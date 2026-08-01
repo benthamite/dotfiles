@@ -4,6 +4,7 @@ import importlib.machinery
 import importlib.util
 import io
 import json
+import stat
 import subprocess
 import sys
 import tempfile
@@ -31,18 +32,19 @@ def policy_for(
     required: list[str] | None = None,
     exempt: dict[str, str] | None = None,
     source_generated: list[dict[str, str]] | None = None,
+    skill_inventory: str = "agents/skill-inventory.org",
 ) -> dict:
     return {
         "version": 1,
         "required_readmes": required or [],
         "exempt_readmes": exempt or {},
         "source_generated": source_generated or [],
-        "skill_inventory": "agents/skill-inventory.org",
+        "skill_inventory": skill_inventory,
         "project_local_skill_documentation_owner": "agents/skill-inventory.org",
     }
 
 
-class DocsAuditTests(unittest.TestCase):
+class DocsAuditTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.module = load_script("docs_audit_script", SCRIPT)
@@ -79,6 +81,13 @@ class DocsAuditTests(unittest.TestCase):
         self.run_git(repo, "add", ".")
         self.run_git(repo, "commit", "-m", "initial")
         return repo
+
+    @staticmethod
+    def skill_text(name: str, description: str) -> str:
+        return f"---\nname: {name}\ndescription: {description}\n---\n"
+
+
+class DocsAuditTests(DocsAuditTestCase):
 
     def test_repo_root_is_script_repository_root(self):
         self.assertEqual(SCRIPT.resolve().parents[1], self.module.REPO_ROOT)
@@ -598,6 +607,122 @@ class DocsAuditTests(unittest.TestCase):
             any(problem.startswith("Required subsystem README") for problem in problems)
         )
 
+    def test_missing_policy_still_aggregates_skill_input_and_link_problems(self):
+        root = self.make_repo(
+            {
+                "README.org": (
+                    "* Directory map\n"
+                    "| =claude= | Claude |\n"
+                    "| =codex= | Codex |\n"
+                    "[[file:missing.org][Missing]]\n"
+                ),
+                "claude/skills/bad/SKILL.md": (
+                    "---\nname: bad\ndescription: # absent\n---\n"
+                ),
+                "claude/skills/duplicate/SKILL.md": self.skill_text(
+                    "duplicate", "Claude description."
+                ),
+                "codex/skills/duplicate/SKILL.md": self.skill_text(
+                    "duplicate", "Codex description."
+                ),
+            }
+        )
+
+        self.assertEqual(
+            [
+                "Broken README file link: README.org -> missing.org",
+                "Conflicting skill definitions in scope Global for name duplicate: "
+                "claude/skills/duplicate/SKILL.md, "
+                "codex/skills/duplicate/SKILL.md",
+                "Invalid skill frontmatter description "
+                "(expected a nonempty single-line string): "
+                "claude/skills/bad/SKILL.md",
+                "README policy is missing or untracked: docs/readme-policy.json",
+            ],
+            self.module.audit_problems(root),
+        )
+
+    def test_invalid_policy_still_aggregates_skill_input_and_link_problems(self):
+        root = self.make_repo(
+            {
+                "README.org": (
+                    "* Directory map\n"
+                    "| =claude= | Claude |\n"
+                    "| =codex= | Codex |\n"
+                    "| =docs= | Docs |\n"
+                    "[[file:missing.org][Missing]]\n"
+                ),
+                "claude/skills/bad/SKILL.md": (
+                    "---\nname: bad\ndescription: # absent\n---\n"
+                ),
+                "claude/skills/duplicate/SKILL.md": self.skill_text(
+                    "duplicate", "Claude description."
+                ),
+                "codex/skills/duplicate/SKILL.md": self.skill_text(
+                    "duplicate", "Codex description."
+                ),
+                "docs/README.org": "Docs\n",
+                "docs/readme-policy.json": json.dumps({"version": 1}),
+            }
+        )
+
+        self.assertEqual(
+            [
+                "Broken README file link: README.org -> missing.org",
+                "Conflicting skill definitions in scope Global for name duplicate: "
+                "claude/skills/duplicate/SKILL.md, "
+                "codex/skills/duplicate/SKILL.md",
+                "Invalid skill frontmatter description "
+                "(expected a nonempty single-line string): "
+                "claude/skills/bad/SKILL.md",
+                "README policy is missing required key: exempt_readmes",
+                "README policy is missing required key: "
+                "project_local_skill_documentation_owner",
+                "README policy is missing required key: required_readmes",
+                "README policy is missing required key: skill_inventory",
+                "README policy is missing required key: source_generated",
+            ],
+            self.module.audit_problems(root),
+        )
+
+    def test_valid_policy_reports_each_skill_input_problem_once(self):
+        policy = policy_for(required=["claude", "codex", "docs"])
+        root = self.make_repo(
+            {
+                "README.org": (
+                    "* Directory map\n"
+                    "| =claude= | Claude |\n"
+                    "| =codex= | Codex |\n"
+                    "| =docs= | Docs |\n"
+                ),
+                "claude/README.org": "Claude\n",
+                "claude/skills/bad/SKILL.md": (
+                    "---\nname: bad\ndescription: # absent\n---\n"
+                ),
+                "claude/skills/duplicate/SKILL.md": self.skill_text(
+                    "duplicate", "Claude description."
+                ),
+                "codex/README.org": "Codex\n",
+                "codex/skills/duplicate/SKILL.md": self.skill_text(
+                    "duplicate", "Codex description."
+                ),
+                "docs/README.org": "Docs\n",
+                "docs/readme-policy.json": json.dumps(policy),
+            }
+        )
+
+        self.assertEqual(
+            [
+                "Conflicting skill definitions in scope Global for name duplicate: "
+                "claude/skills/duplicate/SKILL.md, "
+                "codex/skills/duplicate/SKILL.md",
+                "Invalid skill frontmatter description "
+                "(expected a nonempty single-line string): "
+                "claude/skills/bad/SKILL.md",
+            ],
+            self.module.audit_problems(root),
+        )
+
     def test_escaping_policy_path_cannot_be_satisfied_by_external_file(self):
         external_name = "outside-source.org"
         policy = policy_for(required=["docs"])
@@ -652,6 +777,7 @@ class DocsAuditTests(unittest.TestCase):
             [
                 "Broken README file link: README.org -> missing.org",
                 "Declared generated file is missing: out (source: source.org)",
+                "Generated skill inventory is stale: agents/skill-inventory.org",
                 "Required subsystem README is missing: alpha/README.org",
                 "Root directory map is missing: alpha",
             ],
@@ -688,15 +814,6 @@ class DocsAuditTests(unittest.TestCase):
             problems,
         )
 
-    def test_generate_reports_not_implemented_and_exits_two(self):
-        output = io.StringIO()
-
-        with redirect_stdout(output):
-            result = self.module.main(["generate"])
-
-        self.assertEqual(2, result)
-        self.assertEqual("Skill inventory generation is not implemented\n", output.getvalue())
-
     def test_audit_root_option_reports_all_problems_and_exits_one(self):
         policy = policy_for(required=["alpha", "docs"])
         root = self.make_repo(
@@ -714,13 +831,17 @@ class DocsAuditTests(unittest.TestCase):
 
         self.assertEqual(1, result)
         self.assertEqual(
+            "Generated skill inventory is stale: agents/skill-inventory.org\n"
             "Required subsystem README is missing: alpha/README.org\n"
             "Root directory map is missing: alpha\n",
             output.getvalue(),
         )
 
     def test_audit_exits_zero_when_no_problems_exist(self):
-        policy = policy_for(required=["alpha", "docs"])
+        policy = policy_for(
+            required=["alpha", "docs"],
+            skill_inventory="skill-inventory.org",
+        )
         root = self.make_repo(
             {
                 "README.org": (
@@ -731,6 +852,7 @@ class DocsAuditTests(unittest.TestCase):
                 "alpha/README.org": "Alpha\n",
                 "docs/README.org": "Docs\n",
                 "docs/readme-policy.json": json.dumps(policy),
+                "skill-inventory.org": self.module.render_skill_inventory([]),
             }
         )
         output = io.StringIO()
@@ -740,6 +862,664 @@ class DocsAuditTests(unittest.TestCase):
 
         self.assertEqual(0, result)
         self.assertEqual("", output.getvalue())
+
+
+class DocsAuditInventoryTests(DocsAuditTestCase):
+    def test_inventory_combines_paired_skill_paths(self):
+        skill = self.skill_text("example", "Use when testing.")
+        root = self.make_repo(
+            {
+                "README.org": "Root\n",
+                "claude/skills/example/SKILL.md": skill,
+                "codex/skills/example/SKILL.md": skill,
+            }
+        )
+
+        self.assertEqual(
+            [
+                self.module.SkillInventoryRow(
+                    name="example",
+                    description="Use when testing.",
+                    scope="Global",
+                    tools=("Claude", "Codex"),
+                    paths=(
+                        "claude/skills/example/SKILL.md",
+                        "codex/skills/example/SKILL.md",
+                    ),
+                )
+            ],
+            self.module.skill_inventory_rows(root),
+        )
+
+    def test_inventory_excludes_private_and_system_skills_before_reading(self):
+        root = self.make_repo(
+            {
+                "README.org": "Root\n",
+                "claude/private-skills/x/SKILL.md": b"\xff\xfeprivate",
+                "codex/skills/.system/y/SKILL.md": b"\xff\xfesystem",
+            }
+        )
+
+        self.assertEqual([], self.module.skill_inventory_rows(root))
+
+    def test_public_skill_symlink_to_private_content_is_not_read(self):
+        root = self.make_repo(
+            {"claude/private-skills/secret/SKILL.md": b"\xff\xfeprivate"}
+        )
+        public = root / "claude/skills/public/SKILL.md"
+        public.parent.mkdir(parents=True)
+        public.symlink_to(root / "claude/private-skills/secret/SKILL.md")
+        self.run_git(root, "add", "-f", "claude/skills/public/SKILL.md")
+        self.run_git(root, "commit", "-m", "add public symlink")
+
+        with mock.patch.object(
+            Path,
+            "read_text",
+            side_effect=AssertionError("private contents were read"),
+        ):
+            problems = self.module.skill_inventory_input_problems(root)
+
+        self.assertEqual(
+            [
+                "Tracked skill must not be a symlink: "
+                "claude/skills/public/SKILL.md"
+            ],
+            problems,
+        )
+
+    def test_public_skill_symlink_to_public_content_is_not_read(self):
+        root = self.make_repo({"README.org": "Root\n"})
+        target = root / "claude/skills/target/SKILL.md"
+        target.parent.mkdir(parents=True)
+        target.write_text(self.skill_text("target", "Target description."))
+        public = root / "claude/skills/public/SKILL.md"
+        public.parent.mkdir(parents=True)
+        public.symlink_to(target)
+        self.run_git(root, "add", "claude/skills/public/SKILL.md")
+        self.run_git(root, "commit", "-m", "add public symlink")
+
+        with mock.patch.object(
+            Path,
+            "read_text",
+            side_effect=AssertionError("symlink target contents were read"),
+        ):
+            problems = self.module.skill_inventory_input_problems(root)
+
+        self.assertEqual(
+            ["Tracked skill must not be a symlink: claude/skills/public/SKILL.md"],
+            problems,
+        )
+
+    def test_inventory_audit_reports_exact_stale_output(self):
+        root = self.make_repo(
+            {
+                "README.org": "Root\n",
+                "claude/skills/example/SKILL.md": self.skill_text(
+                    "example", "Use when testing."
+                ),
+            }
+        )
+        self.write_file(root, "agents/skill-inventory.org", "stale\n")
+
+        self.assertEqual(
+            ["Generated skill inventory is stale: agents/skill-inventory.org"],
+            self.module.skill_inventory_problems(root, policy_for()),
+        )
+
+    def test_inventory_audit_reports_missing_output_as_stale(self):
+        root = self.make_repo(
+            {
+                "claude/skills/example/SKILL.md": self.skill_text(
+                    "example", "Use when testing."
+                )
+            }
+        )
+
+        self.assertEqual(
+            ["Generated skill inventory is stale: agents/skill-inventory.org"],
+            self.module.skill_inventory_problems(root, policy_for()),
+        )
+
+    def test_frontmatter_parses_quoted_single_line_values(self):
+        root = self.make_repo(
+            {
+                "claude/skills/quoted/SKILL.md": (
+                    "---\n"
+                    "name: 'quoted'\n"
+                    'description: "Use a quoted description."\n'
+                    "extra: ignored\n"
+                    "---\n"
+                    "description: body content is ignored\n"
+                )
+            }
+        )
+
+        self.assertEqual(
+            ("quoted", "Use a quoted description."),
+            self.module.parse_skill_frontmatter(
+                (root / "claude/skills/quoted/SKILL.md").read_text(),
+                "claude/skills/quoted/SKILL.md",
+            ),
+        )
+
+    def test_frontmatter_rejects_missing_and_multiline_descriptions(self):
+        root = self.make_repo(
+            {
+                "claude/skills/missing/SKILL.md": "---\nname: missing\n---\n",
+                "codex/skills/multiline/SKILL.md": (
+                    "---\nname: multiline\ndescription: |\n  Not one line.\n---\n"
+                ),
+                "codex/skills/non-string/SKILL.md": (
+                    "---\nname: non-string\ndescription: false\n---\n"
+                ),
+            }
+        )
+
+        self.assertEqual(
+            [
+                "Invalid skill frontmatter description "
+                "(expected a nonempty single-line string): "
+                "claude/skills/missing/SKILL.md",
+                "Invalid skill frontmatter description "
+                "(expected a nonempty single-line string): "
+                "codex/skills/multiline/SKILL.md",
+                "Invalid skill frontmatter description "
+                "(expected a nonempty single-line string): "
+                "codex/skills/non-string/SKILL.md",
+            ],
+            self.module.skill_inventory_input_problems(root),
+        )
+
+    def test_frontmatter_rejects_decoded_whitespace_and_newlines(self):
+        root = self.make_repo(
+            {
+                "claude/skills/blank/SKILL.md": (
+                    '---\nname: "   "\ndescription: Valid description.\n---\n'
+                ),
+                "codex/skills/wrapped/SKILL.md": (
+                    '---\nname: wrapped\ndescription: "line\\nwrap"\n---\n'
+                ),
+            }
+        )
+
+        self.assertEqual(
+            [
+                "Invalid skill frontmatter description "
+                "(expected a nonempty single-line string): "
+                "codex/skills/wrapped/SKILL.md",
+                "Invalid skill frontmatter name "
+                "(expected a nonempty single-line string): "
+                "claude/skills/blank/SKILL.md",
+            ],
+            self.module.skill_inventory_input_problems(root),
+        )
+
+    def test_frontmatter_rejects_values_outside_the_supported_subset(self):
+        relative = "claude/skills/example/SKILL.md"
+        cases = {
+            "null comment": (
+                "---\nname: example\ndescription: # absent\n---\n",
+                "description",
+            ),
+            "inline comment": (
+                "---\nname: example\ndescription: Useful. # comment\n---\n",
+                "description",
+            ),
+            "unsupported sequence": (
+                "---\nname: example\ndescription: - item\n---\n",
+                "description",
+            ),
+            "unsupported mapping": (
+                "---\nname: example\ndescription: key: value\n---\n",
+                "description",
+            ),
+            "unsupported tabbed mapping": (
+                "---\nname: example\ndescription: key:\tvalue\n---\n",
+                "description",
+            ),
+            "spaced key before valid key": (
+                "---\nname : old\nname: example\n"
+                "description: Useful.\n---\n",
+                "name",
+            ),
+            "quoted key before valid key": (
+                "---\n'name': old\nname: example\n"
+                "description: Useful.\n---\n",
+                "name",
+            ),
+            "duplicate key": (
+                "---\nname: old\nname: example\n"
+                "description: Useful.\n---\n",
+                "name",
+            ),
+        }
+
+        for label, (text, field) in cases.items():
+            with self.subTest(label=label):
+                with self.assertRaises(ValueError) as raised:
+                    self.module.parse_skill_frontmatter(text, relative)
+                self.assertEqual(
+                    self.module._invalid_frontmatter_problem(field, relative),
+                    str(raised.exception),
+                )
+
+    def test_scope_classification_uses_fixed_precedence(self):
+        paths_and_scopes = {
+            "archive/claude/programmatic-skills/old/SKILL.md": "Archived",
+            ".claude/programmatic-skills/hidden/SKILL.md": "Programmatic",
+            "codex/programmatic-skills/script/SKILL.md": "Programmatic",
+            "emacs/.claude/skills/emacs-local/SKILL.md": "Project-local: emacs",
+            "macos/.codex/skills/macos-local/SKILL.md": "Project-local: macos",
+            ".codex/skills/dotfiles-local/SKILL.md": "Project-local: dotfiles",
+            "claude/skills/global/SKILL.md": "Global",
+        }
+        files = {
+            path: self.skill_text(Path(path).parent.name, f"Description for {path}.")
+            for path in paths_and_scopes
+        }
+        root = self.make_repo(files)
+        self.run_git(
+            root,
+            "add",
+            "-f",
+            ".claude/programmatic-skills/hidden/SKILL.md",
+        )
+        self.run_git(root, "commit", "-m", "track ignored programmatic skill")
+
+        actual = {
+            path: row.scope
+            for row in self.module.skill_inventory_rows(root)
+            for path in row.paths
+        }
+
+        self.assertEqual(paths_and_scopes, actual)
+
+    def test_unknown_public_root_is_rejected_without_reading_contents(self):
+        root = self.make_repo(
+            {"experimental/.claude/skills/x/SKILL.md": b"\xff\xfeunknown"}
+        )
+
+        self.assertEqual(
+            [
+                "Tracked skill is outside known public roots: "
+                "experimental/.claude/skills/x/SKILL.md"
+            ],
+            self.module.skill_inventory_input_problems(root),
+        )
+
+    def test_path_must_identify_exactly_one_tool(self):
+        root = self.make_repo(
+            {
+                "archive/claude/.codex/skills/ambiguous/SKILL.md": self.skill_text(
+                    "ambiguous", "Ambiguous tool path."
+                )
+            }
+        )
+
+        self.assertEqual(
+            [
+                "Tracked skill path does not identify exactly one tool: "
+                "archive/claude/.codex/skills/ambiguous/SKILL.md"
+            ],
+            self.module.skill_inventory_input_problems(root),
+        )
+
+    def test_rendering_escapes_org_cells_and_sorts_deterministically(self):
+        rows = [
+            self.module.SkillInventoryRow(
+                name="zeta",
+                description=r"A backslash \\ and a | pipe.",
+                scope="Global",
+                tools=("Codex",),
+                paths=(r"codex/skills/zeta\\part|x/SKILL.md",),
+            ),
+            self.module.SkillInventoryRow(
+                name="Alpha",
+                description="First.",
+                scope="Global",
+                tools=("Claude",),
+                paths=("claude/skills/alpha/SKILL.md",),
+            ),
+            self.module.SkillInventoryRow(
+                name="local",
+                description="Local.",
+                scope="Project-local: dotfiles",
+                tools=("Claude", "Codex"),
+                paths=(".claude/skills/local/SKILL.md", ".codex/skills/local/SKILL.md"),
+            ),
+        ]
+
+        rendered = self.module.render_skill_inventory(rows)
+
+        self.assertTrue(
+            rendered.startswith(
+                "#+title: Tracked agent skill inventory\n\n"
+                "This file is generated by =bin/docs-audit generate=. "
+                "Do not edit it manually.\n"
+                "It covers tracked public skills in this repository. "
+                "Dynamic plugins, ignored\n"
+                "runtime system skills, private skills, and skills in other "
+                "repositories are\n"
+                "outside its scope.\n"
+            )
+        )
+        self.assertLess(rendered.index("| =Alpha= |"), rendered.index("| =zeta= |"))
+        self.assertLess(
+            rendered.index("* Global"),
+            rendered.index("* Project-local: dotfiles"),
+        )
+        self.assertIn(r"A backslash \\\\ and a \| pipe.", rendered)
+        self.assertIn(r"=codex/skills/zeta\\\\part\|x/SKILL.md=", rendered)
+        self.assertEqual(rendered, self.module.render_skill_inventory(list(reversed(rows))))
+
+    def test_same_name_in_different_scopes_stays_separate(self):
+        skill = self.skill_text("shared", "Same description.")
+        root = self.make_repo(
+            {
+                "claude/skills/shared/SKILL.md": skill,
+                ".claude/skills/shared/SKILL.md": skill,
+            }
+        )
+
+        rows = self.module.skill_inventory_rows(root)
+
+        self.assertEqual(2, len(rows))
+        self.assertEqual(
+            {"Global", "Project-local: dotfiles"},
+            {row.scope for row in rows},
+        )
+
+    def test_conflicting_descriptions_in_one_scope_fail_closed(self):
+        root = self.make_repo(
+            {
+                "claude/skills/duplicate/SKILL.md": self.skill_text(
+                    "duplicate", "Claude description."
+                ),
+                "codex/skills/duplicate/SKILL.md": self.skill_text(
+                    "duplicate", "Codex description."
+                ),
+            }
+        )
+
+        self.assertEqual(
+            [
+                "Conflicting skill definitions in scope Global for name duplicate: "
+                "claude/skills/duplicate/SKILL.md, "
+                "codex/skills/duplicate/SKILL.md"
+            ],
+            self.module.skill_inventory_input_problems(root),
+        )
+
+    def test_generation_is_atomic_stable_and_preserves_output_on_invalid_input(self):
+        skill_path = "claude/skills/example/SKILL.md"
+        root = self.make_repo(
+            {skill_path: self.skill_text("example", "Use when testing.")}
+        )
+        policy = policy_for()
+        destination = root / policy["skill_inventory"]
+        real_replace = self.module.os.replace
+
+        with mock.patch.object(
+            self.module.os, "replace", wraps=real_replace
+        ) as replace:
+            self.assertEqual([], self.module.write_skill_inventory(root, policy))
+
+        source, target = map(Path, replace.call_args.args)
+        self.assertEqual(destination.parent, source.parent)
+        self.assertEqual(destination, target)
+        self.assertEqual(0o644, stat.S_IMODE(destination.stat().st_mode))
+        first = destination.read_bytes()
+
+        self.assertEqual([], self.module.write_skill_inventory(root, policy))
+        self.assertEqual(first, destination.read_bytes())
+
+        entries_before_failed_replace = set(destination.parent.iterdir())
+        with mock.patch.object(
+            self.module.os,
+            "replace",
+            side_effect=OSError("forced replace failure"),
+        ):
+            self.assertEqual(
+                [
+                    "Generated skill inventory could not be written: "
+                    "agents/skill-inventory.org"
+                ],
+                self.module.write_skill_inventory(root, policy),
+            )
+        self.assertEqual(first, destination.read_bytes())
+        self.assertEqual(
+            entries_before_failed_replace,
+            set(destination.parent.iterdir()),
+        )
+
+        self.write_file(
+            root,
+            skill_path,
+            "---\nname: example\ndescription: |\n  Invalid.\n---\n",
+        )
+        problems = self.module.write_skill_inventory(root, policy)
+
+        self.assertTrue(problems)
+        self.assertEqual(first, destination.read_bytes())
+
+    def test_inventory_output_symlink_is_rejected_without_reading_target(self):
+        policy = policy_for(required=["claude", "docs"])
+        root = self.make_repo(
+            {
+                "README.org": (
+                    "* Directory map\n"
+                    "| =claude= | Claude |\n"
+                    "| =docs= | Docs |\n"
+                ),
+                "claude/README.org": "Claude\n",
+                "claude/skills/example/SKILL.md": self.skill_text(
+                    "example", "Use when testing."
+                ),
+                "docs/README.org": "Docs\n",
+                "docs/readme-policy.json": json.dumps(policy),
+            }
+        )
+        destination = root / policy["skill_inventory"]
+        destination.parent.mkdir(parents=True)
+        target = root.parent / "private-inventory-target"
+        target.write_bytes(b"\xff\xfeprivate")
+        destination.symlink_to(target)
+        real_read_text = Path.read_text
+
+        def guarded_read_text(path: Path, *args, **kwargs):
+            if path in {destination, target}:
+                raise AssertionError("inventory symlink target was read")
+            return real_read_text(path, *args, **kwargs)
+
+        with mock.patch.object(Path, "read_text", new=guarded_read_text):
+            problems = self.module.audit_problems(root)
+
+        self.assertEqual(
+            [
+                "Generated skill inventory path contains a symlink: "
+                "agents/skill-inventory.org"
+            ],
+            problems,
+        )
+        self.assertNotIn(
+            str(target.resolve()),
+            problems[0],
+        )
+
+    def test_generation_does_not_replace_inventory_output_symlink(self):
+        policy = policy_for()
+        target_contents = b"\xff\xfeprivate target"
+        root = self.make_repo(
+            {
+                "claude/skills/example/SKILL.md": self.skill_text(
+                    "example", "Use when testing."
+                ),
+            }
+        )
+        destination = root / policy["skill_inventory"]
+        destination.parent.mkdir(parents=True)
+        target = root.parent / "private-inventory-target"
+        target.write_bytes(target_contents)
+        destination.symlink_to(target)
+        real_read_text = Path.read_text
+
+        def guarded_read_text(path: Path, *args, **kwargs):
+            if path in {destination, target}:
+                raise AssertionError("inventory symlink target was read")
+            return real_read_text(path, *args, **kwargs)
+
+        with mock.patch.object(Path, "read_text", new=guarded_read_text):
+            self.assertEqual(
+                [
+                    "Generated skill inventory path contains a symlink: "
+                    "agents/skill-inventory.org"
+                ],
+                self.module.write_skill_inventory(root, policy),
+            )
+        self.assertTrue(destination.is_symlink())
+        self.assertEqual(target_contents, target.read_bytes())
+
+    def test_inventory_audit_rejects_parent_symlink_without_reading_target(self):
+        policy = policy_for(required=["claude", "docs"])
+        target_relative = "claude/private-skills/skill-inventory.org"
+        root = self.make_repo(
+            {
+                "README.org": (
+                    "* Directory map\n"
+                    "| =claude= | Claude |\n"
+                    "| =docs= | Docs |\n"
+                ),
+                "claude/README.org": "Claude\n",
+                "claude/skills/example/SKILL.md": self.skill_text(
+                    "example", "Use when testing."
+                ),
+                target_relative: b"\xff\xfeprivate inventory",
+                "docs/README.org": "Docs\n",
+                "docs/readme-policy.json": json.dumps(policy),
+            }
+        )
+        destination = root / policy["skill_inventory"]
+        target = root / target_relative
+        destination.parent.symlink_to(target.parent, target_is_directory=True)
+        target_reads: list[Path] = []
+        real_read_text = Path.read_text
+
+        def recording_read_text(path: Path, *args, **kwargs):
+            if path in {destination, target}:
+                target_reads.append(path)
+            return real_read_text(path, *args, **kwargs)
+
+        with mock.patch.object(Path, "read_text", new=recording_read_text):
+            problems = self.module.audit_problems(root)
+
+        self.assertEqual(
+            [
+                "Generated skill inventory path contains a symlink: "
+                "agents/skill-inventory.org"
+            ],
+            problems,
+        )
+        self.assertEqual([], target_reads)
+        self.assertNotIn(str(target.resolve()), problems[0])
+
+    def test_generation_rejects_parent_symlink_before_creating_temporary_file(self):
+        policy = policy_for()
+        target_relative = "claude/private-skills/skill-inventory.org"
+        target_contents = b"private inventory\n"
+        root = self.make_repo(
+            {
+                "claude/skills/example/SKILL.md": self.skill_text(
+                    "example", "Use when testing."
+                ),
+                target_relative: target_contents,
+            }
+        )
+        destination = root / policy["skill_inventory"]
+        target = root / target_relative
+        destination.parent.symlink_to(target.parent, target_is_directory=True)
+        target_entries = set(target.parent.iterdir())
+        real_named_temporary_file = self.module.tempfile.NamedTemporaryFile
+
+        with mock.patch.object(
+            self.module.tempfile,
+            "NamedTemporaryFile",
+            wraps=real_named_temporary_file,
+        ) as temporary_file:
+            problems = self.module.write_skill_inventory(root, policy)
+
+        self.assertEqual(
+            [
+                "Generated skill inventory path contains a symlink: "
+                "agents/skill-inventory.org"
+            ],
+            problems,
+        )
+        temporary_file.assert_not_called()
+        self.assertEqual(target_contents, target.read_bytes())
+        self.assertEqual(target_entries, set(target.parent.iterdir()))
+
+    def test_audit_problems_include_stale_inventory(self):
+        policy = policy_for(required=["docs"], skill_inventory="skill-inventory.org")
+        root = self.make_repo(
+            {
+                "README.org": (
+                    "* Directory map\n"
+                    "| =docs= | Documentation |\n"
+                ),
+                "docs/README.org": "Docs\n",
+                "docs/readme-policy.json": json.dumps(policy),
+                "skill-inventory.org": "stale\n",
+            }
+        )
+
+        self.assertEqual(
+            ["Generated skill inventory is stale: skill-inventory.org"],
+            self.module.audit_problems(root),
+        )
+
+    def test_cli_generate_writes_configured_inventory_and_exits_zero(self):
+        policy = policy_for()
+        root = self.make_repo(
+            {
+                "docs/readme-policy.json": json.dumps(policy),
+                "claude/skills/example/SKILL.md": self.skill_text(
+                    "example", "Use when testing."
+                ),
+            }
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            result = self.module.main(["generate", "--root", str(root)])
+
+        self.assertEqual(0, result)
+        self.assertEqual("", output.getvalue())
+        self.assertEqual(
+            self.module.render_skill_inventory(self.module.skill_inventory_rows(root)),
+            (root / policy["skill_inventory"]).read_text(),
+        )
+
+    def test_cli_invalid_root_reports_one_safe_diagnostic_without_traceback(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        non_git = Path(temporary.name)
+        nonexistent = non_git / "does-not-exist"
+
+        for command in ("generate", "audit"):
+            for root in (non_git, nonexistent):
+                with self.subTest(command=command, root=root.name):
+                    output = io.StringIO()
+                    with redirect_stdout(output):
+                        result = self.module.main(
+                            [command, "--root", str(root)]
+                        )
+
+                    self.assertEqual(2, result)
+                    self.assertEqual(
+                        "Repository root is unavailable or not a Git worktree\n",
+                        output.getvalue(),
+                    )
+                    self.assertNotIn("Traceback", output.getvalue())
 
 
 if __name__ == "__main__":

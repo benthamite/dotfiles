@@ -1,31 +1,35 @@
 ---
 name: orchestrate-agent-review
-description: Use when coordinating two live Emacs agent sessions across planning, independent review, revision, and implementation, including Claude/Fable and Codex role assignments or reversals.
+description: Use when coordinating two live Emacs agent sessions through a one-way spec, spec review, plan, plan review, and implementation workflow, including Claude/Fable and Codex role assignments or reversals.
 ---
 
 # orchestrate-agent-review
 
 ## Overview
 
-Run one complete Superpowers-style handoff across two live `agent.el`
-sessions: Agent 1 plans, Agent 2 reviews, Agent 1 revises until approval, and
-Agent 1 implements. The skill keeps roles, monitoring, session state, and Emacs
-minibuffer prompts under explicit control.
+Run one complete Superpowers-style workflow across two live `agent.el`
+sessions: Agent 1 creates each artifact and carries review feedback into the
+next stage; Agent 2 independently reviews the spec and plan once each. The
+skill keeps roles, monitoring, session state, and Emacs minibuffer prompts
+under explicit control.
 
 ## Role contract
 
-- **Agent 1 plans, revises, and implements.** Planning and implementation are
-  one role bundle even though independent review happens between them.
-- **Agent 2 independently reviews** Agent 1's committed plan or revision and
-  returns `IMPLEMENTATION-READY` or `NOT READY`.
+- **Agent 1 creates the spec.**
+- **Agent 2 reviews the spec once.**
+- **Agent 1 creates the plan, incorporating the spec-review feedback.**
+- **Agent 2 reviews the plan once.**
+- **Agent 1 implements the plan, incorporating the plan-review feedback.**
+- Treat both reviews as one-way handoffs. Do not send the artifact back for
+  another review pass. Agent 1 adjudicates the feedback and proceeds to the
+  next stage.
 - Agent 1 defaults to Claude/Fable and Agent 2 defaults to Codex.
 - A user-requested reversal swaps the entire role bundle: the new Agent 1 owns
-  planning, revision, and implementation; the new Agent 2 owns independent
-  review. Never reverse only the planning phase.
+  spec creation, plan creation, and implementation; the new Agent 2 owns both
+  independent reviews. Never reverse only one stage.
 - Plan tasks remain internal execution boundaries for tests and commits. The
-  orchestrated handoff is plan/review/revision followed by implementation of
-  the approved plan; do not create a new agent cycle for every task unless the
-  user explicitly requests that granularity.
+  orchestrated unit is the whole stage; do not create a new inter-model review
+  cycle for every task unless the user explicitly requests that granularity.
 
 Use the helper script for deterministic Emacs/session operations:
 
@@ -36,8 +40,14 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" --help
 ## Operating rules
 
 - While orchestration is active, do not send a final response unless the workflow reached a terminal state or a real blocker requires user input. Use commentary updates instead.
-- Keep prompts narrow after the first plan: “address only these blockers,” “do not reopen settled issues,” and “commit once.”
-- Continue past the normal 2–3 review passes only when remaining feedback is a concrete implementation blocker. Stop when feedback becomes preference churn, scope expansion, or the blocker count stops shrinking across two consecutive reviewer passes.
+- Treat review findings as input to Agent 1's next stage, not as a request to
+  revise and resubmit the current artifact.
+- Require Agent 1 to address valid findings in the next artifact or in the
+  implementation. If Agent 1 rejects a finding, it records a concise reason
+  while continuing; it does not ask Agent 2 to adjudicate the rejection.
+- Perform exactly two inter-model review handoffs: one after the spec and one
+  after the plan. Do not add implementation review unless the user explicitly
+  requests a separate review phase.
 - Preserve unrelated worktree changes. If the repo is dirty for unrelated reasons, report it and avoid staging or committing those files.
 - Never use the interactive `agent-start-new-session` path for unattended runs when an instance-name prompt is possible. Start sessions with explicit instance names.
 
@@ -46,11 +56,11 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" --help
 Identify:
 
 - repo root
-- improvement area or spec/plan path
+- improvement area and spec/plan paths
 - Agent 1 backend/session, usually Claude/Fable
 - Agent 2 backend/session, usually Codex
 - expected first actor
-- pass limit or convergence policy
+- current workflow checkpoint
 
 If the user did not provide enough information and no reasonable default exists, ask one focused question. Otherwise infer from the current repo and live sessions.
 
@@ -72,13 +82,14 @@ Create a durable run file outside the repo or under an ignored state directory. 
 {
   "repo": "/path/to/repo",
   "area": "durable task ledger",
-  "planner_buffer": "*claude:...*",
-  "reviewer_buffer": "*codex:...*",
-  "planner_transcript": "/path/to/claude.jsonl",
-  "reviewer_transcript": "/path/to/codex.jsonl",
-  "latest_planner_commit": null,
-  "expected_actor": "planner",
-  "status": "planning"
+  "agent1_buffer": "*claude:...*",
+  "agent2_buffer": "*codex:...*",
+  "agent1_transcript": "/path/to/claude.jsonl",
+  "agent2_transcript": "/path/to/codex.jsonl",
+  "spec_commit": null,
+  "plan_commit": null,
+  "expected_actor": "agent1",
+  "status": "spec-writing"
 }
 ```
 
@@ -143,62 +154,65 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" watch \
 ```
 
 This prints one concise line when state changes. If it produces no output, the
-state has not changed. A verdict label appears only for the designated reviewer
-transcript, only on assistant output, and only when the first nonblank line is
-exactly `IMPLEMENTATION-READY` or `NOT READY`. Verdict words in prompts and
-progress discussion are not terminal signals.
+state has not changed. The helper's planner/reviewer option names map to Agent
+1 and Agent 2 for monitoring purposes only. Do not use a reviewer verdict as a
+permission gate: completion of the review response advances the workflow.
 
 Send concise commentary updates when state changes or every 60 seconds during long work.
 
-## Step 5: Advance the loop
+## Step 5: Create and review the spec
 
-Use this policy:
-
-1. Planner produces or revises a plan/spec and commits once.
-2. Submit the resulting commit to the reviewer.
-3. Reviewer answers `IMPLEMENTATION-READY` or `NOT READY`.
-4. If `IMPLEMENTATION-READY`, mark the plan approved, then hand control back
-   to Agent 1 to implement the approved plan.
-5. If `NOT READY`, extract only remaining blockers and submit them to the planner.
-6. Repeat until convergence or a stop condition.
-
-Reviewer prompt shape:
-
-```text
-Please perform a narrow implementation-readiness review of <area> commit <hash>.
-
-Context:
-- Previous accepted/rejected commits: ...
-- Your last review found <N> blockers.
-- The planner has now committed <hash>.
-
-Task: Check only whether <hash> resolves the previous blockers and whether it introduced any serious contradiction directly caused by those fixes. Do not reopen settled issues or request style/preference changes.
-
-Answer exactly one of:
-- IMPLEMENTATION-READY
-- NOT READY, followed by only remaining blockers and minimal required changes.
-```
-
-Planner revision prompt shape:
-
-```text
-The reviewer returned NOT READY with <N> remaining blockers. Please make one minimal revision addressing only these blockers. Do not broaden scope or reopen settled decisions. Commit once and report the hash plus a concise mapping from blockers to changes.
-```
-
-## Step 6: Hand the approved plan back for implementation
-
-After Agent 2 returns `IMPLEMENTATION-READY`, submit the accepted plan and
-commit to Agent 1. Approval completes the review loop, not the work.
-
-Agent 1 implements the whole approved plan using its task boundaries for the
-specified tests and commits. Use the implementation workflow required by the
-plan; when the plan leaves that choice open, use `superpowers:executing-plans`.
-Do not transfer implementation to Agent 2 merely because Agent 2 performed the
+Have Agent 1 create the spec using the repository's required design workflow.
+Commit the spec once, then submit that commit to Agent 2 for one independent
 review.
 
-Monitor Agent 1 through the plan's final verification. Return to Agent 2 only
-if the user or plan explicitly requires a post-implementation review; that is a
-new review phase, not an implicit change in the role contract.
+Spec-review prompt shape:
+
+```text
+Independently review the spec at <path/commit>. Identify concrete omissions,
+contradictions, feasibility risks, and unclear acceptance criteria that should
+affect the implementation plan. Return prioritized findings with reasons. This
+is the only spec-review pass; Agent 1 will use the findings when creating the
+plan, so do not request a revised spec or another review round.
+```
+
+## Step 6: Create and review the plan
+
+Submit the spec and Agent 2's complete review to Agent 1. Have Agent 1 create
+the implementation plan while adjudicating every finding. Valid feedback must
+change the plan; rejected feedback must receive a concise recorded reason.
+Proceed directly to the plan rather than revising and resubmitting the spec.
+
+Use the repository's required planning workflow; when unspecified, use
+`superpowers:writing-plans`. Commit the plan once, then submit it to Agent 2 for
+one independent implementation-readiness review.
+
+Plan-review prompt shape:
+
+```text
+Independently review the implementation plan at <path/commit> against the spec.
+Identify concrete correctness gaps, missing verification, sequencing problems,
+and scope contradictions that Agent 1 should account for during implementation.
+Return prioritized findings with reasons. This is the only plan-review pass;
+Agent 1 will use the findings while implementing, so do not request a revised
+plan or another review round.
+```
+
+## Step 7: Implement with the plan review
+
+Submit the plan and Agent 2's complete plan review to Agent 1. Agent 1
+implements the plan while adjudicating every finding. Valid feedback must
+change the implementation or its verification; rejected feedback must receive
+a concise recorded reason. Do not revise and resubmit the plan first.
+
+Use the implementation workflow required by the plan; when unspecified, use
+`superpowers:executing-plans`. Agent 1 implements the whole stage using the
+plan's task boundaries for tests and commits. Do not transfer implementation
+to Agent 2 merely because Agent 2 performed the reviews.
+
+Monitor Agent 1 through the plan's final verification. The workflow ends after
+verified implementation. A user-requested post-implementation review is a
+separate phase, not an implicit third handoff.
 
 ## Stop conditions
 
@@ -206,20 +220,17 @@ Stop and report a blocker when:
 
 - a session is awaiting input but the expected prompt cannot be submitted
 - the worktree has overlapping uncommitted changes not produced by the active actor
-- the reviewer repeats the same blocker without useful narrowing across two passes
-- feedback becomes style-only or scope expansion
+- review feedback exposes a missing user decision that prevents the next stage
 - an external permission, destructive action, or user-only credential is needed
-
-If the remaining blocker count keeps shrinking and the issues are concrete executable failures, continue within reason even past the nominal pass limit.
 
 ## Final report
 
 When complete, report:
 
 - final status per area
-- accepted plan commit hash
+- spec commit hash and spec-review handoff
+- plan commit hash and plan-review handoff
 - implementation commit or commit range
-- number of planner/reviewer passes
 - Agent 1 and Agent 2 assignments
 - repo branch and ahead/behind state
 - whether the working tree is clean

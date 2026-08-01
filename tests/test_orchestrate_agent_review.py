@@ -34,21 +34,33 @@ orchestrator = load_module()
 
 
 class SkillWorkflowTests(unittest.TestCase):
-    def test_paired_skills_define_review_then_implementation_handoff(self):
+    def test_paired_skills_define_one_way_spec_plan_implementation_handoff(self):
         self.assertEqual(CODEX_SKILL.read_bytes(), CLAUDE_SKILL.read_bytes())
         skill = CODEX_SKILL.read_text(encoding="utf-8")
         normalized_skill = " ".join(skill.split())
 
         required_rules = (
-            "Agent 1 plans, revises, and implements",
-            "Agent 2 independently reviews",
-            "hand control back to Agent 1 to implement the approved plan",
+            "Agent 1 creates the spec",
+            "Agent 2 reviews the spec once",
+            "Agent 1 creates the plan, incorporating the spec-review feedback",
+            "Agent 2 reviews the plan once",
+            "Agent 1 implements the plan, incorporating the plan-review feedback",
+            "Do not send the artifact back for another review pass",
             "Agent 1 defaults to Claude/Fable and Agent 2 defaults to Codex",
             "swaps the entire role bundle",
         )
         for rule in required_rules:
             with self.subTest(rule=rule):
                 self.assertIn(rule, normalized_skill)
+
+        forbidden_rules = (
+            "Repeat until convergence",
+            "revises until approval",
+            "planner/reviewer passes",
+        )
+        for rule in forbidden_rules:
+            with self.subTest(rule=rule):
+                self.assertNotIn(rule, normalized_skill)
 
 
 class WatchVerdictTests(unittest.TestCase):

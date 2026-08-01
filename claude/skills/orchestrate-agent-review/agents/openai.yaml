@@ -1,4 +1,4 @@
 interface:
   display_name: "Agent Review Orchestrator"
-  short_description: "Coordinate plan, review, and implementation"
-  default_prompt: "Use $orchestrate-agent-review to coordinate planning, independent review, revision, and implementation across two live agent sessions."
+  short_description: "Coordinate one-way spec and plan reviews"
+  default_prompt: "Use $orchestrate-agent-review to coordinate one spec review and one plan review, then return implementation to the same authoring agent."

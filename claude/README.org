@@ -857,21 +857,18 @@ Meta-skill for reusable AI workflow design. Given a description of something to 
 :ID:       8B807530-4E37-4200-96AB-69C179E17E04
 :END:
 
-Coordinates a complete two-agent plan/review/implementation handoff across
-live Emacs =agent.el= sessions. Agent 1 plans, revises, and implements; Agent 2
-independently reviews until the plan is implementation-ready. Agent 1 defaults
-to Claude/Fable and Agent 2 to Codex, while a requested reversal swaps the
-complete role bundles. The skill records the operating rules that prevent
-unattended review from stalling, including explicit agent instance
-names, temp-file prompt submission, Python-based monitoring instead of shell
-=sleep=, narrow revision prompts, and concrete stop conditions. Its bundled
-=orchestrate_agent_review.py= helper lists live agent buffers, submits prompt
-files, parses transcripts, reports repo/session status, and watches sessions
-with concise bounded output by default. The watcher labels a terminal verdict
-only when the designated reviewer's assistant output starts with the exact
-verdict line, so verdict words in prompts or progress discussion do not produce
-false completion signals. Plan approval hands control back to Agent 1 for
-implementation; it does not complete the workflow. Live Emacs status is
+Coordinates a one-way two-agent workflow across live Emacs =agent.el=
+sessions. Agent 1 creates the spec, receives one independent spec review from
+Agent 2, creates the plan with that feedback, receives one independent plan
+review, and implements with that feedback. Artifacts are never returned for a
+second review pass. Agent 1 defaults to Claude/Fable and Agent 2 to Codex,
+while a requested reversal swaps the complete role bundles. Plan tasks remain
+internal implementation boundaries rather than separate inter-model cycles.
+The skill records explicit instance naming, temp-file prompt submission,
+Python-based monitoring instead of shell =sleep=, feedback handoffs, and stop
+conditions. Its bundled =orchestrate_agent_review.py= helper lists live agent
+buffers, submits prompt files, parses transcripts, reports repo/session status,
+and watches sessions with concise bounded output. Live Emacs status is
 transferred through one-shot temp files while the evaluated Emacs form returns
 =nil=, so structured status data does not travel through the =emacsclient
 --eval= return channel.

@@ -104,6 +104,53 @@ The protected registration paths include =codex/hooks.json=,
 =~/.codex/hooks.json=, and =~/.claude/settings.json=. Policy changes should be
 made manually outside the agent session.
 
+** Guarded dotfiles publication
+
+The dotfiles repo is public, so it has a second gate of its own. Ordinary
+pushes are refused: =remote.origin.pushurl= is =dotfiles-blocked::origin=,
+which resolves to =bin/git-remote-dotfiles-blocked=, a Git remote helper that
+prints a refusal and exits. It runs before the pre-push hook, so =--no-verify=
+does not get past it. The tracked =bin/dotfiles-pre-push= hook, symlinked into
+the hooks directory by =bin/dotfiles-publish install=, then refuses any push
+that does not match a fresh authorization. The fetch URL is untouched, so
+pulling and fetching work normally.
+
+Publication runs through the project-local =publish-dotfiles= skill, which is a
+skill name rather than a command; the executable it drives is
+=bin/dotfiles-publish=. Every outgoing object passes two independent layers:
+
+1. a deterministic layer — Gitleaks over the exact outgoing patch range and
+   over the extracted candidate tree, plus object checks for risky path names,
+   symlinks, submodules, archives, binaries, blobs over 2 MiB, and =git-crypt=
+   paths whose committed blob lacks the =git-crypt= header;
+2. an exhaustive model review — the run builds a manifest of every commit,
+   changed path, patch hunk, new file, and high-risk file, and publication is
+   refused until every single unit id carries a recorded verdict.
+
+Authorization state is local and never committed. It lives in
+=$(git rev-parse --git-dir)/dotfiles-publish/= at mode =0700=: a per-run
+directory holding the run record, redacted findings, manifest, and verdicts; a
+32-byte =fingerprint.key= that keys every finding fingerprint; and a
+five-minute, single-use =authorization.json= naming the exact objects and refs
+of one push. The hook reads and unlinks that file before deciding, so a
+replayed push fails. Findings are stored redacted: locations and keyed
+fingerprints only, never values.
+
+A complete-history audit covers every commit reachable from local branches,
+remote branches, tags, and fetched pull-request heads. It is due when no
+receipt exists, the receipt is over 30 days old, the ruleset changed, or an
+incident was recorded — and it is checked at publication time rather than on a
+timer, so it runs on the next publication after it falls due. A finding on a
+commit that is already reachable from a public ref is classified a public
+incident and routed to =gitguardian-triage=: rotate or revoke first, then
+remove from source, and only then consider rewriting public history.
+
+Ordinary publication and formal release differ in exactly one way that matters:
+ordinary publication pushes one branch update and never creates a tag or a
+GitHub release, while =release-dotfiles= calls the same machinery in release
+mode, adds the release notes and tag text as reviewable units, and authorizes
+one push carrying the branch update plus one tag update.
+
 * Skills
 
 =claude/skills/<name>/= and =codex/skills/<name>/= should contain equivalent
@@ -285,6 +332,9 @@ currently present in this repo. The skill name shown is the directory name.
   merging, or after revision. Scope: Global.
 - =proofread=: Proofread Markdown for spelling, grammar, typos, punctuation,
   and light style/clarity issues. Scope: Global.
+- =publish-dotfiles=: Publish, check publish readiness for, or fully audit the
+  public dotfiles repository, sanitizing unpublished commits when an outgoing
+  finding requires it. Scope: Project-local: dotfiles.
 - =record-decisions=: Extract and record architectural, algorithmic, or design
   decisions from the current session. Scope: Global.
 - =release-package=: Release one of the user's Emacs packages or audit package release

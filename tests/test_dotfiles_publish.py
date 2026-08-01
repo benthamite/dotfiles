@@ -442,6 +442,36 @@ class PublicationFixture(unittest.TestCase):
                 yield path
 
 
+class DotfilesPublishDocumentationTests(unittest.TestCase):
+    """The workflow is only usable if it is findable and its paths are real."""
+
+    def test_the_tracked_executables_and_hook_exist_and_are_executable(self):
+        for helper in (PUBLISH, PRE_PUSH, BLOCKED_TRANSPORT):
+            self.assertTrue(helper.is_file(), helper)
+            self.assertTrue(os.access(str(helper), os.X_OK), "%s is not executable" % helper)
+
+    def test_both_readmes_name_the_project_local_skill(self):
+        inventory = (REPO_ROOT / "agents" / "README.org").read_text(encoding="utf-8")
+        self.assertIn("=publish-dotfiles=", inventory)
+        self.assertIn("Project-local: dotfiles", inventory)
+        self.assertIn("Guarded dotfiles publication", inventory)
+
+        root_readme = (REPO_ROOT / "README.org").read_text(encoding="utf-8")
+        self.assertIn("=publish-dotfiles=", root_readme)
+
+    def test_the_documented_paths_are_the_real_ones(self):
+        inventory = (REPO_ROOT / "agents" / "README.org").read_text(encoding="utf-8")
+        for path in ("bin/dotfiles-publish", "bin/dotfiles-pre-push", "bin/git-remote-dotfiles-blocked"):
+            self.assertIn(path, inventory, "the inventory does not document %s" % path)
+            self.assertTrue((REPO_ROOT / path).is_file(), "%s does not exist" % path)
+
+    def test_the_skill_pair_and_its_evaluations_are_present(self):
+        for side in (".claude", ".codex"):
+            skill = REPO_ROOT / side / "skills" / "publish-dotfiles"
+            self.assertTrue((skill / "SKILL.md").is_file(), skill)
+            self.assertTrue((skill / "evals" / "scenarios.md").is_file(), skill)
+
+
 class DotfilesPublishStateTests(PublicationFixture):
     def test_scan_discovers_repository_from_a_subdirectory(self):
         self.publish_base()

@@ -1,0 +1,22 @@
+#!/bin/sh
+# Tracked pre-push hook for the dotfiles repository.
+#
+# Git's proposed updates arrive on standard input and are passed through
+# unchanged; every decision belongs to dotfiles-publish.
+
+set -eu
+
+here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+root=$(git rev-parse --show-toplevel 2>/dev/null || printf '')
+
+for candidate in "$here/dotfiles-publish" "${root:+$root/bin/dotfiles-publish}"; do
+	[ -n "$candidate" ] || continue
+	if [ -x "$candidate" ]; then
+		exec "$candidate" hook "$@"
+	fi
+done
+
+printf '%s\n' \
+	'Push blocked: bin/dotfiles-publish is missing, so no push can be authorized. Use publish-dotfiles.' \
+	>&2
+exit 1

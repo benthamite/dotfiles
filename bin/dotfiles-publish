@@ -1802,6 +1802,152 @@ def command_authorize(args):
 
 
 # --------------------------------------------------------------------------
+# hook
+# --------------------------------------------------------------------------
+
+
+def parse_rfc3339(text):
+    return float(calendar_timegm(time.strptime(text, "%Y-%m-%dT%H:%M:%SZ")))
+
+
+def update_key(update):
+    return (
+        update["local_ref"],
+        update["local_oid"],
+        update["remote_ref"],
+        update["remote_oid"],
+    )
+
+
+def read_proposed_updates(stream):
+    proposed = []
+    for line in stream.read().splitlines():
+        if not line.strip():
+            continue
+        fields = line.split()
+        if len(fields) != 4:
+            raise PublishError("unsupported pre-push input: %d fields" % len(fields), EXIT_REFUSED)
+        proposed.append(
+            {
+                "local_ref": fields[0],
+                "local_oid": fields[1],
+                "remote_ref": fields[2],
+                "remote_oid": fields[3],
+            }
+        )
+    return proposed
+
+
+def consume_authorization(repo):
+    """Read and unlink the authorization before any decision is made."""
+    path = authorization_path(repo)
+    if not path.exists():
+        return None
+    try:
+        return read_json(path)
+    finally:
+        path.unlink(missing_ok=True)
+
+
+def command_hook(args):
+    repo = discover_repository()
+    proposed = read_proposed_updates(sys.stdin)
+    authorization = consume_authorization(repo)
+    now = now_epoch()
+
+    if authorization is None:
+        raise PublishError(
+            "no push authorization; use publish-dotfiles to review and publish this branch",
+            EXIT_REFUSED,
+        )
+    if not proposed:
+        raise PublishError("no proposed update to authorize", EXIT_REFUSED)
+    if authorization.get("schema") != SCHEMA:
+        raise PublishError("the authorization has an unsupported schema", EXIT_REFUSED)
+    if now > parse_rfc3339(authorization["expires_at"]):
+        raise PublishError(
+            "the push authorization expired at %s; authorize again"
+            % authorization["expires_at"],
+            EXIT_REFUSED,
+        )
+    if authorization["remote_url"] not in (args.remote_location, repo.fetch_url):
+        raise PublishError(
+            "the authorization was issued for a different remote URL", EXIT_REFUSED
+        )
+    if authorization["ruleset_id"] != ruleset_identity(repo.root):
+        raise PublishError("the ruleset changed after the authorization", EXIT_REFUSED)
+
+    for update in proposed:
+        if set(update["local_oid"]) == {"0"}:
+            raise PublishError("this guard never authorizes a ref deletion", EXIT_REFUSED)
+
+    authorized = sorted(update_key(update) for update in authorization["updates"])
+    requested = sorted(update_key(update) for update in proposed)
+    if authorized != requested:
+        raise PublishError(
+            "the proposed push does not match the authorization exactly:\n%s"
+            % "\n".join("proposed: %s" % " ".join(item) for item in requested),
+            EXIT_REFUSED,
+        )
+
+    for update in authorization["updates"]:
+        present = run_git(
+            repo.root, "cat-file", "-e", update["local_oid"] + "^{object}", check=False
+        )
+        if present.code != 0:
+            raise PublishError(
+                "authorized object %s is no longer present locally" % update["local_oid"][:12],
+                EXIT_REFUSED,
+            )
+
+    print("push authorized for run %s" % authorization["run_id"])
+    return EXIT_OK
+
+
+# --------------------------------------------------------------------------
+# push
+# --------------------------------------------------------------------------
+
+
+def command_push(args):
+    repo = discover_repository()
+    fingerprint_key(repo)
+    record, authorization = authorize_run(repo, args.run, args.tag, now_epoch())
+    refspecs = [
+        "%s:%s" % (update["local_oid"], update["remote_ref"])
+        for update in authorization["updates"]
+    ]
+    try:
+        result = run_git(repo.root, "push", record["remote_url"], *refspecs, check=False)
+    finally:
+        # A failure consumes the authorization; publishing again needs a fresh one.
+        authorization_path(repo).unlink(missing_ok=True)
+    if result.code != 0:
+        raise PublishError(
+            "git push failed: %s" % clip(structural_redaction(result.error_text), 400),
+            EXIT_FAILURE,
+        )
+
+    for update in authorization["updates"]:
+        actual = remote_tip_of(repo, record["remote_url"], update["remote_ref"])
+        if actual != update["local_oid"]:
+            raise PublishError(
+                "%s is %s on the remote after the push, not %s"
+                % (update["remote_ref"], (actual or "missing")[:12], update["local_oid"][:12]),
+                EXIT_FAILURE,
+            )
+        print("published: %s %s" % (update["remote_ref"], update["local_oid"]))
+
+    for ref in clear_recovery_refs(repo, record["remote_oid"]):
+        print("recovery-ref-removed: %s" % ref)
+
+    record["published_at"] = rfc3339(now_epoch())
+    write_json(run_directory(repo, args.run) / "run.json", record)
+    print("pushed: %s" % args.run)
+    return EXIT_OK
+
+
+# --------------------------------------------------------------------------
 # Command line
 # --------------------------------------------------------------------------
 
@@ -1870,12 +2016,12 @@ def build_parser():
     push = subparsers.add_parser("push", help="authorize and push the reviewed objects")
     push.add_argument("--run", required=True)
     push.add_argument("--tag", default=None)
-    push.set_defaults(handler=not_yet("push"))
+    push.set_defaults(handler=command_push)
 
     hook = subparsers.add_parser("hook", help="pre-push hook implementation")
     hook.add_argument("remote_name")
     hook.add_argument("remote_location")
-    hook.set_defaults(handler=not_yet("hook"))
+    hook.set_defaults(handler=command_hook)
 
     install = subparsers.add_parser("install", help="install the push guard")
     install.set_defaults(handler=not_yet("install"))

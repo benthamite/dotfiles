@@ -1244,10 +1244,80 @@ class DotfilesPublishAuthorizationTests(PublicationFixture):
         self.assertEqual(candidate, self.remote_tip())
         listing = self.git("ls-remote", str(self.remote))
         self.assertNotIn("refs/tags/", listing.stdout)
-        self.assertEqual(
-            ["refs/heads/master"],
-            sorted({line.split()[1] for line in listing.stdout.splitlines() if line.strip()}),
+        published = {
+            line.split()[1]
+            for line in listing.stdout.splitlines()
+            if line.strip() and line.split()[1] != "HEAD"
+        }
+        self.assertEqual({"refs/heads/master"}, published)
+
+
+    def test_release_publishes_the_branch_and_exactly_one_tag(self):
+        self.publish_base()
+        self.commit("prepare release", {"docs/changes.md": "changes\n"})
+        notes = self.base / "release-notes.md"
+        notes.write_text("Adds the changes document.\n")
+        self.git("tag", "v1.2.3")
+
+        proc, run_id = self.scan(
+            "--mode", "release", "--tag", "v1.2.3", "--release-notes", str(notes)
         )
+        self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
+        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        public = [unit for unit in manifest["units"] if unit["kind"] == "public-text"]
+        self.assertEqual(2, len(public), "release notes and tag text must be reviewed")
+        self.write_full_audit_receipt(run_id)
+        self.review_all(run_id)
+
+        pushed = self.cli("push", "--run", run_id, "--tag", "v1.2.3")
+
+        self.assertEqual(0, pushed.returncode, pushed.stdout + pushed.stderr)
+        self.assertEqual(self.head(), self.remote_tip())
+        self.assertEqual(self.head(), self.remote_tip("refs/tags/v1.2.3"))
+        listing = self.git("ls-remote", "--tags", str(self.remote))
+        self.assertEqual(1, len([line for line in listing.stdout.splitlines() if line.strip()]))
+
+    def test_ordinary_publication_refuses_a_tag(self):
+        run_id = self.prepare_authorized_run()
+        self.git("tag", "v2.0.0")
+
+        refused = self.cli("push", "--run", run_id, "--tag", "v2.0.0")
+
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("release run", refused.stderr)
+        self.assertNotIn("refs/tags/", self.git("ls-remote", str(self.remote)).stdout)
+
+    def test_hook_rejects_extra_refs_and_deletions(self):
+        run_id = self.prepare_authorized_run()
+        run = self.read_json(self.run_dir(run_id) / "run.json")
+        authorized = "%s %s %s %s" % (
+            run["candidate_oid"],
+            run["candidate_oid"],
+            run["remote_ref"],
+            run["remote_oid"],
+        )
+
+        self.assertEqual(0, self.cli("authorize", "--run", run_id).returncode)
+        extra = self.cli(
+            "hook",
+            "origin",
+            str(self.remote),
+            stdin=authorized
+            + "\n%s %s refs/heads/extra %s\n"
+            % (run["candidate_oid"], run["candidate_oid"], "0" * 40),
+        )
+        self.assertNotEqual(0, extra.returncode)
+        self.assertIn("does not match the authorization", extra.stderr)
+
+        self.assertEqual(0, self.cli("authorize", "--run", run_id).returncode)
+        deletion = self.cli(
+            "hook",
+            "origin",
+            str(self.remote),
+            stdin="(delete) %s %s %s\n" % ("0" * 40, run["remote_ref"], run["remote_oid"]),
+        )
+        self.assertNotEqual(0, deletion.returncode)
+        self.assertIn("deletion", deletion.stderr)
 
 
 class DotfilesPublishFullAuditTests(PublicationFixture):

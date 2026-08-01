@@ -1,0 +1,10 @@
+#!/bin/sh
+# Refusing Git remote helper.
+#
+# remote.origin.pushurl points at dotfiles-blocked::origin, so every ordinary
+# push resolves to this helper.  It deliberately does not implement the remote
+# helper protocol: the only correct outcome is a refusal, and it happens before
+# the pre-push hook, so --no-verify cannot bypass it.
+
+printf '%s\n' 'Push blocked: use publish-dotfiles so outgoing history is reviewed.' >&2
+exit 1

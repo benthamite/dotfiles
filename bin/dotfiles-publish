@@ -1922,6 +1922,9 @@ def command_push(args):
     finally:
         # A failure consumes the authorization; publishing again needs a fresh one.
         authorization_path(repo).unlink(missing_ok=True)
+    for line in structural_redaction(result.text + result.error_text).splitlines():
+        if line.strip():
+            print("git: %s" % line.rstrip())
     if result.code != 0:
         raise PublishError(
             "git push failed: %s" % clip(structural_redaction(result.error_text), 400),
@@ -1944,6 +1947,146 @@ def command_push(args):
     record["published_at"] = rfc3339(now_epoch())
     write_json(run_directory(repo, args.run) / "run.json", record)
     print("pushed: %s" % args.run)
+    return EXIT_OK
+
+
+# --------------------------------------------------------------------------
+# install
+# --------------------------------------------------------------------------
+
+EXPECTED_REMOTE = re.compile(r"(?:^|[/:])benthamite/dotfiles(?:\.git)?/?$")
+
+# The temporary blocker installed while this workflow was being designed.  It
+# is the only pre-push content install may replace besides its own symlink.
+BOOTSTRAP_PRE_PUSH_SHA256 = (
+    "f78f818bc470c90c1a4b5ffb1243850925a537609d0964981d854b393233a29e"
+)
+
+GITLEAKS_MINIMUM_VERSION = (8, 29)
+
+TRACKED_HELPERS = ("dotfiles-publish", "dotfiles-pre-push", "git-remote-dotfiles-blocked")
+
+
+def require_repository_identity(repo):
+    if os.environ.get("DOTFILES_PUBLISH_TESTING") == "1":
+        expected = os.environ.get("DOTFILES_PUBLISH_EXPECTED_REMOTE")
+        if expected:
+            if expected != repo.fetch_url:
+                raise PublishError(
+                    "this guard installs into %s, not %s" % (expected, repo.fetch_url)
+                )
+            return
+    if not EXPECTED_REMOTE.search(repo.fetch_url):
+        raise PublishError(
+            "this guard installs into benthamite/dotfiles only, not %s" % repo.fetch_url
+        )
+
+
+def require_gitleaks():
+    executable = gitleaks_executable()
+    completed = subprocess.run(
+        [executable, "version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    if completed.returncode != 0:
+        raise PublishError("could not run '%s version'" % executable)
+    reported = completed.stdout.decode("utf-8", "replace").strip().splitlines()[-1].strip()
+    numbers = re.search(r"(\d+)\.(\d+)", reported)
+    if not numbers:
+        raise PublishError("could not read the gitleaks version from %r" % reported)
+    version = (int(numbers.group(1)), int(numbers.group(2)))
+    if version < GITLEAKS_MINIMUM_VERSION:
+        raise PublishError(
+            "gitleaks %s is older than the required %d.%d"
+            % (reported, *GITLEAKS_MINIMUM_VERSION)
+        )
+    return reported
+
+
+def hooks_directory(repo):
+    configured = run_git(repo.root, "config", "--get", "core.hooksPath", check=False).text.strip()
+    if configured:
+        path = Path(configured)
+        return path if path.is_absolute() else repo.root / path
+    return repo.git_dir / "hooks"
+
+
+def install_pre_push_hook(repo):
+    target = repo.root / "bin" / "dotfiles-pre-push"
+    hook = hooks_directory(repo) / "pre-push"
+    if hook.is_symlink():
+        resolved = (hook.parent / os.readlink(str(hook))).resolve()
+        if resolved != target.resolve():
+            raise PublishError(
+                "pre-push is a symlink to %s; point it at bin/dotfiles-pre-push by hand" % resolved
+            )
+        return "unchanged", hook
+    if hook.exists():
+        digest = hashlib.sha256(hook.read_bytes()).hexdigest()
+        if digest != BOOTSTRAP_PRE_PUSH_SHA256:
+            raise PublishError(
+                "%s already contains an unrelated hook; merge it with bin/dotfiles-pre-push "
+                "by hand and rerun install" % hook
+            )
+    hook.parent.mkdir(parents=True, exist_ok=True)
+    temporary = hook.parent / ".pre-push.dotfiles-publish"
+    temporary.unlink(missing_ok=True)
+    os.symlink(str(target), str(temporary))
+    os.replace(str(temporary), str(hook))
+    return "installed", hook
+
+
+def command_install(args):
+    repo = discover_repository()
+    require_repository_identity(repo)
+
+    for name in TRACKED_HELPERS:
+        helper = repo.root / "bin" / name
+        if not helper.is_file():
+            raise PublishError("tracked helper is missing: %s" % helper)
+        if not os.access(str(helper), os.X_OK):
+            raise PublishError("tracked helper is not executable: %s" % helper)
+
+    transport = shutil.which("git-remote-dotfiles-blocked")
+    if not transport:
+        raise PublishError(
+            "git-remote-dotfiles-blocked is not on PATH, so Git could not refuse a push; "
+            "add %s to PATH and rerun install" % (repo.root / "bin")
+        )
+
+    version = require_gitleaks()
+    hook_state, hook = install_pre_push_hook(repo)
+
+    push_setting = "remote.%s.pushurl" % repo.remote_name
+    current = run_git(repo.root, "config", "--get", push_setting, check=False).text.strip()
+    if current == BLOCKED_PUSH_URL:
+        push_state = "unchanged"
+    else:
+        run_git(repo.root, "config", push_setting, BLOCKED_PUSH_URL)
+        push_state = "set"
+    fetch_url = run_git(repo.root, "remote", "get-url", repo.remote_name).text.strip()
+    if fetch_url != repo.fetch_url:
+        raise PublishError("the fetch URL changed during install; inspect the remote by hand")
+
+    ensure_state_dir(repo)
+    fingerprint_key(repo)
+    write_json(
+        repo.state_dir / "install.json",
+        {
+            "schema": SCHEMA,
+            "installed_at": rfc3339(now_epoch()),
+            "remote_name": repo.remote_name,
+            "fetch_url": fetch_url,
+            "push_url": BLOCKED_PUSH_URL,
+            "hook": str(hook),
+            "gitleaks": version,
+        },
+    )
+
+    print("hook: %s %s" % (hook_state, hook))
+    print("pushurl: %s %s" % (push_state, BLOCKED_PUSH_URL))
+    print("fetch-url: %s" % fetch_url)
+    print("transport: %s" % transport)
+    print("gitleaks: %s" % version)
     return EXIT_OK
 
 
@@ -2024,7 +2167,7 @@ def build_parser():
     hook.set_defaults(handler=command_hook)
 
     install = subparsers.add_parser("install", help="install the push guard")
-    install.set_defaults(handler=not_yet("install"))
+    install.set_defaults(handler=command_install)
 
     return parser
 

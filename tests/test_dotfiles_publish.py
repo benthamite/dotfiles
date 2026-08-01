@@ -1320,6 +1320,133 @@ class DotfilesPublishAuthorizationTests(PublicationFixture):
         self.assertIn("deletion", deletion.stderr)
 
 
+class DotfilesPublishInstallTests(PublicationFixture):
+    BOOTSTRAP_PRE_PUSH = (
+        "#!/bin/sh\n\n"
+        "printf '%s\\n' \\\n"
+        "  'Push blocked: guarded dotfiles publication is not installed yet."
+        " Use publish-dotfiles after implementation.' \\\n"
+        "  >&2\n"
+        "exit 1\n"
+    )
+
+    def install_env(self, **extra):
+        return self.env(DOTFILES_PUBLISH_EXPECTED_REMOTE=str(self.remote), **extra)
+
+    def add_helpers(self):
+        """Copy the tracked helpers into the disposable repository."""
+        target = self.repo / "bin"
+        target.mkdir(parents=True, exist_ok=True)
+        for name in ("dotfiles-publish", "dotfiles-pre-push", "git-remote-dotfiles-blocked"):
+            shutil.copy2(REPO_ROOT / "bin" / name, target / name)
+            (target / name).chmod(0o755)
+        self.git("add", "-A")
+        self.git("commit", "--quiet", "-m", "add publication helpers")
+
+    def hooks_dir(self):
+        return self.repo / ".git" / "hooks"
+
+    def write_unrelated_hooks(self):
+        self.hooks_dir().mkdir(parents=True, exist_ok=True)
+        for name in ("post-commit", "post-rewrite"):
+            path = self.hooks_dir() / name
+            path.write_text("#!/bin/sh\necho %s\n" % name)
+            path.chmod(0o755)
+        return {
+            name: (self.hooks_dir() / name).read_bytes()
+            for name in ("post-commit", "post-rewrite")
+        }
+
+    def test_install_replaces_the_bootstrap_blocker_and_leaves_other_hooks_alone(self):
+        self.publish_base()
+        self.add_helpers()
+        untouched = self.write_unrelated_hooks()
+        bootstrap = self.hooks_dir() / "pre-push"
+        bootstrap.write_text(self.BOOTSTRAP_PRE_PUSH)
+        bootstrap.chmod(0o755)
+
+        installed = self.cli("install", env=self.install_env())
+
+        self.assertEqual(0, installed.returncode, installed.stdout + installed.stderr)
+        hook = self.hooks_dir() / "pre-push"
+        self.assertTrue(hook.is_symlink())
+        self.assertEqual(
+            os.path.realpath(self.repo / "bin" / "dotfiles-pre-push"),
+            os.path.realpath(hook),
+        )
+        for name, content in untouched.items():
+            self.assertEqual(content, (self.hooks_dir() / name).read_bytes())
+        self.assertEqual(
+            str(self.remote),
+            self.git("config", "--get", "remote.origin.url").stdout.strip(),
+        )
+        self.assertEqual(
+            "dotfiles-blocked::origin",
+            self.git("config", "--get", "remote.origin.pushurl").stdout.strip(),
+        )
+
+    def test_install_refuses_an_unrelated_pre_push_hook(self):
+        self.publish_base()
+        self.add_helpers()
+        self.hooks_dir().mkdir(parents=True, exist_ok=True)
+        hook = self.hooks_dir() / "pre-push"
+        hook.write_text("#!/bin/sh\nexec ./scripts/lint.sh\n")
+        hook.chmod(0o755)
+
+        refused = self.cli("install", env=self.install_env())
+
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("merge it with bin/dotfiles-pre-push", refused.stderr)
+        self.assertEqual("#!/bin/sh\nexec ./scripts/lint.sh\n", hook.read_text())
+        self.assertFalse(hook.is_symlink())
+
+    def test_install_is_idempotent(self):
+        self.publish_base()
+        self.add_helpers()
+
+        first = self.cli("install", env=self.install_env())
+        self.assertEqual(0, first.returncode, first.stderr)
+        self.assertIn("hook: installed", first.stdout)
+
+        second = self.cli("install", env=self.install_env())
+        self.assertEqual(0, second.returncode, second.stderr)
+        self.assertIn("hook: unchanged", second.stdout)
+        self.assertIn("pushurl: unchanged", second.stdout)
+
+    def test_installed_remote_blocks_a_no_verify_push(self):
+        self.publish_base()
+        self.add_helpers()
+        self.assertEqual(0, self.cli("install", env=self.install_env()).returncode)
+        before = self.remote_tip()
+        self.commit("unreviewed work", {"docs/unreviewed.md": "unreviewed\n"})
+
+        blocked = self.git("push", "--no-verify", "origin", "master", check=False)
+
+        self.assertNotEqual(0, blocked.returncode)
+        self.assertIn(BLOCKED_PUSH_MESSAGE, blocked.stderr)
+        self.assertEqual(before, self.remote_tip())
+
+    def test_authorized_url_push_passes_through_the_tracked_hook(self):
+        self.publish_base()
+        self.add_helpers()
+        self.assertEqual(0, self.cli("install", env=self.install_env()).returncode)
+        self.commit("add helper", {"docs/helper.md": "helper notes\n"})
+        proc, run_id = self.scan()
+        self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
+        self.write_full_audit_receipt(run_id)
+        self.review_all(run_id)
+
+        pushed = self.cli("push", "--run", run_id)
+
+        self.assertEqual(0, pushed.returncode, pushed.stdout + pushed.stderr)
+        self.assertIn(
+            "push authorized for run %s" % run_id,
+            pushed.stdout,
+            "the tracked pre-push hook did not run for the authorized URL push",
+        )
+        self.assertEqual(self.head(), self.remote_tip())
+
+
 class DotfilesPublishFullAuditTests(PublicationFixture):
     def test_full_audit_due_after_thirty_days_or_ruleset_change(self):
         self.publish_base()

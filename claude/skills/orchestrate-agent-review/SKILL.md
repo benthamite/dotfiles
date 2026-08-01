@@ -45,13 +45,15 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" buffers
 Default helper output is for user-facing monitoring: concise text, no raw JSON,
 and no base64 buffer tails. `--json` is only for debugging or machine parsing
 and still omits buffer tails by default. Use `--include-tail` only for private
-local debugging, never for commentary or prompts sent to another agent.
+local debugging, never for commentary or prompts sent to another agent. The
+helper suppresses Emacs message logging during its internal evals; agents using
+this skill must not inspect `*Messages*` as part of the workflow.
 
 Do not replace the helper with ad-hoc `emacsclient --eval` probes that return
 buffer lists, raw JSON, base64 tails, or arbitrary buffer substrings. Raw
-Emacs return values are captured in live agent transcripts and can also pollute
-`*Messages*`. If the helper lacks a needed status view, extend the helper first
-and verify the resulting live Emacs output before continuing orchestration.
+Emacs return values are captured in live agent transcripts and can also create
+noisy Emacs messages. If the helper lacks a needed status view, extend the
+helper first; do not improvise status checks in live agent buffers.
 
 Create a durable run file outside the repo or under an ignored state directory. The helper can create or update a JSON state file, but the supervising agent remains responsible for interpreting it:
 
@@ -134,12 +136,9 @@ state has not changed. Do not use `watch --json` for user-facing monitoring,
 and never use `watch --json --include-tail` in a live agent session.
 
 Send concise commentary updates when state changes or every 60 seconds during long work.
-Before reporting that noisy monitoring is fixed, verify the live Emacs-visible
-behavior. Do not scan `*Messages*` with ad-hoc `emacsclient --eval` expressions
-that return or search large buffer substrings; those requests can block the
-Emacs server and can themselves produce noisy `*Messages*` entries. Use a
-bounded helper command for this verification, or inspect the live UI only when
-the user is already looking at it.
+Do not ask worker agents to verify orchestration noise, inspect Emacs messages,
+or reason about supervisor internals. Noise prevention belongs in this helper
+and in the supervising agent's command choices.
 
 ## Step 5: Advance the loop
 

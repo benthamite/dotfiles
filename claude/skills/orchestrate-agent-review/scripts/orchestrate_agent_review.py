@@ -13,8 +13,13 @@ from typing import Any
 
 
 def run_emacs_eval(expr: str) -> str:
+    wrapped_expr = f"""
+(let ((inhibit-message t)
+      (message-log-max nil))
+  {expr})
+"""
     proc = subprocess.run(
-        ["emacsclient", "--eval", expr],
+        ["emacsclient", "--eval", wrapped_expr],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         check=False,

@@ -869,9 +869,9 @@ with concise human-readable output by default; raw JSON and base64 tails are
 separate opt-ins, and JSON omits tails unless =--include-tail= is explicitly
 requested for private local debugging. The workflow forbids ad-hoc
 =emacsclient --eval= status probes that return raw buffer JSON or transcript
-tails. Live Emacs verification must use bounded helper output rather than raw
-=*Messages*= buffer scans, because those scans can themselves block the Emacs
-server or create noisy messages.
+tails, and the helper suppresses Emacs message logging during its internal
+evals. Worker agents must not inspect =*Messages*= or reason about supervisor
+noise; noise prevention is part of the helper contract.
 
 **** diagnose
 :PROPERTIES:

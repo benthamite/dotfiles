@@ -1,0 +1,4 @@
+interface:
+  display_name: "LuLu Alert Review"
+  short_description: "Audit the open LuLu firewall alert"
+  default_prompt: "Use $review-lulu-alert to audit the LuLu alert currently on screen and recommend allow or block."

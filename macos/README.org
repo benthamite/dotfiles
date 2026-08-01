@@ -21,6 +21,19 @@ endpoint scanning, and spaces-safe binary analysis. Electron extraction uses an
 exact =@electron/asar= dependency with a committed lockfile and disabled
 lifecycle scripts.
 
+*** review-lulu-alert
+:PROPERTIES:
+:ID:       45E0D4F0-9AA5-49FA-980C-8B1ABA350D40
+:END:
+
+Audits the LuLu firewall alert currently on screen and recommends allow or
+block. A read-only helper reads the alert through the Accessibility API and
+reports the process, its arguments and path, the destination, and the selected
+rule scope and duration. Reviewing never answers the alert: the skill does not
+press Allow or Block, change the scope or duration, or create a rule, and an
+explicit instruction to act is checked against the audited process and endpoint
+before anything is clicked.
+
 *** security-audit
 :PROPERTIES:
 :ID:       E7A2C626-9A58-48B3-B8F8-124BE3A61945

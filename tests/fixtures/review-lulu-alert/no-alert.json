@@ -1,0 +1,17 @@
+{
+  "elements": [],
+  "lulu": {
+    "bundle_id": "com.objective-see.lulu.app",
+    "pid": 1080,
+    "running": true,
+    "version": "4.3.2"
+  },
+  "schema": "lulu-alert-ax-dump/1",
+  "window": {
+    "alert_window_count": 0,
+    "app_window_count": 0,
+    "found": false,
+    "matched_by": null,
+    "title": null
+  }
+}

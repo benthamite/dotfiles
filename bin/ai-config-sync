@@ -13,6 +13,7 @@ import subprocess
 import sys
 import tomllib
 from dataclasses import dataclass
+from functools import cached_property
 from pathlib import Path
 from typing import Iterable
 
@@ -39,7 +40,6 @@ DOTFILES_PROJECT_LOCAL_SKILLS = {
     "find-skills",
     "gitguardian-triage",
     "install-mcp-server",
-    "move-session-log",
     "optimize-agent-instructions",
     "publish-dotfiles",
     "release-dotfiles",
@@ -105,12 +105,6 @@ GIT_OPTIONS_WITH_VALUE = {
     "--super-prefix",
 }
 
-GIT_ADD_OPTIONS_WITH_VALUE = {
-    "--pathspec-from-file",
-    "--chmod",
-}
-
-
 def usage() -> None:
     print(
         """Usage: ai-config-sync MODE
@@ -162,6 +156,26 @@ def real_path(path: Path) -> Path:
 
 def same_path(left: Path, right: Path) -> bool:
     return real_path(left) == real_path(right)
+
+
+def git_common_dir(repo: Path) -> Path | None:
+    text = git_text(["rev-parse", "--git-common-dir"], repo)
+    if text is None or not text.strip():
+        return None
+    common_dir = Path(text.strip())
+    if not common_dir.is_absolute():
+        common_dir = repo / common_dir
+    return real_path(common_dir)
+
+
+def same_git_repository(left: Path, right: Path) -> bool:
+    left_common = git_common_dir(left)
+    right_common = git_common_dir(right)
+    return (
+        left_common is not None
+        and right_common is not None
+        and left_common == right_common
+    )
 
 
 def nearest_existing_path(path: Path) -> Path:
@@ -522,28 +536,101 @@ def remind_codex() -> None:
 
 
 def shell_tokens(command: str) -> list[str]:
-    lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
+    lexer = shlex.shlex(command, posix=True, punctuation_chars="();<>|&\r\n")
+    lexer.whitespace = " \t"
     lexer.whitespace_split = True
     return list(lexer)
 
 
-def split_shell_segments(tokens: list[str]) -> list[list[str]]:
-    segments: list[list[str]] = []
+def shell_segments_with_connectors(
+    tokens: list[str],
+) -> list[tuple[str | None, list[str]]]:
+    segments: list[tuple[str | None, list[str]]] = []
+    connector: str | None = None
     current: list[str] = []
     for token in tokens:
-        if set(token) <= {"&", "|", ";", "(", ")"}:
+        if set(token) <= {"&", "|", ";", "(", ")", "\r", "\n"}:
             if current:
-                segments.append(current)
+                segments.append((connector, current))
                 current = []
+            connector = token.strip("\r\n") or token
             continue
         current.append(token)
     if current:
-        segments.append(current)
+        segments.append((connector, current))
     return segments
 
 
+def is_git_executable_token(token: str) -> bool:
+    return "=" not in token and Path(token).name == "git"
+
+
+def env_utility_command(args: list[str], depth: int = 0) -> list[str]:
+    """Return env's utility argv after leading options and assignments."""
+    if depth > 4:
+        return []
+
+    no_value_options = {
+        "-0",
+        "-i",
+        "--ignore-environment",
+        "-v",
+        "--debug",
+    }
+    value_options = {
+        "-u",
+        "--unset",
+        "-C",
+        "--chdir",
+        "-P",
+        "--argv0",
+    }
+    value_prefixes = (
+        "--unset=",
+        "--chdir=",
+        "--argv0=",
+    )
+    assignment = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if assignment.match(arg):
+            i += 1
+            continue
+        if arg == "--":
+            return args[i + 1 :]
+        if arg in no_value_options:
+            i += 1
+            continue
+        if arg in value_options:
+            if i + 1 >= len(args):
+                return []
+            i += 2
+            continue
+        if arg.startswith(value_prefixes):
+            i += 1
+            continue
+        if arg in {"-S", "--split-string"}:
+            if i + 1 >= len(args):
+                return []
+            try:
+                expanded = shlex.split(args[i + 1], posix=True)
+            except ValueError:
+                return []
+            return env_utility_command(expanded + args[i + 2 :], depth + 1)
+        if arg.startswith("--split-string="):
+            try:
+                expanded = shlex.split(arg.partition("=")[2], posix=True)
+            except ValueError:
+                return []
+            return env_utility_command(expanded + args[i + 1 :], depth + 1)
+        break
+    return args[i:]
+
+
 def git_invocation(segment: list[str], cwd: Path) -> tuple[str, list[str], Path] | None:
-    if not segment or Path(segment[0]).name != "git":
+    if not segment or not is_git_executable_token(segment[0]):
         return None
 
     args = segment[1:]
@@ -569,6 +656,41 @@ def git_invocation(segment: list[str], cwd: Path) -> tuple[str, list[str], Path]
     return None
 
 
+def unwrap_git_command(segment: list[str]) -> tuple[list[str], str | None]:
+    """Unwrap exact safe shell wrappers and flag wrappers that can alter Git."""
+    if not segment:
+        return segment, None
+    if is_git_executable_token(segment[0]):
+        return segment, None
+    if segment[0] == "env":
+        if len(segment) >= 2 and is_git_executable_token(segment[1]):
+            return segment[1:], None
+        utility = env_utility_command(segment[1:])
+        if utility and is_git_executable_token(utility[0]):
+            return utility, (
+                "Cannot safely model wrapped git commit with environment "
+                "assignments or wrapper options."
+            )
+        return segment, None
+    if segment[0] == "command":
+        if len(segment) >= 2 and is_git_executable_token(segment[1]):
+            return segment[1:], None
+        for index, token in enumerate(segment[1:], start=1):
+            if is_git_executable_token(token):
+                return segment[index:], (
+                    "Cannot safely model wrapped git commit with environment "
+                    "assignments or wrapper options."
+                )
+    if "=" in segment[0]:
+        for index, token in enumerate(segment[1:], start=1):
+            if is_git_executable_token(token):
+                return segment[index:], (
+                    "Cannot safely model wrapped git commit with environment "
+                    "assignments or wrapper options."
+                )
+    return segment, None
+
+
 def dirty_paths(
     repo: Path = ROOT,
     include_untracked: bool = True,
@@ -592,6 +714,28 @@ def git_text(args: list[str], repo: Path = ROOT) -> str | None:
     if proc.returncode != 0:
         return None
     return proc.stdout
+
+
+def git_bytes(args: list[str], repo: Path = ROOT) -> bytes | None:
+    proc = subprocess.run(
+        ["git", "-C", str(repo), *args],
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    return proc.stdout if proc.returncode == 0 else None
+
+
+def decode_utf8(
+    data: bytes,
+    label: str,
+    problems: list[str],
+) -> str | None:
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError:
+        problems.append(f"{label} must contain UTF-8 text")
+        return None
 
 
 def tracked_dirty_paths(repo: Path = ROOT) -> set[str]:
@@ -626,12 +770,20 @@ def paths_from_git_add(
     git_cwd: Path,
     repo_root: Path,
     changed: set[str],
-) -> set[str]:
+) -> tuple[set[str], str | None]:
     paths: set[str] = set()
     include_all = False
     include_tracked = False
-    pathspec_from_file = False
     i = 0
+
+    separator_index = args.index("--") if "--" in args else len(args)
+    options_before_separator = args[:separator_index]
+    if any(
+        arg in {"--dry-run", "--refresh", "-h", "--help"}
+        or (arg.startswith("-") and not arg.startswith("--") and "n" in arg[1:])
+        for arg in options_before_separator
+    ):
+        return set(), None
 
     while i < len(args):
         arg = args[i]
@@ -646,53 +798,205 @@ def paths_from_git_add(
             include_tracked = True
             i += 1
             continue
-        if arg in GIT_ADD_OPTIONS_WITH_VALUE:
-            pathspec_from_file = True
+        if arg in {"--pathspec-from-file", "--pathspec-file-nul"} or arg.startswith(
+            "--pathspec-from-file="
+        ):
+            return set(), (
+                "Cannot safely model a mutating git add that reads pathspecs "
+                "from a file; stage deterministic explicit paths first."
+            )
+        if arg in {"-i", "--interactive", "-p", "--patch", "-e", "--edit"}:
+            return set(), (
+                "Cannot safely model an interactive git add before commit; "
+                "stage deterministic explicit paths first."
+            )
+        if arg in {"-N", "--intent-to-add", "--renormalize"}:
+            return set(), (
+                f"Cannot safely model mutating git add option {arg}; "
+                "stage deterministic explicit paths first."
+            )
+        if arg == "--chmod":
+            if i + 1 >= len(args):
+                return set(), f"Cannot safely model incomplete git add option {arg}."
             i += 2
             continue
-        if arg.startswith("--pathspec-from-file="):
-            pathspec_from_file = True
+        if arg.startswith("--chmod="):
             i += 1
             continue
+        if arg in {
+            "-f",
+            "--force",
+            "--ignore-errors",
+            "--no-warn-embedded-repo",
+            "--sparse",
+            "-v",
+            "--verbose",
+            "-q",
+            "--quiet",
+        }:
+            i += 1
+            continue
+        if arg in {"--ignore-removal", "--no-all"}:
+            return set(), (
+                f"Cannot safely model git add option {arg}; "
+                "stage removals explicitly first."
+            )
         if arg.startswith("-"):
-            i += 1
-            continue
+            return set(), (
+                f"Cannot safely model git add option {arg}; "
+                "stage deterministic explicit paths first."
+            )
         break
 
-    if include_all or pathspec_from_file:
-        return set(changed)
-    if include_tracked and i >= len(args):
-        return tracked_dirty_paths(repo_root)
+    raw_paths = args[i:]
+    if any(raw_path.startswith("-") for raw_path in raw_paths):
+        return set(), (
+            "Cannot safely model git add options placed after path arguments; "
+            "stage deterministic explicit paths first."
+        )
+    if any(
+        raw_path.startswith(":") or any(char in raw_path for char in "*?[")
+        for raw_path in raw_paths
+    ):
+        return set(), (
+            "Cannot safely model git add pathspec magic, exclusions, or globs; "
+            "stage deterministic explicit paths first."
+        )
 
-    for raw_path in args[i:]:
+    if not raw_paths:
+        if include_all:
+            return set(changed), None
+        if include_tracked:
+            return tracked_dirty_paths(repo_root), None
+        return set(), None
+
+    eligible_changes = tracked_dirty_paths(repo_root) if include_tracked else changed
+    for raw_path in raw_paths:
         rel = relative_to_repo(raw_path, git_cwd, repo_root)
-        if rel and not rel.startswith("/"):
-            paths.update(expand_pathspec(rel, changed))
-    if include_tracked:
-        paths.update(tracked_dirty_paths(repo_root))
-    return paths
+        if not rel or rel.startswith("/"):
+            return set(), (
+                f"Cannot safely resolve git add path {raw_path!r} inside the repository."
+            )
+        if path_has_change(rel, eligible_changes):
+            paths.update(expand_pathspec(rel, eligible_changes))
+    return paths, None
 
 
 def is_commit_all_arg(arg: str) -> bool:
-    if arg == "--all":
-        return True
-    return arg.startswith("-") and not arg.startswith("--") and "a" in arg[1:]
+    return arg in {"-a", "--all", "-am"} or arg.startswith("-am")
+
+
+def commit_content_problem(args: list[str]) -> str | None:
+    """Return why a commit's content cannot be represented by the candidate index."""
+    unsupported = {
+        "-p",
+        "--patch",
+        "--interactive",
+        "-i",
+        "--include",
+        "-o",
+        "--only",
+        "--pathspec-from-file",
+        "--pathspec-file-nul",
+    }
+    options_with_values = {
+        "-m",
+        "--message",
+        "-F",
+        "--file",
+        "-C",
+        "--reuse-message",
+        "-c",
+        "--reedit-message",
+        "--author",
+        "--date",
+        "--cleanup",
+        "--fixup",
+        "--squash",
+        "--trailer",
+        "--template",
+    }
+    neutral_options = {
+        "-a",
+        "--all",
+        "--amend",
+        "--allow-empty",
+        "--allow-empty-message",
+        "--dry-run",
+        "--no-edit",
+        "--no-gpg-sign",
+        "--no-post-rewrite",
+        "--no-status",
+        "--no-verify",
+        "--porcelain",
+        "--quiet",
+        "-q",
+        "--reset-author",
+        "--short",
+        "--signoff",
+        "-s",
+        "--status",
+        "--verbose",
+        "-v",
+    }
+    value_prefixes = tuple(f"{option}=" for option in options_with_values)
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--":
+            if i + 1 < len(args):
+                return "Cannot safely model git commit with positional pathspecs."
+            return None
+        if arg in unsupported or arg.startswith("--pathspec-from-file="):
+            return f"Cannot safely model git commit content option {arg}."
+        if arg in options_with_values:
+            if i + 1 >= len(args):
+                return f"Cannot safely model incomplete git commit option {arg}."
+            i += 2
+            continue
+        if arg.startswith(value_prefixes):
+            i += 1
+            continue
+        if arg == "-am":
+            if i + 1 >= len(args):
+                return "Cannot safely model incomplete git commit option -am."
+            i += 2
+            continue
+        if arg.startswith("-am") and len(arg) > 3:
+            i += 1
+            continue
+        if arg.startswith("-m") and arg != "-m":
+            i += 1
+            continue
+        if arg in neutral_options:
+            i += 1
+            continue
+        if arg.startswith("--gpg-sign=") or arg.startswith("-S"):
+            i += 1
+            continue
+        if arg.startswith("-"):
+            return f"Cannot safely model git commit option {arg}."
+        return "Cannot safely model git commit with positional pathspecs."
+    return None
 
 
 def command_paths_and_commit_repos(
     command: str,
     cwd: Path,
-) -> tuple[dict[Path, set[str]], set[Path]]:
+) -> tuple[dict[Path, set[str]], set[Path], dict[Path, list[str]]]:
     try:
         tokens = shell_tokens(command)
     except ValueError:
         repo = git_root_for_dir(nearest_existing_path(cwd))
         if repo is not None and "git commit" in command:
-            return {}, {repo}
-        return {}, set()
+            return {}, {repo}, {}
+        return {}, set(), {}
 
     current_dir = cwd
-    paths_by_repo: dict[Path, set[str]] = {}
+    pending_paths_by_repo: dict[Path, set[str]] = {}
+    pending_problems_by_repo: dict[Path, list[str]] = {}
+    commit_paths_by_repo: dict[Path, set[str]] = {}
+    commit_problems_by_repo: dict[Path, list[str]] = {}
     commit_repos: set[Path] = set()
     dirty_cache: dict[Path, set[str]] = {}
 
@@ -701,13 +1005,24 @@ def command_paths_and_commit_repos(
             dirty_cache[repo] = dirty_paths(repo)
         return dirty_cache[repo]
 
-    for segment in split_shell_segments(tokens):
+    planning_add_seen = False
+    planning_chain_safe = True
+    safe_prefix = True
+
+    for connector, segment in shell_segments_with_connectors(tokens):
         if segment and segment[0] == "cd" and len(segment) >= 2:
+            if planning_add_seen:
+                planning_chain_safe = False
             current_dir = path_from_token(segment[1], current_dir)
             continue
 
+        segment, wrapper_problem = unwrap_git_command(segment)
         invocation = git_invocation(segment, current_dir)
         if invocation is None:
+            if planning_add_seen:
+                planning_chain_safe = False
+            else:
+                safe_prefix = False
             continue
 
         command_name, args, git_cwd = invocation
@@ -715,15 +1030,52 @@ def command_paths_and_commit_repos(
         if repo is None:
             continue
         if command_name == "add":
-            paths_by_repo.setdefault(repo, set()).update(
-                paths_from_git_add(args, git_cwd, repo, repo_dirty(repo))
-            )
+            if planning_add_seen and connector != "&&":
+                planning_chain_safe = False
+            planning_add_seen = True
+            if wrapper_problem:
+                planned, problem = set(), wrapper_problem
+            else:
+                planned, problem = paths_from_git_add(
+                    args, git_cwd, repo, repo_dirty(repo)
+                )
+            pending_paths_by_repo.setdefault(repo, set()).update(planned)
+            if problem:
+                pending_problems_by_repo.setdefault(repo, []).append(problem)
+            if not safe_prefix:
+                planning_chain_safe = False
         elif command_name == "commit":
+            if repo in commit_repos:
+                commit_problems_by_repo.setdefault(repo, []).append(
+                    "Cannot safely model multiple git commits in one guarded command."
+                )
+                continue
             commit_repos.add(repo)
+            commit_paths = set(pending_paths_by_repo.get(repo, set()))
+            commit_problems_by_repo[repo] = list(
+                pending_problems_by_repo.get(repo, [])
+            )
+            if wrapper_problem:
+                commit_problems_by_repo[repo].append(wrapper_problem)
+            if commit_paths or commit_problems_by_repo[repo]:
+                if connector != "&&" or not planning_chain_safe:
+                    commit_problems_by_repo[repo].append(
+                        "Cannot safely model git add content unless deterministic "
+                        "adds lead directly to git commit through &&."
+                    )
+                    commit_paths.clear()
+            commit_problem = commit_content_problem(args)
+            if commit_problem:
+                commit_problems_by_repo[repo].append(commit_problem)
+            commit_paths_by_repo[repo] = commit_paths
             if any(is_commit_all_arg(arg) for arg in args):
-                paths_by_repo.setdefault(repo, set()).update(tracked_dirty_paths(repo))
+                commit_paths_by_repo[repo].update(tracked_dirty_paths(repo))
+        elif planning_add_seen:
+            planning_chain_safe = False
+        else:
+            safe_prefix = False
 
-    return paths_by_repo, commit_repos
+    return commit_paths_by_repo, commit_repos, commit_problems_by_repo
 
 
 def skip_runtime_path(path: str) -> bool:
@@ -846,18 +1198,57 @@ def has_changed_prefix(prefix: str, paths: set[str], changed: set[str]) -> bool:
 
 def parse_manifest_text(text: str, label: str, problems: list[str]) -> dict:
     try:
-        return json.loads(text)
+        manifest = json.loads(text)
     except json.JSONDecodeError as exc:
         problems.append(f"{label} is not valid JSON: {exc}")
         return {}
+    if not isinstance(manifest, dict):
+        problems.append(f"{label} must contain a top-level JSON object")
+        return {}
+
+    for section in (
+        "hooks",
+        "instructions",
+        "mcp_servers",
+        "private_skills",
+        "registrations",
+        "skills",
+    ):
+        items = manifest.get(section)
+        if items is None:
+            continue
+        if not isinstance(items, list):
+            problems.append(f"{label} section {section} must be a JSON array")
+            manifest[section] = []
+            continue
+        valid_items = []
+        for index, item in enumerate(items):
+            if not isinstance(item, dict):
+                problems.append(
+                    f"{label} section {section} entry {index} must be a JSON object"
+                )
+                continue
+            valid_items.append(item)
+        manifest[section] = valid_items
+    return manifest
 
 
-def manifest_text_from_head(manifest: str = MANIFEST, manifest_path: Path = MANIFEST_PATH) -> str:
-    text = git_text(["show", f"HEAD:{manifest}"])
-    if text is not None:
-        return text
+def manifest_text_from_head(
+    manifest: str = MANIFEST,
+    manifest_path: Path = MANIFEST_PATH,
+    problems: list[str] | None = None,
+) -> str:
+    data = git_bytes(["show", f"HEAD:{manifest}"])
+    if data is not None:
+        sink = problems if problems is not None else []
+        return decode_utf8(data, f"HEAD:{manifest}", sink) or "{}"
     if manifest_path.exists():
-        return manifest_path.read_text()
+        try:
+            data = manifest_path.read_bytes()
+        except OSError:
+            return "{}"
+        sink = problems if problems is not None else []
+        return decode_utf8(data, str(manifest_path), sink) or "{}"
     return "{}"
 
 
@@ -867,18 +1258,38 @@ def changed_manifest(
     command_paths: set[str],
     staged: set[str],
     problems: list[str],
+    candidate_tree: CommitCandidateTree | None = None,
 ) -> tuple[dict, dict]:
-    base_text = manifest_text_from_head(manifest, manifest_path)
+    base_text = manifest_text_from_head(manifest, manifest_path, problems)
     base = parse_manifest_text(base_text, f"HEAD:{manifest}", problems)
 
+    candidate_changed = path_has_change(manifest, command_paths) or path_has_change(
+        manifest, staged
+    )
+    if candidate_changed and candidate_tree is not None:
+        candidate = candidate_manifest_from_tree(
+            candidate_tree,
+            manifest,
+            f"candidate {manifest}",
+            problems,
+            allow_absent=False,
+        )
+        return base, candidate
+
     if path_has_change(manifest, command_paths):
-        candidate_text = manifest_path.read_text()
+        try:
+            data = manifest_path.read_bytes()
+        except OSError:
+            data = b""
+        candidate_text = decode_utf8(data, manifest, problems) or "{}"
         label = manifest
     elif path_has_change(manifest, staged):
-        candidate_text = git_text(["show", f":{manifest}"])
-        if candidate_text is None:
+        data = git_bytes(["show", f":{manifest}"])
+        if data is None:
             problems.append(f"Could not read staged {manifest}")
             candidate_text = base_text
+        else:
+            candidate_text = decode_utf8(data, f"staged {manifest}", problems) or "{}"
         label = f"staged {manifest}"
     else:
         candidate_text = base_text
@@ -892,9 +1303,15 @@ def guard_manifests(
     command_paths: set[str],
     staged: set[str],
     problems: list[str],
+    candidate_tree: CommitCandidateTree | None = None,
 ) -> tuple[dict, dict, dict, dict]:
     base, candidate = changed_manifest(
-        MANIFEST, MANIFEST_PATH, command_paths, staged, problems
+        MANIFEST,
+        MANIFEST_PATH,
+        command_paths,
+        staged,
+        problems,
+        candidate_tree,
     )
     if PRIVATE_MANIFEST_PATH.exists():
         private_candidate = parse_manifest_text(
@@ -905,15 +1322,24 @@ def guard_manifests(
     return base, candidate, {}, private_candidate
 
 
+def manifest_items(manifest: dict, section: str) -> list[dict]:
+    if not isinstance(manifest, dict):
+        return []
+    items = manifest.get(section)
+    if not isinstance(items, list):
+        return []
+    return [item for item in items if isinstance(item, dict)]
+
+
 def manifest_item_by_name(manifest: dict, section: str, name: str) -> dict | None:
-    for item in manifest.get(section) or []:
+    for item in manifest_items(manifest, section):
         if item.get("name") == name:
             return item
     return None
 
 
 def manifest_registration(manifest: dict, path: str) -> dict | None:
-    for item in manifest.get("registrations") or []:
+    for item in manifest_items(manifest, "registrations"):
         if item.get("path") == path:
             return item
     return None
@@ -1062,7 +1488,7 @@ def private_skill_pair_removed(dir_name: str, paths: set[str], changed: set[str]
 
 
 def private_skill_item_for_path(manifest: dict, path: str, side: str) -> dict | None:
-    for item in manifest.get("private_skills") or []:
+    for item in manifest_items(manifest, "private_skills"):
         rel = item.get(side)
         if not rel:
             continue
@@ -1108,15 +1534,284 @@ def local_skill_sync_problems(repo_root: Path, skill: str, skill_root: str = "sk
     return problems
 
 
+def contained_non_symlink_regular_file(repo_root: Path, relative: str) -> bool:
+    """Return whether `relative` is a regular file below `repo_root` without symlinks."""
+    try:
+        resolved_root = repo_root.resolve(strict=True)
+        candidate = repo_root
+        for part in relative.split("/"):
+            candidate = candidate / part
+            if candidate.is_symlink():
+                return False
+        if not candidate.is_file():
+            return False
+        candidate.resolve(strict=True).relative_to(resolved_root)
+    except (OSError, RuntimeError, ValueError):
+        return False
+    return True
+
+
+@dataclass(frozen=True)
+class CommitCandidateTree:
+    """The tree a guarded commit would create: index plus planned git-add paths."""
+
+    repo_root: Path
+    planned_paths: frozenset[str]
+
+    @cached_property
+    def index_entries(self) -> dict[str, tuple[str, str, str] | None]:
+        proc = run_git(["ls-files", "--stage", "-z"], self.repo_root)
+        if proc.returncode != 0:
+            return {}
+        entries: dict[str, tuple[str, str, str] | None] = {}
+        for record in (item for item in proc.stdout.split("\0") if item):
+            metadata, separator, path = record.partition("\t")
+            fields = metadata.split()
+            if not separator or len(fields) != 3:
+                continue
+            entry = (fields[0], fields[1], fields[2])
+            entries[path] = None if path in entries else entry
+        return entries
+
+    def path_exists(self, relative: str) -> bool:
+        if relative in self.planned_paths:
+            return os.path.lexists(self.repo_root / relative)
+        return relative in self.index_entries
+
+    def is_regular_file(self, relative: str) -> bool:
+        if relative in self.planned_paths:
+            return contained_non_symlink_regular_file(self.repo_root, relative)
+        entry = self.index_entries.get(relative)
+        if entry is None:
+            return False
+        mode, _object_id, stage = entry
+        return mode in {"100644", "100755"} and stage == "0"
+
+    def regular_files_under(self, relative_dir: str) -> set[str]:
+        prefix = relative_dir.rstrip("/") + "/"
+        paths = {
+            path
+            for path, entry in self.index_entries.items()
+            if path.startswith(prefix)
+            and entry is not None
+            and entry[0] in {"100644", "100755"}
+            and entry[2] == "0"
+        }
+        for path in self.planned_paths:
+            if not path.startswith(prefix):
+                continue
+            if contained_non_symlink_regular_file(self.repo_root, path):
+                paths.add(path)
+            else:
+                paths.discard(path)
+        return paths
+
+    def nonregular_files_under(self, relative_dir: str) -> set[str]:
+        prefix = relative_dir.rstrip("/") + "/"
+        paths = {
+            path
+            for path, entry in self.index_entries.items()
+            if path.startswith(prefix)
+            and (
+                entry is None
+                or entry[0] not in {"100644", "100755"}
+                or entry[2] != "0"
+            )
+        }
+        for path in self.planned_paths:
+            if not path.startswith(prefix):
+                continue
+            paths.discard(path)
+            if self.path_exists(path) and not contained_non_symlink_regular_file(
+                self.repo_root, path
+            ):
+                paths.add(path)
+        return paths
+
+    def read_regular_file_bytes(self, relative: str) -> bytes | None:
+        if not self.is_regular_file(relative):
+            return None
+        if relative in self.planned_paths:
+            try:
+                return (self.repo_root / relative).read_bytes()
+            except OSError:
+                return None
+        entry = self.index_entries.get(relative)
+        if entry is None:
+            return None
+        proc = subprocess.run(
+            ["git", "-C", str(self.repo_root), "cat-file", "blob", entry[1]],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        return proc.stdout if proc.returncode == 0 else None
+
+    def read_regular_file(self, relative: str) -> str | None:
+        data = self.read_regular_file_bytes(relative)
+        if data is None:
+            return None
+        try:
+            return data.decode()
+        except UnicodeDecodeError:
+            return None
+
+
+def is_skill_auxiliary_relative(rel: str) -> bool:
+    if rel == "SKILL.md" or Path(rel).name == ".DS_Store":
+        return False
+    if rel.startswith(("digests/", "last-run/", "vetted/")):
+        return False
+    return "node_modules/" not in rel
+
+
+def candidate_skill_aux_files(
+    candidate_tree: CommitCandidateTree,
+    skill_dir: str,
+) -> dict[str, bytes | None]:
+    files: dict[str, bytes | None] = {}
+    prefix = skill_dir.rstrip("/") + "/"
+    for path in candidate_tree.regular_files_under(skill_dir):
+        rel = path.removeprefix(prefix)
+        if not is_skill_auxiliary_relative(rel):
+            continue
+        files[rel] = candidate_tree.read_regular_file_bytes(path)
+    return files
+
+
+def candidate_nonregular_skill_aux_files(
+    candidate_tree: CommitCandidateTree,
+    skill_dir: str,
+) -> set[str]:
+    prefix = skill_dir.rstrip("/") + "/"
+    return {
+        path.removeprefix(prefix)
+        for path in candidate_tree.nonregular_files_under(skill_dir)
+        if is_skill_auxiliary_relative(path.removeprefix(prefix))
+    }
+
+
+def candidate_local_skill_sync_problems(
+    candidate_tree: CommitCandidateTree,
+    skill: str,
+    skill_root: str = "skills",
+) -> list[str]:
+    problems: list[str] = []
+    claude_dir = f".claude/{skill_root}/{skill}"
+    codex_dir = f".codex/{skill_root}/{skill}"
+    claude_path = f"{claude_dir}/SKILL.md"
+    codex_path = f"{codex_dir}/SKILL.md"
+    claude_text = candidate_tree.read_regular_file(claude_path)
+    codex_text = candidate_tree.read_regular_file(codex_path)
+
+    if claude_text is None:
+        problems.append(f"Missing Claude project-local skill file: {claude_path}")
+    if codex_text is None:
+        problems.append(f"Missing Codex project-local skill file: {codex_path}")
+    if problems:
+        return problems
+
+    if normalized_skill_content(claude_text) != normalized_skill_content(codex_text):
+        problems.append(
+            "Project-local skill content drift after tool-specific frontmatter "
+            f"normalization: {skill}"
+        )
+
+    for side, skill_dir in (("Claude", claude_dir), ("Codex", codex_dir)):
+        for rel in sorted(candidate_nonregular_skill_aux_files(candidate_tree, skill_dir)):
+            problems.append(
+                "Auxiliary project-local skill file is not regular on "
+                f"{side} side: {skill}/{rel}"
+            )
+
+    claude_aux = candidate_skill_aux_files(candidate_tree, claude_dir)
+    codex_aux = candidate_skill_aux_files(candidate_tree, codex_dir)
+    for rel in sorted(set(claude_aux) - set(codex_aux)):
+        problems.append(
+            f"Auxiliary project-local skill file only in Claude tree: {skill}/{rel}"
+        )
+    for rel in sorted(set(codex_aux) - set(claude_aux)):
+        problems.append(
+            f"Auxiliary project-local skill file only in Codex tree: {skill}/{rel}"
+        )
+    for rel in sorted(set(claude_aux) & set(codex_aux)):
+        if (
+            claude_aux[rel] is None
+            or codex_aux[rel] is None
+            or claude_aux[rel] != codex_aux[rel]
+        ):
+            problems.append(
+                f"Auxiliary project-local skill file drift: {skill}/{rel}"
+            )
+    return problems
+
+
+def candidate_manifest_from_tree(
+    candidate_tree: CommitCandidateTree,
+    relative: str,
+    label: str,
+    problems: list[str],
+    *,
+    allow_absent: bool,
+) -> dict:
+    if not candidate_tree.path_exists(relative):
+        if not allow_absent:
+            problems.append(f"{label} is missing from the candidate commit")
+        return {}
+    if not candidate_tree.is_regular_file(relative):
+        problems.append(f"{label} must be a regular file in the candidate commit")
+        return {}
+    data = candidate_tree.read_regular_file_bytes(relative)
+    if data is None:
+        problems.append(f"Could not read {label} from the candidate commit")
+        return {}
+    text = decode_utf8(data, label, problems)
+    if text is None:
+        return {}
+    return parse_manifest_text(text, label, problems)
+
+
+def candidate_local_manifest(
+    candidate_tree: CommitCandidateTree,
+    problems: list[str],
+) -> dict:
+    """Return the local manifest from the guarded commit's candidate tree."""
+    return candidate_manifest_from_tree(
+        candidate_tree,
+        MANIFEST,
+        f"candidate {MANIFEST}",
+        problems,
+        allow_absent=True,
+    )
+
+
 def local_skill_readme_problems(
     changed_paths: set[str],
     skill: str,
     skill_root: str,
+    repo_root: Path,
+    manifest: dict | None = None,
+    candidate_tree: CommitCandidateTree | None = None,
 ) -> list[str]:
-    if path_has_change("README.org", changed_paths):
+    owner, mode = local_skill_documentation_policy(repo_root, manifest)
+    generated_dotfiles_inventory = (
+        mode == "generated"
+        and owner == "agents/skill-inventory.org"
+        and same_git_repository(repo_root, ROOT)
+    )
+    owner_is_regular = (
+        candidate_tree.is_regular_file(owner)
+        if candidate_tree is not None
+        else contained_non_symlink_regular_file(repo_root, owner)
+    )
+    if generated_dotfiles_inventory or (
+        owner in changed_paths
+        and owner_is_regular
+    ):
         return []
     return [
-        f"Project-local {skill_root}/{skill} changed without README.org documentation in the same repo. Update the local README.org Skills section, and document only this repo's local skill behavior; do not describe the other agent's paths or behavior there."
+        f"Project-local {skill_root}/{skill} changed without documentation owner "
+        f"{owner} in the same repo. Update {owner} in the same commit."
     ]
 
 
@@ -1136,10 +1831,40 @@ def local_manifest(repo_root: Path) -> dict:
     return data if isinstance(data, dict) else {}
 
 
-def local_artifact_single_agent(repo_root: Path, artifact: str) -> bool:
+def local_skill_documentation_policy(
+    repo_root: Path,
+    manifest: dict | None = None,
+) -> tuple[str, str]:
+    """Return the validated project-local skill documentation owner and mode."""
+    default = ("README.org", "manual")
+    source = local_manifest(repo_root) if manifest is None else manifest
+    policy = source.get("policy")
+    if not isinstance(policy, dict):
+        return default
+
+    owner = policy.get("project_local_documentation_owner", default[0])
+    if not isinstance(owner, str) or not owner:
+        return default
+    if "\\" in owner or owner.startswith("/") or re.match(r"^[A-Za-z]:", owner):
+        return default
+    parts = owner.split("/")
+    if any(part in {"", ".", ".."} for part in parts):
+        return default
+
+    mode = policy.get("project_local_documentation_mode", default[1])
+    if not isinstance(mode, str) or mode not in {"manual", "generated"}:
+        mode = default[1]
+    return owner, mode
+
+
+def local_artifact_single_agent(
+    repo_root: Path,
+    artifact: str,
+    manifest: dict | None = None,
+) -> bool:
     """True when the repo's ai-config-sync.json marks `artifact` (e.g. "skills")
-    as deliberately single-agent, suppressing the counterpart + README guard for
-    that artifact type in THIS repo only.
+    as deliberately single-agent, suppressing the counterpart and documentation
+    guards for that artifact type in THIS repo only.
 
     Marker shape (repo root):
         { "local": { "skills": "claude-only" } }
@@ -1148,7 +1873,8 @@ def local_artifact_single_agent(repo_root: Path, artifact: str) -> bool:
     "claude-only" / "codex-only" both suppress. Default (no marker) = enforce, so
     a new skill is still forced to create its counterpart everywhere else.
     """
-    local = local_manifest(repo_root).get("local")
+    source = local_manifest(repo_root) if manifest is None else manifest
+    local = source.get("local")
     if not isinstance(local, dict):
         return False
     status = str(local.get(artifact) or "")
@@ -1161,10 +1887,19 @@ def local_skill_moved_between_roots(
     skill: str,
     source_root: str,
     target_root: str,
+    candidate_tree: CommitCandidateTree | None = None,
 ) -> bool:
-    source_claude = repo_root / ".claude" / source_root / skill / "SKILL.md"
-    source_codex = repo_root / ".codex" / source_root / skill / "SKILL.md"
-    if source_claude.exists() or source_codex.exists():
+    source_claude = f".claude/{source_root}/{skill}/SKILL.md"
+    source_codex = f".codex/{source_root}/{skill}/SKILL.md"
+    if candidate_tree is not None:
+        source_exists = candidate_tree.path_exists(
+            source_claude
+        ) or candidate_tree.path_exists(source_codex)
+    else:
+        source_exists = (repo_root / source_claude).exists() or (
+            repo_root / source_codex
+        ).exists()
+    if source_exists:
         return False
     target_claude = f".claude/{target_root}/{skill}"
     target_codex = f".codex/{target_root}/{skill}"
@@ -1173,13 +1908,28 @@ def local_skill_moved_between_roots(
         and has_changed_prefix(target_codex, changed_paths, changed_paths)
     ):
         return False
+    if candidate_tree is not None:
+        return not candidate_local_skill_sync_problems(
+            candidate_tree, skill, target_root
+        )
     return not local_skill_sync_problems(repo_root, skill, target_root)
 
 
-def local_skill_removed(repo_root: Path, skill: str, skill_root: str = "skills") -> bool:
-    claude_skill = repo_root / ".claude" / skill_root / skill / "SKILL.md"
-    codex_skill = repo_root / ".codex" / skill_root / skill / "SKILL.md"
-    return not claude_skill.exists() and not codex_skill.exists()
+def local_skill_removed(
+    repo_root: Path,
+    skill: str,
+    skill_root: str = "skills",
+    candidate_tree: CommitCandidateTree | None = None,
+) -> bool:
+    claude_skill = f".claude/{skill_root}/{skill}/SKILL.md"
+    codex_skill = f".codex/{skill_root}/{skill}/SKILL.md"
+    if candidate_tree is not None:
+        return not candidate_tree.path_exists(
+            claude_skill
+        ) and not candidate_tree.path_exists(codex_skill)
+    return not (repo_root / claude_skill).exists() and not (
+        repo_root / codex_skill
+    ).exists()
 
 
 def normalized_project_instruction_text(path: Path) -> str:
@@ -1281,6 +2031,8 @@ def guard_changed_paths(
     candidate_manifest: dict,
     base_private_manifest: dict,
     candidate_private_manifest: dict,
+    local_candidate_manifest: dict | None = None,
+    candidate_tree: CommitCandidateTree | None = None,
 ) -> None:
     processed_global_instructions = False
     processed_global_skills: set[str] = set()
@@ -1293,14 +2045,37 @@ def guard_changed_paths(
     # Project-local opt-out: a repo may declare its skills single-agent (no
     # Claude<->Codex mirror) via ai-config-sync.json. Default is enforce, so a
     # new skill is still forced to create its counterpart unless this is set.
-    local_skills_single_agent = local_artifact_single_agent(repo_root, "skills")
+    local_skills_single_agent = local_artifact_single_agent(
+        repo_root, "skills", local_candidate_manifest
+    )
     # Same opt-out for instruction files: an upstream repo that deliberately
     # keeps only AGENTS.md (or only CLAUDE.md) must not be forced to grow the
     # counterpart just because a local commit touches the file. Marker:
     #     { "local": { "instructions": "codex-only" } }
     local_instructions_single_agent = local_artifact_single_agent(
-        repo_root, "instructions"
+        repo_root, "instructions", local_candidate_manifest
     )
+
+    def documentation_problems(skill: str, skill_root: str) -> list[str]:
+        if local_candidate_manifest is None and candidate_tree is None:
+            return local_skill_readme_problems(
+                changed_paths, skill, skill_root, repo_root
+            )
+        return local_skill_readme_problems(
+            changed_paths,
+            skill,
+            skill_root,
+            repo_root,
+            manifest=local_candidate_manifest,
+            candidate_tree=candidate_tree,
+        )
+
+    def paired_skill_problems(skill: str, skill_root: str) -> list[str]:
+        if candidate_tree is not None:
+            return candidate_local_skill_sync_problems(
+                candidate_tree, skill, skill_root
+            )
+        return local_skill_sync_problems(repo_root, skill, skill_root)
 
     for path in sorted(changed_paths):
         if skip_runtime_path(path):
@@ -1516,17 +2291,24 @@ def guard_changed_paths(
             processed_local_skills.add(skill_key)
             if local_skills_single_agent:
                 continue
-            drift = local_skill_sync_problems(repo_root, skill)
-            doc_drift = local_skill_readme_problems(changed_paths, skill, "skills")
+            drift = paired_skill_problems(skill, "skills")
+            doc_drift = documentation_problems(skill, "skills")
             if drift and local_skill_moved_between_roots(
-                repo_root, changed_paths, skill, "skills", "programmatic-skills"
+                repo_root,
+                changed_paths,
+                skill,
+                "skills",
+                "programmatic-skills",
+                candidate_tree,
             ):
                 continue
-            if drift and local_skill_removed(repo_root, skill):
+            if drift and local_skill_removed(
+                repo_root, skill, candidate_tree=candidate_tree
+            ):
                 if doc_drift:
                     add_nested_problems(
                         problems,
-                        f"Project-local .claude/skills/{skill} removed without a local README.org update:",
+                        f"Project-local .claude/skills/{skill} removed without a documentation owner update:",
                         doc_drift,
                     )
                 continue
@@ -1534,7 +2316,7 @@ def guard_changed_paths(
                 if doc_drift:
                     add_nested_problems(
                         problems,
-                        f"Project-local .claude/skills/{skill} changed without a local README.org update:",
+                        f"Project-local .claude/skills/{skill} changed without a documentation owner update:",
                         doc_drift,
                     )
                 continue
@@ -1559,17 +2341,24 @@ def guard_changed_paths(
             processed_local_skills.add(skill_key)
             if local_skills_single_agent:
                 continue
-            drift = local_skill_sync_problems(repo_root, skill)
-            doc_drift = local_skill_readme_problems(changed_paths, skill, "skills")
+            drift = paired_skill_problems(skill, "skills")
+            doc_drift = documentation_problems(skill, "skills")
             if drift and local_skill_moved_between_roots(
-                repo_root, changed_paths, skill, "skills", "programmatic-skills"
+                repo_root,
+                changed_paths,
+                skill,
+                "skills",
+                "programmatic-skills",
+                candidate_tree,
             ):
                 continue
-            if drift and local_skill_removed(repo_root, skill):
+            if drift and local_skill_removed(
+                repo_root, skill, candidate_tree=candidate_tree
+            ):
                 if doc_drift:
                     add_nested_problems(
                         problems,
-                        f"Project-local .codex/skills/{skill} removed without a local README.org update:",
+                        f"Project-local .codex/skills/{skill} removed without a documentation owner update:",
                         doc_drift,
                     )
                 continue
@@ -1577,7 +2366,7 @@ def guard_changed_paths(
                 if doc_drift:
                     add_nested_problems(
                         problems,
-                        f"Project-local .codex/skills/{skill} changed without a local README.org update:",
+                        f"Project-local .codex/skills/{skill} changed without a documentation owner update:",
                         doc_drift,
                     )
                 continue
@@ -1600,13 +2389,15 @@ def guard_changed_paths(
             if skill_key in processed_local_skills:
                 continue
             processed_local_skills.add(skill_key)
-            drift = local_skill_sync_problems(repo_root, skill, "programmatic-skills")
-            doc_drift = local_skill_readme_problems(changed_paths, skill, "programmatic-skills")
-            if drift and local_skill_removed(repo_root, skill, "programmatic-skills"):
+            drift = paired_skill_problems(skill, "programmatic-skills")
+            doc_drift = documentation_problems(skill, "programmatic-skills")
+            if drift and local_skill_removed(
+                repo_root, skill, "programmatic-skills", candidate_tree
+            ):
                 if doc_drift:
                     add_nested_problems(
                         problems,
-                        f"Project-local .claude/programmatic-skills/{skill} removed without a local README.org update:",
+                        f"Project-local .claude/programmatic-skills/{skill} removed without a documentation owner update:",
                         doc_drift,
                     )
                 continue
@@ -1614,7 +2405,7 @@ def guard_changed_paths(
                 if doc_drift:
                     add_nested_problems(
                         problems,
-                        f"Project-local .claude/programmatic-skills/{skill} changed without a local README.org update:",
+                        f"Project-local .claude/programmatic-skills/{skill} changed without a documentation owner update:",
                         doc_drift,
                     )
                 continue
@@ -1637,13 +2428,15 @@ def guard_changed_paths(
             if skill_key in processed_local_skills:
                 continue
             processed_local_skills.add(skill_key)
-            drift = local_skill_sync_problems(repo_root, skill, "programmatic-skills")
-            doc_drift = local_skill_readme_problems(changed_paths, skill, "programmatic-skills")
-            if drift and local_skill_removed(repo_root, skill, "programmatic-skills"):
+            drift = paired_skill_problems(skill, "programmatic-skills")
+            doc_drift = documentation_problems(skill, "programmatic-skills")
+            if drift and local_skill_removed(
+                repo_root, skill, "programmatic-skills", candidate_tree
+            ):
                 if doc_drift:
                     add_nested_problems(
                         problems,
-                        f"Project-local .codex/programmatic-skills/{skill} removed without a local README.org update:",
+                        f"Project-local .codex/programmatic-skills/{skill} removed without a documentation owner update:",
                         doc_drift,
                     )
                 continue
@@ -1651,7 +2444,7 @@ def guard_changed_paths(
                 if doc_drift:
                     add_nested_problems(
                         problems,
-                        f"Project-local .codex/programmatic-skills/{skill} changed without a local README.org update:",
+                        f"Project-local .codex/programmatic-skills/{skill} changed without a documentation owner update:",
                         doc_drift,
                     )
                 continue
@@ -1695,16 +2488,22 @@ def guard_changed_paths(
 def guard_commit() -> None:
     data = read_input_json()
     command = str(tool_input_object(data).get("command") or "")
-    paths_by_repo, commit_repos = command_paths_and_commit_repos(command, hook_cwd(data))
+    (
+        paths_by_repo,
+        commit_repos,
+        command_problems_by_repo,
+    ) = command_paths_and_commit_repos(command, hook_cwd(data))
     if not commit_repos:
         return
 
     problems: list[str] = []
     full_audit_required = False
     for repo_root in sorted(commit_repos, key=str):
+        problems.extend(command_problems_by_repo.get(repo_root, []))
         changed = dirty_paths(repo_root)
         staged = staged_paths(repo_root)
         command_paths = paths_by_repo.get(repo_root, set())
+        candidate_tree = CommitCandidateTree(repo_root, frozenset(command_paths))
         paths = staged | command_paths
         changed_paths = {path for path in paths if path_has_change(path, changed)}
         if not changed_paths:
@@ -1719,10 +2518,14 @@ def guard_commit() -> None:
                 candidate_manifest,
                 base_private_manifest,
                 candidate_private_manifest,
-            ) = guard_manifests(command_paths, staged, problems)
+            ) = guard_manifests(command_paths, staged, problems, candidate_tree)
+            local_candidate_manifest = candidate_manifest
         else:
             base_manifest, candidate_manifest = {}, {}
             base_private_manifest, candidate_private_manifest = {}, {}
+            local_candidate_manifest = candidate_local_manifest(
+                candidate_tree, problems
+            )
 
         guard_changed_paths(
             repo_root,
@@ -1735,6 +2538,8 @@ def guard_commit() -> None:
             candidate_manifest,
             base_private_manifest,
             candidate_private_manifest,
+            local_candidate_manifest,
+            candidate_tree,
         )
 
     if full_audit_required:
@@ -2237,8 +3042,7 @@ def audit_known_project_instruction_pairs(problems: list[str]) -> None:
             )
 
 
-def normalized_skill_text(path: Path) -> str:
-    text = path.read_text()
+def normalized_skill_content(text: str) -> str:
     if not text.startswith("---\n"):
         return text
     end = text.find("\n---\n", 4)
@@ -2252,6 +3056,10 @@ def normalized_skill_text(path: Path) -> str:
         if key not in TOOL_SPECIFIC_SKILL_FRONTMATTER:
             kept.append(line)
     return "---\n" + "\n".join(kept) + "\n---\n" + body
+
+
+def normalized_skill_text(path: Path) -> str:
+    return normalized_skill_content(path.read_text())
 
 
 def skill_aux_files(skill_dir: Path) -> dict[str, Path]:

@@ -3,6 +3,8 @@
   "policy": {
     "relationship": "Claude and Codex artifacts are peer implementations of shared agent behavior. Neither side is the canonical source; each side may be edited first.",
     "maintenance": "When one side changes, the active agent must update the counterpart in the same session. Hooks remind immediately and block one-sided commits unless the changed artifact is synchronized or this manifest records an explicit artifact-specific status or exemption.",
+    "project_local_documentation_owner": "agents/skill-inventory.org",
+    "project_local_documentation_mode": "generated",
     "no_silent_sync": true
   },
   "instructions": [

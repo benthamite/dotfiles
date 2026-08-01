@@ -99,10 +99,10 @@ tool-specific frontmatter keys such as
 comparison. Tool-specific skills may
 intentionally diverge when agents store state differently; these cases are
 recorded in =ai-config-sync.json=.
-The cross-tool master inventory of global, programmatic, system, and
-project-local skills lives in =../agents/README.org=, so agents can discover
-skills even when they are local to another project. Reusable skills that
-graduate out of project-local roots should be added here, paired in
+The generated =../agents/skill-inventory.org= file is the cross-tool
+discoverability index for tracked public skills, including skills that are not
+active in the current project. Each =SKILL.md= owns behavior. Reusable skills
+that graduate out of project-local roots should be added here, paired in
 =claude/skills/= where possible, and recorded in =ai-config-sync.json=.
 
 For paired skills that keep small state files in their skill directories, update
@@ -195,9 +195,13 @@ tree:
 
 The sync reminder and commit guard apply to these project-local pairs too:
 changing one local skill reminds the agent to update the other, and committing
-one side without an equivalent counterpart is blocked. Each project-local skill
-root documents its skills in that project's =README.org= under a dedicated
-=Skills= section.
+one side without an equivalent counterpart is blocked. For this dotfiles
+repository, each local =SKILL.md= owns behavior and the generated
+=agents/skill-inventory.org= file owns discoverability. =bin/docs-audit audit=
+checks that the inventory is current, so a body-only skill edit does not require
+a no-op change to that generated file. Other repositories use a manual
+documentation owner, =README.org= by default or the repository-relative path
+configured in their local =ai-config-sync.json=.
 
 When switching Emacs/elpaca profiles, the emacs project-local
 =migrate-profile= skill migrates project-local agent roots that live inside

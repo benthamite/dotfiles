@@ -211,15 +211,31 @@ choice between a README and an explicit exemption.
 
 ### Integration with the agent sync guard
 
-`bin/ai-config-sync audit` calls `bin/docs-audit audit` for the dotfiles
-repository. A documentation failure therefore fails the existing configuration
-audit.
+Task 7 adds the `bin/docs-audit audit` delegation to `bin/ai-config-sync audit`
+for the dotfiles repository, after the repository documentation is green. Until
+then the commands remain separate so the intermediate documentation commits can
+land. After integration, a documentation failure also fails the existing
+configuration audit.
 
 The project-local skill commit check stops requiring an arbitrary root README
-edit. For the dotfiles repository it requires the generated inventory to be
-current and uses `agents/README.org` as the human documentation owner. Other
-repositories keep their existing root README default unless their local
-manifest names a different documentation owner.
+edit. For the dotfiles repository, `agents/skill-inventory.org` is the
+configured generated owner. Generated mode does not require that path to appear
+in every skill commit: a body-only `SKILL.md` edit correctly leaves the
+frontmatter-derived inventory byte-identical, so Git has no change to stage.
+The repository documentation audit enforces freshness at final integration.
+Repository identity comes from Git's resolved common directory, so the main
+checkout and its linked worktrees share this exception while an unrelated
+checkout with the same manifest does not. Other repositories retain a manual
+documentation owner, `README.org` by
+default or a repository-relative path named by their local manifest. The exact
+owner path must change, and the candidate commit must contain it as a contained,
+non-symlink regular blob. The guard reads local policy, paired skill bodies,
+auxiliary files, moves, and removals from that same candidate tree rather than
+unstaged working-tree state. Only a contiguous deterministic add chain joined
+to the commit by `&&` may contribute working-tree blobs; Boolean alternatives,
+unsafe wrappers, present-but-invalid manifests, and nonregular auxiliary
+entries block explicitly. Declaring generated mode outside the canonical
+dotfiles Git repository does not bypass that manual gate.
 
 The stale `move-session-log` entry is removed from
 `DOTFILES_PROJECT_LOCAL_SKILLS`. Tests cover the exact current local skill set
@@ -309,15 +325,18 @@ establish that a prose claim matches application behavior.
 
 The work is divided into four independently reviewable commits:
 
-1. Add the failing documentation-policy tests, implement `docs-audit`, and
-   integrate it with the sync checker.
+1. Add the failing documentation-policy tests and implement `docs-audit`
+   without integrating it with the sync checker yet.
 2. Rewrite the root and major subsystem documentation: Emacs, shell, commands,
    macOS, Karabiner, Moonlander, docs, archive, tests, and agent-learning state.
 3. Add concise READMEs to the remaining top-level configuration packages.
 4. Generate the skill inventory, reduce the agent overview documents and
-   manifest notes, then run the full documentation and configuration audits.
+   manifest notes, bring the documentation audit fully green, then integrate it
+   with `bin/ai-config-sync` in Task 7 and run both audits.
 
-Each commit updates only its declared documentation owners. The implementation
+Each commit updates its declared manual documentation owners. A generated owner
+changes only when its generated content changes; freshness is enforced by the
+documentation audit rather than a no-op same-commit touch. The implementation
 uses an isolated worktree because unrelated plans and tests are currently
 present in the main checkout.
 

@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "required_readmes": [
+    ".agent-learnings",
+    "agents",
+    "ai-marketplace-monitor",
+    "aider",
+    "archive",
+    "aspell",
+    "bin",
+    "claude",
+    "codex",
+    "colima",
+    "dark-reader",
+    "docs",
+    "emacs",
+    "enchant",
+    "enhancer-for-youtube",
+    "karabiner",
+    "ledger",
+    "letterboxd-extras",
+    "macos",
+    "mbsync",
+    "moon+reader",
+    "moonlander",
+    "mpv",
+    "pantalaimon",
+    "qBittorrent",
+    "rectangle",
+    "shell",
+    "tests",
+    "uBlacklist",
+    "uBlock",
+    "vimium"
+  ],
+  "exempt_readmes": {
+    ".claude": "Dotfiles-local agent behavior is owned by agents/README.org and the generated inventory.",
+    ".codex": "Dotfiles-local agent behavior is owned by agents/README.org and the generated inventory.",
+    ".github": "The single workflow is documented by the root testing section."
+  },
+  "source_generated": [
+    {
+      "source": "macos/defaults.org",
+      "generated": "macos/macos"
+    },
+    {
+      "source": "karabiner/modifications.org",
+      "generated": "karabiner/karabiner.edn"
+    }
+  ],
+  "skill_inventory": "agents/skill-inventory.org",
+  "project_local_skill_documentation_owner": "agents/skill-inventory.org"
+}

@@ -1,0 +1,499 @@
+#!/usr/bin/env python3
+"""Audit dotfiles documentation ownership, links, and generated outputs."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import posixpath
+import re
+import subprocess
+import sys
+from collections import Counter
+from pathlib import Path, PurePosixPath, PureWindowsPath
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+POLICY_PATH = PurePosixPath("docs/readme-policy.json")
+POLICY_KEYS = {
+    "version",
+    "required_readmes",
+    "exempt_readmes",
+    "source_generated",
+    "skill_inventory",
+    "project_local_skill_documentation_owner",
+}
+SOURCE_GENERATED_KEYS = {"source", "generated"}
+DIRECTORY_MAP_HEADING = "* Directory map"
+DIRECTORY_MAP_ROW = re.compile(r"^\s*\|\s*=([^=|\s]+)=\s*\|")
+ORG_BRACKET_LINK = re.compile(r"\[\[([^\]\n]+)\](?:\[[^\]\n]*\])?\]")
+ORG_ANGLE_LINK = re.compile(r"<([A-Za-z][A-Za-z0-9+.-]*):([^>\n]*)>")
+ORG_PLAIN_LINK = re.compile(
+    r"(?<!\w)([A-Za-z][A-Za-z0-9+.-]*):([^\[\]\s()<>]*[\w/])"
+)
+ORG_LITERAL_BLOCK = re.compile(
+    r"^[ \t]*#\+begin_(src|example|export|comment)\b[^\n]*\n"
+    r".*?^[ \t]*#\+end_\1\b[^\n]*(?:\n|$)",
+    re.IGNORECASE | re.MULTILINE | re.DOTALL,
+)
+ORG_INLINE_CODE = re.compile(r"(?<!\w)([=~])(?=\S)([^\n]*?\S)\1(?!\w)")
+ORG_FIXED_WIDTH_LINE = re.compile(r"^[ \t]*:[ \t].*(?:\n|$)", re.MULTILINE)
+ORG_INLINE_SOURCE = re.compile(
+    r"\bsrc_[A-Za-z0-9_+-]+(?:\[[^\]\n]*\])?\{[^}\n]*\}"
+)
+ORG_COMMENT_LINE = re.compile(r"^[ \t]*#[ \t].*(?:\n|$)", re.MULTILINE)
+
+
+def git_files(root: Path) -> list[str]:
+    """Return repository-relative POSIX paths tracked by Git."""
+    result = subprocess.run(
+        ["git", "ls-files", "-z"],
+        cwd=root,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        shell=False,
+    )
+    return sorted(path for path in result.stdout.split("\0") if path)
+
+
+def tracked_top_level_directories(root: Path) -> set[str]:
+    """Return top-level directories containing tracked files."""
+    return {
+        PurePosixPath(path).parts[0]
+        for path in git_files(root)
+        if len(PurePosixPath(path).parts) > 1
+    }
+
+
+def _path_is_contained(root: Path, path: Path) -> bool:
+    try:
+        path.resolve(strict=False).relative_to(root.resolve())
+    except (OSError, RuntimeError, ValueError):
+        return False
+    return True
+
+
+def safe_contained_file(root: Path, relative: str | PurePosixPath) -> Path | None:
+    """Return a regular file only when its resolved path stays within root."""
+    relative_path = PurePosixPath(relative)
+    path = root.joinpath(*relative_path.parts)
+    if not _path_is_contained(root, path):
+        return None
+    try:
+        return path if path.is_file() else None
+    except OSError:
+        return None
+
+
+def _valid_policy_path(root: Path, value: str) -> bool:
+    if not value or "\\" in value:
+        return False
+    windows_path = PureWindowsPath(value)
+    if windows_path.drive or windows_path.is_absolute():
+        return False
+    parts = value.split("/")
+    if any(part in {"", ".", ".."} for part in parts):
+        return False
+    path = PurePosixPath(value)
+    if path.is_absolute():
+        return False
+    return _path_is_contained(root, root.joinpath(*path.parts))
+
+
+def policy_validation_problems(root: Path, policy: object) -> list[str]:
+    """Report every Task-1 policy schema, type, and path problem."""
+    if not isinstance(policy, dict):
+        return ["README policy must be a JSON object"]
+
+    problems: list[str] = []
+    keys = set(policy)
+    for key in POLICY_KEYS - keys:
+        problems.append(f"README policy is missing required key: {key}")
+    for key in keys - POLICY_KEYS:
+        problems.append(f"README policy contains unexpected key: {key}")
+
+    if "version" in policy and (
+        type(policy["version"]) is not int or policy["version"] != 1
+    ):
+        problems.append("README policy version must be exactly 1")
+
+    required = policy.get("required_readmes")
+    if "required_readmes" in policy:
+        if not isinstance(required, list):
+            problems.append(
+                "README policy key has invalid type: required_readmes (expected array)"
+            )
+        else:
+            for index, directory in enumerate(required):
+                field = f"required_readmes[{index}]"
+                if not isinstance(directory, str):
+                    problems.append(
+                        f"README policy value has invalid type: {field} (expected string)"
+                    )
+                elif not _valid_policy_path(root, directory):
+                    problems.append(f"README policy path is invalid: {field}")
+
+    exempt = policy.get("exempt_readmes")
+    if "exempt_readmes" in policy:
+        if not isinstance(exempt, dict):
+            problems.append(
+                "README policy key has invalid type: exempt_readmes (expected object)"
+            )
+        else:
+            for index, (directory, reason) in enumerate(
+                sorted(exempt.items(), key=lambda item: str(item[0]))
+            ):
+                field = f"exempt_readmes[{index}]"
+                if not isinstance(directory, str):
+                    problems.append(
+                        f"README policy value has invalid type: {field} (expected string key)"
+                    )
+                elif not _valid_policy_path(root, directory):
+                    problems.append(f"README policy path is invalid: {field}")
+                if not isinstance(reason, str):
+                    problems.append(
+                        f"README policy value has invalid type: {field} (expected string reason)"
+                    )
+
+    pairs = policy.get("source_generated")
+    if "source_generated" in policy:
+        if not isinstance(pairs, list):
+            problems.append(
+                "README policy key has invalid type: source_generated (expected array)"
+            )
+        else:
+            for index, pair in enumerate(pairs):
+                prefix = f"source_generated[{index}]"
+                if not isinstance(pair, dict):
+                    problems.append(f"README policy {prefix} must be an object")
+                    continue
+                for key in SOURCE_GENERATED_KEYS - set(pair):
+                    problems.append(f"README policy {prefix} is missing required key: {key}")
+                for key in set(pair) - SOURCE_GENERATED_KEYS:
+                    problems.append(
+                        f"README policy {prefix} contains unexpected key: {key}"
+                    )
+                for key in SOURCE_GENERATED_KEYS & set(pair):
+                    field = f"{prefix}.{key}"
+                    value = pair[key]
+                    if not isinstance(value, str):
+                        problems.append(
+                            f"README policy value has invalid type: {field} (expected string)"
+                        )
+                    elif not _valid_policy_path(root, value):
+                        problems.append(f"README policy path is invalid: {field}")
+
+    for key in ("skill_inventory", "project_local_skill_documentation_owner"):
+        if key not in policy:
+            continue
+        value = policy[key]
+        if not isinstance(value, str):
+            problems.append(
+                f"README policy value has invalid type: {key} (expected string)"
+            )
+        elif not _valid_policy_path(root, value):
+            problems.append(f"README policy path is invalid: {key}")
+
+    return sorted(set(problems))
+
+
+def load_policy(root: Path) -> dict:
+    """Load the repository documentation policy."""
+    path = safe_contained_file(root, POLICY_PATH)
+    if path is None:
+        raise ValueError("README policy is not a safe contained file")
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def readme_coverage_problems(root: Path, policy: dict) -> list[str]:
+    """Report missing subsystem READMEs and incomplete policy coverage."""
+    tracked = set(git_files(root))
+    top_level = tracked_top_level_directories(root)
+    required = set(policy.get("required_readmes", []))
+    exempt = set(policy.get("exempt_readmes", {}))
+    decided = required | exempt
+    problems: list[str] = []
+
+    for directory in required & exempt:
+        problems.append(f"README policy directory is both required and exempt: {directory}")
+
+    for directory in decided - top_level:
+        problems.append(
+            "README policy decision references missing top-level directory: "
+            f"{directory}"
+        )
+
+    for directory in required & top_level:
+        readme = f"{directory}/README.org"
+        if readme not in tracked or safe_contained_file(root, readme) is None:
+            problems.append(f"Required subsystem README is missing: {readme}")
+
+    for directory in top_level - decided:
+        problems.append(
+            f"Top-level directory has no README policy decision: {directory}"
+        )
+
+    return sorted(problems)
+
+
+def root_map_directories(text: str) -> list[str]:
+    """Extract directory names from the root README's directory map."""
+    lines = text.splitlines()
+    try:
+        heading_index = lines.index(DIRECTORY_MAP_HEADING)
+    except ValueError:
+        return []
+
+    directories: list[str] = []
+    for line in lines[heading_index + 1 :]:
+        if line.startswith("* "):
+            break
+        match = DIRECTORY_MAP_ROW.match(line)
+        if match:
+            directories.append(match.group(1))
+    return directories
+
+
+def root_map_problems(text: str, expected: set[str]) -> list[str]:
+    """Report duplicate, missing, and unexpected root directory-map rows."""
+    directories = root_map_directories(text)
+    counts = Counter(directories)
+    present = set(directories)
+    problems: list[str] = []
+
+    for directory, count in counts.items():
+        if count > 1:
+            problems.append(f"Root directory map contains duplicate row: {directory}")
+    for directory in expected - present:
+        problems.append(f"Root directory map is missing: {directory}")
+    for directory in present - expected:
+        problems.append(f"Root directory map contains unexpected row: {directory}")
+
+    return sorted(problems)
+
+
+def _tracked_readme_paths(root: Path) -> list[tuple[str, Path]]:
+    readmes = []
+    for tracked in git_files(root):
+        if tracked == "README.org" or tracked.endswith("/README.org"):
+            readmes.append(
+                (tracked, root.joinpath(*PurePosixPath(tracked).parts))
+            )
+    return readmes
+
+
+def tracked_readme_problems(root: Path) -> list[str]:
+    """Report tracked README symlinks whose resolved targets escape root."""
+    return sorted(
+        f"Tracked README escapes repository: {relative}"
+        for relative, path in _tracked_readme_paths(root)
+        if not _path_is_contained(root, path)
+    )
+
+
+def tracked_readmes(root: Path) -> list[Path]:
+    """Return existing tracked README.org files, including the root README."""
+    readmes = []
+    for tracked, _ in _tracked_readme_paths(root):
+        path = safe_contained_file(root, tracked)
+        if path is not None:
+            readmes.append(path)
+    return sorted(readmes, key=lambda path: path.relative_to(root).as_posix())
+
+
+def org_file_links(text: str) -> list[str]:
+    """Extract unique bracket, angle, and plain Org file-link targets."""
+    literal_spans = [
+        match.span()
+        for pattern in (
+            ORG_LITERAL_BLOCK,
+            ORG_INLINE_CODE,
+            ORG_FIXED_WIDTH_LINE,
+            ORG_INLINE_SOURCE,
+            ORG_COMMENT_LINE,
+        )
+        for match in pattern.finditer(text)
+    ]
+
+    def is_in_spans(position: int, spans: list[tuple[int, int]]) -> bool:
+        return any(start <= position < end for start, end in spans)
+
+    candidates: list[tuple[int, str]] = []
+    enclosed_spans: list[tuple[int, int]] = []
+    for pattern in (ORG_BRACKET_LINK, ORG_ANGLE_LINK):
+        for match in pattern.finditer(text):
+            if is_in_spans(match.start(), literal_spans):
+                continue
+            enclosed_spans.append(match.span())
+            if pattern is ORG_BRACKET_LINK:
+                raw_link = match.group(1)
+                if raw_link.startswith("file:"):
+                    candidates.append((match.start(), raw_link.removeprefix("file:")))
+            elif match.group(1) == "file":
+                candidates.append((match.start(), match.group(2)))
+
+    for match in ORG_PLAIN_LINK.finditer(text):
+        if is_in_spans(match.start(), literal_spans + enclosed_spans):
+            continue
+        if match.group(1) == "file":
+            candidates.append((match.start(), match.group(2)))
+
+    links: list[str] = []
+    seen: set[str] = set()
+    for _, target in sorted(candidates):
+        if target not in seen:
+            links.append(target)
+            seen.add(target)
+    return links
+
+
+def _display_link_target(readme_relative: PurePosixPath, target: str) -> str:
+    parent = readme_relative.parent.as_posix()
+    if parent == ".":
+        parent = ""
+    return posixpath.normpath(posixpath.join(parent, target))
+
+
+def readme_link_problems(root: Path) -> list[str]:
+    """Report broken relative file links in tracked README.org files."""
+    root_resolved = root.resolve()
+    problems = tracked_readme_problems(root)
+
+    for readme in tracked_readmes(root):
+        readme_relative = PurePosixPath(readme.relative_to(root).as_posix())
+        try:
+            text = readme.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            problems.append(
+                "Tracked README could not be read: "
+                f"{readme_relative.as_posix()}"
+            )
+            continue
+        for link in org_file_links(text):
+            target = link.partition("::")[0]
+            if (
+                not target
+                or target.startswith(("/", "~"))
+                or PureWindowsPath(target).is_absolute()
+            ):
+                continue
+
+            display_target = _display_link_target(readme_relative, target)
+            resolved_target = (readme.parent / target).resolve()
+            try:
+                resolved_target.relative_to(root_resolved)
+            except ValueError:
+                problems.append(
+                    "README file link escapes repository: "
+                    f"{readme_relative.as_posix()} -> {display_target}"
+                )
+                continue
+
+            if not resolved_target.exists():
+                problems.append(
+                    "Broken README file link: "
+                    f"{readme_relative.as_posix()} -> {display_target}"
+                )
+
+    return sorted(set(problems))
+
+
+def source_generated_problems(root: Path, policy: dict) -> list[str]:
+    """Report missing paths declared as source/generated pairs."""
+    problems: list[str] = []
+    for pair in policy.get("source_generated", []):
+        source = pair["source"]
+        generated = pair["generated"]
+        if safe_contained_file(root, source) is None:
+            problems.append(
+                f"Declared source file is missing: {source} (generated: {generated})"
+            )
+        if safe_contained_file(root, generated) is None:
+            problems.append(
+                f"Declared generated file is missing: {generated} (source: {source})"
+            )
+    return sorted(problems)
+
+
+def _root_readme_text(root: Path, tracked: set[str]) -> tuple[str, list[str]]:
+    relative = "README.org"
+    if relative not in tracked:
+        return "", ["Root README is missing or untracked: README.org"]
+
+    candidate = root / relative
+    if not _path_is_contained(root, candidate):
+        return "", []
+    path = safe_contained_file(root, relative)
+    if path is None:
+        return "", ["Root README is missing or untracked: README.org"]
+    try:
+        return path.read_text(encoding="utf-8"), []
+    except (OSError, UnicodeError):
+        return "", ["Root README could not be read: README.org"]
+
+
+def audit_problems(root: Path) -> list[str]:
+    """Return every documentation audit problem for root."""
+    tracked = set(git_files(root))
+    expected = tracked_top_level_directories(root)
+    root_text, root_problems = _root_readme_text(root, tracked)
+    problems = [
+        *root_problems,
+        *root_map_problems(root_text, expected),
+        *readme_link_problems(root),
+    ]
+
+    policy_relative = POLICY_PATH.as_posix()
+    if policy_relative not in tracked:
+        problems.append(
+            "README policy is missing or untracked: docs/readme-policy.json"
+        )
+        return sorted(problems)
+    policy_candidate = root.joinpath(*POLICY_PATH.parts)
+    if not _path_is_contained(root, policy_candidate):
+        problems.append("README policy escapes repository: docs/readme-policy.json")
+        return sorted(problems)
+    try:
+        policy = load_policy(root)
+    except (OSError, UnicodeError, ValueError):
+        problems.append("README policy could not be loaded: docs/readme-policy.json")
+        return sorted(problems)
+
+    validation_problems = policy_validation_problems(root, policy)
+    problems.extend(validation_problems)
+    if not validation_problems:
+        problems.extend(readme_coverage_problems(root, policy))
+        problems.extend(source_generated_problems(root, policy))
+    return sorted(problems)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    subparsers.add_parser("generate", help="generate the tracked skill inventory")
+    audit_parser = subparsers.add_parser("audit", help="audit documentation")
+    audit_parser.add_argument(
+        "--root",
+        type=Path,
+        default=REPO_ROOT,
+        help="repository root (default: command repository)",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    if args.command == "generate":
+        print("Skill inventory generation is not implemented")
+        return 2
+
+    problems = audit_problems(args.root.resolve())
+    for problem in problems:
+        print(problem)
+    return 1 if problems else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

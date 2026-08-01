@@ -36,7 +36,7 @@ def elisp_string(value: str) -> str:
     return json.dumps(value)
 
 
-def buffers(_: argparse.Namespace) -> None:
+def buffers(args: argparse.Namespace) -> None:
     expr = r'''
 (progn
   (require 'json)
@@ -60,7 +60,12 @@ def buffers(_: argparse.Namespace) -> None:
                   items)))))
     (princ (json-encode (nreverse items)))))
 '''
-    print(run_emacs_eval(expr))
+    items = json.loads(run_emacs_eval(expr))
+    if args.json:
+        print(json.dumps(items, ensure_ascii=False, indent=2))
+        return
+    for item in items:
+        print(f"{item['state']:15} {item['buffer']} [{item['directory']}]")
 
 
 def buffer_state(buffer: str) -> dict[str, Any]:
@@ -87,7 +92,11 @@ def buffer_state(buffer: str) -> dict[str, Any]:
 
 
 def state_cmd(args: argparse.Namespace) -> None:
-    print(json.dumps(buffer_state(args.buffer), ensure_ascii=False, indent=2))
+    state = buffer_state(args.buffer)
+    if args.json:
+        print(json.dumps(state, ensure_ascii=False, indent=2))
+    else:
+        print(f"{state['state']:15} {state['buffer']} [{state['directory']}]")
 
 
 def submit(args: argparse.Namespace) -> None:
@@ -210,14 +219,53 @@ def status(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def status_cmd(args: argparse.Namespace) -> None:
-    print(json.dumps(status(args), ensure_ascii=False, indent=2))
+    current = status(args)
+    if args.json:
+        print(json.dumps(current, ensure_ascii=False, indent=2))
+        return
+    print("Repo:")
+    print(current["repo"]["status"])
+    print(f"HEAD {current['repo']['head']}")
+    for role in ("planner", "reviewer"):
+        if role in current:
+            item = current[role]
+            print(f"{role.title()}: {item['state']} — {item['buffer']}")
+    for key in ("planner_transcript", "reviewer_transcript"):
+        if key in current:
+            item = current[key]
+            latest = item["latest"][0] if item["latest"] else None
+            if latest:
+                text = latest["text"].replace("\n", " ")
+                if len(text) > 180:
+                    text = text[:177] + "..."
+                print(f"{key}: mtime={item['mtime']} latest={latest['kind']} {text}")
+            else:
+                print(f"{key}: mtime={item['mtime']} latest=<none>")
 
 
 def watch(args: argparse.Namespace) -> None:
     last_rendered = ""
     while True:
         current = status(args)
-        rendered = json.dumps(current, ensure_ascii=False, indent=2)
+        if args.json:
+            rendered = json.dumps(current, ensure_ascii=False, indent=2)
+        else:
+            parts = [current["repo"]["head"]]
+            for role in ("planner", "reviewer"):
+                if role in current:
+                    parts.append(f"{role}={current[role]['state']}")
+            for key in ("planner_transcript", "reviewer_transcript"):
+                if key in current:
+                    latest = current[key]["latest"][0] if current[key]["latest"] else None
+                    if latest:
+                        verdict = ""
+                        text = latest["text"]
+                        if "IMPLEMENTATION-READY" in text:
+                            verdict = " IMPLEMENTATION-READY"
+                        elif "NOT READY" in text:
+                            verdict = " NOT READY"
+                        parts.append(f"{key}_mtime={current[key]['mtime']}{verdict}")
+            rendered = " | ".join(parts)
         if rendered != last_rendered:
             print(rendered, flush=True)
             last_rendered = rendered
@@ -237,11 +285,13 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p = sub.add_parser("buffers", help="List live Emacs agent buffers as JSON")
+    p = sub.add_parser("buffers", help="List live Emacs agent buffers")
+    p.add_argument("--json", action="store_true", help="Emit raw JSON, including base64 buffer tails")
     p.set_defaults(func=buffers)
 
     p = sub.add_parser("state", help="Inspect one live Emacs agent buffer")
     p.add_argument("--buffer", required=True)
+    p.add_argument("--json", action="store_true", help="Emit raw JSON, including base64 buffer tail")
     p.set_defaults(func=state_cmd)
 
     p = sub.add_parser("submit", help="Submit a prompt file to a live agent buffer")
@@ -258,11 +308,13 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("status", help="Collect repo, buffer, and transcript status once")
     add_status_args(p)
+    p.add_argument("--json", action="store_true", help="Emit raw JSON, including base64 buffer tails")
     p.set_defaults(func=status_cmd)
 
     p = sub.add_parser("watch", help="Poll repo, buffer, and transcript status")
     add_status_args(p)
     p.add_argument("--interval", type=float, default=20.0)
+    p.add_argument("--json", action="store_true", help="Emit raw JSON on each changed poll")
     p.set_defaults(func=watch)
 
     args = parser.parse_args(argv)

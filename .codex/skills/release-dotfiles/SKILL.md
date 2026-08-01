@@ -24,7 +24,7 @@ Parse `$ARGUMENTS`:
 
 - `--accept` → skip the pre-release confirmation gate (step 7), and treat clean unpushed package-repo commits in step 1 as approved to push. All other gates still run normally.
 
-`--accept` never skips the post-lockfile profile-test gate in step 9 or the final tag/push/release gate in step 10.
+`--accept` never skips the post-lockfile profile-test gate in step 9, the release gate in step 10, or either security review in step 11. No `--accept` behaviour may skip the deterministic scan or the exhaustive publication review.
 
 ---
 
@@ -323,23 +323,70 @@ If the user made additional dotfiles changes after step 8 (e.g., fixing issues f
 
 ---
 
-## Step 11: Tag, push, and create release
+## Step 11: Guarded publication review
 
-Only after the user confirms:
+A release publishes a branch and a tag to a public repository, so it goes
+through the same two-layer review as any other publication. Use the
+`publish-dotfiles` skill for the details; the executable it drives is
+`bin/dotfiles-publish`.
 
-1. **Tag**:
+Run this **after** the user confirms the profile tested successfully and
+**before** any tag exists. Write the approved notes to a file first:
+
+```bash
+bin/dotfiles-publish scan --mode release \
+  --release-notes /tmp/release-notes.md \
+  --tag NEW_VERSION
+```
+
+Exit 2 means findings, not failure: continue into the review. Then review every
+manifest unit, exactly as `publish-dotfiles` describes:
+
+```bash
+bin/dotfiles-publish review-list --run "$RUN_ID"
+bin/dotfiles-publish review-show --run "$RUN_ID" --unit "$UNIT"
+bin/dotfiles-publish review-record --run "$RUN_ID" --unit "$UNIT" --verdict clean
+bin/dotfiles-publish review-status --run "$RUN_ID"
+```
+
+Release mode adds `public-text` units holding the release notes and the tag
+name. Review the release notes for meaning, not just for secrets: they are
+written for the public, so check that they name no private path, no internal
+host, and no unreleased plan.
+
+**If the review repairs history**, the release you tested no longer exists:
+
+1. the earlier profile confirmation is void — say so plainly;
+2. delete any release tag you already created locally, and never push one;
+3. rerun step 9's lockfile write and the profile test on the repaired commit;
+4. create a fresh scan for the new candidate and review every unit again.
+
+Nothing carries over from the previous run.
+
+---
+
+## Step 12: Tag, push, and create release
+
+Only after the user confirms and `review-status` prints `clean: yes`:
+
+1. **Tag** the reviewed candidate with a lightweight tag:
 
    ```bash
    git tag NEW_VERSION
    ```
 
-2. **Push tag**:
+2. **Publish the branch and the tag in one authorized push**:
 
    ```bash
-   git push origin HEAD --follow-tags
+   bin/dotfiles-publish push --run "$RUN_ID" --tag "$NEW_VERSION"
    ```
 
-3. **Create GitHub release**:
+   This authorizes exactly two ref updates, pushes them, and verifies both on
+   the remote before returning. There is no other way to push from this
+   repository: the `origin` push URL is a refusing transport, and the pre-push
+   hook demands a fresh single-use authorization.
+
+3. **Create GitHub release**, only after that verification succeeded:
 
    ```bash
    gh release create NEW_VERSION \
@@ -355,7 +402,7 @@ Only after the user confirms:
 
 ---
 
-## Step 12: Post-release verification
+## Step 13: Post-release verification
 
 After the release is created:
 

@@ -6,7 +6,9 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import os
 import subprocess
+import tempfile
 import time
 from pathlib import Path
 from typing import Any
@@ -36,28 +38,53 @@ def elisp_string(value: str) -> str:
     return json.dumps(value)
 
 
+def run_emacs_json(value_expr: str) -> Any:
+    """Evaluate VALUE_EXPR in Emacs and transfer JSON through a temp file.
+
+    `emacsclient --eval' always prints the evaluated form's return value.  To
+    keep structured status out of user-visible command output, Emacs writes the
+    JSON payload to a one-shot temp file and returns nil.
+    """
+    fd, path = tempfile.mkstemp(prefix="agent-orch-", suffix=".json")
+    os.close(fd)
+    output_path = Path(path)
+    output_path.unlink(missing_ok=True)
+    expr = f'''
+(let ((out {elisp_string(path)}))
+  (require 'json)
+  (with-temp-file out
+    (insert (json-encode {value_expr})))
+  nil)
+'''
+    try:
+        returned = run_emacs_eval(expr)
+        if returned != "nil":
+            raise SystemExit(f"unexpected emacsclient return value: {returned!r}")
+        return json.loads(output_path.read_text(encoding="utf-8"))
+    finally:
+        output_path.unlink(missing_ok=True)
+
+
 def json_for_display(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, indent=2)
 
 
 def buffers(args: argparse.Namespace) -> None:
-    expr = r'''
-(progn
-  (require 'json)
-  (let (items)
-    (dolist (b (buffer-list))
-      (with-current-buffer b
-        (let ((name (buffer-name b)))
-          (when (string-match-p "^\\*\\(claude\\|codex\\):" name)
-                    (push `((buffer . ,name)
-                            (state . ,(if (boundp 'agent--session-state)
-                                          (format "%s" agent--session-state)
-                                        "unknown"))
-                            (directory . ,(or default-directory "")))
-                          items)))))
-            (princ (json-encode (nreverse items)))))
+    value_expr = r'''
+(let (items)
+  (dolist (b (buffer-list))
+    (with-current-buffer b
+      (let ((name (buffer-name b)))
+        (when (string-match-p "^\\*\\(claude\\|codex\\):" name)
+          (push `((buffer . ,name)
+                  (state . ,(if (boundp 'agent--session-state)
+                                (format "%s" agent--session-state)
+                              "unknown"))
+                  (directory . ,(or default-directory "")))
+                items)))))
+  (nreverse items))
 '''
-    items = json.loads(run_emacs_eval(expr))
+    items = run_emacs_json(value_expr)
     if args.json:
         print(json_for_display(items))
         return
@@ -66,19 +93,15 @@ def buffers(args: argparse.Namespace) -> None:
 
 
 def buffer_state(buffer: str) -> dict[str, Any]:
-    expr = f'''
-(progn
-  (require 'json)
-  (with-current-buffer {elisp_string(buffer)}
-    (princ
-     (json-encode
-      `((buffer . ,(buffer-name))
-        (state . ,(if (boundp 'agent--session-state)
-                      (format "%s" agent--session-state)
-                    "unknown"))
-        (directory . ,(or default-directory ""))))))
+    value_expr = f'''
+(with-current-buffer {elisp_string(buffer)}
+  `((buffer . ,(buffer-name))
+    (state . ,(if (boundp 'agent--session-state)
+                  (format "%s" agent--session-state)
+                "unknown"))
+    (directory . ,(or default-directory ""))))
 '''
-    return json.loads(run_emacs_eval(expr))
+    return run_emacs_json(value_expr)
 
 
 def state_cmd(args: argparse.Namespace) -> None:

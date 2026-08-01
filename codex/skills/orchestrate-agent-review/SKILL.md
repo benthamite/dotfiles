@@ -42,9 +42,11 @@ Inspect live sessions:
 python "$SKILL_DIR/scripts/orchestrate_agent_review.py" buffers
 ```
 
-Default helper output is concise text with bounded fields. JSON output is for
-machine consumers and carries the same bounded fields. Buffer tails are not part
-of the helper status contract.
+Default helper output is concise and bounded. Live Emacs status is transferred
+through one-shot temp files while the evaluated Emacs form returns `nil`, so
+structured status data does not travel through the `emacsclient --eval` return
+channel. The status contract contains buffer name, state, and directory; it
+does not include buffer text.
 
 Create a durable run file outside the repo or under an ignored state directory. The helper can create or update a JSON state file, but the supervising agent remains responsible for interpreting it:
 
@@ -106,8 +108,9 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" status \
   --reviewer-transcript /path/to/codex.jsonl
 ```
 
-This prints a short human-readable status. Add `--json` only when another
-program will consume the output.
+This prints a short human-readable status from repo, live buffer state, and
+transcript evidence. Add `--json` only when another program will consume the
+output.
 
 For a polling loop:
 

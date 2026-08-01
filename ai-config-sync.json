@@ -163,6 +163,13 @@
       "note": "Claude and Codex move-session-log skills intentionally differ because each tool stores sessions in its own layout. The Claude version operates on ~/.claude/projects, ~/.claude/history.jsonl, and ~/.claude.json (a script-free Bash/Glob skill); the Codex version operates on ~/.codex/sessions, history.jsonl, session_index.jsonl, and state_5.sqlite via a bundled Python script. They must not be forced to byte-parity."
     },
     {
+      "name": "orchestrate-agent-review",
+      "claude": "claude/skills/orchestrate-agent-review/SKILL.md",
+      "codex": "codex/skills/orchestrate-agent-review/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
       "name": "overnight-todos",
       "claude": "claude/skills/overnight-todos/SKILL.md",
       "codex": "codex/skills/overnight-todos/SKILL.md",

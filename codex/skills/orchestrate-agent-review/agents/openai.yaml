@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Review Orchestrator"
+  short_description: "Coordinate planner/reviewer agent loops"
+  default_prompt: "Use $orchestrate-agent-review to coordinate a planner/reviewer loop over the current implementation area."

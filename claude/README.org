@@ -852,6 +852,21 @@ before moving on.
 
 Meta-skill for reusable AI workflow design. Given a description of something to automate, analyzes the requirements along dimensions like context source, tool access, multi-step reasoning, and Emacs integration, then recommends the right approach: a Claude Code skill, a Codex skill, paired project-local skills, a gptel directive or preset, a gptel tool, or a gptel command. Creative or underspecified automation requests first use Superpowers brainstorming when available; this skill owns the automation-type decision and implementation path after the workflow shape is clear. After confirmation, builds it in the canonical paths, checks local skill-root conventions before choosing a single target, keeps paired skill copies equivalent when the repo uses paired roots, verifies the result, and commits the logical change unless explicitly told not to.
 
+**** orchestrate-agent-review
+:PROPERTIES:
+:ID:       8B807530-4E37-4200-96AB-69C179E17E04
+:END:
+
+Coordinates a two-agent planner/reviewer loop across live Emacs =agent.el=
+sessions. It is for workflows where one session creates or revises a plan and
+another reviews it until convergence. The skill records the operating rules
+that prevent unattended review from stalling, including explicit agent instance
+names, temp-file prompt submission, Python-based monitoring instead of shell
+=sleep=, narrow revision prompts, and concrete stop conditions. Its bundled
+=orchestrate_agent_review.py= helper lists live agent buffers, submits prompt
+files, parses transcripts, reports repo/session status, and watches sessions
+without relying on brittle ad hoc Emacs Lisp snippets.
+
 **** diagnose
 :PROPERTIES:
 :CUSTOM_ID: h:diagnose

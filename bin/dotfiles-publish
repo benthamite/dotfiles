@@ -30,7 +30,6 @@ import shutil
 import stat
 import subprocess
 import sys
-import tarfile
 import tempfile
 import time
 from dataclasses import dataclass, field
@@ -626,11 +625,28 @@ def run_gitleaks(repo, work, *, git_range=None, directory=None):
             report.unlink()
 
 
-def convert_gitleaks_results(results, key, redactor, source, default_commit=""):
+def repository_relative(path, strip_prefix):
+    """Report a tree-scan hit at its repository path, not its extraction path.
+
+    The fingerprint is keyed on the location, so a temporary directory name in
+    it would change every run and no incident receipt could ever match.
+    """
+    if not strip_prefix:
+        return path
+    prefix = str(strip_prefix).rstrip(os.sep) + os.sep
+    resolved = os.path.realpath(path) if os.path.isabs(path) else path
+    for candidate in (path, resolved):
+        if candidate.startswith(prefix):
+            return candidate[len(prefix) :]
+    return path
+
+
+def convert_gitleaks_results(results, key, redactor, source, default_commit="", strip_prefix=None):
     """Learn the raw values in memory, then persist only redacted records."""
     for result in results:
         commit = result.get("Commit") or default_commit
-        path = result.get("File") or ""
+        path = repository_relative(result.get("File") or "", strip_prefix)
+        result["File"] = path
         rule = result.get("RuleID") or "unknown"
         line = result.get("StartLine") or None
         token = fingerprint(
@@ -847,30 +863,43 @@ def tree_paths(repo, commit):
 
 
 def export_tree(repo, commit, destination):
-    """Extract the exact committed tree without touching the working tree."""
+    """Write the exact committed bytes of every blob in one tree.
+
+    ``git archive`` is not usable here: it runs blobs through the smudge
+    filter, so a git-crypt path would be exported as plaintext and the scan
+    would read something the public never sees. Raw blobs are what get
+    published, so raw blobs are what get scanned. Symlinks and gitlinks are
+    skipped; the object detectors report those separately.
+    """
     destination = Path(destination).resolve()
-    archive_path = destination.parent / "candidate.tar"
-    archive_bytes = run_git(repo.root, "archive", "--format=tar", commit).out
-    archive_path.write_bytes(archive_bytes)
-    try:
-        with tarfile.open(str(archive_path)) as archive:
-            for member in archive:
-                if not member.isfile():
-                    continue
-                target = (destination / member.name).resolve()
-                if target != destination and destination not in target.parents:
-                    raise PublishError(
-                        "archive entry escapes the extraction directory: %s" % member.name
-                    )
-                target.parent.mkdir(parents=True, exist_ok=True)
-                source = archive.extractfile(member)
-                if source is None:
-                    continue
-                with source, open(str(target), "wb") as handle:
-                    shutil.copyfileobj(source, handle)
-                os.chmod(str(target), 0o600)
-    finally:
-        archive_path.unlink(missing_ok=True)
+    listing = run_git(repo.root, "ls-tree", "-r", "-z", commit)
+    wanted = {}
+    for record in listing.out.split(b"\x00"):
+        if not record.strip():
+            continue
+        metadata, _, name = record.partition(b"\t")
+        parts = metadata.split()
+        if len(parts) < 3:
+            continue
+        mode, kind, oid = parts[0].decode(), parts[1].decode(), parts[2].decode()
+        if kind != "blob" or mode == "120000":
+            continue
+        wanted.setdefault(oid, []).append(name.decode("utf-8", "replace"))
+
+    resolved = cat_file_batch(repo, sorted(wanted), head_bytes=None)
+    for oid, paths in wanted.items():
+        entry = resolved.get(oid)
+        if entry is None:
+            continue
+        data = entry[3]
+        for path in paths:
+            target = (destination / path).resolve()
+            if destination not in target.parents:
+                raise PublishError("tree entry escapes the extraction directory: %s" % path)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            descriptor = os.open(str(target), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, FILE_MODE)
+            with os.fdopen(descriptor, "wb") as handle:
+                handle.write(data)
     return destination
 
 
@@ -904,7 +933,12 @@ def scan_outgoing(repo, boundary, key):
         export_tree(repo, boundary.candidate_oid, extracted)
         tree_results = run_gitleaks(repo, work, directory=extracted)
         findings += convert_gitleaks_results(
-            tree_results, key, redactor, "gitleaks-tree", boundary.candidate_oid
+            tree_results,
+            key,
+            redactor,
+            "gitleaks-tree",
+            boundary.candidate_oid,
+            strip_prefix=extracted,
         )
 
     for commit in commits:
@@ -984,7 +1018,12 @@ def cat_file_batch(repo, requests, head_bytes=8192):
             size = int(parts[2])
             data = process.stdout.read(size)
             process.stdout.read(1)
-            results[request] = (parts[0], parts[1], size, data[:head_bytes])
+            results[request] = (
+                parts[0],
+                parts[1],
+                size,
+                data if head_bytes is None else data[:head_bytes],
+            )
     finally:
         process.stdout.close()
         process.wait()
@@ -1168,7 +1207,7 @@ def scan_full_audit(repo, key):
                 export_tree(repo, tree, extracted)
                 tip_results = run_gitleaks(repo, work, directory=extracted)
                 findings += convert_gitleaks_results(
-                    tip_results, key, redactor, "gitleaks-tree", tip
+                    tip_results, key, redactor, "gitleaks-tree", tip, strip_prefix=extracted
                 )
 
         findings += inspect_audit_objects(repo, commits, key, redactor)
@@ -1496,22 +1535,18 @@ def build_manifest(repo, run_id, boundary, result, mode, tag, release_notes):
         for ordinal, (status, path) in enumerate(entries):
             entry = tree_entry(repo, commit, path)
             description = ["status %s" % status, "path %s" % path]
+            detail = {"status": status}
             if entry:
                 mode_bits, kind, oid = entry
                 description.append("mode %s" % mode_bits)
                 description.append("object %s %s" % (kind, oid))
                 description.append("size %d" % blob_size(repo, oid))
+                if kind == "blob" and mode_bits != "120000":
+                    detail["object"] = oid
             else:
                 description.append("object removed at this commit")
             units.append(
-                make_unit(
-                    "path",
-                    commit,
-                    path,
-                    ordinal,
-                    "\n".join(description),
-                    {"status": status},
-                )
+                make_unit("path", commit, path, ordinal, "\n".join(description), detail)
             )
 
         patch = run_git(
@@ -1724,9 +1759,25 @@ def command_review_show(args):
     manifest = load_manifest(repo, args.run)
     for unit in manifest["units"]:
         if unit["unit_id"] == args.unit:
-            print(json.dumps(unit, indent=2, sort_keys=True))
+            print(json.dumps(resolved_unit(repo, unit), indent=2, sort_keys=True))
             return EXIT_OK
     raise PublishError("unknown review unit %s" % args.unit, EXIT_REFUSED)
+
+
+def resolved_unit(repo, unit):
+    """Show a path unit's actual bytes, so a verdict cannot be a rubber stamp.
+
+    The manifest stores metadata for these units to stay small, but a reviewer
+    who only ever sees an object id and a size is attesting to nothing.
+    """
+    if unit["kind"] != "path":
+        return unit
+    oid = (unit.get("detail") or {}).get("object")
+    if not oid:
+        return unit
+    shown = dict(unit)
+    shown["blob"] = blob_content(repo, oid, blob_size(repo, oid), Redactor(fingerprint_key(repo)))
+    return shown
 
 
 def command_review_record(args):
@@ -1786,6 +1837,27 @@ class ReviewStatus:
         return not (self.missing or self.extra or self.unit_findings or self.deterministic)
 
 
+def entry_is_resolved(entry, unit, resolved):
+    """A recorded finding stops blocking once triage resolved its fingerprint.
+
+    Without this, a run whose id is a pure function of the boundary could never
+    go clean again: the verdict is immutable, so a public incident would keep
+    blocking every future audit even after the credential was rotated.
+    """
+    if not resolved:
+        return False
+    fingerprints = {
+        finding.get("fingerprint")
+        for finding in entry.get("findings") or []
+        if finding.get("fingerprint")
+    }
+    if unit and unit.get("kind") == "deterministic-finding":
+        recorded = (unit.get("detail") or {}).get("fingerprint")
+        if recorded:
+            fingerprints.add(recorded)
+    return bool(fingerprints) and fingerprints.issubset(resolved)
+
+
 def review_status(repo, run_id):
     record = load_run(repo, run_id)
     resolved = resolved_fingerprints(repo) if record["mode"] == "full-audit" else frozenset()
@@ -1800,10 +1872,12 @@ def review_status(repo, run_id):
         )
     missing = [unit_id for unit_id in expected if unit_id not in recorded]
     extra = sorted(recorded - set(expected))
+    units_by_id = {unit["unit_id"]: unit for unit in manifest["units"]}
     unit_findings = sorted(
         unit_id
         for unit_id, entry in review["entries"].items()
         if entry.get("verdict") == "finding"
+        and not entry_is_resolved(entry, units_by_id.get(unit_id), resolved)
     )
     deterministic = [
         finding["fingerprint"]

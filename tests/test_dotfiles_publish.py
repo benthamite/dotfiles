@@ -631,6 +631,62 @@ class DotfilesPublishScanTests(PublicationFixture):
         )
         self.assertNotIn(TEST_SECRET, proc.stdout)
 
+    def test_tree_finding_fingerprints_are_stable_across_runs(self):
+        # A fingerprint keyed on the temporary extraction path would change
+        # every run, so no incident receipt could ever match it.
+        self.publish_base()
+        self.commit(
+            "add configuration", {"config/service.conf": "token = %s\n" % TEST_SECRET}
+        )
+
+        _, first_run = self.scan()
+        first = self.read_json(self.run_dir(first_run) / "findings.json")["findings"]
+        (self.run_dir(first_run) / "findings.json").rename(self.base / "first-findings.json")
+        _, second_run = self.scan()
+        second = self.read_json(self.run_dir(second_run) / "findings.json")["findings"]
+
+        def tree_prints(records):
+            return {
+                (record["path"], record["fingerprint"])
+                for record in records
+                if record["source"] == "gitleaks-tree"
+            }
+
+        self.assertTrue(tree_prints(first))
+        self.assertEqual(tree_prints(first), tree_prints(second))
+        for path, _ in tree_prints(first):
+            self.assertFalse(path.startswith("/"), "a tree finding kept an absolute path")
+            self.assertNotIn("dotfiles-publish/tmp", path)
+
+    def test_tree_scan_reads_committed_bytes_not_smudged_content(self):
+        # git archive applies the smudge filter, so it would hand the scanner
+        # the plaintext of an encrypted path instead of the published bytes.
+        self.publish_base()
+        self.git("config", "filter.probe.clean", "sed s/%s/ENCRYPTED-PLACEHOLDER/" % TEST_SECRET)
+        self.git("config", "filter.probe.smudge", "sed s/ENCRYPTED-PLACEHOLDER/%s/" % TEST_SECRET)
+        self.commit(
+            "declare the filter", {".gitattributes": "secrets/service.conf filter=probe\n"}
+        )
+        self.commit(
+            "add the encrypted configuration",
+            {"secrets/service.conf": "token = %s\n" % TEST_SECRET},
+        )
+
+        committed = self.git("cat-file", "blob", "HEAD:secrets/service.conf").stdout
+        self.assertIn("ENCRYPTED-PLACEHOLDER", committed, "the clean filter did not run")
+
+        proc, run_id = self.scan()
+
+        findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
+        tree_findings = [
+            finding for finding in findings if finding["source"] == "gitleaks-tree"
+        ]
+        self.assertEqual(
+            [],
+            tree_findings,
+            "the tree scan read smudged plaintext instead of the committed bytes",
+        )
+
     def test_deterministic_detectors_report_risky_names_symlinks_and_large_blobs(self):
         self.publish_base()
         os.symlink("/etc/passwd", self.repo / "passwd-link")
@@ -852,6 +908,25 @@ class DotfilesPublishManifestTests(PublicationFixture):
 
         missing = self.cli("review-show", "--run", run_id, "--unit", "0" * 32)
         self.assertNotEqual(0, missing.returncode)
+
+    def test_review_show_resolves_a_path_unit_to_its_actual_bytes(self):
+        # A path unit stores metadata only; showing just an object id and a
+        # size would invite a verdict that attests to nothing.
+        self.publish_base()
+        self.commit("add a helper", {"shell/helper.sh": "alias gs='git status'\n"})
+        _, run_id = self.scan()
+
+        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        path_unit = next(
+            unit
+            for unit in manifest["units"]
+            if unit["kind"] == "path" and unit["path"] == "shell/helper.sh"
+        )
+        self.assertNotIn("alias gs", json.dumps(path_unit), "the manifest stores metadata")
+
+        shown = self.cli("review-show", "--run", run_id, "--unit", path_unit["unit_id"])
+        self.assertEqual(0, shown.returncode, shown.stderr)
+        self.assertIn("alias gs='git status'", json.loads(shown.stdout)["blob"])
 
     def test_review_record_rejects_value_fields_and_scanner_known_values(self):
         self.publish_base()
@@ -1607,6 +1682,77 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         self.assertNotIn(
             "deterministic-finding: %s" % finding["fingerprint"], status.stdout
         )
+
+    def test_a_recorded_incident_unblocks_its_own_review_verdict(self):
+        # The run id is a pure function of the boundary and verdicts are
+        # immutable, so a public incident must be clearable without inventing
+        # a new run.
+        self.publish_a_secret()
+        _, run_id = self.scan("--mode", "full-audit")
+        findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
+        incidents = [
+            finding
+            for finding in findings
+            if finding.get("classification") == "public-incident"
+        ]
+        self.assertTrue(incidents)
+        exposed = {finding["fingerprint"] for finding in incidents}
+
+        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        blocking = {
+            unit["unit_id"]: (unit.get("detail") or {}).get("fingerprint")
+            for unit in manifest["units"]
+            if unit["kind"] == "deterministic-finding"
+            and (unit.get("detail") or {}).get("fingerprint") in exposed
+        }
+        self.assertEqual(len(exposed), len(blocking))
+
+        for unit_id in self.unit_ids(run_id):
+            if unit_id in blocking:
+                evidence = self.base / ("unit-%s.json" % unit_id[:8])
+                evidence.write_text(
+                    json.dumps(
+                        [
+                            {
+                                "rule_id": "review-public-credential",
+                                "fingerprint": blocking[unit_id],
+                                "context": "already published, needs rotation",
+                            }
+                        ]
+                    )
+                )
+                arguments = [
+                    "review-record", "--run", run_id, "--unit", unit_id,
+                    "--verdict", "finding", "--findings", str(evidence),
+                ]
+            else:
+                arguments = [
+                    "review-record", "--run", run_id, "--unit", unit_id, "--verdict", "clean"
+                ]
+            self.assertEqual(0, self.cli(*arguments).returncode)
+
+        before = self.cli("review-status", "--run", run_id)
+        self.assertNotEqual(0, before.returncode)
+        self.assertFalse((self.state_dir() / "full-audit.json").exists())
+
+        for fingerprint in sorted(exposed):
+            recorded = self.cli(
+                "incident-record",
+                "--run",
+                run_id,
+                "--fingerprint",
+                fingerprint,
+                "--resolution",
+                "rotated",
+                "--evidence",
+                str(self.write_evidence(fingerprint)),
+            )
+            self.assertEqual(0, recorded.returncode, recorded.stderr)
+
+        after = self.cli("review-status", "--run", run_id)
+        self.assertEqual(0, after.returncode, after.stdout + after.stderr)
+        self.assertIn("clean: yes", after.stdout)
+        self.assertIn("full-audit-recorded: ", after.stdout)
 
     def test_incident_record_rejects_broad_or_value_bearing_evidence(self):
         self.publish_a_secret()

@@ -1,6 +1,6 @@
 ---
 name: move-session-log
-description: Relocate Codex session logs by rewriting embedded project paths so resume and log lookup associate a session with the current project. Use for move session log, import log, or project rename session cleanup.
+description: Use when the user asks to relocate or import a session log into the current project, or to make session history and resume follow a renamed project directory in the current tool; not for merely opening or inspecting the current session log.
 ---
 
 # Move session log

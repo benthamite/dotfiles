@@ -430,6 +430,11 @@ class PublicationFixture(unittest.TestCase):
         self.review_all(run_id)
         return run_id
 
+    def set_remote_writable(self, writable):
+        """Make the bare remote reject writes, so a push fails like a network error."""
+        for directory in [self.remote, *[path for path in self.remote.rglob("*") if path.is_dir()]]:
+            directory.chmod(0o755 if writable else 0o555)
+
     def state_files(self):
         for path in sorted(self.state_dir().rglob("*")):
             if path.is_file():
@@ -946,6 +951,117 @@ class DotfilesPublishManifestTests(PublicationFixture):
 
 
 class DotfilesPublishRepairTests(PublicationFixture):
+    def start_repairable_run(self):
+        self.publish_base()
+        self.commit(
+            "add configuration", {"config/service.conf": "token = %s\n" % TEST_SECRET}
+        )
+        proc, run_id = self.scan()
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        started = self.cli("repair-start", "--run", run_id)
+        self.assertEqual(0, started.returncode, started.stderr)
+        return run_id, started
+
+    def rewrite_history(self, content="token = from-op\n"):
+        self.git("reset", "--quiet", "--hard", self.remote_tip())
+        return self.commit("add configuration", {"config/service.conf": content})
+
+    def test_repair_start_requires_a_blocking_finding(self):
+        run_id = self.prepare_authorized_run()
+
+        refused = self.cli("repair-start", "--run", run_id)
+
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("nothing to repair", refused.stderr)
+        self.assertNotEqual(
+            0,
+            self.git(
+                "rev-parse", "--verify", "refs/dotfiles-publish/recovery/%s" % run_id, check=False
+            ).returncode,
+        )
+
+    def test_repair_start_records_targets_and_refuses_to_move_the_recovery_ref(self):
+        run_id, started = self.start_repairable_run()
+        self.assertIn("recovery-ref: refs/dotfiles-publish/recovery/%s" % run_id, started.stdout)
+        self.assertIn("repair-target: ", started.stdout)
+        self.assertNotIn(TEST_SECRET, started.stdout)
+
+        again = self.cli("repair-start", "--run", run_id)
+        self.assertEqual(0, again.returncode, again.stderr)
+
+        self.git(
+            "update-ref", "refs/dotfiles-publish/recovery/%s" % run_id, self.remote_tip()
+        )
+        moved = self.cli("repair-start", "--run", run_id)
+        self.assertNotEqual(0, moved.returncode)
+        self.assertIn("already protects", moved.stderr)
+
+    def test_repair_verify_enforces_the_allowed_path_list(self):
+        run_id, _ = self.start_repairable_run()
+        self.git("reset", "--quiet", "--hard", self.remote_tip())
+        self.commit(
+            "add configuration",
+            {"config/service.conf": "token = from-op\n", "docs/extra.md": "extra\n"},
+        )
+
+        refused = self.cli(
+            "repair-verify", "--run", run_id, "--allowed-path", "config/service.conf"
+        )
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("docs/extra.md", refused.stderr)
+
+        accepted = self.cli(
+            "repair-verify",
+            "--run",
+            run_id,
+            "--allowed-path",
+            "config/service.conf",
+            "--allowed-path",
+            "docs/extra.md",
+        )
+        self.assertEqual(0, accepted.returncode, accepted.stdout + accepted.stderr)
+        self.assertIn("next: scan", accepted.stdout)
+        self.assertIn("review-invalidated: true", accepted.stdout)
+
+    def test_repair_verify_requires_at_least_one_allowed_path(self):
+        run_id, _ = self.start_repairable_run()
+        self.rewrite_history()
+
+        refused = self.cli("repair-verify", "--run", run_id)
+
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("--allowed-path", refused.stderr)
+
+    def test_repair_verify_refuses_when_the_remote_advanced(self):
+        run_id, _ = self.start_repairable_run()
+        self.rewrite_history()
+        self.advance_remote_elsewhere()
+
+        refused = self.cli(
+            "repair-verify", "--run", run_id, "--allowed-path", "config/service.conf"
+        )
+
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("advanced during repair", refused.stderr)
+
+    def test_repaired_history_needs_a_new_run_and_a_new_review(self):
+        run_id, _ = self.start_repairable_run()
+        self.rewrite_history()
+        verified = self.cli(
+            "repair-verify", "--run", run_id, "--allowed-path", "config/service.conf"
+        )
+        self.assertEqual(0, verified.returncode, verified.stderr)
+
+        clean, new_run = self.scan()
+        self.assertEqual(0, clean.returncode, clean.stdout + clean.stderr)
+        self.assertNotEqual(run_id, new_run)
+        self.assertFalse((self.run_dir(new_run) / "review.json").exists())
+
+        self.write_full_audit_receipt(new_run)
+        refused = self.cli("authorize", "--run", new_run)
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("missing-unit", refused.stderr)
+
     def test_repair_ref_survives_failure_and_is_removed_after_verified_push(self):
         self.publish_base()
         self.commit(
@@ -976,9 +1092,9 @@ class DotfilesPublishRepairTests(PublicationFixture):
         self.write_full_audit_receipt(new_run)
         self.review_all(new_run)
 
-        failed = self.cli(
-            "push", "--run", new_run, env=self.env(DOTFILES_PUBLISH_FORCE_PUSH_FAILURE="1")
-        )
+        self.set_remote_writable(False)
+        failed = self.cli("push", "--run", new_run)
+        self.set_remote_writable(True)
         self.assertNotEqual(0, failed.returncode)
         self.assertEqual(
             0,

@@ -1479,6 +1479,193 @@ def command_scan(args):
 
 
 # --------------------------------------------------------------------------
+# History repair
+# --------------------------------------------------------------------------
+
+
+def repairs_path(repo):
+    return repo.state_dir / "repairs.json"
+
+
+def load_repairs(repo):
+    path = repairs_path(repo)
+    if not path.exists():
+        return {"schema": SCHEMA, "repairs": {}}
+    data = read_json(path)
+    data.setdefault("repairs", {})
+    return data
+
+
+def recovery_ref_for(run_id):
+    return "%s/%s" % (RECOVERY_REF_PREFIX, run_id)
+
+
+def remote_tip_of(repo, url, ref):
+    listing = run_git(repo.root, "ls-remote", url, ref)
+    lines = [line for line in listing.text.splitlines() if line.strip()]
+    return lines[0].split()[0] if lines else None
+
+
+def clear_recovery_refs(repo, remote_oid):
+    """Drop repair protection only once the repaired history is published."""
+    repairs = load_repairs(repo)
+    removed = []
+    for run_id, entry in list(repairs["repairs"].items()):
+        if entry.get("remote_oid") == remote_oid:
+            run_git(repo.root, "update-ref", "-d", entry["recovery_ref"], check=False)
+            removed.append(entry["recovery_ref"])
+            del repairs["repairs"][run_id]
+    if removed:
+        write_json(repairs_path(repo), repairs)
+    return removed
+
+
+def command_repair_start(args):
+    repo = discover_repository()
+    fingerprint_key(repo)
+    record = load_run(repo, args.run)
+    status = review_status(repo, args.run, resolved_fingerprints(repo))
+    if not (status.deterministic or status.unit_findings):
+        raise PublishError(
+            "run %s has no blocking finding, so there is nothing to repair" % args.run,
+            EXIT_REFUSED,
+        )
+
+    ref = recovery_ref_for(args.run)
+    existing = run_git(repo.root, "rev-parse", "--verify", "--quiet", ref, check=False)
+    if existing.code == 0 and existing.text.strip() != record["candidate_oid"]:
+        raise PublishError(
+            "recovery ref %s already protects %s; resolve that repair first"
+            % (ref, existing.text.strip()[:12]),
+            EXIT_REFUSED,
+        )
+    run_git(repo.root, "update-ref", ref, record["candidate_oid"])
+
+    findings = load_findings(repo, args.run).get("findings", [])
+    locations = [
+        {
+            "rule_id": finding["rule_id"],
+            "path": finding["path"],
+            "commit": finding["commit"],
+            "line": finding["line"],
+            "fingerprint": finding["fingerprint"],
+        }
+        for finding in findings
+    ]
+    repairs = load_repairs(repo)
+    repairs["repairs"][args.run] = {
+        "run_id": args.run,
+        "recovery_ref": ref,
+        "original_candidate": record["candidate_oid"],
+        "original_tree": run_git(
+            repo.root, "rev-parse", record["candidate_oid"] + "^{tree}"
+        ).text.strip(),
+        "remote_oid": record["remote_oid"],
+        "remote_ref": record["remote_ref"],
+        "remote_url": record["remote_url"],
+        "started_at": rfc3339(now_epoch()),
+        "status": "started",
+        "finding_locations": locations,
+    }
+    write_json(repairs_path(repo), repairs)
+
+    print("recovery-ref: %s" % ref)
+    print("original-candidate: %s" % record["candidate_oid"])
+    for location in locations:
+        print(
+            "repair-target: %s %s %s %s"
+            % (
+                location["rule_id"],
+                location["path"] or "-",
+                (location["commit"] or "-")[:12],
+                location["fingerprint"],
+            )
+        )
+    for unit_id in status.unit_findings:
+        print("repair-target: review-finding - - %s" % unit_id)
+    return EXIT_OK
+
+
+def command_repair_verify(args):
+    repo = discover_repository()
+    key = fingerprint_key(repo)
+    redactor = Redactor(key)
+    repairs = load_repairs(repo)
+    entry = repairs["repairs"].get(args.run)
+    if not entry:
+        raise PublishError("run %s has no repair in progress" % args.run, EXIT_REFUSED)
+    if not args.allowed_path:
+        raise PublishError(
+            "--allowed-path is required at least once so the rewrite stays bounded",
+            EXIT_REFUSED,
+        )
+
+    current = remote_tip_of(repo, entry["remote_url"], entry["remote_ref"])
+    if current != entry["remote_oid"]:
+        raise PublishError(
+            "the remote tip advanced during repair (%s != %s); start again from a fresh scan"
+            % ((current or "missing")[:12], entry["remote_oid"][:12]),
+            EXIT_REFUSED,
+        )
+
+    original = entry["original_candidate"]
+    new_candidate = run_git(repo.root, "rev-parse", "HEAD^{commit}").text.strip()
+    if new_candidate == original:
+        raise PublishError("HEAD still points at the original candidate", EXIT_REFUSED)
+    ancestry = run_git(
+        repo.root, "merge-base", "--is-ancestor", entry["remote_oid"], new_candidate, check=False
+    )
+    if ancestry.code != 0:
+        raise PublishError(
+            "the repaired candidate does not descend from the published remote tip", EXIT_REFUSED
+        )
+
+    changed = [
+        token.decode("utf-8", "replace")
+        for token in run_git(
+            repo.root, "diff", "--name-only", "-z", original, new_candidate
+        ).out.split(b"\x00")
+        if token.strip()
+    ]
+    allowed = set(args.allowed_path)
+    unexpected = sorted(path for path in changed if path not in allowed)
+    if unexpected:
+        raise PublishError(
+            "the repair changed paths outside the allowlist: %s" % ", ".join(unexpected),
+            EXIT_REFUSED,
+        )
+
+    comparison = run_git(
+        repo.root,
+        "range-diff",
+        "--no-patch",
+        "%s..%s" % (entry["remote_oid"], original),
+        "%s..%s" % (entry["remote_oid"], new_candidate),
+        check=False,
+    )
+    statistics = run_git(repo.root, "diff", "--stat", original, new_candidate, check=False)
+
+    entry["status"] = "verified"
+    entry["new_candidate"] = new_candidate
+    entry["verified_at"] = rfc3339(now_epoch())
+    entry["allowed_paths"] = sorted(allowed)
+    write_json(repairs_path(repo), repairs)
+
+    print("original-candidate: %s" % original)
+    print("new-candidate: %s" % new_candidate)
+    for path in sorted(changed):
+        print("changed-path: %s" % path)
+    for line in redactor.scrub(comparison.text).splitlines():
+        print("range-diff: %s" % line)
+    for line in redactor.scrub(statistics.text).splitlines():
+        print("diff-stat: %s" % line)
+    print("recovery-ref: %s" % entry["recovery_ref"])
+    print("review-invalidated: true")
+    print("next: scan")
+    return EXIT_OK
+
+
+# --------------------------------------------------------------------------
 # Push authorization
 # --------------------------------------------------------------------------
 
@@ -1661,12 +1848,12 @@ def build_parser():
 
     repair_start = subparsers.add_parser("repair-start", help="protect history before repair")
     repair_start.add_argument("--run", required=True)
-    repair_start.set_defaults(handler=not_yet("repair-start"))
+    repair_start.set_defaults(handler=command_repair_start)
 
     repair_verify = subparsers.add_parser("repair-verify", help="verify a repaired history")
     repair_verify.add_argument("--run", required=True)
     repair_verify.add_argument("--allowed-path", action="append", default=[])
-    repair_verify.set_defaults(handler=not_yet("repair-verify"))
+    repair_verify.set_defaults(handler=command_repair_verify)
 
     incident = subparsers.add_parser("incident-record", help="record a resolved public incident")
     incident.add_argument("--run", required=True)

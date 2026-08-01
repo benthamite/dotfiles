@@ -660,6 +660,17 @@ class DotfilesPublishScanTests(PublicationFixture):
             "the candidate tree was not scanned for inherited secrets",
         )
         self.assertNotIn(TEST_SECRET, proc.stdout)
+        inherited = [
+            finding for finding in findings if finding["source"] == "gitleaks-tree"
+        ]
+        self.assertTrue(inherited)
+        for finding in inherited:
+            self.assertEqual(
+                "public-incident",
+                finding["classification"],
+                "an already-published secret was labelled as outgoing, which points "
+                "at a useless rewrite of unpublished commits",
+            )
 
     def test_tree_finding_fingerprints_are_stable_across_runs(self):
         # A fingerprint keyed on the temporary extraction path would change

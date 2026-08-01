@@ -954,7 +954,44 @@ def scan_outgoing(repo, boundary, key):
         "candidate-tree",
     )
 
-    return ScanResult(findings=deduplicate(findings), redactor=redactor, commits=commits)
+    findings = classify_tree_findings(repo, boundary, deduplicate(findings))
+    return ScanResult(findings=findings, redactor=redactor, commits=commits)
+
+
+TREE_SOURCES = ("gitleaks-tree", "candidate-tree")
+
+
+def classify_tree_findings(repo, boundary, findings):
+    """Say plainly when a tree finding is already public.
+
+    A tree scan attributes its hits to the candidate, so an inherited secret
+    looks outgoing. Calling it outgoing invites a rewrite of unpublished
+    commits, which remediates nothing for a value the remote already serves.
+    Range findings keep their classification: their blob differs somewhere in
+    the outgoing commits by construction.
+    """
+    published = {}
+    for finding in findings:
+        if finding["source"] not in TREE_SOURCES or not finding["path"]:
+            continue
+        path = finding["path"]
+        if path not in published:
+            candidate = run_git(
+                repo.root, "rev-parse", "--quiet", "--verify",
+                "%s:%s" % (boundary.candidate_oid, path), check=False,
+            )
+            remote = run_git(
+                repo.root, "rev-parse", "--quiet", "--verify",
+                "%s:%s" % (boundary.remote_oid, path), check=False,
+            )
+            published[path] = (
+                candidate.code == 0
+                and remote.code == 0
+                and candidate.text.strip() == remote.text.strip()
+            )
+        if published[path]:
+            finding["classification"] = "public-incident"
+    return findings
 
 
 def deduplicate(records):

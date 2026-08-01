@@ -816,6 +816,111 @@ class DotfilesPublishManifestTests(PublicationFixture):
         self.assertIn("deploy.log", risky)
         self.assertEqual(manifest["counts"]["commit"], len(commit_units))
 
+    def test_review_list_is_content_free_and_show_returns_one_unit(self):
+        self.publish_base()
+        self.commit("add notes", {"docs/notes.md": "sensitive-looking notes\n"})
+        _, run_id = self.scan()
+
+        listing = self.cli("review-list", "--run", run_id)
+        self.assertEqual(0, listing.returncode, listing.stderr)
+        self.assertNotIn("sensitive-looking notes", listing.stdout)
+
+        unit_id = listing.stdout.splitlines()[0].split()[0]
+        shown = self.cli("review-show", "--run", run_id, "--unit", unit_id)
+        self.assertEqual(0, shown.returncode, shown.stderr)
+        unit = json.loads(shown.stdout)
+        self.assertEqual(unit_id, unit["unit_id"])
+
+        missing = self.cli("review-show", "--run", run_id, "--unit", "0" * 32)
+        self.assertNotEqual(0, missing.returncode)
+
+    def test_review_record_rejects_value_fields_and_scanner_known_values(self):
+        self.publish_base()
+        self.commit(
+            "add configuration", {"config/service.conf": "token = %s\n" % TEST_SECRET}
+        )
+        _, run_id = self.scan()
+        unit_id = self.unit_ids(run_id)[0]
+
+        with_value = self.base / "with-value.json"
+        with_value.write_text(
+            json.dumps([{"rule_id": "manual", "context": "redacted", "value": "anything"}])
+        )
+        rejected = self.cli(
+            "review-record",
+            "--run",
+            run_id,
+            "--unit",
+            unit_id,
+            "--verdict",
+            "finding",
+            "--findings",
+            str(with_value),
+        )
+        self.assertNotEqual(0, rejected.returncode)
+        self.assertIn("value field", rejected.stderr)
+
+        with_secret = self.base / "with-secret.json"
+        with_secret.write_text(
+            json.dumps([{"rule_id": "manual", "context": "saw %s here" % TEST_SECRET}])
+        )
+        leaking = self.cli(
+            "review-record",
+            "--run",
+            run_id,
+            "--unit",
+            unit_id,
+            "--verdict",
+            "finding",
+            "--findings",
+            str(with_secret),
+        )
+        self.assertNotEqual(0, leaking.returncode)
+        self.assertIn("scanner detected", leaking.stderr)
+        self.assertNotIn(TEST_SECRET, leaking.stdout + leaking.stderr)
+
+    def test_review_record_is_idempotent_only_for_an_identical_verdict(self):
+        run_id = self.prepare_authorized_run()
+        unit_id = self.unit_ids(run_id)[0]
+
+        again = self.cli(
+            "review-record", "--run", run_id, "--unit", unit_id, "--verdict", "clean"
+        )
+        self.assertEqual(0, again.returncode, again.stderr)
+
+        findings = self.base / "manual.json"
+        findings.write_text(json.dumps([{"rule_id": "manual", "context": "worth a look"}]))
+        changed = self.cli(
+            "review-record",
+            "--run",
+            run_id,
+            "--unit",
+            unit_id,
+            "--verdict",
+            "finding",
+            "--findings",
+            str(findings),
+        )
+        self.assertNotEqual(0, changed.returncode)
+        self.assertIn("different verdict", changed.stderr)
+
+    def test_review_status_reports_completeness_without_content(self):
+        run_id = self.prepare_authorized_run()
+
+        status = self.cli("review-status", "--run", run_id)
+        self.assertEqual(0, status.returncode, status.stderr)
+        self.assertIn("clean: yes", status.stdout)
+
+        review = self.read_json(self.run_dir(run_id) / "review.json")
+        omitted = sorted(review["entries"])[0]
+        del review["entries"][omitted]
+        (self.run_dir(run_id) / "review.json").write_text(json.dumps(review))
+
+        incomplete = self.cli("review-status", "--run", run_id)
+        self.assertNotEqual(0, incomplete.returncode)
+        self.assertIn("missing-unit: %s" % omitted, incomplete.stdout)
+        self.assertIn("clean: no", incomplete.stdout)
+
     def test_authorize_refuses_incomplete_llm_review(self):
         run_id = self.prepare_authorized_run()
         units = self.unit_ids(run_id)

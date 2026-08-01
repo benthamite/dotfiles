@@ -944,6 +944,482 @@ def store_findings(repo, run_id, result):
 
 
 # --------------------------------------------------------------------------
+# Review manifest
+# --------------------------------------------------------------------------
+
+MANIFEST_KINDS = (
+    "commit",
+    "path",
+    "patch",
+    "new-file",
+    "high-risk-file",
+    "deterministic-finding",
+    "public-text",
+)
+
+FINDING_FIELDS = {
+    "source",
+    "rule_id",
+    "path",
+    "commit",
+    "line",
+    "column",
+    "fingerprint",
+    "context",
+    "classification",
+}
+
+
+def unit_identifier(kind, commit, path, ordinal):
+    return sha256_of("dotfiles-publish-unit", str(SCHEMA), kind, commit, path, str(ordinal))[:32]
+
+
+def make_unit(kind, commit, path, ordinal, content, detail=None):
+    return {
+        "unit_id": unit_identifier(kind, commit, path, ordinal),
+        "kind": kind,
+        "commit": commit,
+        "path": path,
+        "ordinal": ordinal,
+        "content": content,
+        "detail": detail or {},
+    }
+
+
+def split_patch_hunks(patch_text):
+    hunks = []
+    path = ""
+    current = None
+    for line in patch_text.splitlines(keepends=True):
+        if line.startswith("diff --git "):
+            path = ""
+            current = None
+            continue
+        if line.startswith("--- "):
+            candidate = line[4:].strip()
+            if not path and candidate != "/dev/null":
+                path = candidate[2:] if candidate.startswith("a/") else candidate
+            continue
+        if line.startswith("+++ "):
+            candidate = line[4:].strip()
+            if candidate != "/dev/null":
+                path = candidate[2:] if candidate.startswith("b/") else candidate
+            continue
+        if line.startswith("@@"):
+            header = line.rstrip("\n")
+            coordinates = re.match(r"^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@", header)
+            current = {
+                "path": path,
+                "header": header,
+                "old_start": int(coordinates.group(1)) if coordinates else None,
+                "new_start": int(coordinates.group(2)) if coordinates else None,
+                "body": [],
+            }
+            hunks.append(current)
+            continue
+        if current is not None:
+            current["body"].append(line)
+    return hunks
+
+
+def blob_content(repo, oid, size, redactor):
+    """Full text for reviewable blobs; an identified placeholder otherwise."""
+    if size > LARGE_BLOB_LIMIT:
+        data = blob_bytes(repo, oid, 4096)
+        return "[blob omitted: %d bytes exceeds the 2 MiB review limit, object %s]\n%s" % (
+            size,
+            oid,
+            redactor.scrub(data.decode("utf-8", "replace")),
+        )
+    data = blob_bytes(repo, oid)
+    if looks_binary(data):
+        return "[binary blob: %d bytes, object %s, sha256 %s]" % (
+            size,
+            oid,
+            hashlib.sha256(data).hexdigest(),
+        )
+    return redactor.scrub(data.decode("utf-8", "replace"))
+
+
+def is_risky_path(path):
+    return any(pattern.search(path) for pattern, _ in RISKY_PATH_RULES)
+
+
+def commit_units(repo, commit, redactor):
+    fields = run_git(
+        repo.root,
+        "show",
+        "--no-patch",
+        "--format=%H%x00%an <%ae>%x00%aI%x00%P%x00%s%x00%b",
+        commit,
+    ).out.split(b"\x00")
+    values = [item.decode("utf-8", "replace") for item in fields]
+    while len(values) < 6:
+        values.append("")
+    detail = {
+        "author": values[1],
+        "date": values[2],
+        "parents": values[3].split(),
+        "subject": values[4].strip(),
+    }
+    content = redactor.scrub(
+        "commit %s\nauthor %s\ndate %s\nparents %s\nsubject %s\n\n%s"
+        % (commit, detail["author"], detail["date"], " ".join(detail["parents"]), detail["subject"], values[5])
+    )
+    return make_unit("commit", commit, "", 0, content, detail)
+
+
+def build_manifest(repo, run_id, boundary, result, mode, tag, release_notes):
+    redactor = result.redactor
+    units = []
+
+    for commit in result.commits:
+        units.append(commit_units(repo, commit, redactor))
+
+        entries = changed_entries(repo, commit)
+        for ordinal, (status, path) in enumerate(entries):
+            entry = tree_entry(repo, commit, path)
+            description = ["status %s" % status, "path %s" % path]
+            if entry:
+                mode_bits, kind, oid = entry
+                description.append("mode %s" % mode_bits)
+                description.append("object %s %s" % (kind, oid))
+                description.append("size %d" % blob_size(repo, oid))
+            else:
+                description.append("object removed at this commit")
+            units.append(
+                make_unit(
+                    "path",
+                    commit,
+                    path,
+                    ordinal,
+                    "\n".join(description),
+                    {"status": status},
+                )
+            )
+
+        patch = run_git(
+            repo.root, "diff-tree", "--root", "--find-renames", "--format=", "--patch", commit
+        ).text
+        for ordinal, hunk in enumerate(split_patch_hunks(patch)):
+            units.append(
+                make_unit(
+                    "patch",
+                    commit,
+                    hunk["path"],
+                    ordinal,
+                    redactor.scrub(hunk["header"] + "\n" + "".join(hunk["body"])),
+                    {"old_start": hunk["old_start"], "new_start": hunk["new_start"]},
+                )
+            )
+
+        for status, path in entries:
+            if status[0] == "D":
+                continue
+            entry = tree_entry(repo, commit, path)
+            if not entry or entry[1] != "blob" or entry[0] == "120000":
+                continue
+            mode_bits, _, oid = entry
+            size = blob_size(repo, oid)
+            if status[0] in ("A", "C"):
+                units.append(
+                    make_unit(
+                        "new-file",
+                        commit,
+                        path,
+                        0,
+                        blob_content(repo, oid, size, redactor),
+                        {"object": oid, "size": size},
+                    )
+                )
+            if is_risky_path(path):
+                units.append(
+                    make_unit(
+                        "high-risk-file",
+                        commit,
+                        path,
+                        0,
+                        blob_content(repo, oid, size, redactor),
+                        {"object": oid, "size": size},
+                    )
+                )
+
+    for ordinal, finding in enumerate(result.findings):
+        units.append(
+            make_unit(
+                "deterministic-finding",
+                finding["commit"],
+                finding["path"],
+                ordinal,
+                json.dumps(finding, indent=2, sort_keys=True),
+                {"fingerprint": finding["fingerprint"], "rule_id": finding["rule_id"]},
+            )
+        )
+
+    if mode == "release":
+        if release_notes:
+            units.append(
+                make_unit(
+                    "public-text",
+                    boundary.candidate_oid,
+                    str(release_notes),
+                    0,
+                    redactor.scrub(Path(release_notes).read_text(encoding="utf-8")),
+                    {"purpose": "release notes"},
+                )
+            )
+        if tag:
+            units.append(
+                make_unit(
+                    "public-text",
+                    boundary.candidate_oid,
+                    "refs/tags/%s" % tag,
+                    1,
+                    redactor.scrub(tag),
+                    {"purpose": "release tag"},
+                )
+            )
+
+    counts = {kind: 0 for kind in MANIFEST_KINDS}
+    for unit in units:
+        counts[unit["kind"]] = counts.get(unit["kind"], 0) + 1
+
+    digest = hashlib.sha256()
+    digest.update(b"dotfiles-publish-manifest\x00")
+    for unit in units:
+        digest.update(unit["unit_id"].encode("utf-8") + b"\x00")
+        digest.update(hashlib.sha256(unit["content"].encode("utf-8")).digest())
+    manifest_id = digest.hexdigest()
+
+    return {
+        "schema": SCHEMA,
+        "run_id": run_id,
+        "manifest_id": manifest_id,
+        "counts": counts,
+        "units": units,
+    }
+
+
+def store_manifest(repo, run_id, manifest):
+    write_json(run_directory(repo, run_id) / "manifest.json", manifest)
+
+
+def load_manifest(repo, run_id):
+    path = run_directory(repo, run_id) / "manifest.json"
+    if not path.exists():
+        raise PublishError("run %s has no manifest; scan again" % run_id, EXIT_REFUSED)
+    return read_json(path)
+
+
+def load_findings(repo, run_id):
+    path = run_directory(repo, run_id) / "findings.json"
+    if not path.exists():
+        return {"findings": [], "value_hmacs": []}
+    return read_json(path)
+
+
+# --------------------------------------------------------------------------
+# Review records
+# --------------------------------------------------------------------------
+
+
+def review_path(repo, run_id):
+    return run_directory(repo, run_id) / "review.json"
+
+
+def load_review(repo, run_id, manifest):
+    path = review_path(repo, run_id)
+    if not path.exists():
+        return {
+            "schema": SCHEMA,
+            "run_id": run_id,
+            "manifest_id": manifest["manifest_id"],
+            "entries": {},
+        }
+    review = read_json(path)
+    review.setdefault("entries", {})
+    return review
+
+
+def findings_digest(records):
+    return hashlib.sha256(json.dumps(records, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+TOKEN_PATTERN = re.compile(r"[A-Za-z0-9_\-\.\+/=]{8,}")
+
+
+def reject_known_values(text, known_hmacs, key):
+    for token in TOKEN_PATTERN.findall(text):
+        if value_hmac(key, token) in known_hmacs:
+            raise PublishError(
+                "the review record contains a value the scanner detected; report the fingerprint instead",
+                EXIT_REFUSED,
+            )
+
+
+def validate_review_findings(records, known_hmacs, key, unit):
+    if not isinstance(records, list):
+        raise PublishError("a findings file must contain a list of finding records", EXIT_REFUSED)
+    validated = []
+    for index, record in enumerate(records):
+        if not isinstance(record, dict):
+            raise PublishError("finding %d is not an object" % index, EXIT_REFUSED)
+        unknown = set(record) - FINDING_FIELDS
+        if "value" in record or "secret" in record:
+            raise PublishError(
+                "finding %d contains a value field; record only redacted evidence" % index,
+                EXIT_REFUSED,
+            )
+        if unknown:
+            raise PublishError(
+                "finding %d has unsupported fields: %s" % (index, ", ".join(sorted(unknown))),
+                EXIT_REFUSED,
+            )
+        reject_known_values(json.dumps(record), known_hmacs, key)
+        complete = {
+            "source": record.get("source") or "review",
+            "rule_id": record.get("rule_id") or "review-finding",
+            "path": record.get("path") or unit["path"],
+            "commit": record.get("commit") or unit["commit"],
+            "line": record.get("line"),
+            "column": record.get("column"),
+            "fingerprint": record.get("fingerprint")
+            or fingerprint(key, "review", unit["unit_id"], record.get("rule_id") or "review-finding"),
+            "context": clip(structural_redaction(record.get("context") or "")),
+            "classification": record.get("classification") or "outgoing",
+        }
+        validated.append(complete)
+    return validated
+
+
+def command_review_list(args):
+    repo = discover_repository()
+    manifest = load_manifest(repo, args.run)
+    for unit in manifest["units"]:
+        print(
+            "%s %s %s %s"
+            % (unit["unit_id"], unit["kind"], (unit["commit"] or "-")[:12], unit["path"] or "-")
+        )
+    return EXIT_OK
+
+
+def command_review_show(args):
+    repo = discover_repository()
+    manifest = load_manifest(repo, args.run)
+    for unit in manifest["units"]:
+        if unit["unit_id"] == args.unit:
+            print(json.dumps(unit, indent=2, sort_keys=True))
+            return EXIT_OK
+    raise PublishError("unknown review unit %s" % args.unit, EXIT_REFUSED)
+
+
+def command_review_record(args):
+    repo = discover_repository()
+    key = fingerprint_key(repo)
+    manifest = load_manifest(repo, args.run)
+    units = {unit["unit_id"]: unit for unit in manifest["units"]}
+    if args.unit not in units:
+        raise PublishError("unknown review unit %s" % args.unit, EXIT_REFUSED)
+
+    records = []
+    if args.verdict == "finding":
+        if not args.findings:
+            raise PublishError("--findings is required for a finding verdict", EXIT_REFUSED)
+        known = set(load_findings(repo, args.run).get("value_hmacs") or [])
+        payload = read_json(args.findings)
+        if isinstance(payload, dict):
+            payload = payload.get("findings", [])
+        records = validate_review_findings(payload, known, key, units[args.unit])
+        if not records:
+            raise PublishError("a finding verdict needs at least one finding record", EXIT_REFUSED)
+    elif args.findings:
+        raise PublishError("--findings is only meaningful with a finding verdict", EXIT_REFUSED)
+
+    review = load_review(repo, args.run, manifest)
+    digest = findings_digest(records)
+    existing = review["entries"].get(args.unit)
+    if existing and (existing.get("verdict") != args.verdict or existing.get("digest") != digest):
+        raise PublishError(
+            "unit %s already has a different verdict; start a new run instead of revising one"
+            % args.unit,
+            EXIT_REFUSED,
+        )
+    review["manifest_id"] = manifest["manifest_id"]
+    review["entries"][args.unit] = {
+        "verdict": args.verdict,
+        "digest": digest,
+        "findings": records,
+        "recorded_at": rfc3339(now_epoch()),
+    }
+    write_json(review_path(repo, args.run), review)
+    print("recorded: %s %s" % (args.unit, args.verdict))
+    return EXIT_OK
+
+
+@dataclass
+class ReviewStatus:
+    total: int
+    recorded: int
+    missing: list
+    extra: list
+    unit_findings: list
+    deterministic: list
+
+    @property
+    def clean(self):
+        return not (self.missing or self.extra or self.unit_findings or self.deterministic)
+
+
+def review_status(repo, run_id, resolved_fingerprints=frozenset()):
+    manifest = load_manifest(repo, run_id)
+    review = load_review(repo, run_id, manifest)
+    expected = [unit["unit_id"] for unit in manifest["units"]]
+    recorded = set(review["entries"])
+    if review.get("manifest_id") and review["manifest_id"] != manifest["manifest_id"]:
+        raise PublishError(
+            "the review was recorded against a different manifest; scan and review again",
+            EXIT_REFUSED,
+        )
+    missing = [unit_id for unit_id in expected if unit_id not in recorded]
+    extra = sorted(recorded - set(expected))
+    unit_findings = sorted(
+        unit_id
+        for unit_id, entry in review["entries"].items()
+        if entry.get("verdict") == "finding"
+    )
+    deterministic = [
+        finding["fingerprint"]
+        for finding in load_findings(repo, run_id).get("findings", [])
+        if finding["fingerprint"] not in resolved_fingerprints
+    ]
+    return ReviewStatus(
+        total=len(expected),
+        recorded=len(recorded),
+        missing=missing,
+        extra=extra,
+        unit_findings=unit_findings,
+        deterministic=deterministic,
+    )
+
+
+def command_review_status(args):
+    repo = discover_repository()
+    status = review_status(repo, args.run)
+    print("units: %d" % status.total)
+    print("recorded: %d" % status.recorded)
+    for unit_id in status.missing:
+        print("missing-unit: %s" % unit_id)
+    for unit_id in status.extra:
+        print("extra-unit: %s" % unit_id)
+    for unit_id in status.unit_findings:
+        print("review-finding: %s" % unit_id)
+    for print_key in status.deterministic:
+        print("deterministic-finding: %s" % print_key)
+    print("clean: %s" % ("yes" if status.clean else "no"))
+    return EXIT_OK if status.clean else EXIT_REFUSED
+
+
+# --------------------------------------------------------------------------
 # scan
 # --------------------------------------------------------------------------
 
@@ -964,6 +1440,7 @@ def command_scan(args):
     staleness = full_audit_staleness(repo, ruleset_id, now)
 
     result = scan_outgoing(repo, boundary, key)
+    manifest = build_manifest(repo, run_id, boundary, result, args.mode, args.tag, args.release_notes)
     record = {
         "schema": SCHEMA,
         "mode": args.mode,
@@ -976,12 +1453,13 @@ def command_scan(args):
         "remote_oid": boundary.remote_oid,
         "candidate_oid": boundary.candidate_oid,
         "ruleset_id": ruleset_id,
-        "manifest_id": "",
+        "manifest_id": manifest["manifest_id"],
         "full_audit_due": staleness is not None,
         "public_refs": [],
     }
     store_run(repo, record)
     store_findings(repo, run_id, result)
+    store_manifest(repo, run_id, manifest)
 
     print("run: %s" % run_id)
     print("mode: %s" % args.mode)
@@ -993,10 +1471,147 @@ def command_scan(args):
     for finding in result.findings:
         print(format_finding(finding))
     print("findings: %d" % len(result.findings))
+    print("units: %d" % len(manifest["units"]))
     print("full-audit-due: %s" % ("true" if staleness else "false"))
     if staleness:
         print("full-audit-reason: %s" % staleness)
     return EXIT_FINDINGS if result.findings else EXIT_OK
+
+
+# --------------------------------------------------------------------------
+# Push authorization
+# --------------------------------------------------------------------------
+
+
+def authorization_path(repo):
+    return repo.state_dir / "authorization.json"
+
+
+def incidents_path(repo):
+    return repo.state_dir / "incidents.json"
+
+
+def resolved_fingerprints(repo):
+    path = incidents_path(repo)
+    if not path.exists():
+        return frozenset()
+    return frozenset(read_json(path).get("incidents", {}))
+
+
+def revalidate_run(repo, run_id):
+    """Refuse unless every security input still matches the reviewed run."""
+    record = load_run(repo, run_id)
+    if os.path.realpath(record["repository"]) != os.path.realpath(str(repo.root)):
+        raise PublishError("run %s belongs to another repository" % run_id, EXIT_REFUSED)
+    if record["remote_url"] != repo.fetch_url:
+        raise PublishError("the remote URL changed since the review", EXIT_REFUSED)
+    if record["remote_ref"] != repo.remote_ref:
+        raise PublishError("the configured upstream ref changed since the review", EXIT_REFUSED)
+    current_ruleset = ruleset_identity(repo.root)
+    if record["ruleset_id"] != current_ruleset:
+        raise PublishError(
+            "the ruleset changed since the review; scan again under the current policy",
+            EXIT_REFUSED,
+        )
+    boundary = resolve_boundary(repo)
+    if boundary.candidate_oid != record["candidate_oid"]:
+        raise PublishError(
+            "the candidate changed since the review (%s != %s); scan again"
+            % (boundary.candidate_oid[:12], record["candidate_oid"][:12]),
+            EXIT_REFUSED,
+        )
+    if boundary.remote_oid != record["remote_oid"]:
+        raise PublishError(
+            "the remote tip advanced since the review (%s != %s); scan again"
+            % (boundary.remote_oid[:12], record["remote_oid"][:12]),
+            EXIT_REFUSED,
+        )
+    return record, boundary
+
+
+def tag_update(repo, record, tag):
+    if record["mode"] != "release":
+        raise PublishError("a tag may only be published by a release run", EXIT_REFUSED)
+    resolved = run_git(repo.root, "rev-parse", "--verify", "refs/tags/%s^{commit}" % tag, check=False)
+    if resolved.code != 0:
+        raise PublishError("tag %s does not exist locally" % tag, EXIT_REFUSED)
+    tag_object = run_git(repo.root, "rev-parse", "--verify", "refs/tags/%s" % tag).text.strip()
+    if tag_object != record["candidate_oid"]:
+        raise PublishError(
+            "tag %s does not point at the reviewed candidate; use a lightweight tag on it" % tag,
+            EXIT_REFUSED,
+        )
+    existing = run_git(repo.root, "ls-remote", repo.fetch_url, "refs/tags/%s" % tag).text.strip()
+    if existing:
+        raise PublishError("tag %s already exists on the remote" % tag, EXIT_REFUSED)
+    return {
+        "local_ref": tag_object,
+        "local_oid": tag_object,
+        "remote_ref": "refs/tags/%s" % tag,
+        "remote_oid": "0" * len(record["remote_oid"]),
+    }
+
+
+def authorization_updates(repo, record, tag):
+    updates = [
+        {
+            "local_ref": record["candidate_oid"],
+            "local_oid": record["candidate_oid"],
+            "remote_ref": record["remote_ref"],
+            "remote_oid": record["remote_oid"],
+        }
+    ]
+    if tag:
+        updates.append(tag_update(repo, record, tag))
+    return updates
+
+
+def authorize_run(repo, run_id, tag, now):
+    record, _ = revalidate_run(repo, run_id)
+    if record["mode"] == "full-audit":
+        raise PublishError("a full audit run never publishes", EXIT_REFUSED)
+    staleness = full_audit_staleness(repo, record["ruleset_id"], now)
+    if staleness:
+        raise PublishError("full audit required: %s" % staleness, EXIT_REFUSED)
+
+    status = review_status(repo, run_id, resolved_fingerprints(repo))
+    if not status.clean:
+        details = []
+        for unit_id in status.missing:
+            details.append("missing-unit: %s" % unit_id)
+        for unit_id in status.extra:
+            details.append("extra-unit: %s" % unit_id)
+        for unit_id in status.unit_findings:
+            details.append("review-finding: %s" % unit_id)
+        for print_key in status.deterministic:
+            details.append("deterministic-finding: %s" % print_key)
+        raise PublishError(
+            "the review is not exhaustive and clean:\n%s" % "\n".join(details), EXIT_REFUSED
+        )
+
+    authorization = {
+        "schema": SCHEMA,
+        "run_id": run_id,
+        "mode": record["mode"],
+        "created_at": rfc3339(now),
+        "expires_at": rfc3339(now + AUTHORIZATION_LIFETIME_SECONDS),
+        "remote_url": record["remote_url"],
+        "ruleset_id": record["ruleset_id"],
+        "updates": authorization_updates(repo, record, tag),
+    }
+    write_json(authorization_path(repo), authorization)
+    return record, authorization
+
+
+def command_authorize(args):
+    repo = discover_repository()
+    fingerprint_key(repo)
+    _, authorization = authorize_run(repo, args.run, args.tag, now_epoch())
+    print("authorized: %s" % args.run)
+    print("expires_at: %s" % authorization["expires_at"])
+    for update in authorization["updates"]:
+        print("update: %s -> %s" % (update["local_oid"][:12], update["remote_ref"]))
+    return EXIT_OK
 
 
 # --------------------------------------------------------------------------
@@ -1026,23 +1641,23 @@ def build_parser():
 
     review_list = subparsers.add_parser("review-list", help="list review unit identifiers")
     review_list.add_argument("--run", required=True)
-    review_list.set_defaults(handler=not_yet("review-list"))
+    review_list.set_defaults(handler=command_review_list)
 
     review_show = subparsers.add_parser("review-show", help="show exactly one review unit")
     review_show.add_argument("--run", required=True)
     review_show.add_argument("--unit", required=True)
-    review_show.set_defaults(handler=not_yet("review-show"))
+    review_show.set_defaults(handler=command_review_show)
 
     review_record = subparsers.add_parser("review-record", help="record one review verdict")
     review_record.add_argument("--run", required=True)
     review_record.add_argument("--unit", required=True)
     review_record.add_argument("--verdict", required=True, choices=("clean", "finding"))
     review_record.add_argument("--findings", default=None)
-    review_record.set_defaults(handler=not_yet("review-record"))
+    review_record.set_defaults(handler=command_review_record)
 
     review_status = subparsers.add_parser("review-status", help="report review completeness")
     review_status.add_argument("--run", required=True)
-    review_status.set_defaults(handler=not_yet("review-status"))
+    review_status.set_defaults(handler=command_review_status)
 
     repair_start = subparsers.add_parser("repair-start", help="protect history before repair")
     repair_start.add_argument("--run", required=True)
@@ -1063,7 +1678,7 @@ def build_parser():
     authorize = subparsers.add_parser("authorize", help="write a short-lived push authorization")
     authorize.add_argument("--run", required=True)
     authorize.add_argument("--tag", default=None)
-    authorize.set_defaults(handler=not_yet("authorize"))
+    authorize.set_defaults(handler=command_authorize)
 
     push = subparsers.add_parser("push", help="authorize and push the reviewed objects")
     push.add_argument("--run", required=True)

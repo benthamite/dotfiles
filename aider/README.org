@@ -1,0 +1,26 @@
+#+title: Aider configuration
+#+author: Pablo Stafforini
+
+* Files and responsibilities
+
+[[file:.aider.conf.yml][.aider.conf.yml]] is Aider's global configuration. It selects the model and
+edit format, enables linting, controls commit attribution, and defines the
+commit-message prompt. [[file:global_conventions.md][global_conventions.md]] is different: it contains
+the prose instructions Aider should read in every project, including the local
+Emacs Lisp conventions. The YAML imports that Markdown file through its =read=
+setting.
+
+* Activation
+
+The audited machine has =~/.aider.conf.yml= symlinked to the tracked YAML file.
+Both files are hand-maintained sources, not generated output. The conventions
+are active only because the YAML points to their repository path; they are not
+a second Aider configuration file.
+
+* Updating and checking
+
+Keep the =read= path valid when either file moves, parse the YAML after changing
+its structure, and review prose changes independently from model or commit
+settings. The installed Aider launcher had a broken interpreter path during
+this audit, so an end-to-end startup check was not possible. Neither tracked
+file contains a credential field; model-provider credentials remain external.

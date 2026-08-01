@@ -1,0 +1,20 @@
+#+title: uBlock Origin filters
+#+author: Pablo Stafforini
+
+* Purpose
+
+[[file:my-ublock-static-filters.txt][my-ublock-static-filters.txt]] is a personal uBlock Origin static-filter
+list. It contains network and cosmetic rules intended for the extension's “My
+filters” pane. It is not a complete uBlock Origin settings backup.
+
+* Activation and updates
+
+This directory does not establish a live browser-profile link. Paste or import
+the rules through uBlock Origin, apply the changes there, and test the affected
+pages. When updating the tracked copy, preserve the extension's filter syntax
+and comments; successful text parsing alone does not prove that page selectors
+still match.
+
+Filters can include domains, selectors, and complete request URLs. Review new
+rules before publication because URLs may carry identifiers or sensitive query
+parameters even when they are not authentication secrets.

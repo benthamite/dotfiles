@@ -1,0 +1,20 @@
+#+title: Letterboxd Extras settings backup
+#+author: Pablo Stafforini
+
+* Purpose
+
+[[file:letterboxd-extras-backup-2024_9_3 15_43_59.json][letterboxd-extras-backup-2024_9_3 15_43_59.json]] is a dated settings
+backup from the Letterboxd Extras browser extension. Its settings object is
+empty; only version and timestamp metadata are populated. It is not live
+browser state and cannot presently restore any preferences.
+
+* Restore and update
+
+No browser-profile link or automatic import is recorded here. To obtain a
+useful current backup, export one through Letterboxd Extras and keep the dated
+filename unless there is a deliberate decision to replace the old snapshot.
+
+Run =jq empty= on a new backup and confirm that its top-level settings,
+timestamp, and version fields are present. If its settings object is populated,
+restore it in the extension and check representative Letterboxd pages. The
+current file contains metadata, not credentials.

@@ -1,0 +1,29 @@
+#+title: Enchant personal dictionaries
+#+author: Pablo Stafforini
+
+* Dictionaries and languages
+
+This directory supplies Enchant personal dictionaries for Arabic, German,
+English, Spanish, French, Italian, Polish, Russian, and Turkish. For each
+language, =LANG.dic= is the personal include dictionary and =LANG.exc= is the
+personal exclusion dictionary. These are not Aspell replacement lists; the
+latter are the =.prepl= files documented in [[file:../aspell/README.org][the Aspell README]].
+
+[[file:enchant.ordering][enchant.ordering]] selects Aspell as the provider for all languages. The Arabic,
+German, English, Spanish, French, Italian, Russian, and Turkish dictionary files
+tracked here are absolute symlinks into separate language repositories. The two
+Polish files are empty regular files. The absolute targets make this setup
+machine-specific.
+
+* Activation and updates
+
+The audited machine has =~/.config/enchant= symlinked to this directory. Edits
+in the eight external language repositories are therefore live through both
+layers of symlinks. The Polish files and provider ordering are owned here and
+are live through the directory link.
+
+All tracked links currently resolve, and =enchant-lsmod-2 -list-dicts= finds
+the Aspell dictionaries. After changing a language source, repeat that provider
+check and test both an included and an excluded word with an Enchant client.
+Dictionary entries can contain personal vocabulary, but they should never be
+used to store secrets.

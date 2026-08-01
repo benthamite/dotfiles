@@ -1,0 +1,29 @@
+#+title: Pantalaimon configuration
+#+author: Pablo Stafforini
+
+* Purpose
+
+[[file:pantalaimon.conf][pantalaimon.conf]] defines a local Pantalaimon proxy profile for a remote
+Matrix homeserver. It records the homeserver and local listener settings and
+explicitly disables Pantalaimon's system-keyring integration.
+
+* Activation
+
+The audited machine has =~/.config/pantalaimon= symlinked to this directory, so
+the standard =~/.config/pantalaimon/pantalaimon.conf= consumer path resolves to
+the tracked file. The Pantalaimon executable was not installed during this
+audit, and application-level activation could therefore not be checked.
+
+* Updating and checking
+
+This is hand-maintained configuration, not an export. After changing the
+profile, first confirm that the directory link still resolves here. When
+Pantalaimon is installed, start it normally and verify both the local listener
+and a Matrix client connection; file shape alone does not prove either.
+
+* Security
+
+No password, access token, or private key is tracked. Because keyring use is
+disabled, this file does not by itself establish where runtime credentials are
+stored. Listener and TLS changes still affect the security boundary, so review
+them as network-facing changes rather than treating them as cosmetic options.

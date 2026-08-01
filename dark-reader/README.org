@@ -1,0 +1,21 @@
+#+title: Dark Reader settings export
+#+author: Pablo Stafforini
+
+* Purpose
+
+[[file:Dark-Reader-Settings.json][Dark-Reader-Settings.json]] is a settings export from the Dark Reader
+browser extension. It covers extension state, automation, theme preferences,
+site lists, PDF and protected-page behavior, synchronization, and related UI
+state. It is not a browser-profile store.
+
+* Import and update
+
+No live symlink connects this file to a browser profile. Restore it through
+Dark Reader's settings import control. To update it, export the current settings
+from Dark Reader, replace the snapshot, and review the diff. Browser sync does
+not update this repository copy.
+
+Run =jq empty dark-reader/Dark-Reader-Settings.json= before committing, then
+import it and verify the theme and automation on representative pages. Site
+lists, location fields, and news history can disclose browsing or location
+preferences; the current schema contains no credential fields.

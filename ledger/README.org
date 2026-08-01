@@ -1,0 +1,25 @@
+#+title: Ledger command-line defaults
+#+author: Pablo Stafforini
+
+* Purpose
+
+[[file:.ledgerrc][.ledgerrc]] records default Ledger CLI options: external journal and price
+database paths, ISO-style dates, a Monday week start, date sorting, strict
+checking, and plain non-paged output. The financial journal and price database
+are not stored in this directory.
+
+* Activation state
+
+Ledger normally reads =~/.ledgerrc=, but that path is absent on the audited
+machine and no environment override was found. The tracked file is therefore
+not proven to be live. Its two external data targets currently exist, but that
+does not establish that this init file is the configuration in current use.
+
+* Updating and checking
+
+This is hand-maintained source configuration, not generated output. Review
+external paths when moving the financial data, and verify the file with an
+empty temporary journal and price database before allowing Ledger to read real
+records. Once a consumer path is established, confirm =ledger= reports the
+expected defaults. Journal paths and financial data are sensitive even though
+the init file contains no authentication credentials.

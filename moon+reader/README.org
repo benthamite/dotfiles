@@ -1,0 +1,20 @@
+#+title: Moon+ Reader TTS filters
+#+author: Pablo Stafforini
+
+* Purpose
+
+[[file:tts-char-filters][tts-char-filters]] is a small set of character-replacement rules for the
+text-to-speech feature in Moon+ Reader. The rules normalize punctuation and
+spacing before the Android application reads text aloud.
+
+* Activation and updates
+
+This repository does not establish a live filesystem link to Moon+ Reader.
+The file is a portable rules snapshot that must be transferred to the app.
+The exact import or export procedure, and whether the app or this file was the
+original source, are not recorded here.
+
+Preserve the UTF-8 text and the app's =#->#= mapping syntax when editing or
+replacing the snapshot. Verification requires importing it into Moon+ Reader
+and exercising TTS on text that matches each kind of rule; a line-count check
+does not establish that the app accepted the filters.

@@ -1,0 +1,29 @@
+#+title: Aspell personal dictionaries
+#+author: Pablo Stafforini
+
+* Files
+
+This directory contains live personal Aspell data for English and Spanish:
+
+| Language | Accepted words | Replacements |
+|----------+----------------+--------------|
+| English | [[file:.aspell.en.pws][.aspell.en.pws]] | [[file:.aspell.en.prepl][.aspell.en.prepl]] |
+| Spanish | [[file:.aspell.es.pws][.aspell.es.pws]] | [[file:.aspell.es.prepl][.aspell.es.prepl]] |
+
+The =.pws= files are personal word lists. The =.prepl= files are personal
+replacement lists, which map a recurring misspelling to its correction; both
+replacement lists are currently empty.
+
+* Activation and updates
+
+Each matching =~/.aspell.*= path is symlinked to the file here. Words learned or
+replacements recorded through Aspell can therefore modify the repository files
+directly. Manual edits must preserve the format header and keep its entry count
+in sync with the body.
+
+Both language pairs parse with Aspell. At the time of this audit, however, the
+Spanish word-list header reports 415 entries while its body contains none. That
+count is stale even though Aspell accepts the file. After changing either
+language, dump the personal dictionary with Aspell and check that the header
+matches the entries. Personal vocabulary can reveal names or specialized
+interests, but these files should never contain credentials.

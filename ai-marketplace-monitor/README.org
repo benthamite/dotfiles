@@ -1,0 +1,30 @@
+#+title: AI Marketplace Monitor configuration
+#+author: Pablo Stafforini
+
+* Purpose
+
+[[file:config.toml][config.toml]] configures Facebook Marketplace searches, AI-based evaluation
+of the results, and Telegram or Pushbullet notifications. It combines ordinary
+search and model preferences with fields intended to hold account and API
+credentials.
+
+* Activation and updates
+
+This is hand-maintained operational configuration, not an application export.
+The repository does not establish a live symlink or another consumer path for
+it. The command name resolves to a shell function sourced from the private
+=.zshenv-secrets= file, but its implementation and behavior are not documented
+here. The exact process by which the application locates this TOML file is also
+not recorded.
+
+When changing search criteria, item descriptions, notification choices, or the
+model, review the credential-bearing lines separately. No standalone TOML
+validator or safe application parse was available during this audit, so the
+configuration has not been verified end to end.
+
+* Security
+
+The tracked schema includes username, password, notification-token, chat-ID,
+and API-key fields. Because this repository is public, those fields must never
+contain working credentials. Runtime secrets belong in the external secret
+store and should not be printed while checking this file.

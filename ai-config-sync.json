@@ -280,6 +280,13 @@
       "codex": "codex/skills/refresh-cr-tracker/SKILL.md",
       "status": "paired",
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
+      "name": "chrome-permission-audit",
+      "claude": "claude/skills/chrome-permission-audit/SKILL.md",
+      "codex": "codex/skills/chrome-permission-audit/SKILL.md",
+      "status": "paired",
+      "equivalence": "Byte-identical SKILL.md, rules.json and chrome_permissions.js in both trees. The classic-level dependency installs to ~/.claude/chrome-permission-audit/node_modules rather than either skill directory, so npm cannot break parity."
     }
   ],
   "hooks": [

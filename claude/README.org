@@ -820,6 +820,35 @@ level-one headings for the note root/title, use level-two headings for
 top-level content sections under that root, and keep prose paragraphs unfilled
 rather than hard-wrapped.
 
+**** chrome-permission-audit
+
+Inventories every site the Claude Chrome extension may act on, across /all/
+Chrome profiles, classifies each grant into three sensitivity tiers, and reports
+drift from the standing policy: permanently allow ordinary sites, never
+sensitive ones. =chrome_permissions.js audit= discovers profiles from Chrome's
+=Local State=, reads the extension's =permissionStorage= key, and records a
+baseline in =~/.claude/chrome-permission-audit/state.json= so later runs report
+only what is new. =revoke= removes grants (with =--dry-run=), =accept= records a
+per-site tier decision, =state= shows the baseline. Rules live in =rules.json=,
+ordered, first match wins.
+
+Four properties matter. Permissions are /per Chrome profile/, so auditing only
+the default profile misses most of them. Reads use =classic-level= against a
+throwaway copy rather than grepping the store, because the =.log= files retain
+superseded history — one profile held 1,784 stale =netloc= records against 51
+live ones, so a string-scraping reader reports revoked grants as active. Writes
+go direct so Chrome's exclusive LevelDB lock refuses them loudly when the target
+profile is open, instead of half-writing it. Backups (mode 700, under
+=~/Library/Application Support/claude-chrome-permission-backup/=) contain live
+=accessToken= and =refreshToken= values, so they must never be synced and token
+values must never reach a report.
+
+The extension's own =options.html= cannot be automated — browser tools reject
+=chrome-extension://= URLs — and it offers one Revoke button per entry with no
+bulk action, so revocation goes through the store or the user clicks manually.
+Broad prefix rules (=admin.*=, =signin.*=) escalate toward Tier 1 only; no
+heuristic ever classifies an unknown domain as "keep".
+
 *** Twitter and communication skills
 :PROPERTIES:
 :ID:       6E879560-81C4-4842-90F2-AC14D8E0A1CC

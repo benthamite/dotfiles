@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "note": "Ordered: first match wins. Tier 1 = revoke (admin/identity/money/infrastructure/keys). Tier 2 = review (private data, saved payment, messaging, code). Tier 3 = keep (public reference). Anything unmatched is reported as unclassified rather than assumed safe. Record per-site decisions with `accept` instead of loosening a rule, unless the rule itself is wrong.",
+
+  "rules": [
+    { "pattern": "^(docs|help|support|kb)\\.(?!google\\.com$)", "tier": 3, "reason": "documentation subdomain, carries no account authority" },
+
+    { "pattern": "^admin\\.google\\.com$", "tier": 1, "reason": "Google Workspace super-admin: users, passwords, org data" },
+    { "pattern": "^(accounts|myaccount)\\.google\\.com$", "tier": 1, "reason": "Google identity: login, 2FA, recovery, app passwords" },
+    { "pattern": "^mail(-settings)?\\.google\\.com$", "tier": 1, "reason": "Gmail: password-reset inbox, forwarding rules" },
+    { "pattern": "^script\\.google\\.com$", "tier": 1, "reason": "Apps Script: executes arbitrary code as you" },
+
+    { "pattern": "^(app\\.mercury\\.com|wise\\.com|.*\\.wise\\.com)$", "tier": 1, "reason": "banking / money movement" },
+    { "pattern": "^(app\\.deel\\.com|.*justworks\\.com|.*gusto\\.com|.*rippling\\.com)$", "tier": 1, "reason": "payroll & HR: salaries, SSNs, contractor payments" },
+    { "pattern": "^(checkout\\.stripe\\.com|dashboard\\.stripe\\.com|pay\\.[a-z0-9.-]+|billing\\.[a-z0-9.-]+)$", "tier": 1, "reason": "payment / billing surface" },
+    { "pattern": "(^|\\.)(kalshi\\.com|polymarket\\.com|coinbase\\.com|binance\\.com|kraken\\.com)$", "tier": 1, "reason": "real-money trading account" },
+    { "pattern": "afip\\.(gob|gov)\\.ar$", "tier": 1, "reason": "AFIP: tax authority, fiscal identity & invoicing" },
+    { "pattern": "(^|\\.)(irs\\.gov|hmrc\\.gov\\.uk)$", "tier": 1, "reason": "tax authority" },
+
+    { "pattern": "(aws\\.amazon\\.com|signin\\.aws\\.amazon\\.com|console\\.aws\\.amazon\\.com)$", "tier": 1, "reason": "AWS console/sign-in: infrastructure + billing" },
+    { "pattern": "^(console|sdk)\\.cloud\\.google\\.com$", "tier": 1, "reason": "Google Cloud console: infrastructure + billing" },
+    { "pattern": "^console\\.firebase\\.google\\.com$", "tier": 1, "reason": "Firebase console: production data & rules" },
+    { "pattern": "^cloud\\.digitalocean\\.com$", "tier": 1, "reason": "DigitalOcean: servers + billing" },
+    { "pattern": "dash\\.cloudflare\\.com$", "tier": 1, "reason": "Cloudflare: DNS, WAF, tunnels — domain-level control" },
+    { "pattern": "(alibabacloud\\.com|aliyun\\.com)$", "tier": 1, "reason": "Alibaba Cloud console incl. RAM/IAM: infrastructure + billing" },
+    { "pattern": "^(my\\.eurodns\\.com|.*\\.namecheap\\.com|.*\\.godaddy\\.com|domains\\.google\\.com)$", "tier": 1, "reason": "domain registrar: DNS and transfer control" },
+    { "pattern": "^vercel\\.com$", "tier": 1, "reason": "deploy/hosting control + billing" },
+
+    { "pattern": "docusign", "tier": 1, "reason": "DocuSign: executes binding legal signatures" },
+    { "pattern": "^dashboard\\.gitguardian\\.com$", "tier": 1, "reason": "displays leaked secrets in plaintext" },
+    { "pattern": "^(hire\\.lever\\.co|.*\\.greenhouse\\.io|.*\\.ashbyhq\\.com)$", "tier": 1, "reason": "applicant tracking: candidate PII" },
+    { "pattern": "^admin\\.[a-z0-9.-]+$", "tier": 1, "reason": "org admin console: members, keys, spend" },
+    { "pattern": "^(signin|auth)\\.[a-z0-9.-]+$", "tier": 1, "reason": "authentication surface" },
+
+    { "pattern": "^(console\\.anthropic\\.com|platform\\.claude\\.com|platform\\.openai\\.com|console\\.mistral\\.ai|console\\.x\\.ai|openrouter\\.ai|dashboard\\.cohere\\.com|app\\.fireworks\\.ai|platform\\.moonshot\\.ai|login\\.moonshot\\.ai|platform\\.kimi\\.ai|z\\.ai|deepinfra\\.com|novita\\.ai|app\\.primeintellect\\.ai|modal\\.com|api\\.tiingo\\.com|www\\.tiingo\\.com)$", "tier": 1, "reason": "API keys and billing/spend controls" },
+    { "pattern": "^auth\\.meta\\.com$", "tier": 1, "reason": "Meta account authentication" },
+    { "pattern": "^file$", "tier": 1, "reason": "local filesystem (file:// URLs) — not a website" },
+
+    { "pattern": "^(github|gitlab)\\.com$", "tier": 2, "reason": "private source code, CI secrets, org settings" },
+    { "pattern": "slack\\.com$", "tier": 2, "reason": "workspace messages, DMs and files" },
+    { "pattern": "^(web\\.telegram\\.org|web\\.whatsapp\\.com|messenger\\.com|discord\\.com)$", "tier": 2, "reason": "private messaging: read and send as you" },
+    { "pattern": "^(docs|photos|drive|calendar|contacts|groups|keep)\\.google\\.com$", "tier": 2, "reason": "private personal/org content" },
+    { "pattern": "^(lookerstudio|datastudio|tagmanager|analytics)\\.google\\.com$", "tier": 2, "reason": "analytics/BI dashboards and site tags" },
+    { "pattern": "^search\\.google\\.com$", "tier": 2, "reason": "Search Console: site ownership and indexing" },
+    { "pattern": "^(app\\.asana\\.com|airtable\\.com|app\\.travelperk\\.com|dashboard\\.robinpowered\\.com|huggingface\\.co|www\\.notion\\.so|linear\\.app)$", "tier": 2, "reason": "internal org data / bookings / model artifacts" },
+    { "pattern": "^(app\\.ahrefs\\.com|ahrefs\\.com|www\\.figma\\.com|dev\\.meta\\.ai)$", "tier": 2, "reason": "paid SaaS account: work product and billing" },
+    { "pattern": "^(www\\.)?(amazon\\.[a-z.]+|bestbuy\\.com|newegg\\.com|bhphotovideo\\.com|biblio\\.com|hpb\\.com|moesbooks\\.com|sedo\\.com|ebay\\.[a-z.]+)$", "tier": 2, "reason": "retail with saved payment methods / one-click checkout" },
+    { "pattern": "mercadolibre\\.com", "tier": 2, "reason": "retail with saved payment methods / one-click checkout" },
+    { "pattern": "^(localhost|127\\.0\\.0\\.1)(:\\d+)?$", "tier": 2, "reason": "local dev server — scoped to the port, not the process that owns it today" },
+    { "pattern": "workers\\.dev$", "tier": 2, "reason": "ephemeral dev worker host — the name may be reassigned later" },
+    { "pattern": "sendgrid\\.net$", "tier": 2, "reason": "email click-tracking redirect host — usually granted by accident" },
+
+    { "pattern": "^(www\\.)?(google|bing|duckduckgo)\\.[a-z.]+$", "tier": 3, "reason": "search engine" },
+    { "pattern": "^html\\.duckduckgo\\.com$", "tier": 3, "reason": "search engine" },
+    { "pattern": "^(archive\\.is|archive\\.today|web\\.archive\\.org)$", "tier": 3, "reason": "public archive" },
+    { "pattern": "^(chatgpt\\.com|openai\\.com|claude\\.ai|anthropic\\.com|aistudio\\.google\\.com|gemini\\.google\\.com)$", "tier": 3, "reason": "chat assistant front-end / marketing site — the sensitive surfaces are separate subdomains" },
+    { "pattern": "^(www\\.)?(lesswrong\\.com|forum\\.effectivealtruism\\.org|altruismoefficace\\.net|stafforini\\.com|imdb\\.com|semanticscholar\\.org|philpapers\\.org|rand\\.org|forethought\\.org|ea\\.news|eleosai\\.org|goodjudgment\\.com|ai-2027\\.com|coefficientgiving\\.org|time\\.com|x\\.com)$", "tier": 3, "reason": "public reference / reading" },
+    { "pattern": "(^|\\.)substack\\.com$", "tier": 3, "reason": "public publishing/reading" },
+    { "pattern": "annas-archive", "tier": 3, "reason": "public reference / reading" },
+    { "pattern": "^(example\\.com|newtab|forms\\.gle)$", "tier": 3, "reason": "harmless placeholder or public form" }
+  ]
+}

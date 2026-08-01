@@ -1,0 +1,109 @@
+#!/bin/sh
+# 1Password CLI routing shim.
+#
+# Why this exists
+# ---------------
+# 1Password ties a CLI authorization to the controlling terminal. Agent tool
+# calls run each command in a fresh shell with no controlling terminal, so every
+# bare `op` invocation looks like a new session and triggers another Touch ID
+# prompt. `op-desktop` solves that by holding one authorized pty session, but
+# nothing forced callers to use it: `ahrefs-api-guard` shelled out to bare
+# `op read` and produced exactly the stray prompt op-desktop exists to prevent.
+#
+# This shim makes the routing automatic instead of remembered:
+#
+#   Automations vault -> op-automations (read-only service account, no prompt)
+#   everything else   -> op-desktop     (one prompt per 10-minute window)
+#
+# Reached two ways, because neither alone covers every context:
+#
+#   * PATH, for real shells, cron, launchd, and Emacs subprocesses. Requires the
+#     shims directory to precede /opt/homebrew/bin.
+#   * an `op` function in .zshenv, for the Claude Code / Codex Bash tools. Those
+#     source a snapshot that ends with a frozen `export PATH=...` placing
+#     /opt/homebrew/bin ahead of this directory, so PATH order cannot be relied
+#     on there. A function is immune -- the snapshot rewrites PATH, not
+#     function definitions.
+#
+# Child processes inherit neither the function nor, necessarily, a PATH where
+# this directory wins. In-tree scripts must therefore call op-desktop or
+# op-automations themselves; tests/test_op_routing.py enforces that.
+#
+# Escape hatches, all deliberate and loud rather than silent:
+#
+#   OP_SHIM_BYPASS=1  internal; set by op-desktop's broker and op-automations so
+#                     their own `op` children do not re-enter this shim
+#   OP_NO_SHIM=1      caller opt-out, for the stdin cases op-desktop documents
+#                     it cannot forward (documents/templates piped in)
+
+REAL=/opt/homebrew/bin/op
+[ -x "$REAL" ] || REAL=/usr/local/bin/op
+
+# Recursion guard and explicit opt-out.
+if [ -n "${OP_SHIM_BYPASS:-}" ] || [ -n "${OP_NO_SHIM:-}" ]; then
+	exec "$REAL" "$@"
+fi
+
+# Streaming / interactive subcommands. `run` execs a child process, `inject` and
+# `document create` read stdin, `signin` and `account` need a terminal of their
+# own. op-desktop does not forward stdin, so these must not go through it.
+case "${1:-} ${2:-}" in
+document\ create*)
+	exec "$REAL" "$@"
+	;;
+esac
+case "${1:-}" in
+run | inject | signin | plugin | connect | account | update)
+	exec "$REAL" "$@"
+	;;
+esac
+
+# An explicit `-` argument means "read from stdin", which the broker cannot do.
+for arg in "$@"; do
+	if [ "$arg" = "-" ]; then
+		exec "$REAL" "$@"
+	fi
+done
+
+# Does this invocation target the Automations vault? That vault is served by the
+# read-only service account and needs no desktop authorization. Match both the
+# op:// reference form and an explicit --vault, since `op item get X --vault
+# Automations` carries no reference.
+automations=""
+prev=""
+for arg in "$@"; do
+	case "$arg" in
+	op://Automations/* | --vault=Automations | --vault=automations)
+		automations=1
+		;;
+	Automations | automations)
+		[ "$prev" = "--vault" ] && automations=1
+		;;
+	esac
+	prev="$arg"
+done
+
+if [ -n "$automations" ]; then
+	# Already carrying the token: nothing left to add, go straight to the binary.
+	if [ -n "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
+		exec "$REAL" "$@"
+	fi
+	exec op-automations "$@"
+fi
+
+# Everything else is desktop-gated: personal vaults, writes, share links. Note
+# that an ambient OP_SERVICE_ACCOUNT_TOKEN is deliberately NOT honoured here.
+# The service account cannot read personal vaults, so passing it through would
+# turn a routable request into an authorization failure -- which is exactly how
+# `ahrefs-api-guard --op-ref op://Employee/...` failed. op-desktop drops the
+# token from the child environment for the same reason.
+if command -v op-desktop >/dev/null 2>&1; then
+	exec op-desktop "$@"
+fi
+
+# op-desktop missing is a real problem, not something to paper over: falling
+# through to the raw binary is what causes prompt storms. Say so, then proceed
+# so the caller is not hard-broken by a missing wrapper.
+printf 'op shim: op-desktop not found on PATH; running %s directly.\n' "$REAL" >&2
+printf 'op shim: expect one Touch ID prompt per command until op-desktop is restored.\n' >&2
+exec "$REAL" "$@"

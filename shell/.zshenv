@@ -21,6 +21,31 @@ export GEM_HOME="$HOME/.gem"
 # $TMPDIR is overridden (e.g. Claude Code pins TMPDIR=/tmp/claude-$UID).
 export PATH="$HOME/My Drive/dotfiles/shell/shims:$PATH"
 
+# Re-assert that precedence whenever something later prepends /opt/homebrew/bin
+# (`brew shellenv` in .zprofile does). Idempotent: the entry is moved to the
+# front rather than duplicated, so this is safe to call from .zprofile and .zshrc
+# too. Defined here because .zshenv is the one file every zsh reads.
+dotfiles_prefer_shims() {
+	local shims="$HOME/My Drive/dotfiles/shell/shims"
+	path=("$shims" ${path:#"$shims"})
+}
+dotfiles_prefer_shims
+
+# Route every `op` invocation through the routing shim, whatever PATH says.
+#
+# PATH order alone is not enough in agent shells. The Claude Code and Codex Bash
+# tools source a snapshot whose last act is a frozen `export PATH=...` that puts
+# /opt/homebrew/bin ahead of shell/shims, so the shim loses there even though it
+# wins in every ordinary shell. A function is immune: the snapshot rewrites PATH,
+# not function definitions.
+#
+# Without this, bare `op` reaches the real binary with no controlling terminal and
+# triggers a Touch ID prompt per invocation -- the thing op-desktop exists to
+# prevent. See shell/shims/op for the routing rules and escape hatches.
+op() {
+	"$HOME/My Drive/dotfiles/shell/shims/op" "$@"
+}
+
 # Essential environment variables
 export DOTFILES="$HOME/My Drive/dotfiles"
 export EDITOR="emacsclient -nw"

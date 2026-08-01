@@ -60,13 +60,27 @@ def parse_params(items: list[str]) -> dict[str, str]:
     return params
 
 
+def op_reader_for(op_ref: str) -> list[str]:
+    """Pick the 1Password wrapper that can serve this reference without prompting.
+
+    A child process inherits neither the `op` shell function from .zshenv nor a
+    guaranteed PATH where shell/shims wins, so calling bare `op` here is what
+    produced a stray Touch ID prompt: the Automations vault is served by a
+    read-only service account, but a personal-vault reference needs the
+    op-desktop broker, and bare `op` gets neither.
+    """
+    if op_ref.startswith("op://Automations/"):
+        return ["op-automations", "read", op_ref]
+    return ["op-desktop", "read", op_ref]
+
+
 def api_key_from_env_or_op(env: dict[str, str], op_ref: str) -> str:
     key = env.get("AHREFS_API_KEY")
     if key:
         return key
     try:
         result = subprocess.run(
-            ["op", "read", op_ref],
+            op_reader_for(op_ref),
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

@@ -156,3 +156,9 @@ export COMPOSE_BAKE=1
 
 # Local override file (at end so it can override anything above)
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
+
+# Last word on PATH: keep shell/shims ahead of /opt/homebrew/bin after every
+# prepend above (pyenv, nvm, brew shellenv in .zprofile). Defined in .zshenv.
+# This is also the PATH the agent harness captures into its shell snapshot, so
+# getting the order right here is what makes the snapshot correct.
+dotfiles_prefer_shims

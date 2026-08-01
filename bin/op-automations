@@ -19,4 +19,8 @@ if [[ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]]; then
   export OP_SERVICE_ACCOUNT_TOKEN
 fi
 
+# shell/shims/op routes bare `op` back here for Automations-vault work, so this
+# exec must reach the real binary rather than re-entering the shim.
+export OP_SHIM_BYPASS=1
+
 exec op "$@"

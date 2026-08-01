@@ -41,6 +41,7 @@ DOTFILES_PROJECT_LOCAL_SKILLS = {
     "install-mcp-server",
     "move-session-log",
     "optimize-agent-instructions",
+    "publish-dotfiles",
     "release-dotfiles",
     "skill-audit",
     "skill-resolver",
@@ -1021,6 +1022,17 @@ def explicit_skill_sync_problems(name: str, claude_rel: str, codex_rel: str, lab
 
 def skill_sync_problems(skill: str) -> list[str]:
     return paired_skill_sync_problems(skill, "claude/skills", "codex/skills", "skill")
+
+
+def project_local_skill_sync_problems(skill: str) -> list[str]:
+    """Compare a repo-root .claude/.codex skill pair, evaluation files included."""
+    claude_skill = ROOT / ".claude" / "skills" / skill / "SKILL.md"
+    codex_skill = ROOT / ".codex" / "skills" / skill / "SKILL.md"
+    if not claude_skill.exists() and not codex_skill.exists():
+        return []
+    return paired_skill_sync_problems(
+        skill, ".claude/skills", ".codex/skills", "project-local skill"
+    )
 
 
 def private_skill_sync_problems(skill: str) -> list[str]:
@@ -2199,6 +2211,13 @@ def audit_topology(problems: list[str]) -> None:
             problems,
             f"unexpected dotfiles project-local skill exists: {skill}; reusable skills belong in claude/skills and codex/skills, not repo-root .claude/.codex.",
         )
+
+    for skill in sorted(project_claude_skills | project_codex_skills):
+        drift = project_local_skill_sync_problems(skill)
+        if drift:
+            add_nested_problems(
+                problems, f"Project-local skill pair is not synchronized: {skill}", drift
+            )
 
     drift = local_instruction_sync_problems(ROOT)
     if drift:

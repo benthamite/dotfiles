@@ -325,6 +325,72 @@ class AiConfigSyncAuditTests(unittest.TestCase):
 
         self.assertEqual([], problems)
 
+    def make_project_local_pair(self, claude_body: str, codex_body: str, evals: tuple[str, str]):
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        root = Path(temp.name)
+        for side, body, evaluation in (
+            (".claude", claude_body, evals[0]),
+            (".codex", codex_body, evals[1]),
+        ):
+            skill = root / side / "skills" / "publish-dotfiles"
+            (skill / "evals").mkdir(parents=True)
+            (skill / "SKILL.md").write_text(body, encoding="utf-8")
+            (skill / "evals" / "scenarios.md").write_text(evaluation, encoding="utf-8")
+        return root
+
+    CLAUDE_SKILL = (
+        "---\nname: publish-dotfiles\ndescription: Guarded publication.\n"
+        "user-invocable: true\nmodel: opus\n---\n\nBody.\n"
+    )
+    CODEX_SKILL = "---\nname: publish-dotfiles\ndescription: Guarded publication.\n---\n\nBody.\n"
+
+    def test_project_local_publish_dotfiles_pair_is_registered(self):
+        self.assertIn("publish-dotfiles", self.module.DOTFILES_PROJECT_LOCAL_SKILLS)
+
+    def test_project_local_pair_passes_after_frontmatter_normalization(self):
+        root = self.make_project_local_pair(
+            self.CLAUDE_SKILL, self.CODEX_SKILL, ("Scenario one.\n", "Scenario one.\n")
+        )
+
+        with mock.patch.object(self.module, "ROOT", root):
+            problems = self.module.project_local_skill_sync_problems("publish-dotfiles")
+
+        self.assertEqual([], problems)
+
+    def test_project_local_pair_reports_body_and_evaluation_drift(self):
+        root = self.make_project_local_pair(
+            self.CLAUDE_SKILL,
+            self.CODEX_SKILL.replace("Body.", "Different body."),
+            ("Scenario one.\n", "Scenario two.\n"),
+        )
+
+        with mock.patch.object(self.module, "ROOT", root):
+            problems = self.module.project_local_skill_sync_problems("publish-dotfiles")
+
+        self.assertEqual(
+            [
+                "Project-local skill content drift after tool-specific frontmatter "
+                "normalization: publish-dotfiles",
+                "Auxiliary project-local skill file drift: publish-dotfiles/evals/scenarios.md",
+            ],
+            problems,
+        )
+
+    def test_project_local_pair_reports_a_missing_evaluation_file(self):
+        root = self.make_project_local_pair(
+            self.CLAUDE_SKILL, self.CODEX_SKILL, ("Scenario one.\n", "Scenario one.\n")
+        )
+        (root / ".codex/skills/publish-dotfiles/evals/scenarios.md").unlink()
+
+        with mock.patch.object(self.module, "ROOT", root):
+            problems = self.module.project_local_skill_sync_problems("publish-dotfiles")
+
+        self.assertEqual(
+            ["Auxiliary project-local skill file only in Claude tree: publish-dotfiles/evals/scenarios.md"],
+            problems,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

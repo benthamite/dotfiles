@@ -42,10 +42,9 @@ Inspect live sessions:
 python "$SKILL_DIR/scripts/orchestrate_agent_review.py" buffers
 ```
 
-Default helper output is for user-facing monitoring: concise text with bounded
-fields. JSON output is for machine consumers and omits buffer tails unless
-`--include-tail` is supplied. The helper suppresses Emacs message logging during
-its internal evals.
+Default helper output is concise text with bounded fields. JSON output is for
+machine consumers and carries the same bounded fields. Buffer tails are not part
+of the helper status contract.
 
 Create a durable run file outside the repo or under an ignored state directory. The helper can create or update a JSON state file, but the supervising agent remains responsible for interpreting it:
 
@@ -108,8 +107,7 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" status \
 ```
 
 This prints a short human-readable status. Add `--json` only when another
-program will consume the output; JSON omits buffer tails unless
-`--include-tail` is also supplied.
+program will consume the output.
 
 For a polling loop:
 

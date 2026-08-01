@@ -865,9 +865,9 @@ names, temp-file prompt submission, Python-based monitoring instead of shell
 =sleep=, narrow revision prompts, and concrete stop conditions. Its bundled
 =orchestrate_agent_review.py= helper lists live agent buffers, submits prompt
 files, parses transcripts, reports repo/session status, and watches sessions
-with concise bounded output by default. JSON output is for machine consumers,
-omits buffer tails unless =--include-tail= is supplied, and suppresses Emacs
-message logging during helper evals.
+with concise bounded output by default. JSON output is for machine consumers
+and carries the same bounded fields; buffer tails are outside the helper status
+contract.
 
 **** diagnose
 :PROPERTIES:

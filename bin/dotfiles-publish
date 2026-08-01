@@ -1,0 +1,612 @@
+#!/usr/bin/env python3
+"""Guarded publication for the public dotfiles repository.
+
+Ordinary pushes are refused.  Publication happens only through this program,
+which captures the exact outgoing boundary, scans it, requires an exhaustive
+review of every outgoing unit, and then authorizes one short-lived, exact,
+single-use push.
+
+Two environment variables change behaviour and both are deliberate:
+
+``DOTFILES_PUBLISH_NOW``
+    Fixed clock for expiry and staleness tests.  Honoured only when
+    ``DOTFILES_PUBLISH_TESTING=1``, so production always uses the real clock.
+
+``DOTFILES_PUBLISH_GITLEAKS``
+    Path to the scanner.  Ungated, because a caller who can set it can already
+    set ``PATH``; it grants no authority the caller did not already hold.
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import hmac
+import json
+import os
+import secrets
+import stat
+import subprocess
+import sys
+import time
+from dataclasses import dataclass
+from pathlib import Path
+
+SCHEMA = 1
+
+EXIT_OK = 0
+EXIT_REFUSED = 1
+EXIT_FINDINGS = 2
+EXIT_FAILURE = 3
+
+STATE_DIRECTORY_NAME = "dotfiles-publish"
+DIRECTORY_MODE = 0o700
+FILE_MODE = 0o600
+
+AUTHORIZATION_LIFETIME_SECONDS = 300
+FULL_AUDIT_MAX_AGE_SECONDS = 30 * 86400
+
+RECOVERY_REF_PREFIX = "refs/dotfiles-publish/recovery"
+AUDIT_REF_PREFIX = "refs/dotfiles-publish/audit"
+
+BLOCKED_PUSH_URL = "dotfiles-blocked::origin"
+BLOCKED_PUSH_MESSAGE = "Push blocked: use publish-dotfiles so outgoing history is reviewed."
+
+RULESET_POLICY_FILES = (
+    ".gitleaks.toml",
+    ".gitignore",
+    ".gitattributes",
+    "bin/dotfiles-publish",
+)
+
+MODES = ("publish", "release", "full-audit")
+
+
+class PublishError(Exception):
+    """A refusal or failure that stops the current command."""
+
+    def __init__(self, message, code=EXIT_FAILURE):
+        super().__init__(message)
+        self.code = code
+
+
+# --------------------------------------------------------------------------
+# Git plumbing
+# --------------------------------------------------------------------------
+
+
+@dataclass
+class GitResult:
+    code: int
+    out: bytes
+    err: bytes
+
+    @property
+    def text(self):
+        return self.out.decode("utf-8", "replace")
+
+    @property
+    def error_text(self):
+        return self.err.decode("utf-8", "replace")
+
+
+def run_git(repo, *args, input_bytes=None, check=True):
+    """Run one Git command with an argument vector; never through a shell."""
+    command = ["git"]
+    if repo is not None:
+        command += ["-C", str(repo)]
+    command += [str(argument) for argument in args]
+    completed = subprocess.run(
+        command,
+        input=input_bytes,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    result = GitResult(completed.returncode, completed.stdout, completed.stderr)
+    if check and result.code != 0:
+        raise PublishError(
+            "git %s failed (%d): %s"
+            % (" ".join(str(argument) for argument in args), result.code, result.error_text.strip())
+        )
+    return result
+
+
+# --------------------------------------------------------------------------
+# Clock, digests, and atomic state files
+# --------------------------------------------------------------------------
+
+
+def now_epoch():
+    override = os.environ.get("DOTFILES_PUBLISH_NOW")
+    if override and os.environ.get("DOTFILES_PUBLISH_TESTING") == "1":
+        try:
+            return float(override)
+        except ValueError:
+            parsed = time.strptime(override.replace("Z", "UTC"), "%Y-%m-%dT%H:%M:%S%Z")
+            return float(calendar_timegm(parsed))
+    return time.time()
+
+
+def calendar_timegm(parsed):
+    import calendar
+
+    return calendar.timegm(parsed)
+
+
+def rfc3339(epoch):
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(epoch))
+
+
+def sha256_of(*parts):
+    digest = hashlib.sha256()
+    for part in parts:
+        if isinstance(part, str):
+            part = part.encode("utf-8")
+        digest.update(part)
+        digest.update(b"\x00")
+    return digest.hexdigest()
+
+
+def write_json(path, payload, mode=FILE_MODE):
+    """Write JSON atomically through a sibling temporary file."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.parent / ("." + path.name + ".tmp")
+    descriptor = os.open(str(temporary), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, mode)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, indent=2, sort_keys=True)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+    except BaseException:
+        temporary.unlink(missing_ok=True)
+        raise
+    os.chmod(str(temporary), mode)
+    os.replace(str(temporary), str(path))
+
+
+def read_json(path):
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+# --------------------------------------------------------------------------
+# Repository discovery
+# --------------------------------------------------------------------------
+
+
+@dataclass
+class Repository:
+    root: Path
+    git_dir: Path
+    branch: str
+    remote_name: str
+    remote_ref: str
+    fetch_url: str
+
+    @property
+    def state_dir(self):
+        return self.git_dir / STATE_DIRECTORY_NAME
+
+
+def discover_repository(start=None):
+    start = Path(start or os.getcwd())
+    probe = run_git(start, "rev-parse", "--show-toplevel", check=False)
+    if probe.code != 0:
+        raise PublishError("not inside a Git repository: %s" % start)
+    root = Path(probe.text.strip())
+    git_dir = Path(run_git(root, "rev-parse", "--absolute-git-dir").text.strip())
+
+    head = run_git(root, "symbolic-ref", "--quiet", "--short", "HEAD", check=False)
+    if head.code != 0:
+        raise PublishError("HEAD is detached; check out the branch you want to publish")
+    branch = head.text.strip()
+
+    upstream = run_git(
+        root,
+        "for-each-ref",
+        "--format=%(upstream:remotename)%09%(upstream)",
+        "refs/heads/" + branch,
+    ).text.strip()
+    if "\t" not in upstream or not upstream.split("\t")[0]:
+        raise PublishError(
+            "branch %s has no configured upstream; set one before publishing" % branch
+        )
+    remote_name, upstream_ref = upstream.split("\t", 1)
+    if not upstream_ref.startswith("refs/remotes/%s/" % remote_name):
+        raise PublishError("unsupported upstream reference: %s" % upstream_ref)
+    remote_branch = upstream_ref[len("refs/remotes/%s/" % remote_name) :]
+    remote_ref = "refs/heads/" + remote_branch
+
+    fetch_url = run_git(root, "remote", "get-url", remote_name).text.strip()
+    if not fetch_url:
+        raise PublishError("remote %s has no fetch URL" % remote_name)
+
+    return Repository(
+        root=root,
+        git_dir=git_dir,
+        branch=branch,
+        remote_name=remote_name,
+        remote_ref=remote_ref,
+        fetch_url=fetch_url,
+    )
+
+
+# --------------------------------------------------------------------------
+# Local state
+# --------------------------------------------------------------------------
+
+
+def ensure_state_dir(repo):
+    directory = repo.state_dir
+    if directory.is_symlink():
+        raise PublishError("publication state directory is a symlink: %s" % directory)
+    directory.mkdir(parents=True, exist_ok=True)
+    os.chmod(str(directory), DIRECTORY_MODE)
+    return directory
+
+
+def fingerprint_key(repo):
+    """Return the local HMAC key, creating it exactly once."""
+    directory = ensure_state_dir(repo)
+    path = directory / "fingerprint.key"
+    if path.is_symlink():
+        raise PublishError("fingerprint key is a symlink: %s" % path)
+    if path.exists():
+        mode = stat.S_IMODE(path.stat().st_mode)
+        if mode & 0o077:
+            raise PublishError(
+                "fingerprint key %s is group- or world-accessible (mode %o)" % (path, mode)
+            )
+        material = path.read_bytes()
+        if len(material) < 32:
+            raise PublishError("fingerprint key %s is too short" % path)
+        return material
+    material = secrets.token_bytes(32)
+    descriptor = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_EXCL, FILE_MODE)
+    with os.fdopen(descriptor, "wb") as handle:
+        handle.write(material)
+        handle.flush()
+        os.fsync(handle.fileno())
+    return material
+
+
+def fingerprint(key, *parts):
+    """Keyed short fingerprint; a bare hash of a secret would be guessable."""
+    message = b"\x00".join(
+        part.encode("utf-8") if isinstance(part, str) else part for part in parts
+    )
+    return hmac.new(key, message, hashlib.sha256).hexdigest()[:20]
+
+
+def value_hmac(key, value):
+    if isinstance(value, str):
+        value = value.encode("utf-8")
+    return hmac.new(key, b"value\x00" + value, hashlib.sha256).hexdigest()
+
+
+# --------------------------------------------------------------------------
+# Ruleset identity
+# --------------------------------------------------------------------------
+
+
+def ruleset_identity(root):
+    """Digest of the policy that a review was performed under."""
+    digest = hashlib.sha256()
+    digest.update(b"dotfiles-publish-ruleset\x00")
+    digest.update(str(SCHEMA).encode("utf-8") + b"\x00")
+    for name in RULESET_POLICY_FILES:
+        digest.update(name.encode("utf-8") + b"\x00")
+        path = root / name
+        if path.is_file() and not path.is_symlink():
+            digest.update(b"PRESENT\x00")
+            digest.update(hashlib.sha256(path.read_bytes()).digest())
+        else:
+            digest.update(b"MISSING\x00")
+        digest.update(b"\x00")
+    return digest.hexdigest()
+
+
+# --------------------------------------------------------------------------
+# Publication boundary
+# --------------------------------------------------------------------------
+
+
+@dataclass
+class Boundary:
+    remote_oid: str
+    candidate_oid: str
+
+
+def resolve_boundary(repo, fetch=True):
+    if fetch:
+        fetched = run_git(repo.root, "fetch", "--quiet", repo.remote_name, check=False)
+        if fetched.code != 0:
+            raise PublishError(
+                "could not fetch %s before capturing the boundary: %s"
+                % (repo.remote_name, fetched.error_text.strip())
+            )
+    listing = run_git(repo.root, "ls-remote", repo.fetch_url, repo.remote_ref)
+    lines = [line for line in listing.text.splitlines() if line.strip()]
+    if not lines:
+        raise PublishError(
+            "%s does not exist on %s; this workflow publishes existing branches only"
+            % (repo.remote_ref, repo.fetch_url)
+        )
+    remote_oid = lines[0].split()[0]
+    present = run_git(repo.root, "cat-file", "-e", remote_oid + "^{commit}", check=False)
+    if present.code != 0:
+        raise PublishError("remote tip %s is not present locally; fetch first" % remote_oid)
+
+    candidate_oid = run_git(repo.root, "rev-parse", "HEAD^{commit}").text.strip()
+    ancestry = run_git(
+        repo.root, "merge-base", "--is-ancestor", remote_oid, candidate_oid, check=False
+    )
+    if ancestry.code != 0:
+        raise PublishError(
+            "remote tip %s is not an ancestor of %s; synchronize instead of force-pushing"
+            % (remote_oid[:12], candidate_oid[:12])
+        )
+    return Boundary(remote_oid=remote_oid, candidate_oid=candidate_oid)
+
+
+def outgoing_commits(repo, boundary):
+    listing = run_git(
+        repo.root,
+        "rev-list",
+        "--reverse",
+        "%s..%s" % (boundary.remote_oid, boundary.candidate_oid),
+    )
+    return [line.strip() for line in listing.text.splitlines() if line.strip()]
+
+
+# --------------------------------------------------------------------------
+# Run records
+# --------------------------------------------------------------------------
+
+RUN_IDENTITY_FIELDS = (
+    "schema",
+    "mode",
+    "run_id",
+    "repository",
+    "remote_name",
+    "remote_url",
+    "remote_ref",
+    "remote_oid",
+    "candidate_oid",
+    "ruleset_id",
+)
+
+
+def compute_run_id(mode, repo, boundary, ruleset_id, tag, notes_digest):
+    return sha256_of(
+        "dotfiles-publish-run",
+        str(SCHEMA),
+        mode,
+        str(repo.root),
+        repo.fetch_url,
+        repo.remote_ref,
+        boundary.remote_oid,
+        boundary.candidate_oid,
+        ruleset_id,
+        tag or "",
+        notes_digest or "",
+    )[:32]
+
+
+def run_directory(repo, run_id):
+    return ensure_state_dir(repo) / "runs" / run_id
+
+
+def load_run(repo, run_id):
+    path = run_directory(repo, run_id) / "run.json"
+    if not path.exists():
+        raise PublishError("unknown run %s; start with a scan" % run_id, EXIT_REFUSED)
+    return read_json(path)
+
+
+def store_run(repo, record):
+    directory = run_directory(repo, record["run_id"])
+    directory.mkdir(parents=True, exist_ok=True)
+    os.chmod(str(directory.parent), DIRECTORY_MODE)
+    os.chmod(str(directory), DIRECTORY_MODE)
+    path = directory / "run.json"
+    if path.exists():
+        existing = read_json(path)
+        for field in RUN_IDENTITY_FIELDS:
+            if existing.get(field) != record.get(field):
+                raise PublishError(
+                    "run %s already exists with a different %s; a changed input needs a new run"
+                    % (record["run_id"], field)
+                )
+        record["created_at"] = existing.get("created_at", record["created_at"])
+    write_json(path, record)
+    return path
+
+
+def notes_digest_of(path):
+    if not path:
+        return ""
+    notes = Path(path)
+    if not notes.is_file():
+        raise PublishError("release notes file not found: %s" % path)
+    return hashlib.sha256(notes.read_bytes()).hexdigest()
+
+
+# --------------------------------------------------------------------------
+# Full-audit receipts
+# --------------------------------------------------------------------------
+
+
+def full_audit_receipt(repo):
+    path = repo.state_dir / "full-audit.json"
+    if not path.exists():
+        return None
+    return read_json(path)
+
+
+def full_audit_staleness(repo, ruleset_id, now):
+    """Return the reason a full audit is due, or None when the receipt holds."""
+    receipt = full_audit_receipt(repo)
+    if receipt is None:
+        return "no full audit has been recorded"
+    if receipt.get("incident_flag"):
+        return "an incident was recorded after the last full audit"
+    if receipt.get("ruleset_id") != ruleset_id:
+        return "the ruleset changed since the last full audit"
+    completed = receipt.get("completed_epoch")
+    if not isinstance(completed, (int, float)):
+        return "the full audit receipt has no completion time"
+    if now - completed > FULL_AUDIT_MAX_AGE_SECONDS:
+        return "the last full audit is older than 30 days"
+    return None
+
+
+# --------------------------------------------------------------------------
+# scan
+# --------------------------------------------------------------------------
+
+
+def command_scan(args):
+    repo = discover_repository()
+    if args.mode not in MODES:
+        raise PublishError("unknown mode: %s" % args.mode)
+    if args.tag and args.mode != "release":
+        raise PublishError("--tag is only meaningful in release mode")
+
+    ruleset_id = ruleset_identity(repo.root)
+    fingerprint_key(repo)
+    boundary = resolve_boundary(repo)
+    notes_digest = notes_digest_of(args.release_notes)
+    run_id = compute_run_id(args.mode, repo, boundary, ruleset_id, args.tag, notes_digest)
+    now = now_epoch()
+    staleness = full_audit_staleness(repo, ruleset_id, now)
+
+    commits = outgoing_commits(repo, boundary)
+    record = {
+        "schema": SCHEMA,
+        "mode": args.mode,
+        "run_id": run_id,
+        "created_at": rfc3339(now),
+        "repository": str(repo.root),
+        "remote_name": repo.remote_name,
+        "remote_url": repo.fetch_url,
+        "remote_ref": repo.remote_ref,
+        "remote_oid": boundary.remote_oid,
+        "candidate_oid": boundary.candidate_oid,
+        "ruleset_id": ruleset_id,
+        "manifest_id": "",
+        "full_audit_due": staleness is not None,
+        "public_refs": [],
+    }
+    store_run(repo, record)
+
+    print("run: %s" % run_id)
+    print("mode: %s" % args.mode)
+    print("repository: %s" % repo.root)
+    print("remote: %s %s %s" % (repo.remote_name, repo.remote_ref, boundary.remote_oid))
+    print("candidate: %s" % boundary.candidate_oid)
+    print("ruleset: %s" % ruleset_id)
+    print("outgoing-commits: %d" % len(commits))
+    print("full-audit-due: %s" % ("true" if staleness else "false"))
+    if staleness:
+        print("full-audit-reason: %s" % staleness)
+    return EXIT_OK
+
+
+# --------------------------------------------------------------------------
+# Command line
+# --------------------------------------------------------------------------
+
+
+def not_yet(name):
+    def handler(args):
+        raise PublishError("%s is not implemented yet" % name)
+
+    return handler
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(
+        prog="dotfiles-publish",
+        description="Scan, review, and authorize publication of the dotfiles repository.",
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    scan = subparsers.add_parser("scan", help="capture and scan the outgoing boundary")
+    scan.add_argument("--mode", default="publish", choices=MODES)
+    scan.add_argument("--release-notes", default=None)
+    scan.add_argument("--tag", default=None)
+    scan.set_defaults(handler=command_scan)
+
+    review_list = subparsers.add_parser("review-list", help="list review unit identifiers")
+    review_list.add_argument("--run", required=True)
+    review_list.set_defaults(handler=not_yet("review-list"))
+
+    review_show = subparsers.add_parser("review-show", help="show exactly one review unit")
+    review_show.add_argument("--run", required=True)
+    review_show.add_argument("--unit", required=True)
+    review_show.set_defaults(handler=not_yet("review-show"))
+
+    review_record = subparsers.add_parser("review-record", help="record one review verdict")
+    review_record.add_argument("--run", required=True)
+    review_record.add_argument("--unit", required=True)
+    review_record.add_argument("--verdict", required=True, choices=("clean", "finding"))
+    review_record.add_argument("--findings", default=None)
+    review_record.set_defaults(handler=not_yet("review-record"))
+
+    review_status = subparsers.add_parser("review-status", help="report review completeness")
+    review_status.add_argument("--run", required=True)
+    review_status.set_defaults(handler=not_yet("review-status"))
+
+    repair_start = subparsers.add_parser("repair-start", help="protect history before repair")
+    repair_start.add_argument("--run", required=True)
+    repair_start.set_defaults(handler=not_yet("repair-start"))
+
+    repair_verify = subparsers.add_parser("repair-verify", help="verify a repaired history")
+    repair_verify.add_argument("--run", required=True)
+    repair_verify.add_argument("--allowed-path", action="append", default=[])
+    repair_verify.set_defaults(handler=not_yet("repair-verify"))
+
+    incident = subparsers.add_parser("incident-record", help="record a resolved public incident")
+    incident.add_argument("--run", required=True)
+    incident.add_argument("--fingerprint", required=True)
+    incident.add_argument("--resolution", required=True, choices=("rotated", "revoked", "invalid"))
+    incident.add_argument("--evidence", required=True)
+    incident.set_defaults(handler=not_yet("incident-record"))
+
+    authorize = subparsers.add_parser("authorize", help="write a short-lived push authorization")
+    authorize.add_argument("--run", required=True)
+    authorize.add_argument("--tag", default=None)
+    authorize.set_defaults(handler=not_yet("authorize"))
+
+    push = subparsers.add_parser("push", help="authorize and push the reviewed objects")
+    push.add_argument("--run", required=True)
+    push.add_argument("--tag", default=None)
+    push.set_defaults(handler=not_yet("push"))
+
+    hook = subparsers.add_parser("hook", help="pre-push hook implementation")
+    hook.add_argument("remote_name")
+    hook.add_argument("remote_location")
+    hook.set_defaults(handler=not_yet("hook"))
+
+    install = subparsers.add_parser("install", help="install the push guard")
+    install.set_defaults(handler=not_yet("install"))
+
+    return parser
+
+
+def main(argv=None):
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    try:
+        return args.handler(args)
+    except PublishError as error:
+        sys.stderr.write("dotfiles-publish: %s\n" % error)
+        return error.code
+    except BrokenPipeError:
+        return EXIT_FAILURE
+
+
+if __name__ == "__main__":
+    sys.exit(main())

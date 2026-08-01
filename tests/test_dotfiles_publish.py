@@ -342,6 +342,33 @@ class PublicationFixture(unittest.TestCase):
         proc = self.cli("scan", *extra, env=env)
         return proc, self.run_id_of(proc)
 
+    def scan_from(self, directory, *extra, env=None):
+        Path(directory).mkdir(parents=True, exist_ok=True)
+        proc = self.cli("scan", *extra, cwd=directory, env=env)
+        return proc, self.run_id_of(proc)
+
+    def advance_remote_elsewhere(self, message="remote work"):
+        """Move the bare remote forward from a separate clone."""
+        clone = self.base / ("clone-%d" % len(list(self.base.glob("clone-*"))))
+        subprocess.run(
+            [GIT, "clone", "--quiet", str(self.remote), str(clone)],
+            check=True,
+            env=self.git_env(),
+        )
+        for name, value in (
+            ("user.email", "other@example.invalid"),
+            ("user.name", "Other Author"),
+            ("commit.gpgsign", "false"),
+        ):
+            self.git("config", name, value, cwd=clone)
+        (clone / "REMOTE.md").write_text(message + "\n")
+        self.git("add", "-A", cwd=clone)
+        self.git("commit", "--quiet", "-m", message, cwd=clone)
+        self.git(
+            "-c", "core.hooksPath=/dev/null", "push", "--quiet", "origin", "HEAD:refs/heads/master", cwd=clone
+        )
+        return self.remote_tip()
+
     def run_id_of(self, proc):
         match = re.search(r"^run: (\S+)$", proc.stdout, re.MULTILINE)
         self.assertIsNotNone(
@@ -404,6 +431,126 @@ class PublicationFixture(unittest.TestCase):
         for path in sorted(self.state_dir().rglob("*")):
             if path.is_file():
                 yield path
+
+
+class DotfilesPublishStateTests(PublicationFixture):
+    def test_scan_discovers_repository_from_a_subdirectory(self):
+        self.publish_base()
+        self.commit("add notes", {"docs/notes.md": "notes\n"})
+
+        proc, run_id = self.scan_from(self.repo / "docs")
+
+        record = self.read_json(self.run_dir(run_id) / "run.json")
+        self.assertEqual(os.path.realpath(self.repo), os.path.realpath(record["repository"]))
+        self.assertIn("repository: ", proc.stdout)
+
+    def test_scan_resolves_the_configured_upstream_branch(self):
+        self.publish_base()
+        self.git(
+            "-c",
+            "core.hooksPath=/dev/null",
+            "push",
+            "--quiet",
+            "origin",
+            "master:refs/heads/publication",
+        )
+        self.git("fetch", "--quiet", "origin")
+        self.git("branch", "--set-upstream-to=origin/publication", "master")
+        self.commit("add notes", {"docs/notes.md": "notes\n"})
+
+        _, run_id = self.scan()
+
+        record = self.read_json(self.run_dir(run_id) / "run.json")
+        self.assertEqual("origin", record["remote_name"])
+        self.assertEqual("refs/heads/publication", record["remote_ref"])
+        self.assertEqual(str(self.remote), record["remote_url"])
+        self.assertEqual(self.remote_tip("refs/heads/publication"), record["remote_oid"])
+        self.assertEqual(self.head(), record["candidate_oid"])
+
+    def test_scan_rejects_a_non_fast_forward_candidate(self):
+        self.publish_base()
+        self.commit("local work", {"docs/local.md": "local\n"})
+        self.advance_remote_elsewhere()
+
+        proc = self.cli("scan")
+
+        self.assertNotEqual(0, proc.returncode)
+        self.assertIn("ancestor", proc.stderr)
+        self.assertNotIn("force", proc.stdout)
+
+    def test_state_directory_and_files_are_owner_only(self):
+        self.publish_base()
+        self.commit("add notes", {"docs/notes.md": "notes\n"})
+
+        _, run_id = self.scan()
+
+        self.assertEqual(0o700, stat.S_IMODE(self.state_dir().stat().st_mode))
+        self.assertEqual(
+            0o600, stat.S_IMODE((self.state_dir() / "fingerprint.key").stat().st_mode)
+        )
+        self.assertEqual(
+            0o600, stat.S_IMODE((self.run_dir(run_id) / "run.json").stat().st_mode)
+        )
+        self.assertEqual(0o700, stat.S_IMODE(self.run_dir(run_id).stat().st_mode))
+
+    def test_ruleset_identity_is_deterministic_and_policy_sensitive(self):
+        self.publish_base()
+        self.commit("add notes", {"docs/notes.md": "notes\n"})
+
+        first, first_run = self.scan()
+        second, second_run = self.scan()
+        self.assertEqual(first_run, second_run)
+        first_ruleset = self.read_json(self.run_dir(first_run) / "run.json")["ruleset_id"]
+
+        (self.repo / ".gitleaks.toml").write_text("[extend]\nuseDefault = true\n")
+        _, third_run = self.scan()
+        third_ruleset = self.read_json(self.run_dir(third_run) / "run.json")["ruleset_id"]
+
+        self.assertNotEqual(first_ruleset, third_ruleset)
+        self.assertNotEqual(first_run, third_run)
+
+    def test_run_id_refuses_a_conflicting_reuse(self):
+        self.publish_base()
+        self.commit("add notes", {"docs/notes.md": "notes\n"})
+        _, run_id = self.scan()
+
+        record = self.read_json(self.run_dir(run_id) / "run.json")
+        record["candidate_oid"] = "0" * 40
+        (self.run_dir(run_id) / "run.json").write_text(json.dumps(record))
+
+        proc = self.cli("scan")
+        self.assertNotEqual(0, proc.returncode)
+        self.assertIn("candidate_oid", proc.stderr)
+
+    def test_fingerprint_key_is_created_once_and_permission_checked(self):
+        self.publish_base()
+        self.commit("add notes", {"docs/notes.md": "notes\n"})
+
+        self.scan()
+        key_path = self.state_dir() / "fingerprint.key"
+        original = key_path.read_bytes()
+        self.assertEqual(32, len(original))
+
+        self.scan()
+        self.assertEqual(original, key_path.read_bytes())
+
+        key_path.chmod(0o644)
+        proc = self.cli("scan")
+        self.assertNotEqual(0, proc.returncode)
+        self.assertIn("fingerprint key", proc.stderr)
+
+    def test_clock_override_requires_the_testing_flag(self):
+        self.publish_base()
+        self.commit("add notes", {"docs/notes.md": "notes\n"})
+
+        environment = self.env()
+        del environment["DOTFILES_PUBLISH_TESTING"]
+        proc = self.cli("scan", env=environment)
+        run_id = self.run_id_of(proc)
+
+        record = self.read_json(self.run_dir(run_id) / "run.json")
+        self.assertNotEqual("2025-08-01T00:53:20Z", record["created_at"])
+        self.assertGreater(record["created_at"], "2026-")
 
 
 class DotfilesPublishScanTests(PublicationFixture):

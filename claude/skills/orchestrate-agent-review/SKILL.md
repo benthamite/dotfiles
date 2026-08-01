@@ -1,13 +1,31 @@
 ---
 name: orchestrate-agent-review
-description: Coordinate a two-agent planner/reviewer loop across live Emacs agent sessions. Use when the user asks to orchestrate Claude/Fable and Codex, run paired model review, converge a plan through back-and-forth review, monitor agent sessions until completion, or make a multi-agent review process unattended.
+description: Use when coordinating two live Emacs agent sessions across planning, independent review, revision, and implementation, including Claude/Fable and Codex role assignments or reversals.
 ---
 
 # orchestrate-agent-review
 
 ## Overview
 
-Run a loop where one live `agent.el` session creates or revises work and another live `agent.el` session reviews it. The skill exists to keep monitoring, session state, and Emacs minibuffer prompts under explicit control.
+Run one complete Superpowers-style handoff across two live `agent.el`
+sessions: Agent 1 plans, Agent 2 reviews, Agent 1 revises until approval, and
+Agent 1 implements. The skill keeps roles, monitoring, session state, and Emacs
+minibuffer prompts under explicit control.
+
+## Role contract
+
+- **Agent 1 plans, revises, and implements.** Planning and implementation are
+  one role bundle even though independent review happens between them.
+- **Agent 2 independently reviews** Agent 1's committed plan or revision and
+  returns `IMPLEMENTATION-READY` or `NOT READY`.
+- Agent 1 defaults to Claude/Fable and Agent 2 defaults to Codex.
+- A user-requested reversal swaps the entire role bundle: the new Agent 1 owns
+  planning, revision, and implementation; the new Agent 2 owns independent
+  review. Never reverse only the planning phase.
+- Plan tasks remain internal execution boundaries for tests and commits. The
+  orchestrated handoff is plan/review/revision followed by implementation of
+  the approved plan; do not create a new agent cycle for every task unless the
+  user explicitly requests that granularity.
 
 Use the helper script for deterministic Emacs/session operations:
 
@@ -29,8 +47,8 @@ Identify:
 
 - repo root
 - improvement area or spec/plan path
-- planner backend/session, usually Claude/Fable
-- reviewer backend/session, usually Codex
+- Agent 1 backend/session, usually Claude/Fable
+- Agent 2 backend/session, usually Codex
 - expected first actor
 - pass limit or convergence policy
 
@@ -139,7 +157,8 @@ Use this policy:
 1. Planner produces or revises a plan/spec and commits once.
 2. Submit the resulting commit to the reviewer.
 3. Reviewer answers `IMPLEMENTATION-READY` or `NOT READY`.
-4. If `IMPLEMENTATION-READY`, mark the area complete.
+4. If `IMPLEMENTATION-READY`, mark the plan approved, then hand control back
+   to Agent 1 to implement the approved plan.
 5. If `NOT READY`, extract only remaining blockers and submit them to the planner.
 6. Repeat until convergence or a stop condition.
 
@@ -166,6 +185,21 @@ Planner revision prompt shape:
 The reviewer returned NOT READY with <N> remaining blockers. Please make one minimal revision addressing only these blockers. Do not broaden scope or reopen settled decisions. Commit once and report the hash plus a concise mapping from blockers to changes.
 ```
 
+## Step 6: Hand the approved plan back for implementation
+
+After Agent 2 returns `IMPLEMENTATION-READY`, submit the accepted plan and
+commit to Agent 1. Approval completes the review loop, not the work.
+
+Agent 1 implements the whole approved plan using its task boundaries for the
+specified tests and commits. Use the implementation workflow required by the
+plan; when the plan leaves that choice open, use `superpowers:executing-plans`.
+Do not transfer implementation to Agent 2 merely because Agent 2 performed the
+review.
+
+Monitor Agent 1 through the plan's final verification. Return to Agent 2 only
+if the user or plan explicitly requires a post-implementation review; that is a
+new review phase, not an implicit change in the role contract.
+
 ## Stop conditions
 
 Stop and report a blocker when:
@@ -183,8 +217,10 @@ If the remaining blocker count keeps shrinking and the issues are concrete execu
 When complete, report:
 
 - final status per area
-- accepted commit hash
+- accepted plan commit hash
+- implementation commit or commit range
 - number of planner/reviewer passes
+- Agent 1 and Agent 2 assignments
 - repo branch and ahead/behind state
 - whether the working tree is clean
 - any automation friction observed

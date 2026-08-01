@@ -469,10 +469,12 @@ a single target and keeps paired copies equivalent when the repo uses paired
 roots. Creative or underspecified automation requests first use Superpowers
 brainstorming when available.
 
-The =orchestrate-agent-review= skill coordinates a two-agent
-planner/reviewer loop across live Emacs =agent.el= sessions. It is for
-workflows where one session creates or revises a plan and another reviews it
-until convergence. The skill records the operating rules that prevent
+The =orchestrate-agent-review= skill coordinates a complete two-agent
+plan/review/implementation handoff across live Emacs =agent.el= sessions.
+Agent 1 plans, revises, and implements; Agent 2 independently reviews until the
+plan is implementation-ready. Agent 1 defaults to Claude/Fable and Agent 2 to
+Codex, while a requested reversal swaps the complete role bundles. The skill
+records the operating rules that prevent
 unattended review from stalling, including explicit agent instance names,
 temp-file prompt submission, Python-based monitoring instead of shell =sleep=,
 narrow revision prompts, and concrete stop conditions. Its bundled
@@ -481,9 +483,11 @@ files, parses transcripts, reports repo/session status, and watches sessions
 with concise bounded output by default. The watcher labels a terminal verdict
 only when the designated reviewer's assistant output starts with the exact
 verdict line, so verdict words in prompts or progress discussion do not produce
-false completion signals. Live Emacs status is transferred through
-one-shot temp files while the evaluated Emacs form returns =nil=, so structured
-status data does not travel through the =emacsclient --eval= return channel.
+false completion signals. Plan approval hands control back to Agent 1 for
+implementation; it does not complete the workflow. Live Emacs status is
+transferred through one-shot temp files while the evaluated Emacs form returns
+=nil=, so structured status data does not travel through the =emacsclient
+--eval= return channel.
 
 The =add-to-emacs-packages= skill is a Codex workflow for
 registering one of the user's Emacs packages in =my-emacs-packages.org=,

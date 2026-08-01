@@ -16,6 +16,8 @@ CODEX_SCRIPT = (
 CLAUDE_SCRIPT = (
     ROOT / "claude/skills/orchestrate-agent-review/scripts/orchestrate_agent_review.py"
 )
+CODEX_SKILL = ROOT / "codex/skills/orchestrate-agent-review/SKILL.md"
+CLAUDE_SKILL = ROOT / "claude/skills/orchestrate-agent-review/SKILL.md"
 
 
 def load_module():
@@ -29,6 +31,24 @@ def load_module():
 
 
 orchestrator = load_module()
+
+
+class SkillWorkflowTests(unittest.TestCase):
+    def test_paired_skills_define_review_then_implementation_handoff(self):
+        self.assertEqual(CODEX_SKILL.read_bytes(), CLAUDE_SKILL.read_bytes())
+        skill = CODEX_SKILL.read_text(encoding="utf-8")
+        normalized_skill = " ".join(skill.split())
+
+        required_rules = (
+            "Agent 1 plans, revises, and implements",
+            "Agent 2 independently reviews",
+            "hand control back to Agent 1 to implement the approved plan",
+            "Agent 1 defaults to Claude/Fable and Agent 2 defaults to Codex",
+            "swaps the entire role bundle",
+        )
+        for rule in required_rules:
+            with self.subTest(rule=rule):
+                self.assertIn(rule, normalized_skill)
 
 
 class WatchVerdictTests(unittest.TestCase):

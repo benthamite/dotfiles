@@ -102,8 +102,9 @@ supplement it; allowing one layer does not bypass another guard or authorize an
 external write.
 
 Hooks that judge a Git command resolve the repository from the command itself,
-via =hooks/lib-repo-root.sh=. A leading =cd= decides the repository, because a
-session working in one repository routinely commits in another. The target is
+via =hooks/lib-repo-root.sh=. A =cd= at any command head decides the repository,
+the last one winning, because a session working in one repository routinely
+commits in another and the =cd= is often preceded by a preamble. The target is
 extracted by parameter expansion, never evaluated; =$HOME= is substituted, and a
 target carrying command substitution or any other unexpanded variable is treated
 as unresolvable. When the target cannot be resolved the helper reports no

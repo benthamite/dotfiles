@@ -43,49 +43,62 @@ if [ -z "$_repo_context_dir" ] && [ -n "${INPUT:-}" ] && command -v jq >/dev/nul
   )
 fi
 
-# Extract the cd target from "cd <path> ..." patterns without re-evaluating
-# the command in a subshell.  Pure parameter expansion (no `[[ =~ ]]`) so the
+# Extract the cd target from "cd <path> ..." patterns without re-evaluating the
+# command in a subshell.  Pure parameter expansion (no `[[ =~ ]]`) so the
 # behaviour is identical whether this file is sourced into bash or zsh -- the
 # `[[ =~ ]]` ERE engine differs between the two and silently failed to capture
-# quoted paths under zsh, falling back to the hook's cwd.  Command substitution
-# is rejected in the extracted target below, not in the command as a whole: the
-# target is the only value that reaches `git -C`, and rejecting the whole
-# command meant a `$(...)` anywhere in it discarded the cd target.  A multi-line
-# commit message written as `git commit -m "$(cat <<EOF ...)"` did exactly that,
-# so a commit made in one repository was evaluated against the session's own.
+# quoted paths under zsh, falling back to the hook's cwd.
+#
+# Every command head is scanned, not just the first, and the last `cd` wins.  A
+# preamble before changing directory is ordinary -- writing a commit message to a
+# file, setting a variable -- and the repository the command acts on is the same
+# either way.  Heads are the start of the command and whatever follows `&&`,
+# `||`, `;` or a newline.  Shell-group openers are skipped because the
+# output-redaction wrapper rewrites every command to `{ CMD; } 2>&1 | ...`.
+#
+# Command substitution is rejected in the extracted target below rather than in
+# the command as a whole: the target is the only value that reaches `git -C`, and
+# rejecting the whole command meant a `$(...)` anywhere in it discarded the
+# target.  A multi-line commit message written as
+# `git commit -m "$(cat <<EOF ...)"` did exactly that, so a commit made in one
+# repository was evaluated against the session's own.
 _cd_target=""
 _dq='"'
 _sq="'"
-case "$COMMAND" in
-  *)
-    _rest="${COMMAND#"${COMMAND%%[![:space:]]*}"}"        # ltrim
-    # Strip leading shell-group openers.  The output-redaction wrapper rewrites
-    # every command to `{ CMD; } 2>&1 | ...`, and PostToolUse hooks see that
-    # wrapped form -- so the cd target sits after a leading `{` (or `(`).
-    while :; do
-      case "$_rest" in
-        '{'* | '('* ) _rest="${_rest#?}"; _rest="${_rest#"${_rest%%[![:space:]]*}"}" ;;
-        * ) break ;;
-      esac
-    done
-    case "$_rest" in
-      cd[[:space:]]*)
-        _rest="${_rest#cd}"                               # drop leading 'cd'
-        _rest="${_rest#"${_rest%%[![:space:]]*}"}"        # ltrim again
-        case "$_rest" in
-          "$_dq"*) _rest="${_rest#"$_dq"}"; _cd_target="${_rest%%"$_dq"*}" ;;  # "..."
-          "$_sq"*) _rest="${_rest#"$_sq"}"; _cd_target="${_rest%%"$_sq"*}" ;;  # '...'
-          *)       _cd_target="${_rest%%[[:space:]]*}"     # bare: up to whitespace
-                   _cd_target="${_cd_target%%'&'*}"        # or command separator
-                   _cd_target="${_cd_target%%';'*}"
-                   _cd_target="${_cd_target%%'|'*}"
-                   _cd_target="${_cd_target/#\~/$HOME}"    # tilde
-                   _cd_target="${_cd_target//'\ '/ }" ;;   # backslash-space -> space
-        esac
-        ;;
+_scan="$COMMAND"
+while [ -n "$_scan" ]; do
+  _head="${_scan#"${_scan%%[![:space:]]*}"}"              # ltrim
+  while :; do
+    case "$_head" in
+      '{'* | '('* | '&'* | '|'* | ';'* )
+        _head="${_head#?}"; _head="${_head#"${_head%%[![:space:]]*}"}" ;;
+      * ) break ;;
     esac
-    ;;
-esac
+  done
+  case "$_head" in
+    cd[[:space:]]*)
+      _rest="${_head#cd}"
+      _rest="${_rest#"${_rest%%[![:space:]]*}"}"
+      case "$_rest" in
+        "$_dq"*) _rest="${_rest#"$_dq"}"; _cd_target="${_rest%%"$_dq"*}" ;;
+        "$_sq"*) _rest="${_rest#"$_sq"}"; _cd_target="${_rest%%"$_sq"*}" ;;
+        *)       _cd_target="${_rest%%[[:space:]]*}"
+                 _cd_target="${_cd_target%%'&'*}"
+                 _cd_target="${_cd_target%%';'*}"
+                 _cd_target="${_cd_target%%'|'*}"
+                 _cd_target="${_cd_target/#\~/$HOME}"
+                 _cd_target="${_cd_target//'\ '/ }" ;;
+      esac
+      ;;
+  esac
+  # Advance to the next command head.
+  case "$_scan" in
+    *[\&\|\;$'\n']* )
+      _scan="${_scan#*[&|;$'\n']}" ;;
+    * ) _scan="" ;;
+  esac
+done
+unset _scan _head 2>/dev/null || true
 unset _dq _sq _rest 2>/dev/null || true
 
 # Discard a target carrying command substitution, so an injected `$(...)` or

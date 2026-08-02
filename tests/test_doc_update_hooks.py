@@ -288,6 +288,47 @@ class DocUpdateHookRepoPathTests(unittest.TestCase):
                     permission_decision(result), "allow", deny_reason(result)
                 )
 
+    def test_a_cd_after_a_preamble_still_decides_the_repository(self):
+        """The cd need not be the first thing in the command.
+
+        Writing a message to a file, or setting a variable, before changing
+        directory is ordinary, and the repository the command commits in is the
+        same either way.
+        """
+        (self.repo / "example.el").write_text("(provide 'example)\n")
+        (self.doc / "manual.org").write_text("#+title: Manual\nAfter preamble.\n")
+        command = (
+            "MSG=/tmp/some-message.txt && "
+            f'cd "{self.repo}" && git add example.el '
+            "emacs/extras/doc/manual.org && git commit -q -F $MSG"
+        )
+        for hook, command_field in HOOKS:
+            with self.subTest(hook=hook):
+                result = self.run_hook(
+                    hook, command_field, command, cwd=self.elsewhere,
+                    workdir=self.elsewhere,
+                )
+                self.assertEqual(
+                    permission_decision(result), "allow", deny_reason(result)
+                )
+
+    def test_the_last_cd_in_the_chain_decides_the_repository(self):
+        (self.repo / "example.el").write_text("(provide 'example)\n")
+        (self.doc / "manual.org").write_text("#+title: Manual\nLast cd.\n")
+        command = (
+            f'cd "{self.elsewhere}" && echo staging ; cd "{self.repo}" && '
+            "git add example.el emacs/extras/doc/manual.org && git commit -q -m x"
+        )
+        for hook, command_field in HOOKS:
+            with self.subTest(hook=hook):
+                result = self.run_hook(
+                    hook, command_field, command, cwd=self.elsewhere,
+                    workdir=self.elsewhere,
+                )
+                self.assertEqual(
+                    permission_decision(result), "allow", deny_reason(result)
+                )
+
     def test_an_unresolvable_cd_target_is_not_swapped_for_the_session_repo(self):
         """An unresolvable target must not be answered from a different tree.
 

@@ -357,6 +357,30 @@ class StageAtomicRunTests(unittest.TestCase):
         self.assertNotIn("Task 7", prompt)
         self.assertEqual(orchestrator.load_run(self.run_file)["resume_count"], 1)
 
+    def test_resume_stage_closes_an_already_finished_stage_without_rework(self):
+        self.start_implementation()
+        args = SimpleNamespace(run_file=str(self.run_file))
+
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "awaiting-input"},
+            ),
+            mock.patch.object(orchestrator, "submit_to_agent") as submit,
+            redirect_stdout(io.StringIO()),
+        ):
+            orchestrator.resume_stage(args)
+
+        prompt = submit.call_args.args[2]
+        normalized_prompt = " ".join(prompt.split())
+        self.assertIn("If all Stage 2 work is already complete", normalized_prompt)
+        self.assertIn("do not repeat the work or its evidence", normalized_prompt)
+        self.assertIn(
+            "reply with exactly this one line and nothing else: STAGE COMPLETE: 2",
+            normalized_prompt,
+        )
+
     def test_complete_stage_requires_return_and_acceptance_evidence(self):
         self.start_implementation()
         args = SimpleNamespace(

@@ -223,6 +223,9 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" resume-stage \
 ```
 
 `resume-stage` accepts no custom prompt and refuses to contact a busy agent.
+Its fixed prompt handles a completed stage whose return omitted the marker:
+Agent 1 must not repeat work or evidence and must reply with only the exact
+stage-completion marker.
 
 ## Step 5: Create and review the spec
 

@@ -71,6 +71,11 @@ wait for task-level supervision. Own the remaining implementation and
 stage-final verification. Return only when the complete stage is verified, or
 when a documented stop condition genuinely requires user input.
 
+If all Stage {stage} work is already complete and verified, do not repeat the
+work or its evidence. Instead, reply with exactly this one line and nothing
+else:
+STAGE COMPLETE: {stage}
+
 Only after the complete stage and its verification are done, end the final
 response with this exact line:
 STAGE COMPLETE: {stage}"""

@@ -650,13 +650,21 @@ def finish_phase(args: argparse.Namespace) -> None:
             )
         actor_name = PHASE_ACTOR[args.phase]
         live = buffer_state(state[actor_name]["buffer"])
+        digest = None
         if live.get("state") != "awaiting-input":
-            label = "Agent 1" if actor_name == "agent1" else "Agent 2"
-            raise SystemExit(
-                f"{label} is {live.get('state', 'unknown')}; "
-                "phase completion requires awaiting input"
-            )
-        digest = _phase_evidence(state, args.phase)
+            if args.phase == "implementation" and live.get("state") == "busy":
+                try:
+                    digest = _phase_evidence(state, args.phase)
+                except SystemExit:
+                    pass
+            if digest is None:
+                label = "Agent 1" if actor_name == "agent1" else "Agent 2"
+                raise SystemExit(
+                    f"{label} is {live.get('state', 'unknown')}; "
+                    "phase completion requires awaiting input"
+                )
+        if digest is None:
+            digest = _phase_evidence(state, args.phase)
         state["completions"].append(
             {
                 "phase": args.phase,

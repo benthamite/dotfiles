@@ -381,6 +381,37 @@ class StageAtomicRunTests(unittest.TestCase):
             normalized_prompt,
         )
 
+    def test_finish_implementation_reconciles_a_missed_stop_event_from_marker(self):
+        self.start_implementation()
+        self.write_phase_return("implementation")
+
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "busy"},
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            orchestrator.finish_phase(self.finish_args("implementation"))
+
+        state = orchestrator.load_run(self.run_file)
+        self.assertEqual(state["status"], "implementation-returned")
+        self.assertEqual(state["completions"][-1]["phase"], "implementation")
+
+    def test_finish_implementation_keeps_busy_state_without_current_marker(self):
+        self.start_implementation()
+
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "busy"},
+            ),
+            self.assertRaisesRegex(SystemExit, "Agent 1 is busy"),
+        ):
+            orchestrator.finish_phase(self.finish_args("implementation"))
+
     def test_complete_stage_requires_return_and_acceptance_evidence(self):
         self.start_implementation()
         args = SimpleNamespace(

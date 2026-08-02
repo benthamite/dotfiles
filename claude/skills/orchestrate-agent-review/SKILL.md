@@ -166,9 +166,11 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" finish-phase \
 
 `finish-phase` reads only bytes appended to that fixed actor's configured
 top-level transcript after the current submission and requires the exact
-completion marker. It rejects busy actors, stale or missing evidence, and
-premature or mismatched phases. Only then does the next handoff become
-available.
+completion marker. It rejects stale or missing evidence and premature or
+mismatched phases. A busy implementation actor is accepted only when that
+bounded transcript already ends in the exact current-stage marker, which
+reconciles a stop event lost during an Emacs-server interruption without
+exposing transcript content. Only then does the next handoff become available.
 
 The helper persists a pending record before every external submission. If
 delivery fails ambiguously, all further actions stop until the operator uses
@@ -210,8 +212,10 @@ exits. Submission commands are never retried automatically.
 During specification and planning, use the bounded transcript evidence needed
 to pass artifacts between agents. During implementation, the helper disables
 transcript and repository monitoring and exposes only the run's stage/phase
-plus Agent 1's fixed top-level session state. Do not bypass it to read internal
-task/subagent output or inspect per-task repository/process state.
+plus Agent 1's fixed top-level session state. The only exception is the marker
+validator inside `finish-phase`; it may reconcile a stale busy flag but never
+prints transcript content. Do not bypass it to read internal task/subagent
+output or inspect per-task repository/process state.
 
 Send concise commentary when the stage phase changes. Do not emit periodic
 task-level heartbeats. If Agent 1 is busy, leave it alone. If implementation is

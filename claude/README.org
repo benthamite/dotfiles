@@ -96,7 +96,9 @@ and skills owned by other repositories are outside its scope.
 
 The paired =orchestrate-agent-review= helper keeps implementation stages atomic.
 Its fixed resume path tells an agent whose work is already complete to return
-only the required stage marker instead of repeating the work or its evidence.
+only the required stage marker instead of repeating the work or its evidence;
+the bounded marker check also reconciles a busy flag left stale by a lost Emacs
+stop event.
 
 * Hooks
 
@@ -106,8 +108,9 @@ Claude has events with no Codex equivalent here, including =Read=, =Grep=,
 manifest differences, not missing peers.
 
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
-skips edits while Git is in the middle of a rebase, merge, cherry-pick, or
-revert so a live Emacs never loads a partially resolved tree.
+skips test-only files and edits while Git has an active operation or unmerged
+index entries, so a live Emacs never loads tests or a partially resolved tree.
+Test-only Elisp commits likewise do not require package-manual updates.
 
 The SessionStart reasoning-worktree synchronization hook is also Claude-only.
 It repairs required key links before eligibility checks, updates eligible

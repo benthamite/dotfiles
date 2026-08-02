@@ -74,7 +74,10 @@ EXEC_WRAPPERS = {
     "caffeinate", "script", "watch", "source", ".", "pushd", "popd",
 }
 
-# Transparent wrappers that run their remaining argv unchanged.
+# Transparent wrappers that run their remaining argv unchanged. "pyenv exec"
+# is handled alongside these in _evaluate: only its exec subcommand is
+# transparent (it runs the remaining argv through the selected interpreter
+# unchanged); every other pyenv subcommand keeps unknown-command handling.
 TRANSPARENT_WRAPPERS = {"command", "exec", "nohup"}
 
 # Proven read-only (or at least never runtime-state-creating) commands whose
@@ -609,10 +612,19 @@ def _evaluate(argv: list[str], scope: dict) -> dict:
             return _allow("export assignment", argv, cwd)
         return _indet_seg("unsupported export form", argv, cwd)
 
-    while argv and os.path.basename(argv[0]) in TRANSPARENT_WRAPPERS:
-        if argv[0] == "command" and len(argv) > 1 and argv[1] in ("-v", "-V"):
-            return _allow("command lookup", argv, cwd)
-        argv = argv[1:]
+    while argv:
+        base = os.path.basename(argv[0])
+        if base in TRANSPARENT_WRAPPERS:
+            if argv[0] == "command" and len(argv) > 1 and argv[1] in ("-v", "-V"):
+                return _allow("command lookup", argv, cwd)
+            argv = argv[1:]
+            continue
+        # ONLY "pyenv exec" is transparent; other pyenv subcommands fall
+        # through to normal classification below.
+        if base == "pyenv" and len(argv) > 1 and argv[1] == "exec":
+            argv = argv[2:]
+            continue
+        break
     if not argv:
         return _allow("empty command", argv, cwd)
 

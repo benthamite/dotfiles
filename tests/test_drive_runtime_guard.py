@@ -297,6 +297,32 @@ class ParseCommandPolicyTest(unittest.TestCase):
     def test_read_only_command_mentioning_python_is_allowed(self):
         self.assert_decision("grep -r python .", DRIVE_PROJECT, "allow")
 
+    # --- pyenv exec transparent wrapper -------------------------------------
+
+    # The manifest's exact tangodb smoke argv. The guard sees only argv, not
+    # the manifest's env (PYTHONDONTWRITEBYTECODE=1), and the argv alone lacks
+    # bytecode prevention: pytest's dual guard therefore denies under Drive,
+    # while the external-workspace run the manifest prescribes is allowed.
+    TANGODB_SMOKE = "pyenv exec python -m pytest -q -p no:cacheprovider"
+
+    def test_pyenv_exec_tangodb_smoke_argv_in_drive_cwd_is_denied(self):
+        self.assert_decision(self.TANGODB_SMOKE, DRIVE_PROJECT, "deny")
+
+    def test_pyenv_exec_tangodb_smoke_argv_outside_drive_is_allowed(self):
+        self.assert_decision(self.TANGODB_SMOKE, EXTERNAL_PROJECT, "allow")
+
+    def test_pyenv_exec_npm_ci_in_drive_cwd_is_denied(self):
+        self.assert_decision("pyenv exec npm ci", DRIVE_PROJECT, "deny")
+
+    def test_pyenv_exec_npm_ci_outside_drive_is_allowed(self):
+        self.assert_decision("pyenv exec npm ci", EXTERNAL_PROJECT, "allow")
+
+    def test_pyenv_non_exec_subcommand_keeps_current_verdict(self):
+        # Only "pyenv exec" is transparent; other subcommands keep the
+        # pre-existing unknown-command classification (pinned here as allow).
+        for cwd in (DRIVE_PROJECT, EXTERNAL_PROJECT):
+            self.assert_decision("pyenv install 3.12", cwd, "allow")
+
     # --- find/fd exec delegation (reviewer probes) --------------------------
 
     def test_find_exec_npm_ci_in_drive_cwd_is_denied(self):
@@ -526,6 +552,19 @@ class GuardFileTest(unittest.TestCase):
             with self.subTest(command=command):
                 out = self.run_guard(
                     CLAUDE_GUARD, self.claude_payload(command, EXTERNAL_PROJECT)
+                )
+                self.assertIsNone(out)
+
+    def test_guard_denies_pyenv_exec_pytest_under_drive_allows_outside(self):
+        command = "pyenv exec python -m pytest -q -p no:cacheprovider"
+        for guard in (CLAUDE_GUARD, CODEX_GUARD):
+            with self.subTest(guard=str(guard)):
+                out = self.run_guard(
+                    guard, self.claude_payload(command, DRIVE_PROJECT)
+                )
+                self.assert_denied(out)
+                out = self.run_guard(
+                    guard, self.claude_payload(command, EXTERNAL_PROJECT)
                 )
                 self.assertIsNone(out)
 

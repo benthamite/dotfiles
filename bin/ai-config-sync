@@ -3318,8 +3318,17 @@ def audit_private_skills(problems: list[str], manifest: dict) -> None:
 
 def audit_hooks(problems: list[str], manifest: dict) -> None:
     manifest_hooks = {item["name"]: item for item in manifest.get("hooks") or []}
-    claude_hooks = {path.name for path in (ROOT / "claude" / "hooks").iterdir() if path.is_file()}
-    codex_hooks = {path.name for path in (ROOT / "codex" / "hooks").iterdir() if path.is_file()}
+    readme_names = {"README.md", "README.org"}
+    claude_hooks = {
+        path.name
+        for path in (ROOT / "claude" / "hooks").iterdir()
+        if path.is_file() and path.name not in readme_names
+    }
+    codex_hooks = {
+        path.name
+        for path in (ROOT / "codex" / "hooks").iterdir()
+        if path.is_file() and path.name not in readme_names
+    }
 
     for hook in sorted((claude_hooks | codex_hooks) - set(manifest_hooks)):
         add_problem(problems, f"Hook missing from manifest: {hook}")

@@ -76,7 +76,7 @@ The command returns a status token after enqueueing the build. Reloading is driv
 #+findex: elpaca-extras-rebuild-and-reload
 The command ~elpaca-extras-rebuild-and-reload~ is analogous to ~elpaca-extras-update-and-reload~ ([[#h:update-and-reload][Update and reload]]) but uses ~elpaca-rebuild~ instead of ~elpaca-update~. This is useful when you have made local source changes and want to rebuild the package from those changes rather than fetching upstream updates.
 
-The build is enqueued with unbounded printing so long dependency-path lists are serialized completely even when the live Emacs has customized ~print-length~ or ~print-level~.
+Build enqueueing and the later asynchronous autoload and compile steps use unbounded printing, so subprocess forms containing long dependency-path lists are serialized completely even when the live Emacs has customized ~print-length~ or ~print-level~.
 
 ** Lock file management
 :PROPERTIES:

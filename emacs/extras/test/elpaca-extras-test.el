@@ -182,6 +182,31 @@
       (elpaca-extras-rebuild-and-reload 'my-pkg)
       (should (equal observed-print-settings '(nil nil))))))
 
+(ert-deftest elpaca-extras-test-async-build-steps-do-not-truncate-commands ()
+  "Printer limits stay disabled when a build step runs after enqueue returns."
+  (let ((print-length 3)
+        (print-level 2)
+        deferred-build
+        serialized)
+    (cl-letf (((symbol-function 'add-hook) #'ignore)
+              ((symbol-function 'elpaca-rebuild)
+               (lambda (_pkg _force)
+                 (setq deferred-build
+                       (lambda ()
+                         (setq serialized
+                               (elpaca-extras--without-print-limits
+                                (lambda ()
+                                  (format "%S" '((1 2 3 4 5)
+                                                  (6 7 8 9 10)))))))))))
+      (elpaca-extras-rebuild-and-reload 'my-pkg))
+    (should (functionp deferred-build))
+    (funcall deferred-build)
+    (should (equal serialized "((1 2 3 4 5) (6 7 8 9 10))"))
+    (should (advice-member-p #'elpaca-extras--without-print-limits
+                             'elpaca-build-autoloads))
+    (should (advice-member-p #'elpaca-extras--without-print-limits
+                             'elpaca-build-compile))))
+
 (ert-deftest elpaca-extras-test-build-reload-status-missing-token ()
   "Unknown reload tokens return nil."
   (should-not (elpaca-extras-build-reload-status "missing-token")))

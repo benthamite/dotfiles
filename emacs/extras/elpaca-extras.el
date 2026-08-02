@@ -43,6 +43,20 @@
 (defvar elpaca-extras--build-reload-statuses (make-hash-table :test #'equal)
   "Status table for asynchronous build-and-reload requests.")
 
+(defun elpaca-extras--without-print-limits (function &rest args)
+  "Call FUNCTION with printer limits disabled.
+Elpaca serializes subprocess forms while asynchronous build steps run.  User
+values of `print-length' or `print-level' must not truncate those forms."
+  (let ((print-length nil)
+        (print-level nil))
+    (apply function args)))
+
+;; `elpaca-rebuild' only enqueues work.  These functions serialize the actual
+;; subprocess forms later, after the enqueue-time dynamic bindings have ended.
+(dolist (function '(elpaca-build-autoloads elpaca-build-compile))
+  (unless (advice-member-p #'elpaca-extras--without-print-limits function)
+    (advice-add function :around #'elpaca-extras--without-print-limits)))
+
 ;;;; Functions
 
 ;; github.com/progfolio/elpaca/issues/250

@@ -826,6 +826,42 @@ class DotfilesPublishScanTests(PublicationFixture):
         )
         self.assertIn("dotfiles-credential-url", rules)
 
+    @unittest.skipUnless(shutil.which("gitleaks"), "gitleaks is not installed")
+    def test_inline_command_rule_ignores_long_flags_that_contain_dash_p(self):
+        # The short-flag branch once matched the -p inside --paginate and
+        # captured "aginate" as the secret.
+        sample = "\n".join(
+            [
+                "run `gh api repos/OWNER/REPO/issues --jq .title` or `gh api --paginate`.",
+                "psql -p 5432 -h localhost",
+                "mysql -u root -p" + "SuperSecretPassword1",
+                "curl --password " + "hunter2hunter2 https://example.invalid",
+            ]
+        )
+        (self.base / "sample.md").write_text(sample + "\n")
+        report = self.base / "flags-report.json"
+
+        completed = subprocess.run(
+            [
+                "gitleaks", "dir",
+                "--config", str(REPO_ROOT / ".gitleaks.toml"),
+                "--no-banner", "--redact=100",
+                "--report-format", "json",
+                "--report-path", str(report),
+                str(self.base),
+            ],
+            capture_output=True,
+            text=True,
+            env=self.git_env(),
+        )
+
+        self.assertIn(completed.returncode, (0, 1), completed.stderr)
+        results = json.loads(report.read_text() or "[]")
+        lines = {result["StartLine"] for result in results}
+        self.assertNotIn(1, lines, "a long flag containing -p was read as a password")
+        self.assertNotIn(2, lines, "a port number after -p was read as a password")
+        self.assertEqual({3, 4}, lines, "the real inline credentials must still fire")
+
     def test_git_crypt_path_with_plaintext_historical_blob_is_rejected(self):
         self.publish_base()
         self.commit(

@@ -58,7 +58,10 @@ keywords = ["://"]
 [[rules]]
 id = "dotfiles-inline-command-credential"
 description = "Shell command with an inlined token or password"
-regex = '''(?i)\b(?:curl|wget|http|https|psql|mysql|mysqldump|mongo|mongosh|redis-cli|sshpass|scp|rsync|gh|glab|aws|az|gcloud|op|vault|kubectl)\b[^\n]{0,160}?(?:--(?:password|passwd|token|api[_-]?key|secret|auth)[= ]|-p ?|-u [^\s]+ -p)["']?([^\s"'\\]{8,})'''
+# The short-flag branch requires a space before -p and the value attached to it,
+# which is how an inline password is actually written. Accepting a bare "-p"
+# anywhere matched the -p inside long flags such as --paginate.
+regex = '''(?i)\b(?:curl|wget|http|https|psql|mysql|mysqldump|mongo|mongosh|redis-cli|sshpass|scp|rsync|gh|glab|aws|az|gcloud|op|vault|kubectl)\b[^\n]{0,160}?(?:--(?:password|passwd|token|api[_-]?key|secret|auth)[= ] ?|[ ]-p)["']?([^\s"'\\]{8,})'''
 secretGroup = 1
 keywords = [
   "curl",

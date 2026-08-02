@@ -1,19 +1,30 @@
 #!/usr/bin/env python3
 """Fail-closed tooling for migrating repositories out of Google Drive.
 
-This module currently provides the migration manifest data model and its
-strict loader.  Loading is structural only: it never calls Git, never
-requires a source to exist on disk, and never mutates anything.  Every
-schema violation raises ManifestError; nothing is warned about and then
-accepted.
+This module provides the migration manifest data model with its strict
+loader, plus a strictly read-only audit layer.  Manifest loading is
+structural only: it never calls Git, never requires a source to exist on
+disk, and never mutates anything.  Every schema violation raises
+ManifestError; nothing is warned about and then accepted.
+
+The audit layer observes filesystem and Git state without mutating either:
+traversal never follows a symlink, Git is invoked read-only with optional
+locks disabled, and every unreadable path is an error rather than an empty
+success.  The audit payload is canonical (sorted records and keys, no
+timestamps or other volatile fields) so two audits of unchanged state are
+byte-identical; volatile observation metadata belongs only in an external
+journal event wrapper.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
+import stat
+import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -591,19 +602,235 @@ def load_manifest(path: Path) -> Manifest:
     )
 
 
+class AuditError(RuntimeError):
+    """A read-only audit could not observe state completely."""
+
+
+def _scan_sorted(directory: Path) -> list[os.DirEntry]:
+    """List one directory's entries sorted by name, failing closed.
+
+    An unreadable directory raises AuditError; it is never reported as an
+    empty (successful) listing.
+    """
+    try:
+        with os.scandir(directory) as entries:
+            return sorted(entries, key=lambda entry: entry.name)
+    except OSError as error:
+        raise AuditError(
+            f"Audit cannot read directory: {directory} ({error})"
+        ) from error
+
+
+def scan_symlinks(root: Path) -> list[str]:
+    """Report every symlink under root without ever following one.
+
+    Traversal uses os.scandir() and recurses only into real directories
+    (entry.is_dir(follow_symlinks=False)); a symlink is recorded and never
+    entered.  Returns sorted absolute paths.
+    """
+    root = Path(root)
+    found: list[str] = []
+    pending = [root]
+    while pending:
+        directory = pending.pop()
+        for entry in _scan_sorted(directory):
+            try:
+                if entry.is_symlink():
+                    found.append(entry.path)
+                elif entry.is_dir(follow_symlinks=False):
+                    pending.append(Path(entry.path))
+            except OSError as error:
+                raise AuditError(
+                    f"Audit cannot classify entry: {entry.path} ({error})"
+                ) from error
+    return sorted(found)
+
+
+def _sha256_file(path: Path) -> str:
+    """Hash one regular file; any read error is a blocker, never skipped."""
+    digest = hashlib.sha256()
+    try:
+        with open(path, "rb") as handle:
+            for chunk in iter(lambda: handle.read(1 << 20), b""):
+                digest.update(chunk)
+    except OSError as error:
+        raise AuditError(f"Audit cannot hash file: {path} ({error})") from error
+    return digest.hexdigest()
+
+
+def audit_filesystem(root: Path) -> list[dict]:
+    """Record every entry under root for the journal representation.
+
+    Each record carries the filesystem device ID, file mode, link target
+    for symlinks, and SHA-256 hash for regular files.  Traversal never
+    follows a symlink, and every unreadable path raises AuditError.
+    Records are sorted by path so the output is deterministic.
+    """
+    root = Path(root)
+    records: list[dict] = []
+    pending = [root]
+    while pending:
+        directory = pending.pop()
+        for entry in _scan_sorted(directory):
+            path = Path(entry.path)
+            try:
+                info = os.lstat(path)
+            except OSError as error:
+                raise AuditError(f"Audit cannot stat: {path} ({error})") from error
+            record = {
+                "path": path.relative_to(root).as_posix(),
+                "dev": info.st_dev,
+                "mode": f"0o{stat.S_IMODE(info.st_mode):o}",
+            }
+            if stat.S_ISLNK(info.st_mode):
+                record["type"] = "symlink"
+                try:
+                    record["link_target"] = os.readlink(path)
+                except OSError as error:
+                    raise AuditError(
+                        f"Audit cannot read link: {path} ({error})"
+                    ) from error
+            elif stat.S_ISDIR(info.st_mode):
+                record["type"] = "directory"
+                pending.append(path)
+            elif stat.S_ISREG(info.st_mode):
+                record["type"] = "file"
+                record["size"] = info.st_size
+                record["sha256"] = _sha256_file(path)
+            else:
+                record["type"] = "other"
+            records.append(record)
+    return sorted(records, key=lambda record: record["path"])
+
+
+def _git_read(repo: Path, *args: str) -> str:
+    """Run one read-only Git command and return its stdout.
+
+    shell=False and check=True always; GIT_OPTIONAL_LOCKS=0 keeps even
+    `git status` from touching the index, so observation never mutates
+    the repository.  Output is decoded as strict UTF-8 regardless of
+    locale so the payload cannot vary by environment; non-UTF-8 output
+    is an AuditError, never a raw UnicodeDecodeError.
+    """
+    command = ["git", "-C", str(repo), *args]
+    env = dict(os.environ, GIT_OPTIONAL_LOCKS="0")
+    try:
+        completed = subprocess.run(
+            command,
+            shell=False,
+            check=True,
+            capture_output=True,
+            encoding="utf-8",
+            errors="strict",
+            env=env,
+        )
+    except FileNotFoundError as error:
+        raise AuditError(f"Audit cannot find git: {error}") from error
+    except subprocess.CalledProcessError as error:
+        detail = (error.stderr or "").strip()
+        raise AuditError(
+            f"Audit git command failed: {' '.join(command)} ({detail})"
+        ) from error
+    except UnicodeDecodeError as error:
+        raise AuditError(
+            f"Audit git output is not valid UTF-8: {' '.join(command)} ({error})"
+        ) from error
+    return completed.stdout
+
+
+def snapshot_git(repo: Path) -> dict:
+    """Snapshot one repository's observable Git state, read-only.
+
+    Output is NUL-delimited where Git supports it and contains no
+    timestamps or other volatile fields, so an unchanged repository
+    snapshots identically.
+    """
+    repo = Path(repo)
+    return {
+        "head": _git_read(repo, "rev-parse", "HEAD"),
+        "branch": _git_read(repo, "branch", "--show-current"),
+        "refs": _git_read(repo, "for-each-ref", "--format=%(refname)%00%(objectname)"),
+        "status_porcelain_v2": _git_read(repo, "status", "--porcelain=v2", "-z"),
+        "untracked": _git_read(repo, "ls-files", "--others", "--exclude-standard", "-z"),
+        "ignored": _git_read(
+            repo, "ls-files", "--others", "--ignored", "--exclude-standard", "-z"
+        ),
+        "worktrees": _git_read(repo, "worktree", "list", "--porcelain"),
+        "submodules": _git_read(repo, "submodule", "status", "--recursive"),
+        "symlinks": scan_symlinks(repo),
+    }
+
+
+def build_audit_payload(manifest: Manifest) -> dict:
+    """Assemble the deterministic audit payload for one manifest.
+
+    Symlinks are scanned across the whole Drive root; the journal-grade
+    filesystem records and Git snapshots cover each workspace source.
+    The payload carries no timestamps, PIDs, or other volatile fields;
+    such observation metadata belongs only in an external journal event
+    wrapper around this payload.
+    """
+    workspaces: dict[str, dict] = {}
+    for workspace in sorted(manifest.workspaces, key=lambda item: item.name):
+        source = workspace.source_path
+        git_roots = workspace.git_roots or (".",)
+        workspaces[workspace.name] = {
+            "filesystem": audit_filesystem(source),
+            "git": {root: snapshot_git(source / root) for root in sorted(git_roots)},
+        }
+    return {
+        "drive_root": manifest.drive_root,
+        "symlinks": scan_symlinks(manifest.drive_root_path),
+        "workspaces": workspaces,
+    }
+
+
+def canonical_json(payload: dict) -> str:
+    """Serialize a payload canonically: sorted keys, minimal separators."""
+    return json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n"
+
+
+def run_audit(manifest_path: Path) -> int:
+    """Run the read-only audit subcommand; nonzero on any blocker or symlink."""
+    try:
+        manifest = load_manifest(manifest_path)
+        payload = build_audit_payload(manifest)
+    except (ManifestError, AuditError) as error:
+        print(f"drive-workspace audit: {error}", file=sys.stderr)
+        return 1
+    sys.stdout.write(canonical_json(payload))
+    if payload["symlinks"]:
+        print(
+            f"drive-workspace audit: {len(payload['symlinks'])} symlink(s) "
+            f"remain under drive root {manifest.drive_root}",
+            file=sys.stderr,
+        )
+        return 1
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="drive-workspace",
         description=(
-            "Fail-closed tooling for migrating repositories out of Google Drive. "
-            "Subcommands arrive in later tasks."
+            "Fail-closed tooling for migrating repositories out of Google Drive."
         ),
     )
-    parser.add_subparsers(dest="command")
+    subparsers = parser.add_subparsers(dest="command")
+    audit_parser = subparsers.add_parser(
+        "audit",
+        help="Audit filesystem and Git state read-only; nonzero if any "
+        "symlink remains under the Drive root.",
+    )
+    audit_parser.add_argument(
+        "--manifest", required=True, type=Path, help="Path to the migration manifest."
+    )
     arguments = parser.parse_args(argv)
     if arguments.command is None:
         parser.print_help(sys.stderr)
         return 2
+    if arguments.command == "audit":
+        return run_audit(arguments.manifest)
     return 0
 
 

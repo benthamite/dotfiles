@@ -131,7 +131,7 @@ The function @code{vulpea-extras-buffer-p} returns non-@code{nil} if the current
 @findex vulpea-extras-project-update-tag
 The function @code{vulpea-extras-project-update-tag} inspects the current buffer and adds the @samp{"project"} tag if the buffer qualifies as a project (via @code{vulpea-extras-project-p} or @code{vulpea-extras-anniversary-p}), or removes it if the buffer no longer qualifies. It uses @code{vulpea-buffer-tags-set} to modify the tags and only writes changes when the tag set has actually changed, avoiding unnecessary file modifications.
 
-This function is designed to be added to a hook such as @code{before-save-hook} for Org Roam files. It includes guards against running in the minibuffer or when the buffer is in an inconsistent state (checked via @code{track-changes-inconsistent-state-p} when available).
+This function is designed to be added to a hook such as @code{before-save-hook} for Org Roam files. It includes guards against running in the minibuffer or when the buffer is in a state a change hook should not edit (checked via @code{org-extras-buffer-edit-unsafe-p}). It previously consulted @code{track-changes-inconsistent-state-p} directly, which reports an inconsistency in any buffer where no tracker has registered, and so suppressed the tag update in nearly every buffer.
 
 @node Updating agenda files
 @section Updating agenda files

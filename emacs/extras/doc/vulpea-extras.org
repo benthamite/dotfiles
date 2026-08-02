@@ -82,7 +82,7 @@ The function ~vulpea-extras-buffer-p~ returns non-~nil~ if the current buffer's 
 #+findex: vulpea-extras-project-update-tag
 The function ~vulpea-extras-project-update-tag~ inspects the current buffer and adds the ="project"= tag if the buffer qualifies as a project (via ~vulpea-extras-project-p~ or ~vulpea-extras-anniversary-p~), or removes it if the buffer no longer qualifies. It uses ~vulpea-buffer-tags-set~ to modify the tags and only writes changes when the tag set has actually changed, avoiding unnecessary file modifications.
 
-This function is designed to be added to a hook such as ~before-save-hook~ for Org Roam files. It includes guards against running in the minibuffer or when the buffer is in an inconsistent state (checked via ~track-changes-inconsistent-state-p~ when available).
+This function is designed to be added to a hook such as ~before-save-hook~ for Org Roam files. It includes guards against running in the minibuffer or when the buffer is in a state a change hook should not edit (checked via ~org-extras-buffer-edit-unsafe-p~). It previously consulted ~track-changes-inconsistent-state-p~ directly, which reports an inconsistency in any buffer where no tracker has registered, and so suppressed the tag update in nearly every buffer.
 
 ** Updating agenda files
 :PROPERTIES:

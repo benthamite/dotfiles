@@ -1128,12 +1128,27 @@ only level-1 headings in files in specified directories by customizing
 	 (string-match paths-dir-org file)
 	 (not buffer-read-only)
 	 (not org-extras-id-auto-add-exclude-file)
-	 (not (and (fboundp 'track-changes-inconsistent-state-p)
-		   (track-changes-inconsistent-state-p)))
+	 (not (org-extras-buffer-edit-unsafe-p))
 	 (not (member dir org-extras-id-auto-add-excluded-directories))
 	 (not (or (eq org-extras-id-auto-add-excluded-files t)
 		  (and (listp org-extras-id-auto-add-excluded-files)
 		       (member file org-extras-id-auto-add-excluded-files)))))))
+
+;;;###autoload
+(defun org-extras-buffer-edit-unsafe-p ()
+  "Return non-nil if a change hook should not edit the current buffer yet.
+`track-changes-inconsistent-state-p' compares the buffer size a tracker recorded
+against the current one.  When no track-changes client has registered in the
+buffer the recorded size is nil, so it reports an inconsistency unconditionally
+— which is the state of nearly every buffer.  Consulting it directly therefore
+suppressed far more than intended: a file visited and saved with no tracker
+active never had heading IDs added at all, and so was never indexed by Org Roam.
+Postpone only when a tracker really has fallen out of step, or when modification
+hooks are inhibited."
+  (or inhibit-modification-hooks
+      (and (bound-and-true-p track-changes--buffer-size)
+           (fboundp 'track-changes-inconsistent-state-p)
+           (track-changes-inconsistent-state-p))))
 
 (defun org-extras-id-auto-add-id-to-entry ()
   "Create an ID for the entry at point unless its heading is excluded.

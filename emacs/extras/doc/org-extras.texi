@@ -917,10 +917,26 @@ The file must not be inside a directory listed in
 @item
 The file must not match @code{org-extras-id-auto-add-excluded-files}.
 @item
+@code{org-extras-buffer-edit-unsafe-p} must return @code{nil}.
+@item
 For files in directories listed in
 @code{org-extras-id-auto-add-level-1-dirs}, only level-1 headings receive
 IDs.
 @end itemize
+
+@findex org-extras-buffer-edit-unsafe-p
+The function @code{org-extras-buffer-edit-unsafe-p} reports whether a change
+hook should refrain from editing the current buffer for now, either
+because modification hooks are inhibited or because a registered
+@code{track-changes} tracker has fallen out of step with the buffer. It exists
+because @code{track-changes-inconsistent-state-p} cannot be consulted
+directly for this purpose: that function compares the buffer size a
+tracker recorded against the current size, and when no tracker has
+registered the recorded size is @code{nil}, so it reports an inconsistency
+unconditionally. Since most buffers have no tracker, consulting it
+directly suppressed ID addition almost everywhere — a file visited and
+saved with no tracker active never gained heading IDs, and was therefore
+never indexed by Org Roam.
 
 Each heading is then tested individually against
 @code{org-extras-id-auto-add-excluded-headings} by

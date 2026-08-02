@@ -32,6 +32,7 @@
 (require 'vulpea)
 
 (declare-function org-roam-db-query "org-roam-db" (sql &rest args))
+(autoload 'org-extras-buffer-edit-unsafe-p "org-extras")
 
 ;;;; User options
 
@@ -122,8 +123,7 @@ tasks."
   "Update \"PROJECT\" tag in the current buffer."
   (when (and (not (active-minibuffer-window))
              (vulpea-extras-buffer-p)
-             (not (and (fboundp 'track-changes-inconsistent-state-p)
-		       (track-changes-inconsistent-state-p))))
+             (not (org-extras-buffer-edit-unsafe-p)))
     (save-excursion
       (goto-char (point-min))
       (let* ((tags (vulpea-buffer-tags-get))

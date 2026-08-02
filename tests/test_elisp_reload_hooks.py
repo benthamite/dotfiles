@@ -169,6 +169,20 @@ class ElispReloadHookTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertTrue(marker.exists())
 
+    def test_parent_components_do_not_disguise_production_source_as_test(self):
+        test_directory = self.elisp_file.parent / "test"
+        test_directory.mkdir()
+        disguised_path = test_directory / ".." / self.elisp_file.name
+        for hook in HOOKS:
+            with self.subTest(hook=hook):
+                marker = (
+                    Path(self.temp_dir.name)
+                    / f"parent-component-{hook.parents[1].name}-called"
+                )
+                result = self.run_hook(hook, disguised_path, marker)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertTrue(marker.exists())
+
 
 if __name__ == "__main__":
     unittest.main()

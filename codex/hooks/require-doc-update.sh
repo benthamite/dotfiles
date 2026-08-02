@@ -101,17 +101,33 @@ is_doc_exempt_el() {
 
 git_add_elisp_paths() {
   python3 -c '
+import os
 import shlex
 import sys
 
 try:
-    arguments = shlex.split(sys.stdin.read())
+    lexer = shlex.shlex(sys.stdin.read(), posix=True, punctuation_chars=";&|")
+    lexer.whitespace_split = True
+    lexer.commenters = ""
+    arguments = list(lexer)
 except ValueError:
+    sys.stdout.buffer.write(b".unparsed-command.el\0")
     raise SystemExit(0)
 
-for path in arguments[2:]:
-    if path.endswith(".el"):
-        sys.stdout.buffer.write(path.encode() + b"\0")
+i = 0
+while i + 1 < len(arguments):
+    if arguments[i] != "git" or arguments[i + 1] != "add":
+        i += 1
+        continue
+    i += 2
+    while i < len(arguments):
+        path = arguments[i]
+        if path and all(char in ";&|" for char in path):
+            break
+        path = os.path.normpath(path)
+        if path.endswith(".el"):
+            sys.stdout.buffer.write(path.encode() + b"\0")
+        i += 1
 '
 }
 
@@ -156,7 +172,7 @@ if [ -n "$ADD_ARGS" ]; then
         HAS_EL=true
         break
       fi
-    done < <(printf '%s' "$ADD_ARGS" | git_add_elisp_paths)
+    done < <(printf '%s' "$COMMAND" | git_add_elisp_paths)
   fi
   if [ "$HAS_DOC_ORG" = false ] && echo "$ADD_ARGS" | grep -qE '(^|/)doc/[^ ]*\.org'; then
     # Verify at least one doc/*.org file has actual modifications

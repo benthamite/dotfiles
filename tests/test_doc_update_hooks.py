@@ -113,6 +113,27 @@ class DocUpdateHookTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(permission_decision(result), "allow")
 
+    def test_requires_docs_for_normalized_production_path(self):
+        source = self.repo / "example.el"
+        source.write_text("(provide 'example)\n")
+        (self.repo / "test").mkdir()
+        command = "git add test/../example.el && git commit -m test"
+        for hook, command_field in HOOKS:
+            with self.subTest(hook=hook):
+                result = self.run_hook(hook, command_field, command)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(permission_decision(result), "deny")
+
+    def test_requires_docs_for_quoted_production_path_with_shell_punctuation(self):
+        source = self.repo / "source & support.el"
+        source.write_text("(provide 'support)\n")
+        command = 'git add "source & support.el" && git commit -m test'
+        for hook, command_field in HOOKS:
+            with self.subTest(hook=hook):
+                result = self.run_hook(hook, command_field, command)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(permission_decision(result), "deny")
+
 
 if __name__ == "__main__":
     unittest.main()

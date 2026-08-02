@@ -56,6 +56,14 @@ git_operation_in_progress() {
   fi
 }
 
+normalize_changed_path() {
+  local path="$1"
+  local directory
+
+  directory=$(cd -- "$(dirname -- "$path")" 2>/dev/null && pwd -P) || return 1
+  printf '%s/%s\n' "$directory" "$(basename -- "$path")"
+}
+
 test_elisp_file_p() {
   local path="$1"
   local relative
@@ -82,6 +90,7 @@ test_elisp_file_p() {
 
 while IFS= read -r file_path; do
   file_path=$(codex_absolute_changed_path "$file_path")
+  file_path=$(normalize_changed_path "$file_path") || continue
 
   # Only act on .el source files inside elpaca or dotfiles extras.
   [[ "$file_path" == *.el ]]              || continue

@@ -22,6 +22,14 @@ absolute_changed_path() {
   esac
 }
 
+normalize_changed_path() {
+  local path="$1"
+  local directory
+
+  directory=$(cd -- "$(dirname -- "$path")" 2>/dev/null && pwd -P) || return 1
+  printf '%s/%s\n' "$directory" "$(basename -- "$path")"
+}
+
 git_operation_in_progress() {
   local path="$1"
   local git_dir
@@ -67,6 +75,7 @@ test_elisp_file_p() {
 }
 
 file_path=$(absolute_changed_path "$file_path")
+file_path=$(normalize_changed_path "$file_path") || exit 0
 
 # Only act on .el source files inside elpaca or dotfiles extras
 [[ "$file_path" == *.el ]]              || exit 0

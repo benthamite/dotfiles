@@ -2,8 +2,9 @@
 
 ## Status
 
-Revised design pending final user review. This document does not authorize a
-migration by itself.
+Approved by the user on 2026-08-02 for implementation planning. Execution is
+governed by the reviewed implementation plans and their explicit safety gates;
+this specification does not by itself authorize bypassing any gate.
 
 This specification replaces the earlier 56-error local-link design. Google
 Drive for desktop 129.0.1.0 now exposes directory-symlink failures in its
@@ -531,13 +532,14 @@ projects:
 2. representative repository pilots;
 3. personal workspace moves;
 4. personal in-place repairs;
-5. Epoch repository migration and scheduled-workflow verification;
-6. residual non-repository directory repairs;
-7. Epoch document links;
-8. Claude instruction bridges;
-9. Uqbar wrappers;
-10. Enchant runtime migration; and
-11. final Drive/cloud durability verification.
+5. Epoch external-repository path-model changes;
+6. Epoch repository migration and scheduled-workflow verification;
+7. residual non-repository directory repairs;
+8. Epoch document links;
+9. Claude instruction bridges;
+10. Uqbar wrappers;
+11. Enchant runtime migration; and
+12. final Drive/cloud durability verification.
 
 The former four plans must not be executed by editing their numeric gates in
 place. Their valid technical material should be carried into new plans whose

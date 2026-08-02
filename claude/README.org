@@ -134,6 +134,13 @@ repository at all rather than substituting the session's own, since judging a
 tree the command never touched both refuses correct commits and approves ones it
 should refuse.
 
+Guards that inspect a Git command read its arguments only, never its message.
+Heredoc bodies are dropped before lexing, because an apostrophe in prose made
+the lexer raise and the parser fail closed on a commit that staged no Elisp at
+all; argument text that genuinely cannot be lexed still fails closed. Since
+these are =PreToolUse= hooks they run before the =git add= they are judging, so
+the paths a command is about to stage count as staged.
+
 The SessionStart reasoning-worktree synchronization hook is also Claude-only.
 It repairs required key links before eligibility checks, updates eligible
 worktrees without pushing, reapplies the local overlay, injects private

@@ -100,11 +100,36 @@ is_doc_exempt_el() {
 git_add_elisp_paths() {
   python3 -c '
 import os
+import re
 import shlex
 import sys
 
+
+def without_heredoc_bodies(command):
+    """Drop heredoc bodies, which are data rather than command arguments.
+
+    A commit message written through a heredoc is prose. An apostrophe in it
+    ("the hook own context") makes the lexer below raise, and this parser fails
+    closed, so a commit staging no Elisp at all used to be refused.
+    """
+    kept, lines, index = [], command.split("\n"), 0
+    while index < len(lines):
+        line = lines[index]
+        kept.append(line)
+        index += 1
+        for match in re.finditer(r"<<-?\s*([\x27\"]?)([A-Za-z_][A-Za-z0-9_]*)\1", line):
+            delimiter = match.group(2)
+            while index < len(lines) and lines[index].strip() != delimiter:
+                index += 1
+            index += 1  # drop the delimiter line too
+    return "\n".join(kept)
+
+
+suffix = None if "--all" in sys.argv[1:] else ".el"
+
 try:
-    lexer = shlex.shlex(sys.stdin.read(), posix=True, punctuation_chars=";&|")
+    lexer = shlex.shlex(without_heredoc_bodies(sys.stdin.read()),
+                        posix=True, punctuation_chars=";&|")
     lexer.whitespace_split = True
     lexer.commenters = ""
     arguments = list(lexer)
@@ -123,10 +148,17 @@ while i + 1 < len(arguments):
         if path and all(char in ";&|" for char in path):
             break
         path = os.path.normpath(path)
-        if path.endswith(".el"):
+        if suffix is None or path.endswith(suffix):
             sys.stdout.buffer.write(path.encode() + b"\0")
         i += 1
-'
+' "$@"
+}
+
+# Paths the command is about to stage, whatever their extension.  The hook runs
+# before the `git add` it is inspecting, so a file this command stages still
+# looks unstaged to git.
+git_add_paths() {
+  git_add_elisp_paths --all
 }
 
 # Check staged files (amend-aware: see lib-staged-files.sh)
@@ -250,6 +282,19 @@ texinfo_manual_outputs() {
   done
 }
 
+PENDING_ADDS=""
+while IFS= read -r -d '' _pending; do
+  PENDING_ADDS="$PENDING_ADDS$_pending"$'\n'
+done < <(printf '%s' "$COMMAND" | git_add_paths)
+unset _pending
+
+pending_add_p() {
+  case $'\n'"$PENDING_ADDS" in
+    *$'\n'"$1"$'\n'* ) return 0 ;;
+    * ) return 1 ;;
+  esac
+}
+
 DIRTY_GENERATED_DOCS=()
 check_texinfo_manual_source() {
   local file="$1"
@@ -257,6 +302,7 @@ check_texinfo_manual_source() {
     README.org | doc/*.org | */doc/*.org)
       while IFS= read -r generated; do
         [ -n "$generated" ] || continue
+        pending_add_p "$generated" && continue
         if ! git -C "$REPO_ROOT" diff --quiet -- "$generated" || \
            [ -n "$(git -C "$REPO_ROOT" ls-files --others --exclude-standard -- "$generated")" ]; then
           DIRTY_GENERATED_DOCS+=("$generated")

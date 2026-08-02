@@ -288,6 +288,90 @@ class DocUpdateHookRepoPathTests(unittest.TestCase):
                     permission_decision(result), "allow", deny_reason(result)
                 )
 
+    def test_a_generated_texi_staged_by_the_same_command_is_accepted(self):
+        """The hook runs before the git add it is inspecting.
+
+        Refusing because the generated file is unstaged, when the very command
+        being judged stages it, blocks a correct commit.
+        """
+        manual = self.doc / "manual.org"
+        manual.write_text(
+            "#+title: Manual\n#+texinfo_filename: manual.info\nBody.\n"
+        )
+        generated = self.doc / "manual.texi"
+        generated.write_text("@node Top\n")
+        subprocess.run(
+            ["git", "-C", str(self.repo), "add", "-A"], check=True
+        )
+        subprocess.run(
+            [
+                "git", "-C", str(self.repo),
+                "-c", "user.name=Test", "-c", "user.email=test@example.com",
+                "commit", "-qm", "manual",
+            ],
+            check=True,
+        )
+        manual.write_text(
+            "#+title: Manual\n#+texinfo_filename: manual.info\nBody changed.\n"
+        )
+        subprocess.run(
+            ["git", "-C", str(self.repo), "add", "emacs/extras/doc/manual.org"],
+            check=True,
+        )
+        generated.write_text("@node Top\n@c regenerated\n")
+        command = (
+            f'cd "{self.repo}" && git add emacs/extras/doc/manual.texi '
+            "&& git commit -q -m x"
+        )
+        for hook, command_field in HOOKS:
+            with self.subTest(hook=hook):
+                result = self.run_hook(hook, command_field, command)
+                self.assertNotIn("generated Texinfo", deny_reason(result))
+
+    def test_an_apostrophe_in_a_heredoc_message_is_not_read_as_arguments(self):
+        """Prose in a heredoc is data, not arguments.
+
+        An apostrophe in a commit message ("the hook's own context") makes the
+        shell lexer raise, and the parser then fails closed by synthesising a
+        .el path, so a commit staging no Elisp at all is refused.
+        """
+        command = (
+            "cat > /tmp/msg.txt <<'EOF'\n"
+            "hooks: fix the session's own repository\n"
+            "EOF\n"
+            f'cd "{self.repo}" && git add README.org && git commit -q -F /tmp/msg.txt'
+        )
+        for hook, command_field in HOOKS:
+            with self.subTest(hook=hook):
+                result = self.run_hook(hook, command_field, command)
+                self.assertEqual(
+                    permission_decision(result), "allow", deny_reason(result)
+                )
+
+    def test_a_heredoc_body_naming_an_el_file_is_not_read_as_arguments(self):
+        """A message that talks about Elisp is not a commit of Elisp."""
+        command = (
+            "cat > /tmp/msg.txt <<'EOF'\n"
+            "tests: cover example.el and git commit paths\n"
+            "EOF\n"
+            f'cd "{self.repo}" && git add README.org && git commit -q -F /tmp/msg.txt'
+        )
+        for hook, command_field in HOOKS:
+            with self.subTest(hook=hook):
+                result = self.run_hook(hook, command_field, command)
+                self.assertEqual(
+                    permission_decision(result), "allow", deny_reason(result)
+                )
+
+    def test_genuinely_unparseable_arguments_still_fail_closed(self):
+        """Fail-closed is kept for argument text that cannot be lexed."""
+        (self.repo / "example.el").write_text("(provide 'example)\n")
+        command = f'cd "{self.repo}" && git add example.el \'unclosed && git commit -q -m x'
+        for hook, command_field in HOOKS:
+            with self.subTest(hook=hook):
+                result = self.run_hook(hook, command_field, command)
+                self.assertEqual(permission_decision(result), "deny")
+
     def test_a_cd_after_a_preamble_still_decides_the_repository(self):
         """The cd need not be the first thing in the command.
 

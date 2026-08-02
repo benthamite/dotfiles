@@ -1070,7 +1070,9 @@ EVENTS_BY_KIND = {
         "native_errors_recorded",
         "smoke_started", "smoke_checked", "smoke_stopped",
     },
-    "observation": {"drive_state", "native_errors_recorded"},
+    "observation": {
+        "drive_state", "native_errors_recorded", "path_hashes_recorded",
+    },
     "program": {"program_gate"},
     "path_repair": {
         "path_captured", "drive_paused", "path_local_verified",
@@ -3761,6 +3763,80 @@ def cmd_record_native_errors(journal) -> int:
     return 0
 
 
+def _path_hash_manifest(target) -> dict:
+    """Deterministic recursive content-hash manifest of one inspected path.
+
+    Strictly read-only: files are opened for reading only, symlinks are
+    recorded by link text and never followed, and any entry that is not a
+    regular file, directory, or symlink is a blocker rather than a silent
+    omission.  The payload carries no volatile metadata, so re-recording an
+    unchanged tree yields an identical manifest.
+    """
+    root = os.path.abspath(os.path.expanduser(str(target)))
+    if not os.path.lexists(root):
+        raise TransactionError(f"path to record does not exist: {root}")
+    root_info = os.lstat(root)
+    if stat.S_ISLNK(root_info.st_mode) or not stat.S_ISDIR(root_info.st_mode):
+        raise TransactionError(
+            f"recorded path must be a real directory, observed with lstat: "
+            f"{root}"
+        )
+
+    entries: dict[str, dict] = {}
+    for current, dirs, files in os.walk(root, followlinks=False):
+        dirs.sort()
+        for name in sorted((*dirs, *files)):
+            full = os.path.join(current, name)
+            rel = os.path.relpath(full, root)
+            info = os.lstat(full)
+            if stat.S_ISLNK(info.st_mode):
+                entries[rel] = {
+                    "type": "symlink", "target": os.readlink(full),
+                }
+            elif stat.S_ISREG(info.st_mode):
+                digest = hashlib.sha256()
+                with open(full, "rb") as handle:
+                    for chunk in iter(lambda: handle.read(65536), b""):
+                        digest.update(chunk)
+                entries[rel] = {
+                    "type": "file",
+                    "size": info.st_size,
+                    "sha256": digest.hexdigest(),
+                }
+            elif stat.S_ISDIR(info.st_mode):
+                entries[rel] = {"type": "directory"}
+            else:
+                raise TransactionError(
+                    f"unsupported filesystem entry under recorded path: {full}"
+                )
+
+    canonical = (
+        json.dumps(entries, sort_keys=True, separators=(",", ":")) + "\n"
+    )
+    return {
+        "path": root,
+        "entries": entries,
+        "entry_count": len(entries),
+        "aggregate_sha256": hashlib.sha256(
+            canonical.encode("utf-8")
+        ).hexdigest(),
+    }
+
+
+def cmd_record_path_hashes(journal, target) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    if events[0]["journal_kind"] != "observation":
+        raise TransactionError(
+            f"path hashes can be recorded only in an observation journal: "
+            f"{path}"
+        )
+    payload = _path_hash_manifest(target)
+    _append_event(path, "path_hashes_recorded", payload)
+    _print_journal(path)
+    return 0
+
+
 # --- Process-group and Drive-process observation ---------------------------
 
 
@@ -5875,6 +5951,17 @@ def build_parser() -> argparse.ArgumentParser:
         "provider.",
         name_arg=False,
     )
+    record_path_hashes_parser = add_command(
+        "record-path-hashes",
+        "Record a deterministic recursive content-hash manifest of one "
+        "inspected directory into an observation journal, read-only.",
+        name_arg=False,
+    )
+    record_path_hashes_parser.add_argument(
+        "--path", required=True,
+        help="Directory to record; observed with lstat, symlinks never "
+        "followed.",
+    )
     close_parser = add_command(
         "close-rollback-window",
         "Re-run every live gate and append rollback_window_closed.",
@@ -6052,6 +6139,9 @@ def main(argv: list[str] | None = None) -> int:
         "native-preflight": lambda a: cmd_native_preflight(),
         "record-native-errors": lambda a: cmd_record_native_errors(
             a.journal
+        ),
+        "record-path-hashes": lambda a: cmd_record_path_hashes(
+            a.journal, a.path
         ),
         "close-rollback-window": lambda a: cmd_close_rollback_window(
             a.journal, a.baseline_journal, a.restart_before_pid

@@ -1,0 +1,33 @@
+#+title: Claude helper commands
+#+author: Pablo Stafforini
+
+* Activation and scope
+
+This directory contains Claude-specific service wrappers, test runners, and
+configuration installers. There is no =~/.claude/bin= link, and the directory is
+not an executable root by itself. Agent instructions and other scripts invoke
+these files by their repository paths. A similarly named command elsewhere on
+=PATH= is not evidence that the tracked file is active.
+
+* File index
+
+| File | Purpose |
+|------+---------|
+| =_gworkspace_auth.py= | Internal OAuth and short-lived token-cache helper shared by the Gmail and Sheets wrappers. |
+| =ahrefs-api-guard= | Performs the required free quota preflight before a paid Ahrefs API request. |
+| =ai-provider-key= | Provisions and stores project-scoped provider runtime keys while keeping administrator credentials separate. |
+| =batch-test.sh= | Runs a general batch Emacs load or test for an extras or standalone Elpaca package. |
+| =copy-slack-draft= | Copies a Slack draft to the Emacs kill ring and can prefill a thread reply. |
+| =cr-worktree-gc.sh= | Removes only clean, fully pushed transient CR review worktrees and preserves unfinished work. |
+| =elisp-ert= | Runs profile-aware ERT for a package, test file, and optional test selector. |
+| =gmail.py= | Provides the multi-account Gmail read, search, draft, send, reply, attachment, and archive operations. |
+| =install-skills.sh= | Installs the live interactive and programmatic skill links, then applies skill pruning and private shims. |
+| =sheets.py= | Provides the multi-account Google Sheets read, write, append, clear, sheet-management, and metadata operations. |
+| =slack.py= | Provides multi-workspace Slack search, history, thread, user, saved-item, and read-state operations. |
+| =sync-mcp-servers.sh= | Copies canonical user MCP definitions into account configurations while preserving account-specific environments. |
+| =update-gworkspace-refresh-token= | Refreshes and stores a selected Google Workspace account token without printing the token value. |
+
+The documentation audit requires every tracked direct child to appear exactly
+once in this table. Several wrappers obtain credentials from external stores or
+perform remote writes. Inspect the requested account and operation before use,
+and never invoke a credential path merely to verify this index.

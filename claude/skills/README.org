@@ -1,0 +1,37 @@
+#+title: Claude skill layout
+#+author: Pablo Stafforini
+
+* Public skills
+
+Each direct subdirectory of =claude/skills/= is one public interactive skill.
+Its =SKILL.md= file owns the workflow. The frontmatter =name= identifies the
+skill, while =description= controls discovery and should state the trigger and
+scope boundary concisely. Claude-specific frontmatter may restrict tools or
+describe user invocation and arguments.
+
+Auxiliary scripts, references, evaluations, metadata, and package files stay
+inside the skill that uses them. They are part of the paired artifact rather
+than separate global configuration. The live =~/.claude/skills= directory is a
+link to this public tree.
+
+* Pairing and other roots
+
+Public skills normally have a Codex counterpart under =codex/skills/=. Their
+normalized =SKILL.md= bodies and auxiliary files should agree unless
+=ai-config-sync.json= records an intentional difference. Tool-specific routing
+frontmatter is removed only for that parity comparison.
+
+Programmatic skills live under =claude/programmatic-skills/= and are exposed at
+=~/.claude/programmatic-skills=. Explicit automation and Emacs integrations use
+that tree; ordinary interactive discovery does not. Private skills live under
+=claude/private-skills/= when present. Their content and name map are encrypted,
+public directory identifiers are opaque, and ignored shims expose them locally
+without publishing their names.
+
+* Inventory and maintenance
+
+[[file:../../agents/skill-inventory.org][agents/skill-inventory.org]] is the generated cross-tool inventory of
+tracked public skills. It owns the individual skill list, so this README
+documents the layout instead of copying the catalog. After changing a skill,
+run =bin/ai-config-sync audit= for parity and =bin/docs-audit generate= followed
+by =bin/docs-audit audit= for inventory freshness.

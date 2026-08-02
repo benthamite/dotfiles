@@ -1,0 +1,21 @@
+#+title: Codex command rules
+#+author: Pablo Stafforini
+
+* Activation
+
+[[file:default.rules][default.rules]] is the global Codex command-prefix rules file. The audited
+machine has =~/.codex/rules= symlinked to this tracked directory, so Codex reads
+the file through its standard global configuration path.
+
+* Scope
+
+The file contains approval-prefix declarations. They describe command prefixes
+that Codex may run without an additional approval prompt; they are not commands
+executed during installation, and they do not grant broader user authorization.
+There are no deny declarations in the current file.
+
+The separate hook guards still inspect operations covered by these prefixes.
+For example, an allowed Git prefix remains subject to the GitHub write guard,
+repository policy, and the user's actual request. When changing a rule, parse
+the Codex configuration and test a representative allowed command together
+with a nearby command that must remain outside the prefix.

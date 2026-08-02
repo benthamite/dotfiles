@@ -1,0 +1,38 @@
+#+title: Codex skill layout
+#+author: Pablo Stafforini
+
+* Public skills
+
+Each direct subdirectory of =codex/skills/= is one public interactive skill.
+Its =SKILL.md= file owns the workflow. The frontmatter =name= identifies the
+skill, while =description= controls discovery and should state the trigger and
+scope boundary concisely. Tool-specific frontmatter may control invocation,
+arguments, allowed tools, or model choice.
+
+Auxiliary scripts, references, evaluations, agent metadata, and package files
+belong inside the skill that uses them. They are part of the paired artifact,
+not independent global configuration. The live =~/.codex/skills= directory is
+installed as a link to this public tree, apart from Codex-managed runtime system
+skills under the ignored =.system= directory.
+
+* Pairing and other roots
+
+Public skills normally have a Claude counterpart under =claude/skills/=. Their
+bodies and auxiliary files should agree unless =ai-config-sync.json= records an
+intentional difference; the parity audit ignores only the documented
+tool-specific frontmatter keys.
+
+Programmatic skills live under =codex/programmatic-skills/= and are exposed at
+=~/.codex/programmatic-skills=. They are selected explicitly by the batch skill
+runner rather than ordinary interactive discovery. Private skills live under
+=codex/private-skills/= when present. Their content is encrypted, their public
+identifiers are opaque, and ignored shims expose them to local sessions without
+publishing their names.
+
+* Inventory and maintenance
+
+[[file:../../agents/skill-inventory.org][agents/skill-inventory.org]] is the generated cross-tool inventory of
+tracked public skills. It owns the individual skill list, so this README
+documents the layout rather than duplicating that catalog. After changing a
+skill, run =bin/ai-config-sync audit= for parity and =bin/docs-audit generate=
+followed by =bin/docs-audit audit= for inventory freshness.

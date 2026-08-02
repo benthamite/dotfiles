@@ -30,15 +30,19 @@ def load_script(name: str, path: Path):
 def policy_for(
     *,
     required: list[str] | None = None,
+    required_nested: list[str] | None = None,
     exempt: dict[str, str] | None = None,
     source_generated: list[dict[str, str]] | None = None,
+    indexed_directories: list[dict[str, object]] | None = None,
     skill_inventory: str = "agents/skill-inventory.org",
 ) -> dict:
     return {
         "version": 1,
         "required_readmes": required or [],
+        "required_nested_readmes": required_nested or [],
         "exempt_readmes": exempt or {},
         "source_generated": source_generated or [],
+        "indexed_directories": indexed_directories or [],
         "skill_inventory": skill_inventory,
         "project_local_skill_documentation_owner": "agents/skill-inventory.org",
     }
@@ -124,6 +128,35 @@ class DocsAuditTests(DocsAuditTestCase):
         self.assertEqual(
             ["Required subsystem README is missing: alpha/README.org"],
             self.module.readme_coverage_problems(root, policy_for(required=["alpha"])),
+        )
+
+    def test_missing_required_nested_readme_is_reported(self):
+        root = self.make_repo(
+            ["README.org", "claude/README.org", "claude/bin/tool"]
+        )
+        policy = policy_for(
+            required=["claude"],
+            required_nested=["claude/bin/README.org"],
+        )
+
+        self.assertEqual(
+            ["Required nested README is missing: claude/bin/README.org"],
+            self.module.readme_coverage_problems(root, policy),
+        )
+
+    def test_untracked_required_nested_readme_is_reported_as_missing(self):
+        root = self.make_repo(
+            ["README.org", "claude/README.org", "claude/bin/tool"]
+        )
+        self.write_file(root, "claude/bin/README.org", "Index\n")
+        policy = policy_for(
+            required=["claude"],
+            required_nested=["claude/bin/README.org"],
+        )
+
+        self.assertEqual(
+            ["Required nested README is missing: claude/bin/README.org"],
+            self.module.readme_coverage_problems(root, policy),
         )
 
     def test_new_top_level_directory_requires_policy_decision(self):
@@ -525,7 +558,9 @@ class DocsAuditTests(DocsAuditTestCase):
             [
                 "README policy contains unexpected key: extra",
                 "README policy is missing required key: exempt_readmes",
+                "README policy is missing required key: indexed_directories",
                 "README policy is missing required key: project_local_skill_documentation_owner",
+                "README policy is missing required key: required_nested_readmes",
                 "README policy is missing required key: skill_inventory",
                 "README policy is missing required key: source_generated",
                 "README policy key has invalid type: required_readmes (expected array)",
@@ -544,13 +579,34 @@ class DocsAuditTests(DocsAuditTestCase):
         ]
         policy["skill_inventory"] = 7
         policy["project_local_skill_documentation_owner"] = 7
+        policy["required_nested_readmes"] = [7]
+        policy["indexed_directories"] = [
+            {
+                "path": 7,
+                "readme": "claude/bin/README.org",
+                "mode": "unknown",
+                "headings": ["File index", 9],
+                "ignored_basenames": ["nested/name", 8],
+                "extra": True,
+            },
+            "not-an-object",
+        ]
 
         self.assertEqual(
             [
+                "README policy Org heading is invalid: indexed_directories[0].headings[0]",
+                "README policy ignored basename is invalid: indexed_directories[0].ignored_basenames[0]",
+                "README policy indexed_directories[0] contains unexpected key: extra",
+                "README policy indexed_directories[0].mode must be one of: executable, file",
+                "README policy indexed_directories[1] must be an object",
                 "README policy source_generated[0] contains unexpected key: extra",
                 "README policy source_generated[1] must be an object",
                 "README policy value has invalid type: exempt_readmes[0] (expected string reason)",
+                "README policy value has invalid type: indexed_directories[0].headings[1] (expected string)",
+                "README policy value has invalid type: indexed_directories[0].ignored_basenames[1] (expected string)",
+                "README policy value has invalid type: indexed_directories[0].path (expected string)",
                 "README policy value has invalid type: project_local_skill_documentation_owner (expected string)",
+                "README policy value has invalid type: required_nested_readmes[0] (expected string)",
                 "README policy value has invalid type: required_readmes[0] (expected string)",
                 "README policy value has invalid type: skill_inventory (expected string)",
                 "README policy value has invalid type: source_generated[0].source (expected string)",
@@ -570,13 +626,26 @@ class DocsAuditTests(DocsAuditTestCase):
         ]
         policy["skill_inventory"] = "escape/inventory.org"
         policy["project_local_skill_documentation_owner"] = "."
+        policy["required_nested_readmes"] = ["escape/README.org"]
+        policy["indexed_directories"] = [
+            {
+                "path": "escape",
+                "readme": "../outside-index.org",
+                "mode": "file",
+                "headings": ["* File index"],
+                "ignored_basenames": [],
+            }
+        ]
 
         problems = self.module.policy_validation_problems(root, policy)
 
         self.assertEqual(
             [
                 "README policy path is invalid: exempt_readmes[0]",
+                "README policy path is invalid: indexed_directories[0].path",
+                "README policy path is invalid: indexed_directories[0].readme",
                 "README policy path is invalid: project_local_skill_documentation_owner",
+                "README policy path is invalid: required_nested_readmes[0]",
                 "README policy path is invalid: required_readmes[0]",
                 "README policy path is invalid: skill_inventory",
                 "README policy path is invalid: source_generated[0].generated",
@@ -585,6 +654,228 @@ class DocsAuditTests(DocsAuditTestCase):
             problems,
         )
         self.assertNotIn(str(external.resolve()), "\n".join(problems))
+
+    def test_indexed_directory_reports_missing_duplicate_and_unexpected_rows(self):
+        policy = policy_for(
+            required=["claude", "docs"],
+            indexed_directories=[
+                {
+                    "path": "claude/bin",
+                    "readme": "claude/bin/README.org",
+                    "mode": "file",
+                    "headings": ["* File index"],
+                }
+            ],
+            skill_inventory="skill-inventory.org",
+        )
+        root = self.make_repo(
+            {
+                "README.org": (
+                    "* Directory map\n"
+                    "| =claude= | Claude |\n"
+                    "| =docs= | Docs |\n"
+                ),
+                "claude/README.org": "Claude\n",
+                "claude/bin/README.org": (
+                    "* File index\n"
+                    "| Command | Purpose |\n"
+                    "| =tool= | Main |\n"
+                    "| =tool= | Duplicate |\n"
+                    "| =stale= | Removed |\n"
+                ),
+                "claude/bin/tool": "tool\n",
+                "claude/bin/helper.py": "helper\n",
+                "docs/README.org": "Docs\n",
+                "docs/readme-policy.json": json.dumps(policy),
+                "skill-inventory.org": self.module.render_skill_inventory([]),
+            }
+        )
+
+        problems = self.module.audit_problems(root)
+
+        self.assertIn(
+            "Indexed README entry is duplicated: claude/bin/README.org -> tool",
+            problems,
+        )
+        self.assertIn(
+            "Indexed README entry is missing: claude/bin/README.org -> helper.py",
+            problems,
+        )
+        self.assertIn(
+            "Indexed README entry is unexpected: claude/bin/README.org -> stale",
+            problems,
+        )
+
+    def test_file_index_is_direct_excludes_readme_and_honors_ignored_basenames(self):
+        policy = policy_for(
+            required=["claude", "docs"],
+            required_nested=["claude/bin/README.org"],
+            indexed_directories=[
+                {
+                    "path": "claude/bin",
+                    "readme": "claude/bin/README.org",
+                    "mode": "file",
+                    "headings": ["* File index"],
+                    "ignored_basenames": ["ignored"],
+                }
+            ],
+            skill_inventory="skill-inventory.org",
+        )
+        root = self.make_repo(
+            {
+                "README.org": (
+                    "* Directory map\n"
+                    "| =claude= | Claude |\n"
+                    "| =docs= | Docs |\n"
+                ),
+                "claude/README.org": "Claude\n",
+                "claude/bin/README.org": "* File index\n| =tool= | Main |\n",
+                "claude/bin/tool": "tool\n",
+                "claude/bin/ignored": "ignored\n",
+                "claude/bin/nested/helper": "nested\n",
+                "docs/README.org": "Docs\n",
+                "docs/readme-policy.json": json.dumps(policy),
+                "skill-inventory.org": self.module.render_skill_inventory([]),
+            }
+        )
+
+        self.assertEqual([], self.module.audit_problems(root))
+
+    def test_executable_index_uses_tracked_git_mode(self):
+        policy = policy_for(
+            required=["bin", "docs"],
+            indexed_directories=[
+                {
+                    "path": "bin",
+                    "readme": "bin/README.org",
+                    "mode": "executable",
+                    "headings": ["* Command index"],
+                }
+            ],
+            skill_inventory="skill-inventory.org",
+        )
+        root = self.make_repo(
+            {
+                "README.org": (
+                    "* Directory map\n"
+                    "| =bin= | Commands |\n"
+                    "| =docs= | Docs |\n"
+                ),
+                "bin/README.org": "* Command index\n| =run-me= | Main |\n",
+                "bin/run-me": "#!/bin/sh\n",
+                "bin/library.py": "library\n",
+                "docs/README.org": "Docs\n",
+                "docs/readme-policy.json": json.dumps(policy),
+                "skill-inventory.org": self.module.render_skill_inventory([]),
+            }
+        )
+        (root / "bin/run-me").chmod(0o755)
+        self.run_git(root, "add", "bin/run-me")
+        self.run_git(root, "commit", "-m", "make executable")
+
+        self.assertEqual([], self.module.audit_problems(root))
+
+    def test_index_table_accepts_a_direct_basename_with_spaces(self):
+        self.assertEqual(
+            ["helper command.sh"],
+            self.module.index_table_basenames(
+                "* File index\n| File | Purpose |\n"
+                "| =helper command.sh= | Helper |\n",
+                ["* File index"],
+            ),
+        )
+
+    def test_unrelated_table_and_source_block_cannot_satisfy_index(self):
+        policy = policy_for(
+            required=["claude", "docs"],
+            indexed_directories=[
+                {
+                    "path": "claude/bin",
+                    "readme": "claude/bin/README.org",
+                    "mode": "file",
+                    "headings": ["* File index"],
+                }
+            ],
+            skill_inventory="skill-inventory.org",
+        )
+        root = self.make_repo(
+            {
+                "README.org": (
+                    "* Directory map\n"
+                    "| =claude= | Claude |\n"
+                    "| =docs= | Docs |\n"
+                ),
+                "claude/README.org": "Claude\n",
+                "claude/bin/README.org": (
+                    "* File index\n"
+                    "| =bar= | Indexed |\n"
+                    "* Unrelated table\n"
+                    "| =foo= | Must not count |\n"
+                    "#+begin_src org\n"
+                    "| =foo= | Must not count either |\n"
+                    "#+end_src\n"
+                ),
+                "claude/bin/foo": "foo\n",
+                "claude/bin/bar": "bar\n",
+                "docs/README.org": "Docs\n",
+                "docs/readme-policy.json": json.dumps(policy),
+                "skill-inventory.org": self.module.render_skill_inventory([]),
+            }
+        )
+
+        problems = self.module.audit_problems(root)
+
+        self.assertIn(
+            "Indexed README entry is missing: claude/bin/README.org -> foo",
+            problems,
+        )
+        self.assertNotIn(
+            "Indexed README entry is missing: claude/bin/README.org -> bar",
+            problems,
+        )
+
+    def test_context_index_reports_a_new_unlisted_document(self):
+        policy = policy_for(
+            required=["claude", "docs"],
+            required_nested=["claude/context/README.org"],
+            indexed_directories=[
+                {
+                    "path": "claude/context",
+                    "readme": "claude/context/README.org",
+                    "mode": "file",
+                    "headings": ["* Reference index"],
+                }
+            ],
+            skill_inventory="skill-inventory.org",
+        )
+        root = self.make_repo(
+            {
+                "README.org": (
+                    "* Directory map\n"
+                    "| =claude= | Claude |\n"
+                    "| =docs= | Docs |\n"
+                ),
+                "claude/README.org": "Claude\n",
+                "claude/context/README.org": (
+                    "* Reference index\n"
+                    "| =one.md= | One |\n"
+                    "| =two.md= | Two |\n"
+                    "| =three.md= | Three |\n"
+                ),
+                "claude/context/one.md": "one\n",
+                "claude/context/two.md": "two\n",
+                "claude/context/three.md": "three\n",
+                "claude/context/four.md": "four\n",
+                "docs/README.org": "Docs\n",
+                "docs/readme-policy.json": json.dumps(policy),
+                "skill-inventory.org": self.module.render_skill_inventory([]),
+            }
+        )
+
+        self.assertIn(
+            "Indexed README entry is missing: claude/context/README.org -> four.md",
+            self.module.audit_problems(root),
+        )
 
     def test_invalid_policy_skips_policy_checks_but_reports_independent_problems(self):
         root = self.make_repo(
@@ -676,8 +967,10 @@ class DocsAuditTests(DocsAuditTestCase):
                 "(expected a nonempty single-line string): "
                 "claude/skills/bad/SKILL.md",
                 "README policy is missing required key: exempt_readmes",
+                "README policy is missing required key: indexed_directories",
                 "README policy is missing required key: "
                 "project_local_skill_documentation_owner",
+                "README policy is missing required key: required_nested_readmes",
                 "README policy is missing required key: required_readmes",
                 "README policy is missing required key: skill_inventory",
                 "README policy is missing required key: source_generated",

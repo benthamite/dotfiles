@@ -21,14 +21,21 @@ POLICY_PATH = PurePosixPath("docs/readme-policy.json")
 POLICY_KEYS = {
     "version",
     "required_readmes",
+    "required_nested_readmes",
     "exempt_readmes",
     "source_generated",
+    "indexed_directories",
     "skill_inventory",
     "project_local_skill_documentation_owner",
 }
 SOURCE_GENERATED_KEYS = {"source", "generated"}
+INDEXED_DIRECTORY_REQUIRED_KEYS = {"path", "readme", "mode", "headings"}
+INDEXED_DIRECTORY_OPTIONAL_KEYS = {"ignored_basenames"}
+INDEXED_DIRECTORY_MODES = {"executable", "file"}
 DIRECTORY_MAP_HEADING = "* Directory map"
 DIRECTORY_MAP_ROW = re.compile(r"^\s*\|\s*=([^=|\s]+)=\s*\|")
+INDEX_ROW = re.compile(r"^\s*\|\s*=([^=|\r\n]+)=\s*\|")
+ORG_HEADING = re.compile(r"^(\*+) [^\r\n]+$")
 ORG_BRACKET_LINK = re.compile(r"\[\[([^\]\n]+)\](?:\[[^\]\n]*\])?\]")
 ORG_ANGLE_LINK = re.compile(r"<([A-Za-z][A-Za-z0-9+.-]*):([^>\n]*)>")
 ORG_PLAIN_LINK = re.compile(
@@ -131,6 +138,27 @@ def tracked_top_level_directories(root: Path) -> set[str]:
         for path in git_files(root)
         if len(PurePosixPath(path).parts) > 1
     }
+
+
+def git_index_entries(root: Path) -> list[tuple[str, str]]:
+    """Return tracked Git modes and repository-relative paths."""
+    result = subprocess.run(
+        ["git", "ls-files", "--stage", "-z"],
+        cwd=root,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        shell=False,
+    )
+    entries = []
+    for record in result.stdout.split("\0"):
+        if not record:
+            continue
+        metadata, path = record.split("\t", 1)
+        mode = metadata.split(" ", 1)[0]
+        entries.append((mode, path))
+    return sorted(entries, key=lambda entry: entry[1])
 
 
 def _path_is_contained(root: Path, path: Path) -> bool:
@@ -577,6 +605,15 @@ def _valid_policy_path_syntax(value: str) -> bool:
     return True
 
 
+def _valid_ignored_basename(value: str) -> bool:
+    return (
+        bool(value)
+        and value not in {".", ".."}
+        and "/" not in value
+        and "\\" not in value
+    )
+
+
 def _valid_skill_inventory_path(root: Path, value: str) -> bool:
     """Validate an inventory path without following its final component."""
     if not _valid_policy_path_syntax(value):
@@ -616,6 +653,23 @@ def policy_validation_problems(root: Path, policy: object) -> list[str]:
                         f"README policy value has invalid type: {field} (expected string)"
                     )
                 elif not _valid_policy_path(root, directory):
+                    problems.append(f"README policy path is invalid: {field}")
+
+    required_nested = policy.get("required_nested_readmes")
+    if "required_nested_readmes" in policy:
+        if not isinstance(required_nested, list):
+            problems.append(
+                "README policy key has invalid type: "
+                "required_nested_readmes (expected array)"
+            )
+        else:
+            for index, readme in enumerate(required_nested):
+                field = f"required_nested_readmes[{index}]"
+                if not isinstance(readme, str):
+                    problems.append(
+                        f"README policy value has invalid type: {field} (expected string)"
+                    )
+                elif not _valid_policy_path(root, readme):
                     problems.append(f"README policy path is invalid: {field}")
 
     exempt = policy.get("exempt_readmes")
@@ -667,6 +721,91 @@ def policy_validation_problems(root: Path, policy: object) -> list[str]:
                         )
                     elif not _valid_policy_path(root, value):
                         problems.append(f"README policy path is invalid: {field}")
+
+    indexed_directories = policy.get("indexed_directories")
+    if "indexed_directories" in policy:
+        if not isinstance(indexed_directories, list):
+            problems.append(
+                "README policy key has invalid type: indexed_directories (expected array)"
+            )
+        else:
+            allowed_keys = (
+                INDEXED_DIRECTORY_REQUIRED_KEYS | INDEXED_DIRECTORY_OPTIONAL_KEYS
+            )
+            for index, entry in enumerate(indexed_directories):
+                prefix = f"indexed_directories[{index}]"
+                if not isinstance(entry, dict):
+                    problems.append(f"README policy {prefix} must be an object")
+                    continue
+                for key in INDEXED_DIRECTORY_REQUIRED_KEYS - set(entry):
+                    problems.append(
+                        f"README policy {prefix} is missing required key: {key}"
+                    )
+                for key in set(entry) - allowed_keys:
+                    problems.append(
+                        f"README policy {prefix} contains unexpected key: {key}"
+                    )
+                for key in {"path", "readme"} & set(entry):
+                    field = f"{prefix}.{key}"
+                    value = entry[key]
+                    if not isinstance(value, str):
+                        problems.append(
+                            f"README policy value has invalid type: {field} (expected string)"
+                        )
+                    elif not _valid_policy_path(root, value):
+                        problems.append(f"README policy path is invalid: {field}")
+                if "mode" in entry:
+                    field = f"{prefix}.mode"
+                    mode = entry["mode"]
+                    if not isinstance(mode, str):
+                        problems.append(
+                            f"README policy value has invalid type: {field} (expected string)"
+                        )
+                    elif mode not in INDEXED_DIRECTORY_MODES:
+                        problems.append(
+                            f"README policy {field} must be one of: executable, file"
+                        )
+                if "headings" in entry:
+                    field = f"{prefix}.headings"
+                    headings = entry["headings"]
+                    if not isinstance(headings, list):
+                        problems.append(
+                            f"README policy key has invalid type: {field} (expected array)"
+                        )
+                    elif not headings:
+                        problems.append(f"README policy {field} must not be empty")
+                    else:
+                        for heading_index, heading in enumerate(headings):
+                            heading_field = f"{field}[{heading_index}]"
+                            if not isinstance(heading, str):
+                                problems.append(
+                                    "README policy value has invalid type: "
+                                    f"{heading_field} (expected string)"
+                                )
+                            elif ORG_HEADING.fullmatch(heading) is None:
+                                problems.append(
+                                    f"README policy Org heading is invalid: {heading_field}"
+                                )
+                if "ignored_basenames" in entry:
+                    field = f"{prefix}.ignored_basenames"
+                    ignored = entry["ignored_basenames"]
+                    if not isinstance(ignored, list):
+                        problems.append(
+                            f"README policy key has invalid type: {field} (expected array)"
+                        )
+                    else:
+                        for ignored_index, basename in enumerate(ignored):
+                            ignored_field = f"{field}[{ignored_index}]"
+                            if not isinstance(basename, str):
+                                problems.append(
+                                    "README policy value has invalid type: "
+                                    f"{ignored_field} (expected string)"
+                                )
+                            elif not _valid_ignored_basename(basename):
+                                problems.append(
+                                    "README policy ignored basename is invalid: "
+                                    f"{ignored_field}"
+                                )
 
     for key in ("skill_inventory", "project_local_skill_documentation_owner"):
         if key not in policy:
@@ -721,12 +860,136 @@ def readme_coverage_problems(root: Path, policy: dict) -> list[str]:
         if readme not in tracked or safe_contained_file(root, readme) is None:
             problems.append(f"Required subsystem README is missing: {readme}")
 
+    for readme in policy.get("required_nested_readmes", []):
+        if readme not in tracked or safe_contained_file(root, readme) is None:
+            problems.append(f"Required nested README is missing: {readme}")
+
     for directory in top_level - decided:
         problems.append(
             f"Top-level directory has no README policy decision: {directory}"
         )
 
     return sorted(problems)
+
+
+def _mask_index_literal_regions(text: str) -> str:
+    """Mask Org literal regions while preserving line positions."""
+    spans = [
+        match.span()
+        for pattern in (
+            ORG_LITERAL_BLOCK,
+            ORG_FIXED_WIDTH_LINE,
+            ORG_INLINE_SOURCE,
+            ORG_COMMENT_LINE,
+        )
+        for match in pattern.finditer(text)
+    ]
+    masked = list(text)
+    for start, end in spans:
+        for index in range(start, end):
+            if masked[index] != "\n":
+                masked[index] = " "
+    return "".join(masked)
+
+
+def _index_table_contents(
+    text: str, headings: list[str]
+) -> tuple[list[str], set[str]]:
+    """Return indexed basenames and declared headings present in text."""
+    declared = set(headings)
+    present: set[str] = set()
+    basenames: list[str] = []
+    active_level: int | None = None
+
+    for line in _mask_index_literal_regions(text).splitlines():
+        heading_match = ORG_HEADING.fullmatch(line)
+        if heading_match:
+            if line in declared:
+                present.add(line)
+                active_level = len(heading_match.group(1))
+            elif active_level is not None and len(heading_match.group(1)) <= active_level:
+                active_level = None
+            continue
+        if active_level is None:
+            continue
+        row_match = INDEX_ROW.match(line)
+        if row_match:
+            basenames.append(row_match.group(1))
+
+    return basenames, present
+
+
+def index_table_basenames(text: str, headings: list[str]) -> list[str]:
+    """Return index basenames under the policy-declared Org headings."""
+    basenames, _ = _index_table_contents(text, headings)
+    return basenames
+
+
+def indexed_directory_problems(root: Path, policy: dict) -> list[str]:
+    """Report drift between tracked direct children and their Org indexes."""
+    tracked = set(git_files(root))
+    index_entries = git_index_entries(root)
+    problems: list[str] = []
+
+    for entry in policy.get("indexed_directories", []):
+        directory = PurePosixPath(entry["path"])
+        readme_relative = entry["readme"]
+        ignored = set(entry.get("ignored_basenames", []))
+        headings = entry["headings"]
+        expected = []
+        for mode, tracked_path in index_entries:
+            path = PurePosixPath(tracked_path)
+            if path.parent != directory or path.name == "README.org":
+                continue
+            if path.name in ignored:
+                continue
+            if entry["mode"] == "executable" and mode != "100755":
+                continue
+            expected.append(path.name)
+
+        if readme_relative not in tracked:
+            problems.append(
+                f"Indexed directory README is missing or untracked: {readme_relative}"
+            )
+            continue
+        readme = safe_contained_file(root, readme_relative)
+        if readme is None:
+            problems.append(
+                f"Indexed directory README is missing or unsafe: {readme_relative}"
+            )
+            continue
+        try:
+            actual, present_headings = _index_table_contents(
+                readme.read_text(encoding="utf-8"), headings
+            )
+        except (OSError, UnicodeError):
+            problems.append(
+                f"Indexed directory README could not be read: {readme_relative}"
+            )
+            continue
+
+        for heading in set(headings) - present_headings:
+            problems.append(
+                f"Indexed README heading is missing: {readme_relative} -> {heading}"
+            )
+
+        expected_counts = Counter(expected)
+        actual_counts = Counter(actual)
+        for basename, count in actual_counts.items():
+            if count > 1:
+                problems.append(
+                    f"Indexed README entry is duplicated: {readme_relative} -> {basename}"
+                )
+        for basename in expected_counts.keys() - actual_counts.keys():
+            problems.append(
+                f"Indexed README entry is missing: {readme_relative} -> {basename}"
+            )
+        for basename in actual_counts.keys() - expected_counts.keys():
+            problems.append(
+                f"Indexed README entry is unexpected: {readme_relative} -> {basename}"
+            )
+
+    return sorted(set(problems))
 
 
 def root_map_directories(text: str) -> list[str]:
@@ -958,6 +1221,7 @@ def audit_problems(root: Path) -> list[str]:
     problems.extend(validation_problems)
     if not validation_problems:
         problems.extend(readme_coverage_problems(root, policy))
+        problems.extend(indexed_directory_problems(root, policy))
         problems.extend(source_generated_problems(root, policy))
         if not inventory_input_problems:
             problems.extend(skill_inventory_problems(root, policy))

@@ -1,0 +1,21 @@
+#+title: Codex helper commands
+#+author: Pablo Stafforini
+
+* Scope
+
+This directory contains the Codex-specific helper command tracked by the
+dotfiles repository. It is not added to =PATH= as a command bundle; invoke the
+script by its repository path when installing or repairing the Codex skill
+layout.
+
+* Command index
+
+| Command | Purpose |
+|---------+---------|
+| =install-skills.sh= | Installs or repairs the live public and programmatic skill-directory links, preserves Codex-managed system skills, applies native skill pruning, and installs private-skill shims. |
+
+The documentation audit compares this table with every tracked direct child of
+the directory. Add or remove the matching row whenever the command set changes.
+The installer changes live Codex configuration, including native disable
+settings managed by =bin/skill-prune install=. Inspect its proposed paths before
+running it, then verify both the links and pruning state.

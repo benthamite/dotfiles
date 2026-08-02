@@ -119,9 +119,16 @@ The automatic ID machinery ([[#h:id-management][ID management]]) respects four u
 options that control where and how IDs are added.
 
 The user option ~org-extras-id-auto-add-excluded-directories~ is a list
-of directory paths.  Files inside these directories will be skipped when
-~org-extras-id-auto-add-ids-to-headings-in-file~ runs.  The default
-value is ~nil~.
+of directory paths.  Files inside these directories, at any depth, will
+be skipped when ~org-extras-id-auto-add-ids-to-headings-in-file~ runs.
+The default value is ~nil~.
+
+Matching is recursive, via ~org-extras-id-file-under-any-p~.  It formerly
+compared a file's own directory against the list with ~member~, so a
+listed directory excluded its own files but none of its subdirectories:
+710 files under =anki/elisp= remained eligible for IDs while =anki= was
+listed as excluded.  Entries that name a subdirectory of another entry
+are consequently redundant now, though harmless.
 
 The user option ~org-extras-id-auto-add-excluded-files~ is either a list
 of file paths to skip, or ~t~ to disable automatic ID addition globally.
@@ -135,10 +142,11 @@ default value is =("Local variables" "COMMENT Local variables" "TODO
 Local variables")=.
 
 The user option ~org-extras-id-auto-add-level-1-dirs~ is a list of
-directory paths.  For files in these directories, only level-1 headings
-receive automatic IDs, rather than headings at all levels.  The default
-value includes the =gptel/= and =chatgpt/= subdirectories under the
-notes directory.
+directory paths.  For files in these directories, at any depth, only
+level-1 headings receive automatic IDs, rather than headings at all
+levels.  The default value includes the =gptel/= and =chatgpt/=
+subdirectories under the notes directory.  Matching is recursive, by the
+same ~org-extras-id-file-under-any-p~ used for the excluded directories.
 
 ** BBDB anniversaries heading
 :PROPERTIES:
@@ -805,11 +813,13 @@ to its contents.
 The function ~org-extras-id-missing-id-candidates~ returns the files the
 command works on by default: every Org file under ~org-directory~ that
 ~org-extras-id-update-excluded-patterns~ does not exclude and that
-~org-extras-id-file-may-lack-ids-p~ reports as possibly incomplete.  That
-predicate is a cheap textual comparison of heading count against ~:ID:~
-count, used to avoid visiting thousands of already-complete files.  It
-deliberately errs towards including a file, since a file wrongly
-included is merely visited and left unchanged.
+~org-extras-id-file-may-lack-ids-p~ reports as incomplete.  That
+predicate scans the file textually, without visiting it, to avoid opening
+thousands of already-complete files.  It examines only the heading levels
+the file is eligible for, so a file in
+~org-extras-id-auto-add-level-1-dirs~ is not selected merely because its
+subheadings carry no IDs, and it attributes a property drawer to the
+heading it belongs to rather than to an enclosing one.
 
 *** Updating ID locations
 :PROPERTIES:

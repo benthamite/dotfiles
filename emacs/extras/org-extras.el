@@ -1116,23 +1116,32 @@ only level-1 headings in files in specified directories by customizing
 `org-extras-id-auto-add-level-1-dirs'."
   (when (org-extras-id-auto-add-eligible-buffer-p)
     (org-map-entries #'org-extras-id-auto-add-id-to-entry
-		     (when (member (file-name-directory (buffer-file-name))
-				   org-extras-id-auto-add-level-1-dirs)
+		     (when (org-extras-id-file-under-any-p
+			    (buffer-file-name) org-extras-id-auto-add-level-1-dirs)
 		       "LEVEL=1"))))
 
 (defun org-extras-id-auto-add-eligible-buffer-p ()
   "Return non-nil if the current buffer may receive automatic heading IDs."
-  (when-let* ((file (buffer-file-name))
-              (dir (file-name-directory file)))
+  (when-let* ((file (buffer-file-name)))
     (and (derived-mode-p 'org-mode)
 	 (string-match paths-dir-org file)
 	 (not buffer-read-only)
 	 (not org-extras-id-auto-add-exclude-file)
 	 (not (org-extras-buffer-edit-unsafe-p))
-	 (not (member dir org-extras-id-auto-add-excluded-directories))
+	 (not (org-extras-id-file-under-any-p
+	       file org-extras-id-auto-add-excluded-directories))
 	 (not (or (eq org-extras-id-auto-add-excluded-files t)
 		  (and (listp org-extras-id-auto-add-excluded-files)
 		       (member file org-extras-id-auto-add-excluded-files)))))))
+
+(defun org-extras-id-file-under-any-p (file directories)
+  "Return non-nil if FILE sits inside any of DIRECTORIES, at any depth.
+FILE's own directory used to be compared against DIRECTORIES with `member',
+which matched a listed directory's own files but none of its subdirectories.
+That left 710 files under \"anki/elisp\" eligible for IDs while \"anki\" itself
+was listed as excluded, and it is why the list had grown entries such as
+\"tlon/fede/archive\" that a recursive test makes redundant."
+  (seq-some (lambda (directory) (file-in-directory-p file directory)) directories))
 
 ;;;###autoload
 (defun org-extras-buffer-edit-unsafe-p ()
@@ -1199,15 +1208,36 @@ skipped."
                  (directory-files-recursively org-directory "\\.org\\'"))))
 
 (defun org-extras-id-file-may-lack-ids-p (file)
-  "Return non-nil if FILE holds more headings than ID properties.
+  "Return non-nil if a heading in FILE that should carry an ID does not.
 A cheap textual pre-filter, so that `org-extras-id-add-missing-ids' does not
-visit thousands of already-complete files.  It errs towards including a file:
-level-1-only directories and excluded headings make the comparison approximate,
-and a file wrongly included is merely visited and left unchanged."
+visit thousands of already-complete files.  Only the heading levels FILE is
+eligible for are examined, so a file in `org-extras-id-auto-add-level-1-dirs'
+is not selected merely because its subheadings have no IDs."
   (with-temp-buffer
     (insert-file-contents file)
-    (> (count-matches "^\\*+[ \t]" (point-min) (point-max))
-       (count-matches "^[ \t]*:ID:[ \t]" (point-min) (point-max)))))
+    (let ((heading (org-extras-id--eligible-heading-regexp file))
+          (incomplete nil))
+      (goto-char (point-min))
+      (while (and (not incomplete) (re-search-forward heading nil t))
+        (unless (org-extras-id--entry-carries-id-p)
+          (setq incomplete t)))
+      incomplete)))
+
+(defun org-extras-id--eligible-heading-regexp (file)
+  "Return the regexp matching the headings of FILE that may receive an ID."
+  (if (org-extras-id-file-under-any-p file org-extras-id-auto-add-level-1-dirs)
+      "^\\*[ \t]"
+    "^\\*+[ \t]"))
+
+(defun org-extras-id--entry-carries-id-p ()
+  "Return non-nil if the heading around point declares an ID property.
+Only the text up to the next heading of any level is examined, so a drawer
+belonging to a child heading is never mistaken for the current heading's."
+  (let ((limit (save-excursion
+                 (if (re-search-forward "^\\*+[ \t]" nil t)
+                     (match-beginning 0)
+                   (point-max)))))
+    (save-excursion (re-search-forward "^[ \t]*:ID:[ \t]" limit t))))
 
 (defun org-extras-id-add-missing-ids-in-file (file)
   "Add missing heading IDs to FILE, saving it only when something changed.

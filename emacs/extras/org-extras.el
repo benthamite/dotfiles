@@ -1201,11 +1201,21 @@ skipped."
           :errors (nreverse errors))))
 
 (defun org-extras-id-missing-id-candidates ()
-  "Return the Org files under `org-directory' that may lack heading IDs."
+  "Return the Org files under `org-directory' that may lack heading IDs.
+Files that `org-extras-id-update-excluded-patterns' or
+`org-extras-id-auto-add-excluded-directories' rule out are dropped before the
+per-file scan, so a directory excluded from automatic IDs is not opened only to
+be refused."
   (cl-remove-if-not
    #'org-extras-id-file-may-lack-ids-p
-   (cl-remove-if #'org-extras-id--update-excluded-p
+   (cl-remove-if #'org-extras-id-auto-add-excluded-file-p
                  (directory-files-recursively org-directory "\\.org\\'"))))
+
+(defun org-extras-id-auto-add-excluded-file-p (file)
+  "Return non-nil if FILE is ruled out of automatic ID addition by its path."
+  (or (org-extras-id--update-excluded-p file)
+      (org-extras-id-file-under-any-p
+       file org-extras-id-auto-add-excluded-directories)))
 
 (defun org-extras-id-file-may-lack-ids-p (file)
   "Return non-nil if a heading in FILE that should carry an ID does not.

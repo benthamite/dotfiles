@@ -979,8 +979,11 @@ to its contents.
 @findex org-extras-id-file-may-lack-ids-p
 The function @code{org-extras-id-missing-id-candidates} returns the files the
 command works on by default: every Org file under @code{org-directory} that
-@code{org-extras-id-update-excluded-patterns} does not exclude and that
-@code{org-extras-id-file-may-lack-ids-p} reports as incomplete.  That
+@code{org-extras-id-auto-add-excluded-file-p} does not rule out by path, and
+that @code{org-extras-id-file-may-lack-ids-p} reports as incomplete.  The
+first of those combines @code{org-extras-id-update-excluded-patterns} with
+@code{org-extras-id-auto-add-excluded-directories}, so a directory excluded
+from automatic IDs is never opened merely to be refused.  That
 predicate scans the file textually, without visiting it, to avoid opening
 thousands of already-complete files.  It examines only the heading levels
 the file is eligible for, so a file in

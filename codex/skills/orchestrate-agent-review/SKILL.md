@@ -151,10 +151,14 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" submit \
 The helper selects the actor from the phase and rejects out-of-order,
 duplicate, wrong-role, busy-actor, and post-implementation arbitrary
 submissions. Before delivery it records the fixed transcript byte boundary;
-after delivery it records the phase as active. It does not enable the next
-handoff merely because the prompt was delivered. Every phase prompt ends with
-a fixed completion marker contract, and the implementation prompt also
-contains a non-overridable whole-stage contract.
+only after a busy transition or transcript growth acknowledges delivery does
+it record the phase as active. If the initial submit call returns without that
+acknowledgement, the helper may retry only the submit keystroke when the exact
+phase marker proves that the original prompt remains in the fixed actor's
+composer. It never retransmits the prompt. It does not enable the next handoff
+merely because the prompt was delivered. Every phase prompt ends with a fixed
+completion marker contract, and the implementation prompt also contains a
+non-overridable whole-stage contract.
 
 After the fixed top-level actor is awaiting input, record the return:
 
@@ -175,7 +179,10 @@ exposing transcript content. Only then does the next handoff become available.
 The helper persists a pending record before every external submission. If
 delivery fails ambiguously, all further actions stop until the operator uses
 `reconcile-submission --delivered` or `--not-delivered` based on concrete
-session evidence. Never retry an ambiguous submission automatically.
+session evidence. When the exact current phase marker is still present in the
+composer, use `retry-delivery --run-file <run>`; it rechecks the transcript and
+session state, sends only Return, and refuses to paste the prompt again. Never
+retry or retransmit an ambiguous prompt automatically.
 
 ## Step 4: Monitor without ending the turn
 
@@ -207,7 +214,7 @@ use a reviewer verdict as a permission gate: a returned review with its fixed
 completion marker advances the workflow.
 If a read-only poll loses the Emacs server connection, the watcher reports the
 error and retries once after the normal interval. A second consecutive failure
-exits. Submission commands are never retried automatically.
+exits. Prompt content is never retransmitted automatically.
 
 During specification and planning, use the bounded transcript evidence needed
 to pass artifacts between agents. During implementation, the helper disables

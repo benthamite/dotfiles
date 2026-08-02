@@ -459,6 +459,121 @@ class StageAtomicRunTests(unittest.TestCase):
             orchestrator.reconcile_submission(args)
         self.assertIsNone(orchestrator.load_run(self.run_file)["pending_submission"])
 
+    def test_submit_retries_only_return_when_prompt_remains_in_composer(self):
+        self.create_run()
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "awaiting-input"},
+            ),
+            mock.patch.object(orchestrator, "run_emacs_eval", return_value="submitted"),
+            mock.patch.object(
+                orchestrator,
+                "_wait_for_delivery",
+                side_effect=(False, True),
+            ) as wait_for_delivery,
+            mock.patch.object(
+                orchestrator,
+                "pending_prompt_contains",
+                return_value=True,
+            ),
+            mock.patch.object(
+                orchestrator,
+                "send_return_to_agent",
+            ) as send_return,
+            redirect_stdout(io.StringIO()),
+        ):
+            orchestrator.submit(self.submit_args("spec"))
+
+        send_return.assert_called_once_with("*claude:stage-2*", "claude-code")
+        self.assertEqual(wait_for_delivery.call_count, 2)
+        state = orchestrator.load_run(self.run_file)
+        self.assertIsNone(state["pending_submission"])
+        self.assertEqual(state["status"], "phase-active")
+
+    def test_submit_keeps_pending_when_return_retry_is_not_acknowledged(self):
+        self.create_run()
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "awaiting-input"},
+            ),
+            mock.patch.object(orchestrator, "run_emacs_eval", return_value="submitted"),
+            mock.patch.object(
+                orchestrator,
+                "_wait_for_delivery",
+                side_effect=(False, False),
+            ),
+            mock.patch.object(
+                orchestrator,
+                "pending_prompt_contains",
+                return_value=True,
+            ),
+            mock.patch.object(
+                orchestrator,
+                "send_return_to_agent",
+            ),
+            self.assertRaisesRegex(
+                orchestrator.EmacsClientError,
+                "delivery was not acknowledged",
+            ),
+        ):
+            orchestrator.submit(self.submit_args("spec"))
+
+        state = orchestrator.load_run(self.run_file)
+        self.assertEqual(state["status"], "ready")
+        self.assertEqual(state["pending_submission"]["phase"], "spec")
+
+    def test_retry_delivery_recovers_legacy_active_submission_without_repaste(self):
+        self.create_run()
+        state = orchestrator.load_run(self.run_file)
+        state["submissions"].append(
+            {"phase": "spec", "actor": "agent1", "transcript_offset": 0}
+        )
+        state["status"] = "phase-active"
+        state["active_phase"] = "spec"
+        state["expected_phase"] = None
+        orchestrator.save_run(self.run_file, state)
+
+        args = SimpleNamespace(run_file=str(self.run_file))
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "awaiting-input"},
+            ),
+            mock.patch.object(
+                orchestrator,
+                "_delivery_observed",
+                return_value=False,
+            ),
+            mock.patch.object(
+                orchestrator,
+                "pending_prompt_contains",
+                return_value=True,
+            ),
+            mock.patch.object(
+                orchestrator,
+                "send_return_to_agent",
+            ) as send_return,
+            mock.patch.object(
+                orchestrator,
+                "_wait_for_delivery",
+                return_value=True,
+            ),
+            mock.patch.object(orchestrator, "submit_to_agent") as submit_prompt,
+            redirect_stdout(io.StringIO()),
+        ):
+            orchestrator.retry_delivery(args)
+
+        send_return.assert_called_once_with("*claude:stage-2*", "claude-code")
+        submit_prompt.assert_not_called()
+        self.assertEqual(
+            orchestrator.load_run(self.run_file)["status"], "phase-active"
+        )
+
     def test_submit_requires_fixed_destination_actor_to_be_awaiting(self):
         self.create_run()
         with (

@@ -98,7 +98,10 @@ The paired =orchestrate-agent-review= helper keeps implementation stages atomic.
 Its fixed resume path tells an agent whose work is already complete to return
 only the required stage marker instead of repeating the work or its evidence;
 the bounded marker check also reconciles a busy flag left stale by a lost Emacs
-stop event.
+stop event. Phase submission remains pending until a busy transition or
+transcript growth acknowledges delivery. If the original phase marker is still
+present in the fixed actor's composer, the helper may retry only the Return
+keystroke; it never pastes the prompt a second time.
 
 * Hooks
 

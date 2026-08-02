@@ -33,6 +33,9 @@ RUN_STATUSES = {
     "implementation-returned",
     "complete",
 }
+DELIVERY_INITIAL_WAIT_SECONDS = 2.0
+DELIVERY_RETRY_WAIT_SECONDS = 8.0
+DELIVERY_POLL_SECONDS = 0.1
 
 IMPLEMENTATION_CONTRACT = """STAGE-ATOMIC IMPLEMENTATION CONTRACT
 
@@ -463,7 +466,7 @@ def state_cmd(args: argparse.Namespace) -> None:
         print(f"{state['state']:15} {state['buffer']} [{state['directory']}]")
 
 
-def submit_to_agent(buffer: str, backend: str, prompt: str) -> None:
+def _submit_function(backend: str) -> str:
     fn = {
         "claude": "agent-claude-submit-command",
         "claude-code": "agent-claude-submit-command",
@@ -471,6 +474,90 @@ def submit_to_agent(buffer: str, backend: str, prompt: str) -> None:
     }.get(backend)
     if fn is None:
         raise SystemExit("--backend must be claude, claude-code, or codex")
+    return fn
+
+
+def send_return_to_agent(buffer: str, backend: str) -> None:
+    fn = {
+        "claude": "agent-claude-send-return",
+        "claude-code": "agent-claude-send-return",
+        "codex": "agent-codex-send-return",
+    }.get(backend)
+    if fn is None:
+        raise SystemExit("--backend must be claude, claude-code, or codex")
+    expr = f'''
+(with-current-buffer {elisp_string(buffer)}
+  (let ((target ({fn} (get-buffer {elisp_string(buffer)}))))
+    (unless (buffer-live-p target)
+      (error "agent return dispatch did not resolve a live buffer"))
+    (princ "submitted")))
+'''
+    returned = run_emacs_eval(expr)
+    if returned != "submitted":
+        raise SystemExit(f"unexpected return-submit result: {returned!r}")
+
+
+def pending_prompt_contains(buffer: str, marker: str) -> bool:
+    """Return whether BUFFER's last visible composer contains MARKER.
+
+    Only the boolean result crosses the Emacs boundary; prompt text stays in
+    the fixed top-level session buffer.
+    """
+    expr = f'''
+(with-current-buffer {elisp_string(buffer)}
+  (save-excursion
+    (goto-char (point-max))
+    (if (and (re-search-backward "^[❯>$][[:space:]]" nil t)
+             (search-forward {elisp_string(marker)} nil t))
+        (princ "present")
+      (princ "absent"))))
+'''
+    returned = run_emacs_eval(expr)
+    if returned not in {"present", "absent"}:
+        raise SystemExit(f"unexpected pending-prompt result: {returned!r}")
+    return returned == "present"
+
+
+def _transcript_advanced(transcript: str, offset: int) -> bool:
+    try:
+        return Path(transcript).stat().st_size > offset
+    except FileNotFoundError:
+        return False
+    except OSError as error:
+        raise EmacsClientError(
+            f"cannot inspect transcript delivery boundary {transcript}: {error}"
+        ) from None
+
+
+def _delivery_observed(buffer: str, transcript: str, offset: int) -> bool:
+    if _transcript_advanced(transcript, offset):
+        return True
+    return buffer_state(buffer).get("state") == "busy"
+
+
+def _wait_for_delivery(
+    buffer: str, transcript: str, offset: int, timeout: float
+) -> bool:
+    deadline = time.monotonic() + timeout
+    while True:
+        if _delivery_observed(buffer, transcript, offset):
+            return True
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return False
+        time.sleep(min(DELIVERY_POLL_SECONDS, remaining))
+
+
+def submit_to_agent(
+    buffer: str,
+    backend: str,
+    prompt: str,
+    *,
+    transcript: str,
+    transcript_offset: int,
+    delivery_marker: str,
+) -> None:
+    fn = _submit_function(backend)
     fd, temporary = tempfile.mkstemp(prefix="agent-orch-prompt-", suffix=".txt")
     prompt_path = Path(temporary)
     try:
@@ -482,10 +569,13 @@ def submit_to_agent(buffer: str, backend: str, prompt: str) -> None:
 (with-current-buffer {elisp_string(buffer)}
   (with-temp-buffer
     (insert-file-contents {elisp_string(str(prompt_path))})
-    ({fn}
-     (buffer-string)
-     (get-buffer {elisp_string(buffer)}))
-    (princ "submitted")))
+    (let ((target
+           ({fn}
+            (buffer-string)
+            (get-buffer {elisp_string(buffer)}))))
+      (unless (buffer-live-p target)
+        (error "agent submit dispatch did not resolve a live buffer"))
+      (princ "submitted"))))
 '''
         returned = run_emacs_eval(expr)
         if returned != "submitted":
@@ -495,11 +585,41 @@ def submit_to_agent(buffer: str, backend: str, prompt: str) -> None:
             os.close(fd)
         prompt_path.unlink(missing_ok=True)
 
+    if _wait_for_delivery(
+        buffer,
+        transcript,
+        transcript_offset,
+        DELIVERY_INITIAL_WAIT_SECONDS,
+    ):
+        return
+    if not pending_prompt_contains(buffer, delivery_marker):
+        raise EmacsClientError(
+            "submission returned without delivery acknowledgement and the exact "
+            "pending prompt could not be proved in the composer"
+        )
+    send_return_to_agent(buffer, backend)
+    if not _wait_for_delivery(
+        buffer,
+        transcript,
+        transcript_offset,
+        DELIVERY_RETRY_WAIT_SECONDS,
+    ):
+        raise EmacsClientError(
+            "submission delivery was not acknowledged after retrying only the "
+            "submit keystroke"
+        )
+
 
 def _phase_prompt(state: dict[str, Any], phase: str, context: str) -> str:
     if phase == "implementation":
         return IMPLEMENTATION_CONTRACT.format(stage=state["stage"], context=context)
     return PHASE_CONTRACT.format(phase=phase, context=context)
+
+
+def _delivery_marker(stage: str, phase: str) -> str:
+    if phase == "implementation":
+        return f"STAGE COMPLETE: {stage}"
+    return f"PHASE COMPLETE: {phase}"
 
 
 def _evidence_digest(path: Path | str) -> str:
@@ -622,7 +742,14 @@ def submit(args: argparse.Namespace) -> None:
             "transcript_offset": _transcript_offset(state, actor_name),
         }
         save_run(args.run_file, state)
-        submit_to_agent(actor["buffer"], actor["backend"], prompt)
+        submit_to_agent(
+            actor["buffer"],
+            actor["backend"],
+            prompt,
+            transcript=actor["transcript"],
+            transcript_offset=state["pending_submission"]["transcript_offset"],
+            delivery_marker=_delivery_marker(state["stage"], args.phase),
+        )
         _finalize_pending(state)
         save_run(args.run_file, state)
     print(f"submitted stage={state['stage']} phase={args.phase} actor={actor_name}")
@@ -699,6 +826,69 @@ def reconcile_submission(args: argparse.Namespace) -> None:
     print(f"reconciled stage={state['stage']} outcome={outcome}")
 
 
+def retry_delivery(args: argparse.Namespace) -> None:
+    """Retry only Return for a concretely observed pending composer prompt."""
+    with run_lock(args.run_file):
+        state = load_run(args.run_file)
+        pending = state["pending_submission"]
+        if pending is not None:
+            submission = pending
+        elif state["status"] in {"phase-active", "implementation-active"}:
+            current = state["submissions"][-1]
+            submission = {
+                "kind": "phase",
+                "phase": current["phase"],
+                "actor": current["actor"],
+                "transcript_offset": current["transcript_offset"],
+            }
+        else:
+            raise SystemExit("no current submission is eligible for delivery retry")
+
+        actor = state[submission["actor"]]
+        transcript = actor["transcript"]
+        offset = submission["transcript_offset"]
+        if _delivery_observed(actor["buffer"], transcript, offset):
+            if pending is not None:
+                _finalize_pending(state)
+                save_run(args.run_file, state)
+            print(
+                f"delivery already observed stage={state['stage']} "
+                f"phase={submission['phase']}"
+            )
+            return
+
+        live = buffer_state(actor["buffer"])
+        if live.get("state") != "awaiting-input":
+            raise SystemExit(
+                f"{submission['actor']} is {live.get('state', 'unknown')}; "
+                "delivery retry requires awaiting input"
+            )
+        marker = _delivery_marker(state["stage"], submission["phase"])
+        if not pending_prompt_contains(actor["buffer"], marker):
+            raise SystemExit(
+                "exact pending phase marker is not present in the current composer; "
+                "refusing delivery retry"
+            )
+        send_return_to_agent(actor["buffer"], actor["backend"])
+        if not _wait_for_delivery(
+            actor["buffer"],
+            transcript,
+            offset,
+            DELIVERY_RETRY_WAIT_SECONDS,
+        ):
+            raise EmacsClientError(
+                "submission delivery was not acknowledged after retrying only the "
+                "submit keystroke"
+            )
+        if pending is not None:
+            _finalize_pending(state)
+            save_run(args.run_file, state)
+    print(
+        f"retried delivery stage={state['stage']} "
+        f"phase={submission['phase']} actor={submission['actor']}"
+    )
+
+
 def run_status(args: argparse.Namespace) -> None:
     state = load_run(args.run_file)
     display = {
@@ -738,7 +928,14 @@ def resume_stage(args: argparse.Namespace) -> None:
             "transcript_offset": _transcript_offset(state, "agent1"),
         }
         save_run(args.run_file, state)
-        submit_to_agent(agent1["buffer"], agent1["backend"], prompt)
+        submit_to_agent(
+            agent1["buffer"],
+            agent1["backend"],
+            prompt,
+            transcript=agent1["transcript"],
+            transcript_offset=state["pending_submission"]["transcript_offset"],
+            delivery_marker=_delivery_marker(state["stage"], "implementation"),
+        )
         _finalize_pending(state)
         save_run(args.run_file, state)
     print(f"resumed stage={state['stage']} actor=agent1")
@@ -1040,6 +1237,13 @@ def main(argv: list[str] | None = None) -> int:
     outcome.add_argument("--delivered", action="store_true")
     outcome.add_argument("--not-delivered", action="store_false", dest="delivered")
     p.set_defaults(func=reconcile_submission)
+
+    p = sub.add_parser(
+        "retry-delivery",
+        help="Retry only Return when the exact phase prompt remains in the composer",
+    )
+    p.add_argument("--run-file", required=True)
+    p.set_defaults(func=retry_delivery)
 
     p = sub.add_parser(
         "resume-stage", help="Resume an awaiting Agent 1 with fixed stage scope"

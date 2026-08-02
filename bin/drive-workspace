@@ -1057,7 +1057,7 @@ JOURNAL_SCHEMA_VERSION = 1
 STATE_ROOT_ENV = "DRIVE_WORKSPACE_STATE_ROOT"
 DEFAULT_STATE_ROOT = "~/.local/state/drive-workspace-migration"
 
-JOURNAL_KINDS = {"transaction", "observation", "program"}
+JOURNAL_KINDS = {"transaction", "observation", "program", "path_repair"}
 EVENTS_BY_KIND = {
     "transaction": {
         "capture", "drive_state", "drive_paused", "moved", "local_verified",
@@ -1072,6 +1072,13 @@ EVENTS_BY_KIND = {
     },
     "observation": {"drive_state", "native_errors_recorded"},
     "program": {"program_gate"},
+    "path_repair": {
+        "path_captured", "drive_paused", "path_local_verified",
+        "path_local_rolled_back", "path_cloud_recorded",
+        "path_cloud_verified", "path_cloud_restored",
+        "native_errors_recorded", "rollback_window_closed",
+        "path_target_finalized", "private_preimage_finalized",
+    },
 }
 EVENT_KEYS = {
     "event", "transaction_id", "sequence", "previous_hash",
@@ -3013,7 +3020,8 @@ DEFAULT_OAUTH_FILE = "~/.config/gdoc/accounts/personal/token.json"
 GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token"
 DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3"
 DRIVE_FILE_FIELDS = (
-    "id,name,parents,trashed,explicitlyTrashed,ownedByMe,driveId,mimeType"
+    "id,name,parents,trashed,explicitlyTrashed,ownedByMe,driveId,mimeType,"
+    "md5Checksum"
 )
 DRIVE_LIST_FIELDS = (
     "nextPageToken,incompleteSearch,"
@@ -3327,12 +3335,16 @@ def _chain_root_id(reader: _CloudReader, meta: dict) -> str:
 
 
 def _cloud_name_hits(reader: _CloudReader, record: dict) -> list:
-    """Live objects sharing the old name, across ALL listing pages.
+    """Live objects sharing the journaled workspace object name."""
+    return _cloud_live_name_hits(reader, record["object"]["name"])
+
+
+def _cloud_live_name_hits(reader: _CloudReader, name: str) -> list:
+    """Live objects sharing one name, across ALL listing pages.
 
     Every page must carry the expected fields; a truncated, incomplete,
     or looping listing is a blocker, never a silently shorter sweep.
     """
-    name = record["object"]["name"]
     query = f"name = '{_escape_drive_query(name)}' and trashed = false"
     hits: list = []
     seen_tokens: set = {None}
@@ -3828,14 +3840,18 @@ def cmd_close_rollback_window(
     path = _journal_abspath(journal)
     events = read_journal(path)
     header = events[0]
+    baseline_path = _journal_abspath(baseline_journal)
+    baseline_events = read_journal(baseline_path)
+    if header["journal_kind"] == "path_repair":
+        return _close_path_rollback_window(
+            path, events, baseline_path, baseline_events, restart_before_pid
+        )
     if header["journal_kind"] != "transaction":
         raise TransactionError(
             f"journal is a {header['journal_kind']} journal, not a "
             f"transaction journal: {path}"
         )
     name = header["workspace"]
-    baseline_path = _journal_abspath(baseline_journal)
-    baseline_events = read_journal(baseline_path)
     if _latest(events, "rollback_window_closed") is not None:
         raise TransactionError(
             f"the rollback window was already closed: {path}"
@@ -3962,6 +3978,1407 @@ def cmd_close_rollback_window(
             "baseline_final_hash": baseline_events[-1]["event_hash"],
         },
     )
+    _print_journal(path)
+    return 0
+
+
+# --- Path repair -----------------------------------------------------------
+#
+# A path-repair transaction captures ONE in-Drive path (symlink, regular
+# file, or directory), journals its exact preimage in a private mode-0700
+# transaction directory, and can verify the intended final state and roll
+# the path back locally and in the cloud.  Everything is fail-closed: an
+# unknown object type, an escaped root, an unjournaled replacement, or
+# missing pause evidence is a blocker, never a skipped check.
+
+PATH_FINAL_TYPES = ("absent", "file", "directory")
+GOOGLE_NATIVE_MIME_PREFIX = "application/vnd.google-apps."
+FOLDER_MIME_TYPE = "application/vnd.google-apps.folder"
+
+
+def _require_path_header(events: list, journal: str) -> dict:
+    header = events[0]
+    if header["journal_kind"] != "path_repair":
+        raise TransactionError(
+            f"journal is a {header['journal_kind']} journal, not a "
+            f"path_repair journal: {journal}"
+        )
+    return header
+
+
+def _require_path_capture(events: list, journal: str) -> dict:
+    capture = _latest(events, "path_captured")
+    if capture is None:
+        raise TransactionError(
+            f"journal has no path_captured event: {journal}"
+        )
+    return capture
+
+
+def _require_journaled_root(path_abs: str) -> str:
+    """The captured path's parent, required to be symlink-free."""
+    parent = os.path.dirname(path_abs)
+    if not os.path.isdir(parent):
+        raise TransactionError(
+            f"path parent is not a directory: {parent}"
+        )
+    real = os.path.realpath(parent)
+    if real != parent:
+        raise TransactionError(
+            f"path resolves outside the journaled root: {parent} "
+            f"traverses a symlink to {real}"
+        )
+    return parent
+
+
+def _recheck_journaled_root(capture_payload: dict) -> None:
+    parent = os.path.dirname(capture_payload["path"])
+    real = os.path.realpath(parent)
+    if real != capture_payload["root"]:
+        raise TransactionError(
+            f"path resolves outside the journaled root "
+            f"{capture_payload['root']}: {real}"
+        )
+
+
+def _require_replacement_within_root(abs_replacement: str, root: str) -> None:
+    """Require a sibling replacement to sit physically inside the root.
+
+    Textual containment is not enough: a symlinked directory component
+    would let the replacement physically escape the journaled root, so
+    every existing component below the root must be a non-symlink and
+    the fully resolved path must stay inside the resolved root.  Runs
+    at capture AND again at verify/rollback, mirroring the root
+    re-check, so a symlink introduced after capture is still a blocker.
+    """
+    if not _is_within(abs_replacement, root) or abs_replacement == root:
+        raise TransactionError(
+            f"replacement is outside the journaled root {root}: "
+            f"{abs_replacement}"
+        )
+    current = root
+    for component in os.path.relpath(abs_replacement, root).split(os.sep):
+        current = os.path.join(current, component)
+        try:
+            info = os.lstat(current)
+        except (FileNotFoundError, NotADirectoryError):
+            # A missing component cannot be a symlink, and nothing can
+            # exist below it; the leaf may legitimately not exist yet.
+            break
+        except OSError as error:
+            raise TransactionError(
+                f"replacement path cannot be observed: {current} "
+                f"({error})"
+            ) from error
+        if stat.S_ISLNK(info.st_mode):
+            raise TransactionError(
+                f"replacement path traverses a symlink at {current}; it "
+                f"escapes the journaled root: {abs_replacement}"
+            )
+    real_root = os.path.realpath(root)
+    real = os.path.realpath(abs_replacement)
+    if not _is_within(real, real_root) or real == real_root:
+        raise TransactionError(
+            f"replacement resolves outside the journaled root "
+            f"{real_root}: {real}"
+        )
+
+
+def _path_git_observation(path_abs: str) -> dict | None:
+    """Exact Git mode/status observation for one path, or None outside Git."""
+    parent = os.path.dirname(path_abs)
+    try:
+        completed = subprocess.run(
+            ["git", "-C", parent, "rev-parse", "--show-toplevel"],
+            shell=False,
+            check=False,
+            capture_output=True,
+            encoding="utf-8",
+            errors="strict",
+            env=dict(os.environ, GIT_OPTIONAL_LOCKS="0"),
+        )
+    except FileNotFoundError as error:
+        raise TransactionError(
+            f"git is unavailable for the path observation: {error}"
+        ) from error
+    except UnicodeDecodeError as error:
+        raise TransactionError(
+            f"git output is not valid UTF-8: {error}"
+        ) from error
+    if completed.returncode != 0:
+        return None
+    toplevel = completed.stdout.strip()
+    rel = os.path.relpath(path_abs, toplevel)
+    if rel.startswith(".."):
+        return None
+    ls_files = _run_git(Path(toplevel), ("ls-files", "-s", "-z", "--", rel))
+    status = _run_git(
+        Path(toplevel), ("status", "--porcelain=v2", "-z", "--", rel)
+    )
+    return {
+        "toplevel": toplevel,
+        "rel": rel,
+        "ls_files": ls_files,
+        "status": status,
+        "tracked": bool(ls_files),
+    }
+
+
+def _git_status_entries(status_z: str) -> list:
+    """Porcelain-v2 -z records; rename entries consume their second path."""
+    tokens = status_z.split("\0")
+    entries = []
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        index += 1
+        if not token:
+            continue
+        entries.append(token)
+        if token.startswith("2 "):
+            index += 1
+    return entries
+
+
+def _require_clean_git_state(capture_payload: dict) -> dict | None:
+    """Recompute the Git observation; any non-untracked entry is a blocker."""
+    observation = _path_git_observation(capture_payload["path"])
+    captured = capture_payload["git"]
+    if (observation is None) != (captured is None):
+        raise TransactionError(
+            "Git repository membership changed since capture"
+        )
+    if observation is not None and observation["toplevel"] != captured["toplevel"]:
+        raise TransactionError(
+            f"Git toplevel changed since capture: "
+            f"{observation['toplevel']!r} != {captured['toplevel']!r}"
+        )
+    if observation is not None:
+        dirty = [
+            entry for entry in _git_status_entries(observation["status"])
+            if not entry.startswith("? ")
+        ]
+        if dirty:
+            raise TransactionError(
+                f"Git status for the path is not clean: {dirty!r}"
+            )
+    return observation
+
+
+def _collect_directory_preimage(path_abs: str) -> tuple:
+    """(entries, blobs) for a recursive directory preimage.
+
+    Entries carry NUL-safe (strict-UTF-8, JSON-encoded) relative paths;
+    sockets, devices, FIFOs, nested symlinks, hard links, and every other
+    uncovered entry type are blockers rather than silently skipped.
+    """
+    entries: list[dict] = []
+    blobs: dict[str, bytes] = {}
+    pending = [path_abs]
+    while pending:
+        directory = pending.pop()
+        for entry in _scan_sorted(Path(directory)):
+            rel = os.path.relpath(entry.path, path_abs)
+            try:
+                rel.encode("utf-8", errors="strict")
+            except UnicodeEncodeError as error:
+                raise TransactionError(
+                    f"preimage entry name cannot be read as UTF-8: "
+                    f"{entry.path!r} ({error})"
+                ) from error
+            try:
+                info = os.lstat(entry.path)
+            except OSError as error:
+                raise TransactionError(
+                    f"preimage entry cannot be read: {entry.path} ({error})"
+                ) from error
+            mode = f"0o{stat.S_IMODE(info.st_mode):o}"
+            if stat.S_ISDIR(info.st_mode):
+                entries.append(
+                    {"path": rel, "type": "directory", "mode": mode}
+                )
+                pending.append(entry.path)
+            elif stat.S_ISREG(info.st_mode):
+                if info.st_nlink > 1:
+                    raise TransactionError(
+                        f"preimage entry is a hard link (st_nlink="
+                        f"{info.st_nlink}); an exact private preimage "
+                        f"cannot cover it: {entry.path}"
+                    )
+                try:
+                    data = Path(entry.path).read_bytes()
+                except OSError as error:
+                    raise TransactionError(
+                        f"preimage content cannot be read: {entry.path} "
+                        f"({error})"
+                    ) from error
+                digest = hashlib.sha256(data).hexdigest()
+                blobs[digest] = data
+                entries.append(
+                    {
+                        "path": rel,
+                        "type": "file",
+                        "mode": mode,
+                        "size": info.st_size,
+                        "sha256": digest,
+                    }
+                )
+            else:
+                raise TransactionError(
+                    f"preimage entry type is not supported in a directory "
+                    f"preimage: {entry.path}"
+                )
+    entries.sort(key=lambda record: record["path"])
+    return entries, blobs
+
+
+def _preimage_blob_root(journal_path: str) -> str:
+    return os.path.join(os.path.dirname(journal_path), "preimage", "blobs")
+
+
+def _write_preimage_blobs(journal_path: str, blobs: dict) -> None:
+    """Write private mode-0600 fsynced preimage assets under the journal."""
+    if not blobs:
+        return
+    blob_root = _preimage_blob_root(journal_path)
+    os.makedirs(blob_root, mode=0o700)
+    os.chmod(blob_root, 0o700)
+    os.chmod(os.path.dirname(blob_root), 0o700)
+    for digest in sorted(blobs):
+        blob_path = os.path.join(blob_root, digest)
+        fd = os.open(blob_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        try:
+            os.fchmod(fd, 0o600)
+            data = blobs[digest]
+            if os.write(fd, data) != len(data):
+                raise TransactionError(
+                    f"preimage asset write was short: {blob_path}"
+                )
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+
+
+def _read_preimage_blob(blob_root: str, digest: str) -> bytes:
+    blob_path = os.path.join(blob_root, digest)
+    try:
+        data = Path(blob_path).read_bytes()
+    except OSError as error:
+        raise TransactionError(
+            f"private preimage asset is missing or unreadable: "
+            f"{blob_path} ({error})"
+        ) from error
+    if hashlib.sha256(data).hexdigest() != digest:
+        raise TransactionError(
+            f"private preimage asset no longer matches its journaled "
+            f"hash: {blob_path}"
+        )
+    return data
+
+
+def cmd_capture_path(
+    label: str, journal, path, replacements, final_type: str,
+    target_policy: str,
+) -> int:
+    journal_path = _validate_new_journal_path(journal)
+    path_abs = os.path.abspath(os.path.expanduser(str(path)))
+    try:
+        info = os.lstat(path_abs)
+    except OSError as error:
+        raise TransactionError(
+            f"unknown current object: the path cannot be observed: "
+            f"{path_abs} ({error})"
+        ) from error
+    root = _require_journaled_root(path_abs)
+    if stat.S_ISLNK(info.st_mode):
+        lstat_type = "symlink"
+    elif stat.S_ISREG(info.st_mode):
+        lstat_type = "file"
+    elif stat.S_ISDIR(info.st_mode):
+        lstat_type = "directory"
+    else:
+        raise TransactionError(
+            f"unknown current object: only a symlink, regular file, or "
+            f"directory can be captured: {path_abs}"
+        )
+    if target_policy == "disposable" and lstat_type != "symlink":
+        raise TransactionError(
+            "target_policy disposable applies only to a symlink preimage "
+            "with an external target; declare retain instead"
+        )
+    replacement_paths: list[str] = []
+    for replacement in replacements:
+        abs_replacement = os.path.abspath(
+            os.path.expanduser(str(replacement))
+        )
+        if not _is_within(abs_replacement, root) or abs_replacement == root:
+            raise TransactionError(
+                f"replacement is outside the journaled root {root}: "
+                f"{abs_replacement}"
+            )
+        if abs_replacement != path_abs and not _is_within(
+            abs_replacement, path_abs
+        ):
+            # Interior replacements live under the captured path itself
+            # (a symlink until the repair lands) and are never renamed
+            # independently; sibling replacements ARE renamed, so their
+            # full component chain must be symlink-free.
+            _require_replacement_within_root(abs_replacement, root)
+        if abs_replacement in replacement_paths:
+            raise TransactionError(
+                f"replacement is declared twice: {abs_replacement}"
+            )
+        if abs_replacement != path_abs and os.path.lexists(abs_replacement):
+            rinfo = os.lstat(abs_replacement)
+            empty_file = (
+                stat.S_ISREG(rinfo.st_mode) and rinfo.st_size == 0
+            )
+            empty_dir = (
+                stat.S_ISDIR(rinfo.st_mode)
+                and not os.listdir(abs_replacement)
+            )
+            if not (empty_file or empty_dir):
+                raise TransactionError(
+                    f"a nonempty replacement already occupies "
+                    f"{abs_replacement}; capture refuses to journal over it"
+                )
+        replacement_paths.append(abs_replacement)
+    mode = f"0o{stat.S_IMODE(info.st_mode):o}"
+    blobs: dict[str, bytes] = {}
+    if lstat_type == "symlink":
+        link_text = os.readlink(path_abs)
+        target = _resolve_link_target(
+            Path(root), os.path.basename(path_abs), link_text
+        )
+        if not os.path.lexists(target):
+            if target_policy == "disposable":
+                raise TransactionError(
+                    f"disposable link target is missing: {target}"
+                )
+            target_record = None
+        else:
+            tinfo = os.lstat(target)
+            tmode = f"0o{stat.S_IMODE(tinfo.st_mode):o}"
+            if stat.S_ISDIR(tinfo.st_mode) and not stat.S_ISLNK(
+                tinfo.st_mode
+            ):
+                target_record = {
+                    "path": target,
+                    "lstat_type": "directory",
+                    "lstat_mode": tmode,
+                    "dev": tinfo.st_dev,
+                    "ino": tinfo.st_ino,
+                    "manifest": audit_filesystem(Path(target)),
+                }
+            elif stat.S_ISREG(tinfo.st_mode):
+                target_record = {
+                    "path": target,
+                    "lstat_type": "file",
+                    "lstat_mode": tmode,
+                    "dev": tinfo.st_dev,
+                    "ino": tinfo.st_ino,
+                    "size": tinfo.st_size,
+                    "sha256": _sha256_file(Path(target)),
+                }
+            else:
+                raise TransactionError(
+                    f"unknown current object: the link target type is "
+                    f"unsupported: {target}"
+                )
+        source = {
+            "lstat_type": "symlink",
+            "lstat_mode": mode,
+            "link_text": link_text,
+            "target": target_record,
+        }
+    elif lstat_type == "file":
+        if info.st_nlink > 1:
+            raise TransactionError(
+                f"the path is a hard link (st_nlink={info.st_nlink}); an "
+                f"exact private preimage cannot cover it: {path_abs}"
+            )
+        try:
+            data = Path(path_abs).read_bytes()
+        except OSError as error:
+            raise TransactionError(
+                f"path content cannot be read: {path_abs} ({error})"
+            ) from error
+        digest = hashlib.sha256(data).hexdigest()
+        blobs[digest] = data
+        source = {
+            "lstat_type": "file",
+            "lstat_mode": mode,
+            "size": info.st_size,
+            "sha256": digest,
+        }
+    else:
+        entries, blobs = _collect_directory_preimage(path_abs)
+        source = {
+            "lstat_type": "directory",
+            "lstat_mode": mode,
+            "entries": entries,
+        }
+    git_observation = _path_git_observation(path_abs)
+    payload = {
+        "label": label,
+        "path": path_abs,
+        "root": root,
+        "final_type": final_type,
+        "target_policy": target_policy,
+        "replacements": replacement_paths,
+        "source": source,
+        "git": git_observation,
+        "tracked": bool(git_observation and git_observation["tracked"]),
+        "cloud_preimage": None,
+    }
+    _create_journal(
+        journal_path,
+        journal_kind="path_repair",
+        label=label,
+        source=path_abs,
+    )
+    _write_preimage_blobs(journal_path, blobs)
+    _append_event(journal_path, "path_captured", payload)
+    _print_journal(journal_path)
+    return 0
+
+
+def cmd_confirm_path_paused(journal) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    header = _require_path_header(events, path)
+    _require_path_capture(events, path)
+    evidence = _require_pause_evidence(header["label"])
+    _append_event(
+        path, "drive_paused",
+        {"label": header["label"], "evidence": evidence},
+    )
+    _print_journal(path)
+    return 0
+
+
+def _load_content_manifest(manifest_path) -> dict:
+    """Parse a NUL-safe SHA-256 content manifest into {relpath: sha256}."""
+    absolute = os.path.abspath(os.path.expanduser(str(manifest_path)))
+    try:
+        data = Path(absolute).read_bytes()
+    except OSError as error:
+        raise TransactionError(
+            f"content manifest cannot be read: {absolute} ({error})"
+        ) from error
+    if not data or not data.endswith(b"\0"):
+        raise TransactionError(
+            f"content manifest records must be nonempty and "
+            f"NUL-terminated: {absolute}"
+        )
+    hashes: dict[str, str] = {}
+    for record in data.split(b"\0")[:-1]:
+        try:
+            text = record.decode("utf-8", errors="strict")
+        except UnicodeDecodeError as error:
+            raise TransactionError(
+                f"content manifest record is not valid UTF-8: {absolute} "
+                f"({error})"
+            ) from error
+        digest, separator, rel = text.partition("  ")
+        if not separator or not SHA256_HEX_RE.fullmatch(digest) or not rel:
+            raise TransactionError(
+                f"content manifest record is malformed: {text!r}"
+            )
+        if rel in hashes:
+            raise TransactionError(
+                f"content manifest repeats the path {rel!r}"
+            )
+        hashes[rel] = digest
+    return hashes
+
+
+def _check_content_manifest(capture_payload: dict, manifest_path) -> str:
+    """Require the final content to match the manifest exactly."""
+    final_type = capture_payload["final_type"]
+    if final_type == "absent":
+        raise TransactionError(
+            "a content manifest can never verify an absent final state"
+        )
+    expected = _load_content_manifest(manifest_path)
+    path_abs = capture_payload["path"]
+    actual: dict[str, str] = {}
+    if final_type == "file":
+        actual["."] = _sha256_file(Path(path_abs))
+    else:
+        pending = [path_abs]
+        while pending:
+            directory = pending.pop()
+            for entry in _scan_sorted(Path(directory)):
+                info = os.lstat(entry.path)
+                rel = os.path.relpath(entry.path, path_abs)
+                if stat.S_ISDIR(info.st_mode) and not stat.S_ISLNK(
+                    info.st_mode
+                ):
+                    pending.append(entry.path)
+                elif stat.S_ISREG(info.st_mode):
+                    actual[rel] = _sha256_file(Path(entry.path))
+                else:
+                    raise TransactionError(
+                        f"the final directory contains an entry type the "
+                        f"content manifest cannot cover: {entry.path}"
+                    )
+    if actual != expected:
+        missing = sorted(set(expected) - set(actual))
+        extra = sorted(set(actual) - set(expected))
+        changed = sorted(
+            rel for rel in set(actual) & set(expected)
+            if actual[rel] != expected[rel]
+        )
+        raise TransactionError(
+            f"content manifest mismatch: missing={missing} extra={extra} "
+            f"changed={changed}"
+        )
+    return hashlib.sha256(
+        Path(os.path.abspath(os.path.expanduser(str(manifest_path))))
+        .read_bytes()
+    ).hexdigest()
+
+
+def cmd_verify_path_local(journal, manifest) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_path_header(events, path)
+    capture = _require_path_capture(events, path)
+    payload = capture["payload"]
+    _recheck_journaled_root(payload)
+    target_path = payload["path"]
+    final_type = payload["final_type"]
+    if final_type == "absent":
+        if os.path.lexists(target_path):
+            raise TransactionError(
+                f"the declared final type is absent but something still "
+                f"occupies {target_path}"
+            )
+    else:
+        try:
+            info = os.lstat(target_path)
+        except OSError as error:
+            raise TransactionError(
+                f"the declared final type is {final_type} but the path "
+                f"is missing: {target_path} ({error})"
+            ) from error
+        if stat.S_ISLNK(info.st_mode):
+            raise TransactionError(
+                f"a symlink is never accepted as a {final_type}: "
+                f"{target_path}"
+            )
+        if final_type == "file" and not stat.S_ISREG(info.st_mode):
+            raise TransactionError(
+                f"the declared final type is file but the path is not a "
+                f"regular file: {target_path}"
+            )
+        if final_type == "directory" and not stat.S_ISDIR(info.st_mode):
+            raise TransactionError(
+                f"the declared final type is directory but the path is "
+                f"not a directory: {target_path}"
+            )
+    for replacement in payload["replacements"]:
+        if _is_within(replacement, target_path):
+            continue
+        _require_replacement_within_root(replacement, payload["root"])
+        if not os.path.lexists(replacement):
+            raise TransactionError(
+                f"journaled replacement is missing: {replacement}"
+            )
+        if os.path.islink(replacement):
+            raise TransactionError(
+                f"journaled replacement is a symlink: {replacement}"
+            )
+    observation = _require_clean_git_state(payload)
+    manifest_sha = None
+    if manifest is not None:
+        manifest_sha = _check_content_manifest(payload, manifest)
+    _append_event(
+        path,
+        "path_local_verified",
+        {
+            "label": payload["label"],
+            "final_type": final_type,
+            "git": observation,
+            "manifest_sha256": manifest_sha,
+        },
+    )
+    _print_journal(path)
+    return 0
+
+
+def _path_preimage_intact(target_path: str, source: dict) -> bool:
+    """Whether the exact captured preimage still occupies the path."""
+    if not os.path.lexists(target_path):
+        return False
+    info = os.lstat(target_path)
+    kind = source["lstat_type"]
+    if kind == "symlink":
+        return (
+            stat.S_ISLNK(info.st_mode)
+            and os.readlink(target_path) == source["link_text"]
+            and f"0o{stat.S_IMODE(info.st_mode):o}" == source["lstat_mode"]
+        )
+    if stat.S_ISLNK(info.st_mode):
+        return False
+    if f"0o{stat.S_IMODE(info.st_mode):o}" != source["lstat_mode"]:
+        return False
+    if kind == "file":
+        if not stat.S_ISREG(info.st_mode):
+            return False
+        return _sha256_file(Path(target_path)) == source["sha256"]
+    if not stat.S_ISDIR(info.st_mode):
+        return False
+    try:
+        entries, _blobs = _collect_directory_preimage(target_path)
+    except TransactionError:
+        return False
+    return entries == source["entries"]
+
+
+def _require_journaled_occupant(target_path: str, payload: dict) -> None:
+    """Only a journaled (or empty) replacement may be moved to Trash."""
+    info = os.lstat(target_path)
+    final_type = payload["final_type"]
+    replacements = payload["replacements"]
+    if stat.S_ISLNK(info.st_mode):
+        if (
+            payload["source"]["lstat_type"] == "symlink"
+            and os.readlink(target_path)
+            == payload["source"]["link_text"]
+        ):
+            # The journaled preimage link with a drifted mode: provably
+            # this transaction's own object, so it may move to Trash and
+            # be restored with the exact recorded mode.
+            return
+        raise TransactionError(
+            f"an unjournaled symlink occupies the path; refusing to "
+            f"trash it: {target_path}"
+        )
+    if target_path in replacements:
+        if final_type == "file" and not stat.S_ISREG(info.st_mode):
+            raise TransactionError(
+                f"the same-path replacement changed type (final type is "
+                f"file); refusing: {target_path}"
+            )
+        if final_type == "directory" and not stat.S_ISDIR(info.st_mode):
+            raise TransactionError(
+                f"the same-path replacement changed type (final type is "
+                f"directory); refusing: {target_path}"
+            )
+        return
+    interior = [
+        replacement for replacement in replacements
+        if _is_within(replacement, target_path)
+        and replacement != target_path
+    ]
+    if stat.S_ISDIR(info.st_mode) and interior:
+        entries, _blobs = _collect_directory_preimage(target_path)
+        for record in entries:
+            if record["type"] != "file":
+                continue
+            absolute = os.path.join(target_path, record["path"])
+            if not any(
+                absolute == replacement
+                or _is_within(absolute, replacement)
+                for replacement in interior
+            ):
+                raise TransactionError(
+                    f"nonempty unjournaled replacement content at "
+                    f"{absolute}; refusing to trash it"
+                )
+        return
+    if stat.S_ISREG(info.st_mode) and info.st_size == 0:
+        return
+    if stat.S_ISDIR(info.st_mode) and not os.listdir(target_path):
+        return
+    raise TransactionError(
+        f"a nonempty unjournaled replacement occupies the path; refusing "
+        f"to trash it: {target_path}"
+    )
+
+
+def _discard_restore_staging(staging: str) -> None:
+    """Remove the tool's own partially built restore staging area."""
+    try:
+        if os.path.islink(staging) or os.path.isfile(staging):
+            os.unlink(staging)
+        elif os.path.isdir(staging):
+            shutil.rmtree(staging)
+    except OSError:
+        pass
+
+
+def _restore_path_preimage(
+    target_path: str, source: dict, journal_path: str
+) -> None:
+    """Atomically rebuild the exact preimage at the captured path."""
+    if os.path.lexists(target_path):
+        raise TransactionError(
+            f"the path is still occupied; the replacement move did not "
+            f"complete: {target_path}"
+        )
+    parent = os.path.dirname(target_path)
+    staging = os.path.join(
+        parent, f".drive-workspace-restore-{uuid.uuid4().hex}"
+    )
+    blob_root = _preimage_blob_root(journal_path)
+    kind = source["lstat_type"]
+    mode = int(source["lstat_mode"], 8)
+    try:
+        if kind == "symlink":
+            os.symlink(source["link_text"], staging)
+            if os.chmod in os.supports_follow_symlinks:
+                os.chmod(staging, mode, follow_symlinks=False)
+            current = stat.S_IMODE(os.lstat(staging).st_mode)
+            if current != mode:
+                raise TransactionError(
+                    f"cannot restore the exact symlink mode "
+                    f"{source['lstat_mode']} at {target_path}"
+                )
+        elif kind == "file":
+            data = _read_preimage_blob(blob_root, source["sha256"])
+            fd = os.open(
+                staging, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600
+            )
+            try:
+                if os.write(fd, data) != len(data):
+                    raise TransactionError(
+                        f"preimage restore write was short: {staging}"
+                    )
+                os.fsync(fd)
+            finally:
+                os.close(fd)
+            os.chmod(staging, mode)
+        else:
+            os.mkdir(staging, 0o700)
+            directories = [(staging, mode)]
+            for record in source["entries"]:
+                full = os.path.join(staging, record["path"])
+                if record["type"] == "directory":
+                    os.mkdir(full, 0o700)
+                    directories.append((full, int(record["mode"], 8)))
+                else:
+                    data = _read_preimage_blob(blob_root, record["sha256"])
+                    fd = os.open(
+                        full, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600
+                    )
+                    try:
+                        if os.write(fd, data) != len(data):
+                            raise TransactionError(
+                                f"preimage restore write was short: {full}"
+                            )
+                        os.fsync(fd)
+                    finally:
+                        os.close(fd)
+                    os.chmod(full, int(record["mode"], 8))
+            for full, directory_mode in reversed(directories):
+                os.chmod(full, directory_mode)
+        os.rename(staging, target_path)
+    except OSError as error:
+        _discard_restore_staging(staging)
+        raise TransactionError(
+            f"preimage restore failed: {target_path} ({error})"
+        ) from error
+    except TransactionError:
+        _discard_restore_staging(staging)
+        raise
+    if not _path_preimage_intact(target_path, source):
+        raise TransactionError(
+            f"preimage restore postcondition failed: {target_path}"
+        )
+
+
+def cmd_rollback_path_local(journal) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    header = _require_path_header(events, path)
+    capture = _require_path_capture(events, path)
+    payload = capture["payload"]
+    if _latest(events, "rollback_window_closed") is not None:
+        raise TransactionError(
+            f"the rollback window is closed; local rollback is "
+            f"deliberately unavailable: {path}"
+        )
+    if _latest(events, "private_preimage_finalized") is not None:
+        raise TransactionError(
+            f"the private preimage was finalized; local rollback is no "
+            f"longer possible: {path}"
+        )
+    if _latest(events, "path_local_rolled_back") is not None:
+        raise TransactionError(
+            f"the path was already rolled back: {path}"
+        )
+    paused = _latest(events, "drive_paused")
+    if paused is None or paused["sequence"] < capture["sequence"]:
+        raise TransactionError(
+            "fresh pause evidence is missing: confirm-path-paused must "
+            "succeed after capture and before rollback"
+        )
+    evidence = _require_pause_evidence(header["label"])
+    _recheck_journaled_root(payload)
+    target_path = payload["path"]
+    source = payload["source"]
+    preimage_intact = _path_preimage_intact(target_path, source)
+    plans: list[str] = []
+    if not preimage_intact and os.path.lexists(target_path):
+        _require_journaled_occupant(target_path, payload)
+        plans.append(target_path)
+    for replacement in payload["replacements"]:
+        if replacement == target_path or _is_within(
+            replacement, target_path
+        ):
+            continue
+        _require_replacement_within_root(replacement, payload["root"])
+        if os.path.lexists(replacement):
+            if os.path.islink(replacement):
+                raise TransactionError(
+                    f"the sibling replacement changed into a symlink; "
+                    f"refusing to trash it: {replacement}"
+                )
+            plans.append(replacement)
+    trash_records = []
+    if plans:
+        trash = _trash_directory(path, "replacements")
+        for index, item in enumerate(plans):
+            trash_path = trash / f"{index:03d}-{os.path.basename(item)}"
+            if os.path.lexists(trash_path):
+                raise TransactionError(
+                    f"trash entry already exists: {trash_path}"
+                )
+            os.rename(item, trash_path)
+            trash_records.append(
+                {"path": item, "trash_path": str(trash_path)}
+            )
+    if not preimage_intact:
+        _restore_path_preimage(target_path, source, path)
+    _append_event(
+        path,
+        "path_local_rolled_back",
+        {
+            "label": header["label"],
+            "restored": source["lstat_type"],
+            "trash": trash_records,
+            "pause_evidence": evidence,
+        },
+    )
+    _print_journal(path)
+    return 0
+
+
+def cmd_record_path_cloud(journal) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    header = _require_path_header(events, path)
+    capture = _require_path_capture(events, path)
+    if _latest(events, "path_cloud_recorded") is not None:
+        raise TransactionError(
+            f"the cloud preimage was already recorded: {path}"
+        )
+    payload = capture["payload"]
+    _recheck_journaled_root(payload)
+    if not _path_preimage_intact(payload["path"], payload["source"]):
+        raise TransactionError(
+            "the local path no longer matches its captured preimage; "
+            "record-path-cloud must snapshot the cloud before any local "
+            "mutation"
+        )
+    name = os.path.basename(payload["path"])
+    reader = _CloudReader()
+    root = reader.get_file("root")
+    root_id = root.get("id")
+    if not isinstance(root_id, str) or not root_id:
+        raise TransactionError("the cloud root has no usable ID")
+    candidates = []
+    for hit in _cloud_live_name_hits(reader, name):
+        hit_root = _chain_root_id(reader, hit)
+        if hit_root != root_id:
+            raise TransactionError(
+                f"computer-backup route: live object {hit.get('id')!r} "
+                f"shares the name under machine root {hit_root!r}"
+            )
+        candidates.append(hit)
+    if len(candidates) > 1:
+        raise TransactionError(
+            f"ambiguous name matches: {len(candidates)} live objects are "
+            f"named {name!r} under My Drive; refusing to guess a preimage"
+        )
+    preimage = None
+    parent_id = None
+    chain = None
+    if candidates:
+        obj = reader.get_file(candidates[0]["id"])
+        parents = obj.get("parents")
+        if not isinstance(parents, list) or len(parents) != 1:
+            raise TransactionError(
+                f"cloud object {obj.get('id')!r} has an ambiguous parent "
+                f"set: {parents!r}"
+            )
+        if obj.get("ownedByMe") is not True or obj.get("driveId"):
+            raise TransactionError(
+                f"cloud object {obj.get('id')!r} is not in My Drive "
+                f"(is_my_drive must be 1)"
+            )
+        chain = _parent_chain(reader, obj)
+        if not chain or chain[-1]["id"] != root_id:
+            raise TransactionError(
+                f"cloud object {obj.get('id')!r} does not chain to the "
+                f"My Drive root {root_id!r}"
+            )
+        parent_id = parents[0]
+        preimage = {
+            "id": obj["id"],
+            "name": obj.get("name"),
+            "parents": parents,
+            "mimeType": obj.get("mimeType"),
+            "md5Checksum": obj.get("md5Checksum"),
+        }
+    _append_event(
+        path,
+        "path_cloud_recorded",
+        {
+            "label": header["label"],
+            "name": name,
+            "root_id": root_id,
+            "cloud_preimage": preimage,
+            "parent_id": parent_id,
+            "parent_chain": chain,
+        },
+    )
+    _print_journal(path)
+    return 0
+
+
+def _require_path_cloud_record(events: list, journal: str) -> dict:
+    record = _latest(events, "path_cloud_recorded")
+    if record is None:
+        raise TransactionError(
+            f"journal has no path_cloud_recorded event; record-path-cloud "
+            f"must run first: {journal}"
+        )
+    return record["payload"]
+
+
+def _path_cloud_verification(
+    reader: _CloudReader, capture_payload: dict, record: dict
+) -> dict:
+    """The full fail-closed cloud check for one path repair."""
+    final_type = capture_payload["final_type"]
+    name = record["name"]
+    root = reader.get_file("root")
+    if root.get("id") != record["root_id"]:
+        raise TransactionError(
+            f"cloud root ID mismatch: {root.get('id')!r} is not the "
+            f"journaled root {record['root_id']!r}"
+        )
+    preimage = record["cloud_preimage"]
+    my_drive_hits = []
+    for hit in _cloud_live_name_hits(reader, name):
+        hit_root = _chain_root_id(reader, hit)
+        if hit_root != record["root_id"]:
+            raise TransactionError(
+                f"computer-backup route: live object {hit.get('id')!r} "
+                f"shares the name under machine root {hit_root!r}"
+            )
+        my_drive_hits.append(hit)
+    old = None
+    if preimage is not None:
+        old = reader.get_file(preimage["id"])
+        if old.get("parents") != preimage["parents"]:
+            raise TransactionError(
+                f"old cloud object {preimage['id']} has a changed parent "
+                f"{old.get('parents')!r}; the journaled parent is "
+                f"{record['parent_id']!r}"
+            )
+        if old.get("ownedByMe") is not True or old.get("driveId"):
+            raise TransactionError(
+                f"old cloud object {preimage['id']} is not in My Drive "
+                f"(is_my_drive must be 1)"
+            )
+        if final_type == "absent" and old.get("trashed") is not True:
+            raise TransactionError(
+                f"old cloud object {preimage['id']} is not trashed"
+            )
+    final_id = None
+    if final_type == "absent":
+        for hit in my_drive_hits:
+            hit_id = hit.get("id")
+            if preimage is not None and hit_id == preimage["id"]:
+                raise TransactionError(
+                    f"old cloud object {hit_id} appears live in the name "
+                    f"listing; it is not trashed"
+                )
+            if record["parent_id"] is not None and record["parent_id"] in (
+                hit.get("parents") or []
+            ):
+                raise TransactionError(
+                    f"a live object occupies the journaled cloud path: "
+                    f"{hit_id!r}"
+                )
+            if preimage is None:
+                raise TransactionError(
+                    f"unexpected cloud creation: live object {hit_id!r} "
+                    f"is named {name!r} but the journal records "
+                    f"cloud_preimage: null"
+                )
+            raise TransactionError(
+                f"duplicate live cloud object {hit_id!r} shares the name "
+                f"under the journaled root"
+            )
+    else:
+        if preimage is not None:
+            candidates = [
+                hit for hit in my_drive_hits
+                if (hit.get("parents") or []) == preimage["parents"]
+            ]
+            for hit in my_drive_hits:
+                if hit not in candidates:
+                    raise TransactionError(
+                        f"duplicate live cloud object {hit.get('id')!r} "
+                        f"shares the name under the journaled root"
+                    )
+        else:
+            candidates = my_drive_hits
+        if len(candidates) != 1:
+            raise TransactionError(
+                f"the final cloud representation is ambiguous or missing: "
+                f"{len(candidates)} live object(s) named {name!r} at the "
+                f"expected parent"
+            )
+        final_obj = reader.get_file(candidates[0]["id"])
+        final_id = final_obj.get("id")
+        mime = final_obj.get("mimeType")
+        if final_type == "directory":
+            if mime != FOLDER_MIME_TYPE:
+                raise TransactionError(
+                    f"the final cloud object {final_id!r} is not a "
+                    f"folder: {mime!r}"
+                )
+        else:
+            if mime == FOLDER_MIME_TYPE:
+                raise TransactionError(
+                    f"a folder can never verify as the final file: "
+                    f"{final_id!r}"
+                )
+            if isinstance(mime, str) and mime.startswith(
+                GOOGLE_NATIVE_MIME_PREFIX
+            ):
+                if preimage is None or final_id != preimage["id"]:
+                    raise TransactionError(
+                        f"Google-native file {final_id!r} has no "
+                        f"journaled ID; refusing the ambiguity"
+                    )
+            else:
+                md5 = final_obj.get("md5Checksum")
+                if not isinstance(md5, str) or not md5:
+                    raise TransactionError(
+                        f"unsupported hash coverage: the API exposes no "
+                        f"content hash for {final_id!r}"
+                    )
+                local_path = capture_payload["path"]
+                try:
+                    local_info = os.lstat(local_path)
+                except OSError as error:
+                    raise TransactionError(
+                        f"the local final file cannot be observed for "
+                        f"the hash comparison: {local_path} ({error})"
+                    ) from error
+                if stat.S_ISLNK(local_info.st_mode) or not stat.S_ISREG(
+                    local_info.st_mode
+                ):
+                    raise TransactionError(
+                        f"the local final path is not a regular file; "
+                        f"refusing to hash through it: {local_path}"
+                    )
+                try:
+                    local_bytes = Path(local_path).read_bytes()
+                except OSError as error:
+                    raise TransactionError(
+                        f"the local final file cannot be read for the "
+                        f"hash comparison: {local_path} ({error})"
+                    ) from error
+                local_md5 = hashlib.md5(local_bytes).hexdigest()
+                if md5 != local_md5:
+                    raise TransactionError(
+                        f"content hash mismatch for {final_id!r}: cloud "
+                        f"md5 {md5} != local {local_md5}"
+                    )
+        if (
+            old is not None
+            and old.get("trashed") is not True
+            and old.get("id") != final_id
+        ):
+            raise TransactionError(
+                f"duplicate: the old cloud object {old.get('id')!r} is "
+                f"still live beside the final object {final_id!r}"
+            )
+    return {
+        "label": capture_payload["label"],
+        "final_type": final_type,
+        "name": name,
+        "object_id": final_id,
+        "root_id": record["root_id"],
+        "machine_root_count": 0,
+    }
+
+
+def cmd_verify_path_cloud(journal, manifest) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_path_header(events, path)
+    capture = _require_path_capture(events, path)
+    record = _require_path_cloud_record(events, path)
+    if manifest is not None:
+        _check_content_manifest(capture["payload"], manifest)
+    reader = _CloudReader()
+    summary = _path_cloud_verification(reader, capture["payload"], record)
+    _append_event(path, "path_cloud_verified", summary)
+    _print_journal(path)
+    return 0
+
+
+def cmd_restore_path_cloud(journal) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    header = _require_path_header(events, path)
+    _require_path_capture(events, path)
+    record = _require_path_cloud_record(events, path)
+    preimage = record["cloud_preimage"]
+    if preimage is None:
+        raise TransactionError(
+            "the journal records cloud_preimage: null; there is no "
+            "journaled preimage ID to restore"
+        )
+    evidence = _require_pause_evidence(header["label"])
+    reader = _CloudReader()
+    object_id = preimage["id"]
+    old = reader.get_file(object_id)
+    if old.get("trashed") is not True:
+        raise TransactionError(
+            f"old cloud object {object_id} is not in Trash; there is "
+            f"nothing to restore"
+        )
+    if old.get("parents") != preimage["parents"]:
+        raise TransactionError(
+            f"old cloud object {object_id} has a changed parent "
+            f"{old.get('parents')!r}; the journaled parent is "
+            f"{record['parent_id']!r}"
+        )
+    for hit in _cloud_live_name_hits(reader, record["name"]):
+        raise TransactionError(
+            f"a live duplicate blocks the cloud restore: {hit.get('id')!r}"
+        )
+    reader.clear_trashed(object_id)
+    refetched = reader.get_file(object_id)
+    if (
+        refetched.get("id") != object_id
+        or refetched.get("trashed") is not False
+        or refetched.get("parents") != preimage["parents"]
+    ):
+        raise TransactionError(
+            f"the restored cloud object did not refetch at its original "
+            f"parent: {refetched!r}"
+        )
+    _append_event(
+        path,
+        "path_cloud_restored",
+        {
+            "label": header["label"],
+            "object_id": object_id,
+            "parents": refetched.get("parents"),
+            "pause_evidence": evidence,
+        },
+    )
+    _print_journal(path)
+    return 0
+
+
+def _close_path_rollback_window(
+    path: str, events: list, baseline_path: str, baseline_events: list,
+    restart_before_pid: int,
+) -> int:
+    """Path-repair variant of close-rollback-window.
+
+    Reuses the Task 5 evidence pattern: baseline native error rows, two
+    stable provider observations, the live-user gates, a fresh cloud
+    verification, and a Google Drive process that provably restarted.
+    """
+    header = events[0]
+    label = header["label"]
+    if _latest(events, "rollback_window_closed") is not None:
+        raise TransactionError(
+            f"the rollback window was already closed: {path}"
+        )
+    capture = _require_path_capture(events, path)
+    verified = _latest(events, "path_local_verified")
+    if verified is None or verified["sequence"] < capture["sequence"]:
+        raise TransactionError(
+            "a successful verify-path-local after capture is required"
+        )
+    if _latest(events, "path_cloud_verified") is None:
+        raise TransactionError(
+            "a successful verify-path-cloud event is required"
+        )
+    record = _require_path_cloud_record(events, path)
+    baseline_native = _latest(baseline_events, "native_errors_recorded")
+    if baseline_native is None:
+        raise TransactionError(
+            f"the baseline journal records no native_errors_recorded "
+            f"evidence: {baseline_path}"
+        )
+    baseline_rows = {
+        _native_row_identity(row)
+        for row in baseline_native["payload"]["rows"]
+    }
+
+    def observe() -> tuple:
+        evidence = _require_provider_evidence(label)
+        for row in _native_error_rows():
+            if _native_row_identity(row) not in baseline_rows:
+                raise TransactionError(
+                    f"native error {row['row_key']!r} ({row['path']}) is "
+                    f"not present in the baseline journal"
+                )
+        _require_no_live_source_users(capture["payload"]["path"])
+        reader = _CloudReader()
+        _path_cloud_verification(reader, capture["payload"], record)
+        drive_pid = _google_drive_pid()
+        if drive_pid == restart_before_pid:
+            raise TransactionError(
+                f"the Google Drive process ID {drive_pid} has not "
+                f"changed; the required normal restart has not happened"
+            )
+        return evidence["queue_cursors"], drive_pid
+
+    first_cursors, first_pid = observe()
+    second_cursors, second_pid = observe()
+    if first_cursors != second_cursors:
+        raise TransactionError(
+            "queue cursors are not stable across the "
+            "close-rollback-window reads"
+        )
+    if first_pid != second_pid:
+        raise TransactionError(
+            "the Google Drive process changed between the "
+            "close-rollback-window reads; a normal restart must settle "
+            "before the window can close"
+        )
+    _append_event(
+        path,
+        "rollback_window_closed",
+        {
+            "label": label,
+            "queue_cursors": second_cursors,
+            "drive_pid": second_pid,
+            "restart_before_pid": restart_before_pid,
+            "baseline_journal": baseline_path,
+            "baseline_final_hash": baseline_events[-1]["event_hash"],
+        },
+    )
+    _print_journal(path)
+    return 0
+
+
+def cmd_finalize_path(journal) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_path_header(events, path)
+    capture = _require_path_capture(events, path)
+    payload = capture["payload"]
+    if _latest(events, "rollback_window_closed") is None:
+        raise TransactionError(
+            "rollback_window_closed has not been recorded; the preimage "
+            "and target stay recoverable until the rollback window is "
+            "closed"
+        )
+    if _latest(events, "private_preimage_finalized") is not None:
+        raise TransactionError(
+            f"the path repair was already finalized: {path}"
+        )
+    source = payload["source"]
+    if payload["target_policy"] == "disposable":
+        target = source["target"]
+        target_path = target["path"]
+        try:
+            info = os.lstat(target_path)
+        except OSError as error:
+            raise TransactionError(
+                f"target changed since capture (now missing): "
+                f"{target_path} ({error})"
+            ) from error
+        if info.st_dev != target["dev"] or info.st_ino != target["ino"]:
+            raise TransactionError(
+                f"target changed since capture; refusing to finalize: "
+                f"{target_path}"
+            )
+        if target["lstat_type"] == "directory":
+            if not stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode):
+                raise TransactionError(
+                    f"target changed since capture (not a directory): "
+                    f"{target_path}"
+                )
+            if audit_filesystem(Path(target_path)) != target["manifest"]:
+                raise TransactionError(
+                    f"target manifest changed since capture; refusing to "
+                    f"finalize: {target_path}"
+                )
+        else:
+            if not stat.S_ISREG(info.st_mode):
+                raise TransactionError(
+                    f"target changed since capture (not a regular file): "
+                    f"{target_path}"
+                )
+            if _sha256_file(Path(target_path)) != target["sha256"]:
+                raise TransactionError(
+                    f"target hash changed since capture; refusing to "
+                    f"finalize: {target_path}"
+                )
+        real_target = os.path.realpath(target_path)
+        for link in scan_symlinks(Path(payload["root"])):
+            resolved = os.path.realpath(link)
+            if resolved == real_target or _is_within(
+                resolved, real_target
+            ):
+                # A link to the target OR to anything inside it would
+                # dangle if the target moved to Trash.
+                raise TransactionError(
+                    f"target is still referenced by the live symlink "
+                    f"{link}: {target_path}"
+                )
+        trash = _trash_directory(path, "targets")
+        trash_path = trash / f"000-{os.path.basename(target_path)}"
+        if os.path.lexists(trash_path):
+            raise TransactionError(
+                f"trash entry already exists: {trash_path}"
+            )
+        os.rename(target_path, trash_path)
+        _append_event(
+            path,
+            "path_target_finalized",
+            {"target": target_path, "trash_path": str(trash_path)},
+        )
+    assets = []
+    preimage_root = os.path.join(os.path.dirname(path), "preimage")
+    if os.path.isdir(preimage_root):
+        pending = [preimage_root]
+        while pending:
+            directory = pending.pop()
+            for entry in _scan_sorted(Path(directory)):
+                if entry.is_dir(follow_symlinks=False):
+                    pending.append(entry.path)
+                else:
+                    assets.append(
+                        {
+                            "path": os.path.relpath(
+                                entry.path, preimage_root
+                            ),
+                            "sha256": _sha256_file(Path(entry.path)),
+                        }
+                    )
+        assets.sort(key=lambda record: record["path"])
+        shutil.rmtree(preimage_root)
+    _append_event(path, "private_preimage_finalized", {"assets": assets})
     _print_journal(path)
     return 0
 
@@ -4472,6 +5889,91 @@ def build_parser() -> argparse.ArgumentParser:
         help="Google Drive PID captured immediately before the required "
         "normal restart.",
     )
+    capture_path_parser = subparsers.add_parser(
+        "capture-path",
+        help="Create a path-repair journal capturing one in-Drive path's "
+        "exact preimage, target manifest, Git state, and replacements.",
+    )
+    capture_path_parser.add_argument(
+        "label", help="Short label naming this path repair."
+    )
+    capture_path_parser.add_argument(
+        "--journal", required=True,
+        help="Path to the new path-repair journal below the state root.",
+    )
+    capture_path_parser.add_argument(
+        "--path", required=True,
+        help="Absolute path to capture; observed with lstat, never "
+        "followed.",
+    )
+    capture_path_parser.add_argument(
+        "--replacement", action="append", default=[], dest="replacements",
+        help="Exact replacement path (repeatable); must resolve inside "
+        "the journaled root.",
+    )
+    capture_path_parser.add_argument(
+        "--final-type", required=True, choices=PATH_FINAL_TYPES,
+        help="The intended final state of the path after the repair.",
+    )
+    capture_path_parser.add_argument(
+        "--target-policy", required=True,
+        choices=("disposable", "retain"),
+        help="Whether finalize-path may move the symlink target to Trash.",
+    )
+
+    def add_path_command(
+        command: str, help_text: str, *, content_manifest: bool = False
+    ) -> argparse.ArgumentParser:
+        subparser = subparsers.add_parser(command, help=help_text)
+        subparser.add_argument(
+            "--journal", required=True,
+            help="Path to the path-repair journal.",
+        )
+        if content_manifest:
+            subparser.add_argument(
+                "--manifest",
+                help="Optional NUL-safe SHA-256 content manifest: records "
+                "of '<sha256><two spaces><relative path>' each terminated "
+                "by NUL.  This is NOT the workspace migration manifest.",
+            )
+        return subparser
+
+    add_path_command(
+        "confirm-path-paused",
+        "Require fresh characterized pause evidence for a path repair.",
+    )
+    add_path_command(
+        "verify-path-local",
+        "Require the declared final type, exact Git mode/status, and the "
+        "optional content manifest.",
+        content_manifest=True,
+    )
+    add_path_command(
+        "rollback-path-local",
+        "While paused, trash only journaled replacements and restore the "
+        "exact recorded preimage.",
+    )
+    add_path_command(
+        "record-path-cloud",
+        "Snapshot the path's cloud preimage identity (or cloud_preimage: "
+        "null) before mutation.",
+    )
+    add_path_command(
+        "verify-path-cloud",
+        "Require the final absent or regular cloud representation, "
+        "content hashes, no duplicate, and no computer-backup route.",
+        content_manifest=True,
+    )
+    add_path_command(
+        "restore-path-cloud",
+        "Clear trashed on only the journaled preimage IDs at their "
+        "original parents.",
+    )
+    add_path_command(
+        "finalize-path",
+        "After the rollback window closes, trash a disposable target and "
+        "remove only private preimage assets.",
+    )
     for command, help_text in (
         ("smoke-start", "Start one manifest runtime service in its own "
          "process group with a journaled log."),
@@ -4554,6 +6056,21 @@ def main(argv: list[str] | None = None) -> int:
         "close-rollback-window": lambda a: cmd_close_rollback_window(
             a.journal, a.baseline_journal, a.restart_before_pid
         ),
+        "capture-path": lambda a: cmd_capture_path(
+            a.label, a.journal, a.path, a.replacements, a.final_type,
+            a.target_policy,
+        ),
+        "confirm-path-paused": lambda a: cmd_confirm_path_paused(a.journal),
+        "verify-path-local": lambda a: cmd_verify_path_local(
+            a.journal, a.manifest
+        ),
+        "rollback-path-local": lambda a: cmd_rollback_path_local(a.journal),
+        "record-path-cloud": lambda a: cmd_record_path_cloud(a.journal),
+        "verify-path-cloud": lambda a: cmd_verify_path_cloud(
+            a.journal, a.manifest
+        ),
+        "restore-path-cloud": lambda a: cmd_restore_path_cloud(a.journal),
+        "finalize-path": lambda a: cmd_finalize_path(a.journal),
         "smoke-start": lambda a: cmd_smoke_start(
             a.name, a.service, a.journal
         ),

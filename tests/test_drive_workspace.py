@@ -2506,15 +2506,12 @@ class FakeTools:
         raise AssertionError(f"unexpected tool invocation: {argv}")
 
 
-class LiveGateTests(JournalFixture):
-    """Process, Emacs-buffer, consumer, cloud, native, and smoke-service gates.
+class CloudJournalFixture(JournalFixture):
+    """JournalFixture plus fixture OAuth credentials behind the env seam.
 
-    All cloud traffic is served by FakeCloud through a patched
-    urllib.request.urlopen; lsof, emacsclient, osascript, and ps are
-    served by FakeTools through the module's _run_tool seam.  The OAuth
-    credential path is overridden with fixture credentials so the real
-    personal token file is never read, and no fixture token may ever
-    appear in a journal, stdout, or stderr.
+    Every cloud-touching test (workspace or path repair) runs with these
+    fixture credentials so the real personal token file is never read;
+    FakeCloud asserts the fixture refresh token on every OAuth call.
     """
 
     def setUp(self):
@@ -2550,6 +2547,29 @@ class LiveGateTests(JournalFixture):
 
         self.addCleanup(restore)
 
+    def install_tools(self, **kwargs):
+        tools = FakeTools(self, **kwargs)
+        original = self.module._run_tool
+        self.module._run_tool = tools
+        self.addCleanup(setattr, self.module, "_run_tool", original)
+        # Route the process/Emacs gates through the mocked observer seam
+        # instead of the fixture's benign no-users default.
+        self.module._process_cwds = self.real_process_cwds
+        self.module._emacs_visited_files = self.real_emacs_visited_files
+        return tools
+
+
+class LiveGateTests(CloudJournalFixture):
+    """Process, Emacs-buffer, consumer, cloud, native, and smoke-service gates.
+
+    All cloud traffic is served by FakeCloud through a patched
+    urllib.request.urlopen; lsof, emacsclient, osascript, and ps are
+    served by FakeTools through the module's _run_tool seam.  The OAuth
+    credential path is overridden with fixture credentials so the real
+    personal token file is never read, and no fixture token may ever
+    appear in a journal, stdout, or stderr.
+    """
+
     # ------------------------------------------------------------------
     # Shared fixtures
     # ------------------------------------------------------------------
@@ -2582,17 +2602,6 @@ class LiveGateTests(JournalFixture):
             **kwargs,
         )
         return cloud.install()
-
-    def install_tools(self, **kwargs):
-        tools = FakeTools(self, **kwargs)
-        original = self.module._run_tool
-        self.module._run_tool = tools
-        self.addCleanup(setattr, self.module, "_run_tool", original)
-        # Route the process/Emacs gates through the mocked observer seam
-        # instead of the fixture's benign no-users default.
-        self.module._process_cwds = self.real_process_cwds
-        self.module._emacs_visited_files = self.real_emacs_visited_files
-        return tools
 
     def assert_no_secret_leak(self, *streams):
         journal_bytes = b""
@@ -3708,6 +3717,1207 @@ class LiveGateTests(JournalFixture):
             _stdout, stderr = self.expect_fail(*argv)
             self.assertIn("journal", stderr.lower(), argv[0])
             self.assertEqual(corrupted, self.journal.read_bytes(), argv[0])
+
+
+class PathRepairTests(CloudJournalFixture):
+    """Journaled single-path repair transactions: capture through finalize.
+
+    Every repair operates on one in-Drive path (symlink, regular file,
+    or directory) inside disposable temporary Drive roots.  Cloud
+    identity is served by FakeCloud, native pause/state evidence by the
+    provider seams, and live-observer tools by FakeTools; no test ever
+    touches the network, the real Drive client, or a real repository.
+    """
+
+    # ------------------------------------------------------------------
+    # Helpers and fixtures
+    # ------------------------------------------------------------------
+
+    def capture_argv(
+        self,
+        label,
+        path,
+        *,
+        replacements=(),
+        final_type="absent",
+        policy="disposable",
+        journal=None,
+    ):
+        argv = [
+            "capture-path", label, "--journal", journal or self.journal,
+            "--path", path, "--final-type", final_type,
+            "--target-policy", policy,
+        ]
+        for replacement in replacements:
+            argv.extend(["--replacement", replacement])
+        return argv
+
+    def capture_path(self, label, path, **kwargs):
+        return self.ok(*self.capture_argv(label, path, **kwargs))
+
+    def payload(self, event_type, journal=None):
+        matches = [
+            event for event in self.events(journal)
+            if event["event"] == event_type
+        ]
+        self.assertTrue(matches, f"no {event_type} event")
+        return matches[-1]["payload"]
+
+    def confirm_paused(self, journal=None):
+        self.install_providers()
+        self.ok(
+            "confirm-path-paused", "--journal", journal or self.journal
+        )
+
+    def capture_link(self):
+        """Link whose target is a disposable generated directory."""
+        self.link_path = self.source / "node_modules"
+        self.capture_path("nm", self.link_path)
+        return self.link_path
+
+    def capture_dirty_tracked_file(self):
+        """Tracked regular file with a same-path replacement."""
+        path = self.source / "tracked.txt"
+        path.write_bytes(b"corrupted\n")
+        os.chmod(path, 0o644)
+        self.capture_path(
+            "fix-tracked", path, replacements=[path],
+            final_type="file", policy="retain",
+        )
+        return path
+
+    def capture_sibling_file(self):
+        """Regular-file preimage with a journaled sibling replacement."""
+        path = self.source / "notes.txt"
+        path.write_bytes(b"alpha\nbeta\n")
+        os.chmod(path, 0o640)
+        self.sibling = self.source / "notes-fixed.txt"
+        self.capture_path(
+            "notes", path, replacements=[self.sibling],
+            final_type="absent", policy="retain",
+        )
+        return path
+
+    def make_preimage_directory(self):
+        path = self.source / "cachedir"
+        (path / "sub").mkdir(parents=True)
+        (path / "a.txt").write_bytes(b"alpha\n")
+        os.chmod(path / "a.txt", 0o600)
+        (path / "sub" / "b.bin").write_bytes(b"beta\n")
+        os.chmod(path / "sub" / "b.bin", 0o755)
+        return path
+
+    def capture_directory(self, journal=None):
+        """Regular-directory preimage replaced in place."""
+        path = self.make_preimage_directory()
+        self.capture_path(
+            "cache", path, replacements=[path],
+            final_type="directory", policy="retain", journal=journal,
+        )
+        return path
+
+    def capture_dist_link(self):
+        """Link replaced by a directory of journaled interior files."""
+        target = self.targets / "dist-target"
+        target.mkdir()
+        (target / "old.js").write_bytes(b"old\n")
+        self.dist_target = target
+        path = self.source / "dist"
+        path.symlink_to(target)
+        self.capture_path(
+            "dist", path, replacements=[path / "index.js"],
+            final_type="directory", policy="disposable",
+        )
+        return path
+
+    def path_cloud_files(self, name, **overrides):
+        obj = {
+            "id": "pobj-1",
+            "name": name,
+            "parents": ["parent-1"],
+            "trashed": False,
+            "explicitlyTrashed": False,
+            "ownedByMe": True,
+            "mimeType": "application/vnd.google-apps.folder",
+        }
+        obj.update(overrides)
+        return {
+            "pobj-1": obj,
+            "parent-1": {
+                "id": "parent-1", "name": "repos", "parents": ["root-1"],
+                "trashed": False, "ownedByMe": True,
+            },
+            "root-1": {"id": "root-1", "name": "My Drive", "trashed": False},
+        }
+
+    def hit(self, name, file_id="pobj-1", **overrides):
+        record = {
+            "id": file_id, "name": name, "parents": ["parent-1"],
+            "trashed": False, "ownedByMe": True,
+        }
+        record.update(overrides)
+        return record
+
+    # ------------------------------------------------------------------
+    # capture-path
+    # ------------------------------------------------------------------
+
+    def test_capture_path_link_records_lstat_and_target_manifest(self):
+        path = self.source / "node_modules"
+        link_mode = f"0o{stat.S_IMODE(os.lstat(path).st_mode):o}"
+        stdout, _stderr = self.capture_path("nm", path)
+        self.assertEqual(self.success_stdout(self.journal), stdout)
+        self.assertEqual(
+            0o700, stat.S_IMODE(os.lstat(self.journal.parent).st_mode)
+        )
+        self.assertEqual(0o600, stat.S_IMODE(os.lstat(self.journal).st_mode))
+        header = self.events()[0]
+        self.assertEqual("path_repair", header["journal_kind"])
+        self.assertEqual("nm", header["label"])
+        payload = self.payload("path_captured")
+        self.assertEqual(str(path), payload["path"])
+        self.assertEqual(os.path.realpath(str(self.source)), payload["root"])
+        source = payload["source"]
+        self.assertEqual("symlink", source["lstat_type"])
+        self.assertEqual(os.readlink(path), source["link_text"])
+        self.assertEqual(link_mode, source["lstat_mode"])
+        target = source["target"]
+        self.assertEqual(str(self.targets / "node_modules"), target["path"])
+        dep = [
+            record for record in target["manifest"]
+            if record["path"] == "dep.js"
+        ]
+        self.assertEqual(1, len(dep))
+        self.assertEqual(
+            hashlib.sha256(b"dep\n").hexdigest(), dep[0]["sha256"]
+        )
+        self.assertEqual("absent", payload["final_type"])
+        self.assertEqual("disposable", payload["target_policy"])
+        self.assertEqual([], payload["replacements"])
+        self.assertIsNone(payload["cloud_preimage"])
+        self.assertFalse(payload["tracked"])
+        self.assertIsNotNone(payload["git"])
+
+    def test_capture_path_retains_user_data_target(self):
+        path = self.source / ".venv"
+        self.capture_path("venv", path, policy="retain")
+        payload = self.payload("path_captured")
+        self.assertEqual("retain", payload["target_policy"])
+        target = payload["source"]["target"]
+        self.assertEqual(str(self.targets / "venv"), target["path"])
+        names = {record["path"] for record in target["manifest"]}
+        self.assertIn("bin.txt", names)
+
+    def test_capture_path_tracked_file_records_git_and_private_asset(self):
+        path = self.capture_dirty_tracked_file()
+        payload = self.payload("path_captured")
+        self.assertTrue(payload["tracked"])
+        source = payload["source"]
+        self.assertEqual("file", source["lstat_type"])
+        self.assertEqual("0o644", source["lstat_mode"])
+        sha = hashlib.sha256(b"corrupted\n").hexdigest()
+        self.assertEqual(sha, source["sha256"])
+        asset = self.journal.parent / "preimage" / "blobs" / sha
+        self.assertEqual(b"corrupted\n", asset.read_bytes())
+        self.assertEqual(0o600, stat.S_IMODE(os.lstat(asset).st_mode))
+        self.assertEqual(
+            0o700,
+            stat.S_IMODE(os.lstat(self.journal.parent / "preimage").st_mode),
+        )
+        git = payload["git"]
+        self.assertIn("100644", git["ls_files"])
+        entries = [entry for entry in git["status"].split("\0") if entry]
+        self.assertTrue(
+            any(entry.startswith("1 ") for entry in entries),
+            f"the dirty preimage must show in the exact status: {entries!r}",
+        )
+        self.assertEqual([str(path)], payload["replacements"])
+
+    def test_capture_path_directory_preimage_is_recursive_and_nul_safe(self):
+        self.capture_directory()
+        payload = self.payload("path_captured")
+        source = payload["source"]
+        self.assertEqual("directory", source["lstat_type"])
+        by_path = {record["path"]: record for record in source["entries"]}
+        self.assertEqual({"a.txt", "sub", "sub/b.bin"}, set(by_path))
+        self.assertEqual("0o600", by_path["a.txt"]["mode"])
+        self.assertEqual("0o755", by_path["sub/b.bin"]["mode"])
+        self.assertEqual("directory", by_path["sub"]["type"])
+        sha = hashlib.sha256(b"beta\n").hexdigest()
+        self.assertEqual(sha, by_path["sub/b.bin"]["sha256"])
+        blob = self.journal.parent / "preimage" / "blobs" / sha
+        self.assertEqual(b"beta\n", blob.read_bytes())
+
+    def test_capture_path_rejects_unknown_or_unreadable_objects(self):
+        missing = self.source / "not-there"
+        _stdout, stderr = self.expect_fail(*self.capture_argv("x", missing))
+        self.assertIn("unknown", stderr.lower())
+        self.assertFalse(
+            self.journal.parent.exists(), "no journal may outlive a blocker"
+        )
+        fifo = self.source / "fifo"
+        os.mkfifo(fifo)
+        _stdout, stderr = self.expect_fail(
+            *self.capture_argv("x", fifo, policy="retain")
+        )
+        self.assertIn("unknown", stderr.lower())
+        hard = self.source / "hard.txt"
+        os.link(self.source / "tracked.txt", hard)
+        _stdout, stderr = self.expect_fail(
+            *self.capture_argv(
+                "x", self.source / "tracked.txt",
+                final_type="file", policy="retain",
+            )
+        )
+        self.assertIn("hard link", stderr)
+        os.remove(hard)
+        unreadable = self.source / "secret.txt"
+        unreadable.write_bytes(b"data")
+        os.chmod(unreadable, 0)
+        _stdout, stderr = self.expect_fail(
+            *self.capture_argv(
+                "x", unreadable, final_type="file", policy="retain",
+            )
+        )
+        self.assertIn("read", stderr.lower())
+        os.chmod(unreadable, 0o600)
+        bad_dir = self.make_preimage_directory()
+        os.mkfifo(bad_dir / "pipe")
+        _stdout, stderr = self.expect_fail(
+            *self.capture_argv(
+                "x", bad_dir, final_type="directory", policy="retain",
+            )
+        )
+        self.assertIn("not supported", stderr)
+        os.remove(bad_dir / "pipe")
+        os.link(bad_dir / "a.txt", bad_dir / "hard.txt")
+        _stdout, stderr = self.expect_fail(
+            *self.capture_argv(
+                "x", bad_dir, final_type="directory", policy="retain",
+            )
+        )
+        self.assertIn("hard link", stderr)
+        os.remove(bad_dir / "hard.txt")
+        (bad_dir / "inner-link").symlink_to(self.targets / "venv")
+        _stdout, stderr = self.expect_fail(
+            *self.capture_argv(
+                "x", bad_dir, final_type="directory", policy="retain",
+            )
+        )
+        self.assertIn("not supported", stderr)
+        self.assertFalse(self.journal.parent.exists())
+
+    def test_capture_path_rejects_bad_replacements_and_roots(self):
+        path = self.source / "notes.txt"
+        path.write_bytes(b"n\n")
+        outside = self.targets / "elsewhere.txt"
+        _stdout, stderr = self.expect_fail(
+            *self.capture_argv(
+                "x", path, replacements=[outside], policy="retain",
+            )
+        )
+        self.assertIn("journaled root", stderr)
+        sibling = self.source / "notes-new.txt"
+        sibling.write_bytes(b"occupied\n")
+        _stdout, stderr = self.expect_fail(
+            *self.capture_argv(
+                "x", path, replacements=[sibling], policy="retain",
+            )
+        )
+        self.assertIn("replacement", stderr)
+        os.remove(sibling)
+        sibling.touch()
+        self.ok(
+            *self.capture_argv(
+                "x", path, replacements=[sibling], policy="retain",
+            )
+        )
+        outside_journal = self.root / "outside.jsonl"
+        _stdout, stderr = self.expect_fail(
+            *self.capture_argv(
+                "y", path, policy="retain", journal=outside_journal,
+            )
+        )
+        self.assertIn("state root", stderr)
+        journal3 = self.state / "r3" / "journal.jsonl"
+        _stdout, stderr = self.expect_fail(
+            *self.capture_argv("z", path, journal=journal3)
+        )
+        self.assertIn("disposable", stderr)
+        dangling = self.source / "dangle"
+        dangling.symlink_to(self.source / "gone")
+        _stdout, stderr = self.expect_fail(
+            *self.capture_argv("d", dangling, journal=journal3)
+        )
+        self.assertIn("target", stderr)
+        self.ok(
+            *self.capture_argv(
+                "d", dangling, policy="retain", journal=journal3,
+            )
+        )
+        self.assertIsNone(
+            self.payload("path_captured", journal3)["source"]["target"]
+        )
+        alias = self.drive / "alias"
+        alias.symlink_to(self.source)
+        journal4 = self.state / "r4" / "journal.jsonl"
+        _stdout, stderr = self.expect_fail(
+            *self.capture_argv(
+                "a", alias / "notes.txt", policy="retain", journal=journal4,
+            )
+        )
+        self.assertIn("root", stderr)
+
+    # ------------------------------------------------------------------
+    # confirm-path-paused and verify-path-local
+    # ------------------------------------------------------------------
+
+    def test_confirm_path_paused_requires_characterized_evidence(self):
+        self.capture_link()
+        _stdout, stderr = self.expect_fail(
+            "confirm-path-paused", "--journal", self.journal
+        )
+        self.assertIn("pause", stderr)
+        self.module.DRIVE_PAUSE_PROVIDER = (
+            lambda name: {"paused": False, "queue_advanced": False}
+        )
+        _stdout, stderr = self.expect_fail(
+            "confirm-path-paused", "--journal", self.journal
+        )
+        self.assertIn("paused", stderr)
+        self.module.DRIVE_PAUSE_PROVIDER = (
+            lambda name: {"paused": True, "queue_advanced": True}
+        )
+        _stdout, stderr = self.expect_fail(
+            "confirm-path-paused", "--journal", self.journal
+        )
+        self.assertIn("queue", stderr)
+        self.install_providers()
+        self.ok("confirm-path-paused", "--journal", self.journal)
+        payload = self.payload("drive_paused")
+        self.assertEqual(
+            {"paused": True, "queue_advanced": False}, payload["evidence"]
+        )
+
+    def test_verify_path_local_requires_declared_absent(self):
+        path = self.capture_link()
+        _stdout, stderr = self.expect_fail(
+            "verify-path-local", "--journal", self.journal
+        )
+        self.assertIn("absent", stderr)
+        os.remove(path)
+        stdout, _stderr = self.ok(
+            "verify-path-local", "--journal", self.journal
+        )
+        self.assertEqual(self.success_stdout(self.journal), stdout)
+        self.assertEqual(
+            "absent", self.payload("path_local_verified")["final_type"]
+        )
+
+    def test_verify_path_local_never_accepts_a_symlink(self):
+        path = self.capture_dirty_tracked_file()
+        os.remove(path)
+        path.symlink_to(self.targets / "venv" / "bin.txt")
+        _stdout, stderr = self.expect_fail(
+            "verify-path-local", "--journal", self.journal
+        )
+        self.assertIn("symlink", stderr)
+        os.remove(path)
+        journal2 = self.state / "r2" / "journal.jsonl"
+        directory = self.capture_directory(journal=journal2)
+        shutil.rmtree(directory)
+        directory.symlink_to(self.targets / "venv")
+        _stdout, stderr = self.expect_fail(
+            "verify-path-local", "--journal", journal2
+        )
+        self.assertIn("symlink", stderr)
+
+    def test_verify_path_local_requires_clean_git_status(self):
+        path = self.capture_dirty_tracked_file()
+        path.write_bytes(b"still-wrong\n")
+        _stdout, stderr = self.expect_fail(
+            "verify-path-local", "--journal", self.journal
+        )
+        self.assertIn("git", stderr.lower())
+        path.write_bytes(b"original\n")
+        self.ok("verify-path-local", "--journal", self.journal)
+        git = self.payload("path_local_verified")["git"]
+        self.assertIn("100644", git["ls_files"])
+
+    def test_verify_path_local_checks_nul_safe_sha256_manifest(self):
+        path = self.capture_dirty_tracked_file()
+        path.write_bytes(b"original\n")
+        good = hashlib.sha256(b"original\n").hexdigest()
+        manifest = self.root / "final.manifest"
+        manifest.write_bytes(f"{good}  .\0".encode("utf-8"))
+        self.ok(
+            "verify-path-local", "--journal", self.journal,
+            "--manifest", manifest,
+        )
+        manifest.write_bytes(f"{'0' * 64}  .\0".encode("utf-8"))
+        _stdout, stderr = self.expect_fail(
+            "verify-path-local", "--journal", self.journal,
+            "--manifest", manifest,
+        )
+        self.assertIn("manifest", stderr)
+        journal2 = self.state / "r2" / "journal.jsonl"
+        nm = self.source / "node_modules"
+        self.capture_path("nm", nm, journal=journal2)
+        os.remove(nm)
+        _stdout, stderr = self.expect_fail(
+            "verify-path-local", "--journal", journal2,
+            "--manifest", manifest,
+        )
+        self.assertIn("absent", stderr)
+        journal3 = self.state / "r3" / "journal.jsonl"
+        directory = self.capture_directory(journal=journal3)
+        shutil.rmtree(directory)
+        (directory / "sub").mkdir(parents=True)
+        (directory / "a.txt").write_bytes(b"new-a\n")
+        (directory / "sub" / "b.bin").write_bytes(b"new-b\n")
+        sha_a = hashlib.sha256(b"new-a\n").hexdigest()
+        sha_b = hashlib.sha256(b"new-b\n").hexdigest()
+        manifest.write_bytes(
+            f"{sha_a}  a.txt\0{sha_b}  sub/b.bin\0".encode("utf-8")
+        )
+        self.ok(
+            "verify-path-local", "--journal", journal3,
+            "--manifest", manifest,
+        )
+        manifest.write_bytes(f"{sha_a}  a.txt\0".encode("utf-8"))
+        _stdout, stderr = self.expect_fail(
+            "verify-path-local", "--journal", journal3,
+            "--manifest", manifest,
+        )
+        self.assertIn("manifest", stderr)
+
+    def test_verify_path_local_rejects_a_path_escaping_the_root(self):
+        path = self.capture_dirty_tracked_file()
+        path.write_bytes(b"original\n")
+        moved = self.drive / "repo-moved"
+        os.rename(self.source, moved)
+        (self.drive / "repo").symlink_to(moved)
+        _stdout, stderr = self.expect_fail(
+            "verify-path-local", "--journal", self.journal
+        )
+        self.assertIn("root", stderr)
+
+    def test_verify_path_local_requires_journaled_sibling_replacements(self):
+        path = self.capture_sibling_file()
+        os.remove(path)
+        _stdout, stderr = self.expect_fail(
+            "verify-path-local", "--journal", self.journal
+        )
+        self.assertIn("replacement", stderr)
+        self.sibling.write_bytes(b"fixed\n")
+        self.ok("verify-path-local", "--journal", self.journal)
+
+    # ------------------------------------------------------------------
+    # rollback-path-local
+    # ------------------------------------------------------------------
+
+    def test_rollback_path_local_requires_fresh_pause_evidence(self):
+        path = self.capture_link()
+        os.remove(path)
+        _stdout, stderr = self.expect_fail(
+            "rollback-path-local", "--journal", self.journal
+        )
+        self.assertIn("pause", stderr)
+        self.assertFalse(os.path.lexists(path))
+        self.confirm_paused()
+        self.module.DRIVE_PAUSE_PROVIDER = None
+        _stdout, stderr = self.expect_fail(
+            "rollback-path-local", "--journal", self.journal
+        )
+        self.assertIn("pause", stderr)
+        self.install_providers()
+        self.ok("rollback-path-local", "--journal", self.journal)
+        self.assertTrue(os.path.islink(path))
+
+    def test_rollback_path_local_restores_exact_link_and_leaves_target(self):
+        path = self.capture_link()
+        text = os.readlink(path)
+        self.confirm_paused()
+        os.remove(path)
+        stdout, _stderr = self.ok(
+            "rollback-path-local", "--journal", self.journal
+        )
+        self.assertEqual(self.success_stdout(self.journal), stdout)
+        self.assertTrue(os.path.islink(path))
+        self.assertEqual(text, os.readlink(path))
+        self.assertEqual(
+            b"dep\n",
+            (self.targets / "node_modules" / "dep.js").read_bytes(),
+            "the external target is never touched",
+        )
+        payload = self.payload("path_local_rolled_back")
+        self.assertEqual([], payload["trash"])
+
+    def test_rollback_path_local_trashes_same_path_replacement(self):
+        path = self.capture_dirty_tracked_file()
+        self.confirm_paused()
+        path.write_bytes(b"original\n")
+        self.ok("rollback-path-local", "--journal", self.journal)
+        self.assertEqual(b"corrupted\n", path.read_bytes())
+        self.assertEqual(0o644, stat.S_IMODE(os.lstat(path).st_mode))
+        payload = self.payload("path_local_rolled_back")
+        self.assertEqual(1, len(payload["trash"]))
+        record = payload["trash"][0]
+        self.assertEqual(str(path), record["path"])
+        self.assertEqual(
+            b"original\n", Path(record["trash_path"]).read_bytes()
+        )
+        self.assertTrue(
+            record["trash_path"].startswith(str(self.journal.parent)),
+            "the trash must be tool-owned under the transaction directory",
+        )
+
+    def test_rollback_path_local_trashes_sibling_replacement(self):
+        path = self.capture_sibling_file()
+        self.confirm_paused()
+        os.rename(path, self.sibling)
+        self.ok("rollback-path-local", "--journal", self.journal)
+        self.assertEqual(b"alpha\nbeta\n", path.read_bytes())
+        self.assertEqual(0o640, stat.S_IMODE(os.lstat(path).st_mode))
+        self.assertFalse(os.path.lexists(self.sibling))
+        payload = self.payload("path_local_rolled_back")
+        self.assertEqual(
+            [str(self.sibling)],
+            [record["path"] for record in payload["trash"]],
+        )
+
+    def test_rollback_path_local_restores_directory_preimage(self):
+        path = self.capture_directory()
+        self.confirm_paused()
+        shutil.rmtree(path)
+        path.mkdir()
+        (path / "replacement.txt").write_bytes(b"new\n")
+        self.ok("rollback-path-local", "--journal", self.journal)
+        self.assertEqual(b"alpha\n", (path / "a.txt").read_bytes())
+        self.assertEqual(
+            0o600, stat.S_IMODE(os.lstat(path / "a.txt").st_mode)
+        )
+        self.assertEqual(b"beta\n", (path / "sub" / "b.bin").read_bytes())
+        self.assertEqual(
+            0o755, stat.S_IMODE(os.lstat(path / "sub" / "b.bin").st_mode)
+        )
+        trashed = self.payload("path_local_rolled_back")["trash"]
+        self.assertEqual(1, len(trashed))
+        self.assertEqual(
+            b"new\n",
+            (Path(trashed[0]["trash_path"]) / "replacement.txt").read_bytes(),
+        )
+
+    def test_rollback_path_local_refuses_unjournaled_replacements(self):
+        path = self.capture_link()
+        self.confirm_paused()
+        os.remove(path)
+        path.mkdir()
+        (path / "user-data.txt").write_bytes(b"precious\n")
+        _stdout, stderr = self.expect_fail(
+            "rollback-path-local", "--journal", self.journal
+        )
+        self.assertIn("unjournaled", stderr)
+        self.assertEqual(
+            b"precious\n", (path / "user-data.txt").read_bytes()
+        )
+        shutil.rmtree(path)
+        path.mkdir()
+        self.ok("rollback-path-local", "--journal", self.journal)
+        self.assertTrue(os.path.islink(path))
+
+    def test_rollback_path_local_refuses_changed_interior_replacement(self):
+        path = self.capture_dist_link()
+        self.confirm_paused()
+        os.remove(path)
+        path.mkdir()
+        (path / "index.js").write_bytes(b"built\n")
+        (path / "extra.txt").write_bytes(b"unjournaled\n")
+        _stdout, stderr = self.expect_fail(
+            "rollback-path-local", "--journal", self.journal
+        )
+        self.assertIn("unjournaled", stderr)
+        os.remove(path / "extra.txt")
+        self.ok("rollback-path-local", "--journal", self.journal)
+        self.assertTrue(os.path.islink(path))
+        self.assertEqual(b"old\n", (self.dist_target / "old.js").read_bytes())
+
+    def test_rollback_path_local_is_unavailable_after_the_window_closes(self):
+        path = self.capture_link()
+        self.confirm_paused()
+        os.remove(path)
+        self.module._append_event(
+            self.journal, "rollback_window_closed", {}
+        )
+        _stdout, stderr = self.expect_fail(
+            "rollback-path-local", "--journal", self.journal
+        )
+        self.assertIn("closed", stderr)
+        self.assertFalse(os.path.lexists(path))
+
+    # ------------------------------------------------------------------
+    # record-path-cloud / verify-path-cloud / restore-path-cloud
+    # ------------------------------------------------------------------
+
+    def test_record_path_cloud_snapshots_preimage_identity(self):
+        self.capture_link()
+        files = self.path_cloud_files("node_modules")
+        cloud = FakeCloud(
+            self, files, list_hits=[self.hit("node_modules")]
+        ).install()
+        stdout, _stderr = self.ok(
+            "record-path-cloud", "--journal", self.journal
+        )
+        self.assertEqual(self.success_stdout(self.journal), stdout)
+        payload = self.payload("path_cloud_recorded")
+        self.assertEqual("pobj-1", payload["cloud_preimage"]["id"])
+        self.assertEqual("parent-1", payload["parent_id"])
+        self.assertEqual(
+            ["parent-1", "root-1"],
+            [entry["id"] for entry in payload["parent_chain"]],
+        )
+        self.assertEqual("root-1", payload["root_id"])
+        self.assertEqual([], cloud.mutations())
+        _stdout, stderr = self.expect_fail(
+            "record-path-cloud", "--journal", self.journal
+        )
+        self.assertIn("already", stderr)
+
+    def test_record_path_cloud_null_ambiguous_and_backup_blockers(self):
+        self.capture_link()
+        files = self.path_cloud_files("node_modules")
+        cloud = FakeCloud(self, files).install()
+        self.ok("record-path-cloud", "--journal", self.journal)
+        payload = self.payload("path_cloud_recorded")
+        self.assertIsNone(payload["cloud_preimage"])
+        self.assertIsNone(payload["parent_id"])
+        line = [
+            line for line in
+            self.journal.read_text(encoding="utf-8").splitlines()
+            if '"path_cloud_recorded"' in line
+        ][-1]
+        self.assertIn(
+            '"cloud_preimage":null', line,
+            "an absent preimage must be the literal null, never an ID",
+        )
+        journal2 = self.state / "r2" / "journal.jsonl"
+        self.capture_path(
+            "venv", self.source / ".venv", policy="retain", journal=journal2,
+        )
+        files["pobj-2"] = dict(files["pobj-1"], id="pobj-2", name=".venv")
+        files["pobj-1"] = dict(files["pobj-1"], name=".venv")
+        cloud.list_hits[:] = [
+            self.hit(".venv"), self.hit(".venv", file_id="pobj-2"),
+        ]
+        _stdout, stderr = self.expect_fail(
+            "record-path-cloud", "--journal", journal2
+        )
+        self.assertIn("ambiguous", stderr)
+        files["mobj-1"] = {
+            "id": "mobj-1", "name": ".venv", "parents": ["machine-1"],
+            "trashed": False, "ownedByMe": True,
+        }
+        files["machine-1"] = {"id": "machine-1", "name": "My MacBook"}
+        cloud.list_hits[:] = [
+            self.hit(".venv", file_id="mobj-1", parents=["machine-1"]),
+        ]
+        _stdout, stderr = self.expect_fail(
+            "record-path-cloud", "--journal", journal2
+        )
+        self.assertIn("computer-backup", stderr)
+
+    def test_verify_path_cloud_absent_accepts_trashed_preimage(self):
+        path = self.capture_link()
+        files = self.path_cloud_files("node_modules")
+        cloud = FakeCloud(
+            self, files, list_hits=[self.hit("node_modules")]
+        ).install()
+        self.ok("record-path-cloud", "--journal", self.journal)
+        os.remove(path)
+        files["pobj-1"]["trashed"] = True
+        cloud.list_hits[:] = []
+        self.ok("verify-path-cloud", "--journal", self.journal)
+        payload = self.payload("path_cloud_verified")
+        self.assertEqual("absent", payload["final_type"])
+        self.assertEqual(0, payload["machine_root_count"])
+        self.assertEqual([], cloud.mutations())
+
+    def test_verify_path_cloud_rejects_each_blocker(self):
+        path = self.capture_link()
+        files = self.path_cloud_files("node_modules")
+        cloud = FakeCloud(
+            self, files, list_hits=[self.hit("node_modules")]
+        ).install()
+        self.ok("record-path-cloud", "--journal", self.journal)
+        os.remove(path)
+        cloud.list_hits[:] = []
+        _stdout, stderr = self.expect_fail(
+            "verify-path-cloud", "--journal", self.journal
+        )
+        self.assertIn("not trashed", stderr)
+        files["pobj-1"]["trashed"] = True
+        files["pobj-1"]["parents"] = ["elsewhere-1"]
+        _stdout, stderr = self.expect_fail(
+            "verify-path-cloud", "--journal", self.journal
+        )
+        self.assertIn("parent", stderr)
+        files["pobj-1"]["parents"] = ["parent-1"]
+        files["dup-1"] = {
+            "id": "dup-1", "name": "node_modules", "parents": ["parent-1"],
+            "trashed": False, "ownedByMe": True,
+        }
+        cloud.list_hits[:] = [self.hit("node_modules", file_id="dup-1")]
+        _stdout, stderr = self.expect_fail(
+            "verify-path-cloud", "--journal", self.journal
+        )
+        self.assertIn("occupies", stderr)
+        files["mobj-1"] = {
+            "id": "mobj-1", "name": "node_modules", "parents": ["machine-1"],
+            "trashed": False, "ownedByMe": True,
+        }
+        files["machine-1"] = {"id": "machine-1", "name": "My MacBook"}
+        cloud.list_hits[:] = [
+            self.hit("node_modules", file_id="mobj-1", parents=["machine-1"]),
+        ]
+        _stdout, stderr = self.expect_fail(
+            "verify-path-cloud", "--journal", self.journal
+        )
+        self.assertIn("computer-backup", stderr)
+        self.assertEqual([], cloud.mutations())
+
+    def test_verify_path_cloud_null_preimage_requires_absence(self):
+        path = self.capture_link()
+        files = self.path_cloud_files("node_modules")
+        cloud = FakeCloud(self, files).install()
+        self.ok("record-path-cloud", "--journal", self.journal)
+        os.remove(path)
+        self.ok("verify-path-cloud", "--journal", self.journal)
+        self.assertIsNone(self.payload("path_cloud_verified")["object_id"])
+        files["new-1"] = {
+            "id": "new-1", "name": "node_modules", "parents": ["parent-1"],
+            "trashed": False, "ownedByMe": True,
+        }
+        cloud.list_hits[:] = [self.hit("node_modules", file_id="new-1")]
+        _stdout, stderr = self.expect_fail(
+            "verify-path-cloud", "--journal", self.journal
+        )
+        self.assertIn("unexpected", stderr)
+
+    def test_verify_path_cloud_checks_final_file_hashes(self):
+        path = self.capture_dirty_tracked_file()
+        final = b"original\n"
+        md5 = hashlib.md5(final).hexdigest()
+        files = self.path_cloud_files(
+            "tracked.txt", mimeType="text/plain", md5Checksum=md5,
+        )
+        cloud = FakeCloud(
+            self, files, list_hits=[self.hit("tracked.txt")]
+        ).install()
+        self.ok("record-path-cloud", "--journal", self.journal)
+        path.write_bytes(final)
+        self.ok("verify-path-cloud", "--journal", self.journal)
+        self.assertEqual(
+            "pobj-1", self.payload("path_cloud_verified")["object_id"]
+        )
+        manifest = self.root / "cloud.manifest"
+        manifest.write_bytes(
+            f"{hashlib.sha256(final).hexdigest()}  .\0".encode("utf-8")
+        )
+        self.ok(
+            "verify-path-cloud", "--journal", self.journal,
+            "--manifest", manifest,
+        )
+        manifest.write_bytes(f"{'0' * 64}  .\0".encode("utf-8"))
+        _stdout, stderr = self.expect_fail(
+            "verify-path-cloud", "--journal", self.journal,
+            "--manifest", manifest,
+        )
+        self.assertIn("manifest", stderr)
+        files["pobj-1"]["md5Checksum"] = "0" * 32
+        _stdout, stderr = self.expect_fail(
+            "verify-path-cloud", "--journal", self.journal
+        )
+        self.assertIn("hash", stderr)
+        del files["pobj-1"]["md5Checksum"]
+        _stdout, stderr = self.expect_fail(
+            "verify-path-cloud", "--journal", self.journal
+        )
+        self.assertIn("hash", stderr)
+        files["pobj-1"]["md5Checksum"] = md5
+        files["gnew-1"] = dict(
+            files["pobj-1"], id="gnew-1",
+            mimeType="application/vnd.google-apps.document",
+        )
+        cloud.list_hits[:] = [self.hit("tracked.txt", file_id="gnew-1")]
+        _stdout, stderr = self.expect_fail(
+            "verify-path-cloud", "--journal", self.journal
+        )
+        self.assertIn("Google-native", stderr)
+        self.assertEqual([], cloud.mutations())
+
+    def test_restore_path_cloud_updates_only_journaled_ids(self):
+        self.capture_link()
+        files = self.path_cloud_files("node_modules")
+        cloud = FakeCloud(
+            self, files, list_hits=[self.hit("node_modules")]
+        ).install()
+        self.ok("record-path-cloud", "--journal", self.journal)
+        files["pobj-1"]["trashed"] = True
+        cloud.list_hits[:] = []
+        _stdout, stderr = self.expect_fail(
+            "restore-path-cloud", "--journal", self.journal
+        )
+        self.assertIn("pause", stderr)
+        self.assertEqual([], cloud.mutations())
+        self.install_providers()
+        self.ok("restore-path-cloud", "--journal", self.journal)
+        mutations = cloud.mutations()
+        self.assertEqual(1, len(mutations))
+        method, url, body = mutations[0]
+        self.assertEqual("PATCH", method)
+        self.assertIn("/files/pobj-1", url)
+        self.assertEqual({"trashed": False}, json.loads(body))
+        self.assertFalse(files["pobj-1"]["trashed"])
+        payload = self.payload("path_cloud_restored")
+        self.assertEqual("pobj-1", payload["object_id"])
+        self.assertEqual(["parent-1"], payload["parents"])
+
+    def test_restore_path_cloud_refusals(self):
+        self.capture_link()
+        files = self.path_cloud_files("node_modules")
+        cloud = FakeCloud(self, files).install()
+        self.ok("record-path-cloud", "--journal", self.journal)
+        self.install_providers()
+        _stdout, stderr = self.expect_fail(
+            "restore-path-cloud", "--journal", self.journal
+        )
+        self.assertIn("cloud_preimage", stderr)
+        journal2 = self.state / "r2" / "journal.jsonl"
+        self.capture_path(
+            "venv", self.source / ".venv", policy="retain", journal=journal2,
+        )
+        files["pobj-1"]["name"] = ".venv"
+        cloud.list_hits[:] = [self.hit(".venv")]
+        self.ok("record-path-cloud", "--journal", journal2)
+        cloud.list_hits[:] = []
+        _stdout, stderr = self.expect_fail(
+            "restore-path-cloud", "--journal", journal2
+        )
+        self.assertIn("Trash", stderr)
+        files["pobj-1"]["trashed"] = True
+        files["pobj-1"]["parents"] = ["elsewhere-1"]
+        _stdout, stderr = self.expect_fail(
+            "restore-path-cloud", "--journal", journal2
+        )
+        self.assertIn("parent", stderr)
+        files["pobj-1"]["parents"] = ["parent-1"]
+        files["dup-1"] = {
+            "id": "dup-1", "name": ".venv", "parents": ["parent-1"],
+            "trashed": False, "ownedByMe": True,
+        }
+        cloud.list_hits[:] = [self.hit(".venv", file_id="dup-1")]
+        _stdout, stderr = self.expect_fail(
+            "restore-path-cloud", "--journal", journal2
+        )
+        self.assertIn("duplicate", stderr)
+        self.assertEqual([], cloud.mutations())
+
+    # ------------------------------------------------------------------
+    # close-rollback-window and finalize-path
+    # ------------------------------------------------------------------
+
+    def test_close_rollback_window_for_path_repair(self):
+        path = self.capture_link()
+        files = self.path_cloud_files("node_modules")
+        cloud = FakeCloud(
+            self, files, list_hits=[self.hit("node_modules")]
+        ).install()
+        self.ok("record-path-cloud", "--journal", self.journal)
+        os.remove(path)
+        self.install_providers()
+        baseline = self.make_baseline()
+        tools = self.install_tools()
+        self.ok("record-native-errors", "--journal", baseline)
+        files["pobj-1"]["trashed"] = True
+        cloud.list_hits[:] = []
+        argv = [
+            "close-rollback-window", "--journal", self.journal,
+            "--baseline-journal", baseline,
+            "--restart-before-pid", "1111",
+        ]
+        _stdout, stderr = self.expect_fail(*argv)
+        self.assertIn("verify-path-local", stderr)
+        self.ok("verify-path-local", "--journal", self.journal)
+        _stdout, stderr = self.expect_fail(*argv)
+        self.assertIn("verify-path-cloud", stderr)
+        self.ok("verify-path-cloud", "--journal", self.journal)
+        stdout, _stderr = self.ok(*argv)
+        self.assertEqual(self.success_stdout(self.journal), stdout)
+        closed = self.payload("rollback_window_closed")
+        self.assertEqual("nm", closed["label"])
+        self.assertEqual({"outbound": 7}, closed["queue_cursors"])
+        self.assertEqual(4242, closed["drive_pid"])
+        self.assertEqual(1111, closed["restart_before_pid"])
+        _stdout, stderr = self.expect_fail(*argv)
+        self.assertIn("closed", stderr)
+        self.ok("finalize-path", "--journal", self.journal)
+        self.assertFalse((self.targets / "node_modules").exists())
+
+    def test_finalize_path_requires_rollback_window_closed(self):
+        path = self.capture_link()
+        os.remove(path)
+        _stdout, stderr = self.expect_fail(
+            "finalize-path", "--journal", self.journal
+        )
+        self.assertIn("rollback_window_closed", stderr)
+        self.assertTrue((self.targets / "node_modules").is_dir())
+
+    def test_finalize_path_disposable_rechecks_target(self):
+        path = self.capture_link()
+        os.remove(path)
+        self.module._append_event(
+            self.journal, "rollback_window_closed", {}
+        )
+        (self.targets / "node_modules" / "new.txt").write_bytes(b"x")
+        _stdout, stderr = self.expect_fail(
+            "finalize-path", "--journal", self.journal
+        )
+        self.assertIn("changed", stderr)
+        self.assertTrue((self.targets / "node_modules").is_dir())
+        os.remove(self.targets / "node_modules" / "new.txt")
+        path.symlink_to(self.targets / "node_modules")
+        _stdout, stderr = self.expect_fail(
+            "finalize-path", "--journal", self.journal
+        )
+        self.assertIn("referenc", stderr)
+        self.assertTrue((self.targets / "node_modules").is_dir())
+        os.remove(path)
+        self.ok("finalize-path", "--journal", self.journal)
+        self.assertFalse((self.targets / "node_modules").exists())
+        trashed = list((self.journal.parent / "trash").rglob("dep.js"))
+        self.assertEqual(1, len(trashed))
+        self.assertEqual(
+            1, self.event_types().count("path_target_finalized")
+        )
+        self.assertEqual(
+            1, self.event_types().count("private_preimage_finalized")
+        )
+        self.ok("verify-journal", "--journal", self.journal)
+        _stdout, stderr = self.expect_fail(
+            "finalize-path", "--journal", self.journal
+        )
+        self.assertIn("already", stderr)
+
+    def test_finalize_path_retains_user_data_target(self):
+        path = self.source / ".venv"
+        self.capture_path("venv", path, policy="retain")
+        os.remove(path)
+        self.module._append_event(
+            self.journal, "rollback_window_closed", {}
+        )
+        self.ok("finalize-path", "--journal", self.journal)
+        self.assertTrue(
+            (self.targets / "venv").is_dir(),
+            "a retained target must never be touched",
+        )
+        self.assertEqual(
+            0, self.event_types().count("path_target_finalized")
+        )
+        self.assertEqual([], self.payload("private_preimage_finalized")["assets"])
+
+    def test_finalize_path_removes_only_private_preimage_assets(self):
+        path = self.capture_dirty_tracked_file()
+        sha = hashlib.sha256(b"corrupted\n").hexdigest()
+        asset = self.journal.parent / "preimage" / "blobs" / sha
+        self.assertTrue(asset.is_file())
+        path.write_bytes(b"original\n")
+        self.module._append_event(
+            self.journal, "rollback_window_closed", {}
+        )
+        self.ok("finalize-path", "--journal", self.journal)
+        self.assertFalse(asset.exists())
+        self.assertFalse((self.journal.parent / "preimage").exists())
+        payload = self.payload("private_preimage_finalized")
+        self.assertEqual(
+            [{"path": f"blobs/{sha}", "sha256": sha}], payload["assets"]
+        )
+        self.assertEqual(
+            b"original\n", path.read_bytes(),
+            "finalize never touches the repaired path",
+        )
+        self.install_providers()
+        _stdout, stderr = self.expect_fail(
+            "rollback-path-local", "--journal", self.journal
+        )
+        self.assertIn("closed", stderr)
+
+    # ------------------------------------------------------------------
+    # Symlink-escape containment, mutation gates, and hash guards
+    # ------------------------------------------------------------------
+
+    def test_capture_path_rejects_symlink_escaping_replacement(self):
+        # Reviewer probe: root/sub -> ../../outside makes a textually
+        # contained replacement physically escape the journaled root.
+        outside = self.root / "outside"
+        outside.mkdir()
+        (self.source / "sub").symlink_to(Path("../../outside"))
+        path = self.source / "notes.txt"
+        path.write_bytes(b"n\n")
+        _stdout, stderr = self.expect_fail(
+            *self.capture_argv(
+                "x", path,
+                replacements=[self.source / "sub" / "new.txt"],
+                policy="retain",
+            )
+        )
+        self.assertIn("symlink", stderr)
+        self.assertFalse(
+            self.journal.parent.exists(), "no journal may outlive a blocker"
+        )
+
+    def test_rollback_path_local_blocks_symlinked_replacement_component(self):
+        outside = self.root / "outside"
+        outside.mkdir()
+        subdir = self.source / "subdir"
+        subdir.mkdir()
+        path = self.source / "notes.txt"
+        path.write_bytes(b"alpha\n")
+        replacement = subdir / "new.txt"
+        self.capture_path(
+            "notes", path, replacements=[replacement],
+            final_type="absent", policy="retain",
+        )
+        self.confirm_paused()
+        os.remove(path)
+        os.rmdir(subdir)
+        subdir.symlink_to(outside)
+        (outside / "new.txt").write_bytes(b"escaped\n")
+        _stdout, stderr = self.expect_fail(
+            "rollback-path-local", "--journal", self.journal
+        )
+        self.assertIn("symlink", stderr)
+        self.assertEqual(
+            b"escaped\n", (outside / "new.txt").read_bytes(),
+            "nothing outside the journaled root may ever move to trash",
+        )
+        _stdout, stderr = self.expect_fail(
+            "verify-path-local", "--journal", self.journal
+        )
+        self.assertIn("symlink", stderr)
+
+    def test_finalize_path_blocks_interior_target_reference(self):
+        path = self.capture_link()
+        os.remove(path)
+        self.module._append_event(
+            self.journal, "rollback_window_closed", {}
+        )
+        alias = self.source / "dep-alias"
+        alias.symlink_to(self.targets / "node_modules" / "dep.js")
+        _stdout, stderr = self.expect_fail(
+            "finalize-path", "--journal", self.journal
+        )
+        self.assertIn("referenc", stderr)
+        self.assertTrue(
+            (self.targets / "node_modules" / "dep.js").is_file(),
+            "an interior-referenced target must never be trashed",
+        )
+        os.remove(alias)
+        self.ok("finalize-path", "--journal", self.journal)
+        self.assertFalse((self.targets / "node_modules").exists())
+
+    def test_record_path_cloud_refuses_after_local_mutation(self):
+        path = self.capture_link()
+        cloud = FakeCloud(
+            self, self.path_cloud_files("node_modules")
+        ).install()
+        os.remove(path)
+        _stdout, stderr = self.expect_fail(
+            "record-path-cloud", "--journal", self.journal
+        )
+        self.assertIn("preimage", stderr)
+        self.assertEqual(
+            [], cloud.requests,
+            "the local pre-mutation gate must fire before any cloud call",
+        )
+        self.assertNotIn("path_cloud_recorded", self.event_types())
+
+    def test_verify_path_cloud_never_hashes_through_a_symlink(self):
+        path = self.capture_dirty_tracked_file()
+        final = b"original\n"
+        files = self.path_cloud_files(
+            "tracked.txt", mimeType="text/plain",
+            md5Checksum=hashlib.md5(final).hexdigest(),
+        )
+        FakeCloud(
+            self, files, list_hits=[self.hit("tracked.txt")]
+        ).install()
+        self.ok("record-path-cloud", "--journal", self.journal)
+        other = self.source / "other.txt"
+        other.write_bytes(final)
+        os.remove(path)
+        path.symlink_to(other)
+        _stdout, stderr = self.expect_fail(
+            "verify-path-cloud", "--journal", self.journal
+        )
+        self.assertIn("regular file", stderr)
+
+    def test_rollback_path_local_restores_exact_symlink_mode(self):
+        path = self.source / "node_modules"
+        recorded_mode = stat.S_IMODE(os.lstat(path).st_mode)
+        self.capture_path("nm", path)
+        self.confirm_paused()
+        drifted = 0o700 if recorded_mode != 0o700 else 0o755
+        os.chmod(path, drifted, follow_symlinks=False)
+        self.ok("rollback-path-local", "--journal", self.journal)
+        self.assertTrue(os.path.islink(path))
+        self.assertEqual(
+            recorded_mode, stat.S_IMODE(os.lstat(path).st_mode),
+            "rollback must restore the exact journaled symlink mode",
+        )
+        trash = self.payload("path_local_rolled_back")["trash"]
+        self.assertEqual(1, len(trash))
+        self.assertEqual(str(path), trash[0]["path"])
+
+    # ------------------------------------------------------------------
+    # --force and corrupted journals
+    # ------------------------------------------------------------------
+
+    def test_path_commands_reject_force_and_corrupt_journals(self):
+        path = self.capture_link()
+        journal_argvs = [
+            ["confirm-path-paused", "--journal", str(self.journal)],
+            ["verify-path-local", "--journal", str(self.journal)],
+            ["rollback-path-local", "--journal", str(self.journal)],
+            ["record-path-cloud", "--journal", str(self.journal)],
+            ["verify-path-cloud", "--journal", str(self.journal)],
+            ["restore-path-cloud", "--journal", str(self.journal)],
+            ["finalize-path", "--journal", str(self.journal)],
+        ]
+        capture_argv = [
+            str(item) for item in self.capture_argv(
+                "f", path, journal=self.state / "force" / "journal.jsonl",
+            )
+        ]
+        for argv in journal_argvs + [capture_argv]:
+            stderr = io.StringIO()
+            with self.assertRaises(SystemExit, msg=argv[0]):
+                with contextlib.redirect_stderr(stderr):
+                    self.module.main(argv + ["--force"])
+            self.assertIn("--force", stderr.getvalue(), argv[0])
+        self.craft_line(self.journal, "drive_paused", event_hash="f" * 64)
+        corrupted = self.journal.read_bytes()
+        sentinel = os.readlink(path)
+        for argv in journal_argvs:
+            _stdout, stderr = self.expect_fail(*argv)
+            self.assertIn("journal", stderr.lower(), argv[0])
+            self.assertEqual(
+                corrupted, self.journal.read_bytes(),
+                f"{argv[0]} repaired or truncated the journal",
+            )
+        self.assertEqual(
+            sentinel, os.readlink(path),
+            "no command may touch the path behind a corrupt journal",
+        )
 
 
 if __name__ == "__main__":

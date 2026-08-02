@@ -825,6 +825,105 @@ class StageAtomicRunTests(unittest.TestCase):
         ):
             orchestrator.stage_return(args)
 
+    def test_switch_model_requires_credit_stop_and_verifies_status_change(self):
+        self.start_implementation()
+        record = {
+            "timestamp": "2026-08-02T12:00:00Z",
+            "message": {
+                "role": "assistant",
+                "content": "You're out of usage credits. Run /model to switch models.",
+            },
+        }
+        with self.agent1_transcript.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(record) + "\n")
+
+        args = SimpleNamespace(run_file=str(self.run_file), model="opus")
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "awaiting-input"},
+            ),
+            mock.patch.object(
+                orchestrator,
+                "agent1_model_id",
+                side_effect=("claude-fable-5", "claude-opus-4-7"),
+                create=True,
+            ),
+            mock.patch.object(
+                orchestrator,
+                "send_local_control",
+                create=True,
+            ) as send_control,
+            mock.patch.object(
+                orchestrator,
+                "_wait_for_agent1_model",
+                return_value=True,
+                create=True,
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            orchestrator.switch_model(args)
+
+        send_control.assert_called_once_with("*claude:stage-2*", "/model opus")
+        self.assertEqual(orchestrator.load_run(self.run_file)["status"], "implementation-active")
+
+    def test_switch_model_rejects_without_bounded_credit_stop(self):
+        self.start_implementation()
+        record = {
+            "timestamp": "2026-08-02T12:00:00Z",
+            "message": {"role": "assistant", "content": "Need a design decision."},
+        }
+        with self.agent1_transcript.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(record) + "\n")
+
+        with self.assertRaisesRegex(SystemExit, "usage-credit stop"):
+            orchestrator.switch_model(
+                SimpleNamespace(run_file=str(self.run_file), model="opus")
+            )
+
+    def test_switch_model_confirms_local_model_dialog_with_return(self):
+        self.start_implementation()
+        record = {
+            "timestamp": "2026-08-02T12:00:00Z",
+            "message": {
+                "role": "assistant",
+                "content": "You're out of usage credits. Run /model to switch models.",
+            },
+        }
+        with self.agent1_transcript.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(record) + "\n")
+
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "awaiting-input"},
+            ),
+            mock.patch.object(
+                orchestrator,
+                "agent1_model_id",
+                side_effect=("claude-fable-5", "claude-opus-4-7"),
+                create=True,
+            ),
+            mock.patch.object(orchestrator, "send_local_control", create=True),
+            mock.patch.object(
+                orchestrator,
+                "_wait_for_agent1_model",
+                side_effect=(False, True),
+                create=True,
+            ),
+            mock.patch.object(
+                orchestrator, "send_return_to_agent"
+            ) as send_return,
+            redirect_stdout(io.StringIO()),
+        ):
+            orchestrator.switch_model(
+                SimpleNamespace(run_file=str(self.run_file), model="opus")
+            )
+
+        send_return.assert_called_once_with("*claude:stage-2*", "claude-code")
+
     def test_raw_buffer_and_transcript_cli_bypasses_are_unavailable(self):
         with (
             redirect_stderr(io.StringIO()),

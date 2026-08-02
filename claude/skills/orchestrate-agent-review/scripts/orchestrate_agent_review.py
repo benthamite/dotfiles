@@ -36,6 +36,8 @@ RUN_STATUSES = {
 DELIVERY_INITIAL_WAIT_SECONDS = 2.0
 DELIVERY_RETRY_WAIT_SECONDS = 8.0
 DELIVERY_POLL_SECONDS = 0.1
+MODEL_SWITCH_INITIAL_WAIT_SECONDS = 3.0
+MODEL_SWITCH_CONFIRM_WAIT_SECONDS = 8.0
 
 IMPLEMENTATION_CONTRACT = """STAGE-ATOMIC IMPLEMENTATION CONTRACT
 
@@ -501,6 +503,47 @@ def send_return_to_agent(buffer: str, backend: str) -> None:
     returned = run_emacs_eval(expr)
     if returned != "submitted":
         raise SystemExit(f"unexpected return-submit result: {returned!r}")
+
+
+def send_local_control(buffer: str, command: str) -> None:
+    """Submit one fixed Claude local control command to BUFFER."""
+    expr = f'''
+(with-current-buffer {elisp_string(buffer)}
+  (let ((target (agent-claude-submit-command
+                 {elisp_string(command)}
+                 (get-buffer {elisp_string(buffer)}))))
+    (unless (buffer-live-p target)
+      (error "Claude local control did not resolve a live buffer"))
+    (princ "submitted")))
+'''
+    returned = run_emacs_eval(expr)
+    if returned != "submitted":
+        raise SystemExit(f"unexpected local-control result: {returned!r}")
+
+
+def agent1_model_id(buffer: str) -> str:
+    """Return the live Claude model id reported for BUFFER."""
+    expr = f'''
+(with-current-buffer {elisp_string(buffer)}
+  (let* ((fresh (and (fboundp 'agent-claude--parse-status-file)
+                     (agent-claude--parse-status-file)))
+         (status (or fresh
+                     (and (boundp 'agent-claude--status-data)
+                          agent-claude--status-data)))
+         (model (plist-get status :model))
+         (id (plist-get model :id)))
+    (princ (or id "unknown"))))
+'''
+    return run_emacs_eval(expr)
+
+
+def _wait_for_agent1_model(buffer: str, model: str, timeout: float) -> bool:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if model.casefold() in agent1_model_id(buffer).casefold():
+            return True
+        time.sleep(DELIVERY_POLL_SECONDS)
+    return False
 
 
 def pending_prompt_contains(buffer: str, marker: str) -> bool:
@@ -1183,6 +1226,15 @@ def stage_return(args: argparse.Namespace) -> None:
             f"Agent 1 is {live.get('state', 'unknown')}; "
             "stage return is available only after Agent 1 awaits input"
         )
+    text = _latest_implementation_return(state)
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    marker = f"STAGE COMPLETE: {state['stage']}"
+    if lines and lines[-1] == marker:
+        raise SystemExit("stage return is complete; use finish-phase")
+    print(text)
+
+
+def _latest_implementation_return(state: dict[str, Any]) -> str:
     submission = state["submissions"][-1]
     messages = transcript_messages(
         Path(state["agent1"]["transcript"]),
@@ -1190,12 +1242,56 @@ def stage_return(args: argparse.Namespace) -> None:
     )
     if not messages:
         raise SystemExit("no bounded implementation return is available")
-    text = messages[-1]["text"]
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
-    marker = f"STAGE COMPLETE: {state['stage']}"
-    if lines and lines[-1] == marker:
-        raise SystemExit("stage return is complete; use finish-phase")
-    print(text)
+    return messages[-1]["text"]
+
+
+def switch_model(args: argparse.Namespace) -> None:
+    """Recover an awaiting Claude implementation from a usage-credit stop."""
+    with run_lock(args.run_file):
+        state = load_run(args.run_file)
+        _require_no_pending(state)
+        if state["status"] != "implementation-active":
+            raise SystemExit("stage implementation is not active")
+        agent1 = state["agent1"]
+        if agent1["backend"] not in {"claude", "claude-code"}:
+            raise SystemExit("model switching is available only for Claude Agent 1")
+        latest = _latest_implementation_return(state).casefold()
+        if not (
+            "out of usage credits" in latest
+            or "usage credits are exhausted" in latest
+        ):
+            raise SystemExit(
+                "model switching requires an explicit bounded usage-credit stop"
+            )
+        live = buffer_state(agent1["buffer"])
+        if live.get("state") != "awaiting-input":
+            raise SystemExit(
+                f"Agent 1 is {live.get('state', 'unknown')}; "
+                "model switching is allowed only when awaiting input"
+            )
+
+        old_model = agent1_model_id(agent1["buffer"])
+        send_local_control(agent1["buffer"], f"/model {args.model}")
+        changed = _wait_for_agent1_model(
+            agent1["buffer"], args.model, MODEL_SWITCH_INITIAL_WAIT_SECONDS
+        )
+        if not changed:
+            live = buffer_state(agent1["buffer"])
+            if live.get("state") == "awaiting-input":
+                send_return_to_agent(agent1["buffer"], agent1["backend"])
+            changed = _wait_for_agent1_model(
+                agent1["buffer"], args.model, MODEL_SWITCH_CONFIRM_WAIT_SECONDS
+            )
+        if not changed:
+            raise EmacsClientError(
+                f"Claude did not report a verified switch to {args.model}"
+            )
+        new_model = agent1_model_id(agent1["buffer"])
+        if args.model.casefold() not in new_model.casefold():
+            raise EmacsClientError(
+                f"Claude reported {new_model!r}, not the requested {args.model!r}"
+            )
+    print(f"switched Agent 1 model: {old_model} -> {new_model}")
 
 
 def git_status(repo: Path) -> dict[str, str]:
@@ -1425,6 +1521,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.add_argument("--run-file", required=True)
     p.set_defaults(func=resume_stage)
+
+    p = sub.add_parser(
+        "switch-model",
+        help="Recover a credit-stopped Claude implementation on another model",
+    )
+    p.add_argument("--run-file", required=True)
+    p.add_argument("--model", required=True, choices=("opus", "sonnet"))
+    p.set_defaults(func=switch_model)
 
     p = sub.add_parser(
         "complete-stage", help="Close a run after stage-final verification"

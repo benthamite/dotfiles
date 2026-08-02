@@ -45,6 +45,10 @@ Violating the letter of these rules violates the workflow:
 - Never treat a task commit or batch boundary as permission to prompt Agent 1.
 - The only implementation recovery is `resume-stage`, which has fixed
   whole-stage wording and is allowed only when Agent 1 is awaiting input.
+  When the bounded stage return explicitly reports exhausted Claude usage
+  credits, `switch-model` may first change the same fixed Agent 1 session to
+  Opus or Sonnet. This is local session control, not another model turn or a
+  role handoff; verify the reported model change, then use `resume-stage`.
 - Run one independent stage-final acceptance pass only after Agent 1 returns
   the complete implementation.
 
@@ -256,6 +260,24 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" resume-stage \
 Its fixed prompt handles a completed stage whose return omitted the marker:
 Agent 1 must not repeat work or evidence and must reply with only the exact
 stage-completion marker.
+
+If the bounded `stage-return` explicitly says Claude exhausted its usage
+credits, preserve the Agent 1 role and recover without spending money or
+handing implementation to Agent 2:
+
+```bash
+python "$SKILL_DIR/scripts/orchestrate_agent_review.py" switch-model \
+  --run-file /tmp/improvement-5-run.json --model opus
+python "$SKILL_DIR/scripts/orchestrate_agent_review.py" resume-stage \
+  --run-file /tmp/improvement-5-run.json
+```
+
+`switch-model` is blocked outside an active, awaiting Claude implementation
+whose latest bounded return contains the explicit credit stop. It submits only
+Claude's local `/model` control, confirms a local dialog with Return when
+needed, and succeeds only after the status file reports the requested model.
+It does not alter the guarded phase, create an extra review, or itself resume
+implementation.
 
 ## Step 5: Create and review the spec
 

@@ -537,6 +537,19 @@ def agent1_model_id(buffer: str) -> str:
     return run_emacs_eval(expr)
 
 
+def agent1_process_live(buffer: str) -> bool:
+    """Return whether BUFFER still owns a live Claude terminal process."""
+    expr = f'''
+(with-current-buffer {elisp_string(buffer)}
+  (let ((process (get-buffer-process (current-buffer))))
+    (princ (if (and process (process-live-p process)) "live" "dead"))))
+'''
+    returned = run_emacs_eval(expr)
+    if returned not in {"live", "dead"}:
+        raise SystemExit(f"unexpected Claude process state: {returned!r}")
+    return returned == "live"
+
+
 def _wait_for_agent1_model(buffer: str, model: str, timeout: float) -> bool:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -1264,9 +1277,17 @@ def switch_model(args: argparse.Namespace) -> None:
                 "model switching requires an explicit bounded usage-credit stop"
             )
         live = buffer_state(agent1["buffer"])
-        if live.get("state") != "awaiting-input":
+        live_state = live.get("state")
+        reset_but_live = (
+            live_state == "unknown" and agent1_process_live(agent1["buffer"])
+        )
+        if live_state != "awaiting-input" and not reset_but_live:
+            if live_state == "unknown":
+                raise SystemExit(
+                    "Agent 1 state is unknown and its Claude process is not live"
+                )
             raise SystemExit(
-                f"Agent 1 is {live.get('state', 'unknown')}; "
+                f"Agent 1 is {live_state or 'unknown'}; "
                 "model switching is allowed only when awaiting input"
             )
 
@@ -1277,7 +1298,10 @@ def switch_model(args: argparse.Namespace) -> None:
         )
         if not changed:
             live = buffer_state(agent1["buffer"])
-            if live.get("state") == "awaiting-input":
+            live_state = live.get("state")
+            if live_state == "awaiting-input" or (
+                live_state == "unknown" and agent1_process_live(agent1["buffer"])
+            ):
                 send_return_to_agent(agent1["buffer"], agent1["backend"])
             changed = _wait_for_agent1_model(
                 agent1["buffer"], args.model, MODEL_SWITCH_CONFIRM_WAIT_SECONDS

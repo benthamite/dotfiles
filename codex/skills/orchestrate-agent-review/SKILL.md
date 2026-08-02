@@ -277,7 +277,10 @@ whose latest bounded return contains the explicit credit stop. It submits only
 Claude's local `/model` control, confirms a local dialog with Return when
 needed, and succeeds only after the status file reports the requested model.
 It does not alter the guarded phase, create an extra review, or itself resume
-implementation.
+implementation. If Emacs has reset an otherwise live Claude buffer's lifecycle
+metadata to `unknown`, the explicit bounded credit stop plus its live terminal
+process may stand in for the lost awaiting state; an unknown dead process stays
+blocked.
 
 ## Step 5: Create and review the spec
 

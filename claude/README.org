@@ -116,7 +116,10 @@ inaccessible. If that bounded return explicitly reports exhausted Claude usage
 credits, the helper can switch the same fixed author session to Opus or Sonnet,
 verify the model from Claude's status file, and leave the stage awaiting the
 ordinary fixed whole-stage resume. This local control neither transfers the
-implementation role nor creates another review turn.
+implementation role nor creates another review turn. A live Claude process and
+the explicit bounded stop also let the guard recover when Emacs has reset the
+otherwise idle session's lifecycle metadata to unknown; unknown dead sessions
+remain blocked.
 
 * Hooks
 

@@ -387,6 +387,14 @@ sources.  Binding both options in one named function also removes the
 duplicated lambda that =.dir-locals.el= and ~safe-local-eval-forms~
 previously had to match exactly for the hook to be considered safe.
 
+Both options are declared with a valueless ~defvar~ ahead of the function.
+=ox= is not required until the export runs, so without those declarations
+the byte-compiler does not know the symbols are dynamic and compiles the
+bindings as lexical ones, which the exporter never reads.  That failure is
+silent: the manuals are still written, just with the wrong options.  It
+also does not reproduce through ~emacsclient --eval~, which evaluates with
+dynamic binding and so appears to work.
+
 *** Exporting citation previews
 :PROPERTIES:
 :CUSTOM_ID: h:exporting-citation-previews

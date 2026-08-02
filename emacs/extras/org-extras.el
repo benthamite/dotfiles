@@ -1143,6 +1143,14 @@ was listed as excluded, and it is why the list had grown entries such as
 \"tlon/fede/archive\" that a recursive test makes redundant."
   (seq-some (lambda (directory) (file-in-directory-p file directory)) directories))
 
+;; Mark these `ox' options special at compile time.  `ox' is not required until
+;; the export actually runs, so without these declarations the byte-compiler does
+;; not know the symbols are dynamic and quietly compiles the `let' below into
+;; lexical bindings, which the exporter never reads.  The manuals were still
+;; generated with the wrong options and nothing reported a problem.
+(defvar org-export-preserve-breaks)
+(defvar org-export-with-title)
+
 ;;;###autoload
 (defun org-extras-export-manual-to-texinfo ()
   "Export the current buffer to Texinfo with the options a manual needs.

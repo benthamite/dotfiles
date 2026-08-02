@@ -27,10 +27,15 @@ An earlier version of this section claimed "sessions never carry over between co
 - **Warn before prompting.** Tell the user a Touch ID prompt is coming before running the command, so they're at the keyboard — a timed-out prompt means a retry, which is another prompt.
 - **Steady state should be silent.** Prompt bursts are acceptable during one-time provisioning; if routine operation of an automation requires recurring biometric approval, that's a design smell — restructure so runtime reads come from `Automations`.
 
-## Main Epoch 1Password vaults
+## Epoch 1Password vaults
 
-The Epoch tenant (`epoch-team.1password.com`) has several vaults; these are the three that matter most for routine work. For the full 9-vault topology and the "where does a new secret belong" rules, use the `epoch-vaults` skill; for create/edit/delete, use `store-secret`.
+Vault topology, what each vault holds, ownership, and the "where does a new
+secret belong" rules are Epoch project documentation, so they live with the
+Epoch workspace rather than here: use the `epoch-vaults` skill, and
+`store-secret` for create/edit/delete.
 
-- **Automations** — secrets consumed by Pablo's automations (GitHub Actions / scheduled jobs), behind `op://Automations/...` references. The read-only `OP_SERVICE_ACCOUNT_TOKEN` can read this vault directly; other vaults need the desktop-app biometric session. Pablo is owner.
-- **Operations** — shared org-account credentials: vendor logins, finance tools (e.g. Mercury cards), centralized org-level provider keys, and per-user provider keys. Shared/María-owned: reads are fine, writes need confirmation. (Note: this is *not* a catch-all for `ai-access-management` secrets — those are deliberately scattered across **Employee**, **Automations**, and **Benchmarking**, with only a few in Operations. Resolve any specific credential's location via the `epoch-vaults` skill or the LLM API providers tracker, not by assuming Operations.)
-- **Employee** — Pablo's personal vault for his own work credentials. Pablo is owner (owner-write, like Automations).
+They are deliberately not restated in this file. This repository is public, and
+a description of an employer's vault layout, its finance and vendor credential
+locations, and who owns each vault is an operational map of someone else's
+organization. The routing rules above are all an agent needs to pick the right
+wrapper; the placement rules belong to the workspace that owns them.

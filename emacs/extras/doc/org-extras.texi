@@ -111,6 +111,7 @@ Folding, cycling, and narrowing
 ID management
 
 * Automatic ID addition::
+* Adding missing IDs in bulk::
 * Updating ID locations::
 * Finding duplicate IDs::
 * Processing duplicate IDs::
@@ -887,6 +888,7 @@ heading.
 
 @menu
 * Automatic ID addition::
+* Adding missing IDs in bulk::
 * Updating ID locations::
 * Finding duplicate IDs::
 * Processing duplicate IDs::
@@ -915,16 +917,50 @@ The file must not be inside a directory listed in
 @item
 The file must not match @code{org-extras-id-auto-add-excluded-files}.
 @item
-The current heading must not match
-@code{org-extras-id-auto-add-excluded-headings}.
-@item
 For files in directories listed in
 @code{org-extras-id-auto-add-level-1-dirs}, only level-1 headings receive
 IDs.
 @end itemize
 
+Each heading is then tested individually against
+@code{org-extras-id-auto-add-excluded-headings} by
+@code{org-extras-id-auto-add-id-to-entry}, and skipped if it matches.  That
+test used to be applied once per file, against whichever heading point
+happened to sit on when the file was saved, so it almost never fired and
+the named headings were given IDs anyway.
+
 See @ref{Automatic ID exclusions} for details on configuring
 these options.
+
+@node Adding missing IDs in bulk
+@subsection Adding missing IDs in bulk
+
+@findex org-extras-id-add-missing-ids
+The command @code{org-extras-id-add-missing-ids} visits Org files, adds any
+missing heading IDs through
+@code{org-extras-id-auto-add-ids-to-headings-in-file}, and saves the files it
+changed.  Called with no argument it works on every candidate under
+@code{org-directory}; called from Lisp it accepts an explicit list of files.
+It returns a plist reporting how many files were scanned, changed and
+left alone, plus any that raised an error.
+
+This command exists because @code{before-save-hook} only reaches files saved
+from a buffer.  A file written by an external tool, a script or a pull
+keeps its headings without IDs, so Org Roam records the file but indexes
+no node inside it, and every roam-derived view — including
+@code{org-agenda-files}, which is built from the Org Roam database — is blind
+to its contents.
+
+@findex org-extras-id-missing-id-candidates
+@findex org-extras-id-file-may-lack-ids-p
+The function @code{org-extras-id-missing-id-candidates} returns the files the
+command works on by default: every Org file under @code{org-directory} that
+@code{org-extras-id-update-excluded-patterns} does not exclude and that
+@code{org-extras-id-file-may-lack-ids-p} reports as possibly incomplete.  That
+predicate is a cheap textual comparison of heading count against @code{:ID:}
+count, used to avoid visiting thousands of already-complete files.  It
+deliberately errs towards including a file, since a file wrongly
+included is merely visited and left unchanged.
 
 @node Updating ID locations
 @subsection Updating ID locations

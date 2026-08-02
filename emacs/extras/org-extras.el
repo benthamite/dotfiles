@@ -1114,23 +1114,102 @@ files by setting the value of the file-local variable
 `org-extras-id-auto-add-exclude-file' to t, and can make the function add IDs to
 only level-1 headings in files in specified directories by customizing
 `org-extras-id-auto-add-level-1-dirs'."
+  (when (org-extras-id-auto-add-eligible-buffer-p)
+    (org-map-entries #'org-extras-id-auto-add-id-to-entry
+		     (when (member (file-name-directory (buffer-file-name))
+				   org-extras-id-auto-add-level-1-dirs)
+		       "LEVEL=1"))))
+
+(defun org-extras-id-auto-add-eligible-buffer-p ()
+  "Return non-nil if the current buffer may receive automatic heading IDs."
   (when-let* ((file (buffer-file-name))
               (dir (file-name-directory file)))
-    (when (and (derived-mode-p 'org-mode)
-	       (string-match paths-dir-org file)
-	       (not buffer-read-only)
-	       (not org-extras-id-auto-add-exclude-file)
-	       (not (and (fboundp 'track-changes-inconsistent-state-p)
-			 (track-changes-inconsistent-state-p)))
-	       (not (member dir org-extras-id-auto-add-excluded-directories))
-	       (not (or (eq org-extras-id-auto-add-excluded-files t)
-			(and (listp org-extras-id-auto-add-excluded-files)
-			     (member file org-extras-id-auto-add-excluded-files))))
-	       (not (member (org-get-heading) org-extras-id-auto-add-excluded-headings)))
-      (org-map-entries #'org-id-get-create
-		       ;; parametrize this
-		       (when (member dir org-extras-id-auto-add-level-1-dirs)
-			 "LEVEL=1")))))
+    (and (derived-mode-p 'org-mode)
+	 (string-match paths-dir-org file)
+	 (not buffer-read-only)
+	 (not org-extras-id-auto-add-exclude-file)
+	 (not (and (fboundp 'track-changes-inconsistent-state-p)
+		   (track-changes-inconsistent-state-p)))
+	 (not (member dir org-extras-id-auto-add-excluded-directories))
+	 (not (or (eq org-extras-id-auto-add-excluded-files t)
+		  (and (listp org-extras-id-auto-add-excluded-files)
+		       (member file org-extras-id-auto-add-excluded-files)))))))
+
+(defun org-extras-id-auto-add-id-to-entry ()
+  "Create an ID for the entry at point unless its heading is excluded.
+The exclusion is tested per entry.  It used to be tested once per file against
+whatever heading point happened to sit on, which meant
+`org-extras-id-auto-add-excluded-headings' almost never took effect and headings
+it names were given IDs anyway."
+  (unless (member (org-get-heading) org-extras-id-auto-add-excluded-headings)
+    (org-id-get-create)))
+
+;;;###autoload
+(defun org-extras-id-add-missing-ids (&optional files)
+  "Add missing heading IDs to FILES and save the ones that changed.
+FILES defaults to every Org file under `org-directory' that
+`org-extras-id-update-excluded-patterns' does not exclude.  Each file is visited
+and passed through `org-extras-id-auto-add-ids-to-headings-in-file', so the same
+exclusions apply as when saving that file by hand.
+
+`org-extras-id-auto-add-ids-to-headings-in-file' runs from `before-save-hook',
+which reaches a file only when it is saved from a buffer.  A file written by
+anything else -- an external tool, a script, a pull -- keeps its headings
+without IDs, so Org Roam records the file but indexes no node in it, and every
+roam-derived view is blind to its contents.  This command reconciles those
+files.  Return a plist reporting how many files were scanned, changed and
+skipped."
+  (interactive)
+  (let ((targets (or files (org-extras-id-missing-id-candidates)))
+        (changed 0)
+        (unchanged 0)
+        (errors '()))
+    (dolist (file targets)
+      (condition-case error
+          (if (org-extras-id-add-missing-ids-in-file file)
+              (setq changed (1+ changed))
+            (setq unchanged (1+ unchanged)))
+        (error (push (cons file (error-message-string error)) errors))))
+    (when (called-interactively-p 'any)
+      (message "Added IDs in %d of %d files, %d failed"
+               changed (length targets) (length errors)))
+    (list :scanned (length targets) :changed changed :unchanged unchanged
+          :errors (nreverse errors))))
+
+(defun org-extras-id-missing-id-candidates ()
+  "Return the Org files under `org-directory' that may lack heading IDs."
+  (cl-remove-if-not
+   #'org-extras-id-file-may-lack-ids-p
+   (cl-remove-if #'org-extras-id--update-excluded-p
+                 (directory-files-recursively org-directory "\\.org\\'"))))
+
+(defun org-extras-id-file-may-lack-ids-p (file)
+  "Return non-nil if FILE holds more headings than ID properties.
+A cheap textual pre-filter, so that `org-extras-id-add-missing-ids' does not
+visit thousands of already-complete files.  It errs towards including a file:
+level-1-only directories and excluded headings make the comparison approximate,
+and a file wrongly included is merely visited and left unchanged."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (> (count-matches "^\\*+[ \t]" (point-min) (point-max))
+       (count-matches "^[ \t]*:ID:[ \t]" (point-min) (point-max)))))
+
+(defun org-extras-id-add-missing-ids-in-file (file)
+  "Add missing heading IDs to FILE, saving it only when something changed.
+Return non-nil if FILE was modified.  A file already open in a modified buffer
+is left alone, so that unsaved work is never written out as a side effect.
+Saving runs `before-save-hook' as usual, so a file that becomes a project by
+gaining indexable headings also gains its \"project\" tag."
+  (let ((existing (find-buffer-visiting file)))
+    (unless (and existing (buffer-modified-p existing))
+      (let ((buffer (or existing (find-file-noselect file t))))
+        (unwind-protect
+            (with-current-buffer buffer
+              (org-extras-id-auto-add-ids-to-headings-in-file)
+              (when (buffer-modified-p)
+                (save-buffer)
+                t))
+          (unless existing (kill-buffer buffer)))))))
 
 (defun org-extras--id-update-warning-handler (level message &rest args)
   "Run `org-extras-id-find-duplicate-ids' when duplicate IDs are found.

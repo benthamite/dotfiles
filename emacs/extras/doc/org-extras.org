@@ -750,14 +750,51 @@ several exclusion conditions:
 - The file must not be inside a directory listed in
   ~org-extras-id-auto-add-excluded-directories~.
 - The file must not match ~org-extras-id-auto-add-excluded-files~.
-- The current heading must not match
-  ~org-extras-id-auto-add-excluded-headings~.
 - For files in directories listed in
   ~org-extras-id-auto-add-level-1-dirs~, only level-1 headings receive
   IDs.
 
+Each heading is then tested individually against
+~org-extras-id-auto-add-excluded-headings~ by
+~org-extras-id-auto-add-id-to-entry~, and skipped if it matches.  That
+test used to be applied once per file, against whichever heading point
+happened to sit on when the file was saved, so it almost never fired and
+the named headings were given IDs anyway.
+
 See [[#h:automatic-id-exclusions][Automatic ID exclusions]] for details on configuring
 these options.
+
+*** Adding missing IDs in bulk
+:PROPERTIES:
+:CUSTOM_ID: h:adding-missing-ids
+:END:
+
+#+findex: org-extras-id-add-missing-ids
+The command ~org-extras-id-add-missing-ids~ visits Org files, adds any
+missing heading IDs through
+~org-extras-id-auto-add-ids-to-headings-in-file~, and saves the files it
+changed.  Called with no argument it works on every candidate under
+~org-directory~; called from Lisp it accepts an explicit list of files.
+It returns a plist reporting how many files were scanned, changed and
+left alone, plus any that raised an error.
+
+This command exists because ~before-save-hook~ only reaches files saved
+from a buffer.  A file written by an external tool, a script or a pull
+keeps its headings without IDs, so Org Roam records the file but indexes
+no node inside it, and every roam-derived view — including
+~org-agenda-files~, which is built from the Org Roam database — is blind
+to its contents.
+
+#+findex: org-extras-id-missing-id-candidates
+#+findex: org-extras-id-file-may-lack-ids-p
+The function ~org-extras-id-missing-id-candidates~ returns the files the
+command works on by default: every Org file under ~org-directory~ that
+~org-extras-id-update-excluded-patterns~ does not exclude and that
+~org-extras-id-file-may-lack-ids-p~ reports as possibly incomplete.  That
+predicate is a cheap textual comparison of heading count against ~:ID:~
+count, used to avoid visiting thousands of already-complete files.  It
+deliberately errs towards including a file, since a file wrongly
+included is merely visited and left unchanged.
 
 *** Updating ID locations
 :PROPERTIES:

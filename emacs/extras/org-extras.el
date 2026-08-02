@@ -75,6 +75,16 @@ the function `vulpea-agenda-files-update')."
   :type '(repeat file)
   :group 'org-extras)
 
+(defcustom org-extras-id-auto-add-excluded-regexps nil
+  "Path patterns to exclude from `org-extras-id-auto-add-ids-to-headings-in-file'.
+Each entry is matched against a file's absolute name.  Use this for a rule that
+picks out files by shape rather than by location, which neither
+`org-extras-id-auto-add-excluded-directories' nor
+`org-extras-id-auto-add-excluded-files' can express: every README in a tree, say,
+where naming each one would go stale as directories are added."
+  :type '(repeat regexp)
+  :group 'org-extras)
+
 (defcustom org-extras-id-auto-add-excluded-files
   (list paths-file-orb-noter-template)
   "Files to exclude from `org-extras-id-auto-add-ids-to-headings-in-file'.
@@ -1130,6 +1140,7 @@ only level-1 headings in files in specified directories by customizing
 	 (not (org-extras-buffer-edit-unsafe-p))
 	 (not (org-extras-id-file-under-any-p
 	       file org-extras-id-auto-add-excluded-directories))
+	 (not (org-extras-id-file-matches-excluded-regexp-p file))
 	 (not (or (eq org-extras-id-auto-add-excluded-files t)
 		  (and (listp org-extras-id-auto-add-excluded-files)
 		       (member file org-extras-id-auto-add-excluded-files)))))))
@@ -1239,7 +1250,13 @@ be refused."
   "Return non-nil if FILE is ruled out of automatic ID addition by its path."
   (or (org-extras-id--update-excluded-p file)
       (org-extras-id-file-under-any-p
-       file org-extras-id-auto-add-excluded-directories)))
+       file org-extras-id-auto-add-excluded-directories)
+      (org-extras-id-file-matches-excluded-regexp-p file)))
+
+(defun org-extras-id-file-matches-excluded-regexp-p (file)
+  "Return non-nil if FILE matches `org-extras-id-auto-add-excluded-regexps'."
+  (seq-some (lambda (pattern) (string-match-p pattern file))
+            org-extras-id-auto-add-excluded-regexps))
 
 (defun org-extras-id-file-may-lack-ids-p (file)
   "Return non-nil if a heading in FILE that should carry an ID does not.

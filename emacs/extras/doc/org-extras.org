@@ -130,6 +130,17 @@ listed directory excluded its own files but none of its subdirectories:
 listed as excluded.  Entries that name a subdirectory of another entry
 are consequently redundant now, though harmless.
 
+#+vindex: org-extras-id-auto-add-excluded-regexps
+The user option ~org-extras-id-auto-add-excluded-regexps~ is a list of
+patterns matched against a file's absolute name.  It covers rules that
+pick files out by shape rather than by location, which neither of the
+other two path options can express.  The default value is ~nil~; the
+configuration uses it for every =README.org= under the dotfiles tree,
+which carry no ~CUSTOM_ID~ and whose heading names repeat across forty
+files, and for =dotfiles/archive/=, which is outside the Org Roam
+database altogether so an ID there could never be indexed.  Naming those
+files individually would go stale as directories are added.
+
 The user option ~org-extras-id-auto-add-excluded-files~ is either a list
 of file paths to skip, or ~t~ to disable automatic ID addition globally.
 Its default value is a list containing ~paths-file-orb-noter-template~.

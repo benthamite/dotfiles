@@ -2872,5 +2872,95 @@ if os.path.lexists(mode_link) and (
         )
 
 
+class FixDriveErrorsSkillPolicyTests(unittest.TestCase):
+    """The tracked fix-drive-errors pair replaces the retired parent-Drive
+    shadow workflow that externalized directories behind in-Drive symlinks.
+
+    These tests pin the replacement skill's safety contract: paired bodies,
+    the Drive symlink invariant, the read-only tracked audit as the entry
+    point, hard prohibitions on account reconnection and internal database
+    edits, and the complete absence of symlink-creating or legacy
+    externalization instructions.
+    """
+
+    CLAUDE_SKILL = "claude/skills/fix-drive-errors/SKILL.md"
+    CODEX_SKILL = "codex/skills/fix-drive-errors/SKILL.md"
+    SYMLINK_INVARIANT = (
+        "No filesystem symlink may exist anywhere under ~/My Drive"
+    )
+
+    @classmethod
+    def setUpClass(cls):
+        cls.module = load_script(
+            "ai_config_sync_audit_script_fix_drive_errors",
+            DOTFILES / "bin" / "ai-config-sync",
+        )
+
+    def skill_texts(self) -> dict[str, str]:
+        texts: dict[str, str] = {}
+        for rel in (self.CLAUDE_SKILL, self.CODEX_SKILL):
+            path = DOTFILES / rel
+            self.assertTrue(path.is_file(), f"Missing tracked skill file: {rel}")
+            texts[rel] = path.read_text(encoding="utf-8")
+        return texts
+
+    def test_tracked_pair_exists_with_matching_bodies(self):
+        texts = self.skill_texts()
+
+        self.assertEqual(
+            self.module.normalized_skill_content(texts[self.CLAUDE_SKILL]),
+            self.module.normalized_skill_content(texts[self.CODEX_SKILL]),
+        )
+
+    def test_skill_states_the_drive_symlink_invariant(self):
+        for rel, text in self.skill_texts().items():
+            self.assertIn(self.SYMLINK_INVARIANT, text, rel)
+            self.assertIn("every in-Drive symlink is an error", text, rel)
+
+    def test_skill_starts_with_the_tracked_read_only_audit(self):
+        for rel, text in self.skill_texts().items():
+            self.assertIn("bin/drive-workspace audit", text, rel)
+
+    def test_skill_prohibits_reconnect_and_internal_database_edits(self):
+        for rel, text in self.skill_texts().items():
+            self.assertIn(
+                "Never disconnect or reconnect the Google Drive account",
+                text,
+                rel,
+            )
+            self.assertIn(
+                "Never edit Google Drive's internal databases", text, rel
+            )
+
+    def test_skill_never_creates_symlinks_or_reintroduces_externalization(self):
+        forbidden = (
+            "ln -s",
+            "ln --symbolic",
+            "os.symlink",
+            "symlink_to",
+            "nosync",
+        )
+        for rel, text in self.skill_texts().items():
+            lowered = text.lower()
+            for pattern in forbidden:
+                self.assertNotIn(pattern, lowered, f"{rel} contains {pattern!r}")
+
+    def test_skill_is_registered_as_a_paired_manifest_entry(self):
+        manifest = json.loads(
+            (DOTFILES / "ai-config-sync.json").read_text(encoding="utf-8")
+        )
+        entries = [
+            item
+            for item in manifest.get("skills", [])
+            if item.get("name") == "fix-drive-errors"
+        ]
+
+        self.assertEqual(1, len(entries), "fix-drive-errors manifest entry")
+        entry = entries[0]
+        self.assertEqual("paired", entry.get("status"))
+        self.assertEqual(self.CLAUDE_SKILL, entry.get("claude"))
+        self.assertEqual(self.CODEX_SKILL, entry.get("codex"))
+
+
 if __name__ == "__main__":
     unittest.main()

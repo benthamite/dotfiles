@@ -98,6 +98,15 @@ The paired =orchestrate-agent-review= helper keeps implementation stages atomic.
 Its fixed resume path tells an agent whose work is already complete to return
 only the required stage marker instead of repeating the work or its evidence.
 
+The paired =fix-drive-errors= skill owns Google Drive sync-error triage. It
+snapshots the native error panel, runs the read-only =bin/drive-workspace=
+audit before any change, and routes every repair through that tool's
+journaled transactions. Its invariant is that no filesystem symlink may exist
+anywhere under =~/My Drive=, so every in-Drive symlink is an error to repair,
+and the skill never disconnects the Drive account or edits Drive's internal
+databases. It replaces the retired untracked parent-Drive workflow that
+externalized directories behind in-Drive symlinks.
+
 The =move-session-log= skill bundles a Python adapter
 (=skills/move-session-log/scripts/move_session_log.py=) that mirrors the Codex
 adapter's interface — single-session import plus =--dry-run=/=--rename OLD

@@ -116,6 +116,13 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
+      "name": "fix-drive-errors",
+      "claude": "claude/skills/fix-drive-errors/SKILL.md",
+      "codex": "codex/skills/fix-drive-errors/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
       "name": "generate-readme",
       "claude": "claude/skills/generate-readme/SKILL.md",
       "codex": "codex/skills/generate-readme/SKILL.md",

@@ -22,6 +22,12 @@ bodies and auxiliary files should agree unless =ai-config-sync.json= records an
 intentional difference; the parity audit ignores only the documented
 tool-specific frontmatter keys.
 
+Untracked parent-Drive skill copies under =~/My Drive/.codex/skills= (and
+their Claude peers) are legacy shadows outside Git. They are inspect-only
+pending retirement: the tracked =fix-drive-errors= pair replaces their Drive
+error workflow, and no skill may create a filesystem symlink under
+=~/My Drive=.
+
 Programmatic skills live under =codex/programmatic-skills/= and are exposed at
 =~/.codex/programmatic-skills=. They are selected explicitly by the batch skill
 runner rather than ordinary interactive discovery. Private skills live under

@@ -29,6 +29,9 @@
 ;;; Code:
 
 (require 'elpaca)
+(require 'eieio)
+(require 'lisp-mode)
+(require 'loadhist)
 
 ;;;; Variables
 
@@ -42,6 +45,10 @@
 
 (defvar elpaca-extras--build-reload-statuses (make-hash-table :test #'equal)
   "Status table for asynchronous build-and-reload requests.")
+
+(define-error 'elpaca-extras-restart-required
+  "A package class layout changed; restart Emacs before loading it"
+  'user-error)
 
 (defun elpaca-extras--without-print-limits (function &rest args)
   "Call FUNCTION with printer limits disabled.
@@ -59,27 +66,295 @@ values of `print-length' or `print-level' must not truncate those forms."
 
 ;;;; Functions
 
-(defun elpaca-extras--source-feature-info (file)
-  "Return FILE's provided feature and direct feature requirements.
-The result is a plist with `:feature' and `:requires' entries."
+(defun elpaca-extras--source-feature-info (file &optional artifact)
+  "Return FILE's features, requirements, and EIEIO class layouts.
+ARTIFACT is the exact file that a subsequent `load' will evaluate."
+  (let (classes features requirements)
+    (dolist (source-form (elpaca-extras--source-forms file))
+      (dolist (form (elpaca-extras--source-feature-forms source-form))
+        (pcase (car form)
+          ('provide
+           (when-let* ((name (elpaca-extras--quoted-symbol (cadr form))))
+             (cl-pushnew name features)))
+          ('require
+           (when-let* ((name (elpaca-extras--quoted-symbol (cadr form))))
+             (cl-pushnew name requirements)))))
+      (dolist (form
+               (elpaca-extras--source-class-forms
+                source-form
+                (or (null artifact)
+                    (string-match-p (rx ".el" eos) artifact))))
+        (push (elpaca-extras--source-class-layout form) classes)))
+    (list :source file
+          :artifact (or artifact file)
+          :features (nreverse features)
+          :requires (nreverse requirements)
+          :classes (nreverse classes))))
+
+(defun elpaca-extras--source-forms (file)
+  "Read and return all top-level Lisp forms in FILE."
   (with-temp-buffer
     (insert-file-contents file)
-    (let (feature requirements)
-      (goto-char (point-min))
-      (while (re-search-forward
-              "^[[:space:]]*(\\(provide\\|require\\)\\_>" nil t)
-        (goto-char (match-beginning 0))
-        (condition-case nil
-            (let* ((form (read (current-buffer)))
-                   (value (cadr form))
-                   (name (and (eq (car-safe value) 'quote)
-                              (cadr value))))
-              (when (symbolp name)
-                (pcase (car form)
-                  ('provide (setq feature name))
-                  ('require (cl-pushnew name requirements)))))
-          (error (forward-line 1))))
-      (list :feature feature :requires (nreverse requirements)))))
+    (goto-char (point-min))
+    (set-syntax-table emacs-lisp-mode-syntax-table)
+    (let (forms)
+      (while (progn (forward-comment (point-max)) (not (eobp)))
+        (push (read (current-buffer)) forms))
+      (nreverse forms))))
+
+(defun elpaca-extras--source-feature-forms (form)
+  "Return definite load-time feature forms nested in FORM."
+  (cond
+   ((not (consp form)) nil)
+   ((memq (car form) '(provide require)) (list form))
+   ((memq (car form) '(eval-and-compile progn))
+    (mapcan #'elpaca-extras--source-feature-forms (cdr form)))
+   (t nil)))
+
+(defun elpaca-extras--source-class-forms (form &optional sourcep)
+  "Return definite load-time EIEIO class forms nested in FORM.
+SOURCEP means the selected load artifact is interpreted source, so forms in
+`eval-when-compile' will execute."
+  (cond
+   ((not (consp form)) nil)
+   ((eq (car form) 'defclass) (list form))
+   ((eq (car form) 'eval-when-compile)
+    (when sourcep
+      (mapcan (lambda (nested)
+                (elpaca-extras--source-class-forms nested sourcep))
+              (cdr form))))
+   ((or (memq (car form) '(function quote))
+        (eq (car form) (intern "`")))
+    nil)
+   ((memq (car form) '(eval-and-compile progn))
+    (mapcan (lambda (nested)
+              (elpaca-extras--source-class-forms nested sourcep))
+            (cdr form)))
+   ((elpaca-extras--contains-source-class-p form)
+    (error "Cannot inspect defclass wrapped by %s" (car form)))
+   (t nil)))
+
+(defun elpaca-extras--contains-source-class-p (form)
+  "Return non-nil when executable FORM contains a class declaration."
+  (cond
+   ((not (consp form)) nil)
+   ((eq (car form) 'defclass) t)
+   ((or (memq (car form)
+              '(cl-defmacro cl-defmethod cl-defsubst cl-defun defmacro
+                 defsubst defun eval-when-compile function lambda quote))
+        (eq (car form) (intern "`")))
+    nil)
+   (t (cl-some #'elpaca-extras--contains-source-class-p (cdr form)))))
+
+(defun elpaca-extras--source-class-layout (form)
+  "Return the EIEIO class layout declared by defclass FORM."
+  (let ((name (cadr form))
+        (parents (caddr form))
+        (slots (cadddr form)))
+    (unless (and (symbolp name)
+                 (proper-list-p parents)
+                 (cl-every #'symbolp parents)
+                 (proper-list-p slots))
+      (error "Cannot determine class layout from %S" form))
+    (list :name name
+          :parents parents
+          :slots (mapcar #'elpaca-extras--source-slot-layout slots))))
+
+(defun elpaca-extras--source-slot-layout (slot)
+  "Return SLOT's name and normalized allocation."
+  (let* ((name (if (consp slot) (car slot) slot))
+         (options (and (consp slot) (cdr slot)))
+         (allocation (plist-get options :allocation)))
+    (unless (and (symbolp name)
+                 (proper-list-p options)
+                 (memq allocation '(nil :class :instance)))
+      (error "Cannot determine slot layout from %S" slot))
+    (cons name (if (eq allocation :class) :class :instance))))
+
+(defun elpaca-extras--quoted-symbol (value)
+  "Return VALUE's quoted symbol, or nil when VALUE is not one."
+  (and (eq (car-safe value) 'quote) (symbolp (cadr value)) (cadr value)))
+
+(defun elpaca-extras--assert-reloadable-class-layouts (package file-info)
+  "Reject unsafe EIEIO layouts before reloading PACKAGE's FILE-INFO."
+  (let ((layouts (elpaca-extras--class-layouts file-info)))
+    ;; Literal declarations can be checked before any package code changes.
+    ;; A class previously created by one of these exact files but absent from
+    ;; the literal declarations came from a macro or computed form.  Refuse it
+    ;; here rather than mistaking an unknown layout for a safe one.
+    (dolist (class-name
+             (elpaca-extras--loaded-class-names-for-files file-info))
+      (unless (assq class-name layouts)
+        (signal
+         'elpaca-extras-restart-required
+         (list
+          (format
+           "Cannot reload %s: class %s is not statically inspectable; restart Emacs"
+           package class-name)))))
+    (dolist (layout (mapcar #'cdr layouts))
+      (elpaca-extras--assert-class-layout package layout layouts))))
+
+(defun elpaca-extras--assert-class-layout (package layout layouts)
+  "Reject LAYOUT when it would invalidate a live class from PACKAGE.
+LAYOUTS indexes other prospective class definitions that will load with it."
+  (let* ((class-name (plist-get layout :name))
+         (current-class (find-class class-name nil))
+         (source-parents (plist-get layout :parents)))
+    (when (and current-class
+               (or
+                (not
+                 (equal source-parents
+                        (elpaca-extras--class-parent-names current-class)))
+                (not
+                 (equal
+                  (plist-get
+                   (elpaca-extras--source-effective-layout layout layouts)
+                   :instance)
+                  (plist-get
+                   (elpaca-extras--class-effective-layout current-class)
+                   :instance)))))
+      (signal
+       'elpaca-extras-restart-required
+       (list
+        (format "Cannot reload %s: class %s changed layout; restart Emacs"
+                package class-name))))))
+
+(defun elpaca-extras--class-layouts (file-info)
+  "Index selected class layouts in FILE-INFO by class name."
+  (let (layouts)
+    (dolist (info file-info)
+      (dolist (layout (plist-get info :classes))
+        (let ((existing (assq (plist-get layout :name) layouts)))
+          (if existing
+              (unless (equal (cdr existing) layout)
+                (signal
+                 'elpaca-extras-restart-required
+                 (list
+                  (format "Class %s has divergent source declarations"
+                          (plist-get layout :name)))))
+            (push (cons (plist-get layout :name) layout) layouts)))))
+    (nreverse layouts)))
+
+(defun elpaca-extras--loaded-class-names-for-files (file-info)
+  "Return live EIEIO classes previously defined by FILE-INFO's files."
+  (let (history-entries result)
+    (dolist (info file-info)
+      (let ((files (list (plist-get info :source)
+                         (plist-get info :artifact))))
+        (dolist (feature (plist-get info :features))
+          (when (featurep feature)
+            (when-let* ((loaded-file (feature-file feature))
+                        (entry (assoc loaded-file load-history)))
+              (cl-pushnew entry history-entries :test #'eq))))
+        (dolist (entry load-history)
+          (when (cl-some
+                 (lambda (file)
+                   (elpaca-extras--same-library-file-p (car entry) file))
+                 files)
+            (cl-pushnew entry history-entries :test #'eq)))))
+    (dolist (entry history-entries)
+      (dolist (item (cdr entry))
+        (when (and (eq (car-safe item) 'define-type)
+                   (find-class (cdr item) nil))
+          (cl-pushnew (cdr item) result))))
+    (nreverse result)))
+
+(defun elpaca-extras--same-library-file-p (left right)
+  "Return non-nil when LEFT and RIGHT name the same Lisp library artifact."
+  (and (stringp left)
+       (stringp right)
+       (or
+        (and (file-exists-p left)
+             (file-exists-p right)
+             (file-equal-p left right))
+        (equal
+         (file-name-sans-extension (expand-file-name left))
+         (file-name-sans-extension (expand-file-name right))))))
+
+(defun elpaca-extras--guarded-eieio-defclass
+    (package original &rest arguments)
+  "Call ORIGINAL class definition with a live-layout guard for PACKAGE.
+ARGUMENTS are those passed to `eieio-defclass-internal'."
+  (let* ((class-name (nth 0 arguments))
+         (current-class (find-class class-name nil)))
+    (when current-class
+      (let ((layout
+             (list :name class-name
+                   :parents (nth 1 arguments)
+                   :slots (mapcar #'elpaca-extras--source-slot-layout
+                                  (nth 2 arguments)))))
+        (elpaca-extras--assert-class-layout
+         package layout (list (cons class-name layout)))))
+    (apply original arguments)))
+
+(defun elpaca-extras--call-with-class-layout-guard (package function)
+  "Call FUNCTION while guarding every runtime class definition in PACKAGE."
+  (let ((original (symbol-function 'eieio-defclass-internal)))
+    (cl-letf (((symbol-function 'eieio-defclass-internal)
+               (lambda (&rest arguments)
+                 (apply #'elpaca-extras--guarded-eieio-defclass
+                        package original arguments))))
+      (funcall function))))
+
+(defun elpaca-extras--class-parent-names (class)
+  "Return CLASS's direct parent names in precedence order."
+  (mapcar #'eieio-class-name (eieio-class-parents class)))
+
+(defun elpaca-extras--class-effective-layout (class)
+  "Return CLASS's effective instance and class slot names."
+  (list
+   :instance
+   (mapcar #'eieio-slot-descriptor-name (eieio-class-slots class))
+   :class
+   (mapcar #'eieio-slot-descriptor-name
+           (eieio--class-class-slots class))))
+
+(defun elpaca-extras--source-effective-layout
+    (layout layouts &optional visiting)
+  "Return the prospective effective slot LAYOUT.
+LAYOUTS indexes selected source layouts.  VISITING detects cyclic source
+inheritance."
+  (let ((class-name (plist-get layout :name))
+        (effective (list :instance nil :class nil)))
+    (when (memq class-name visiting)
+      (error "Cyclic source inheritance involving %s" class-name))
+    (dolist (parent-name (plist-get layout :parents))
+      (let* ((source-parent (cdr (assq parent-name layouts)))
+             (parent-layout
+              (if source-parent
+                  (elpaca-extras--source-effective-layout
+                   source-parent layouts (cons class-name visiting))
+                (when-let* ((parent (find-class parent-name nil)))
+                  (elpaca-extras--class-effective-layout parent)))))
+        (unless parent-layout
+          (error "Cannot determine parent class layout for %s" parent-name))
+        (dolist (slot (plist-get parent-layout :instance))
+          (setq effective
+                (elpaca-extras--add-slot-to-layout
+                 effective (cons slot :instance))))
+        (dolist (slot (plist-get parent-layout :class))
+          (setq effective
+                (elpaca-extras--add-slot-to-layout
+                 effective (cons slot :class))))))
+    (dolist (slot (plist-get layout :slots))
+      (setq effective
+            (elpaca-extras--add-slot-to-layout effective slot)))
+    effective))
+
+(defun elpaca-extras--add-slot-to-layout (layout slot)
+  "Return LAYOUT after adding SLOT according to EIEIO allocation rules."
+  (let ((instance-slots (plist-get layout :instance))
+        (class-slots (plist-get layout :class))
+        (name (car slot))
+        (allocation (cdr slot)))
+    (when (memq name class-slots)
+      (setq allocation :class))
+    (if (eq allocation :class)
+        (unless (memq name class-slots)
+          (setq class-slots (nconc class-slots (list name))))
+      (unless (memq name instance-slots)
+        (setq instance-slots (nconc instance-slots (list name)))))
+    (list :instance instance-slots :class class-slots)))
 
 (defun elpaca-extras--order-features (package-features requirements)
   "Order PACKAGE-FEATURES after their dependencies in REQUIREMENTS.
@@ -102,6 +377,13 @@ REQUIREMENTS maps each feature to the features it directly requires."
       (dolist (feature selected)
         (visit feature)))
     (nreverse ordered)))
+
+(defun elpaca-extras--source-artifact (source package-dir)
+  "Return the exact load artifact for SOURCE within PACKAGE-DIR."
+  (or (locate-file
+       (file-name-sans-extension (file-name-nondirectory source))
+       (list package-dir) (get-load-suffixes))
+      source))
 
 ;; github.com/progfolio/elpaca/issues/250
 (defun elpaca-extras-reload (package &optional allp)
@@ -129,39 +411,68 @@ preserved unless the new code changes their defaults."
          (package-files (and package-dir
                              (directory-files package-dir 'full (rx ".el" eos))))
          (feature-info
-          (mapcar #'elpaca-extras--source-feature-info package-files))
+          (mapcar
+           (lambda (source)
+             (let ((artifact
+                    (elpaca-extras--source-artifact source package-dir)))
+               (elpaca-extras--source-feature-info source artifact)))
+           package-files))
          (requirements (make-hash-table :test #'eq))
          (package-features
           (cl-loop for info in feature-info
-                   for feature = (plist-get info :feature)
-                   when feature
-                   do (puthash feature (plist-get info :requires)
-                               requirements)
-                   and collect feature)))
+                   append
+                   (cl-loop for feature in (plist-get info :features)
+                            do (puthash feature (plist-get info :requires)
+                                        requirements)
+                            collect feature))))
     (unless allp
       (setf package-features (seq-intersection package-features features))
       ;; Always include the main feature: when the user explicitly
       ;; rebuilds a package, the main module must be loaded even if
       ;; it was only set up via autoloads and never fully loaded.
       (cl-pushnew package package-features))
+    (let ((selected-info
+           (cl-remove-if-not
+            (lambda (info)
+              (or (seq-intersection
+                   (plist-get info :features) package-features)
+                  (elpaca-extras--same-library-file-p
+                   (plist-get info :artifact) located)))
+            feature-info)))
+      (elpaca-extras--assert-reloadable-class-layouts package selected-info))
     ;; Preserve the main feature's established first-load behavior, then load
     ;; subfeatures after their in-package requirements.  In particular, an
-    ;; EIEIO subclass must be redefined after its superclass so live instances
-    ;; inherit newly added slots during a package reload.
+    ;; unchanged EIEIO subclass must be redefined after its superclass.
     (let ((main-feature-p (memq package package-features)))
       (setq package-features
             (elpaca-extras--order-features
              (delq package package-features) requirements))
       (when main-feature-p
         (push package package-features)))
-    ;; Force-load each file via `load' rather than `require'.
+    ;; Force-load each exact file via `load' rather than `require'.
     ;; `require' is a no-op when the feature is in `features', and
     ;; elpaca's rebuild can re-add features (via autoloads) before
-    ;; we get here.  `load' always evaluates the file.
-    (dolist (feature package-features)
-      (load (locate-file (symbol-name feature) load-path
-                         (get-load-suffixes))
-            nil 'nomessage))
+    ;; we get here.  Loading by file also handles a module that provides more
+    ;; than one feature without evaluating the same module twice.
+    (let ((feature-artifacts (make-hash-table :test #'eq))
+          artifacts)
+      (dolist (info feature-info)
+        (dolist (feature (plist-get info :features))
+          (puthash feature (plist-get info :artifact) feature-artifacts)))
+      (puthash package located feature-artifacts)
+      (dolist (feature package-features)
+        (when-let* ((artifact
+                     (or (gethash feature feature-artifacts)
+                         (locate-file (symbol-name feature) load-path
+                                      (get-load-suffixes)))))
+          (unless (cl-find artifact artifacts
+                           :test #'elpaca-extras--same-library-file-p)
+            (setq artifacts (nconc artifacts (list artifact))))))
+      (elpaca-extras--call-with-class-layout-guard
+       package
+       (lambda ()
+         (dolist (artifact artifacts)
+           (load artifact nil 'nomessage)))))
     (when package-features
       (message "Reloaded: %s" (mapconcat #'symbol-name package-features " ")))))
 
@@ -237,12 +548,22 @@ TOKEN, when non-nil, identifies the status entry to update."
       (remove-hook 'elpaca-post-queue-hook callback)
       (pcase status
         ('finished
-         (elpaca-extras-reload pkg)
-         (elpaca-extras--record-build-reload-status
-          token :package pkg :state 'finished
-          :message (format "%s and reloaded: %s" verb pkg))
-         (message "%s and reloaded: %s" verb pkg)
-         'finished)
+         (condition-case reload-error
+             (progn
+               (elpaca-extras-reload pkg)
+               (elpaca-extras--record-build-reload-status
+                token :package pkg :state 'finished
+                :message (format "%s and reloaded: %s" verb pkg))
+               (message "%s and reloaded: %s" verb pkg)
+               'finished)
+           (error
+            (let ((message
+                   (format "Reload failed for %s: %s"
+                           pkg (error-message-string reload-error))))
+              (elpaca-extras--record-build-reload-status
+               token :package pkg :state 'failed :message message)
+              (message "%s" message)
+              'failed))))
         ('failed
          (let ((message (format "Build failed for %s: %s" pkg
                                 (or (and e (nth 2 (car (elpaca<-log e))))

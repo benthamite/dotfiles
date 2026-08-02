@@ -119,7 +119,9 @@ ordinary fixed whole-stage resume. This local control neither transfers the
 implementation role nor creates another review turn. A live Claude process and
 the explicit bounded stop also let the guard recover when Emacs has reset the
 otherwise idle session's lifecycle metadata to unknown; unknown dead sessions
-remain blocked.
+remain blocked. Once the requested model is verified, the helper restores that
+buffer's blocked/waiting state and leaves the ordinary whole-stage resume guard
+unchanged.
 
 * Hooks
 

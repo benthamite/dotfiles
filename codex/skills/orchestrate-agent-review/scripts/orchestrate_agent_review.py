@@ -550,6 +550,20 @@ def agent1_process_live(buffer: str) -> bool:
     return returned == "live"
 
 
+def reconcile_agent1_waiting(buffer: str) -> None:
+    """Restore a reset Claude lifecycle state from a verified blocked stop."""
+    expr = f'''
+(with-current-buffer {elisp_string(buffer)}
+  (agent-session-event (current-buffer) 'blocked)
+  (princ (format "%s" (agent-session-display-state (current-buffer)))))
+'''
+    returned = run_emacs_eval(expr)
+    if returned not in {"waiting", "background-waiting"}:
+        raise EmacsClientError(
+            f"Claude waiting-state reconciliation reported {returned!r}"
+        )
+
+
 def _wait_for_agent1_model(buffer: str, model: str, timeout: float) -> bool:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -1292,29 +1306,35 @@ def switch_model(args: argparse.Namespace) -> None:
             )
 
         old_model = agent1_model_id(agent1["buffer"])
-        send_local_control(agent1["buffer"], f"/model {args.model}")
-        changed = _wait_for_agent1_model(
-            agent1["buffer"], args.model, MODEL_SWITCH_INITIAL_WAIT_SECONDS
-        )
-        if not changed:
-            live = buffer_state(agent1["buffer"])
-            live_state = live.get("state")
-            if live_state == "awaiting-input" or (
-                live_state == "unknown" and agent1_process_live(agent1["buffer"])
-            ):
-                send_return_to_agent(agent1["buffer"], agent1["backend"])
+        if args.model.casefold() in old_model.casefold():
+            new_model = old_model
+        else:
+            send_local_control(agent1["buffer"], f"/model {args.model}")
             changed = _wait_for_agent1_model(
-                agent1["buffer"], args.model, MODEL_SWITCH_CONFIRM_WAIT_SECONDS
+                agent1["buffer"], args.model, MODEL_SWITCH_INITIAL_WAIT_SECONDS
             )
-        if not changed:
-            raise EmacsClientError(
-                f"Claude did not report a verified switch to {args.model}"
-            )
-        new_model = agent1_model_id(agent1["buffer"])
+            if not changed:
+                live = buffer_state(agent1["buffer"])
+                live_state = live.get("state")
+                if live_state == "awaiting-input" or (
+                    live_state == "unknown"
+                    and agent1_process_live(agent1["buffer"])
+                ):
+                    send_return_to_agent(agent1["buffer"], agent1["backend"])
+                changed = _wait_for_agent1_model(
+                    agent1["buffer"], args.model, MODEL_SWITCH_CONFIRM_WAIT_SECONDS
+                )
+            if not changed:
+                raise EmacsClientError(
+                    f"Claude did not report a verified switch to {args.model}"
+                )
+            new_model = agent1_model_id(agent1["buffer"])
         if args.model.casefold() not in new_model.casefold():
             raise EmacsClientError(
                 f"Claude reported {new_model!r}, not the requested {args.model!r}"
             )
+        if reset_but_live:
+            reconcile_agent1_waiting(agent1["buffer"])
     print(f"switched Agent 1 model: {old_model} -> {new_model}")
 
 

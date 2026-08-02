@@ -957,11 +957,18 @@ class StageAtomicRunTests(unittest.TestCase):
             mock.patch.object(
                 orchestrator, "_wait_for_agent1_model", return_value=True
             ),
+            mock.patch.object(
+                orchestrator,
+                "reconcile_agent1_waiting",
+                create=True,
+            ) as reconcile_waiting,
             redirect_stdout(io.StringIO()),
         ):
             orchestrator.switch_model(
                 SimpleNamespace(run_file=str(self.run_file), model="opus")
             )
+
+        reconcile_waiting.assert_called_once_with("*claude:stage-2*")
 
     def test_switch_model_rejects_unknown_state_when_process_is_not_live(self):
         self.start_implementation()
@@ -992,6 +999,43 @@ class StageAtomicRunTests(unittest.TestCase):
             orchestrator.switch_model(
                 SimpleNamespace(run_file=str(self.run_file), model="opus")
             )
+
+    def test_switch_model_reconciles_unknown_when_model_is_already_selected(self):
+        self.start_implementation()
+        record = {
+            "timestamp": "2026-08-02T12:00:00Z",
+            "message": {
+                "role": "assistant",
+                "content": "You're out of usage credits. Run /model to switch models.",
+            },
+        }
+        with self.agent1_transcript.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(record) + "\n")
+
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "unknown"},
+            ),
+            mock.patch.object(
+                orchestrator, "agent1_process_live", return_value=True
+            ),
+            mock.patch.object(
+                orchestrator, "agent1_model_id", return_value="claude-opus-5"
+            ),
+            mock.patch.object(orchestrator, "send_local_control") as send_control,
+            mock.patch.object(
+                orchestrator, "reconcile_agent1_waiting", create=True
+            ) as reconcile_waiting,
+            redirect_stdout(io.StringIO()),
+        ):
+            orchestrator.switch_model(
+                SimpleNamespace(run_file=str(self.run_file), model="opus")
+            )
+
+        send_control.assert_not_called()
+        reconcile_waiting.assert_called_once_with("*claude:stage-2*")
 
     def test_raw_buffer_and_transcript_cli_bypasses_are_unavailable(self):
         with (

@@ -279,8 +279,10 @@ needed, and succeeds only after the status file reports the requested model.
 It does not alter the guarded phase, create an extra review, or itself resume
 implementation. If Emacs has reset an otherwise live Claude buffer's lifecycle
 metadata to `unknown`, the explicit bounded credit stop plus its live terminal
-process may stand in for the lost awaiting state; an unknown dead process stays
-blocked.
+process may stand in for the lost awaiting state. After the requested model is
+verified, the helper restores that buffer's blocked/waiting lifecycle state so
+the ordinary `resume-stage` guard remains unchanged; an unknown dead process
+stays blocked.
 
 ## Step 5: Create and review the spec
 

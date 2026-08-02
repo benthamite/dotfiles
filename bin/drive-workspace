@@ -7,6 +7,14 @@ structural only: it never calls Git, never requires a source to exist on
 disk, and never mutates anything.  Every schema violation raises
 ManifestError; nothing is warned about and then accepted.
 
+The remote-coverage gate proves that every commit that matters (HEADs,
+branches, tags, stash, submodule HEADs) is reachable from a ref some
+remote advertises, before any move is allowed.  It is the sole exception
+to pure reads: advertised refs are fetched into a run-scoped
+refs/drive-workspace-audit/<run-id>/ namespace that is deleted in a
+finally path, with every pre-existing ref verified byte-identical
+afterwards.  There is no push path and no waiver option.
+
 The audit layer observes filesystem and Git state without mutating either:
 traversal never follows a symlink, Git is invoked read-only with optional
 locks disabled, and every unreadable path is an error rather than an empty
@@ -703,14 +711,13 @@ def audit_filesystem(root: Path) -> list[dict]:
     return sorted(records, key=lambda record: record["path"])
 
 
-def _git_read(repo: Path, *args: str) -> str:
-    """Run one read-only Git command and return its stdout.
+def _run_git(repo: Path, args: tuple, stdin_text: str | None = None) -> str:
+    """Shared fail-closed core for every Git invocation in this module.
 
     shell=False and check=True always; GIT_OPTIONAL_LOCKS=0 keeps even
-    `git status` from touching the index, so observation never mutates
-    the repository.  Output is decoded as strict UTF-8 regardless of
-    locale so the payload cannot vary by environment; non-UTF-8 output
-    is an AuditError, never a raw UnicodeDecodeError.
+    `git status` from touching the index.  Output is decoded as strict
+    UTF-8 regardless of locale so results cannot vary by environment;
+    non-UTF-8 output is an AuditError, never a raw UnicodeDecodeError.
     """
     command = ["git", "-C", str(repo), *args]
     env = dict(os.environ, GIT_OPTIONAL_LOCKS="0")
@@ -723,6 +730,7 @@ def _git_read(repo: Path, *args: str) -> str:
             encoding="utf-8",
             errors="strict",
             env=env,
+            input=stdin_text,
         )
     except FileNotFoundError as error:
         raise AuditError(f"Audit cannot find git: {error}") from error
@@ -736,6 +744,30 @@ def _git_read(repo: Path, *args: str) -> str:
             f"Audit git output is not valid UTF-8: {' '.join(command)} ({error})"
         ) from error
     return completed.stdout
+
+
+def _git_read(repo: Path, *args: str) -> str:
+    """Run one read-only Git command and return its stdout.
+
+    Observation never mutates the repository; see _run_git for the
+    fail-closed execution contract.  Commands that write refs must use
+    _git_write_audit_refs instead, never this helper.
+    """
+    return _run_git(repo, args)
+
+
+def _git_write_audit_refs(
+    repo: Path, *args: str, stdin_text: str | None = None
+) -> str:
+    """Run one Git command that WRITES refs for the coverage audit.
+
+    Deliberately named apart from _git_read: the only writes this module
+    ever performs are the run-scoped refs/drive-workspace-audit/<run-id>/
+    namespace lifecycle -- fetching advertised remote refs into it and
+    deleting exactly that namespace afterwards.  Same fail-closed
+    execution contract as _run_git.
+    """
+    return _run_git(repo, args, stdin_text=stdin_text)
 
 
 def snapshot_git(repo: Path) -> dict:
@@ -759,6 +791,250 @@ def snapshot_git(repo: Path) -> dict:
         "submodules": _git_read(repo, "submodule", "status", "--recursive"),
         "symlinks": scan_symlinks(repo),
     }
+
+
+AUDIT_REF_ROOT = "refs/drive-workspace-audit"
+
+
+def _is_ancestor(repo: Path, ancestor: str, descendant: str) -> bool:
+    """Report whether ancestor is reachable from descendant.
+
+    `git merge-base --is-ancestor` answers with exit code 1 for "no",
+    which is the only non-error failure; every other nonzero exit is an
+    AuditError, so a missing object can never read as "not covered but
+    fine" -- it fails the audit outright.
+    """
+    command = [
+        "git", "-C", str(repo), "merge-base", "--is-ancestor",
+        ancestor, descendant,
+    ]
+    env = dict(os.environ, GIT_OPTIONAL_LOCKS="0")
+    try:
+        completed = subprocess.run(
+            command,
+            shell=False,
+            check=False,
+            capture_output=True,
+            encoding="utf-8",
+            errors="strict",
+            env=env,
+        )
+    except FileNotFoundError as error:
+        raise AuditError(f"Audit cannot find git: {error}") from error
+    if completed.returncode == 0:
+        return True
+    if completed.returncode == 1:
+        return False
+    raise AuditError(
+        f"Audit git command failed: {' '.join(command)} "
+        f"({(completed.stderr or '').strip()})"
+    )
+
+
+def _worktree_head_commits(repo: Path) -> list[str]:
+    """Every worktree HEAD commit, primary and linked alike."""
+    heads: list[str] = []
+    for line in _git_read(repo, "worktree", "list", "--porcelain").splitlines():
+        if line.startswith("HEAD "):
+            oid = line.split(" ", 1)[1].strip()
+            if oid.strip("0"):
+                heads.append(oid)
+    return heads
+
+
+def _checked_out_submodules(repo: Path) -> list[Path]:
+    """Absolute worktree paths of every populated submodule, recursively."""
+    output = _git_read(repo, "submodule", "foreach", "--recursive", "--quiet", "pwd")
+    return [Path(line) for line in output.splitlines() if line]
+
+
+def _required_commits(repo: Path) -> tuple[dict[str, str], list[str]]:
+    """Map each required commit OID to the reason it is required.
+
+    Required commits: the primary HEAD, every `git worktree list` HEAD,
+    refs/heads/*, refs/tags/* (annotated tags peeled to their target
+    commit), and refs/stash.  A ref that does not peel to a commit is a
+    blocker, never silently skipped.
+    """
+    required: dict[str, str] = {}
+    blockers: list[str] = []
+    head = _git_read(repo, "rev-parse", "--verify", "HEAD^{commit}").strip()
+    required[head] = "HEAD"
+    for oid in _worktree_head_commits(repo):
+        required.setdefault(oid, "worktree HEAD")
+    listing = _git_read(
+        repo,
+        "for-each-ref",
+        "--format=%(refname)%00%(objecttype)%00%(objectname)"
+        "%00%(*objecttype)%00%(*objectname)",
+        "refs/heads", "refs/tags", "refs/stash",
+    )
+    for line in listing.splitlines():
+        refname, objecttype, objectname, peeled_type, peeled_name = (
+            line.split("\x00")
+        )
+        if objecttype == "commit":
+            required.setdefault(objectname, refname)
+        elif peeled_type == "commit":
+            required.setdefault(peeled_name, refname)
+        else:
+            blockers.append(
+                f"{repo}: {refname} does not peel to a commit "
+                f"({objectname} is a {objecttype})"
+            )
+    return required, blockers
+
+
+def _advertised_refs(repo: Path, remote: str) -> list[tuple[str, str]]:
+    """The (refname, OID) pairs one remote advertises, via ls-remote."""
+    pairs: list[tuple[str, str]] = []
+    for line in _git_read(repo, "ls-remote", "--refs", remote).splitlines():
+        oid, _tab, refname = line.partition("\t")
+        pairs.append((refname, oid))
+    return pairs
+
+
+def _delete_audit_namespace(repo: Path, namespace: str, before: str) -> None:
+    """Delete exactly this run's audit refs and prove nothing else moved.
+
+    Deletion goes through `git update-ref --stdin` with the expected old
+    value for each ref.  Afterwards the full ref listing must be
+    byte-identical to the pre-audit snapshot; any difference is an
+    AuditError.  Fetched objects that became unreachable are left for
+    normal Git maintenance.
+    """
+    listing = _git_read(
+        repo, "for-each-ref", "--format=%(refname)%00%(objectname)", namespace
+    )
+    instructions = []
+    for line in listing.splitlines():
+        refname, oid = line.split("\x00")
+        instructions.append(f"delete {refname} {oid}")
+    if instructions:
+        _git_write_audit_refs(
+            repo, "update-ref", "--stdin",
+            stdin_text="\n".join(instructions) + "\n",
+        )
+    after = _git_read(repo, "for-each-ref", "--format=%(refname)%00%(objectname)")
+    if after != before:
+        raise AuditError(
+            f"Audit ref cleanup failed: refs in {repo} no longer match "
+            f"their pre-audit snapshot"
+        )
+
+
+def _cover_repo(repo: Path, required: dict[str, str]) -> list[str]:
+    """Check one repository's required commits against its remotes.
+
+    Advertised refs are fetched only into a unique run namespace with
+    explicit force refspecs, --no-tags, and an empty --refmap so neither
+    refs/remotes/* nor refs/tags/* can move; there is no --prune and no
+    fetch of unqualified object IDs.  Every advertised pair must resolve
+    to its fetched audit ref, and every required commit must be an
+    ancestor of at least one advertised tip.  The namespace is deleted in
+    a finally path whether or not blockers were found.
+    """
+    blockers: list[str] = []
+    tips: set[str] = set()
+    namespace = f"{AUDIT_REF_ROOT}/{os.urandom(16).hex()}"
+    before = _git_read(repo, "for-each-ref", "--format=%(refname)%00%(objectname)")
+    try:
+        remotes = _git_read(repo, "remote").split()
+        for remote_index, remote in enumerate(sorted(remotes)):
+            try:
+                advertised = _advertised_refs(repo, remote)
+            except AuditError as error:
+                blockers.append(
+                    f"{repo}: remote {remote!r} advertisement failed: {error}"
+                )
+                continue
+            fetchable: list[tuple[str, str]] = []
+            for refname, oid in advertised:
+                if refname.startswith("refs/"):
+                    fetchable.append((refname, oid))
+                else:
+                    blockers.append(
+                        f"{repo}: remote {remote!r} advertises non-ref "
+                        f"{refname!r}; refusing to fetch it"
+                    )
+            if not fetchable:
+                continue
+            refspecs = [
+                f"+{refname}:{namespace}/{remote_index}/{position}"
+                for position, (refname, _oid) in enumerate(fetchable)
+            ]
+            try:
+                _git_write_audit_refs(
+                    repo, "fetch", "--quiet", "--no-tags", "--no-prune",
+                    "--no-recurse-submodules", "--no-write-fetch-head",
+                    "--no-auto-maintenance", "--refmap=", remote, *refspecs,
+                )
+            except AuditError as error:
+                blockers.append(
+                    f"{repo}: fetch from remote {remote!r} failed: {error}"
+                )
+                continue
+            for position, (refname, oid) in enumerate(fetchable):
+                audit_ref = f"{namespace}/{remote_index}/{position}"
+                try:
+                    fetched = _git_read(
+                        repo, "rev-parse", "--verify", audit_ref
+                    ).strip()
+                except AuditError:
+                    blockers.append(
+                        f"{repo}: advertised {refname} ({oid}) from remote "
+                        f"{remote!r} is missing after fetch"
+                    )
+                    continue
+                if fetched != oid:
+                    blockers.append(
+                        f"{repo}: advertised {refname} on remote {remote!r} "
+                        f"moved during audit (expected {oid}, fetched {fetched})"
+                    )
+                    continue
+                try:
+                    tip = _git_read(
+                        repo, "rev-parse", "--verify", f"{audit_ref}^{{commit}}"
+                    ).strip()
+                except AuditError:
+                    # A non-commit advertisement (e.g. a tag of a blob)
+                    # cannot cover commits; it is verified above but
+                    # contributes no tip.
+                    continue
+                tips.add(tip)
+        for oid in sorted(required):
+            if not any(_is_ancestor(repo, oid, tip) for tip in sorted(tips)):
+                blockers.append(
+                    f"{repo}: unpublished commit {oid} ({required[oid]}) is "
+                    f"not reachable from any advertised remote ref"
+                )
+    finally:
+        _delete_audit_namespace(repo, namespace, before)
+    return blockers
+
+
+def remote_coverage(root: Path) -> dict:
+    """Prove every commit that matters is on some remote, fail-closed.
+
+    Required commits: the primary HEAD, every linked-worktree HEAD,
+    refs/heads/*, refs/tags/* (peeled), refs/stash, and each recursively
+    checked-out submodule's HEAD (checked against that submodule's own
+    remotes).  A failed advertisement or fetch, a missing or moved
+    object, or an uncovered commit lands in the blocker list; unpublished
+    commit OIDs appear verbatim there.  The repository is never mutated
+    beyond the run-scoped audit ref namespace, which is deleted in a
+    finally path with pre-existing refs verified byte-identical.  There
+    is no push path and no waiver option.
+    """
+    root = Path(root)
+    required, blockers = _required_commits(root)
+    blockers.extend(_cover_repo(root, required))
+    for submodule in _checked_out_submodules(root):
+        head = _git_read(submodule, "rev-parse", "--verify", "HEAD^{commit}").strip()
+        blockers.extend(
+            _cover_repo(submodule, {head: "checked-out submodule HEAD"})
+        )
+    return {"root": str(root), "blockers": sorted(blockers), "ok": not blockers}
 
 
 def build_audit_payload(manifest: Manifest) -> dict:

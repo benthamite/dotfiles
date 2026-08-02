@@ -397,5 +397,188 @@ class AuditTests(unittest.TestCase):
         self.assertEqual([], payload["symlinks"])
 
 
+class RemoteCoverageTests(unittest.TestCase):
+    """remote_coverage() proves every commit that matters is on some remote.
+
+    Every remote is a local bare repository created with `git init --bare`;
+    nothing in this class touches the network.  Each test snapshots every
+    pre-existing ref before the audit and asserts afterwards that the refs
+    are byte-identical and that the run-scoped audit namespace is absent,
+    on success and failure paths alike.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.module = load_script("drive_workspace", ROOT / "bin/drive-workspace")
+
+    def setUp(self):
+        self.root = Path(
+            tempfile.mkdtemp(prefix=".drive-workspace-remote-", dir=Path.home())
+        )
+        self.addCleanup(shutil.rmtree, self.root)
+        # Isolate every git call -- the fixtures' and the module's own --
+        # from user and system configuration.
+        self._saved_env = {
+            name: os.environ.get(name)
+            for name in ("GIT_CONFIG_GLOBAL", "GIT_CONFIG_SYSTEM")
+        }
+        os.environ["GIT_CONFIG_GLOBAL"] = os.devnull
+        os.environ["GIT_CONFIG_SYSTEM"] = os.devnull
+        self.addCleanup(self._restore_env)
+        self.env = dict(os.environ)
+
+    def _restore_env(self):
+        for name, value in self._saved_env.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+
+    def git(self, repo: Path, *args: str) -> str:
+        completed = subprocess.run(
+            ["git", "-C", str(repo), *args],
+            check=True,
+            capture_output=True,
+            encoding="utf-8",
+            env=self.env,
+        )
+        return completed.stdout
+
+    def make_repo(self, path: Path) -> Path:
+        path.mkdir(parents=True)
+        self.git(path, "init", "--quiet", "-b", "main")
+        self.git(path, "config", "user.email", "coverage-test@example.invalid")
+        self.git(path, "config", "user.name", "Coverage Test")
+        return path
+
+    def make_bare(self, name: str) -> Path:
+        path = self.root / name
+        subprocess.run(
+            ["git", "init", "--quiet", "--bare", "-b", "main", str(path)],
+            check=True,
+            capture_output=True,
+            env=self.env,
+        )
+        return path
+
+    def commit(self, repo: Path, name: str, content: str) -> str:
+        (repo / name).write_text(content, encoding="utf-8")
+        self.git(repo, "add", name)
+        self.git(repo, "commit", "--quiet", "-m", f"add {name}")
+        return self.git(repo, "rev-parse", "HEAD").strip()
+
+    def make_published_repo(self) -> Path:
+        """One repository with a single commit pushed to a bare origin."""
+        repo = self.make_repo(self.root / "repo")
+        self.commit(repo, "a.txt", "a\n")
+        origin = self.make_bare("origin.git")
+        self.git(repo, "remote", "add", "origin", str(origin))
+        self.git(repo, "push", "--quiet", "origin", "main")
+        return repo
+
+    def run_coverage(self, repo: Path, *extra_repos: Path) -> dict:
+        """Run remote_coverage and assert it left every repository untouched."""
+        repos = (repo, *extra_repos)
+        ref_format = "--format=%(refname)%00%(objectname)"
+        before = {r: self.git(r, "for-each-ref", ref_format) for r in repos}
+        result = self.module.remote_coverage(repo)
+        for r in repos:
+            self.assertEqual(before[r], self.git(r, "for-each-ref", ref_format))
+            self.assertEqual(
+                "", self.git(r, "for-each-ref", "refs/drive-workspace-audit")
+            )
+        return result
+
+    def assert_blocked_by(self, result: dict, oid: str) -> None:
+        self.assertFalse(result["ok"])
+        self.assertTrue(
+            any(oid in blocker for blocker in result["blockers"]),
+            f"{oid} not named in blockers: {result['blockers']}",
+        )
+
+    def test_published_branch_has_no_blockers(self):
+        repo = self.make_published_repo()
+        result = self.run_coverage(repo)
+        self.assertEqual([], result["blockers"])
+        self.assertTrue(result["ok"])
+
+    def test_unpublished_branch_commit_oid_is_a_blocker(self):
+        repo = self.make_published_repo()
+        self.git(repo, "switch", "--quiet", "-c", "topic")
+        oid = self.commit(repo, "b.txt", "b\n")
+        self.assert_blocked_by(self.run_coverage(repo), oid)
+
+    def test_stash_commit_oid_is_a_blocker(self):
+        repo = self.make_published_repo()
+        (repo / "a.txt").write_text("stashed\n", encoding="utf-8")
+        self.git(repo, "stash", "push", "--quiet")
+        oid = self.git(repo, "rev-parse", "refs/stash").strip()
+        self.assert_blocked_by(self.run_coverage(repo), oid)
+
+    def test_detached_linked_worktree_head_is_a_blocker(self):
+        repo = self.make_published_repo()
+        worktree = self.root / "wt"
+        self.git(repo, "worktree", "add", "--quiet", "--detach", str(worktree))
+        oid = self.commit(worktree, "w.txt", "w\n")
+        self.assert_blocked_by(self.run_coverage(repo), oid)
+
+    def test_checked_out_submodule_head_is_a_blocker(self):
+        sub_origin = self.make_bare("sub-origin.git")
+        seed = self.make_repo(self.root / "sub-seed")
+        self.commit(seed, "s.txt", "s\n")
+        self.git(seed, "remote", "add", "origin", str(sub_origin))
+        self.git(seed, "push", "--quiet", "origin", "main")
+
+        superproject = self.make_repo(self.root / "super")
+        self.commit(superproject, "base.txt", "base\n")
+        # protocol.file.allow is a test-fixture concession: modern git
+        # blocks local-path submodule clones by default.  The tool under
+        # test never sets it.
+        self.git(
+            superproject, "-c", "protocol.file.allow=always",
+            "submodule", "add", "--quiet", str(sub_origin), "sub",
+        )
+        self.git(superproject, "commit", "--quiet", "-m", "add submodule")
+        origin = self.make_bare("super-origin.git")
+        self.git(superproject, "remote", "add", "origin", str(origin))
+        self.git(superproject, "push", "--quiet", "origin", "main")
+
+        sub = superproject / "sub"
+        self.git(sub, "config", "user.email", "coverage-test@example.invalid")
+        self.git(sub, "config", "user.name", "Coverage Test")
+        oid = self.commit(sub, "extra.txt", "x\n")
+        self.assert_blocked_by(self.run_coverage(superproject, sub), oid)
+
+    def test_advertised_non_head_ref_provides_coverage(self):
+        repo = self.make_published_repo()
+        self.git(repo, "switch", "--quiet", "-c", "topic")
+        self.commit(repo, "b.txt", "b\n")
+        self.git(repo, "push", "--quiet", "origin", "topic:refs/odd/keep")
+        result = self.run_coverage(repo)
+        self.assertEqual([], result["blockers"])
+
+    def test_annotated_tag_target_is_required_until_the_tag_is_pushed(self):
+        repo = self.make_published_repo()
+        first = self.git(repo, "rev-parse", "HEAD").strip()
+        tagged = self.commit(repo, "b.txt", "b\n")
+        self.git(repo, "tag", "-a", "v1", "-m", "v1")
+        self.git(repo, "reset", "--hard", "--quiet", first)
+        self.assert_blocked_by(self.run_coverage(repo), tagged)
+        self.git(repo, "push", "--quiet", "origin", "v1")
+        covered = self.run_coverage(repo)
+        self.assertEqual([], covered["blockers"])
+
+    def test_unreachable_remote_is_a_blocker_not_a_crash(self):
+        repo = self.make_repo(self.root / "repo")
+        self.commit(repo, "a.txt", "a\n")
+        self.git(repo, "remote", "add", "origin", str(self.root / "missing.git"))
+        result = self.run_coverage(repo)
+        self.assertFalse(result["ok"])
+        self.assertTrue(
+            any("origin" in blocker for blocker in result["blockers"]),
+            result["blockers"],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -7,9 +7,6 @@
     "project_local_documentation_mode": "generated",
     "no_silent_sync": true
   },
-  "local": {
-    "instructions": "cross-directory-global-pair: claude/CLAUDE.md pairs with codex/AGENTS.md per the instructions array, not with a same-directory sibling; transitional marker for committing the global pair from a linked worktree, removed in the immediately following commit"
-  },
   "instructions": [
     {
       "name": "global-instructions",

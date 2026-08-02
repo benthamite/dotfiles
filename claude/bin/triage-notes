@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+"""Run a configured Org triage engine with an enforced personal corpus boundary.
+
+Private configuration: ~/.config/triage-notes/config.json, or the explicit
+TRIAGE_NOTES_CONFIG path. See triage-personal-todos for the engine contract.
+No engine is bundled or discovered in another organization's workspace.
+"""
+
+import importlib.util
+import json
+import os
+from pathlib import Path
+import sys
+
+
+def main(arguments):
+    config_path = Path(os.environ.get(
+        "TRIAGE_NOTES_CONFIG", str(Path.home() / ".config/triage-notes/config.json")
+    )).expanduser()
+    try:
+        config = json.loads(config_path.read_text())
+        if (not isinstance(config, dict) or config.get("schema_version") != 1
+                or not isinstance(config.get("engine"), str)
+                or not isinstance(config.get("excluded_roots"), list)
+                or not config["excluded_roots"]
+                or any(not isinstance(root, str) for root in config["excluded_roots"])):
+            raise ValueError("expected schema_version 1, engine and nonempty excluded_roots")
+        engine = Path(config["engine"]).expanduser()
+        excluded = tuple(Path(root).expanduser() for root in config["excluded_roots"])
+        if not engine.is_absolute() or any(not root.is_absolute() for root in excluded):
+            raise ValueError("engine and excluded_roots must be absolute paths")
+        engine = engine.resolve(strict=True)
+        if not engine.is_file():
+            raise ValueError("engine is not a regular file")
+        excluded = tuple(root.resolve() for root in excluded)
+    except (OSError, ValueError, TypeError):
+        print("triage-notes: missing or invalid private engine configuration; "
+              "see triage-personal-todos prerequisites. No notes were accessed.", file=sys.stderr)
+        return 1
+
+    sys.dont_write_bytecode = True
+    sys.path.insert(0, str(engine.parent))
+    spec = importlib.util.spec_from_file_location("triage_project_todos", engine)
+    if spec is None or spec.loader is None:
+        print("triage-notes: configured engine cannot be loaded", file=sys.stderr)
+        return 1
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module.main(arguments or ["--help"], required_corpus="personal-notes",
+                       excluded_roots=excluded)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

@@ -162,6 +162,13 @@ repository at all rather than substituting the session's own, since judging a
 tree the command never touched both refuses correct commits and approves ones it
 should refuse.
 
+A change under =claude/skills=, =claude/hooks=, =claude/settings*.json= or
+=claude/CLAUDE.md= must be accompanied by an update to this file. The guard
+accepts only that exact path, named among a command's =git add= arguments: some
+other README does not stand in for it, and a commit message mentioning the file
+is not an update to it. Both were previously accepted, which is how the triage
+split reached this repository undocumented.
+
 Guards that inspect a Git command read its arguments only, never its message.
 Heredoc bodies are dropped before lexing, because an apostrophe in prose made
 the lexer raise and the parser fail closed on a commit that staged no Elisp at

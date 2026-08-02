@@ -66,8 +66,16 @@ if [ "$HAS_CLAUDE_CHANGES" = false ]; then
     fi
   fi
 fi
+# Accept the overview only when the command stages that exact path. This used to
+# match the bare substring README.org anywhere in the command, so staging some
+# other README satisfied it -- `git add claude/skills/... claude/bin/README.org`
+# passed the guard and the overview went unwritten -- and so did a commit message
+# that merely mentioned the file.
 if [ "$HAS_README" = false ]; then
-  if echo "$COMMAND" | grep -qF 'README.org'; then
+  # Only the `git add` arguments count, never the rest of the command: a commit
+  # message that mentions the file is not an update to it.
+  README_ADD_ARGS=$(echo "$COMMAND" | grep -oE 'git[[:space:]]+add[[:space:]]+[^;&|]*' || true)
+  if [ -n "$README_ADD_ARGS" ] && echo "$README_ADD_ARGS" | grep -qE '(^|[[:space:]"'"'"'])(\./)?claude/README\.org([[:space:]"'"'"']|$)'; then
     HAS_README=true
   fi
 fi

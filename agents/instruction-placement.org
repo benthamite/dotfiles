@@ -2,6 +2,9 @@
 #+author: Pablo Stafforini
 
 * Purpose
+:PROPERTIES:
+:ID:       6942FB37-8945-418F-BAA2-F2C1B6AF31C3
+:END:
 
 This is the canonical placement policy for agent-facing guidance in the
 dotfiles setup. Use it to decide whether guidance belongs in =CLAUDE.md=,
@@ -12,6 +15,9 @@ Tool-specific READMEs document activation details. Project-specific convention
 docs may specialize this policy for a project family.
 
 * Principle
+:PROPERTIES:
+:ID:       98895450-00F9-43D3-9A55-1294667A1037
+:END:
 
 Use progressive disclosure. Keep always-loaded context small, stable, and
 high-signal; put detailed workflows and volatile state where agents load them
@@ -22,6 +28,9 @@ their scope. Add to them only when the guidance is both important and likely to
 matter in nearly every session covered by that file.
 
 * Placement Matrix
+:PROPERTIES:
+:ID:       2BFE7317-3E34-4FE7-8D93-CEDCD0BE52EF
+:END:
 
 | Guidance type | Preferred home | Use when |
 |---------------+----------------+----------|
@@ -35,6 +44,9 @@ matter in nearly every session covered by that file.
 | Claude/Codex artifact topology and sync | =agents/README.org= | It concerns counterpart paths, activation, sync checks, or non-portable tool differences. |
 
 * Decision Test
+:PROPERTIES:
+:ID:       969FB80B-08A4-4FA7-9CC6-B5F228E29375
+:END:
 
 1. Does this need to be in context for almost every session in this scope? If
    not, keep it out of =CLAUDE.md= and =AGENTS.md=.
@@ -50,6 +62,9 @@ matter in nearly every session covered by that file.
    artifact or record an explicit sync exemption, then run the sync audit.
 
 * Anti-Patterns
+:PROPERTIES:
+:ID:       2C7C395D-99B5-461B-BA3A-AA3CA13656B5
+:END:
 
 - Long SOPs pasted into =CLAUDE.md= or =AGENTS.md=.
 - Duplicating the same policy in global, project, skill, and README files.
@@ -60,6 +75,9 @@ matter in nearly every session covered by that file.
   user informed" without concrete behavior or verification.
 
 * Related Docs
+:PROPERTIES:
+:ID:       73CA286D-B25B-4C44-86D7-7111AEAAB49E
+:END:
 
 - =agents/README.org= defines the Claude/Codex synchronization topology.
 - =claude/README.org= and =codex/README.org= document tool-specific activation

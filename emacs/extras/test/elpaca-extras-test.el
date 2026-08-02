@@ -269,6 +269,40 @@
           (should-not (memq 'pkg-extra loaded)))
       (setq features saved-features))))
 
+(ert-deftest elpaca-extras-test-reload-orders-feature-dependencies ()
+  "Reload package subfeatures after the package features they require."
+  (let ((loaded nil)
+        (saved-features features))
+    (unwind-protect
+        (cl-letf (((symbol-function 'locate-file)
+                   (lambda (name _path _suffixes)
+                     (format "/fake/pkg/%s.el" name)))
+                  ((symbol-function 'directory-files)
+                   (lambda (_dir _full _pattern)
+                     '("/fake/pkg/pkg-child.el"
+                       "/fake/pkg/pkg-base.el")))
+                  ((symbol-function 'insert-file-contents)
+                   (lambda (file &rest _)
+                     (erase-buffer)
+                     (if (string-match-p "child" file)
+                         (insert "(require 'pkg-base)\n(provide 'pkg-child)")
+                       (insert "(provide 'pkg-base)"))
+                     (goto-char (point-min))))
+                  ((symbol-function 'load)
+                   (lambda (file &rest _)
+                     (setq loaded
+                           (append
+                            loaded
+                            (list
+                             (intern
+                              (file-name-sans-extension
+                               (file-name-nondirectory file))))))))
+                  ((symbol-function 'message) #'ignore))
+          (setq features '(pkg-child pkg-base unrelated-feature))
+          (elpaca-extras-reload 'pkg)
+          (should (equal loaded '(pkg pkg-base pkg-child))))
+      (setq features saved-features))))
+
 (ert-deftest elpaca-extras-test-reload-allp-loads-all-features ()
   "With ALLP non-nil, all discovered features are loaded regardless of `features'."
   (let* ((loaded nil))

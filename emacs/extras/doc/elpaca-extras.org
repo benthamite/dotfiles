@@ -54,7 +54,7 @@ The default value is ~nil~ (no exclusions). The type is a list of symbols.
 #+findex: elpaca-extras-reload
 After making local edits to an installed package or after a manual rebuild, the old feature definitions remain active in the running Emacs session. The command ~elpaca-extras-reload~ force-loads the features provided by a specified package so new definitions replace old ones.
 
-It works by scanning the package's installation directory for =.el= files, extracting the feature names from their ~provide~ forms, and calling ~load~ on the matching feature files. By default, features that were already loaded are loaded again, and the main package feature is also loaded so locally rebuilt packages do not remain in an autoload-only state. With a prefix argument, all features provided by the package are loaded regardless of their previous state.
+It works by scanning the package's installation directory for =.el= files, extracting feature names and direct dependencies from their ~provide~ and ~require~ forms, and calling ~load~ on the matching feature files. The main feature retains its established first-load position; package subfeatures are then loaded after the subfeatures they require. This dependency order is important for live EIEIO class changes: a subclass must be redefined after its superclass for existing objects to inherit newly added slots. By default, features that were already loaded are loaded again, and the main package feature is also loaded so locally rebuilt packages do not remain in an autoload-only state. With a prefix argument, all features provided by the package are loaded regardless of their previous state.
 
 ** Update and reload
 :PROPERTIES:

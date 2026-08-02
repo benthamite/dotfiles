@@ -59,6 +59,50 @@ values of `print-length' or `print-level' must not truncate those forms."
 
 ;;;; Functions
 
+(defun elpaca-extras--source-feature-info (file)
+  "Return FILE's provided feature and direct feature requirements.
+The result is a plist with `:feature' and `:requires' entries."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (let (feature requirements)
+      (goto-char (point-min))
+      (while (re-search-forward
+              "^[[:space:]]*(\\(provide\\|require\\)\\_>" nil t)
+        (goto-char (match-beginning 0))
+        (condition-case nil
+            (let* ((form (read (current-buffer)))
+                   (value (cadr form))
+                   (name (and (eq (car-safe value) 'quote)
+                              (cadr value))))
+              (when (symbolp name)
+                (pcase (car form)
+                  ('provide (setq feature name))
+                  ('require (cl-pushnew name requirements)))))
+          (error (forward-line 1))))
+      (list :feature feature :requires (nreverse requirements)))))
+
+(defun elpaca-extras--order-features (package-features requirements)
+  "Order PACKAGE-FEATURES after their dependencies in REQUIREMENTS.
+REQUIREMENTS maps each feature to the features it directly requires."
+  (let ((selected (copy-sequence package-features))
+        (visiting (make-hash-table :test #'eq))
+        (visited (make-hash-table :test #'eq))
+        ordered)
+    (cl-labels
+        ((visit (feature)
+           (unless (gethash feature visited)
+             (unless (gethash feature visiting)
+               (puthash feature t visiting)
+               (dolist (dependency (gethash feature requirements))
+                 (when (memq dependency selected)
+                   (visit dependency)))
+               (remhash feature visiting)
+               (puthash feature t visited)
+               (push feature ordered)))))
+      (dolist (feature selected)
+        (visit feature)))
+    (nreverse ordered)))
+
 ;; github.com/progfolio/elpaca/issues/250
 (defun elpaca-extras-reload (package &optional allp)
   "Reload PACKAGE's features.
@@ -84,24 +128,32 @@ preserved unless the new code changes their defaults."
          (package-dir (and located (file-name-directory located)))
          (package-files (and package-dir
                              (directory-files package-dir 'full (rx ".el" eos))))
+         (feature-info
+          (mapcar #'elpaca-extras--source-feature-info package-files))
+         (requirements (make-hash-table :test #'eq))
          (package-features
-          (cl-loop for file in package-files
-                   when (with-temp-buffer
-                          (insert-file-contents file)
-                          (when (re-search-forward (rx bol "(provide" (1+ space)) nil t)
-                            (goto-char (match-beginning 0))
-                            (cadadr (read (current-buffer)))))
-                   collect it)))
+          (cl-loop for info in feature-info
+                   for feature = (plist-get info :feature)
+                   when feature
+                   do (puthash feature (plist-get info :requires)
+                               requirements)
+                   and collect feature)))
     (unless allp
       (setf package-features (seq-intersection package-features features))
       ;; Always include the main feature: when the user explicitly
       ;; rebuilds a package, the main module must be loaded even if
       ;; it was only set up via autoloads and never fully loaded.
       (cl-pushnew package package-features))
-    ;; Load the main feature first so sub-modules find its variables.
-    (when (memq package package-features)
-      (setf package-features
-            (cons package (delq package package-features))))
+    ;; Preserve the main feature's established first-load behavior, then load
+    ;; subfeatures after their in-package requirements.  In particular, an
+    ;; EIEIO subclass must be redefined after its superclass so live instances
+    ;; inherit newly added slots during a package reload.
+    (let ((main-feature-p (memq package package-features)))
+      (setq package-features
+            (elpaca-extras--order-features
+             (delq package package-features) requirements))
+      (when main-feature-p
+        (push package package-features)))
     ;; Force-load each file via `load' rather than `require'.
     ;; `require' is a no-op when the feature is in `features', and
     ;; elpaca's rebuild can re-add features (via autoloads) before

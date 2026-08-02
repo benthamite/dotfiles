@@ -146,7 +146,9 @@ daemon that is concurrently serving `emacsclient' requests."
     (elpaca-extras--record-build-reload-status
      token :package pkg :state 'queued :message "Build queued")
     (add-hook 'elpaca-post-queue-hook callback)
-    (funcall build-fn pkg t)
+    (let ((print-length nil)
+          (print-level nil))
+      (funcall build-fn pkg t))
     token))
 
 (defun elpaca-extras--build-reload-token (pkg)

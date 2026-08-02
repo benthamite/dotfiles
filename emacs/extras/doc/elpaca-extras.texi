@@ -122,6 +122,8 @@ The command returns a status token after enqueueing the build. Reloading is driv
 @findex elpaca-extras-rebuild-and-reload
 The command @code{elpaca-extras-rebuild-and-reload} is analogous to @code{elpaca-extras-update-and-reload} (@ref{Update and reload}) but uses @code{elpaca-rebuild} instead of @code{elpaca-update}. This is useful when you have made local source changes and want to rebuild the package from those changes rather than fetching upstream updates.
 
+The build is enqueued with unbounded printing so long dependency-path lists are serialized completely even when the live Emacs has customized @code{print-length} or @code{print-level}.
+
 @node Lock file management
 @section Lock file management
 

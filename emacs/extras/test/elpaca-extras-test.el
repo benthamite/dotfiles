@@ -169,6 +169,19 @@
         (should (eq (plist-get entry :package) 'my-pkg))
         (should (eq (plist-get entry :state) 'queued))))))
 
+(ert-deftest elpaca-extras-test-rebuild-and-reload-does-not-truncate-build-data ()
+  "The rebuild runs with unbounded printing for serialized Elpaca commands."
+  (let ((print-length 10)
+        (print-level 10)
+        observed-print-settings)
+    (cl-letf (((symbol-function 'add-hook) #'ignore)
+              ((symbol-function 'elpaca-rebuild)
+               (lambda (_pkg _force)
+                 (setq observed-print-settings
+                       (list print-length print-level)))))
+      (elpaca-extras-rebuild-and-reload 'my-pkg)
+      (should (equal observed-print-settings '(nil nil))))))
+
 (ert-deftest elpaca-extras-test-build-reload-status-missing-token ()
   "Unknown reload tokens return nil."
   (should-not (elpaca-extras-build-reload-status "missing-token")))

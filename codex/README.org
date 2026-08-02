@@ -79,6 +79,11 @@ dotfiles repo's project-local =.codex/= directory so Codex does not load it
 twice. Registrations normalize Codex payload and tool-name differences before
 dispatching to the paired scripts documented in [[file:hooks/README.org][the hook index]].
 
+The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
+skips test-only files and edits while Git has an active operation or unmerged
+index entries, so a live Emacs never loads tests or a partially resolved tree.
+Test-only Elisp commits likewise do not require package-manual updates.
+
 Emacs-owned sessions use eight explicit =codex-hook-wrapper= registrations for
 lifecycle forwarding. The wrapper comes from the Emacs package source tree
 because the build tree does not contain that script; its configured source path

@@ -85,7 +85,7 @@ Claude.
 | =fire-and-forget.sh= | Detaches nonblocking Notification and Stop hook work after consuming the event payload. |
 | =lib-repo-root.sh= | Resolves the effective Git root from hook command and working-directory context. |
 | =lib-staged-files.sh= | Lists the complete staged commit content, including an amended commit. |
-| =load-elisp-after-edit.sh= | Rebuilds and reloads an edited Elisp package through the live Emacs session. |
+| =load-elisp-after-edit.sh= | Rebuilds and reloads an edited Elisp package through the live Emacs session, except for test-only files or while Git has an active operation or unmerged index entries. |
 | =notify-emacs-notification.sh= | Forwards a Claude Notification event to Emacs. |
 | =notify-emacs-session-end.sh= | Forwards a Claude Stop event to Emacs. |
 | =pretooluse-bash.sh= | Dispatches the Bash guards and output wrapper registered for PreToolUse. |

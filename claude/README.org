@@ -105,6 +105,10 @@ Claude has events with no Codex equivalent here, including =Read=, =Grep=,
 =Glob=, =Skill=, Notification, and Chrome-specific events. Those are explicit
 manifest differences, not missing peers.
 
+The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
+skips edits while Git is in the middle of a rebase, merge, cherry-pick, or
+revert so a live Emacs never loads a partially resolved tree.
+
 The SessionStart reasoning-worktree synchronization hook is also Claude-only.
 It repairs required key links before eligibility checks, updates eligible
 worktrees without pushing, reapplies the local overlay, injects private

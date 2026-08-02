@@ -18,6 +18,7 @@ first_pkg=""
 count=0
 failed=0
 unresolved=0
+skipped=0
 reload_timeout=${ELPACA_RELOAD_TIMEOUT_SECONDS:-120}
 reload_poll_interval=${ELPACA_RELOAD_POLL_INTERVAL_SECONDS:-1}
 last_status=""
@@ -35,16 +36,64 @@ codex_absolute_changed_path() {
   esac
 }
 
+git_operation_in_progress() {
+  local path="$1"
+  local git_dir
+
+  git_dir=$(git -C "$(dirname "$path")" rev-parse --absolute-git-dir 2>/dev/null) || return 1
+  if [ -d "$git_dir/rebase-merge" ] ||
+     [ -d "$git_dir/rebase-apply" ] ||
+     [ -f "$git_dir/MERGE_HEAD" ] ||
+     [ -f "$git_dir/CHERRY_PICK_HEAD" ] ||
+     [ -f "$git_dir/REVERT_HEAD" ]; then
+    return 0
+  fi
+
+  if git -C "$(dirname "$path")" diff --quiet --diff-filter=U -- 2>/dev/null; then
+    return 1
+  else
+    [ "$?" -eq 1 ]
+  fi
+}
+
+test_elisp_file_p() {
+  local path="$1"
+  local relative
+
+  case "$path" in
+    *elpaca/sources/*)
+      relative="${path##*elpaca/sources/}"
+      relative="${relative#*/}"
+      ;;
+    */dotfiles/emacs/extras/*)
+      relative="${path##*/dotfiles/emacs/extras/}"
+      ;;
+    *) return 1 ;;
+  esac
+
+  case "$relative" in
+    test/* | */test/* | tests/* | */tests/*) return 0 ;;
+  esac
+  case "${relative##*/}" in
+    *-test.el | *-tests.el | test-*.el) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 while IFS= read -r file_path; do
   file_path=$(codex_absolute_changed_path "$file_path")
 
   # Only act on .el source files inside elpaca or dotfiles extras.
   [[ "$file_path" == *.el ]]              || continue
   [[ "$file_path" != *.elc ]]             || continue
-  [[ "$file_path" != *-test.el ]]         || continue
-  [[ "$file_path" != *-tests.el ]]        || continue
   [[ "$file_path" == *elpaca/sources/* ]] || \
   [[ "$file_path" == */dotfiles/emacs/extras/* ]] || continue
+  test_elisp_file_p "$file_path" && continue
+
+  if git_operation_in_progress "$file_path"; then
+    skipped=$((skipped + 1))
+    continue
+  fi
 
   # Encode the path with base64 so the elisp side can decode a literal string
   # without ever exposing $(...) or backticks to the shell during interpolation.
@@ -128,6 +177,15 @@ if [ "$failed" -gt 0 ]; then
 fi
 
 if [ "$count" -eq 0 ]; then
+  if [ "$skipped" -gt 0 ]; then
+    jq -n --argjson c "$skipped" '{
+      "hookSpecificOutput": {
+        "hookEventName": "PostToolUse",
+        "additionalContext": ("Skipped rebuild+reload for " + ($c|tostring) + " Elisp file(s) because a Git operation is in progress")
+      }
+    }'
+    exit 0
+  fi
   if [ "$unresolved" -gt 0 ]; then
     jq -n --argjson c "$unresolved" '{
       "hookSpecificOutput": {

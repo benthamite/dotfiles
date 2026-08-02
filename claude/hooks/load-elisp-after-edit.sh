@@ -22,15 +22,67 @@ absolute_changed_path() {
   esac
 }
 
+git_operation_in_progress() {
+  local path="$1"
+  local git_dir
+
+  git_dir=$(git -C "$(dirname "$path")" rev-parse --absolute-git-dir 2>/dev/null) || return 1
+  if [ -d "$git_dir/rebase-merge" ] ||
+     [ -d "$git_dir/rebase-apply" ] ||
+     [ -f "$git_dir/MERGE_HEAD" ] ||
+     [ -f "$git_dir/CHERRY_PICK_HEAD" ] ||
+     [ -f "$git_dir/REVERT_HEAD" ]; then
+    return 0
+  fi
+
+  if git -C "$(dirname "$path")" diff --quiet --diff-filter=U -- 2>/dev/null; then
+    return 1
+  else
+    [ "$?" -eq 1 ]
+  fi
+}
+
+test_elisp_file_p() {
+  local path="$1"
+  local relative
+
+  case "$path" in
+    *elpaca/sources/*)
+      relative="${path##*elpaca/sources/}"
+      relative="${relative#*/}"
+      ;;
+    */dotfiles/emacs/extras/*)
+      relative="${path##*/dotfiles/emacs/extras/}"
+      ;;
+    *) return 1 ;;
+  esac
+
+  case "$relative" in
+    test/* | */test/* | tests/* | */tests/*) return 0 ;;
+  esac
+  case "${relative##*/}" in
+    *-test.el | *-tests.el | test-*.el) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 file_path=$(absolute_changed_path "$file_path")
 
 # Only act on .el source files inside elpaca or dotfiles extras
 [[ "$file_path" == *.el ]]              || exit 0
 [[ "$file_path" != *.elc ]]             || exit 0
-[[ "$file_path" != *-test.el ]]         || exit 0
-[[ "$file_path" != *-tests.el ]]        || exit 0
 [[ "$file_path" == *elpaca/sources/* ]] || \
 [[ "$file_path" == */dotfiles/emacs/extras/* ]] || exit 0
+test_elisp_file_p "$file_path" && exit 0
+
+if git_operation_in_progress "$file_path"; then
+  jq -n '{
+    "hookSpecificOutput": {
+      "message": "Skipped rebuild+reload because a Git operation is in progress"
+    }
+  }'
+  exit 0
+fi
 
 # Encode the path with base64 so the elisp side can decode a literal string
 # without ever exposing $(...) or backticks to the shell during interpolation.

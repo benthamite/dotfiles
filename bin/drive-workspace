@@ -27,14 +27,20 @@ journal event wrapper.
 from __future__ import annotations
 
 import argparse
+import difflib
+import fcntl
 import hashlib
 import json
 import os
 import re
+import shutil
 import stat
 import subprocess
 import sys
+import tempfile
+import uuid
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from types import MappingProxyType
 
@@ -1037,6 +1043,331 @@ def remote_coverage(root: Path) -> dict:
     return {"root": str(root), "blockers": sorted(blockers), "ok": not blockers}
 
 
+# ---------------------------------------------------------------------------
+# Journal layer: append-only, hash-chained JSON Lines
+# ---------------------------------------------------------------------------
+
+JOURNAL_SCHEMA_VERSION = 1
+STATE_ROOT_ENV = "DRIVE_WORKSPACE_STATE_ROOT"
+DEFAULT_STATE_ROOT = "~/.local/state/drive-workspace-migration"
+
+JOURNAL_KINDS = {"transaction", "observation", "program"}
+EVENTS_BY_KIND = {
+    "transaction": {
+        "capture", "drive_state", "drive_paused", "moved", "local_verified",
+        "consumers_applied", "consumers_verified", "consumers_staged",
+        "consumers_rolled_back", "generated_paths_materialized", "smoke",
+        "generated_paths_rolled_back", "rollback_window_closed",
+        "generated_target_finalized", "local_rolled_back",
+        "rollback_verified", "rollback_drill_requested",
+    },
+    "observation": {"drive_state"},
+    "program": {"program_gate"},
+}
+EVENT_KEYS = {
+    "event", "transaction_id", "sequence", "previous_hash",
+    "time_utc", "payload", "event_hash",
+}
+HEADER_KEYS = {
+    "event", "transaction_id", "sequence", "previous_hash", "time_utc",
+    "schema_version", "journal_kind", "workspace", "source", "destination",
+    "workspace_kind", "label", "event_hash",
+}
+
+# Provider seams.  Real native-Drive and cloud observation providers land in
+# later tasks; the fail-closed default (None) makes every command that needs
+# provider evidence a blocker rather than a fabricated success.
+DRIVE_STATE_PROVIDER = None
+DRIVE_PAUSE_PROVIDER = None
+SESSION_ADAPTERS: dict = {}
+
+
+class JournalError(RuntimeError):
+    """A journal is unusable: misplaced, corrupted, or insecure."""
+
+
+class TransactionError(RuntimeError):
+    """A transaction command refused to proceed."""
+
+
+def _state_root() -> str:
+    """The active state root: env override for tests, real default otherwise."""
+    raw = os.environ.get(STATE_ROOT_ENV) or DEFAULT_STATE_ROOT
+    return os.path.abspath(os.path.expanduser(raw))
+
+
+def _journal_abspath(journal) -> str:
+    return os.path.abspath(os.path.expanduser(str(journal)))
+
+
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _canonical_line(event: dict) -> bytes:
+    """One canonical journal line: sorted keys, compact separators, newline."""
+    return (
+        json.dumps(event, sort_keys=True, separators=(",", ":")) + "\n"
+    ).encode("utf-8")
+
+
+def _event_hash(event: dict) -> str:
+    """SHA-256 of the canonical event with event_hash omitted."""
+    body = {key: value for key, value in event.items() if key != "event_hash"}
+    return hashlib.sha256(_canonical_line(body)).hexdigest()
+
+
+def _line_hash(line: bytes) -> str:
+    """SHA-256 of one full journal line, trailing newline included."""
+    return hashlib.sha256(line).hexdigest()
+
+
+def _check_journal_permissions(journal: str) -> None:
+    """Require exactly 0o600 on the journal and 0o700 on its parent."""
+    try:
+        info = os.lstat(journal)
+    except OSError as error:
+        raise JournalError(f"journal cannot be read: {journal} ({error})") from error
+    if not stat.S_ISREG(info.st_mode):
+        raise JournalError(f"journal is not a regular file: {journal}")
+    mode = stat.S_IMODE(info.st_mode)
+    if mode != 0o600:
+        raise JournalError(
+            f"journal permissions are 0o{mode:o}, not 0o600: {journal}; "
+            f"broader permissions permanently block mutation"
+        )
+    parent = os.path.dirname(journal)
+    try:
+        parent_info = os.lstat(parent)
+    except OSError as error:
+        raise JournalError(
+            f"journal parent cannot be read: {parent} ({error})"
+        ) from error
+    if not stat.S_ISDIR(parent_info.st_mode):
+        raise JournalError(f"journal parent is not a directory: {parent}")
+    parent_mode = stat.S_IMODE(parent_info.st_mode)
+    if parent_mode != 0o700:
+        raise JournalError(
+            f"journal parent permissions are 0o{parent_mode:o}, not 0o700: "
+            f"{parent}; broader permissions permanently block mutation"
+        )
+
+
+def _parse_journal(journal: str, data: bytes) -> list[dict]:
+    """Validate the full hash chain; any defect is permanent, never repaired."""
+    if not data:
+        raise JournalError(f"journal is empty: {journal}")
+    if not data.endswith(b"\n"):
+        raise JournalError(f"journal last line is truncated: {journal}")
+    lines = data.splitlines(keepends=True)
+    events: list[dict] = []
+    previous_line: bytes | None = None
+    journal_kind = None
+    transaction_id = None
+    for index, line in enumerate(lines):
+        try:
+            event = json.loads(line.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise JournalError(
+                f"journal line {index} is not valid JSON: {journal} ({error})"
+            ) from error
+        if not isinstance(event, dict):
+            raise JournalError(
+                f"journal line {index} is not an object: {journal}"
+            )
+        expected_keys = HEADER_KEYS if index == 0 else EVENT_KEYS
+        if set(event) != expected_keys:
+            raise JournalError(
+                f"journal line {index} has an unexpected structure: {journal}"
+            )
+        if index == 0:
+            if event["event"] != "header":
+                raise JournalError(f"journal has no header event: {journal}")
+            if event["schema_version"] != JOURNAL_SCHEMA_VERSION:
+                raise JournalError(
+                    f"journal schema version {event['schema_version']!r} is "
+                    f"unsupported: {journal}"
+                )
+            journal_kind = event["journal_kind"]
+            if journal_kind not in JOURNAL_KINDS:
+                raise JournalError(
+                    f"journal kind {journal_kind!r} is unknown: {journal}"
+                )
+            transaction_id = event["transaction_id"]
+            if event["previous_hash"] is not None:
+                raise JournalError(
+                    f"journal header must have a null previous_hash: {journal}"
+                )
+        else:
+            if event["event"] not in EVENTS_BY_KIND[journal_kind]:
+                raise JournalError(
+                    f"journal line {index} has unknown event "
+                    f"{event['event']!r} for a {journal_kind} journal: "
+                    f"{journal}"
+                )
+            if event["transaction_id"] != transaction_id:
+                raise JournalError(
+                    f"journal line {index} changes the transaction UUID: "
+                    f"{journal}"
+                )
+            if event["previous_hash"] != _line_hash(previous_line):
+                raise JournalError(
+                    f"journal line {index} has a previous_hash that does not "
+                    f"match the prior line: {journal}"
+                )
+        if event["sequence"] != index:
+            raise JournalError(
+                f"journal line {index} has sequence {event['sequence']!r}; "
+                f"duplicate or skipped sequences permanently block mutation: "
+                f"{journal}"
+            )
+        if event["event_hash"] != _event_hash(event):
+            raise JournalError(
+                f"journal line {index} has an event_hash that does not match "
+                f"its canonical content: {journal}"
+            )
+        if _canonical_line(event) != line:
+            raise JournalError(
+                f"journal line {index} is not in canonical form: {journal}"
+            )
+        events.append(event)
+        previous_line = line
+    return events
+
+
+def read_journal(journal) -> list[dict]:
+    """Read and fully validate one journal, permissions included."""
+    path = _journal_abspath(journal)
+    _check_journal_permissions(path)
+    try:
+        data = Path(path).read_bytes()
+    except OSError as error:
+        raise JournalError(f"journal cannot be read: {path} ({error})") from error
+    return _parse_journal(path, data)
+
+
+def _append_event(journal, event_type: str, payload: dict) -> dict:
+    """Append one event under an exclusive lock, then revalidate the chain."""
+    path = _journal_abspath(journal)
+    _check_journal_permissions(path)
+    fd = os.open(path, os.O_APPEND | os.O_WRONLY)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        data = Path(path).read_bytes()
+        events = _parse_journal(path, data)
+        journal_kind = events[0]["journal_kind"]
+        if event_type not in EVENTS_BY_KIND[journal_kind]:
+            raise JournalError(
+                f"event {event_type!r} is not permitted in a "
+                f"{journal_kind} journal: {path}"
+            )
+        last_line = data.splitlines(keepends=True)[-1]
+        event = {
+            "event": event_type,
+            "transaction_id": events[0]["transaction_id"],
+            "sequence": events[-1]["sequence"] + 1,
+            "previous_hash": _line_hash(last_line),
+            "time_utc": _utc_now(),
+            "payload": payload,
+        }
+        event["event_hash"] = _event_hash(event)
+        line = _canonical_line(event)
+        written = os.write(fd, line)
+        if written != len(line):
+            raise JournalError(
+                f"journal append wrote {written} of {len(line)} bytes: {path}"
+            )
+        os.fsync(fd)
+        _parse_journal(path, Path(path).read_bytes())
+        return event
+    finally:
+        os.close(fd)
+
+
+def _validate_new_journal_path(journal) -> str:
+    """A new journal must resolve below the state root and not exist yet."""
+    path = _journal_abspath(journal)
+    root = _state_root()
+    if not _is_within(path, root):
+        raise JournalError(
+            f"journal must resolve below the state root {root}: {path}"
+        )
+    if os.path.lexists(path):
+        raise JournalError(f"journal already exists: {path}")
+    return path
+
+
+def _create_journal(
+    journal,
+    *,
+    journal_kind: str,
+    workspace: str | None = None,
+    source: str | None = None,
+    destination: str | None = None,
+    workspace_kind: str | None = None,
+    label: str | None = None,
+) -> str:
+    """Create a mode-0600 journal in a mode-0700 parent and write the header."""
+    path = _validate_new_journal_path(journal)
+    root = _state_root()
+    parent = os.path.dirname(path)
+    missing: list[str] = []
+    probe = parent
+    while not os.path.isdir(probe) and _is_within(probe, root):
+        missing.append(probe)
+        probe = os.path.dirname(probe)
+    if not os.path.isdir(probe):
+        raise JournalError(
+            f"journal ancestor directory is missing outside the state root: "
+            f"{probe}"
+        )
+    for directory in reversed(missing):
+        os.mkdir(directory, 0o700)
+        os.chmod(directory, 0o700)
+    parent_mode = stat.S_IMODE(os.lstat(parent).st_mode)
+    if parent_mode != 0o700:
+        raise JournalError(
+            f"journal parent permissions are 0o{parent_mode:o}, not 0o700: "
+            f"{parent}"
+        )
+    header = {
+        "event": "header",
+        "transaction_id": str(uuid.uuid4()),
+        "sequence": 0,
+        "previous_hash": None,
+        "time_utc": _utc_now(),
+        "schema_version": JOURNAL_SCHEMA_VERSION,
+        "journal_kind": journal_kind,
+        "workspace": workspace,
+        "source": source,
+        "destination": destination,
+        "workspace_kind": workspace_kind,
+        "label": label,
+    }
+    header["event_hash"] = _event_hash(header)
+    line = _canonical_line(header)
+    fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_APPEND, 0o600)
+    try:
+        os.fchmod(fd, 0o600)
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        written = os.write(fd, line)
+        if written != len(line):
+            raise JournalError(
+                f"journal header wrote {written} of {len(line)} bytes: {path}"
+            )
+        os.fsync(fd)
+        parent_fd = os.open(parent, os.O_RDONLY)
+        try:
+            os.fsync(parent_fd)
+        finally:
+            os.close(parent_fd)
+        _parse_journal(path, Path(path).read_bytes())
+    finally:
+        os.close(fd)
+    _check_journal_permissions(path)
+    return path
+
+
 def build_audit_payload(manifest: Manifest) -> dict:
     """Assemble the deterministic audit payload for one manifest.
 
@@ -1085,7 +1416,1531 @@ def run_audit(manifest_path: Path) -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
+# ---------------------------------------------------------------------------
+# Transaction command layer
+# ---------------------------------------------------------------------------
+
+
+def _print_journal(path: str) -> None:
+    """Success stdout is exactly one JSON object naming the journal."""
+    sys.stdout.write(
+        json.dumps({"journal": path}, separators=(",", ":")) + "\n"
+    )
+
+
+def _device_of(path) -> int:
+    """st_dev of one path; a seam so tests can simulate device mismatches."""
+    return os.lstat(os.path.abspath(os.path.expanduser(str(path)))).st_dev
+
+
+def _load_workspace(manifest_path, name: str) -> tuple[Manifest, Workspace]:
+    manifest = load_manifest(Path(manifest_path))
+    try:
+        workspace = manifest.by_name(name)
+    except KeyError as error:
+        raise TransactionError(str(error)) from error
+    return manifest, workspace
+
+
+def _latest(events: list[dict], event_type: str) -> dict | None:
+    matches = [event for event in events if event["event"] == event_type]
+    return matches[-1] if matches else None
+
+
+def _active(
+    events: list[dict], event_type: str, undo_type: str
+) -> dict | None:
+    """The latest event of a type unless a later undo event supersedes it."""
+    done = _latest(events, event_type)
+    if done is None:
+        return None
+    undone = _latest(events, undo_type)
+    if undone is not None and undone["sequence"] > done["sequence"]:
+        return None
+    return done
+
+
+def _require_transaction_header(
+    events: list[dict], name: str, journal: str
+) -> dict:
+    header = events[0]
+    if header["journal_kind"] != "transaction":
+        raise TransactionError(
+            f"journal is a {header['journal_kind']} journal, not a "
+            f"transaction journal: {journal}"
+        )
+    if header["workspace"] != name:
+        raise TransactionError(
+            f"journal belongs to workspace {header['workspace']!r}, "
+            f"not {name!r}: {journal}"
+        )
+    return header
+
+
+def _require_capture(events: list[dict], journal: str) -> dict:
+    capture = _latest(events, "capture")
+    if capture is None:
+        raise TransactionError(f"journal has no capture event: {journal}")
+    return capture
+
+
+def _workspace_git_roots(workspace: Workspace) -> tuple:
+    return workspace.git_roots or (".",)
+
+
+def _comparable_filesystem(records: list[dict]) -> list[dict]:
+    """Filesystem records with Git internals excluded.
+
+    Git state is compared through snapshot_git; the audited .git trees
+    legitimately change under read-only Git observation (e.g. the
+    remote-coverage fetch adds objects), so byte-comparing them would
+    reject unchanged workspaces.
+    """
+    return [
+        record for record in records
+        if ".git" not in record["path"].split("/")
+    ]
+
+
+def _workspace_snapshot(workspace: Workspace, root: Path) -> dict:
+    return {
+        "filesystem": audit_filesystem(root),
+        "git": {
+            git_root: snapshot_git(root / git_root)
+            for git_root in sorted(_workspace_git_roots(workspace))
+        },
+    }
+
+
+def _snapshots_match(current: dict, captured: dict) -> bool:
+    return (
+        _comparable_filesystem(current["filesystem"])
+        == _comparable_filesystem(captured["filesystem"])
+        and current["git"] == captured["git"]
+    )
+
+
+def _sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _read_text(path: str, context: str) -> str:
+    try:
+        return Path(path).read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as error:
+        raise TransactionError(
+            f"{context} cannot be read as UTF-8 text: {path} ({error})"
+        ) from error
+
+
+def _atomic_write(path: str, content: str) -> None:
+    """Replace one file's content atomically, preserving its mode.
+
+    Every operating-system failure (full disk, permissions, read-only
+    filesystem) is raised as TransactionError so callers' rollback paths
+    run instead of the process dying with a traceback, and the temporary
+    file is removed on any failure after its creation.
+    """
+    try:
+        mode = stat.S_IMODE(os.stat(path).st_mode)
+        directory = os.path.dirname(path)
+        fd, temp_path = tempfile.mkstemp(
+            prefix=".drive-workspace-", dir=directory
+        )
+    except OSError as error:
+        raise TransactionError(f"cannot write {path}: {error}") from error
+    try:
+        try:
+            os.write(fd, content.encode("utf-8"))
+            os.fsync(fd)
+        finally:
+            os.close(fd)
+        os.chmod(temp_path, mode)
+        os.rename(temp_path, path)
+    except OSError as error:
+        # Best-effort removal of the tool's own just-created temporary
+        # file; the original write failure below is what callers must see.
+        try:
+            os.unlink(temp_path)
+        except OSError:
+            pass
+        raise TransactionError(f"cannot write {path}: {error}") from error
+
+
+def _capture_payload(workspace: Workspace) -> dict:
+    """Audit state and exact consumer preimages for the capture event."""
+    source = workspace.source_path
+    if not source.is_dir():
+        raise TransactionError(f"workspace source is missing: {source}")
+    snapshot = _workspace_snapshot(workspace, source)
+    links = []
+    for link in workspace.links:
+        link_path = source / link.path
+        try:
+            info = os.lstat(link_path)
+        except OSError as error:
+            raise TransactionError(
+                f"manifest link is missing: {link_path} ({error})"
+            ) from error
+        if not stat.S_ISLNK(info.st_mode):
+            raise TransactionError(
+                f"manifest link is not a symlink: {link_path}"
+            )
+        text = os.readlink(link_path)
+        if text != link.link_text:
+            raise TransactionError(
+                f"manifest link text mismatch at {link_path}: "
+                f"observed {text!r}, declared {link.link_text!r}"
+            )
+        mode = f"0o{stat.S_IMODE(info.st_mode):o}"
+        if mode != link.lstat_mode:
+            raise TransactionError(
+                f"manifest link mode mismatch at {link_path}: "
+                f"observed {mode}, declared {link.lstat_mode}"
+            )
+        if os.path.isabs(text):
+            target = os.path.normpath(text)
+        else:
+            target = os.path.normpath(
+                os.path.join(str(link_path.parent), text)
+            )
+        links.append(
+            {
+                "path": link.path,
+                "link_text": text,
+                "lstat_mode": mode,
+                "disposition": link.disposition,
+                "target_policy": link.target_policy,
+                "post_smoke_type": link.post_smoke_type,
+                "target": target,
+            }
+        )
+    consumers = []
+    for consumer in workspace.consumers:
+        consumer_path = os.path.abspath(os.path.expanduser(consumer.path))
+        content = _read_text(consumer_path, f"consumer {consumer.name!r}")
+        count = content.count(consumer.old)
+        if count != consumer.count:
+            raise TransactionError(
+                f"consumer {consumer.name!r} contains {count} occurrence(s) "
+                f"of the old value; the manifest declares {consumer.count}"
+            )
+        if consumer.new in content:
+            raise TransactionError(
+                f"consumer {consumer.name!r} preimage already contains the "
+                f"new value; exact occurrence verification could never "
+                f"distinguish applied from unapplied state: {consumer_path}"
+            )
+        consumers.append(
+            {
+                "name": consumer.name,
+                "path": consumer_path,
+                "old": consumer.old,
+                "new": consumer.new,
+                "count": consumer.count,
+                "session_adapter": consumer.session_adapter,
+                "content": content,
+                "sha256": _sha256_text(content),
+            }
+        )
+    return {
+        "filesystem": snapshot["filesystem"],
+        "git": snapshot["git"],
+        "links": links,
+        "consumers": consumers,
+        "source_dev": _device_of(source),
+    }
+
+
+def cmd_capture(name: str, journal, manifest_path) -> int:
+    path = _validate_new_journal_path(journal)
+    _manifest, workspace = _load_workspace(manifest_path, name)
+    payload = _capture_payload(workspace)
+    _create_journal(
+        path,
+        journal_kind="transaction",
+        workspace=name,
+        source=str(workspace.source_path),
+        destination=str(workspace.destination_path),
+        workspace_kind=workspace.kind,
+    )
+    _append_event(path, "capture", payload)
+    _print_journal(path)
+    return 0
+
+
+def cmd_init_journal(journal, kind: str, label: str) -> int:
+    path = _create_journal(journal, journal_kind=kind, label=label)
+    _print_journal(path)
+    return 0
+
+
+def cmd_verify_journal(journal) -> int:
+    path = _journal_abspath(journal)
+    read_journal(path)
+    _print_journal(path)
+    return 0
+
+
+def _require_provider_evidence(name: str) -> dict:
+    if DRIVE_STATE_PROVIDER is None:
+        raise TransactionError(
+            "no native Drive state provider is configured; refusing to "
+            "fabricate drive_state evidence"
+        )
+    evidence = DRIVE_STATE_PROVIDER(name)
+    if (
+        not isinstance(evidence, dict)
+        or "rows" not in evidence
+        or "queue_cursors" not in evidence
+    ):
+        raise TransactionError(
+            "the Drive state provider returned no usable evidence "
+            "(rows and queue_cursors are required)"
+        )
+    return evidence
+
+
+def cmd_record_drive_state(name: str, journal) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    header = events[0]
+    if header["journal_kind"] == "transaction" and header["workspace"] != name:
+        raise TransactionError(
+            f"journal belongs to workspace {header['workspace']!r}, "
+            f"not {name!r}: {path}"
+        )
+    if header["journal_kind"] == "program":
+        raise TransactionError(
+            f"drive_state cannot be recorded in a program journal: {path}"
+        )
+    evidence = _require_provider_evidence(name)
+    _append_event(
+        path, "drive_state", {"workspace": name, "evidence": evidence}
+    )
+    _print_journal(path)
+    return 0
+
+
+def cmd_confirm_drive_paused(name: str, journal) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    _require_capture(events, path)
+    if DRIVE_PAUSE_PROVIDER is None:
+        raise TransactionError(
+            "no Drive pause provider is configured; refusing to assume the "
+            "native client is paused"
+        )
+    evidence = DRIVE_PAUSE_PROVIDER(name)
+    if not isinstance(evidence, dict) or evidence.get("paused") is not True:
+        raise TransactionError(
+            "the Drive pause provider did not observe a paused native state"
+        )
+    if evidence.get("queue_advanced") is not False:
+        raise TransactionError(
+            "the Drive pause provider observed outbound queue advancement "
+            "during the bounded observation"
+        )
+    _append_event(
+        path, "drive_paused", {"workspace": name, "evidence": evidence}
+    )
+    _print_journal(path)
+    return 0
+
+
+def cmd_move(name: str, journal, manifest_path) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    capture = _require_capture(events, path)
+    if _active(events, "moved", "local_rolled_back") is not None:
+        raise TransactionError(
+            f"workspace was already moved by this transaction: {path}"
+        )
+    paused = _latest(events, "drive_paused")
+    if paused is None or paused["sequence"] < capture["sequence"]:
+        raise TransactionError(
+            "fresh pause evidence is missing: confirm-drive-paused must "
+            "succeed after capture and before move"
+        )
+    _manifest, workspace = _load_workspace(manifest_path, name)
+    source = workspace.source_path
+    destination = workspace.destination_path
+    if not source.is_dir():
+        raise TransactionError(f"workspace source is missing: {source}")
+    if os.path.lexists(destination):
+        raise TransactionError(
+            f"destination already exists; refusing to collide: {destination}"
+        )
+    parent = destination.parent
+    if not parent.is_dir():
+        raise TransactionError(f"destination parent is missing: {parent}")
+    if _device_of(source) != _device_of(parent):
+        raise TransactionError(
+            f"source {source} and destination parent {parent} are on "
+            f"different devices; os.rename would degrade to a copy"
+        )
+    current = _workspace_snapshot(workspace, source)
+    if not _snapshots_match(current, capture["payload"]):
+        raise TransactionError(
+            "source snapshot changed since capture; start a new transaction"
+        )
+    for git_root in sorted(_workspace_git_roots(workspace)):
+        coverage = remote_coverage(source / git_root)
+        if not coverage["ok"]:
+            raise TransactionError(
+                "uncovered commits block the move: "
+                + "; ".join(coverage["blockers"])
+            )
+    if workspace.kind == "workspace":
+        try:
+            os.rename(source, destination)
+        except OSError as error:
+            raise TransactionError(
+                f"rename failed: {source} -> {destination} ({error})"
+            ) from error
+        for git_root in sorted(_workspace_git_roots(workspace)):
+            _run_git(destination / git_root, ("worktree", "repair"))
+            _run_git(
+                destination / git_root,
+                ("submodule", "status", "--recursive"),
+            )
+    else:
+        owner = workspace.owner_path
+        _run_git(owner, ("worktree", "move", str(source), str(destination)))
+        _run_git(owner, ("worktree", "repair"))
+        _run_git(destination, ("submodule", "status", "--recursive"))
+    _append_event(
+        path,
+        "moved",
+        {
+            "source": str(source),
+            "destination": str(destination),
+            "dev": _device_of(destination),
+            "kind": workspace.kind,
+        },
+    )
+    _print_journal(path)
+    return 0
+
+
+def _require_moved(events: list[dict], journal: str) -> dict:
+    moved = _active(events, "moved", "local_rolled_back")
+    if moved is None:
+        raise TransactionError(
+            f"journal records no active move for this workspace: {journal}"
+        )
+    return moved
+
+
+# --- Consumers -------------------------------------------------------------
+
+
+def cmd_apply_consumers(name: str, journal, manifest_path) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    capture = _require_capture(events, path)
+    _require_moved(events, path)
+    if _active(events, "consumers_applied", "consumers_rolled_back"):
+        raise TransactionError(f"consumers were already applied: {path}")
+    _load_workspace(manifest_path, name)
+    consumers = capture["payload"]["consumers"]
+    for consumer in consumers:
+        adapter_name = consumer["session_adapter"]
+        if adapter_name is not None and adapter_name not in SESSION_ADAPTERS:
+            raise TransactionError(
+                f"no session adapter is registered for {adapter_name!r}; "
+                f"refusing to apply consumers"
+            )
+    plans = []
+    for consumer in consumers:
+        consumer_path = consumer["path"]
+        content = _read_text(
+            consumer_path, f"consumer {consumer['name']!r}"
+        )
+        if content != consumer["content"]:
+            raise TransactionError(
+                f"consumer {consumer['name']!r} drifted from its captured "
+                f"preimage: {consumer_path}"
+            )
+        new_content = content.replace(consumer["old"], consumer["new"])
+        if (
+            consumer["old"] in new_content
+            or new_content.count(consumer["new"]) != consumer["count"]
+        ):
+            raise TransactionError(
+                f"consumer {consumer['name']!r} substitution did not produce "
+                f"the exact expected occurrences"
+            )
+        plans.append((consumer, consumer_path, content, new_content))
+    applied: list[tuple[str, str]] = []
+    try:
+        for consumer, consumer_path, old_content, new_content in plans:
+            _atomic_write(consumer_path, new_content)
+            applied.append((consumer_path, old_content))
+            adapter_name = consumer["session_adapter"]
+            if adapter_name is not None:
+                try:
+                    SESSION_ADAPTERS[adapter_name](consumer)
+                except Exception as error:
+                    raise TransactionError(
+                        f"session adapter {adapter_name!r} failed: {error}"
+                    ) from error
+    except TransactionError:
+        # Tested rollback before returning nonzero: restore every preimage
+        # that was already substituted.  A restoration failure is reported
+        # but never masks the original error being re-raised.
+        for consumer_path, old_content in reversed(applied):
+            try:
+                _atomic_write(consumer_path, old_content)
+            except TransactionError as restore_error:
+                print(
+                    f"drive-workspace: preimage restoration failed for "
+                    f"{consumer_path}: {restore_error}",
+                    file=sys.stderr,
+                )
+        raise
+    _append_event(
+        path,
+        "consumers_applied",
+        {
+            "consumers": [
+                {
+                    "name": consumer["name"],
+                    "path": consumer_path,
+                    "content": new_content,
+                    "sha256": _sha256_text(new_content),
+                }
+                for consumer, consumer_path, _old, new_content in plans
+            ]
+        },
+    )
+    _print_journal(path)
+    return 0
+
+
+def _capture_consumer_by_name(capture: dict) -> dict:
+    return {
+        consumer["name"]: consumer
+        for consumer in capture["payload"]["consumers"]
+    }
+
+
+def cmd_verify_consumers(name: str, journal, manifest_path) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    capture = _require_capture(events, path)
+    applied = _active(events, "consumers_applied", "consumers_rolled_back")
+    if applied is None:
+        raise TransactionError(
+            f"journal records no active consumer application: {path}"
+        )
+    _load_workspace(manifest_path, name)
+    by_name = _capture_consumer_by_name(capture)
+    for record in applied["payload"]["consumers"]:
+        consumer = by_name[record["name"]]
+        content = _read_text(record["path"], f"consumer {record['name']!r}")
+        old_count = content.count(consumer["old"])
+        if old_count != 0:
+            raise TransactionError(
+                f"consumer {record['name']!r} still contains {old_count} "
+                f"occurrence(s) of the old value: {record['path']}"
+            )
+        new_count = content.count(consumer["new"])
+        if new_count != consumer["count"]:
+            raise TransactionError(
+                f"consumer {record['name']!r} contains {new_count} "
+                f"occurrence(s) of the new value; expected "
+                f"{consumer['count']}: {record['path']}"
+            )
+    _append_event(path, "consumers_verified", {"workspace": name})
+    _print_journal(path)
+    return 0
+
+
+def _consumer_repo(consumer_path: str) -> tuple[str, str]:
+    directory = os.path.dirname(consumer_path)
+    try:
+        repo = _git_read(
+            Path(directory), "rev-parse", "--show-toplevel"
+        ).strip()
+    except AuditError as error:
+        raise TransactionError(
+            f"consumer file is not inside a Git repository: "
+            f"{consumer_path} ({error})"
+        ) from error
+    return repo, os.path.relpath(consumer_path, repo)
+
+
+def _unified_patch(rel: str, old_content: str, new_content: str) -> str:
+    diff = "".join(
+        difflib.unified_diff(
+            old_content.splitlines(keepends=True),
+            new_content.splitlines(keepends=True),
+            fromfile=f"a/{rel}",
+            tofile=f"b/{rel}",
+        )
+    )
+    if not diff:
+        raise TransactionError(
+            f"consumer substitution produced no staged change for {rel}"
+        )
+    return f"diff --git a/{rel} b/{rel}\n{diff}"
+
+
+def cmd_stage_consumers(name: str, journal, manifest_path) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    capture = _require_capture(events, path)
+    applied = _active(events, "consumers_applied", "consumers_rolled_back")
+    if applied is None:
+        raise TransactionError(
+            f"consumers must be applied before staging: {path}"
+        )
+    if _active(events, "consumers_staged", "consumers_rolled_back"):
+        raise TransactionError(f"consumers were already staged: {path}")
+    _load_workspace(manifest_path, name)
+    applied_by_name = {
+        record["name"]: record
+        for record in applied["payload"]["consumers"]
+    }
+    plans = []
+    repos: dict[str, list[str]] = {}
+    for consumer in capture["payload"]["consumers"]:
+        consumer_path = consumer["path"]
+        repo, rel = _consumer_repo(consumer_path)
+        current = _read_text(
+            consumer_path, f"consumer {consumer['name']!r}"
+        )
+        if current != applied_by_name[consumer["name"]]["content"]:
+            raise TransactionError(
+                f"consumer {consumer['name']!r} drifted after application; "
+                f"refusing to stage: {consumer_path}"
+            )
+        try:
+            index_content = _git_read(Path(repo), "show", f":{rel}")
+        except AuditError as error:
+            raise TransactionError(
+                f"consumer file is not tracked in its Git index: "
+                f"{consumer_path} ({error})"
+            ) from error
+        index_count = index_content.count(consumer["old"])
+        if index_count != consumer["count"]:
+            raise TransactionError(
+                f"overlapping dirty hunk: the index copy of {rel} contains "
+                f"{index_count} occurrence(s) of the old value; the manifest "
+                f"declares {consumer['count']}"
+            )
+        target = index_content.replace(consumer["old"], consumer["new"])
+        patch = _unified_patch(rel, index_content, target)
+        plans.append((consumer, repo, rel, target, patch))
+        repos.setdefault(repo, []).append(rel)
+    for repo, rels in repos.items():
+        staged = _git_read(
+            Path(repo), "diff", "--cached", "--name-only"
+        ).strip()
+        if staged:
+            raise TransactionError(
+                f"additional staged paths are present in {repo}: {staged}; "
+                f"refusing to mix them with manifest-owned hunks"
+            )
+    for _consumer, repo, rel, _target, patch in plans:
+        _run_git(
+            Path(repo), ("apply", "--cached", "--check", "-"),
+            stdin_text=patch,
+        )
+    for _consumer, repo, rel, _target, patch in plans:
+        _run_git(Path(repo), ("apply", "--cached", "-"), stdin_text=patch)
+    for repo, rels in repos.items():
+        staged_now = sorted(
+            line
+            for line in _git_read(
+                Path(repo), "diff", "--cached", "--name-only"
+            ).splitlines()
+            if line
+        )
+        if staged_now != sorted(rels):
+            raise TransactionError(
+                f"staged paths in {repo} are {staged_now}, expected "
+                f"exactly {sorted(rels)}"
+            )
+    for _consumer, repo, rel, target, _patch in plans:
+        staged_content = _git_read(Path(repo), "show", f":{rel}")
+        if staged_content != target:
+            raise TransactionError(
+                f"staged content of {rel} does not match the exact "
+                f"manifest-owned patch"
+            )
+    _append_event(
+        path,
+        "consumers_staged",
+        {
+            "patches": [
+                {"name": consumer["name"], "repo": repo, "rel": rel,
+                 "patch": patch, "sha256": _sha256_text(patch)}
+                for consumer, repo, rel, _target, patch in plans
+            ]
+        },
+    )
+    _print_journal(path)
+    return 0
+
+
+def cmd_rollback_consumers(name: str, journal, manifest_path) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    capture = _require_capture(events, path)
+    applied = _active(events, "consumers_applied", "consumers_rolled_back")
+    if applied is None:
+        raise TransactionError(
+            f"journal records no active consumer application to roll "
+            f"back: {path}"
+        )
+    _load_workspace(manifest_path, name)
+    for record in applied["payload"]["consumers"]:
+        current = _read_text(record["path"], f"consumer {record['name']!r}")
+        if current != record["content"]:
+            raise TransactionError(
+                f"concurrent drift in consumer {record['name']!r}; refusing "
+                f"to roll back over unjournaled changes: {record['path']}"
+            )
+    staged = _active(events, "consumers_staged", "consumers_rolled_back")
+    if staged is not None:
+        for patch_record in staged["payload"]["patches"]:
+            _run_git(
+                Path(patch_record["repo"]),
+                ("apply", "--cached", "-R", "-"),
+                stdin_text=patch_record["patch"],
+            )
+    by_name = _capture_consumer_by_name(capture)
+    for record in applied["payload"]["consumers"]:
+        _atomic_write(record["path"], by_name[record["name"]]["content"])
+    _append_event(path, "consumers_rolled_back", {"workspace": name})
+    _print_journal(path)
+    return 0
+
+
+# --- verify-local, generated paths, smoke ----------------------------------
+
+
+def _verify_destination_links(
+    events: list[dict], capture: dict, destination: Path
+) -> None:
+    """Require the destination link set to match the journaled expectation.
+
+    Raises on any concurrent path drift: a missing or altered preserved
+    link, a materialized path that reappeared before smoke, a post-smoke
+    type other than the declared one, or any unclassified symlink change.
+
+    The interior of a regenerated post-smoke directory is exempt from the
+    exact-symlink-set check: only the journaled transition at the record's
+    own path is required, and regenerated trees (node_modules/.bin, venv
+    interpreters) legitimately contain symlinks of their own.  Full
+    strictness applies everywhere else under the destination.
+    """
+    links = capture["payload"]["links"]
+    materialized_event = _active(
+        events, "generated_paths_materialized", "generated_paths_rolled_back"
+    )
+    materialized = (
+        {record["path"] for record in materialized_event["payload"]["links"]}
+        if materialized_event
+        else set()
+    )
+    smoke_after = None
+    if materialized_event is not None:
+        smoke = _latest(events, "smoke")
+        if smoke is not None and smoke["sequence"] > materialized_event["sequence"]:
+            smoke_after = smoke
+    expected_links = []
+    exempt_interiors = []
+    for link in links:
+        link_path = destination / link["path"]
+        if link["path"] in materialized:
+            if smoke_after is not None:
+                declared = link["post_smoke_type"]
+                if declared == "directory":
+                    try:
+                        info = os.lstat(link_path)
+                    except OSError as error:
+                        raise TransactionError(
+                            f"concurrent path drift: generated path "
+                            f"{link['path']} is absent but its declared "
+                            f"post-smoke type is directory ({error})"
+                        ) from error
+                    if stat.S_ISLNK(info.st_mode) or not stat.S_ISDIR(
+                        info.st_mode
+                    ):
+                        raise TransactionError(
+                            f"concurrent path drift: generated path "
+                            f"{link['path']} is not the declared post-smoke "
+                            f"directory"
+                        )
+                    exempt_interiors.append(str(link_path))
+                elif declared == "absent":
+                    if os.path.lexists(link_path):
+                        raise TransactionError(
+                            f"concurrent path drift: generated path "
+                            f"{link['path']} is present but its declared "
+                            f"post-smoke type is absent"
+                        )
+                else:
+                    raise TransactionError(
+                        f"concurrent path drift: unclassified post-smoke "
+                        f"type {declared!r} for {link['path']}"
+                    )
+            elif os.path.lexists(link_path):
+                raise TransactionError(
+                    f"concurrent path drift: materialized path "
+                    f"{link['path']} reappeared before smoke"
+                )
+            continue
+        try:
+            info = os.lstat(link_path)
+        except OSError as error:
+            raise TransactionError(
+                f"concurrent path drift: captured link is missing at "
+                f"{link_path} ({error})"
+            ) from error
+        if not stat.S_ISLNK(info.st_mode):
+            raise TransactionError(
+                f"concurrent path drift: {link_path} is no longer a symlink"
+            )
+        if os.readlink(link_path) != link["link_text"]:
+            raise TransactionError(
+                f"concurrent path drift: link text changed at {link_path}"
+            )
+        if f"0o{stat.S_IMODE(info.st_mode):o}" != link["lstat_mode"]:
+            raise TransactionError(
+                f"concurrent path drift: link mode changed at {link_path}"
+            )
+        expected_links.append(str(link_path))
+    found = [
+        symlink
+        for symlink in scan_symlinks(destination)
+        if not any(
+            symlink.startswith(interior + os.sep)
+            for interior in exempt_interiors
+        )
+    ]
+    if sorted(found) != sorted(expected_links):
+        raise TransactionError(
+            f"concurrent path drift: symlinks under {destination} are "
+            f"{sorted(found)}, expected exactly {sorted(expected_links)}"
+        )
+
+
+def cmd_verify_local(name: str, journal, manifest_path) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    capture = _require_capture(events, path)
+    _require_moved(events, path)
+    _manifest, workspace = _load_workspace(manifest_path, name)
+    destination = workspace.destination_path
+    if not destination.is_dir():
+        raise TransactionError(f"destination is missing: {destination}")
+    if workspace.kind == "linked_worktree":
+        _git_read(destination, "rev-parse", "--git-dir")
+        owner_listing = _git_read(
+            workspace.owner_path, "worktree", "list", "--porcelain"
+        )
+        if f"worktree {destination}" not in owner_listing.splitlines():
+            raise TransactionError(
+                f"owner repository does not list the moved worktree: "
+                f"{destination}"
+            )
+    else:
+        _verify_destination_links(events, capture, destination)
+    _append_event(path, "local_verified", {"workspace": name})
+    _print_journal(path)
+    return 0
+
+
+def _trash_directory(journal_path: str, category: str) -> Path:
+    trash = Path(os.path.dirname(journal_path)) / "trash" / category
+    os.makedirs(trash, mode=0o700, exist_ok=True)
+    os.chmod(trash, 0o700)
+    os.chmod(trash.parent, 0o700)
+    return trash
+
+
+def cmd_materialize_generated_paths(name: str, journal, manifest_path) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    capture = _require_capture(events, path)
+    moved = _require_moved(events, path)
+    verified = _latest(events, "local_verified")
+    if verified is None or verified["sequence"] < moved["sequence"]:
+        raise TransactionError(
+            "verify-local must pass after the move before generated paths "
+            "are materialized"
+        )
+    if _active(
+        events, "generated_paths_materialized", "generated_paths_rolled_back"
+    ):
+        raise TransactionError(
+            f"generated paths were already materialized: {path}"
+        )
+    _manifest, workspace = _load_workspace(manifest_path, name)
+    destination = workspace.destination_path
+    generated = [
+        link
+        for link in capture["payload"]["links"]
+        if link["disposition"] == "materialize_generated_directory"
+    ]
+    checks = []
+    for link in generated:
+        link_path = destination / link["path"]
+        try:
+            info = os.lstat(link_path)
+        except OSError as error:
+            raise TransactionError(
+                f"concurrent path drift: generated link is missing at "
+                f"{link_path} ({error})"
+            ) from error
+        if not stat.S_ISLNK(info.st_mode):
+            raise TransactionError(
+                f"concurrent path drift: {link_path} is no longer a symlink"
+            )
+        if os.readlink(link_path) != link["link_text"]:
+            raise TransactionError(
+                f"concurrent path drift: link text changed at {link_path}"
+            )
+        if f"0o{stat.S_IMODE(info.st_mode):o}" != link["lstat_mode"]:
+            raise TransactionError(
+                f"concurrent path drift: link mode changed at {link_path}"
+            )
+        target = link["target"]
+        try:
+            target_info = os.lstat(target)
+        except OSError as error:
+            raise TransactionError(
+                f"generated link target is missing: {target} ({error})"
+            ) from error
+        checks.append((link, link_path, target, target_info))
+    trash = _trash_directory(path, "links")
+    records = []
+    for index, (link, link_path, target, target_info) in enumerate(checks):
+        trash_path = trash / f"{index:03d}-{os.path.basename(link['path'])}"
+        if os.path.lexists(trash_path):
+            raise TransactionError(
+                f"trash entry already exists: {trash_path}"
+            )
+        os.rename(link_path, trash_path)
+        if os.path.lexists(link_path) or not os.path.islink(trash_path):
+            raise TransactionError(
+                f"materialization postcondition failed for {link_path}"
+            )
+        if os.readlink(trash_path) != link["link_text"]:
+            raise TransactionError(
+                f"trashed link no longer matches its capture: {trash_path}"
+            )
+        if not os.path.isdir(target):
+            raise TransactionError(
+                f"external target vanished during materialization: {target}"
+            )
+        records.append(
+            {
+                "path": link["path"],
+                "link_text": link["link_text"],
+                "lstat_mode": link["lstat_mode"],
+                "target_policy": link["target_policy"],
+                "post_smoke_type": link["post_smoke_type"],
+                "trash_path": str(trash_path),
+                "target": target,
+                "target_dev": target_info.st_dev,
+                "target_ino": target_info.st_ino,
+            }
+        )
+    _append_event(path, "generated_paths_materialized", {"links": records})
+    _print_journal(path)
+    return 0
+
+
+def cmd_rollback_generated_paths(name: str, journal, manifest_path) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    _require_capture(events, path)
+    materialized = _active(
+        events, "generated_paths_materialized", "generated_paths_rolled_back"
+    )
+    if materialized is None:
+        raise TransactionError(
+            f"journal records no active generated-path materialization: "
+            f"{path}"
+        )
+    _manifest, workspace = _load_workspace(manifest_path, name)
+    destination = workspace.destination_path
+    plans = []
+    for record in materialized["payload"]["links"]:
+        trash_path = record["trash_path"]
+        if not os.path.islink(trash_path):
+            raise TransactionError(
+                f"concurrent drift: trashed link is missing or altered: "
+                f"{trash_path}"
+            )
+        if os.readlink(trash_path) != record["link_text"]:
+            raise TransactionError(
+                f"concurrent drift: trashed link text changed: {trash_path}"
+            )
+        link_path = destination / record["path"]
+        replacement = False
+        if os.path.lexists(link_path):
+            info = os.lstat(link_path)
+            if stat.S_ISLNK(info.st_mode):
+                raise TransactionError(
+                    f"concurrent drift: {link_path} is unexpectedly a "
+                    f"symlink; refusing to overwrite it"
+                )
+            if not stat.S_ISDIR(info.st_mode):
+                raise TransactionError(
+                    f"concurrent drift: {link_path} is not a generated "
+                    f"directory replacement"
+                )
+            replacement = True
+        plans.append((record, link_path, replacement))
+    trash = _trash_directory(path, "replacements")
+    restored = []
+    for index, (record, link_path, replacement) in enumerate(plans):
+        if replacement:
+            replacement_trash = (
+                trash / f"{index:03d}-{os.path.basename(record['path'])}"
+            )
+            if os.path.lexists(replacement_trash):
+                raise TransactionError(
+                    f"trash entry already exists: {replacement_trash}"
+                )
+            os.rename(link_path, replacement_trash)
+        os.rename(record["trash_path"], link_path)
+        if (
+            not os.path.islink(link_path)
+            or os.readlink(link_path) != record["link_text"]
+        ):
+            raise TransactionError(
+                f"rollback postcondition failed for {link_path}"
+            )
+        restored.append(record["path"])
+    _append_event(
+        path, "generated_paths_rolled_back", {"paths": restored}
+    )
+    _print_journal(path)
+    return 0
+
+
+def cmd_run_smoke(name: str, journal, manifest_path) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    capture = _require_capture(events, path)
+    _require_moved(events, path)
+    manifest, workspace = _load_workspace(manifest_path, name)
+    destination = workspace.destination_path
+    if not destination.is_dir():
+        raise TransactionError(f"destination is missing: {destination}")
+    if workspace.kind == "workspace":
+        _verify_destination_links(events, capture, destination)
+    drive_root = str(manifest.drive_root_path)
+    transaction_tmp = tempfile.mkdtemp(prefix="drive-workspace-")
+    os.chmod(transaction_tmp, 0o700)
+    if _is_within(os.path.abspath(transaction_tmp), drive_root):
+        # The tool provably just created this empty directory; remove it
+        # before refusing so nothing is leaked inside the Drive root.
+        os.rmdir(transaction_tmp)
+        raise TransactionError(
+            f"transaction temporary root resolved inside the Drive "
+            f"root: {transaction_tmp}"
+        )
+    results: list[dict] = []
+    failure: TransactionError | None = None
+    try:
+        for smoke in workspace.smoke:
+            cwd = destination / smoke.cwd
+            if not cwd.is_dir():
+                raise TransactionError(
+                    f"smoke cwd is missing: {cwd}"
+                )
+            env = dict(os.environ)
+            for key, value in smoke.env.items():
+                env[key] = value.replace(TRANSACTION_TMP, transaction_tmp)
+            try:
+                completed = subprocess.run(
+                    list(smoke.argv),
+                    cwd=str(cwd),
+                    env=env,
+                    shell=False,
+                    capture_output=True,
+                )
+            except OSError as error:
+                raise TransactionError(
+                    f"smoke command could not run: "
+                    f"{' '.join(smoke.argv)} ({error})"
+                ) from error
+            results.append(
+                {
+                    "argv": list(smoke.argv),
+                    "cwd": str(cwd),
+                    "status": completed.returncode,
+                }
+            )
+            if completed.returncode != 0:
+                failure = TransactionError(
+                    f"smoke command failed with status "
+                    f"{completed.returncode}: {' '.join(smoke.argv)}"
+                )
+                break
+    except TransactionError as error:
+        failure = error
+    finally:
+        tmp_abs = os.path.abspath(transaction_tmp)
+        if _is_within(tmp_abs, drive_root):
+            cleanup_note = (
+                f"refusing to delete a temporary root inside the Drive "
+                f"root: {transaction_tmp}"
+            )
+            if failure is None:
+                failure = TransactionError(cleanup_note)
+            else:
+                print(f"drive-workspace: {cleanup_note}", file=sys.stderr)
+        else:
+            try:
+                shutil.rmtree(transaction_tmp)
+            except OSError as error:
+                cleanup_note = (
+                    f"temporary root cleanup failed: "
+                    f"{transaction_tmp} ({error})"
+                )
+                if failure is None:
+                    failure = TransactionError(cleanup_note)
+                else:
+                    # Never hide the original failure behind a cleanup error.
+                    print(
+                        f"drive-workspace: {cleanup_note}", file=sys.stderr
+                    )
+    if results or failure is None:
+        _append_event(
+            path,
+            "smoke",
+            {
+                "results": results,
+                "transaction_tmp": transaction_tmp,
+                "completed": failure is None,
+            },
+        )
+    if failure is not None:
+        raise failure
+    _print_journal(path)
+    return 0
+
+
+# --- rollback-local, finalize, verify-rollback, drill, program gates -------
+
+
+def cmd_rollback_local(name: str, journal, manifest_path) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    capture = _require_capture(events, path)
+    _require_moved(events, path)
+    if _active(events, "consumers_applied", "consumers_rolled_back"):
+        raise TransactionError(
+            "consumer changes must be rolled back before the local path"
+        )
+    if _active(
+        events, "generated_paths_materialized", "generated_paths_rolled_back"
+    ):
+        raise TransactionError(
+            "generated paths must be rolled back before the local path"
+        )
+    _manifest, workspace = _load_workspace(manifest_path, name)
+    source = workspace.source_path
+    destination = workspace.destination_path
+    if not os.path.lexists(destination):
+        raise TransactionError(f"destination is missing: {destination}")
+    if os.path.lexists(source):
+        raise TransactionError(
+            f"source position is occupied; refusing to collide: {source}"
+        )
+    parent = source.parent
+    if not parent.is_dir():
+        raise TransactionError(f"source parent is missing: {parent}")
+    if _device_of(destination) != _device_of(parent):
+        raise TransactionError(
+            f"destination {destination} and source parent {parent} are on "
+            f"different devices; os.rename would degrade to a copy"
+        )
+    if workspace.kind == "workspace":
+        try:
+            os.rename(destination, source)
+        except OSError as error:
+            raise TransactionError(
+                f"rename failed: {destination} -> {source} ({error})"
+            ) from error
+    else:
+        owner = workspace.owner_path
+        _run_git(owner, ("worktree", "move", str(destination), str(source)))
+        _run_git(owner, ("worktree", "repair"))
+    current = _workspace_snapshot(workspace, source)
+    if not _snapshots_match(current, capture["payload"]):
+        raise TransactionError(
+            "restored tree does not match the captured snapshot exactly; "
+            "manual inspection is required before this transaction is "
+            "considered rolled back"
+        )
+    _append_event(
+        path,
+        "local_rolled_back",
+        {"source": str(source), "destination": str(destination)},
+    )
+    _print_journal(path)
+    return 0
+
+
+def _resolve_link_target(base: Path, link_path: str, link_text: str) -> str:
+    if os.path.isabs(link_text):
+        return os.path.normpath(link_text)
+    return os.path.normpath(
+        os.path.join(str((base / link_path).parent), link_text)
+    )
+
+
+def cmd_finalize_generated_paths(name: str, journal, manifest_path) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    _require_capture(events, path)
+    materialized = _active(
+        events, "generated_paths_materialized", "generated_paths_rolled_back"
+    )
+    if materialized is None:
+        raise TransactionError(
+            f"journal records no active generated-path materialization to "
+            f"finalize: {path}"
+        )
+    if _latest(events, "rollback_window_closed") is None:
+        raise TransactionError(
+            "rollback_window_closed has not been recorded; the old targets "
+            "stay recoverable until the rollback window is closed"
+        )
+    manifest, workspace = _load_workspace(manifest_path, name)
+    finalized_targets = {
+        target
+        for event in events
+        if event["event"] == "generated_target_finalized"
+        for target in event["payload"]["targets"]
+    }
+    records = materialized["payload"]["links"]
+    target_counts: dict[str, int] = {}
+    for record in records:
+        target_counts[record["target"]] = (
+            target_counts.get(record["target"], 0) + 1
+        )
+    plans = []
+    for record in records:
+        target = record["target"]
+        if record["target_policy"] != "disposable":
+            continue
+        if target in finalized_targets:
+            continue
+        if target_counts[target] > 1:
+            raise TransactionError(
+                f"target is ambiguous: {target} is claimed by more than one "
+                f"materialized link"
+            )
+        for other_workspace in manifest.workspaces:
+            for link in other_workspace.links:
+                own_link = (
+                    other_workspace.name == workspace.name
+                    and link.path == record["path"]
+                )
+                for base in (
+                    other_workspace.source_path,
+                    other_workspace.destination_path,
+                ):
+                    candidate = _resolve_link_target(
+                        base, link.path, link.link_text
+                    )
+                    if candidate != target:
+                        continue
+                    live_path = base / link.path
+                    if not os.path.islink(live_path):
+                        continue
+                    if own_link:
+                        # The record's own path was materialized away; a
+                        # live symlink here means it was recreated behind
+                        # the journal's back and still references the
+                        # target.
+                        raise TransactionError(
+                            f"target is still referenced: the materialized "
+                            f"link was recreated at {live_path}: {target}"
+                        )
+                    raise TransactionError(
+                        f"target is shared with the live link "
+                        f"{live_path} declared by workspace "
+                        f"{other_workspace.name!r}: {target}"
+                    )
+        try:
+            target_info = os.lstat(target)
+        except OSError as error:
+            raise TransactionError(
+                f"target changed since materialization (now missing): "
+                f"{target} ({error})"
+            ) from error
+        if (
+            target_info.st_dev != record["target_dev"]
+            or target_info.st_ino != record["target_ino"]
+        ):
+            raise TransactionError(
+                f"target changed since materialization; refusing to "
+                f"finalize: {target}"
+            )
+        if not stat.S_ISDIR(target_info.st_mode) or stat.S_ISLNK(
+            target_info.st_mode
+        ):
+            raise TransactionError(
+                f"target changed since materialization (not a directory): "
+                f"{target}"
+            )
+        plans.append((record, target))
+    if plans:
+        trash = _trash_directory(path, "targets")
+        finalized = []
+        for index, (record, target) in enumerate(plans):
+            trash_path = trash / f"{index:03d}-{os.path.basename(target)}"
+            if os.path.lexists(trash_path):
+                raise TransactionError(
+                    f"trash entry already exists: {trash_path}"
+                )
+            os.rename(target, trash_path)
+            finalized.append(target)
+        _append_event(
+            path, "generated_target_finalized", {"targets": finalized}
+        )
+    _print_journal(path)
+    return 0
+
+
+def cmd_verify_rollback(
+    name: str, journal, baseline_journal, manifest_path
+) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    baseline_path = _journal_abspath(baseline_journal)
+    baseline_events = read_journal(baseline_path)
+    _require_transaction_header(events, name, path)
+    capture = _require_capture(events, path)
+    rolled_back = _latest(events, "local_rolled_back")
+    if rolled_back is None:
+        raise TransactionError(
+            f"journal records no local rollback to verify: {path}"
+        )
+    if _latest(events, "rollback_verified") is not None:
+        raise TransactionError(
+            f"rollback was already verified; the terminal event is "
+            f"append-once: {path}"
+        )
+    _manifest, workspace = _load_workspace(manifest_path, name)
+    source = workspace.source_path
+    if not source.is_dir():
+        raise TransactionError(f"restored source is missing: {source}")
+    for link in capture["payload"]["links"]:
+        link_path = source / link["path"]
+        if (
+            not os.path.islink(link_path)
+            or os.readlink(link_path) != link["link_text"]
+        ):
+            raise TransactionError(
+                f"generated-link preimage mismatch at {link_path}"
+            )
+    current = _workspace_snapshot(workspace, source)
+    if not _snapshots_match(current, capture["payload"]):
+        raise TransactionError(
+            "local snapshot does not match the captured pre-move state"
+        )
+    for consumer in capture["payload"]["consumers"]:
+        content = _read_text(
+            consumer["path"], f"consumer {consumer['name']!r}"
+        )
+        if content != consumer["content"]:
+            raise TransactionError(
+                f"consumer preimage mismatch: {consumer['path']}"
+            )
+    current_state = _require_provider_evidence(name)
+    journaled = _latest(events, "drive_state")
+    if journaled is None:
+        raise TransactionError(
+            f"journal has no drive_state evidence to compare against: {path}"
+        )
+    baseline_state = _latest(baseline_events, "drive_state")
+    if baseline_state is None:
+        raise TransactionError(
+            f"baseline journal has no drive_state evidence: {baseline_path}"
+        )
+    journaled_cloud = journaled["payload"]["evidence"].get("cloud")
+    current_cloud = current_state.get("cloud")
+    if not isinstance(journaled_cloud, dict) or not isinstance(
+        current_cloud, dict
+    ):
+        raise TransactionError(
+            "cloud identity evidence is missing from the provider or the "
+            "journal"
+        )
+    if current_cloud.get("object_id") != journaled_cloud.get("object_id"):
+        raise TransactionError(
+            f"cloud object ID mismatch: "
+            f"{current_cloud.get('object_id')!r} is not the original "
+            f"{journaled_cloud.get('object_id')!r}"
+        )
+    if current_cloud.get("parent_id") != journaled_cloud.get("parent_id"):
+        raise TransactionError(
+            f"cloud parent mismatch: {current_cloud.get('parent_id')!r} is "
+            f"not the original {journaled_cloud.get('parent_id')!r}"
+        )
+    duplicates = current_cloud.get("duplicates")
+    if duplicates != []:
+        raise TransactionError(
+            f"replacement or duplicate cloud objects are present: "
+            f"{duplicates!r}"
+        )
+    baseline_evidence = baseline_state["payload"]["evidence"]
+    if current_state["queue_cursors"] != baseline_evidence["queue_cursors"]:
+        raise TransactionError(
+            "queue cursors are not stable against the supplied baseline"
+        )
+    if current_state["rows"] != baseline_evidence["rows"]:
+        raise TransactionError(
+            "native rows do not equal the supplied baseline"
+        )
+    _append_event(
+        path,
+        "rollback_verified",
+        {
+            "workspace": name,
+            "baseline_journal": baseline_path,
+            "baseline_final_hash": baseline_events[-1]["event_hash"],
+        },
+    )
+    _print_journal(path)
+    return 0
+
+
+def cmd_request_rollback_drill(name: str, journal, manifest_path) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    capture = _require_capture(events, path)
+    _manifest, workspace = _load_workspace(manifest_path, name)
+    current_state = _require_provider_evidence(name)
+    journaled = _latest(events, "drive_state")
+    if journaled is None:
+        raise TransactionError(
+            f"record-drive-state evidence is required before a rollback "
+            f"drill: {path}"
+        )
+    journaled_cloud = journaled["payload"]["evidence"].get("cloud")
+    current_cloud = current_state.get("cloud")
+    if not isinstance(journaled_cloud, dict) or not isinstance(
+        current_cloud, dict
+    ):
+        raise TransactionError(
+            "cloud identity evidence is missing from the provider or the "
+            "journal"
+        )
+    if (
+        current_cloud.get("object_id") != journaled_cloud.get("object_id")
+        or current_cloud.get("parent_id") != journaled_cloud.get("parent_id")
+    ):
+        raise TransactionError(
+            "cloud identity has not converged; refusing the rollback drill"
+        )
+    if current_cloud.get("duplicates") != []:
+        raise TransactionError(
+            f"replacement or duplicate cloud objects are present: "
+            f"{current_cloud.get('duplicates')!r}"
+        )
+    source = workspace.source_path
+    if not source.is_dir():
+        raise TransactionError(f"workspace source is missing: {source}")
+    current = _workspace_snapshot(workspace, source)
+    if not _snapshots_match(current, capture["payload"]):
+        raise TransactionError(
+            "local state has drifted from the capture; refusing the "
+            "rollback drill"
+        )
+    _append_event(
+        path,
+        "rollback_drill_requested",
+        {"workspace": name, "evidence": current_state},
+    )
+    _print_journal(path)
+    return 0
+
+
+PROGRAM_GATES = (
+    "native_record_convergence_passed",
+    "after_resume_rollback_passed",
+)
+
+
+def cmd_record_program_gate(journal, gate: str, evidence_journal) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    if events[0]["journal_kind"] != "program":
+        raise TransactionError(
+            f"journal is a {events[0]['journal_kind']} journal, not a "
+            f"program journal: {path}"
+        )
+    evidence_path = _journal_abspath(evidence_journal)
+    evidence_events = read_journal(evidence_path)
+    if evidence_events[0]["journal_kind"] != "transaction":
+        raise TransactionError(
+            f"evidence journal is not a transaction journal: {evidence_path}"
+        )
+    if gate == "native_record_convergence_passed":
+        evidence = _latest(evidence_events, "drive_state")
+        if evidence is None:
+            raise TransactionError(
+                f"evidence journal has no drive_state evidence for the "
+                f"native convergence gate: {evidence_path}"
+            )
+        if "rows" not in evidence["payload"].get("evidence", {}):
+            raise TransactionError(
+                f"drive_state evidence carries no native rows: "
+                f"{evidence_path}"
+            )
+    else:
+        evidence = _latest(evidence_events, "rollback_verified")
+        if evidence is None:
+            raise TransactionError(
+                f"evidence journal has no rollback_verified terminal event "
+                f"for the after-resume gate: {evidence_path}"
+            )
+    _append_event(
+        path,
+        "program_gate",
+        {
+            "gate": gate,
+            "evidence_journal": evidence_path,
+            "evidence_transaction_id": evidence_events[0]["transaction_id"],
+            "evidence_sequence": evidence["sequence"],
+            "evidence_final_hash": evidence_events[-1]["event_hash"],
+        },
+    )
+    _print_journal(path)
+    return 0
+
+
+# --- Command-line surface --------------------------------------------------
+
+
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="drive-workspace",
         description=(
@@ -1099,15 +2954,208 @@ def main(argv: list[str] | None = None) -> int:
         "symlink remains under the Drive root.",
     )
     audit_parser.add_argument(
-        "--manifest", required=True, type=Path, help="Path to the migration manifest."
+        "--manifest", required=True, type=Path,
+        help="Path to the migration manifest.",
     )
+
+    def add_command(
+        command: str,
+        help_text: str,
+        *,
+        name_arg: bool = True,
+        manifest: bool = False,
+    ) -> argparse.ArgumentParser:
+        subparser = subparsers.add_parser(command, help=help_text)
+        if name_arg:
+            subparser.add_argument(
+                "name", help="Workspace name from the manifest."
+            )
+        subparser.add_argument(
+            "--journal", required=True, help="Path to the journal."
+        )
+        if manifest:
+            subparser.add_argument(
+                "--manifest", required=True, type=Path,
+                help="Path to the migration manifest.",
+            )
+        return subparser
+
+    add_command(
+        "capture",
+        "Create the transaction journal and record audit state plus exact "
+        "consumer preimages.",
+        manifest=True,
+    )
+    init_parser = add_command(
+        "init-journal",
+        "Create an observation or program journal.",
+        name_arg=False,
+    )
+    init_parser.add_argument(
+        "--kind", required=True, choices=("observation", "program")
+    )
+    init_parser.add_argument("--label", required=True)
+    add_command(
+        "verify-journal",
+        "Validate a journal's full hash chain read-only.",
+        name_arg=False,
+    )
+    add_command(
+        "record-drive-state",
+        "Record provider-observed native Drive state and queue cursors.",
+    )
+    add_command(
+        "confirm-drive-paused",
+        "Require fresh provider evidence that Drive is paused with no "
+        "outbound queue advancement.",
+    )
+    add_command(
+        "move",
+        "Atomically move the workspace after re-running every preflight "
+        "gate.",
+        manifest=True,
+    )
+    add_command(
+        "apply-consumers",
+        "Apply the journaled old/new consumer substitutions atomically.",
+        manifest=True,
+    )
+    add_command(
+        "verify-consumers",
+        "Require no old value and exact new occurrence counts.",
+        manifest=True,
+    )
+    add_command(
+        "stage-consumers",
+        "Stage exactly the manifest-owned hunks with git apply --cached.",
+        manifest=True,
+    )
+    add_command(
+        "verify-local",
+        "Require every captured link intact (or its declared post-smoke "
+        "type) at the destination.",
+        manifest=True,
+    )
+    add_command(
+        "materialize-generated-paths",
+        "Move classified generated links to the recoverable trash.",
+        manifest=True,
+    )
+    add_command(
+        "run-smoke",
+        "Run the manifest smoke records with an external per-transaction "
+        "temporary root.",
+        manifest=True,
+    )
+    add_command(
+        "rollback-generated-paths",
+        "Restore materialized generated links from the recoverable trash.",
+        manifest=True,
+    )
+    add_command(
+        "finalize-generated-paths",
+        "After the rollback window closes, move unreferenced disposable "
+        "targets to the recoverable trash.",
+        manifest=True,
+    )
+    add_command(
+        "rollback-consumers",
+        "Restore consumer preimages and unstage manifest-owned hunks.",
+        manifest=True,
+    )
+    add_command(
+        "rollback-local",
+        "Move the workspace back and require the exact captured snapshot.",
+        manifest=True,
+    )
+    verify_rollback_parser = add_command(
+        "verify-rollback",
+        "After Drive resumes, verify the complete rollback and append the "
+        "terminal event.",
+        manifest=True,
+    )
+    verify_rollback_parser.add_argument(
+        "--baseline-journal", required=True,
+        help="Observation journal holding the native baseline.",
+    )
+    add_command(
+        "request-rollback-drill",
+        "Record the sole accepted deliberate-failure event after "
+        "convergence checks.",
+        manifest=True,
+    )
+    gate_parser = add_command(
+        "record-program-gate",
+        "Verify a transaction journal's evidence and record a program gate.",
+        name_arg=False,
+    )
+    gate_parser.add_argument("--gate", required=True, choices=PROGRAM_GATES)
+    gate_parser.add_argument("--evidence-journal", required=True)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
     arguments = parser.parse_args(argv)
     if arguments.command is None:
         parser.print_help(sys.stderr)
         return 2
     if arguments.command == "audit":
         return run_audit(arguments.manifest)
-    return 0
+    handlers = {
+        "capture": lambda a: cmd_capture(a.name, a.journal, a.manifest),
+        "init-journal": lambda a: cmd_init_journal(a.journal, a.kind, a.label),
+        "verify-journal": lambda a: cmd_verify_journal(a.journal),
+        "record-drive-state": lambda a: cmd_record_drive_state(
+            a.name, a.journal
+        ),
+        "confirm-drive-paused": lambda a: cmd_confirm_drive_paused(
+            a.name, a.journal
+        ),
+        "move": lambda a: cmd_move(a.name, a.journal, a.manifest),
+        "apply-consumers": lambda a: cmd_apply_consumers(
+            a.name, a.journal, a.manifest
+        ),
+        "verify-consumers": lambda a: cmd_verify_consumers(
+            a.name, a.journal, a.manifest
+        ),
+        "stage-consumers": lambda a: cmd_stage_consumers(
+            a.name, a.journal, a.manifest
+        ),
+        "verify-local": lambda a: cmd_verify_local(
+            a.name, a.journal, a.manifest
+        ),
+        "materialize-generated-paths": lambda a: (
+            cmd_materialize_generated_paths(a.name, a.journal, a.manifest)
+        ),
+        "run-smoke": lambda a: cmd_run_smoke(a.name, a.journal, a.manifest),
+        "rollback-generated-paths": lambda a: (
+            cmd_rollback_generated_paths(a.name, a.journal, a.manifest)
+        ),
+        "finalize-generated-paths": lambda a: (
+            cmd_finalize_generated_paths(a.name, a.journal, a.manifest)
+        ),
+        "rollback-consumers": lambda a: cmd_rollback_consumers(
+            a.name, a.journal, a.manifest
+        ),
+        "rollback-local": lambda a: cmd_rollback_local(
+            a.name, a.journal, a.manifest
+        ),
+        "verify-rollback": lambda a: cmd_verify_rollback(
+            a.name, a.journal, a.baseline_journal, a.manifest
+        ),
+        "request-rollback-drill": lambda a: cmd_request_rollback_drill(
+            a.name, a.journal, a.manifest
+        ),
+        "record-program-gate": lambda a: cmd_record_program_gate(
+            a.journal, a.gate, a.evidence_journal
+        ),
+    }
+    try:
+        return handlers[arguments.command](arguments)
+    except (ManifestError, AuditError, JournalError, TransactionError) as error:
+        print(f"drive-workspace: {error}", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":

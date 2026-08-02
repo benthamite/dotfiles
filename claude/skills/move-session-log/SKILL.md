@@ -20,7 +20,25 @@ Do not use this skill to inspect or open the current conversation log; use
 ## Modes
 
 - **Single session**: `move-session-log <session-id>` — move a specific session from another project's logs to the **current** project's logs. Use when one session got recorded under the wrong project (e.g., you `cd`'d during a session, or invoked Claude from the wrong dir).
-- **Whole-project rename**: `move-session-log --rename <old-project-path> <new-project-path>` — move all session data when a project's filesystem path changes. Used by the `rename-project` skill. This is also the per-package primitive that `migrate-profile` performs in bulk; that skill stays separate because it adds merge semantics and `~/.claude.json` profile-path rewrites that the simple rename doesn't need.
+- **Whole-project rename**: `move-session-log --rename <old-project-path> <new-project-path>` — move all session data when a project's filesystem path changes. Used by the `rename-project` skill and by the Drive workspace migration tooling. This is also the per-package primitive that `migrate-profile` performs in bulk; that skill stays separate because it adds merge semantics and `~/.claude.json` profile-path rewrites that the simple rename doesn't need.
+
+## Bundled script (preferred)
+
+Both modes are implemented by the bundled adapter, which mirrors the Codex
+`move-session-log` script interface and has byte-equivalent path-mapping
+semantics (enforced by `tests/test_move_session_log_parity.py` in dotfiles):
+
+```bash
+python3 "/Users/pablostafforini/My Drive/dotfiles/claude/skills/move-session-log/scripts/move_session_log.py" <session-id>
+python3 "/Users/pablostafforini/My Drive/dotfiles/claude/skills/move-session-log/scripts/move_session_log.py" --dry-run --rename <old-project-path> <new-project-path>
+python3 "/Users/pablostafforini/My Drive/dotfiles/claude/skills/move-session-log/scripts/move_session_log.py" --rename <old-project-path> <new-project-path>
+```
+
+Run `--dry-run` first for renames and inspect the reported counts. The script
+honors `CLAUDE_CONFIG_DIR` (config file at `$CLAUDE_CONFIG_DIR/.claude.json`)
+and defaults to `~/.claude` + `~/.claude.json`. The manual step-by-step
+recipes below remain as the reference description of what it does and as a
+fallback if the script is unavailable.
 
 ## Path encoding
 

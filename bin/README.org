@@ -1,7 +1,7 @@
 #+title: Command index
 #+author: Pablo Stafforini
 
-This index covers the 52 tracked files under =bin/= whose Git mode is
+This index covers the 54 tracked files under =bin/= whose Git mode is
 =100755=. Non-executable libraries and data files are intentionally omitted.
 The first column is machine-readable and should contain every executable
 exactly once.
@@ -81,6 +81,8 @@ Mail activation and credential lookup are documented further in
 | Command | Contract |
 |---------+----------|
 | =char_input= | Passes one character to the macOS input-character AppleScript. |
+| =drive-workspace= | Audits, migrates, and repairs Google Drive-hosted workspaces against the tracked migration manifest. |
+| =drive-workspace-native.jxa= | JXA helper that reads Google Drive's native sync metadata for =drive-workspace=. |
 | =mdfind-wrapper= | Runs Spotlight’s =mdfind= while suppressing its known query-parser noise. |
 | =personal-updates= | Applies the scheduled and manual update policy documented in [[file:../macos/README.org][the macOS README]]. |
 | =switch-gnupg= | Replaces the Homebrew GnuPG formula with a requested historical version. |

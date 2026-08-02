@@ -1,0 +1,236 @@
+"""Parity tests for the Claude and Codex session-relocation adapters.
+
+Both move_session_log.py scripts must support
+
+    python3 scripts/move_session_log.py --dry-run --rename OLD NEW
+    python3 scripts/move_session_log.py --rename OLD NEW
+
+and must apply byte-equivalent path-mapping semantics: an exact-match OLD
+path value in a session path field becomes exactly NEW, other values are
+untouched, and --dry-run modifies nothing. The session-root layouts differ
+(Codex: ~/.codex/sessions + history + index; Claude: ~/.claude/projects with
+encoded directory names + history + ~/.claude.json), so the scripts are not
+byte-identical; the mapping behavior must be.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+import subprocess
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+CODEX_SCRIPT = ROOT / "codex" / "skills" / "move-session-log" / "scripts" / "move_session_log.py"
+CLAUDE_SCRIPT = ROOT / "claude" / "skills" / "move-session-log" / "scripts" / "move_session_log.py"
+
+OLD = "/Users/example/My Drive/repos/sample-project"
+NEW = "/Users/example/repos/sample-project"
+OTHER = "/Users/example/elsewhere/unrelated-project"
+SESSION_ID = "11111111-2222-3333-4444-555555555555"
+
+PATH_KEYS = {"cwd", "project", "workdir", "working_dir"}
+
+
+def encode_claude(path: str) -> str:
+    return re.sub(r"[/. ]", "-", path)
+
+
+def jsonl(rows: list[dict]) -> str:
+    return "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows)
+
+
+def tree_digest(root: Path) -> dict[str, str]:
+    digest = {}
+    for path in sorted(root.rglob("*")):
+        if path.is_file():
+            digest[str(path.relative_to(root))] = hashlib.sha256(
+                path.read_bytes()
+            ).hexdigest()
+    return digest
+
+
+def collect_path_values(root: Path) -> list[str]:
+    values: list[str] = []
+
+    def walk(obj):
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                if key in PATH_KEYS and isinstance(value, str):
+                    values.append(value)
+                else:
+                    walk(value)
+        elif isinstance(obj, list):
+            for item in obj:
+                walk(item)
+
+    for path in sorted(root.rglob("*.jsonl")):
+        for line in path.read_text().splitlines():
+            if not line.strip():
+                continue
+            try:
+                walk(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return values
+
+
+class MoveSessionLogParityTest(unittest.TestCase):
+    def make_codex_home(self, base: Path) -> Path:
+        home = base / "codex-home"
+        day = home / "sessions" / "2026" / "08" / "01"
+        day.mkdir(parents=True)
+        (day / f"rollout-2026-08-01T10-00-00-{SESSION_ID}.jsonl").write_text(
+            jsonl(
+                [
+                    {
+                        "type": "session_meta",
+                        "payload": {
+                            "id": SESSION_ID,
+                            "timestamp": "2026-08-01T10:00:00Z",
+                            "cwd": OLD,
+                        },
+                    },
+                    {"type": "turn_context", "payload": {"cwd": OLD}},
+                    {"type": "turn_context", "payload": {"cwd": OTHER}},
+                ]
+            )
+        )
+        (home / "history.jsonl").write_text(
+            jsonl(
+                [
+                    {"session_id": SESSION_ID, "text": "hello", "cwd": OLD},
+                    {"session_id": "other", "text": "hi", "cwd": OTHER},
+                ]
+            )
+        )
+        (home / "session_index.jsonl").write_text(
+            jsonl([{"id": SESSION_ID, "cwd": OLD}])
+        )
+        return home
+
+    def make_claude_config(self, base: Path) -> Path:
+        config = base / "claude-config"
+        project_dir = config / "projects" / encode_claude(OLD)
+        project_dir.mkdir(parents=True)
+        (project_dir / f"{SESSION_ID}.jsonl").write_text(
+            jsonl(
+                [
+                    {"sessionId": SESSION_ID, "cwd": OLD, "type": "user"},
+                    {"sessionId": SESSION_ID, "cwd": OLD, "type": "assistant"},
+                    {"sessionId": SESSION_ID, "cwd": OTHER, "type": "user"},
+                ]
+            )
+        )
+        (config / "history.jsonl").write_text(
+            jsonl(
+                [
+                    {"sessionId": SESSION_ID, "project": OLD, "display": "hello"},
+                    {"sessionId": "other", "project": OTHER, "display": "hi"},
+                ]
+            )
+        )
+        (config / ".claude.json").write_text(
+            json.dumps({"projects": {OLD: {"allowedTools": []}, OTHER: {}}}, indent=2)
+        )
+        return config
+
+    def run_codex(self, home: Path, *args: str) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            ["python3", str(CODEX_SCRIPT), *args],
+            capture_output=True,
+            text=True,
+            env={**os.environ, "CODEX_HOME": str(home)},
+        )
+
+    def run_claude(self, config: Path, *args: str) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            ["python3", str(CLAUDE_SCRIPT), *args],
+            capture_output=True,
+            text=True,
+            env={**os.environ, "CLAUDE_CONFIG_DIR": str(config)},
+        )
+
+    def test_dry_run_modifies_nothing_in_either_tree(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            codex_home = self.make_codex_home(base)
+            claude_config = self.make_claude_config(base)
+            before_codex = tree_digest(codex_home)
+            before_claude = tree_digest(claude_config)
+
+            result = self.run_codex(codex_home, "--dry-run", "--rename", OLD, NEW)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = self.run_claude(claude_config, "--dry-run", "--rename", OLD, NEW)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+            self.assertEqual(tree_digest(codex_home), before_codex)
+            self.assertEqual(tree_digest(claude_config), before_claude)
+
+    def test_rename_applies_byte_equivalent_path_mapping(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            codex_home = self.make_codex_home(base)
+            claude_config = self.make_claude_config(base)
+
+            result = self.run_codex(codex_home, "--rename", OLD, NEW)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = self.run_claude(claude_config, "--rename", OLD, NEW)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+            codex_values = collect_path_values(codex_home)
+            claude_values = collect_path_values(claude_config)
+
+            # Identical mapping semantics: OLD is gone from both trees, the
+            # rewritten value is byte-identical to NEW on both sides, and
+            # non-matching values survive untouched on both sides.
+            for label, values in (("codex", codex_values), ("claude", claude_values)):
+                with self.subTest(tool=label):
+                    self.assertNotIn(OLD, values)
+                    self.assertIn(NEW, values)
+                    self.assertIn(OTHER, values)
+            self.assertEqual(set(codex_values), set(claude_values))
+
+    def test_claude_rename_moves_project_dir_and_claude_json_entry(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            claude_config = self.make_claude_config(base)
+            result = self.run_claude(claude_config, "--rename", OLD, NEW)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+            self.assertFalse((claude_config / "projects" / encode_claude(OLD)).exists())
+            new_dir = claude_config / "projects" / encode_claude(NEW)
+            self.assertTrue(new_dir.is_dir())
+            self.assertTrue((new_dir / f"{SESSION_ID}.jsonl").is_file())
+
+            data = json.loads((claude_config / ".claude.json").read_text())
+            self.assertIn(NEW, data["projects"])
+            self.assertNotIn(OLD, data["projects"])
+            self.assertIn(OTHER, data["projects"])
+
+            history = [
+                json.loads(line)
+                for line in (claude_config / "history.jsonl").read_text().splitlines()
+            ]
+            self.assertEqual(
+                [entry["project"] for entry in history], [NEW, OTHER]
+            )
+
+    def test_rename_requires_absolute_paths_on_both_sides(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            codex_home = self.make_codex_home(base)
+            claude_config = self.make_claude_config(base)
+            result = self.run_codex(codex_home, "--rename", "relative/x", NEW)
+            self.assertNotEqual(result.returncode, 0)
+            result = self.run_claude(claude_config, "--rename", "relative/x", NEW)
+            self.assertNotEqual(result.returncode, 0)
+
+
+if __name__ == "__main__":
+    unittest.main()

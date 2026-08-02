@@ -5,10 +5,17 @@
 # claude/hooks/sync-reasoning-tasks-worktree.sh. It fetches once, skips protected
 # non-task worktrees, then lets the per-worktree script handle dirty trees,
 # detached heads, dry-run merge conflicts, local overlays, and key symlinks.
+#
+# Worktree discovery goes through `git worktree list`, so it covers both the
+# shared external root (~/repos/.worktrees/reasoning-tasks/<branch>, where
+# newtask and cr-review-worktree construct new worktrees) and any legacy
+# sibling worktrees that have not been migrated yet. No worktree is ever
+# created here, and none may live under ~/My Drive.
 
 set -euo pipefail
 
 root="${REASONING_TASKS_WORKTREES_ROOT:-${AGENT_C_WORKTREES_ROOT:-$HOME/Trajectory/reasoning-tasks}}"
+external_root="${REASONING_TASKS_EXTERNAL_WORKTREES_ROOT:-$HOME/repos/.worktrees/reasoning-tasks}"
 main="${REASONING_TASKS_MAIN_WORKTREE:-${AGENT_C_MAIN_WORKTREE:-$root/main}}"
 sync_script="${REASONING_TASKS_SYNC_SCRIPT:-${AGENT_C_SYNC_SCRIPT:-$HOME/My Drive/dotfiles/claude/hooks/sync-reasoning-tasks-worktree.sh}}"
 log_dir="${REASONING_TASKS_SYNC_LOG_DIR:-${AGENT_C_SYNC_LOG_DIR:-$HOME/.local/state/reasoning-tasks-worktree-sync}}"
@@ -29,6 +36,7 @@ trap 'rmdir "$lock_dir" 2>/dev/null || true' EXIT
 
 echo "[reasoning-tasks-sync-all] started $(date '+%Y-%m-%d %H:%M:%S')"
 echo "[reasoning-tasks-sync-all] root: $root"
+echo "[reasoning-tasks-sync-all] external worktrees root: $external_root"
 
 if [ ! -d "$main" ]; then
   echo "[reasoning-tasks-sync-all] missing main worktree: $main"

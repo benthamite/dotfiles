@@ -122,8 +122,17 @@ repair_all_worktree_keys() {
   local canonical="$HOME/Trajectory/reasoning-tasks/reasoning-tasks-cr-studio/.claude/.env"
   [ -e "$canonical" ] || return 0
   local d name link n=0
-  for d in "$HOME"/Trajectory/reasoning-tasks/*/; do
+  # New worktrees live under the shared external root
+  # ~/repos/.worktrees/reasoning-tasks (task worktrees under pablo/<slug>,
+  # QA worktrees as qa-<issue|slug>); legacy worktrees remain siblings of
+  # main until migrated. Cover all three layouts; only real worktrees (a
+  # .git pointer exists) are touched, so container dirs like pablo/ are
+  # skipped.
+  for d in "$HOME"/Trajectory/reasoning-tasks/*/ \
+           "$HOME"/repos/.worktrees/reasoning-tasks/*/ \
+           "$HOME"/repos/.worktrees/reasoning-tasks/pablo/*/; do
     [ -d "$d" ] || continue
+    [ -e "$d.git" ] || continue
     name="$(basename "$d")"
     case "$name" in main|reasoning-tasks-cr-studio|agent-c-cr-studio) continue;; esac
     link="$d.claude/.env"
@@ -138,7 +147,8 @@ repair_all_worktree_keys() {
 }
 repair_all_worktree_keys
 
-# Garbage-collect stale transient CR QA worktrees under ~/Trajectory/reasoning-tasks/.cr-tmp/.
+# Garbage-collect stale transient CR QA worktrees under
+# ~/repos/.worktrees/reasoning-tasks/qa-* (plus legacy in-repo leftovers).
 # Best-effort and strictly non-fatal: runs AFTER the critical key-repair above so it
 # can never affect it, and only removes worktrees that are clean AND fully pushed
 # (the script keeps anything with uncommitted/unpushed work). See cr-worktree-gc.sh.

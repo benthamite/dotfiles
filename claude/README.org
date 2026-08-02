@@ -98,6 +98,18 @@ roots, and maintenance. The generated
 public skills only; runtime plugins, private skills, ignored system content,
 and skills owned by other repositories are outside its scope.
 
+Org task triage is split across two skills over one engine. =triage-personal-todos=
+here owns personal notes; the project-local =triage-project-todos= in the Epoch
+workspace owns Epoch work. They share the engine, the task fingerprints, the
+snapshot binding and the transactional write, and differ only in which corpus
+they cover and which nine-row priority table the model judges against. The split
+exists because that table is the thing that differs, and choosing the wrong one
+fails silently: it writes a priority cookie with provenance attached, which the
+other skill then reads as settled. Each inventory and prepared manifest records
+its corpus, and verification reads it back out, so a run prepared against one
+corpus cannot be verified or applied as the other. =bin/triage-notes= is the only
+place that knows where the shared engine lives.
+
 The paired =orchestrate-agent-review= helper keeps implementation stages atomic.
 Its fixed resume path tells an agent whose work is already complete to return
 only the required stage marker instead of repeating the work or its evidence;

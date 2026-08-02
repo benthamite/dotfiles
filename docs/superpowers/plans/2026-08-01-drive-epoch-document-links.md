@@ -1,5 +1,9 @@
 # Drive-Compatible Epoch Document Links Implementation Plan
 
+> **Superseded:** Do not execute this plan. Its Drive baseline and sequencing
+> rely on the invalid assumption that directory-symlink failures are not
+> user-visible. Rewrite it from the revised workspace design before use.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace 36 invalid cross-account `.gdoc` pointers with normal `.url` files that open the same documents through the configured Epoch Chrome profile without changing permissions.
@@ -1372,8 +1376,10 @@ The script must never print token data or HTTP response bodies.
 
 - [ ] **Step 3: Snapshot permissions and create the pilot**
 
-Choose an authorized pilot document privately and export its ID as
-`EPOCH_PILOT_DOC_ID`. Never put the real ID in this public plan. Run:
+Pick any Epoch-only document for the pilot and export its id as
+`EPOCH_PILOT_DOC_ID`; it is deliberately not written down here, because this
+plan is published and a document id is a direct handle to internal notes.
+Run:
 
 ~~~bash
 umask 077

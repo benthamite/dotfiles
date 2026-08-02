@@ -112,7 +112,10 @@ backend's authoritative waiting state, and atomically adopts the fresh
 transcript without creating another review pass. During implementation, a
 missing final marker can expose only the latest bounded stage-level return once
 the author is awaiting input; busy-session and earlier internal messages remain
-inaccessible. If that bounded return explicitly reports exhausted Claude usage
+inaccessible. Every delivered whole-stage resume advances that boundary, so an
+awaiting author with no fresh assistant output cannot make an earlier progress
+message look like a new return. If that bounded return explicitly reports
+exhausted Claude usage
 credits, the helper can switch the same fixed author session to Opus or Sonnet,
 verify the model from Claude's status file, and leave the stage awaiting the
 ordinary fixed whole-stage resume. This local control neither transfers the

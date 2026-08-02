@@ -245,7 +245,11 @@ may print only the latest assistant response after the guarded implementation
 boundary. It is unavailable while Agent 1 is busy, suppresses all earlier
 internal progress messages, and refuses a completed marker. Use it only to
 identify a stage-level stop condition or distinguish that condition from an
-omitted marker; it does not authorize task-level supervision.
+omitted marker; it does not authorize task-level supervision. After every
+delivered `resume-stage`, the helper moves this boundary to that resume's
+transcript offset. If Agent 1 awaits without fresh assistant output, it reports
+no bounded return instead of repeating the previous checkpoint; do not resume
+again until a fresh return exists.
 
 Send concise commentary when the stage phase changes. Do not emit periodic
 task-level heartbeats. If Agent 1 is busy, leave it alone. If implementation is

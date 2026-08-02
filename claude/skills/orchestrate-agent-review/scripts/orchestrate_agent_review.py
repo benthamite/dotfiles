@@ -199,6 +199,13 @@ def validate_run(state: Any) -> dict[str, Any]:
         raise SystemExit("invalid run state: submissions and completions are incoherent")
     if not isinstance(state.get("resume_count"), int) or state["resume_count"] < 0:
         raise SystemExit("invalid run state: resume count must be a nonnegative integer")
+    latest_resume_offset = state.get("latest_resume_offset")
+    if latest_resume_offset is not None and (
+        not isinstance(latest_resume_offset, int) or latest_resume_offset < 0
+    ):
+        raise SystemExit(
+            "invalid run state: latest resume offset must be a nonnegative integer"
+        )
     _validate_pending(state.get("pending_submission"))
 
     status = state["status"]
@@ -376,6 +383,7 @@ def create_run(args: argparse.Namespace) -> None:
         "completions": completions,
         "pending_submission": None,
         "resume_count": 0,
+        "latest_resume_offset": None,
         "adopted_evidence": adopted_evidence,
         "acceptance_evidence": None,
     }
@@ -837,6 +845,7 @@ def _finalize_pending(state: dict[str, Any]) -> None:
         state["expected_phase"] = None
     else:
         state["resume_count"] += 1
+        state["latest_resume_offset"] = pending["transcript_offset"]
     state["pending_submission"] = None
 
 
@@ -1263,9 +1272,12 @@ def stage_return(args: argparse.Namespace) -> None:
 
 def _latest_implementation_return(state: dict[str, Any]) -> str:
     submission = state["submissions"][-1]
+    offset = state.get("latest_resume_offset")
+    if offset is None:
+        offset = submission["transcript_offset"]
     messages = transcript_messages(
         Path(state["agent1"]["transcript"]),
-        offset=submission["transcript_offset"],
+        offset=offset,
     )
     if not messages:
         raise SystemExit("no bounded implementation return is available")

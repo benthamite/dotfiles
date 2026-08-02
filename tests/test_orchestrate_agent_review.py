@@ -355,7 +355,9 @@ class StageAtomicRunTests(unittest.TestCase):
         self.assertIn("Do not stop at internal task boundaries", prompt)
         self.assertTrue(prompt.endswith("STAGE COMPLETE: 2"))
         self.assertNotIn("Task 7", prompt)
-        self.assertEqual(orchestrator.load_run(self.run_file)["resume_count"], 1)
+        state = orchestrator.load_run(self.run_file)
+        self.assertEqual(state["resume_count"], 1)
+        self.assertEqual(state["latest_resume_offset"], 0)
 
     def test_resume_stage_closes_an_already_finished_stage_without_rework(self):
         self.start_implementation()
@@ -824,6 +826,52 @@ class StageAtomicRunTests(unittest.TestCase):
             self.assertRaisesRegex(SystemExit, "use finish-phase"),
         ):
             orchestrator.stage_return(args)
+
+    def test_stage_return_requires_fresh_assistant_output_after_resume(self):
+        self.start_implementation()
+        record = {
+            "timestamp": "2026-08-02T12:00:00Z",
+            "message": {"role": "assistant", "content": "Earlier progress"},
+        }
+        with self.agent1_transcript.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(record) + "\n")
+
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "awaiting-input"},
+            ),
+            mock.patch.object(orchestrator, "submit_to_agent"),
+            redirect_stdout(io.StringIO()),
+        ):
+            orchestrator.resume_stage(SimpleNamespace(run_file=str(self.run_file)))
+
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "awaiting-input"},
+            ),
+            self.assertRaisesRegex(SystemExit, "no bounded implementation return"),
+        ):
+            orchestrator.stage_return(SimpleNamespace(run_file=str(self.run_file)))
+
+        record["message"]["content"] = "Fresh stage-level stop"
+        with self.agent1_transcript.open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(record) + "\n")
+        output = io.StringIO()
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "awaiting-input"},
+            ),
+            redirect_stdout(output),
+        ):
+            orchestrator.stage_return(SimpleNamespace(run_file=str(self.run_file)))
+
+        self.assertEqual(output.getvalue().strip(), "Fresh stage-level stop")
 
     def test_switch_model_requires_credit_stop_and_verifies_status_change(self):
         self.start_implementation()

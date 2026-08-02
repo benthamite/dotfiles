@@ -141,7 +141,7 @@ The function @code{vulpea-extras-agenda-files-update} dynamically rebuilds @code
 
 @enumerate
 @item
-The current value of @code{org-agenda-files}.
+The files listed in @code{vulpea-extras-agenda-files-base}.
 @item
 All files tagged with @samp{"project"} in the Org Roam database (queried via @code{vulpea-extras-project-files}).
 @item
@@ -149,6 +149,11 @@ Recently modified Org Roam files (retrieved via @code{org-roam-extras-recent} fr
 @end enumerate
 
 After merging these lists and removing duplicates, it subtracts any files listed in @code{org-extras-agenda-files-excluded}. This function is installed as @samp{:before} advice on @code{org-agenda}, so the agenda file list is always fresh when you open the agenda.
+
+The list is rebuilt from these sources rather than added to the value already in @code{org-agenda-files}. This matters because the selection has to be able to shrink: @code{vulpea-extras-project-update-tag} removes the @samp{"project"} tag as soon as a file has no open task left, and that removal only reaches the agenda if a file which no longer qualifies is actually dropped.
+
+@vindex vulpea-extras-agenda-files-base
+The user option @code{vulpea-extras-agenda-files-base} lists the files that must appear in @code{org-agenda-files} whether or not they qualify as projects or count as recently modified. It exists because the rebuild is unconditional: without it, a statically configured agenda file would be discarded on the first refresh. The default value is the calendar file defined by the @samp{paths} package.
 
 @findex vulpea-extras-project-files
 The function @code{vulpea-extras-project-files} queries the Org Roam database for all files that contain a node tagged with @samp{"project"}. It returns a deduplicated list of file paths. This is the function that connects the automatic tagging system (@ref{Updating the project tag}) to the agenda file list.

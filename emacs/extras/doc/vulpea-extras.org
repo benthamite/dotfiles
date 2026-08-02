@@ -92,11 +92,16 @@ This function is designed to be added to a hook such as ~before-save-hook~ for O
 #+findex: vulpea-extras-agenda-files-update
 The function ~vulpea-extras-agenda-files-update~ dynamically rebuilds ~org-agenda-files~ by combining three sources:
 
-1. The current value of ~org-agenda-files~.
+1. The files listed in ~vulpea-extras-agenda-files-base~.
 2. All files tagged with ="project"= in the Org Roam database (queried via ~vulpea-extras-project-files~).
 3. Recently modified Org Roam files (retrieved via ~org-roam-extras-recent~ from =org-roam-extras.el=, limited to the last 2 days and 500 files).
 
 After merging these lists and removing duplicates, it subtracts any files listed in ~org-extras-agenda-files-excluded~. This function is installed as =:before= advice on ~org-agenda~, so the agenda file list is always fresh when you open the agenda.
+
+The list is rebuilt from these sources rather than added to the value already in ~org-agenda-files~. This matters because the selection has to be able to shrink: ~vulpea-extras-project-update-tag~ removes the ="project"= tag as soon as a file has no open task left, and that removal only reaches the agenda if a file which no longer qualifies is actually dropped.
+
+#+vindex: vulpea-extras-agenda-files-base
+The user option ~vulpea-extras-agenda-files-base~ lists the files that must appear in ~org-agenda-files~ whether or not they qualify as projects or count as recently modified. It exists because the rebuild is unconditional: without it, a statically configured agenda file would be discarded on the first refresh. The default value is the calendar file defined by the =paths= package.
 
 #+findex: vulpea-extras-project-files
 The function ~vulpea-extras-project-files~ queries the Org Roam database for all files that contain a node tagged with ="project"=. It returns a deduplicated list of file paths. This is the function that connects the automatic tagging system ([[#h:updating-the-project-tag][Updating the project tag]]) to the agenda file list.

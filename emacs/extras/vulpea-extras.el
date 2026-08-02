@@ -53,6 +53,15 @@
   :type '(repeat file)
   :group 'vulpea-extras)
 
+(defcustom vulpea-extras-agenda-files-base
+  (list paths-file-calendar)
+  "Files always present in `org-agenda-files'.
+`vulpea-extras-agenda-files-update' rebuilds `org-agenda-files' from scratch, so
+a file that is neither tagged as a project nor recently modified leaves the
+agenda.  List here the files that must survive that recomputation regardless."
+  :type '(repeat file)
+  :group 'vulpea-extras)
+
 ;;;; Functions
 
 (defun vulpea-extras-project-p ()
@@ -130,11 +139,16 @@ tasks."
 (defvar org-extras-agenda-files-excluded)
 (autoload 'org-roam-extras-recent "org-roam-extras")
 (defun vulpea-extras-agenda-files-update (&rest _)
-  "Update the value of `org-agenda-files'."
+  "Update the value of `org-agenda-files'.
+The list is rebuilt from `vulpea-extras-agenda-files-base' and the current
+dynamic selection, rather than extended.  Extending it made the agenda grow
+without bound: `vulpea-extras-project-update-tag' drops the \"project\" tag once
+a file has no open task left, but a file that had entered `org-agenda-files'
+once stayed there for the rest of the session regardless."
   (setq org-agenda-files
         (seq-difference
          (delete-dups (append
-		       (org-agenda-files)
+		       vulpea-extras-agenda-files-base
 		       (vulpea-extras-project-files)
 		       (org-roam-extras-recent 2 500)))
          org-extras-agenda-files-excluded)))

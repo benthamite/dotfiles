@@ -361,6 +361,32 @@ For the reverse operation (copying Org as formatted HTML), see
 ~ox-clip-formatted-copy~.  For the Markdown equivalent, see
 ~markdown-mode-extras-paste-with-conversion~ in =markdown-mode-extras.el=.
 
+*** Exporting a package manual to Texinfo
+:PROPERTIES:
+:CUSTOM_ID: h:exporting-a-manual-to-texinfo
+:END:
+
+#+findex: org-extras-export-manual-to-texinfo
+The function ~org-extras-export-manual-to-texinfo~ exports the current
+buffer to Texinfo with the export options a manual requires, rather than
+whatever the global values happen to be.  It is what the
+=emacs/extras/doc/= directory's =.dir-locals.el= puts on
+~after-save-hook~, so every manual is regenerated when it is saved, and
+the same form is registered in ~safe-local-eval-forms~ so the directory
+variable is evaluated without a prompt.
+
+Two of the global export options are wrong for a manual, and leaving them
+ambient corrupted the generated output.  ~org-export-preserve-breaks~ is
+~t~, and these manuals write each paragraph as a single long line, so the
+newline ending every paragraph was exported as a forced =@*= line break.
+~org-export-with-title~ is ~nil~, which drops =@title= from the title
+page.  Because the export ran on every save, any save of any manual
+reproduced both, whether or not its Org source had changed — which made
+the committed =.texi= files look stale whenever anything touched their
+sources.  Binding both options in one named function also removes the
+duplicated lambda that =.dir-locals.el= and ~safe-local-eval-forms~
+previously had to match exactly for the hook to be considered safe.
+
 *** Exporting citation previews
 :PROPERTIES:
 :CUSTOM_ID: h:exporting-citation-previews

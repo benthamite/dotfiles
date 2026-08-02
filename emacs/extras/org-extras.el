@@ -1144,6 +1144,22 @@ was listed as excluded, and it is why the list had grown entries such as
   (seq-some (lambda (directory) (file-in-directory-p file directory)) directories))
 
 ;;;###autoload
+(defun org-extras-export-manual-to-texinfo ()
+  "Export the current buffer to Texinfo with the options a manual needs.
+The export options are bound here rather than inherited from the global ones,
+because two of the global values are wrong for a manual and were silently
+corrupting the generated output.  `org-export-preserve-breaks' is t, and these
+manuals write each paragraph as a single long line, so the newline ending every
+paragraph became a forced `@*' line break; `org-export-with-title' is nil, which
+drops `@title' from the title page.  Any save of any manual reproduced both,
+whether or not its Org source had changed at all."
+  (require 'ox-texinfo)
+  (let ((inhibit-message t)
+        (org-export-preserve-breaks nil)
+        (org-export-with-title t))
+    (org-texinfo-export-to-texinfo)))
+
+;;;###autoload
 (defun org-extras-buffer-edit-unsafe-p ()
   "Return non-nil if a change hook should not edit the current buffer yet.
 `track-changes-inconsistent-state-p' compares the buffer size a tracker recorded

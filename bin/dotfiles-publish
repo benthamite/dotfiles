@@ -1874,6 +1874,31 @@ class ReviewStatus:
         return not (self.missing or self.extra or self.unit_findings or self.deterministic)
 
 
+def deterministic_is_resolved(finding, units_by_id, entries, resolved):
+    """A scanner hit stops blocking once the review has adjudicated it.
+
+    Every deterministic finding gets its own manifest unit precisely so the
+    review can judge it. Ignoring that verdict would make the second layer
+    decorative: a detector that fires on a file *about* credentials could never
+    be cleared, and the guard would refuse every publication forever.
+
+    A clean verdict means the reviewer judged there is no secret here, so there
+    is nothing to rotate and nothing to remove. The public-incident
+    classification governs which remedy applies once a finding is judged real;
+    it does not make a false positive unclearable.
+    """
+    if finding["fingerprint"] in resolved:
+        return True
+    for unit in units_by_id.values():
+        if unit["kind"] != "deterministic-finding":
+            continue
+        if (unit.get("detail") or {}).get("fingerprint") != finding["fingerprint"]:
+            continue
+        entry = entries.get(unit["unit_id"])
+        return bool(entry) and entry.get("verdict") == "clean"
+    return False
+
+
 def entry_is_resolved(entry, unit, resolved):
     """A recorded finding stops blocking once triage resolved its fingerprint.
 
@@ -1919,7 +1944,7 @@ def review_status(repo, run_id):
     deterministic = [
         finding["fingerprint"]
         for finding in load_findings(repo, run_id).get("findings", [])
-        if finding["fingerprint"] not in resolved
+        if not deterministic_is_resolved(finding, units_by_id, review["entries"], resolved)
     ]
     return ReviewStatus(
         total=len(expected),

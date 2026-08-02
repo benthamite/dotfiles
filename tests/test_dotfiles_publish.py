@@ -1076,6 +1076,68 @@ class DotfilesPublishManifestTests(PublicationFixture):
         self.assertNotEqual(0, changed.returncode)
         self.assertIn("different verdict", changed.stderr)
 
+    def test_a_scanner_finding_judged_clean_by_the_review_stops_blocking(self):
+        # Every deterministic finding gets a unit so the review can adjudicate
+        # it. Ignoring that verdict would make the second layer decorative and
+        # leave a detector that fires on documentation blocking forever.
+        self.publish_base()
+        self.commit(
+            "document the credential format",
+            {"docs/format.md": "token = %s\n" % TEST_SECRET},
+        )
+        proc, run_id = self.scan()
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        self.write_full_audit_receipt(run_id)
+
+        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        scanner_units = [
+            unit["unit_id"]
+            for unit in manifest["units"]
+            if unit["kind"] == "deterministic-finding"
+        ]
+        self.assertTrue(scanner_units)
+
+        self.review_all(run_id)
+        status = self.cli("review-status", "--run", run_id)
+        self.assertEqual(0, status.returncode, status.stdout + status.stderr)
+        self.assertIn("clean: yes", status.stdout)
+        self.assertEqual(
+            0, self.cli("authorize", "--run", run_id).returncode, "a judged run must authorize"
+        )
+
+    def test_a_scanner_finding_judged_unsafe_keeps_blocking(self):
+        self.publish_base()
+        self.commit(
+            "add a credential", {"config/service.conf": "token = %s\n" % TEST_SECRET}
+        )
+        _, run_id = self.scan()
+        self.write_full_audit_receipt(run_id)
+
+        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        scanner_units = {
+            unit["unit_id"]
+            for unit in manifest["units"]
+            if unit["kind"] == "deterministic-finding"
+        }
+        findings = self.base / "real.json"
+        findings.write_text(
+            json.dumps([{"rule_id": "review-credential", "context": "a real credential"}])
+        )
+        for unit_id in self.unit_ids(run_id):
+            if unit_id in scanner_units:
+                arguments = ["--verdict", "finding", "--findings", str(findings)]
+            else:
+                arguments = ["--verdict", "clean"]
+            self.assertEqual(
+                0,
+                self.cli("review-record", "--run", run_id, "--unit", unit_id, *arguments).returncode,
+            )
+
+        status = self.cli("review-status", "--run", run_id)
+        self.assertNotEqual(0, status.returncode)
+        self.assertIn("clean: no", status.stdout)
+        self.assertNotEqual(0, self.cli("authorize", "--run", run_id).returncode)
+
     def test_review_status_reports_completeness_without_content(self):
         run_id = self.prepare_authorized_run()
 

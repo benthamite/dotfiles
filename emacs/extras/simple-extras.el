@@ -1064,5 +1064,32 @@ and return nil when FUN fails."
 	(shell-command (format "python -m venv %s" venv-dir))
 	(message "Virtual environment created at %s" venv-dir)))))
 
+;;;###autoload
+(defun simple-extras-reap-closed-server-clients ()
+  "Delete `server-clients' entries whose connection has already closed.
+`server-sentinel' normally removes a client when its connection ends, but it can
+be missed: an `emacsclient' killed while the server is still evaluating its
+request, as happens whenever such a call is wrapped in `timeout', leaves the
+server trying to reply down a socket nobody holds.  The entry then sits in
+`server-clients' with a status of `closed' for the rest of the session.  Return
+the number of entries deleted.
+
+Only entries owning no buffer, frame or tty are removed, so a live editing
+session is never touched."
+  (interactive)
+  (let ((stale (seq-filter #'simple-extras-server-client-abandoned-p server-clients)))
+    (dolist (client stale)
+      (server-delete-client client t))
+    (when (called-interactively-p 'any)
+      (message "Reaped %d closed server client(s)" (length stale)))
+    (length stale)))
+
+(defun simple-extras-server-client-abandoned-p (client)
+  "Return non-nil if CLIENT is a closed server connection owning nothing."
+  (and (eq (process-status client) 'closed)
+       (null (process-get client 'buffers))
+       (not (process-get client 'frame))
+       (not (process-get client 'tty))))
+
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

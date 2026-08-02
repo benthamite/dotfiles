@@ -77,6 +77,7 @@ Functions
 * Asciifying strings::
 * Slug helpers::
 * Network detection::
+* Reaping closed server clients::
 * Auto-save for new buffers::
 * Miscellaneous utilities::
 
@@ -425,6 +426,7 @@ The command @code{simple-extras-set-python-virtual-environment} creates a Python
 * Asciifying strings::
 * Slug helpers::
 * Network detection::
+* Reaping closed server clients::
 * Auto-save for new buffers::
 * Miscellaneous utilities::
 @end menu
@@ -495,6 +497,18 @@ The function @code{simple-extras-slug-hyphenate} replaces spaces, underscores, a
 
 @findex simple-extras-connected-to-network-p
 The function @code{simple-extras-connected-to-network-p} checks whether the system is connected to a specific WiFi network by name. On macOS, it queries the network SSID via @samp{ipconfig getsummary}; on GNU/Linux, it uses @samp{iwgetid -r}. It returns @code{t} if the current SSID matches the given NETWORK argument. This can be used in configuration to conditionally enable features that depend on being connected to a particular network (e.g., a home or office network).
+
+@node Reaping closed server clients
+@section Reaping closed server clients
+
+@findex simple-extras-reap-closed-server-clients
+@findex simple-extras-server-client-abandoned-p
+The command @code{simple-extras-reap-closed-server-clients} removes entries from @code{server-clients} whose connection has already closed, returning the number deleted. It runs from @code{midnight-hook}.
+
+@code{server-sentinel} normally removes a client when its connection ends, but the cleanup can be missed. An @code{emacsclient} killed while the server is still evaluating its request leaves Emacs replying down a socket nobody holds, and this happens routinely whenever such a call is wrapped in @samp{timeout}. The entry then sits in @code{server-clients} with a status of @code{closed} for the rest of the session; one such orphan had persisted for over 25 hours, alongside three leaked entries whose client processes were long gone.
+
+@findex simple-extras-server-client-abandoned-p
+The predicate @code{simple-extras-server-client-abandoned-p} decides which entries qualify: the connection must be @code{closed} and the client must own no buffer, frame or tty, so a live editing session is never disturbed.
 
 @node Auto-save for new buffers
 @section Auto-save for new buffers

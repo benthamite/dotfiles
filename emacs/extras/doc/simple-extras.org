@@ -434,6 +434,20 @@ The function ~simple-extras-slug-hyphenate~ replaces spaces, underscores, and do
 #+findex: simple-extras-connected-to-network-p
 The function ~simple-extras-connected-to-network-p~ checks whether the system is connected to a specific WiFi network by name. On macOS, it queries the network SSID via =ipconfig getsummary=; on GNU/Linux, it uses =iwgetid -r=. It returns ~t~ if the current SSID matches the given NETWORK argument. This can be used in configuration to conditionally enable features that depend on being connected to a particular network (e.g., a home or office network).
 
+** Reaping closed server clients
+:PROPERTIES:
+:CUSTOM_ID: h:reaping-closed-server-clients
+:END:
+
+#+findex: simple-extras-reap-closed-server-clients
+#+findex: simple-extras-server-client-abandoned-p
+The command ~simple-extras-reap-closed-server-clients~ removes entries from ~server-clients~ whose connection has already closed, returning the number deleted. It runs from ~midnight-hook~.
+
+~server-sentinel~ normally removes a client when its connection ends, but the cleanup can be missed. An ~emacsclient~ killed while the server is still evaluating its request leaves Emacs replying down a socket nobody holds, and this happens routinely whenever such a call is wrapped in =timeout=. The entry then sits in ~server-clients~ with a status of ~closed~ for the rest of the session; one such orphan had persisted for over 25 hours, alongside three leaked entries whose client processes were long gone.
+
+#+findex: simple-extras-server-client-abandoned-p
+The predicate ~simple-extras-server-client-abandoned-p~ decides which entries qualify: the connection must be ~closed~ and the client must own no buffer, frame or tty, so a live editing session is never disturbed.
+
 ** Auto-save for new buffers
 :PROPERTIES:
 :CUSTOM_ID: h:auto-save-for-new-buffers

@@ -4,8 +4,6 @@
 > rely on the invalid assumption that directory-symlink failures are not
 > user-visible. Rewrite it from the revised workspace design before use.
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** Replace 36 invalid cross-account `.gdoc` pointers with normal `.url` files that open the same documents through the configured Epoch Chrome profile without changing permissions.
 
 **Architecture:** A standard-library Python helper creates and validates a private `epoch-doc:` URL and delegates opening to the fail-closed `chrome-profile-open epoch` alias. A signed macOS LaunchServices app owns the scheme, while the meeting workflow creates ignored `.url` files through the helper.

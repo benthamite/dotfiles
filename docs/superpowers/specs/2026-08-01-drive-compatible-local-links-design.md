@@ -1,449 +1,544 @@
-# Drive-Compatible Local Links Design
+# Drive-Compatible Workspaces Design
+
+## Status
+
+Revised design pending final user review. This document does not authorize a
+migration by itself.
+
+This specification replaces the earlier 56-error local-link design. Google
+Drive for desktop 129.0.1.0 now exposes directory-symlink failures in its
+native error panel, so an in-Drive symlink is not a successful externalization.
+The four implementation plans derived from the earlier design are superseded
+until they are rewritten from this specification.
 
 ## Goal
 
-Reduce Google Drive for desktop's native error count from 56 to zero without
-sharing Epoch documents with the personal account, duplicating canonical
-content, or weakening the existing meeting, agent-instruction, Uqbar, and
-spell-checking workflows.
+Reduce Google Drive for desktop's native error count to zero without losing
+repository state, breaking developer or scheduled workflows, sharing Epoch
+documents with the personal account, duplicating writable sources, or
+re-registering the Drive account.
 
-The design replaces only file representations that Drive cannot accept. Each
-subsystem retains one canonical source, and every migration is verified through
-the real user-visible workflow before the next subsystem changes.
+The durable filesystem invariant is:
 
-## Observed problem
+> No filesystem symlink may exist anywhere under `~/My Drive`.
 
-The generated-directory cleanup reduced the native Drive error count from 190
-to 56. A clean restart reproduced exactly two remaining classes:
+Active code that requires dependencies, builds, virtual environments, caches,
+browser profiles, or linked worktrees belongs outside Drive. Content that
+remains in Drive must use regular Drive-compatible files and directories.
 
-- 36 `INVALID_GOOGLE_DOCUMENT` errors from ignored `.gdoc` pointer files under
-  `Epoch/meetings/`. Cross-account pointers can fail when the account owning the local
-  mirror lacks access to the document. Verify access through the owning account
-  without copying permission records into public documentation.
-- 20 `UNSUPPORTED` errors from Git-tracked file symlinks: 16 Enchant dictionary
-  links in `dotfiles/enchant`, two `CLAUDE.md -> AGENTS.md` links in
-  `rubric-visualizer` and `uqbar`, and the `uqbar` compatibility names
-  `build.py -> build` and `launch.py -> launch`.
+## Evidence that invalidated the earlier design
 
-Drive's internal log also records `PARTIAL_RESULTS` for externalized directory
-symlinks, but these entries do not appear in the native error count after Drive
-settles. This project targets the 56 user-visible errors. It does not claim that
-Drive's log will contain no error-severity lines.
+After the previous Drive restart, the native panel briefly reported 56 errors.
+Once Drive completed its replay, the panel reported 193. The current-run
+`UploadCreateMergeQueueItem` failures reconciled exactly:
 
-## Policy decisions
+- 134 `PARTIAL_RESULTS` failures, one for each resolving directory symlink
+  under My Drive;
+- 36 `INVALID_GOOGLE_DOCUMENT` failures from Epoch-account `.gdoc` files;
+- 20 persistent `UNSUPPORTED` failures from tracked file symlinks; and
+- three temporary npm `.bin` symlink failures created while building a skill.
 
-The Drive error list should be meaningful rather than permanently noisy, but a
-zero count is not sufficient reason to introduce duplicate writable state.
-Accordingly:
+The three npm links were later removed, but Drive retained their failed-create
+records. The 134 directory links were visible in the native paginated error
+dialog as generic upload failures. Therefore the earlier claim that directory
+links were harmless log-only events was false.
 
-- cross-account meeting links remain local convenience artifacts and never
-  change document permissions;
-- `AGENTS.md`, Uqbar's extensionless commands, and each language repository's
-  dictionary remain canonical;
-- file symlinks may continue to exist outside the Drive mirror;
-- no component silently falls back to a personal browser profile, default
-  browser, copied implementation, or alternate dictionary;
-- migration proceeds one error category at a time and stops when the native
-  count does not fall by the exact expected amount; and
-- local commits remain separate from publication. No repository is pushed by
-  this work without a later explicit request.
+The directory-link inventory was:
 
-## Architecture
+| Area | Count |
+|---|---:|
+| Epoch | 70 |
+| Personal repositories | 55 |
+| Dotfiles | 3 |
+| Courses | 3 |
+| Apps | 1 |
+| Health | 1 |
+| Home mirror | 1 |
 
-### Epoch document links
+Of the 134 links, 131 pointed into `~/.drive-nosync`, two pointed into an
+external npm cache, and one was the intentional tracked
+`agent-skills/.opencode/skills -> ../skills` link. The exact one-to-one match
+establishes that leaving a healthy symlink in Drive does not solve the error.
 
-The 36 Epoch-account `.gdoc` pointers become normal `.url` files. A shortcut
-for document `<DOC_ID>` contains exactly:
+Drive itself was healthy during diagnosis: the root remained a normal My Drive
+mirror with `is_my_drive=1`, the expected root document ID, and no
+`machine_root` row; its principal databases passed SQLite quick checks; and its
+queues were active rather than paused or wedged.
 
-```ini
-[InternetShortcut]
-URL=epoch-doc:///document/<DOC_ID>
-```
+## Decisions and hard constraints
 
-The path form is deliberate. Putting the case-sensitive document ID in a URL
-host risks case normalization; a path segment preserves it.
+- Canonical external repository roots are `~/repos` for personal repositories
+  and `~/repos/epoch` for Epoch repositories.
+- Linked worktrees live under `~/repos/.worktrees`, including dotfiles
+  worktrees.
+- The existing real `~/repos/wuzapi` checkout remains untouched.
+- Git remotes are sufficient backup for repository history. The migration does
+  not create periodic Drive snapshots or duplicate writable checkouts.
+- Every repository selected for a move must have a reachable remote. After a
+  fresh fetch, every commit reachable from the primary `HEAD`, every registered
+  linked-worktree `HEAD` including detached heads, local branches, local tags,
+  `refs/stash`, and checked-out submodule heads must also be reachable from an
+  advertised remote ref. This gate has no implicit waiver and nothing is pushed
+  without separate explicit authorization.
+- The existing working tree is moved intact. Staged, unstaged, untracked,
+  ignored, executable, symlink, submodule, and linked-worktree state must not be
+  reconstructed from a fresh clone.
+- Verified old repository trees leave Drive. No compatibility symlink or
+  writable Drive-side mirror remains.
+- Dotfiles remains the Drive-side source of truth, but it becomes a strict
+  source-only exception: its runtime dependencies, generated state, and
+  worktrees live outside Drive.
+- Of the original 127 personal repository roots, 119 remain in Drive: the ten
+  repaired repositories and 109 repositories with no current directory-link
+  failure. They remain source-only trees. The ten repairs may use only their
+  defined guarded external runtimes; activating one of the 109 unaffected trees
+  for dependency installation, building, state-creating tests, or linked
+  worktree use requires migrating it first. The already-existing `dont-sleep`
+  linked worktree is the sole named exception: its main tree remains
+  source-only and its active worktree moves to the external worktree root.
+- No live runtime command searches both old and new roots or silently falls
+  back to an old path. Stale paths fail explicitly; the migration audit may
+  inspect both roots to prove convergence.
+- Drive is never disconnected, reconnected, or re-registered. Sync direction
+  and cloud routing are verified through the Drive API rather than inferred
+  from the UI or network traffic.
+- Cloud and filesystem removal uses recoverable Trash operations. Ambiguous or
+  user-authored content is never classified as disposable from its basename or
+  ignore status alone.
+- Repository publication remains separate from local migration. No push, pull
+  request, issue, or other externally visible GitHub action is implicit.
 
-Dotfiles owns a small `epoch-doc-link` command with two operations:
-
-- `create` validates a document ID against `[A-Za-z0-9_-]+` and atomically
-  writes the exact `.url` representation; and
-- `open` accepts only `epoch-doc:///document/<DOC_ID>`, validates the ID again,
-  and launches an argument vector equivalent to:
-
-  ```text
-  chrome-profile-open epoch https://docs.google.com/document/d/<DOC_ID>/edit
-  ```
-
-Neither operation invokes a shell. A missing or invalid `epoch` profile is a
-hard error; there is no default-browser or personal-profile fallback.
-
-LaunchServices needs an application to own the `epoch-doc:` scheme. Tracked
-source lives under `dotfiles/macos/epoch-doc-handler/`, with a small Swift
-application delegate and its `Info.plist`. The application receives opened
-URLs, passes them to `~/bin/epoch-doc-link open` as an argument array, shows a
-visible error if validation or profile routing fails, and terminates after the
-request. `dotfiles/bin/install-epoch-doc-handler` builds, ad-hoc signs,
-installs, and registers the application under `~/Applications/`, outside the
-Drive mirror. The installed bundle is generated state; tracked source and tests
-remain canonical in dotfiles.
-
-The `meeting-debrief` Step 8 instructions in Epoch's paired Claude and Codex
-skills call `epoch-doc-link create` instead of writing JSON. Their verification
-and commit guidance refer to the `.url` artifact and still treat it as ignored
-local convenience state. Epoch uses a scoped `/meetings/**/*.url` ignore rule;
-it does not globally ignore unrelated Internet shortcuts.
-
-Only the 36 pointers whose JSON identifies the owning work account migrate. The eight valid
-personal-account `.gdoc` files remain unchanged unless they later produce a
-user-visible error.
-
-Direct HTTPS shortcuts with `authuser=<email>` are rejected because account
-selection depends on browser session state and has not been reliable enough to
-fail closed. Numeric `/u/N/` routing is also session-order-dependent. A
-`.command` file would select the profile exactly but would open Terminal and
-depend on executable metadata surviving cloud round trips.
-
-### Claude instruction bridges
-
-In `rubric-visualizer` and `uqbar`, `CLAUDE.md` becomes a regular mode-`100644`
-file containing exactly:
-
-```markdown
-@AGENTS.md
-```
-
-Claude Code supports this import form, so `AGENTS.md` remains the only content
-source. This is semantic synchronization rather than byte-for-byte mirroring.
-
-The dotfiles parity tools change before either repository changes:
-
-- `ai-config-sync` recognizes the exact import-only bridge as synchronized,
-  suppresses false edit reminders, and still reports ordinary content drift;
-- `mirror-claude-agents` recognizes the bridge and performs a no-op instead of
-  copying the import line over `AGENTS.md`; and
-- the paired `update-log` skills recognize the bridge before their ordinary
-  byte-for-byte mirror procedure, update canonical session state in
-  `AGENTS.md`, and leave the import-only `CLAUDE.md` unchanged; and
-- focused tests cover bridge equivalence, normal drift, a missing target,
-  reminder behavior, helper safety, and the `update-log` bridge branch.
-
-`agents/README.org` documents import bridges alongside ordinary mirrored pairs.
-Historical repository design documents that describe the old symlink remain
-unchanged because they accurately record the earlier design.
-
-### Uqbar compatibility commands
-
-`uqbar/build.py` and `uqbar/launch.py` become regular executable Bash forwarding
-scripts. Despite their suffixes, the current symlink targets are already Bash
-programs and callers execute the compatibility names directly.
-
-Each wrapper enables strict Bash behavior, resolves its own directory without
-depending on the caller's working directory, and uses `exec` with quoted
-arguments to invoke the canonical extensionless command. For example,
-`build.py` has the behavior:
-
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec "$SCRIPT_DIR/build" "$@"
-```
-
-`launch.py` differs only in its target. This preserves argument boundaries,
-stdout and stderr, exit status, and signal behavior without copying command
-implementation.
-
-At investigation time the local Uqbar checkout was 94 commits behind its
-already-fetched `origin/main`. Implementation must re-measure this state,
-preserve unrelated untracked files, and fast-forward safely before editing. It must then reread the newer `build`,
-`launch`, and `AGENTS.md` rather than applying this design to stale content.
-
-Uqbar's existing debugpy configuration for `launch.py` is a separate pre-existing
-problem: it has already pointed at Bash through a symlink since April. Repairing
-that debugger configuration is not part of this project.
-
-### Enchant runtime configuration
-
-The current write path contains two symlink layers inside or into Drive:
+## Target layout
 
 ```text
-Jinx -> Enchant -> ~/.config/enchant/<lang>.dic
-                    -> dotfiles/enchant/<lang>.dic
-                    -> repos/<lang>/dict/<lang>.dic
+~/repos/<name>                    moved personal repositories
+~/repos/epoch/<project>           all Epoch repositories
+~/repos/.worktrees/<repo>/<name>  all linked worktrees
+
+~/My Drive/Epoch/...              documents, notes, and project metadata
+~/My Drive/dotfiles               source-only dotfiles repository
+~/My Drive/...                    other synchronized documents and data
 ```
 
-Jinx's Personal action calls Enchant's dictionary-add operation, so the
-dictionary files are writable state rather than disposable copies. The
-canonical files remain:
+Epoch's `projects/<name>/repo` directories disappear. Project notes and
+metadata stay at their existing Drive paths, while the project registry and
+live automation configuration point to `~/repos/epoch/<name>`.
 
-- `repos/{ar,de,en,es,fr,it,ru,tr}/dict/<lang>.{dic,exc}`;
-- `dotfiles/enchant/pl.{dic,exc}` for Polish; and
-- `dotfiles/enchant/enchant.ordering` for provider selection.
+Repositories outside Drive may use their existing tracked symlinks and create
+`node_modules`, virtual environments, builds, caches, and browser profiles
+normally. Existing large external targets such as Consensus Trader data and
+Stafforini PDF collections remain in place initially; their absolute symlinks
+become Drive-safe because the owning repository is outside the mirror.
 
-The new runtime path is:
+Two explicit conceptual roots own live path construction:
 
 ```text
-Jinx -> Enchant -> ~/.config/enchant/<lang>.dic
-                    -> canonical repository file
+REPOS_ROOT=$HOME/repos
+EPOCH_REPOS_ROOT=$HOME/repos/epoch
 ```
 
-`~/.config/enchant` becomes a real local directory outside Drive. It contains
-runtime symlinks directly to the canonical files. The 16 forwarding symlinks in
-`dotfiles/enchant` are removed from Git; the regular Polish files and ordering
-file remain there.
+Live configuration either constructs paths from those roots or stores an exact
+new path. Historical logs and documents are not mass-rewritten merely because
+they mention an old location.
 
-`dotfiles/bin/install-enchant-config` owns the runtime layout. It derives the
-dotfiles path, supports explicit config/dotfiles/repos roots for disposable
-tests, validates every canonical target before mutation, creates or repairs
-only the expected links, and stops on unknown files or type conflicts. The
-current `~/.config/enchant -> dotfiles/enchant` link is unmanaged manual state;
-no tracked bootstrap mechanism currently recreates it. The new installer and
-README documentation therefore become the first canonical bootstrap and
-healing path.
+## Repository migration scope
 
-Regular mirrored dictionary copies and bidirectional synchronization are
-rejected because Enchant writes these files and conflict handling would create
-a second source of truth. Moving canonical dictionaries back into dotfiles
-would reverse the established repository boundary and create the same drift in
-the opposite direction.
+### Epoch repositories
+
+Move all 34 `Epoch/projects/<name>/repo` working trees to
+`~/repos/epoch/<name>`. Thirty-two of them currently account for 65 directory
+links; moving all 34 establishes one predictable Epoch repository boundary.
+
+### Personal workspace trees moved
+
+Move these six workspace trees, which account for 43 directory links. They
+contain eight repository roots because `ea.news` is a superproject with two
+submodules. The separate inherited `dont-sleep` linked worktree is not included
+in either count:
+
+| Current workspace | Destination | Links | Reason |
+|---|---|---:|---|
+| `~/My Drive/repos/80000hours.global` | `~/repos/80000hours.global` | 6 | Active Python and Next runtimes repeatedly create `.venv`, `node_modules`, `.next`, and caches. |
+| `~/My Drive/repos/agent-skills` | `~/repos/agent-skills` | 1 | The repository intentionally tracks `.opencode/skills -> ../skills`; moving preserves its single-source semantics. |
+| `~/My Drive/repos/consensus-trader` | `~/repos/consensus-trader` | 8 | It tracks a virtual environment, caches, 122 GB of live data, and 129 MB of results behind pervasive relative paths. |
+| `~/My Drive/repos/ea.news` | `~/repos/ea.news` | 2 | The frontend requires `node_modules` and `.next`. Moving only that submodule would break the superproject, so the transaction preserves the parent, `ea.news-api`, `ea.news-front`, and their relative layout. |
+| `~/My Drive/repos/stafforini.com` | `~/repos/stafforini.com` | 7 | Build and deploy workflows use dependencies, persistent `public` output, 48 GB of PDFs, and 5.4 GB of thumbnails. |
+| `~/My Drive/repos/tangodb` | `~/repos/tangodb` | 19 | The active Python/Svelte monorepo has dependencies, framework output, persistent browser state, and tracked cache links. |
+
+The `ea.news` correction is required by live Git state. The parent tracks
+`ea.news-front` and `ea.news-api` as submodules, enables recursive submodule
+operations, and stores both Git directories outside Drive. Moving only the
+frontend would leave its required gitlink path absent and allow a later
+`git submodule update` to recreate a second checkout in Drive. The whole 26 MB
+workspace therefore moves intact; the migration repairs both submodule
+`core.worktree` values, including the API's stale Dropbox path, while preserving
+the frontend's current branch, commit, and pre-existing parent gitlink
+difference.
+
+Implementation must remeasure repository state. At design time, only
+`80000hours.global` and `agent-skills` were clean and caught up with their
+recorded upstreams. Consensus Trader, EA News, and TangoDB had local-only
+commits; Consensus Trader, Stafforini, and TangoDB also had dirty or untracked
+state. Moving preserves that state, but the exact remote-commit coverage rule
+must be satisfied before each migration.
+
+### Personal repositories repaired in place
+
+These ten repositories account for the remaining 12 personal directory links:
+
+| Repository | Links | Repair |
+|---|---:|---|
+| `80k-website-old` | 2 | Remove inactive `node_modules` and `.next`; migrate the repository before any future build. |
+| `add-to-repo` | 1 | Restore `dist` as its three regular tracked GitHub Action artifacts; the current untracked link masks tracked deletions. |
+| `archive/polymarket-bot` | 1 | Remove disposable egg metadata. |
+| `archive/polymarket-bot-2` | 1 | Remove egg metadata while preserving the untracked DuckDB file. |
+| `archive/polymarket-traders` | 1 | Remove the small generated `build` output; migrate before renewed development. |
+| `gmail-maildir-sync` | 1 | Remove `__pycache__` and retain the existing bytecode-disable policy. |
+| `launchd` | 1 | Disable or externally redirect pytest caching without changing its operational repository path. |
+| `pass-utils` | 1 | Remove egg metadata and use non-editable installation in an external environment. |
+| `rubric-visualizer` | 2 | Remove Python and pytest caches; separately migrate its file-symlink instruction bridge. |
+| `wikipedia-deletion-analysis` | 1 | Set a project-specific external uv environment and update the scheduled collector path. |
+
+An in-place repair is complete only after exercising the operation that could
+recreate the path. Every retained build-capable repository must have a
+fail-closed technical guard on its supported install and build entrypoints when
+they run under My Drive. Documentation reinforces the guard but does not
+replace it. If a reliable guard cannot be implemented, the repository must move
+before the old operation is used again.
+
+## Residual non-repository directory links
+
+Repository migration and repair address 120 of the 134 directory links. The
+remaining 14 have explicit dispositions:
+
+| Paths | Disposition |
+|---|---|
+| `Epoch/.cache`, `Epoch/.pytest_cache`, `Epoch/projects/.cache`, and the two caches under `Epoch/projects/shared/scripts` | Remove the links; disable Python bytecode and pytest caches or direct them to an external project-specific location. |
+| `dotfiles/.pytest_cache` and `dotfiles/claude/bin/__pycache__` | Remove the links and prevent recreation through the same Python policy. |
+| `dotfiles/claude/skills/proofread/node_modules` | Install a purpose-built proofread runtime outside Drive and make both skill copies invoke it without an in-Drive link. |
+| One course `__pycache__` and two course virtual environments | Remove the cache link; recreate or preserve each environment at a named external path and update its launch instructions. |
+| `home/.pytest_cache` | Remove the link and prevent recreation. |
+| The two Promethease Bootstrap `dist` trees under `Apps` and `Health` | Byte-compare the external contents, then restore them as regular Drive directories; they are vendor assets without a proven reinstall source. |
+
+Cloud copies are reconciled path by path. Disposable caches may be moved to
+cloud Trash only after their classification is proven. Promethease assets are
+restored as regular content rather than deleted.
+
+## Remaining file-representation migrations
+
+The four earlier categories remain necessary after directory work, but their
+old baselines and sequencing are invalid:
+
+- Convert the 36 Epoch-account `.gdoc` files to regular `.url` files handled by
+  the fail-closed `epoch-doc:` application. Preserve the permission audit,
+  Epoch Chrome-profile routing, pilot, and cloud-parent verification.
+- Replace the 16 Enchant forwarding links in dotfiles with a real
+  `~/.config/enchant` runtime directory whose external links point directly to
+  the unchanged regular canonical dictionary files under
+  `~/My Drive/repos/<language>/dict`. The language repositories are not added
+  to the personal migration scope.
+- Replace Rubric Visualizer's `CLAUDE.md` link with the exact regular
+  `@AGENTS.md` import bridge and make parity/update tooling bridge-aware.
+- Replace Uqbar's `CLAUDE.md` link with the same import bridge and its
+  `build.py` and `launch.py` links with tested regular executable wrappers.
+
+The live inherited worktree
+`repos/dont-sleep/.worktrees/safe-local-install` also moves to
+`~/repos/.worktrees/dont-sleep/safe-local-install` through Git's supported
+worktree mechanism after its owning session, processes, and buffers are
+inactive. This relocates a worktree, not the `dont-sleep` main repository, and
+does not expand the six-workspace migration scope.
+
+All file-category counts are rebaselined only after directory links reach zero.
+
+## Migration components
+
+### Migration manifest and tool
+
+A small tested tool owns repeated migration mechanics. It provides:
+
+- a read-only audit that records blockers without mutation;
+- an explicit old-to-new path manifest;
+- a pre-move journal containing Git, filesystem, worktree, submodule, remote,
+  consumer, process, and cloud identifiers;
+- same-filesystem move, verification, and rollback operations;
+- exact configured smoke commands per repository; and
+- an append-only completion record for each pilot and batch.
+
+The tool fails closed on a destination collision, different filesystem,
+unreachable remote, failure of the exact remote-commit coverage rule, active
+process or buffer, unknown nested repository, linked-worktree inconsistency,
+uninitialized or dirty submodule that was not recorded, stale consumer, or
+verification failure. It never supplies a `--force` path around these checks.
+
+### Live path migration
+
+The migration inventory covers live configuration and consumers, including:
+
+- Epoch's project registry and automation hooks;
+- Codex trusted-project entries and Claude/Codex project instructions;
+- shell aliases and environment configuration;
+- Emacs configuration and package paths;
+- launchd jobs, schedulers, service definitions, and working directories;
+- repository-local relative dependencies and sibling-repository references;
+- scripts and skills with absolute repository paths; and
+- resumable agent-session path associations, updated through their supported
+  relocation mechanism rather than blanket log rewriting.
+
+Mixed old and new paths during migration are explicit in the manifest. No
+runtime resolver probes both locations.
+
+### Regression prevention
+
+- `fix-drive-errors` is rewritten so every in-Drive symlink is an error, not a
+  healthy terminal state.
+- `nosync` stops creating symlinks and is retired or redirected to explicit
+  repository migration or tool-specific configuration.
+- Worktree skills and helpers always allocate under `~/repos/.worktrees`.
+- Agent instructions and repository-local guards refuse supported dependency
+  installation, virtual-environment creation, unsupported builds, or worktree
+  creation in a Drive-hosted repository. A repository that cannot enforce the
+  relevant operation is migrated instead of being left source-only.
+- A reusable audit reports any new symlink under My Drive, stale old-root
+  reference, or source-only repository that has acquired generated runtime
+  state.
+- Reactivating one of the 109 unaffected source-only personal repositories
+  starts with migration; it never starts by running the old symlink
+  externalizer.
+
+The inherited `dont-sleep/.worktrees/safe-local-install` state is not modified
+while its session, process, or buffers are active. It is deferred or moved only
+through a verified Git worktree operation, with its Git metadata and live
+consumers checked before and after relocation.
+
+## Per-repository transaction
+
+### 1. Preflight while Drive runs
+
+1. Confirm that the destination is absent and both roots have the same device
+   ID, making the move an atomic filesystem rename rather than a copy.
+2. Record branch, `HEAD`, all refs, upstream divergence, remotes, index,
+   staged and unstaged diffs, untracked and ignored files, executable modes,
+   symlink targets, submodules, nested repositories, and linked worktrees.
+3. Fetch the configured remote, verify its advertised refs, and apply the exact
+   remote-commit coverage rule from this specification. Stop on any uncovered
+   commit. Do not push implicitly.
+4. Inventory every live consumer of the old path.
+5. Query running process working directories, active agent sessions, jobs, and
+   Emacs file-visiting buffers. Defer an active repository.
+6. Record the relevant cloud folder ID and parent chain before local removal.
+
+### 2. Pause Drive and move
+
+1. Pause Drive through its supported UI.
+2. Recheck that no preflight state changed.
+3. Rename the existing working tree to its exact destination without
+   dereferencing symlinks or copying content.
+4. Repair linked-worktree metadata and submodule `core.worktree` values through
+   Git's supported commands and configuration interfaces.
+5. If the move or immediate repository check fails, rename the tree back and
+   restore configuration before Drive resumes.
+
+### 3. Update consumers and verify locally
+
+1. Apply only the manifest's live path changes.
+2. Compare the complete pre/post Git and filesystem evidence.
+3. Run repository-specific tests, builds, editor/CLI checks, and representative
+   real commands from the new path.
+4. Verify every submodule, linked worktree, sibling dependency, hook, service,
+   and session association.
+5. Search live configuration for stale old-path references and confirm that
+   the old directory has not been recreated.
+
+### 4. Resume Drive and verify cloud convergence
+
+1. Resume Drive only after all local checks pass.
+2. Use the Drive API to confirm the recorded old cloud tree enters Trash and
+   that no replacement or duplicate tree appears under My Drive or a computer
+   backup.
+3. Wait for Drive's queues and native error list to settle; record the actual
+   category change rather than assuming a decrement.
+4. For a removed path whose failed-create record remains, exercise only Drive's
+   supported retry or dismissal flow and a normal application restart. Record
+   the path-level transition. Never edit Drive's databases or re-register the
+   account.
+5. Stop the batch on any unexpected cloud creation, route, duplicate, or error.
+
+Pilots run one repository at a time. Later batches may share one pause/resume
+window only after the after-resume rollback drill passes. A batch that changes
+shared registry or configuration files is one rollback boundary. Within it,
+each repository still has its own manifest, exact configuration preimage and
+hunks, and verification record.
+
+## In-place repair and residual transaction
+
+The ten personal repairs and 14 residual paths use a separate transaction; a
+repository-move journal is not sufficient:
+
+1. Record the link's exact `lstat` data and target, the external target's
+   content manifest, modes and hashes, repository state where applicable, live
+   consumers, and any existing cloud object and parent IDs.
+2. Prove the intended classification. Disposable cache or build state requires
+   a named recreation source. User data and vendor assets are preserved by
+   default. If the two Promethease copies differ, preserve both and stop for an
+   explicit source choice.
+3. Prepare and verify replacement configuration or regular content before
+   touching the old path. For `add-to-repo/dist`, recheck all three files
+   against `HEAD`; any mismatch preserves both versions and stops for an
+   explicit source choice or verified rebuild. Retain the external target until
+   the restored action passes a real invocation.
+4. Pause Drive, recheck the preimage, move only the link itself to Trash without
+   following it, and atomically install the verified regular replacement when
+   one is required. Never remove the external target in the same transaction.
+5. Exercise the exact install, build, cache, environment, vendor-asset, or
+   scheduled workflow that could recreate or consume the path. Require the
+   intended regular representation and a clean symlink audit.
+6. Resume Drive and verify the path's cloud parent, representation, content,
+   error-record transition, and absence of a duplicate. On failure, pause Drive
+   and restore the recorded local and cloud preimage from Trash before any next
+   path.
+7. After the defined rollback window, move a verified obsolete external target
+   to Trash. Retain a target only when the manifest names it as the canonical
+   external runtime or data source. This prevents unowned duplicate vendor or
+   writable content from becoming permanent.
+
+No repair batch combines paths that share a configuration file unless that
+configuration change has one atomic batch rollback boundary.
+
+## Native error-record convergence gate
+
+The three removed npm links proved that Drive can retain a native failed-create
+record after its filesystem source disappears. Before bulk migration, a pilot
+must establish the supported path from a removed link to a cleared native
+record: queue settlement, any path-specific Retry or Dismiss action exposed by
+Drive, and a normal restart. The test records the native item identity and its
+observed transition; database disappearance alone is not evidence.
+
+If a stale item survives all supported actions, bulk work stops and the design
+is revised. Reconnecting the account and editing Drive's internal databases are
+not fallback options.
 
 ## Migration sequence
 
-Each phase records the native Drive count and targeted post-restart log entries,
-applies one bounded change, restarts Drive, waits for it to settle, and requires
-the exact expected reduction before continuing.
+1. **Freeze regression sources.** Prevent new in-Drive worktrees and symlink
+   externalizations; wait for or safely relocate the inherited `dont-sleep`
+   worktree; refresh the complete filesystem and native error baseline.
+2. **Prove native error convergence.** Use one removed-link pilot to establish
+   how its native failed-create record clears through supported Drive behavior.
+3. **Pilot the migration tool and rollback.** Cover a simple personal
+   repository, a Node/Next repository, a Python repository, an Epoch registry
+   entry, and a repository with linked worktrees, submodules, or large external
+   data. One low-risk pilot must complete a deliberately exercised
+   after-resume rollback and a second successful migration before batching is
+   allowed.
+4. **Move the six proposed personal workspace trees.** Start with clean,
+   remote-backed low-risk pilots; migrate stateful repositories only after
+   their local-only history and dirty state pass the exact backup gate. Treat
+   `ea.news` as the single aggregate submodule transaction defined above.
+5. **Repair the ten in-place personal repositories.** Exercise each
+   recreation path and preserve every named exception.
+6. **Move all 34 Epoch repositories in small batches.** Update the registry,
+   hooks, automation, services, and scheduled jobs alongside each batch.
+7. **Resolve the 14 non-repository directory links.** Use the explicit
+   disposition table; do not apply a basename-only cleanup.
+8. **Reach zero directory symlinks and rebaseline.** Restart and settle Drive
+   before beginning the file-representation work.
+9. **Execute rewritten file-category plans.** Migrate Epoch document pointers,
+   Enchant runtime links, and Rubric/Uqbar file representations against the
+   new baseline.
+10. **Run durability verification.** Repeat state-creating and recreation
+    workflows and complete two fresh Drive restarts that both settle at zero
+    before claiming success.
 
-### 1. Install and pilot the document-link handler
+## Scheduled and live workflow verification
 
-1. Build, install, and register the handler outside Drive.
-2. Record one pilot document's permissions through the Epoch API.
-3. Create its sibling `.url` while retaining the `.gdoc`.
-4. Open the `.url` through Finder and prove that Chrome uses the configured
-   Epoch profile, the document loads without an account chooser, and malformed
-   URLs or an invalid alias fail without another-profile fallback.
-5. Re-query permissions and prove the personal account was not added.
-6. Move only the pilot `.gdoc` to Trash.
-7. Restart Drive and require `56 -> 55`, with no error for the `.url`.
-8. Migrate the other 35 only after the pilot passes, then require `55 -> 20`.
-9. Update both `meeting-debrief` skill copies and their scoped ignore guidance.
+Repository verification includes every configured user-visible or runtime
+surface, not merely unit tests. Affected launchd jobs, schedulers, services,
+hooks, editor integrations, and automation commands receive:
 
-The generated `.url` files are expected to sync into the corresponding personal
-My Drive meeting paths. Resolve a sample through the Drive API and verify the
-expected parent chain; a pointer outside My Drive or under a machine-backup tree
-is a failure.
+1. configuration inspection showing the new path is loaded;
+2. a successful controlled invocation; and
+3. observation of the next actual scheduler-triggered execution when schedule
+   wiring is part of the contract.
 
-### 2. Teach parity tools about import bridges
+A long-interval scheduled job remains pending rather than being declared safe
+from a manual invocation alone. No active Emacs session is signaled or
+restarted during this work.
 
-1. Add the failing focused tests in dotfiles.
-2. Implement bridge recognition in `ai-config-sync` and
-   `mirror-claude-agents`.
-3. Update documentation and run the focused suite plus full
-   `bin/ai-config-sync audit`.
-4. Replace the `rubric-visualizer` symlink and live-verify Claude's imported
-   project instructions; require `20 -> 19`.
-5. After Uqbar is current, replace its instruction symlink, repeat live
-   verification, and require `19 -> 18`.
+## Rollback
 
-The tool change precedes repository changes so existing automation can never
-overwrite a canonical `AGENTS.md` with the literal bridge.
+Before Drive resumes, rollback renames the repository to its original path,
+restores manifest-owned configuration, repairs worktrees, and reruns the local
+baseline.
 
-### 3. Install Uqbar wrappers
+After Drive resumes, the correct order for reconciling the journaled local tree
+with the original cloud object is not assumed. A low-risk pilot must inject a
+failure after cloud convergence, exercise the supported restore path, and prove
+through the Drive API that the restored local tree maps to the journaled object
+ID and parent without creating a duplicate. If this drill fails, all later
+moves stop and the design is revised. It never reconnects the account or
+creates an unverified replacement cloud tree.
 
-1. Protect unrelated untracked files and fast-forward the checkout safely.
-2. Revalidate that the compatibility names still point at Bash commands and
-   that repository callers still execute them directly.
-3. Replace one symlink at a time with a mode-`100755` wrapper.
-4. Run the disposable forwarding harness and safe real-command comparisons.
-5. Restart Drive and require `18 -> 16`.
+In-place and residual rollback follows its own recorded preimage: pause Drive,
+remove only the failed replacement through Trash, restore the original local
+representation and cloud object, and prove content hashes, object identity, and
+parentage before resuming. External targets are retained until the replacement
+has passed its real workflow and cloud verification.
 
-### 4. Move Enchant runtime links outside Drive
-
-1. Build the complete proposed runtime directory in a temporary sibling of
-   `~/.config/enchant`.
-2. Validate every link and exercise dictionary reads and writes against
-   disposable dictionary targets through that directory.
-3. Move the old directory symlink to Trash and atomically install the validated
-   real directory.
-4. Confirm the active Jinx/Enchant configuration reads an existing personal
-   word through the real runtime path. Do not add a test word to canonical user
-   data merely for verification.
-5. Remove the 16 tracked forwarding symlinks from dotfiles and add the installer,
-   tests, and README documentation.
-6. Restart Drive and require `16 -> 0`.
-
-## Failure handling and rollback
-
-- The URL handler rejects unknown schemes, malformed paths, invalid IDs, and a
-  missing profile with a visible error. It never opens another profile.
-- The meeting migration keeps each `.gdoc` until its replacement opens
-  correctly. A failed pilot removes its new `.url` and restores the `.gdoc`
-  from Trash.
-- Parity-tool tests must pass before an import bridge is introduced. A failed
-  bridge conversion is restored from the preceding repository commit.
-- Uqbar is never reset, stashed, rebased, or updated over untracked user files.
-  Unexpected divergence or changed upstream semantics stops that phase.
-- The Enchant installer validates the complete target layout before touching
-  the live path. Unknown content and missing targets fail closed. A failed live
-  swap restores the old directory symlink from Trash.
-- Category-specific commits make every rollback local to one subsystem.
-- No cloud permission, GitHub publication, or Drive-account re-registration is
-  part of rollback or recovery.
-
-## Implementation surfaces and commit boundaries
-
-Expected logical commits are:
-
-1. **dotfiles handler infrastructure:** `bin/epoch-doc-link`,
-   `bin/install-epoch-doc-handler`, `macos/epoch-doc-handler/`, tests, and
-   directly required documentation;
-2. **Epoch meeting workflow:** the paired `meeting-debrief` skills and scoped
-   ignore rule;
-3. **dotfiles parity tooling:** `ai-config-sync`, `mirror-claude-agents`, the
-   paired `update-log` skills, tests, `agents/README.org`, and the directly
-   required Claude/Codex README updates;
-4. **rubric-visualizer bridge:** regular import-only `CLAUDE.md`;
-5. **Uqbar bridge:** regular import-only `CLAUDE.md` after safe synchronization;
-6. **Uqbar wrappers:** regular executable `build.py` and `launch.py` plus
-   focused verification;
-7. **dotfiles Enchant runtime:** installer, tests, README documentation, and
-   removal of the 16 tracked forwarding links.
-
-The ignored local shortcut migration occurs after the handler and workflow
-commits, but remains live state outside Git. Commit inspection must preserve
-all unrelated dirty and untracked files in every repository.
-
-## Verification
-
-### Automated checks
-
-- `epoch-doc-link`: valid and malformed URL parsing, case-preserving document
-  IDs, atomic exact-format creation, shell-free argument passing, missing-profile
-  failure, and no fallback.
-- handler installation: bundle structure, registered scheme, generated artifact
-  location outside Drive, idempotent reinstall, and visible propagation of CLI
-  errors.
-- parity tooling: bridge equivalence, normal drift, missing target, reminder
-  behavior, safe helper no-op, `update-log` bridge handling, focused tests, and
-  full `ai-config-sync audit`.
-- Uqbar wrappers: `bash -n`, mode `100755`, arguments containing spaces,
-  arbitrary caller working directories, stdout and stderr, nonzero status, and
-  `exec`-preserved behavior through disposable targets.
-- Enchant installer: fresh setup, idempotent rerun, repair of a known stale
-  link, refusal to overwrite unknown content, missing-target failure, and
-  disposable dictionary read/write behavior.
-- paired Claude/Codex meeting skills remain semantically equivalent except for
-  tool-specific frontmatter and pass their applicable skill/configuration audit.
-
-### Live checks
-
-- Finder opens an `epoch-doc:` shortcut in the configured Epoch Chrome profile
-  and the expected document loads.
-- Normalized Epoch document permission records are unchanged before and after
-  the pilot; the personal account is absent.
-- Claude in both affected repositories loads a distinctive instruction from
-  canonical `AGENTS.md` through the regular bridge.
-- Safe real Uqbar wrapper invocations match their canonical commands, including
-  from outside the repository.
-- Active Jinx/Enchant reads canonical dictionaries through the new runtime
-  directory.
-- The native Drive UI follows `56 -> 20 -> 18 -> 16 -> 0` and remains at zero
-  after a final fresh restart and settling period.
-- Targeted logs contain no new `INVALID_GOOGLE_DOCUMENT` or `UNSUPPORTED`
-  entries for migrated paths. Existing directory-symlink `PARTIAL_RESULTS` are
-  reported separately and do not invalidate the UI criterion unless they
-  become user-visible.
-- The Drive API root still matches the registered personal My Drive root,
-  migrated `.url` samples have the intended parent chain, and no item lands in
-  a computer-backup or unexpected tree.
-
-### Repository checks
-
-- Each logical commit contains only its intended paths.
-- Relevant Git object modes are `100644` for instruction bridges and `100755`
-  for command wrappers.
-- Dotfiles documentation and tests cover the new handler, bridge convention,
-  and Enchant installer.
-- Unrelated dirty and untracked state is preserved.
-- No repository is pushed.
-
-## Rejected alternatives
-
-### Tolerate or dismiss the 56 errors
-
-This is the lowest-change option but leaves Drive's warning surface permanently
-noisy and makes future real failures harder to notice. Dismissing entries would
-also treat the symptom rather than the unsupported local representations.
-
-### Delete all `.gdoc` pointers
-
-The pointers are ignored convenience files, so deletion would be recoverable,
-but it would remove useful Finder access and leave `meeting-debrief` generating
-the same problem again.
-
-### Direct Google account-routing URLs
-
-Email-valued `authuser` parameters and numeric account indices depend on browser
-session state. They do not provide the required fail-closed guarantee that the
-Epoch profile, rather than the personal profile, opens the document.
-
-### Replace symlinks with tracked content copies
-
-This reaches zero quickly but creates duplicate writable dictionaries,
-duplicated agent instructions, or copied command implementations. Drift becomes
-silent and the Drive counter improves at the expense of source integrity.
-
-### Bidirectionally synchronize Enchant copies
-
-This introduces conflict detection and resolution for files that Enchant writes
-interactively. Keeping runtime symlinks outside Drive preserves immediate
-single-source writes with less machinery.
-
-### Move entire repositories outside Drive
-
-This is far broader than the 20 unsupported file links and conflicts with the
-established filesystem organization, including dotfiles as the Drive-side
-source of truth.
-
-## Non-goals and adjacent findings
-
-- Eliminating every error-severity line in Drive's internal log.
-- Changing the eight valid personal-account `.gdoc` files.
-- Sharing Epoch documents with the personal account or creating personal Drive
-  shortcuts to the underlying documents.
-- Repairing Uqbar's pre-existing debugpy configuration.
-- Repairing the separate `repos/add-to-repo/dist` tracked-content/symlink
-  mismatch.
-- Changing directory externalization under `~/.drive-nosync/`.
-- Repairing repository integrity for the `ar`, `en`, and `tr` language
-  repositories. At investigation time they had no commits/default branch, and
-  the untracked English dictionary contained substantial user data. That risk
-  warrants a separate repository-integrity task but does not block this runtime
-  migration because the canonical files remain regular Drive-synced files.
+No rollback deletes external data targets, ambiguous outputs, untracked user
+state, or local-only commits. Category-specific Git commits keep code/config
+rollback independent from filesystem and cloud rollback.
 
 ## Acceptance criteria
 
-- The native Google Drive error count reaches zero and remains zero after a
-  clean restart and settling period.
-- All 36 Epoch meeting pointers open the intended document through the Epoch
-  Chrome profile, and no document permission changes.
-- Malformed document links and missing profile configuration fail visibly with
-  no fallback.
-- Future `meeting-debrief` runs create ignored `.url` pointers through the
-  validated helper and no longer create Epoch-account `.gdoc` pointers.
-- Both regular `CLAUDE.md` bridges import canonical `AGENTS.md`; parity tooling
-  treats only the exact import-only form as synchronized and cannot overwrite
-  the target. The `update-log` workflow edits canonical `AGENTS.md` without
-  replacing or hand-editing the bridge.
-- Uqbar compatibility names remain executable from any working directory and
-  preserve canonical command behavior without copied implementation.
-- Jinx/Enchant reads and writes each language's canonical dictionary through
-  runtime symlinks located outside Drive.
-- Re-running the Enchant and URL-handler installers is idempotent, while unknown
-  conflicts and missing dependencies fail closed.
-- No targeted path produces a new `INVALID_GOOGLE_DOCUMENT` or `UNSUPPORTED`
-  entry after the final restart.
-- The registered Drive root and cloud routing remain correct, and expected
-  `.url` uploads land only under their corresponding My Drive meeting folders.
-- Every repository commit is single-purpose, preserves unrelated state, and
-  remains local.
+The migration is complete only when all of the following hold:
+
+- `find ~/My\ Drive -type l` exits successfully with empty standard output and
+  standard error;
+- every moved workspace and nested repository's pre/post manifest matches and
+  its configured live workflows pass from the new path;
+- every repaired repository passes the operation that could recreate its old
+  link without producing a new symlink or persistent Drive failure;
+- every residual path matches its approved disposition and content manifest,
+  and its real consumer or recreation workflow passes;
+- the after-resume rollback pilot restored the journaled cloud object without a
+  duplicate, followed by a second successful migration of that pilot;
+- every affected scheduled workflow has passed its required live trigger;
+- Drive registration still has `is_my_drive=1`, the exact journaled My Drive
+  root ID, and zero `machine_root` rows;
+- the Drive API shows expected old repository trees in Trash, no unexpected
+  cloud creations, and no computer-backup or duplicate tree;
+- the native Drive panel shows zero errors after queues settle;
+- two post-migration fresh Drive restarts both settle at zero;
+- targeted logs contain no persistent create failure for a migrated path;
+- the stale-record pilot demonstrated the supported native-record transition,
+  and no removed source survives as a stale native error;
+- `npm ci`, `uv sync`, pytest, representative builds, browser tooling, and a
+  fresh linked worktree complete in their approved external locations without
+  recreating an old Drive path; and
+- the current zero state survives a final complete symlink and stale-path
+  audit.
+
+Passing tests, a clean local invariant, or a transient zero immediately after
+restart is not sufficient evidence.
+
+## Documentation and plan consequences
+
+The rewritten implementation plans must separate at least these bounded
+projects:
+
+1. migration tooling, path registry, and regression guards;
+2. representative repository pilots;
+3. personal workspace moves;
+4. personal in-place repairs;
+5. Epoch repository migration and scheduled-workflow verification;
+6. residual non-repository directory repairs;
+7. Epoch document links;
+8. Claude instruction bridges;
+9. Uqbar wrappers;
+10. Enchant runtime migration; and
+11. final Drive/cloud durability verification.
+
+The former four plans must not be executed by editing their numeric gates in
+place. Their valid technical material should be carried into new plans whose
+prerequisites and acceptance criteria derive from this specification.

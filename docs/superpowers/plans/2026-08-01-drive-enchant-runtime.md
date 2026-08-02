@@ -1,6 +1,8 @@
 # Drive-Compatible Enchant Runtime Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Superseded:** Do not execute this plan. Its Drive baseline and sequencing
+> rely on the invalid assumption that directory-symlink failures are not
+> user-visible. Rewrite it from the revised workspace design before use.
 
 **Goal:** Move all writable Enchant runtime symlinks outside Google Drive while preserving each dictionary's existing canonical file and reducing the final 16 Drive errors to zero.
 

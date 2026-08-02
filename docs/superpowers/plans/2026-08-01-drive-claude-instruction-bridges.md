@@ -1,6 +1,8 @@
 # Drive-Compatible Claude Instruction Bridges Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Superseded:** Do not execute this plan. Its Drive baseline and sequencing
+> rely on the invalid assumption that directory-symlink failures are not
+> user-visible. Rewrite it from the revised workspace design before use.
 
 **Goal:** Replace two Drive-rejected `CLAUDE.md` file symlinks with exact import bridges while keeping `AGENTS.md` canonical and making every local parity workflow bridge-aware.
 

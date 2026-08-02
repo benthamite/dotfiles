@@ -1,6 +1,8 @@
 # Drive-Compatible Uqbar Compatibility Wrappers Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Superseded:** Do not execute this plan. Its Drive baseline and sequencing
+> rely on the invalid assumption that directory-symlink failures are not
+> user-visible. Rewrite it from the revised workspace design before use.
 
 **Goal:** Replace Uqbar's two Drive-rejected command symlinks with regular executable wrappers that preserve the behavior of the canonical extensionless Bash commands.
 

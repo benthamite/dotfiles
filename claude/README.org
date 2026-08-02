@@ -101,7 +101,11 @@ the bounded marker check also reconciles a busy flag left stale by a lost Emacs
 stop event. Phase submission remains pending until a busy transition or
 transcript growth acknowledges delivery. If the original phase marker is still
 present in the fixed actor's composer, the helper may retry only the Return
-keystroke; it never pastes the prompt a second time.
+keystroke; it never pastes the prompt a second time. A non-implementation phase
+whose process exits before any assistant output can be moved once to a fresh
+fixed-role session: the guard verifies the empty return boundary, uses the
+backend's authoritative waiting state, and atomically adopts the fresh
+transcript without creating another review pass.
 
 * Hooks
 

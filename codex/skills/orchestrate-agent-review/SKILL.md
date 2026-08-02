@@ -184,6 +184,17 @@ composer, use `retry-delivery --run-file <run>`; it rechecks the transcript and
 session state, sends only Return, and refuses to paste the prompt again. Never
 retry or retransmit an ambiguous prompt automatically.
 
+If a non-implementation actor's process exits after accepting the phase prompt
+but before returning any assistant output, start a fresh fixed-role session and
+use `restart-phase --run-file <run> --prompt-file <same-context>`. The helper
+requires authoritative waiting state, proves that the failed transcript has no
+assistant output after the guarded boundary, submits the same whole phase once
+to the fresh session, and atomically rebinds the run to its new transcript. It
+refuses recovery after any reviewer or author output, so this is process-loss
+recovery rather than another review pass. Fresh app-server sessions are treated
+as waiting from the backend's authoritative inactive-turn state even when the
+cached event state is still `unknown`.
+
 ## Step 4: Monitor without ending the turn
 
 Use Python-based polling, not shell `sleep`, because the reviewed agents may run broad process probes such as `pkill -f "sleep 20"` that can kill sleep-based monitor commands.

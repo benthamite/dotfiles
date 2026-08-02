@@ -441,11 +441,17 @@ def json_for_display(value: Any) -> str:
 def buffer_state(buffer: str) -> dict[str, Any]:
     value_expr = f'''
 (with-current-buffer {elisp_string(buffer)}
-  `((buffer . ,(buffer-name))
-    (state . ,(if (boundp 'agent--session-state)
-                  (format "%s" agent--session-state)
-                "unknown"))
-    (directory . ,(or default-directory ""))))
+  (let ((display-state
+         (when (fboundp 'agent-session-display-state)
+           (agent-session-display-state (current-buffer)))))
+    `((buffer . ,(buffer-name))
+      (state . ,(pcase display-state
+                   ((or 'waiting 'background-waiting) "awaiting-input")
+                   ('busy "busy")
+                   (_ (if (boundp 'agent--session-state)
+                          (format "%s" agent--session-state)
+                        "unknown"))))
+      (directory . ,(or default-directory "")))))
 '''
     return run_emacs_json(value_expr)
 
@@ -516,6 +522,70 @@ def pending_prompt_contains(buffer: str, marker: str) -> bool:
     if returned not in {"present", "absent"}:
         raise SystemExit(f"unexpected pending-prompt result: {returned!r}")
     return returned == "present"
+
+
+def agent_transcript_path(buffer: str, backend: str) -> str | None:
+    """Return BUFFER's current transcript path without enumerating sessions."""
+    if backend != "codex":
+        raise SystemExit("fresh phase restart currently requires the Codex backend")
+    expr = f'''
+(with-current-buffer {elisp_string(buffer)}
+  (let* ((identity (codex-session-identity (current-buffer)))
+         (session-id (plist-get identity :session-id))
+         (file (or (and (boundp 'codex--session-transcript-file)
+                        codex--session-transcript-file)
+                   (and session-id (codex--find-session-transcript session-id)))))
+    (if file
+        (princ (expand-file-name file))
+      (princ "none"))))
+'''
+    returned = run_emacs_eval(expr)
+    return None if returned == "none" else returned
+
+
+def _user_marker_offset(path: Path | str, marker: str) -> int | None:
+    transcript = Path(path)
+    try:
+        stream = transcript.open("rb")
+    except FileNotFoundError:
+        return None
+    except OSError as error:
+        raise EmacsClientError(f"cannot inspect fresh transcript {path}: {error}") from None
+    with stream:
+        offset = 0
+        for line in stream:
+            try:
+                obj = json.loads(line.decode("utf-8", "replace"))
+            except json.JSONDecodeError:
+                offset += len(line)
+                continue
+            payload = obj.get("payload") or {}
+            if (
+                obj.get("type") == "response_item"
+                and payload.get("type") == "message"
+                and payload.get("role") == "user"
+            ):
+                text = "\n".join(
+                    item.get("text", "")
+                    for item in (payload.get("content") or [])
+                    if isinstance(item, dict) and item.get("type") == "input_text"
+                )
+                if marker in text:
+                    return offset
+            offset += len(line)
+    return None
+
+
+def _wait_for_transcript_path(buffer: str, backend: str, timeout: float) -> str | None:
+    deadline = time.monotonic() + timeout
+    while True:
+        path = agent_transcript_path(buffer, backend)
+        if path:
+            return path
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return None
+        time.sleep(min(DELIVERY_POLL_SECONDS, remaining))
 
 
 def _transcript_advanced(transcript: str, offset: int) -> bool:
@@ -889,6 +959,77 @@ def retry_delivery(args: argparse.Namespace) -> None:
     )
 
 
+def restart_phase(args: argparse.Namespace) -> None:
+    """Restart a non-implementation phase whose prior actor returned no output."""
+    prompt_path = Path(args.prompt_file)
+    try:
+        context = prompt_path.read_text(encoding="utf-8")
+    except OSError as error:
+        raise SystemExit(f"cannot read prompt file {prompt_path}: {error}") from None
+    with run_lock(args.run_file):
+        state = load_run(args.run_file)
+        _require_no_pending(state)
+        if state["status"] != "phase-active" or state["active_phase"] == "implementation":
+            raise SystemExit("only an active spec or plan phase can be restarted")
+        phase = state["active_phase"]
+        actor_name = PHASE_ACTOR[phase]
+        actor = state[actor_name]
+        submission = state["submissions"][-1]
+        returned = transcript_messages(
+            Path(actor["transcript"]), offset=submission["transcript_offset"]
+        )
+        if returned:
+            raise SystemExit(
+                "active phase already returned assistant output; refusing restart"
+            )
+        live = buffer_state(actor["buffer"])
+        if live.get("state") != "awaiting-input":
+            raise SystemExit(
+                f"{actor_name} is {live.get('state', 'unknown')}; "
+                "phase restart requires a fresh waiting session"
+            )
+        marker = _delivery_marker(state["stage"], phase)
+        old_transcript = str(Path(actor["transcript"]).resolve())
+        fresh = agent_transcript_path(actor["buffer"], actor["backend"])
+        marker_offset = _user_marker_offset(fresh, marker) if fresh else None
+        if marker_offset is None:
+            if fresh and str(Path(fresh).resolve()) == old_transcript:
+                raise SystemExit(
+                    "fixed actor still points at the failed transcript; "
+                    "phase restart requires a fresh session"
+                )
+            starting_offset = _transcript_offset(
+                {actor_name: {"transcript": fresh or "/nonexistent"}}, actor_name
+            )
+            prompt = _phase_prompt(state, phase, context)
+            submit_to_agent(
+                actor["buffer"],
+                actor["backend"],
+                prompt,
+                transcript=fresh or "/nonexistent",
+                transcript_offset=starting_offset,
+                delivery_marker=marker,
+            )
+            fresh = _wait_for_transcript_path(
+                actor["buffer"], actor["backend"], DELIVERY_RETRY_WAIT_SECONDS
+            )
+            if not fresh:
+                raise EmacsClientError(
+                    "fresh phase delivery was acknowledged but its transcript path "
+                    "is not yet available"
+                )
+            marker_offset = starting_offset
+        if str(Path(fresh).resolve()) == old_transcript:
+            raise SystemExit("phase restart did not acquire a fresh transcript")
+        actor["transcript"] = fresh
+        submission["transcript_offset"] = marker_offset
+        save_run(args.run_file, state)
+    print(
+        f"restarted stage={state['stage']} phase={phase} actor={actor_name} "
+        "with fresh transcript"
+    )
+
+
 def run_status(args: argparse.Namespace) -> None:
     state = load_run(args.run_file)
     display = {
@@ -1244,6 +1385,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.add_argument("--run-file", required=True)
     p.set_defaults(func=retry_delivery)
+
+    p = sub.add_parser(
+        "restart-phase",
+        help="Restart a returned-empty review or authoring phase in a fresh session",
+    )
+    p.add_argument("--run-file", required=True)
+    p.add_argument("--prompt-file", required=True)
+    p.set_defaults(func=restart_phase)
 
     p = sub.add_parser(
         "resume-stage", help="Resume an awaiting Agent 1 with fixed stage scope"

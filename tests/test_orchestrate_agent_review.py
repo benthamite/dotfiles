@@ -574,6 +574,115 @@ class StageAtomicRunTests(unittest.TestCase):
             orchestrator.load_run(self.run_file)["status"], "phase-active"
         )
 
+    def test_restart_phase_moves_active_review_to_fresh_fixed_session(self):
+        self.create_run()
+        with mock.patch.object(orchestrator, "submit_to_agent"):
+            self.submit_phase("spec")
+        self.finish_phase("spec")
+        with mock.patch.object(orchestrator, "submit_to_agent"):
+            self.submit_phase("spec-review")
+
+        fresh_transcript = self.directory / "fresh-agent2.jsonl"
+        args = SimpleNamespace(
+            run_file=str(self.run_file),
+            prompt_file=str(self.prompt_file),
+        )
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "awaiting-input"},
+            ),
+            mock.patch.object(
+                orchestrator,
+                "agent_transcript_path",
+                side_effect=(None, str(fresh_transcript)),
+                create=True,
+            ),
+            mock.patch.object(orchestrator, "submit_to_agent") as submit,
+            redirect_stdout(io.StringIO()),
+        ):
+            orchestrator.restart_phase(args)
+
+        sent = submit.call_args
+        self.assertEqual(sent.args[:2], ("*codex:stage-2*", "codex"))
+        self.assertIn("Phase context", sent.args[2])
+        self.assertEqual(sent.kwargs["transcript_offset"], 0)
+        state = orchestrator.load_run(self.run_file)
+        self.assertEqual(state["agent2"]["transcript"], str(fresh_transcript))
+        self.assertEqual(state["submissions"][-1]["transcript_offset"], 0)
+        self.assertEqual(state["status"], "phase-active")
+
+    def test_restart_phase_adopts_existing_fresh_transcript_without_resubmit(self):
+        self.create_run()
+        with mock.patch.object(orchestrator, "submit_to_agent"):
+            self.submit_phase("spec")
+        self.finish_phase("spec")
+        with mock.patch.object(orchestrator, "submit_to_agent"):
+            self.submit_phase("spec-review")
+
+        fresh_transcript = self.directory / "fresh-agent2.jsonl"
+        fresh_transcript.write_text(
+            json.dumps(
+                {
+                    "type": "response_item",
+                    "payload": {
+                        "type": "message",
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "input_text",
+                                "text": "PHASE COMPLETE: spec-review",
+                            }
+                        ],
+                    },
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        args = SimpleNamespace(
+            run_file=str(self.run_file),
+            prompt_file=str(self.prompt_file),
+        )
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "awaiting-input"},
+            ),
+            mock.patch.object(
+                orchestrator,
+                "agent_transcript_path",
+                return_value=str(fresh_transcript),
+                create=True,
+            ),
+            mock.patch.object(orchestrator, "submit_to_agent") as submit,
+            redirect_stdout(io.StringIO()),
+        ):
+            orchestrator.restart_phase(args)
+
+        submit.assert_not_called()
+        state = orchestrator.load_run(self.run_file)
+        self.assertEqual(state["agent2"]["transcript"], str(fresh_transcript))
+
+    def test_restart_phase_rejects_after_reviewer_returned_any_message(self):
+        self.create_run()
+        with mock.patch.object(orchestrator, "submit_to_agent"):
+            self.submit_phase("spec")
+        self.finish_phase("spec")
+        with mock.patch.object(orchestrator, "submit_to_agent"):
+            self.submit_phase("spec-review")
+        self.write_phase_return("spec-review", marker=False)
+
+        with self.assertRaisesRegex(SystemExit, "already returned assistant output"):
+            orchestrator.restart_phase(
+                SimpleNamespace(
+                    run_file=str(self.run_file),
+                    prompt_file=str(self.prompt_file),
+                )
+            )
+
     def test_submit_requires_fixed_destination_actor_to_be_awaiting(self):
         self.create_run()
         with (
@@ -698,6 +807,24 @@ class StageAtomicRunTests(unittest.TestCase):
             result = orchestrator.run_emacs_json("'((state . \"busy\"))")
 
         self.assertEqual(result, {"state": "busy"})
+
+    def test_buffer_state_uses_authoritative_backend_display_state(self):
+        captured = {}
+
+        def return_state(expr):
+            captured["expr"] = expr
+            return {
+                "buffer": "*codex:fresh*",
+                "state": "awaiting-input",
+                "directory": "/tmp/",
+            }
+
+        with mock.patch.object(orchestrator, "run_emacs_json", side_effect=return_state):
+            state = orchestrator.buffer_state("*codex:fresh*")
+
+        self.assertEqual(state["state"], "awaiting-input")
+        self.assertIn("agent-session-display-state", captured["expr"])
+        self.assertIn("background-waiting", captured["expr"])
 
 
 class WatchVerdictTests(unittest.TestCase):

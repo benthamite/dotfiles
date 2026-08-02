@@ -9,13 +9,16 @@ import json
 import os
 import re
 import shlex
+import stat
 import subprocess
 import sys
+import tempfile
 import tomllib
+import unicodedata
 from dataclasses import dataclass
 from functools import cached_property
-from pathlib import Path
-from typing import Iterable
+from pathlib import Path, PurePosixPath
+from typing import BinaryIO, Iterable
 
 
 ROOT = Path.home() / "My Drive" / "dotfiles"
@@ -2498,6 +2501,7 @@ def guard_commit() -> None:
 
     problems: list[str] = []
     full_audit_required = False
+    documentation_candidate: CommitCandidateTree | None = None
     for repo_root in sorted(commit_repos, key=str):
         problems.extend(command_problems_by_repo.get(repo_root, []))
         changed = dirty_paths(repo_root)
@@ -2511,6 +2515,7 @@ def guard_commit() -> None:
 
         include_global = same_path(repo_root, ROOT)
         if include_global:
+            documentation_candidate = candidate_tree
             if any(full_audit_gate_path(path) for path in changed_paths):
                 full_audit_required = True
             (
@@ -2542,8 +2547,19 @@ def guard_commit() -> None:
             candidate_tree,
         )
 
+    if documentation_candidate is not None:
+        documentation_drift = candidate_documentation_audit_problems(
+            documentation_candidate
+        )
+        if documentation_drift:
+            add_nested_problems(
+                problems,
+                "The documentation audit is not clean:",
+                documentation_drift,
+            )
+
     if full_audit_required:
-        drift = audit_problems()
+        drift = audit_problems(include_documentation=False)
         if drift:
             add_nested_problems(
                 problems,
@@ -2557,7 +2573,7 @@ def guard_commit() -> None:
     reason = (
         "BLOCKED: AI config sync guard found configuration problems.\n\n"
         + "\n".join(problems)
-        + "\n\nMake the full audit clean before committing agent configuration. "
+        + "\n\nMake the configuration and documentation audits clean before committing. "
         "Update the counterpart in this same session. For global dotfiles "
         f"artifacts, stage {MANIFEST} with an explicit status/exemption if the "
         "counterpart should not exist. When updating README.org files, document "
@@ -3386,10 +3402,595 @@ def audit_registrations(problems: list[str], manifest: dict) -> None:
             add_problem(problems, f"Manifest registrations missing: {expected}")
 
 
-def audit_problems() -> list[str]:
-    problems: list[str] = []
+def _documentation_checker_is_safe(root: Path, checker: Path) -> bool:
+    """Return whether checker is a regular, non-symlinked file within root."""
+    try:
+        checker.resolve().relative_to(root.resolve())
+        return checker.is_file() and not checker.is_symlink()
+    except (OSError, RuntimeError, ValueError):
+        return False
+
+
+def _run_documentation_audit(
+    root: Path,
+    checker: Path,
+    *,
+    checker_argument: str,
+    environment: dict[str, str] | None = None,
+) -> list[str]:
+    """Run checker for root and convert every output line into a problem."""
+
+    try:
+        completed = subprocess.run(
+            ["python3", checker_argument, "audit", "--root", str(root)],
+            cwd=root,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            shell=False,
+            check=False,
+            env=environment,
+        )
+    except (OSError, UnicodeError) as error:
+        return [f"Documentation audit checker could not run: {error}"]
+
+    problems = [
+        line.strip()
+        for stream in (completed.stdout, completed.stderr)
+        for line in stream.splitlines()
+        if line.strip()
+    ]
+    if completed.returncode and not problems:
+        return [
+            "Documentation audit checker failed with exit status "
+            f"{completed.returncode}"
+        ]
+    return problems
+
+
+def documentation_audit_problems(root: Path = ROOT) -> list[str]:
+    """Run the canonical working-tree documentation audit."""
+    checker = root / "bin" / "docs-audit"
+    try:
+        checker_exists = checker.exists()
+    except OSError:
+        checker_exists = False
+    if not checker_exists:
+        return [f"Documentation audit checker is missing: {checker}"]
+    if not _documentation_checker_is_safe(root, checker):
+        return [
+            "Documentation audit checker is not a regular in-root file: "
+            f"{checker}"
+        ]
+    return _run_documentation_audit(
+        root,
+        checker,
+        checker_argument="bin/docs-audit",
+    )
+
+
+CANDIDATE_DOCS_MATERIALIZATION_ERROR = (
+    "Documentation audit could not materialize the proposed commit tree"
+)
+CANDIDATE_DOCS_FILTERED_PATH_ERROR = (
+    "Documentation audit cannot safely model planned filtered or transformed "
+    "paths; stage them separately before committing"
+)
+CANDIDATE_DOCS_MAX_SYMLINK_BYTES = 4096
+CANDIDATE_DOCS_COPY_CHUNK_BYTES = 1024 * 1024
+
+
+def _open_candidate_parent(repo: Path, relative: str) -> tuple[int, str]:
+    """Open a candidate path's parent without following any path component."""
+    directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    try:
+        descriptor = os.open(repo, directory_flags)
+    except OSError as error:
+        raise RuntimeError("candidate repository root could not be opened") from error
+    try:
+        parts = relative.split("/")
+        for part in parts[:-1]:
+            child_descriptor = os.open(
+                part,
+                directory_flags,
+                dir_fd=descriptor,
+            )
+            previous_descriptor = descriptor
+            descriptor = child_descriptor
+            os.close(previous_descriptor)
+        return descriptor, parts[-1]
+    except BaseException:
+        try:
+            os.close(descriptor)
+        except OSError:
+            pass
+        raise
+
+
+def _sanitized_git_environment() -> dict[str, str]:
+    """Return the process environment without inherited Git routing state."""
+    environment = {
+        key: value
+        for key, value in os.environ.items()
+        if not key.startswith("GIT_")
+    }
+    environment["GIT_NO_REPLACE_OBJECTS"] = "1"
+    return environment
+
+
+def _materialize_git_blobs_batch(
+    repo: Path,
+    entries: dict[str, tuple[str, str]],
+    worktree: Path,
+    environment: dict[str, str],
+) -> bool:
+    """Stream raw blobs into a candidate tree through one Git process."""
+    process: subprocess.Popen[bytes] | None = None
+    succeeded = False
+    try:
+        process = subprocess.Popen(
+            ["git", "-C", str(repo), "cat-file", "--batch"],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            shell=False,
+            env=environment,
+        )
+        if process.stdin is None or process.stdout is None:
+            return False
+
+        for relative, (mode, object_id) in sorted(entries.items()):
+            process.stdin.write(object_id.encode("ascii") + b"\n")
+            process.stdin.flush()
+            header = process.stdout.readline(257)
+            if len(header) > 256 or not header.endswith(b"\n"):
+                return False
+            fields = header[:-1].split(b" ")
+            if len(fields) != 3:
+                return False
+            raw_object_id, object_type, raw_size = fields
+            if (
+                raw_object_id != object_id.encode("ascii")
+                or object_type != b"blob"
+                or not re.fullmatch(rb"0|[1-9][0-9]*", raw_size)
+            ):
+                return False
+            size = int(raw_size)
+            destination = worktree.joinpath(*relative.split("/"))
+            destination.parent.mkdir(parents=True, exist_ok=True)
+
+            if mode == "120000":
+                if size > CANDIDATE_DOCS_MAX_SYMLINK_BYTES:
+                    return False
+                content = bytearray()
+                remaining = size
+                while remaining:
+                    chunk = process.stdout.read(remaining)
+                    if not chunk:
+                        return False
+                    content.extend(chunk)
+                    remaining -= len(chunk)
+                target = bytes(content)
+                if b"\0" in target:
+                    return False
+                os.symlink(os.fsdecode(target), destination)
+            else:
+                remaining = size
+                with destination.open("xb") as output_file:
+                    while remaining:
+                        chunk = process.stdout.read(
+                            min(CANDIDATE_DOCS_COPY_CHUNK_BYTES, remaining)
+                        )
+                        if not chunk:
+                            return False
+                        output_file.write(chunk)
+                        remaining -= len(chunk)
+                destination.chmod(0o755 if mode == "100755" else 0o644)
+
+            if process.stdout.read(1) != b"\n":
+                return False
+
+        process.stdin.close()
+        if process.stdout.read(1) or process.wait() != 0:
+            return False
+        succeeded = True
+        return True
+    except (BrokenPipeError, OSError, UnicodeError, ValueError):
+        return False
+    finally:
+        if process is not None:
+            if not succeeded:
+                try:
+                    if process.stdin is not None and not process.stdin.closed:
+                        process.stdin.close()
+                except OSError:
+                    pass
+                try:
+                    process.terminate()
+                except OSError:
+                    pass
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    try:
+                        process.kill()
+                    except OSError:
+                        pass
+                    process.wait()
+                except OSError:
+                    pass
+            for pipe in (process.stdin, process.stdout):
+                try:
+                    if pipe is not None and not pipe.closed:
+                        pipe.close()
+                except OSError:
+                    pass
+
+
+def candidate_documentation_audit_problems(
+    candidate_tree: CommitCandidateTree,
+) -> list[str]:
+    """Audit the exact canonical commit candidate with the committed checker."""
+    if not same_path(candidate_tree.repo_root, ROOT):
+        return []
+
+    repo = candidate_tree.repo_root.resolve()
+    planned_paths = sorted(candidate_tree.planned_paths)
+    if any(
+        not path
+        or Path(path).is_absolute()
+        or "\\" in path
+        or any(part in {"", ".", ".."} for part in path.split("/"))
+        for path in planned_paths
+    ):
+        return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+
+    base_environment = _sanitized_git_environment()
+
+    def git_process(
+        arguments: list[str],
+        *,
+        environment: dict[str, str] | None = None,
+        text: bool = True,
+        input_data: str | bytes | None = None,
+        input_file: BinaryIO | None = None,
+    ) -> subprocess.CompletedProcess:
+        input_arguments = (
+            {"stdin": input_file} if input_file is not None else {"input": input_data}
+        )
+        return subprocess.run(
+            ["git", "-C", str(repo), *arguments],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=text,
+            shell=False,
+            env=environment or base_environment,
+            **input_arguments,
+        )
+
+    try:
+        git_dir_result = git_process(["rev-parse", "--absolute-git-dir"])
+        objects_result = git_process(["rev-parse", "--git-path", "objects"])
+        tree_result = git_process(["write-tree"])
+        checker_result = git_process(
+            ["show", "HEAD:bin/docs-audit"], text=False
+        )
+    except OSError:
+        return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+    if (
+        git_dir_result.returncode
+        or objects_result.returncode
+        or tree_result.returncode
+        or checker_result.returncode
+    ):
+        return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+
+    git_dir = Path(git_dir_result.stdout.strip()).resolve()
+    original_objects = Path(objects_result.stdout.strip())
+    if not original_objects.is_absolute():
+        original_objects = repo / original_objects
+    original_objects = original_objects.resolve()
+    tree_object = tree_result.stdout.strip()
+    if (
+        not git_dir.is_absolute()
+        or not original_objects.is_absolute()
+        or not tree_object
+    ):
+        return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+
+    try:
+        with tempfile.TemporaryDirectory(prefix="ai-config-docs-") as temporary:
+            temporary_root = Path(temporary).resolve()
+            worktree = temporary_root / "tree"
+            worktree.mkdir(mode=0o700)
+            alternate_index = (temporary_root / "index").resolve()
+            temporary_objects = (temporary_root / "objects").resolve()
+            temporary_objects.mkdir(mode=0o700)
+            trusted_checker = (temporary_root / "docs-audit").resolve()
+
+            trusted_checker.write_bytes(checker_result.stdout)
+            trusted_checker.chmod(0o700)
+
+            index_environment = {
+                **base_environment,
+                "GIT_DIR": str(git_dir),
+                "GIT_WORK_TREE": str(repo),
+                "GIT_INDEX_FILE": str(alternate_index),
+                "GIT_OBJECT_DIRECTORY": str(temporary_objects),
+                "GIT_ALTERNATE_OBJECT_DIRECTORIES": str(original_objects),
+            }
+            read_tree = git_process(
+                ["read-tree", tree_object], environment=index_environment
+            )
+            if read_tree.returncode:
+                return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+
+            filemode_result = git_process(
+                ["config", "--bool", "core.filemode"],
+                environment=index_environment,
+            )
+            filemode_enabled = (
+                filemode_result.returncode == 0
+                and filemode_result.stdout.strip() == "true"
+            )
+            autocrlf_result = git_process(
+                ["config", "--bool-or-str", "core.autocrlf"],
+                environment=index_environment,
+            )
+            autocrlf_enabled = (
+                autocrlf_result.returncode == 0
+                and autocrlf_result.stdout.strip() not in {"", "false"}
+            )
+
+            for relative in planned_paths:
+                if PurePosixPath(relative).name == ".gitattributes":
+                    return [CANDIDATE_DOCS_FILTERED_PATH_ERROR]
+                try:
+                    parent_descriptor, basename = _open_candidate_parent(
+                        repo, relative
+                    )
+                except FileNotFoundError:
+                    removal = git_process(
+                        ["update-index", "--force-remove", "--", relative],
+                        environment=index_environment,
+                    )
+                    if removal.returncode:
+                        return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                    continue
+                except (OSError, RuntimeError):
+                    return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                try:
+                    try:
+                        candidate_status = os.stat(
+                            basename,
+                            dir_fd=parent_descriptor,
+                            follow_symlinks=False,
+                        )
+                    except FileNotFoundError:
+                        removal = git_process(
+                            ["update-index", "--force-remove", "--", relative],
+                            environment=index_environment,
+                        )
+                        if removal.returncode:
+                            return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                        continue
+
+                    for cached_arguments in ([], ["--cached"]):
+                        attributes = git_process(
+                            [
+                                "check-attr",
+                                *cached_arguments,
+                                "-z",
+                                "filter",
+                                "text",
+                                "eol",
+                                "ident",
+                                "working-tree-encoding",
+                                "--",
+                                relative,
+                            ],
+                            environment=index_environment,
+                            text=False,
+                        )
+                        if attributes.returncode:
+                            return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                        attribute_fields = attributes.stdout.split(b"\0")
+                        if attribute_fields and attribute_fields[-1] == b"":
+                            attribute_fields.pop()
+                        if len(attribute_fields) % 3 != 0:
+                            return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                        attribute_values = attribute_fields[2::3]
+                        if autocrlf_enabled or any(
+                            value not in {b"unspecified", b"unset"}
+                            for value in attribute_values
+                        ):
+                            return [CANDIDATE_DOCS_FILTERED_PATH_ERROR]
+
+                    if stat.S_ISLNK(candidate_status.st_mode):
+                        mode = "120000"
+                        try:
+                            content = os.fsencode(
+                                os.readlink(basename, dir_fd=parent_descriptor)
+                            )
+                        except OSError:
+                            return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                        if len(content) > CANDIDATE_DOCS_MAX_SYMLINK_BYTES:
+                            return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                        blob = git_process(
+                            ["hash-object", "-w", "--no-filters", "--stdin"],
+                            environment=index_environment,
+                            text=False,
+                            input_data=content,
+                        )
+                    elif stat.S_ISREG(candidate_status.st_mode):
+                        descriptor = -1
+                        try:
+                            descriptor = os.open(
+                                basename,
+                                os.O_RDONLY | os.O_NOFOLLOW,
+                                dir_fd=parent_descriptor,
+                            )
+                            opened_status = os.fstat(descriptor)
+                            if not stat.S_ISREG(opened_status.st_mode):
+                                return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                            current_mode = opened_status.st_mode
+                            with os.fdopen(descriptor, "rb") as input_file:
+                                descriptor = -1
+                                blob = git_process(
+                                    [
+                                        "hash-object",
+                                        "-w",
+                                        "--no-filters",
+                                        "--stdin",
+                                    ],
+                                    environment=index_environment,
+                                    text=False,
+                                    input_file=input_file,
+                                )
+                        except OSError:
+                            return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                        finally:
+                            if descriptor >= 0:
+                                try:
+                                    os.close(descriptor)
+                                except OSError:
+                                    pass
+                        if filemode_enabled and current_mode & 0o111:
+                            mode = "100755"
+                        else:
+                            mode = "100644"
+                            if not filemode_enabled:
+                                existing = git_process(
+                                    ["ls-files", "--stage", "-z", "--", relative],
+                                    environment=index_environment,
+                                    text=False,
+                                )
+                                if existing.returncode:
+                                    return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                                record = existing.stdout.split(b"\0", 1)[0]
+                                metadata, separator, _path = record.partition(b"\t")
+                                fields = metadata.split()
+                                if (
+                                    separator
+                                    and len(fields) == 3
+                                    and fields[2] == b"0"
+                                ):
+                                    existing_mode = fields[0].decode(
+                                        "ascii", errors="ignore"
+                                    )
+                                    if existing_mode in {"100644", "100755"}:
+                                        mode = existing_mode
+                    else:
+                        return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                except OSError:
+                    return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                finally:
+                    try:
+                        os.close(parent_descriptor)
+                    except OSError:
+                        pass
+
+                if blob.returncode:
+                    return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                try:
+                    object_id = blob.stdout.decode("ascii").strip()
+                except UnicodeDecodeError:
+                    return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                if not re.fullmatch(r"[0-9a-f]{40,64}", object_id):
+                    return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                update = git_process(
+                    [
+                        "update-index",
+                        "--add",
+                        "--cacheinfo",
+                        f"{mode},{object_id},{relative}",
+                    ],
+                    environment=index_environment,
+                )
+                if update.returncode:
+                    return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+
+            candidate_environment = {
+                **index_environment,
+                "GIT_WORK_TREE": str(worktree),
+            }
+            index_entries_result = git_process(
+                ["ls-files", "--stage", "-z"],
+                environment=candidate_environment,
+                text=False,
+            )
+            if index_entries_result.returncode:
+                return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+
+            entries: dict[str, tuple[str, str]] = {}
+            normalized_paths: set[str] = set()
+            for record in index_entries_result.stdout.split(b"\0"):
+                if not record:
+                    continue
+                metadata, separator, raw_path = record.partition(b"\t")
+                fields = metadata.split()
+                if not separator or len(fields) != 3:
+                    return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                try:
+                    mode = fields[0].decode("ascii")
+                    object_id = fields[1].decode("ascii")
+                    stage = fields[2].decode("ascii")
+                    relative = raw_path.decode("utf-8")
+                except UnicodeDecodeError:
+                    return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                parts = relative.split("/")
+                if (
+                    stage != "0"
+                    or mode not in {"100644", "100755", "120000"}
+                    or not re.fullmatch(r"[0-9a-f]{40,64}", object_id)
+                    or not relative
+                    or PurePosixPath(relative).is_absolute()
+                    or "\\" in relative
+                    or any(part in {"", ".", ".."} for part in parts)
+                    or parts[0].casefold() == ".git"
+                    or relative in entries
+                ):
+                    return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                normalized = unicodedata.normalize("NFC", relative).casefold()
+                if normalized in normalized_paths:
+                    return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                normalized_paths.add(normalized)
+                entries[relative] = (mode, object_id)
+
+            tracked_paths = set(entries)
+            for relative in tracked_paths:
+                parts = relative.split("/")
+                if any(
+                    "/".join(parts[:index]) in tracked_paths
+                    for index in range(1, len(parts))
+                ):
+                    return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+
+            if not _materialize_git_blobs_batch(
+                repo,
+                entries,
+                worktree,
+                candidate_environment,
+            ):
+                return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+
+            return _run_documentation_audit(
+                worktree,
+                trusted_checker,
+                checker_argument=str(trusted_checker),
+                environment=candidate_environment,
+            )
+    except (OSError, UnicodeError):
+        return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+
+
+def audit_problems(*, include_documentation: bool = True) -> list[str]:
+    problems: list[str] = (
+        documentation_audit_problems(ROOT) if include_documentation else []
+    )
     if not MANIFEST_PATH.exists():
-        return [f"Missing manifest: {MANIFEST}"]
+        return [*problems, f"Missing manifest: {MANIFEST}"]
 
     manifest = load_manifest()
     private_manifest = load_private_manifest()

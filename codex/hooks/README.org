@@ -14,6 +14,47 @@ These hooks supplement the written instructions with executable checks. An
 allowing result from one hook does not bypass another hook, the global rules,
 or the need for user authorization.
 
+* Operational contracts
+
+The destructive-command guard is registered directly here. Claude carries the
+same logic inline in its =pretooluse-bash.sh= dispatcher, so both implementations
+must change and be tested together. Decisions are allow or deny, never approval
+prompts; =ALLOW_CLONE=1= is the narrow explicit clone override.
+
+The dirty-tree rewrite guard blocks =filter-repo= and =filter-branch= only when
+the target repository has staged or unstaged tracked changes. Untracked files
+are deliberately ignored. It resolves =git -C= and the last applicable =cd=
+before falling back to the hook working directory, and masks heredoc bodies to
+avoid prose false positives. =ALLOW_DIRTY_REWRITE=1= is the explicit override.
+
+The sensitive-read guard denies content access to credential-bearing paths. It
+permits content-free metadata, quiet/count/name-only searches, existence tests,
+Git ignore/index queries, and auth-aware tools only in recognized narrow forms.
+It also permits =.env= or =.envrc= to be sourced solely as subprocess
+environment, while still denying commands that print, parse, or dump it.
+
+The secret-leak guard applies the same command policy to every literal nested
+=cmd= inside a =functions.exec= program, including nested shell-tool calls.
+Read-only Automations access must use =op-automations= and desktop-gated work
+must use =op-desktop=. The sanctioned fallback batches all operations in one
+=env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '...'= shell; later raw =op= calls
+and =--reveal= remain denied.
+
+The Elisp documentation gate honors
+=branch.<branch>.deferDocUpdates=true= only on feature branches and ignores it
+on =main= and =master=. Remove the setting when the branch merges.
+
+The hook installer owns all eight =codex-hook-wrapper= lifecycle registrations.
+It must preserve the live =config.toml= and =hooks.json= symlinks and replace
+stale profile-specific wrapper paths rather than append duplicates. The global
+wrappers are safe outside Emacs: when =CODEX_BUFFER_NAME= is absent, they
+consume the payload and exit successfully without calling =emacsclient=.
+
+=require-codex-readme-update.sh= is a dotfiles-scoped commit gate. Its
+command-text fallback excludes project-local =.codex/= paths, and it excludes
+the repo-root =AGENTS.md= project mirror; the project-local dotfiles skill is
+handled by its configured documentation owner instead.
+
 * File index
 
 | File | Purpose |

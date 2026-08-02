@@ -18,6 +18,13 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = PurePosixPath("docs/readme-policy.json")
+MANIFEST_PATH = PurePosixPath("ai-config-sync.json")
+AGENT_OVERVIEW_READMES = (
+    PurePosixPath("agents/README.org"),
+    PurePosixPath("claude/README.org"),
+    PurePosixPath("codex/README.org"),
+)
+MANIFEST_NOTE_LIMIT = 600
 POLICY_KEYS = {
     "version",
     "required_readmes",
@@ -448,6 +455,115 @@ def skill_inventory_rows(root: Path) -> list[SkillInventoryRow]:
     if result.problems:
         raise ValueError("\n".join(result.problems))
     return list(result.rows)
+
+
+def _normalized_org_heading(line: str) -> str | None:
+    """Return comparable visible text for one Org heading."""
+    match = re.fullmatch(r"\*+\s+(.+?)\s*", line)
+    if match is None:
+        return None
+    text = match.group(1).strip()
+    text = re.sub(r"^(?:TODO|DONE|WAITING|HOLD|CANCELLED)\s+", "", text)
+    text = re.sub(r"^\[#[A-Z]\]\s+", "", text)
+    text = re.sub(r"\s+:[A-Za-z0-9_@#%:]+:$", "", text)
+    link = re.fullmatch(r"\[\[.*?\]\[([^]\n]+)\]\]", text)
+    if link is not None:
+        text = link.group(1).strip()
+    else:
+        link = re.fullmatch(r"\[\[([^]\n]+)\]\]", text)
+        if link is not None:
+            text = link.group(1).strip()
+    while (
+        len(text) >= 2
+        and text[0] == text[-1]
+        and text[0] in "=~*/_+"
+    ):
+        text = text[1:-1].strip()
+    return text
+
+
+def manual_skill_catalog_problems(
+    root: Path, rows: list[SkillInventoryRow]
+) -> list[str]:
+    """Reject hand-maintained per-skill headings in agent overview READMEs."""
+    tracked = set(git_files(root))
+    skill_names = {row.name.casefold(): row.name for row in rows}
+    problems: list[str] = []
+    for relative in AGENT_OVERVIEW_READMES:
+        relative_text = relative.as_posix()
+        if relative_text not in tracked:
+            continue
+        path = safe_contained_file(root, relative)
+        if path is None:
+            problems.append(
+                f"Agent overview README could not be read: {relative_text}"
+            )
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError):
+            problems.append(
+                f"Agent overview README could not be read: {relative_text}"
+            )
+            continue
+        for line in _mask_index_literal_regions(text).splitlines():
+            heading = _normalized_org_heading(line)
+            if heading is None:
+                continue
+            canonical = skill_names.get(heading.casefold())
+            if canonical is not None:
+                problems.append(
+                    "Manual skill catalog heading is forbidden: "
+                    f"{relative_text} -> {canonical}"
+                )
+            if (
+                relative == PurePosixPath("agents/README.org")
+                and heading.casefold() == "master skill inventory"
+            ):
+                problems.append(
+                    "Manual skill inventory heading is forbidden: "
+                    "agents/README.org -> Master Skill Inventory"
+                )
+    return sorted(set(problems))
+
+
+def manifest_note_problems(root: Path) -> list[str]:
+    """Report oversized public manifest notes without exposing their content."""
+    tracked = set(git_files(root))
+    relative = MANIFEST_PATH.as_posix()
+    if relative not in tracked:
+        return []
+    path = safe_contained_file(root, MANIFEST_PATH)
+    if path is None or _path_has_symlink_component(root, MANIFEST_PATH):
+        return [f"Public manifest could not be read: {relative}"]
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return [f"Public manifest could not be loaded: {relative}"]
+
+    problems: list[str] = []
+
+    def visit(value: object, json_path: str) -> None:
+        if isinstance(value, dict):
+            for key in sorted(value):
+                child = value[key]
+                child_path = f"{json_path}.{key}"
+                if (
+                    key == "note"
+                    and isinstance(child, str)
+                    and len(child) > MANIFEST_NOTE_LIMIT
+                ):
+                    problems.append(
+                        "Manifest note exceeds 600 characters: "
+                        f"{child_path} ({len(child)})"
+                    )
+                visit(child, child_path)
+        elif isinstance(value, list):
+            for index, child in enumerate(value):
+                visit(child, f"{json_path}[{index}]")
+
+    visit(data, "$")
+    return sorted(problems)
 
 
 def _org_table_cell(value: str) -> str:
@@ -1199,7 +1315,12 @@ def audit_problems(root: Path) -> list[str]:
         *root_map_problems(root_text, expected),
         *readme_link_problems(root),
         *inventory_input_problems,
+        *manifest_note_problems(root),
     ]
+    if not inventory_input_problems:
+        problems.extend(
+            manual_skill_catalog_problems(root, skill_inventory_rows(root))
+        )
 
     policy_relative = POLICY_PATH.as_posix()
     if policy_relative not in tracked:

@@ -9,6 +9,24 @@ not an executable root by itself. Agent instructions and other scripts invoke
 these files by their repository paths. A similarly named command elsewhere on
 =PATH= is not evidence that the tracked file is active.
 
+* Operational boundaries
+
+=ai-provider-key= keeps provider administrator credentials out of project
+repositories and stores project-scoped runtime credentials in the Automations
+vault. Before a non-dry-run create or update, its verified monthly spend cap
+must match the live provider control and remain within the configured autonomous
+ceiling; dry-run mode checks that prerequisite without creating or storing a
+credential.
+
+=ahrefs-api-guard= probes the free subscription-usage endpoint before every
+paid request and blocks a call that would cross the configured remaining-unit
+reserve. Manual Ahrefs calls must use the guarded command; a similarly named
+PATH wrapper should not be assumed to be this tracked file without resolving it.
+
+=copy-slack-draft= refuses to overwrite unsent reply input, preserves unrelated
+buffers, and verifies the exact staged text. Its errors omit request objects so
+credentials carried in HTTP headers cannot reach stderr.
+
 * File index
 
 | File | Purpose |

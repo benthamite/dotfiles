@@ -96,6 +96,87 @@ class DocsAuditTests(DocsAuditTestCase):
     def test_repo_root_is_script_repository_root(self):
         self.assertEqual(SCRIPT.resolve().parents[1], self.module.REPO_ROOT)
 
+    def test_manual_skill_catalog_normalizes_org_heading_markup(self):
+        root = self.make_repo(
+            [
+                "README.org",
+                "agents/README.org",
+                "claude/README.org",
+                "codex/README.org",
+            ]
+        )
+        self.write_file(
+            root,
+            "agents/README.org",
+            "Prose may mention =example= or [[file:x][example]].\n"
+            "* example\n"
+            "#+begin_src org\n"
+            "* example\n"
+            "#+end_src\n",
+        )
+        self.write_file(root, "claude/README.org", "* =example=\n")
+        self.write_file(root, "codex/README.org", "* [[file:x][example]]\n")
+        rows = [
+            self.module.SkillInventoryRow(
+                name="example",
+                description="Use when testing.",
+                scope="Global",
+                tools=("Claude",),
+                paths=("claude/skills/example/SKILL.md",),
+            )
+        ]
+
+        self.assertEqual(
+            [
+                "Manual skill catalog heading is forbidden: agents/README.org -> example",
+                "Manual skill catalog heading is forbidden: claude/README.org -> example",
+                "Manual skill catalog heading is forbidden: codex/README.org -> example",
+            ],
+            self.module.manual_skill_catalog_problems(root, rows),
+        )
+
+    def test_repository_overviews_have_no_manual_skill_catalog_headings(self):
+        rows = self.module.skill_inventory_rows(REPO_ROOT)
+
+        self.assertEqual([], self.module.manual_skill_catalog_problems(REPO_ROOT, rows))
+
+    def test_agents_readme_has_no_master_skill_inventory(self):
+        text = (REPO_ROOT / "agents" / "README.org").read_text(encoding="utf-8")
+
+        self.assertNotRegex(
+            text,
+            r"(?im)^\*+\s+(?:[=~*/_+]*)Master Skill Inventory(?:[=~*/_+]*)\s*$",
+        )
+
+    def test_manifest_note_limit_is_enforced_recursively(self):
+        root = self.make_repo(["ai-config-sync.json"])
+        self.write_file(
+            root,
+            "ai-config-sync.json",
+            json.dumps({"hooks": [{"note": "x" * 601}]}),
+        )
+
+        self.assertEqual(
+            ["Manifest note exceeds 600 characters: $.hooks[0].note (601)"],
+            self.module.manifest_note_problems(root),
+        )
+
+    def test_repository_manifest_notes_fit_limit(self):
+        self.assertEqual([], self.module.manifest_note_problems(REPO_ROOT))
+
+    def test_manifest_note_audit_rejects_a_tracked_symlink_without_reading_it(self):
+        root = self.make_repo(["ai-config-sync.json"])
+        target = root / "runtime-manifest.json"
+        target.write_text(json.dumps({"note": "x" * 601}), encoding="utf-8")
+        manifest = root / "ai-config-sync.json"
+        manifest.unlink()
+        manifest.symlink_to(target)
+
+        self.assertEqual(
+            ["Public manifest could not be read: ai-config-sync.json"],
+            self.module.manifest_note_problems(root),
+        )
+
     def test_git_files_calls_git_with_an_argument_array_and_no_shell(self):
         completed = subprocess.CompletedProcess([], 0, stdout="b\0a\0", stderr="")
 

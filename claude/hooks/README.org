@@ -13,6 +13,55 @@ dispatch targets, one-shot installers, compatibility wrappers, or project-local
 guards. Registration determines when a script runs; its presence in this
 directory does not.
 
+* Operational contracts
+
+The destructive-command policy is registered as a standalone Codex hook but is
+inlined into Claude's =pretooluse-bash.sh= dispatcher. Change and test those two
+implementations together. Both are deny-only and never ask for approval;
+=ALLOW_CLONE=1= is the narrow explicit override for an otherwise blocked clone.
+
+The dirty-tree rewrite guard blocks =filter-repo= and =filter-branch= only when
+the target repository has staged or unstaged tracked changes. Untracked files
+are deliberately ignored. It resolves the target from =git -C=, the last
+applicable =cd=, and then the hook working directory, while masking heredoc
+bodies to avoid treating quoted examples as commands. =ALLOW_DIRTY_REWRITE=1=
+is its explicit override.
+
+The sensitive-read guard denies content access to credential-bearing paths.
+It permits content-free metadata commands, quiet/count/name-only searches,
+existence tests, Git ignore/index queries, and auth-aware tools only within the
+narrow forms recognized by the hook; a compound command cannot inherit an
+allowance from a safe first command. Sourcing a quoted or unquoted =.env= or
+=.envrc= solely as subprocess environment is allowed, including =set -a=
+wrappers, but printing, parsing, or dumping that environment is denied. Claude
+registers the standalone hook for =Read= and keeps its Bash logic inlined in
+=pretooluse-bash.sh=.
+
+The secret-leak guard blocks secret-shaped literals, unsafe output routes, and
+direct =op= use. Read-only Automations access goes through =op-automations=;
+desktop-gated work goes through =op-desktop=. When that broker is unavailable,
+the sanctioned fallback batches all operations inside one
+=env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '...'= shell. =--reveal= remains
+denied inside sanctioned forms.
+
+The Elisp documentation gate may be deferred on a feature branch with
+=branch.<branch>.deferDocUpdates=true= for a deliberate multi-commit refactor.
+The setting is ignored on =main= and =master= and should be removed when the
+branch merges. The Codex counterpart uses the same rule.
+
+The reasoning-worktree SessionStart hook repairs required key links before its
+working-directory and origin checks. For eligible worktrees it fetches and
+merges shared state without pushing, reapplies the local overlay and context,
+injects private project skills, and installs the worktree-local issue-comment
+freshness guard. The bulk wrapper performs the shared fetch once. As best-effort
+nonfatal maintenance, the hook also garbage-collects only clean, fully pushed
+transient CR worktrees and prints the =cr-task-state --hook= branch, run, and
+rubric-state banner with divergence warnings. Comment freshness blocks a post
+when a newer reasoning-task issue comment has not been acknowledged and includes
+that newest comment in the denial; API failures are an intentional fail-open
+boundary. Codex has no SessionStart counterpart and routes this posting flow to
+Claude.
+
 * File index
 
 | File | Purpose |

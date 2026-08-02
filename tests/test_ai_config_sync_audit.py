@@ -4,6 +4,8 @@ import io
 import importlib.machinery
 import importlib.util
 import json
+import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -41,6 +43,64 @@ class AiConfigSyncAuditTests(unittest.TestCase):
             Path(self.module.__file__).resolve(),
         )
 
+    def test_ai_config_audit_propagates_docs_audit_failure(self):
+        with mock.patch.object(
+            self.module, "documentation_audit_problems", return_value=["broken docs"]
+        ):
+            self.assertIn("broken docs", self.module.audit_problems())
+
+    def test_documentation_audit_captures_stdout_and_stderr(self):
+        root = self.make_repo(["bin/docs-audit"])
+        completed = subprocess.CompletedProcess(
+            [], 1, stdout="first problem\n\n", stderr="second problem\n"
+        )
+
+        with mock.patch.object(
+            self.module.subprocess, "run", return_value=completed
+        ) as run:
+            problems = self.module.documentation_audit_problems(root)
+
+        self.assertEqual(["first problem", "second problem"], problems)
+        args, kwargs = run.call_args
+        self.assertEqual(
+            ["python3", "bin/docs-audit", "audit", "--root", str(root)], args[0]
+        )
+        self.assertEqual(root, kwargs["cwd"])
+        self.assertIs(kwargs["shell"], False)
+
+    def test_documentation_audit_fails_closed_when_checker_is_missing(self):
+        root = self.make_repo(["README.org"])
+
+        self.assertEqual(
+            [f"Documentation audit checker is missing: {root / 'bin/docs-audit'}"],
+            self.module.documentation_audit_problems(root),
+        )
+
+    def test_documentation_audit_rejects_symlinked_checker(self):
+        root = self.make_repo(["README.org"])
+        external_temp = tempfile.TemporaryDirectory()
+        self.addCleanup(external_temp.cleanup)
+        outside = Path(external_temp.name) / "docs-audit"
+        outside.write_text("#!/bin/sh\n", encoding="utf-8")
+        checker = root / "bin" / "docs-audit"
+        checker.parent.mkdir()
+        checker.symlink_to(outside)
+
+        self.assertEqual(
+            [f"Documentation audit checker is not a regular in-root file: {checker}"],
+            self.module.documentation_audit_problems(root),
+        )
+
+    def test_documentation_audit_fails_closed_on_silent_nonzero_exit(self):
+        root = self.make_repo(["bin/docs-audit"])
+        completed = subprocess.CompletedProcess([], 3, stdout="", stderr="")
+
+        with mock.patch.object(self.module.subprocess, "run", return_value=completed):
+            self.assertEqual(
+                ["Documentation audit checker failed with exit status 3"],
+                self.module.documentation_audit_problems(root),
+            )
+
     def run_git(self, repo: Path, *args: str) -> None:
         subprocess.run(
             ["git", *args],
@@ -67,6 +127,47 @@ class AiConfigSyncAuditTests(unittest.TestCase):
             self.write_file(repo, rel)
         self.run_git(repo, "add", ".")
         self.run_git(repo, "commit", "-m", "initial")
+        return repo
+
+    def make_candidate_docs_repo(self, readme: str = "clean docs\n") -> Path:
+        checker = """#!/usr/bin/env python3
+import sys
+import os
+from pathlib import Path
+
+root = Path(sys.argv[sys.argv.index("--root") + 1])
+readme = root / "claude" / "README.org"
+if not readme.exists():
+    print("candidate docs are missing")
+    raise SystemExit(1)
+texts = readme.read_text(encoding="utf-8") + (root / "README.org").read_text(encoding="utf-8")
+if "* forbidden" in texts:
+    print("bad candidate docs")
+    raise SystemExit(1)
+mode_script = root / "mode-script"
+if mode_script.exists() and not os.access(mode_script, os.X_OK):
+    print("candidate executable mode was lost")
+    raise SystemExit(1)
+mode_link = root / "mode-link"
+if os.path.lexists(mode_link) and (
+    not mode_link.is_symlink() or os.readlink(mode_link) != "README.org"
+):
+    print("candidate symlink mode or target was lost")
+    raise SystemExit(1)
+"""
+        repo = self.make_repo(
+            [
+                "README.org",
+                "ai-config-sync.json",
+                "bin/docs-audit",
+                "claude/README.org",
+            ]
+        )
+        self.write_file(repo, "ai-config-sync.json", "{}\n")
+        self.write_file(repo, "bin/docs-audit", checker)
+        self.write_file(repo, "claude/README.org", readme)
+        self.run_git(repo, "add", ".")
+        self.run_git(repo, "commit", "-m", "candidate docs fixture")
         return repo
 
     def test_audit_reports_deleted_project_local_claude_skill_counterpart(self):
@@ -223,6 +324,12 @@ class AiConfigSyncAuditTests(unittest.TestCase):
                 return_value=[audit_problem],
                 create=True,
             ),
+            mock.patch.object(
+                self.module,
+                "candidate_documentation_audit_problems",
+                return_value=[],
+                create=True,
+            ),
             redirect_stdout(output),
         ):
             self.module.guard_commit()
@@ -232,6 +339,664 @@ class AiConfigSyncAuditTests(unittest.TestCase):
         hook_output = result["hookSpecificOutput"]
         self.assertEqual("deny", hook_output["permissionDecision"])
         self.assertIn(audit_problem, hook_output["permissionDecisionReason"])
+
+    def test_guard_commit_audits_staged_docs_not_clean_unstaged_copy(self):
+        repo = self.make_candidate_docs_repo()
+        readme = repo / "claude" / "README.org"
+        readme.write_text("* forbidden\n", encoding="utf-8")
+        self.run_git(repo, "add", "claude/README.org")
+        readme.write_text("clean docs\n", encoding="utf-8")
+        staged = {"claude/README.org"}
+        output = io.StringIO()
+
+        with (
+            mock.patch.object(self.module, "ROOT", repo),
+            mock.patch.object(
+                self.module,
+                "read_input_json",
+                return_value={"tool_input": {"command": "git commit -m test"}},
+            ),
+            mock.patch.object(self.module, "hook_cwd", return_value=repo),
+            mock.patch.object(
+                self.module,
+                "command_paths_and_commit_repos",
+                return_value=({}, {repo}, {}),
+            ),
+            mock.patch.object(self.module, "dirty_paths", return_value=staged),
+            mock.patch.object(self.module, "staged_paths", return_value=staged),
+            mock.patch.object(
+                self.module, "guard_manifests", return_value=({}, {}, {}, {})
+            ),
+            mock.patch.object(self.module, "guard_changed_paths"),
+            mock.patch.object(self.module, "audit_problems", return_value=[]),
+            redirect_stdout(output),
+        ):
+            self.module.guard_commit()
+
+        self.assertIn("bad candidate docs", output.getvalue())
+
+    def test_guard_commit_audits_root_readme_without_running_full_ai_audit(self):
+        repo = self.make_candidate_docs_repo()
+        root_readme = repo / "README.org"
+        root_readme.write_text("* forbidden\n", encoding="utf-8")
+        self.run_git(repo, "add", "README.org")
+        root_readme.write_text("clean root docs\n", encoding="utf-8")
+        changed = {"README.org"}
+        output = io.StringIO()
+
+        with (
+            mock.patch.object(self.module, "ROOT", repo),
+            mock.patch.object(
+                self.module,
+                "read_input_json",
+                return_value={"tool_input": {"command": "git commit -m test"}},
+            ),
+            mock.patch.object(self.module, "hook_cwd", return_value=repo),
+            mock.patch.object(
+                self.module,
+                "command_paths_and_commit_repos",
+                return_value=({}, {repo}, {}),
+            ),
+            mock.patch.object(self.module, "dirty_paths", return_value=changed),
+            mock.patch.object(self.module, "staged_paths", return_value=changed),
+            mock.patch.object(
+                self.module, "guard_manifests", return_value=({}, {}, {}, {})
+            ),
+            mock.patch.object(self.module, "guard_changed_paths"),
+            mock.patch.object(self.module, "audit_problems") as audit_mock,
+            redirect_stdout(output),
+        ):
+            self.module.guard_commit()
+
+        audit_mock.assert_not_called()
+        self.assertIn("bad candidate docs", output.getvalue())
+
+    def test_candidate_docs_ignore_bad_unstaged_copy_after_staging_clean_docs(self):
+        repo = self.make_candidate_docs_repo("* forbidden\n")
+        readme = repo / "claude" / "README.org"
+        readme.write_text("clean docs\n", encoding="utf-8")
+        self.run_git(repo, "add", "claude/README.org")
+        readme.write_text("* forbidden\n", encoding="utf-8")
+
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset())
+            )
+
+        self.assertEqual([], problems)
+
+    def test_candidate_docs_apply_planned_additions_and_deletions(self):
+        repo = self.make_candidate_docs_repo()
+        readme = repo / "claude" / "README.org"
+        readme.write_text("* forbidden\n", encoding="utf-8")
+
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(
+                    repo, frozenset({"claude/README.org"})
+                )
+            )
+        self.assertEqual(["bad candidate docs"], problems)
+
+        readme.unlink()
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(
+                    repo, frozenset({"claude/README.org"})
+                )
+            )
+        self.assertEqual(["candidate docs are missing"], problems)
+
+    def test_candidate_docs_never_execute_candidate_checker(self):
+        repo = self.make_candidate_docs_repo()
+        marker = repo / "candidate-checker-ran"
+        replacement = (
+            "#!/usr/bin/env python3\n"
+            "from pathlib import Path\n"
+            f"Path({str(marker)!r}).write_text('ran', encoding='utf-8')\n"
+        )
+        self.write_file(repo, "bin/docs-audit", replacement)
+        self.run_git(repo, "add", "bin/docs-audit")
+
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset())
+            )
+
+        self.assertEqual([], problems)
+        self.assertFalse(marker.exists())
+
+    def test_candidate_docs_preserve_executable_and_symlink_modes(self):
+        repo = self.make_candidate_docs_repo()
+        script = repo / "mode-script"
+        script.write_text("#!/bin/sh\n", encoding="utf-8")
+        script.chmod(0o755)
+        (repo / "mode-link").symlink_to("README.org")
+        self.run_git(repo, "add", "mode-script", "mode-link")
+        self.run_git(repo, "commit", "-m", "add mode fixtures")
+
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset())
+            )
+
+        self.assertEqual([], problems)
+
+    def test_candidate_docs_do_not_run_git_crypt_smudge_filter(self):
+        repo = self.make_candidate_docs_repo()
+        marker = repo / "smudge-filter-ran"
+        smudge = repo / "smudge.py"
+        smudge.write_text(
+            "import pathlib, sys\n"
+            f"pathlib.Path({str(marker)!r}).write_text('ran', encoding='utf-8')\n"
+            "sys.stdout.buffer.write(sys.stdin.buffer.read())\n",
+            encoding="utf-8",
+        )
+        self.run_git(repo, "config", "filter.git-crypt.smudge", f"python3 {smudge}")
+        self.run_git(repo, "config", "filter.git-crypt.clean", "cat")
+        self.run_git(repo, "config", "filter.git-crypt.required", "true")
+        self.write_file(repo, ".gitattributes", "private/** filter=git-crypt\n")
+        self.write_file(repo, "private/ciphertext", "encrypted bytes\n")
+        self.run_git(repo, "add", ".gitattributes", "private/ciphertext")
+        self.run_git(repo, "commit", "-m", "add encrypted fixture")
+
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset())
+            )
+
+        self.assertEqual([], problems)
+        self.assertFalse(marker.exists())
+
+    def test_candidate_docs_do_not_run_arbitrary_process_or_smudge_filters(self):
+        repo = self.make_candidate_docs_repo()
+        marker = repo / "evil-filter-ran"
+        filter_program = repo / "evil-filter.py"
+        self.write_file(repo, ".gitattributes", "payload filter=evil\n")
+        self.write_file(repo, "payload", "raw candidate bytes\n")
+        self.run_git(repo, "add", ".gitattributes", "payload")
+        self.run_git(repo, "commit", "-m", "add filtered fixture")
+        filter_program.write_text(
+            "import pathlib, sys\n"
+            f"pathlib.Path({str(marker)!r}).write_text('ran', encoding='utf-8')\n"
+            "sys.exit(1)\n",
+            encoding="utf-8",
+        )
+        command = f"python3 {filter_program}"
+        self.run_git(repo, "config", "filter.evil.process", command)
+        self.run_git(repo, "config", "filter.evil.smudge", command)
+        self.run_git(repo, "config", "filter.evil.required", "true")
+
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset())
+            )
+
+        self.assertEqual([], problems)
+        self.assertFalse(marker.exists())
+
+    def test_candidate_docs_load_all_committed_blobs_in_one_batch(self):
+        repo = self.make_candidate_docs_repo()
+        self.write_file(repo, "one", "first blob\n")
+        self.write_file(repo, "two", "second blob\n")
+        self.run_git(repo, "add", "one", "two")
+        self.run_git(repo, "commit", "-m", "add batch fixtures")
+        actual_git = shutil.which("git")
+        self.assertIsNotNone(actual_git)
+        wrapper_temp = tempfile.TemporaryDirectory()
+        self.addCleanup(wrapper_temp.cleanup)
+        wrapper_dir = Path(wrapper_temp.name)
+        trace = wrapper_dir / "trace"
+        wrapper = wrapper_dir / "git"
+        wrapper.write_text(
+            "#!/bin/sh\n"
+            f"printf '%s\\n' \"$*\" >> {shlex.quote(str(trace))}\n"
+            f"exec {shlex.quote(actual_git)} \"$@\"\n",
+            encoding="utf-8",
+        )
+        wrapper.chmod(0o755)
+
+        with (
+            mock.patch.object(self.module, "ROOT", repo),
+            mock.patch.dict(
+                self.module.os.environ,
+                {"PATH": f"{wrapper_dir}:{self.module.os.environ['PATH']}"},
+            ),
+        ):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset())
+            )
+
+        cat_file_calls = [
+            line
+            for line in trace.read_text(encoding="utf-8").splitlines()
+            if "cat-file" in line.split()
+        ]
+        self.assertEqual([], problems)
+        self.assertEqual(1, len(cat_file_calls))
+        self.assertIn("--batch", cat_file_calls[0].split())
+
+    def test_git_blob_batch_materializes_a_real_symlink_target(self):
+        repo = self.make_candidate_docs_repo()
+        (repo / "mode-link").symlink_to("README.org")
+        self.run_git(repo, "add", "mode-link")
+        self.run_git(repo, "commit", "-m", "add symlink fixture")
+        object_id = subprocess.run(
+            ["git", "-C", str(repo), "rev-parse", "HEAD:mode-link"],
+            text=True,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        ).stdout.strip()
+        worktree_temp = tempfile.TemporaryDirectory()
+        self.addCleanup(worktree_temp.cleanup)
+        worktree = Path(worktree_temp.name)
+
+        succeeded = self.module._materialize_git_blobs_batch(
+            repo,
+            {"mode-link": ("120000", object_id)},
+            worktree,
+            self.module._sanitized_git_environment(),
+        )
+
+        self.assertTrue(succeeded)
+        self.assertTrue((worktree / "mode-link").is_symlink())
+        self.assertEqual("README.org", (worktree / "mode-link").readlink().as_posix())
+
+    def test_git_blob_batch_fails_closed_and_reaps_on_malformed_output(self):
+        object_id = "a" * 40
+        cases = {
+            "mismatched object": b"b" * 40 + b" blob 1\nx\n",
+            "truncated content": b"a" * 40 + b" blob 2\nx\n",
+            "trailing data": b"a" * 40 + b" blob 1\nx\nextra",
+        }
+
+        class RecordingInput:
+            def __init__(self):
+                self.data = bytearray()
+                self.closed = False
+
+            def write(self, content: bytes) -> int:
+                self.data.extend(content)
+                return len(content)
+
+            def flush(self) -> None:
+                pass
+
+            def close(self) -> None:
+                self.closed = True
+
+        class FakeProcess:
+            returncode = None
+
+            def __init__(self, output: bytes):
+                self.stdin = RecordingInput()
+                self.stdout = io.BytesIO(output)
+                self.terminated = False
+                self.waited = False
+
+            def poll(self):
+                return self.returncode
+
+            def terminate(self) -> None:
+                self.terminated = True
+                self.returncode = -15
+
+            def kill(self) -> None:
+                self.returncode = -9
+
+            def wait(self, timeout=None) -> int:
+                self.waited = True
+                if self.returncode is None:
+                    self.returncode = 0
+                return self.returncode
+
+        for label, output in cases.items():
+            with self.subTest(label=label):
+                process = FakeProcess(output)
+                candidate_temp = tempfile.TemporaryDirectory()
+                self.addCleanup(candidate_temp.cleanup)
+                worktree = Path(candidate_temp.name)
+                with mock.patch.object(
+                    self.module.subprocess, "Popen", return_value=process
+                ) as popen:
+                    succeeded = self.module._materialize_git_blobs_batch(
+                        Path("/repo"),
+                        {"one": ("100644", object_id)},
+                        worktree,
+                        {"GIT_NO_REPLACE_OBJECTS": "1"},
+                    )
+
+                self.assertFalse(succeeded)
+                self.assertEqual(
+                    f"{object_id}\n".encode("ascii"), bytes(process.stdin.data)
+                )
+                self.assertTrue(process.terminated)
+                self.assertTrue(process.waited)
+                self.assertIs(popen.call_args.kwargs["stderr"], subprocess.DEVNULL)
+
+    def test_candidate_docs_stream_planned_regular_files_without_read_bytes(self):
+        repo = self.make_candidate_docs_repo()
+        self.write_file(repo, "planned", "planned content\n")
+
+        with (
+            mock.patch.object(self.module, "ROOT", repo),
+            mock.patch.object(
+                Path,
+                "read_bytes",
+                side_effect=AssertionError("planned file was buffered"),
+            ),
+        ):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset({"planned"}))
+            )
+
+        self.assertEqual([], problems)
+
+    def test_candidate_docs_reject_planned_file_swapped_to_symlink_before_open(self):
+        repo = self.make_candidate_docs_repo()
+        self.write_file(repo, "planned", "planned content\n")
+        external_temp = tempfile.TemporaryDirectory()
+        self.addCleanup(external_temp.cleanup)
+        external = Path(external_temp.name) / "external"
+        external.write_text("external content\n", encoding="utf-8")
+        original_open = self.module.os.open
+        swapped = False
+
+        def swap_to_symlink(path, flags, mode=0o777, *, dir_fd=None):
+            nonlocal swapped
+            if not swapped and (
+                Path(path) == repo / "planned"
+                or (path == "planned" and dir_fd is not None)
+            ):
+                swapped = True
+                (repo / "planned").unlink()
+                (repo / "planned").symlink_to(external)
+            return original_open(path, flags, mode, dir_fd=dir_fd)
+
+        with (
+            mock.patch.object(self.module, "ROOT", repo),
+            mock.patch.object(self.module.os, "open", side_effect=swap_to_symlink),
+        ):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset({"planned"}))
+            )
+
+        self.assertTrue(swapped)
+        self.assertEqual(
+            [self.module.CANDIDATE_DOCS_MATERIALIZATION_ERROR], problems
+        )
+
+    def test_candidate_docs_reject_parent_swapped_to_symlink_before_open(self):
+        repo = self.make_candidate_docs_repo()
+        self.write_file(repo, "safe/planned", "safe content\n")
+        external_temp = tempfile.TemporaryDirectory()
+        self.addCleanup(external_temp.cleanup)
+        external = Path(external_temp.name)
+        (external / "planned").write_text(
+            "outside content\n", encoding="utf-8"
+        )
+        original_open = self.module.os.open
+        swapped = False
+
+        def swap_parent(path, flags, mode=0o777, *, dir_fd=None):
+            nonlocal swapped
+            if not swapped and (
+                Path(path) == repo / "safe" / "planned"
+                or (path == "safe" and dir_fd is not None)
+            ):
+                swapped = True
+                (repo / "safe").rename(repo / "safe-before-swap")
+                (repo / "safe").symlink_to(external, target_is_directory=True)
+            return original_open(path, flags, mode, dir_fd=dir_fd)
+
+        with (
+            mock.patch.object(self.module, "ROOT", repo),
+            mock.patch.object(self.module.os, "open", side_effect=swap_parent),
+        ):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(
+                    repo, frozenset({"safe/planned"})
+                )
+            )
+
+        self.assertTrue(swapped)
+        self.assertEqual(
+            [self.module.CANDIDATE_DOCS_MATERIALIZATION_ERROR], problems
+        )
+
+    def test_candidate_docs_reject_oversized_committed_symlink_target(self):
+        repo = self.make_candidate_docs_repo()
+        result = subprocess.run(
+            ["git", "-C", str(repo), "hash-object", "-w", "--stdin"],
+            input="x" * 4097,
+            text=True,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        self.run_git(
+            repo,
+            "update-index",
+            "--add",
+            "--cacheinfo",
+            f"120000,{result.stdout.strip()},oversized-link",
+        )
+
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset())
+            )
+
+        self.assertEqual(
+            [self.module.CANDIDATE_DOCS_MATERIALIZATION_ERROR], problems
+        )
+
+    def test_candidate_docs_fail_closed_for_planned_filtered_path(self):
+        repo = self.make_candidate_docs_repo()
+        marker = repo / "planned-filter-ran"
+        filter_program = repo / "planned-filter.py"
+        self.write_file(repo, ".gitattributes", "payload filter=evil\n")
+        self.write_file(repo, "payload", "committed bytes\n")
+        self.run_git(repo, "add", ".gitattributes", "payload")
+        self.run_git(repo, "commit", "-m", "add filtered fixture")
+        filter_program.write_text(
+            "import pathlib, sys\n"
+            f"pathlib.Path({str(marker)!r}).write_text('ran', encoding='utf-8')\n"
+            "sys.exit(1)\n",
+            encoding="utf-8",
+        )
+        command = f"python3 {filter_program}"
+        self.run_git(repo, "config", "filter.evil.clean", command)
+        self.run_git(repo, "config", "filter.evil.process", command)
+        self.run_git(repo, "config", "filter.evil.required", "true")
+        self.write_file(repo, "payload", "planned bytes\n")
+
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset({"payload"}))
+            )
+
+        self.assertEqual(
+            [self.module.CANDIDATE_DOCS_FILTERED_PATH_ERROR], problems
+        )
+        self.assertFalse(marker.exists())
+
+    def test_candidate_docs_use_staged_attributes_for_planned_paths(self):
+        repo = self.make_candidate_docs_repo()
+        marker = repo / "staged-filter-ran"
+        filter_program = repo / "staged-filter.py"
+        self.write_file(repo, ".gitattributes", "")
+        self.write_file(repo, "payload", "committed bytes\n")
+        self.run_git(repo, "add", ".gitattributes", "payload")
+        self.run_git(repo, "commit", "-m", "add attribute fixture")
+        filter_program.write_text(
+            "import pathlib, sys\n"
+            f"pathlib.Path({str(marker)!r}).write_text('ran', encoding='utf-8')\n"
+            "sys.exit(1)\n",
+            encoding="utf-8",
+        )
+        self.write_file(repo, ".gitattributes", "payload filter=evil\n")
+        self.run_git(repo, "add", ".gitattributes")
+        command = f"python3 {filter_program}"
+        self.run_git(repo, "config", "filter.evil.clean", command)
+        self.run_git(repo, "config", "filter.evil.process", command)
+        self.run_git(repo, "config", "filter.evil.required", "true")
+        self.write_file(repo, ".gitattributes", "")
+        self.write_file(repo, "payload", "planned bytes\n")
+
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset({"payload"}))
+            )
+
+        self.assertEqual(
+            [self.module.CANDIDATE_DOCS_FILTERED_PATH_ERROR], problems
+        )
+        self.assertFalse(marker.exists())
+
+    def test_candidate_docs_use_working_attributes_for_planned_git_add(self):
+        repo = self.make_candidate_docs_repo()
+        marker = repo / "working-filter-ran"
+        filter_program = repo / "working-filter.py"
+        self.write_file(repo, ".gitattributes", "")
+        self.write_file(repo, "payload", "committed bytes\n")
+        self.run_git(repo, "add", ".gitattributes", "payload")
+        self.run_git(repo, "commit", "-m", "add attribute fixture")
+        filter_program.write_text(
+            "import pathlib, sys\n"
+            f"pathlib.Path({str(marker)!r}).write_text('ran', encoding='utf-8')\n"
+            "sys.exit(1)\n",
+            encoding="utf-8",
+        )
+        command = f"python3 {filter_program}"
+        self.run_git(repo, "config", "filter.evil.clean", command)
+        self.run_git(repo, "config", "filter.evil.process", command)
+        self.run_git(repo, "config", "filter.evil.required", "true")
+        self.write_file(repo, ".gitattributes", "payload filter=evil\n")
+        self.write_file(repo, "payload", "planned bytes\n")
+
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset({"payload"}))
+            )
+
+        self.assertEqual(
+            [self.module.CANDIDATE_DOCS_FILTERED_PATH_ERROR], problems
+        )
+        self.assertFalse(marker.exists())
+
+    def test_candidate_docs_require_planned_gitattributes_staged_separately(self):
+        repo = self.make_candidate_docs_repo()
+        self.write_file(repo, ".gitattributes", "*.txt text\n")
+
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(
+                    repo, frozenset({".gitattributes"})
+                )
+            )
+
+        self.assertEqual(
+            [self.module.CANDIDATE_DOCS_FILTERED_PATH_ERROR], problems
+        )
+
+    def test_candidate_docs_ignore_git_replacement_for_committed_checker(self):
+        repo = self.make_candidate_docs_repo()
+        marker = repo / "replacement-checker-ran"
+        malicious = (
+            "#!/usr/bin/env python3\n"
+            "from pathlib import Path\n"
+            f"Path({str(marker)!r}).write_text('ran', encoding='utf-8')\n"
+        )
+
+        def git_output(*args: str, input_text: str | None = None) -> str:
+            result = subprocess.run(
+                ["git", "-C", str(repo), *args],
+                input=input_text,
+                text=True,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            return result.stdout.strip()
+
+        checker_object = git_output("rev-parse", "HEAD:bin/docs-audit")
+        malicious_object = git_output(
+            "hash-object", "-w", "--stdin", input_text=malicious
+        )
+        self.run_git(repo, "replace", checker_object, malicious_object)
+
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset())
+            )
+
+        self.assertEqual([], problems)
+        self.assertFalse(marker.exists())
+
+    def test_candidate_docs_fail_closed_for_unmerged_index(self):
+        repo = self.make_candidate_docs_repo()
+
+        def blob(text: str) -> str:
+            result = subprocess.run(
+                ["git", "-C", str(repo), "hash-object", "-w", "--stdin"],
+                input=text,
+                text=True,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            return result.stdout.strip()
+
+        self.run_git(repo, "update-index", "--force-remove", "claude/README.org")
+        records = "".join(
+            f"100644 {blob(text)} {stage}\tclaude/README.org\n"
+            for stage, text in ((1, "base\n"), (2, "ours\n"), (3, "theirs\n"))
+        )
+        subprocess.run(
+            ["git", "-C", str(repo), "update-index", "--index-info"],
+            input=records,
+            text=True,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset())
+            )
+
+        self.assertEqual(
+            [self.module.CANDIDATE_DOCS_MATERIALIZATION_ERROR], problems
+        )
+
+    def test_candidate_docs_fail_closed_for_gitlink(self):
+        repo = self.make_candidate_docs_repo()
+        result = subprocess.run(
+            ["git", "-C", str(repo), "rev-parse", "HEAD"],
+            text=True,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        self.run_git(
+            repo,
+            "update-index",
+            "--add",
+            "--cacheinfo",
+            f"160000,{result.stdout.strip()},vendor/submodule",
+        )
+
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset())
+            )
+
+        self.assertEqual(
+            [self.module.CANDIDATE_DOCS_MATERIALIZATION_ERROR], problems
+        )
 
     def test_guard_commit_does_not_run_full_audit_for_project_config_commit(self):
         repo = self.make_repo(["README.md"])

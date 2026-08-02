@@ -64,6 +64,13 @@ additive. Account selection changes which user-level native state is active; it
 does not introduce a third precedence layer. Effective behavior therefore
 depends on both tracked instructions and the selected live state.
 
+The global instructions state the repository-root contract shared with the
+Codex side: active repositories live outside Drive under =~/repos/= (Epoch
+repositories under =~/repos/epoch/=), source-only personal repositories may
+remain under =~/My Drive/repos/= only without dependencies, builds, caches,
+virtual environments, or worktrees, and every linked worktree lives under
+=~/repos/.worktrees/<repo>/<name>=.
+
 The live global settings register hooks by absolute path. Stop forwarding to
 Emacs is a turn-end signal, not proof that the agent process exited. Reusable
 lesson capture belongs to the Emacs =agent-before-exit= flow and must not be

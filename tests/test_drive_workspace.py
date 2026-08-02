@@ -1401,6 +1401,40 @@ class TransactionTests(JournalFixture):
         )
         self.assertTrue(self.source.is_dir())
 
+    def test_rollback_local_refuses_until_generated_paths_rolled_back(self):
+        self.do_move()
+        self.ok(
+            "verify-local", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        self.ok(
+            "materialize-generated-paths", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        _stdout, stderr = self.expect_fail(
+            "rollback-local", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        self.assertIn("generated paths must be rolled back", stderr)
+        self.assertTrue(self.destination.is_dir())
+        self.assertFalse(os.path.lexists(self.source))
+        self.assertFalse(os.path.lexists(self.destination / "node_modules"))
+        self.assertNotIn("local_rolled_back", self.event_types())
+        self.ok(
+            "rollback-generated-paths", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        self.ok(
+            "rollback-local", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        self.assertTrue(self.source.is_dir())
+        self.assertEqual(
+            str(self.targets / "node_modules"),
+            os.readlink(self.source / "node_modules"),
+        )
+        self.assertEqual("local_rolled_back", self.event_types()[-1])
+
     def test_linked_worktree_moves_with_git_worktree_move_and_back(self):
         self.add_worktree_fixture()
         calls = []
@@ -2092,6 +2126,17 @@ class TransactionTests(JournalFixture):
         )
         self.ok(*argv)
         self.assertEqual("rollback_verified", self.event_types()[-1])
+        self.assertEqual(
+            1, self.event_types().count("rollback_verified")
+        )
+
+    def test_verify_rollback_refuses_second_terminal_event(self):
+        baseline = self.rolled_back_journal()
+        argv = self.verify_rollback_argv(baseline)
+        self.ok(*argv)
+        self.assertEqual("rollback_verified", self.event_types()[-1])
+        _stdout, stderr = self.expect_fail(*argv)
+        self.assertIn("already verified", stderr)
         self.assertEqual(
             1, self.event_types().count("rollback_verified")
         )

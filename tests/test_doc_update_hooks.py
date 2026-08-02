@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import tempfile
 import unittest
@@ -190,7 +191,9 @@ class DocUpdateHookRepoPathTests(unittest.TestCase):
             check=True,
         )
 
-    def run_hook(self, hook, command_field, command, cwd=None, workdir=None):
+    def run_hook(
+        self, hook, command_field, command, cwd=None, workdir=None, home=None
+    ):
         payload = {
             "tool_name": "exec_command",
             "tool_input": {
@@ -198,6 +201,9 @@ class DocUpdateHookRepoPathTests(unittest.TestCase):
                 "workdir": str(workdir or self.repo),
             },
         }
+        env = None
+        if home is not None:
+            env = {**os.environ, "HOME": str(home)}
         return subprocess.run(
             ["bash", str(hook)],
             input=json.dumps(payload),
@@ -205,6 +211,7 @@ class DocUpdateHookRepoPathTests(unittest.TestCase):
             capture_output=True,
             check=False,
             cwd=str(cwd) if cwd else None,
+            env=env,
         )
 
     def test_nested_doc_directory_is_found_when_the_path_has_a_space(self):
@@ -256,6 +263,50 @@ class DocUpdateHookRepoPathTests(unittest.TestCase):
                 self.assertEqual(
                     permission_decision(result), "allow", deny_reason(result)
                 )
+
+    def test_cd_target_written_through_home_is_resolved(self):
+        """`cd "$HOME/..."` is how these paths are normally written.
+
+        The target is extracted by parameter expansion alone, which never
+        expands `$HOME`, so the directory test failed on the literal string and
+        the session's repository was silently used instead.
+        """
+        (self.repo / "example.el").write_text("(provide 'example)\n")
+        (self.doc / "manual.org").write_text("#+title: Manual\nVia HOME.\n")
+        relative = self.repo.relative_to(Path(self.temp_dir.name))
+        command = (
+            f'cd "$HOME/{relative}" && git add example.el '
+            "emacs/extras/doc/manual.org && git commit -q -m subject"
+        )
+        for hook, command_field in HOOKS:
+            with self.subTest(hook=hook):
+                result = self.run_hook(
+                    hook, command_field, command, cwd=self.elsewhere,
+                    workdir=self.elsewhere, home=self.temp_dir.name,
+                )
+                self.assertEqual(
+                    permission_decision(result), "allow", deny_reason(result)
+                )
+
+    def test_an_unresolvable_cd_target_is_not_swapped_for_the_session_repo(self):
+        """An unresolvable target must not be answered from a different tree.
+
+        Evaluating the session's repository instead is unsound in both
+        directions: it refuses correct commits, and it approves ones it should
+        refuse whenever that other tree happens to hold a staged manual.
+        """
+        (self.repo / "example.el").write_text("(provide 'example)\n")
+        command = (
+            'cd "$SOME_UNSET_VARIABLE/repo" && git add example.el '
+            "&& git commit -q -m subject"
+        )
+        for hook, command_field in HOOKS:
+            with self.subTest(hook=hook):
+                result = self.run_hook(
+                    hook, command_field, command, cwd=self.elsewhere,
+                    workdir=self.elsewhere,
+                )
+                self.assertNotIn("README.org", deny_reason(result))
 
     def test_one_shot_add_and_commit_does_not_depend_on_the_hook_cwd(self):
         (self.repo / "example.el").write_text("(provide 'example)\n")

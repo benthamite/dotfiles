@@ -94,14 +94,36 @@ case "$_cd_target" in
   *'$('* | *'`'* ) _cd_target="" ;;
 esac
 
+# Expand $HOME, which is how these paths are ordinarily written.  Only this one
+# variable is expanded, and by substitution rather than evaluation.  A target
+# still holding a `$` after that cannot be resolved safely, so it is marked
+# unresolvable rather than guessed at.
+_cd_unresolvable=""
+if [ -n "$_cd_target" ]; then
+  _cd_target="${_cd_target//'${HOME}'/$HOME}"
+  _cd_target="${_cd_target//'$HOME'/$HOME}"
+  case "$_cd_target" in
+    *'$'* ) _cd_unresolvable=yes; _cd_target="" ;;
+  esac
+fi
+
+# When the command changes directory, that target decides the repository. If it
+# is present but unresolvable, leave REPO_ROOT empty instead of falling back to
+# the hook's own context: answering from a different repository is unsound in
+# both directions, refusing correct commits and approving ones that should be
+# refused whenever the other tree happens to satisfy the check. Callers already
+# treat an empty REPO_ROOT as "not a repository" and stand down.
 if [ -n "$_cd_target" ] && [ -d "$_cd_target" ]; then
   REPO_ROOT=$(git -C "$_cd_target" rev-parse --show-toplevel 2>/dev/null || true)
+elif [ -n "$_cd_target" ] || [ -n "$_cd_unresolvable" ]; then
+  REPO_ROOT=""
 elif [ -n "$_repo_context_dir" ] && [ -d "$_repo_context_dir" ]; then
   REPO_ROOT=$(git -C "$_repo_context_dir" rev-parse --show-toplevel 2>/dev/null || true)
 else
   REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || true)
 fi
 unset _cd_target
+unset _cd_unresolvable
 unset _repo_context_dir
 
 if [ -n "$REPO_ROOT" ]; then

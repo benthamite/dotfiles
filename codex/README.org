@@ -101,6 +101,16 @@ state; they do not create a Claude Notification event.
 supplement it; allowing one layer does not bypass another guard or authorize an
 external write.
 
+Hooks that judge a Git command resolve the repository from the command itself,
+via =hooks/lib-repo-root.sh=. A leading =cd= decides the repository, because a
+session working in one repository routinely commits in another. The target is
+extracted by parameter expansion, never evaluated; =$HOME= is substituted, and a
+target carrying command substitution or any other unexpanded variable is treated
+as unresolvable. When the target cannot be resolved the helper reports no
+repository at all rather than substituting the session's own, since judging a
+tree the command never touched both refuses correct commits and approves ones it
+should refuse.
+
 * Verification
 
 After changing shared configuration, run =bin/ai-config-sync audit=. After a

@@ -804,6 +804,11 @@ several exclusion conditions:
   ~org-extras-id-auto-add-excluded-directories~.
 - The file must not match ~org-extras-id-auto-add-excluded-files~.
 - ~org-extras-buffer-edit-unsafe-p~ must return ~nil~.
+- ~org-extras-id-auto-add-exclude-file~ must be ~nil~.  It is declared a
+  safe file-local variable, so the opt-out holds wherever the file is
+  opened rather than only where ~enable-local-variables~ is permissive.  A
+  batch Emacs applies safe local variables and no others, so without that
+  declaration a bulk run would give IDs to the files that set the flag.
 - For files in directories listed in
   ~org-extras-id-auto-add-level-1-dirs~, only level-1 headings receive
   IDs.

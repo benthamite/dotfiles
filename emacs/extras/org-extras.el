@@ -162,7 +162,13 @@ When nil, use Org's built-in CSL fallback style."
 ;;;; Variables
 
 (defvar-local org-extras-id-auto-add-exclude-file nil
-  "Do not add IDs to headings in the current buffer.")
+  "Do not add IDs to headings in the current buffer.
+Set as a file-local variable in files that must keep their headings without IDs.")
+;; Declared safe so the opt-out is honoured wherever the file is opened, rather
+;; than only where `enable-local-variables' is permissive.  A batch Emacs applies
+;; safe local variables and no others, so without this the five files that set
+;; the flag would have been given IDs by a bulk run.
+(put 'org-extras-id-auto-add-exclude-file 'safe-local-variable #'booleanp)
 
 ;;;; Functions
 

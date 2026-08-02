@@ -972,6 +972,12 @@ The file must not match @code{org-extras-id-auto-add-excluded-files}.
 @item
 @code{org-extras-buffer-edit-unsafe-p} must return @code{nil}.
 @item
+@code{org-extras-id-auto-add-exclude-file} must be @code{nil}.  It is declared a
+safe file-local variable, so the opt-out holds wherever the file is
+opened rather than only where @code{enable-local-variables} is permissive.  A
+batch Emacs applies safe local variables and no others, so without that
+declaration a bulk run would give IDs to the files that set the flag.
+@item
 For files in directories listed in
 @code{org-extras-id-auto-add-level-1-dirs}, only level-1 headings receive
 IDs.

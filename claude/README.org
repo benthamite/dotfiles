@@ -105,6 +105,13 @@ Claude has events with no Codex equivalent here, including =Read=, =Grep=,
 =Glob=, =Skill=, Notification, and Chrome-specific events. Those are explicit
 manifest differences, not missing peers.
 
+The Drive runtime-state guard pair keeps dependency, build, cache,
+virtualenv, bytecode, and worktree state out of =~/My Drive=: state-creating
+commands are denied unless their effective project and targets are all
+external, indeterminate parses are denied rather than allowed or escalated,
+and the two guard scripts are byte-identical across the Claude and Codex trees
+with all parsing in the shared =lib/drive_runtime_command.py= module.
+
 The SessionStart reasoning-worktree synchronization hook is also Claude-only.
 It repairs required key links before eligibility checks, updates eligible
 worktrees without pushing, reapplies the local overlay, injects private

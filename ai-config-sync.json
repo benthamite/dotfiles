@@ -309,6 +309,14 @@
       "equivalence": "Identical apart from the payload-normalization preamble documented above."
     },
     {
+      "name": "block-drive-runtime-command.sh",
+      "claude": "claude/hooks/block-drive-runtime-command.sh",
+      "codex": "codex/hooks/block-drive-runtime-command.sh",
+      "status": "paired-dispatched",
+      "note": "Paired Drive runtime-state guard: denies npm/uv/pip/python/pytest/git-worktree commands whose effective project, cwd, or explicit target lies under ~/My Drive, with the exact migration deny reason. All parsing lives in lib/drive_runtime_command.py (the single parser); indeterminate parses are denied, never allowed or escalated. Claude side is delegated by pretooluse-bash.sh behind a cheap keyword gate; Codex registers the script directly in codex/hooks.json.",
+      "equivalence": "Byte-identical by design (tests/test_drive_runtime_guard.py asserts parity); the script normalizes both Claude object payloads and Codex string-wrapped payloads itself."
+    },
+    {
       "name": "block-elpaca-dotfiles-edit.sh",
       "claude": "claude/hooks/block-elpaca-dotfiles-edit.sh",
       "codex": "codex/hooks/block-elpaca-dotfiles-edit.sh",

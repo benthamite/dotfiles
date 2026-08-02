@@ -1,0 +1,22 @@
+#+title: Rectangle settings export
+#+author: Pablo Stafforini
+
+* Purpose
+
+[[file:RectangleConfig.json][RectangleConfig.json]] is a Rectangle window-manager settings export. It
+contains application defaults and keyboard shortcuts. It is not the live macOS
+preference store.
+
+* Import and update
+
+There is no repository symlink or other automatic activation for this file.
+Import it through Rectangle when restoring the setup. To update it, export the
+current settings from Rectangle, replace this snapshot, and inspect the JSON
+diff rather than editing the macOS preferences database by hand.
+
+Run =jq empty rectangle/RectangleConfig.json= before committing. Then import
+the file and exercise representative window actions and shortcuts; valid JSON
+does not establish that Rectangle accepts every setting.
+
+The export may disclose shortcut choices and lists of applications that receive
+special treatment. It contains no credential-shaped fields at present.

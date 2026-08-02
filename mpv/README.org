@@ -1,0 +1,36 @@
+#+title: mpv configuration
+#+author: Pablo Stafforini
+
+* Purpose and files
+
+This directory owns the mpv playback configuration:
+
+| Path | Role |
+|------+------|
+| [[file:mpv.conf][mpv.conf]] | Playback, subtitle, seeking, and window defaults. |
+| [[file:input.conf][input.conf]] | Custom keyboard bindings. |
+| [[file:script-opts/osc.conf][script-opts/osc.conf]] | On-screen controller timing. |
+| [[file:scripts/osc.lua][scripts/osc.lua]] | Vendored on-screen controller implementation. |
+| [[file:scripts/show-osc-on-seek.lua][scripts/show-osc-on-seek.lua]] | Shows millisecond-precision position information after seeking. |
+| [[file:fonts/][fonts/]] | Two fonts retained from the former uosc setup. |
+
+The tracked configuration and scripts no longer refer to the two uosc fonts.
+They therefore appear to be unused, although the repository does not prove
+that no external mpv component loads them.
+
+* Activation
+
+The audited machine has =~/.config/mpv= symlinked to this directory. mpv reads
+the tree in place, so hand-edited configuration changes are live on the next
+invocation. =osc.lua= is vendored code rather than another local configuration
+source; replace it deliberately when updating the upstream implementation.
+
+* Checking changes
+
+Both Lua scripts can be parsed with =luac -p=. A no-media mpv startup is useful
+for catching configuration and input parsing errors. Neither check proves that
+interactive bindings, subtitle selection, seeking, or the on-screen controller
+behave as intended, so exercise the changed behavior in mpv as the final test.
+
+There are no credential fields here. The subtitle languages, media options,
+and key bindings are ordinary preferences.

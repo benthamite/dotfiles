@@ -1,0 +1,27 @@
+#+title: Colima virtual-machine configuration
+#+author: Pablo Stafforini
+
+* Purpose
+
+[[file:colima.yaml][colima.yaml]] describes a resource-heavy, ARM64 Colima virtual machine using
+Docker, QEMU, and sshfs. Kubernetes is disabled. The file also retains Colima's
+documented template options for networking, mounts, provisioning, and the
+Docker daemon.
+
+* Activation and updates
+
+No standard Colima profile path on the audited machine points to this file, and
+the Colima executable is absent. The repository therefore records a profile
+snapshot, not a configuration proven to be live. The original generation or
+installation procedure is not recorded.
+
+The YAML parses, but that is only a structural check. CPU and memory are normal
+profile settings; disk size can only increase after creation, while architecture,
+runtime, and virtual-machine type are effectively creation-time choices. Before
+using an updated snapshot, install it through Colima's profile mechanism and
+verify the resulting VM and Docker context. Recreating an existing VM may be
+required for the latter settings.
+
+The current environment, mount, provisioning, custom DNS, and custom Docker
+sections are empty. Treat additions there as security-sensitive because they
+can expose host paths, inject commands, or alter network trust.

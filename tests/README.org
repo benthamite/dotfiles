@@ -1,0 +1,30 @@
+#+title: Repository tests
+#+author: Pablo Stafforini
+
+The Python tests in this directory use the standard-library =unittest=
+framework. Run the full repository suite from the root with:
+
+#+begin_src sh
+python3 -m unittest discover -s tests -v
+#+end_src
+
+Run one module while developing a focused change, for example:
+
+#+begin_src sh
+python3 -m unittest tests.test_docs_audit -v
+#+end_src
+
+Files under [[file:fixtures/][fixtures/]] are inert test inputs. They are not application state and
+are not loaded outside the tests that name them. Several modules exercise
+macOS commands, local wrappers, or repository topology, so a failure should be
+read in light of the test’s explicit preconditions rather than converted to a
+skip.
+
+Emacs extras use their own ERT and batch harness under
+[[file:../emacs/extras/test/][emacs/extras/test/]]. The single GitHub Actions workflow currently runs that
+extras suite; it is not evidence that every Python module in this directory ran
+on GitHub.
+
+Adding a runtime command or guard normally requires a regression module here.
+Tests should reproduce the user-visible or security boundary being claimed,
+not merely import the implementation.

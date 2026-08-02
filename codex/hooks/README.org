@@ -1,0 +1,95 @@
+#+title: Codex hook implementations
+#+author: Pablo Stafforini
+
+* Activation and boundaries
+
+The tracked [[file:../hooks.json][hooks.json]] file registers Codex hooks and is live globally through
+the =~/.codex/hooks.json= symlink. Registration and implementation are separate:
+the JSON chooses an event and matcher, while the scripts in this directory
+decide what to block, record, regenerate, or report. Four =lib-*= files are
+sourced helpers rather than registered hooks. =session-learning-capture.sh= is
+a retained legacy helper and is not registered at present.
+
+These hooks supplement the written instructions with executable checks. An
+allowing result from one hook does not bypass another hook, the global rules,
+or the need for user authorization.
+
+* Operational contracts
+
+The destructive-command guard is registered directly here. Claude carries the
+same logic inline in its =pretooluse-bash.sh= dispatcher, so both implementations
+must change and be tested together. Decisions are allow or deny, never approval
+prompts; =ALLOW_CLONE=1= is the narrow explicit clone override.
+
+The dirty-tree rewrite guard blocks =filter-repo= and =filter-branch= only when
+the target repository has staged or unstaged tracked changes. Untracked files
+are deliberately ignored. It resolves =git -C= and the last applicable =cd=
+before falling back to the hook working directory, and masks heredoc bodies to
+avoid prose false positives. =ALLOW_DIRTY_REWRITE=1= is the explicit override.
+
+The sensitive-read guard denies content access to credential-bearing paths. It
+permits content-free metadata, quiet/count/name-only searches, existence tests,
+Git ignore/index queries, and auth-aware tools only in recognized narrow forms.
+It also permits =.env= or =.envrc= to be sourced solely as subprocess
+environment, while still denying commands that print, parse, or dump it.
+
+The secret-leak guard applies the same command policy to every literal nested
+=cmd= inside a =functions.exec= program, including nested shell-tool calls.
+Read-only Automations access must use =op-automations= and desktop-gated work
+must use =op-desktop=. The sanctioned fallback batches all operations in one
+=env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '...'= shell; later raw =op= calls
+and =--reveal= remain denied.
+
+The Elisp documentation gate honors
+=branch.<branch>.deferDocUpdates=true= only on feature branches and ignores it
+on =main= and =master=. Remove the setting when the branch merges.
+
+The hook installer owns all eight =codex-hook-wrapper= lifecycle registrations.
+It must preserve the live =config.toml= and =hooks.json= symlinks and replace
+stale profile-specific wrapper paths rather than append duplicates. The global
+wrappers are safe outside Emacs: when =CODEX_BUFFER_NAME= is absent, they
+consume the payload and exit successfully without calling =emacsclient=.
+
+=require-codex-readme-update.sh= is a dotfiles-scoped commit gate. Its
+command-text fallback excludes project-local =.codex/= paths, and it excludes
+the repo-root =AGENTS.md= project mirror; the project-local dotfiles skill is
+handled by its configured documentation owner instead.
+
+* File index
+
+| File | Purpose |
+|------+---------|
+| =block-destructive-command.sh= | Blocks hard-to-reverse shell operations, with quoted-text masking to avoid treating prose as a command. |
+| =block-dirty-tree-rewrite.sh= | Blocks Git history rewrites when the target repository has staged or unstaged tracked changes. |
+| =block-elpaca-dotfiles-edit.sh= | Denies writes to the read-only Elpaca dotfiles mirror and points to the canonical repository. |
+| =block-elpaca-rebuild-uncommitted.sh= | Blocks rebuilding an extras package while its canonical Elisp source has uncommitted changes. |
+| =block-github-guard-edit.sh= | Protects the GitHub allowlist, guard implementations, and hook registrations from agent edits. |
+| =block-github-write-command.sh= | Blocks repository-scoped GitHub writes unless the target matches an exact repo or account wildcard in the committed allowlist, or an exact Epoch project repo in the fixed committed automations registry. |
+| =block-secret-leak.sh= | Blocks literal secret disclosure and unsafe secret-bearing reads, writes, or output. |
+| =block-sensitive-read.sh= | Blocks content reads of credential-like files while permitting narrowly defined metadata checks. |
+| =block-texi-edit.sh= | Blocks direct edits to generated Texinfo and points to the Org source. |
+| =block-unguarded-ahrefs-api.sh= | Blocks paid Ahrefs API calls that do not pass through the quota guard. |
+| =block-walk-list-access.sh= | Restricts direct access to the protected walk-list data store. |
+| =lib-codex-hook-json.sh= | Normalizes Codex hook payloads and extracts literal nested command data without evaluating JavaScript. |
+| =lib-codex-paths.sh= | Extracts changed paths from the supported Codex edit and patch payload forms. |
+| =lib-repo-root.sh= | Resolves the effective Git repository from structured hook context without shell re-evaluation. |
+| =lib-staged-files.sh= | Lists staged paths and handles amended commits as complete proposed commits. |
+| =load-elisp-after-edit.sh= | Rebuilds and reloads the owning Elpaca package after an Elisp edit. |
+| =regenerate-manual-after-edit.sh= | Regenerates Texinfo and existing Info output after an Org manual edit. |
+| =remind-ai-config-sync.sh= | Delegates paired Claude/Codex update reminders to =bin/ai-config-sync=. |
+| =remind-claude-readme-update.sh= | Reminds work outside dotfiles when a symlinked edit changed the Claude configuration. |
+| =remind-plan-review.sh= | Reminds the agent to obtain an independent review after editing an implementation plan. |
+| =require-ai-config-sync.sh= | Delegates paired-configuration commit blocking to =bin/ai-config-sync=. |
+| =require-codex-readme-update.sh= | Requires the Codex README with staged Codex integration or sync changes. |
+| =require-doc-update.sh= | Requires the owning manual and generated Texinfo with staged documented Elisp changes. |
+| =require-elisp-test-before-commit.sh= | Requires a current-session batch-test marker before committing Elisp. |
+| =require-elisp-verify-after-commit.sh= | Requires a qualifying live Emacs check after an Elisp commit before further shell work. |
+| =require-readme-update.sh= | Requires the Claude README with staged Claude skills, hooks, or settings changes. |
+| =session-learning-capture.sh= | Retained unregistered helper for requesting session-learning capture at session end. |
+| =track-elisp-test.sh= | Records successful batch Elisp tests and rejects tests loaded from stale builds. |
+| =track-elisp-verify.sh= | Sets and clears the live-Emacs verification marker around Elisp commits. |
+
+The documentation audit requires every tracked direct child to appear exactly
+once in this table. After changing a registered hook, verify the registration
+and exercise the relevant allow and deny paths; running the script in isolation
+does not prove that Codex invokes it with the intended event payload.

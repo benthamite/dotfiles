@@ -450,19 +450,20 @@ class DotfilesPublishDocumentationTests(unittest.TestCase):
             self.assertTrue(helper.is_file(), helper)
             self.assertTrue(os.access(str(helper), os.X_OK), "%s is not executable" % helper)
 
-    def test_both_readmes_name_the_project_local_skill(self):
-        inventory = (REPO_ROOT / "agents" / "README.org").read_text(encoding="utf-8")
-        self.assertIn("=publish-dotfiles=", inventory)
-        self.assertIn("Project-local: dotfiles", inventory)
-        self.assertIn("Guarded dotfiles publication", inventory)
+    def test_agent_overview_names_the_project_local_skill_pair(self):
+        overview = (REPO_ROOT / "agents" / "README.org").read_text(encoding="utf-8")
+        self.assertIn("=.claude/skills/publish-dotfiles/=", overview)
+        self.assertIn("=.codex/skills/publish-dotfiles/=", overview)
+        self.assertIn("Guarded dotfiles publication", overview)
 
         root_readme = (REPO_ROOT / "README.org").read_text(encoding="utf-8")
-        self.assertIn("=publish-dotfiles=", root_readme)
+        self.assertIn("guarded dotfiles workflow", root_readme)
+        self.assertIn("agents/README.org", root_readme)
 
     def test_the_documented_paths_are_the_real_ones(self):
-        inventory = (REPO_ROOT / "agents" / "README.org").read_text(encoding="utf-8")
+        overview = (REPO_ROOT / "agents" / "README.org").read_text(encoding="utf-8")
         for path in ("bin/dotfiles-publish", "bin/dotfiles-pre-push", "bin/git-remote-dotfiles-blocked"):
-            self.assertIn(path, inventory, "the inventory does not document %s" % path)
+            self.assertIn(path, overview, "the overview does not document %s" % path)
             self.assertTrue((REPO_ROOT / path).is_file(), "%s does not exist" % path)
 
     def test_the_skill_pair_and_its_evaluations_are_present(self):

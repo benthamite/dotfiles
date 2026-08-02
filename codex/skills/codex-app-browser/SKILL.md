@@ -1,6 +1,6 @@
 ---
 name: codex-app-browser
-description: Use when the user explicitly invokes `$codex-app-browser`, asks to use the Codex App, in-app browser, in-built browser, Browser Use, or to open/navigate/click/test/screenshot something in the Codex app; also use when the user says they switched or resumed a Codex CLI/Emacs session in the Codex App to get browser access.
+description: Use when the user explicitly invokes `$codex-app-browser`, asks about or to use the Codex App’s in-app browser for opening, navigating, clicking, testing, or screenshots, or says a Codex CLI/Emacs thread was moved or resumed in the Codex App for browser access; not for ordinary browser use outside the Codex App.
 ---
 
 # Codex App browser handoff

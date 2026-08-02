@@ -1,0 +1,22 @@
+#+title: Claude reference context
+#+author: Pablo Stafforini
+
+* Reference index
+
+| Document | Read when |
+|----------+-----------|
+| =google-services.md= | A task needs Google account routing, authentication, scopes, refresh-token maintenance, or service-specific troubleshooting. |
+| =mcp-servers.md= | A task adds, removes, places, audits, or diagnoses a Claude MCP server. |
+| =secrets.md= | Before reading, storing, sharing, moving, or otherwise handling credentials and secret-bearing configuration. |
+
+These three documents are operational context, not general background to load
+into every task. [[file:google-services.md][google-services.md]] includes account and authentication procedures; do
+not reproduce or run credential-bearing recipes merely to document them.
+[[file:mcp-servers.md][mcp-servers.md]] is safe to read for server topology and placement, but resolved
+per-account environment values remain secrets. [[file:secrets.md][secrets.md]] is handling policy rather
+than a credential file, and its rule remains the same: never print or quote a
+resolved secret.
+
+The index deliberately contains only the tracked reference documents in this
+directory. Add a row when a new reference becomes part of the supported
+context surface, together with an explicit safe-read boundary.

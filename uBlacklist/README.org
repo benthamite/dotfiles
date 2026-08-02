@@ -1,0 +1,20 @@
+#+title: uBlacklist filters
+#+author: Pablo Stafforini
+
+* Purpose
+
+[[file:uBlacklist.txt][uBlacklist.txt]] is a portable list of URL patterns for the uBlacklist
+browser extension. It tells the extension which sites to hide from supported
+search results. It is not a full extension-settings backup.
+
+* Activation and updates
+
+No live browser-profile link, hosted rules URL, or import/subscription route is
+recorded in this repository. The file is the rules source, but its activation
+procedure is unproved. Keep one extension-compatible pattern per line when
+editing it. Once a known consumer route is established, confirm in uBlacklist
+that a matching result is hidden.
+
+The selected domains reveal filtering preferences but are not credentials.
+Review any newly added URL before publication in case it embeds a private path,
+query string, or account identifier.

@@ -1,0 +1,22 @@
+#+title: Enhancer for YouTube settings export
+#+author: Pablo Stafforini
+
+* Purpose
+
+[[file:enhancer-for-youtube-settings.json][enhancer-for-youtube-settings.json]] is a settings export from the
+Enhancer for YouTube browser extension. It covers playback defaults, quality,
+speed, volume, the miniplayer and control bar, hidden interface sections,
+themes, and filters. It is not live browser-extension storage.
+
+* Import and update
+
+No browser-profile link is recorded here. Restore the file through the
+extension's settings import control. To update it, export the active settings,
+replace this snapshot, and review the version and =settings= object in the
+diff.
+
+Run =jq empty enhancer-for-youtube/enhancer-for-youtube-settings.json= before
+committing, then re-import and exercise the changed behavior on YouTube. The
+schema includes fields for custom CSS and JavaScript. They are empty at present,
+but any future content in those fields must be reviewed as executable code.
+There are no credential fields in the current export.

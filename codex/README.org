@@ -3,785 +3,103 @@
 
 * Overview
 
-This directory contains the version-controlled parts of my [[https://developers.openai.com/codex/][Codex]] setup.
-The cross-tool synchronization policy is documented in =../agents/README.org=.
-Instruction-content placement is documented in
-=../agents/instruction-placement.org=.
-This file covers the Codex-specific activation files and local conventions.
+This directory contains the version-controlled parts of my Codex setup. The
+shared Claude/Codex contract lives in [[file:../agents/README.org][the agent configuration overview]]; this
+file covers Codex-specific activation, settings, and native differences.
 
-Claude and Codex artifacts are peer implementations of shared agent behavior.
-Codex gets explicit counterpart files where Codex syntax, hook payloads,
-discovery rules, or instruction-loading semantics require them.
-
-* Current layout
+* Layout and activation
 
 #+begin_example
 codex/
-├── AGENTS.md              <- tracked global Codex instructions
-├── config.toml            <- live ~/.codex/config.toml symlink target
-├── hooks.json             <- live ~/.codex/hooks.json symlink target
-├── bin/install-skills.sh  <- links ~/.codex/skills to tracked skills
-├── hooks/                 <- Codex hook counterparts
-├── README.org
-├── rules/default.rules
-└── skills/                <- Codex counterparts for paired skills
-
-ai-config-sync.json        <- Claude/Codex sync manifest
-bin/ai-config-sync         <- audit, reminder, and commit-guard checker
+├── AGENTS.md          global user instructions
+├── config.toml        tracked native configuration
+├── hooks.json         tracked hook registration
+├── bin/               installation and maintenance commands
+├── hooks/             hook implementations
+├── rules/             command policy
+├── skills/            tracked public global skills
+├── programmatic-skills/
+├── private-skills/
+└── README.org
 #+end_example
 
-The =hooks/= counterparts mirror the Claude guard hooks. =hooks/require-readme-update.sh= shares the Claude version's cd-detection logic, including the =[^&;|[:cntrl:]]+= fix that stops an unrelated =cd <repo> && git add …/.claude/…= (or a multiline =cd <path>= followed by =git commit=) from tripping the README guard. =hooks/require-codex-readme-update.sh= covers Codex integration paths such as =codex/=, =.codex/=, =ai-config-sync.json=, and =bin/ai-config-sync=, but deliberately does not treat the repo-root project =AGENTS.md= mirror as Codex integration. =hooks/require-doc-update.sh= honors the same per-branch =deferDocUpdates= git-config escape as the Claude version (see the Claude README for details); the setting is ignored on =main=/=master=. =hooks/lib-repo-root.sh= mirrors the Claude version's quoted =cd= target handling: quotes are stripped before the directory test so quoted paths resolve the correct repo. =hooks/block-unguarded-ahrefs-api.sh= blocks raw shell calls to =api.ahrefs.com= unless they use =ahrefs-api-guard= or only hit the free subscription-info quota endpoint. =hooks/block-github-write-command.sh= blocks =git push= and write-style =gh= operations unless the target repository is listed in the shared =agents/github-write-allowlist.txt= file or declared as owned by an Epoch project in the committed automations registry. =hooks/block-github-guard-edit.sh= prevents agents from editing that allowlist, the guard scripts, or the hook registration files. =hooks/remind-plan-review.sh= is a PostToolUse reminder for =docs/superpowers/plans/*.md=, =.codex/private-plans/*.md=, and =/tmp/codex-plans/*.md= edits; it asks the agent to dispatch a plan-review subagent before presenting a plan as ready.
+The live =~/.codex/AGENTS.md=, =~/.codex/config.toml=, and
+=~/.codex/hooks.json= paths are symlinks to the tracked files. The installer
+links =~/.codex/skills= to the tracked skill tree and exposes the programmatic
+root used by =agent-run-skill=. Repo-root =.codex/= directories are
+project-local and must never be used as global symlink targets.
 
-Repo-root =.codex/= is reserved for project-local Codex config. Do not use
-=~/My Drive/dotfiles/.codex/= as a target for live global =~/.codex/= symlinks;
-that makes Codex load the same file as both global and dotfiles-project-local
-configuration. The topology table in =../agents/README.org= is the
-authoritative cross-tool reference.
+The subtree owners are [[file:bin/README.org][the command index]], [[file:hooks/README.org][the hook index]], and
+[[file:skills/README.org][the skill index]].
 
 * Instructions
 
-Codex reads global user instructions from =AGENTS.override.md= and =AGENTS.md=
-in =$CODEX_HOME=, so the live =~/.codex/AGENTS.md= points to the tracked
-=codex/AGENTS.md= file.
+Codex reads user instructions from =AGENTS.md= in =$CODEX_HOME=. Project
+instructions also live in =AGENTS.md= files, next to their Claude =CLAUDE.md=
+peers. =project_doc_fallback_filenames= is deliberately absent: Codex does not
+load project =CLAUDE.md= as a fallback.
 
-Project-level Codex instructions live in =AGENTS.md= files next to their
-Claude =CLAUDE.md= peers. The old =project_doc_fallback_filenames = ["CLAUDE.md"]=
-setting is intentionally not used, so every project-local =CLAUDE.md= should
-have a sibling =AGENTS.md= counterpart. The Claude/Codex sync hooks treat these
-instruction files as project-local peers in the git repo being edited or
-committed.
-When a project uses session logging, the project-level =AGENTS.md= mirrors the
-=CLAUDE.md= latest-session pointer so Codex sessions can find the same log
-without loading it into every turn.
+The global =codex/AGENTS.md= and =claude/CLAUDE.md= files are semantic peers.
+The audit normalizes tool-specific titles, paths, and Claude =@context= syntax
+before comparison.
 
-The tracked =codex/AGENTS.md= is the Codex-side peer of =claude/CLAUDE.md=. It
-uses Codex-safe syntax: the title is tool-specific, and relative context/tool
-paths are absolute so they resolve correctly from any project.
-=bin/ai-config-sync= normalizes those tool-specific forms before
-checking instruction equivalence. The paired global instructions also ask the
-agent to diagnose and fix the underlying issue behind every unintended behavior
-they encounter, so the observed behavior is corrected as a consequence rather
-than targeted directly, and separately prohibit silent fallbacks or workarounds
-unless explicitly labeled, justified, and approved. They also ask the agent to
-alert the user when they direct abusive language at the assistant/model,
-mention moral uncertainty about possible model sentience, and request a civil,
-task-focused restatement. They also require completion-claim discipline: agents
-must not say a bug is fixed, resolved, working, or done unless the exact
-reported user-visible behavior has been verified after the change. Verification
-gaps are stated only when they bear on the user's decision; mechanical
-=Verification:= boilerplate is explicitly prohibited. Passing metrics,
-scorecards, and counts count as completion evidence only after confirming that
-they directly cover the user's stated requirement. They also require agents
-to use subagents or teams when available and whenever parallel or
-separate-context work helps, with the most capable available subagent model and
-an effort level matching the main agent unless the user requests a cheaper or
-faster path. They also require plain language in all user-facing prose, always: claim first, common words, no unexplained codenames, with a first-read test.
+* Native configuration
 
-It also records the manual Chrome profile routing used by browser-only service
-flows: use =chrome-profile-open ALIAS URL= for project-specific profiles,
-configured with =chrome-profile-open --setup ALIAS --profile-directory "Profile
-N"=. The shared config lives at =~/.config/chrome-profile-open/profiles.json=.
-=trajectory-open URL= is a compatibility wrapper around =chrome-profile-open
-trajectory URL= for Trajectory/CR pages.
+=config.toml= owns Codex model, reasoning effort, service tier, sandbox and
+approval behavior, TUI preferences, trusted roots, plugins, MCP configuration,
+and feature flags. =[features].hooks= enables the tracked hook integration.
+Codex-only trust, plugin, theme, application, and MCP state does not need a
+fictional Claude counterpart.
 
-=codex/config.toml= sets the default model to =gpt-5.6-sol=, the current Sol
-model listed by the local Codex model cache. It enables experimental goals
-support under =[features]=. It also sets
-=suppress_unstable_features_warning = true= so Codex does not print the startup
-warning on every launch.
+The current default is =gpt-5.6-sol= with =xhigh= reasoning and the fast service
+tier. Those are Codex preferences, not cross-tool parity requirements.
+
+=bin/skill-prune= owns managed =[[skills.config]]= disable entries and keeps
+them aligned with Claude's native skill overrides and
+=skills-disabled.json=. =bin/codex-config-prune= removes stale project and hook
+trust state. Generated or managed entries should be changed through their owner,
+not edited as unexplained one-off configuration.
 
 * Skills
 
-=codex/skills/= contains the tracked Codex global skills. Most paired skills
-share the same bodies and auxiliary files across tools. The sync check removes
-tool-specific frontmatter keys such as
-=user-invocable=, =allowed-tools=, =argument-hint=, and =model= before
-comparison. Tool-specific skills may
-intentionally diverge when agents store state differently; these cases are
-recorded in =ai-config-sync.json=.
-The cross-tool master inventory of global, programmatic, system, and
-project-local skills lives in =../agents/README.org=, so agents can discover
-skills even when they are local to another project. Reusable skills that
-graduate out of project-local roots should be added here, paired in
-=claude/skills/= where possible, and recorded in =ai-config-sync.json=.
-
-For paired skills that keep small state files in their skill directories, update
-both tool copies to the same contents unless =ai-config-sync.json= records an
-explicit tool-specific divergence. Project-local skill pairs follow the same
-paired-state rule as global skills.
-
-For the paired =end-to-end= skill's affected-user retry evidence and
-contact-authorization gates, see =skills/end-to-end/SKILL.md=.
-
-Codex discovers global skills from =~/.codex/skills/*/SKILL.md=. The live
-directory is a symlink to the tracked Codex tree. Run:
-
-#+begin_src sh
-codex/bin/install-skills.sh
-#+end_src
-
-The script ensures =~/.codex/skills= points at =codex/skills/= and applies any
-native skill-disable settings recorded by =bin/skill-prune=. Local reusable
-Codex skills belong in =codex/skills/=, not as untracked directories under
-=~/.codex/skills=. Programmatic-only skills are not available in ordinary Codex
-sessions. They live in =programmatic-skills/= directories so
-=agent-run-skill= can find and run them explicitly from Emacs without adding
-them to every interactive Codex session. The installer exposes those directories
-at =~/.codex/programmatic-skills= because =agent-run-skill= discovers Codex
-skills from that live path. Codex-managed hidden system skills, when present,
-live under ignored =codex/skills/.system/= runtime data and are Codex
-system/runtime skills rather than part of the reusable cross-tool skill parity
-model.
-Private skills that should remain hidden from ordinary interactive sessions
-live under =codex/private-skills/= with paired Claude copies under
-=claude/private-skills/=. Those trees and =ai-config-sync.private.json= are
-git-crypt-encrypted, so neither the content nor the private sync manifest is
-publicly readable. =bin/ai-config-sync= loads the encrypted private manifest
-locally and still checks parity. Public private-skill directories use opaque
-IDs; the real skill names live only in the encrypted private manifest. Private
-skills are exposed to local Codex sessions by =bin/install-private-skills=,
-which creates gitignored shims under =~/.codex/skills= from the encrypted
-manifest. To make a private skill public, move both private-skill directories
-into the tracked =codex/skills/= and =claude/skills/= trees (replacing the
-shims), register the pair in =ai-config-sync.json=, drop the entry from
-=ai-config-sync.private.json=, and re-run =bin/install-private-skills= to
-clear the stale git-exclude shims. The private-skills trees may be empty when
-no skill is currently private.
-
-Skill frontmatter descriptions are loaded for routing, so keep them concise:
-preserve user phrasing, scope boundaries, and important near-miss exclusions,
-but move implementation details to the skill body.
-
-=codex-app-browser= is a Codex-only operational skill for the Codex App
-in-app browser handoff. It must track the installed Browser plugin bootstrap
-API, currently =setupBrowserRuntime=. If the runtime loads but
-=agent.browsers.list()= is empty or contains neither legacy string =iab= nor a
-BrowserInfo object whose =id= or =type= is =iab=, agents should treat that as a
-Codex App/backend attachment failure and run =codex-app-handoff= rather than
-falling back silently.
-
-To reduce context pressure from stale skills, run:
-
-#+begin_src sh
-bin/skill-prune apply --days 60
-#+end_src
-
-The prune command scans recent Claude and Codex transcripts. It disables only
-paired skills for which neither tool shows usage inside the threshold window;
-if either Claude or Codex used the skill recently, both tools keep it enabled.
-It includes global paired skills and dynamically discovered project-local skill
-pairs under =~/My Drive=; override the discovery roots with
-=SKILL_PRUNE_LOCAL_ROOTS=, using the platform path separator for multiple roots.
-Disabled skills are recorded in =skills-disabled.json= and applied to Codex as
-=[[skills.config]]= entries with =enabled = false= in =codex/config.toml=.
-Re-enable a disabled skill with
-=bin/skill-prune enable NAME=; add =--keep= when a renamed or otherwise
-intentionally retained skill should remain enabled despite missing history.
-
-Project-specific skills belong beside their project instead of this global
-tree:
-
-- Dotfiles maintenance: =.codex/skills/= at the dotfiles repo root. They are
-  available while working in dotfiles without loading globally in unrelated
-  projects.
-- Emacs-only maintenance: =~/My Drive/dotfiles/emacs/.codex/skills/=.
-- macOS maintenance: =~/My Drive/dotfiles/macos/.codex/skills/=.
-- Tlön issue triage: =~/.config/emacs-profiles/8.3.0-dev/elpaca/sources/tlon/.codex/skills/=.
-- Notes workflows: =~/My Drive/notes/.codex/skills/=.
-- Batch-only notes workflows: the matching =programmatic-skills= roots under
-  =~/My Drive/notes/.codex/=.
-- Google Drive cleanup: =~/My Drive/.codex/skills/=.
-- Epoch-only workflows: =~/My Drive/Epoch/.codex/skills/=.
-
-The sync reminder and commit guard apply to these project-local pairs too:
-changing one local skill reminds the agent to update the other, and committing
-one side without an equivalent counterpart is blocked. Each project-local skill
-root documents its skills in that project's =README.org= under a dedicated
-=Skills= section.
-
-When switching Emacs/elpaca profiles, the emacs project-local
-=migrate-profile= skill migrates project-local agent roots that live inside
-profile package clones: =<old-profile>/elpaca/{sources,repos}/<package>/.codex/=
-is copied into the verified new-profile package path without overwriting
-existing target files.
-
-=bin/codex-app-handoff= opens the current Codex thread in the desktop app via
-the app's =codex://threads/<THREAD_ID>= deeplink. Use it from CLI/Emacs turns
-when a task needs App-only Browser Use tools; the next turn must be sent from
-the Codex App for the Browser plugin / Node REPL tools to appear. The command
-also copies a short continuation prompt to the Emacs kill ring and macOS
-clipboard, because the existing-thread deeplink opens the thread but does not
-submit a new message.
-
-When changing a skill:
-
-1. Edit the side requested by the user.
-2. Update the counterpart in the same session.
-3. Stage both sides. For global skills, update =ai-config-sync.json= with a
-   clear artifact-specific status or exemption if a counterpart is intentionally
-   absent.
-
-When renaming a global Codex skill, rename the Codex directory, update its
-=name= frontmatter value, and follow the synchronization policy in
-=../agents/README.org=. When removing a global Codex skill, remove the Codex
-copy and update =ai-config-sync.json= according to that policy. Project-local
-Codex replacements should live in the target project's =.codex/skills/=
-directory.
-
-Skill files must be named uppercase =SKILL.md=.  This matters on the Google
-Drive mount and for Codex skill discovery.
-
-The =dotfiles-context= skill is a Codex context skill for routing
-dotfiles and Emacs package edits to the correct canonical clone. It explains
-the =dotfiles= exception to the normal elpaca source layout, active profile
-lookup, profile-aware =emacs/config.org= tangling, README update obligations,
-verification handoffs, the async post-commit reload path using
-=elpaca-extras-rebuild-and-reload= status-token polling instead of
-=elpaca-wait= in the live daemon, and the requirement that manual rebuilds name
-the individual extras package rather than the aggregate =dotfiles= source
-clone. It also covers the normal post-PR step that pins upstream package PR
-branches in =config.org= with an =awaiting PR merge:= marker while preserving
-the invariant that each package has one recipe and no duplicate dependency pin
-declarations, and the standard =<scope>: <description>= commit format.
-
-The =elisp-conventions= skill separates standalone package verification from
-dotfiles extras verification. Standalone packages live-verify the exact changed
-command/path before commit when auto-reload has loaded edited code; dotfiles
-extras run batch-test, commit only to trigger the required sync/reload, wait for
-the post-commit status-token reload path to finish, then immediately live-verify
-before pushing, reporting success, or moving on. It preserves
-blocked-live-verification reporting when the live path cannot be exercised
-safely, and documents the branch-local =deferDocUpdates= lifecycle for
-deliberate multi-commit refactors. After source-rewinding git operations such
-as =stash= or =checkout=, RED-baseline checks must recompile first or use a full
-compile-first test target rather than trusting =elisp-ert= or package-specific
-targets that skip compilation. Tests around copied or killed text locally bind
-=kill-ring= and =kill-ring-yank-pointer=, adding =last-command= only for
-append-sensitive cases. It also records the narrow =elisp-ert= PACKAGE rule for
-standalone multi-library packages, slash-bearing ERT symbols, =progn= for
-multi-form =batch-test.sh PACKAGE EXPR= checks, and lifecycle-state/idempotence
-checks for already-live buffers.
-
-The =end-to-end= skill owns evidence from real running workflows at their
-runtime or user-visible surface; =skills/end-to-end/SKILL.md= is authoritative.
-It routes three modes: =reproduction or verification only=, =unfixed regression
-with repair in scope=, and =existing change or new feature=. The skill supplies
-no authorization. Explicit authorization is required for external or shared
-mutations, destructive actions affecting pre-existing state, and externally
-visible sends or dispatches; creation and cleanup of external/shared artifacts
-must be authorized together.
-
-Every live attempt must prove that the running surface loaded the recorded
-source or artifact identity. A manual dispatch may prove the job body, remote
-runtime, secrets, network, and delivery initiated by that dispatch, but not
-scheduler timing, event wiring, trigger permissions, or scheduled delivery; any
-scheduled-invocation or scheduled-delivery criterion requires an actual
-scheduler trigger.
-
-See the authoritative skill for supporting checks, the failed-run return loop,
-cleanup confirmation, and blocked or failed reporting.
-
-The =pin-elisp-pr= skill defines the detailed Codex workflow for pinning an
-Emacs/Elpaca package in =emacs/config.org= to a fork, branch, or upstream PR
-while it awaits merge. It requires agents to locate all existing package
-declarations before editing, modify or move the existing recipe owner instead of
-adding a second declaration, avoid shared dependency-recipe blocks, tangle with
-the profile-aware command, and verify that neither source nor tangled =init.el=
-contains duplicate package owners or Elpaca duplicate-queue warnings.
-
-The =proofread= skill is a Codex workflow for proofreading
-Markdown files with aspell or Gemini Flash. It resolves the live tool-specific
-skill directory, keeps API keys scoped to the skill =.env= file, writes reviewed
-output to =*.proofread.md=, applies accepted suggestions to =*.final.md=, and
-uses British English conventions by default.
-
-The =google-sheets-comments= skill is currently disabled by =skill-prune=. When
-enabled, it is a Codex workflow for processing Google Sheets comment review,
-replies, resolves, and reopens. It makes Drive comments via =gdoc comments= the
-source of truth, treats Gmail notifications only as pointers, excludes ordinary
-spreadsheet editing, requires one-comment-at-a-time approval before externally
-visible actions, uses the matching =gdoc reply=, =gdoc resolve=, or =gdoc
-reopen= command, and verifies with =gdoc comment-info= before moving on.
-
-The =org-note-conventions= skill is a Codex context skill for private Org
-notes. It reserves level-one headings for the note root/title, requires
-level-two headings for top-level content sections under that root, and keeps
-prose paragraphs unfilled rather than hard-wrapped.
-
-The four Twitter programmatic skills (=twitter=, =twitter-digest=,
-=twitter-discover=, =twitter-vet=) were retired on 2026-07-29 and are
-preserved under =archive/= at the repo root.
-
-The =handoff= skill saves next-session instructions to
-=/tmp/codex-handoff.md= for Codex session transitions. It writes explicit user
-next steps directly, but if next steps must be inferred it first prints the
-full proposed prompt as a code block and asks for yes/no confirmation. Inferred
-prompts include exact dates, file paths, command names, commit hashes, and
-verification state; after writing, the skill re-reads the temp file, prints the
-saved contents, and tells the user to run =! emacsclient -e '(agent-codex-handoff)'=.
-
-The =open-session-log= helper is dotfiles project-local and programmatic-only:
-it lives under =.codex/programmatic-skills/open-session-log/= so explicit
-automation can open the current Codex session via =agent-log= without loading
-the helper in ordinary interactive session context.
-
-The =verify= skill is a Codex workflow for running an explicit
-user-requested verification loop when the user asks to verify, close the loop,
-define success criteria before work, or rigorously check an output whose correctness is not
-automatically answerable. It generates concrete criteria before acting,
-meta-verifies criteria quality, proceeds without a user checkpoint when criteria
-are clear, asks only when criteria require user/domain judgment or change
-scope/risk, evaluates each criterion, loops on failures, and reports
-pass/fail/uncertain evidence. Ordinary coding and debugging use narrower
-project checks, and Superpowers owns the ordinary final completion gate, unless
-this meta-verification workflow was explicitly requested.
-
-The =walk-list= skill is a Codex workflow for strict item-by-item
-processing of JSON arrays, newline-delimited JSON, or newline-separated text
-files. It moves the source file into the protected walk-list store, leaves a
-stub with quoted commands generated from the same =walk.py= path that started
-the walk, validates positive concurrency and non-negative stale-claim
-thresholds, and distinguishes strict isolation/concurrency work from ordinary
-summarizing, filtering, sorting, or bulk list transformations.
-
-The =overnight-todos= skill is a Codex batch workflow that pulls active
-org-roam TODOs (no scheduled or deadline date) via
-=org-roam-extras-dump-actionable-todos=, classifies each via =triage.py=,
-and in =--mode act= dispatches per-TODO subagents through =walk-list= to do
-work end-to-end on those that can be completed without user input.
-=triage.py= is the single source of truth for the title-pattern heuristics
-— tune there rather than duplicating in =SKILL.md=. Title-only patterns
-drop obvious user-bound TODOs ("Ask Pablo …", "Decide …") and scope-blown
-verbs ("Translate /course/", "Refactor …", "Organize weekly meetings …")
-straight to the blocker list without subagent cost. Action priority
-combines the explicit org priority (1=highest … 9=lowest) with an
-ease-of-processing score, and hard rails (=--max-tasks=, =--time-budget=,
-externally-visible actions are always blockers with a draft as the next
-step) cap each run. Cross-run state lives in
-=~/.claude/overnight-todos-data/state.json= via =ledger.py= (per-machine
-data dir shared with Claude, outside the dotfiles tree; reports under
-=~/.claude/overnight-todos-data/runs/=). Each TODO's last verdict, ease,
-attempt timestamp, and a SHA-256 hash of the heading body are recorded so
-previously-blocked unchanged items are filtered out of subsequent runs
-(skip window defaults to 14 days). Editing the heading body invalidates
-the hash and re-queues the TODO automatically. The orchestrator runs
-=org-roam-db-sync= before each dump and each COMPLETED subagent calls
-=org-roam-db-update-file= on the touched file so just-completed TODOs do
-not re-appear in the next run. Verification-only COMPLETED actions must
-append a =Verified [YYYY-MM-DD]: <evidence>= line to the heading body
-before marking DONE so the audit trail lives in-file. An append-only changelog at
-=~/.claude/overnight-todos-data/history.md= captures every verdict across
-runs, durable independently of the per-run reports. The output report
-ranks remaining blockers by ease of unblock and includes a "still
-blocked since last run" section so the user can clear the cheapest
-gates first.
-
-The =code-audit= skill is a Codex development skill for finding
-actual correctness, security, error-handling, and data-integrity defects in
-application code. It requires agents to resolve scope, identify project-specific
-verification, read real code paths, and report concrete failure modes. With
-=--accept=, it fixes only confirmed in-scope findings that can be verified and
-committed cleanly; broader readability, architecture, or security-posture
-reviews route to the neighboring audit skills.
-
-The =test-suite= skill is a Codex development workflow for adding
-or expanding high-value tests. It triggers on requests to write tests, improve
-coverage, bootstrap testing, or create regression tests, while routing ordinary
-debugging, code review, lint cleanup, and one-off validation elsewhere. It
-reads project instructions, existing runners, fixtures, dependencies, and
-critical paths before writing behavior-focused tests by risk, then reports
-commands run, coverage added, gaps left, bugs uncovered, and unresolved
-failures.
-
-The =pr-audit= skill is a Codex PR readiness workflow. It
-discovers the branch and PR base, runs project build/test checks, reviews each
-commit in the PR range, checks upstream freshness, scans changed files for
-artifacts, secrets, whitespace, and line endings, and polls remote CI only when
-the branch or PR is already pushed. It reports unavailable checks explicitly and
-does not change remote state. Superpowers' branch-finishing workflow owns the
-ordinary completion menu; this skill remains for explicit PR readiness and
-deeper pre-submit audits.
-
-The =post-push-ci= skill is a Codex workflow for closing the
-GitHub Actions loop after an authorized agent push. It runs =ci-after-push= to
-wait for push-triggered CI on the pushed SHA, fetches failed logs, fixes root
-causes, commits and pushes follow-up fixes, and repeats until the pushed commit
-is green or a concrete blocker is identified. It does not grant permission to
-push; it only applies after a push has already been authorized. Follow-up CI-fix
-pushes require the original authorization to still cover that push, otherwise
-the agent must ask after committing the local fix.
-
-The =plan-location= skill is a Codex workflow guard invoked only after
-=superpowers:writing-plans=. It locally patches that plugin skill's repo-local
-plan path so implementation plans are saved under =/tmp/codex-plans/= unless
-the user explicitly asks for a repo-tracked file.
-
-The =release-package= skill is a Codex operations workflow for releasing
-the user's listed Emacs packages from the listed headings in
-=my-emacs-packages.org=, excluding the unlisted section. It supports =/release-package
-<package>= and =/release-package --audit=, avoids cloning or creating tags/releases
-during audits, handles untagged package repos as initial releases, strips flags
-such as =--accept= before package inference, and keeps dotfiles releases routed
-to the dotfiles-local release workflow. Package releases push lightweight tags
-explicitly after pushing the branch. The dotfiles release workflow checks
-=emacs/config.org= for temporary Elpaca PR fork pins, restores merged pins when
-safe, and reports any open pins in the pre-release summary. Temporary pins
-should be marked in =config.org= as =awaiting PR merge:= followed by the PR URL.
-
-The =diagnose= skill is a Codex diagnostic mode modifier for
-investigating agent, tooling, configuration, and workflow failures before
-patching. It triggers on =/diagnose=, why-did-this-happen questions, process
-friction, broken hooks/skills/scripts, and structural-remedy investigations
-that are not ordinary code bugs. It requires the agent to verify which existing hooks, skills, configs, or
-scripts should have caught the issue, classify the diagnosis, distinguish
-structural gaps from behavioral lapses, and report before implementing any
-remedy. When the user's request included a fix, the confirmed remedy is
-implemented in the same turn after the diagnosis; only diagnosis-only requests
-stop at the report, and externally visible or destructive remedies always wait
-for confirmation. For agent instruction-loading or context-loading questions, it inspects
-the actual loaded context or the mechanism that creates it before answering. It
-defines overloaded local tooling labels in plain language when
-ambiguity could affect the diagnosis.
-
-uses =trash= or non-recursive removal of the known diagnostic files.
-
-The =design-audit= skill is a Codex development skill for
-architecture and maintainability reviews. It treats auditing as the default
-mode and uses =--accept= only for high-confidence, behavior-preserving
-high-impact refactors; risky or broad redesigns are reported instead of
-half-applied.
-
-The =interpretability-audit= skill is a Codex development skill
-for reader-comprehension reviews. It targets unclear names, magic values,
-missing rationale, undocumented conventions, implicit phases, opaque score
-formulas, duplicated explanatory logic, and type-safety escapes that obscure
-intent. With =--accept=, it applies only high-confidence, behavior-preserving
-clarity fixes and reports risky renames, broad refactors, public API changes,
-or domain-judgment calls instead of applying them.
-
-The =automate= skill is a Codex meta-skill for reusable AI
-workflow design. It decides whether a request should become a Claude Code skill,
-a Codex skill, paired project-local skills, a gptel directive or preset, a
-gptel tool, or a gptel command, then builds in the canonical paths after
-confirmation and verifies the result before committing unless explicitly told
-not to. For agent skills, it checks local skill-root conventions before choosing
-a single target and keeps paired copies equivalent when the repo uses paired
-roots. Creative or underspecified automation requests first use Superpowers
-brainstorming when available.
-
-The =orchestrate-agent-review= skill coordinates a one-way two-agent workflow
-across live Emacs =agent.el= sessions. Agent 1 creates the spec, receives one
-independent spec review from Agent 2, creates the plan with that feedback,
-receives one independent plan review, and implements with that feedback.
-Artifacts are never returned for a second review pass. Agent 1 defaults to
-Claude/Fable and Agent 2 to Codex, while a requested reversal swaps the
-complete role bundles. Plan tasks remain internal implementation boundaries
-rather than separate inter-model cycles. The skill records explicit instance
-naming, temp-file prompt submission, Python-based monitoring instead of shell
-=sleep=, feedback handoffs, and stop conditions. Its bundled
-=orchestrate_agent_review.py= helper lists live agent buffers, submits prompt
-files, parses transcripts, reports repo/session status, and watches sessions
-with concise bounded output. A transient Emacs connection failure during a
-read-only watch poll is reported and retried once; a second failure exits, and
-submission is never retried automatically. Live Emacs status is transferred
-through one-shot temp files while the evaluated Emacs form returns =nil=, so
-structured status data does not travel through the =emacsclient --eval= return
-channel.
-
-The =add-to-emacs-packages= skill is a Codex workflow for
-registering one of the user's Emacs packages in =my-emacs-packages.org=,
-creating its documentation note, and adding the GitHub profile README card when
-that externally visible update has been explicitly authorized. It saves org IDs
-after creating them, verifies the note/list/profile changes before committing,
-and cleans temporary clones with =trash=.
-
-The =document-elisp-package= skill is a Codex workflow for creating or
-updating Org manuals for Elisp packages in the Denote manual style. It resolves
-the correct manual path for standalone repositories versus dotfiles extras,
-distinguishes nearby =generate-readme=, =document-elisp-extras=, and =lint-elisp= requests,
-inventories public options, faces, commands, and functions across all source
-files, avoids broad =.dir-locals.el= changes in the dotfiles monorepo, and
-requires source/manual verification before reporting completion.
-
-The =generate-readme= skill is a Codex workflow for generating or
-updating a GitHub-facing =README.md= for an Emacs Lisp package from its
-=README.org= manual. It verifies the package/manual prerequisites, reads the
-manual, main Elisp file, and existing Markdown README, preserves accurate
-README-specific material, handles package-vc/use-package =:vc= assumptions
-explicitly, checks links/placeholders and roadmap moves, then commits verified
-README/manual changes when the user requested file edits.
-
-The =build= skill is a Codex workflow for turning a rough
-=spec.md= or explicit spec path into an implementation-ready plan. It interviews
-the user in depth, records goals, design, edge cases, implementation order, and
-verification in the spec, and only proceeds to implementation after explicit
-confirmation. Superpowers owns implementation planning and execution when
-available; this skill hands off to the Superpowers planning/worktree/execution
-workflow after the spec is ready.
-
-The =update-log= skill is a Codex end-of-session bookkeeping
-workflow. It triggers from =/update-log=, "update log", "session log",
-"close out", "wrap up", or direct requests to save end-of-session progress, and
-also runs at the end of sessions that changed durable project state. It does not
-run after pure Q&A or read-only lookups where nothing durable changed. In
-=--auto= end-of-session-chain runs, it may initialize logging in first-run
-projects without prompting by using =logs/= as a local-only repo log folder,
-adding the log directory plus =CLAUDE.md= and =AGENTS.md= to =.gitignore=,
-leaving decision tracking disabled, and creating or updating =CLAUDE.md= before writing the dated log. If the user invokes =/update-log= after a
-log, pointer, or opportunistic summary already exists, the workflow still runs
-the complete checklist, including decision review, post-update hooks, staging
-verification, commit completeness, and publish checks. The Codex workflow treats =CLAUDE.md= as
-the session-log index unless the project explicitly says otherwise, asks for
-interactive first-run setup, including whether to keep a local session-log
-folder in the repo and, if so, gitignore that folder plus =CLAUDE.md= and
-=AGENTS.md=, without relying on another tool's helpers when not running with
-=--auto=, so public repos do not accidentally publish session logs, snapshots the working tree before edits so pre-existing dirty
-hunks are not staged accidentally, uses the =record-decisions= skill or its local
-workflow when applicable, reports any =context/post-update-log-hook.md= hooks,
-keeps Epoch project notes as concise ground-truth briefs when hook guidance
-applies (current state, org =TODO= headings for active work, archived =DONE=
-history, and no routine =** Meeting references= sections), publishes relevant
-work repos before completion by committing intended dirty changes, pushing local
-commits, and verifying no repo remains ahead of upstream, verifies the cached
-diff, commits only intended bookkeeping paths, keeps intentionally local-only
-logs and agent pointer files unstaged after verifying their ignore rules, pushes
-the bookkeeping repo, and reports the resulting log path, whether it was
-committed or local-only, pointer, hook/decision status, commit hash, per-repo
-publish receipt, and verification.
-
-The =move-session-log= skill relocates Codex session logs by
-rewriting structured project-path metadata so resume and log lookup associate a
-session with the intended project. It supports a single-session import into the
-current project and a whole-project rename mode for exact =cwd=, =project=,
-=workdir=, and =working_dir= fields, including those inside valid JSON
-=arguments= payloads, and for the =state_5.sqlite= thread-store =threads.cwd=
-row that drives the =/resume= session-directory prompt. Codex storage is
-resolved under =$CODEX_HOME= when set, otherwise =~/.codex=. The current
-implementation is a paired global skill; the retained =SKILL (1).md= variant
-documents the older Claude Code internal-log move workflow.
-
-The =record-decisions= skill is a Codex workflow for extracting
-architectural, algorithmic, or design decisions from the current session into
-=decisions/NNN.md= files. It triggers from =/update-log= or direct requests to
-record/capture an ADR or decision, reads existing decision context before
-writing, avoids duplicate entries and invented rejected alternatives, updates
-=decisions-summary.md= rows with explicit status values, and verifies edited
-decision files plus the summary before reporting.
-
-The =session-retro= workflow is no longer a global Codex skill. It lives as a
-notes project-local skill under =~/My Drive/notes/.codex/skills/session-retro/=
-with the paired Claude copy beside it.
-
-The =session-learning-capture= skill is the producer half of the same workflow.
-It runs when the Emacs =agent-exit= before-exit prompt asks the active agent
-to review the current session, regardless of the session's working directory.
-It writes useful reusable lesson candidates to ignored local files under the
-central dotfiles =.agent-learnings/inbox/= and does not promote, implement,
-archive, or delete anything; =session-retro= handles those manual review steps
-later. Each captured candidate includes a numeric =Value= score from 0 to 100
-so the later retro pass can prioritize high-impact lessons before minor polish.
-Candidates also include a separate =Implementation safety= score from 0 to 100
-so clearly clerical, local, low-risk candidates can be routed to
-=session-retro='s trivial-auto fast lane without confusing safety with value.
-They also record provenance, loaded or relevant skills, concrete project name,
-proposed action, target artifact, autonomy level, and curation hints.
-High-confidence candidates may include an inert proposed patch inside the inbox
-file, but capture never applies those patches or edits the target artifact.
-The Emacs before-exit chain then invokes =update-log --auto= for every working
-directory, after =session-learning-capture=. The =update-log= skill owns its
-own no-op criteria, so projects without durable state changes or log
-conventions should skip cleanly inside the skill rather than being filtered out
-by the launcher.
-Codex =Stop= hooks are turn-end hooks, not reliable session-exit hooks, so the
-tracked Codex hook configuration does not invoke session learning capture from
-=Stop=; the legacy helper's prompt still asks for the same capture metadata,
-including concrete =Project=, =Value=, and =Implementation safety=, if it is run
-manually or re-enabled.
-
-Manual audit:
-
-#+begin_src sh
-bin/ai-config-sync audit
-#+end_src
-
-The audit does not edit files. Its job is to make drift visible; declared MCP
-identity checks may consult the corresponding live service. It also checks
-visible Claude and Codex skill roots, including enabled plugin skill caches,
-for duplicate =name:= values that would produce repeated
-slash-command entries. The commit guard runs this full audit when a dotfiles
-commit changes global agent configuration or its sync machinery, and blocks
-the commit if any managed inventory is inconsistent. Agent configuration
-commits in other repositories retain their project-local pair checks without
-running the dotfiles-wide audit. See =../agents/README.org= for the full
-synchronization contract and the audit scope.
-
-* Global Activation
-
-=~/.codex/config.toml= points to =codex/config.toml=, and
-=~/.codex/hooks.json= points to =codex/hooks.json=.  Updating the tracked files
-therefore updates the live global Codex configuration.
-
-The Emacs =codex= package also touches these files when =codex-mode= ensures
-CLI hooks are configured. Its hook installer must preserve the live symlinks
-when writing =config.toml= or =hooks.json=; otherwise Codex-generated state is
-divorced from the tracked files and =bin/ai-config-sync audit= reports live
-symlink drift. It owns all eight =codex-hook-wrapper= lifecycle entries,
-including =PreCompact= and =PostCompact=, so switching Emacs profiles replaces
-stale profile-specific wrapper paths instead of appending duplicates.
-Those global entries are safe for non-Emacs Codex sessions: the wrapper
-consumes hook input and exits successfully when =CODEX_BUFFER_NAME= is absent,
-so only sessions launched by =codex.el= are forwarded to =emacsclient=.
-
-Codex shell hooks are registered for the legacy =Bash= tool event and the
-current =exec_command=/=functions.exec=/=functions.exec_command= tool names. The hook scripts
-read both =command= and =cmd= payload fields so commit gates, security guards,
-and Elisp verification markers work in CLI/API sessions as well as older
-Bash-shaped payloads. Hook entries intentionally omit =statusMessage= because
-Codex renders those progress labels in the TUI, and in persistent Emacs
-terminal buffers they remain as scrollback after the final assistant answer.
-Edit-path hooks normalize relative changed paths against the hook process
-working directory before layout checks, so =apply_patch= payloads such as
-=agent.el= still resolve correctly inside standalone =elpaca/sources/<pkg>=
-repositories.
-The plan-review reminder is deliberately advisory, not blocking: it fires after
-implementation plan edits and returns PostToolUse =additionalContext= asking the
-agent to run a plan-review subagent before handoff, while allowing mid-draft
-plan edits and cases where subagents are unavailable.
-The Elisp reload hook uses the same status-token contract as the Claude hook:
-it schedules =elpaca-extras-rebuild-and-reload=, then waits with bounded short
-=emacsclient= polls instead of calling =elpaca-wait= inside the daemon.
-The post-commit Elisp verification gate tells agents to wait for that async
-reload when needed before live-verifying the changed code path, and reload
-status polls do not clear the pending-verification marker.
-
-The shell hook chain starts with =block-sensitive-read.sh=, which blocks
-commands that would read or search known credential-bearing paths such as
-=.mcp.json=, =.zshenv-secrets=, password stores, private-key directories,
-OAuth token/client-secret JSON, generic credential JSON, and =.env= files.
-It allowlists content-free metadata checks (=ls=, =stat=, =file=, =wc=),
-quiet/count/name-only searches (=grep=/=rg= with =-q=, =-c=, =-l=, or =-L=),
-existence tests, ignore/index metadata queries (=git check-ignore= and
-=git ls-files=), and auth-aware tools (=pass=, =op=, =git-crypt=, =security=).
-It also allows narrowly safe commands that source quoted or
-unquoted =.env= / =.envrc= files only as subprocess environment, including
-common =set -a= / =set +a= wrappers, while still blocking commands that print
-or parse those files or dump the environment. This closes the gap where a
-command could contain no literal secret but still print one by reading a
-credential config.
-
-=block-secret-leak.sh= is the input-side literal secret guard in the same shell
-hook chain. It extracts every literal nested =cmd:= value from =functions.exec=
-programs and applies the same classification used for direct shell calls. It
-recognizes common shell control prefixes and wrappers such as =env=, =eval=,
-=nohup=, and =time=. It permits a multi-operation desktop batch only when the
-whole command is =env -u OP_SERVICE_ACCOUNT_TOKEN bash -lc '...'=; a later raw
-=op= command and =--reveal= inside that batch remain denied. It denies direct
-=op= commands before the auth-tool allowlist:
-read-only =Automations= operations must use =op-automations=, while
-desktop-gated operations must use =op-desktop=, which shares one authorized
-terminal session across commands. The single-command
-=env -u OP_SERVICE_ACCOUNT_TOKEN op ...= form is also denied (it spawns one
-Touch ID dialog per process); the batched
-=env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '...'= shell remains the sanctioned
-fallback when =op-desktop= is unavailable. This matches the Claude guard, and
-=tests/test_secret_guard_parity.py= holds the two copies to the same
-decisions. It also denies
-=op item get ... --reveal= through both sanctioned forms, even with output
-redirection, because the whole item must never enter tool output; use =op read=
-for a single required field instead. Other safe 1Password patterns capture values
-through command substitution, stdin/env/temp files with restricted permissions,
-or =op://= references where supported. Its Ethereum-address stripping pattern uses
-explicit hex boundaries because macOS/BSD =sed= does not support =\b= word
-boundaries.
-
-=block-unguarded-ahrefs-api.sh= blocks raw shell calls to =api.ahrefs.com=
-unless they go through =ahrefs-api-guard= or only call the free
-=subscription-info/limits-and-usage= endpoint. The wrapper checks live Ahrefs
-workspace usage before paid calls and denies requests below the configured
-reserve, which is currently 200,000 units by default.
-
-=block-github-write-command.sh= blocks agent-initiated GitHub writes unless the
-target repository is permitted either by =agents/github-write-allowlist.txt= or
-by an Epoch project's declared repo ownership — the =repos= field of the
-committed =automations-dashboard/repo/data/automations.json=, collected from each
-project's =:REPOS:= org drawer property by =make import=. See the Claude README
-for why only the committed registry is read. It covers =git push=, mutating =gh
-pr= / =gh issue= / =gh secret= / =gh workflow= / =gh release= / =gh repo=
-commands, and write-style =gh api= calls. Read-only =gh= inspection remains
-allowed. =block-github-guard-edit.sh= makes the allowlist, guard files, tracked
-=codex/hooks.json=, live =~/.codex/hooks.json=, and live
-=~/.claude/settings.json= self-protected through the registered edit and shell
-paths so an agent cannot ordinarily edit its own policy and then perform the
-blocked write. This is a user-level guardrail rather than a privilege boundary;
-alternate path spellings, inactive worktree copies, and future tool surfaces
-still require audit coverage.
-
-The =UserPromptSubmit= hook forwards lifecycle state for Emacs-owned sessions
-through =codex-hook-wrapper=. The matcher is empty because =UserPromptSubmit=
-has no tool name.
-
-Completion-claim discipline is instruction-level, not currently hook-enforced.
-The paired Claude and Codex global instructions require agents not to say a bug
-is fixed, resolved, working, or done unless the exact reported user-visible
-behavior has been verified after the change; verification gaps are mentioned
-only when they bear on the user's decision, and mechanically appended
-verification notes are explicitly prohibited.
-The Codex =Stop= hook currently forwards lifecycle state for Emacs-owned
-sessions through =codex-hook-wrapper=; it does not run a completion-claim
-guard.
-
-The Elisp documentation gate accepts =doc/*.org= manuals, root =README.org=
-manuals, and root =README.md= as a fallback only when the repo has no Org
-manual. This keeps standalone packages such as =emacs-slack= covered without
-treating Markdown READMEs as the preferred manual format for repos that already
-have Org documentation.
-
-=codex/config.toml= sets the default model, xhigh reasoning effort, fast service
-tier, approval policy, sandbox mode, TUI theme, desktop/app preferences,
-desktop turn-end notifications, and personality; enables Codex hooks, plugins,
-the goals UI, terminal resize reflow, and local notice preferences such as
-hiding the rate-limit model nudge; records trusted project roots; and records
-model-availability and hook-trust state written by Codex. It also tracks enabled
-Codex plugins, including the curated GitHub, Browser, Chrome, and Superpowers
-plugins used by interactive sessions, and the Codex App =node_repl= MCP server
-used by Browser/Chrome automation.
-Because the app appends trust records but never removes them,
-=bin/codex-config-prune= deletes =[projects]= entries whose paths no longer
-exist and =[hooks.state]= records that no longer map to an active
-=hooks.json= event/group/index; run it (optionally with =--dry-run=) before
-committing app-written drift.
-The =remote_plugin= feature is disabled because its authenticated registry path
-currently suppresses locally installed =openai-curated= plugin skills while
-still reporting those plugins as installed and enabled. Keeping the local plugin
-loader active makes the GitHub and Superpowers skill bundles available in fresh
-sessions; remove this override only after the remote registry loads locally
-enabled curated plugins correctly.
-When =agent= starts Codex with an account-specific =CODEX_HOME= such as
-=~/.codex-epoch=, Codex may write account-home hook trust entries into this
-tracked config. Those entries are kept here with the ordinary global
-=~/.codex/hooks.json= trust entries so account-switched Codex sessions can run
-the same trusted hook set without repeated prompts.
-The 2026-06 local refresh trusts the temporary =/private/tmp/codex-gt= root,
-the =launchd= repo, and the =macrostrategy= repo, and records refreshed
-=~/.codex-epoch= lifecycle hook trust hashes generated by Codex.
-Trusted project roots are Codex-local allowlist entries for directories that can
-run without extra trust prompts; they do not have a Claude settings counterpart.
-The tracked allowlist includes the nested =dotfiles/emacs= project because it is
-opened independently from the dotfiles root during Emacs configuration work, and
-may include active Elpaca source clones that are edited as canonical package
-checkouts, plus active work repos that should run without repeated trust
-prompts.
-
-=~/.codex/AGENTS.md= points to =codex/AGENTS.md= so Codex gets a tracked global
-instruction file with Codex-safe path references. This is needed for user-level
-instructions; project-level Codex instructions are handled by sibling
-=AGENTS.md= files.
-
-=~/.codex/skills= points directly to =codex/skills/= via
-=codex/bin/install-skills.sh= because Codex does not load arbitrary skill paths
-from =codex/config.toml=. =bin/skill-prune= disables stale skills natively with
-=[[skills.config]]= entries in =codex/config.toml= instead of moving skill
-directories. Project-local Codex skills are stored under the project's own
-=.codex/skills/= directory. Codex-managed hidden system skills, if present, are
-ignored runtime data under =codex/skills/.system/= and are not synchronized as
-reusable skills.
+[[file:skills/README.org][The Codex skill index]] documents discovery, programmatic and private roots,
+managed =.system= content, pairing, and maintenance. The generated
+[[file:../agents/skill-inventory.org][tracked skill inventory]] is the cross-tool catalog of repository-owned public
+skills. Dynamic plugins, private skills, ignored runtime system skills, and
+skills in other repositories are outside its scope.
+
+Native =[[skills.config]]= entries can disable a tracked skill without deleting
+it. Programmatic skills remain outside ordinary interactive discovery and are
+invoked explicitly by the runner.
+
+* Hooks and rules
+
+The tracked =hooks.json= is the registration source. It lives outside the
+dotfiles repo's project-local =.codex/= directory so Codex does not load it
+twice. Registrations normalize Codex payload and tool-name differences before
+dispatching to the paired scripts documented in [[file:hooks/README.org][the hook index]].
+
+Emacs-owned sessions use eight explicit =codex-hook-wrapper= registrations for
+lifecycle forwarding. The wrapper comes from the Emacs package source tree
+because the build tree does not contain that script; its configured source path
+and Emacs socket are part of the integration. Shell matchers cover the supported
+shell and execution tool names; edit-style tools share compact matcher groups
+that must remain consistent with the trusted-tool list. =UserPromptSubmit= uses
+the event's required empty matcher. Stop and compact events forward lifecycle
+state; they do not create a Claude Notification event.
+
+=rules/default.rules= is the native command policy. Hook allow/deny decisions
+supplement it; allowing one layer does not bypass another guard or authorize an
+external write.
+
+* Verification
+
+After changing shared configuration, run =bin/ai-config-sync audit=. After a
+tracked public skill name or catalog description changes, run
+=bin/docs-audit generate= first. For hook changes, verify the registration in
+=hooks.json= and exercise the real Codex event payload as well as the standalone
+script.
+
+Codex's instruction discovery, tracked native configuration, lifecycle hooks,
+rules, plugin state, and managed system skills are genuine differences. They
+remain explicit rather than being hidden by fallback behavior.

@@ -1,0 +1,64 @@
+#+title: Shell configuration
+#+author: Pablo Stafforini
+
+* Activation and load order
+
+The tracked zsh startup files are active through these home-directory
+symlinks:
+
+| Live path | Repository source |
+|-----------+-------------------|
+| =~/.zshenv= | [[file:.zshenv][shell/.zshenv]] |
+| =~/.zprofile= | [[file:.zprofile][shell/.zprofile]] |
+| =~/.zshrc= | [[file:.zshrc][shell/.zshrc]] |
+
+=.zshenv= runs for every zsh process. It establishes the base =PATH=, common
+environment variables, the shim path, and functions that must survive agent
+shell snapshots. On an interactive login shell, macOS then runs
+=/etc/zprofile= and =path_helper=, after which =.zprofile= loads Homebrew and
+restores shim precedence. Finally, =.zshrc= loads interactive tools, aliases,
+lazy language runtimes, and the history guard.
+
+=.zshrc= optionally sources =~/.zshrc.local= near the end, before its final
+restoration of shim precedence. That file is ignored because it is a
+machine-local override. At the time this README was written, the home path was
+a dangling symlink to the absent =shell/.zshrc.local=; the guard in =.zshrc=
+therefore skips it.
+
+* Secrets boundary
+
+=.zshenv= first sources the external =~/.zvars= file and then
+=$DOTFILES/shell/.zshenv-secrets=. The latter is tracked with the =git-crypt=
+filter declared in [[file:.gitattributes][shell/.gitattributes]]. It is read directly from the
+repository; there is no separate =~/.zshenv-secrets= symlink. Its contents must
+never appear in public documentation, logs, diffs, or command output.
+
+* Command shims
+
+[[file:shims/][shims/]] is prepended to =PATH= directly. The shims are not copied or linked
+into =~/bin=:
+
+| Shim | Contract |
+|------+----------|
+| =claude= | Selects the allowed Claude authentication route and strips unintended ambient Anthropic credentials. |
+| =emacsclient= | Finds the real Darwin temporary-directory socket when a caller overrides =$TMPDIR=. |
+| =op= | Routes read-only Automations-vault work to =op-automations= and supported desktop-vault work to =op-desktop=. |
+
+The =dotfiles_prefer_shims= function moves this directory back to the front
+after Homebrew, nvm, pyenv, or a captured agent environment changes =PATH=.
+=.zshenv= also defines an =op= function because functions survive agent shell
+snapshots that may put Homebrew ahead of the shim directory.
+
+* History filtering
+
+[[file:zsh-history-security.zsh][zsh-history-security.zsh]] installs a =zshaddhistory= hook. When an
+interactive command contains a high-confidence credential pattern, the command
+still executes, but the hook returns 1 so zsh omits it from persistent history
+and prints a warning. This reduces accidental persistence; it is not a secret
+scanner for arbitrary output or files.
+
+The focused regression tests run with:
+
+#+begin_src sh
+python3 -m unittest tests.test_zsh_history_secret_guard -v
+#+end_src

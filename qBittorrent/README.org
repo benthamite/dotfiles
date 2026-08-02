@@ -1,0 +1,29 @@
+#+title: qBittorrent preference state
+#+author: Pablo Stafforini
+
+* Purpose
+
+[[file:categories.json][categories.json]] records category-to-download-directory mappings, while
+[[file:watched_folders.json][watched_folders.json]] records watched-folder state. These are individual
+qBittorrent preference files, not a complete settings export and not torrent
+resume data.
+
+* Activation state
+
+On the audited machine, the corresponding files under
+=~/Library/Preferences/qBittorrent/= are symlinks to the former Dropbox
+checkout. Both links are currently broken. The files in this repository are
+therefore not live qBittorrent state, even though the old setup was evidently
+intended to make them so.
+
+* Updating and checking
+
+qBittorrent owns this JSON schema and may rewrite these files. Stop the
+application before copying state, validate both files with =jq empty=, and
+review the diff before committing it. Restoring live use also requires fixing
+the two application-facing links; after that, verify category placement and
+watched-folder behavior in qBittorrent itself.
+
+The category file exposes local directory organization. It should not contain
+credentials, but new fields and paths still deserve a security review before
+publication.

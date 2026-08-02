@@ -1,0 +1,109 @@
+#+title: Command index
+#+author: Pablo Stafforini
+
+This index covers the 52 tracked files under =bin/= whose Git mode is
+=100755=. Non-executable libraries and data files are intentionally omitted.
+The first column is machine-readable and should contain every executable
+exactly once.
+
+* Agents
+
+The shared configuration model, guard boundaries, and publication workflow are
+documented in [[file:../agents/README.org][the agent manual]]. Skill names and triggers belong in the
+[[file:../agents/skill-inventory.org][generated skill inventory]].
+
+| Command | Contract |
+|---------+----------|
+| =agent-skill= | Resolves a Claude or Codex skill by name across the active skill roots. |
+| =ahrefs-api-guard= | Delegates Ahrefs API access to the guarded Claude-side wrapper. |
+| =ai-config-sync= | Audits and guards paired Claude and Codex configuration. |
+| =claude-stage-hook= | Stages explicitly marked Claude final-message commands on the user’s paste surfaces. |
+| =codex-app-handoff= | Opens the current Codex thread in the desktop app and can copy a continuation prompt. |
+| =codex-config-prune= | Removes stale project-trust and hook-state entries from Codex configuration. |
+| =codex-protocol-watch= | Checks whether Codex has added protocol methods unsupported by the Emacs client. |
+| =cr-pull-pinned= | Pulls and verifies the Taiga job pinned by a CR task. |
+| =cr-review-worktree= | Creates the canonical read-only review worktree for a CR task. |
+| =cr-taiga= | Maintains the private CR Taiga run ledger and exact-job comparisons. |
+| =cr-taiga-compare= | Compatibility entry point for =cr-taiga compare=. |
+| =cr-taiga-run= | Compatibility entry point for =cr-taiga run=. |
+| =cr-taiga-watch= | Polls a submitted Taiga CR job until grading finishes or the bounded wait fails. |
+| =cr-task-state= | Prints a read-only map of a CR task’s branch, run, rubric, and divergence state. |
+| =docs-audit= | Generates the tracked skill inventory and audits documentation ownership, links, and generated pairs. |
+| =dotfiles-pre-push= | Passes proposed dotfiles pushes to the publication authorizer and otherwise refuses them. |
+| =dotfiles-publish= | Scans, reviews, and authorizes one exact guarded publication of this public repository. |
+| =git-remote-dotfiles-blocked= | Refuses ordinary dotfiles pushes before Git can bypass the publication workflow. |
+| =install-private-skills= | Installs ignored local shims for skills named by the encrypted private manifest. |
+| =mirror-claude-agents= | Copies between a project’s =CLAUDE.md= and =AGENTS.md= when they are intentional mirrors. |
+| =skill-prune= | Disables stale Claude and Codex skills through the tools’ native settings. |
+| =stage-for-user= | Copies a file, literal, or stdin to the Emacs kill ring and macOS clipboard without echoing it. |
+| =sync-agent-c-worktrees= | Compatibility entry point for =sync-reasoning-tasks-worktrees=. |
+| =sync-reasoning-tasks-worktrees= | Runs the guarded reasoning-task sync across eligible task worktrees. |
+
+* Emacs
+
+See [[file:../emacs/README.org][the Emacs README]] for profiles, tangling, and the canonical-source
+boundary.
+
+| Command | Contract |
+|---------+----------|
+| =elpaca-package-path= | Resolves the editable source directory for a package in the active Elpaca profile. |
+| =emacs= | Launches Emacs.app, optionally with a named profile, while filtering one known startup warning. |
+| =emacs-client= | Runs =emacsclient= with an empty alternate-editor fallback. |
+
+* External services
+
+Credential-bearing wrappers resolve credentials internally. Their output must
+not be used to print or document secret values; the placement rules are in
+[[file:../claude/context/secrets.md][the secrets context]].
+
+| Command | Contract |
+|---------+----------|
+| =annas-mcp= | Starts the local Anna’s Archive client with its configured endpoint, download path, and credential. |
+| =check_tlon_pass_changes= | Pulls remote changes for the Tlon password-store repository. |
+| =chrome-profile-open= | Opens URLs in a Chrome profile selected by a configured alias. |
+| =chrome-work-tab= | Opens URLs in the work Chrome profile, with a Codex-specific external-browser guard. |
+| =gam= | Launches the local GAMADV-XTD3 installation. |
+| =gmail-maildir-sync= | Runs the Gmail-to-Maildir package with its Google Workspace authentication context. |
+| =libby= | Searches for and downloads matching books through the configured library source. |
+| =mbsync-parallel= | Synchronizes non-Epoch mbsync channels in parallel while running the Epoch Gmail sync separately. |
+| =mbsync-passcmd= | Supplies mbsync with its password from the shared temporary file or the encrypted store. |
+| =op-automations= | Runs 1Password CLI reads with the read-only Automations service account. |
+| =op-desktop= | Reuses one terminal-backed desktop authorization for supported 1Password CLI calls. |
+| =trajectory-open= | Opens a URL through the =trajectory= Chrome profile alias. |
+| =transfer-github-issues= | Transfers the issue numbers in the configured input file between two fixed repositories. |
+| =translation-server= | Starts the local translation-server project with npm. |
+
+Mail activation and credential lookup are documented further in
+[[file:../mbsync/README.org][the mbsync README]].
+
+* macOS and system maintenance
+
+| Command | Contract |
+|---------+----------|
+| =char_input= | Passes one character to the macOS input-character AppleScript. |
+| =mdfind-wrapper= | Runs Spotlight’s =mdfind= while suppressing its known query-parser noise. |
+| =personal-updates= | Applies the scheduled and manual update policy documented in [[file:../macos/README.org][the macOS README]]. |
+| =switch-gnupg= | Replaces the Homebrew GnuPG formula with a requested historical version. |
+
+* General utilities
+
+| Command | Contract |
+|---------+----------|
+| =auto-subtitle= | Transcribes media with WhisperX and post-processes the resulting SRT. |
+| =ci-after-push= | Pushes a branch, waits for matching GitHub Actions runs, and prints failed logs. |
+| =compressPDF= | Replaces a PDF only when OCR and compression produce a worthwhile valid result. |
+| =git-move= | Replays a path’s first-parent patch history into another repository. |
+| =move-files-recursively= | Flattens descendant files into the current directory, prefixing collisions. |
+| =opentopage= | Opens a PDF in Preview and navigates to a requested page. |
+| =srt-tighten= | Splits dense subtitles, caps lingering captions, and removes empty segments. |
+
+* Regenerating the inventory
+
+The exact source list is:
+
+#+begin_src sh
+git ls-files -s bin | awk '$1 == "100755" {sub(/^bin\//, "", $4); print $4}'
+#+end_src
+
+When an executable is added, removed, or changes mode, update this table in the
+same commit. Derive the inventory from Git rather than walking untracked files.

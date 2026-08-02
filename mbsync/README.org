@@ -1,0 +1,32 @@
+#+title: mbsync configuration
+#+author: Pablo Stafforini
+
+* Purpose
+
+[[file:.mbsyncrc][.mbsyncrc]] is the public source configuration for =mbsync= (isync). It
+defines the remote IMAP side, the local Maildir side, the channels between
+them, and the groups used for ordinary synchronization.
+
+* Activation
+
+The audited machine has =~/.mbsyncrc= symlinked to this file, so edits here are
+live. The configuration asks an external credential store for the IMAP
+password at runtime; the password is not kept in this repository. Do not run
+or quote that lookup merely to check the documentation.
+
+* Updating and checking
+
+This is hand-maintained configuration, not an application export. Keep account,
+store, channel, and group names consistent when editing it. A safe preliminary
+check is to confirm that =~/.mbsyncrc= still resolves to this file and review the
+directives without executing the credential lookup. No side-effect-free
+application validation was established during this audit. A normal sync may
+create or expunge mail locally or remotely, so it is a deliberate production
+operation, not a generic configuration check.
+
+* Security
+
+The file records public connection and mailbox structure, including the names
+of the directives used to obtain an identity and password. Credential values
+belong in the external store. They should never be substituted into this file
+or included in logs and documentation.

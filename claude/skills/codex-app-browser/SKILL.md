@@ -1,6 +1,6 @@
 ---
 name: codex-app-browser
-description: Use when the user asks Claude about the Codex App in-app browser handoff skill or why `$codex-app-browser` works only in Codex.
+description: Use when the user explicitly invokes `$codex-app-browser`, asks about or to use the Codex App’s in-app browser for opening, navigating, clicking, testing, or screenshots, or says a Codex CLI/Emacs thread was moved or resumed in the Codex App for browser access; not for ordinary browser use outside the Codex App.
 ---
 
 # Codex App browser handoff

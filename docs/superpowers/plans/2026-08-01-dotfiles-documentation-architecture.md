@@ -266,6 +266,17 @@ git commit -m "docs: generate tracked skill inventory"
 
 ## Task 3: Correct project-local documentation ownership
 
+**Controller-approved correction:** The initial plan required
+`agents/skill-inventory.org` to appear in every dotfiles local-skill commit.
+That is incorrect for body-only `SKILL.md` edits because the generated inventory
+uses only the skill name, description, and path and therefore remains
+byte-identical. The final contract does not require a no-op Git change in
+generated mode. `bin/docs-audit audit` enforces inventory freshness when the
+documentation audit is integrated in Task 7. Generated mode is not a generic
+bypass: all linked worktrees identified by the canonical dotfiles Git common
+directory share the exception, while unrelated repositories retain the manual
+same-commit requirement.
+
 **Files:**
 
 - Modify: `bin/ai-config-sync`
@@ -274,28 +285,77 @@ git commit -m "docs: generate tracked skill inventory"
 - Modify: `agents/README.org`
 - Modify: `claude/README.org`
 - Modify: `codex/README.org`
+- Modify: `docs/superpowers/specs/2026-08-01-dotfiles-documentation-architecture-design.md`
+- Modify: `docs/superpowers/plans/2026-08-01-dotfiles-documentation-architecture.md`
 
 - [ ] Add failing regression tests:
 
 ```python
+def test_loaded_script_belongs_to_test_checkout(self):
+    expected_root = Path(__file__).resolve().parents[1]
+    self.assertEqual(
+        expected_root / "bin" / "ai-config-sync",
+        Path(self.module.__file__).resolve(),
+    )
+
 def test_dotfiles_project_local_allowlist_matches_actual_skills(self):
     actual = {p.parent.name for p in (DOTFILES / ".claude/skills").glob("*/SKILL.md")}
     self.assertEqual(actual, self.module.DOTFILES_PROJECT_LOCAL_SKILLS)
 
-def test_dotfiles_local_skill_uses_configured_documentation_owner(self):
-    changed = {".claude/skills/example/SKILL.md", "agents/skill-inventory.org"}
+def test_dotfiles_generated_owner_allows_body_only_skill_change(self):
+    changed = {
+        ".claude/skills/config-audit/SKILL.md",
+        ".codex/skills/config-audit/SKILL.md",
+    }
     with mock.patch.object(self.module, "ROOT", DOTFILES):
         self.assertEqual(
             [],
             self.module.local_skill_readme_problems(
-                changed, "example", "skills", DOTFILES
+                changed, "config-audit", "skills", DOTFILES
             ),
         )
+
+def test_noncanonical_generated_mode_still_requires_configured_owner(self):
+    repo = self.make_repo(["README.md"])
+    self.write_file(
+        repo,
+        "ai-config-sync.json",
+        json.dumps({"policy": {
+            "project_local_documentation_owner": "agents/skill-inventory.org",
+            "project_local_documentation_mode": "generated",
+        }}),
+    )
+    problems = self.module.local_skill_readme_problems(
+        {".claude/skills/example/SKILL.md"}, "example", "skills", repo
+    )
+    self.assertIn("agents/skill-inventory.org", problems[0])
 ```
 
-- [ ] Verify RED. The allowlist test must fail because `move-session-log` is stale; the owner test fails because the new signature and manifest field do not exist.
+- [ ] Verify RED. The locality test must show that the suite previously loaded
+  the main checkout, the allowlist test must fail because `move-session-log` is
+  stale, and the owner tests must fail because the new signature and manifest
+  fields do not exist.
 
-- [ ] Remove `move-session-log` from `DOTFILES_PROJECT_LOCAL_SKILLS`. Change the function signature to `local_skill_readme_problems(changed_paths, skill, skill_root, repo_root)`. Resolve the owner from the repository's manifest field `policy.project_local_documentation_owner`, defaulting to `README.org` for other repositories. Require the owner path in `changed_paths`; the dotfiles manifest sets it to `agents/skill-inventory.org`.
+- [ ] Remove `move-session-log` from `DOTFILES_PROJECT_LOCAL_SKILLS`. Change
+  the function signature to
+  `local_skill_readme_problems(changed_paths, skill, skill_root, repo_root)`.
+  Resolve and validate the owner from
+  `policy.project_local_documentation_owner`, defaulting to manual
+  `README.org`. Manual mode requires that exact owner path in `changed_paths`
+  and requires the post-change owner to remain a contained, non-symlink regular
+  file. The dotfiles manifest sets `agents/skill-inventory.org` to generated
+  mode, which suppresses only the canonical dotfiles same-commit touch gate.
+  Compare Git common directories so linked dotfiles worktrees qualify but
+  unrelated repositories declaring generated mode still use the manual gate.
+  Commit guarding reads the manifest, exact owner blob, paired skill bodies,
+  auxiliary files, moves, and removals from one candidate tree: the current
+  index plus deterministic paths in an immediately preceding `git add ... &&
+  git commit` chain. Unsupported interactive/pathspec content modes block
+  explicitly rather than authorizing working-tree state. Treat literal
+  newlines, Boolean alternatives, wrapper assignments/options,
+  present-but-invalid manifests, and candidate auxiliary symlinks as explicit
+  blockers; quoted newlines and exact `command git`/`env git` wrappers remain
+  supported.
 
 - [ ] Update the three agent READMEs narrowly in this commit: replace claims that project-local skill changes must touch root `README.org` with the configured-owner/generated-inventory rule. Do not perform the large prose consolidation until Task 7. Do not yet invoke `bin/docs-audit` from `bin/ai-config-sync`; that integration waits until the required documentation exists, so intermediate commits remain possible.
 
@@ -311,7 +371,7 @@ Expected: both test modules pass. `bin/docs-audit audit` still reports the missi
 - [ ] Commit:
 
 ```bash
-git add bin/ai-config-sync tests/test_ai_config_sync_audit.py ai-config-sync.json agents/README.org claude/README.org codex/README.org
+git add bin/ai-config-sync tests/test_ai_config_sync_audit.py ai-config-sync.json agents/README.org claude/README.org codex/README.org docs/superpowers/specs/2026-08-01-dotfiles-documentation-architecture-design.md docs/superpowers/plans/2026-08-01-dotfiles-documentation-architecture.md
 git commit -m "agents: validate documentation ownership"
 ```
 

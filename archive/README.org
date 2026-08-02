@@ -1,0 +1,16 @@
+#+title: Archived agent material
+#+author: Pablo Stafforini
+
+This directory retains retired Claude and Codex programmatic skills together
+with the lists, digests, and result files needed to understand their former
+operation. The two archived trees are kept as historical counterparts.
+
+Archived =SKILL.md= files are not installed into the live Claude or Codex skill
+roots and are not discoverable as active skills. The generated
+[[file:../agents/skill-inventory.org::*Archived][skill inventory]] lists them under =Archived= so their presence is not confused
+with activation.
+
+The retained outputs are records, not a queue of work to resume. Move material
+out of =archive/= only as an explicit reactivation, with its current trigger,
+dependencies, safety rules, paired-tool status, and tests reviewed as a new
+change. Ordinary maintenance should leave the history intact.

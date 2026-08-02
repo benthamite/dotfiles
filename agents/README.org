@@ -3,460 +3,172 @@
 
 * Overview
 
-This document describes how the Claude Code and Codex configurations in this
-repo stay aligned. Tool-specific setup details remain in
-=claude/README.org= and =codex/README.org=.
+This document owns the shared Claude Code and Codex configuration model.
+Tool-specific activation belongs in [[file:../claude/README.org][the Claude overview]] and
+[[file:../codex/README.org][the Codex overview]]. The placement policy for instructions, skills, hooks,
+linters, reference material, and project briefs lives in
+[[file:instruction-placement.org][instruction-placement.org]].
 
-This file is the authoritative cross-tool topology reference. If a tool-specific
-README conflicts with this file about where a shared artifact belongs, follow
-this file.
-
-Instruction-content placement is handled by =instruction-placement.org=. Use
-that policy to decide whether guidance belongs in =CLAUDE.md=, =AGENTS.md=, a
-skill, a hook, a linter, a reference doc, or a project brief.
-
-The synchronization model is intentionally manual, not auto-generated. When an
-agent changes a reusable Claude or Codex artifact, whether global or
-project-local, hooks remind it to update the counterpart during the same
-session. Commit guards then block one-sided commits unless the changed artifact
-is synchronized. For global dotfiles artifacts, =ai-config-sync.json= can also
-record an explicit artifact-specific status or exemption.
+The two configurations are maintained as peer implementations. Hooks remind an
+agent to update a counterpart, and commit guards reject one-sided changes. The
+public manifest, =ai-config-sync.json=, records deliberate exceptions and
+tool-specific equivalents.
 
 * Topology
 
-| Path | Role | Tracked? | Live consumer |
-|------+------|----------|---------------|
-| =claude/CLAUDE.md= | Claude global instructions | Yes | =~/.claude/CLAUDE.md= symlink |
-| =codex/AGENTS.md= | Codex global instructions | Yes | =~/.codex/AGENTS.md= symlink |
-| =CLAUDE.md= and =AGENTS.md= | Dotfiles project instructions | Yes | Loaded only when working in this repo |
-| =claude/skills/= and =codex/skills/= | Global reusable skills | Yes | =~/.claude/skills= and =~/.codex/skills= symlinks |
-| =claude/hooks/= and =codex/hooks/= | Hook script implementations | Yes | Referenced by live hook registrations |
-| =~/.claude/settings.json= | Claude global settings and hook registration | No | Real mutable file, edited in place |
-| =~/.claude/settings.local.json= | Claude machine-local permissions | No | Real mutable file, edited in place |
-| =codex/hooks.json= | Codex global hook registration | Yes | =~/.codex/hooks.json= symlink |
-| =codex/config.toml= | Codex global settings | Yes | =~/.codex/config.toml= symlink |
-| =agents/github-write-allowlist.txt= | Shared GitHub write allowlist (one of two sources) | Yes | Read by Claude and Codex GitHub write guards |
-| =<project>/.claude/= and =<project>/.codex/= | Project-local tool config | Project-dependent | Loaded only for that project |
+| Tracked source | Live or project consumer |
+|----------------+--------------------------|
+| =claude/CLAUDE.md= | =~/.claude/CLAUDE.md= symlink |
+| =codex/AGENTS.md= | =~/.codex/AGENTS.md= symlink |
+| =claude/skills/= | =~/.claude/skills= symlink |
+| =codex/skills/= | =~/.codex/skills= symlink |
+| =claude/hooks/= | Absolute paths registered in mutable =~/.claude/settings.json= |
+| =codex/hooks.json= | =~/.codex/hooks.json= symlink |
+| =codex/config.toml= | =~/.codex/config.toml= symlink |
+| =CLAUDE.md= and =AGENTS.md= | Instructions for this dotfiles project only |
+| =<project>/.claude/= and =<project>/.codex/= | Configuration for that project only |
 
-Repo-root =.claude/= and =.codex/= paths are project-local by definition. Do
-not use them as targets for global =~/.claude/= or =~/.codex/= symlinks. In this
-dotfiles repo, reusable skills belong in =claude/skills/= and =codex/skills/=.
-Other projects may use =.claude/skills/= with =.codex/skills/=, and
-=.claude/hooks/= with =.codex/hooks/=, for project-specific behavior. The sync
-reminder and commit guard treat those local pairs like global pairs inside the
-target project repo.
+Repo-root =.claude/= and =.codex/= directories are always project-local. They
+must never be global symlink targets. Claude's =settings.json= is intentionally
+a mutable regular file because Claude rewrites it; Codex's tracked configuration
+and hook registration are stable symlink targets.
 
-* Peer Model
+Claude account overlays selected with =CLAUDE_CONFIG_DIR= remain Claude-local.
+Private, runtime, and account state are not made public merely to force a
+symmetrical tree.
 
-Claude and Codex artifacts are peer implementations of shared agent behavior.
-Either side may be edited first. When the tools need different syntax,
-discovery rules, hook payloads, or activation files, both files are kept as
-explicit counterparts and =bin/ai-config-sync= checks equivalence under
-tool-specific normalization.
+* Peer model
 
-The tracked =claude/CLAUDE.md= and =codex/AGENTS.md= files are paired
-user-level instruction files. The live =~/.codex/AGENTS.md= symlink points to
-the tracked Codex file.
+Neither tool is canonical. Either side may be edited first, but paired
+instructions, skills, auxiliary skill files, compatible hooks, and project-local
+counterparts must agree after tool-specific normalization.
 
-Project-level instructions are also paired. Every project-local =CLAUDE.md=
-should have a sibling =AGENTS.md= counterpart. The sync checker treats
-=CLAUDE.md= and =AGENTS.md= pairs anywhere in the command's target git
-repository as project-local instruction peers, just as it treats =.claude/skills/= and
-=.codex/skills/= as project-local skill peers. Codex does not use
-=project_doc_fallback_filenames= to read =CLAUDE.md=; project Codex
-instructions live in =AGENTS.md=.
+Project Codex instructions live in =AGENTS.md=. Codex does not use
+=project_doc_fallback_filenames= to load =CLAUDE.md=. The instruction audit
+normalizes Claude's =@context= syntax and equivalent Codex-safe paths before it
+compares the global pair.
 
-Instruction equivalence checks normalize the Claude-only =@context= syntax and
-Codex-safe path references before comparing paired instruction files.
+Some differences are genuine:
 
-* External Write Gates
+- Claude =Read=, =Grep=, =Glob=, and =Skill= events have no Codex event here.
+- Claude Chrome hooks have no Codex counterpart.
+- Claude Notification events are replaced in Emacs-owned Codex sessions by
+  lifecycle forwarding through =codex-hook-wrapper=.
+- Settings, permission models, hook payloads, plugins, MCP lifecycle, and
+  model controls use different native formats.
 
-Agent-initiated GitHub writes are deny-by-default. Claude and Codex hooks block
-=git push= and write-style =gh= operations, including PRs, issues, secrets,
-workflow runs, releases, repo mutations, and write-style =gh api= calls, unless
-the target repository is permitted by one of two sources.
+These differences belong in the manifest and the relevant tool overview, not
+in invented no-op counterparts.
 
-=agents/github-write-allowlist.txt= is the first: it takes exact =OWNER/REPO=
-entries and =OWNER/*= account wildcards, and the =benthamite/*= entry permits
-writes to repositories in Pablo's GitHub account. Entries should be added only
-for repositories or accounts Pablo explicitly wants agents to mutate.
+* External write gates
 
-The second is repo ownership declared by an Epoch project. Each project names
-the repos it owns in its =:REPOS:= org drawer property; =make import= in
-=automations-dashboard= collects those into the =repos= field of
-=data/automations.json=; the guard reads that field from the *committed*
-registry, at a fixed path that no environment variable can redirect. Both
-constraints exist because an agent can edit a tracked file freely: trusting the
-working tree, or a caller-supplied registry path, would let a blocked agent add
-its own target and retry. Requiring a commit means every widening of the gate
-leaves a trail in history. Declared entries are exact repos, never wildcards.
+Agent-initiated GitHub writes are denied unless the target is authorized by one
+of two committed sources:
 
-So for one of Pablo's own project repos there is no allowlist line to add:
-declaring it on the owning project and committing the regenerated registry is
-the whole procedure. =make check-write-allowlist --github= reports repos Pablo
-administers that no project declares. Being able to push is deliberately not the
-test — Pablo can push to far more of the =epoch-research= org than he owns.
+1. =agents/github-write-allowlist.txt=, which accepts exact =OWNER/REPO=
+   entries and explicit =OWNER/*= account wildcards;
+2. the fixed committed Epoch automations registry, whose exact repository list
+   is derived from project =:REPOS:= declarations.
 
-The allowlist and its guard scripts are self-protected by edit hooks. Agents
-may inspect them, but they may not edit the allowlist, remove tracked or live
-hook registrations, or patch the guard scripts as a way to bypass the gate.
-The protected registration paths include =codex/hooks.json=,
-=~/.codex/hooks.json=, and =~/.claude/settings.json=. Policy changes should be
-made manually outside the agent session.
+The guard never trusts a working-tree edit or a caller-selected registry path.
+The allowlist, guard implementations, and registration files are themselves
+protected from agent edits. Hook decisions are allow or deny; they never ask
+for approval.
 
 ** Guarded dotfiles publication
 
-The dotfiles repo is public, so it has a second gate of its own. Ordinary
-pushes are refused: =remote.origin.pushurl= is =dotfiles-blocked::origin=,
-which resolves to =bin/git-remote-dotfiles-blocked=, a Git remote helper that
-prints a refusal and exits. It runs before the pre-push hook, so =--no-verify=
-does not get past it. The tracked =bin/dotfiles-pre-push= hook, symlinked into
-the hooks directory by =bin/dotfiles-publish install=, then refuses any push
-that does not match a fresh authorization. The fetch URL is untouched, so
-pulling and fetching work normally.
+This repository is public, but ordinary =git push= is disabled by its push URL.
+The paired project-local skill lives at
+=.claude/skills/publish-dotfiles/= and =.codex/skills/publish-dotfiles/= and
+drives =bin/dotfiles-publish=. Its installer activates
+=bin/dotfiles-pre-push=, while the refusing push URL routes through
+=bin/git-remote-dotfiles-blocked= so =--no-verify= cannot bypass publication.
+The deterministic scan covers the exact outgoing history and candidate tree;
+the model review must give every manifest unit an explicit verdict. A short-lived
+authorization then names one exact push and is consumed before the hook decides.
 
-Publication runs through the project-local =publish-dotfiles= skill, which is a
-skill name rather than a command; the executable it drives is
-=bin/dotfiles-publish=. Every outgoing object passes two independent layers:
+The same machinery performs a complete reachable-history audit when its receipt
+is missing, more than 30 days old, invalidated by a ruleset change, or followed
+by an incident. Already-public secrets are incidents: rotate or revoke first,
+then remove the source, and only then consider rewriting public history.
 
-1. a deterministic layer — Gitleaks over the exact outgoing patch range and
-   over the extracted candidate tree, plus object checks for risky path names,
-   symlinks, submodules, archives, binaries, blobs over 2 MiB, and =git-crypt=
-   paths whose committed blob lacks the =git-crypt= header;
-2. an exhaustive model review — the run builds a manifest of every commit,
-   changed path, patch hunk, new file, and high-risk file, and publication is
-   refused until every single unit id carries a recorded verdict.
-
-Authorization state is local and never committed. It lives in
-=$(git rev-parse --git-dir)/dotfiles-publish/= at mode =0700=: a per-run
-directory holding the run record, redacted findings, manifest, and verdicts; a
-32-byte =fingerprint.key= that keys every finding fingerprint; and a
-five-minute, single-use =authorization.json= naming the exact objects and refs
-of one push. The hook reads and unlinks that file before deciding, so a
-replayed push fails. Findings are stored redacted: locations and keyed
-fingerprints only, never values.
-
-A complete-history audit covers every commit reachable from local branches,
-remote branches, tags, and fetched pull-request heads. It is due when no
-receipt exists, the receipt is over 30 days old, the ruleset changed, or an
-incident was recorded — and it is checked at publication time rather than on a
-timer, so it runs on the next publication after it falls due. A finding on a
-commit that is already reachable from a public ref is classified a public
-incident and routed to =gitguardian-triage=: rotate or revoke first, then
-remove from source, and only then consider rewriting public history.
-
-Ordinary publication and formal release differ in exactly one way that matters:
-ordinary publication pushes one branch update and never creates a tag or a
-GitHub release, while =release-dotfiles= calls the same machinery in release
-mode, adds the release notes and tag text as reviewable units, and authorizes
-one push carrying the branch update plus one tag update.
+Ordinary publication updates one branch. A formal dotfiles release adds one tag
+and reviews the release notes and tag text as additional units.
 
 * Skills
 
-=claude/skills/<name>/= and =codex/skills/<name>/= should contain equivalent
-skill bodies and auxiliary files. The content check removes tool-specific
-frontmatter keys such as =allowed-tools=, =argument-hint=, =model=,
-=user-invocable=, and argument metadata from both sides before comparison.
-Runtime output directories such as =digests/=, =last-run/=, and
-=twitter-vet/vetted/= are intentionally ignored.
+Global reusable skills live in paired =claude/skills/<name>/= and
+=codex/skills/<name>/= directories. Project-local pairs use
+=.claude/skills/<name>/= and =.codex/skills/<name>/=. The sync audit compares
+bodies and auxiliary files after removing tool-only frontmatter.
 
-Project-local skills follow the same rule inside their own repository:
-=.claude/skills/<name>/= and =.codex/skills/<name>/= should contain equivalent
-skill bodies and auxiliary files. The post-edit reminders and commit guard use
-the same frontmatter normalization for local skills.
+Archived skills live under =archive/=. Programmatic skills are explicitly
+invoked rather than exposed to every interactive session. Encrypted private
+skills and their private manifest remain outside the public inventory. Codex's
+managed =.system= skills and dynamic plugin skills are runtime state, not
+repository-owned peers. Parent-Drive skill pairs outside Git are checked by the
+global audit because a commit guard cannot see them.
 
-Retired skills are moved, twins and runtime state intact, to =archive/= at the
-repo root (currently the four Twitter programmatic skills: =twitter=,
-=twitter-digest=, =twitter-discover=, =twitter-vet=). Archived copies are not
-exposed to any live skill root and are excluded from the sync inventory.
-
-The parent-Drive workspace pairs under =~/My Drive/.claude/skills/= and
-=~/My Drive/.codex/skills/= (currently =fix-drive-errors= and =nosync=) live
-outside every git repo, so commit-time guards never see them. =bin/ai-config-sync
-audit= checks them by absolute path with the same frontmatter normalization and
-auxiliary-file comparison as tracked pairs; drift there fails the audit.
-
-Codex discovers global skills from =~/.codex/skills/*/SKILL.md=. Claude
-discovers global skills from =~/.claude/skills/*/SKILL.md=. The tracked skill
-trees are activated by:
-
-#+begin_src sh
-codex/bin/install-skills.sh
-#+end_src
-
-The installers keep =~/.claude/skills= and =~/.codex/skills= linked to the
-tracked skill trees. =skills-disabled.json= records stale global skills that
-=bin/skill-prune= disables through native tool settings: Claude
-=skillOverrides= in the live =~/.claude/settings.local.json= and Codex
-=[[skills.config]]= entries in =codex/config.toml=. Run
-=bin/skill-prune apply --days 60= to disable paired skills that have no recent
-usage in either Claude or Codex; a recent use in either tool keeps both tools
-enabled. Local reusable skills should live in both =claude/skills/= and
-=codex/skills/= instead of living only under a live home-directory symlink.
-Hidden Codex-managed system skills may exist under ignored
-=codex/skills/.system/= runtime data. They are Codex system/runtime skills, not
-part of the reusable skill parity model.
-
-Private skills that should be synchronized but hidden from ordinary interactive
-sessions live under =claude/private-skills/= and =codex/private-skills/=.
-Those trees and =ai-config-sync.private.json= are git-crypt-encrypted. The
-public =ai-config-sync.json= does not name private skills; =bin/ai-config-sync=
-loads the encrypted private manifest locally and still checks Claude/Codex
-parity. Public private-skill directories use opaque IDs; the real skill names
-live only in the encrypted private manifest. Private skills are not exposed
-through tracked public files. =bin/install-private-skills= creates local
-gitignored shims under =~/.claude/skills= and =~/.codex/skills= so explicit
-=$skill= invocations still resolve on unlocked machines.
-
-** Master Skill Inventory
-
-This inventory includes global, programmatic, Codex system/runtime, and
-project-local skills
-currently present in this repo. The skill name shown is the directory name.
-
-- =add-to-emacs-packages=: Add or register one of the user's Emacs packages in
-  my-emacs-packages.org, create its documentation note, and add its GitHub
-  profile README card. Scope: Global.
-- =add-bib-entry=: Add works to Pablo's bibliography using the Emacs/Zotra/Ebib
-  workflow, including DOI/ISBN/URL imports, citekey resolution, and headless
-  PDF/HTML attachment processing where available; resolves involved Elpaca
-  package sources with =bin/elpaca-package-path=. Scope: Global.
-- =audit-mac-app=: Audit a macOS .app before running it or granting
-  permissions, especially when the user asks whether a Mac app is safe,
-  suspicious, malware, from an unknown developer, or requests screen recording,
-  accessibility, camera, microphone, input monitoring, or other sensitive
-  permissions. Scope: Project-local: macos.
-- =automate=: Design and build a reusable AI automation. Scope: Global.
-- =build=: Spec-based build workflow. Scope: Global.
-- =config-audit=: Audit agent configuration for redundancy, conflicts, dead
-  weight, staleness, and instruction drift across CLAUDE.md, AGENTS.md, skills,
-  memory, hooks, settings, and docs. Scope: Project-local: dotfiles.
-- =code-audit=: Audit code for actual defects, including bugs, application
-  security issues, error handling gaps, and correctness problems. Scope: Global.
-- =codex-app-browser=: Use when the user explicitly invokes
-  `$codex-app-browser`, asks to use the Codex App, in-app browser, in-built
-  browser, Browser Use, or to open/navigate/click/test/screenshot something in
-  the Codex app; also use when the user says they switched or resumed a Codex
-  CLI/Emacs session in the Codex App to get browser access. Scope: Global.
-- =design-audit=: Audit code architecture and maintainability for unnecessary
-  complexity, premature or missing abstractions, duplication, unclear
-  boundaries, and refactoring opportunities. Scope: Global.
-- =diagnose=: Diagnose agent, tooling, configuration, or workflow failures before
-  fixing. Scope: Global.
-- =document-elisp-package=: Create or update an Org manual for an Emacs Lisp package in the
-  Denote manual style. Scope: Global.
-- =document-elisp-extras=: Audit, create, or refresh documentation for all Emacs extras
-  packages in the dotfiles repo. Scope: Global; Project-local: emacs.
-- =dotfiles-context=: Dotfiles and Emacs package routing context, including
-  =bin/elpaca-package-path= for active-profile package source resolution, the
-  normal post-PR =config.org= pin for upstream Elpaca package branches awaiting
-  merge, with one package recipe per package and no duplicate dependency pin
-  declarations.
-  Scope: Global.
-- =dx-audit=: Audit a codebase's AI developer experience, including project
-  instructions, verification commands, automation, onboarding traps, and
-  collaboration friction. Scope: Global.
-- =elisp-conventions=: Use when writing, editing, reviewing, or testing Emacs
-  Lisp code, including dotfiles extras packages, Elpaca rebuild/reload behavior,
-  batch-test verification, docstring and error-message conventions, and
-  transient menu suffix checks. Scope: Global.
-- =end-to-end=: Use when correctness depends on exercising a real running
-  software workflow through its user-visible or runtime surface; not merely for
-  explaining, writing, reviewing, or running automated E2E tests; deploying
-  something live or checking deployment status; reproducing research results;
-  or verifying pure logic with adequate automated coverage. Scope: Global.
-- =emacs-freeze=: Diagnose a frozen, hung, beachballing, or unresponsive Emacs
-  by sampling the process, reading server buffers when possible, and
-  recommending recovery. Scope: Project-local: emacs.
-- =find-skills=: Discover, vet, and optionally install agent skills when the
-  user asks "find a skill for X", "is there a skill that can...", "how do I add
-  support for X", or otherwise wants reusable/installable agent capabilities.
-  Scope: Project-local: dotfiles.
-- =generate-readme=: Generate or update a GitHub-facing README.md for an Emacs
-  Lisp package from its README.org manual. Scope: Global.
-- =gitguardian-triage=: Triage and remediate GitGuardian secret incidents.
-  Scope: Project-local: dotfiles.
-- =google-sheets-comments= (disabled by =skill-prune=): Handle Google Sheets comment review, replies,
-  resolves, reopens, and notification emails correctly. Scope: Global.
-- =handoff=: Save next-session instructions to `/tmp/claude-code-handoff.md`
-  for Claude Code session transitions. Scope: Global.
-- =imagegen=: Generate or edit raster images when the task benefits from
-  AI-created bitmap visuals such as photos, illustrations, textures, sprites,
-  mockups, or transparent-background cutouts. Scope: Codex system/runtime.
-- =install-mcp-server=: Install and configure a new MCP server for Claude
-  Code, including discovery, auth verification, credential-safe setup, scope
-  placement, registration, sync, and restart/testing expectations. Scope:
-  Project-local: dotfiles.
-- =interpretability-audit=: Audit code for intent transparency and reader
-  comprehension. Scope: Global.
-- =lint-elisp=: Fix byte-compile warnings, checkdoc notes, and other Elisp
-  diagnostics in one or more files. Scope: Global.
-- =migrate-profile=: Consolidate Claude Code project data across elpaca
-  profile changes. Scope: Project-local: emacs.
-- =move-session-log=: Relocate session logs by rewriting embedded project
-  paths so resume and log lookup associate a session with the current project.
-  Tool-specific divergence: the Claude version moves Claude Code session logs
-  under =~/.claude/projects= (with =~/.claude/history.jsonl= and
-  =~/.claude.json=); the Codex version rewrites Codex session metadata under
-  =~/.codex/sessions= (with =state_5.sqlite=). Scope: Global.
-- =org-note-conventions=: Apply private Org note structure and prose-formatting
-  conventions: reserve level-one headings for the note root/title, use
-  level-two headings for top-level content sections, and keep prose paragraphs
-  unfilled. Scope: Global.
-- =open-session-log=: Open the current Claude Code or Codex session log in
-  Emacs via agent-log. Scope: Programmatic; Project-local: dotfiles.
-- =openai-docs=: Use when the user asks how to build with OpenAI products or
-  APIs and needs up-to-date official documentation with citations, help choosing
-  the latest model for a use case, or model upgrade and prompt-upgrade guidance;
-  prioritize OpenAI docs MCP tools, use bundled references only as helper
-  context, and restrict any fallback browsing to official OpenAI domains. Scope:
-  Codex system/runtime.
-- =optimize-agent-instructions=: Optimize project agent instruction files.
-  Scope: Project-local: dotfiles.
-- =plugin-creator=: Create and scaffold plugin directories for Codex with a
-  required `.codex-plugin/plugin.json`, optional plugin folders/files, and
-  baseline placeholders you can edit before publishing or testing. Scope:
-  Codex system/runtime.
-- =post-push-ci=: Close the loop after agent pushes by waiting for GitHub
-  Actions, inspecting failed logs, fixing push-triggered CI failures, and
-  repeating until the pushed commit is green or a real blocker is identified.
-  Scope: Global.
-- =plan-location=: Local patch invoked only after
-  =superpowers:writing-plans=; overrides that plugin skill's repo-local plan
-  path so implementation plans save under =/tmp/codex-plans/= unless the user
-  asks for a repo-tracked file. Scope: Global.
-- =pin-elisp-pr=: Pin an Emacs/Elpaca package in =emacs/config.org= to a fork,
-  branch, or upstream PR while enforcing one package recipe per package and no
-  duplicate dependency pin declarations. Scope: Global.
-- =pr-audit=: Verify a PR or PR-ready branch before submitting, pushing,
-  merging, or after revision. Scope: Global.
-- =proofread=: Proofread Markdown for spelling, grammar, typos, punctuation,
-  and light style/clarity issues. Scope: Global.
-- =publish-dotfiles=: Publish, check publish readiness for, or fully audit the
-  public dotfiles repository, sanitizing unpublished commits when an outgoing
-  finding requires it. Scope: Project-local: dotfiles.
-- =record-decisions=: Extract and record architectural, algorithmic, or design
-  decisions from the current session. Scope: Global.
-- =release-package=: Release one of the user's Emacs packages or audit package release
-  readiness. Scope: Global.
-- =release-dotfiles=: Release a new version of the dotfiles repo. Scope:
-  Project-local: dotfiles.
-- =rename-package=: Rename an Emacs package end to end, especially
-  elpaca-managed standalone packages. Scope: Project-local: emacs.
-- =security-audit=: Scan for exposed API keys and leaked credentials, audit
-  dependency vulnerabilities, review macOS hardening settings, and evaluate
-  Claude Code configuration risks. Scope: Project-local: macos.
-- =session-learning-capture=: Review the current session when a
-  Stop/session-end hook asks for lesson capture, then write candidate reusable
-  lessons plus promotion metadata to the central dotfiles .agent-learnings/inbox
-  without implementing them. Captures concrete =Project= metadata plus separate
-  =Value= and =Implementation safety= scores so later review can distinguish
-  impact from clerical auto-implementation suitability. Scope: Global.
-- =session-retro=: Review notes agent-learning inbox suggestions, interview
-  the user about each candidate with implement/defer/drop choices, then
-  implement accepted improvements and archive or discard the processed records.
-  Scope: Project-local: notes.
-- =skill-audit=: Audit or improve Claude/Codex skills for trigger quality,
-  workflow design, progressive disclosure, verification, portability, and
-  maintainability. Scope: Project-local: dotfiles.
-- =skill-installer=: Install Codex skills into $CODEX_HOME/skills from a
-  curated list or a GitHub repo path. Scope: Codex system/runtime.
-- =skill-resolver= (disabled by =skill-prune=): Resolve and read Claude/Codex skill files by skill name
-  with deterministic filesystem lookup. Scope: Project-local: dotfiles.
-- =symptom-check=: Run an invariant-focused root-cause check before a
-  non-trivial bug fix. Scope: Global.
-- =test-suite=: Create or expand high-value test suites for a codebase or
-  specific module. Scope: Global.
-- =try-hartree-skills=: Evaluate HartreeWorks third-party skills one at a
-  time. Scope: Programmatic.
-- =update-log=: End-of-session bookkeeping. Scope: Global.
-- =verify=: Run an explicit user-requested verification loop. Scope: Global.
-- =walk-list=: Process a list file strictly item by item, sequentially or with
-  a bounded subagent pool. Scope: Global.
+The generated [[file:skill-inventory.org][tracked skill inventory]] is the sole catalog of public skills
+owned by this repository. It deliberately excludes dynamic plugins, ignored
+runtime system skills, private skills, and skills from other repositories.
+Each =SKILL.md= owns behavior; [[file:../claude/skills/README.org][the Claude skill index]] and
+[[file:../codex/skills/README.org][the Codex skill index]] own their tree mechanics.
 
 * Hooks
 
-Hook scripts are paired when the two tools expose compatible events and payloads.
-The Codex counterparts live in =codex/hooks/= and are registered from the tracked
-=codex/hooks.json= file, which is live globally through the
-=~/.codex/hooks.json= symlink. Claude hooks live in =claude/hooks/= and are
-registered in the mutable live =~/.claude/settings.json=.
+Compatible hook scripts are paired, but registration remains native to each
+tool. Claude registrations live in mutable =~/.claude/settings.json=; Codex
+registrations live in tracked =codex/hooks.json=. Project-local activation is
+paired as =.claude/settings.json= and =.codex/hooks.json=.
 
-Project-local hook scripts are paired the same way: =.claude/hooks/<name>=
-with =.codex/hooks/<name>= inside the target repo. Project-local registration
-files are paired as activation state: =.claude/settings.json= with
-=.codex/hooks.json=.
+Script ownership and event boundaries are documented in
+[[file:../claude/hooks/README.org][the Claude hook index]] and [[file:../codex/hooks/README.org][the Codex hook index]]. A script passing in
+isolation does not prove that the host invokes it with the intended event and
+payload.
 
-Some hooks cannot be synchronized one-for-one:
+* Guards and verification
 
-- Claude =Read=/=Grep=/=Glob= hooks do not have equivalent Codex events here.
-- Claude =Skill= hooks do not have equivalent Codex skill hook events here.
-- Claude Notification hooks are replaced by Codex lifecycle forwarding through
-  =codex-hook-wrapper= entries in =codex/hooks.json= for Emacs-owned sessions.
-- Chrome-specific Claude hooks have no Codex counterpart.
+=bin/ai-config-sync= provides reminders, a staged-commit guard, and a global
+audit. It checks paired instructions, skills and their auxiliary files, hook
+inventory and registrations, live symlinks, declared MCP parity, and topology
+invariants. For agent-configuration commits in this repository, the commit
+guard runs the full audit; other repositories receive only their project-local
+pair and documentation-owner checks.
 
-These cases are recorded in =ai-config-sync.json= rather than treated as drift.
+For every commit in the canonical dotfiles checkout, the documentation guard
+audits the exact staged and planned candidate tree, not the working copy. It
+builds that view with a private alternate Git index, keeps git-crypt blobs
+encrypted while materializing it, and executes the already-committed
+=bin/docs-audit= rather than a candidate replacement. Thus an unstaged clean
+copy cannot hide bad staged documentation, and a dirty working copy cannot
+block a clean staged version. Conflicts or materialization failures close the
+gate. The broader AI configuration audit retains its narrower configuration
+change trigger.
 
-* Guard Rails
-
-=bin/ai-config-sync= provides three kinds of checks:
-
-- =remind-claude= and =remind-codex= read hook JSON and print the counterpart to
-  update after relevant global or project-local edits.
-- =guard-commit= blocks one-sided commits. It inspects staged files and common
-  one-shot shell forms such as =git add ... && git commit=, =git add -A=,
-  =git commit -a=, quoted paths, absolute paths, and symlinked =~/.claude= paths.
-  When a dotfiles commit changes global agent configuration or its sync
-  machinery, the guard also runs the full audit and blocks the commit if any
-  managed inventory is inconsistent, including drift outside the files being
-  committed. This full-audit gate does not apply to agent configuration in
-  other repositories.
-  The guard resolves the git repo targeted by the commit command, so it checks
-  project-local sibling =CLAUDE.md=/=AGENTS.md=, =.claude/=, and =.codex/= pairs in that
-  repo as well as global dotfiles pairs. For skills, it checks content parity
-  after tool-specific frontmatter normalization rather than accepting any
-  arbitrary counterpart file. Project-local skill changes, including paired
-  removals, must also update the same repo's =README.org= =Skills= section.
-  Tool-specific README files document only that tool's behavior and paths;
-  project-local README files document only the local project behavior, not the
-  other agent's directory layout.
-- =audit= verifies the manifest, topology invariants, live symlinks, global
-  instruction equivalence, skill content parity after tool-specific frontmatter normalization,
-  auxiliary skill files, duplicate visible skill names, hook file inventory,
-  hook registrations, the live skill symlinks, and Codex activation files.
-  Within that manifest scope, it checks only MCP servers recorded in
-  =ai-config-sync.json= as manifest-declared shared MCP wiring: paired local
-  presence in the Claude and Codex public configs, public config parity,
-  required environment key presence, and any configured identity checks. Hosted
-  Claude connectors, Codex plugins, Codex App runtime MCP servers, and
-  unmanifested tool-local MCP servers are outside this parity requirement
-  unless they are recorded in the manifest.
-  Topology checks include
-  forbidden dotfiles-local =.codex/hooks.json= files, live symlinks resolving
-  into project-local config, undocumented tool-home symlinks, and dotfiles
-  project-local skills. It also checks the dotfiles repo-root
-  =CLAUDE.md=/=AGENTS.md= pair.
-
-Run the read-only audit with:
+The canonical dotfiles audit now delegates to:
 
 #+begin_src sh
-bin/ai-config-sync audit
+python3 bin/docs-audit audit --root "$HOME/My Drive/dotfiles"
 #+end_src
 
-* When Changing Config
+That documentation audit enforces README ownership, links, subtree indexes,
+the generated skill inventory, overview/catalog separation, and concise public
+manifest notes. It is not inherited by unrelated repositories.
 
-1. Edit the side requested by the user.
-2. Update the counterpart in the same session.
-3. For global dotfiles artifacts, if no counterpart should exist, update
-   =ai-config-sync.json= with the explicit artifact-specific status or
-   exemption.
-4. Run =bin/ai-config-sync audit= before committing global dotfiles config.
-   The commit guard enforces a clean full audit for these commits.
+After changing configuration:
+
+1. update the peer artifact or record the deliberate exception;
+2. update the owning README or regenerate the tracked inventory when required;
+3. run =bin/docs-audit generate= after adding, removing, renaming, or changing
+   the catalog description of a tracked public skill;
+4. run =bin/ai-config-sync audit=;
+5. exercise the affected allow and deny paths through the actual host tool.
 
 * Limits
 
-The system can keep the shared artifacts synchronized, but it cannot make Claude
-Code and Codex fully behaviorally identical. Their global settings formats,
-permission systems, hook event surfaces, tool names, model settings, MCP/plugin
-systems, and lifecycle events differ. The sync target is therefore explicit
-parity where possible plus documented non-parity where the tools differ.
+Synchronization proves the repository's declared structural contract. It does
+not make the tools behaviorally identical, validate unregistered runtime state,
+or replace an end-to-end check of the feature that changed. Format, permission,
+event, plugin, MCP, and lifecycle differences remain explicit rather than being
+hidden behind fallbacks.

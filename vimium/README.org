@@ -1,0 +1,22 @@
+#+title: Vimium options export
+#+author: Pablo Stafforini
+
+* Purpose
+
+[[file:vimium-options.json][vimium-options.json]] is a Vimium extension options export. It records key
+mappings, link-hint characters, search shortcuts, and exclusion rules. It is a
+portable backup rather than live browser-profile state.
+
+* Import and update
+
+No filesystem link or automatic browser activation is recorded here. Restore
+the file through Vimium's options backup and restore controls. To update it,
+export the active options again and review the resulting diff.
+
+Run =jq empty vimium/vimium-options.json= before committing, then re-import it
+and exercise representative mappings, search shortcuts, and exclusions. The
+JSON can be valid while the behavioral setup is still wrong.
+
+Search templates and exclusion patterns reveal browsing habits and may contain
+site-specific identifiers. They are not credentials by nature, but they should
+still be reviewed before the export is published.

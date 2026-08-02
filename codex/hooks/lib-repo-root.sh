@@ -47,14 +47,16 @@ fi
 # the command in a subshell.  Pure parameter expansion (no `[[ =~ ]]`) so the
 # behaviour is identical whether this file is sourced into bash or zsh -- the
 # `[[ =~ ]]` ERE engine differs between the two and silently failed to capture
-# quoted paths under zsh, falling back to the hook's cwd.  Reject inputs that
-# contain command substitution so an injected `$(...)` or backtick can't reach
-# `git -C`.
+# quoted paths under zsh, falling back to the hook's cwd.  Command substitution
+# is rejected in the extracted target below, not in the command as a whole: the
+# target is the only value that reaches `git -C`, and rejecting the whole
+# command meant a `$(...)` anywhere in it discarded the cd target.  A multi-line
+# commit message written as `git commit -m "$(cat <<EOF ...)"` did exactly that,
+# so a commit made in one repository was evaluated against the session's own.
 _cd_target=""
 _dq='"'
 _sq="'"
 case "$COMMAND" in
-  *'$('* | *'`'* ) ;;  # bail: command substitution present
   *)
     _rest="${COMMAND#"${COMMAND%%[![:space:]]*}"}"        # ltrim
     # Strip leading shell-group openers.  The output-redaction wrapper rewrites
@@ -85,6 +87,12 @@ case "$COMMAND" in
     ;;
 esac
 unset _dq _sq _rest 2>/dev/null || true
+
+# Discard a target carrying command substitution, so an injected `$(...)` or
+# backtick cannot reach `git -C`.
+case "$_cd_target" in
+  *'$('* | *'`'* ) _cd_target="" ;;
+esac
 
 if [ -n "$_cd_target" ] && [ -d "$_cd_target" ]; then
   REPO_ROOT=$(git -C "$_cd_target" rev-parse --show-toplevel 2>/dev/null || true)

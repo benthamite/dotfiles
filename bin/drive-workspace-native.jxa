@@ -1,0 +1,427 @@
+#!/usr/bin/osascript -l JavaScript
+// drive-workspace-native.jxa -- the ONLY native Google Drive UI provider
+// for bin/drive-workspace.
+//
+// Commands:
+//   preflight                    Verify Accessibility and Screen Recording
+//                                permission against the live Google Drive
+//                                menu/status window and emit its attributes
+//                                plus a window-scoped screenshot hash.
+//   list-errors --page-token T   Enumerate the visible native error rows,
+//                                one bounded page per invocation, with a
+//                                stable next-page token.
+//
+// Contract (enforced by tests/test_drive_workspace.py LiveGateTests):
+// - Addresses the "Google Drive" process only through System Events and
+//   requires "UI elements enabled".
+// - Exits 77 on Accessibility denial (error -25211) or on any missing
+//   AX attribute; exits 78 when Screen Recording is denied (a failed,
+//   empty, or single-color capture).
+// - Finds exactly one visible menu/status window; anything else is an
+//   ambiguous-UI hard failure.
+// - Reads AXRole, AXIdentifier, AXTitle, AXDescription, AXValue,
+//   AXPosition, and AXSize, obtains AXWindowNumber, and captures only
+//   that window with /usr/sbin/screencapture -x -l WINDOW_ID PATH to a
+//   mode-0o600 tool-owned PNG that is hashed and deleted in finally.
+// - Never opens System Settings and never prompts for permission.
+
+'use strict';
+
+ObjC.import('Foundation');
+ObjC.import('AppKit');
+ObjC.import('CommonCrypto');
+ObjC.import('stdlib');
+
+var EXIT_ACCESSIBILITY = 77;
+var EXIT_SCREEN_RECORDING = 78;
+var ACCESSIBILITY_DENIED = -25211;
+var WINDOW_ATTRIBUTES = [
+  'AXRole', 'AXIdentifier', 'AXTitle', 'AXDescription',
+  'AXValue', 'AXPosition', 'AXSize',
+];
+var PAGE_SIZE = 20;
+
+function writeStderr(message) {
+  $.NSFileHandle.fileHandleWithStandardError.writeData(
+    $(String(message) + '\n').dataUsingEncoding($.NSUTF8StringEncoding));
+}
+
+function writeStdout(text) {
+  $.NSFileHandle.fileHandleWithStandardOutput.writeData(
+    $(String(text)).dataUsingEncoding($.NSUTF8StringEncoding));
+}
+
+function fail(code, message) {
+  writeStderr(message);
+  $.exit(code);
+}
+
+function isAccessibilityError(error) {
+  return error && (
+    error.errorNumber === ACCESSIBILITY_DENIED ||
+    String(error.message || '').indexOf(String(ACCESSIBILITY_DENIED)) >= 0
+  );
+}
+
+// --- Hashing (no shelling out): CC_SHA256 via the ObjC bridge -----------
+
+function base64ToHex(base64) {
+  var alphabet =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  var bits = 0;
+  var value = 0;
+  var hex = '';
+  for (var i = 0; i < base64.length; i++) {
+    var ch = base64[i];
+    if (ch === '=') {
+      break;
+    }
+    var index = alphabet.indexOf(ch);
+    if (index < 0) {
+      continue;
+    }
+    value = (value << 6) | index;
+    bits += 6;
+    if (bits >= 8) {
+      bits -= 8;
+      var byte = (value >> bits) & 0xff;
+      hex += (byte < 16 ? '0' : '') + byte.toString(16);
+    }
+  }
+  return hex;
+}
+
+function sha256Hex(path) {
+  var data = $.NSData.dataWithContentsOfFile(path);
+  if (data.isNil() || data.length === 0) {
+    return null;
+  }
+  var digest = $.NSMutableData.dataWithLength(32);
+  $.CC_SHA256(data.bytes, data.length, digest.mutableBytes);
+  return base64ToHex(ObjC.unwrap(digest.base64EncodedStringWithOptions(0)));
+}
+
+// --- Private PNG lifecycle ----------------------------------------------
+
+function privateAttributes() {
+  // NSFilePosixPermissions 0o600: the capture is tool-owned and private.
+  return $.NSDictionary.dictionaryWithObjectForKey(
+    $.NSNumber.numberWithShort(0o600), $('NSFilePosixPermissions'));
+}
+
+function createPrivateFile(path) {
+  return $.NSFileManager.defaultManager
+    .createFileAtPathContentsAttributes(path, $.NSData.data,
+                                        privateAttributes());
+}
+
+function restrictPermissions(path) {
+  $.NSFileManager.defaultManager
+    .setAttributesOfItemAtPathError(privateAttributes(), path, null);
+}
+
+function runScreencapture(windowId, path) {
+  var task = $.NSTask.alloc.init;
+  task.executableURL = $.NSURL.fileURLWithPath('/usr/sbin/screencapture');
+  task.arguments = ['-x', '-l', String(windowId), path];
+  var launched = task.launchAndReturnError(null);
+  if (!launched) {
+    return 1;
+  }
+  task.waitUntilExit;
+  return task.terminationStatus;
+}
+
+function isBlankImage(path) {
+  var image = $.NSBitmapImageRep.imageRepWithContentsOfFile(path);
+  if (image.isNil()) {
+    return true;
+  }
+  var width = image.pixelsWide;
+  var height = image.pixelsHigh;
+  if (width === 0 || height === 0) {
+    return true;
+  }
+  var first = null;
+  try {
+    for (var ix = 0; ix < 8; ix++) {
+      for (var iy = 0; iy < 8; iy++) {
+        var x = Math.floor(width * (ix + 0.5) / 8);
+        var y = Math.floor(height * (iy + 0.5) / 8);
+        var color = image.colorAtXY(x, y);
+        if (color.isNil()) {
+          return true;
+        }
+        var key = [
+          color.redComponent, color.greenComponent, color.blueComponent,
+        ].join(',');
+        if (first === null) {
+          first = key;
+        } else if (key !== first) {
+          return false;
+        }
+      }
+    }
+  } catch (error) {
+    // An unreadable pixel format cannot prove a real capture; treat it
+    // as blank rather than trusting it.
+    return true;
+  }
+  return true;
+}
+
+function captureWindowHash(windowId) {
+  var directory = ObjC.unwrap($.NSTemporaryDirectory());
+  var pid = $.NSProcessInfo.processInfo.processIdentifier;
+  var pngPath = directory + 'drive-workspace-native-' + pid + '.png';
+  if (!createPrivateFile(pngPath)) {
+    fail(1, 'cannot create the private capture file: ' + pngPath);
+  }
+  var failure = null;
+  var hash = null;
+  try {
+    var status = runScreencapture(windowId, pngPath);
+    restrictPermissions(pngPath);
+    if (status !== 0) {
+      failure = {
+        code: EXIT_SCREEN_RECORDING,
+        message: 'screencapture exited ' + status +
+          '; Screen Recording permission is missing or the window is gone',
+      };
+    } else {
+      hash = sha256Hex(pngPath);
+      if (hash === null || isBlankImage(pngPath)) {
+        failure = {
+          code: EXIT_SCREEN_RECORDING,
+          message: 'capture is blank; Screen Recording permission is missing',
+        };
+      }
+    }
+  } finally {
+    $.NSFileManager.defaultManager.removeItemAtPathError(pngPath, null);
+  }
+  if (failure !== null) {
+    fail(failure.code, failure.message);
+  }
+  return hash;
+}
+
+// --- Google Drive window acquisition ------------------------------------
+
+function readAttribute(element, name) {
+  var value;
+  try {
+    value = element.attributes[name].value();
+  } catch (error) {
+    if (isAccessibilityError(error)) {
+      fail(EXIT_ACCESSIBILITY,
+           'Accessibility denied (-25211) while reading ' + name);
+    }
+    fail(EXIT_ACCESSIBILITY, 'missing AX attribute ' + name);
+  }
+  if (value === undefined) {
+    fail(EXIT_ACCESSIBILITY, 'missing AX attribute ' + name);
+  }
+  return value;
+}
+
+function driveWindow() {
+  var systemEvents = Application('System Events');
+  var enabled;
+  try {
+    enabled = systemEvents.uiElementsEnabled();
+  } catch (error) {
+    if (isAccessibilityError(error)) {
+      fail(EXIT_ACCESSIBILITY,
+           'Accessibility denied (-25211) while querying System Events');
+    }
+    throw error;
+  }
+  if (!enabled) {
+    fail(EXIT_ACCESSIBILITY,
+         'System Events reports "UI elements enabled" is false; ' +
+         'Accessibility permission is missing');
+  }
+  var processes;
+  try {
+    processes = systemEvents.applicationProcesses
+      .whose({ name: 'Google Drive' })();
+  } catch (error) {
+    if (isAccessibilityError(error)) {
+      fail(EXIT_ACCESSIBILITY,
+           'Accessibility denied (-25211) while listing processes');
+    }
+    throw error;
+  }
+  if (processes.length === 0) {
+    fail(1, 'Google Drive process is not running');
+  }
+  if (processes.length !== 1) {
+    fail(1, 'ambiguous: found ' + processes.length +
+            ' Google Drive processes');
+  }
+  var driveProcess = processes[0];
+  var windows;
+  try {
+    windows = driveProcess.windows();
+  } catch (error) {
+    if (isAccessibilityError(error)) {
+      fail(EXIT_ACCESSIBILITY,
+           'Accessibility denied (-25211) while listing windows');
+    }
+    throw error;
+  }
+  var visible = [];
+  for (var i = 0; i < windows.length; i++) {
+    var record = { attributes: {} };
+    for (var j = 0; j < WINDOW_ATTRIBUTES.length; j++) {
+      var name = WINDOW_ATTRIBUTES[j];
+      var value;
+      try {
+        value = windows[i].attributes[name].value();
+      } catch (error) {
+        if (isAccessibilityError(error)) {
+          fail(EXIT_ACCESSIBILITY,
+               'Accessibility denied (-25211) while reading ' + name);
+        }
+        // The contract forbids silently skipping a candidate window: a
+        // required attribute that cannot be read is the missing-attribute
+        // exit-77 case, never a visibility filter.
+        fail(EXIT_ACCESSIBILITY,
+             'missing AX attribute ' + name + ' on a candidate window');
+      }
+      if (value === undefined) {
+        fail(EXIT_ACCESSIBILITY,
+             'missing AX attribute ' + name + ' on a candidate window');
+      }
+      record.attributes[name] = value;
+    }
+    record.element = windows[i];
+    visible.push(record);
+  }
+  if (visible.length === 0) {
+    fail(1, 'no visible Google Drive menu/status window');
+  }
+  if (visible.length !== 1) {
+    fail(1, 'ambiguous: found ' + visible.length +
+            ' visible Google Drive windows');
+  }
+  var chosen = visible[0];
+  chosen.attributes.AXWindowNumber =
+    readAttribute(chosen.element, 'AXWindowNumber');
+  return chosen;
+}
+
+// --- Error-row enumeration ----------------------------------------------
+
+function collectErrorRows(windowRecord) {
+  // Every user-visible row inside the status window: rows are read from
+  // the UI only, never derived from logs or SQLite.
+  var rows = [];
+  var elements;
+  try {
+    elements = windowRecord.element.entireContents();
+  } catch (error) {
+    if (isAccessibilityError(error)) {
+      fail(EXIT_ACCESSIBILITY,
+           'Accessibility denied (-25211) while walking the error list');
+    }
+    throw error;
+  }
+  for (var i = 0; i < elements.length; i++) {
+    var role;
+    try {
+      role = elements[i].attributes['AXRole'].value();
+    } catch (error) {
+      continue;
+    }
+    if (role !== 'AXRow' && role !== 'AXCell') {
+      continue;
+    }
+    var texts = [];
+    var contents;
+    try {
+      contents = elements[i].entireContents();
+    } catch (error) {
+      contents = [];
+    }
+    for (var j = 0; j < contents.length; j++) {
+      try {
+        var value = contents[j].attributes['AXValue'].value();
+        if (typeof value === 'string' && value.length > 0) {
+          texts.push(value);
+        }
+      } catch (error) {
+        continue;
+      }
+    }
+    if (texts.length === 0) {
+      continue;
+    }
+    var identifier;
+    try {
+      identifier = elements[i].attributes['AXIdentifier'].value();
+    } catch (error) {
+      identifier = null;
+    }
+    rows.push({
+      row_key: identifier || (texts[0] + '#' + rows.length),
+      path: texts[0],
+      category: texts.length > 1 ? texts[1] : 'error',
+      text: texts.join(' '),
+      row_index: rows.length,
+    });
+  }
+  return rows;
+}
+
+function listErrors(pageToken) {
+  var windowRecord = driveWindow();
+  var hash = captureWindowHash(windowRecord.attributes.AXWindowNumber);
+  var rows = collectErrorRows(windowRecord);
+  var offset = 0;
+  if (pageToken !== '') {
+    offset = parseInt(pageToken, 10);
+    if (!(offset >= 0)) {
+      fail(1, 'invalid --page-token: ' + pageToken);
+    }
+  }
+  var page = rows.slice(offset, offset + PAGE_SIZE);
+  for (var i = 0; i < page.length; i++) {
+    page[i].row_index = i;
+  }
+  var next = offset + PAGE_SIZE < rows.length
+    ? String(offset + PAGE_SIZE)
+    : null;
+  return {
+    rows: page,
+    next_page_token: next,
+    screenshot_sha256: hash,
+    captured_utc: new Date().toISOString(),
+  };
+}
+
+function preflight() {
+  var windowRecord = driveWindow();
+  var hash = captureWindowHash(windowRecord.attributes.AXWindowNumber);
+  return {
+    window: windowRecord.attributes,
+    screenshot_sha256: hash,
+    captured_utc: new Date().toISOString(),
+  };
+}
+
+function run(argv) {
+  var command = argv[0];
+  if (command === 'preflight' && argv.length === 1) {
+    writeStdout(JSON.stringify(preflight()) + '\n');
+    return;
+  }
+  if (command === 'list-errors' && argv.length === 3 &&
+      argv[1] === '--page-token') {
+    writeStdout(JSON.stringify(listErrors(argv[2])) + '\n');
+    return;
+  }
+  fail(2, 'usage: drive-workspace-native.jxa preflight | ' +
+          'list-errors --page-token TOKEN');
+}

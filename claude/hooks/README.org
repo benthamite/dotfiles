@@ -20,6 +20,18 @@ inlined into Claude's =pretooluse-bash.sh= dispatcher. Change and test those two
 implementations together. Both are deny-only and never ask for approval;
 =ALLOW_CLONE=1= is the narrow explicit override for an otherwise blocked clone.
 
+The Drive runtime-state guard denies state-creating commands — npm
+ci/install and =npm run build|dev|test=, =uv sync= and project-bound =uv run=,
+=python -m venv=, every pip install form, Python without bytecode prevention,
+pytest without both bytecode and cache prevention, and =git worktree add= —
+whenever the effective project, working directory, or explicit target lies
+under =~/My Drive=. All parsing lives in the shared
+=lib/drive_runtime_command.py= module; a command it cannot model is
+indeterminate and denied, never partially parsed, silently allowed, or
+escalated for approval. The Claude side is delegated by =pretooluse-bash.sh=
+behind a cheap masked keyword gate; the Codex copy is byte-identical and
+registered directly in =codex/hooks.json=.
+
 The dirty-tree rewrite guard blocks =filter-repo= and =filter-branch= only when
 the target repository has staged or unstaged tracked changes. Untracked files
 are deliberately ignored. It resolves the target from =git -C=, the last
@@ -68,6 +80,7 @@ Claude.
 |------+---------|
 | =block-destructive-command.sh= | Blocks hard-to-reverse shell deletion and destructive operations. |
 | =block-dirty-tree-rewrite.sh= | Blocks Git history rewrites when the target repository has dirty tracked changes. |
+| =block-drive-runtime-command.sh= | Denies dependency, build, cache, virtualenv, bytecode, and worktree state creation under ~/My Drive via the shared =lib/drive_runtime_command.py= parser. |
 | =block-elpaca-dotfiles-edit.sh= | Denies writes to the read-only Elpaca dotfiles mirror and points to the canonical repository. |
 | =block-elpaca-rebuild-uncommitted.sh= | Blocks rebuilding or reloading when the relevant Elisp source is uncommitted. |
 | =block-github-guard-edit.sh= | Protects GitHub write-gate policy and registration files from agent edits. |

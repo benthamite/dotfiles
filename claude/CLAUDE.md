@@ -54,7 +54,9 @@ When opening Chrome manually for browser-only service flows, use `chrome-profile
 ## Filesystem organization
 
 - Dotfiles source of truth: `~/My Drive/dotfiles/`; many home-directory paths are symlinks into it.
-- Project repos: `~/My Drive/repos/`.
+- Active personal repositories: `~/repos/`; active Epoch repositories: `~/repos/epoch/`.
+- Source-only personal repositories may remain under `~/My Drive/repos/`; do not create dependencies, builds, caches, virtual environments, or worktrees there.
+- All linked worktrees: `~/repos/.worktrees/<repo>/<name>`.
 
 ## Version control
 

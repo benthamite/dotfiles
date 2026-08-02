@@ -68,6 +68,13 @@ Operating rules in =CLAUDE.md= stay short and state the behavior directly. The
 file is a lean always-loaded instruction source, not a manual: detail belongs in
 skills and context files that load on demand.
 
+The global instructions state the repository-root contract shared with the
+Codex side: active repositories live outside Drive under =~/repos/= (Epoch
+repositories under =~/repos/epoch/=), source-only personal repositories may
+remain under =~/My Drive/repos/= only without dependencies, builds, caches,
+virtual environments, or worktrees, and every linked worktree lives under
+=~/repos/.worktrees/<repo>/<name>=.
+
 The live global settings register hooks by absolute path. Stop forwarding to
 Emacs is a turn-end signal, not proof that the agent process exited. Reusable
 lesson capture belongs to the Emacs =agent-before-exit= flow and must not be
@@ -139,6 +146,21 @@ restores that buffer's blocked/waiting state, since the local model control can
 emit a submit event without a model turn's stop event. The ordinary whole-stage
 resume guard remains unchanged.
 
+The paired =fix-drive-errors= skill owns Google Drive sync-error triage. It
+snapshots the native error panel, runs the read-only =bin/drive-workspace=
+audit before any change, and routes every repair through that tool's
+journaled transactions. Its invariant is that no filesystem symlink may exist
+anywhere under =~/My Drive=, so every in-Drive symlink is an error to repair,
+and the skill never disconnects the Drive account or edits Drive's internal
+databases. It replaces the retired untracked parent-Drive workflow that
+externalized directories behind in-Drive symlinks.
+
+The =move-session-log= skill bundles a Python adapter
+(=skills/move-session-log/scripts/move_session_log.py=) that mirrors the Codex
+adapter's interface — single-session import plus =--dry-run=/=--rename OLD
+NEW= — with byte-equivalent path-mapping semantics, so the Drive workspace
+migration tooling can relocate session history for either tool.
+
 * Hooks
 
 [[file:hooks/README.org][The Claude hook index]] owns registration boundaries and the per-file index.
@@ -176,11 +198,22 @@ all; argument text that genuinely cannot be lexed still fails closed. Since
 these are =PreToolUse= hooks they run before the =git add= they are judging, so
 the paths a command is about to stage count as staged.
 
+The Drive runtime-state guard pair keeps dependency, build, cache,
+virtualenv, bytecode, and worktree state out of =~/My Drive=: state-creating
+commands are denied unless their effective project and targets are all
+external, indeterminate parses are denied rather than allowed or escalated,
+and the two guard scripts are byte-identical across the Claude and Codex trees
+with all parsing in the shared =lib/drive_runtime_command.py= module.
+
 The SessionStart reasoning-worktree synchronization hook is also Claude-only.
 It repairs required key links before eligibility checks, updates eligible
 worktrees without pushing, reapplies the local overlay, injects private
 project skills, and installs worktree-local freshness protection. Its bulk
-wrapper fetches shared state once before processing multiple worktrees.
+wrapper fetches shared state once before processing multiple worktrees. All
+worktree-creating helpers construct destinations under the shared external
+root =~/repos/.worktrees/<repository>/<branch>= — never inside a repository
+checkout or =~/My Drive= — while maintenance helpers keep covering legacy
+worktree locations until those are migrated.
 
 * Verification
 

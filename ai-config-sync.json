@@ -116,6 +116,13 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
+      "name": "fix-drive-errors",
+      "claude": "claude/skills/fix-drive-errors/SKILL.md",
+      "codex": "codex/skills/fix-drive-errors/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
       "name": "generate-readme",
       "claude": "claude/skills/generate-readme/SKILL.md",
       "codex": "codex/skills/generate-readme/SKILL.md",
@@ -162,7 +169,7 @@
       "claude": "claude/skills/move-session-log/SKILL.md",
       "codex": "codex/skills/move-session-log/SKILL.md",
       "status": "tool-specific-divergence",
-      "note": "Claude and Codex move-session-log skills intentionally differ because each tool stores sessions in its own layout. The Claude version operates on ~/.claude/projects, ~/.claude/history.jsonl, and ~/.claude.json (a script-free Bash/Glob skill); the Codex version operates on ~/.codex/sessions, history.jsonl, session_index.jsonl, and state_5.sqlite via a bundled Python script. They must not be forced to byte-parity."
+      "note": "Claude and Codex move-session-log skills intentionally differ because each tool stores sessions in its own layout. Both bundle a scripts/move_session_log.py adapter with the same interface (single-session import; --dry-run/--rename OLD NEW) and byte-equivalent path mapping, enforced by tests/test_move_session_log_parity.py. Claude operates on ~/.claude/projects, history.jsonl, and ~/.claude.json (honoring CLAUDE_CONFIG_DIR); Codex on ~/.codex/sessions, history.jsonl, session_index.jsonl, and state_5.sqlite. Not forced to byte-parity."
     },
     {
       "name": "orchestrate-agent-review",
@@ -314,6 +321,14 @@
       "status": "paired",
       "note": "Blocks filter-repo and filter-branch only when the resolved target has staged or unstaged tracked changes; untracked files are deliberately ignored. Resolution uses git -C, then the last applicable cd, then the hook cwd. Heredoc bodies are masked, and ALLOW_DIRTY_REWRITE=1 is the explicit override. Codex normalizes supported shell-tool payloads; the scripts are otherwise paired. Details live in both hook READMEs.",
       "equivalence": "Identical apart from the payload-normalization preamble documented above."
+    },
+    {
+      "name": "block-drive-runtime-command.sh",
+      "claude": "claude/hooks/block-drive-runtime-command.sh",
+      "codex": "codex/hooks/block-drive-runtime-command.sh",
+      "status": "paired-dispatched",
+      "note": "Paired Drive runtime-state guard: denies npm/uv/pip/python/pytest/git-worktree commands whose effective project, cwd, or explicit target lies under ~/My Drive, with the exact migration deny reason. All parsing lives in lib/drive_runtime_command.py (the single parser); indeterminate parses are denied, never allowed or escalated. Claude side is delegated by pretooluse-bash.sh behind a cheap keyword gate; Codex registers the script directly in codex/hooks.json.",
+      "equivalence": "Byte-identical by design (tests/test_drive_runtime_guard.py asserts parity); the script normalizes both Claude object payloads and Codex string-wrapped payloads itself."
     },
     {
       "name": "block-elpaca-dotfiles-edit.sh",

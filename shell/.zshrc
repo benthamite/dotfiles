@@ -5,19 +5,14 @@ source "$HOME/My Drive/dotfiles/shell/zsh-history-security.zsh"
 # because macOS path_helper in /etc/zprofile reorders PATH after .zshenv)
 export PATH="$NVM_DIR/versions/node/v20.18.2/bin:$PATH"
 
+# No post-install npm wrapper here: the old node_modules relocation hook
+# (move node_modules to a cache dir and symlink it back into Drive) was the
+# root cause of recreated Drive symlinks. Dependency state is now kept out
+# of ~/My Drive entirely — the agent-side guard denies npm installs under
+# Drive, and repositories are migrated to external workspaces.
 load_nvm() {
     [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && . "/opt/homebrew/opt/nvm/nvm.sh"
     [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && . "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
-    # After nvm loads, define persistent npm wrapper to relocate
-    # node_modules out of Google Drive after install
-    npm() {
-        command npm "$@"
-        local ret=$?
-        if [[ $ret -eq 0 && ("$1" == "install" || "$1" == "i" || "$1" == "ci") ]]; then
-            _gdrive_relocate_node_modules
-        fi
-        return $ret
-    }
 }
 
 nvm() {
@@ -44,24 +39,6 @@ npx() {
     npx "$@"
 }
 
-# Relocate node_modules out of Google Drive after npm install.
-# npm always replaces symlinks with real directories during install,
-# so we move node_modules to a cache dir and symlink back afterwards.
-_gdrive_relocate_node_modules() {
-    local drive_prefix="$HOME/My Drive"
-    [[ "$PWD" != "$drive_prefix"* ]] && return 0
-    [[ ! -d node_modules || -L node_modules ]] && return 0
-
-    local project_id="${PWD#$drive_prefix/}"
-    project_id="${project_id//\//-}"
-    local cache_dir="$HOME/.cache/node_modules/$project_id"
-
-    [[ -d "$cache_dir" ]] && trash "$cache_dir" 2>/dev/null
-    mv node_modules "$cache_dir"
-    ln -s "$cache_dir" node_modules
-    echo "node_modules relocated to $cache_dir (outside Google Drive)"
-}
-
 # pyenv setup with lazy loading
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
@@ -77,6 +54,10 @@ pyenv() {
 # Python aliases and functions
 alias python="python3"
 mkvenv() {
+    if [[ "$PWD" == "$HOME/My Drive"* ]]; then
+        echo "mkvenv: refusing to create a virtualenv under ~/My Drive; migrate the repository or run the workflow from its approved external workspace." >&2
+        return 1
+    fi
     CURR_VENV=$(basename "$(pwd)")
     echo "Creating venv for $CURR_VENV at $(pwd)/.venv"
     python3 -m venv .venv --prompt "$CURR_VENV"
@@ -121,15 +102,21 @@ claude-trajectory() {
 }
 
 # Trajectory reasoning-tasks: create a new task worktree + wire its API-key symlink in one step.
+# Worktrees live OUTSIDE the repository checkout, under the shared external
+# root ~/repos/.worktrees/<repository>/<branch> — never inside ~/My Drive or
+# the repo tree itself.
 # Usage: newtask <task-slug>   (e.g. newtask compensate-misaligned-ais)
-# Then: cd ~/Trajectory/reasoning-tasks/<task-slug> && claude-trajectory
+# Then: cd ~/repos/.worktrees/reasoning-tasks/pablo/<task-slug> && claude-trajectory
 newtask() {
   if [ -z "$1" ]; then echo "usage: newtask <task-slug>"; return 1; fi
   local root=~/Trajectory/reasoning-tasks
+  local wt="$HOME/repos/.worktrees/reasoning-tasks/pablo/$1"
   git -C "$root/main" fetch origin main &&
-    git -C "$root/main" worktree add "$root/$1" -b "pablo/$1" origin/main &&
-    ln -s "$root/reasoning-tasks-cr-studio/.claude/.env" "$root/$1/.claude/.env" &&
-    echo "ready: cd $root/$1 && claude-trajectory"
+    mkdir -p "${wt%/*}" &&
+    git -C "$root/main" worktree add "$wt" -b "pablo/$1" origin/main &&
+    mkdir -p "$wt/.claude" &&
+    ln -s "$root/reasoning-tasks-cr-studio/.claude/.env" "$wt/.claude/.env" &&
+    echo "ready: cd $wt && claude-trajectory"
 }
 
 # Manually merge origin/main into the current reasoning-tasks worktree (skills/docs/etc).

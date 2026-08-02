@@ -4,7 +4,9 @@
 # Codifies the proven Ready-for-QA review recipe (2026-07-04 "do-both" session,
 # ~/.claude/rendered/Trajectory/2026-07-04_14-41_do-both.md):
 #   1. resolve the canonical PR branch with cr-task-state
-#   2. detached read-only worktree under <main>/.cr-tmp/qa-<issue|slug>
+#   2. detached read-only worktree under the shared external worktrees root
+#      ~/repos/.worktrees/reasoning-tasks/qa-<issue|slug> (never inside the
+#      repository checkout or ~/My Drive)
 #   3. sparse-checkout DISABLE — the inherited sparse config silently drops
 #      tasks/ and tooling/ (the recurring "empty worktree" failure)
 #   4. run the reasoning-tasks sync hook inside it (.claude/.env key symlink,
@@ -16,11 +18,12 @@
 #        cr-review-worktree <slug> --branch <branch>   # override resolution
 #
 # Review worktrees are read-only working copies of origin/<canonical-branch>.
-# cr-worktree-gc cleans .cr-tmp/ worktrees that have no local changes.
+# cr-worktree-gc cleans qa-* worktrees that have no local changes.
 set -uo pipefail
 
 REPO="trajectory-labs-pbc/reasoning-tasks"
 MAIN="$HOME/Trajectory/reasoning-tasks/main"
+WORKTREES="$HOME/repos/.worktrees/reasoning-tasks"
 HOOK="$HOME/My Drive/dotfiles/claude/hooks/sync-reasoning-tasks-worktree.sh"
 
 die() { echo "cr-review-worktree: $*" >&2; exit 1; }
@@ -71,8 +74,8 @@ echo "canonical branch: $branch"
 
 # --- create or refresh the detached worktree ---------------------------------
 git -C "$MAIN" fetch origin "$branch" --quiet || die "git fetch origin $branch failed"
-wt="$MAIN/.cr-tmp/qa-${issue:-$slug}"
-mkdir -p "$MAIN/.cr-tmp"
+wt="$WORKTREES/qa-${issue:-$slug}"
+mkdir -p "$WORKTREES"
 # $MAIN sits behind a symlink, so compare against `worktree list` via the
 # .git pointer on disk rather than porcelain path strings.
 if [ -e "$wt/.git" ]; then

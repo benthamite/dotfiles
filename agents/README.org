@@ -109,6 +109,14 @@ managed =.system= skills and dynamic plugin skills are runtime state, not
 repository-owned peers. Parent-Drive skill pairs outside Git are checked by the
 global audit because a commit guard cannot see them.
 
+Google Drive sync-error repair is owned by the tracked =fix-drive-errors=
+pair. Its contract is the workspace-migration invariant — no filesystem
+symlink may exist anywhere under =~/My Drive= — with every repair routed
+through =bin/drive-workspace= journaled transactions and hard prohibitions on
+account reconnection and Drive-internal database edits. The untracked
+parent-Drive shadow copies of the old symlink-externalization workflow are
+inspect-only until they are retired.
+
 The generated [[file:skill-inventory.org][tracked skill inventory]] is the sole catalog of public skills
 owned by this repository. It deliberately excludes dynamic plugins, ignored
 runtime system skills, private skills, and skills from other repositories.

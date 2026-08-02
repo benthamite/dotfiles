@@ -54,6 +54,7 @@ against the tracked top-level tree.
 | =karabiner= | [[file:karabiner/README.org][Karabiner and Goku keyboard configuration]] |
 | =ledger= | [[file:ledger/README.org][Ledger configuration]] |
 | =letterboxd-extras= | [[file:letterboxd-extras/README.org][Letterboxd browser extension assets]] |
+| =lib= | [[file:claude/hooks/README.org][Shared agent-guard Python modules, documented with the hooks]] |
 | =macos= | [[file:macos/README.org][macOS defaults, scheduled jobs, and security tools]] |
 | =mbsync= | [[file:mbsync/README.org][mbsync mail configuration]] |
 | =moon+reader= | [[file:moon+reader/README.org][Moon+ Reader settings export]] |

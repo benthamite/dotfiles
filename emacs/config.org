@@ -9179,24 +9179,30 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 :ID:       879A65A9-B1CB-4685-B07F-62EBF693C15A
 :END:
 
-/Create (if needed) the reasoning-tasks worktree for a CR task and launch a Claude session in it, with no terminal step. The worktree is based on =origin/main= so it always has current skills; the SessionStart hook (=sync-reasoning-tasks-worktree.sh=) wires its API-key symlink./
+/Create (if needed) the reasoning-tasks worktree for a CR task and launch a Claude session in it, with no terminal step. The worktree lives under the shared external root =~/repos/.worktrees/reasoning-tasks/= (never inside the repository checkout or =~/My Drive=) and is based on =origin/main= so it always has current skills; the SessionStart hook (=sync-reasoning-tasks-worktree.sh=) wires its API-key symlink./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (defun ps/trajectory-new-task (slug)
   "Create the reasoning-tasks worktree for SLUG if needed, then launch Claude in it.
-The worktree is based on `origin/main' so it always carries current CR
-skills, and the SessionStart hook wires its API-key symlink, so there is
-no manual step.  When the worktree already exists, skip creation and
-just start a session.  The session uses the `trajectory' Claude account."
+The worktree is created under the shared external worktrees root
+`~/repos/.worktrees/reasoning-tasks/pablo/SLUG' — outside the repository
+checkout and outside \"~/My Drive\" — and is based on `origin/main' so
+it always carries current CR skills; the SessionStart hook wires its
+API-key symlink, so there is no manual step.  When the worktree already
+exists (at the external root, or at the legacy sibling location for
+tasks created before the move), skip creation and just start a session.
+The session uses the `trajectory' Claude account."
   (interactive (list (read-string "Task slug: ")))
   (require 'agent)
   (setq slug (string-trim slug))
   (when (string-empty-p slug)
     (user-error "Task slug must not be empty"))
   (let* ((root (expand-file-name "~/Trajectory/reasoning-tasks"))
-         (dir (expand-file-name slug root)))
-    (unless (file-directory-p dir)
-      (ps/trajectory--add-worktree slug dir root))
+         (dir (expand-file-name slug "~/repos/.worktrees/reasoning-tasks/pablo/"))
+         (legacy (expand-file-name slug root)))
+    (cond ((file-directory-p dir))
+          ((file-directory-p legacy) (setq dir legacy))
+          (t (ps/trajectory--add-worktree slug dir root)))
     (agent-start-session
      (agent-session-create
       :backend 'claude-code :account "trajectory"
@@ -9204,13 +9210,16 @@ just start a session.  The session uses the `trajectory' Claude account."
 
 (defun ps/trajectory--add-worktree (slug dir root)
   "Add the reasoning-tasks worktree DIR for SLUG, based on `origin/main'.
-ROOT is the reasoning-tasks worktrees directory.  Fetch first so the new task is
-not born behind upstream; reattach the `pablo/SLUG' branch if it already
-exists, otherwise create it off `origin/main'."
+DIR is the external worktree destination under
+`~/repos/.worktrees/reasoning-tasks/'; ROOT is the repository directory
+holding the `main' clone.  Fetch first so the new task is not born
+behind upstream; reattach the `pablo/SLUG' branch if it already exists,
+otherwise create it off `origin/main'."
   (let ((default-directory (expand-file-name "main" root))
         (branch (concat "pablo/" slug))
         (buffer "*trajectory-new-task*"))
     (message "trajectory-new-task: creating worktree %s…" slug)
+    (make-directory (file-name-directory (directory-file-name dir)) t)
     (call-process "git" nil nil nil "fetch" "--quiet" "origin" "main")
     (let* ((have-branch (zerop (call-process "git" nil nil nil "rev-parse"
                                              "--verify" "--quiet"

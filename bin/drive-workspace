@@ -1,0 +1,611 @@
+#!/usr/bin/env python3
+"""Fail-closed tooling for migrating repositories out of Google Drive.
+
+This module currently provides the migration manifest data model and its
+strict loader.  Loading is structural only: it never calls Git, never
+requires a source to exist on disk, and never mutates anything.  Every
+schema violation raises ManifestError; nothing is warned about and then
+accepted.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import sys
+from dataclasses import dataclass, field
+from pathlib import Path
+from types import MappingProxyType
+
+TRANSACTION_TMP = "{transaction_tmp}"
+PLACEHOLDER_RE = re.compile(r"\{[^{}]*\}")
+ENV_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+ENV_ASSIGNMENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
+SHELL_NAMES = {"sh", "bash", "zsh", "dash", "ksh"}
+SHELL_OPERATORS = ("&&", "||", ";", "|", ">", "<", "`", "$(", "\n")
+
+MANIFEST_KEYS = {
+    "version", "drive_root", "repos_root", "epoch_repos_root",
+    "worktrees_root", "state_root", "workspaces",
+}
+WORKSPACE_KEYS = {
+    "name", "group", "kind", "source", "destination", "git_roots",
+    "expected_symlinks", "links", "consumers", "smoke", "runtime_services",
+}
+WORKTREE_KEYS = {
+    "name", "group", "kind", "source", "destination", "owner", "branch",
+    "expected_symlinks", "consumers", "smoke",
+}
+LINK_KEYS = {
+    "path", "lstat_type", "lstat_mode", "link_text",
+    "disposition", "target_policy", "post_smoke_type",
+}
+SMOKE_KEYS = {"cwd", "argv", "env"}
+CONSUMER_KEYS = {"name", "kind", "path", "old", "new", "count", "session_adapter"}
+CONSUMER_REQUIRED_KEYS = CONSUMER_KEYS - {"session_adapter"}
+RUNTIME_SERVICE_KEYS = {"name", "cwd", "argv", "port", "http"}
+HTTP_JSON_KEYS = {"json_keys"}
+HTTP_MARKER_KEYS = {"status", "content_marker"}
+
+GROUPS = {"personal", "worktree"}
+KINDS = {"workspace", "linked_worktree"}
+LSTAT_TYPES = {"symlink", "directory", "file"}
+DISPOSITIONS = {"preserve_link", "materialize_generated_directory"}
+TARGET_POLICIES = {"retain", "disposable"}
+POST_SMOKE_TYPES = {"link", "directory", "absent"}
+POST_SMOKE_BY_DISPOSITION = {
+    "preserve_link": {"link"},
+    "materialize_generated_directory": {"directory", "absent"},
+}
+TARGET_POLICY_BY_DISPOSITION = {
+    "preserve_link": "retain",
+    "materialize_generated_directory": "disposable",
+}
+
+
+class ManifestError(ValueError):
+    """A manifest failed structural validation."""
+
+
+def _fail(context: str, message: str) -> None:
+    raise ManifestError(f"Manifest {context}: {message}")
+
+
+def _require_keys(raw: dict, allowed: set, required: set, context: str) -> None:
+    if not isinstance(raw, dict):
+        _fail(context, "must be a JSON object")
+    unknown = sorted(set(raw) - allowed)
+    if unknown:
+        _fail(context, f"contains unknown keys: {', '.join(unknown)}")
+    missing = sorted(required - set(raw))
+    if missing:
+        _fail(context, f"is missing required keys: {', '.join(missing)}")
+
+
+def _require_string(value, context: str) -> str:
+    if not isinstance(value, str) or not value:
+        _fail(context, "must be a nonempty string")
+    return value
+
+
+def _require_tilde_path(value, context: str) -> str:
+    _require_string(value, context)
+    if not value.startswith("~/"):
+        _fail(context, "must be a raw '~/'-prefixed path")
+    if not Path(value).expanduser().is_absolute():
+        _fail(context, "must expand to an absolute path")
+    return value
+
+
+def _expanded(raw_path: str) -> str:
+    return os.path.normpath(os.path.expanduser(raw_path))
+
+
+def _is_within(candidate: str, root: str) -> bool:
+    return candidate == root or candidate.startswith(root + os.sep)
+
+
+def _require_relative_path(value, context: str) -> str:
+    _require_string(value, context)
+    if value.startswith(("/", "~")):
+        _fail(context, "must be a relative path")
+    parts = value.split("/")
+    if value != ".":
+        if "" in parts or "." in parts or ".." in parts:
+            _fail(context, "must be a normalized relative path without '.' or '..'")
+    return value
+
+
+def _reject_placeholders(value: str, context: str) -> None:
+    if TRANSACTION_TMP in value:
+        _fail(context, f"must not contain the {TRANSACTION_TMP} placeholder")
+
+
+def _validate_argv(argv, context: str) -> tuple:
+    """Validate one exec argument array; reject every shell-string escape."""
+    if not isinstance(argv, list) or not argv:
+        _fail(context, "argv must be a nonempty array")
+    for index, arg in enumerate(argv):
+        arg_context = f"{context} argv[{index}]"
+        _require_string(arg, arg_context)
+        _reject_placeholders(arg, arg_context)
+        for operator in SHELL_OPERATORS:
+            if operator in arg:
+                _fail(arg_context, f"must not contain shell operator {operator!r}")
+        if ENV_ASSIGNMENT_RE.match(arg):
+            _fail(arg_context, "must not encode an environment assignment")
+        if "/tmp/uv-cache" in arg:
+            _fail(arg_context, "must not name a shared /tmp/uv-cache")
+    if argv[0] == "cd":
+        _fail(context, "argv must not encode a 'cd' command")
+    if Path(argv[0]).name == "env":
+        _fail(context, "argv must not use an 'env' wrapper; declare env in the env object")
+    if Path(argv[0]).name in SHELL_NAMES and "-c" in argv[1:]:
+        _fail(context, "argv must not invoke a shell with a command string")
+    return tuple(argv)
+
+
+@dataclass(frozen=True)
+class Smoke:
+    """One smoke command: a structured record, never a shell string."""
+
+    cwd: str
+    argv: tuple
+    env: MappingProxyType
+    raw: dict = field(compare=False)
+
+    @staticmethod
+    def load(raw: dict, context: str) -> "Smoke":
+        _require_keys(raw, SMOKE_KEYS, SMOKE_KEYS, context)
+        cwd = _require_relative_path(raw["cwd"], f"{context} cwd")
+        _reject_placeholders(raw["cwd"], f"{context} cwd")
+        argv = _validate_argv(raw["argv"], context)
+        env = raw["env"]
+        if not isinstance(env, dict):
+            _fail(context, "env must be an object")
+        for name, value in env.items():
+            env_context = f"{context} env[{name!r}]"
+            if not isinstance(name, str) or not ENV_NAME_RE.match(name):
+                _fail(context, f"env name is invalid: {name!r}")
+            _require_string(value, env_context)
+            for match in PLACEHOLDER_RE.findall(value):
+                if match != TRANSACTION_TMP:
+                    _fail(env_context, f"uses unsupported placeholder {match!r}")
+            if "/tmp/uv-cache" in value:
+                _fail(env_context, "must not name a shared /tmp/uv-cache")
+        return Smoke(
+            cwd=cwd,
+            argv=tuple(argv),
+            env=MappingProxyType(dict(env)),
+            raw=raw,
+        )
+
+
+@dataclass(frozen=True)
+class Link:
+    """One captured symlink disposition record."""
+
+    path: str
+    lstat_type: str
+    lstat_mode: str
+    link_text: str
+    disposition: str
+    target_policy: str
+    post_smoke_type: str
+    raw: dict = field(compare=False)
+
+    @staticmethod
+    def load(raw: dict, context: str) -> "Link":
+        _require_keys(raw, LINK_KEYS, LINK_KEYS, context)
+        path = _require_relative_path(raw["path"], f"{context} path")
+        if path == ".":
+            _fail(context, "path must name an entry inside the workspace")
+        lstat_type = _require_string(raw["lstat_type"], f"{context} lstat_type")
+        if lstat_type not in LSTAT_TYPES:
+            _fail(context, f"lstat_type must be one of: {', '.join(sorted(LSTAT_TYPES))}")
+        lstat_mode = _require_string(raw["lstat_mode"], f"{context} lstat_mode")
+        if not re.fullmatch(r"0o[0-7]{3,4}", lstat_mode):
+            _fail(context, "lstat_mode must be an octal mode string like '0o755'")
+        link_text = _require_string(raw["link_text"], f"{context} link_text")
+        disposition = _require_string(raw["disposition"], f"{context} disposition")
+        if disposition not in DISPOSITIONS:
+            _fail(context, f"disposition must be one of: {', '.join(sorted(DISPOSITIONS))}")
+        target_policy = _require_string(raw["target_policy"], f"{context} target_policy")
+        if target_policy != TARGET_POLICY_BY_DISPOSITION[disposition]:
+            _fail(
+                context,
+                f"target_policy {target_policy!r} contradicts disposition {disposition!r}",
+            )
+        post_smoke_type = _require_string(raw["post_smoke_type"], f"{context} post_smoke_type")
+        if post_smoke_type not in POST_SMOKE_TYPES:
+            _fail(
+                context,
+                f"post_smoke_type must be one of: {', '.join(sorted(POST_SMOKE_TYPES))}",
+            )
+        if post_smoke_type not in POST_SMOKE_BY_DISPOSITION[disposition]:
+            _fail(
+                context,
+                f"post_smoke_type {post_smoke_type!r} contradicts disposition {disposition!r}",
+            )
+        return Link(
+            path=path,
+            lstat_type=lstat_type,
+            lstat_mode=lstat_mode,
+            link_text=link_text,
+            disposition=disposition,
+            target_policy=target_policy,
+            post_smoke_type=post_smoke_type,
+            raw=raw,
+        )
+
+
+@dataclass(frozen=True)
+class Consumer:
+    """One external configuration record that names the workspace path."""
+
+    name: str
+    kind: str
+    path: str
+    old: str
+    new: str
+    count: int
+    session_adapter: str | None
+    raw: dict = field(compare=False)
+
+    @staticmethod
+    def load(raw: dict, context: str) -> "Consumer":
+        _require_keys(raw, CONSUMER_KEYS, CONSUMER_REQUIRED_KEYS, context)
+        name = _require_string(raw["name"], f"{context} name")
+        kind = _require_string(raw["kind"], f"{context} kind")
+        path = _require_string(raw["path"], f"{context} path")
+        old = _require_string(raw["old"], f"{context} old")
+        new = _require_string(raw["new"], f"{context} new")
+        if old == new:
+            _fail(context, "old and new values must differ")
+        count = raw["count"]
+        if not isinstance(count, int) or isinstance(count, bool) or count < 1:
+            _fail(context, "count must be a positive integer")
+        session_adapter = raw.get("session_adapter")
+        if session_adapter is not None:
+            _require_string(session_adapter, f"{context} session_adapter")
+        return Consumer(
+            name=name,
+            kind=kind,
+            path=path,
+            old=old,
+            new=new,
+            count=count,
+            session_adapter=session_adapter,
+            raw=raw,
+        )
+
+
+@dataclass(frozen=True)
+class RuntimeService:
+    """One long-running service with a structured HTTP verification."""
+
+    name: str
+    cwd: str
+    argv: tuple
+    port: int
+    http: MappingProxyType
+    raw: dict = field(compare=False)
+
+    @staticmethod
+    def load(raw: dict, context: str) -> "RuntimeService":
+        _require_keys(raw, RUNTIME_SERVICE_KEYS, RUNTIME_SERVICE_KEYS, context)
+        name = _require_string(raw["name"], f"{context} name")
+        cwd = _require_relative_path(raw["cwd"], f"{context} cwd")
+        argv = _validate_argv(raw["argv"], context)
+        port = raw["port"]
+        if not isinstance(port, int) or isinstance(port, bool) or not 1 <= port <= 65535:
+            _fail(context, "port must be an integer between 1 and 65535")
+        http = raw["http"]
+        if not isinstance(http, dict):
+            _fail(context, "http must be an object")
+        if set(http) == HTTP_JSON_KEYS:
+            keys = http["json_keys"]
+            if (
+                not isinstance(keys, list)
+                or not keys
+                or not all(isinstance(key, str) and key for key in keys)
+            ):
+                _fail(context, "http json_keys must be a nonempty array of strings")
+        elif set(http) == HTTP_MARKER_KEYS:
+            if http["status"] != 200:
+                _fail(context, "http status must be exactly 200")
+            _require_string(http["content_marker"], f"{context} http content_marker")
+        else:
+            _fail(
+                context,
+                "http must contain exactly json_keys, or exactly status and content_marker",
+            )
+        return RuntimeService(
+            name=name,
+            cwd=cwd,
+            argv=tuple(argv),
+            port=port,
+            http=MappingProxyType(dict(http)),
+            raw=raw,
+        )
+
+
+@dataclass(frozen=True)
+class Workspace:
+    """One migration transaction: a workspace or a linked worktree."""
+
+    name: str
+    group: str
+    kind: str
+    source: str
+    destination: str
+    expected_symlinks: int
+    git_roots: tuple
+    links: tuple
+    consumers: tuple
+    smoke: tuple
+    runtime_services: tuple
+    owner: str | None
+    branch: str | None
+    raw: dict = field(compare=False)
+
+    @property
+    def source_path(self) -> Path:
+        return Path(self.source).expanduser()
+
+    @property
+    def destination_path(self) -> Path:
+        return Path(self.destination).expanduser()
+
+    @property
+    def owner_path(self) -> Path | None:
+        return None if self.owner is None else Path(self.owner).expanduser()
+
+    @staticmethod
+    def load(raw: dict, drive_root: str, index: int) -> "Workspace":
+        context = f"workspaces[{index}]"
+        if not isinstance(raw, dict):
+            _fail(context, "must be a JSON object")
+        if "wuzapi" in json.dumps(raw):
+            _fail(context, "must not contain 'wuzapi'")
+        kind = raw.get("kind")
+        if kind not in KINDS:
+            _fail(context, f"kind must be one of: {', '.join(sorted(KINDS))}")
+        if kind == "workspace":
+            required = WORKSPACE_KEYS - {"runtime_services"}
+            _require_keys(raw, WORKSPACE_KEYS, required, context)
+        else:
+            _require_keys(raw, WORKTREE_KEYS, WORKTREE_KEYS, context)
+
+        name = _require_string(raw["name"], f"{context} name")
+        context = f"workspace {name!r}"
+        group = _require_string(raw["group"], f"{context} group")
+        if group not in GROUPS:
+            _fail(context, f"group must be one of: {', '.join(sorted(GROUPS))}")
+        source = _require_tilde_path(raw["source"], f"{context} source")
+        destination = _require_tilde_path(raw["destination"], f"{context} destination")
+        drive = _expanded(drive_root)
+        if not _is_within(_expanded(source), drive):
+            _fail(context, f"source must be inside {drive_root}")
+        if _is_within(_expanded(destination), drive):
+            _fail(context, f"destination must be outside {drive_root}")
+
+        expected_symlinks = raw["expected_symlinks"]
+        if (
+            not isinstance(expected_symlinks, int)
+            or isinstance(expected_symlinks, bool)
+            or expected_symlinks < 0
+        ):
+            _fail(context, "expected_symlinks must be a non-negative integer")
+
+        owner = None
+        branch = None
+        git_roots: tuple = ()
+        links: tuple = ()
+        runtime_services: tuple = ()
+        if kind == "workspace":
+            raw_git_roots = raw["git_roots"]
+            if not isinstance(raw_git_roots, list) or not raw_git_roots:
+                _fail(context, "git_roots must be a nonempty array")
+            for position, root in enumerate(raw_git_roots):
+                _require_relative_path(root, f"{context} git_roots[{position}]")
+            if len(set(raw_git_roots)) != len(raw_git_roots):
+                _fail(context, "git_roots must not repeat entries")
+            git_roots = tuple(raw_git_roots)
+
+            raw_links = raw["links"]
+            if not isinstance(raw_links, list):
+                _fail(context, "links must be an array of records, not a count")
+            links = tuple(
+                Link.load(link, f"{context} links[{position}]")
+                for position, link in enumerate(raw_links)
+            )
+            if len(links) != expected_symlinks:
+                _fail(
+                    context,
+                    f"expected_symlinks is {expected_symlinks} "
+                    f"but links contains {len(links)} records",
+                )
+            seen_paths = [link.path for link in links]
+            if len(set(seen_paths)) != len(seen_paths):
+                _fail(context, "links must not repeat a path")
+            for link in links:
+                for other in links:
+                    if link is not other and other.path.startswith(link.path + "/"):
+                        _fail(
+                            context,
+                            f"links overlap: {link.path!r} contains {other.path!r}",
+                        )
+            if "runtime_services" in raw:
+                raw_services = raw["runtime_services"]
+                if not isinstance(raw_services, list) or not raw_services:
+                    _fail(context, "runtime_services must be a nonempty array")
+                runtime_services = tuple(
+                    RuntimeService.load(service, f"{context} runtime_services[{position}]")
+                    for position, service in enumerate(raw_services)
+                )
+                service_names = [service.name for service in runtime_services]
+                if len(set(service_names)) != len(service_names):
+                    _fail(context, "runtime_services must not repeat a name")
+        else:
+            owner = _require_tilde_path(raw["owner"], f"{context} owner")
+            if not _is_within(_expanded(owner), drive):
+                _fail(context, f"owner must be inside {drive_root}")
+            branch = _require_string(raw["branch"], f"{context} branch")
+            if expected_symlinks != 0:
+                _fail(context, "a linked worktree must declare zero expected symlinks")
+
+        raw_consumers = raw["consumers"]
+        if not isinstance(raw_consumers, list):
+            _fail(context, "consumers must be an array")
+        consumers = tuple(
+            Consumer.load(consumer, f"{context} consumers[{position}]")
+            for position, consumer in enumerate(raw_consumers)
+        )
+        consumer_names = [consumer.name for consumer in consumers]
+        if len(set(consumer_names)) != len(consumer_names):
+            _fail(context, "consumers must not repeat a name")
+
+        raw_smoke = raw["smoke"]
+        if not isinstance(raw_smoke, list) or not raw_smoke:
+            _fail(context, "smoke must be a nonempty array")
+        smoke = tuple(
+            Smoke.load(record, f"{context} smoke[{position}]")
+            for position, record in enumerate(raw_smoke)
+        )
+
+        return Workspace(
+            name=name,
+            group=group,
+            kind=kind,
+            source=source,
+            destination=destination,
+            expected_symlinks=expected_symlinks,
+            git_roots=git_roots,
+            links=links,
+            consumers=consumers,
+            smoke=smoke,
+            runtime_services=runtime_services,
+            owner=owner,
+            branch=branch,
+            raw=raw,
+        )
+
+
+@dataclass(frozen=True)
+class Manifest:
+    """The validated migration manifest, with raw '~' forms preserved."""
+
+    version: int
+    drive_root: str
+    repos_root: str
+    epoch_repos_root: str
+    worktrees_root: str
+    state_root: str
+    workspaces: tuple
+    raw: dict = field(compare=False)
+
+    @property
+    def drive_root_path(self) -> Path:
+        return Path(self.drive_root).expanduser()
+
+    @property
+    def state_root_path(self) -> Path:
+        return Path(self.state_root).expanduser()
+
+    def by_name(self, name: str) -> Workspace:
+        for workspace in self.workspaces:
+            if workspace.name == name:
+                return workspace
+        raise KeyError(f"Manifest has no workspace named {name!r}")
+
+
+def load_manifest(path: Path) -> Manifest:
+    """Load and structurally validate the migration manifest.
+
+    Raises ManifestError on any schema violation.  Never calls Git and
+    never requires a declared source to exist on disk.
+    """
+    try:
+        raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    except OSError as error:
+        raise ManifestError(f"Manifest could not be read: {path} ({error})") from error
+    except json.JSONDecodeError as error:
+        raise ManifestError(f"Manifest is not valid JSON: {path} ({error})") from error
+
+    _require_keys(raw, MANIFEST_KEYS, MANIFEST_KEYS, "document")
+    if raw["version"] != 1:
+        _fail("document", "version must be exactly 1")
+    drive_root = _require_tilde_path(raw["drive_root"], "document drive_root")
+    repos_root = _require_tilde_path(raw["repos_root"], "document repos_root")
+    epoch_repos_root = _require_tilde_path(
+        raw["epoch_repos_root"], "document epoch_repos_root"
+    )
+    worktrees_root = _require_tilde_path(
+        raw["worktrees_root"], "document worktrees_root"
+    )
+    state_root = _require_tilde_path(raw["state_root"], "document state_root")
+    drive = _expanded(drive_root)
+    for label, root in (
+        ("repos_root", repos_root),
+        ("epoch_repos_root", epoch_repos_root),
+        ("worktrees_root", worktrees_root),
+        ("state_root", state_root),
+    ):
+        if _is_within(_expanded(root), drive):
+            _fail("document", f"{label} must be outside {drive_root}")
+
+    raw_workspaces = raw["workspaces"]
+    if not isinstance(raw_workspaces, list) or not raw_workspaces:
+        _fail("document", "workspaces must be a nonempty array")
+    workspaces = tuple(
+        Workspace.load(entry, drive_root, index)
+        for index, entry in enumerate(raw_workspaces)
+    )
+
+    names = [workspace.name for workspace in workspaces]
+    duplicate_names = sorted({name for name in names if names.count(name) > 1})
+    if duplicate_names:
+        _fail("document", f"workspace names are duplicated: {', '.join(duplicate_names)}")
+    destinations = [workspace.destination for workspace in workspaces]
+    duplicate_destinations = sorted(
+        {value for value in destinations if destinations.count(value) > 1}
+    )
+    if duplicate_destinations:
+        _fail(
+            "document",
+            f"workspace destinations are duplicated: {', '.join(duplicate_destinations)}",
+        )
+
+    return Manifest(
+        version=raw["version"],
+        drive_root=drive_root,
+        repos_root=repos_root,
+        epoch_repos_root=epoch_repos_root,
+        worktrees_root=worktrees_root,
+        state_root=state_root,
+        workspaces=workspaces,
+        raw=raw,
+    )
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="drive-workspace",
+        description=(
+            "Fail-closed tooling for migrating repositories out of Google Drive. "
+            "Subcommands arrive in later tasks."
+        ),
+    )
+    parser.add_subparsers(dest="command")
+    arguments = parser.parse_args(argv)
+    if arguments.command is None:
+        parser.print_help(sys.stderr)
+        return 2
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

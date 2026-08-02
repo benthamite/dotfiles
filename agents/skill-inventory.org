@@ -6,9 +6,6 @@ runtime system skills, private skills, and skills in other repositories are
 outside its scope.
 
 * Global
-:PROPERTIES:
-:ID:       F78A58A1-3F92-4341-96CA-659564F879A3
-:END:
 
 | Skill | Tools | Description | Paths |
 |-------+-------+-------------+-------|
@@ -53,9 +50,6 @@ outside its scope.
 | =walk-list= | Claude, Codex | Process a list file strictly item by item, sequentially or with a bounded subagent pool. Use when the user needs no skipping, batching, or peeking ahead; not for lists that can be safely read all at once. | =claude/skills/walk-list/SKILL.md=, =codex/skills/walk-list/SKILL.md= |
 
 * Project-local: dotfiles
-:PROPERTIES:
-:ID:       5925767E-4241-491D-B5DE-7546119777E6
-:END:
 
 | Skill | Tools | Description | Paths |
 |-------+-------+-------------+-------|
@@ -70,9 +64,6 @@ outside its scope.
 | =skill-resolver= | Claude, Codex | Resolve and read Claude/Codex skill files by skill name with deterministic filesystem lookup. Use when a user names a skill without an exact path, when you need to open, inspect, debug, or locate a skill, or before manually expanding a skill root/path. | =.claude/skills/skill-resolver/SKILL.md=, =.codex/skills/skill-resolver/SKILL.md= |
 
 * Project-local: emacs
-:PROPERTIES:
-:ID:       308C60F5-D310-4844-B2F5-02F34D4D51E3
-:END:
 
 | Skill | Tools | Description | Paths |
 |-------+-------+-------------+-------|
@@ -82,9 +73,6 @@ outside its scope.
 | =rename-package= | Claude, Codex | Rename an Emacs package end to end, especially elpaca-managed standalone packages. Use when the user asks to rename a package, local files, feature/symbol prefixes, GitHub repository, elpaca source directory, or references in dotfiles/system configuration. | =emacs/.claude/skills/rename-package/SKILL.md=, =emacs/.codex/skills/rename-package/SKILL.md= |
 
 * Project-local: macos
-:PROPERTIES:
-:ID:       1E3E9EF4-E040-4E71-A27D-1DDEB3AE1089
-:END:
 
 | Skill | Tools | Description | Paths |
 |-------+-------+-------------+-------|
@@ -93,9 +81,6 @@ outside its scope.
 | =security-audit= | Claude, Codex | Scan for exposed API keys and leaked credentials, audit dependency vulnerabilities, review macOS hardening settings, and evaluate Claude Code configuration risks. Use when the user wants a security review, vulnerability scan, dependency audit, secrets check, or periodic security posture assessment. | =macos/.claude/skills/security-audit/SKILL.md=, =macos/.codex/skills/security-audit/SKILL.md= |
 
 * Programmatic
-:PROPERTIES:
-:ID:       2F25ADA4-A2AF-40AD-BF42-F9B9BE68E725
-:END:
 
 | Skill | Tools | Description | Paths |
 |-------+-------+-------------+-------|
@@ -104,9 +89,6 @@ outside its scope.
 | =walk-list= | Claude, Codex | Process a list file strictly item by item, sequentially or with a bounded subagent pool. Use when the user needs no skipping, batching, or peeking ahead; not for lists that can be safely read all at once. | =claude/programmatic-skills/walk-list/SKILL.md=, =codex/programmatic-skills/walk-list/SKILL.md= |
 
 * Archived
-:PROPERTIES:
-:ID:       B3747803-9751-466A-A656-FD81AC33D681
-:END:
 
 | Skill | Tools | Description | Paths |
 |-------+-------+-------------+-------|

@@ -109,7 +109,10 @@ keystroke; it never pastes the prompt a second time. A non-implementation phase
 whose process exits before any assistant output can be moved once to a fresh
 fixed-role session: the guard verifies the empty return boundary, uses the
 backend's authoritative waiting state, and atomically adopts the fresh
-transcript without creating another review pass.
+transcript without creating another review pass. During implementation, a
+missing final marker can expose only the latest bounded stage-level return once
+the author is awaiting input; busy-session and earlier internal messages remain
+inaccessible.
 
 * Hooks
 

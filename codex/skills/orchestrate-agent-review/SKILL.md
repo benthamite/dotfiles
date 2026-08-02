@@ -235,6 +235,14 @@ validator inside `finish-phase`; it may reconcile a stale busy flag but never
 prints transcript content. Do not bypass it to read internal task/subagent
 output or inspect per-task repository/process state.
 
+If Agent 1 is awaiting input and `finish-phase --phase implementation` rejects
+the return because its final marker is missing, `stage-return --run-file <run>`
+may print only the latest assistant response after the guarded implementation
+boundary. It is unavailable while Agent 1 is busy, suppresses all earlier
+internal progress messages, and refuses a completed marker. Use it only to
+identify a stage-level stop condition or distinguish that condition from an
+omitted marker; it does not authorize task-level supervision.
+
 Send concise commentary when the stage phase changes. Do not emit periodic
 task-level heartbeats. If Agent 1 is busy, leave it alone. If implementation is
 active and Agent 1 is awaiting input, the only permitted continuation is:

@@ -1172,6 +1172,32 @@ def transcript_cmd(args: argparse.Namespace) -> None:
     print(json.dumps(messages, ensure_ascii=False, indent=2))
 
 
+def stage_return(args: argparse.Namespace) -> None:
+    """Print only the latest bounded top-level return from awaiting Agent 1."""
+    state = load_run(args.run_file)
+    if state["status"] != "implementation-active":
+        raise SystemExit("stage implementation is not active")
+    live = buffer_state(state["agent1"]["buffer"])
+    if live.get("state") != "awaiting-input":
+        raise SystemExit(
+            f"Agent 1 is {live.get('state', 'unknown')}; "
+            "stage return is available only after Agent 1 awaits input"
+        )
+    submission = state["submissions"][-1]
+    messages = transcript_messages(
+        Path(state["agent1"]["transcript"]),
+        offset=submission["transcript_offset"],
+    )
+    if not messages:
+        raise SystemExit("no bounded implementation return is available")
+    text = messages[-1]["text"]
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    marker = f"STAGE COMPLETE: {state['stage']}"
+    if lines and lines[-1] == marker:
+        raise SystemExit("stage return is complete; use finish-phase")
+    print(text)
+
+
 def git_status(repo: Path) -> dict[str, str]:
     def git(*argv: str) -> str:
         proc = subprocess.run(
@@ -1413,6 +1439,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--since")
     p.add_argument("--last", type=int, default=5)
     p.set_defaults(func=transcript_cmd)
+
+    p = sub.add_parser(
+        "stage-return",
+        help="Read only the latest bounded return from awaiting Agent 1",
+    )
+    p.add_argument("--run-file", required=True)
+    p.set_defaults(func=stage_return)
 
     p = sub.add_parser("status", help="Collect repo, buffer, and transcript status once")
     add_status_args(p)

@@ -776,6 +776,55 @@ class StageAtomicRunTests(unittest.TestCase):
             )
         buffer_state.assert_called_once_with("*claude:stage-2*")
 
+    def test_stage_return_exposes_only_last_bounded_return_after_agent_awaits(self):
+        self.start_implementation()
+        transcript = self.agent1_transcript
+        for text in ("internal progress", "Stage-wide blocked-unobserved result"):
+            record = {
+                "timestamp": "2026-08-02T12:00:00Z",
+                "message": {"role": "assistant", "content": text},
+            }
+            with transcript.open("a", encoding="utf-8") as stream:
+                stream.write(json.dumps(record) + "\n")
+
+        output = io.StringIO()
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "awaiting-input"},
+            ),
+            redirect_stdout(output),
+        ):
+            orchestrator.stage_return(SimpleNamespace(run_file=str(self.run_file)))
+
+        self.assertEqual(output.getvalue().strip(), "Stage-wide blocked-unobserved result")
+        self.assertNotIn("internal progress", output.getvalue())
+
+    def test_stage_return_rejects_busy_agent_and_completed_marker(self):
+        self.start_implementation()
+        args = SimpleNamespace(run_file=str(self.run_file))
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "busy"},
+            ),
+            self.assertRaisesRegex(SystemExit, "Agent 1 is busy"),
+        ):
+            orchestrator.stage_return(args)
+
+        self.write_phase_return("implementation")
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "awaiting-input"},
+            ),
+            self.assertRaisesRegex(SystemExit, "use finish-phase"),
+        ):
+            orchestrator.stage_return(args)
+
     def test_raw_buffer_and_transcript_cli_bypasses_are_unavailable(self):
         with (
             redirect_stderr(io.StringIO()),

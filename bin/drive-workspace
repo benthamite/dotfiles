@@ -34,10 +34,16 @@ import json
 import os
 import re
 import shutil
+import signal
+import socket
 import stat
 import subprocess
 import sys
 import tempfile
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -1060,8 +1066,11 @@ EVENTS_BY_KIND = {
         "generated_paths_rolled_back", "rollback_window_closed",
         "generated_target_finalized", "local_rolled_back",
         "rollback_verified", "rollback_drill_requested",
+        "cloud_recorded", "cloud_verified", "cloud_restored",
+        "native_errors_recorded",
+        "smoke_started", "smoke_checked", "smoke_stopped",
     },
-    "observation": {"drive_state"},
+    "observation": {"drive_state", "native_errors_recorded"},
     "program": {"program_gate"},
 }
 EVENT_KEYS = {
@@ -1648,6 +1657,16 @@ def _capture_payload(workspace: Workspace) -> dict:
         "git": snapshot["git"],
         "links": links,
         "consumers": consumers,
+        "runtime_services": [
+            {
+                "name": service.name,
+                "cwd": service.cwd,
+                "argv": list(service.argv),
+                "port": service.port,
+                "http": dict(service.http),
+            }
+            for service in workspace.runtime_services
+        ],
         "source_dev": _device_of(source),
     }
 
@@ -1722,26 +1741,47 @@ def cmd_record_drive_state(name: str, journal) -> int:
     return 0
 
 
-def cmd_confirm_drive_paused(name: str, journal) -> int:
-    path = _journal_abspath(journal)
-    events = read_journal(path)
-    _require_transaction_header(events, name, path)
-    _require_capture(events, path)
+def _require_pause_evidence(name: str) -> dict:
+    """Fresh characterized pause evidence, or a blocker.
+
+    Characterization: the provider must report a boolean paused state and
+    a boolean queue observation; anything else (a missing provider, an
+    ambiguous UI reading, a running client, or a queue cursor advancing
+    while the UI claims to be paused) is a blocker.
+    """
     if DRIVE_PAUSE_PROVIDER is None:
         raise TransactionError(
             "no Drive pause provider is configured; refusing to assume the "
             "native client is paused"
         )
     evidence = DRIVE_PAUSE_PROVIDER(name)
-    if not isinstance(evidence, dict) or evidence.get("paused") is not True:
+    if (
+        not isinstance(evidence, dict)
+        or not isinstance(evidence.get("paused"), bool)
+        or not isinstance(evidence.get("queue_advanced"), bool)
+    ):
+        raise TransactionError(
+            "the Drive pause provider returned an ambiguous UI reading; "
+            "refusing to treat it as paused"
+        )
+    if evidence["paused"] is not True:
         raise TransactionError(
             "the Drive pause provider did not observe a paused native state"
         )
-    if evidence.get("queue_advanced") is not False:
+    if evidence["queue_advanced"] is not False:
         raise TransactionError(
             "the Drive pause provider observed outbound queue advancement "
             "during the bounded observation"
         )
+    return evidence
+
+
+def cmd_confirm_drive_paused(name: str, journal) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    _require_capture(events, path)
+    evidence = _require_pause_evidence(name)
     _append_event(
         path, "drive_paused", {"workspace": name, "evidence": evidence}
     )
@@ -1781,6 +1821,10 @@ def cmd_move(name: str, journal, manifest_path) -> int:
             f"source {source} and destination parent {parent} are on "
             f"different devices; os.rename would degrade to a copy"
         )
+    # No live user may sit below the source when it is renamed away: a
+    # process cwd or an Emacs file-visiting buffer below the source is a
+    # blocker (the same gates re-run at close-rollback-window).
+    _require_no_live_source_users(str(source))
     current = _workspace_snapshot(workspace, source)
     if not _snapshots_match(current, capture["payload"]):
         raise TransactionError(
@@ -2937,6 +2981,1303 @@ def cmd_record_program_gate(journal, gate: str, evidence_journal) -> int:
     return 0
 
 
+# ---------------------------------------------------------------------------
+# Live gates: processes, Emacs buffers, cloud identity, native UI, services
+# ---------------------------------------------------------------------------
+
+LSOF = "/usr/sbin/lsof"
+PS = "/bin/ps"
+OSASCRIPT = "/usr/bin/osascript"
+# Deliberately PATH-resolved, not absolute: the dotfiles shim
+# shell/shims/emacsclient must win when present (it repairs Emacs server
+# socket discovery under an overridden TMPDIR), and its absolute path
+# lives under the Drive tree this very migration relocates.  Hardcoding
+# either candidate breaks one environment; PATH order picks the right
+# one per invoking shell.
+EMACSCLIENT = "emacsclient"
+EMACS_BUFFER_QUERY = (
+    "(json-encode (delq nil (mapcar #'buffer-file-name (buffer-list))))"
+)
+NATIVE_JXA_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "drive-workspace-native.jxa"
+)
+NATIVE_PAGE_LIMIT = 100
+PREFLIGHT_WINDOW_KEYS = (
+    "AXRole", "AXIdentifier", "AXTitle", "AXDescription",
+    "AXValue", "AXPosition", "AXSize", "AXWindowNumber",
+)
+SHA256_HEX_RE = re.compile(r"[0-9a-f]{64}")
+
+OAUTH_FILE_ENV = "DRIVE_WORKSPACE_OAUTH_FILE"
+DEFAULT_OAUTH_FILE = "~/.config/gdoc/accounts/personal/token.json"
+GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token"
+DRIVE_API_ROOT = "https://www.googleapis.com/drive/v3"
+DRIVE_FILE_FIELDS = (
+    "id,name,parents,trashed,explicitlyTrashed,ownedByMe,driveId,mimeType"
+)
+DRIVE_LIST_FIELDS = (
+    "nextPageToken,incompleteSearch,"
+    "files(id,name,parents,trashed,ownedByMe,driveId)"
+)
+CLOUD_PAGE_LIMIT = 100
+
+SMOKE_STOP_TIMEOUT = 10.0
+# Popen handles for smoke services started by this same process.  Real
+# runs start and stop services from separate invocations, where this map
+# is empty and reaping is a no-op; in-process callers (tests) need it so
+# an exited child is reaped instead of lingering as a zombie that
+# `ps -Ao pgid=,pid=` would misreport as a live group member.
+_SMOKE_CHILDREN: dict = {}
+
+
+def _run_tool(argv) -> subprocess.CompletedProcess:
+    """Sole subprocess seam for live observers.
+
+    Everything close-rollback-window and the native provider observe
+    (lsof, emacsclient, osascript, ps) runs through this function with a
+    structured argv, shell=False, and strict UTF-8 decoding, so tests can
+    substitute recorded fixtures for the entire observation surface.
+    """
+    try:
+        return subprocess.run(
+            [str(item) for item in argv],
+            shell=False,
+            check=False,
+            capture_output=True,
+            encoding="utf-8",
+            errors="strict",
+        )
+    except FileNotFoundError as error:
+        raise TransactionError(
+            f"required observer tool is missing: {argv[0]} ({error})"
+        ) from error
+    except UnicodeDecodeError as error:
+        raise TransactionError(
+            f"observer output is not valid UTF-8: {argv[0]} ({error})"
+        ) from error
+
+
+# --- Process and Emacs gates ----------------------------------------------
+
+
+def _process_cwds() -> list:
+    """(pid, cwd) for every observable process, via lsof field output.
+
+    `lsof -Fn -a -d cwd` is parsed structurally (p/n field lines); no
+    shell and no column splitting are involved.
+    """
+    completed = _run_tool([LSOF, "-Fn", "-a", "-d", "cwd"])
+    if completed.returncode != 0:
+        raise TransactionError(
+            f"lsof -Fn -a -d cwd failed (status {completed.returncode}); "
+            f"the process gate cannot observe"
+        )
+    records = []
+    pid = None
+    for line in completed.stdout.splitlines():
+        if line.startswith("p"):
+            try:
+                pid = int(line[1:])
+            except ValueError as error:
+                raise TransactionError(
+                    f"lsof output is unreadable: {line!r}"
+                ) from error
+        elif line.startswith("n") and pid is not None:
+            records.append((pid, line[1:]))
+    return records
+
+
+def _emacs_visited_files() -> list:
+    """Every file-visiting buffer path in the live Emacs session.
+
+    Emacs is queried only with `emacsclient -e`; it is never signalled.
+    The elisp expression returns a JSON array printed as an elisp string,
+    which is decoded here fail-closed: any unreadable output is a
+    blocker, never an empty success.
+    """
+    completed = _run_tool([EMACSCLIENT, "-e", EMACS_BUFFER_QUERY])
+    if completed.returncode != 0:
+        raise TransactionError(
+            "emacsclient -e failed; the Emacs buffer gate cannot observe "
+            "(is the Emacs server running?)"
+        )
+    raw = completed.stdout.strip()
+    try:
+        printed = json.loads(raw)
+        value = json.loads(printed) if isinstance(printed, str) else printed
+    except (json.JSONDecodeError, TypeError) as error:
+        raise TransactionError(
+            f"emacsclient buffer listing is unreadable: {raw!r} ({error})"
+        ) from error
+    if value is None:
+        return []
+    if not isinstance(value, list) or not all(
+        isinstance(item, str) for item in value
+    ):
+        raise TransactionError(
+            f"emacsclient buffer listing is unreadable: {raw!r}"
+        )
+    return value
+
+
+def _require_no_live_source_users(source: str) -> None:
+    """Block while any process cwd or Emacs buffer is below the source."""
+    root = os.path.normpath(str(source))
+    for pid, cwd in _process_cwds():
+        if _is_within(os.path.normpath(cwd), root):
+            raise TransactionError(
+                f"process {pid} has its cwd below the source path "
+                f"{root}: {cwd}"
+            )
+    for file_path in _emacs_visited_files():
+        expanded = os.path.normpath(os.path.expanduser(file_path))
+        if _is_within(expanded, root):
+            raise TransactionError(
+                f"an Emacs buffer visits {file_path} below the source "
+                f"path {root}; close it before the window can close"
+            )
+
+
+# --- Cloud reader ----------------------------------------------------------
+
+
+def _oauth_file_path() -> str:
+    raw = os.environ.get(OAUTH_FILE_ENV) or DEFAULT_OAUTH_FILE
+    return os.path.abspath(os.path.expanduser(raw))
+
+
+def _load_oauth_credentials() -> dict:
+    """Read the personal gdoc OAuth file at runtime only, never at import.
+
+    The values are used solely to mint a short-lived access token over
+    TLS; nothing from this file is ever printed, journaled, or included
+    in an error message.
+    """
+    path = _oauth_file_path()
+    try:
+        raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise TransactionError(
+            f"cloud OAuth credential file cannot be read: {path} "
+            f"({type(error).__name__})"
+        ) from error
+    if not isinstance(raw, dict):
+        raise TransactionError(
+            f"cloud OAuth credential file is not a JSON object: {path}"
+        )
+    for key in ("refresh_token", "client_id", "client_secret"):
+        value = raw.get(key)
+        if not isinstance(value, str) or not value:
+            raise TransactionError(
+                f"cloud OAuth credential file is missing {key}: {path}"
+            )
+    token_uri = raw.get("token_uri") or GOOGLE_TOKEN_URI
+    if not isinstance(token_uri, str) or not token_uri.startswith("https://"):
+        raise TransactionError(
+            f"cloud OAuth token_uri is not an https endpoint: {path}"
+        )
+    return {
+        "refresh_token": raw["refresh_token"],
+        "client_id": raw["client_id"],
+        "client_secret": raw["client_secret"],
+        "token_uri": token_uri,
+    }
+
+
+class _CloudReader:
+    """Minimal fail-closed Google Drive v3 client over urllib.request.
+
+    The only mutation it can express is files.update with trashed=false
+    (for restore-cloud); there is no create, copy, upload, delete, or
+    rename path.  The refreshed access token lives only in memory and in
+    the Authorization header; it is never printed or journaled.
+    """
+
+    def __init__(self):
+        credentials = _load_oauth_credentials()
+        body = urllib.parse.urlencode(
+            {
+                "grant_type": "refresh_token",
+                "refresh_token": credentials["refresh_token"],
+                "client_id": credentials["client_id"],
+                "client_secret": credentials["client_secret"],
+            }
+        ).encode("ascii")
+        request = urllib.request.Request(
+            credentials["token_uri"],
+            data=body,
+            method="POST",
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        payload = self._json(request)
+        token = payload.get("access_token")
+        if not isinstance(token, str) or not token:
+            raise TransactionError(
+                "the OAuth token refresh returned no usable access token"
+            )
+        self._token = token
+
+    @staticmethod
+    def _json(request) -> dict:
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                data = response.read()
+        except urllib.error.HTTPError as error:
+            raise TransactionError(
+                f"cloud API request failed: {error.code} {error.reason} "
+                f"({request.get_method()} "
+                f"{request.full_url.split('?')[0]})"
+            ) from error
+        except (urllib.error.URLError, OSError) as error:
+            raise TransactionError(
+                f"cloud API request failed: {error}"
+            ) from error
+        try:
+            payload = json.loads(data.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise TransactionError(
+                f"cloud API response is not valid JSON ({error})"
+            ) from error
+        if not isinstance(payload, dict):
+            raise TransactionError("cloud API response is not a JSON object")
+        return payload
+
+    def _api(self, method: str, path: str, params: dict, body=None) -> dict:
+        url = f"{DRIVE_API_ROOT}/{path}"
+        if params:
+            url += "?" + urllib.parse.urlencode(params)
+        data = None
+        headers = {"Authorization": f"Bearer {self._token}"}
+        if body is not None:
+            data = json.dumps(body).encode("utf-8")
+            headers["Content-Type"] = "application/json"
+        request = urllib.request.Request(
+            url, data=data, method=method, headers=headers
+        )
+        return self._json(request)
+
+    def get_file(self, file_id: str) -> dict:
+        return self._api(
+            "GET",
+            f"files/{urllib.parse.quote(str(file_id), safe='')}",
+            {"fields": DRIVE_FILE_FIELDS, "supportsAllDrives": "true"},
+        )
+
+    def list_files(self, query: str, page_token: str | None = None) -> dict:
+        params = {
+            "q": query, "fields": DRIVE_LIST_FIELDS, "pageSize": "100",
+        }
+        if page_token is not None:
+            params["pageToken"] = page_token
+        return self._api("GET", "files", params)
+
+    def clear_trashed(self, file_id: str) -> dict:
+        """The ONLY mutation: files.update with {"trashed": false}."""
+        return self._api(
+            "PATCH",
+            f"files/{urllib.parse.quote(str(file_id), safe='')}",
+            {"fields": DRIVE_FILE_FIELDS, "supportsAllDrives": "true"},
+            body={"trashed": False},
+        )
+
+
+def _latest_cloud_record(events: list, journal: str) -> dict:
+    recorded = _latest(events, "cloud_recorded")
+    if recorded is None:
+        raise TransactionError(
+            f"journal has no cloud_recorded event; record-cloud must run "
+            f"first: {journal}"
+        )
+    return recorded["payload"]
+
+
+def _escape_drive_query(value: str) -> str:
+    return value.replace("\\", "\\\\").replace("'", "\\'")
+
+
+def _parent_chain(reader: _CloudReader, meta: dict) -> list:
+    """The [{id, name}, ...] chain from meta's parent up to its root."""
+    chain = []
+    seen = set()
+    current = meta
+    for _ in range(64):
+        parents = current.get("parents")
+        if not parents:
+            return chain
+        if not isinstance(parents, list) or len(parents) != 1:
+            raise TransactionError(
+                f"cloud parent chain for {current.get('id')!r} is "
+                f"ambiguous: {parents!r}"
+            )
+        parent_id = parents[0]
+        if parent_id in seen:
+            raise TransactionError(
+                "cloud parent chain loops; refusing the ambiguity"
+            )
+        seen.add(parent_id)
+        parent = reader.get_file(parent_id)
+        chain.append({"id": parent.get("id"), "name": parent.get("name")})
+        current = parent
+    raise TransactionError("cloud parent chain is too deep; refusing")
+
+
+def _chain_root_id(reader: _CloudReader, meta: dict) -> str:
+    chain = _parent_chain(reader, meta)
+    return chain[-1]["id"] if chain else meta.get("id")
+
+
+def _cloud_name_hits(reader: _CloudReader, record: dict) -> list:
+    """Live objects sharing the old name, across ALL listing pages.
+
+    Every page must carry the expected fields; a truncated, incomplete,
+    or looping listing is a blocker, never a silently shorter sweep.
+    """
+    name = record["object"]["name"]
+    query = f"name = '{_escape_drive_query(name)}' and trashed = false"
+    hits: list = []
+    seen_tokens: set = {None}
+    token = None
+    for _ in range(CLOUD_PAGE_LIMIT):
+        listing = reader.list_files(query, page_token=token)
+        if listing.get("incompleteSearch") is not False:
+            raise TransactionError(
+                "cloud listing is incomplete (incompleteSearch); the "
+                "duplicate check is ambiguous and therefore a blocker"
+            )
+        files = listing.get("files")
+        if not isinstance(files, list):
+            raise TransactionError(
+                "cloud listing returned no usable files array"
+            )
+        hits.extend(files)
+        next_token = listing.get("nextPageToken")
+        if next_token is None:
+            return hits
+        if not isinstance(next_token, str) or not next_token:
+            raise TransactionError(
+                "cloud listing returned an unusable next-page token"
+            )
+        if next_token in seen_tokens:
+            raise TransactionError(
+                f"cloud listing pagination loop on token {next_token!r}"
+            )
+        seen_tokens.add(next_token)
+        token = next_token
+    raise TransactionError("cloud listing pagination did not terminate")
+
+
+def _classify_name_hits(
+    reader: _CloudReader, record: dict, hits: list
+) -> int:
+    """Every live same-name object is a blocker of a specific class."""
+    for hit in hits:
+        hit_id = hit.get("id")
+        if hit_id == record["object"]["id"]:
+            raise TransactionError(
+                f"old cloud object {hit_id} appears live in the name "
+                f"listing; it is not trashed"
+            )
+        if record["parent_id"] in (hit.get("parents") or []):
+            raise TransactionError(
+                f"a live object occupies the old cloud path: {hit_id!r}"
+            )
+        root = _chain_root_id(reader, hit)
+        if root == record["root_id"]:
+            raise TransactionError(
+                f"duplicate live cloud object {hit_id!r} shares the old "
+                f"name under the journaled root"
+            )
+        raise TransactionError(
+            f"computer-backup (machine root {root!r}) duplicate: "
+            f"{hit_id!r}; the machine_root count must be zero"
+        )
+    return 0
+
+
+def _cloud_verification(
+    name: str, reader: _CloudReader, record: dict
+) -> dict:
+    object_id = record["object"]["id"]
+    old = reader.get_file(object_id)
+    if old.get("trashed") is not True:
+        raise TransactionError(
+            f"old cloud object {object_id} is not trashed"
+        )
+    if old.get("parents") != [record["parent_id"]]:
+        raise TransactionError(
+            f"old cloud object {object_id} has a changed parent "
+            f"{old.get('parents')!r}; the journaled parent is "
+            f"{record['parent_id']!r}"
+        )
+    if old.get("ownedByMe") is not True or old.get("driveId"):
+        raise TransactionError(
+            f"old cloud object {object_id} is not in My Drive "
+            f"(is_my_drive must be 1)"
+        )
+    root = reader.get_file("root")
+    if root.get("id") != record["root_id"]:
+        raise TransactionError(
+            f"cloud root ID mismatch: {root.get('id')!r} is not the "
+            f"journaled root {record['root_id']!r}"
+        )
+    hits = _cloud_name_hits(reader, record)
+    machine_count = _classify_name_hits(reader, record, hits)
+    return {
+        "workspace": name,
+        "object_id": object_id,
+        "parent_id": record["parent_id"],
+        "root_id": record["root_id"],
+        "machine_root_count": machine_count,
+        "is_my_drive": 1,
+    }
+
+
+def cmd_record_cloud(name: str, journal) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    _require_capture(events, path)
+    state = _latest(events, "drive_state")
+    if state is None:
+        raise TransactionError(
+            f"journal has no drive_state evidence; record-drive-state "
+            f"must run before record-cloud: {path}"
+        )
+    cloud_evidence = state["payload"]["evidence"].get("cloud")
+    if not isinstance(cloud_evidence, dict) or not isinstance(
+        cloud_evidence.get("object_id"), str
+    ):
+        raise TransactionError(
+            f"drive_state evidence names no cloud object_id: {path}"
+        )
+    reader = _CloudReader()
+    object_id = cloud_evidence["object_id"]
+    obj = reader.get_file(object_id)
+    if obj.get("id") != object_id:
+        raise TransactionError(
+            f"cloud object {object_id} refetched with a different ID: "
+            f"{obj.get('id')!r}"
+        )
+    if not isinstance(obj.get("name"), str) or not obj["name"]:
+        raise TransactionError(
+            f"cloud object {object_id} has no usable name"
+        )
+    parents = obj.get("parents")
+    if not isinstance(parents, list) or len(parents) != 1:
+        raise TransactionError(
+            f"cloud object {object_id} has an ambiguous parent set: "
+            f"{parents!r}"
+        )
+    if obj.get("ownedByMe") is not True or obj.get("driveId"):
+        raise TransactionError(
+            f"cloud object {object_id} is not in My Drive "
+            f"(is_my_drive must be 1)"
+        )
+    chain = _parent_chain(reader, obj)
+    if not chain:
+        raise TransactionError(
+            f"cloud object {object_id} has no parent chain"
+        )
+    root = reader.get_file("root")
+    if chain[-1]["id"] != root.get("id"):
+        raise TransactionError(
+            f"cloud object {object_id} does not chain to the My Drive "
+            f"root {root.get('id')!r}"
+        )
+    _append_event(
+        path,
+        "cloud_recorded",
+        {
+            "workspace": name,
+            "object": {
+                "id": obj["id"],
+                "name": obj["name"],
+                "parents": parents,
+                "mimeType": obj.get("mimeType"),
+            },
+            "parent_id": parents[0],
+            "parent_chain": chain,
+            "root_id": root["id"],
+            "is_my_drive": 1,
+        },
+    )
+    _print_journal(path)
+    return 0
+
+
+def cmd_verify_cloud(name: str, journal) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    record = _latest_cloud_record(events, path)
+    reader = _CloudReader()
+    summary = _cloud_verification(name, reader, record)
+    _append_event(path, "cloud_verified", summary)
+    _print_journal(path)
+    return 0
+
+
+def cmd_restore_cloud(name: str, journal) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    _require_capture(events, path)
+    record = _latest_cloud_record(events, path)
+    evidence = _require_pause_evidence(name)
+    destination = events[0]["destination"]
+    if not destination or not os.path.isdir(destination):
+        raise TransactionError(
+            f"the destination is missing outside Drive; refusing the "
+            f"cloud restore: {destination}"
+        )
+    reader = _CloudReader()
+    object_id = record["object"]["id"]
+    old = reader.get_file(object_id)
+    if old.get("trashed") is not True:
+        raise TransactionError(
+            f"old cloud object {object_id} is not in Trash; there is "
+            f"nothing to restore"
+        )
+    if old.get("parents") != [record["parent_id"]]:
+        raise TransactionError(
+            f"old cloud object {object_id} has a changed parent "
+            f"{old.get('parents')!r}; the journaled parent is "
+            f"{record['parent_id']!r}"
+        )
+    for hit in _cloud_name_hits(reader, record):
+        raise TransactionError(
+            f"a live duplicate blocks the cloud restore: {hit.get('id')!r}"
+        )
+    reader.clear_trashed(object_id)
+    refetched = reader.get_file(object_id)
+    if (
+        refetched.get("id") != object_id
+        or refetched.get("trashed") is not False
+        or refetched.get("parents") != [record["parent_id"]]
+    ):
+        raise TransactionError(
+            f"the restored cloud object did not refetch at its original "
+            f"parent: {refetched!r}"
+        )
+    _append_event(
+        path,
+        "cloud_restored",
+        {
+            "workspace": name,
+            "object_id": object_id,
+            "parents": refetched.get("parents"),
+            "metadata": {
+                key: refetched.get(key)
+                for key in ("id", "name", "parents", "trashed", "mimeType")
+            },
+            "pause_evidence": evidence,
+        },
+    )
+    _print_journal(path)
+    return 0
+
+
+# --- Native provider: preflight and error rows -----------------------------
+
+
+def _run_native(args: list) -> dict:
+    completed = _run_tool(
+        [OSASCRIPT, "-l", "JavaScript", NATIVE_JXA_PATH, *args]
+    )
+    stderr = (completed.stderr or "").strip()
+    if completed.returncode == 77:
+        raise TransactionError(
+            f"the native provider was denied Accessibility (exit 77): "
+            f"{stderr}"
+        )
+    if completed.returncode != 0:
+        raise TransactionError(
+            f"the native provider failed (status {completed.returncode}): "
+            f"{stderr}"
+        )
+    try:
+        payload = json.loads(completed.stdout)
+    except json.JSONDecodeError as error:
+        raise TransactionError(
+            f"native provider output is not valid JSON ({error})"
+        ) from error
+    if not isinstance(payload, dict):
+        raise TransactionError("native provider output is not an object")
+    return payload
+
+
+def cmd_native_preflight() -> int:
+    payload = _run_native(["preflight"])
+    window = payload.get("window")
+    if not isinstance(window, dict):
+        raise TransactionError(
+            "native preflight payload has no window object"
+        )
+    for key in PREFLIGHT_WINDOW_KEYS:
+        if key not in window:
+            raise TransactionError(
+                f"native preflight payload is missing the {key} attribute"
+            )
+    digest = payload.get("screenshot_sha256")
+    if not isinstance(digest, str) or not SHA256_HEX_RE.fullmatch(digest):
+        raise TransactionError(
+            "native preflight payload has no usable screenshot hash"
+        )
+    if not isinstance(payload.get("captured_utc"), str):
+        raise TransactionError(
+            "native preflight payload has no capture time"
+        )
+    sys.stdout.write(canonical_json(payload))
+    return 0
+
+
+def _native_row_identity(row: dict) -> tuple:
+    return (row["row_key"], row["path"], row["category"], row["text"])
+
+
+def _native_row_record(
+    row, page_index: int, captured: str, screenshot: str
+) -> dict:
+    if not isinstance(row, dict):
+        raise TransactionError(
+            f"native error row is unreadable (not an object): {row!r}"
+        )
+    unknown = set(row) - {
+        "row_key", "path", "category", "text", "row_index", "annotation",
+    }
+    if unknown:
+        raise TransactionError(
+            f"native error row carries unknown fields "
+            f"{sorted(unknown)}: {row!r}"
+        )
+    row_key = row.get("row_key")
+    path = row.get("path")
+    category = row.get("category")
+    text = row.get("text")
+    row_index = row.get("row_index")
+    if (
+        not isinstance(row_key, str) or not row_key
+        or not isinstance(path, str) or not path
+        or not isinstance(category, str)
+        or not isinstance(text, str)
+        or not isinstance(row_index, int) or isinstance(row_index, bool)
+    ):
+        raise TransactionError(f"native error row is unreadable: {row!r}")
+    record = {
+        "row_key": row_key,
+        "path": path,
+        "category": category,
+        "text": text,
+        "page_index": page_index,
+        "row_index": row_index,
+        "captured_utc": captured,
+        "screenshot_sha256": screenshot,
+    }
+    annotation = row.get("annotation")
+    if annotation is not None:
+        # Log/database matches are optional annotations only; they can
+        # never create or clear a native row.
+        if not isinstance(annotation, str):
+            raise TransactionError(
+                f"native error row annotation is unreadable: {row!r}"
+            )
+        record["annotation"] = annotation
+    return record
+
+
+def _native_error_rows() -> list:
+    """All visible native error rows via the sole tested JXA provider."""
+    rows = []
+    seen_keys = set()
+    seen_tokens = {""}
+    token = ""
+    for page_index in range(NATIVE_PAGE_LIMIT):
+        payload = _run_native(["list-errors", "--page-token", token])
+        page_rows = payload.get("rows")
+        screenshot = payload.get("screenshot_sha256")
+        captured = payload.get("captured_utc")
+        if (
+            not isinstance(page_rows, list)
+            or not isinstance(screenshot, str)
+            or not SHA256_HEX_RE.fullmatch(screenshot)
+            or not isinstance(captured, str) or not captured
+        ):
+            raise TransactionError(
+                "native provider page is missing rows, a screenshot "
+                "hash, or a capture time"
+            )
+        next_token = payload.get("next_page_token")
+        if next_token is not None:
+            if not isinstance(next_token, str) or not next_token:
+                raise TransactionError(
+                    "native provider returned an unusable next-page token"
+                )
+            if next_token in seen_tokens:
+                raise TransactionError(
+                    f"native provider pagination loop on token "
+                    f"{next_token!r}"
+                )
+            seen_tokens.add(next_token)
+        for row in page_rows:
+            record = _native_row_record(
+                row, page_index, captured, screenshot
+            )
+            if record["row_key"] in seen_keys:
+                raise TransactionError(
+                    f"duplicate native row key {record['row_key']!r}"
+                )
+            seen_keys.add(record["row_key"])
+            rows.append(record)
+        if next_token is None:
+            return rows
+        token = next_token
+    raise TransactionError(
+        "native provider pagination did not terminate"
+    )
+
+
+def cmd_record_native_errors(journal) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    if events[0]["journal_kind"] == "program":
+        raise TransactionError(
+            f"native errors cannot be recorded in a program journal: {path}"
+        )
+    rows = _native_error_rows()
+    _append_event(path, "native_errors_recorded", {"rows": rows})
+    _print_journal(path)
+    return 0
+
+
+# --- Process-group and Drive-process observation ---------------------------
+
+
+def _reap_exited_children(pgid: int) -> None:
+    """Reap this process's own exited children in one process group.
+
+    Without this, a smoke service started and stopped by the same
+    process would linger as a zombie that ps still lists, and the group
+    could never read as exited.  Foreign processes are unaffected.
+    """
+    for process in list(_SMOKE_CHILDREN.values()):
+        process.poll()
+    while True:
+        try:
+            pid, _status = os.waitpid(-pgid, os.WNOHANG)
+        except (ChildProcessError, OSError):
+            return
+        if pid == 0:
+            return
+
+
+def _process_group_members(pgid: int) -> list:
+    _reap_exited_children(pgid)
+    completed = _run_tool([PS, "-Ao", "pgid=,pid="])
+    if completed.returncode != 0:
+        raise TransactionError(
+            f"ps -Ao pgid=,pid= failed (status {completed.returncode})"
+        )
+    members = []
+    for line in completed.stdout.splitlines():
+        parts = line.split()
+        if len(parts) != 2:
+            continue
+        if parts[0] == str(pgid):
+            try:
+                members.append(int(parts[1]))
+            except ValueError as error:
+                raise TransactionError(
+                    f"ps output is unreadable: {line!r}"
+                ) from error
+    return members
+
+
+def _google_drive_pid() -> int:
+    completed = _run_tool([PS, "-Axo", "pid=,comm="])
+    if completed.returncode != 0:
+        raise TransactionError(
+            f"ps -Axo pid=,comm= failed (status {completed.returncode})"
+        )
+    pids = []
+    for line in completed.stdout.splitlines():
+        parts = line.strip().split(None, 1)
+        if len(parts) != 2:
+            continue
+        pid_text, comm = parts
+        if os.path.basename(comm) == "Google Drive":
+            try:
+                pids.append(int(pid_text))
+            except ValueError as error:
+                raise TransactionError(
+                    f"ps output is unreadable: {line!r}"
+                ) from error
+    if len(pids) != 1:
+        raise TransactionError(
+            f"expected exactly one Google Drive process; found "
+            f"{len(pids)}"
+        )
+    return pids[0]
+
+
+# --- close-rollback-window -------------------------------------------------
+
+
+def cmd_close_rollback_window(
+    journal, baseline_journal, restart_before_pid: int
+) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    header = events[0]
+    if header["journal_kind"] != "transaction":
+        raise TransactionError(
+            f"journal is a {header['journal_kind']} journal, not a "
+            f"transaction journal: {path}"
+        )
+    name = header["workspace"]
+    baseline_path = _journal_abspath(baseline_journal)
+    baseline_events = read_journal(baseline_path)
+    if _latest(events, "rollback_window_closed") is not None:
+        raise TransactionError(
+            f"the rollback window was already closed: {path}"
+        )
+    capture = _require_capture(events, path)
+    _require_moved(events, path)
+    materialized = _active(
+        events, "generated_paths_materialized", "generated_paths_rolled_back"
+    )
+    if materialized is None:
+        raise TransactionError(
+            f"close-rollback-window requires an active "
+            f"generated_paths_materialized event: {path}"
+        )
+    smokes = [
+        event for event in events
+        if event["event"] == "smoke"
+        and event["payload"].get("completed") is True
+        and event["sequence"] > materialized["sequence"]
+    ]
+    if len(smokes) != 1:
+        raise TransactionError(
+            f"exactly one successful run-smoke after materialization is "
+            f"required; found {len(smokes)}"
+        )
+    smoke_sequence = smokes[0]["sequence"]
+    if not any(
+        event["event"] == "local_verified"
+        and event["sequence"] > smoke_sequence
+        for event in events
+    ):
+        raise TransactionError(
+            "a successful verify-local after the accepted run-smoke is "
+            "required"
+        )
+    if _latest(events, "consumers_verified") is None:
+        raise TransactionError(
+            "an explicit successful verify-consumers event is required "
+            "(a workspace with no consumers still needs the no-op event)"
+        )
+    if _latest(events, "cloud_verified") is None:
+        raise TransactionError(
+            "a successful verify-cloud event is required"
+        )
+    record = _latest_cloud_record(events, path)
+    baseline_native = _latest(baseline_events, "native_errors_recorded")
+    if baseline_native is None:
+        raise TransactionError(
+            f"the baseline journal records no native_errors_recorded "
+            f"evidence: {baseline_path}"
+        )
+    baseline_rows = {
+        _native_row_identity(row)
+        for row in baseline_native["payload"]["rows"]
+    }
+    source = header["source"]
+    smoke_groups = sorted(
+        {
+            event["payload"]["pgid"]
+            for event in events
+            if event["event"] == "smoke_started"
+        }
+    )
+
+    def observe() -> tuple:
+        evidence = _require_provider_evidence(name)
+        for row in _native_error_rows():
+            if _native_row_identity(row) not in baseline_rows:
+                raise TransactionError(
+                    f"native error {row['row_key']!r} ({row['path']}) is "
+                    f"not present in the baseline journal"
+                )
+        for consumer in capture["payload"]["consumers"]:
+            content = _read_text(
+                consumer["path"], f"consumer {consumer['name']!r}"
+            )
+            count = content.count(consumer["old"])
+            if count:
+                raise TransactionError(
+                    f"consumer {consumer['name']!r} still contains "
+                    f"{count} occurrence(s) of the old path: "
+                    f"{consumer['path']}"
+                )
+        _require_no_live_source_users(source)
+        reader = _CloudReader()
+        _cloud_verification(name, reader, record)
+        for pgid in smoke_groups:
+            members = _process_group_members(pgid)
+            if members:
+                raise TransactionError(
+                    f"smoke-start process group {pgid} is still live "
+                    f"(pids {members})"
+                )
+        drive_pid = _google_drive_pid()
+        if drive_pid == restart_before_pid:
+            raise TransactionError(
+                f"the Google Drive process ID {drive_pid} has not "
+                f"changed; the required normal restart has not happened"
+            )
+        return evidence["queue_cursors"], drive_pid
+
+    first_cursors, first_pid = observe()
+    second_cursors, second_pid = observe()
+    if first_cursors != second_cursors:
+        raise TransactionError(
+            "queue cursors are not stable across the "
+            "close-rollback-window reads"
+        )
+    if first_pid != second_pid:
+        raise TransactionError(
+            "the Google Drive process changed between the "
+            "close-rollback-window reads; a normal restart must settle "
+            "before the window can close"
+        )
+    _append_event(
+        path,
+        "rollback_window_closed",
+        {
+            "workspace": name,
+            "queue_cursors": second_cursors,
+            "drive_pid": second_pid,
+            "restart_before_pid": restart_before_pid,
+            "baseline_journal": baseline_path,
+            "baseline_final_hash": baseline_events[-1]["event_hash"],
+        },
+    )
+    _print_journal(path)
+    return 0
+
+
+# --- Smoke services --------------------------------------------------------
+
+
+def _capture_service(capture: dict, service_name: str) -> dict:
+    services = capture["payload"].get("runtime_services")
+    if not isinstance(services, list):
+        raise TransactionError(
+            "the journal capture records no runtime services"
+        )
+    for service in services:
+        if service.get("name") == service_name:
+            return service
+    raise TransactionError(
+        f"no runtime service named {service_name!r} is journaled"
+    )
+
+
+def _active_smoke_start(events: list, service_name: str):
+    started = [
+        event for event in events
+        if event["event"] == "smoke_started"
+        and event["payload"].get("service") == service_name
+    ]
+    if not started:
+        return None
+    last = started[-1]
+    stopped = [
+        event for event in events
+        if event["event"] == "smoke_stopped"
+        and event["payload"].get("service") == service_name
+        and event["sequence"] > last["sequence"]
+    ]
+    return None if stopped else last
+
+
+def _require_port_bindable(port: int, message: str) -> None:
+    probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        # SO_REUSEADDR keeps a lingering TIME_WAIT connection from
+        # blocking the probe; a live listener is caught by the lsof
+        # check in _require_port_free, which every caller uses.
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        probe.bind(("127.0.0.1", port))
+    except OSError as error:
+        raise TransactionError(f"{message} ({error})") from error
+    finally:
+        probe.close()
+
+
+def _require_port_free(port: int, message: str) -> None:
+    """Require no listener on the port at all, wildcard included.
+
+    The SO_REUSEADDR bind probe alone would let a 0.0.0.0 listener pass
+    a 127.0.0.1 bind, so the lsof listener sweep is also required to be
+    empty.
+    """
+    _require_port_bindable(port, message)
+    listeners = _port_listeners(port)
+    if listeners:
+        raise TransactionError(
+            f"{message} (listening pids "
+            f"{sorted(pid for pid, _pgid in listeners)})"
+        )
+
+
+def cmd_smoke_start(name: str, service_name: str, journal) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    capture = _require_capture(events, path)
+    _require_moved(events, path)
+    service = _capture_service(capture, service_name)
+    if _active_smoke_start(events, service_name) is not None:
+        raise TransactionError(
+            f"smoke service {service_name!r} was already started and "
+            f"not stopped: {path}"
+        )
+    port = service["port"]
+    _require_port_free(
+        port,
+        f"an existing listener occupies port {port}; a pre-existing "
+        f"listener can never satisfy a smoke",
+    )
+    destination = events[0]["destination"]
+    cwd = os.path.normpath(os.path.join(destination, service["cwd"]))
+    if not os.path.isdir(cwd):
+        raise TransactionError(f"smoke service cwd is missing: {cwd}")
+    log_path = os.path.join(
+        os.path.dirname(path), f"smoke-{service_name}-{len(events)}.log"
+    )
+    fd = os.open(log_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    try:
+        os.fchmod(fd, 0o600)
+        try:
+            process = subprocess.Popen(
+                list(service["argv"]),
+                cwd=cwd,
+                stdin=subprocess.DEVNULL,
+                stdout=fd,
+                stderr=fd,
+                shell=False,
+                start_new_session=True,
+            )
+        except (OSError, ValueError) as error:
+            raise TransactionError(
+                f"smoke service could not start: {service['argv']!r} "
+                f"({error})"
+            ) from error
+    finally:
+        os.close(fd)
+    try:
+        pgid = os.getpgid(process.pid)
+    except ProcessLookupError:
+        # start_new_session=True made the child its own group leader, so
+        # its group ID equals its PID even if it already exited.
+        pgid = process.pid
+    _SMOKE_CHILDREN[process.pid] = process
+    _append_event(
+        path,
+        "smoke_started",
+        {
+            "service": service_name,
+            "pid": process.pid,
+            "pgid": pgid,
+            "port": port,
+            "log": log_path,
+        },
+    )
+    _print_journal(path)
+    return 0
+
+
+def _port_listeners(port: int) -> list:
+    """(pid, pgid) pairs for every listener on one loopback TCP port."""
+    completed = _run_tool(
+        [LSOF, "-nP", "-a", f"-iTCP:{port}", "-sTCP:LISTEN", "-Fpg"]
+    )
+    if completed.returncode == 1 and not completed.stdout.strip():
+        return []
+    if completed.returncode != 0:
+        raise TransactionError(
+            f"lsof listener query failed (status {completed.returncode})"
+        )
+    pairs = []
+    pid = None
+    for line in completed.stdout.splitlines():
+        try:
+            if line.startswith("p"):
+                pid = int(line[1:])
+            elif line.startswith("g") and pid is not None:
+                pairs.append((pid, int(line[1:])))
+        except ValueError as error:
+            raise TransactionError(
+                f"lsof output is unreadable: {line!r}"
+            ) from error
+    return pairs
+
+
+def _check_service_http(service: dict, port: int) -> dict:
+    url = f"http://127.0.0.1:{port}/"
+    try:
+        with urllib.request.urlopen(url, timeout=10) as response:
+            status = response.status
+            body = response.read(1 << 20)
+    except (urllib.error.URLError, OSError) as error:
+        raise TransactionError(
+            f"smoke HTTP check failed: {url} ({error})"
+        ) from error
+    http_spec = service["http"]
+    if "json_keys" in http_spec:
+        try:
+            payload = json.loads(body.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise TransactionError(
+                f"smoke response is not valid JSON: {url} ({error})"
+            ) from error
+        if not isinstance(payload, dict) or set(payload) != set(
+            http_spec["json_keys"]
+        ):
+            raise TransactionError(
+                f"smoke response JSON keys "
+                f"{sorted(payload) if isinstance(payload, dict) else None} "
+                f"do not equal the manifest json_keys "
+                f"{sorted(http_spec['json_keys'])}"
+            )
+        return {"status": status, "json_keys": sorted(payload)}
+    if status != http_spec["status"]:
+        raise TransactionError(
+            f"smoke response status {status} is not the manifest's "
+            f"exact {http_spec['status']}"
+        )
+    try:
+        text = body.decode("utf-8")
+    except UnicodeDecodeError as error:
+        raise TransactionError(
+            f"smoke response is not UTF-8 text: {url} ({error})"
+        ) from error
+    if http_spec["content_marker"] not in text:
+        raise TransactionError(
+            f"smoke response does not contain the manifest content "
+            f"marker {http_spec['content_marker']!r}"
+        )
+    return {"status": status, "content_marker": http_spec["content_marker"]}
+
+
+def cmd_smoke_check(name: str, service_name: str, journal) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    capture = _require_capture(events, path)
+    started = _active_smoke_start(events, service_name)
+    if started is None:
+        raise TransactionError(
+            f"no journaled smoke-start is active for service "
+            f"{service_name!r}; a pre-existing listener can never "
+            f"satisfy a smoke: {path}"
+        )
+    service = _capture_service(capture, service_name)
+    port = started["payload"]["port"]
+    pgid = started["payload"]["pgid"]
+    listeners = _port_listeners(port)
+    if not listeners:
+        raise TransactionError(
+            f"no process is listening on port {port} for service "
+            f"{service_name!r}"
+        )
+    foreign = [
+        listener_pid
+        for listener_pid, listener_pgid in listeners
+        if listener_pgid != pgid
+    ]
+    if foreign:
+        raise TransactionError(
+            f"the listener on port {port} is not owned by the journaled "
+            f"process group {pgid} (pids {foreign})"
+        )
+    summary = _check_service_http(service, port)
+    _append_event(
+        path,
+        "smoke_checked",
+        {
+            "service": service_name,
+            "pgid": pgid,
+            "port": port,
+            "http": summary,
+        },
+    )
+    _print_journal(path)
+    return 0
+
+
+def _await_group_exit(pgid: int, timeout: float) -> bool:
+    deadline = time.monotonic() + timeout
+    while True:
+        if not _process_group_members(pgid):
+            return True
+        if time.monotonic() >= deadline:
+            return False
+        time.sleep(0.1)
+
+
+def cmd_smoke_stop(name: str, service_name: str, journal) -> int:
+    path = _journal_abspath(journal)
+    events = read_journal(path)
+    _require_transaction_header(events, name, path)
+    _require_capture(events, path)
+    started = _active_smoke_start(events, service_name)
+    if started is None:
+        raise TransactionError(
+            f"no journaled smoke-start is active for service "
+            f"{service_name!r}: {path}"
+        )
+    pgid = started["payload"]["pgid"]
+    port = started["payload"]["port"]
+    try:
+        os.killpg(pgid, signal.SIGTERM)
+    except ProcessLookupError:
+        pass
+    except PermissionError as error:
+        raise TransactionError(
+            f"cannot signal the journaled process group {pgid}: {error}"
+        ) from error
+    forced = False
+    if not _await_group_exit(pgid, SMOKE_STOP_TIMEOUT):
+        forced = True
+        try:
+            os.killpg(pgid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        except PermissionError as error:
+            raise TransactionError(
+                f"cannot signal the journaled process group {pgid}: "
+                f"{error}"
+            ) from error
+        if not _await_group_exit(pgid, 5.0):
+            raise TransactionError(
+                f"process group {pgid} is still alive after SIGKILL"
+            )
+    _require_port_free(
+        port,
+        f"port {port} is still occupied by a listener after stopping "
+        f"service {service_name!r}",
+    )
+    _append_event(
+        path,
+        "smoke_stopped",
+        {"service": service_name, "pgid": pgid, "forced": forced},
+    )
+    _print_journal(path)
+    return 0
+
+
 # --- Command-line surface --------------------------------------------------
 
 
@@ -3091,6 +4432,59 @@ def build_parser() -> argparse.ArgumentParser:
     )
     gate_parser.add_argument("--gate", required=True, choices=PROGRAM_GATES)
     gate_parser.add_argument("--evidence-journal", required=True)
+    add_command(
+        "record-cloud",
+        "Record the old cloud object ID and parent chain via the Drive "
+        "v3 reader.",
+    )
+    add_command(
+        "verify-cloud",
+        "Require the exact old object trashed, no live old path, no "
+        "duplicate, and a matching root.",
+    )
+    add_command(
+        "restore-cloud",
+        "Clear only the journaled object's trashed field and refetch it "
+        "at its original parent.",
+    )
+    subparsers.add_parser(
+        "native-preflight",
+        help="Run the JXA provider preflight; permission denial is a "
+        "hard blocker.",
+    )
+    add_command(
+        "record-native-errors",
+        "Enumerate every visible native error row through the JXA "
+        "provider.",
+        name_arg=False,
+    )
+    close_parser = add_command(
+        "close-rollback-window",
+        "Re-run every live gate and append rollback_window_closed.",
+        name_arg=False,
+    )
+    close_parser.add_argument(
+        "--baseline-journal", required=True,
+        help="Journal holding the native error baseline.",
+    )
+    close_parser.add_argument(
+        "--restart-before-pid", required=True, type=int,
+        help="Google Drive PID captured immediately before the required "
+        "normal restart.",
+    )
+    for command, help_text in (
+        ("smoke-start", "Start one manifest runtime service in its own "
+         "process group with a journaled log."),
+        ("smoke-check", "Require the journaled process group to own the "
+         "listener and the manifest's exact HTTP contract."),
+        ("smoke-stop", "Terminate only the journaled process group and "
+         "require the port released."),
+    ):
+        smoke_parser = add_command(command, help_text)
+        smoke_parser.add_argument(
+            "--service", required=True,
+            help="Runtime service name from the manifest.",
+        )
     return parser
 
 
@@ -3149,6 +4543,25 @@ def main(argv: list[str] | None = None) -> int:
         ),
         "record-program-gate": lambda a: cmd_record_program_gate(
             a.journal, a.gate, a.evidence_journal
+        ),
+        "record-cloud": lambda a: cmd_record_cloud(a.name, a.journal),
+        "verify-cloud": lambda a: cmd_verify_cloud(a.name, a.journal),
+        "restore-cloud": lambda a: cmd_restore_cloud(a.name, a.journal),
+        "native-preflight": lambda a: cmd_native_preflight(),
+        "record-native-errors": lambda a: cmd_record_native_errors(
+            a.journal
+        ),
+        "close-rollback-window": lambda a: cmd_close_rollback_window(
+            a.journal, a.baseline_journal, a.restart_before_pid
+        ),
+        "smoke-start": lambda a: cmd_smoke_start(
+            a.name, a.service, a.journal
+        ),
+        "smoke-check": lambda a: cmd_smoke_check(
+            a.name, a.service, a.journal
+        ),
+        "smoke-stop": lambda a: cmd_smoke_stop(
+            a.name, a.service, a.journal
         ),
     }
     try:

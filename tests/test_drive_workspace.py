@@ -9,12 +9,19 @@ import io
 import json
 import os
 import shutil
+import signal
+import socket
 import stat
 import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unittest
+import unittest.mock
+import urllib.error
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 
@@ -581,8 +588,8 @@ class RemoteCoverageTests(unittest.TestCase):
         )
 
 
-class TransactionTests(unittest.TestCase):
-    """Journaled transaction layer: hash-chained JSONL plus atomic moves.
+class JournalFixture(unittest.TestCase):
+    """Shared journaled-transaction fixture for transaction and live-gate tests.
 
     Everything runs against disposable temporary trees and repositories
     under a hidden directory in the home directory; the state root is
@@ -620,6 +627,23 @@ class TransactionTests(unittest.TestCase):
         self.module.DRIVE_PAUSE_PROVIDER = None
         self.module.SESSION_ADAPTERS = {}
         self.adapter_calls = []
+
+        # move's fail-closed process/Emacs gates would otherwise run the
+        # real lsof and emacsclient (slow, and emacsclient fails without
+        # a live Emacs server).  Default every test to explicit "no live
+        # users" evidence; gate-specific tests override these seams or
+        # restore the real functions over a mocked _run_tool.
+        self.real_process_cwds = self.module._process_cwds
+        self.real_emacs_visited_files = self.module._emacs_visited_files
+        self.module._process_cwds = lambda: []
+        self.module._emacs_visited_files = lambda: []
+        self.addCleanup(
+            setattr, self.module, "_process_cwds", self.real_process_cwds
+        )
+        self.addCleanup(
+            setattr, self.module, "_emacs_visited_files",
+            self.real_emacs_visited_files,
+        )
 
         self.drive = self.root / "drive"
         self.drive.mkdir()
@@ -741,6 +765,7 @@ class TransactionTests(unittest.TestCase):
         include_worktree: bool = False,
         link_names: list | None = None,
         extra_consumers: list | None = None,
+        runtime_services: list | None = None,
     ) -> Path:
         names = link_names or ["node_modules", ".venv"]
         workspace = {
@@ -772,6 +797,8 @@ class TransactionTests(unittest.TestCase):
                 }
             ],
         }
+        if runtime_services is not None:
+            workspace["runtime_services"] = runtime_services
         workspaces = [workspace]
         if include_worktree:
             workspaces.append(
@@ -944,6 +971,10 @@ class TransactionTests(unittest.TestCase):
         return json.dumps(
             {"journal": str(journal)}, separators=(",", ":")
         ) + "\n"
+
+
+class TransactionTests(JournalFixture):
+    """Journaled transaction layer: hash-chained JSONL plus atomic moves."""
 
     # ------------------------------------------------------------------
     # Journal creation and hash chain
@@ -2207,6 +2238,1476 @@ class TransactionTests(unittest.TestCase):
                 with contextlib.redirect_stderr(stderr):
                     self.module.main(argv + ["--force"])
             self.assertIn("--force", stderr.getvalue(), argv[0])
+
+
+class _FakeCloudResponse:
+    def __init__(self, payload: dict):
+        self._data = json.dumps(payload).encode("utf-8")
+
+    def read(self) -> bytes:
+        return self._data
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+
+class FakeCloud:
+    """In-memory Google Drive v3 plus OAuth token endpoint behind urlopen.
+
+    Installed by patching urllib.request.urlopen, so no test ever opens a
+    network connection for cloud work.  Every request is recorded as
+    (method, url, body) for exactness assertions; the Authorization
+    header is verified on every API call.
+    """
+
+    def __init__(self, test, files, root_id="root-1", list_hits=None,
+                 incomplete=False, list_pages=None):
+        self.test = test
+        self.files = files
+        self.root_id = root_id
+        self.list_hits = list(list_hits or [])
+        self.incomplete = incomplete
+        # Multi-page listings: each page dict is served verbatim; the
+        # pageToken parameter indexes the list ("" or absent -> page 0,
+        # "N" -> page N), mirroring the nextPageToken values fixtures use.
+        self.list_pages = (
+            None if list_pages is None else copy.deepcopy(list_pages)
+        )
+        self.requests = []
+
+    def install(self):
+        patcher = unittest.mock.patch("urllib.request.urlopen", new=self)
+        patcher.start()
+        self.test.addCleanup(patcher.stop)
+        return self
+
+    def mutations(self):
+        return [
+            (method, url, body)
+            for method, url, body in self.requests
+            if method != "GET" and "oauth2" not in url
+        ]
+
+    def __call__(self, request, timeout=None):
+        method = request.get_method()
+        url = request.full_url
+        body = request.data
+        self.requests.append((method, url, body))
+        parsed = urllib.parse.urlsplit(url)
+        if parsed.netloc == "oauth2.googleapis.com":
+            self.test.assertEqual("POST", method)
+            params = urllib.parse.parse_qs((body or b"").decode("utf-8"))
+            self.test.assertEqual(
+                [self.test.refresh_token], params.get("refresh_token")
+            )
+            self.test.assertEqual(
+                ["refresh_token"], params.get("grant_type")
+            )
+            return _FakeCloudResponse(
+                {
+                    "access_token": self.test.access_token,
+                    "expires_in": 3599,
+                    "token_type": "Bearer",
+                }
+            )
+        self.test.assertEqual("www.googleapis.com", parsed.netloc)
+        self.test.assertEqual(
+            f"Bearer {self.test.access_token}",
+            request.get_header("Authorization"),
+        )
+        if parsed.path == "/drive/v3/files":
+            self.test.assertEqual("GET", method)
+            params = urllib.parse.parse_qs(parsed.query)
+            self.test.assertIn(
+                "nextPageToken", params["fields"][0],
+                "the listing must request nextPageToken so truncation "
+                "is detectable",
+            )
+            if self.list_pages is not None:
+                token = params.get("pageToken", [""])[0]
+                index = 0 if token == "" else int(token)
+                return _FakeCloudResponse(
+                    copy.deepcopy(self.list_pages[index])
+                )
+            return _FakeCloudResponse(
+                {
+                    "incompleteSearch": self.incomplete,
+                    "files": copy.deepcopy(self.list_hits),
+                }
+            )
+        file_id = urllib.parse.unquote(parsed.path.rsplit("/", 1)[1])
+        if file_id == "root":
+            file_id = self.root_id
+        if method == "GET":
+            if file_id not in self.files:
+                raise urllib.error.HTTPError(
+                    url, 404, "Not Found", None, io.BytesIO(b"{}")
+                )
+            return _FakeCloudResponse(copy.deepcopy(self.files[file_id]))
+        if method == "PATCH":
+            payload = json.loads(body.decode("utf-8"))
+            self.files[file_id].update(payload)
+            return _FakeCloudResponse(copy.deepcopy(self.files[file_id]))
+        raise AssertionError(f"unexpected cloud request: {method} {url}")
+
+
+NATIVE_PAGE = {
+    "rows": [
+        {
+            "row_key": "err-1",
+            "path": "/drive/legacy/file.txt",
+            "category": "Sync error",
+            "text": "Cannot sync file",
+            "row_index": 0,
+        }
+    ],
+    "next_page_token": None,
+    "screenshot_sha256": "a" * 64,
+    "captured_utc": "2026-08-02T00:00:00+00:00",
+}
+
+PREFLIGHT_FIXTURE = {
+    "window": {
+        "AXRole": "AXWindow",
+        "AXIdentifier": "GDFSMenuWindow",
+        "AXTitle": "Google Drive",
+        "AXDescription": "Google Drive status window",
+        "AXValue": "",
+        "AXPosition": [1204.0, 25.0],
+        "AXSize": [420.0, 640.0],
+        "AXWindowNumber": 5521,
+    },
+    "screenshot_sha256": "c" * 64,
+    "captured_utc": "2026-08-02T00:00:00+00:00",
+}
+
+SMOKE_SERVER_SOURCE = """\
+import http.server
+import json
+import signal
+import subprocess
+import sys
+import time
+
+port = int(sys.argv[1])
+mode = sys.argv[2] if len(sys.argv) > 2 else "marker"
+if "ignore-term" in mode:
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+child_body = "import time\\ntime.sleep(600)\\n"
+if "ignore-term" in mode:
+    child_body = (
+        "import signal, time\\n"
+        "signal.signal(signal.SIGTERM, signal.SIG_IGN)\\n"
+        "time.sleep(600)\\n"
+    )
+child = subprocess.Popen([sys.executable, "-c", child_body])
+
+
+class Handler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        if "json" in mode:
+            body = json.dumps({"status": "ok", "workspace": "sample"}).encode()
+            ctype = "application/json"
+        else:
+            body = b"drive-smoke-ok"
+            ctype = "text/plain"
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, *args):
+        pass
+
+
+http.server.HTTPServer(("127.0.0.1", port), Handler).serve_forever()
+"""
+
+
+class FakeTools:
+    """Recorded stand-in for the module's live-observer subprocess seam.
+
+    Serves lsof cwd listings, emacsclient buffer queries, the JXA
+    list-errors provider, and both ps forms from fixture data, asserting
+    the exact argv contract for each tool.
+    """
+
+    def __init__(self, test, cwds=(), emacs_files=(), emacs_rc=0, lsof_rc=0,
+                 native_pages=None, native_rc=0, native_stderr="",
+                 ps_groups=(), drive_pids=(4242,)):
+        self.test = test
+        self.cwds = list(cwds)
+        self.emacs_files = list(emacs_files)
+        self.emacs_rc = emacs_rc
+        self.lsof_rc = lsof_rc
+        self.native_pages = (
+            [copy.deepcopy(NATIVE_PAGE)]
+            if native_pages is None
+            else copy.deepcopy(native_pages)
+        )
+        self.native_rc = native_rc
+        self.native_stderr = native_stderr
+        self.ps_groups = list(ps_groups)
+        self.drive_pids = list(drive_pids)
+        self.calls = []
+
+    def __call__(self, argv):
+        argv = [str(item) for item in argv]
+        self.calls.append(argv)
+        base = os.path.basename(argv[0])
+        if base == "lsof":
+            self.test.assertEqual(["-Fn", "-a", "-d", "cwd"], argv[1:])
+            out = "".join(
+                f"p{pid}\nfcwd\nn{path}\n" for pid, path in self.cwds
+            )
+            return subprocess.CompletedProcess(argv, self.lsof_rc, out, "")
+        if base == "emacsclient":
+            self.test.assertEqual(3, len(argv), argv)
+            self.test.assertEqual("-e", argv[1])
+            self.test.assertIn("buffer-file-name", argv[2])
+            if self.emacs_rc != 0:
+                return subprocess.CompletedProcess(
+                    argv, self.emacs_rc, "", "emacsclient: can't find socket\n"
+                )
+            payload = json.dumps(json.dumps(self.emacs_files))
+            return subprocess.CompletedProcess(argv, 0, payload + "\n", "")
+        if base == "osascript":
+            self.test.assertEqual("/usr/bin/osascript", argv[0])
+            self.test.assertEqual(["-l", "JavaScript"], argv[1:3])
+            self.test.assertEqual(self.test.module.NATIVE_JXA_PATH, argv[3])
+            self.test.assertEqual("list-errors", argv[4])
+            self.test.assertEqual("--page-token", argv[5])
+            token = argv[6]
+            if self.native_rc:
+                return subprocess.CompletedProcess(
+                    argv, self.native_rc, "", self.native_stderr
+                )
+            index = 0 if token == "" else int(token)
+            return subprocess.CompletedProcess(
+                argv, 0, json.dumps(self.native_pages[index]), ""
+            )
+        if base == "ps":
+            if argv[1:] == ["-Ao", "pgid=,pid="]:
+                out = "".join(
+                    f"{pgid} {pid}\n" for pgid, pid in self.ps_groups
+                )
+                return subprocess.CompletedProcess(argv, 0, out, "")
+            if argv[1:] == ["-Axo", "pid=,comm="]:
+                out = "1 /sbin/launchd\n" + "".join(
+                    f"{pid} /Applications/Google Drive.app/Contents/"
+                    f"MacOS/Google Drive\n"
+                    for pid in self.drive_pids
+                )
+                return subprocess.CompletedProcess(argv, 0, out, "")
+        raise AssertionError(f"unexpected tool invocation: {argv}")
+
+
+class LiveGateTests(JournalFixture):
+    """Process, Emacs-buffer, consumer, cloud, native, and smoke-service gates.
+
+    All cloud traffic is served by FakeCloud through a patched
+    urllib.request.urlopen; lsof, emacsclient, osascript, and ps are
+    served by FakeTools through the module's _run_tool seam.  The OAuth
+    credential path is overridden with fixture credentials so the real
+    personal token file is never read, and no fixture token may ever
+    appear in a journal, stdout, or stderr.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.refresh_token = "fixture-refresh-token-1849"
+        self.access_token = "fixture-access-token-7203"
+        self.client_secret = "fixture-client-secret-5561"
+        oauth_dir = self.root / "oauth"
+        oauth_dir.mkdir(mode=0o700)
+        self.oauth_file = oauth_dir / "token.json"
+        self.oauth_file.write_text(
+            json.dumps(
+                {
+                    "token": "stale-access-token",
+                    "refresh_token": self.refresh_token,
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "client_id": "fixture-client-id",
+                    "client_secret": self.client_secret,
+                    "scopes": ["https://www.googleapis.com/auth/drive"],
+                }
+            ),
+            encoding="utf-8",
+        )
+        os.chmod(self.oauth_file, 0o600)
+        saved = os.environ.get(self.module.OAUTH_FILE_ENV)
+        os.environ[self.module.OAUTH_FILE_ENV] = str(self.oauth_file)
+
+        def restore():
+            if saved is None:
+                os.environ.pop(self.module.OAUTH_FILE_ENV, None)
+            else:
+                os.environ[self.module.OAUTH_FILE_ENV] = saved
+
+        self.addCleanup(restore)
+
+    # ------------------------------------------------------------------
+    # Shared fixtures
+    # ------------------------------------------------------------------
+
+    def cloud_files(self, trashed=True):
+        return {
+            "obj-1": {
+                "id": "obj-1",
+                "name": "repo",
+                "parents": ["parent-1"],
+                "trashed": trashed,
+                "explicitlyTrashed": trashed,
+                "ownedByMe": True,
+                "mimeType": "application/vnd.google-apps.folder",
+            },
+            "parent-1": {
+                "id": "parent-1",
+                "name": "repos",
+                "parents": ["root-1"],
+                "trashed": False,
+                "ownedByMe": True,
+            },
+            "root-1": {"id": "root-1", "name": "My Drive", "trashed": False},
+        }
+
+    def install_cloud(self, trashed=True, files=None, **kwargs):
+        cloud = FakeCloud(
+            self,
+            self.cloud_files(trashed=trashed) if files is None else files,
+            **kwargs,
+        )
+        return cloud.install()
+
+    def install_tools(self, **kwargs):
+        tools = FakeTools(self, **kwargs)
+        original = self.module._run_tool
+        self.module._run_tool = tools
+        self.addCleanup(setattr, self.module, "_run_tool", original)
+        # Route the process/Emacs gates through the mocked observer seam
+        # instead of the fixture's benign no-users default.
+        self.module._process_cwds = self.real_process_cwds
+        self.module._emacs_visited_files = self.real_emacs_visited_files
+        return tools
+
+    def assert_no_secret_leak(self, *streams):
+        journal_bytes = b""
+        if self.journal.exists():
+            journal_bytes = self.journal.read_bytes()
+        for secret in (
+            self.refresh_token, self.access_token, self.client_secret
+        ):
+            self.assertNotIn(secret.encode("utf-8"), journal_bytes)
+            for stream in streams:
+                self.assertNotIn(secret, stream)
+
+    def cloud_journal(self):
+        """A captured journal carrying drive_state cloud identity."""
+        self.install_providers()
+        self.capture()
+        self.ok("record-drive-state", "sample", "--journal", self.journal)
+
+    def recorded_cloud_journal(self, do_move=False):
+        if do_move:
+            self.do_move()
+        else:
+            self.cloud_journal()
+        cloud = self.install_cloud(trashed=False)
+        self.ok("record-cloud", "sample", "--journal", self.journal)
+        return cloud
+
+    def trash_old_object(self, cloud):
+        cloud.files["obj-1"]["trashed"] = True
+        cloud.files["obj-1"]["explicitlyTrashed"] = True
+
+    # ------------------------------------------------------------------
+    # Cloud record / verify
+    # ------------------------------------------------------------------
+
+    def test_default_oauth_path_is_the_personal_gdoc_token(self):
+        self.assertEqual(
+            "~/.config/gdoc/accounts/personal/token.json",
+            self.module.DEFAULT_OAUTH_FILE,
+        )
+
+    def test_record_cloud_stores_object_id_and_parent_chain(self):
+        self.cloud_journal()
+        cloud = self.install_cloud(trashed=False)
+        stdout, stderr = self.ok(
+            "record-cloud", "sample", "--journal", self.journal
+        )
+        self.assertEqual(self.success_stdout(self.journal), stdout)
+        event = [
+            item for item in self.events()
+            if item["event"] == "cloud_recorded"
+        ][-1]
+        payload = event["payload"]
+        self.assertEqual("obj-1", payload["object"]["id"])
+        self.assertEqual("repo", payload["object"]["name"])
+        self.assertEqual("parent-1", payload["parent_id"])
+        self.assertEqual(
+            ["parent-1", "root-1"],
+            [entry["id"] for entry in payload["parent_chain"]],
+        )
+        self.assertEqual("root-1", payload["root_id"])
+        self.assertEqual(1, payload["is_my_drive"])
+        token_calls = [
+            url for _method, url, _body in cloud.requests if "oauth2" in url
+        ]
+        self.assertEqual(1, len(token_calls))
+        self.assertEqual([], cloud.mutations())
+        self.assert_no_secret_leak(stdout, stderr)
+
+    def test_record_cloud_fails_closed_without_drive_state(self):
+        self.capture()
+        cloud = self.install_cloud(trashed=False)
+        _stdout, stderr = self.expect_fail(
+            "record-cloud", "sample", "--journal", self.journal
+        )
+        self.assertIn("drive_state", stderr)
+        self.assertEqual([], cloud.requests)
+        self.assertNotIn("cloud_recorded", self.event_types())
+
+    def test_record_cloud_rejects_missing_oauth_file_without_requests(self):
+        self.cloud_journal()
+        cloud = self.install_cloud(trashed=False)
+        os.environ[self.module.OAUTH_FILE_ENV] = str(
+            self.root / "missing-token.json"
+        )
+        _stdout, stderr = self.expect_fail(
+            "record-cloud", "sample", "--journal", self.journal
+        )
+        self.assertIn("OAuth", stderr)
+        self.assertEqual([], cloud.requests)
+
+    def test_verify_cloud_accepts_trashed_original_and_journals_event(self):
+        cloud = self.recorded_cloud_journal()
+        self.trash_old_object(cloud)
+        stdout, stderr = self.ok(
+            "verify-cloud", "sample", "--journal", self.journal
+        )
+        self.assertEqual(self.success_stdout(self.journal), stdout)
+        event = [
+            item for item in self.events()
+            if item["event"] == "cloud_verified"
+        ][-1]
+        payload = event["payload"]
+        self.assertEqual("obj-1", payload["object_id"])
+        self.assertEqual("parent-1", payload["parent_id"])
+        self.assertEqual("root-1", payload["root_id"])
+        self.assertEqual(0, payload["machine_root_count"])
+        self.assertEqual([], cloud.mutations())
+        self.assert_no_secret_leak(stdout, stderr)
+
+    def test_verify_cloud_rejects_untrashed_old_tree_after_resume(self):
+        self.recorded_cloud_journal()
+        self.install_cloud(trashed=False)
+        _stdout, stderr = self.expect_fail(
+            "verify-cloud", "sample", "--journal", self.journal
+        )
+        self.assertIn("trashed", stderr)
+        self.assertNotIn("cloud_verified", self.event_types())
+
+    def test_verify_cloud_rejects_old_folder_with_wrong_parent(self):
+        self.recorded_cloud_journal()
+        files = self.cloud_files(trashed=True)
+        files["obj-1"]["parents"] = ["parent-2"]
+        files["parent-2"] = {
+            "id": "parent-2", "name": "elsewhere",
+            "parents": ["root-1"], "trashed": False,
+        }
+        self.install_cloud(files=files)
+        _stdout, stderr = self.expect_fail(
+            "verify-cloud", "sample", "--journal", self.journal
+        )
+        self.assertIn("parent", stderr)
+        self.assertNotIn("cloud_verified", self.event_types())
+
+    def test_verify_cloud_rejects_duplicates_ambiguity_and_foreign_roots(self):
+        self.recorded_cloud_journal()
+        live_at_old_path = {
+            "id": "dup-1", "name": "repo", "parents": ["parent-1"],
+            "trashed": False,
+        }
+        my_drive_duplicate = {
+            "id": "dup-2", "name": "repo", "parents": ["other-1"],
+            "trashed": False,
+        }
+        machine_duplicate = {
+            "id": "dup-3", "name": "repo", "parents": ["machine-1"],
+            "trashed": False,
+        }
+        extra_files = {
+            "other-1": {
+                "id": "other-1", "name": "archive",
+                "parents": ["root-1"], "trashed": False,
+            },
+            "machine-1": {"id": "machine-1", "name": "MacBook Pro",
+                          "trashed": False},
+        }
+        cases = [
+            ("occupies", dict(list_hits=[live_at_old_path])),
+            ("duplicate", dict(list_hits=[my_drive_duplicate])),
+            ("computer", dict(list_hits=[machine_duplicate])),
+            ("incomplete", dict(incomplete=True)),
+        ]
+        for marker, kwargs in cases:
+            with self.subTest(marker):
+                files = self.cloud_files(trashed=True)
+                files.update(copy.deepcopy(extra_files))
+                self.install_cloud(files=files, **kwargs)
+                _stdout, stderr = self.expect_fail(
+                    "verify-cloud", "sample", "--journal", self.journal
+                )
+                self.assertIn(marker, stderr)
+        with self.subTest("not-my-drive"):
+            files = self.cloud_files(trashed=True)
+            files["obj-1"]["ownedByMe"] = False
+            self.install_cloud(files=files)
+            _stdout, stderr = self.expect_fail(
+                "verify-cloud", "sample", "--journal", self.journal
+            )
+            self.assertIn("My Drive", stderr)
+        with self.subTest("root-mismatch"):
+            files = self.cloud_files(trashed=True)
+            files["root-2"] = {"id": "root-2", "name": "My Drive",
+                               "trashed": False}
+            self.install_cloud(files=files, root_id="root-2")
+            _stdout, stderr = self.expect_fail(
+                "verify-cloud", "sample", "--journal", self.journal
+            )
+            self.assertIn("root", stderr)
+        self.assertNotIn("cloud_verified", self.event_types())
+
+    def test_verify_cloud_paginates_the_duplicate_sweep(self):
+        self.recorded_cloud_journal()
+        base_files = self.cloud_files(trashed=True)
+        base_files["other-1"] = {
+            "id": "other-1", "name": "archive",
+            "parents": ["root-1"], "trashed": False,
+        }
+        duplicate = {
+            "id": "dup-2", "name": "repo", "parents": ["other-1"],
+            "trashed": False,
+        }
+        with self.subTest("clean-multi-page-listing-passes"):
+            self.install_cloud(
+                files=copy.deepcopy(base_files),
+                list_pages=[
+                    {"incompleteSearch": False, "files": [],
+                     "nextPageToken": "1"},
+                    {"incompleteSearch": False, "files": []},
+                ],
+            )
+            self.ok("verify-cloud", "sample", "--journal", self.journal)
+        with self.subTest("duplicate-on-page-two-blocks"):
+            self.install_cloud(
+                files=copy.deepcopy(base_files),
+                list_pages=[
+                    {"incompleteSearch": False, "files": [],
+                     "nextPageToken": "1"},
+                    {"incompleteSearch": False,
+                     "files": [copy.deepcopy(duplicate)]},
+                ],
+            )
+            _stdout, stderr = self.expect_fail(
+                "verify-cloud", "sample", "--journal", self.journal
+            )
+            self.assertIn("duplicate", stderr)
+        with self.subTest("pagination-loop-blocks"):
+            self.install_cloud(
+                files=copy.deepcopy(base_files),
+                list_pages=[
+                    {"incompleteSearch": False, "files": [],
+                     "nextPageToken": "1"},
+                    {"incompleteSearch": False, "files": [],
+                     "nextPageToken": "1"},
+                ],
+            )
+            _stdout, stderr = self.expect_fail(
+                "verify-cloud", "sample", "--journal", self.journal
+            )
+            self.assertIn("loop", stderr)
+        with self.subTest("incomplete-later-page-blocks"):
+            self.install_cloud(
+                files=copy.deepcopy(base_files),
+                list_pages=[
+                    {"incompleteSearch": False, "files": [],
+                     "nextPageToken": "1"},
+                    {"files": []},
+                ],
+            )
+            _stdout, stderr = self.expect_fail(
+                "verify-cloud", "sample", "--journal", self.journal
+            )
+            self.assertIn("incomplete", stderr)
+
+    # ------------------------------------------------------------------
+    # Move preflight gates
+    # ------------------------------------------------------------------
+
+    def move_argv(self):
+        return [
+            "move", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        ]
+
+    def test_move_blocks_on_process_cwd_below_source(self):
+        self.prepare_move()
+        self.module._process_cwds = lambda: [
+            (4321, str(self.source / "subdir"))
+        ]
+        _stdout, stderr = self.expect_fail(*self.move_argv())
+        self.assertIn("process", stderr)
+        self.assertIn("4321", stderr)
+        self.assertTrue(self.source.exists())
+        self.assertFalse(self.destination.exists())
+        self.assertNotIn("moved", self.event_types())
+
+    def test_move_blocks_on_emacs_buffer_below_source(self):
+        self.prepare_move()
+        self.module._emacs_visited_files = lambda: [
+            str(self.source / "tracked.txt")
+        ]
+        _stdout, stderr = self.expect_fail(*self.move_argv())
+        self.assertIn("Emacs", stderr)
+        self.assertTrue(self.source.exists())
+        self.assertFalse(self.destination.exists())
+        self.assertNotIn("moved", self.event_types())
+
+    # ------------------------------------------------------------------
+    # Cloud restore
+    # ------------------------------------------------------------------
+
+    def test_restore_cloud_issues_only_files_update_and_precedes_rollback(self):
+        cloud = self.recorded_cloud_journal(do_move=True)
+        self.trash_old_object(cloud)
+        stdout, stderr = self.ok(
+            "restore-cloud", "sample", "--journal", self.journal
+        )
+        self.assertEqual(self.success_stdout(self.journal), stdout)
+        mutations = cloud.mutations()
+        self.assertEqual(1, len(mutations))
+        method, url, body = mutations[0]
+        self.assertEqual("PATCH", method)
+        self.assertIn("/drive/v3/files/obj-1", url)
+        self.assertEqual({"trashed": False}, json.loads(body.decode("utf-8")))
+        for req_method, req_url, _body in cloud.requests:
+            self.assertNotIn("upload", req_url)
+            if "oauth2" in req_url:
+                continue
+            self.assertNotIn(req_method, {"POST", "PUT", "DELETE"})
+        self.assertFalse(cloud.files["obj-1"]["trashed"])
+        event = [
+            item for item in self.events()
+            if item["event"] == "cloud_restored"
+        ][-1]
+        self.assertEqual("obj-1", event["payload"]["object_id"])
+        self.assertEqual(["parent-1"], event["payload"]["parents"])
+        self.assert_no_secret_leak(stdout, stderr)
+        self.ok(
+            "rollback-local", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        types = self.event_types()
+        self.assertLess(
+            types.index("cloud_restored"), types.index("local_rolled_back")
+        )
+
+    def test_restore_cloud_refuses_changed_parent_and_live_duplicate(self):
+        with self.subTest("changed-parent"):
+            cloud = self.recorded_cloud_journal(do_move=True)
+            files = self.cloud_files(trashed=True)
+            files["obj-1"]["parents"] = ["parent-2"]
+            files["parent-2"] = {
+                "id": "parent-2", "name": "elsewhere",
+                "parents": ["root-1"], "trashed": False,
+            }
+            moved_cloud = self.install_cloud(files=files)
+            _stdout, stderr = self.expect_fail(
+                "restore-cloud", "sample", "--journal", self.journal
+            )
+            self.assertIn("parent", stderr)
+            self.assertEqual([], moved_cloud.mutations())
+        with self.subTest("live-duplicate"):
+            duplicate = {
+                "id": "dup-1", "name": "repo", "parents": ["parent-1"],
+                "trashed": False,
+            }
+            dup_cloud = self.install_cloud(
+                trashed=True, list_hits=[duplicate]
+            )
+            _stdout, stderr = self.expect_fail(
+                "restore-cloud", "sample", "--journal", self.journal
+            )
+            self.assertIn("duplicate", stderr)
+            self.assertEqual([], dup_cloud.mutations())
+        self.assertNotIn("cloud_restored", self.event_types())
+
+    def test_restore_cloud_characterizes_the_pause_provider(self):
+        cloud = self.recorded_cloud_journal(do_move=True)
+        self.trash_old_object(cloud)
+        cases = [
+            ("no-provider", None, "provider"),
+            (
+                "running",
+                lambda name: {"paused": False, "queue_advanced": False},
+                "paused",
+            ),
+            (
+                "ambiguous-ui",
+                lambda name: {"paused": "maybe", "queue_advanced": False},
+                "ambiguous",
+            ),
+            (
+                "queue-advances-while-paused",
+                lambda name: {"paused": True, "queue_advanced": True},
+                "queue",
+            ),
+        ]
+        for label, provider, marker in cases:
+            with self.subTest(label):
+                requests_before = len(cloud.requests)
+                self.module.DRIVE_PAUSE_PROVIDER = provider
+                _stdout, stderr = self.expect_fail(
+                    "restore-cloud", "sample", "--journal", self.journal
+                )
+                self.assertIn(marker, stderr)
+                self.assertEqual(
+                    requests_before, len(cloud.requests),
+                    "a refused pause must not reach the cloud API",
+                )
+        self.assertNotIn("cloud_restored", self.event_types())
+
+    def test_restore_cloud_requires_destination_present_outside_drive(self):
+        cloud = self.recorded_cloud_journal(do_move=True)
+        self.trash_old_object(cloud)
+        os.rename(self.destination, self.root / "stashed-destination")
+        _stdout, stderr = self.expect_fail(
+            "restore-cloud", "sample", "--journal", self.journal
+        )
+        self.assertIn("destination", stderr)
+        self.assertEqual([], cloud.mutations())
+        self.assertNotIn("cloud_restored", self.event_types())
+
+    # ------------------------------------------------------------------
+    # Native provider: preflight and error recording
+    # ------------------------------------------------------------------
+
+    def install_preflight(self, returncode=0, stdout="", stderr=""):
+        calls = []
+
+        def fake(argv):
+            calls.append([str(item) for item in argv])
+            return subprocess.CompletedProcess(
+                calls[-1], returncode, stdout, stderr
+            )
+
+        original = self.module._run_tool
+        self.module._run_tool = fake
+        self.addCleanup(setattr, self.module, "_run_tool", original)
+        return calls
+
+    def test_native_preflight_invokes_the_exact_jxa_provider(self):
+        calls = self.install_preflight(
+            returncode=0, stdout=json.dumps(PREFLIGHT_FIXTURE)
+        )
+        stdout, _stderr = self.ok("native-preflight")
+        self.assertEqual(
+            [
+                [
+                    "/usr/bin/osascript", "-l", "JavaScript",
+                    self.module.NATIVE_JXA_PATH, "preflight",
+                ]
+            ],
+            calls,
+        )
+        payload = json.loads(stdout)
+        self.assertEqual("AXWindow", payload["window"]["AXRole"])
+        self.assertEqual(5521, payload["window"]["AXWindowNumber"])
+        self.assertEqual("c" * 64, payload["screenshot_sha256"])
+
+    def test_native_preflight_rejects_denied_or_ambiguous_fixtures(self):
+        cases = [
+            (
+                "drive-absent", 1, "",
+                "Google Drive process is not running", "Google Drive",
+            ),
+            ("accessibility-denied", 77, "", "-25211", "Accessibility"),
+            (
+                "screen-recording-denied", 78, "",
+                "capture is blank; Screen Recording permission is missing",
+                "Screen Recording",
+            ),
+            (
+                "ambiguous-window", 1, "",
+                "ambiguous: found 2 visible Google Drive windows",
+                "ambiguous",
+            ),
+            (
+                "missing-attribute", 0,
+                json.dumps(
+                    {
+                        "window": {"AXRole": "AXWindow"},
+                        "screenshot_sha256": "c" * 64,
+                        "captured_utc": "2026-08-02T00:00:00+00:00",
+                    }
+                ),
+                "", "AX",
+            ),
+        ]
+        for label, code, out, err, marker in cases:
+            with self.subTest(label):
+                self.install_preflight(
+                    returncode=code, stdout=out, stderr=err
+                )
+                stdout, stderr, status = self.run_main("native-preflight")
+                self.assertNotEqual(0, status)
+                self.assertIn(marker, stderr)
+
+    def test_jxa_provider_is_committed_and_matches_the_contract(self):
+        path = ROOT / "bin" / "drive-workspace-native.jxa"
+        self.assertTrue(
+            self.module.NATIVE_JXA_PATH.endswith(
+                "bin/drive-workspace-native.jxa"
+            )
+        )
+        text = path.read_text(encoding="utf-8")
+        for required in (
+            "System Events", "Google Drive", "UI elements enabled",
+            "-25211", "77", "AXRole", "AXIdentifier", "AXTitle",
+            "AXDescription", "AXValue", "AXPosition", "AXSize",
+            "AXWindowNumber", "/usr/sbin/screencapture", "-x", "-l",
+            "list-errors", "--page-token", "0o600",
+        ):
+            self.assertIn(required, text)
+
+    def test_record_native_errors_follows_pagination_and_stores_schema(self):
+        self.capture()
+        page_one = {
+            "rows": [
+                {
+                    "row_key": "err-1",
+                    "path": "/drive/a.txt",
+                    "category": "Sync error",
+                    "text": "Cannot sync a.txt",
+                    "row_index": 0,
+                }
+            ],
+            "next_page_token": "1",
+            "screenshot_sha256": "a" * 64,
+            "captured_utc": "2026-08-02T00:00:01+00:00",
+        }
+        page_two = {
+            "rows": [
+                {
+                    "row_key": "err-2",
+                    "path": "/drive/b.txt",
+                    "category": "Sync error",
+                    "text": "Cannot sync b.txt",
+                    "row_index": 0,
+                    "annotation": "matches drivefs log line 88",
+                }
+            ],
+            "next_page_token": None,
+            "screenshot_sha256": "b" * 64,
+            "captured_utc": "2026-08-02T00:00:02+00:00",
+        }
+        tools = self.install_tools(native_pages=[page_one, page_two])
+        stdout, _stderr = self.ok(
+            "record-native-errors", "--journal", self.journal
+        )
+        self.assertEqual(self.success_stdout(self.journal), stdout)
+        tokens = [
+            call[6] for call in tools.calls
+            if os.path.basename(call[0]) == "osascript"
+        ]
+        self.assertEqual(["", "1"], tokens)
+        event = [
+            item for item in self.events()
+            if item["event"] == "native_errors_recorded"
+        ][-1]
+        rows = event["payload"]["rows"]
+        self.assertEqual(2, len(rows))
+        first, second = rows
+        self.assertEqual(
+            {
+                "row_key": "err-1",
+                "path": "/drive/a.txt",
+                "category": "Sync error",
+                "text": "Cannot sync a.txt",
+                "page_index": 0,
+                "row_index": 0,
+                "captured_utc": "2026-08-02T00:00:01+00:00",
+                "screenshot_sha256": "a" * 64,
+            },
+            first,
+        )
+        self.assertEqual("err-2", second["row_key"])
+        self.assertEqual(1, second["page_index"])
+        self.assertEqual(
+            "matches drivefs log line 88", second["annotation"],
+            "log matches are optional annotations on a native row",
+        )
+
+    def test_record_native_errors_rejects_bad_rows_loops_and_duplicates(self):
+        self.capture()
+        unreadable = copy.deepcopy(NATIVE_PAGE)
+        unreadable["rows"][0]["path"] = None
+        looping = copy.deepcopy(NATIVE_PAGE)
+        looping["next_page_token"] = "0"
+        duplicate_a = copy.deepcopy(NATIVE_PAGE)
+        duplicate_a["next_page_token"] = "1"
+        duplicate_b = copy.deepcopy(NATIVE_PAGE)
+        duplicate_b["rows"][0]["row_index"] = 1
+        cases = [
+            ("unreadable-row", [unreadable], "row"),
+            ("pagination-loop", [looping], "loop"),
+            ("duplicate-key", [duplicate_a, duplicate_b], "duplicate"),
+        ]
+        for label, pages, marker in cases:
+            with self.subTest(label):
+                self.install_tools(native_pages=pages)
+                _stdout, stderr = self.expect_fail(
+                    "record-native-errors", "--journal", self.journal
+                )
+                self.assertIn(marker, stderr)
+        with self.subTest("provider-failure"):
+            self.install_tools(native_rc=77, native_stderr="-25211")
+            _stdout, stderr = self.expect_fail(
+                "record-native-errors", "--journal", self.journal
+            )
+            self.assertIn("Accessibility", stderr)
+        with self.subTest("program-journal"):
+            program = self.state / "program" / "journal.jsonl"
+            self.ok(
+                "init-journal", "--journal", program,
+                "--kind", "program", "--label", "gates",
+            )
+            self.install_tools()
+            _stdout, stderr = self.expect_fail(
+                "record-native-errors", "--journal", program
+            )
+            self.assertIn("program", stderr)
+        self.assertNotIn("native_errors_recorded", self.event_types())
+
+    # ------------------------------------------------------------------
+    # close-rollback-window
+    # ------------------------------------------------------------------
+
+    def close_argv(self, baseline, pid=1111):
+        return [
+            "close-rollback-window", "--journal", self.journal,
+            "--baseline-journal", baseline,
+            "--restart-before-pid", str(pid),
+        ]
+
+    def verify_local_ok(self):
+        self.ok(
+            "verify-local", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+
+    def closed_window_prereqs(self):
+        """Drive the full happy path up to a closable rollback window."""
+        self.do_move()
+        self.verify_local_ok()
+        self.ok(
+            "materialize-generated-paths", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        self.ok(
+            "run-smoke", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        (self.destination / "node_modules").mkdir()
+        self.verify_local_ok()
+        self.ok(
+            "apply-consumers", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        self.ok(
+            "verify-consumers", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        self.cloud = self.install_cloud(trashed=False)
+        self.ok("record-cloud", "sample", "--journal", self.journal)
+        self.trash_old_object(self.cloud)
+        self.ok("verify-cloud", "sample", "--journal", self.journal)
+        baseline = self.make_baseline()
+        tools = self.install_tools()
+        self.ok("record-native-errors", "--journal", baseline)
+        return baseline, tools
+
+    def test_close_rollback_window_requires_ordered_evidence(self):
+        self.do_move()
+        baseline = self.make_baseline()
+        self.verify_local_ok()
+        self.ok(
+            "materialize-generated-paths", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        _stdout, stderr = self.expect_fail(*self.close_argv(baseline))
+        self.assertIn("run-smoke", stderr)
+        self.ok(
+            "run-smoke", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        _stdout, stderr = self.expect_fail(*self.close_argv(baseline))
+        self.assertIn("verify-local", stderr)
+        (self.destination / "node_modules").mkdir()
+        self.verify_local_ok()
+        _stdout, stderr = self.expect_fail(*self.close_argv(baseline))
+        self.assertIn(
+            "verify-consumers", stderr,
+            "a workspace still needs the explicit verify-consumers event",
+        )
+        self.ok(
+            "apply-consumers", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        self.ok(
+            "verify-consumers", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        _stdout, stderr = self.expect_fail(*self.close_argv(baseline))
+        self.assertIn("verify-cloud", stderr)
+        self.cloud = self.install_cloud(trashed=False)
+        self.ok("record-cloud", "sample", "--journal", self.journal)
+        self.trash_old_object(self.cloud)
+        self.ok("verify-cloud", "sample", "--journal", self.journal)
+        tools = self.install_tools()
+        _stdout, stderr = self.expect_fail(*self.close_argv(baseline))
+        self.assertIn("native", stderr)
+        self.ok("record-native-errors", "--journal", baseline)
+        self.assertNotIn("rollback_window_closed", self.event_types())
+        stdout, _stderr = self.ok(*self.close_argv(baseline))
+        self.assertEqual(self.success_stdout(self.journal), stdout)
+        closed = [
+            item for item in self.events()
+            if item["event"] == "rollback_window_closed"
+        ]
+        self.assertEqual(1, len(closed))
+        payload = closed[0]["payload"]
+        self.assertEqual("sample", payload["workspace"])
+        self.assertEqual({"outbound": 7}, payload["queue_cursors"])
+        self.assertEqual(4242, payload["drive_pid"])
+        self.assertEqual(1111, payload["restart_before_pid"])
+        _stdout, stderr = self.expect_fail(*self.close_argv(baseline))
+        self.assertIn("closed", stderr)
+        self.ok(
+            "finalize-generated-paths", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        self.assertFalse(
+            (self.targets / "node_modules").exists(),
+            "the producer event must unlock Task 4's finalize consumer",
+        )
+
+    def test_close_rollback_window_requires_exactly_one_smoke(self):
+        self.do_move()
+        baseline = self.make_baseline()
+        self.verify_local_ok()
+        self.ok(
+            "materialize-generated-paths", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        self.ok(
+            "run-smoke", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        (self.destination / "node_modules").mkdir()
+        self.ok(
+            "run-smoke", "sample", "--journal", self.journal,
+            "--manifest", self.manifest_path,
+        )
+        _stdout, stderr = self.expect_fail(*self.close_argv(baseline))
+        self.assertIn("run-smoke", stderr)
+        self.assertNotIn("rollback_window_closed", self.event_types())
+
+    def test_close_rollback_window_blocks_on_process_cwd_below_source(self):
+        baseline, _tools = self.closed_window_prereqs()
+        tools = self.install_tools(
+            cwds=[(4321, str(self.source / "subdir"))]
+        )
+        _stdout, stderr = self.expect_fail(*self.close_argv(baseline))
+        self.assertIn("process", stderr)
+        self.assertIn("4321", stderr)
+        lsof_calls = [
+            call for call in tools.calls
+            if os.path.basename(call[0]) == "lsof"
+        ]
+        self.assertTrue(lsof_calls)
+        for call in lsof_calls:
+            self.assertEqual(["-Fn", "-a", "-d", "cwd"], call[1:])
+        self.assertNotIn("rollback_window_closed", self.event_types())
+
+    def test_close_rollback_window_blocks_on_emacs_buffer_below_source(self):
+        baseline, _tools = self.closed_window_prereqs()
+        tools = self.install_tools(
+            emacs_files=[str(self.source / "tracked.txt")]
+        )
+        _stdout, stderr = self.expect_fail(*self.close_argv(baseline))
+        self.assertIn("Emacs", stderr)
+        emacs_calls = [
+            call for call in tools.calls
+            if os.path.basename(call[0]) == "emacsclient"
+        ]
+        self.assertTrue(emacs_calls)
+        for call in emacs_calls:
+            self.assertEqual("-e", call[1])
+            self.assertEqual(3, len(call))
+        self.install_tools(emacs_rc=1)
+        _stdout, stderr = self.expect_fail(*self.close_argv(baseline))
+        self.assertIn("emacsclient", stderr)
+        self.assertNotIn("rollback_window_closed", self.event_types())
+
+    def test_close_rollback_window_blocks_on_consumer_with_old_path(self):
+        baseline, _tools = self.closed_window_prereqs()
+        content = self.config_path.read_text(encoding="utf-8")
+        self.config_path.write_text(
+            content + f"regressed {self.old}\n", encoding="utf-8"
+        )
+        _stdout, stderr = self.expect_fail(*self.close_argv(baseline))
+        self.assertIn("consumer", stderr)
+        self.assertNotIn("rollback_window_closed", self.event_types())
+
+    def test_close_rollback_window_blocks_on_live_state_regressions(self):
+        baseline, _tools = self.closed_window_prereqs()
+        with self.subTest("new-native-error"):
+            regressed = copy.deepcopy(NATIVE_PAGE)
+            regressed["rows"].append(
+                {
+                    "row_key": "err-new",
+                    "path": str(self.destination / "tracked.txt"),
+                    "category": "Sync error",
+                    "text": "Cannot sync tracked.txt",
+                    "row_index": 1,
+                }
+            )
+            self.install_tools(native_pages=[regressed])
+            _stdout, stderr = self.expect_fail(*self.close_argv(baseline))
+            self.assertIn("native", stderr)
+        self.install_tools()
+        with self.subTest("unstable-queue-cursors"):
+            counter = {"value": 0}
+
+            def advancing(name):
+                counter["value"] += 1
+                return {
+                    "rows": [{"path": "repo", "id": "obj-1"}],
+                    "queue_cursors": {"outbound": counter["value"]},
+                    "cloud": {
+                        "object_id": "obj-1", "parent_id": "parent-1",
+                        "duplicates": [],
+                    },
+                }
+
+            self.module.DRIVE_STATE_PROVIDER = advancing
+            _stdout, stderr = self.expect_fail(*self.close_argv(baseline))
+            self.assertIn("stable", stderr)
+            self.install_providers()
+        with self.subTest("drive-pid-unchanged"):
+            _stdout, stderr = self.expect_fail(
+                *self.close_argv(baseline, pid=4242)
+            )
+            self.assertIn("restart", stderr)
+        with self.subTest("live-smoke-process-group"):
+            self.module._append_event(
+                self.journal, "smoke_started",
+                {
+                    "service": "web", "pid": 7778, "pgid": 7777,
+                    "port": 4567, "log": str(self.journal.parent / "l.log"),
+                },
+            )
+            self.install_tools(ps_groups=[(7777, 7778)])
+            _stdout, stderr = self.expect_fail(*self.close_argv(baseline))
+            self.assertIn("group", stderr)
+        self.assertNotIn("rollback_window_closed", self.event_types())
+
+    # ------------------------------------------------------------------
+    # Smoke services
+    # ------------------------------------------------------------------
+
+    def free_port(self) -> int:
+        with socket.socket() as probe:
+            probe.bind(("127.0.0.1", 0))
+            return probe.getsockname()[1]
+
+    def services_manifest(self):
+        (self.source / "smoke_server.py").write_text(
+            SMOKE_SERVER_SOURCE, encoding="utf-8"
+        )
+        self.web_port = self.free_port()
+        self.api_port = self.free_port()
+        self.badjson_port = self.free_port()
+        self.stubborn_port = self.free_port()
+        services = [
+            {
+                "name": "web", "cwd": ".",
+                "argv": ["python3", "smoke_server.py", str(self.web_port)],
+                "port": self.web_port,
+                "http": {"status": 200, "content_marker": "drive-smoke-ok"},
+            },
+            {
+                "name": "api", "cwd": ".",
+                "argv": [
+                    "python3", "smoke_server.py", str(self.api_port), "json",
+                ],
+                "port": self.api_port,
+                "http": {"json_keys": ["status", "workspace"]},
+            },
+            {
+                "name": "badjson", "cwd": ".",
+                "argv": [
+                    "python3", "smoke_server.py",
+                    str(self.badjson_port), "json",
+                ],
+                "port": self.badjson_port,
+                "http": {"json_keys": ["status", "workspace", "extra"]},
+            },
+            {
+                "name": "stubborn", "cwd": ".",
+                "argv": [
+                    "python3", "smoke_server.py",
+                    str(self.stubborn_port), "ignore-term",
+                ],
+                "port": self.stubborn_port,
+                "http": {"status": 200, "content_marker": "drive-smoke-ok"},
+            },
+        ]
+        self.manifest_path = self.write_manifest(runtime_services=services)
+
+    def kill_group(self, pgid):
+        try:
+            os.killpg(pgid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError):
+            # ESRCH: already gone; EPERM: only unreaped zombies remain.
+            pass
+
+    def wait_port(self, port, timeout=10.0):
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            try:
+                with socket.create_connection(("127.0.0.1", port), 0.2):
+                    return
+            except OSError:
+                time.sleep(0.05)
+        self.fail(f"port {port} never started listening")
+
+    def start_service(self, service):
+        self.ok(
+            "smoke-start", "sample", "--service", service,
+            "--journal", self.journal,
+        )
+        event = [
+            item for item in self.events()
+            if item["event"] == "smoke_started"
+        ][-1]
+        payload = event["payload"]
+        self.addCleanup(self.kill_group, payload["pgid"])
+        self.wait_port(payload["port"])
+        return payload
+
+    def group_members(self, pgid):
+        # Reap any of this process's own exited children first so a
+        # zombie is not misread as a live group member.
+        self.module._reap_exited_children(pgid)
+        listing = subprocess.run(
+            ["/bin/ps", "-Ao", "pgid=,pid="],
+            capture_output=True, encoding="utf-8", check=True,
+        ).stdout
+        members = []
+        for line in listing.splitlines():
+            parts = line.split()
+            if len(parts) == 2 and parts[0] == str(pgid):
+                members.append(int(parts[1]))
+        return members
+
+    def assert_port_bindable(self, port):
+        with socket.socket() as probe:
+            # SO_REUSEADDR: a lingering TIME_WAIT connection is fine;
+            # only a live listener must fail this probe.
+            probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            probe.bind(("127.0.0.1", port))
+
+    def test_smoke_service_normal_lifecycle(self):
+        self.services_manifest()
+        self.do_move()
+        payload = self.start_service("web")
+        self.assertEqual(self.web_port, payload["port"])
+        log = Path(payload["log"])
+        self.assertTrue(log.is_file())
+        self.assertEqual(0o600, stat.S_IMODE(os.stat(log).st_mode))
+        self.assertTrue(str(log).startswith(str(self.state)))
+        self.assertGreaterEqual(
+            len(self.group_members(payload["pgid"])), 2,
+            "the fixture server must have spawned a child in its group",
+        )
+        _stdout, stderr = self.expect_fail(
+            "smoke-start", "sample", "--service", "web",
+            "--journal", self.journal,
+        )
+        self.assertIn("already", stderr)
+        self.ok(
+            "smoke-check", "sample", "--service", "web",
+            "--journal", self.journal,
+        )
+        self.assertEqual("smoke_checked", self.event_types()[-1])
+        self.ok(
+            "smoke-stop", "sample", "--service", "web",
+            "--journal", self.journal,
+        )
+        stopped = [
+            item for item in self.events()
+            if item["event"] == "smoke_stopped"
+        ][-1]
+        self.assertFalse(stopped["payload"]["forced"])
+        self.assertEqual([], self.group_members(payload["pgid"]))
+        self.assert_port_bindable(self.web_port)
+
+    def test_smoke_check_enforces_the_exact_json_key_set(self):
+        self.services_manifest()
+        self.do_move()
+        self.start_service("api")
+        self.ok(
+            "smoke-check", "sample", "--service", "api",
+            "--journal", self.journal,
+        )
+        self.start_service("badjson")
+        _stdout, stderr = self.expect_fail(
+            "smoke-check", "sample", "--service", "badjson",
+            "--journal", self.journal,
+        )
+        self.assertIn("json", stderr.lower())
+        for service in ("api", "badjson"):
+            self.ok(
+                "smoke-stop", "sample", "--service", service,
+                "--journal", self.journal,
+            )
+
+    def test_smoke_start_rejects_a_preexisting_listener(self):
+        self.services_manifest()
+        self.do_move()
+        squatter = socket.socket()
+        self.addCleanup(squatter.close)
+        squatter.bind(("127.0.0.1", self.web_port))
+        squatter.listen(1)
+        _stdout, stderr = self.expect_fail(
+            "smoke-start", "sample", "--service", "web",
+            "--journal", self.journal,
+        )
+        self.assertIn("listener", stderr)
+        self.assertNotIn("smoke_started", self.event_types())
+
+    def test_smoke_start_rejects_a_wildcard_listener(self):
+        # A 0.0.0.0 listener with SO_REUSEADDR would pass a plain
+        # 127.0.0.1 bind probe; the lsof listener sweep must still block.
+        self.services_manifest()
+        self.do_move()
+        squatter = socket.socket()
+        self.addCleanup(squatter.close)
+        squatter.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        squatter.bind(("0.0.0.0", self.web_port))
+        squatter.listen(1)
+        _stdout, stderr = self.expect_fail(
+            "smoke-start", "sample", "--service", "web",
+            "--journal", self.journal,
+        )
+        self.assertIn("listener", stderr)
+        self.assertNotIn("smoke_started", self.event_types())
+
+    def test_preexisting_listener_never_satisfies_a_smoke_check(self):
+        self.services_manifest()
+        self.do_move()
+        _stdout, stderr = self.expect_fail(
+            "smoke-check", "sample", "--service", "web",
+            "--journal", self.journal,
+        )
+        self.assertIn("smoke-start", stderr)
+        payload = self.start_service("web")
+        self.kill_group(payload["pgid"])
+        deadline = time.monotonic() + 10
+        while self.group_members(payload["pgid"]):
+            if time.monotonic() > deadline:
+                self.fail("fixture group did not die")
+            time.sleep(0.05)
+        impostor = subprocess.Popen(
+            [
+                sys.executable, "-c",
+                "import socket, time\n"
+                "server = socket.socket()\n"
+                "server.setsockopt("
+                "socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)\n"
+                f"server.bind(('127.0.0.1', {self.web_port}))\n"
+                "server.listen(1)\n"
+                "time.sleep(300)\n",
+            ],
+            start_new_session=True,
+        )
+        self.addCleanup(impostor.wait)
+        self.addCleanup(impostor.kill)
+        self.wait_port(self.web_port)
+        _stdout, stderr = self.expect_fail(
+            "smoke-check", "sample", "--service", "web",
+            "--journal", self.journal,
+        )
+        self.assertIn("group", stderr)
+        self.assertNotIn("smoke_checked", self.event_types())
+
+    def test_smoke_stop_forces_sigkill_on_a_stubborn_group(self):
+        self.services_manifest()
+        self.do_move()
+        payload = self.start_service("stubborn")
+        self.ok(
+            "smoke-stop", "sample", "--service", "stubborn",
+            "--journal", self.journal,
+        )
+        stopped = [
+            item for item in self.events()
+            if item["event"] == "smoke_stopped"
+        ][-1]
+        self.assertTrue(stopped["payload"]["forced"])
+        self.assertEqual([], self.group_members(payload["pgid"]))
+        self.assert_port_bindable(self.stubborn_port)
+
+    # ------------------------------------------------------------------
+    # Command-surface hygiene
+    # ------------------------------------------------------------------
+
+    def test_new_commands_reject_force_and_corrupt_journals(self):
+        self.capture()
+        journal_argvs = [
+            ["record-cloud", "sample", "--journal", str(self.journal)],
+            ["verify-cloud", "sample", "--journal", str(self.journal)],
+            ["restore-cloud", "sample", "--journal", str(self.journal)],
+            ["record-native-errors", "--journal", str(self.journal)],
+            ["close-rollback-window", "--journal", str(self.journal),
+             "--baseline-journal", str(self.journal),
+             "--restart-before-pid", "1"],
+            ["smoke-start", "sample", "--service", "web",
+             "--journal", str(self.journal)],
+            ["smoke-check", "sample", "--service", "web",
+             "--journal", str(self.journal)],
+            ["smoke-stop", "sample", "--service", "web",
+             "--journal", str(self.journal)],
+        ]
+        for argv in journal_argvs + [["native-preflight"]]:
+            stderr = io.StringIO()
+            with self.assertRaises(SystemExit, msg=argv[0]):
+                with contextlib.redirect_stderr(stderr):
+                    self.module.main(argv + ["--force"])
+            self.assertIn("--force", stderr.getvalue(), argv[0])
+        self.craft_line(self.journal, "drive_state", event_hash="f" * 64)
+        corrupted = self.journal.read_bytes()
+        for argv in journal_argvs:
+            _stdout, stderr = self.expect_fail(*argv)
+            self.assertIn("journal", stderr.lower(), argv[0])
+            self.assertEqual(corrupted, self.journal.read_bytes(), argv[0])
 
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ documented in [[file:../agents/README.org][the agent manual]]. Skill names and t
 |---------+----------|
 | =agent-skill= | Resolves a Claude or Codex skill by name across the active skill roots. |
 | =ahrefs-api-guard= | Delegates Ahrefs API access to the guarded Claude-side wrapper. |
-| =ai-config-sync= | Audits and guards paired Claude and Codex configuration. |
+| =ai-config-sync= | Audits and guards paired Claude and Codex configuration while treating each tool's hook README as independent documentation. |
 | =claude-stage-hook= | Stages explicitly marked Claude final-message commands on the user’s paste surfaces. |
 | =codex-app-handoff= | Opens the current Codex thread in the desktop app and can copy a continuation prompt. |
 | =codex-config-prune= | Removes stale project-trust and hook-state entries from Codex configuration. |

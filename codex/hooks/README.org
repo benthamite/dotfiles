@@ -40,6 +40,15 @@ must use =op-desktop=. The sanctioned fallback batches all operations in one
 =env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '...'= shell; later raw =op= calls
 and =--reveal= remain denied.
 
+The post-commit Elisp tracker attributes each literal nested
+=tools.exec_command= call to the =workdir= in that same call rather than to the
+hook process directory. Multiple calls remain distinct. Missing, dynamic,
+invalid, overridable, or repeated commit targets conservatively retain the
+verification marker, including multiple commits inside one shell call. Inert
+quoted text and shell comments do not count as commits, while interpreter
+payloads remain conservative. Only an exact successful direct =emacsclient=
+event clears the marker.
+
 The Elisp documentation gate honors
 =branch.<branch>.deferDocUpdates=true= only on feature branches and ignores it
 on =main= and =master=. Remove the setting when the branch merges.
@@ -70,7 +79,7 @@ handled by its configured documentation owner instead.
 | =block-texi-edit.sh= | Blocks direct edits to generated Texinfo and points to the Org source. |
 | =block-unguarded-ahrefs-api.sh= | Blocks paid Ahrefs API calls that do not pass through the quota guard. |
 | =block-walk-list-access.sh= | Restricts direct access to the protected walk-list data store. |
-| =lib-codex-hook-json.sh= | Normalizes Codex hook payloads and extracts literal nested command data without evaluating JavaScript. |
+| =lib-codex-hook-json.sh= | Normalizes Codex hook payloads and extracts literal nested commands plus paired command/workdir records from actual shell-tool calls without evaluating JavaScript. |
 | =lib-codex-paths.sh= | Extracts changed paths from the supported Codex edit and patch payload forms. |
 | =lib-repo-root.sh= | Resolves the effective Git repository from structured hook context without shell re-evaluation. |
 | =lib-staged-files.sh= | Lists staged paths and handles amended commits as complete proposed commits. |
@@ -87,7 +96,7 @@ handled by its configured documentation owner instead.
 | =require-readme-update.sh= | Requires the Claude README with staged Claude skills, hooks, or settings changes. |
 | =session-learning-capture.sh= | Retained unregistered helper for requesting session-learning capture at session end. |
 | =track-elisp-test.sh= | Records successful batch Elisp tests and rejects tests loaded from stale builds. |
-| =track-elisp-verify.sh= | Sets and clears the live-Emacs verification marker around Elisp commits. |
+| =track-elisp-verify.sh= | Sets and clears the live-Emacs verification marker around Elisp commits, with per-call repository attribution for =functions.exec= wrappers. |
 
 The documentation audit requires every tracked direct child to appear exactly
 once in this table. After changing a registered hook, verify the registration

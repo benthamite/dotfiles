@@ -397,7 +397,7 @@
       "claude": null,
       "codex": "codex/hooks/lib-codex-hook-json.sh",
       "status": "codex-only",
-      "note": "Codex hook payload normalizer for tool_input/tool_response object-or-string variants plus a literal nested cmd extractor for functions.exec programs; Claude hooks read native Claude payloads directly."
+      "note": "Codex-only hook payload normalizer for tool_input/tool_response object-or-string variants. Its non-evaluating functions.exec parser emits literal nested commands and paired command/workdir records from actual tools.exec_command calls, rejects overridable object fields as ambiguous, and classifies commit syntax without treating inert quoted text as a command; Claude has no functions.exec wrapper and reads native Claude payloads directly."
     },
     {
       "name": "lib-codex-paths.sh",
@@ -586,7 +586,7 @@
       "claude": "claude/hooks/track-elisp-verify.sh",
       "codex": "codex/hooks/track-elisp-verify.sh",
       "status": "paired",
-      "note": "paired; Codex version accepts exitCode and exit_code payload keys and normalizes string-wrapped tool_input/tool_response via lib-codex-hook-json.sh"
+      "note": "paired for direct shell-tool verification tracking; Codex additionally accepts exitCode and exit_code payload keys and uses its Codex-only functions.exec parser to attribute each literal nested commit to the matching workdir without inspecting the hook cwd. Unattributed or repeated nested commits conservatively retain verification, and only exact direct successful emacsclient events clear it."
     },
     {
       "name": "wrap-bash-output.sh",

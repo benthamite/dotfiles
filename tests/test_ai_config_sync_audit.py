@@ -314,6 +314,28 @@ if os.path.lexists(mode_link) and (
 
         self.assertEqual([], problems)
 
+    def test_guard_hooks_ignores_tool_specific_readme_files(self):
+        repo = self.make_repo(
+            ["claude/hooks/README.org", "codex/hooks/README.md"]
+        )
+        changed = {"claude/hooks/README.org", "codex/hooks/README.md"}
+        problems: list[str] = []
+
+        self.module.guard_changed_paths(
+            repo,
+            changed,
+            changed,
+            changed,
+            problems,
+            True,
+            {},
+            {},
+            {},
+            {},
+        )
+
+        self.assertEqual([], problems)
+
     def test_guard_commit_blocks_global_config_commit_when_full_audit_is_red(self):
         staged = {"claude/README.org"}
         audit_problem = "Hook missing from manifest: stale-hook.sh"

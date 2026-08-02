@@ -64,6 +64,7 @@ TOOL_SPECIFIC_SKILL_FRONTMATTER = {
 
 PEER_STATUS_PREFIXES = ("paired",)
 REGISTERED_PAIR_STATUSES = {"paired"}
+HOOK_DOCUMENTATION_NAMES = {"README.md", "README.org"}
 
 RUNTIME_PATTERNS = (
     "claude/skills/*/digests/*",
@@ -2221,7 +2222,11 @@ def guard_changed_paths(
                     f"{path} changed without synchronized counterpart {counterpart} or a private-skill-specific {PRIVATE_MANIFEST} exemption:",
                     drift,
                 )
-        elif include_global and path.startswith("claude/hooks/"):
+        elif (
+            include_global
+            and path.startswith("claude/hooks/")
+            and Path(path).name not in HOOK_DOCUMENTATION_NAMES
+        ):
             hook = path.removeprefix("claude/hooks/")
             if hook in processed_global_hooks:
                 continue
@@ -2237,7 +2242,11 @@ def guard_changed_paths(
                 hook,
             ):
                 problems.append(f"claude/hooks/{hook} changed without codex/hooks/{hook} or {MANIFEST}")
-        elif include_global and path.startswith("codex/hooks/"):
+        elif (
+            include_global
+            and path.startswith("codex/hooks/")
+            and Path(path).name not in HOOK_DOCUMENTATION_NAMES
+        ):
             hook = path.removeprefix("codex/hooks/")
             if hook in processed_global_hooks:
                 continue
@@ -3318,16 +3327,15 @@ def audit_private_skills(problems: list[str], manifest: dict) -> None:
 
 def audit_hooks(problems: list[str], manifest: dict) -> None:
     manifest_hooks = {item["name"]: item for item in manifest.get("hooks") or []}
-    readme_names = {"README.md", "README.org"}
     claude_hooks = {
         path.name
         for path in (ROOT / "claude" / "hooks").iterdir()
-        if path.is_file() and path.name not in readme_names
+        if path.is_file() and path.name not in HOOK_DOCUMENTATION_NAMES
     }
     codex_hooks = {
         path.name
         for path in (ROOT / "codex" / "hooks").iterdir()
-        if path.is_file() and path.name not in readme_names
+        if path.is_file() and path.name not in HOOK_DOCUMENTATION_NAMES
     }
 
     for hook in sorted((claude_hooks | codex_hooks) - set(manifest_hooks)):

@@ -82,7 +82,11 @@ dispatching to the paired scripts documented in [[file:hooks/README.org][the hoo
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged
 index entries, so a live Emacs never loads tests or a partially resolved tree.
-Test-only Elisp commits likewise do not require package-manual updates.
+Test-only Elisp commits likewise do not require package-manual updates. For
+=functions.exec= wrappers, post-commit verification pairs each literal nested
+shell command with its own =workdir=; it never guesses from the hook process
+directory, ignores inert quoted commit text, and conservatively retains
+verification for ambiguous or repeated commit targets.
 
 Emacs-owned sessions use eight explicit =codex-hook-wrapper= registrations for
 lifecycle forwarding. The wrapper comes from the Emacs package source tree

@@ -861,11 +861,17 @@ class StageAtomicRunTests(unittest.TestCase):
                 return_value=True,
                 create=True,
             ),
+            mock.patch.object(
+                orchestrator,
+                "reconcile_agent1_waiting",
+                create=True,
+            ) as reconcile_waiting,
             redirect_stdout(io.StringIO()),
         ):
             orchestrator.switch_model(args)
 
         send_control.assert_called_once_with("*claude:stage-2*", "/model opus")
+        reconcile_waiting.assert_called_once_with("*claude:stage-2*")
         self.assertEqual(orchestrator.load_run(self.run_file)["status"], "implementation-active")
 
     def test_switch_model_rejects_without_bounded_credit_stop(self):
@@ -912,6 +918,9 @@ class StageAtomicRunTests(unittest.TestCase):
                 "_wait_for_agent1_model",
                 side_effect=(False, True),
                 create=True,
+            ),
+            mock.patch.object(
+                orchestrator, "reconcile_agent1_waiting", create=True
             ),
             mock.patch.object(
                 orchestrator, "send_return_to_agent"

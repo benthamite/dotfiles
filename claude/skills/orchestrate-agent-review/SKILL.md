@@ -277,12 +277,13 @@ whose latest bounded return contains the explicit credit stop. It submits only
 Claude's local `/model` control, confirms a local dialog with Return when
 needed, and succeeds only after the status file reports the requested model.
 It does not alter the guarded phase, create an extra review, or itself resume
-implementation. If Emacs has reset an otherwise live Claude buffer's lifecycle
-metadata to `unknown`, the explicit bounded credit stop plus its live terminal
-process may stand in for the lost awaiting state. After the requested model is
-verified, the helper restores that buffer's blocked/waiting lifecycle state so
-the ordinary `resume-stage` guard remains unchanged; an unknown dead process
-stays blocked.
+implementation. After verification, it always restores the buffer's
+blocked/waiting lifecycle state because Claude's local `/model` control can
+emit a submit event without the stop event of a model turn. If Emacs had
+already reset an otherwise live Claude buffer's metadata to `unknown`, the
+explicit bounded credit stop plus its live terminal process may stand in for
+the lost awaiting state; an unknown dead process stays blocked. The ordinary
+`resume-stage` guard remains unchanged.
 
 ## Step 5: Create and review the spec
 

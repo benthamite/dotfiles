@@ -1333,8 +1333,7 @@ def switch_model(args: argparse.Namespace) -> None:
             raise EmacsClientError(
                 f"Claude reported {new_model!r}, not the requested {args.model!r}"
             )
-        if reset_but_live:
-            reconcile_agent1_waiting(agent1["buffer"])
+        reconcile_agent1_waiting(agent1["buffer"])
     print(f"switched Agent 1 model: {old_model} -> {new_model}")
 
 

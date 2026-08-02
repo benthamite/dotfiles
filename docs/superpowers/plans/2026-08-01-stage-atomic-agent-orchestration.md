@@ -25,12 +25,13 @@ Cover these public behaviors with temporary run files and mocked Emacs calls:
 
 ```python
 orchestrator.create_run(...)
-orchestrator.submit_phase(...)
+orchestrator.submit(...)
+orchestrator.finish_phase(...)
 orchestrator.resume_stage(...)
 orchestrator.complete_stage(...)
 ```
 
-Assert the exact phase sequence `spec -> spec-review -> plan -> plan-review -> implementation`, fixed role routing, an immutable implementation contract, rejection of duplicate/out-of-order/post-implementation arbitrary submissions, stage-only recovery, busy-agent rejection, adoption evidence, mode `0600`, and paired helper identity.
+Assert the exact phase sequence `spec -> spec-review -> plan -> plan-review -> implementation`, fixed role routing, an immutable implementation contract, rejection of duplicate/out-of-order/post-implementation arbitrary submissions, stage-only recovery, busy-agent rejection, adoption evidence, mode `0600`, and paired helper identity. Also require a returned top-level actor plus exact completion marker before the next phase, explicit reconciliation after ambiguous delivery, and acceptance evidence before completion.
 
 - [ ] **Step 3: Run the focused tests and verify RED**
 
@@ -50,11 +51,11 @@ Expected: new tests fail because run-state and stage-recovery APIs do not exist 
 
 - [ ] **Step 1: Add run-state loading and atomic persistence**
 
-Implement a versioned JSON state containing repository, stage, Agent 1 and Agent 2 role bundles, expected phase, status, submissions, and resume count. Create new files with `O_EXCL | O_NOFOLLOW` and mode `0600`; reject malformed, symlinked, or unsupported state.
+Implement a versioned JSON state containing repository, stage, Agent 1 and Agent 2 role bundles with required top-level transcript paths, expected phase, status, submissions, transcript boundaries, and resume count. Create new files with `O_EXCL | O_NOFOLLOW` and mode `0600`; reject malformed, symlinked, or unsupported state.
 
 - [ ] **Step 2: Replace arbitrary submission with guarded phase submission**
 
-Change `submit` to require `--run-file`, `--phase`, and `--prompt-file`. Resolve the destination from the fixed role bundle, reject an unexpected phase before Emacs is called, advance state only after successful submission, and prepend the fixed whole-stage contract to implementation prompts.
+Change `submit` to require `--run-file`, `--phase`, and `--prompt-file`. Resolve the destination from the fixed role bundle, reject an unexpected phase before Emacs is called, persist an ambiguous pending submission before contacting Emacs, and prepend the fixed whole-stage contract to implementation prompts. Successful delivery marks the phase active rather than complete.
 
 - [ ] **Step 3: Add lifecycle commands**
 
@@ -63,11 +64,13 @@ Add:
 ```text
 init-run
 run-status
+finish-phase
+reconcile-submission
 resume-stage
 complete-stage
 ```
 
-`resume-stage` accepts no prompt file, requires `implementation-active` and an awaiting Agent 1, and submits fixed whole-stage wording. `complete-stage` closes the run after stage-final verification. Existing implementation may be adopted only with explicit spec commit, plan commit, and completed-review evidence.
+`finish-phase` requires the fixed actor to be awaiting input and verifies the exact completion marker only in transcript bytes appended after the current submission. `reconcile-submission` resolves ambiguous external delivery without an automatic retry. `resume-stage` accepts no prompt file, requires `implementation-active` and an awaiting Agent 1, and submits fixed whole-stage wording. `complete-stage` records explicit stage-final acceptance evidence and refuses an implementation that has not returned. Existing implementation may be adopted only with explicit spec commit, plan commit, and completed-review evidence. Remove global buffer enumeration so monitoring cannot substitute internal task/subagent sessions for the fixed actors.
 
 - [ ] **Step 4: Run focused tests and verify GREEN**
 
@@ -86,8 +89,7 @@ Expected: all orchestrator tests pass.
 - Modify: `claude/skills/orchestrate-agent-review/SKILL.md`
 - Modify: `codex/skills/orchestrate-agent-review/agents/openai.yaml`
 - Modify: `claude/skills/orchestrate-agent-review/agents/openai.yaml`
-- Modify: `codex/README.org`
-- Modify: `claude/README.org`
+- Modify: `agents/skill-inventory.org` (generated)
 
 - [ ] **Step 1: Add the hard rule and red flags**
 
@@ -97,9 +99,9 @@ State that implementation is one opaque handoff. Explicitly prohibit task-number
 
 Replace raw `submit` examples with `init-run` plus guarded phase submissions. During implementation, permit only phase-level `watch` output and fixed `resume-stage` recovery. Require one independent stage-final acceptance pass after Agent 1 returns.
 
-- [ ] **Step 3: Refresh paired metadata and READMEs**
+- [ ] **Step 3: Refresh paired metadata and generated inventory**
 
-Make the default prompt explicitly request a complete stage workflow and update both README descriptions to describe enforced run state and stage-only recovery.
+Make the default prompt explicitly request a complete stage workflow and regenerate the tracked public-skill inventory. The individual workflow remains owned by `SKILL.md`.
 
 ### Task 4: Verify behavior and deployment
 
@@ -142,7 +144,7 @@ git diff --check
 git status --short
 ```
 
-Stage only the paired orchestrator skill, helper, metadata, tests, READMEs, and these design/plan artifacts. Leave unrelated `codex/config.toml` untouched. Commit with:
+Stage only the paired orchestrator skill, helper, metadata, tests, generated inventory, and these design/plan artifacts. Leave unrelated `codex/config.toml` untouched. Commit with:
 
 ```bash
 git commit -m "agents: enforce stage-atomic orchestration"

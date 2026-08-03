@@ -1,5 +1,5 @@
 model = "gpt-5.6-sol"
-model_reasoning_effort = "xhigh"
+model_reasoning_effort = "medium"
 service_tier = "fast"
 approval_policy = "on-request"
 sandbox_mode = "danger-full-access"
@@ -408,6 +408,12 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/repos/ae-newsletter-generator"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/Downloads"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/git-dirs"]
+trust_level = "trusted"
+
 [tui]
 theme = "light"
 
@@ -701,10 +707,10 @@ trusted_hash = "sha256:51f05e23ee3979bab554164c6438059c3de2473dc24ac99de403f690b
 trusted_hash = "sha256:34dab145cbd12ee6011d1fbc33b06030dafe76026caf43c5f097cc97a45991e8"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:1:0"]
-trusted_hash = "sha256:fbde2a0e426cfe9f31207719d307840ac8211f1815a8c7d58cb53da4866124ca"
+trusted_hash = "sha256:7316b5a606cfb6cba65cc86b6a4f34fd9c561ae82522f99bbba44cb4bff3f920"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:2:0"]
-trusted_hash = "sha256:7316b5a606cfb6cba65cc86b6a4f34fd9c561ae82522f99bbba44cb4bff3f920"
+trusted_hash = "sha256:84371657412f1c7824551cba5781509e482cf1b519d53be1454604839414ca22"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:2:1"]
 trusted_hash = "sha256:8b0edb356d74353744da62f19dd782c326f7f94bcd3f80d5348acb428d696fd5"
@@ -760,6 +766,21 @@ trusted_hash = "sha256:c1a1cd200ab8775d3b193265d52bd662fa4fbad5606b375e148c5c5f9
 
 [hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:post_tool_use:1:4"]
 trusted_hash = "sha256:1ef9cd07e6b3968261e484743978641b54628671e504a50b6248700a8652899d"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:14"]
+trusted_hash = "sha256:227189072eaf2dfc7300adfc34de8a56586e77e8e5011a18db31144ef11303da"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:1:1"]
+trusted_hash = "sha256:8b0edb356d74353744da62f19dd782c326f7f94bcd3f80d5348acb428d696fd5"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:1:2"]
+trusted_hash = "sha256:ea596c82ee86433b0fc9a7c44144634d8271d531fbde509da9693a1a23ff07af"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:1:3"]
+trusted_hash = "sha256:fced58c9d5f6ff9709656f453c2fdc66512c250a86f608e829cc73f6a7212a7c"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:1:4"]
+trusted_hash = "sha256:c1a1cd200ab8775d3b193265d52bd662fa4fbad5606b375e148c5c5f94fde7d8"
 
 [[skills.config]]
 path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/google-sheets-comments/SKILL.md"

@@ -707,7 +707,7 @@
       "path": "codex/config.toml",
       "tracked": true,
       "live_path": "~/.codex/config.toml",
-      "note": "Tracked global config, live through ~/.codex/config.toml. Codex-only trust, plugin, theme, app, MCP, account, and model state has no Claude counterpart; project-doc fallbacks remain disabled and [features].hooks enables hooks. bin/skill-prune owns managed [[skills.config]] entries and shared disable state. bin/codex-config-prune removes dead project and hook-trust records. See codex/README.org."
+      "note": "Tracked global config, live through ~/.codex/config.toml. Codex-only trust, plugin, theme, app, MCP, account, and model state has no Claude counterpart; project-doc fallbacks remain disabled and [features].hooks enables hooks. bin/skill-prune owns managed [[skills.config]] entries and shared disable state. bin/codex-config-prune removes dead project and hook-trust records. The [projects.\"...\"] trust keys name absolute repository paths and so change when a repository moves; the 2026-08-03 migration out of ~/My Drive/repos rewrote 16 of them to ~/repos. See codex/README.org."
     },
     {
       "tool": "Codex",

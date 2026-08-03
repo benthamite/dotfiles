@@ -699,6 +699,103 @@ class StageAtomicRunTests(unittest.TestCase):
             orchestrator.submit(self.submit_args("spec"))
         submit.assert_not_called()
 
+    def test_submit_bootstraps_a_fresh_initialized_claude_session(self):
+        self.create_run()
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                side_effect=(
+                    {"state": "unknown"},
+                    {"state": "awaiting-input"},
+                ),
+            ),
+            mock.patch.object(
+                orchestrator,
+                "agent1_process_live",
+                return_value=True,
+            ),
+            mock.patch.object(
+                orchestrator,
+                "claude_session_initialized",
+                return_value=True,
+                create=True,
+            ),
+            mock.patch.object(
+                orchestrator,
+                "reconcile_agent1_waiting",
+            ) as reconcile,
+            mock.patch.object(orchestrator, "submit_to_agent") as submit,
+            redirect_stdout(io.StringIO()),
+        ):
+            orchestrator.submit(self.submit_args("spec"))
+
+        reconcile.assert_called_once_with("*claude:stage-2*")
+        submit.assert_called_once()
+
+    def test_submit_does_not_bootstrap_unknown_claude_with_existing_history(self):
+        self.create_run()
+        self.agent1_transcript.write_text("existing turn\n", encoding="utf-8")
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "unknown"},
+            ),
+            mock.patch.object(
+                orchestrator,
+                "agent1_process_live",
+            ) as process_live,
+            mock.patch.object(
+                orchestrator,
+                "claude_session_initialized",
+                create=True,
+            ) as initialized,
+            mock.patch.object(
+                orchestrator,
+                "reconcile_agent1_waiting",
+            ) as reconcile,
+            mock.patch.object(orchestrator, "submit_to_agent") as submit,
+            self.assertRaisesRegex(SystemExit, "Agent 1 is unknown"),
+        ):
+            orchestrator.submit(self.submit_args("spec"))
+
+        process_live.assert_not_called()
+        initialized.assert_not_called()
+        reconcile.assert_not_called()
+        submit.assert_not_called()
+
+    def test_submit_does_not_bootstrap_uninitialized_claude_process(self):
+        self.create_run()
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "unknown"},
+            ),
+            mock.patch.object(
+                orchestrator,
+                "agent1_process_live",
+                return_value=True,
+            ),
+            mock.patch.object(
+                orchestrator,
+                "claude_session_initialized",
+                return_value=False,
+                create=True,
+            ),
+            mock.patch.object(
+                orchestrator,
+                "reconcile_agent1_waiting",
+            ) as reconcile,
+            mock.patch.object(orchestrator, "submit_to_agent") as submit,
+            self.assertRaisesRegex(SystemExit, "Agent 1 is unknown"),
+        ):
+            orchestrator.submit(self.submit_args("spec"))
+
+        reconcile.assert_not_called()
+        submit.assert_not_called()
+
     def test_stale_completion_marker_cannot_finish_new_submission(self):
         self.create_run()
         self.write_phase_return("spec")

@@ -140,6 +140,12 @@ When a new session is required, avoid commands that ask for an instance name. Us
 
 For Claude/Fable, use `:backend 'claude-code` and an instance such as `"improvement-5-claude"`.
 
+A newly initialized Claude session can still report `unknown` before its first
+lifecycle event. The guarded first submission reconciles it as waiting only
+when the Claude process is live, its configured transcript has no history, and
+the per-process status file names that exact transcript. Do not manually mark
+other unknown sessions as waiting.
+
 ## Step 3: Submit guarded phases
 
 Write phase context to a mode-`0600` temp file, submit it through the run, then

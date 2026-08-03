@@ -572,6 +572,35 @@ def reconcile_agent1_waiting(buffer: str) -> None:
         )
 
 
+def claude_session_initialized(buffer: str, transcript: str) -> bool:
+    """Return whether BUFFER's live Claude status names TRANSCRIPT.
+
+    A fresh Claude terminal has no lifecycle event yet, so agent.el reports
+    ``unknown`` even after the CLI has initialized its idle composer.  The
+    per-process status file supplies the session identity and transcript path
+    needed to distinguish that state from an uninitialized terminal.
+    """
+    expr = f'''
+(with-current-buffer {elisp_string(buffer)}
+  (let* ((status (and (fboundp 'agent-claude--parse-status-file)
+                      (agent-claude--parse-status-file)))
+         (session-id (plist-get status :session_id))
+         (status-transcript (plist-get status :transcript_path))
+         (expected (expand-file-name {elisp_string(transcript)})))
+    (princ
+     (if (and (stringp session-id)
+              (not (string-empty-p session-id))
+              (stringp status-transcript)
+              (string= (expand-file-name status-transcript) expected))
+         "initialized"
+       "uninitialized"))))
+'''
+    returned = run_emacs_eval(expr)
+    if returned not in {"initialized", "uninitialized"}:
+        raise SystemExit(f"unexpected Claude initialization state: {returned!r}")
+    return returned == "initialized"
+
+
 def _wait_for_agent1_model(buffer: str, model: str, timeout: float) -> bool:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -791,6 +820,29 @@ def _transcript_offset(state: dict[str, Any], actor: str) -> int:
         raise SystemExit(f"cannot inspect transcript {path}: {error}") from None
 
 
+def _bootstrap_fresh_claude_waiting(
+    state: dict[str, Any], actor_name: str, live: dict[str, Any]
+) -> dict[str, Any]:
+    """Reconcile an initialized, untouched Claude session before first use.
+
+    Do not generalize an ``unknown`` lifecycle state to waiting.  Bootstrap
+    only a Claude process whose configured transcript has no history, whose
+    terminal process is live, and whose per-process status file names that
+    exact transcript.
+    """
+    actor = state[actor_name]
+    if (
+        live.get("state") == "unknown"
+        and actor["backend"] in {"claude", "claude-code"}
+        and _transcript_offset(state, actor_name) == 0
+        and agent1_process_live(actor["buffer"])
+        and claude_session_initialized(actor["buffer"], actor["transcript"])
+    ):
+        reconcile_agent1_waiting(actor["buffer"])
+        return buffer_state(actor["buffer"])
+    return live
+
+
 def _phase_evidence(state: dict[str, Any], phase: str) -> str:
     actor = PHASE_ACTOR[phase]
     transcript = state[actor].get("transcript")
@@ -877,6 +929,7 @@ def submit(args: argparse.Namespace) -> None:
         actor_name = PHASE_ACTOR[args.phase]
         actor = state[actor_name]
         live = buffer_state(actor["buffer"])
+        live = _bootstrap_fresh_claude_waiting(state, actor_name, live)
         if live.get("state") != "awaiting-input":
             label = "Agent 1" if actor_name == "agent1" else "Agent 2"
             raise SystemExit(

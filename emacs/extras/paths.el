@@ -323,7 +323,13 @@ value."
 
 (defcustom paths-dir-split-git
   (file-name-concat (expand-file-name "~") "git-dirs/")
-  "Path to the \".git\" directory in split repos."
+  "Path to the \".git\" directory in split repos.
+
+Splitting exists only to keep the object store out of the Google Drive sync
+root, so it now applies only to repositories whose worktree is still inside
+Drive: the dotfiles repository and the Epoch project repositories.  Every
+repository under `paths-dir-personal-repos' keeps its \".git\" directory in
+place."
   :type 'directory
   :group 'paths)
 

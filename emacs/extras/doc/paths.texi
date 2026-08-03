@@ -271,7 +271,7 @@ These directories organize Git repositories by provenance:
 @item
 @code{paths-dir-tlon-docs}, @code{paths-dir-babel-refs}, @code{paths-dir-translation-server}: specific repositories.
 @item
-@code{paths-dir-split-git} (default: @samp{~/git-dirs/}): bare @samp{.git} directories for split-worktree repos.
+@code{paths-dir-split-git} (default: @samp{~/git-dirs/}): bare @samp{.git} directories for split-worktree repos. Splitting keeps the object store out of the Google Drive sync root, so as of 2026-08-03 it applies only to the dotfiles repository and the Epoch project repositories, whose worktrees are still inside Drive; repositories under @samp{~/repos/} hold their own @samp{.git} directory.
 @item
 @code{paths-dir-all-repos}: a list aggregating several personal data directories for use in search and agenda commands.
 @end itemize

@@ -69,11 +69,13 @@ file is a lean always-loaded instruction source, not a manual: detail belongs in
 skills and context files that load on demand.
 
 The global instructions state the repository-root contract shared with the
-Codex side: active repositories live outside Drive under =~/repos/= (Epoch
-repositories under =~/repos/epoch/=), source-only personal repositories may
-remain under =~/My Drive/repos/= only without dependencies, builds, caches,
-virtual environments, or worktrees, and every linked worktree lives under
-=~/repos/.worktrees/<repo>/<name>=.
+Codex side: every repository lives outside Drive under =~/repos/= (Epoch
+repositories under =~/repos/epoch/=), nothing under the Drive sync root may
+hold dependencies, builds, caches, virtual environments, or worktrees, and
+every linked worktree lives under =~/repos/.worktrees/<repo>/<name>=. The
+108 repositories that used to sit under =~/My Drive/repos/= were moved on
+2026-08-03; =regenerate-coverage-map.sh= and the other hooks that name a
+repository path were updated in the same change.
 
 The live global settings register hooks by absolute path. Stop forwarding to
 Emacs is a turn-end signal, not proof that the agent process exited. Reusable

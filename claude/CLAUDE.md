@@ -55,7 +55,7 @@ When opening Chrome manually for browser-only service flows, use `chrome-profile
 
 - Dotfiles source of truth: `~/My Drive/dotfiles/`; many home-directory paths are symlinks into it.
 - Active personal repositories: `~/repos/`; active Epoch repositories: `~/repos/epoch/`.
-- Source-only personal repositories may remain under `~/My Drive/repos/`; do not create dependencies, builds, caches, virtual environments, or worktrees there.
+- No repositories live under `~/My Drive/` any more; all 108 moved to `~/repos/` on 2026-08-03. Never create one there, and never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
 - All linked worktrees: `~/repos/.worktrees/<repo>/<name>`.
 
 ## Version control

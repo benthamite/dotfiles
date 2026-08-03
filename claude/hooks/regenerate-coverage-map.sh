@@ -11,6 +11,6 @@ case "$fp" in
   *) exit 0 ;;
 esac
 task_dir="${fp%/grading/*}"
-viz="$HOME/My Drive/repos/rubric-visualizer/coverage_map.py"
+viz="$HOME/repos/rubric-visualizer/coverage_map.py"
 [ -f "$viz" ] && [ -d "$task_dir/grading" ] && python3 "$viz" "$task_dir" >/dev/null 2>&1
 exit 0

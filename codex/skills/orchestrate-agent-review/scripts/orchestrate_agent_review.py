@@ -9,6 +9,8 @@ import fcntl
 import hashlib
 import json
 import os
+import re
+import stat
 import subprocess
 import tempfile
 import time
@@ -44,8 +46,11 @@ Implement and complete all of Stage {stage}. Internal plan tasks are not orchest
 own their sequencing, tests, commits, corrections,
 and recovery without returning for task-level supervision. Do not stop at an
 internal task boundary. Return only when the entire stage and its stage-final
-verification are complete, or when a documented stop condition genuinely
-requires user input.
+verification are complete, or when progress requires a user-only credential,
+identity check, irreversible action, spending decision, destructive action, or
+product choice that the repository and approved plan cannot determine. A false
+technical premise, failed test, missing capture, or implementation obstacle is
+not a user-only stop: adapt the plan and continue toward the whole-stage result.
 
 Stage context follows:
 
@@ -59,6 +64,19 @@ create task-level checkpoints, or authorize an early return.
 Only after the complete stage and its verification are done, end the final
 response with this exact line:
 STAGE COMPLETE: {stage}"""
+
+STEERING_CONTRACT = """TARGETED WHOLE-STAGE STEERING
+
+This message responds to the specific reason you returned before completing
+Stage {stage}. It is not an internal-task checkpoint or a new implementation
+plan. Use the diagnosis below, then resume ownership of the entire stage,
+including its final verification.
+
+{context}
+
+Return only when the complete stage is verified or a genuinely user-only
+decision described by the implementation contract remains.
+"""
 
 PHASE_CONTRACT = """{context}
 
@@ -181,6 +199,16 @@ def validate_run(state: Any) -> dict[str, Any]:
     ]:
         raise SystemExit("invalid run state: submissions and completions are incoherent")
     _validate_pending(state.get("pending_submission"))
+    steering_prompts = state.get("steering_prompts", [])
+    if not isinstance(steering_prompts, list) or any(
+        not isinstance(entry, dict)
+        or not isinstance(entry.get("prompt_sha256"), str)
+        or len(entry["prompt_sha256"]) != 64
+        or not isinstance(entry.get("stop_sha256"), str)
+        or len(entry["stop_sha256"]) != 64
+        for entry in steering_prompts
+    ):
+        raise SystemExit("invalid run state: steering prompts are incoherent")
 
     status = state["status"]
     if status != "implementation-stopped" and state.get("stop_evidence") is not None:
@@ -210,6 +238,7 @@ def validate_run(state: Any) -> dict[str, Any]:
             and active_phase is None
             and expected is None
             and isinstance(evidence, dict)
+            and evidence.get("kind") in {"agent-return", "delivery-ambiguous"}
             and isinstance(evidence.get("sha256"), str)
             and len(evidence["sha256"]) == 64
             and state.get("acceptance_evidence") is None
@@ -323,6 +352,14 @@ def create_run(args: argparse.Namespace) -> None:
         raise SystemExit("invalid Agent 2 backend")
     if not str(args.stage).strip():
         raise SystemExit("stage must not be empty")
+    agent1_transcript = Path(args.agent1_transcript) if args.agent1_transcript else None
+    if (
+        not args.adopt_implementation
+        and agent1_transcript is not None
+        and agent1_transcript.exists()
+        and agent1_transcript.stat().st_size
+    ):
+        raise SystemExit("a new stage requires a fresh Agent 1 transcript")
     adopted_evidence = None
     expected_phase = "spec"
     submissions: list[dict[str, str]] = []
@@ -370,6 +407,7 @@ def create_run(args: argparse.Namespace) -> None:
         "completions": completions,
         "pending_submission": None,
         "stop_evidence": None,
+        "steering_prompts": [],
         "adopted_evidence": adopted_evidence,
         "acceptance_evidence": None,
     }
@@ -862,6 +900,7 @@ def _freeze_pending_implementation(state: dict[str, Any], reason: str) -> None:
     state["status"] = "implementation-stopped"
     state["active_phase"] = None
     state["stop_evidence"] = {
+        "kind": "delivery-ambiguous",
         "sha256": hashlib.sha256(reason.encode("utf-8")).hexdigest()
     }
 
@@ -878,10 +917,14 @@ def submit(args: argparse.Namespace) -> None:
         state = load_run(args.run_file)
         _require_no_pending(state)
         if state["status"] == "implementation-active":
-            raise SystemExit("stage implementation already has its one permitted prompt")
+            raise SystemExit("stage implementation is active; leave Agent 1 alone")
         if state["status"] == "implementation-stopped":
+            if state.get("stop_evidence", {}).get("kind") == "delivery-ambiguous":
+                raise SystemExit(
+                    "ambiguous implementation delivery cannot be steered or resubmitted"
+                )
             raise SystemExit(
-                "one-pass implementation stopped; this run cannot contact an agent again"
+                "implementation returned early; use steer-stage with a targeted diagnosis"
             )
         if state["status"] == "complete":
             raise SystemExit("orchestration run is already complete")
@@ -1252,7 +1295,7 @@ def transcript_cmd(args: argparse.Namespace) -> None:
 
 
 def stage_return(args: argparse.Namespace) -> None:
-    """Freeze and print a premature one-pass implementation return."""
+    """Record and print a genuine incomplete implementation return."""
     with run_lock(args.run_file):
         state = load_run(args.run_file)
         if state["status"] != "implementation-active":
@@ -1271,10 +1314,73 @@ def stage_return(args: argparse.Namespace) -> None:
         state["status"] = "implementation-stopped"
         state["active_phase"] = None
         state["stop_evidence"] = {
+            "kind": "agent-return",
             "sha256": hashlib.sha256(text.encode("utf-8")).hexdigest()
         }
         save_run(args.run_file, state)
     print(text)
+
+
+def steer_stage(args: argparse.Namespace) -> None:
+    """Send one novel, targeted response to a genuine incomplete stage return."""
+    prompt_path = Path(args.prompt_file)
+    if not prompt_path.exists():
+        raise SystemExit(f"prompt file does not exist: {prompt_path}")
+    if stat.S_IMODE(prompt_path.stat().st_mode) != 0o600:
+        raise SystemExit("steer-stage prompt file must have mode 0600")
+    context = prompt_path.read_text(encoding="utf-8").strip()
+    fields = {}
+    for name in ("Obstacle", "Resolution", "Whole-stage direction"):
+        match = re.search(rf"(?m)^{re.escape(name)}:\s*(.+)$", context)
+        if match:
+            fields[name] = match.group(1).strip()
+    if set(fields) != {"Obstacle", "Resolution", "Whole-stage direction"} or any(
+        len(value) < 20 for value in fields.values()
+    ):
+        raise SystemExit(
+            "steer-stage requires Obstacle, Resolution, and Whole-stage direction; "
+            "generic continuation is not accepted"
+        )
+    prompt_sha = hashlib.sha256(context.encode("utf-8")).hexdigest()
+    with run_lock(args.run_file):
+        state = load_run(args.run_file)
+        if state["status"] != "implementation-stopped":
+            raise SystemExit("stage steering requires a recorded incomplete return")
+        evidence = state["stop_evidence"]
+        if evidence.get("kind") != "agent-return":
+            raise SystemExit("ambiguous delivery is not an Agent 1 return and cannot be steered")
+        prior = state.get("steering_prompts", [])
+        if any(entry["stop_sha256"] == evidence["sha256"] for entry in prior):
+            raise SystemExit("this incomplete return already received a steering attempt")
+        if any(entry["prompt_sha256"] == prompt_sha for entry in prior):
+            raise SystemExit("this steering message was already sent")
+        live = buffer_state(state["agent1"]["buffer"])
+        if live.get("state") != "awaiting-input":
+            raise SystemExit(
+                f"Agent 1 is {live.get('state', 'unknown')}; steering requires awaiting input"
+            )
+        prompt = STEERING_CONTRACT.format(stage=state["stage"], context=context)
+        state.setdefault("steering_prompts", []).append(
+            {
+                "prompt_sha256": prompt_sha,
+                "stop_sha256": evidence["sha256"],
+            }
+        )
+        save_run(args.run_file, state)
+        submit_to_agent(
+            state["agent1"]["buffer"],
+            state["agent1"]["backend"],
+            prompt,
+            transcript=state["agent1"]["transcript"],
+            transcript_offset=_transcript_offset(state, "agent1"),
+            delivery_marker=f"TARGETED WHOLE-STAGE STEERING\n\nThis message responds",
+            one_pass=True,
+        )
+        state["status"] = "implementation-active"
+        state["active_phase"] = "implementation"
+        state["stop_evidence"] = None
+        save_run(args.run_file, state)
+    print(f"steered stage={state['stage']} actor=agent1")
 
 
 def _latest_implementation_return(state: dict[str, Any]) -> str:
@@ -1539,6 +1645,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.add_argument("--run-file", required=True)
     p.set_defaults(func=stage_return)
+
+    p = sub.add_parser(
+        "steer-stage",
+        help="Send targeted whole-stage steering after a genuine incomplete return",
+    )
+    p.add_argument("--run-file", required=True)
+    p.add_argument("--prompt-file", required=True)
+    p.set_defaults(func=steer_stage)
 
     p = sub.add_parser("status", help="Collect repo, buffer, and transcript status once")
     add_status_args(p)

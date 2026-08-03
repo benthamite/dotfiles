@@ -118,7 +118,7 @@ corpus cannot be verified or applied as the other. =bin/triage-notes= is the onl
 place that knows where the shared engine lives.
 
 The paired =orchestrate-agent-review= helper keeps implementation stages atomic.
-It sends exactly one implementation prompt through =agent-submit=, so
+It sends one initial implementation handoff through =agent-submit=, so
 =agent.el= records the same lifecycle transition as an interactive submission.
 For specification, planning, and review, the only retry is a Return keystroke
 while delivery of the original prompt is still pending and the unchanged prompt
@@ -137,14 +137,16 @@ fixed-role session: the guard verifies the empty return boundary, uses the
 backend's authoritative waiting state, and atomically adopts the fresh
 transcript without creating another review pass.
 
-Implementation has no continuation or model-switch command. A completed
+Implementation has no generic continuation or model-switch command. A completed
 implementation ends with its exact stage marker and proceeds to stage-wide
-acceptance only after the actor is authoritatively awaiting input; marker text
-never overrides a busy lifecycle state. Any other top-level return freezes the version-2 run as
-=implementation-stopped=, stores only a digest of the return as evidence, and
-permanently rejects further agent submissions from that run. Retrying the stage
-therefore requires a new explicit run; no watcher or recovery path can inject a
-second model turn into the original implementation pass.
+closure only after the actor is authoritatively awaiting input; marker text
+never overrides a busy lifecycle state. Any other top-level return becomes
+=implementation-stopped= and stores a digest of the return. The operator may
+then send one specific whole-stage diagnosis with =steer-stage=; the helper
+requires explicit obstacle, resolution, and whole-stage direction fields and
+rejects generic, repeated, busy-session, ambiguous-delivery, and unrecorded-return
+steering. New non-adopted stages also reject a reused nonempty Agent 1
+transcript. Agent 1 retains implementation and final-verification ownership.
 
 The paired =fix-drive-errors= skill owns Google Drive sync-error triage. It
 snapshots the native error panel, runs the read-only =bin/drive-workspace=

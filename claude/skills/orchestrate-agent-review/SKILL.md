@@ -10,7 +10,8 @@ description: Use when coordinating two live Emacs agent sessions for a staged im
 Run one complete Superpowers-style stage across two live `agent.el` sessions.
 Agent 1 owns every authoring and implementation phase; Agent 2 independently
 reviews the specification and plan once each. The helper enforces phase order,
-fixed roles, and a single whole-stage implementation handoff.
+fixed roles, one initial whole-stage implementation handoff, and targeted
+whole-stage steering only after a genuine incomplete return.
 
 ## Role contract
 
@@ -28,28 +29,42 @@ fixed roles, and a single whole-stage implementation handoff.
   independent reviews. Never reverse only one stage.
 - Plan tasks belong exclusively to Agent 1's internal execution. They are not
   orchestration phases, progress units, handoff points, or acceptance gates.
+- In a multi-stage engineering project, delegate top-level stages sequentially,
+  one stage per fresh Agent 1 session. Do not reuse that implementation session
+  for the next stage. Internal plan tasks stay inside their stage's single
+  session and never receive separate orchestration delegations. `init-run`
+  rejects a nonempty Agent 1 transcript for a new, non-adopted stage; sequencing
+  the stage runs remains the orchestrator's responsibility.
 
 ## STAGE ATOMICITY — HARD RULE
 
 The entire stage is the smallest orchestration unit. After the plan review,
-send one implementation handoff to Agent 1 and wait for the complete stage.
+send one initial implementation handoff to Agent 1 and wait for the complete
+stage. Agent 1 owns implementation and stage-final verification.
 Violating the letter of these rules violates the workflow:
 
 - Never report progress as `Task N`; report only the stage and current phase.
 - Never inspect or steer Agent 1's internal tasks, subagents, task transcripts,
   task commits, or per-task processes.
-- Never send task-specific corrections, liveness checks, continuation prompts,
-  or verification instructions.
+- Never send task-specific corrections, liveness checks, generic continuation
+  prompts, or independent verification instructions.
 - Never run independent acceptance gates at internal task boundaries. Agent 1
   owns implementation checks until the complete stage returns.
 - Never treat a task commit or batch boundary as permission to prompt Agent 1.
-- Send exactly one implementation prompt. Never send continuation, reminder,
-  marker-repair, model-switch, or recovery prompts during that implementation.
-- A premature implementation return ends that run. Record it with the helper,
-  report the failed one-pass execution, and do not contact either agent again
-  through that run.
-- Run one independent stage-final acceptance pass only after Agent 1 returns
-  the complete implementation.
+- Send exactly one initial implementation handoff. While Agent 1 is active,
+  never send a continuation, reminder, marker-repair, model-switch, or recovery
+  prompt.
+- Intermediate narration and tool activity are not returns. Only an
+  authoritative transition to awaiting input permits return handling.
+- When Agent 1 genuinely returns early, read the bounded final return, diagnose
+  the specific reason for the stop, and send one targeted steering message that
+  directs Agent 1 back to the whole-stage outcome.
+- Never send a generic continuation prompt. Never repeat a steering message.
+  A targeted message names the actual obstacle and resolves it using authority
+  and evidence already available from the stage.
+- Agent 1 owns implementation and stage-final verification. The orchestrator
+  does not inspect the work, run acceptance tests, compare outputs, or add an
+  implementation-review pass.
 
 Internal decomposition is allowed; external task-level orchestration is not.
 The absence of another Agent 2 review does not make task-level supervision
@@ -250,14 +265,36 @@ output or inspect per-task repository/process state.
 
 If Agent 1 is awaiting input and `finish-phase --phase implementation` rejects
 the return because its final marker is missing, run `stage-return --run-file
-<run>`. The command prints only the latest bounded assistant return, stores its
-digest, changes the run to `implementation-stopped`, and permanently disables
-further submissions. It is unavailable while Agent 1 is busy and refuses a
-completed marker. This fail-closed transition covers checkpoints, missing
-markers, usage-credit stops, permission stops, and genuine user blockers alike;
-none authorizes another implementation turn inside the same run.
+<run>`. The command prints only the latest bounded assistant return and records
+its digest. It is unavailable while Agent 1 is busy and refuses a completed
+marker.
 
-Send concise commentary only when the stage phase changes or the one-pass run
+Classify the stated reason. If progress truly requires a user-only credential,
+identity check, irreversible action, spending decision, destructive action, or
+underdetermined product choice, report that blocker. Otherwise write a specific
+diagnosis to a mode-`0600` prompt file and steer the same fixed Agent 1:
+
+```bash
+python "$SKILL_DIR/scripts/orchestrate_agent_review.py" steer-stage \
+  --run-file /tmp/improvement-5-run.json \
+  --prompt-file /tmp/improvement-5-steering.txt
+```
+
+The diagnosis states why Agent 1 stopped, supplies the missing evidence or
+authority already available, and returns ownership of the complete stage to
+Agent 1. Use exactly these three populated lines so the helper can distinguish
+specific steering from a generic continuation:
+
+```text
+Obstacle: <the concrete reason Agent 1 returned>
+Resolution: <the evidence or authority that resolves it>
+Whole-stage direction: <how Agent 1 resumes ownership of the complete stage>
+```
+
+It never names an internal task sequence. The helper rejects generic,
+repeated, busy-session, ambiguous-delivery, and unrecorded-return steering.
+
+Send concise commentary only when the stage phase changes or the guarded run
 reaches a terminal state. Do not emit periodic task-level heartbeats. If Agent
 1 is busy, leave it alone.
 
@@ -317,7 +354,8 @@ plan's internal task boundaries for its own tests and commits. The orchestrator
 does not observe or manage those boundaries. Do not transfer implementation to
 Agent 2 merely because Agent 2 performed the reviews.
 
-Wait for Agent 1 to return the complete implementation and its final evidence.
+Wait for Agent 1 to return the complete implementation and its final
+verification evidence.
 The final top-level response must end with the helper-injected exact stage
 completion marker. Once Agent 1 is awaiting input, run:
 
@@ -327,10 +365,9 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" finish-phase \
   --phase implementation
 ```
 
-This command rejects a premature return without the stage marker. Then run one
-independent stage-wide acceptance pass. Do not rerun broad gates after internal
-commits. Save the acceptance receipt to a mode-`0600` evidence file and close
-the run:
+This command rejects a premature return without the stage marker. Save Agent
+1's reported stage-final verification evidence to a mode-`0600` evidence file
+and close the run:
 
 ```bash
 python "$SKILL_DIR/scripts/orchestrate_agent_review.py" complete-stage \
@@ -338,8 +375,9 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" complete-stage \
   --evidence-file /tmp/improvement-5-acceptance.txt
 ```
 
-`complete-stage` refuses an active implementation and records the acceptance
-evidence digest before marking the stage complete.
+`complete-stage` refuses an active implementation and records the supplied
+verification-evidence digest before marking the stage complete. It does not
+perform verification itself.
 
 A user-requested post-implementation review is separate, not an implicit third
 handoff.
@@ -353,21 +391,21 @@ Stop before acting if you are about to say or do any of these:
 - “I will inspect the current task's process or transcript”
 - “I will send a focused correction for this task”
 - “I will rerun the full gate before the stage is complete”
-- “I will continue the implementation after this checkpoint”
+- “Continue.”
 
-All indicate that internal decomposition has leaked into orchestration. Return
-to the stage/phase view. If Agent 1 has returned without the completion marker,
-freeze the run with `stage-return`; never contact the agent again from that run.
+All indicate that internal decomposition or generic prompting has leaked into
+orchestration. Return to the stage/phase view. A genuine incomplete return may
+receive one specific whole-stage steering message; an internal task may not.
 
 ## Common rationalizations
 
 | Rationalization | Required response |
 |---|---|
 | “I am not adding another review, so task supervision is harmless.” | Task supervision itself violates stage atomicity. |
-| “A ten-minute pause justifies inspecting Task N.” | Busy means wait; a premature return freezes the run. |
+| “A ten-minute pause justifies inspecting Task N.” | Busy means wait; elapsed time is not a return. |
 | “The user needs a detailed status.” | Report the stage and phase, not Agent 1's internal decomposition. |
-| “A suspicious test command needs immediate correction.” | Agent 1 owns corrections until the stage returns. Verify independently once at the stage boundary. |
-| “The continuation uses fixed wording, so it is still one pass.” | Every new user message is another model turn. One pass permits exactly one implementation prompt. |
+| “A suspicious test command needs immediate correction.” | Agent 1 owns corrections and verification until the stage returns. |
+| “Continue is harmless after a return.” | Diagnose the actual obstacle and send a novel whole-stage steer, or send nothing. |
 
 ## Stop conditions
 
@@ -377,7 +415,9 @@ Stop and report a blocker when:
 - the worktree has overlapping uncommitted changes not produced by the active actor
 - review feedback exposes a missing user decision that prevents the next stage
 - an external permission, destructive action, or user-only credential is needed
-- Agent 1 returns from implementation without the exact stage-completion marker
+- Agent 1 returns with a blocker that genuinely requires the user's identity,
+  credential, irreversible authority, spending, destructive action, or an
+  underdetermined product choice
 
 ## Final report
 

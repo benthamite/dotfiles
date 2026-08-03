@@ -49,13 +49,19 @@ class SkillWorkflowTests(unittest.TestCase):
             "Do not send the artifact back for another review pass",
             "Agent 1 defaults to Claude/Fable and Agent 2 defaults to Codex",
             "swaps the entire role bundle",
+            "delegate top-level stages sequentially, one stage per fresh Agent 1 session",
+            "Internal plan tasks stay inside their stage's single session",
             "STAGE ATOMICITY — HARD RULE",
             "Never report progress as `Task N`",
             "Never inspect or steer Agent 1's internal tasks",
             "Never run independent acceptance gates at internal task boundaries",
-            "Send exactly one implementation prompt",
-            "A premature implementation return ends that run",
-            "Run one independent stage-final acceptance pass only after Agent 1 returns",
+            "Send exactly one initial implementation handoff",
+            "Intermediate narration and tool activity are not returns",
+            "Agent 1 owns implementation and stage-final verification",
+            "diagnose the specific reason for the stop",
+            "send one targeted steering message",
+            "Never send a generic continuation prompt",
+            "Never repeat a steering message",
         )
         for rule in required_rules:
             with self.subTest(rule=rule):
@@ -67,6 +73,8 @@ class SkillWorkflowTests(unittest.TestCase):
             "planner/reviewer passes",
             "status: stage-4-implementation-tasks-4-8",
             "resume-stage",
+            "A premature implementation return ends that run",
+            "Run one independent stage-final acceptance pass",
         )
         for rule in forbidden_rules:
             with self.subTest(rule=rule):
@@ -285,7 +293,7 @@ class StageAtomicRunTests(unittest.TestCase):
             mock.patch.object(orchestrator, "submit_to_agent") as submit,
             self.assertRaisesRegex(
                 SystemExit,
-                "already has its one permitted prompt",
+                "implementation is active; leave Agent 1 alone",
             ),
         ):
             orchestrator.submit(self.submit_args("implementation"))
@@ -334,7 +342,7 @@ class StageAtomicRunTests(unittest.TestCase):
                 orchestrator.main([command, "--run-file", str(self.run_file)])
             self.assertEqual(raised.exception.code, 2)
 
-    def test_premature_implementation_return_freezes_the_one_pass_run(self):
+    def test_premature_implementation_return_allows_targeted_steering(self):
         self.start_implementation()
         record = {
             "timestamp": "2026-08-02T12:00:00Z",
@@ -361,10 +369,134 @@ class StageAtomicRunTests(unittest.TestCase):
         self.assertEqual(state["status"], "implementation-stopped")
         self.assertIsNone(state["active_phase"])
         self.assertEqual(len(state["stop_evidence"]["sha256"]), 64)
+        self.assertEqual(state["stop_evidence"]["kind"], "agent-return")
+        original_stop_sha = state["stop_evidence"]["sha256"]
         self.assertIn("internal checkpoint", output.getvalue())
 
-        with self.assertRaisesRegex(SystemExit, "one-pass implementation stopped"):
+        with self.assertRaisesRegex(SystemExit, "use steer-stage"):
             orchestrator.submit(self.submit_args("implementation"))
+
+        steering = self.directory / "steering.txt"
+        steering.write_text(
+            "Obstacle: You stopped at an internal checkpoint before the stage was complete.\n"
+            "Resolution: No user decision is needed; use the existing plan and repository evidence.\n"
+            "Whole-stage direction: Return to the whole Stage 2 outcome and complete its verification.",
+            encoding="utf-8",
+        )
+        steering.chmod(0o600)
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "awaiting-input"},
+            ),
+            mock.patch.object(orchestrator, "submit_to_agent") as submit,
+            redirect_stdout(io.StringIO()),
+        ):
+            orchestrator.steer_stage(
+                SimpleNamespace(
+                    run_file=str(self.run_file), prompt_file=str(steering)
+                )
+            )
+
+        state = orchestrator.load_run(self.run_file)
+        self.assertEqual(state["status"], "implementation-active")
+        self.assertEqual(state["active_phase"], "implementation")
+        self.assertIsNone(state["stop_evidence"])
+        self.assertEqual(len(state["steering_prompts"]), 1)
+        submitted_prompt = submit.call_args.args[2]
+        self.assertIn("internal checkpoint", submitted_prompt)
+        self.assertIn("whole Stage 2", submitted_prompt)
+
+        state["status"] = "implementation-stopped"
+        state["active_phase"] = None
+        state["stop_evidence"] = {
+            "kind": "agent-return",
+            "sha256": original_stop_sha,
+        }
+        orchestrator.save_run(self.run_file, state)
+        with self.assertRaisesRegex(SystemExit, "already received"):
+            orchestrator.steer_stage(
+                SimpleNamespace(
+                    run_file=str(self.run_file), prompt_file=str(steering)
+                )
+            )
+
+    def test_generic_or_repeated_stage_steering_is_rejected(self):
+        self.start_implementation()
+        record = {
+            "timestamp": "2026-08-02T12:00:00Z",
+            "message": {"role": "assistant", "content": "Checkpoint."},
+        }
+        self.agent1_transcript.write_text(json.dumps(record) + "\n", encoding="utf-8")
+        with (
+            mock.patch.object(
+                orchestrator,
+                "buffer_state",
+                return_value={"state": "awaiting-input"},
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            orchestrator.stage_return(SimpleNamespace(run_file=str(self.run_file)))
+
+        generic = self.directory / "generic.txt"
+        generic.write_text(
+            "Please continue working on the whole stage and complete all remaining "
+            "work and verification without stopping.",
+            encoding="utf-8",
+        )
+        generic.chmod(0o600)
+        with self.assertRaisesRegex(SystemExit, "Obstacle, Resolution"):
+            orchestrator.steer_stage(
+                SimpleNamespace(run_file=str(self.run_file), prompt_file=str(generic))
+            )
+
+    def test_ambiguous_steering_attempt_cannot_contact_agent_twice(self):
+        self.start_implementation()
+        record = {
+            "timestamp": "2026-08-02T12:00:00Z",
+            "message": {"role": "assistant", "content": "Capture failed."},
+        }
+        self.agent1_transcript.write_text(json.dumps(record) + "\n", encoding="utf-8")
+        with (
+            mock.patch.object(
+                orchestrator, "buffer_state", return_value={"state": "awaiting-input"}
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            orchestrator.stage_return(SimpleNamespace(run_file=str(self.run_file)))
+
+        steering = self.directory / "steering-ambiguous.txt"
+        steering.write_text(
+            "Obstacle: The requested capture failed for a recoverable technical reason.\n"
+            "Resolution: Use the alternate capture path already documented in the repository.\n"
+            "Whole-stage direction: Continue ownership of the entire stage and its final verification.",
+            encoding="utf-8",
+        )
+        steering.chmod(0o600)
+        args = SimpleNamespace(run_file=str(self.run_file), prompt_file=str(steering))
+        with (
+            mock.patch.object(
+                orchestrator, "buffer_state", return_value={"state": "awaiting-input"}
+            ),
+            mock.patch.object(
+                orchestrator, "submit_to_agent", side_effect=RuntimeError("ambiguous")
+            ) as submit,
+            self.assertRaisesRegex(RuntimeError, "ambiguous"),
+        ):
+            orchestrator.steer_stage(args)
+        with (
+            mock.patch.object(orchestrator, "submit_to_agent") as second_submit,
+            self.assertRaisesRegex(SystemExit, "already received"),
+        ):
+            orchestrator.steer_stage(args)
+        self.assertEqual(submit.call_count, 1)
+        second_submit.assert_not_called()
+
+    def test_new_stage_rejects_reused_agent1_transcript(self):
+        self.agent1_transcript.write_text("prior stage", encoding="utf-8")
+        with self.assertRaisesRegex(SystemExit, "fresh Agent 1 transcript"):
+            self.create_run()
 
     def test_finish_implementation_rejects_busy_state_even_with_marker(self):
         self.start_implementation()
@@ -599,7 +731,7 @@ class StageAtomicRunTests(unittest.TestCase):
         state = orchestrator.load_run(self.run_file)
         self.assertEqual(state["status"], "implementation-stopped")
         self.assertIsNone(state["pending_submission"])
-        with self.assertRaisesRegex(SystemExit, "one-pass implementation stopped"):
+        with self.assertRaisesRegex(SystemExit, "ambiguous implementation delivery"):
             orchestrator.submit(self.submit_args("implementation"))
 
     def test_pending_implementation_delivery_cannot_retry_return(self):

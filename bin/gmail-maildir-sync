@@ -2,7 +2,7 @@
 set -eu
 
 # Entry-point wrapper for gmail-maildir-sync Python package.
-repo="$HOME/My Drive/repos/gmail-maildir-sync"
+repo="$HOME/repos/gmail-maildir-sync"
 uv_bin="${UV_BIN:-$HOME/.local/bin/uv}"
 if [ ! -x "$uv_bin" ]; then
   uv_bin="$(command -v uv || true)"

@@ -164,7 +164,7 @@ These directories are children of ~paths-dir-google-drive~ and contain media and
 These directories organize Git repositories by provenance:
 
 - ~paths-dir-external-repos~ (default: =~/source/=): third-party repositories.
-- ~paths-dir-tlon-repos~ and ~paths-dir-personal-repos~ (both default to =My Drive/repos/=): organization and personal repositories.
+- ~paths-dir-tlon-repos~ and ~paths-dir-personal-repos~ (both default to =~/repos/=): organization and personal repositories. They deliberately do not derive from ~paths-dir-google-drive~: working repositories live outside the Drive sync root, because build and cache directories inside it produce sync errors.
 - ~paths-dir-tlon-todos~: Org files for organization task tracking.
 - ~paths-dir-tlon-docs~, ~paths-dir-babel-refs~, ~paths-dir-translation-server~: specific repositories.
 - ~paths-dir-split-git~ (default: =~/git-dirs/=): bare =.git= directories for split-worktree repos.

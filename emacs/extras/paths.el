@@ -304,7 +304,7 @@ value."
   :group 'paths)
 
 (defcustom paths-dir-tlon-repos
-  (file-name-concat paths-dir-google-drive "repos/")
+  (file-name-concat (expand-file-name "~") "repos/")
   "Path to the Tlön repositories directory."
   :type 'directory
   :group 'paths)
@@ -316,7 +316,7 @@ value."
   :group 'paths)
 
 (defcustom paths-dir-personal-repos
-  (file-name-concat paths-dir-google-drive "repos/")
+  (file-name-concat (expand-file-name "~") "repos/")
   "Path to the personal repositories directory."
   :type 'directory
   :group 'paths)

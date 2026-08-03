@@ -43,12 +43,11 @@ Violating the letter of these rules violates the workflow:
 - Never run independent acceptance gates at internal task boundaries. Agent 1
   owns implementation checks until the complete stage returns.
 - Never treat a task commit or batch boundary as permission to prompt Agent 1.
-- The only implementation recovery is `resume-stage`, which has fixed
-  whole-stage wording and is allowed only when Agent 1 is awaiting input.
-  When the bounded stage return explicitly reports exhausted Claude usage
-  credits, `switch-model` may first change the same fixed Agent 1 session to
-  Opus or Sonnet. This is local session control, not another model turn or a
-  role handoff; verify the reported model change, then use `resume-stage`.
+- Send exactly one implementation prompt. Never send continuation, reminder,
+  marker-repair, model-switch, or recovery prompts during that implementation.
+- A premature implementation return ends that run. Record it with the helper,
+  report the failed one-pass execution, and do not contact either agent again
+  through that run.
 - Run one independent stage-final acceptance pass only after Agent 1 returns
   the complete implementation.
 
@@ -168,7 +167,9 @@ phase marker proves that the original prompt remains in the fixed actor's
 composer. It never retransmits the prompt. It does not enable the next handoff
 merely because the prompt was delivered. Every phase prompt ends with a fixed
 completion marker contract, and the implementation prompt also contains a
-non-overridable whole-stage contract.
+non-overridable whole-stage contract. Implementation is stricter: only
+transcript growth independently acknowledges delivery, and neither the initial
+submission nor a CLI recovery command retries Return.
 
 After the fixed top-level actor is awaiting input, record the return:
 
@@ -181,10 +182,9 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" finish-phase \
 `finish-phase` reads only bytes appended to that fixed actor's configured
 top-level transcript after the current submission and requires the exact
 completion marker. It rejects stale or missing evidence and premature or
-mismatched phases. A busy implementation actor is accepted only when that
-bounded transcript already ends in the exact current-stage marker, which
-reconciles a stop event lost during an Emacs-server interruption without
-exposing transcript content. Only then does the next handoff become available.
+mismatched phases. Every actor, including implementation, must be authoritatively
+awaiting input; transcript text never overrides a busy lifecycle state. Only
+then does the next handoff become available.
 
 The helper persists a pending record before every external submission. If
 delivery fails ambiguously, all further actions stop until the operator uses
@@ -192,7 +192,10 @@ delivery fails ambiguously, all further actions stop until the operator uses
 session evidence. When the exact current phase marker is still present in the
 composer, use `retry-delivery --run-file <run>`; it rechecks the transcript and
 session state, sends only Return, and refuses to paste the prompt again. Never
-retry or retransmit an ambiguous prompt automatically.
+retry or retransmit an ambiguous prompt automatically. Neither path sends
+Return for implementation. Reconciliation activates implementation only when
+the guarded transcript actually grew; every other ambiguous implementation
+outcome freezes the run permanently.
 
 If a non-implementation actor's process exits after accepting the phase prompt
 but before returning any assistant output, start a fresh fixed-role session and
@@ -241,59 +244,22 @@ During specification and planning, use the bounded transcript evidence needed
 to pass artifacts between agents. During implementation, the helper disables
 transcript and repository monitoring and exposes only the run's stage/phase
 plus Agent 1's fixed top-level session state. The only exception is the marker
-validator inside `finish-phase`; it may reconcile a stale busy flag but never
+validator inside `finish-phase`; it never overrides a busy lifecycle state or
 prints transcript content. Do not bypass it to read internal task/subagent
 output or inspect per-task repository/process state.
 
 If Agent 1 is awaiting input and `finish-phase --phase implementation` rejects
-the return because its final marker is missing, `stage-return --run-file <run>`
-may print only the latest assistant response after the guarded implementation
-boundary. It is unavailable while Agent 1 is busy, suppresses all earlier
-internal progress messages, and refuses a completed marker. Use it only to
-identify a stage-level stop condition or distinguish that condition from an
-omitted marker; it does not authorize task-level supervision. After every
-delivered `resume-stage`, the helper moves this boundary to that resume's
-transcript offset. If Agent 1 awaits without fresh assistant output, it reports
-no bounded return instead of repeating the previous checkpoint; do not resume
-again until a fresh return exists.
+the return because its final marker is missing, run `stage-return --run-file
+<run>`. The command prints only the latest bounded assistant return, stores its
+digest, changes the run to `implementation-stopped`, and permanently disables
+further submissions. It is unavailable while Agent 1 is busy and refuses a
+completed marker. This fail-closed transition covers checkpoints, missing
+markers, usage-credit stops, permission stops, and genuine user blockers alike;
+none authorizes another implementation turn inside the same run.
 
-Send concise commentary when the stage phase changes. Do not emit periodic
-task-level heartbeats. If Agent 1 is busy, leave it alone. If implementation is
-active and Agent 1 is awaiting input, the only permitted continuation is:
-
-```bash
-python "$SKILL_DIR/scripts/orchestrate_agent_review.py" resume-stage \
-  --run-file /tmp/improvement-5-run.json
-```
-
-`resume-stage` accepts no custom prompt and refuses to contact a busy agent.
-Its fixed prompt handles a completed stage whose return omitted the marker:
-Agent 1 must not repeat work or evidence and must reply with only the exact
-stage-completion marker.
-
-If the bounded `stage-return` explicitly says Claude exhausted its usage
-credits, preserve the Agent 1 role and recover without spending money or
-handing implementation to Agent 2:
-
-```bash
-python "$SKILL_DIR/scripts/orchestrate_agent_review.py" switch-model \
-  --run-file /tmp/improvement-5-run.json --model opus
-python "$SKILL_DIR/scripts/orchestrate_agent_review.py" resume-stage \
-  --run-file /tmp/improvement-5-run.json
-```
-
-`switch-model` is blocked outside an active, awaiting Claude implementation
-whose latest bounded return contains the explicit credit stop. It submits only
-Claude's local `/model` control, confirms a local dialog with Return when
-needed, and succeeds only after the status file reports the requested model.
-It does not alter the guarded phase, create an extra review, or itself resume
-implementation. After verification, it always restores the buffer's
-blocked/waiting lifecycle state because Claude's local `/model` control can
-emit a submit event without the stop event of a model turn. If Emacs had
-already reset an otherwise live Claude buffer's metadata to `unknown`, the
-explicit bounded credit stop plus its live terminal process may stand in for
-the lost awaiting state; an unknown dead process stays blocked. The ordinary
-`resume-stage` guard remains unchanged.
+Send concise commentary only when the stage phase changes or the one-pass run
+reaches a terminal state. Do not emit periodic task-level heartbeats. If Agent
+1 is busy, leave it alone.
 
 ## Step 5: Create and review the spec
 
@@ -387,18 +353,21 @@ Stop before acting if you are about to say or do any of these:
 - “I will inspect the current task's process or transcript”
 - “I will send a focused correction for this task”
 - “I will rerun the full gate before the stage is complete”
+- “I will continue the implementation after this checkpoint”
 
 All indicate that internal decomposition has leaked into orchestration. Return
-to the stage/phase view; if Agent 1 awaits input, use only `resume-stage`.
+to the stage/phase view. If Agent 1 has returned without the completion marker,
+freeze the run with `stage-return`; never contact the agent again from that run.
 
 ## Common rationalizations
 
 | Rationalization | Required response |
 |---|---|
 | “I am not adding another review, so task supervision is harmless.” | Task supervision itself violates stage atomicity. |
-| “A ten-minute pause justifies inspecting Task N.” | Busy means wait; awaiting input permits only fixed stage recovery. |
+| “A ten-minute pause justifies inspecting Task N.” | Busy means wait; a premature return freezes the run. |
 | “The user needs a detailed status.” | Report the stage and phase, not Agent 1's internal decomposition. |
 | “A suspicious test command needs immediate correction.” | Agent 1 owns corrections until the stage returns. Verify independently once at the stage boundary. |
+| “The continuation uses fixed wording, so it is still one pass.” | Every new user message is another model turn. One pass permits exactly one implementation prompt. |
 
 ## Stop conditions
 
@@ -408,6 +377,7 @@ Stop and report a blocker when:
 - the worktree has overlapping uncommitted changes not produced by the active actor
 - review feedback exposes a missing user decision that prevents the next stage
 - an external permission, destructive action, or user-only credential is needed
+- Agent 1 returns from implementation without the exact stage-completion marker
 
 ## Final report
 

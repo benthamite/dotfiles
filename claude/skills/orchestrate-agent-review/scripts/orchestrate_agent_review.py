@@ -16,7 +16,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
-RUN_VERSION = 1
+RUN_VERSION = 2
 PHASES = ("spec", "spec-review", "plan", "plan-review", "implementation")
 PHASE_ACTOR = {
     "spec": "agent1",
@@ -30,14 +30,13 @@ RUN_STATUSES = {
     "ready",
     "phase-active",
     "implementation-active",
+    "implementation-stopped",
     "implementation-returned",
     "complete",
 }
 DELIVERY_INITIAL_WAIT_SECONDS = 2.0
 DELIVERY_RETRY_WAIT_SECONDS = 8.0
 DELIVERY_POLL_SECONDS = 0.1
-MODEL_SWITCH_INITIAL_WAIT_SECONDS = 3.0
-MODEL_SWITCH_CONFIRM_WAIT_SECONDS = 8.0
 
 IMPLEMENTATION_CONTRACT = """STAGE-ATOMIC IMPLEMENTATION CONTRACT
 
@@ -69,22 +68,6 @@ Complete the entire {phase} phase before returning. This context cannot create
 intermediate orchestration checkpoints. Only after the phase is complete, end
 the final response with this exact line:
 PHASE COMPLETE: {phase}"""
-
-RESUME_CONTRACT = """Resume and complete all remaining work for Stage {stage}.
-Do not stop at internal task boundaries, report task-number checkpoints, or
-wait for task-level supervision. Own the remaining implementation and
-stage-final verification. Return only when the complete stage is verified, or
-when a documented stop condition genuinely requires user input.
-
-If all Stage {stage} work is already complete and verified, do not repeat the
-work or its evidence. Instead, reply with exactly this one line and nothing
-else:
-STAGE COMPLETE: {stage}
-
-Only after the complete stage and its verification are done, end the final
-response with this exact line:
-STAGE COMPLETE: {stage}"""
-
 
 class EmacsClientError(RuntimeError):
     """An emacsclient request failed while the Emacs server may be transiently unavailable."""
@@ -156,7 +139,7 @@ def _validate_pending(pending: Any) -> None:
         "transcript_offset",
     }:
         raise SystemExit("invalid run state: malformed pending submission")
-    if pending["kind"] not in {"phase", "resume"}:
+    if pending["kind"] != "phase":
         raise SystemExit("invalid run state: malformed pending submission")
     if pending["phase"] not in PHASES:
         raise SystemExit("invalid run state: malformed pending submission")
@@ -197,18 +180,11 @@ def validate_run(state: Any) -> dict[str, Any]:
         for index, entry in enumerate(completions)
     ]:
         raise SystemExit("invalid run state: submissions and completions are incoherent")
-    if not isinstance(state.get("resume_count"), int) or state["resume_count"] < 0:
-        raise SystemExit("invalid run state: resume count must be a nonnegative integer")
-    latest_resume_offset = state.get("latest_resume_offset")
-    if latest_resume_offset is not None and (
-        not isinstance(latest_resume_offset, int) or latest_resume_offset < 0
-    ):
-        raise SystemExit(
-            "invalid run state: latest resume offset must be a nonnegative integer"
-        )
     _validate_pending(state.get("pending_submission"))
 
     status = state["status"]
+    if status != "implementation-stopped" and state.get("stop_evidence") is not None:
+        raise SystemExit("invalid run state: stop evidence is incoherent")
     active_phase = state.get("active_phase")
     next_index = len(submissions)
     if status == "ready":
@@ -226,11 +202,24 @@ def validate_run(state: Any) -> dict[str, Any]:
             and expected is None
             and (status == "implementation-active") == (current == "implementation")
         )
+    elif status == "implementation-stopped":
+        evidence = state.get("stop_evidence")
+        coherent = (
+            len(submissions) == len(PHASES)
+            and len(completions) == len(PHASES) - 1
+            and active_phase is None
+            and expected is None
+            and isinstance(evidence, dict)
+            and isinstance(evidence.get("sha256"), str)
+            and len(evidence["sha256"]) == 64
+            and state.get("acceptance_evidence") is None
+        )
     elif status == "implementation-returned":
         coherent = (
             len(submissions) == len(completions) == len(PHASES)
             and active_phase is None
             and expected is None
+            and state.get("stop_evidence") is None
             and state.get("acceptance_evidence") is None
         )
     else:
@@ -242,17 +231,15 @@ def validate_run(state: Any) -> dict[str, Any]:
             and isinstance(evidence, dict)
             and isinstance(evidence.get("sha256"), str)
             and len(evidence["sha256"]) == 64
+            and state.get("stop_evidence") is None
         )
     if not coherent:
         raise SystemExit("invalid run state: phase lifecycle is incoherent")
 
     pending = state.get("pending_submission")
     if pending:
-        if pending["kind"] == "phase":
-            if status != "ready" or pending["phase"] != expected:
-                raise SystemExit("invalid run state: pending phase is incoherent")
-        elif status != "implementation-active" or pending["phase"] != "implementation":
-            raise SystemExit("invalid run state: pending resume is incoherent")
+        if status != "ready" or pending["phase"] != expected:
+            raise SystemExit("invalid run state: pending phase is incoherent")
     return state
 
 
@@ -382,8 +369,7 @@ def create_run(args: argparse.Namespace) -> None:
         "submissions": submissions,
         "completions": completions,
         "pending_submission": None,
-        "resume_count": 0,
-        "latest_resume_offset": None,
+        "stop_evidence": None,
         "adopted_evidence": adopted_evidence,
         "acceptance_evidence": None,
     }
@@ -469,7 +455,12 @@ def buffer_state(buffer: str) -> dict[str, Any]:
 def state_cmd(args: argparse.Namespace) -> None:
     run = load_run(args.run_file)
     if (
-        run["status"] in {"implementation-active", "implementation-returned"}
+        run["status"]
+        in {
+            "implementation-active",
+            "implementation-stopped",
+            "implementation-returned",
+        }
         and args.actor != "agent1"
     ):
         raise SystemExit(
@@ -483,27 +474,17 @@ def state_cmd(args: argparse.Namespace) -> None:
 
 
 def _submit_function(backend: str) -> str:
-    fn = {
-        "claude": "agent-claude-submit-command",
-        "claude-code": "agent-claude-submit-command",
-        "codex": "agent-codex-submit-command",
-    }.get(backend)
-    if fn is None:
+    if backend not in VALID_BACKENDS:
         raise SystemExit("--backend must be claude, claude-code, or codex")
-    return fn
+    return "agent-submit"
 
 
 def send_return_to_agent(buffer: str, backend: str) -> None:
-    fn = {
-        "claude": "agent-claude-send-return",
-        "claude-code": "agent-claude-send-return",
-        "codex": "agent-codex-send-return",
-    }.get(backend)
-    if fn is None:
+    if backend not in VALID_BACKENDS:
         raise SystemExit("--backend must be claude, claude-code, or codex")
     expr = f'''
 (with-current-buffer {elisp_string(buffer)}
-  (let ((target ({fn} (get-buffer {elisp_string(buffer)}))))
+  (let ((target (agent-send-return (get-buffer {elisp_string(buffer)}))))
     (unless (buffer-live-p target)
       (error "agent return dispatch did not resolve a live buffer"))
     (princ "submitted")))
@@ -511,38 +492,6 @@ def send_return_to_agent(buffer: str, backend: str) -> None:
     returned = run_emacs_eval(expr)
     if returned != "submitted":
         raise SystemExit(f"unexpected return-submit result: {returned!r}")
-
-
-def send_local_control(buffer: str, command: str) -> None:
-    """Submit one fixed Claude local control command to BUFFER."""
-    expr = f'''
-(with-current-buffer {elisp_string(buffer)}
-  (let ((target (agent-claude-submit-command
-                 {elisp_string(command)}
-                 (get-buffer {elisp_string(buffer)}))))
-    (unless (buffer-live-p target)
-      (error "Claude local control did not resolve a live buffer"))
-    (princ "submitted")))
-'''
-    returned = run_emacs_eval(expr)
-    if returned != "submitted":
-        raise SystemExit(f"unexpected local-control result: {returned!r}")
-
-
-def agent1_model_id(buffer: str) -> str:
-    """Return the live Claude model id reported for BUFFER."""
-    expr = f'''
-(with-current-buffer {elisp_string(buffer)}
-  (let* ((fresh (and (fboundp 'agent-claude--parse-status-file)
-                     (agent-claude--parse-status-file)))
-         (status (or fresh
-                     (and (boundp 'agent-claude--status-data)
-                          agent-claude--status-data)))
-         (model (plist-get status :model))
-         (id (plist-get model :id)))
-    (princ (or id "unknown"))))
-'''
-    return run_emacs_eval(expr)
 
 
 def agent1_process_live(buffer: str) -> bool:
@@ -599,15 +548,6 @@ def claude_session_initialized(buffer: str, transcript: str) -> bool:
     if returned not in {"initialized", "uninitialized"}:
         raise SystemExit(f"unexpected Claude initialization state: {returned!r}")
     return returned == "initialized"
-
-
-def _wait_for_agent1_model(buffer: str, model: str, timeout: float) -> bool:
-    deadline = time.monotonic() + timeout
-    while time.monotonic() < deadline:
-        if model.casefold() in agent1_model_id(buffer).casefold():
-            return True
-        time.sleep(DELIVERY_POLL_SECONDS)
-    return False
 
 
 def pending_prompt_contains(buffer: str, marker: str) -> bool:
@@ -706,18 +646,27 @@ def _transcript_advanced(transcript: str, offset: int) -> bool:
         ) from None
 
 
-def _delivery_observed(buffer: str, transcript: str, offset: int) -> bool:
+def _delivery_observed(
+    buffer: str, transcript: str, offset: int, *, accept_busy: bool = True
+) -> bool:
     if _transcript_advanced(transcript, offset):
         return True
-    return buffer_state(buffer).get("state") == "busy"
+    return accept_busy and buffer_state(buffer).get("state") == "busy"
 
 
 def _wait_for_delivery(
-    buffer: str, transcript: str, offset: int, timeout: float
+    buffer: str,
+    transcript: str,
+    offset: int,
+    timeout: float,
+    *,
+    accept_busy: bool = True,
 ) -> bool:
     deadline = time.monotonic() + timeout
     while True:
-        if _delivery_observed(buffer, transcript, offset):
+        if _delivery_observed(
+            buffer, transcript, offset, accept_busy=accept_busy
+        ):
             return True
         remaining = deadline - time.monotonic()
         if remaining <= 0:
@@ -733,6 +682,7 @@ def submit_to_agent(
     transcript: str,
     transcript_offset: int,
     delivery_marker: str,
+    one_pass: bool = False,
 ) -> None:
     fn = _submit_function(backend)
     fd, temporary = tempfile.mkstemp(prefix="agent-orch-prompt-", suffix=".txt")
@@ -767,8 +717,14 @@ def submit_to_agent(
         transcript,
         transcript_offset,
         DELIVERY_INITIAL_WAIT_SECONDS,
+        accept_busy=not one_pass,
     ):
         return
+    if one_pass:
+        raise EmacsClientError(
+            "implementation delivery was not independently acknowledged; "
+            "the one-pass run remains pending and no Return retry was sent"
+        )
     if not pending_prompt_contains(buffer, delivery_marker):
         raise EmacsClientError(
             "submission returned without delivery acknowledgement and the exact "
@@ -881,24 +837,33 @@ def _finalize_pending(state: dict[str, Any]) -> None:
     pending = state["pending_submission"]
     if pending is None:
         raise SystemExit("no pending submission to finalize")
-    if pending["kind"] == "phase":
-        phase = pending["phase"]
-        state["submissions"].append(
-            {
-                "phase": phase,
-                "actor": pending["actor"],
-                "transcript_offset": pending["transcript_offset"],
-            }
-        )
-        state["status"] = (
-            "implementation-active" if phase == "implementation" else "phase-active"
-        )
-        state["active_phase"] = phase
-        state["expected_phase"] = None
-    else:
-        state["resume_count"] += 1
-        state["latest_resume_offset"] = pending["transcript_offset"]
+    phase = pending["phase"]
+    state["submissions"].append(
+        {
+            "phase": phase,
+            "actor": pending["actor"],
+            "transcript_offset": pending["transcript_offset"],
+        }
+    )
+    state["status"] = (
+        "implementation-active" if phase == "implementation" else "phase-active"
+    )
+    state["active_phase"] = phase
+    state["expected_phase"] = None
     state["pending_submission"] = None
+
+
+def _freeze_pending_implementation(state: dict[str, Any], reason: str) -> None:
+    """Make an ambiguous implementation attempt permanently non-runnable."""
+    pending = state["pending_submission"]
+    if pending is None or pending["phase"] != "implementation":
+        raise SystemExit("no pending implementation can be frozen")
+    _finalize_pending(state)
+    state["status"] = "implementation-stopped"
+    state["active_phase"] = None
+    state["stop_evidence"] = {
+        "sha256": hashlib.sha256(reason.encode("utf-8")).hexdigest()
+    }
 
 
 def submit(args: argparse.Namespace) -> None:
@@ -913,8 +878,10 @@ def submit(args: argparse.Namespace) -> None:
         state = load_run(args.run_file)
         _require_no_pending(state)
         if state["status"] == "implementation-active":
+            raise SystemExit("stage implementation already has its one permitted prompt")
+        if state["status"] == "implementation-stopped":
             raise SystemExit(
-                "stage implementation is already active; use resume-stage"
+                "one-pass implementation stopped; this run cannot contact an agent again"
             )
         if state["status"] == "complete":
             raise SystemExit("orchestration run is already complete")
@@ -951,6 +918,7 @@ def submit(args: argparse.Namespace) -> None:
             transcript=actor["transcript"],
             transcript_offset=state["pending_submission"]["transcript_offset"],
             delivery_marker=_delivery_marker(state["stage"], args.phase),
+            one_pass=args.phase == "implementation",
         )
         _finalize_pending(state)
         save_run(args.run_file, state)
@@ -958,7 +926,11 @@ def submit(args: argparse.Namespace) -> None:
 
 
 def run_phase(state: dict[str, Any]) -> str:
-    if state["status"] in {"implementation-active", "implementation-returned"}:
+    if state["status"] in {
+        "implementation-active",
+        "implementation-stopped",
+        "implementation-returned",
+    }:
         return "implementation"
     if state["status"] == "complete":
         return "complete"
@@ -979,21 +951,13 @@ def finish_phase(args: argparse.Namespace) -> None:
             )
         actor_name = PHASE_ACTOR[args.phase]
         live = buffer_state(state[actor_name]["buffer"])
-        digest = None
         if live.get("state") != "awaiting-input":
-            if args.phase == "implementation" and live.get("state") == "busy":
-                try:
-                    digest = _phase_evidence(state, args.phase)
-                except SystemExit:
-                    pass
-            if digest is None:
-                label = "Agent 1" if actor_name == "agent1" else "Agent 2"
-                raise SystemExit(
-                    f"{label} is {live.get('state', 'unknown')}; "
-                    "phase completion requires awaiting input"
-                )
-        if digest is None:
-            digest = _phase_evidence(state, args.phase)
+            label = "Agent 1" if actor_name == "agent1" else "Agent 2"
+            raise SystemExit(
+                f"{label} is {live.get('state', 'unknown')}; "
+                "phase completion requires awaiting input"
+            )
+        digest = _phase_evidence(state, args.phase)
         state["completions"].append(
             {
                 "phase": args.phase,
@@ -1018,7 +982,18 @@ def reconcile_submission(args: argparse.Namespace) -> None:
         pending = state["pending_submission"]
         if pending is None:
             raise SystemExit("no pending submission requires reconciliation")
-        if args.delivered:
+        if pending["phase"] == "implementation" and (
+            not args.delivered
+            or not _transcript_advanced(
+                state[pending["actor"]]["transcript"],
+                pending["transcript_offset"],
+            )
+        ):
+            _freeze_pending_implementation(
+                state, "implementation delivery outcome was not independently verified"
+            )
+            outcome = "implementation-stopped"
+        elif args.delivered:
             _finalize_pending(state)
             outcome = "delivered"
         else:
@@ -1033,26 +1008,29 @@ def retry_delivery(args: argparse.Namespace) -> None:
     with run_lock(args.run_file):
         state = load_run(args.run_file)
         pending = state["pending_submission"]
-        if pending is not None:
-            submission = pending
-        elif state["status"] in {"phase-active", "implementation-active"}:
-            current = state["submissions"][-1]
-            submission = {
-                "kind": "phase",
-                "phase": current["phase"],
-                "actor": current["actor"],
-                "transcript_offset": current["transcript_offset"],
-            }
-        else:
-            raise SystemExit("no current submission is eligible for delivery retry")
+        if pending is None:
+            raise SystemExit("only a pending submission is eligible for delivery retry")
+        submission = pending
 
         actor = state[submission["actor"]]
         transcript = actor["transcript"]
         offset = submission["transcript_offset"]
-        if _delivery_observed(actor["buffer"], transcript, offset):
-            if pending is not None:
+        if submission["phase"] == "implementation":
+            if _transcript_advanced(transcript, offset):
                 _finalize_pending(state)
                 save_run(args.run_file, state)
+                print(
+                    f"delivery already observed stage={state['stage']} "
+                    "phase=implementation"
+                )
+                return
+            raise SystemExit(
+                "implementation delivery cannot be retried; reconcile the pending "
+                "attempt, which freezes the one-pass run without another agent contact"
+            )
+        if _delivery_observed(actor["buffer"], transcript, offset):
+            _finalize_pending(state)
+            save_run(args.run_file, state)
             print(
                 f"delivery already observed stage={state['stage']} "
                 f"phase={submission['phase']}"
@@ -1082,9 +1060,8 @@ def retry_delivery(args: argparse.Namespace) -> None:
                 "submission delivery was not acknowledged after retrying only the "
                 "submit keystroke"
             )
-        if pending is not None:
-            _finalize_pending(state)
-            save_run(args.run_file, state)
+        _finalize_pending(state)
+        save_run(args.run_file, state)
     print(
         f"retried delivery stage={state['stage']} "
         f"phase={submission['phase']} actor={submission['actor']}"
@@ -1180,40 +1157,6 @@ def run_status(args: argparse.Namespace) -> None:
         )
 
 
-def resume_stage(args: argparse.Namespace) -> None:
-    with run_lock(args.run_file):
-        state = load_run(args.run_file)
-        _require_no_pending(state)
-        if state["status"] != "implementation-active":
-            raise SystemExit("stage implementation is not active")
-        agent1 = state["agent1"]
-        live = buffer_state(agent1["buffer"])
-        if live.get("state") != "awaiting-input":
-            raise SystemExit(
-                f"Agent 1 is {live.get('state', 'unknown')}; "
-                "resume-stage is allowed only when awaiting input"
-            )
-        prompt = RESUME_CONTRACT.format(stage=state["stage"])
-        state["pending_submission"] = {
-            "kind": "resume",
-            "phase": "implementation",
-            "actor": "agent1",
-            "transcript_offset": _transcript_offset(state, "agent1"),
-        }
-        save_run(args.run_file, state)
-        submit_to_agent(
-            agent1["buffer"],
-            agent1["backend"],
-            prompt,
-            transcript=agent1["transcript"],
-            transcript_offset=state["pending_submission"]["transcript_offset"],
-            delivery_marker=_delivery_marker(state["stage"], "implementation"),
-        )
-        _finalize_pending(state)
-        save_run(args.run_file, state)
-    print(f"resumed stage={state['stage']} actor=agent1")
-
-
 def complete_stage(args: argparse.Namespace) -> None:
     with run_lock(args.run_file):
         state = load_run(args.run_file)
@@ -1293,7 +1236,11 @@ def transcript_messages(
 
 def transcript_cmd(args: argparse.Namespace) -> None:
     state = load_run(args.run_file)
-    if state["status"] in {"implementation-active", "implementation-returned"}:
+    if state["status"] in {
+        "implementation-active",
+        "implementation-stopped",
+        "implementation-returned",
+    }:
         raise SystemExit("transcripts are unavailable during implementation")
     transcript = state[args.actor].get("transcript")
     if not transcript:
@@ -1305,32 +1252,36 @@ def transcript_cmd(args: argparse.Namespace) -> None:
 
 
 def stage_return(args: argparse.Namespace) -> None:
-    """Print only the latest bounded top-level return from awaiting Agent 1."""
-    state = load_run(args.run_file)
-    if state["status"] != "implementation-active":
-        raise SystemExit("stage implementation is not active")
-    live = buffer_state(state["agent1"]["buffer"])
-    if live.get("state") != "awaiting-input":
-        raise SystemExit(
-            f"Agent 1 is {live.get('state', 'unknown')}; "
-            "stage return is available only after Agent 1 awaits input"
-        )
-    text = _latest_implementation_return(state)
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
-    marker = f"STAGE COMPLETE: {state['stage']}"
-    if lines and lines[-1] == marker:
-        raise SystemExit("stage return is complete; use finish-phase")
+    """Freeze and print a premature one-pass implementation return."""
+    with run_lock(args.run_file):
+        state = load_run(args.run_file)
+        if state["status"] != "implementation-active":
+            raise SystemExit("stage implementation is not active")
+        live = buffer_state(state["agent1"]["buffer"])
+        if live.get("state") != "awaiting-input":
+            raise SystemExit(
+                f"Agent 1 is {live.get('state', 'unknown')}; "
+                "stage return is available only after Agent 1 awaits input"
+            )
+        text = _latest_implementation_return(state)
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        marker = f"STAGE COMPLETE: {state['stage']}"
+        if lines and lines[-1] == marker:
+            raise SystemExit("stage return is complete; use finish-phase")
+        state["status"] = "implementation-stopped"
+        state["active_phase"] = None
+        state["stop_evidence"] = {
+            "sha256": hashlib.sha256(text.encode("utf-8")).hexdigest()
+        }
+        save_run(args.run_file, state)
     print(text)
 
 
 def _latest_implementation_return(state: dict[str, Any]) -> str:
     submission = state["submissions"][-1]
-    offset = state.get("latest_resume_offset")
-    if offset is None:
-        offset = submission["transcript_offset"]
     messages = transcript_messages(
         Path(state["agent1"]["transcript"]),
-        offset=offset,
+        offset=submission["transcript_offset"],
     )
     if not messages:
         raise SystemExit("no bounded implementation return is available")
@@ -1338,68 +1289,8 @@ def _latest_implementation_return(state: dict[str, Any]) -> str:
 
 
 def switch_model(args: argparse.Namespace) -> None:
-    """Recover an awaiting Claude implementation from a usage-credit stop."""
-    with run_lock(args.run_file):
-        state = load_run(args.run_file)
-        _require_no_pending(state)
-        if state["status"] != "implementation-active":
-            raise SystemExit("stage implementation is not active")
-        agent1 = state["agent1"]
-        if agent1["backend"] not in {"claude", "claude-code"}:
-            raise SystemExit("model switching is available only for Claude Agent 1")
-        latest = _latest_implementation_return(state).casefold()
-        if not (
-            "out of usage credits" in latest
-            or "usage credits are exhausted" in latest
-        ):
-            raise SystemExit(
-                "model switching requires an explicit bounded usage-credit stop"
-            )
-        live = buffer_state(agent1["buffer"])
-        live_state = live.get("state")
-        reset_but_live = (
-            live_state == "unknown" and agent1_process_live(agent1["buffer"])
-        )
-        if live_state != "awaiting-input" and not reset_but_live:
-            if live_state == "unknown":
-                raise SystemExit(
-                    "Agent 1 state is unknown and its Claude process is not live"
-                )
-            raise SystemExit(
-                f"Agent 1 is {live_state or 'unknown'}; "
-                "model switching is allowed only when awaiting input"
-            )
-
-        old_model = agent1_model_id(agent1["buffer"])
-        if args.model.casefold() in old_model.casefold():
-            new_model = old_model
-        else:
-            send_local_control(agent1["buffer"], f"/model {args.model}")
-            changed = _wait_for_agent1_model(
-                agent1["buffer"], args.model, MODEL_SWITCH_INITIAL_WAIT_SECONDS
-            )
-            if not changed:
-                live = buffer_state(agent1["buffer"])
-                live_state = live.get("state")
-                if live_state == "awaiting-input" or (
-                    live_state == "unknown"
-                    and agent1_process_live(agent1["buffer"])
-                ):
-                    send_return_to_agent(agent1["buffer"], agent1["backend"])
-                changed = _wait_for_agent1_model(
-                    agent1["buffer"], args.model, MODEL_SWITCH_CONFIRM_WAIT_SECONDS
-                )
-            if not changed:
-                raise EmacsClientError(
-                    f"Claude did not report a verified switch to {args.model}"
-                )
-            new_model = agent1_model_id(agent1["buffer"])
-        if args.model.casefold() not in new_model.casefold():
-            raise EmacsClientError(
-                f"Claude reported {new_model!r}, not the requested {args.model!r}"
-            )
-        reconcile_agent1_waiting(agent1["buffer"])
-    print(f"switched Agent 1 model: {old_model} -> {new_model}")
+    """Reject model-turn continuation for a one-pass implementation."""
+    raise SystemExit("one-pass implementation cannot be continued on another model")
 
 
 def git_status(repo: Path) -> dict[str, str]:
@@ -1430,7 +1321,11 @@ def status(args: argparse.Namespace) -> dict[str, Any]:
             "pending_reconciliation": state["pending_submission"] is not None,
         }
     }
-    if state["status"] in {"implementation-active", "implementation-returned"}:
+    if state["status"] in {
+        "implementation-active",
+        "implementation-stopped",
+        "implementation-returned",
+    }:
         result["agent1"] = buffer_state(state["agent1"]["buffer"])
         return result
 
@@ -1623,20 +1518,6 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--run-file", required=True)
     p.add_argument("--prompt-file", required=True)
     p.set_defaults(func=restart_phase)
-
-    p = sub.add_parser(
-        "resume-stage", help="Resume an awaiting Agent 1 with fixed stage scope"
-    )
-    p.add_argument("--run-file", required=True)
-    p.set_defaults(func=resume_stage)
-
-    p = sub.add_parser(
-        "switch-model",
-        help="Recover a credit-stopped Claude implementation on another model",
-    )
-    p.add_argument("--run-file", required=True)
-    p.add_argument("--model", required=True, choices=("opus", "sonnet"))
-    p.set_defaults(func=switch_model)
 
     p = sub.add_parser(
         "complete-stage", help="Close a run after stage-final verification"

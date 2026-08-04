@@ -1044,9 +1044,9 @@ def cat_file_batch(repo, requests, head_bytes=8192):
     )
     results = {}
     try:
-        process.stdin.write(("\n".join(requests) + "\n").encode("utf-8", "replace"))
-        process.stdin.close()
         for request in requests:
+            process.stdin.write((request + "\n").encode("utf-8", "replace"))
+            process.stdin.flush()
             header = process.stdout.readline().decode("utf-8", "replace").strip()
             parts = header.split()
             if len(parts) != 3:
@@ -1062,6 +1062,7 @@ def cat_file_batch(repo, requests, head_bytes=8192):
                 data if head_bytes is None else data[:head_bytes],
             )
     finally:
+        process.stdin.close()
         process.stdout.close()
         process.wait()
     return results

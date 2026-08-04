@@ -1740,6 +1740,43 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         self.assertIn("rotate or revoke", proc.stdout)
         self.assertFalse((self.state_dir() / "authorization.json").exists())
 
+    def test_full_audit_object_reader_does_not_deadlock_on_full_pipes(self):
+        self.publish_base()
+        long_path = "/".join(["x" * 50] * 8) + "/large.bin"
+        self.commit(
+            "add audit objects",
+            {"large.bin": b"x" * (128 * 1024), long_path: b"x"},
+        )
+        large_request = "HEAD:large.bin"
+        repeated_request = "HEAD:%s" % long_path
+        probe = """
+import runpy
+import sys
+from pathlib import Path
+
+module = runpy.run_path(sys.argv[1], run_name="dotfiles_publish_probe")
+repo = type("Repo", (), {"root": Path(sys.argv[2])})()
+module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
+"""
+        try:
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    "-c",
+                    probe,
+                    str(PUBLISH),
+                    str(self.repo),
+                    large_request,
+                    repeated_request,
+                ],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+        except subprocess.TimeoutExpired:
+            self.fail("git cat-file batch protocol deadlocked on full pipes")
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+
     def test_full_audit_covers_pull_request_heads_and_removes_its_refs(self):
         self.publish_base()
         self.commit(

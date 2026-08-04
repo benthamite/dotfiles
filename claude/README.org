@@ -119,37 +119,6 @@ its corpus, and verification reads it back out, so a run prepared against one
 corpus cannot be verified or applied as the other. =bin/triage-notes= is the only
 place that knows where the shared engine lives.
 
-The paired =orchestrate-agent-review= helper keeps implementation stages atomic.
-It sends one initial implementation handoff through =agent-submit=, so
-=agent.el= records the same lifecycle transition as an interactive submission.
-For specification, planning, and review, the only retry is a Return keystroke
-while delivery of the original prompt is still pending and the unchanged prompt
-remains visible in the composer; the helper never pastes the prompt twice. Once
-delivery is acknowledged, even that keystroke path closes. Implementation has
-no Return retry at all and requires transcript growth as independent delivery
-evidence; the =busy= event emitted by submission cannot acknowledge itself. An
-ambiguous implementation attempt freezes the run instead of becoming eligible
-for resubmission. Other phase submissions remain pending until a busy
-transition or transcript growth acknowledges delivery. For a first submission
-to a fresh Claude session, the guard recognizes the otherwise unknown lifecycle
-state only when the process is live, the transcript is empty, and Claude's
-status file names that exact transcript. A non-implementation phase whose
-process exits before any assistant output can be moved once to a fresh
-fixed-role session: the guard verifies the empty return boundary, uses the
-backend's authoritative waiting state, and atomically adopts the fresh
-transcript without creating another review pass.
-
-Implementation has no generic continuation or model-switch command. A completed
-implementation ends with its exact stage marker and proceeds to stage-wide
-closure only after the actor is authoritatively awaiting input; marker text
-never overrides a busy lifecycle state. Any other top-level return becomes
-=implementation-stopped= and stores a digest of the return. The operator may
-then send one specific whole-stage diagnosis with =steer-stage=; the helper
-requires explicit obstacle, resolution, and whole-stage direction fields and
-rejects generic, repeated, busy-session, ambiguous-delivery, and unrecorded-return
-steering. New non-adopted stages also reject a reused nonempty Agent 1
-transcript. Agent 1 retains implementation and final-verification ownership.
-
 The paired =fix-drive-errors= skill owns Google Drive sync-error triage. It
 snapshots the native error panel, runs the read-only =bin/drive-workspace=
 audit before any change, and routes every repair through that tool's

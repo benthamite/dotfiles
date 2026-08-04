@@ -37,6 +37,16 @@ def decision(result: subprocess.CompletedProcess[str]) -> str:
 
 
 class GitHubWriteGuardParityTests(unittest.TestCase):
+    """Repo-level allowlisting, for both guards.
+
+    Every command here pushes ``main`` on purpose. These tests exist to prove
+    the *repo* allowlist decides, and since the guards became ref-aware a
+    topic-branch push is allowed on any repo — so using one as the example
+    would make the deny cases fail and, worse, make the allow cases pass even
+    with an empty allowlist. Pushing a protected branch is the shape the
+    allowlist still governs, so it is the shape that tests it.
+    """
+
     def setUp(self) -> None:
         self.tempdir = tempfile.TemporaryDirectory()
         self.addCleanup(self.tempdir.cleanup)
@@ -95,14 +105,14 @@ exit 1
     def test_account_wildcard_allows_repo(self) -> None:
         command = (
             "git push https://github.com/benthamite/yasnippet.git "
-            "fix/post-command-handler-quit"
+            "main"
         )
         self.assert_both(command, expected="allow")
 
     def test_other_account_is_denied(self) -> None:
         command = (
             "git push https://github.com/example/unowned.git "
-            "fix/post-command-handler-quit"
+            "main"
         )
         self.assert_both(command, expected="deny")
 
@@ -116,7 +126,7 @@ exit 1
         self.assertTrue(exact_entries)
         command = (
             f"git push https://github.com/{exact_entries[0]}.git "
-            "fix/post-command-handler-quit"
+            "main"
         )
 
         self.assert_both(command, expected="allow")
@@ -124,7 +134,7 @@ exit 1
     def test_wildcard_does_not_match_similar_owner(self) -> None:
         command = (
             "git push https://github.com/benthamitee/yasnippet.git "
-            "fix/post-command-handler-quit"
+            "main"
         )
         self.assert_both(command, expected="deny")
 
@@ -158,7 +168,7 @@ exit 1
         self.assertTrue(candidates, "expected a declared repo absent from the allowlist")
         command = (
             f"git push https://github.com/{candidates[0]}.git "
-            "fix/post-command-handler-quit"
+            "main"
         )
 
         self.assert_both(command, expected="allow")
@@ -168,7 +178,7 @@ exit 1
         self.assertNotIn("epoch-research/not-a-project-of-mine", declared)
         command = (
             "git push https://github.com/epoch-research/not-a-project-of-mine.git "
-            "fix/post-command-handler-quit"
+            "main"
         )
 
         self.assert_both(command, expected="deny")
@@ -186,7 +196,7 @@ exit 1
         }
         # Nothing to assert if the working tree matches HEAD, which is the norm.
         for repo in sorted(working_repos - set(self.declared_repos())):
-            command = f"git push https://github.com/{repo}.git branch"
+            command = f"git push https://github.com/{repo}.git main"
             self.assert_both(command, expected="deny")
 
 

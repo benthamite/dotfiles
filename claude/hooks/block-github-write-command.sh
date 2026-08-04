@@ -345,8 +345,105 @@ if contains_protected_guard_path && guard_modification_p; then
     deny "attempt to modify GitHub write-guard files" "Those files are self-protected. Edit them manually outside Claude if the policy needs to change."
 fi
 
+# Branches whose contents other people, deployments, or releases consume.
+# Pushing one is not pull-request work, so it stays gated by the allowlist.
+PROTECTED_BRANCH_RE='^(main|master|trunk|develop|development|staging|stage|production|prod|gh-pages|(release|releases|hotfix)/.*)$'
+
+# True when the command is a plain additive push of named topic branches.
+#
+# This is what lets an agent contribute to a repo by pull request without a
+# standing write grant on it, which is the friction the repo-only gate created:
+# opening a PR requires pushing a branch, and a branch nobody consumes is
+# reversible and reviewable. The dangerous shapes stay gated because none of
+# them is pull-request work. A force push rewrites commits that may not be ours
+# — a branch name is not proof of authorship — and --force-with-lease is safer
+# but still a rewrite. A deletion cannot be undone from the remote.
+# --all/--mirror/--tags push refs the command never names, main among them. A
+# bare `git push` follows push.default and the branch's upstream, so the command
+# alone does not say where it lands. Every one of those resolves to deny.
+#
+# Note this does permit fast-forwarding a topic branch that already exists,
+# which may belong to someone else and may be in their open PR. That adds
+# commits rather than destroying any, and it is visible in the PR; rewriting is
+# the line this draws.
+safe_topic_branch_push_p() {
+    local segment token dest
+    # Isolate the push's own arguments so a neighbouring command in the chain
+    # cannot contribute a flag or a refspec.
+    [[ "$COMMAND" =~ (^|[[:space:];|\&])git[[:space:]]+(-C[[:space:]]+[^[:space:]]+[[:space:]]+)?push[[:space:]]+(.*) ]] || return 1
+    segment="${BASH_REMATCH[3]}"
+    segment="${segment%%&&*}"
+    segment="${segment%%;*}"
+    segment="${segment%%|*}"
+
+    local -a words=() positional=()
+    read -r -a words <<< "$segment"
+
+    local i=0
+    while [ "$i" -lt "${#words[@]}" ]; do
+	token="${words[$i]}"
+	i=$((i + 1))
+	case "$token" in
+	    --force | -f | --force-with-lease | --force-with-lease=* \
+		| --force-if-includes | --mirror | --all | --tags \
+		| --follow-tags | --delete | -d | --prune)
+		return 1
+		;;
+	    # Options that consume the next word. Skipping it stops a value
+	    # like `-o ci.skip` from being read as a refspec.
+	    -o | --push-option | --receive-pack | --exec | --repo)
+		i=$((i + 1))
+		;;
+	    --set-upstream | -u | --quiet | -q | --verbose | -v | --progress \
+		| --no-progress | --no-verify | --verify | --atomic | --porcelain \
+		| --ipv4 | -4 | --ipv6 | -6 | --thin | --no-thin | --signed \
+		| --no-signed | --dry-run | -n)
+		;;
+	    --*=*) ;;
+	    -*)
+		# An unrecognised flag could be anything, including an
+		# abbreviation of --force. Refuse rather than guess.
+		return 1
+		;;
+	    *)
+		positional+=("$token")
+		;;
+	esac
+    done
+
+    # First positional is the remote and the rest are refspecs, so fewer than
+    # two means no destination was named.
+    [ "${#positional[@]}" -ge 2 ] || return 1
+
+    local idx=1
+    while [ "$idx" -lt "${#positional[@]}" ]; do
+	token="${positional[$idx]}"
+	idx=$((idx + 1))
+	case "$token" in
+	    +*) return 1 ;;  # a leading + forces this refspec on its own
+	    :*) return 1 ;;  # empty source deletes the destination
+	esac
+	dest="${token##*:}"
+	[ -n "$dest" ] || return 1
+	dest="${dest#refs/heads/}"
+	case "$dest" in
+	    refs/*) return 1 ;;  # a ref outside refs/heads is not a branch
+	    HEAD) return 1 ;;    # resolves to whatever branch is checked out
+	esac
+	[[ "$dest" =~ $PROTECTED_BRANCH_RE ]] && return 1
+    done
+    return 0
+}
+
 if echo "$COMMAND" | grep -qE '(^|[[:space:];|&])git[[:space:]]+push\b'; then
     if echo "$COMMAND" | grep -qE '(^|[[:space:]])--dry-run([[:space:]]|$)'; then
+	exit 0
+    fi
+    # Checked before the repo is resolved, because the shape of the push is
+    # what makes it safe. Resolving the repo can fail outright for a command
+    # this test already accepts — a `cd` into an unresolvable path followed by
+    # a topic-branch push used to be denied for want of a repo name.
+    if safe_topic_branch_push_p; then
 	exit 0
     fi
     repo=$(repo_from_urlish "$COMMAND" || true)
@@ -371,7 +468,17 @@ if echo "$COMMAND" | grep -qE '(^|[[:space:];|&])git[[:space:]]+push\b'; then
     require_allowed_repo "git push" "$repo"
 fi
 
-if echo "$COMMAND" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+pr[[:space:]]+(create|close|reopen|merge|comment|review|edit|ready|lock|unlock|update-branch)\b'; then
+# `create` and `edit` are omitted deliberately: they are the two operations an
+# agent needs to open its own pull request and finish it. Several repos require
+# a description to be completed after the fact — epoch-website-astro wants
+# Cloudflare preview links filled in once the build lands — so gating `edit`
+# makes their own required workflow impossible to complete and leaves the branch
+# push pointless. `merge` stays gated because it writes to the default branch,
+# which is the thing being protected. The residual risk accepted here is that
+# `gh pr edit --repo X 123` can overwrite someone else's pull request
+# description; GitHub keeps an edit history, so that is visible and recoverable,
+# unlike a force push or a merge.
+if echo "$COMMAND" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+pr[[:space:]]+(close|reopen|merge|comment|review|ready|lock|unlock|update-branch)\b'; then
     require_allowed_repo "gh pr write operation" "$(target_repo_for_gh)"
 fi
 

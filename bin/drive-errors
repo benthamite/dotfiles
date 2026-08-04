@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+# Read Google Drive's native sync-error list, and locate the offenders on disk.
+#
+# Drive reports errors only in a menu-bar panel; there is no file or API for
+# them. This reads that panel through the accessibility API, then resolves each
+# reported name against the Drive tree so a stale entry (an error for something
+# that no longer exists) is distinguishable from a live one.
+#
+# That distinction is the whole point. Drive's error list does not clear itself
+# when the offending path goes away, so a raw count says nothing about how much
+# is actually wrong. On 2026-08-03 the panel reported 200+ errors while only 8
+# live offenders remained.
+#
+# Predecessor: bin/drive-workspace-native.jxa, removed 2026-08-03. It located
+# the panel by AXIdentifier, which the current Drive build no longer sets, and
+# it hashed a screenshot of the window for a journaling workflow that no longer
+# exists.
+#
+#   drive-errors list     names Drive is complaining about, with counts
+#   drive-errors locate   every symlink and generated directory under Drive
+#   drive-errors          both
+
+set -euo pipefail
+
+DRIVE="$HOME/My Drive"
+# Archives are deliberately Drive-hosted bulk storage, not working trees.
+PRUNE=(-not -path "$DRIVE/repos/archive/*" -not -path "$DRIVE/repos/_cr-legacy-archive/*")
+
+open_panel() {
+    osascript -l JavaScript -e '
+      Application("System Events").processes.byName("Google Drive")
+        .menuBars[1].menuBarItems[0].click();' >/dev/null 2>&1 || true
+    sleep 4
+}
+
+read_panel() {
+    osascript -l JavaScript -e '
+      var se = Application("System Events");
+      var proc = se.processes.byName("Google Drive");
+      var out = [];
+      proc.windows().forEach(function (w) {
+        (function walk(el, depth) {
+          if (depth > 12 || out.length > 600) return;
+          var kids;
+          try { kids = el.uiElements(); } catch (e) { return; }
+          for (var i = 0; i < kids.length; i++) {
+            var k = kids[i], v = null;
+            try { v = k.value(); } catch (e) {}
+            if (!v) { try { v = k.title(); } catch (e) {} }
+            if (v && String(v).length > 1) out.push(String(v));
+            walk(k, depth + 1);
+          }
+        })(w, 0);
+      });
+      out.join("\n");' 2>/dev/null || true
+}
+
+cmd_list() {
+    echo "=== Drive error panel ==="
+    open_panel
+    local text
+    text=$(read_panel)
+    if [ -z "$text" ]; then
+        echo "Could not read the panel. Grant Accessibility permission to the" >&2
+        echo "terminal, or open the Drive menu-bar item by hand and retry." >&2
+        return 1
+    fi
+    printf '%s\n' "$text" | grep -n "Can’t\|Can't" >/dev/null 2>&1 || {
+        echo "No error rows found in the panel."
+        return 0
+    }
+    echo "Names reported, with how many still exist under Drive:"
+    printf '%s\n' "$text" \
+        | grep -v "Can’t\|Can't\|More Options\|Open \|Error list\|Previous page\|Next page\|Done\|Google Drive" \
+        | sort -u \
+        | while IFS= read -r name; do
+            [ -n "$name" ] || continue
+            local n
+            n=$(find "$DRIVE" -name "$name" "${PRUNE[@]}" 2>/dev/null | wc -l | tr -d ' ')
+            if [ "$n" -eq 0 ]; then
+                printf '  STALE  %s (no longer under Drive)\n' "$name"
+            else
+                printf '  LIVE   %s (%s under Drive)\n' "$name" "$n"
+            fi
+        done
+    printf '%s\n' "$text" | grep -oE '^[0-9]+/[0-9]+$' | tail -1 \
+        | sed 's/^/  panel page: /'
+}
+
+cmd_locate() {
+    echo "=== symlinks under Drive (Drive cannot represent these at all) ==="
+    find "$DRIVE" -type l "${PRUNE[@]}" 2>/dev/null \
+        | sed "s|$DRIVE/||" | sort
+    echo
+    echo "=== real generated directories under Drive ==="
+    find "$DRIVE" \( -name node_modules -o -name __pycache__ -o -name .pytest_cache \
+        -o -name .venv -o -name venv -o -name .next -o -name .ruff_cache \) \
+        -not -type l "${PRUNE[@]}" 2>/dev/null | sed "s|$DRIVE/||" | sort
+}
+
+case "${1:-both}" in
+    list)   cmd_list ;;
+    locate) cmd_locate ;;
+    both)   cmd_list; echo; cmd_locate ;;
+    *)      echo "usage: drive-errors [list|locate|both]" >&2; exit 2 ;;
+esac

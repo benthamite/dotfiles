@@ -119,6 +119,15 @@ its corpus, and verification reads it back out, so a run prepared against one
 corpus cannot be verified or applied as the other. =bin/triage-notes= is the only
 place that knows where the shared engine lives.
 
+Both skills offer the same =a/s/d/r/m= shortcuts on a briefed task: action it,
+skip it for the session, close it as already done, reprioritize it, or record it
+as non-actionable. =d= exists because a stale record is a common outcome rather
+than an edge case, and because the engine cannot express completion — so =d= is
+a direct Org edit rather than a prepared update. It verifies from the source
+rather than the heading, flips to =DONE= with =CLOSED= and =LAST_VERIFIED=,
+records the check that settled it, and splits out anything the closure leaves
+open. Partial completion is a rewrite, not a close.
+
 The =move-session-log= skill bundles a Python adapter
 (=skills/move-session-log/scripts/move_session_log.py=) that mirrors the Codex
 adapter's interface — single-session import plus =--dry-run=/=--rename OLD

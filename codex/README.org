@@ -60,6 +60,16 @@ them aligned with Claude's native skill overrides and
 trust state. Generated or managed entries should be changed through their owner,
 not edited as unexplained one-off configuration.
 
+The =[projects."..."]= trust keys name absolute repository paths, so moving a
+repository means rewriting its key. A running Codex appends its own trust entry
+whenever it starts in a directory the config does not already cover, so a
+rewrite has to merge with any entry Codex added for the new path rather than
+land beside it. TOML rejects duplicate tables, and Codex reports a duplicate as
+a fatal =failed to load configuration= that aborts every session, not as a
+warning about the one affected project. The 2026-08-03 migration out of =~/My
+Drive/repos= hit this: the rewritten =tangodb= key collided with an appended
+one.
+
 * Skills
 
 [[file:skills/README.org][The Codex skill index]] documents discovery, programmatic and private roots,

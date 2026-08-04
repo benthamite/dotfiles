@@ -414,12 +414,6 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/git-dirs"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/repos/tangodb"]
-trust_level = "trusted"
-
-[projects."/private/tmp/claude-501/-Users-pablostafforini--config-emacs-profiles-8-3-0-dev-elpaca-sources-codex/a086a652-2069-4822-a65d-bdf94a06bbca/scratchpad/acct-check"]
-trust_level = "trusted"
-
 [tui]
 theme = "dark"
 

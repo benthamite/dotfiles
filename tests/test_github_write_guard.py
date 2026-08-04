@@ -199,6 +199,43 @@ exit 1
             command = f"git push https://github.com/{repo}.git main"
             self.assert_both(command, expected="deny")
 
+    # Contributing to a repo we do not own is the workflow the gate exists to
+    # permit, not to stop: opening a pull request, filing an issue, and replying
+    # on either are additive and reversible by the maintainer. What the gate
+    # buys is writes to a ref or a state other people consume.
+
+    def test_opening_a_pull_request_on_an_unowned_repo_is_allowed(self) -> None:
+        command = (
+            "gh pr create --repo example/unowned --base main "
+            "--title Fix --body Body"
+        )
+        self.assert_both(command, expected="allow")
+
+    def test_filing_an_issue_on_an_unowned_repo_is_allowed(self) -> None:
+        command = "gh issue create --repo example/unowned --title Q --body Body"
+        self.assert_both(command, expected="allow")
+
+    def test_commenting_on_an_unowned_repo_is_allowed(self) -> None:
+        for command in (
+            "gh issue comment --repo example/unowned 1 --body Thanks",
+            "gh pr comment --repo example/unowned 1 --body Rebased",
+        ):
+            with self.subTest(command=command):
+                self.assert_both(command, expected="allow")
+
+    def test_merging_a_pull_request_on_an_unowned_repo_is_denied(self) -> None:
+        command = "gh pr merge --repo example/unowned 1 --squash"
+        self.assert_both(command, expected="deny")
+
+    def test_changing_someone_elses_issue_is_denied(self) -> None:
+        for command in (
+            "gh issue close --repo example/unowned 1",
+            "gh issue edit --repo example/unowned 1 --body Rewritten",
+            "gh issue delete --repo example/unowned 1",
+        ):
+            with self.subTest(command=command):
+                self.assert_both(command, expected="deny")
+
 
 if __name__ == "__main__":
     unittest.main()

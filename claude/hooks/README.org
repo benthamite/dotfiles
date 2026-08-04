@@ -71,7 +71,7 @@ Claude.
 | =block-elpaca-dotfiles-edit.sh= | Denies writes to the read-only Elpaca dotfiles mirror and points to the canonical repository. |
 | =block-elpaca-rebuild-uncommitted.sh= | Blocks rebuilding or reloading when the relevant Elisp source is uncommitted. |
 | =block-github-guard-edit.sh= | Protects GitHub write-gate policy and registration files from agent edits. |
-| =block-github-write-command.sh= | Gates GitHub mutations against the explicit repository and account allowlist, except for pull-request work: pushing a named topic branch and creating or editing a pull request are allowed on any repository. Pushes to a default or deploy branch, force pushes, ref deletions, merges, and every other mutation still require an allowlisted target. |
+| =block-github-write-command.sh= | Gates GitHub mutations against the explicit repository and account allowlist, except for contributions: pushing a named topic branch, creating or editing a pull request, filing an issue, and commenting on either are allowed on any repository, because they add content without altering anything other people already rely on. Pushes to a default or deploy branch, force pushes, ref deletions, merges, edits to someone else's issue, and every other mutation still require an allowlisted target. |
 | =block-long-pipeline-run-unchecked.sh= | Requires preflight, cleanliness, and checkpoint conditions for long consensus-trader jobs. |
 | =block-secret-leak.sh= | Blocks secret literals, unsafe secret-file writes, and secret-bearing output. |
 | =block-sensitive-read.sh= | Blocks content reads of credential-like paths while permitting narrow metadata checks. |

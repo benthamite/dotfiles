@@ -485,11 +485,23 @@ fi
 # `gh pr edit --repo X 123` can overwrite someone else's pull request
 # description; GitHub keeps an edit history, so that is visible and recoverable,
 # unlike a force push or a merge.
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+pr[[:space:]]+(close|reopen|merge|comment|review|ready|lock|unlock|update-branch)\b'; then
+#
+# `comment` is omitted for the same reason. Answering review feedback is part of
+# carrying a pull request to completion, and a comment adds new content instead
+# of altering anyone else's. Every verb left in the list changes a pull
+# request's state rather than adding to it.
+if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+pr[[:space:]]+(close|reopen|merge|review|ready|lock|unlock|update-branch)\b'; then
   require_allowed_repo "gh pr write operation" "$(target_repo_for_gh)"
 fi
 
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+issue[[:space:]]+(create|close|reopen|comment|edit|lock|unlock|transfer|delete|pin|unpin|develop)\b'; then
+# Filing an issue and commenting on one are contributions in the same sense that
+# opening a pull request is: they add new content and alter nothing that already
+# exists, so `create` and `comment` are omitted. Raising an issue is often the
+# only correct way to contribute to a repo we do not own — asking where a large
+# asset should be hosted, say — and gating it stops that at the point where it
+# is least dangerous. The verbs left in the list alter an existing issue's state
+# or overwrite someone else's text.
+if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+issue[[:space:]]+(close|reopen|edit|lock|unlock|transfer|delete|pin|unpin|develop)\b'; then
   require_allowed_repo "gh issue write operation" "$(target_repo_for_gh)"
 fi
 

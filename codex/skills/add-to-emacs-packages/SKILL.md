@@ -29,7 +29,7 @@ Do not use this for general Emacs package documentation, README generation, or r
 
 ### Step 1: Determine the package name
 
-If the user supplied a package name, use it. Otherwise, infer the package name from the basename of the current working directory (e.g., if the user is in `~/My Drive/repos/pangram/`, the package is `pangram`).
+If the user supplied a package name, use it. Otherwise, infer the package name from the basename of the current working directory (e.g., if the user is in `~/repos/pangram/`, the package is `pangram`).
 
 If neither yields a plausible Emacs package name, ask the user.
 
@@ -72,7 +72,7 @@ Create the file `<package>.org` in the notes directory with this structure:
 
 ```org
 #+title: =<package>= manual
-#+hugo_base_dir: ~/My Drive/repos/stafforini.com/
+#+hugo_base_dir: ~/repos/stafforini.com/
 
 * =<package>= manual
   :PROPERTIES:

@@ -18,7 +18,7 @@ goals = true
 js_repl = false
 remote_plugin = false
 
-[projects."/Users/pablostafforini/My Drive/repos/consensus-trader"]
+[projects."/Users/pablostafforini/repos/consensus-trader"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.1.0-dev/elpaca/sources/codex"]
@@ -42,7 +42,7 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/emacs-slack"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/repos/stafforini.com"]
+[projects."/Users/pablostafforini/repos/stafforini.com"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/My Drive/dotfiles/claude"]
@@ -72,10 +72,10 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/Library/CloudStorage/Dropbox/tlon"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/repos/airbnb-pricing"]
+[projects."/Users/pablostafforini/repos/airbnb-pricing"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/repos/tangodb"]
+[projects."/Users/pablostafforini/repos/tangodb"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/My Drive/dotfiles/codex"]
@@ -168,10 +168,10 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/builds/sgn"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/repos/prometheus"]
+[projects."/Users/pablostafforini/repos/prometheus"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/repos/agent-skills"]
+[projects."/Users/pablostafforini/repos/agent-skills"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/My Drive/dotfiles/emacs"]
@@ -186,22 +186,22 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/agent-log"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/repos/agent-sync-template"]
+[projects."/Users/pablostafforini/repos/agent-sync-template"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/emacs-slack"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/repos/wikipedia-deletion-analysis"]
+[projects."/Users/pablostafforini/repos/wikipedia-deletion-analysis"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/repos/uqbar"]
+[projects."/Users/pablostafforini/repos/uqbar"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/codex"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/repos/80000hours.global"]
+[projects."/Users/pablostafforini/repos/80000hours.global"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/My Drive/notes/public"]
@@ -225,13 +225,13 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/home"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/ai-productivity-digest/repo"]
+[projects."/Users/pablostafforini/repos/epoch/ai-productivity-digest"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/source/ea-forum-zotero-translator"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/email-triage/repo"]
+[projects."/Users/pablostafforini/repos/epoch/email-triage"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/My Drive/Epoch/projects/cybersecurity-policy"]
@@ -279,10 +279,10 @@ trust_level = "trusted"
 [projects."/private/tmp/codex-gt"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/repos/launchd"]
+[projects."/Users/pablostafforini/repos/launchd"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/repos/macrostrategy"]
+[projects."/Users/pablostafforini/repos/macrostrategy"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/My Drive/Epoch/projects"]
@@ -300,7 +300,7 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/Epoch/projects/gdocs-addon"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/repos/orbit"]
+[projects."/Users/pablostafforini/repos/orbit"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/annas-archive"]
@@ -348,7 +348,7 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/Epoch/projects/lever-assistant"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/repos/reasoning-excellence"]
+[projects."/Users/pablostafforini/repos/reasoning-excellence"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/My Drive/Epoch/projects/local-cybersecurity-checkup"]
@@ -363,7 +363,7 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/Trajectory/reasoning-tasks/main"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/repos/rubric-visualizer"]
+[projects."/Users/pablostafforini/repos/rubric-visualizer"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.claude/rendered/Trajectory"]
@@ -405,7 +405,7 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/Epoch/meetings/matt"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/repos/ae-newsletter-generator"]
+[projects."/Users/pablostafforini/repos/ae-newsletter-generator"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/Downloads"]
@@ -414,8 +414,14 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/git-dirs"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/repos/tangodb"]
+trust_level = "trusted"
+
+[projects."/private/tmp/claude-501/-Users-pablostafforini--config-emacs-profiles-8-3-0-dev-elpaca-sources-codex/a086a652-2069-4822-a65d-bdf94a06bbca/scratchpad/acct-check"]
+trust_level = "trusted"
+
 [tui]
-theme = "light"
+theme = "dark"
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4

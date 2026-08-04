@@ -32,7 +32,7 @@ Common operations:
 /Users/pablostafforini/My\ Drive/dotfiles/bin/agent-skill path diagnose --tool claude
 /Users/pablostafforini/My\ Drive/dotfiles/bin/agent-skill list --tool codex
 /Users/pablostafforini/My\ Drive/dotfiles/bin/agent-skill roots --tool codex
-/Users/pablostafforini/My\ Drive/dotfiles/bin/agent-skill path triage-issues --tool codex --cwd /Users/pablostafforini/My\ Drive/repos/tlon.el
+/Users/pablostafforini/My\ Drive/dotfiles/bin/agent-skill path triage-issues --tool codex --cwd /Users/pablostafforini/repos/tlon.el
 ```
 
 Rules:

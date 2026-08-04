@@ -21,6 +21,13 @@ normalized =SKILL.md= bodies and auxiliary files should agree unless
 =ai-config-sync.json= records an intentional difference. Tool-specific routing
 frontmatter is removed only for that parity comparison.
 
+The untracked shadow skill copies that once sat under =~/My Drive/.claude/skills=
+and =~/My Drive/.codex/skills= were retired on 2026-08-03 along with the Drive
+workspace tooling. They documented a withdrawn scheme that kept repositories in
+Drive and moved their generated directories out behind in-Drive symlinks; no
+repository lives under the sync root now, and Google Drive cannot represent a
+symlink, so no skill may create one there.
+
 Programmatic skills live under =claude/programmatic-skills/= and are exposed at
 =~/.claude/programmatic-skills=. Explicit automation and Emacs integrations use
 that tree; ordinary interactive discovery does not. Private skills live under

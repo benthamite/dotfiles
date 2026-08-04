@@ -130,7 +130,7 @@ exit 1
 
 
     def declared_repos(self) -> list[str]:
-        registry_repo = Path.home() / "My Drive" / "Epoch" / "projects" / "automations-dashboard" / "repo"
+        registry_repo = Path.home() / "repos" / "epoch" / "automations-dashboard"
         blob = subprocess.run(
             ["git", "-C", str(registry_repo), "show", "HEAD:data/automations.json"],
             check=True,
@@ -177,7 +177,7 @@ exit 1
         # A blocked agent can edit the registry file; only a commit counts. This
         # asserts the guard reads HEAD, by checking a repo present in the working
         # tree but absent from the committed blob is still refused.
-        registry = Path.home() / "My Drive" / "Epoch" / "projects" / "automations-dashboard" / "repo" / "data" / "automations.json"
+        registry = Path.home() / "repos" / "epoch" / "automations-dashboard" / "data" / "automations.json"
         working = json.loads(registry.read_text(encoding="utf-8"))
         working_repos = {
             repo.lower()

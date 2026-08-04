@@ -119,15 +119,6 @@ its corpus, and verification reads it back out, so a run prepared against one
 corpus cannot be verified or applied as the other. =bin/triage-notes= is the only
 place that knows where the shared engine lives.
 
-The paired =fix-drive-errors= skill owns Google Drive sync-error triage. It
-snapshots the native error panel, runs the read-only =bin/drive-workspace=
-audit before any change, and routes every repair through that tool's
-journaled transactions. Its invariant is that no filesystem symlink may exist
-anywhere under =~/My Drive=, so every in-Drive symlink is an error to repair,
-and the skill never disconnects the Drive account or edits Drive's internal
-databases. It replaces the retired untracked parent-Drive workflow that
-externalized directories behind in-Drive symlinks.
-
 The =move-session-log= skill bundles a Python adapter
 (=skills/move-session-log/scripts/move_session_log.py=) that mirrors the Codex
 adapter's interface — single-session import plus =--dry-run=/=--rename OLD
@@ -170,13 +161,6 @@ the lexer raise and the parser fail closed on a commit that staged no Elisp at
 all; argument text that genuinely cannot be lexed still fails closed. Since
 these are =PreToolUse= hooks they run before the =git add= they are judging, so
 the paths a command is about to stage count as staged.
-
-The Drive runtime-state guard pair keeps dependency, build, cache,
-virtualenv, bytecode, and worktree state out of =~/My Drive=: state-creating
-commands are denied unless their effective project and targets are all
-external, indeterminate parses are denied rather than allowed or escalated,
-and the two guard scripts are byte-identical across the Claude and Codex trees
-with all parsing in the shared =lib/drive_runtime_command.py= module.
 
 The SessionStart reasoning-worktree synchronization hook is also Claude-only.
 It repairs required key links before eligibility checks, updates eligible

@@ -46,8 +46,7 @@
   "exempt_readmes": {
     ".claude": "Dotfiles-local agent behavior is owned by agents/README.org and the generated inventory.",
     ".codex": "Dotfiles-local agent behavior is owned by agents/README.org and the generated inventory.",
-    ".github": "The single workflow is documented by the root testing section.",
-    "lib": "Shared agent-guard Python modules are owned by the hook documentation (claude/hooks/README.org and codex/hooks/README.org) and their module docstrings."
+    ".github": "The single workflow is documented by the root testing section."
   },
   "source_generated": [
     {

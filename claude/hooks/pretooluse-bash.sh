@@ -578,12 +578,6 @@ fi
 check_sensitive_read
 check_destructive
 check_walk_list
-# Drive runtime-state guard: deny dependency/build/cache/worktree state under
-# ~/My Drive. Cheap presence gate only — masking, gating, and the Python
-# parser (lib/drive_runtime_command.py) all live in the delegated guard.
-if echo "$COMMAND" | grep -qE '(^|[^[:alnum:]_-])(npm|npx|uv|pip[0-9.]*|python[0-9.]*|pytest|virtualenv)([^[:alnum:]_-]|$)|(^|[^[:alnum:]_-])worktree([^[:alnum:]_-]|$)'; then
-  delegate block-drive-runtime-command.sh
-fi
 [ "$IS_COMMIT" -eq 1 ] && delegate require-elisp-test-before-commit.sh
 [ "$IS_COMMIT" -eq 1 ] && delegate require-doc-update.sh
 [ "$IS_COMMIT" -eq 1 ] && delegate require-readme-update.sh

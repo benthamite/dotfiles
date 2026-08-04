@@ -72,11 +72,6 @@ Native =[[skills.config]]= entries can disable a tracked skill without deleting
 it. Programmatic skills remain outside ordinary interactive discovery and are
 invoked explicitly by the runner.
 
-Drive sync-error triage is owned by the paired =fix-drive-errors= skill, which
-routes every repair through =bin/drive-workspace= journaled transactions and
-treats any symlink under =~/My Drive= as an error. It replaces the retired
-untracked parent-Drive workflow that created in-Drive symlinks.
-
 * Hooks and rules
 
 The tracked =hooks.json= is the registration source. It lives outside the

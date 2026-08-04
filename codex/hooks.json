@@ -97,11 +97,6 @@
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-dirty-tree-rewrite.sh",
             "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-drive-runtime-command.sh",
-            "timeout": 10
           }
         ]
       },

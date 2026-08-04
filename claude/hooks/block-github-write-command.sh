@@ -113,7 +113,7 @@ repo_from_local_git() {
 #
 # The paths are fixed rather than overridable by environment variable, which
 # would let a caller point this at a registry it controls -- the same bypass.
-DECLARED_REPOS_REPO="$HOME/My Drive/Epoch/projects/automations-dashboard/repo"
+DECLARED_REPOS_REPO="$HOME/repos/epoch/automations-dashboard"
 DECLARED_REPOS_PATH="data/automations.json"
 
 declared_repos() {

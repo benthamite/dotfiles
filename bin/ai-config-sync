@@ -1384,6 +1384,18 @@ def manifest_skill_removed(base: dict, candidate: dict, skill: str) -> bool:
     )
 
 
+def global_skill_dir_exists(skill: str) -> bool:
+    """Whether SKILL names a skill directory rather than a file beside them.
+
+    Files that live directly under ``skills/`` -- the README index, for one --
+    are not skills, but splitting the path on ``/`` yields their filename, and
+    treating that as a skill name blocks every commit that touches them.
+    """
+    return (ROOT / "claude" / "skills" / skill).is_dir() or (
+        ROOT / "codex" / "skills" / skill
+    ).is_dir()
+
+
 def global_skill_files_absent(skill: str) -> bool:
     return not (ROOT / "claude" / "skills" / skill / "SKILL.md").exists() and not (
         ROOT / "codex" / "skills" / skill / "SKILL.md"
@@ -2114,6 +2126,8 @@ def guard_changed_paths(
                 )
         elif include_global and path.startswith("claude/skills/"):
             skill = path.removeprefix("claude/skills/").split("/", 1)[0]
+            if not global_skill_dir_exists(skill):
+                continue
             if skill in processed_global_skills:
                 continue
             processed_global_skills.add(skill)
@@ -2140,6 +2154,8 @@ def guard_changed_paths(
                 )
         elif include_global and path.startswith("codex/skills/"):
             skill = path.removeprefix("codex/skills/").split("/", 1)[0]
+            if not global_skill_dir_exists(skill):
+                continue
             if skill in processed_global_skills:
                 continue
             processed_global_skills.add(skill)

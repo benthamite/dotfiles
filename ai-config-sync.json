@@ -116,13 +116,6 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
-      "name": "fix-drive-errors",
-      "claude": "claude/skills/fix-drive-errors/SKILL.md",
-      "codex": "codex/skills/fix-drive-errors/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
       "name": "generate-readme",
       "claude": "claude/skills/generate-readme/SKILL.md",
       "codex": "codex/skills/generate-readme/SKILL.md",
@@ -314,14 +307,6 @@
       "status": "paired",
       "note": "Blocks filter-repo and filter-branch only when the resolved target has staged or unstaged tracked changes; untracked files are deliberately ignored. Resolution uses git -C, then the last applicable cd, then the hook cwd. Heredoc bodies are masked, and ALLOW_DIRTY_REWRITE=1 is the explicit override. Codex normalizes supported shell-tool payloads; the scripts are otherwise paired. Details live in both hook READMEs.",
       "equivalence": "Identical apart from the payload-normalization preamble documented above."
-    },
-    {
-      "name": "block-drive-runtime-command.sh",
-      "claude": "claude/hooks/block-drive-runtime-command.sh",
-      "codex": "codex/hooks/block-drive-runtime-command.sh",
-      "status": "paired-dispatched",
-      "note": "Paired Drive runtime-state guard: denies npm/uv/pip/python/pytest/git-worktree commands whose effective project, cwd, or explicit target lies under ~/My Drive, with the exact migration deny reason. All parsing lives in lib/drive_runtime_command.py (the single parser); indeterminate parses are denied, never allowed or escalated. Claude side is delegated by pretooluse-bash.sh behind a cheap keyword gate; Codex registers the script directly in codex/hooks.json.",
-      "equivalence": "Byte-identical by design (tests/test_drive_runtime_guard.py asserts parity); the script normalizes both Claude object payloads and Codex string-wrapped payloads itself."
     },
     {
       "name": "block-elpaca-dotfiles-edit.sh",
@@ -686,7 +671,7 @@
       "path": "codex/hooks.json",
       "tracked": true,
       "live_path": "~/.codex/hooks.json",
-      "note": "Tracked global registration, live through ~/.codex/hooks.json; it stays outside repo-root .codex to avoid double loading. Lifecycle entries use codex-hook-wrapper with an explicit Emacs socket. Shell matchers cover Bash, exec_command, functions.exec, and functions.exec_command; edit matchers are collapsed for trust review, and UserPromptSubmit has an empty matcher. Guards allow or deny, never ask. See codex/README.org and codex/hooks/README.org."
+      "note": "Tracked global registration, live through ~/.codex/hooks.json; it stays outside repo-root .codex to avoid double loading. Lifecycle entries use codex-hook-wrapper with an explicit Emacs socket. Shell matchers cover Bash, exec_command, functions.exec, and functions.exec_command; edit matchers are collapsed for trust review, and UserPromptSubmit has an empty matcher. Guards allow or deny, never ask. The Drive runtime-state guard was removed on 2026-08-03 with the rest of the Drive workspace tooling, so its shell-matcher entry is gone. See codex/README.org and codex/hooks/README.org."
     },
     {
       "tool": "Claude Code and Codex",

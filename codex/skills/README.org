@@ -22,11 +22,12 @@ bodies and auxiliary files should agree unless =ai-config-sync.json= records an
 intentional difference; the parity audit ignores only the documented
 tool-specific frontmatter keys.
 
-Untracked parent-Drive skill copies under =~/My Drive/.codex/skills= (and
-their Claude peers) are legacy shadows outside Git. They are inspect-only
-pending retirement: the tracked =fix-drive-errors= pair replaces their Drive
-error workflow, and no skill may create a filesystem symlink under
-=~/My Drive=.
+The untracked shadow skill copies that once sat under =~/My Drive/.claude/skills=
+and =~/My Drive/.codex/skills= were retired on 2026-08-03 along with the Drive
+workspace tooling. They documented a withdrawn scheme that kept repositories in
+Drive and moved their generated directories out behind in-Drive symlinks; no
+repository lives under the sync root now, and Google Drive cannot represent a
+symlink, so no skill may create one there.
 
 Programmatic skills live under =codex/programmatic-skills/= and are exposed at
 =~/.codex/programmatic-skills=. They are selected explicitly by the batch skill

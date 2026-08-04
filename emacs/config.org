@@ -7289,8 +7289,10 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
   :defer t
   :custom
   (gdocs-accounts
-   `(("personal" . ((client-id . ,(auth-source-pass-get "gdocs-client-id" "chrome/cloud.google.com"))
-                    (client-secret . ,(auth-source-pass-get "gdocs-client-secret" "chrome/cloud.google.com")))))))
+   (let ((creds `((client-id . ,(auth-source-pass-get "gdocs-client-id" "chrome/cloud.google.com"))
+                  (client-secret . ,(auth-source-pass-get "gdocs-client-secret" "chrome/cloud.google.com")))))
+     `(("epoch" . ,creds)
+       ("personal" . ,creds)))))
 #+end_src
 
 ** =gdrive=

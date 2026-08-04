@@ -241,6 +241,71 @@ def prefill_slack_reply(permalink: str, path: Path) -> str:
     return run_emacs_eval(expr)
 
 
+def prefill_channel_message(channel: str, path: Path) -> str:
+    """Open a channel's own message buffer and prefill its composer.
+
+    The permalink path above always lands in a *thread*, which is wrong for a
+    top-level channel post. Resolving the team is the part worth centralising:
+    ``slack-teams-by-token`` holds every workspace Emacs knows about, and
+    taking the first one silently picks whichever happens to be first — a
+    workspace with no rooms loaded looks exactly like a missing channel.
+    """
+    expr = f"""
+(progn
+  (require 'cl-lib)
+  (require 'subr-x)
+  (require 'slack-team nil t)
+  (unless (fboundp 'slack-create-message-buffer)
+    (require 'slack-message-buffer nil t))
+  (unless (fboundp 'slack-create-message-buffer)
+    (error "slack-create-message-buffer is not available"))
+  (let* ((channel-id {elisp_string(channel)})
+         (teams (hash-table-values slack-teams-by-token))
+         ;; Pick the team that actually has this room, not the first team.
+         (team (or (cl-find-if (lambda (tm) (slack-room-find channel-id tm)) teams)
+                   (error "No connected Slack team has room %s. Loaded teams: %s"
+                          channel-id
+                          (mapconcat (lambda (tm)
+                                       (format "%s(%d rooms)"
+                                               (slack-team-name tm)
+                                               (length (slack-team-channels tm))))
+                                     teams ", "))))
+         (room (slack-room-find channel-id team)))
+    (unless (slack-team-connectedp team)
+      (slack-start team)
+      (let ((deadline (+ (float-time) 20)))
+        (while (and (not (slack-team-connectedp team))
+                    (< (float-time) deadline))
+          (accept-process-output nil 0.25))))
+    ;; The cursor slot is typed as a string. Passing nil happens to work when a
+    ;; buffer for this room is already cached and blows up with "Invalid slot
+    ;; type" when one has to be constructed, which is exactly the first time
+    ;; any given DM is opened.
+    (let* ((buffer (slack-create-message-buffer room "" team))
+           (buf (slack-buffer-buffer buffer))
+           (draft (with-temp-buffer
+                    (insert-file-contents {elisp_string(str(path))})
+                    (buffer-string))))
+      (unless (buffer-live-p buf)
+        (error "Slack message buffer is not live for %s" channel-id))
+      (with-current-buffer buf
+        (unless (and (markerp lui-input-marker)
+                     (eq (marker-buffer lui-input-marker) buf))
+          (error "Slack message input is not available in %s" (buffer-name buf)))
+        (let ((existing (buffer-substring-no-properties
+                         lui-input-marker (point-max))))
+          (unless (or (string-empty-p existing) (equal existing draft))
+            (error "Slack message input in %s already contains unsent text"
+                   (buffer-name buf)))
+          (unless (equal existing draft)
+            (goto-char lui-input-marker)
+            (insert draft))))
+      (slack-buffer-display buffer)
+      (buffer-name buf))))
+""".strip()
+    return run_emacs_eval(expr)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
@@ -250,7 +315,17 @@ def main() -> int:
     parser.add_argument("--file", required=True, help="Path to the draft text file")
     parser.add_argument(
         "--permalink",
-        help="Slack permalink to open and prefill in Emacs after copying the draft",
+        help=(
+            "Slack permalink of the message to reply to. Opens the thread in "
+            "Emacs and prefills its reply input."
+        ),
+    )
+    parser.add_argument(
+        "--channel",
+        help=(
+            "Slack channel ID for a top-level post (not a thread reply). "
+            "Opens the channel in Emacs and prefills its message input."
+        ),
     )
     parser.add_argument(
         "--no-open",
@@ -273,8 +348,14 @@ def main() -> int:
     if not text.strip():
         sys.stderr.write(f"ERROR: draft file is empty: {draft_path}\n")
         return 2
-    if not args.no_open and not args.permalink:
-        sys.stderr.write("ERROR: --permalink is required unless --no-open is used\n")
+    if args.permalink and args.channel:
+        sys.stderr.write("ERROR: pass --permalink or --channel, not both\n")
+        return 2
+    if not args.no_open and not (args.permalink or args.channel):
+        sys.stderr.write(
+            "ERROR: --permalink (thread reply) or --channel (top-level post) "
+            "is required unless --no-open is used\n"
+        )
         return 2
 
     try:
@@ -285,6 +366,18 @@ def main() -> int:
     print("Copied draft to Emacs kill ring")
 
     if args.no_open:
+        return 0
+
+    if args.channel:
+        try:
+            buffer_name = prefill_channel_message(args.channel, draft_path)
+        except RuntimeError as exc:
+            sys.stderr.write(
+                "ERROR: failed to open the Slack channel and insert draft in "
+                f"Emacs: {exc}\n"
+            )
+            return 1
+        print(f"Inserted draft into the Slack message input of {buffer_name}")
         return 0
 
     try:

@@ -185,6 +185,23 @@
             (elpaca-extras-build-reload-status "error-token") :state)))
       (should (string-match-p "broken source parser" message-result)))))
 
+(ert-deftest elpaca-extras-test-handle-build-complete-isolates-load-history ()
+  "A reload does not inherit the active file's load-history context."
+  (let ((fake-callback (lambda () nil))
+        (current-load-list '((defun . unrelated-function)))
+        observed-load-list)
+    (cl-letf (((symbol-function 'elpaca-get)
+               (lambda (_pkg) 'fake-elpaca))
+              ((symbol-function 'elpaca--status)
+               (lambda (_e) 'finished))
+              ((symbol-function 'remove-hook) #'ignore)
+              ((symbol-function 'elpaca-extras-reload)
+               (lambda (_pkg) (setq observed-load-list current-load-list)))
+              ((symbol-function 'message) #'ignore))
+      (elpaca-extras--handle-build-complete
+       'my-pkg fake-callback "Rebuilt" "isolated-token")
+      (should-not observed-load-list))))
+
 (ert-deftest elpaca-extras-test-handle-build-complete-pending ()
   "When status is neither finished nor failed, hook is not removed."
   (let ((hook-removed nil)

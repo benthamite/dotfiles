@@ -549,7 +549,7 @@ TOKEN, when non-nil, identifies the status entry to update."
       (pcase status
         ('finished
          (condition-case reload-error
-             (progn
+             (let ((current-load-list nil))
                (elpaca-extras-reload pkg)
                (elpaca-extras--record-build-reload-status
                 token :package pkg :state 'finished

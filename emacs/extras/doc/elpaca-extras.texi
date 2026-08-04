@@ -114,7 +114,7 @@ The command @code{elpaca-extras-update-and-reload} combines updating a package v
 
 This provides a convenient single-step workflow: update, build, and force-load the new definitions.
 
-The command returns a status token after enqueueing the build. Reloading is driven by @code{elpaca-post-queue-hook} when Elpaca's build process actually finishes. Callers that need a deterministic completion point should poll @code{elpaca-extras-build-reload-status} or @code{elpaca-extras-format-build-reload-status} for that token with short calls; they should not call @code{elpaca-wait} inside the daemon.
+The command returns a status token after enqueueing the build. Reloading is driven by @code{elpaca-post-queue-hook} when Elpaca's build process actually finishes. The completion callback isolates the reload from any active @code{current-load-list}, so definitions cannot be attributed to an unrelated package whose load or build callback happened to be in progress. Callers that need a deterministic completion point should poll @code{elpaca-extras-build-reload-status} or @code{elpaca-extras-format-build-reload-status} for that token with short calls; they should not call @code{elpaca-wait} inside the daemon.
 
 @node Rebuild and reload
 @section Rebuild and reload

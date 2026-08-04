@@ -546,18 +546,39 @@ def shell_tokens(command: str) -> list[str]:
     return list(lexer)
 
 
+def is_redirection_operator(token: str) -> bool:
+    """Return True for redirection operators such as ``>``, ``>>`` and ``>&``.
+
+    ``shell_tokens`` groups runs of punctuation, so ``2>&1`` arrives as the
+    three tokens ``2``, ``>&`` and ``1``.
+    """
+    chars = set(token)
+    return bool(chars & {"<", ">"}) and chars <= {"<", ">", "&", "|"}
+
+
 def shell_segments_with_connectors(
     tokens: list[str],
 ) -> list[tuple[str | None, list[str]]]:
     segments: list[tuple[str | None, list[str]]] = []
     connector: str | None = None
     current: list[str] = []
-    for token in tokens:
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        index += 1
         if set(token) <= {"&", "|", ";", "(", ")", "\r", "\n"}:
             if current:
                 segments.append((connector, current))
                 current = []
             connector = token.strip("\r\n") or token
+            continue
+        if is_redirection_operator(token):
+            # Drop the operator, its target, and any file-descriptor prefix, so
+            # that `git commit -m msg 2>&1` is not read as a commit carrying the
+            # positional operands `2` and `1`.
+            if len(current) and current[-1].isdigit() and len(current[-1]) == 1:
+                current.pop()
+            index += 1
             continue
         current.append(token)
     if current:

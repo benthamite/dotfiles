@@ -2026,6 +2026,28 @@ if os.path.lexists(mode_link) and (
                 self.assertTrue(output.getvalue())
                 self.assertIn("Cannot safely model git commit", output.getvalue())
 
+    def test_redirections_are_not_mistaken_for_commit_pathspecs(self):
+        commands = (
+            "git commit -m test 2>&1 | tail -5",
+            "git commit -m test > /dev/null",
+            "git commit -m test 2>/dev/null",
+            "git commit -m test >out.txt 2>&1",
+            "git commit -m test 2>&1; git status --short",
+        )
+
+        for command in commands:
+            with self.subTest(command=command):
+                segments = self.module.shell_segments_with_connectors(
+                    self.module.shell_tokens(command)
+                )
+                args = next(
+                    segment[2:]
+                    for _, segment in segments
+                    if segment[:2] == ["git", "commit"]
+                )
+                self.assertEqual(args, ["-m", "test"])
+                self.assertIsNone(self.module.commit_content_problem(args))
+
     def test_commit_all_with_attached_message_uses_working_candidate(self):
         claude_skill = ".claude/skills/example/SKILL.md"
         codex_skill = ".codex/skills/example/SKILL.md"

@@ -2048,6 +2048,133 @@ if os.path.lexists(mode_link) and (
                 self.assertEqual(args, ["-m", "test"])
                 self.assertIsNone(self.module.commit_content_problem(args))
 
+    def test_heredoc_bodies_are_not_lexed_as_shell_source(self):
+        """A commit message is data, not shell source.
+
+        An apostrophe or a double quote in the body used to toggle shlex's quote
+        state, splitting the -m value across two tokens so the second looked like
+        a positional pathspec.
+        """
+        message = (
+            "mentions: reject truncated tool calls\n"
+            "\n"
+            '- The account-quality call defaulted rationale to "".\n'
+            "- same_story read a missing field through .get's default, and\n"
+            '  False means "different stories", so dedup silently stopped.\n'
+        )
+        command = (
+            "git add -A && git commit -q -m \"$(cat <<'EOF'\n"
+            + message
+            + "EOF\n)\" && git log --oneline -1"
+        )
+
+        segments = self.module.shell_segments_with_connectors(
+            self.module.shell_tokens(command)
+        )
+        args = next(
+            segment[2:]
+            for _, segment in segments
+            if segment[:2] == ["git", "commit"]
+        )
+        self.assertEqual(args[:2], ["-q", "-m"])
+        self.assertEqual(len(args), 3, f"message split into {args[2:]!r}")
+        self.assertIsNone(self.module.commit_content_problem(args))
+
+    def test_heredoc_body_does_not_break_the_add_commit_chain(self):
+        """Writing a message file first must not look like an interrupted chain.
+
+        The body's own words used to arrive as bogus non-git segments, which made
+        the add -> commit chain look like something ran in between it.
+        """
+        command = (
+            "cat > /tmp/msg.txt <<'EOF'\n"
+            "subject line\n"
+            "\n"
+            "body with an apostrophe's quote\n"
+            "EOF\n"
+            "git add README.md && git commit -q -F /tmp/msg.txt"
+        )
+
+        segments = self.module.shell_segments_with_connectors(
+            self.module.shell_tokens(command)
+        )
+        git_segments = [segment for _, segment in segments if segment[:1] == ["git"]]
+        self.assertEqual(
+            git_segments,
+            [
+                ["git", "add", "README.md"],
+                ["git", "commit", "-q", "-F", "/tmp/msg.txt"],
+            ],
+        )
+
+    def test_strip_heredocs_leaves_herestrings_and_plain_redirects(self):
+        self.assertEqual(
+            self.module.strip_heredocs("git commit -m test <<<word"),
+            "git commit -m test <<<word",
+        )
+        self.assertEqual(
+            self.module.strip_heredocs("git commit -F msg.txt < in.txt"),
+            "git commit -F msg.txt < in.txt",
+        )
+
+    def test_strip_heredocs_handles_tab_stripping_and_two_on_one_line(self):
+        command = "cat <<-A > x <<B\n\tfirst\n\tA\nsecond\nB\ngit status"
+        self.assertEqual(
+            self.module.strip_heredocs(command).split("\n")[-1], "git status"
+        )
+
+    def test_unmodellable_command_is_allowed_without_a_guarded_surface(self):
+        """Refusing a command the guard cannot model only helps if it protects parity.
+
+        A repo carrying no paired Claude/Codex surface has none to protect, so the
+        refusal was pure cost.
+        """
+        repo = self.make_repo(["README.md"])
+        self.write_file(repo, "README.md", "changed\n")
+        command = (
+            "D=/tmp/x && cat > $D/msg.txt <<'EOF'\n"
+            "subject\n"
+            "EOF\n"
+            "git add README.md && git commit -q -F $D/msg.txt"
+        )
+
+        output = io.StringIO()
+        with (
+            mock.patch.object(
+                self.module,
+                "read_input_json",
+                return_value={"tool_input": {"command": command, "cwd": str(repo)}},
+            ),
+            redirect_stdout(output),
+        ):
+            self.module.guard_commit()
+
+        self.assertEqual(output.getvalue(), "")
+
+    def test_unmodellable_command_still_blocks_with_a_guarded_surface(self):
+        repo = self.make_repo(["README.md"])
+        self.write_file(repo, "README.md", "changed\n")
+        self.write_file(repo, ".claude/skills/demo/SKILL.md", "name: demo\n")
+        command = (
+            "D=/tmp/x && cat > $D/msg.txt <<'EOF'\n"
+            "subject\n"
+            "EOF\n"
+            "git add README.md && git commit -q -F $D/msg.txt"
+        )
+
+        output = io.StringIO()
+        with (
+            mock.patch.object(
+                self.module,
+                "read_input_json",
+                return_value={"tool_input": {"command": command, "cwd": str(repo)}},
+            ),
+            redirect_stdout(output),
+        ):
+            self.module.guard_commit()
+
+        self.assertIn("deterministic", output.getvalue())
+
     def test_commit_all_with_attached_message_uses_working_candidate(self):
         claude_skill = ".claude/skills/example/SKILL.md"
         codex_skill = ".codex/skills/example/SKILL.md"

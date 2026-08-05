@@ -539,8 +539,60 @@ def remind_codex() -> None:
     print_post_tool_context_message(reminder_messages(paths_from_codex_input(data), hook_cwd(data)))
 
 
+# A heredoc redirection: `<<WORD`, `<<'WORD'`, `<<"WORD"`, or the tab-stripping
+# `<<-WORD`. The lookarounds keep `<<<` (a herestring) out: without them the
+# regex simply matches the second and third `<` of `<<<word` as its own `<<WORD`.
+HEREDOC_OPERATOR = re.compile(
+    r"(?<!<)<<(?!<)-?[ \t]*(?:'([^']*)'|\"([^\"]*)\"|([A-Za-z_][A-Za-z0-9_]*))"
+)
+
+
+def strip_heredocs(command: str) -> str:
+    """Remove heredoc operators and their bodies before the command is lexed.
+
+    A heredoc body is literal data to the shell, not shell source, so lexing it
+    corrupts the command around it. Both failure modes have been seen in
+    practice, from ordinary commit messages:
+
+    * An apostrophe or a double quote in the body toggles ``shlex``'s quote
+      state, which splits the ``-m`` value across two tokens and makes the
+      second one look like a positional pathspec.
+    * The body's own words otherwise arrive as bogus non-git command segments,
+      which makes an `add` -> `commit` chain look like it was interrupted.
+
+    Dropping the body is safe for this guard's purpose: it only ever needs the
+    paths a command stages, and a heredoc body never contributes one.
+    """
+    lines = command.split("\n")
+    kept: list[str] = []
+    index = 0
+    while index < len(lines):
+        delimiters: list[str] = []
+
+        def collect(match: re.Match[str]) -> str:
+            delimiters.append(next(g for g in match.groups() if g is not None))
+            # A space, not "", so `cat <<EOF` cannot become the token `catEOF`.
+            return " "
+
+        kept.append(HEREDOC_OPERATOR.sub(collect, lines[index]))
+        index += 1
+        for delimiter in delimiters:
+            # `<<-` strips leading tabs from the terminator, and a plain `<<`
+            # terminator must be alone on its line, so comparing the stripped
+            # line covers both. An unterminated heredoc consumes the remainder,
+            # which is what the shell would reject anyway.
+            while index < len(lines):
+                terminator = lines[index].strip() == delimiter
+                index += 1
+                if terminator:
+                    break
+    return "\n".join(kept)
+
+
 def shell_tokens(command: str) -> list[str]:
-    lexer = shlex.shlex(command, posix=True, punctuation_chars="();<>|&\r\n")
+    lexer = shlex.shlex(
+        strip_heredocs(command), posix=True, punctuation_chars="();<>|&\r\n"
+    )
     lexer.whitespace = " \t"
     lexer.whitespace_split = True
     return list(lexer)
@@ -681,6 +733,17 @@ def git_invocation(segment: list[str], cwd: Path) -> tuple[str, list[str], Path]
     return None
 
 
+# Unlike the path-modelling problems, a wrapped commit invalidates the guard's
+# whole frame of reference rather than just its path model: `GIT_INDEX_FILE` or
+# `GIT_WORK_TREE` can point the commit at a different index or tree entirely, so
+# this repo's staged and dirty paths stop bounding what gets committed. It must
+# therefore block regardless of what the repo currently contains.
+WRAPPED_GIT_COMMIT_PROBLEM = (
+    "Cannot safely model wrapped git commit with environment "
+    "assignments or wrapper options."
+)
+
+
 def unwrap_git_command(segment: list[str]) -> tuple[list[str], str | None]:
     """Unwrap exact safe shell wrappers and flag wrappers that can alter Git."""
     if not segment:
@@ -692,27 +755,18 @@ def unwrap_git_command(segment: list[str]) -> tuple[list[str], str | None]:
             return segment[1:], None
         utility = env_utility_command(segment[1:])
         if utility and is_git_executable_token(utility[0]):
-            return utility, (
-                "Cannot safely model wrapped git commit with environment "
-                "assignments or wrapper options."
-            )
+            return utility, WRAPPED_GIT_COMMIT_PROBLEM
         return segment, None
     if segment[0] == "command":
         if len(segment) >= 2 and is_git_executable_token(segment[1]):
             return segment[1:], None
         for index, token in enumerate(segment[1:], start=1):
             if is_git_executable_token(token):
-                return segment[index:], (
-                    "Cannot safely model wrapped git commit with environment "
-                    "assignments or wrapper options."
-                )
+                return segment[index:], WRAPPED_GIT_COMMIT_PROBLEM
     if "=" in segment[0]:
         for index, token in enumerate(segment[1:], start=1):
             if is_git_executable_token(token):
-                return segment[index:], (
-                    "Cannot safely model wrapped git commit with environment "
-                    "assignments or wrapper options."
-                )
+                return segment[index:], WRAPPED_GIT_COMMIT_PROBLEM
     return segment, None
 
 
@@ -1105,6 +1159,22 @@ def command_paths_and_commit_repos(
 
 def skip_runtime_path(path: str) -> bool:
     return any(fnmatch.fnmatchcase(path, pattern) for pattern in RUNTIME_PATTERNS)
+
+
+# The paired surfaces `guard_changed_paths` inspects in a repo that is not the
+# dotfiles root: paired instruction files at any depth, and the paired local
+# skill trees. Keep in step with that function's local branches.
+LOCAL_GUARDED_SKILL_ROOTS = (".claude/skills/", ".codex/skills/")
+LOCAL_GUARDED_INSTRUCTION_NAMES = frozenset({"CLAUDE.md", "AGENTS.md"})
+
+
+def local_guarded_path(path: str) -> bool:
+    """Whether this guard would check ``path`` for Claude<->Codex parity."""
+    if skip_runtime_path(path):
+        return False
+    if Path(path).name in LOCAL_GUARDED_INSTRUCTION_NAMES:
+        return True
+    return path.startswith(LOCAL_GUARDED_SKILL_ROOTS)
 
 
 @dataclass(frozen=True)
@@ -2549,9 +2619,25 @@ def guard_commit() -> None:
     full_audit_required = False
     documentation_candidate: CommitCandidateTree | None = None
     for repo_root in sorted(commit_repos, key=str):
-        problems.extend(command_problems_by_repo.get(repo_root, []))
         changed = dirty_paths(repo_root)
         staged = staged_paths(repo_root)
+        include_global = same_path(repo_root, ROOT)
+        # A command this guard cannot model is only worth blocking when the
+        # commit could carry something the guard would have checked. In the
+        # dotfiles repo that is assumed, because the documentation and full
+        # audits below reason over the candidate tree that the failed model
+        # produced. Elsewhere, `staged | changed` is every path a `git add` in
+        # this command could stage, so if none of them is a paired-config
+        # surface there is no parity to protect and refusing only costs the
+        # caller a working command.
+        repo_problems = command_problems_by_repo.get(repo_root, [])
+        gatable = [p for p in repo_problems if p != WRAPPED_GIT_COMMIT_PROBLEM]
+        problems.extend(p for p in repo_problems if p == WRAPPED_GIT_COMMIT_PROBLEM)
+        if gatable and (
+            include_global
+            or any(local_guarded_path(path) for path in staged | changed)
+        ):
+            problems.extend(gatable)
         command_paths = paths_by_repo.get(repo_root, set())
         candidate_tree = CommitCandidateTree(repo_root, frozenset(command_paths))
         paths = staged | command_paths
@@ -2559,7 +2645,6 @@ def guard_commit() -> None:
         if not changed_paths:
             continue
 
-        include_global = same_path(repo_root, ROOT)
         if include_global:
             documentation_candidate = candidate_tree
             if any(full_audit_gate_path(path) for path in changed_paths):

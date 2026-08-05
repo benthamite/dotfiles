@@ -237,27 +237,58 @@ LAYOUTS indexes other prospective class definitions that will load with it."
 
 (defun elpaca-extras--loaded-class-names-for-files (file-info)
   "Return live EIEIO classes previously defined by FILE-INFO's files."
-  (let (history-entries result)
-    (dolist (info file-info)
-      (let ((files (list (plist-get info :source)
-                         (plist-get info :artifact))))
-        (dolist (feature (plist-get info :features))
-          (when (featurep feature)
-            (when-let* ((loaded-file (feature-file feature))
-                        (entry (assoc loaded-file load-history)))
-              (cl-pushnew entry history-entries :test #'eq))))
-        (dolist (entry load-history)
-          (when (cl-some
-                 (lambda (file)
-                   (elpaca-extras--same-library-file-p (car entry) file))
-                 files)
-            (cl-pushnew entry history-entries :test #'eq)))))
+  (let ((history-entries (elpaca-extras--history-entries-for-files file-info))
+        result)
     (dolist (entry history-entries)
       (dolist (item (cdr entry))
         (when (and (eq (car-safe item) 'define-type)
                    (find-class (cdr item) nil))
           (cl-pushnew (cdr item) result))))
     (nreverse result)))
+
+(defun elpaca-extras--history-entries-for-files (file-info)
+  "Return the `load-history' entries recorded for FILE-INFO's files.
+Scan `load-history' once and match on an extension-less absolute name,
+falling back to a file-system comparison only for an entry whose base
+name matches one of FILE-INFO's files.  A per-file scan that compared
+every entry with `elpaca-extras--same-library-file-p' cost three
+file-system calls per comparison, which dominated reload time: a
+long-running session holds well over a thousand entries, and the work
+grew with both that count and the package's file count."
+  (let ((by-key (make-hash-table :test #'equal))
+        (by-base (make-hash-table :test #'equal))
+        history-entries)
+    (dolist (info file-info)
+      (dolist (file (list (plist-get info :source) (plist-get info :artifact)))
+        (when-let* ((key (elpaca-extras--library-key file)))
+          (puthash key t by-key)
+          (push file (gethash (file-name-nondirectory key) by-base))))
+      (dolist (feature (plist-get info :features))
+        (when (featurep feature)
+          (when-let* ((loaded-file (feature-file feature))
+                      (entry (assoc loaded-file load-history)))
+            (cl-pushnew entry history-entries :test #'eq)))))
+    (dolist (entry load-history)
+      (when (elpaca-extras--history-entry-matches-p (car entry) by-key by-base)
+        (cl-pushnew entry history-entries :test #'eq)))
+    history-entries))
+
+(defun elpaca-extras--history-entry-matches-p (file by-key by-base)
+  "Return non-nil when FILE names a library indexed by BY-KEY or BY-BASE.
+BY-KEY maps an extension-less absolute name to t.  BY-BASE maps an
+extension-less base name to the files carrying it, which are compared
+with `elpaca-extras--same-library-file-p' so a symbolic link under
+another name still matches."
+  (when-let* ((key (elpaca-extras--library-key file)))
+    (or (gethash key by-key)
+        (cl-some (lambda (candidate)
+                   (elpaca-extras--same-library-file-p file candidate))
+                 (gethash (file-name-nondirectory key) by-base)))))
+
+(defun elpaca-extras--library-key (file)
+  "Return the extension-less absolute name of FILE, or nil when not a name."
+  (and (stringp file)
+       (file-name-sans-extension (expand-file-name file))))
 
 (defun elpaca-extras--same-library-file-p (left right)
   "Return non-nil when LEFT and RIGHT name the same Lisp library artifact."

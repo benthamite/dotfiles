@@ -83,6 +83,12 @@ both setup and execution, canonicalizing both its root and actual =node_modules=
 destination before rejecting paths into this Drive-synced tree. Its package
 commands continue to read the skill-local scripts and =.env= file.
 
+The paired =orchestrate-agent-review= skill coordinates fixed Claude and Codex
+sessions through one guarded, stage-atomic workflow. Its helper recognizes the
+canonical =claude-code= and =codex= backends, uses Codex's public prompt reader
+for app-server delivery recovery, and can rebind a failed author or reviewer
+phase to a fresh transcript without enumerating unrelated sessions.
+
 Native =[[skills.config]]= entries can disable a tracked skill without deleting
 it. Programmatic skills remain outside ordinary interactive discovery and are
 invoked explicitly by the runner.

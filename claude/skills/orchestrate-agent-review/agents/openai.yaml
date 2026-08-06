@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Review Orchestrator"
+  short_description: "Orchestrate one complete stage atomically"
+  default_prompt: "Use $orchestrate-agent-review to run one complete stage: Agent 1 authors and implements, Agent 2 reviews the spec and plan once, and internal plan tasks never become orchestration checkpoints."

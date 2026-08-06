@@ -139,6 +139,12 @@ adapter's interface — single-session import plus =--dry-run=/=--rename OLD
 NEW= — with byte-equivalent path-mapping semantics, so the Drive workspace
 migration tooling can relocate session history for either tool.
 
+The paired =orchestrate-agent-review= skill coordinates fixed Claude and Codex
+sessions through one guarded, stage-atomic workflow. Its helper recognizes the
+canonical =claude-code= and =codex= backends, uses Codex's public prompt reader
+for app-server delivery recovery, and can rebind a failed author or reviewer
+phase to a fresh transcript without enumerating unrelated sessions.
+
 The =fix-drive-errors= skill treats the fully paginated native Drive panel as
 the source of truth. Its helper preserves duplicate rows and exact error
 reasons, inventories all candidate paths without claiming a basename match is

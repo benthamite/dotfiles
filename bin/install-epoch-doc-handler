@@ -1,0 +1,492 @@
+#!/usr/bin/env python3
+"""Build, sign, install, and register the Epoch document URL handler."""
+
+from __future__ import annotations
+
+import argparse
+import ctypes
+import os
+import plistlib
+import shutil
+import stat
+import subprocess
+import sys
+import tempfile
+from dataclasses import dataclass
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SOURCE = ROOT / "macos" / "epoch-doc-handler"
+APP_NAME = "Epoch Document Link.app"
+BUNDLE_ID = "com.stafforini.epoch-doc-handler"
+DEFAULT_APPLICATIONS_ROOT = Path.home() / "Applications"
+DEFAULT_DRIVE_ROOT = Path.home() / "My Drive"
+DEFAULT_LSREGISTER = Path(
+    "/System/Library/Frameworks/CoreServices.framework/"
+    "Frameworks/LaunchServices.framework/Support/lsregister"
+)
+
+
+class InstallError(RuntimeError):
+    """Raised when installation cannot complete safely."""
+
+
+@dataclass(frozen=True)
+class Toolchain:
+    swiftc: Path
+    codesign: Path
+    plutil: Path
+    lsregister: Path
+    trash: Path
+
+
+@dataclass(frozen=True)
+class ApplicationIdentity:
+    device: int
+    inode: int
+
+
+def filesystem_identity(path: Path) -> ApplicationIdentity:
+    try:
+        metadata = os.lstat(path)
+    except OSError as error:
+        raise InstallError(f"cannot inspect owned path: {path}") from error
+    return ApplicationIdentity(metadata.st_dev, metadata.st_ino)
+
+
+def require_identity(
+    path: Path,
+    expected: ApplicationIdentity,
+    operation: str,
+) -> None:
+    actual = filesystem_identity(path)
+    if actual != expected:
+        raise InstallError(
+            f"{operation}: filesystem identity changed at {path}; "
+            "refusing to move or trash it"
+        )
+
+
+def lexical_absolute(path: Path) -> Path:
+    return Path(os.path.abspath(os.path.expanduser(os.fspath(path))))
+
+
+def default_toolchain() -> Toolchain:
+    trash = shutil.which("trash")
+    if trash is None:
+        raise InstallError("trash command not found")
+    return Toolchain(
+        swiftc=Path(os.environ.get("EPOCH_DOC_SWIFTC", "/usr/bin/swiftc")),
+        codesign=Path(os.environ.get("EPOCH_DOC_CODESIGN", "/usr/bin/codesign")),
+        plutil=Path(os.environ.get("EPOCH_DOC_PLUTIL", "/usr/bin/plutil")),
+        lsregister=Path(os.environ.get("EPOCH_DOC_LSREGISTER", DEFAULT_LSREGISTER)),
+        trash=Path(os.environ.get("EPOCH_DOC_TRASH", trash)),
+    )
+
+
+def run_command(command: list[str]) -> None:
+    process = subprocess.run(command, capture_output=True, text=True)
+    if process.returncode:
+        detail = process.stderr.strip() or process.stdout.strip()
+        raise InstallError(
+            f"command failed ({process.returncode}): {' '.join(command)}: {detail}"
+        )
+
+
+def bundle_identifier(application: Path) -> str:
+    plist_path = application / "Contents" / "Info.plist"
+    try:
+        with plist_path.open("rb") as handle:
+            payload = plistlib.load(handle)
+    except (OSError, plistlib.InvalidFileException) as error:
+        raise InstallError(
+            f"cannot read application metadata: {plist_path}: {error}"
+        ) from error
+    if not isinstance(payload, dict):
+        raise InstallError(
+            f"application metadata must be a dictionary: {plist_path}"
+        )
+    return str(payload.get("CFBundleIdentifier") or "")
+
+
+def validated_application_identity(application: Path) -> ApplicationIdentity:
+    try:
+        before = os.lstat(application)
+    except OSError as error:
+        raise InstallError(f"cannot inspect application path: {application}") from error
+    if stat.S_ISLNK(before.st_mode) or not stat.S_ISDIR(before.st_mode):
+        raise InstallError(f"refusing to replace non-application path: {application}")
+    if bundle_identifier(application) != BUNDLE_ID:
+        raise InstallError(
+            f"refusing to replace application with another bundle ID: {application}"
+        )
+    try:
+        after = os.lstat(application)
+    except OSError as error:
+        raise InstallError(
+            f"application changed while validating: {application}"
+        ) from error
+    before_identity = ApplicationIdentity(before.st_dev, before.st_ino)
+    after_identity = ApplicationIdentity(after.st_dev, after.st_ino)
+    if after_identity != before_identity:
+        raise InstallError(f"application changed while validating: {application}")
+    return before_identity
+
+
+def rename_exclusive(source: Path, destination: Path) -> None:
+    """Rename a directory without replacing a concurrently created destination."""
+    renameatx_np = ctypes.CDLL(None, use_errno=True).renameatx_np
+    renameatx_np.argtypes = [
+        ctypes.c_int,
+        ctypes.c_char_p,
+        ctypes.c_int,
+        ctypes.c_char_p,
+        ctypes.c_uint,
+    ]
+    renameatx_np.restype = ctypes.c_int
+    at_fdcwd = -2
+    rename_excl = 0x00000004
+    result = renameatx_np(
+        at_fdcwd,
+        os.fsencode(source),
+        at_fdcwd,
+        os.fsencode(destination),
+        rename_excl,
+    )
+    if result != 0:
+        error = ctypes.get_errno()
+        raise OSError(error, os.strerror(error), destination)
+
+
+def is_within(path: Path, root: Path) -> bool:
+    return path == root or root in path.parents
+
+
+def validate_destination(applications_root: Path, drive_root: Path) -> None:
+    lexical_applications = lexical_absolute(applications_root)
+    lexical_drive = lexical_absolute(drive_root)
+    resolved_applications = lexical_applications.resolve(strict=False)
+    resolved_drive = lexical_drive.resolve(strict=False)
+    if is_within(lexical_applications, lexical_drive) or is_within(
+        resolved_applications, resolved_drive
+    ):
+        raise InstallError(
+            f"refusing to install inside Google Drive: {applications_root}"
+        )
+
+
+def trash_path(path: Path, toolchain: Toolchain) -> None:
+    run_command([str(toolchain.trash), str(path)])
+
+
+def build_bundle(
+    application: Path,
+    toolchain: Toolchain,
+    runner=run_command,
+) -> None:
+    macos_directory = application / "Contents" / "MacOS"
+    macos_directory.mkdir(parents=True)
+    info = application / "Contents" / "Info.plist"
+    executable = macos_directory / "epoch-doc-handler"
+    shutil.copyfile(SOURCE / "Info.plist", info)
+    runner(
+        [
+            str(toolchain.swiftc),
+            "-parse-as-library",
+            "-framework",
+            "AppKit",
+            str(SOURCE / "main.swift"),
+            "-o",
+            str(executable),
+        ]
+    )
+    runner([str(toolchain.plutil), "-lint", str(info)])
+    if bundle_identifier(application) != BUNDLE_ID:
+        raise InstallError("staged application has the wrong bundle identifier")
+    runner(
+        [
+            str(toolchain.codesign),
+            "--force",
+            "--deep",
+            "--sign",
+            "-",
+            str(application),
+        ]
+    )
+    runner(
+        [
+            str(toolchain.codesign),
+            "--verify",
+            "--deep",
+            "--strict",
+            str(application),
+        ]
+    )
+
+
+def install(
+    applications_root: Path,
+    drive_root: Path,
+    toolchain: Toolchain,
+    runner=run_command,
+    trash_func=trash_path,
+) -> Path:
+    applications_root = lexical_absolute(applications_root)
+    validate_destination(applications_root, drive_root)
+    applications_root.mkdir(parents=True, exist_ok=True)
+    installed = applications_root / APP_NAME
+    initial_identity = (
+        validated_application_identity(installed)
+        if os.path.lexists(installed)
+        else None
+    )
+
+    build_root = Path(
+        tempfile.mkdtemp(prefix=".epoch-doc-handler-", dir=applications_root)
+    )
+    build_root_identity = filesystem_identity(build_root)
+    staged = build_root / "staged.app"
+    previous = build_root / "previous.app"
+    failed = build_root / "failed.app"
+    staged.mkdir()
+    staged_identity = filesystem_identity(staged)
+    had_previous = initial_identity is not None
+    cleanup_build_root = True
+    installation_succeeded = False
+
+    def restore_or_preserve_previous() -> str:
+        nonlocal cleanup_build_root
+        assert initial_identity is not None
+        try:
+            require_identity(previous, initial_identity, "restore previous bundle")
+        except InstallError:
+            cleanup_build_root = False
+            raise
+        if os.path.lexists(installed):
+            cleanup_build_root = False
+            return f"moved application preserved at {previous}"
+        os.replace(previous, installed)
+        require_identity(installed, initial_identity, "restore previous bundle")
+        return "moved application restored to its original path"
+
+    def verify_owned_state(operation: str) -> None:
+        require_identity(build_root, build_root_identity, operation)
+        expected = {
+            "staged.app": staged_identity,
+            "previous.app": initial_identity,
+            "failed.app": staged_identity,
+        }
+        for child in build_root.iterdir():
+            identity = expected.get(child.name)
+            if identity is None:
+                raise InstallError(
+                    f"{operation}: unowned path appeared at {child}; "
+                    "refusing to trash it"
+                )
+            require_identity(child, identity, operation)
+
+    def stop_cleanup_and_verify_owned_state(operation: str) -> None:
+        nonlocal cleanup_build_root
+        cleanup_build_root = False
+        verify_owned_state(operation)
+
+    try:
+        build_bundle(staged, toolchain, runner)
+        built_identity = validated_application_identity(staged)
+        if built_identity != staged_identity:
+            stop_cleanup_and_verify_owned_state("validate staged bundle")
+            raise InstallError(
+                f"staged bundle changed during build and was preserved at {staged}"
+            )
+        if initial_identity is None:
+            if os.path.lexists(installed):
+                raise InstallError(
+                    "destination changed during build; refusing to replace: "
+                    f"{installed}"
+                )
+        else:
+            try:
+                current_identity = validated_application_identity(installed)
+            except InstallError as error:
+                raise InstallError(
+                    "destination changed during build; refusing to replace: "
+                    f"{installed}"
+                ) from error
+            if current_identity != initial_identity:
+                raise InstallError(
+                    "destination changed during build; refusing to replace: "
+                    f"{installed}"
+                )
+
+        if had_previous:
+            assert initial_identity is not None
+            require_identity(installed, initial_identity, "stage previous bundle")
+            os.replace(installed, previous)
+            try:
+                require_identity(previous, initial_identity, "stage previous bundle")
+            except InstallError as error:
+                unexpected_identity = filesystem_identity(previous)
+                if not os.path.lexists(installed):
+                    require_identity(
+                        previous,
+                        unexpected_identity,
+                        "restore unexpected moved path",
+                    )
+                    os.replace(previous, installed)
+                    require_identity(
+                        installed,
+                        unexpected_identity,
+                        "restore unexpected moved path",
+                    )
+                    recovery = "unexpected path was restored without alteration"
+                else:
+                    cleanup_build_root = False
+                    recovery = f"unexpected path was preserved at {previous}"
+                raise InstallError(
+                    f"destination changed while being moved; {recovery}"
+                ) from error
+            try:
+                validated_application_identity(previous)
+            except InstallError as error:
+                recovery = restore_or_preserve_previous()
+                raise InstallError(
+                    f"destination changed while being moved; {recovery}"
+                ) from error
+        require_identity(staged, staged_identity, "install staged bundle")
+        try:
+            rename_exclusive(staged, installed)
+        except OSError as error:
+            if had_previous and previous.exists():
+                restore_or_preserve_previous()
+            raise InstallError(
+                f"destination changed during build; refusing to replace: {installed}"
+            ) from error
+        try:
+            require_identity(installed, staged_identity, "install staged bundle")
+        except InstallError:
+            stop_cleanup_and_verify_owned_state("install staged bundle")
+            raise
+
+        try:
+            runner([str(toolchain.lsregister), "-f", str(installed)])
+        except Exception as registration_error:
+            try:
+                require_identity(
+                    installed, staged_identity, "registration failure rollback"
+                )
+            except InstallError as identity_error:
+                stop_cleanup_and_verify_owned_state(
+                    "registration failure ownership check"
+                )
+                raise InstallError(
+                    "installed application changed during registration; "
+                    "foreign application was left untouched and cleanup stopped "
+                    f"with verified state under {build_root}"
+                ) from identity_error
+
+            os.replace(installed, failed)
+            try:
+                require_identity(failed, staged_identity, "preserve failed bundle")
+            except InstallError:
+                cleanup_build_root = False
+                if not os.path.lexists(installed):
+                    os.replace(failed, installed)
+                raise
+
+            if had_previous and os.path.lexists(previous):
+                restore_or_preserve_previous()
+                try:
+                    runner([str(toolchain.lsregister), "-f", str(installed)])
+                except Exception as restore_error:
+                    try:
+                        assert initial_identity is not None
+                        require_identity(
+                            installed,
+                            initial_identity,
+                            "register restored bundle",
+                        )
+                    except InstallError as identity_error:
+                        stop_cleanup_and_verify_owned_state(
+                            "restored registration ownership check"
+                        )
+                        raise InstallError(
+                            "restored application changed during registration; "
+                            "foreign application was left untouched and cleanup "
+                            f"stopped with verified state under {build_root}"
+                        ) from identity_error
+                    raise InstallError(
+                        f"{registration_error}; previous application was restored but "
+                        f"registration also failed: {restore_error}"
+                    ) from registration_error
+                assert initial_identity is not None
+                try:
+                    require_identity(
+                        installed,
+                        initial_identity,
+                        "register restored bundle",
+                    )
+                except InstallError as identity_error:
+                    stop_cleanup_and_verify_owned_state(
+                        "restored registration ownership check"
+                    )
+                    raise InstallError(
+                        "restored application changed during registration; "
+                        "foreign application was left untouched and cleanup stopped "
+                        f"with verified state under {build_root}"
+                    ) from identity_error
+            raise
+
+        try:
+            require_identity(installed, staged_identity, "complete installation")
+        except InstallError as identity_error:
+            stop_cleanup_and_verify_owned_state("complete installation")
+            raise InstallError(
+                "installed application changed during registration; foreign "
+                "application was left untouched and cleanup stopped with verified "
+                f"state under {build_root}"
+            ) from identity_error
+        installation_succeeded = True
+    finally:
+        if cleanup_build_root:
+            try:
+                verify_owned_state("clean staged build root")
+            except InstallError:
+                cleanup_build_root = False
+                raise
+            trash_func(build_root, toolchain)
+
+    if not installation_succeeded:
+        raise InstallError("installation ended without a verified installed bundle")
+    require_identity(installed, staged_identity, "report completed installation")
+    return installed
+
+
+def parse_args(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Install the Epoch document URL handler."
+    )
+    parser.add_argument(
+        "--applications-root", type=Path, default=DEFAULT_APPLICATIONS_ROOT
+    )
+    parser.add_argument("--drive-root", type=Path, default=DEFAULT_DRIVE_ROOT)
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(sys.argv[1:] if argv is None else argv)
+    try:
+        installed = install(
+            args.applications_root,
+            args.drive_root,
+            default_toolchain(),
+        )
+    except (InstallError, OSError) as error:
+        print(f"install-epoch-doc-handler: {error}", file=sys.stderr)
+        return 1
+    print(f"Installed and registered epoch-doc: {installed}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

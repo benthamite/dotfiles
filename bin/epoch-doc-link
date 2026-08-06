@@ -1,0 +1,148 @@
+#!/usr/bin/env python3
+"""Create and open fail-closed Epoch Google document links."""
+
+from __future__ import annotations
+
+import argparse
+import os
+import re
+import stat
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+
+DOC_ID_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+URL_PREFIX = "epoch-doc:///document/"
+PROFILE_ALIAS = "epoch"
+PROFILE_OPENER = Path.home() / "bin" / "chrome-profile-open"
+
+
+class LinkError(Exception):
+    """Raised when a shortcut is malformed or unsafe."""
+
+
+def validate_doc_id(value: str) -> str:
+    if not DOC_ID_RE.fullmatch(value):
+        raise LinkError(f"Invalid Google document ID: {value!r}")
+    return value
+
+
+def link_url(document_id: str) -> str:
+    return URL_PREFIX + validate_doc_id(document_id)
+
+
+def document_url(document_id: str) -> str:
+    validated = validate_doc_id(document_id)
+    return f"https://docs.google.com/document/d/{validated}/edit"
+
+
+def shortcut_text(document_id: str) -> str:
+    return f"[InternetShortcut]\nURL={link_url(document_id)}\n"
+
+
+def parse_link_url(value: str) -> str:
+    if not value.startswith(URL_PREFIX):
+        raise LinkError("Expected epoch-doc:///document/DOC_ID")
+    document_id = validate_doc_id(value[len(URL_PREFIX) :])
+    if value != link_url(document_id):
+        raise LinkError("Epoch document URL is not in canonical form")
+    return document_id
+
+
+def create_shortcut(document_id: str, destination: Path) -> None:
+    if destination.suffix != ".url":
+        raise LinkError("Shortcut destination must end in .url")
+    if not destination.parent.is_dir():
+        raise LinkError(f"Destination directory does not exist: {destination.parent}")
+    if destination.is_symlink():
+        raise LinkError(f"Refusing to replace symlink: {destination}")
+    if destination.exists() and not destination.is_file():
+        raise LinkError(f"Refusing to replace non-file: {destination}")
+
+    content = shortcut_text(document_id).encode("ascii")
+    if destination.exists():
+        try:
+            existing = destination.read_bytes()
+        except OSError as error:
+            raise LinkError(
+                f"Cannot inspect existing destination: {destination}"
+            ) from error
+        if existing == content:
+            if stat.S_IMODE(destination.stat().st_mode) != 0o644:
+                raise LinkError(f"Existing shortcut has unexpected mode: {destination}")
+            return
+        raise LinkError(f"Refusing to replace different regular file: {destination}")
+
+    descriptor, temporary = tempfile.mkstemp(
+        prefix=f".{destination.name}.", dir=destination.parent
+    )
+    temporary_path = Path(temporary)
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(temporary_path, 0o644)
+        try:
+            os.link(temporary_path, destination)
+        except FileExistsError as error:
+            raise LinkError(
+                f"Destination appeared during shortcut creation: {destination}"
+            ) from error
+    finally:
+        temporary_path.unlink(missing_ok=True)
+
+
+def open_shortcut(value: str, opener: Path = PROFILE_OPENER) -> int:
+    document_id = parse_link_url(value)
+    command = [str(opener), PROFILE_ALIAS, document_url(document_id)]
+    try:
+        return subprocess.run(command, check=False).returncode
+    except OSError as error:
+        raise LinkError(f"Cannot run profile opener: {error}") from error
+
+
+def create_link(document_id: str, destination: Path | str) -> None:
+    """Compatibility name for callers that describe the file as a link."""
+    create_shortcut(document_id, Path(destination))
+
+
+def doc_id_from_url(value: str) -> str:
+    """Compatibility name for the strict URL parser."""
+    return parse_link_url(value)
+
+
+def open_link(value: str) -> int:
+    """Open through the configured Epoch profile opener."""
+    return open_shortcut(value)
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Create or open an Epoch Google document link."
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    create = subparsers.add_parser("create")
+    create.add_argument("document_id")
+    create.add_argument("destination", type=Path)
+    open_parser = subparsers.add_parser("open")
+    open_parser.add_argument("url")
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(sys.argv[1:] if argv is None else argv)
+    try:
+        if args.command == "create":
+            create_shortcut(args.document_id, args.destination)
+            return 0
+        return open_shortcut(args.url)
+    except LinkError as error:
+        print(f"epoch-doc-link: {error}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

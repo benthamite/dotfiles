@@ -76,3 +76,21 @@ descriptions, and paths are generated in the
 The design record for the read-only LuLu alert reviewer is retained at
 [[file:docs/superpowers/specs/2026-08-01-review-lulu-alert-design.md][its local specification]]. Design records explain decisions; they are not
 loaded as executable configuration.
+
+* Epoch document links
+
+=bin/epoch-doc-link= creates ordinary Internet shortcuts whose URL has the form
+=epoch-doc:///document/DOC_ID=. The local handler validates that form and
+delegates to =chrome-profile-open epoch=, so links fail visibly instead of
+falling back to another Chrome profile.
+
+Install or repair the generated application outside Google Drive with:
+
+#+begin_src sh
+~/bin/install-epoch-doc-handler
+#+end_src
+
+The installer compiles and ad-hoc signs =Epoch Document Link.app= under
+=~/Applications=, replaces only a bundle with identifier
+=com.stafforini.epoch-doc-handler=, rolls back failed registration, and
+registers the =epoch-doc= scheme with LaunchServices.

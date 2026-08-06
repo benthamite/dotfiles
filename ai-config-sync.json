@@ -404,7 +404,7 @@
       "claude": null,
       "codex": "codex/hooks/lib-codex-hook-json.sh",
       "status": "codex-only",
-      "note": "Codex-only hook payload normalizer for tool_input/tool_response object-or-string variants. Its non-evaluating functions.exec parser emits literal nested commands and paired command/workdir records from actual tools.exec_command calls, rejects overridable object fields as ambiguous, and classifies commit syntax without treating inert quoted text as a command; Claude has no functions.exec wrapper and reads native Claude payloads directly."
+      "note": "Codex-only payload normalizer for object-or-string tool input and output. Its non-evaluating functions.exec parser emits literal nested command/workdir records, rejects overridable fields as ambiguous, and ignores inert quoted text when classifying commits. For nested Bash events that omit workdir, it matches the exact command against recent parent functions.exec calls in the session transcript and returns only one unique literal existing workdir. Claude has no functions.exec wrapper and reads native payloads directly."
     },
     {
       "name": "lib-codex-paths.sh",
@@ -418,7 +418,7 @@
       "claude": "claude/hooks/lib-repo-root.sh",
       "codex": "codex/hooks/lib-repo-root.sh",
       "status": "paired-utility",
-      "note": "Shared repo-root helper copied for hooks that need command-context git roots; Codex usage comment references lib-codex-hook-json.sh."
+      "note": "Shared repo-root helper copied for hooks that need command-context git roots. The Codex copy additionally asks lib-codex-hook-json.sh for an exact unambiguous parent functions.exec workdir when a nested Bash event omits it; Claude receives its native command context directly."
     },
     {
       "name": "lib-staged-files.sh",
@@ -523,7 +523,7 @@
       "claude": "claude/hooks/require-doc-update.sh",
       "codex": "codex/hooks/require-doc-update.sh",
       "status": "paired-dispatched",
-      "note": "paired for Bash git commit gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
+      "note": "paired for Bash git commit gate; Codex side normalizes string-wrapped tool_input and attributes nested functions.exec Bash events to their exact literal parent workdir via lib-codex-hook-json.sh"
     },
     {
       "name": "require-elisp-skill.sh",

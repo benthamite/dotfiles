@@ -43,6 +43,15 @@ if [ -z "$_repo_context_dir" ] && [ -n "${INPUT:-}" ] && command -v jq >/dev/nul
   )
 fi
 
+if [ -n "${INPUT:-}" ] && [ -n "${COMMAND:-}" ] && \
+   command -v codex_parent_exec_workdir >/dev/null 2>&1; then
+  _parent_exec_workdir=$(codex_parent_exec_workdir "$INPUT" "$COMMAND" || true)
+  if [ -n "$_parent_exec_workdir" ]; then
+    _repo_context_dir="$_parent_exec_workdir"
+  fi
+  unset _parent_exec_workdir
+fi
+
 # Extract the cd target from "cd <path> ..." patterns without re-evaluating the
 # command in a subshell.  Pure parameter expansion (no `[[ =~ ]]`) so the
 # behaviour is identical whether this file is sourced into bash or zsh -- the

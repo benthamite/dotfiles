@@ -120,7 +120,11 @@ target carrying command substitution or any other unexpanded variable is treated
 as unresolvable. When the target cannot be resolved the helper reports no
 repository at all rather than substituting the session's own, since judging a
 tree the command never touched both refuses correct commits and approves ones it
-should refuse.
+should refuse. Nested Bash events from =functions.exec= omit their literal
+=workdir= and report the session directory instead. For those events, the Codex
+helper matches the exact command to the most recent parent =tools.exec_command=
+record in the session transcript and accepts only one unambiguous, existing
+workdir.
 
 Guards that inspect a Git command read its arguments only, never its message.
 Heredoc bodies are dropped before lexing, because an apostrophe in prose made

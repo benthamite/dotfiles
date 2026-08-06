@@ -446,6 +446,63 @@ class DocUpdateHookRepoPathTests(unittest.TestCase):
                     permission_decision(result), "allow", deny_reason(result)
                 )
 
+    def run_functions_exec_hook(self, command):
+        source = (
+            "const r = await tools.exec_command("
+            + json.dumps({"cmd": command, "workdir": str(self.elsewhere)})
+            + "); text(r.output);"
+        )
+        transcript = Path(self.temp_dir.name) / "transcript.jsonl"
+        transcript.write_text(
+            json.dumps(
+                {
+                    "type": "response_item",
+                    "payload": {
+                        "type": "custom_tool_call",
+                        "name": "exec",
+                        "input": source,
+                    },
+                }
+            )
+            + "\n"
+        )
+        payload = {
+            "tool_name": "Bash",
+            "cwd": str(self.repo),
+            "transcript_path": str(transcript),
+            "tool_input": {"command": command},
+        }
+        return subprocess.run(
+            ["bash", str(DOTFILES / "codex/hooks/require-doc-update.sh")],
+            input=json.dumps(payload),
+            text=True,
+            capture_output=True,
+            check=False,
+            cwd=self.repo,
+        )
+
+    def test_functions_exec_uses_nested_standalone_repo_context(self):
+        """A nested literal workdir owns the commit documentation policy."""
+        source = self.elsewhere / "example.el"
+        source.write_text("(provide 'example)\n")
+        manual = self.elsewhere / "README.org"
+        manual.write_text("#+title: Elsewhere\nUpdated.\n")
+        result = self.run_functions_exec_hook(
+            "git add README.org example.el && git commit -m test"
+        )
+        self.assertEqual(permission_decision(result), "allow", deny_reason(result))
+
+    def test_functions_exec_still_requires_nested_repo_manual(self):
+        """Unpacking the nested workdir must not bypass the documentation gate."""
+        source = self.elsewhere / "example.el"
+        source.write_text("(provide 'example)\n")
+        result = self.run_functions_exec_hook(
+            "git add example.el && git commit -m test"
+        )
+        self.assertEqual(permission_decision(result), "deny")
+        self.assertIn("README.org", deny_reason(result))
+        self.assertNotIn("doc/*.org", deny_reason(result))
+
 
 if __name__ == "__main__":
     unittest.main()

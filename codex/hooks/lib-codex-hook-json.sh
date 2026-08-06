@@ -286,6 +286,68 @@ codex_nested_exec_contexts() {
   _codex_nested_exec_values contexts
 }
 
+codex_parent_exec_workdir() {
+  local input="$1"
+  local command="$2"
+  local transcript source context nested_command nested_workdir
+  local found found_workdir invalid
+
+  transcript=$(codex_hook_jq "$input" '.transcript_path // empty')
+  [ -f "$transcript" ] || return 1
+
+  while IFS= read -r -d '' source; do
+    found=false
+    found_workdir=""
+    invalid=false
+    while IFS= read -r -d '' context; do
+      nested_command=$(printf '%s' "$context" | jq -r '.cmd // empty')
+      [ "$nested_command" = "$command" ] || continue
+      found=true
+      if [ "$(printf '%s' "$context" | jq -r '.ambiguous')" = "true" ]; then
+        invalid=true
+        continue
+      fi
+      nested_workdir=$(printf '%s' "$context" | jq -r '.workdir // empty')
+      if [ -z "$nested_workdir" ] || [ ! -d "$nested_workdir" ]; then
+        invalid=true
+      elif [ -z "$found_workdir" ]; then
+        found_workdir="$nested_workdir"
+      elif [ "$found_workdir" != "$nested_workdir" ]; then
+        invalid=true
+      fi
+    done < <(printf '%s' "$source" | codex_nested_exec_contexts)
+    if [ "$found" = true ]; then
+      if [ "$invalid" = false ] && [ -n "$found_workdir" ]; then
+        printf '%s' "$found_workdir"
+        return 0
+      fi
+      return 1
+    fi
+  done < <(python3 -c '
+import json
+import subprocess
+import sys
+
+result = subprocess.run(
+    ["tail", "-n", "64", sys.argv[1]],
+    check=False,
+    capture_output=True,
+    text=True,
+)
+for line in reversed(result.stdout.splitlines()):
+    try:
+        event = json.loads(line)
+    except json.JSONDecodeError:
+        continue
+    payload = event.get("payload", {})
+    if (payload.get("type") == "custom_tool_call"
+            and payload.get("name") == "exec"
+            and isinstance(payload.get("input"), str)):
+        sys.stdout.buffer.write(payload["input"].encode("utf-8") + b"\0")
+' "$transcript")
+  return 1
+}
+
 # Classify executable-looking shell syntax while ignoring inert quoted text.
 # Git classification stays conservative when an interpreter can execute a
 # quoted payload. Emacsclient classification requires the executable at a

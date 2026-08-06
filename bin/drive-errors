@@ -61,47 +61,84 @@ function descendants(el, depth) {
   }
   return out;
 }
-function errorWindowPresent() {
+function windowNamed(name) {
   var windows = proc.windows();
   for (var i = 0; i < windows.length; i++) {
-    var all = [windows[i]].concat(descendants(windows[i], 0));
-    for (var j = 0; j < all.length; j++) {
-      var title = titleOf(all[j]);
-      if (title === "Google Drive Error list") return true;
-    }
+    if (titleOf(windows[i]) === name) return windows[i];
+  }
+  return null;
+}
+function waitForWindowAbsent(name) {
+  for (var attempt = 0; attempt < 20; attempt++) {
+    traversalFailed = false;
+    if (windowNamed(name) === null && !traversalFailed) return true;
+    delay(0.25);
   }
   return false;
 }
-
-try { proc.menuBars[1].menuBarItems[0].click(); } catch (error) {
-  throw new Error("Could not click the Google Drive menu-bar item: " + error);
+function waitForWindowPresent(name) {
+  for (var attempt = 0; attempt < 20; attempt++) {
+    traversalFailed = false;
+    var found = windowNamed(name);
+    if (found !== null && !traversalFailed) return found;
+    delay(0.25);
+  }
+  return null;
 }
-delay(4);
-
-var summary = null, cleanScans = 0;
-for (var scan = 0; scan < 8 && summary === null && cleanScans < 4; scan++) {
+function closeExistingErrorList() {
   traversalFailed = false;
-  var windows = proc.windows(), sawSyncCompleted = false;
+  var errorWindow = windowNamed("Google Drive Error list");
+  if (errorWindow === null) {
+    if (traversalFailed) throw new Error("Could not determine whether a Google Drive Error list was open");
+    return;
+  }
+  var children = childrenOf(errorWindow);
+  for (var i = 0; i < children.length; i++) {
+    var subrole = "";
+    try { subrole = String(children[i].subrole()); } catch (_) {}
+    if (subrole === "AXCloseButton") {
+      children[i].click();
+      if (!waitForWindowAbsent("Google Drive Error list")) {
+        throw new Error("Existing Google Drive Error list did not close");
+      }
+      return;
+    }
+  }
+  throw new Error("An existing Google Drive Error list could not be closed safely");
+}
+
+closeExistingErrorList();
+traversalFailed = false;
+if (windowNamed("Google Drive") === null) {
+  try { proc.menuBars[1].menuBarItems[0].click(); } catch (error) {
+    throw new Error("Could not click the Google Drive menu-bar item: " + error);
+  }
+  delay(4);
+}
+
+var summary = null, errorCount = null, sawUpToDate = false;
+for (var scan = 0; scan < 3 && summary === null && !sawUpToDate; scan++) {
+  traversalFailed = false;
+  var windows = proc.windows();
   for (var wi = 0; wi < windows.length && summary === null; wi++) {
+    if (titleOf(windows[wi]) !== "Google Drive") continue;
     var all = descendants(windows[wi], 0);
     for (var ai = 0; ai < all.length; ai++) {
       var role = roleOf(all[ai]), title = titleOf(all[ai]);
-      if (title === "Sync completed") sawSyncCompleted = true;
-      if ((role === "AXGroup" || role === "AXLandmarkRegion") &&
-          title.match(/^\d+ errors?$/)) {
+      if (title === "Up to date") sawUpToDate = true;
+      var match = title.match(/^(\d+) errors?$/);
+      if ((role === "AXGroup" || role === "AXLandmarkRegion") && match) {
         summary = all[ai];
+        errorCount = Number(match[1]);
         break;
       }
     }
   }
-  if (summary === null) {
-    cleanScans = sawSyncCompleted && !traversalFailed ? cleanScans + 1 : 0;
-    delay(0.25);
-  }
+  if (summary === null && !sawUpToDate) delay(0.5);
 }
 
 if (summary === null) {
-  JSON.stringify({state: cleanScans >= 4 ? "clean" : "unrecognized"});
+  JSON.stringify({state: sawUpToDate && !traversalFailed ? "clean" : "unrecognized"});
 } else {
   var view = null, inside = descendants(summary, 0);
   for (var vi = 0; vi < inside.length; vi++) {
@@ -113,9 +150,10 @@ if (summary === null) {
   }
   if (view === null) throw new Error("Found the error summary but not its View button");
   view.click();
-  for (var attempt = 0; attempt < 20 && !errorWindowPresent(); attempt++) delay(0.25);
-  if (!errorWindowPresent()) throw new Error("Google Drive Error list did not open");
-  JSON.stringify({state: "errors"});
+  if (waitForWindowPresent("Google Drive Error list") === null) {
+    throw new Error("Google Drive Error list did not open");
+  }
+  JSON.stringify({state: "errors", errorCount: errorCount});
 }
 '''
 
@@ -245,7 +283,7 @@ JSON.stringify({clicked: true});
 
 
 class Panel(Protocol):
-    def open_error_list(self) -> bool: ...
+    def open_error_list(self) -> int | None: ...
 
     def read_page(self) -> dict[str, Any]: ...
 
@@ -269,12 +307,16 @@ class AccessibilityPanel:
         except json.JSONDecodeError as error:
             raise RuntimeError("Google Drive returned malformed panel data") from error
 
-    def open_error_list(self) -> bool:
-        state = self._run_jxa(OPEN_ERROR_LIST_JXA).get("state")
+    def open_error_list(self) -> int | None:
+        result = self._run_jxa(OPEN_ERROR_LIST_JXA)
+        state = result.get("state")
         if state == "errors":
-            return True
+            error_count = result.get("errorCount")
+            if not isinstance(error_count, int) or error_count < 1:
+                raise RuntimeError("Google Drive error summary had an invalid count")
+            return error_count
         if state == "clean":
-            return False
+            return None
         raise RuntimeError("Google Drive panel state was unrecognized; refusing to report it clean")
 
     def read_page(self) -> dict[str, Any]:
@@ -290,13 +332,18 @@ class FixturePanel:
         self.pages = fixture.get("pages", [])
         self.index = 0
 
-    def open_error_list(self) -> bool:
+    def open_error_list(self) -> int | None:
         state = self.fixture.get("state")
         if state == "unrecognized":
             raise RuntimeError("Google Drive panel state was unrecognized")
         if state == "clean":
-            return False
-        return bool(self.pages)
+            return None
+        if not self.pages:
+            return None
+        error_count = self.fixture.get("errorCount")
+        if error_count is None:
+            error_count = sum(len(page.get("rows", [])) for page in self.pages)
+        return error_count
 
     def read_page(self) -> dict[str, Any]:
         return self.pages[self.index]
@@ -306,17 +353,14 @@ class FixturePanel:
 
 
 def collect_rows(panel: Panel) -> list[dict[str, str]]:
-    if not panel.open_error_list():
+    expected_count = panel.open_error_list()
+    if expected_count is None:
         return []
     rows: list[dict[str, str]] = []
     expected_page = 1
     expected_total: int | None = None
     while True:
         page_data = panel.read_page()
-        if page_data.get("traversalFailed"):
-            raise RuntimeError(
-                "Google Drive accessibility traversal failed; refusing a partial page"
-            )
         page = page_data.get("page")
         total = page_data.get("total")
         if not isinstance(page, int) or not isinstance(total, int) or total < 1:
@@ -339,6 +383,11 @@ def collect_rows(panel: Panel) -> list[dict[str, str]]:
                 raise RuntimeError("Google Drive error row has no filename")
             rows.append({"name": name, "reason": row["reason"]})
         if page == total:
+            if len(rows) != expected_count:
+                raise RuntimeError(
+                    f"Google Drive summary expected {expected_count} rows, "
+                    f"but accessibility returned {len(rows)}"
+                )
             return rows
         expected_page += 1
         panel.next_page()

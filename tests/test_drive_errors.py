@@ -144,6 +144,7 @@ class DriveErrorsTests(unittest.TestCase):
 
     def test_list_rejects_partial_page_after_ax_traversal_failure(self) -> None:
         fixture = {
+            "errorCount": 2,
             "pages": [
                 {
                     "page": 1,
@@ -159,8 +160,43 @@ class DriveErrorsTests(unittest.TestCase):
             result = self.run_script("list", Path(tmp), fixture)
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("traversal", result.stderr.lower())
+        self.assertIn("expected 2 rows", result.stderr.lower())
         self.assertNotIn("1. partial", result.stdout)
+
+    def test_list_accepts_irrelevant_ax_failure_when_expected_count_is_complete(self) -> None:
+        fixture = {
+            "errorCount": 1,
+            "pages": [
+                {
+                    "page": 1,
+                    "total": 1,
+                    "traversalFailed": True,
+                    "rows": [
+                        {"name": "complete", "reason": "Can’t upload some files"}
+                    ],
+                }
+            ],
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            result = self.run_script("list", Path(tmp), fixture)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("1. complete", result.stdout)
+
+    def test_reader_recognizes_current_clean_marker_and_closes_stale_error_window(self) -> None:
+        namespace = runpy.run_path(str(SCRIPT))
+        open_jxa = namespace["OPEN_ERROR_LIST_JXA"]
+        self.assertIn('title === "Up to date"', open_jxa)
+        self.assertIn('subrole === "AXCloseButton"', open_jxa)
+        self.assertIn("waitForWindowAbsent", open_jxa)
+        self.assertIn(
+            'throw new Error("Existing Google Drive Error list did not close")',
+            open_jxa,
+        )
+        self.assertLess(
+            open_jxa.index("waitForWindowAbsent"),
+            open_jxa.index("view.click()"),
+        )
 
     def test_list_fails_closed_when_panel_state_is_unrecognized(self) -> None:
         fixture = {"state": "unrecognized"}
@@ -194,7 +230,7 @@ class DriveErrorsTests(unittest.TestCase):
 
     def test_source_uses_semantic_view_and_reacquired_page_controls(self) -> None:
         source = SCRIPT.read_text()
-        self.assertIn('title.match(/^\\d+ errors?$/)', source)
+        self.assertIn('title.match(/^(\\d+) errors?$/)', source)
         self.assertIn('title === "View"', source)
         self.assertIn('title === "Google Drive Error list"', source)
         self.assertIn('title === "Previous page"', source)
@@ -211,18 +247,13 @@ class DriveErrorsTests(unittest.TestCase):
         namespace = runpy.run_path(str(SCRIPT))
         open_jxa = namespace["OPEN_ERROR_LIST_JXA"]
         self.assertIn("traversalFailed", open_jxa)
-        self.assertIn("sawSyncCompleted && !traversalFailed", open_jxa)
+        self.assertIn("sawUpToDate && !traversalFailed", open_jxa)
 
-    def test_open_and_page_read_fail_closed_on_ax_property_errors(self) -> None:
+    def test_clean_detection_fails_closed_on_ax_property_errors(self) -> None:
         namespace = runpy.run_path(str(SCRIPT))
-        for name in ("OPEN_ERROR_LIST_JXA", "READ_PAGE_JXA"):
-            source = namespace[name]
-            self.assertIn(
-                'catch (_) { traversalFailed = true; return ""; }', source
-            )
-            self.assertIn(
-                "if (!titleRead || !valueRead) traversalFailed = true;", source
-            )
+        source = namespace["OPEN_ERROR_LIST_JXA"]
+        self.assertIn('catch (_) { traversalFailed = true; return ""; }', source)
+        self.assertIn("if (!titleRead || !valueRead) traversalFailed = true;", source)
 
 
 if __name__ == "__main__":

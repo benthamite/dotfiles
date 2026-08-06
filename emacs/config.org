@@ -1731,8 +1731,6 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package vc-extras
   :after vc
-  :custom
-  (vc-extras-split-repo t)
 
   :bind
   ("A-v" . vc-extras-menu))
@@ -9163,8 +9161,10 @@ The author provides a good overview of the package in [[https://www.youtube.com/
                            ("epoch"    . "~/.claude-epoch")
                            ("trajectory" . "~/.claude-trajectory")))
 
-  (agent-codex-accounts '(("tlon"     . "~/.codex-tlon")
-                          ("epoch"    . "~/.codex-epoch")))
+  ;; Separate profiles keep account authentication and usage independent.
+  (agent-codex-accounts '(("tlon"   . "~/.codex-tlon")
+                          ("epoch"  . "~/.codex-epoch")
+                          ("epoch2" . "~/.codex-epoch2")))
 
   :bind
   ("H-e" . agent-menu)

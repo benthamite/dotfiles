@@ -18,6 +18,7 @@ CLAUDE_SKILL = ROOT / "claude" / "skills" / "proofread"
 CODEX_SKILL = ROOT / "codex" / "skills" / "proofread"
 INSTALL_COMMAND = "yarn -s setup-runtime"
 PRECEDENCE_TEXT = "PROOFREAD_RUNTIME_DIR, then XDG_DATA_HOME, then ~/.local/share/proofread"
+DESTINATION_TEXT = "Both the runtime root and node_modules destination are canonicalized"
 
 
 class ProofreadRuntimeTests(unittest.TestCase):
@@ -187,6 +188,52 @@ class ProofreadRuntimeLocationTests(unittest.TestCase):
         self.assertIn("Refusing proofread runtime inside Google Drive", result.stderr)
         self.assertFalse((target / "node_modules").exists())
 
+    def test_setup_rejects_external_node_modules_symlink_into_drive(self) -> None:
+        runtime = self.root / "external-runtime"
+        runtime.mkdir()
+        target = self.drive / "node-modules-target"
+        target.mkdir()
+        (runtime / "node_modules").symlink_to(target, target_is_directory=True)
+        env = self.env(PROOFREAD_RUNTIME_DIR=str(runtime))
+
+        result = self.run_yarn("setup-runtime", env=env)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Refusing proofread runtime inside Google Drive", result.stderr)
+        self.assertFalse((target / "tsx").exists())
+
+    def test_execution_rejects_external_node_modules_symlink_into_drive(self) -> None:
+        runtime = self.root / "external-runtime"
+        runtime.mkdir()
+        target = self.drive / "node-modules-target"
+        tsx_cli = target / "tsx" / "dist" / "cli.mjs"
+        tsx_cli.parent.mkdir(parents=True)
+        tsx_cli.write_text("process.exit(0);\n", encoding="utf-8")
+        (runtime / "node_modules").symlink_to(target, target_is_directory=True)
+        source = self.root / "rejected.md"
+        source.write_text("Text.\n", encoding="utf-8")
+        env = self.env(PROOFREAD_RUNTIME_DIR=str(runtime))
+
+        result = self.run_yarn(
+            "proofread", str(source), "--engine", "spellcheck", env=env
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Refusing proofread runtime inside Google Drive", result.stderr)
+
+    def test_setup_rejects_dangling_runtime_symlink_into_drive(self) -> None:
+        target = self.drive / "not-created" / "runtime"
+        alias = self.root / "external-looking-runtime"
+        alias.symlink_to(target, target_is_directory=True)
+        env = self.env(PROOFREAD_RUNTIME_DIR=str(alias))
+
+        result = self.run_yarn("setup-runtime", env=env)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Refusing proofread runtime inside Google Drive", result.stderr)
+        self.assertNotIn("\n    at ", result.stderr)
+        self.assertFalse(target.exists())
+
     def test_paired_docs_define_one_runtime_precedence_model(self) -> None:
         for skill_dir in (CLAUDE_SKILL, CODEX_SKILL):
             with self.subTest(skill_dir=skill_dir):
@@ -196,6 +243,8 @@ class ProofreadRuntimeLocationTests(unittest.TestCase):
                 self.assertIn(INSTALL_COMMAND, readme)
                 self.assertIn(PRECEDENCE_TEXT, skill)
                 self.assertIn(PRECEDENCE_TEXT, readme)
+                self.assertIn(DESTINATION_TEXT, skill)
+                self.assertIn(DESTINATION_TEXT, readme)
 
 
 if __name__ == "__main__":

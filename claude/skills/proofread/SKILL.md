@@ -149,7 +149,7 @@ If the user hasn't installed dependencies yet:
 cd "$skill_dir" && yarn -s setup-runtime
 ```
 
-Setup and execution use the same precedence: PROOFREAD_RUNTIME_DIR, then XDG_DATA_HOME, then ~/.local/share/proofread. The resolved path must remain outside `~/My Drive`; the commands fail rather than use a direct or symlinked path into Drive. Do not create or symlink `node_modules` inside the skill directory.
+Setup and execution use the same precedence: PROOFREAD_RUNTIME_DIR, then XDG_DATA_HOME, then ~/.local/share/proofread. Both the runtime root and node_modules destination are canonicalized before use; either is rejected if it resolves directly or through a symlink into `~/My Drive`. Do not create or symlink `node_modules` inside the skill directory.
 
 ## Configuration
 

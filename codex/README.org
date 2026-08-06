@@ -79,9 +79,9 @@ skills. Dynamic plugins, private skills, ignored runtime system skills, and
 skills in other repositories are outside its scope.
 
 The paired =proofread= skill resolves one external Node dependency runtime for
-both setup and execution, rejecting even symlinked runtime paths inside this
-Drive-synced tree. Its package commands continue to read the skill-local scripts
-and =.env= file.
+both setup and execution, canonicalizing both its root and actual =node_modules=
+destination before rejecting paths into this Drive-synced tree. Its package
+commands continue to read the skill-local scripts and =.env= file.
 
 Native =[[skills.config]]= entries can disable a tracked skill without deleting
 it. Programmatic skills remain outside ordinary interactive discovery and are

@@ -108,9 +108,9 @@ public skills only; runtime plugins, private skills, ignored system content,
 and skills owned by other repositories are outside its scope.
 
 The paired =proofread= skill resolves one external Node dependency runtime for
-both setup and execution, rejecting even symlinked runtime paths inside this
-Drive-synced tree. Its package commands continue to read the skill-local scripts
-and =.env= file.
+both setup and execution, canonicalizing both its root and actual =node_modules=
+destination before rejecting paths into this Drive-synced tree. Its package
+commands continue to read the skill-local scripts and =.env= file.
 
 Org task triage is split across two skills over one engine. =triage-personal-todos=
 here owns personal notes; the project-local =triage-project-todos= in the Epoch

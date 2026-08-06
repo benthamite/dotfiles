@@ -1,7 +1,7 @@
 #+title: Command index
 #+author: Pablo Stafforini
 
-This index covers the 54 tracked files under =bin/= whose Git mode is
+This index covers the 55 tracked files under =bin/= whose Git mode is
 =100755=. Non-executable libraries and data files are intentionally omitted.
 The first column is machine-readable and should contain every executable
 exactly once.
@@ -63,6 +63,7 @@ not be used to print or document secret values; the placement rules are in
 | =check_tlon_pass_changes= | Pulls remote changes for the Tlon password-store repository. |
 | =chrome-profile-open= | Opens URLs in a Chrome profile selected by a configured alias. |
 | =chrome-work-tab= | Opens URLs in the work Chrome profile, with a Codex-specific external-browser guard. |
+| =epoch-doc-link= | Creates private =epoch-doc:= shortcuts and opens them only through the configured Epoch Chrome profile. |
 | =gam= | Launches the local GAMADV-XTD3 installation. |
 | =gmail-maildir-sync= | Runs the Gmail-to-Maildir package with its Google Workspace authentication context. |
 | =libby= | Searches for and downloads matching books through the configured library source. |
@@ -82,6 +83,7 @@ Mail activation and credential lookup are documented further in
 | Command | Contract |
 |---------+----------|
 | =char_input= | Passes one character to the macOS input-character AppleScript. |
+| =install-epoch-doc-handler= | Safely builds, signs, installs, and registers the local =epoch-doc:= URL handler. |
 | =mdfind-wrapper= | Runs Spotlight’s =mdfind= while suppressing its known query-parser noise. |
 | =personal-updates= | Applies the scheduled and manual update policy documented in [[file:../macos/README.org][the macOS README]]. |
 | =switch-gnupg= | Replaces the Homebrew GnuPG formula with a requested historical version. |

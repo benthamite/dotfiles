@@ -147,7 +147,8 @@ in Ebib after adding it."
 If DO-NOT-OPEN is non-nil, do not open the new entry in Ebib."
   (let* ((imdb-id (zotra-extras--imdb-id-from-url url))
 	 (item (zotra-extras--fetch-omdb-item imdb-id))
-	 (entry (zotra-extras--omdb-item-to-biblatex item url)))
+	 (entry (zotra-extras--process-biblatex-entry
+		 (zotra-extras--omdb-item-to-biblatex item url))))
     (zotra-extras--insert-entry entry bibfile)
     (unless do-not-open
       (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey))))
@@ -230,6 +231,7 @@ If DO-NOT-OPEN is non-nil, do not open the new entry in Ebib."
     (insert "\n" entry)
     (bibtex-mode)
     (bibtex-set-dialect 'biblatex t)
+    (goto-char (point-min))
     (while (bibtex-next-entry)
       (save-excursion
 	(save-restriction

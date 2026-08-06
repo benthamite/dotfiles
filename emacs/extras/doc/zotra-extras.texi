@@ -267,7 +267,7 @@ To handle this, @code{zotra-extras-add-entry} (@ref{Adding entries}) detects the
 @findex zotra-extras--omdb-item-to-biblatex
 IMDb can return an AWS WAF challenge page to non-browser HTTP clients. When this happens, Zotero's IMDb translator receives no usable page metadata and the translation server falls back to an empty generic @samp{@@online} entry. To avoid this failure mode, @code{zotra-extras-add-entry} detects IMDb title URLs such as @samp{https://www.imdb.com/title/tt0073679/}, extracts the @samp{tt} identifier, fetches metadata from OMDb, and writes a populated Bib@LaTeX{} @samp{@@movie} entry directly.
 
-This path requires the @samp{bib} package and a configured @code{bib-omdb-key}. It still honors the BIBFILE and DO-NOT-OPEN arguments used by the normal adding workflow, writes the entry as UTF-8, and records the inserted key in @code{zotra-extras-most-recent-bibkey} so the entry can be opened in @samp{ebib}.
+This path requires the @samp{bib} package and a configured @code{bib-omdb-key}. Before insertion, it runs the same @code{zotra-after-get-bibtex-entry-hook} used by ordinary Zotra imports, so timestamping, field cleanup, key normalization, and encoding fixes remain consistent across both paths. It also honors the BIBFILE and DO-NOT-OPEN arguments used by the normal adding workflow, writes the entry as UTF-8, and records the inserted key in @code{zotra-extras-most-recent-bibkey} so the entry can be opened in @samp{ebib}.
 
 @node Indices
 @chapter Indices

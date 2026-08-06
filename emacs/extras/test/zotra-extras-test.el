@@ -48,8 +48,12 @@
 (ert-deftest zotra-extras-test-add-entry-uses-omdb-for-imdb-url ()
   "Add IMDb URLs through the OMDb fallback instead of `zotra-add-entry'."
   (let ((file (make-temp-file "zotra-imdb-" nil ".bib"))
+        (bibtex-biblatex-entry-alist
+         (cons '("Movie" "Film" (("title")) nil (("timestamp")))
+               bibtex-biblatex-entry-alist))
         (zotra-extras-use-mullvad-p nil)
-        (zotra-after-get-bibtex-entry-hook nil)
+        (zotra-after-get-bibtex-entry-hook
+         '(zotra-extras-test--add-fixed-timestamp))
         (item '((Title . "Carrie")
                 (Year . "1976")
                 (Director . "Brian De Palma")
@@ -64,7 +68,11 @@
                      item))
                   ((symbol-function 'zotra-add-entry)
                    (lambda (&rest _)
-                     (ert-fail "IMDb URLs should not use zotra-add-entry"))))
+                     (ert-fail "IMDb URLs should not use zotra-add-entry")))
+                  ((symbol-function 'zotra-extras-test--add-fixed-timestamp)
+                   (lambda ()
+                     (forward-line 1)
+                     (insert "  timestamp = {fixed timestamp},\n"))))
           (zotra-extras-add-entry
            "https://www.imdb.com/title/tt0073679/?ref_=fn_t_1" nil file t)
           (with-temp-buffer
@@ -72,6 +80,8 @@
             (let ((contents (buffer-string)))
               (should (string-match-p "@movie{imdb-tt0073679," contents))
               (should (string-match-p "title = {Carrie}" contents))
+              (should (string-match-p
+                       "timestamp = {fixed timestamp}" contents))
               (should-not (string-match-p "@online" contents))
               (should (equal zotra-extras-most-recent-bibkey
                              "imdb-tt0073679")))))

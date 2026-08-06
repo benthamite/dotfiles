@@ -1,106 +1,464 @@
-#!/usr/bin/env bash
-# Read Google Drive's native sync-error list, and locate the offenders on disk.
-#
-# Drive reports errors only in a menu-bar panel; there is no file or API for
-# them. This reads that panel through the accessibility API, then resolves each
-# reported name against the Drive tree so a stale entry (an error for something
-# that no longer exists) is distinguishable from a live one.
-#
-# That distinction is the whole point. Drive's error list does not clear itself
-# when the offending path goes away, so a raw count says nothing about how much
-# is actually wrong. On 2026-08-03 the panel reported 200+ errors while only 8
-# live offenders remained.
-#
-# Predecessor: bin/drive-workspace-native.jxa, removed 2026-08-03. It located
-# the panel by AXIdentifier, which the current Drive build no longer sets, and
-# it hashed a screenshot of the window for a journaling workflow that no longer
-# exists.
-#
-#   drive-errors list     names Drive is complaining about, with counts
-#   drive-errors locate   every symlink and generated directory under Drive
-#   drive-errors          both
+#!/usr/bin/env python3
+"""Read Google Drive's error panel and inventory sync-hostile paths."""
 
-set -euo pipefail
+from __future__ import annotations
 
-DRIVE="$HOME/My Drive"
-# Archives are deliberately Drive-hosted bulk storage, not working trees.
-PRUNE=(-not -path "$DRIVE/repos/archive/*" -not -path "$DRIVE/repos/_cr-legacy-archive/*")
+from collections import Counter
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+from typing import Any, Protocol
 
-open_panel() {
-    osascript -l JavaScript -e '
-      Application("System Events").processes.byName("Google Drive")
-        .menuBars[1].menuBarItems[0].click();' >/dev/null 2>&1 || true
-    sleep 4
+
+REASONS = (
+    "Can’t upload some Google files",
+    "Can’t upload some files",
+)
+GENERATED_NAMES = {
+    "node_modules",
+    "__pycache__",
+    ".pytest_cache",
+    ".venv",
+    "venv",
+    ".next",
+    ".ruff_cache",
 }
+DRIVE_ROOT = Path(
+    os.environ.get("DRIVE_ERRORS_DRIVE_ROOT", str(Path.home() / "My Drive"))
+)
 
-read_panel() {
-    osascript -l JavaScript -e '
-      var se = Application("System Events");
-      var proc = se.processes.byName("Google Drive");
-      var out = [];
-      proc.windows().forEach(function (w) {
-        (function walk(el, depth) {
-          if (depth > 12 || out.length > 600) return;
-          var kids;
-          try { kids = el.uiElements(); } catch (e) { return; }
-          for (var i = 0; i < kids.length; i++) {
-            var k = kids[i], v = null;
-            try { v = k.value(); } catch (e) {}
-            if (!v) { try { v = k.title(); } catch (e) {} }
-            if (v && String(v).length > 1) out.push(String(v));
-            walk(k, depth + 1);
-          }
-        })(w, 0);
-      });
-      out.join("\n");' 2>/dev/null || true
+
+OPEN_ERROR_LIST_JXA = r'''
+var se = Application("System Events");
+var proc = se.processes.byName("Google Drive");
+var traversalFailed = false;
+
+function roleOf(el) {
+  try { return String(el.role()); }
+  catch (_) { traversalFailed = true; return ""; }
 }
-
-cmd_list() {
-    echo "=== Drive error panel ==="
-    open_panel
-    local text
-    text=$(read_panel)
-    if [ -z "$text" ]; then
-        echo "Could not read the panel. Grant Accessibility permission to the" >&2
-        echo "terminal, or open the Drive menu-bar item by hand and retry." >&2
-        return 1
-    fi
-    printf '%s\n' "$text" | grep -n "Can’t\|Can't" >/dev/null 2>&1 || {
-        echo "No error rows found in the panel."
-        return 0
+function titleOf(el) {
+  var titleRead = false, valueRead = false;
+  try { var value = el.title(); titleRead = true; if (value) return String(value); }
+  catch (_) {}
+  try { var value = el.value(); valueRead = true; if (value) return String(value); }
+  catch (_) {}
+  if (!titleRead || !valueRead) traversalFailed = true;
+  return "";
+}
+function childrenOf(el) {
+  try { return el.uiElements(); }
+  catch (_) { traversalFailed = true; return []; }
+}
+function descendants(el, depth) {
+  if (depth > 14) { traversalFailed = true; return []; }
+  var out = [], children = childrenOf(el);
+  for (var i = 0; i < children.length; i++) {
+    out.push(children[i]);
+    out = out.concat(descendants(children[i], depth + 1));
+  }
+  return out;
+}
+function errorWindowPresent() {
+  var windows = proc.windows();
+  for (var i = 0; i < windows.length; i++) {
+    var all = [windows[i]].concat(descendants(windows[i], 0));
+    for (var j = 0; j < all.length; j++) {
+      var title = titleOf(all[j]);
+      if (title === "Google Drive Error list") return true;
     }
-    echo "Names reported, with how many still exist under Drive:"
-    printf '%s\n' "$text" \
-        | grep -v "Can’t\|Can't\|More Options\|Open \|Error list\|Previous page\|Next page\|Done\|Google Drive" \
-        | sort -u \
-        | while IFS= read -r name; do
-            [ -n "$name" ] || continue
-            local n
-            n=$(find "$DRIVE" -name "$name" "${PRUNE[@]}" 2>/dev/null | wc -l | tr -d ' ')
-            if [ "$n" -eq 0 ]; then
-                printf '  STALE  %s (no longer under Drive)\n' "$name"
-            else
-                printf '  LIVE   %s (%s under Drive)\n' "$name" "$n"
-            fi
-        done
-    printf '%s\n' "$text" | grep -oE '^[0-9]+/[0-9]+$' | tail -1 \
-        | sed 's/^/  panel page: /'
+  }
+  return false;
 }
 
-cmd_locate() {
-    echo "=== symlinks under Drive (Drive cannot represent these at all) ==="
-    find "$DRIVE" -type l "${PRUNE[@]}" 2>/dev/null \
-        | sed "s|$DRIVE/||" | sort
-    echo
-    echo "=== real generated directories under Drive ==="
-    find "$DRIVE" \( -name node_modules -o -name __pycache__ -o -name .pytest_cache \
-        -o -name .venv -o -name venv -o -name .next -o -name .ruff_cache \) \
-        -not -type l "${PRUNE[@]}" 2>/dev/null | sed "s|$DRIVE/||" | sort
+try { proc.menuBars[1].menuBarItems[0].click(); } catch (error) {
+  throw new Error("Could not click the Google Drive menu-bar item: " + error);
+}
+delay(4);
+
+var summary = null, cleanScans = 0;
+for (var scan = 0; scan < 8 && summary === null && cleanScans < 4; scan++) {
+  traversalFailed = false;
+  var windows = proc.windows(), sawSyncCompleted = false;
+  for (var wi = 0; wi < windows.length && summary === null; wi++) {
+    var all = descendants(windows[wi], 0);
+    for (var ai = 0; ai < all.length; ai++) {
+      var role = roleOf(all[ai]), title = titleOf(all[ai]);
+      if (title === "Sync completed") sawSyncCompleted = true;
+      if ((role === "AXGroup" || role === "AXLandmarkRegion") &&
+          title.match(/^\d+ errors?$/)) {
+        summary = all[ai];
+        break;
+      }
+    }
+  }
+  if (summary === null) {
+    cleanScans = sawSyncCompleted && !traversalFailed ? cleanScans + 1 : 0;
+    delay(0.25);
+  }
 }
 
-case "${1:-both}" in
-    list)   cmd_list ;;
-    locate) cmd_locate ;;
-    both)   cmd_list; echo; cmd_locate ;;
-    *)      echo "usage: drive-errors [list|locate|both]" >&2; exit 2 ;;
-esac
+if (summary === null) {
+  JSON.stringify({state: cleanScans >= 4 ? "clean" : "unrecognized"});
+} else {
+  var view = null, inside = descendants(summary, 0);
+  for (var vi = 0; vi < inside.length; vi++) {
+    var title = titleOf(inside[vi]);
+    if (roleOf(inside[vi]) === "AXButton" && title === "View") {
+      view = inside[vi];
+      break;
+    }
+  }
+  if (view === null) throw new Error("Found the error summary but not its View button");
+  view.click();
+  for (var attempt = 0; attempt < 20 && !errorWindowPresent(); attempt++) delay(0.25);
+  if (!errorWindowPresent()) throw new Error("Google Drive Error list did not open");
+  JSON.stringify({state: "errors"});
+}
+'''
+
+
+READ_PAGE_JXA = r'''
+var se = Application("System Events");
+var proc = se.processes.byName("Google Drive");
+var reasons = ["Can’t upload some Google files", "Can’t upload some files"];
+var traversalFailed = false;
+
+function roleOf(el) {
+  try { return String(el.role()); }
+  catch (_) { traversalFailed = true; return ""; }
+}
+function titleOf(el) {
+  var titleRead = false, valueRead = false;
+  try { var value = el.title(); titleRead = true; if (value) return String(value); }
+  catch (_) {}
+  try { var value = el.value(); valueRead = true; if (value) return String(value); }
+  catch (_) {}
+  if (!titleRead || !valueRead) traversalFailed = true;
+  return "";
+}
+function childrenOf(el) {
+  try { return el.uiElements(); }
+  catch (_) { traversalFailed = true; return []; }
+}
+function descendants(el, depth) {
+  if (depth > 14) { traversalFailed = true; return []; }
+  var out = [], children = childrenOf(el);
+  for (var i = 0; i < children.length; i++) {
+    out.push(children[i]);
+    out = out.concat(descendants(children[i], depth + 1));
+  }
+  return out;
+}
+function reasonUnder(el) {
+  var all = [el].concat(descendants(el, 0));
+  for (var i = 0; i < all.length; i++) {
+    var title = titleOf(all[i]);
+    if (reasons.indexOf(title) !== -1) return title;
+  }
+  return null;
+}
+function collectRows(el, rows, depth) {
+  if (depth > 14) { traversalFailed = true; return; }
+  var children = childrenOf(el);
+  for (var i = 0; i + 1 < children.length; i++) {
+    if (roleOf(children[i]) === "AXLink" && roleOf(children[i + 1]) === "AXGroup") {
+      var reason = reasonUnder(children[i + 1]);
+      var name = titleOf(children[i]);
+      if (reason !== null && name !== "") rows.push({name: name, reason: reason});
+    }
+  }
+  for (var j = 0; j < children.length; j++) collectRows(children[j], rows, depth + 1);
+}
+
+var target = null, windows = proc.windows();
+for (var wi = 0; wi < windows.length && target === null; wi++) {
+  var all = [windows[wi]].concat(descendants(windows[wi], 0));
+  for (var ai = 0; ai < all.length; ai++) {
+    var title = titleOf(all[ai]);
+    if (title === "Google Drive Error list") { target = windows[wi]; break; }
+  }
+}
+if (target === null) throw new Error("Google Drive Error list is not open");
+
+var page = null, total = null, previous = false, next = false;
+var controls = descendants(target, 0);
+for (var ci = 0; ci < controls.length; ci++) {
+  var title = titleOf(controls[ci]);
+  if (roleOf(controls[ci]) === "AXButton" && title === "Previous page") previous = true;
+  if (roleOf(controls[ci]) === "AXButton" && title === "Next page") next = true;
+  var match = title.match(/^(\d+)\/(\d+)$/);
+  if (match) { page = Number(match[1]); total = Number(match[2]); }
+}
+if (page === null || !previous || !next) {
+  throw new Error("Could not identify the error-list pagination controls");
+}
+var rows = [];
+collectRows(target, rows, 0);
+JSON.stringify({page: page, total: total, rows: rows, traversalFailed: traversalFailed});
+'''
+
+
+NEXT_PAGE_JXA = r'''
+var se = Application("System Events");
+var proc = se.processes.byName("Google Drive");
+function roleOf(el) { try { return String(el.role()); } catch (_) { return ""; } }
+function titleOf(el) {
+  try { var value = el.title(); if (value) return String(value); } catch (_) {}
+  try { var value = el.value(); if (value) return String(value); } catch (_) {}
+  return "";
+}
+function childrenOf(el) { try { return el.uiElements(); } catch (_) { return []; } }
+function descendants(el, depth) {
+  if (depth > 14) return [];
+  var out = [], children = childrenOf(el);
+  for (var i = 0; i < children.length; i++) {
+    out.push(children[i]);
+    out = out.concat(descendants(children[i], depth + 1));
+  }
+  return out;
+}
+var windows = proc.windows(), target = null, next = null;
+for (var wi = 0; wi < windows.length && target === null; wi++) {
+  var windowElements = [windows[wi]].concat(descendants(windows[wi], 0));
+  for (var ei = 0; ei < windowElements.length; ei++) {
+    var title = titleOf(windowElements[ei]);
+    if (title === "Google Drive Error list") { target = windows[wi]; break; }
+  }
+}
+if (target === null) throw new Error("Google Drive Error list is not open");
+var all = descendants(target, 0);
+for (var ai = 0; ai < all.length; ai++) {
+  var title = titleOf(all[ai]);
+  if (roleOf(all[ai]) === "AXButton" && title === "Next page") {
+    next = all[ai];
+    break;
+  }
+}
+if (next === null) throw new Error("Could not reacquire the Next page button");
+next.click();
+delay(2);
+JSON.stringify({clicked: true});
+'''
+
+
+class Panel(Protocol):
+    def open_error_list(self) -> bool: ...
+
+    def read_page(self) -> dict[str, Any]: ...
+
+    def next_page(self) -> None: ...
+
+
+class AccessibilityPanel:
+    @staticmethod
+    def _run_jxa(source: str) -> dict[str, Any]:
+        result = subprocess.run(
+            ["osascript", "-l", "JavaScript", "-e", source],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if result.returncode != 0:
+            message = result.stderr.strip() or "unknown accessibility error"
+            raise RuntimeError(message)
+        try:
+            return json.loads(result.stdout)
+        except json.JSONDecodeError as error:
+            raise RuntimeError("Google Drive returned malformed panel data") from error
+
+    def open_error_list(self) -> bool:
+        state = self._run_jxa(OPEN_ERROR_LIST_JXA).get("state")
+        if state == "errors":
+            return True
+        if state == "clean":
+            return False
+        raise RuntimeError("Google Drive panel state was unrecognized; refusing to report it clean")
+
+    def read_page(self) -> dict[str, Any]:
+        return self._run_jxa(READ_PAGE_JXA)
+
+    def next_page(self) -> None:
+        self._run_jxa(NEXT_PAGE_JXA)
+
+
+class FixturePanel:
+    def __init__(self, fixture: dict[str, Any]) -> None:
+        self.fixture = fixture
+        self.pages = fixture.get("pages", [])
+        self.index = 0
+
+    def open_error_list(self) -> bool:
+        state = self.fixture.get("state")
+        if state == "unrecognized":
+            raise RuntimeError("Google Drive panel state was unrecognized")
+        if state == "clean":
+            return False
+        return bool(self.pages)
+
+    def read_page(self) -> dict[str, Any]:
+        return self.pages[self.index]
+
+    def next_page(self) -> None:
+        self.index += 1
+
+
+def collect_rows(panel: Panel) -> list[dict[str, str]]:
+    if not panel.open_error_list():
+        return []
+    rows: list[dict[str, str]] = []
+    expected_page = 1
+    expected_total: int | None = None
+    while True:
+        page_data = panel.read_page()
+        if page_data.get("traversalFailed"):
+            raise RuntimeError(
+                "Google Drive accessibility traversal failed; refusing a partial page"
+            )
+        page = page_data.get("page")
+        total = page_data.get("total")
+        if not isinstance(page, int) or not isinstance(total, int) or total < 1:
+            raise RuntimeError("Invalid pagination metadata from Google Drive")
+        if page != expected_page or (expected_total is not None and total != expected_total):
+            raise RuntimeError("Google Drive error-list pagination was not sequential")
+        expected_total = total
+        page_rows = page_data.get("rows")
+        if not isinstance(page_rows, list):
+            raise RuntimeError("Invalid row data from Google Drive")
+        if not page_rows:
+            raise RuntimeError(
+                "Google Drive error-list page contained no rows; refusing to report it clean"
+            )
+        for row in page_rows:
+            if not isinstance(row, dict) or row.get("reason") not in REASONS:
+                raise RuntimeError("Unexpected Google Drive error row")
+            name = row.get("name")
+            if not isinstance(name, str) or not name:
+                raise RuntimeError("Google Drive error row has no filename")
+            rows.append({"name": name, "reason": row["reason"]})
+        if page == total:
+            return rows
+        expected_page += 1
+        panel.next_page()
+
+
+def walk_entries(root: Path):
+    def fail_on_walk_error(error: OSError) -> None:
+        raise RuntimeError(f"Could not traverse Drive root: {error}") from error
+
+    for directory, dirnames, filenames in os.walk(
+        root, followlinks=False, onerror=fail_on_walk_error
+    ):
+        base = Path(directory)
+        for name in dirnames:
+            yield base / name
+        for name in filenames:
+            yield base / name
+
+
+def candidate_paths(root: Path, names: set[str]) -> dict[str, list[Path]]:
+    matches = {name: [] for name in names}
+    for path in walk_entries(root):
+        if path.name in matches:
+            matches[path.name].append(path)
+    for paths in matches.values():
+        paths.sort(key=lambda path: str(path))
+    return matches
+
+
+def relative(path: Path, root: Path) -> str:
+    try:
+        return str(path.relative_to(root))
+    except ValueError:
+        return str(path)
+
+
+def panel_from_environment() -> Panel:
+    fixture = os.environ.get("DRIVE_ERRORS_PANEL_FIXTURE")
+    if fixture is None:
+        return AccessibilityPanel()
+    try:
+        parsed = json.loads(fixture)
+    except json.JSONDecodeError as error:
+        raise RuntimeError("DRIVE_ERRORS_PANEL_FIXTURE is not valid JSON") from error
+    if not isinstance(parsed, dict):
+        raise RuntimeError("DRIVE_ERRORS_PANEL_FIXTURE must be a JSON object")
+    return FixturePanel(parsed)
+
+
+def cmd_list(root: Path) -> int:
+    print("=== Drive error panel ===")
+    rows = collect_rows(panel_from_environment())
+    if not rows:
+        print("No error rows found in the panel.")
+        return 0
+
+    print("Raw rows (panel order; duplicates preserved):")
+    for index, row in enumerate(rows, 1):
+        print(f"  {index}. {row['name']} — {row['reason']}")
+
+    counts = Counter(row["reason"] for row in rows)
+    print("Reason summary:")
+    for reason in REASONS:
+        print(f"  {reason}: {counts[reason]}")
+
+    print("Candidate filesystem paths (basename matches; not exact-instance proof):")
+    names = {row["name"] for row in rows}
+    matches = candidate_paths(root, names)
+    for name in sorted(names):
+        paths = matches[name]
+        print(f"  {name}: {len(paths)} candidate paths")
+        for path in paths:
+            print(f"    {relative(path, root)}")
+    return 0
+
+
+def cmd_locate(root: Path) -> int:
+    entries = list(walk_entries(root))
+    symlinks = sorted(
+        (path for path in entries if path.is_symlink()), key=lambda path: str(path)
+    )
+    generated = sorted(
+        (
+            path
+            for path in entries
+            if path.name in GENERATED_NAMES and path.is_dir() and not path.is_symlink()
+        ),
+        key=lambda path: str(path),
+    )
+    print("=== symlinks under Drive (Drive cannot represent these at all) ===")
+    for path in symlinks:
+        print(relative(path, root))
+    print()
+    print("=== real generated directories under Drive ===")
+    for path in generated:
+        print(relative(path, root))
+    return 0
+
+
+def main(argv: list[str]) -> int:
+    command = argv[1] if len(argv) > 1 else "both"
+    if command not in {"list", "locate", "both"} or len(argv) > 2:
+        print("usage: drive-errors [list|locate|both]", file=sys.stderr)
+        return 2
+    try:
+        if not DRIVE_ROOT.is_dir() or not os.access(
+            DRIVE_ROOT, os.R_OK | os.X_OK
+        ):
+            raise RuntimeError(f"Drive root is not an accessible directory: {DRIVE_ROOT}")
+        if command in {"list", "both"}:
+            cmd_list(DRIVE_ROOT)
+        if command == "both":
+            print()
+        if command in {"locate", "both"}:
+            cmd_locate(DRIVE_ROOT)
+    except RuntimeError as error:
+        print(f"drive-errors: {error}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv))

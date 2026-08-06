@@ -139,6 +139,14 @@ adapter's interface — single-session import plus =--dry-run=/=--rename OLD
 NEW= — with byte-equivalent path-mapping semantics, so the Drive workspace
 migration tooling can relocate session history for either tool.
 
+The =fix-drive-errors= skill treats the fully paginated native Drive panel as
+the source of truth. Its helper preserves duplicate rows and exact error
+reasons, inventories all candidate paths without claiming a basename match is
+the offending instance, and fails closed when accessibility traversal is
+incomplete. The skill also covers rejected cross-account =.gdoc= pointers and
+routes their replacement through ordinary =epoch-doc:= URL shortcuts rather
+than sharing changes or another Drive-hosted symlink.
+
 * Hooks
 
 [[file:hooks/README.org][The Claude hook index]] owns registration boundaries and the per-file index.

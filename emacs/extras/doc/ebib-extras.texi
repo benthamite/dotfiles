@@ -370,7 +370,7 @@ The command @code{ebib-extras-set-rating} prompts for a rating (1--10, where pre
 @item
 For books, it opens Goodreads with the entry's title.
 @item
-For films, it opens the entry's stored IMDb URL (or searches IMDb if no URL is stored) and opens Letterboxd (using a stored slug or fetching one via @code{bib-search-letterboxd}). If a Letterboxd slug is fetched, it is stored in the @samp{letterboxd} field for future use. The slug is always a bare identifier (e.g. @samp{hamnet-2025}), never a full URL@.
+For films, it opens the entry's stored IMDb URL (or searches IMDb if no URL is stored) and opens Letterboxd. A stored Letterboxd slug opens the film directly; otherwise, the command opens a Letterboxd title search.
 @end itemize
 
 Pressing @samp{RET} without entering a digit skips the rating without modifying the field.

@@ -265,6 +265,42 @@
   (should-error (ebib-extras-check-valid-key "bad")
                 :type 'user-error))
 
+;;;; ebib-extras-set-rating
+
+(ert-deftest ebib-extras-test-set-rating-searches-letterboxd-without-slug ()
+  "Search Letterboxd directly when the film has no stored slug."
+  (let ((ebib--cur-db 'test-db)
+	opened-url searched-title set-fields)
+    (cl-letf (((symbol-function 'ebib-extras-choose-rating)
+	       (lambda () "7"))
+	      ((symbol-function 'ebib-extras-get-supertype)
+	       (lambda () "film"))
+	      ((symbol-function 'ebib-extras-get-field)
+	       (lambda (field &optional _key)
+		 (pcase field
+		   ("title" "Blue Moon")
+		   ("url" "https://www.imdb.com/title/tt32536228/")
+		   ("letterboxd" nil))))
+	      ((symbol-function 'ebib--get-key-at-point)
+	       (lambda () "linklater2025bluemoon"))
+	      ((symbol-function 'ebib-set-field-value)
+	       (lambda (field value _key _db &optional _action)
+		 (push (cons field value) set-fields)))
+	      ((symbol-function 'ebib-extras-update-entry-buffer) #'ignore)
+	      ((symbol-function 'browse-url)
+	       (lambda (url &rest _args)
+		 (setq opened-url url)))
+	      ((symbol-function 'ebib-extras-search-letterboxd)
+	       (lambda (title)
+		 (setq searched-title title)))
+	      ((symbol-function 'bib-search-letterboxd)
+	       (lambda (&rest _args)
+		 (error "Private Letterboxd lookup should not run"))))
+      (ebib-extras-set-rating))
+    (should (equal searched-title "Blue Moon"))
+    (should (equal opened-url "https://www.imdb.com/title/tt32536228/"))
+    (should (equal set-fields '(("rating" . "7"))))))
+
 ;;;; arXiv identifiers
 
 (ert-deftest ebib-extras-test-arxiv-id-p-new-style ()

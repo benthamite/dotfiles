@@ -1414,9 +1414,7 @@ file."
 (declare-function ebib-extras-search-goodreads "ebib-extras")
 (declare-function ebib-extras-search-imdb "ebib-extras")
 (declare-function ebib-extras-search-letterboxd "ebib-extras")
-(declare-function bib-search-letterboxd "bib")
 (defvar bib-letterboxd-url)
-(defvar bib-letterboxd-use-slug-p)
 (defun ebib-extras-set-rating ()
   "Set rating of current entry.
 If applicable, open external website to set rating there as well."
@@ -1425,6 +1423,10 @@ If applicable, open external website to set rating there as well."
 	(supertype (ebib-extras-get-supertype))
 	(title (ebib-extras-get-field "title"))
 	(db ebib--cur-db))
+    (when rating
+      (ebib-set-field-value "rating" rating (ebib--get-key-at-point)
+			    ebib--cur-db 'overwrite))
+    (ebib-extras-update-entry-buffer db)
     (pcase supertype
       ("book" (ebib-extras-search-goodreads title))
       ("film"
@@ -1437,16 +1439,7 @@ If applicable, open external website to set rating there as well."
        (let ((lbx-slug (ebib-extras-get-field "letterboxd")))
          (if (and lbx-slug (not (string-empty-p lbx-slug)))
              (browse-url (format bib-letterboxd-url lbx-slug))
-           (let ((slug (let ((bib-letterboxd-use-slug-p t))
-                          (bib-search-letterboxd title))))
-             (when slug
-               (ebib-set-field-value "letterboxd" slug (ebib--get-key-at-point)
-                                     ebib--cur-db 'overwrite)
-               (ebib-extras-update-entry-buffer ebib--cur-db)
-               (browse-url (format bib-letterboxd-url slug))))))))
-    (when rating
-      (ebib-set-field-value "rating" rating (ebib--get-key-at-point) ebib--cur-db 'overwrite))
-    (ebib-extras-update-entry-buffer db)))
+           (ebib-extras-search-letterboxd title)))))))
 
 (defun ebib-extras-update-entry-buffer (db)
   "Update the entry buffer with the current entry in DB."

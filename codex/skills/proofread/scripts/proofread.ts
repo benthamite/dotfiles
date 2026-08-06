@@ -1,11 +1,19 @@
 #!/usr/bin/env npx tsx
 
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { generateText } from "ai";
-import { parse } from "dotenv";
+import { createRequire } from "module";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { basename, dirname, join } from "path";
 import { execSync } from "child_process";
+
+const runtimeDir = process.env.PROOFREAD_RUNTIME_DIR;
+if (!runtimeDir) {
+  throw new Error("PROOFREAD_RUNTIME_DIR must be set by scripts/run-with-runtime.sh");
+}
+
+const runtimeRequire = createRequire(join(runtimeDir, "package.json"));
+const { createGoogleGenerativeAI } = runtimeRequire("@ai-sdk/google") as typeof import("@ai-sdk/google");
+const { generateText } = runtimeRequire("ai") as typeof import("ai");
+const { parse } = runtimeRequire("dotenv") as typeof import("dotenv");
 
 // Load environment variables ONLY from the skill's .env file (not shell environment)
 const envPath = join(dirname(decodeURIComponent(new URL(import.meta.url).pathname)), "..", ".env");

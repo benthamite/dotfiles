@@ -48,7 +48,7 @@ Resolve the current tool's skill directory before checking configuration:
 - Codex: `/Users/pablostafforini/My Drive/dotfiles/bin/agent-skill path proofread --tool codex`
 - Claude Code: `/Users/pablostafforini/My Drive/dotfiles/bin/agent-skill path proofread --tool claude`
 
-Set `skill_dir` to the parent directory of the returned `SKILL.md` path. Use that directory for `.env`, scripts, and dependency installs.
+Set `skill_dir` to the parent directory of the returned `SKILL.md` path. Use that directory for `.env` and scripts. Dependencies must remain outside Google Drive's sync root.
 
 If the user chose an LLM level, check if the API key is configured:
 
@@ -146,8 +146,10 @@ Removed: S2, S4
 If the user hasn't installed dependencies yet:
 
 ```bash
-cd "$skill_dir" && yarn install
+cd "$skill_dir" && yarn -s setup-runtime
 ```
+
+Setup and execution use the same precedence: PROOFREAD_RUNTIME_DIR, then XDG_DATA_HOME, then ~/.local/share/proofread. The resolved path must remain outside `~/My Drive`; the commands fail rather than use a direct or symlinked path into Drive. Do not create or symlink `node_modules` inside the skill directory.
 
 ## Configuration
 

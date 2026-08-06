@@ -4,8 +4,9 @@
   "description": "AI-powered proofreading skill using Gemini Flash",
   "type": "module",
   "scripts": {
-    "proofread": "tsx scripts/proofread.ts",
-    "apply": "tsx scripts/apply-suggestions.ts"
+    "setup-runtime": "sh scripts/install-runtime.sh",
+    "proofread": "sh scripts/run-with-runtime.sh scripts/proofread.ts",
+    "apply": "sh scripts/run-with-runtime.sh scripts/apply-suggestions.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.20",

@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Use when the user asks to save next steps, prepare a resume prompt, or continue work in a fresh session of the current tool, or when clear follow-up work should resume there; not for a Codex App in-app-browser handoff.
+description: Use when the user asks to save next steps, prepare a resume prompt, or continue work in a fresh session of the current tool, or when clear follow-up work should resume there.
 ---
 
 # Handoff

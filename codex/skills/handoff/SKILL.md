@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Use when the user asks to save next steps, prepare a resume prompt, or continue work in a fresh session of the current tool, or when clear follow-up work should resume there; not for a Codex App in-app-browser handoff.
+description: Use when the user asks to save next steps, prepare a resume prompt, or continue work in a fresh session of the current tool, or when clear follow-up work should resume there.
 ---
 
 # Handoff
@@ -10,9 +10,8 @@ to `/tmp/codex-handoff.md`. The Emacs command
 `agent-codex-handoff` reads this file, closes the current Codex
 session, and starts a new one with the handoff prompt.
 
-Do not use this skill for Codex App Browser Use handoffs; use
-`codex-app-browser` for that workflow. If the user explicitly names a
-project-specific closeout skill, use that skill instead.
+If the user explicitly names a project-specific closeout skill, use that skill
+instead.
 
 ## Determining the prompt
 

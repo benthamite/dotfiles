@@ -1,7 +1,7 @@
 #+title: Command index
 #+author: Pablo Stafforini
 
-This index covers the 55 tracked files under =bin/= whose Git mode is
+This index covers the 54 tracked files under =bin/= whose Git mode is
 =100755=. Non-executable libraries and data files are intentionally omitted.
 The first column is machine-readable and should contain every executable
 exactly once.
@@ -18,7 +18,6 @@ documented in [[file:../agents/README.org][the agent manual]]. Skill names and t
 | =ahrefs-api-guard= | Delegates Ahrefs API access to the guarded Claude-side wrapper. |
 | =ai-config-sync= | Audits and guards paired Claude and Codex configuration while treating each tool's hook README as independent documentation. |
 | =claude-stage-hook= | Stages explicitly marked Claude final-message commands on the user’s paste surfaces. |
-| =codex-app-handoff= | Opens the current Codex thread in the desktop app and can copy a continuation prompt. |
 | =codex-config-prune= | Removes stale project-trust and hook-state entries from Codex configuration. |
 | =codex-protocol-watch= | Checks whether Codex has added protocol methods unsupported by the Emacs client. |
 | =cr-pull-pinned= | Pulls and verifies the Taiga job pinned by a CR task. |

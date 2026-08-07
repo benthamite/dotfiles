@@ -1,4 +1,0 @@
-interface:
-  display_name: "Codex App Browser"
-  short_description: "Bootstrap Codex App browser access"
-  default_prompt: "$codex-app-browser <describe the browser-dependent task>"

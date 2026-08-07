@@ -78,6 +78,10 @@ managed =.system= content, pairing, and maintenance. The generated
 skills. Dynamic plugins, private skills, ignored runtime system skills, and
 skills in other repositories are outside its scope.
 
+Browser control is runtime-owned: the bundled Browser and Chrome plugins load
+directly through Codex. No tracked skill or helper command mediates a
+CLI/Emacs-to-App browser handoff.
+
 The paired =proofread= skill resolves one external Node dependency runtime for
 both setup and execution, canonicalizing both its root and actual =node_modules=
 destination before rejecting paths into this Drive-synced tree. Its package

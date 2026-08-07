@@ -8184,6 +8184,20 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
         (kill-buffer)
         (message "%s" message))))
 
+  (defun debug-inhibit-nested-entry (fn &rest args)
+    "Apply FN to ARGS with entry into a nested debugger inhibited.
+`debug' renders the backtrace via `debugger-setup-buffer' before it reaches
+its recursive edit, and `backtrace--print-func-and-args' calls `symbol-file'
+once per frame.  With a large `load-history' that render costs seconds at
+depth, and it is interruptible, so a quit arriving mid-render opens another
+debugger one frame deeper.  Reaching depth N is quadratic in N, so the loop
+never converges.  Binding `inhibit-debugger' makes such a quit abort this
+debugger entry cleanly instead of nesting, which keeps `debug-on-error' and
+`debug-on-quit' safe to leave enabled."
+    (let ((inhibit-debugger t))
+      (apply fn args)))
+  (advice-add 'debugger-setup-buffer :around #'debug-inhibit-nested-entry)
+
   :bind
   (:map debugger-mode-map
         ("s" . debug-save-backtrace)))

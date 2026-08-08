@@ -9166,9 +9166,12 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (agent-before-exit-skill-names '("session-learning-capture"
                                    ("update-log" :args "--auto")))
   (agent-sync-theme t)
-  (agent-epoch-project-registry-file
-   "/Users/pablostafforini/My Drive/Epoch/projects/shared/project-registry.json")
-  (agent-epoch-projects-root "/Users/pablostafforini/My Drive/Epoch/projects/")
+  (agent-project-sources
+   '(("epoch"
+      . ("/Users/pablostafforini/My Drive/Epoch/projects/shared/project-registry.json"))
+     ("trajectory" . ("~/Trajectory/reasoning-tasks/*"))
+     ("" . ("~/repos/*" "~/repos/.worktrees/*/*"))))
+  (agent-project-registry-root "/Users/pablostafforini/My Drive/Epoch/projects/")
   (agent-claude-org-todo-in-progress-keyword "DOING")
   (agent-claude-accounts '(("personal"  . "~/.claude-personal")
                            ("tlon"     . "~/.claude-tlon")
@@ -9265,6 +9268,7 @@ otherwise create it off `origin/main'."
   :demand t
   :custom
   (agent-log-summary-model 'gemini-flash-latest)
+  (agent-log-group-by-project nil)
   (agent-log-auto-sync-sessions t)
   (agent-log-auto-summarize-sessions t)
   (agent-log-auto-rename-sessions t)
@@ -13480,7 +13484,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   (slack-buffer-mode-hook . (lambda () (setopt line-spacing nil)))
 
   :bind
-  (("A-k" . slack-menu)
+  (("H-r" . slack-menu)
    :map slack-mode-map
    ("s-a" . slack-all-threads)
    ("s-c" . slack-channel-select)

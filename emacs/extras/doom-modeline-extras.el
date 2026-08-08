@@ -162,7 +162,6 @@ Uses strikethrough to indicate the cost is not actually charged."
 (declare-function agent-backend-icon-string "agents")
 (declare-function agent-display-name "agents")
 (declare-function agent-alert-indicator "agents")
-(declare-function agent-toggle-alert "agents")
 (declare-function agent-session "agent")
 (declare-function agent-session-account "agent")
 (declare-function agent-claude-status-model "agent-claude")
@@ -187,10 +186,14 @@ Uses strikethrough to indicate the cost is not actually charged."
 (defvar agent-claude--status-data)
 
 (defun doom-modeline-extras--toggle-alert-click (event)
-  "Toggle AI session alert from a mouse click EVENT in the modeline."
+  "Toggle AI session alert from a mouse click EVENT in the modeline.
+Sets `agent-alert-on-ready' directly, which is the same state the
+`agent-menu' option infix binds."
   (interactive "e")
   (with-selected-window (posn-window (event-start event))
-    (agent-toggle-alert)
+    (setq agent-alert-on-ready (not agent-alert-on-ready))
+    (message "AI alert notifications %s"
+             (if agent-alert-on-ready "enabled" "disabled"))
     (force-mode-line-update)))
 
 (defvar doom-modeline-extras--alert-map

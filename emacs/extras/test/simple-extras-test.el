@@ -789,5 +789,81 @@
     (should (string-match-p "defun foo" (buffer-string)))
     (should-not (string-match-p "defun bar" (buffer-string)))))
 
+;;;; Auto-save secret detection
+
+(defun simple-extras-test--fake-key (prefix body)
+  "Build a credential-shaped string from PREFIX and BODY.
+Assembled at runtime so that no literal credential pattern appears in the test
+source, where secret scanners would flag it."
+  (concat prefix body))
+
+(ert-deftest simple-extras-test-detects-anthropic-key ()
+  "Buffer containing an Anthropic key is reported as holding a secret."
+  (with-temp-buffer
+    (insert "notes " (simple-extras-test--fake-key
+                      "sk-ant-" "api03-AAAAAAAAAAAAAAAAAAAAAAAAAA")
+            " more notes")
+    (should (simple-extras-buffer-contains-secret-p))))
+
+(ert-deftest simple-extras-test-detects-github-pat ()
+  "Buffer containing a GitHub personal access token is reported as a secret."
+  (with-temp-buffer
+    (insert (simple-extras-test--fake-key
+             "ghp" "_012345678901234567890123456789012345"))
+    (should (simple-extras-buffer-contains-secret-p))))
+
+(ert-deftest simple-extras-test-detects-slack-token ()
+  "Buffer containing a Slack token is reported as holding a secret."
+  (with-temp-buffer
+    (insert (simple-extras-test--fake-key "xox" "c-33980812345-abcdefghij"))
+    (should (simple-extras-buffer-contains-secret-p))))
+
+(ert-deftest simple-extras-test-detects-aws-key ()
+  "Buffer containing an AWS access key is reported as holding a secret."
+  (with-temp-buffer
+    (insert (simple-extras-test--fake-key "AK" "IAIOSFODNN7EXAMPLE"))
+    (should (simple-extras-buffer-contains-secret-p))))
+
+(ert-deftest simple-extras-test-detects-private-key-block ()
+  "Buffer containing a PEM private key header is reported as holding a secret."
+  (with-temp-buffer
+    (insert "-----BEGIN OPENSSH PRIVATE KEY-----\nabc\n")
+    (should (simple-extras-buffer-contains-secret-p))))
+
+(ert-deftest simple-extras-test-ignores-ordinary-prose ()
+  "Prose resembling a key prefix is not reported as holding a secret.
+Note slugs such as `risk-account-on-april-14' end in a `sk-' sequence."
+  (with-temp-buffer
+    (insert "ordinary prose about risk-account-on-april-14 and other tasks")
+    (should-not (simple-extras-buffer-contains-secret-p))))
+
+(ert-deftest simple-extras-test-secret-scan-cache-invalidates ()
+  "Scan result is recomputed after the buffer's text changes."
+  (with-temp-buffer
+    (insert (simple-extras-test--fake-key
+             "sk-ant-" "api03-AAAAAAAAAAAAAAAAAAAAAAAAAA"))
+    (should (simple-extras-buffer-contains-secret-p))
+    (erase-buffer)
+    (insert "clean now")
+    (should-not (simple-extras-buffer-contains-secret-p))))
+
+(ert-deftest simple-extras-test-disable-auto-save-deletes-file ()
+  "Disabling auto-save clears the file name and removes the file on disk."
+  (let ((file (make-temp-file "simple-extras-test-auto-save")))
+    (with-temp-buffer
+      (setq buffer-auto-save-file-name file)
+      (simple-extras-disable-auto-save)
+      (should-not buffer-auto-save-file-name))
+    (should-not (file-exists-p file))))
+
+(ert-deftest simple-extras-test-new-buffer-auto-save-skips-secrets ()
+  "Auto-save is not re-enabled for a new buffer holding a credential."
+  (with-temp-buffer
+    (rename-buffer "untitled-secret-test" t)
+    (insert (simple-extras-test--fake-key
+             "sk-ant-" "api03-AAAAAAAAAAAAAAAAAAAAAAAAAA"))
+    (simple-extras-new-buffer-enable-auto-save)
+    (should-not buffer-auto-save-file-name)))
+
 (provide 'simple-extras-test)
 ;;; simple-extras-test.el ends here

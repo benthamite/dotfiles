@@ -49,6 +49,23 @@
          (unless (file-directory-p value)
            (make-directory value t))))
 
+(defcustom simple-extras-secret-regexp
+  (concat "sk-ant-[A-Za-z0-9_-]\\{20,\\}"
+          "\\|sk-proj-[A-Za-z0-9_-]\\{20,\\}"
+          "\\|sk-admin-[A-Za-z0-9_-]\\{20,\\}"
+          "\\|sk-svcacct-[A-Za-z0-9_-]\\{20,\\}"
+          "\\|sk-[A-Za-z0-9]\\{20,\\}"
+          "\\|gh[pousr]_[A-Za-z0-9]\\{36\\}"
+          "\\|github_pat_[A-Za-z0-9_]\\{22,\\}"
+          "\\|xox[bporca]-[A-Za-z0-9-]\\{10,\\}"
+          "\\|AKIA[0-9A-Z]\\{16\\}"
+          "\\|-----BEGIN [A-Z ]*PRIVATE KEY-----")
+  "Regexp matching credentials that must never reach an auto-save file.
+Buffers whose text matches this are excluded from auto-saving by
+`simple-extras-inhibit-auto-save-of-secrets'."
+  :type 'regexp
+  :group 'simple-extras)
+
 ;;;; Functions
 
 ;;;;; Personal
@@ -888,8 +905,11 @@ leading and trailing hyphen."
        (string-match "^untitled" (buffer-name))))
 
 (defun simple-extras-new-buffer-enable-auto-save ()
-  "Enable auto-save for new, non-file-visiting buffers."
-  (when (simple-extras-is-new-buffer-p)
+  "Enable auto-save for new, non-file-visiting buffers.
+Buffers containing credentials are left alone, so that
+`simple-extras-inhibit-auto-save-of-secrets' is not undone."
+  (when (and (simple-extras-is-new-buffer-p)
+             (not (simple-extras-buffer-contains-secret-p)))
     (auto-save-mode 1)))
 
 (add-hook 'buffer-list-update-hook #'simple-extras-new-buffer-enable-auto-save)
@@ -904,6 +924,54 @@ to it."
     (apply orig-func args)))
 
 (advice-add 'auto-save-mode :around #'simple-extras-new-buffer-auto-save-dir)
+
+(defvar-local simple-extras--secret-scan-tick nil
+  "Value of `buffer-chars-modified-tick' when this buffer was last scanned.")
+
+(defvar-local simple-extras--secret-scan-result nil
+  "Cached result of the last `simple-extras-scan-buffer-for-secret' call.")
+
+(defun simple-extras-inhibit-auto-save-of-secrets (&rest _)
+  "Stop any buffer holding a credential from being auto-saved to disk.
+Emacs auto-saves non-file-visiting buffers into a permanent directory and never
+removes those files when the buffer is killed unsaved, so a credential pasted
+into a scratch buffer would otherwise persist indefinitely."
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (and buffer-auto-save-file-name
+                 (simple-extras-buffer-contains-secret-p))
+        (simple-extras-disable-auto-save)))))
+
+(defun simple-extras-disable-auto-save ()
+  "Turn off auto-saving for the current buffer and delete its auto-save file.
+The existing file is deleted because it may already contain the credential."
+  (let ((file buffer-auto-save-file-name))
+    (setq buffer-auto-save-file-name nil)
+    (when (and file (file-exists-p file))
+      (ignore-errors (delete-file file))))
+  (message "Auto-save disabled for %s: buffer contains a credential"
+           (buffer-name)))
+
+(defun simple-extras-buffer-contains-secret-p ()
+  "Return non-nil iff the current buffer appears to contain a credential.
+The result is cached until the buffer's text next changes, so that this stays
+cheap when called from frequently-run hooks."
+  (let ((tick (buffer-chars-modified-tick)))
+    (unless (eq tick simple-extras--secret-scan-tick)
+      (setq simple-extras--secret-scan-tick tick
+            simple-extras--secret-scan-result
+            (simple-extras-scan-buffer-for-secret)))
+    simple-extras--secret-scan-result))
+
+(defun simple-extras-scan-buffer-for-secret ()
+  "Return non-nil iff the buffer's text matches `simple-extras-secret-regexp'."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (and (re-search-forward simple-extras-secret-regexp nil t) t))))
+
+(advice-add 'do-auto-save :before #'simple-extras-inhibit-auto-save-of-secrets)
 
 ;;;;; sort
 

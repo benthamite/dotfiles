@@ -462,6 +462,26 @@ The function ~simple-extras-new-buffer-enable-auto-save~ enables ~auto-save-mode
 
 The function ~simple-extras-new-buffer-auto-save-dir~ is an ~:around~ advice on ~auto-save-mode~ that redirects auto-save files for untitled buffers to the directory specified by ~simple-extras-new-buffer-auto-save-dir~ ([[#h:auto-save-directory][Auto-save directory for new buffers]]). For file-visiting buffers, it passes through to the original function unchanged.
 
+** Keeping credentials out of auto-save files
+:PROPERTIES:
+:CUSTOM_ID: h:auto-save-secrets
+:END:
+
+#+findex: simple-extras-inhibit-auto-save-of-secrets
+#+findex: simple-extras-disable-auto-save
+#+findex: simple-extras-buffer-contains-secret-p
+#+vindex: simple-extras-secret-regexp
+Redirecting auto-save files for untitled buffers to a fixed directory ([[#h:auto-save-for-new-buffers][Auto-save for new buffers]]) has a consequence that is easy to miss: those files are never cleaned up. ~delete-auto-save-files~ removes an auto-save file when its buffer is *saved*, but an untitled scratch buffer is by definition never saved, so killing it leaves the auto-save file behind permanently. Paste an API key into a scratch buffer to look at it, kill the buffer, and the key remains on disk indefinitely — and is then swept up by whatever backs the machine up.
+
+The function ~simple-extras-inhibit-auto-save-of-secrets~ prevents this. It runs as ~:before~ advice on ~do-auto-save~, and for every buffer that is due to be auto-saved and whose text matches ~simple-extras-secret-regexp~, it calls ~simple-extras-disable-auto-save~ — which clears ~buffer-auto-save-file-name~ and deletes any auto-save file already written, since that file may already contain the credential. Auto-saving stays off for that buffer for the rest of the session.
+
+~simple-extras-new-buffer-enable-auto-save~ makes the same check, so that its ~buffer-list-update-hook~ entry does not immediately switch auto-saving back on.
+
+#+vindex: simple-extras-secret-regexp
+The user option ~simple-extras-secret-regexp~ holds the pattern. It covers Anthropic, OpenAI (including project, admin and service-account keys), GitHub, Slack and AWS credential formats, plus PEM private key headers. Add to it if you handle credentials in a format it does not yet recognise.
+
+The scan is cached against ~buffer-chars-modified-tick~ and recomputed only when the buffer's text changes, which matters because ~auto-save-interval~ may be set low enough that auto-saving happens every few keystrokes.
+
 ** Miscellaneous utilities
 :PROPERTIES:
 :CUSTOM_ID: h:misc-utilities

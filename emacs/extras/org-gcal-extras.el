@@ -28,8 +28,10 @@
 
 ;;; Code:
 
+(require 'aio)
 (require 'cl-lib)
 (require 'deferred)
+(require 'oauth2-auto)
 (require 'org-gcal)
 (require 'el-patch)
 (require 'transient)
@@ -219,6 +221,31 @@ stale org-element cache after an async calendar sync has edited a buffer."
 				   (replace-regexp-in-string "/" " " id)))))
     (user-error "No id found")))
 
+;;;###autoload
+(defun org-gcal-extras-reauthenticate (calendar-id)
+  "Replace the stored OAuth tokens for CALENDAR-ID with freshly issued ones.
+Opens a browser login and returns immediately, so Emacs stays responsive
+while you complete it; the new tokens are stored once the login finishes.
+Interactively, prompt for CALENDAR-ID with completion over
+`org-gcal-fetch-file-alist'."
+  (interactive
+   (list (completing-read "Re-authenticate calendar: "
+			  (mapcar #'car org-gcal-fetch-file-alist) nil t)))
+  (aio-listen (oauth2-auto-force-reauth calendar-id 'org-gcal)
+	      (apply-partially #'org-gcal-extras--report-reauthentication
+			       calendar-id))
+  (message "Complete the login in your browser to re-authenticate %s" calendar-id))
+
+(defun org-gcal-extras--report-reauthentication (calendar-id result)
+  "Report the outcome of re-authenticating CALENDAR-ID.
+RESULT is the `aio' result function, which re-signals any error raised by
+the authentication flow."
+  (condition-case err
+      (progn (funcall result)
+	     (message "Re-authenticated %s" calendar-id))
+    (error (message "Re-authentication of %s failed: %s"
+		    calendar-id (error-message-string err)))))
+
 ;;;###autoload (autoload 'org-gcal-extras-menu "org-gcal-extras" nil t)
 (transient-define-prefix org-gcal-extras-menu ()
   "Dispatch an `org-gcal' command."
@@ -233,6 +260,7 @@ stale org-element cache after an async calendar sync has edited a buffer."
     ("o" "open at point" org-gcal-extras-open-at-point)
     ("d" "delete at point" org-gcal-delete-at-point)]
    ["Setup"
+    ("a" "re-authenticate" org-gcal-extras-reauthenticate)
     ("u" "unlock sync" org-gcal--sync-unlock)
     ("c" "clear token" org-gcal-sync-tokens-clear)
     ("t" "toggle debug" org-gcal-toggle-debug)

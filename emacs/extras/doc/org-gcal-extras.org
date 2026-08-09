@@ -68,6 +68,16 @@ The inner guard is the same pattern used by ~forge-extras--prevent-reentrant-que
 #+findex: org-gcal-extras-open-at-point
 When reviewing synchronized calendar events in Org mode, you may want to edit an event in the Google Calendar web interface directly. The command ~org-gcal-extras-open-at-point~ reads the =entry-id= property from the Org heading at point, constructs the corresponding Google Calendar edit URL (encoding the event ID in base64), and opens it in the default web browser via ~browse-url~. If the heading has no =entry-id= property, the command signals a user error.
 
+** Re-authenticating a calendar
+:PROPERTIES:
+:CUSTOM_ID: h:reauthenticate
+:END:
+
+#+findex: org-gcal-extras-reauthenticate
+=oauth2-auto=, the package =org-gcal= uses to obtain access tokens, exposes no interactive command, so there is no built-in way to repair a calendar whose stored refresh token is missing or has been revoked. The command ~org-gcal-extras-reauthenticate~ prompts for a calendar with completion over ~org-gcal-fetch-file-alist~, opens the Google login page in a browser, and stores the newly issued tokens when the login completes.
+
+The command returns as soon as the browser opens. It deliberately does not wait for the login: ~oauth2-auto-force-reauth~ returns an =aio= promise, and waiting for such a promise with ~aio-wait-for~ busy-waits on the main thread, which is what freezes Emacs during an unattended background sync ([[#h:login-suppression][Interactive login suppression]]). Instead the outcome is reported in the echo area through ~org-gcal-extras--report-reauthentication~ once the flow settles, whether it succeeded or failed.
+
 ** Transient menu
 :PROPERTIES:
 :CUSTOM_ID: h:transient-menu
@@ -79,7 +89,7 @@ The =org-gcal= package provides many commands but no built-in dispatch interface
 - *Fetch:* ~org-gcal-fetch~ (fetch all calendars) and ~org-gcal-fetch-buffer~ (fetch only the current buffer's calendar).
 - *Sync:* ~org-gcal-sync~ (sync all calendars) and ~org-gcal-sync-buffer~ (sync only the current buffer).
 - *Act:* ~org-gcal-post-at-point~ (push local changes for the event at point), ~org-gcal-extras-open-at-point~ (open in browser, [[#h:open-at-point][Opening events in Google Calendar]]), and ~org-gcal-delete-at-point~ (delete the event).
-- *Setup:* ~org-gcal--sync-unlock~ (release a stuck sync lock), ~org-gcal-sync-tokens-clear~ (clear stored sync tokens), ~org-gcal-toggle-debug~ (toggle debug logging), and ~org-gcal-reload-client-id-secret~ (reload OAuth credentials).
+- *Setup:* ~org-gcal-extras-reauthenticate~ (re-authenticate a calendar, [[#h:reauthenticate][Re-authenticating a calendar]]), ~org-gcal--sync-unlock~ (release a stuck sync lock), ~org-gcal-sync-tokens-clear~ (clear stored sync tokens), ~org-gcal-toggle-debug~ (toggle debug logging), and ~org-gcal-reload-client-id-secret~ (reload OAuth credentials).
 
 This menu is defined with ~transient-define-prefix~ and can be bound to a convenient key for quick access.
 

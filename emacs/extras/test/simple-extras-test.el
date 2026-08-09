@@ -868,27 +868,25 @@ without a guard each call would orphan the previous auto-save file."
       (dotimes (_ 5) (simple-extras-new-buffer-enable-auto-save))
       (should (equal first buffer-auto-save-file-name)))))
 
-(ert-deftest simple-extras-test-kill-deletes-new-buffer-auto-save-file ()
-  "Killing a new buffer removes its auto-save file from the auto-save directory."
+(ert-deftest simple-extras-test-killed-buffer-keeps-auto-save-file ()
+  "A killed untitled buffer keeps its auto-save file, so it can be recovered.
+Killing a buffer that visits no file does not prompt, so this file is the only
+way back to the contents of one killed by accident."
   (let* ((dir simple-extras-new-buffer-auto-save-dir)
-         (file (expand-file-name "#untitled-kill-test#" dir)))
+         (buf (generate-new-buffer "untitled-recovery-test"))
+         file)
     (make-directory dir t)
-    (with-temp-file file (insert "draft"))
-    (with-temp-buffer
-      (setq buffer-auto-save-file-name file)
-      (simple-extras-new-buffer-delete-auto-save))
-    (should-not (file-exists-p file))))
-
-(ert-deftest simple-extras-test-kill-spares-file-buffer-auto-save ()
-  "Auto-save files outside the new-buffer directory are left alone."
-  (let ((file (make-temp-file "simple-extras-test-real-auto-save")))
     (unwind-protect
-        (with-temp-buffer
-          (setq buffer-file-name (make-temp-file "simple-extras-test-real")
-                buffer-auto-save-file-name file)
-          (simple-extras-new-buffer-delete-auto-save)
+        (progn
+          (with-current-buffer buf
+            (simple-extras-new-buffer-enable-auto-save)
+            (insert "a draft worth recovering")
+            (do-auto-save)
+            (setq file buffer-auto-save-file-name))
+          (should (file-exists-p file))
+          (kill-buffer buf)
           (should (file-exists-p file)))
-      (when (file-exists-p file) (delete-file file)))))
+      (when (and file (file-exists-p file)) (delete-file file)))))
 
 (ert-deftest simple-extras-test-new-buffer-auto-save-skips-secrets ()
   "Auto-save is not re-enabled for a new buffer holding a credential."

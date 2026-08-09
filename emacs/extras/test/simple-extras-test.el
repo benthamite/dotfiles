@@ -856,6 +856,28 @@ Note slugs such as `risk-account-on-april-14' end in a `sk-' sequence."
       (should-not buffer-auto-save-file-name))
     (should-not (file-exists-p file))))
 
+(ert-deftest simple-extras-test-kill-deletes-new-buffer-auto-save-file ()
+  "Killing a new buffer removes its auto-save file from the auto-save directory."
+  (let* ((dir simple-extras-new-buffer-auto-save-dir)
+         (file (expand-file-name "#untitled-kill-test#" dir)))
+    (make-directory dir t)
+    (with-temp-file file (insert "draft"))
+    (with-temp-buffer
+      (setq buffer-auto-save-file-name file)
+      (simple-extras-new-buffer-delete-auto-save))
+    (should-not (file-exists-p file))))
+
+(ert-deftest simple-extras-test-kill-spares-file-buffer-auto-save ()
+  "Auto-save files outside the new-buffer directory are left alone."
+  (let ((file (make-temp-file "simple-extras-test-real-auto-save")))
+    (unwind-protect
+        (with-temp-buffer
+          (setq buffer-file-name (make-temp-file "simple-extras-test-real")
+                buffer-auto-save-file-name file)
+          (simple-extras-new-buffer-delete-auto-save)
+          (should (file-exists-p file)))
+      (when (file-exists-p file) (delete-file file)))))
+
 (ert-deftest simple-extras-test-new-buffer-auto-save-skips-secrets ()
   "Auto-save is not re-enabled for a new buffer holding a credential."
   (with-temp-buffer

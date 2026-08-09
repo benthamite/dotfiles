@@ -914,6 +914,22 @@ Buffers containing credentials are left alone, so that
 
 (add-hook 'buffer-list-update-hook #'simple-extras-new-buffer-enable-auto-save)
 
+(defun simple-extras-new-buffer-delete-auto-save ()
+  "Delete a new buffer's auto-save file when the buffer is killed.
+Emacs keeps the auto-save file of a modified buffer so that its contents can be
+recovered later, but a non-file-visiting buffer has no `recover-file' path, so
+the file is never reclaimed and the auto-save directory grows without bound.
+Only files under `simple-extras-new-buffer-auto-save-dir' are removed, so a
+file-visiting buffer's auto-save file is never touched."
+  (when (and (not buffer-file-name)
+             buffer-auto-save-file-name
+             (file-in-directory-p buffer-auto-save-file-name
+                                  simple-extras-new-buffer-auto-save-dir)
+             (file-exists-p buffer-auto-save-file-name))
+    (ignore-errors (delete-file buffer-auto-save-file-name))))
+
+(add-hook 'kill-buffer-hook #'simple-extras-new-buffer-delete-auto-save)
+
 (defun simple-extras-new-buffer-auto-save-dir (orig-func &rest args)
   "Use a standard location for auto-save files for non-file-visiting buffers.
 ORIG-FUNC is the original function being advised.  ARGS are the arguments passed

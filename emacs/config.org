@@ -4690,12 +4690,13 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 
 I use this package in combination with =prot-scratch= (see above) to persist scratch buffers in different modes. This way, I am able to open a scratch buffer in /any/ mode for temporary notes, without running the risk of losing them.
 
+~persistent-scratch-backup-directory~ is deliberately ~nil~. Setting it makes the package write a *new, dated file on every save*, so a scratch buffer edited over months leaves hundreds of historical copies that nothing ever reclaims — 2,646 of them had accumulated, holding old drafts and pasted API keys in plain text. With it unset, the scratch state is still persisted across sessions, but to a single file that is overwritten in place, which is all the persistence I want.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package persistent-scratch
   :custom
   (persistent-scratch-autosave-interval 10)
-  (persistent-scratch-backup-directory
-   (no-littering-expand-var-file-name "auto-save/scratch-buffers/"))
+  (persistent-scratch-backup-directory nil)
   :hook
   (emacs-startup . persistent-scratch-setup-default))
 #+end_src

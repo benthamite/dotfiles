@@ -524,6 +524,11 @@ The function @code{simple-extras-new-buffer-enable-auto-save} enables @code{auto
 
 The function @code{simple-extras-new-buffer-auto-save-dir} is an @code{:around} advice on @code{auto-save-mode} that redirects auto-save files for untitled buffers to the directory specified by @code{simple-extras-new-buffer-auto-save-dir} (@ref{Auto-save directory for new buffers}). For file-visiting buffers, it passes through to the original function unchanged.
 
+@findex simple-extras-new-buffer-delete-auto-save
+The function @code{simple-extras-new-buffer-delete-auto-save} runs from @code{kill-buffer-hook} and removes a new buffer's auto-save file when the buffer is killed. This is necessary because Emacs deliberately preserves the auto-save file of a @strong{modified} buffer so that its contents can be recovered afterwards — @code{delete-auto-save-files} only takes effect when a buffer is saved, and an untitled buffer is by definition never saved. For a file-visiting buffer that retention is what makes @code{recover-file} work, but an untitled buffer has no recovery path, so the file is simply never reclaimed. Without this hook the directory grows by one file per auto-save cycle and never shrinks; 41,377 files totalling 241 MB had accumulated over roughly nine months, containing old drafts and, in some cases, pasted credentials.
+
+The function only deletes files that live under @code{simple-extras-new-buffer-auto-save-dir}, so the auto-save file of a file-visiting buffer is never removed and crash recovery for real files is unaffected. Crash recovery for untitled buffers is likewise unaffected, since a crash does not run @code{kill-buffer-hook}; only a deliberate kill discards the file.
+
 @node Keeping credentials out of auto-save files
 @section Keeping credentials out of auto-save files
 

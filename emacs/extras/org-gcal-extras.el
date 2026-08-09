@@ -155,6 +155,30 @@ invocations outside the chain all proceed normally."
 
 (advice-add 'org-read-date :around #'org-gcal-extras--avoid-prompt-during-sync-chain)
 
+;;;;; Interactive login suppression during sync chain
+
+(defun org-gcal-extras--avoid-login-during-sync-chain (orig-fun &rest args)
+  "Signal an error instead of opening a browser login from a sync chain.
+ORIG-FUN is `oauth2-auto-authenticate', which opens a browser and returns
+a promise that resolves only once a Google login completes.  Its caller
+`org-gcal--get-access-token' waits for that promise with `aio-wait-for',
+which busy-waits on the main thread, so an unattended background sync
+freezes Emacs for as long as nobody logs in.  Signalling resolves the
+promise with an error instead, which ends the wait and lets the chain's
+`deferred:error' handler report it.  Repair the account afterwards with
+`org-gcal-extras-reauthenticate'.
+
+ORIG-FUN is applied to ARGS for direct user calls and whenever no sync
+chain is running."
+  (if (and org-gcal-extras--sync-chain-active
+	   (org-gcal-extras--in-deferred-worker-p))
+      (error "org-gcal-extras: refusing to open a browser login during sync chain; \
+call `org-gcal-extras-reauthenticate'")
+    (apply orig-fun args)))
+
+(advice-add 'oauth2-auto-authenticate :around
+	    #'org-gcal-extras--avoid-login-during-sync-chain)
+
 ;;;; Functions
 
 (defun org-gcal-extras--reset-element-cache ()

@@ -86,7 +86,7 @@ The deadlock occurs when @code{oauth2-auto--plstore-write} calls @code{plstore-s
 
 A second class of bug appears when @samp{org-gcal-sync}'s deferred chain reaches an entry with missing or unparseable date information. Inside @code{org-gcal-post-at-point}, the chain falls into a branch that calls @code{org-read-date} to ask the user. Because the chain is running on a timer (not on a user keypress), the prompt blocks the chain and lets other timers (e.g.~display-time~) fire reentrantly, producing spurious ``Timer already activated'' errors.
 
-The package addresses both classes with three layers of guards:
+The package addresses both classes with four layers of guards:
 
 @vindex org-gcal-extras--sync-active
 @findex org-gcal-extras--prevent-reentrant-sync
@@ -99,6 +99,11 @@ The package addresses both classes with three layers of guards:
 
 @findex org-gcal-extras--avoid-prompt-during-sync-chain
 @strong{Prompt suppression.} The function @code{org-gcal-extras--avoid-prompt-during-sync-chain} is added as @samp{:around} advice to @code{org-read-date}. When the outer guard is active and @code{deferred:worker} is on the call stack (i.e.~the prompt is being raised from inside the chain rather than from a user keypress), it signals an error instead of prompting. The error propagates back to the chain's existing @code{deferred:error} handler, which logs it and proceeds with the next entry. Direct user calls and @code{org-read-date} invocations outside the chain are unaffected.
+
+@findex org-gcal-extras--avoid-login-during-sync-chain
+@strong{Interactive login suppression.} The function @code{org-gcal-extras--avoid-login-during-sync-chain} is added as @samp{:around} advice to @code{oauth2-auto-authenticate}, under the same condition as the prompt suppression above. When a stored refresh token is missing or has been revoked, @code{oauth2-auto-refresh-or-authenticate} falls back to a full browser login, which returns a promise that resolves only once someone completes a Google login. @code{org-gcal--get-access-token} waits for that promise with @code{aio-wait-for}, a busy-wait on the main thread, so an unattended sync --- the nightly one, for instance --- freezes Emacs entirely until the login happens. Signalling instead resolves the promise with an error, which ends the wait immediately and surfaces the failure through the chain's @code{deferred:error} handler. Repair the affected account afterwards with @code{org-gcal-extras-reauthenticate} (@ref{Re-authenticating a calendar}).
+
+Because the advice sits on @code{oauth2-auto-authenticate} rather than on an @samp{org-gcal} function, it also suppresses logins for other @samp{oauth2-auto} consumers that happen to be invoked from inside an @samp{org-gcal} sync chain. This is intended: the freeze they would cause is the same.
 
 The inner guard is the same pattern used by @code{forge-extras--prevent-reentrant-query} to protect @samp{forge} from the identical class of freeze.
 
@@ -123,7 +128,7 @@ When reviewing synchronized calendar events in Org mode, you may want to edit an
 @findex org-gcal-extras-reauthenticate
 @samp{oauth2-auto}, the package @samp{org-gcal} uses to obtain access tokens, exposes no interactive command, so there is no built-in way to repair a calendar whose stored refresh token is missing or has been revoked. The command @code{org-gcal-extras-reauthenticate} prompts for a calendar with completion over @code{org-gcal-fetch-file-alist}, opens the Google login page in a browser, and stores the newly issued tokens when the login completes.
 
-The command returns as soon as the browser opens. It deliberately does not wait for the login: @code{oauth2-auto-force-reauth} returns an @samp{aio} promise, and waiting for such a promise with @code{aio-wait-for} busy-waits on the main thread, which is what freezes Emacs during an unattended background sync (). Instead the outcome is reported in the echo area through @code{org-gcal-extras--report-reauthentication} once the flow settles, whether it succeeded or failed.
+The command returns as soon as the browser opens. It deliberately does not wait for the login: @code{oauth2-auto-force-reauth} returns an @samp{aio} promise, and waiting for such a promise with @code{aio-wait-for} busy-waits on the main thread, which is what freezes Emacs during an unattended background sync (@ref{Re-entrancy and prompt guards}). Instead the outcome is reported in the echo area through @code{org-gcal-extras--report-reauthentication} once the flow settles, whether it succeeded or failed.
 
 @node Transient menu
 @section Transient menu

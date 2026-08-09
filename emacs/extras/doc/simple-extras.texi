@@ -522,6 +522,8 @@ The function @code{simple-extras-is-new-buffer-p} returns @code{t} if the curren
 
 The function @code{simple-extras-new-buffer-enable-auto-save} enables @code{auto-save-mode} for new buffers (as determined by @code{simple-extras-is-new-buffer-p}). It is added to @code{buffer-list-update-hook} so that auto-save is activated as soon as a new untitled buffer appears.
 
+It returns immediately when the buffer already has an auto-save file name, and that guard is essential rather than a mere optimisation. @code{auto-save-mode} recomputes @code{buffer-auto-save-file-name} on @strong{every} invocation, and @code{make-auto-save-file-name} gives a buffer that visits no file a name containing a random component, so successive calls yield @samp{#untitled#bhdeoF#}, @samp{#untitled#jBhzLB#}, @samp{#untitled#kDY6F6#} and so on. Since @code{buffer-list-update-hook} runs on nearly every command, an unguarded version renamed the auto-save target continuously: each auto-save wrote to a freshly-named file and abandoned the previous one. A single buffer named @samp{untitled} had left 17,214 files behind this way, and 41,377 had accumulated in total, peaking at 1,127 in one day.
+
 The function @code{simple-extras-new-buffer-auto-save-dir} is an @code{:around} advice on @code{auto-save-mode} that redirects auto-save files for untitled buffers to the directory specified by @code{simple-extras-new-buffer-auto-save-dir} (@ref{Auto-save directory for new buffers}). For file-visiting buffers, it passes through to the original function unchanged.
 
 @findex simple-extras-new-buffer-delete-auto-save

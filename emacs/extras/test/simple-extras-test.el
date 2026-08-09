@@ -856,6 +856,18 @@ Note slugs such as `risk-account-on-april-14' end in a `sk-' sequence."
       (should-not buffer-auto-save-file-name))
     (should-not (file-exists-p file))))
 
+(ert-deftest simple-extras-test-enable-auto-save-is-idempotent ()
+  "Repeated calls keep one auto-save file name instead of generating new ones.
+`auto-save-mode' recomputes a randomised name for buffers visiting no file, so
+without a guard each call would orphan the previous auto-save file."
+  (with-temp-buffer
+    (rename-buffer "untitled-idempotence-test" t)
+    (simple-extras-new-buffer-enable-auto-save)
+    (let ((first buffer-auto-save-file-name))
+      (should first)
+      (dotimes (_ 5) (simple-extras-new-buffer-enable-auto-save))
+      (should (equal first buffer-auto-save-file-name)))))
+
 (ert-deftest simple-extras-test-kill-deletes-new-buffer-auto-save-file ()
   "Killing a new buffer removes its auto-save file from the auto-save directory."
   (let* ((dir simple-extras-new-buffer-auto-save-dir)

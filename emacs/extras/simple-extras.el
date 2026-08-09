@@ -906,9 +906,16 @@ leading and trailing hyphen."
 
 (defun simple-extras-new-buffer-enable-auto-save ()
   "Enable auto-save for new, non-file-visiting buffers.
+Does nothing when the buffer already has an auto-save file name.  This runs from
+`buffer-list-update-hook', which fires on nearly every command, and each call to
+`auto-save-mode' recomputes `buffer-auto-save-file-name' — a name that, for a
+buffer visiting no file, contains a random component.  Calling it repeatedly
+therefore renamed the auto-save target continuously, so every auto-save wrote a
+new file and orphaned the previous one.
 Buffers containing credentials are left alone, so that
 `simple-extras-inhibit-auto-save-of-secrets' is not undone."
   (when (and (simple-extras-is-new-buffer-p)
+             (not buffer-auto-save-file-name)
              (not (simple-extras-buffer-contains-secret-p)))
     (auto-save-mode 1)))
 

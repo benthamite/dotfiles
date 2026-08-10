@@ -70,7 +70,15 @@ respectively."
   (interactive)
   (setq browse-url-handlers '())
   (browse-url-extras-set-handler browse-url-extras-browse-url-default-file 'browse-url-default-browser)
-  (browse-url-extras-set-handler browse-url-extras-browse-url-firefox-file 'browse-url-firefox))
+  (browse-url-extras-set-handler browse-url-extras-browse-url-firefox-file 'browse-url-firefox)
+  (browse-url-extras-sync-eww-handlers))
+
+(defun browse-url-extras-sync-eww-handlers ()
+  "Rebuild EWW's external-browser regexp from the current URL handlers."
+  (setopt eww-use-browse-url
+          (mapconcat #'identity
+                     (cons "\\`mailto:" (mapcar #'car browse-url-handlers))
+                     "\\|")))
 
 ;;;###autoload
 (defun browse-url-extras-of-dired-file-externally ()
@@ -135,4 +143,3 @@ If URL is nil, prompt for a URL."
 
 (provide 'browse-url-extras)
 ;;; browse-url-extras.el ends here
-

@@ -13768,13 +13768,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
      thing-at-point-url-at-point))
   (eww-history-limit most-positive-fixnum)
   (eww-browse-url-new-window-is-tab nil)
-  ;; make eww respect url handlers when following links in webpages
-
   :config
-  (dolist (cons browse-url-handlers)
-    (setopt eww-use-browse-url
-          (concat eww-use-browse-url "\\|" (car cons))))
-
   (with-eval-after-load 'savehist
     (dolist (var '(eww-history eww-prompt-history))
       (add-to-list 'savehist-additional-variables var)))

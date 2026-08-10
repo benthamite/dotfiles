@@ -106,6 +106,21 @@
       (delete-file default-file)
       (delete-file firefox-file))))
 
+;;;; sync-eww-handlers
+
+(ert-deftest browse-url-extras-test-sync-eww-handlers-is-idempotent ()
+  "Rebuild the EWW handler regexp without accumulating old handlers."
+  (let ((browse-url-handlers
+         '(("example\\.com" . browse-url-default-browser)
+           ("other\\.com" . browse-url-firefox)))
+        (eww-use-browse-url "stale"))
+    (browse-url-extras-sync-eww-handlers)
+    (let ((expected "\\`mailto:\\|example\\.com\\|other\\.com"))
+      (should (equal eww-use-browse-url expected))
+      (browse-url-extras-sync-eww-handlers)
+      (should (equal eww-use-browse-url expected))
+      (should (string-match-p eww-use-browse-url "https://example.com")))))
+
 ;;;; write-url-to-file
 
 (ert-deftest browse-url-extras-test-write-url-to-file-appends ()

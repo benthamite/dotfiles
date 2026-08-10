@@ -71,7 +71,7 @@ The main capabilities are:
 
 @itemize
 @item
-@strong{Per-domain browser routing.} Maintaining lists of domains that should open in the default system browser or in Firefox, loaded from configuration files (@ref{Browser routing}).
+@strong{Per-domain browser routing.} Maintaining lists of domains that should open in the default system browser or in Firefox, loaded from configuration files, and keeping EWW's external-browser regexp synchronized with those handlers (@ref{Browser routing}).
 @item
 @strong{Interactive domain management.} Adding the current page's domain to an external browser list with a single command (@ref{Adding domains}).
 @item
@@ -115,7 +115,7 @@ The default value points to @samp{etc/browse-url-firefox.txt} in the Emacs confi
 @section Browser routing
 
 @findex browse-url-extras-set-domains-to-open-externally
-The command @code{browse-url-extras-set-domains-to-open-externally} reads the domain lists from @code{browse-url-extras-browse-url-default-file} and @code{browse-url-extras-browse-url-firefox-file} (@ref{User options}) and configures @code{browse-url-handlers} so that matching URLs are routed to the appropriate external browser. It clears any existing handlers before rebuilding the list.
+The command @code{browse-url-extras-set-domains-to-open-externally} reads the domain lists from @code{browse-url-extras-browse-url-default-file} and @code{browse-url-extras-browse-url-firefox-file} (@ref{User options}) and configures @code{browse-url-handlers} so that matching URLs are routed to the appropriate external browser. It clears any existing handlers before rebuilding the list, then calls @code{browse-url-extras-sync-eww-handlers} so that following a matching link inside EWW also uses the external browser (@ref{Configuration helpers}).
 
 This command is called automatically when @samp{browse-url-extras.el} is loaded and after adding a new domain with @code{browse-url-extras-add-domain-to-open-externally} (@ref{Adding domains}).
 
@@ -150,8 +150,11 @@ The command @code{browse-url-open-externally-in-background} opens a URL in Firef
 @section Configuration helpers
 
 @findex browse-url-extras-set-handler
+@findex browse-url-extras-sync-eww-handlers
 @findex browse-url-extras-write-url-to-file
 The function @code{browse-url-extras-set-handler} reads a URLS-FILE (one domain per line) and adds entries to @code{browse-url-handlers} mapping each domain (as a quoted regexp) to the specified HANDLER function. It is called by @code{browse-url-extras-set-domains-to-open-externally} (@ref{Browser routing}) for each browser configuration file.
+
+The function @code{browse-url-extras-sync-eww-handlers} rebuilds @code{eww-use-browse-url} from EWW's stable @samp{mailto:} pattern and the current @code{browse-url-handlers} keys. Because it derives the complete regexp from current state instead of appending to the previous value, repeated package loads are idempotent and cannot accumulate duplicate alternatives.
 
 The function @code{browse-url-extras-write-url-to-file} appends a URL string to a FILE, then cleans up the file by removing blank lines, eliminating duplicates, and sorting alphabetically. It is used by @code{browse-url-extras-add-domain-to-open-externally} (@ref{Adding domains}) to maintain tidy domain lists.
 

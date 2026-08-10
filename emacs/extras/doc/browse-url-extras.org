@@ -23,7 +23,7 @@ The package depends on =browse-url=, =eww=, =paths=, =f=, and =s=.
 
 The main capabilities are:
 
-- *Per-domain browser routing.* Maintaining lists of domains that should open in the default system browser or in Firefox, loaded from configuration files ([[#h:browser-routing][Browser routing]]).
+- *Per-domain browser routing.* Maintaining lists of domains that should open in the default system browser or in Firefox, loaded from configuration files, and keeping EWW's external-browser regexp synchronized with those handlers ([[#h:browser-routing][Browser routing]]).
 - *Interactive domain management.* Adding the current page's domain to an external browser list with a single command ([[#h:add-domain][Adding domains]]).
 - *External browsing.* Opening the current EWW or xwidget-webkit URL in an external browser, or opening URLs in the background ([[#h:external-browsing][External browsing]]).
 
@@ -63,7 +63,7 @@ The default value points to =etc/browse-url-firefox.txt= in the Emacs configurat
 :END:
 
 #+findex: browse-url-extras-set-domains-to-open-externally
-The command ~browse-url-extras-set-domains-to-open-externally~ reads the domain lists from ~browse-url-extras-browse-url-default-file~ and ~browse-url-extras-browse-url-firefox-file~ ([[#h:user-options][User options]]) and configures ~browse-url-handlers~ so that matching URLs are routed to the appropriate external browser. It clears any existing handlers before rebuilding the list.
+The command ~browse-url-extras-set-domains-to-open-externally~ reads the domain lists from ~browse-url-extras-browse-url-default-file~ and ~browse-url-extras-browse-url-firefox-file~ ([[#h:user-options][User options]]) and configures ~browse-url-handlers~ so that matching URLs are routed to the appropriate external browser. It clears any existing handlers before rebuilding the list, then calls ~browse-url-extras-sync-eww-handlers~ so that following a matching link inside EWW also uses the external browser ([[#h:configuration-helpers][Configuration helpers]]).
 
 This command is called automatically when =browse-url-extras.el= is loaded and after adding a new domain with ~browse-url-extras-add-domain-to-open-externally~ ([[#h:add-domain][Adding domains]]).
 
@@ -102,8 +102,11 @@ The command ~browse-url-open-externally-in-background~ opens a URL in Firefox on
 :END:
 
 #+findex: browse-url-extras-set-handler
+#+findex: browse-url-extras-sync-eww-handlers
 #+findex: browse-url-extras-write-url-to-file
 The function ~browse-url-extras-set-handler~ reads a URLS-FILE (one domain per line) and adds entries to ~browse-url-handlers~ mapping each domain (as a quoted regexp) to the specified HANDLER function. It is called by ~browse-url-extras-set-domains-to-open-externally~ ([[#h:browser-routing][Browser routing]]) for each browser configuration file.
+
+The function ~browse-url-extras-sync-eww-handlers~ rebuilds ~eww-use-browse-url~ from EWW's stable =mailto:= pattern and the current ~browse-url-handlers~ keys. Because it derives the complete regexp from current state instead of appending to the previous value, repeated package loads are idempotent and cannot accumulate duplicate alternatives.
 
 The function ~browse-url-extras-write-url-to-file~ appends a URL string to a FILE, then cleans up the file by removing blank lines, eliminating duplicates, and sorting alphabetically. It is used by ~browse-url-extras-add-domain-to-open-externally~ ([[#h:add-domain][Adding domains]]) to maintain tidy domain lists.
 

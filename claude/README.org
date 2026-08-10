@@ -66,7 +66,8 @@ depends on both tracked instructions and the selected live state.
 
 Operating rules in =CLAUDE.md= stay short and state the behavior directly. The
 file is a lean always-loaded instruction source, not a manual: detail belongs in
-skills and context files that load on demand.
+skills and context files that load on demand. User-facing replies use ASD-STE100
+Simplified Technical English.
 
 The global instructions state the repository-root contract shared with the
 Codex side: every repository lives outside Drive under =~/repos/= (Epoch

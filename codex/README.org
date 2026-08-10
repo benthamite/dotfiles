@@ -41,7 +41,8 @@ load project =CLAUDE.md= as a fallback.
 
 The global =codex/AGENTS.md= and =claude/CLAUDE.md= files are semantic peers.
 The audit normalizes tool-specific titles, paths, and Claude =@context= syntax
-before comparison.
+before comparison. User-facing replies use ASD-STE100 Simplified Technical
+English.
 
 * Native configuration
 

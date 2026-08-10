@@ -504,6 +504,21 @@ The tool *add_bib_entry_and_process* (~gptel-extras-add-bib-entry-and-process~) 
 #+findex: gptel-extras--modify-value-append-fix
 The function ~gptel-extras--modify-value-append-fix~ is added as =:around= advice on ~gptel--modify-value~. It normalizes =:append= specifications in preset plists so that tool names (strings or symbols) are properly wrapped in a list when appending to an existing list value. Without this fix, appending tool names could be misinterpreted as string appends, causing errors.
 
+** Redacting credentials from queries
+:PROPERTIES:
+:CUSTOM_ID: h:redact-secrets
+:END:
+
+#+findex: gptel-extras-redact-secrets-in-query
+#+vindex: gptel-extras-redact-secrets
+The function ~gptel-extras-redact-secrets-in-query~ runs from ~gptel-prompt-transform-functions~ and replaces anything matching ~simple-extras-secret-regexp~ with =[REDACTED-CREDENTIAL]= before the query leaves the machine. It reports how many credentials it removed.
+
+That hook is called in a temporary buffer holding the exact text bound for the provider, which makes it the one place worth guarding: whatever reaches that buffer is transmitted verbatim to a third party. Guarding individual commands would not be enough, because a credential can enter a query by many routes — context added from a buffer or a file, an agent transcript, a shell history, or a backtrace whose frames include an API key as an argument. Emacs prints every argument when it enters the debugger, so a function that takes a key as a parameter puts that key in =*Backtrace*= without anyone typing it.
+
+The function is appended to the hook rather than prepended, so that it runs *after* ~gptel--transform-add-context~. Order matters here: context pulled in from other buffers and files is inserted by that earlier function, and redacting before it ran would leave exactly the material most likely to contain a credential untouched.
+
+The user option ~gptel-extras-redact-secrets~ defaults to =t=; set it to =nil= only to debug the redaction itself.
+
 * Indices
 :PROPERTIES:
 :CUSTOM_ID: h:indices

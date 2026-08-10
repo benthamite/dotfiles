@@ -34,6 +34,7 @@
 (require 'org)
 (require 'seq)
 (require 'paths)
+(require 'simple-extras)
 (require 'subr-x)
 
 (defvar gptel-use-tools)
@@ -1454,6 +1455,37 @@ added as a single context chunk."
 	(setq message (concat message " (context cleared)")))
       (user-error message))))
 
+
+;;;;; Redact credentials
+
+(defcustom gptel-extras-redact-secrets t
+  "Whether to strip credentials out of a query before it is sent.
+Set this to nil only to debug the redaction itself."
+  :type 'boolean
+  :group 'gptel-extras)
+
+(defun gptel-extras-redact-secrets-in-query (&optional _info)
+  "Replace any credential in the query about to be sent with a placeholder.
+Runs from `gptel-prompt-transform-functions', which is called in a temporary
+buffer holding the exact text bound for the LLM provider.  Whatever reaches that
+buffer leaves the machine verbatim, and context added from a buffer or file
+routinely carries credentials: an agent transcript, a shell history, a backtrace
+whose frames include an API key as an argument.  Redacting here covers every
+route into a query, rather than one command at a time.
+INFO is the request plist, which this function does not use."
+  (when gptel-extras-redact-secrets
+    (let ((count 0))
+      (save-excursion
+        (goto-char (point-min))
+        (while (re-search-forward simple-extras-secret-regexp nil t)
+          (replace-match "[REDACTED-CREDENTIAL]" t t)
+          (setq count (1+ count))))
+      (when (> count 0)
+        (message "gptel: redacted %d credential%s from the outgoing query"
+                 count (if (= count 1) "" "s"))))))
+
+(add-hook 'gptel-prompt-transform-functions
+          #'gptel-extras-redact-secrets-in-query t)
 
 (provide 'gptel-extras)
 ;;; gptel-extras.el ends here

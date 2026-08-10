@@ -98,6 +98,7 @@ Tools
 * Filesystem tools::
 * Bib@TeX{} tools::
 * Robustifying tool presets::
+* Redacting credentials from queries::
 
 Indices
 
@@ -560,6 +561,7 @@ This creates presets named @samp{tools-web-search} (sets tools to the two specif
 * Filesystem tools::
 * Bib@TeX{} tools::
 * Robustifying tool presets::
+* Redacting credentials from queries::
 @end menu
 
 @node Filesystem tools
@@ -600,6 +602,19 @@ The tool @strong{add@math{_bib}@math{_entry}@math{_and}@math{_process}} (@code{g
 
 @findex gptel-extras--modify-value-append-fix
 The function @code{gptel-extras--modify-value-append-fix} is added as @samp{:around} advice on @code{gptel--modify-value}. It normalizes @samp{:append} specifications in preset plists so that tool names (strings or symbols) are properly wrapped in a list when appending to an existing list value. Without this fix, appending tool names could be misinterpreted as string appends, causing errors.
+
+@node Redacting credentials from queries
+@section Redacting credentials from queries
+
+@findex gptel-extras-redact-secrets-in-query
+@vindex gptel-extras-redact-secrets
+The function @code{gptel-extras-redact-secrets-in-query} runs from @code{gptel-prompt-transform-functions} and replaces anything matching @code{simple-extras-secret-regexp} with @samp{[REDACTED-CREDENTIAL]} before the query leaves the machine. It reports how many credentials it removed.
+
+That hook is called in a temporary buffer holding the exact text bound for the provider, which makes it the one place worth guarding: whatever reaches that buffer is transmitted verbatim to a third party. Guarding individual commands would not be enough, because a credential can enter a query by many routes — context added from a buffer or a file, an agent transcript, a shell history, or a backtrace whose frames include an API key as an argument. Emacs prints every argument when it enters the debugger, so a function that takes a key as a parameter puts that key in @samp{*Backtrace*} without anyone typing it.
+
+The function is appended to the hook rather than prepended, so that it runs @strong{after} @code{gptel--transform-add-context}. Order matters here: context pulled in from other buffers and files is inserted by that earlier function, and redacting before it ran would leave exactly the material most likely to contain a credential untouched.
+
+The user option @code{gptel-extras-redact-secrets} defaults to @samp{t}; set it to @samp{nil} only to debug the redaction itself.
 
 @node Indices
 @chapter Indices

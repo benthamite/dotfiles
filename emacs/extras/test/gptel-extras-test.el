@@ -608,5 +608,64 @@ literal in the pattern."
           (setq zotra-extras-most-recent-bibkey old-key)
         (makunbound 'zotra-extras-most-recent-bibkey)))))
 
+;;;; Redact credentials
+
+(defun gptel-extras-test--fake-key (prefix body)
+  "Build a credential-shaped string from PREFIX and BODY.
+Assembled at runtime so no literal credential pattern appears in the source,
+where secret scanners would flag it."
+  (concat prefix body))
+
+(ert-deftest gptel-extras-test-redacts-credential-from-query ()
+  "A credential in the outgoing query is replaced with a placeholder."
+  (with-temp-buffer
+    (insert "please review this: "
+            (gptel-extras-test--fake-key
+             "sk-ant-" "api03-AAAAAAAAAAAAAAAAAAAAAAAAAA")
+            " thanks")
+    (gptel-extras-redact-secrets-in-query)
+    (should (string-match-p "\\[REDACTED-CREDENTIAL\\]" (buffer-string)))
+    (should-not (string-match-p "sk-ant-api03" (buffer-string)))
+    (should (string-match-p "please review this" (buffer-string)))))
+
+(ert-deftest gptel-extras-test-redacts-every-credential ()
+  "Every credential in the query is replaced, not only the first."
+  (with-temp-buffer
+    (insert (gptel-extras-test--fake-key "sk-ant-" "api03-AAAAAAAAAAAAAAAAAAAAAAAAAA")
+            "\n"
+            (gptel-extras-test--fake-key "ghp" "_012345678901234567890123456789012345")
+            "\n"
+            (gptel-extras-test--fake-key "xox" "b-33980812345-abcdefghij"))
+    (gptel-extras-redact-secrets-in-query)
+    (should (= 3 (cl-count "[REDACTED-CREDENTIAL]" (split-string (buffer-string) "\n")
+                           :test #'string=)))))
+
+(ert-deftest gptel-extras-test-leaves-ordinary-text-alone ()
+  "A query with no credential is passed through unchanged."
+  (with-temp-buffer
+    (insert "summarise risk-account-on-april-14 and the other tasks")
+    (let ((before (buffer-string)))
+      (gptel-extras-redact-secrets-in-query)
+      (should (equal before (buffer-string))))))
+
+(ert-deftest gptel-extras-test-redaction-can-be-disabled ()
+  "Setting `gptel-extras-redact-secrets' to nil disables redaction."
+  (with-temp-buffer
+    (insert (gptel-extras-test--fake-key "sk-ant-" "api03-AAAAAAAAAAAAAAAAAAAAAAAAAA"))
+    (let ((gptel-extras-redact-secrets nil)
+          (before (buffer-string)))
+      (gptel-extras-redact-secrets-in-query)
+      (should (equal before (buffer-string))))))
+
+(ert-deftest gptel-extras-test-redaction-runs-after-context ()
+  "Redaction is ordered after gptel's own context insertion.
+Context pulled from other buffers and files must be redacted too, so this
+function has to run once that text is already in the query buffer."
+  (let ((hook gptel-prompt-transform-functions))
+    (should (memq 'gptel-extras-redact-secrets-in-query hook))
+    (when (memq 'gptel--transform-add-context hook)
+      (should (> (cl-position 'gptel-extras-redact-secrets-in-query hook)
+                 (cl-position 'gptel--transform-add-context hook))))))
+
 (provide 'gptel-extras-test)
 ;;; gptel-extras-test.el ends here

@@ -477,7 +477,18 @@ The auto-save file of an untitled buffer deliberately *survives* the buffer bein
 #+vindex: simple-extras-secret-regexp
 Redirecting auto-save files for untitled buffers to a fixed directory ([[#h:auto-save-for-new-buffers][Auto-save for new buffers]]) has a consequence that is easy to miss: those files are never cleaned up. ~delete-auto-save-files~ removes an auto-save file when its buffer is *saved*, but an untitled scratch buffer is by definition never saved, so killing it leaves the auto-save file behind permanently. Paste an API key into a scratch buffer to look at it, kill the buffer, and the key remains on disk indefinitely — and is then swept up by whatever backs the machine up.
 
-The function ~simple-extras-inhibit-auto-save-of-secrets~ prevents this. It runs as ~:before~ advice on ~do-auto-save~, and for every buffer that is due to be auto-saved and whose text matches ~simple-extras-secret-regexp~, it calls ~simple-extras-disable-auto-save~ — which clears ~buffer-auto-save-file-name~ and deletes any auto-save file already written, since that file may already contain the credential. Auto-saving stays off for that buffer for the rest of the session.
+The function ~simple-extras-inhibit-auto-save-of-secrets~ prevents this. It runs as ~:before~ advice on ~do-auto-save~, and for every buffer that is due to be auto-saved and that holds a secret, it calls ~simple-extras-disable-auto-save~ — which clears ~buffer-auto-save-file-name~ and deletes any auto-save file already written, since that file may already contain the credential. Auto-saving stays off for that buffer for the rest of the session.
+
+A buffer counts as holding a secret on either of two independent tests, because neither covers the other's case.
+
+#+findex: simple-extras-visiting-decrypted-file-p
+The first is *location*: ~simple-extras-visiting-decrypted-file-p~ returns non-nil for any buffer visiting a file under ~temporary-file-directory~. This is the ~pass edit~ case. That command decrypts an entry to a temporary file and opens an editor on it — on a system without =/dev/shm=, which includes macOS, that file is on ordinary disk — so every file there is a decrypted secret regardless of its contents. Location is the surer test, because a pattern has to recognise the credential format in advance and never will for all of them: a passphrase, a recovery code or a bank account detail looks like ordinary text. Extending the pattern list one format at a time is the wrong shape of fix for this case.
+
+#+vindex: simple-extras-secret-regexp
+The second is *content*: ~simple-extras-buffer-contains-secret-p~ matches the buffer text against ~simple-extras-secret-regexp~. This catches what location cannot — a key pasted into an untitled buffer, or printed in a backtrace because a function took it as an argument. Emacs prints every argument when it enters the debugger, so a key reaches =*Backtrace*= without anyone typing it there.
+
+#+findex: simple-extras-backup-enable-predicate
+~simple-extras-backup-enable-predicate~ applies the same location rule to backups and is installed as ~backup-enable-predicate~. Backups are disabled globally through ~make-backup-files~, so this is redundant today; it exists so that re-enabling backups cannot silently restore the original leak. That leak was exactly this: Emacs wrote a permanent backup of a ~pass~ temporary file, and the shredding ~pass~ performs on exit removed only its own copy. 38 entries leaked that way between February and July 2023.
 
 ~simple-extras-new-buffer-enable-auto-save~ makes the same check, so that its ~buffer-list-update-hook~ entry does not immediately switch auto-saving back on.
 

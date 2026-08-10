@@ -946,7 +946,8 @@ into a scratch buffer would otherwise persist indefinitely."
   (dolist (buffer (buffer-list))
     (with-current-buffer buffer
       (when (and buffer-auto-save-file-name
-                 (simple-extras-buffer-contains-secret-p))
+                 (or (simple-extras-visiting-decrypted-file-p)
+                     (simple-extras-buffer-contains-secret-p)))
         (simple-extras-disable-auto-save)))))
 
 (defun simple-extras-disable-auto-save ()
@@ -956,8 +957,19 @@ The existing file is deleted because it may already contain the credential."
     (setq buffer-auto-save-file-name nil)
     (when (and file (file-exists-p file))
       (ignore-errors (delete-file file))))
-  (message "Auto-save disabled for %s: buffer contains a credential"
-           (buffer-name)))
+  (message "Auto-save disabled for %s: buffer holds a secret" (buffer-name)))
+
+(defun simple-extras-visiting-decrypted-file-p ()
+  "Return non-nil iff the buffer visits a file in the temporary directory.
+A password manager decrypts an entry to a temporary file and opens an editor on
+it: `pass edit' writes to a `pass.XXXXXXXXXXXXX' directory under
+`temporary-file-directory', and `gpg' and `op' behave the same way.  Every such
+file is a decrypted secret, whatever its contents, so location is a surer test
+than any pattern.  A pattern must recognise the credential format in advance,
+and it never will for all of them -- a passphrase, a recovery code or a bank
+detail looks like ordinary text."
+  (and buffer-file-name
+       (file-in-directory-p buffer-file-name temporary-file-directory)))
 
 (defun simple-extras-buffer-contains-secret-p ()
   "Return non-nil iff the current buffer appears to contain a credential.
@@ -979,6 +991,17 @@ cheap when called from frequently-run hooks."
       (and (re-search-forward simple-extras-secret-regexp nil t) t))))
 
 (advice-add 'do-auto-save :before #'simple-extras-inhibit-auto-save-of-secrets)
+
+(defun simple-extras-backup-enable-predicate (name)
+  "Return non-nil iff Emacs may write a backup of the file NAME.
+Refuses every file in `temporary-file-directory'.  A backup there is what leaked
+38 `pass' entries: `pass edit' decrypts an entry to a temporary file, Emacs kept
+a permanent copy of it, and the shredding `pass' does on exit then removed only
+its own file."
+  (and (not (file-in-directory-p name temporary-file-directory))
+       (normal-backup-enable-predicate name)))
+
+(setq backup-enable-predicate #'simple-extras-backup-enable-predicate)
 
 ;;;;; sort
 

@@ -868,6 +868,35 @@ without a guard each call would orphan the previous auto-save file."
       (dotimes (_ 5) (simple-extras-new-buffer-enable-auto-save))
       (should (equal first buffer-auto-save-file-name)))))
 
+(ert-deftest simple-extras-test-detects-decrypted-temp-file ()
+  "A buffer visiting a file in the temporary directory counts as holding a secret.
+This is the `pass edit' case: the file is a decrypted entry whatever it holds."
+  (let ((file (make-temp-file "pass.XXXXXXXXXXXXX-tlon-core-example.com-" nil ".txt")))
+    (unwind-protect
+        (with-temp-buffer
+          (setq buffer-file-name file)
+          (insert "an ordinary passphrase with no recognisable format\n")
+          (should (simple-extras-visiting-decrypted-file-p))
+          (should-not (simple-extras-buffer-contains-secret-p)))
+      (delete-file file))))
+
+(ert-deftest simple-extras-test-ordinary-file-is-not-decrypted-temp ()
+  "A buffer visiting a file outside the temporary directory is not flagged."
+  (with-temp-buffer
+    (setq buffer-file-name (expand-file-name "notes.org" "~"))
+    (should-not (simple-extras-visiting-decrypted-file-p))))
+
+(ert-deftest simple-extras-test-backup-refused-for-temp-file ()
+  "Emacs may not back up a file in the temporary directory."
+  (let ((file (make-temp-file "pass.XXXXXXXXXXXXX-example-" nil ".txt")))
+    (unwind-protect
+        (should-not (simple-extras-backup-enable-predicate file))
+      (delete-file file))))
+
+(ert-deftest simple-extras-test-backup-allowed-for-ordinary-file ()
+  "Emacs may still back up a file outside the temporary directory."
+  (should (simple-extras-backup-enable-predicate (expand-file-name "notes.org" "~"))))
+
 (ert-deftest simple-extras-test-killed-buffer-keeps-auto-save-file ()
   "A killed untitled buffer keeps its auto-save file, so it can be recovered.
 Killing a buffer that visits no file does not prompt, so this file is the only

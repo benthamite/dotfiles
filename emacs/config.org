@@ -9170,6 +9170,16 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (agent-project-sources
    '(("epoch"
       . ("/Users/pablostafforini/My Drive/Epoch/projects/shared/project-registry.json"))
+     ("tlon"
+      . ("~/My Drive/tlon/projects/80k-ai-2027"
+         "~/My Drive/tlon/projects/80k-podcast"
+         "~/My Drive/tlon/projects/ai-2027"
+         "~/My Drive/tlon/projects/ai-in-context"
+         "~/My Drive/tlon/projects/bisagra"
+         "~/My Drive/tlon/projects/boletin"
+         "~/My Drive/tlon/projects/cognitive-revolution"
+         "~/My Drive/tlon/projects/ea.international"
+         "~/My Drive/tlon/projects/ea.news"))
      ("trajectory" . ("~/Trajectory/reasoning-tasks/*"))
      ("" . ("~/repos/*" "~/repos/.worktrees/*/*"))))
   (agent-project-registry-root "/Users/pablostafforini/My Drive/Epoch/projects/")

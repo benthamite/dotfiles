@@ -787,6 +787,42 @@ enabled = false
 path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/skill-resolver/SKILL.md"
 enabled = false
 
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/add-bib-entry/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/overnight-todos/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/pin-elisp-pr/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/refresh-cr-tracker/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/symptom-check/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/find-skills/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/install-mcp-server/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/optimize-agent-instructions/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/skill-audit/SKILL.md"
+enabled = false
+
 [notice]
 hide_rate_limit_model_nudge = true
 

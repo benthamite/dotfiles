@@ -1,10 +1,70 @@
 {
   "disabled": {
+    "add-bib-entry": {
+      "claude_last_used": "not found",
+      "codex_last_used": "not found",
+      "disabled_at": "2026-08-11T14:28:04+00:00",
+      "reason": "Zero lifetime invocations in the merged Claude usage counters since creation on 2026-06-07.",
+      "threshold_days": 60
+    },
+    "find-skills": {
+      "claude_last_used": "not found",
+      "codex_last_used": "not found",
+      "codex_path": ".codex/skills/find-skills/SKILL.md",
+      "disabled_at": "2026-08-11T14:28:04+00:00",
+      "reason": "Zero lifetime invocations in the merged Claude usage counters since creation on 2026-05-10.",
+      "threshold_days": 60
+    },
     "google-sheets-comments": {
       "claude_last_used": "not found",
       "codex_last_used": "not found",
       "disabled_at": "2026-05-10T15:14:51+00:00",
       "reason": "No Claude or Codex usage found inside the threshold window.",
+      "threshold_days": 60
+    },
+    "install-mcp-server": {
+      "claude_last_used": "not found",
+      "codex_last_used": "not found",
+      "codex_path": ".codex/skills/install-mcp-server/SKILL.md",
+      "disabled_at": "2026-08-11T14:28:04+00:00",
+      "reason": "Zero lifetime invocations in the merged Claude usage counters since creation on 2026-06-06.",
+      "threshold_days": 60
+    },
+    "optimize-agent-instructions": {
+      "claude_last_used": "not found",
+      "codex_last_used": "not found",
+      "codex_path": ".codex/skills/optimize-agent-instructions/SKILL.md",
+      "disabled_at": "2026-08-11T14:28:04+00:00",
+      "reason": "Zero lifetime invocations in the merged Claude usage counters since creation on 2026-05-17.",
+      "threshold_days": 60
+    },
+    "overnight-todos": {
+      "claude_last_used": "not found",
+      "codex_last_used": "not found",
+      "disabled_at": "2026-08-11T14:28:04+00:00",
+      "reason": "Zero lifetime invocations in the merged Claude usage counters since creation on 2026-05-16.",
+      "threshold_days": 60
+    },
+    "pin-elisp-pr": {
+      "claude_last_used": "not found",
+      "codex_last_used": "not found",
+      "disabled_at": "2026-08-11T14:28:04+00:00",
+      "reason": "Zero lifetime invocations in the merged Claude usage counters since creation on 2026-05-17.",
+      "threshold_days": 60
+    },
+    "refresh-cr-tracker": {
+      "claude_last_used": "not found",
+      "codex_last_used": "not found",
+      "disabled_at": "2026-08-11T14:28:04+00:00",
+      "reason": "Zero lifetime invocations since creation on 2026-06-26. NOTE: only 46 days old, so it does not clear the 60-day window; disabled on the stronger never-invoked signal after explicit user approval. Re-enable if that is too aggressive.",
+      "threshold_days": 60
+    },
+    "skill-audit": {
+      "claude_last_used": "not found",
+      "codex_last_used": "not found",
+      "codex_path": ".codex/skills/skill-audit/SKILL.md",
+      "disabled_at": "2026-08-11T14:28:04+00:00",
+      "reason": "Zero lifetime invocations in the merged Claude usage counters since creation on 2026-06-06.",
       "threshold_days": 60
     },
     "skill-resolver": {
@@ -13,6 +73,13 @@
       "codex_path": ".codex/skills/skill-resolver/SKILL.md",
       "disabled_at": "2026-05-10T15:14:51+00:00",
       "reason": "No Claude or Codex usage found inside the threshold window.",
+      "threshold_days": 60
+    },
+    "symptom-check": {
+      "claude_last_used": "not found",
+      "codex_last_used": "not found",
+      "disabled_at": "2026-08-11T14:28:04+00:00",
+      "reason": "Zero lifetime invocations in the merged Claude usage counters since creation on 2026-04-25.",
       "threshold_days": 60
     }
   },

@@ -692,7 +692,7 @@
       "path": "codex/config.toml",
       "tracked": true,
       "live_path": "~/.codex/config.toml",
-      "note": "Tracked global config, live through ~/.codex/config.toml. Codex-only trust, plugin, theme, app, MCP, account, and model state has no Claude counterpart; project-doc fallbacks remain disabled and [features].hooks enables hooks. bin/skill-prune owns managed [[skills.config]] entries and shared disable state. bin/codex-config-prune removes dead project and hook-trust records. Moving a repository means rewriting its [projects.\"...\"] trust key and merging it with any entry Codex appended for the new path; a duplicate table makes the config unparseable. See codex/README.org."
+      "note": "Tracked global config, live at ~/.codex/config.toml. Codex-only trust, plugin, theme, MCP, account, model state has no Claude counterpart; project-doc fallbacks stay disabled; [features].hooks enables hooks. bin/skill-prune owns managed [[skills.config]] entries but reads only ~/.claude/.claude.json, missing ~/.claude-epoch usage and calling active skills unused; 2026-08-11 entries were hand-added, recorded in skills-disabled.json; fix before using apply. bin/codex-config-prune removes dead records. Moving a repo means rewriting its trust key; duplicates break the config. See codex/README.org."
     },
     {
       "tool": "Codex",
@@ -720,7 +720,7 @@
       "path": "bin/drive-errors",
       "tracked": true,
       "live_path": "tracked dotfiles command",
-      "note": "Reads Google Drive's native sync-error panel through the accessibility API \u2014 the only way to reach it, since Drive exposes no file or API \u2014 and marks each reported name stale or live by resolving it against the Drive tree. Drive's list does not clear itself when the offending path disappears, so the raw count overstates the problem badly; the 2026-08-03 panel showed 200+ errors against 8 live offenders. Owned by the fix-drive-errors skill."
+      "note": "Reads Google Drive's native sync-error panel through the accessibility API — the only way to reach it, since Drive exposes no file or API — and marks each reported name stale or live by resolving it against the Drive tree. Drive's list does not clear itself when the offending path disappears, so the raw count overstates the problem badly; the 2026-08-03 panel showed 200+ errors against 8 live offenders. Owned by the fix-drive-errors skill."
     }
   ],
   "audit_command": "bin/ai-config-sync audit"

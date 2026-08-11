@@ -274,3 +274,75 @@ test("internal deadline cleans output and browser profile", async (t) => {
   assert.deepEqual(await fs.readdir(profiles), []);
   await assert.rejects(fs.access(output));
 });
+
+test("bot-verification pages fail instead of becoming PDFs", async (t) => {
+  const chromeProgram = process.env.EWW_EXTRAS_RENDERER_CHROME_PROGRAM;
+  if (!chromeProgram) {
+    t.skip("test-browser supplies system Chrome");
+    return;
+  }
+  const server = await startFixtureServer();
+  const temporary = await fs.mkdtemp(path.join(os.tmpdir(), "eww-render-test-"));
+  const output = path.join(temporary, "challenge.pdf");
+  t.after(async () => {
+    await server.close();
+    await fs.rm(temporary, { recursive: true, force: true });
+  });
+
+  await assert.rejects(renderer.render({
+    url: `${server.origin}/challenge`,
+    output,
+    type: "pdf",
+    "chrome-program": chromeProgram,
+    "module-root": process.env.EWW_EXTRAS_RENDERER_MODULE_ROOT,
+  }), /verification: browser challenge page/);
+  await assert.rejects(fs.access(output));
+});
+
+test("rendering waits for dynamically populated content to settle", async (t) => {
+  const chromeProgram = process.env.EWW_EXTRAS_RENDERER_CHROME_PROGRAM;
+  if (!chromeProgram) {
+    t.skip("test-browser supplies system Chrome");
+    return;
+  }
+  const server = await startFixtureServer();
+  const temporary = await fs.mkdtemp(path.join(os.tmpdir(), "eww-render-test-"));
+  const output = path.join(temporary, "dynamic.html");
+  t.after(async () => {
+    await server.close();
+    await fs.rm(temporary, { recursive: true, force: true });
+  });
+
+  await renderer.render({
+    url: `${server.origin}/dynamic`,
+    output,
+    type: "html",
+    "chrome-program": chromeProgram,
+    "module-root": process.env.EWW_EXTRAS_RENDERER_MODULE_ROOT,
+  });
+  assert.match(await fs.readFile(output, "utf8"), /Dynamic article content arrived/);
+});
+
+test("newsletter text does not remove an ordinary content ancestor", async (t) => {
+  const chromeProgram = process.env.EWW_EXTRAS_RENDERER_CHROME_PROGRAM;
+  if (!chromeProgram) {
+    t.skip("test-browser supplies system Chrome");
+    return;
+  }
+  const server = await startFixtureServer();
+  const temporary = await fs.mkdtemp(path.join(os.tmpdir(), "eww-render-test-"));
+  const output = path.join(temporary, "newsletter.html");
+  t.after(async () => {
+    await server.close();
+    await fs.rm(temporary, { recursive: true, force: true });
+  });
+
+  await renderer.render({
+    url: `${server.origin}/newsletter-content`,
+    output,
+    type: "html",
+    "chrome-program": chromeProgram,
+    "module-root": process.env.EWW_EXTRAS_RENDERER_MODULE_ROOT,
+  });
+  assert.match(await fs.readFile(output, "utf8"), /Important article body/);
+});

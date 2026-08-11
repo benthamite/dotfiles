@@ -162,15 +162,18 @@ function cleanupResidualUiExpression() {
   const consentWords = /\b(cookie|consent|privacy|tracking|preferences)\b/i;
   const viewportArea = Math.max(1, innerWidth * innerHeight);
   for (const node of document.querySelectorAll("body *")) {
-    const text = `${node.id} ${node.className} ${node.getAttribute("aria-label") || ""} ${node.textContent || ""}`;
+    const identity = `${node.id} ${node.className} ${node.getAttribute("aria-label") || ""} ${node.getAttribute("title") || ""}`;
+    const text = `${identity} ${node.textContent || ""}`;
     if (consentWords.test(text)) continue;
     const style = getComputedStyle(node);
     const rect = node.getBoundingClientRect();
     const modal = node.getAttribute("role") === "dialog" || node.getAttribute("aria-modal") === "true";
-    const genericOverlay = /\b(modal|overlay|backdrop|subscribe|newsletter)\b/i.test(text);
+    const genericOverlay = /\b(modal|overlay|backdrop|subscribe|newsletter)\b/i.test(identity);
     const largePositioned = new Set(["fixed", "sticky"]).has(style.position) &&
       rect.width * rect.height >= viewportArea * 0.15;
-    if (modal || genericOverlay || largePositioned) node.remove();
+    if (modal || genericOverlay || largePositioned) {
+      node.remove();
+    }
   }
   document.documentElement.style.overflow = "auto";
   if (document.body) document.body.style.overflow = "auto";
@@ -184,6 +187,21 @@ async function cleanupResidualUi(page) {
       // A frame can detach while the page settles.
     }
   }
+}
+
+async function isBrowserChallenge(page) {
+  return page.evaluate(() => {
+    const title = document.title.toLowerCase();
+    const text = (document.body?.innerText || "").toLowerCase();
+    const signals = [
+      title.includes("just a moment"),
+      text.includes("performing security verification"),
+      text.includes("verifies you are not a bot"),
+      text.includes("checking your browser"),
+      text.includes("security by cloudflare"),
+    ];
+    return signals.filter(Boolean).length >= 2;
+  });
 }
 
 async function waitForConsent(page, state) {
@@ -255,7 +273,18 @@ async function render(rawArgs, options = {}) {
         await page.waitForFunction(() => document.body?.textContent?.trim(), null, {
           timeout: 5000,
         });
-        await waitForConsent(page, consentState);
+        if (await isBrowserChallenge(page)) {
+          throw new Error("verification: browser challenge page");
+        }
+        await Promise.all([
+          waitForConsent(page, consentState),
+          page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => null),
+        ]);
+        await wait(250);
+        if (await findBlockingConsentUi(page)) {
+          throw new Error("verification: unresolved late consent blocker");
+        }
+        await cleanupResidualUi(page);
         await serialize(page, args.type, temporaryOutput);
         const metadata = await fs.stat(temporaryOutput);
         if (metadata.size === 0) throw new Error("serialization: empty output");
@@ -286,6 +315,7 @@ module.exports = {
   blockingConsentExpression,
   cleanupResidualUiExpression,
   findBlockingConsentUi,
+  isBrowserChallenge,
   parseArgs,
   render,
   validateArgs,

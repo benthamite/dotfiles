@@ -41,11 +41,32 @@ const pages = {
   "/never-ready": `<!doctype html><html><body><script>
     document.body.textContent = '';
   </script></body></html>`,
+  "/challenge": `<!doctype html><html><head><title>Just a moment...</title></head>
+    <body><main><h1>Performing security verification</h1>
+      <p>This website verifies you are not a bot.</p><p>Verifying...</p>
+    </main></body></html>`,
+  "/dynamic": `<!doctype html><html><body><main id="content">Loading</main>
+    <script>fetch('/dynamic-data').then(response => response.text()).then(text => {
+      document.querySelector('#content').textContent = text;
+    });</script>
+  </body></html>`,
+  "/newsletter-content": `<!doctype html><html><body><main id="maincontent">
+    <article>Important article body</article>
+    <section id="newsletters">Newsletter recommendations</section>
+  </main></body></html>`,
 };
 
 function startFixtureServer() {
   const server = http.createServer((request, response) => {
-    const page = pages[new URL(request.url, "http://localhost").pathname];
+    const pathname = new URL(request.url, "http://localhost").pathname;
+    if (pathname === "/dynamic-data") {
+      setTimeout(() => {
+        response.writeHead(200, { "content-type": "text/plain" });
+        response.end("Dynamic article content arrived");
+      }, 1800);
+      return;
+    }
+    const page = pages[pathname];
     response.writeHead(page ? 200 : 404, { "content-type": "text/html" });
     response.end(page || "Not found");
   });

@@ -13,6 +13,18 @@
 
 (require 'ebib-extras)
 
+;;;; Ebib return bindings
+
+(ert-deftest ebib-extras-test-return-edits-current-field ()
+  "Bind RET to edit the current field in an Ebib entry buffer."
+  (should (eq (lookup-key ebib-entry-mode-map (kbd "RET"))
+              #'ebib-edit-current-field)))
+
+(ert-deftest ebib-extras-test-return-edits-selected-entry ()
+  "Bind RET to edit the selected entry in an Ebib index buffer."
+  (should (eq (lookup-key ebib-index-mode-map (kbd "RET"))
+              #'ebib-edit-entry)))
+
 ;;;; ebib-extras-isbn-p
 
 (ert-deftest ebib-extras-test-isbn-p-isbn13-no-hyphens ()
@@ -226,6 +238,26 @@
   (should (member "Book" ebib-extras-book-like-entry-types))
   (should (member "incollection" ebib-extras-book-like-entry-types))
   (should (member "Incollection" ebib-extras-book-like-entry-types)))
+
+;;;; ebib-extras-attach-files
+
+(ert-deftest ebib-extras-test-attach-files-capitalized-online-type ()
+  "Generate both attachments for a capitalized Online entry type."
+  (let (attached)
+    (cl-letf (((symbol-function 'ebib-extras-get-field)
+               (lambda (field &optional _key)
+                 (pcase field
+                   ("url" "https://example.com/article")
+                   ("=type=" "Online")
+                   (_ nil))))
+              ((symbol-function 'ebib-extras-url-to-pdf-attach)
+               (lambda (key) (push (list "pdf" key) attached)))
+              ((symbol-function 'ebib-extras-url-to-html-attach)
+               (lambda (key) (push (list "html" key) attached))))
+      (ebib-extras-attach-files "Ngo2026WhatJustHappened"))
+    (should (equal (nreverse attached)
+                   '(("pdf" "Ngo2026WhatJustHappened")
+                     ("html" "Ngo2026WhatJustHappened"))))))
 
 ;;;; ebib-extras--extension-directories
 

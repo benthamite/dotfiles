@@ -323,6 +323,8 @@ It calls @code{ebib-extras-attach-files} to download and attach the appropriate 
 
 This command assumes that the entry's type, author, date, and title fields are already correctly set.
 
+In the Ebib entry buffer, @samp{RET} edits the field at point.  In the Ebib index buffer, @samp{RET} opens the selected entry for editing.  These bindings accept the keyboard Return event as well as the graphical Return event that @samp{ebib} binds by default.
+
 @node Setting and fetching field values
 @subsection Setting and fetching field values
 
@@ -461,7 +463,7 @@ If an ISBN is available or the entry type is book-like, it calls @code{ebib-extr
 @item
 If the URL matches a known video website (YouTube), it calls @code{ebib-extras-url-to-srt-attach} to download subtitles.
 @item
-If the entry type contains ``online'' and a URL is available, it calls both @code{ebib-extras-url-to-pdf-attach} and @code{ebib-extras-url-to-html-attach}.
+If the entry type is @samp{online} or @samp{article} and a URL is available, it calls both @code{ebib-extras-url-to-pdf-attach} and @code{ebib-extras-url-to-html-attach}.  Entry-type matching is case-insensitive, so standard Bib@TeX{} forms such as @samp{Online} and @samp{Article} follow the same path.
 @end enumerate
 
 @node DOI and book attachment

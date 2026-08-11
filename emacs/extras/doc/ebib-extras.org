@@ -161,6 +161,8 @@ The command ~ebib-extras-process-entry~ provides a unified workflow for preparin
 
 This command assumes that the entry's type, author, date, and title fields are already correctly set.
 
+In the Ebib entry buffer, =RET= edits the field at point.  In the Ebib index buffer, =RET= opens the selected entry for editing.  These bindings accept the keyboard Return event as well as the graphical Return event that =ebib= binds by default.
+
 *** Setting and fetching field values
 :PROPERTIES:
 :CUSTOM_ID: h:field-manipulation
@@ -288,7 +290,7 @@ The command ~ebib-extras-attach-files~ is a DWIM command that tries to download 
 1. If a DOI is available, it calls ~ebib-extras-doi-attach~.
 2. If an ISBN is available or the entry type is book-like, it calls ~ebib-extras-book-attach~.
 3. If the URL matches a known video website (YouTube), it calls ~ebib-extras-url-to-srt-attach~ to download subtitles.
-4. If the entry type contains "online" and a URL is available, it calls both ~ebib-extras-url-to-pdf-attach~ and ~ebib-extras-url-to-html-attach~.
+4. If the entry type is =online= or =article= and a URL is available, it calls both ~ebib-extras-url-to-pdf-attach~ and ~ebib-extras-url-to-html-attach~.  Entry-type matching is case-insensitive, so standard BibTeX forms such as =Online= and =Article= follow the same path.
 
 *** DOI and book attachment
 :PROPERTIES:

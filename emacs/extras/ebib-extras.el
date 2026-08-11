@@ -35,6 +35,9 @@
 (require 'shut-up)
 (require 'annas-archive)
 
+(define-key ebib-entry-mode-map (kbd "RET") #'ebib-edit-current-field)
+(define-key ebib-index-mode-map (kbd "RET") #'ebib-edit-entry)
+
 ;;;; User options
 
 (defgroup ebib-extras ()
@@ -807,7 +810,7 @@ KEY is an optional BibTeX key string, passed interactively as nil."
               ((and url (cl-some (lambda (regexp) (string-match regexp url))
                                  ebib-extras-video-websites))
                (ebib-extras-url-to-srt-attach target-key))
-              ((and url (member type '("online" "article")))
+              ((and url (member (downcase type) '("online" "article")))
                (ebib-extras-url-to-pdf-attach target-key)
                (ebib-extras-url-to-html-attach target-key)))))))
 

@@ -1,14 +1,18 @@
 #!/usr/bin/env node
 
-const fs = require("fs");
-const { spawn } = require("child_process");
+"use strict";
+
+const fs = require("node:fs/promises");
+const os = require("node:os");
+const path = require("node:path");
+const { createRequire } = require("node:module");
 
 function parseArgs(argv) {
   const args = {};
-  for (let i = 0; i < argv.length; i += 2) {
-    const key = argv[i];
-    const value = argv[i + 1];
-    if (!key || !key.startsWith("--") || value === undefined) {
+  for (let index = 0; index < argv.length; index += 2) {
+    const key = argv[index];
+    const value = argv[index + 1];
+    if (!key?.startsWith("--") || value === undefined) {
       throw new Error(`Invalid argument sequence near ${key || "<end>"}`);
     }
     args[key.slice(2)] = value;
@@ -16,235 +20,273 @@ function parseArgs(argv) {
   return args;
 }
 
-function requireArg(args, name) {
-  if (!args[name]) {
-    throw new Error(`Missing --${name}`);
+function validateArgs(args) {
+  const allowed = new Set([
+    "url",
+    "output",
+    "type",
+    "chrome-program",
+    "module-root",
+  ]);
+  for (const name of Object.keys(args)) {
+    if (!allowed.has(name)) throw new Error(`Unknown option --${name}`);
   }
-  return args[name];
+  for (const name of allowed) {
+    if (!args[name]) throw new Error(`Missing --${name}`);
+  }
+  if (!new Set(["pdf", "html"]).has(args.type)) {
+    throw new Error(`Invalid --type ${args.type}`);
+  }
+  return args;
 }
 
-function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+function loadPlaywright(moduleRoot) {
+  const cacheRequire = createRequire(path.join(moduleRoot, "package.json"));
+  return cacheRequire("playwright-core");
 }
 
-class CdpClient {
-  constructor(socket) {
-    this.nextId = 1;
-    this.pending = new Map();
-    this.waiters = new Map();
-    socket.addEventListener("message", (event) => this.handleMessage(event));
-    this.socket = socket;
-  }
+async function loadAutoconsent(moduleRoot) {
+  const cacheRequire = createRequire(path.join(moduleRoot, "package.json"));
+  const entry = cacheRequire.resolve("@duckduckgo/autoconsent");
+  const content = await fs.readFile(
+    path.join(path.dirname(entry), "autoconsent.playwright.js"),
+    "utf8",
+  );
+  const rules = cacheRequire("@duckduckgo/autoconsent/rules/rules.json");
+  return { content, rules };
+}
 
-  static connect(url) {
-    return new Promise((resolve, reject) => {
-      const socket = new WebSocket(url);
-      socket.addEventListener("open", () => resolve(new CdpClient(socket)));
-      socket.addEventListener("error", reject);
-    });
-  }
+const consentConfig = {
+  enabled: true,
+  autoAction: "optOut",
+  disabledCmps: [],
+  enablePrehide: true,
+  enableCosmeticRules: true,
+  enableGeneratedRules: true,
+  enableHeuristicDetection: true,
+  enablePopupMutationObserver: true,
+  detectRetries: 20,
+  isMainWorld: false,
+  prehideTimeout: 2000,
+  visualTest: false,
+  logs: {
+    lifecycle: false,
+    rulesteps: false,
+    detectionsteps: false,
+    evals: false,
+    errors: true,
+    messages: false,
+    waits: false,
+  },
+  performanceLoggingEnabled: false,
+  heuristicPopupSearchTimeout: 100,
+  heuristicMode: "tier2",
+};
 
-  handleMessage(event) {
-    const message = JSON.parse(event.data);
-    if (message.id && this.pending.has(message.id)) {
-      const { resolve, reject } = this.pending.get(message.id);
-      this.pending.delete(message.id);
-      if (message.error) {
-        reject(new Error(message.error.message));
-      } else {
-        resolve(message.result || {});
+function wait(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+async function installAutoconsent(context, moduleRoot) {
+  const { content, rules } = await loadAutoconsent(moduleRoot);
+  const state = { detected: false, done: false, cmpNames: new Set() };
+  await context.exposeBinding(
+    "autoconsentSendMessage",
+    async ({ frame }, message) => {
+      if (!message || frame.isDetached()) return;
+      if (message.type === "init") {
+        await frame.evaluate(
+          ({ config, ruleBundle }) => globalThis.autoconsentReceiveMessage?.({
+            type: "initResp",
+            config,
+            rules: ruleBundle,
+          }),
+          { config: consentConfig, ruleBundle: rules },
+        );
+      } else if (message.type === "eval") {
+        const result = await frame.evaluate(message.code);
+        await frame.evaluate(
+          ({ id, value }) => globalThis.autoconsentReceiveMessage?.({
+            type: "evalResp",
+            id,
+            result: value,
+          }),
+          { id: message.id, value: result },
+        );
       }
-      return;
-    }
-    if (message.method) {
-      const key = this.eventKey(message.method, message.sessionId);
-      const waiters = this.waiters.get(key) || [];
-      waiters.splice(0).forEach((resolve) => resolve(message.params || {}));
-      this.waiters.delete(key);
-    }
-  }
-
-  send(method, params = {}, sessionId = null) {
-    const id = this.nextId++;
-    const message = { id, method, params };
-    if (sessionId) {
-      message.sessionId = sessionId;
-    }
-    return new Promise((resolve, reject) => {
-      this.pending.set(id, { resolve, reject });
-      this.socket.send(JSON.stringify(message));
-    });
-  }
-
-  waitFor(method, sessionId, timeoutMs) {
-    const key = this.eventKey(method, sessionId);
-    return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error(`Timed out waiting for ${method}`));
-      }, timeoutMs);
-      const wrappedResolve = (params) => {
-        clearTimeout(timeout);
-        resolve(params);
-      };
-      const waiters = this.waiters.get(key) || [];
-      waiters.push(wrappedResolve);
-      this.waiters.set(key, waiters);
-    });
-  }
-
-  eventKey(method, sessionId) {
-    return `${sessionId || ""}:${method}`;
-  }
-}
-
-function launchChrome(args) {
-  const chromeArgs = [
-    "--headless=new",
-    `--user-data-dir=${args["user-data-dir"]}`,
-    `--profile-directory=${args["profile-directory"]}`,
-    "--disable-gpu",
-    "--disable-extensions",
-    "--disable-software-rasterizer",
-    "--no-first-run",
-    "--no-default-browser-check",
-    "--hide-scrollbars",
-    "--remote-debugging-port=0",
-    "about:blank",
-  ];
-  const chrome = spawn(args["chrome-program"], chromeArgs, {
-    stdio: ["ignore", "ignore", "pipe"],
-  });
-  const endpoint = new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      reject(new Error("Timed out waiting for Chrome DevTools endpoint"));
-    }, 10000);
-    chrome.stderr.on("data", (chunk) => {
-      const match = chunk.toString().match(/DevTools listening on (ws:\/\/\S+)/);
-      if (match) {
-        clearTimeout(timeout);
-        resolve(match[1]);
+      if (new Set(["cmpDetected", "popupFound"]).has(message.type)) {
+        state.detected = true;
+        if (message.cmp) state.cmpNames.add(message.cmp);
       }
-    });
-  });
-  return { chrome, endpoint };
+      if (message.type === "autoconsentDone") {
+        state.done = true;
+        if (message.cmp) state.cmpNames.add(message.cmp);
+      }
+    },
+  );
+  await context.addInitScript({ content });
+  return state;
 }
 
-async function openPage(client, url) {
-  const { targetId } = await client.send("Target.createTarget", { url: "about:blank" });
-  const { sessionId } = await client.send("Target.attachToTarget", {
-    targetId,
-    flatten: true,
-  });
-  await client.send("Page.enable", {}, sessionId);
-  await client.send("Runtime.enable", {}, sessionId);
-  const loaded = client.waitFor("Page.loadEventFired", sessionId, 15000).catch(() => null);
-  await client.send("Page.navigate", { url }, sessionId);
-  await loaded;
-  await wait(2500);
-  return sessionId;
-}
-
-async function cleanupPage(client, sessionId) {
-  await client.send("Runtime.evaluate", {
-    expression: `(${cleanupExpression.toString()})()`,
-    awaitPromise: true,
-    returnByValue: true,
-  }, sessionId);
-}
-
-async function cleanupExpression() {
-  const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  document.querySelectorAll([
-    '[aria-label="close"]',
-    '[aria-label="Close"]',
-    'button[title="Close"]',
-    'button[title="close"]',
-  ].join(",")).forEach((button) => {
-    try {
-      button.click();
-    } catch (_) {}
-  });
-  await pause(500);
-  const selectors = [
-    '[role="dialog"]',
-    '[aria-modal="true"]',
-    '[class*="subscribeDialog"]',
-    '[class*="SubscribeDialog"]',
-    '[class*="modal"]',
-    '[class*="Modal"]',
-    '[class*="overlay"]',
-    '[class*="Overlay"]',
-    '[class*="backdrop"]',
-    '[class*="Backdrop"]',
-    '[id*="cookie"]',
-    '[class*="cookie"]',
-  ];
-  document.querySelectorAll(selectors.join(",")).forEach((node) => node.remove());
-  const viewportArea = window.innerWidth * window.innerHeight;
-  document.querySelectorAll("body *").forEach((node) => {
-    const style = window.getComputedStyle(node);
-    if (!["fixed", "sticky"].includes(style.position)) {
-      return;
-    }
+function blockingConsentExpression() {
+  const consentWords = /\b(cookie|consent|privacy|tracking|preferences)\b/i;
+  const viewportArea = Math.max(1, innerWidth * innerHeight);
+  for (const node of document.querySelectorAll("body *")) {
+    const style = getComputedStyle(node);
+    if (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0) continue;
     const rect = node.getBoundingClientRect();
-    const area = Math.max(0, rect.width) * Math.max(0, rect.height);
-    const zIndex = Number.parseInt(style.zIndex, 10);
-    if (area > viewportArea * 0.15 && (Number.isNaN(zIndex) || zIndex >= 10)) {
-      node.remove();
+    if (rect.width <= 0 || rect.height <= 0) continue;
+    const text = `${node.id} ${node.className} ${node.getAttribute("aria-label") || ""} ${node.textContent || ""}`;
+    if (!consentWords.test(text)) continue;
+    const modal = node.getAttribute("role") === "dialog" || node.getAttribute("aria-modal") === "true";
+    const positioned = new Set(["fixed", "sticky"]).has(style.position);
+    const large = rect.width * rect.height >= viewportArea * 0.15;
+    if (modal || (positioned && large)) return true;
+  }
+  return false;
+}
+
+async function findBlockingConsentUi(page) {
+  for (const frame of page.frames()) {
+    try {
+      if (await frame.evaluate(blockingConsentExpression)) return true;
+    } catch (_) {
+      // A frame can detach while the page settles.
     }
-  });
+  }
+  return false;
+}
+
+function cleanupResidualUiExpression() {
+  document.querySelector("style#autoconsent-prehide")?.remove();
+  const consentWords = /\b(cookie|consent|privacy|tracking|preferences)\b/i;
+  const viewportArea = Math.max(1, innerWidth * innerHeight);
+  for (const node of document.querySelectorAll("body *")) {
+    const text = `${node.id} ${node.className} ${node.getAttribute("aria-label") || ""} ${node.textContent || ""}`;
+    if (consentWords.test(text)) continue;
+    const style = getComputedStyle(node);
+    const rect = node.getBoundingClientRect();
+    const modal = node.getAttribute("role") === "dialog" || node.getAttribute("aria-modal") === "true";
+    const genericOverlay = /\b(modal|overlay|backdrop|subscribe|newsletter)\b/i.test(text);
+    const largePositioned = new Set(["fixed", "sticky"]).has(style.position) &&
+      rect.width * rect.height >= viewportArea * 0.15;
+    if (modal || genericOverlay || largePositioned) node.remove();
+  }
   document.documentElement.style.overflow = "auto";
-  document.body.style.overflow = "auto";
+  if (document.body) document.body.style.overflow = "auto";
 }
 
-async function writePdf(client, sessionId, output) {
-  const result = await client.send("Page.printToPDF", {
-    printBackground: true,
-    displayHeaderFooter: false,
-    preferCSSPageSize: false,
-  }, sessionId);
-  fs.writeFileSync(output, Buffer.from(result.data, "base64"));
+async function cleanupResidualUi(page) {
+  for (const frame of page.frames()) {
+    try {
+      await frame.evaluate(cleanupResidualUiExpression);
+    } catch (_) {
+      // A frame can detach while the page settles.
+    }
+  }
 }
 
-async function writeHtml(client, sessionId, output) {
-  const result = await client.send("Runtime.evaluate", {
-    expression: "'<!doctype html>\\n' + document.documentElement.outerHTML",
-    returnByValue: true,
-  }, sessionId);
-  fs.writeFileSync(output, result.result.value);
+async function waitForConsent(page, state) {
+  const observationDeadline = Date.now() + 500;
+  while (Date.now() < observationDeadline && !state.detected && !state.done) {
+    await wait(25);
+  }
+  if (state.detected && !state.done) {
+    const consentDeadline = Date.now() + 5000;
+    while (Date.now() < consentDeadline && !state.done) await wait(25);
+  }
+  await wait(250);
+  if (await findBlockingConsentUi(page)) {
+    throw new Error("verification: unresolved consent blocker");
+  }
+  await cleanupResidualUi(page);
+  if (await findBlockingConsentUi(page)) {
+    throw new Error("verification: unresolved consent blocker after cleanup");
+  }
+}
+
+async function serialize(page, type, output) {
+  if (type === "pdf") {
+    await page.pdf({ path: output, printBackground: true });
+  } else {
+    await fs.writeFile(output, `<!doctype html>\n${await page.content()}`, {
+      mode: 0o600,
+    });
+  }
+}
+
+async function render(rawArgs, options = {}) {
+  const args = validateArgs(rawArgs);
+  const deadlineMs = options.deadlineMs || 27000;
+  const deadlineAt = Date.now() + deadlineMs;
+  const temporaryRoot = options.temporaryRoot || os.tmpdir();
+  const { chromium } = loadPlaywright(args["module-root"]);
+  const profile = await fs.mkdtemp(path.join(temporaryRoot, "eww-extras-renderer-"));
+  await fs.chmod(profile, 0o700);
+  const outputDirectory = path.dirname(args.output);
+  const temporaryOutput = path.join(
+    outputDirectory,
+    `.${path.basename(args.output)}.${process.pid}.${Date.now()}.tmp`,
+  );
+  let context;
+  try {
+    context = await chromium.launchPersistentContext(profile, {
+      executablePath: args["chrome-program"],
+      headless: true,
+      timeout: Math.min(8000, deadlineMs),
+      args: ["--disable-extensions", "--no-first-run", "--no-default-browser-check"],
+    });
+    const remaining = deadlineAt - Date.now();
+    if (remaining <= 0) throw new Error("timeout: internal render deadline");
+    let deadlineTimer;
+    const deadline = new Promise((_, reject) => {
+      deadlineTimer = setTimeout(
+        () => reject(new Error("timeout: internal render deadline")),
+        remaining,
+      );
+    });
+    try {
+      await Promise.race([(async () => {
+        const consentState = await installAutoconsent(context, args["module-root"]);
+        const pages = context.pages();
+        const page = pages[0] || await context.newPage();
+        await page.goto(args.url, { waitUntil: "commit", timeout: 15000 });
+        await page.waitForLoadState("domcontentloaded", { timeout: 15000 });
+        await page.waitForFunction(() => document.body?.textContent?.trim(), null, {
+          timeout: 5000,
+        });
+        await waitForConsent(page, consentState);
+        await serialize(page, args.type, temporaryOutput);
+        const metadata = await fs.stat(temporaryOutput);
+        if (metadata.size === 0) throw new Error("serialization: empty output");
+        await fs.rename(temporaryOutput, args.output);
+      })(), deadline]);
+    } finally {
+      clearTimeout(deadlineTimer);
+    }
+  } finally {
+    if (context) await context.close().catch(() => {});
+    await fs.rm(temporaryOutput, { force: true });
+    await fs.rm(profile, { recursive: true, force: true });
+  }
 }
 
 async function main() {
-  const args = parseArgs(process.argv.slice(2));
-  const type = requireArg(args, "type");
-  const output = requireArg(args, "output");
-  requireArg(args, "url");
-  requireArg(args, "chrome-program");
-  requireArg(args, "user-data-dir");
-  requireArg(args, "profile-directory");
-  if (!["pdf", "html"].includes(type)) {
-    throw new Error(`Invalid --type ${type}`);
-  }
-  if (typeof WebSocket === "undefined") {
-    throw new Error("This script requires a Node.js runtime with WebSocket support");
-  }
-  const { chrome, endpoint } = launchChrome(args);
-  try {
-    const client = await CdpClient.connect(await endpoint);
-    const sessionId = await openPage(client, args.url);
-    await cleanupPage(client, sessionId);
-    if (type === "pdf") {
-      await writePdf(client, sessionId, output);
-    } else {
-      await writeHtml(client, sessionId, output);
-    }
-    await client.send("Browser.close").catch(() => null);
-  } finally {
-    setTimeout(() => chrome.kill(), 1000);
-  }
+  await render(parseArgs(process.argv.slice(2)));
 }
 
-main().catch((error) => {
-  console.error(error.stack || error.message);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error.message);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = {
+  blockingConsentExpression,
+  cleanupResidualUiExpression,
+  findBlockingConsentUi,
+  parseArgs,
+  render,
+  validateArgs,
+};

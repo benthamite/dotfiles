@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import filecmp
 import json
+import os
+import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -84,6 +87,84 @@ class AuditMacAppSupplyChainTests(unittest.TestCase):
                     path = skill_dir / relative
                     text = path.read_text(encoding="utf-8")
                     self.assertNotRegex(text, r"\bnpx\b[^\n]*\basar\b")
+
+    def test_brace_expansion_has_dos_fix(self):
+        minimum_safe_version = (5, 0, 9)
+        for skill_dir in SKILL_DIRS:
+            with self.subTest(skill=skill_dir):
+                lock = json.loads(
+                    (skill_dir / "package-lock.json").read_text(encoding="utf-8")
+                )
+                version = lock["packages"]["node_modules/brace-expansion"]["version"]
+                self.assertGreaterEqual(
+                    tuple(map(int, version.split("."))),
+                    minimum_safe_version,
+                    "brace-expansion must include the GHSA-rgw5-rvv9-x895 fix",
+                )
+
+    def test_cold_cache_install_runs_from_staging_project(self):
+        for skill_dir in SKILL_DIRS:
+            with self.subTest(skill=skill_dir), tempfile.TemporaryDirectory() as temp:
+                temp_dir = Path(temp)
+                runtime_dir = temp_dir / "runtime"
+                runtime_dir.mkdir()
+                node = runtime_dir / "node"
+                npm = runtime_dir / "npm"
+                node.write_text(
+                    """#!/bin/bash
+if [ "${1:-}" = "-e" ]; then
+    exit 0
+fi
+if [ "${2:-}" = "extract" ]; then
+    mkdir -p "$4"
+    printf '{}\\n' >"$4/package.json"
+    exit 0
+fi
+exit 1
+""",
+                    encoding="utf-8",
+                )
+                npm.write_text(
+                    """#!/bin/bash
+set -e
+[ "${1:-}" = "ci" ]
+for argument in "$@"; do
+    [ "$argument" != "--prefix" ]
+done
+[ -f package.json ]
+[ -f package-lock.json ]
+mkdir -p node_modules/@electron/asar/bin
+: >node_modules/@electron/asar/bin/asar.mjs
+""",
+                    encoding="utf-8",
+                )
+                node.chmod(0o755)
+                npm.chmod(0o755)
+                archive = temp_dir / "fixture.asar"
+                archive.touch()
+                destination = temp_dir / "extracted"
+                environment = os.environ.copy()
+                environment.update(
+                    {
+                        "AUDIT_MAC_APP_CACHE_DIR": str(temp_dir / "cache"),
+                        "AUDIT_MAC_APP_NODE": str(node),
+                    }
+                )
+
+                result = subprocess.run(
+                    [
+                        str(skill_dir / "scripts/extract-asar.sh"),
+                        str(archive),
+                        str(destination),
+                    ],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                    env=environment,
+                )
+
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertTrue((destination / "package.json").is_file())
 
 
 if __name__ == "__main__":

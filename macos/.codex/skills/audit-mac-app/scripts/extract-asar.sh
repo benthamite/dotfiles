@@ -89,11 +89,13 @@ if [ ! -f "$ASAR_MODULE" ]; then
 
     cp "$SKILL_DIR/package.json" "$SKILL_DIR/package-lock.json" "$STAGING_DIR/"
     echo "Installing the locked Electron ASAR extractor..." >&2
-    PATH="$NODE_DIR:$PATH" "$NPM_BIN" ci \
-        --prefix "$STAGING_DIR" \
-        --ignore-scripts \
-        --no-audit \
-        --no-fund
+    (
+        cd -- "$STAGING_DIR"
+        PATH="$NODE_DIR:$PATH" "$NPM_BIN" ci \
+            --ignore-scripts \
+            --no-audit \
+            --no-fund
+    )
 
     if [ -e "$INSTALL_DIR" ]; then
         echo "The extractor cache is incomplete: $INSTALL_DIR" >&2

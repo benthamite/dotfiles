@@ -1,0 +1,11 @@
+{
+  "name": "eww-extras-renderer",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@duckduckgo/autoconsent": "16.20.1",
+    "playwright-core": "1.62.1"
+  }
+}

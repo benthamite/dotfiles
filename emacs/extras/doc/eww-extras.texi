@@ -41,13 +41,11 @@ This manual describes the features and customization options for the Emacs Lisp 
 User options
 
 * Readability exceptions::
-* Chrome data directory::
 
 Commands
 
 * Browsing local files::
 * Generating files from URLs::
-* Chrome data management::
 * Adding readability exceptions::
 * Vimium-like navigation::
 * Switching renderers::
@@ -111,7 +109,6 @@ playback), and adding the current page to a bibliography via
 
 @menu
 * Readability exceptions::
-* Chrome data directory::
 @end menu
 
 @node Readability exceptions
@@ -134,24 +131,12 @@ line.  The default value is @samp{etc/eww-readable-exceptions.txt} within
 the Emacs configuration directory (via @code{paths-dir-dotemacs}).  You would
 change this if you want to store the exceptions file elsewhere.
 
-@node Chrome data directory
-@section Chrome data directory
-
-@vindex eww-extras-chrome-data-dir
-The user option @code{eww-extras-chrome-data-dir} specifies the path to the
-main Google Chrome profile directory.  The default value is
-@samp{~/Library/Application Support/Google/Chrome/}.  This directory is used
-as the source when creating profile copies for headless Chrome sessions
-(@ref{Chrome data management}).  You should only change this if Chrome stores
-its data in a non-standard location.
-
 @node Commands
 @chapter Commands
 
 @menu
 * Browsing local files::
 * Generating files from URLs::
-* Chrome data management::
 * Adding readability exceptions::
 * Vimium-like navigation::
 * Switching renderers::
@@ -189,33 +174,20 @@ the output file path and Bib@TeX{} key upon completion.  This enables
 workflows like automatically attaching the generated file to a Bib@TeX{}
 entry.
 
-The commands require Chrome profile copies to exist for authentication.
-Use @code{eww-extras-chrome-copy-data-dirs} to create or update them
-(@ref{Chrome data management}).  The processes run asynchronously; check the
-@samp{*eww-extras download file process*} buffer for detailed output.
-Headless rendering always uses the copied Chrome @samp{Default} profile, and the
-rendering script removes common subscription, cookie, modal, and overlay
-elements before saving the PDF or HTML@.
+The commands run asynchronously in a fresh headless Chrome profile.  They do
+not read a personal Chrome profile, retain cookies between runs, load browser
+extensions, or require an exported cookie file.  The first run installs the
+exact locked renderer dependencies in @samp{~/Library/Caches/eww-extras-renderer};
+later runs reuse that cache.  The dependency tree and browser profile are
+never created in the dotfiles repository or Google Drive.
 
-@node Chrome data management
-@section Chrome data management
-
-@findex eww-extras-chrome-copy-data-dirs
-@findex eww-extras-chrome-delete-data-dirs
-The command @code{eww-extras-chrome-copy-data-dirs} creates or updates two
-copies of the Chrome profile directory.  Two copies are needed to allow
-simultaneous PDF and HTML generation (one headless Chrome instance per
-copy).  The copies use @samp{rsync} for efficiency: the first run may take a
-while, but subsequent updates are fast.
-
-Chrome must be completely closed before running this command, because
-headless Chrome cannot access a profile that is locked by a running
-instance.  The command verifies this and signals an error if Chrome is
-still running.
-
-The command @code{eww-extras-chrome-delete-data-dirs} deletes both profile
-copies after prompting for confirmation.  This can free substantial disk
-space.
+Before saving the file, the renderer uses DuckDuckGo Autoconsent to opt out of
+supported consent managers.  It then removes non-consent residual overlays
+and checks every frame for a remaining blocking consent prompt.  If a prompt
+remains, the process fails and does not create or modify the requested output.
+The renderer is intended for public pages; it does not carry authentication
+from a personal browser session.  Rendering has a 27-second internal deadline
+and a 30-second hard process limit.
 
 @node Adding readability exceptions
 @section Adding readability exceptions
@@ -331,18 +303,16 @@ headless Chrome process, and sets up the process sentinel.  An optional
 @code{key} argument lets callers supply the Bib@TeX{} key directly, bypassing
 the buffer-derived lookup.
 
-The function @code{eww-extras-url-to-file-make-command} builds the shell
-command for the headless Chrome rendering script, including the copied Chrome
-data directory, the @samp{Default} profile, and a 30-second timeout.  URLs and
-output paths are shell-quoted for safety.  It enables Node's WebSocket support
-explicitly so the renderer also works with Node 20.  The script drives Chrome
-through the DevTools Protocol so it can remove common overlays before printing
-or dumping the cleaned DOM@.
+The function @code{eww-extras-url-to-file-make-command} builds a direct argument
+list for the renderer wrapper.  The wrapper verifies the lock-hash dependency
+cache, installs it with @samp{npm ci --ignore-scripts} when necessary, and launches
+the configured system Chrome through @samp{playwright-core}.  It does not use a
+shell command, @samp{npx}, or a Playwright-managed browser download.
 
 The function @code{eww-extras-url-to-file-sentinel} creates a process
-sentinel that checks the exit status.  It runs the callback on success,
-or if the file was created despite a non-zero exit status (which can
-happen with certain Chrome warnings).
+sentinel that requires both a zero exit status and a nonempty output before it
+runs the callback.  Each render has a private diagnostics buffer, so concurrent
+PDF and HTML jobs cannot mix their errors.  Failed output is never attached.
 
 The function @code{eww-extras-run-callback} safely executes the optional
 callback function with the output file and Bib@TeX{} key as arguments.

@@ -117,53 +117,12 @@ The placeholders are replaced by the URL.")
   :type 'file
   :group 'eww-extras)
 
-(defcustom eww-extras-chrome-data-dir
-  (expand-file-name "~/Library/Application Support/Google/Chrome/")
-  "The directory where Chrome data is stored."
-  :type 'directory
-  :group 'eww-extras)
-
-(defcustom eww-extras-chrome-profile-directory "Default"
-  "Chrome profile directory used by headless URL rendering."
-  :type 'string
-  :group 'eww-extras)
-
-(defcustom eww-extras-node-program
-  (or (executable-find "node") "/opt/homebrew/bin/node")
-  "Node.js executable used by the headless URL rendering script."
-  :type 'file
-  :group 'eww-extras)
-
 ;;;; Variables
 
-(defconst eww-extras-chrome-data-dir-base
-  (expand-file-name "~/.chrome-data-")
-  "The base directory where Chrome data is stored.")
-
-(defconst eww-extras-chrome-data-dir-copy-pdf
-  (concat eww-extras-chrome-data-dir-base "pdf/")
-  "A copy of the directory where Chrome data is stored.
-A headless Chrome session will fail to authenticate if Chrome is running,
-because the database will be locked.  So we make a copy of the relevant
-directory by running `eww-extras-chrome-copy-data-dirs'.")
-
-(defconst eww-extras-chrome-data-dir-copy-html
-  (concat eww-extras-chrome-data-dir-base "html/")
-  "A copy of the directory where Chrome data is stored.
-This is an identical copy of `eww-extras-chrome-data-dir-copy-pdf'.  It
-is needed so that we can run two headless Chrome sessions
-simultaneously.")
-
-(defconst eww-extras-rsync-command
-  "rsync -av '%s' '%s'"
-  "The `rsync' command to make a copy of the Chrome data directory.
-The placeholders `%s' are replaced by with the source and destination
-directories.")
-
-(defconst eww-extras-url-render-script
+(defconst eww-extras-url-renderer-program
   (file-name-concat paths-dir-dotemacs
-                    "extras/scripts/eww-extras-render-url.js")
-  "Script used to render URLs to PDF or HTML through headless Chrome.")
+                    "extras/scripts/eww-extras-renderer/run.sh")
+  "Program used to render URLs to PDF or HTML through headless Chrome.")
 
 ;;;; Functions
 
@@ -212,20 +171,26 @@ buffer-derived lookup."
                        ("html" (simple-extras-slugify (org-web-tools-extras-org-title-for-url url)))))))
          (file-name (file-name-with-extension title type))
          (output-file (file-name-concat paths-dir-downloads file-name))
+	 (process-buffer
+	  (generate-new-buffer (format " *eww-extras download %s*" type)))
 	 (process (make-process
 		   :name (format "url-to-%s" type)
-		   :buffer "*eww-extras download file process*"
+		   :buffer process-buffer
+		   :stderr process-buffer
 		   :command (eww-extras-url-to-file-make-command url output-file type))))
-    (message "Getting %s file…. (See `*eww-extras download file process*' buffer for details.)" type)
+    (message "Getting %s file…" type)
     (set-process-sentinel process
-			  (eww-extras-url-to-file-sentinel callback output-file bibtex-key))))
+			  (eww-extras-url-to-file-sentinel
+			   callback output-file bibtex-key process-buffer))))
 
-(defun eww-extras-url-to-file-sentinel (callback output-file bibtex-key)
+(defun eww-extras-url-to-file-sentinel
+    (callback output-file bibtex-key &optional process-buffer)
   "Create a process sentinel for URL-to-file operations.
 
 CALLBACK is a function to be called upon successful file download.
 OUTPUT-FILE is the path of the file being downloaded.
 BIBTEX-KEY is the BibTeX key associated with the download, if any.
+PROCESS-BUFFER is the private diagnostics buffer for this render.
 
 The returned sentinel function takes two arguments:
 PROC, the process object, and EVENT, a string describing the process status."
@@ -233,114 +198,41 @@ PROC, the process object, and EVENT, a string describing the process status."
     (let* ((exit-status (process-exit-status proc))
            (file-ok (and (file-exists-p output-file)
                          (file-regular-p output-file)
-                         (> (file-attribute-size (file-attributes output-file)) 0))))
-      (cond
-       ;; Exited successfully and produced a non-empty file.
-       ((and (eq exit-status 0) file-ok)
-        (eww-extras-run-callback callback output-file bibtex-key))
-       ;; Exited successfully but produced an empty or missing file.
-       ((eq exit-status 0)
-        (user-error "Process exited successfully but %s is empty or missing"
-                    (file-name-nondirectory output-file)))
-       ;; Non-zero exit but the file exists and is nonempty — attach anyway.
-       (file-ok
-        (message "Warning: process exited with status %s, but %s was created. Attaching anyway."
-                 exit-status (file-name-nondirectory output-file))
-        (eww-extras-run-callback callback output-file bibtex-key))
-       ;; Otherwise, bail out with the original error message.
-       (t
-        (user-error "Could not get file.  Process exit status was %s.\n\nRaw event:\n%s"
-                    exit-status event))))))
+                         (> (file-attribute-size (file-attributes output-file)) 0)))
+           (diagnostic
+            (when (buffer-live-p process-buffer)
+              (with-current-buffer process-buffer
+                (car (last (split-string (string-trim (buffer-string))
+                                         "\n" t)))))))
+      (unwind-protect
+          (cond
+           ((and (eq exit-status 0) file-ok)
+            (eww-extras-run-callback callback output-file bibtex-key))
+           ((eq exit-status 0)
+            (user-error "Process exited successfully but %s is empty or missing"
+                        (file-name-nondirectory output-file)))
+           (t
+            (user-error "Could not get file (status %s): %s"
+                        exit-status (or diagnostic event))))
+        (when (buffer-live-p process-buffer)
+          (kill-buffer process-buffer))))))
 
 (defun eww-extras-url-to-file-make-command (url output-file type)
   "Make command to generate OUTPUT-FILE of TYPE from URL."
-  (let* ((data-dir (pcase type
-		     ("pdf" eww-extras-chrome-data-dir-copy-pdf)
-		     ("html" eww-extras-chrome-data-dir-copy-html)
-		     (_ (user-error "Invalid type: %s" type))))
-	 (quoted-url (shell-quote-argument url))
-	 (quoted-output (shell-quote-argument output-file))
-         (quoted-data-dir (shell-quote-argument data-dir))
-         (quoted-script (shell-quote-argument eww-extras-url-render-script))
-         (quoted-node (shell-quote-argument eww-extras-node-program))
-         (quoted-chrome (shell-quote-argument browse-url-chrome-program))
-         (quoted-profile
-          (shell-quote-argument eww-extras-chrome-profile-directory)))
-    (list shell-file-name shell-command-switch
-          (format
-           "timeout 30s %s --experimental-websocket %s --type %s --url %s --output %s --chrome-program %s --user-data-dir %s --profile-directory %s"
-           quoted-node quoted-script type quoted-url quoted-output quoted-chrome
-           quoted-data-dir quoted-profile))))
+  (unless (member type '("pdf" "html"))
+    (user-error "Invalid type: %s" type))
+  (list eww-extras-url-renderer-program
+        "render"
+        "--type" type
+        "--url" url
+        "--output" output-file
+        "--chrome-program" browse-url-chrome-program))
 
 (defun eww-extras-run-callback (callback file key)
   "When CALLBACK is non-nil, run it with FILE and KEY as arguments.
 FILE is the file to attach and KEY is the BibTeX key of the associated entry."
   (when callback
     (funcall callback file key)))
-
-;;;;; Data dirs
-
-;;;###autoload
-(defun eww-extras-chrome-copy-data-dirs ()
-  "Make copies of the Chrome data directory asynchronously.
-This command needs to be run to make two copies of the Chrome data directory,
-and then every once in a while to keep those copies updated.  The initial copy
-may take a while if the data directory is very big, but subsequent updates
-should be fast."
-  (interactive)
-  (when (y-or-n-p "Make sure you have closed all instances of Chrome, and that `eww-extras-chrome-data-dir' and `eww-extras-chrome-data-dir-copy' point to the right directories.  This command runs asynchronously in the background.  Proceed? ")
-    (unless (string-empty-p (shell-command-to-string "pgrep -l \"Google Chrome\""))
-      (user-error "Chrome is running.  Close all instances of Chrome and try again"))
-    (message "Copying Chrome data directory to `%s'..." eww-extras-chrome-data-dir-copy-pdf)
-    (let ((process (start-process-shell-command
-                    "eww-extras-rsync-pdf"
-                    "*eww-extras-copy-data-dirs*"
-                    (format eww-extras-rsync-command
-                            eww-extras-chrome-data-dir
-                            eww-extras-chrome-data-dir-copy-pdf))))
-      (set-process-sentinel process #'eww-extras-chrome-copy-data-dirs--sentinel-1))))
-
-(defun eww-extras-chrome-copy-data-dirs--sentinel-1 (process event)
-  "First sentinel for `eww-extras-chrome-copy-data-dirs'.
-PROCESS is the process object and EVENT is the event string."
-  (if (and (memq (process-status process) '(exit signal))
-           (zerop (process-exit-status process)))
-      (progn
-        (message "Finished copying to `%s'. Now copying to `%s'..."
-                 eww-extras-chrome-data-dir-copy-pdf
-                 eww-extras-chrome-data-dir-copy-html)
-        (eww-extras-chrome-delete-data-dir "html")
-        (let ((proc (start-process-shell-command
-                     "eww-extras-rsync-html"
-                     "*eww-extras-copy-data-dirs*"
-                     (format eww-extras-rsync-command
-                             eww-extras-chrome-data-dir-copy-pdf
-                             eww-extras-chrome-data-dir-copy-html))))
-          (set-process-sentinel proc #'eww-extras-chrome-copy-data-dirs--sentinel-2)))
-    (message "Error copying to %s: %s" eww-extras-chrome-data-dir-copy-pdf event)))
-
-(defun eww-extras-chrome-copy-data-dirs--sentinel-2 (process event)
-  "Second sentinel for `eww-extras-chrome-copy-data-dirs'.
-PROCESS is the process object and EVENT is the event string."
-  (if (and (memq (process-status process) '(exit signal))
-           (zerop (process-exit-status process)))
-      (message "Done copying Chrome data directories.")
-    (message "Error copying to %s: %s" eww-extras-chrome-data-dir-copy-html event)))
-
-(defun eww-extras-chrome-delete-data-dirs ()
-  "Delete the copy of the Chrome data directory."
-  (interactive)
-  (when (y-or-n-p "Are you sure you want to delete the copies of the Chrome data directory? ")
-    (dolist (dir (list "pdf" "html"))
-      (eww-extras-chrome-delete-data-dir dir))))
-
-(defun eww-extras-chrome-delete-data-dir (type)
-  "Delete copy of Chrome data directory of TYPE."
-  (let ((dir (pcase type
-	       ("pdf" eww-extras-chrome-data-dir-copy-pdf)
-	       ("html" eww-extras-chrome-data-dir-copy-html))))
-    (message "Deleting `%s'..." dir)
-    (delete-directory dir t)))
 
 ;;;;; URL to HTML, PDF
 

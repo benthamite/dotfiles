@@ -17,11 +17,12 @@
     (let ((cmd (eww-extras-url-to-file-make-command
                 "https://example.com" "/tmp/out.pdf" "pdf")))
       (should (listp cmd))
-      (should (= (length cmd) 3))
-      (should (string-match-p "eww-extras-render-url\\.js" (nth 2 cmd)))
-      (should (string-match-p "--type pdf" (nth 2 cmd)))
-      (should (string-match-p "--profile-directory Default" (nth 2 cmd)))
-      (should (string-match-p "example.com" (nth 2 cmd))))))
+      (should (string-match-p "eww-extras-renderer/run\\.sh" (car cmd)))
+      (should (equal (cadr cmd) "render"))
+      (should (equal (cadr (member "--type" cmd)) "pdf"))
+      (should-not (member "--profile-directory" cmd))
+      (should-not (member "--user-data-dir" cmd))
+      (should (member "https://example.com" cmd)))))
 
 (ert-deftest eww-extras-test-make-command-html ()
   "Make-command constructs an HTML download command."
@@ -30,18 +31,17 @@
     (let ((cmd (eww-extras-url-to-file-make-command
                 "https://example.com" "/tmp/out.html" "html")))
       (should (listp cmd))
-      (should (string-match-p "eww-extras-render-url\\.js" (nth 2 cmd)))
-      (should (string-match-p "--type html" (nth 2 cmd))))))
+      (should (string-match-p "eww-extras-renderer/run\\.sh" (car cmd)))
+      (should (equal (cadr (member "--type" cmd)) "html")))))
 
-(ert-deftest eww-extras-test-make-command-enables-node-websocket ()
-  "Make-command enables WebSocket support in the Node runtime."
+(ert-deftest eww-extras-test-make-command-needs-no-node-flags ()
+  "Make-command leaves Node and browser state to the renderer wrapper."
   (let ((browse-url-chrome-program "/usr/bin/chrome")
         (eww-extras-node-program "/usr/bin/node"))
-    (let ((command (nth 2 (eww-extras-url-to-file-make-command
-                           "https://example.com" "/tmp/out.pdf" "pdf"))))
-      (should (string-match-p
-               "/usr/bin/node --experimental-websocket .*eww-extras-render-url\\.js"
-               command)))))
+    (let ((command (eww-extras-url-to-file-make-command
+                    "https://example.com" "/tmp/out.pdf" "pdf")))
+      (should-not (member "--experimental-websocket" command))
+      (should-not (member "/usr/bin/node" command)))))
 
 (ert-deftest eww-extras-test-make-command-invalid-type ()
   "Make-command signals error for invalid type."
@@ -62,6 +62,55 @@
 (ert-deftest eww-extras-test-run-callback-nil ()
   "Run-callback does nothing when callback is nil."
   (should-not (eww-extras-run-callback nil "/tmp/test.pdf" "key")))
+
+(ert-deftest eww-extras-test-sentinel-rejects-output-after-failure ()
+  "A failed renderer must not attach a nonempty destination file."
+  (let ((file (make-temp-file "eww-extras-failed"))
+        (called nil))
+    (unwind-protect
+        (progn
+          (with-temp-file file (insert "pre-existing"))
+          (cl-letf (((symbol-function 'process-exit-status) (lambda (_proc) 1)))
+            (should-error
+             (funcall (eww-extras-url-to-file-sentinel
+                       (lambda (&rest _) (setq called t)) file nil)
+                      nil "exited abnormally\n")
+             :type 'user-error))
+          (should-not called)
+          (should (equal (with-temp-buffer
+                           (insert-file-contents file)
+                           (buffer-string))
+                         "pre-existing")))
+      (delete-file file))))
+
+(ert-deftest eww-extras-test-url-to-file-uses-private-process-buffers ()
+  "Concurrent renders must not share diagnostic output."
+  (let ((buffers nil)
+        (paths-dir-downloads temporary-file-directory))
+    (cl-letf (((symbol-function 'simple-extras-get-url) #'identity)
+              ((symbol-function 'make-process)
+               (lambda (&rest arguments)
+                 (push (plist-get arguments :buffer) buffers)
+                 'eww-extras-test-process))
+              ((symbol-function 'set-process-sentinel) #'ignore)
+              ((symbol-function 'message) #'ignore))
+      (eww-extras-url-to-file "pdf" "https://example.com/one")
+      (eww-extras-url-to-file "pdf" "https://example.com/two"))
+    (unwind-protect
+        (progn
+          (should (= (length buffers) 2))
+          (should (cl-every #'bufferp buffers))
+          (should-not (eq (car buffers) (cadr buffers))))
+      (mapc (lambda (buffer)
+              (when (buffer-live-p buffer) (kill-buffer buffer)))
+            buffers))))
+
+(ert-deftest eww-extras-test-copied-profile-api-is-retired ()
+  "Rendering must not expose commands that copy personal Chrome state."
+  (should-not (fboundp 'eww-extras-chrome-copy-data-dirs))
+  (should-not (fboundp 'eww-extras-chrome-delete-data-dirs))
+  (should-not (boundp 'eww-extras-chrome-data-dir-copy-pdf))
+  (should-not (boundp 'eww-extras-chrome-data-dir-copy-html)))
 
 ;;;; Readable exceptions from file
 

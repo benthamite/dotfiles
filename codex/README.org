@@ -105,6 +105,10 @@ dotfiles repo's project-local =.codex/= directory so Codex does not load it
 twice. Registrations normalize Codex payload and tool-name differences before
 dispatching to the paired scripts documented in [[file:hooks/README.org][the hook index]].
 
+Sensitive-read guards permit the security audit's shell-export classifier only
+for its exact absolute helper and target paths. The classifier reports names,
+line numbers, scopes, and classifications without printing values.
+
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged
 index entries, so a live Emacs never loads tests or a partially resolved tree.

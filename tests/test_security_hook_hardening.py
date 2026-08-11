@@ -12,6 +12,14 @@ SENSITIVE_READ_GUARDS = (
     DOTFILES / "codex/hooks/block-sensitive-read.sh",
     DOTFILES / "claude/hooks/pretooluse-bash.sh",
 )
+SENSITIVE_READ_HELPERS = {
+    DOTFILES / "claude/hooks/block-sensitive-read.sh": DOTFILES
+    / "macos/.claude/skills/security-audit/scripts/classify-shell-exports.py",
+    DOTFILES / "codex/hooks/block-sensitive-read.sh": DOTFILES
+    / "macos/.codex/skills/security-audit/scripts/classify-shell-exports.py",
+    DOTFILES / "claude/hooks/pretooluse-bash.sh": DOTFILES
+    / "macos/.claude/skills/security-audit/scripts/classify-shell-exports.py",
+}
 
 
 def run_hook(script: Path, payload: dict) -> subprocess.CompletedProcess[str]:
@@ -62,6 +70,16 @@ class ProtectedHookRegistrationTests(unittest.TestCase):
 
 
 class SensitiveReadGuardTests(unittest.TestCase):
+    def test_value_free_shell_export_classifier_is_allowed(self):
+        secrets = DOTFILES / "shell/.zshenv-secrets"
+        for guard, helper in SENSITIVE_READ_HELPERS.items():
+            with self.subTest(guard=guard):
+                command = f'python3 "{helper}" "{secrets}"'
+                payload = {"tool_name": "Bash", "tool_input": {"command": command}}
+                result = run_hook(guard, payload)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(permission_decision(result), "allow")
+
     def test_safe_prefix_does_not_hide_later_content_read(self):
         command = "ls ~/.ssh/id_test_guard; cat ~/.ssh/id_test_guard"
         payload = {"tool_name": "Bash", "tool_input": {"command": command}}

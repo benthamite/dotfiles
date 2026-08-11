@@ -261,6 +261,20 @@ sr_is_safe_env_loader() {
   echo "$command" | grep -qE '\b(cat|sed|awk|perl|python[0-9.]*|ruby|node|head|tail|less|more|grep|rg|ripgrep)\b[^&;|]*\.envrc\b' && return 1
   return 0
 }
+sr_is_safe_shell_export_classifier() {
+  local command="$1" helper target python
+  target="$HOME/My Drive/dotfiles/shell/.zshenv-secrets"
+
+  for python in python3 /usr/bin/python3 /opt/homebrew/bin/python3; do
+    for helper in \
+      "$HOME/My Drive/dotfiles/macos/.claude/skills/security-audit/scripts/classify-shell-exports.py" \
+      "$HOME/My Drive/dotfiles/macos/.codex/skills/security-audit/scripts/classify-shell-exports.py"; do
+      [ "$command" = "$python \"$helper\" \"$target\"" ] && return 0
+      [ "$command" = "$python '$helper' '$target'" ] && return 0
+    done
+  done
+  return 1
+}
 sr_has_shell_composition() {
   local command="$1"
   printf '%s' "$command" | grep -qE '[;&|<>`]|[$][(]' && return 0
@@ -294,6 +308,10 @@ check_sensitive_read() {
     SENSITIVE_LABEL="credential JSON"
   fi
   [ -z "$SENSITIVE_LABEL" ] && return 0
+
+  if [ "$SENSITIVE_LABEL" = "shell secrets file" ] && sr_is_safe_shell_export_classifier "$COMMAND"; then
+    return 0
+  fi
 
   if [ "$SENSITIVE_LABEL" = "environment secrets file" ] && sr_is_safe_env_loader "$COMMAND"; then
     ALLOW_CONTEXT="Sensitive environment file loading was allowed for this Bash command. Do not print, inspect, summarize, or quote loaded environment values; use them only as process environment for the requested command."

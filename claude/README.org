@@ -165,6 +165,10 @@ Claude has events with no Codex equivalent here, including =Read=, =Grep=,
 =Glob=, =Skill=, Notification, and Chrome-specific events. Those are explicit
 manifest differences, not missing peers.
 
+Sensitive-read guards permit the security audit's shell-export classifier only
+for its exact absolute helper and target paths. The classifier reports names,
+line numbers, scopes, and classifications without printing values.
+
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged
 index entries, so a live Emacs never loads tests or a partially resolved tree.

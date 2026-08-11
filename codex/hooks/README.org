@@ -75,7 +75,7 @@ handled by its configured documentation owner instead.
 | =block-github-guard-edit.sh= | Protects the GitHub allowlist, guard implementations, and hook registrations from agent edits. |
 | =block-github-write-command.sh= | Blocks repository-scoped GitHub writes unless the target matches an exact repo or account wildcard in the committed allowlist, or an exact Epoch project repo in the fixed committed automations registry. Contributions are exempt from that requirement: pushing a named topic branch, creating or editing a pull request, filing an issue, and commenting on either are allowed on any repository, because they add content without altering anything other people already rely on. Pushes to a default or deploy branch, force pushes, ref deletions, merges, edits to someone else's issue, and all other mutations are not. |
 | =block-secret-leak.sh= | Blocks literal secret disclosure and unsafe secret-bearing reads, writes, or output. |
-| =block-sensitive-read.sh= | Blocks content reads of credential-like files while permitting narrowly defined metadata checks. |
+| =block-sensitive-read.sh= | Blocks content reads of credential-like files while permitting narrowly defined metadata checks and the exact value-free shell-export classifier. |
 | =block-texi-edit.sh= | Blocks direct edits to generated Texinfo and points to the Org source. |
 | =block-unguarded-ahrefs-api.sh= | Blocks paid Ahrefs API calls that do not pass through the quota guard. |
 | =block-walk-list-access.sh= | Restricts direct access to the protected walk-list data store. |

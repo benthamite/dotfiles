@@ -74,7 +74,7 @@ Claude.
 | =block-github-write-command.sh= | Gates GitHub mutations against the explicit repository and account allowlist, except for contributions: pushing a named topic branch, creating or editing a pull request, filing an issue, and commenting on either are allowed on any repository, because they add content without altering anything other people already rely on. Pushes to a default or deploy branch, force pushes, ref deletions, merges, edits to someone else's issue, and every other mutation still require an allowlisted target. |
 | =block-long-pipeline-run-unchecked.sh= | Requires preflight, cleanliness, and checkpoint conditions for long consensus-trader jobs. |
 | =block-secret-leak.sh= | Blocks secret literals, unsafe secret-file writes, and secret-bearing output. |
-| =block-sensitive-read.sh= | Blocks content reads of credential-like paths while permitting narrow metadata checks. |
+| =block-sensitive-read.sh= | Blocks content reads of credential-like paths while permitting narrow metadata checks and the exact value-free shell-export classifier. |
 | =block-texi-edit.sh= | Blocks direct edits to generated Texinfo and points to the Org source. |
 | =block-unguarded-ahrefs-api.sh= | Blocks paid Ahrefs calls outside the guarded quota wrapper. |
 | =block-walk-list-access.sh= | Prevents bypassing the walk-list skill's protected data store. |

@@ -53,6 +53,21 @@ is_safe_env_loader() {
   return 0
 }
 
+is_safe_shell_export_classifier() {
+  local command="$1" helper target python
+  target="$HOME/My Drive/dotfiles/shell/.zshenv-secrets"
+
+  for python in python3 /usr/bin/python3 /opt/homebrew/bin/python3; do
+    for helper in \
+      "$HOME/My Drive/dotfiles/macos/.claude/skills/security-audit/scripts/classify-shell-exports.py" \
+      "$HOME/My Drive/dotfiles/macos/.codex/skills/security-audit/scripts/classify-shell-exports.py"; do
+      [ "$command" = "$python \"$helper\" \"$target\"" ] && return 0
+      [ "$command" = "$python '$helper' '$target'" ] && return 0
+    done
+  done
+  return 1
+}
+
 has_shell_composition() {
   local command="$1"
 
@@ -109,6 +124,10 @@ case "$TOOL_NAME" in
 
     LABEL=$(sensitive_label_for_text "$COMMAND")
     [ -z "$LABEL" ] && exit 0
+
+    if [ "$LABEL" = "shell secrets file" ] && is_safe_shell_export_classifier "$COMMAND"; then
+      exit 0
+    fi
 
     if [ "$LABEL" = "environment secrets file" ] && is_safe_env_loader "$COMMAND"; then
       allow_env_loader

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Profile AI CLI Performance"
+  short_description: "Benchmark Claude Code and Codex latency"
+  default_prompt: "Use $profile-ai-cli-performance to compare clean and configured Claude Code and Codex response latency."

@@ -79,6 +79,10 @@ managed =.system= content, pairing, and maintenance. The generated
 skills. Dynamic plugins, private skills, ignored runtime system skills, and
 skills in other repositories are outside its scope.
 
+The =profile-ai-cli-performance= skill benchmarks clean and configured Claude
+Code and Codex processes with pinned per-client settings, preflight checks, and
+comparable latency metrics.
+
 Browser control is runtime-owned: the bundled Browser and Chrome plugins load
 directly through Codex. No tracked skill or helper command mediates a
 CLI/Emacs-to-App browser handoff.

@@ -113,6 +113,10 @@ roots, and maintenance. The generated
 public skills only; runtime plugins, private skills, ignored system content,
 and skills owned by other repositories are outside its scope.
 
+The =profile-ai-cli-performance= skill benchmarks clean and configured Claude
+Code and Codex processes with pinned per-client settings, preflight checks, and
+comparable latency metrics.
+
 Browser control is runtime-owned rather than mirrored through a tracked
 Codex-App handoff skill. Claude therefore carries no pointer skill or helper
 command for moving a Codex thread into the desktop app.

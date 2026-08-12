@@ -214,6 +214,13 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
+      "name": "profile-ai-cli-performance",
+      "claude": "claude/skills/profile-ai-cli-performance/SKILL.md",
+      "codex": "codex/skills/profile-ai-cli-performance/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
       "name": "proofread",
       "claude": "claude/skills/proofread/SKILL.md",
       "codex": "codex/skills/proofread/SKILL.md",

@@ -43,6 +43,16 @@ def parse_args() -> argparse.Namespace:
         help="Add configured Claude with only hosted/local MCP loading excluded.",
     )
     parser.add_argument(
+        "--only",
+        action="append",
+        default=[],
+        help=(
+            "Restrict the run to these conditions (repeatable or comma separated). "
+            "Use when one client is unavailable and the other within-client "
+            "comparison is still valid. Cross-client claims stay unavailable."
+        ),
+    )
+    parser.add_argument(
         "--dry-run", action="store_true", help="Print sanitized commands only."
     )
     return parser.parse_args()
@@ -372,10 +382,18 @@ def main() -> int:
                 "command": claude_common[:1] + ["--strict-mcp-config"] + claude_common[1:],
             }
 
+        selected = [name for item in args.only for name in item.split(",") if name]
+        if selected:
+            unknown = [name for name in selected if name not in conditions]
+            if unknown:
+                raise SystemExit(f"Unknown condition(s): {', '.join(unknown)}")
+            conditions = {name: conditions[name] for name in conditions if name in selected}
+
         metadata = {
             "claude_binary": claude,
             "codex_binary": codex,
             "active_codex_home": str(active_codex_home),
+            "conditions": list(conditions),
             "project_dir": str(project),
             "runs": args.runs,
             "timeout_s": args.timeout,
@@ -399,12 +417,13 @@ def main() -> int:
             row["phase"] = "preflight"
             preflight.append(row)
         failed = [row for row in preflight if row["status"] != "success"]
-        clean_claude = next(row for row in preflight if row["condition"] == "claude_clean")
-        if clean_claude["isolation"]["mcp_servers"] != []:
-            failed.append({"condition": "claude_clean", "status": "isolation_failure"})
-        if clean_claude["isolation"]["hosted_tool_count"]:
-            failed.append({"condition": "claude_clean", "status": "isolation_failure"})
-        if args.claude_mcp_ablation:
+        if "claude_clean" in conditions:
+            clean_claude = next(row for row in preflight if row["condition"] == "claude_clean")
+            if clean_claude["isolation"]["mcp_servers"] != []:
+                failed.append({"condition": "claude_clean", "status": "isolation_failure"})
+            if clean_claude["isolation"]["hosted_tool_count"]:
+                failed.append({"condition": "claude_clean", "status": "isolation_failure"})
+        if args.claude_mcp_ablation and "claude_configured_no_mcp" in conditions:
             ablation = next(
                 row for row in preflight
                 if row["condition"] == "claude_configured_no_mcp"
@@ -417,12 +436,13 @@ def main() -> int:
                     "condition": "claude_configured_no_mcp",
                     "status": "isolation_failure",
                 })
-        codex_mcp = subprocess.run(
-            [codex, "mcp", "list"], env=conditions["codex_clean"]["env"],
-            cwd=work, text=True, capture_output=True, timeout=30,
-        )
-        if codex_mcp.returncode or "No MCP servers configured" not in codex_mcp.stdout:
-            failed.append({"condition": "codex_clean", "status": "isolation_failure"})
+        if "codex_clean" in conditions:
+            codex_mcp = subprocess.run(
+                [codex, "mcp", "list"], env=conditions["codex_clean"]["env"],
+                cwd=work, text=True, capture_output=True, timeout=30,
+            )
+            if codex_mcp.returncode or "No MCP servers configured" not in codex_mcp.stdout:
+                failed.append({"condition": "codex_clean", "status": "isolation_failure"})
         if failed:
             print(json.dumps({"metadata": metadata, "preflight": preflight, "status": "unavailable"}, indent=2))
             return 2

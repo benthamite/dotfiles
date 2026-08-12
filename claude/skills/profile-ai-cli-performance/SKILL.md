@@ -27,7 +27,9 @@ is intrinsically faster.
 5. Run one untimed preflight for every condition. Require exit 0 and the exact
    expected answer. If authentication, quota, syntax, or isolation fails, stop
    that comparison and report the condition unavailable. Do not substitute
-   another account, provider, model, proxy metric, or configured arm.
+   another account, provider, model, proxy metric, or configured arm. When one
+   client is unavailable, `--only` keeps the other client's clean-versus-
+   configured comparison. The cross-client comparison stays unavailable.
 6. Predeclare the run count, prompt, timeout, condition order, and metrics.
    Default to 10 measured runs per condition. Alternate or randomize conditions
    in blocks; never run every sample of one condition first.

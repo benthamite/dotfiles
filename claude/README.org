@@ -115,7 +115,11 @@ and skills owned by other repositories are outside its scope.
 
 The =profile-ai-cli-performance= skill benchmarks clean and configured Claude
 Code and Codex processes with pinned per-client settings, preflight checks, and
-comparable latency metrics.
+comparable latency metrics. Its =--only= flag restricts the run to named
+conditions, which keeps the Claude clean-versus-configured comparison available
+when the other client fails preflight on quota or authentication. The isolation
+checks then apply to the selected conditions only, and the cross-client
+comparison stays unavailable.
 
 Browser control is runtime-owned rather than mirrored through a tracked
 Codex-App handoff skill. Claude therefore carries no pointer skill or helper

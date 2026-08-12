@@ -81,7 +81,11 @@ skills in other repositories are outside its scope.
 
 The =profile-ai-cli-performance= skill benchmarks clean and configured Claude
 Code and Codex processes with pinned per-client settings, preflight checks, and
-comparable latency metrics.
+comparable latency metrics. Its =--only= flag restricts the run to named
+conditions, which keeps the Codex clean-versus-configured comparison available
+when the other client fails preflight on quota or authentication. The isolation
+checks then apply to the selected conditions only, and the cross-client
+comparison stays unavailable.
 
 Browser control is runtime-owned: the bundled Browser and Chrome plugins load
 directly through Codex. No tracked skill or helper command mediates a

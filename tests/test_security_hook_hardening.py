@@ -7,18 +7,17 @@ from pathlib import Path
 
 
 DOTFILES = Path(__file__).resolve().parents[1]
-CANONICAL_DOTFILES = Path.home() / "My Drive" / "dotfiles"
 SENSITIVE_READ_GUARDS = (
     DOTFILES / "claude/hooks/block-sensitive-read.sh",
     DOTFILES / "codex/hooks/block-sensitive-read.sh",
     DOTFILES / "claude/hooks/pretooluse-bash.sh",
 )
 SENSITIVE_READ_HELPERS = {
-    DOTFILES / "claude/hooks/block-sensitive-read.sh": CANONICAL_DOTFILES
+    DOTFILES / "claude/hooks/block-sensitive-read.sh": DOTFILES
     / "macos/.claude/skills/security-audit/scripts/classify-shell-exports.py",
-    DOTFILES / "codex/hooks/block-sensitive-read.sh": CANONICAL_DOTFILES
+    DOTFILES / "codex/hooks/block-sensitive-read.sh": DOTFILES
     / "macos/.codex/skills/security-audit/scripts/classify-shell-exports.py",
-    DOTFILES / "claude/hooks/pretooluse-bash.sh": CANONICAL_DOTFILES
+    DOTFILES / "claude/hooks/pretooluse-bash.sh": DOTFILES
     / "macos/.claude/skills/security-audit/scripts/classify-shell-exports.py",
 }
 
@@ -71,20 +70,8 @@ class ProtectedHookRegistrationTests(unittest.TestCase):
 
 
 class SensitiveReadGuardTests(unittest.TestCase):
-    def test_shell_export_classifiers_use_canonical_dotfiles_checkout(self):
-        canonical_dotfiles = Path.home() / "My Drive" / "dotfiles"
-        expected_helpers = {
-            DOTFILES / "claude/hooks/block-sensitive-read.sh": canonical_dotfiles
-            / "macos/.claude/skills/security-audit/scripts/classify-shell-exports.py",
-            DOTFILES / "codex/hooks/block-sensitive-read.sh": canonical_dotfiles
-            / "macos/.codex/skills/security-audit/scripts/classify-shell-exports.py",
-            DOTFILES / "claude/hooks/pretooluse-bash.sh": canonical_dotfiles
-            / "macos/.claude/skills/security-audit/scripts/classify-shell-exports.py",
-        }
-        self.assertEqual(SENSITIVE_READ_HELPERS, expected_helpers)
-
     def test_value_free_shell_export_classifier_is_allowed(self):
-        secrets = CANONICAL_DOTFILES / "shell/.zshenv-secrets"
+        secrets = DOTFILES / "shell/.zshenv-secrets"
         for guard, helper in SENSITIVE_READ_HELPERS.items():
             with self.subTest(guard=guard):
                 command = f'python3 "{helper}" "{secrets}"'

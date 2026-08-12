@@ -58,12 +58,10 @@ guard behavior, or JSON parsing. It will not combine the `jq` calls.
 
 ## Implementation shape
 
-Use a small Bash helper whose arguments keep the original input producer, the
-prefilter, and unchanged regex at the same call site. The producer is explicit:
-an `echo` site stays `echo`, and a `printf '%s'` site stays `printf`. The helper
-returns false without starting `grep` when none of its fixed literals occurs.
-Otherwise, it passes the original producer's output and regex to BSD `grep`
-without changing flags or pattern syntax.
+Use a small Bash helper whose arguments keep the prefilter and unchanged regex
+at the same call site. The helper returns false without starting `grep` when
+none of its fixed literals occurs. Otherwise, it passes the original text and
+regex to BSD `grep` without changing flags or pattern syntax.
 
 Call sites must remain readable enough that a reviewer can see why each fixed
 literal is necessary. Do not hide unrelated alternatives inside a generic

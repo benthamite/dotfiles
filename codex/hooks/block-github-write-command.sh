@@ -68,8 +68,22 @@ repo_from_gh_repo_flag() {
   repo_from_urlish "$CMD" || true
 }
 
+# `gh repo` names its target positionally rather than through --repo. Without
+# this the target falls through to the surrounding checkout's remote, which
+# both denies allowlisted targets outside a checkout and lets an unrelated
+# OWNER/REPO inherit the ambient repo's authorization.
+repo_from_gh_repo_positional() {
+  if [[ "$CMD" =~ (^|[[:space:]])gh[[:space:]]+repo[[:space:]]+(create|delete|edit|rename|archive|unarchive|sync)[[:space:]]+([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+) ]]; then
+      normalize_repo "${BASH_REMATCH[3]}"
+      return 0
+  fi
+  return 1
+}
+
+# The endpoint is commonly written `/repos/…` or quoted, so anchor on any
+# character that cannot be part of the path rather than on whitespace alone.
 repo_from_gh_api_endpoint() {
-  if [[ "$CMD" =~ (^|[[:space:]])repos/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)(/|[[:space:]]|$) ]]; then
+  if [[ "$CMD" =~ (^|[^A-Za-z0-9_.-])/?repos/([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)($|[^A-Za-z0-9_.-]) ]]; then
     normalize_repo "${BASH_REMATCH[2]}/${BASH_REMATCH[3]}"
     return 0
   fi
@@ -525,7 +539,14 @@ if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+release[[:space:]]+(c
 fi
 
 if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+repo[[:space:]]+(create|delete|edit|rename|archive|unarchive|sync)\b'; then
-  require_allowed_repo "gh repo write operation" "$(target_repo_for_gh)"
+  repo=$(repo_from_gh_repo_positional || true)
+  if [ -z "$repo" ] && echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+repo[[:space:]]+create\b'; then
+      # Creation never acts on the surrounding checkout, so its remote must
+      # not stand in for a target the command did not name.
+      deny "gh repo create without an explicit OWNER/REPO target" "A repo creation does not act on the current directory's repository, so that repository's allowlist entry cannot authorize it. Name the target as OWNER/REPO."
+  fi
+  [ -n "$repo" ] || repo=$(target_repo_for_gh)
+  require_allowed_repo "gh repo write operation" "$repo"
 fi
 
 if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+(label|milestone)[[:space:]]+(create|delete|edit)\b'; then

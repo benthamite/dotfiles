@@ -236,6 +236,50 @@ exit 1
             with self.subTest(command=command):
                 self.assert_both(command, expected="deny")
 
+    # `gh repo` names its target positionally and `gh api` endpoints are often
+    # written with a leading slash or in quotes. Both used to slip past the
+    # target parsers and land on the surrounding checkout's remote, which is
+    # this repo -- allowlisted -- so an unowned target inherited its
+    # authorization. These tests run from ROOT precisely to reproduce that.
+
+    def test_gh_repo_create_reads_its_positional_target(self) -> None:
+        self.assert_both("gh repo create example/unowned --private", expected="deny")
+
+    def test_gh_repo_create_allows_an_allowlisted_positional_target(self) -> None:
+        self.assert_both("gh repo create benthamite/scratch --private", expected="allow")
+
+    def test_gh_repo_create_without_a_named_target_is_denied(self) -> None:
+        # `create` never operates on the ambient repo, so the cwd remote must
+        # not stand in for a target the command did not name.
+        self.assert_both("gh repo create scratch --private", expected="deny")
+
+    def test_other_gh_repo_verbs_read_their_positional_target(self) -> None:
+        for command in (
+            "gh repo delete example/unowned --yes",
+            "gh repo edit example/unowned --visibility public",
+            "gh repo archive example/unowned --yes",
+        ):
+            with self.subTest(command=command):
+                self.assert_both(command, expected="deny")
+
+    def test_gh_api_endpoint_is_read_through_a_leading_slash(self) -> None:
+        command = "gh api --method POST /repos/example/unowned/rulesets"
+        self.assert_both(command, expected="deny")
+
+    def test_gh_api_endpoint_is_read_through_quotes(self) -> None:
+        for command in (
+            'gh api --method POST "repos/example/unowned/rulesets"',
+            "gh api --method POST '/repos/example/unowned/rulesets'",
+        ):
+            with self.subTest(command=command):
+                self.assert_both(command, expected="deny")
+
+    def test_gh_api_endpoint_with_a_leading_slash_still_allows_owned_repos(
+        self,
+    ) -> None:
+        command = "gh api --method POST /repos/benthamite/org/rulesets"
+        self.assert_both(command, expected="allow")
+
 
 if __name__ == "__main__":
     unittest.main()

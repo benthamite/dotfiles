@@ -198,6 +198,15 @@ repository at all rather than substituting the session's own, since judging a
 tree the command never touched both refuses correct commits and approves ones it
 should refuse.
 
+The GitHub write guard resolves the target repository from the command before
+it falls back to the surrounding checkout's remote. =gh repo= verbs name their
+target positionally and =gh api= endpoints are read through a leading slash or
+surrounding quotes; both used to miss, leaving the ambient repository to stand
+in, so an unowned target inherited whatever allowlist entry that repository
+had. =gh repo create= now refuses a command that names no =OWNER/REPO= at all,
+because a creation never acts on the current repository and so cannot borrow
+its authorization.
+
 A change under =claude/skills=, =claude/hooks=, =claude/settings*.json= or
 =claude/CLAUDE.md= must be accompanied by an update to this file. The guard
 accepts only that exact path, named among a command's =git add= arguments: some

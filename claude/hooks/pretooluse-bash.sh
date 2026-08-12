@@ -42,23 +42,6 @@ DENY_REASONS=()
 ALLOW_CONTEXT=""
 UPDATED_CMD=""
 add_deny() { DENY_REASONS+=("$1"); }
-prefilter_grep() {
-  local producer="$1" text="$2" regex="$3" literal matched=1
-  shift 3
-  if [ "${CLAUDE_BASH_PREFILTERS:-1}" != 0 ]; then
-    for literal in "$@"; do
-      case "$text" in
-        *"$literal"*) matched=0; break ;;
-      esac
-    done
-    [ "$matched" -eq 0 ] || return 1
-  fi
-  case "$producer" in
-    printf) printf '%s' "$text" ;;
-    echo) echo "$text" ;;
-    *) return 2 ;;
-  esac | grep -qE -- "$regex"
-}
 # No add_ask: CLAUDE.md forbids a guard escalating to Pablo, and the clone rule
 # was the only caller. Removing the accumulator and its emitter branch makes
 # "never ask" structural here rather than a property of the current rule set.
@@ -131,8 +114,8 @@ Only if \`op-desktop\` is unavailable, fall back to \`env -u OP_SERVICE_ACCOUNT_
   OP_WRAPPER='(command[[:space:]]+|((/usr/bin/|/bin/)?env)([[:space:]]+(-u[[:space:]]+[^[:space:]]+|-i|--|[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*))*[[:space:]]+|xargs([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+|(sudo|timeout|nice|exec|nohup|time)([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+|[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)'
   if [ "$OP_EXPLICIT_BATCH" -eq 0 ] && { printf '%s' "$OP_SCAN" | grep -qE "${OP_BOUNDARY}${OP_BIN}" || \
      printf '%s' "$OP_SCAN" | grep -qE "${OP_BOUNDARY}${OP_WRAPPER}${OP_BIN}" || \
-     prefilter_grep printf "$OP_SCAN" 'find[[:space:]].*-exec[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|$)' 'op' ||
-     prefilter_grep printf "$OP_SCAN" '\$\([[:space:]]*command[[:space:]]+-v[[:space:]]+op[[:space:]]*\)' 'op'; }; then
+     printf '%s' "$OP_SCAN" | grep -qE 'find[[:space:]].*-exec[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|$)' || \
+     printf '%s' "$OP_SCAN" | grep -qE '\$\([[:space:]]*command[[:space:]]+-v[[:space:]]+op[[:space:]]*\)'; }; then
     add_deny "BLOCKED: Bash contains a direct 1Password CLI command, which can trigger a separate Touch ID prompt for every process.
 
 Use \`op-desktop ...\` for desktop-gated operations: personal-vault reads, item creates/edits, share links. It runs every command inside one authorized terminal session, so a whole task costs one Touch ID prompt instead of one per command.
@@ -302,26 +285,26 @@ sr_has_shell_composition() {
 }
 check_sensitive_read() {
   local SENSITIVE_LABEL=""
-  if   prefilter_grep echo "$COMMAND" '\.zshenv-secrets\b' '.zshenv-secrets'; then
+  if   echo "$COMMAND" | grep -qE '\.zshenv-secrets\b'; then
     SENSITIVE_LABEL="shell secrets file"
-  elif prefilter_grep echo "$COMMAND" '\.password-store/' '.password-store/'; then
+  elif echo "$COMMAND" | grep -qE '\.password-store/'; then
     SENSITIVE_LABEL="password store (GPG-encrypted secrets)"
-  elif prefilter_grep echo "$COMMAND" '(^|[[:space:]/])\.mcp\.json\b|(^|[[:space:]/])mcp\.json\b' '.mcp.json' 'mcp.json'; then
+  elif echo "$COMMAND" | grep -qE '(^|[[:space:]/])\.mcp\.json\b|(^|[[:space:]/])mcp\.json\b'; then
     SENSITIVE_LABEL="MCP credential config"
-  elif prefilter_grep echo "$COMMAND" '(^|[[:space:]/])\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]/])\.envrc\b' '.env'; then
+  elif echo "$COMMAND" | grep -qE '(^|[[:space:]/])\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]/])\.envrc\b'; then
     SENSITIVE_LABEL="environment secrets file"
-  elif prefilter_grep echo "$COMMAND" '(^|[ /=])\.ssh/id_[A-Za-z0-9_]+\b' '.ssh/id_' &&
+  elif echo "$COMMAND" | grep -qE '(^|[ /=])\.ssh/id_[A-Za-z0-9_]+\b' && \
        ! echo "$COMMAND" | grep -qE '\.ssh/id_[A-Za-z0-9_]+\.pub\b'; then
     SENSITIVE_LABEL="SSH private key"
-  elif prefilter_grep echo "$COMMAND" '\.gnupg/' '.gnupg/'; then
+  elif echo "$COMMAND" | grep -qE '\.gnupg/'; then
     SENSITIVE_LABEL="GPG keyring"
-  elif prefilter_grep echo "$COMMAND" '(^|[[:space:]])?/?[^[:space:]]*\.config/[^/[:space:]]+/tokens\.json\b' 'tokens.json'; then
+  elif echo "$COMMAND" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.config/[^/[:space:]]+/tokens\.json\b'; then
     SENSITIVE_LABEL="OAuth tokens"
-  elif prefilter_grep echo "$COMMAND" '(^|[[:space:]])?/?[^[:space:]]*\.gmail-mcp-epoch/credentials/' '.gmail-mcp-epoch/credentials/'; then
+  elif echo "$COMMAND" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.gmail-mcp-epoch/credentials/'; then
     SENSITIVE_LABEL="Gmail MCP credentials"
-  elif prefilter_grep echo "$COMMAND" '(^|[[:space:]])?/?[^[:space:]]*\.config/[^/[:space:]]+/(secret\.json|client_secret[^"[:space:]]*\.json)\b' 'secret.json' 'client_secret'; then
+  elif echo "$COMMAND" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.config/[^/[:space:]]+/(secret\.json|client_secret[^"[:space:]]*\.json)\b'; then
     SENSITIVE_LABEL="OAuth client secret"
-  elif prefilter_grep echo "$COMMAND" '(^|[[:space:]/])(credentials\.json|service-account[^/[:space:]]*\.json|tokens\.json)\b' 'credentials.json' 'service-account' 'tokens.json'; then
+  elif echo "$COMMAND" | grep -qE '(^|[[:space:]/])(credentials\.json|service-account[^/[:space:]]*\.json|tokens\.json)\b'; then
     SENSITIVE_LABEL="credential JSON"
   fi
   [ -z "$SENSITIVE_LABEL" ] && return 0
@@ -483,13 +466,13 @@ dc_mask_quoted() {
 }
 check_destructive() {
   local SCAN; SCAN=$(dc_mask_quoted) || SCAN="$COMMAND"; [ -n "$SCAN" ] || SCAN="$COMMAND"
-  if prefilter_grep echo "$SCAN" '\brm\s+(-[a-zA-Z]*r[a-zA-Z]*f|(-[a-zA-Z]*f[a-zA-Z]*r)|-rf|-fr)\b' 'rm'; then
+  if echo "$SCAN" | grep -qE '\brm\s+(-[a-zA-Z]*r[a-zA-Z]*f|(-[a-zA-Z]*f[a-zA-Z]*r)|-rf|-fr)\b'; then
     dc_deny "rm -rf detected" "Use 'trash' instead of 'rm -rf' to allow recovery."; return 0
   fi
   # -f/--force must appear WITHIN the git push invocation (before the next
   # command separator), not merely anywhere in a compound command — a
   # `[ -f file ]` test elsewhere in the string used to false-positive this.
-  if prefilter_grep echo "$SCAN" '\bgit\s+push[^|;&]*(\s-f\b|\s--force\b)' 'push' &&
+  if echo "$SCAN" | grep -qE '\bgit\s+push[^|;&]*(\s-f\b|\s--force\b)' && \
      ! echo "$SCAN" | grep -qE '\bgit\s+push[^|;&]*--force-with-lease'; then
     dc_deny "git push --force detected" "Force-pushing can overwrite upstream history. Use --force-with-lease for branch-scoped pushes, or confirm with the user."; return 0
   fi
@@ -502,41 +485,41 @@ check_destructive() {
   # hatch inside a quoted string is masked out, and kept inside this branch so it
   # cannot wave through any other rule here. Keep in sync with
   # claude/hooks/block-destructive-command.sh, the source of truth.
-  if prefilter_grep echo "$SCAN" '\b(git\s+clone|gh\s+repo\s+clone)\b' 'clone' &&
+  if echo "$SCAN" | grep -qE '\b(git\s+clone|gh\s+repo\s+clone)\b' && \
      ! echo "$SCAN" | grep -qE '(^|[[:space:]])ALLOW_CLONE=1([[:space:]]|$)'; then
     dc_deny "git clone detected" "Only clone repositories the user has explicitly requested by URL or name. If this is a clone they asked for, prefix the command with ALLOW_CLONE=1. If it is not, ask them in chat first."; return 0
   fi
-  if prefilter_grep echo "$SCAN" '\bgit\s+reset\s+--hard\b' 'reset'; then
+  if echo "$SCAN" | grep -qE '\bgit\s+reset\s+--hard\b'; then
     dc_deny "git reset --hard detected" "This discards uncommitted changes irreversibly. Consider 'git stash' instead."; return 0
   fi
-  if prefilter_grep echo "$SCAN" '\bgit\s+clean\s+.*-[a-zA-Z]*f' 'clean'; then
+  if echo "$SCAN" | grep -qE '\bgit\s+clean\s+.*-[a-zA-Z]*f'; then
     dc_deny "git clean -f detected" "This permanently deletes untracked files. Review 'git clean -n' first."; return 0
   fi
-  if prefilter_grep echo "$SCAN" '\bgit\s+checkout\s+--\s+\.' 'checkout'; then
+  if echo "$SCAN" | grep -qE '\bgit\s+checkout\s+--\s+\.'; then
     dc_deny "git checkout -- . detected" "This discards all unstaged changes. Consider 'git stash' instead."; return 0
   fi
-  if prefilter_grep echo "$SCAN" '\bgit\s+branch\s+-D\b' 'branch'; then
+  if echo "$SCAN" | grep -qE '\bgit\s+branch\s+-D\b'; then
     dc_deny "git branch -D detected" "Force-deleting a branch can lose unmerged work. Use -d for safe delete."; return 0
   fi
-  if prefilter_grep echo "$SCAN" '\bgh\s+api\s+.*repos/.*visibility|gh\s+repo\s+edit\s+.*--visibility' 'visibility'; then
+  if echo "$SCAN" | grep -qE '\bgh\s+api\s+.*repos/.*visibility|gh\s+repo\s+edit\s+.*--visibility'; then
     dc_deny "GitHub repo visibility change detected" "Toggling a repo private permanently destroys all stars and watchers. NEVER do this."; return 0
   fi
-  if prefilter_grep echo "$SCAN" '\bgh\s+repo\s+delete\b' 'delete'; then
+  if echo "$SCAN" | grep -qE '\bgh\s+repo\s+delete\b'; then
     dc_deny "gh repo delete detected" "Deleting a GitHub repo is irreversible and destroys all stars, forks, and history. Confirm with the user first."; return 0
   fi
-  if prefilter_grep echo "$SCAN" '\bdropdb\b' 'dropdb'; then
+  if echo "$SCAN" | grep -qE '\bdropdb\b'; then
     dc_deny "dropdb detected" "Dropping a database is irreversible. Confirm with the user first."; return 0
   fi
-  if prefilter_grep echo "$SCAN" '\bbq\s+rm\b' 'bq'; then
+  if echo "$SCAN" | grep -qE '\bbq\s+rm\b'; then
     dc_deny "bq rm detected" "BigQuery rm is irreversible. Confirm with the user first."; return 0
   fi
   # The recursive flag must appear WITHIN the aws s3 rm invocation (before
   # the next command separator), not merely anywhere in a compound command
   # (same cross-segment false-positive class as the force-push guard).
-  if prefilter_grep echo "$SCAN" '\baws\s+s3\s+rm[^|;&]*(\s--recursive\b|\s-r\b)' 'aws'; then
+  if echo "$SCAN" | grep -qE '\baws\s+s3\s+rm[^|;&]*(\s--recursive\b|\s-r\b)'; then
     dc_deny "aws s3 rm --recursive detected" "Recursive S3 deletion is irreversible. Confirm with the user first."; return 0
   fi
-  if prefilter_grep echo "$SCAN" '\bop\s+item\s+(delete|remove)\b' 'op'; then
+  if echo "$SCAN" | grep -qE '\bop\s+item\s+(delete|remove)\b'; then
     dc_deny "op item delete detected" "Deleting a 1Password item is irreversible. Confirm with the user first."; return 0
   fi
   return 0

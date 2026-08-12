@@ -37,14 +37,6 @@ wrappers, but printing, parsing, or dumping that environment is denied. Claude
 registers the standalone hook for =Read= and keeps its Bash logic inlined in
 =pretooluse-bash.sh=.
 
-Selected positive checks in =pretooluse-bash.sh= use adjacent fixed literals
-as necessary conditions before they start BSD =grep=. Each call also declares
-its original =echo= or =printf '%s'= producer, so the original input semantics
-and regex remain authoritative. A fixed-literal prefilter can over-match, but it
-must not under-match: every command accepted by the regex must contain at least
-one declared literal. =CLAUDE_BASH_PREFILTERS=0= is test-only and bypasses the
-substring check while preserving the original producer and regex path.
-
 The secret-leak guard blocks secret-shaped literals, unsafe output routes, and
 direct =op= use. Read-only Automations access goes through =op-automations=;
 desktop-gated work goes through =op-desktop=. When that broker is unavailable,

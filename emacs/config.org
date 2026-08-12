@@ -1731,7 +1731,9 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package vc-extras
   :after vc
-
+  :custom
+  (vc-extras-split-repo nil)
+  
   :bind
   ("A-v" . vc-extras-menu))
 #+end_src
@@ -7753,6 +7755,20 @@ CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
   :custom
   (dictionary-server "dict.org")
   (dictionary-use-single-buffer t))
+#+end_src
+
+** =quotidian=
+:PROPERTIES:
+:ID:       A60C3F09-533A-4348-9233-86C6F89FD623
+:END:
+
+/[[https://github.com/benthamite/quotidian][quotidian]] displays quotations from the Oxford Dictionary of Quotations and other authoritative sources, either in a review buffer or in the echo area./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package quotidian
+  :ensure (:host github
+                 :repo "benthamite/quotidian")
+  :defer t)
 #+end_src
 
 * docs

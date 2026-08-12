@@ -25,6 +25,19 @@ machine-local override. At the time this README was written, the home path was
 a dangling symlink to the absent =shell/.zshrc.local=; the guard in =.zshrc=
 therefore skips it.
 
+* Codex account selection
+
+=.zshenv= points =CODEX_HOME= at the account named in
+=~/.codex-current-account=, which the Emacs account command writes. Without
+this, a terminal =codex= used whichever identity =~/.codex= was last logged in
+to, while Emacs used the selected account. The two accounts have separate
+quotas and billing, so the split stayed invisible until one of them reached a
+usage limit. Each =~/.codex-<account>= directory is a thin overlay in which
+=auth.json= is the only real file and everything else links back to =~/.codex=,
+so this selects the identity and changes nothing else. An explicit =CODEX_HOME=
+always wins, and an empty, unknown, or absent account name leaves the variable
+unset so Codex falls back to =~/.codex=.
+
 * Secrets boundary
 
 =.zshenv= first sources the external =~/.zvars= file and then

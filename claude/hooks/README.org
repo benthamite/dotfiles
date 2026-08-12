@@ -50,7 +50,13 @@ The setting is ignored on =main= and =master= and should be removed when the
 branch merges. The Codex counterpart uses the same rule.
 
 The reasoning-worktree SessionStart hook repairs required key links before its
-working-directory and origin checks. For eligible worktrees it fetches and
+working-directory and origin checks. That repair loop therefore runs in every
+session in every repository, so it must start no subprocess when all links are
+already correct. It uses shell parameter expansion for the worktree name and the
+=-ef= test for the already-correct comparison, instead of one =basename= and one
+=readlink= process for each worktree. A link that reaches the canonical key
+through a different path counts as correct and stays as it is; a missing,
+broken, or foreign link is still repaired. For eligible worktrees it fetches and
 merges shared state without pushing, reapplies the local overlay and context,
 injects private project skills, and installs the worktree-local issue-comment
 freshness guard. The bulk wrapper performs the shared fetch once. As best-effort

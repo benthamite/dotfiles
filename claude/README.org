@@ -215,7 +215,11 @@ the paths a command is about to stage count as staged.
 The SessionStart reasoning-worktree synchronization hook is also Claude-only.
 It repairs required key links before eligibility checks, updates eligible
 worktrees without pushing, reapplies the local overlay, injects private
-project skills, and installs worktree-local freshness protection. Its bulk
+project skills, and installs worktree-local freshness protection. Because the
+key repair precedes the eligibility checks, it delays the start of every
+session in every repository, and it therefore starts no subprocess while the
+links are correct. Keep it that way: an added =basename= or =readlink= for each
+worktree previously cost approximately 0.41 seconds of session start time. Its bulk
 wrapper fetches shared state once before processing multiple worktrees. All
 worktree-creating helpers construct destinations under the shared external
 root =~/repos/.worktrees/<repository>/<branch>= — never inside a repository

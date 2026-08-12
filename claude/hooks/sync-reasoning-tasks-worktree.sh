@@ -118,6 +118,18 @@ inject_private_skills() {
 # `ln -s`. This loop repairs EVERY reasoning-tasks task worktree's key symlink on every
 # session start, regardless of cwd — the mechanical guarantee that a future
 # session can never see a missing key. Cheap, idempotent; never reads the secret.
+#
+# Because this runs before the guards, it is on the critical path of EVERY
+# session in EVERY repo, so it must fork nothing in the common case where all
+# links are already correct. `basename` and `readlink` used to run once per
+# worktree; at 76 worktrees that cost ~0.4s of the ~0.52s hook, which showed up
+# as a ~0.57s delay before Claude Code sent its first request. Both are now
+# builtins: `${d##*/}` for the name, and `-ef` (same device+inode after
+# following symlinks) for the already-correct test. `-ef` is a slightly wider
+# notion of correct than the old target-string comparison — a link reaching the
+# canonical key by another path now counts as correct instead of being
+# rewritten to the canonical spelling — which is what the guarantee is about.
+# A missing, broken, or foreign-target link still fails `-ef` and is repaired.
 repair_all_worktree_keys() {
   local canonical="$HOME/Trajectory/reasoning-tasks/reasoning-tasks-cr-studio/.claude/.env"
   [ -e "$canonical" ] || return 0
@@ -133,12 +145,13 @@ repair_all_worktree_keys() {
            "$HOME"/repos/.worktrees/reasoning-tasks/pablo/*/; do
     [ -d "$d" ] || continue
     [ -e "$d.git" ] || continue
-    name="$(basename "$d")"
+    name="${d%/}"; name="${name##*/}"
     case "$name" in main|reasoning-tasks-cr-studio|agent-c-cr-studio) continue;; esac
     link="$d.claude/.env"
     # Leave a real key file (regular file, not a symlink) untouched.
     [ -e "$link" ] && [ ! -L "$link" ] && continue
-    [ "$(readlink "$link" 2>/dev/null || true)" = "$canonical" ] && continue
+    # Already resolves to the canonical key: nothing to do, and no fork.
+    [ "$link" -ef "$canonical" ] && continue
     mkdir -p "$d.claude" 2>/dev/null || true
     ln -sfn "$canonical" "$link" 2>/dev/null && n=$((n+1))
   done

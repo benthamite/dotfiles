@@ -33,7 +33,11 @@ Chrome integration uses three Chrome profiles, one per Claude Code account. Brow
 
 - User-level: empty.
 - Project-local: `~/My Drive/Epoch/.mcp.json` holds `asana`; `~/source/ForumMagnum/.mcp.json` holds `playwright`. These are exceptions, not the default service-access path. The Epoch Asana MCP is the canonical Asana interface for reads and writes, and its token must resolve to `pablo@epoch.ai`; verify with `~/My Drive/Epoch/scripts/check-asana-mcp-identity.sh` after any Asana token change, then restart the agent session so the running MCP server picks up the new environment. Airtable is no longer loaded as a broad Epoch MCP server; use project scripts, the Airtable REST API, or hosted connectors for explicit Airtable tasks. The email-triage bot Gmail account is accessed through `claude/bin/gmail.py --account email-triage`, not an MCP server. The global shared-systems rule still requires explicit user confirmation before creating or updating tasks.
-- claude.ai connectors: GitHub Integration, Ahrefs, Gmail, Google Calendar, Google Drive, Slack, GitHub via Copilot MCP, and Asana. These hosted connectors may be useful in claude.ai surfaces but are not canonical for shared Claude/Codex local workflows.
+- claude.ai connectors: disabled globally in Claude Code with
+  `disableClaudeAiConnectors: true` in the shared user settings. Hosted
+  connectors may remain connected for claude.ai surfaces, but Claude Code does
+  not load them or their tool schemas. They are not canonical for shared
+  Claude/Codex local workflows.
 - Plugin-managed: none currently enabled.
 - `claude-in-chrome`: enabled and heavily used for browser automation.
 

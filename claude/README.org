@@ -27,6 +27,11 @@ settings, permissions, hooks, or plugins change, so a symlink would be unsafe.
 =~/.claude/settings.local.json= holds machine-local permissions and native
 skill-disable state.
 
+The shared live settings set =disableClaudeAiConnectors= to =true=. Claude Code
+therefore does not load hosted claude.ai connectors or their tool schemas.
+Service access uses the canonical local CLIs and scripts documented in
+=CLAUDE.md= instead.
+
 Per-project configuration belongs in =<project>/.claude/=. Repo-root
 =.claude/= directories are project-local and are never global symlink targets.
 Account-specific homes selected with =CLAUDE_CONFIG_DIR= isolate authentication,

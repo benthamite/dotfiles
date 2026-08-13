@@ -151,6 +151,25 @@ rather than the heading, flips to =DONE= with =CLOSED= and =LAST_VERIFIED=,
 records the check that settled it, and splits out anything the closure leaves
 open. Partial completion is a rewrite, not a close.
 
+The paired =update-log= skill runs its post-update-log hooks *before* it writes
+the =CLAUDE.md= pointer, because the project brief those hooks refresh is what
+the map summarises; the reverse order digests the state the project was in
+before the session. The step order encodes that dependency rather than
+describing it. Until 2026-08-13 the pointer step came first while instructing
+the reader to work from a brief the hooks had not refreshed yet, so in practice
+the digest came from the session log.
+
+Two writing rules follow from the same defect. =Current focus= selects from the
+brief's open tasks deterministically — priority order, non-actionable keywords
+skipped unless everything is blocked, each task carried by its own heading text
+rather than paraphrased, defined empty state — so two runs over one brief agree.
+And no derived field may *originate* a claim that work is outstanding, pending,
+blocked, or awaiting somebody: those fields carry neither evidence nor a date,
+so such a claim belongs on the task holding =VERIFY_WITH= and =LAST_VERIFIED=.
+A derived field may repeat it; it must not be where it first appears. Epoch's
+=NEXT_STEP= and =STATUS_DETAIL= take the same rule through
+=projects/context/project-doc-conventions.md=.
+
 The =move-session-log= skill bundles a Python adapter
 (=skills/move-session-log/scripts/move_session_log.py=) that mirrors the Codex
 adapter's interface — single-session import plus =--dry-run=/=--rename OLD

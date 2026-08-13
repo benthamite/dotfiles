@@ -71,7 +71,7 @@ Determine the project's log directory and whether decisions are tracked:
 
 1. **Read `CLAUDE.md`** in the project root. For this workflow, `CLAUDE.md` is the canonical session-log index unless the project explicitly says otherwise; in Codex sessions, `AGENTS.md` may contain agent instructions but is not the session-log pointer. Look for a reference to a session log file — either:
    - A path like `<dir>/YYYY-MM-DD.md` in a "Latest session" section (current format), or
-   - A legacy `@<dir>/YYYY-MM-DD.md` import (old format — will be migrated in Step 2).
+   - A legacy `@<dir>/YYYY-MM-DD.md` import (old format — will be migrated in Step 4).
    
    Extract the directory portion — that is the log directory.
 
@@ -124,7 +124,7 @@ create or update `CLAUDE.md`; and continue.
 5. **Update CLAUDE.md**:
    - If CLAUDE.md doesn't exist, create it with a minimal structure containing the project name (from the directory name or `package.json`/`pyproject.toml` if available), a "Latest session" section, and (if decisions were opted in) a "Decision records" section with the `@decisions-summary.md` reference.
    - If CLAUDE.md exists but has no "Latest session" section, append one.
-   - The "Latest session" section will be populated in Step 2 with a summary + pointer (not an `@` import).
+   - The "Latest session" section will be populated in Step 4 with a summary + pointer (not an `@` import).
 
 Then proceed to Step 1.
 
@@ -142,19 +142,53 @@ The file should contain:
 
 Be concise but specific. Include exact numbers where available (counts, percentages, timings). Future sessions may need to understand *why* decisions were made, so document reasoning for non-obvious choices.
 
-## Step 2: Update the CLAUDE.md session pointer
+## Step 2: Record decisions
+
+If a `decisions/` directory exists in the project root, use the `record-decisions` skill if available to check whether any architectural or algorithmic decisions were made this session. If the skill is unavailable, follow the local workflow directly: inspect `decisions/`, identify qualifying decisions, add `decisions/NNN.md` entries, and update `decisions-summary.md`. If new entries are added, they will be included in the commit.
+
+If no `decisions/` directory exists, skip this step.
+
+## Step 3: Run post-update-log hooks
+
+Walk up ancestor directories from the project root to the git root (inclusive). For each ancestor, check whether `<ancestor>/context/post-update-log-hook.md` exists. If found, read and follow its instructions. Run all matching hooks, innermost first.
+
+This lets parent directories define project-family-level bookkeeping — master project list updates, shared status syncing, meeting action item reconciliation, etc. — that fires automatically after every `/update-log` invocation, without bloating per-session CLAUDE.md context.
+
+For Epoch project notes, the main project `.org` file is a concise ground-truth brief, not a chronological session dossier; its target shape is defined in `projects/context/project-doc-conventions.md`. When a hook or local convention asks you to update it:
+
+- refresh current-state fields and sections from the session log just written;
+- keep active work as org `TODO` headings, not checkbox mirrors;
+- archive completed `DONE` headings and stale historical narrative into `<project>_archive.org`;
+- do not create routine `** Meeting references` sections; only record meeting links when they support durable decisions or constraints.
+
+If no such file is found at any level, skip this step. In the final report, state which hooks were found, which hooks ran, and which files they changed.
+
+## Step 4: Update the CLAUDE.md session pointer
+
+This step runs after the hooks on purpose. The project brief is the source the
+map summarises, so it has to be current before the map is written; doing it the
+other way round produces a digest of the state the project was in before this
+session. Until 2026-08-13 this step sat *before* the hooks while instructing the
+reader to work from a brief the hooks had not refreshed yet — an instruction
+nobody following the document in order could satisfy.
 
 How CLAUDE.md is maintained depends on its shape — the file itself tells you which mode to use:
 
 ### Map mode
 
-CLAUDE.md has a `## Current focus` section (and no `## Latest session`). The file is a stable map and the session narrative belongs in the project's brief (e.g. the `.org`), not here. The brief itself is refreshed by the post-update-log hook in Step 4. In this mode:
+CLAUDE.md has a `## Current focus` section (and no `## Latest session`). The file is a stable map and the session narrative belongs in the project's brief (e.g. the `.org`), not here. Step 3 has already refreshed that brief. In this mode:
 
-1. **Regenerate `## Current focus`, replacing the previous content — never append to it.** Derive it from the project brief's open work (for `.org` briefs, the `** Active TODOs` headings) *after* the Step 4 post-hook has refreshed that brief, so the digest reflects the just-updated state. Output a short digest: a one-line orientation, optionally followed by up to ~6 bullets of the live open priorities. Hard cap ~120 words. **No dates and no session narrative** (e.g. "On 2026-06-29 did X") — those live in `logs/`; durable state lives in the brief.
+1. **Regenerate `## Current focus` from the brief's open work, replacing the previous content — never append to it.** For `.org` briefs the open work is the `** Active TODOs` headings. Output a short digest: a one-line orientation, optionally followed by up to ~6 bullets of the live open priorities. Hard cap ~120 words. **No dates and no session narrative** (e.g. "On 2026-06-29 did X") — those live in `logs/`; durable state lives in the brief.
    - **Why replace, not append:** appending is what turns `Current focus` into a chronological blob that duplicates the log and the brief. Replacing loses nothing — the session log you just wrote holds the narrative, and the brief's `** Active TODOs` hold the live state. `Current focus` is only a convenience index into those.
    - If the existing `Current focus` is already a multi-paragraph blob, this run is the moment to compact it down to the digest; do not preserve the old chronology.
+   - **Choose what to list deterministically**, not by impression, so two runs over the same brief produce the same digest:
+     - take open tasks in priority order, highest first;
+     - skip tasks whose keyword marks them as not actionable (`WAITING`, `SOMEDAY`, `MAYBE`, `LATER`, `DELEGATED`). If *every* open task is one of those, say so in the orientation line and name what the work is waiting on, rather than listing a blocked task as though it were available;
+     - carry each task's own heading text, or a link to it. Do not paraphrase a task into a fresh sentence — a paraphrase is a second copy of the task that can disagree with the original;
+     - if there are no open tasks, write one line saying so and naming what closed the last of them. Do not fill the section with recent history.
+   - **Do not originate a claim here.** A statement that work is outstanding, pending, blocked, or awaiting somebody is only worth as much as the last time somebody checked, and this section records no evidence and no date. Such a claim belongs on the task that carries the evidence for it — in Epoch briefs, a `TODO` with `VERIFY_WITH` and `LAST_VERIFIED`. `Current focus` may repeat a claim that a task already carries; it must not be the first place the claim appears. If the session established something outstanding that no task records, add or update the task first, then let the digest reflect it.
 2. Keep the `## Read first` pointers accurate if any referenced file moved or was added.
-3. Do **not** add a `## Latest session` narrative. If the brief's `STATUS_DETAIL` / `NEXT_STEP` dashboard abstracts have themselves blobbed past their word caps (≤120 / ≤40), compact them the same way while updating the brief in Step 4 — they are derived summaries of `** Current state` / `** Active TODOs`, not changelogs.
+3. Do **not** add a `## Latest session` narrative. If the brief's `STATUS_DETAIL` / `NEXT_STEP` dashboard abstracts have themselves blobbed past their word caps (≤120 / ≤40), compact them the same way while updating the brief in Step 3 — they are derived summaries of `** Current state` / `** Active TODOs`, not changelogs.
 
 This is the shape defined by a project's documentation conventions (for Epoch, `projects/context/project-doc-conventions.md`). When in doubt about what belongs in the map versus the brief, follow that doc.
 
@@ -177,6 +211,12 @@ Full details: session-logs/2026-04-13.md
 
 Do NOT use an `@` import — the full log can be hundreds of lines and should not be injected into every session. The summary gives the next session enough context to orient; the pointer lets it read deeper on demand.
 
+This mode is a record of what happened in one session, so it may say what was
+found or left unfinished. It still must not assert that some outside party has
+not yet acted unless the session actually checked — write "asked Matt on
+2026-08-06, no reply as of that check" rather than "waiting on Matt", which
+reads as current however old it gets.
+
 If CLAUDE.md currently has a legacy `@<log_dir>/...` import, replace it with the summary + pointer format.
 
 ### Sibling AGENTS.md
@@ -193,27 +233,6 @@ Many Epoch projects keep a sibling `AGENTS.md` next to `CLAUDE.md` as a Codex-si
    first to confirm exactly what it would copy, then run the same helper without
    `--check` if mirroring is needed.
 3. Verify with a final `diff -u CLAUDE.md AGENTS.md` returning no output before staging.
-
-## Step 3: Record decisions
-
-If a `decisions/` directory exists in the project root, use the `record-decisions` skill if available to check whether any architectural or algorithmic decisions were made this session. If the skill is unavailable, follow the local workflow directly: inspect `decisions/`, identify qualifying decisions, add `decisions/NNN.md` entries, and update `decisions-summary.md`. If new entries are added, they will be included in the commit.
-
-If no `decisions/` directory exists, skip this step.
-
-## Step 4: Run post-update-log hooks
-
-Walk up ancestor directories from the project root to the git root (inclusive). For each ancestor, check whether `<ancestor>/context/post-update-log-hook.md` exists. If found, read and follow its instructions. Run all matching hooks, innermost first.
-
-This lets parent directories define project-family-level bookkeeping — master project list updates, shared status syncing, meeting action item reconciliation, etc. — that fires automatically after every `/update-log` invocation, without bloating per-session CLAUDE.md context.
-
-For Epoch project notes, the main project `.org` file is a concise ground-truth brief, not a chronological session dossier; its target shape is defined in `projects/context/project-doc-conventions.md`. When a hook or local convention asks you to update it:
-
-- refresh current-state fields and sections from the session log just written;
-- keep active work as org `TODO` headings, not checkbox mirrors;
-- archive completed `DONE` headings and stale historical narrative into `<project>_archive.org`;
-- do not create routine `** Meeting references` sections; only record meeting links when they support durable decisions or constraints.
-
-If no such file is found at any level, skip this step. In the final report, state which hooks were found, which hooks ran, and which files they changed.
 
 ## Step 5: Commit And Push
 

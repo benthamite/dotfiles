@@ -336,6 +336,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#powerthesaurus][powerthesaurus]]
   - [[#reverso][reverso]]
   - [[#dictionary][dictionary]]
+  - [[#quotidian][quotidian]]
 - [[#docs][docs]]
   - [[#pdf-tools][pdf-tools]]
   - [[#pdf-tools-extras][pdf-tools-extras]]
@@ -7767,7 +7768,8 @@ CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package quotidian
   :ensure (:host github
-                 :repo "benthamite/quotidian")
+                 :repo "benthamite/quotidian"
+                 :files (:defaults "data"))
   :defer t)
 #+end_src
 

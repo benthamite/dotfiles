@@ -1078,5 +1078,16 @@
     (should called)
     (should-not debug-on-error-seen)))
 
+(ert-deftest org-extras-test-id-update-excludes-test-fixtures ()
+  "Skip notes inside test fixture trees, which copy canonical IDs verbatim."
+  (should (org-extras-id--update-excluded-p
+           (concat "/Users/x/My Drive/Epoch/projects/shared/tests/fixtures/"
+                   "stale-premise/onboarding-matt-thread/projects/onboarding/"
+                   "onboarding.org")))
+  (should (org-extras-id--update-excluded-p
+           "/Users/x/repos/foo/test/fixtures/notes/onboarding.org"))
+  (should-not (org-extras-id--update-excluded-p
+               "/Users/x/My Drive/Epoch/projects/onboarding/onboarding.org")))
+
 (provide 'org-extras-test)
 ;;; org-extras-test.el ends here

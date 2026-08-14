@@ -889,7 +889,9 @@ under ~org-directory~ and updates the ID location database via
 stale entries with matching paths are pruned from ~org-id-files~ and
 ~org-id-locations~ before the scan so they cannot reappear as
 duplicates on the next run.  The default patterns exclude macOS Trash
-files, git worktree checkouts inside ~org-directory~, Google Drive
+files, git worktree checkouts inside ~org-directory~, test fixture
+trees such as =tests/fixtures/=, which reconstruct notes verbatim and
+therefore repeat the IDs of the notes they reproduce, Google Drive
 sync-conflict files, legacy Dropbox copies of files now canonical
 under ~org-directory~, and files with carriage returns in their
 names.  If the scan reports duplicate IDs, the command automatically

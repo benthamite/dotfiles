@@ -112,6 +112,7 @@ automatic addition of IDs globally."
 (defcustom org-extras-id-update-excluded-patterns
   '("/\\.Trash/"
     "/\\.worktrees/"
+    "/tests?/fixtures/"
     "conflicted copy"
     "/Library/CloudStorage/Dropbox/"
     "\r")
@@ -121,9 +122,10 @@ paths match any pattern are also purged, so they do not re-appear as
 duplicates on subsequent scans.
 
 Defaults exclude macOS Trash, git worktree checkouts (which duplicate every
-ID from the main branch), Google Drive sync-conflict files, legacy Dropbox
-copies of files now canonical under `org-directory', and files with carriage
-returns in their names."
+ID from the main branch), test fixture trees (which reconstruct notes verbatim,
+IDs included, so that a test cannot drift from the note it reproduces), Google
+Drive sync-conflict files, legacy Dropbox copies of files now canonical under
+`org-directory', and files with carriage returns in their names."
   :type '(repeat regexp)
   :group 'org-extras)
 

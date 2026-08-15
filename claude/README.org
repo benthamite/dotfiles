@@ -192,11 +192,6 @@ canonical =claude-code= and =codex= backends, uses Codex's public prompt reader
 for app-server delivery recovery, and can rebind a failed author or reviewer
 phase to a fresh transcript without enumerating unrelated sessions.
 
-The paired =update-situational-awareness-filing= skill treats a new SA LP filing
-as one refresh across SEC facts, Org results, MarketData sensitivity, charts,
-the portfolio calculator, and the live page. Its checker rejects stale quarter
-markers and =err= sensitivity cells, so a partial refresh cannot pass as complete.
-
 The =fix-drive-errors= skill treats the fully paginated native Drive panel as
 the source of truth. Its helper preserves duplicate rows and exact error
 reasons, inventories all candidate paths without claiming a basename match is

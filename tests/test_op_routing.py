@@ -147,6 +147,17 @@ class ShimRoutingTest(unittest.TestCase):
         )
         self.assertTrue(out.startswith("REAL "), out)
 
+    def test_automations_write_uses_desktop_broker(self):
+        out = self.route(
+            "item", "create", "--vault", "Automations", "-",
+            env_extra={"OP_SERVICE_ACCOUNT_TOKEN": "read-only"},
+        )
+        self.assertTrue(out.startswith("op-desktop "), out)
+
+    def test_piped_item_template_uses_desktop_broker(self):
+        out = self.route("item", "create", "--vault", "Employee", "-")
+        self.assertTrue(out.startswith("op-desktop "), out)
+
     def test_bypass_env_vars_reach_the_binary_directly(self):
         """op-desktop's broker and op-automations set these to avoid recursion."""
         for var in ("OP_SHIM_BYPASS", "OP_NO_SHIM"):
@@ -154,13 +165,12 @@ class ShimRoutingTest(unittest.TestCase):
             self.assertTrue(out.startswith("REAL "), f"{var}: {out}")
 
     def test_streaming_subcommands_reach_the_binary_directly(self):
-        """op-desktop cannot forward stdin, so these must not be routed to it."""
+        """Commands needing raw interactive terminal behavior bypass the broker."""
         for args in (
             ("run", "--", "env"),
             ("inject",),
             ("signin",),
             ("document", "create", "file.txt"),
-            ("read", "-"),
         ):
             out = self.route(*args)
             self.assertTrue(out.startswith("REAL "), f"{args}: {out}")

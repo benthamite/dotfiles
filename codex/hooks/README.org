@@ -36,9 +36,8 @@ environment, while still denying commands that print, parse, or dump it.
 The secret-leak guard applies the same command policy to every literal nested
 =cmd= inside a =functions.exec= program, including nested shell-tool calls.
 Read-only Automations access must use =op-automations= and desktop-gated work
-must use =op-desktop=. The sanctioned fallback batches all operations in one
-=env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '...'= shell; later raw =op= calls
-and =--reveal= remain denied.
+must use =op-desktop=. The broker forwards piped item templates, so stdin is not
+a reason to bypass it. Raw =op= writes and =--reveal= remain denied.
 
 The post-commit Elisp tracker attributes each literal nested
 =tools.exec_command= call to the =workdir= in that same call rather than to the

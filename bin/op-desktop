@@ -21,15 +21,18 @@ Usage
 -----
     op-desktop read "op://Employee/Some Item/credential"
     op-desktop item get "Title" --vault Employee --format=json
+    op-desktop item template get "API Credential" | op-desktop item create --vault Automations -
 
     op-desktop --status     show broker state
     op-desktop --stop       stop the broker (drops the authorization)
 
-Limitations
------------
-stdin is not forwarded to the child; the pty is used as its stdin so that
-1Password can resolve a terminal. Commands that read a document or template from
-stdin must be run some other way.
+Standard input
+--------------
+Piped input for commands with a ``-`` stdin marker is forwarded through the
+protected 0600 broker socket. The child
+still belongs to the broker's terminal session, so 1Password reuses the same
+desktop authorization. This supports secret-safe JSON templates such as
+``op item create -`` without exposing values in argv or bypassing the broker.
 
 The broker never writes secret values anywhere: command output goes back over a
 0600 unix socket to the caller and is not logged.
@@ -61,6 +64,7 @@ IDLE_EXIT_SECONDS = 3600
 
 START_TIMEOUT_SECONDS = 20
 RECV_CHUNK = 65536
+MAX_STDIN_BYTES = 16 * 1024 * 1024
 
 # Run the real binary by absolute path. `shell/shims/op` routes bare `op` here,
 # so resolving "op" through PATH would make the broker re-enter its own shim and
@@ -236,15 +240,39 @@ def run_broker() -> None:
             # and passes straight through instead of routing back here.
             env["OP_SHIM_BYPASS"] = "1"
 
+            stdin_payload = request.get("stdin_b64")
+            if stdin_payload is not None:
+                if not isinstance(stdin_payload, str):
+                    send_json(conn, {"rc": 2, "out": "", "err": "op-desktop: bad stdin\n"})
+                    continue
+                try:
+                    import base64
+
+                    child_input = base64.b64decode(stdin_payload, validate=True)
+                except (ValueError, TypeError):
+                    send_json(conn, {"rc": 2, "out": "", "err": "op-desktop: bad stdin\n"})
+                    continue
+                if len(child_input) > MAX_STDIN_BYTES:
+                    send_json(conn, {"rc": 2, "out": "", "err": "op-desktop: stdin too large\n"})
+                    continue
+            else:
+                child_input = None
+
             log(f"op {' '.join(argv[:2])} ({len(argv)} args)")
             try:
+                run_options = {
+                    "stdout": subprocess.PIPE,
+                    "stderr": subprocess.PIPE,
+                    "env": env,
+                    "cwd": cwd,
+                }
+                if child_input is None:
+                    run_options["stdin"] = slave_fd
+                else:
+                    run_options["input"] = child_input
                 completed = subprocess.run(
                     [OP_BINARY, *argv],
-                    stdin=slave_fd,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    env=env,
-                    cwd=cwd,
+                    **run_options,
                 )
                 payload = {
                     "rc": completed.returncode,
@@ -376,16 +404,28 @@ def main(argv) -> int:
         print(__doc__.strip())
         return 0
 
+    stdin_content = None
+    if "-" in argv and not sys.stdin.isatty():
+        stdin_content = sys.stdin.buffer.read(MAX_STDIN_BYTES + 1)
+        if len(stdin_content) > MAX_STDIN_BYTES:
+            print("op-desktop: stdin too large", file=sys.stderr)
+            return 2
+
     conn = connect_or_start()
     with conn:
         conn.settimeout(None)
+        request = {
+            "argv": argv,
+            "env": {k: v for k, v in os.environ.items() if k.startswith("OP_")},
+            "cwd": os.getcwd(),
+        }
+        if stdin_content is not None:
+            import base64
+
+            request["stdin_b64"] = base64.b64encode(stdin_content).decode("ascii")
         send_json(
             conn,
-            {
-                "argv": argv,
-                "env": {k: v for k, v in os.environ.items() if k.startswith("OP_")},
-                "cwd": os.getcwd(),
-            },
+            request,
         )
         reply = recv_json(conn)
 

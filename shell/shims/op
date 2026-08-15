@@ -33,8 +33,8 @@
 #
 #   OP_SHIM_BYPASS=1  internal; set by op-desktop's broker and op-automations so
 #                     their own `op` children do not re-enter this shim
-#   OP_NO_SHIM=1      caller opt-out, for the stdin cases op-desktop documents
-#                     it cannot forward (documents/templates piped in)
+#   OP_NO_SHIM=1      caller opt-out for operations that require the raw CLI's
+#                     own interactive terminal behavior
 
 REAL=/opt/homebrew/bin/op
 [ -x "$REAL" ] || REAL=/usr/local/bin/op
@@ -44,9 +44,9 @@ if [ -n "${OP_SHIM_BYPASS:-}" ] || [ -n "${OP_NO_SHIM:-}" ]; then
 	exec "$REAL" "$@"
 fi
 
-# Streaming / interactive subcommands. `run` execs a child process, `inject` and
-# `document create` read stdin, `signin` and `account` need a terminal of their
-# own. op-desktop does not forward stdin, so these must not go through it.
+# Interactive subcommands. `run` execs a child process; `signin`, `account`, and
+# plugin-management commands need a terminal of their own. Piped item templates
+# are supported by op-desktop and must not bypass it.
 case "${1:-} ${2:-}" in
 document\ create*)
 	exec "$REAL" "$@"
@@ -58,12 +58,13 @@ run | inject | signin | plugin | connect | account | update)
 	;;
 esac
 
-# An explicit `-` argument means "read from stdin", which the broker cannot do.
-for arg in "$@"; do
-	if [ "$arg" = "-" ]; then
-		exec "$REAL" "$@"
-	fi
-done
+# Writes always use the desktop-authorized broker. This check must precede the
+# Automations read route because that service account is deliberately read-only.
+case "${1:-} ${2:-}" in
+item\ create | item\ edit | item\ delete | item\ share | item\ move | item\ archive)
+	exec op-desktop "$@"
+	;;
+esac
 
 # Does this invocation target the Automations vault? That vault is served by the
 # read-only service account and needs no desktop authorization. Match both the

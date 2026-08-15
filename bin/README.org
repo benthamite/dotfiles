@@ -69,7 +69,7 @@ not be used to print or document secret values; the placement rules are in
 | =mbsync-parallel= | Synchronizes non-Epoch mbsync channels in parallel while running the Epoch Gmail sync separately. |
 | =mbsync-passcmd= | Supplies mbsync with its password from the shared temporary file or the encrypted store. |
 | =op-automations= | Runs 1Password CLI reads with the read-only Automations service account. |
-| =op-desktop= | Reuses one terminal-backed desktop authorization for supported 1Password CLI calls. |
+| =op-desktop= | Reuses one terminal-backed desktop authorization for 1Password CLI calls and securely forwards piped item templates. |
 | =trajectory-open= | Opens a URL through the =trajectory= Chrome profile alias. |
 | =transfer-github-issues= | Transfers the issue numbers in the configured input file between two fixed repositories. |
 | =translation-server= | Starts the local translation-server project with npm. |

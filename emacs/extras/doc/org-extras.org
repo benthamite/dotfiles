@@ -896,7 +896,8 @@ sync-conflict files, legacy Dropbox copies of files now canonical
 under ~org-directory~, and files with carriage returns in their
 names.  If the scan reports duplicate IDs, the command automatically
 calls ~org-extras-id-find-duplicate-ids~ ([[#h:finding-duplicate-ids][Finding duplicate IDs]]) so
-that you can review and resolve them.
+that you can review and resolve them.  Starting a new scan removes any
+results buffer left by an earlier scan.
 
 Internally, it temporarily advises ~display-warning~ to intercept
 "duplicate IDs found" messages and trigger the duplicate-ID workflow.
@@ -927,12 +928,15 @@ overhead that would otherwise dominate the scan time.
 :END:
 
 #+findex: org-extras-id-find-duplicate-ids
-The command ~org-extras-id-find-duplicate-ids~ parses the =*Messages*=
-buffer for "Duplicate ID" warnings produced by
-~org-id-update-id-locations~ and presents the results in a dedicated
-read-only =*Duplicate Org IDs*= buffer.  Each line shows a file path
-followed by the duplicate ID.  In this buffer, pressing =SPC= calls
-~org-extras-id-process-next-duplicate~ to process the next entry.
+The command ~org-extras-id-find-duplicate-ids~ parses only the most
+recent ID scan in the =*Messages*= buffer for "Duplicate ID" warnings
+produced by ~org-id-update-id-locations~ and presents the results in a
+dedicated read-only =*Duplicate Org IDs*= buffer.  This prevents fixed
+duplicates from older scans from reappearing.  Each line shows a file
+path followed by the duplicate ID.  In this buffer, pressing =SPC=
+calls ~org-extras-id-process-next-duplicate~ to process the next entry.
+If the latest scan has no duplicates, any stale results buffer is
+removed.
 
 *** Processing duplicate IDs
 :PROPERTIES:

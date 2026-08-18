@@ -1367,6 +1367,7 @@ If `org-id-update-id-locations' reports duplicate IDs, this
 command will automatically call `org-extras-id-find-duplicate-ids'
 to display them in a dedicated buffer."
   (interactive)
+  (org-extras-id--clear-duplicate-buffer)
   (org-extras-id--prune-locations)
   (let* ((all-files (directory-files-recursively org-directory "\\.org$"))
          (filtered-files
@@ -1430,36 +1431,49 @@ preventing them from reappearing as duplicates of canonical files."
 ;;;;;; process duplicate ids
 
 (defun org-extras-id-find-duplicate-ids ()
-  "Scan *Messages* buffer for duplicate IDs and display them in a new buffer.
-It assumes that a \"Duplicate ID\" line is associated with the file from the
-most recent preceding \"Finding ID locations\" line."
+  "Display duplicate IDs from the latest scan recorded in *Messages*.
+Assume that a \"Duplicate ID\" line is associated with the file from the most
+recent preceding \"Finding ID locations\" line."
   (interactive)
-  (let ((results '())
-        (current-file nil)
-        (messages-buf (get-buffer "*Messages*")))
+  (let ((messages-buf (get-buffer "*Messages*")))
     (if (not messages-buf)
         (user-error "Buffer *Messages* does not exist")
-      (with-current-buffer messages-buf
-        (goto-char (point-min))
-        (while (not (eobp))
-          (cond
-           ((looking-at "Finding ID locations .*?: \\(.*\\)$")
-            (setq current-file (match-string 1)))
-           ((looking-at "^Duplicate ID \"\\([^\"]+\\)\"")
-            (when current-file
-              (let ((id (match-string 1)))
-                (push (format "%s: %s" current-file id) results)))))
-          (forward-line 1))))
-    (if results
-        (with-current-buffer (get-buffer-create "*Duplicate Org IDs*")
-          (let ((inhibit-read-only t))
-            (erase-buffer)
-            (insert (string-join (reverse results) "\n"))
-            (goto-char (point-min))
-            (simple-extras-local-set-key (kbd "SPC") #'org-extras-id-process-next-duplicate)
-            (setq buffer-read-only t))
-          (display-buffer (current-buffer)))
-      (message "No duplicate IDs found in *Messages* buffer."))))
+      (let ((results (org-extras-id--collect-duplicates messages-buf)))
+        (if results
+            (with-current-buffer (get-buffer-create "*Duplicate Org IDs*")
+              (let ((inhibit-read-only t))
+                (erase-buffer)
+                (insert (string-join results "\n"))
+                (goto-char (point-min))
+                (simple-extras-local-set-key (kbd "SPC") #'org-extras-id-process-next-duplicate)
+                (setq buffer-read-only t))
+              (display-buffer (current-buffer)))
+          (org-extras-id--clear-duplicate-buffer)
+          (message "No duplicate IDs found in the latest ID scan"))))))
+
+(defun org-extras-id--collect-duplicates (buffer)
+  "Return duplicate ID entries from the latest scan in BUFFER."
+  (with-current-buffer buffer
+    (let ((results '())
+          (current-file nil))
+      (goto-char (point-max))
+      (if (re-search-backward "^Finding ID locations (1/[0-9]+ files): " nil t)
+          (beginning-of-line)
+        (goto-char (point-min)))
+      (while (not (eobp))
+        (cond
+         ((looking-at "Finding ID locations .*?: \\(.*\\)$")
+          (setq current-file (match-string 1)))
+         ((looking-at "^Duplicate ID \"\\([^\"]+\\)\"")
+          (when current-file
+            (push (format "%s: %s" current-file (match-string 1)) results))))
+        (forward-line 1))
+      (reverse results))))
+
+(defun org-extras-id--clear-duplicate-buffer ()
+  "Kill the stale duplicate-ID results buffer when it exists."
+  (when-let ((buffer (get-buffer "*Duplicate Org IDs*")))
+    (kill-buffer buffer)))
 
 (declare-function simple-extras-local-set-key "simple-extras")
 (declare-function simple-extras-visible-mode-enhanced "simple-extras")

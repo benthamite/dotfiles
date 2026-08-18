@@ -1062,7 +1062,8 @@ sync-conflict files, legacy Dropbox copies of files now canonical
 under @code{org-directory}, and files with carriage returns in their
 names.  If the scan reports duplicate IDs, the command automatically
 calls @code{org-extras-id-find-duplicate-ids} (@ref{Finding duplicate IDs}) so
-that you can review and resolve them.
+that you can review and resolve them.  Starting a new scan removes any
+results buffer left by an earlier scan.
 
 Internally, it temporarily advises @code{display-warning} to intercept
 ``duplicate IDs found'' messages and trigger the duplicate-ID workflow.
@@ -1091,12 +1092,15 @@ overhead that would otherwise dominate the scan time.
 @subsection Finding duplicate IDs
 
 @findex org-extras-id-find-duplicate-ids
-The command @code{org-extras-id-find-duplicate-ids} parses the @samp{*Messages*}
-buffer for ``Duplicate ID'' warnings produced by
-@code{org-id-update-id-locations} and presents the results in a dedicated
-read-only @samp{*Duplicate Org IDs*} buffer.  Each line shows a file path
-followed by the duplicate ID@.  In this buffer, pressing @samp{SPC} calls
-@code{org-extras-id-process-next-duplicate} to process the next entry.
+The command @code{org-extras-id-find-duplicate-ids} parses only the most
+recent ID scan in the @samp{*Messages*} buffer for ``Duplicate ID'' warnings
+produced by @code{org-id-update-id-locations} and presents the results in a
+dedicated read-only @samp{*Duplicate Org IDs*} buffer.  This prevents fixed
+duplicates from older scans from reappearing.  Each line shows a file
+path followed by the duplicate ID@.  In this buffer, pressing @samp{SPC}
+calls @code{org-extras-id-process-next-duplicate} to process the next entry.
+If the latest scan has no duplicates, any stale results buffer is
+removed.
 
 @node Processing duplicate IDs
 @subsection Processing duplicate IDs

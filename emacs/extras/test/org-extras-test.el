@@ -12,6 +12,25 @@
 
 (defvar buffer-face-mode-hook)
 
+;;;; duplicate IDs
+
+(ert-deftest org-extras-test-id-collect-duplicates-uses-latest-scan ()
+  "Ignore duplicate warnings from scans before the latest scan."
+  (with-temp-buffer
+    (insert "Finding ID locations (1/1 files): /old.org\n"
+            "Duplicate ID \"OLD\"\n"
+            "Finding ID locations (1/2 files): /new-one.org\n"
+            "Finding ID locations (2/2 files): /new-two.org\n"
+            "Duplicate ID \"NEW\"\n")
+    (should (equal (org-extras-id--collect-duplicates (current-buffer))
+                   '("/new-two.org: NEW")))))
+
+(ert-deftest org-extras-test-id-clear-duplicate-buffer ()
+  "Remove stale duplicate-ID results."
+  (get-buffer-create "*Duplicate Org IDs*")
+  (org-extras-id--clear-duplicate-buffer)
+  (should-not (get-buffer "*Duplicate Org IDs*")))
+
 ;;;; count-lines-with-expression
 
 (ert-deftest org-extras-test-count-lines-with-expression-basic-match ()

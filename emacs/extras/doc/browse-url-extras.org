@@ -104,7 +104,10 @@ The command ~browse-url-open-externally-in-background~ opens a URL in Firefox on
 #+findex: browse-url-extras-set-handler
 #+findex: browse-url-extras-sync-eww-handlers
 #+findex: browse-url-extras-write-url-to-file
-The function ~browse-url-extras-set-handler~ reads a URLS-FILE (one domain per line) and adds entries to ~browse-url-handlers~ mapping each domain (as a quoted regexp) to the specified HANDLER function. It is called by ~browse-url-extras-set-domains-to-open-externally~ ([[#h:browser-routing][Browser routing]]) for each browser configuration file.
+The function ~browse-url-extras-set-handler~ reads a URLS-FILE (one domain per line) and adds entries to ~browse-url-handlers~ mapping each domain to the specified HANDLER function. It is called by ~browse-url-extras-set-domains-to-open-externally~ ([[#h:browser-routing][Browser routing]]) for each browser configuration file.
+
+#+findex: browse-url-extras-domain-regexp
+The function ~browse-url-extras-domain-regexp~ builds the regexp used for each entry. The regexp is anchored to the host component of the URL, so it matches DOMAIN and its subdomains but not a URL that merely mentions DOMAIN in its userinfo, path, query or fragment. Without this anchoring, a hostile URL such as =https://evil.example/?ref=github.com= would be routed out of EWW and into the external browser, where live logged-in sessions are available to it.
 
 The function ~browse-url-extras-sync-eww-handlers~ rebuilds ~eww-use-browse-url~ from EWW's stable =mailto:= pattern and the current ~browse-url-handlers~ keys. Because it derives the complete regexp from current state instead of appending to the previous value, repeated package loads are idempotent and cannot accumulate duplicate alternatives.
 

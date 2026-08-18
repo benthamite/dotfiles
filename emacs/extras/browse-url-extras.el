@@ -57,8 +57,21 @@
 (defun browse-url-extras-set-handler (urls-file handler)
   "Set the URL HANDLER from a URLS-FILE."
   (when (file-exists-p urls-file)
-    (dolist (url (s-split "\n" (f-read urls-file) t))
-      (push (cons (regexp-quote url) handler) browse-url-handlers))))
+    (dolist (domain (s-split "\n" (f-read urls-file) t))
+      (push (cons (browse-url-extras-domain-regexp domain) handler)
+            browse-url-handlers))))
+
+(defun browse-url-extras-domain-regexp (domain)
+  "Return a regexp matching URLs whose host is DOMAIN or a subdomain of DOMAIN.
+The regexp is anchored to the host component.  A URL that only mentions DOMAIN
+in its userinfo, port, path, query or fragment does not match, so a hostile URL
+such as `https://evil.example/?ref=DOMAIN\=' cannot select this handler."
+  (concat "\\`[a-zA-Z][a-zA-Z0-9+.-]*://"
+          "\\(?:[^/?#]*@\\)?"
+          "\\(?:[^/?#@]*\\.\\)?"
+          (regexp-quote domain)
+          "\\(?::[0-9]+\\)?"
+          "\\(?:[/?#]\\|\\'\\)"))
 
 ;;;###autoload
 (defun browse-url-extras-set-domains-to-open-externally ()

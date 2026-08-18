@@ -521,6 +521,8 @@ The extras come with their own manuals and user options: everything is documente
   - [[#slack-extras][slack-extras]]
   - [[#ol-emacs-slack][ol-emacs-slack]]
 - [[#web][web]]
+  - [[#nsm][nsm]]
+  - [[#url][url]]
   - [[#browse-url][browse-url]]
   - [[#browse-url-extras][browse-url-extras]]
   - [[#shr][shr]]
@@ -13484,13 +13486,11 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   (slack-message-custom-notifier 'ignore)
   (slack-activity-feed-watch-channels '("automation-alerts"
                                         "cybersecurity-ops"
-                                        "mirrorcode-compute-planning"
-                                        "ops-ai-api-providers"
-                                        "pablo-caroline"
                                         "pablo-isabel"
                                         "pablo-maria"
                                         "pablo-ricardo"
                                         "pablo-elliot"
+					"matt-pablo"
                                         "media-mentions-digest"
                                         "analytics-digest"
                                         "ai-productivity-digest"))
@@ -13613,6 +13613,43 @@ CLOCK: [2021-05-18 Tue 18:26]--[2021-05-18 Tue 18:54] =>  0:28
 - [[http://www.howardism.org/Technical/Emacs/browsing-in-emacs.html][Emacs-focused Web Browsing]]
 - [[https://protesilaos.com/codelog/2021-03-25-emacs-eww/][EWW and my extras (text-based Emacs web browser) | Protesilaos Stavrou]]
 
+** =nsm=
+:PROPERTIES:
+:ID:       A09A2617-68BF-4F6F-97D5-32826AAFEC8E
+:END:
+
+/nsm is the Network Security Manager, which checks TLS connections./
+
+At the default =medium= level, Emacs only asks a yes/no question when a
+certificate is bad.  The =high= level also records certificate fingerprints, so
+Emacs warns me when the certificate of a known host changes.
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-feature nsm
+  :defer t
+  :custom
+  (network-security-level 'high))
+#+end_src
+
+** =url=
+:PROPERTIES:
+:ID:       2F41AC94-B93C-40F7-A111-7D1881D68231
+:END:
+
+/url is the URL loading library used by eww and by many packages./
+
+The privacy level keeps the referrer, the operating system version and the Emacs
+version out of every request.  I do not use =paranoid=, because that value also
+stops all cookies and removes the =User-Agent= header, which breaks logged-in
+pages in eww.
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-feature url
+  :defer t
+  :custom
+  (url-privacy-level '(email os emacs lastloc)))
+#+end_src
+
 ** =browse-url=
 :PROPERTIES:
 :ID:       0373B505-A028-4537-871F-3CCC2E5EADB1
@@ -13670,7 +13707,7 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
   (shr-width nil)
   (shr-max-width 100)
   (shr-discard-aria-hidden t)
-  (shr-cookie-policy t)
+  (shr-cookie-policy 'same-origin)
 
   :config
   (defun ps/shr-set-target-ids-with-live-markers (orig-fun ids)

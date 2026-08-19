@@ -35,6 +35,9 @@ case "$REL" in
   agents/github-write-allowlist.txt|\
   codex/hooks/block-github-write-command.sh|\
   codex/hooks/block-github-guard-edit.sh|\
+  codex/hooks/lib-codex-hook-json.sh|\
+  codex/hooks/lib-codex-paths.sh|\
+  codex/hooks/lib-repo-root.sh|\
   codex/hooks.json|\
   claude-live-settings|\
   claude/hooks/block-github-write-command.sh|\

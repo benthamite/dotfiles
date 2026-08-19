@@ -1,10 +1,8 @@
 """Ref-level behavior of the GitHub write guards, on a repo with no write grant.
 
-The rule: gate writes to refs other people consume, not writes to the repo.
-Creating a topic branch and opening a pull request against it are how you
-contribute to a repo you do not own, they are reviewable, and they are
-reversible. Landing on the default branch, rewriting history, deleting refs and
-merging are none of those things, so they stay gated by the allowlist.
+The rule is deny by repository: every push and mutating PR or issue operation
+needs an explicit repository grant. Topic branches and reviewable contributions
+are not exempt because they are still external writes.
 
 Repo-level allowlisting is tested separately, in test_github_write_guard.py.
 
@@ -98,39 +96,26 @@ class GuardInRepoMixin:
 class UnprivilegedRepoRefRulesTests(GuardInRepoMixin, unittest.TestCase):
     REMOTE = UNPRIVILEGED_REMOTE
 
-    # --- what the change permits (these three currently fail) ---
-
-    def test_creating_a_topic_branch_is_allowed(self) -> None:
-        # The case that motivated the change: contributing to another team's
-        # repo by PR must not need a standing write grant on that repo.
+    def test_creating_a_topic_branch_is_denied(self) -> None:
         self.assert_both(
             "git push -u origin my-feature-branch",
-            expected="allow",
+            expected="deny",
         )
 
-    def test_explicit_refspec_to_a_topic_branch_is_allowed(self) -> None:
-        self.assert_both("git push origin HEAD:my-topic-branch", expected="allow")
+    def test_explicit_refspec_to_a_topic_branch_is_denied(self) -> None:
+        self.assert_both("git push origin HEAD:my-topic-branch", expected="deny")
 
-    def test_opening_a_pull_request_is_allowed(self) -> None:
-        # Allowing the push but gating the PR would leave the friction where it
-        # was. Reviewer notification is governed by the separate
-        # ask-before-externally-visible rule, not by this guard.
+    def test_opening_a_pull_request_is_denied(self) -> None:
         self.assert_both(
             f"gh pr create --draft --repo {UNPRIVILEGED_REPO} --title t --body b",
-            expected="allow",
+            expected="deny",
         )
 
-    def test_editing_a_pull_request_body_is_allowed(self) -> None:
-        # Several repos require the description to be completed after the fact —
-        # epoch-website-astro wants Cloudflare preview links filled in once the
-        # build lands. Gating this makes their own required workflow impossible
-        # to finish and leaves the branch push pointless.
+    def test_editing_a_pull_request_body_is_denied(self) -> None:
         self.assert_both(
             f"gh pr edit 1177 --repo {UNPRIVILEGED_REPO} --body-file body.md",
-            expected="allow",
+            expected="deny",
         )
-
-    # --- what must keep being denied ---
 
     def test_pushing_the_default_branch_is_still_denied(self) -> None:
         for command in (

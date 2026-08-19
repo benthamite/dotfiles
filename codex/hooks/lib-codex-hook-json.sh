@@ -208,6 +208,12 @@ def parse_object(start, end):
                 fields[key] = value
                 if quote == "`" and "${" in value:
                     ambiguous.add(key)
+                # A literal is safe only when it is the complete value
+                # expression. Concatenation, property access, calls, and other
+                # trailing syntax can change the value that reaches the tool.
+                value_end = skip_space(pos)
+                if value_end < end and source[value_end] not in ",}":
+                    ambiguous.add(key)
         else:
             if key in relevant:
                 ambiguous.add(key)
@@ -238,6 +244,49 @@ while pos < n:
     if source.startswith("//", pos) or source.startswith("/*", pos):
         pos = skip_space(pos)
         continue
+    if source.startswith("tools", pos):
+        before_ok = pos == 0 or not (source[pos - 1].isalnum() or source[pos - 1] in "_$")
+        after_tools = pos + len("tools")
+        after_ok = after_tools == n or not (source[after_tools].isalnum() or source[after_tools] in "_$")
+        if before_ok and after_ok and not source.startswith("tools.", pos):
+            if mode == "contexts":
+                sys.stdout.buffer.write(
+                    json.dumps(
+                        {"cmd": None, "workdir": None, "ambiguous": True},
+                        separators=(",", ":"),
+                    ).encode("utf-8") + b"\0"
+                )
+            pos = after_tools
+            continue
+    # Computed tool access cannot be tied to a literal tool name without
+    # evaluating JavaScript. Reject it instead of trying to recognize selected
+    # spellings such as tools["exec_command"].
+    if source.startswith("tools[", pos):
+        if mode == "contexts":
+            sys.stdout.buffer.write(
+                json.dumps(
+                    {"cmd": None, "workdir": None, "ambiguous": True},
+                    separators=(",", ":"),
+                ).encode("utf-8") + b"\0"
+            )
+        pos += len("tools[")
+        continue
+    # Destructuring and other indirect references can alias exec_command
+    # without spelling tools.exec_command at the call site.
+    if source.startswith("exec_command", pos):
+        before_ok = pos == 0 or not (source[pos - 1].isalnum() or source[pos - 1] in "_$")
+        after = pos + len("exec_command")
+        after_ok = after == n or not (source[after].isalnum() or source[after] in "_$")
+        if before_ok and after_ok:
+            if mode == "contexts":
+                sys.stdout.buffer.write(
+                    json.dumps(
+                        {"cmd": None, "workdir": None, "ambiguous": True},
+                        separators=(",", ":"),
+                    ).encode("utf-8") + b"\0"
+                )
+            pos = after
+            continue
     if not source.startswith(needle, pos):
         pos += 1
         continue
@@ -249,14 +298,35 @@ while pos < n:
         continue
     call = skip_space(after)
     if call >= n or source[call] != "(":
+        if mode == "contexts":
+            sys.stdout.buffer.write(
+                json.dumps(
+                    {"cmd": None, "workdir": None, "ambiguous": True},
+                    separators=(",", ":"),
+                ).encode("utf-8") + b"\0"
+            )
         pos = after
         continue
     obj = skip_space(call + 1)
     if obj >= n or source[obj] != "{":
+        if mode == "contexts":
+            sys.stdout.buffer.write(
+                json.dumps(
+                    {"cmd": None, "workdir": None, "ambiguous": True},
+                    separators=(",", ":"),
+                ).encode("utf-8") + b"\0"
+            )
         pos = call + 1
         continue
     end = matching_brace(obj)
     if end is None:
+        if mode == "contexts":
+            sys.stdout.buffer.write(
+                json.dumps(
+                    {"cmd": None, "workdir": None, "ambiguous": True},
+                    separators=(",", ":"),
+                ).encode("utf-8") + b"\0"
+            )
         break
     fields, ambiguous = parse_object(obj, end)
     command = fields.get("cmd")

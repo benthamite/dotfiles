@@ -341,14 +341,14 @@
       "claude": "claude/hooks/block-github-guard-edit.sh",
       "codex": "codex/hooks/block-github-guard-edit.sh",
       "status": "paired",
-      "note": "paired self-protection for the shared GitHub write allowlist, guard scripts, tracked codex/hooks.json, live ~/.codex/hooks.json, and live ~/.claude/settings.json; Claude handles Edit/Write/NotebookEdit file_path payloads, while Codex handles apply_patch/Edit/Write changed paths via lib-codex-paths.sh"
+      "note": "paired self-protection for the shared GitHub write allowlist, guard scripts, Codex nested-command and changed-path parsers, repo-root resolver, tracked codex/hooks.json, live ~/.codex/hooks.json, and live ~/.claude/settings.json; Claude handles Edit/Write/NotebookEdit file_path payloads, while Codex handles apply_patch/Edit/Write changed paths via lib-codex-paths.sh and rejects standard nested functions.exec patches to protected files"
     },
     {
       "name": "block-github-write-command.sh",
       "claude": "claude/hooks/block-github-write-command.sh",
       "codex": "codex/hooks/block-github-write-command.sh",
       "status": "paired-dispatched",
-      "note": "paired GitHub write gate for shell commands; blocks git push and mutating gh operations unless the target repo matches an exact OWNER/REPO entry or OWNER/* account wildcard in agents/github-write-allowlist.txt. Codex side normalizes Bash, exec_command, functions.exec, and functions.exec_command payloads via lib-codex-hook-json.sh; Claude side is delegated by pretooluse-bash.sh."
+      "note": "paired GitHub write gate for shell commands; blocks git pushes and recognized mutating gh operations unless the target repo matches an exact OWNER/REPO entry or OWNER/* account wildcard in agents/github-write-allowlist.txt. Codex independently classifies literal nested functions.exec exec_command records and denies ambiguous records via the self-protected lib-codex-hook-json.sh parser; Claude side is delegated by pretooluse-bash.sh."
     },
     {
       "name": "block-secret-leak.sh",

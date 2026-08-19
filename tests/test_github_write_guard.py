@@ -39,12 +39,8 @@ def decision(result: subprocess.CompletedProcess[str]) -> str:
 class GitHubWriteGuardParityTests(unittest.TestCase):
     """Repo-level allowlisting, for both guards.
 
-    Every command here pushes ``main`` on purpose. These tests exist to prove
-    the *repo* allowlist decides, and since the guards became ref-aware a
-    topic-branch push is allowed on any repo — so using one as the example
-    would make the deny cases fail and, worse, make the allow cases pass even
-    with an empty allowlist. Pushing a protected branch is the shape the
-    allowlist still governs, so it is the shape that tests it.
+    These tests prove that every GitHub write is decided by the repository
+    allowlist, while read-only inspection remains available everywhere.
     """
 
     def setUp(self) -> None:
@@ -83,6 +79,18 @@ exit 1
             env=env,
         )
 
+    def run_codex_exec_guard(self, source: str) -> subprocess.CompletedProcess[str]:
+        data = {"tool_name": "functions.exec", "tool_input": {"input": source}}
+        return subprocess.run(
+            ["bash", str(GUARDS["codex"])],
+            input=json.dumps(data),
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=ROOT,
+            env=os.environ.copy(),
+        )
+
     def assert_both(
         self,
         command: str,
@@ -101,6 +109,117 @@ exit 1
                     (decision(result), gh_log),
                     (expected, ""),
                 )
+
+    def test_codex_functions_exec_denies_nested_unowned_push(self) -> None:
+        source = (
+            'await tools.exec_command({cmd:"git push '
+            'https://github.com/example/unowned.git HEAD:topic"});'
+        )
+        self.assertEqual(decision(self.run_codex_exec_guard(source)), "deny")
+
+    def test_codex_functions_exec_denies_nested_unowned_contributions(self) -> None:
+        for command in (
+            "gh pr create --repo example/unowned --title T --body B",
+            "gh pr comment --repo example/unowned 1 --body B",
+            "gh issue create --repo example/unowned --title T --body B",
+            "gh issue comment --repo example/unowned 1 --body B",
+        ):
+            with self.subTest(command=command):
+                source = f"await tools.exec_command({{cmd:{json.dumps(command)}}});"
+                self.assertEqual(decision(self.run_codex_exec_guard(source)), "deny")
+
+    def test_codex_functions_exec_checks_every_nested_command(self) -> None:
+        source = (
+            'await tools.exec_command({cmd:"gh pr view --repo example/unowned 1"});'
+            'await tools.exec_command({cmd:"gh issue create --repo example/unowned '
+            '--title T --body B"});'
+        )
+        self.assertEqual(decision(self.run_codex_exec_guard(source)), "deny")
+
+    def test_codex_functions_exec_allows_nested_read_only_commands(self) -> None:
+        source = (
+            'await tools.exec_command({cmd:"gh pr view --repo example/unowned 1"});'
+            'await tools.exec_command({cmd:"gh issue list --repo example/unowned"});'
+        )
+        self.assertEqual(decision(self.run_codex_exec_guard(source)), "allow")
+
+    def test_codex_functions_exec_allows_nested_allowlisted_push(self) -> None:
+        source = (
+            'await tools.exec_command({cmd:"git push '
+            'https://github.com/benthamite/scratch.git HEAD:topic"});'
+        )
+        self.assertEqual(decision(self.run_codex_exec_guard(source)), "allow")
+
+    def test_codex_functions_exec_denies_dynamic_or_ambiguous_call(self) -> None:
+        for source in (
+            'const args={cmd:"gh pr view --repo example/unowned 1"}; '
+            "await tools.exec_command(args);",
+            'const args={cmd:"gh pr view --repo example/unowned 1"}; '
+            "await tools.exec_command({...args});",
+            'await tools.exec_command({cmd:"gh pr view --repo example/unowned 1; " + '
+            '"gh issue create --repo example/unowned --title T --body B"});',
+            'const e=tools.exec_command; await e({cmd:"gh issue create '
+            '--repo example/unowned --title T --body B"});',
+            'await tools["exec_command"]({cmd:"gh issue create '
+            '--repo example/unowned --title T --body B"});',
+            'const {exec_command:e}=tools; await e({cmd:"gh issue create '
+            '--repo example/unowned --title T --body B"});',
+            'const name="exec_"+"command"; await tools[name]({cmd:"gh issue create '
+            '--repo example/unowned --title T --body B"});',
+        ):
+            with self.subTest(source=source):
+                self.assertEqual(decision(self.run_codex_exec_guard(source)), "deny")
+
+    def test_git_global_options_and_executable_paths_are_gated(self) -> None:
+        for command in (
+            "git -C /tmp push https://github.com/example/unowned.git HEAD:topic",
+            "/usr/bin/git push https://github.com/example/unowned.git HEAD:topic",
+            '"/usr/bin/git" push https://github.com/example/unowned.git HEAD:topic',
+            "git --paginate push https://github.com/example/unowned.git HEAD:topic",
+            "git -p push https://github.com/example/unowned.git HEAD:topic",
+        ):
+            with self.subTest(command=command):
+                self.assert_both(command, expected="deny")
+
+    def test_gh_repo_environment_overrides_ambient_repository(self) -> None:
+        for command in (
+            "GH_REPO=example/unowned gh pr create --title T --body B",
+            "GH_REPO='example/unowned' gh pr create --title T --body B",
+        ):
+            with self.subTest(command=command):
+                self.assert_both(command, expected="deny")
+
+    def test_compound_commands_cannot_borrow_an_allowlisted_target(self) -> None:
+        for command in (
+            "echo https://github.com/benthamite/scratch; git push https://github.com/example/unowned.git HEAD:topic",
+            "gh pr view --repo benthamite/scratch 1; gh issue create --repo example/unowned --title T --body B",
+            "gh issue create --repo benthamite/scratch --title T --body B; gh issue create --repo example/unowned --title T --body B",
+            "git push --dry-run https://github.com/benthamite/scratch.git HEAD:topic; git push https://github.com/example/unowned.git HEAD:topic",
+        ):
+            with self.subTest(command=command):
+                self.assert_both(command, expected="deny")
+
+    def test_additional_repo_write_families_are_gated(self) -> None:
+        for command in (
+            "gh cache delete --all --repo example/unowned",
+            "gh discussion create --repo example/unowned --title T --body B",
+            "gh repo deploy-key add key.pub --repo example/unowned",
+            "gh repo autolink create --repo example/unowned --key-prefix T- --url-template https://example.test/<num>",
+            "gh pr revert 1 --repo example/unowned",
+            "gh release delete-asset v1 asset.zip --repo example/unowned --yes",
+        ):
+            with self.subTest(command=command):
+                self.assert_both(command, expected="deny")
+
+    def test_non_repo_scoped_remote_writes_are_denied(self) -> None:
+        for command in (
+            "gh project create --owner example --title T",
+            "gh ssh-key add key.pub --title T",
+            "gh codespace create --repo example/unowned",
+            "gh repo fork example/unowned",
+        ):
+            with self.subTest(command=command):
+                self.assert_both(command, expected="deny")
 
     def test_account_wildcard_allows_repo(self) -> None:
         command = (
@@ -199,26 +318,34 @@ exit 1
             command = f"git push https://github.com/{repo}.git main"
             self.assert_both(command, expected="deny")
 
-    # Contributing to a repo we do not own is the workflow the gate exists to
-    # permit, not to stop: opening a pull request, filing an issue, and replying
-    # on either are additive and reversible by the maintainer. What the gate
-    # buys is writes to a ref or a state other people consume.
-
-    def test_opening_a_pull_request_on_an_unowned_repo_is_allowed(self) -> None:
+    def test_opening_a_pull_request_on_an_unowned_repo_is_denied(self) -> None:
         command = (
             "gh pr create --repo example/unowned --base main "
             "--title Fix --body Body"
         )
-        self.assert_both(command, expected="allow")
+        self.assert_both(command, expected="deny")
 
-    def test_filing_an_issue_on_an_unowned_repo_is_allowed(self) -> None:
+    def test_filing_an_issue_on_an_unowned_repo_is_denied(self) -> None:
         command = "gh issue create --repo example/unowned --title Q --body Body"
-        self.assert_both(command, expected="allow")
+        self.assert_both(command, expected="deny")
 
-    def test_commenting_on_an_unowned_repo_is_allowed(self) -> None:
+    def test_commenting_on_an_unowned_repo_is_denied(self) -> None:
         for command in (
             "gh issue comment --repo example/unowned 1 --body Thanks",
             "gh pr comment --repo example/unowned 1 --body Rebased",
+        ):
+            with self.subTest(command=command):
+                self.assert_both(command, expected="deny")
+
+    def test_reading_an_unowned_repo_is_allowed(self) -> None:
+        for command in (
+            "gh pr view --repo example/unowned 1",
+            "gh pr list --repo example/unowned",
+            "gh pr status --repo example/unowned",
+            "gh pr checks --repo example/unowned 1",
+            "gh pr diff --repo example/unowned 1",
+            "gh issue view --repo example/unowned 1",
+            "gh issue list --repo example/unowned",
         ):
             with self.subTest(command=command):
                 self.assert_both(command, expected="allow")

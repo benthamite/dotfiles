@@ -40,6 +40,34 @@ deny() {
   exit 0
 }
 
+# functions.exec is JavaScript orchestration, not a shell command. Classify
+# every literal nested exec_command independently, without evaluating the
+# JavaScript. Dynamic or otherwise ambiguous calls fail closed.
+if [ "$TOOL_NAME" = "functions.exec" ]; then
+  while IFS= read -r -d '' context; do
+    if [ "$(printf '%s' "$context" | jq -r '.ambiguous')" = "true" ]; then
+      deny "functions.exec contains an ambiguous nested exec_command" "Name cmd and workdir as literal object fields so the GitHub write target can be checked without evaluating JavaScript."
+    fi
+
+    nested_cmd=$(printf '%s' "$context" | jq -r '.cmd // empty')
+    [ -n "$nested_cmd" ] || deny "functions.exec contains an empty nested exec_command" "The GitHub write guard cannot classify an empty command."
+    nested_workdir=$(printf '%s' "$context" | jq -r '.workdir // empty')
+    nested_payload=$(jq -nc --arg cmd "$nested_cmd" '{tool_name:"functions.exec_command",tool_input:{cmd:$cmd}}')
+
+    if [ -n "$nested_workdir" ]; then
+      [ -d "$nested_workdir" ] || deny "functions.exec nested workdir cannot be resolved" "The literal workdir does not name an existing directory."
+      nested_result=$(cd -- "$nested_workdir" && printf '%s' "$nested_payload" | "$0")
+    else
+      nested_result=$(printf '%s' "$nested_payload" | "$0")
+    fi
+    if [ -n "$nested_result" ]; then
+      printf '%s\n' "$nested_result"
+      exit 0
+    fi
+  done < <(printf '%s' "$CMD" | codex_nested_exec_contexts)
+  exit 0
+fi
+
 normalize_repo() {
     local value="$1"
     value="${value#https://github.com/}"
@@ -66,6 +94,16 @@ repo_from_gh_repo_flag() {
     return 0
   fi
   repo_from_urlish "$CMD" || true
+}
+
+repo_from_gh_repo_env() {
+  local env_command
+  env_command=$(printf '%s' "$CMD" | sed -E "s/GH_REPO=['\"]([^'\"]+)['\"]/GH_REPO=\\1/g")
+  if [[ "$env_command" =~ (^|[[:space:];|&])GH_REPO=([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)($|[[:space:]]) ]]; then
+    normalize_repo "${BASH_REMATCH[2]}"
+    return 0
+  fi
+  return 1
 }
 
 # `gh repo` names its target positionally rather than through --repo. Without
@@ -192,6 +230,11 @@ target_repo_for_gh() {
 	printf '%s' "$repo"
 	return 0
     fi
+    repo=$(repo_from_gh_repo_env || true)
+    if [ -n "$repo" ]; then
+	printf '%s' "$repo"
+	return 0
+    fi
     repo=$(repo_from_local_git || true)
     [ -n "$repo" ] && printf '%s' "$repo"
 }
@@ -247,8 +290,8 @@ resolved_run_dir() {
 	| grep -c . || true)
 
     local dash_c=""
-    if [[ "$COMMAND" =~ (^|[[:space:];|\&])git[[:space:]]+-C[[:space:]]+([^[:space:];\|\&]+) ]]; then
-	dash_c="${BASH_REMATCH[2]}"
+    if [[ "$COMMAND" =~ (^|[[:space:];|\&])([^[:space:];|\&]*/)?git[[:space:]]+-C[[:space:]]+([^[:space:];\|\&]+) ]]; then
+	dash_c="${BASH_REMATCH[3]}"
     fi
 
     if [ "$changes" -eq 0 ] && [ -z "$dash_c" ]; then
@@ -329,7 +372,7 @@ repo_from_git_dir() {
 # would be a liability in a hard gate, and factoring it into a shared library that
 # is not itself self-protected would let an agent neuter all three guards by
 # editing the library.
-PROTECTED_GUARD_PATH_RE='(agents/github-write-allowlist\.txt|codex/(hooks/block-github-write-command\.sh|hooks/block-github-guard-edit\.sh|hooks\.json)|claude/(hooks/block-github-write-command\.sh|hooks/block-github-guard-edit\.sh|hooks/pretooluse-bash\.sh)|\.codex/hooks\.json|\.claude/settings\.json)'
+PROTECTED_GUARD_PATH_RE='(agents/github-write-allowlist\.txt|codex/(hooks/block-github-write-command\.sh|hooks/block-github-guard-edit\.sh|hooks/lib-codex-hook-json\.sh|hooks/lib-codex-paths\.sh|hooks/lib-repo-root\.sh|hooks\.json)|claude/(hooks/block-github-write-command\.sh|hooks/block-github-guard-edit\.sh|hooks/pretooluse-bash\.sh)|\.codex/hooks\.json|\.claude/settings\.json)'
 
 guard_modification_p() {
     local sanitized
@@ -359,112 +402,57 @@ guard_modification_p() {
 }
 
 contains_protected_guard_path() {
-  echo "$CMD" | grep -qE '(agents/github-write-allowlist\.txt|codex/(hooks/block-github-write-command\.sh|hooks/block-github-guard-edit\.sh|hooks\.json)|claude/(hooks/block-github-write-command\.sh|hooks/block-github-guard-edit\.sh|hooks/pretooluse-bash\.sh)|\.codex/hooks\.json|\.claude/settings\.json)'
+  echo "$CMD" | grep -qE '(agents/github-write-allowlist\.txt|codex/(hooks/block-github-write-command\.sh|hooks/block-github-guard-edit\.sh|hooks/lib-codex-hook-json\.sh|hooks/lib-codex-paths\.sh|hooks/lib-repo-root\.sh|hooks\.json)|claude/(hooks/block-github-write-command\.sh|hooks/block-github-guard-edit\.sh|hooks/pretooluse-bash\.sh)|\.codex/hooks\.json|\.claude/settings\.json)'
 }
+
+# Accept Git's executable path and global options before the subcommand. These
+# are ordinary Git forms, for example `/usr/bin/git push` and
+# `git -C /path push`.
+git_push_command_p() {
+  local git_re
+  git_re="(^|[[:space:];|&])(\"[^\"]*/git\"|'[^']*/git'|[^[:space:];|&]*/git|git)([[:space:]]+(-C|-c|--git-dir|--work-tree|--namespace)(=|[[:space:]]+)[^[:space:];|&]+|[[:space:]]+-[pP]|[[:space:]]+--(paginate|no-pager|bare|no-replace-objects|literal-pathspecs|glob-pathspecs|noglob-pathspecs|icase-pathspecs))*[[:space:]]+push\\b"
+  printf '%s' "$CMD" | grep -qE "$git_re"
+}
+
+compound_shell_command_p() {
+  printf '%s' "$CMD" | python3 -c '
+import sys
+
+source = sys.stdin.read()
+quote = None
+escaped = False
+for index, char in enumerate(source):
+    if escaped:
+        escaped = False
+        continue
+    if char == "\\":
+        escaped = True
+        continue
+    if quote is not None:
+        if char == quote:
+            quote = None
+        continue
+    if char in ("\"", chr(39), "`"):
+        quote = char
+        continue
+    if char in (";", "|", "&", "\n"):
+        raise SystemExit(0)
+raise SystemExit(1)
+'
+}
+
+# Target extraction is command-wide. Refuse compound GitHub commands instead
+# of letting an unrelated or earlier segment lend its repository to a write.
+if compound_shell_command_p && { git_push_command_p || printf '%s' "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]'; }; then
+  deny "compound GitHub command has no segment-local repository target" "Run each GitHub command in a separate tool call so the guard can bind the write to exactly one repository."
+fi
 
 if contains_protected_guard_path && guard_modification_p; then
   deny "attempt to modify GitHub write-guard files" "Those files are self-protected. Edit them manually outside Codex if the policy needs to change."
 fi
 
-# Branches whose contents other people, deployments, or releases consume.
-# Pushing one is not pull-request work, so it stays gated by the allowlist.
-PROTECTED_BRANCH_RE='^(main|master|trunk|develop|development|staging|stage|production|prod|gh-pages|(release|releases|hotfix)/.*)$'
-
-# True when the command is a plain additive push of named topic branches.
-#
-# This is what lets an agent contribute to a repo by pull request without a
-# standing write grant on it, which is the friction the repo-only gate created:
-# opening a PR requires pushing a branch, and a branch nobody consumes is
-# reversible and reviewable. The dangerous shapes stay gated because none of
-# them is pull-request work. A force push rewrites commits that may not be ours
-# — a branch name is not proof of authorship — and --force-with-lease is safer
-# but still a rewrite. A deletion cannot be undone from the remote.
-# --all/--mirror/--tags push refs the command never names, main among them. A
-# bare `git push` follows push.default and the branch's upstream, so the command
-# alone does not say where it lands. Every one of those resolves to deny.
-#
-# Note this does permit fast-forwarding a topic branch that already exists,
-# which may belong to someone else and may be in their open PR. That adds
-# commits rather than destroying any, and it is visible in the PR; rewriting is
-# the line this draws.
-safe_topic_branch_push_p() {
-  local segment token dest
-  # Isolate the push's own arguments so a neighbouring command in the chain
-  # cannot contribute a flag or a refspec.
-  [[ "$CMD" =~ (^|[[:space:];|\&])git[[:space:]]+(-C[[:space:]]+[^[:space:]]+[[:space:]]+)?push[[:space:]]+(.*) ]] || return 1
-  segment="${BASH_REMATCH[3]}"
-  segment="${segment%%&&*}"
-  segment="${segment%%;*}"
-  segment="${segment%%|*}"
-
-  local -a words=() positional=()
-  read -r -a words <<< "$segment"
-
-  local i=0
-  while [ "$i" -lt "${#words[@]}" ]; do
-    token="${words[$i]}"
-    i=$((i + 1))
-    case "$token" in
-      --force | -f | --force-with-lease | --force-with-lease=* \
-        | --force-if-includes | --mirror | --all | --tags \
-        | --follow-tags | --delete | -d | --prune)
-        return 1
-        ;;
-      # Options that consume the next word. Skipping it stops a value
-      # like `-o ci.skip` from being read as a refspec.
-      -o | --push-option | --receive-pack | --exec | --repo)
-        i=$((i + 1))
-        ;;
-      --set-upstream | -u | --quiet | -q | --verbose | -v | --progress \
-        | --no-progress | --no-verify | --verify | --atomic | --porcelain \
-        | --ipv4 | -4 | --ipv6 | -6 | --thin | --no-thin | --signed \
-        | --no-signed | --dry-run | -n)
-        ;;
-      --*=*) ;;
-      -*)
-        # An unrecognised flag could be anything, including an
-        # abbreviation of --force. Refuse rather than guess.
-        return 1
-        ;;
-      *)
-        positional+=("$token")
-        ;;
-    esac
-  done
-
-  # First positional is the remote and the rest are refspecs, so fewer than
-  # two means no destination was named.
-  [ "${#positional[@]}" -ge 2 ] || return 1
-
-  local idx=1
-  while [ "$idx" -lt "${#positional[@]}" ]; do
-    token="${positional[$idx]}"
-    idx=$((idx + 1))
-    case "$token" in
-      +*) return 1 ;;  # a leading + forces this refspec on its own
-      :*) return 1 ;;  # empty source deletes the destination
-    esac
-    dest="${token##*:}"
-    [ -n "$dest" ] || return 1
-    dest="${dest#refs/heads/}"
-    case "$dest" in
-      refs/*) return 1 ;;  # a ref outside refs/heads is not a branch
-      HEAD) return 1 ;;    # resolves to whatever branch is checked out
-    esac
-    [[ "$dest" =~ $PROTECTED_BRANCH_RE ]] && return 1
-  done
-  return 0
-}
-
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])git[[:space:]]+push\b'; then
+if git_push_command_p; then
   if echo "$CMD" | grep -qE '(^|[[:space:]])--dry-run([[:space:]]|$)'; then
-    exit 0
-  fi
-  # Checked before the repo is resolved, because the shape of the push is
-  # what makes it safe. Resolving the repo can fail outright for a command
-  # this test already accepts — a `cd` into an unresolvable path followed by
-  # a topic-branch push used to be denied for want of a repo name.
-  if safe_topic_branch_push_p; then
     exit 0
   fi
   repo=$(repo_from_urlish "$CMD" || true)
@@ -489,33 +477,13 @@ if echo "$CMD" | grep -qE '(^|[[:space:];|&])git[[:space:]]+push\b'; then
   require_allowed_repo "git push" "$repo"
 fi
 
-# `create` and `edit` are omitted deliberately: they are the two operations an
-# agent needs to open its own pull request and finish it. Several repos require
-# a description to be completed after the fact — epoch-website-astro wants
-# Cloudflare preview links filled in once the build lands — so gating `edit`
-# makes their own required workflow impossible to complete and leaves the branch
-# push pointless. `merge` stays gated because it writes to the default branch,
-# which is the thing being protected. The residual risk accepted here is that
-# `gh pr edit --repo X 123` can overwrite someone else's pull request
-# description; GitHub keeps an edit history, so that is visible and recoverable,
-# unlike a force push or a merge.
-#
-# `comment` is omitted for the same reason. Answering review feedback is part of
-# carrying a pull request to completion, and a comment adds new content instead
-# of altering anyone else's. Every verb left in the list changes a pull
-# request's state rather than adding to it.
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+pr[[:space:]]+(close|reopen|merge|review|ready|lock|unlock|update-branch)\b'; then
+# All mutating PR and issue operations require an allowed repository. Read-only
+# view, list, status, checks, and diff operations remain allowed by omission.
+if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+pr[[:space:]]+(close|comment|create|edit|reopen|merge|revert|review|ready|lock|unlock|update-branch)\b'; then
   require_allowed_repo "gh pr write operation" "$(target_repo_for_gh)"
 fi
 
-# Filing an issue and commenting on one are contributions in the same sense that
-# opening a pull request is: they add new content and alter nothing that already
-# exists, so `create` and `comment` are omitted. Raising an issue is often the
-# only correct way to contribute to a repo we do not own — asking where a large
-# asset should be hosted, say — and gating it stops that at the point where it
-# is least dangerous. The verbs left in the list alter an existing issue's state
-# or overwrite someone else's text.
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+issue[[:space:]]+(close|reopen|edit|lock|unlock|transfer|delete|pin|unpin|develop)\b'; then
+if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+issue[[:space:]]+(close|comment|create|reopen|edit|lock|unlock|transfer|delete|pin|unpin|develop)\b'; then
   require_allowed_repo "gh issue write operation" "$(target_repo_for_gh)"
 fi
 
@@ -534,7 +502,7 @@ if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+run[[:space:]]+(cance
   require_allowed_repo "gh run write operation" "$(target_repo_for_gh)"
 fi
 
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+release[[:space:]]+(create|delete|edit|upload)\b'; then
+if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+release[[:space:]]+(create|delete|delete-asset|edit|upload)\b'; then
   require_allowed_repo "gh release write operation" "$(target_repo_for_gh)"
 fi
 
@@ -553,8 +521,23 @@ if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+(label|milestone)[[:s
   require_allowed_repo "gh label/milestone write operation" "$(target_repo_for_gh)"
 fi
 
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+gist[[:space:]]+(create|delete|edit)\b'; then
+if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+gist[[:space:]]+(create|delete|edit|rename)\b'; then
   deny "gh gist write operation" "Gists are not repo-scoped, so the repo allowlist cannot authorize them."
+fi
+
+if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+(cache[[:space:]]+delete|discussion[[:space:]]+(comment|create|edit)|repo[[:space:]]+(autolink[[:space:]]+(create|delete)|deploy-key[[:space:]]+(add|delete)))\b'; then
+  require_allowed_repo "gh repository write operation" "$(target_repo_for_gh)"
+fi
+
+if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+(agent-task[[:space:]]+create|label[[:space:]]+clone)\b'; then
+  require_allowed_repo "gh repository write operation" "$(target_repo_for_gh)"
+fi
+
+# These mutations act on an account, organization, codespace, project, or a
+# newly created fork rather than one unambiguous existing repository. A repo
+# allowlist entry cannot authorize them.
+if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+(codespace[[:space:]]+(create|delete|edit|rebuild|stop)|gpg-key[[:space:]]+(add|delete)|ssh-key[[:space:]]+(add|delete)|project[[:space:]]+(close|copy|create|delete|edit|field-create|field-delete|item-add|item-archive|item-create|item-delete|item-edit|link|mark-template|unlink)|repo[[:space:]]+fork)\b'; then
+  deny "non-repository-scoped gh write operation" "This operation has no single existing repository target that the repo allowlist can authorize."
 fi
 
 if is_gh_api_write; then

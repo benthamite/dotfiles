@@ -24,7 +24,7 @@ Do not use this skill for:
 - Actual defects, edge cases, security bugs, or error-handling failures; use `code-audit`.
 - Architecture, abstraction, duplication, or refactoring quality; use `design-audit`.
 - Naming, comments, and readability-only issues; use `interpretability-audit`.
-- Secrets, dependency vulnerabilities, machine posture, or Claude/Codex attack surface; use `security-audit`.
+- Secrets, dependency vulnerabilities, machine posture, or Claude/Codex attack surface; these require a dedicated environment-security review rather than a developer-experience audit.
 - Pre-submit validation of a concrete change or PR; use `pr-audit`.
 
 ## Process

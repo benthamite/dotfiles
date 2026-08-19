@@ -17,7 +17,7 @@ When Superpowers is available, use `superpowers:finishing-a-development-branch` 
 
 ## When not to use
 
-- General bug, security, or architecture review of code that is not tied to PR readiness; use `code-audit`, `security-audit`, or `design-audit` instead.
+- General bug, application-security, or architecture review of code that is not tied to PR readiness; use `code-audit` or `design-audit` instead. Dedicated machine, dependency, secrets, or agent-security posture reviews are also outside this skill's scope.
 - A narrow request to run one known command, unless the user also asks for PR readiness or pre-submit verification.
 - Investigation of why a check failed without a full PR audit; use `diagnose` when the user wants root-cause analysis first.
 

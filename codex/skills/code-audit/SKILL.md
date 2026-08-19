@@ -5,17 +5,17 @@ description: Audit code for actual defects, including bugs, application security
 
 # Code audit
 
-Review $ARGUMENTS for correctness, security, and robustness issues. The goal is to find **actual or potential defects** — things that could cause wrong behavior, data loss, security vulnerabilities, or silent failures.
+Review the scope named in the user's request or `$ARGUMENTS` for correctness, security, and robustness issues. The goal is to find **actual or potential defects** — things that could cause wrong behavior, data loss, security vulnerabilities, or silent failures.
 
-If `--accept` is present in `$ARGUMENTS`, audit first, then fix all confirmed findings whose fix is clear and within the requested scope. Do not broaden into refactors, feature work, or speculative defensive rewrites. If a finding needs product judgment, credentials, or an externally visible action, report it as unresolved instead of guessing. Run the relevant verification for the project and commit only the accepted fixes.
+If the user explicitly asks to fix confirmed findings, whether in natural language or with `--accept`, audit first, then fix all confirmed findings whose fix is clear and within the requested scope. Do not broaden into refactors, feature work, or speculative defensive rewrites. If a finding needs product judgment, credentials, or an externally visible action, report it as unresolved instead of guessing. Run the relevant verification for the project and commit only the accepted fixes.
 
 ## Workflow
 
-1. **Resolve the scope**: use the explicit files, directories, diff, PR, or issue named in `$ARGUMENTS`; if none is provided, default to the current project. Read project instructions and check the working tree before editing.
+1. **Resolve the scope**: use the explicit files, directories, diff, PR, or issue named in the user's request first, then any scope in `$ARGUMENTS`; only when neither names a scope should you default to the current project. Read project instructions and check the working tree before editing.
 2. **Identify verification**: inspect the project's docs and config for the right checks before changing code. Examples: byte-compile and ERT for Elisp, typecheck/lint/test commands for typed or compiled projects, dependency scanners when the audit includes package risk.
 3. **Read real code paths**: inspect the implementation, callers, inputs, and persistence boundaries. Use available subagents or parallel searches for broad codebases, but do not infer findings from filenames alone.
 4. **Confirm each finding**: trace a concrete failure mode, bad input, race, leak, or attack path. Prefer reproducible examples or precise reasoning over generic "could be safer" advice.
-5. **Report or fix**: in normal mode, report findings in the format below and offer to fix critical and bug-level issues. With `--accept`, apply the confirmed in-scope fixes, verify them, and commit the result.
+5. **Report or fix**: for an audit-only request, report findings in the format below and offer to fix critical and bug-level issues. When the user asked for fixes in natural language or with `--accept`, apply the confirmed in-scope fixes, verify them, and commit the result.
 
 ## What to look for
 
@@ -56,7 +56,7 @@ If `--accept` is present in `$ARGUMENTS`, audit first, then fix all confirmed fi
 - Missing features or enhancements
 - Performance issues that don't affect correctness (unless they could cause timeouts or OOM)
 - Test coverage gaps (mention if a critical path is untested, but don't audit test quality)
-- Broad machine, secrets, dependency, or Claude Code posture issues outside the application code under review (use `/security-audit` for that)
+- Broad machine, secrets, dependency, or agent-configuration posture issues outside the application code under review
 - Code that is correct and handles errors properly — don't suggest defensive code for impossible conditions
 
 ## Output format
@@ -65,7 +65,7 @@ Organize findings into:
 
 1. **Critical**: issues that could cause data loss, security breaches, or silent corruption in production
 2. **Bugs**: things that are demonstrably wrong or will fail under specific conditions
-3. **Fragile**: code that works now but will break under reasonable future changes or edge cases
+3. **Fragile**: code that works now but will fail under a concrete supported input, configuration, dependency, or environment transition
 4. **Minor**: small issues worth fixing when nearby code is being changed
 
 For each finding, include:
@@ -79,4 +79,4 @@ Then include:
 - **Verification**: checks run, results, and any checks that were relevant but could not be run
 - **No findings**: if no defects were found, say that clearly and describe the scoped files or paths reviewed plus any residual risk
 
-At the end, offer to fix the critical and bug-level issues unless `--accept` was used. If `--accept` was used, summarize the fixes, verification, unresolved findings, and commit hash.
+At the end of an audit-only request, offer to fix the critical and bug-level issues. When the user asked for fixes in natural language or with `--accept`, summarize the fixes, verification, unresolved findings, and commit hash.

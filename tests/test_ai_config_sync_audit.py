@@ -49,6 +49,28 @@ class AiConfigSyncAuditTests(unittest.TestCase):
         ):
             self.assertIn("broken docs", self.module.audit_problems())
 
+    def test_skill_pair_normalization_ignores_claude_explicit_only_field(self):
+        claude = (
+            "---\n"
+            "name: example\n"
+            "description: Explicit workflow.\n"
+            "disable-model-invocation: true\n"
+            "---\n"
+            "\nBody.\n"
+        )
+        codex = (
+            "---\n"
+            "name: example\n"
+            "description: Explicit workflow.\n"
+            "---\n"
+            "\nBody.\n"
+        )
+
+        self.assertEqual(
+            self.module.normalized_skill_content(claude),
+            self.module.normalized_skill_content(codex),
+        )
+
     def test_documentation_audit_captures_stdout_and_stderr(self):
         root = self.make_repo(["bin/docs-audit"])
         completed = subprocess.CompletedProcess(

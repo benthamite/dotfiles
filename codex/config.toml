@@ -779,49 +779,16 @@ trusted_hash = "sha256:fced58c9d5f6ff9709656f453c2fdc66512c250a86f608e829cc73f6a
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:1:4"]
 trusted_hash = "sha256:c1a1cd200ab8775d3b193265d52bd662fa4fbad5606b375e148c5c5f94fde7d8"
 
-[[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/google-sheets-comments/SKILL.md"
-enabled = false
 
-[[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/skill-resolver/SKILL.md"
-enabled = false
 
-[[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/add-bib-entry/SKILL.md"
-enabled = false
 
-[[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/overnight-todos/SKILL.md"
-enabled = false
 
-[[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/pin-elisp-pr/SKILL.md"
-enabled = false
 
-[[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/refresh-cr-tracker/SKILL.md"
-enabled = false
 
-[[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/symptom-check/SKILL.md"
-enabled = false
 
-[[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/find-skills/SKILL.md"
-enabled = false
 
-[[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/install-mcp-server/SKILL.md"
-enabled = false
 
-[[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/optimize-agent-instructions/SKILL.md"
-enabled = false
 
-[[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/skill-audit/SKILL.md"
-enabled = false
 
 [notice]
 hide_rate_limit_model_nudge = true
@@ -863,4 +830,45 @@ BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
 NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f,d0b55a8f9e8e7e9c88421416ea4ce9542c302abf43aa7fc871be4553ea70dd26"
 NODE_REPL_TRUSTED_CODE_PATHS = "/Users/pablostafforini/.codex"
 
+# BEGIN skill-prune disabled skills
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/add-bib-entry/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/find-skills/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/google-sheets-comments/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/install-mcp-server/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/optimize-agent-instructions/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/overnight-todos/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/pin-elisp-pr/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/refresh-cr-tracker/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/skill-resolver/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/symptom-check/SKILL.md"
+enabled = false
 # END skill-prune disabled skills

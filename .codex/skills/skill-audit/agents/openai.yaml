@@ -1,0 +1,6 @@
+interface:
+  display_name: "Skill Audit"
+  short_description: "Audit skill behavior and routing evidence"
+  default_prompt: "Use $skill-audit to audit a skill or its historical autonomous routing."
+policy:
+  allow_implicit_invocation: false

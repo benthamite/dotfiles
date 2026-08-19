@@ -40,13 +40,20 @@ if [[ "$label" == deleted:* ]]; then
         if [ "$repo" = "$dotfiles_root" ]; then
           [ "$candidate" = "emacs/extras/$deleted_package.el" ] || continue
         else
-          [ "$(basename "$candidate")" = "$deleted_package.el" ] || continue
+          { [ "$candidate" = "$deleted_package.el" ] ||
+            [ "$candidate" = "lisp/$deleted_package.el" ]; } || continue
         fi
         printf '%s\n' "$candidate"
       done
   )
   if [ "$(printf '%s\n' "$deleted_candidates" | sed '/^$/d' | wc -l | tr -d ' ')" != 1 ]; then
     echo "Deleted-package verification requires one matching deleted path in HEAD: $label" >&2
+    exit 1
+  fi
+  if [ "$repo" != "$dotfiles_root" ] &&
+     { git -C "$repo" cat-file -e "HEAD:$deleted_package.el" 2>/dev/null ||
+       git -C "$repo" cat-file -e "HEAD:lisp/$deleted_package.el" 2>/dev/null; }; then
+    echo "Deleted-package verification requires no canonical main file at HEAD: $label" >&2
     exit 1
   fi
   target_pathspec=$(printf '%s\n' "$deleted_candidates" | sed -n '1p')

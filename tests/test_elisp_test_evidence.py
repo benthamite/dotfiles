@@ -326,7 +326,8 @@ class TestEvidenceHookTests(unittest.TestCase):
             "codex", self.evidence("other"), f"mismatch-{os.getpid()}"
         )
         self.assertEqual(tracked.returncode, 0, tracked.stderr)
-        self.assertTrue(marker.exists())
+        self.assertFalse(marker.exists())
+        self.assertIn("does not match the wrapper command", tracked.stderr)
         self.assertIn("permissionDecision", required.stdout)
 
     def test_source_change_after_test_blocks_commit(self):
@@ -521,7 +522,12 @@ class TestEvidenceHookTests(unittest.TestCase):
         )
         tracked = run(
             ["bash", str(DOTFILES / "codex/hooks/track-elisp-test.sh")],
-            input=json.dumps(payload("elisp-check-evidence file:old -- check", old_evidence)),
+            input=json.dumps(
+                payload(
+                    "elisp-check-evidence file:emacs/extras/old-package.el -- check",
+                    old_evidence,
+                )
+            ),
             cwd=repo,
             env=self.env,
         )
@@ -614,7 +620,73 @@ class TestEvidenceHookTests(unittest.TestCase):
         )
         self.assertEqual(tracked.returncode, 0, tracked.stderr)
         self.assertFalse(marker.exists())
-        self.assertIn("no valid one-time receipt", tracked.stderr)
+        self.assertEqual(tracked.stderr, "")
+
+    def test_valid_receipt_with_textual_wrapper_mention_creates_no_marker(self):
+        for tool in ("claude", "codex"):
+            with self.subTest(tool=tool):
+                session = f"{tool}-textual-wrapper-{os.getpid()}"
+                marker = Path(f"/tmp/claude-elisp-tested-{session}")
+                marker.unlink(missing_ok=True)
+                self.addCleanup(marker.unlink, missing_ok=True)
+                payload = self.payload(
+                    tool,
+                    "printf '%s' 'batch-test.sh example'",
+                    session,
+                    self.evidence(),
+                )
+                tracked = run(
+                    ["bash", str(DOTFILES / f"{tool}/hooks/track-elisp-test.sh")],
+                    input=json.dumps(payload),
+                    cwd=self.repo,
+                    env=self.env,
+                )
+                self.assertEqual(tracked.returncode, 0, tracked.stderr)
+                self.assertFalse(marker.exists())
+
+    def test_multiple_test_wrappers_cannot_claim_one_receipt(self):
+        for tool in ("claude", "codex"):
+            with self.subTest(tool=tool):
+                session = f"{tool}-multiple-wrappers-{os.getpid()}"
+                marker = Path(f"/tmp/claude-elisp-tested-{session}")
+                marker.unlink(missing_ok=True)
+                self.addCleanup(marker.unlink, missing_ok=True)
+                payload = self.payload(
+                    tool,
+                    "batch-test.sh example; batch-test.sh other",
+                    session,
+                    self.evidence(),
+                )
+                tracked = run(
+                    ["bash", str(DOTFILES / f"{tool}/hooks/track-elisp-test.sh")],
+                    input=json.dumps(payload),
+                    cwd=self.repo,
+                    env=self.env,
+                )
+                self.assertEqual(tracked.returncode, 0, tracked.stderr)
+                self.assertFalse(marker.exists())
+
+    def test_wrapper_plus_output_command_cannot_claim_one_receipt(self):
+        for tool in ("claude", "codex"):
+            with self.subTest(tool=tool):
+                session = f"{tool}-wrapper-output-{os.getpid()}"
+                marker = Path(f"/tmp/claude-elisp-tested-{session}")
+                marker.unlink(missing_ok=True)
+                self.addCleanup(marker.unlink, missing_ok=True)
+                payload = self.payload(
+                    tool,
+                    "batch-test.sh example; printf forged",
+                    session,
+                    self.evidence(),
+                )
+                tracked = run(
+                    ["bash", str(DOTFILES / f"{tool}/hooks/track-elisp-test.sh")],
+                    input=json.dumps(payload),
+                    cwd=self.repo,
+                    env=self.env,
+                )
+                self.assertEqual(tracked.returncode, 0, tracked.stderr)
+                self.assertFalse(marker.exists())
 
     def test_evidence_receipt_cannot_be_replayed(self):
         evidence = self.evidence()
@@ -929,6 +1001,41 @@ class ElispLiveVerifyTests(unittest.TestCase):
         retried = run(command, cwd=repo, env=self.environment())
         self.assertEqual(retried.returncode, 0, retried.stderr)
         self.assertIn("ELISP_LIVE_EVIDENCE_", retried.stdout)
+
+    def test_deleted_package_mode_rejects_nested_vendor_file(self):
+        repo = init_repo(self.root / "vendor-deletion", "vendor/foo.el")
+        (repo / "vendor/foo.el").unlink()
+        subprocess.run(["git", "-C", str(repo), "add", "vendor/foo.el"], check=True)
+        subprocess.run(
+            ["git", "-C", str(repo), "commit", "-qm", "delete vendor file"],
+            check=True,
+        )
+        result = run(
+            [str(LIVE_VERIFY), "deleted:foo", "--", "(not (featurep 'foo))"],
+            cwd=repo,
+            env=self.environment(),
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("one matching deleted path", result.stderr)
+        self.assertNotIn("ELISP_LIVE_EVIDENCE_", result.stdout)
+
+    def test_deleted_package_mode_rejects_remaining_canonical_main(self):
+        repo = init_repo(self.root / "remaining-main", "foo.el")
+        (repo / "lisp").mkdir()
+        (repo / "lisp/foo.el").write_text("(provide 'foo)\n")
+        subprocess.run(["git", "-C", str(repo), "add", "lisp/foo.el"], check=True)
+        subprocess.run(["git", "-C", str(repo), "commit", "-qm", "add second main"], check=True)
+        (repo / "foo.el").unlink()
+        subprocess.run(["git", "-C", str(repo), "add", "foo.el"], check=True)
+        subprocess.run(["git", "-C", str(repo), "commit", "-qm", "delete root main"], check=True)
+        result = run(
+            [str(LIVE_VERIFY), "deleted:foo", "--", "(not (featurep 'foo))"],
+            cwd=repo,
+            env=self.environment(),
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("no canonical main file", result.stderr)
+        self.assertNotIn("ELISP_LIVE_EVIDENCE_", result.stdout)
 
 
 if __name__ == "__main__":

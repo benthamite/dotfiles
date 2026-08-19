@@ -27,6 +27,74 @@ if [[ "$CODEX_GIT_PARSE_CONTEXT" != /* ]]; then
 fi
 [ -d "$CODEX_GIT_PARSE_CONTEXT" ] || CODEX_GIT_PARSE_CONTEXT=$PWD
 
+deny() {
+  local reason="$1"
+  jq -n --arg reason "$reason" '{
+    "hookSpecificOutput": {
+      "hookEventName": "PreToolUse",
+      "permissionDecision": "deny",
+      "permissionDecisionReason": $reason
+    }
+  }'
+  exit 0
+}
+
+# Route each parsed commit through the existing one-repository check with that
+# invocation own effective directory and Git global options.
+if [ -z "${CLAUDE_GATE_ROUTED_RECORD:-}" ]; then
+  GIT_RECORDS=()
+  while IFS= read -r -d '' record; do GIT_RECORDS+=("$record"); done \
+    < <(printf '%s' "$COMMAND" | codex_git_invocations "$CODEX_GIT_PARSE_CONTEXT")
+  for record in "${GIT_RECORDS[@]}"; do
+    [ "$(printf '%s' "$record" | jq -r '.subcommand')" = commit ] || continue
+    if [ "$(printf '%s' "$record" | jq -r '.ambiguous // false')" = true ]; then
+      AMBIGUITY=$(printf '%s' "$record" | jq -r '.ambiguity // empty')
+      case "$AMBIGUITY" in
+        unknown-git-global-option)
+          deny "BLOCKED: Git global options make the commit subcommand ambiguous. Use recognized Git global options so the Elisp evidence gate can identify the commit and its target repository."
+          ;;
+        git-environment|dynamic-shell-context|shell-recursion-limit|invalid-command-substitution|missing-interpreter-command|dynamic-shell-executable|git-shell-alias|git-alias-depth|invalid-git-alias|empty-git-alias)
+          deny "BLOCKED: Git commit syntax is dynamic or ambiguous. Use a literal Git commit command, target repository, index, and supported shell form so the Elisp evidence gate can inspect the exact commit."
+          ;;
+      esac
+    fi
+  done
+  for record in "${GIT_RECORDS[@]}"; do
+    [ "$(printf '%s' "$record" | jq -r '.subcommand')" = commit ] || continue
+    RECORD_CONTEXT=$(printf '%s' "$record" | jq -r '.context_dir // empty')
+    [ -n "$RECORD_CONTEXT" ] || RECORD_CONTEXT=$CODEX_GIT_PARSE_CONTEXT
+    RECORD_REPO=$(codex_git_invocation_repo "$record" "$RECORD_CONTEXT" || true)
+    [ -n "$RECORD_REPO" ] || continue
+    RECORD_SEQUENCE=$(printf '%s' "$record" | jq -r '.sequence')
+    ROUTED_COMMAND=""
+    for candidate in "${GIT_RECORDS[@]}"; do
+      [ "$(printf '%s' "$candidate" | jq -r '.subcommand')" = add ] || continue
+      CANDIDATE_SEQUENCE=$(printf '%s' "$candidate" | jq -r '.sequence')
+      [ "$CANDIDATE_SEQUENCE" -lt "$RECORD_SEQUENCE" ] || continue
+      CANDIDATE_CONTEXT=$(printf '%s' "$candidate" | jq -r '.context_dir // empty')
+      [ -n "$CANDIDATE_CONTEXT" ] || CANDIDATE_CONTEXT=$CODEX_GIT_PARSE_CONTEXT
+      CANDIDATE_REPO=$(codex_git_invocation_repo "$candidate" "$CANDIDATE_CONTEXT" || true)
+      [ "$CANDIDATE_REPO" = "$RECORD_REPO" ] || continue
+      ROUTED_COMMAND="${ROUTED_COMMAND}$(codex_git_record_command "$candidate"); "
+    done
+    RECORD_COMMAND=$(codex_git_record_command "$record")
+    if [ "$(printf '%s' "$record" | jq -r '.ambiguous // false')" = true ]; then
+      RECORD_COMMAND="! $RECORD_COMMAND"
+    fi
+    ROUTED_COMMAND="${ROUTED_COMMAND}${RECORD_COMMAND}"
+    ROUTED_INPUT=$(jq -nc \
+      --arg cmd "$ROUTED_COMMAND" --arg workdir "$RECORD_CONTEXT" \
+      --arg session "$SESSION_ID" \
+      '{session_id:$session,tool_input:{command:$cmd,workdir:$workdir}}')
+    ROUTED_RESULT=$(printf '%s' "$ROUTED_INPUT" | CLAUDE_GATE_ROUTED_RECORD=1 "$0")
+    if [ -n "$ROUTED_RESULT" ]; then
+      printf '%s\n' "$ROUTED_RESULT"
+      exit 0
+    fi
+  done
+  exit 0
+fi
+
 # Only intercept git commit commands
 if [ "$(printf '%s' "$COMMAND" | codex_git_commit_count)" -eq 0 ]; then
   exit 0

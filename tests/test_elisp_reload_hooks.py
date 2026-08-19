@@ -921,6 +921,130 @@ class ElispVerifyTrackingHookTests(unittest.TestCase):
                     expected = f"deleted:{name}" if layout != "auxiliary" else name
                     self.assertEqual(labels, {expected})
 
+    def test_nested_vendor_main_name_deletion_remains_package_rebuild(self):
+        for tool in ("claude", "codex"):
+            with self.subTest(tool=tool):
+                repo = self.root / f"{tool}-profile/elpaca/sources/foo"
+                repo.parent.mkdir(parents=True)
+                repo.mkdir()
+                subprocess.run(["git", "init", "-q", str(repo)], check=True)
+                subprocess.run(
+                    ["git", "-C", str(repo), "config", "user.email", "test@example.com"],
+                    check=True,
+                )
+                subprocess.run(
+                    ["git", "-C", str(repo), "config", "user.name", "Hook Test"],
+                    check=True,
+                )
+                source = repo / "vendor/foo.el"
+                source.parent.mkdir()
+                source.write_text("(provide 'foo)\n")
+                subprocess.run(["git", "-C", str(repo), "add", "vendor/foo.el"], check=True)
+                subprocess.run(["git", "-C", str(repo), "commit", "-qm", "baseline"], check=True)
+                source.unlink()
+                subprocess.run(["git", "-C", str(repo), "add", "vendor/foo.el"], check=True)
+                subprocess.run(["git", "-C", str(repo), "commit", "-qm", "delete vendor file"], check=True)
+                result, marker = self.run_direct(
+                    repo,
+                    "git commit -m delete",
+                    f"{tool}-vendor-foo-{os.getpid()}",
+                    exit_code=0,
+                    initial_marker=False,
+                    tool=tool,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                labels = {
+                    base64.b64decode(line.split(":", 2)[2]).decode()
+                    for line in marker.read_text().splitlines()
+                }
+                self.assertEqual(labels, {"foo"})
+
+    def test_deleted_main_with_remaining_canonical_main_is_package_rebuild(self):
+        for tool in ("claude", "codex"):
+            with self.subTest(tool=tool):
+                repo = self.root / f"{tool}-dual-profile/elpaca/sources/foo"
+                repo.parent.mkdir(parents=True)
+                repo.mkdir()
+                subprocess.run(["git", "init", "-q", str(repo)], check=True)
+                subprocess.run(["git", "-C", str(repo), "config", "user.email", "test@example.com"], check=True)
+                subprocess.run(["git", "-C", str(repo), "config", "user.name", "Hook Test"], check=True)
+                (repo / "lisp").mkdir()
+                (repo / "foo.el").write_text("(provide 'foo)\n")
+                (repo / "lisp/foo.el").write_text("(provide 'foo)\n")
+                subprocess.run(["git", "-C", str(repo), "add", "."], check=True)
+                subprocess.run(["git", "-C", str(repo), "commit", "-qm", "baseline"], check=True)
+                (repo / "foo.el").unlink()
+                subprocess.run(["git", "-C", str(repo), "add", "foo.el"], check=True)
+                subprocess.run(["git", "-C", str(repo), "commit", "-qm", "delete one main"], check=True)
+                result, marker = self.run_direct(
+                    repo,
+                    "git commit -m delete",
+                    f"{tool}-dual-main-{os.getpid()}",
+                    exit_code=0,
+                    initial_marker=False,
+                    tool=tool,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                labels = {
+                    base64.b64decode(line.split(":", 2)[2]).decode()
+                    for line in marker.read_text().splitlines()
+                }
+                self.assertEqual(labels, {"foo"})
+
+    def test_live_evidence_label_must_match_wrapper_argument(self):
+        for tool in ("claude", "codex"):
+            with self.subTest(tool=tool):
+                repo = self.make_repo(f"{tool}-live-label-binding", "fixture.el")
+                commit = subprocess.run(
+                    ["git", "-C", str(repo), "rev-parse", "HEAD"],
+                    text=True,
+                    capture_output=True,
+                    check=True,
+                ).stdout.strip()
+                encoded_repo = self.encoded_repo(repo)
+                label = base64.b64encode(repo.name.encode()).decode()
+                marker_content = f"{encoded_repo}:{commit}:{label}\n"
+                evidence = self.live_evidence(repo, repo.name, commit)
+                result, marker = self.run_direct(
+                    repo,
+                    "elisp-live-verify other-label -- '(other-label-status)'",
+                    f"{tool}-live-label-binding-{os.getpid()}",
+                    exit_code=0,
+                    initial_marker=True,
+                    marker_content=marker_content,
+                    output=evidence,
+                    tool=tool,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertTrue(marker.exists())
+
+    def test_live_wrapper_plus_output_command_keeps_marker(self):
+        for tool in ("claude", "codex"):
+            with self.subTest(tool=tool):
+                repo = self.make_repo(f"{tool}-live-output-binding", "fixture.el")
+                commit = subprocess.run(
+                    ["git", "-C", str(repo), "rev-parse", "HEAD"],
+                    text=True,
+                    capture_output=True,
+                    check=True,
+                ).stdout.strip()
+                encoded_repo = self.encoded_repo(repo)
+                label = base64.b64encode(repo.name.encode()).decode()
+                marker_content = f"{encoded_repo}:{commit}:{label}\n"
+                evidence = self.live_evidence(repo, repo.name, commit)
+                result, marker = self.run_direct(
+                    repo,
+                    f"elisp-live-verify {repo.name} -- '({repo.name}-status)'; printf forged",
+                    f"{tool}-live-output-binding-{os.getpid()}",
+                    exit_code=0,
+                    initial_marker=True,
+                    marker_content=marker_content,
+                    output=evidence,
+                    tool=tool,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertTrue(marker.exists())
+
     def test_nonpackage_elisp_commit_needs_no_live_package_obligation(self):
         for tool in ("claude", "codex"):
             with self.subTest(tool=tool):

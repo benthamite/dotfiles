@@ -425,7 +425,7 @@
       "claude": "claude/hooks/lib-elisp-evidence.sh",
       "codex": "codex/hooks/lib-elisp-evidence.sh",
       "status": "paired-utility",
-      "note": "Identical helper that issues and atomically consumes one-time receipts for Elisp test and live evidence. Unconsumed evidence expires after one day through cleanup of only user-owned regular receipt and claim files; test and live-verification markers do not expire."
+      "note": "Identical helper that issues and atomically consumes one-time correlation receipts for Elisp test and live evidence. Receipts prevent accidental copying and replay but do not authenticate against another process running as the same user. Unconsumed evidence expires after one day through cleanup of only user-owned regular receipt and claim files; test and live-verification markers do not expire."
     },
     {
       "name": "lib-repo-root.sh",

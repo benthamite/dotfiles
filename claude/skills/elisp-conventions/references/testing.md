@@ -34,8 +34,11 @@ affected output.
 
 For a deleted production file, use its old repository-relative path in the
 `file:RELATIVE-PATH` label and run a project check that proves the proposed tree
-is valid without that file. For a rename, establish this file-labeled evidence
-for the old path and normal package evidence for the new path.
+is valid without that file. A standalone package is fully deleted only when the
+old path is exactly `PACKAGE.el` or `lisp/PACKAGE.el` and neither canonical main
+path remains. Deleting a same-named file below another directory is an ordinary
+package change. For a rename, establish file-labeled evidence for the old path
+and normal package evidence for the new path.
 
 Use `--staged` only when the same file also has unrelated unstaged edits that
 must remain outside the commit. It materializes the Git index under a temporary

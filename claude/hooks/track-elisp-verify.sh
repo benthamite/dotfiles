@@ -67,7 +67,9 @@ production_label() {
           */elpaca/sources/*|*/elpaca/repos/*)
             package=$(basename "$repo_root")
             if [ "$change_kind" = deleted ] &&
-               [ "$(basename "$file")" = "$package.el" ]; then
+               { [ "$file" = "$package.el" ] || [ "$file" = "lisp/$package.el" ]; } &&
+               ! git -C "$repo_root" cat-file -e "HEAD:$package.el" 2>/dev/null &&
+               ! git -C "$repo_root" cat-file -e "HEAD:lisp/$package.el" 2>/dev/null; then
               printf 'deleted:%s' "$package"
             else
               printf '%s' "$package"
@@ -149,13 +151,15 @@ record_commits() {
 }
 
 consume_live_evidence() {
-  local evidence verified_evidence version repo_b64 label_b64 commit repo temporary
+  local expected_label="$1" evidence verified_evidence version repo_b64 label_b64 commit repo label temporary
   evidence=$(printf '%s\n' "$STDOUT" | grep '^ELISP_LIVE_EVIDENCE_V2:' | tail -1 || true)
   [ -n "$evidence" ] || return 1
   verified_evidence=$(elisp_evidence_consume live "$evidence") || return 1
   IFS=: read -r version repo_b64 label_b64 commit <<< "$verified_evidence"
   [ "$version" = ELISP_LIVE_EVIDENCE_V2 ] && [[ "$commit" =~ ^[0-9a-f]{40,64}$ ]] || return 1
   repo=$(decode_base64 "$repo_b64") || return 1
+  label=$(decode_base64 "$label_b64") || return 1
+  [ "$label" = "$expected_label" ] || return 1
   [ -d "$repo" ] && [ "$(git -C "$repo" rev-parse HEAD 2>/dev/null || true)" = "$commit" ] || return 1
   acquire_lock || return 1
   trap release_lock EXIT
@@ -169,14 +173,53 @@ consume_live_evidence() {
 }
 
 if [ "$EXIT_CODE" = 0 ]; then
-  commit_count=$(printf '%s' "$COMMAND" | codex_git_commit_count)
-  if [ "$commit_count" -gt 0 ]; then
-    # shellcheck source=lib-repo-root.sh
-    source "$SCRIPT_DIR/lib-repo-root.sh"
-    if [ -n "$REPO_ROOT" ]; then record_commits "$REPO_ROOT" "$commit_count" || true; fi
+  command_workdir=$(printf '%s' "$INPUT" | jq -r '
+    .tool_input.workdir // .tool_input.cwd //
+    .workdir // .cwd // empty')
+  [ -n "$command_workdir" ] || command_workdir=$PWD
+  if [[ "$command_workdir" != /* ]]; then command_workdir="$PWD/$command_workdir"; fi
+  repos=()
+  counts=()
+  while IFS= read -r -d '' record; do
+    [ "$(printf '%s' "$record" | jq -r '.subcommand')" = commit ] || continue
+    # A successful direct `A && B` event proves that A succeeded. Other
+    # control flow, substitutions, pipelines, or later commands do not prove
+    # the parsed commit's result.
+    if [ "$(printf '%s' "$record" | jq -r '.ambiguous // false')" = true ]; then
+      [ "$(printf '%s' "$record" | jq -r '.ambiguity // empty')" = shell-status-decoupled ] &&
+        [ "$(printf '%s' "$record" | jq -r '.status_operator // empty')" = '&&' ] || continue
+    fi
+    record_context=$(printf '%s' "$record" | jq -r '.context_dir // empty')
+    [ -n "$record_context" ] || record_context=$command_workdir
+    repo_root=$(codex_git_invocation_repo "$record" "$record_context" || true)
+    [ -n "$repo_root" ] || continue
+    found=-1
+    for index in "${!repos[@]}"; do
+      [ "${repos[$index]}" = "$repo_root" ] && found=$index
+    done
+    if [ "$found" -ge 0 ]; then
+      counts[found]=$((counts[found] + 1))
+    else
+      repos+=("$repo_root")
+      counts+=(1)
+    fi
+  done < <(printf '%s' "$COMMAND" | codex_git_invocations "$command_workdir")
+  for index in "${!repos[@]}"; do
+    record_commits "${repos[$index]}" "${counts[$index]}" || true
+  done
+  live_count=0
+  live_label=""
+  executable_count=0
+  while IFS= read -r -d '' candidate; do
+    live_count=$((live_count + 1))
+    live_label="$candidate"
+  done < <(printf '%s' "$COMMAND" | codex_elisp_evidence_labels live)
+  while IFS= read -r -d '' executable; do
+    executable_count=$((executable_count + 1))
+  done < <(printf '%s' "$COMMAND" | codex_shell_executables)
+  if [ "$live_count" -eq 1 ] && [ "$executable_count" -eq 1 ]; then
+    consume_live_evidence "$live_label" || true
   fi
-  live_count=$(printf '%s' "$COMMAND" | codex_executable_count elisp-live-verify)
-  if [ "$live_count" -eq 1 ]; then consume_live_evidence || true; fi
 fi
 
 exit 0

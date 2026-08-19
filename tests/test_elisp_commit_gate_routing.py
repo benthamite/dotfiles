@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import json
 import os
 import shlex
@@ -163,6 +164,32 @@ class ElispCommitGateRoutingTests(unittest.TestCase):
                     self.assertEqual(result.returncode, 0, result.stderr)
                     self.assertIn("dynamic or ambiguous", result.stdout)
 
+    def test_config_env_alias_uses_effective_prefix_assignment(self):
+        self.stage_elisp_change()
+        cases = (
+            (
+                "ENVVAR=commit git --config-env=alias.x=ENVVAR x -m fixture",
+                "does not have matching test evidence",
+                "commit",
+            ),
+            (
+                "ENVVAR=status git --config-env=alias.x=ENVVAR x --short",
+                "",
+                "status",
+            ),
+        )
+        for tool in GATES:
+            for command, message, subcommand in cases:
+                with self.subTest(tool=tool, command=command):
+                    result = self.run_gate(tool, command, self.repo)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    if message:
+                        self.assertIn(message, result.stdout)
+                    else:
+                        self.assertEqual(result.stdout, "")
+                    records = self.git_records(command, self.repo)
+                    self.assertEqual(records[0]["subcommand"], subcommand)
+
     def test_commit_aliases_are_resolved_or_fail_closed(self):
         subprocess.run(
             ["git", "-C", str(self.repo), "config", "alias.local-ci", "commit"],
@@ -283,6 +310,129 @@ class ElispCommitGateRoutingTests(unittest.TestCase):
                         )
                         self.assertTrue(commit["ambiguous"])
                         self.assertEqual(commit["ambiguity"], ambiguity)
+
+    def test_computed_git_subcommand_is_resolved_or_proportionally_ambiguous(self):
+        self.stage_elisp_change()
+        cases = (
+            (
+                'git "$(printf commit)" -m fixture',
+                "does not have matching test evidence",
+                False,
+            ),
+            ('git "$(printf status)" --short', "", False),
+            ('git "$(unknown-helper)" -m fixture', "dynamic or ambiguous", True),
+        )
+        for tool in GATES:
+            for command, message, ambiguous in cases:
+                with self.subTest(tool=tool, command=command):
+                    result = self.run_gate(tool, command, self.repo)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    if message:
+                        self.assertIn(message, result.stdout)
+                    else:
+                        self.assertEqual(result.stdout, "")
+                    records = self.git_records(command, self.repo)
+                    if ambiguous:
+                        self.assertTrue(records[0]["ambiguous"])
+                        self.assertEqual(
+                            records[0]["ambiguity"], "dynamic-git-subcommand"
+                        )
+                    else:
+                        expected = "commit" if "commit" in command else "status"
+                        self.assertEqual(records[0]["subcommand"], expected)
+                        self.assertFalse(records[0]["ambiguous"])
+
+        readme = self.fallback / "README.md"
+        readme.write_text("changed\n")
+        subprocess.run(["git", "-C", str(self.fallback), "add", "README.md"], check=True)
+        for tool in GATES:
+            result = self.run_gate(
+                tool, 'git "$(unknown-helper)" -m fixture', self.fallback
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout, "")
+
+    def test_shell_line_continuation_preserves_git_subcommand(self):
+        self.stage_elisp_change()
+        command = "git \\\ncommit -m fixture"
+        for tool in GATES:
+            with self.subTest(tool=tool):
+                result = self.run_gate(tool, command, self.repo)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("does not have matching test evidence", result.stdout)
+        record = self.git_records(command, self.repo)[0]
+        self.assertEqual(record["subcommand"], "commit")
+
+    def test_line_continuation_in_inert_text_or_status_is_not_commit(self):
+        commands = (
+            "git \\\nstatus --short",
+            "printf '%s' 'git \\\ncommit'",
+        )
+        for tool in GATES:
+            for command in commands:
+                with self.subTest(tool=tool, command=command):
+                    result = self.run_gate(tool, command, self.repo)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(result.stdout, "")
+
+    def test_additional_shell_executors_intercept_commit(self):
+        self.stage_elisp_change()
+        cases = (
+            ("noglob git commit -m fixture", "does not have matching test evidence", None),
+            (
+                "function f { git commit -m fixture; }; f",
+                "dynamic or ambiguous",
+                "shell-function",
+            ),
+            (
+                'env -S "git commit -m fixture"',
+                "does not have matching test evidence",
+                None,
+            ),
+            ("nice git commit -m fixture", "does not have matching test evidence", None),
+            ("nohup git commit -m fixture", "does not have matching test evidence", None),
+            (
+                "printf x | xargs -I{} git commit -m fixture",
+                "dynamic or ambiguous",
+                "shell-xargs",
+            ),
+            (
+                "find . -maxdepth 0 -exec git commit -m fixture \\;",
+                "dynamic or ambiguous",
+                "shell-find-exec",
+            ),
+        )
+        for tool in GATES:
+            for command, message, ambiguity in cases:
+                with self.subTest(tool=tool, command=command):
+                    result = self.run_gate(tool, command, self.repo)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertIn(message, result.stdout)
+                    if ambiguity:
+                        commit = next(
+                            record
+                            for record in self.git_records(command, self.repo)
+                            if record["subcommand"] == "commit"
+                        )
+                        self.assertTrue(commit["ambiguous"])
+                        self.assertEqual(commit["ambiguity"], ambiguity)
+
+    def test_additional_shell_executors_preserve_non_commit_controls(self):
+        commands = (
+            "noglob git status --short",
+            "function f { git status --short; }; f",
+            'env -S "git status --short"',
+            "nice git status --short",
+            "nohup git status --short",
+            "printf x | xargs -I{} git status --short",
+            "find . -maxdepth 0 -exec git status --short \\;",
+        )
+        for tool in GATES:
+            for command in commands:
+                with self.subTest(tool=tool, command=command):
+                    result = self.run_gate(tool, command, self.repo)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(result.stdout, "")
 
     def test_inert_shell_forms_do_not_count_as_commits(self):
         self.stage_elisp_change()
@@ -470,6 +620,70 @@ class ElispCommitGateRoutingTests(unittest.TestCase):
         result = self.run_functions_gate(source, self.fallback)
         self.assertIn("does not have matching test evidence", result.stdout)
 
+    def test_nested_literal_object_variable_is_resolved(self):
+        self.stage_elisp_change()
+        workdir = json.dumps(str(self.repo))
+        commit_source = (
+            f"const a = {{cmd: 'git commit -m fixture', workdir: {workdir}}}; "
+            "await tools.exec_command(a);"
+        )
+        result = self.run_functions_gate(commit_source, self.fallback)
+        self.assertIn("does not have matching test evidence", result.stdout)
+
+        status_source = (
+            f"const a = {{cmd: 'git status --short', workdir: {workdir}}}; "
+            "await tools.exec_command(a);"
+        )
+        result = self.run_functions_gate(status_source, self.fallback)
+        self.assertEqual(result.stdout, "")
+
+    def test_each_commit_uses_its_own_repository_context(self):
+        self.stage_elisp_change()
+        commands = (
+            (
+                f"git -C {shlex.quote(str(self.fallback))} commit -m clean; "
+                f"git -C {shlex.quote(str(self.repo))} commit -m elisp",
+                self.fallback,
+                "does not have matching test evidence",
+            ),
+            (
+                f"env --chdir={shlex.quote(str(self.repo))} git commit -m fixture",
+                self.fallback,
+                "does not have matching test evidence",
+            ),
+            (
+                f"git commit -m fixture; cd {shlex.quote(str(self.fallback))}",
+                self.repo,
+                "dynamic or ambiguous",
+            ),
+        )
+        for tool in GATES:
+            for command, workdir, message in commands:
+                with self.subTest(tool=tool, command=command):
+                    result = self.run_gate(tool, command, workdir)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertIn(message, result.stdout)
+
+    def test_repository_context_does_not_leak_between_invocations(self):
+        self.stage_elisp_change()
+        commands = (
+            (
+                f"env --chdir={shlex.quote(str(self.fallback))} "
+                "git commit -m fixture",
+                self.repo,
+            ),
+            (
+                f"git commit -m fixture; cd {shlex.quote(str(self.repo))}",
+                self.fallback,
+            ),
+        )
+        for tool in GATES:
+            for command, workdir in commands:
+                with self.subTest(tool=tool, command=command):
+                    result = self.run_gate(tool, command, workdir)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(result.stdout, "")
+
     def test_separate_nested_add_and_commit_share_explicit_workdir(self):
         self.leave_elisp_change_unstaged()
         workdir = json.dumps(str(self.repo))
@@ -538,6 +752,92 @@ class ElispCommitGateRoutingTests(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertTrue(marker.exists(), f"nested codex: {command}")
+
+    def test_trackers_attribute_each_commit_to_its_own_repository(self):
+        tracker_repo = self.make_repo(
+            "profile/elpaca/sources/per-repo-tracker", "per-repo-tracker.el"
+        )
+        expected_repo = base64.b64encode(str(tracker_repo.resolve()).encode()).decode()
+        unexpected_repo = base64.b64encode(str(self.fallback.resolve()).encode()).decode()
+        cases = (
+            (
+                f"git -C {shlex.quote(str(self.fallback))} commit -m clean; "
+                f"git -C {shlex.quote(str(tracker_repo))} commit -m elisp",
+                self.fallback,
+            ),
+            (
+                f"env --chdir={shlex.quote(str(tracker_repo))} git commit -m fixture",
+                self.fallback,
+            ),
+            (
+                f"cd {shlex.quote(str(tracker_repo))} && git commit -m fixture",
+                self.fallback,
+            ),
+        )
+        for tool, tracker in TRACKERS.items():
+            for index, (command, workdir) in enumerate(cases):
+                session = f"tracker-per-repo-{tool}-{index}-{os.getpid()}"
+                marker = Path(f"/tmp/claude-elisp-verify-needed-{session}")
+                marker.unlink(missing_ok=True)
+                self.addCleanup(marker.unlink, missing_ok=True)
+                payload = self.payload(tool, command, workdir)
+                payload["session_id"] = session
+                if tool == "codex":
+                    payload["tool_response"] = {"exit_code": 0}
+                else:
+                    payload["tool_output"] = {"exitCode": 0}
+                result = subprocess.run(
+                    ["bash", str(tracker)],
+                    input=json.dumps(payload),
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                    cwd=self.fallback,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertTrue(marker.exists(), f"{tool}: {command}")
+                self.assertTrue(
+                    any(
+                        line.startswith(expected_repo + ":")
+                        for line in marker.read_text().splitlines()
+                    ),
+                    f"{tool}: {command}",
+                )
+                self.assertFalse(
+                    any(
+                        line.startswith(unexpected_repo + ":")
+                        for line in marker.read_text().splitlines()
+                    ),
+                    f"{tool}: {command}",
+                )
+                self.assertNotIn("MALFORMED", marker.read_text())
+
+    def test_trackers_do_not_record_status_decoupled_commit(self):
+        tracker_repo = self.make_repo(
+            "profile/elpaca/sources/status-ambiguous", "status-ambiguous.el"
+        )
+        command = f"git commit -m fixture; cd {shlex.quote(str(self.fallback))}"
+        for tool, tracker in TRACKERS.items():
+            session = f"tracker-status-ambiguous-{tool}-{os.getpid()}"
+            marker = Path(f"/tmp/claude-elisp-verify-needed-{session}")
+            marker.unlink(missing_ok=True)
+            self.addCleanup(marker.unlink, missing_ok=True)
+            payload = self.payload(tool, command, tracker_repo)
+            payload["session_id"] = session
+            if tool == "codex":
+                payload["tool_response"] = {"exit_code": 0}
+            else:
+                payload["tool_output"] = {"exitCode": 0}
+            result = subprocess.run(
+                ["bash", str(tracker)],
+                input=json.dumps(payload),
+                text=True,
+                capture_output=True,
+                check=False,
+                cwd=self.fallback,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertFalse(marker.exists(), f"{tool}: {command}")
 
     def test_terminal_global_options_do_not_create_tracker_markers(self):
         tracker_repo = self.make_repo(

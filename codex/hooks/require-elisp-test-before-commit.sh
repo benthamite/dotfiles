@@ -52,7 +52,7 @@ if [ "$TOOL_NAME" = functions.exec ]; then
     NESTED_COMMAND=$(printf '%s' "$context" | jq -r '.cmd // empty')
     AMBIGUOUS=$(printf '%s' "$context" | jq -r '.ambiguous')
     if [ "$AMBIGUOUS" = true ]; then
-      if [ -n "$NESTED_COMMAND" ] &&
+      if [ -z "$NESTED_COMMAND" ] ||
          [ "$(printf '%s' "$NESTED_COMMAND" | codex_git_commit_count)" -gt 0 ]; then
         deny "BLOCKED: A nested functions.exec Git commit has a dynamic or ambiguous cmd/workdir. Use literal cmd and workdir fields so the Elisp evidence gate can identify the target repository."
       fi
@@ -99,6 +99,64 @@ if [ "$TOOL_NAME" = functions.exec ]; then
     NESTED_RESULT=$(printf '%s' "$NESTED_INPUT" | "$0")
     if [ -n "$NESTED_RESULT" ]; then
       printf '%s\n' "$NESTED_RESULT"
+      exit 0
+    fi
+  done
+  exit 0
+fi
+
+# Route each commit invocation through the existing one-repository check with
+# the exact directory and Git options captured for that record. This prevents
+# a later cd or another commit in the same shell program from changing which
+# repository supplies staged files and evidence.
+if [ -z "${CODEX_GATE_ROUTED_RECORD:-}" ]; then
+  GIT_RECORDS=()
+  while IFS= read -r -d '' record; do GIT_RECORDS+=("$record"); done \
+    < <(printf '%s' "$COMMAND" | codex_git_invocations "$CODEX_GIT_PARSE_CONTEXT")
+  for record in "${GIT_RECORDS[@]}"; do
+    [ "$(printf '%s' "$record" | jq -r '.subcommand')" = commit ] || continue
+    if [ "$(printf '%s' "$record" | jq -r '.ambiguous // false')" = true ]; then
+      AMBIGUITY=$(printf '%s' "$record" | jq -r '.ambiguity // empty')
+      case "$AMBIGUITY" in
+        unknown-git-global-option)
+          deny "BLOCKED: Git global options make the commit subcommand ambiguous. Use recognized Git global options so the Elisp evidence gate can identify the commit and its target repository."
+          ;;
+        git-environment|dynamic-shell-context|shell-recursion-limit|invalid-command-substitution|missing-interpreter-command|dynamic-shell-executable|git-shell-alias|git-alias-depth|invalid-git-alias|empty-git-alias)
+          deny "BLOCKED: Git commit syntax is dynamic or ambiguous. Use a literal Git commit command, target repository, index, and supported shell form so the Elisp evidence gate can inspect the exact commit."
+          ;;
+      esac
+    fi
+  done
+  for record in "${GIT_RECORDS[@]}"; do
+    [ "$(printf '%s' "$record" | jq -r '.subcommand')" = commit ] || continue
+    RECORD_CONTEXT=$(printf '%s' "$record" | jq -r '.context_dir // empty')
+    [ -n "$RECORD_CONTEXT" ] || RECORD_CONTEXT=$CODEX_GIT_PARSE_CONTEXT
+    RECORD_REPO=$(codex_git_invocation_repo "$record" "$RECORD_CONTEXT" || true)
+    [ -n "$RECORD_REPO" ] || continue
+    RECORD_SEQUENCE=$(printf '%s' "$record" | jq -r '.sequence')
+    ROUTED_COMMAND=""
+    for candidate in "${GIT_RECORDS[@]}"; do
+      [ "$(printf '%s' "$candidate" | jq -r '.subcommand')" = add ] || continue
+      CANDIDATE_SEQUENCE=$(printf '%s' "$candidate" | jq -r '.sequence')
+      [ "$CANDIDATE_SEQUENCE" -lt "$RECORD_SEQUENCE" ] || continue
+      CANDIDATE_CONTEXT=$(printf '%s' "$candidate" | jq -r '.context_dir // empty')
+      [ -n "$CANDIDATE_CONTEXT" ] || CANDIDATE_CONTEXT=$CODEX_GIT_PARSE_CONTEXT
+      CANDIDATE_REPO=$(codex_git_invocation_repo "$candidate" "$CANDIDATE_CONTEXT" || true)
+      [ "$CANDIDATE_REPO" = "$RECORD_REPO" ] || continue
+      ROUTED_COMMAND="${ROUTED_COMMAND}$(codex_git_record_command "$candidate"); "
+    done
+    RECORD_COMMAND=$(codex_git_record_command "$record")
+    if [ "$(printf '%s' "$record" | jq -r '.ambiguous // false')" = true ]; then
+      RECORD_COMMAND="! $RECORD_COMMAND"
+    fi
+    ROUTED_COMMAND="${ROUTED_COMMAND}${RECORD_COMMAND}"
+    ROUTED_INPUT=$(jq -nc \
+      --arg cmd "$ROUTED_COMMAND" --arg workdir "$RECORD_CONTEXT" \
+      --arg session "$SESSION_ID" \
+      '{tool_name:"functions.exec_command",session_id:$session,tool_input:{cmd:$cmd,workdir:$workdir}}')
+    ROUTED_RESULT=$(printf '%s' "$ROUTED_INPUT" | CODEX_GATE_ROUTED_RECORD=1 "$0")
+    if [ -n "$ROUTED_RESULT" ]; then
+      printf '%s\n' "$ROUTED_RESULT"
       exit 0
     fi
   done

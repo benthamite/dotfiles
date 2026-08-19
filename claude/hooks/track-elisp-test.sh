@@ -13,6 +13,9 @@
 set -euo pipefail
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+# Reuse the quote-aware wrapper classifier used by the paired Codex hook.
+# shellcheck source=../../codex/hooks/lib-codex-hook-json.sh
+source "$SCRIPT_DIR/../../codex/hooks/lib-codex-hook-json.sh"
 # shellcheck source=lib-elisp-evidence.sh
 source "$SCRIPT_DIR/lib-elisp-evidence.sh"
 
@@ -50,8 +53,20 @@ STDERR=$(printf '%s' "$INPUT" | jq -r '
 ')
 COMBINED="$STDOUT$STDERR"
 
+EXPECTED_LABEL=""
+EXPECTED_COUNT=0
+EXECUTABLE_COUNT=0
+while IFS= read -r -d '' candidate; do
+  EXPECTED_COUNT=$((EXPECTED_COUNT + 1))
+  EXPECTED_LABEL="$candidate"
+done < <(printf '%s' "$COMMAND" | codex_elisp_evidence_labels test)
+while IFS= read -r -d '' executable; do
+  EXECUTABLE_COUNT=$((EXECUTABLE_COUNT + 1))
+done < <(printf '%s' "$COMMAND" | codex_shell_executables)
+
 # Only the source-aware wrapper emits revision-bound evidence.
-if [ "$EXIT_CODE" = 0 ] && echo "$COMMAND" | grep -qE 'batch-test\.sh|elisp-check-evidence'; then
+if [ "$EXIT_CODE" = 0 ] && [ "$EXPECTED_COUNT" -eq 1 ] &&
+   [ "$EXECUTABLE_COUNT" -eq 1 ]; then
   # Safety check: did Emacs print a real stale-load warning? These are
   # the canonical messages emitted when a .elc shadows a newer .el. We
   # match them literally rather than any mention of elpaca/builds, which
@@ -93,6 +108,10 @@ if [ "$EXIT_CODE" = 0 ] && echo "$COMMAND" | grep -qE 'batch-test\.sh|elisp-chec
 
   REPO=$(decode_base64 "$REPO_B64") || exit 0
   PACKAGE=$(decode_base64 "$PACKAGE_B64") || exit 0
+  if [ "$PACKAGE" != "$EXPECTED_LABEL" ]; then
+    echo "WARNING: Elisp check evidence label does not match the wrapper command." >&2
+    exit 0
+  fi
   DOTFILES_ROOT=$(cd -- "$SCRIPT_DIR/../.." && pwd)
   REVISION_HELPER="$DOTFILES_ROOT/claude/bin/elisp-source-revision"
   WORKING_REVISION=$("$REVISION_HELPER" "$REPO" 2>/dev/null || true)

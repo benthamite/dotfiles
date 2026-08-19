@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
-# Issue and consume one-time receipts for Elisp test and live evidence.
+# Issue and consume one-time correlation receipts for Elisp evidence.
+#
+# These receipts prevent accidental output reuse and replay between supported
+# wrapper calls. They do not authenticate evidence against a process running as
+# the same user, which can source this public issuer or write the user-owned
+# marker and receipt files directly.
 
 elisp_evidence_cleanup_receipts() {
   local root="$1" candidate

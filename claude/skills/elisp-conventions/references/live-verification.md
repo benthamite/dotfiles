@@ -30,8 +30,11 @@ For a deleted package, use:
 This mode requires the package source to be absent at `HEAD`. It removes only
 the resolved package build below `elpaca-builds-directory`, removes that build
 from `load-path`, unloads the feature, and then runs the non-nil absence check.
-It does not delete the shared Elpaca source mirror. A rename requires this check
-for the old package and normal live verification for the new package.
+For a standalone package, the deleted path must be exactly `PACKAGE.el` or
+`lisp/PACKAGE.el`, and neither path can remain at `HEAD`. A same-named file in a
+vendor or other nested directory is an ordinary package change. The helper does
+not delete the shared Elpaca source mirror. A rename requires this check for the
+old package and normal live verification for the new package.
 
 ## Active-session safety
 

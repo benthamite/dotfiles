@@ -45,15 +45,20 @@ omitted workdir from the outer context, and denies dynamic or ambiguous commit
 targets. The post-commit tracker uses the same context and recognizes Git
 global options such as =-C=. Multiple commits inside one shell call remain
 distinct. Inert quoted text and shell comments do not count as commits, while
-interpreter payloads remain conservative. Only matching one-time evidence from
-a successful =elisp-live-verify= call clears an obligation.
+interpreter payloads remain conservative. Only evidence whose label matches
+exactly one supported wrapper in executable position, with no other executable
+in that command event, can clear an obligation.
 
-Elisp test and live evidence is accepted only with a matching receipt from the
-owning wrapper. The tracker atomically consumes the receipt, so output replay
-or a copied evidence line fails closed. On the next issue or consume operation,
-the shared helper removes only user-owned regular receipt and claim files older
-than one day, so unconsumed evidence expires at that point. It never expires or
-removes test markers or live-verification obligations.
+Elisp test and live evidence includes a one-time correlation receipt. The
+tracker binds the evidence label to the observed wrapper arguments and
+atomically consumes the receipt. A receipt can clear one matching event, and a
+second use fails. A textual mention, mismatched label, or compound output
+command does not count as the wrapper event. This is not authentication against
+another process running as the same user: such a process can source the public
+issuer or write the user-owned state files. On the next issue or consume
+operation, the helper removes only user-owned regular receipt and claim files
+older than one day. It never expires or removes test markers or
+live-verification obligations.
 
 The Elisp documentation gate honors
 =branch.<branch>.deferDocUpdates=true= only on feature branches and ignores it
@@ -87,7 +92,7 @@ handled by its configured documentation owner instead.
 | =block-walk-list-access.sh= | Restricts direct access to the protected walk-list data store. |
 | =lib-codex-hook-json.sh= | Normalizes Codex hook payloads, extracts literal nested command/workdir records without evaluating JavaScript, recognizes Git subcommands after supported global options, and recovers an exact nested Bash command's parent workdir from the session transcript. |
 | =lib-codex-paths.sh= | Extracts changed paths from the supported Codex edit and patch payload forms. |
-| =lib-elisp-evidence.sh= | Issues and atomically consumes one-time receipts for Elisp test and live evidence. |
+| =lib-elisp-evidence.sh= | Issues and atomically consumes one-time correlation receipts for Elisp test and live evidence; these receipts prevent replay but do not authenticate against the same user. |
 | =lib-repo-root.sh= | Resolves the effective Git repository from structured hook context, Git global options, or an exact unambiguous parent =functions.exec= record without shell re-evaluation. |
 | =lib-staged-files.sh= | Lists staged paths and name-status data, including an amended commit as the complete proposed commit. |
 | =load-elisp-after-edit.sh= | Rebuilds and reloads the owning Elpaca package after an Elisp edit, including paths recovered from a nested composed-tool patch; skips test-only files and active or unresolved Git operations. |

@@ -72,6 +72,7 @@ codex_shell_tool_p() {
 _codex_nested_exec_values() {
   python3 -c '
 import json
+import re
 import sys
 
 mode = sys.argv[1]
@@ -154,6 +155,62 @@ def matching_brace(pos):
             if depth == 0:
                 return pos
         pos += 1
+    return None
+
+
+def mask_non_code(text):
+    masked = list(text)
+    pos = 0
+    limit = len(text)
+    while pos < limit:
+        if text[pos] in ("\"", chr(39), "`"):
+            quote = text[pos]
+            end = pos + 1
+            while end < limit:
+                if text[end] == "\\" and end + 1 < limit:
+                    end += 2
+                    continue
+                if text[end] == quote:
+                    end += 1
+                    break
+                end += 1
+            for index in range(pos, min(end, limit)):
+                masked[index] = " "
+            pos = end
+            continue
+        if text.startswith("//", pos):
+            end = text.find("\n", pos + 2)
+            end = limit if end < 0 else end
+            for index in range(pos, end):
+                masked[index] = " "
+            pos = end
+            continue
+        if text.startswith("/*", pos):
+            end = text.find("*/", pos + 2)
+            end = limit if end < 0 else min(limit, end + 2)
+            for index in range(pos, end):
+                masked[index] = " "
+            pos = end
+            continue
+        pos += 1
+    return "".join(masked)
+
+
+def literal_object_binding(name, before):
+    prefix = source[:before]
+    masked = mask_non_code(prefix)
+    pattern = re.compile(
+        r"\b(?:const|let|var)\s+" + re.escape(name) + r"\s*=\s*\{"
+    )
+    for match in reversed(list(pattern.finditer(masked))):
+        start = masked.find("{", match.start(), match.end())
+        end = matching_brace(start)
+        if end is None or end >= before:
+            continue
+        intervening = mask_non_code(source[end + 1:before])
+        if re.search(r"\b" + re.escape(name) + r"\b", intervening):
+            return None
+        return start, end
     return None
 
 
@@ -308,7 +365,25 @@ while pos < n:
         pos = after
         continue
     obj = skip_space(call + 1)
-    if obj >= n or source[obj] != "{":
+    call_end = None
+    if obj < n and (source[obj].isalpha() or source[obj] in "_$"):
+        name, argument_end = read_identifier(obj)
+        closing = skip_space(argument_end)
+        binding = literal_object_binding(name, obj) if closing < n and source[closing] == ")" else None
+        if binding is not None:
+            obj, end = binding
+            call_end = closing
+        else:
+            if mode == "contexts":
+                sys.stdout.buffer.write(
+                    json.dumps(
+                        {"cmd": None, "workdir": None, "ambiguous": True},
+                        separators=(",", ":"),
+                    ).encode("utf-8") + b"\0"
+                )
+            pos = argument_end
+            continue
+    elif obj >= n or source[obj] != "{":
         if mode == "contexts":
             sys.stdout.buffer.write(
                 json.dumps(
@@ -318,7 +393,8 @@ while pos < n:
             )
         pos = call + 1
         continue
-    end = matching_brace(obj)
+    else:
+        end = matching_brace(obj)
     if end is None:
         if mode == "contexts":
             sys.stdout.buffer.write(
@@ -344,7 +420,7 @@ while pos < n:
             separators=(",", ":"),
         )
         sys.stdout.buffer.write(output.encode("utf-8") + b"\0")
-    pos = end + 1
+    pos = call_end + 1 if call_end is not None else end + 1
 ' "$1"
 }
 
@@ -502,7 +578,9 @@ def split_segments(tokens):
         yield segment, None
 
 
-def ambiguous_commit(reason, assignments=None, global_args=None, invoked=None):
+def ambiguous_commit(
+    reason, assignments=None, global_args=None, invoked=None, invocation_dir=None
+):
     record = {
         "subcommand": "commit",
         "args": [],
@@ -510,6 +588,7 @@ def ambiguous_commit(reason, assignments=None, global_args=None, invoked=None):
         "assignments": assignments or [],
         "ambiguous": True,
         "ambiguity": reason,
+        "context_dir": invocation_dir or context_dir,
     }
     if invoked is not None:
         record["invoked_subcommand"] = invoked
@@ -546,11 +625,16 @@ def config_aliases(global_args):
     return aliases
 
 
-def configured_alias(name, global_args):
+def configured_alias(name, global_args, assignments, invocation_dir):
+    effective_env = os.environ.copy()
+    for assignment in assignments:
+        key, _, value = assignment.partition("=")
+        effective_env[key] = value
     try:
         result = subprocess.run(
             ["git"] + global_args + ["config", "--get", "alias." + name],
-            cwd=context_dir,
+            cwd=invocation_dir,
+            env=effective_env,
             check=False,
             capture_output=True,
             text=True,
@@ -563,8 +647,15 @@ def configured_alias(name, global_args):
     return result.stdout.rstrip("\n")
 
 
-def parse_git(words, assignments=None, inherited_aliases=None, alias_depth=0):
+def parse_git(
+    words,
+    assignments=None,
+    inherited_aliases=None,
+    alias_depth=0,
+    invocation_dir=None,
+):
     assignments = assignments or []
+    invocation_dir = invocation_dir or context_dir
     global_args = []
     ambiguous = False
     pos = 1
@@ -618,40 +709,48 @@ def parse_git(words, assignments=None, inherited_aliases=None, alias_depth=0):
                 "assignments": assignments,
                 "ambiguous": True,
                 "ambiguity": "unknown-git-global-option",
+                "context_dir": invocation_dir,
             }
             return record
 
         aliases = dict(inherited_aliases or {})
         aliases.update(config_aliases(global_args))
         if token not in aliases and token not in builtin_commands:
-            alias_value = configured_alias(token, global_args)
+            alias_value = configured_alias(
+                token, global_args, assignments, invocation_dir
+            )
             if alias_value is not None:
                 aliases[token] = alias_value
         if token in aliases:
             if alias_depth >= 8:
                 return ambiguous_commit(
-                    "git-alias-depth", assignments, global_args, token
+                    "git-alias-depth", assignments, global_args, token,
+                    invocation_dir
                 )
             alias_value = aliases[token]
             if alias_value.startswith("!"):
                 return ambiguous_commit(
-                    "git-shell-alias", assignments, global_args, token
+                    "git-shell-alias", assignments, global_args, token,
+                    invocation_dir
                 )
             try:
                 alias_words = shlex.split(alias_value, posix=True)
             except ValueError:
                 return ambiguous_commit(
-                    "invalid-git-alias", assignments, global_args, token
+                    "invalid-git-alias", assignments, global_args, token,
+                    invocation_dir
                 )
             if not alias_words:
                 return ambiguous_commit(
-                    "empty-git-alias", assignments, global_args, token
+                    "empty-git-alias", assignments, global_args, token,
+                    invocation_dir
                 )
             record = parse_git(
                 ["git"] + alias_words + words[pos + 1:],
                 assignments,
                 aliases,
                 alias_depth + 1,
+                invocation_dir,
             )
             if record is None:
                 return None
@@ -665,7 +764,8 @@ def parse_git(words, assignments=None, inherited_aliases=None, alias_depth=0):
         dynamic_subcommand = any(char in token for char in "$`{}*?[")
         if dynamic_subcommand:
             return ambiguous_commit(
-                "dynamic-git-subcommand", assignments, global_args, token
+                "dynamic-git-subcommand", assignments, global_args, token,
+                invocation_dir
             )
         record = {
             "subcommand": token,
@@ -673,6 +773,7 @@ def parse_git(words, assignments=None, inherited_aliases=None, alias_depth=0):
             "global_args": global_args,
             "assignments": assignments,
             "ambiguous": git_assignments_ambiguous(assignments),
+            "context_dir": invocation_dir,
         }
         if record["ambiguous"]:
             record["ambiguity"] = "git-environment"
@@ -794,7 +895,7 @@ def extract_substitutions(program):
             if depth != 0:
                 return program, [], True
             commands.append(program[inner:end])
-            masked.append("SUBSTITUTION")
+            masked.append("__CODEX_SUB_" + str(len(commands) - 1) + "__")
             pos = end + 1
             continue
         if not single_quoted and char == "`":
@@ -809,7 +910,7 @@ def extract_substitutions(program):
             if end >= len(program):
                 return program, [], True
             commands.append(program[pos + 1:end])
-            masked.append("SUBSTITUTION")
+            masked.append("__CODEX_SUB_" + str(len(commands) - 1) + "__")
             pos = end + 1
             continue
         masked.append(char)
@@ -817,20 +918,67 @@ def extract_substitutions(program):
     return "".join(masked), commands, False
 
 
-def scan(program, depth=0):
+def static_substitution_output(program):
+    segments = list(split_segments(tokenize(program)))
+    if len(segments) != 1 or segments[0][1] is not None:
+        return None
+    words = segments[0][0]
+    if not words or os.path.basename(words[0]) != "printf":
+        return None
+    if len(words) == 2 and words[1] in {"commit", "status"}:
+        return words[1]
+    if len(words) == 3 and words[1] in {"%s", "%s\\n"}:
+        if words[2] in {"commit", "status"}:
+            return words[2]
+    return None
+
+
+def resolved_context(base_dir, value):
+    if not value or any(char in value for char in "$`"):
+        return None
+    value = os.path.expanduser(value)
+    if not os.path.isabs(value):
+        value = os.path.join(base_dir, value)
+    return os.path.abspath(value)
+
+
+def mark_records_ambiguous(records, reason):
+    for record in records:
+        if record.get("subcommand") == "commit":
+            record["ambiguous"] = True
+            record["ambiguity"] = reason
+    return records
+
+
+def scan(program, depth=0, initial_dir=None):
+    initial_dir = initial_dir or context_dir
     if depth > 4:
-        return [ambiguous_commit("shell-recursion-limit")]
+        return [ambiguous_commit(
+            "shell-recursion-limit", invocation_dir=initial_dir
+        )]
+    program = program.replace(chr(92) + "\n", "")
     records = []
     masked_program, substitutions, invalid_substitution = extract_substitutions(program)
     if invalid_substitution:
-        return [ambiguous_commit("invalid-command-substitution")]
-    for nested_program in substitutions:
-        nested_records = scan(nested_program, depth + 1)
-        for record in nested_records:
-            record["ambiguous"] = True
-            record["ambiguity"] = "shell-command-substitution"
-        records.extend(nested_records)
+        return [ambiguous_commit(
+            "invalid-command-substitution", invocation_dir=initial_dir
+        )]
+    for substitution_index, nested_program in enumerate(substitutions):
+        placeholder = "__CODEX_SUB_" + str(substitution_index) + "__"
+        static_output = static_substitution_output(nested_program)
+        if static_output is not None:
+            masked_program = masked_program.replace(placeholder, static_output)
+            continue
+        masked_program = masked_program.replace(
+            placeholder, "$CODEX_DYNAMIC_SUB_" + str(substitution_index)
+        )
+        nested_records = scan(nested_program, depth + 1, initial_dir)
+        records.extend(mark_records_ambiguous(
+            nested_records, "shell-command-substitution"
+        ))
     shell_variables = {}
+    current_dir = initial_dir
+    context_unknown = False
     segments = list(split_segments(tokenize(masked_program)))
     for segment_index, (words, terminator) in enumerate(segments):
         pos = 0
@@ -848,11 +996,20 @@ def scan(program, depth=0):
                         shell_variables[name] = value
             continue
 
+        if words[pos] == "function" and pos + 2 < len(words):
+            try:
+                body_start = words.index("{", pos + 2) + 1
+            except ValueError:
+                continue
+            nested = scan(" ".join(words[body_start:]), depth + 1, current_dir)
+            records.extend(mark_records_ambiguous(nested, "shell-function"))
+            continue
+
         while pos < len(words) and words[pos] in {"!", "if", "then", "elif", "while", "until", "do", "{"}:
             if words[pos] in {"!", "if", "elif", "while", "until"}:
                 control_ambiguous = True
             pos += 1
-        if pos < len(words) and words[pos] == "time":
+        if pos < len(words) and words[pos] in {"time", "noglob"}:
             pos += 1
             while pos < len(words) and words[pos] in {"-p", "--"}:
                 pos += 1
@@ -864,6 +1021,8 @@ def scan(program, depth=0):
         if pos >= len(words):
             continue
 
+        invocation_dir = current_dir
+        invocation_context_unknown = context_unknown
         if words[pos] == "env":
             pos += 1
             while pos < len(words):
@@ -874,10 +1033,46 @@ def scan(program, depth=0):
                 if token in {"-i", "--ignore-environment", "-0", "--null"}:
                     pos += 1
                     continue
-                if token in {"-u", "--unset", "-C", "--chdir", "-S", "--split-string"}:
+                if token in {"-u", "--unset"}:
                     pos += 2
                     continue
-                if any(token.startswith(prefix) for prefix in ("--unset=", "--chdir=", "--split-string=")):
+                if token in {"-C", "--chdir"}:
+                    if pos + 1 >= len(words):
+                        invocation_context_unknown = True
+                        pos += 1
+                        continue
+                    target_dir = resolved_context(invocation_dir, words[pos + 1])
+                    if target_dir is None:
+                        invocation_context_unknown = True
+                    else:
+                        invocation_dir = target_dir
+                    pos += 2
+                    continue
+                if token.startswith("--chdir="):
+                    target_dir = resolved_context(invocation_dir, token.partition("=")[2])
+                    if target_dir is None:
+                        invocation_context_unknown = True
+                    else:
+                        invocation_dir = target_dir
+                    pos += 1
+                    continue
+                if token in {"-S", "--split-string"}:
+                    if pos + 1 >= len(words):
+                        break
+                    try:
+                        split_words = shlex.split(words[pos + 1], posix=True)
+                    except ValueError:
+                        break
+                    words = words[:pos] + split_words + words[pos + 2:]
+                    continue
+                if token.startswith("--split-string="):
+                    try:
+                        split_words = shlex.split(token.partition("=")[2], posix=True)
+                    except ValueError:
+                        break
+                    words = words[:pos] + split_words + words[pos + 1:]
+                    continue
+                if token.startswith("--unset="):
                     pos += 1
                     continue
                 if is_assignment(token):
@@ -888,8 +1083,47 @@ def scan(program, depth=0):
             if pos >= len(words):
                 continue
 
+        if os.path.basename(words[pos]) == "nice":
+            pos += 1
+            while pos < len(words):
+                token = words[pos]
+                if token == "--":
+                    pos += 1
+                    break
+                if token in {"-n", "--adjustment"}:
+                    pos += 2
+                    continue
+                if token.startswith("--adjustment=") or (
+                    token.startswith("-") and token[1:].lstrip("+").isdigit()
+                ):
+                    pos += 1
+                    continue
+                break
+        if pos < len(words) and os.path.basename(words[pos]) == "nohup":
+            pos += 1
+            if pos < len(words) and words[pos] == "--":
+                pos += 1
+            elif pos < len(words) and words[pos] in {"--help", "--version"}:
+                continue
+        if pos >= len(words):
+            continue
+
         executable = os.path.basename(words[pos])
         command_words = words[pos:]
+        if executable == "cd":
+            cd_pos = 1
+            if cd_pos < len(command_words) and command_words[cd_pos] == "--":
+                cd_pos += 1
+            target_dir = (
+                resolved_context(current_dir, command_words[cd_pos])
+                if cd_pos < len(command_words) else None
+            )
+            if target_dir is None:
+                context_unknown = True
+            else:
+                current_dir = target_dir
+                context_unknown = False
+            continue
         if executable == "git":
             if len(command_words) > 1:
                 subcommand = command_words[1]
@@ -908,8 +1142,13 @@ def scan(program, depth=0):
                     and "," in subcommand
                 ):
                     command_words = [command_words[0]] + subcommand[1:-1].split(",") + command_words[2:]
-            record = parse_git(command_words, assignments)
+            record = parse_git(
+                command_words, assignments, invocation_dir=invocation_dir
+            )
             if record is not None:
+                if record["subcommand"] == "commit" and invocation_context_unknown:
+                    record["ambiguous"] = True
+                    record["ambiguity"] = "dynamic-shell-context"
                 if record["subcommand"] == "commit" and control_ambiguous:
                     record["ambiguous"] = True
                     record["ambiguity"] = "shell-control-flow"
@@ -924,31 +1163,77 @@ def scan(program, depth=0):
                 ):
                     record["ambiguous"] = True
                     record["ambiguity"] = "shell-status-decoupled"
+                    record["status_operator"] = terminator
                 records.append(record)
             continue
         if executable == "eval":
             if len(command_words) < 2:
                 continue
-            nested = scan(" ".join(command_words[1:]), depth + 1)
-            for record in nested:
-                record["ambiguous"] = True
-                record["ambiguity"] = "shell-eval"
-            records.extend(nested)
+            nested = scan(" ".join(command_words[1:]), depth + 1, invocation_dir)
+            records.extend(mark_records_ambiguous(nested, "shell-eval"))
             continue
         if executable in interpreters:
             command_index = interpreter_command_index(command_words)
             if command_index is not None and command_index < len(command_words):
-                records.extend(scan(command_words[command_index], depth + 1))
+                records.extend(scan(
+                    command_words[command_index], depth + 1, invocation_dir
+                ))
             elif command_index is not None:
-                records.append(ambiguous_commit("missing-interpreter-command"))
+                records.append(ambiguous_commit(
+                    "missing-interpreter-command", invocation_dir=invocation_dir
+                ))
+            continue
+        if executable == "xargs":
+            inner_pos = 1
+            value_options = {
+                "-a", "--arg-file", "-E", "--eof", "-I", "--replace",
+                "-L", "--max-lines", "-n", "--max-args", "-P", "--max-procs",
+                "-s", "--max-chars",
+            }
+            while inner_pos < len(command_words):
+                token = command_words[inner_pos]
+                if token == "--":
+                    inner_pos += 1
+                    break
+                if token in value_options:
+                    inner_pos += 2
+                    continue
+                if token.startswith("--") and "=" in token:
+                    inner_pos += 1
+                    continue
+                if token.startswith(("-I", "-L", "-n", "-P", "-s")):
+                    inner_pos += 1
+                    continue
+                if token.startswith("-"):
+                    inner_pos += 1
+                    continue
+                break
+            if inner_pos < len(command_words):
+                nested = scan(
+                    " ".join(command_words[inner_pos:]), depth + 1, invocation_dir
+                )
+                records.extend(mark_records_ambiguous(nested, "shell-xargs"))
+            continue
+        if executable == "find" and "-exec" in command_words:
+            inner_pos = command_words.index("-exec") + 1
+            if inner_pos < len(command_words):
+                nested = scan(
+                    " ".join(command_words[inner_pos:]), depth + 1, invocation_dir
+                )
+                records.extend(mark_records_ambiguous(
+                    nested, "shell-find-exec"
+                ))
             continue
         if executable.startswith("$") or executable.startswith("`"):
             if "commit" in command_words[1:]:
-                records.append(ambiguous_commit("dynamic-shell-executable"))
+                records.append(ambiguous_commit(
+                    "dynamic-shell-executable", invocation_dir=invocation_dir
+                ))
     return records
 
 
-for record in scan(source):
+for sequence, record in enumerate(scan(source)):
+    record["sequence"] = sequence
     sys.stdout.buffer.write(
         json.dumps(record, separators=(",", ":")).encode("utf-8") + b"\0"
     )
@@ -970,20 +1255,47 @@ codex_git_subcommand_count() {
 codex_git_invocation_repo() {
   local record="$1"
   local context_dir="$2"
-  local value have_global_args=false
-  local -a global_args=()
+  local value have_global_args=false have_assignments=false
+  local -a global_args=() assignments=()
   while IFS= read -r -d '' value; do
     global_args+=("$value")
     have_global_args=true
   done < <(printf '%s' "$record" | jq -j '.global_args[] | ., "\u0000"')
+  while IFS= read -r -d '' value; do
+    assignments+=("$value")
+    have_assignments=true
+  done < <(printf '%s' "$record" | jq -j '.assignments[] | ., "\u0000"')
   (
     cd -- "$context_dir" 2>/dev/null || exit 1
-    if [ "$have_global_args" = true ]; then
+    if [ "$have_global_args" = true ] && [ "$have_assignments" = true ]; then
+      env "${assignments[@]}" git "${global_args[@]}" rev-parse --show-toplevel 2>/dev/null
+    elif [ "$have_global_args" = true ]; then
       git "${global_args[@]}" rev-parse --show-toplevel 2>/dev/null
+    elif [ "$have_assignments" = true ]; then
+      env "${assignments[@]}" git rev-parse --show-toplevel 2>/dev/null
     else
       git rev-parse --show-toplevel 2>/dev/null
     fi
   )
+}
+
+# Reconstruct one parsed Git record as a shell-safe literal command. Callers
+# use this only to route that record through an existing per-command policy
+# check; no reconstructed text is evaluated in this helper.
+codex_git_record_command() {
+  local record="$1" value
+  while IFS= read -r -d '' value; do
+    printf '%q ' "$value"
+  done < <(printf '%s' "$record" | jq -j '.assignments[] | ., "\u0000"')
+  printf 'git '
+  while IFS= read -r -d '' value; do
+    printf '%q ' "$value"
+  done < <(printf '%s' "$record" | jq -j '.global_args[] | ., "\u0000"')
+  value=$(printf '%s' "$record" | jq -r '.subcommand')
+  printf '%q ' "$value"
+  while IFS= read -r -d '' value; do
+    printf '%q ' "$value"
+  done < <(printf '%s' "$record" | jq -j '.args[] | ., "\u0000"')
 }
 
 # Return success when a parsed `git add` invocation would select a changed
@@ -1174,6 +1486,75 @@ for token in tokens:
         count += 1
 print(count)
 ' "$executable"
+}
+
+# Emit the evidence label for each supported Elisp wrapper that appears in
+# executable position. This binds output to the label in the observed command;
+# it is not an authentication boundary against another same-user process.
+codex_elisp_evidence_labels() {
+  local kind="$1"
+  python3 -c '
+import os
+import shlex
+import sys
+
+kind = sys.argv[1]
+source = sys.stdin.read()
+lexer = shlex.shlex(source, posix=True, punctuation_chars=";&|(){}")
+lexer.whitespace_split = True
+lexer.commenters = "#"
+try:
+    tokens = list(lexer)
+except ValueError:
+    raise SystemExit
+
+boundaries = {";", ";;", "&", "&&", "|", "||", "(", ")", "{", "}"}
+wrappers = {"command", "exec"}
+
+def is_assignment(token):
+    if "=" not in token or token.startswith(("/", "./", "../")):
+        return False
+    name = token.partition("=")[0]
+    return bool(name) and name.replace("_", "a").isalnum()
+
+segments = []
+segment = []
+for token in tokens:
+    if token in boundaries or all(char in ";&|(){}" for char in token):
+        if segment:
+            segments.append(segment)
+            segment = []
+    else:
+        segment.append(token)
+if segment:
+    segments.append(segment)
+
+for words in segments:
+    pos = 0
+    while pos < len(words) and is_assignment(words[pos]):
+        pos += 1
+    if pos < len(words) and words[pos] in wrappers:
+        pos += 1
+        if pos < len(words) and words[pos] == "--":
+            pos += 1
+    if pos >= len(words):
+        continue
+    executable = os.path.basename(words[pos])
+    arguments = words[pos + 1:]
+    label = None
+    if kind == "test" and executable == "batch-test.sh" and arguments:
+        label = arguments[0]
+    elif kind == "test" and executable == "elisp-check-evidence":
+        if arguments and arguments[0] == "--staged":
+            arguments = arguments[1:]
+        if len(arguments) >= 2 and arguments[1] == "--":
+            label = arguments[0]
+    elif kind == "live" and executable == "elisp-live-verify":
+        if len(arguments) == 3 and arguments[1] == "--":
+            label = arguments[0]
+    if label and not any(char in label for char in "\n\r$`"):
+        sys.stdout.buffer.write(label.encode() + b"\0")
+' "$kind"
 }
 
 codex_shell_executables() {

@@ -153,8 +153,6 @@ exit 1
     def test_codex_functions_exec_denies_dynamic_or_ambiguous_call(self) -> None:
         for source in (
             'const args={cmd:"gh pr view --repo example/unowned 1"}; '
-            "await tools.exec_command(args);",
-            'const args={cmd:"gh pr view --repo example/unowned 1"}; '
             "await tools.exec_command({...args});",
             'await tools.exec_command({cmd:"gh pr view --repo example/unowned 1; " + '
             '"gh issue create --repo example/unowned --title T --body B"});',
@@ -169,6 +167,13 @@ exit 1
         ):
             with self.subTest(source=source):
                 self.assertEqual(decision(self.run_codex_exec_guard(source)), "deny")
+
+    def test_codex_functions_exec_resolves_literal_const_object(self) -> None:
+        source = (
+            'const args={cmd:"gh pr view --repo example/unowned 1"}; '
+            "await tools.exec_command(args);"
+        )
+        self.assertEqual(decision(self.run_codex_exec_guard(source)), "allow")
 
     def test_git_global_options_and_executable_paths_are_gated(self) -> None:
         for command in (

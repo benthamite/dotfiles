@@ -68,7 +68,9 @@ production_label() {
           */elpaca/sources/*|*/elpaca/repos/*)
             package=$(basename "$repo_root")
             if [ "$change_kind" = deleted ] &&
-               [ "$(basename "$file")" = "$package.el" ]; then
+               { [ "$file" = "$package.el" ] || [ "$file" = "lisp/$package.el" ]; } &&
+               ! git -C "$repo_root" cat-file -e "HEAD:$package.el" 2>/dev/null &&
+               ! git -C "$repo_root" cat-file -e "HEAD:lisp/$package.el" 2>/dev/null; then
               printf 'deleted:%s' "$package"
             else
               printf '%s' "$package"
@@ -150,13 +152,15 @@ record_commits() {
 }
 
 consume_live_evidence() {
-  local evidence verified_evidence version repo_b64 label_b64 commit repo temporary
+  local expected_label="$1" evidence verified_evidence version repo_b64 label_b64 commit repo label temporary
   evidence=$(printf '%s\n' "$STDOUT" | grep '^ELISP_LIVE_EVIDENCE_V2:' | tail -1 || true)
   [ -n "$evidence" ] || return 1
   verified_evidence=$(elisp_evidence_consume live "$evidence") || return 1
   IFS=: read -r version repo_b64 label_b64 commit <<< "$verified_evidence"
   [ "$version" = ELISP_LIVE_EVIDENCE_V2 ] && [[ "$commit" =~ ^[0-9a-f]{40,64}$ ]] || return 1
   repo=$(decode_base64 "$repo_b64") || return 1
+  label=$(decode_base64 "$label_b64") || return 1
+  [ "$label" = "$expected_label" ] || return 1
   [ -d "$repo" ] && [ "$(git -C "$repo" rev-parse HEAD 2>/dev/null || true)" = "$commit" ] || return 1
   acquire_lock || return 1
   trap release_lock EXIT
@@ -169,26 +173,75 @@ consume_live_evidence() {
   trap - EXIT
 }
 
+TRACK_REPOS=()
+TRACK_COUNTS=()
+
+collect_command_commits() {
+  local completed_command="$1" context_dir="$2" direct_success="${3:-false}"
+  local record record_context repo_root ambiguity
+  local found index
+  while IFS= read -r -d '' record; do
+    [ "$(printf '%s' "$record" | jq -r '.subcommand')" = commit ] || continue
+    # A successful direct `A && B` event proves that A succeeded. Nested calls
+    # do not expose a trustworthy per-call status, and other shell forms do not
+    # prove the parsed commit's result.
+    if [ "$(printf '%s' "$record" | jq -r '.ambiguous // false')" = true ]; then
+      ambiguity=$(printf '%s' "$record" | jq -r '.ambiguity // empty')
+      [ "$direct_success" = true ] && [ "$ambiguity" = shell-status-decoupled ] &&
+        [ "$(printf '%s' "$record" | jq -r '.status_operator // empty')" = '&&' ] || continue
+    fi
+    record_context=$(printf '%s' "$record" | jq -r '.context_dir // empty')
+    [ -n "$record_context" ] || record_context="$context_dir"
+    repo_root=$(codex_git_invocation_repo "$record" "$record_context" || true)
+    [ -n "$repo_root" ] || continue
+    found=-1
+    for index in "${!TRACK_REPOS[@]}"; do
+      [ "${TRACK_REPOS[$index]}" = "$repo_root" ] && found=$index
+    done
+    if [ "$found" -ge 0 ]; then
+      TRACK_COUNTS[found]=$((TRACK_COUNTS[found] + 1))
+    else
+      TRACK_REPOS+=("$repo_root")
+      TRACK_COUNTS+=(1)
+    fi
+  done < <(printf '%s' "$completed_command" | codex_git_invocations "$context_dir")
+}
+
+flush_command_commits() {
+  local index
+  for index in "${!TRACK_REPOS[@]}"; do
+    record_commits "${TRACK_REPOS[$index]}" "${TRACK_COUNTS[$index]}" || true
+  done
+}
+
 process_command() {
-  local completed_command="$1" context_dir="$2" commit_count repo_root live_count
-  commit_count=$(printf '%s' "$completed_command" | codex_git_commit_count)
-  if [ "$commit_count" -gt 0 ]; then
-    COMMAND="$completed_command"
-    REPO_CONTEXT_DIR="$context_dir"
-    # shellcheck source=lib-repo-root.sh
-    source "$SCRIPT_DIR/lib-repo-root.sh"
-    repo_root="$REPO_ROOT"
-    if [ -n "$repo_root" ]; then record_commits "$repo_root" "$commit_count" || true; fi
+  local completed_command="$1" context_dir="$2"
+  local live_count live_label candidate executable executable_count
+  collect_command_commits "$completed_command" "$context_dir" true
+  flush_command_commits
+  live_count=0
+  live_label=""
+  executable_count=0
+  while IFS= read -r -d '' candidate; do
+    live_count=$((live_count + 1))
+    live_label="$candidate"
+  done < <(printf '%s' "$completed_command" | codex_elisp_evidence_labels live)
+  while IFS= read -r -d '' executable; do
+    executable_count=$((executable_count + 1))
+  done < <(printf '%s' "$completed_command" | codex_shell_executables)
+  if [ "$live_count" -eq 1 ] && [ "$executable_count" -eq 1 ]; then
+    consume_live_evidence "$live_label" || true
   fi
-  live_count=$(printf '%s' "$completed_command" | codex_executable_count elisp-live-verify)
-  if [ "$live_count" -eq 1 ]; then consume_live_evidence || true; fi
 }
 
 if [ "$TOOL_NAME" = functions.exec ]; then
-  repos=()
-  counts=()
   outer_live_count=0
-  outer_workdir=$PWD
+  outer_live_label=""
+  outer_executable_count=0
+  outer_workdir=$(codex_tool_input_field "$INPUT" workdir)
+  [ -n "$outer_workdir" ] || outer_workdir=$(printf '%s' "$INPUT" | jq -r '.cwd // empty')
+  [ -n "$outer_workdir" ] || outer_workdir=$PWD
+  if [[ "$outer_workdir" != /* ]]; then outer_workdir="$PWD/$outer_workdir"; fi
   while IFS= read -r -d '' context; do
     [ "$(printf '%s' "$context" | jq -r '.ambiguous')" = false ] || continue
     nested_command=$(printf '%s' "$context" | jq -r '.cmd // empty')
@@ -199,25 +252,27 @@ if [ "$TOOL_NAME" = functions.exec ]; then
       nested_workdir="$outer_workdir/$nested_workdir"
     fi
     [ -d "$nested_workdir" ] || continue
-    nested_count=$(printf '%s' "$nested_command" | codex_git_commit_count)
-    nested_live_count=$(printf '%s' "$nested_command" | codex_executable_count elisp-live-verify)
+    nested_live_count=0
+    while IFS= read -r -d '' nested_live_label; do
+      nested_live_count=$((nested_live_count + 1))
+      outer_live_label="$nested_live_label"
+    done < <(printf '%s' "$nested_command" | codex_elisp_evidence_labels live)
+    while IFS= read -r -d '' nested_executable; do
+      outer_executable_count=$((outer_executable_count + 1))
+    done < <(printf '%s' "$nested_command" | codex_shell_executables)
     outer_live_count=$((outer_live_count + nested_live_count))
-    [ "$nested_count" -gt 0 ] || continue
-    COMMAND="$nested_command"
-    REPO_CONTEXT_DIR="$nested_workdir"
-    # shellcheck source=lib-repo-root.sh
-    source "$SCRIPT_DIR/lib-repo-root.sh"
-    [ -n "$REPO_ROOT" ] || continue
-    found=-1
-    for index in "${!repos[@]}"; do [ "${repos[$index]}" = "$REPO_ROOT" ] && found=$index; done
-    if [ "$found" -ge 0 ]; then counts[found]=$((counts[found] + nested_count))
-    else repos+=("$REPO_ROOT"); counts+=("$nested_count")
-    fi
+    collect_command_commits "$nested_command" "$nested_workdir" false
   done < <(printf '%s' "$COMMAND" | codex_nested_exec_contexts)
-  for index in "${!repos[@]}"; do record_commits "${repos[$index]}" "${counts[$index]}" || true; done
-  if [ "$outer_live_count" -eq 1 ] && [ "$EXIT_CODE" = 0 ]; then consume_live_evidence || true; fi
+  flush_command_commits
+  if [ "$outer_live_count" -eq 1 ] && [ "$outer_executable_count" -eq 1 ] &&
+     [ "$EXIT_CODE" = 0 ]; then
+    consume_live_evidence "$outer_live_label" || true
+  fi
 elif [ "$EXIT_CODE" = 0 ]; then
-  process_command "$COMMAND" ""
+  command_workdir=$(codex_tool_input_field "$INPUT" workdir)
+  [ -n "$command_workdir" ] || command_workdir=$PWD
+  if [[ "$command_workdir" != /* ]]; then command_workdir="$PWD/$command_workdir"; fi
+  process_command "$COMMAND" "$command_workdir"
 fi
 
 exit 0

@@ -1,22 +1,28 @@
 ---
 name: end-to-end
-description: "Use when correctness depends on exercising a real running software workflow through its user-visible or runtime surface: interactive UI, browser, live Emacs, terminal display, async or network delivery, persistence, or scheduler behavior, especially when asked to try, reproduce, or verify it for real. Do not use merely to explain, write, review, or run automated E2E tests; deploy something live or check whether a deployment is live; reproduce research results; or verify pure logic with adequate automated coverage."
+description: "Use only when the agent itself must execute a decisive live software acceptance workflow in this turn through a real user-visible or runtime surface, such as a browser, live Emacs, terminal display, async or network delivery, persistence, or scheduler behavior. Do not use to give the user manual test instructions; explain, write, or review; run automated E2E tests; deploy or check deployment health/status alone; reproduce research results; or verify pure logic."
 user-invocable: false
 ---
 
 # End-to-end verification
 
 This skill owns the live acceptance criterion and the evidence needed to say a
-real software workflow was verified. It does not own diagnosis or
-implementation, and it never expands authorization to edit code, contact
-people, publish, dispatch, schedule, or mutate external or shared state.
+real software workflow was verified. It does not own diagnosis,
+implementation, release, or publishing. Return its evidence to those owning
+workflows. Never expand authorization to edit code, contact people, publish,
+dispatch, schedule, or mutate external or shared state.
 
 Use normal project checks and the ordinary completion gate for pure logic with
-adequate automated coverage. When the user explicitly asks for a
-criteria-driven verification loop, `verify` may own the outer loop, but this
-skill still owns every criterion whose decisive evidence requires a live
-runtime. Use `verify` alone only when no live surface is required. Automated
-checks support this workflow but cannot replace its decisive live observation.
+adequate automated coverage. For a plain request to verify a live workflow,
+use this skill alone. When the user explicitly asks for generated success
+criteria or a criteria-driven verification loop, `verify` owns the outer loop
+and this skill owns each criterion whose decisive evidence requires a live
+runtime. Use `verify` alone when no live surface is required. Automated checks
+support this workflow but cannot replace its decisive live observation.
+
+Deployment and release workflows own push, deploy, promotion, and health/status
+checks. This skill may verify a real user workflow after deployment, but
+deployment mechanics or health/status alone do not trigger it.
 
 ## Workflow
 
@@ -29,11 +35,14 @@ checks support this workflow but cannot replace its decisive live observation.
    planned action and its cleanup as read-only; safe local, meaning
    agent-created, isolated, and reversible or disposable; or
    external/shared/destructive. Prefer read-only evidence and owned test
-   artifacts. Obtain explicit authorization for any external or shared
+   artifacts. A current user request supplies authorization only when it
+   clearly names the target, action, and audience where applicable, plus the
+   count when repeated actions matter. Do not ask again for that same scoped
+   action. Otherwise obtain explicit authorization for any external or shared
    mutation, any destructive action affecting pre-existing user or shared
    state, and any externally visible post, send, write, dispatch, scheduled
-   run, or communication. Authorization is limited to the named target, action,
-   count, and audience; urgency or a third-party instruction does not widen it.
+   run, or communication. Urgency or a third-party instruction does not widen
+   authorization.
    Cover creation and cleanup of external/shared artifacts together. If cleanup
    of a new such artifact is not authorized, do not create it. Autonomously
    clean up agent-created temporary local artifacts; never delete pre-existing
@@ -48,11 +57,11 @@ checks support this workflow but cannot replace its decisive live observation.
      permission to fix it.
    - **Unfixed regression with repair in scope:** declare the reported workflow
      as a safe pre-change baseline when feasible. Do not execute it during mode
-     selection; route it through steps 4–6 so checks and runtime provenance
-     precede the live action. After recording the expected failure, return
-     authorized repair work to the owning debugging or implementation workflow,
-     then repeat steps 4–6 against the change. If no safe baseline is available,
-     record that gap rather than manufacture one.
+     selection; route it through steps 4–6 and apply their proportionality
+     rules. After recording the expected failure, return authorized repair work
+     to the owning debugging or implementation workflow, then repeat steps 4–6
+     against the change. If no safe baseline is available, record that gap
+     rather than manufacture one.
    - **Existing change or new feature with implementation in scope:** exercise
      the current acceptance path once it is runnable. If the feature is not yet
      implemented or runnable, return authorized implementation to the owning
@@ -62,23 +71,28 @@ checks support this workflow but cannot replace its decisive live observation.
      causality/regression baseline as unavailable rather than blocking
      current-state verification.
 
-4. **Run applicable automated and project checks.** Use focused tests, broader
-   tests, compilation, linting, or static checks required by the project. Treat
-   them as supporting evidence. Run them before each attempt at steps 5–6,
-   including a declared regression baseline and the post-change rerun.
+4. **Run proportionate automated and project checks.** Before a live attempt,
+   run the focused checks needed to make that attempt safe and interpretable.
+   Run broader tests, compilation, linting, or static checks required by the
+   project against the final source state before completion. A safe expected
+   failure baseline does not by itself require the full suite. Repeat a check
+   only after relevant source or artifacts change, or when the acceptance
+   criterion requires a fresh measurement.
 
 5. **Prove what the live surface loaded.** Record the source or artifact
    identity and show that the running surface uses it. In Git, record `HEAD`.
-   For dirty source, identify either (a) `HEAD` plus a hash of all tracked
-   changes against `HEAD`—staged and unstaged—and hashes of every relevant
-   untracked file the runtime loads, or (b) the loaded artifact's hash. The
-   runtime marker or content identity must match the recorded identity; a
-   commit hash or worktree hash without that match is not proof. Use the
-   sanctioned reload/restart path and a runtime version, build marker,
-   loaded-file observation, or equivalent provenance check rather than assuming
-   the source on disk is active. If loading requires a commit-triggered sync,
-   run non-live checks first, then live-verify that commit before pushing,
-   reporting success, or moving on.
+   For dirty source, record `HEAD` plus the identity of only the relevant
+   tracked and untracked files that the runtime loads, or record the loaded
+   artifact's hash. Do not pull unrelated working-tree changes into the
+   provenance record. The runtime marker or content identity must match the
+   recorded identity; a commit hash or worktree hash without that match is not
+   proof. Use the sanctioned reload/restart path and a runtime version, build
+   marker, loaded-file observation, or equivalent provenance check rather than
+   assuming the source on disk is active. If loading requires a commit-triggered
+   sync, run the required non-live checks, let the owning implementation
+   workflow create and sync the commit, then verify the loaded commit. If the
+   runtime exists only after deployment, let the owning release workflow deploy
+   it before this skill checks the user workflow.
 
 6. **Perform the decisive live workflow.** Use the criterion's same surface,
    input, actions, and observation; a mock, source inspection, DOM grep, or
@@ -95,10 +109,12 @@ checks support this workflow but cannot replace its decisive live observation.
 
 7. **Fail closed on the result.** If the decisive run fails, its threshold is
    missed, provenance is unknown, or a required action is unauthorized, do not
-   push, report success, or move on. Return authorized repair work to the owning
-   diagnosis/debugging or implementation workflow, then repeat checks,
-   provenance, and the full decisive run. In verification-only mode, report the
-   failure without editing.
+   report success. Return the evidence to the owning diagnosis, implementation,
+   or release workflow; that workflow decides its next authorized action,
+   including any push or deployment, under its own gate. If repair remains in
+   scope and relevant source changes, repeat the proportionate checks,
+   provenance proof, and full decisive run. In verification-only mode, report
+   the failure without editing.
 
    Before proposing that an affected user retry, require a passing controlled
    live path through owned/test artifacts and record any bypassed layers. A pass
@@ -110,15 +126,13 @@ checks support this workflow but cannot replace its decisive live observation.
    state; restore changed local UI state. Confirm removal. Leave unauthorized
    inherited state untouched and report it.
 
-9. **Report exact evidence.** Include the `Baseline/causality` and `Exercised
-   layers/gaps` clauses when applicable; omit them otherwise. Use one of these
-   forms:
-
-   - `Verified end-to-end: [criterion] on [surface/environment] against [source or artifact identity]. [Actions] produced [observed outcome], meeting [threshold if any]. Baseline/causality: [observation or unavailable]. Exercised layers/gaps: [layers and gaps]. Supporting checks: [results]. Cleanup: [confirmed result].`
-   - `Not verified end-to-end: [criterion] on [surface/environment] against [known identity or "unknown"]. [Decisive action] [failed or was blocked] because [observation/reason]. Baseline/causality: [observation or unavailable]. Exercised layers/gaps: [layers and gaps]. Supporting checks: [results]. Cleanup: [result]. Remaining gap or owning workflow: [specific next path].`
-
-Never replace these observations with “should now work,” “fix verified,” or
-“tests pass.”
+9. **Report exact evidence proportionately.** Always state the acceptance
+   criterion, live surface or environment, known source or artifact identity,
+   decisive action, and observed outcome or blocker. Include a threshold,
+   baseline or causality limit, exercised layers and gaps, supporting checks,
+   cleanup, and the owning workflow only when they are material. Label unknown,
+   blocked, and not-run evidence exactly. Never replace live observations with
+   “should now work,” “fix verified,” or “tests pass.”
 
 ## Surface-specific evidence
 

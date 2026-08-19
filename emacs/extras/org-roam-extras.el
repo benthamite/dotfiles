@@ -539,7 +539,7 @@ satisfies these criteria."
   (org-roam-db-autosync-mode -1)
   (run-with-idle-timer (* 20 60) t
    (lambda ()
-     (let ((debug-on-error nil))
+     (let ((inhibit-debugger t))
        (condition-case err
          (org-roam-db-sync)
        (quit nil)

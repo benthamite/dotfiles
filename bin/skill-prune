@@ -8,7 +8,10 @@ import json
 import os
 import re
 import sqlite3
+import stat
 import sys
+import tempfile
+import tomllib
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -387,48 +390,90 @@ def link_tool_skills(tool: str) -> None:
     target.symlink_to(source)
 
 
-def strip_codex_block(text: str) -> str:
+def strip_codex_block(text: str, managed_paths: set[str]) -> str:
+    """Remove generated disabled-skill state without trusting its markers.
+
+    The markers make the generated region easy to inspect, but they are not
+    the ownership boundary.  Remove only exact disabled tables for skills that
+    this command manages, then remove the marker lines.  This also repairs a
+    block whose begin or end marker was lost without consuming adjacent user
+    configuration.
+    """
+    tomllib.loads(text)
     pattern = re.compile(
-        rf"\n?{re.escape(CODEX_BLOCK_BEGIN)}\n.*?\n{re.escape(CODEX_BLOCK_END)}\n?",
+        rf"(?:^|\n+){re.escape(CODEX_BLOCK_BEGIN)}\n.*?\n"
+        rf"{re.escape(CODEX_BLOCK_END)}(?:\n+|$)",
         re.DOTALL,
     )
-    return pattern.sub("\n", text).rstrip() + "\n"
+    text = pattern.sub(lambda match: "" if match.start() == 0 else "\n\n", text)
+    for path in sorted(managed_paths, key=len, reverse=True):
+        table = re.compile(
+            rf"(?:^|\n)\[\[skills\.config\]\]\n"
+            rf"path = \"{re.escape(path)}\"\n"
+            rf"enabled = false\n?"
+        )
+        text = table.sub("\n", text)
+    marker = re.compile(
+        rf"^({re.escape(CODEX_BLOCK_BEGIN)}|{re.escape(CODEX_BLOCK_END)})\n?",
+        re.MULTILINE,
+    )
+    text = marker.sub("", text).rstrip() + "\n"
+    tomllib.loads(text)
+    return text
 
 
-def paired_skill_by_name(skills: list[Skill]) -> dict[str, Skill]:
-    paired = [skill for skill in skills if skill.claude and skill.codex]
-    counts: dict[str, int] = {}
-    for skill in paired:
-        counts[skill.name] = counts.get(skill.name, 0) + 1
-    duplicates = sorted(name for name, count in counts.items() if count > 1)
-    if duplicates:
-        joined = ", ".join(duplicates)
-        raise SystemExit(f"Refusing to manage non-unique paired skill names: {joined}")
-    return {skill.name: skill for skill in paired}
+def write_text_atomic(path: Path, text: str) -> None:
+    mode = stat.S_IMODE(path.stat().st_mode)
+    handle, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    temporary_path = Path(temporary)
+    try:
+        with os.fdopen(handle, "w", encoding="utf-8") as stream:
+            stream.write(text)
+        temporary_path.chmod(mode)
+        os.replace(temporary_path, path)
+    finally:
+        temporary_path.unlink(missing_ok=True)
+
+
+def paired_skills_by_name(skills: list[Skill]) -> dict[str, list[Skill]]:
+    grouped: dict[str, list[Skill]] = {}
+    for skill in skills:
+        if skill.claude and skill.codex:
+            grouped.setdefault(skill.name, []).append(skill)
+    return grouped
 
 
 def update_codex_config(disabled_names: set[str], skills: list[Skill]) -> None:
-    skill_map = paired_skill_by_name(skills)
+    skill_map = paired_skills_by_name(skills)
     config = ROOT / "codex" / "config.toml"
-    text = strip_codex_block(config.read_text())
+    managed_paths = {
+        skill_path(skill.codex).as_posix()
+        for matches in skill_map.values()
+        for skill in matches
+        if skill.codex
+    }
+    text = strip_codex_block(config.read_text(), managed_paths)
     if disabled_names:
         lines = ["", CODEX_BLOCK_BEGIN]
         for name in sorted(disabled_names):
-            skill = skill_map.get(name)
-            if not skill or not skill.codex:
-                continue
-            path = skill_path(skill.codex)
-            lines.extend(
-                [
-                    "",
-                    "[[skills.config]]",
-                    f'path = "{path.as_posix()}"',
-                    "enabled = false",
-                ]
-            )
+            paths = {
+                skill_path(skill.codex).as_posix()
+                for skill in skill_map.get(name, [])
+                if skill.codex
+            }
+            for path in sorted(paths):
+                lines.extend(
+                    [
+                        "",
+                        "[[skills.config]]",
+                        f'path = "{path}"',
+                        "enabled = false",
+                    ]
+                )
         lines.append(CODEX_BLOCK_END)
         text = text.rstrip() + "\n" + "\n".join(lines) + "\n"
-    config.write_text(text)
+    tomllib.loads(text)
+    write_text_atomic(config, text)
 
 
 def update_claude_settings(disabled_names: set[str], skills: list[Skill]) -> None:
@@ -438,7 +483,7 @@ def update_claude_settings(disabled_names: set[str], skills: list[Skill]) -> Non
     else:
         data = {}
     overrides = data.setdefault("skillOverrides", {})
-    managed_names = set(paired_skill_by_name(skills))
+    managed_names = set(paired_skills_by_name(skills))
     for name in sorted(managed_names - disabled_names):
         if overrides.get(name) == "off":
             overrides.pop(name)

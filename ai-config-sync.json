@@ -706,7 +706,7 @@
       "path": "codex/config.toml",
       "tracked": true,
       "live_path": "~/.codex/config.toml",
-      "note": "Tracked global config, live at ~/.codex/config.toml. Codex-only trust, plugin, theme, MCP, account, model state has no Claude counterpart; project-doc fallbacks stay disabled; [features].hooks enables hooks. bin/skill-prune owns managed [[skills.config]] entries but reads only ~/.claude/.claude.json, missing ~/.claude-epoch usage and calling active skills unused; 2026-08-11 entries were hand-added, recorded in skills-disabled.json; fix before using apply. bin/codex-config-prune removes dead records. Moving a repo means rewriting its trust key; duplicates break the config. See codex/README.org."
+      "note": "Tracked global Codex config, live at ~/.codex/config.toml. Codex-only trust, plugin, theme, MCP, account, and model state has no Claude counterpart; project-doc fallbacks stay disabled; [features].hooks enables hooks. bin/skill-prune owns managed [[skills.config]] entries and replaces exact tables without relying on comment markers. Its usage scan still misses ~/.claude-epoch, so fix it before using apply; disabled state is in skills-disabled.json. bin/codex-config-prune removes dead records. Moving a repo requires rewriting its trust key; duplicates invalidate TOML. See codex/README.org."
     },
     {
       "tool": "Codex",

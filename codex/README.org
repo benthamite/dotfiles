@@ -123,16 +123,24 @@ issues, and comments. It classifies each literal shell command nested in
 =functions.exec= independently and refuses dynamic or ambiguous nested calls;
 read-only GitHub inspection remains available for undeclared repositories.
 The self-edit guard also inspects standard nested =apply_patch= calls, because
-the nested runtime does not dispatch a separate pre-tool event for them.
+the nested runtime does not dispatch a separate pre-tool event for them. The
+Elisp post-edit hook is registered on the outer composed-tool event as well as
+direct edit events, so it recovers changed paths from nested patches instead of
+depending on that missing event.
 
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged
 index entries, so a live Emacs never loads tests or a partially resolved tree.
-Test-only Elisp commits likewise do not require package-manual updates. For
-=functions.exec= wrappers, post-commit verification pairs each literal nested
-shell command with its own =workdir=; it never guesses from the hook process
-directory, ignores inert quoted commit text, and conservatively retains
-verification for ambiguous or repeated commit targets.
+The batch runner loads canonical source and emits evidence bound to the
+repository, package, and source revision; commit guards reject stale or reused
+evidence. Test-only Elisp commits likewise do not require package-manual
+updates. For =functions.exec= wrappers, post-commit verification pairs each
+literal nested shell command with its own =workdir=; it never guesses from the
+hook process directory and ignores inert quoted commit text. It records every
+production package across multi-commit commands. Only =elisp-live-verify= can
+clear one matching repository/package/commit obligation. The helper rejects
+dirty source, waits for the package reload, and then runs the package-named live
+expression. Unrelated =emacsclient= calls do not clear the gate.
 
 Emacs-owned sessions use eight explicit =codex-hook-wrapper= registrations for
 lifecycle forwarding. The wrapper comes from the Emacs package source tree

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Validate the documented Elpaca sync hook against the installed hook.
+
+set -euo pipefail
+
+script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+repo=$(cd -- "$script_dir/../.." && pwd)
+installed=${ELPACA_SYNC_HOOK:-/Users/pablostafforini/git-dirs/dotfiles/hooks/sync-elpaca-clone.sh}
+extracted=$(mktemp "${TMPDIR:-/tmp}/sync-elpaca-clone.XXXXXX")
+cleanup() {
+  rm -f "$extracted"
+}
+trap cleanup EXIT
+
+awk '
+  /^=hooks\/sync-elpaca-clone\.sh=:$/ { section = 1; next }
+  section && /^#\+begin_src shell/ { body = 1; next }
+  body && /^#\+end_src/ { exit }
+  body { print }
+' "$repo/emacs/config.org" > "$extracted"
+
+if [ ! -s "$extracted" ]; then
+  echo "Cannot extract hooks/sync-elpaca-clone.sh from emacs/config.org" >&2
+  exit 1
+fi
+sh -n "$extracted"
+sh -n "$installed"
+diff -u "$extracted" "$installed"

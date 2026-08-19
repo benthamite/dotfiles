@@ -496,3 +496,79 @@ codex_git_commit_count() {
 codex_emacsclient_eval_count() {
   _codex_shell_syntax_count emacsclient
 }
+
+# Count a named executable in command position while ignoring quoted arguments,
+# comments, and later words in the same shell segment. This is used for helper
+# allowlists where a mere textual mention must not bypass a gate.
+codex_executable_count() {
+  local executable="$1"
+  python3 -c '
+import os
+import shlex
+import sys
+
+target = sys.argv[1]
+source = sys.stdin.read()
+lexer = shlex.shlex(source, posix=True, punctuation_chars=";&|(){}")
+lexer.whitespace_split = True
+lexer.commenters = "#"
+tokens = list(lexer)
+boundaries = {";", ";;", "&", "&&", "|", "||", "(", ")", "{", "}"}
+wrappers = {"command", "exec"}
+count = 0
+at_start = True
+skip_wrapper = False
+for token in tokens:
+    if token in boundaries or all(char in ";&|(){}" for char in token):
+        at_start = True
+        skip_wrapper = False
+        continue
+    if not at_start:
+        continue
+    if "=" in token and not token.startswith(("/", "./", "../")):
+        name, _, _ = token.partition("=")
+        if name.replace("_", "a").isalnum():
+            continue
+    if token in wrappers and not skip_wrapper:
+        skip_wrapper = True
+        continue
+    at_start = False
+    if os.path.basename(token) == target:
+        count += 1
+print(count)
+' "$executable"
+}
+
+codex_shell_executables() {
+  python3 -c '
+import os
+import shlex
+import sys
+
+source = sys.stdin.read()
+lexer = shlex.shlex(source, posix=True, punctuation_chars=";&|(){}")
+lexer.whitespace_split = True
+lexer.commenters = "#"
+tokens = list(lexer)
+boundaries = {";", ";;", "&", "&&", "|", "||", "(", ")", "{", "}"}
+wrappers = {"command", "exec"}
+at_start = True
+skip_wrapper = False
+for token in tokens:
+    if token in boundaries or all(char in ";&|(){}" for char in token):
+        at_start = True
+        skip_wrapper = False
+        continue
+    if not at_start:
+        continue
+    if "=" in token and not token.startswith(("/", "./", "../")):
+        name, _, _ = token.partition("=")
+        if name.replace("_", "a").isalnum():
+            continue
+    if token in wrappers and not skip_wrapper:
+        skip_wrapper = True
+        continue
+    at_start = False
+    sys.stdout.buffer.write(os.path.basename(token).encode() + b"\0")
+'
+}

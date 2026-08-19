@@ -20,6 +20,13 @@ INPUT=$(cat)
 
 COMMAND=$(codex_shell_command "$INPUT")
 SESSION_ID=$(codex_session_id "$INPUT")
+EXIT_CODE=$(codex_hook_jq "$INPUT" '
+  .tool_output.exitCode //
+  .tool_output.exit_code //
+  codex_tool_response.exitCode //
+  codex_tool_response.exit_code //
+  "0"
+')
 STDOUT=$(codex_hook_jq "$INPUT" '
   .tool_output.stdout // codex_tool_response.stdout // codex_tool_response.output // codex_tool_response.text // empty
 ')
@@ -28,8 +35,8 @@ STDERR=$(codex_hook_jq "$INPUT" '
 ')
 COMBINED="$STDOUT$STDERR"
 
-# Check if the command used emacs --batch or the batch-test.sh wrapper
-if echo "$COMMAND" | grep -qE 'emacs\s+--batch|batch-test\.sh'; then
+# Only the source-aware wrapper emits revision-bound evidence.
+if [ "$EXIT_CODE" = 0 ] && echo "$COMMAND" | grep -qE 'batch-test\.sh|elisp-check-evidence'; then
   # Safety check: did Emacs print a real stale-load warning? These are
   # the canonical messages emitted when a .elc shadows a newer .el. We
   # match them literally rather than any mention of elpaca/builds, which
@@ -43,11 +50,74 @@ if echo "$COMMAND" | grep -qE 'emacs\s+--batch|batch-test\.sh'; then
     exit 0
   fi
 
-  MARKER="/tmp/claude-elisp-tested-${SESSION_ID}"
-  touch "$MARKER"
+  EVIDENCE=$(printf '%s\n' "$COMBINED" | grep '^ELISP_TEST_EVIDENCE_V1:' | tail -1 || true)
+  if [ -z "$EVIDENCE" ]; then
+    echo "WARNING: Elisp check returned no revision-bound evidence." >&2
+    exit 0
+  fi
 
-  # Clean up stale markers from old sessions (>1 hour)
-  find /tmp -maxdepth 1 -name 'claude-elisp-tested-*' -mmin +60 -delete 2>/dev/null || true
+  IFS=: read -r VERSION REPO_B64 PACKAGE_B64 REVISION <<< "$EVIDENCE"
+  if [ "$VERSION" != ELISP_TEST_EVIDENCE_V1 ] ||
+     ! [[ "$REVISION" =~ ^[0-9a-f]{64}$ ]]; then
+    echo "WARNING: Elisp check returned malformed test evidence." >&2
+    exit 0
+  fi
+
+  decode_base64() {
+    local encoded="$1"
+    if printf '%s' "$encoded" | base64 -D 2>/dev/null; then
+      return 0
+    fi
+    printf '%s' "$encoded" | base64 -d 2>/dev/null
+  }
+
+  REPO=$(decode_base64 "$REPO_B64") || exit 0
+  PACKAGE=$(decode_base64 "$PACKAGE_B64") || exit 0
+  DOTFILES_ROOT=$(cd -- "$SCRIPT_DIR/../.." && pwd)
+  REVISION_HELPER="$DOTFILES_ROOT/claude/bin/elisp-source-revision"
+  WORKING_REVISION=$("$REVISION_HELPER" "$REPO" 2>/dev/null || true)
+  INDEX_REVISION=$("$REVISION_HELPER" --index "$REPO" 2>/dev/null || true)
+  if [ ! -d "$REPO" ] || [ -z "$PACKAGE" ] ||
+     { [ "$WORKING_REVISION" != "$REVISION" ] && [ "$INDEX_REVISION" != "$REVISION" ]; }; then
+    echo "WARNING: Elisp check evidence does not match the current source." >&2
+    exit 0
+  fi
+
+  MARKER="/tmp/claude-elisp-tested-${SESSION_ID}"
+  LOCK_DIR="${MARKER}.lock"
+  acquired=false
+  for _attempt in $(seq 1 200); do
+    if mkdir "$LOCK_DIR" 2>/dev/null; then
+      printf '%s\n' "$$" > "$LOCK_DIR/owner"
+      acquired=true
+      break
+    fi
+    if [ -s "$LOCK_DIR/owner" ]; then
+      lock_owner=$(sed -n '1p' "$LOCK_DIR/owner")
+      if ! kill -0 "$lock_owner" 2>/dev/null; then
+        rm -f "$LOCK_DIR/owner"
+        rmdir "$LOCK_DIR" 2>/dev/null || true
+      fi
+    fi
+    sleep 0.01
+  done
+  if [ "$acquired" != true ]; then
+    echo "WARNING: Could not lock the Elisp test evidence marker." >&2
+    exit 0
+  fi
+  release_lock() {
+    rm -f "$LOCK_DIR/owner"
+    rmdir "$LOCK_DIR" 2>/dev/null || true
+  }
+  trap release_lock EXIT
+
+  TEMPORARY=$(mktemp "${TMPDIR:-/tmp}/elisp-tested.XXXXXX")
+  if [ -f "$MARKER" ]; then
+    awk -F: -v repo="$REPO_B64" -v package="$PACKAGE_B64" \
+      '$1 != repo || $2 != package' "$MARKER" > "$TEMPORARY"
+  fi
+  printf '%s:%s:%s\n' "$REPO_B64" "$PACKAGE_B64" "$REVISION" >> "$TEMPORARY"
+  mv -f "$TEMPORARY" "$MARKER"
 fi
 
 exit 0

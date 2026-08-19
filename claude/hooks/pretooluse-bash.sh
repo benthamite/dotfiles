@@ -540,13 +540,11 @@ The walk-list protected store at ~/.claude/walk-list-data/ is unreadable by any 
   return 0
 }
 
-# --- require-elisp-verify-after-commit.sh (marker-gated, always-run) ---
+# --- require-elisp-verify-after-commit.sh (marker-gated delegation) ---
 check_elisp_verify() {
   local MARKER="/tmp/claude-elisp-verify-needed-${SESSION_ID}"
   [ -f "$MARKER" ] || return 0
-  echo "$COMMAND" | grep -qE '\bemacsclient\b' && return 0
-  echo "$COMMAND" | grep -qE 'batch-test\.sh' && return 0
-  add_deny "BLOCKED: You committed Elisp changes but have not verified them in the running Emacs. Wait for the async post-commit rebuild+reload to finish if it is still pending, then run \`emacsclient -e\` (or \`emacsclient --eval\`) to exercise the changed code path before continuing. A reload status poll alone is not live verification."
+  delegate "require-elisp-verify-after-commit.sh"
   return 0
 }
 

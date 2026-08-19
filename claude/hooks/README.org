@@ -105,15 +105,15 @@ Claude.
 | =require-ai-config-sync.sh= | Blocks commits that violate the paired Claude/Codex configuration contract. |
 | =require-doc-update.sh= | Requires the owning package manual with staged documented Elisp changes. |
 | =require-elisp-skill.sh= | Blocks Elisp edits until the Elisp conventions skill has been loaded. |
-| =require-elisp-test-before-commit.sh= | Requires current-session batch-test evidence before an Elisp commit. |
-| =require-elisp-verify-after-commit.sh= | Blocks later commands until the required live Emacs check follows an Elisp commit. |
+| =require-elisp-test-before-commit.sh= | Requires batch-test evidence for the target repository, package, and current source revision before an Elisp commit. |
+| =require-elisp-verify-after-commit.sh= | Blocks later commands until the exact helper emits repository/package/commit-bound live evidence. |
 | =require-readme-update.sh= | Requires Claude configuration documentation with staged Claude configuration changes. |
 | =session-learning-capture.sh= | Retained unregistered Stop helper for requesting reusable-lesson capture. |
 | =sync-agent-c-worktree.sh= | Compatibility wrapper for the renamed reasoning-task worktree synchronization hook. |
 | =sync-reasoning-tasks-worktree.sh= | Repairs and updates an eligible reasoning-task worktree at SessionStart without pushing it. |
 | =track-elisp-skill.sh= | Records that the Elisp conventions skill was loaded in the current session. |
-| =track-elisp-test.sh= | Records valid batch-test evidence and rejects stale-build loading. |
-| =track-elisp-verify.sh= | Creates and clears the pending live-verification marker around Elisp commits. |
+| =track-elisp-test.sh= | Validates and records repository/package/source-revision evidence from the source-aware batch runner. |
+| =track-elisp-verify.sh= | Records each production package in an Elisp commit and clears only the matching repository/package/commit live evidence. |
 | =wrap-bash-output.sh= | Routes plausible secret-printing command output through the redactor while preserving status. |
 
 The documentation audit requires every tracked direct child to appear exactly

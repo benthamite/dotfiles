@@ -61,18 +61,23 @@ The release workflow rewrites it from the current profile with
 * Commit-time synchronization and reload
 
 The canonical Git directory has =post-commit= and =post-rewrite= hooks that
-delegate to =sync-elpaca-clone.sh=. They fetch the committed =master= state
+delegate to =sync-elpaca-clone.sh=. They fetch the committed current-branch state
 into the active profile’s dotfiles checkout and reset that mirror to the fetched
 commit; pushing is unrelated to this local activation path.
-For changed files under =emacs/extras/=, the same hook schedules
-=elpaca-extras-rebuild-and-reload= and polls its status through short
-=emacsclient= calls.
+For changed files under =emacs/extras/=, the same hook creates a per-commit,
+per-package pending state and starts the bounded =elpaca-rebuild-wait= helper.
+The helper records =finished= or =failed= under
+=~/.cache/dotfiles/elpaca-reload/COMMIT/=, so later verification can observe the
+actual reload result.
 
 This means an uncommitted extras edit is not yet the code loaded by Emacs. The
-safe order is: edit the canonical file, run its batch test, commit, wait for the
-post-commit rebuild and reload, and then exercise the changed command in the
-live Emacs session. Manual rebuilds should name the individual extras package;
-they should not rebuild the aggregate =dotfiles= package.
+safe order is: edit the canonical file, run the source-aware batch test, commit,
+then run =~/My\ Drive/dotfiles/claude/bin/elisp-live-verify PACKAGE -- EXPR=.
+That helper observes the post-commit rebuild, runs the package-named expression
+in live Emacs, and emits repository/package/commit-bound evidence. Batch
+evidence is separately bound to the repository, package, and source revision.
+Manual rebuilds should name the individual extras package; they should not
+rebuild the aggregate =dotfiles= package.
 
 * Verification and agent support
 

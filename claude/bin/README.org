@@ -34,10 +34,15 @@ credentials carried in HTTP headers cannot reach stderr.
 | =_gworkspace_auth.py= | Internal OAuth and short-lived token-cache helper shared by the Gmail and Sheets wrappers. |
 | =ahrefs-api-guard= | Performs the required free quota preflight before a paid Ahrefs API request. |
 | =ai-provider-key= | Provisions and stores project-scoped provider runtime keys while keeping administrator credentials separate. |
-| =batch-test.sh= | Runs a general batch Emacs load or test for an extras or standalone Elpaca package. |
+| =batch-test.sh= | Loads canonical package source in batch Emacs, rejects stale-load warnings, and emits repository/package/source-revision evidence. |
+| =check-elpaca-sync-hook= | Validates the embedded Elpaca sync hook and confirms that the installed hook is identical. |
 | =copy-slack-draft= | Copies a Slack draft to the Emacs kill ring and can prefill a thread reply. |
 | =cr-worktree-gc.sh= | Removes only clean, fully pushed transient CR review worktrees and preserves unfinished work. |
 | =elisp-ert= | Runs profile-aware ERT for a package, test file, and optional test selector. |
+| =elisp-check-evidence= | Runs a tracked project-owned non-package Elisp check against the working tree or an explicit index snapshot and emits repository/file/source-revision evidence. |
+| =elisp-live-verify= | Waits for the named committed package to reload, exercises a package-named live expression, and emits repository/package/commit evidence. |
+| =elisp-source-revision= | Computes the Git-and-content identity used to bind Elisp test evidence to the current source. |
+| =elpaca-rebuild-wait= | Rebuilds and reloads one Elpaca package with bounded polling, or observes the current dotfiles post-commit reload state. |
 | =gmail.py= | Provides the multi-account Gmail read, search, draft, send, reply, attachment, and archive operations. |
 | =install-skills.sh= | Installs the live interactive and programmatic skill links, then applies skill pruning and private shims. |
 | =sheets.py= | Provides the multi-account Google Sheets read, write, append, clear, sheet-management, and metadata operations. |

@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+# Rebuild and reload one Elpaca package, then wait for a terminal status.
+
+set -euo pipefail
+
+if [ "$#" -ne 1 ]; then
+  echo "Usage: elpaca-rebuild-wait PACKAGE" >&2
+  exit 2
+fi
+
+package="$1"
+case "$package" in
+  *[!A-Za-z0-9+_.-]* | "")
+    echo "Invalid package name: $package" >&2
+    exit 2
+    ;;
+esac
+
+script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+dotfiles_root=${DOTFILES_ROOT:-$(cd -- "$script_dir/../.." && pwd)}
+dotfiles_root=$(cd -- "$dotfiles_root" && pwd -P)
+source_repo=$(git rev-parse --show-toplevel 2>/dev/null || printf '%s' "$dotfiles_root")
+source_repo=$(cd -- "$source_repo" && pwd -P)
+state_root=${ELPACA_RELOAD_STATE_DIR:-$HOME/.cache/dotfiles/elpaca-reload}
+reload_timeout=${ELPACA_RELOAD_TIMEOUT_SECONDS:-120}
+reload_poll_interval=${ELPACA_RELOAD_POLL_INTERVAL_SECONDS:-1}
+owner=${ELPACA_RELOAD_OWNER:-0}
+if [ "$source_repo" != "$dotfiles_root" ] ||
+   [ ! -f "$dotfiles_root/emacs/extras/$package.el" ]; then
+  # Standalone source checkouts can change without the dotfiles HEAD changing.
+  # Always request a fresh rebuild instead of reusing dotfiles commit state.
+  owner=1
+fi
+
+if [ -n "${ELPACA_RELOAD_STATUS_FILE:-}" ]; then
+  status_file=$ELPACA_RELOAD_STATUS_FILE
+else
+  commit=$(git -C "$source_repo" rev-parse HEAD 2>/dev/null) || {
+    echo "Cannot resolve the source commit" >&2
+    exit 1
+  }
+  status_file="$state_root/$commit/$package.status"
+fi
+
+status_dir=$(dirname -- "$status_file")
+mkdir -p "$status_dir"
+
+write_status() {
+  local value="$1"
+  local temporary="$status_file.tmp.$$"
+  printf '%s\n' "$value" > "$temporary"
+  mv -f "$temporary" "$status_file"
+}
+
+read_status() {
+  if [ -f "$status_file" ]; then
+    sed -n '1p' "$status_file"
+  fi
+}
+
+wait_for_existing() {
+  local deadline status
+  deadline=$(( $(date +%s) + reload_timeout ))
+  while (( $(date +%s) <= deadline )); do
+    status=$(read_status)
+    case "$status" in
+      finished:*) printf '%s\n' "$status"; return 0 ;;
+      failed:*) printf '%s\n' "$status" >&2; return 1 ;;
+    esac
+    sleep "$reload_poll_interval"
+  done
+  echo "Timed out after ${reload_timeout}s waiting for $package (last status: ${status:-missing})" >&2
+  return 1
+}
+
+if [ "$owner" != 1 ] && [ -f "$status_file" ]; then
+  wait_for_existing
+  exit $?
+fi
+
+write_status "pending:requesting rebuild"
+
+strip_emacs_string() {
+  sed 's/^"//; s/"$//'
+}
+
+if ! raw_token=$(timeout 30 emacsclient -e "(when (elpaca-get '$package) (elpaca-extras-rebuild-and-reload '$package))" 2>&1); then
+  write_status "failed:could not request rebuild: $raw_token"
+  printf '%s\n' "$(read_status)" >&2
+  exit 1
+fi
+
+token=$(printf '%s' "$raw_token" | strip_emacs_string)
+if [ -z "$token" ] || [ "$token" = nil ]; then
+  write_status "failed:no completion token returned"
+  printf '%s\n' "$(read_status)" >&2
+  exit 1
+fi
+
+deadline=$(( $(date +%s) + reload_timeout ))
+status="queued"
+message="Build queued"
+while (( $(date +%s) <= deadline )); do
+  if raw_status=$(timeout 10 emacsclient -e "(elpaca-extras-format-build-reload-status \"$token\")" 2>&1); then
+    status_result=$(printf '%s' "$raw_status" | strip_emacs_string)
+  else
+    status_result="poll-error:$raw_status"
+  fi
+  status=${status_result%%:*}
+  message=${status_result#*:}
+  case "$status" in
+    finished)
+      write_status "finished:$message"
+      printf '%s\n' "$(read_status)"
+      exit 0
+      ;;
+    failed)
+      write_status "failed:$message"
+      printf '%s\n' "$(read_status)" >&2
+      exit 1
+      ;;
+  esac
+  sleep "$reload_poll_interval"
+done
+
+write_status "failed:timed out after ${reload_timeout}s; last status: $status: $message"
+printf '%s\n' "$(read_status)" >&2
+exit 1

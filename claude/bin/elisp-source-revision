@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+"""Print a content revision for all Elisp source in a Git worktree."""
+
+from __future__ import annotations
+
+import hashlib
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+
+def git(repo: Path, *args: str, check: bool = True) -> bytes:
+    result = subprocess.run(
+        ["git", "-C", str(repo), *args],
+        check=False,
+        capture_output=True,
+    )
+    if check and result.returncode != 0:
+        sys.stderr.buffer.write(result.stderr)
+        raise SystemExit(result.returncode)
+    return result.stdout
+
+
+def main() -> int:
+    arguments = sys.argv[1:]
+    index_mode = False
+    if arguments[:1] == ["--index"]:
+        index_mode = True
+        arguments = arguments[1:]
+    if len(arguments) != 1:
+        print("Usage: elisp-source-revision [--index] REPOSITORY", file=sys.stderr)
+        return 2
+
+    requested = Path(arguments[0]).expanduser()
+    root_text = git(requested, "rev-parse", "--show-toplevel").decode().strip()
+    root = Path(root_text).resolve()
+    head = git(root, "rev-parse", "--verify", "HEAD", check=False).strip()
+
+    pathspecs = (":(glob)**/*.el", "emacs/config.org")
+    tracked = set(
+        path
+        for path in git(root, "ls-files", "-z", "--", *pathspecs).split(b"\0")
+        if path
+    )
+    untracked: set[bytes] = set()
+    if not index_mode:
+        untracked = set(
+            path
+            for path in git(
+                root,
+                "ls-files",
+                "-z",
+                "--others",
+                "--exclude-standard",
+                "--",
+                *pathspecs,
+            ).split(b"\0")
+            if path
+        )
+
+    digest = hashlib.sha256()
+    digest.update(b"elisp-source-revision-v1\0")
+    digest.update(head or b"unborn")
+    digest.update(b"\0")
+
+    for encoded_path in sorted(tracked | untracked):
+        digest.update(encoded_path)
+        digest.update(b"\0")
+        relative = os.fsdecode(encoded_path)
+        if index_mode:
+            entry = git(root, "ls-files", "-s", "--", relative).decode().strip()
+            if not entry:
+                digest.update(b"missing\0")
+            else:
+                mode = entry.split(maxsplit=1)[0]
+                digest.update(b"symlink\0" if mode == "120000" else b"file\0")
+                digest.update(git(root, "show", f":{relative}"))
+        else:
+            path = root / relative
+            if path.is_symlink():
+                digest.update(b"symlink\0")
+                digest.update(os.fsencode(os.readlink(path)))
+            elif path.is_file():
+                digest.update(b"file\0")
+                digest.update(path.read_bytes())
+            else:
+                digest.update(b"missing\0")
+        digest.update(b"\0")
+
+    print(digest.hexdigest())
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

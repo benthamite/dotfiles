@@ -152,6 +152,11 @@
         "hooks": [
           {
             "type": "command",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/load-elisp-after-edit.sh",
+            "timeout": 150
+          },
+          {
+            "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/track-elisp-test.sh",
             "timeout": 5
           },
@@ -168,7 +173,7 @@
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/load-elisp-after-edit.sh",
-            "timeout": 30
+            "timeout": 150
           },
           {
             "type": "command",

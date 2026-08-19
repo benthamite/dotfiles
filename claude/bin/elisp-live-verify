@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Exercise committed Elisp in the live Emacs session and emit bound evidence.
+
+set -euo pipefail
+
+if [ "$#" -ne 3 ] || [ "$2" != -- ]; then
+  echo "Usage: elisp-live-verify LABEL -- ELISP-EXPRESSION" >&2
+  exit 2
+fi
+
+label="$1"
+expression="$3"
+case "$label" in
+  *$'\n'* | "")
+    echo "Verification label must be one non-empty line" >&2
+    exit 2
+    ;;
+esac
+
+script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+dotfiles_root=$(cd -- "$script_dir/../.." && pwd)
+repo=$(git rev-parse --show-toplevel)
+commit=$(git -C "$repo" rev-parse HEAD)
+
+if [[ "$label" == file:* ]]; then
+  relative=${label#file:}
+  target_pathspec="$relative"
+else
+  target_pathspec="*.el"
+  if [ "$repo" = "$dotfiles_root" ] && [ -f "$repo/emacs/extras/$label.el" ]; then
+    target_pathspec="emacs/extras/$label.el"
+  fi
+  if [[ "$expression" != *"$label"* ]]; then
+    echo "The live expression must name the package it verifies: $label" >&2
+    exit 2
+  fi
+fi
+
+# The evidence names a commit. Do not certify a different staged or working
+# source version under that commit identity.
+if ! git -C "$repo" diff --quiet -- "$target_pathspec" ||
+   ! git -C "$repo" diff --cached --quiet -- "$target_pathspec"; then
+  echo "Live verification requires committed, unchanged source for $label" >&2
+  exit 1
+fi
+
+if [ "$repo" = "$dotfiles_root" ] && [ -f "$repo/emacs/extras/$label.el" ]; then
+  "$dotfiles_root/claude/bin/elpaca-rebuild-wait" "$label"
+elif [[ "$label" != file:* ]]; then
+  DOTFILES_ROOT="$dotfiles_root" "$dotfiles_root/claude/bin/elpaca-rebuild-wait" "$label"
+fi
+
+timeout 30 emacsclient --eval "$expression"
+
+repo_b64=$(printf '%s' "$repo" | base64 | tr -d '\n')
+label_b64=$(printf '%s' "$label" | base64 | tr -d '\n')
+printf 'ELISP_LIVE_EVIDENCE_V1:%s:%s:%s\n' "$repo_b64" "$label_b64" "$commit"

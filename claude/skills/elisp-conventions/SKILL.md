@@ -53,31 +53,34 @@ unless they also change production code or user documentation.
      below. It must load the canonical extras source.
    - For standalone production source, run `batch-test.sh PACKAGE` against the
      canonical source. The live rebuild is a later, separate check.
-   - For non-package Elisp, use the owning project's clean batch or compile
-     check. Do not substitute an unrelated package check.
+   - For non-package Elisp, run the owning project's clean batch or compile
+     check through `elisp-check-evidence file:RELATIVE-PATH -- PROJECT-CHECK`.
+     `PROJECT-CHECK` must be a tracked executable in that repository. Do not
+     substitute an unrelated package check.
 3. Run focused ERT when behavior needs it. Read
    [references/testing.md](references/testing.md) for command forms and
    stale-compiled-code safeguards.
 4. Before any live Emacs check, read
    [references/live-verification.md](references/live-verification.md).
-   - A standalone package can be live-verified after the rebuild helper returns
-     success for the edited source.
-   - A dotfiles extra must pass batch verification before commit. After commit,
-     run the rebuild helper for the changed package and wait for success before
-     exercising the changed live path.
+   - After the verified commit, use `elisp-live-verify PACKAGE -- EXPR` for a
+     standalone package or dotfiles extra. It waits for the package rebuild,
+     exercises the named live path, and emits package/commit-bound evidence.
    - Non-package Elisp uses its owning workflow; do not load it into the active
      session unless that workflow makes the operation safe.
 
 ```bash
 ~/My\ Drive/dotfiles/claude/bin/elpaca-rebuild-wait PACKAGE
+~/My\ Drive/dotfiles/claude/bin/elisp-live-verify PACKAGE -- '(PACKAGE-CHECK)'
 ~/My\ Drive/dotfiles/claude/bin/batch-test.sh PACKAGE
+~/My\ Drive/dotfiles/claude/bin/elisp-check-evidence file:RELATIVE-PATH -- PROJECT-CHECK
 ~/My\ Drive/dotfiles/claude/bin/elisp-ert PACKAGE TEST-FILE [TEST-NAME]
 ```
 
 Test evidence counts only when it identifies the repository, package, and
 source revision or equivalent content identity that was tested. A generic
 session marker or a clean test for another package is not evidence for the
-current change. Treat any stale-load warning as a failed verification.
+current change. Live evidence must also identify the committed repository and
+package. Treat any stale-load warning as a failed verification.
 
 Never use `load-file`, `eval-buffer`, `eval-defun`, or manual
 `byte-compile-file` to reload edited package code. Use the bounded rebuild helper

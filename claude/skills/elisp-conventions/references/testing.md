@@ -11,6 +11,8 @@ commands:
 ```bash
 ~/My\ Drive/dotfiles/claude/bin/batch-test.sh PACKAGE
 ~/My\ Drive/dotfiles/claude/bin/batch-test.sh PACKAGE '(message "%S" (PACKAGE-some-fn))'
+~/My\ Drive/dotfiles/claude/bin/elisp-check-evidence file:RELATIVE-PATH -- PROJECT-CHECK
+~/My\ Drive/dotfiles/claude/bin/elisp-check-evidence --staged file:RELATIVE-PATH -- PROJECT-CHECK
 ~/My\ Drive/dotfiles/claude/bin/elisp-ert PACKAGE test/PACKAGE-test.el
 ~/My\ Drive/dotfiles/claude/bin/elisp-ert PACKAGE test/PACKAGE-test.el TEST-NAME
 ```
@@ -21,6 +23,20 @@ multiple libraries, `PACKAGE` is the Elpaca source-directory name, not the test
 file or library basename. For example, use
 `elisp-ert agent test/agent-claude-test.el`, not
 `elisp-ert agent-claude test/agent-claude-test.el`.
+
+For non-package Elisp, replace `RELATIVE-PATH` with the staged path relative to
+the repository root and replace `PROJECT-CHECK` with the owning project's
+actual batch, compile, or test command. The wrapper emits evidence only when
+that command is a tracked executable in the repository and succeeds without a
+stale-load warning. For `emacs/config.org`, use the exact
+`file:emacs/config.org` label and a tracked check that tangles and validates the
+affected output.
+
+Use `--staged` only when the same file also has unrelated unstaged edits that
+must remain outside the commit. It materializes the Git index under a temporary
+directory, runs the tracked project check there, and emits the index content
+identity. Package source does not use this exception: its staged and working
+bytes must match before `batch-test.sh` evidence can authorize a commit.
 
 Do not accept the result unless its evidence is bound to the repository,
 package, and source revision or equivalent content identity under review. A

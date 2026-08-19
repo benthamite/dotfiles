@@ -831,17 +831,23 @@ NAME and ARGS as in `use-package'."
 (elpaca-wait)
 #+end_src
 
-Because =use-personal-package= declares each extras file with an =:ensure= recipe pointing at this GitHub repository, =elpaca= treats them like any other package: it clones the repo into its own =elpaca/sources/dotfiles/= directory and builds the relevant files from there. The matching =init-personal-package-menu= also exposes those recipes to Elpaca's dependency resolver, so extras packages referenced from another package's =Package-Requires= metadata remain installable even when a development profile intentionally has no lockfile. The recipes do not use =:wait t=: Elpaca's normal queue processing reads the whole init file before resolving dependency metadata, which lets later package declarations supply recipes for dependencies of earlier personal packages. This means the dotfiles end up in two separate local clones—the primary one in my main dotfiles location (where all edits are made) and the elpaca-managed one under =elpaca/sources/dotfiles/= (which Emacs loads from). To keep them in sync, three git hooks in the primary clone's gitdir automatically propagate changes to the elpaca clone. The =post-commit= hook handles normal commits, the =post-rewrite= hook handles rebases and amends, and both delegate to a shared =sync-elpaca-clone.sh= script. All three files live in the gitdir's =hooks/= directory and must be executable. The script reads the active profile name from a cache file (=~/.config/emacs-profiles/.current-profile=) that Emacs writes at startup, rather than calling =emacsclient=, to avoid deadlocking when the hook is triggered by a synchronous git process inside Emacs (e.g., =magit-commit-squash=).
+Because =use-personal-package= declares each extras file with an =:ensure= recipe pointing at this GitHub repository, =elpaca= treats them like any other package: it clones the repo into its own =elpaca/sources/dotfiles/= directory and builds the relevant files from there. The matching =init-personal-package-menu= also exposes those recipes to Elpaca's dependency resolver, so extras packages referenced from another package's =Package-Requires= metadata remain installable even when a development profile intentionally has no lockfile. The recipes do not use =:wait t=: Elpaca's normal queue processing reads the whole init file before resolving dependency metadata, which lets later package declarations supply recipes for dependencies of earlier personal packages. This means the dotfiles end up in two separate local clones—the primary one in my main dotfiles location (where all edits are made) and the elpaca-managed one under =elpaca/sources/dotfiles/= (which Emacs loads from). To keep them in sync, three git hooks in the primary clone's gitdir automatically propagate changes to the elpaca clone. The =post-commit= hook handles normal commits, the =post-rewrite= hook handles rebases and amends, and both delegate to a shared =sync-elpaca-clone.sh= script. All three files live in the gitdir's =hooks/= directory and must be executable. The script reads the active profile name from a cache file (=~/.config/emacs-profiles/.current-profile=) that Emacs writes at startup, rather than calling =emacsclient=, to avoid deadlocking when the hook is triggered by a synchronous git process inside Emacs (e.g., =magit-commit-squash=). For every changed extras package, the script writes a per-commit =pending= state and starts the bounded =claude/bin/elpaca-rebuild-wait= helper in the background. The helper records =finished= or =failed= under =~/.cache/dotfiles/elpaca-reload/COMMIT/= so an agent can wait for the exact post-commit reload without relying on a hidden background token.
 
 =hooks/sync-elpaca-clone.sh=:
 
 #+begin_src shell :tangle no
 #!/bin/sh
-# Propagate the current state of master to the elpaca repos clone.
+# Propagate the current branch state to the elpaca repos clone.
 # Reads the active profile from a cache file written by Emacs at startup,
 # avoiding emacsclient calls that deadlock when git is spawned synchronously
 # by Emacs.
 # Called by post-commit and post-rewrite hooks.
+REWRITE_RANGES=""
+if [ "$#" -gt 0 ]; then
+    REWRITE_RANGES=$(cat)
+fi
+PRIMARY_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+BRANCH=$(git symbolic-ref --quiet --short HEAD 2>/dev/null || printf '%s' master)
 PROFILE=$(cat "$HOME/.config/emacs-profiles/.current-profile" 2>/dev/null)
 ELPACA_BASE="$HOME/.config/emacs-profiles/$PROFILE/elpaca"
 
@@ -858,48 +864,75 @@ if [ -n "$ELPACA_DOTFILES" ]; then
     # GIT_WORK_TREE pointing at the Google Drive clone.  Unsetting them
     # is essential so that git commands target the elpaca clone.
     unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
-    git -C "$ELPACA_DOTFILES" fetch "$GITDIR" master 2>&1 &&
+    git -C "$ELPACA_DOTFILES" fetch "$GITDIR" "$BRANCH" 2>&1 &&
     git -C "$ELPACA_DOTFILES" reset --hard FETCH_HEAD 2>&1
 
     # Rebuild+reload any extras packages whose .el files changed in this
     # commit.  Run asynchronously to avoid deadlocking when git is spawned
     # synchronously by Emacs (e.g. magit-commit).
-    CHANGED_EL=$(git -C "$ELPACA_DOTFILES" diff --name-only HEAD~1 HEAD -- 'emacs/extras/*.el' 2>/dev/null || true)
+    state_root=${ELPACA_RELOAD_STATE_DIR:-"$HOME/.cache/dotfiles/elpaca-reload"}
+    if [ -n "$REWRITE_RANGES" ]; then
+        CHANGED_EL=$(
+            printf '%s\n' "$REWRITE_RANGES" |
+            while read -r old new rest; do
+                [ -n "$old" ] && [ -n "$new" ] || continue
+                git -C "$ELPACA_DOTFILES" diff --name-only "$old" "$new" -- 'emacs/extras/*.el' 2>/dev/null || true
+            done |
+            sort -u
+        )
+    else
+        CHANGED_EL=$(git -C "$ELPACA_DOTFILES" diff-tree --root --no-commit-id --name-only -r HEAD -- 'emacs/extras/*.el' 2>/dev/null || true)
+    fi
     if [ -n "$CHANGED_EL" ]; then
         PKGS=""
         for f in $CHANGED_EL; do
             pkg=$(basename "$f" .el)
             PKGS="$PKGS $pkg"
         done
-        (
-            strip_emacs_string() {
-                sed 's/^"//; s/"$//'
-            }
+        commit=$(git -C "$ELPACA_DOTFILES" rev-parse HEAD 2>/dev/null)
+        helper="$PRIMARY_ROOT/claude/bin/elpaca-rebuild-wait"
+        status_dir="$state_root/$commit"
+        mkdir -p "$status_dir"
+        for pkg in $PKGS; do
+            status_file="$status_dir/$pkg.status"
+            log_file="$status_dir/$pkg.log"
+            temporary="$status_file.tmp.$$"
+            printf '%s\n' "pending:queued by post-commit" > "$temporary"
+            mv -f "$temporary" "$status_file"
+            if [ ! -x "$helper" ]; then
+                printf '%s\n' "failed:missing rebuild helper: $helper" > "$status_file"
+                continue
+            fi
+            (
+                ELPACA_RELOAD_OWNER=1 \
+                ELPACA_RELOAD_STATUS_FILE="$status_file" \
+                "$helper" "$pkg"
+            ) >"$log_file" 2>&1 &
+        done
+    fi
 
-            reload_timeout=${ELPACA_RELOAD_TIMEOUT_SECONDS:-120}
-            reload_poll_interval=${ELPACA_RELOAD_POLL_INTERVAL_SECONDS:-1}
-            for pkg in $PKGS; do
-                raw_token=$(timeout 30 emacsclient -e "(when (elpaca-get '$pkg) (elpaca-extras-rebuild-and-reload '$pkg))" 2>&1) || continue
-                token=$(printf '%s' "$raw_token" | strip_emacs_string)
-                if [ -z "$token" ] || [ "$token" = "nil" ]; then
-                    continue
-                fi
-
-                deadline=$(( $(date +%s) + reload_timeout ))
-                status="queued"
-                while [ "$(date +%s)" -le "$deadline" ]; do
-                    raw_status=$(timeout 10 emacsclient -e "(elpaca-extras-format-build-reload-status \"$token\")" 2>&1) || raw_status="poll-error:$raw_status"
-                    status_result=$(printf '%s' "$raw_status" | strip_emacs_string)
-                    status=${status_result%%:*}
-                    case "$status" in
-                        finished|failed)
-                            break
-                            ;;
-                    esac
-                    sleep "$reload_poll_interval"
-                done
-            done
-        ) >/dev/null 2>&1 &
+    # Keep bounded evidence without deleting a status referenced by any live
+    # verification obligation. A malformed obligation disables cleanup.
+    malformed_marker=false
+    active_commits=""
+    for marker in /tmp/claude-elisp-verify-needed-*; do
+        [ -f "$marker" ] || continue
+        if [ ! -s "$marker" ] || grep -qvE '^[^:]+:[0-9a-f]{40,64}:[^:]+$' "$marker"; then
+            malformed_marker=true
+            break
+        fi
+        active_commits="$active_commits
+$(awk -F: '{print $2}' "$marker")"
+    done
+    if [ "$malformed_marker" = false ] && [ -d "$state_root" ]; then
+        for old_dir in "$state_root"/*; do
+            [ -d "$old_dir" ] || continue
+            [ -n "$(find "$old_dir" -prune -mtime +30 -print)" ] || continue
+            old_commit=$(basename "$old_dir")
+            printf '%s\n' "$active_commits" | grep -qxF "$old_commit" && continue
+            find "$old_dir" -type f -delete
+            find "$old_dir" -depth -type d -empty -delete
+        done
     fi
 fi
 #+end_src
@@ -915,7 +948,7 @@ exec "$(dirname "$0")/sync-elpaca-clone.sh"
 
 #+begin_src shell :tangle no
 #!/bin/sh
-exec "$(dirname "$0")/sync-elpaca-clone.sh"
+exec "$(dirname "$0")/sync-elpaca-clone.sh" "$@"
 #+end_src
 
 ** =use-package-extras=

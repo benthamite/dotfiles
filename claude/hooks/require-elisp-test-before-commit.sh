@@ -42,28 +42,99 @@ if [ -n "$STAGED" ]; then
   done <<< "$STAGED"
 fi
 
-# Also catch the pattern: git add ... && git commit in a single bash command.
-# When staging and committing happen in one call, git diff --cached sees nothing
-# yet at hook-fire time, so we must also scan the command string itself.
-# Extract only the `git add` arguments to avoid false positives from
-# commit messages or other parts of the command that mention .el files.
-if [ "$HAS_ELISP" = false ]; then
-  ADD_ARGS=$(echo "$COMMAND" | grep -oE 'git\s+add\s+[^;&|]*' || true)
-  if [ -n "$ADD_ARGS" ]; then
-    if echo "$ADD_ARGS" | grep -qE '\.el[[:space:]|&;]|\.el$' || \
-       echo "$ADD_ARGS" | grep -qF 'emacs/config.org'; then
-      HAS_ELISP=true
-    fi
-  fi
+# A combined add+commit call cannot be checked against the future index. Make
+# the agent split the operations so the commit gate can identify exact bytes.
+ADD_ARGS=$(echo "$COMMAND" | grep -oE 'git\s+add\s+[^;&|]*' || true)
+if [ -n "$ADD_ARGS" ] &&
+   { echo "$ADD_ARGS" | grep -qE '\.el([[:space:]]|$)' ||
+     echo "$ADD_ARGS" | grep -qF 'emacs/config.org'; }; then
+  REASON="BLOCKED: Stage Elisp source in a separate command before git commit. A combined git add and git commit call cannot bind test evidence to the future index."
+  jq -n --arg reason "$REASON" '{
+    "hookSpecificOutput": {
+      "hookEventName": "PreToolUse",
+      "permissionDecision": "deny",
+      "permissionDecisionReason": $reason
+    }
+  }'
+  exit 0
 fi
 
 if [ "$HAS_ELISP" = false ]; then
   exit 0
 fi
 
-# Check for test marker (kept across retries; cleaned up by TTL)
+# Check for evidence tied to this repository, package, and source revision.
 MARKER="/tmp/claude-elisp-tested-${SESSION_ID}"
-if [ -f "$MARKER" ]; then
+DOTFILES_ROOT=$(cd -- "$SCRIPT_DIR/../.." && pwd)
+REVISION_HELPER="$DOTFILES_ROOT/claude/bin/elisp-source-revision"
+REVISION=$("$REVISION_HELPER" "$REPO_ROOT")
+REPO_B64=$(printf '%s' "$REPO_ROOT" | base64 | tr -d '\n')
+
+evidence_matches_package() {
+  local package="$1" package_b64
+  package_b64=$(printf '%s' "$package" | base64 | tr -d '\n')
+  [ -f "$MARKER" ] && grep -qxF "$REPO_B64:$package_b64:$REVISION" "$MARKER"
+}
+
+EXPECTED_PACKAGES=()
+INDEX_DIVERGENCE=""
+while IFS= read -r file; do
+  case "$file" in
+    emacs/extras/*.el)
+      package=$(basename "$file" .el)
+      package=${package#test-}
+      package=${package%-tests}
+      package=${package%-test}
+      EXPECTED_PACKAGES+=("$package")
+      ;;
+    emacs/config.org) EXPECTED_PACKAGES+=("file:emacs/config.org") ;;
+    .dir-locals.el|*/.dir-locals.el|lockfile.el|*/lockfile.el|*-autoloads.el|*-pkg.el)
+      EXPECTED_PACKAGES+=("file:$file")
+      ;;
+    *.el)
+      if [ "$REPO_ROOT" = "$DOTFILES_ROOT" ]; then
+        EXPECTED_PACKAGES+=("file:$file")
+      else
+        EXPECTED_PACKAGES+=("$(basename "$REPO_ROOT")")
+      fi
+      ;;
+  esac
+  case "$file" in
+    *.el|emacs/config.org)
+      if ! git -C "$REPO_ROOT" diff --quiet -- "$file"; then
+        INDEX_DIVERGENCE="$file"
+      fi
+      ;;
+  esac
+done <<< "$STAGED"
+
+USE_STAGED_EVIDENCE=false
+if [ -n "$INDEX_DIVERGENCE" ]; then
+  for package in "${EXPECTED_PACKAGES[@]}"; do
+    if [[ "$package" != file:* ]]; then
+      REASON="BLOCKED: The staged and working-tree versions differ for ${INDEX_DIVERGENCE}. Package batch evidence must test the same bytes that the commit will contain."
+      jq -n --arg reason "$REASON" '{
+        "hookSpecificOutput": {
+          "hookEventName": "PreToolUse",
+          "permissionDecision": "deny",
+          "permissionDecisionReason": $reason
+        }
+      }'
+      exit 0
+    fi
+  done
+  REVISION=$("$REVISION_HELPER" --index "$REPO_ROOT")
+  USE_STAGED_EVIDENCE=true
+fi
+
+MISSING_PACKAGE=""
+for package in "${EXPECTED_PACKAGES[@]}"; do
+  if ! evidence_matches_package "$package"; then
+    MISSING_PACKAGE="$package"
+    break
+  fi
+done
+if [ -z "$MISSING_PACKAGE" ]; then
   exit 0
 fi
 
@@ -75,13 +146,21 @@ if [ -n "$STAGED_EL" ]; then
   PKG_NAME=$(basename "$STAGED_EL" .el)
 fi
 
-if [ -n "$PKG_NAME" ]; then
-  EXAMPLE_CMD="~/My\\\\ Drive/dotfiles/claude/bin/batch-test.sh ${PKG_NAME}"
+if [ -n "$MISSING_PACKAGE" ]; then
+  PKG_NAME="$MISSING_PACKAGE"
+fi
+if [[ "$PKG_NAME" == file:* ]]; then
+  FILE_LABEL=${PKG_NAME#file:}
+  STAGED_FLAG=""
+  [ "$USE_STAGED_EVIDENCE" = true ] && STAGED_FLAG="--staged "
+  EXAMPLE_CMD="\"$DOTFILES_ROOT/claude/bin/elisp-check-evidence\" ${STAGED_FLAG}file:${FILE_LABEL} -- PROJECT-CHECK"
+elif [ -n "$PKG_NAME" ]; then
+  EXAMPLE_CMD="\"$DOTFILES_ROOT/claude/bin/batch-test.sh\" ${PKG_NAME}"
 else
-  EXAMPLE_CMD="~/My\\\\ Drive/dotfiles/claude/bin/batch-test.sh YOUR-PACKAGE"
+  EXAMPLE_CMD="\"$DOTFILES_ROOT/claude/bin/batch-test.sh\" YOUR-PACKAGE"
 fi
 
-REASON="BLOCKED: Elisp files are staged but you have not tested them in this session. You MUST run \`emacs --batch\` to verify the changed code before committing.\n\nCommand:\n${EXAMPLE_CMD}\n\nFor config.org changes: first tangle with \`emacsclient -e '(init-build-profile (file-name-directory user-init-file))'\`, then in the batch session also eval the changed use-package form before requiring the package, so after-load hooks are registered and exercised."
+REASON="BLOCKED: The staged Elisp source does not have matching test evidence for this repository, package or file label, and source revision.\n\nCommand:\n${EXAMPLE_CMD}\n\nReplace PROJECT-CHECK with a tracked executable in the owning repository. Run the test after the final source edit. For config.org, use the exact file:emacs/config.org label and a tracked check that tangles and validates the affected output."
 jq -n --arg reason "$REASON" '{
   "hookSpecificOutput": {
     "hookEventName": "PreToolUse",

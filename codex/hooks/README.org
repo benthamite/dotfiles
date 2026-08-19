@@ -82,7 +82,7 @@ handled by its configured documentation owner instead.
 | =lib-codex-paths.sh= | Extracts changed paths from the supported Codex edit and patch payload forms. |
 | =lib-repo-root.sh= | Resolves the effective Git repository from structured hook context or an exact unambiguous parent =functions.exec= record without shell re-evaluation. |
 | =lib-staged-files.sh= | Lists staged paths and handles amended commits as complete proposed commits. |
-| =load-elisp-after-edit.sh= | Rebuilds and reloads the owning Elpaca package after an Elisp edit, except for test-only files or while Git has an active operation or unmerged index entries. |
+| =load-elisp-after-edit.sh= | Rebuilds and reloads the owning Elpaca package after an Elisp edit, including paths recovered from a nested composed-tool patch; skips test-only files and active or unresolved Git operations. |
 | =regenerate-manual-after-edit.sh= | Regenerates Texinfo and existing Info output after an Org manual edit. |
 | =remind-ai-config-sync.sh= | Delegates paired Claude/Codex update reminders to =bin/ai-config-sync=. |
 | =remind-claude-readme-update.sh= | Reminds work outside dotfiles when a symlinked edit changed the Claude configuration. |
@@ -90,12 +90,12 @@ handled by its configured documentation owner instead.
 | =require-ai-config-sync.sh= | Delegates paired-configuration commit blocking to =bin/ai-config-sync=. |
 | =require-codex-readme-update.sh= | Requires the Codex README with staged Codex integration or sync changes. |
 | =require-doc-update.sh= | Requires the owning manual and generated Texinfo with staged documented Elisp changes. |
-| =require-elisp-test-before-commit.sh= | Requires a current-session batch-test marker before committing Elisp. |
-| =require-elisp-verify-after-commit.sh= | Requires a qualifying live Emacs check after an Elisp commit before further shell work. |
+| =require-elisp-test-before-commit.sh= | Requires batch-test evidence for the target repository, package, and current source revision before committing Elisp. |
+| =require-elisp-verify-after-commit.sh= | Allows only exact rebuild/live helpers until repository/package/commit-bound evidence clears an Elisp commit. |
 | =require-readme-update.sh= | Requires the Claude README with staged Claude skills, hooks, or settings changes. |
 | =session-learning-capture.sh= | Retained unregistered helper for requesting session-learning capture at session end. |
-| =track-elisp-test.sh= | Records successful batch Elisp tests and rejects tests loaded from stale builds. |
-| =track-elisp-verify.sh= | Sets and clears the live-Emacs verification marker around Elisp commits, with per-call repository attribution for =functions.exec= wrappers. |
+| =track-elisp-test.sh= | Validates and records successful repository/package/source-revision evidence from the source-aware batch runner. |
+| =track-elisp-verify.sh= | Records every production package across direct or composed Elisp commits and clears only matching bound live evidence. |
 
 The documentation audit requires every tracked direct child to appear exactly
 once in this table. After changing a registered hook, verify the registration

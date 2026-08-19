@@ -22,7 +22,7 @@ Three git hooks in the working tree's gitdir (=/Users/pablostafforini/git-dirs/d
 | =post-rewrite= | Rebases, amends | Delegates to =sync-elpaca-clone.sh= |
 | =sync-elpaca-clone.sh= | Called by the above | Fetches from the working tree's gitdir into the elpaca clone, then =reset --hard FETCH_HEAD= |
 
-After the sync, =sync-elpaca-clone.sh= also asks Emacs to run =elpaca-extras-rebuild-and-reload= for any extras packages whose =.el= files changed.  The hook runs fire-and-forget to avoid deadlocking when git is spawned synchronously by Emacs (e.g. =magit-commit-squash=), then a background shell process polls the returned status token with short =emacsclient= calls.  It does not call =elpaca-wait= inside the live daemon.
+After the sync, =sync-elpaca-clone.sh= starts =elpaca-rebuild-wait= for every extras package whose =.el= file changed. The hook remains fire-and-forget to avoid deadlocking when Git is spawned synchronously by Emacs (for example, =magit-commit-squash=). Before it returns, it writes a =pending= state keyed by the committed revision and package. The bounded background helper changes that state to =finished= or =failed= and preserves its log under =~/.cache/dotfiles/elpaca-reload/COMMIT/=. A later agent invocation of the same helper observes that exact post-commit state instead of scheduling a duplicate build.
 
 The active elpaca profile is read from =~/.config/emacs-profiles/.current-profile= (a cache file written by Emacs at startup), not from =emacsclient=, to avoid the same deadlock.
 
@@ -37,23 +37,18 @@ The =load-elisp-after-edit.sh= Claude Code hook fires on every Edit/Write of an 
 
 * Batch testing (=emacs --batch=)
 
-Batch tests bypass elpaca entirely.  The correct pattern:
+Use the source-aware batch runner:
 
 #+begin_src shell
-ELPACA=$HOME/.config/emacs-profiles/$(emacsclient -e 'init-current-profile' | tr -d '"')/elpaca
-rm -f "$PWD/emacs/extras/YOUR-PACKAGE.elc"
-emacs --batch \
-  --eval "(dolist (dir (file-expand-wildcards \"$ELPACA/builds/*/\")) (add-to-list 'load-path dir))" \
-  --eval "(push \"$PWD/emacs/extras\" load-path)" \
-  --eval "(require 'YOUR-PACKAGE)"
+~/My\ Drive/dotfiles/claude/bin/batch-test.sh YOUR-PACKAGE
 #+end_src
 
-Critical details:
-
-- The =push= *must* come after the =dolist=.  This places =emacs/extras= at the front of =load-path=, so the working tree =.el= loads instead of the stale =.elc= in =elpaca/builds/=.
-- Never use =append= (puts it at the end, elpaca builds win).
-- Never use =load-prefer-newer= (causes version mismatches between elpaca dependencies).
-- Always =rm -f= the =.elc= in =emacs/extras/= (co-located =.elc= shadows =.el= when =load-prefer-newer= is off).
+The runner keeps Elpaca builds available for dependencies but loads the requested
+library by its canonical =.el= path. This prevents stale package bytecode from
+shadowing the edit. It fails on any stale-load warning and emits evidence bound
+to the repository, package, and current Elisp source revision. The commit guard
+recomputes that revision and rejects evidence from a different package or from
+source changed after the test.
 
 * Common pitfalls
 
@@ -71,17 +66,18 @@ Never hardcode a profile name.  Stale profiles have stale elpaca clones that are
 
 =elpaca-rebuild= byte-compiles the source into =elpaca/builds/= but does *not* load the new code into the running Emacs session.  =elpaca-extras-reload= is the step that calls =load= on each feature, which re-evaluates =defconst=, =defvar=, =defun=, etc.
 
-In the live daemon, do not call =elpaca-wait= inside one long =emacsclient= expression.  Use =elpaca-extras-rebuild-and-reload= and poll its status token with short =emacsclient= calls:
+In the live daemon, do not call =elpaca-wait= inside one long =emacsclient=
+expression or write an open-ended polling loop. After commit, use the bound
+live helper:
 
 #+begin_src shell
-token=$(emacsclient -e "(elpaca-extras-rebuild-and-reload 'PACKAGE)" | sed 's/^"//; s/"$//')
-while status=$(emacsclient -e "(elpaca-extras-format-build-reload-status \"$token\")" | sed 's/^"//; s/"$//'); do
-  case "$status" in
-    finished:*|failed:*) printf '%s\n' "$status"; break ;;
-  esac
-  sleep 1
-done
+~/My\ Drive/dotfiles/claude/bin/elisp-live-verify PACKAGE -- '(PACKAGE-CHECK)'
 #+end_src
+
+Each =emacsclient= request has its own timeout, and the complete rebuild has a
+120-second default deadline. The command succeeds only after =finished= and a
+successful package-named live expression. Its evidence names the repository,
+package, and commit.
 
 ** Editing before committing
 
@@ -90,12 +86,13 @@ If you edit a file and immediately check whether Emacs picked up the change (e.g
 * Full lifecycle of a change
 
 1. Edit =~/My Drive/dotfiles/emacs/extras/foo-extras.el=
-2. =load-elisp-after-edit.sh= fires (Claude Code hook) -> rebuilds from elpaca source (may be stale — this is OK)
-3. =require-elisp-test-before-commit.sh= blocks commit until =emacs --batch= test passes
-4. Run batch test with correct =load-path= order (tests from working tree, not elpaca)
+2. =load-elisp-after-edit.sh= fires on a direct edit or on changed paths recovered from a composed Codex patch; for extras this pre-commit rebuild can still use the committed mirror
+3. =require-elisp-test-before-commit.sh= blocks commit until source-aware batch evidence matches the repository, package, and source revision
+4. Run =batch-test.sh=, which loads the canonical source path rather than package bytecode
 5. =git commit= -> =post-commit= hook -> =sync-elpaca-clone.sh=:
    a. Fetches committed changes into elpaca clone
    b. =reset --hard FETCH_HEAD=
-   c. Async =emacsclient=: =elpaca-extras-rebuild-and-reload=
-   d. Background shell polling with =elpaca-extras-format-build-reload-status=
-6. After the async status reaches =finished=, running Emacs has the new byte-compiled code
+   c. Writes a =pending= state keyed by commit and package
+   d. Starts bounded =elpaca-rebuild-wait= processing, which records =finished= or =failed=
+6. Run =elisp-live-verify foo-extras -- '(foo-extras-CHECK)'=; it waits for that exact post-commit result and then exercises the named live path
+7. Only its repository/package/commit-bound evidence clears that obligation; an unrelated live evaluation does not

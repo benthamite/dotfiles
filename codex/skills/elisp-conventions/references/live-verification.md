@@ -5,20 +5,18 @@ Emacs session.
 
 ## Establish loaded-code state
 
-Use the bounded rebuild helper when an Elpaca package must be loaded into the
-active session:
+After the verified commit, use the bound live-verification helper:
 
 ```bash
-~/My\ Drive/dotfiles/claude/bin/elpaca-rebuild-wait PACKAGE
+~/My\ Drive/dotfiles/claude/bin/elisp-live-verify PACKAGE -- '(PACKAGE-CHECK)'
 ```
 
-The helper must return success for the requested package only after its rebuild
-and reload status reaches `finished`. For a standalone package, run it after the
-edit. For a dotfiles extra, run it after the verified commit has synchronized
-the canonical source into the Elpaca mirror. Do not infer completion from an
-edit event, a commit return value, or a status check for another package.
-
-After completion, exercise the exact changed command or runtime path. For
+The helper rejects dirty source, waits until the named package reaches a
+`finished` rebuild-and-reload state, then runs the expression in the active
+session. The expression must name and exercise the package. Its evidence is
+bound to the repository, package, and commit. Do not infer completion from an
+edit event, a commit return value, another package, or an unrelated
+`emacsclient` call. For
 buffer-local state, hooks, timers, teardown, or other session-lifecycle changes,
 test fresh state and legacy or partial state, including idempotence.
 
@@ -43,12 +41,9 @@ After adding or changing a `transient-define-prefix`, verify every suffix symbol
 against code from the current change. Transient defers suffix validation until
 invocation, so compiling the prefix is not sufficient.
 
-- For a dotfiles extra, check every suffix through `batch-test.sh` against the
-  canonical source before commit. After commit and a successful
-  `elpaca-rebuild-wait`, repeat the small `interactive-form` checks in live
-  Emacs.
-- For a standalone package, run `elpaca-rebuild-wait` after the edit, then check
-  every suffix in live Emacs before commit.
+- Check every suffix through `batch-test.sh` against canonical source before
+  commit. After commit, repeat the small `interactive-form` checks through
+  `elisp-live-verify`.
 
 An `interactive-form` result of `nil` means the suffix function needs an
 `interactive` specification.

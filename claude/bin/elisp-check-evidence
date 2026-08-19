@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# Run a project-owned Elisp check and emit revision-bound commit evidence.
+
+set -euo pipefail
+
+staged=false
+if [ "${1:-}" = --staged ]; then
+  staged=true
+  shift
+fi
+
+if [ "$#" -lt 3 ] || [ "$2" != -- ]; then
+  echo "Usage: elisp-check-evidence [--staged] LABEL -- COMMAND [ARG...]" >&2
+  exit 2
+fi
+
+label="$1"
+shift 2
+case "$label" in
+  *$'\n'* | "")
+    echo "Evidence label must be one non-empty line" >&2
+    exit 2
+    ;;
+esac
+
+script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+dotfiles_root=$(cd -- "$script_dir/../.." && pwd)
+revision_helper="$dotfiles_root/claude/bin/elisp-source-revision"
+repo=$(git rev-parse --show-toplevel)
+check_command="$1"
+shift
+case "$check_command" in
+  */*) ;;
+  *)
+    echo "Evidence command must be a tracked executable in this repository" >&2
+    exit 2
+    ;;
+esac
+check_dir=$(cd -- "$(dirname -- "$check_command")" 2>/dev/null && pwd -P) || {
+  echo "Cannot resolve evidence command: $check_command" >&2
+  exit 2
+}
+check_path="$check_dir/$(basename -- "$check_command")"
+case "$check_path" in
+  "$repo"/*) ;;
+  *)
+    echo "Evidence command is outside this repository: $check_command" >&2
+    exit 2
+    ;;
+esac
+check_relative=${check_path#"$repo"/}
+if [ ! -x "$check_path" ] ||
+   ! git -C "$repo" ls-files --error-unmatch -- "$check_relative" >/dev/null 2>&1; then
+  echo "Evidence command must be tracked and executable: $check_relative" >&2
+  exit 2
+fi
+run_root="$repo"
+run_command="$check_path"
+snapshot_root=""
+revision_arguments=("$repo")
+if [ "$staged" = true ]; then
+  snapshot_root=$(mktemp -d "${TMPDIR:-/tmp}/elisp-index.XXXXXX")
+  git -C "$repo" checkout-index --all --prefix="$snapshot_root/"
+  run_root="$snapshot_root"
+  run_command="$snapshot_root/$check_relative"
+  revision_arguments=(--index "$repo")
+fi
+output_file=$(mktemp "${TMPDIR:-/tmp}/elisp-check.XXXXXX")
+cleanup() {
+  rm -f "$output_file"
+  if [ -n "$snapshot_root" ] && [ -d "$snapshot_root" ]; then
+    find "$snapshot_root" -depth -delete 2>/dev/null || true
+  fi
+}
+trap cleanup EXIT
+
+revision_before=$("$revision_helper" "${revision_arguments[@]}")
+
+set +e
+(cd -- "$run_root" && "$run_command" "$@") >"$output_file" 2>&1
+status=$?
+set -e
+sed -n '1,$p' "$output_file"
+if [ "$status" -ne 0 ]; then
+  exit "$status"
+fi
+if grep -qE 'newer than byte-compiled file|using older file' "$output_file"; then
+  echo "elisp-check-evidence rejected a stale-load warning" >&2
+  exit 1
+fi
+
+revision_after=$("$revision_helper" "${revision_arguments[@]}")
+if [ "$revision_after" != "$revision_before" ]; then
+  echo "elisp-check-evidence rejected a source change that occurred during the check" >&2
+  exit 1
+fi
+repo_b64=$(printf '%s' "$repo" | base64 | tr -d '\n')
+label_b64=$(printf '%s' "$label" | base64 | tr -d '\n')
+printf 'ELISP_TEST_EVIDENCE_V1:%s:%s:%s\n' "$repo_b64" "$label_b64" "$revision_before"

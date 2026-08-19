@@ -13,12 +13,25 @@ After the verified commit, use the bound live-verification helper:
 
 The helper rejects dirty source, waits until the named package reaches a
 `finished` rebuild-and-reload state, then runs the expression in the active
-session. The expression must name and exercise the package. Its evidence is
+session. The expression must name and exercise the package and return a
+non-nil result. Its evidence is
 bound to the repository, package, and commit. Do not infer completion from an
 edit event, a commit return value, another package, or an unrelated
 `emacsclient` call. For
 buffer-local state, hooks, timers, teardown, or other session-lifecycle changes,
 test fresh state and legacy or partial state, including idempotence.
+
+For a deleted package, use:
+
+```bash
+~/My\ Drive/dotfiles/claude/bin/elisp-live-verify deleted:PACKAGE -- '(not (featurep '\''PACKAGE))'
+```
+
+This mode requires the package source to be absent at `HEAD`. It removes only
+the resolved package build below `elpaca-builds-directory`, removes that build
+from `load-path`, unloads the feature, and then runs the non-nil absence check.
+It does not delete the shared Elpaca source mirror. A rename requires this check
+for the old package and normal live verification for the new package.
 
 ## Active-session safety
 

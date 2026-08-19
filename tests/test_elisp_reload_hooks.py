@@ -18,6 +18,7 @@ VERIFY_TRACKERS = {
     "claude": DOTFILES / "claude/hooks/track-elisp-verify.sh",
     "codex": DOTFILES / "codex/hooks/track-elisp-verify.sh",
 }
+EVIDENCE_LIB = DOTFILES / "claude/hooks/lib-elisp-evidence.sh"
 SYNC_HOOK = Path("/Users/pablostafforini/git-dirs/dotfiles/hooks/sync-elpaca-clone.sh")
 CHECK_SYNC_HOOK = DOTFILES / "claude/bin/check-elpaca-sync-hook"
 
@@ -232,6 +233,40 @@ class ElispVerifyTrackingHookTests(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp_dir.cleanup)
         self.root = Path(self.temp_dir.name)
+        self.receipt_dir = self.root / "receipts"
+        self.evidence_env = os.environ.copy()
+        self.evidence_env["ELISP_EVIDENCE_RECEIPT_DIR"] = str(self.receipt_dir)
+
+    def encoded_repo(self, repo: Path) -> str:
+        canonical_repo = subprocess.run(
+            ["git", "-C", str(repo), "rev-parse", "--show-toplevel"],
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout.strip()
+        return base64.b64encode(canonical_repo.encode()).decode()
+
+    def live_evidence(self, repo: Path, label: str, commit: str) -> str:
+        repo_b64 = self.encoded_repo(repo)
+        label_b64 = base64.b64encode(label.encode()).decode()
+        result = subprocess.run(
+            [
+                "bash",
+                "-c",
+                'source "$1"; elisp_evidence_emit live "$2" "$3" "$4"',
+                "issue-live-evidence",
+                str(EVIDENCE_LIB),
+                repo_b64,
+                label_b64,
+                commit,
+            ],
+            text=True,
+            capture_output=True,
+            check=False,
+            env=self.evidence_env,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout
 
     def make_repo(self, name: str, filename: str) -> Path:
         if filename.endswith(".el"):
@@ -284,6 +319,7 @@ class ElispVerifyTrackingHookTests(unittest.TestCase):
             capture_output=True,
             check=False,
             cwd=fallback_repo,
+            env=self.evidence_env,
         )
         return result, marker
 
@@ -326,7 +362,7 @@ class ElispVerifyTrackingHookTests(unittest.TestCase):
                 "tool_input": {"cmd": command, "workdir": str(repo)},
                 "tool_response": {"exit_code": exit_code, "output": output},
             }
-        env = os.environ.copy()
+        env = self.evidence_env.copy()
         if reload_state_root is not None:
             env["ELPACA_RELOAD_STATE_DIR"] = str(reload_state_root)
         result = subprocess.run(
@@ -439,15 +475,15 @@ class ElispVerifyTrackingHookTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue(marker.exists())
 
-    def test_unattributed_nested_commit_is_not_misattributed(self):
-        fallback_repo = self.make_repo("fallback-shell-missing", "fixture.sh")
+    def test_nested_commit_without_workdir_uses_outer_cwd(self):
+        fallback_repo = self.make_repo("fallback-elisp-missing", "fixture.el")
         result, marker = self.run_source(
             fallback_repo,
             "await tools.exec_command({cmd: 'git commit -m fixture'});",
             f"codex-missing-{os.getpid()}",
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertFalse(marker.exists())
+        self.assertTrue(marker.exists())
 
     def test_nonzero_outer_result_does_not_hide_nested_elisp_commit(self):
         fallback_repo = self.make_repo("fallback-shell-failed-outer", "fixture.sh")
@@ -516,6 +552,24 @@ class ElispVerifyTrackingHookTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(marker.exists())
+        pretool_payload = {
+            "tool_name": "functions.exec",
+            "session_id": f"codex-dynamic-pretool-{os.getpid()}",
+            "tool_input": source,
+        }
+        blocked = subprocess.run(
+            [
+                "bash",
+                str(DOTFILES / "codex/hooks/require-elisp-test-before-commit.sh"),
+            ],
+            input=json.dumps(pretool_payload),
+            text=True,
+            capture_output=True,
+            check=False,
+            cwd=fallback_repo,
+        )
+        self.assertEqual(blocked.returncode, 0, blocked.stderr)
+        self.assertIn("dynamic or ambiguous", blocked.stdout)
 
     def test_template_nested_workdir_is_not_misattributed(self):
         fallback_repo = self.make_repo("fallback-shell-template", "fixture.sh")
@@ -619,10 +673,10 @@ class ElispVerifyTrackingHookTests(unittest.TestCase):
             capture_output=True,
             check=True,
         ).stdout.strip()
-        encoded_repo = base64.b64encode(str(repo).encode()).decode()
+        encoded_repo = self.encoded_repo(repo)
         label = base64.b64encode(b"fixture").decode()
         marker_content = f"{encoded_repo}:{commit}:{label}\n"
-        evidence = f"ELISP_LIVE_EVIDENCE_V1:{encoded_repo}:{label}:{commit}\n"
+        evidence = self.live_evidence(repo, "fixture", commit)
 
         result, marker = self.run_direct(
             repo,
@@ -670,10 +724,10 @@ class ElispVerifyTrackingHookTests(unittest.TestCase):
                     capture_output=True,
                     check=True,
                 ).stdout.strip()
-                encoded_repo = base64.b64encode(str(repo).encode()).decode()
+                encoded_repo = self.encoded_repo(repo)
                 label = base64.b64encode(repo.name.encode()).decode()
                 content = f"{encoded_repo}:{commit}:{label}\n"
-                evidence = f"ELISP_LIVE_EVIDENCE_V1:{encoded_repo}:{label}:{commit}\n"
+                evidence = self.live_evidence(repo, repo.name, commit)
                 result, marker = self.run_direct(
                     repo,
                     f"elisp-live-verify {repo.name} -- '({repo.name}-status)'",
@@ -695,14 +749,14 @@ class ElispVerifyTrackingHookTests(unittest.TestCase):
             capture_output=True,
             check=True,
         ).stdout.strip()
-        encoded_repo = base64.b64encode(str(repo).encode()).decode()
+        encoded_repo = self.encoded_repo(repo)
         first = base64.b64encode(b"multi-label").decode()
         second = base64.b64encode(b"other").decode()
         content = (
             f"{encoded_repo}:{commit}:{first}\n"
             f"{encoded_repo}:{commit}:{second}\n"
         )
-        evidence = f"ELISP_LIVE_EVIDENCE_V1:{encoded_repo}:{first}:{commit}\n"
+        evidence = self.live_evidence(repo, "multi-label", commit)
         result, marker = self.run_direct(
             repo,
             "elisp-live-verify multi-label -- '(multi-label-status)'",
@@ -764,6 +818,108 @@ class ElispVerifyTrackingHookTests(unittest.TestCase):
                 )
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertTrue(marker.exists())
+
+    def test_deleted_extra_creates_deleted_package_obligation(self):
+        for tool in ("claude", "codex"):
+            with self.subTest(tool=tool):
+                repo = self.make_repo(
+                    f"{tool}-deleted-extra", "emacs/extras/old-package.el"
+                )
+                (repo / "emacs/extras/old-package.el").unlink()
+                subprocess.run(
+                    ["git", "-C", str(repo), "add", "emacs/extras/old-package.el"],
+                    check=True,
+                )
+                subprocess.run(
+                    ["git", "-C", str(repo), "commit", "-qm", "delete old package"],
+                    check=True,
+                )
+                result, marker = self.run_direct(
+                    repo,
+                    "git commit -m delete",
+                    f"{tool}-deleted-extra-{os.getpid()}",
+                    exit_code=0,
+                    initial_marker=False,
+                    tool=tool,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                labels = {
+                    base64.b64decode(line.split(":", 2)[2]).decode()
+                    for line in marker.read_text().splitlines()
+                }
+                self.assertEqual(labels, {"deleted:old-package"})
+
+    def test_renamed_extra_requires_new_and_deleted_old_packages(self):
+        for tool in ("claude", "codex"):
+            with self.subTest(tool=tool):
+                repo = self.make_repo(
+                    f"{tool}-renamed-extra", "emacs/extras/old-package.el"
+                )
+                subprocess.run(
+                    [
+                        "git",
+                        "-C",
+                        str(repo),
+                        "mv",
+                        "emacs/extras/old-package.el",
+                        "emacs/extras/new-package.el",
+                    ],
+                    check=True,
+                )
+                subprocess.run(
+                    ["git", "-C", str(repo), "commit", "-qm", "rename package"],
+                    check=True,
+                )
+                result, marker = self.run_direct(
+                    repo,
+                    "git commit -m rename",
+                    f"{tool}-renamed-extra-{os.getpid()}",
+                    exit_code=0,
+                    initial_marker=False,
+                    tool=tool,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                labels = {
+                    base64.b64decode(line.split(":", 2)[2]).decode()
+                    for line in marker.read_text().splitlines()
+                }
+                self.assertEqual(labels, {"deleted:old-package", "new-package"})
+
+    def test_standalone_main_deletion_is_distinct_from_auxiliary_deletion(self):
+        for tool in ("claude", "codex"):
+            for layout in ("root", "lisp", "auxiliary"):
+                with self.subTest(tool=tool, layout=layout):
+                    name = f"{tool}-standalone-delete-{layout}"
+                    if layout == "root":
+                        filename = f"{name}.el"
+                    elif layout == "lisp":
+                        filename = f"lisp/{name}.el"
+                    else:
+                        filename = "lisp/helper.el"
+                    repo = self.make_repo(name, filename)
+                    (repo / filename).unlink()
+                    subprocess.run(
+                        ["git", "-C", str(repo), "add", filename], check=True
+                    )
+                    subprocess.run(
+                        ["git", "-C", str(repo), "commit", "-qm", "delete file"],
+                        check=True,
+                    )
+                    result, marker = self.run_direct(
+                        repo,
+                        "git commit -m delete",
+                        f"{name}-{os.getpid()}",
+                        exit_code=0,
+                        initial_marker=False,
+                        tool=tool,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    labels = {
+                        base64.b64decode(line.split(":", 2)[2]).decode()
+                        for line in marker.read_text().splitlines()
+                    }
+                    expected = f"deleted:{name}" if layout != "auxiliary" else name
+                    self.assertEqual(labels, {expected})
 
     def test_nonpackage_elisp_commit_needs_no_live_package_obligation(self):
         for tool in ("claude", "codex"):
@@ -873,10 +1029,10 @@ class ElispVerifyTrackingHookTests(unittest.TestCase):
             ["git", "-C", str(repo), "rev-parse", "HEAD"],
             text=True, capture_output=True, check=True,
         ).stdout.strip()
-        encoded_repo = base64.b64encode(str(repo).encode()).decode()
+        encoded_repo = self.encoded_repo(repo)
         label = base64.b64encode(repo.name.encode()).decode()
         content = f"{encoded_repo}:{commit}:{label}\n"
-        evidence = f"ELISP_LIVE_EVIDENCE_V1:{encoded_repo}:{label}:{commit}\n"
+        evidence = self.live_evidence(repo, repo.name, commit)
         session = f"codex-composed-live-{os.getpid()}"
         marker = Path(f"/tmp/claude-elisp-verify-needed-{session}")
         marker.write_text(content)
@@ -896,14 +1052,61 @@ class ElispVerifyTrackingHookTests(unittest.TestCase):
         gate = subprocess.run(
             ["bash", str(DOTFILES / "codex/hooks/require-elisp-verify-after-commit.sh")],
             input=json.dumps(payload), text=True, capture_output=True, check=False, cwd=repo,
+            env=self.evidence_env,
         )
         self.assertEqual(gate.stdout, "")
         tracked = subprocess.run(
             ["bash", str(VERIFY_TRACKERS["codex"])],
             input=json.dumps(payload), text=True, capture_output=True, check=False, cwd=repo,
+            env=self.evidence_env,
         )
         self.assertEqual(tracked.returncode, 0, tracked.stderr)
         self.assertFalse(marker.exists())
+
+    def test_failed_nested_live_helper_with_forged_evidence_keeps_marker(self):
+        repo = self.make_repo("codex-forged-live", "fixture.el")
+        commit = subprocess.run(
+            ["git", "-C", str(repo), "rev-parse", "HEAD"],
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout.strip()
+        encoded_repo = base64.b64encode(str(repo).encode()).decode()
+        label = base64.b64encode(repo.name.encode()).decode()
+        content = f"{encoded_repo}:{commit}:{label}\n"
+        evidence = (
+            f"ELISP_LIVE_EVIDENCE_V2:{encoded_repo}:{label}:{commit}:"
+            "receipt.forged\n"
+        )
+        session = f"codex-forged-live-{os.getpid()}"
+        marker = Path(f"/tmp/claude-elisp-verify-needed-{session}")
+        marker.write_text(content)
+        self.addCleanup(marker.unlink, missing_ok=True)
+        shell_command = (
+            f"elisp-live-verify {repo.name} -- '({repo.name}-status)'; exit 1"
+        )
+        source = (
+            "const r = await tools.exec_command("
+            + json.dumps({"cmd": shell_command, "workdir": str(repo)})
+            + "); if (r.exit_code !== 0) text('helper failed');"
+        )
+        payload = {
+            "tool_name": "functions.exec",
+            "session_id": session,
+            "tool_input": source,
+            "tool_response": {"exit_code": 0, "output": evidence},
+        }
+        tracked = subprocess.run(
+            ["bash", str(VERIFY_TRACKERS["codex"])],
+            input=json.dumps(payload),
+            text=True,
+            capture_output=True,
+            check=False,
+            cwd=repo,
+            env=self.evidence_env,
+        )
+        self.assertEqual(tracked.returncode, 0, tracked.stderr)
+        self.assertTrue(marker.exists())
 
 class ElpacaSyncHookTests(unittest.TestCase):
     def setUp(self):
@@ -976,6 +1179,34 @@ class ElpacaSyncHookTests(unittest.TestCase):
             text=True, capture_output=True, check=True,
         ).stdout.strip()
         self.assertEqual(mirror_head, self.new)
+
+    def test_deleted_package_is_removed_without_a_rebuild_request(self):
+        (self.primary / "emacs/extras/foo.el").unlink()
+        subprocess.run(
+            ["git", "-C", str(self.primary), "add", "emacs/extras/foo.el"],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.primary), "commit", "-qm", "delete foo"],
+            check=True,
+        )
+        self.new = subprocess.run(
+            ["git", "-C", str(self.primary), "rev-parse", "HEAD"],
+            text=True,
+            capture_output=True,
+            check=True,
+        ).stdout.strip()
+        result = self.run_sync()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse((self.mirror / "emacs/extras/foo.el").exists())
+        self.assertFalse((self.state / self.new / "foo.status").exists())
+        bar_status = self.state / self.new / "bar.status"
+        for _attempt in range(100):
+            if bar_status.exists() and bar_status.read_text().startswith("finished:"):
+                break
+            import time
+            time.sleep(0.01)
+        self.assertEqual(bar_status.read_text(), "finished:test\n")
 
     def test_status_retention_preserves_active_obligation(self):
         unreferenced = self.state / ("a" * 40)

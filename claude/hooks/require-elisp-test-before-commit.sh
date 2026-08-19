@@ -8,16 +8,61 @@
 set -euo pipefail
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+# Use the shared parser so both gates and both post-commit trackers recognize
+# the same Git global-option forms.
+# shellcheck source=../../codex/hooks/lib-codex-hook-json.sh
+source "$SCRIPT_DIR/../../codex/hooks/lib-codex-hook-json.sh"
 
 INPUT=$(cat)
 
 COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
 SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // empty')
+CODEX_GIT_PARSE_CONTEXT=$(printf '%s' "$INPUT" | jq -r '
+  .tool_input.workdir // .tool_input.cwd //
+  .tool_input.working_directory // .tool_input.working_dir //
+  .workdir // .cwd // .working_directory // .working_dir // empty')
+[ -n "$CODEX_GIT_PARSE_CONTEXT" ] || CODEX_GIT_PARSE_CONTEXT=$PWD
+if [[ "$CODEX_GIT_PARSE_CONTEXT" != /* ]]; then
+  CODEX_GIT_PARSE_CONTEXT="$PWD/$CODEX_GIT_PARSE_CONTEXT"
+fi
+[ -d "$CODEX_GIT_PARSE_CONTEXT" ] || CODEX_GIT_PARSE_CONTEXT=$PWD
 
 # Only intercept git commit commands
-if ! echo "$COMMAND" | grep -qE '\bgit\s+commit\b'; then
+if [ "$(printf '%s' "$COMMAND" | codex_git_commit_count)" -eq 0 ]; then
   exit 0
 fi
+
+# Reject ambiguity before repository lookup. Target-changing environment
+# variables can otherwise make lookup fail and cause this gate to stand down.
+COMMIT_RECORD=""
+SYNTAX_AMBIGUOUS=false
+while IFS= read -r -d '' record; do
+  if [ "$(printf '%s' "$record" | jq -r '.subcommand')" = commit ]; then
+    if [ "$(printf '%s' "$record" | jq -r '.ambiguous // false')" = true ]; then
+      AMBIGUITY=$(printf '%s' "$record" | jq -r '.ambiguity // empty')
+      case "$AMBIGUITY" in
+        unknown-git-global-option)
+          REASON="BLOCKED: Git global options make the commit subcommand ambiguous. Use recognized Git global options so the Elisp evidence gate can identify the commit and its target repository."
+          ;;
+        git-environment|shell-recursion-limit|invalid-command-substitution|missing-interpreter-command|dynamic-shell-executable|git-shell-alias|git-alias-depth|invalid-git-alias|empty-git-alias)
+          REASON="BLOCKED: Git commit syntax is dynamic or ambiguous. Use a literal Git commit command, target repository, index, and supported shell form so the Elisp evidence gate can inspect the exact commit."
+          ;;
+        *) SYNTAX_AMBIGUOUS=true; REASON="" ;;
+      esac
+      if [ -n "$REASON" ]; then
+        jq -n --arg reason "$REASON" '{
+          "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "deny",
+            "permissionDecisionReason": $reason
+          }
+        }'
+        exit 0
+      fi
+    fi
+    [ -n "$COMMIT_RECORD" ] || COMMIT_RECORD=$record
+  fi
+done < <(printf '%s' "$COMMAND" | codex_git_invocations)
 
 # Inspect staged files in the repo targeted by the command, not the hook cwd.
 # shellcheck source=lib-repo-root.sh
@@ -31,24 +76,37 @@ fi
 source "$SCRIPT_DIR/lib-staged-files.sh"
 
 HAS_ELISP=false
-if [ -n "$STAGED" ]; then
-  while IFS= read -r file; do
-    case "$file" in
-      *.el|emacs/config.org)
-        HAS_ELISP=true
-        break
-        ;;
-    esac
-  done <<< "$STAGED"
+if [ -n "$STAGED_STATUS" ]; then
+  while IFS=$'\t' read -r status first second; do
+    case "$status" in R*|C*) paths="$first"$'\n'"$second" ;; *) paths="$first" ;; esac
+    while IFS= read -r file; do
+      case "$file" in *.el|emacs/config.org) HAS_ELISP=true ;; esac
+    done <<< "$paths"
+    [ "$HAS_ELISP" = false ] || break
+  done <<< "$STAGED_STATUS"
 fi
 
 # A combined add+commit call cannot be checked against the future index. Make
 # the agent split the operations so the commit gate can identify exact bytes.
-ADD_ARGS=$(echo "$COMMAND" | grep -oE 'git\s+add\s+[^;&|]*' || true)
-if [ -n "$ADD_ARGS" ] &&
-   { echo "$ADD_ARGS" | grep -qE '\.el([[:space:]]|$)' ||
-     echo "$ADD_ARGS" | grep -qF 'emacs/config.org'; }; then
+while IFS= read -r -d '' record; do
+  [ "$(printf '%s' "$record" | jq -r '.subcommand')" = add ] || continue
+  ADD_REPO_ROOT=$(codex_git_invocation_repo "$record" "${REPO_COMMAND_CONTEXT:-$REPO_ROOT}" || true)
+  [ "$ADD_REPO_ROOT" = "$REPO_ROOT" ] || continue
+  if codex_git_add_selects_elisp "$REPO_ROOT" "$record"; then
   REASON="BLOCKED: Stage Elisp source in a separate command before git commit. A combined git add and git commit call cannot bind test evidence to the future index."
+  jq -n --arg reason "$REASON" '{
+    "hookSpecificOutput": {
+      "hookEventName": "PreToolUse",
+      "permissionDecision": "deny",
+      "permissionDecisionReason": $reason
+    }
+  }'
+  exit 0
+  fi
+done < <(printf '%s' "$COMMAND" | codex_git_invocations)
+
+if [ "$SYNTAX_AMBIGUOUS" = true ] && [ "$HAS_ELISP" = true ]; then
+  REASON="BLOCKED: Git commit syntax is dynamic or ambiguous. Use a literal Git commit command, target repository, index, and supported shell form so the Elisp evidence gate can inspect the exact commit."
   jq -n --arg reason "$REASON" '{
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
@@ -78,7 +136,11 @@ evidence_matches_package() {
 
 EXPECTED_PACKAGES=()
 INDEX_DIVERGENCE=""
-while IFS= read -r file; do
+record_expected_package() {
+  local file="$1" change_kind="$2" package
+  if [ "$change_kind" = deleted ]; then
+    case "$file" in *.el|emacs/config.org) EXPECTED_PACKAGES+=("file:$file") ;; esac
+  else
   case "$file" in
     emacs/extras/*.el)
       package=$(basename "$file" .el)
@@ -99,6 +161,7 @@ while IFS= read -r file; do
       fi
       ;;
   esac
+  fi
   case "$file" in
     *.el|emacs/config.org)
       if ! git -C "$REPO_ROOT" diff --quiet -- "$file"; then
@@ -106,7 +169,19 @@ while IFS= read -r file; do
       fi
       ;;
   esac
-done <<< "$STAGED"
+}
+while IFS=$'\t' read -r status first second; do
+  [ -n "$first" ] || continue
+  case "$status" in
+    D*) record_expected_package "$first" deleted ;;
+    R*)
+      record_expected_package "$first" deleted
+      record_expected_package "$second" present
+      ;;
+    C*) record_expected_package "$second" present ;;
+    *) record_expected_package "$first" present ;;
+  esac
+done <<< "$STAGED_STATUS"
 
 USE_STAGED_EVIDENCE=false
 if [ -n "$INDEX_DIVERGENCE" ]; then

@@ -7,6 +7,8 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
 # Reuse the quote-aware shell classifiers used by the paired Codex hook.
 # shellcheck source=../../codex/hooks/lib-codex-hook-json.sh
 source "$SCRIPT_DIR/../../codex/hooks/lib-codex-hook-json.sh"
+# shellcheck source=lib-elisp-evidence.sh
+source "$SCRIPT_DIR/lib-elisp-evidence.sh"
 
 INPUT=$(cat)
 COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
@@ -49,15 +51,28 @@ decode_base64() {
 }
 
 production_label() {
-  local repo_root="$1" file="$2" package
+  local repo_root="$1" file="$2" change_kind="${3:-present}" package
   case "$file" in
     test/*|tests/*|*/test/*|*/tests/*|*-test.el|*-tests.el|*/test-*.el) return 1 ;;
-    emacs/extras/*.el) package=$(basename "$file" .el); printf '%s' "$package" ;;
+    emacs/extras/*.el)
+      package=$(basename "$file" .el)
+      if [ "$change_kind" = deleted ]; then printf 'deleted:%s' "$package"
+      else printf '%s' "$package"
+      fi
+      ;;
     *.el)
       if [ "$repo_root" = "$DOTFILES_ROOT" ]; then return 1
       else
         case "$repo_root" in
-          */elpaca/sources/*|*/elpaca/repos/*) basename "$repo_root" ;;
+          */elpaca/sources/*|*/elpaca/repos/*)
+            package=$(basename "$repo_root")
+            if [ "$change_kind" = deleted ] &&
+               [ "$(basename "$file")" = "$package.el" ]; then
+              printf 'deleted:%s' "$package"
+            else
+              printf '%s' "$package"
+            fi
+            ;;
           *) return 1 ;;
         esac
       fi
@@ -66,9 +81,18 @@ production_label() {
   esac
 }
 
+append_production_label() {
+  local repo_root="$1" file="$2" change_kind="$3" labels_file="$4"
+  local label label_b64
+  if label=$(production_label "$repo_root" "$file" "$change_kind"); then
+    label_b64=$(encode_base64 "$label")
+    printf '%s\n' "$label_b64" >> "$labels_file"
+  fi
+}
+
 record_commits() {
   local repo_root="$1" count="$2" head repo_b64 temporary labels_file
-  local offset ref committed file label label_b64 existing_repo old_commit existing_label
+  local offset ref committed status first second label_b64 existing_repo old_commit existing_label
   head=$(git -C "$repo_root" rev-parse HEAD 2>/dev/null) || return 1
   repo_b64=$(encode_base64 "$repo_root")
   labels_file=$(mktemp "${TMPDIR:-/tmp}/elisp-labels.XXXXXX")
@@ -95,16 +119,21 @@ record_commits() {
   offset=0
   while [ "$offset" -lt "$count" ]; do
     if [ "$offset" -eq 0 ]; then ref=HEAD; else ref="HEAD~$offset"; fi
-    if ! committed=$(git -C "$repo_root" diff-tree --root --no-commit-id --name-only -r "$ref" 2>/dev/null); then
+    if ! committed=$(git -C "$repo_root" diff-tree --root --no-commit-id --name-status -M -r "$ref" 2>/dev/null); then
       printf 'MALFORMED:diff-tree-failed:%s\n' "$ref" >> "$temporary"
       break
     fi
-    while IFS= read -r file; do
-      [ -n "$file" ] || continue
-      if label=$(production_label "$repo_root" "$file"); then
-        label_b64=$(encode_base64 "$label")
-        printf '%s\n' "$label_b64" >> "$labels_file"
-      fi
+    while IFS=$'\t' read -r status first second; do
+      [ -n "$first" ] || continue
+      case "$status" in
+        D*) append_production_label "$repo_root" "$first" deleted "$labels_file" ;;
+        R*)
+          append_production_label "$repo_root" "$first" deleted "$labels_file"
+          append_production_label "$repo_root" "$second" present "$labels_file"
+          ;;
+        C*) append_production_label "$repo_root" "$second" present "$labels_file" ;;
+        *) append_production_label "$repo_root" "$first" present "$labels_file" ;;
+      esac
     done <<< "$committed"
     offset=$((offset + 1))
   done
@@ -120,11 +149,12 @@ record_commits() {
 }
 
 consume_live_evidence() {
-  local evidence version repo_b64 label_b64 commit repo temporary
-  evidence=$(printf '%s\n' "$STDOUT" | grep '^ELISP_LIVE_EVIDENCE_V1:' | tail -1 || true)
+  local evidence verified_evidence version repo_b64 label_b64 commit repo temporary
+  evidence=$(printf '%s\n' "$STDOUT" | grep '^ELISP_LIVE_EVIDENCE_V2:' | tail -1 || true)
   [ -n "$evidence" ] || return 1
-  IFS=: read -r version repo_b64 label_b64 commit <<< "$evidence"
-  [ "$version" = ELISP_LIVE_EVIDENCE_V1 ] && [[ "$commit" =~ ^[0-9a-f]{40,64}$ ]] || return 1
+  verified_evidence=$(elisp_evidence_consume live "$evidence") || return 1
+  IFS=: read -r version repo_b64 label_b64 commit <<< "$verified_evidence"
+  [ "$version" = ELISP_LIVE_EVIDENCE_V2 ] && [[ "$commit" =~ ^[0-9a-f]{40,64}$ ]] || return 1
   repo=$(decode_base64 "$repo_b64") || return 1
   [ -d "$repo" ] && [ "$(git -C "$repo" rev-parse HEAD 2>/dev/null || true)" = "$commit" ] || return 1
   acquire_lock || return 1

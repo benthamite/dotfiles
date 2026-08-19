@@ -30,6 +30,8 @@ shift
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 REVISION_HELPER="$REPO_ROOT/claude/bin/elisp-source-revision"
+# shellcheck source=../hooks/lib-elisp-evidence.sh
+source "$REPO_ROOT/claude/hooks/lib-elisp-evidence.sh"
 PROFILE=$(emacsclient -e 'init-current-profile' 2>/dev/null | tr -d '"')
 ELPACA="$HOME/.config/emacs-profiles/$PROFILE/elpaca"
 EXTRAS="$REPO_ROOT/emacs/extras"
@@ -67,6 +69,11 @@ if [ ! -f "$SOURCE_FILE" ]; then
   echo "Cannot find canonical source file: $SOURCE_FILE" >&2
   exit 1
 fi
+
+# Put the canonical package checkout before every build directory.  Loading the
+# main file by absolute name is not enough when it requires sibling libraries.
+SOURCE_DIR_B64=$(printf '%s' "$SOURCE_DIR" | base64 | tr -d '\n')
+ARGS+=(--eval "(add-to-list 'load-path (decode-coding-string (base64-decode-string \"$SOURCE_DIR_B64\") 'utf-8))")
 
 # Bind the result to the exact source snapshot that the check starts with.
 # A concurrent edit must invalidate the run instead of receiving evidence for
@@ -115,4 +122,4 @@ if [ "$REVISION_AFTER" != "$REVISION_BEFORE" ]; then
 fi
 REPO_B64=$(printf '%s' "$SOURCE_REPO" | base64 | tr -d '\n')
 PACKAGE_B64=$(printf '%s' "$PACKAGE" | base64 | tr -d '\n')
-printf 'ELISP_TEST_EVIDENCE_V1:%s:%s:%s\n' "$REPO_B64" "$PACKAGE_B64" "$REVISION_BEFORE"
+elisp_evidence_emit test "$REPO_B64" "$PACKAGE_B64" "$REVISION_BEFORE"

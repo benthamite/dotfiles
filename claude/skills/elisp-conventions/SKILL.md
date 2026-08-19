@@ -57,6 +57,8 @@ unless they also change production code or user documentation.
      check through `elisp-check-evidence file:RELATIVE-PATH -- PROJECT-CHECK`.
      `PROJECT-CHECK` must be a tracked executable in that repository. Do not
      substitute an unrelated package check.
+   - A deleted production file cannot be loaded. Use the same `file:RELATIVE-PATH`
+     label with a project check that proves the repository is valid without it.
 3. Run focused ERT when behavior needs it. Read
    [references/testing.md](references/testing.md) for command forms and
    stale-compiled-code safeguards.
@@ -65,6 +67,9 @@ unless they also change production code or user documentation.
    - After the verified commit, use `elisp-live-verify PACKAGE -- EXPR` for a
      standalone package or dotfiles extra. It waits for the package rebuild,
      exercises the named live path, and emits package/commit-bound evidence.
+   - For a deleted package, use `elisp-live-verify deleted:PACKAGE -- EXPR`.
+     The helper removes only that package's safe Elpaca build, unloads the
+     feature, and requires a non-nil expression that verifies its absence.
    - Non-package Elisp uses its owning workflow; do not load it into the active
      session unless that workflow makes the operation safe.
 

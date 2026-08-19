@@ -32,6 +32,11 @@ stale-load warning. For `emacs/config.org`, use the exact
 `file:emacs/config.org` label and a tracked check that tangles and validates the
 affected output.
 
+For a deleted production file, use its old repository-relative path in the
+`file:RELATIVE-PATH` label and run a project check that proves the proposed tree
+is valid without that file. For a rename, establish this file-labeled evidence
+for the old path and normal package evidence for the new path.
+
 Use `--staged` only when the same file also has unrelated unstaged edits that
 must remain outside the commit. It materializes the Git index under a temporary
 directory, runs the tracked project check there, and emits the index content

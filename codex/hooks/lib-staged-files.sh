@@ -25,7 +25,9 @@ _amend_base() {
 _BASE=$(_amend_base)
 if [ -n "$_BASE" ]; then
   STAGED=$(git diff --cached --name-only "$_BASE" 2>/dev/null || true)
+  STAGED_STATUS=$(git diff --cached --name-status -M "$_BASE" 2>/dev/null || true)
 else
   STAGED=$(git diff --cached --name-only 2>/dev/null || true)
+  STAGED_STATUS=$(git diff --cached --name-status -M 2>/dev/null || true)
 fi
 unset _BASE

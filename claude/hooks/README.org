@@ -49,6 +49,13 @@ The Elisp documentation gate may be deferred on a feature branch with
 The setting is ignored on =main= and =master= and should be removed when the
 branch merges. The Codex counterpart uses the same rule.
 
+Elisp test and live evidence is accepted only with a matching receipt from the
+owning wrapper. The tracker atomically consumes the receipt, so output replay
+or a copied evidence line fails closed. On the next issue or consume operation,
+the shared helper removes only user-owned regular receipt and claim files older
+than one day, so unconsumed evidence expires at that point. It never expires or
+removes test markers or live-verification obligations.
+
 The reasoning-worktree SessionStart hook repairs required key links before its
 working-directory and origin checks. That repair loop therefore runs in every
 session in every repository, so it must start no subprocess when all links are
@@ -89,8 +96,9 @@ Claude.
 | =cr-skill-routing-reminder.sh= | Reminds an agent to use the owning CR authoring or review skill. |
 | =elpaca-run.sh= | Resolves the active Emacs profile and runs an executable from an Elpaca package. |
 | =fire-and-forget.sh= | Detaches nonblocking Notification and Stop hook work after consuming the event payload. |
-| =lib-repo-root.sh= | Resolves the effective Git root from hook command and working-directory context. |
-| =lib-staged-files.sh= | Lists the complete staged commit content, including an amended commit. |
+| =lib-elisp-evidence.sh= | Issues and atomically consumes one-time receipts for Elisp test and live evidence. |
+| =lib-repo-root.sh= | Resolves the effective Git root from command context and supported Git global options. |
+| =lib-staged-files.sh= | Lists staged paths and name-status data, including an amended commit as the complete proposed commit. |
 | =load-elisp-after-edit.sh= | Rebuilds and reloads an edited Elisp package through the live Emacs session, except for test-only files or while Git has an active operation or unmerged index entries. |
 | =notify-emacs-notification.sh= | Forwards a Claude Notification event to Emacs. |
 | =notify-emacs-session-end.sh= | Forwards a Claude Stop event to Emacs. |
@@ -105,15 +113,15 @@ Claude.
 | =require-ai-config-sync.sh= | Blocks commits that violate the paired Claude/Codex configuration contract. |
 | =require-doc-update.sh= | Requires the owning package manual with staged documented Elisp changes. |
 | =require-elisp-skill.sh= | Blocks Elisp edits until the Elisp conventions skill has been loaded. |
-| =require-elisp-test-before-commit.sh= | Requires batch-test evidence for the target repository, package, and current source revision before an Elisp commit. |
+| =require-elisp-test-before-commit.sh= | Routes commits to the target repository, blocks combined staging, and requires matching package or deletion-check evidence for the proposed Elisp source. |
 | =require-elisp-verify-after-commit.sh= | Blocks later commands until the exact helper emits repository/package/commit-bound live evidence. |
 | =require-readme-update.sh= | Requires Claude configuration documentation with staged Claude configuration changes. |
 | =session-learning-capture.sh= | Retained unregistered Stop helper for requesting reusable-lesson capture. |
 | =sync-agent-c-worktree.sh= | Compatibility wrapper for the renamed reasoning-task worktree synchronization hook. |
 | =sync-reasoning-tasks-worktree.sh= | Repairs and updates an eligible reasoning-task worktree at SessionStart without pushing it. |
 | =track-elisp-skill.sh= | Records that the Elisp conventions skill was loaded in the current session. |
-| =track-elisp-test.sh= | Validates and records repository/package/source-revision evidence from the source-aware batch runner. |
-| =track-elisp-verify.sh= | Records each production package in an Elisp commit and clears only the matching repository/package/commit live evidence. |
+| =track-elisp-test.sh= | Consumes a one-time receipt, then validates and records repository/package/source-revision evidence from the source-aware batch runner. |
+| =track-elisp-verify.sh= | Records each production package in an Elisp commit and consumes one-time receipts before clearing matching repository/package/commit live evidence. |
 | =wrap-bash-output.sh= | Routes plausible secret-printing command output through the redactor while preserving status. |
 
 The documentation audit requires every tracked direct child to appear exactly

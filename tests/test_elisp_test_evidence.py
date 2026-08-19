@@ -15,10 +15,44 @@ BATCH_TEST = DOTFILES / "claude/bin/batch-test.sh"
 REBUILD_WAIT = DOTFILES / "claude/bin/elpaca-rebuild-wait"
 CHECK_EVIDENCE = DOTFILES / "claude/bin/elisp-check-evidence"
 LIVE_VERIFY = DOTFILES / "claude/bin/elisp-live-verify"
+EVIDENCE_LIB = DOTFILES / "claude/hooks/lib-elisp-evidence.sh"
 
 
 def run(command: list[str], **kwargs) -> subprocess.CompletedProcess[str]:
     return subprocess.run(command, text=True, capture_output=True, check=False, **kwargs)
+
+
+def evidence_environment(receipt_dir: Path) -> dict[str, str]:
+    env = os.environ.copy()
+    env["ELISP_EVIDENCE_RECEIPT_DIR"] = str(receipt_dir)
+    return env
+
+
+def issue_evidence(
+    kind: str, repo: Path, label: str, identity: str, receipt_dir: Path
+) -> str:
+    canonical_repo = run(
+        ["git", "-C", str(repo), "rev-parse", "--show-toplevel"]
+    ).stdout.strip()
+    repo_b64 = base64.b64encode(canonical_repo.encode()).decode()
+    label_b64 = base64.b64encode(label.encode()).decode()
+    result = run(
+        [
+            "bash",
+            "-c",
+            'source "$1"; elisp_evidence_emit "$2" "$3" "$4" "$5"',
+            "issue-evidence",
+            str(EVIDENCE_LIB),
+            kind,
+            repo_b64,
+            label_b64,
+            identity,
+        ],
+        env=evidence_environment(receipt_dir),
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr or "failed to issue evidence receipt")
+    return result.stdout.strip()
 
 
 def init_repo(path: Path, filename: str = "example.el") -> Path:
@@ -67,6 +101,7 @@ class BatchTestTests(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp_dir.cleanup)
         self.root = Path(self.temp_dir.name)
+        self.receipt_dir = self.root / "receipts"
         self.home = self.root / "home"
         self.source = init_repo(
             self.home / ".config/emacs-profiles/test/elpaca/sources/example"
@@ -93,6 +128,7 @@ class BatchTestTests(unittest.TestCase):
         env = os.environ.copy()
         env["HOME"] = str(self.home)
         env["PATH"] = f"{self.fake_bin}:{env['PATH']}"
+        env["ELISP_EVIDENCE_RECEIPT_DIR"] = str(self.receipt_dir)
         if stale:
             env["FAKE_EMACS_STALE"] = "1"
         return env
@@ -101,29 +137,35 @@ class BatchTestTests(unittest.TestCase):
         result = run([str(BATCH_TEST), "example"], env=self.environment())
         self.assertEqual(result.returncode, 0, result.stderr)
         encoded_source = base64.b64encode(str(self.source / "example.el").encode()).decode()
+        encoded_source_dir = base64.b64encode(str(self.source).encode()).decode()
         self.assertIn(encoded_source, result.stdout)
+        self.assertIn(
+            f"add-to-list 'load-path (decode-coding-string (base64-decode-string \"{encoded_source_dir}\")",
+            result.stdout,
+        )
         self.assertRegex(
             result.stdout,
-            r"(?m)^ELISP_TEST_EVIDENCE_V1:[^:]+:[^:]+:[0-9a-f]{64}$",
+            r"(?m)^ELISP_TEST_EVIDENCE_V2:[^:]+:[^:]+:[0-9a-f]{64}:receipt\.[A-Za-z0-9]+$",
         )
 
     def test_stale_load_warning_fails_without_evidence(self):
         result = run([str(BATCH_TEST), "example"], env=self.environment(stale=True))
         self.assertNotEqual(result.returncode, 0)
-        self.assertNotIn("ELISP_TEST_EVIDENCE_V1", result.stdout)
+        self.assertNotIn("ELISP_TEST_EVIDENCE_", result.stdout)
 
     def test_source_change_during_batch_check_emits_no_evidence(self):
         env = self.environment()
         env["FAKE_EMACS_EDIT_SOURCE"] = str(self.source / "example.el")
         result = run([str(BATCH_TEST), "example"], env=env)
         self.assertNotEqual(result.returncode, 0)
-        self.assertNotIn("ELISP_TEST_EVIDENCE_V1", result.stdout)
+        self.assertNotIn("ELISP_TEST_EVIDENCE_", result.stdout)
 
 
 class ElispCheckEvidenceTests(unittest.TestCase):
     def test_project_check_emits_file_labeled_evidence(self):
         with tempfile.TemporaryDirectory() as directory:
-            repo = init_repo(Path(directory) / "project", ".dir-locals.el")
+            root = Path(directory)
+            repo = init_repo(root / "project", ".dir-locals.el")
             check = repo / "check.sh"
             check.write_text("#!/bin/sh\nexit 0\n")
             check.chmod(0o755)
@@ -132,17 +174,19 @@ class ElispCheckEvidenceTests(unittest.TestCase):
             result = run(
                 [str(CHECK_EVIDENCE), "file:.dir-locals.el", "--", str(check)],
                 cwd=repo,
+                env=evidence_environment(root / "receipts"),
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             label = base64.b64encode(b"file:.dir-locals.el").decode()
             self.assertRegex(
                 result.stdout,
-                rf"(?m)^ELISP_TEST_EVIDENCE_V1:[^:]+:{label}:[0-9a-f]{{64}}$",
+                rf"(?m)^ELISP_TEST_EVIDENCE_V2:[^:]+:{label}:[0-9a-f]{{64}}:receipt\.[A-Za-z0-9]+$",
             )
 
     def test_failed_project_check_emits_no_evidence(self):
         with tempfile.TemporaryDirectory() as directory:
-            repo = init_repo(Path(directory) / "project", ".dir-locals.el")
+            root = Path(directory)
+            repo = init_repo(root / "project", ".dir-locals.el")
             check = repo / "check.sh"
             check.write_text("#!/bin/sh\nexit 1\n")
             check.chmod(0o755)
@@ -151,23 +195,27 @@ class ElispCheckEvidenceTests(unittest.TestCase):
             result = run(
                 [str(CHECK_EVIDENCE), "file:.dir-locals.el", "--", str(check)],
                 cwd=repo,
+                env=evidence_environment(root / "receipts"),
             )
             self.assertNotEqual(result.returncode, 0)
-            self.assertNotIn("ELISP_TEST_EVIDENCE_V1", result.stdout)
+            self.assertNotIn("ELISP_TEST_EVIDENCE_", result.stdout)
 
     def test_trivial_true_command_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
-            repo = init_repo(Path(directory) / "project", ".dir-locals.el")
+            root = Path(directory)
+            repo = init_repo(root / "project", ".dir-locals.el")
             result = run(
                 [str(CHECK_EVIDENCE), "file:.dir-locals.el", "--", "true"],
                 cwd=repo,
+                env=evidence_environment(root / "receipts"),
             )
             self.assertEqual(result.returncode, 2)
-            self.assertNotIn("ELISP_TEST_EVIDENCE_V1", result.stdout)
+            self.assertNotIn("ELISP_TEST_EVIDENCE_", result.stdout)
 
     def test_source_change_during_project_check_emits_no_evidence(self):
         with tempfile.TemporaryDirectory() as directory:
-            repo = init_repo(Path(directory) / "project", ".dir-locals.el")
+            root = Path(directory)
+            repo = init_repo(root / "project", ".dir-locals.el")
             check = repo / "check.sh"
             check.write_text(
                 "#!/bin/sh\nprintf '%s\\n' '((nil . ((fill-column . 81))))' > .dir-locals.el\n"
@@ -178,13 +226,15 @@ class ElispCheckEvidenceTests(unittest.TestCase):
             result = run(
                 [str(CHECK_EVIDENCE), "file:.dir-locals.el", "--", str(check)],
                 cwd=repo,
+                env=evidence_environment(root / "receipts"),
             )
             self.assertNotEqual(result.returncode, 0)
-            self.assertNotIn("ELISP_TEST_EVIDENCE_V1", result.stdout)
+            self.assertNotIn("ELISP_TEST_EVIDENCE_", result.stdout)
 
     def test_staged_check_runs_against_index_snapshot(self):
         with tempfile.TemporaryDirectory() as directory:
-            repo = init_repo(Path(directory) / "project", ".dir-locals.el")
+            root = Path(directory)
+            repo = init_repo(root / "project", ".dir-locals.el")
             check = repo / "check.sh"
             check.write_text("#!/bin/sh\ngrep -q 'fill-column . 80' .dir-locals.el\n")
             check.chmod(0o755)
@@ -202,6 +252,7 @@ class ElispCheckEvidenceTests(unittest.TestCase):
                     str(check),
                 ],
                 cwd=repo,
+                env=evidence_environment(root / "receipts"),
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn(
@@ -215,18 +266,15 @@ class TestEvidenceHookTests(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp_dir.cleanup)
         self.root = Path(self.temp_dir.name)
+        self.receipt_dir = self.root / "receipts"
+        self.env = evidence_environment(self.receipt_dir)
         self.repo = init_repo(self.root / "example")
         (self.repo / "example.el").write_text("(provide 'changed)\n")
         subprocess.run(["git", "-C", str(self.repo), "add", "example.el"], check=True)
 
     def evidence(self, package: str = "example") -> str:
         revision = run([str(REVISION_HELPER), str(self.repo)]).stdout.strip()
-        canonical_repo = run(
-            ["git", "-C", str(self.repo), "rev-parse", "--show-toplevel"]
-        ).stdout.strip()
-        repo = base64.b64encode(canonical_repo.encode()).decode()
-        encoded_package = base64.b64encode(package.encode()).decode()
-        return f"ELISP_TEST_EVIDENCE_V1:{repo}:{encoded_package}:{revision}"
+        return issue_evidence("test", self.repo, package, revision, self.receipt_dir)
 
     def payload(self, tool: str, command: str, session: str, output: str = "", exit_code: int = 0):
         if tool == "codex":
@@ -252,11 +300,13 @@ class TestEvidenceHookTests(unittest.TestCase):
             ["bash", str(track)],
             input=json.dumps(self.payload(tool, "batch-test.sh example", session, evidence)),
             cwd=self.repo,
+            env=self.env,
         )
         required = run(
             ["bash", str(require)],
             input=json.dumps(self.payload(tool, "git commit -m fixture", session)),
             cwd=self.repo,
+            env=self.env,
         )
         return tracked, required, marker
 
@@ -290,6 +340,7 @@ class TestEvidenceHookTests(unittest.TestCase):
             ["bash", str(track)],
             input=json.dumps(self.payload("codex", "batch-test.sh example", session, self.evidence())),
             cwd=self.repo,
+            env=self.env,
         )
         self.assertEqual(tracked.returncode, 0, tracked.stderr)
         (self.repo / "example.el").write_text("(provide 'changed-again)\n")
@@ -297,6 +348,7 @@ class TestEvidenceHookTests(unittest.TestCase):
             ["bash", str(require)],
             input=json.dumps(self.payload("codex", "git commit -m fixture", session)),
             cwd=self.repo,
+            env=self.env,
         )
         self.assertIn("permissionDecision", required.stdout)
 
@@ -336,6 +388,7 @@ class TestEvidenceHookTests(unittest.TestCase):
                 self.payload("codex", "batch-test.sh example", session, self.evidence(), 1)
             ),
             cwd=self.repo,
+            env=self.env,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(marker.exists())
@@ -345,13 +398,8 @@ class TestEvidenceHookTests(unittest.TestCase):
         (repo / ".dir-locals.el").write_text("((nil . ((fill-column . 80))))\n")
         subprocess.run(["git", "-C", str(repo), "add", ".dir-locals.el"], check=True)
         revision = run([str(REVISION_HELPER), str(repo)]).stdout.strip()
-        canonical_repo = run(
-            ["git", "-C", str(repo), "rev-parse", "--show-toplevel"]
-        ).stdout.strip()
-        evidence = "ELISP_TEST_EVIDENCE_V1:{}:{}:{}".format(
-            base64.b64encode(canonical_repo.encode()).decode(),
-            base64.b64encode(b"file:.dir-locals.el").decode(),
-            revision,
+        evidence = issue_evidence(
+            "test", repo, "file:.dir-locals.el", revision, self.receipt_dir
         )
         session = f"nonpackage-{os.getpid()}"
         marker = Path(f"/tmp/claude-elisp-tested-{session}")
@@ -367,6 +415,7 @@ class TestEvidenceHookTests(unittest.TestCase):
             ["bash", str(DOTFILES / "codex/hooks/track-elisp-test.sh")],
             input=json.dumps(payload),
             cwd=repo,
+            env=self.env,
         )
         self.assertEqual(tracked.returncode, 0, tracked.stderr)
         payload["tool_input"]["cmd"] = "git commit -m fixture"
@@ -375,6 +424,7 @@ class TestEvidenceHookTests(unittest.TestCase):
             ["bash", str(DOTFILES / "codex/hooks/require-elisp-test-before-commit.sh")],
             input=json.dumps(payload),
             cwd=repo,
+            env=self.env,
         )
         self.assertEqual(required.stdout, "")
 
@@ -383,9 +433,9 @@ class TestEvidenceHookTests(unittest.TestCase):
         (repo / "emacs/config.org").write_text("#+title: changed\n")
         subprocess.run(["git", "-C", str(repo), "add", "emacs/config.org"], check=True)
         revision = run([str(REVISION_HELPER), str(repo)]).stdout.strip()
-        encoded_repo = base64.b64encode(str(repo).encode()).decode()
-        wrong_label = base64.b64encode(b"some-package").decode()
-        evidence = f"ELISP_TEST_EVIDENCE_V1:{encoded_repo}:{wrong_label}:{revision}"
+        evidence = issue_evidence(
+            "test", repo, "some-package", revision, self.receipt_dir
+        )
         session = f"config-label-{os.getpid()}"
         payload = {
             "tool_name": "exec_command",
@@ -400,14 +450,107 @@ class TestEvidenceHookTests(unittest.TestCase):
             ["bash", str(DOTFILES / "codex/hooks/track-elisp-test.sh")],
             input=json.dumps(payload),
             cwd=repo,
+            env=self.env,
         )
         payload["tool_input"]["cmd"] = "git commit -m fixture"
         required = run(
             ["bash", str(DOTFILES / "codex/hooks/require-elisp-test-before-commit.sh")],
             input=json.dumps(payload),
             cwd=repo,
+            env=self.env,
         )
         self.assertIn("file:emacs/config.org", required.stdout)
+
+    def test_deleted_extra_requires_file_labeled_project_evidence(self):
+        repo = init_repo(self.root / "deleted-extra", "emacs/extras/old-package.el")
+        (repo / "emacs/extras/old-package.el").unlink()
+        subprocess.run(
+            ["git", "-C", str(repo), "add", "emacs/extras/old-package.el"],
+            check=True,
+        )
+        session = f"deleted-extra-{os.getpid()}"
+        payload = {
+            "tool_name": "exec_command",
+            "session_id": session,
+            "tool_input": {"cmd": "git commit -m delete", "workdir": str(repo)},
+            "tool_response": {"output": "", "exit_code": 0},
+        }
+        required = run(
+            ["bash", str(DOTFILES / "codex/hooks/require-elisp-test-before-commit.sh")],
+            input=json.dumps(payload),
+            cwd=repo,
+            env=self.env,
+        )
+        self.assertIn("elisp-check-evidence", required.stdout)
+        self.assertIn("file:emacs/extras/old-package.el", required.stdout)
+        self.assertNotIn("batch-test.sh\" old-package", required.stdout)
+
+    def test_renamed_extra_requires_old_file_and_new_package_evidence(self):
+        repo = init_repo(self.root / "renamed-extra", "emacs/extras/old-package.el")
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(repo),
+                "mv",
+                "emacs/extras/old-package.el",
+                "emacs/extras/new-package.el",
+            ],
+            check=True,
+        )
+        revision = run([str(REVISION_HELPER), str(repo)]).stdout.strip()
+        session = f"renamed-extra-{os.getpid()}"
+        marker = Path(f"/tmp/claude-elisp-tested-{session}")
+        marker.unlink(missing_ok=True)
+        self.addCleanup(marker.unlink, missing_ok=True)
+
+        def payload(command: str, output: str = "") -> dict[str, object]:
+            return {
+                "tool_name": "exec_command",
+                "session_id": session,
+                "tool_input": {"cmd": command, "workdir": str(repo)},
+                "tool_response": {"output": output, "exit_code": 0},
+            }
+
+        old_evidence = issue_evidence(
+            "test",
+            repo,
+            "file:emacs/extras/old-package.el",
+            revision,
+            self.receipt_dir,
+        )
+        tracked = run(
+            ["bash", str(DOTFILES / "codex/hooks/track-elisp-test.sh")],
+            input=json.dumps(payload("elisp-check-evidence file:old -- check", old_evidence)),
+            cwd=repo,
+            env=self.env,
+        )
+        self.assertEqual(tracked.returncode, 0, tracked.stderr)
+        required = run(
+            ["bash", str(DOTFILES / "codex/hooks/require-elisp-test-before-commit.sh")],
+            input=json.dumps(payload("git commit -m rename")),
+            cwd=repo,
+            env=self.env,
+        )
+        self.assertIn('batch-test.sh\\\" new-package', required.stdout)
+
+        new_evidence = issue_evidence(
+            "test", repo, "new-package", revision, self.receipt_dir
+        )
+        tracked = run(
+            ["bash", str(DOTFILES / "codex/hooks/track-elisp-test.sh")],
+            input=json.dumps(payload("batch-test.sh new-package", new_evidence)),
+            cwd=repo,
+            env=self.env,
+        )
+        self.assertEqual(tracked.returncode, 0, tracked.stderr)
+        required = run(
+            ["bash", str(DOTFILES / "codex/hooks/require-elisp-test-before-commit.sh")],
+            input=json.dumps(payload("git commit -m rename")),
+            cwd=repo,
+            env=self.env,
+        )
+        self.assertEqual(required.stdout, "")
 
     def test_staged_file_evidence_allows_partial_file_commit(self):
         repo = init_repo(self.root / "partial-file", ".dir-locals.el")
@@ -424,6 +567,7 @@ class TestEvidenceHookTests(unittest.TestCase):
                 str(CHECK_EVIDENCE), "--staged", "file:.dir-locals.el", "--", str(check)
             ],
             cwd=repo,
+            env=self.env,
         )
         self.assertEqual(checked.returncode, 0, checked.stderr)
         session = f"partial-file-{os.getpid()}"
@@ -438,14 +582,60 @@ class TestEvidenceHookTests(unittest.TestCase):
         }
         run(
             ["bash", str(DOTFILES / "codex/hooks/track-elisp-test.sh")],
-            input=json.dumps(payload), cwd=repo,
+            input=json.dumps(payload), cwd=repo, env=self.env,
         )
         payload["tool_input"]["cmd"] = "git commit -m fixture"
         required = run(
             ["bash", str(DOTFILES / "codex/hooks/require-elisp-test-before-commit.sh")],
-            input=json.dumps(payload), cwd=repo,
+            input=json.dumps(payload), cwd=repo, env=self.env,
         )
         self.assertEqual(required.stdout, "")
+
+    def test_forged_evidence_without_receipt_creates_no_marker(self):
+        revision = run([str(REVISION_HELPER), str(self.repo)]).stdout.strip()
+        encoded_repo = base64.b64encode(str(self.repo).encode()).decode()
+        encoded_package = base64.b64encode(b"example").decode()
+        evidence = (
+            f"ELISP_TEST_EVIDENCE_V2:{encoded_repo}:{encoded_package}:"
+            f"{revision}:receipt.forged"
+        )
+        session = f"forged-{os.getpid()}"
+        marker = Path(f"/tmp/claude-elisp-tested-{session}")
+        marker.unlink(missing_ok=True)
+        self.addCleanup(marker.unlink, missing_ok=True)
+        payload = self.payload(
+            "codex", "printf forged # batch-test.sh", session, evidence
+        )
+        tracked = run(
+            ["bash", str(DOTFILES / "codex/hooks/track-elisp-test.sh")],
+            input=json.dumps(payload),
+            cwd=self.repo,
+            env=self.env,
+        )
+        self.assertEqual(tracked.returncode, 0, tracked.stderr)
+        self.assertFalse(marker.exists())
+        self.assertIn("no valid one-time receipt", tracked.stderr)
+
+    def test_evidence_receipt_cannot_be_replayed(self):
+        evidence = self.evidence()
+        first, _required, first_marker = self.run_hooks(
+            "codex", evidence, f"receipt-first-{os.getpid()}"
+        )
+        self.assertEqual(first.returncode, 0, first.stderr)
+        self.assertTrue(first_marker.exists())
+        replay, _required, replay_marker = self.run_hooks(
+            "codex", evidence, f"receipt-replay-{os.getpid()}"
+        )
+        self.assertEqual(replay.returncode, 0, replay.stderr)
+        self.assertFalse(replay_marker.exists())
+
+    def test_abandoned_receipts_older_than_one_day_are_removed(self):
+        self.receipt_dir.mkdir(mode=0o700)
+        stale_receipt = self.receipt_dir / "receipt.abandoned"
+        stale_receipt.write_text("abandoned\n")
+        os.utime(stale_receipt, (1, 1))
+        self.evidence()
+        self.assertFalse(stale_receipt.exists())
 
 
 class ElpacaRebuildWaitTests(unittest.TestCase):
@@ -454,6 +644,16 @@ class ElpacaRebuildWaitTests(unittest.TestCase):
         self.addCleanup(self.temp_dir.cleanup)
         self.root = Path(self.temp_dir.name)
         self.dotfiles = init_repo(self.root / "dotfiles", "emacs/extras/example.el")
+        self.home = self.root / "home"
+        mirror_parent = self.home / ".config/emacs-profiles/test/elpaca/sources"
+        mirror_parent.mkdir(parents=True)
+        self.mirror = mirror_parent / "dotfiles"
+        subprocess.run(
+            ["git", "clone", "-q", str(self.dotfiles), str(self.mirror)], check=True
+        )
+        profile_cache = self.home / ".config/emacs-profiles/.current-profile"
+        profile_cache.parent.mkdir(parents=True, exist_ok=True)
+        profile_cache.write_text("test\n")
         self.state = self.root / "state"
         self.fake_bin = self.root / "bin"
         self.fake_bin.mkdir()
@@ -461,6 +661,7 @@ class ElpacaRebuildWaitTests(unittest.TestCase):
 
     def environment(self) -> dict[str, str]:
         env = os.environ.copy()
+        env["HOME"] = str(self.home)
         env["DOTFILES_ROOT"] = str(self.dotfiles)
         env["ELPACA_RELOAD_STATE_DIR"] = str(self.state)
         env["ELPACA_RELOAD_TIMEOUT_SECONDS"] = "3"
@@ -525,6 +726,27 @@ class ElpacaRebuildWaitTests(unittest.TestCase):
         self.assertTrue(self.called.exists())
         self.assertEqual(status.read_text(), "finished:loaded\n")
 
+    def test_rejects_finished_state_for_a_different_mirror_head(self):
+        (self.dotfiles / "emacs/extras/example.el").write_text("(provide 'changed)\n")
+        subprocess.run(
+            ["git", "-C", str(self.dotfiles), "add", "emacs/extras/example.el"],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.dotfiles), "commit", "-qm", "change"], check=True
+        )
+        commit = run(["git", "-C", str(self.dotfiles), "rev-parse", "HEAD"]).stdout.strip()
+        status = self.state / commit / "example.status"
+        status.parent.mkdir(parents=True)
+        status.write_text("finished:stale mirror\n")
+        self.write_emacsclient()
+        result = run(
+            [str(REBUILD_WAIT), "example"], env=self.environment(), cwd=self.dotfiles
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("does not match source HEAD", result.stderr)
+        self.assertFalse(self.called.exists())
+
 
 class ElispLiveVerifyTests(unittest.TestCase):
     def setUp(self):
@@ -537,10 +759,12 @@ class ElispLiveVerifyTests(unittest.TestCase):
         emacsclient = self.fake_bin / "emacsclient"
         emacsclient.write_text(
             "#!/bin/sh\n"
+            "if [ -n \"${FAKE_EMACSCLIENT_LOG:-}\" ]; then printf '%s\\034' \"$*\" >> \"$FAKE_EMACSCLIENT_LOG\"; fi\n"
             "case \"$*\" in\n"
             "  *format-build-reload-status*) printf '%s\\n' '\"finished:loaded\"' ;;\n"
             "  *elpaca-extras-rebuild-and-reload*) printf '%s\\n' '\"token-1\"' ;;\n"
-            "  *) printf '%s\\n' 't' ;;\n"
+            "  *unload-feature*) printf '%s\\n' 't' ;;\n"
+            "  *) printf '%s\\n' \"${FAKE_LIVE_RESULT:-t}\" ;;\n"
             "esac\n"
         )
         emacsclient.chmod(0o755)
@@ -550,6 +774,7 @@ class ElispLiveVerifyTests(unittest.TestCase):
         env["PATH"] = f"{self.fake_bin}:{env['PATH']}"
         env["ELPACA_RELOAD_STATE_DIR"] = str(self.root / "state")
         env["ELPACA_RELOAD_POLL_INTERVAL_SECONDS"] = "0"
+        env["ELISP_EVIDENCE_RECEIPT_DIR"] = str(self.root / "receipts")
         return env
 
     def test_emits_repository_label_and_commit_bound_evidence(self):
@@ -561,7 +786,7 @@ class ElispLiveVerifyTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertRegex(
             result.stdout,
-            r"(?m)^ELISP_LIVE_EVIDENCE_V1:[^:]+:[^:]+:[0-9a-f]{40,64}$",
+            r"(?m)^ELISP_LIVE_EVIDENCE_V2:[^:]+:[^:]+:[0-9a-f]{40,64}:receipt\.[A-Za-z0-9]+$",
         )
 
     def test_unrelated_expression_is_rejected(self):
@@ -571,7 +796,7 @@ class ElispLiveVerifyTests(unittest.TestCase):
             env=self.environment(),
         )
         self.assertEqual(result.returncode, 2)
-        self.assertNotIn("ELISP_LIVE_EVIDENCE_V1", result.stdout)
+        self.assertNotIn("ELISP_LIVE_EVIDENCE_", result.stdout)
 
     def test_dirty_package_source_is_rejected(self):
         (self.repo / "example.el").write_text("(provide 'dirty)\n")
@@ -581,7 +806,129 @@ class ElispLiveVerifyTests(unittest.TestCase):
             env=self.environment(),
         )
         self.assertNotEqual(result.returncode, 0)
-        self.assertNotIn("ELISP_LIVE_EVIDENCE_V1", result.stdout)
+        self.assertNotIn("ELISP_LIVE_EVIDENCE_", result.stdout)
+
+    def test_nil_live_result_emits_no_evidence(self):
+        env = self.environment()
+        env["FAKE_LIVE_RESULT"] = "nil"
+        result = run(
+            [str(LIVE_VERIFY), "example", "--", "(example-status)"],
+            cwd=self.repo,
+            env=env,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn("ELISP_LIVE_EVIDENCE_", result.stdout)
+
+    def test_deleted_package_mode_unloads_and_verifies_absence(self):
+        repo = init_repo(self.root / "deleted", "lisp/old-package.el")
+        (repo / "lisp/old-package.el").unlink()
+        subprocess.run(
+            ["git", "-C", str(repo), "add", "lisp/old-package.el"], check=True
+        )
+        subprocess.run(
+            ["git", "-C", str(repo), "commit", "-qm", "delete old package"],
+            check=True,
+        )
+        log = self.root / "emacsclient.log"
+        env = self.environment()
+        env["FAKE_EMACSCLIENT_LOG"] = str(log)
+        result = run(
+            [
+                str(LIVE_VERIFY),
+                "deleted:old-package",
+                "--",
+                "(not (featurep 'old-package))",
+            ],
+            cwd=repo,
+            env=env,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        calls = [call.decode() for call in log.read_bytes().split(b"\x1c") if call]
+        cleanup_call = next(call for call in calls if "unload-feature id" in call)
+        cleanup_expression = cleanup_call.removeprefix("--eval ")
+        self.assertIn("elpaca<-build-dir", cleanup_expression)
+        self.assertIn("elpaca-builds-directory", cleanup_expression)
+        self.assertIn("derived-build", cleanup_expression)
+        self.assertIn("delete-directory", cleanup_expression)
+        self.assertIn("unload-feature id", cleanup_expression)
+        self.assertIn("file-exists-p build-directory", cleanup_expression)
+        self.assertIn("load-path", cleanup_expression)
+        self.assertIn("ELISP_LIVE_EVIDENCE_", result.stdout)
+
+        builds_root = self.root / "builds"
+        build_directory = builds_root / "old-package"
+        build_directory.mkdir(parents=True)
+        library = build_directory / "old-package.el"
+        library.write_text("(provide 'old-package)\n")
+        checked = run(
+            [
+                "emacs",
+                "-Q",
+                "--batch",
+                "--eval",
+                "(require 'cl-lib)",
+                "--eval",
+                f"(setq elpaca-builds-directory {json.dumps(str(builds_root))})",
+                "--eval",
+                "(defun elpaca-get (_id) t)",
+                "--eval",
+                f"(defun elpaca<-build-dir (_e) {json.dumps(str(build_directory))})",
+                "--eval",
+                '(defun elpaca<-package (_e) "old-package")',
+                "--eval",
+                f"(add-to-list 'load-path {json.dumps(str(build_directory))})",
+                "--eval",
+                f"(load {json.dumps(str(library))} nil nil t)",
+                "--eval",
+                f"(unless {cleanup_expression} (kill-emacs 1))",
+            ]
+        )
+        self.assertEqual(checked.returncode, 0, checked.stderr)
+        self.assertFalse(build_directory.exists())
+
+        retried = run(
+            [
+                "emacs",
+                "-Q",
+                "--batch",
+                "--eval",
+                "(require 'cl-lib)",
+                "--eval",
+                f"(setq elpaca-builds-directory {json.dumps(str(builds_root))})",
+                "--eval",
+                "(defun elpaca-get (_id) nil)",
+                "--eval",
+                f"(add-to-list 'load-path {json.dumps(str(build_directory))})",
+                "--eval",
+                f"(unless {cleanup_expression} (kill-emacs 1))",
+            ]
+        )
+        self.assertEqual(retried.returncode, 0, retried.stderr)
+        self.assertFalse(build_directory.exists())
+
+    def test_deleted_cleanup_can_retry_after_nil_user_result(self):
+        repo = init_repo(self.root / "deleted-retry", "old-package.el")
+        (repo / "old-package.el").unlink()
+        subprocess.run(["git", "-C", str(repo), "add", "old-package.el"], check=True)
+        subprocess.run(
+            ["git", "-C", str(repo), "commit", "-qm", "delete old package"],
+            check=True,
+        )
+        command = [
+            str(LIVE_VERIFY),
+            "deleted:old-package",
+            "--",
+            "(not (featurep 'old-package))",
+        ]
+        first_env = self.environment()
+        first_env["FAKE_LIVE_RESULT"] = "nil"
+        first = run(command, cwd=repo, env=first_env)
+        self.assertNotEqual(first.returncode, 0)
+        self.assertNotIn("ELISP_LIVE_EVIDENCE_", first.stdout)
+
+        retried = run(command, cwd=repo, env=self.environment())
+        self.assertEqual(retried.returncode, 0, retried.stderr)
+        self.assertIn("ELISP_LIVE_EVIDENCE_", retried.stdout)
 
 
 if __name__ == "__main__":

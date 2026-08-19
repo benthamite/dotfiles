@@ -19,10 +19,42 @@ esac
 
 script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
 dotfiles_root=$(cd -- "$script_dir/../.." && pwd)
+# shellcheck source=../hooks/lib-elisp-evidence.sh
+source "$dotfiles_root/claude/hooks/lib-elisp-evidence.sh"
 repo=$(git rev-parse --show-toplevel)
 commit=$(git -C "$repo" rev-parse HEAD)
+deleted_package=""
 
-if [[ "$label" == file:* ]]; then
+if [[ "$label" == deleted:* ]]; then
+  deleted_package=${label#deleted:}
+  case "$deleted_package" in
+    *[!A-Za-z0-9+_.-]* | "")
+      echo "Invalid deleted package label: $label" >&2
+      exit 2
+      ;;
+  esac
+  deleted_candidates=$(
+    git -C "$repo" diff-tree --root --no-commit-id --name-status -M -r "$commit" 2>/dev/null |
+      while IFS=$'\t' read -r status first _second; do
+        case "$status" in D*|R*) candidate=$first ;; *) continue ;; esac
+        if [ "$repo" = "$dotfiles_root" ]; then
+          [ "$candidate" = "emacs/extras/$deleted_package.el" ] || continue
+        else
+          [ "$(basename "$candidate")" = "$deleted_package.el" ] || continue
+        fi
+        printf '%s\n' "$candidate"
+      done
+  )
+  if [ "$(printf '%s\n' "$deleted_candidates" | sed '/^$/d' | wc -l | tr -d ' ')" != 1 ]; then
+    echo "Deleted-package verification requires one matching deleted path in HEAD: $label" >&2
+    exit 1
+  fi
+  target_pathspec=$(printf '%s\n' "$deleted_candidates" | sed -n '1p')
+  if [[ "$expression" != *"$deleted_package"* ]]; then
+    echo "The live expression must name the deleted package it verifies: $deleted_package" >&2
+    exit 2
+  fi
+elif [[ "$label" == file:* ]]; then
   relative=${label#file:}
   target_pathspec="$relative"
 else
@@ -44,14 +76,69 @@ if ! git -C "$repo" diff --quiet -- "$target_pathspec" ||
   exit 1
 fi
 
-if [ "$repo" = "$dotfiles_root" ] && [ -f "$repo/emacs/extras/$label.el" ]; then
+if [ -n "$deleted_package" ]; then
+  cleanup_expression="(let* ((id '$deleted_package)
+       (e (elpaca-get id))
+       (package-name (symbol-name id))
+       (builds-root (file-name-as-directory (expand-file-name elpaca-builds-directory)))
+       (derived-build (file-name-as-directory
+                       (expand-file-name package-name builds-root)))
+       (resolved-build (and e (elpaca<-build-dir e)
+                            (file-name-as-directory
+                             (expand-file-name (elpaca<-build-dir e)))))
+       (build-directory (or resolved-build derived-build)))
+  (unless (and (equal build-directory derived-build)
+               (equal (file-name-directory
+                       (directory-file-name build-directory))
+                      builds-root)
+               (not (equal build-directory builds-root))
+               (equal (file-name-nondirectory
+                       (directory-file-name build-directory))
+                      package-name)
+               (or (not e) (equal (elpaca<-package e) package-name))
+               (or (not (file-exists-p build-directory))
+                   (and (file-directory-p build-directory)
+                        (not (file-symlink-p
+                              (directory-file-name build-directory))))))
+    (error \"Unsafe Elpaca build directory for %S: %S\"
+           id build-directory))
+  (when (featurep id) (unload-feature id t))
+  (setq load-path
+        (cl-remove-if
+         (lambda (entry)
+           (and (stringp entry)
+                (equal (file-name-as-directory (expand-file-name entry))
+                       build-directory)))
+         load-path))
+  (when (file-exists-p build-directory)
+    (delete-directory build-directory t))
+  (and (not (featurep id))
+       (not (file-exists-p build-directory))
+       (not (cl-find-if
+             (lambda (entry)
+               (and (stringp entry)
+                    (equal (file-name-as-directory (expand-file-name entry))
+                           build-directory)))
+             load-path))))"
+  unload_result=$(timeout 30 emacsclient --eval "$cleanup_expression")
+  printf '%s\n' "$unload_result"
+  if [ "$unload_result" != t ]; then
+    echo "Live deletion check did not remove the loaded feature: $deleted_package" >&2
+    exit 1
+  fi
+elif [ "$repo" = "$dotfiles_root" ] && [ -f "$repo/emacs/extras/$label.el" ]; then
   "$dotfiles_root/claude/bin/elpaca-rebuild-wait" "$label"
 elif [[ "$label" != file:* ]]; then
   DOTFILES_ROOT="$dotfiles_root" "$dotfiles_root/claude/bin/elpaca-rebuild-wait" "$label"
 fi
 
-timeout 30 emacsclient --eval "$expression"
+live_result=$(timeout 30 emacsclient --eval "$expression")
+printf '%s\n' "$live_result"
+if [ -z "$live_result" ] || [ "$live_result" = nil ]; then
+  echo "The live verification expression returned nil for $label" >&2
+  exit 1
+fi
 
 repo_b64=$(printf '%s' "$repo" | base64 | tr -d '\n')
 label_b64=$(printf '%s' "$label" | base64 | tr -d '\n')
-printf 'ELISP_LIVE_EVIDENCE_V1:%s:%s:%s\n' "$repo_b64" "$label_b64" "$commit"
+elisp_evidence_emit live "$repo_b64" "$label_b64" "$commit"

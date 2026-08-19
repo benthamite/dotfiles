@@ -144,6 +144,35 @@ elif [ -n "$_repo_context_dir" ] && [ -d "$_repo_context_dir" ]; then
 else
   REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || true)
 fi
+
+# Preserve the directory from which Git itself will interpret relative global
+# option paths. Callers that inspect another invocation in the same shell
+# program must not reinterpret `-C subdir` from the resolved repository root.
+REPO_COMMAND_CONTEXT="${_repo_context_dir:-$PWD}"
+[ -z "$_cd_target" ] || REPO_COMMAND_CONTEXT="$_cd_target"
+
+# A Git global `-C`, `--git-dir`, or `--work-tree` option can target a
+# repository outside the shell tool context. When the shared parser is loaded,
+# resolve the first commit invocation through those literal options. The base
+# remains the effective `cd` target when the command has one.
+if [ -z "$_cd_unresolvable" ] &&
+   command -v codex_git_invocations >/dev/null 2>&1 &&
+   command -v codex_git_invocation_repo >/dev/null 2>&1; then
+  _commit_invocation=""
+  while IFS= read -r -d '' _git_invocation; do
+    if [ "$(printf '%s' "$_git_invocation" | jq -r '.subcommand')" = commit ]; then
+      _commit_invocation="$_git_invocation"
+      break
+    fi
+  done < <(printf '%s' "$COMMAND" | codex_git_invocations)
+  if [ -n "$_commit_invocation" ]; then
+    _git_invocation_repo=$(codex_git_invocation_repo \
+      "$_commit_invocation" "$REPO_COMMAND_CONTEXT" || true)
+    [ -z "$_git_invocation_repo" ] || REPO_ROOT="$_git_invocation_repo"
+  fi
+  unset _commit_invocation _git_invocation
+  unset _git_invocation_repo
+fi
 unset _cd_target
 unset _cd_unresolvable
 unset _repo_context_dir

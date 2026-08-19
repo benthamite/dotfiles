@@ -26,6 +26,8 @@ esac
 script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
 dotfiles_root=$(cd -- "$script_dir/../.." && pwd)
 revision_helper="$dotfiles_root/claude/bin/elisp-source-revision"
+# shellcheck source=../hooks/lib-elisp-evidence.sh
+source "$dotfiles_root/claude/hooks/lib-elisp-evidence.sh"
 repo=$(git rev-parse --show-toplevel)
 check_command="$1"
 shift
@@ -96,4 +98,4 @@ if [ "$revision_after" != "$revision_before" ]; then
 fi
 repo_b64=$(printf '%s' "$repo" | base64 | tr -d '\n')
 label_b64=$(printf '%s' "$label" | base64 | tr -d '\n')
-printf 'ELISP_TEST_EVIDENCE_V1:%s:%s:%s\n' "$repo_b64" "$label_b64" "$revision_before"
+elisp_evidence_emit test "$repo_b64" "$label_b64" "$revision_before"

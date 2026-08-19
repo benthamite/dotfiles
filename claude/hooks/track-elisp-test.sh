@@ -12,6 +12,10 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+# shellcheck source=lib-elisp-evidence.sh
+source "$SCRIPT_DIR/lib-elisp-evidence.sh"
+
 INPUT=$(cat)
 
 COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
@@ -61,14 +65,19 @@ if [ "$EXIT_CODE" = 0 ] && echo "$COMMAND" | grep -qE 'batch-test\.sh|elisp-chec
     exit 0
   fi
 
-  EVIDENCE=$(printf '%s\n' "$COMBINED" | grep '^ELISP_TEST_EVIDENCE_V1:' | tail -1 || true)
+  EVIDENCE=$(printf '%s\n' "$COMBINED" | grep '^ELISP_TEST_EVIDENCE_V2:' | tail -1 || true)
   if [ -z "$EVIDENCE" ]; then
     echo "WARNING: Elisp check returned no revision-bound evidence." >&2
     exit 0
   fi
+  VERIFIED_EVIDENCE=$(elisp_evidence_consume test "$EVIDENCE" || true)
+  if [ -z "$VERIFIED_EVIDENCE" ]; then
+    echo "WARNING: Elisp check evidence has no valid one-time receipt." >&2
+    exit 0
+  fi
 
-  IFS=: read -r VERSION REPO_B64 PACKAGE_B64 REVISION <<< "$EVIDENCE"
-  if [ "$VERSION" != ELISP_TEST_EVIDENCE_V1 ] ||
+  IFS=: read -r VERSION REPO_B64 PACKAGE_B64 REVISION <<< "$VERIFIED_EVIDENCE"
+  if [ "$VERSION" != ELISP_TEST_EVIDENCE_V2 ] ||
      ! [[ "$REVISION" =~ ^[0-9a-f]{64}$ ]]; then
     echo "WARNING: Elisp check returned malformed test evidence." >&2
     exit 0
@@ -84,7 +93,7 @@ if [ "$EXIT_CODE" = 0 ] && echo "$COMMAND" | grep -qE 'batch-test\.sh|elisp-chec
 
   REPO=$(decode_base64 "$REPO_B64") || exit 0
   PACKAGE=$(decode_base64 "$PACKAGE_B64") || exit 0
-  DOTFILES_ROOT=$(cd -- "$(dirname -- "$0")/../.." && pwd)
+  DOTFILES_ROOT=$(cd -- "$SCRIPT_DIR/../.." && pwd)
   REVISION_HELPER="$DOTFILES_ROOT/claude/bin/elisp-source-revision"
   WORKING_REVISION=$("$REVISION_HELPER" "$REPO" 2>/dev/null || true)
   INDEX_REVISION=$("$REVISION_HELPER" --index "$REPO" 2>/dev/null || true)

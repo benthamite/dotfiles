@@ -418,10 +418,647 @@ for line in reversed(result.stdout.splitlines()):
   return 1
 }
 
+# Emit the Git invocations in a shell program as NUL-delimited JSON records.
+# Each record contains the subcommand, its arguments, and the Git global
+# options that precede it. This lets callers recognize forms such as
+# `git -C repo commit` without evaluating the command.
+codex_git_invocations() {
+  python3 -c '
+import json
+import os
+import shlex
+import subprocess
+import sys
+
+source = sys.stdin.read()
+context_dir = sys.argv[1] if len(sys.argv) > 1 and os.path.isdir(sys.argv[1]) else os.getcwd()
+boundaries = {";", ";;", "&", "&&", "|", "||", "(", ")", "\n"}
+interpreters = {"bash", "sh", "zsh", "dash", "ksh"}
+global_value_options = {
+    "-C", "-c", "--git-dir", "--work-tree", "--namespace",
+    "--super-prefix", "--config-env", "--exec-path",
+}
+global_flag_options = {
+    "--bare", "--no-pager", "--paginate", "-p", "--literal-pathspecs",
+    "--glob-pathspecs", "--noglob-pathspecs", "--icase-pathspecs",
+    "--no-optional-locks", "--no-replace-objects",
+}
+terminal_global_options = {"--version", "--help", "-h"}
+
+
+def load_builtin_commands():
+    try:
+        result = subprocess.run(
+            ["git", "--list-cmds=builtins"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+        return set(result.stdout.split())
+    except (OSError, subprocess.SubprocessError):
+        # With no command inventory, unknown Git subcommands must remain
+        # ambiguous. Literal core commands are added so routine hooks still
+        # classify the operations they are designed to inspect.
+        return {
+            "add", "commit", "config", "diff", "diff-tree", "ls-files",
+            "rev-parse", "status",
+        }
+
+
+builtin_commands = load_builtin_commands()
+
+
+def tokenize(program):
+    try:
+        lexer = shlex.shlex(program, posix=True, punctuation_chars=";&|()\n")
+        lexer.whitespace = " \t\r"
+        lexer.whitespace_split = True
+        lexer.commenters = "#"
+        return list(lexer)
+    except ValueError:
+        return []
+
+
+def is_assignment(token):
+    if "=" not in token or token.startswith(("/", "./", "../")):
+        return False
+    name = token.partition("=")[0]
+    return bool(name) and (name[0].isalpha() or name[0] == "_") and all(
+        char.isalnum() or char == "_" for char in name
+    )
+
+
+def split_segments(tokens):
+    segment = []
+    for token in tokens:
+        if token in boundaries or (token and all(char in ";&|()\n" for char in token)):
+            if segment:
+                yield segment, token
+                segment = []
+        else:
+            segment.append(token)
+    if segment:
+        yield segment, None
+
+
+def ambiguous_commit(reason, assignments=None, global_args=None, invoked=None):
+    record = {
+        "subcommand": "commit",
+        "args": [],
+        "global_args": global_args or [],
+        "assignments": assignments or [],
+        "ambiguous": True,
+        "ambiguity": reason,
+    }
+    if invoked is not None:
+        record["invoked_subcommand"] = invoked
+    return record
+
+
+def assignment_name(token):
+    return token.partition("=")[0]
+
+
+def git_assignments_ambiguous(assignments):
+    return any(assignment_name(token).startswith("GIT_") for token in assignments)
+
+
+def config_aliases(global_args):
+    aliases = {}
+    pos = 0
+    while pos < len(global_args):
+        token = global_args[pos]
+        value = None
+        if token == "-c" and pos + 1 < len(global_args):
+            value = global_args[pos + 1]
+            pos += 2
+        elif token.startswith("-c") and token != "-c":
+            value = token[2:]
+            pos += 1
+        else:
+            pos += 1
+        if value is None or "=" not in value:
+            continue
+        key, _, alias_value = value.partition("=")
+        if key.lower().startswith("alias.") and len(key) > len("alias."):
+            aliases[key[len("alias."):]] = alias_value
+    return aliases
+
+
+def configured_alias(name, global_args):
+    try:
+        result = subprocess.run(
+            ["git"] + global_args + ["config", "--get", "alias." + name],
+            cwd=context_dir,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    return result.stdout.rstrip("\n")
+
+
+def parse_git(words, assignments=None, inherited_aliases=None, alias_depth=0):
+    assignments = assignments or []
+    global_args = []
+    ambiguous = False
+    pos = 1
+    while pos < len(words):
+        token = words[pos]
+        if token in terminal_global_options:
+            return None
+        if token == "--":
+            global_args.append(token)
+            pos += 1
+            break
+        if token in global_value_options:
+            global_args.append(token)
+            pos += 1
+            if pos >= len(words):
+                return None
+            global_args.append(words[pos])
+            pos += 1
+            continue
+        if any(token.startswith(option + "=") for option in global_value_options if option.startswith("--")):
+            global_args.append(token)
+            pos += 1
+            continue
+        if token.startswith("-C") and token != "-C":
+            global_args.append(token)
+            pos += 1
+            continue
+        if token.startswith("-c") and token != "-c":
+            global_args.append(token)
+            pos += 1
+            continue
+        if token in global_flag_options:
+            global_args.append(token)
+            pos += 1
+            continue
+        if token.startswith("-"):
+            # An unknown option may or may not consume the next token. Keep
+            # scanning, but mark a later commit token as ambiguous so policy
+            # gates can fail closed instead of mistaking an option value for
+            # the subcommand.
+            global_args.append(token)
+            ambiguous = True
+            pos += 1
+            continue
+        if ambiguous and "commit" in words[pos:]:
+            commit_pos = words.index("commit", pos)
+            record = {
+                "subcommand": "commit",
+                "args": words[commit_pos + 1:],
+                "global_args": words[1:commit_pos],
+                "assignments": assignments,
+                "ambiguous": True,
+                "ambiguity": "unknown-git-global-option",
+            }
+            return record
+
+        aliases = dict(inherited_aliases or {})
+        aliases.update(config_aliases(global_args))
+        if token not in aliases and token not in builtin_commands:
+            alias_value = configured_alias(token, global_args)
+            if alias_value is not None:
+                aliases[token] = alias_value
+        if token in aliases:
+            if alias_depth >= 8:
+                return ambiguous_commit(
+                    "git-alias-depth", assignments, global_args, token
+                )
+            alias_value = aliases[token]
+            if alias_value.startswith("!"):
+                return ambiguous_commit(
+                    "git-shell-alias", assignments, global_args, token
+                )
+            try:
+                alias_words = shlex.split(alias_value, posix=True)
+            except ValueError:
+                return ambiguous_commit(
+                    "invalid-git-alias", assignments, global_args, token
+                )
+            if not alias_words:
+                return ambiguous_commit(
+                    "empty-git-alias", assignments, global_args, token
+                )
+            record = parse_git(
+                ["git"] + alias_words + words[pos + 1:],
+                assignments,
+                aliases,
+                alias_depth + 1,
+            )
+            if record is None:
+                return None
+            record["global_args"] = global_args
+            record["invoked_subcommand"] = token
+            if git_assignments_ambiguous(assignments):
+                record["ambiguous"] = True
+                record["ambiguity"] = "git-environment"
+            return record
+
+        dynamic_subcommand = any(char in token for char in "$`{}*?[")
+        if dynamic_subcommand:
+            return ambiguous_commit(
+                "dynamic-git-subcommand", assignments, global_args, token
+            )
+        record = {
+            "subcommand": token,
+            "args": words[pos + 1:],
+            "global_args": global_args,
+            "assignments": assignments,
+            "ambiguous": git_assignments_ambiguous(assignments),
+        }
+        if record["ambiguous"]:
+            record["ambiguity"] = "git-environment"
+        return record
+    return None
+
+
+def consume_command_wrapper(words, pos):
+    wrapper = words[pos]
+    pos += 1
+    if wrapper == "command":
+        while pos < len(words):
+            token = words[pos]
+            if token == "--":
+                return pos + 1, False
+            if token in {"-v", "-V"}:
+                return pos + 1, True
+            if token == "-p":
+                pos += 1
+                continue
+            break
+        return pos, False
+    while pos < len(words):
+        token = words[pos]
+        if token == "--":
+            return pos + 1, False
+        if token in {"-c", "-l"}:
+            pos += 1
+            continue
+        if token == "-a":
+            return pos + 2, pos + 1 >= len(words)
+        if token.startswith("-a") and token != "-a":
+            pos += 1
+            continue
+        break
+    return pos, False
+
+
+def interpreter_command_index(command_words):
+    pos = 1
+    while pos < len(command_words):
+        option = command_words[pos]
+        if option == "--":
+            return None
+        if option in {"--norc", "--noprofile", "--posix", "--restricted", "--verbose"}:
+            pos += 1
+            continue
+        if option in {"--rcfile", "--init-file"}:
+            pos += 2
+            continue
+        if option.startswith("--rcfile=") or option.startswith("--init-file="):
+            pos += 1
+            continue
+        if option in {"-o", "+o", "-O", "+O"}:
+            pos += 2
+            continue
+        if option.startswith("-") and not option.startswith("--") and "c" in option[1:]:
+            return pos + 1
+        if option.startswith("+") and "c" in option[1:]:
+            return pos + 1
+        if option.startswith("-") or option.startswith("+"):
+            pos += 1
+            continue
+        return None
+    return None
+
+
+def extract_substitutions(program):
+    masked = []
+    commands = []
+    pos = 0
+    single_quoted = False
+    double_quoted = False
+    while pos < len(program):
+        char = program[pos]
+        if char == "\\" and pos + 1 < len(program):
+            masked.append(program[pos:pos + 2])
+            pos += 2
+            continue
+        if char == chr(39) and not double_quoted:
+            single_quoted = not single_quoted
+            masked.append(char)
+            pos += 1
+            continue
+        if char == "\"" and not single_quoted:
+            double_quoted = not double_quoted
+            masked.append(char)
+            pos += 1
+            continue
+        if not single_quoted and program.startswith("$(", pos):
+            inner = pos + 2
+            end = inner
+            depth = 1
+            inner_single = False
+            inner_double = False
+            while end < len(program):
+                current = program[end]
+                if current == "\\" and end + 1 < len(program):
+                    end += 2
+                    continue
+                if current == chr(39) and not inner_double:
+                    inner_single = not inner_single
+                    end += 1
+                    continue
+                if current == "\"" and not inner_single:
+                    inner_double = not inner_double
+                    end += 1
+                    continue
+                if not inner_single and not inner_double:
+                    if program.startswith("$(", end):
+                        depth += 1
+                        end += 2
+                        continue
+                    if current == ")":
+                        depth -= 1
+                        if depth == 0:
+                            break
+                end += 1
+            if depth != 0:
+                return program, [], True
+            commands.append(program[inner:end])
+            masked.append("SUBSTITUTION")
+            pos = end + 1
+            continue
+        if not single_quoted and char == "`":
+            end = pos + 1
+            while end < len(program):
+                if program[end] == "\\" and end + 1 < len(program):
+                    end += 2
+                    continue
+                if program[end] == "`":
+                    break
+                end += 1
+            if end >= len(program):
+                return program, [], True
+            commands.append(program[pos + 1:end])
+            masked.append("SUBSTITUTION")
+            pos = end + 1
+            continue
+        masked.append(char)
+        pos += 1
+    return "".join(masked), commands, False
+
+
+def scan(program, depth=0):
+    if depth > 4:
+        return [ambiguous_commit("shell-recursion-limit")]
+    records = []
+    masked_program, substitutions, invalid_substitution = extract_substitutions(program)
+    if invalid_substitution:
+        return [ambiguous_commit("invalid-command-substitution")]
+    for nested_program in substitutions:
+        nested_records = scan(nested_program, depth + 1)
+        for record in nested_records:
+            record["ambiguous"] = True
+            record["ambiguity"] = "shell-command-substitution"
+        records.extend(nested_records)
+    shell_variables = {}
+    segments = list(split_segments(tokenize(masked_program)))
+    for segment_index, (words, terminator) in enumerate(segments):
+        pos = 0
+        assignments = []
+        control_ambiguous = False
+        while pos < len(words) and is_assignment(words[pos]):
+            assignments.append(words[pos])
+            pos += 1
+
+        if pos >= len(words):
+            if terminator in {";", ";;", "&&", "||", "\n"}:
+                for assignment in assignments:
+                    name, _, value = assignment.partition("=")
+                    if not any(char in value for char in "$`"):
+                        shell_variables[name] = value
+            continue
+
+        while pos < len(words) and words[pos] in {"!", "if", "then", "elif", "while", "until", "do", "{"}:
+            if words[pos] in {"!", "if", "elif", "while", "until"}:
+                control_ambiguous = True
+            pos += 1
+        if pos < len(words) and words[pos] == "time":
+            pos += 1
+            while pos < len(words) and words[pos] in {"-p", "--"}:
+                pos += 1
+        while pos < len(words) and words[pos] in {"command", "exec"}:
+            pos, terminal = consume_command_wrapper(words, pos)
+            if terminal:
+                pos = len(words)
+                break
+        if pos >= len(words):
+            continue
+
+        if words[pos] == "env":
+            pos += 1
+            while pos < len(words):
+                token = words[pos]
+                if token == "--":
+                    pos += 1
+                    break
+                if token in {"-i", "--ignore-environment", "-0", "--null"}:
+                    pos += 1
+                    continue
+                if token in {"-u", "--unset", "-C", "--chdir", "-S", "--split-string"}:
+                    pos += 2
+                    continue
+                if any(token.startswith(prefix) for prefix in ("--unset=", "--chdir=", "--split-string=")):
+                    pos += 1
+                    continue
+                if is_assignment(token):
+                    assignments.append(token)
+                    pos += 1
+                    continue
+                break
+            if pos >= len(words):
+                continue
+
+        executable = os.path.basename(words[pos])
+        command_words = words[pos:]
+        if executable == "git":
+            if len(command_words) > 1:
+                subcommand = command_words[1]
+                variable_name = None
+                if subcommand.startswith("${") and subcommand.endswith("}"):
+                    variable_name = subcommand[2:-1]
+                elif subcommand.startswith("$"):
+                    variable_name = subcommand[1:]
+                if variable_name in shell_variables:
+                    command_words = [
+                        command_words[0], shell_variables[variable_name]
+                    ] + command_words[2:]
+                elif (
+                    subcommand.startswith("{")
+                    and subcommand.endswith("}")
+                    and "," in subcommand
+                ):
+                    command_words = [command_words[0]] + subcommand[1:-1].split(",") + command_words[2:]
+            record = parse_git(command_words, assignments)
+            if record is not None:
+                if record["subcommand"] == "commit" and control_ambiguous:
+                    record["ambiguous"] = True
+                    record["ambiguity"] = "shell-control-flow"
+                later_command = segment_index + 1 < len(segments)
+                status_decoupled = terminator in {"|", "||", "&", "&&"} or (
+                    terminator in {";", ";;", "\n"} and later_command
+                )
+                if (
+                    record["subcommand"] == "commit"
+                    and status_decoupled
+                    and not record["ambiguous"]
+                ):
+                    record["ambiguous"] = True
+                    record["ambiguity"] = "shell-status-decoupled"
+                records.append(record)
+            continue
+        if executable == "eval":
+            if len(command_words) < 2:
+                continue
+            nested = scan(" ".join(command_words[1:]), depth + 1)
+            for record in nested:
+                record["ambiguous"] = True
+                record["ambiguity"] = "shell-eval"
+            records.extend(nested)
+            continue
+        if executable in interpreters:
+            command_index = interpreter_command_index(command_words)
+            if command_index is not None and command_index < len(command_words):
+                records.extend(scan(command_words[command_index], depth + 1))
+            elif command_index is not None:
+                records.append(ambiguous_commit("missing-interpreter-command"))
+            continue
+        if executable.startswith("$") or executable.startswith("`"):
+            if "commit" in command_words[1:]:
+                records.append(ambiguous_commit("dynamic-shell-executable"))
+    return records
+
+
+for record in scan(source):
+    sys.stdout.buffer.write(
+        json.dumps(record, separators=(",", ":")).encode("utf-8") + b"\0"
+    )
+' "${1:-${CODEX_GIT_PARSE_CONTEXT:-}}"
+}
+
+codex_git_subcommand_count() {
+  local target="$1"
+  local context_dir="${2:-${CODEX_GIT_PARSE_CONTEXT:-}}"
+  local record count=0
+  while IFS= read -r -d '' record; do
+    if [ "$(printf '%s' "$record" | jq -r '.subcommand')" = "$target" ]; then
+      count=$((count + 1))
+    fi
+  done < <(codex_git_invocations "$context_dir")
+  printf '%s\n' "$count"
+}
+
+codex_git_invocation_repo() {
+  local record="$1"
+  local context_dir="$2"
+  local value have_global_args=false
+  local -a global_args=()
+  while IFS= read -r -d '' value; do
+    global_args+=("$value")
+    have_global_args=true
+  done < <(printf '%s' "$record" | jq -j '.global_args[] | ., "\u0000"')
+  (
+    cd -- "$context_dir" 2>/dev/null || exit 1
+    if [ "$have_global_args" = true ]; then
+      git "${global_args[@]}" rev-parse --show-toplevel 2>/dev/null
+    else
+      git rev-parse --show-toplevel 2>/dev/null
+    fi
+  )
+}
+
+# Return success when a parsed `git add` invocation would select a changed
+# Elisp source or emacs/config.org. This is read-only: it asks Git which changed
+# tracked and untracked paths match the invocation pathspecs.
+codex_git_add_selects_elisp() {
+  local repo="$1"
+  local record="$2"
+  local value argument tracked_only=false all_paths=false
+  local expect_value=false pathspec_from_file=false after_double_dash=false
+  local -a add_args=() pathspecs=() list_args=(-m -d)
+
+  while IFS= read -r -d '' value; do
+    add_args+=("$value")
+  done < <(printf '%s' "$record" | jq -j '.args[] | ., "\u0000"')
+  for argument in "${add_args[@]}"; do
+    if [ "$after_double_dash" = true ]; then
+      pathspecs+=("$argument")
+      continue
+    fi
+    if [ "$expect_value" = true ]; then
+      expect_value=false
+      pathspec_from_file=true
+      continue
+    fi
+    case "$argument" in
+      --) after_double_dash=true ;;
+      -A|--all) all_paths=true ;;
+      -u|--update) tracked_only=true; all_paths=true ;;
+      -p|--patch|-i|--interactive|-e|--edit|-U|--unified|--unified=*|-U*) all_paths=true ;;
+      --pathspec-from-file) expect_value=true ;;
+      --pathspec-from-file=*) pathspec_from_file=true ;;
+      --chmod) expect_value=true ;;
+      --chmod=*|-N|--intent-to-add|-f|--force|--ignore-errors|--ignore-missing|--renormalize|--sparse|--refresh|--no-all|--no-ignore-removal) ;;
+      -*A*|--all=*) all_paths=true ;;
+      -*u*) tracked_only=true; all_paths=true ;;
+      -*) ;;
+      *) pathspecs+=("$argument") ;;
+    esac
+  done
+  if [ "$pathspec_from_file" = true ]; then
+    all_paths=true
+    pathspecs=()
+  fi
+  if [ ${#pathspecs[@]} -eq 0 ] && [ "$all_paths" = false ]; then
+    return 1
+  fi
+  if [ "$tracked_only" = false ]; then
+    list_args+=(-o --exclude-standard)
+  fi
+  if [ ${#pathspecs[@]} -gt 0 ]; then
+    list_args+=(-- "${pathspecs[@]}")
+  fi
+  while IFS= read -r -d '' value; do
+    case "$value" in
+      *.el|emacs/config.org) return 0 ;;
+    esac
+  done < <(git -C "$repo" ls-files -z "${list_args[@]}" 2>/dev/null || true)
+  # Include paths that are already changed in the index. A repeated explicit
+  # add still forms one compound stage-and-commit request and must be split.
+  local -a diff_args=(--cached --name-only -z)
+  if [ ${#pathspecs[@]} -gt 0 ]; then
+    diff_args+=(-- "${pathspecs[@]}")
+  fi
+  while IFS= read -r -d '' value; do
+    case "$value" in
+      *.el|emacs/config.org) return 0 ;;
+    esac
+  done < <(git -C "$repo" diff "${diff_args[@]}" 2>/dev/null || true)
+  return 1
+}
+
 # Classify executable-looking shell syntax while ignoring inert quoted text.
-# Git classification stays conservative when an interpreter can execute a
-# quoted payload. Emacsclient classification requires the executable at a
-# command boundary, so quoted commit messages can never clear verification.
+# Emacsclient classification requires the executable at a command boundary, so
+# quoted commit messages can never clear verification.
 _codex_shell_syntax_count() {
   python3 -c '
 import re
@@ -490,7 +1127,7 @@ print(len(re.findall(pattern, scan, flags=re.MULTILINE)))
 }
 
 codex_git_commit_count() {
-  _codex_shell_syntax_count git
+  codex_git_subcommand_count commit "${1:-${CODEX_GIT_PARSE_CONTEXT:-}}"
 }
 
 codex_emacsclient_eval_count() {

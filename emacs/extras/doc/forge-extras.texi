@@ -63,6 +63,7 @@ Commands
 
 Pulling notifications
 
+* Offline protection::
 * Re-entrancy protection::
 
 GitHub Project integration
@@ -327,8 +328,27 @@ example, to refresh notifications periodically in the background) rather
 than direct interactive invocation.
 
 @menu
+* Offline protection::
 * Re-entrancy protection::
 @end menu
+
+@node Offline protection
+@subsection Offline protection
+
+On systems without asynchronous DNS support (notably macOS), Emacs
+resolves hostnames synchronously inside @code{open-network-stream}, so a
+network outage freezes Emacs for the duration of the resolver timeout —
+before any Elisp-level timeout can intervene.  To avoid this,
+@code{forge-extras-pull-notifications} first probes DNS resolution of
+@samp{api.github.com} in a subprocess (@samp{dscacheutil} on macOS, @samp{getent}
+elsewhere) and only pulls when the probe succeeds.  A successful probe
+also warms the system resolver cache, so the subsequent in-process
+lookup returns instantly.  The probe is abandoned after
+@code{forge-extras-dns-probe-timeout} seconds (default 3).
+
+The variable @code{forge-extras-pull-notifications-timeout} additionally
+injects a timeout into @code{url-retrieve-synchronously}, which protects
+against connections that drop after DNS resolution succeeds.
 
 @node Re-entrancy protection
 @subsection Re-entrancy protection

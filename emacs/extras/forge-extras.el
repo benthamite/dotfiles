@@ -201,9 +201,17 @@ Prevents re-entrant calls when a timer fires during GPG decryption.")
 
 (defun forge-extras-pull-notifications ()
   "Fetch notifications for all repositories from the current forge.
+Probe DNS resolution of the GitHub API host in a subprocess first, and
+skip the pull when the probe fails, so that Emacs does not freeze inside
+the synchronous resolver call in `open-network-stream' when offline."
+  (forge-extras--call-when-host-resolves "api.github.com"
+                                         #'forge-extras--pull-notifications-now))
+
+(defun forge-extras--pull-notifications-now ()
+  "Fetch notifications for all repositories from the current forge.
 Do not update if `elfeed' is in the process of being updated, since this causes
 problems.  Inject a timeout into `url-retrieve-synchronously' so that
-Emacs does not freeze when there is no internet connection."
+Emacs does not freeze when the connection drops mid-request."
   (unless (or forge-extras--pull-in-progress
               (bound-and-true-p elfeed-extras-auto-update-in-process))
     (let ((forge-extras--pull-in-progress t))
@@ -218,6 +226,54 @@ Emacs does not freeze when there is no internet connection."
                   (forge-pull-notifications)))))
         (error
          (forge-extras-message-debug "Skipping notifications due to error: %S" err))))))
+
+(defvar forge-extras-dns-probe-timeout 3
+  "Seconds to wait for a DNS probe subprocess before assuming Emacs is offline.")
+
+(defun forge-extras--call-when-host-resolves (host callback)
+  "Call CALLBACK once HOST resolves in a background subprocess.
+Emacs resolves hostnames synchronously inside `open-network-stream' on
+systems without async DNS support, such as macOS, so a dead network
+freezes Emacs for the duration of the resolver timeout.  Probing in a
+subprocess avoids the freeze and warms the system resolver cache, which
+makes the subsequent in-process lookup return instantly.  When HOST does
+not resolve within `forge-extras-dns-probe-timeout', log a debug message
+instead of calling CALLBACK.  When no resolver command is available,
+call CALLBACK directly."
+  (if-let* ((command (forge-extras--dns-probe-command host)))
+      (let ((proc (make-process
+                   :name "forge-extras-dns-probe"
+                   :buffer (generate-new-buffer " *forge-extras-dns-probe*")
+                   :command command
+                   :noquery t
+                   :sentinel (forge-extras--dns-probe-sentinel callback))))
+        (run-at-time forge-extras-dns-probe-timeout nil
+                     #'forge-extras--kill-dns-probe proc))
+    (funcall callback)))
+
+(defun forge-extras--dns-probe-command (host)
+  "Return the resolver command used to probe HOST, or nil when unavailable."
+  (cond ((executable-find "dscacheutil")
+         (list "dscacheutil" "-q" "host" "-a" "name" host))
+        ((executable-find "getent")
+         (list "getent" "ahosts" host))))
+
+(defun forge-extras--dns-probe-sentinel (callback)
+  "Return a DNS probe sentinel that calls CALLBACK on successful resolution."
+  (lambda (proc _event)
+    (unless (process-live-p proc)
+      (let ((output (with-current-buffer (process-buffer proc)
+                      (buffer-string))))
+        (kill-buffer (process-buffer proc))
+        (if (and (eq (process-exit-status proc) 0)
+                 (string-match-p "[0-9]" output))
+            (funcall callback)
+          (forge-extras-message-debug "Skipping notifications: host unresolvable"))))))
+
+(defun forge-extras--kill-dns-probe (proc)
+  "Kill the DNS probe process PROC if it is still running."
+  (when (process-live-p proc)
+    (delete-process proc)))
 
 ;;;;; sync read status
 

@@ -217,6 +217,13 @@ skips test-only files and edits while Git has an active operation or unmerged
 index entries, so a live Emacs never loads tests or a partially resolved tree.
 Test-only Elisp commits likewise do not require package-manual updates.
 
+Live-verification evidence for a standalone-package label binds to the
+package's own checkout, resolved through =bin/elpaca-package-path=, never to
+the shell's working directory. The verify-after-commit gate keys its debt to
+the committing repository while blocking =cd=, so a harness that pins the
+working directory to the dotfiles root could otherwise never clear a debt for
+a commit in a package repository.
+
 Hooks that judge a Git command resolve the repository from the command itself,
 via =hooks/lib-repo-root.sh=. A =cd= at any command head decides the repository,
 the last one winning, because a session working in one repository routinely

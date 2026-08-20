@@ -22,6 +22,23 @@ dotfiles_root=$(cd -- "$script_dir/../.." && pwd)
 # shellcheck source=../hooks/lib-elisp-evidence.sh
 source "$dotfiles_root/claude/hooks/lib-elisp-evidence.sh"
 repo=$(git rev-parse --show-toplevel)
+# A standalone-package label must bind evidence to that package's checkout,
+# not to the shell's repo: harnesses that pin the working directory to the
+# dotfiles root could otherwise never mint evidence that matches the debt
+# recorded for a commit in the package repo (deadlock observed 2026-08-20).
+case "$label" in
+  file:* | deleted:*) ;;
+  *)
+    if [ "$repo" = "$dotfiles_root" ] &&
+       [ ! -f "$dotfiles_root/emacs/extras/$label.el" ] &&
+       [ "$label" != dotfiles ]; then
+      package_path=$("$dotfiles_root/bin/elpaca-package-path" "$label" 2>/dev/null || true)
+      if [ -n "$package_path" ] && [ -d "$package_path" ]; then
+        repo=$(git -C "$package_path" rev-parse --show-toplevel)
+      fi
+    fi
+    ;;
+esac
 commit=$(git -C "$repo" rev-parse HEAD)
 deleted_package=""
 

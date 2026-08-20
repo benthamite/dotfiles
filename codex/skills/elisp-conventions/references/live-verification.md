@@ -15,7 +15,10 @@ The helper rejects dirty source, waits until the named package reaches a
 `finished` rebuild-and-reload state, then runs the expression in the active
 session. The expression must name and exercise the package and return a
 non-nil result. Its evidence is
-bound to the repository, package, and commit. Do not infer completion from an
+bound to the repository, package, and commit. For a standalone-package label,
+the helper resolves the package's own checkout via `elpaca-package-path` and
+binds the evidence there, so it works from any working directory. Do not infer
+completion from an
 edit event, a commit return value, another package, or an unrelated
 `emacsclient` call. For
 buffer-local state, hooks, timers, teardown, or other session-lifecycle changes,

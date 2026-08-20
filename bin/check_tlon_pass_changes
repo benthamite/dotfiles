@@ -1,4 +1,44 @@
 #!/usr/bin/env bash
-printf "%s - checking github tlon-team/pass repo for remote changes\n" "$(date "+%F %T")"
-cd "/Users/$USER/.password-store/tlon"
-git pull
+
+set -u
+set -o pipefail
+
+readonly repository="/Users/pablostafforini/.password-store/tlon"
+readonly heartbeat="/Users/pablostafforini/.local/state/launchd/org.tlon.pass.gitpull.success"
+readonly ssh_command="/usr/bin/ssh -o BatchMode=yes -o ConnectTimeout=10 -o ConnectionAttempts=1 -o ServerAliveInterval=10 -o ServerAliveCountMax=2"
+readonly max_attempts=3
+readonly attempt_timeout=45
+readonly retry_delays=(5 15)
+
+output_file=$(/usr/bin/mktemp -t check_tlon_pass_changes)
+trap '/bin/rm -f "$output_file"' EXIT
+
+cd "$repository" || exit 1
+
+for ((attempt = 1; attempt <= max_attempts; attempt++)); do
+  if GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND="$ssh_command" \
+    /opt/homebrew/bin/gtimeout --kill-after=5 "$attempt_timeout" \
+    /opt/homebrew/bin/git \
+      -c http.lowSpeedLimit=1 \
+      -c http.lowSpeedTime=20 \
+      pull >"$output_file" 2>&1; then
+    /bin/mkdir -p "${heartbeat%/*}"
+    /usr/bin/touch "$heartbeat"
+    if [[ $(<"$output_file") != "Already up to date." ]]; then
+      /usr/bin/printf "%s - updated github tlon-team/pass repo\n" "$(/bin/date "+%F %T")"
+      /bin/cat "$output_file"
+    fi
+    exit 0
+  else
+    status=$?
+  fi
+
+  /usr/bin/printf "%s - github tlon-team/pass pull attempt %d/%d failed with code %d\n" \
+    "$(/bin/date "+%F %T")" "$attempt" "$max_attempts" "$status"
+  /bin/cat "$output_file"
+  if ((attempt < max_attempts)); then
+    /bin/sleep "${retry_delays[attempt - 1]}"
+  fi
+done
+
+exit "$status"

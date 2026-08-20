@@ -47,8 +47,14 @@
 (defvar doom-modeline-extras-github-last-count 0
   "Last count of GitHub notifications.")
 
-(defvar doom-modeline-extras--github-fetch-active nil
-  "Non-nil while an async GitHub notification count fetch is running.")
+(defvar doom-modeline-extras--github-fetch-process nil
+  "Child process of the in-flight GitHub notification count fetch, if any.")
+
+(defvar doom-modeline-extras--github-fetch-started nil
+  "Time at which the in-flight GitHub notification count fetch started.")
+
+(defconst doom-modeline-extras--github-fetch-timeout 60
+  "Seconds after which an in-flight GitHub count fetch is considered hung.")
 
 ;;;; User options
 
@@ -507,16 +513,41 @@ a forge notification pull to keep forge in sync."
 (defun doom-modeline-extras--github-fetch-notifications ()
   "Fetch the GitHub notification count without returning the payload."
   (when (and doom-modeline-github
-             (not doom-modeline-extras--github-fetch-active)
              (require 'async nil t))
-    (setq doom-modeline-extras--github-fetch-active t)
-    (condition-case err
-        (let ((async-prompt-for-password nil))
-          (async-start (doom-modeline-extras--github-fetch-count-form)
-                       #'doom-modeline-extras--github-fetch-finished))
-      (error
-       (setq doom-modeline-extras--github-fetch-active nil)
-       (message "doom-modeline-extras: GitHub fetch failed: %S" err)))))
+    (doom-modeline-extras--github-reap-fetch)
+    (unless doom-modeline-extras--github-fetch-process
+      (condition-case err
+          (let ((async-prompt-for-password nil))
+            (setq doom-modeline-extras--github-fetch-started (current-time)
+                  doom-modeline-extras--github-fetch-process
+                  (async-start (doom-modeline-extras--github-fetch-count-form)
+                               #'doom-modeline-extras--github-fetch-finished)))
+        (error
+         (setq doom-modeline-extras--github-fetch-process nil
+               doom-modeline-extras--github-fetch-started nil)
+         (message "doom-modeline-extras: GitHub fetch failed: %S" err))))))
+
+(defun doom-modeline-extras--github-reap-fetch ()
+  "Discard the in-flight GitHub count fetch if its child died or hung.
+`async-when-done' never invokes the completion callback when the child
+exits abnormally, and a child blocked on synchronous DNS resolution can
+outlive its own timeout, so a fetch that never reports back would
+otherwise disable all future fetches."
+  (when-let* ((proc doom-modeline-extras--github-fetch-process))
+    (cond ((not (process-live-p proc))
+           (doom-modeline-extras--github-discard-fetch proc))
+          ((and doom-modeline-extras--github-fetch-started
+                (> (float-time (time-since doom-modeline-extras--github-fetch-started))
+                   doom-modeline-extras--github-fetch-timeout))
+           (delete-process proc)
+           (doom-modeline-extras--github-discard-fetch proc)))))
+
+(defun doom-modeline-extras--github-discard-fetch (proc)
+  "Forget the GitHub count fetch PROC and kill its leftover buffer."
+  (when (buffer-live-p (process-buffer proc))
+    (kill-buffer (process-buffer proc)))
+  (setq doom-modeline-extras--github-fetch-process nil
+        doom-modeline-extras--github-fetch-started nil))
 
 (defun doom-modeline-extras--github-fetch-count-form ()
   "Return an async child form that fetches the GitHub notification count."
@@ -545,7 +576,8 @@ a forge notification pull to keep forge in sync."
 
 (defun doom-modeline-extras--github-fetch-finished (result)
   "Store GitHub notification count RESULT and run follow-up hooks."
-  (setq doom-modeline-extras--github-fetch-active nil)
+  (setq doom-modeline-extras--github-fetch-process nil
+        doom-modeline-extras--github-fetch-started nil)
   (message "")
   (setq doom-modeline--github-notification-number
         (if (natnump result) result 0))

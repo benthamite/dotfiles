@@ -288,6 +288,15 @@ notification count instead of the full GitHub notification payload.
 It also disables ~async.el~ password prompting for this API poll and
 skips overlapping fetches while one is already in flight.
 
+The in-flight guard tracks the child process itself rather than a
+boolean flag.  Before each poll, the fetcher reaps a child that died
+without reporting back (a case in which ~async.el~ never invokes the
+completion callback) and kills a child that has run longer than
+~doom-modeline-extras--github-fetch-timeout~ seconds, such as one
+blocked on synchronous DNS resolution during a network outage.  A
+failed fetch therefore delays the count by at most one timer cycle
+instead of freezing it permanently.
+
 The function ~doom-modeline-extras-refresh-github-after-forge~ works in
 the opposite direction: it is installed as =:after= advice on
 ~forge--ghub-update-notifications~ so that after Forge pulls

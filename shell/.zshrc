@@ -83,8 +83,22 @@ function mdfind() {
 alias muinit="cd ~; mu init --maildir=$HOME/Mail --personal-address=$PERSONAL_EMAIL --personal-address=$PERSONAL_GMAIL --personal-address=$WORK_EMAIL --personal-address=$UNI_EMAIL; mu index"
 
 # Emacs aliases
-alias emacsk="pkill -SIGUSR2 Emacs"
-alias emacsK="while true; do pkill -SIGUSR2 Emacs; done"
+# Break a busy interactive Emacs into the Lisp debugger (debug-on-event
+# defaults to sigusr2).  Signal only top-level Emacs processes: a plain
+# `pkill -SIGUSR2 Emacs` also hits batch children spawned by Emacs
+# (package retrieval workers, elpaca builds, test subprocesses), whose
+# armed debugger exits them with status 255 at their next activity.
+emacsk() {
+  local pid ppid
+  for pid in $(pgrep -x Emacs); do
+    ppid=$(ps -o ppid= -p "$pid" | tr -d ' ')
+    case "$(ps -o comm= -p "$ppid" 2>/dev/null)" in
+      *Emacs*) ;;
+      *) kill -USR2 "$pid" ;;
+    esac
+  done
+}
+emacsK() { while true; do emacsk; done }
 
 # Claude Code multi-account (separate OAuth sessions via config dir)
 alias claude-personal='CLAUDE_CONFIG_DIR=~/.claude-personal claude'

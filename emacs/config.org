@@ -1166,7 +1166,42 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 /[[https://github.com/raxod502/el-patch][el-patch]] customizes the behavior of Emacs Lisp functions and notifies the user when a function so customized changes./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package el-patch)
+(use-package el-patch
+  :config
+  (defvar init-el-patch-validation-failure-log
+    (expand-file-name "el-patch-validation-failures.eld" user-emacs-directory)
+    "File recording evidence for failed el-patch validations.")
+
+  (defun init-el-patch-record-validation-failure
+      (fn name type &optional nomsg run-hooks variant)
+    "Capture evidence when a patch validation fails, then return its result.
+FN is `el-patch-validate'; NAME, TYPE, NOMSG, RUN-HOOKS and VARIANT are its
+arguments.  Validation failures have been observed to be transient (on
+2026-08-20 the midnight run flagged two org-gcal patches that validated clean
+hours later with identical patch, source file, and registry state), so the
+definition actually located and the symbol's defining file are recorded at
+failure time to make the next occurrence diagnosable."
+    (let ((result (funcall fn name type nomsg run-hooks variant)))
+      (unless result
+        (with-demoted-errors "init-el-patch-record-validation-failure: %S"
+          (let* ((expected (el-patch--resolve-definition
+                            (el-patch-get name type variant) nil))
+                 (actual (el-patch--locate expected))
+                 (print-length nil)
+                 (print-level nil))
+            (with-temp-buffer
+              (prin1 (list :time (format-time-string "%FT%T%z")
+                           :name name
+                           :type type
+                           :symbol-file (symbol-file name 'defun)
+                           :expected expected
+                           :actual actual)
+                     (current-buffer))
+              (insert "\n")
+              (append-to-file (point-min) (point-max)
+                              init-el-patch-validation-failure-log)))))
+      result))
+  (advice-add 'el-patch-validate :around #'init-el-patch-record-validation-failure))
 #+end_src
 
 ** =websocket=
@@ -9253,7 +9288,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   ;; Separate profiles keep account authentication and usage independent.
   (agent-codex-accounts '(("tlon"   . "~/.codex-tlon")
                           ("epoch"  . "~/.codex-epoch")
-                          ("epoch2" . "~/.codex-epoch2")))
+                          ("epoch2" . "~/.codex-epoch2")
+                          ("epoch3" . "~/.codex-epoch3")))
 
   :bind
   ("H-e" . agent-menu)
@@ -9262,6 +9298,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (with-eval-after-load 'debug
     (bind-keys :map debugger-mode-map
                ("D" . agent-debug-backtrace))))
+               
 #+end_src
 
 

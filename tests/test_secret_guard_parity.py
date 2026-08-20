@@ -78,6 +78,25 @@ class SecretGuardParityTests(unittest.TestCase):
             "allow",
         )
 
+    def test_unfiltered_op_item_output_is_denied(self):
+        commands = (
+            "op-desktop item list --format=json",
+            "op-desktop item get abc --vault Finance --format=json",
+            "op-automations item list --vault Automations --format=json",
+        )
+        for command in commands:
+            with self.subTest(command=command):
+                self.assert_both(command, "deny")
+
+    def test_filtered_or_redirected_op_item_output_is_allowed(self):
+        commands = (
+            "op-desktop item list --format=json | jq '[.[] | {id,title}]'",
+            "op-desktop item get abc --format=json > /tmp/item.json",
+        )
+        for command in commands:
+            with self.subTest(command=command):
+                self.assert_both(command, "allow")
+
     def test_deny_message_advises_op_desktop(self):
         for tool, guard in GUARDS.items():
             with self.subTest(tool=tool):

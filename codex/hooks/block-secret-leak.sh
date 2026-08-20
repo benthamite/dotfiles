@@ -120,6 +120,25 @@ contains_any_op_reveal_output() {
   return 1
 }
 
+contains_unfiltered_op_item_output() {
+  local command="$1"
+  printf '%s' "$command" | grep -qE '(^|[;&|(!][[:space:]]*)(op-desktop|op-automations)[[:space:]]+item[[:space:]]+(list|get)([[:space:]]|$)' || return 1
+  # 1Password item summaries can contain secret-valued URL fields.
+  printf '%s' "$command" | grep -qE '(\|[[:space:]]*jq([[:space:]]|$)|(^|[^0-9])[0-9]*>[[:space:]]*[^&])' && return 1
+  return 0
+}
+
+contains_any_unfiltered_op_item_output() {
+  local nested
+  contains_unfiltered_op_item_output "$CONTENT" && return 0
+  if [ "$TOOL_NAME" = "functions.exec" ]; then
+    while IFS= read -r -d '' nested; do
+      contains_unfiltered_op_item_output "$nested" && return 0
+    done < <(printf '%s' "$CONTENT" | codex_nested_exec_commands)
+  fi
+  return 1
+}
+
 deny_raw_op_command() {
   jq -n --arg tool "$TOOL_NAME" '{
     "hookSpecificOutput": {
@@ -142,11 +161,25 @@ deny_op_reveal_output() {
   exit 0
 }
 
+deny_unfiltered_op_item_output() {
+  jq -n --arg tool "$TOOL_NAME" '{
+    "hookSpecificOutput": {
+      "hookEventName": "PreToolUse",
+      "permissionDecision": "deny",
+      "permissionDecisionReason": ("BLOCKED: " + $tool + " would print unfiltered 1Password item output. Item summaries can contain secret-valued URL fields.\n\nPipe through `jq` to select only the exact non-secret metadata needed, or redirect to a mode-0600 temporary file for secret-safe processing.")
+    }
+  }'
+  exit 0
+}
+
 # --- Allowlist: commands that legitimately read secrets ---
 # pass, op, security (Keychain), git-crypt, and secret-scanning tools themselves
 if codex_shell_tool_p "$TOOL_NAME"; then
   if contains_any_op_reveal_output; then
     deny_op_reveal_output
+  fi
+  if contains_any_unfiltered_op_item_output; then
+    deny_unfiltered_op_item_output
   fi
   if contains_raw_op_command; then
     deny_raw_op_command

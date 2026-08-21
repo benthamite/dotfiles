@@ -3,8 +3,8 @@
 Both copies of block-secret-leak.sh must enforce the same 1Password policy:
 - direct `op` commands are denied,
 - the unbatched `env -u OP_SERVICE_ACCOUNT_TOKEN op ...` form is denied,
-- the explicit batched fallback `env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '...'`
-  is allowed,
+- the old batched `env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '...'` bypass is
+  denied,
 - the `op-automations` and `op-desktop` wrappers are allowed,
 - deny messages advise `op-desktop`, not a path the policy blocks.
 """
@@ -60,10 +60,10 @@ class SecretGuardParityTests(unittest.TestCase):
             "deny",
         )
 
-    def test_batched_fallback_shell_is_allowed(self):
+    def test_batched_raw_shell_is_denied(self):
         self.assert_both(
             "env -u OP_SERVICE_ACCOUNT_TOKEN bash -c 'op read op://Employee/Example/credential > /dev/null'",
-            "allow",
+            "deny",
         )
 
     def test_op_automations_is_allowed(self):

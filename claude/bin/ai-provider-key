@@ -268,7 +268,7 @@ def write_env_op(repo: Path, env_name: str, op_ref: str, *, force: bool) -> None
         if not next_lines:
             next_lines.extend(
                 [
-                    "# 1Password secret references — resolved at runtime by `op run --env-file .env.op`.",
+                    "# 1Password secret references — resolved at runtime by `op-automations run --env-file .env.op`.",
                     "# Project runtime keys only; never use ambient personal API keys.",
                 ]
             )

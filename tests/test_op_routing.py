@@ -1,9 +1,10 @@
 """Tests for 1Password CLI routing.
 
-Every `op` invocation must reach either `op-automations` (read-only service
-account, no prompt) or `op-desktop` (one authorized pty session, one Touch ID
-prompt per 10-minute window). Reaching the raw binary with no controlling
-terminal is what produces a prompt per command.
+Every secret-bearing `op` invocation must reach either `op-automations`
+(read-only service account, no prompt) or `op-desktop` (one authorized pty
+session, one Touch ID prompt per 10-minute window). Reaching the raw binary with
+no controlling terminal is what produces a prompt per command. Explicit account
+management remains available through the shim's documented escape path.
 
 Three independent things have to hold, and each has failed in practice:
 
@@ -164,14 +165,41 @@ class ShimRoutingTest(unittest.TestCase):
             out = self.route("read", "op://Employee/Foo/x", env_extra={var: "1"})
             self.assertTrue(out.startswith("REAL "), f"{var}: {out}")
 
-    def test_streaming_subcommands_reach_the_binary_directly(self):
-        """Commands needing raw interactive terminal behavior bypass the broker."""
+    def test_secret_bearing_streaming_subcommands_use_the_broker(self):
+        """Streaming secret operations must not escape to the raw CLI."""
         for args in (
             ("run", "--", "env"),
             ("inject",),
-            ("signin",),
             ("document", "create", "file.txt"),
         ):
+            out = self.route(*args)
+            self.assertTrue(out.startswith("op-desktop "), f"{args}: {out}")
+
+    def test_automations_env_file_run_uses_the_service_account(self):
+        """An all-Automations env file must run without a biometric prompt."""
+        with tempfile.NamedTemporaryFile("w", suffix=".env.op") as env_file:
+            env_file.write(
+                "API_KEY=op://Automations/Example/credential\n"
+                "MODE=production\n"
+            )
+            env_file.flush()
+            out = self.route("run", f"--env-file={env_file.name}", "--", "env")
+        self.assertTrue(out.startswith("op-automations "), out)
+
+    def test_mixed_vault_env_file_run_uses_the_broker(self):
+        """A mixed env file cannot use the Automations-only service account."""
+        with tempfile.NamedTemporaryFile("w", suffix=".env.op") as env_file:
+            env_file.write(
+                "API_KEY=op://Automations/Example/credential\n"
+                "PERSONAL=op://Employee/Example/credential\n"
+            )
+            env_file.flush()
+            out = self.route("run", "--env-file", env_file.name, "--", "env")
+        self.assertTrue(out.startswith("op-desktop "), out)
+
+    def test_account_management_subcommands_reach_the_binary_directly(self):
+        """Only explicit account-management operations bypass the broker."""
+        for args in (("signin",), ("plugin",), ("connect",), ("account",), ("update",)):
             out = self.route(*args)
             self.assertTrue(out.startswith("REAL "), f"{args}: {out}")
 

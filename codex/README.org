@@ -128,6 +128,10 @@ Elisp post-edit hook is registered on the outer composed-tool event as well as
 direct edit events, so it recovers changed paths from nested patches instead of
 depending on that missing event.
 
+The secret guard denies raw =op= even inside an =env -u ... bash -c= batch.
+Automations reads use =op-automations= and desktop-gated work uses
+=op-desktop=; a missing broker is an error to repair, not an alternate route.
+
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged
 index entries, so a live Emacs never loads tests or a partially resolved tree.

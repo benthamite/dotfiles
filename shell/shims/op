@@ -44,16 +44,11 @@ if [ -n "${OP_SHIM_BYPASS:-}" ] || [ -n "${OP_NO_SHIM:-}" ]; then
 	exec "$REAL" "$@"
 fi
 
-# Interactive subcommands. `run` execs a child process; `signin`, `account`, and
-# plugin-management commands need a terminal of their own. Piped item templates
-# are supported by op-desktop and must not bypass it.
-case "${1:-} ${2:-}" in
-document\ create*)
-	exec "$REAL" "$@"
-	;;
-esac
+# Account-management commands need the raw CLI's own interactive terminal.
+# Secret-bearing commands such as `run`, `inject`, and piped document operations
+# are supported by op-desktop and must never bypass the router.
 case "${1:-}" in
-run | inject | signin | plugin | connect | account | update)
+signin | plugin | connect | account | update)
 	exec "$REAL" "$@"
 	;;
 esac
@@ -71,20 +66,66 @@ esac
 # op:// reference form and an explicit --vault, since `op item get X --vault
 # Automations` carries no reference.
 automations=""
+other_vault=""
+env_file_next=""
+
+classify_env_file() {
+	[ -r "$1" ] || return
+	classification=$(awk '
+    {
+      line = $0
+      while ((start = index(line, "op://")) > 0) {
+        line = substr(line, start + 5)
+        vault = line
+        sub(/\/.*/, "", vault)
+        if (vault == "Automations") automations = 1
+        else if (vault != "") other = 1
+        line = substr(line, length(vault) + 1)
+      }
+    }
+    END {
+      if (automations) print "automations"
+      if (other) print "other"
+    }
+  ' "$1")
+	case "$classification" in
+	*automations*) automations=1 ;;
+	esac
+	case "$classification" in
+	*other*) other_vault=1 ;;
+	esac
+}
+
 prev=""
 for arg in "$@"; do
+	if [ -n "$env_file_next" ]; then
+		classify_env_file "$arg"
+		env_file_next=""
+	fi
 	case "$arg" in
 	op://Automations/* | --vault=Automations | --vault=automations)
 		automations=1
 		;;
+	op://*)
+		other_vault=1
+		;;
+	--env-file)
+		env_file_next=1
+		;;
+	--env-file=*)
+		classify_env_file "${arg#--env-file=}"
+		;;
 	Automations | automations)
 		[ "$prev" = "--vault" ] && automations=1
+		;;
+	*)
+		[ "$prev" = "--vault" ] && other_vault=1
 		;;
 	esac
 	prev="$arg"
 done
 
-if [ -n "$automations" ]; then
+if [ -n "$automations" ] && [ -z "$other_vault" ]; then
 	# Already carrying the token: nothing left to add, go straight to the binary.
 	if [ -n "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
 		exec "$REAL" "$@"
@@ -103,8 +144,7 @@ if command -v op-desktop >/dev/null 2>&1; then
 fi
 
 # op-desktop missing is a real problem, not something to paper over: falling
-# through to the raw binary is what causes prompt storms. Say so, then proceed
-# so the caller is not hard-broken by a missing wrapper.
-printf 'op shim: op-desktop not found on PATH; running %s directly.\n' "$REAL" >&2
-printf 'op shim: expect one Touch ID prompt per command until op-desktop is restored.\n' >&2
-exec "$REAL" "$@"
+# through to the raw binary is what causes prompt storms.
+printf 'op shim: op-desktop not found on PATH; refusing to run the raw CLI.\n' >&2
+printf 'op shim: restore op-desktop or set OP_NO_SHIM=1 explicitly.\n' >&2
+exit 127

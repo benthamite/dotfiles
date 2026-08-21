@@ -62,12 +62,6 @@ delegate() {
   fi
 }
 
-dc_explicit_desktop_op_batch_p() {
-  local flattened
-  flattened=$(printf '%s' "$1" | tr '\n' ' ')
-  printf '%s' "$flattened" | grep -qE "^[[:space:]]*((/usr/bin/|/bin/)?env)[[:space:]]+-u[[:space:]]+OP_SERVICE_ACCOUNT_TOKEN[[:space:]]+((/bin/|/usr/bin/)?(bash|sh|zsh|dash|ksh))[[:space:]]+-l?c[[:space:]]+('[^']*'|\"[^\"]*\")[[:space:]]*$"
-}
-
 # ============================================================================
 # Ported checks (verbatim logic from the standalone hooks; Bash branch only).
 # ============================================================================
@@ -75,12 +69,9 @@ dc_explicit_desktop_op_batch_p() {
 # --- block-secret-leak.sh (Bash branch) ---
 check_secret_leak() {
   local CONTENT="$COMMAND"
-  local OP_EXPLICIT_BATCH=0
   [ -z "$CONTENT" ] && return 0
-  dc_explicit_desktop_op_batch_p "$CONTENT" && OP_EXPLICIT_BATCH=1
 
-  if { printf '%s' "$CONTENT" | grep -qE '(^[[:space:]]*|[;&|(!][[:space:]]*)(op-automations|((/usr/bin/|/bin/)?env)[[:space:]]+-u[[:space:]]+OP_SERVICE_ACCOUNT_TOKEN[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op|(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op)[[:space:]]+' || \
-       { [ "$OP_EXPLICIT_BATCH" -eq 1 ] && printf '%s' "$CONTENT" | grep -qE '(^|[;&|[:space:]])op[[:space:]]+'; }; } && \
+  if printf '%s' "$CONTENT" | grep -qE '(^[[:space:]]*|[;&|(!][[:space:]]*)(op-automations|((/usr/bin/|/bin/)?env)[[:space:]]+-u[[:space:]]+OP_SERVICE_ACCOUNT_TOKEN[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op|(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op)[[:space:]]+' && \
      printf '%s' "$CONTENT" | grep -qE -- '(^|[[:space:]])--reveal([^[:alnum:]_-]|$)'; then
     add_deny "BLOCKED: Bash command would print a revealed 1Password field.
 
@@ -89,30 +80,21 @@ Do not use \`op item get --reveal\`, including through \`op-automations\` or exp
   fi
 
   local OP_SCAN OP_BOUNDARY OP_BIN OP_WRAPPER
-  if [ "$OP_EXPLICIT_BATCH" -eq 0 ] && { \
-     printf '%s' "$CONTENT" | grep -qE 'cmd[[:space:]]*:[[:space:]]*["'"'"'`][[:space:]]*((command|env|xargs|sudo|timeout)[[:space:]]+|(bash|sh|zsh|dash|ksh)[[:space:]]+-l?c[[:space:]]+["'"'"'])?(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|["'"'"'`])' || \
-     printf '%s' "$CONTENT" | grep -qE '(^|[;&|(!][[:space:]]*|\$\([[:space:]]*)(((/bin/|/usr/bin/)?(bash|sh|zsh|dash|ksh))[[:space:]]+-l?c|eval)[[:space:]]+["'"'"'][^"'"'"']*(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|["'"'"'])'; }; then
+  if { printf '%s' "$CONTENT" | grep -qE 'cmd[[:space:]]*:[[:space:]]*["'"'"'`][[:space:]]*((command|env|xargs|sudo|timeout)[[:space:]]+|(bash|sh|zsh|dash|ksh)[[:space:]]+-l?c[[:space:]]+["'"'"'])?(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|["'"'"'`])' || \
+       printf '%s' "$CONTENT" | grep -qE '(^|[;&|(!][[:space:]]*|\$\([[:space:]]*)(((/usr/bin/|/bin/)?env)([[:space:]]+(-u[[:space:]]+[^[:space:]]+|-i|--|[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*))*[[:space:]]+)?(((/bin/|/usr/bin/)?(bash|sh|zsh|dash|ksh))[[:space:]]+-l?c|eval)[[:space:]]+["'"'"'][^"'"'"']*(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|["'"'"'])'; }; then
     add_deny "BLOCKED: Bash contains a direct 1Password CLI command, which can trigger a separate Touch ID prompt for every process.
 
 Use \`op-desktop ...\` for desktop-gated operations: personal-vault reads, item creates/edits, share links. It runs every command inside one authorized terminal session, so a whole task costs one Touch ID prompt instead of one per command.
 
-For prompt-free read-only access to the Automations vault, use \`op-automations ...\`.
-
-Only if \`op-desktop\` is unavailable, fall back to \`env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '...'\` with every required operation batched into that single shell."
+For prompt-free read-only access to the Automations vault, use \`op-automations ...\`. If the broker is unavailable, repair it rather than bypassing it with raw \`op\`."
     return 0
   fi
   OP_SCAN=$(dc_mask_quoted) || OP_SCAN="$CONTENT"
-  # `env -u OP_SERVICE_ACCOUNT_TOKEN op ...` as a single command used to be
-  # whitelisted here. It is not any more: one such command per tool call is the
-  # exact shape that produced five Touch ID prompts on 2026-07-28, because
-  # 1Password keys CLI authorization to a controlling terminal and agent shells
-  # have none. Desktop-gated work goes through `op-desktop`, which holds one
-  # authorized pty session; the `bash -c` batch form above stays as the fallback.
   OP_SCAN=$(printf '%s' "$OP_SCAN" | sed -E 's/(^|[;&|])[[:space:]]*(if|then|elif|while|until|do)[[:space:]]+/\1 /g')
   OP_BOUNDARY='(^[[:space:]]*|[;&|(!][[:space:]]*|\$\([[:space:]]*)'
   OP_BIN='(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|$)'
   OP_WRAPPER='(command[[:space:]]+|((/usr/bin/|/bin/)?env)([[:space:]]+(-u[[:space:]]+[^[:space:]]+|-i|--|[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*))*[[:space:]]+|xargs([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+|(sudo|timeout|nice|exec|nohup|time)([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+|[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)'
-  if [ "$OP_EXPLICIT_BATCH" -eq 0 ] && { printf '%s' "$OP_SCAN" | grep -qE "${OP_BOUNDARY}${OP_BIN}" || \
+  if { printf '%s' "$OP_SCAN" | grep -qE "${OP_BOUNDARY}${OP_BIN}" || \
      printf '%s' "$OP_SCAN" | grep -qE "${OP_BOUNDARY}${OP_WRAPPER}${OP_BIN}" || \
      printf '%s' "$OP_SCAN" | grep -qE 'find[[:space:]].*-exec[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|$)' || \
      printf '%s' "$OP_SCAN" | grep -qE '\$\([[:space:]]*command[[:space:]]+-v[[:space:]]+op[[:space:]]*\)'; }; then
@@ -120,9 +102,7 @@ Only if \`op-desktop\` is unavailable, fall back to \`env -u OP_SERVICE_ACCOUNT_
 
 Use \`op-desktop ...\` for desktop-gated operations: personal-vault reads, item creates/edits, share links. It runs every command inside one authorized terminal session, so a whole task costs one Touch ID prompt instead of one per command.
 
-For prompt-free read-only access to the Automations vault, use \`op-automations ...\`.
-
-Only if \`op-desktop\` is unavailable, fall back to \`env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '...'\` with every required operation batched into that single shell."
+For prompt-free read-only access to the Automations vault, use \`op-automations ...\`. If the broker is unavailable, repair it rather than bypassing it with raw \`op\`."
     return 0
   fi
 

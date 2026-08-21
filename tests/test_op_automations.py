@@ -242,9 +242,8 @@ class RawOpGuardTest(unittest.TestCase):
                     )
 
     def test_guards_deny_unbatched_desktop_auth(self):
-        # Since the op-desktop policy (2026-07-28), the single-command
-        # `env -u OP_SERVICE_ACCOUNT_TOKEN op ...` form is denied everywhere;
-        # only the batched `env -u ... bash -c '...'` fallback stays allowed.
+        # Raw desktop authentication is denied everywhere; desktop-gated work
+        # must use the persistent op-desktop broker.
         command = "env -u OP_SERVICE_ACCOUNT_TOKEN op item get abc --vault Employee"
         payloads = (
             ("claude/hooks/pretooluse-bash.sh", {"tool_name": "Bash", "tool_input": {"command": command}}),
@@ -255,7 +254,7 @@ class RawOpGuardTest(unittest.TestCase):
             with self.subTest(path=path):
                 self.assert_denied(path, payload)
 
-    def test_guards_allow_one_explicit_desktop_batch(self):
+    def test_guards_deny_old_explicit_desktop_batch(self):
         op_word = "o" + "p"
         command = (
             "env -u OP_SERVICE_ACCOUNT_TOKEN bash -lc '"
@@ -269,7 +268,7 @@ class RawOpGuardTest(unittest.TestCase):
         )
         for path, payload in payloads:
             with self.subTest(path=path):
-                self.assert_allowed(path, payload)
+                self.assert_denied(path, payload)
 
     def test_guards_deny_raw_op_after_explicit_desktop_batch(self):
         op_word = "o" + "p"

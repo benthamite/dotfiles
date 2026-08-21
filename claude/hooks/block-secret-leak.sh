@@ -64,20 +64,13 @@ mask_op_quoted_literals() {
     }'
 }
 
-is_explicit_desktop_op_batch() {
-  local flattened
-  flattened=$(printf '%s' "$1" | tr '\n' ' ')
-  printf '%s' "$flattened" | grep -qE "^[[:space:]]*((/usr/bin/|/bin/)?env)[[:space:]]+-u[[:space:]]+OP_SERVICE_ACCOUNT_TOKEN[[:space:]]+((/bin/|/usr/bin/)?(bash|sh|zsh|dash|ksh))[[:space:]]+-l?c[[:space:]]+('[^']*'|\"[^\"]*\")[[:space:]]*$"
-}
-
 contains_raw_op_command() {
   local raw scan boundary op_bin wrapper
   raw="$CONTENT"
-  is_explicit_desktop_op_batch "$raw" && return 1
   if printf '%s' "$raw" | grep -qE 'cmd[[:space:]]*:[[:space:]]*["'"'"'`][[:space:]]*((command|env|xargs|sudo|timeout)[[:space:]]+|(bash|sh|zsh|dash|ksh)[[:space:]]+-l?c[[:space:]]+["'"'"'])?(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|["'"'"'`])'; then
     return 0
   fi
-  if printf '%s' "$raw" | grep -qE '(^|[;&|(!][[:space:]]*|\$\([[:space:]]*)(((/bin/|/usr/bin/)?(bash|sh|zsh|dash|ksh))[[:space:]]+-l?c|eval)[[:space:]]+["'"'"'][^"'"'"']*(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|["'"'"'])'; then
+  if printf '%s' "$raw" | grep -qE '(^|[;&|(!][[:space:]]*|\$\([[:space:]]*)(((/usr/bin/|/bin/)?env)([[:space:]]+(-u[[:space:]]+[^[:space:]]+|-i|--|[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*))*[[:space:]]+)?(((/bin/|/usr/bin/)?(bash|sh|zsh|dash|ksh))[[:space:]]+-l?c|eval)[[:space:]]+["'"'"'][^"'"'"']*(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|["'"'"'])'; then
     return 0
   fi
   scan=$(mask_op_quoted_literals "$raw")
@@ -104,7 +97,7 @@ deny_raw_op_command() {
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: " + $tool + " contains a direct 1Password CLI command, which can trigger a separate Touch ID prompt for every process.\n\nUse `op-desktop ...` for desktop-gated operations: personal-vault reads, item creates/edits, share links. It runs every command inside one authorized terminal session, so a whole task costs one Touch ID prompt instead of one per command.\n\nFor prompt-free read-only access to the Automations vault, use `op-automations ...`.\n\nOnly if `op-desktop` is unavailable, fall back to `env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '"'"'...'"'"'` with every required operation batched into that single shell.")
+      "permissionDecisionReason": ("BLOCKED: " + $tool + " contains a direct 1Password CLI command, which can trigger a separate Touch ID prompt for every process.\n\nUse `op-desktop ...` for desktop-gated operations: personal-vault reads, item creates/edits, share links. It runs every command inside one authorized terminal session, so a whole task costs one Touch ID prompt instead of one per command.\n\nFor prompt-free read-only access to the Automations vault, use `op-automations ...`. If the broker is unavailable, repair it rather than bypassing it with raw `op`.")
     }
   }'
   exit 0
@@ -135,8 +128,7 @@ deny_unfiltered_op_item_output() {
 # --- Allowlist: commands that legitimately read secrets ---
 # pass, op, security (Keychain), git-crypt, and secret-scanning tools themselves
 if [ "$TOOL_NAME" = "Bash" ]; then
-  if { printf '%s' "$CONTENT" | grep -qE '(^[[:space:]]*|[;&|(!][[:space:]]*)(op-automations|((/usr/bin/|/bin/)?env)[[:space:]]+-u[[:space:]]+OP_SERVICE_ACCOUNT_TOKEN[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op|(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op)[[:space:]]+' || \
-       { is_explicit_desktop_op_batch "$CONTENT" && printf '%s' "$CONTENT" | grep -qE '(^|[;&|[:space:]])op[[:space:]]+'; }; } && \
+  if printf '%s' "$CONTENT" | grep -qE '(^[[:space:]]*|[;&|(!][[:space:]]*)(op-automations|((/usr/bin/|/bin/)?env)[[:space:]]+-u[[:space:]]+OP_SERVICE_ACCOUNT_TOKEN[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op|(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op)[[:space:]]+' && \
      printf '%s' "$CONTENT" | grep -qE -- '(^|[[:space:]])--reveal([^[:alnum:]_-]|$)'; then
     deny_op_reveal_output
   fi

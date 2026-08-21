@@ -143,6 +143,40 @@ class ElispReloadHookTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertTrue(marker.exists())
 
+    def test_repository_name_mismatch_uses_shared_package_resolver(self):
+        source = self.repo / "elpaca/sources/emacs-slack/slack-feed.el"
+        source.parent.mkdir(parents=True)
+        source.write_text("(provide 'slack-feed)\n")
+        emacsclient = self.fake_bin / "emacsclient"
+        log = Path(self.temp_dir.name) / "resolver.log"
+        emacsclient.write_text(
+            "#!/bin/sh\n"
+            "printf '%s\\034' \"$*\" >> \"$FAKE_EMACSCLIENT_LOG\"\n"
+            "case \"$*\" in\n"
+            "  *format-build-reload-status*) printf '\"finished:loaded\"\\n' ;;\n"
+            "  *) printf '\"slack:token-1\"\\n' ;;\n"
+            "esac\n"
+        )
+        emacsclient.chmod(0o755)
+        for hook in HOOKS:
+            with self.subTest(hook=hook):
+                marker = Path(self.temp_dir.name) / f"{hook.parents[1].name}-called"
+                payload = {"tool_input": {"file_path": str(source)}}
+                env = os.environ.copy()
+                env["EMACSCLIENT_CALLED"] = str(marker)
+                env["FAKE_EMACSCLIENT_LOG"] = str(log)
+                env["ELPACA_RELOAD_POLL_INTERVAL_SECONDS"] = "0"
+                env["PATH"] = f"{self.fake_bin}:{env['PATH']}"
+                result = subprocess.run(
+                    ["bash", str(hook)], input=json.dumps(payload), text=True,
+                    capture_output=True, check=False, env=env
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("slack", result.stdout)
+        calls = log.read_text()
+        self.assertIn("elpaca-extras-resolve-package file", calls)
+        self.assertNotIn("elpaca--queued", calls)
+
     def test_codex_reload_recovers_path_from_nested_patch(self):
         marker = Path(self.temp_dir.name) / "nested-patch-called"
         payload = {

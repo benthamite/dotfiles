@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "$#" -ne 1 ]; then
+  echo "Usage: elpaca-package-resolve IDENTIFIER" >&2
+  exit 2
+fi
+
+identifier=$1
+case "$identifier" in
+  *[!A-Za-z0-9+_.-]* | "")
+    echo "Invalid package identifier: $identifier" >&2
+    exit 2
+    ;;
+esac
+
+script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+dotfiles_root=${DOTFILES_ROOT:-$(cd -- "$script_dir/.." && pwd)}
+dotfiles_root=$(cd -- "$dotfiles_root" && pwd -P)
+
+if [ "$identifier" = dotfiles ]; then
+  jq -cn \
+    --arg label dotfiles \
+    --arg id dotfiles \
+    --arg source "$dotfiles_root" \
+    --arg repo "$dotfiles_root" \
+    '{label: $label, id: $id, source: $source, repo: $repo}'
+  exit 0
+fi
+
+if [ -f "$dotfiles_root/emacs/extras/$identifier.el" ]; then
+  jq -cn \
+    --arg label "$identifier" \
+    --arg id "$identifier" \
+    --arg source "$dotfiles_root/emacs/extras" \
+    --arg repo "$dotfiles_root" \
+    '{label: $label, id: $id, source: $source, repo: $repo}'
+  exit 0
+fi
+
+identifier_b64=$(printf '%s' "$identifier" | base64 | tr -d '\n')
+expression="
+(when-let* ((identifier
+             (decode-coding-string
+              (base64-decode-string \"$identifier_b64\") 'utf-8))
+            (resolution (elpaca-extras-resolve-package identifier))
+            (id (plist-get resolution :id))
+            (source (plist-get resolution :source-dir))
+            (label (plist-get resolution :label)))
+  (format \"%s:%s:%s\"
+          id
+          (base64-encode-string source t)
+          (base64-encode-string label t)))"
+
+if ! raw=$(timeout 10 emacsclient -e "$expression" 2>&1); then
+  echo "Could not query the live Elpaca package registry: $raw" >&2
+  exit 1
+fi
+result=$(printf '%s' "$raw" | sed 's/^"//; s/"$//')
+if [ -z "$result" ] || [ "$result" = nil ]; then
+  echo "No queued Elpaca package matches: $identifier" >&2
+  exit 1
+fi
+
+id=${result%%:*}
+encoded=${result#*:}
+source_b64=${encoded%%:*}
+label_b64=${encoded#*:}
+case "$id" in
+  *[!A-Za-z0-9+_.-]* | "")
+    echo "Invalid package ID returned by Emacs: $id" >&2
+    exit 1
+    ;;
+esac
+source=$(jq -nr --arg value "$source_b64" '$value | @base64d')
+label=$(jq -nr --arg value "$label_b64" '$value | @base64d')
+source=${source%/}
+
+if [ -f "$dotfiles_root/emacs/extras/$id.el" ]; then
+  label=$id
+  source="$dotfiles_root/emacs/extras"
+  repo=$dotfiles_root
+else
+  repo=$(git -C "$source" rev-parse --show-toplevel 2>/dev/null) || {
+    echo "Resolved Elpaca source is not a Git checkout: $source" >&2
+    exit 1
+  }
+  repo=$(cd -- "$repo" && pwd -P)
+  label=$(basename -- "$repo")
+fi
+
+jq -cn \
+  --arg label "$label" \
+  --arg id "$id" \
+  --arg source "$source" \
+  --arg repo "$repo" \
+  '{label: $label, id: $id, source: $source, repo: $repo}'

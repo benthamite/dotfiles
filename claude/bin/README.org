@@ -40,9 +40,9 @@ credentials carried in HTTP headers cannot reach stderr.
 | =cr-worktree-gc.sh= | Removes only clean, fully pushed transient CR review worktrees and preserves unfinished work. |
 | =elisp-ert= | Runs profile-aware ERT for a package, test file, and optional test selector. |
 | =elisp-check-evidence= | Runs a tracked project-owned non-package Elisp check against the working tree or an explicit index snapshot and emits repository/file/source-revision evidence with a one-time replay-correlation token. |
-| =elisp-live-verify= | Waits for a committed package reload or safely removes a deleted package build, requires a non-nil package-named live check, and emits repository/package/commit evidence with a one-time replay-correlation token; a standalone-package label binds the evidence to the package's own checkout regardless of the working directory. |
+| =elisp-live-verify= | Waits for a committed package reload or safely removes a deleted package build, requires a non-nil check naming the resolved Elpaca ID, and emits canonical repository-label/commit evidence with a one-time replay-correlation token. |
 | =elisp-source-revision= | Computes the Git-and-content identity used to bind Elisp test evidence to the current source. |
-| =elpaca-rebuild-wait= | Rebuilds and reloads one Elpaca package with bounded polling, or observes exact source/mirror-bound dotfiles post-commit reload state. |
+| =elpaca-rebuild-wait= | Resolves a package ID or checkout label, rebuilds and reloads the canonical Elpaca ID with bounded polling, or observes exact source/mirror-bound dotfiles post-commit reload state. |
 | =gmail.py= | Provides the multi-account Gmail read, search, draft, send, reply, attachment, and archive operations. |
 | =install-skills.sh= | Installs the live interactive and programmatic skill links, then applies skill pruning and private shims. |
 | =sheets.py= | Provides the multi-account Google Sheets read, write, append, clear, sheet-management, and metadata operations. |

@@ -1,7 +1,7 @@
 #+title: Command index
 #+author: Pablo Stafforini
 
-This index covers the 54 tracked files under =bin/= whose Git mode is
+This index covers the 55 tracked files under =bin/= whose Git mode is
 =100755=. Non-executable libraries and data files are intentionally omitted.
 The first column is machine-readable and should contain every executable
 exactly once.
@@ -46,7 +46,8 @@ boundary.
 
 | Command | Contract |
 |---------+----------|
-| =elpaca-package-path= | Resolves the editable source directory for a package in the active Elpaca profile. |
+| =elpaca-package-path= | Resolves the editable source directory from an Elpaca package ID or checkout label. |
+| =elpaca-package-resolve= | Resolves an Elpaca package ID or checkout label to its distinct evidence label, package ID, source directory, and repository. |
 | =emacs= | Launches Emacs.app, optionally with a named profile, while filtering one known startup warning. |
 | =emacs-client= | Runs =emacsclient= with an empty alternate-editor fallback. |
 

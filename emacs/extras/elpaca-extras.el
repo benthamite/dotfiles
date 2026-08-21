@@ -66,6 +66,92 @@ values of `print-length' or `print-level' must not truncate those forms."
 
 ;;;; Functions
 
+;;;###autoload
+(defun elpaca-extras-resolve-package (identifier)
+  "Resolve IDENTIFIER to one queued Elpaca package.
+IDENTIFIER may be a package ID, package name, checkout basename, or
+an absolute path inside a package source directory.  Return a plist containing
+`:id', `:package', `:source-dir', and `:label', or nil when nothing matches.
+Signal an error rather than choosing between ambiguous matches."
+  (let* ((identifier (if (symbolp identifier)
+                         (symbol-name identifier)
+                       identifier))
+         (entries (mapcar #'cdr (elpaca--queued)))
+         (direct (and (stringp identifier)
+                      (elpaca-get (intern identifier))))
+         (package-matches
+          (and (stringp identifier)
+               (cl-remove-if-not
+                (lambda (entry)
+                  (equal identifier (elpaca<-package entry)))
+                entries)))
+         (pathp (and (stringp identifier)
+                     (file-name-absolute-p identifier)))
+         (path (and pathp (expand-file-name identifier)))
+         (containing
+          (and path
+               (cl-remove-if-not
+                (lambda (entry)
+                  (when-let* ((source-dir
+                               (elpaca-extras--package-source-dir entry)))
+                    (or (equal path (directory-file-name source-dir))
+                        (string-prefix-p source-dir path))))
+                entries)))
+         (file-base (and path
+                         (file-name-sans-extension
+                          (file-name-nondirectory path))))
+         (file-matches
+          (and file-base containing
+               (cl-remove-if-not
+                (lambda (entry)
+                  (or (equal file-base (symbol-name (elpaca<-id entry)))
+                      (equal file-base (elpaca<-package entry))))
+                containing)))
+         (source-name-matches
+          (and (stringp identifier)
+               (cl-remove-if-not
+                (lambda (entry)
+                  (when-let* ((source-dir
+                               (elpaca-extras--package-source-dir entry)))
+                    (equal identifier
+                           (file-name-nondirectory
+                            (directory-file-name source-dir)))))
+                entries)))
+         (entry
+          (or direct
+              (elpaca-extras--unique-package-match identifier package-matches)
+              (elpaca-extras--unique-package-match identifier file-matches)
+              (elpaca-extras--unique-package-match identifier source-name-matches)
+              (elpaca-extras--unique-package-match identifier containing))))
+    (when entry
+      (let ((source-dir (elpaca-extras--package-source-dir entry)))
+        (list :id (elpaca<-id entry)
+              :package (elpaca<-package entry)
+              :source-dir source-dir
+              :label (file-name-nondirectory
+                      (directory-file-name source-dir)))))))
+
+(defun elpaca-extras--package-source-dir (entry)
+  "Return ENTRY's normalized source directory."
+  (when-let* ((source-dir (or (elpaca<-source-dir entry)
+                              (elpaca-source-dir entry))))
+    (file-name-as-directory (expand-file-name source-dir))))
+
+(defun elpaca-extras--unique-package-match (identifier entries)
+  "Return the unique entry matching IDENTIFIER among ENTRIES.
+Signal a `user-error' when ENTRIES contains different package IDs."
+  (let ((entries (cl-delete-duplicates entries
+                                       :key #'elpaca<-id
+                                       :test #'eq)))
+    (pcase (length entries)
+      (0 nil)
+      (1 (car entries))
+      (_ (user-error "Ambiguous Elpaca package identifier %S: %s"
+                     identifier
+                     (mapconcat
+                      (lambda (entry) (symbol-name (elpaca<-id entry)))
+                      entries ", "))))))
+
 (defun elpaca-extras--source-feature-info (file &optional artifact)
   "Return FILE's features, requirements, and EIEIO class layouts.
 ARTIFACT is the exact file that a subsequent `load' will evaluate."

@@ -77,7 +77,9 @@ live helper:
 Each =emacsclient= request has its own timeout, and the complete rebuild has a
 120-second default deadline. The command succeeds only after =finished= and a
 successful package-named live expression. Its evidence names the repository,
-package, and commit.
+package, and commit. For a checkout whose repository name differs from its
+Elpaca ID, pass the repository name as PACKAGE and name the resolved Elpaca ID
+in the expression. For example, use =emacs-slack= and =slack= respectively.
 
 ** Editing before committing
 

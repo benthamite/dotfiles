@@ -114,18 +114,16 @@ while IFS= read -r file_path; do
   # never blocks the command loop.  The shell hook then polls the returned
   # token with short emacsclient calls; there is no long-running wait inside
   # Emacs.
-  # First try the file's basename as a package name (handles extras packages
-  # that share the dotfiles source dir). Fall back to source dir prefix match.
-  result=$(timeout 30 emacsclient -e "
+  if ! result=$(timeout 30 emacsclient -e "
 (let* ((file (decode-coding-string (base64-decode-string \"$path_b64\") 'utf-8))
-       (base (intern (file-name-sans-extension (file-name-nondirectory file))))
-       (pkg (or (and (elpaca-get base) base)
-                (cl-loop for e in (mapcar #'cdr (elpaca--queued))
-                         for src = (elpaca-source-dir e)
-                         when (and src (string-prefix-p src file))
-                         return (cadr e)))))
+       (resolution (elpaca-extras-resolve-package file))
+       (pkg (plist-get resolution :id)))
   (when pkg
-    (format \"%s:%s\" pkg (elpaca-extras-rebuild-and-reload pkg))))" 2>&1) || exit 0
+    (format \"%s:%s\" pkg (elpaca-extras-rebuild-and-reload pkg))))" 2>&1); then
+    failed=$((failed + 1))
+    last_status="could not resolve package for $file_path: $result"
+    continue
+  fi
 
   # Strip quotes from emacsclient output.
   result=$(printf '%s' "$result" | strip_emacs_string)

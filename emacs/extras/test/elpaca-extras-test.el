@@ -7,6 +7,56 @@
 (require 'ert)
 (require 'elpaca-extras)
 
+;;;; elpaca-extras-resolve-package
+
+(ert-deftest elpaca-extras-test-resolve-package-separates-package-identities ()
+  "IDs, checkout labels, and source paths resolve to the same package."
+  (let* ((source "/tmp/elpaca/sources/emacs-slack/")
+         (entry (elpaca<--create :id 'slack :package "slack"
+                                 :source-dir source))
+         (queue `((slack . ,entry))))
+    (cl-letf (((symbol-function 'elpaca--queued) (lambda (&optional _n) queue))
+              ((symbol-function 'elpaca-get)
+               (lambda (id) (and (eq id 'slack) entry))))
+      (dolist (identifier (list 'slack "slack" "emacs-slack"
+                                (concat source "slack-feed.el")))
+        (let ((resolution (elpaca-extras-resolve-package identifier)))
+          (should (eq (plist-get resolution :id) 'slack))
+          (should (equal (plist-get resolution :label) "emacs-slack"))
+          (should (equal (plist-get resolution :source-dir) source)))))))
+
+(ert-deftest elpaca-extras-test-resolve-package-uses-main-file-in-shared-source ()
+  "A main file identifies one package in a shared source checkout."
+  (let* ((source "/tmp/elpaca/sources/biblio/")
+         (biblio (elpaca<--create :id 'biblio :package "biblio"
+                                  :source-dir source))
+         (core (elpaca<--create :id 'biblio-core :package "biblio-core"
+                                :source-dir source))
+         (queue `((biblio . ,biblio) (biblio-core . ,core))))
+    (cl-letf (((symbol-function 'elpaca--queued) (lambda (&optional _n) queue))
+              ((symbol-function 'elpaca-get)
+               (lambda (id) (alist-get id queue))))
+      (should
+       (eq (plist-get
+            (elpaca-extras-resolve-package (concat source "biblio-core.el"))
+            :id)
+           'biblio-core)))))
+
+(ert-deftest elpaca-extras-test-resolve-package-rejects-ambiguous-source ()
+  "A shared checkout helper file does not select an arbitrary package."
+  (let* ((source "/tmp/elpaca/sources/biblio/")
+         (biblio (elpaca<--create :id 'biblio :package "biblio"
+                                  :source-dir source))
+         (core (elpaca<--create :id 'biblio-core :package "biblio-core"
+                                :source-dir source))
+         (queue `((biblio . ,biblio) (biblio-core . ,core))))
+    (cl-letf (((symbol-function 'elpaca--queued) (lambda (&optional _n) queue))
+              ((symbol-function 'elpaca-get)
+               (lambda (id) (alist-get id queue))))
+      (should-error
+       (elpaca-extras-resolve-package (concat source "biblio-utils.el"))
+       :type 'user-error))))
+
 ;;;; elpaca-extras-write-lock-file-excluding
 
 (ert-deftest elpaca-extras-test-write-lock-file-excluding-filters-packages ()

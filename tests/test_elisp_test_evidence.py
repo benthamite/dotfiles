@@ -739,6 +739,8 @@ class ElpacaRebuildWaitTests(unittest.TestCase):
         env["ELPACA_RELOAD_TIMEOUT_SECONDS"] = "3"
         env["ELPACA_RELOAD_POLL_INTERVAL_SECONDS"] = "0"
         env["EMACSCLIENT_CALLED"] = str(self.called)
+        env["FAKE_PACKAGE_ID"] = "example"
+        env["FAKE_PACKAGE_SOURCE"] = str(self.dotfiles)
         env["PATH"] = f"{self.fake_bin}:{env['PATH']}"
         return env
 
@@ -747,9 +749,14 @@ class ElpacaRebuildWaitTests(unittest.TestCase):
         script = self.fake_bin / "emacsclient"
         script.write_text(
             "#!/bin/sh\n"
-            ": > \"$EMACSCLIENT_CALLED\"\n"
+            "printf '%s\\034' \"$*\" >> \"$EMACSCLIENT_CALLED\"\n"
+            "if [ -n \"${FAKE_EMACSCLIENT_LOG:-}\" ]; then printf '%s\\034' \"$*\" >> \"$FAKE_EMACSCLIENT_LOG\"; fi\n"
             f"counter={counter!s}\n"
             "case \"$*\" in\n"
+            "  *elpaca-extras-resolve-package*)\n"
+            "    source=$(printf '%s' \"$FAKE_PACKAGE_SOURCE/\" | base64 | tr -d '\\n')\n"
+            "    label=$(basename \"$FAKE_PACKAGE_SOURCE\" | base64 | tr -d '\\n')\n"
+            "    printf '\"%s:%s:%s\"\\n' \"$FAKE_PACKAGE_ID\" \"$source\" \"$label\" ;;\n"
             "  *format-build-reload-status*)\n"
             "    count=$(sed -n '1p' \"$counter\" 2>/dev/null || printf '0')\n"
             "    count=$((count + 1)); printf '%s\\n' \"$count\" > \"$counter\"\n"
@@ -789,14 +796,33 @@ class ElpacaRebuildWaitTests(unittest.TestCase):
         status = self.state / commit / "standalone.status"
         status.parent.mkdir(parents=True)
         status.write_text("finished:stale\n")
+        env = self.environment()
+        env["FAKE_PACKAGE_ID"] = "standalone"
+        env["FAKE_PACKAGE_SOURCE"] = str(standalone)
         result = run(
             [str(REBUILD_WAIT), "standalone"],
-            env=self.environment(),
+            env=env,
             cwd=standalone,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue(self.called.exists())
         self.assertEqual(status.read_text(), "finished:loaded\n")
+
+    def test_repository_label_rebuilds_resolved_package_id(self):
+        self.write_emacsclient()
+        standalone = init_repo(self.root / "emacs-slack", "slack.el")
+        log = self.root / "emacsclient.log"
+        env = self.environment()
+        env["FAKE_PACKAGE_ID"] = "slack"
+        env["FAKE_PACKAGE_SOURCE"] = str(standalone)
+        env["FAKE_EMACSCLIENT_LOG"] = str(log)
+        result = run(
+            [str(REBUILD_WAIT), "emacs-slack"], env=env, cwd=standalone
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        calls = log.read_text() if log.exists() else ""
+        self.assertIn("elpaca-extras-rebuild-and-reload 'slack", calls)
+        self.assertNotIn("elpaca-extras-rebuild-and-reload 'emacs-slack", calls)
 
     def test_rejects_finished_state_for_a_different_mirror_head(self):
         (self.dotfiles / "emacs/extras/example.el").write_text("(provide 'changed)\n")
@@ -833,6 +859,10 @@ class ElispLiveVerifyTests(unittest.TestCase):
             "#!/bin/sh\n"
             "if [ -n \"${FAKE_EMACSCLIENT_LOG:-}\" ]; then printf '%s\\034' \"$*\" >> \"$FAKE_EMACSCLIENT_LOG\"; fi\n"
             "case \"$*\" in\n"
+            "  *elpaca-extras-resolve-package*)\n"
+            "    source=$(printf '%s' \"$FAKE_PACKAGE_SOURCE/\" | base64 | tr -d '\\n')\n"
+            "    label=$(basename \"$FAKE_PACKAGE_SOURCE\" | base64 | tr -d '\\n')\n"
+            "    printf '\"%s:%s:%s\"\\n' \"$FAKE_PACKAGE_ID\" \"$source\" \"$label\" ;;\n"
             "  *format-build-reload-status*) printf '%s\\n' '\"finished:loaded\"' ;;\n"
             "  *elpaca-extras-rebuild-and-reload*) printf '%s\\n' '\"token-1\"' ;;\n"
             "  *unload-feature*) printf '%s\\n' 't' ;;\n"
@@ -847,6 +877,8 @@ class ElispLiveVerifyTests(unittest.TestCase):
         env["ELPACA_RELOAD_STATE_DIR"] = str(self.root / "state")
         env["ELPACA_RELOAD_POLL_INTERVAL_SECONDS"] = "0"
         env["ELISP_EVIDENCE_RECEIPT_DIR"] = str(self.root / "receipts")
+        env["FAKE_PACKAGE_ID"] = "example"
+        env["FAKE_PACKAGE_SOURCE"] = str(self.repo)
         return env
 
     def test_emits_repository_label_and_commit_bound_evidence(self):
@@ -860,6 +892,30 @@ class ElispLiveVerifyTests(unittest.TestCase):
             result.stdout,
             r"(?m)^ELISP_LIVE_EVIDENCE_V2:[^:]+:[^:]+:[0-9a-f]{40,64}:receipt\.[A-Za-z0-9]+$",
         )
+
+    def test_repository_label_uses_package_id_but_remains_evidence_label(self):
+        repo = init_repo(self.root / "emacs-slack", "slack.el")
+        log = self.root / "emacsclient.log"
+        env = self.environment()
+        env["FAKE_PACKAGE_ID"] = "slack"
+        env["FAKE_PACKAGE_SOURCE"] = str(repo)
+        env["FAKE_EMACSCLIENT_LOG"] = str(log)
+        result = run(
+            [str(LIVE_VERIFY), "emacs-slack", "--", "(featurep 'slack)"],
+            cwd=DOTFILES,
+            env=env,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        evidence = next(
+            line for line in result.stdout.splitlines()
+            if line.startswith("ELISP_LIVE_EVIDENCE_V2:")
+        )
+        fields = evidence.split(":")
+        self.assertEqual(base64.b64decode(fields[1]).decode(), str(repo.resolve()))
+        self.assertEqual(base64.b64decode(fields[2]).decode(), "emacs-slack")
+        calls = log.read_text()
+        self.assertIn("elpaca-extras-rebuild-and-reload 'slack", calls)
+        self.assertNotIn("elpaca-extras-rebuild-and-reload 'emacs-slack", calls)
 
     def test_unrelated_expression_is_rejected(self):
         result = run(

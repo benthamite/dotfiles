@@ -22,21 +22,16 @@ dotfiles_root=$(cd -- "$script_dir/../.." && pwd)
 # shellcheck source=../hooks/lib-elisp-evidence.sh
 source "$dotfiles_root/claude/hooks/lib-elisp-evidence.sh"
 repo=$(git rev-parse --show-toplevel)
-# A standalone-package label must bind evidence to that package's checkout,
-# not to the shell's repo: harnesses that pin the working directory to the
-# dotfiles root could otherwise never mint evidence that matches the debt
-# recorded for a commit in the package repo (deadlock observed 2026-08-20).
+verification_label=$label
+package_id=""
 case "$label" in
   file:* | deleted:*) ;;
   *)
-    if [ "$repo" = "$dotfiles_root" ] &&
-       [ ! -f "$dotfiles_root/emacs/extras/$label.el" ] &&
-       [ "$label" != dotfiles ]; then
-      package_path=$("$dotfiles_root/bin/elpaca-package-path" "$label" 2>/dev/null || true)
-      if [ -n "$package_path" ] && [ -d "$package_path" ]; then
-        repo=$(git -C "$package_path" rev-parse --show-toplevel)
-      fi
-    fi
+    resolution=$(DOTFILES_ROOT="$dotfiles_root" \
+      "$dotfiles_root/bin/elpaca-package-resolve" "$label")
+    package_id=$(printf '%s' "$resolution" | jq -er '.id')
+    verification_label=$(printf '%s' "$resolution" | jq -er '.label')
+    repo=$(printf '%s' "$resolution" | jq -er '.repo')
     ;;
 esac
 commit=$(git -C "$repo" rev-parse HEAD)
@@ -83,11 +78,11 @@ elif [[ "$label" == file:* ]]; then
   target_pathspec="$relative"
 else
   target_pathspec="*.el"
-  if [ "$repo" = "$dotfiles_root" ] && [ -f "$repo/emacs/extras/$label.el" ]; then
-    target_pathspec="emacs/extras/$label.el"
+  if [ "$repo" = "$dotfiles_root" ] && [ -f "$repo/emacs/extras/$package_id.el" ]; then
+    target_pathspec="emacs/extras/$package_id.el"
   fi
-  if [[ "$expression" != *"$label"* ]]; then
-    echo "The live expression must name the package it verifies: $label" >&2
+  if [[ "$expression" != *"$package_id"* ]]; then
+    echo "The live expression must name the resolved package ID: $package_id" >&2
     exit 2
   fi
 fi
@@ -150,10 +145,11 @@ if [ -n "$deleted_package" ]; then
     echo "Live deletion check did not remove the loaded feature: $deleted_package" >&2
     exit 1
   fi
-elif [ "$repo" = "$dotfiles_root" ] && [ -f "$repo/emacs/extras/$label.el" ]; then
-  "$dotfiles_root/claude/bin/elpaca-rebuild-wait" "$label"
+elif [ "$repo" = "$dotfiles_root" ] && [ -f "$repo/emacs/extras/$package_id.el" ]; then
+  "$dotfiles_root/claude/bin/elpaca-rebuild-wait" "$package_id"
 elif [[ "$label" != file:* ]]; then
-  DOTFILES_ROOT="$dotfiles_root" "$dotfiles_root/claude/bin/elpaca-rebuild-wait" "$label"
+  DOTFILES_ROOT="$dotfiles_root" \
+    "$dotfiles_root/claude/bin/elpaca-rebuild-wait" "$package_id"
 fi
 
 live_result=$(timeout 30 emacsclient --eval "$expression")
@@ -164,5 +160,5 @@ if [ -z "$live_result" ] || [ "$live_result" = nil ]; then
 fi
 
 repo_b64=$(printf '%s' "$repo" | base64 | tr -d '\n')
-label_b64=$(printf '%s' "$label" | base64 | tr -d '\n')
+label_b64=$(printf '%s' "$verification_label" | base64 | tr -d '\n')
 elisp_evidence_emit live "$repo_b64" "$label_b64" "$commit"

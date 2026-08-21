@@ -8,19 +8,22 @@ if [ "$#" -ne 1 ]; then
   exit 2
 fi
 
-package="$1"
-case "$package" in
+identifier="$1"
+case "$identifier" in
   *[!A-Za-z0-9+_.-]* | "")
-    echo "Invalid package name: $package" >&2
+    echo "Invalid package identifier: $identifier" >&2
     exit 2
     ;;
 esac
 
 script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
-dotfiles_root=${DOTFILES_ROOT:-$(cd -- "$script_dir/../.." && pwd)}
+tool_root=$(cd -- "$script_dir/../.." && pwd)
+dotfiles_root=${DOTFILES_ROOT:-$tool_root}
 dotfiles_root=$(cd -- "$dotfiles_root" && pwd -P)
-source_repo=$(git rev-parse --show-toplevel 2>/dev/null || printf '%s' "$dotfiles_root")
-source_repo=$(cd -- "$source_repo" && pwd -P)
+resolution=$(DOTFILES_ROOT="$dotfiles_root" \
+  "$tool_root/bin/elpaca-package-resolve" "$identifier")
+package=$(printf '%s' "$resolution" | jq -er '.id')
+source_repo=$(printf '%s' "$resolution" | jq -er '.repo')
 state_root=${ELPACA_RELOAD_STATE_DIR:-$HOME/.cache/dotfiles/elpaca-reload}
 reload_timeout=${ELPACA_RELOAD_TIMEOUT_SECONDS:-120}
 reload_poll_interval=${ELPACA_RELOAD_POLL_INTERVAL_SECONDS:-1}

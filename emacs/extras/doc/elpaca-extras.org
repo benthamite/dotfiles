@@ -24,6 +24,7 @@ The main capabilities are:
 - *Reload after update.* A command that updates a package and automatically reloads its features once the build finishes ([[#h:update-and-reload][Update and reload]]).
 - *Reload after rebuild.* The same workflow for package rebuilds ([[#h:rebuild-and-reload][Rebuild and reload]]).
 - *Manual reload.* A standalone reload command for when you have made local edits to a package's source ([[#h:reload][Reload]]).
+- *Package resolution.* Mapping package IDs, checkout names, and source files to one queued package ([[#h:package-resolution][Package resolution]]).
 - *Filtered lock files.* Writing Elpaca lock files while excluding specific packages ([[#h:lock-file][Lock file management]]).
 
 * User options
@@ -40,6 +41,14 @@ The main capabilities are:
 The user option ~elpaca-extras-write-lock-file-excluded~ specifies a list of package identifiers (symbols) that should be omitted when writing a lock file with ~elpaca-extras-write-lock-file-excluding~ ([[#h:lock-file][Lock file management]]). This is useful for packages that are installed from local sources or that you do not want pinned to a specific revision.
 
 The default value is ~nil~ (no exclusions). The type is a list of symbols.
+
+* Package resolution
+:PROPERTIES:
+:CUSTOM_ID: h:package-resolution
+:END:
+
+#+findex: elpaca-extras-resolve-package
+The function ~elpaca-extras-resolve-package~ maps an Elpaca package ID, package name, source-directory basename, or absolute source path to a plist containing the canonical package ID, package name, source directory, and checkout label. Exact IDs take precedence. A main source filename can distinguish packages that share one checkout. Any remaining ambiguity signals an error instead of selecting an arbitrary package.
 
 * Commands
 :PROPERTIES:

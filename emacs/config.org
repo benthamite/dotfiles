@@ -9285,9 +9285,6 @@ The author provides a good overview of the package in [[https://www.youtube.com/
                            ("epoch"    . "~/.claude-epoch")
                            ("trajectory" . "~/.claude-trajectory")))
 
-  ;; Separate profiles keep account authentication and usage independent.
-  ;; They share the "epoch" pool, so selecting "epoch" routes each new
-  ;; session to the member with the most quota left.
   (agent-codex-accounts '(("tlon"   . "~/.codex-tlon")
                           ("epoch"  :home "~/.codex-epoch"  :pool "epoch")
                           ("epoch2" :home "~/.codex-epoch2" :pool "epoch")

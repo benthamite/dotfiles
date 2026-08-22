@@ -17,6 +17,7 @@ documented in [[file:../agents/README.org][the agent manual]]. Skill names and t
 | =agent-skill= | Resolves a Claude or Codex skill by name across the active skill roots. |
 | =ahrefs-api-guard= | Delegates Ahrefs API access to the guarded Claude-side wrapper. |
 | =ai-config-sync= | Audits and guards paired Claude and Codex configuration while treating each tool's hook README as independent documentation. |
+| =check-config-org= | Parses every tangled Elisp block in =emacs/config.org= and runs the profile-aware tangle; the evidence check for config.org commits. |
 | =claude-stage-hook= | Stages explicitly marked Claude final-message commands on the user’s paste surfaces. |
 | =codex-config-prune= | Removes stale project-trust and hook-state entries from Codex configuration. |
 | =codex-protocol-watch= | Checks whether Codex has added protocol methods unsupported by the Emacs client. |

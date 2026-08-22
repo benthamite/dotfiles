@@ -1,0 +1,38 @@
+#!/bin/bash
+# Validate emacs/config.org: every tangled Elisp block must read as
+# balanced Lisp, and the profile-aware tangle must succeed in the
+# active Emacs session.  Used as the evidence check for config.org
+# commits (see claude/bin/elisp-check-evidence).
+
+set -euo pipefail
+
+root=$(cd -- "$(dirname -- "$0")/.." && pwd)
+config="$root/emacs/config.org"
+
+emacs --batch -Q --eval "
+(progn
+  (require 'org)
+  (find-file \"$config\")
+  (let ((count 0) line)
+    (org-babel-map-src-blocks nil
+      (when (and (string= lang \"emacs-lisp\")
+                 (not (string-match-p \":tangle +no\" (or header-args \"\"))))
+        (setq count (1+ count))
+        (setq line (line-number-at-pos beg-block))
+        (with-temp-buffer
+          (emacs-lisp-mode)
+          (insert body)
+          (goto-char (point-min))
+          (condition-case err
+              (while (progn (forward-comment (buffer-size)) (not (eobp)))
+                (read (current-buffer)))
+            (error (error \"config.org block at line %d: %s\"
+                          line (error-message-string err)))))))
+    (message \"config.org: %d Elisp blocks parsed\" count)))"
+
+if emacsclient -e '(init-build-profile (file-name-directory user-init-file))' >/dev/null; then
+  echo "config.org: profile tangle completed"
+else
+  echo "config.org: profile tangle failed" >&2
+  exit 1
+fi

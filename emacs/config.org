@@ -9286,10 +9286,13 @@ The author provides a good overview of the package in [[https://www.youtube.com/
                            ("trajectory" . "~/.claude-trajectory")))
 
   ;; Separate profiles keep account authentication and usage independent.
+  ;; They share the "epoch" pool, so selecting "epoch" routes each new
+  ;; session to the member with the most quota left.
   (agent-codex-accounts '(("tlon"   . "~/.codex-tlon")
-                          ("epoch"  . "~/.codex-epoch")
-                          ("epoch2" . "~/.codex-epoch2")
-                          ("epoch3" . "~/.codex-epoch3")))
+                          ("epoch"  :home "~/.codex-epoch"  :pool "epoch")
+                          ("epoch2" :home "~/.codex-epoch2" :pool "epoch")
+                          ("epoch3" :home "~/.codex-epoch3" :pool "epoch")
+                          ("epoch4" :home "~/.codex-epoch4" :pool "epoch")))
 
   :bind
   ("H-e" . agent-menu)
@@ -9298,7 +9301,6 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (with-eval-after-load 'debug
     (bind-keys :map debugger-mode-map
                ("D" . agent-debug-backtrace))))
-               
 #+end_src
 
 

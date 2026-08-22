@@ -28,7 +28,6 @@ dotfiles_root=$(cd -- "$script_dir/../.." && pwd)
 revision_helper="$dotfiles_root/claude/bin/elisp-source-revision"
 # shellcheck source=../hooks/lib-elisp-evidence.sh
 source "$dotfiles_root/claude/hooks/lib-elisp-evidence.sh"
-repo=$(git rev-parse --show-toplevel)
 check_command="$1"
 shift
 case "$check_command" in
@@ -43,6 +42,9 @@ check_dir=$(cd -- "$(dirname -- "$check_command")" 2>/dev/null && pwd -P) || {
   exit 2
 }
 check_path="$check_dir/$(basename -- "$check_command")"
+# The owning repository is the check command's, so an absolute command
+# works from any working directory.
+repo=$(git -C "$check_dir" rev-parse --show-toplevel)
 case "$check_path" in
   "$repo"/*) ;;
   *)

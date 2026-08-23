@@ -83,7 +83,6 @@ handled by its configured documentation owner instead.
 | =block-dirty-tree-rewrite.sh= | Blocks Git history rewrites when the target repository has staged or unstaged tracked changes. |
 | =block-elpaca-dotfiles-edit.sh= | Denies writes to the read-only Elpaca dotfiles mirror and points to the canonical repository. |
 | =block-elpaca-rebuild-uncommitted.sh= | Blocks rebuilding an extras package while its canonical Elisp source has uncommitted changes. |
-| =block-github-guard-edit.sh= | Protects the GitHub allowlist, guard implementations, helper parsers, repo resolver, and hook registrations from direct edits and standard nested =functions.exec= patches. |
 | =block-github-write-command.sh= | Blocks Git pushes and recognized mutating =gh= operations unless the target matches an exact repo or account wildcard in the committed allowlist, or an exact Epoch project repo in the fixed committed automations registry. This includes topic-branch pushes, pull-request and issue creation or edits, and comments. Read-only inspection remains allowed. Nested =functions.exec= shell calls are checked independently and ambiguous recognized calls fail closed. |
 | =block-secret-leak.sh= | Blocks literal secret disclosure and unsafe secret-bearing reads, writes, or output. |
 | =block-sensitive-read.sh= | Blocks content reads of credential-like files while permitting narrowly defined metadata checks and the exact value-free shell-export classifier. |

@@ -50,11 +50,6 @@
           },
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-github-guard-edit.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-destructive-command.sh",
             "timeout": 5
           },
@@ -126,11 +121,6 @@
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-walk-list-access.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-github-guard-edit.sh",
             "timeout": 5
           }
         ]

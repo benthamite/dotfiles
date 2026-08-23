@@ -122,11 +122,9 @@ push and mutating =gh= operation, including topic branches, pull requests,
 issues, and comments. It classifies each literal shell command nested in
 =functions.exec= independently and refuses dynamic or ambiguous nested calls;
 read-only GitHub inspection remains available for undeclared repositories.
-The self-edit guard also inspects standard nested =apply_patch= calls, because
-the nested runtime does not dispatch a separate pre-tool event for them. The
-Elisp post-edit hook is registered on the outer composed-tool event as well as
-direct edit events, so it recovers changed paths from nested patches instead of
-depending on that missing event.
+The Elisp post-edit hook is registered on the outer composed-tool event as well
+as direct edit events, so it recovers changed paths from nested patches instead
+of depending on the nested runtime to dispatch a separate pre-tool event.
 
 The secret guard denies raw =op= even inside an =env -u ... bash -c= batch.
 Automations reads use =op-automations= and desktop-gated work uses

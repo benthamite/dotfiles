@@ -71,9 +71,7 @@ of two committed sources:
    is derived from project =:REPOS:= declarations.
 
 The guard never trusts a working-tree edit or a caller-selected registry path.
-The allowlist, guard implementations, and registration files are themselves
-protected from agent edits. Hook decisions are allow or deny; they never ask
-for approval.
+Hook decisions are allow or deny; they never ask for approval.
 
 Contribution writes are not exempt: topic branches, pull requests, issues, and
 comments require the same committed repository authorization as other writes.

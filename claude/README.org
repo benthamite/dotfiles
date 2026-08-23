@@ -246,7 +246,9 @@ its authorization.
 
 Every GitHub write now requires committed repository authorization. Topic
 branches, pull requests, issues, and comments have no contribution exemption;
-read-only inspection remains available for undeclared repositories.
+read-only inspection remains available for undeclared repositories. The
+allowlist, guard implementation, and hook registrations remain agent-editable;
+there is no separate self-edit guard.
 
 A change under =claude/skills=, =claude/hooks=, =claude/settings*.json= or
 =claude/CLAUDE.md= must be accompanied by an update to this file. The guard

@@ -9215,7 +9215,11 @@ The author provides a good overview of the package in [[https://www.youtube.com/
                  :files ("*.el" (:exclude "images/*")))
   :defer t
   :custom
-  (claude-code-display-window-fn (lambda (_buffer) (claude-code-switch-to-buffer) nil))
+  ;; Switch to the buffer just created. Do not call
+  ;; `claude-code-switch-to-buffer' here: it re-resolves the buffer by
+  ;; directory and prompts whenever the directory already has more than one
+  ;; instance, which breaks unattended session starts.
+  (claude-code-display-window-fn (lambda (buffer) (switch-to-buffer buffer) nil))
   (claude-code-terminal-backend 'eat)
   (claude-code-optimize-window-resize nil)
   ;; `--allow-dangerously-skip-permissions' only adds "bypass permissions" to

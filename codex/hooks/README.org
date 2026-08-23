@@ -75,6 +75,19 @@ command-text fallback excludes project-local =.codex/= paths, and it excludes
 the repo-root =AGENTS.md= project mirror; the project-local dotfiles skill is
 handled by its configured documentation owner instead.
 
+The LaunchAgent registry guard routes every launchd change through
+=~/repos/launchd=. It denies writing a plist into
+=~/Library/LaunchAgents=, redirecting into that directory, and
+=launchctl bootstrap/load/enable/submit= as well as
+=bootout/unload/disable/remove=, and names =bin/launchd-install.py= in the
+denial. That script writes the canonical plist, symlinks the live file, adds the
+=registry/jobs.json= entry, and runs the drift audit; loading stays behind its
+explicit =--load= flag. Read-only inspection is deliberately untouched: =ls=,
+=cat=, =readlink=, =diff=, =plutil -p=, =defaults read=, and =launchctl
+print/list=. Heredoc bodies are masked so a commit message quoting a live path is
+not read as an invocation. =ALLOW_LAUNCHAGENT_CHANGE=1= is the narrow override
+for a change Pablo has authorized, such as a temporary bootout while debugging.
+
 * File index
 
 | File | Purpose |
@@ -88,6 +101,7 @@ handled by its configured documentation owner instead.
 | =block-sensitive-read.sh= | Blocks content reads of credential-like files while permitting narrowly defined metadata checks and the exact value-free shell-export classifier. |
 | =block-texi-edit.sh= | Blocks direct edits to generated Texinfo and points to the Org source. |
 | =block-unguarded-ahrefs-api.sh= | Blocks paid Ahrefs API calls that do not pass through the quota guard. |
+| =block-unregistered-launchagent.sh= | Routes LaunchAgent installs, loads, and removals through the =~/repos/launchd= registry and its installer, covering shell payloads and =apply_patch= paths. |
 | =block-walk-list-access.sh= | Restricts direct access to the protected walk-list data store. |
 | =lib-codex-hook-json.sh= | Normalizes Codex hook payloads, extracts literal nested command/workdir records without evaluating JavaScript, recognizes Git subcommands after supported global options, and recovers an exact nested Bash command's parent workdir from the session transcript. |
 | =lib-codex-paths.sh= | Extracts changed paths from the supported Codex edit and patch payload forms. |

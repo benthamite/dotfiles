@@ -78,6 +78,19 @@ that newest comment in the denial; API failures are an intentional fail-open
 boundary. Codex has no SessionStart counterpart and routes this posting flow to
 Claude.
 
+The LaunchAgent registry guard routes every launchd change through
+=~/repos/launchd=. It denies writing a plist into
+=~/Library/LaunchAgents=, redirecting into that directory, and
+=launchctl bootstrap/load/enable/submit= as well as
+=bootout/unload/disable/remove=, and names =bin/launchd-install.py= in the
+denial. That script writes the canonical plist, symlinks the live file, adds the
+=registry/jobs.json= entry, and runs the drift audit; loading stays behind its
+explicit =--load= flag. Read-only inspection is deliberately untouched: =ls=,
+=cat=, =readlink=, =diff=, =plutil -p=, =defaults read=, and =launchctl
+print/list=. Heredoc bodies are masked so a commit message quoting a live path is
+not read as an invocation. =ALLOW_LAUNCHAGENT_CHANGE=1= is the narrow override
+for a change Pablo has authorized, such as a temporary bootout while debugging.
+
 * File index
 
 | File | Purpose |
@@ -92,6 +105,7 @@ Claude.
 | =block-sensitive-read.sh= | Blocks content reads of credential-like paths while permitting narrow metadata checks and the exact value-free shell-export classifier. |
 | =block-texi-edit.sh= | Blocks direct edits to generated Texinfo and points to the Org source. |
 | =block-unguarded-ahrefs-api.sh= | Blocks paid Ahrefs calls outside the guarded quota wrapper. |
+| =block-unregistered-launchagent.sh= | Routes LaunchAgent installs, loads, and removals through the =~/repos/launchd= registry and its installer. |
 | =block-walk-list-access.sh= | Prevents bypassing the walk-list skill's protected data store. |
 | =cr-card-body-gate.sh= | Validates a CR issue body file before a GitHub create or edit operation. |
 | =cr-issue-comment-freshness.sh= | Requires acknowledgement of the latest reasoning-task issue comment before a project-local post. |

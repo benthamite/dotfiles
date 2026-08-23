@@ -97,6 +97,11 @@
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-dirty-tree-rewrite.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-unregistered-launchagent.sh",
+            "timeout": 5
           }
         ]
       },
@@ -121,6 +126,11 @@
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-walk-list-access.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-unregistered-launchagent.sh",
             "timeout": 5
           }
         ]

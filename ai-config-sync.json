@@ -372,6 +372,14 @@
       "note": "paired for apply_patch/Edit/Write path guards"
     },
     {
+      "name": "block-unregistered-launchagent.sh",
+      "claude": "claude/hooks/block-unregistered-launchagent.sh",
+      "codex": "codex/hooks/block-unregistered-launchagent.sh",
+      "status": "paired",
+      "note": "Routes LaunchAgent changes through ~/repos/launchd, denying hand-installed plists in ~/Library/LaunchAgents and launchctl bootstrap/load/enable/submit and bootout/unload/disable/remove; the denial names bin/launchd-install.py. Read-only inspection stays allowed, as does anything routed through that installer. Heredoc bodies are masked so a quoted path is not read as an invocation. ALLOW_LAUNCHAGENT_CHANGE=1 is the narrow authorized-change override. Claude reads tool_input file_path and command; Codex uses lib-codex-paths.sh and codex_shell_command. Details in both hook READMEs.",
+      "equivalence": "Identical apart from the payload-extraction preamble documented above."
+    },
+    {
       "name": "block-walk-list-access.sh",
       "claude": "claude/hooks/block-walk-list-access.sh",
       "codex": "codex/hooks/block-walk-list-access.sh",
@@ -678,14 +686,14 @@
       "tool": "Claude Code",
       "path": "~/.claude/settings.json",
       "tracked": false,
-      "note": "Mutable live global settings; hook registrations are added in place. Stop forwards turn-end state to Emacs, while session-learning capture belongs to the Emacs agent-before-exit path because Stop is not true process exit. Ahrefs and GitHub guard registration is documented in claude/hooks/README.org."
+      "note": "Mutable live global settings; hook registrations are added in place. Stop forwards turn-end state to Emacs, while session-learning capture belongs to the Emacs agent-before-exit path because Stop is not true process exit. Ahrefs and GitHub guard registration is documented in claude/hooks/README.org. The LaunchAgent registry guard is registered on both the shell and edit matchers so plist writes and launchctl verbs are both covered."
     },
     {
       "tool": "Codex",
       "path": "codex/hooks.json",
       "tracked": true,
       "live_path": "~/.codex/hooks.json",
-      "note": "Tracked global registration, live through ~/.codex/hooks.json; it stays outside repo-root .codex to avoid double loading. Lifecycle entries use codex-hook-wrapper with an explicit Emacs socket. Shell matchers cover Bash, exec_command, functions.exec, and functions.exec_command; edit matchers are collapsed for trust review, and UserPromptSubmit has an empty matcher. Guards allow or deny, never ask. The Drive runtime-state guard was removed on 2026-08-03 with the rest of the Drive workspace tooling, so its shell-matcher entry is gone. See codex/README.org and codex/hooks/README.org."
+      "note": "Tracked global registration, live through ~/.codex/hooks.json; it stays outside repo-root .codex to avoid double loading. Lifecycle entries use codex-hook-wrapper with an explicit Emacs socket. Shell matchers cover Bash, exec_command, functions.exec, and functions.exec_command; edit matchers are collapsed for trust review, and UserPromptSubmit has an empty matcher. Guards allow or deny, never ask. The Drive runtime-state guard was removed on 2026-08-03. The LaunchAgent registry guard runs on both the shell and edit matchers. See codex/README.org and codex/hooks/README.org."
     },
     {
       "tool": "Claude Code and Codex",

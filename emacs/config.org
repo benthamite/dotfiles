@@ -9286,10 +9286,10 @@ The author provides a good overview of the package in [[https://www.youtube.com/
                            ("trajectory" . "~/.claude-trajectory")))
 
   (agent-codex-accounts '(("tlon"   . "~/.codex-tlon")
-                          ("epoch"  :home "~/.codex-epoch"  :pool "epoch")
-                          ("epoch2" :home "~/.codex-epoch2" :pool "epoch")
-                          ("epoch3" :home "~/.codex-epoch3" :pool "epoch")
-                          ("epoch4" :home "~/.codex-epoch4" :pool "epoch")))
+                          ("epoch"  :home "~/.codex-epoch"  :pool "epoch-pool")
+                          ("epoch2" :home "~/.codex-epoch2" :pool "epoch-pool")
+                          ("epoch3" :home "~/.codex-epoch3" :pool "epoch-pool")
+                          ("epoch4" :home "~/.codex-epoch4" :pool "epoch-pool")))
 
   :bind
   ("H-e" . agent-menu)

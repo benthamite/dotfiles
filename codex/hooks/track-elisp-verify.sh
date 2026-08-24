@@ -151,18 +151,37 @@ record_commits() {
   trap - EXIT
 }
 
+# A detected live-verify run whose evidence cannot be consumed must say
+# so visibly: the verify gate would otherwise keep blocking later with a
+# message that no longer names the cause. CONSUME_REASON stays empty for
+# the benign no-pending-marker case, which needs no report.
+report_unverified() {
+  jq -n --arg message "Elisp live-verify evidence NOT recorded: $1 The verify gate will keep requiring it." \
+    '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":$message}}'
+  exit 0
+}
+
 consume_live_evidence() {
   local expected_label="$1" evidence verified_evidence version repo_b64 label_b64 commit repo label temporary
+  CONSUME_REASON=""
   evidence=$(printf '%s\n' "$STDOUT" | grep '^ELISP_LIVE_EVIDENCE_V2:' | tail -1 || true)
-  [ -n "$evidence" ] || return 1
-  verified_evidence=$(elisp_evidence_consume live "$evidence") || return 1
+  [ -n "$evidence" ] ||
+    { CONSUME_REASON="the run printed no live-evidence line."; return 1; }
+  verified_evidence=$(elisp_evidence_consume live "$evidence") ||
+    { CONSUME_REASON="the live evidence has no valid one-time receipt."; return 1; }
   IFS=: read -r version repo_b64 label_b64 commit <<< "$verified_evidence"
-  [ "$version" = ELISP_LIVE_EVIDENCE_V2 ] && [[ "$commit" =~ ^[0-9a-f]{40,64}$ ]] || return 1
-  repo=$(decode_base64 "$repo_b64") || return 1
-  label=$(decode_base64 "$label_b64") || return 1
-  [ "$label" = "$expected_label" ] || return 1
-  [ -d "$repo" ] && [ "$(git -C "$repo" rev-parse HEAD 2>/dev/null || true)" = "$commit" ] || return 1
-  acquire_lock || return 1
+  [ "$version" = ELISP_LIVE_EVIDENCE_V2 ] && [[ "$commit" =~ ^[0-9a-f]{40,64}$ ]] ||
+    { CONSUME_REASON="the live evidence line is malformed."; return 1; }
+  repo=$(decode_base64 "$repo_b64") ||
+    { CONSUME_REASON="the live evidence repository field cannot be decoded."; return 1; }
+  label=$(decode_base64 "$label_b64") ||
+    { CONSUME_REASON="the live evidence label field cannot be decoded."; return 1; }
+  [ "$label" = "$expected_label" ] ||
+    { CONSUME_REASON="the live evidence label does not match the wrapper command."; return 1; }
+  [ -d "$repo" ] && [ "$(git -C "$repo" rev-parse HEAD 2>/dev/null || true)" = "$commit" ] ||
+    { CONSUME_REASON="the live evidence commit does not match the repository HEAD. Re-run after committing."; return 1; }
+  acquire_lock ||
+    { CONSUME_REASON="the verify marker could not be locked. Re-run the check."; return 1; }
   trap release_lock EXIT
   [ -s "$MARKER" ] || { release_lock; trap - EXIT; return 1; }
   temporary=$(mktemp "${TMPDIR:-/tmp}/elisp-verify.XXXXXX")
@@ -229,8 +248,16 @@ process_command() {
   while IFS= read -r -d '' executable; do
     executable_count=$((executable_count + 1))
   done < <(printf '%s' "$completed_command" | codex_shell_executables)
-  if [ "$live_count" -eq 1 ] && [ "$executable_count" -eq 1 ]; then
-    consume_live_evidence "$live_label" || true
+  if [ "$live_count" -gt 0 ]; then
+    if [ "$live_count" -gt 1 ]; then
+      report_unverified "the command contains $live_count live-verify invocations. Run each check as its own command."
+    fi
+    if [ "$executable_count" -ne 1 ]; then
+      report_unverified "the wrapper must be the only executable in the command. Re-run it bare, without pipes, chains, or other commands."
+    fi
+    if ! consume_live_evidence "$live_label" && [ -n "$CONSUME_REASON" ]; then
+      report_unverified "$CONSUME_REASON"
+    fi
   fi
 }
 
@@ -264,9 +291,16 @@ if [ "$TOOL_NAME" = functions.exec ]; then
     collect_command_commits "$nested_command" "$nested_workdir" false
   done < <(printf '%s' "$COMMAND" | codex_nested_exec_contexts)
   flush_command_commits
-  if [ "$outer_live_count" -eq 1 ] && [ "$outer_executable_count" -eq 1 ] &&
-     [ "$EXIT_CODE" = 0 ]; then
-    consume_live_evidence "$outer_live_label" || true
+  if [ "$EXIT_CODE" = 0 ] && [ "$outer_live_count" -gt 0 ]; then
+    if [ "$outer_live_count" -gt 1 ]; then
+      report_unverified "the command contains $outer_live_count live-verify invocations. Run each check as its own command."
+    fi
+    if [ "$outer_executable_count" -ne 1 ]; then
+      report_unverified "the wrapper must be the only executable in the command. Re-run it bare, without pipes, chains, or other commands."
+    fi
+    if ! consume_live_evidence "$outer_live_label" && [ -n "$CONSUME_REASON" ]; then
+      report_unverified "$CONSUME_REASON"
+    fi
   fi
 elif [ "$EXIT_CODE" = 0 ]; then
   command_workdir=$(codex_tool_input_field "$INPUT" workdir)

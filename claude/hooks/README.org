@@ -136,8 +136,8 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =sync-agent-c-worktree.sh= | Compatibility wrapper for the renamed reasoning-task worktree synchronization hook. |
 | =sync-reasoning-tasks-worktree.sh= | Repairs and updates an eligible reasoning-task worktree at SessionStart without pushing it. |
 | =track-elisp-skill.sh= | Records that the Elisp conventions skill was loaded in the current session. |
-| =track-elisp-test.sh= | Consumes a one-time receipt, then validates and records repository/package/source-revision evidence from the source-aware batch runner. |
-| =track-elisp-verify.sh= | Records each production package in an Elisp commit and consumes one-time receipts before clearing matching repository/package/commit live evidence. |
+| =track-elisp-test.sh= | Consumes a one-time receipt, then validates and records repository/package/source-revision evidence from the source-aware batch runner. When a detected wrapper run cannot be recorded (piped command, stale load, invalid receipt, revision mismatch), it reports the cause to the model instead of failing silently. |
+| =track-elisp-verify.sh= | Records each production package in an Elisp commit and consumes one-time receipts before clearing matching repository/package/commit live evidence. When a detected live-verify run cannot be consumed, it reports the cause to the model instead of failing silently. |
 | =wrap-bash-output.sh= | Routes plausible secret-printing command output through the redactor while preserving status. |
 
 The documentation audit requires every tracked direct child to appear exactly

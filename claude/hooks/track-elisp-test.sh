@@ -64,38 +64,47 @@ while IFS= read -r -d '' executable; do
   EXECUTABLE_COUNT=$((EXECUTABLE_COUNT + 1))
 done < <(printf '%s' "$COMMAND" | codex_shell_executables)
 
+# A detected wrapper run whose evidence cannot be recorded must say so
+# visibly: the commit gate would otherwise block later with a message
+# that no longer names the cause. additionalContext reaches the model;
+# a bare stderr warning from a PostToolUse hook does not.
+report_unrecorded() {
+  jq -n --arg message "Elisp test evidence NOT recorded: $1 The commit gate will block until a wrapper run records evidence." \
+    '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":$message}}'
+  exit 0
+}
+
 # Only the source-aware wrapper emits revision-bound evidence.
-if [ "$EXIT_CODE" = 0 ] && [ "$EXPECTED_COUNT" -eq 1 ] &&
-   [ "$EXECUTABLE_COUNT" -eq 1 ]; then
+if [ "$EXIT_CODE" = 0 ] && [ "$EXPECTED_COUNT" -gt 0 ]; then
+  if [ "$EXPECTED_COUNT" -gt 1 ]; then
+    report_unrecorded "the command contains $EXPECTED_COUNT wrapper invocations. Run each check as its own command."
+  fi
+  if [ "$EXECUTABLE_COUNT" -ne 1 ]; then
+    report_unrecorded "the wrapper must be the only executable in the command. Re-run it bare, without pipes, chains, or other commands."
+  fi
   # Safety check: did Emacs print a real stale-load warning? These are
   # the canonical messages emitted when a .elc shadows a newer .el. We
   # match them literally rather than any mention of elpaca/builds, which
   # produces false positives when the test prints function source paths
   # or when a standalone package legitimately loads from elpaca/builds.
   if echo "$COMBINED" | grep -qE 'newer than byte-compiled file|using older file'; then
-    echo "WARNING: emacs --batch printed a stale-load warning." >&2
-    echo "The test may not have verified your edits. Fix load-path order:" >&2
-    echo '  (push "/path/to/canonical/source" load-path)  ; before elpaca builds' >&2
     # Do NOT create the marker — the commit hook should still block.
-    exit 0
+    report_unrecorded "emacs --batch printed a stale-load warning, so the test may not have verified your edits. Fix load-path order: (push \"/path/to/canonical/source\" load-path) before elpaca builds."
   fi
 
   EVIDENCE=$(printf '%s\n' "$COMBINED" | grep '^ELISP_TEST_EVIDENCE_V2:' | tail -1 || true)
   if [ -z "$EVIDENCE" ]; then
-    echo "WARNING: Elisp check returned no revision-bound evidence." >&2
-    exit 0
+    report_unrecorded "the check printed no revision-bound evidence line."
   fi
   VERIFIED_EVIDENCE=$(elisp_evidence_consume test "$EVIDENCE" || true)
   if [ -z "$VERIFIED_EVIDENCE" ]; then
-    echo "WARNING: Elisp check evidence has no valid one-time receipt." >&2
-    exit 0
+    report_unrecorded "the evidence has no valid one-time receipt."
   fi
 
   IFS=: read -r VERSION REPO_B64 PACKAGE_B64 REVISION <<< "$VERIFIED_EVIDENCE"
   if [ "$VERSION" != ELISP_TEST_EVIDENCE_V2 ] ||
      ! [[ "$REVISION" =~ ^[0-9a-f]{64}$ ]]; then
-    echo "WARNING: Elisp check returned malformed test evidence." >&2
-    exit 0
+    report_unrecorded "the evidence line is malformed."
   fi
 
   decode_base64() {
@@ -106,11 +115,12 @@ if [ "$EXIT_CODE" = 0 ] && [ "$EXPECTED_COUNT" -eq 1 ] &&
     printf '%s' "$encoded" | base64 -d 2>/dev/null
   }
 
-  REPO=$(decode_base64 "$REPO_B64") || exit 0
-  PACKAGE=$(decode_base64 "$PACKAGE_B64") || exit 0
+  REPO=$(decode_base64 "$REPO_B64") ||
+    report_unrecorded "the evidence repository field cannot be decoded."
+  PACKAGE=$(decode_base64 "$PACKAGE_B64") ||
+    report_unrecorded "the evidence package field cannot be decoded."
   if [ "$PACKAGE" != "$EXPECTED_LABEL" ]; then
-    echo "WARNING: Elisp check evidence label does not match the wrapper command." >&2
-    exit 0
+    report_unrecorded "the evidence label does not match the wrapper command."
   fi
   DOTFILES_ROOT=$(cd -- "$SCRIPT_DIR/../.." && pwd)
   REVISION_HELPER="$DOTFILES_ROOT/claude/bin/elisp-source-revision"
@@ -118,8 +128,7 @@ if [ "$EXIT_CODE" = 0 ] && [ "$EXPECTED_COUNT" -eq 1 ] &&
   INDEX_REVISION=$("$REVISION_HELPER" --index "$REPO" 2>/dev/null || true)
   if [ ! -d "$REPO" ] || [ -z "$PACKAGE" ] ||
      { [ "$WORKING_REVISION" != "$REVISION" ] && [ "$INDEX_REVISION" != "$REVISION" ]; }; then
-    echo "WARNING: Elisp check evidence does not match the current source." >&2
-    exit 0
+    report_unrecorded "the evidence does not match the current source revision. Re-run the check after the final source edit."
   fi
 
   MARKER="/tmp/claude-elisp-tested-${SESSION_ID}"
@@ -141,8 +150,7 @@ if [ "$EXIT_CODE" = 0 ] && [ "$EXPECTED_COUNT" -eq 1 ] &&
     sleep 0.01
   done
   if [ "$acquired" != true ]; then
-    echo "WARNING: Could not lock the Elisp test evidence marker." >&2
-    exit 0
+    report_unrecorded "the evidence marker could not be locked. Re-run the check."
   fi
   release_lock() {
     rm -f "$LOCK_DIR/owner"

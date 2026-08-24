@@ -143,10 +143,31 @@ supports the \"Put Back\" functionality in macOS."
 	   (switch-to-buffer buffer-name nil 'force-same-window)))))
 
 (defun files-extras-save-all-buffers ()
-  "Save all file-visiting buffers."
+  "Save all file-visiting buffers, skipping any that would raise a coding prompt.
+A buffer containing characters that its coding system cannot encode
+makes `basic-save-buffer' prompt for a coding system; from unattended
+contexts such as the midnight hook, that prompt blocks Emacs until
+answered.  Skip such buffers and report them instead."
   (interactive)
-  (save-some-buffers
-   `(4)))
+  (save-some-buffers '(4) #'files-extras--save-would-not-prompt-p))
+
+(defun files-extras--save-would-not-prompt-p ()
+  "Return t if saving the current buffer cannot raise a coding prompt.
+Return nil for buffers not visiting a file, preserving the
+`save-some-buffers' default of considering only file-visiting buffers.
+When the buffer contains a character that its coding system cannot
+encode, message the buffer name and offending position and return nil."
+  (when buffer-file-name
+    (let* ((coding (or buffer-file-coding-system
+		       (default-value 'buffer-file-coding-system)))
+	   (pos (when coding
+		  (unencodable-char-position (point-min) (point-max) coding))))
+      (if pos
+	  (progn
+	    (message "files-extras: not saving `%s': char at position %d cannot be encoded by `%s'"
+		     (buffer-name) pos coding)
+	    nil)
+	t))))
 
 (defun files-extras-save-buffer-no-hooks ()
   "Save the current buffer without running any hooks."

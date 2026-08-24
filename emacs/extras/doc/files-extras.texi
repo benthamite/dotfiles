@@ -170,7 +170,11 @@ reflects both your unsaved changes and the file's current state on disk.
 The command @code{files-extras-save-all-buffers} saves all file-visiting
 buffers without prompting for confirmation.  It passes a prefix argument
 of 4 to @code{save-some-buffers}, which bypasses the per-buffer confirmation
-that the default behavior would require.
+that the default behavior would require.  A buffer containing characters
+that its coding system cannot encode is skipped with a message rather
+than saved, because saving it would raise a coding-system prompt; this
+keeps unattended callers, such as the midnight hook, from blocking on
+the minibuffer.
 
 The command @code{files-extras-save-buffer-no-hooks} saves the current buffer
 while temporarily disabling both @code{before-save-hook} and

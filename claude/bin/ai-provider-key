@@ -40,12 +40,9 @@ DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD = 500.0
 # Per-provider overrides of the autonomous ceiling. Keep each entry equal to the
 # matching `max_autonomous_monthly_spend_usd` in
 # `Epoch/projects/ai-access-management/provider-controls.yml`, which in turn
-# mirrors the provider's own workspace/project spend limit. Anthropic is 1000
-# because the shared Automations workspace is set to $1000 and 15 other
-# automation keys share it; a lower ceiling here deadlocks provisioning, since
-# the agent can then request neither the true cap nor a smaller one.
+# mirrors the provider's own workspace/project spend limit. Anthropic automation keys share the verified workspace cap.
 MAX_AUTONOMOUS_MONTHLY_SPEND_USD_BY_PROVIDER = {
-    "anthropic": 1000.0,
+    "anthropic": 1500.0,
 }
 
 

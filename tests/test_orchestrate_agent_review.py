@@ -159,8 +159,8 @@ class StageAtomicRunTests(unittest.TestCase):
             captured["expr"] = expr
             return "present"
 
-        with mock.patch.object(orchestrator, "run_emacs_eval", side_effect=evaluate):
-            orchestrator.pending_prompt_contains(
+        with mock.patch.object(orchestrator.session, "run_emacs_eval", side_effect=evaluate):
+            orchestrator.session.pending_prompt_contains(
                 "*codex:stage-2*", "codex", "marker"
             )
 
@@ -169,12 +169,12 @@ class StageAtomicRunTests(unittest.TestCase):
 
     def test_claude_transcript_path_uses_status_record(self):
         with mock.patch.object(
-            orchestrator,
+            orchestrator.session,
             "run_emacs_eval",
             return_value="/tmp/fresh-claude.jsonl",
         ) as evaluate:
             try:
-                result = orchestrator.agent_transcript_path(
+                result = orchestrator.session.agent_transcript_path(
                     "*claude:stage-2*", "claude-code"
                 )
             except SystemExit as error:
@@ -186,7 +186,7 @@ class StageAtomicRunTests(unittest.TestCase):
     def submit_phase(self, phase):
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "awaiting-input"},
             ),
@@ -220,7 +220,7 @@ class StageAtomicRunTests(unittest.TestCase):
         self.write_phase_return(phase)
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "awaiting-input"},
             ),
@@ -257,7 +257,7 @@ class StageAtomicRunTests(unittest.TestCase):
             ("implementation", "*claude:stage-2*", "claude-code"),
         )
 
-        with mock.patch.object(orchestrator, "submit_to_agent") as submit:
+        with mock.patch.object(orchestrator.session, "submit_to_agent") as submit:
             for phase, buffer, backend in phases:
                 with self.subTest(phase=phase), redirect_stdout(io.StringIO()):
                     self.submit_phase(phase)
@@ -298,7 +298,7 @@ class StageAtomicRunTests(unittest.TestCase):
 
     def test_next_phase_is_blocked_until_previous_actor_returns_with_evidence(self):
         self.create_run()
-        with mock.patch.object(orchestrator, "submit_to_agent"):
+        with mock.patch.object(orchestrator.session, "submit_to_agent"):
             self.submit_phase("spec")
 
         with self.assertRaisesRegex(SystemExit, "spec phase is still active"):
@@ -306,7 +306,7 @@ class StageAtomicRunTests(unittest.TestCase):
 
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "busy"},
             ),
@@ -317,7 +317,7 @@ class StageAtomicRunTests(unittest.TestCase):
         self.write_phase_return("spec", marker=False)
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "awaiting-input"},
             ),
@@ -329,7 +329,7 @@ class StageAtomicRunTests(unittest.TestCase):
         self.create_run()
 
         with (
-            mock.patch.object(orchestrator, "submit_to_agent") as submit,
+            mock.patch.object(orchestrator.session, "submit_to_agent") as submit,
             self.assertRaisesRegex(SystemExit, "expected phase is spec"),
         ):
             orchestrator.submit(self.submit_args("plan"))
@@ -339,7 +339,7 @@ class StageAtomicRunTests(unittest.TestCase):
     def test_arbitrary_submission_is_impossible_after_implementation_starts(self):
         self.create_run()
         with (
-            mock.patch.object(orchestrator, "submit_to_agent"),
+            mock.patch.object(orchestrator.session, "submit_to_agent"),
             redirect_stdout(io.StringIO()),
         ):
             for phase in orchestrator.PHASES:
@@ -348,7 +348,7 @@ class StageAtomicRunTests(unittest.TestCase):
                     self.finish_phase(phase)
 
         with (
-            mock.patch.object(orchestrator, "submit_to_agent") as submit,
+            mock.patch.object(orchestrator.session, "submit_to_agent") as submit,
             self.assertRaisesRegex(
                 SystemExit,
                 "implementation is active; leave Agent 1 alone",
@@ -382,7 +382,7 @@ class StageAtomicRunTests(unittest.TestCase):
             reviews_complete=True,
         )
         with (
-            mock.patch.object(orchestrator, "submit_to_agent"),
+            mock.patch.object(orchestrator.session, "submit_to_agent"),
             redirect_stdout(io.StringIO()),
         ):
             self.submit_phase("implementation")
@@ -415,7 +415,7 @@ class StageAtomicRunTests(unittest.TestCase):
         output = io.StringIO()
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "awaiting-input"},
             ),
@@ -444,11 +444,11 @@ class StageAtomicRunTests(unittest.TestCase):
         steering.chmod(0o600)
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "awaiting-input"},
             ),
-            mock.patch.object(orchestrator, "submit_to_agent") as submit,
+            mock.patch.object(orchestrator.session, "submit_to_agent") as submit,
             redirect_stdout(io.StringIO()),
         ):
             orchestrator.steer_stage(
@@ -489,7 +489,7 @@ class StageAtomicRunTests(unittest.TestCase):
         self.agent1_transcript.write_text(json.dumps(record) + "\n", encoding="utf-8")
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "awaiting-input"},
             ),
@@ -518,7 +518,7 @@ class StageAtomicRunTests(unittest.TestCase):
         self.agent1_transcript.write_text(json.dumps(record) + "\n", encoding="utf-8")
         with (
             mock.patch.object(
-                orchestrator, "buffer_state", return_value={"state": "awaiting-input"}
+                orchestrator.session, "buffer_state", return_value={"state": "awaiting-input"}
             ),
             redirect_stdout(io.StringIO()),
         ):
@@ -535,16 +535,16 @@ class StageAtomicRunTests(unittest.TestCase):
         args = SimpleNamespace(run_file=str(self.run_file), prompt_file=str(steering))
         with (
             mock.patch.object(
-                orchestrator, "buffer_state", return_value={"state": "awaiting-input"}
+                orchestrator.session, "buffer_state", return_value={"state": "awaiting-input"}
             ),
             mock.patch.object(
-                orchestrator, "submit_to_agent", side_effect=RuntimeError("ambiguous")
+                orchestrator.session, "submit_to_agent", side_effect=RuntimeError("ambiguous")
             ) as submit,
             self.assertRaisesRegex(RuntimeError, "ambiguous"),
         ):
             orchestrator.steer_stage(args)
         with (
-            mock.patch.object(orchestrator, "submit_to_agent") as second_submit,
+            mock.patch.object(orchestrator.session, "submit_to_agent") as second_submit,
             self.assertRaisesRegex(SystemExit, "already received"),
         ):
             orchestrator.steer_stage(args)
@@ -562,7 +562,7 @@ class StageAtomicRunTests(unittest.TestCase):
 
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "busy"},
             ),
@@ -579,7 +579,7 @@ class StageAtomicRunTests(unittest.TestCase):
 
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "busy"},
             ),
@@ -616,7 +616,7 @@ class StageAtomicRunTests(unittest.TestCase):
         self.create_run()
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "submit_to_agent",
                 side_effect=orchestrator.EmacsClientError("ambiguous failure"),
             ),
@@ -638,23 +638,23 @@ class StageAtomicRunTests(unittest.TestCase):
         self.create_run()
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "awaiting-input"},
             ),
-            mock.patch.object(orchestrator, "run_emacs_eval", return_value="submitted"),
+            mock.patch.object(orchestrator.session, "run_emacs_eval", return_value="submitted"),
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "_wait_for_delivery",
                 side_effect=(False, True),
             ) as wait_for_delivery,
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "pending_prompt_contains",
                 return_value=True,
             ),
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "send_return_to_agent",
             ) as send_return,
             redirect_stdout(io.StringIO()),
@@ -676,17 +676,17 @@ class StageAtomicRunTests(unittest.TestCase):
 
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "run_emacs_eval",
                 side_effect=submit_through_emacs,
             ),
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "_wait_for_delivery",
                 return_value=True,
             ),
         ):
-            orchestrator.submit_to_agent(
+            orchestrator.session.submit_to_agent(
                 "*claude:stage-2*",
                 "claude-code",
                 "whole phase",
@@ -702,23 +702,23 @@ class StageAtomicRunTests(unittest.TestCase):
         self.create_run()
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "awaiting-input"},
             ),
-            mock.patch.object(orchestrator, "run_emacs_eval", return_value="submitted"),
+            mock.patch.object(orchestrator.session, "run_emacs_eval", return_value="submitted"),
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "_wait_for_delivery",
                 side_effect=(False, False),
             ),
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "pending_prompt_contains",
                 return_value=True,
             ),
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "send_return_to_agent",
             ),
             self.assertRaisesRegex(
@@ -734,16 +734,16 @@ class StageAtomicRunTests(unittest.TestCase):
 
     def test_implementation_submission_never_retries_return(self):
         with (
-            mock.patch.object(orchestrator, "run_emacs_eval", return_value="submitted"),
-            mock.patch.object(orchestrator, "_wait_for_delivery", return_value=False),
-            mock.patch.object(orchestrator, "pending_prompt_contains") as composer,
-            mock.patch.object(orchestrator, "send_return_to_agent") as send_return,
+            mock.patch.object(orchestrator.session, "run_emacs_eval", return_value="submitted"),
+            mock.patch.object(orchestrator.session, "_wait_for_delivery", return_value=False),
+            mock.patch.object(orchestrator.session, "pending_prompt_contains") as composer,
+            mock.patch.object(orchestrator.session, "send_return_to_agent") as send_return,
             self.assertRaisesRegex(
                 orchestrator.EmacsClientError,
                 "implementation delivery was not independently acknowledged",
             ),
         ):
-            orchestrator.submit_to_agent(
+            orchestrator.session.submit_to_agent(
                 "*claude:stage-2*",
                 "claude-code",
                 "whole stage",
@@ -765,12 +765,12 @@ class StageAtomicRunTests(unittest.TestCase):
         )
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "awaiting-input"},
             ),
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "submit_to_agent",
                 side_effect=orchestrator.EmacsClientError("ambiguous failure"),
             ),
@@ -809,7 +809,7 @@ class StageAtomicRunTests(unittest.TestCase):
         orchestrator.save_run(self.run_file, state)
 
         with (
-            mock.patch.object(orchestrator, "send_return_to_agent") as send_return,
+            mock.patch.object(orchestrator.session, "send_return_to_agent") as send_return,
             self.assertRaisesRegex(SystemExit, "implementation delivery cannot be retried"),
         ):
             orchestrator.retry_delivery(
@@ -830,7 +830,7 @@ class StageAtomicRunTests(unittest.TestCase):
         orchestrator.save_run(self.run_file, state)
 
         with (
-            mock.patch.object(orchestrator, "send_return_to_agent") as send_return,
+            mock.patch.object(orchestrator.session, "send_return_to_agent") as send_return,
             self.assertRaisesRegex(SystemExit, "only a pending submission"),
         ):
             orchestrator.retry_delivery(
@@ -841,10 +841,10 @@ class StageAtomicRunTests(unittest.TestCase):
 
     def test_restart_phase_moves_active_review_to_fresh_fixed_session(self):
         self.create_run()
-        with mock.patch.object(orchestrator, "submit_to_agent"):
+        with mock.patch.object(orchestrator.session, "submit_to_agent"):
             self.submit_phase("spec")
         self.finish_phase("spec")
-        with mock.patch.object(orchestrator, "submit_to_agent"):
+        with mock.patch.object(orchestrator.session, "submit_to_agent"):
             self.submit_phase("spec-review")
 
         fresh_transcript = self.directory / "fresh-agent2.jsonl"
@@ -854,17 +854,17 @@ class StageAtomicRunTests(unittest.TestCase):
         )
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "awaiting-input"},
             ),
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "agent_transcript_path",
                 side_effect=(None, str(fresh_transcript)),
                 create=True,
             ),
-            mock.patch.object(orchestrator, "submit_to_agent") as submit,
+            mock.patch.object(orchestrator.session, "submit_to_agent") as submit,
             redirect_stdout(io.StringIO()),
         ):
             orchestrator.restart_phase(args)
@@ -880,10 +880,10 @@ class StageAtomicRunTests(unittest.TestCase):
 
     def test_restart_phase_adopts_existing_fresh_transcript_without_resubmit(self):
         self.create_run()
-        with mock.patch.object(orchestrator, "submit_to_agent"):
+        with mock.patch.object(orchestrator.session, "submit_to_agent"):
             self.submit_phase("spec")
         self.finish_phase("spec")
-        with mock.patch.object(orchestrator, "submit_to_agent"):
+        with mock.patch.object(orchestrator.session, "submit_to_agent"):
             self.submit_phase("spec-review")
 
         fresh_transcript = self.directory / "fresh-agent2.jsonl"
@@ -912,17 +912,17 @@ class StageAtomicRunTests(unittest.TestCase):
         )
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "awaiting-input"},
             ),
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "agent_transcript_path",
                 return_value=str(fresh_transcript),
                 create=True,
             ),
-            mock.patch.object(orchestrator, "submit_to_agent") as submit,
+            mock.patch.object(orchestrator.session, "submit_to_agent") as submit,
             redirect_stdout(io.StringIO()),
         ):
             orchestrator.restart_phase(args)
@@ -933,10 +933,10 @@ class StageAtomicRunTests(unittest.TestCase):
 
     def test_restart_phase_rejects_after_reviewer_returned_any_message(self):
         self.create_run()
-        with mock.patch.object(orchestrator, "submit_to_agent"):
+        with mock.patch.object(orchestrator.session, "submit_to_agent"):
             self.submit_phase("spec")
         self.finish_phase("spec")
-        with mock.patch.object(orchestrator, "submit_to_agent"):
+        with mock.patch.object(orchestrator.session, "submit_to_agent"):
             self.submit_phase("spec-review")
         self.write_phase_return("spec-review", marker=False)
 
@@ -952,11 +952,11 @@ class StageAtomicRunTests(unittest.TestCase):
         self.create_run()
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "busy"},
             ),
-            mock.patch.object(orchestrator, "submit_to_agent") as submit,
+            mock.patch.object(orchestrator.session, "submit_to_agent") as submit,
             self.assertRaisesRegex(SystemExit, "Agent 1 is busy"),
         ):
             orchestrator.submit(self.submit_args("spec"))
@@ -966,7 +966,7 @@ class StageAtomicRunTests(unittest.TestCase):
         self.create_run()
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 side_effect=(
                     {"state": "unknown"},
@@ -974,21 +974,21 @@ class StageAtomicRunTests(unittest.TestCase):
                 ),
             ),
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "agent1_process_live",
                 return_value=True,
             ),
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "claude_session_initialized",
                 return_value=True,
                 create=True,
             ),
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "reconcile_agent1_waiting",
             ) as reconcile,
-            mock.patch.object(orchestrator, "submit_to_agent") as submit,
+            mock.patch.object(orchestrator.session, "submit_to_agent") as submit,
             redirect_stdout(io.StringIO()),
         ):
             orchestrator.submit(self.submit_args("spec"))
@@ -1001,24 +1001,24 @@ class StageAtomicRunTests(unittest.TestCase):
         self.agent1_transcript.write_text("existing turn\n", encoding="utf-8")
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "unknown"},
             ),
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "agent1_process_live",
             ) as process_live,
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "claude_session_initialized",
                 create=True,
             ) as initialized,
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "reconcile_agent1_waiting",
             ) as reconcile,
-            mock.patch.object(orchestrator, "submit_to_agent") as submit,
+            mock.patch.object(orchestrator.session, "submit_to_agent") as submit,
             self.assertRaisesRegex(SystemExit, "Agent 1 is unknown"),
         ):
             orchestrator.submit(self.submit_args("spec"))
@@ -1032,26 +1032,26 @@ class StageAtomicRunTests(unittest.TestCase):
         self.create_run()
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "unknown"},
             ),
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "agent1_process_live",
                 return_value=True,
             ),
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "claude_session_initialized",
                 return_value=False,
                 create=True,
             ),
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "reconcile_agent1_waiting",
             ) as reconcile,
-            mock.patch.object(orchestrator, "submit_to_agent") as submit,
+            mock.patch.object(orchestrator.session, "submit_to_agent") as submit,
             self.assertRaisesRegex(SystemExit, "Agent 1 is unknown"),
         ):
             orchestrator.submit(self.submit_args("spec"))
@@ -1062,12 +1062,12 @@ class StageAtomicRunTests(unittest.TestCase):
     def test_stale_completion_marker_cannot_finish_new_submission(self):
         self.create_run()
         self.write_phase_return("spec")
-        with mock.patch.object(orchestrator, "submit_to_agent"):
+        with mock.patch.object(orchestrator.session, "submit_to_agent"):
             self.submit_phase("spec")
 
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "awaiting-input"},
             ),
@@ -1099,12 +1099,12 @@ class StageAtomicRunTests(unittest.TestCase):
 
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "busy", "buffer": "*claude:stage-2*"},
             ) as buffer_state,
             mock.patch.object(orchestrator, "git_status") as git_status,
-            mock.patch.object(orchestrator, "transcript_messages") as transcripts,
+            mock.patch.object(orchestrator.session, "transcript_messages") as transcripts,
         ):
             current = orchestrator.status(args)
 
@@ -1127,7 +1127,7 @@ class StageAtomicRunTests(unittest.TestCase):
 
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "busy", "buffer": "*claude:stage-2*"},
             ) as buffer_state,
@@ -1152,7 +1152,7 @@ class StageAtomicRunTests(unittest.TestCase):
         output = io.StringIO()
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "awaiting-input"},
             ),
@@ -1168,7 +1168,7 @@ class StageAtomicRunTests(unittest.TestCase):
         args = SimpleNamespace(run_file=str(self.run_file))
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "busy"},
             ),
@@ -1179,7 +1179,7 @@ class StageAtomicRunTests(unittest.TestCase):
         self.write_phase_return("implementation")
         with (
             mock.patch.object(
-                orchestrator,
+                orchestrator.session,
                 "buffer_state",
                 return_value={"state": "awaiting-input"},
             ),
@@ -1220,8 +1220,8 @@ class StageAtomicRunTests(unittest.TestCase):
             path.write_text('{"state":"busy"}', encoding="utf-8")
             return "nil"
 
-        with mock.patch.object(orchestrator, "run_emacs_eval", side_effect=emulate_emacs):
-            result = orchestrator.run_emacs_json("'((state . \"busy\"))")
+        with mock.patch.object(orchestrator.session, "run_emacs_eval", side_effect=emulate_emacs):
+            result = orchestrator.session.run_emacs_json("'((state . \"busy\"))")
 
         self.assertEqual(result, {"state": "busy"})
 
@@ -1236,8 +1236,8 @@ class StageAtomicRunTests(unittest.TestCase):
                 "directory": "/tmp/",
             }
 
-        with mock.patch.object(orchestrator, "run_emacs_json", side_effect=return_state):
-            state = orchestrator.buffer_state("*codex:fresh*")
+        with mock.patch.object(orchestrator.session, "run_emacs_json", side_effect=return_state):
+            state = orchestrator.session.buffer_state("*codex:fresh*")
 
         self.assertEqual(state["state"], "awaiting-input")
         self.assertIn("agent-session-display-state", captured["expr"])
@@ -1459,7 +1459,7 @@ class TranscriptMessageTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            messages = orchestrator.transcript_messages(transcript)
+            messages = orchestrator.session.transcript_messages(transcript)
 
         self.assertEqual(
             messages,

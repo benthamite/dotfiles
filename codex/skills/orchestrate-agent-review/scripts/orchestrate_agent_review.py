@@ -4,9 +4,9 @@
 from __future__ import annotations
 
 import argparse
-import ast
 import fcntl
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -18,6 +18,17 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
+_LIB_FILE = (
+    Path(__file__).resolve().parents[4] / "lib" / "python" / "agent_session_lib.py"
+)
+_LIB_SPEC = importlib.util.spec_from_file_location("agent_session_lib", _LIB_FILE)
+if _LIB_SPEC is None or _LIB_SPEC.loader is None:
+    raise SystemExit(f"cannot load shared session library: {_LIB_FILE}")
+session = importlib.util.module_from_spec(_LIB_SPEC)
+_LIB_SPEC.loader.exec_module(session)
+
+EmacsClientError = session.EmacsClientError
+
 RUN_VERSION = 2
 PHASES = ("spec", "spec-review", "plan", "plan-review", "implementation")
 PHASE_ACTOR = {
@@ -27,7 +38,6 @@ PHASE_ACTOR = {
     "plan-review": "agent2",
     "implementation": "agent1",
 }
-VALID_BACKENDS = {"claude-code", "codex"}
 RUN_STATUSES = {
     "ready",
     "phase-active",
@@ -36,9 +46,6 @@ RUN_STATUSES = {
     "implementation-returned",
     "complete",
 }
-DELIVERY_INITIAL_WAIT_SECONDS = 2.0
-DELIVERY_RETRY_WAIT_SECONDS = 8.0
-DELIVERY_POLL_SECONDS = 0.1
 
 IMPLEMENTATION_CONTRACT = """STAGE-ATOMIC IMPLEMENTATION CONTRACT
 
@@ -87,15 +94,6 @@ intermediate orchestration checkpoints. Only after the phase is complete, end
 the final response with this exact line:
 PHASE COMPLETE: {phase}"""
 
-class EmacsClientError(RuntimeError):
-    """An emacsclient request failed while the Emacs server may be transiently unavailable."""
-
-
-def _write_all(fd: int, data: bytes) -> None:
-    offset = 0
-    while offset < len(data):
-        offset += os.write(fd, data[offset:])
-
 
 def _state_bytes(state: dict[str, Any]) -> bytes:
     return (json.dumps(state, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode(
@@ -108,7 +106,7 @@ def _validate_role(role: dict[str, Any], name: str) -> None:
         raise SystemExit(f"invalid run state: {name} role is missing")
     if not isinstance(role.get("buffer"), str) or not role["buffer"]:
         raise SystemExit(f"invalid run state: {name} buffer is missing")
-    if role.get("backend") not in VALID_BACKENDS:
+    if role.get("backend") not in session.VALID_BACKENDS:
         raise SystemExit(f"invalid run state: {name} backend is invalid")
     transcript = role.get("transcript")
     if not isinstance(transcript, str) or not transcript:
@@ -299,7 +297,7 @@ def _create_run_file(path: Path, state: dict[str, Any]) -> None:
         raise SystemExit(f"cannot create orchestration run file {path}: {error}") from None
     try:
         os.fchmod(fd, 0o600)
-        _write_all(fd, _state_bytes(state))
+        session._write_all(fd, _state_bytes(state))
         os.fsync(fd)
     finally:
         os.close(fd)
@@ -314,7 +312,7 @@ def save_run(path: Path | str, state: dict[str, Any]) -> None:
     temp_path = Path(temporary)
     try:
         os.fchmod(fd, 0o600)
-        _write_all(fd, _state_bytes(state))
+        session._write_all(fd, _state_bytes(state))
         os.fsync(fd)
         os.close(fd)
         fd = -1
@@ -346,9 +344,9 @@ def run_lock(path: Path | str):
 
 
 def create_run(args: argparse.Namespace) -> None:
-    if args.agent1_backend not in VALID_BACKENDS:
+    if args.agent1_backend not in session.VALID_BACKENDS:
         raise SystemExit("invalid Agent 1 backend")
-    if args.agent2_backend not in VALID_BACKENDS:
+    if args.agent2_backend not in session.VALID_BACKENDS:
         raise SystemExit("invalid Agent 2 backend")
     if not str(args.stage).strip():
         raise SystemExit("stage must not be empty")
@@ -413,81 +411,7 @@ def create_run(args: argparse.Namespace) -> None:
     }
     validate_run(state)
     _create_run_file(Path(args.run_file), state)
-    print(json_for_display(state))
-
-
-def run_emacs_eval(expr: str) -> str:
-    proc = subprocess.run(
-        ["emacsclient", "--eval", expr],
-        capture_output=True,
-        check=False,
-    )
-    stdout = proc.stdout.decode("utf-8", "replace")
-    stderr = proc.stderr.decode("utf-8", "replace")
-    if proc.returncode != 0:
-        raise EmacsClientError(
-            f"emacsclient failed ({proc.returncode}): {stderr.strip()}"
-        )
-    value = stdout.strip()
-    if value.startswith('"') and value.endswith('"'):
-        try:
-            return ast.literal_eval(value)
-        except (SyntaxError, ValueError):
-            return value
-    return value
-
-
-def elisp_string(value: str) -> str:
-    return json.dumps(value)
-
-
-def run_emacs_json(value_expr: str) -> Any:
-    """Evaluate VALUE_EXPR in Emacs and transfer JSON through a temp file.
-
-    `emacsclient --eval' always prints the evaluated form's return value.  To
-    keep structured status out of user-visible command output, Emacs writes the
-    JSON payload to a one-shot temp file and returns nil.
-    """
-    fd, path = tempfile.mkstemp(prefix="agent-orch-", suffix=".json")
-    os.fchmod(fd, 0o600)
-    os.close(fd)
-    output_path = Path(path)
-    expr = f'''
-(let ((out {elisp_string(path)}))
-  (require 'json)
-  (with-temp-file out
-    (insert (json-encode {value_expr})))
-  nil)
-'''
-    try:
-        returned = run_emacs_eval(expr)
-        if returned != "nil":
-            raise SystemExit(f"unexpected emacsclient return value: {returned!r}")
-        return json.loads(output_path.read_text(encoding="utf-8"))
-    finally:
-        output_path.unlink(missing_ok=True)
-
-
-def json_for_display(value: Any) -> str:
-    return json.dumps(value, ensure_ascii=False, indent=2)
-
-
-def buffer_state(buffer: str) -> dict[str, Any]:
-    value_expr = f'''
-(with-current-buffer {elisp_string(buffer)}
-  (let ((display-state
-         (when (fboundp 'agent-session-display-state)
-           (agent-session-display-state (current-buffer)))))
-    `((buffer . ,(buffer-name))
-      (state . ,(pcase display-state
-                   ((or 'waiting 'background-waiting) "awaiting-input")
-                   ('busy "busy")
-                   (_ (if (boundp 'agent--session-state)
-                          (format "%s" agent--session-state)
-                        "unknown"))))
-      (directory . ,(or default-directory "")))))
-'''
-    return run_emacs_json(value_expr)
+    print(session.json_for_display(state))
 
 
 def state_cmd(args: argparse.Namespace) -> None:
@@ -504,302 +428,11 @@ def state_cmd(args: argparse.Namespace) -> None:
         raise SystemExit(
             "only Agent 1 top-level state is available during implementation"
         )
-    state = buffer_state(run[args.actor]["buffer"])
+    state = session.buffer_state(run[args.actor]["buffer"])
     if args.json:
-        print(json_for_display(state))
+        print(session.json_for_display(state))
     else:
         print(f"{state['state']:15} {state['buffer']} [{state['directory']}]")
-
-
-def _submit_function(backend: str) -> str:
-    if backend not in VALID_BACKENDS:
-        raise SystemExit("--backend must be claude-code or codex")
-    return "agent-submit"
-
-
-def send_return_to_agent(buffer: str, backend: str) -> None:
-    if backend not in VALID_BACKENDS:
-        raise SystemExit("--backend must be claude-code or codex")
-    expr = f'''
-(with-current-buffer {elisp_string(buffer)}
-  (let ((target (agent-send-return (get-buffer {elisp_string(buffer)}))))
-    (unless (buffer-live-p target)
-      (error "agent return dispatch did not resolve a live buffer"))
-    (princ "submitted")))
-'''
-    returned = run_emacs_eval(expr)
-    if returned != "submitted":
-        raise SystemExit(f"unexpected return-submit result: {returned!r}")
-
-
-def agent1_process_live(buffer: str) -> bool:
-    """Return whether BUFFER still owns a live Claude terminal process."""
-    expr = f'''
-(with-current-buffer {elisp_string(buffer)}
-  (let ((process (get-buffer-process (current-buffer))))
-    (princ (if (and process (process-live-p process)) "live" "dead"))))
-'''
-    returned = run_emacs_eval(expr)
-    if returned not in {"live", "dead"}:
-        raise SystemExit(f"unexpected Claude process state: {returned!r}")
-    return returned == "live"
-
-
-def reconcile_agent1_waiting(buffer: str) -> None:
-    """Restore a reset Claude lifecycle state from a verified blocked stop."""
-    expr = f'''
-(with-current-buffer {elisp_string(buffer)}
-  (agent-session-event (current-buffer) 'blocked)
-  (princ (format "%s" (agent-session-display-state (current-buffer)))))
-'''
-    returned = run_emacs_eval(expr)
-    if returned not in {"waiting", "background-waiting"}:
-        raise EmacsClientError(
-            f"Claude waiting-state reconciliation reported {returned!r}"
-        )
-
-
-def claude_session_initialized(buffer: str, transcript: str) -> bool:
-    """Return whether BUFFER's live Claude status names TRANSCRIPT.
-
-    A fresh Claude terminal has no lifecycle event yet, so agent.el reports
-    ``unknown`` even after the CLI has initialized its idle composer.  The
-    per-process status file supplies the session identity and transcript path
-    needed to distinguish that state from an uninitialized terminal.
-    """
-    expr = f'''
-(with-current-buffer {elisp_string(buffer)}
-  (let* ((status (and (fboundp 'agent-claude--parse-status-file)
-                      (agent-claude--parse-status-file)))
-         (session-id (plist-get status :session_id))
-         (status-transcript (plist-get status :transcript_path))
-         (expected (expand-file-name {elisp_string(transcript)})))
-    (princ
-     (if (and (stringp session-id)
-              (not (string-empty-p session-id))
-              (stringp status-transcript)
-              (string= (expand-file-name status-transcript) expected))
-         "initialized"
-       "uninitialized"))))
-'''
-    returned = run_emacs_eval(expr)
-    if returned not in {"initialized", "uninitialized"}:
-        raise SystemExit(f"unexpected Claude initialization state: {returned!r}")
-    return returned == "initialized"
-
-
-def pending_prompt_contains(buffer: str, backend: str, marker: str) -> bool:
-    """Return whether BUFFER's last visible composer contains MARKER.
-
-    Only the boolean result crosses the Emacs boundary; prompt text stays in
-    the fixed top-level session buffer.
-    """
-    if backend == "codex":
-        expr = f'''
-(with-current-buffer {elisp_string(buffer)}
-  (let ((input (codex-prompt-input (current-buffer))))
-    (if (and (stringp input)
-             (string-match-p (regexp-quote {elisp_string(marker)}) input))
-        (princ "present")
-      (princ "absent"))))
-'''
-    else:
-        expr = f'''
-(with-current-buffer {elisp_string(buffer)}
-  (save-excursion
-    (goto-char (point-max))
-    (if (and (re-search-backward "^[❯>$][[:space:]]" nil t)
-             (search-forward {elisp_string(marker)} nil t))
-        (princ "present")
-      (princ "absent"))))
-'''
-    returned = run_emacs_eval(expr)
-    if returned not in {"present", "absent"}:
-        raise SystemExit(f"unexpected pending-prompt result: {returned!r}")
-    return returned == "present"
-
-
-def agent_transcript_path(buffer: str, backend: str) -> str | None:
-    """Return BUFFER's current transcript path without enumerating sessions."""
-    if backend == "claude-code":
-        expr = f'''
-(with-current-buffer {elisp_string(buffer)}
-  (let* ((status (and (fboundp 'agent-claude--parse-status-file)
-                      (agent-claude--parse-status-file)))
-         (file (plist-get status :transcript_path)))
-    (if file
-        (princ (expand-file-name file))
-      (princ "none"))))
-'''
-    elif backend == "codex":
-        expr = f'''
-(with-current-buffer {elisp_string(buffer)}
-  (let* ((identity (codex-session-identity (current-buffer)))
-         (session-id (plist-get identity :session-id))
-         (file (or (and (boundp 'codex--session-transcript-file)
-                        codex--session-transcript-file)
-                   (and session-id (codex--find-session-transcript session-id)))))
-    (if file
-        (princ (expand-file-name file))
-      (princ "none"))))
-'''
-    else:
-        raise SystemExit("fresh phase restart requires claude-code or codex")
-    returned = run_emacs_eval(expr)
-    return None if returned == "none" else returned
-
-
-def _user_marker_offset(path: Path | str, marker: str) -> int | None:
-    transcript = Path(path)
-    try:
-        stream = transcript.open("rb")
-    except FileNotFoundError:
-        return None
-    except OSError as error:
-        raise EmacsClientError(f"cannot inspect fresh transcript {path}: {error}") from None
-    with stream:
-        offset = 0
-        for line in stream:
-            try:
-                obj = json.loads(line.decode("utf-8", "replace"))
-            except json.JSONDecodeError:
-                offset += len(line)
-                continue
-            payload = obj.get("payload") or {}
-            if (
-                obj.get("type") == "response_item"
-                and payload.get("type") == "message"
-                and payload.get("role") == "user"
-            ):
-                text = "\n".join(
-                    item.get("text", "")
-                    for item in (payload.get("content") or [])
-                    if isinstance(item, dict) and item.get("type") == "input_text"
-                )
-                if marker in text:
-                    return offset
-            offset += len(line)
-    return None
-
-
-def _wait_for_transcript_path(buffer: str, backend: str, timeout: float) -> str | None:
-    deadline = time.monotonic() + timeout
-    while True:
-        path = agent_transcript_path(buffer, backend)
-        if path:
-            return path
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            return None
-        time.sleep(min(DELIVERY_POLL_SECONDS, remaining))
-
-
-def _transcript_advanced(transcript: str, offset: int) -> bool:
-    try:
-        return Path(transcript).stat().st_size > offset
-    except FileNotFoundError:
-        return False
-    except OSError as error:
-        raise EmacsClientError(
-            f"cannot inspect transcript delivery boundary {transcript}: {error}"
-        ) from None
-
-
-def _delivery_observed(
-    buffer: str, transcript: str, offset: int, *, accept_busy: bool = True
-) -> bool:
-    if _transcript_advanced(transcript, offset):
-        return True
-    return accept_busy and buffer_state(buffer).get("state") == "busy"
-
-
-def _wait_for_delivery(
-    buffer: str,
-    transcript: str,
-    offset: int,
-    timeout: float,
-    *,
-    accept_busy: bool = True,
-) -> bool:
-    deadline = time.monotonic() + timeout
-    while True:
-        if _delivery_observed(
-            buffer, transcript, offset, accept_busy=accept_busy
-        ):
-            return True
-        remaining = deadline - time.monotonic()
-        if remaining <= 0:
-            return False
-        time.sleep(min(DELIVERY_POLL_SECONDS, remaining))
-
-
-def submit_to_agent(
-    buffer: str,
-    backend: str,
-    prompt: str,
-    *,
-    transcript: str,
-    transcript_offset: int,
-    delivery_marker: str,
-    one_pass: bool = False,
-) -> None:
-    fn = _submit_function(backend)
-    fd, temporary = tempfile.mkstemp(prefix="agent-orch-prompt-", suffix=".txt")
-    prompt_path = Path(temporary)
-    try:
-        os.fchmod(fd, 0o600)
-        _write_all(fd, prompt.encode("utf-8"))
-        os.close(fd)
-        fd = -1
-        expr = f'''
-(with-current-buffer {elisp_string(buffer)}
-  (with-temp-buffer
-    (insert-file-contents {elisp_string(str(prompt_path))})
-    (let ((target
-           ({fn}
-            (buffer-string)
-            (get-buffer {elisp_string(buffer)}))))
-      (unless (buffer-live-p target)
-        (error "agent submit dispatch did not resolve a live buffer"))
-      (princ "submitted"))))
-'''
-        returned = run_emacs_eval(expr)
-        if returned != "submitted":
-            raise SystemExit(f"unexpected submit result: {returned!r}")
-    finally:
-        if fd >= 0:
-            os.close(fd)
-        prompt_path.unlink(missing_ok=True)
-
-    if _wait_for_delivery(
-        buffer,
-        transcript,
-        transcript_offset,
-        DELIVERY_INITIAL_WAIT_SECONDS,
-        accept_busy=not one_pass,
-    ):
-        return
-    if one_pass:
-        raise EmacsClientError(
-            "implementation delivery was not independently acknowledged; "
-            "the one-pass run remains pending and no Return retry was sent"
-        )
-    if not pending_prompt_contains(buffer, backend, delivery_marker):
-        raise EmacsClientError(
-            "submission returned without delivery acknowledgement and the exact "
-            "pending prompt could not be proved in the composer"
-        )
-    send_return_to_agent(buffer, backend)
-    if not _wait_for_delivery(
-        buffer,
-        transcript,
-        transcript_offset,
-        DELIVERY_RETRY_WAIT_SECONDS,
-    ):
-        raise EmacsClientError(
-            "submission delivery was not acknowledged after retrying only the "
-            "submit keystroke"
-        )
 
 
 def _phase_prompt(state: dict[str, Any], phase: str, context: str) -> str:
@@ -825,39 +458,6 @@ def _evidence_digest(path: Path | str) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def _transcript_offset(state: dict[str, Any], actor: str) -> int:
-    path = Path(state[actor]["transcript"])
-    try:
-        return path.stat().st_size
-    except FileNotFoundError:
-        return 0
-    except OSError as error:
-        raise SystemExit(f"cannot inspect transcript {path}: {error}") from None
-
-
-def _bootstrap_fresh_claude_waiting(
-    state: dict[str, Any], actor_name: str, live: dict[str, Any]
-) -> dict[str, Any]:
-    """Reconcile an initialized, untouched Claude session before first use.
-
-    Do not generalize an ``unknown`` lifecycle state to waiting.  Bootstrap
-    only a Claude process whose configured transcript has no history, whose
-    terminal process is live, and whose per-process status file names that
-    exact transcript.
-    """
-    actor = state[actor_name]
-    if (
-        live.get("state") == "unknown"
-        and actor["backend"] == "claude-code"
-        and _transcript_offset(state, actor_name) == 0
-        and agent1_process_live(actor["buffer"])
-        and claude_session_initialized(actor["buffer"], actor["transcript"])
-    ):
-        reconcile_agent1_waiting(actor["buffer"])
-        return buffer_state(actor["buffer"])
-    return live
-
-
 def _phase_evidence(state: dict[str, Any], phase: str) -> str:
     actor = PHASE_ACTOR[phase]
     transcript = state[actor].get("transcript")
@@ -866,7 +466,7 @@ def _phase_evidence(state: dict[str, Any], phase: str) -> str:
     submission = state["submissions"][-1]
     if submission["phase"] != phase:
         raise SystemExit("phase submission boundary is incoherent")
-    messages = transcript_messages(
+    messages = session.transcript_messages(
         Path(transcript), offset=submission["transcript_offset"]
     )
     if not messages:
@@ -959,8 +559,8 @@ def submit(args: argparse.Namespace) -> None:
             )
         actor_name = PHASE_ACTOR[args.phase]
         actor = state[actor_name]
-        live = buffer_state(actor["buffer"])
-        live = _bootstrap_fresh_claude_waiting(state, actor_name, live)
+        live = session.buffer_state(actor["buffer"])
+        live = session._bootstrap_fresh_claude_waiting(state, actor_name, live)
         if live.get("state") != "awaiting-input":
             label = "Agent 1" if actor_name == "agent1" else "Agent 2"
             raise SystemExit(
@@ -972,10 +572,10 @@ def submit(args: argparse.Namespace) -> None:
             "kind": "phase",
             "phase": args.phase,
             "actor": actor_name,
-            "transcript_offset": _transcript_offset(state, actor_name),
+            "transcript_offset": session._transcript_offset(state, actor_name),
         }
         save_run(args.run_file, state)
-        submit_to_agent(
+        session.submit_to_agent(
             actor["buffer"],
             actor["backend"],
             prompt,
@@ -1014,7 +614,7 @@ def finish_phase(args: argparse.Namespace) -> None:
                 f"active phase is {state['active_phase']}; refusing {args.phase} completion"
             )
         actor_name = PHASE_ACTOR[args.phase]
-        live = buffer_state(state[actor_name]["buffer"])
+        live = session.buffer_state(state[actor_name]["buffer"])
         if live.get("state") != "awaiting-input":
             label = "Agent 1" if actor_name == "agent1" else "Agent 2"
             raise SystemExit(
@@ -1048,7 +648,7 @@ def reconcile_submission(args: argparse.Namespace) -> None:
             raise SystemExit("no pending submission requires reconciliation")
         if pending["phase"] == "implementation" and (
             not args.delivered
-            or not _transcript_advanced(
+            or not session._transcript_advanced(
                 state[pending["actor"]]["transcript"],
                 pending["transcript_offset"],
             )
@@ -1080,7 +680,7 @@ def retry_delivery(args: argparse.Namespace) -> None:
         transcript = actor["transcript"]
         offset = submission["transcript_offset"]
         if submission["phase"] == "implementation":
-            if _transcript_advanced(transcript, offset):
+            if session._transcript_advanced(transcript, offset):
                 _finalize_pending(state)
                 save_run(args.run_file, state)
                 print(
@@ -1092,7 +692,7 @@ def retry_delivery(args: argparse.Namespace) -> None:
                 "implementation delivery cannot be retried; reconcile the pending "
                 "attempt, which freezes the one-pass run without another agent contact"
             )
-        if _delivery_observed(actor["buffer"], transcript, offset):
+        if session._delivery_observed(actor["buffer"], transcript, offset):
             _finalize_pending(state)
             save_run(args.run_file, state)
             print(
@@ -1101,24 +701,26 @@ def retry_delivery(args: argparse.Namespace) -> None:
             )
             return
 
-        live = buffer_state(actor["buffer"])
+        live = session.buffer_state(actor["buffer"])
         if live.get("state") != "awaiting-input":
             raise SystemExit(
                 f"{submission['actor']} is {live.get('state', 'unknown')}; "
                 "delivery retry requires awaiting input"
             )
         marker = _delivery_marker(state["stage"], submission["phase"])
-        if not pending_prompt_contains(actor["buffer"], actor["backend"], marker):
+        if not session.pending_prompt_contains(
+            actor["buffer"], actor["backend"], marker
+        ):
             raise SystemExit(
                 "exact pending phase marker is not present in the current composer; "
                 "refusing delivery retry"
             )
-        send_return_to_agent(actor["buffer"], actor["backend"])
-        if not _wait_for_delivery(
+        session.send_return_to_agent(actor["buffer"], actor["backend"])
+        if not session._wait_for_delivery(
             actor["buffer"],
             transcript,
             offset,
-            DELIVERY_RETRY_WAIT_SECONDS,
+            session.DELIVERY_RETRY_WAIT_SECONDS,
         ):
             raise EmacsClientError(
                 "submission delivery was not acknowledged after retrying only the "
@@ -1148,14 +750,14 @@ def restart_phase(args: argparse.Namespace) -> None:
         actor_name = PHASE_ACTOR[phase]
         actor = state[actor_name]
         submission = state["submissions"][-1]
-        returned = transcript_messages(
+        returned = session.transcript_messages(
             Path(actor["transcript"]), offset=submission["transcript_offset"]
         )
         if returned:
             raise SystemExit(
                 "active phase already returned assistant output; refusing restart"
             )
-        live = buffer_state(actor["buffer"])
+        live = session.buffer_state(actor["buffer"])
         if live.get("state") != "awaiting-input":
             raise SystemExit(
                 f"{actor_name} is {live.get('state', 'unknown')}; "
@@ -1163,19 +765,19 @@ def restart_phase(args: argparse.Namespace) -> None:
             )
         marker = _delivery_marker(state["stage"], phase)
         old_transcript = str(Path(actor["transcript"]).resolve())
-        fresh = agent_transcript_path(actor["buffer"], actor["backend"])
-        marker_offset = _user_marker_offset(fresh, marker) if fresh else None
+        fresh = session.agent_transcript_path(actor["buffer"], actor["backend"])
+        marker_offset = session._user_marker_offset(fresh, marker) if fresh else None
         if marker_offset is None:
             if fresh and str(Path(fresh).resolve()) == old_transcript:
                 raise SystemExit(
                     "fixed actor still points at the failed transcript; "
                     "phase restart requires a fresh session"
                 )
-            starting_offset = _transcript_offset(
+            starting_offset = session._transcript_offset(
                 {actor_name: {"transcript": fresh or "/nonexistent"}}, actor_name
             )
             prompt = _phase_prompt(state, phase, context)
-            submit_to_agent(
+            session.submit_to_agent(
                 actor["buffer"],
                 actor["backend"],
                 prompt,
@@ -1183,8 +785,8 @@ def restart_phase(args: argparse.Namespace) -> None:
                 transcript_offset=starting_offset,
                 delivery_marker=marker,
             )
-            fresh = _wait_for_transcript_path(
-                actor["buffer"], actor["backend"], DELIVERY_RETRY_WAIT_SECONDS
+            fresh = session._wait_for_transcript_path(
+                actor["buffer"], actor["backend"], session.DELIVERY_RETRY_WAIT_SECONDS
             )
             if not fresh:
                 raise EmacsClientError(
@@ -1212,7 +814,7 @@ def run_status(args: argparse.Namespace) -> None:
         "pending_reconciliation": state["pending_submission"] is not None,
     }
     if getattr(args, "json", False):
-        print(json_for_display(display))
+        print(session.json_for_display(display))
     else:
         print(
             f"stage={display['stage']} phase={display['phase']} "
@@ -1237,67 +839,6 @@ def complete_stage(args: argparse.Namespace) -> None:
     print(f"completed stage={state['stage']}")
 
 
-def transcript_messages(
-    path: Path, since: str | None = None, offset: int = 0
-) -> list[dict[str, str]]:
-    if not path.exists():
-        return []
-    try:
-        size = path.stat().st_size
-        if offset > size:
-            return []
-        with path.open("rb") as stream:
-            stream.seek(offset)
-            content = stream.read().decode("utf-8", "replace")
-    except OSError:
-        return []
-    out: list[dict[str, str]] = []
-    for line in content.splitlines():
-        if not line.strip():
-            continue
-        try:
-            obj = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        ts = str(obj.get("timestamp", ""))
-        if since and ts < since:
-            continue
-        payload = obj.get("payload") or {}
-        text = ""
-        kind = ""
-        if obj.get("type") == "event_msg" and payload.get("type") == "task_complete":
-            kind = "complete"
-            text = payload.get("last_agent_message") or ""
-        elif obj.get("type") == "response_item" and payload.get("type") == "message":
-            parts = [
-                c.get("text", "")
-                for c in (payload.get("content") or [])
-                if isinstance(c, dict) and c.get("type") == "output_text"
-            ]
-            if parts:
-                kind = "message"
-                text = "\n".join(parts)
-        else:
-            message = obj.get("message") or {}
-            if message.get("role") != "assistant":
-                continue
-            content = message.get("content")
-            if isinstance(content, list):
-                parts = []
-                for item in content:
-                    if isinstance(item, dict) and item.get("type") == "text":
-                        parts.append(item.get("text", ""))
-                if parts:
-                    kind = message.get("role") or "message"
-                    text = "\n".join(parts)
-            elif isinstance(content, str):
-                kind = message.get("role") or "message"
-                text = content
-        if text:
-            out.append({"timestamp": ts, "kind": kind, "text": text})
-    return out
-
-
 def transcript_cmd(args: argparse.Namespace) -> None:
     state = load_run(args.run_file)
     if state["status"] in {
@@ -1309,7 +850,7 @@ def transcript_cmd(args: argparse.Namespace) -> None:
     transcript = state[args.actor].get("transcript")
     if not transcript:
         raise SystemExit(f"{args.actor} transcript was not recorded in the run")
-    messages = transcript_messages(Path(transcript), args.since)
+    messages = session.transcript_messages(Path(transcript), args.since)
     if args.last:
         messages = messages[-args.last :]
     print(json.dumps(messages, ensure_ascii=False, indent=2))
@@ -1321,7 +862,7 @@ def stage_return(args: argparse.Namespace) -> None:
         state = load_run(args.run_file)
         if state["status"] != "implementation-active":
             raise SystemExit("stage implementation is not active")
-        live = buffer_state(state["agent1"]["buffer"])
+        live = session.buffer_state(state["agent1"]["buffer"])
         if live.get("state") != "awaiting-input":
             raise SystemExit(
                 f"Agent 1 is {live.get('state', 'unknown')}; "
@@ -1375,7 +916,7 @@ def steer_stage(args: argparse.Namespace) -> None:
             raise SystemExit("this incomplete return already received a steering attempt")
         if any(entry["prompt_sha256"] == prompt_sha for entry in prior):
             raise SystemExit("this steering message was already sent")
-        live = buffer_state(state["agent1"]["buffer"])
+        live = session.buffer_state(state["agent1"]["buffer"])
         if live.get("state") != "awaiting-input":
             raise SystemExit(
                 f"Agent 1 is {live.get('state', 'unknown')}; steering requires awaiting input"
@@ -1388,12 +929,12 @@ def steer_stage(args: argparse.Namespace) -> None:
             }
         )
         save_run(args.run_file, state)
-        submit_to_agent(
+        session.submit_to_agent(
             state["agent1"]["buffer"],
             state["agent1"]["backend"],
             prompt,
             transcript=state["agent1"]["transcript"],
-            transcript_offset=_transcript_offset(state, "agent1"),
+            transcript_offset=session._transcript_offset(state, "agent1"),
             delivery_marker=f"TARGETED WHOLE-STAGE STEERING\n\nThis message responds",
             one_pass=True,
         )
@@ -1406,7 +947,7 @@ def steer_stage(args: argparse.Namespace) -> None:
 
 def _latest_implementation_return(state: dict[str, Any]) -> str:
     submission = state["submissions"][-1]
-    messages = transcript_messages(
+    messages = session.transcript_messages(
         Path(state["agent1"]["transcript"]),
         offset=submission["transcript_offset"],
     )
@@ -1453,12 +994,12 @@ def status(args: argparse.Namespace) -> dict[str, Any]:
         "implementation-stopped",
         "implementation-returned",
     }:
-        result["agent1"] = buffer_state(state["agent1"]["buffer"])
+        result["agent1"] = session.buffer_state(state["agent1"]["buffer"])
         return result
 
     result["repo"] = git_status(Path(state["repo"]))
     for actor in ("agent1", "agent2"):
-        result[actor] = buffer_state(state[actor]["buffer"])
+        result[actor] = session.buffer_state(state[actor]["buffer"])
         transcript = state[actor].get("transcript")
         if not transcript:
             continue
@@ -1466,7 +1007,7 @@ def status(args: argparse.Namespace) -> dict[str, Any]:
         result[f"{actor}_transcript"] = {
             "path": str(p),
             "mtime": p.stat().st_mtime if p.exists() else None,
-            "latest": transcript_messages(p, args.since)[-1:] if p.exists() else [],
+            "latest": session.transcript_messages(p, args.since)[-1:] if p.exists() else [],
         }
     return result
 
@@ -1474,7 +1015,7 @@ def status(args: argparse.Namespace) -> dict[str, Any]:
 def status_cmd(args: argparse.Namespace) -> None:
     current = status(args)
     if args.json:
-        print(json_for_display(current))
+        print(session.json_for_display(current))
         return
     if "repo" in current:
         print("Repo:")
@@ -1526,7 +1067,7 @@ def watch(args: argparse.Namespace) -> None:
         except EmacsClientError as error:
             message = " ".join(str(error).split())
             error_rendered = (
-                json_for_display({"monitor_error": message})
+                session.json_for_display({"monitor_error": message})
                 if args.json
                 else f"monitor-error={message}"
             )
@@ -1536,7 +1077,7 @@ def watch(args: argparse.Namespace) -> None:
             time.sleep(args.interval)
             current = status(args)
         if args.json:
-            rendered = json_for_display(current)
+            rendered = session.json_for_display(current)
         else:
             parts = []
             if "repo" in current:
@@ -1592,10 +1133,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--repo", required=True)
     p.add_argument("--stage", required=True)
     p.add_argument("--agent1-buffer", required=True)
-    p.add_argument("--agent1-backend", required=True, choices=sorted(VALID_BACKENDS))
+    p.add_argument(
+        "--agent1-backend", required=True, choices=sorted(session.VALID_BACKENDS)
+    )
     p.add_argument("--agent1-transcript", required=True)
     p.add_argument("--agent2-buffer", required=True)
-    p.add_argument("--agent2-backend", required=True, choices=sorted(VALID_BACKENDS))
+    p.add_argument(
+        "--agent2-backend", required=True, choices=sorted(session.VALID_BACKENDS)
+    )
     p.add_argument("--agent2-transcript", required=True)
     p.add_argument("--adopt-implementation", action="store_true")
     p.add_argument("--spec-commit")

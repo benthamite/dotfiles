@@ -298,6 +298,13 @@
       "equivalence": "Byte-identical SKILL.md, rules.json and chrome_permissions.js in both trees. The classic-level dependency installs to ~/.claude/chrome-permission-audit/node_modules rather than either skill directory, so npm cannot break parity."
     },
     {
+      "name": "cross-review-plan",
+      "claude": "claude/skills/cross-review-plan/SKILL.md",
+      "codex": "codex/skills/cross-review-plan/SKILL.md",
+      "status": "paired",
+      "equivalence": "Byte-identical SKILL.md and auxiliary files (helper script, openai.yaml) on both sides."
+    },
+    {
       "name": "triage-personal-todos",
       "claude": "claude/skills/triage-personal-todos/SKILL.md",
       "codex": "codex/skills/triage-personal-todos/SKILL.md",

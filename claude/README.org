@@ -191,7 +191,24 @@ The paired =orchestrate-agent-review= skill coordinates fixed Claude and Codex
 sessions through one guarded, stage-atomic workflow. Its helper recognizes the
 canonical =claude-code= and =codex= backends, uses Codex's public prompt reader
 for app-server delivery recovery, and can rebind a failed author or reviewer
-phase to a fresh transcript without enumerating unrelated sessions.
+phase to a fresh transcript without enumerating unrelated sessions. The
+single-actor session primitives it relies on — guarded prompt delivery,
+transcript-boundary acknowledgment, marker-gated transcript reads, and buffer
+lifecycle inspection — live in the shared =lib/python/agent_session_lib.py=
+module, which its helper loads by resolved file path.
+
+The paired =cross-review-plan= skill runs one cross-model review of a
+committed plan from inside the authoring session: it anchors the review to
+the exact committed blob (the reviewer reads =git show <commit>:<path>=,
+never the working tree), enforces an opposite-backend fresh-reviewer identity
+invariant at initialization (verified against the buffer's detected backend,
+not just the declared label), permits exactly one marker-gated review pass
+(markerless returns are terminal) and one zero-output process-loss restart,
+and leaves adjudication and implementation in the current session. Because a
+fresh Codex session materializes its rollout transcript only on first
+delivery, the helper rebinds to the discovered transcript once it provably
+contains the run's marker-bearing prompt. Its helper reuses the same shared
+=agent_session_lib= module.
 
 The =fix-drive-errors= skill treats the fully paginated native Drive panel as
 the source of truth. Its helper preserves duplicate rows and exact error

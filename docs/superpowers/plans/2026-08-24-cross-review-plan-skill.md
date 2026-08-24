@@ -182,7 +182,7 @@ Manifest and docs:
 
 ## Tasks
 
-- [ ] 1. Map the existing test suite's patch seams (every
+- [x] 1. Map the existing test suite's patch seams (every
   `orchestrator.<name>` attribute it replaces), then extract
   `lib/python/agent_session_lib.py` — moved functions **and their
   constants** — and refactor `orchestrate_agent_review.py` to call through
@@ -191,28 +191,28 @@ Manifest and docs:
   `tests/test_orchestrate_agent_review.py` suite passes; every subcommand's
   `--help` runs; `init-run` + `status` golden-output comparison against a
   synthetic run file.
-- [ ] 2. Write `tests/test_agent_session_lib.py` for the extracted module's
+- [x] 2. Write `tests/test_agent_session_lib.py` for the extracted module's
   pure functions with fixture transcripts.
-- [ ] 3. Write `cross_review_plan.py` with the single-phase guarded state
+- [x] 3. Write `cross_review_plan.py` with the single-phase guarded state
   machine, including `restart-review` and the init-time identity invariant,
   reusing `session` for all Emacs operations. Same safety semantics as the
   parent skill: mode-0600 files, pending-record before external submission,
   no automatic retransmission, marker-gated completion, transcript text
   never overrides a busy lifecycle state.
-- [ ] 4. Write `tests/test_cross_review_plan.py` (coverage listed in the
+- [x] 4. Write `tests/test_cross_review_plan.py` (coverage listed in the
   file map).
-- [ ] 5. Write `SKILL.md`: workflow above, backend detection, explicit
+- [x] 5. Write `SKILL.md`: workflow above, backend detection, explicit
   instance names, the one-pass review prompt template (reading the plan via
   `git show <commit>:<path>`), adjudication rules (borrowed verbatim where
   they apply from `orchestrate-agent-review`), markerless-terminal rule,
   single-restart rule, stop conditions (user-only blockers → report), and a
   final-report checklist.
-- [ ] 6. Mirror everything into the Codex tree; add the manifest entry;
+- [x] 6. Mirror everything into the Codex tree; add the manifest entry;
   update `claude/README.org` and the Codex counterpart docs; regenerate the
   skill inventory; run `bin/docs-audit generate`, `bin/docs-audit audit`,
   and `bin/ai-config-sync audit`; commit as one logical change (hooks
   require both sides, README, and manifest together).
-- [ ] 7. Verification beyond the suites:
+- [ ] 7. Verification beyond the suites (in progress):
   - One **complete parent-skill phase** live post-refactor (not just
     `init-run`): a real spec or plan phase through submission,
     acknowledgment, and marker-gated `finish-phase`, exercising the moved
@@ -266,3 +266,41 @@ only for zero-output process death. One nuance kept from the original plan:
 the skill may still *author and commit* a plan when none exists (the
 handoff itself always requires the committed artifact), and the reviewer
 session is left open after the run.
+
+## Second adjudication (live cross-review of 2026-08-24, Codex reviewer)
+
+The implemented skill was verified live in the Claude→Codex direction by
+running it on this plan itself (commit `eb8b2076`, blob `dc57d683…`): fresh
+Codex reviewer session, `init-review` → `submit-review` → `watch` →
+marker-gated `finish-review`, twelve findings returned. Dispositions:
+
+- **Accepted, implemented**: (2) authoritative backend verification — new
+  `buffer_backend` lib primitive checked at init and submit; (3) fresh-Codex
+  transcript handshake — marker-proof lazy adoption at submit and
+  finish-review (this gap actually fired live and drove the fix); (6, partial)
+  `restart_used` now persists before any external contact; (9, partial)
+  ref-name→full-OID resolution test added; (10) `reconcile --not-delivered`
+  fails closed when the transcript advanced past the boundary; (11) the live
+  bar is honest adjudication of every returned finding, with accept/reject
+  branches covered by unit tests; (12) both symlinked entrypoints smoke-tested
+  for shared-lib resolution.
+- **No change needed** (already implemented as recommended; the finding was
+  valid against this plan's wording): (1) init stores the full commit OID and
+  the prompt uses it; (4) the submission boundary is snapshotted inside
+  `submit-review` immediately before the pending record, with identity
+  re-validated there; (5) markerless returns atomically enter a terminal
+  `review-incomplete` state that refuses submit, retry, reconcile, and
+  restart; (8) the `lib/` documentation, policy entry, and root map landed
+  with the implementation and both audits pass.
+- **Rejected with reasons**: (6, remainder) a canonical prompt digest and a
+  backend-neutral session-creation primitive add state without new safety —
+  the prompt is deterministic from the run file and session creation stays a
+  manual SKILL step, as in the parent skill; (7) a raw-activity scanner would
+  false-positive on the delivered prompt record itself; the recovery condition
+  is process death plus zero assistant messages, and a dead session with only
+  non-message events has no standing review output to re-contact.
+
+Remaining verification: one complete parent-skill phase live post-refactor,
+and the Codex→Claude direction (must be initiated from a Codex session).
+Until those run, the skill is implemented and one-direction-verified, not
+fully verified.

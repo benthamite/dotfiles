@@ -185,7 +185,10 @@ The =move-session-log= skill bundles a Python adapter
 (=skills/move-session-log/scripts/move_session_log.py=) that mirrors the Codex
 adapter's interface — single-session import plus =--dry-run=/=--rename OLD
 NEW= — with byte-equivalent path-mapping semantics, so the Drive workspace
-migration tooling can relocate session history for either tool.
+migration tooling can relocate session history for either tool. Its JSONL
+rewrites resolve symlinks before writing, so a profile that shares its
+=history.jsonl= via symlink (e.g. =~/.claude-epoch= → =~/.claude=) keeps the
+link intact instead of getting a diverged copy.
 
 The paired =orchestrate-agent-review= skill coordinates fixed Claude and Codex
 sessions through one guarded, stage-atomic workflow. Its helper recognizes the

@@ -66,6 +66,10 @@ def load_jsonl(path: Path) -> list[tuple[str, Any | None]]:
 
 
 def write_jsonl(path: Path, rows: list[tuple[str, Any | None]]) -> None:
+    # os.replace on a symlink path would clobber the link itself, diverging
+    # stores that share one file (e.g. ~/.claude-epoch/history.jsonl ->
+    # ~/.claude/history.jsonl); write to the link target instead.
+    path = path.resolve()
     stat = path.stat()
     fd, tmp_name = tempfile.mkstemp(
         prefix=".rewrite-", suffix=".jsonl", dir=str(path.parent), text=True

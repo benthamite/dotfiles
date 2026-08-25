@@ -221,6 +221,36 @@ class MoveSessionLogParityTest(unittest.TestCase):
                 [entry["project"] for entry in history], [NEW, OTHER]
             )
 
+    def test_rewrite_preserves_history_symlink_on_both_sides(self):
+        # Profiles may share one history store via a symlink (e.g.
+        # ~/.claude-epoch/history.jsonl -> ~/.claude/history.jsonl); the
+        # rewrite must go through the link, not replace it.
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            codex_home = self.make_codex_home(base)
+            claude_config = self.make_claude_config(base)
+
+            for home, history in (
+                (codex_home, codex_home / "history.jsonl"),
+                (claude_config, claude_config / "history.jsonl"),
+            ):
+                target = base / f"shared-{home.name}-history.jsonl"
+                history.rename(target)
+                history.symlink_to(target)
+
+            result = self.run_codex(codex_home, "--rename", OLD, NEW)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = self.run_claude(claude_config, "--rename", OLD, NEW)
+            self.assertEqual(result.returncode, 0, result.stderr)
+
+            for home in (codex_home, claude_config):
+                history = home / "history.jsonl"
+                with self.subTest(tool=home.name):
+                    self.assertTrue(history.is_symlink())
+                    target_text = history.resolve().read_text()
+                    self.assertIn(NEW, target_text)
+                    self.assertNotIn('"' + OLD + '"', target_text)
+
     def test_rename_requires_absolute_paths_on_both_sides(self):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)

@@ -13724,11 +13724,33 @@ version out of every request.  I do not use =paranoid=, because that value also
 stops all cookies and removes the =User-Agent= header, which breaks logged-in
 pages in eww.
 
+An error raised inside a =url-http= process sentinel (for example, a DNS
+failure while the sentinel retries a broken connection) must not open the
+debugger.  =url-gw= binds =coding-system-for-read= to =binary= around the
+connection, and the debugger's recursive edit inherits that binding, so every
+file visited or read by timers while the debugger sits open (midnight hook,
+auto-revert, Org files, JSON reads) comes in as raw bytes.  On 2026-08-26 a
+Spotify DNS error left the debugger open overnight; =el-patch-validate-all=
+then read =org-gcal.el= raw, seven =people/*.org= buffers became unibyte, and
+=~/.claude.json= failed to parse.  Emacs reports sentinel errors in the echo
+area regardless, so nothing is lost by keeping the debugger out.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature url
   :defer t
   :custom
-  (url-privacy-level '(email os emacs lastloc)))
+  (url-privacy-level '(email os emacs lastloc))
+  :config
+  (defun url-extras-inhibit-debugger-in-sentinel (fn &rest args)
+    "Apply FN to ARGS with `debug-on-error' bound to nil.
+FN is a `url-http' process sentinel.  A debugger entered from a sentinel
+runs its recursive edit inside the binary `coding-system-for-read' binding
+that `url-gw' establishes, which makes every file read during that edit
+arrive as raw bytes."
+    (let ((debug-on-error nil))
+      (apply fn args)))
+  (dolist (sentinel '(url-http-end-of-document-sentinel url-http-async-sentinel))
+    (advice-add sentinel :around #'url-extras-inhibit-debugger-in-sentinel)))
 #+end_src
 
 ** =browse-url=

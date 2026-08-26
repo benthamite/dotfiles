@@ -3227,14 +3227,6 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
     (bind-keys :map special-mode-map
                ("k" . previous-line)
                ("l" . next-line)))
-  (with-eval-after-load 'slack
-    (bind-keys :map slack-message-buffer-mode-map
-               ("k" . previous-line)
-               ("l" . next-line)))
-  (with-eval-after-load 'slack
-    (bind-keys :map slack-activity-feed-buffer-mode-map
-               ("k" . previous-line)
-               ("l" . next-line)))
   (with-eval-after-load 'wasabi
     (bind-keys :map wasabi-mode-map
                ("k" . previous-line)
@@ -4312,11 +4304,15 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
     (bind-keys :map messages-buffer-mode-map
                ("q" . files-extras-bury-buffer-switch-to-other-window)))
   (with-eval-after-load 'slack
+    ;; printable keys go in the message-region keymaps, not the mode
+    ;; maps, so they self-insert at the input prompt
     (bind-keys :map slack-activity-feed-buffer-mode-map
                ("q" . files-extras-kill-this-buffer))
-    (bind-keys :map slack-message-buffer-mode-map
+    (bind-keys :map slack-activity-feed-buffer-message-keymap
                ("q" . files-extras-kill-this-buffer))
-    (bind-keys :map slack-thread-message-buffer-mode-map
+    (bind-keys :map slack-message-buffer-message-keymap
+               ("q" . files-extras-kill-this-buffer))
+    (bind-keys :map slack-thread-message-buffer-message-keymap
                ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'special
     (bind-keys :map special-mode-map
@@ -13565,6 +13561,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   (slack-prefer-current-team t)
   (slack-buffer-emojify t)
   (slack-message-custom-notifier 'ignore)
+  (slack-thread-also-send-to-room nil)
   (slack-activity-feed-watch-channels '("automation-alerts"
                                         "cybersecurity-ops"
                                         "pablo-isabel"
@@ -13607,7 +13604,12 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
    ("s-g" . slack-group-select)
    ("s-m" . slack-im-select)
    ("s-u" . slack-select-rooms)
+   ;; printable keys live in the message-region keymaps (active only on
+   ;; rendered messages), never in the mode maps, which apply buffer-wide
+   ;; and would shadow typing at the input prompt
    :map slack-thread-message-buffer-mode-map
+   ("s-z" . slack-message-write-another-buffer)
+   :map slack-thread-message-buffer-message-keymap
    ("d" . slack-thread-show-or-create)
    ("e" . slack-message-edit)
    ("o" . slack-chat-org-capture)
@@ -13615,7 +13617,8 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
    ("r" . slack-thread-reply)
    ("R" . slack-message-add-reaction)
    ("z" . slack-message-write-another-buffer)
-   ("s-z" . slack-message-write-another-buffer)
+   ;; the feed has no usable input prompt, so its mode map may also carry
+   ;; printable keys: they keep working in the gaps between entries
    :map slack-activity-feed-buffer-mode-map
    ("," . slack-activity-feed-goto-prev)
    ("." . slack-activity-feed-goto-next)
@@ -13627,7 +13630,19 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
    ("R" . slack-message-add-reaction)
    ("z" . slack-message-write-another-buffer)
    ("s-z" . slack-message-write-another-buffer)
+   :map slack-activity-feed-buffer-message-keymap
+   ("," . slack-activity-feed-goto-prev)
+   ("." . slack-activity-feed-goto-next)
+   ("d" . slack-thread-show-or-create)
+   ("e" . slack-message-edit)
+   ("k" . slack-feed-goto-prev)
+   ("l" . slack-feed-goto-next)
+   ("r" . slack-thread-reply)
+   ("R" . slack-message-add-reaction)
+   ("z" . slack-message-write-another-buffer)
    :map slack-message-buffer-mode-map
+   ("s-z" . slack-message-write-another-buffer)
+   :map slack-message-buffer-message-keymap
    ("," . slack-buffer-goto-prev-message)
    ("." . slack-buffer-goto-next-message)
    ("d" . slack-thread-show-or-create)
@@ -13638,7 +13653,6 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
    ("r" . slack-thread-reply)
    ("R" . slack-message-add-reaction)
    ("z" . slack-message-write-another-buffer)
-   ("s-z" . slack-message-write-another-buffer)
    :map slack-message-compose-buffer-mode-map
    ("s-c" . slack-message-send-from-buffer)
    ("s-f" . slack-message-select-file)
@@ -13659,10 +13673,13 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   (:map slack-activity-feed-buffer-mode-map
         ("E" . slack-extras-work-capture)
         ("o" . slack-extras-personal-capture)
-        :map slack-thread-message-buffer-mode-map
+        :map slack-activity-feed-buffer-message-keymap
         ("E" . slack-extras-work-capture)
         ("o" . slack-extras-personal-capture)
-        :map slack-message-buffer-mode-map
+        :map slack-thread-message-buffer-message-keymap
+        ("E" . slack-extras-work-capture)
+        ("o" . slack-extras-personal-capture)
+        :map slack-message-buffer-message-keymap
         ("E" . slack-extras-work-capture)
         ("o" . slack-extras-personal-capture)))
 #+end_src

@@ -46,6 +46,17 @@ invocation for ordinary messages.
    where genuine fresh-eyes QA helps, you may still run a separate `humanize`
    audit afterwards, but treat that as a judgment call, not a routine step.
 
+## Concision (hard rule)
+
+- Only what the recipient needs to act or decide. If a sentence doesn't change
+  what the reader does next, cut it.
+- Lead with the ask; one ask per message.
+- No framing, no restating the question, no announcing future messages, no
+  closing summaries.
+- Slack replies and DMs: 2–4 sentences, ~100 words max. Email tolerates a
+  little more.
+- When torn between two lengths, pick the shorter.
+
 ## Pablo's style (distilled from the samples)
 
 - Full, grammatical sentences even in chat; no fragment-style punchiness.

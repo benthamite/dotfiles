@@ -131,6 +131,10 @@ both setup and execution, canonicalizing both its root and actual =node_modules=
 destination before rejecting paths into this Drive-synced tree. Its package
 commands continue to read the skill-local scripts and =.env= file.
 
+The paired =personalize= skill carries a hard concision rule: outgoing drafts
+carry only what the recipient needs to act or decide, lead with the ask, and
+hold Slack replies to a few sentences.
+
 Org task triage is split across two skills over one engine. =triage-personal-todos=
 here owns personal notes; the project-local =triage-project-todos= in the Epoch
 workspace owns Epoch work. They share the engine, the task fingerprints, the

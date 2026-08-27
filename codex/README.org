@@ -152,7 +152,10 @@ skips test-only files and edits while Git has an active operation or unmerged
 index entries, so a live Emacs never loads tests or a partially resolved tree.
 The batch runner loads canonical source and emits evidence bound to the
 repository, package, and source revision; commit guards reject stale or reused
-evidence. Test-only Elisp commits likewise do not require package-manual
+evidence.  Composed-tool responses arrive as arrays of text blocks; the hook
+payload normalizer joins those blocks before evidence tracking, so successful
+=functions.exec= checks create the same session marker as direct shell checks.
+Test-only Elisp commits likewise do not require package-manual
 updates. For =functions.exec= wrappers, post-commit verification pairs each
 literal nested shell command with its own =workdir=; it never guesses from the
 hook process directory and ignores inert quoted commit text. It records every

@@ -103,7 +103,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =block-unguarded-ahrefs-api.sh= | Blocks paid Ahrefs API calls that do not pass through the quota guard. |
 | =block-unregistered-launchagent.sh= | Routes LaunchAgent installs, loads, and removals through the =~/repos/launchd= registry and its installer, covering shell payloads and =apply_patch= paths. |
 | =block-walk-list-access.sh= | Restricts direct access to the protected walk-list data store. |
-| =lib-codex-hook-json.sh= | Normalizes Codex hook payloads, extracts literal nested command/workdir records without evaluating JavaScript, recognizes Git subcommands after supported global options, and recovers an exact nested Bash command's parent workdir from the session transcript. |
+| =lib-codex-hook-json.sh= | Normalizes Codex hook payloads, including block-array responses from =functions.exec=, extracts literal nested command/workdir records without evaluating JavaScript, recognizes Git subcommands after supported global options, and recovers an exact nested Bash command's parent workdir from the session transcript. |
 | =lib-codex-paths.sh= | Extracts changed paths from the supported Codex edit and patch payload forms. |
 | =lib-elisp-evidence.sh= | Issues and atomically consumes one-time correlation receipts for Elisp test and live evidence; these receipts prevent replay but do not authenticate against the same user. |
 | =lib-repo-root.sh= | Resolves the effective Git repository from structured hook context, Git global options, or an exact unambiguous parent =functions.exec= record without shell re-evaluation. |

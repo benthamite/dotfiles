@@ -15,6 +15,12 @@ CODEX_HOOK_JQ_DEFS='
   def codex_tool_response:
     .tool_response? as $response |
     if ($response | type) == "object" then $response
+    elif ($response | type) == "array" then
+      {"output": ([$response[]? |
+                    if type == "object" then (.text // .output // empty)
+                    elif type == "string" then .
+                    else empty
+                    end] | join(""))}
     elif ($response | type) == "string" then
       ($response as $raw |
        (try ($raw | fromjson) catch {"output": $raw}) |

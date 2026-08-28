@@ -422,6 +422,22 @@ Stop and report a blocker when:
   credential, irreversible authority, spending, destructive action, or an
   underdetermined product choice
 
+## Session cleanup — HARD RULE
+
+Stage sessions are disposable. Kill both fixed actor sessions as soon as the
+run reaches a terminal state (`complete-stage`, a frozen run, or an abandoned
+stage) and before starting the next stage's fresh sessions:
+
+```elisp
+(dolist (b '("*claude:...*" "*codex:...*"))
+  (when (get-buffer b) (agent--force-kill-buffer (get-buffer b))))
+```
+
+Never leave finished, superseded, or primed-but-unused agent sessions open;
+the user finds stray sessions distracting. Also kill any session you started
+for priming or discovery that did not become a run actor. Report the kills in
+the final report.
+
 ## Final report
 
 When complete, report:
@@ -434,3 +450,4 @@ When complete, report:
 - repo branch and ahead/behind state
 - whether the working tree is clean
 - any automation friction observed
+- confirmation that both stage sessions were killed

@@ -104,7 +104,10 @@ phase to a fresh transcript without enumerating unrelated sessions. The
 single-actor session primitives it relies on — guarded prompt delivery,
 transcript-boundary acknowledgment, marker-gated transcript reads, and buffer
 lifecycle inspection — live in the shared =lib/python/agent_session_lib.py=
-module, which its helper loads by resolved file path.
+module, which its helper loads by resolved file path. Stage sessions are
+disposable: the skill requires killing both fixed actor sessions (and any
+priming session) as soon as a run reaches a terminal state, so no finished or
+unused agent buffers linger.
 
 The paired =cross-review-plan= skill runs one cross-model review of a
 committed plan from inside the authoring session: it anchors the review to

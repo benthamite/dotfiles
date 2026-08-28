@@ -9377,6 +9377,7 @@ otherwise create it off `origin/main'."
   :custom
   (agent-log-summary-model 'gemini-flash-latest)
   (agent-log-group-by-project nil)
+  (agent-log-session-sort-key 'modification-time)
   (agent-log-auto-sync-sessions t)
   (agent-log-auto-summarize-sessions t)
   (agent-log-auto-rename-sessions t)

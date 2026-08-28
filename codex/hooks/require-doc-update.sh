@@ -66,11 +66,12 @@ HAS_DOC_DIR=false
 HAS_README_ORG=false
 HAS_README_MD=false
 
-# Check for doc/ at root or nested (up to 3 levels deep)
-if [ -d "$REPO_ROOT/doc" ] || \
-   compgen -G "$REPO_ROOT/*/doc" > /dev/null 2>&1 || \
-   compgen -G "$REPO_ROOT/*/*/doc" > /dev/null 2>&1 || \
-   compgen -G "$REPO_ROOT/*/*/*/doc" > /dev/null 2>&1; then
+# Check for doc/ at root or nested (up to 3 levels deep). Skip vendored
+# trees: node_modules/*/doc made a website repo look like an Elisp package
+# with a manual, so README.org could never satisfy the gate there.
+if [ -n "$(find "$REPO_ROOT" -maxdepth 4 -type d -name doc \
+      -not -path '*/node_modules/*' -not -path '*/.git/*' \
+      -print -quit 2>/dev/null)" ]; then
   HAS_DOC_DIR=true
 fi
 if [ -f "$REPO_ROOT/README.org" ]; then

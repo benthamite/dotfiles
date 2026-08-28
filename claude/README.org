@@ -135,6 +135,12 @@ The paired =personalize= skill carries a hard concision rule: outgoing drafts
 carry only what the recipient needs to act or decide, lead with the ask, and
 hold Slack replies to a few sentences.
 
+The paired =humanize= skill owns the single tells catalogue that =personalize=
+reads by reference. Beyond the Wikipedia-derived tells it launched with, the
+catalogue covers the engagement register (throat-clearing openers, faux-insight
+setups, colon reveals, fake-profound kickers, and kin) merged from
+petergyang/no-ai-slop.
+
 Org task triage is split across two skills over one engine. =triage-personal-todos=
 here owns personal notes; the project-local =triage-project-todos= in the Epoch
 workspace owns Epoch work. They share the engine, the task fingerprints, the

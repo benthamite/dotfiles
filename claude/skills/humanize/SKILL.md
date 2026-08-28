@@ -1,6 +1,6 @@
 ---
 name: humanize
-description: Rewrite prose to remove patterns that read as AI-generated — vocabulary tells (delve, tapestry, pivotal, underscore), copula avoidance (stands as, serves as, marks), negative parallelism, rule-of-three stacks, trailing -ing summary clauses, significance puffery, compulsive summaries, em-dash overuse, mechanical bolding, bullet-with-bold-header lists, render artefacts (oaicite, contentReference, turn0search0), and similar fingerprints. Use for /humanize, de-slop, removing AI tells, "sounds like ChatGPT/Claude/Gemini", anti-AI-detection cleanup, or as the final pass before publishing AI-assisted prose. Also invoked by other skills (e.g. wikipedia-article) as a last-mile cleanup phase.
+description: Rewrite prose to remove patterns that read as AI-generated — vocabulary tells (delve, tapestry, pivotal, underscore), copula avoidance (stands as, serves as, marks), negative parallelism, rule-of-three stacks, trailing -ing summary clauses, significance puffery, compulsive summaries, engagement-register moves (throat-clearing openers, faux-insight setups, colon reveals, fake-profound kickers), em-dash overuse, mechanical bolding, bullet-with-bold-header lists, render artefacts (oaicite, contentReference, turn0search0), and similar fingerprints. Use for /humanize, de-slop, removing AI tells, "sounds like ChatGPT/Claude/Gemini", anti-AI-detection cleanup, or as the final pass before publishing AI-assisted prose. Also invoked by other skills (e.g. wikipedia-article) as a last-mile cleanup phase.
 ---
 
 # Humanize
@@ -51,10 +51,20 @@ Each entry is a tell paired with its fix. Apply only when a tell appears as part
 | **Copula avoidance** — *serves as, stands as, marks, represents, boasts, features, offers, maintains* in place of *is/are/has* | Switch back to the plain copula unless the avoidance is genuinely earning a different meaning. |
 | **"Concrete" / "robust" as filler** — especially in defences against AI accusations | Cut the adjective. |
 | **Elegant variation** — three synonyms for the same referent in one paragraph | Pick one term and reuse it. |
+| **Filler idioms** — *it's worth noting, it's important to note, at the end of the day, in today's world, in the age of, when it comes to, at its core, in order to, going forward, let's dive in* | Cut the idiom; state the point directly. |
+| **Weak verb phrases** — *made a decision, has the ability to, conducted an analysis, provides a summary of* | Use the direct verb: decided, can, analysed, summarises. |
+| **Empty intensifiers in density** — *literally, honestly, truly, actually, simply, fundamentally, crucially, importantly* | Cut when they add nothing. Keep ones carrying real uncertainty, contrast, or the writer's spoken rhythm. |
 
 ### Phrasing and syntax
 
-- **Negative parallelism**: "not just X, but Y", "not X — Y", "it's not about X, it's about Y", used as a recurring move. Allow at most one instance per piece.
+- **Negative parallelism**: "not just X, but Y", "not X — Y", "it's not about X, it's about Y", used as a recurring move; also the stacked negative listing "Not a X. Not a Y. A Z." Allow at most one instance per piece; state Y (or Z) directly.
+- **Throat-clearing openers**: "Here's the thing", "Here's what I mean", "Let me be clear", "I'll be honest", "The uncomfortable truth is". Delete and state the point.
+- **Faux-insight setups**: "What most people get wrong", "Here's what nobody tells you", "The part everyone misses". Cut the setup; let the claim stand on its own.
+- **Colon reveals**: a noun phrase, a colon, then a dramatic reveal — "The best part: it learns." Rewrite as a plain sentence; keep colons for lists, labels, and quotes.
+- **Rhetorical setups**: "What if I told you…", "Think about it:", "Plot twist:", and self-answered question–answer pairs. Drop the device and make the point.
+- **Interpretive metadiscourse**: "The key point is", "As you can see", "This distinction matters", "That last part matters more than it sounds", redundant "In other words". Delete when the point is already clear; otherwise replace with the missing support or fact.
+- **Dramatic fragmentation**: "That's it. That's the whole thing.", or stacked punchy fragments used for fake momentum. Rewrite as complete sentences.
+- **Fake-profound kickers**: a closing aphorism or mic-drop line ("The future isn't coming. It's already here."). Delete it — do not rewrite it into a better metaphor — and end on the last concrete point, takeaway, or next action.
 - **Rule of three**: stacked triadic adjectives or three-item lists used to inflate thin content. Cut to two items, or to one specific item.
 - **Trailing -ing summary clauses**: "…, highlighting the broader significance of …", "…, reflecting an enduring legacy of …", "…, underscoring its pivotal role in …". Delete the clause or fold the claim into the main sentence with a real verb.
 - **Significance puffery**: *stands as a testament to, marks a pivotal moment, underscores the importance of, a key turning point, deeply rooted, broader trends, lasting legacy*. Either back the claim with a specific source and rewrite as a concrete fact, or remove.
@@ -70,6 +80,8 @@ Each entry is a tell paired with its fix. Apply only when a tell appears as part
 - **Title Case In Section Headings** when the house style is sentence case. Lowercase non-proper-noun words.
 - **Skipped heading levels** (`##` → `####`). Re-level.
 - **Horizontal rules (`---`) before headings**. Remove.
+- **Headers over tiny sections**: a heading for every two-sentence passage. Merge into prose under fewer headings.
+- **Robotic rhythm**: runs of same-shape sentences or identically structured paragraphs. Break the symmetry; vary shape only where it serves the point.
 
 ### Formatting
 
@@ -99,6 +111,7 @@ Knowledge-cutoff disclaimers ("As of my last update…"), "as an AI language mod
 5. **Pre-November-2022 text is presumed human.** If you can tell content predates ChatGPT (commit dates, references, internal evidence), don't humanise it.
 6. **Don't add insecurity to "sound human".** Plain prose, not hedged prose. "X is Y" beats "I think X might in some sense be Y".
 7. **No new facts.** Humanise rewords; it does not research. If a sentence is empty of meaning once the puffery is stripped, flag it for the user; don't backfill.
+8. **Portability test.** A sentence that could move unchanged to another person, company, or product is probably filler. Cut it, or anchor it with a fact specific to the subject — without inventing one (rule 7).
 
 ## Output format
 
@@ -130,6 +143,8 @@ Flagged for the user: <claims left empty after puffery stripped, citations that 
 | Running humanise on quotations | Quotes are verbatim. Stop. |
 | Editing pre-2022 prose | Strong presumption of human authorship. Leave alone. |
 | Touching code/config | Out of scope. Only prose. |
+| Cutting every "honestly"/"actually"/"I think" | Keep qualifiers that carry real uncertainty or the writer's spoken rhythm; hedging is human when it's genuine. |
+| Rewriting a fake-profound kicker into a better metaphor | Delete it and end on the last concrete point. |
 
 ## Worked example
 

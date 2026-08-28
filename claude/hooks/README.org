@@ -31,7 +31,10 @@ The sensitive-read guard denies content access to credential-bearing paths.
 It permits content-free metadata commands, quiet/count/name-only searches,
 existence tests, Git ignore/index queries, and auth-aware tools only within the
 narrow forms recognized by the hook; a compound command cannot inherit an
-allowance from a safe first command. Sourcing a quoted or unquoted =.env= or
+allowance from a safe first command. The auth-aware set covers =pass=,
+=git-crypt=, =security=, and =op= together with the =op-automations= and
+=op-desktop= brokers, which the secret-leak guard requires in place of raw
+=op=. Sourcing a quoted or unquoted =.env= or
 =.envrc= solely as subprocess environment is allowed, including =set -a=
 wrappers, but printing, parsing, or dumping that environment is denied. Claude
 registers the standalone hook for =Read= and keeps its Bash logic inlined in

@@ -303,7 +303,7 @@ check_sensitive_read() {
 This could expose secret values in the conversation context. Use a safe alternative: pass/op/git-crypt for auth-managed secrets; ls/stat/file/wc -l/-c or git check-ignore/git ls-files for metadata; grep -l/-c/-q/-L for filename/count/quiet matches. Loading environment files into a subprocess is allowed only when the command does not print or inspect the loaded secrets."
     return 0
   fi
-  echo "$COMMAND" | grep -qE '^[[:space:]]*(pass[[:space:]]|op[[:space:]]|git-crypt[[:space:]]|security[[:space:]])' && return 0
+  echo "$COMMAND" | grep -qE '^[[:space:]]*(pass[[:space:]]|op[[:space:]]|op-automations[[:space:]]|op-desktop[[:space:]]|git-crypt[[:space:]]|security[[:space:]])' && return 0
   echo "$COMMAND" | grep -qE '^[[:space:]]*git[[:space:]]+(check-ignore|ls-files)([[:space:]]|$)' && return 0
   echo "$COMMAND" | grep -qE '^[[:space:]]*(ls|stat|file|basename|dirname|realpath)([[:space:]]|$)' && return 0
   echo "$COMMAND" | grep -qE '^[[:space:]]*wc([[:space:]]+-[lcwmL]+)*([[:space:]]|$)' && return 0

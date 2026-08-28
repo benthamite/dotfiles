@@ -236,6 +236,11 @@ Sensitive-read guards permit the security audit's shell-export classifier only
 for its exact absolute helper and target paths. The classifier reports names,
 line numbers, scopes, and classifications without printing values.
 
+Their auth-aware allowlist admits the =op-automations= and =op-desktop= brokers
+alongside raw =op=. The secret-leak guard requires those brokers in place of raw
+=op=, so recognizing only the raw form left commands that also name a
+credential-bearing path with no permitted invocation at all.
+
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged
 index entries, so a live Emacs never loads tests or a partially resolved tree.

@@ -137,8 +137,10 @@ case "$TOOL_NAME" in
       deny "$LABEL" "compound shell command cannot use a metadata-command allowance safely"
     fi
 
-    # Auth-aware tools manage secrets safely.
-    if echo "$COMMAND" | grep -qE '^[[:space:]]*(pass[[:space:]]|op[[:space:]]|git-crypt[[:space:]]|security[[:space:]])'; then
+    # Auth-aware tools manage secrets safely. op-automations and op-desktop
+    # exec the real `op`; the Bash guard requires them in place of raw `op`,
+    # so both must pass here too.
+    if echo "$COMMAND" | grep -qE '^[[:space:]]*(pass[[:space:]]|op[[:space:]]|op-automations[[:space:]]|op-desktop[[:space:]]|git-crypt[[:space:]]|security[[:space:]])'; then
       exit 0
     fi
 

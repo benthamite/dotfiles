@@ -30,6 +30,9 @@ avoid prose false positives. =ALLOW_DIRTY_REWRITE=1= is the explicit override.
 The sensitive-read guard denies content access to credential-bearing paths. It
 permits content-free metadata, quiet/count/name-only searches, existence tests,
 Git ignore/index queries, and auth-aware tools only in recognized narrow forms.
+The auth-aware set covers =pass=, =git-crypt=, =security=, and =op= together
+with the =op-automations= and =op-desktop= brokers, which the secret-leak guard
+requires in place of raw =op=.
 It also permits =.env= or =.envrc= to be sourced solely as subprocess
 environment, while still denying commands that print, parse, or dump it.
 

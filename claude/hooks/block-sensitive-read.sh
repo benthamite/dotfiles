@@ -267,7 +267,9 @@ if [ "$TOOL_NAME" = "Bash" ]; then
 
   # Auth-aware tools (these manage secrets safely; allow even when the
   # command names a sensitive path, e.g. `pass insert` or `git-crypt unlock`).
-  if echo "$COMMAND" | grep -qE '^[[:space:]]*(pass[[:space:]]|op[[:space:]]|git-crypt[[:space:]]|security[[:space:]])'; then
+  # op-automations and op-desktop exec the real `op`; pretooluse-bash.sh
+  # requires them in place of raw `op`, so both must pass here too.
+  if echo "$COMMAND" | grep -qE '^[[:space:]]*(pass[[:space:]]|op[[:space:]]|op-automations[[:space:]]|op-desktop[[:space:]]|git-crypt[[:space:]]|security[[:space:]])'; then
     exit 0
   fi
 

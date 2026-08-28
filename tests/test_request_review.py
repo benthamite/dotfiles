@@ -11,14 +11,14 @@ from types import SimpleNamespace
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
-CODEX_SCRIPT = ROOT / "codex/skills/cross-review-plan/scripts/cross_review_plan.py"
-CLAUDE_SCRIPT = ROOT / "claude/skills/cross-review-plan/scripts/cross_review_plan.py"
-CODEX_SKILL = ROOT / "codex/skills/cross-review-plan/SKILL.md"
-CLAUDE_SKILL = ROOT / "claude/skills/cross-review-plan/SKILL.md"
+CODEX_SCRIPT = ROOT / "codex/skills/request-review/scripts/request_review.py"
+CLAUDE_SCRIPT = ROOT / "claude/skills/request-review/scripts/request_review.py"
+CODEX_SKILL = ROOT / "codex/skills/request-review/SKILL.md"
+CLAUDE_SKILL = ROOT / "claude/skills/request-review/SKILL.md"
 
 
 def load_module():
-    spec = importlib.util.spec_from_file_location("cross_review_plan", CODEX_SCRIPT)
+    spec = importlib.util.spec_from_file_location("request_review", CODEX_SCRIPT)
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
     spec.loader.exec_module(module)
@@ -39,7 +39,7 @@ class SkillPairingTests(unittest.TestCase):
             entry["name"] for entry in manifest["skills"]
             if entry.get("status") == "paired"
         }
-        self.assertIn("cross-review-plan", paired)
+        self.assertIn("request-review", paired)
 
     def test_skill_encodes_single_pass_and_terminal_rules(self):
         skill = " ".join(CODEX_SKILL.read_text(encoding="utf-8").split())

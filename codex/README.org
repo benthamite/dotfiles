@@ -96,7 +96,7 @@ both setup and execution, canonicalizing both its root and actual =node_modules=
 destination before rejecting paths into this Drive-synced tree. Its package
 commands continue to read the skill-local scripts and =.env= file.
 
-The paired =orchestrate-agent-review= skill coordinates fixed Claude and Codex
+The paired =orchestrate-review= skill coordinates fixed Claude and Codex
 sessions through one guarded, stage-atomic workflow. Its helper recognizes the
 canonical =claude-code= and =codex= backends, uses Codex's public prompt reader
 for app-server delivery recovery, and can rebind a failed author or reviewer
@@ -109,7 +109,7 @@ disposable: the skill requires killing both fixed actor sessions (and any
 priming session) as soon as a run reaches a terminal state, so no finished or
 unused agent buffers linger.
 
-The paired =cross-review-plan= skill runs one cross-model review of a
+The paired =request-review= skill runs one cross-model review of a
 committed plan from inside the authoring session: it anchors the review to
 the exact committed blob (the reviewer reads =git show <commit>:<path>=,
 never the working tree), enforces an opposite-backend fresh-reviewer identity

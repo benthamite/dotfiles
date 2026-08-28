@@ -10,7 +10,7 @@ Python modules loaded by resolved file path from more than one consumer.
 - =agent_session_lib.py= — single-actor Emacs =agent.el= session primitives
   (guarded prompt delivery, transcript-boundary acknowledgment, marker-gated
   transcript reads, buffer lifecycle inspection). Consumed by the paired
-  =orchestrate-agent-review= and =cross-review-plan= skill helpers on both
+  =orchestrate-review= and =request-review= skill helpers on both
   the Claude and Codex sides; tested by =tests/test_agent_session_lib.py=.
   Consumers call every primitive through the loaded module object
   (=session.<name>=) so tests have exactly one patch point per primitive.

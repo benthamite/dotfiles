@@ -1,9 +1,9 @@
 ---
-name: orchestrate-agent-review
+name: orchestrate-review
 description: Use when coordinating two live Emacs agent sessions for a staged implementation that needs independent artifact review, fixed author/reviewer roles, unattended completion, or role reversal.
 ---
 
-# orchestrate-agent-review
+# orchestrate-review
 
 ## Overview
 
@@ -73,7 +73,7 @@ acceptable.
 Use the helper script for deterministic Emacs/session operations:
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_agent_review.py" --help
+python "$SKILL_DIR/scripts/orchestrate_review.py" --help
 ```
 
 ## Operating rules
@@ -120,7 +120,7 @@ Create a guarded mode-`0600` run file outside the repo or under an ignored
 state directory:
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_agent_review.py" init-run \
+python "$SKILL_DIR/scripts/orchestrate_review.py" init-run \
   --run-file /tmp/improvement-5-run.json \
   --repo /path/to/repo \
   --stage 5 \
@@ -166,7 +166,7 @@ Write phase context to a mode-`0600` temp file, submit it through the run, then
 delete it:
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_agent_review.py" submit \
+python "$SKILL_DIR/scripts/orchestrate_review.py" submit \
   --run-file /tmp/improvement-5-run.json \
   --phase spec \
   --prompt-file /tmp/prompt.txt
@@ -191,7 +191,7 @@ submission nor a CLI recovery command retries Return.
 After the fixed top-level actor is awaiting input, record the return:
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_agent_review.py" finish-phase \
+python "$SKILL_DIR/scripts/orchestrate_review.py" finish-phase \
   --run-file /tmp/improvement-5-run.json \
   --phase spec
 ```
@@ -233,7 +233,7 @@ Use Python-based polling, not shell `sleep`, because the reviewed agents may run
 For a one-shot status check:
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_agent_review.py" status \
+python "$SKILL_DIR/scripts/orchestrate_review.py" status \
   --run-file /tmp/improvement-5-run.json
 ```
 
@@ -244,7 +244,7 @@ output.
 For a polling loop:
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_agent_review.py" watch \
+python "$SKILL_DIR/scripts/orchestrate_review.py" watch \
   --run-file /tmp/improvement-5-run.json \
   --interval 20
 ```
@@ -278,7 +278,7 @@ underdetermined product choice, report that blocker. Otherwise write a specific
 diagnosis to a mode-`0600` prompt file and steer the same fixed Agent 1:
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_agent_review.py" steer-stage \
+python "$SKILL_DIR/scripts/orchestrate_review.py" steer-stage \
   --run-file /tmp/improvement-5-run.json \
   --prompt-file /tmp/improvement-5-steering.txt
 ```
@@ -363,7 +363,7 @@ The final top-level response must end with the helper-injected exact stage
 completion marker. Once Agent 1 is awaiting input, run:
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_agent_review.py" finish-phase \
+python "$SKILL_DIR/scripts/orchestrate_review.py" finish-phase \
   --run-file /tmp/improvement-5-run.json \
   --phase implementation
 ```
@@ -373,7 +373,7 @@ This command rejects a premature return without the stage marker. Save Agent
 and close the run:
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_agent_review.py" complete-stage \
+python "$SKILL_DIR/scripts/orchestrate_review.py" complete-stage \
   --run-file /tmp/improvement-5-run.json \
   --evidence-file /tmp/improvement-5-acceptance.txt
 ```

@@ -12,13 +12,13 @@ from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 CODEX_SCRIPT = (
-    ROOT / "codex/skills/orchestrate-agent-review/scripts/orchestrate_agent_review.py"
+    ROOT / "codex/skills/orchestrate-review/scripts/orchestrate_review.py"
 )
 CLAUDE_SCRIPT = (
-    ROOT / "claude/skills/orchestrate-agent-review/scripts/orchestrate_agent_review.py"
+    ROOT / "claude/skills/orchestrate-review/scripts/orchestrate_review.py"
 )
-CODEX_SKILL = ROOT / "codex/skills/orchestrate-agent-review/SKILL.md"
-CLAUDE_SKILL = ROOT / "claude/skills/orchestrate-agent-review/SKILL.md"
+CODEX_SKILL = ROOT / "codex/skills/orchestrate-review/SKILL.md"
+CLAUDE_SKILL = ROOT / "claude/skills/orchestrate-review/SKILL.md"
 
 
 class SkillDiscoveryTests(unittest.TestCase):
@@ -28,25 +28,25 @@ class SkillDiscoveryTests(unittest.TestCase):
             entry["name"] for entry in manifest["skills"]
             if entry.get("status") == "paired"
         }
-        self.assertIn("orchestrate-agent-review", paired)
+        self.assertIn("orchestrate-review", paired)
 
         inventory = (ROOT / "agents/skill-inventory.org").read_text()
-        self.assertIn("=orchestrate-agent-review=", inventory)
+        self.assertIn("=orchestrate-review=", inventory)
 
     def test_openai_metadata_invokes_public_skill(self):
         for side in ("claude", "codex"):
             metadata = (
                 ROOT
                 / side
-                / "skills/orchestrate-agent-review/agents/openai.yaml"
+                / "skills/orchestrate-review/agents/openai.yaml"
             ).read_text()
             with self.subTest(side=side):
-                self.assertIn("$orchestrate-agent-review", metadata)
+                self.assertIn("$orchestrate-review", metadata)
 
 
 def load_module():
     spec = importlib.util.spec_from_file_location(
-        "orchestrate_agent_review", CODEX_SCRIPT
+        "orchestrate_review", CODEX_SCRIPT
     )
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None

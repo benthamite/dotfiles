@@ -1,9 +1,9 @@
 ---
-name: cross-review-plan
+name: request-review
 description: Use when the current agent session should hand a committed plan to a fresh session of the other CLI (Claude ↔ Codex) for one independent review pass, monitor it, and then implement the plan here while adjudicating the feedback.
 ---
 
-# cross-review-plan
+# request-review
 
 ## Overview
 
@@ -14,7 +14,7 @@ monitors that session, and then implements the plan **in this session** while
 adjudicating every finding. The helper guards the reviewer half; authoring,
 adjudication, and implementation stay entirely in the current session.
 
-This is not `orchestrate-agent-review`: there is no second author session, no
+This is not `orchestrate-review`: there is no second author session, no
 spec phase, and no stage handoff. Use that skill when a separate session
 should own authoring and implementation; use this one when *you* are the
 author and implementer and only the review crosses models.
@@ -35,7 +35,7 @@ author and implementer and only the review crosses models.
 Use the helper for every deterministic session operation:
 
 ```bash
-python "$SKILL_DIR/scripts/cross_review_plan.py" --help
+python "$SKILL_DIR/scripts/request_review.py" --help
 ```
 
 ## Step 1: Commit the plan
@@ -67,7 +67,7 @@ guarded mode-`0600` run file outside the repo or under an ignored state
 directory:
 
 ```bash
-python "$SKILL_DIR/scripts/cross_review_plan.py" init-review \
+python "$SKILL_DIR/scripts/request_review.py" init-review \
   --run-file /tmp/plan-review-run.json \
   --repo /path/to/repo \
   --plan-path docs/plans/the-plan.md \
@@ -96,7 +96,7 @@ file, so supply the real path.
 ## Step 3: Submit the single review pass
 
 ```bash
-python "$SKILL_DIR/scripts/cross_review_plan.py" submit-review \
+python "$SKILL_DIR/scripts/request_review.py" submit-review \
   --run-file /tmp/plan-review-run.json
 ```
 
@@ -120,7 +120,7 @@ Use the Python watcher, never shell `sleep` (the reviewed agent may run broad
 process probes such as `pkill -f "sleep 20"`):
 
 ```bash
-python "$SKILL_DIR/scripts/cross_review_plan.py" watch \
+python "$SKILL_DIR/scripts/request_review.py" watch \
   --run-file /tmp/plan-review-run.json --interval 20
 ```
 
@@ -139,7 +139,7 @@ is reported to the user, not retried.
 When the reviewer is authoritatively awaiting input:
 
 ```bash
-python "$SKILL_DIR/scripts/cross_review_plan.py" finish-review \
+python "$SKILL_DIR/scripts/request_review.py" finish-review \
   --run-file /tmp/plan-review-run.json
 ```
 

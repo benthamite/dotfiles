@@ -1,7 +1,7 @@
 """Single-actor Emacs agent.el session primitives shared by agent skills.
 
-Extracted from orchestrate-agent-review's helper so that other skills
-(currently cross-review-plan) can reuse guarded prompt delivery,
+Extracted from orchestrate-review's helper so that other skills
+(currently request-review) can reuse guarded prompt delivery,
 transcript-boundary acknowledgment, completion-marker transcript reads, and
 buffer lifecycle inspection without duplicating them. Everything here is
 single-actor and knows nothing about any skill's run-file state machine.

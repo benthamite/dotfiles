@@ -165,9 +165,9 @@
       "note": "Claude and Codex move-session-log skills intentionally differ because each tool stores sessions in its own layout. Both bundle a scripts/move_session_log.py adapter with the same interface (single-session import; --dry-run/--rename OLD NEW) and byte-equivalent path mapping, enforced by tests/test_move_session_log_parity.py. Claude operates on ~/.claude/projects, history.jsonl, and ~/.claude.json (honoring CLAUDE_CONFIG_DIR); Codex on ~/.codex/sessions, history.jsonl, session_index.jsonl, and state_5.sqlite. Not forced to byte-parity."
     },
     {
-      "name": "orchestrate-agent-review",
-      "claude": "claude/skills/orchestrate-agent-review/SKILL.md",
-      "codex": "codex/skills/orchestrate-agent-review/SKILL.md",
+      "name": "orchestrate-review",
+      "claude": "claude/skills/orchestrate-review/SKILL.md",
+      "codex": "codex/skills/orchestrate-review/SKILL.md",
       "status": "paired",
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
@@ -298,9 +298,9 @@
       "equivalence": "Byte-identical SKILL.md, rules.json and chrome_permissions.js in both trees. The classic-level dependency installs to ~/.claude/chrome-permission-audit/node_modules rather than either skill directory, so npm cannot break parity."
     },
     {
-      "name": "cross-review-plan",
-      "claude": "claude/skills/cross-review-plan/SKILL.md",
-      "codex": "codex/skills/cross-review-plan/SKILL.md",
+      "name": "request-review",
+      "claude": "claude/skills/request-review/SKILL.md",
+      "codex": "codex/skills/request-review/SKILL.md",
       "status": "paired",
       "equivalence": "Byte-identical SKILL.md and auxiliary files (helper script, openai.yaml) on both sides."
     },

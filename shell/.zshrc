@@ -88,9 +88,15 @@ alias muinit="cd ~; mu init --maildir=$HOME/Mail --personal-address=$PERSONAL_EM
 # `pkill -SIGUSR2 Emacs` also hits batch children spawned by Emacs
 # (package retrieval workers, elpaca builds, test subprocesses), whose
 # armed debugger exits them with status 255 at their next activity.
+# Batch processes not spawned by Emacs (launchd jobs such as vara-refresh
+# run `emacs --batch` under bash) are skipped by command line for the same
+# reason: on 2026-08-27 a broadcast killed a launchd refresh mid-run.
 emacsk() {
   local pid ppid
   for pid in $(pgrep -x Emacs); do
+    case "$(ps -o args= -p "$pid" 2>/dev/null)" in
+      *--batch*|*-batch*) continue ;;
+    esac
     ppid=$(ps -o ppid= -p "$pid" | tr -d ' ')
     case "$(ps -o comm= -p "$ppid" 2>/dev/null)" in
       *Emacs*) ;;

@@ -41,6 +41,11 @@ whole-stage steering only after a genuine incomplete return.
 The entire stage is the smallest orchestration unit. After the plan review,
 send one initial implementation handoff to Agent 1 and wait for the complete
 stage. Agent 1 owns implementation and stage-final verification.
+Agent 1 must never end its turn to wait: the injected implementation
+contract tells it that an unfinished background job, subagent, or reviewer is
+not a reason to return, and that it must wait inside the turn with bounded
+polling (under the 10-minute command limit, re-armed as needed). An ended turn
+is a stop; the orchestrator's only remedy is one targeted steer.
 Violating the letter of these rules violates the workflow:
 
 - Never report progress as `Task N`; report only the stage and current phase.

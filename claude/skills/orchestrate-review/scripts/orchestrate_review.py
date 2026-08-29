@@ -58,6 +58,12 @@ identity check, irreversible action, spending decision, destructive action, or
 product choice that the repository and approved plan cannot determine. A false
 technical premise, failed test, missing capture, or implementation obstacle is
 not a user-only stop: adapt the plan and continue toward the whole-stage result.
+Never end your turn to wait: a background command, detached job, subagent,
+or reviewer that has not finished is not a reason to return. Ending the turn
+is read as a stage stop and can only be reopened by a steering prompt. Wait
+inside the turn with bounded polling loops (each well under the harness's
+10-minute command limit, re-armed as needed) and continue when the result
+lands.
 
 Stage context follows:
 

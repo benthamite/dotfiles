@@ -5,7 +5,7 @@
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/forge-extras.el
 ;; Version: 0.2
-;; Package-Requires: ((forge "0.3.1") (shut-up "0.3.1"))
+;; Package-Requires: ((forge "0.3.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -29,7 +29,6 @@
 ;;; Code:
 
 (require 'forge)
-(require 'shut-up)
 (require 'json)
 (require 'seq)
 (require 'cl-lib)
@@ -171,12 +170,6 @@ unsupported types so `seq-keep' filters them."
   "Return the GitHub Actions URL for repository OWNER and NAME."
   (format "https://github.com/%s/%s/actions" owner name))
 
-(defvar forge-extras-pull-notifications-timeout 15
-  "Timeout in seconds for `forge-extras-pull-notifications'.
-`forge-pull-notifications' calls `url-retrieve-synchronously' without
-a timeout, so the synchronous TCP connect blocks Emacs when offline.
-This variable sets the timeout injected into the call.")
-
 (defvar forge-extras--query-active nil
   "Non-nil while `forge--query' is executing.
 Prevents re-entrant forge queries when timers fire during
@@ -189,15 +182,27 @@ During `epg-wait-for-status' and `url-retrieve-synchronously',
 `accept-process-output' services the event loop, allowing timers
 to fire re-entrantly.  Each re-entrant `forge--query' blocks on
 GPG again, creating unbounded nesting that freezes Emacs."
-  (unless forge-extras--query-active
+  (if forge-extras--query-active
+      (forge-extras-message-debug "Dropped re-entrant forge query")
     (let ((forge-extras--query-active t))
       (apply orig-fun args))))
 
 (advice-add 'forge--query :around #'forge-extras--prevent-reentrant-query)
 
-(defvar forge-extras--pull-in-progress nil
-  "Non-nil while `forge-extras-pull-notifications' is running.
-Prevents re-entrant calls when a timer fires during GPG decryption.")
+(defvar forge-extras-pull-notifications-githost "github.com"
+  "Git host whose notifications `forge-extras-pull-notifications' fetches.
+It must be the first element of a `forge-alist' entry whose class is
+`forge-github-repository'.")
+
+(defvar forge-extras-pull-notifications-stale-seconds 300
+  "Seconds after which an unfinished notification pull counts as abandoned.
+Every stage of the pull runs in a network callback.  If a callback never
+fires, the in-progress guard would otherwise block all later pulls.")
+
+(defvar forge-extras--pull-started nil
+  "Time at which the current notification pull began, or nil when none runs.
+Set by `forge-extras--pull-notifications-now' and cleared when the pull
+finishes or fails.")
 
 (defun forge-extras-pull-notifications ()
   "Fetch notifications for all repositories from the current forge.
@@ -208,33 +213,199 @@ the synchronous resolver call in `open-network-stream' when offline."
                                          #'forge-extras--pull-notifications-now))
 
 (defun forge-extras--pull-notifications-now ()
-  "Fetch notifications for all repositories from the current forge.
-Do not update if `elfeed' is in the process of being updated, since this causes
-problems.  Inject a timeout into `url-retrieve-synchronously' so that
-Emacs does not freeze when the connection drops mid-request.
-
-Handle `quit' as well as `error': the pull runs from timers and process
-sentinels, which bind `inhibit-quit', so a quit reaches it only when the
-user forces one to interrupt the synchronous request.  Abort the pull
-and log a debug message instead of letting the quit escape, since an
-unhandled quit from a background job enters the debugger whenever
-`debug-on-quit' is enabled."
-  (unless (or forge-extras--pull-in-progress
+  "Start an asynchronous pull of GitHub notifications.
+Do nothing while a pull is in progress or while `elfeed' is updating,
+since concurrent database access caused problems.  Every network request
+carries a callback, so Emacs never blocks on the connection.  An error
+or quit raised while starting the pull ends it and is logged as a debug
+message rather than allowed to escape from a background job, since an
+unhandled quit enters the debugger whenever `debug-on-quit' is enabled."
+  (unless (or (forge-extras--pull-in-progress-p)
               (bound-and-true-p elfeed-extras-auto-update-in-process))
-    (let ((forge-extras--pull-in-progress t))
-      (condition-case err
-          (shut-up
-            (with-no-warnings
-              (let ((orig (symbol-function 'url-retrieve-synchronously)))
-                (cl-letf (((symbol-function 'url-retrieve-synchronously)
-                           (lambda (url &optional silent inhibit-cookies timeout)
-                             (funcall orig url silent inhibit-cookies
-                                      (or timeout forge-extras-pull-notifications-timeout)))))
-                  (forge-pull-notifications)))))
-        (error
-         (forge-extras-message-debug "Skipping notifications due to error: %S" err))
-        (quit
-         (forge-extras-message-debug "Skipping notifications: quit"))))))
+    (setq forge-extras--pull-started (current-time))
+    (condition-case err
+        (forge-extras--pull-notifications-async
+         forge-extras-pull-notifications-githost
+         #'forge-extras--pull-finished
+         #'forge-extras--pull-failed)
+      (error (forge-extras--pull-failed err))
+      (quit (forge-extras--pull-failed 'quit)))))
+
+(defun forge-extras--pull-in-progress-p ()
+  "Return non-nil when a pull started less than the stale limit ago.
+The limit is `forge-extras-pull-notifications-stale-seconds'."
+  (and forge-extras--pull-started
+       (< (float-time (time-since forge-extras--pull-started))
+          forge-extras-pull-notifications-stale-seconds)))
+
+(defun forge-extras--pull-finished ()
+  "Record that the current notification pull completed."
+  (setq forge-extras--pull-started nil)
+  (forge-extras-message-debug "Pulled notifications"))
+
+(defun forge-extras--pull-failed (err &rest _)
+  "Record that the current notification pull failed with ERR.
+Accept and ignore the extra arguments ghub passes to error callbacks."
+  (setq forge-extras--pull-started nil)
+  (forge-extras-message-debug "Skipping notifications due to error: %S" err))
+
+(defmacro forge-extras--pull-stage (errorback &rest body)
+  "Run BODY as one stage of the pull, reporting any error to ERRORBACK.
+Stages run inside network callbacks, where an escaping error would be
+reported by the process machinery and leave the pull marked as running."
+  (declare (indent 1))
+  `(condition-case err
+       (progn ,@body)
+     (error (funcall ,errorback err))))
+
+(defun forge-extras--pull-notifications-async (githost callback errorback)
+  "Fetch GitHub notifications for GITHOST without blocking Emacs.
+This is an asynchronous reimplementation of `forge--pull-notifications'
+for `forge-github-repository'.  Forge's version issues the initial REST
+request synchronously and, while massaging the results, synchronously
+looks up the id of every repository not yet in the database; both waits
+block Emacs.  Here every request carries a callback: fetch the
+notification list, resolve unknown repositories, fetch the topics in
+batches, then store everything and call CALLBACK with no arguments.
+Call ERRORBACK with the error data when a stage fails."
+  (pcase-let* ((`(,_ ,apihost ,forge ,_) (forge--get-forge-host githost t))
+               (since (forge--ghub-notifications-since forge))
+               (buffer (current-buffer)))
+    (forge--rest apihost "GET" "/notifications"
+      (cons '(all . t) (and since (list (cons 'since since))))
+      :unpaginate t
+      :errorback errorback
+      :callback
+      (lambda (data &rest _)
+        (forge-extras--pull-stage errorback
+          (forge-extras--resolve-notification-repositories
+           apihost githost data
+           (lambda (ids)
+             (forge-extras--pull-stage errorback
+               (forge-extras--fetch-notification-topics
+                apihost
+                (forge-extras--massage-notifications data githost ids)
+                (lambda (notifs topics)
+                  (forge-extras--pull-stage errorback
+                    (forge--ghub-update-notifications notifs topics (not since))
+                    (forge-refresh-buffer buffer)
+                    (funcall callback)))
+                errorback)))))))))
+
+(defun forge-extras--resolve-notification-repositories
+    (apihost githost data callback)
+  "Look up the repositories in notification DATA that Forge does not know.
+Query APIHOST asynchronously for the id of each distinct repository of
+GITHOST that is not yet in the database, then call CALLBACK with an
+alist mapping (OWNER . NAME) to the id, or to nil when the lookup
+failed, for example because access to the repository was revoked."
+  (let* ((unknown (forge-extras--unknown-notification-repositories githost data))
+         (pending (length unknown))
+         (ids nil))
+    (if (null unknown)
+        (funcall callback nil)
+      (dolist (key unknown)
+        (let ((done (lambda (id)
+                      (push (cons key id) ids)
+                      (when (zerop (cl-decf pending))
+                        (funcall callback ids)))))
+          (forge-extras--when-query-idle
+           (lambda ()
+             (forge--query apihost
+               '(query (repository [(owner $owner String!)
+                                    (name  $name  String!)]
+                                   id))
+               `((owner . ,(car key)) (name . ,(cdr key)))
+               :callback (lambda (d &rest _)
+                           (funcall done (let-alist d .repository.id)))
+               :errorback (lambda (&rest _) (funcall done nil))))))))))
+
+(defun forge-extras--unknown-notification-repositories (githost data)
+  "Return the distinct (OWNER . NAME) pairs in DATA unknown to Forge.
+DATA is a list of GitHub notification alists for GITHOST."
+  (let (keys)
+    (dolist (datum data)
+      (let-alist datum
+        (let ((key (cons .repository.owner.login .repository.name)))
+          (unless (or (member key keys)
+                      (forge-get-repository (list githost (car key) (cdr key))
+                                            nil :known?))
+            (push key keys)))))
+    keys))
+
+(defun forge-extras--when-query-idle (thunk)
+  "Call THUNK now unless a synchronous forge query is waiting; else retry.
+`forge-extras--prevent-reentrant-query' drops queries issued while
+another one waits, which would stall the asynchronous pull.  Defer the
+request by a second instead, so it is issued once the wait ends."
+  (if forge-extras--query-active
+      (run-at-time 1 nil #'forge-extras--when-query-idle thunk)
+    (funcall thunk)))
+
+(defun forge-extras--massage-notifications (data githost ids)
+  "Convert notification DATA from GITHOST into Forge's pull tuples.
+IDS is the alist built by `forge-extras--resolve-notification-repositories'.
+Forge's massaging inserts unknown repositories through
+`forge-get-repository', which calls `ghub-repository-id' synchronously.
+Serve those calls from IDS so that no network wait happens here.  A
+repository whose id could not be resolved signals an error, which
+`forge-extras-massage-notification-gracefully' turns into a dropped
+notification."
+  (cl-letf (((symbol-function 'ghub-repository-id)
+             (lambda (owner name &rest _)
+               (or (cdr (assoc (cons owner name) ids))
+                   (error "Repository %s/%s is not accessible" owner name)))))
+    (seq-keep (lambda (datum)
+                (forge--ghub-massage-notification datum githost))
+              data)))
+
+(defun forge-extras--fetch-notification-topics
+    (apihost notifs callback errorback)
+  "Fetch the topics behind NOTIFS from APIHOST asynchronously.
+NOTIFS are pull tuples as returned by `forge--ghub-massage-notification'.
+Request them in batches of 50 as `forge--pull-notifications' does, then
+call CALLBACK with NOTIFS and the topic data, or ERRORBACK with the
+GraphQL errors.  Drop topics GitHub reports as NOT_FOUND, which happens
+for repositories that disabled issues, and retry the batch up to three
+times."
+  (let ((groups (seq-partition notifs 50))
+        (topics nil))
+    (cl-labels
+        ((next (&optional data &rest _)
+           (when data
+             (setq topics (nconc topics (cdr data))))
+           (if (null groups)
+               (funcall callback notifs topics)
+             (let ((query (cons 'query (seq-keep #'caddr (pop groups))))
+                   (tries 3))
+               (cl-labels
+                   ((vacuum ()
+                      (forge-extras--when-query-idle
+                       (lambda ()
+                         (forge--query apihost query nil
+                           :callback #'next
+                           :errorback #'retry))))
+                    (retry (errors &rest _)
+                      (let ((notfound (forge-extras--not-found-aliases errors)))
+                        (if (or (zerop tries) (null notfound))
+                            (funcall errorback errors)
+                          (cl-decf tries)
+                          (setq query
+                                (cons 'query
+                                      (cl-remove-if (lambda (item)
+                                                      (memq (caar item) notfound))
+                                                    (cdr query))))
+                          (vacuum)))))
+                 (vacuum))))))
+      (next))))
+
+(defun forge-extras--not-found-aliases (errors)
+  "Return the query aliases that GraphQL ERRORS report as NOT_FOUND."
+  (seq-keep (lambda (err)
+              (and (equal (cdr (assq 'type err)) "NOT_FOUND")
+                   (cadr (assq 'path err))
+                   (intern (cadr (assq 'path err)))))
+            (cdr errors)))
 
 (defvar forge-extras-dns-probe-timeout 3
   "Seconds to wait for a DNS probe subprocess before assuming Emacs is offline.")
@@ -354,54 +525,89 @@ TOPICS and INITIAL-PULL have the same meanings as in
   "Sync unread notification status from GitHub after storing notifications.
 On GitHub, marking a notification as unread does not update its
 `updated_at' timestamp.  Forge's `since' filter then skips it during
-the normal pull.  This function makes a supplementary REST API call to
-fetch currently-unread notifications and marks the corresponding local
-topics as unread.
+the normal pull.  This function runs `gh api /notifications' in a
+subprocess and, once it exits, marks the corresponding local topics as
+unread, so that Emacs never blocks on the request.
 INITIAL-PULL is non-nil on the first pull and is skipped since all
 notifications are already fetched in that case."
-  (unless initial-pull
-    (condition-case err
-        (when (executable-find "gh")
-          (let (notifications)
-            (with-temp-buffer
-              (when (zerop (call-process "gh" nil t nil
-                                         "api" "/notifications"))
-                (goto-char (point-min))
-                (setq notifications
-                      (let ((json-array-type 'list)
-                            (json-object-type 'alist)
-                            (json-key-type 'symbol))
-                        (ignore-errors (json-read))))))
-            (when (consp notifications)
-              (let ((synced 0))
-                (closql-with-transaction (forge-db)
-                  (dolist (data notifications)
-                    (let-alist data
-                      (when (and .subject.url
-                                 (string-match "[^/]*\\'" .subject.url))
-                        (let* ((raw-type (intern (downcase (or .subject.type ""))))
-                               (type (if (eq raw-type 'pullrequest) 'pullreq raw-type))
-                               (number (string-to-number
-                                        (match-string 0 .subject.url))))
-                          (when (and (memq type '(issue pullreq))
-                                     (> number 0))
-                            (when-let*
-                                ((repo (ignore-errors
-                                         (forge-get-repository
-                                          (list "github.com"
-                                                .repository.owner.login
-                                                .repository.name))))
-                                 (topic (ignore-errors
-                                          (forge-get-topic repo number))))
-                              (unless (eq (oref topic status) 'unread)
-                                (oset topic status 'unread)
-                                (cl-incf synced)))))))))
-                (when (> synced 0)
-                  (forge-extras-message-debug
-                   "Synced %d unread notification(s) from GitHub" synced))))))
-      (error
-       (forge-extras-message-debug
-        "forge-extras-sync-unread-from-github: %S" err)))))
+  (when (and (not initial-pull) (executable-find "gh"))
+    (let* ((stderr (generate-new-buffer " *forge-extras-gh-notifications-stderr*"))
+           (proc (make-process
+                  :name "forge-extras-gh-notifications"
+                  :buffer (generate-new-buffer " *forge-extras-gh-notifications*")
+                  :stderr stderr
+                  :command '("gh" "api" "/notifications")
+                  :noquery t
+                  :sentinel #'forge-extras--sync-unread-sentinel)))
+      (process-put proc 'forge-extras-stderr stderr))))
+
+(defun forge-extras--sync-unread-sentinel (proc _event)
+  "Mark local topics unread from the notifications that PROC fetched.
+Log a debug message when `gh' fails or its output cannot be processed,
+then delete the output buffers."
+  (unless (process-live-p proc)
+    (let ((stdout (process-buffer proc))
+          (stderr (process-get proc 'forge-extras-stderr)))
+      (unwind-protect
+          (condition-case err
+              (if (zerop (process-exit-status proc))
+                  (forge-extras--mark-unread-topics
+                   (forge-extras--read-json-buffer stdout))
+                (forge-extras-message-debug
+                 "gh api /notifications failed: %s"
+                 (with-current-buffer stderr (string-trim (buffer-string)))))
+            (error
+             (forge-extras-message-debug
+              "forge-extras-sync-unread-from-github: %S" err)))
+        (forge-extras--kill-process-buffer stdout)
+        (forge-extras--kill-process-buffer stderr)))))
+
+(defun forge-extras--read-json-buffer (buffer)
+  "Parse the JSON value at the beginning of BUFFER into lists and alists."
+  (with-current-buffer buffer
+    (goto-char (point-min))
+    (let ((json-array-type 'list)
+          (json-object-type 'alist)
+          (json-key-type 'symbol))
+      (json-read))))
+
+(defun forge-extras--mark-unread-topics (notifications)
+  "Mark the local topics behind unread GitHub NOTIFICATIONS as unread.
+NOTIFICATIONS is the parsed response of `gh api /notifications'.  Only
+issues and pull requests of repositories Forge already knows are
+updated."
+  (let ((synced 0))
+    (closql-with-transaction (forge-db)
+      (dolist (data notifications)
+        (let-alist data
+          (when (and .subject.url
+                     (string-match "[^/]*\\'" .subject.url))
+            (let ((type (forge-extras--normalize-github-notification-type
+                         .subject.type))
+                  (number (string-to-number (match-string 0 .subject.url))))
+              (when (and (memq type '(issue pullreq))
+                         (> number 0))
+                (when-let*
+                    ((repo (ignore-errors
+                             (forge-get-repository
+                              (list forge-extras-pull-notifications-githost
+                                    .repository.owner.login
+                                    .repository.name)
+                              nil :known?)))
+                     (topic (ignore-errors (forge-get-topic repo number))))
+                  (unless (eq (oref topic status) 'unread)
+                    (oset topic status 'unread)
+                    (cl-incf synced)))))))))
+    (when (> synced 0)
+      (forge-extras-message-debug
+       "Synced %d unread notification(s) from GitHub" synced))))
+
+(defun forge-extras--kill-process-buffer (buffer)
+  "Delete the process attached to BUFFER, if any, and kill BUFFER."
+  (when (buffer-live-p buffer)
+    (when-let* ((proc (get-buffer-process buffer)))
+      (delete-process proc))
+    (kill-buffer buffer)))
 
 (advice-add 'forge--ghub-update-notifications :around
             #'forge-extras-update-notifications-with-orphans)

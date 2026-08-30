@@ -589,5 +589,240 @@
       (should (= (length result) 1))
       (should (equal (car result) '("Backlog" . "OPT_only"))))))
 
+;;;; Asynchronous notification pull
+
+(ert-deftest forge-extras-test-pull-in-progress-p ()
+  "A pull counts as running until the stale limit passes."
+  (let ((forge-extras-pull-notifications-stale-seconds 300))
+    (let ((forge-extras--pull-started nil))
+      (should-not (forge-extras--pull-in-progress-p)))
+    (let ((forge-extras--pull-started (current-time)))
+      (should (forge-extras--pull-in-progress-p)))
+    (let ((forge-extras--pull-started (time-subtract (current-time) 400)))
+      (should-not (forge-extras--pull-in-progress-p)))))
+
+(ert-deftest forge-extras-test-pull-notifications-now-clears-guard-on-failure ()
+  "An error or quit while starting the pull releases the guard."
+  (dolist (signal '(error quit))
+    (let ((forge-extras--pull-started nil)
+          (elfeed-extras-auto-update-in-process nil)
+          (debug-on-quit t))
+      (cl-letf (((symbol-function 'forge-extras--pull-notifications-async)
+                 (lambda (&rest _) (signal signal (list "boom")))))
+        (forge-extras--pull-notifications-now)
+        (should-not forge-extras--pull-started)))))
+
+(ert-deftest forge-extras-test-pull-notifications-now-skips-when-running ()
+  "No second pull starts while one is in progress."
+  (let ((forge-extras--pull-started (current-time))
+        (forge-extras-pull-notifications-stale-seconds 300)
+        (called nil))
+    (cl-letf (((symbol-function 'forge-extras--pull-notifications-async)
+               (lambda (&rest _) (setq called t))))
+      (forge-extras--pull-notifications-now)
+      (should-not called))))
+
+(ert-deftest forge-extras-test-pull-notifications-async-wires-stages ()
+  "The pipeline stores the fetched topics and calls the final callback."
+  (let ((rest-args nil) (stored nil) (finished nil))
+    (cl-letf (((symbol-function 'forge--get-forge-host)
+               (lambda (&rest _)
+                 '("github.com" "api.github.com" "github.com"
+                   forge-github-repository)))
+              ((symbol-function 'forge--ghub-notifications-since)
+               (lambda (_forge) nil))
+              ((symbol-function 'forge--rest)
+               (lambda (host method resource params &rest keys)
+                 (setq rest-args (list host method resource params
+                                       (plist-get keys :unpaginate)))
+                 (funcall (plist-get keys :callback) '(n1 n2) nil nil nil)))
+              ((symbol-function 'forge-extras--resolve-notification-repositories)
+               (lambda (_apihost _githost _data callback)
+                 (funcall callback '((("o" . "r") . "ID")))))
+              ((symbol-function 'forge-extras--massage-notifications)
+               (lambda (data _githost ids)
+                 (should (equal ids '((("o" . "r") . "ID"))))
+                 (mapcar #'symbol-name data)))
+              ((symbol-function 'forge-extras--fetch-notification-topics)
+               (lambda (_apihost notifs callback _errorback)
+                 (funcall callback notifs '(t1 t2))))
+              ((symbol-function 'forge--ghub-update-notifications)
+               (lambda (notifs topics initial)
+                 (setq stored (list notifs topics initial))))
+              ((symbol-function 'forge-refresh-buffer) #'ignore))
+      (forge-extras--pull-notifications-async
+       "github.com" (lambda () (setq finished t)) #'error))
+    (should (equal rest-args
+                   '("api.github.com" "GET" "/notifications" ((all . t)) t)))
+    (should (equal stored '(("n1" "n2") (t1 t2) t)))
+    (should finished)))
+
+(ert-deftest forge-extras-test-pull-notifications-async-reports-stage-errors ()
+  "An error inside a callback stage reaches the errorback."
+  (let ((reported nil))
+    (cl-letf (((symbol-function 'forge--get-forge-host)
+               (lambda (&rest _)
+                 '("github.com" "api.github.com" "github.com"
+                   forge-github-repository)))
+              ((symbol-function 'forge--ghub-notifications-since)
+               (lambda (_forge) "2026-01-01T00:00:00Z"))
+              ((symbol-function 'forge--rest)
+               (lambda (_host _method _resource params &rest keys)
+                 (should (equal params
+                                '((all . t) (since . "2026-01-01T00:00:00Z"))))
+                 (funcall (plist-get keys :callback) nil)))
+              ((symbol-function 'forge-extras--resolve-notification-repositories)
+               (lambda (&rest _) (error "Stage failed"))))
+      (forge-extras--pull-notifications-async
+       "github.com" (lambda () (ert-fail "callback ran"))
+       (lambda (err &rest _) (setq reported err))))
+    (should (equal reported '(error "Stage failed")))))
+
+(ert-deftest forge-extras-test-unknown-notification-repositories ()
+  "Only distinct repositories absent from the database are returned."
+  (let ((data '(((repository (owner (login . "a")) (name . "known")))
+                ((repository (owner (login . "b")) (name . "new")))
+                ((repository (owner (login . "b")) (name . "new"))))))
+    (cl-letf (((symbol-function 'forge-get-repository)
+               (lambda (spec _remote demand)
+                 (should (eq demand :known?))
+                 (and (equal (nth 2 spec) "known") 'repo))))
+      (should (equal (forge-extras--unknown-notification-repositories
+                      "github.com" data)
+                     '(("b" . "new")))))))
+
+(ert-deftest forge-extras-test-resolve-notification-repositories ()
+  "Unknown repositories are resolved with one query each, failures as nil."
+  (let ((data '(((repository (owner (login . "a")) (name . "ok")))
+                ((repository (owner (login . "a")) (name . "gone")))))
+        (queries nil)
+        (result 'unset)
+        (forge-extras--query-active nil))
+    (cl-letf (((symbol-function 'forge-get-repository) (lambda (&rest _) nil))
+              ((symbol-function 'forge--query)
+               (lambda (_host _query variables &rest keys)
+                 (push variables queries)
+                 (if (equal (alist-get 'name variables) "ok")
+                     (funcall (plist-get keys :callback)
+                              '((repository (id . "R_ok"))))
+                   (funcall (plist-get keys :errorback) '(errors))))))
+      (forge-extras--resolve-notification-repositories
+       "api.github.com" "github.com" data (lambda (ids) (setq result ids))))
+    (should (= (length queries) 2))
+    (should (equal (assoc '("a" . "ok") result) '(("a" . "ok") . "R_ok")))
+    (should (equal (assoc '("a" . "gone") result) '(("a" . "gone") . nil)))))
+
+(ert-deftest forge-extras-test-resolve-notification-repositories-none ()
+  "With nothing to resolve the callback runs at once with nil."
+  (let ((result 'unset))
+    (cl-letf (((symbol-function 'forge-get-repository) (lambda (&rest _) 'repo))
+              ((symbol-function 'forge--query)
+               (lambda (&rest _) (ert-fail "queried"))))
+      (forge-extras--resolve-notification-repositories
+       "api.github.com" "github.com"
+       '(((repository (owner (login . "a")) (name . "r"))))
+       (lambda (ids) (setq result ids))))
+    (should (null result))))
+
+(ert-deftest forge-extras-test-massage-notifications-serves-ids ()
+  "Massaging reads repository ids from the resolved alist."
+  (cl-letf (((symbol-function 'forge--ghub-massage-notification)
+             (lambda (datum _githost)
+               (let-alist datum
+                 (ghub-repository-id .owner .name :host "api.github.com")))))
+    (should (equal (forge-extras--massage-notifications
+                    '(((owner . "a") (name . "r"))) "github.com"
+                    '((("a" . "r") . "R_1")))
+                   '("R_1")))
+    (should-error (forge-extras--massage-notifications
+                   '(((owner . "a") (name . "r"))) "github.com" nil))))
+
+(ert-deftest forge-extras-test-fetch-notification-topics-batches ()
+  "Topics are fetched in batches of 50 and concatenated."
+  (let* ((notifs (mapcar (lambda (i)
+                           (let ((alias (intern (format "_n%d" i))))
+                             (list alias (format "id%d" i)
+                                   (list (list alias 'repository)))))
+                         (number-sequence 1 60)))
+         (queries nil)
+         (result nil)
+         (forge-extras--query-active nil))
+    (cl-letf (((symbol-function 'forge--query)
+               (lambda (_host query _variables &rest keys)
+                 (push query queries)
+                 (funcall (plist-get keys :callback)
+                          (cons 'data (list (list (caar (cadr query)) 'topic)))))))
+      (forge-extras--fetch-notification-topics
+       "api.github.com" notifs
+       (lambda (n topics) (setq result (list n topics)))
+       (lambda (&rest _) (ert-fail "errorback ran"))))
+    (should (= (length queries) 2))
+    (should (= (length (cdr (cadr queries))) 50))
+    (should (= (length (cdr (car queries))) 10))
+    (should (eq (car result) notifs))
+    (should (equal (cadr result) '((_n1 topic) (_n51 topic))))))
+
+(ert-deftest forge-extras-test-fetch-notification-topics-retries-not-found ()
+  "A NOT_FOUND alias is dropped and the batch retried."
+  (let ((notifs '((_a "ida" ((_a repository))) (_b "idb" ((_b repository)))))
+        (attempts nil)
+        (result nil)
+        (forge-extras--query-active nil))
+    (cl-letf (((symbol-function 'forge--query)
+               (lambda (_host query _variables &rest keys)
+                 (push (mapcar #'caar (cdr query)) attempts)
+                 (if (memq '_b (car attempts))
+                     (funcall (plist-get keys :errorback)
+                              '(errors ((type . "NOT_FOUND") (path "_b"))))
+                   (funcall (plist-get keys :callback) '(data (_a topic)))))))
+      (forge-extras--fetch-notification-topics
+       "api.github.com" notifs
+       (lambda (_n topics) (setq result topics))
+       (lambda (&rest _) (ert-fail "errorback ran"))))
+    (should (equal (nreverse attempts) '((_a _b) (_a))))
+    (should (equal result '((_a topic))))))
+
+(ert-deftest forge-extras-test-fetch-notification-topics-gives-up ()
+  "Errors without NOT_FOUND aliases reach the errorback."
+  (let ((reported nil)
+        (forge-extras--query-active nil))
+    (cl-letf (((symbol-function 'forge--query)
+               (lambda (_host _query _variables &rest keys)
+                 (funcall (plist-get keys :errorback)
+                          '(errors ((type . "RATE_LIMITED")))))))
+      (forge-extras--fetch-notification-topics
+       "api.github.com" '((_a "ida" ((_a repository))))
+       (lambda (&rest _) (ert-fail "callback ran"))
+       (lambda (errors &rest _) (setq reported errors))))
+    (should (equal reported '(errors ((type . "RATE_LIMITED")))))))
+
+(ert-deftest forge-extras-test-not-found-aliases ()
+  "Aliases are extracted from NOT_FOUND GraphQL errors only."
+  (should (equal (forge-extras--not-found-aliases
+                  '(errors ((type . "NOT_FOUND") (path "_x"))
+                           ((type . "FORBIDDEN") (path "_y"))
+                           ((type . "NOT_FOUND"))))
+                 '(_x))))
+
+(ert-deftest forge-extras-test-when-query-idle-defers ()
+  "A query issued while another waits is deferred, not dropped."
+  (let ((ran nil) (scheduled nil))
+    (cl-letf (((symbol-function 'run-at-time)
+               (lambda (&rest args) (setq scheduled args))))
+      (let ((forge-extras--query-active t))
+        (forge-extras--when-query-idle (lambda () (setq ran t))))
+      (should-not ran)
+      (should (= (car scheduled) 1))
+      (let ((forge-extras--query-active nil))
+        (forge-extras--when-query-idle (lambda () (setq ran t))))
+      (should ran))))
+
+(ert-deftest forge-extras-test-read-json-buffer ()
+  "JSON output is parsed into lists and alists keyed by symbols."
+  (with-temp-buffer
+    (insert "[{\"id\": \"1\", \"subject\": {\"type\": \"Issue\"}}]")
+    (should (equal (forge-extras--read-json-buffer (current-buffer))
+                   '(((id . "1") (subject (type . "Issue"))))))))
+
 (provide 'forge-extras-test)
 ;;; forge-extras-test.el ends here

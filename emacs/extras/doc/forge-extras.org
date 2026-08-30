@@ -38,7 +38,7 @@ The package addresses two broad areas:
   board order, discover field and option Node IDs, and insert Markdown
   links to issues---all without leaving Emacs ([[#h:github-project-integration][GitHub Project integration]]).
 
-The package requires =forge= (version 0.3.1 or later) and =shut-up=.
+The package requires =forge= (version 0.3.1 or later).
 The GitHub Project features additionally require the =gh= CLI to be
 installed and authenticated.
 
@@ -227,16 +227,52 @@ argument programmatically.
 :END:
 
 #+findex: forge-extras-pull-notifications
-The command ~forge-extras-pull-notifications~ calls
-~forge-pull-notifications~ silently, suppressing all output via
-=shut-up= and =with-no-warnings=.  It also guards against running when
-an Elfeed update is in progress (detected via
+The command ~forge-extras-pull-notifications~ fetches GitHub
+notifications for the host named by
+~forge-extras-pull-notifications-githost~ (default =github.com=)
+without blocking Emacs.  It guards against running when an Elfeed
+update is in progress (detected via
 ~elfeed-extras-auto-update-in-process~), because concurrent database
 access was found to cause problems.
 
 This command is primarily intended for use in timers or hooks (for
 example, to refresh notifications periodically in the background) rather
 than direct interactive invocation.
+
+*** Asynchronous pull
+:PROPERTIES:
+:CUSTOM_ID: h:asynchronous-pull
+:END:
+
+Forge's own ~forge--pull-notifications~ issues its initial REST request
+for =/notifications= synchronously and, while converting the results,
+synchronously looks up the id of every repository not yet in its
+database.  Both waits block Emacs, and because timers and process
+sentinels bind ~inhibit-quit~, =C-g= cannot interrupt them.
+
+~forge-extras-pull-notifications~ therefore uses its own
+reimplementation, ~forge-extras--pull-notifications-async~, in which
+every request carries a callback:
+
+1. Fetch the notification list with ~forge--rest~, unpaginated.
+2. Resolve the ids of repositories Forge does not know yet with one
+   GraphQL query each.  Repositories whose lookup fails (for example
+   because access was revoked) are dropped.
+3. Convert the notifications with Forge's own
+   ~forge--ghub-massage-notification~, serving the pre-resolved ids to
+   its synchronous ~ghub-repository-id~ call so that no network wait
+   happens.
+4. Fetch the topics behind the notifications in batches of 50, dropping
+   topics GitHub reports as =NOT_FOUND= and retrying the batch up to
+   three times, as Forge does.
+5. Store everything with ~forge--ghub-update-notifications~, so the
+   advice described under [[#h:notification-and-read-status][Notification and read-status synchronization]]
+   still runs.
+
+Errors in any stage end the pull and are logged as debug messages.  A
+pull that never completes, because a callback never fires, is treated as
+abandoned after ~forge-extras-pull-notifications-stale-seconds~ (default
+300) so that later pulls are not blocked.
 
 *** Offline protection
 :PROPERTIES:
@@ -254,35 +290,27 @@ also warms the system resolver cache, so the subsequent in-process
 lookup returns instantly.  The probe is abandoned after
 ~forge-extras-dns-probe-timeout~ seconds (default 3).
 
-The variable ~forge-extras-pull-notifications-timeout~ additionally
-injects a timeout into ~url-retrieve-synchronously~, which protects
-against connections that drop after DNS resolution succeeds.
-
-The pull runs from timers and process sentinels, both of which bind
-~inhibit-quit~, so a quit reaches it only when the user forces one (for
-example by pressing =C-g= repeatedly) to interrupt the synchronous
-request.  Such a quit aborts the pull and is logged as a debug message
-rather than allowed to escape, because an unhandled quit from a
-background job would otherwise open the debugger whenever
-~debug-on-quit~ is enabled.
-
 *** Re-entrancy protection
 :PROPERTIES:
 :CUSTOM_ID: h:reentrant-protection
 :END:
 
 Forge queries involve synchronous GPG decryption (via ~epg-wait-for-status~)
-and network waits (via ~url-retrieve-synchronously~), both of which call
+and, in Forge's own commands, network waits (via
+~url-retrieve-synchronously~), both of which call
 ~accept-process-output~.  This services the Emacs event loop, allowing
 timers to fire re-entrantly.  Each re-entrant ~forge--query~ blocks on
 GPG again, creating unbounded nesting that can freeze Emacs.
 
 Two guards prevent this.  The command-level guard
-~forge-extras--pull-in-progress~ prevents re-entrant calls through
-~forge-extras-pull-notifications~ itself.  The lower-level guard
-~forge-extras--query-active~, installed as ~:around~ advice on
-~forge--query~, catches re-entrant calls that enter forge through any
-other path (such as callback hooks or other timers).
+~forge-extras--pull-started~ prevents a second pull from starting while
+one is in progress.  The lower-level guard ~forge-extras--query-active~,
+installed as ~:around~ advice on ~forge--query~, drops re-entrant calls
+that enter forge through any other path (such as callback hooks or other
+timers), logging a debug message.  Because the asynchronous pull issues
+its GraphQL queries from network callbacks, which may fire while such a
+wait is active, it defers a query by one second whenever the guard is
+active instead of losing it.
 
 ** GitHub CI notifications
 :PROPERTIES:
@@ -342,9 +370,10 @@ notifications entirely.
 
 The function is installed as ~:after~ advice on
 ~forge--ghub-update-notifications~, so it runs automatically at the end
-of every ~forge-pull-notifications~ call.  It queries the GitHub REST
-API for currently-unread notifications via the =gh= CLI, then sets the
-local topic status to ~unread~ for any that Forge missed.
+of every notification pull.  It runs =gh api /notifications= in a
+subprocess and, once that exits, sets the local topic status to ~unread~
+for any currently-unread notification that Forge missed.  Because the
+request runs in a subprocess, Emacs does not block on it.
 
 ** Tracking repositories
 :PROPERTIES:

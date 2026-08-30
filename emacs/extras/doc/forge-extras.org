@@ -258,6 +258,14 @@ The variable ~forge-extras-pull-notifications-timeout~ additionally
 injects a timeout into ~url-retrieve-synchronously~, which protects
 against connections that drop after DNS resolution succeeds.
 
+The pull runs from timers and process sentinels, both of which bind
+~inhibit-quit~, so a quit reaches it only when the user forces one (for
+example by pressing =C-g= repeatedly) to interrupt the synchronous
+request.  Such a quit aborts the pull and is logged as a debug message
+rather than allowed to escape, because an unhandled quit from a
+background job would otherwise open the debugger whenever
+~debug-on-quit~ is enabled.
+
 *** Re-entrancy protection
 :PROPERTIES:
 :CUSTOM_ID: h:reentrant-protection

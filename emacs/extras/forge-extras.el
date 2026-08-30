@@ -211,7 +211,14 @@ the synchronous resolver call in `open-network-stream' when offline."
   "Fetch notifications for all repositories from the current forge.
 Do not update if `elfeed' is in the process of being updated, since this causes
 problems.  Inject a timeout into `url-retrieve-synchronously' so that
-Emacs does not freeze when the connection drops mid-request."
+Emacs does not freeze when the connection drops mid-request.
+
+Handle `quit' as well as `error': the pull runs from timers and process
+sentinels, which bind `inhibit-quit', so a quit reaches it only when the
+user forces one to interrupt the synchronous request.  Abort the pull
+and log a debug message instead of letting the quit escape, since an
+unhandled quit from a background job enters the debugger whenever
+`debug-on-quit' is enabled."
   (unless (or forge-extras--pull-in-progress
               (bound-and-true-p elfeed-extras-auto-update-in-process))
     (let ((forge-extras--pull-in-progress t))
@@ -225,7 +232,9 @@ Emacs does not freeze when the connection drops mid-request."
                                       (or timeout forge-extras-pull-notifications-timeout)))))
                   (forge-pull-notifications)))))
         (error
-         (forge-extras-message-debug "Skipping notifications due to error: %S" err))))))
+         (forge-extras-message-debug "Skipping notifications due to error: %S" err))
+        (quit
+         (forge-extras-message-debug "Skipping notifications: quit"))))))
 
 (defvar forge-extras-dns-probe-timeout 3
   "Seconds to wait for a DNS probe subprocess before assuming Emacs is offline.")

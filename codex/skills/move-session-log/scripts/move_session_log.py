@@ -19,9 +19,35 @@ SESSIONS_DIR = CODEX_HOME / "sessions"
 HISTORY_FILE = CODEX_HOME / "history.jsonl"
 SESSION_INDEX_FILE = CODEX_HOME / "session_index.jsonl"
 SHELL_SNAPSHOTS_DIR = CODEX_HOME / "shell_snapshots"
-STATE_DB = CODEX_HOME / "state_5.sqlite"
 SESSION_ID_KEYS = {"id", "session_id", "sessionId"}
 PATH_FIELD_KEYS = {"cwd", "project", "workdir", "working_dir"}
+
+
+def state_db_paths() -> list[Path]:
+    """Return thread stores for Codex profiles sharing this session store."""
+    sessions_root = SESSIONS_DIR.resolve()
+    homes = [CODEX_HOME]
+    homes.extend(
+        path
+        for path in CODEX_HOME.parent.glob(".codex*")
+        if path.is_dir() and path != CODEX_HOME
+    )
+
+    databases: list[Path] = []
+    seen: set[Path] = set()
+    for home in homes:
+        sessions = home / "sessions"
+        database = home / "state_5.sqlite"
+        if not sessions.exists() or not database.exists():
+            continue
+        if sessions.resolve() != sessions_root:
+            continue
+        resolved_database = database.resolve()
+        if resolved_database in seen:
+            continue
+        seen.add(resolved_database)
+        databases.append(database)
+    return databases
 
 
 def load_jsonl(path: Path) -> list[tuple[str, Any | None]]:
@@ -299,6 +325,28 @@ def rewrite_state_db_rename(
     return len(rows)
 
 
+def rewrite_state_dbs_for_session(
+    session_id: str, project: str, *, dry_run: bool = False
+) -> tuple[int, list[Path]]:
+    databases = state_db_paths()
+    rewritten = sum(
+        rewrite_state_db_for_session(path, session_id, project, dry_run=dry_run)
+        for path in databases
+    )
+    return rewritten, databases
+
+
+def rewrite_state_dbs_rename(
+    old: str, new: str, *, dry_run: bool = False
+) -> tuple[int, list[Path]]:
+    databases = state_db_paths()
+    rewritten = sum(
+        rewrite_state_db_rename(path, old, new, dry_run=dry_run)
+        for path in databases
+    )
+    return rewritten, databases
+
+
 def list_recent(current_project: str) -> None:
     shown = 0
     for path in iter_session_files():
@@ -340,8 +388,8 @@ def single_session(
     index_rewrites = rewrite_jsonl_for_session(
         SESSION_INDEX_FILE, session_id, project, dry_run=dry_run
     )
-    state_db_rewrites = rewrite_state_db_for_session(
-        STATE_DB, session_id, project, dry_run=dry_run
+    state_db_rewrites, state_dbs = rewrite_state_dbs_for_session(
+        session_id, project, dry_run=dry_run
     )
     snapshots = shell_snapshots(session_id)
 
@@ -353,6 +401,9 @@ def single_session(
     print(f"history path fields rewritten: {history_rewrites}")
     print(f"session_index path fields rewritten: {index_rewrites}")
     print(f"state_db thread cwd rows rewritten: {state_db_rewrites}")
+    print(f"state_db files checked: {len(state_dbs)}")
+    for state_db in state_dbs:
+        print(f"state_db: {state_db}")
     print(f"shell snapshots found: {len(snapshots)}")
     for snapshot in snapshots:
         print(f"shell snapshot: {snapshot}")
@@ -376,7 +427,9 @@ def rename_project(old: str, new: str, *, dry_run: bool = False) -> int:
     index_rewrites = rewrite_jsonl_rename(
         SESSION_INDEX_FILE, old, new, dry_run=dry_run
     )
-    state_db_rewrites = rewrite_state_db_rename(STATE_DB, old, new, dry_run=dry_run)
+    state_db_rewrites, state_dbs = rewrite_state_dbs_rename(
+        old, new, dry_run=dry_run
+    )
 
     print(f"dry run: {dry_run}")
     print(f"session files scanned: {len(session_files)}")
@@ -385,6 +438,9 @@ def rename_project(old: str, new: str, *, dry_run: bool = False) -> int:
     print(f"history path fields rewritten: {history_rewrites}")
     print(f"session_index path fields rewritten: {index_rewrites}")
     print(f"state_db thread cwd rows rewritten: {state_db_rewrites}")
+    print(f"state_db files checked: {len(state_dbs)}")
+    for state_db in state_dbs:
+        print(f"state_db: {state_db}")
     return 0
 
 

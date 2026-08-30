@@ -198,7 +198,10 @@ NEW= — with byte-equivalent path-mapping semantics, so the Drive workspace
 migration tooling can relocate session history for either tool. Its JSONL
 rewrites resolve symlinks before writing, so a profile that shares its
 =history.jsonl= via symlink (e.g. =~/.claude-epoch= → =~/.claude=) keeps the
-link intact instead of getting a diverged copy.
+link intact instead of getting a diverged copy. The Codex counterpart also
+updates every profile-local thread database attached to the shared session
+store, preventing a moved session from remaining hidden under another
+profile's old project path.
 
 The paired =orchestrate-review= skill coordinates fixed Claude and Codex
 sessions through one guarded, stage-atomic workflow. Its helper recognizes the

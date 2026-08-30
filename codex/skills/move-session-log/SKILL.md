@@ -13,9 +13,12 @@ Codex stores sessions globally under `$CODEX_HOME/sessions/YYYY/MM/DD/` when
 than in per-project directories. Do not use `~/.claude/projects`,
 `~/.claude/history.jsonl`, or `~/.claude.json` for this skill. For Codex, the
 "move" is a metadata rewrite, not a filesystem move. Current Codex also stores
-the resumable thread list in `$CODEX_HOME/state_5.sqlite` when `CODEX_HOME` is
-set, otherwise in `~/.codex/state_5.sqlite`; the `threads.cwd` row must be
-rewritten too, or `/resume` can still offer the old session directory.
+the resumable thread list in a profile-local `state_5.sqlite`. Profiles can
+share the global session files while keeping separate thread databases. The
+script therefore updates every `~/.codex*` profile whose `sessions` directory
+resolves to the active session store; updating only the active `$CODEX_HOME`
+can leave the session hidden in another profile's project-filtered `/resume`
+list.
 
 Do not use this skill to inspect or open the current conversation log; use
 `open-session-log` for that. Do not use it for Claude Code logs, which are
@@ -40,7 +43,8 @@ under their resolved location.
   parsed JSON tool-call `workdir` fields that `/resume` can treat as the latest
   session directory. Also update matching `history.jsonl` and
   `session_index.jsonl` rows if those files contain path fields in the future,
-  plus the matching `state_5.sqlite` `threads.cwd` row.
+  plus matching `state_5.sqlite` `threads.cwd` rows in every Codex profile that
+  shares the session store.
 - **Whole-project rename**:
   `move-session-log --rename <old-project-path> <new-project-path>` - rewrite
   Codex session metadata from an old absolute project path to a new absolute
@@ -71,8 +75,10 @@ The script:
    `session_index.jsonl` only if those rows contain structured path fields.
    Current Codex history rows may contain only `session_id`, `ts`, and `text`;
    that is normal.
-4. Rewrites the matching Codex home `state_5.sqlite` `threads.cwd` row. Codex
-   `/resume` reads this thread-store row for the "Session directory" prompt.
+4. Rewrites matching `state_5.sqlite` `threads.cwd` rows across every Codex
+   profile that shares the session store. Codex `/resume` reads its active
+   profile's thread-store row for project filtering and the "Session
+   directory" prompt.
 5. Reports counts and matching shell snapshots under the Codex home
    `shell_snapshots` directory. Shell snapshots are session-global, not
    project-specific, so they are not moved.
@@ -106,7 +112,8 @@ The script rewrites exact structured path fields only:
 It does not perform raw string replacement in transcript text, command output,
 or command strings inside function-call arguments.
 
-The script also rewrites exact `threads.cwd` matches in `state_5.sqlite`.
+The script also rewrites exact `threads.cwd` matches in every profile-local
+`state_5.sqlite` that shares the active session store.
 
 Always run the dry run first for `--rename`, inspect the reported counts, and
 stop if the old/new paths appear reversed or the count is unexpectedly broad.
@@ -131,4 +138,4 @@ For `--rename`, report whether the dry run matched the final run's counts:
 - session path fields rewritten
 - `history.jsonl` path fields rewritten
 - `session_index.jsonl` path fields rewritten
-- `state_5.sqlite` `threads.cwd` rows rewritten
+- profile-local `state_5.sqlite` files checked and `threads.cwd` rows rewritten

@@ -19,6 +19,7 @@ import hashlib
 import json
 import os
 import re
+import sqlite3
 import subprocess
 import tempfile
 import unittest
@@ -140,6 +141,18 @@ class MoveSessionLogParityTest(unittest.TestCase):
         )
         return config
 
+    def make_codex_state_db(self, home: Path, cwd: str = OLD) -> Path:
+        database = home / "state_5.sqlite"
+        with sqlite3.connect(database) as conn:
+            conn.execute(
+                "CREATE TABLE threads (id TEXT PRIMARY KEY, rollout_path TEXT, cwd TEXT)"
+            )
+            conn.execute(
+                "INSERT INTO threads VALUES (?, ?, ?)",
+                (SESSION_ID, f"rollout-{SESSION_ID}.jsonl", cwd),
+            )
+        return database
+
     def run_codex(self, home: Path, *args: str) -> subprocess.CompletedProcess:
         return subprocess.run(
             ["python3", str(CODEX_SCRIPT), *args],
@@ -260,6 +273,70 @@ class MoveSessionLogParityTest(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             result = self.run_claude(claude_config, "--rename", "relative/x", NEW)
             self.assertNotEqual(result.returncode, 0)
+
+    def test_codex_updates_every_profile_sharing_the_session_store(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            shared_sessions = base / "shared-sessions"
+            day = shared_sessions / "2026" / "08" / "01"
+            day.mkdir(parents=True)
+            (day / f"rollout-2026-08-01T10-00-00-{SESSION_ID}.jsonl").write_text(
+                jsonl(
+                    [
+                        {
+                            "type": "session_meta",
+                            "payload": {"id": SESSION_ID, "cwd": OLD},
+                        }
+                    ]
+                )
+            )
+
+            homes = [base / ".codex-epoch", base / ".codex-epoch3"]
+            for home in homes:
+                home.mkdir()
+                (home / "sessions").symlink_to(
+                    shared_sessions, target_is_directory=True
+                )
+                (home / "history.jsonl").write_text("")
+                (home / "session_index.jsonl").write_text("")
+                self.make_codex_state_db(home)
+
+            result = self.run_codex(homes[0], "--project", NEW, SESSION_ID)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("state_db thread cwd rows rewritten: 2", result.stdout)
+            self.assertIn("state_db files checked: 2", result.stdout)
+
+            for home in homes:
+                with sqlite3.connect(home / "state_5.sqlite") as conn:
+                    cwd = conn.execute(
+                        "SELECT cwd FROM threads WHERE id = ?", (SESSION_ID,)
+                    ).fetchone()[0]
+                self.assertEqual(cwd, NEW)
+
+            session_file = next(shared_sessions.rglob("*.jsonl"))
+            session_file.write_text(
+                jsonl(
+                    [
+                        {
+                            "type": "session_meta",
+                            "payload": {"id": SESSION_ID, "cwd": OLD},
+                        }
+                    ]
+                )
+            )
+            for home in homes:
+                with sqlite3.connect(home / "state_5.sqlite") as conn:
+                    conn.execute("UPDATE threads SET cwd = ?", (OLD,))
+
+            result = self.run_codex(homes[0], "--rename", OLD, NEW)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("state_db thread cwd rows rewritten: 2", result.stdout)
+            for home in homes:
+                with sqlite3.connect(home / "state_5.sqlite") as conn:
+                    cwd = conn.execute(
+                        "SELECT cwd FROM threads WHERE id = ?", (SESSION_ID,)
+                    ).fetchone()[0]
+                self.assertEqual(cwd, NEW)
 
 
 if __name__ == "__main__":

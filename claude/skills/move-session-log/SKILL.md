@@ -12,7 +12,10 @@ Relocate one or all Claude Code session logs and rewrite every embedded path (`h
 This is the Claude Code version of the workflow. It must operate on
 `~/.claude/projects`, `~/.claude/history.jsonl`, and `~/.claude.json`. Do not
 use it for Codex sessions, which live under `~/.codex/sessions` and are handled
-by the Codex-side `move-session-log` skill.
+by the Codex-side `move-session-log` skill. Unlike Claude's per-profile project
+directories, Codex profiles can share one session store while keeping separate
+thread databases, so the Codex adapter updates every profile attached to that
+store.
 
 Do not use this skill to inspect or open the current conversation log; use
 `open-session-log` for that.

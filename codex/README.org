@@ -96,6 +96,13 @@ both setup and execution, canonicalizing both its root and actual =node_modules=
 destination before rejecting paths into this Drive-synced tree. Its package
 commands continue to read the skill-local scripts and =.env= file.
 
+The paired =move-session-log= skill rewrites session metadata and Codex's
+project-filtered thread index. Because several Codex profiles share the same
+session directory but keep separate =state_5.sqlite= databases, its Codex
+adapter updates every profile attached to that shared store. A relocation
+therefore remains visible from =codex resume= regardless of which profile
+performed it.
+
 The paired =orchestrate-review= skill coordinates fixed Claude and Codex
 sessions through one guarded, stage-atomic workflow. Its helper recognizes the
 canonical =claude-code= and =codex= backends, uses Codex's public prompt reader

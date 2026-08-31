@@ -31,20 +31,26 @@ The sensitive-read guard denies content access to credential-bearing paths.
 It permits content-free metadata commands, quiet/count/name-only searches,
 existence tests, Git ignore/index queries, and auth-aware tools only within the
 narrow forms recognized by the hook; a compound command cannot inherit an
-allowance from a safe first command. The auth-aware set covers =pass=,
-=git-crypt=, =security=, and =op= together with the =op-automations= and
-=op-desktop= brokers, which the secret-leak guard requires in place of raw
-=op=. Sourcing a quoted or unquoted =.env= or
+allowance from a safe first command. The sensitive-path classifier recognizes
+=pass=, =git-crypt=, =security=, =op=, =op-automations=, and =op-desktop= as
+auth-aware tools; the independent secret-leak guard still denies their direct
+agent-shell secret output. Sourcing a quoted or unquoted =.env= or
 =.envrc= solely as subprocess environment is allowed, including =set -a=
 wrappers, but printing, parsing, or dumping that environment is denied. Claude
-registers the standalone hook for =Read= and keeps its Bash logic inlined in
-=pretooluse-bash.sh=.
+registers the standalone hook for =Read= and =Grep= and keeps its Bash logic
+inlined in =pretooluse-bash.sh=. Grep content searches remain available for
+ordinary repository scopes and filename/count-only searches; sensitive paths,
+globs, and broad home-directory content searches are denied.
 
 The secret-leak guard blocks secret-shaped literals, unsafe output routes, and
-direct =op= use. Read-only Automations access goes through =op-automations=;
-desktop-gated work goes through =op-desktop=. A missing broker is an error to
-repair, not permission to bypass routing with raw =op=. =--reveal= remains
-denied inside sanctioned forms.
+direct agent-shell access to credential or clipboard tools. Raw =op=,
+=op-automations=, =op-desktop=, =pass=, =security=, and =pbpaste= are denied
+even when wrapped, piped, filtered, redirected, dynamically resolved, or called
+through a nested shell. Only the non-secret =op-desktop --status= and =--stop=
+controls bypass that rule. Quoted literals in ordinary commands and simple
+non-expanding =echo=/=printf= documentation remain available. Shell containment
+is not treated as proof that a value cannot reach agent output; use a dedicated
+audited non-printing operation instead.
 
 The GitHub write guard is deny-only. It refuses writes outside the committed
 repository registry, but a matching repository establishes only that boundary;

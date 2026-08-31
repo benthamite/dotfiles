@@ -66,158 +66,6 @@ delegate() {
 # Ported checks (verbatim logic from the standalone hooks; Bash branch only).
 # ============================================================================
 
-# --- block-secret-leak.sh (Bash branch) ---
-check_secret_leak() {
-  local CONTENT="$COMMAND"
-  [ -z "$CONTENT" ] && return 0
-
-  if printf '%s' "$CONTENT" | grep -qE '(^[[:space:]]*|[;&|(!][[:space:]]*)(op-automations|((/usr/bin/|/bin/)?env)[[:space:]]+-u[[:space:]]+OP_SERVICE_ACCOUNT_TOKEN[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op|(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op)[[:space:]]+' && \
-     printf '%s' "$CONTENT" | grep -qE -- '(^|[[:space:]])--reveal([^[:alnum:]_-]|$)'; then
-    add_deny "BLOCKED: Bash command would print a revealed 1Password field.
-
-Do not use \`op item get --reveal\`, including through \`op-automations\` or explicit desktop authentication. Read only the required field with \`op read\` and keep the value inside a protected variable, stdin stream, or restricted temp file."
-    return 0
-  fi
-
-  local OP_SCAN OP_BOUNDARY OP_BIN OP_WRAPPER
-  if { printf '%s' "$CONTENT" | grep -qE 'cmd[[:space:]]*:[[:space:]]*["'"'"'`][[:space:]]*((command|env|xargs|sudo|timeout)[[:space:]]+|(bash|sh|zsh|dash|ksh)[[:space:]]+-l?c[[:space:]]+["'"'"'])?(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|["'"'"'`])' || \
-       printf '%s' "$CONTENT" | grep -qE '(^|[;&|(!][[:space:]]*|\$\([[:space:]]*)(((/usr/bin/|/bin/)?env)([[:space:]]+(-u[[:space:]]+[^[:space:]]+|-i|--|[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*))*[[:space:]]+)?(((/bin/|/usr/bin/)?(bash|sh|zsh|dash|ksh))[[:space:]]+-l?c|eval)[[:space:]]+["'"'"'][^"'"'"']*(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|["'"'"'])'; }; then
-    add_deny "BLOCKED: Bash contains a direct 1Password CLI command, which can trigger a separate Touch ID prompt for every process.
-
-Use \`op-desktop ...\` for desktop-gated operations: personal-vault reads, item creates/edits, share links. It runs every command inside one authorized terminal session, so a whole task costs one Touch ID prompt instead of one per command.
-
-For prompt-free read-only access to the Automations vault, use \`op-automations ...\`. If the broker is unavailable, repair it rather than bypassing it with raw \`op\`."
-    return 0
-  fi
-  OP_SCAN=$(dc_mask_quoted) || OP_SCAN="$CONTENT"
-  OP_SCAN=$(printf '%s' "$OP_SCAN" | sed -E 's/(^|[;&|])[[:space:]]*(if|then|elif|while|until|do)[[:space:]]+/\1 /g')
-  OP_BOUNDARY='(^[[:space:]]*|[;&|(!][[:space:]]*|\$\([[:space:]]*)'
-  OP_BIN='(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|$)'
-  OP_WRAPPER='(command[[:space:]]+|((/usr/bin/|/bin/)?env)([[:space:]]+(-u[[:space:]]+[^[:space:]]+|-i|--|[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*))*[[:space:]]+|xargs([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+|(sudo|timeout|nice|exec|nohup|time)([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+|[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)'
-  if { printf '%s' "$OP_SCAN" | grep -qE "${OP_BOUNDARY}${OP_BIN}" || \
-     printf '%s' "$OP_SCAN" | grep -qE "${OP_BOUNDARY}${OP_WRAPPER}${OP_BIN}" || \
-     printf '%s' "$OP_SCAN" | grep -qE 'find[[:space:]].*-exec[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|$)' || \
-     printf '%s' "$OP_SCAN" | grep -qE '\$\([[:space:]]*command[[:space:]]+-v[[:space:]]+op[[:space:]]*\)'; }; then
-    add_deny "BLOCKED: Bash contains a direct 1Password CLI command, which can trigger a separate Touch ID prompt for every process.
-
-Use \`op-desktop ...\` for desktop-gated operations: personal-vault reads, item creates/edits, share links. It runs every command inside one authorized terminal session, so a whole task costs one Touch ID prompt instead of one per command.
-
-For prompt-free read-only access to the Automations vault, use \`op-automations ...\`. If the broker is unavailable, repair it rather than bypassing it with raw \`op\`."
-    return 0
-  fi
-
-  # Standalone `op item get ... --reveal` prints the revealed field.
-  if echo "$CONTENT" | grep -qE '^\s*op\s+item\s+get\b' && \
-     echo "$CONTENT" | grep -qE -- '(^|[[:space:]])--reveal([^[:alnum:]_-]|$)' && \
-     ! echo "$CONTENT" | grep -qE '[|>]'; then
-    add_deny "BLOCKED: Bash command would print a revealed 1Password field.
-
-Do not run standalone \`op item get ... --reveal\` commands. Capture the value through command substitution, pass it through stdin/env/temp files with restricted permissions, or use \`op://\` references where supported."
-    return 0
-  fi
-  # Allowlist: auth-aware tools, pipes from them, scanners, env-var refs, secret files.
-  echo "$CONTENT" | grep -qE '^\s*(pass|op |security |git-crypt )' && return 0
-  echo "$CONTENT" | grep -qE '^\s*(pass|op )\s.*\|' && return 0
-  echo "$CONTENT" | grep -qE '^\s*(grep|rg|ripgrep)\s' && return 0
-  if echo "$CONTENT" | grep -qE '\$\{?[A-Z_]+\}?' && ! echo "$CONTENT" | grep -qE '(AKIA|ghp_|ghs_|github_pat_|xox[bporca]-|sk-[a-zA-Z0-9]{20,}|-----BEGIN)'; then
-    return 0
-  fi
-  echo "$CONTENT" | grep -qE '\.zshenv-secrets|\.env\.op' && return 0
-
-  local SECRET_PATTERNS SECRET_LABELS
-  SECRET_PATTERNS=(
-    'AKIA[0-9A-Z]{16}'
-    'gh[ps]_[A-Za-z0-9_]{36,}'
-    'github_pat_[A-Za-z0-9_]{22,}'
-    'xox[bporca]-[A-Za-z0-9-]{10,}'
-    'sk-ant-[A-Za-z0-9_-]{40,}'
-    '(^|[^A-Za-z0-9])sk-[a-zA-Z0-9_-]{20,}'
-    '(sk|pk|rk)_(live|test)_[A-Za-z0-9]{20,}'
-    'lin_api_[A-Za-z0-9]{40,}'
-    'pat[A-Za-z0-9]{14}\.[a-f0-9]{64}'
-    '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----'
-    '"client_secret"\s*:\s*"[A-Za-z0-9_-]{20,}"'
-    'AIza[0-9A-Za-z_-]{35}'
-    'glpat-[A-Za-z0-9_-]{20,}'
-    'eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+'
-    '(postgres|postgresql|mysql|mongodb|mongodb\+srv|redis|amqp|amqps|mssql)://[^:/ ]+:[^@/ ]+@'
-    "(api[_-]?key|api[_-]?secret|secret[_-]?key|access[_-]?token|auth[_-]?token)\s*[=:]\s*['\"][A-Za-z0-9/+=_-]{32,}"
-  )
-  SECRET_LABELS=(
-    'AWS access key'
-    'GitHub token'
-    'GitHub personal access token'
-    'Slack token'
-    'Anthropic API key'
-    'API secret key (sk-...)'
-    'Stripe API key'
-    'Linear API key'
-    'Airtable personal access token'
-    'private key'
-    'Google OAuth client secret'
-    'Google API key'
-    'GitLab token'
-    'JWT'
-    'database connection string with embedded credentials'
-    'hardcoded secret value'
-  )
-  local gate_args=() _pat _i
-  for _pat in "${SECRET_PATTERNS[@]}"; do gate_args+=(-e "$_pat"); done
-  if echo "$CONTENT" | grep -qE "${gate_args[@]}"; then
-    for _i in "${!SECRET_PATTERNS[@]}"; do
-      if echo "$CONTENT" | grep -qE -e "${SECRET_PATTERNS[$_i]}"; then
-        add_deny "BLOCKED: Bash command would expose a secret (${SECRET_LABELS[$_i]}).
-
-Use environment variables, \`pass\`, or \`op://\` references instead of literal secret values.
-
-If this is a false positive (e.g. you are scanning for patterns, not echoing actual secrets), and you are confident the command is safe, tell the user and ask them to run it manually with \`!\`."
-        return 0
-      fi
-    done
-  fi
-
-  # Exfiltration patterns.
-  local SENSITIVE_PATH_RE='\.(ssh/id_|zshenv-secrets|password-store|gnupg/)|tokens\.json'
-  if echo "$CONTENT" | grep -qE "(cat|base64|xxd)\s+[^\|;]*${SENSITIVE_PATH_RE}" && \
-     echo "$CONTENT" | grep -qE '\|\s*(curl|wget|nc|ncat)\b'; then
-    add_deny "BLOCKED: Bash command would expose a secret (sensitive file piped to network tool (exfiltration risk))."
-    return 0
-  fi
-  if echo "$CONTENT" | grep -qE 'curl\s' && \
-     echo "$CONTENT" | grep -qE '(-d\s*@|--data[a-z-]*\s*@)' && \
-     echo "$CONTENT" | grep -qE "$SENSITIVE_PATH_RE"; then
-    add_deny "BLOCKED: Bash command would expose a secret (curl uploading sensitive file (exfiltration risk))."
-    return 0
-  fi
-  if echo "$CONTENT" | grep -qE '\b(curl|wget|nc|ncat|python[23]?\s.*urllib|node\s.*fetch)\b'; then
-    local HIGH_ENTROPY HAS_UPPER HAS_LOWER HAS_SYMBOL CLASSES
-    HIGH_ENTROPY=$(echo "$CONTENT" | \
-      sed -E 's/0x[a-fA-F0-9]{40}([^a-fA-F0-9]|$)/\1/g' | \
-      grep -oE '[A-Za-z0-9/+=_-]{30,}' | \
-      grep -vE '^https?://' | \
-      grep -vE '^/' | \
-      grep -vE '^[a-z]+$' | \
-      grep -vE '[a-zA-Z]+/[a-zA-Z]+/[a-zA-Z]+' | \
-      head -1 || true)
-    if [ -n "$HIGH_ENTROPY" ]; then
-      if echo "$HIGH_ENTROPY" | grep -q '[0-9]'; then
-        HAS_UPPER=$(echo "$HIGH_ENTROPY" | grep -c '[A-Z]' || true)
-        HAS_LOWER=$(echo "$HIGH_ENTROPY" | grep -c '[a-z]' || true)
-        HAS_SYMBOL=$(echo "$HIGH_ENTROPY" | grep -c '[/+=_-]' || true)
-        CLASSES=1
-        [ "$HAS_UPPER" -gt 0 ] && CLASSES=$((CLASSES + 1))
-        [ "$HAS_LOWER" -gt 0 ] && CLASSES=$((CLASSES + 1))
-        [ "$HAS_SYMBOL" -gt 0 ] && CLASSES=$((CLASSES + 1))
-        if [ "$CLASSES" -ge 3 ]; then
-          add_deny "BLOCKED: Bash command would expose a secret (network command with inline secret-like string (exfiltration risk))."
-          return 0
-        fi
-      fi
-    fi
-  fi
-  return 0
-}
-
 # --- block-unguarded-ahrefs-api.sh ---
 check_ahrefs() {
   echo "$COMMAND" | grep -q 'api\.ahrefs\.com' || return 0
@@ -566,7 +414,10 @@ check_wrap() {
 IS_COMMIT=0
 echo "$COMMAND" | grep -qE '\bcommit\b' && IS_COMMIT=1
 
-check_secret_leak
+# Secret routing is security-sensitive and evolves independently. Delegate on
+# every Bash command so the registered standalone guard is the single live
+# implementation instead of maintaining a second inlined policy here.
+delegate block-secret-leak.sh
 check_ahrefs
 if echo "$COMMAND" | grep -qE '(^|[[:space:];|&])(git[[:space:]]+push|gh[[:space:]]+(api|pr|issue|secret|variable|workflow|run|release|repo|label|milestone|gist)[[:space:]])'; then
   delegate block-github-write-command.sh

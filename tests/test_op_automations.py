@@ -95,12 +95,13 @@ class RawOpGuardTest(unittest.TestCase):
     def assert_denied(self, path, payload):
         result = run_hook(path, payload)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("direct 1Password CLI command", result.stdout)
+        self.assertIn('"permissionDecision": "deny"', result.stdout)
+        self.assertIn("dedicated audited operation", result.stdout)
 
     def assert_allowed(self, path, payload):
         result = run_hook(path, payload)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertNotIn("direct 1Password CLI command", result.stdout)
+        self.assertNotIn('"permissionDecision": "deny"', result.stdout)
 
     def test_claude_dispatcher_denies_raw_op(self):
         self.assert_denied(
@@ -213,14 +214,27 @@ class RawOpGuardTest(unittest.TestCase):
                         {"tool_name": "functions.exec", "tool_input": {"input": source}},
                     )
 
-    def test_guards_allow_promptless_wrapper(self):
+    def test_guards_deny_promptless_wrapper_output(self):
         payloads = (
             ("claude/hooks/pretooluse-bash.sh", {"tool_name": "Bash", "tool_input": {"command": "op-automations item list --vault Automations"}}),
             ("codex/hooks/block-secret-leak.sh", {"tool_name": "functions.exec", "tool_input": {"input": 'await tools.exec_command({cmd: "op-automations item list --vault Automations"});'}}),
         )
         for path, payload in payloads:
             with self.subTest(path=path):
-                self.assert_allowed(path, payload)
+                result = run_hook(path, payload)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn("secret-bearing credential or clipboard tool", result.stdout)
+
+    def test_guards_deny_direct_op_run(self):
+        payloads = (
+            ("claude/hooks/pretooluse-bash.sh", {"tool_name": "Bash", "tool_input": {"command": "op-automations run --env-file=.env.op -- true"}}),
+            ("codex/hooks/block-secret-leak.sh", {"tool_name": "functions.exec", "tool_input": {"input": 'await tools.exec_command({cmd: "op-automations run --env-file=.env.op -- true"});'}}),
+        )
+        for path, payload in payloads:
+            with self.subTest(path=path):
+                result = run_hook(path, payload)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn('"permissionDecision": "deny"', result.stdout)
 
     def test_guards_allow_quoted_documentation(self):
         commands = (
@@ -305,7 +319,7 @@ class RawOpGuardTest(unittest.TestCase):
                         {"tool_name": tool_name, "tool_input": {field: command}},
                     )
                     self.assertEqual(result.returncode, 0, result.stderr)
-                    self.assertIn("revealed 1Password field", result.stdout)
+                    self.assertIn('"permissionDecision": "deny"', result.stdout)
 
     def test_codex_guard_denies_nested_reveal_through_sanctioned_forms(self):
         op_word = "o" + "p"
@@ -322,7 +336,27 @@ class RawOpGuardTest(unittest.TestCase):
                     {"tool_name": "functions.exec", "tool_input": {"input": source}},
                 )
                 self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertIn("revealed 1Password field", result.stdout)
+                self.assertIn('"permissionDecision": "deny"', result.stdout)
+
+    def test_codex_guard_denies_nested_secret_output_commands(self):
+        commands = (
+            "pbpaste",
+            "op-automations read op://Automations/Example/credential > /dev/null",
+            "op-automations run --env-file=.env.op -- printenv SECRET",
+            "op-automations inject --in-file=.env.op",
+            "op-desktop item list --format=json | jq .",
+            "op-desktop document get abc",
+            "op-desktop item share abc",
+        )
+        for command in commands:
+            source = f"await tools.exec_command({{cmd: {json.dumps(command)}}});"
+            with self.subTest(command=command):
+                result = run_hook(
+                    "codex/hooks/block-secret-leak.sh",
+                    {"tool_name": "functions.exec", "tool_input": {"input": source}},
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn('"permissionDecision": "deny"', result.stdout)
 
 
 if __name__ == "__main__":

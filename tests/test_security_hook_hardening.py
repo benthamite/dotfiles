@@ -51,13 +51,13 @@ def hook_matchers(config: dict, command_fragment: str) -> list[str]:
 
 
 class ProtectedHookRegistrationTests(unittest.TestCase):
-    def test_live_claude_sensitive_read_guard_covers_read(self):
-        """Read is the floor. Grep coverage was deliberately dropped on 2026-07-31.
+    def test_live_claude_sensitive_read_guard_covers_read_and_grep(self):
+        """The live registration must enforce both implemented read branches.
 
-        Registering block-sensitive-read.sh on Grep as well as Read arrived with
-        the 07-30 hardening and interrupted ordinary work often enough that
-        Pablo removed that block by hand the next day. Asserting it here would
-        just re-argue a settled decision every time the suite runs.
+        Grep coverage was removed on 2026-07-31 after broad searches interrupted
+        ordinary work. The guard now has regression coverage for the intended
+        boundary: ordinary repository scopes pass, while sensitive paths, globs,
+        and broad home-directory content searches are denied.
         """
         config = json.loads((Path.home() / ".claude/settings.json").read_text())
         matchers = hook_matchers(config, "block-sensitive-read.sh")
@@ -66,7 +66,20 @@ class ProtectedHookRegistrationTests(unittest.TestCase):
             for matcher in matchers
             for tool in matcher.split("|")
         }
-        self.assertIn("Read", covered_tools)
+        self.assertGreaterEqual(covered_tools, {"Read", "Grep"})
+
+    def test_secret_store_and_clipboard_reads_are_not_preapproved(self):
+        config = json.loads((Path.home() / ".claude/settings.json").read_text())
+        permission_allows = set(config["permissions"]["allow"])
+        self.assertTrue(
+            {
+                "Bash(op-automations:*)",
+                "Bash(pbpaste)",
+                "Bash(pbpaste:*)",
+            }.isdisjoint(permission_allows)
+        )
+        auto_allows = config.get("autoMode", {}).get("allow", [])
+        self.assertFalse(any("op-automations" in rule for rule in auto_allows))
 
 
 class SensitiveReadGuardTests(unittest.TestCase):

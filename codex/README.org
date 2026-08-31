@@ -165,9 +165,13 @@ The Elisp post-edit hook is registered on the outer composed-tool event as well
 as direct edit events, so it recovers changed paths from nested patches instead
 of depending on the nested runtime to dispatch a separate pre-tool event.
 
-The secret guard denies raw =op= even inside an =env -u ... bash -c= batch.
-Automations reads use =op-automations= and desktop-gated work uses
-=op-desktop=; a missing broker is an error to repair, not an alternate route.
+The secret guard denies direct agent-shell invocations of raw =op=, the
+=op-automations= and =op-desktop= brokers, =pass=, macOS =security=, and
+=pbpaste=, including wrappers, nested shells, process substitution, executable
+globs, and shell-word obfuscation. Broker status and stop controls remain
+available because they return no credential data. Secret-consuming work must
+use a dedicated audited operation that keeps values out of agent output; a
+missing operation is an error to repair, not an alternate route.
 
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged

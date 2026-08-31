@@ -354,8 +354,8 @@
       "name": "block-secret-leak.sh",
       "claude": "claude/hooks/block-secret-leak.sh",
       "codex": "codex/hooks/block-secret-leak.sh",
-      "status": "paired",
-      "note": "paired; both sides block direct op commands in favor of prompt-free op-automations or an explicit batched desktop-auth form, and deny item --reveal output; Codex scans Bash, exec_command, functions.exec, functions.exec_command, and apply_patch payloads and extracts literal nested cmd values via lib-codex-hook-json.sh"
+      "status": "paired-dispatched",
+      "note": "paired secret-output guard; Claude delegates every Bash event from pretooluse-bash.sh to the standalone source of truth, while Codex scans Bash, exec_command, functions.exec, functions.exec_command, and apply_patch payloads and extracts literal nested cmd values via lib-codex-hook-json.sh. Both deny direct op, op-automations, op-desktop, pass, security, and pbpaste use without trusting wrappers, dynamic resolution, nested shells, pipes, or redirects as containment; only op-desktop status/stop controls are exempt."
     },
     {
       "name": "block-unguarded-ahrefs-api.sh",

@@ -257,10 +257,14 @@ Sensitive-read guards permit the security audit's shell-export classifier only
 for its exact absolute helper and target paths. The classifier reports names,
 line numbers, scopes, and classifications without printing values.
 
-Their auth-aware allowlist admits the =op-automations= and =op-desktop= brokers
-alongside raw =op=. The secret-leak guard requires those brokers in place of raw
-=op=, so recognizing only the raw form left commands that also name a
-credential-bearing path with no permitted invocation at all.
+The secret-leak guard denies direct agent-shell invocations of raw =op=, the
+=op-automations= and =op-desktop= brokers, =pass=, macOS =security=, and
+=pbpaste=, including wrappers, nested shells, process substitution, executable
+globs, and shell-word obfuscation. Broker status and stop controls remain
+available because they return no credential data. Secret-consuming work must
+use a dedicated audited operation that keeps values out of agent output. The
+Claude Bash dispatcher delegates this decision to the standalone guard instead
+of carrying a second inline policy copy.
 
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged

@@ -67,6 +67,39 @@ mask_op_quoted_literals() {
     }'
 }
 
+normalize_shell_words() {
+  printf '%s\n' "$1" | awk '
+    BEGIN { SQ = sprintf("%c", 39); DQ = "\""; BS = "\\" }
+    { text = text $0 "\n" }
+    END {
+      n = length(text); out = ""; i = 1
+      while (i <= n) {
+        c = substr(text, i, 1)
+        if (c == BS && i < n) { out = out substr(text, i + 1, 1); i += 2; continue }
+        if (c == SQ || c == DQ) {
+          quote = c; j = i + 1; span = ""; closed = 0
+          while (j <= n) {
+            d = substr(text, j, 1)
+            if (quote == DQ && d == BS && j < n) {
+              span = span substr(text, j + 1, 1); j += 2; continue
+            }
+            if (d == quote) { closed = 1; break }
+            span = span d; j++
+          }
+          if (!closed) { out = out substr(text, i); break }
+          if (span !~ /[[:space:];&|()]/ &&
+              (quote == SQ || (index(span, "$") == 0 && index(span, "`") == 0)))
+            out = out span
+          else
+            out = out "''"
+          i = j + 1; continue
+        }
+        out = out c; i++
+      }
+      printf "%s", out
+    }'
+}
+
 contains_raw_shell_op_command() {
   local raw="$1" scan boundary op_bin wrapper
   if printf '%s' "$raw" | grep -qE '(^|[;&|(!][[:space:]]*|\$\([[:space:]]*)(((/usr/bin/|/bin/)?env)([[:space:]]+(-u[[:space:]]+[^[:space:]]+|-i|--|[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*))*[[:space:]]+)?(((/bin/|/usr/bin/)?(bash|sh|zsh|dash|ksh))[[:space:]]+-l?c|eval)[[:space:]]+["'"'"'][^"'"'"']*(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|["'"'"'])'; then
@@ -112,20 +145,74 @@ contains_any_op_reveal_output() {
   return 1
 }
 
-contains_unfiltered_op_item_output() {
-  local command="$1"
-  printf '%s' "$command" | grep -qE '(^|[;&|(!][[:space:]]*)(op-desktop|op-automations)[[:space:]]+item[[:space:]]+(list|get)([[:space:]]|$)' || return 1
-  # 1Password item summaries can contain secret-valued URL fields.
-  printf '%s' "$command" | grep -qE '(\|[[:space:]]*jq([[:space:]]|$)|(^|[^0-9])[0-9]*>[[:space:]]*[^&])' && return 1
-  return 0
+contains_secret_output_command() {
+  local raw="$1" scan normalized protected boundary wrapper executable delimiter
+  protected='(^|[^A-Za-z0-9_-])(op|op-automations|op-desktop|pbpaste|pass|security)([^A-Za-z0-9_-]|$)'
+
+  # These broker controls return no vault or clipboard data.
+  if printf '%s' "$raw" | grep -qE '^[[:space:]]*([^[:space:];|&()]*/)?op-desktop[[:space:]]+--(status|stop)[[:space:]]*$'; then
+    return 1
+  fi
+
+  # A literal mention printed by a simple nested echo/printf program is data,
+  # provided the program contains no expansion or shell control operator.
+  if printf '%s' "$raw" | grep -qE "^[[:space:]]*(([^;&|[:space:]]*/)?(command|env|sudo|timeout|nice|exec|nohup|time)([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+)?([^;&|[:space:]]*/)?(bash|sh|zsh|dash|ksh)[[:space:]]+-l?c[[:space:]]+'[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^;&|[:space:]]*[[:space:]]+)*((command|sudo|exec|nohup|time)[[:space:]]+|env([[:space:]]+[A-Za-z_][A-Za-z0-9_]*=[^;&|[:space:]]*)*[[:space:]]+)?(builtin[[:space:]]+)?([^;&|[:space:]]*/)?(echo|printf)([[:space:]]+[^'\$;&|]*)?'[[:space:]]*$" && \
+     ! printf '%s' "$raw" | grep -qE '`|[<>]\('; then
+    return 1
+  fi
+  if printf '%s' "$raw" | grep -qE '^[[:space:]]*(([^;&|[:space:]]*/)?(command|env|sudo|timeout|nice|exec|nohup|time)([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+)?([^;&|[:space:]]*/)?(bash|sh|zsh|dash|ksh)[[:space:]]+-l?c[[:space:]]+"[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^;&|[:space:]]*[[:space:]]+)*((command|sudo|exec|nohup|time)[[:space:]]+|env([[:space:]]+[A-Za-z_][A-Za-z0-9_]*=[^;&|[:space:]]*)*[[:space:]]+)?(builtin[[:space:]]+)?([^;&|[:space:]]*/)?(echo|printf)([[:space:]]+[^"$;&|]*)?"[[:space:]]*$' && \
+     ! printf '%s' "$raw" | grep -qE '`|[<>]\('; then
+    return 1
+  fi
+
+  # Quoted literals in ordinary commands are data. Everything else that names
+  # a protected secret tool is denied instead of trying to prove that an
+  # arbitrary shell pipeline, wrapper, global flag, or subcommand is safe.
+  scan=$(mask_op_quoted_literals "$raw")
+  if printf '%s' "$scan" | grep -qE '^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^;&|[:space:]]*[[:space:]]+)*((command|sudo|exec|nohup|time)[[:space:]]+|env([[:space:]]+[A-Za-z_][A-Za-z0-9_]*=[^;&|[:space:]]*)*[[:space:]]+)?(builtin[[:space:]]+)?([^;&|[:space:]]*/)?(echo|printf)([[:space:]]+[^;&|`]*)?[[:space:]]*$' && \
+     ! printf '%s' "$scan" | grep -qE '[;&|`]|\$\(|[<>]\('; then
+    return 1
+  fi
+  printf '%s' "$scan" | grep -qE "$protected" && return 0
+
+  # Quoting becomes executable source under an interpreter. Fail closed on any
+  # protected tool named in that program, regardless of its shell grammar.
+  if printf '%s' "$raw" | grep -qE '(^|[;&|(!][[:space:]]*|\$\([[:space:]]*)(([^;&|[:space:]]*/)?(command|env|sudo|timeout|nice|exec|nohup|time)([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+)?(([^;&|[:space:]]*/)?(bash|sh|zsh|dash|ksh)[[:space:]]+-l?c|eval)[[:space:]]+["'"'"']' && \
+     printf '%s' "$raw" | grep -qE "$protected"; then
+    return 0
+  fi
+
+  # Quoted variable assignments and command-discovery substitutions are the
+  # remaining common ways to hide the executable name from the masked scan.
+  if printf '%s' "$raw" | grep -qE '[A-Za-z_][A-Za-z0-9_]*=[[:space:]]*["'"'"']([^"'"'"']*/)?(op-automations|op-desktop|pbpaste|pass|security)["'"'"']' && \
+     printf '%s' "$raw" | grep -qE '\$\{?[A-Za-z_][A-Za-z0-9_]*\}?'; then
+    return 0
+  fi
+  printf '%s' "$raw" | grep -qE '\$\([[:space:]]*(command[[:space:]]+-v|which|type[[:space:]]+-P)[[:space:]]+(op-automations|op-desktop|pbpaste|pass|security)[[:space:]]*\)' && return 0
+
+  # Normalize the shell's lexical removal of backslashes and adjacent quotes,
+  # then classify the resulting command word. Executable globs are rejected
+  # because their resolved program cannot be known before expansion.
+  normalized=$(normalize_shell_words "$raw")
+  boundary='(^[[:space:]]*|[;&|(!`][[:space:]]*|\$\([[:space:]]*)'
+  wrapper='(([^;&|[:space:]]*/)?(command|env|sudo|timeout|nice|exec|nohup|time|builtin)([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+|[A-Za-z_][A-Za-z0-9_]*=[^;&|[:space:]]*[[:space:]]+)'
+  executable='([^;&|[:space:]]*/)?(op|op-automations|op-desktop|pbpaste|pass|security)'
+  delimiter='([[:space:];|&)`]|$)'
+  printf '%s' "$normalized" | grep -qE "${boundary}(${wrapper})*${executable}${delimiter}" && return 0
+  printf '%s' "$normalized" | grep -qE "${boundary}(${wrapper})*[^;&|[:space:]]*([?*]|\\\[[^]]*)[^;&|[:space:]]*${delimiter}" && return 0
+  printf '%s' "$normalized" | grep -qE "find[[:space:]].*-exec[[:space:]]+[^;&|[:space:]]*([?*]|\\\[[^]]*)[^;&|[:space:]]*${delimiter}" && return 0
+  if printf '%s' "$raw" | grep -qE '(([^;&|[:space:]]*/)?(bash|sh|zsh|dash|ksh)[[:space:]]+-l?c|eval)[[:space:]]+["'"'"'][^"'"'"']*([?*]|\[[^]]*)'; then
+    return 0
+  fi
+  return 1
 }
 
-contains_any_unfiltered_op_item_output() {
+contains_any_secret_output_command() {
   local nested
-  contains_unfiltered_op_item_output "$CONTENT" && return 0
+  contains_secret_output_command "$CONTENT" && return 0
   if [ "$TOOL_NAME" = "functions.exec" ]; then
     while IFS= read -r -d '' nested; do
-      contains_unfiltered_op_item_output "$nested" && return 0
+      contains_secret_output_command "$nested" && return 0
     done < <(printf '%s' "$CONTENT" | codex_nested_exec_commands)
   fi
   return 1
@@ -136,7 +223,7 @@ deny_raw_op_command() {
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: " + $tool + " contains a direct 1Password CLI command, which can trigger a separate Touch ID prompt for every process.\n\nUse `op-desktop ...` for desktop-gated operations: personal-vault reads, item creates/edits, share links. It runs every command inside one authorized terminal session, so a whole task costs one Touch ID prompt instead of one per command.\n\nFor prompt-free read-only access to the Automations vault, use `op-automations ...`. If the broker is unavailable, repair it rather than bypassing it with raw `op`.")
+      "permissionDecisionReason": ("BLOCKED: " + $tool + " contains a direct 1Password CLI command.\n\nRaw `op` and direct broker calls are not permitted in agent shell commands. Use a dedicated audited operation that routes through `op-automations` or `op-desktop` internally without returning secrets to agent output. If that operation is unavailable, repair it rather than bypassing the routing policy.")
     }
   }'
   exit 0
@@ -147,31 +234,30 @@ deny_op_reveal_output() {
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: " + $tool + " command would print a revealed 1Password field.\n\nDo not run standalone `op item get ... --reveal` commands. Capture the value through command substitution, pass it through stdin/env/temp files with restricted permissions, or use `op://` references where supported.")
+      "permissionDecisionReason": ("BLOCKED: " + $tool + " command would print a revealed 1Password field.\n\nDo not run `op ... --reveal` in an agent shell. Use a dedicated audited operation that consumes the value without returning it to agent output.")
     }
   }'
   exit 0
 }
 
-deny_unfiltered_op_item_output() {
+deny_secret_output_command() {
   jq -n --arg tool "$TOOL_NAME" '{
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: " + $tool + " would print unfiltered 1Password item output. Item summaries can contain secret-valued URL fields.\n\nPipe through `jq` to select only the exact non-secret metadata needed, or redirect to a mode-0600 temporary file for secret-safe processing.")
+      "permissionDecisionReason": ("BLOCKED: " + $tool + " invokes a secret-bearing credential or clipboard tool.\n\nAgent shell commands may not directly call `op-automations`, `op-desktop`, `pass`, `security`, or `pbpaste`; wrappers, nested shells, pipes, and redirects are not trusted containment. Use a dedicated audited operation that consumes the value without returning it to agent output.")
     }
   }'
   exit 0
 }
 
-# --- Allowlist: commands that legitimately read secrets ---
-# pass, op, security (Keychain), git-crypt, and secret-scanning tools themselves
+# --- Allowlist: commands that do not return secret-manager output ---
 if codex_shell_tool_p "$TOOL_NAME"; then
+  if contains_any_secret_output_command; then
+    deny_secret_output_command
+  fi
   if contains_any_op_reveal_output; then
     deny_op_reveal_output
-  fi
-  if contains_any_unfiltered_op_item_output; then
-    deny_unfiltered_op_item_output
   fi
   if contains_raw_op_command; then
     deny_raw_op_command
@@ -183,12 +269,8 @@ if codex_shell_tool_p "$TOOL_NAME"; then
      ! echo "$CONTENT" | grep -qE '[|>]'; then
     deny_op_reveal_output
   fi
-  # Allow pass/op/security/git-crypt commands
-  if echo "$CONTENT" | grep -qE '^\s*(pass|op |security |git-crypt )'; then
-    exit 0
-  fi
-  # Allow piping FROM pass/op (e.g. `pass show foo | some-command`)
-  if echo "$CONTENT" | grep -qE '^\s*(pass|op )\s.*\|'; then
+  # git-crypt operations do not print stored secret values themselves.
+  if echo "$CONTENT" | grep -qE '^\s*git-crypt '; then
     exit 0
   fi
   # Allow grep/rg scanning for patterns (the audit skill itself)

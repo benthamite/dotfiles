@@ -1164,6 +1164,86 @@ def watch(args: argparse.Namespace) -> None:
         time.sleep(args.interval)
 
 
+def _raw_transcript_texts(path: Path, kinds: set[str]) -> list[tuple[str, str]]:
+    out: list[tuple[str, str]] = []
+    if not path.exists():
+        return out
+    for line in path.read_text(errors="replace").splitlines():
+        try:
+            d = json.loads(line)
+        except Exception:
+            continue
+        if d.get("type") not in kinds:
+            continue
+        c = d.get("message", {}).get("content")
+        if isinstance(c, str):
+            txt = c
+        elif isinstance(c, list):
+            txt = " ".join(
+                (x.get("text") or "") for x in c if isinstance(x, dict)
+            )
+        else:
+            txt = ""
+        if txt.strip():
+            out.append((d["type"], txt))
+    return out
+
+
+def ask_cmd(args: argparse.Namespace) -> None:
+    """Post a direct question to a run actor, confirm it landed, print the reply.
+
+    Direct communication for supervision. Posting is confirmed from the actor's
+    transcript (the message text appears there), never inferred from the
+    terminal screen. Claude sessions queue a message until the current turn
+    ends; pass --interrupt to end the turn first (ESC to the eat terminal).
+    """
+    state = load_run(args.run_file)
+    actor = state[args.actor]
+    text = Path(args.prompt_file).read_text()
+    marker = text.strip().splitlines()[0][:80]
+    transcript = Path(actor["transcript"])
+    before = len(_raw_transcript_texts(transcript, {"assistant"}))
+    if args.interrupt:
+        session.run_emacs_eval(
+            f'(with-current-buffer {session.elisp_string(actor["buffer"])} '
+            f'(when (and (boundp (quote eat-terminal)) eat-terminal) '
+            f'(eat-term-send-string eat-terminal "\e")) t)'
+        )
+        time.sleep(4)
+    session.run_emacs_eval(
+        f'(progn (agent-submit {session.elisp_string(text)} '
+        f'(get-buffer {session.elisp_string(actor["buffer"])})) t)'
+    )
+    deadline = time.time() + args.timeout
+    posted = False
+    while time.time() < deadline:
+        if any(marker in t for k, t in _raw_transcript_texts(transcript, {"user"})):
+            posted = True
+            break
+        time.sleep(5)
+    print("posted" if posted else "NOT CONFIRMED POSTED (still queued or lost)")
+    while time.time() < deadline:
+        replies = _raw_transcript_texts(transcript, {"assistant"})
+        if len(replies) > before:
+            print("reply:")
+            print(replies[-1][1])
+            return
+        time.sleep(5)
+    print("no reply within timeout")
+
+
+def interrupt_cmd(args: argparse.Namespace) -> None:
+    """Send ESC to a run actor's eat terminal to end its current turn."""
+    state = load_run(args.run_file)
+    actor = state[args.actor]
+    session.run_emacs_eval(
+        f'(with-current-buffer {session.elisp_string(actor["buffer"])} '
+        f'(when (and (boundp (quote eat-terminal)) eat-terminal) '
+        f'(eat-term-send-string eat-terminal "\e")) t)'
+    )
+    print(f"interrupt sent to {actor['buffer']}")
+
+
 def add_status_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--run-file", required=True)
     parser.add_argument("--since")
@@ -1262,6 +1342,29 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.add_argument("--run-file", required=True)
     p.set_defaults(func=stage_return)
+
+    ask_p = sub.add_parser("ask", help="Post a direct question to an actor, confirm it posted, print the reply")
+
+    ask_p.add_argument("--run-file", required=True)
+
+    ask_p.add_argument("--actor", choices=["agent1", "agent2"], default="agent1")
+
+    ask_p.add_argument("--prompt-file", required=True)
+
+    ask_p.add_argument("--interrupt", action="store_true", help="End the actor's current turn first (ESC to eat)")
+
+    ask_p.add_argument("--timeout", type=int, default=300)
+
+    ask_p.set_defaults(func=ask_cmd)
+
+    int_p = sub.add_parser("interrupt", help="Send ESC to an actor's eat terminal")
+
+    int_p.add_argument("--run-file", required=True)
+
+    int_p.add_argument("--actor", choices=["agent1", "agent2"], default="agent1")
+
+    int_p.set_defaults(func=interrupt_cmd)
+
 
     p = sub.add_parser(
         "steer-stage",

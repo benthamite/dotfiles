@@ -42,6 +42,12 @@ Read-only Automations access must use =op-automations= and desktop-gated work
 must use =op-desktop=. The broker forwards piped item templates, so stdin is not
 a reason to bypass it. Raw =op= writes and =--reveal= remain denied.
 
+The GitHub write guard is deny-only. It refuses writes outside the committed
+repository registry, but a matching repository establishes only that boundary;
+the hook emits no explicit allow, including for pull-request merges. Authorized
+writes continue through the host's normal permission layer and still require the
+user authorization called for by the global instructions.
+
 The Elisp commit gate routes each literal nested =tools.exec_command= call by
 its own =workdir=, groups staged and commit calls by repository, inherits an
 omitted workdir from the outer context, and denies dynamic or ambiguous commit
@@ -99,7 +105,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =block-dirty-tree-rewrite.sh= | Blocks Git history rewrites when the target repository has staged or unstaged tracked changes. |
 | =block-elpaca-dotfiles-edit.sh= | Denies writes to the read-only Elpaca dotfiles mirror and points to the canonical repository. |
 | =block-elpaca-rebuild-uncommitted.sh= | Blocks rebuilding an extras package while its canonical Elisp source has uncommitted changes. |
-| =block-github-write-command.sh= | Blocks Git pushes and recognized mutating =gh= operations unless the target matches an exact repo or account wildcard in the committed allowlist, or an exact Epoch project repo in the fixed committed automations registry. This includes topic-branch pushes, pull-request and issue creation or edits, and comments. Read-only inspection remains allowed. Nested =functions.exec= shell calls are checked independently and ambiguous recognized calls fail closed. |
+| =block-github-write-command.sh= | Blocks Git pushes and recognized mutating =gh= operations unless the target matches an exact repo or account wildcard in the committed allowlist, or an exact Epoch project repo in the fixed committed automations registry. A registry match falls through silently to normal permission handling; it never explicitly approves a write. This includes topic-branch pushes, pull-request and issue creation or edits, and comments. Read-only inspection remains allowed. Nested =functions.exec= shell calls are checked independently and ambiguous recognized calls fail closed. |
 | =block-secret-leak.sh= | Blocks literal secret disclosure and unsafe secret-bearing reads, writes, or output. |
 | =block-sensitive-read.sh= | Blocks content reads of credential-like files while permitting narrowly defined metadata checks and the exact value-free shell-export classifier. |
 | =block-texi-edit.sh= | Blocks direct edits to generated Texinfo and points to the Org source. |

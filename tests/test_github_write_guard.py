@@ -359,24 +359,16 @@ exit 1
         command = "gh pr merge --repo example/unowned 1 --squash"
         self.assert_both(command, expected="deny")
 
-    def test_merging_into_an_owned_repo_is_explicitly_pre_approved(self) -> None:
-        """Merges in Pablo's repos bypass every downstream approval layer.
-
-        Pablo decided on 2026-08-27 that merges are allowed in all and only
-        his repos. Silence (allow by omission) is not enough: it leaves the
-        model-level classifier a veto over merges the registry already
-        authorized, which is the failure this rule removed. So the guard must
-        answer with an explicit allow decision, not an empty stdout.
-        """
+    def test_merging_into_an_owned_repo_falls_through_silently(self) -> None:
+        """Repository authorization does not pre-approve an external write."""
         command = "gh pr merge --repo benthamite/yasnippet 1 --squash"
         for tool in GUARDS:
             with self.subTest(tool=tool):
                 result = self.run_guard(tool, command)
-                self.assertTrue(result.stdout.strip())
-                self.assertEqual(decision(result), "allow")
+                self.assertEqual(result.stdout.strip(), "")
 
     def test_other_pr_writes_on_an_owned_repo_stay_silent(self) -> None:
-        """Only merges are pre-approved; other writes keep their layers."""
+        """Other allowlisted PR writes also keep their permission layers."""
         command = "gh pr create --repo benthamite/yasnippet --title T --body B"
         for tool in GUARDS:
             with self.subTest(tool=tool):

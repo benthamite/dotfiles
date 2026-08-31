@@ -296,7 +296,10 @@ its authorization.
 
 Every GitHub write now requires committed repository authorization. Topic
 branches, pull requests, issues, and comments have no contribution exemption;
-read-only inspection remains available for undeclared repositories. The
+read-only inspection remains available for undeclared repositories. A registry
+match makes the guard fall through silently rather than explicitly approving the
+write, including for pull-request merges, so the host's normal permission layer
+and the global user-authorization rule still apply. The
 allowlist, guard implementation, and hook registrations remain agent-editable;
 there is no separate self-edit guard.
 

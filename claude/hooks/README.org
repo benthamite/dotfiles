@@ -46,6 +46,12 @@ desktop-gated work goes through =op-desktop=. A missing broker is an error to
 repair, not permission to bypass routing with raw =op=. =--reveal= remains
 denied inside sanctioned forms.
 
+The GitHub write guard is deny-only. It refuses writes outside the committed
+repository registry, but a matching repository establishes only that boundary;
+the hook emits no explicit allow, including for pull-request merges. Authorized
+writes continue through the host's normal permission layer and still require the
+user authorization called for by the global instructions.
+
 The Elisp documentation gate may be deferred on a feature branch with
 =branch.<branch>.deferDocUpdates=true= for a deliberate multi-commit refactor.
 The setting is ignored on =main= and =master= and should be removed when the
@@ -102,7 +108,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =block-dirty-tree-rewrite.sh= | Blocks Git history rewrites when the target repository has dirty tracked changes. |
 | =block-elpaca-dotfiles-edit.sh= | Denies writes to the read-only Elpaca dotfiles mirror and points to the canonical repository. |
 | =block-elpaca-rebuild-uncommitted.sh= | Blocks rebuilding or reloading when the relevant Elisp source is uncommitted. |
-| =block-github-write-command.sh= | Blocks Git pushes and recognized mutating =gh= operations unless the target matches an exact repo or account wildcard in the committed allowlist, or an exact Epoch project repo in the fixed committed automations registry. This includes topic-branch pushes, pull-request and issue creation or edits, and comments. Read-only inspection remains allowed. |
+| =block-github-write-command.sh= | Blocks Git pushes and recognized mutating =gh= operations unless the target matches an exact repo or account wildcard in the committed allowlist, or an exact Epoch project repo in the fixed committed automations registry. A registry match falls through silently to normal permission handling; it never explicitly approves a write. This includes topic-branch pushes, pull-request and issue creation or edits, and comments. Read-only inspection remains allowed. |
 | =block-long-pipeline-run-unchecked.sh= | Requires preflight, cleanliness, and checkpoint conditions for long consensus-trader jobs. |
 | =block-secret-leak.sh= | Blocks secret literals, unsafe secret-file writes, and secret-bearing output. |
 | =block-sensitive-read.sh= | Blocks content reads of credential-like paths while permitting narrow metadata checks and the exact value-free shell-export classifier. |

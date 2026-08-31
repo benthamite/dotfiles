@@ -157,7 +157,10 @@ The GitHub write guard requires committed repository authorization for every
 push and mutating =gh= operation, including topic branches, pull requests,
 issues, and comments. It classifies each literal shell command nested in
 =functions.exec= independently and refuses dynamic or ambiguous nested calls;
-read-only GitHub inspection remains available for undeclared repositories.
+read-only GitHub inspection remains available for undeclared repositories. A
+registry match falls through silently rather than explicitly approving the
+write, including for pull-request merges, so the normal permission layer and
+the global user-authorization rule still apply.
 The Elisp post-edit hook is registered on the outer composed-tool event as well
 as direct edit events, so it recovers changed paths from nested patches instead
 of depending on the nested runtime to dispatch a separate pre-tool event.

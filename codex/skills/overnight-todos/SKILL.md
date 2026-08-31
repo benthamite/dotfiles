@@ -3,7 +3,6 @@ name: overnight-todos
 description: Batch-process org-roam TODOs autonomously. Acts on TODOs that can be completed without user input and records blockers for the rest, sorted by ease of unblock. Use when the user says "overnight todos", "run overnight", "process my todos", "todo batch", "act on my todos", or schedules a nightly run.
 argument-hint: "[--mode dry-run|act] [--dir DIR] [--tag TAG] [--max-tasks N] [--time-budget MIN] [--max-concurrent N]"
 user-invocable: true
-allowed-tools: Bash, Read, Edit, Write, Agent, Skill, ToolSearch
 ---
 
 # overnight-todos

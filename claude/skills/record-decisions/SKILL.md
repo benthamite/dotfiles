@@ -2,7 +2,6 @@
 name: record-decisions
 description: Extract and record architectural, algorithmic, or design decisions from the current session. Use at the end of a session (usually via /update-log), when the user asks to record/capture an ADR or decision, or when a significant trade-off was made.
 user-invocable: true
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 argument-hint: "[optional: specific decision to record]"
 ---
 

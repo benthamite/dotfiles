@@ -2,7 +2,6 @@
 name: update-log
 description: End-of-session bookkeeping. Do NOT invoke this on your own initiative, and do NOT hand-write a session log yourself instead of invoking it — writing or editing any file under a project's logs/ directory is this skill's job alone. Run it only when the user explicitly asks (the user types /update-log or says update log, session log, close out, wrap up, or asks to save project progress) or when the deliberate end-of-session chain invokes it with --auto. Never trigger it proactively mid-session or at session end on your own judgment, even when the session clearly changed durable project state — wait for an explicit request or the --auto chain.
 user-invocable: true
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 argument-hint: "[--exit] [--auto] [--receipt-file PATH] [optional summary of what was done]"
 ---
 

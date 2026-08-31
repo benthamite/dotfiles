@@ -126,6 +126,11 @@ Browser control is runtime-owned rather than mirrored through a tracked
 Codex-App handoff skill. Claude therefore carries no pointer skill or helper
 command for moving a Codex thread into the desktop app.
 
+Model-invocable tracked skills do not preapprove bare high-risk tools through
+=allowed-tools=. Loading a skill therefore leaves Bash, write, edit, agent, and
+user-question permission decisions to the ordinary runtime policy. A narrowly
+scoped Bash pattern may be declared when a skill genuinely needs one.
+
 The paired =proofread= skill resolves one external Node dependency runtime for
 both setup and execution, canonicalizing both its root and actual =node_modules=
 destination before rejecting paths into this Drive-synced tree. Its package

@@ -2,7 +2,6 @@
 name: walk-list
 description: Process a list file strictly item by item, sequentially or with a bounded subagent pool. Use when the user needs no skipping, batching, or peeking ahead; not for lists that can be safely read all at once.
 user-invocable: true
-allowed-tools: Bash, Read, Agent
 argument-hint: "start <file> [--max-concurrent N] | next <file> <decision> | dispatch <file> | record <file> <token> <decision> | pool-status <file> | status <file> | show-decisions <file> | release-stale <file> <sec> | restore <file> | abort <file>"
 ---
 

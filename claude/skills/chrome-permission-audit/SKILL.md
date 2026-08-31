@@ -2,7 +2,6 @@
 name: chrome-permission-audit
 description: Audit and revoke the sites Claude in Chrome is permanently allowed to access, across every Chrome profile. Use when the user asks to check/audit/review Claude's browser site permissions, asks which sites Claude can access, wants to revoke browser access to sensitive sites, or asks whether the "permanent but not sensitive" policy still holds. Not for Chrome's own content settings, extension host permissions, or OAuth app grants.
 user-invocable: true
-allowed-tools: Bash, Read, Write
 argument-hint: "[audit] | revoke --sites a,b,c [--profile P] [--dry-run] | revoke --tier 1 | accept --site X --tier N | state"
 ---
 

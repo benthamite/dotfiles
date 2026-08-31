@@ -759,10 +759,12 @@ KEY is an optional BibTeX key string, passed interactively as nil."
   "Attempt to download and attach a PDF for the entry with KEY using its DOI.
 If KEY is nil, use the entry at point.  The DOI is downloaded via
 `annas-archive-download' and the resulting file is attached via
-`annas-archive-post-download-hook'."
+`annas-archive-post-download-hook'.  The DOI is offered as the initial
+search string so it can be confirmed or edited before searching."
   (interactive (list nil))
   (let ((target-key (or key (ebib--get-key-at-point))))
-    (when-let* ((doi (ebib-extras-get-field "doi" target-key)))
+    (when-let* ((doi (ebib-extras-get-field "doi" target-key))
+		(id (read-string "Search string: " doi)))
       (cl-labels ((attach-and-remove-hook (url &optional path)
                     (if path
 			(progn
@@ -774,7 +776,7 @@ If KEY is nil, use the entry at point.  The DOI is downloaded via
                     (remove-hook 'annas-archive-post-download-hook
 				 #'attach-and-remove-hook)))
 	(add-hook 'annas-archive-post-download-hook #'attach-and-remove-hook nil nil)
-	(annas-archive-download doi)))))
+	(annas-archive-download id)))))
 
 (defun ebib-extras-attach-file-to-entry (&optional file key)
   "Attach FILE to the BibTeX entry with KEY.

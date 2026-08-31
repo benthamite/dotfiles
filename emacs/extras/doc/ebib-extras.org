@@ -299,7 +299,7 @@ The command ~ebib-extras-attach-files~ is a DWIM command that tries to download 
 
 #+findex: ebib-extras-doi-attach
 #+findex: ebib-extras-book-attach
-The command ~ebib-extras-doi-attach~ downloads a PDF using the entry's DOI via ~annas-archive-download~. It sets up a one-shot hook on ~annas-archive-post-download-hook~ to automatically attach the downloaded file once the download completes.
+The command ~ebib-extras-doi-attach~ downloads a PDF using the entry's DOI via ~annas-archive-download~. It prompts for the search string pre-filled with the DOI, so the identifier can be confirmed or edited before searching. It sets up a one-shot hook on ~annas-archive-post-download-hook~ to automatically attach the downloaded file once the download completes.
 
 The command ~ebib-extras-book-attach~ searches for and downloads a book by ISBN or title via ~annas-archive-download~. It prompts the user with a search string pre-filled from the entry's ISBN (if available) or title (for book-like entry types). Like ~ebib-extras-doi-attach~, it uses a one-shot hook on ~annas-archive-post-download-hook~ to attach the file when the download finishes. If the download was initiated externally (not through =eww=), it displays a message asking the user to attach the file manually.
 

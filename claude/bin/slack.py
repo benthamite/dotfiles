@@ -13,6 +13,8 @@ Multiple workspaces are supported via the WORKSPACES registry and the global
                  (.../xoxc_token -> Bearer token, .../xoxd_token -> 'd' cookie)
   trajectory  -> pass entry trajectory/slack.com/trajectorylabs
                  (token: field -> Bearer token, cookie: field -> 'd' cookie)
+  altruismo-eficaz -> pass entry chrome/slack.com/altruismo-eficaz
+                 (token: field -> Bearer token, cookie: field -> 'd' cookie)
 
 Usage:
   slack.py [-w WORKSPACE] <subcommand> ...
@@ -62,6 +64,12 @@ WORKSPACES = {
     "trajectory": {
         "source": "pass",
         "pass_entry": "trajectory/slack.com/trajectorylabs",
+        "token_field": "token",
+        "cookie_field": "cookie",
+    },
+    "altruismo-eficaz": {
+        "source": "pass",
+        "pass_entry": "chrome/slack.com/altruismo-eficaz",
         "token_field": "token",
         "cookie_field": "cookie",
     },

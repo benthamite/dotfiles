@@ -724,59 +724,61 @@ SRT file must be done manually."
 
 (defun ebib-extras-book-attach (&optional key)
   "Attempt to download and attach a PDF for the book-type entry with KEY.
-If KEY is nil, uses the entry at point.  It uses the entry's ISBN or title (if a
-book-like type) to search and download via `annas-archive-download'.  A hook is
-added to `annas-archive-post-download-hook' to automatically attach the
-downloaded file using `ebib-extras-attach-file' if the download was internal;
-otherwise, it messages to attach manually.
+If KEY is nil, uses the entry at point.  It prompts for a search string
+pre-filled with the entry's ISBN or, for book-like types, its title, then
+searches and downloads via `annas-archive-download'.  The downloaded file is
+attached by `ebib-extras--annas-archive-attach'.
 KEY is an optional BibTeX key string, passed interactively as nil."
   (interactive (list nil))
   (let ((target-key (or key (ebib--get-key-at-point))))
-    ;; Use target-key when getting fields
     (when-let* ((id (read-string "Search string: "
 				 (or (ebib-extras-get-isbn target-key)
 				     (let ((type (ebib-extras-get-field "=type=" target-key)))
 				       (and (member type ebib-extras-book-like-entry-types)
 					    (ebib-extras-get-field "title" target-key)))))))
-      ;; Use a hook to capture the key and call attach-file when download finishes.
-      ;; This hook (`annas-archive-post-download-hook') receives (url path) if
-      ;; downloaded via eww, or just (url) if downloaded externally.
-      ;; Use cl-labels to define a function that can refer to itself for removal.
-      (cl-labels ((attach-and-remove-hook (url &optional path)
-                    (if path
-			(progn
-                          (message "Annas Archive download finished for %s, attaching file %s" target-key path)
-                          (ebib-extras-attach-file path target-key t))
-                      (message "Annas Archive download initiated externally for %s (URL: %s). Attach file manually." target-key url))
-                    ;; Remove this specific function instance from the hook after it runs.
-                    (remove-hook 'annas-archive-post-download-hook #'attach-and-remove-hook)))
-        ;; Use the actual hook name from annas-archive.el
-        ;; Add hook globally (nil) instead of locally (t), append=nil (add to front)
-        (add-hook 'annas-archive-post-download-hook #'attach-and-remove-hook nil nil)
-        (annas-archive-download id)))))
+      (ebib-extras--annas-archive-download id target-key))))
 
 (defun ebib-extras-doi-attach (&optional key)
   "Attempt to download and attach a PDF for the entry with KEY using its DOI.
-If KEY is nil, use the entry at point.  The DOI is downloaded via
-`annas-archive-download' and the resulting file is attached via
-`annas-archive-post-download-hook'.  The DOI is offered as the initial
-search string so it can be confirmed or edited before searching."
+If KEY is nil, use the entry at point.  It prompts for a search string
+pre-filled with the DOI, so the identifier can be confirmed or edited, then
+searches and downloads via `annas-archive-download'.  The downloaded file is
+attached by `ebib-extras--annas-archive-attach'."
   (interactive (list nil))
   (let ((target-key (or key (ebib--get-key-at-point))))
     (when-let* ((doi (ebib-extras-get-field "doi" target-key))
 		(id (read-string "Search string: " doi)))
-      (cl-labels ((attach-and-remove-hook (url &optional path)
-                    (if path
-			(progn
-			  (message "Annas Archive download finished for %s, attaching file %s"
-				   target-key path)
-			  (ebib-extras-attach-file path target-key t))
-		      (message "Annas Archive download initiated externally for %s (URL: %s)"
-			       target-key url))
-                    (remove-hook 'annas-archive-post-download-hook
-				 #'attach-and-remove-hook)))
-	(add-hook 'annas-archive-post-download-hook #'attach-and-remove-hook nil nil)
-	(annas-archive-download id)))))
+      (ebib-extras--annas-archive-download id target-key))))
+
+(defvar ebib-extras--annas-archive-pending-key nil
+  "BibTeX key awaiting the next Anna's Archive download, or nil.")
+
+(defun ebib-extras--annas-archive-download (id key)
+  "Download ID from Anna's Archive and attach the result to entry KEY.
+ID is the search string.  KEY is the BibTeX key.  A single named handler is
+installed on `annas-archive-post-download-hook', so repeated or aborted calls
+never accumulate handlers; only the most recent KEY is attached."
+  (setq ebib-extras--annas-archive-pending-key key)
+  (add-hook 'annas-archive-post-download-hook #'ebib-extras--annas-archive-attach)
+  (annas-archive-download id))
+
+(defun ebib-extras--annas-archive-attach (url &optional path)
+  "Attach the Anna's Archive download at PATH to the pending entry.
+URL is the download URL.  PATH is the local file when the download was made
+by Emacs, and nil when it was handed to an external browser.  The handler
+removes itself and clears `ebib-extras--annas-archive-pending-key' before
+attaching, so an error while attaching cannot leave a stale handler behind."
+  (let ((key ebib-extras--annas-archive-pending-key))
+    (setq ebib-extras--annas-archive-pending-key nil)
+    (remove-hook 'annas-archive-post-download-hook #'ebib-extras--annas-archive-attach)
+    (cond ((null key)
+	   (message "Anna's Archive download finished but no entry is pending (URL: %s)" url))
+	  (path
+	   (message "Anna's Archive download finished for %s, attaching file %s" key path)
+	   (ebib-extras-attach-file path key t))
+	  (t
+	   (message "Anna's Archive download initiated externally for %s (URL: %s). Attach file manually"
+		    key url)))))
 
 (defun ebib-extras-attach-file-to-entry (&optional file key)
   "Attach FILE to the BibTeX entry with KEY.

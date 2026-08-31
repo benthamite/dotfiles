@@ -7,9 +7,6 @@ import subprocess
 import unittest
 from pathlib import Path
 
-import yaml
-
-
 DOTFILES = Path("/Users/pablostafforini/My Drive/dotfiles")
 SKILL_DIRS = (
     DOTFILES / "macos/.claude/skills/review-lulu-alert",
@@ -32,6 +29,49 @@ MUTATING_AX_CALLS = (
 
 SWIFT = shutil.which("swift")
 requires_swift = unittest.skipUnless(SWIFT, "swift is not available")
+
+
+def yaml_scalar(value: str) -> str:
+    """Parse the scalar subset used by skill metadata without PyYAML."""
+    value = value.strip()
+    if value.startswith('"'):
+        parsed = json.loads(value)
+        if not isinstance(parsed, str):
+            raise ValueError("metadata scalar must be a string")
+        return parsed
+    if value.startswith("'") and value.endswith("'"):
+        return value[1:-1].replace("''", "'")
+    return value
+
+
+def frontmatter_scalars(text: str) -> dict[str, str]:
+    if not text.startswith("---\n"):
+        raise ValueError("missing frontmatter")
+    block, separator, _body = text[4:].partition("\n---\n")
+    if not separator:
+        raise ValueError("unterminated frontmatter")
+    result: dict[str, str] = {}
+    for line in block.splitlines():
+        key, delimiter, value = line.partition(":")
+        if not delimiter or not key or key[0].isspace():
+            raise ValueError(f"unsupported frontmatter line: {line!r}")
+        result[key] = yaml_scalar(value)
+    return result
+
+
+def interface_scalars(text: str) -> dict[str, str]:
+    lines = text.splitlines()
+    if not lines or lines[0] != "interface:":
+        raise ValueError("missing interface mapping")
+    result: dict[str, str] = {}
+    for line in lines[1:]:
+        if not line.startswith("  ") or line.startswith("    "):
+            raise ValueError(f"unsupported interface line: {line!r}")
+        key, delimiter, value = line.strip().partition(":")
+        if not delimiter:
+            raise ValueError(f"unsupported interface line: {line!r}")
+        result[key] = yaml_scalar(value)
+    return result
 
 
 def run_helper(*args: str) -> subprocess.CompletedProcess[str]:
@@ -77,7 +117,7 @@ class MirroredSkillTreeTests(unittest.TestCase):
             text = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
             with self.subTest(skill=skill_dir.parent.parent.name):
                 self.assertTrue(text.startswith("---\n"))
-                front = yaml.safe_load(text.split("---\n")[1])
+                front = frontmatter_scalars(text)
                 self.assertEqual("review-lulu-alert", front["name"])
                 description = front["description"].lower()
                 self.assertIn("lulu", description)
@@ -85,9 +125,10 @@ class MirroredSkillTreeTests(unittest.TestCase):
 
     def test_openai_interface_metadata_is_present(self):
         for skill_dir in SKILL_DIRS:
-            data = yaml.safe_load((skill_dir / "agents/openai.yaml").read_text(encoding="utf-8"))
+            interface = interface_scalars(
+                (skill_dir / "agents/openai.yaml").read_text(encoding="utf-8")
+            )
             with self.subTest(skill=skill_dir.parent.parent.name):
-                interface = data["interface"]
                 self.assertTrue(interface["display_name"])
                 self.assertTrue(interface["short_description"])
                 self.assertIn("review-lulu-alert", interface["default_prompt"])

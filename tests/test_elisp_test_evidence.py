@@ -327,7 +327,8 @@ class TestEvidenceHookTests(unittest.TestCase):
         )
         self.assertEqual(tracked.returncode, 0, tracked.stderr)
         self.assertFalse(marker.exists())
-        self.assertIn("does not match the wrapper command", tracked.stderr)
+        self.assertIn("does not match the wrapper command", tracked.stdout)
+        self.assertIn("additionalContext", tracked.stdout)
         self.assertIn("permissionDecision", required.stdout)
 
     def test_source_change_after_test_blocks_commit(self):

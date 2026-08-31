@@ -68,8 +68,41 @@ Violating the letter of these rules violates the workflow:
   A targeted message names the actual obstacle and resolves it using authority
   and evidence already available from the stage.
 - Agent 1 owns implementation and stage-final verification. The orchestrator
-  does not inspect the work, run acceptance tests, compare outputs, or add an
+  does not run acceptance tests, compare outputs, or add an
   implementation-review pass.
+
+## SUPERVISION AND STOP-LOSS — HARD RULE
+
+Stage atomicity governs *prompting*, not *watching*. The orchestrator must
+supervise the stage from evidence Agent 1 publishes, and must stop a stage
+that is burning time without landing anything. A 10-hour run of five
+full-cycle retries with no landed result happened once because the
+orchestrator read "never inspect" as "never look"; that is a failure of the
+orchestrator, not compliance.
+
+- The injected implementation contract names a progress file
+  (`<run-file>.progress`). Agent 1 appends one line per completed step,
+  per attempt start, and per attempt failure (with the failing step and
+  cause). `status` and `watch` print the latest line and its age during
+  implementation. Reading it is required, not a violation.
+- Check the progress file at least every 30 minutes while Agent 1 is busy.
+  Report progress to the user in plain language at least hourly on any stage
+  running longer than an hour: what landed, what failed, what is running.
+- Stop-loss, enforced by the orchestrator: if the progress file shows the
+  same landing step (a regen, rehearsal, or import cycle) failing twice, or
+  no new progress line for 60 minutes while Agent 1 reports busy, do not let
+  the loop continue. Read the state, and either steer Agent 1 to change the
+  iteration method (for example: fix and test against cached artifacts, do
+  not rerun the full cycle) or stop the stage and report to the user. A
+  third full-cycle retry of the same landing is never acceptable.
+- Retries must be cheap. If a stage's landing cycle costs more than a few
+  minutes, the plan must include (or the orchestrator must demand before the
+  first retry) a resume-from-cached-outputs path so that a failure in a
+  post-cycle check does not repeat the cycle.
+- Harness facts to put in every handoff: shell `sleep` is blocked but
+  Python-interpreter waits are not; background commands and waiters are
+  killed after 10 minutes and do not re-invoke the session; an ended turn is
+  a stop.
 
 Internal decomposition is allowed; external task-level orchestration is not.
 The absence of another Agent 2 review does not make task-level supervision
@@ -265,8 +298,9 @@ exits. Prompt content is never retransmitted automatically.
 
 During specification and planning, use the bounded transcript evidence needed
 to pass artifacts between agents. During implementation, the helper disables
-transcript and repository monitoring and exposes only the run's stage/phase
-plus Agent 1's fixed top-level session state. The only exception is the marker
+transcript and repository monitoring and exposes the run's stage/phase,
+Agent 1's fixed top-level session state, and the latest progress-file line
+with its age (the supervision channel). The only exception is the marker
 validator inside `finish-phase`; it never overrides a busy lifecycle state or
 prints transcript content. Do not bypass it to read internal task/subagent
 output or inspect per-task repository/process state.
@@ -302,9 +336,10 @@ Whole-stage direction: <how Agent 1 resumes ownership of the complete stage>
 It never names an internal task sequence. The helper rejects generic,
 repeated, busy-session, ambiguous-delivery, and unrecorded-return steering.
 
-Send concise commentary only when the stage phase changes or the guarded run
-reaches a terminal state. Do not emit periodic task-level heartbeats. If Agent
-1 is busy, leave it alone.
+Send commentary when the stage phase changes, when the guarded run reaches a
+terminal state, and — on long stages — at least hourly in plain language from
+the progress file (see SUPERVISION AND STOP-LOSS). Do not prompt Agent 1
+while it is busy; do read its progress file.
 
 ## Step 5: Create and review the spec
 

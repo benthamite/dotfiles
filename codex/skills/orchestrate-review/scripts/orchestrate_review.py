@@ -63,7 +63,18 @@ or reviewer that has not finished is not a reason to return. Ending the turn
 is read as a stage stop and can only be reopened by a steering prompt. Wait
 inside the turn with bounded polling loops (each well under the harness's
 10-minute command limit, re-armed as needed) and continue when the result
-lands.
+lands. Shell `sleep` is blocked in this harness; waits through the Python
+interpreter are not. Background waiters die after 10 minutes and never
+re-invoke you.
+
+Progress file (mandatory): append one line to {progress_file} at every
+attempt start, every completed step, and every attempt failure (with the
+failing step and its cause), e.g. "attempt 3 | treatment_regen | FAILED:
+predecessor ambiguity". The orchestrator supervises the stage from this file
+and stops it if the same landing cycle fails twice; keep the file honest and
+current. Iteration must be cheap: when a check fails after an expensive
+cycle (regen, rehearsal, import), fix and test the check against the cached
+outputs of that cycle; do not rerun the cycle unless its inputs changed.
 
 Stage context follows:
 
@@ -441,9 +452,32 @@ def state_cmd(args: argparse.Namespace) -> None:
         print(f"{state['state']:15} {state['buffer']} [{state['directory']}]")
 
 
-def _phase_prompt(state: dict[str, Any], phase: str, context: str) -> str:
+def progress_file_for(run_file: str | Path) -> Path:
+    """The supervision channel Agent 1 appends to during implementation."""
+    return Path(str(run_file) + ".progress")
+
+
+def latest_progress(run_file: str | Path) -> dict[str, Any] | None:
+    p = progress_file_for(run_file)
+    if not p.exists():
+        return None
+    lines = [l for l in p.read_text(errors="replace").splitlines() if l.strip()]
+    return {
+        "path": str(p),
+        "lines": len(lines),
+        "latest": lines[-1] if lines else "",
+        "age_s": int(time.time() - p.stat().st_mtime),
+    }
+
+
+def _phase_prompt(
+    state: dict[str, Any], phase: str, context: str, run_file: str | Path | None = None
+) -> str:
     if phase == "implementation":
-        return IMPLEMENTATION_CONTRACT.format(stage=state["stage"], context=context)
+        progress = str(progress_file_for(run_file)) if run_file else "<run-file>.progress"
+        return IMPLEMENTATION_CONTRACT.format(
+            stage=state["stage"], context=context, progress_file=progress
+        )
     return PHASE_CONTRACT.format(phase=phase, context=context)
 
 
@@ -573,7 +607,7 @@ def submit(args: argparse.Namespace) -> None:
                 f"{label} is {live.get('state', 'unknown')}; "
                 "phase submission requires awaiting input"
             )
-        prompt = _phase_prompt(state, args.phase, context)
+        prompt = _phase_prompt(state, args.phase, context, args.run_file)
         state["pending_submission"] = {
             "kind": "phase",
             "phase": args.phase,
@@ -1001,6 +1035,9 @@ def status(args: argparse.Namespace) -> dict[str, Any]:
         "implementation-returned",
     }:
         result["agent1"] = session.buffer_state(state["agent1"]["buffer"])
+        progress = latest_progress(args.run_file)
+        if progress is not None:
+            result["progress"] = progress
         return result
 
     result["repo"] = git_status(Path(state["repo"]))
@@ -1037,6 +1074,9 @@ def status_cmd(args: argparse.Namespace) -> None:
         if role in current:
             item = current[role]
             print(f"{role.title()}: {item['state']} — {item['buffer']}")
+    if "progress" in current:
+        item = current["progress"]
+        print(f"Progress: [{item['age_s']}s ago, {item['lines']} lines] {item['latest'][:200]}")
     for key in ("agent1_transcript", "agent2_transcript"):
         if key in current:
             item = current[key]
@@ -1094,6 +1134,11 @@ def watch(args: argparse.Namespace) -> None:
             for role in ("agent1", "agent2", "planner", "reviewer"):
                 if role in current:
                     parts.append(f"{role}={current[role]['state']}")
+            if "progress" in current:
+                item = current["progress"]
+                parts.append(
+                    f"progress[{item['age_s']}s]={item['latest'][:120]}"
+                )
             for key in (
                 "agent1_transcript",
                 "agent2_transcript",

@@ -216,7 +216,9 @@ disposable: the skill requires killing both fixed actor sessions (and any
 priming session) as soon as a run reaches a terminal state, so no finished or
 unused agent buffers linger. The injected implementation contract also forbids
 Agent 1 from ending its turn to wait on background jobs or subagents; it must
-poll inside the turn with bounded loops.
+poll inside the turn with bounded loops. The orchestrator supervises through
+a progress file Agent 1 appends to, reports hourly on long stages, and enforces
+a stop-loss: the same landing cycle failing twice ends the stage.
 
 The paired =request-review= skill runs one cross-model review of a
 committed plan from inside the authoring session: it anchors the review to

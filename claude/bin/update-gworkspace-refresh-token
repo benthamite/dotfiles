@@ -86,19 +86,15 @@ def read_pass_entry(entry):
     return ""
 
 
-def op_env():
-    env = os.environ.copy()
-    if "OP_SERVICE_ACCOUNT_TOKEN" not in env:
-        token = read_pass_entry("epoch/1password-service-account-token")
-        if token:
-            env["OP_SERVICE_ACCOUNT_TOKEN"] = token
-    return env
-
-
 def op_inject(spec, value):
-    subprocess.run(
+    # 1Password writes need the desktop-authorized broker: the ambient
+    # OP_SERVICE_ACCOUNT_TOKEN is read-only, so bare `op item edit` fails.
+    op_desktop = Path(__file__).resolve().parents[2] / "bin" / "op-desktop"
+    env = os.environ.copy()
+    env.pop("OP_SERVICE_ACCOUNT_TOKEN", None)
+    result = subprocess.run(
         [
-            "op",
+            str(op_desktop),
             "item",
             "edit",
             spec["item"],
@@ -106,9 +102,19 @@ def op_inject(spec, value):
             spec["vault"],
             f"{spec['field']}={value}",
         ],
-        check=True,
-        env=op_env(),
+        capture_output=True,
+        text=True,
+        env=env,
     )
+    if result.returncode != 0:
+        # Never raise CalledProcessError here: its message embeds argv,
+        # which carries the credential.
+        stderr = (result.stderr or "").replace(value, "[REDACTED]").strip()
+        sys.exit(
+            f"1Password write failed (exit {result.returncode}): "
+            f"{stderr or 'no stderr'}\n"
+            "The new refresh token was NOT stored; re-run this helper."
+        )
 
 
 def main():

@@ -34,6 +34,33 @@ This threat model shapes the audit: checks that reduce the blast radius of a com
 
 Scan for exposed credentials and secrets mismanagement.
 
+**Credential incident memory:**
+
+Before investigating a detected credential, run the bundled
+`scripts/credential-incident-registry.py` with `--start TARGET list`, resolving
+both the helper and target to absolute paths. In a Git repository it reads the
+mode-0600 registry at
+`GIT_DIR/dotfiles-publish/credential-incidents.json`; outside Git it uses
+`$XDG_STATE_HOME/security-audit/credential-incidents.json` (or
+`~/.local/state/security-audit/credential-incidents.json`). Use `lookup
+--fingerprint FINGERPRINT` when a scanner supplied a fingerprint.
+
+The registry records only keyed fingerprints, provider status, verification
+method and time, redacted provider references, historical locations, and the
+next action. It never stores a credential value. Reuse a matching record's
+provider research and completed verification instead of repeating them. For a
+pending record, perform only its recorded next action and refresh the live
+validity check when remediation is authorized. A registry record is evidence,
+not an allowlist: it never suppresses a scanner finding. For public Git history,
+`dotfiles-publish incident-record` remains the only command that resolves an
+exact finding after rejection of the old credential has been verified.
+
+Ordinary audit mode is read-only, so do not create or update the registry during
+an audit. During explicitly authorized remediation, update the record
+immediately after a provider action or live verification with the helper's
+`record --input FILE` command. The input must be a mode-0600 temporary JSON file;
+trash it after recording. Run `validate` after every update.
+
 **What to check:**
 
 - **Plaintext secrets in config files**: scan `~/.claude.json`, project `.env` files, `launchd` plists, and similar for API keys, tokens, passwords, and OAuth secrets. Match common patterns:

@@ -10,6 +10,7 @@ import sqlite3
 import sys
 import tempfile
 from collections import Counter
+from contextlib import closing
 from pathlib import Path
 from typing import Any
 
@@ -290,7 +291,7 @@ def rewrite_state_db_for_session(
 ) -> int:
     if not path.exists():
         return 0
-    with sqlite3.connect(path) as conn:
+    with closing(sqlite3.connect(path)) as conn, conn:
         rows = conn.execute(
             """
             SELECT id FROM threads
@@ -315,7 +316,7 @@ def rewrite_state_db_rename(
 ) -> int:
     if not path.exists():
         return 0
-    with sqlite3.connect(path) as conn:
+    with closing(sqlite3.connect(path)) as conn, conn:
         rows = conn.execute(
             "SELECT id FROM threads WHERE cwd = ?",
             (old,),

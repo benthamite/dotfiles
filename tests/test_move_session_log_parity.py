@@ -23,6 +23,7 @@ import sqlite3
 import subprocess
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 
 
@@ -143,7 +144,7 @@ class MoveSessionLogParityTest(unittest.TestCase):
 
     def make_codex_state_db(self, home: Path, cwd: str = OLD) -> Path:
         database = home / "state_5.sqlite"
-        with sqlite3.connect(database) as conn:
+        with closing(sqlite3.connect(database)) as conn, conn:
             conn.execute(
                 "CREATE TABLE threads (id TEXT PRIMARY KEY, rollout_path TEXT, cwd TEXT)"
             )
@@ -154,12 +155,18 @@ class MoveSessionLogParityTest(unittest.TestCase):
         return database
 
     def run_codex(self, home: Path, *args: str) -> subprocess.CompletedProcess:
-        return subprocess.run(
+        result = subprocess.run(
             ["python3", str(CODEX_SCRIPT), *args],
             capture_output=True,
             text=True,
-            env={**os.environ, "CODEX_HOME": str(home)},
+            env={
+                **os.environ,
+                "CODEX_HOME": str(home),
+                "PYTHONWARNINGS": "always::ResourceWarning",
+            },
         )
+        self.assertNotIn("ResourceWarning", result.stderr)
+        return result
 
     def run_claude(self, config: Path, *args: str) -> subprocess.CompletedProcess:
         return subprocess.run(
@@ -307,7 +314,7 @@ class MoveSessionLogParityTest(unittest.TestCase):
             self.assertIn("state_db files checked: 2", result.stdout)
 
             for home in homes:
-                with sqlite3.connect(home / "state_5.sqlite") as conn:
+                with closing(sqlite3.connect(home / "state_5.sqlite")) as conn:
                     cwd = conn.execute(
                         "SELECT cwd FROM threads WHERE id = ?", (SESSION_ID,)
                     ).fetchone()[0]
@@ -325,14 +332,14 @@ class MoveSessionLogParityTest(unittest.TestCase):
                 )
             )
             for home in homes:
-                with sqlite3.connect(home / "state_5.sqlite") as conn:
+                with closing(sqlite3.connect(home / "state_5.sqlite")) as conn, conn:
                     conn.execute("UPDATE threads SET cwd = ?", (OLD,))
 
             result = self.run_codex(homes[0], "--rename", OLD, NEW)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("state_db thread cwd rows rewritten: 2", result.stdout)
             for home in homes:
-                with sqlite3.connect(home / "state_5.sqlite") as conn:
+                with closing(sqlite3.connect(home / "state_5.sqlite")) as conn:
                     cwd = conn.execute(
                         "SELECT cwd FROM threads WHERE id = ?", (SESSION_ID,)
                     ).fetchone()[0]

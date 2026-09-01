@@ -4,12 +4,13 @@
 from __future__ import annotations
 
 import argparse
-import concurrent.futures
 import json
+import math
 import re
 import shutil
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -21,7 +22,71 @@ API_ORIGIN = "https://api.gitguardian.com"
 API_PREFIX = "/v1/"
 PASS_ENTRY = "auth-sources/api.gitguardian.com/pablo@stafforini.com"
 MAX_RESPONSE_BYTES = 10 * 1024 * 1024
+MAX_RATE_LIMIT_RETRIES = 2
+MAX_RETRY_AFTER_SECONDS = 5.0
 NEXT_LINK_RE = re.compile(r'<([^>]+)>\s*;\s*rel="next"')
+SHA_RE = re.compile(r"^[0-9a-fA-F]{40,64}$")
+IDENTIFIER_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{0,63}$")
+DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+TIMESTAMP_RE = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$"
+)
+CONTROL_RE = re.compile(r"[\x00-\x1f\x7f]")
+
+OPEN_STATUSES = ("TRIGGERED", "ASSIGNED")
+CLOSED_STATUSES = ("RESOLVED", "IGNORED")
+INCIDENT_STATUSES = frozenset(OPEN_STATUSES + CLOSED_STATUSES)
+SEVERITIES = frozenset(("critical", "high", "medium", "low", "info", "unknown"))
+VALIDITIES = frozenset(("valid", "invalid", "failed_to_check", "no_checker", "unknown"))
+IGNORE_REASONS = frozenset(("test_credential", "false_positive", "low_risk", "invalid"))
+PRESENCES = frozenset(("present", "removed", "unknown"))
+VISIBILITIES = frozenset(("public", "private", "internal", "unknown"))
+CHANGE_TYPES = frozenset(("addition", "context", "deletion", "unknown"))
+SOURCE_TYPES = frozenset(
+    (
+        "azure_devops",
+        "azure_cr",
+        "bitbucket",
+        "bitbucket_cloud",
+        "confluence_cloud",
+        "confluence_data_center",
+        "custom_source",
+        "docker_hub",
+        "github",
+        "gitlab",
+        "google_artifact",
+        "aws_ecr",
+        "jfrog_artifact",
+        "jira_cloud",
+        "jira_data_center",
+        "microsoft_onedrive",
+        "microsoft_teams",
+        "servicenow",
+        "sharepoint_online",
+        "sharepoint_online_drive",
+        "sharepoint_online_pages",
+        "slack",
+    )
+)
+INCIDENT_TAGS = frozenset(
+    (
+        "DEFAULT_BRANCH",
+        "FROM_HISTORICAL_SCAN",
+        "IGNORED_IN_CHECK_RUN",
+        "CHECK_RUN_SKIP_FALSE_POSITIVE",
+        "CHECK_RUN_SKIP_LOW_RISK",
+        "CHECK_RUN_SKIP_TEST_CRED",
+        "PUBLIC",
+        "PUBLICLY_EXPOSED",
+        "PUBLICLY_LEAKED",
+        "REGRESSION",
+        "REVOCABLE_BY_GG",
+        "SENSITIVE_FILE",
+        "TEST_FILE",
+        "FALSE_POSITIVE",
+        "VAULTED",
+    )
+)
 
 
 class TriageError(RuntimeError):
@@ -76,6 +141,7 @@ def _api_get(
     url: str,
     token: str,
     opener: Callable[..., Any] = urllib.request.urlopen,
+    sleeper: Callable[[float], None] = time.sleep,
 ) -> tuple[Any, str | None]:
     request = urllib.request.Request(
         _validate_api_url(url),
@@ -86,14 +152,29 @@ def _api_get(
             "User-Agent": "dotfiles-gitguardian-incidents/1",
         },
     )
-    try:
-        with opener(request, timeout=30) as response:
-            payload = response.read(MAX_RESPONSE_BYTES + 1)
-            link = response.headers.get("Link")
-    except urllib.error.HTTPError as exc:
-        raise TriageError(f"GitGuardian API request failed with HTTP {exc.code}") from exc
-    except (urllib.error.URLError, TimeoutError, OSError) as exc:
-        raise TriageError("GitGuardian API request failed") from exc
+    for attempt in range(MAX_RATE_LIMIT_RETRIES + 1):
+        try:
+            with opener(request, timeout=30) as response:
+                payload = response.read(MAX_RESPONSE_BYTES + 1)
+                link = response.headers.get("Link")
+            break
+        except urllib.error.HTTPError as exc:
+            code = exc.code
+            retry_after = exc.headers.get("Retry-After") if exc.headers else None
+            exc.close()
+            if code != 429 or attempt == MAX_RATE_LIMIT_RETRIES:
+                raise TriageError(
+                    f"GitGuardian API request failed with HTTP {code}"
+                ) from exc
+            try:
+                delay = float(retry_after)
+            except (TypeError, ValueError):
+                delay = 1.0
+            if not math.isfinite(delay):
+                delay = 1.0
+            sleeper(min(max(delay, 0.0), MAX_RETRY_AFTER_SECONDS))
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            raise TriageError("GitGuardian API request failed") from exc
     if len(payload) > MAX_RESPONSE_BYTES:
         raise TriageError("GitGuardian API response exceeded the safety limit")
     try:
@@ -111,13 +192,73 @@ def _next_url(current_url: str, link_header: str | None) -> str | None:
     return _validate_api_url(urllib.parse.urljoin(current_url, match.group(1)))
 
 
-def _safe_text(value: Any, default: str = "?") -> str:
-    if not isinstance(value, str) or not value:
+def _pages(
+    url: str,
+    token: str,
+    getter: Callable[[str, str], tuple[Any, str | None]],
+):
+    seen = set()
+    while url is not None:
+        if url in seen:
+            raise TriageError("GitGuardian returned a pagination cycle")
+        seen.add(url)
+        payload, link = getter(url, token)
+        yield payload
+        url = _next_url(url, link)
+
+
+def _safe_text(value: Any, default: str = "?", limit: int = 4096) -> str:
+    if (
+        not isinstance(value, str)
+        or not value
+        or len(value.encode("utf-8")) > limit
+        or CONTROL_RE.search(value)
+    ):
         return default
     return value
 
 
-def summarize_incident(incident: dict[str, Any]) -> dict[str, Any]:
+def _safe_enum(value: Any, allowed: frozenset[str], default: str = "?") -> str:
+    return value if isinstance(value, str) and value in allowed else default
+
+
+def _safe_int(value: Any, default: int | None = None, minimum: int = 0) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
+        return default
+    return value
+
+
+def _safe_date(value: Any) -> str:
+    if not isinstance(value, str):
+        return "?"
+    date = value[:10]
+    if not DATE_RE.fullmatch(date) or (len(value) > 10 and not TIMESTAMP_RE.fullmatch(value)):
+        return "?"
+    return date
+
+
+def _safe_timestamp(value: Any) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str) or not TIMESTAMP_RE.fullmatch(value):
+        return None
+    return value
+
+
+def _safe_tags(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    return sorted({tag for tag in value if isinstance(tag, str) and tag in INCIDENT_TAGS})
+
+
+def _source(occurrence: dict[str, Any]) -> dict[str, Any]:
+    source = occurrence.get("source")
+    return source if isinstance(source, dict) else {}
+
+
+def summarize_incident(
+    incident: dict[str, Any], *, include_location: bool = True
+) -> dict[str, Any]:
     """Project an incident onto a fixed metadata-only schema."""
     detector = incident.get("detector")
     if not isinstance(detector, dict):
@@ -126,70 +267,193 @@ def summarize_incident(incident: dict[str, Any]) -> dict[str, Any]:
     occurrence = occurrences[0] if isinstance(occurrences, list) and occurrences else {}
     if not isinstance(occurrence, dict):
         occurrence = {}
-    source = occurrence.get("source")
-    if not isinstance(source, dict):
-        source = {}
-    date = _safe_text(incident.get("date"))
+    source = _source(occurrence)
+    occurrence_count = _safe_int(incident.get("occurrences_count"))
+    if occurrence_count is None:
+        occurrence_count = len(occurrences) if isinstance(occurrences, list) else 0
     return {
-        "id": incident.get("id"),
+        "id": _safe_int(incident.get("id"), minimum=1),
         "detector": _safe_text(detector.get("display_name")),
-        "severity": _safe_text(incident.get("severity")),
-        "validity": _safe_text(incident.get("validity")),
-        "occurrences": incident.get("occurrences_count", len(occurrences or [])),
-        "source": _safe_text(source.get("full_name")),
-        "visibility": _safe_text(source.get("visibility")),
-        "filepath": _safe_text(occurrence.get("filepath")),
-        "date": date[:10] if date != "?" else date,
-        "status": _safe_text(incident.get("status")),
+        "severity": _safe_enum(incident.get("severity"), SEVERITIES),
+        "validity": _safe_enum(incident.get("validity"), VALIDITIES),
+        "occurrences": occurrence_count,
+        "source": _safe_text(source.get("full_name")) if include_location else "?",
+        "visibility": _safe_enum(source.get("visibility"), VISIBILITIES)
+        if include_location
+        else "?",
+        "filepath": _safe_text(occurrence.get("filepath")) if include_location else "?",
+        "date": _safe_date(incident.get("date")),
+        "status": _safe_enum(incident.get("status"), INCIDENT_STATUSES),
+        "ignore_reason": _safe_enum(incident.get("ignore_reason"), IGNORE_REASONS),
+        "secret_revoked": incident.get("secret_revoked")
+        if isinstance(incident.get("secret_revoked"), bool)
+        else None,
+        "triggered_at": _safe_timestamp(incident.get("triggered_at")),
+        "resolved_at": _safe_timestamp(incident.get("resolved_at")),
+        "ignored_at": _safe_timestamp(incident.get("ignored_at")),
+        "tags": _safe_tags(incident.get("tags")),
     }
+
+
+def summarize_occurrence(occurrence: dict[str, Any]) -> dict[str, Any]:
+    """Project one occurrence without returning matched values or arbitrary fields."""
+    source = _source(occurrence)
+    sha = occurrence.get("sha")
+    if not isinstance(sha, str) or not SHA_RE.fullmatch(sha):
+        sha = "?"
+    matches = []
+    raw_matches = occurrence.get("matches")
+    if isinstance(raw_matches, list):
+        for match in raw_matches:
+            if not isinstance(match, dict):
+                continue
+            positions = {
+                "name": match.get("name")
+                if isinstance(match.get("name"), str)
+                and IDENTIFIER_RE.fullmatch(match["name"])
+                else "?",
+                "index_start": _safe_int(match.get("indice_start")),
+                "index_end": _safe_int(match.get("indice_end")),
+                "pre_line_start": _safe_int(match.get("pre_line_start"), minimum=1),
+                "pre_line_end": _safe_int(match.get("pre_line_end"), minimum=1),
+                "post_line_start": _safe_int(match.get("post_line_start"), minimum=1),
+                "post_line_end": _safe_int(match.get("post_line_end"), minimum=1),
+            }
+            if any(value is not None for value in positions.values()):
+                matches.append(positions)
+    return {
+        "id": _safe_int(occurrence.get("id"), minimum=1),
+        "incident_id": _safe_int(occurrence.get("incident_id"), minimum=1),
+        "sha": sha,
+        "filepath": _safe_text(occurrence.get("filepath")),
+        "source": _safe_text(source.get("full_name")),
+        "source_id": _safe_int(source.get("id"), minimum=1),
+        "source_type": _safe_enum(source.get("type"), SOURCE_TYPES),
+        "visibility": _safe_enum(source.get("visibility"), VISIBILITIES),
+        "presence": _safe_enum(occurrence.get("presence"), PRESENCES),
+        "change_type": _safe_enum(occurrence.get("change_type"), CHANGE_TYPES),
+        "date": _safe_timestamp(occurrence.get("date")),
+        "tags": _safe_tags(occurrence.get("tags")),
+        "matches": matches,
+    }
+
+
+def _list_incidents(
+    token: str,
+    statuses: tuple[str, ...],
+    getter: Callable[[str, str], tuple[Any, str | None]] = _api_get,
+) -> list[dict[str, Any]]:
+    summaries_by_id: dict[int, dict[str, Any]] = {}
+    for status in statuses:
+        url = f"{API_ORIGIN}/v1/incidents/secrets?per_page=100&status={status}"
+        for payload in _pages(url, token, getter):
+            if not isinstance(payload, list):
+                raise TriageError("GitGuardian API returned an unexpected incident list")
+            for item in payload:
+                incident_id = item.get("id") if isinstance(item, dict) else None
+                if _safe_int(incident_id, minimum=1) is None:
+                    raise TriageError("GitGuardian API returned an invalid incident identifier")
+                summary = summarize_incident(item, include_location=False)
+                previous = summaries_by_id.get(incident_id)
+                if previous is not None and previous != summary:
+                    raise TriageError("GitGuardian returned conflicting duplicate incidents")
+                summaries_by_id[incident_id] = summary
+    return sorted(
+        summaries_by_id.values(), key=lambda item: (item["detector"], item["id"])
+    )
 
 
 def list_open_incidents(
     token: str,
     getter: Callable[[str, str], tuple[Any, str | None]] = _api_get,
 ) -> list[dict[str, Any]]:
-    incident_ids: list[int] = []
-    for status in ("TRIGGERED", "ASSIGNED"):
-        url = f"{API_ORIGIN}/v1/incidents/secrets?per_page=100&status={status}"
-        while url is not None:
-            payload, link = getter(url, token)
-            if not isinstance(payload, list):
-                raise TriageError("GitGuardian API returned an unexpected incident list")
-            for item in payload:
-                incident_id = item.get("id") if isinstance(item, dict) else None
-                if not isinstance(incident_id, int):
-                    raise TriageError("GitGuardian API returned an invalid incident identifier")
-                incident_ids.append(incident_id)
-            url = _next_url(url, link)
+    return _list_incidents(token, OPEN_STATUSES, getter)
 
-    def fetch_detail(incident_id: int) -> dict[str, Any]:
-        payload, _ = getter(f"{API_ORIGIN}/v1/incidents/secrets/{incident_id}", token)
-        if not isinstance(payload, dict) or payload.get("id") != incident_id:
-            raise TriageError("GitGuardian API returned an unexpected incident detail")
-        return summarize_incident(payload)
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
-        summaries = list(pool.map(fetch_detail, incident_ids))
-    return sorted(summaries, key=lambda item: (item["detector"], item["id"]))
+def list_closed_incidents(
+    token: str,
+    getter: Callable[[str, str], tuple[Any, str | None]] = _api_get,
+) -> list[dict[str, Any]]:
+    return _list_incidents(token, CLOSED_STATUSES, getter)
+
+
+def get_incident(
+    incident_id: int,
+    token: str,
+    getter: Callable[[str, str], tuple[Any, str | None]] = _api_get,
+) -> dict[str, Any]:
+    detail_url = f"{API_ORIGIN}/v1/incidents/secrets/{incident_id}?with_occurrences=0"
+    payload, _ = getter(detail_url, token)
+    if (
+        not isinstance(payload, dict)
+        or _safe_int(payload.get("id"), minimum=1) != incident_id
+    ):
+        raise TriageError("GitGuardian API returned an unexpected incident detail")
+
+    occurrences_by_id: dict[int, dict[str, Any]] = {}
+    url = f"{API_ORIGIN}/v1/occurrences/secrets?per_page=100&incident_id={incident_id}"
+    for occurrence_payload in _pages(url, token, getter):
+        if not isinstance(occurrence_payload, list):
+            raise TriageError("GitGuardian API returned an unexpected occurrence list")
+        for occurrence in occurrence_payload:
+            if (
+                not isinstance(occurrence, dict)
+                or _safe_int(occurrence.get("incident_id"), minimum=1) != incident_id
+                or _safe_int(occurrence.get("id"), minimum=1) is None
+            ):
+                raise TriageError("GitGuardian API returned an invalid occurrence")
+            occurrence_id = occurrence["id"]
+            summary = summarize_occurrence(occurrence)
+            previous = occurrences_by_id.get(occurrence_id)
+            if previous is not None and previous != summary:
+                raise TriageError("GitGuardian returned conflicting duplicate occurrences")
+            occurrences_by_id[occurrence_id] = summary
+
+    expected_count = _safe_int(payload.get("occurrences_count"))
+    if expected_count is not None and expected_count != len(occurrences_by_id):
+        raise TriageError("GitGuardian returned an occurrence count mismatch")
+
+    summary = summarize_incident(payload)
+    summary["occurrence_details"] = sorted(
+        occurrences_by_id.values(),
+        key=lambda item: (item["sha"], item["filepath"], item["id"]),
+    )
+    return summary
+
+
+def positive_incident_id(value: str) -> int:
+    incident_id = int(value)
+    if incident_id < 1:
+        raise argparse.ArgumentTypeError("incident id must be positive")
+    return incident_id
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="List redacted metadata for triggered GitGuardian incidents."
+        description="Read fixed-schema GitGuardian incident metadata without secret values."
     )
-    parser.add_argument("command", choices=("list-open",))
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    subparsers.add_parser("list-open", help="list triggered and assigned incidents")
+    subparsers.add_parser("list-closed", help="list resolved and ignored incidents")
+    detail = subparsers.add_parser("get", help="get redacted incident and occurrence metadata")
+    detail.add_argument("incident_id", type=positive_incident_id)
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    if args.command == "list-open":
-        try:
-            incidents = list_open_incidents(load_token())
-        except TriageError as exc:
-            print(f"error: {exc}", file=sys.stderr)
-            return 1
-        print(json.dumps(incidents, ensure_ascii=True, sort_keys=True))
+    try:
+        token = load_token()
+        if args.command == "list-open":
+            incidents = list_open_incidents(token)
+        elif args.command == "list-closed":
+            incidents = list_closed_incidents(token)
+        else:
+            incidents = get_incident(args.incident_id, token)
+    except TriageError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(incidents, ensure_ascii=True, sort_keys=True))
     return 0
 
 

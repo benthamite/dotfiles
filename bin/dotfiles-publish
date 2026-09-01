@@ -715,12 +715,21 @@ ARCHIVE_SUFFIXES = (
 )
 
 LARGE_BLOB_LIMIT = 2 * 1024 * 1024
+AUDIT_REVIEW_CHUNK_LIMIT = 128 * 1024
 GIT_CRYPT_HEADER = b"\x00GITCRYPT\x00"
 
 
 def changed_entries(repo, commit):
     raw = run_git(
-        repo.root, "diff-tree", "--root", "--no-commit-id", "--name-status", "-r", "-z", commit
+        repo.root,
+        "diff-tree",
+        "--root",
+        "--diff-merges=separate",
+        "--no-commit-id",
+        "--name-status",
+        "-r",
+        "-z",
+        commit,
     ).out
     tokens = raw.split(b"\x00")
     entries = []
@@ -1258,18 +1267,136 @@ def scan_full_audit(repo, key):
         remove_audit_refs(repo)
 
 
-def build_audit_manifest(repo, run_id, result):
-    """Commit, path, high-risk, and finding units across the audited history."""
-    redactor = result.redactor
+def split_utf8_chunks(text, limit):
+    """Split text without cutting a UTF-8 sequence or exceeding a byte limit."""
+    if limit <= 0:
+        raise ValueError("the chunk limit must be positive")
+    pieces = []
+    current = []
+    current_size = 0
+    for line in text.splitlines(keepends=True):
+        while line:
+            encoded_size = len(line.encode("utf-8"))
+            if encoded_size <= limit - current_size:
+                current.append(line)
+                current_size += encoded_size
+                line = ""
+                continue
+            if current:
+                pieces.append("".join(current))
+                current = []
+                current_size = 0
+                continue
+            low, high = 1, len(line)
+            while low < high:
+                middle = (low + high + 1) // 2
+                if len(line[:middle].encode("utf-8")) <= limit:
+                    low = middle
+                else:
+                    high = middle - 1
+            pieces.append(line[:low])
+            line = line[low:]
+    if current:
+        pieces.append("".join(current))
+    return pieces or [""]
+
+
+def audit_commit_review_text(repo, commit, redactor):
+    """Return one commit's metadata and patch without invoking textconv drivers."""
+    shown = run_git(
+        repo.root,
+        "show",
+        "--root",
+        "--no-ext-diff",
+        "--no-textconv",
+        "--diff-merges=separate",
+        "--find-renames",
+        "--format=commit %H%nauthor %an <%ae>%ndate %aI%nparents %P%nsubject %s%n%n%b",
+        "--patch",
+        commit,
+    ).text
+    return redactor.scrub(shown)
+
+
+def audit_history_units(repo, commits, redactor):
+    """Bundle complete commit metadata and patches into bounded review units."""
     units = []
-    for commit in result.commits:
-        units.append(commit_units(repo, commit, redactor))
+    content = []
+    content_size = 0
+    content_commits = []
+    ordinal = 0
+    payload_limit = AUDIT_REVIEW_CHUNK_LIMIT - 256
+
+    def flush():
+        nonlocal content, content_size, content_commits, ordinal
+        if not content:
+            return
+        units.append(
+            make_unit(
+                "patch",
+                content_commits[0],
+                "full-history",
+                ordinal,
+                "".join(content),
+                {
+                    "commit_count": len(content_commits),
+                    "first_commit": content_commits[0],
+                    "last_commit": content_commits[-1],
+                },
+            )
+        )
+        ordinal += 1
+        content = []
+        content_size = 0
+        content_commits = []
+
+    for commit in commits:
+        pieces = split_utf8_chunks(audit_commit_review_text(repo, commit, redactor), payload_limit)
+        for part, piece in enumerate(pieces, 1):
+            marker = "\n=== AUDIT COMMIT %s PART %d/%d ===\n" % (commit, part, len(pieces))
+            framed = marker + piece
+            framed_size = len(framed.encode("utf-8"))
+            if content and content_size + framed_size > AUDIT_REVIEW_CHUNK_LIMIT:
+                flush()
+            content.append(framed)
+            content_size += framed_size
+            if not content_commits or content_commits[-1] != commit:
+                content_commits.append(commit)
+    flush()
+    return units
+
+
+def finding_source_excerpt(finding, resolved, redactor):
+    """Return bounded source context with every scanner-known value redacted."""
+    commit = finding.get("commit")
+    path = finding.get("path")
+    line_number = finding.get("line")
+    entry = resolved.get("%s:%s" % (commit, path)) if commit and path else None
+    if not entry or not isinstance(line_number, int) or line_number < 1:
+        return "source excerpt unavailable"
+    _, kind, size, head = entry
+    if kind != "blob" or looks_binary(head):
+        return "source excerpt unavailable for non-text object"
+    lines = head.decode("utf-8", "replace").splitlines()
+    if line_number > len(lines):
+        suffix = " (file exceeds review excerpt limit)" if size > len(head) else ""
+        return "source excerpt unavailable%s" % suffix
+    start = max(0, line_number - 3)
+    end = min(len(lines), line_number + 2)
+    excerpt = "\n".join("%d: %s" % (index + 1, lines[index]) for index in range(start, end))
+    return redactor.scrub(excerpt)
+
+
+def build_audit_manifest(repo, run_id, result):
+    """Bounded history patches, high-risk files, and findings for review."""
+    redactor = result.redactor
+    units = audit_history_units(repo, result.commits, redactor)
 
     requests = []
     origin = {}
     for commit in result.commits:
         for ordinal, (status, path) in enumerate(changed_entries(repo, commit)):
-            if status[0] == "D":
+            if status[0] == "D" or not is_risky_path(path):
                 continue
             request = "%s:%s" % (commit, path)
             requests.append(request)
@@ -1285,33 +1412,32 @@ def build_audit_manifest(repo, run_id, result):
         if (oid, path) in seen:
             continue
         seen.add((oid, path))
-        units.append(
-            make_unit(
-                "path",
-                commit,
-                path,
-                ordinal,
-                "status %s\npath %s\nobject %s %s\nsize %d" % (status, path, kind, oid, size),
-                {"status": status, "object": oid},
-            )
-        )
         if kind == "blob" and is_risky_path(path):
-            if looks_binary(head):
-                content = "[binary blob: %d bytes, object %s]" % (size, oid)
-            else:
-                content = redactor.scrub(head.decode("utf-8", "replace"))
+            content = blob_content(repo, oid, size, redactor)
             units.append(
                 make_unit("high-risk-file", commit, path, 0, content, {"object": oid, "size": size})
             )
 
+    finding_requests = sorted(
+        {
+            "%s:%s" % (finding.get("commit"), finding.get("path"))
+            for finding in result.findings
+            if finding.get("commit") and finding.get("path")
+        }
+    )
+    finding_objects = cat_file_batch(repo, finding_requests, head_bytes=LARGE_BLOB_LIMIT)
     for ordinal, finding in enumerate(result.findings):
+        content = json.dumps(finding, indent=2, sort_keys=True)
+        content += "\n\nsource excerpt:\n" + finding_source_excerpt(
+            finding, finding_objects, redactor
+        )
         units.append(
             make_unit(
                 "deterministic-finding",
                 finding["commit"],
                 finding["path"],
                 ordinal,
-                json.dumps(finding, indent=2, sort_keys=True),
+                content,
                 {"fingerprint": finding["fingerprint"], "classification": finding["classification"]},
             )
         )

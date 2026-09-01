@@ -1740,6 +1740,164 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         self.assertIn("rotate or revoke", proc.stdout)
         self.assertFalse((self.state_dir() / "authorization.json").exists())
 
+    def test_full_audit_reviews_bounded_complete_history_patches(self):
+        self.publish_base()
+        first = self.commit(
+            "first historical change",
+            {"docs/changes.md": "first historical line\n"},
+        )
+        second = self.commit(
+            "second historical change",
+            {"docs/changes.md": "first historical line\nsecond historical line\n"},
+        )
+
+        proc, run_id = self.scan("--mode", "full-audit")
+
+        self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
+        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        self.assertFalse(
+            [unit for unit in manifest["units"] if unit["kind"] in ("commit", "path")]
+        )
+        patches = [unit for unit in manifest["units"] if unit["kind"] == "patch"]
+        self.assertTrue(patches)
+        serialized = "\n".join(unit["content"] for unit in patches)
+        for expected in (
+            first,
+            second,
+            "first historical change",
+            "second historical change",
+            "+first historical line",
+            "+second historical line",
+        ):
+            self.assertIn(expected, serialized)
+        for unit in patches:
+            self.assertLessEqual(len(unit["content"].encode("utf-8")), 128 * 1024)
+
+    def test_full_audit_finding_includes_redacted_source_context(self):
+        self.publish_base()
+        self.commit(
+            "historical configuration",
+            {
+                "config/service.conf": (
+                    "service = example\n"
+                    "token = %s\n"
+                    "purpose = regression test\n" % TEST_SECRET
+                )
+            },
+        )
+
+        proc, run_id = self.scan("--mode", "full-audit")
+
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        serialized = json.dumps(manifest)
+        self.assertNotIn(TEST_SECRET, serialized)
+        findings = [
+            unit for unit in manifest["units"] if unit["kind"] == "deterministic-finding"
+        ]
+        self.assertTrue(findings)
+        source_context = "\n".join(unit["content"] for unit in findings)
+        self.assertIn("source excerpt:", source_context)
+        self.assertIn("service = example", source_context)
+        self.assertIn("purpose = regression test", source_context)
+        self.assertIn("[REDACTED:", source_context)
+
+    def test_full_audit_patch_bundles_include_merge_resolution_content(self):
+        self.publish_base()
+        self.commit("add merge fixture", {"docs/merge.md": "base\n"})
+        self.git("switch", "--quiet", "-c", "side")
+        self.commit("side change", {"docs/merge.md": "side\n"})
+        self.git("switch", "--quiet", "master")
+        self.commit("main change", {"docs/merge.md": "main\n"})
+        merged = self.git("merge", "--no-ff", "side", check=False)
+        self.assertNotEqual(0, merged.returncode)
+        merge_path = self.repo / "docs/merge.md"
+        merge_path.write_text("manual merge resolution\n")
+        self.git("add", "docs/merge.md")
+        self.git("commit", "--quiet", "-m", "merge resolved manually")
+        merge_commit = self.head()
+
+        proc, run_id = self.scan("--mode", "full-audit")
+
+        self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
+        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        serialized = "\n".join(
+            unit["content"] for unit in manifest["units"] if unit["kind"] == "patch"
+        )
+        self.assertIn(merge_commit, serialized)
+        self.assertIn("merge resolved manually", serialized)
+        self.assertIn("manual merge resolution", serialized)
+
+    def test_full_audit_patch_bundles_show_a_merge_equal_to_one_parent(self):
+        self.publish_base()
+        self.commit("add decision fixture", {"docs/decision.md": "base decision\n"})
+        self.git("switch", "--quiet", "-c", "side")
+        self.commit("side decision", {"docs/decision.md": "side decision\n"})
+        self.git("switch", "--quiet", "master")
+        self.commit("main decision", {"docs/decision.md": "main decision\n"})
+        merged = self.git("merge", "--no-ff", "side", check=False)
+        self.assertNotEqual(0, merged.returncode)
+        decision_path = self.repo / "docs/decision.md"
+        decision_path.write_text("main decision\n")
+        self.git("add", "docs/decision.md")
+        self.git("commit", "--quiet", "-m", "keep main decision at merge")
+        merge_commit = self.head()
+
+        proc, run_id = self.scan("--mode", "full-audit")
+
+        self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
+        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        serialized = "\n".join(
+            unit["content"] for unit in manifest["units"] if unit["kind"] == "patch"
+        )
+        marker = "=== AUDIT COMMIT %s PART 1/1 ===" % merge_commit
+        merge_frame = serialized.split(marker, 1)[1].split("=== AUDIT COMMIT", 1)[0]
+        self.assertIn("keep main decision at merge", merge_frame)
+        self.assertIn("diff --git a/docs/decision.md b/docs/decision.md", merge_frame)
+        self.assertIn("-side decision", merge_frame)
+        self.assertIn("+main decision", merge_frame)
+
+    def test_full_audit_detects_a_risky_file_created_only_by_a_merge(self):
+        self.publish_base()
+        self.commit("add merge base", {"docs/base.md": "base\n"})
+        self.git("switch", "--quiet", "-c", "side")
+        self.commit("side work", {"docs/side.md": "side\n"})
+        self.git("switch", "--quiet", "master")
+        self.commit("main work", {"docs/main.md": "main\n"})
+        merged = self.git("merge", "--no-ff", "--no-commit", "side")
+        self.assertEqual(0, merged.returncode, merged.stdout + merged.stderr)
+        merge_only = self.repo / "config/.env.merge-only"
+        merge_only.parent.mkdir(parents=True, exist_ok=True)
+        merge_only.write_text("EXAMPLE=placeholder\n")
+        self.git("add", "config/.env.merge-only")
+        self.git("commit", "--quiet", "-m", "add merge-only fixture")
+
+        proc, run_id = self.scan("--mode", "full-audit")
+
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
+        self.assertIn("config/.env.merge-only", {finding["path"] for finding in findings})
+        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        high_risk = {
+            unit["path"] for unit in manifest["units"] if unit["kind"] == "high-risk-file"
+        }
+        self.assertIn("config/.env.merge-only", high_risk)
+
+    def test_full_audit_chunking_preserves_a_long_multibyte_line(self):
+        self.publish_base()
+        payload = "é" * 70000
+        self.commit("add long line", {"docs/long.txt": payload + "\n"})
+
+        proc, run_id = self.scan("--mode", "full-audit")
+
+        self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
+        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        patches = [unit for unit in manifest["units"] if unit["kind"] == "patch"]
+        self.assertGreater(len(patches), 1)
+        self.assertEqual(70000, sum(unit["content"].count("é") for unit in patches))
+        for unit in patches:
+            self.assertLessEqual(len(unit["content"].encode("utf-8")), 128 * 1024)
+
     def test_full_audit_object_reader_does_not_deadlock_on_full_pipes(self):
         self.publish_base()
         long_path = "/".join(["x" * 50] * 8) + "/large.bin"

@@ -185,7 +185,8 @@ available because they return no credential data. Secret-consuming work must
 use a dedicated audited operation that keeps values out of agent output; a
 missing operation is an error to repair, not an alternate route. Quoted
 argument globs, including =rg= exclusion patterns beginning with =!=, remain
-inert data rather than executable command words.
+inert data rather than executable command words. A shell =case= default pattern
+is likewise grammar, not an executable glob.
 
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged

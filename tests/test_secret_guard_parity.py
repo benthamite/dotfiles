@@ -277,6 +277,26 @@ class SecretGuardParityTests(unittest.TestCase):
             with self.subTest(command=command):
                 self.assert_both(command, "allow")
 
+    def test_case_default_pattern_is_not_mistaken_for_executable_glob(self):
+        self.assert_both("case x in *) true ;; esac", "allow")
+        for shred in ("shred", "/opt/homebrew/bin/shred"):
+            command = f"""runs_root=/Users/pablostafforini/git-dirs/dotfiles/dotfiles-publish/runs
+purged=0
+for run_file in "$runs_root"/*/run.json; do
+  test -f "$run_file" || continue
+  schema=$(jq -r '.schema // 0' "$run_file")
+  test "$schema" = 1 || continue
+  run_dir=$(dirname "$run_file")
+  case "$run_dir" in "$runs_root"/[0-9a-f][0-9a-f]*) ;; *) printf 'refusing unexpected run path: %s\\n' "$run_dir" >&2; exit 1 ;; esac
+  find "$run_dir" -type f -exec {shred} -u -n 3 -- {{}} +
+  trash "$run_dir"
+  purged=$((purged + 1))
+done"""
+            with self.subTest(shred=shred):
+                self.assert_both(command, "allow")
+
+        self.assert_both("o? read op://Employee/X/credential", "deny")
+
     def test_deny_message_advises_op_desktop(self):
         for tool, guard in GUARDS.items():
             with self.subTest(tool=tool):

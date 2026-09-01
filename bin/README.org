@@ -30,7 +30,7 @@ documented in [[file:../agents/README.org][the agent manual]]. Skill names and t
 | =cr-task-state= | Prints a read-only map of a CR task’s branch, run, rubric, and divergence state. |
 | =docs-audit= | Generates the tracked skill inventory and audits documentation ownership, links, and generated pairs. |
 | =dotfiles-pre-push= | Passes proposed dotfiles pushes to the publication authorizer and otherwise refuses them. |
-| =dotfiles-publish= | Scans, reviews, and authorizes one exact guarded publication; full-history review uses bounded complete commit-and-patch bundles, comparing merges to every parent, instead of one mutable record per historical path state. |
+| =dotfiles-publish= | Scans, reviews, and authorizes one exact guarded publication; full-history review uses bounded merge-complete bundles, and concurrent review writes are serialized. |
 | =drive-errors= | Reads every page of Google Drive's native sync-error panel, preserves exact rows and reasons, and inventories candidate paths without claiming basename matches identify the offending instance. |
 | =git-remote-dotfiles-blocked= | Refuses ordinary dotfiles pushes before Git can bypass the publication workflow. |
 | =install-private-skills= | Installs ignored local shims for skills named by the encrypted private manifest. |

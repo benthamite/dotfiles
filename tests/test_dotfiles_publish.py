@@ -1006,6 +1006,44 @@ class DotfilesPublishManifestTests(PublicationFixture):
         self.assertEqual(0, shown.returncode, shown.stderr)
         self.assertIn("alias gs='git status'", json.loads(shown.stdout)["blob"])
 
+    def test_concurrent_review_records_do_not_overwrite_each_other(self):
+        self.publish_base()
+        self.commit(
+            "add concurrent review fixtures",
+            {"docs/item-%02d.md" % index: "item %d\n" % index for index in range(8)},
+        )
+        _, run_id = self.scan()
+        unit_ids = self.unit_ids(run_id)[:12]
+        environment = self.env(DOTFILES_PUBLISH_TEST_REVIEW_DELAY="0.05")
+
+        processes = [
+            subprocess.Popen(
+                [
+                    sys.executable,
+                    str(PUBLISH),
+                    "review-record",
+                    "--run",
+                    run_id,
+                    "--unit",
+                    unit_id,
+                    "--verdict",
+                    "clean",
+                ],
+                cwd=str(self.repo),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                env=environment,
+            )
+            for unit_id in unit_ids
+        ]
+        completed = [process.communicate(timeout=10) for process in processes]
+
+        for process, (stdout, stderr) in zip(processes, completed):
+            self.assertEqual(0, process.returncode, stdout + stderr)
+        review = self.read_json(self.run_dir(run_id) / "review.json")
+        self.assertEqual(set(unit_ids), set(review["entries"]))
+
     def test_review_record_rejects_value_fields_and_scanner_known_values(self):
         self.publish_base()
         self.commit(

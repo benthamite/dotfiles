@@ -20,6 +20,7 @@ Two environment variables change behaviour and both are deliberate:
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import hmac
 import json
@@ -32,6 +33,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -1842,6 +1844,19 @@ def review_path(repo, run_id):
     return run_directory(repo, run_id) / "review.json"
 
 
+@contextmanager
+def review_write_lock(repo, run_id):
+    """Serialize immutable review updates so concurrent agents cannot lose one."""
+    path = run_directory(repo, run_id) / "review.lock"
+    descriptor = os.open(str(path), os.O_RDWR | os.O_CREAT, FILE_MODE)
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        yield
+    finally:
+        fcntl.flock(descriptor, fcntl.LOCK_UN)
+        os.close(descriptor)
+
+
 def load_review(repo, run_id, manifest):
     path = review_path(repo, run_id)
     if not path.exists():
@@ -1966,23 +1981,30 @@ def command_review_record(args):
     elif args.findings:
         raise PublishError("--findings is only meaningful with a finding verdict", EXIT_REFUSED)
 
-    review = load_review(repo, args.run, manifest)
     digest = findings_digest(records)
-    existing = review["entries"].get(args.unit)
-    if existing and (existing.get("verdict") != args.verdict or existing.get("digest") != digest):
-        raise PublishError(
-            "unit %s already has a different verdict; start a new run instead of revising one"
-            % args.unit,
-            EXIT_REFUSED,
-        )
-    review["manifest_id"] = manifest["manifest_id"]
-    review["entries"][args.unit] = {
-        "verdict": args.verdict,
-        "digest": digest,
-        "findings": records,
-        "recorded_at": rfc3339(now_epoch()),
-    }
-    write_json(review_path(repo, args.run), review)
+    with review_write_lock(repo, args.run):
+        review = load_review(repo, args.run, manifest)
+        if os.environ.get("DOTFILES_PUBLISH_TESTING") == "1":
+            delay = float(os.environ.get("DOTFILES_PUBLISH_TEST_REVIEW_DELAY", "0"))
+            if delay > 0:
+                time.sleep(delay)
+        existing = review["entries"].get(args.unit)
+        if existing and (
+            existing.get("verdict") != args.verdict or existing.get("digest") != digest
+        ):
+            raise PublishError(
+                "unit %s already has a different verdict; start a new run instead of revising one"
+                % args.unit,
+                EXIT_REFUSED,
+            )
+        review["manifest_id"] = manifest["manifest_id"]
+        review["entries"][args.unit] = {
+            "verdict": args.verdict,
+            "digest": digest,
+            "findings": records,
+            "recorded_at": rfc3339(now_epoch()),
+        }
+        write_json(review_path(repo, args.run), review)
     print("recorded: %s %s" % (args.unit, args.verdict))
     return EXIT_OK
 

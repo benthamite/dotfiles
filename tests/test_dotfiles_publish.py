@@ -34,13 +34,22 @@ DAY = 86400
 GIT = shutil.which("git") or "/usr/bin/git"
 
 
+def option_from_argv(argv, name):
+    prefix = name + "="
+    for index, argument in enumerate(argv):
+        if argument.startswith(prefix):
+            return argument[len(prefix) :]
+        if argument == name and index + 1 < len(argv):
+            return argv[index + 1]
+    return None
+
+
 FAKE_GITLEAKS = r'''"""Test double for gitleaks.
 
 It accepts the production command line, really inspects the requested commit
-range or directory, and writes a gitleaks-shaped JSON report.  It deliberately
-leaves the raw matched value in the report so the tests can prove that
-dotfiles-publish redacts scanner output on its own instead of trusting the
-scanner's own --redact flag.
+range or directory, and writes a gitleaks-shaped JSON report.  It honors the
+scanner's --redact flag so tests fail if dotfiles-publish prevents its own
+redactor from learning the raw value.
 """
 
 import json
@@ -70,7 +79,9 @@ def patterns():
 
 
 def record(value, path, commit, line_number, line):
-    column = line.find(value) + 1
+    character_offset = line.find(value)
+    column = len(line[:character_offset].encode("utf-8")) + 1
+    value_length = len(value.encode("utf-8"))
     return {
         "RuleID": "fake-generic-api-key",
         "Description": "fake generic api key",
@@ -79,7 +90,7 @@ def record(value, path, commit, line_number, line):
         "StartLine": line_number,
         "EndLine": line_number,
         "StartColumn": column,
-        "EndColumn": column + len(value) - 1,
+        "EndColumn": column + value_length - 1,
         "Match": line.strip(),
         "Secret": value,
         "Entropy": 4.2,
@@ -164,6 +175,23 @@ def main():
         sys.stderr.write(os.environ.get("DOTFILES_FAKE_GITLEAKS_FAIL_TEXT", "fake scanner crash") + "\n")
         return int(forced)
     report = option(argv, "--report-path")
+    required_mode = os.environ.get("DOTFILES_FAKE_GITLEAKS_REQUIRE_REPORT_MODE")
+    if report and required_mode:
+        try:
+            actual_mode = os.stat(report).st_mode & 0o777
+        except OSError:
+            actual_mode = -1
+        if actual_mode != int(required_mode, 8):
+            sys.stderr.write("report path is not pre-created with the required mode\n")
+            return 8
+    required_directory_mode = os.environ.get(
+        "DOTFILES_FAKE_GITLEAKS_REQUIRE_REPORT_DIRECTORY_MODE"
+    )
+    if report and required_directory_mode:
+        actual_directory_mode = os.stat(os.path.dirname(report)).st_mode & 0o777
+        if actual_directory_mode != int(required_directory_mode, 8):
+            sys.stderr.write("report directory does not have the required mode\n")
+            return 8
     mode = argv[0] if argv else ""
     positional = []
     skip = False
@@ -182,10 +210,30 @@ def main():
         findings = scan_dir(target, compiled)
     else:
         findings = scan_git(target, option(argv, "--log-opts"), compiled)
+    reported_secret = os.environ.get("DOTFILES_FAKE_GITLEAKS_REPORTED_SECRET")
+    if reported_secret:
+        for finding in findings:
+            source_value = finding["Secret"]
+            finding["Secret"] = reported_secret
+            finding["Match"] = finding["Match"].replace(source_value, reported_secret)
+    if option(argv, "--redact"):
+        for finding in findings:
+            value = finding["Secret"]
+            finding["Secret"] = "REDACTED"
+            finding["Match"] = finding["Match"].replace(value, "REDACTED")
+    attack = os.environ.get("DOTFILES_FAKE_GITLEAKS_REPORT_ATTACK")
+    if report and attack in ("replace", "permissive", "symlink"):
+        os.unlink(report)
+        if attack == "symlink":
+            os.symlink(os.devnull, report)
     if report:
         with open(report, "w", encoding="utf-8") as handle:
             json.dump(findings, handle)
-    return 1 if findings else 0
+        if attack in ("replace", "permissive"):
+            os.chmod(report, 0o644 if attack == "permissive" else 0o600)
+    if os.environ.get("DOTFILES_FAKE_GITLEAKS_PARTIAL_FAILURE"):
+        return 1
+    return int(option(argv, "--exit-code") or 1) if findings else 0
 
 
 if __name__ == "__main__":
@@ -271,6 +319,8 @@ class PublicationFixture(unittest.TestCase):
                 "DOTFILES_PUBLISH_NOW": str(self.now),
                 "DOTFILES_PUBLISH_GITLEAKS": str(self.scanner),
                 "DOTFILES_FAKE_GITLEAKS_LOG": str(self.scanner_log),
+                "DOTFILES_FAKE_GITLEAKS_REQUIRE_REPORT_MODE": "600",
+                "DOTFILES_FAKE_GITLEAKS_REQUIRE_REPORT_DIRECTORY_MODE": "700",
             }
         )
         env.update(extra)
@@ -407,7 +457,7 @@ class PublicationFixture(unittest.TestCase):
         """Record a clean full audit without running one, for publication tests."""
         run = self.read_json(self.run_dir(run_id) / "run.json")
         receipt = {
-            "schema": 1,
+            "schema": 2,
             "completed_epoch": completed_epoch if completed_epoch is not None else self.now,
             "completed_at": "2026-01-01T00:00:00Z",
             "ruleset_id": run["ruleset_id"],
@@ -440,6 +490,39 @@ class PublicationFixture(unittest.TestCase):
         for path in sorted(self.state_dir().rglob("*")):
             if path.is_file():
                 yield path
+
+    def assert_run_redacts(self, proc, run_id, value, fingerprint):
+        marker = "[REDACTED:%s]" % fingerprint
+        self.assertNotIn(value, proc.stdout + proc.stderr)
+        persisted = []
+        for path in sorted(self.run_dir(run_id).rglob("*")):
+            if not path.is_file():
+                continue
+            content = path.read_text(encoding="utf-8", errors="replace")
+            self.assertNotIn(value, content, str(path))
+            persisted.append(content)
+        self.assertIn(marker, "\n".join(persisted))
+
+        shown_units = []
+        for unit_id in self.unit_ids(run_id):
+            shown = self.cli("review-show", "--run", run_id, "--unit", unit_id)
+            self.assertEqual(0, shown.returncode, shown.stderr)
+            self.assertNotIn(value, shown.stdout)
+            shown_units.append(shown.stdout)
+        self.assertIn(marker, "\n".join(shown_units))
+
+        invocations = [
+            json.loads(line)
+            for line in self.scanner_log.read_text().splitlines()
+            if line.strip()
+        ]
+        self.assertFalse(
+            [argument for argv in invocations for argument in argv if argument.startswith("--redact")]
+        )
+        for argv in invocations:
+            report = option_from_argv(argv, "--report-path")
+            self.assertIsNotNone(report)
+            self.assertFalse(Path(report).exists(), "raw scanner report survived cleanup")
 
 
 class DotfilesPublishDocumentationTests(unittest.TestCase):
@@ -672,6 +755,7 @@ class DotfilesPublishScanTests(PublicationFixture):
                 "an already-published secret was labelled as outgoing, which points "
                 "at a useless rewrite of unpublished commits",
             )
+        self.assert_run_redacts(proc, run_id, TEST_SECRET, inherited[0]["fingerprint"])
 
     def test_tree_finding_fingerprints_are_stable_across_runs(self):
         # A fingerprint keyed on the temporary extraction path would change
@@ -891,6 +975,49 @@ class DotfilesPublishScanTests(PublicationFixture):
 
 
 class DotfilesPublishRedactionTests(PublicationFixture):
+    @unittest.skipUnless(shutil.which("gitleaks"), "gitleaks is not installed")
+    def test_live_gitleaks_report_is_read_privately_and_redacted_by_the_wrapper(self):
+        self.publish_base()
+        config = """title = "dotfiles publication test"
+[extend]
+useDefault = true
+
+[[rules]]
+id = "dotfiles-test-secret"
+description = "synthetic test secret"
+regex = '''DOTFILES_TEST_SECRET_[0-9a-f]{12}'''
+"""
+        self.commit(
+            "add live scanner fixture",
+            {
+                ".gitleaks.toml": config,
+                "config/service.conf": "π historical sample %s\n" % TEST_SECRET,
+            },
+        )
+
+        proc, run_id = self.scan(
+            env=self.env(DOTFILES_PUBLISH_GITLEAKS=shutil.which("gitleaks"))
+        )
+
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
+        matching = [
+            finding for finding in findings if finding["rule_id"] == "dotfiles-test-secret"
+        ]
+        self.assertTrue(matching, findings)
+        marker = "[REDACTED:%s]" % matching[0]["fingerprint"]
+        persisted = "\n".join(
+            path.read_text(encoding="utf-8", errors="replace")
+            for path in self.run_dir(run_id).rglob("*")
+            if path.is_file()
+        )
+        self.assertNotIn(TEST_SECRET, persisted)
+        self.assertIn(marker, persisted)
+        for unit_id in self.unit_ids(run_id):
+            shown = self.cli("review-show", "--run", run_id, "--unit", unit_id)
+            self.assertEqual(0, shown.returncode, shown.stderr)
+            self.assertNotIn(TEST_SECRET, shown.stdout)
+
     def test_scan_redacts_value_from_stdout_stderr_and_persisted_state(self):
         self.publish_base()
         self.commit(
@@ -911,6 +1038,7 @@ class DotfilesPublishRedactionTests(PublicationFixture):
         findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
         self.assertTrue(findings)
         self.assertIn("[REDACTED:", json.dumps(findings))
+        self.assert_run_redacts(proc, run_id, TEST_SECRET, findings[0]["fingerprint"])
 
     def test_manifest_units_are_redacted_before_they_are_stored(self):
         self.publish_base()
@@ -925,8 +1053,119 @@ class DotfilesPublishRedactionTests(PublicationFixture):
         self.assertNotIn(TEST_SECRET, serialized)
         self.assertIn("[REDACTED:", serialized)
 
+    def test_private_atomically_replaced_scanner_report_is_accepted(self):
+        self.publish_base()
+        self.commit(
+            "add configuration",
+            {"config/service.conf": "historical sample %s\n" % TEST_SECRET},
+        )
+
+        proc, run_id = self.scan(
+            env=self.env(DOTFILES_FAKE_GITLEAKS_REPORT_ATTACK="replace")
+        )
+
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        finding = self.read_json(self.run_dir(run_id) / "findings.json")["findings"][0]
+        self.assert_run_redacts(proc, run_id, TEST_SECRET, finding["fingerprint"])
+
+    def test_unsafe_scanner_report_fails_closed_and_is_removed(self):
+        self.publish_base()
+        self.commit(
+            "add configuration",
+            {"config/service.conf": "historical sample %s\n" % TEST_SECRET},
+        )
+
+        proc = self.cli(
+            "scan",
+            env=self.env(DOTFILES_FAKE_GITLEAKS_REPORT_ATTACK="symlink"),
+        )
+
+        self.assertEqual(3, proc.returncode, proc.stdout + proc.stderr)
+        self.assertNotIn(TEST_SECRET, proc.stdout + proc.stderr)
+        invocation = json.loads(self.scanner_log.read_text().splitlines()[-1])
+        report = option_from_argv(invocation, "--report-path")
+        self.assertFalse(Path(report).exists())
+
+    def test_permissive_scanner_report_fails_closed_and_is_removed(self):
+        self.publish_base()
+        self.commit(
+            "add configuration",
+            {"config/service.conf": "historical sample %s\n" % TEST_SECRET},
+        )
+
+        proc = self.cli(
+            "scan",
+            env=self.env(DOTFILES_FAKE_GITLEAKS_REPORT_ATTACK="permissive"),
+        )
+
+        self.assertEqual(3, proc.returncode, proc.stdout + proc.stderr)
+        self.assertIn("private regular file", proc.stderr)
+        invocation = json.loads(self.scanner_log.read_text().splitlines()[-1])
+        self.assertFalse(
+            Path(option_from_argv(invocation, "--report-path")).exists()
+        )
+
+    def test_partial_report_with_error_status_is_not_accepted_or_persisted(self):
+        self.publish_base()
+        self.commit(
+            "add configuration",
+            {"config/service.conf": "historical sample %s\n" % TEST_SECRET},
+        )
+
+        proc = self.cli(
+            "scan",
+            env=self.env(DOTFILES_FAKE_GITLEAKS_PARTIAL_FAILURE="1"),
+        )
+
+        self.assertEqual(3, proc.returncode, proc.stdout + proc.stderr)
+        self.assertNotIn(TEST_SECRET, proc.stdout + proc.stderr)
+        self.assertFalse((self.state_dir() / "runs").exists())
+        invocation = json.loads(self.scanner_log.read_text().splitlines()[-1])
+        self.assertFalse(Path(option_from_argv(invocation, "--report-path")).exists())
+
+    def test_scanner_exec_failure_removes_private_workspace(self):
+        self.publish_base()
+        self.commit("add notes", {"docs/notes.md": "notes\n"})
+        temporary_root = self.base / "temporary"
+        temporary_root.mkdir(mode=0o700)
+
+        proc = self.cli(
+            "scan",
+            env=self.env(
+                DOTFILES_PUBLISH_GITLEAKS=str(self.base / "missing-gitleaks"),
+                TMPDIR=str(temporary_root),
+            ),
+        )
+
+        self.assertEqual(3, proc.returncode, proc.stdout + proc.stderr)
+        self.assertIn("could not execute gitleaks", proc.stderr)
+        self.assertEqual([], list(temporary_root.glob("dotfiles-publish-scan-*")))
+
 
 class DotfilesPublishManifestTests(PublicationFixture):
+    def test_legacy_run_refuses_all_review_commands_before_reading_manifest(self):
+        self.publish_base()
+        self.commit("add notes", {"docs/notes.md": "notes\n"})
+        _, run_id = self.scan()
+        run_path = self.run_dir(run_id) / "run.json"
+        record = self.read_json(run_path)
+        record["schema"] = 1
+        run_path.write_text(json.dumps(record))
+        canary = "LEGACY_MANIFEST_CANARY_MUST_NOT_BE_PRINTED"
+        (self.run_dir(run_id) / "manifest.json").write_text(canary)
+
+        commands = (
+            ("review-list", "--run", run_id),
+            ("review-show", "--run", run_id, "--unit", "0" * 32),
+            ("review-status", "--run", run_id),
+        )
+        for command in commands:
+            with self.subTest(command=command[0]):
+                proc = self.cli(*command)
+                self.assertEqual(1, proc.returncode, proc.stdout + proc.stderr)
+                self.assertIn("predates safe scanner redaction", proc.stderr)
+                self.assertNotIn(canary, proc.stdout + proc.stderr)
+
     def test_manifest_has_every_commit_path_patch_and_full_new_file(self):
         self.publish_base()
         first = self.commit(
@@ -988,8 +1227,8 @@ class DotfilesPublishManifestTests(PublicationFixture):
         self.assertNotEqual(0, missing.returncode)
 
     def test_review_show_resolves_a_path_unit_to_its_actual_bytes(self):
-        # A path unit stores metadata only; showing just an object id and a
-        # size would invite a verdict that attests to nothing.
+        # Capture the redacted snapshot while scanner values are still in
+        # memory; resolving the raw object later would lose that protection.
         self.publish_base()
         self.commit("add a helper", {"shell/helper.sh": "alias gs='git status'\n"})
         _, run_id = self.scan()
@@ -1000,11 +1239,26 @@ class DotfilesPublishManifestTests(PublicationFixture):
             for unit in manifest["units"]
             if unit["kind"] == "path" and unit["path"] == "shell/helper.sh"
         )
-        self.assertNotIn("alias gs", json.dumps(path_unit), "the manifest stores metadata")
+        self.assertIn("alias gs='git status'", path_unit["blob"])
 
         shown = self.cli("review-show", "--run", run_id, "--unit", path_unit["unit_id"])
         self.assertEqual(0, shown.returncode, shown.stderr)
         self.assertIn("alias gs='git status'", json.loads(shown.stdout)["blob"])
+
+    def test_review_show_refuses_legacy_path_units_without_a_redacted_snapshot(self):
+        self.publish_base()
+        self.commit("add a helper", {"shell/helper.sh": "alias gs='git status'\n"})
+        _, run_id = self.scan()
+        manifest_path = self.run_dir(run_id) / "manifest.json"
+        manifest = self.read_json(manifest_path)
+        path_unit = next(unit for unit in manifest["units"] if unit["kind"] == "path")
+        path_unit.pop("blob", None)
+        manifest_path.write_text(json.dumps(manifest))
+
+        shown = self.cli("review-show", "--run", run_id, "--unit", path_unit["unit_id"])
+
+        self.assertEqual(1, shown.returncode)
+        self.assertIn("predates safe redaction", shown.stderr)
 
     def test_concurrent_review_records_do_not_overwrite_each_other(self):
         self.publish_base()
@@ -1840,6 +2094,100 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         self.assertIn("purpose = regression test", source_context)
         self.assertIn("[REDACTED:", source_context)
 
+    def test_full_audit_redacts_a_secret_present_only_in_public_history(self):
+        self.publish_base()
+        leaking = self.commit(
+            "add historical fixture",
+            {
+                "config/historical.conf": (
+                    "historical sample %s\nordinary trailing line\n" % TEST_SECRET
+                )
+            },
+        )
+        self.commit("remove historical fixture", remove=("config/historical.conf",))
+        self.git("-c", "core.hooksPath=/dev/null", "push", "--quiet", "origin", "master")
+        self.git("fetch", "--quiet", "origin")
+
+        proc, run_id = self.scan("--mode", "full-audit")
+
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
+        historical = [
+            finding
+            for finding in findings
+            if finding["source"] == "gitleaks-history"
+            and finding["commit"] == leaking
+            and finding["path"] == "config/historical.conf"
+        ]
+        self.assertTrue(historical, findings)
+        self.assertEqual("public-incident", historical[0]["classification"])
+        self.assert_run_redacts(
+            proc, run_id, TEST_SECRET, historical[0]["fingerprint"]
+        )
+
+    def test_full_audit_redacts_encoded_source_when_scanner_reports_decoded_value(self):
+        encoded = TEST_SECRET.encode("utf-8").hex()
+        self.publish_base()
+        leaking = self.commit(
+            "add encoded historical fixture",
+            {"config/encoded.conf": "historical sample %s\n" % encoded},
+        )
+        self.commit("remove encoded historical fixture", remove=("config/encoded.conf",))
+        self.git("-c", "core.hooksPath=/dev/null", "push", "--quiet", "origin", "master")
+        self.git("fetch", "--quiet", "origin")
+
+        proc, run_id = self.scan(
+            "--mode",
+            "full-audit",
+            env=self.env(
+                DOTFILES_FAKE_GITLEAKS_PATTERNS=re.escape(encoded),
+                DOTFILES_FAKE_GITLEAKS_REPORTED_SECRET=TEST_SECRET,
+            ),
+        )
+
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
+        historical = [
+            finding
+            for finding in findings
+            if finding["source"] == "gitleaks-history"
+            and finding["commit"] == leaking
+            and finding["path"] == "config/encoded.conf"
+        ]
+        self.assertTrue(historical, findings)
+        self.assert_run_redacts(proc, run_id, encoded, historical[0]["fingerprint"])
+        for path in self.run_dir(run_id).rglob("*"):
+            if path.is_file():
+                self.assertNotIn(TEST_SECRET, path.read_text(errors="replace"))
+
+        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        unit = next(
+            unit
+            for unit in manifest["units"]
+            if unit["kind"] == "deterministic-finding"
+            and unit["detail"]["fingerprint"] == historical[0]["fingerprint"]
+        )
+        findings_file = self.base / "encoded-review-finding.json"
+        findings_file.write_text(
+            json.dumps([{"rule_id": "manual", "context": encoded}])
+        )
+        recorded = self.cli(
+            "review-record",
+            "--run",
+            run_id,
+            "--unit",
+            unit["unit_id"],
+            "--verdict",
+            "finding",
+            "--findings",
+            str(findings_file),
+        )
+        self.assertEqual(1, recorded.returncode, recorded.stdout + recorded.stderr)
+        self.assertIn("contains a value the scanner detected", recorded.stderr)
+        review_path = self.run_dir(run_id) / "review.json"
+        if review_path.exists():
+            self.assertNotIn(encoded, review_path.read_text())
+
     def test_full_audit_patch_bundles_include_merge_resolution_content(self):
         self.publish_base()
         self.commit("add merge fixture", {"docs/merge.md": "base\n"})
@@ -2032,6 +2380,19 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         self.publish_a_secret()
         proc, run_id = self.scan("--mode", "full-audit")
         finding = self.public_incident(run_id)
+        legacy_fingerprint = "a" * 20
+        legacy_incidents = {
+            "schema": 1,
+            "incidents": {
+                legacy_fingerprint: {
+                    "resolution": "rotated",
+                    "resolved_at": "2025-01-01T00:00:00Z",
+                }
+            },
+        }
+        incidents_path = self.state_dir() / "incidents.json"
+        incidents_path.write_text(json.dumps(legacy_incidents))
+        incidents_path.chmod(0o600)
 
         recorded = self.cli(
             "incident-record",
@@ -2047,6 +2408,7 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
 
         self.assertEqual(0, recorded.returncode, recorded.stdout + recorded.stderr)
         incidents = self.read_json(self.state_dir() / "incidents.json")["incidents"]
+        self.assertEqual(legacy_incidents["incidents"][legacy_fingerprint], incidents[legacy_fingerprint])
         self.assertEqual("rotated", incidents[finding["fingerprint"]]["resolution"])
         self.assertNotIn("value", json.dumps(incidents))
         self.assertIn("evidence_sha256", incidents[finding["fingerprint"]])

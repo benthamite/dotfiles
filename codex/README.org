@@ -98,9 +98,11 @@ scoped Bash pattern may be declared when a skill genuinely needs one.
 
 The paired =publish-dotfiles= skill reviews full history through bounded
 commit-and-patch bundles. Merge commits are compared with every parent, and
-scanner findings carry redacted source context, so fewer immutable review
-records do not reduce the audited surface. Review writes are locked so bounded
-agent pools cannot overwrite one another's verdicts.
+scanner findings carry fingerprint-redacted source context, so fewer immutable
+review records do not reduce the audited surface. Raw scanner reports are
+confined to a private off-tree temporary workspace, path snapshots are redacted
+at scan time, and schema-2 runs refuse legacy manifests. Review writes are
+locked so bounded agent pools cannot overwrite one another's verdicts.
 
 The paired =proofread= skill resolves one external Node dependency runtime for
 both setup and execution, canonicalizing both its root and actual =node_modules=

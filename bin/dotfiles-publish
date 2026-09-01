@@ -37,7 +37,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
-SCHEMA = 1
+SCHEMA = 2
 
 EXIT_OK = 0
 EXIT_REFUSED = 1
@@ -251,6 +251,25 @@ def ensure_state_dir(repo):
     return directory
 
 
+@contextmanager
+def scan_workspace(repo):
+    """Yield a private temporary workspace outside the synced source tree."""
+    state = ensure_state_dir(repo).resolve()
+    root = repo.root.resolve()
+    parent = state if root != state and root not in state.parents else None
+    with tempfile.TemporaryDirectory(
+        prefix="dotfiles-publish-scan-",
+        dir=str(parent) if parent is not None else None,
+    ) as temporary:
+        work = Path(temporary).resolve()
+        if work == root or root in work.parents:
+            raise PublishError(
+                "scanner temporary directory is inside the repository", EXIT_FAILURE
+            )
+        os.chmod(str(work), DIRECTORY_MODE)
+        yield work
+
+
 def fingerprint_key(repo):
     """Return the local HMAC key, creating it exactly once."""
     directory = ensure_state_dir(repo)
@@ -407,7 +426,13 @@ def load_run(repo, run_id):
     path = run_directory(repo, run_id) / "run.json"
     if not path.exists():
         raise PublishError("unknown run %s; start with a scan" % run_id, EXIT_REFUSED)
-    return read_json(path)
+    record = read_json(path)
+    if record.get("schema") != SCHEMA:
+        raise PublishError(
+            "run %s predates safe scanner redaction; scan again" % run_id,
+            EXIT_REFUSED,
+        )
+    return record
 
 
 def store_run(repo, record):
@@ -594,37 +619,84 @@ def gitleaks_config_argument(repo):
 def run_gitleaks(repo, work, *, git_range=None, directory=None):
     """Run one scan and return its raw results; the report never outlives this call."""
     report = Path(work) / "gitleaks-report.json"
-    command = [gitleaks_executable(), "dir" if directory else "git"]
-    command += gitleaks_config_argument(repo)
-    command += [
-        "--no-banner",
-        "--redact=100",
-        "--report-format",
-        "json",
-        "--report-path",
-        str(report),
-    ]
-    if git_range:
-        command.append("--log-opts=%s" % git_range)
-    command.append(str(directory or repo.root))
-    completed = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     try:
-        if completed.returncode not in (0, 1):
+        flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0)
+        descriptor = os.open(str(report), flags, FILE_MODE)
+        try:
+            os.fchmod(descriptor, FILE_MODE)
+            original = os.fstat(descriptor)
+            if not stat.S_ISREG(original.st_mode):
+                raise PublishError(
+                    "gitleaks report could not be secured", EXIT_FAILURE
+                )
+        finally:
+            os.close(descriptor)
+
+        command = [gitleaks_executable(), "dir" if directory else "git"]
+        command += gitleaks_config_argument(repo)
+        command += [
+            "--no-banner",
+            "--exit-code=2",
+            "--report-format",
+            "json",
+            "--report-path",
+            str(report),
+        ]
+        if git_range:
+            command.append("--log-opts=%s" % git_range)
+        command.append(str(directory or repo.root))
+        try:
+            completed = subprocess.run(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                umask=0o077,
+            )
+        except OSError:
+            raise PublishError("could not execute gitleaks", EXIT_FAILURE)
+        if completed.returncode not in (0, 2):
             raise PublishError(
-                "gitleaks failed with exit code %d: %s"
-                % (completed.returncode, structural_redaction(clip(completed.stderr.decode("utf-8", "replace"), 400))),
+                "gitleaks failed with exit code %d" % completed.returncode,
                 EXIT_FAILURE,
             )
-        if not report.exists():
-            return []
         try:
-            payload = json.loads(report.read_text(encoding="utf-8") or "[]")
-        except json.JSONDecodeError as error:
-            raise PublishError("gitleaks report was not valid JSON: %s" % error.msg, EXIT_FAILURE)
-        return payload or []
+            read_descriptor = os.open(
+                str(report), os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+            )
+        except OSError:
+            raise PublishError(
+                "gitleaks report was not a private regular file", EXIT_FAILURE
+            )
+        try:
+            current = os.fstat(read_descriptor)
+            if (
+                not stat.S_ISREG(current.st_mode)
+                or stat.S_IMODE(current.st_mode) != FILE_MODE
+            ):
+                raise PublishError(
+                    "gitleaks report was not a private regular file", EXIT_FAILURE
+                )
+            with os.fdopen(read_descriptor, "r", encoding="utf-8") as handle:
+                read_descriptor = None
+                report_text = handle.read()
+        finally:
+            if read_descriptor is not None:
+                os.close(read_descriptor)
+        if not report_text:
+            raise PublishError("gitleaks report was empty", EXIT_FAILURE)
+        try:
+            payload = json.loads(report_text)
+        except json.JSONDecodeError:
+            raise PublishError("gitleaks report was not valid JSON", EXIT_FAILURE)
+        if not isinstance(payload, list):
+            raise PublishError("gitleaks report was not a JSON list", EXIT_FAILURE)
+        if completed.returncode == 0 and payload:
+            raise PublishError("gitleaks returned findings with a success status", EXIT_FAILURE)
+        if completed.returncode == 2 and not payload:
+            raise PublishError("gitleaks returned a finding status without findings", EXIT_FAILURE)
+        return payload
     finally:
-        if report.exists():
-            report.unlink()
+        report.unlink(missing_ok=True)
 
 
 def repository_relative(path, strip_prefix):
@@ -643,10 +715,94 @@ def repository_relative(path, strip_prefix):
     return path
 
 
-def convert_gitleaks_results(results, key, redactor, source, default_commit="", strip_prefix=None):
+def gitleaks_source_values(repo, result, *, default_commit="", directory=None):
+    """Read the exact raw source lines and match span named by a result."""
+    start = result.get("StartLine")
+    end = result.get("EndLine") or start
+    start_column = result.get("StartColumn")
+    end_column = result.get("EndColumn")
+    reported_path = result.get("File") or ""
+    if not isinstance(start, int) or not isinstance(end, int) or start < 1 or end < start:
+        raise PublishError("gitleaks returned invalid source coordinates", EXIT_FAILURE)
+    if (
+        not isinstance(start_column, int)
+        or not isinstance(end_column, int)
+        or start_column < 1
+        or end_column < 1
+    ):
+        raise PublishError("gitleaks returned invalid source columns", EXIT_FAILURE)
+    if not reported_path:
+        raise PublishError("gitleaks returned a finding without a source path", EXIT_FAILURE)
+
+    if directory is not None:
+        root = Path(directory).resolve()
+        candidate = Path(reported_path)
+        if not candidate.is_absolute():
+            candidate = root / candidate
+        try:
+            if candidate.is_symlink():
+                raise OSError("symlink")
+            resolved = candidate.resolve(strict=True)
+            if resolved == root or root not in resolved.parents:
+                raise OSError("outside scan root")
+            descriptor = os.open(
+                str(resolved), os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+            )
+            try:
+                source_stat = os.fstat(descriptor)
+                if not stat.S_ISREG(source_stat.st_mode):
+                    raise OSError("not regular")
+                with os.fdopen(descriptor, "rb") as handle:
+                    descriptor = None
+                    data = handle.read()
+            finally:
+                if descriptor is not None:
+                    os.close(descriptor)
+        except OSError:
+            raise PublishError("could not read gitleaks source coordinates", EXIT_FAILURE)
+    else:
+        commit = result.get("Commit") or default_commit
+        if not isinstance(commit, str) or not re.fullmatch(r"[0-9a-fA-F]{40,64}", commit):
+            raise PublishError("gitleaks returned an invalid source commit", EXIT_FAILURE)
+        data = run_git(
+            repo.root, "cat-file", "blob", "%s:%s" % (commit, reported_path)
+        ).out
+
+    lines = data.splitlines()
+    if end > len(lines):
+        raise PublishError("gitleaks source coordinates exceeded the file", EXIT_FAILURE)
+    selected = lines[start - 1 : end]
+    if start == end:
+        if end_column < start_column or end_column > len(selected[0]):
+            raise PublishError("gitleaks source columns exceeded the line", EXIT_FAILURE)
+        span = selected[0][start_column - 1 : end_column]
+    else:
+        if start_column > len(selected[0]) + 1 or end_column > len(selected[-1]):
+            raise PublishError("gitleaks source columns exceeded the lines", EXIT_FAILURE)
+        span = b"\n".join(
+            [selected[0][start_column - 1 :], *selected[1:-1], selected[-1][:end_column]]
+        )
+    decoded_lines = [line.decode("utf-8", "replace") for line in selected]
+    decoded_span = span.decode("utf-8", "replace")
+    return [*decoded_lines, decoded_span, *TOKEN_PATTERN.findall(decoded_span)]
+
+
+def convert_gitleaks_results(
+    results,
+    key,
+    redactor,
+    source,
+    repo,
+    default_commit="",
+    strip_prefix=None,
+    directory=None,
+):
     """Learn the raw values in memory, then persist only redacted records."""
     for result in results:
         commit = result.get("Commit") or default_commit
+        raw_values = gitleaks_source_values(
+            repo, result, default_commit=default_commit, directory=directory
+        )
         path = repository_relative(result.get("File") or "", strip_prefix)
         result["File"] = path
         rule = result.get("RuleID") or "unknown"
@@ -663,6 +819,8 @@ def convert_gitleaks_results(results, key, redactor, source, default_commit="", 
         for candidate in (result.get("Secret"), result.get("Match"), result.get("Line")):
             if candidate and candidate != "REDACTED":
                 redactor.learn(candidate, token)
+        for raw_value in raw_values:
+            redactor.learn(raw_value, token)
         result["_token"] = token
 
     records = []
@@ -680,6 +838,8 @@ def convert_gitleaks_results(results, key, redactor, source, default_commit="", 
                 clip(redactor.scrub(result.get("Match") or "")),
             )
         )
+        for field in ("Secret", "Match", "Line"):
+            result.pop(field, None)
     return records
 
 
@@ -931,15 +1091,14 @@ def scan_outgoing(repo, boundary, key):
     redactor = Redactor(key)
     findings = []
     commits = outgoing_commits(repo, boundary)
-    state = ensure_state_dir(repo)
-
-    with tempfile.TemporaryDirectory(dir=str(state)) as work:
-        os.chmod(work, DIRECTORY_MODE)
+    with scan_workspace(repo) as work:
         range_expression = "%s..%s" % (boundary.remote_oid, boundary.candidate_oid)
         results = run_gitleaks(repo, work, git_range=range_expression)
-        findings += convert_gitleaks_results(results, key, redactor, "gitleaks-range")
+        findings += convert_gitleaks_results(
+            results, key, redactor, "gitleaks-range", repo
+        )
 
-        extracted = Path(work) / "candidate-tree"
+        extracted = work / "candidate-tree"
         extracted.mkdir(mode=DIRECTORY_MODE)
         export_tree(repo, boundary.candidate_oid, extracted)
         tree_results = run_gitleaks(repo, work, directory=extracted)
@@ -948,8 +1107,10 @@ def scan_outgoing(repo, boundary, key):
             key,
             redactor,
             "gitleaks-tree",
+            repo,
             boundary.candidate_oid,
             strip_prefix=extracted,
+            directory=extracted,
         )
 
     for commit in commits:
@@ -1238,25 +1399,32 @@ def scan_full_audit(repo, key):
     """Scan every commit reachable from local, remote, tag, and pull-request refs."""
     redactor = Redactor(key)
     findings = []
-    state = ensure_state_dir(repo)
     try:
         remote_refs, _ = fetch_public_refs(repo)
         public_tips = present_objects(repo, set(remote_refs.values()))
         public_commits = reachable_commits(repo, public_tips)
         commits = audit_commits(repo)
 
-        with tempfile.TemporaryDirectory(dir=str(state)) as work:
-            os.chmod(work, DIRECTORY_MODE)
+        with scan_workspace(repo) as work:
             results = run_gitleaks(repo, work, git_range=" ".join(AUDIT_SURFACE))
-            findings += convert_gitleaks_results(results, key, redactor, "gitleaks-history")
+            findings += convert_gitleaks_results(
+                results, key, redactor, "gitleaks-history", repo
+            )
 
             for ordinal, (tree, tip) in enumerate(sorted(audit_tip_trees(repo).items())):
-                extracted = Path(work) / ("tip-%d" % ordinal)
+                extracted = work / ("tip-%d" % ordinal)
                 extracted.mkdir(mode=DIRECTORY_MODE)
                 export_tree(repo, tree, extracted)
                 tip_results = run_gitleaks(repo, work, directory=extracted)
                 findings += convert_gitleaks_results(
-                    tip_results, key, redactor, "gitleaks-tree", tip, strip_prefix=extracted
+                    tip_results,
+                    key,
+                    redactor,
+                    "gitleaks-tree",
+                    repo,
+                    tip,
+                    strip_prefix=extracted,
+                    directory=extracted,
                 )
 
         findings += inspect_audit_objects(repo, commits, key, redactor)
@@ -1580,7 +1748,9 @@ FINDING_FIELDS = {
 
 
 def unit_identifier(kind, commit, path, ordinal):
-    return sha256_of("dotfiles-publish-unit", str(SCHEMA), kind, commit, path, str(ordinal))[:32]
+    return sha256_of(
+        "dotfiles-publish-unit", str(SCHEMA), kind, commit, path, str(ordinal)
+    )[:32]
 
 
 def make_unit(kind, commit, path, ordinal, content, detail=None):
@@ -1711,9 +1881,10 @@ def build_manifest(repo, run_id, boundary, result, mode, tag, release_notes):
                     detail["object"] = oid
             else:
                 description.append("object removed at this commit")
-            units.append(
-                make_unit("path", commit, path, ordinal, "\n".join(description), detail)
-            )
+            unit = make_unit("path", commit, path, ordinal, "\n".join(description), detail)
+            if entry and entry[1] == "blob" and entry[0] != "120000":
+                unit["blob"] = blob_content(repo, entry[2], blob_size(repo, entry[2]), redactor)
+            units.append(unit)
 
         patch = run_git(
             repo.root, "diff-tree", "--root", "--find-renames", "--format=", "--patch", commit
@@ -1805,7 +1976,8 @@ def build_manifest(repo, run_id, boundary, result, mode, tag, release_notes):
     digest.update(b"dotfiles-publish-manifest\x00")
     for unit in units:
         digest.update(unit["unit_id"].encode("utf-8") + b"\x00")
-        digest.update(hashlib.sha256(unit["content"].encode("utf-8")).digest())
+        encoded = json.dumps(unit, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        digest.update(hashlib.sha256(encoded).digest())
     manifest_id = digest.hexdigest()
 
     return {
@@ -1822,10 +1994,17 @@ def store_manifest(repo, run_id, manifest):
 
 
 def load_manifest(repo, run_id):
+    load_run(repo, run_id)
     path = run_directory(repo, run_id) / "manifest.json"
     if not path.exists():
         raise PublishError("run %s has no manifest; scan again" % run_id, EXIT_REFUSED)
-    return read_json(path)
+    manifest = read_json(path)
+    if manifest.get("schema") != SCHEMA:
+        raise PublishError(
+            "run %s predates safe scanner redaction; scan again" % run_id,
+            EXIT_REFUSED,
+        )
+    return manifest
 
 
 def load_findings(repo, run_id):
@@ -1944,19 +2123,22 @@ def command_review_show(args):
 
 
 def resolved_unit(repo, unit):
-    """Show a path unit's actual bytes, so a verdict cannot be a rubber stamp.
+    """Show the redacted path snapshot captured during the scan.
 
-    The manifest stores metadata for these units to stay small, but a reviewer
-    who only ever sees an object id and a size is attesting to nothing.
+    Older manifests resolved the raw object here, after the scanner-known
+    values had left memory.  Refuse those units instead of risking disclosure.
     """
     if unit["kind"] != "path":
         return unit
     oid = (unit.get("detail") or {}).get("object")
     if not oid:
         return unit
-    shown = dict(unit)
-    shown["blob"] = blob_content(repo, oid, blob_size(repo, oid), Redactor(fingerprint_key(repo)))
-    return shown
+    if "blob" not in unit:
+        raise PublishError(
+            "path unit predates safe redaction; scan again before review",
+            EXIT_REFUSED,
+        )
+    return unit
 
 
 def command_review_record(args):

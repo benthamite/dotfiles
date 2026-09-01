@@ -34,6 +34,7 @@ credentials carried in HTTP headers cannot reach stderr.
 | =_gworkspace_auth.py= | Internal OAuth and short-lived token-cache helper shared by the Gmail and Sheets wrappers. |
 | =ahrefs-api-guard= | Performs the required free quota preflight before a paid Ahrefs API request. |
 | =ai-provider-key= | Provisions and stores project-scoped provider runtime keys while keeping administrator credentials separate. |
+| =ai-provider-key-from-clipboard= | Consumes a console-created provider key from the clipboard, validates its shape, and pipes it to =ai-provider-key= without exposing the value. |
 | =batch-test.sh= | Loads canonical package source in batch Emacs, rejects stale-load warnings, and emits repository/package/source-revision evidence with a one-time replay-correlation token. |
 | =check-elpaca-sync-hook= | Validates the embedded Elpaca sync hook and confirms that the installed hook is identical. |
 | =copy-slack-draft= | Copies a Slack draft to the Emacs kill ring and can prefill a thread reply. |

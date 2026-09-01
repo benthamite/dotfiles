@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Audited clipboard consumer for console-created provider keys.
+#
+# Reads the macOS clipboard (populated by a provider console's Copy button),
+# validates that it looks like the expected provider's API key, and pipes it
+# straight into `ai-provider-key create-automation --secret-stdin`. The value
+# never reaches argv, agent output, or a file. Prints only length/newline
+# diagnostics and the helper's own non-secret output.
+#
+# Usage: ai-provider-key-from-clipboard --provider anthropic \
+#          --project <slug> --repo <path> --verified-monthly-spend-cap-usd <n> [...]
+#
+# All arguments are passed through to `ai-provider-key create-automation`,
+# except --provider, which is also inspected here to pick the validation shape.
+set -euo pipefail
+
+HELPER="$(dirname "$0")/ai-provider-key"
+
+provider=""
+args=("$@")
+for ((i = 0; i < ${#args[@]}; i++)); do
+  if [ "${args[$i]}" = "--provider" ]; then
+    provider="${args[$((i + 1))]:-}"
+  fi
+done
+
+case "$provider" in
+  anthropic) prefix="sk-ant-" ;;
+  openai) prefix="sk-" ;;
+  *)
+    echo "ai-provider-key-from-clipboard: pass --provider anthropic|openai" >&2
+    exit 2
+    ;;
+esac
+
+SECRET="$(pbpaste)"
+trap 'unset SECRET' EXIT
+
+bytes=$(printf %s "$SECRET" | wc -c | tr -d ' ')
+newlines=$(printf %s "$SECRET" | tr -cd '\n' | wc -c | tr -d ' ')
+printf 'clipboard candidate: len=%s nl=%s\n' "$bytes" "$newlines"
+case "$SECRET" in
+  "$prefix"*) : ;;
+  *)
+    echo "clipboard content does not start with the expected $provider key prefix" >&2
+    exit 1
+    ;;
+esac
+if [ "$bytes" -lt 40 ] || [ "$bytes" -gt 250 ] || [ "$newlines" -ne 0 ]; then
+  echo "clipboard content does not match expected key shape" >&2
+  exit 1
+fi
+
+printf %s "$SECRET" | "$HELPER" create-automation "$@" --secret-stdin

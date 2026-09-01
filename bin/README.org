@@ -1,7 +1,7 @@
 #+title: Command index
 #+author: Pablo Stafforini
 
-This index covers the 55 tracked files under =bin/= whose Git mode is
+This index covers the 56 tracked files under =bin/= whose Git mode is
 =100755=. Non-executable libraries and data files are intentionally omitted.
 The first column is machine-readable and should contain every executable
 exactly once.
@@ -67,6 +67,7 @@ not be used to print or document secret values; the placement rules are in
 | =epoch-doc-link= | Creates private =epoch-doc:= shortcuts and opens them only through the configured Epoch Chrome profile. |
 | =gam= | Launches the local GAMADV-XTD3 installation. |
 | =gmail-maildir-sync= | Runs the Gmail-to-Maildir package with its Google Workspace authentication context. |
+| =gitguardian-incidents= | Lists fixed-schema metadata for open GitGuardian incidents while keeping the API credential and matched values out of agent output. |
 | =libby= | Searches for and downloads matching books through the configured library source. |
 | =mbsync-parallel= | Synchronizes non-Epoch mbsync channels in parallel while running the Epoch Gmail sync separately. |
 | =mbsync-passcmd= | Supplies mbsync with its password from the shared temporary file or the encrypted store. |

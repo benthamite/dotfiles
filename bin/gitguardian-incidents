@@ -1,0 +1,197 @@
+#!/usr/bin/env python3
+"""Read GitGuardian incident metadata without exposing credentials or matches."""
+
+from __future__ import annotations
+
+import argparse
+import concurrent.futures
+import json
+import re
+import shutil
+import subprocess
+import sys
+import urllib.error
+import urllib.parse
+import urllib.request
+from collections.abc import Callable
+from typing import Any
+
+
+API_ORIGIN = "https://api.gitguardian.com"
+API_PREFIX = "/v1/"
+PASS_ENTRY = "auth-sources/api.gitguardian.com/pablo@stafforini.com"
+MAX_RESPONSE_BYTES = 10 * 1024 * 1024
+NEXT_LINK_RE = re.compile(r'<([^>]+)>\s*;\s*rel="next"')
+
+
+class TriageError(RuntimeError):
+    """A deliberately redacted operational failure."""
+
+
+def load_token() -> str:
+    """Read only the first line of the configured password-store entry."""
+    executable = shutil.which("pass")
+    if executable is None:
+        raise TriageError("password-store client is unavailable")
+
+    try:
+        proc = subprocess.Popen(
+            [executable, PASS_ENTRY],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+        )
+        assert proc.stdout is not None
+        first_line = proc.stdout.readline(MAX_RESPONSE_BYTES + 1)
+        proc.stdout.close()
+        returncode = proc.wait(timeout=30)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise TriageError("GitGuardian credential lookup failed") from exc
+
+    if returncode != 0 or not first_line or len(first_line) > MAX_RESPONSE_BYTES:
+        raise TriageError("GitGuardian credential lookup failed")
+    try:
+        token = first_line.rstrip(b"\r\n").decode("ascii")
+    except UnicodeDecodeError as exc:
+        raise TriageError("GitGuardian credential has an invalid format") from exc
+    if not token.startswith("gg_pat_") or len(token) > 512:
+        raise TriageError("GitGuardian credential has an invalid format")
+    return token
+
+
+def _validate_api_url(url: str) -> str:
+    parsed = urllib.parse.urlsplit(url)
+    expected = urllib.parse.urlsplit(API_ORIGIN)
+    if (
+        parsed.scheme != "https"
+        or parsed.netloc != expected.netloc
+        or not parsed.path.startswith(API_PREFIX)
+        or parsed.username is not None
+        or parsed.password is not None
+    ):
+        raise TriageError("GitGuardian returned an unsafe pagination URL")
+    return url
+
+
+def _api_get(
+    url: str,
+    token: str,
+    opener: Callable[..., Any] = urllib.request.urlopen,
+) -> tuple[Any, str | None]:
+    request = urllib.request.Request(
+        _validate_api_url(url),
+        headers={
+            "Authorization": f"Token {token}",
+            "Accept": "application/json",
+            "X-Privacy-Mode": "true",
+            "User-Agent": "dotfiles-gitguardian-incidents/1",
+        },
+    )
+    try:
+        with opener(request, timeout=30) as response:
+            payload = response.read(MAX_RESPONSE_BYTES + 1)
+            link = response.headers.get("Link")
+    except urllib.error.HTTPError as exc:
+        raise TriageError(f"GitGuardian API request failed with HTTP {exc.code}") from exc
+    except (urllib.error.URLError, TimeoutError, OSError) as exc:
+        raise TriageError("GitGuardian API request failed") from exc
+    if len(payload) > MAX_RESPONSE_BYTES:
+        raise TriageError("GitGuardian API response exceeded the safety limit")
+    try:
+        return json.loads(payload), link
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise TriageError("GitGuardian API returned invalid JSON") from exc
+
+
+def _next_url(current_url: str, link_header: str | None) -> str | None:
+    if not link_header:
+        return None
+    match = NEXT_LINK_RE.search(link_header)
+    if match is None:
+        return None
+    return _validate_api_url(urllib.parse.urljoin(current_url, match.group(1)))
+
+
+def _safe_text(value: Any, default: str = "?") -> str:
+    if not isinstance(value, str) or not value:
+        return default
+    return value
+
+
+def summarize_incident(incident: dict[str, Any]) -> dict[str, Any]:
+    """Project an incident onto a fixed metadata-only schema."""
+    detector = incident.get("detector")
+    if not isinstance(detector, dict):
+        detector = {}
+    occurrences = incident.get("occurrences")
+    occurrence = occurrences[0] if isinstance(occurrences, list) and occurrences else {}
+    if not isinstance(occurrence, dict):
+        occurrence = {}
+    source = occurrence.get("source")
+    if not isinstance(source, dict):
+        source = {}
+    date = _safe_text(incident.get("date"))
+    return {
+        "id": incident.get("id"),
+        "detector": _safe_text(detector.get("display_name")),
+        "severity": _safe_text(incident.get("severity")),
+        "validity": _safe_text(incident.get("validity")),
+        "occurrences": incident.get("occurrences_count", len(occurrences or [])),
+        "source": _safe_text(source.get("full_name")),
+        "visibility": _safe_text(source.get("visibility")),
+        "filepath": _safe_text(occurrence.get("filepath")),
+        "date": date[:10] if date != "?" else date,
+        "status": _safe_text(incident.get("status")),
+    }
+
+
+def list_open_incidents(
+    token: str,
+    getter: Callable[[str, str], tuple[Any, str | None]] = _api_get,
+) -> list[dict[str, Any]]:
+    incident_ids: list[int] = []
+    for status in ("TRIGGERED", "ASSIGNED"):
+        url = f"{API_ORIGIN}/v1/incidents/secrets?per_page=100&status={status}"
+        while url is not None:
+            payload, link = getter(url, token)
+            if not isinstance(payload, list):
+                raise TriageError("GitGuardian API returned an unexpected incident list")
+            for item in payload:
+                incident_id = item.get("id") if isinstance(item, dict) else None
+                if not isinstance(incident_id, int):
+                    raise TriageError("GitGuardian API returned an invalid incident identifier")
+                incident_ids.append(incident_id)
+            url = _next_url(url, link)
+
+    def fetch_detail(incident_id: int) -> dict[str, Any]:
+        payload, _ = getter(f"{API_ORIGIN}/v1/incidents/secrets/{incident_id}", token)
+        if not isinstance(payload, dict) or payload.get("id") != incident_id:
+            raise TriageError("GitGuardian API returned an unexpected incident detail")
+        return summarize_incident(payload)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+        summaries = list(pool.map(fetch_detail, incident_ids))
+    return sorted(summaries, key=lambda item: (item["detector"], item["id"]))
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="List redacted metadata for triggered GitGuardian incidents."
+    )
+    parser.add_argument("command", choices=("list-open",))
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    if args.command == "list-open":
+        try:
+            incidents = list_open_incidents(load_token())
+        except TriageError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(incidents, ensure_ascii=True, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

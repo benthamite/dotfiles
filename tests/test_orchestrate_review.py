@@ -5,6 +5,7 @@ import json
 import re
 import tempfile
 import unittest
+import warnings
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from types import SimpleNamespace
@@ -58,6 +59,12 @@ orchestrator = load_module()
 
 
 class SkillWorkflowTests(unittest.TestCase):
+    def test_paired_helpers_compile_without_syntax_warnings(self):
+        for script in (CODEX_SCRIPT, CLAUDE_SCRIPT):
+            with self.subTest(script=script), warnings.catch_warnings():
+                warnings.simplefilter("error", SyntaxWarning)
+                compile(script.read_bytes(), str(script), "exec")
+
     def test_paired_skills_define_one_way_spec_plan_implementation_handoff(self):
         self.assertEqual(CODEX_SKILL.read_bytes(), CLAUDE_SKILL.read_bytes())
         skill = CODEX_SKILL.read_text(encoding="utf-8")

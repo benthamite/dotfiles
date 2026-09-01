@@ -1207,7 +1207,7 @@ def ask_cmd(args: argparse.Namespace) -> None:
         session.run_emacs_eval(
             f'(with-current-buffer {session.elisp_string(actor["buffer"])} '
             f'(when (and (boundp (quote eat-terminal)) eat-terminal) '
-            f'(eat-term-send-string eat-terminal "\e")) t)'
+            f'(eat-term-send-string eat-terminal "\\e")) t)'
         )
         time.sleep(4)
     session.run_emacs_eval(
@@ -1239,7 +1239,7 @@ def interrupt_cmd(args: argparse.Namespace) -> None:
     session.run_emacs_eval(
         f'(with-current-buffer {session.elisp_string(actor["buffer"])} '
         f'(when (and (boundp (quote eat-terminal)) eat-terminal) '
-        f'(eat-term-send-string eat-terminal "\e")) t)'
+        f'(eat-term-send-string eat-terminal "\\e")) t)'
     )
     print(f"interrupt sent to {actor['buffer']}")
 

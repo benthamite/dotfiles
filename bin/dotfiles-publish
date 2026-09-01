@@ -37,7 +37,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
-SCHEMA = 2
+SCHEMA = 3
 
 EXIT_OK = 0
 EXIT_REFUSED = 1
@@ -47,6 +47,13 @@ EXIT_FAILURE = 3
 STATE_DIRECTORY_NAME = "dotfiles-publish"
 DIRECTORY_MODE = 0o700
 FILE_MODE = 0o600
+
+MIN_KNOWN_VALUE_CHARS = 4
+MAX_REVIEW_FIELD_CHARS = 4096
+MAX_REVIEW_FINDINGS = 256
+MAX_REVIEW_FINDINGS_BYTES = 64 * 1024
+MAX_INCIDENT_EVIDENCE_BYTES = 64 * 1024
+MAX_KNOWN_VALUE_CHECK_WORK = 10_000_000
 
 AUTHORIZATION_LIFETIME_SECONDS = 300
 FULL_AUDIT_MAX_AGE_SECONDS = 30 * 86400
@@ -173,6 +180,42 @@ def write_json(path, payload, mode=FILE_MODE):
 
 def read_json(path):
     return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def read_bounded_json(path, limit, description):
+    """Read a small regular JSON file through one no-follow descriptor."""
+    descriptor = None
+    try:
+        descriptor = os.open(
+            str(path),
+            os.O_RDONLY
+            | getattr(os, "O_NOFOLLOW", 0)
+            | getattr(os, "O_NONBLOCK", 0),
+        )
+        source_stat = os.fstat(descriptor)
+        if not stat.S_ISREG(source_stat.st_mode) or source_stat.st_size > limit:
+            raise PublishError("the %s file is too large" % description, EXIT_REFUSED)
+        chunks = []
+        remaining = limit + 1
+        while remaining:
+            chunk = os.read(descriptor, min(65536, remaining))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        payload = b"".join(chunks)
+        if len(payload) > limit:
+            raise PublishError("the %s file is too large" % description, EXIT_REFUSED)
+        return payload, json.loads(payload.decode("utf-8"))
+    except OSError as error:
+        raise PublishError(
+            "could not read the %s file: %s" % (description, error), EXIT_REFUSED
+        )
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        raise PublishError("the %s file is not valid UTF-8 JSON" % description, EXIT_REFUSED)
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
 
 
 # --------------------------------------------------------------------------
@@ -532,17 +575,29 @@ class Redactor:
     def __init__(self, key):
         self.key = key
         self.values = {}
+        self.known_values = set()
 
-    def learn(self, value, token):
-        if value and len(value) >= 4:
-            self.values[value] = token
+    def learn(self, value, token=None, *, scrub=True):
+        if value and len(value) >= MIN_KNOWN_VALUE_CHARS:
+            self.known_values.add(value)
+            if scrub:
+                if not token:
+                    raise PublishError("a scrubbed scanner value needs a fingerprint")
+                self.values[value] = token
 
     @property
-    def value_hmacs(self):
-        return sorted({value_hmac(self.key, value) for value in self.values})
+    def value_signatures(self):
+        return sorted(
+            (
+                {"length": len(value), "hmac": value_hmac(self.key, value)}
+                for value in self.known_values
+                if len(value) <= MAX_REVIEW_FIELD_CHARS
+            ),
+            key=lambda signature: (signature["length"], signature["hmac"]),
+        )
 
     def knows(self, candidate):
-        return value_hmac(self.key, candidate) in set(self.value_hmacs)
+        return candidate in self.known_values
 
     def scrub(self, text):
         if text is None:
@@ -716,7 +771,7 @@ def repository_relative(path, strip_prefix):
 
 
 def gitleaks_source_values(repo, result, *, default_commit="", directory=None):
-    """Read the exact raw source lines and match span named by a result."""
+    """Return authoritative scrub values and HMAC-only review candidates."""
     start = result.get("StartLine")
     end = result.get("EndLine") or start
     start_column = result.get("StartColumn")
@@ -724,13 +779,6 @@ def gitleaks_source_values(repo, result, *, default_commit="", directory=None):
     reported_path = result.get("File") or ""
     if not isinstance(start, int) or not isinstance(end, int) or start < 1 or end < start:
         raise PublishError("gitleaks returned invalid source coordinates", EXIT_FAILURE)
-    if (
-        not isinstance(start_column, int)
-        or not isinstance(end_column, int)
-        or start_column < 1
-        or end_column < 1
-    ):
-        raise PublishError("gitleaks returned invalid source columns", EXIT_FAILURE)
     if not reported_path:
         raise PublishError("gitleaks returned a finding without a source path", EXIT_FAILURE)
 
@@ -772,19 +820,39 @@ def gitleaks_source_values(repo, result, *, default_commit="", directory=None):
     if end > len(lines):
         raise PublishError("gitleaks source coordinates exceeded the file", EXIT_FAILURE)
     selected = lines[start - 1 : end]
-    if start == end:
-        if end_column < start_column or end_column > len(selected[0]):
-            raise PublishError("gitleaks source columns exceeded the line", EXIT_FAILURE)
-        span = selected[0][start_column - 1 : end_column]
-    else:
-        if start_column > len(selected[0]) + 1 or end_column > len(selected[-1]):
-            raise PublishError("gitleaks source columns exceeded the lines", EXIT_FAILURE)
-        span = b"\n".join(
-            [selected[0][start_column - 1 :], *selected[1:-1], selected[-1][:end_column]]
-        )
     decoded_lines = [line.decode("utf-8", "replace") for line in selected]
-    decoded_span = span.decode("utf-8", "replace")
-    return [*decoded_lines, decoded_span, *TOKEN_PATTERN.findall(decoded_span)]
+    scrub_values = [*decoded_lines]
+    review_candidates = []
+    for line in decoded_lines:
+        review_candidates.extend(TOKEN_PATTERN.findall(line))
+
+    span = None
+    if start == end:
+        if (
+            isinstance(start_column, int)
+            and isinstance(end_column, int)
+            and 1 <= start_column <= end_column <= len(selected[0])
+        ):
+            span = selected[0][start_column - 1 : end_column]
+    else:
+        if (
+            isinstance(start_column, int)
+            and isinstance(end_column, int)
+            and 1 <= start_column <= len(selected[0]) + 1
+            and 1 <= end_column <= len(selected[-1])
+        ):
+            span = b"\n".join(
+                [
+                    selected[0][start_column - 1 :],
+                    *selected[1:-1],
+                    selected[-1][:end_column],
+                ]
+            )
+    if span is not None:
+        decoded_span = span.decode("utf-8", "replace")
+        scrub_values.append(decoded_span)
+        review_candidates.extend(TOKEN_PATTERN.findall(decoded_span))
+    return scrub_values, review_candidates
 
 
 def convert_gitleaks_results(
@@ -800,7 +868,7 @@ def convert_gitleaks_results(
     """Learn the raw values in memory, then persist only redacted records."""
     for result in results:
         commit = result.get("Commit") or default_commit
-        raw_values = gitleaks_source_values(
+        scrub_values, review_candidates = gitleaks_source_values(
             repo, result, default_commit=default_commit, directory=directory
         )
         path = repository_relative(result.get("File") or "", strip_prefix)
@@ -819,8 +887,10 @@ def convert_gitleaks_results(
         for candidate in (result.get("Secret"), result.get("Match"), result.get("Line")):
             if candidate and candidate != "REDACTED":
                 redactor.learn(candidate, token)
-        for raw_value in raw_values:
+        for raw_value in scrub_values:
             redactor.learn(raw_value, token)
+        for raw_value in review_candidates:
+            redactor.learn(raw_value, scrub=False)
         result["_token"] = token
 
     records = []
@@ -1185,7 +1255,7 @@ def store_findings(repo, run_id, result):
             "schema": SCHEMA,
             "run_id": run_id,
             "findings": result.findings,
-            "value_hmacs": result.redactor.value_hmacs,
+            "value_signatures": result.redactor.value_signatures,
         },
     )
 
@@ -1680,10 +1750,9 @@ def command_incident_record(args):
         )
 
     evidence_path = Path(args.evidence)
-    if not evidence_path.is_file():
-        raise PublishError("evidence file not found: %s" % args.evidence, EXIT_REFUSED)
-    evidence_bytes = evidence_path.read_bytes()
-    evidence = json.loads(evidence_bytes.decode("utf-8"))
+    evidence_bytes, evidence = read_bounded_json(
+        evidence_path, MAX_INCIDENT_EVIDENCE_BYTES, "incident evidence"
+    )
     if not isinstance(evidence, dict):
         raise PublishError("the evidence file must contain one JSON object", EXIT_REFUSED)
     if "value" in evidence or "secret" in evidence:
@@ -1702,9 +1771,7 @@ def command_incident_record(args):
             raise PublishError(
                 "a path-wide or rule-wide incident exception is forbidden", EXIT_REFUSED
             )
-    reject_known_values(
-        evidence_bytes.decode("utf-8", "replace"), set(findings.get("value_hmacs") or []), key
-    )
+    reject_known_values(evidence, findings.get("value_signatures") or [], key)
 
     incidents = load_incidents(repo)
     incidents["incidents"][args.fingerprint] = {
@@ -2010,8 +2077,14 @@ def load_manifest(repo, run_id):
 def load_findings(repo, run_id):
     path = run_directory(repo, run_id) / "findings.json"
     if not path.exists():
-        return {"findings": [], "value_hmacs": []}
-    return read_json(path)
+        return {"findings": [], "value_signatures": []}
+    findings = read_json(path)
+    if findings.get("schema") != SCHEMA:
+        raise PublishError(
+            "run %s predates safe scanner redaction; scan again" % run_id,
+            EXIT_REFUSED,
+        )
+    return findings
 
 
 # --------------------------------------------------------------------------
@@ -2057,19 +2130,79 @@ def findings_digest(records):
 TOKEN_PATTERN = re.compile(r"[A-Za-z0-9_\-\.\+/=]{8,}")
 
 
-def reject_known_values(text, known_hmacs, key):
-    for token in TOKEN_PATTERN.findall(text):
-        if value_hmac(key, token) in known_hmacs:
+def signature_index(signatures):
+    """Validate persisted signatures and group their HMACs by character length."""
+    indexed = {}
+    for signature in signatures:
+        if not isinstance(signature, dict):
+            raise PublishError("scanner value signatures are invalid; scan again", EXIT_REFUSED)
+        length = signature.get("length")
+        digest = signature.get("hmac")
+        if (
+            not isinstance(length, int)
+            or not MIN_KNOWN_VALUE_CHARS <= length <= MAX_REVIEW_FIELD_CHARS
+            or not isinstance(digest, str)
+            or not re.fullmatch(r"[0-9a-f]{64}", digest)
+        ):
+            raise PublishError("scanner value signatures are invalid; scan again", EXIT_REFUSED)
+        indexed.setdefault(length, set()).add(digest)
+    return indexed
+
+
+def string_values(value):
+    """Yield strings from JSON-compatible evidence without JSON escaping them."""
+    if isinstance(value, str):
+        yield value
+    elif isinstance(value, dict):
+        for item in value.values():
+            yield from string_values(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from string_values(item)
+
+
+def reject_known_values(value, signatures, key):
+    indexed = signature_index(signatures)
+    if not indexed:
+        return
+    texts = list(string_values(value))
+    work = 0
+    for text in texts:
+        if len(text) > MAX_REVIEW_FIELD_CHARS:
             raise PublishError(
-                "the review record contains a value the scanner detected; report the fingerprint instead",
+                "a review evidence field is too long; keep only concise redacted evidence",
                 EXIT_REFUSED,
             )
+        for length in indexed:
+            if length <= len(text):
+                # Four is the maximum UTF-8 byte length of one Unicode scalar.
+                # This conservative preflight bounds both slices and bytes hashed.
+                work += (len(text) - length + 1) * length * 4
+                if work > MAX_KNOWN_VALUE_CHECK_WORK:
+                    raise PublishError(
+                        "review evidence requires too much secret-comparison work; keep it concise",
+                        EXIT_REFUSED,
+                    )
+    for text in texts:
+        for length, digests in indexed.items():
+            if length > len(text):
+                continue
+            for offset in range(len(text) - length + 1):
+                if value_hmac(key, text[offset : offset + length]) in digests:
+                    raise PublishError(
+                        "the review record contains a value the scanner detected; report the fingerprint instead",
+                        EXIT_REFUSED,
+                    )
 
 
-def validate_review_findings(records, known_hmacs, key, unit):
+def validate_review_findings(records, signatures, key, unit):
     if not isinstance(records, list):
         raise PublishError("a findings file must contain a list of finding records", EXIT_REFUSED)
-    validated = []
+    if len(records) > MAX_REVIEW_FINDINGS:
+        raise PublishError(
+            "a findings file contains too many records; split the review into smaller units",
+            EXIT_REFUSED,
+        )
     for index, record in enumerate(records):
         if not isinstance(record, dict):
             raise PublishError("finding %d is not an object" % index, EXIT_REFUSED)
@@ -2084,7 +2217,29 @@ def validate_review_findings(records, known_hmacs, key, unit):
                 "finding %d has unsupported fields: %s" % (index, ", ".join(sorted(unknown))),
                 EXIT_REFUSED,
             )
-        reject_known_values(json.dumps(record), known_hmacs, key)
+        for field_name, value in record.items():
+            if field_name in ("line", "column"):
+                if value is not None and not isinstance(value, int):
+                    raise PublishError(
+                        "finding %d field %s must be an integer" % (index, field_name),
+                        EXIT_REFUSED,
+                    )
+                continue
+            if value is not None and not isinstance(value, str):
+                raise PublishError(
+                    "finding %d field %s must be a string" % (index, field_name),
+                    EXIT_REFUSED,
+                )
+            if isinstance(value, str) and len(value) > MAX_REVIEW_FIELD_CHARS:
+                raise PublishError(
+                    "finding %d field %s is too long" % (index, field_name),
+                    EXIT_REFUSED,
+                )
+    # Budget the complete payload before hashing any reviewer-controlled text.
+    reject_known_values(records, signatures, key)
+
+    validated = []
+    for record in records:
         complete = {
             "source": record.get("source") or "review",
             "rule_id": record.get("rule_id") or "review-finding",
@@ -2153,11 +2308,13 @@ def command_review_record(args):
     if args.verdict == "finding":
         if not args.findings:
             raise PublishError("--findings is required for a finding verdict", EXIT_REFUSED)
-        known = set(load_findings(repo, args.run).get("value_hmacs") or [])
-        payload = read_json(args.findings)
+        signatures = load_findings(repo, args.run).get("value_signatures") or []
+        _, payload = read_bounded_json(
+            args.findings, MAX_REVIEW_FINDINGS_BYTES, "review findings"
+        )
         if isinstance(payload, dict):
             payload = payload.get("findings", [])
-        records = validate_review_findings(payload, known, key, units[args.unit])
+        records = validate_review_findings(payload, signatures, key, units[args.unit])
         if not records:
             raise PublishError("a finding verdict needs at least one finding record", EXIT_REFUSED)
     elif args.findings:

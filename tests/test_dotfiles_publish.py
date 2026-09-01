@@ -216,6 +216,10 @@ def main():
             source_value = finding["Secret"]
             finding["Secret"] = reported_secret
             finding["Match"] = finding["Match"].replace(source_value, reported_secret)
+    if os.environ.get("DOTFILES_FAKE_GITLEAKS_INVALID_COLUMNS"):
+        for finding in findings:
+            finding["StartColumn"] = 999999
+            finding["EndColumn"] = 1000000
     if option(argv, "--redact"):
         for finding in findings:
             value = finding["Secret"]
@@ -457,7 +461,7 @@ class PublicationFixture(unittest.TestCase):
         """Record a clean full audit without running one, for publication tests."""
         run = self.read_json(self.run_dir(run_id) / "run.json")
         receipt = {
-            "schema": 2,
+            "schema": 3,
             "completed_epoch": completed_epoch if completed_epoch is not None else self.now,
             "completed_at": "2026-01-01T00:00:00Z",
             "ruleset_id": run["ruleset_id"],
@@ -1343,6 +1347,170 @@ class DotfilesPublishManifestTests(PublicationFixture):
         self.assertIn("scanner detected", leaking.stderr)
         self.assertNotIn(TEST_SECRET, leaking.stdout + leaking.stderr)
 
+    def test_review_record_rejects_punctuation_and_multiline_scanner_values(self):
+        reported = "a!β@c#d$e%f^g&h*i\nsecond!line"
+        self.publish_base()
+        self.commit(
+            "add configuration", {"config/service.conf": "token = %s\n" % TEST_SECRET}
+        )
+        _, run_id = self.scan(
+            env=self.env(DOTFILES_FAKE_GITLEAKS_REPORTED_SECRET=reported)
+        )
+        unit_id = self.unit_ids(run_id)[0]
+        for index, context in enumerate((reported, "saw %s here" % reported)):
+            findings_file = self.base / ("punctuation-multiline-%d.json" % index)
+            findings_file.write_text(
+                json.dumps([{"rule_id": "manual", "context": context}])
+            )
+            rejected = self.cli(
+                "review-record",
+                "--run",
+                run_id,
+                "--unit",
+                unit_id,
+                "--verdict",
+                "finding",
+                "--findings",
+                str(findings_file),
+            )
+            self.assertEqual(1, rejected.returncode, rejected.stdout + rejected.stderr)
+            self.assertIn("scanner detected", rejected.stderr)
+        review_path = self.run_dir(run_id) / "review.json"
+        if review_path.exists():
+            self.assertNotIn(reported, review_path.read_text())
+        for path in self.run_dir(run_id).rglob("*"):
+            if path.is_file():
+                self.assertNotIn(reported, path.read_text(errors="replace"), str(path))
+
+    def test_review_record_refuses_legacy_value_hmac_state(self):
+        self.publish_base()
+        self.commit(
+            "add configuration", {"config/service.conf": "token = %s\n" % TEST_SECRET}
+        )
+        _, run_id = self.scan()
+        findings_path = self.run_dir(run_id) / "findings.json"
+        findings = self.read_json(findings_path)
+        findings["schema"] = 2
+        findings["value_hmacs"] = [
+            signature["hmac"] for signature in findings.pop("value_signatures")
+        ]
+        findings_path.write_text(json.dumps(findings))
+        findings_file = self.base / "legacy-review.json"
+        findings_file.write_text(
+            json.dumps([{"rule_id": "manual", "context": "redacted evidence"}])
+        )
+
+        rejected = self.cli(
+            "review-record",
+            "--run",
+            run_id,
+            "--unit",
+            self.unit_ids(run_id)[0],
+            "--verdict",
+            "finding",
+            "--findings",
+            str(findings_file),
+        )
+
+        self.assertEqual(1, rejected.returncode, rejected.stdout + rejected.stderr)
+        self.assertIn("predates safe scanner redaction", rejected.stderr)
+
+    def test_review_record_bounds_reviewer_controlled_input(self):
+        self.publish_base()
+        self.commit(
+            "add configuration", {"config/service.conf": "token = %s\n" % TEST_SECRET}
+        )
+        _, run_id = self.scan()
+        unit_id = self.unit_ids(run_id)[0]
+
+        cases = (
+            ("oversized", [{"context": "x" * (64 * 1024)}], "file is too large"),
+            ("too-many", [{} for _ in range(257)], "too many records"),
+            ("long-field", [{"context": "x" * 4097}], "field context is too long"),
+        )
+        for name, payload, expected in cases:
+            findings_file = self.base / (name + ".json")
+            findings_file.write_text(json.dumps(payload))
+            rejected = self.cli(
+                "review-record",
+                "--run",
+                run_id,
+                "--unit",
+                unit_id,
+                "--verdict",
+                "finding",
+                "--findings",
+                str(findings_file),
+            )
+            self.assertEqual(1, rejected.returncode, rejected.stdout + rejected.stderr)
+            self.assertIn(expected, rejected.stderr)
+        self.assertFalse((self.run_dir(run_id) / "review.json").exists())
+
+    def test_review_record_bounds_secret_comparison_work_before_hashing(self):
+        self.publish_base()
+        self.commit(
+            "add configuration", {"config/service.conf": "token = %s\n" % TEST_SECRET}
+        )
+        _, run_id = self.scan()
+        findings_path = self.run_dir(run_id) / "findings.json"
+        findings = self.read_json(findings_path)
+        findings_file = self.base / "comparison-budget.json"
+        findings_file.write_text(json.dumps([{"context": "x" * 4096}]))
+        unit_id = self.unit_ids(run_id)[0]
+
+        findings["value_signatures"] = [{"length": 500, "hmac": "0" * 64}]
+        findings_path.write_text(json.dumps(findings))
+        accepted = self.cli(
+            "review-record",
+            "--run",
+            run_id,
+            "--unit",
+            unit_id,
+            "--verdict",
+            "finding",
+            "--findings",
+            str(findings_file),
+        )
+        self.assertEqual(0, accepted.returncode, accepted.stdout + accepted.stderr)
+        before = (self.run_dir(run_id) / "review.json").read_text()
+
+        findings_file.write_text(
+            json.dumps([{"context": "x" * 4096}, {"context": "y" * 4096}])
+        )
+        rejected_total = self.cli(
+            "review-record",
+            "--run",
+            run_id,
+            "--unit",
+            unit_id,
+            "--verdict",
+            "finding",
+            "--findings",
+            str(findings_file),
+        )
+        self.assertEqual(
+            1, rejected_total.returncode, rejected_total.stdout + rejected_total.stderr
+        )
+        self.assertIn("too much secret-comparison work", rejected_total.stderr)
+
+        findings["value_signatures"] = [{"length": 1000, "hmac": "0" * 64}]
+        findings_path.write_text(json.dumps(findings))
+        findings_file.write_text(json.dumps([{"context": "x" * 4096}]))
+        rejected = self.cli(
+            "review-record",
+            "--run",
+            run_id,
+            "--unit",
+            unit_id,
+            "--verdict",
+            "finding",
+            "--findings",
+            str(findings_file),
+        )
+        self.assertEqual(1, rejected.returncode, rejected.stdout + rejected.stderr)
+        self.assertIn("too much secret-comparison work", rejected.stderr)
+        self.assertEqual(before, (self.run_dir(run_id) / "review.json").read_text())
+
     def test_review_record_is_idempotent_only_for_an_identical_verdict(self):
         run_id = self.prepare_authorized_run()
         unit_id = self.unit_ids(run_id)[0]
@@ -1992,7 +2160,8 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         """Put a secret on the public branch, the way a real leak arrives."""
         self.publish_base()
         self.commit(
-            "publish configuration", {"config/service.conf": "token = %s\n" % TEST_SECRET}
+            "publish configuration",
+            {"config/service.conf": "verification token = %s\n" % TEST_SECRET},
         )
         self.git("-c", "core.hooksPath=/dev/null", "push", "--quiet", "origin", "master")
         self.git("fetch", "--quiet", "origin")
@@ -2187,6 +2356,99 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         review_path = self.run_dir(run_id) / "review.json"
         if review_path.exists():
             self.assertNotIn(encoded, review_path.read_text())
+
+    def test_full_audit_uses_lines_when_scanner_columns_are_impossible(self):
+        encoded = TEST_SECRET.encode("utf-8").hex()
+        line_prefix = "LINE-FIRST-CANARY"
+        self.publish_base()
+        leaking = self.commit(
+            "add line-first fixture",
+            {
+                "config/line-first.conf": "%s configuration %s TRAILING-CANARY\n"
+                % (line_prefix, encoded),
+                "docs/benign.md": "configuration remains visible\n",
+            },
+        )
+        self.commit("remove line-first fixture", remove=("config/line-first.conf",))
+        self.git("-c", "core.hooksPath=/dev/null", "push", "--quiet", "origin", "master")
+        self.git("fetch", "--quiet", "origin")
+
+        proc, run_id = self.scan(
+            "--mode",
+            "full-audit",
+            env=self.env(
+                DOTFILES_FAKE_GITLEAKS_PATTERNS=re.escape(encoded),
+                DOTFILES_FAKE_GITLEAKS_REPORTED_SECRET=TEST_SECRET,
+                DOTFILES_FAKE_GITLEAKS_INVALID_COLUMNS="1",
+            ),
+        )
+
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
+        historical = next(
+            finding
+            for finding in findings
+            if finding["source"] == "gitleaks-history"
+            and finding["commit"] == leaking
+            and finding["path"] == "config/line-first.conf"
+        )
+        self.assert_run_redacts(proc, run_id, encoded, historical["fingerprint"])
+
+        persisted = "\n".join(
+            path.read_text(encoding="utf-8", errors="replace")
+            for path in self.run_dir(run_id).rglob("*")
+            if path.is_file()
+        )
+        self.assertNotIn(line_prefix, persisted)
+        shown_units = []
+        for unit_id in self.unit_ids(run_id):
+            shown = self.cli("review-show", "--run", run_id, "--unit", unit_id)
+            self.assertEqual(0, shown.returncode, shown.stderr)
+            shown_units.append(shown.stdout)
+        shown_text = "\n".join(shown_units)
+        self.assertNotIn(line_prefix, shown_text)
+        self.assertIn("configuration remains visible", shown_text)
+
+        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        target = next(
+            unit
+            for unit in manifest["units"]
+            if unit["kind"] == "deterministic-finding"
+            and unit["detail"]["fingerprint"] == historical["fingerprint"]
+        )
+        safe_unit = next(
+            unit for unit in manifest["units"] if unit["unit_id"] != target["unit_id"]
+        )
+        clean = self.cli(
+            "review-record",
+            "--run",
+            run_id,
+            "--unit",
+            safe_unit["unit_id"],
+            "--verdict",
+            "clean",
+        )
+        self.assertEqual(0, clean.returncode, clean.stderr)
+        findings_file = self.base / "invalid-column-review.json"
+        findings_file.write_text(
+            json.dumps([{"rule_id": "manual", "context": encoded}])
+        )
+        rejected = self.cli(
+            "review-record",
+            "--run",
+            run_id,
+            "--unit",
+            target["unit_id"],
+            "--verdict",
+            "finding",
+            "--findings",
+            str(findings_file),
+        )
+        self.assertEqual(1, rejected.returncode, rejected.stdout + rejected.stderr)
+        self.assertIn("contains a value the scanner detected", rejected.stderr)
+        review = (self.run_dir(run_id) / "review.json").read_text()
+        self.assertNotIn(encoded, review)
+        self.assertNotIn(line_prefix, review)
 
     def test_full_audit_patch_bundles_include_merge_resolution_content(self):
         self.publish_base()
@@ -2541,6 +2803,36 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         self.assertNotEqual(0, detected.returncode)
         self.assertIn("scanner detected", detected.stderr)
 
+        self.assertFalse((self.state_dir() / "incidents.json").exists())
+
+    def test_incident_record_rejects_punctuation_and_multiline_scanner_values(self):
+        reported = "a!β@c#d$e%f^g&h*i\nsecond!line"
+        self.publish_a_secret()
+        _, run_id = self.scan(
+            "--mode",
+            "full-audit",
+            env=self.env(DOTFILES_FAKE_GITLEAKS_REPORTED_SECRET=reported),
+        )
+        finding = self.public_incident(run_id)
+        evidence = self.write_evidence(
+            finding["fingerprint"],
+            verification="rotation probe rejected %s as expected" % reported,
+        )
+
+        rejected = self.cli(
+            "incident-record",
+            "--run",
+            run_id,
+            "--fingerprint",
+            finding["fingerprint"],
+            "--resolution",
+            "rotated",
+            "--evidence",
+            str(evidence),
+        )
+
+        self.assertEqual(1, rejected.returncode, rejected.stdout + rejected.stderr)
+        self.assertIn("scanner detected", rejected.stderr)
         self.assertFalse((self.state_dir() / "incidents.json").exists())
 
     def test_incident_record_refuses_an_unpublished_finding(self):

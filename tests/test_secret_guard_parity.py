@@ -133,6 +133,7 @@ class SecretGuardParityTests(unittest.TestCase):
         commands = (
             "rg 'pbpaste' docs",
             "git commit -m 'docs: op-desktop read and pbpaste'",
+            "rg --files -g '!*.gpg' -g '!.git/**'",
         )
         for command in commands:
             with self.subTest(command=command):

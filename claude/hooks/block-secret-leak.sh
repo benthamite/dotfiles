@@ -84,7 +84,7 @@ normalize_shell_words() {
             span = span d; j++
           }
           if (!closed) { out = out substr(text, i); break }
-          if (span !~ /[[:space:];&|()]/ &&
+          if (span !~ /[[:space:];&|()!]/ &&
               (quote == SQ || (index(span, "$") == 0 && index(span, "`") == 0)))
             out = out span
           else

@@ -171,7 +171,9 @@ The secret guard denies direct agent-shell invocations of raw =op=, the
 globs, and shell-word obfuscation. Broker status and stop controls remain
 available because they return no credential data. Secret-consuming work must
 use a dedicated audited operation that keeps values out of agent output; a
-missing operation is an error to repair, not an alternate route.
+missing operation is an error to repair, not an alternate route. Quoted
+argument globs, including =rg= exclusion patterns beginning with =!=, remain
+inert data rather than executable command words.
 
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged

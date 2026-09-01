@@ -2787,6 +2787,14 @@ def command_repair_verify(args):
             "--allowed-path is required at least once so the rewrite stays bounded",
             EXIT_REFUSED,
         )
+    protected = run_git(
+        repo.root, "rev-parse", "--verify", "--quiet", entry["recovery_ref"], check=False
+    )
+    if protected.code != 0 or protected.text.strip() != entry["original_candidate"]:
+        raise PublishError(
+            "the recovery ref no longer protects the original candidate",
+            EXIT_REFUSED,
+        )
 
     current = remote_tip_of(repo, entry["remote_url"], entry["remote_ref"])
     if current != entry["remote_oid"]:

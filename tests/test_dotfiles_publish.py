@@ -1750,6 +1750,26 @@ class DotfilesPublishRepairTests(PublicationFixture):
         self.assertNotEqual(0, refused.returncode)
         self.assertIn("advanced during repair", refused.stderr)
 
+    def test_repair_verify_requires_the_original_recovery_ref(self):
+        run_id, _ = self.start_repairable_run()
+        self.rewrite_history()
+        self.git(
+            "update-ref",
+            "refs/dotfiles-publish/recovery/%s" % run_id,
+            self.remote_tip(),
+        )
+
+        refused = self.cli(
+            "repair-verify",
+            "--run",
+            run_id,
+            "--allowed-path",
+            "config/service.conf",
+        )
+
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("no longer protects", refused.stderr)
+
     def test_repaired_history_needs_a_new_run_and_a_new_review(self):
         run_id, _ = self.start_repairable_run()
         self.rewrite_history()

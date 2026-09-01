@@ -162,7 +162,10 @@ Work through every finding here, in the current session:
 - Then implement the plan and verify the result, per the plan's own
   verification section.
 
-Leave the reviewer session open for inspection — never kill it — and name it
+Once `finish-review` has recorded the return, kill the reviewer session
+(`agent--force-kill-buffer` on its buffer, or `agent-kill-session-buffer`
+from inside it). The run file and the reviewer transcript path are the
+inspection record; an idle session is not. Name the buffer and transcript
 in the final report.
 
 ## Stop conditions

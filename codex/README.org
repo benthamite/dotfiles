@@ -147,7 +147,9 @@ never the working tree), enforces an opposite-backend fresh-reviewer identity
 invariant at initialization (verified against the buffer's detected backend,
 not just the declared label), permits exactly one marker-gated review pass
 (markerless returns are terminal) and one zero-output process-loss restart,
-and leaves adjudication and implementation in the current session. Because a
+and leaves adjudication and implementation in the current session. Once
+=finish-review= has recorded the return, the reviewer session is killed;
+the run file and transcript path are the inspection record. Because a
 fresh Codex session materializes its rollout transcript only on first
 delivery, the helper rebinds to the discovered transcript once it provably
 contains the run's marker-bearing prompt. Its helper reuses the same shared

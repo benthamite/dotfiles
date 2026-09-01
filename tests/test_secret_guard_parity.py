@@ -297,6 +297,17 @@ done"""
 
         self.assert_both("o? read op://Employee/X/credential", "deny")
 
+    def test_exit_status_parameter_is_not_mistaken_for_executable_glob(self):
+        # `$?` expands to digits, never a program name (2026-09-01: a Slack
+        # draft helper call was denied solely for its `rc=$?` epilogue).
+        self.assert_both(
+            "copy-slack-draft --file \"$TMPFILE\"\nrc=$?\nrm -f \"$TMPFILE\"\nexit $rc",
+            "allow",
+        )
+        self.assert_both("do-thing; rc=$?; echo done", "allow")
+        # A real glob in the executable word must still be denied.
+        self.assert_both("pbpast? --version", "deny")
+
     def test_deny_message_advises_op_desktop(self):
         for tool, guard in GUARDS.items():
             with self.subTest(tool=tool):

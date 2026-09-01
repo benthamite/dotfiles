@@ -169,9 +169,12 @@ contains_secret_output_command() {
   # because their resolved program cannot be known before expansion.
   normalized=$(normalize_shell_words "$raw")
   # A case statement's default `*)` is a pattern, not an executable glob.
+  # `$?` expands to the numeric exit status, never a program name, so its `?`
+  # is not a glob either (e.g. `rc=$?`).
   normalized=$(printf '%s\n' "$normalized" | sed -E \
     -e 's/(case[[:space:]]+[^;&|()]+[[:space:]]+in[[:space:]]*)\*[[:space:]]*\)/\1CASE_DEFAULT)/g' \
-    -e 's/(^|;;[[:space:]]*)\*[[:space:]]*\)/\1CASE_DEFAULT)/g')
+    -e 's/(^|;;[[:space:]]*)\*[[:space:]]*\)/\1CASE_DEFAULT)/g' \
+    -e 's/\$\?/EXIT_STATUS/g')
   boundary='(^[[:space:]]*|[;&|(!`][[:space:]]*|\$\([[:space:]]*)'
   wrapper='(([^;&|[:space:]]*/)?(command|env|sudo|timeout|nice|exec|nohup|time|builtin)([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+|[A-Za-z_][A-Za-z0-9_]*=[^;&|[:space:]]*[[:space:]]+)'
   executable='([^;&|[:space:]]*/)?(op|op-automations|op-desktop|pbpaste|pass|security)'

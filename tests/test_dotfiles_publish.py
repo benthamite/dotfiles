@@ -91,6 +91,7 @@ def record(value, path, commit, line_number, line):
         "EndLine": line_number,
         "StartColumn": column,
         "EndColumn": column + value_length - 1,
+        "Line": line,
         "Match": line.strip(),
         "Secret": value,
         "Entropy": 4.2,
@@ -100,11 +101,14 @@ def record(value, path, commit, line_number, line):
 
 def scan_git(repo, log_opts, compiled):
     rev_args = ["--all"] if not log_opts else log_opts.split()
+    git_environment = os.environ.copy()
+    git_environment["DOTFILES_FAKE_GITLEAKS_CHILD"] = "1"
     listing = subprocess.run(
         ["git", "-C", repo, "rev-list", "--reverse", *rev_args],
         capture_output=True,
         text=True,
         check=True,
+        env=git_environment,
     )
     findings = []
     for commit in listing.stdout.split():
@@ -112,6 +116,7 @@ def scan_git(repo, log_opts, compiled):
             ["git", "-C", repo, "show", "--format=", "--patch", "--root", commit],
             capture_output=True,
             text=True,
+            env=git_environment,
         ).stdout
         path = ""
         line_number = 0
@@ -220,6 +225,18 @@ def main():
         for finding in findings:
             finding["StartColumn"] = 999999
             finding["EndColumn"] = 1000000
+    if mode != "dir" and os.environ.get(
+        "DOTFILES_FAKE_GITLEAKS_INVALID_GIT_COORDINATES"
+    ):
+        for finding in findings:
+            finding["StartLine"] = 999999
+            finding["EndLine"] = 999999
+            finding["StartColumn"] = 999999
+            finding["EndColumn"] = 1000000
+    if mode != "dir" and os.environ.get("DOTFILES_FAKE_GITLEAKS_OMIT_GIT_LINE"):
+        for finding in findings:
+            finding.pop("Line", None)
+            finding["Tags"] = ["decoded:hex", "decode-depth:1"]
     if option(argv, "--redact"):
         for finding in findings:
             value = finding["Secret"]
@@ -461,7 +478,7 @@ class PublicationFixture(unittest.TestCase):
         """Record a clean full audit without running one, for publication tests."""
         run = self.read_json(self.run_dir(run_id) / "run.json")
         receipt = {
-            "schema": 3,
+            "schema": 4,
             "completed_epoch": completed_epoch if completed_epoch is not None else self.now,
             "completed_at": "2026-01-01T00:00:00Z",
             "ruleset_id": run["ruleset_id"],
@@ -2259,6 +2276,14 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         self.assertTrue(findings)
         source_context = "\n".join(unit["content"] for unit in findings)
         self.assertIn("source excerpt:", source_context)
+        history_context = "\n".join(
+            unit["content"]
+            for unit in findings
+            if '"source": "gitleaks-history"' in unit["content"]
+        )
+        self.assertIn("Git patch coordinates are not blob coordinates", history_context)
+        self.assertNotIn("service = example", history_context)
+        self.assertNotIn("purpose = regression test", history_context)
         self.assertIn("service = example", source_context)
         self.assertIn("purpose = regression test", source_context)
         self.assertIn("[REDACTED:", source_context)
@@ -2356,6 +2381,92 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         review_path = self.run_dir(run_id) / "review.json"
         if review_path.exists():
             self.assertNotIn(encoded, review_path.read_text())
+
+    def test_full_audit_recovers_decoded_source_from_the_git_patch_stream(self):
+        encoded = TEST_SECRET.encode("utf-8").hex()
+        target = ":(glob)*.enc"
+        textconv = self.base / "prefix-lines.sh"
+        textconv.write_text("#!/bin/sh\nprintf '\\n\\n\\n\\n'\n/bin/cat \"$1\"\n")
+        textconv.chmod(0o700)
+        self.publish_base()
+        self.git("config", "diff.audit-fixture.textconv", str(textconv))
+        leaking = self.commit(
+            "add textconv historical fixture",
+            {
+                ".gitattributes": "*.enc diff=audit-fixture\n",
+                target: encoded + "\n",
+                "decoy.enc": "DECOY-CANARY\n",
+            },
+        )
+        self.commit("remove textconv fixture", remove=(target,))
+        self.git("-c", "core.hooksPath=/dev/null", "push", "--quiet", "origin", "master")
+        self.git("fetch", "--quiet", "origin")
+
+        proc, run_id = self.scan(
+            "--mode",
+            "full-audit",
+            env=self.env(
+                DOTFILES_FAKE_GITLEAKS_PATTERNS=re.escape(encoded),
+                DOTFILES_FAKE_GITLEAKS_REPORTED_SECRET=TEST_SECRET,
+                DOTFILES_FAKE_GITLEAKS_OMIT_GIT_LINE="1",
+            ),
+        )
+
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
+        historical = next(
+            finding
+            for finding in findings
+            if finding["source"] == "gitleaks-history"
+            and finding["commit"] == leaking
+            and finding["path"] == target
+        )
+        self.assertGreater(historical["line"], 1)
+        self.assert_run_redacts(proc, run_id, encoded, historical["fingerprint"])
+        manifest = (self.run_dir(run_id) / "manifest.json").read_text()
+        self.assertIn("DECOY-CANARY", manifest)
+
+    def test_full_audit_hides_textconv_stderr_when_patch_recovery_fails(self):
+        encoded = TEST_SECRET.encode("utf-8").hex()
+        canary = "TEXTCONV-SECRET-CANARY"
+        textconv = self.base / "failing-textconv.sh"
+        textconv.write_text(
+            "#!/bin/sh\n"
+            "if [ \"$DOTFILES_FAKE_GITLEAKS_CHILD\" = 1 ]; then /bin/cat \"$1\"; exit 0; fi\n"
+            "printf '%s\\n' \"%s\" >&2\n"
+            "exit 9\n" % ("%s", canary)
+        )
+        textconv.chmod(0o700)
+        self.publish_base()
+        self.git("config", "diff.audit-fixture.textconv", str(textconv))
+        self.commit(
+            "add failing textconv fixture",
+            {
+                ".gitattributes": "*.enc diff=audit-fixture\n",
+                "failure.enc": encoded + "\n",
+            },
+        )
+        self.commit("remove failing textconv fixture", remove=("failure.enc",))
+        self.git("-c", "core.hooksPath=/dev/null", "push", "--quiet", "origin", "master")
+        self.git("fetch", "--quiet", "origin")
+
+        proc = self.cli(
+            "scan",
+            "--mode",
+            "full-audit",
+            env=self.env(
+                DOTFILES_FAKE_GITLEAKS_PATTERNS=re.escape(encoded),
+                DOTFILES_FAKE_GITLEAKS_REPORTED_SECRET=TEST_SECRET,
+                DOTFILES_FAKE_GITLEAKS_OMIT_GIT_LINE="1",
+            ),
+        )
+
+        self.assertEqual(3, proc.returncode, proc.stdout + proc.stderr)
+        self.assertIn("could not recover a decoded gitleaks finding", proc.stderr)
+        for value in (canary, encoded, TEST_SECRET):
+            self.assertNotIn(value, proc.stdout + proc.stderr)
+            for path in self.state_files():
+                self.assertNotIn(value, path.read_text(errors="replace"), str(path))
 
     def test_full_audit_uses_lines_when_scanner_columns_are_impossible(self):
         encoded = TEST_SECRET.encode("utf-8").hex()

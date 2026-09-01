@@ -37,7 +37,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
-SCHEMA = 3
+SCHEMA = 4
 
 EXIT_OK = 0
 EXIT_REFUSED = 1
@@ -770,56 +770,94 @@ def repository_relative(path, strip_prefix):
     return path
 
 
-def gitleaks_source_values(repo, result, *, default_commit="", directory=None):
-    """Return authoritative scrub values and HMAC-only review candidates."""
+def gitleaks_report_values(result):
+    """Return raw values carried safely inside the private scanner report."""
+    scrub_values = []
+    review_candidates = []
+    for candidate in (result.get("Secret"), result.get("Match"), result.get("Line")):
+        if candidate and candidate != "REDACTED":
+            scrub_values.append(candidate)
+    line = result.get("Line")
+    if isinstance(line, str) and line:
+        for source_line in line.splitlines():
+            if source_line:
+                scrub_values.append(source_line)
+                review_candidates.extend(TOKEN_PATTERN.findall(source_line))
+    return scrub_values, review_candidates
+
+
+GIT_HUNK_HEADER = re.compile(rb"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
+
+
+def gitleaks_git_patch_values(repo, result):
+    """Recover decoded raw source from the same zero-context Git patch stream."""
+    start = result.get("StartLine")
+    end = result.get("EndLine") or start
+    commit = result.get("Commit") or ""
+    path = result.get("File") or ""
+    if (
+        not isinstance(start, int)
+        or not isinstance(end, int)
+        or start < 1
+        or end < start
+        or not isinstance(commit, str)
+        or not re.fullmatch(r"[0-9a-fA-F]{40,64}", commit)
+        or not path
+    ):
+        raise PublishError("gitleaks returned invalid Git patch coordinates", EXIT_FAILURE)
+
+    shown = run_git(
+        repo.root,
+        "--literal-pathspecs",
+        "show",
+        "--format=",
+        "--patch",
+        "-U0",
+        commit,
+        "--",
+        path,
+        check=False,
+    )
+    if shown.code != 0:
+        raise PublishError(
+            "could not recover a decoded gitleaks finding from its Git patch",
+            EXIT_FAILURE,
+        )
+    patch = shown.out
+    added = {}
+    position = None
+    for patch_line in patch.splitlines():
+        header = GIT_HUNK_HEADER.match(patch_line)
+        if header:
+            position = int(header.group(1))
+            continue
+        if position is None:
+            continue
+        if patch_line.startswith(b"+"):
+            added[position] = patch_line[1:]
+            position += 1
+        elif patch_line.startswith(b" "):
+            position += 1
+        elif patch_line.startswith(b"-") or patch_line.startswith(b"\\"):
+            continue
+        else:
+            position = None
+
+    selected = [added.get(line_number) for line_number in range(start, end + 1)]
+    if not selected or any(line is None for line in selected):
+        raise PublishError(
+            "could not recover a decoded gitleaks finding from its Git patch",
+            EXIT_FAILURE,
+        )
+    return gitleaks_selected_line_values(result, selected)
+
+
+def gitleaks_selected_line_values(result, selected):
+    """Learn complete source lines and an advisory byte-column span."""
     start = result.get("StartLine")
     end = result.get("EndLine") or start
     start_column = result.get("StartColumn")
     end_column = result.get("EndColumn")
-    reported_path = result.get("File") or ""
-    if not isinstance(start, int) or not isinstance(end, int) or start < 1 or end < start:
-        raise PublishError("gitleaks returned invalid source coordinates", EXIT_FAILURE)
-    if not reported_path:
-        raise PublishError("gitleaks returned a finding without a source path", EXIT_FAILURE)
-
-    if directory is not None:
-        root = Path(directory).resolve()
-        candidate = Path(reported_path)
-        if not candidate.is_absolute():
-            candidate = root / candidate
-        try:
-            if candidate.is_symlink():
-                raise OSError("symlink")
-            resolved = candidate.resolve(strict=True)
-            if resolved == root or root not in resolved.parents:
-                raise OSError("outside scan root")
-            descriptor = os.open(
-                str(resolved), os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
-            )
-            try:
-                source_stat = os.fstat(descriptor)
-                if not stat.S_ISREG(source_stat.st_mode):
-                    raise OSError("not regular")
-                with os.fdopen(descriptor, "rb") as handle:
-                    descriptor = None
-                    data = handle.read()
-            finally:
-                if descriptor is not None:
-                    os.close(descriptor)
-        except OSError:
-            raise PublishError("could not read gitleaks source coordinates", EXIT_FAILURE)
-    else:
-        commit = result.get("Commit") or default_commit
-        if not isinstance(commit, str) or not re.fullmatch(r"[0-9a-fA-F]{40,64}", commit):
-            raise PublishError("gitleaks returned an invalid source commit", EXIT_FAILURE)
-        data = run_git(
-            repo.root, "cat-file", "blob", "%s:%s" % (commit, reported_path)
-        ).out
-
-    lines = data.splitlines()
-    if end > len(lines):
-        raise PublishError("gitleaks source coordinates exceeded the file", EXIT_FAILURE)
-    selected = lines[start - 1 : end]
     decoded_lines = [line.decode("utf-8", "replace") for line in selected]
     scrub_values = [*decoded_lines]
     review_candidates = []
@@ -834,25 +872,67 @@ def gitleaks_source_values(repo, result, *, default_commit="", directory=None):
             and 1 <= start_column <= end_column <= len(selected[0])
         ):
             span = selected[0][start_column - 1 : end_column]
-    else:
-        if (
-            isinstance(start_column, int)
-            and isinstance(end_column, int)
-            and 1 <= start_column <= len(selected[0]) + 1
-            and 1 <= end_column <= len(selected[-1])
-        ):
-            span = b"\n".join(
-                [
-                    selected[0][start_column - 1 :],
-                    *selected[1:-1],
-                    selected[-1][:end_column],
-                ]
-            )
+    elif (
+        isinstance(start_column, int)
+        and isinstance(end_column, int)
+        and 1 <= start_column <= len(selected[0]) + 1
+        and 1 <= end_column <= len(selected[-1])
+    ):
+        span = b"\n".join(
+            [
+                selected[0][start_column - 1 :],
+                *selected[1:-1],
+                selected[-1][:end_column],
+            ]
+        )
     if span is not None:
         decoded_span = span.decode("utf-8", "replace")
         scrub_values.append(decoded_span)
         review_candidates.extend(TOKEN_PATTERN.findall(decoded_span))
     return scrub_values, review_candidates
+
+
+def gitleaks_source_values(result, *, directory):
+    """Return authoritative directory lines and HMAC-only review candidates."""
+    start = result.get("StartLine")
+    end = result.get("EndLine") or start
+    reported_path = result.get("File") or ""
+    if not isinstance(start, int) or not isinstance(end, int) or start < 1 or end < start:
+        raise PublishError("gitleaks returned invalid source coordinates", EXIT_FAILURE)
+    if not reported_path:
+        raise PublishError("gitleaks returned a finding without a source path", EXIT_FAILURE)
+
+    root = Path(directory).resolve()
+    candidate = Path(reported_path)
+    if not candidate.is_absolute():
+        candidate = root / candidate
+    try:
+        if candidate.is_symlink():
+            raise OSError("symlink")
+        resolved = candidate.resolve(strict=True)
+        if resolved == root or root not in resolved.parents:
+            raise OSError("outside scan root")
+        descriptor = os.open(
+            str(resolved), os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+        )
+        try:
+            source_stat = os.fstat(descriptor)
+            if not stat.S_ISREG(source_stat.st_mode):
+                raise OSError("not regular")
+            with os.fdopen(descriptor, "rb") as handle:
+                descriptor = None
+                data = handle.read()
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
+    except OSError:
+        raise PublishError("could not read gitleaks source coordinates", EXIT_FAILURE)
+
+    lines = data.splitlines()
+    if end > len(lines):
+        raise PublishError("gitleaks source coordinates exceeded the file", EXIT_FAILURE)
+    selected = lines[start - 1 : end]
+    return gitleaks_selected_line_values(result, selected)
 
 
 def convert_gitleaks_results(
@@ -868,9 +948,22 @@ def convert_gitleaks_results(
     """Learn the raw values in memory, then persist only redacted records."""
     for result in results:
         commit = result.get("Commit") or default_commit
-        scrub_values, review_candidates = gitleaks_source_values(
-            repo, result, default_commit=default_commit, directory=directory
-        )
+        scrub_values, review_candidates = gitleaks_report_values(result)
+        if directory is not None:
+            source_scrub_values, source_review_candidates = gitleaks_source_values(
+                result, directory=directory
+            )
+            scrub_values.extend(source_scrub_values)
+            review_candidates.extend(source_review_candidates)
+        elif not result.get("Line") and any(
+            isinstance(tag, str) and tag.startswith("decoded:")
+            for tag in (result.get("Tags") or [])
+        ):
+            source_scrub_values, source_review_candidates = gitleaks_git_patch_values(
+                repo, result
+            )
+            scrub_values.extend(source_scrub_values)
+            review_candidates.extend(source_review_candidates)
         path = repository_relative(result.get("File") or "", strip_prefix)
         result["File"] = path
         rule = result.get("RuleID") or "unknown"
@@ -884,9 +977,6 @@ def convert_gitleaks_results(
             rule,
             str(line or ""),
         )
-        for candidate in (result.get("Secret"), result.get("Match"), result.get("Line")):
-            if candidate and candidate != "REDACTED":
-                redactor.learn(candidate, token)
         for raw_value in scrub_values:
             redactor.learn(raw_value, token)
         for raw_value in review_candidates:
@@ -1608,6 +1698,10 @@ def audit_history_units(repo, commits, redactor):
 
 def finding_source_excerpt(finding, resolved, redactor):
     """Return bounded source context with every scanner-known value redacted."""
+    if finding.get("source") == "gitleaks-history":
+        return "Git patch coordinates are not blob coordinates; scanner context: %s" % (
+            finding.get("context") or "redacted context unavailable"
+        )
     commit = finding.get("commit")
     path = finding.get("path")
     line_number = finding.get("line")
@@ -1662,7 +1756,9 @@ def build_audit_manifest(repo, run_id, result):
         {
             "%s:%s" % (finding.get("commit"), finding.get("path"))
             for finding in result.findings
-            if finding.get("commit") and finding.get("path")
+            if finding.get("commit")
+            and finding.get("path")
+            and finding.get("source") != "gitleaks-history"
         }
     )
     finding_objects = cat_file_batch(repo, finding_requests, head_bytes=LARGE_BLOB_LIMIT)

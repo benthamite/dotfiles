@@ -128,6 +128,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =elpaca-run.sh= | Resolves the active Emacs profile and runs an executable from an Elpaca package. |
 | =fire-and-forget.sh= | Detaches nonblocking Notification and Stop hook work after consuming the event payload. |
 | =lib-elisp-evidence.sh= | Issues and atomically consumes one-time correlation receipts for Elisp test and live evidence; these receipts prevent replay but do not authenticate against the same user. |
+| =lib-heredoc.sh= | Masks heredoc bodies that feed a known data sink through a plain simple command, so guards classify command words only; bodies fed to shells, interpreters, or pipelines stay in the scan, and an =all= mode lets a guard word its denial for a path named only inside an interpreter-fed program. |
 | =lib-repo-root.sh= | Resolves the effective Git root from command context and supported Git global options. |
 | =lib-staged-files.sh= | Lists staged paths and name-status data, including an amended commit as the complete proposed commit. |
 | =load-elisp-after-edit.sh= | Rebuilds and reloads an edited Elisp package through the live Emacs session, except for test-only files or while Git has an active operation or unmerged index entries. |

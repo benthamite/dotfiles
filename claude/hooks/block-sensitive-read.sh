@@ -17,6 +17,9 @@
 
 set -euo pipefail
 
+# shellcheck source=lib-heredoc.sh
+source "$(dirname "$0")/lib-heredoc.sh"
+
 INPUT=$(cat)
 TOOL_NAME=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty')
 
@@ -214,6 +217,35 @@ fi
 # Bash tool branch — scan the command string for sensitive path mentions.
 # --------------------------------------------------------------------------
 
+# Classify TEXT by the sensitive path it names; empty when it names none.
+sensitive_label_for_command() {
+  local text="$1" SENSITIVE_LABEL=""
+  if   echo "$text" | grep -qE '\.zshenv-secrets\b'; then
+    SENSITIVE_LABEL="shell secrets file"
+  elif echo "$text" | grep -qE '\.password-store/'; then
+    SENSITIVE_LABEL="password store (GPG-encrypted secrets)"
+  elif echo "$text" | grep -qE '(^|[[:space:]/])\.mcp\.json\b|(^|[[:space:]/])mcp\.json\b'; then
+    SENSITIVE_LABEL="MCP credential config"
+  elif echo "$text" | grep -qE '(^|[[:space:]/])\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]/])\.envrc\b'; then
+    SENSITIVE_LABEL="environment secrets file"
+  elif echo "$text" | grep -qE '(^|[ /=])\.ssh/id_[A-Za-z0-9_]+\b' && \
+       ! echo "$text" | grep -qE '\.ssh/id_[A-Za-z0-9_]+\.pub\b'; then
+    # Match private keys but exclude public keys (.pub).
+    SENSITIVE_LABEL="SSH private key"
+  elif echo "$text" | grep -qE '\.gnupg/'; then
+    SENSITIVE_LABEL="GPG keyring"
+  elif echo "$text" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.config/[^/[:space:]]+/tokens\.json\b'; then
+    SENSITIVE_LABEL="OAuth tokens"
+  elif echo "$text" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.gmail-mcp-epoch/credentials/'; then
+    SENSITIVE_LABEL="Gmail MCP credentials"
+  elif echo "$text" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.config/[^/[:space:]]+/(secret\.json|client_secret[^"[:space:]]*\.json)\b'; then
+    SENSITIVE_LABEL="OAuth client secret"
+  elif echo "$text" | grep -qE '(^|[[:space:]/])(credentials\.json|service-account[^/[:space:]]*\.json|tokens\.json)\b'; then
+    SENSITIVE_LABEL="credential JSON"
+  fi
+  printf '%s' "$SENSITIVE_LABEL"
+}
+
 if [ "$TOOL_NAME" = "Bash" ]; then
   COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
   [ -z "$COMMAND" ] && exit 0
@@ -221,33 +253,16 @@ if [ "$TOOL_NAME" = "Bash" ]; then
   # 1. Identify which sensitive path (if any) is mentioned.
   #    These regexes use the same set as the Read branch above. If you add
   #    a path there, add it here too.
-  SENSITIVE_LABEL=""
-  if   echo "$COMMAND" | grep -qE '\.zshenv-secrets\b'; then
-    SENSITIVE_LABEL="shell secrets file"
-  elif echo "$COMMAND" | grep -qE '\.password-store/'; then
-    SENSITIVE_LABEL="password store (GPG-encrypted secrets)"
-  elif echo "$COMMAND" | grep -qE '(^|[[:space:]/])\.mcp\.json\b|(^|[[:space:]/])mcp\.json\b'; then
-    SENSITIVE_LABEL="MCP credential config"
-  elif echo "$COMMAND" | grep -qE '(^|[[:space:]/])\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]/])\.envrc\b'; then
-    SENSITIVE_LABEL="environment secrets file"
-  elif echo "$COMMAND" | grep -qE '(^|[ /=])\.ssh/id_[A-Za-z0-9_]+\b' && \
-       ! echo "$COMMAND" | grep -qE '\.ssh/id_[A-Za-z0-9_]+\.pub\b'; then
-    # Match private keys but exclude public keys (.pub).
-    SENSITIVE_LABEL="SSH private key"
-  elif echo "$COMMAND" | grep -qE '\.gnupg/'; then
-    SENSITIVE_LABEL="GPG keyring"
-  elif echo "$COMMAND" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.config/[^/[:space:]]+/tokens\.json\b'; then
-    SENSITIVE_LABEL="OAuth tokens"
-  elif echo "$COMMAND" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.gmail-mcp-epoch/credentials/'; then
-    SENSITIVE_LABEL="Gmail MCP credentials"
-  elif echo "$COMMAND" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.config/[^/[:space:]]+/(secret\.json|client_secret[^"[:space:]]*\.json)\b'; then
-    SENSITIVE_LABEL="OAuth client secret"
-  elif echo "$COMMAND" | grep -qE '(^|[[:space:]/])(credentials\.json|service-account[^/[:space:]]*\.json|tokens\.json)\b'; then
-    SENSITIVE_LABEL="credential JSON"
-  fi
+  # Heredoc bodies fed to a data sink are data (see lib-heredoc.sh); a body
+  # fed to an interpreter stays in the scan because it may read the file.
+  SENSITIVE_LABEL=$(sensitive_label_for_command "$(mask_heredoc_bodies "$COMMAND")")
 
   # No sensitive path mentioned → allow.
   [ -z "$SENSITIVE_LABEL" ] && exit 0
+
+  if [ -z "$(sensitive_label_for_command "$(mask_heredoc_bodies "$COMMAND" all)")" ]; then
+    deny "$SENSITIVE_LABEL" "a program fed to an interpreter through a heredoc names this file and the guard cannot prove the program does not read it; write the program to a file and run that, or drop the mention"
+  fi
 
   if [ "$SENSITIVE_LABEL" = "shell secrets file" ] && is_safe_shell_export_classifier "$COMMAND"; then
     exit 0

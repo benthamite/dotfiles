@@ -316,6 +316,42 @@ done"""
                 self.assertIn("op-desktop", reason)
                 self.assertNotIn("env -u OP_SERVICE_ACCOUNT_TOKEN op ", reason)
 
+    # Heredoc bodies and non-shell `eval` arguments are data, not command words.
+    def test_markdown_heredoc_to_a_data_sink_is_allowed(self):
+        self.assert_both(
+            "cat <<'EOF' > plan.md\n**Goal.** Ship it.\n- tests pass\nEOF",
+            "allow",
+        )
+
+    def test_commit_message_heredoc_mentioning_pass_is_allowed(self):
+        self.assert_both(
+            "git commit -q -F - <<'EOF'\nAll tests pass now\nEOF",
+            "allow",
+        )
+
+    def test_emacsclient_eval_with_let_star_is_allowed(self):
+        self.assert_both(
+            "emacsclient --eval '(let* ((x 1)) (message \"%s\" x))'",
+            "allow",
+        )
+
+    def test_heredoc_fed_to_a_shell_is_still_denied(self):
+        for command in (
+            "bash <<'EOF'\nop read op://Employee/Example/credential\nEOF",
+            "cat <<'EOF' | bash\nop read op://Employee/Example/credential\nEOF",
+            "python3 - <<'PY'\nimport os\nos.system(op read op://Employee/Example/credential)\nPY",
+        ):
+            self.assert_both(command, "deny")
+
+    def test_heredoc_operator_inside_quotes_does_not_hide_a_later_command(self):
+        self.assert_both(
+            "echo 'see <<EOF below'\nop read op://Employee/Example/credential",
+            "deny",
+        )
+
+    def test_shell_eval_with_glob_is_still_denied(self):
+        self.assert_both("eval 'p?ss show example'", "deny")
+
 
 if __name__ == "__main__":
     unittest.main()

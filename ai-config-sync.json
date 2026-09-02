@@ -436,6 +436,13 @@
       "note": "Identical helper that issues and atomically consumes one-time correlation receipts for Elisp test and live evidence. Receipts prevent accidental copying and replay but do not authenticate against another process running as the same user. Unconsumed evidence expires after one day through cleanup of only user-owned regular receipt and claim files; test and live-verification markers do not expire."
     },
     {
+      "name": "lib-heredoc.sh",
+      "claude": "claude/hooks/lib-heredoc.sh",
+      "codex": "codex/hooks/lib-heredoc.sh",
+      "status": "paired-utility",
+      "note": "Identical heredoc-aware masking helper for the secret-leak and sensitive-read guards: heredoc bodies fed to a known data sink are dropped from command-word scans; bodies fed to shells, interpreters, or pipelines stay in the scan."
+    },
+    {
       "name": "lib-repo-root.sh",
       "claude": "claude/hooks/lib-repo-root.sh",
       "codex": "codex/hooks/lib-repo-root.sh",

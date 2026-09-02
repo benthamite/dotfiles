@@ -13,6 +13,8 @@ set -euo pipefail
 
 # shellcheck source=lib-codex-paths.sh
 source "$(dirname "$0")/lib-codex-paths.sh"
+# shellcheck source=lib-heredoc.sh
+source "$(dirname "$0")/lib-heredoc.sh"
 
 INPUT=$(cat)
 
@@ -146,7 +148,10 @@ contains_any_op_reveal_output() {
 }
 
 contains_secret_output_command() {
-  local raw="$1" scan normalized protected boundary wrapper executable delimiter
+  local raw scan normalized protected boundary wrapper executable delimiter
+  # Heredoc bodies fed to a data sink are data, not command words; keep
+  # bodies fed to interpreters or pipelines in the scan (see lib-heredoc.sh).
+  raw=$(mask_heredoc_bodies "$1")
   protected='(^|[^A-Za-z0-9_-])(op|op-automations|op-desktop|pbpaste|pass|security)([^A-Za-z0-9_-]|$)'
 
   # These broker controls return no vault or clipboard data.
@@ -208,7 +213,9 @@ contains_secret_output_command() {
   printf '%s' "$normalized" | grep -qE "${boundary}(${wrapper})*${executable}${delimiter}" && return 0
   printf '%s' "$normalized" | grep -qE "${boundary}(${wrapper})*[^;&|[:space:]]*([?*]|\\\[[^]]*)[^;&|[:space:]]*${delimiter}" && return 0
   printf '%s' "$normalized" | grep -qE "find[[:space:]].*-exec[[:space:]]+[^;&|[:space:]]*([?*]|\\\[[^]]*)[^;&|[:space:]]*${delimiter}" && return 0
-  if printf '%s' "$raw" | grep -qE '(([^;&|[:space:]]*/)?(bash|sh|zsh|dash|ksh)[[:space:]]+-l?c|eval)[[:space:]]+["'"'"'][^"'"'"']*([?*]|\[[^]]*)'; then
+  # `eval` needs a left word boundary: `emacsclient --eval '(let* ...)'` is
+  # an Elisp argument, not a shell eval, and its `*` is not a glob.
+  if printf '%s' "$raw" | grep -qE '(^|[[:space:];&|(!`])(([^;&|[:space:]]*/)?(bash|sh|zsh|dash|ksh)[[:space:]]+-l?c|eval)[[:space:]]+["'"'"'][^"'"'"']*([?*]|\[[^]]*)'; then
     return 0
   fi
   return 1

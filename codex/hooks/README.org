@@ -6,7 +6,7 @@
 The tracked [[file:../hooks.json][hooks.json]] file registers Codex hooks and is live globally through
 the =~/.codex/hooks.json= symlink. Registration and implementation are separate:
 the JSON chooses an event and matcher, while the scripts in this directory
-decide what to block, record, regenerate, or report. Five =lib-*= files are
+decide what to block, record, regenerate, or report. Six =lib-*= files are
 sourced helpers rather than registered hooks. =session-learning-capture.sh= is
 a retained legacy helper and is not registered at present.
 
@@ -119,6 +119,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =lib-codex-hook-json.sh= | Normalizes Codex hook payloads, including block-array responses from =functions.exec=, extracts literal nested command/workdir records without evaluating JavaScript, recognizes Git subcommands after supported global options, and recovers an exact nested Bash command's parent workdir from the session transcript. |
 | =lib-codex-paths.sh= | Extracts changed paths from the supported Codex edit and patch payload forms. |
 | =lib-elisp-evidence.sh= | Issues and atomically consumes one-time correlation receipts for Elisp test and live evidence; these receipts prevent replay but do not authenticate against the same user. |
+| =lib-heredoc.sh= | Masks heredoc bodies that feed a known data sink through a plain simple command, so guards classify command words only; bodies fed to shells, interpreters, or pipelines stay in the scan, and an =all= mode lets a guard word its denial for a path named only inside an interpreter-fed program. |
 | =lib-repo-root.sh= | Resolves the effective Git repository from structured hook context, Git global options, or an exact unambiguous parent =functions.exec= record without shell re-evaluation. |
 | =lib-staged-files.sh= | Lists staged paths and name-status data, including an amended commit as the complete proposed commit. |
 | =load-elisp-after-edit.sh= | Rebuilds and reloads the owning Elpaca package after an Elisp edit, including paths recovered from a nested composed-tool patch; skips test-only files and active or unresolved Git operations. |

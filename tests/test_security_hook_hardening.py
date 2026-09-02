@@ -199,5 +199,35 @@ class ClaudeGrepSensitiveReadTests(unittest.TestCase):
         )
 
 
+class HeredocSensitiveReadTests(unittest.TestCase):
+    """Heredoc bodies fed to a data sink are data; bodies fed to interpreters are not."""
+
+    def run_all(self, command: str) -> list[tuple[Path, subprocess.CompletedProcess[str]]]:
+        payload = {"tool_name": "Bash", "tool_input": {"command": command}}
+        return [(guard, run_hook(guard, payload)) for guard in SENSITIVE_READ_GUARDS]
+
+    def test_secrets_path_inside_a_sink_heredoc_is_allowed(self):
+        command = "cat <<'EOF' > notes.md\nNever print .zshenv-secrets in a report.\nEOF"
+        for guard, result in self.run_all(command):
+            with self.subTest(guard=guard):
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(permission_decision(result), "allow")
+
+    def test_secrets_path_inside_an_interpreter_heredoc_is_denied_with_the_reason(self):
+        command = "python3 - <<'PY'\nprint(open('.zshenv-secrets').read())\nPY"
+        for guard, result in self.run_all(command):
+            with self.subTest(guard=guard):
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(permission_decision(result), "deny")
+                self.assertIn("heredoc", result.stdout)
+
+    def test_sink_heredoc_piped_to_a_shell_is_denied(self):
+        command = "cat <<'EOF' | bash\ncat ~/.zshenv-secrets\nEOF"
+        for guard, result in self.run_all(command):
+            with self.subTest(guard=guard):
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(permission_decision(result), "deny")
+
+
 if __name__ == "__main__":
     unittest.main()

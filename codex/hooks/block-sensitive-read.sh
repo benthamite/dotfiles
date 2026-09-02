@@ -11,6 +11,8 @@ set -euo pipefail
 
 # shellcheck source=lib-codex-hook-json.sh
 source "$(dirname "$0")/lib-codex-hook-json.sh"
+# shellcheck source=lib-heredoc.sh
+source "$(dirname "$0")/lib-heredoc.sh"
 
 INPUT=$(cat)
 TOOL_NAME=$(codex_tool_name "$INPUT")
@@ -122,8 +124,13 @@ case "$TOOL_NAME" in
     COMMAND=$(codex_shell_command "$INPUT")
     [ -z "$COMMAND" ] && exit 0
 
-    LABEL=$(sensitive_label_for_text "$COMMAND")
+    # Heredoc bodies fed to a data sink are data (see lib-heredoc.sh); a body
+    # fed to an interpreter stays in the scan because it may read the file.
+    LABEL=$(sensitive_label_for_text "$(mask_heredoc_bodies "$COMMAND")")
     [ -z "$LABEL" ] && exit 0
+    if [ -z "$(sensitive_label_for_text "$(mask_heredoc_bodies "$COMMAND" all)")" ]; then
+      deny "$LABEL" "a program fed to an interpreter through a heredoc names this file and the guard cannot prove the program does not read it; write the program to a file and run that, or drop the mention"
+    fi
 
     if [ "$LABEL" = "shell secrets file" ] && is_safe_shell_export_classifier "$COMMAND"; then
       exit 0

@@ -196,7 +196,14 @@ use a dedicated audited operation that keeps values out of agent output; a
 missing operation is an error to repair, not an alternate route. Quoted
 argument globs, including =rg= exclusion patterns beginning with =!=, remain
 inert data rather than executable command words. A shell =case= default pattern
-is likewise grammar, not an executable glob.
+is likewise grammar, not an executable glob. Heredoc bodies fed to a known data sink (=cat=, =tee=, =git=, =gh=, and
+similar) with no pipe or substitution around them are data too, so a commit
+message or a Markdown file written through a heredoc is never scanned as
+shell text; bodies fed to shells, interpreters, or unknown programs stay in
+the scan. The sensitive-read guard applies the same rule and names the
+heredoc in its denial when a path is mentioned only inside an
+interpreter-fed program. A shell =eval= is recognized only at a word
+boundary, so an =emacsclient --eval= argument is Elisp, not shell.
 
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged

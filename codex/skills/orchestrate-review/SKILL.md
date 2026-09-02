@@ -92,6 +92,16 @@ tasks" does not mean "never look at progress."
   iteration method (for example: fix and test against cached artifacts, do
   not rerun the full cycle) or stop the stage and report to the user. A
   third full-cycle retry of the same landing is never acceptable.
+- Watch for silence, not only signals. A change-triggered watcher misses the
+  worst failures, which emit no event at all: a detached runner that dies
+  silently between steps (a crash before its first log line included), and a
+  session stuck on an auth or error prompt (for example "Login expired").
+  Every supervision watcher must also alert when (a) no runner process
+  exists while the landing state says one should be running, (b) the
+  progress file has been silent longer than ~15 minutes while Agent 1
+  reports busy, or (c) the actor transcript's tail shows a login or
+  fatal-error prompt. When an alert fires, act within minutes — set the
+  enforcement timer the moment the anomaly is seen, not when convenient.
 - Retries must be cheap. If a stage's landing cycle costs more than a few
   minutes, the plan must include (or the orchestrator must demand before the
   first retry) a resume-from-cached-outputs path so that a failure in a

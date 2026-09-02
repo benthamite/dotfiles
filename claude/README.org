@@ -241,7 +241,11 @@ unused agent buffers linger. The injected implementation contract also forbids
 Agent 1 from ending its turn to wait on background jobs or subagents; it must
 poll inside the turn with bounded loops. The orchestrator supervises through
 a progress file Agent 1 appends to, reports hourly on long stages, and enforces
-a stop-loss: the same landing cycle failing twice ends the stage. Terminal
+a stop-loss: the same landing cycle failing twice ends the stage. Supervision
+watchers must alert on silence as well as change — a dead runner while a
+landing is mid-flight, a progress file quiet beyond ~15 minutes, or an actor
+stuck on a login or fatal-error prompt — and the orchestrator acts on such an
+alert within minutes. Terminal
 interrupts encode ESC explicitly so the paired Python helpers compile without
 unknown-escape warnings while sending the same Emacs Lisp input.
 

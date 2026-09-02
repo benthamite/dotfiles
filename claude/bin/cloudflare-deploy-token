@@ -1,0 +1,192 @@
+#!/usr/bin/env bash
+# Audited provisioning wrapper: mint a per-project Cloudflare Worker-deploy
+# API token and store it in the Automations vault, following the fleet's
+# one-token-per-project convention (op://Automations/Cloudflare API - <p>/credential).
+#
+# Sibling of `ai-provider-key` (admin credential mints a scoped runtime
+# credential, which is stored without ever reaching argv, agent output, or a
+# file) and of `store-secret-from-clipboard` (whose op-desktop storage
+# mechanics this copies). Local administrator references and the default
+# account belong in private configuration; see README.org.
+#
+# Usage: cloudflare-deploy-token --project <slug> [--account-id <id>]
+#          [--kv] [--d1] [--update] [--title <override>]
+#
+# Default scope is Workers Scripts Write; --kv / --d1 widen deliberately.
+# --update replaces the credential field on an existing item.
+set -euo pipefail
+
+project="" account_id="" want_kv=0 want_d1=0 update=0 title=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --project) project="$2"; shift 2 ;;
+    --account-id) account_id="$2"; shift 2 ;;
+    --kv) want_kv=1; shift ;;
+    --d1) want_d1=1; shift ;;
+    --update) update=1; shift ;;
+    --title) title="$2"; shift 2 ;;
+    *) echo "cloudflare-deploy-token: unknown argument $1" >&2; exit 2 ;;
+  esac
+done
+if [ -z "$project" ]; then
+  echo "cloudflare-deploy-token: --project is required" >&2
+  exit 2
+fi
+[ -n "$title" ] || title="Cloudflare API - $project"
+
+# Parse inert JSON rather than sourcing shell code. Reject malformed or
+# broadly readable local configuration before any credential/provider access.
+config_values="$(python3 - <<'PYCONFIG'
+import json, os, re, stat, sys
+from pathlib import Path
+
+path = Path(os.environ.get("CLOUDFLARE_DEPLOY_TOKEN_CONFIG",
+                           str(Path.home() / ".config/agent-tools/cloudflare-deploy-token.json")))
+try:
+    descriptor = os.open(path, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW)
+    with os.fdopen(descriptor) as source:
+        info = os.fstat(source.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o077:
+            raise ValueError("configuration must be an owner-only regular file (mode 600)")
+        config = json.load(source)
+    keys = ("default_account_id", "automation_admin_reference", "desktop_admin_reference")
+    if not isinstance(config, dict) or set(config) != set(keys):
+        raise ValueError("configuration requires exactly: " + ", ".join(keys))
+    if any(not isinstance(config[key], str) or not config[key] for key in keys):
+        raise ValueError("configuration fields must be nonempty strings")
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", config[keys[0]]):
+        raise ValueError("invalid default account identifier")
+    for key in keys[1:]:
+        if not re.fullmatch(r"op://[^/\x00-\x1f\x7f]+/[^/\x00-\x1f\x7f]+/[^/\x00-\x1f\x7f]+", config[key]):
+            raise ValueError("invalid administrator reference")
+    print("\n".join(config[key] for key in keys))
+except (OSError, ValueError) as error:
+    # JSON parser errors can include input text; never echo config values.
+    message = "invalid JSON" if isinstance(error, (json.JSONDecodeError, UnicodeError)) else (
+        str(error) if isinstance(error, ValueError) else "configuration unavailable")
+    sys.exit("cloudflare-deploy-token: " + message + "; see README.org for private setup")
+PYCONFIG
+)"
+{
+  IFS= read -r default_account
+  IFS= read -r automation_admin_reference
+  IFS= read -r desktop_admin_reference
+} <<< "$config_values"
+[ -n "$account_id" ] || account_id="$default_account"
+unset config_values
+
+# Validate the existing item before minting; retain its other fields on edit.
+existing_template=""
+if [ "$update" -eq 1 ]; then
+  existing_template="$(op-desktop item get "$title" --vault Automations --format json)"
+  EXISTING_TEMPLATE="$existing_template" python3 - <<'PYPREFLIGHT'
+import json, os, sys
+try:
+    item = json.loads(os.environ["EXISTING_TEMPLATE"])
+    if (not isinstance(item, dict) or item.get("category") != "API_CREDENTIAL"
+            or item.get("files") or item.get("passkeys")
+            or not isinstance(item.get("fields"), list)
+            or any(not isinstance(field, dict) for field in item["fields"])):
+        raise ValueError()
+    if sum(field.get("id") == "credential" or field.get("label") == "credential"
+           for field in item["fields"]) > 1:
+        raise ValueError()
+except (ValueError, KeyError):
+    sys.exit("cloudflare-deploy-token: update requires an API credential item without attachments, passkeys or ambiguous fields")
+PYPREFLIGHT
+fi
+
+# Preserve the existing explicit desktop fallback when the promptless broker
+# cannot read the configured administrator credential. Keep its diagnostic.
+if ! ADMIN="$(op-automations read "$automation_admin_reference")"; then
+  echo "cloudflare-deploy-token: automation read failed; trying configured desktop reference" >&2
+  ADMIN="$(op-desktop read "$desktop_admin_reference")"
+fi
+trap 'unset ADMIN SECRET' EXIT
+
+SECRET="$(
+  ADMIN="$ADMIN" ACCOUNT_ID="$account_id" PROJECT="$project" \
+  WANT_KV="$want_kv" WANT_D1="$want_d1" python3 - <<'PY'
+import json, os, sys, urllib.request
+
+API = "https://api.cloudflare.com/client/v4"
+admin = os.environ["ADMIN"]
+
+def call(method, path, body=None):
+    request = urllib.request.Request(
+        f"{API}{path}",
+        method=method,
+        data=json.dumps(body).encode() if body is not None else None,
+        headers={"Authorization": f"Bearer {admin}", "Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(request, timeout=30) as response:
+        payload = json.load(response)
+    if not payload.get("success"):
+        raise SystemExit(f"Cloudflare API {path} failed: {payload.get('errors')}")
+    return payload["result"]
+
+wanted = ["Workers Scripts Write"]
+if os.environ["WANT_KV"] == "1":
+    wanted.append("Workers KV Storage Write")
+if os.environ["WANT_D1"] == "1":
+    wanted.append("D1 Write")
+
+groups = call("GET", "/user/tokens/permission_groups")
+by_name = {}
+for group in groups:
+    by_name.setdefault(group["name"], group["id"])
+missing = [name for name in wanted if name not in by_name]
+if missing:
+    raise SystemExit(f"permission groups not found by name: {missing}")
+
+result = call(
+    "POST",
+    "/user/tokens",
+    {
+        "name": f"Cloudflare API - {os.environ['PROJECT']} (deploy)",
+        "policies": [
+            {
+                "effect": "allow",
+                "resources": {
+                    f"com.cloudflare.api.account.{os.environ['ACCOUNT_ID']}": "*"
+                },
+                "permission_groups": [{"id": by_name[name]} for name in wanted],
+            }
+        ],
+    },
+)
+value = result.get("value")
+if not value or "\n" in value or not (30 <= len(value) <= 100):
+    raise SystemExit("minted token value has an unexpected shape")
+sys.stdout.write(value)
+PY
+)"
+
+template="$(
+    SECRET="$SECRET" TITLE="$title" EXISTING_TEMPLATE="$existing_template" python3 - <<'PY'
+import json, os
+item = json.loads(os.environ["EXISTING_TEMPLATE"]) if os.environ["EXISTING_TEMPLATE"] else {
+    "title": os.environ["TITLE"], "category": "API_CREDENTIAL", "fields": []}
+fields = [field for field in item["fields"]
+          if field.get("id") == "credential" or field.get("label") == "credential"]
+if fields:
+    fields[0].update(type="CONCEALED", value=os.environ["SECRET"])
+else:
+    item["fields"].append({"id": "credential", "type": "CONCEALED", "label": "credential",
+                           "value": os.environ["SECRET"]})
+print(json.dumps(item))
+PY
+)"
+if [ "$update" -eq 1 ]; then
+  printf '%s' "$template" | op-desktop item edit "$title" --vault Automations >/dev/null
+else
+  printf '%s' "$template" | op-desktop item create --vault Automations - >/dev/null
+fi
+unset template existing_template
+
+op-desktop read "op://Automations/$title/credential" >/dev/null
+op-automations read "op://Automations/$title/credential" >/dev/null
+printf 'minted and stored op://Automations/%s/credential (account %s, scopes: Workers Scripts Write%s%s)\n' \
+  "$title" "$account_id" \
+  "$([ "$want_kv" -eq 1 ] && printf ', KV Write')" \
+  "$([ "$want_d1" -eq 1 ] && printf ', D1 Write')"

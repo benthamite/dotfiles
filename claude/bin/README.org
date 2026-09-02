@@ -38,6 +38,7 @@ credentials carried in HTTP headers cannot reach stderr.
 | =store-secret-from-clipboard= | Consumes any console-created API credential from the clipboard, validates its shape, and writes it to a 1Password item through =op-desktop= on stdin without exposing the value. |
 | =batch-test.sh= | Loads canonical package source in batch Emacs, rejects stale-load warnings, and emits repository/package/source-revision evidence with a one-time replay-correlation token. |
 | =check-elpaca-sync-hook= | Validates the embedded Elpaca sync hook and confirms that the installed hook is identical. |
+| =cloudflare-deploy-token= | Mints a per-project Cloudflare Worker-deploy API token using privately configured administrator references and stores it in the Automations vault. |
 | =copy-slack-draft= | Copies a Slack draft to the Emacs kill ring and can prefill a thread reply. |
 | =cr-worktree-gc.sh= | Removes only clean, fully pushed transient CR review worktrees and preserves unfinished work. |
 | =elisp-ert= | Runs profile-aware ERT for a package, test file, and optional test selector. |

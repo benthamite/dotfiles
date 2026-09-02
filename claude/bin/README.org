@@ -35,6 +35,7 @@ credentials carried in HTTP headers cannot reach stderr.
 | =ahrefs-api-guard= | Performs the required free quota preflight before a paid Ahrefs API request. |
 | =ai-provider-key= | Provisions and stores project-scoped provider runtime keys while keeping administrator credentials separate. |
 | =ai-provider-key-from-clipboard= | Consumes a console-created provider key from the clipboard, validates its shape, and pipes it to =ai-provider-key= without exposing the value. |
+| =store-secret-from-clipboard= | Consumes any console-created API credential from the clipboard, validates its shape, and writes it to a 1Password item through =op-desktop= on stdin without exposing the value. |
 | =batch-test.sh= | Loads canonical package source in batch Emacs, rejects stale-load warnings, and emits repository/package/source-revision evidence with a one-time replay-correlation token. |
 | =check-elpaca-sync-hook= | Validates the embedded Elpaca sync hook and confirms that the installed hook is identical. |
 | =copy-slack-draft= | Copies a Slack draft to the Emacs kill ring and can prefill a thread reply. |

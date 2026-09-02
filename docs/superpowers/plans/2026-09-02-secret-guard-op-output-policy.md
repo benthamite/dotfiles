@@ -10,10 +10,14 @@ result, and so the transcript).
 `8c8e3e99e`, blob `02a29b02`). Revision 1 classified broker commands by
 "where stdout goes" with a deny list; the review showed that model fails open
 in five places (adjudication record at the end). Revision 2 inverts it: an
-**allowlist** of broker command shapes, everything else denied. Nothing is
-applied to the working tree; both hook files are at HEAD. The revision-1 patch
-committed beside this plan is superseded and will be replaced by the
-implementation commit; it is kept only as the reviewed artifact.
+**allowlist** of broker command shapes, everything else denied. Approved by
+the owner ("go", 2026-09-02) and implemented the same day; the revision-1
+patch committed beside this plan is superseded and kept only as the reviewed
+artifact. Implementation notes: the classifier is `claude/hooks/lib-op-policy.py`
+(paired for Codex) with its case table in `tests/test_op_policy.py`; the
+standalone sensitive-read copies keep allowing any leading broker command
+(their scope is file reads), while the Bash dispatcher combines both guards,
+so the "program prints its environment" denial is pinned on the dispatcher.
 
 ## Diagnosis (why the guard is shaped this way today)
 

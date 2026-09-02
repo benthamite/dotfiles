@@ -106,6 +106,22 @@ sr_is_safe_shell_export_classifier() {
   done
   return 1
 }
+sr_is_safe_op_run_loader() {
+  # `op-automations run --env-file F -- <program>` is an environment loader in
+  # the same sense as `source .env`: 1Password reads F and hands the values to
+  # the program as environment, masking them in its output. Allowed when the
+  # only composition is leading VAR=value assignments (none OP_*) and file
+  # redirects, and the program is not an environment dumper or a shell.
+  local command="$1" stripped
+  printf '%s' "$command" | grep -q 'OP_RUN_NO_MASKING' && return 1
+  printf '%s' "$command" | grep -qE '>[[:space:]]*(/dev/(std(out|err)|fd/|tty)|&|-([[:space:]]|$))' && return 1
+  stripped=$(printf '%s' "$command" | sed -E 's/[[:space:]]*[12]?&?>>?[[:space:]]*[^[:space:];&|<>()]+//g')
+  printf '%s' "$stripped" | grep -qE '^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:];&|<>()]*[[:space:]]+)*([^;&|[:space:]]*/)?op-automations[[:space:]]+run[[:space:]]+(--env-file(=|[[:space:]]+)[^[:space:];&|<>()]+[[:space:]]+)+--[[:space:]]+[^[:space:];&|<>()]+([[:space:]]+[^;&|<>()`]*)?$' || return 1
+  printf '%s' "$stripped" | grep -qE '(^|[[:space:]])OP_[A-Za-z0-9_]*=' && return 1
+  printf '%s' "$stripped" | grep -qE -- '--[[:space:]]+([^[:space:]]*/)?(env|printenv|set|export|declare|typeset|bash|sh|zsh|dash|ksh|eval)([[:space:]]|$)' && return 1
+  printf '%s' "$stripped" | grep -qE '\$\(|`' && return 1
+  return 0
+}
 sr_has_shell_composition() {
   local command="$1"
   printf '%s' "$command" | grep -qE '[;&|<>`]|[$][(]' && return 0
@@ -156,6 +172,10 @@ check_sensitive_read() {
   fi
 
   if [ "$SENSITIVE_LABEL" = "environment secrets file" ] && sr_is_safe_env_loader "$COMMAND"; then
+    ALLOW_CONTEXT="Sensitive environment file loading was allowed for this Bash command. Do not print, inspect, summarize, or quote loaded environment values; use them only as process environment for the requested command."
+    return 0
+  fi
+  if [ "$SENSITIVE_LABEL" = "environment secrets file" ] && sr_is_safe_op_run_loader "$COMMAND"; then
     ALLOW_CONTEXT="Sensitive environment file loading was allowed for this Bash command. Do not print, inspect, summarize, or quote loaded environment values; use them only as process environment for the requested command."
     return 0
   fi

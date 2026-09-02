@@ -126,12 +126,9 @@ contains_secret_output_command() {
   # Heredoc bodies fed to a data sink are data, not command words; keep
   # bodies fed to interpreters or pipelines in the scan (see lib-heredoc.sh).
   raw=$(mask_heredoc_bodies "$1")
-  protected='(^|[^A-Za-z0-9_-])(op|op-automations|op-desktop|pbpaste|pass|security)([^A-Za-z0-9_-]|$)'
-
-  # These broker controls return no vault or clipboard data.
-  if printf '%s' "$raw" | grep -qE '^[[:space:]]*([^[:space:];|&()]*/)?op-desktop[[:space:]]+--(status|stop)[[:space:]]*$'; then
-    return 1
-  fi
+  # 1Password brokers are classified by lib-op-policy.py (see the gate below);
+  # this rule covers the tools whose output *is* the secret.
+  protected='(^|[^A-Za-z0-9_-])(pbpaste|pass|security)([^A-Za-z0-9_-]|$)'
 
   # A literal mention printed by a simple nested echo/printf program is data,
   # provided the program contains no expansion or shell control operator.
@@ -163,11 +160,11 @@ contains_secret_output_command() {
 
   # Quoted variable assignments and command-discovery substitutions are the
   # remaining common ways to hide the executable name from the masked scan.
-  if printf '%s' "$raw" | grep -qE '[A-Za-z_][A-Za-z0-9_]*=[[:space:]]*["'"'"']([^"'"'"']*/)?(op-automations|op-desktop|pbpaste|pass|security)["'"'"']' && \
+  if printf '%s' "$raw" | grep -qE '[A-Za-z_][A-Za-z0-9_]*=[[:space:]]*["'"'"']([^"'"'"']*/)?(pbpaste|pass|security)["'"'"']' && \
      printf '%s' "$raw" | grep -qE '\$\{?[A-Za-z_][A-Za-z0-9_]*\}?'; then
     return 0
   fi
-  printf '%s' "$raw" | grep -qE '\$\([[:space:]]*(command[[:space:]]+-v|which|type[[:space:]]+-P)[[:space:]]+(op-automations|op-desktop|pbpaste|pass|security)[[:space:]]*\)' && return 0
+  printf '%s' "$raw" | grep -qE '\$\([[:space:]]*(command[[:space:]]+-v|which|type[[:space:]]+-P)[[:space:]]+(pbpaste|pass|security)[[:space:]]*\)' && return 0
 
   # Normalize the shell's lexical removal of backslashes and adjacent quotes,
   # then classify the resulting command word. Executable globs are rejected
@@ -182,7 +179,7 @@ contains_secret_output_command() {
     -e 's/\$\?/EXIT_STATUS/g')
   boundary='(^[[:space:]]*|[;&|(!`][[:space:]]*|\$\([[:space:]]*)'
   wrapper='(([^;&|[:space:]]*/)?(command|env|sudo|timeout|nice|exec|nohup|time|builtin)([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+|[A-Za-z_][A-Za-z0-9_]*=[^;&|[:space:]]*[[:space:]]+)'
-  executable='([^;&|[:space:]]*/)?(op|op-automations|op-desktop|pbpaste|pass|security)'
+  executable='([^;&|[:space:]]*/)?(pbpaste|pass|security)'
   delimiter='([[:space:];|&)`]|$)'
   printf '%s' "$normalized" | grep -qE "${boundary}(${wrapper})*${executable}${delimiter}" && return 0
   printf '%s' "$normalized" | grep -qE "${boundary}(${wrapper})*[^;&|[:space:]]*([?*]|\\\[[^]]*)[^;&|[:space:]]*${delimiter}" && return 0
@@ -195,12 +192,49 @@ contains_secret_output_command() {
   return 1
 }
 
+# --- 1Password brokers: allowlist classifier --------------------------------
+# `op-automations` and `op-desktop` are how an agent shell reaches 1Password.
+# lib-op-policy.py permits a closed list of command shapes whose stdout carries
+# no credential and denies everything else, including shapes it cannot place.
+# Raw `op` stays denied (Touch ID routing, see context/secrets.md).
+# Plan: docs/superpowers/plans/2026-09-02-secret-guard-op-output-policy.md
+op_policy_denial() {
+  # Print the classifier's reason when the command would print a 1Password
+  # secret; return 1 when it is allowed or names no broker.
+  local plain result decision
+  plain=$(printf '%s' "$1" | sed -E "s/['\"\\\\]//g")
+  printf '%s' "$plain" | grep -qE 'op-automations|op-desktop|OP_RUN_NO_MASKING' || return 1
+  result=$(printf '%s' "$1" | python3 "$(dirname "$0")/lib-op-policy.py" 2>/dev/null) \
+    || result='{"decision":"deny","reason":"the 1Password policy classifier failed, so the command cannot be classified"}'
+  decision=$(printf '%s' "$result" | jq -r '.decision // "deny"' 2>/dev/null || echo deny)
+  [ "$decision" = "deny" ] || return 1
+  printf '%s' "$result" | jq -r '.reason // "unclassified 1Password command"' 2>/dev/null || echo "unclassified 1Password command"
+}
+
+contains_normalized_raw_op() {
+  # Quote and backslash removal can spell raw `op` without writing it.
+  local normalized
+  normalized=$(normalize_shell_words "$1")
+  printf '%s' "$normalized" | grep -qE "(^[[:space:]]*|[;&|(!\`][[:space:]]*|\\\$\([[:space:]]*)((([^;&|[:space:]]*/)?(command|env|sudo|timeout|nice|exec|nohup|time|builtin)([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+|[A-Za-z_][A-Za-z0-9_]*=[^;&|[:space:]]*[[:space:]]+))*([^;&|[:space:]]*/)?op([[:space:]]|$)"
+}
+
+deny_op_secret_output() {
+  jq -n --arg tool "$TOOL_NAME" --arg reason "$1" '{
+    "hookSpecificOutput": {
+      "hookEventName": "PreToolUse",
+      "permissionDecision": "deny",
+      "permissionDecisionReason": ("BLOCKED: " + $tool + " would print a 1Password secret into agent output: " + $reason + ".\n\nInvoking `op-automations` or `op-desktop` is fine; printing what they return is not. Allowed shapes: `op-automations run --env-file F -- <program>` (masked; not a shell or environment dumper); `X=$(op-automations read REF)` used by a non-printing command; `read REF > file`, or piped to `pbcopy`, `gh secret set`, `wrangler secret put`; `item get ID --format=json | jq` selecting only metadata keys; `document get`/`inject` with `--out-file`; writes without `--format`. Anything else is denied.")
+    }
+  }'
+  exit 0
+}
+
 deny_raw_op_command() {
   jq -n --arg tool "$TOOL_NAME" '{
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: " + $tool + " contains a direct 1Password CLI command.\n\nRaw `op` and direct broker calls are not permitted in agent shell commands. Use a dedicated audited operation that routes through `op-automations` or `op-desktop` internally without returning secrets to agent output. If that operation is unavailable, repair it rather than bypassing the routing policy.")
+      "permissionDecisionReason": ("BLOCKED: " + $tool + " contains a direct 1Password CLI command, which can trigger a separate Touch ID prompt for every process.\n\nUse `op-desktop ...` for desktop-gated operations: personal-vault reads, item creates/edits, share links. It runs every command inside one authorized terminal session, so a whole task costs one Touch ID prompt instead of one per command.\n\nFor prompt-free read-only access to the Automations vault, use `op-automations ...` (for example `op-automations run --env-file .env.op -- <program>`). If the broker is unavailable, repair it rather than bypassing it with raw `op`.")
     }
   }'
   exit 0
@@ -211,7 +245,7 @@ deny_op_reveal_output() {
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: " + $tool + " command would print a revealed 1Password field.\n\nDo not run `op ... --reveal` in an agent shell. Use a dedicated audited operation that consumes the value without returning it to agent output.")
+      "permissionDecisionReason": ("BLOCKED: " + $tool + " command would print a revealed 1Password field.\n\nDo not run `... --reveal` in an agent shell, including through `op-automations` or `op-desktop`. Capture the value with `X=$(op-automations read REF)` for a non-printing command, or write it to a mode-0600 file.")
     }
   }'
   exit 0
@@ -222,7 +256,7 @@ deny_secret_output_command() {
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: " + $tool + " invokes a secret-bearing credential or clipboard tool.\n\nAgent shell commands may not directly call `op-automations`, `op-desktop`, `pass`, `security`, or `pbpaste`; wrappers, nested shells, pipes, and redirects are not trusted containment. Use a dedicated audited operation that consumes the value without returning it to agent output.")
+      "permissionDecisionReason": ("BLOCKED: " + $tool + " invokes a secret-printing credential or clipboard tool.\n\nAgent shell commands may not call `pass`, `security`, or `pbpaste`, whose output is the secret itself; wrappers, nested shells, pipes, and redirects are not trusted containment. Epoch secrets live in 1Password: use `op-automations`/`op-desktop` in one of the allowed non-printing shapes.")
     }
   }'
   exit 0
@@ -233,7 +267,13 @@ if [ "$TOOL_NAME" = "Bash" ]; then
   if contains_secret_output_command "$CONTENT"; then
     deny_secret_output_command
   fi
-  if printf '%s' "$CONTENT" | grep -qE '(^[[:space:]]*|[;&|(!][[:space:]]*)(op-automations|((/usr/bin/|/bin/)?env)[[:space:]]+-u[[:space:]]+OP_SERVICE_ACCOUNT_TOKEN[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op|(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op)[[:space:]]+' && \
+  if op_reason=$(op_policy_denial "$(mask_heredoc_bodies "$CONTENT")"); then
+    deny_op_secret_output "$op_reason"
+  fi
+  if contains_normalized_raw_op "$CONTENT"; then
+    deny_raw_op_command
+  fi
+  if printf '%s' "$CONTENT" | grep -qE '(^[[:space:]]*|[;&|(!][[:space:]]*)(op-automations|op-desktop|((/usr/bin/|/bin/)?env)[[:space:]]+-u[[:space:]]+OP_SERVICE_ACCOUNT_TOKEN[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op|(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op)[[:space:]]+' && \
      printf '%s' "$CONTENT" | grep -qE -- '(^|[[:space:]])--reveal([^[:alnum:]_-]|$)'; then
     deny_op_reveal_output
   fi

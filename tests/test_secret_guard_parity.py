@@ -1,14 +1,21 @@
 """Parity tests for the Claude and Codex secret-leak guards.
 
-Both copies of block-secret-leak.sh must enforce the same 1Password policy:
+Both copies of block-secret-leak.sh must enforce the same 1Password policy
+(docs/superpowers/plans/2026-09-02-secret-guard-op-output-policy.md):
 - direct `op` commands are denied,
 - the unbatched `env -u OP_SERVICE_ACCOUNT_TOKEN op ...` form is denied,
 - the old batched `env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '...'` bypass is
   denied,
-- broker reads, item output, and clipboard reads are denied regardless of
-  pipes or redirects,
-- direct secret provisioning through `run` and `inject` is denied,
+- the `op-automations` and `op-desktop` brokers are allowed in a closed list
+  of shapes whose stdout carries no credential (masked `run`, captured or
+  filed `read`, metadata-only `jq` over item output, `--out-file` documents,
+  writes without `--format`, metadata commands) and denied in every other
+  shape, including shapes the classifier cannot place,
+- clipboard, `pass` and Keychain reads are denied regardless of pipes or
+  redirects,
 - deny messages advise `op-desktop`, not a path the policy blocks.
+The exhaustive broker case table lives in tests/test_op_policy.py; this file
+checks that every guard entry point wires the classifier in.
 """
 
 from __future__ import annotations
@@ -69,26 +76,64 @@ class SecretGuardParityTests(unittest.TestCase):
             "deny",
         )
 
-    def test_op_automations_read_is_denied(self):
-        self.assert_both(
+    def test_contained_broker_reads_are_allowed(self):
+        commands = (
             "op-automations read op://Automations/Example/credential > /dev/null",
-            "deny",
+            "op-desktop read op://Employee/Example/credential > /tmp/token.txt",
+            'X=$(op-automations read op://Automations/X/credential); curl -H "Authorization: Bearer $X" https://api.example',
+            "op-automations read op://Automations/X/credential | pbcopy",
+            # (`| gh secret set` is also an allowed consumer, but the dispatcher's
+            # GitHub write guard judges the repository, so it is not tested here.)
+            "op-automations read op://Automations/X/credential | wrangler secret put TOKEN",
         )
+        for command in commands:
+            with self.subTest(command=command):
+                self.assert_both(command, "allow")
 
-    def test_op_desktop_read_is_denied(self):
-        self.assert_both(
-            "op-desktop read op://Employee/Example/credential > /dev/null",
-            "deny",
+    def test_bare_or_printed_broker_reads_are_denied(self):
+        commands = (
+            "op-automations read op://Automations/Example/credential",
+            "op-automations read op://Automations/Example/credential 2>/dev/null",
+            "op-automations read op://Automations/X/credential | cat",
+            "op-automations read op://Automations/X/credential > /dev/stdout",
+            "op-automations read op://Automations/X/credential >&2",
+            "true | op-automations read op://Automations/X/credential",
+            "{ op-automations read op://Automations/X/credential; }",
+            "if true; then op-automations read op://Automations/X/credential; fi",
+            "cat <(op-automations read op://Automations/X/credential)",
+            "X=$(op-automations read op://Automations/X/credential); printf '%s\\n' \"$X\"",
+            "X=$(op-automations read op://Automations/X/credential)\necho \"$X\"",
         )
+        for command in commands:
+            with self.subTest(command=command):
+                self.assert_both(command, "deny")
 
-    def test_secret_provisioning_commands_are_denied(self):
+    def test_masked_run_and_file_outputs_are_allowed(self):
+        commands = (
+            "op-automations run --env-file=.env.op -- true",
+            "op-automations run --env-file .env.op -- python3 script.py --flag",
+            "op-automations inject --in-file=.env.op --out-file=/tmp/env",
+            "op-desktop document get abc --out-file /tmp/key.json",
+        )
+        for command in commands:
+            with self.subTest(command=command):
+                self.assert_both(command, "allow")
+
+    def test_secret_printing_broker_commands_are_denied(self):
         commands = (
             "op-automations run --env-file=.env.op -- printenv SECRET",
             "op-automations run --env-file=.env.op -- env",
             "op-automations run --env-file=.env.op -- pbpaste",
+            "op-automations run --env-file=.env.op -- bash -c 'echo $SECRET'",
+            "op-automations run --no-masking --env-file=.env.op -- true",
+            "OP_RUN_NO_MASKING=1 op-automations run --env-file=.env.op -- true",
             "op-automations inject --in-file=.env.op",
+            "op-automations inject --in-file=.env.op --out-file=/dev/stdout",
             "op-desktop document get abc",
             "op-desktop item share abc",
+            "op-desktop signin --raw",
+            "op-desktop environment read blgexucrwfr2dtsxe2q4uu7dp4",
+            "op-desktop frobnicate",
         )
         for command in commands:
             with self.subTest(command=command):
@@ -105,10 +150,22 @@ class SecretGuardParityTests(unittest.TestCase):
             with self.subTest(command=command):
                 self.assert_both(command, "deny")
 
-    def test_filtering_or_redirecting_op_item_output_does_not_bypass_guard(self):
+    def test_metadata_filtered_or_filed_op_item_output_is_allowed(self):
         commands = (
             "op-desktop item list --format=json | jq '[.[] | {id,title}]'",
+            "op-desktop item get abc --format=json | jq '[.fields[] | {label,purpose,type}]'",
             "op-desktop item get abc --format=json > /tmp/item.json",
+        )
+        for command in commands:
+            with self.subTest(command=command):
+                self.assert_both(command, "allow")
+
+    def test_value_selecting_jq_over_op_item_output_is_denied(self):
+        commands = (
+            "op-desktop item list --format=json | jq .",
+            "op-desktop item get abc --format=json | jq '.fields[].value'",
+            "op-desktop item get abc --format=json | jq 'to_entries'",
+            "op-desktop item get abc --fields label=password",
         )
         for command in commands:
             with self.subTest(command=command):
@@ -161,9 +218,13 @@ class SecretGuardParityTests(unittest.TestCase):
             with self.subTest(command=command):
                 self.assert_both(command, "allow")
 
-    def test_direct_broker_writes_require_an_audited_wrapper(self):
+    def test_broker_writes_are_allowed_unless_they_print_values(self):
         self.assert_both(
             "op-desktop item create --vault Automations --title Example",
+            "allow",
+        )
+        self.assert_both(
+            "op-desktop item create --vault Automations --title Example --format=json",
             "deny",
         )
 

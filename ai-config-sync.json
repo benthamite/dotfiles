@@ -362,7 +362,14 @@
       "claude": "claude/hooks/block-secret-leak.sh",
       "codex": "codex/hooks/block-secret-leak.sh",
       "status": "paired-dispatched",
-      "note": "paired secret-output guard; Claude delegates every Bash event from pretooluse-bash.sh to the standalone source of truth, while Codex scans Bash, exec_command, functions.exec, functions.exec_command, and apply_patch payloads and extracts literal nested cmd values via lib-codex-hook-json.sh. Both deny direct op, op-automations, op-desktop, pass, security, and pbpaste use without trusting wrappers, dynamic resolution, nested shells, pipes, or redirects as containment; only op-desktop status/stop controls are exempt."
+      "note": "paired secret-output guard; Claude delegates every Bash event from pretooluse-bash.sh to the standalone source of truth, while Codex scans shell and apply_patch payloads and extracts literal nested cmd values via lib-codex-hook-json.sh. Both deny raw op, pass, security, and pbpaste regardless of wrappers, indirection, nested shells, pipes, or redirects, and classify the op-automations/op-desktop brokers through lib-op-policy.py: a closed allowlist of non-printing command shapes, everything else denied (docs/superpowers/plans/2026-09-02-secret-guard-op-output-policy.md)."
+    },
+    {
+      "name": "lib-op-policy.py",
+      "claude": "claude/hooks/lib-op-policy.py",
+      "codex": "codex/hooks/lib-op-policy.py",
+      "status": "paired",
+      "note": "identical 1Password broker output classifier called by both block-secret-leak.sh copies; tests/test_op_policy.py asserts byte-identity and runs the shared case table against both copies."
     },
     {
       "name": "block-unguarded-ahrefs-api.sh",
@@ -448,6 +455,13 @@
       "codex": "codex/hooks/lib-heredoc.sh",
       "status": "paired-utility",
       "note": "Identical heredoc-aware masking helper for the secret-leak and sensitive-read guards: heredoc bodies fed to a known data sink are dropped from command-word scans; bodies fed to shells, interpreters, or pipelines stay in the scan."
+    },
+    {
+      "name": "lib-op-policy.py",
+      "claude": "claude/hooks/lib-op-policy.py",
+      "codex": "codex/hooks/lib-op-policy.py",
+      "status": "paired-utility",
+      "note": "Identical 1Password broker output-policy helper for the secret-leak guards: classifies an op-automations/op-desktop invocation as allow or deny by whether its stdout can carry a credential; unmatched shapes are denied."
     },
     {
       "name": "lib-repo-root.sh",

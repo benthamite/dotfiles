@@ -33,24 +33,33 @@ existence tests, Git ignore/index queries, and auth-aware tools only within the
 narrow forms recognized by the hook; a compound command cannot inherit an
 allowance from a safe first command. The sensitive-path classifier recognizes
 =pass=, =git-crypt=, =security=, =op=, =op-automations=, and =op-desktop= as
-auth-aware tools; the independent secret-leak guard still denies their direct
-agent-shell secret output. Sourcing a quoted or unquoted =.env= or
-=.envrc= solely as subprocess environment is allowed, including =set -a=
-wrappers, but printing, parsing, or dumping that environment is denied. Claude
+auth-aware tools; the independent secret-leak guard still denies their
+secret-printing shapes. Sourcing a quoted or unquoted =.env= or =.envrc=
+solely as subprocess environment is allowed, including =set -a= wrappers, and
+so is =op-automations run --env-file .env.op -- <program>= with leading
+=VAR=value= assignments and file redirects (1Password reads the file and
+masks the values); printing, parsing, or dumping that environment is denied. Claude
 registers the standalone hook for =Read= and =Grep= and keeps its Bash logic
 inlined in =pretooluse-bash.sh=. Grep content searches remain available for
 ordinary repository scopes and filename/count-only searches; sensitive paths,
 globs, and broad home-directory content searches are denied.
 
-The secret-leak guard blocks secret-shaped literals, unsafe output routes, and
-direct agent-shell access to credential or clipboard tools. Raw =op=,
-=op-automations=, =op-desktop=, =pass=, =security=, and =pbpaste= are denied
-even when wrapped, piped, filtered, redirected, dynamically resolved, or called
-through a nested shell. Only the non-secret =op-desktop --status= and =--stop=
-controls bypass that rule. Quoted literals in ordinary commands and simple
-non-expanding =echo=/=printf= documentation remain available. Shell containment
-is not treated as proof that a value cannot reach agent output; use a dedicated
-audited non-printing operation instead.
+The secret-leak guard blocks secret-shaped literals and secret-printing
+commands. Raw =op=, =pass=, =security=, and =pbpaste= are denied even when
+wrapped, piped, filtered, redirected, dynamically resolved, or called through
+a nested shell. The 1Password brokers =op-automations= and =op-desktop= are
+classified by =lib-op-policy.py=, an allowlist of command shapes whose stdout
+carries no credential: masked =run= with a non-shell program, =read= captured
+into a variable, a regular file, or a listed consumer, item output piped to a
+metadata-only =jq= filter or a file, =document get=/=inject= with
+=--out-file=, writes without =--format=, and metadata commands. Every other
+broker shape is denied, including shapes the classifier cannot place, a
+broker named inside an interpreter program or reached through indirection,
+=--reveal=, =item share=, =signin=, =environment read=, credential-minting
+subcommands, and any =OP_*= environment override. Quoted literals in ordinary
+commands and simple non-expanding =echo=/=printf= documentation remain
+available. The case table is =tests/test_op_policy.py=; the rationale is
+=docs/superpowers/plans/2026-09-02-secret-guard-op-output-policy.md=.
 
 The GitHub write guard is deny-only. It refuses writes outside the committed
 repository registry, but a matching repository establishes only that boundary;
@@ -117,6 +126,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =block-github-write-command.sh= | Blocks Git pushes and recognized mutating =gh= operations unless the target matches an exact repo or account wildcard in the committed allowlist, or an exact Epoch project repo in the fixed committed automations registry. A registry match falls through silently to normal permission handling; it never explicitly approves a write. This includes topic-branch pushes, pull-request and issue creation or edits, and comments. Read-only inspection remains allowed. |
 | =block-long-pipeline-run-unchecked.sh= | Requires preflight, cleanliness, and checkpoint conditions for long consensus-trader jobs. |
 | =block-secret-leak.sh= | Blocks secret literals, unsafe secret-file writes, and secret-bearing output. |
+| =lib-op-policy.py= | Classifies 1Password broker commands for =block-secret-leak.sh=: a closed allowlist of shapes whose stdout carries no credential, everything else denied. |
 | =block-sensitive-read.sh= | Blocks content reads of credential-like paths while permitting narrow metadata checks and the exact value-free shell-export classifier. |
 | =block-texi-edit.sh= | Blocks direct edits to generated Texinfo and points to the Org source. |
 | =block-unguarded-ahrefs-api.sh= | Blocks paid Ahrefs calls outside the guarded quota wrapper. |

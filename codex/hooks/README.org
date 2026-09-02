@@ -32,19 +32,28 @@ permits content-free metadata, quiet/count/name-only searches, existence tests,
 Git ignore/index queries, and auth-aware tools only in recognized narrow forms.
 The classifier recognizes =pass=, =git-crypt=, =security=, =op=,
 =op-automations=, and =op-desktop= as auth-aware tools; the independent
-secret-leak guard still denies their direct agent-shell secret output.
-It also permits =.env= or =.envrc= to be sourced solely as subprocess
-environment, while still denying commands that print, parse, or dump it.
+secret-leak guard still denies their secret-printing shapes. It also permits
+=.env= or =.envrc= to be sourced solely as subprocess environment, and
+=op-automations run --env-file .env.op -- <program>= with leading =VAR=value=
+assignments and file redirects, while still denying commands that print,
+parse, or dump that environment.
 
 The secret-leak guard applies the same command policy to every literal nested
-=cmd= inside a =functions.exec= program, including nested shell-tool calls.
-Raw =op=, =op-automations=, =op-desktop=, =pass=, =security=, and =pbpaste=
-are denied even when wrapped, piped, filtered, redirected, dynamically
-resolved, or called through a literal nested shell. Only the non-secret
-=op-desktop --status= and =--stop= controls bypass that rule. Quoted literals in
-ordinary commands and simple non-expanding =echo=/=printf= documentation remain
-available. Shell containment is not treated as proof that a value cannot reach
-agent output; use a dedicated audited non-printing operation instead.
+=cmd= inside a =functions.exec= program, including nested shell-tool calls; a
+1Password broker named anywhere else in the program is denied as
+unclassifiable. Raw =op=, =pass=, =security=, and =pbpaste= are denied even
+when wrapped, piped, filtered, redirected, dynamically resolved, or called
+through a literal nested shell. The brokers =op-automations= and =op-desktop=
+are classified by =lib-op-policy.py=, an allowlist of command shapes whose
+stdout carries no credential: masked =run= with a non-shell program, =read=
+captured into a variable, a regular file, or a listed consumer, item output
+piped to a metadata-only =jq= filter or a file, =document get=/=inject= with
+=--out-file=, writes without =--format=, and metadata commands. Every other
+broker shape is denied, including =--reveal=, =item share=, =signin=,
+=environment read=, credential-minting subcommands, indirection, and any
+=OP_*= environment override. Quoted literals in ordinary commands and simple
+non-expanding =echo=/=printf= documentation remain available. The case table
+is =tests/test_op_policy.py=.
 
 The GitHub write guard is deny-only. It refuses writes outside the committed
 repository registry, but a matching repository establishes only that boundary;
@@ -111,6 +120,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =block-elpaca-rebuild-uncommitted.sh= | Blocks rebuilding an extras package while its canonical Elisp source has uncommitted changes. |
 | =block-github-write-command.sh= | Blocks Git pushes and recognized mutating =gh= operations unless the target matches an exact repo or account wildcard in the committed allowlist, or an exact Epoch project repo in the fixed committed automations registry. A registry match falls through silently to normal permission handling; it never explicitly approves a write. This includes topic-branch pushes, pull-request and issue creation or edits, and comments. Read-only inspection remains allowed. Nested =functions.exec= shell calls are checked independently and ambiguous recognized calls fail closed. |
 | =block-secret-leak.sh= | Blocks literal secret disclosure and unsafe secret-bearing reads, writes, or output. |
+| =lib-op-policy.py= | Classifies 1Password broker commands for =block-secret-leak.sh=: a closed allowlist of shapes whose stdout carries no credential, everything else denied. |
 | =block-sensitive-read.sh= | Blocks content reads of credential-like files while permitting narrowly defined metadata checks and the exact value-free shell-export classifier. |
 | =block-texi-edit.sh= | Blocks direct edits to generated Texinfo and points to the Org source. |
 | =block-unguarded-ahrefs-api.sh= | Blocks paid Ahrefs API calls that do not pass through the quota guard. |

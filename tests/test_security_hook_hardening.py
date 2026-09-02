@@ -93,6 +93,53 @@ class SensitiveReadGuardTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(permission_decision(result), "allow")
 
+    def test_masked_op_run_env_file_loader_is_allowed(self):
+        # `op-automations run --env-file .env.op -- <program>` is an environment
+        # loader like `source .env`: 1Password reads the file and masks the values
+        # in the program's output. Assignments and file redirects do not make it
+        # a compound read.
+        commands = (
+            "op-automations run --env-file .env.op -- python3 sync.py --flag",
+            "DATA_DIR=/tmp/d op-automations run --env-file /Users/x/repo/.env.op -- /usr/bin/python3 bridge.py --redraft 2> /tmp/err.txt",
+            'op-automations run --env-file .env.op -- python3 bridge.py > "$S/out.txt" 2> "$S/err.txt"',
+        )
+        for guard in SENSITIVE_READ_GUARDS:
+            for command in commands:
+                with self.subTest(guard=guard.name, command=command):
+                    payload = {"tool_name": "Bash", "tool_input": {"command": command}}
+                    result = run_hook(guard, payload)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(permission_decision(result), "allow")
+
+    def test_op_run_env_file_loader_that_could_print_is_denied(self):
+        commands = (
+            "OP_RUN_NO_MASKING=1 op-automations run --env-file .env.op -- python3 sync.py",
+            "op-automations run --env-file .env.op -- python3 sync.py > /dev/stderr",
+            "cd /tmp && op-automations run --env-file .env.op -- python3 sync.py",
+            "op-automations run --env-file .env.op -- python3 sync.py | tee /tmp/log",
+        )
+        for guard in SENSITIVE_READ_GUARDS:
+            for command in commands:
+                with self.subTest(guard=guard.name, command=command):
+                    payload = {"tool_name": "Bash", "tool_input": {"command": command}}
+                    result = run_hook(guard, payload)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(permission_decision(result), "deny")
+        # A program that prints its environment is the secret-leak guard's
+        # call, not a sensitive *read*; the standalone sensitive-read copies
+        # allow any leading broker command, and the Bash dispatcher combines
+        # both guards. Pin the combined decision.
+        dispatcher = DOTFILES / "claude/hooks/pretooluse-bash.sh"
+        for command in (
+            "op-automations run --env-file .env.op -- env",
+            "op-automations run --env-file .env.op -- bash -c 'echo $TOKEN'",
+        ):
+            with self.subTest(guard=dispatcher.name, command=command):
+                payload = {"tool_name": "Bash", "tool_input": {"command": command}}
+                result = run_hook(dispatcher, payload)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(permission_decision(result), "deny")
+
     def test_safe_prefix_does_not_hide_later_content_read(self):
         command = "ls ~/.ssh/id_test_guard; cat ~/.ssh/id_test_guard"
         payload = {"tool_name": "Bash", "tool_input": {"command": command}}

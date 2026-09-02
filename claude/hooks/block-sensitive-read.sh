@@ -78,6 +78,23 @@ is_safe_shell_export_classifier() {
   return 1
 }
 
+is_safe_op_run_loader() {
+  # `op-automations run --env-file F -- <program>` is an environment loader in
+  # the same sense as `source .env`: 1Password reads F and hands the values to
+  # the program as environment, masking them in its output. Allowed when the
+  # only composition is leading VAR=value assignments (none OP_*) and file
+  # redirects, and the program is not an environment dumper or a shell.
+  local command="$1" stripped
+  printf '%s' "$command" | grep -q 'OP_RUN_NO_MASKING' && return 1
+  printf '%s' "$command" | grep -qE '>[[:space:]]*(/dev/(std(out|err)|fd/|tty)|&|-([[:space:]]|$))' && return 1
+  stripped=$(printf '%s' "$command" | sed -E 's/[[:space:]]*[12]?&?>>?[[:space:]]*[^[:space:];&|<>()]+//g')
+  printf '%s' "$stripped" | grep -qE '^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:];&|<>()]*[[:space:]]+)*([^;&|[:space:]]*/)?op-automations[[:space:]]+run[[:space:]]+(--env-file(=|[[:space:]]+)[^[:space:];&|<>()]+[[:space:]]+)+--[[:space:]]+[^[:space:];&|<>()]+([[:space:]]+[^;&|<>()`]*)?$' || return 1
+  printf '%s' "$stripped" | grep -qE '(^|[[:space:]])OP_[A-Za-z0-9_]*=' && return 1
+  printf '%s' "$stripped" | grep -qE -- '--[[:space:]]+([^[:space:]]*/)?(env|printenv|set|export|declare|typeset|bash|sh|zsh|dash|ksh|eval)([[:space:]]|$)' && return 1
+  printf '%s' "$stripped" | grep -qE '\$\(|`' && return 1
+  return 0
+}
+
 has_shell_composition() {
   local command="$1"
 
@@ -269,6 +286,9 @@ if [ "$TOOL_NAME" = "Bash" ]; then
   fi
 
   if [ "$SENSITIVE_LABEL" = "environment secrets file" ] && is_safe_env_loader "$COMMAND"; then
+    allow_env_loader
+  fi
+  if [ "$SENSITIVE_LABEL" = "environment secrets file" ] && is_safe_op_run_loader "$COMMAND"; then
     allow_env_loader
   fi
 

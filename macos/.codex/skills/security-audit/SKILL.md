@@ -16,6 +16,8 @@ Use subagents to explore in parallel where appropriate. Give each subagent the s
 
 This skill is audit-only unless the user explicitly asks for remediation. Do not rotate credentials, change account settings, post externally visible updates, or mutate external systems while auditing.
 
+A remediation that changes what a guard *permits*, rather than fixing how it enforces the rule the owner already set, is a policy decision, not a fix: state the proposed rule in one paragraph and get an explicit yes before committing it or rewriting the policy prose that describes it (2026-08-31: an audit remediation replaced "never print a secret" with "never invoke the secret tool" and blocked every `op-automations` call for three days).
+
 When scanning for secrets, never emit raw matching lines to the terminal or final report. Use quiet/list/count modes or a redacting helper that outputs only the path, line number, secret type, and a short fingerprint when needed to distinguish duplicates. Do not read secret store contents, private keys, browser cookies, or credential files; check metadata, references, encryption status, or configured paths instead. When `pass` lookup is necessary, use full paths and `pass find`; do not use `pass ls | grep`.
 
 If a check is unavailable, unsafe to run, or would expose raw secrets, mark it as not checked with the concrete reason rather than guessing.

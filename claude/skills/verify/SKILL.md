@@ -9,10 +9,6 @@ argument-hint: <task description>
 
 Execute $ARGUMENTS with self-generated verification criteria that close the agentic loop. The goal: never declare a task "done" without concrete evidence that it was done correctly.
 
-## When this skill is invoked
-
-**IMPORTANT**: When triggered, follow the execution steps below. Do NOT just describe what the skill does.
-
 ## When not to use
 
 - Do not use for a simple direct check where the user asked for one command or one fact and no verification loop is needed.
@@ -81,7 +77,7 @@ If using curated test cases (e.g., classification), run every case and report ac
 - **Some fail**: fix the failures, then re-verify (only the failed criteria, plus any that might have been affected by the fix). Loop until all pass or you've exhausted reasonable approaches.
 - **Some uncertain**: flag these to the user. Ask whether they want to provide judgment, modify the criteria, or accept the uncertainty.
 
-If you loop more than 3 times on the same criterion, stop and surface the issue to the user rather than spinning.
+If repeated fixes are not converging on a criterion, stop and surface the issue to the user rather than continuing to iterate.
 
 Keep the final response proportionate to the task. Include the result or artifact, the criteria evaluated, pass/fail/uncertain status with evidence, and any unresolved uncertainty. For small tasks, a terse verification summary is enough; for larger tasks, use a compact table or checklist.
 

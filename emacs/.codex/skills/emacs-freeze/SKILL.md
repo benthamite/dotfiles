@@ -37,10 +37,9 @@ hooks, and server requests separately.
 **A slow server is not a dead server.** A wedged Emacs may still service
 process input intermittently — from inside `accept-process-output`, a recursive
 edit, or a process filter — so server requests can take a minute or more to
-land instead of never landing. In the session that produced this rule, 3-second
-and 10-second probes both timed out and were misread as "server unresponsive,"
-which pushed the whole diagnosis toward kill options. A 90-second probe returned
-normally, and the session was then recovered with no data loss and no kill.
+land instead of never landing. A short probe can time out on a wedged-but-
+servicing Emacs while a longer one returns, and the difference decides
+between a one-line eval and a kill.
 Never conclude "unresponsive" without completing the timeout ladder in step 2.5.
 
 ## Procedure
@@ -100,9 +99,7 @@ done
 
 Only after **the 120-second probe has also failed** may you describe the server
 as unresponsive. A shorter failure means "slow", not "dead", and the difference
-decides whether recovery is a one-line eval or a kill. This ladder exists
-because skipping it once turned a fully recoverable session into a
-recommendation to terminate Emacs.
+decides whether recovery is a one-line eval or a kill.
 
 Once a probe returns, pull the buffers using a timeout at least as large as the
 one that worked:
@@ -153,7 +150,7 @@ Getting this wrong leads to diagnosing a symptom (something firing inside a wedg
 
 Grep the sample for `call_debugger` and `Fdebug`. If there is ≥1, **the freeze is a debugger problem, not a computation problem.**
 
-**`call_debugger` frames are not recursive edits.** `debug` renders `*Backtrace*` via `debugger-setup-buffer` *before* it reaches `(recursive-edit)`, so a debugger level that is still rendering has no recursive edit yet. Do not report nesting depth from frame counts alone — ask the server for `(recursion-depth)` and report both. In the session that produced this rule the sample showed ~1,350 `call_debugger` frames while `(recursion-depth)` was **5**: about 1,345 levels were still stuck mid-render. The two numbers mean different things and the gap between them is itself diagnostic.
+**`call_debugger` frames are not recursive edits.** `debug` renders `*Backtrace*` via `debugger-setup-buffer` *before* it reaches `(recursive-edit)`, so a debugger level that is still rendering has no recursive edit yet. Do not report nesting depth from frame counts alone — ask the server for `(recursion-depth)` and report both. Example: a sample can show ~1,350 `call_debugger` frames while `(recursion-depth)` is **5**: about 1,345 levels were still stuck mid-render. The two numbers mean different things and the gap between them is itself diagnostic.
 
 Identify the error that opened the **outermost** debugger, but be aware you may not be able to: see the truncation warning in 3c. Note also that nested entry can occur during *unwinding* (`unwind_to_catch → unbind_to → bcall0 → call_debugger`), not only on a fresh signal — if you see that chain, the recursion is being driven by unwind forms, and say so rather than assuming plain re-signalling.
 
@@ -231,7 +228,7 @@ Report, in this order:
 
 ### Rules
 
-These exist because this skill previously produced a confident, plausible, and wrong diagnosis. Honor them strictly.
+A confident, plausible, wrong diagnosis is the failure mode this skill guards against.
 
 - **No unverified citations.** Do not reference specific external patches, packages, issues, or mailing-list threads unless you have fetched and confirmed they exist. Generic statements about a package's behavior are fine; specific claims like "the auth-source-pass-cache patch" are not.
 - **Verify facts before stating them.** If you run `find | wc -l`, exclude irrelevant paths (e.g. `.git/`). If you cite Emacs API semantics (idle timers, hooks, etc.), consult documentation or say "I'm not sure about the exact semantics."
@@ -240,7 +237,7 @@ These exist because this skill previously produced a confident, plausible, and w
 - **Symptoms ≠ causes.** A slow operation visible in the sample is not the cause of the freeze unless Step 3a/3b rules out alternatives.
 - **A timeout is not a verdict.** "Did not answer in N seconds" is the observation. "The server is unresponsive" is an inference, and it is only warranted after the full ladder in step 2.5. Getting this wrong points the entire diagnosis at destructive recovery.
 - **Answer the question that was asked.** If the user asks what an option does, lead with the direct answer — "yes, that kills Emacs" — before any qualification. Do not restate the diagnosis instead of answering.
-- **Prefer measuring to recalling.** Every claim about Emacs internals in this skill was wrong at least once before it was tested. If a fact can be checked with a two-line `emacs -Q --batch` probe or a docstring lookup, check it. When building such a probe, note that a `condition-case` handler around the signal suppresses debugger entry, and that batch mode does not enter the debugger the way an interactive session does — a probe that reports "no debugger entered" may be measuring its own harness.
+- **Prefer measuring to recalling.** If a fact can be checked with a two-line `emacs -Q --batch` probe or a docstring lookup, check it. When building such a probe, note that a `condition-case` handler around the signal suppresses debugger entry, and that batch mode does not enter the debugger the way an interactive session does — a probe that reports "no debugger entered" may be measuring its own harness.
 
 ### 5. Clean up
 

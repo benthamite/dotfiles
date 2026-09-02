@@ -95,6 +95,13 @@ Claude's native stores. Shared MCP wiring is audited only when it is declared in
 =ai-config-sync.json=; placement and account guidance lives in
 [[file:context/mcp-servers.md][the MCP reference]].
 
+Instruction files, skills, and hook reminders state current rules with their
+reasons and without incident history, migration-relative wording, shouted
+emphasis, or numeric output caps. The prompt audit recorded in
+[[file:../docs/superpowers/plans/2026-09-02-prompt-audit.md][the 2026-09-02 prompt-audit plan]] lists the removed patterns and the items
+left in place on purpose, including the deliberate =model:= aliases on the
+GitGuardian, publication, and proofread skills.
+
 * Commands and context
 
 [[file:bin/README.org][The command index]] documents the tracked service clients, wrappers, and

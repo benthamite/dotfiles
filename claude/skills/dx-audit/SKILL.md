@@ -7,7 +7,7 @@ argument-choices: "--accept"
 
 # AI developer experience audit
 
-Thoroughly explore $ARGUMENTS (if no argument provided, default to the current project) and produce a prioritized set of recommendations for making this codebase easier for an AI coding agent to work with reliably and efficiently.
+Explore $ARGUMENTS (if no argument provided, default to the current project) and produce a prioritized set of recommendations for making this codebase easier for an AI coding agent to work with reliably and efficiently.
 
 This is an audit skill first. Do not edit the project unless the user explicitly asks for implementation or `--accept` is present in `$ARGUMENTS`.
 
@@ -89,7 +89,7 @@ For each gap, produce a recommendation. Recommendations must be:
 - **Effort-estimated**: rough T-shirt size (S/M/L/XL) so the user can prioritize
 - **Ordered by impact**: the recommendation that would most reduce friction comes first
 
-Think broadly. The examples below are illustrative, not exhaustive:
+The examples below are illustrative, not exhaustive:
 
 - A test suite so the AI can verify changes
 - A CLAUDE.md with build/test commands so fresh sessions can self-orient

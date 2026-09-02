@@ -21,7 +21,7 @@ except Exception:
 case "$fp" in
   */tasks/*/prompt.txt|*/tasks/*/grading/rubric.md|*/tasks/*/grading/GOLDEN.md)
     cat <<'JSON'
-{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"⚠️ CR ROUTING GUARD — you are editing a CR prompt/rubric/GOLDEN. This is authoring craft OWNED by the /article-to-rubric skill (QA is owned by /qa-reasoning). If you are hand-authoring or hand-fixing this instead of having INVOKED the owning skill, STOP now and invoke the skill so you behave exactly as if the user had invoked it directly. Doing skill-owned craft by hand is a routing-principle violation."}}
+{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"You are editing a CR prompt, rubric, or GOLDEN file. Authoring these is owned by the /article-to-rubric skill (QA by /qa-reasoning). If you have not invoked the owning skill for this change, invoke it now and continue from there rather than hand-editing."}}
 JSON
     ;;
 esac

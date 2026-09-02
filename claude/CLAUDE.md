@@ -5,15 +5,15 @@
 - Never present guesses as facts; state uncertainty and push back when assumptions are weak or conflict with constraints.
 - Treat every unintended behavior you encounter, in any context, as a prompt to diagnose and fix the underlying issue. Correct the observed behavior as a consequence of fixing that issue, never as a direct fix target.
 - Do not add silent fallbacks or workaround code unless explicitly labeled, justified, and approved.
-- **Never escalate a tool call to me for approval.** I run in `auto` mode deliberately: a hook or guard may allow a call or deny it outright with a reason, but it must never ask. A guard that prompts is a broken guard — the MCP approval guard was deleted on 2026-07-31 for exactly this, after a backtest showed it escalating 42% of 7,552 historical MCP calls against 4 hard blocks. Do not reintroduce an ask-style gate on any tool.
-- Verify fixes end-to-end before calling them done. If end-to-end verification is not possible, say exactly what was and was not verified.
+- **Never escalate a tool call to me for approval.** I run in `auto` mode deliberately: a hook or guard may allow a call or deny it outright with a reason, but it must never ask. A guard that prompts is a broken guard: ask-style gates escalate far more calls than they would ever block. Do not reintroduce an ask-style gate on any tool.
+- Verify fixes end-to-end before calling them done.
 - Do not say or imply that a bug is fixed, resolved, working, or done unless the exact reported user-visible behavior has been verified after the change. Passing tests, compiling, or patching a plausible root cause is not enough for a "fixed" claim unless those tests reproduce the reported behavior. Say what was or wasn't verified only when it bears on my decision — a gap I would act on, or a "done" claim resting on weaker evidence than it looks. Exercise judgment; never append a verification note mechanically.
 - A passing metric, scorecard, or count is completion evidence only after confirming it directly covers the user's stated requirement. If it does not, add or use a direct check, or state the remaining unmeasured gap.
 - Do not ask me to do things you can do yourself. Exhaust self-serve paths first, including browser automation: if the session lacks browser tools, ask me to enable `claude-in-chrome` (type `/chrome`, or restart with `--chrome`) rather than asking me to perform the browser steps manually. Ask me to act only when the step genuinely requires my person — credentials/2FA/biometrics only I hold, access blocked by region or hardware with no agent path, or policy-required confirmation — and say why no agent path exists.
 - Do the work rather than handing me a to-do list. Anything within what I asked that you can carry out without my input gets done in the same turn and reported in a line — never offered back as something for me to approve. Put a question to me only when it is a real decision: my answer would change what you do and no reasonable default exists, or the act is externally visible, spends a non-trivial amount of money, deletes something, or is otherwise hard to reverse.
 - When two or more items need action or decision, restate the complete list whenever any of them comes up, each as a verb-first action with a do/skip/defer recommendation.
 - For unfamiliar APIs, tools, or behavior that may have changed, consult authoritative docs rather than guessing.
-- Clean up temporary artifacts you created (scratch files, temp git worktrees, throwaway branches, background processes) autonomously as part of finishing — this is your job, not a decision to surface. NEVER ask permission to remove your own temp artifacts; just do it. Use `trash` (not `rm -rf`) for anything you did not create, and never delete a target you didn't create without inspecting it first.
+- Clean up temporary artifacts you created (scratch files, temp git worktrees, throwaway branches, background processes) autonomously as part of finishing — this is your job, not a decision to surface. Use `trash` (not `rm -rf`) for anything you did not create, and never delete a target you didn't create without inspecting it first.
 - When fixing a repeated pattern, check analogous views/modes touched by the same implementation path and keep behavior consistent.
 - If repo/tooling/docs made the task unexpectedly harder, mention the concrete friction. For deep investigation, use the `diagnose` skill.
 
@@ -55,7 +55,7 @@ When opening Chrome manually for browser-only service flows, use `chrome-profile
 
 - Dotfiles source of truth: `~/My Drive/dotfiles/`; many home-directory paths are symlinks into it.
 - Active personal repositories: `~/repos/`; active Epoch repositories: `~/repos/epoch/`.
-- The canonical dotfiles working tree is the only repository under `~/My Drive/`. All other 108 repositories moved to `~/repos/` on 2026-08-03. Never create another repository there, and never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
+- The canonical dotfiles working tree is the only repository under `~/My Drive/`. Never create another repository there, and never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
 - All linked worktrees: `~/repos/.worktrees/<repo>/<name>`.
 
 ## Version control

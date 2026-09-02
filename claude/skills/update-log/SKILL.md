@@ -201,9 +201,7 @@ If no such file is found at any level, skip this step. In the final report, stat
 This step runs after the hooks on purpose. The project brief is the source the
 map summarises, so it has to be current before the map is written; doing it the
 other way round produces a digest of the state the project was in before this
-session. Until 2026-08-13 this step sat *before* the hooks while instructing the
-reader to work from a brief the hooks had not refreshed yet — an instruction
-nobody following the document in order could satisfy.
+session.
 
 How CLAUDE.md is maintained depends on its shape — the file itself tells you which mode to use:
 
@@ -218,7 +216,7 @@ mirrored, and let the maintenance transaction below derive Current focus and
 contract that the generator and its output must satisfy. For generic projects,
 apply them directly.
 
-1. **Regenerate `## Current focus` from the brief's open work, replacing the previous content — never append to it.** For `.org` briefs the open work is the `** Active TODOs` headings. Output a short digest: a one-line orientation, optionally followed by up to ~6 bullets of the live open priorities. Hard cap ~120 words. **No dates and no session narrative** (e.g. "On 2026-06-29 did X") — those live in `logs/`; durable state lives in the brief.
+1. **Regenerate `## Current focus` from the brief's open work, replacing the previous content — never append to it.** For `.org` briefs the open work is the `** Active TODOs` headings. Output a short digest: a one-line orientation followed by the few highest-priority live open tasks, one bullet each. It is an index into the brief, not a summary of it. **No dates and no session narrative** (e.g. "On 2026-06-29 did X") — those live in `logs/`; durable state lives in the brief.
    - **Why replace, not append:** appending is what turns `Current focus` into a chronological blob that duplicates the log and the brief. Replacing loses nothing — the session log you just wrote holds the narrative, and the brief's `** Active TODOs` hold the live state. `Current focus` is only a convenience index into those.
    - If the existing `Current focus` is already a multi-paragraph blob, this run is the moment to compact it down to the digest; do not preserve the old chronology.
    - **Choose what to list deterministically**, not by impression, so two runs over the same brief produce the same digest:

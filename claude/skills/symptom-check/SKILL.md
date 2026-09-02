@@ -102,7 +102,7 @@ End with one of three sentences:
 
 ## Anti-patterns
 
-These have all happened. Don't:
+Do not:
 
 - **Skip Step 4** because the local fix "obviously works." If you can't articulate the invariant, you're patching.
 - **Pad Step 5** with maybes to make the case feel thorough. Either confirm or admit you didn't check.

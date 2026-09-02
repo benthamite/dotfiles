@@ -80,7 +80,7 @@ The active agent system prompt and training already establish many behaviors. In
 
 **Examples of likely defaults**: don't mix unrelated changes in a commit, use descriptive variable names, don't introduce security vulnerabilities.
 
-**Examples of likely NOT defaults**: commit all changes immediately (system prompt says the opposite), use `trash` instead of `rm`, prefer Opus over Haiku for subagents.
+**Examples of likely NOT defaults**: commit all changes immediately (system prompt says the opposite), use `trash` instead of `rm`, use the most capable available model for subagents.
 
 ### Criterion 2: Conflicts
 
@@ -192,5 +192,5 @@ Before calling the audit complete:
 - **Do not remove rules that are working.** If a rule changes behavior in a useful way and isn't duplicated elsewhere, it stays — even if it was reactive in origin.
 - **Canonical location principle.** When a rule must exist somewhere, prefer CLAUDE.md or AGENTS.md (always loaded) over context skills (loaded conditionally) over memory (loaded per-project). If a rule is in CLAUDE.md or AGENTS.md AND a skill, cut it from the skill.
 - **Hooks trump instructions.** If a hook mechanically enforces a rule, the instruction-level statement is documentation at best. It can be cut unless it provides context the hook can't (e.g., explaining *why* the rule exists).
-- **Don't touch procedural skills.** The body of user-invocable skills is procedural, not a competing instruction set. Don't recommend cutting steps from release, twitter-digest, etc. unless they contain general rules that duplicate CLAUDE.md or AGENTS.md.
+- **Don't touch procedural skills.** The body of user-invocable skills is procedural, not a competing instruction set. Don't recommend cutting steps from user-invocable procedural skills (release-dotfiles, publish-dotfiles, etc.) unless they contain general rules that duplicate CLAUDE.md or AGENTS.md.
 - **Respect the confirmation boundary.** `--accept` or an explicit apply request authorizes high-confidence cleanup; otherwise, present the full analysis and wait for confirmation before changing files.

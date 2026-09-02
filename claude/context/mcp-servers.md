@@ -16,7 +16,7 @@ Claude Code can load MCP servers through five mechanisms:
 
 Do not use `~/.claude.json`'s `projects.<path>.mcpServers` block. Claude Code supports it, but it duplicates `<project>/.mcp.json` in a hidden location. Always put project-scoped MCPs in `<project>/.mcp.json`.
 
-When source code for an MCP server needs to be cloned locally, use `~/My Drive/dotfiles/claude/mcp-servers/<name>/`. The parent directory may otherwise be empty.
+When source code for an MCP server needs to be cloned locally, use `~/repos/mcp-servers/<name>/`, never a path under `~/My Drive` (the Drive sync root holds no repositories or dependency trees).
 
 ## Multi-account notes
 

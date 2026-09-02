@@ -20,13 +20,6 @@ close both at once, while writing:
   rhythm, his explicit hedging, and his vocabulary. Avoiding AI tells is not the
   same as sounding like him.
 
-Historically this was two steps: draft, then run the `humanize` skill as a
-separate audit. That double pass is tedious, and when the draft is already
-in-voice it changes almost nothing. So this skill folds both concerns into
-composition itself: you hold the tells in mind *and* match his voice as you
-write, producing clean, in-voice text directly. There is no separate humanize
-invocation for ordinary messages.
-
 ## Procedure
 
 1. **Load his voice.** Read the private samples at
@@ -53,8 +46,7 @@ invocation for ordinary messages.
 - Lead with the ask; one ask per message.
 - No framing, no restating the question, no announcing future messages, no
   closing summaries.
-- Slack replies and DMs: 2–4 sentences, ~100 words max. Email tolerates a
-  little more.
+- Slack replies and DMs are a few sentences; email tolerates a little more.
 - When torn between two lengths, pick the shorter.
 
 ## Pablo's style (distilled from the samples)

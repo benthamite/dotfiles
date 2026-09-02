@@ -44,6 +44,11 @@ The audit normalizes tool-specific titles, paths, and Claude =@context= syntax
 before comparison. User-facing replies use ASD-STE100 Simplified Technical
 English.
 
+Instruction files, skills, and hook reminders state current rules with their
+reasons and without incident history, migration-relative wording, shouted
+emphasis, or numeric output caps. The
+[[file:../docs/superpowers/plans/2026-09-02-prompt-audit.md][2026-09-02 prompt-audit plan]] records the removed patterns.
+
 * Native configuration
 
 =config.toml= owns Codex model, reasoning effort, service tier, sandbox and

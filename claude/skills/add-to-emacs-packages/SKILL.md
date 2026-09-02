@@ -10,8 +10,6 @@ Register one of the user's Emacs packages in the public packages list, create an
 
 ## When this skill is invoked
 
-**IMPORTANT**: When triggered, follow the execution steps below. Do NOT just describe what the skill does.
-
 Do not use this for general Emacs package documentation, README generation, or release work unless the user also wants the package registered in the public packages list. Use `document-elisp-package`, `generate-readme`, or `release-package` for those narrower workflows.
 
 ## Key paths

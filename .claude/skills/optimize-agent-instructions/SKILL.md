@@ -15,7 +15,7 @@ Use the canonical placement policy in `agents/instruction-placement.org` from th
 
 ## Background: why this matters
 
-Claude Code or Codex loads CLAUDE.md or AGENTS.md files, imports, local memories, and rules as context rather than enforced configuration. They are high-leverage because they shape every relevant session, but the instruction budget is finite: frontier thinking models reliably follow ~150-200 instructions total, and Claude Code or Codex's system prompt already consumes ~50 of those. Every line in persistent instructions competes for the remainder.
+Claude Code or Codex loads CLAUDE.md or AGENTS.md files, imports, local memories, and rules as context rather than enforced configuration. They are high-leverage because they shape every relevant session, but the instruction budget is finite: every line in persistent instructions competes for attention with the system prompt and with every other rule, and specific stale or vague instructions degrade behavior more than volume does.
 
 Long, vague, stale, or non-universal instructions consume context and reduce adherence. The goal is not to make instructions clever; it is to keep them scoped, concrete, current, and easy for the agent to verify.
 
@@ -26,8 +26,8 @@ Long, vague, stale, or non-universal instructions consume context and reduce adh
 3. Read the Claude Code or Codex instruction sources that affect the target: `.claude/CLAUDE.md or AGENTS.md` if separate, `CLAUDE.local.md` if present, and `.claude/rules/**/*.md` if present
 4. Treat local or personal instruction files as private context: use them to detect conflicts, but do not quote sensitive content or copy local-only rules into shared files unless the user explicitly targets those files
 5. Count:
-   - Total lines (target: under 200; absolute max: 300)
-   - Discrete instructions/rules (target: under 100, accounting for system prompt's ~50)
+   - Total lines
+   - Discrete instructions/rules
    - `@`-imports, rules files, and their sizes
 
 ## Phase 2: Evaluate every instruction
@@ -116,10 +116,9 @@ CLAUDE.md or AGENTS.md should list available resources with one-line description
 
 Anti-pattern to flag: `See [context/foo.md](context/foo.md)` with no surrounding context, pointing to operational content. Plain links are the weakest externalization — weaker than `@`-imports, which at least expand inline. If the target is operational, convert it to a skill. If it's reference, at minimum use an `@`-import.
 
-### Markdown structure
+### Structure
 
-- Uses headers and bullets to group related instructions (Claude scans structure like a reader)
-- No dense paragraphs of prose — bullets are more reliably followed
+- Reference data (paths, commands, tables) is structured; behavioral rules are short prose that carries the reason
 - Logical grouping: related rules are adjacent, not scattered
 
 ## Phase 4: Output and applied-mode closeout
@@ -128,11 +127,11 @@ For analysis-only runs, provide the full report below. For `--accept` runs, appl
 
 ### 1. Metrics
 
-| Metric | Current | Target | Status |
-|--------|---------|--------|--------|
-| Total lines | N | < 200 | ok/over |
-| Instruction count | N | < 100 | ok/over |
-| Imports/rules | N | — | — |
+| Metric | Current |
+|--------|---------|
+| Total lines | N |
+| Instruction count | N |
+| Imports/rules | N |
 
 ### 2. Per-instruction analysis
 

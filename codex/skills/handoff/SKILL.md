@@ -65,4 +65,4 @@ When drafting an inferred prompt:
 5. Print the contents so the user can review.
 6. Tell the user to run `! emacsclient -e '(agent-codex-handoff)'`
    to close this session and start a new one with the prompt auto-submitted.
-   Do NOT run this command yourself — only the user should trigger it.
+   Do not run it yourself: it closes this session, so only the user should trigger it.

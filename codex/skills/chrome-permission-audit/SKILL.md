@@ -37,8 +37,8 @@ script discovers profiles from Chrome's `Local State` and skips those where the
 extension is not installed.
 
 **Reading requires a real LevelDB reader.** The store's `.log` files retain
-superseded history — one profile held 1,784 stale `netloc` records against 51
-live ones. Grep or `strings` over those files reports long-revoked grants as
+superseded history, and stale `netloc` records can outnumber live ones many
+times over. Grep or `strings` over those files reports long-revoked grants as
 active. Reads therefore go through `classic-level` against a throwaway copy, so a
 running Chrome cannot block them.
 
@@ -109,8 +109,8 @@ them; count records, not just names, when reporting.
 
 ## Reporting to the user
 
-Lead with whether the policy holds and what changed since last run — not with a
-185-row table. Group by profile, name the account, and for each violation say
+Lead with whether the policy holds and what changed since last run — not with the
+full inventory table. Group by profile, name the account, and for each violation say
 what the site actually controls ("Workspace super-admin: users, passwords") not
 just its category. Flag anything whose grant date suggests it was a one-off that
 never got cleaned up.

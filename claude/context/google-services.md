@@ -70,7 +70,7 @@ all formatting damage; when checkbox state, strikethrough, or similar formatting
 matters, also check an export format that preserves it, such as Markdown or
 HTML.
 
-## Google Docs read-only inspection caveats (observed 2026-06-11)
+## Google Docs read-only inspection caveats
 
 For read-only Google Docs inspection, treat Drive API exports as the reliable
 source for document body state. `gdoc cat` and `gdoc info` can be convenient
@@ -88,12 +88,14 @@ orientation tools, but do not use their output alone for content-change claims.
 - Verify real content edits with Drive revisions plus per-revision export
   byte-compare.
 
-This behavior was observed with installed gdoc v0.7.6 on 2026-06-11. Re-check
-after `gdoc` upgrades before relying on exact subcommand limitations.
+Re-check each caveat above against the installed `gdoc` before relying on it
+for a content-change claim (they were confirmed on an old release); the
+export-and-byte-compare method above is version-independent and is the
+reliable path regardless.
 
 ## Auth
 
-`gmail.py`, `sheets.py`, `bin/gmail-maildir-sync`, and the shared `claude/bin/_gworkspace_auth.py` helper support the migrated secret layout. For the human accounts, the OAuth client (id and secret) is shared and only the refresh token differs per account. These variables are no longer globally exported from `.zshenv-secrets`; the wrappers still accept explicit env vars for one-off overrides, but normally resolve values from the stores below:
+`gmail.py`, `sheets.py`, `bin/gmail-maildir-sync`, and the shared `claude/bin/_gworkspace_auth.py` helper resolve credentials as described below. For the human accounts, the OAuth client (id and secret) is shared and only the refresh token differs per account. These variables are not globally exported from `.zshenv-secrets`; the wrappers accept explicit env vars for one-off overrides, but normally resolve values from the stores below:
 
 | Var | Account | Purpose |
 |---|---|---|
@@ -123,11 +125,11 @@ Use `gmail.py --account epoch` for `pablo@epoch.ai`.
 
 ### email-triage bot account
 
-Use `gmail.py --account email-triage` for `email-triage@epoch.ai`. This replaces the previous `gmail-epoch-triage` MCP server path for local agent workflows.
+Use `gmail.py --account email-triage` for `email-triage@epoch.ai`.
 
 ### personal account
 
-No dedicated MCP server. Personal-account Docs/Drive go through `gdoc --account personal` (see "Tooling by service" above). Calendar through `gcalcli`. Gmail isn't wired.
+No dedicated MCP server. Personal-account Docs/Drive go through `gdoc --account personal` (see "Tooling by service" above). Calendar through `gcalcli`. Gmail through `gmail.py --account personal`.
 
 ### Built-in (claude.ai integrations)
 
@@ -215,7 +217,7 @@ Note: the OAuth flow's `port=8080` matches the redirect URI registered for `clau
 
 ### email-triage bot account (email-triage@epoch.ai)
 
-The built-in OAuth flow previously used by the MCP server was port-conflict-prone. Generate tokens manually using `InstalledAppFlow` on a different port and write to the credentials directory:
+The library's built-in OAuth flow is port-conflict-prone. Generate tokens manually using `InstalledAppFlow` on a different port and write to the credentials directory:
 
 ```bash
 python3 -c "
@@ -273,19 +275,13 @@ A browser opens; sign in as `pablo.stafforini@gmail.com`. Expect Google's
 "unverified app" warning (Advanced → continue); that is normal for this client.
 
 The shared OAuth client lives in GCP project `claude-code-gmail-490520` (owned by
-`pablo@epoch.ai`). On 2026-07-08 its publishing status was changed from "Testing"
-to **"In production"**, which removed the 7-day refresh-token expiry that had been
-forcing weekly re-auth. Tokens issued *before* that date still carry the old 7-day
-fuse — one final `gdoc auth --account <name>` after expiry replaces them with a
-persistent token (already done for `pablo.stafforini@trajectorylabs.net`; the
-`personal` and `epoch` gdoc tokens will roll over the next time they expire).
-Do not switch the app to "Internal": the client is shared across epoch, personal,
+`pablo@epoch.ai`) and is published as "In production", so refresh tokens do not
+expire on a 7-day schedule. Do not switch the app to "Internal": the client is shared across epoch, personal,
 and trajectory accounts, and Internal would restrict it to `@epoch.ai` users.
 
 ### `access_denied` from `gdoc --account pablo.stafforini@trajectorylabs.net`
 
-Historical (testing-mode) failure; should no longer occur now that the app is in
-production. If auth fails anyway, rerun:
+Rerun:
 
 ```bash
 gdoc auth --account pablo.stafforini@trajectorylabs.net

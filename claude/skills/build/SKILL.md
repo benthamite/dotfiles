@@ -39,7 +39,6 @@ Guidelines for the interview:
 - Cover both high-level architecture and low-level implementation details
 - Challenge assumptions and suggest alternatives when appropriate
 - Continue interviewing until the spec is comprehensive enough to implement without guesswork
-- Aim for thoroughness: for large features, this may mean 20-40+ questions
 - Stop only when unresolved decisions are answered, explicitly deferred, or captured as implementation assumptions
 
 #### Step 3: Write the spec

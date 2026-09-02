@@ -36,10 +36,8 @@ user can read it, then use `AskUserQuestion` with a simple yes/no
 to confirm. The user may ask you to edit, reorder, or reject items
 before you save the file.
 
-IMPORTANT: `AskUserQuestion` cannot display long-form content — only
-short option labels. Never put the prompt text inside annotations or
-option descriptions. Always print the prompt as regular text output
-BEFORE calling `AskUserQuestion`.
+`AskUserQuestion` shows only short option labels, so print the full
+prompt as ordinary text before calling it.
 
 When drafting an inferred prompt:
 - Start with "Continue from previous session (DATE)." Use the exact
@@ -67,4 +65,4 @@ When drafting an inferred prompt:
 5. Print the contents so the user can review.
 6. Tell the user to run `! emacsclient -e '(agent-claude-handoff)'`
    to close this session and start a new one with the prompt auto-submitted.
-   Do NOT run this command yourself — only the user should trigger it.
+   Do not run it yourself: it closes this session, so only the user should trigger it.

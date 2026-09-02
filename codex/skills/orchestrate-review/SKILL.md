@@ -36,7 +36,7 @@ whole-stage steering only after a genuine incomplete return.
   rejects a nonempty Agent 1 transcript for a new, non-adopted stage; sequencing
   the stage runs remains the orchestrator's responsibility.
 
-## STAGE ATOMICITY — HARD RULE
+## Stage atomicity
 
 The entire stage is the smallest orchestration unit. After the plan review,
 send one initial implementation handoff to Agent 1 and wait for the complete
@@ -46,7 +46,6 @@ contract tells it that an unfinished background job, subagent, or reviewer is
 not a reason to return, and that it must wait inside the turn with bounded
 polling (under the 10-minute command limit, re-armed as needed). An ended turn
 is a stop; the orchestrator's only remedy is one targeted steer.
-Violating the letter of these rules violates the workflow:
 
 - Never report progress as `Task N`; report only the stage and current phase.
 - Never inspect or steer Agent 1's internal tasks, subagents, task transcripts,
@@ -71,14 +70,12 @@ Violating the letter of these rules violates the workflow:
   does not run acceptance tests, compare outputs, or add an
   implementation-review pass.
 
-## SUPERVISION AND STOP-LOSS — HARD RULE
+## Supervision and stop-loss
 
-Stage atomicity governs *prompting*, not *watching*. The orchestrator must
-supervise the stage from evidence Agent 1 publishes, and must stop a stage
-that is burning time without landing anything. A 10-hour run of five
-full-cycle retries with no landed result happened once because the
-orchestrator read "never inspect" as "never look"; that is a failure of the
-orchestrator, not compliance.
+Stage atomicity governs *prompting*, not *watching*. The orchestrator
+supervises the stage from the evidence Agent 1 publishes and stops a stage
+that is burning time without landing anything. "Never inspect internal
+tasks" does not mean "never look at progress."
 
 - The injected implementation contract names a progress file
   (`<run-file>.progress`). Agent 1 appends one line per completed step,
@@ -462,7 +459,7 @@ Stop and report a blocker when:
   credential, irreversible authority, spending, destructive action, or an
   underdetermined product choice
 
-## Session cleanup — HARD RULE
+## Session cleanup
 
 Stage sessions are disposable. Kill both fixed actor sessions as soon as the
 run reaches a terminal state (`complete-stage`, a frozen run, or an abandoned

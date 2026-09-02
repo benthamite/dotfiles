@@ -143,7 +143,7 @@ If the org manual contains a "Roadmap" section, a "Future plans" section, or a "
 
 If no roadmap content exists in the manual, omit this section.
 
-After moving the roadmap content to the README, **remove the Roadmap section from the org manual** and commit the removal together with the README (or as a separate commit). Do not leave any trace of the roadmap in the manual — no empty section, no "see README" pointer, no commented-out content. Do not add any note in the README about the roadmap also being present in the manual.
+After moving the roadmap content to the README, delete the Roadmap section from the org manual outright (heading and body, nothing left behind) and commit the removal together with the README (or as a separate commit). The README is then the roadmap's only home; do not describe it as also living in the manual.
 
 #### 8. Contributing and license (if applicable)
 

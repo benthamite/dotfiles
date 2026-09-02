@@ -31,6 +31,21 @@ cat >/dev/null 2>&1 || true
 verbose="${SYNC_REASONING_TASKS_VERBOSE:-${SYNC_AGENT_C_VERBOSE:-0}}"
 vsay() { [ "$verbose" = "1" ] && echo "[sync-reasoning-tasks] $*"; return 0; }
 say()  { echo "[sync-reasoning-tasks] $*"; }
+
+# Time budget. Claude Code kills this hook at its registered timeout (30 s in
+# ~/.claude/settings.json), so every network step below is bounded so that the
+# worst case (task-state banner + fetch + merge) stays inside that budget and
+# the kill can never land in the middle of `git merge`.
+bounded() {
+  local secs="$1"; shift
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "$secs" "$@"
+  elif command -v gtimeout >/dev/null 2>&1; then
+    gtimeout "$secs" "$@"
+  else
+    "$@"
+  fi
+}
 overlay_dir="${SYNC_REASONING_TASKS_OVERLAY_DIR:-${SYNC_AGENT_C_OVERLAY_DIR:-$HOME/My Drive/dotfiles/claude/templates/reasoning-tasks}}"
 parent_agents="${SYNC_REASONING_TASKS_PARENT_AGENTS:-${SYNC_AGENT_C_PARENT_AGENTS:-$HOME/Trajectory/AGENTS.md}}"
 # Private (project-scoped, NOT user-level) skills to inject into reasoning-tasks worktrees.
@@ -217,18 +232,23 @@ for entry in pre:
         raise SystemExit(0)  # already registered
 pre.append({"matcher": "Bash", "hooks": [{"type": "command", "command": cmd}]})
 path.parent.mkdir(exist_ok=True)
-path.write_text(json.dumps(data, indent=2) + "\n")
+# Atomic replace: a hook-timeout kill mid-write must never leave a truncated
+# settings file that every later session then fails to parse.
+tmp = path.with_name(path.name + ".tmp")
+tmp.write_text(json.dumps(data, indent=2) + "\n")
+os.replace(tmp, path)
 PYEOF
 fi
 
 # Task-state banner: a deterministic map of which branch / run / rubric revision is
 # live for this worktree's task, with divergence warnings (the 2026-07-03 wrong-
 # lineage incident: a QA audit ran against a stale PR branch while the live work
-# sat on ryan/eval-106 and in thread comments). Best-effort, hard 40s self-timeout
-# inside the script, silent for non-task worktrees (batch dirs, studio) where no
-# branch matches the directory name.
+# sat on ryan/eval-106 and in thread comments). Best-effort: the script has a 12 s
+# self-timeout that prints a "run manually" note, and the outer bound here is the
+# backstop, so the banner can never eat the fetch+merge budget below. Silent for
+# non-task worktrees (batch dirs, studio) where no branch matches the directory name.
 if [ -x "$HOME/bin/cr-task-state" ]; then
-  ts_out="$("$HOME/bin/cr-task-state" --hook 2>/dev/null || true)"
+  ts_out="$(bounded 15 "$HOME/bin/cr-task-state" --hook 2>/dev/null || true)"
   case "$ts_out" in
     ""|*"no remote branches touch"*) vsay "no task-state banner (not a single-task worktree)." ;;
     *) say "task-state map:
@@ -277,17 +297,13 @@ if [ -n "$(git status --porcelain --untracked-files=no 2>/dev/null)" ]; then
   exit 0
 fi
 
-# Fetch origin/main, time-bounded (the hook's own timeout is the outer bound).
-# Bulk callers fetch once before walking every worktree and set this flag to
-# avoid dozens of redundant network calls.
+# Fetch origin/main, time-bounded so the merge below can never start close to
+# the hook's 30 s kill. Bulk callers fetch once before walking every worktree
+# and set this flag to avoid dozens of redundant network calls.
 if [ "${SYNC_REASONING_TASKS_SKIP_FETCH:-${SYNC_AGENT_C_SKIP_FETCH:-0}}" = "1" ]; then
   vsay "fetch skipped by bulk caller; using local origin/main."
-elif command -v timeout >/dev/null 2>&1; then
-  timeout 20 git fetch --quiet origin main 2>/dev/null || true
-elif command -v gtimeout >/dev/null 2>&1; then
-  gtimeout 20 git fetch --quiet origin main 2>/dev/null || true
 else
-  git fetch --quiet origin main 2>/dev/null || true
+  bounded 10 git fetch --quiet origin main 2>/dev/null || true
 fi
 
 # Already current?
@@ -307,8 +323,27 @@ if ! git merge-tree --write-tree HEAD origin/main >/dev/null 2>&1; then
 fi
 
 # Clean merge available — incorporate all upstream changes. Never push.
+# If the hook is killed while the merge is in flight, undo it: a leftover
+# MERGE_HEAD would make every later session skip the sync as "dirty" until
+# someone cleaned it up by hand.
 before="$(git rev-parse HEAD 2>/dev/null || true)"
-if git merge --no-edit origin/main >/dev/null 2>&1; then
+# The merge runs as a background job and the script waits on it: bash only
+# delivers a trapped signal once the foreground command returns, so a merge run
+# in the foreground would make the trap wait for git instead of stopping it.
+abort_merge_on_signal() {
+  kill "$merge_pid" 2>/dev/null
+  wait "$merge_pid" 2>/dev/null
+  git merge --abort >/dev/null 2>&1 || git reset -q --merge >/dev/null 2>&1
+  say "interrupted during merge of origin/main — merge aborted, tree restored."
+  exit 0
+}
+git merge --no-edit origin/main >/dev/null 2>&1 &
+merge_pid=$!
+trap abort_merge_on_signal TERM INT HUP
+wait "$merge_pid"
+merge_status=$?
+trap - TERM INT HUP
+if [ "$merge_status" -eq 0 ]; then
   changed="$(git diff --name-only "$before" HEAD 2>/dev/null)"
   files="$(printf '%s\n' "$changed" | grep -c . || true)"
   skills="$(printf '%s\n' "$changed" | grep -c '^\.claude/skills/' || true)"

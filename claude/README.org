@@ -297,6 +297,16 @@ scans both hook trees for the invalid shape. The live registration gives
 =load-elisp-after-edit.sh= a 150 s timeout, matching Codex, because the script
 waits up to 120 s for the Elpaca rebuild before reporting.
 
+The SessionStart sync hook, =sync-reasoning-tasks-worktree.sh=, runs under a
+30 s registration timeout and budgets its network steps to stay inside it: the
+task-state banner is capped at 15 s (the script's own alarm fires at 12 s), the
+fetch at 10 s, and a TERM during the merge aborts the merge so no worktree is
+left with a stale =MERGE_HEAD= that later sessions would read as dirty. Its
+local-settings registration writes atomically.
+=tests/test_sync_reasoning_tasks_hook.py= executes the real hook against
+scratch repositories for the no-op, register-and-merge, and interrupted-merge
+paths.
+
 Sensitive-read guards permit the security audit's shell-export classifier only
 for its exact absolute helper and target paths. The classifier reports names,
 line numbers, scopes, and classifications without printing values.

@@ -601,7 +601,7 @@
       "claude": "claude/hooks/sync-reasoning-tasks-worktree.sh",
       "codex": null,
       "status": "unsupported-or-replaced",
-      "note": "Claude-only SessionStart support for reasoning-tasks worktrees. Key-link repair precedes eligibility guards; eligible worktrees sync upstream without pushing, reapply the local overlay and context, inject private project skills, and install freshness protection. The bulk wrapper fetches once. Codex uses creation-time Emacs setup or explicit shared sync because it has no SessionStart counterpart. Full behavior lives in claude/hooks/README.org."
+      "note": "Claude-only SessionStart support for reasoning-tasks worktrees, budgeted for its 30 s registration timeout (banner 15 s, fetch 10 s, merge aborted on TERM, atomic settings write; tests/test_sync_reasoning_tasks_hook.py runs the real hook). Key-link repair precedes eligibility guards; eligible worktrees sync upstream without pushing, reapply the local overlay, inject private project skills, and install freshness protection. The bulk wrapper fetches once. Codex has no SessionStart counterpart and uses creation-time Emacs setup or explicit shared sync. Full behavior: claude/hooks/README.org."
     },
     {
       "name": "sync-agent-c-worktree.sh",

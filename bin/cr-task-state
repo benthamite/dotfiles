@@ -223,7 +223,11 @@ def main() -> int:
     args = ap.parse_args()
 
     if args.hook:
-        # A session-start banner must never hang the hook: hard 40s ceiling.
+        # A session-start banner must never hang the hook: hard 12 s ceiling.
+        # The SessionStart hook that calls this is itself killed at 30 s and
+        # still has to fetch and merge afterwards, so the banner gets a small
+        # fixed share of that budget (the hook also wraps the call in a 15 s
+        # outer timeout as a backstop).
         import signal
 
         def _bail(signum, frame):
@@ -231,7 +235,7 @@ def main() -> int:
             raise SystemExit(0)
 
         signal.signal(signal.SIGALRM, _bail)
-        signal.alarm(40)
+        signal.alarm(12)
 
     root = git(["rev-parse", "--show-toplevel"]).strip()
     if not root:

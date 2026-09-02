@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.machinery
 import importlib.util
+import json
 import sys
 import tempfile
 import tomllib
@@ -195,6 +196,53 @@ class SkillPruneTests(unittest.TestCase):
             self.module.update_codex_config(set(), [])
 
         self.assertEqual(malformed, config.read_text(encoding="utf-8"))
+
+    def test_update_claude_settings_writes_where_claude_reads_overrides(self):
+        """User skills go to <config>/settings.json, project-local skills to the
+        project's .claude/settings.local.json, and entries left in the user-level
+        settings.local.json (which Claude Code never reads) are retired."""
+        workspace = tempfile.TemporaryDirectory()
+        self.addCleanup(workspace.cleanup)
+        root = Path(workspace.name)
+        # The active config dir links its settings into a shared tree, as the
+        # multi-account layout does; writes must land in the shared file and
+        # leave the links in place.
+        shared = root / "shared"
+        shared.mkdir()
+        (shared / "settings.json").write_text(
+            '{"model": "opus", "skillOverrides": {"auto-mode-setup": "off", "old-user": "off"}}\n'
+        )
+        (shared / "settings.local.json").write_text(
+            '{"permissions": {"allow": ["Bash(ls)"]}, "skillOverrides": {"proj-off": "off", "user-off": "off"}}\n'
+        )
+        config_dir = root / "config"
+        config_dir.mkdir()
+        (config_dir / "settings.json").symlink_to(shared / "settings.json")
+        (config_dir / "settings.local.json").symlink_to(shared / "settings.local.json")
+        project = root / "project"
+        proj_off = project / ".claude/skills/proj-off/SKILL.md"
+        proj_on = project / ".claude/skills/proj-on/SKILL.md"
+        skills = [
+            self.module.Skill("user-off", "claude/skills/user-off/SKILL.md", "codex/skills/user-off/SKILL.md", "paired"),
+            self.module.Skill("old-user", "claude/skills/old-user/SKILL.md", "codex/skills/old-user/SKILL.md", "paired"),
+            self.module.Skill("proj-off", proj_off.as_posix(), proj_off.as_posix(), "paired-project-local", "project-local"),
+            self.module.Skill("proj-on", proj_on.as_posix(), proj_on.as_posix(), "paired-project-local", "project-local"),
+        ]
+
+        original_resolve = self.module.resolve_home
+        self.addCleanup(setattr, self.module, "resolve_home", original_resolve)
+        self.module.resolve_home = lambda tool: config_dir
+        self.module.update_claude_settings({"user-off", "proj-off"}, skills)
+
+        self.assertTrue((config_dir / "settings.json").is_symlink())
+        self.assertTrue((config_dir / "settings.local.json").is_symlink())
+        user = json.loads((shared / "settings.json").read_text())
+        self.assertEqual("opus", user["model"])
+        self.assertEqual({"auto-mode-setup": "off", "user-off": "off"}, user["skillOverrides"])
+        local = json.loads((project / ".claude/settings.local.json").read_text())
+        self.assertEqual({"skillOverrides": {"proj-off": "off"}}, local)
+        legacy = json.loads((shared / "settings.local.json").read_text())
+        self.assertEqual({"permissions": {"allow": ["Bash(ls)"]}}, legacy)
 
 
 if __name__ == "__main__":

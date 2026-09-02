@@ -2780,24 +2780,69 @@ def disabled_skill_names() -> set[str]:
     return set(disabled_skill_records())
 
 
+def native_disabled_skill_names() -> set[str]:
+    """Skills switched off in Claude settings that skill-prune does not manage.
+
+    Recorded under "native_disabled" in skills-disabled.json (for example a
+    bundled Claude Code skill). They have no tracked directory and no Codex
+    counterpart, so they are exempt from the pairing checks but still count as
+    deliberate, recorded overrides.
+    """
+    if not DISABLED_SKILLS_PATH.exists():
+        return set()
+    try:
+        data = json.loads(DISABLED_SKILLS_PATH.read_text())
+    except json.JSONDecodeError:
+        return set()
+    return set(data.get("native_disabled") or {})
+
+
+def claude_skill_override_files() -> list[Path]:
+    """The two files Claude Code reads skillOverrides from for this repository:
+    the user scope and this project's local scope. There is no user-level
+    settings.local.json; an override there is never honored."""
+    return [
+        Path.home() / ".claude" / "settings.json",
+        ROOT / ".claude" / "settings.local.json",
+    ]
+
+
 def check_native_disabled_skills(problems: list[str]) -> None:
     disabled_records = disabled_skill_records()
     disabled = set(disabled_records)
+    recorded = disabled | native_disabled_skill_names()
 
-    claude_settings = Path.home() / ".claude" / "settings.local.json"
-    try:
-        claude_data = json.loads(claude_settings.read_text())
-    except (OSError, json.JSONDecodeError) as exc:
-        add_problem(problems, f"Cannot read live Claude settings.local.json for disabled skills: {exc}")
-        claude_data = {}
-    overrides = claude_data.get("skillOverrides") or {}
+    overrides: dict[str, str] = {}
+    for claude_settings in claude_skill_override_files():
+        if not claude_settings.exists():
+            continue
+        try:
+            claude_data = json.loads(claude_settings.read_text())
+        except (OSError, json.JSONDecodeError) as exc:
+            add_problem(problems, f"Cannot read Claude settings for disabled skills ({claude_settings}): {exc}")
+            continue
+        for name, value in (claude_data.get("skillOverrides") or {}).items():
+            if value == "off":
+                overrides[name] = "off"
+    legacy = Path.home() / ".claude" / "settings.local.json"
+    if legacy.exists():
+        try:
+            legacy_overrides = json.loads(legacy.read_text()).get("skillOverrides") or {}
+        except (OSError, json.JSONDecodeError, AttributeError):
+            legacy_overrides = {}
+        for name in sorted(legacy_overrides):
+            if name in disabled:
+                add_problem(
+                    problems,
+                    f"Disabled skill override sits in user-level settings.local.json, which Claude never reads: {name}",
+                )
     for name in sorted(disabled):
         if overrides.get(name) != "off":
             add_problem(problems, f"Disabled skill missing Claude skillOverrides off entry: {name}")
     # Reverse direction: an override with no backing record is stale state that
     # the forward check alone can never catch.
     for name in sorted(overrides):
-        if overrides.get(name) == "off" and name not in disabled:
+        if overrides.get(name) == "off" and name not in recorded:
             add_problem(
                 problems,
                 f"Claude skillOverrides off entry has no skills-disabled.json record: {name}",

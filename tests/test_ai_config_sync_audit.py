@@ -1141,13 +1141,15 @@ if os.path.lexists(mode_link) and (
     def test_stale_skill_override_without_record_is_reported(self):
         home = Path(tempfile.mkdtemp())
         self.addCleanup(lambda: __import__("shutil").rmtree(home, ignore_errors=True))
-        settings = home / ".claude" / "settings.local.json"
+        settings = home / ".claude" / "settings.json"
         settings.parent.mkdir(parents=True)
         settings.write_text(json.dumps({"skillOverrides": {"ghost-skill": "off"}}))
 
         problems: list[str] = []
         with (
             mock.patch.object(self.module, "disabled_skill_records", return_value={}),
+            mock.patch.object(self.module, "native_disabled_skill_names", return_value=set()),
+            mock.patch.object(self.module, "ROOT", home / "repo"),
             mock.patch("pathlib.Path.home", return_value=home),
         ):
             self.module.check_native_disabled_skills(problems)
@@ -1156,6 +1158,39 @@ if os.path.lexists(mode_link) and (
             "Claude skillOverrides off entry has no skills-disabled.json record: ghost-skill",
             problems,
         )
+
+    def test_disabled_skill_overrides_are_read_from_files_claude_honors(self):
+        home = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: __import__("shutil").rmtree(home, ignore_errors=True))
+        repo = home / "repo"
+        user_settings = home / ".claude" / "settings.json"
+        user_settings.parent.mkdir(parents=True)
+        user_settings.write_text(json.dumps({"skillOverrides": {"user-skill": "off", "bundled-skill": "off"}}))
+        project_settings = repo / ".claude" / "settings.local.json"
+        project_settings.parent.mkdir(parents=True)
+        project_settings.write_text(json.dumps({"skillOverrides": {"project-skill": "off"}}))
+        # The user-level settings.local.json is never read by Claude Code, so an
+        # override that lives only there must be reported, not accepted.
+        (home / ".claude" / "settings.local.json").write_text(
+            json.dumps({"skillOverrides": {"dead-skill": "off"}})
+        )
+        records = {"user-skill": {}, "project-skill": {}, "dead-skill": {}}
+
+        problems: list[str] = []
+        with (
+            mock.patch.object(self.module, "disabled_skill_records", return_value=records),
+            mock.patch.object(self.module, "native_disabled_skill_names", return_value={"bundled-skill"}),
+            mock.patch.object(self.module, "ROOT", repo),
+            mock.patch("pathlib.Path.home", return_value=home),
+        ):
+            self.module.check_native_disabled_skills(problems)
+
+        self.assertIn("Disabled skill missing Claude skillOverrides off entry: dead-skill", problems)
+        self.assertIn(
+            "Disabled skill override sits in user-level settings.local.json, which Claude never reads: dead-skill",
+            problems,
+        )
+        self.assertFalse([p for p in problems if "user-skill" in p or "project-skill" in p or "bundled-skill" in p], problems)
 
     def test_parent_drive_absent_workspace_is_skipped(self):
         workspace = self.make_parent_drive_workspace()

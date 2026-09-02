@@ -476,22 +476,89 @@ def update_codex_config(disabled_names: set[str], skills: list[Skill]) -> None:
     write_text_atomic(config, text)
 
 
-def update_claude_settings(disabled_names: set[str], skills: list[Skill]) -> None:
-    settings = resolve_home("claude") / "settings.local.json"
-    if settings.exists():
-        data = json.loads(settings.read_text())
-    else:
-        data = {}
-    overrides = data.setdefault("skillOverrides", {})
-    managed_names = set(paired_skills_by_name(skills))
-    for name in sorted(managed_names - disabled_names):
+def claude_settings_target(skill: Skill) -> Path:
+    """Return the settings file Claude Code actually consults for this skill.
+
+    Claude Code has no user-level settings.local.json: the user scope is
+    <config>/settings.json and the local scope is <project>/.claude/settings.local.json.
+    An override written anywhere else is silently ignored, which is how four
+    project-local skills stayed loaded for months after skills-disabled.json
+    recorded them as off.
+    """
+    if skill.source == "project-local" and skill.claude:
+        return Path(skill.claude).parents[2] / "settings.local.json"
+    return resolve_home("claude") / "settings.json"
+
+
+def _read_json_object(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    data = json.loads(path.read_text() or "{}")
+    if not isinstance(data, dict):
+        raise ValueError(f"{path} does not contain a JSON object")
+    return data
+
+
+def _write_json_object(path: Path, data: dict) -> None:
+    text = json.dumps(data, indent=2) + "\n"
+    if path.exists():
+        # <config>/settings.json is normally a symlink into the shared ~/.claude
+        # tree; write through to the real file so os.replace() updates the target
+        # instead of swapping the link for a detached copy.
+        write_text_atomic(path.resolve(), text)
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.touch(mode=0o600)
+    write_text_atomic(path, text)
+
+
+def _apply_overrides(path: Path, managed_here: set[str], disabled_here: set[str]) -> None:
+    data = _read_json_object(path)
+    overrides = data.get("skillOverrides")
+    if not isinstance(overrides, dict):
+        overrides = {}
+    for name in sorted(managed_here - disabled_here):
         if overrides.get(name) == "off":
             overrides.pop(name)
-    for name in sorted(disabled_names):
+    for name in sorted(disabled_here):
         overrides[name] = "off"
-    if not overrides:
+    if overrides:
+        data["skillOverrides"] = overrides
+    else:
         data.pop("skillOverrides", None)
-    settings.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+    if not data and not path.exists():
+        return
+    _write_json_object(path, data)
+
+
+def update_claude_settings(disabled_names: set[str], skills: list[Skill]) -> None:
+    managed = paired_skills_by_name(skills)
+    targets: dict[Path, tuple[set[str], set[str]]] = {}
+    for name, entries in managed.items():
+        for skill in entries:
+            managed_here, disabled_here = targets.setdefault(
+                claude_settings_target(skill), (set(), set())
+            )
+            managed_here.add(name)
+            if name in disabled_names:
+                disabled_here.add(name)
+    for path, (managed_here, disabled_here) in sorted(targets.items()):
+        _apply_overrides(path, managed_here, disabled_here)
+
+    # Retire managed entries from the user-level settings.local.json that earlier
+    # versions wrote: Claude Code never reads that file, so an "off" there is dead.
+    legacy = resolve_home("claude") / "settings.local.json"
+    if legacy.exists():
+        data = _read_json_object(legacy)
+        overrides = data.get("skillOverrides")
+        if isinstance(overrides, dict) and set(overrides) & set(managed):
+            for name in managed:
+                overrides.pop(name, None)
+            if overrides:
+                data["skillOverrides"] = overrides
+            else:
+                data.pop("skillOverrides", None)
+            _write_json_object(legacy, data)
 
 
 def install(disabled_data: dict) -> None:

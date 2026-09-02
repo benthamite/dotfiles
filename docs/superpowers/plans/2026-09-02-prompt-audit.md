@@ -4,6 +4,8 @@
 
 **Deliverable under review.** The audit report below (assumptions, findings with `file:line`, pattern, reason, confidence) and the proposed patch committed alongside it at `docs/superpowers/plans/2026-09-02-prompt-audit.patch` (read it with `git show <commit>:docs/superpowers/plans/2026-09-02-prompt-audit.patch`). Hunk ids in the findings tables (G1, S12, P5a, ...) map to the edits that produced the patch; each hunk is independently droppable.
 
+**Status.** Reviewed by Codex, adjudicated, and applied on 2026-09-02; see the adjudication record at the end.
+
 **Implementation steps.**
 
 1. `git apply docs/superpowers/plans/2026-09-02-prompt-audit.patch` from the repo root (already verified with `git apply --check` against the current tree).
@@ -20,10 +22,10 @@
 
 ## Assumptions
 
-- **Scope:** whole repository prompt surface, Claude side as primary: `claude/CLAUDE.md`, `claude/context/*.md`, `claude/skills/*/SKILL.md` (42), `claude/programmatic-skills` (3), `.claude/skills` (9) + `.claude/programmatic-skills` (1), `emacs/.claude/skills` (4), `macos/.claude/skills` (4, incl. untracked `reconcile-contacts`), `claude/templates/reasoning-tasks/*`, `codex/rules/default.rules`, and the model-facing text emitted by `claude/hooks/*.sh` plus `bin/ai-config-sync`. `claude/context/voice-samples.md` is data, not instructions. Vendor-bundled `codex/skills/.system/*` (OpenAI docs) is out of scope.
+- **Scope:** whole repository prompt surface, Claude side as primary: `claude/CLAUDE.md`, `claude/context/*.md`, `claude/skills/*/SKILL.md` (42), `claude/programmatic-skills` (3), `.claude/skills` (9) + `.claude/programmatic-skills` (1), `emacs/.claude/skills` (4), `macos/.claude/skills` (4, incl. untracked `reconcile-contacts`, read from the working tree), `claude/templates/reasoning-tasks/*`, `codex/rules/default.rules`, and the model-facing text emitted by `claude/hooks/*.sh` plus `bin/ai-config-sync`. `claude/context/voice-samples.md` is data, not instructions. Vendor-bundled `codex/skills/.system/*` (OpenAI docs) is out of scope.
 - **Target model:** Claude Fable 5.1. `~/.claude/settings.json` sets `model: fable[1m]`, `effortLevel: high`; no repo file pins a different model except three skill frontmatter pins (findings below).
 - **Non-Anthropic provider marker:** the `codex/` tree is a paired copy of the `claude/` tree for OpenAI Codex (GPT-5.6 per `codex/config.toml`). The Fable 5.1 reasoning does not transfer to Codex, but `ai-config-sync.json` requires every Claude edit to be mirrored in the same session, so the patch applies each hunk to the Codex counterpart wherever the text is identical. Four hunks have no Codex counterpart text (Claude-only frontmatter or tools) and are Claude-only.
-- **Provenance:** all files date from 2026-01-30 onward (Opus 4.6 era through Fable 5). No retired model names, no prefill, no scratchpad/"think step by step" scaffolds, no anti-formatting or anti-narration rules, no `budget_tokens` or sampling fossils anywhere. The surface is already well-tuned; what remains is incident archaeology, numeric caps, a few shouted boosters, stale environment facts, and three model pins.
+- **Provenance:** all files date from 2026-01-30 onward (Opus 4.6 era through Fable 5). No retired model names, no prefill, no scratchpad/"think step by step" scaffolds, no anti-formatting rules, no `budget_tokens` or sampling fossils; the one possible anti-narration rule (`CLAUDE.md:32`) is flagged in the Low list. The surface is already well-tuned; what remains is incident archaeology, numeric caps, a few shouted boosters, stale environment facts, and three model pins.
 
 ## Summary
 
@@ -134,3 +136,37 @@ or take hunks selectively with `git apply --include=<path>` / `git add -p`. Afte
 - Verified directly: gdoc version (0.21.0 vs pinned 0.7.6); `claude/mcp-servers/` absent; `twitter-digest` only under `archive/`; `tests/test_op_routing.py` and `shell/shims/op` exist; the three `model:` pins; every Codex counterpart body byte-identical before edits; patch applies cleanly.
 - Not verified: behavioral A/B of any rewrite. No eval suite covers these skills. The highest-stakes rewrites are G5 (scope of the fix-root-cause rule) and S12/S16 (digest and Slack length): if the digest or Slack drafts come back longer than you want after applying, re-add a qualitative bound ("a few bullets", "a short reply"), not the number.
 - Re-run this audit at the next model release.
+
+## Cross-model review adjudication (2026-09-02)
+
+Reviewer: Codex (`*codex:~/My Drive/dotfiles/:plan-review-codex*`, account `epoch2`), one pass over commit 887fac1b3 (blob 15a10ab5). Seventeen findings; each was verified against the repository before acceptance.
+
+**Accepted, patch changed.**
+
+- G5 (root-cause rule narrowed): dropped. The reviewer is right that narrowing "every unintended behavior you encounter" to "when you fix" is a scope change to a deliberate policy, not prompt cleanup.
+- X4 (`op_reader_for()`): the function is local to `claude/bin/ahrefs-api-guard`, not a reusable API; `tests/test_op_routing.py:41` asks for "the same property or a wrapper". Rewritten to say exactly that and cite the function as the pattern.
+- M2a (Emacs probe timings): the ladder in step 2.5 is 5/30/120 s, so "3-10 s" and "90-120 s" would contradict the executable procedure. Rewritten without numbers.
+- S12 (digest bound): the deterministic listing rules have no stopping condition, so "the live open priorities" was unbounded. Rewritten to "the few highest-priority live open tasks", a qualitative bound rather than the old ~6/120-word cap.
+- X1b (gdoc caveats): `gdoc --version` does not verify behavior. Rewritten to re-check each listed caveat against the installed tool.
+- S6 (email-reply-by-mistake recovery): restored. The rule carries unique disclosure-and-correction behavior that step 9 does not cover.
+- G2 (repositories under `~/repos/`): the universal claim is false for Elpaca checkouts under the Emacs profile paths. The migration sentence is now simply dropped; line 57 already states where active repositories live.
+- S8 (roadmap removal): the dropped clause guarded against a false README statement. Restored in positive form.
+- F14 (`google-services.md` contradiction): line 29 documents `gmail.py --account personal` and `gmail.py` implements it; line 130's "Gmail isn't wired" was wrong. Fixed (X6).
+- F17 (dated wording left in touched files): fixed at `google-services.md` lines 96, 126, 218 (X5a-d) and the one-run 1,784-versus-51 statistic in `chrome-permission-audit` (S10b).
+- F5 (hunk-level adjudication not operationally valid) and F12 (verification sequencing): accepted as process findings. Adjudication happened before application; the patch was regenerated with only accepted hunks and applied once, and verification compares the applied diff to the adjudicated patch before committing.
+- F6 (README gates): accepted. Both `claude/README.org` and `codex/README.org` are updated in the same commit as the instruction changes; the five-commit plan is replaced by one commit for the audit and one for this record.
+- F16 (coverage wording): accepted; report wording corrected below.
+
+**Declined, moved to flag.**
+
+- P1, P2, S20 (`model: opus` / `model: sonnet` pins): commit 22aec0877 shows the aliases were chosen deliberately as dynamic aliases (they track the newest Opus/Sonnet, so the "silently degrades after the next release" reason does not hold), and whether Fable should run the GitGuardian and publication gates is an execution-policy decision for the user. Left in place; recorded as flags with no reason on file.
+
+**Rejected.**
+
+- F11 (`config-audit:83` "commit all changes immediately" contradicted): the line lists examples of user rules that are *not* harness defaults, precisely because CLAUDE.md requires immediate commits while the system prompt does not. The line is consistent with CLAUDE.md; the reviewer inverted its sense.
+- F13 (Fable reasoning applied to Codex mirrors): `ai-config-sync.json` defines pair equivalence as identical bodies after frontmatter normalization and `bin/ai-config-sync audit` enforces it, so divergent bodies would fail the gate. The behavior-changing hunk (G5) was dropped for both sides; the remaining mirrored edits are wording and dated-fact removals that apply to any model.
+- F7 as stated ("weaker" unverified): partially rejected. Fable 5.1 sits above the Opus tier in Anthropic's published lineup, so "weaker" is accurate; the pins were nonetheless declined for the policy reason above.
+
+**Report corrections.** `macos/.claude/skills/reconcile-contacts/SKILL.md` is untracked and was read from the working tree, not from the committed blob. The "no anti-narration rules anywhere" claim is qualified: `CLAUDE.md:32` is flagged as a possible update-suppressor in the Low list.
+
+**Implementation result.** Adjudicated patch (44 files, +129/-215) applied with `git apply`; `bin/ai-config-sync audit` passed; `git diff --stat` on the patch's files matched the patch before commit. No behavioral eval exists for these skills; the rewrites were verified by reading each changed sentence in place.

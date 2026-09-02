@@ -1,6 +1,6 @@
 diff -ruN a/.claude/skills/config-audit/SKILL.md b/.claude/skills/config-audit/SKILL.md
 --- a/.claude/skills/config-audit/SKILL.md	2026-08-06 10:28:14
-+++ b/.claude/skills/config-audit/SKILL.md	2026-09-02 10:55:05
++++ b/.claude/skills/config-audit/SKILL.md	2026-09-02 11:14:38
 @@ -80,7 +80,7 @@
  
  **Examples of likely defaults**: don't mix unrelated changes in a commit, use descriptive variable names, don't introduce security vulnerabilities.
@@ -19,16 +19,8 @@ diff -ruN a/.claude/skills/config-audit/SKILL.md b/.claude/skills/config-audit/S
  - **Respect the confirmation boundary.** `--accept` or an explicit apply request authorizes high-confidence cleanup; otherwise, present the full analysis and wait for confirmation before changing files.
 diff -ruN a/.claude/skills/gitguardian-triage/SKILL.md b/.claude/skills/gitguardian-triage/SKILL.md
 --- a/.claude/skills/gitguardian-triage/SKILL.md	2026-08-31 22:37:41
-+++ b/.claude/skills/gitguardian-triage/SKILL.md	2026-09-02 10:55:05
-@@ -2,7 +2,6 @@
- name: gitguardian-triage
- description: Triage and remediate GitGuardian secret incidents. Use for gitguardian/GG triage, secret audit, rotating leaked secrets, processing incidents, or clearing the GitGuardian dashboard.
- user-invocable: true
--model: opus
- ---
- 
- # GitGuardian triage and remediation
-@@ -217,7 +216,6 @@
++++ b/.claude/skills/gitguardian-triage/SKILL.md	2026-09-02 11:14:38
+@@ -217,7 +217,6 @@
  ' _ {}
  rm -f "$LEAK_FILE"
  ```
@@ -38,7 +30,7 @@ diff -ruN a/.claude/skills/gitguardian-triage/SKILL.md b/.claude/skills/gitguard
  ```bash
 diff -ruN a/.claude/skills/install-mcp-server/SKILL.md b/.claude/skills/install-mcp-server/SKILL.md
 --- a/.claude/skills/install-mcp-server/SKILL.md	2026-08-06 10:28:14
-+++ b/.claude/skills/install-mcp-server/SKILL.md	2026-09-02 10:55:05
++++ b/.claude/skills/install-mcp-server/SKILL.md	2026-09-02 11:14:38
 @@ -8,8 +8,6 @@
  
  Install a new MCP server into Claude Code, avoiding common pitfalls.
@@ -114,7 +106,7 @@ diff -ruN a/.claude/skills/install-mcp-server/SKILL.md b/.claude/skills/install-
  
 diff -ruN a/.claude/skills/optimize-agent-instructions/SKILL.md b/.claude/skills/optimize-agent-instructions/SKILL.md
 --- a/.claude/skills/optimize-agent-instructions/SKILL.md	2026-08-06 10:28:14
-+++ b/.claude/skills/optimize-agent-instructions/SKILL.md	2026-09-02 10:55:05
++++ b/.claude/skills/optimize-agent-instructions/SKILL.md	2026-09-02 11:14:38
 @@ -15,7 +15,7 @@
  
  ## Background: why this matters
@@ -167,7 +159,7 @@ diff -ruN a/.claude/skills/optimize-agent-instructions/SKILL.md b/.claude/skills
  
 diff -ruN a/.codex/skills/config-audit/SKILL.md b/.codex/skills/config-audit/SKILL.md
 --- a/.codex/skills/config-audit/SKILL.md	2026-08-06 10:28:14
-+++ b/.codex/skills/config-audit/SKILL.md	2026-09-02 10:55:05
++++ b/.codex/skills/config-audit/SKILL.md	2026-09-02 11:14:38
 @@ -80,7 +80,7 @@
  
  **Examples of likely defaults**: don't mix unrelated changes in a commit, use descriptive variable names, don't introduce security vulnerabilities.
@@ -186,7 +178,7 @@ diff -ruN a/.codex/skills/config-audit/SKILL.md b/.codex/skills/config-audit/SKI
  - **Respect the confirmation boundary.** `--accept` or an explicit apply request authorizes high-confidence cleanup; otherwise, present the full analysis and wait for confirmation before changing files.
 diff -ruN a/.codex/skills/gitguardian-triage/SKILL.md b/.codex/skills/gitguardian-triage/SKILL.md
 --- a/.codex/skills/gitguardian-triage/SKILL.md	2026-08-31 22:37:41
-+++ b/.codex/skills/gitguardian-triage/SKILL.md	2026-09-02 10:55:05
++++ b/.codex/skills/gitguardian-triage/SKILL.md	2026-09-02 11:14:38
 @@ -215,7 +215,6 @@
  ' _ {}
  rm -f "$LEAK_FILE"
@@ -197,7 +189,7 @@ diff -ruN a/.codex/skills/gitguardian-triage/SKILL.md b/.codex/skills/gitguardia
  ```bash
 diff -ruN a/.codex/skills/install-mcp-server/SKILL.md b/.codex/skills/install-mcp-server/SKILL.md
 --- a/.codex/skills/install-mcp-server/SKILL.md	2026-08-06 10:28:14
-+++ b/.codex/skills/install-mcp-server/SKILL.md	2026-09-02 10:55:05
++++ b/.codex/skills/install-mcp-server/SKILL.md	2026-09-02 11:14:38
 @@ -7,8 +7,6 @@
  
  Install a new MCP server into Claude Code, avoiding common pitfalls.
@@ -273,7 +265,7 @@ diff -ruN a/.codex/skills/install-mcp-server/SKILL.md b/.codex/skills/install-mc
  
 diff -ruN a/.codex/skills/optimize-agent-instructions/SKILL.md b/.codex/skills/optimize-agent-instructions/SKILL.md
 --- a/.codex/skills/optimize-agent-instructions/SKILL.md	2026-08-06 10:28:14
-+++ b/.codex/skills/optimize-agent-instructions/SKILL.md	2026-09-02 10:55:05
++++ b/.codex/skills/optimize-agent-instructions/SKILL.md	2026-09-02 11:14:38
 @@ -15,7 +15,7 @@
  
  ## Background: why this matters
@@ -326,13 +318,10 @@ diff -ruN a/.codex/skills/optimize-agent-instructions/SKILL.md b/.codex/skills/o
  
 diff -ruN a/claude/CLAUDE.md b/claude/CLAUDE.md
 --- a/claude/CLAUDE.md	2026-08-19 17:48:55
-+++ b/claude/CLAUDE.md	2026-09-02 10:55:05
-@@ -3,17 +3,17 @@
- ## Operating rules
- 
++++ b/claude/CLAUDE.md	2026-09-02 11:14:38
+@@ -5,15 +5,15 @@
  - Never present guesses as facts; state uncertainty and push back when assumptions are weak or conflict with constraints.
--- Treat every unintended behavior you encounter, in any context, as a prompt to diagnose and fix the underlying issue. Correct the observed behavior as a consequence of fixing that issue, never as a direct fix target.
-+- When you fix unintended behavior, diagnose and fix the underlying issue; the observed behavior gets corrected as a consequence, never as the direct fix target.
+ - Treat every unintended behavior you encounter, in any context, as a prompt to diagnose and fix the underlying issue. Correct the observed behavior as a consequence of fixing that issue, never as a direct fix target.
  - Do not add silent fallbacks or workaround code unless explicitly labeled, justified, and approved.
 -- **Never escalate a tool call to me for approval.** I run in `auto` mode deliberately: a hook or guard may allow a call or deny it outright with a reason, but it must never ask. A guard that prompts is a broken guard — the MCP approval guard was deleted on 2026-07-31 for exactly this, after a backtest showed it escalating 42% of 7,552 historical MCP calls against 4 hard blocks. Do not reintroduce an ask-style gate on any tool.
 -- Verify fixes end-to-end before calling them done. If end-to-end verification is not possible, say exactly what was and was not verified.
@@ -354,13 +343,13 @@ diff -ruN a/claude/CLAUDE.md b/claude/CLAUDE.md
  - Dotfiles source of truth: `~/My Drive/dotfiles/`; many home-directory paths are symlinks into it.
  - Active personal repositories: `~/repos/`; active Epoch repositories: `~/repos/epoch/`.
 -- The canonical dotfiles working tree is the only repository under `~/My Drive/`. All other 108 repositories moved to `~/repos/` on 2026-08-03. Never create another repository there, and never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
-+- The canonical dotfiles working tree is the only repository under `~/My Drive/`; every other repository lives under `~/repos/`. Never create another repository there, and never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
++- The canonical dotfiles working tree is the only repository under `~/My Drive/`. Never create another repository there, and never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
  - All linked worktrees: `~/repos/.worktrees/<repo>/<name>`.
  
  ## Version control
 diff -ruN a/claude/context/google-services.md b/claude/context/google-services.md
 --- a/claude/context/google-services.md	2026-08-06 10:28:14
-+++ b/claude/context/google-services.md	2026-09-02 10:55:05
++++ b/claude/context/google-services.md	2026-09-02 11:14:38
 @@ -70,7 +70,7 @@
  matters, also check an export format that preserves it, such as Markdown or
  HTML.
@@ -370,19 +359,48 @@ diff -ruN a/claude/context/google-services.md b/claude/context/google-services.m
  
  For read-only Google Docs inspection, treat Drive API exports as the reliable
  source for document body state. `gdoc cat` and `gdoc info` can be convenient
-@@ -88,8 +88,9 @@
+@@ -88,12 +88,14 @@
  - Verify real content edits with Drive revisions plus per-revision export
    byte-compare.
  
 -This behavior was observed with installed gdoc v0.7.6 on 2026-06-11. Re-check
 -after `gdoc` upgrades before relying on exact subcommand limitations.
-+Verify these caveats against the installed `gdoc` (`gdoc --version`) before
-+relying on them for a content-change claim; the export-and-byte-compare method
-+above is version-independent and is the reliable path regardless.
++Re-check each caveat above against the installed `gdoc` before relying on it
++for a content-change claim (they were confirmed on an old release); the
++export-and-byte-compare method above is version-independent and is the
++reliable path regardless.
  
  ## Auth
  
-@@ -273,19 +274,13 @@
+-`gmail.py`, `sheets.py`, `bin/gmail-maildir-sync`, and the shared `claude/bin/_gworkspace_auth.py` helper support the migrated secret layout. For the human accounts, the OAuth client (id and secret) is shared and only the refresh token differs per account. These variables are no longer globally exported from `.zshenv-secrets`; the wrappers still accept explicit env vars for one-off overrides, but normally resolve values from the stores below:
++`gmail.py`, `sheets.py`, `bin/gmail-maildir-sync`, and the shared `claude/bin/_gworkspace_auth.py` helper resolve credentials as described below. For the human accounts, the OAuth client (id and secret) is shared and only the refresh token differs per account. These variables are not globally exported from `.zshenv-secrets`; the wrappers accept explicit env vars for one-off overrides, but normally resolve values from the stores below:
+ 
+ | Var | Account | Purpose |
+ |---|---|---|
+@@ -123,11 +125,11 @@
+ 
+ ### email-triage bot account
+ 
+-Use `gmail.py --account email-triage` for `email-triage@epoch.ai`. This replaces the previous `gmail-epoch-triage` MCP server path for local agent workflows.
++Use `gmail.py --account email-triage` for `email-triage@epoch.ai`.
+ 
+ ### personal account
+ 
+-No dedicated MCP server. Personal-account Docs/Drive go through `gdoc --account personal` (see "Tooling by service" above). Calendar through `gcalcli`. Gmail isn't wired.
++No dedicated MCP server. Personal-account Docs/Drive go through `gdoc --account personal` (see "Tooling by service" above). Calendar through `gcalcli`. Gmail through `gmail.py --account personal`.
+ 
+ ### Built-in (claude.ai integrations)
+ 
+@@ -215,7 +217,7 @@
+ 
+ ### email-triage bot account (email-triage@epoch.ai)
+ 
+-The built-in OAuth flow previously used by the MCP server was port-conflict-prone. Generate tokens manually using `InstalledAppFlow` on a different port and write to the credentials directory:
++The library's built-in OAuth flow is port-conflict-prone. Generate tokens manually using `InstalledAppFlow` on a different port and write to the credentials directory:
+ 
+ ```bash
+ python3 -c "
+@@ -273,19 +275,13 @@
  "unverified app" warning (Advanced → continue); that is normal for this client.
  
  The shared OAuth client lives in GCP project `claude-code-gmail-490520` (owned by
@@ -407,7 +425,7 @@ diff -ruN a/claude/context/google-services.md b/claude/context/google-services.m
  gdoc auth --account pablo.stafforini@trajectorylabs.net
 diff -ruN a/claude/context/mcp-servers.md b/claude/context/mcp-servers.md
 --- a/claude/context/mcp-servers.md	2026-08-11 23:20:20
-+++ b/claude/context/mcp-servers.md	2026-09-02 10:55:05
++++ b/claude/context/mcp-servers.md	2026-09-02 11:14:38
 @@ -16,7 +16,7 @@
  
  Do not use `~/.claude.json`'s `projects.<path>.mcpServers` block. Claude Code supports it, but it duplicates `<project>/.mcp.json` in a hidden location. Always put project-scoped MCPs in `<project>/.mcp.json`.
@@ -419,7 +437,7 @@ diff -ruN a/claude/context/mcp-servers.md b/claude/context/mcp-servers.md
  
 diff -ruN a/claude/context/secrets.md b/claude/context/secrets.md
 --- a/claude/context/secrets.md	2026-08-31 20:08:59
-+++ b/claude/context/secrets.md	2026-09-02 10:55:05
++++ b/claude/context/secrets.md	2026-09-02 11:14:38
 @@ -17,9 +17,7 @@
  
  **Why this happens** (1Password's [app-integration security model](https://www.1password.dev/cli/biometric-security/), confirmed against the desktop app's own logs on 2026-07-28): on macOS an authorization is identified by the **controlling terminal — the tty plus its start time** — and survives 10 minutes of inactivity, 12 hours maximum, extending to every sub-shell in that terminal. It is revoked outright whenever the app locks, which `AutoLockMonitor` does on screen lock or sleep. Agent tool calls run each command in a shell with **no controlling terminal at all** (`tty` returns "not a tty"), so every invocation presents a new session identity and re-authorizes. Those repeat prompts are pure waste: the app log shows each one driving a system-unlock challenge that returns `NoNewAccountsUnlocked`, because the vault was already open.
@@ -427,13 +445,13 @@ diff -ruN a/claude/context/secrets.md b/claude/context/secrets.md
 -An earlier version of this section claimed "sessions never carry over between commands, and there is no cache the agent can extend." **That was wrong**, and the error mattered: by declaring the window nonexistent it ruled out any mechanism, leaving batching discipline as the only available remedy. There is a renewable 10-minute window; agents simply never had a tty to anchor it to.
 -
 -- **Routing is automatic in zsh; scripts must still name a wrapper (2026-08-01).** `shell/shims/op` routes each invocation by target — `op://Automations/…` and `--vault Automations` to `op-automations`, everything else to `op-desktop` — and `.zshenv` defines an `op` function that reaches it regardless of PATH. The function matters because the Claude Code and Codex Bash tools source a snapshot ending in a frozen `export PATH=…` that places `/opt/homebrew/bin` ahead of `shell/shims`; PATH order alone loses there, function definitions survive. **Child processes inherit neither**, so a script that shells out must name `op-desktop`/`op-automations` itself. That gap is what broke on 2026-08-01: `ahrefs-api-guard` spawned the bare CLI for a read, and passing it `--op-ref op://Employee/…` produced a stray prompt and then a lookup failure, because the service-account context it inherited cannot read personal vaults. Fixed via `op_reader_for()`; `tests/test_op_routing.py` now fails on any new bare-`op` caller or absolute-path invocation. Note an ambient `OP_SERVICE_ACCOUNT_TOKEN` is deliberately *not* honoured for personal-vault requests — passing it through converts a routable request into an authorization failure.
-+- **Routing is automatic in zsh; scripts must still name a wrapper.** `shell/shims/op` routes each invocation by target — `op://Automations/…` and `--vault Automations` to `op-automations`, everything else to `op-desktop` — and `.zshenv` defines an `op` function that reaches it regardless of PATH. The function matters because the Claude Code and Codex Bash tools source a snapshot ending in a frozen `export PATH=…` that places `/opt/homebrew/bin` ahead of `shell/shims`; PATH order alone loses there, function definitions survive. **Child processes inherit neither**, so a script that shells out must name `op-desktop`/`op-automations` itself. A bare-CLI child process inherits the service-account context, which cannot read personal vaults, so a personal `--op-ref` from such a process produces a stray prompt and then a lookup failure. `tests/test_op_routing.py` fails on any bare-`op` caller or absolute-path invocation, so add new callers through `op_reader_for()`. Note an ambient `OP_SERVICE_ACCOUNT_TOKEN` is deliberately *not* honoured for personal-vault requests — passing it through converts a routable request into an authorization failure.
++- **Routing is automatic in zsh; scripts must still name a wrapper.** `shell/shims/op` routes each invocation by target — `op://Automations/…` and `--vault Automations` to `op-automations`, everything else to `op-desktop` — and `.zshenv` defines an `op` function that reaches it regardless of PATH. The function matters because the Claude Code and Codex Bash tools source a snapshot ending in a frozen `export PATH=…` that places `/opt/homebrew/bin` ahead of `shell/shims`; PATH order alone loses there, function definitions survive. **Child processes inherit neither**, so a script that shells out must name `op-desktop`/`op-automations` itself. A bare-CLI child process inherits the service-account context, which cannot read personal vaults, so a personal `--op-ref` from such a process produces a stray prompt and then a lookup failure. `tests/test_op_routing.py` fails on any bare-`op` caller or absolute-path invocation, so give a new caller the same routing property or a wrapper (see `op_reader_for()` in `claude/bin/ahrefs-api-guard` for the pattern). Note an ambient `OP_SERVICE_ACCOUNT_TOKEN` is deliberately *not* honoured for personal-vault requests — passing it through converts a routable request into an authorization failure.
  - **Use `op-desktop` inside every dedicated desktop-gated operation.** It keeps one detached broker process that owns a real pty and runs each `op` command inside that session, so they all share a single authorization: one prompt per 10-minute idle window instead of one per command. Direct agent-shell broker calls are blocked except for `op-desktop --status` and `--stop`; audited wrappers may use the broker internally when they consume output without returning secrets. It forwards protected stdin through its mode-0600 broker socket, so piped item templates are supported inside those wrappers. It does not extend 1Password's limits, it just stops us discarding the session between commands. **Measured 2026-07-28:** five `op` commands across four separate agent shells produced *one* biometric challenge in the 1Password log, against five before.
  - **Inventory first, then batch.** List every desktop-gated operation the task will need (dedicated non-printing reads of personal vaults, item creates/edits, share links) before starting. Implement or use one audited wrapper that routes them through `op-desktop`; the broker keeps them in the same authorization window.
  - **Never `op signin --force`.** It discards any live session and forces re-auth. `op-desktop` reuses its broker session automatically. If the broker is unavailable, stop and repair it rather than bypassing it with raw `op`.
 diff -ruN a/claude/hooks/cr-skill-routing-reminder.sh b/claude/hooks/cr-skill-routing-reminder.sh
 --- a/claude/hooks/cr-skill-routing-reminder.sh	2026-08-23 10:32:57
-+++ b/claude/hooks/cr-skill-routing-reminder.sh	2026-09-02 10:55:05
++++ b/claude/hooks/cr-skill-routing-reminder.sh	2026-09-02 11:14:38
 @@ -21,7 +21,7 @@
  case "$fp" in
    */tasks/*/prompt.txt|*/tasks/*/grading/rubric.md|*/tasks/*/grading/GOLDEN.md)
@@ -445,7 +463,7 @@ diff -ruN a/claude/hooks/cr-skill-routing-reminder.sh b/claude/hooks/cr-skill-ro
  esac
 diff -ruN a/claude/hooks/remind-claude-readme-update.sh b/claude/hooks/remind-claude-readme-update.sh
 --- a/claude/hooks/remind-claude-readme-update.sh	2026-08-06 10:28:14
-+++ b/claude/hooks/remind-claude-readme-update.sh	2026-09-02 10:55:05
++++ b/claude/hooks/remind-claude-readme-update.sh	2026-09-02 11:14:38
 @@ -67,8 +67,7 @@
  REL_PATH="${REAL_PATH#$DOTFILES_CLAUDE_REAL/}"
  
@@ -458,7 +476,7 @@ diff -ruN a/claude/hooks/remind-claude-readme-update.sh b/claude/hooks/remind-cl
  The require-readme-update.sh hook will block the commit if README.org is not staged.
 diff -ruN a/claude/skills/add-to-emacs-packages/SKILL.md b/claude/skills/add-to-emacs-packages/SKILL.md
 --- a/claude/skills/add-to-emacs-packages/SKILL.md	2026-08-06 10:28:14
-+++ b/claude/skills/add-to-emacs-packages/SKILL.md	2026-09-02 10:55:05
++++ b/claude/skills/add-to-emacs-packages/SKILL.md	2026-09-02 11:14:38
 @@ -10,8 +10,6 @@
  
  ## When this skill is invoked
@@ -470,7 +488,7 @@ diff -ruN a/claude/skills/add-to-emacs-packages/SKILL.md b/claude/skills/add-to-
  ## Key paths
 diff -ruN a/claude/skills/build/SKILL.md b/claude/skills/build/SKILL.md
 --- a/claude/skills/build/SKILL.md	2026-08-06 10:28:14
-+++ b/claude/skills/build/SKILL.md	2026-09-02 10:55:05
++++ b/claude/skills/build/SKILL.md	2026-09-02 11:14:38
 @@ -39,7 +39,6 @@
  - Cover both high-level architecture and low-level implementation details
  - Challenge assumptions and suggest alternatives when appropriate
@@ -481,7 +499,18 @@ diff -ruN a/claude/skills/build/SKILL.md b/claude/skills/build/SKILL.md
  #### Step 3: Write the spec
 diff -ruN a/claude/skills/chrome-permission-audit/SKILL.md b/claude/skills/chrome-permission-audit/SKILL.md
 --- a/claude/skills/chrome-permission-audit/SKILL.md	2026-08-31 15:57:03
-+++ b/claude/skills/chrome-permission-audit/SKILL.md	2026-09-02 10:55:05
++++ b/claude/skills/chrome-permission-audit/SKILL.md	2026-09-02 11:14:38
+@@ -37,8 +37,8 @@
+ extension is not installed.
+ 
+ **Reading requires a real LevelDB reader.** The store's `.log` files retain
+-superseded history — one profile held 1,784 stale `netloc` records against 51
+-live ones. Grep or `strings` over those files reports long-revoked grants as
++superseded history, and stale `netloc` records can outnumber live ones many
++times over. Grep or `strings` over those files reports long-revoked grants as
+ active. Reads therefore go through `classic-level` against a throwaway copy, so a
+ running Chrome cannot block them.
+ 
 @@ -109,8 +109,8 @@
  
  ## Reporting to the user
@@ -495,7 +524,7 @@ diff -ruN a/claude/skills/chrome-permission-audit/SKILL.md b/claude/skills/chrom
  never got cleaned up.
 diff -ruN a/claude/skills/dx-audit/SKILL.md b/claude/skills/dx-audit/SKILL.md
 --- a/claude/skills/dx-audit/SKILL.md	2026-08-19 17:41:02
-+++ b/claude/skills/dx-audit/SKILL.md	2026-09-02 10:55:05
++++ b/claude/skills/dx-audit/SKILL.md	2026-09-02 11:14:38
 @@ -7,7 +7,7 @@
  
  # AI developer experience audit
@@ -516,19 +545,19 @@ diff -ruN a/claude/skills/dx-audit/SKILL.md b/claude/skills/dx-audit/SKILL.md
  - A CLAUDE.md with build/test commands so fresh sessions can self-orient
 diff -ruN a/claude/skills/generate-readme/SKILL.md b/claude/skills/generate-readme/SKILL.md
 --- a/claude/skills/generate-readme/SKILL.md	2026-08-06 10:28:14
-+++ b/claude/skills/generate-readme/SKILL.md	2026-09-02 10:55:05
++++ b/claude/skills/generate-readme/SKILL.md	2026-09-02 11:14:38
 @@ -143,7 +143,7 @@
  
  If no roadmap content exists in the manual, omit this section.
  
 -After moving the roadmap content to the README, **remove the Roadmap section from the org manual** and commit the removal together with the README (or as a separate commit). Do not leave any trace of the roadmap in the manual — no empty section, no "see README" pointer, no commented-out content. Do not add any note in the README about the roadmap also being present in the manual.
-+After moving the roadmap content to the README, delete the Roadmap section from the org manual outright (heading and body, nothing left behind) and commit the removal together with the README (or as a separate commit).
++After moving the roadmap content to the README, delete the Roadmap section from the org manual outright (heading and body, nothing left behind) and commit the removal together with the README (or as a separate commit). The README is then the roadmap's only home; do not describe it as also living in the manual.
  
  #### 8. Contributing and license (if applicable)
  
 diff -ruN a/claude/skills/google-sheets-comments/SKILL.md b/claude/skills/google-sheets-comments/SKILL.md
 --- a/claude/skills/google-sheets-comments/SKILL.md	2026-08-06 10:28:14
-+++ b/claude/skills/google-sheets-comments/SKILL.md	2026-09-02 10:55:05
++++ b/claude/skills/google-sheets-comments/SKILL.md	2026-09-02 11:14:38
 @@ -28,12 +28,8 @@
  gdoc comments --account epoch --json --all '<sheet-url-or-id>'
  ```
@@ -543,7 +572,7 @@ diff -ruN a/claude/skills/google-sheets-comments/SKILL.md b/claude/skills/google
  Use Gmail only to discover that a Sheet has comment activity or to extract a
  Sheet URL/comment hint. After that, switch to `gdoc comments`.
  
-@@ -78,19 +74,12 @@
+@@ -78,10 +74,6 @@
  
  ## Important Pitfalls
  
@@ -554,18 +583,9 @@ diff -ruN a/claude/skills/google-sheets-comments/SKILL.md b/claude/skills/google
  - Do not collapse several replies inside one Drive comment thread into one
    item unless the user explicitly asks for grouped handling.
  - Do not create a new comment unless the user explicitly asks for a new
-   comment, not a reply to an existing thread.
- - If the user says "one by one", handle one Drive comment or reply, ask whether
-   to take the proposed action, verify after the action, then continue.
--- If you already sent an email reply by mistake, check `gdoc comment-info`
--  before claiming it posted. If it is missing, tell the user exactly what
--  happened and use `gdoc reply` for the actual Sheet thread after approval.
- 
- ## Approval Format
- 
 diff -ruN a/claude/skills/handoff/SKILL.md b/claude/skills/handoff/SKILL.md
 --- a/claude/skills/handoff/SKILL.md	2026-08-07 17:08:53
-+++ b/claude/skills/handoff/SKILL.md	2026-09-02 10:55:05
++++ b/claude/skills/handoff/SKILL.md	2026-09-02 11:14:38
 @@ -36,10 +36,8 @@
  to confirm. The user may ask you to edit, reorder, or reject items
  before you save the file.
@@ -587,7 +607,7 @@ diff -ruN a/claude/skills/handoff/SKILL.md b/claude/skills/handoff/SKILL.md
 +   Do not run it yourself: it closes this session, so only the user should trigger it.
 diff -ruN a/claude/skills/orchestrate-review/SKILL.md b/claude/skills/orchestrate-review/SKILL.md
 --- a/claude/skills/orchestrate-review/SKILL.md	2026-08-31 08:35:03
-+++ b/claude/skills/orchestrate-review/SKILL.md	2026-09-02 10:55:05
++++ b/claude/skills/orchestrate-review/SKILL.md	2026-09-02 11:14:38
 @@ -36,7 +36,7 @@
    rejects a nonempty Agent 1 transcript for a new, non-adopted stage; sequencing
    the stage runs remains the orchestrator's responsibility.
@@ -636,7 +656,7 @@ diff -ruN a/claude/skills/orchestrate-review/SKILL.md b/claude/skills/orchestrat
  run reaches a terminal state (`complete-stage`, a frozen run, or an abandoned
 diff -ruN a/claude/skills/personalize/SKILL.md b/claude/skills/personalize/SKILL.md
 --- a/claude/skills/personalize/SKILL.md	2026-08-26 12:39:46
-+++ b/claude/skills/personalize/SKILL.md	2026-09-02 10:55:05
++++ b/claude/skills/personalize/SKILL.md	2026-09-02 11:14:38
 @@ -20,13 +20,6 @@
    rhythm, his explicit hedging, and his vocabulary. Avoiding AI tells is not the
    same as sounding like him.
@@ -661,20 +681,9 @@ diff -ruN a/claude/skills/personalize/SKILL.md b/claude/skills/personalize/SKILL
  - When torn between two lengths, pick the shorter.
  
  ## Pablo's style (distilled from the samples)
-diff -ruN a/claude/skills/proofread/SKILL.md b/claude/skills/proofread/SKILL.md
---- a/claude/skills/proofread/SKILL.md	2026-08-06 10:59:53
-+++ b/claude/skills/proofread/SKILL.md	2026-09-02 10:55:05
-@@ -1,7 +1,6 @@
- ---
- name: proofread
- description: Proofread Markdown for spelling, grammar, typos, punctuation, and light style/clarity issues. Use for proofread, spell check, grammar check, typo review, or proofreading a Markdown file.
--model: sonnet
- ---
- 
- # Proofread skill
 diff -ruN a/claude/skills/symptom-check/SKILL.md b/claude/skills/symptom-check/SKILL.md
 --- a/claude/skills/symptom-check/SKILL.md	2026-08-06 10:28:14
-+++ b/claude/skills/symptom-check/SKILL.md	2026-09-02 10:55:05
++++ b/claude/skills/symptom-check/SKILL.md	2026-09-02 11:14:38
 @@ -102,7 +102,7 @@
  
  ## Anti-patterns
@@ -686,7 +695,7 @@ diff -ruN a/claude/skills/symptom-check/SKILL.md b/claude/skills/symptom-check/S
  - **Pad Step 5** with maybes to make the case feel thorough. Either confirm or admit you didn't check.
 diff -ruN a/claude/skills/update-log/SKILL.md b/claude/skills/update-log/SKILL.md
 --- a/claude/skills/update-log/SKILL.md	2026-08-31 15:57:03
-+++ b/claude/skills/update-log/SKILL.md	2026-09-02 10:55:05
++++ b/claude/skills/update-log/SKILL.md	2026-09-02 11:14:38
 @@ -201,9 +201,7 @@
  This step runs after the hooks on purpose. The project brief is the source the
  map summarises, so it has to be current before the map is written; doing it the
@@ -703,13 +712,13 @@ diff -ruN a/claude/skills/update-log/SKILL.md b/claude/skills/update-log/SKILL.m
  apply them directly.
  
 -1. **Regenerate `## Current focus` from the brief's open work, replacing the previous content — never append to it.** For `.org` briefs the open work is the `** Active TODOs` headings. Output a short digest: a one-line orientation, optionally followed by up to ~6 bullets of the live open priorities. Hard cap ~120 words. **No dates and no session narrative** (e.g. "On 2026-06-29 did X") — those live in `logs/`; durable state lives in the brief.
-+1. **Regenerate `## Current focus` from the brief's open work, replacing the previous content — never append to it.** For `.org` briefs the open work is the `** Active TODOs` headings. Output a short digest: a one-line orientation followed by the live open priorities, one bullet each. It is an index into the brief, not a summary of it. **No dates and no session narrative** (e.g. "On 2026-06-29 did X") — those live in `logs/`; durable state lives in the brief.
++1. **Regenerate `## Current focus` from the brief's open work, replacing the previous content — never append to it.** For `.org` briefs the open work is the `** Active TODOs` headings. Output a short digest: a one-line orientation followed by the few highest-priority live open tasks, one bullet each. It is an index into the brief, not a summary of it. **No dates and no session narrative** (e.g. "On 2026-06-29 did X") — those live in `logs/`; durable state lives in the brief.
     - **Why replace, not append:** appending is what turns `Current focus` into a chronological blob that duplicates the log and the brief. Replacing loses nothing — the session log you just wrote holds the narrative, and the brief's `** Active TODOs` hold the live state. `Current focus` is only a convenience index into those.
     - If the existing `Current focus` is already a multi-paragraph blob, this run is the moment to compact it down to the digest; do not preserve the old chronology.
     - **Choose what to list deterministically**, not by impression, so two runs over the same brief produce the same digest:
 diff -ruN a/claude/skills/verify/SKILL.md b/claude/skills/verify/SKILL.md
 --- a/claude/skills/verify/SKILL.md	2026-08-19 17:41:23
-+++ b/claude/skills/verify/SKILL.md	2026-09-02 10:55:05
++++ b/claude/skills/verify/SKILL.md	2026-09-02 11:14:38
 @@ -9,10 +9,6 @@
  
  Execute $ARGUMENTS with self-generated verification criteria that close the agentic loop. The goal: never declare a task "done" without concrete evidence that it was done correctly.
@@ -732,13 +741,10 @@ diff -ruN a/claude/skills/verify/SKILL.md b/claude/skills/verify/SKILL.md
  
 diff -ruN a/codex/AGENTS.md b/codex/AGENTS.md
 --- a/codex/AGENTS.md	2026-08-20 11:04:42
-+++ b/codex/AGENTS.md	2026-09-02 10:55:05
-@@ -3,17 +3,17 @@
- ## Operating rules
- 
++++ b/codex/AGENTS.md	2026-09-02 11:14:38
+@@ -5,15 +5,15 @@
  - Never present guesses as facts; state uncertainty and push back when assumptions are weak or conflict with constraints.
--- Treat every unintended behavior you encounter, in any context, as a prompt to diagnose and fix the underlying issue. Correct the observed behavior as a consequence of fixing that issue, never as a direct fix target.
-+- When you fix unintended behavior, diagnose and fix the underlying issue; the observed behavior gets corrected as a consequence, never as the direct fix target.
+ - Treat every unintended behavior you encounter, in any context, as a prompt to diagnose and fix the underlying issue. Correct the observed behavior as a consequence of fixing that issue, never as a direct fix target.
  - Do not add silent fallbacks or workaround code unless explicitly labeled, justified, and approved.
 -- **Never escalate a tool call to me for approval.** I run in `auto` mode deliberately: a hook or guard may allow a call or deny it outright with a reason, but it must never ask. A guard that prompts is a broken guard — the MCP approval guard was deleted on 2026-07-31 for exactly this, after a backtest showed it escalating 42% of 7,552 historical MCP calls against 4 hard blocks. Do not reintroduce an ask-style gate on any tool.
 -- Verify fixes end-to-end before calling them done. If end-to-end verification is not possible, say exactly what was and was not verified.
@@ -760,13 +766,13 @@ diff -ruN a/codex/AGENTS.md b/codex/AGENTS.md
  - Dotfiles source of truth: `~/My Drive/dotfiles/`; many home-directory paths are symlinks into it.
  - Active personal repositories: `~/repos/`; active Epoch repositories: `~/repos/epoch/`.
 -- The canonical dotfiles working tree is the only repository under `~/My Drive/`. All other 108 repositories moved to `~/repos/` on 2026-08-03. Never create another repository there, and never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
-+- The canonical dotfiles working tree is the only repository under `~/My Drive/`; every other repository lives under `~/repos/`. Never create another repository there, and never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
++- The canonical dotfiles working tree is the only repository under `~/My Drive/`. Never create another repository there, and never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
  - All linked worktrees: `~/repos/.worktrees/<repo>/<name>`.
  
  ## Version control
 diff -ruN a/codex/hooks/remind-claude-readme-update.sh b/codex/hooks/remind-claude-readme-update.sh
 --- a/codex/hooks/remind-claude-readme-update.sh	2026-08-06 10:28:14
-+++ b/codex/hooks/remind-claude-readme-update.sh	2026-09-02 10:55:05
++++ b/codex/hooks/remind-claude-readme-update.sh	2026-09-02 11:14:38
 @@ -56,8 +56,7 @@
    REL_PATH="${REAL_PATH#$DOTFILES_CLAUDE_REAL/}"
  
@@ -779,7 +785,7 @@ diff -ruN a/codex/hooks/remind-claude-readme-update.sh b/codex/hooks/remind-clau
  The require-readme-update.sh hook will block the commit if README.org is not staged.
 diff -ruN a/codex/skills/add-to-emacs-packages/SKILL.md b/codex/skills/add-to-emacs-packages/SKILL.md
 --- a/codex/skills/add-to-emacs-packages/SKILL.md	2026-08-06 10:28:14
-+++ b/codex/skills/add-to-emacs-packages/SKILL.md	2026-09-02 10:55:05
++++ b/codex/skills/add-to-emacs-packages/SKILL.md	2026-09-02 11:14:38
 @@ -9,8 +9,6 @@
  
  ## When this skill is invoked
@@ -791,7 +797,7 @@ diff -ruN a/codex/skills/add-to-emacs-packages/SKILL.md b/codex/skills/add-to-em
  ## Key paths
 diff -ruN a/codex/skills/build/SKILL.md b/codex/skills/build/SKILL.md
 --- a/codex/skills/build/SKILL.md	2026-08-06 10:28:14
-+++ b/codex/skills/build/SKILL.md	2026-09-02 10:55:05
++++ b/codex/skills/build/SKILL.md	2026-09-02 11:14:38
 @@ -38,7 +38,6 @@
  - Cover both high-level architecture and low-level implementation details
  - Challenge assumptions and suggest alternatives when appropriate
@@ -802,7 +808,18 @@ diff -ruN a/codex/skills/build/SKILL.md b/codex/skills/build/SKILL.md
  #### Step 3: Write the spec
 diff -ruN a/codex/skills/chrome-permission-audit/SKILL.md b/codex/skills/chrome-permission-audit/SKILL.md
 --- a/codex/skills/chrome-permission-audit/SKILL.md	2026-08-31 15:57:03
-+++ b/codex/skills/chrome-permission-audit/SKILL.md	2026-09-02 10:55:05
++++ b/codex/skills/chrome-permission-audit/SKILL.md	2026-09-02 11:14:38
+@@ -37,8 +37,8 @@
+ extension is not installed.
+ 
+ **Reading requires a real LevelDB reader.** The store's `.log` files retain
+-superseded history — one profile held 1,784 stale `netloc` records against 51
+-live ones. Grep or `strings` over those files reports long-revoked grants as
++superseded history, and stale `netloc` records can outnumber live ones many
++times over. Grep or `strings` over those files reports long-revoked grants as
+ active. Reads therefore go through `classic-level` against a throwaway copy, so a
+ running Chrome cannot block them.
+ 
 @@ -109,8 +109,8 @@
  
  ## Reporting to the user
@@ -816,7 +833,7 @@ diff -ruN a/codex/skills/chrome-permission-audit/SKILL.md b/codex/skills/chrome-
  never got cleaned up.
 diff -ruN a/codex/skills/dx-audit/SKILL.md b/codex/skills/dx-audit/SKILL.md
 --- a/codex/skills/dx-audit/SKILL.md	2026-08-19 17:41:02
-+++ b/codex/skills/dx-audit/SKILL.md	2026-09-02 10:55:05
++++ b/codex/skills/dx-audit/SKILL.md	2026-09-02 11:14:38
 @@ -5,7 +5,7 @@
  
  # AI developer experience audit
@@ -837,19 +854,19 @@ diff -ruN a/codex/skills/dx-audit/SKILL.md b/codex/skills/dx-audit/SKILL.md
  - A CLAUDE.md with build/test commands so fresh sessions can self-orient
 diff -ruN a/codex/skills/generate-readme/SKILL.md b/codex/skills/generate-readme/SKILL.md
 --- a/codex/skills/generate-readme/SKILL.md	2026-08-06 10:28:14
-+++ b/codex/skills/generate-readme/SKILL.md	2026-09-02 10:55:05
++++ b/codex/skills/generate-readme/SKILL.md	2026-09-02 11:14:38
 @@ -143,7 +143,7 @@
  
  If no roadmap content exists in the manual, omit this section.
  
 -After moving the roadmap content to the README, **remove the Roadmap section from the org manual** and commit the removal together with the README (or as a separate commit). Do not leave any trace of the roadmap in the manual — no empty section, no "see README" pointer, no commented-out content. Do not add any note in the README about the roadmap also being present in the manual.
-+After moving the roadmap content to the README, delete the Roadmap section from the org manual outright (heading and body, nothing left behind) and commit the removal together with the README (or as a separate commit).
++After moving the roadmap content to the README, delete the Roadmap section from the org manual outright (heading and body, nothing left behind) and commit the removal together with the README (or as a separate commit). The README is then the roadmap's only home; do not describe it as also living in the manual.
  
  #### 8. Contributing and license (if applicable)
  
 diff -ruN a/codex/skills/google-sheets-comments/SKILL.md b/codex/skills/google-sheets-comments/SKILL.md
 --- a/codex/skills/google-sheets-comments/SKILL.md	2026-08-06 10:28:14
-+++ b/codex/skills/google-sheets-comments/SKILL.md	2026-09-02 10:55:05
++++ b/codex/skills/google-sheets-comments/SKILL.md	2026-09-02 11:14:38
 @@ -28,12 +28,8 @@
  gdoc comments --account epoch --json --all '<sheet-url-or-id>'
  ```
@@ -864,7 +881,7 @@ diff -ruN a/codex/skills/google-sheets-comments/SKILL.md b/codex/skills/google-s
  Use Gmail only to discover that a Sheet has comment activity or to extract a
  Sheet URL/comment hint. After that, switch to `gdoc comments`.
  
-@@ -78,19 +74,12 @@
+@@ -78,10 +74,6 @@
  
  ## Important Pitfalls
  
@@ -875,18 +892,9 @@ diff -ruN a/codex/skills/google-sheets-comments/SKILL.md b/codex/skills/google-s
  - Do not collapse several replies inside one Drive comment thread into one
    item unless the user explicitly asks for grouped handling.
  - Do not create a new comment unless the user explicitly asks for a new
-   comment, not a reply to an existing thread.
- - If the user says "one by one", handle one Drive comment or reply, ask whether
-   to take the proposed action, verify after the action, then continue.
--- If you already sent an email reply by mistake, check `gdoc comment-info`
--  before claiming it posted. If it is missing, tell the user exactly what
--  happened and use `gdoc reply` for the actual Sheet thread after approval.
- 
- ## Approval Format
- 
 diff -ruN a/codex/skills/handoff/SKILL.md b/codex/skills/handoff/SKILL.md
 --- a/codex/skills/handoff/SKILL.md	2026-08-07 17:08:24
-+++ b/codex/skills/handoff/SKILL.md	2026-09-02 10:55:05
++++ b/codex/skills/handoff/SKILL.md	2026-09-02 11:14:38
 @@ -65,4 +65,4 @@
  5. Print the contents so the user can review.
  6. Tell the user to run `! emacsclient -e '(agent-codex-handoff)'`
@@ -895,7 +903,7 @@ diff -ruN a/codex/skills/handoff/SKILL.md b/codex/skills/handoff/SKILL.md
 +   Do not run it yourself: it closes this session, so only the user should trigger it.
 diff -ruN a/codex/skills/orchestrate-review/SKILL.md b/codex/skills/orchestrate-review/SKILL.md
 --- a/codex/skills/orchestrate-review/SKILL.md	2026-08-31 08:35:03
-+++ b/codex/skills/orchestrate-review/SKILL.md	2026-09-02 10:55:05
++++ b/codex/skills/orchestrate-review/SKILL.md	2026-09-02 11:14:38
 @@ -36,7 +36,7 @@
    rejects a nonempty Agent 1 transcript for a new, non-adopted stage; sequencing
    the stage runs remains the orchestrator's responsibility.
@@ -944,7 +952,7 @@ diff -ruN a/codex/skills/orchestrate-review/SKILL.md b/codex/skills/orchestrate-
  run reaches a terminal state (`complete-stage`, a frozen run, or an abandoned
 diff -ruN a/codex/skills/personalize/SKILL.md b/codex/skills/personalize/SKILL.md
 --- a/codex/skills/personalize/SKILL.md	2026-08-26 12:40:19
-+++ b/codex/skills/personalize/SKILL.md	2026-09-02 10:55:05
++++ b/codex/skills/personalize/SKILL.md	2026-09-02 11:14:38
 @@ -20,13 +20,6 @@
    rhythm, his explicit hedging, and his vocabulary. Avoiding AI tells is not the
    same as sounding like him.
@@ -971,7 +979,7 @@ diff -ruN a/codex/skills/personalize/SKILL.md b/codex/skills/personalize/SKILL.m
  ## Pablo's style (distilled from the samples)
 diff -ruN a/codex/skills/symptom-check/SKILL.md b/codex/skills/symptom-check/SKILL.md
 --- a/codex/skills/symptom-check/SKILL.md	2026-08-06 10:28:14
-+++ b/codex/skills/symptom-check/SKILL.md	2026-09-02 10:55:05
++++ b/codex/skills/symptom-check/SKILL.md	2026-09-02 11:14:38
 @@ -101,7 +101,7 @@
  
  ## Anti-patterns
@@ -983,7 +991,7 @@ diff -ruN a/codex/skills/symptom-check/SKILL.md b/codex/skills/symptom-check/SKI
  - **Pad Step 5** with maybes to make the case feel thorough. Either confirm or admit you didn't check.
 diff -ruN a/codex/skills/update-log/SKILL.md b/codex/skills/update-log/SKILL.md
 --- a/codex/skills/update-log/SKILL.md	2026-08-31 15:57:03
-+++ b/codex/skills/update-log/SKILL.md	2026-09-02 10:55:05
++++ b/codex/skills/update-log/SKILL.md	2026-09-02 11:14:38
 @@ -201,9 +201,7 @@
  This step runs after the hooks on purpose. The project brief is the source the
  map summarises, so it has to be current before the map is written; doing it the
@@ -1000,13 +1008,13 @@ diff -ruN a/codex/skills/update-log/SKILL.md b/codex/skills/update-log/SKILL.md
  apply them directly.
  
 -1. **Regenerate `## Current focus` from the brief's open work, replacing the previous content — never append to it.** For `.org` briefs the open work is the `** Active TODOs` headings. Output a short digest: a one-line orientation, optionally followed by up to ~6 bullets of the live open priorities. Hard cap ~120 words. **No dates and no session narrative** (e.g. "On 2026-06-29 did X") — those live in `logs/`; durable state lives in the brief.
-+1. **Regenerate `## Current focus` from the brief's open work, replacing the previous content — never append to it.** For `.org` briefs the open work is the `** Active TODOs` headings. Output a short digest: a one-line orientation followed by the live open priorities, one bullet each. It is an index into the brief, not a summary of it. **No dates and no session narrative** (e.g. "On 2026-06-29 did X") — those live in `logs/`; durable state lives in the brief.
++1. **Regenerate `## Current focus` from the brief's open work, replacing the previous content — never append to it.** For `.org` briefs the open work is the `** Active TODOs` headings. Output a short digest: a one-line orientation followed by the few highest-priority live open tasks, one bullet each. It is an index into the brief, not a summary of it. **No dates and no session narrative** (e.g. "On 2026-06-29 did X") — those live in `logs/`; durable state lives in the brief.
     - **Why replace, not append:** appending is what turns `Current focus` into a chronological blob that duplicates the log and the brief. Replacing loses nothing — the session log you just wrote holds the narrative, and the brief's `** Active TODOs` hold the live state. `Current focus` is only a convenience index into those.
     - If the existing `Current focus` is already a multi-paragraph blob, this run is the moment to compact it down to the digest; do not preserve the old chronology.
     - **Choose what to list deterministically**, not by impression, so two runs over the same brief produce the same digest:
 diff -ruN a/codex/skills/verify/SKILL.md b/codex/skills/verify/SKILL.md
 --- a/codex/skills/verify/SKILL.md	2026-08-19 17:41:23
-+++ b/codex/skills/verify/SKILL.md	2026-09-02 10:55:05
++++ b/codex/skills/verify/SKILL.md	2026-09-02 11:14:38
 @@ -7,10 +7,6 @@
  
  Execute $ARGUMENTS with self-generated verification criteria that close the agentic loop. The goal: never declare a task "done" without concrete evidence that it was done correctly.
@@ -1029,7 +1037,7 @@ diff -ruN a/codex/skills/verify/SKILL.md b/codex/skills/verify/SKILL.md
  
 diff -ruN a/emacs/.claude/skills/emacs-freeze/SKILL.md b/emacs/.claude/skills/emacs-freeze/SKILL.md
 --- a/emacs/.claude/skills/emacs-freeze/SKILL.md	2026-08-07 20:19:07
-+++ b/emacs/.claude/skills/emacs-freeze/SKILL.md	2026-09-02 10:55:05
++++ b/emacs/.claude/skills/emacs-freeze/SKILL.md	2026-09-02 11:14:38
 @@ -37,10 +37,9 @@
  **A slow server is not a dead server.** A wedged Emacs may still service
  process input intermittently — from inside `accept-process-output`, a recursive
@@ -1038,8 +1046,8 @@ diff -ruN a/emacs/.claude/skills/emacs-freeze/SKILL.md b/emacs/.claude/skills/em
 -and 10-second probes both timed out and were misread as "server unresponsive,"
 -which pushed the whole diagnosis toward kill options. A 90-second probe returned
 -normally, and the session was then recovered with no data loss and no kill.
-+land instead of never landing. Short probes (3-10 s) time out on a wedged-but-
-+servicing Emacs; a 90-120 s probe often returns, and the difference decides
++land instead of never landing. A short probe can time out on a wedged-but-
++servicing Emacs while a longer one returns, and the difference decides
 +between a one-line eval and a kill.
  Never conclude "unresponsive" without completing the timeout ladder in step 2.5.
  
@@ -1084,7 +1092,7 @@ diff -ruN a/emacs/.claude/skills/emacs-freeze/SKILL.md b/emacs/.claude/skills/em
  
 diff -ruN a/emacs/.codex/skills/emacs-freeze/SKILL.md b/emacs/.codex/skills/emacs-freeze/SKILL.md
 --- a/emacs/.codex/skills/emacs-freeze/SKILL.md	2026-08-07 20:19:13
-+++ b/emacs/.codex/skills/emacs-freeze/SKILL.md	2026-09-02 10:55:05
++++ b/emacs/.codex/skills/emacs-freeze/SKILL.md	2026-09-02 11:14:38
 @@ -37,10 +37,9 @@
  **A slow server is not a dead server.** A wedged Emacs may still service
  process input intermittently — from inside `accept-process-output`, a recursive
@@ -1093,8 +1101,8 @@ diff -ruN a/emacs/.codex/skills/emacs-freeze/SKILL.md b/emacs/.codex/skills/emac
 -and 10-second probes both timed out and were misread as "server unresponsive,"
 -which pushed the whole diagnosis toward kill options. A 90-second probe returned
 -normally, and the session was then recovered with no data loss and no kill.
-+land instead of never landing. Short probes (3-10 s) time out on a wedged-but-
-+servicing Emacs; a 90-120 s probe often returns, and the difference decides
++land instead of never landing. A short probe can time out on a wedged-but-
++servicing Emacs while a longer one returns, and the difference decides
 +between a one-line eval and a kill.
  Never conclude "unresponsive" without completing the timeout ladder in step 2.5.
  

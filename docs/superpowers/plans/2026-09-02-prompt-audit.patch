@@ -1,0 +1,1139 @@
+diff -ruN a/.claude/skills/config-audit/SKILL.md b/.claude/skills/config-audit/SKILL.md
+--- a/.claude/skills/config-audit/SKILL.md	2026-08-06 10:28:14
++++ b/.claude/skills/config-audit/SKILL.md	2026-09-02 10:55:05
+@@ -80,7 +80,7 @@
+ 
+ **Examples of likely defaults**: don't mix unrelated changes in a commit, use descriptive variable names, don't introduce security vulnerabilities.
+ 
+-**Examples of likely NOT defaults**: commit all changes immediately (system prompt says the opposite), use `trash` instead of `rm`, prefer Opus over Haiku for subagents.
++**Examples of likely NOT defaults**: commit all changes immediately (system prompt says the opposite), use `trash` instead of `rm`, use the most capable available model for subagents.
+ 
+ ### Criterion 2: Conflicts
+ 
+@@ -192,5 +192,5 @@
+ - **Do not remove rules that are working.** If a rule changes behavior in a useful way and isn't duplicated elsewhere, it stays — even if it was reactive in origin.
+ - **Canonical location principle.** When a rule must exist somewhere, prefer CLAUDE.md or AGENTS.md (always loaded) over context skills (loaded conditionally) over memory (loaded per-project). If a rule is in CLAUDE.md or AGENTS.md AND a skill, cut it from the skill.
+ - **Hooks trump instructions.** If a hook mechanically enforces a rule, the instruction-level statement is documentation at best. It can be cut unless it provides context the hook can't (e.g., explaining *why* the rule exists).
+-- **Don't touch procedural skills.** The body of user-invocable skills is procedural, not a competing instruction set. Don't recommend cutting steps from release, twitter-digest, etc. unless they contain general rules that duplicate CLAUDE.md or AGENTS.md.
++- **Don't touch procedural skills.** The body of user-invocable skills is procedural, not a competing instruction set. Don't recommend cutting steps from user-invocable procedural skills (release-dotfiles, publish-dotfiles, etc.) unless they contain general rules that duplicate CLAUDE.md or AGENTS.md.
+ - **Respect the confirmation boundary.** `--accept` or an explicit apply request authorizes high-confidence cleanup; otherwise, present the full analysis and wait for confirmation before changing files.
+diff -ruN a/.claude/skills/gitguardian-triage/SKILL.md b/.claude/skills/gitguardian-triage/SKILL.md
+--- a/.claude/skills/gitguardian-triage/SKILL.md	2026-08-31 22:37:41
++++ b/.claude/skills/gitguardian-triage/SKILL.md	2026-09-02 10:55:05
+@@ -2,7 +2,6 @@
+ name: gitguardian-triage
+ description: Triage and remediate GitGuardian secret incidents. Use for gitguardian/GG triage, secret audit, rotating leaked secrets, processing incidents, or clearing the GitGuardian dashboard.
+ user-invocable: true
+-model: opus
+ ---
+ 
+ # GitGuardian triage and remediation
+@@ -217,7 +216,6 @@
+ ' _ {}
+ rm -f "$LEAK_FILE"
+ ```
+-The earlier `head -1` shortcut misses every multi-field entry. Always scan the full content.
+ 
+ **Search 3 — Elisp/code references to the matching pass entries.** For each `pass` entry that hit in Search 2, grep code for the **path prefix** (the entry's parent dir), because the actual call site usually concatenates a runtime variable for the leaf:
+ ```bash
+diff -ruN a/.claude/skills/install-mcp-server/SKILL.md b/.claude/skills/install-mcp-server/SKILL.md
+--- a/.claude/skills/install-mcp-server/SKILL.md	2026-08-06 10:28:14
++++ b/.claude/skills/install-mcp-server/SKILL.md	2026-09-02 10:55:05
+@@ -8,8 +8,6 @@
+ 
+ Install a new MCP server into Claude Code, avoiding common pitfalls.
+ 
+-**IMPORTANT**: When triggered, follow the execution steps below. Do NOT just describe what the skill does.
+-
+ ## Arguments
+ 
+ `$ARGUMENTS` contains the server name, GitHub URL, npm package, or a description of the service the user wants to connect (e.g. "Gmail", "Notion", "Jira"). If empty, ask what service they want to connect.
+@@ -41,7 +39,7 @@
+ 
+ **Get user confirmation before proceeding.**
+ 
+-## Step 2: Auth verification (CRITICAL — do this BEFORE installing)
++## Step 2: Auth verification (before installing)
+ 
+ This is the most important step. Many MCP servers have auth mechanisms that are locked to specific platforms or require non-trivial setup. Investigate BEFORE spending time on installation.
+ 
+@@ -54,7 +52,7 @@
+ 3. **No auth**: Proceed directly.
+ 4. **Credential shape**: Identify the exact env vars, headers, config files, or OAuth flags the server needs. Decide how each secret will be supplied before registration. Do not put raw secret values in shell commands, command output, tracked files, or chat.
+ 
+-**If auth requires creating OAuth credentials, GCP projects, or other setup**: explain exactly what's needed and get confirmation before proceeding. Don't install first and discover auth problems later.
++**If auth requires creating OAuth credentials, GCP projects, or other setup**: explain exactly what's needed and get confirmation before proceeding.
+ 
+ ## Step 3: Install dependencies
+ 
+@@ -69,14 +67,13 @@
+ - Test that the package exists: `uvx <package> --help` or similar.
+ 
+ ### Git repo (needs cloning and building)
+-- Clone to `~/My Drive/dotfiles/claude/mcp-servers/<name>/` (or ask the user where they want it).
++- Clone to `~/repos/mcp-servers/<name>/` (or ask the user where they want it). Never clone under `~/My Drive`: the Drive sync root holds no repositories, builds, or `node_modules`.
+ - Run `npm install && npm run build` (or equivalent).
+-- Run `/nosync` on any `node_modules` directory inside the clone to avoid Google Drive sync issues.
+ - **Important**: If the entry point is a built/bundled JS file, verify it exists after the build.
+ 
+ ## Step 4: Determine the command
+ 
+-**CRITICAL**: Do NOT use bare interpreter names like `node`, `python`, or `python3` as the command. Claude Code spawns MCP servers as child processes without a shell, so shell functions (e.g. nvm's lazy-loading `node` wrapper) and PATH-dependent lookups may fail silently.
++Do not use bare interpreter names like `node`, `python`, or `python3` as the command. Claude Code spawns MCP servers as child processes without a shell, so shell functions (e.g. nvm's lazy-loading `node` wrapper) and PATH-dependent lookups may fail silently.
+ 
+ Use these rules:
+ - **npx/uvx servers**: `npx` and `uvx` are usually real binaries. Verify with `command -v npx` / `command -v uvx`. If they resolve to shell functions, use absolute paths.
+@@ -130,17 +127,15 @@
+ claude mcp add -s project <name> -- npx -y <package>
+ ```
+ 
+-### HTTP/SSE URL formatting (CRITICAL)
++### HTTP/SSE URL formatting
+ 
+ **Always include a trailing slash on HTTP MCP server URLs.** Claude Code's HTTP transport handler may silently drop servers whose URL lacks a trailing slash — the server entry is written to config but never appears in `claude mcp list` and is completely invisible at runtime.
+ 
+ - WRONG: `https://mcp.example.com`
+ - RIGHT: `https://mcp.example.com/`
+ 
+-When extracting a URL from documentation, always verify it ends with `/`. If it doesn't, add one.
++### Sync and verify registration
+ 
+-### Sync and verify registration (CRITICAL — use `claude mcp list`, NOT `claude mcp get`)
+-
+ After adding, run:
+ 
+ ```bash
+@@ -148,7 +143,7 @@
+ claude mcp list 2>&1 | grep <name>
+ ```
+ 
+-The server **MUST** appear in `claude mcp list` output. This command checks actual runtime health. It may spawn stdio servers from `.mcp.json`, so run it only from a directory you trust.
++The server must appear in `claude mcp list` output (not `claude mcp get`, which reads config rather than runtime health). This command checks actual runtime health. It may spawn stdio servers from `.mcp.json`, so run it only from a directory you trust.
+ 
+ **Do NOT rely on `claude mcp get <name>`** — it reads from the config file and will report a server as present even when Claude Code cannot actually load it. A server that appears in `claude mcp get` but not `claude mcp list` is broken.
+ 
+diff -ruN a/.claude/skills/optimize-agent-instructions/SKILL.md b/.claude/skills/optimize-agent-instructions/SKILL.md
+--- a/.claude/skills/optimize-agent-instructions/SKILL.md	2026-08-06 10:28:14
++++ b/.claude/skills/optimize-agent-instructions/SKILL.md	2026-09-02 10:55:05
+@@ -15,7 +15,7 @@
+ 
+ ## Background: why this matters
+ 
+-Claude Code or Codex loads CLAUDE.md or AGENTS.md files, imports, local memories, and rules as context rather than enforced configuration. They are high-leverage because they shape every relevant session, but the instruction budget is finite: frontier thinking models reliably follow ~150-200 instructions total, and Claude Code or Codex's system prompt already consumes ~50 of those. Every line in persistent instructions competes for the remainder.
++Claude Code or Codex loads CLAUDE.md or AGENTS.md files, imports, local memories, and rules as context rather than enforced configuration. They are high-leverage because they shape every relevant session, but the instruction budget is finite: every line in persistent instructions competes for attention with the system prompt and with every other rule, and specific stale or vague instructions degrade behavior more than volume does.
+ 
+ Long, vague, stale, or non-universal instructions consume context and reduce adherence. The goal is not to make instructions clever; it is to keep them scoped, concrete, current, and easy for the agent to verify.
+ 
+@@ -26,8 +26,8 @@
+ 3. Read the Claude Code or Codex instruction sources that affect the target: `.claude/CLAUDE.md or AGENTS.md` if separate, `CLAUDE.local.md` if present, and `.claude/rules/**/*.md` if present
+ 4. Treat local or personal instruction files as private context: use them to detect conflicts, but do not quote sensitive content or copy local-only rules into shared files unless the user explicitly targets those files
+ 5. Count:
+-   - Total lines (target: under 200; absolute max: 300)
+-   - Discrete instructions/rules (target: under 100, accounting for system prompt's ~50)
++   - Total lines
++   - Discrete instructions/rules
+    - `@`-imports, rules files, and their sizes
+ 
+ ## Phase 2: Evaluate every instruction
+@@ -116,10 +116,9 @@
+ 
+ Anti-pattern to flag: `See [context/foo.md](context/foo.md)` with no surrounding context, pointing to operational content. Plain links are the weakest externalization — weaker than `@`-imports, which at least expand inline. If the target is operational, convert it to a skill. If it's reference, at minimum use an `@`-import.
+ 
+-### Markdown structure
++### Structure
+ 
+-- Uses headers and bullets to group related instructions (Claude scans structure like a reader)
+-- No dense paragraphs of prose — bullets are more reliably followed
++- Reference data (paths, commands, tables) is structured; behavioral rules are short prose that carries the reason
+ - Logical grouping: related rules are adjacent, not scattered
+ 
+ ## Phase 4: Output and applied-mode closeout
+@@ -128,11 +127,11 @@
+ 
+ ### 1. Metrics
+ 
+-| Metric | Current | Target | Status |
+-|--------|---------|--------|--------|
+-| Total lines | N | < 200 | ok/over |
+-| Instruction count | N | < 100 | ok/over |
+-| Imports/rules | N | — | — |
++| Metric | Current |
++|--------|---------|
++| Total lines | N |
++| Instruction count | N |
++| Imports/rules | N |
+ 
+ ### 2. Per-instruction analysis
+ 
+diff -ruN a/.codex/skills/config-audit/SKILL.md b/.codex/skills/config-audit/SKILL.md
+--- a/.codex/skills/config-audit/SKILL.md	2026-08-06 10:28:14
++++ b/.codex/skills/config-audit/SKILL.md	2026-09-02 10:55:05
+@@ -80,7 +80,7 @@
+ 
+ **Examples of likely defaults**: don't mix unrelated changes in a commit, use descriptive variable names, don't introduce security vulnerabilities.
+ 
+-**Examples of likely NOT defaults**: commit all changes immediately (system prompt says the opposite), use `trash` instead of `rm`, prefer Opus over Haiku for subagents.
++**Examples of likely NOT defaults**: commit all changes immediately (system prompt says the opposite), use `trash` instead of `rm`, use the most capable available model for subagents.
+ 
+ ### Criterion 2: Conflicts
+ 
+@@ -192,5 +192,5 @@
+ - **Do not remove rules that are working.** If a rule changes behavior in a useful way and isn't duplicated elsewhere, it stays — even if it was reactive in origin.
+ - **Canonical location principle.** When a rule must exist somewhere, prefer CLAUDE.md or AGENTS.md (always loaded) over context skills (loaded conditionally) over memory (loaded per-project). If a rule is in CLAUDE.md or AGENTS.md AND a skill, cut it from the skill.
+ - **Hooks trump instructions.** If a hook mechanically enforces a rule, the instruction-level statement is documentation at best. It can be cut unless it provides context the hook can't (e.g., explaining *why* the rule exists).
+-- **Don't touch procedural skills.** The body of user-invocable skills is procedural, not a competing instruction set. Don't recommend cutting steps from release, twitter-digest, etc. unless they contain general rules that duplicate CLAUDE.md or AGENTS.md.
++- **Don't touch procedural skills.** The body of user-invocable skills is procedural, not a competing instruction set. Don't recommend cutting steps from user-invocable procedural skills (release-dotfiles, publish-dotfiles, etc.) unless they contain general rules that duplicate CLAUDE.md or AGENTS.md.
+ - **Respect the confirmation boundary.** `--accept` or an explicit apply request authorizes high-confidence cleanup; otherwise, present the full analysis and wait for confirmation before changing files.
+diff -ruN a/.codex/skills/gitguardian-triage/SKILL.md b/.codex/skills/gitguardian-triage/SKILL.md
+--- a/.codex/skills/gitguardian-triage/SKILL.md	2026-08-31 22:37:41
++++ b/.codex/skills/gitguardian-triage/SKILL.md	2026-09-02 10:55:05
+@@ -215,7 +215,6 @@
+ ' _ {}
+ rm -f "$LEAK_FILE"
+ ```
+-The earlier `head -1` shortcut misses every multi-field entry. Always scan the full content.
+ 
+ **Search 3 — Elisp/code references to the matching pass entries.** For each `pass` entry that hit in Search 2, grep code for the **path prefix** (the entry's parent dir), because the actual call site usually concatenates a runtime variable for the leaf:
+ ```bash
+diff -ruN a/.codex/skills/install-mcp-server/SKILL.md b/.codex/skills/install-mcp-server/SKILL.md
+--- a/.codex/skills/install-mcp-server/SKILL.md	2026-08-06 10:28:14
++++ b/.codex/skills/install-mcp-server/SKILL.md	2026-09-02 10:55:05
+@@ -7,8 +7,6 @@
+ 
+ Install a new MCP server into Claude Code, avoiding common pitfalls.
+ 
+-**IMPORTANT**: When triggered, follow the execution steps below. Do NOT just describe what the skill does.
+-
+ ## Arguments
+ 
+ `$ARGUMENTS` contains the server name, GitHub URL, npm package, or a description of the service the user wants to connect (e.g. "Gmail", "Notion", "Jira"). If empty, ask what service they want to connect.
+@@ -40,7 +38,7 @@
+ 
+ **Get user confirmation before proceeding.**
+ 
+-## Step 2: Auth verification (CRITICAL — do this BEFORE installing)
++## Step 2: Auth verification (before installing)
+ 
+ This is the most important step. Many MCP servers have auth mechanisms that are locked to specific platforms or require non-trivial setup. Investigate BEFORE spending time on installation.
+ 
+@@ -53,7 +51,7 @@
+ 3. **No auth**: Proceed directly.
+ 4. **Credential shape**: Identify the exact env vars, headers, config files, or OAuth flags the server needs. Decide how each secret will be supplied before registration. Do not put raw secret values in shell commands, command output, tracked files, or chat.
+ 
+-**If auth requires creating OAuth credentials, GCP projects, or other setup**: explain exactly what's needed and get confirmation before proceeding. Don't install first and discover auth problems later.
++**If auth requires creating OAuth credentials, GCP projects, or other setup**: explain exactly what's needed and get confirmation before proceeding.
+ 
+ ## Step 3: Install dependencies
+ 
+@@ -68,14 +66,13 @@
+ - Test that the package exists: `uvx <package> --help` or similar.
+ 
+ ### Git repo (needs cloning and building)
+-- Clone to `~/My Drive/dotfiles/claude/mcp-servers/<name>/` (or ask the user where they want it).
++- Clone to `~/repos/mcp-servers/<name>/` (or ask the user where they want it). Never clone under `~/My Drive`: the Drive sync root holds no repositories, builds, or `node_modules`.
+ - Run `npm install && npm run build` (or equivalent).
+-- Run `/nosync` on any `node_modules` directory inside the clone to avoid Google Drive sync issues.
+ - **Important**: If the entry point is a built/bundled JS file, verify it exists after the build.
+ 
+ ## Step 4: Determine the command
+ 
+-**CRITICAL**: Do NOT use bare interpreter names like `node`, `python`, or `python3` as the command. Claude Code spawns MCP servers as child processes without a shell, so shell functions (e.g. nvm's lazy-loading `node` wrapper) and PATH-dependent lookups may fail silently.
++Do not use bare interpreter names like `node`, `python`, or `python3` as the command. Claude Code spawns MCP servers as child processes without a shell, so shell functions (e.g. nvm's lazy-loading `node` wrapper) and PATH-dependent lookups may fail silently.
+ 
+ Use these rules:
+ - **npx/uvx servers**: `npx` and `uvx` are usually real binaries. Verify with `command -v npx` / `command -v uvx`. If they resolve to shell functions, use absolute paths.
+@@ -129,17 +126,15 @@
+ claude mcp add -s project <name> -- npx -y <package>
+ ```
+ 
+-### HTTP/SSE URL formatting (CRITICAL)
++### HTTP/SSE URL formatting
+ 
+ **Always include a trailing slash on HTTP MCP server URLs.** Claude Code's HTTP transport handler may silently drop servers whose URL lacks a trailing slash — the server entry is written to config but never appears in `claude mcp list` and is completely invisible at runtime.
+ 
+ - WRONG: `https://mcp.example.com`
+ - RIGHT: `https://mcp.example.com/`
+ 
+-When extracting a URL from documentation, always verify it ends with `/`. If it doesn't, add one.
++### Sync and verify registration
+ 
+-### Sync and verify registration (CRITICAL — use `claude mcp list`, NOT `claude mcp get`)
+-
+ After adding, run:
+ 
+ ```bash
+@@ -147,7 +142,7 @@
+ claude mcp list 2>&1 | grep <name>
+ ```
+ 
+-The server **MUST** appear in `claude mcp list` output. This command checks actual runtime health. It may spawn stdio servers from `.mcp.json`, so run it only from a directory you trust.
++The server must appear in `claude mcp list` output (not `claude mcp get`, which reads config rather than runtime health). This command checks actual runtime health. It may spawn stdio servers from `.mcp.json`, so run it only from a directory you trust.
+ 
+ **Do NOT rely on `claude mcp get <name>`** — it reads from the config file and will report a server as present even when Claude Code cannot actually load it. A server that appears in `claude mcp get` but not `claude mcp list` is broken.
+ 
+diff -ruN a/.codex/skills/optimize-agent-instructions/SKILL.md b/.codex/skills/optimize-agent-instructions/SKILL.md
+--- a/.codex/skills/optimize-agent-instructions/SKILL.md	2026-08-06 10:28:14
++++ b/.codex/skills/optimize-agent-instructions/SKILL.md	2026-09-02 10:55:05
+@@ -15,7 +15,7 @@
+ 
+ ## Background: why this matters
+ 
+-Claude Code or Codex loads CLAUDE.md or AGENTS.md files, imports, local memories, and rules as context rather than enforced configuration. They are high-leverage because they shape every relevant session, but the instruction budget is finite: frontier thinking models reliably follow ~150-200 instructions total, and Claude Code or Codex's system prompt already consumes ~50 of those. Every line in persistent instructions competes for the remainder.
++Claude Code or Codex loads CLAUDE.md or AGENTS.md files, imports, local memories, and rules as context rather than enforced configuration. They are high-leverage because they shape every relevant session, but the instruction budget is finite: every line in persistent instructions competes for attention with the system prompt and with every other rule, and specific stale or vague instructions degrade behavior more than volume does.
+ 
+ Long, vague, stale, or non-universal instructions consume context and reduce adherence. The goal is not to make instructions clever; it is to keep them scoped, concrete, current, and easy for the agent to verify.
+ 
+@@ -26,8 +26,8 @@
+ 3. Read the Claude Code or Codex instruction sources that affect the target: `.claude/CLAUDE.md or AGENTS.md` if separate, `CLAUDE.local.md` if present, and `.claude/rules/**/*.md` if present
+ 4. Treat local or personal instruction files as private context: use them to detect conflicts, but do not quote sensitive content or copy local-only rules into shared files unless the user explicitly targets those files
+ 5. Count:
+-   - Total lines (target: under 200; absolute max: 300)
+-   - Discrete instructions/rules (target: under 100, accounting for system prompt's ~50)
++   - Total lines
++   - Discrete instructions/rules
+    - `@`-imports, rules files, and their sizes
+ 
+ ## Phase 2: Evaluate every instruction
+@@ -116,10 +116,9 @@
+ 
+ Anti-pattern to flag: `See [context/foo.md](context/foo.md)` with no surrounding context, pointing to operational content. Plain links are the weakest externalization — weaker than `@`-imports, which at least expand inline. If the target is operational, convert it to a skill. If it's reference, at minimum use an `@`-import.
+ 
+-### Markdown structure
++### Structure
+ 
+-- Uses headers and bullets to group related instructions (Claude scans structure like a reader)
+-- No dense paragraphs of prose — bullets are more reliably followed
++- Reference data (paths, commands, tables) is structured; behavioral rules are short prose that carries the reason
+ - Logical grouping: related rules are adjacent, not scattered
+ 
+ ## Phase 4: Output and applied-mode closeout
+@@ -128,11 +127,11 @@
+ 
+ ### 1. Metrics
+ 
+-| Metric | Current | Target | Status |
+-|--------|---------|--------|--------|
+-| Total lines | N | < 200 | ok/over |
+-| Instruction count | N | < 100 | ok/over |
+-| Imports/rules | N | — | — |
++| Metric | Current |
++|--------|---------|
++| Total lines | N |
++| Instruction count | N |
++| Imports/rules | N |
+ 
+ ### 2. Per-instruction analysis
+ 
+diff -ruN a/claude/CLAUDE.md b/claude/CLAUDE.md
+--- a/claude/CLAUDE.md	2026-08-19 17:48:55
++++ b/claude/CLAUDE.md	2026-09-02 10:55:05
+@@ -3,17 +3,17 @@
+ ## Operating rules
+ 
+ - Never present guesses as facts; state uncertainty and push back when assumptions are weak or conflict with constraints.
+-- Treat every unintended behavior you encounter, in any context, as a prompt to diagnose and fix the underlying issue. Correct the observed behavior as a consequence of fixing that issue, never as a direct fix target.
++- When you fix unintended behavior, diagnose and fix the underlying issue; the observed behavior gets corrected as a consequence, never as the direct fix target.
+ - Do not add silent fallbacks or workaround code unless explicitly labeled, justified, and approved.
+-- **Never escalate a tool call to me for approval.** I run in `auto` mode deliberately: a hook or guard may allow a call or deny it outright with a reason, but it must never ask. A guard that prompts is a broken guard — the MCP approval guard was deleted on 2026-07-31 for exactly this, after a backtest showed it escalating 42% of 7,552 historical MCP calls against 4 hard blocks. Do not reintroduce an ask-style gate on any tool.
+-- Verify fixes end-to-end before calling them done. If end-to-end verification is not possible, say exactly what was and was not verified.
++- **Never escalate a tool call to me for approval.** I run in `auto` mode deliberately: a hook or guard may allow a call or deny it outright with a reason, but it must never ask. A guard that prompts is a broken guard: ask-style gates escalate far more calls than they would ever block. Do not reintroduce an ask-style gate on any tool.
++- Verify fixes end-to-end before calling them done.
+ - Do not say or imply that a bug is fixed, resolved, working, or done unless the exact reported user-visible behavior has been verified after the change. Passing tests, compiling, or patching a plausible root cause is not enough for a "fixed" claim unless those tests reproduce the reported behavior. Say what was or wasn't verified only when it bears on my decision — a gap I would act on, or a "done" claim resting on weaker evidence than it looks. Exercise judgment; never append a verification note mechanically.
+ - A passing metric, scorecard, or count is completion evidence only after confirming it directly covers the user's stated requirement. If it does not, add or use a direct check, or state the remaining unmeasured gap.
+ - Do not ask me to do things you can do yourself. Exhaust self-serve paths first, including browser automation: if the session lacks browser tools, ask me to enable `claude-in-chrome` (type `/chrome`, or restart with `--chrome`) rather than asking me to perform the browser steps manually. Ask me to act only when the step genuinely requires my person — credentials/2FA/biometrics only I hold, access blocked by region or hardware with no agent path, or policy-required confirmation — and say why no agent path exists.
+ - Do the work rather than handing me a to-do list. Anything within what I asked that you can carry out without my input gets done in the same turn and reported in a line — never offered back as something for me to approve. Put a question to me only when it is a real decision: my answer would change what you do and no reasonable default exists, or the act is externally visible, spends a non-trivial amount of money, deletes something, or is otherwise hard to reverse.
+ - When two or more items need action or decision, restate the complete list whenever any of them comes up, each as a verb-first action with a do/skip/defer recommendation.
+ - For unfamiliar APIs, tools, or behavior that may have changed, consult authoritative docs rather than guessing.
+-- Clean up temporary artifacts you created (scratch files, temp git worktrees, throwaway branches, background processes) autonomously as part of finishing — this is your job, not a decision to surface. NEVER ask permission to remove your own temp artifacts; just do it. Use `trash` (not `rm -rf`) for anything you did not create, and never delete a target you didn't create without inspecting it first.
++- Clean up temporary artifacts you created (scratch files, temp git worktrees, throwaway branches, background processes) autonomously as part of finishing — this is your job, not a decision to surface. Use `trash` (not `rm -rf`) for anything you did not create, and never delete a target you didn't create without inspecting it first.
+ - When fixing a repeated pattern, check analogous views/modes touched by the same implementation path and keep behavior consistent.
+ - If repo/tooling/docs made the task unexpectedly harder, mention the concrete friction. For deep investigation, use the `diagnose` skill.
+ 
+@@ -55,7 +55,7 @@
+ 
+ - Dotfiles source of truth: `~/My Drive/dotfiles/`; many home-directory paths are symlinks into it.
+ - Active personal repositories: `~/repos/`; active Epoch repositories: `~/repos/epoch/`.
+-- The canonical dotfiles working tree is the only repository under `~/My Drive/`. All other 108 repositories moved to `~/repos/` on 2026-08-03. Never create another repository there, and never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
++- The canonical dotfiles working tree is the only repository under `~/My Drive/`; every other repository lives under `~/repos/`. Never create another repository there, and never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
+ - All linked worktrees: `~/repos/.worktrees/<repo>/<name>`.
+ 
+ ## Version control
+diff -ruN a/claude/context/google-services.md b/claude/context/google-services.md
+--- a/claude/context/google-services.md	2026-08-06 10:28:14
++++ b/claude/context/google-services.md	2026-09-02 10:55:05
+@@ -70,7 +70,7 @@
+ matters, also check an export format that preserves it, such as Markdown or
+ HTML.
+ 
+-## Google Docs read-only inspection caveats (observed 2026-06-11)
++## Google Docs read-only inspection caveats
+ 
+ For read-only Google Docs inspection, treat Drive API exports as the reliable
+ source for document body state. `gdoc cat` and `gdoc info` can be convenient
+@@ -88,8 +88,9 @@
+ - Verify real content edits with Drive revisions plus per-revision export
+   byte-compare.
+ 
+-This behavior was observed with installed gdoc v0.7.6 on 2026-06-11. Re-check
+-after `gdoc` upgrades before relying on exact subcommand limitations.
++Verify these caveats against the installed `gdoc` (`gdoc --version`) before
++relying on them for a content-change claim; the export-and-byte-compare method
++above is version-independent and is the reliable path regardless.
+ 
+ ## Auth
+ 
+@@ -273,19 +274,13 @@
+ "unverified app" warning (Advanced → continue); that is normal for this client.
+ 
+ The shared OAuth client lives in GCP project `claude-code-gmail-490520` (owned by
+-`pablo@epoch.ai`). On 2026-07-08 its publishing status was changed from "Testing"
+-to **"In production"**, which removed the 7-day refresh-token expiry that had been
+-forcing weekly re-auth. Tokens issued *before* that date still carry the old 7-day
+-fuse — one final `gdoc auth --account <name>` after expiry replaces them with a
+-persistent token (already done for `pablo.stafforini@trajectorylabs.net`; the
+-`personal` and `epoch` gdoc tokens will roll over the next time they expire).
+-Do not switch the app to "Internal": the client is shared across epoch, personal,
++`pablo@epoch.ai`) and is published as "In production", so refresh tokens do not
++expire on a 7-day schedule. Do not switch the app to "Internal": the client is shared across epoch, personal,
+ and trajectory accounts, and Internal would restrict it to `@epoch.ai` users.
+ 
+ ### `access_denied` from `gdoc --account pablo.stafforini@trajectorylabs.net`
+ 
+-Historical (testing-mode) failure; should no longer occur now that the app is in
+-production. If auth fails anyway, rerun:
++Rerun:
+ 
+ ```bash
+ gdoc auth --account pablo.stafforini@trajectorylabs.net
+diff -ruN a/claude/context/mcp-servers.md b/claude/context/mcp-servers.md
+--- a/claude/context/mcp-servers.md	2026-08-11 23:20:20
++++ b/claude/context/mcp-servers.md	2026-09-02 10:55:05
+@@ -16,7 +16,7 @@
+ 
+ Do not use `~/.claude.json`'s `projects.<path>.mcpServers` block. Claude Code supports it, but it duplicates `<project>/.mcp.json` in a hidden location. Always put project-scoped MCPs in `<project>/.mcp.json`.
+ 
+-When source code for an MCP server needs to be cloned locally, use `~/My Drive/dotfiles/claude/mcp-servers/<name>/`. The parent directory may otherwise be empty.
++When source code for an MCP server needs to be cloned locally, use `~/repos/mcp-servers/<name>/`, never a path under `~/My Drive` (the Drive sync root holds no repositories or dependency trees).
+ 
+ ## Multi-account notes
+ 
+diff -ruN a/claude/context/secrets.md b/claude/context/secrets.md
+--- a/claude/context/secrets.md	2026-08-31 20:08:59
++++ b/claude/context/secrets.md	2026-09-02 10:55:05
+@@ -17,9 +17,7 @@
+ 
+ **Why this happens** (1Password's [app-integration security model](https://www.1password.dev/cli/biometric-security/), confirmed against the desktop app's own logs on 2026-07-28): on macOS an authorization is identified by the **controlling terminal — the tty plus its start time** — and survives 10 minutes of inactivity, 12 hours maximum, extending to every sub-shell in that terminal. It is revoked outright whenever the app locks, which `AutoLockMonitor` does on screen lock or sleep. Agent tool calls run each command in a shell with **no controlling terminal at all** (`tty` returns "not a tty"), so every invocation presents a new session identity and re-authorizes. Those repeat prompts are pure waste: the app log shows each one driving a system-unlock challenge that returns `NoNewAccountsUnlocked`, because the vault was already open.
+ 
+-An earlier version of this section claimed "sessions never carry over between commands, and there is no cache the agent can extend." **That was wrong**, and the error mattered: by declaring the window nonexistent it ruled out any mechanism, leaving batching discipline as the only available remedy. There is a renewable 10-minute window; agents simply never had a tty to anchor it to.
+-
+-- **Routing is automatic in zsh; scripts must still name a wrapper (2026-08-01).** `shell/shims/op` routes each invocation by target — `op://Automations/…` and `--vault Automations` to `op-automations`, everything else to `op-desktop` — and `.zshenv` defines an `op` function that reaches it regardless of PATH. The function matters because the Claude Code and Codex Bash tools source a snapshot ending in a frozen `export PATH=…` that places `/opt/homebrew/bin` ahead of `shell/shims`; PATH order alone loses there, function definitions survive. **Child processes inherit neither**, so a script that shells out must name `op-desktop`/`op-automations` itself. That gap is what broke on 2026-08-01: `ahrefs-api-guard` spawned the bare CLI for a read, and passing it `--op-ref op://Employee/…` produced a stray prompt and then a lookup failure, because the service-account context it inherited cannot read personal vaults. Fixed via `op_reader_for()`; `tests/test_op_routing.py` now fails on any new bare-`op` caller or absolute-path invocation. Note an ambient `OP_SERVICE_ACCOUNT_TOKEN` is deliberately *not* honoured for personal-vault requests — passing it through converts a routable request into an authorization failure.
++- **Routing is automatic in zsh; scripts must still name a wrapper.** `shell/shims/op` routes each invocation by target — `op://Automations/…` and `--vault Automations` to `op-automations`, everything else to `op-desktop` — and `.zshenv` defines an `op` function that reaches it regardless of PATH. The function matters because the Claude Code and Codex Bash tools source a snapshot ending in a frozen `export PATH=…` that places `/opt/homebrew/bin` ahead of `shell/shims`; PATH order alone loses there, function definitions survive. **Child processes inherit neither**, so a script that shells out must name `op-desktop`/`op-automations` itself. A bare-CLI child process inherits the service-account context, which cannot read personal vaults, so a personal `--op-ref` from such a process produces a stray prompt and then a lookup failure. `tests/test_op_routing.py` fails on any bare-`op` caller or absolute-path invocation, so add new callers through `op_reader_for()`. Note an ambient `OP_SERVICE_ACCOUNT_TOKEN` is deliberately *not* honoured for personal-vault requests — passing it through converts a routable request into an authorization failure.
+ - **Use `op-desktop` inside every dedicated desktop-gated operation.** It keeps one detached broker process that owns a real pty and runs each `op` command inside that session, so they all share a single authorization: one prompt per 10-minute idle window instead of one per command. Direct agent-shell broker calls are blocked except for `op-desktop --status` and `--stop`; audited wrappers may use the broker internally when they consume output without returning secrets. It forwards protected stdin through its mode-0600 broker socket, so piped item templates are supported inside those wrappers. It does not extend 1Password's limits, it just stops us discarding the session between commands. **Measured 2026-07-28:** five `op` commands across four separate agent shells produced *one* biometric challenge in the 1Password log, against five before.
+ - **Inventory first, then batch.** List every desktop-gated operation the task will need (dedicated non-printing reads of personal vaults, item creates/edits, share links) before starting. Implement or use one audited wrapper that routes them through `op-desktop`; the broker keeps them in the same authorization window.
+ - **Never `op signin --force`.** It discards any live session and forces re-auth. `op-desktop` reuses its broker session automatically. If the broker is unavailable, stop and repair it rather than bypassing it with raw `op`.
+diff -ruN a/claude/hooks/cr-skill-routing-reminder.sh b/claude/hooks/cr-skill-routing-reminder.sh
+--- a/claude/hooks/cr-skill-routing-reminder.sh	2026-08-23 10:32:57
++++ b/claude/hooks/cr-skill-routing-reminder.sh	2026-09-02 10:55:05
+@@ -21,7 +21,7 @@
+ case "$fp" in
+   */tasks/*/prompt.txt|*/tasks/*/grading/rubric.md|*/tasks/*/grading/GOLDEN.md)
+     cat <<'JSON'
+-{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"⚠️ CR ROUTING GUARD — you are editing a CR prompt/rubric/GOLDEN. This is authoring craft OWNED by the /article-to-rubric skill (QA is owned by /qa-reasoning). If you are hand-authoring or hand-fixing this instead of having INVOKED the owning skill, STOP now and invoke the skill so you behave exactly as if the user had invoked it directly. Doing skill-owned craft by hand is a routing-principle violation."}}
++{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"You are editing a CR prompt, rubric, or GOLDEN file. Authoring these is owned by the /article-to-rubric skill (QA by /qa-reasoning). If you have not invoked the owning skill for this change, invoke it now and continue from there rather than hand-editing."}}
+ JSON
+     ;;
+ esac
+diff -ruN a/claude/hooks/remind-claude-readme-update.sh b/claude/hooks/remind-claude-readme-update.sh
+--- a/claude/hooks/remind-claude-readme-update.sh	2026-08-06 10:28:14
++++ b/claude/hooks/remind-claude-readme-update.sh	2026-09-02 10:55:05
+@@ -67,8 +67,7 @@
+ REL_PATH="${REAL_PATH#$DOTFILES_CLAUDE_REAL/}"
+ 
+ cat <<EOF
+-REMINDER: You just modified claude/$REL_PATH (in the dotfiles repo, via symlink).
+-You MUST:
++You just modified claude/$REL_PATH (in the dotfiles repo, via symlink). Before finishing:
+   1. Update claude/README.org to reflect this change.
+   2. Commit in the dotfiles repo: cd "$DOTFILES_ROOT" && git add claude/ && git commit
+ The require-readme-update.sh hook will block the commit if README.org is not staged.
+diff -ruN a/claude/skills/add-to-emacs-packages/SKILL.md b/claude/skills/add-to-emacs-packages/SKILL.md
+--- a/claude/skills/add-to-emacs-packages/SKILL.md	2026-08-06 10:28:14
++++ b/claude/skills/add-to-emacs-packages/SKILL.md	2026-09-02 10:55:05
+@@ -10,8 +10,6 @@
+ 
+ ## When this skill is invoked
+ 
+-**IMPORTANT**: When triggered, follow the execution steps below. Do NOT just describe what the skill does.
+-
+ Do not use this for general Emacs package documentation, README generation, or release work unless the user also wants the package registered in the public packages list. Use `document-elisp-package`, `generate-readme`, or `release-package` for those narrower workflows.
+ 
+ ## Key paths
+diff -ruN a/claude/skills/build/SKILL.md b/claude/skills/build/SKILL.md
+--- a/claude/skills/build/SKILL.md	2026-08-06 10:28:14
++++ b/claude/skills/build/SKILL.md	2026-09-02 10:55:05
+@@ -39,7 +39,6 @@
+ - Cover both high-level architecture and low-level implementation details
+ - Challenge assumptions and suggest alternatives when appropriate
+ - Continue interviewing until the spec is comprehensive enough to implement without guesswork
+-- Aim for thoroughness: for large features, this may mean 20-40+ questions
+ - Stop only when unresolved decisions are answered, explicitly deferred, or captured as implementation assumptions
+ 
+ #### Step 3: Write the spec
+diff -ruN a/claude/skills/chrome-permission-audit/SKILL.md b/claude/skills/chrome-permission-audit/SKILL.md
+--- a/claude/skills/chrome-permission-audit/SKILL.md	2026-08-31 15:57:03
++++ b/claude/skills/chrome-permission-audit/SKILL.md	2026-09-02 10:55:05
+@@ -109,8 +109,8 @@
+ 
+ ## Reporting to the user
+ 
+-Lead with whether the policy holds and what changed since last run — not with a
+-185-row table. Group by profile, name the account, and for each violation say
++Lead with whether the policy holds and what changed since last run — not with the
++full inventory table. Group by profile, name the account, and for each violation say
+ what the site actually controls ("Workspace super-admin: users, passwords") not
+ just its category. Flag anything whose grant date suggests it was a one-off that
+ never got cleaned up.
+diff -ruN a/claude/skills/dx-audit/SKILL.md b/claude/skills/dx-audit/SKILL.md
+--- a/claude/skills/dx-audit/SKILL.md	2026-08-19 17:41:02
++++ b/claude/skills/dx-audit/SKILL.md	2026-09-02 10:55:05
+@@ -7,7 +7,7 @@
+ 
+ # AI developer experience audit
+ 
+-Thoroughly explore $ARGUMENTS (if no argument provided, default to the current project) and produce a prioritized set of recommendations for making this codebase easier for an AI coding agent to work with reliably and efficiently.
++Explore $ARGUMENTS (if no argument provided, default to the current project) and produce a prioritized set of recommendations for making this codebase easier for an AI coding agent to work with reliably and efficiently.
+ 
+ This is an audit skill first. Do not edit the project unless the user explicitly asks for implementation or `--accept` is present in `$ARGUMENTS`.
+ 
+@@ -89,7 +89,7 @@
+ - **Effort-estimated**: rough T-shirt size (S/M/L/XL) so the user can prioritize
+ - **Ordered by impact**: the recommendation that would most reduce friction comes first
+ 
+-Think broadly. The examples below are illustrative, not exhaustive:
++The examples below are illustrative, not exhaustive:
+ 
+ - A test suite so the AI can verify changes
+ - A CLAUDE.md with build/test commands so fresh sessions can self-orient
+diff -ruN a/claude/skills/generate-readme/SKILL.md b/claude/skills/generate-readme/SKILL.md
+--- a/claude/skills/generate-readme/SKILL.md	2026-08-06 10:28:14
++++ b/claude/skills/generate-readme/SKILL.md	2026-09-02 10:55:05
+@@ -143,7 +143,7 @@
+ 
+ If no roadmap content exists in the manual, omit this section.
+ 
+-After moving the roadmap content to the README, **remove the Roadmap section from the org manual** and commit the removal together with the README (or as a separate commit). Do not leave any trace of the roadmap in the manual — no empty section, no "see README" pointer, no commented-out content. Do not add any note in the README about the roadmap also being present in the manual.
++After moving the roadmap content to the README, delete the Roadmap section from the org manual outright (heading and body, nothing left behind) and commit the removal together with the README (or as a separate commit).
+ 
+ #### 8. Contributing and license (if applicable)
+ 
+diff -ruN a/claude/skills/google-sheets-comments/SKILL.md b/claude/skills/google-sheets-comments/SKILL.md
+--- a/claude/skills/google-sheets-comments/SKILL.md	2026-08-06 10:28:14
++++ b/claude/skills/google-sheets-comments/SKILL.md	2026-09-02 10:55:05
+@@ -28,12 +28,8 @@
+ gdoc comments --account epoch --json --all '<sheet-url-or-id>'
+ ```
+ 
+-If the account is unclear, read the local Google services context first:
++If the account is unclear, read `~/My Drive/dotfiles/claude/context/google-services.md` first.
+ 
+-```bash
+-sed -n '1,220p' "$HOME/My Drive/dotfiles/claude/context/google-services.md"
+-```
+-
+ Use Gmail only to discover that a Sheet has comment activity or to extract a
+ Sheet URL/comment hint. After that, switch to `gdoc comments`.
+ 
+@@ -78,19 +74,12 @@
+ 
+ ## Important Pitfalls
+ 
+-- Do not use a Google Docs/Sheets notification email as the source of truth.
+-- Do not post by emailing a notification `Reply <...@docs.google.com>` address
+-  unless the user explicitly asks for that fallback and accepts that it may not
+-  update the Sheet comment thread.
+ - Do not collapse several replies inside one Drive comment thread into one
+   item unless the user explicitly asks for grouped handling.
+ - Do not create a new comment unless the user explicitly asks for a new
+   comment, not a reply to an existing thread.
+ - If the user says "one by one", handle one Drive comment or reply, ask whether
+   to take the proposed action, verify after the action, then continue.
+-- If you already sent an email reply by mistake, check `gdoc comment-info`
+-  before claiming it posted. If it is missing, tell the user exactly what
+-  happened and use `gdoc reply` for the actual Sheet thread after approval.
+ 
+ ## Approval Format
+ 
+diff -ruN a/claude/skills/handoff/SKILL.md b/claude/skills/handoff/SKILL.md
+--- a/claude/skills/handoff/SKILL.md	2026-08-07 17:08:53
++++ b/claude/skills/handoff/SKILL.md	2026-09-02 10:55:05
+@@ -36,10 +36,8 @@
+ to confirm. The user may ask you to edit, reorder, or reject items
+ before you save the file.
+ 
+-IMPORTANT: `AskUserQuestion` cannot display long-form content — only
+-short option labels. Never put the prompt text inside annotations or
+-option descriptions. Always print the prompt as regular text output
+-BEFORE calling `AskUserQuestion`.
++`AskUserQuestion` shows only short option labels, so print the full
++prompt as ordinary text before calling it.
+ 
+ When drafting an inferred prompt:
+ - Start with "Continue from previous session (DATE)." Use the exact
+@@ -67,4 +65,4 @@
+ 5. Print the contents so the user can review.
+ 6. Tell the user to run `! emacsclient -e '(agent-claude-handoff)'`
+    to close this session and start a new one with the prompt auto-submitted.
+-   Do NOT run this command yourself — only the user should trigger it.
++   Do not run it yourself: it closes this session, so only the user should trigger it.
+diff -ruN a/claude/skills/orchestrate-review/SKILL.md b/claude/skills/orchestrate-review/SKILL.md
+--- a/claude/skills/orchestrate-review/SKILL.md	2026-08-31 08:35:03
++++ b/claude/skills/orchestrate-review/SKILL.md	2026-09-02 10:55:05
+@@ -36,7 +36,7 @@
+   rejects a nonempty Agent 1 transcript for a new, non-adopted stage; sequencing
+   the stage runs remains the orchestrator's responsibility.
+ 
+-## STAGE ATOMICITY — HARD RULE
++## Stage atomicity
+ 
+ The entire stage is the smallest orchestration unit. After the plan review,
+ send one initial implementation handoff to Agent 1 and wait for the complete
+@@ -46,7 +46,6 @@
+ not a reason to return, and that it must wait inside the turn with bounded
+ polling (under the 10-minute command limit, re-armed as needed). An ended turn
+ is a stop; the orchestrator's only remedy is one targeted steer.
+-Violating the letter of these rules violates the workflow:
+ 
+ - Never report progress as `Task N`; report only the stage and current phase.
+ - Never inspect or steer Agent 1's internal tasks, subagents, task transcripts,
+@@ -71,14 +70,12 @@
+   does not run acceptance tests, compare outputs, or add an
+   implementation-review pass.
+ 
+-## SUPERVISION AND STOP-LOSS — HARD RULE
++## Supervision and stop-loss
+ 
+-Stage atomicity governs *prompting*, not *watching*. The orchestrator must
+-supervise the stage from evidence Agent 1 publishes, and must stop a stage
+-that is burning time without landing anything. A 10-hour run of five
+-full-cycle retries with no landed result happened once because the
+-orchestrator read "never inspect" as "never look"; that is a failure of the
+-orchestrator, not compliance.
++Stage atomicity governs *prompting*, not *watching*. The orchestrator
++supervises the stage from the evidence Agent 1 publishes and stops a stage
++that is burning time without landing anything. "Never inspect internal
++tasks" does not mean "never look at progress."
+ 
+ - The injected implementation contract names a progress file
+   (`<run-file>.progress`). Agent 1 appends one line per completed step,
+@@ -462,7 +459,7 @@
+   credential, irreversible authority, spending, destructive action, or an
+   underdetermined product choice
+ 
+-## Session cleanup — HARD RULE
++## Session cleanup
+ 
+ Stage sessions are disposable. Kill both fixed actor sessions as soon as the
+ run reaches a terminal state (`complete-stage`, a frozen run, or an abandoned
+diff -ruN a/claude/skills/personalize/SKILL.md b/claude/skills/personalize/SKILL.md
+--- a/claude/skills/personalize/SKILL.md	2026-08-26 12:39:46
++++ b/claude/skills/personalize/SKILL.md	2026-09-02 10:55:05
+@@ -20,13 +20,6 @@
+   rhythm, his explicit hedging, and his vocabulary. Avoiding AI tells is not the
+   same as sounding like him.
+ 
+-Historically this was two steps: draft, then run the `humanize` skill as a
+-separate audit. That double pass is tedious, and when the draft is already
+-in-voice it changes almost nothing. So this skill folds both concerns into
+-composition itself: you hold the tells in mind *and* match his voice as you
+-write, producing clean, in-voice text directly. There is no separate humanize
+-invocation for ordinary messages.
+-
+ ## Procedure
+ 
+ 1. **Load his voice.** Read the private samples at
+@@ -53,8 +46,7 @@
+ - Lead with the ask; one ask per message.
+ - No framing, no restating the question, no announcing future messages, no
+   closing summaries.
+-- Slack replies and DMs: 2–4 sentences, ~100 words max. Email tolerates a
+-  little more.
++- Slack replies and DMs are a few sentences; email tolerates a little more.
+ - When torn between two lengths, pick the shorter.
+ 
+ ## Pablo's style (distilled from the samples)
+diff -ruN a/claude/skills/proofread/SKILL.md b/claude/skills/proofread/SKILL.md
+--- a/claude/skills/proofread/SKILL.md	2026-08-06 10:59:53
++++ b/claude/skills/proofread/SKILL.md	2026-09-02 10:55:05
+@@ -1,7 +1,6 @@
+ ---
+ name: proofread
+ description: Proofread Markdown for spelling, grammar, typos, punctuation, and light style/clarity issues. Use for proofread, spell check, grammar check, typo review, or proofreading a Markdown file.
+-model: sonnet
+ ---
+ 
+ # Proofread skill
+diff -ruN a/claude/skills/symptom-check/SKILL.md b/claude/skills/symptom-check/SKILL.md
+--- a/claude/skills/symptom-check/SKILL.md	2026-08-06 10:28:14
++++ b/claude/skills/symptom-check/SKILL.md	2026-09-02 10:55:05
+@@ -102,7 +102,7 @@
+ 
+ ## Anti-patterns
+ 
+-These have all happened. Don't:
++Do not:
+ 
+ - **Skip Step 4** because the local fix "obviously works." If you can't articulate the invariant, you're patching.
+ - **Pad Step 5** with maybes to make the case feel thorough. Either confirm or admit you didn't check.
+diff -ruN a/claude/skills/update-log/SKILL.md b/claude/skills/update-log/SKILL.md
+--- a/claude/skills/update-log/SKILL.md	2026-08-31 15:57:03
++++ b/claude/skills/update-log/SKILL.md	2026-09-02 10:55:05
+@@ -201,9 +201,7 @@
+ This step runs after the hooks on purpose. The project brief is the source the
+ map summarises, so it has to be current before the map is written; doing it the
+ other way round produces a digest of the state the project was in before this
+-session. Until 2026-08-13 this step sat *before* the hooks while instructing the
+-reader to work from a brief the hooks had not refreshed yet — an instruction
+-nobody following the document in order could satisfy.
++session.
+ 
+ How CLAUDE.md is maintained depends on its shape — the file itself tells you which mode to use:
+ 
+@@ -218,7 +216,7 @@
+ contract that the generator and its output must satisfy. For generic projects,
+ apply them directly.
+ 
+-1. **Regenerate `## Current focus` from the brief's open work, replacing the previous content — never append to it.** For `.org` briefs the open work is the `** Active TODOs` headings. Output a short digest: a one-line orientation, optionally followed by up to ~6 bullets of the live open priorities. Hard cap ~120 words. **No dates and no session narrative** (e.g. "On 2026-06-29 did X") — those live in `logs/`; durable state lives in the brief.
++1. **Regenerate `## Current focus` from the brief's open work, replacing the previous content — never append to it.** For `.org` briefs the open work is the `** Active TODOs` headings. Output a short digest: a one-line orientation followed by the live open priorities, one bullet each. It is an index into the brief, not a summary of it. **No dates and no session narrative** (e.g. "On 2026-06-29 did X") — those live in `logs/`; durable state lives in the brief.
+    - **Why replace, not append:** appending is what turns `Current focus` into a chronological blob that duplicates the log and the brief. Replacing loses nothing — the session log you just wrote holds the narrative, and the brief's `** Active TODOs` hold the live state. `Current focus` is only a convenience index into those.
+    - If the existing `Current focus` is already a multi-paragraph blob, this run is the moment to compact it down to the digest; do not preserve the old chronology.
+    - **Choose what to list deterministically**, not by impression, so two runs over the same brief produce the same digest:
+diff -ruN a/claude/skills/verify/SKILL.md b/claude/skills/verify/SKILL.md
+--- a/claude/skills/verify/SKILL.md	2026-08-19 17:41:23
++++ b/claude/skills/verify/SKILL.md	2026-09-02 10:55:05
+@@ -9,10 +9,6 @@
+ 
+ Execute $ARGUMENTS with self-generated verification criteria that close the agentic loop. The goal: never declare a task "done" without concrete evidence that it was done correctly.
+ 
+-## When this skill is invoked
+-
+-**IMPORTANT**: When triggered, follow the execution steps below. Do NOT just describe what the skill does.
+-
+ ## When not to use
+ 
+ - Do not use for a simple direct check where the user asked for one command or one fact and no verification loop is needed.
+@@ -81,7 +77,7 @@
+ - **Some fail**: fix the failures, then re-verify (only the failed criteria, plus any that might have been affected by the fix). Loop until all pass or you've exhausted reasonable approaches.
+ - **Some uncertain**: flag these to the user. Ask whether they want to provide judgment, modify the criteria, or accept the uncertainty.
+ 
+-If you loop more than 3 times on the same criterion, stop and surface the issue to the user rather than spinning.
++If repeated fixes are not converging on a criterion, stop and surface the issue to the user rather than continuing to iterate.
+ 
+ Keep the final response proportionate to the task. Include the result or artifact, the criteria evaluated, pass/fail/uncertain status with evidence, and any unresolved uncertainty. For small tasks, a terse verification summary is enough; for larger tasks, use a compact table or checklist.
+ 
+diff -ruN a/codex/AGENTS.md b/codex/AGENTS.md
+--- a/codex/AGENTS.md	2026-08-20 11:04:42
++++ b/codex/AGENTS.md	2026-09-02 10:55:05
+@@ -3,17 +3,17 @@
+ ## Operating rules
+ 
+ - Never present guesses as facts; state uncertainty and push back when assumptions are weak or conflict with constraints.
+-- Treat every unintended behavior you encounter, in any context, as a prompt to diagnose and fix the underlying issue. Correct the observed behavior as a consequence of fixing that issue, never as a direct fix target.
++- When you fix unintended behavior, diagnose and fix the underlying issue; the observed behavior gets corrected as a consequence, never as the direct fix target.
+ - Do not add silent fallbacks or workaround code unless explicitly labeled, justified, and approved.
+-- **Never escalate a tool call to me for approval.** I run in `auto` mode deliberately: a hook or guard may allow a call or deny it outright with a reason, but it must never ask. A guard that prompts is a broken guard — the MCP approval guard was deleted on 2026-07-31 for exactly this, after a backtest showed it escalating 42% of 7,552 historical MCP calls against 4 hard blocks. Do not reintroduce an ask-style gate on any tool.
+-- Verify fixes end-to-end before calling them done. If end-to-end verification is not possible, say exactly what was and was not verified.
++- **Never escalate a tool call to me for approval.** I run in `auto` mode deliberately: a hook or guard may allow a call or deny it outright with a reason, but it must never ask. A guard that prompts is a broken guard: ask-style gates escalate far more calls than they would ever block. Do not reintroduce an ask-style gate on any tool.
++- Verify fixes end-to-end before calling them done.
+ - Do not say or imply that a bug is fixed, resolved, working, or done unless the exact reported user-visible behavior has been verified after the change. Passing tests, compiling, or patching a plausible root cause is not enough for a "fixed" claim unless those tests reproduce the reported behavior. Say what was or wasn't verified only when it bears on my decision — a gap I would act on, or a "done" claim resting on weaker evidence than it looks. Exercise judgment; never append a verification note mechanically.
+ - A passing metric, scorecard, or count is completion evidence only after confirming it directly covers the user's stated requirement. If it does not, add or use a direct check, or state the remaining unmeasured gap.
+ - Do not ask me to do things you can do yourself. Exhaust self-serve paths first, including browser automation where the session provides it. Ask me to act only when the step genuinely requires my person — credentials/2FA/biometrics only I hold, access blocked by region or hardware with no agent path, or policy-required confirmation — and say why no agent path exists.
+ - Do the work rather than handing me a to-do list. Anything within what I asked that you can carry out without my input gets done in the same turn and reported in a line — never offered back as something for me to approve. Put a question to me only when it is a real decision: my answer would change what you do and no reasonable default exists, or the act is externally visible, spends a non-trivial amount of money, deletes something, or is otherwise hard to reverse.
+ - When two or more items need action or decision, restate the complete list whenever any of them comes up, each as a verb-first action with a do/skip/defer recommendation.
+ - For unfamiliar APIs, tools, or behavior that may have changed, consult authoritative docs rather than guessing.
+-- Clean up temporary artifacts you created (scratch files, temp git worktrees, throwaway branches, background processes) autonomously as part of finishing — this is your job, not a decision to surface. NEVER ask permission to remove your own temp artifacts; just do it. Use `trash` (not `rm -rf`) for anything you did not create, and never delete a target you didn't create without inspecting it first.
++- Clean up temporary artifacts you created (scratch files, temp git worktrees, throwaway branches, background processes) autonomously as part of finishing — this is your job, not a decision to surface. Use `trash` (not `rm -rf`) for anything you did not create, and never delete a target you didn't create without inspecting it first.
+ - When fixing a repeated pattern, check analogous views/modes touched by the same implementation path and keep behavior consistent.
+ - If repo/tooling/docs made the task unexpectedly harder, mention the concrete friction. For deep investigation, use the `diagnose` skill.
+ 
+@@ -55,7 +55,7 @@
+ 
+ - Dotfiles source of truth: `~/My Drive/dotfiles/`; many home-directory paths are symlinks into it.
+ - Active personal repositories: `~/repos/`; active Epoch repositories: `~/repos/epoch/`.
+-- The canonical dotfiles working tree is the only repository under `~/My Drive/`. All other 108 repositories moved to `~/repos/` on 2026-08-03. Never create another repository there, and never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
++- The canonical dotfiles working tree is the only repository under `~/My Drive/`; every other repository lives under `~/repos/`. Never create another repository there, and never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
+ - All linked worktrees: `~/repos/.worktrees/<repo>/<name>`.
+ 
+ ## Version control
+diff -ruN a/codex/hooks/remind-claude-readme-update.sh b/codex/hooks/remind-claude-readme-update.sh
+--- a/codex/hooks/remind-claude-readme-update.sh	2026-08-06 10:28:14
++++ b/codex/hooks/remind-claude-readme-update.sh	2026-09-02 10:55:05
+@@ -56,8 +56,7 @@
+   REL_PATH="${REAL_PATH#$DOTFILES_CLAUDE_REAL/}"
+ 
+   MESSAGE=$(cat <<EOF
+-REMINDER: You just modified claude/$REL_PATH (in the dotfiles repo, via symlink).
+-You MUST:
++You just modified claude/$REL_PATH (in the dotfiles repo, via symlink). Before finishing:
+   1. Update claude/README.org to reflect this change.
+   2. Commit in the dotfiles repo: cd "$DOTFILES_ROOT" && git add claude/ && git commit
+ The require-readme-update.sh hook will block the commit if README.org is not staged.
+diff -ruN a/codex/skills/add-to-emacs-packages/SKILL.md b/codex/skills/add-to-emacs-packages/SKILL.md
+--- a/codex/skills/add-to-emacs-packages/SKILL.md	2026-08-06 10:28:14
++++ b/codex/skills/add-to-emacs-packages/SKILL.md	2026-09-02 10:55:05
+@@ -9,8 +9,6 @@
+ 
+ ## When this skill is invoked
+ 
+-**IMPORTANT**: When triggered, follow the execution steps below. Do NOT just describe what the skill does.
+-
+ Do not use this for general Emacs package documentation, README generation, or release work unless the user also wants the package registered in the public packages list. Use `document-elisp-package`, `generate-readme`, or `release-package` for those narrower workflows.
+ 
+ ## Key paths
+diff -ruN a/codex/skills/build/SKILL.md b/codex/skills/build/SKILL.md
+--- a/codex/skills/build/SKILL.md	2026-08-06 10:28:14
++++ b/codex/skills/build/SKILL.md	2026-09-02 10:55:05
+@@ -38,7 +38,6 @@
+ - Cover both high-level architecture and low-level implementation details
+ - Challenge assumptions and suggest alternatives when appropriate
+ - Continue interviewing until the spec is comprehensive enough to implement without guesswork
+-- Aim for thoroughness: for large features, this may mean 20-40+ questions
+ - Stop only when unresolved decisions are answered, explicitly deferred, or captured as implementation assumptions
+ 
+ #### Step 3: Write the spec
+diff -ruN a/codex/skills/chrome-permission-audit/SKILL.md b/codex/skills/chrome-permission-audit/SKILL.md
+--- a/codex/skills/chrome-permission-audit/SKILL.md	2026-08-31 15:57:03
++++ b/codex/skills/chrome-permission-audit/SKILL.md	2026-09-02 10:55:05
+@@ -109,8 +109,8 @@
+ 
+ ## Reporting to the user
+ 
+-Lead with whether the policy holds and what changed since last run — not with a
+-185-row table. Group by profile, name the account, and for each violation say
++Lead with whether the policy holds and what changed since last run — not with the
++full inventory table. Group by profile, name the account, and for each violation say
+ what the site actually controls ("Workspace super-admin: users, passwords") not
+ just its category. Flag anything whose grant date suggests it was a one-off that
+ never got cleaned up.
+diff -ruN a/codex/skills/dx-audit/SKILL.md b/codex/skills/dx-audit/SKILL.md
+--- a/codex/skills/dx-audit/SKILL.md	2026-08-19 17:41:02
++++ b/codex/skills/dx-audit/SKILL.md	2026-09-02 10:55:05
+@@ -5,7 +5,7 @@
+ 
+ # AI developer experience audit
+ 
+-Thoroughly explore $ARGUMENTS (if no argument provided, default to the current project) and produce a prioritized set of recommendations for making this codebase easier for an AI coding agent to work with reliably and efficiently.
++Explore $ARGUMENTS (if no argument provided, default to the current project) and produce a prioritized set of recommendations for making this codebase easier for an AI coding agent to work with reliably and efficiently.
+ 
+ This is an audit skill first. Do not edit the project unless the user explicitly asks for implementation or `--accept` is present in `$ARGUMENTS`.
+ 
+@@ -87,7 +87,7 @@
+ - **Effort-estimated**: rough T-shirt size (S/M/L/XL) so the user can prioritize
+ - **Ordered by impact**: the recommendation that would most reduce friction comes first
+ 
+-Think broadly. The examples below are illustrative, not exhaustive:
++The examples below are illustrative, not exhaustive:
+ 
+ - A test suite so the AI can verify changes
+ - A CLAUDE.md with build/test commands so fresh sessions can self-orient
+diff -ruN a/codex/skills/generate-readme/SKILL.md b/codex/skills/generate-readme/SKILL.md
+--- a/codex/skills/generate-readme/SKILL.md	2026-08-06 10:28:14
++++ b/codex/skills/generate-readme/SKILL.md	2026-09-02 10:55:05
+@@ -143,7 +143,7 @@
+ 
+ If no roadmap content exists in the manual, omit this section.
+ 
+-After moving the roadmap content to the README, **remove the Roadmap section from the org manual** and commit the removal together with the README (or as a separate commit). Do not leave any trace of the roadmap in the manual — no empty section, no "see README" pointer, no commented-out content. Do not add any note in the README about the roadmap also being present in the manual.
++After moving the roadmap content to the README, delete the Roadmap section from the org manual outright (heading and body, nothing left behind) and commit the removal together with the README (or as a separate commit).
+ 
+ #### 8. Contributing and license (if applicable)
+ 
+diff -ruN a/codex/skills/google-sheets-comments/SKILL.md b/codex/skills/google-sheets-comments/SKILL.md
+--- a/codex/skills/google-sheets-comments/SKILL.md	2026-08-06 10:28:14
++++ b/codex/skills/google-sheets-comments/SKILL.md	2026-09-02 10:55:05
+@@ -28,12 +28,8 @@
+ gdoc comments --account epoch --json --all '<sheet-url-or-id>'
+ ```
+ 
+-If the account is unclear, read the local Google services context first:
++If the account is unclear, read `~/My Drive/dotfiles/claude/context/google-services.md` first.
+ 
+-```bash
+-sed -n '1,220p' "$HOME/My Drive/dotfiles/claude/context/google-services.md"
+-```
+-
+ Use Gmail only to discover that a Sheet has comment activity or to extract a
+ Sheet URL/comment hint. After that, switch to `gdoc comments`.
+ 
+@@ -78,19 +74,12 @@
+ 
+ ## Important Pitfalls
+ 
+-- Do not use a Google Docs/Sheets notification email as the source of truth.
+-- Do not post by emailing a notification `Reply <...@docs.google.com>` address
+-  unless the user explicitly asks for that fallback and accepts that it may not
+-  update the Sheet comment thread.
+ - Do not collapse several replies inside one Drive comment thread into one
+   item unless the user explicitly asks for grouped handling.
+ - Do not create a new comment unless the user explicitly asks for a new
+   comment, not a reply to an existing thread.
+ - If the user says "one by one", handle one Drive comment or reply, ask whether
+   to take the proposed action, verify after the action, then continue.
+-- If you already sent an email reply by mistake, check `gdoc comment-info`
+-  before claiming it posted. If it is missing, tell the user exactly what
+-  happened and use `gdoc reply` for the actual Sheet thread after approval.
+ 
+ ## Approval Format
+ 
+diff -ruN a/codex/skills/handoff/SKILL.md b/codex/skills/handoff/SKILL.md
+--- a/codex/skills/handoff/SKILL.md	2026-08-07 17:08:24
++++ b/codex/skills/handoff/SKILL.md	2026-09-02 10:55:05
+@@ -65,4 +65,4 @@
+ 5. Print the contents so the user can review.
+ 6. Tell the user to run `! emacsclient -e '(agent-codex-handoff)'`
+    to close this session and start a new one with the prompt auto-submitted.
+-   Do NOT run this command yourself — only the user should trigger it.
++   Do not run it yourself: it closes this session, so only the user should trigger it.
+diff -ruN a/codex/skills/orchestrate-review/SKILL.md b/codex/skills/orchestrate-review/SKILL.md
+--- a/codex/skills/orchestrate-review/SKILL.md	2026-08-31 08:35:03
++++ b/codex/skills/orchestrate-review/SKILL.md	2026-09-02 10:55:05
+@@ -36,7 +36,7 @@
+   rejects a nonempty Agent 1 transcript for a new, non-adopted stage; sequencing
+   the stage runs remains the orchestrator's responsibility.
+ 
+-## STAGE ATOMICITY — HARD RULE
++## Stage atomicity
+ 
+ The entire stage is the smallest orchestration unit. After the plan review,
+ send one initial implementation handoff to Agent 1 and wait for the complete
+@@ -46,7 +46,6 @@
+ not a reason to return, and that it must wait inside the turn with bounded
+ polling (under the 10-minute command limit, re-armed as needed). An ended turn
+ is a stop; the orchestrator's only remedy is one targeted steer.
+-Violating the letter of these rules violates the workflow:
+ 
+ - Never report progress as `Task N`; report only the stage and current phase.
+ - Never inspect or steer Agent 1's internal tasks, subagents, task transcripts,
+@@ -71,14 +70,12 @@
+   does not run acceptance tests, compare outputs, or add an
+   implementation-review pass.
+ 
+-## SUPERVISION AND STOP-LOSS — HARD RULE
++## Supervision and stop-loss
+ 
+-Stage atomicity governs *prompting*, not *watching*. The orchestrator must
+-supervise the stage from evidence Agent 1 publishes, and must stop a stage
+-that is burning time without landing anything. A 10-hour run of five
+-full-cycle retries with no landed result happened once because the
+-orchestrator read "never inspect" as "never look"; that is a failure of the
+-orchestrator, not compliance.
++Stage atomicity governs *prompting*, not *watching*. The orchestrator
++supervises the stage from the evidence Agent 1 publishes and stops a stage
++that is burning time without landing anything. "Never inspect internal
++tasks" does not mean "never look at progress."
+ 
+ - The injected implementation contract names a progress file
+   (`<run-file>.progress`). Agent 1 appends one line per completed step,
+@@ -462,7 +459,7 @@
+   credential, irreversible authority, spending, destructive action, or an
+   underdetermined product choice
+ 
+-## Session cleanup — HARD RULE
++## Session cleanup
+ 
+ Stage sessions are disposable. Kill both fixed actor sessions as soon as the
+ run reaches a terminal state (`complete-stage`, a frozen run, or an abandoned
+diff -ruN a/codex/skills/personalize/SKILL.md b/codex/skills/personalize/SKILL.md
+--- a/codex/skills/personalize/SKILL.md	2026-08-26 12:40:19
++++ b/codex/skills/personalize/SKILL.md	2026-09-02 10:55:05
+@@ -20,13 +20,6 @@
+   rhythm, his explicit hedging, and his vocabulary. Avoiding AI tells is not the
+   same as sounding like him.
+ 
+-Historically this was two steps: draft, then run the `humanize` skill as a
+-separate audit. That double pass is tedious, and when the draft is already
+-in-voice it changes almost nothing. So this skill folds both concerns into
+-composition itself: you hold the tells in mind *and* match his voice as you
+-write, producing clean, in-voice text directly. There is no separate humanize
+-invocation for ordinary messages.
+-
+ ## Procedure
+ 
+ 1. **Load his voice.** Read the private samples at
+@@ -53,8 +46,7 @@
+ - Lead with the ask; one ask per message.
+ - No framing, no restating the question, no announcing future messages, no
+   closing summaries.
+-- Slack replies and DMs: 2–4 sentences, ~100 words max. Email tolerates a
+-  little more.
++- Slack replies and DMs are a few sentences; email tolerates a little more.
+ - When torn between two lengths, pick the shorter.
+ 
+ ## Pablo's style (distilled from the samples)
+diff -ruN a/codex/skills/symptom-check/SKILL.md b/codex/skills/symptom-check/SKILL.md
+--- a/codex/skills/symptom-check/SKILL.md	2026-08-06 10:28:14
++++ b/codex/skills/symptom-check/SKILL.md	2026-09-02 10:55:05
+@@ -101,7 +101,7 @@
+ 
+ ## Anti-patterns
+ 
+-These have all happened. Don't:
++Do not:
+ 
+ - **Skip Step 4** because the local fix "obviously works." If you can't articulate the invariant, you're patching.
+ - **Pad Step 5** with maybes to make the case feel thorough. Either confirm or admit you didn't check.
+diff -ruN a/codex/skills/update-log/SKILL.md b/codex/skills/update-log/SKILL.md
+--- a/codex/skills/update-log/SKILL.md	2026-08-31 15:57:03
++++ b/codex/skills/update-log/SKILL.md	2026-09-02 10:55:05
+@@ -201,9 +201,7 @@
+ This step runs after the hooks on purpose. The project brief is the source the
+ map summarises, so it has to be current before the map is written; doing it the
+ other way round produces a digest of the state the project was in before this
+-session. Until 2026-08-13 this step sat *before* the hooks while instructing the
+-reader to work from a brief the hooks had not refreshed yet — an instruction
+-nobody following the document in order could satisfy.
++session.
+ 
+ How CLAUDE.md is maintained depends on its shape — the file itself tells you which mode to use:
+ 
+@@ -218,7 +216,7 @@
+ contract that the generator and its output must satisfy. For generic projects,
+ apply them directly.
+ 
+-1. **Regenerate `## Current focus` from the brief's open work, replacing the previous content — never append to it.** For `.org` briefs the open work is the `** Active TODOs` headings. Output a short digest: a one-line orientation, optionally followed by up to ~6 bullets of the live open priorities. Hard cap ~120 words. **No dates and no session narrative** (e.g. "On 2026-06-29 did X") — those live in `logs/`; durable state lives in the brief.
++1. **Regenerate `## Current focus` from the brief's open work, replacing the previous content — never append to it.** For `.org` briefs the open work is the `** Active TODOs` headings. Output a short digest: a one-line orientation followed by the live open priorities, one bullet each. It is an index into the brief, not a summary of it. **No dates and no session narrative** (e.g. "On 2026-06-29 did X") — those live in `logs/`; durable state lives in the brief.
+    - **Why replace, not append:** appending is what turns `Current focus` into a chronological blob that duplicates the log and the brief. Replacing loses nothing — the session log you just wrote holds the narrative, and the brief's `** Active TODOs` hold the live state. `Current focus` is only a convenience index into those.
+    - If the existing `Current focus` is already a multi-paragraph blob, this run is the moment to compact it down to the digest; do not preserve the old chronology.
+    - **Choose what to list deterministically**, not by impression, so two runs over the same brief produce the same digest:
+diff -ruN a/codex/skills/verify/SKILL.md b/codex/skills/verify/SKILL.md
+--- a/codex/skills/verify/SKILL.md	2026-08-19 17:41:23
++++ b/codex/skills/verify/SKILL.md	2026-09-02 10:55:05
+@@ -7,10 +7,6 @@
+ 
+ Execute $ARGUMENTS with self-generated verification criteria that close the agentic loop. The goal: never declare a task "done" without concrete evidence that it was done correctly.
+ 
+-## When this skill is invoked
+-
+-**IMPORTANT**: When triggered, follow the execution steps below. Do NOT just describe what the skill does.
+-
+ ## When not to use
+ 
+ - Do not use for a simple direct check where the user asked for one command or one fact and no verification loop is needed.
+@@ -79,7 +75,7 @@
+ - **Some fail**: fix the failures, then re-verify (only the failed criteria, plus any that might have been affected by the fix). Loop until all pass or you've exhausted reasonable approaches.
+ - **Some uncertain**: flag these to the user. Ask whether they want to provide judgment, modify the criteria, or accept the uncertainty.
+ 
+-If you loop more than 3 times on the same criterion, stop and surface the issue to the user rather than spinning.
++If repeated fixes are not converging on a criterion, stop and surface the issue to the user rather than continuing to iterate.
+ 
+ Keep the final response proportionate to the task. Include the result or artifact, the criteria evaluated, pass/fail/uncertain status with evidence, and any unresolved uncertainty. For small tasks, a terse verification summary is enough; for larger tasks, use a compact table or checklist.
+ 
+diff -ruN a/emacs/.claude/skills/emacs-freeze/SKILL.md b/emacs/.claude/skills/emacs-freeze/SKILL.md
+--- a/emacs/.claude/skills/emacs-freeze/SKILL.md	2026-08-07 20:19:07
++++ b/emacs/.claude/skills/emacs-freeze/SKILL.md	2026-09-02 10:55:05
+@@ -37,10 +37,9 @@
+ **A slow server is not a dead server.** A wedged Emacs may still service
+ process input intermittently — from inside `accept-process-output`, a recursive
+ edit, or a process filter — so server requests can take a minute or more to
+-land instead of never landing. In the session that produced this rule, 3-second
+-and 10-second probes both timed out and were misread as "server unresponsive,"
+-which pushed the whole diagnosis toward kill options. A 90-second probe returned
+-normally, and the session was then recovered with no data loss and no kill.
++land instead of never landing. Short probes (3-10 s) time out on a wedged-but-
++servicing Emacs; a 90-120 s probe often returns, and the difference decides
++between a one-line eval and a kill.
+ Never conclude "unresponsive" without completing the timeout ladder in step 2.5.
+ 
+ ## Procedure
+@@ -100,9 +99,7 @@
+ 
+ Only after **the 120-second probe has also failed** may you describe the server
+ as unresponsive. A shorter failure means "slow", not "dead", and the difference
+-decides whether recovery is a one-line eval or a kill. This ladder exists
+-because skipping it once turned a fully recoverable session into a
+-recommendation to terminate Emacs.
++decides whether recovery is a one-line eval or a kill.
+ 
+ Once a probe returns, pull the buffers using a timeout at least as large as the
+ one that worked:
+@@ -153,7 +150,7 @@
+ 
+ Grep the sample for `call_debugger` and `Fdebug`. If there is ≥1, **the freeze is a debugger problem, not a computation problem.**
+ 
+-**`call_debugger` frames are not recursive edits.** `debug` renders `*Backtrace*` via `debugger-setup-buffer` *before* it reaches `(recursive-edit)`, so a debugger level that is still rendering has no recursive edit yet. Do not report nesting depth from frame counts alone — ask the server for `(recursion-depth)` and report both. In the session that produced this rule the sample showed ~1,350 `call_debugger` frames while `(recursion-depth)` was **5**: about 1,345 levels were still stuck mid-render. The two numbers mean different things and the gap between them is itself diagnostic.
++**`call_debugger` frames are not recursive edits.** `debug` renders `*Backtrace*` via `debugger-setup-buffer` *before* it reaches `(recursive-edit)`, so a debugger level that is still rendering has no recursive edit yet. Do not report nesting depth from frame counts alone — ask the server for `(recursion-depth)` and report both. Example: a sample can show ~1,350 `call_debugger` frames while `(recursion-depth)` is **5**: about 1,345 levels were still stuck mid-render. The two numbers mean different things and the gap between them is itself diagnostic.
+ 
+ Identify the error that opened the **outermost** debugger, but be aware you may not be able to: see the truncation warning in 3c. Note also that nested entry can occur during *unwinding* (`unwind_to_catch → unbind_to → bcall0 → call_debugger`), not only on a fresh signal — if you see that chain, the recursion is being driven by unwind forms, and say so rather than assuming plain re-signalling.
+ 
+@@ -231,7 +228,7 @@
+ 
+ ### Rules
+ 
+-These exist because this skill previously produced a confident, plausible, and wrong diagnosis. Honor them strictly.
++A confident, plausible, wrong diagnosis is the failure mode this skill guards against.
+ 
+ - **No unverified citations.** Do not reference specific external patches, packages, issues, or mailing-list threads unless you have fetched and confirmed they exist. Generic statements about a package's behavior are fine; specific claims like "the auth-source-pass-cache patch" are not.
+ - **Verify facts before stating them.** If you run `find | wc -l`, exclude irrelevant paths (e.g. `.git/`). If you cite Emacs API semantics (idle timers, hooks, etc.), consult documentation or say "I'm not sure about the exact semantics."
+@@ -240,7 +237,7 @@
+ - **Symptoms ≠ causes.** A slow operation visible in the sample is not the cause of the freeze unless Step 3a/3b rules out alternatives.
+ - **A timeout is not a verdict.** "Did not answer in N seconds" is the observation. "The server is unresponsive" is an inference, and it is only warranted after the full ladder in step 2.5. Getting this wrong points the entire diagnosis at destructive recovery.
+ - **Answer the question that was asked.** If the user asks what an option does, lead with the direct answer — "yes, that kills Emacs" — before any qualification. Do not restate the diagnosis instead of answering.
+-- **Prefer measuring to recalling.** Every claim about Emacs internals in this skill was wrong at least once before it was tested. If a fact can be checked with a two-line `emacs -Q --batch` probe or a docstring lookup, check it. When building such a probe, note that a `condition-case` handler around the signal suppresses debugger entry, and that batch mode does not enter the debugger the way an interactive session does — a probe that reports "no debugger entered" may be measuring its own harness.
++- **Prefer measuring to recalling.** If a fact can be checked with a two-line `emacs -Q --batch` probe or a docstring lookup, check it. When building such a probe, note that a `condition-case` handler around the signal suppresses debugger entry, and that batch mode does not enter the debugger the way an interactive session does — a probe that reports "no debugger entered" may be measuring its own harness.
+ 
+ ### 5. Clean up
+ 
+diff -ruN a/emacs/.codex/skills/emacs-freeze/SKILL.md b/emacs/.codex/skills/emacs-freeze/SKILL.md
+--- a/emacs/.codex/skills/emacs-freeze/SKILL.md	2026-08-07 20:19:13
++++ b/emacs/.codex/skills/emacs-freeze/SKILL.md	2026-09-02 10:55:05
+@@ -37,10 +37,9 @@
+ **A slow server is not a dead server.** A wedged Emacs may still service
+ process input intermittently — from inside `accept-process-output`, a recursive
+ edit, or a process filter — so server requests can take a minute or more to
+-land instead of never landing. In the session that produced this rule, 3-second
+-and 10-second probes both timed out and were misread as "server unresponsive,"
+-which pushed the whole diagnosis toward kill options. A 90-second probe returned
+-normally, and the session was then recovered with no data loss and no kill.
++land instead of never landing. Short probes (3-10 s) time out on a wedged-but-
++servicing Emacs; a 90-120 s probe often returns, and the difference decides
++between a one-line eval and a kill.
+ Never conclude "unresponsive" without completing the timeout ladder in step 2.5.
+ 
+ ## Procedure
+@@ -100,9 +99,7 @@
+ 
+ Only after **the 120-second probe has also failed** may you describe the server
+ as unresponsive. A shorter failure means "slow", not "dead", and the difference
+-decides whether recovery is a one-line eval or a kill. This ladder exists
+-because skipping it once turned a fully recoverable session into a
+-recommendation to terminate Emacs.
++decides whether recovery is a one-line eval or a kill.
+ 
+ Once a probe returns, pull the buffers using a timeout at least as large as the
+ one that worked:
+@@ -153,7 +150,7 @@
+ 
+ Grep the sample for `call_debugger` and `Fdebug`. If there is ≥1, **the freeze is a debugger problem, not a computation problem.**
+ 
+-**`call_debugger` frames are not recursive edits.** `debug` renders `*Backtrace*` via `debugger-setup-buffer` *before* it reaches `(recursive-edit)`, so a debugger level that is still rendering has no recursive edit yet. Do not report nesting depth from frame counts alone — ask the server for `(recursion-depth)` and report both. In the session that produced this rule the sample showed ~1,350 `call_debugger` frames while `(recursion-depth)` was **5**: about 1,345 levels were still stuck mid-render. The two numbers mean different things and the gap between them is itself diagnostic.
++**`call_debugger` frames are not recursive edits.** `debug` renders `*Backtrace*` via `debugger-setup-buffer` *before* it reaches `(recursive-edit)`, so a debugger level that is still rendering has no recursive edit yet. Do not report nesting depth from frame counts alone — ask the server for `(recursion-depth)` and report both. Example: a sample can show ~1,350 `call_debugger` frames while `(recursion-depth)` is **5**: about 1,345 levels were still stuck mid-render. The two numbers mean different things and the gap between them is itself diagnostic.
+ 
+ Identify the error that opened the **outermost** debugger, but be aware you may not be able to: see the truncation warning in 3c. Note also that nested entry can occur during *unwinding* (`unwind_to_catch → unbind_to → bcall0 → call_debugger`), not only on a fresh signal — if you see that chain, the recursion is being driven by unwind forms, and say so rather than assuming plain re-signalling.
+ 
+@@ -231,7 +228,7 @@
+ 
+ ### Rules
+ 
+-These exist because this skill previously produced a confident, plausible, and wrong diagnosis. Honor them strictly.
++A confident, plausible, wrong diagnosis is the failure mode this skill guards against.
+ 
+ - **No unverified citations.** Do not reference specific external patches, packages, issues, or mailing-list threads unless you have fetched and confirmed they exist. Generic statements about a package's behavior are fine; specific claims like "the auth-source-pass-cache patch" are not.
+ - **Verify facts before stating them.** If you run `find | wc -l`, exclude irrelevant paths (e.g. `.git/`). If you cite Emacs API semantics (idle timers, hooks, etc.), consult documentation or say "I'm not sure about the exact semantics."
+@@ -240,7 +237,7 @@
+ - **Symptoms ≠ causes.** A slow operation visible in the sample is not the cause of the freeze unless Step 3a/3b rules out alternatives.
+ - **A timeout is not a verdict.** "Did not answer in N seconds" is the observation. "The server is unresponsive" is an inference, and it is only warranted after the full ladder in step 2.5. Getting this wrong points the entire diagnosis at destructive recovery.
+ - **Answer the question that was asked.** If the user asks what an option does, lead with the direct answer — "yes, that kills Emacs" — before any qualification. Do not restate the diagnosis instead of answering.
+-- **Prefer measuring to recalling.** Every claim about Emacs internals in this skill was wrong at least once before it was tested. If a fact can be checked with a two-line `emacs -Q --batch` probe or a docstring lookup, check it. When building such a probe, note that a `condition-case` handler around the signal suppresses debugger entry, and that batch mode does not enter the debugger the way an interactive session does — a probe that reports "no debugger entered" may be measuring its own harness.
++- **Prefer measuring to recalling.** If a fact can be checked with a two-line `emacs -Q --batch` probe or a docstring lookup, check it. When building such a probe, note that a `condition-case` handler around the signal suppresses debugger entry, and that batch mode does not enter the debugger the way an interactive session does — a probe that reports "no debugger entered" may be measuring its own harness.
+ 
+ ### 5. Clean up
+ 

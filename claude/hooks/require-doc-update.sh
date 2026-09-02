@@ -98,6 +98,32 @@ is_doc_exempt_el() {
   esac
 }
 
+# A staged .el change that only rewrites the `;; Version:' header is
+# also exempt: it records a release, and changes no behavior the manual
+# could describe.  Release tooling makes that bump as a commit of its
+# own, which otherwise could not be committed without inventing a
+# documentation edit to satisfy this gate.
+is_version_bump_only() {
+  local file="$1" diff body
+  if [ -n "${STAGED_BASE:-}" ]; then
+    diff=$(git -C "$REPO_ROOT" diff --cached --unified=0 "$STAGED_BASE" -- "$file" 2>/dev/null || true)
+  else
+    diff=$(git -C "$REPO_ROOT" diff --cached --unified=0 -- "$file" 2>/dev/null || true)
+  fi
+  # In a combined `git add ... && git commit' the file is not in the
+  # index yet, so judge it by the working-tree diff instead.
+  if [ -z "$diff" ]; then
+    diff=$(git -C "$REPO_ROOT" diff --unified=0 -- "$file" 2>/dev/null || true)
+  fi
+  [ -n "$diff" ] || return 1
+  # Keep the added and removed content lines, dropping file headers.
+  body=$(printf '%s\n' "$diff" | grep -E '^[+-]' | grep -Ev '^(\+\+\+|---)' || true)
+  [ -n "$body" ] || return 1
+  # Exempt only when every changed line is a version header.
+  ! printf '%s\n' "$body" |
+    grep -qEv '^[+-];;[[:space:]]*Version:[[:space:]]*[0-9][0-9A-Za-z.+-]*[[:space:]]*$'
+}
+
 git_add_elisp_paths() {
   python3 -c '
 import os
@@ -174,7 +200,7 @@ if [ -n "$STAGED" ]; then
   while IFS= read -r file; do
     case "$file" in
       *.el)
-        is_doc_exempt_el "$file" || HAS_EL=true
+        is_doc_exempt_el "$file" || is_version_bump_only "$file" || HAS_EL=true
         ;;
       doc/*.org | */doc/*.org)
         HAS_DOC_ORG=true
@@ -199,7 +225,7 @@ if [ -n "$ADD_ARGS" ]; then
   if [ "$HAS_EL" = false ]; then
     # Extract literal .el paths from git add args without evaluating the shell.
     while IFS= read -r -d '' el_file; do
-      if ! is_doc_exempt_el "$el_file"; then
+      if ! is_doc_exempt_el "$el_file" && ! is_version_bump_only "$el_file"; then
         HAS_EL=true
         break
       fi

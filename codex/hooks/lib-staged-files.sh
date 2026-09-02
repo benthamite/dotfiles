@@ -11,6 +11,11 @@
 #   COMMAND=$(codex_shell_command "$INPUT")
 #   source "$(dirname "$0")/lib-staged-files.sh"
 #   # $STAGED now contains the list of staged files
+#
+# $STAGED_BASE holds the revision the file list was computed against:
+# "HEAD~1" when amending, empty otherwise.  A hook that inspects the
+# staged diff must pass it so that an amend is judged by its full
+# effect rather than by the newest index write alone.
 
 _amend_base() {
   if echo "$COMMAND" | grep -qE '\b--amend\b'; then
@@ -30,4 +35,5 @@ else
   STAGED=$(git diff --cached --name-only 2>/dev/null || true)
   STAGED_STATUS=$(git diff --cached --name-status -M 2>/dev/null || true)
 fi
+STAGED_BASE="$_BASE"
 unset _BASE

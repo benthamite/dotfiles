@@ -3064,6 +3064,39 @@ if os.path.lexists(mode_link) and (
             problems,
         )
 
+    def test_sequential_commits_linked_by_and_are_modelled_as_a_union(self):
+        repo = self.make_repo(["a.txt", "b.txt"])
+        self.write_file(repo, "a.txt", "a2\n")
+        self.write_file(repo, "b.txt", "b2\n")
+        command = (
+            "git add -- a.txt && git commit -m one && "
+            "git add -- b.txt && git commit -m two"
+        )
+        paths, repos, problems = self.module.command_paths_and_commit_repos(
+            command, repo
+        )
+        self.assertEqual(len(repos), 1)
+        root = next(iter(repos))
+        self.assertEqual(paths[root], {"a.txt", "b.txt"})
+        self.assertEqual(problems.get(root, []), [])
+
+    def test_second_commit_not_linked_by_and_is_refused(self):
+        repo = self.make_repo(["a.txt", "b.txt"])
+        self.write_file(repo, "a.txt", "a2\n")
+        self.write_file(repo, "b.txt", "b2\n")
+        commands = (
+            "git add -- a.txt && git commit -m one; git commit -m two",
+            "git add -- a.txt && git commit -m one; "
+            "git add -- b.txt && git commit -m two",
+        )
+        for command in commands:
+            with self.subTest(command=command):
+                paths, repos, problems = self.module.command_paths_and_commit_repos(
+                    command, repo
+                )
+                root = next(iter(repos))
+                self.assertTrue(problems.get(root), problems)
+
 
 if __name__ == "__main__":
     unittest.main()

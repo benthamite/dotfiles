@@ -255,7 +255,10 @@ Heredoc bodies are dropped before lexing, because an apostrophe in prose made
 the lexer raise and the parser fail closed on a commit that staged no Elisp at
 all; argument text that genuinely cannot be lexed still fails closed. Since
 these hooks run before the =git add= they are judging, the paths a command is
-about to stage count as staged.
+about to stage count as staged. A second =git commit= in the same
+command is modelled in sequence when =&&= links it to the first: the adds
+between the two commits are its content, and the guard audits the union,
+which is the tree the whole command leaves behind.
 
 * Verification
 

@@ -1125,16 +1125,32 @@ def command_paths_and_commit_repos(
             if not safe_prefix:
                 planning_chain_safe = False
         elif command_name == "commit":
-            if repo in commit_repos:
+            # A second commit in the same repo is modelled sequentially: the
+            # adds since the previous commit are its content, and the guard
+            # audits the union, which is the tree the whole command leaves
+            # behind. `&&` between the commits keeps the model faithful (a
+            # failed first commit stops the chain); anything looser is refused
+            # below like any other non-deterministic add chain.
+            repeat = repo in commit_repos
+            if repeat and connector != "&&":
                 commit_problems_by_repo.setdefault(repo, []).append(
-                    "Cannot safely model multiple git commits in one guarded command."
+                    "Cannot safely model a second git commit unless && links it "
+                    "to the previous one."
                 )
+                pending_paths_by_repo.pop(repo, None)
+                pending_problems_by_repo.pop(repo, None)
                 continue
             commit_repos.add(repo)
-            commit_paths = set(pending_paths_by_repo.get(repo, set()))
-            commit_problems_by_repo[repo] = list(
-                pending_problems_by_repo.get(repo, [])
-            )
+            commit_paths = set(pending_paths_by_repo.pop(repo, set()))
+            if repeat:
+                commit_paths |= commit_paths_by_repo.get(repo, set())
+                commit_problems_by_repo[repo] = list(
+                    commit_problems_by_repo.get(repo, [])
+                ) + list(pending_problems_by_repo.pop(repo, []))
+            else:
+                commit_problems_by_repo[repo] = list(
+                    pending_problems_by_repo.pop(repo, [])
+                )
             if wrapper_problem:
                 commit_problems_by_repo[repo].append(wrapper_problem)
             if commit_paths or commit_problems_by_repo[repo]:

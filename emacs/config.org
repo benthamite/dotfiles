@@ -4359,6 +4359,41 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (find-file-hook . global-auto-revert-mode))
 #+end_src
 
+** =timer=
+:PROPERTIES:
+:ID:       E00B05EB-0727-42B9-88EE-54B128931E64
+:END:
+
+/timer runs the functions scheduled with =run-at-time= and =run-with-idle-timer=./
+
+A timer fires from whatever wait happens to be in progress and inherits that
+code's dynamic bindings.  =url-open-stream= (like =websocket-open= and Tramp)
+binds =coding-system-for-read= to =binary= around a blocking network connect,
+and Emacs runs timers while that connect waits.  Any file a timer visits or
+reverts in that window arrives as raw bytes, and because
+=after-insert-file-set-coding= copies a non-nil =coding-system-for-read= into
+the permanent-local =buffer-file-coding-system-explicit=, every later revert of
+that buffer re-reads it as =binary= as well.  On 2026-08-31 the midnight agenda
+refresh fired inside such a binding and tagged 264 Org buffers; reverting one of
+them later handed raw bytes to Copilot's =textDocument/didOpen=, which
+=json-serialize= rejected.  No timer legitimately depends on an inherited coding
+binding, so every timer runs with both variables reset.
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-feature timer
+  :config
+  (defun timer-extras-run-with-default-coding (fn timer)
+    "Apply FN to TIMER with no inherited file coding bindings.
+Timers fire from whatever wait is in progress and inherit its dynamic
+bindings.  `url-open-stream' and similar code bind `coding-system-for-read'
+to `binary' around a blocking connect, so a file visited by the timer would
+arrive as raw bytes with a permanent `binary' explicit coding."
+    (let ((coding-system-for-read nil)
+          (coding-system-for-write nil))
+      (funcall fn timer)))
+  (advice-add 'timer-event-handler :around #'timer-extras-run-with-default-coding))
+#+end_src
+
 ** =dired=
 :PROPERTIES:
 :ID:       617F5323-6518-4751-948B-3E8032D93130
@@ -13603,7 +13638,6 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
    ("s-a" . slack-all-threads)
    ("s-c" . slack-channel-select)
    ("s-g" . slack-group-select)
-   ("s-m" . slack-im-select)
    ("s-u" . slack-select-rooms)
    ;; printable keys live in the message-region keymaps (active only on
    ;; rendered messages), never in the mode maps, which apply buffer-wide
@@ -13654,6 +13688,10 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
    ("r" . slack-thread-reply)
    ("R" . slack-message-add-reaction)
    ("z" . slack-message-write-another-buffer)
+   :map slack-message-edit-buffer-mode-map
+   ("s-c" . slack-message-send-from-buffer)
+   ("s-f" . slack-message-select-file)
+   ("s-m" . slack-message-embed-mention)
    :map slack-message-compose-buffer-mode-map
    ("s-c" . slack-message-send-from-buffer)
    ("s-f" . slack-message-select-file)

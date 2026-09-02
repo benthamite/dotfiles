@@ -8,9 +8,11 @@
 | =google-services.md= | A task needs Google account routing, authentication, scopes, refresh-token maintenance, or service-specific troubleshooting. |
 | =mcp-servers.md= | A task adds, removes, places, audits, or diagnoses a Claude MCP server. |
 | =secrets.md= | Before reading, storing, sharing, moving, or otherwise handling credentials and secret-bearing configuration. |
+| =service-access.md= | A task needs an external service (Gmail, Google Sheets/Calendar/Docs/Drive, Slack, GitHub, Anna's Archive) or a manually opened Chrome profile; it maps each service to its local tool. |
 
-These three documents are operational context, not general background to load
-into every task. [[file:google-services.md][google-services.md]] includes account and authentication procedures; do
+These documents are operational context, not general background to load
+into every task. [[file:service-access.md][service-access.md]] is a plain routing table and safe to read
+in full. [[file:google-services.md][google-services.md]] includes account and authentication procedures; do
 not reproduce or run credential-bearing recipes merely to document them.
 [[file:mcp-servers.md][mcp-servers.md]] is safe to read for server topology and placement, but resolved
 per-account environment values remain secrets. [[file:secrets.md][secrets.md]] is handling policy rather

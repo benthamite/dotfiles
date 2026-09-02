@@ -186,6 +186,13 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
+      "name": "paste-via-kill-ring",
+      "claude": "claude/skills/paste-via-kill-ring/SKILL.md",
+      "codex": "codex/skills/paste-via-kill-ring/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
       "name": "personalize",
       "claude": "claude/skills/personalize/SKILL.md",
       "codex": "codex/skills/personalize/SKILL.md",

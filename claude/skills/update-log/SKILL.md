@@ -234,7 +234,7 @@ This is the shape defined by a project's documentation conventions (for Epoch, `
 
 CLAUDE.md has a `## Latest session` section, or neither section (default/legacy). Update the "Latest session" section with:
 
-1. A **2–4 sentence summary** of this session's work (what was done, key outcomes, important numbers).
+1. A **2–4 sentence summary** of this session's work (what was done, key outcomes, important numbers). Omit anything a fresh session recovers from the repository itself — commit hashes, file lists, mechanism details — since this section loads into every session; the log file holds them.
 2. A **pointer** to the full log file: `Full details: <log_dir>/YYYY-MM-DD.md`
 
 Example:

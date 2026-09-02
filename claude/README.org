@@ -129,6 +129,13 @@ when the other client fails preflight on quota or authentication. The isolation
 checks then apply to the selected conditions only, and the cross-client
 comparison stays unavailable.
 
+The =paste-via-kill-ring= skill owns the procedure for handing over text the
+user must paste himself (Emacs kill ring, clipboard for Chrome or native
+forms, opening the target thread). The global instructions only point at it,
+and the service-access routing table lives in
+[[file:context/service-access.md][context/service-access.md]] for the same reason: procedures load on demand,
+while the always-loaded file keeps one trigger line each.
+
 Browser control is runtime-owned rather than mirrored through a tracked
 Codex-App handoff skill. Claude therefore carries no pointer skill or helper
 command for moving a Codex thread into the desktop app.

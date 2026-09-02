@@ -37,6 +37,8 @@ ALLOW = [
     "DATA_DIR=/tmp/d op-automations run --env-file .env.op -- /usr/bin/python3 bridge.py --redraft 2> /tmp/err.txt",
     "op-automations run --env-file /Users/x/repo/.env.op -- /usr/bin/python3 /Users/x/repo/bridge.py --redraft --actor 'claude[bot]'",
     "op-automations --account acct run --env-file .env.op -- true",
+    'op-automations run --env-file "$ROOT/.env.op" -- python3 "$ROOT/bridge.py" --redraft',
+    "op-automations read op://Automations/$REF/credential > /tmp/x",
     "cd ~/repos/x && op-automations run --env-file .env.op -- make test",
     'op-automations run --env-file .env.op -- python3 bridge.py > "$S/out.txt" 2> "$S/err.txt"',
     # read: captured, filed, or consumed
@@ -184,7 +186,8 @@ DENY = [
     "op-'automations' read op://Automations/X/credential",
     "op\\-automations read op://Automations/X/credential",
     "env -u echo op-automations read op://Automations/X/credential",
-    "op-automations read op://Automations/$REF/credential > /tmp/x",
+    "op-automations $SUB op://Automations/X/credential > /tmp/x",
+    'X=$(op-automations read op://Automations/X/credential); op-automations read op://Automations/Y/credential --out-file "$X"',
 ]
 
 

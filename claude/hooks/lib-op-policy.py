@@ -485,8 +485,9 @@ def classify_invocation(
     if any(a[0].startswith("OP_") for a in simple.assignments):
         raise Deny("OP_* environment assignment on a 1Password command (masking or auth override)")
     texts = [w.text for w in words[1:]]
-    if any(w.expands for w in words):
-        raise Deny("1Password command with a shell expansion in its arguments cannot be classified")
+    # Expansions in arguments (`--env-file "$ROOT/.env.op"`, `--out-file "$TMP"`)
+    # do not change a shape's stdout; an expansion in the subcommand position
+    # falls through to the unclassified denial below.
     if "--reveal" in texts:
         raise Deny("--reveal prints a concealed field")
     flags, rest = _parse_global_flags(texts)

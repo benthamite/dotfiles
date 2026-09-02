@@ -195,7 +195,9 @@ brokers =op-automations= and =op-desktop= are the sanctioned access path:
 no credential (masked =run=, captured or filed =read=, metadata-only =jq= over
 item output, =--out-file= documents, writes without =--format=, metadata
 commands) and denies every other shape, including shapes it cannot place and
-a broker named outside a literal nested exec command. Quoted
+a broker named outside a literal nested exec command. Shell expansions are
+fine in broker arguments; an expansion in the subcommand position is
+unclassifiable and denied. Quoted
 argument globs, including =rg= exclusion patterns beginning with =!=, remain
 inert data rather than executable command words. A shell =case= default pattern
 is likewise grammar, not an executable glob. Heredoc bodies fed to a known data sink (=cat=, =tee=, =git=, =gh=, and

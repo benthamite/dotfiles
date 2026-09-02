@@ -6,10 +6,29 @@
 # build process finishes (via elpaca-post-queue-hook). The hook waits by
 # polling a status token with short emacsclient calls, so the daemon's command
 # loop is never held by a long-running wait expression.
+#
+# Output contract (Claude Code PostToolUse): every branch exits 0 and prints
+# JSON. Informational outcomes use hookSpecificOutput.additionalContext with
+# hookEventName; failures use top-level decision/reason so Claude is prompted
+# to act. JSON printed alongside a non-zero exit is discarded by Claude, and a
+# hookSpecificOutput without hookEventName fails schema validation.
 
 set -euo pipefail
 
 input=$(cat)
+
+emit_context() {
+  jq -n --arg m "$1" '{
+    "hookSpecificOutput": {
+      "hookEventName": "PostToolUse",
+      "additionalContext": $m
+    }
+  }'
+}
+
+emit_failure() {
+  jq -n --arg r "$1" '{"decision": "block", "reason": $r}'
+}
 
 file_path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // empty')
 
@@ -85,11 +104,7 @@ file_path=$(normalize_changed_path "$file_path") || exit 0
 test_elisp_file_p "$file_path" && exit 0
 
 if git_operation_in_progress "$file_path"; then
-  jq -n '{
-    "hookSpecificOutput": {
-      "message": "Skipped rebuild+reload because a Git operation is in progress"
-    }
-  }'
+  emit_context "Skipped rebuild+reload because a Git operation is in progress"
   exit 0
 fi
 
@@ -114,12 +129,8 @@ if ! result=$(timeout 30 emacsclient -e "
        (pkg (plist-get resolution :id)))
   (when pkg
     (format \"%s:%s\" pkg (elpaca-extras-rebuild-and-reload pkg))))" 2>&1); then
-  jq -n --arg m "$result" '{
-    "hookSpecificOutput": {
-      "message": ("Failed to resolve the edited Elisp package: " + $m)
-    }
-  }'
-  exit 1
+  emit_failure "Failed to resolve the edited Elisp package: $result"
+  exit 0
 fi
 
 # Strip quotes from emacsclient output
@@ -127,20 +138,12 @@ result=$(printf '%s' "$result" | strip_emacs_string)
 pkg=${result%%:*}
 token=${result#*:}
 if [[ "$pkg" == "nil" ]] || [[ -z "$pkg" ]]; then
-  jq -n '{
-    "hookSpecificOutput": {
-      "message": "Edited Elisp file, but no elpaca package was resolved for rebuild"
-    }
-  }'
+  emit_context "Edited Elisp file, but no elpaca package was resolved for rebuild"
   exit 0
 fi
 
 if [[ -z "$token" ]] || [[ "$token" == "$pkg" ]]; then
-  jq -n --arg p "$pkg" '{
-    "hookSpecificOutput": {
-      "message": ("Scheduled rebuild+reload for " + $p + ", but no completion token was returned")
-    }
-  }'
+  emit_context "Scheduled rebuild+reload for $pkg, but no completion token was returned"
   exit 0
 fi
 
@@ -154,28 +157,16 @@ while (( $(date +%s) <= deadline )); do
   message=${status_result#*:}
   case "$status" in
     finished)
-      jq -n --arg p "$pkg" --arg m "$message" '{
-        "hookSpecificOutput": {
-          "message": ("Completed rebuild+reload of " + $p + ": " + $m)
-        }
-      }'
+      emit_context "Completed rebuild+reload of $pkg: $message"
       exit 0
       ;;
     failed)
-      jq -n --arg p "$pkg" --arg m "$message" '{
-        "hookSpecificOutput": {
-          "message": ("Failed rebuild+reload of " + $p + ": " + $m)
-        }
-      }'
-      exit 1
+      emit_failure "Failed rebuild+reload of $pkg: $message"
+      exit 0
       ;;
   esac
   sleep "$reload_poll_interval"
 done
 
-jq -n --arg p "$pkg" --arg s "$status" --arg m "$message" --arg timeout "$reload_timeout" '{
-  "hookSpecificOutput": {
-    "message": ("Timed out after " + $timeout + "s waiting for rebuild+reload of " + $p + " (last status: " + $s + ": " + $m + ")")
-  }
-}'
-exit 1
+emit_failure "Timed out after ${reload_timeout}s waiting for rebuild+reload of $pkg (last status: $status: $message)"
+exit 0

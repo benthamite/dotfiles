@@ -279,6 +279,17 @@ Claude has events with no Codex equivalent here, including =Read=, =Grep=,
 =Glob=, =Skill=, Notification, and Chrome-specific events. Those are explicit
 manifest differences, not missing peers.
 
+Hooks that return JSON follow the Claude hook contract exactly:
+=hookSpecificOutput= carries =hookEventName= and =additionalContext=, and a
+branch that wants Claude to react exits 0 with top-level =decision= and
+=reason=. A bare =message= field fails schema validation and is dropped, and
+JSON printed beside a non-zero exit is discarded, so both shapes silently lose
+the hook's result. =tests/test_hook_output_contract.py= exercises every output
+branch of =load-elisp-after-edit.sh= and =regenerate-manual-after-edit.sh= and
+scans both hook trees for the invalid shape. The live registration gives
+=load-elisp-after-edit.sh= a 150 s timeout, matching Codex, because the script
+waits up to 120 s for the Elpaca rebuild before reporting.
+
 Sensitive-read guards permit the security audit's shell-export classifier only
 for its exact absolute helper and target paths. The classifier reports names,
 line numbers, scopes, and classifications without printing values.

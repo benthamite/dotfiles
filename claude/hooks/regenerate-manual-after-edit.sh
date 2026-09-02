@@ -42,7 +42,7 @@ if ! texi_output=$(emacs --batch -Q "$file_path" --eval '
                  (org-texinfo-export-to-texinfo)
                  "\n")))' 2>&1); then
   jq -n --arg msg "Texinfo export failed: $(echo "$texi_output" | tail -5 | tr '\n' ' ')" \
-    '{"hookSpecificOutput":{"message":$msg}}'
+    '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":$msg}}'
   exit 0
 fi
 
@@ -66,4 +66,4 @@ fi
 [ "$texi_count" -gt 0 ] || exit 0
 
 jq -n --arg dir "$dir" --argjson t "$texi_count" --argjson i "$info_count" \
-  '{"hookSpecificOutput":{"message":("Regenerated " + ($t|tostring) + " .texi and " + ($i|tostring) + " .info file(s) in " + $dir)}}'
+  '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":("Regenerated " + ($t|tostring) + " .texi and " + ($i|tostring) + " .info file(s) in " + $dir)}}'

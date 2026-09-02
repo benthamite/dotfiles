@@ -461,7 +461,7 @@
       "claude": "claude/hooks/load-elisp-after-edit.sh",
       "codex": "codex/hooks/load-elisp-after-edit.sh",
       "status": "paired",
-      "note": "paired for apply_patch/Edit/Write path lists; Codex PostToolUse output must include hookEventName and use additionalContext rather than Claude's message field"
+      "note": "paired for apply_patch/Edit/Write path lists; both copies emit PostToolUse JSON per the shared hook contract: hookSpecificOutput must carry hookEventName and additionalContext (a bare message field fails Claude's schema validation and is dropped), and failure branches must exit 0 with decision/reason because JSON printed alongside a non-zero exit is ignored"
     },
     {
       "name": "notify-emacs-notification.sh",
@@ -489,7 +489,7 @@
       "claude": "claude/hooks/regenerate-manual-after-edit.sh",
       "codex": "codex/hooks/regenerate-manual-after-edit.sh",
       "status": "paired",
-      "note": "paired for apply_patch/Edit/Write path lists; Codex PostToolUse output must include hookEventName and use additionalContext rather than Claude's message field"
+      "note": "paired for apply_patch/Edit/Write path lists; both copies emit PostToolUse JSON per the shared hook contract: hookSpecificOutput must carry hookEventName and additionalContext (a bare message field fails Claude's schema validation and is dropped), and failure branches must exit 0 with decision/reason because JSON printed alongside a non-zero exit is ignored"
     },
     {
       "name": "regenerate-coverage-map.sh",
@@ -700,7 +700,7 @@
       "tool": "Claude Code",
       "path": "~/.claude/settings.json",
       "tracked": false,
-      "note": "Mutable live global settings; hook registrations are added in place. Stop forwards turn-end state to Emacs, while session-learning capture belongs to the Emacs agent-before-exit path because Stop is not true process exit. Ahrefs and GitHub guard registration is documented in claude/hooks/README.org. The LaunchAgent registry guard is registered on both the shell and edit matchers so plist writes and launchctl verbs are both covered."
+      "note": "Mutable live global settings; hook registrations are added in place. load-elisp-after-edit.sh is registered with timeout 150 (matching codex/hooks.json) because it waits up to 120 s for the Elpaca rebuild before reporting. Stop forwards turn-end state to Emacs, while session-learning capture belongs to the Emacs agent-before-exit path because Stop is not true process exit. Ahrefs and GitHub guard registration is documented in claude/hooks/README.org. The LaunchAgent registry guard is registered on both the shell and edit matchers so plist writes and launchctl verbs are both covered."
     },
     {
       "tool": "Codex",

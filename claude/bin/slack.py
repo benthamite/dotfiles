@@ -459,6 +459,32 @@ def cmd_unsave(args):
     print(json.dumps(out, indent=2))
 
 
+def cmd_file(args):
+    """Download a Slack-hosted file (files.slack.com url_private*) to a local path."""
+    xoxc, xoxd = _tokens()
+    host = urllib.parse.urlparse(args.url).netloc
+    if host != "files.slack.com":
+        sys.stderr.write(f"ERROR: refusing to send Slack credentials to {host}\n")
+        sys.exit(2)
+    req = urllib.request.Request(
+        args.url,
+        headers={"Authorization": f"Bearer {xoxc}", "Cookie": f"d={xoxd}"},
+    )
+    try:
+        resp = urllib.request.urlopen(req)
+    except urllib.error.HTTPError as e:
+        sys.stderr.write(f"ERROR: HTTP {e.code} downloading file\n")
+        sys.exit(1)
+    data = resp.read()
+    ctype = resp.headers.get("Content-Type", "")
+    if ctype.startswith("text/html"):
+        sys.stderr.write("ERROR: got an HTML page instead of the file (auth or access problem)\n")
+        sys.exit(1)
+    with open(args.output, "wb") as fh:
+        fh.write(data)
+    print(json.dumps({"ok": True, "path": args.output, "bytes": len(data), "content_type": ctype}))
+
+
 def main():
     p = argparse.ArgumentParser(description="Slack web-API wrapper (xoxc/xoxd auth)")
     p.add_argument(
@@ -543,6 +569,11 @@ def main():
 
     u = sub.add_parser("unreads")
     u.set_defaults(func=cmd_unreads)
+
+    f = sub.add_parser("file", help="download a files.slack.com url_private to OUTPUT")
+    f.add_argument("url")
+    f.add_argument("output")
+    f.set_defaults(func=cmd_file)
 
     args = p.parse_args()
     global _workspace

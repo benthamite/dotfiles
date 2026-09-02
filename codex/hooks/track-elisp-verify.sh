@@ -185,8 +185,14 @@ consume_live_evidence() {
   trap release_lock EXIT
   [ -s "$MARKER" ] || { release_lock; trap - EXIT; return 1; }
   temporary=$(mktemp "${TMPDIR:-/tmp}/elisp-verify.XXXXXX")
-  awk -F: -v repo="$repo_b64" -v commit="$commit" -v label="$label_b64" \
-    '$1 != repo || $2 != commit || $3 != label' "$MARKER" > "$temporary"
+  # The evidence is bound to the repository's current HEAD, checked
+  # above, so it certifies the newest committed state of this label.
+  # Clear every pending row for the same repository and label, not just
+  # one naming that exact commit: a commit made outside this tool leaves
+  # a row naming a commit that is no longer HEAD, and matching on it
+  # would strand the row forever and block the session.
+  awk -F: -v repo="$repo_b64" -v label="$label_b64" \
+    '$1 != repo || $3 != label' "$MARKER" > "$temporary"
   if [ -s "$temporary" ]; then mv -f "$temporary" "$MARKER"; else rm -f "$temporary" "$MARKER"; fi
   release_lock
   trap - EXIT

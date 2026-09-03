@@ -37,7 +37,7 @@ CLIENT_SECRET_PASS = "env/google-workspace-client-secret"
 
 SCOPES = {
     "epoch": [
-        "https://www.googleapis.com/auth/gmail.modify",
+        "https://mail.google.com/",
         "https://www.googleapis.com/auth/calendar",
         "https://www.googleapis.com/auth/drive",
         "https://www.googleapis.com/auth/documents",
@@ -140,6 +140,12 @@ def main():
         },
         SCOPES[args.account],
     )
+    # Incremental authorization can return previously granted scopes in
+    # addition to the scopes requested above. oauthlib rejects that valid
+    # superset unless relaxed scope matching is enabled; our explicit
+    # missing-scope check below still fails closed if a requested scope is
+    # absent.
+    os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
     creds = flow.run_local_server(
         port=args.port,
         open_browser=True,

@@ -164,7 +164,7 @@ Use `--account epoch` for the Epoch account. When the browser opens, sign in as 
 
 Choose your scopes by what the token will be used for:
 
-- Epoch (full set): `gmail.modify`, `calendar`, `drive`, `documents`, `spreadsheets`.
+- Epoch (full set): `mail.google.com`, `calendar`, `drive`, `documents`, `spreadsheets`.
 - Personal: `gmail.modify`, `calendar.app.created`,
   `calendar.calendarlist.readonly`, `spreadsheets`. Calendar writes are limited
   to secondary calendars created by this OAuth application; calendar-list
@@ -172,7 +172,7 @@ Choose your scopes by what the token will be used for:
   state loss.
 
 ```bash
-SCOPES="https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/spreadsheets"
+SCOPES="https://mail.google.com/ https://www.googleapis.com/auth/spreadsheets"
 # Add ' https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/documents' for the Epoch full set.
 
 uv run --with google-auth-oauthlib --no-project python3 -c "

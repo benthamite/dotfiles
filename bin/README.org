@@ -88,6 +88,7 @@ Mail activation and credential lookup are documented further in
 | =install-epoch-doc-handler= | Safely builds, signs, installs, and registers the local =epoch-doc:= URL handler. |
 | =mdfind-wrapper= | Runs Spotlight’s =mdfind= while suppressing its known query-parser noise. |
 | =personal-updates= | Applies the scheduled and manual update policy documented in [[file:../macos/README.org][the macOS README]]. |
+| =sync-google-birthdays= | Mirrors reconciled BBDB birthdays into the reminder-free personal Google calendar =Birthdays (managed)=. |
 | =switch-gnupg= | Replaces the Homebrew GnuPG formula with a requested historical version. |
 
 * General utilities

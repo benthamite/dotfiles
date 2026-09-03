@@ -1,0 +1,543 @@
+#!/usr/bin/env python3
+"""Mirror reconciled BBDB birthdays into an ordinary Google Calendar."""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import fcntl
+import hashlib
+import importlib.util
+import json
+import os
+import random
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DUMP_SCRIPT = (
+    REPO_ROOT
+    / "macos/.codex/skills/reconcile-contacts/scripts/dump-bbdb.el"
+)
+RECONCILE_SCRIPT = (
+    REPO_ROOT
+    / "macos/.codex/skills/reconcile-contacts/scripts/reconcile-contacts.py"
+)
+BBDB_FILE = Path.home() / "My Drive/bbdb/bbdn.el"
+AUTH_HELPER = REPO_ROOT / "claude/bin/_gworkspace_auth.py"
+STATE_DIR = Path.home() / ".local/state/google-birthdays-sync"
+STATE_FILE = STATE_DIR / "state.json"
+ATTESTATION_FILE = STATE_DIR / "reconciliation.json"
+HEARTBEAT_FILE = STATE_DIR / "success"
+LOCK_FILE = STATE_DIR / "lock"
+CALENDAR_NAME = "Birthdays (managed)"
+CALENDAR_DESCRIPTION = "Birthdays mirrored from reconciled BBDB and Google Contacts"
+MANAGED_BY = "sync-google-birthdays-v1"
+MIN_SAFE_BIRTHDAYS = 800
+WRITE_INTERVAL = 0.15
+API_ROOT = "https://www.googleapis.com/calendar/v3"
+
+
+def assert_reconciled(script=RECONCILE_SCRIPT):
+    """Fail unless BBDB and Contacts are structurally and birthday-identical."""
+    result = subprocess.run(
+        [sys.executable, str(script), "--json"],
+        capture_output=True,
+        text=True,
+    )
+    try:
+        report = json.loads(result.stdout)
+    except json.JSONDecodeError as error:
+        raise RuntimeError(
+            f"Contact reconciliation did not return JSON: {result.stderr.strip()}"
+        ) from error
+    guarded_keys = (
+        "contacts_only", "bbdb_only", "bbdb_duplicates", "contacts_duplicates",
+        "contacts_collapsing", "bbdb_collapsing", "ambiguous_keys",
+        "birthday_bbdb_only", "birthday_contacts_only", "birthday_conflicts",
+        "self_check_problems",
+    )
+    differences = {key: len(report.get(key, [])) for key in guarded_keys
+                   if report.get(key)}
+    if result.returncode or report.get("bbdb_count") != report.get("contacts_count") \
+            or differences:
+        raise RuntimeError(
+            "Refusing calendar sync because contacts are not reconciled: "
+            f"BBDB={report.get('bbdb_count')} Contacts={report.get('contacts_count')} "
+            f"differences={differences}"
+        )
+    return report
+
+
+def bbdb_digest(bbdb_file=BBDB_FILE):
+    """Return the digest that binds an attestation to one exact BBDB file."""
+    return hashlib.sha256(bbdb_file.read_bytes()).hexdigest()
+
+
+def write_reconciliation_attestation(report, path=ATTESTATION_FILE,
+                                     bbdb_file=BBDB_FILE):
+    """Record that the exact current BBDB passed direct reconciliation."""
+    attestation = {
+        "version": 1,
+        "bbdb_sha256": bbdb_digest(bbdb_file),
+        "bbdb_count": report["bbdb_count"],
+        "contacts_count": report["contacts_count"],
+        "reconciled_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+    }
+    atomic_write(path, json.dumps(attestation, indent=2, sort_keys=True) + "\n")
+    return attestation
+
+
+def assert_reconciliation_attested(path=ATTESTATION_FILE,
+                                   bbdb_file=BBDB_FILE):
+    """Fail unless BBDB is byte-identical to a directly reconciled snapshot."""
+    if not path.exists():
+        raise RuntimeError(
+            "No reconciliation attestation; run --record-reconciliation-attestation "
+            "interactively after reconciling Contacts"
+        )
+    attestation = json.loads(path.read_text())
+    if attestation.get("version") != 1 \
+            or attestation.get("bbdb_sha256") != bbdb_digest(bbdb_file):
+        raise RuntimeError(
+            "BBDB changed since direct contact reconciliation; refusing calendar sync"
+        )
+    if attestation.get("bbdb_count") != attestation.get("contacts_count"):
+        raise RuntimeError("Invalid reconciliation attestation")
+    return attestation
+
+
+def normalize_birthday(value):
+    """Return VALUE as (year-or-None, month, day)."""
+    text = str(value).strip()
+    for fmt in ("%Y-%m-%d", "%d-%m-%Y"):
+        try:
+            value_date = dt.datetime.strptime(text, fmt).date()
+            return value_date.year, value_date.month, value_date.day
+        except ValueError:
+            pass
+    if len(text) == 5:
+        value_date = dt.datetime.strptime(f"2000-{text}", "%Y-%m-%d").date()
+        return None, value_date.month, value_date.day
+    raise ValueError(f"Unsupported birthday value: {value!r}")
+
+
+def display_name(record):
+    """Return the calendar label for BBDB RECORD."""
+    name = " ".join(
+        part.strip() for part in (record.get("first", ""), record.get("last", ""))
+        if part and part.strip()
+    )
+    return name or "; ".join(record.get("org", []))
+
+
+def load_birthdays(bbdb_file=BBDB_FILE, dump_script=DUMP_SCRIPT):
+    """Load and validate birthday records through BBDB's own reader."""
+    env = dict(os.environ, BBDB_FILE=str(bbdb_file))
+    result = subprocess.run(
+        ["emacs", "-Q", "--batch", "-l", str(dump_script)],
+        capture_output=True,
+        check=True,
+        env=env,
+        text=True,
+    )
+    birthdays = []
+    for record in json.loads(result.stdout):
+        if not record.get("birthday"):
+            continue
+        stable_id = record.get("uuid")
+        name = display_name(record)
+        if not stable_id or not name:
+            raise RuntimeError("Birthday record lacks a UUID or display name")
+        year, month, day = normalize_birthday(record["birthday"])
+        birthdays.append({
+            "stable_id": stable_id,
+            "display_name": name,
+            "year": year,
+            "month": month,
+            "day": day,
+        })
+    stable_ids = [record["stable_id"] for record in birthdays]
+    if len(stable_ids) != len(set(stable_ids)):
+        raise RuntimeError("Duplicate BBDB UUID among birthday records")
+    if len(birthdays) < MIN_SAFE_BIRTHDAYS:
+        raise RuntimeError(
+            f"Refusing an implausibly small source ({len(birthdays)} birthdays; "
+            f"minimum {MIN_SAFE_BIRTHDAYS})"
+        )
+    return sorted(birthdays, key=lambda record: record["stable_id"])
+
+
+def source_digest(records):
+    """Return a stable digest for birthday RECORDS."""
+    lines = []
+    for record in records:
+        birthday = (
+            f"{record['year']:04d}-{record['month']:02d}-{record['day']:02d}"
+            if record["year"] is not None
+            else f"{record['month']:02d}-{record['day']:02d}"
+        )
+        lines.append(
+            f"{record['stable_id']}\t{record['display_name']}\t{birthday}"
+        )
+    return hashlib.sha256("\n".join(lines).encode()).hexdigest()
+
+
+def event_id(stable_id):
+    """Return a deterministic Google Calendar event ID for STABLE_ID."""
+    return "bda" + hashlib.sha256(stable_id.encode()).hexdigest()[:40]
+
+
+def desired_event(record):
+    """Return the managed Google event body for birthday RECORD."""
+    anchor = dt.date(2000, record["month"], record["day"])
+    birthday = (
+        f"{record['year']:04d}-{record['month']:02d}-{record['day']:02d}"
+        if record["year"] is not None
+        else f"{record['month']:02d}-{record['day']:02d}"
+    )
+    description = "Birthday"
+    if record["year"] is not None:
+        description = f"Born {record['year']}"
+    return {
+        "id": event_id(record["stable_id"]),
+        "summary": f"{record['display_name']}'s birthday",
+        "description": description,
+        "start": {"date": anchor.isoformat()},
+        "end": {"date": (anchor + dt.timedelta(days=1)).isoformat()},
+        "recurrence": ["RRULE:FREQ=YEARLY"],
+        "transparency": "transparent",
+        "visibility": "private",
+        "reminders": {"useDefault": False},
+        "extendedProperties": {
+            "private": {
+                "managedBy": MANAGED_BY,
+                "stableId": record["stable_id"],
+                "birthday": birthday,
+            }
+        },
+    }
+
+
+def comparable_event(event):
+    """Return only managed fields from Google EVENT."""
+    return {
+        key: event.get(key)
+        for key in (
+            "id", "summary", "description", "start", "end", "recurrence",
+            "transparency", "visibility", "reminders", "extendedProperties",
+        )
+    }
+
+
+def plan_changes(desired, existing):
+    """Return insert, update, and delete sets for DESIRED and EXISTING."""
+    desired_by_id = {event["id"]: event for event in desired}
+    existing_by_id = {event["id"]: event for event in existing}
+    inserts = [desired_by_id[key] for key in sorted(desired_by_id.keys() - existing_by_id)]
+    deletes = [existing_by_id[key] for key in sorted(existing_by_id.keys() - desired_by_id)]
+    updates = [
+        desired_by_id[key]
+        for key in sorted(desired_by_id.keys() & existing_by_id)
+        if comparable_event(desired_by_id[key]) != comparable_event(existing_by_id[key])
+    ]
+    return inserts, updates, deletes
+
+
+def load_auth_helper(path=AUTH_HELPER):
+    """Load the repository's shared Google OAuth helper from PATH."""
+    spec = importlib.util.spec_from_file_location("gworkspace_auth", path)
+    module = importlib.util.module_from_spec(spec)
+    if spec.loader is None:
+        raise RuntimeError(f"Cannot load OAuth helper: {path}")
+    spec.loader.exec_module(module)
+    return module
+
+
+class CalendarApi:
+    """Small authenticated Google Calendar API client."""
+
+    def __init__(self, token):
+        self.token = token
+
+    def request(self, method, path, params=None, body=None):
+        """Send one Calendar API request."""
+        url = API_ROOT + path
+        if params:
+            url += "?" + urllib.parse.urlencode(params, doseq=True)
+        data = None if body is None else json.dumps(body).encode()
+        headers = {"Authorization": f"Bearer {self.token}"}
+        if data is not None:
+            headers["Content-Type"] = "application/json"
+        for attempt in range(8):
+            request = urllib.request.Request(
+                url, data=data, headers=headers, method=method
+            )
+            try:
+                with urllib.request.urlopen(request, timeout=30) as response:
+                    raw = response.read()
+                return json.loads(raw) if raw else {}
+            except urllib.error.HTTPError as error:
+                detail = error.read().decode(errors="replace")
+                retryable = error.code in (429, 500, 502, 503, 504)
+                if error.code == 403:
+                    try:
+                        reasons = {
+                            item.get("reason")
+                            for item in json.loads(detail)["error"].get("errors", [])
+                        }
+                    except (json.JSONDecodeError, KeyError, TypeError):
+                        reasons = set()
+                    retryable = bool(
+                        reasons & {"rateLimitExceeded", "userRateLimitExceeded"}
+                    )
+                if not retryable or attempt == 7:
+                    raise RuntimeError(
+                        f"Calendar API {method} {path} failed: "
+                        f"HTTP {error.code}: {detail}"
+                    ) from error
+                time.sleep(min(60, 2 ** attempt) + random.uniform(0, 1))
+
+    def pages(self, path, params=None):
+        """Yield items across all result pages for PATH."""
+        params = dict(params or {})
+        while True:
+            response = self.request("GET", path, params=params)
+            yield from response.get("items", [])
+            token = response.get("nextPageToken")
+            if not token:
+                break
+            params["pageToken"] = token
+
+
+def calendar_id(api, name, create=True):
+    """Return the app-created calendar named NAME, optionally creating it."""
+    state = {}
+    if STATE_FILE.exists():
+        state = json.loads(STATE_FILE.read_text())
+    stored_id = state.get("calendar_id")
+    if stored_id:
+        encoded = urllib.parse.quote(stored_id, safe="")
+        calendar = api.request("GET", f"/calendars/{encoded}")
+        if calendar.get("summary") != name:
+            raise RuntimeError(
+                f"Stored calendar is named {calendar.get('summary')!r}, not {name!r}"
+            )
+        return stored_id, False
+    matches = [
+        item for item in api.pages("/users/me/calendarList", {"maxResults": 250})
+        if item.get("summary") == name
+    ]
+    if len(matches) > 1:
+        raise RuntimeError(f"More than one calendar is named {name!r}")
+    if matches:
+        candidate_id = matches[0]["id"]
+        encoded = urllib.parse.quote(candidate_id, safe="")
+        calendar = api.request("GET", f"/calendars/{encoded}")
+        if calendar.get("description") != CALENDAR_DESCRIPTION:
+            raise RuntimeError(
+                f"Existing calendar {name!r} is not owned by this sync"
+            )
+        atomic_write(STATE_FILE, json.dumps({
+            "calendar": name,
+            "calendar_id": candidate_id,
+            "recovered": True,
+        }, indent=2, sort_keys=True) + "\n")
+        return candidate_id, False
+    if not create:
+        raise RuntimeError(f"No stored app-created calendar ID for {name!r}")
+    created = api.request("POST", "/calendars", body={
+        "summary": name,
+        "description": CALENDAR_DESCRIPTION,
+        "timeZone": "America/Argentina/Buenos_Aires",
+    })
+    atomic_write(STATE_FILE, json.dumps({
+        "calendar": name,
+        "calendar_id": created["id"],
+        "provisioning": True,
+    }, indent=2, sort_keys=True) + "\n")
+    return created["id"], True
+
+
+def managed_events(api, selected_calendar_id):
+    """Return every event owned by this sync in SELECTED_CALENDAR_ID."""
+    encoded = urllib.parse.quote(selected_calendar_id, safe="")
+    return list(api.pages(f"/calendars/{encoded}/events", {
+        "maxResults": 2500,
+        "showDeleted": "false",
+        "singleEvents": "false",
+        "privateExtendedProperty": f"managedBy={MANAGED_BY}",
+    }))
+
+
+def apply_changes(api, selected_calendar_id, inserts, updates, deletes,
+                  write_interval=0.15):
+    """Apply planned changes safely to SELECTED_CALENDAR_ID."""
+    encoded_calendar = urllib.parse.quote(selected_calendar_id, safe="")
+
+    def insert(event):
+        return api.request(
+            "POST", f"/calendars/{encoded_calendar}/events", body=event
+        )
+
+    def update(event):
+        encoded_event = urllib.parse.quote(event["id"], safe="")
+        return api.request(
+            "PUT", f"/calendars/{encoded_calendar}/events/{encoded_event}",
+            body=event,
+        )
+
+    def delete(event):
+        encoded_event = urllib.parse.quote(event["id"], safe="")
+        return api.request(
+            "DELETE", f"/calendars/{encoded_calendar}/events/{encoded_event}"
+        )
+
+    for function, events in ((insert, inserts), (update, updates)):
+        for event in events:
+            function(event)
+            time.sleep(write_interval)
+    present = managed_events(api, selected_calendar_id)
+    verify_present(inserts + updates, present)
+    for event in deletes:
+        delete(event)
+        time.sleep(write_interval)
+
+
+def atomic_write(path, text):
+    """Atomically write TEXT to PATH."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(text)
+    temporary.replace(path)
+
+
+def verify_exact(desired, existing):
+    """Raise unless EXISTING is exactly DESIRED on managed fields."""
+    desired_by_id = {event["id"]: comparable_event(event) for event in desired}
+    existing_by_id = {event["id"]: comparable_event(event) for event in existing}
+    if desired_by_id != existing_by_id:
+        missing = sorted(desired_by_id.keys() - existing_by_id)
+        extra = sorted(existing_by_id.keys() - desired_by_id)
+        changed = sorted(
+            key for key in desired_by_id.keys() & existing_by_id
+            if desired_by_id[key] != existing_by_id[key]
+        )
+        raise RuntimeError(
+            "Post-sync verification failed: "
+            f"missing={len(missing)} extra={len(extra)} changed={len(changed)}"
+        )
+
+
+def verify_present(desired, existing):
+    """Raise unless every DESIRED event is correct in EXISTING."""
+    existing_by_id = {event["id"]: comparable_event(event) for event in existing}
+    missing_or_changed = [
+        event["id"] for event in desired
+        if existing_by_id.get(event["id"]) != comparable_event(event)
+    ]
+    if missing_or_changed:
+        raise RuntimeError(
+            f"Pre-prune verification failed for {len(missing_or_changed)} events"
+        )
+
+
+def prune_digest(deletes):
+    """Return the authorization digest for the exact DELETE event IDs."""
+    event_ids = "\n".join(sorted(event["id"] for event in deletes))
+    return hashlib.sha256(event_ids.encode()).hexdigest()
+
+
+def validate_pruning(deletes, allow_prune_digest):
+    """Require exact explicit authorization before pruning managed events."""
+    required_digest = prune_digest(deletes) if deletes else None
+    if deletes and required_digest != allow_prune_digest:
+        raise RuntimeError(
+            f"Refusing to prune {len(deletes)} managed events without "
+            f"--allow-prune-digest {required_digest}"
+        )
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--calendar-name", default=CALENDAR_NAME)
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--verify-only", action="store_true")
+    parser.add_argument("--allow-prune-digest")
+    parser.add_argument(
+        "--use-reconciliation-attestation",
+        action="store_true",
+        help="require the exact BBDB snapshot previously reconciled interactively",
+    )
+    parser.add_argument(
+        "--record-reconciliation-attestation",
+        action="store_true",
+        help="reconcile Contacts directly, record the exact BBDB snapshot, and exit",
+    )
+    args = parser.parse_args()
+
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    with LOCK_FILE.open("w") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise SystemExit("Another birthday sync is already running")
+
+        if args.record_reconciliation_attestation:
+            report = assert_reconciled()
+            print(json.dumps(
+                write_reconciliation_attestation(report),
+                indent=2,
+                sort_keys=True,
+            ))
+            return
+        if args.use_reconciliation_attestation:
+            assert_reconciliation_attested()
+        else:
+            assert_reconciled()
+        records = load_birthdays()
+        desired = [desired_event(record) for record in records]
+        auth = load_auth_helper()
+        api = CalendarApi(auth.get_access_token("personal"))
+        selected_calendar_id, created = calendar_id(
+            api, args.calendar_name, create=not (args.dry_run or args.verify_only)
+        )
+        existing = managed_events(api, selected_calendar_id)
+        inserts, updates, deletes = plan_changes(desired, existing)
+        validate_pruning(deletes, args.allow_prune_digest)
+        result = {
+            "calendar": args.calendar_name,
+            "calendar_id": selected_calendar_id,
+            "calendar_created": created,
+            "source_count": len(records),
+            "source_digest": source_digest(records),
+            "insert": len(inserts),
+            "update": len(updates),
+            "delete": len(deletes),
+        }
+        if deletes:
+            result["delete_digest"] = prune_digest(deletes)
+        if args.verify_only:
+            verify_exact(desired, existing)
+        elif not args.dry_run:
+            apply_changes(
+                api, selected_calendar_id, inserts, updates, deletes,
+                WRITE_INTERVAL,
+            )
+            final_events = managed_events(api, selected_calendar_id)
+            verify_exact(desired, final_events)
+            result["verified_count"] = len(final_events)
+            result["synced_at"] = dt.datetime.now(dt.timezone.utc).isoformat()
+            atomic_write(STATE_FILE, json.dumps(result, indent=2, sort_keys=True) + "\n")
+            atomic_write(HEARTBEAT_FILE, result["synced_at"] + "\n")
+        print(json.dumps(result, indent=2, sort_keys=True))
+
+
+if __name__ == "__main__":
+    main()

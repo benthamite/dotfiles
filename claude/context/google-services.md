@@ -165,7 +165,11 @@ Use `--account epoch` for the Epoch account. When the browser opens, sign in as 
 Choose your scopes by what the token will be used for:
 
 - Epoch (full set): `gmail.modify`, `calendar`, `drive`, `documents`, `spreadsheets`.
-- Personal (just what `gmail.py` and `sheets.py` need): `gmail.modify`, `spreadsheets`.
+- Personal: `gmail.modify`, `calendar.app.created`,
+  `calendar.calendarlist.readonly`, `spreadsheets`. Calendar writes are limited
+  to secondary calendars created by this OAuth application; calendar-list
+  access is read-only and prevents duplicate managed calendars after local
+  state loss.
 
 ```bash
 SCOPES="https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/spreadsheets"

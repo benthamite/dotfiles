@@ -45,6 +45,8 @@ SCOPES = {
     ],
     "personal": [
         "https://www.googleapis.com/auth/gmail.modify",
+        "https://www.googleapis.com/auth/calendar.app.created",
+        "https://www.googleapis.com/auth/calendar.calendarlist.readonly",
         "https://www.googleapis.com/auth/spreadsheets",
     ],
 }
@@ -138,7 +140,25 @@ def main():
         },
         SCOPES[args.account],
     )
-    creds = flow.run_local_server(port=args.port, open_browser=True)
+    creds = flow.run_local_server(
+        port=args.port,
+        open_browser=True,
+        include_granted_scopes="true",
+        prompt="consent",
+        login_hint={
+            "epoch": "pablo@epoch.ai",
+            "personal": "pablo.stafforini@gmail.com",
+        }[args.account],
+    )
+    granted_scopes = set(creds.granted_scopes or creds.scopes or [])
+    missing_scopes = set(SCOPES[args.account]) - granted_scopes
+    if not creds.refresh_token:
+        sys.exit("Google did not return a refresh token; the old token was not changed")
+    if missing_scopes:
+        sys.exit(
+            "Google did not grant every requested scope; the old token was not changed: "
+            + ", ".join(sorted(missing_scopes))
+        )
     if args.account in TOKEN_OP_ENTRIES:
         spec = TOKEN_OP_ENTRIES[args.account]
         op_inject(spec, creds.refresh_token)

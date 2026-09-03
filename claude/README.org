@@ -108,6 +108,9 @@ GitGuardian, publication, and proofread skills.
 maintenance tools. It is the owner for command behavior; this overview does not
 duplicate a command-by-command catalog.
 
+The =ai-provider-key= helper owns the autonomous spend ceilings for automation
+runtime keys directly.
+
 [[file:context/README.org][The context index]] routes account, service, browser, secret, and MCP procedures.
 Sensitive procedures should be loaded only when the task needs them. In
 particular, read the secrets context before handling credentials rather than
@@ -139,6 +142,10 @@ while the always-loaded file keeps one trigger line each.
 Browser control is runtime-owned rather than mirrored through a tracked
 Codex-App handoff skill. Claude therefore carries no pointer skill or helper
 command for moving a Codex thread into the desktop app.
+
+The =move-session-log= adapter reassigns individual resumable sessions or whole
+renamed projects by moving Claude's per-project session artifacts and rewriting
+the corresponding history and project metadata.
 
 Model-invocable tracked skills do not preapprove bare high-risk tools through
 =allowed-tools=. Loading a skill therefore leaves Bash, write, edit, agent, and

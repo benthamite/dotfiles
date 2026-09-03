@@ -345,6 +345,28 @@ class MoveSessionLogParityTest(unittest.TestCase):
                     ).fetchone()[0]
                 self.assertEqual(cwd, NEW)
 
+    def test_codex_single_session_finds_archived_session(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            codex_home = self.make_codex_home(base)
+            archived = codex_home / "archived_sessions"
+            archived.mkdir()
+            active = next((codex_home / "sessions").rglob("*.jsonl"))
+            archived_file = archived / active.name
+            active.rename(archived_file)
+            self.make_codex_state_db(codex_home)
+
+            result = self.run_codex(codex_home, "--project", NEW, SESSION_ID)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn(f"session: {archived_file}", result.stdout)
+            self.assertNotIn(OLD, collect_path_values(archived))
+            self.assertIn(NEW, collect_path_values(archived))
+
+            with closing(sqlite3.connect(codex_home / "state_5.sqlite")) as conn:
+                cwd = conn.execute(
+                    "SELECT cwd FROM threads WHERE id = ?", (SESSION_ID,)
+                ).fetchone()[0]
+            self.assertEqual(cwd, NEW)
 
 if __name__ == "__main__":
     unittest.main()

@@ -51,6 +51,33 @@ def state_db_paths() -> list[Path]:
     return databases
 
 
+def session_roots() -> list[Path]:
+    """Return active and archived session roots for profiles sharing this store."""
+    sessions_root = SESSIONS_DIR.resolve()
+    homes = [CODEX_HOME]
+    homes.extend(
+        path
+        for path in CODEX_HOME.parent.glob(".codex*")
+        if path.is_dir() and path != CODEX_HOME
+    )
+
+    roots: list[Path] = []
+    seen: set[Path] = set()
+    for home in homes:
+        sessions = home / "sessions"
+        if not sessions.exists() or sessions.resolve() != sessions_root:
+            continue
+        for candidate in (sessions, home / "archived_sessions"):
+            if not candidate.exists():
+                continue
+            resolved = candidate.resolve()
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            roots.append(candidate)
+    return roots
+
+
 def load_jsonl(path: Path) -> list[tuple[str, Any | None]]:
     rows: list[tuple[str, Any | None]] = []
     with path.open(encoding="utf-8") as handle:
@@ -100,7 +127,11 @@ def iter_session_files() -> list[Path]:
     if not SESSIONS_DIR.exists():
         raise SystemExit(f"Missing Codex sessions directory: {SESSIONS_DIR}")
     return sorted(
-        SESSIONS_DIR.rglob("*.jsonl"),
+        (
+            path
+            for root in session_roots()
+            for path in root.rglob("*.jsonl")
+        ),
         key=lambda p: p.stat().st_mtime,
         reverse=True,
     )
@@ -134,7 +165,8 @@ def find_session(session_id: str) -> Path:
     if len(content_matches) > 1:
         joined = "\n".join(str(p) for p in content_matches)
         raise SystemExit(f"Multiple metadata matches for {session_id}:\n{joined}")
-    raise SystemExit(f"No Codex session found for {session_id} under {SESSIONS_DIR}")
+    searched = ", ".join(str(path) for path in session_roots())
+    raise SystemExit(f"No Codex session found for {session_id} under {searched}")
 
 
 def parse_json_arguments(value: str) -> Any | None:

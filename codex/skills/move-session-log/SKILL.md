@@ -8,9 +8,10 @@ description: Use when the user asks to relocate or import a session log into the
 Import one Codex session into the current project, or rewrite Codex session
 metadata after a project directory rename.
 
-Codex stores sessions globally under `$CODEX_HOME/sessions/YYYY/MM/DD/` when
-`CODEX_HOME` is set, otherwise under `~/.codex/sessions/YYYY/MM/DD/`, rather
-than in per-project directories. Do not use `~/.claude/projects`,
+Codex stores active sessions globally under `$CODEX_HOME/sessions/YYYY/MM/DD/`
+when `CODEX_HOME` is set, otherwise under `~/.codex/sessions/YYYY/MM/DD/`.
+Archived sessions live in a sibling `archived_sessions/` directory and are
+included by the adapter. Do not use `~/.claude/projects`,
 `~/.claude/history.jsonl`, or `~/.claude.json` for this skill. For Codex, the
 "move" is a metadata rewrite, not a filesystem move. Current Codex also stores
 the resumable thread list in a profile-local `state_5.sqlite`. Profiles can
@@ -63,7 +64,8 @@ python3 /Users/pablostafforini/My\ Drive/dotfiles/codex/skills/move-session-log/
 
 The script:
 
-1. Finds the matching session JSONL under the Codex home `sessions` directory.
+1. Finds the matching session JSONL under the active `sessions` tree or any
+   `archived_sessions` tree belonging to a Codex profile that shares it.
    Codex filenames usually look like
    `rollout-YYYY-MM-DDTHH-MM-SS-<session-id>.jsonl`; the script also inspects
    `session_meta.payload.id` if needed.

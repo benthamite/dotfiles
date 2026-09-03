@@ -117,7 +117,7 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/gdocs"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/ai-access-management"]
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/ai-team-accounts"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/My Drive/Epoch/projects/chatgpt-analyzer"]

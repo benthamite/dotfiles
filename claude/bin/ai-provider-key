@@ -37,10 +37,9 @@ DEFAULT_ANTHROPIC_ADMIN_REF = "op://Employee/Anthropic - api-provisioning-admin/
 DEFAULT_OPENAI_AUTOMATIONS_PROJECT_ID = "proj_mdM7wTXIQUFqquI4A1zCO2BF"
 DEFAULT_ANTHROPIC_AUTOMATIONS_WORKSPACE_ID = "wrkspc_016hokUAzbZA7qVGuAUjfZTb"
 DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD = 500.0
-# Per-provider overrides of the autonomous ceiling. Keep each entry equal to the
-# matching `max_autonomous_monthly_spend_usd` in
-# `Epoch/projects/ai-access-management/provider-controls.yml`, which in turn
-# mirrors the provider's own workspace/project spend limit. Anthropic automation keys share the verified workspace cap.
+# Per-provider overrides of the autonomous ceiling for automation runtime keys.
+# Anthropic automation keys share one workspace cap, so this ceiling must
+# match the verified workspace cap to permit provisioning.
 MAX_AUTONOMOUS_MONTHLY_SPEND_USD_BY_PROVIDER = {
     "anthropic": 1500.0,
 }

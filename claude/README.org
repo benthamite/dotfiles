@@ -426,6 +426,11 @@ delivery, the helper rebinds to the discovered transcript once it provably
 contains the run's marker-bearing prompt. Its helper reuses the same shared
 =agent_session_lib= module.
 
+The =google-sheets-comments= skill binds account/file/thread/reply identity,
+uses current API evidence rather than email notifications, and preserves exact
+action authority. Its gdoc contract records projection and receipt limitations;
+fresh pre/post checks reconcile ambiguous writes before any retry.
+
 The =generate-readme= skill preserves established Org manuals, README-specific
 material and foreign edits. It distinguishes package/feature/repository names,
 checks recipe prerequisites and installed revisions, verifies publishable links,

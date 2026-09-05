@@ -2,115 +2,163 @@
 name: chrome-permission-audit
 description: Audit and revoke the sites Claude in Chrome is permanently allowed to access, across every Chrome profile. Use when the user asks to check/audit/review Claude's browser site permissions, asks which sites Claude can access, wants to revoke browser access to sensitive sites, or asks whether the "permanent but not sensitive" policy still holds. Not for Chrome's own content settings, extension host permissions, or OAuth app grants.
 user-invocable: true
-argument-hint: "[audit] | revoke --sites a,b,c [--profile P] [--dry-run] | revoke --tier 1 | accept --site X --tier N | state"
+argument-hint: "audit [--record] | revoke --sites a,b --dry-run --plan FILE | revoke --plan FILE | accept --site X --tier N | state | setup"
 ---
 
 # chrome-permission-audit
 
-Inventories every site the Claude Chrome extension may act on, classifies each by
-sensitivity, and reports drift from the standing policy: **permanently allow
-ordinary sites, never sensitive ones.**
+Audit stored permanent site-allow records for Claude in Chrome against the policy
+of keeping ordinary sites and reviewing/revoking sensitive ones. Stored records
+are not a complete model of effective access: runtime permission modes, surfaces,
+deny precedence, one-time grants and domain transitions can change the outcome.
 
-## Run it
+This skill concerns the extension's site-permission store, not Chrome content
+settings, extension host permissions or OAuth grants. A request to audit/report
+does not authorize revocation, persistent reclassification, dependency setup or
+closing browser windows.
+
+## Commands and prerequisites
+
+Resolve `chrome_permissions.js` relative to this loaded skill directory and quote
+paths containing spaces. The current CLI requires Chrome to be closed and obtains
+exclusive LevelDB access; a window closing is not proof the browser process ended.
+Do not quit Chrome or close profiles without explicit user authorization.
 
 ```sh
-node <skill-dir>/chrome_permissions.js audit
+node "SKILL-DIR/chrome_permissions.js" audit
 ```
 
-First run establishes a baseline and reports no drift. Later runs also list what
-is new. `classic-level` self-installs into the skill directory on first use
-(already gitignored).
-
-| Command | Purpose |
+| Command | Contract |
 |---|---|
-| `audit [--json] [--no-record]` | Inventory, classify, report violations + drift |
-| `revoke --sites a,b,c [--profile P] [--dry-run]` | Remove named grants |
-| `revoke --tier 1 [--profile all]` | Remove every Tier 1 grant |
-| `accept --site X --tier N [--note "..."]` | Record a decision so X classifies that way from now on |
-| `state` | Show baseline and recorded overrides |
+| `audit [--json] [--record\|--no-record]` | Read stored records; default does not update baseline/state |
+| `revoke (--sites a,b\|--tier 1\|2\|3) [--profile exact-dir\|unique-label\|all] --dry-run [--plan FILE]` | Preview exact standing-allow targets; optionally save a private reviewed plan |
+| `revoke --plan FILE` | Revalidate and apply only that plan |
+| `accept --site X --tier 1\|2\|3 [--note TEXT]` | Persist an explicitly approved classification override |
+| `state` | Inspect baseline and overrides |
+| `setup` | Explicitly install pinned `classic-level@3.0.0`; never an implicit audit step |
 
-## Five facts that determine correct behaviour
+Commands return structured JSON; `--json` remains an accepted audit option.
+Tier 2 still requires review even when no Tier 1 violation was classified.
 
-**Permissions are per Chrome profile, not global.** Each account keeps an
-independent list. Auditing only the default profile misses most of them. The
-script discovers profiles from Chrome's `Local State` and skips those where the
-extension is not installed.
+The established state/dependency directory is
+`~/.claude/chrome-permission-audit/`, currently outside Drive. Do not put runtime
+dependencies, state, plans or generated artifacts in the skill tree or a synced
+location. Resolve symlinks rather than assuming every home path is outside Drive.
+Missing/broken dependencies are setup gaps, not permission-free profiles.
 
-**Reading requires a real LevelDB reader.** The store's `.log` files retain
-superseded history, and stale `netloc` records can outnumber live ones many
-times over. Grep or `strings` over those files reports long-revoked grants as
-active. Reads therefore go through `classic-level` against a throwaway copy, so a
-running Chrome cannot block them.
+Read `/Users/pablostafforini/My Drive/dotfiles/claude/context/secrets.md` before
+handling permission-store data or backups. Access only the permission key through
+the helper; never dump the whole database, tokens, raw errors or account sessions.
 
-**Writing requires the profile to be closed.** Chrome holds an exclusive LevelDB
-lock on profiles it has open. Writes go direct so the lock fails them loudly.
-Closing just that profile's windows is usually enough — quitting Chrome entirely
-is only needed when the target profile is the one in use. Check by trying; a
-locked profile is reported as skipped, never partially written.
+## Evidence and coverage
 
-**The extension UI cannot be automated.** Browser tools reject
-`chrome-extension://` URLs outright, so `options.html` is unreachable to an
-agent. Its permission list also offers one Revoke button per entry with no bulk
-action. Revocation goes through the store, or the user clicks manually.
+- Inventory every discoverable profile in the configured Chrome user-data root.
+  Report inaccessible, malformed or unregistered profile/store evidence explicitly.
+  A missing directory is not proof that the extension cannot act elsewhere.
+  Other Chrome channels or custom user-data roots require separate scoped evidence.
+- Use a real LevelDB reader. Log files contain superseded records; grep/strings
+  cannot establish the live permission set.
+- Do not copy an active LevelDB directory and claim a coherent snapshot.
+  Current reads use exclusive database access after the Chrome-closed check.
+  The audit does not write permission/state values by default, but opening
+  LevelDB can update engine housekeeping files; it is not byte-for-byte inert.
+- Distinguish missing permission data from read errors or an unsupported schema.
+  Incomplete evidence prevents an unqualified policy-holds claim.
+- Browser-tool support for extension pages varies. Inspect actual capabilities
+  rather than declaring all `chrome-extension://` pages impossible. An available
+  UI observation may help diagnose a gap, but does not replace verified
+  all-profile coverage or authorize an alternative mutation path.
 
-**Backups contain live credentials.** The same store holds `accessToken` and
-`refreshToken`. Backups are written mode 700 under
-`~/Library/Application Support/claude-chrome-permission-backup/<timestamp>/`.
-Never copy token values into a report, a log, or a scratch file, and never leave
-a store copy behind. Tell the user the backup path and that it should not be
-synced.
+Only `action=allow`, `duration=always`, `scope.type=netloc` records are the
+standing site allows targeted by this CLI. Report deny, one-time and
+domain-transition records separately; do not call them permanent access grants.
+Unknown records are a coverage gap, not safe entries to silently discard.
 
-## Tiers
+The inspected extension version 1.0.91 also checks grant surface and gives matching
+deny records precedence. It normalizes leading `www.` and trailing dots for
+netloc matching and supports wildcard hosts. These are version-specific runtime
+observations, not permission to merge stored records during editing. Re-check
+the installed implementation when its schema or semantics change.
 
-| Tier | Meaning | Examples |
-|---|---|---|
-| 1 | **Revoke** — violates the policy | admin consoles, identity, banking, payroll, cloud/IAM, API-key dashboards, registrars, e-signature, `file` |
-| 2 | **Review** — defensible, real exposure | private Drive/Calendar, Slack, messaging, source code, retail with saved cards, localhost |
-| 3 | **Keep** | search engines, archives, public reference |
-| — | **Unclassified** | no rule matched |
+## Classification
 
-Rules live in `rules.json`, ordered, first match wins.
+| Tier | Meaning |
+|---|---|
+| 1 | Sensitive standing allow; recommend scoped revocation |
+| 2 | Review private content, account authority or context-dependent exposure |
+| 3 | Explicitly named ordinary-site candidate; not a universal safety guarantee |
+| Unclassified | No supported rule; investigate rather than assume safe |
 
-Unmatched domains are reported as unclassified rather than assumed safe. Some
-rules are deliberately broad prefix heuristics (`admin.*`, `signin.*`, `api.*`),
-and **every broad rule escalates toward Tier 1 — none of them grants "keep."** A
-heuristic that misfires costs a needless revocation, never a silent approval.
+`rules.json` uses ordered first-match rules. Generic prefixes such as `docs.`,
+`help.` or `support.` do not prove public/read-only access. Look-alike domains or
+arbitrary search-engine suffixes must not inherit a keep classification.
+Heuristics may raise concern, never grant Tier 3.
 
-## Workflow
+AI/chat/social/publishing accounts can contain private data even when their
+landing pages are public. Google AI Studio also manages API keys; see
+[Google's API-key documentation](https://ai.google.dev/gemini-api/docs/api-key).
+Classify the host's actual scope, not the benign page most recently visited.
 
-1. Run `audit`. Read the violations and unclassified sections first.
-2. For unclassified entries, decide a tier and record it with `accept`. Do not
-   loosen a rule to silence one site unless the rule itself is wrong.
-3. Propose revocations to the user as an explicit list and get approval. Never
-   revoke unprompted — some Tier 1 grants are deliberate.
-4. Revoke with `--dry-run` first, then for real.
-5. **Verify by re-running `audit`**, which re-reads the live stores. The revoke
-   command's own output is not verification of itself.
+Overrides are global exact-site classification decisions across profiles, not
+browser permission grants. Do not call `accept` automatically during an audit or
+downgrade a concern to silence it. Propose an evidence-backed tier; persist it only
+when the current request or subsequent decision authorizes that change.
 
-## Judgement notes
+## Revocation workflow
 
-**A `localhost` grant is scoped to the port, not the process.** Whatever binds
-that port next inherits the permission. Identify what a port actually serves
-before keeping it: `lsof -iTCP:PORT -sTCP:LISTEN -P -n`, then `ps -p <PID>
--o command=` for the project path, then `curl -sI` for what it serves. Plain grep
-for a 4-digit port across repos is mostly noise — it collides with catalog
-numbers, UUID fragments and row counts. Search launchd agents and config files.
+1. Audit without recording state and check coverage/schema failures first.
+   Distinguish observed findings from incomplete evidence.
+2. Resolve the exact profile directories, account context and site records.
+   Profile labels can collide; never select multiple profiles by an ambiguous name.
+   Distinguish stored identifiers, including ports, wildcards and grant surfaces.
+3. Present the exact standing-allow records to remove. An explicit scoped user
+   revocation request supplies authority; do not ask redundantly. An audit request
+   or tier label alone does not. Never treat rule matches as automatic approval.
+4. Run the dry-run command and save a private plan when revocation is authorized.
+   Inspect the complete plan/target list before applying it. Broad tier selectors
+   are not permission to include newly appearing records after review.
+5. Apply only that plan. Changed profile/store contents, rules or overrides require
+   a new review, not a silent broadened retry. The helper preserves deny, once and
+   domain-transition records; deleting a deny could increase access.
+6. Treat nonzero/partial/uncertain results as such. Retain recovery evidence and
+   reconcile exactly which profiles changed before any retry.
+7. Re-run `audit` after mutation and verify the intended stored records are gone
+   while unrelated records remain. Once Chrome is reopened through an authorized
+   path, inspect its actual extension UI/runtime state before claiming effective
+   access was revoked. A disk edit alone does not prove what a live extension can do.
 
-**Ephemeral hosts age badly.** Preview deployments (`*.workers.dev`) and
-tracking redirects (`*.sendgrid.net`) get granted by accident and keep standing
-access to a hostname that may later belong to someone else.
+If the user asked to remove all effective access, remaining one-time, wildcard,
+transition, surface or runtime-mode access must be addressed through an
+appropriately supported and authorized path. Do not present removal of standing
+netloc records as complete revocation of every possible access route.
 
-**`localhost` and `127.0.0.1` are distinct entries** to the extension, as are
-`example.com` and `www.example.com`. Match exactly when revoking.
+## Baselines and recovery
 
-**Duplicate entries are normal.** The same netloc can appear twice with different
-durations (`always` plus a leftover `once`). Revoking by netloc removes all of
-them; count records, not just names, when reporting.
+Recording a baseline is a separate local mutation: use `audit --record` only
+when authorized. A first baseline has no prior comparison; do not say no change
+occurred. Legacy all-time seen history cannot prove drift since the last run;
+establish a fresh baseline explicitly while preserving valid user overrides.
+Changed/reappearing records matter, not just never-before-seen hostnames.
 
-## Reporting to the user
+New recovery backups contain only the exact pre-write `permissionStorage` value,
+captured under the database lock, not OAuth keys or full store copies. They still
+contain private browsing/account metadata: keep them restrictive and outside
+sync, and report their exact location. Prior whole-store backups may contain live
+credentials; do not inspect, copy or delete them as incidental audit cleanup.
 
-Lead with whether the policy holds and what changed since last run — not with the
-full inventory table. Group by profile, name the account, and for each violation say
-what the site actually controls ("Workspace super-admin: users, passwords") not
-just its category. Flag anything whose grant date suggests it was a one-off that
-never got cleaned up.
+An uncertain write retains its backup. Do not restore automatically, which could
+reintroduce access or overwrite newer decisions. Recovery needs an exact target,
+closed browser, current-state comparison and explicit restoration authority.
+
+## Judgment and reporting
+
+A localhost grant is tied to host/port, not the process that happened to own it.
+Use scoped read-only process/config evidence to identify it; do not probe arbitrary
+services or send credentials. Preview and redirect hosts need ownership/destination
+review. Exact stored records and effective runtime host matching are different.
+
+Lead with the stored-policy finding and coverage limits, then what changed from
+a valid prior baseline. Group relevant findings by profile/account, explain the
+actual concern without inventing control capabilities, and count records as well
+as distinct sites. Minimize private inventory detail in reports. Separate observed,
+recommended, authorized, changed and runtime-verified states.

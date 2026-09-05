@@ -168,6 +168,11 @@ personal/plugin identities and exact name boundaries, and handles task-start
 context, hidden inputs, and fractional timestamps. Counts remain reconstructed
 evidence, not native invocation telemetry or proof of workflow completion.
 
+The =chrome-permission-audit= helper defaults to non-recording reads and requires
+exclusive closed-browser store access. Revocations consume reviewed exact plans,
+preserve deny/transient records, and retain permission-key-only recovery backups.
+Its classification rules do not infer safety from generic documentation hosts.
+
 The =build= skill preserves the requested spec/planning/implementation endpoint.
 It investigates before interviewing, records decisions incrementally, separates
 real blockers from assumptions, and keeps execution plans tied to the accepted spec.

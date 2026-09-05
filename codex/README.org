@@ -225,6 +225,10 @@ personal/plugin identities and exact name boundaries, and handles task-start
 context, hidden inputs, and fractional timestamps. Counts remain reconstructed
 evidence, not native invocation telemetry or proof of workflow completion.
 
+The programmatic Hartree trial queue reviews source before execution, keeps
+trial dependencies outside Drive, and promotes only a user-accepted candidate.
+Its historical verdicts are preserved; a completed queue does not restart itself.
+
 The programmatic [[file:programmatic-skills/open-session-log/SKILL.md][open-session-log]] helper resolves the current runtime's
 session identity and exact transcript in its active account root. It opens
 that path in Emacs and checks the rendered buffer's identity before reporting

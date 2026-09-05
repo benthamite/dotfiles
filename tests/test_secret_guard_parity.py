@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -34,15 +35,17 @@ GUARDS = {
 }
 
 
-def run_guard(guard: Path, command: str) -> dict | None:
+def run_guard(guard: Path, command: str, *, cwd: Path | None = None) -> dict | None:
     """Run a guard with a synthetic Bash payload; return its decision JSON."""
-    payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
+    payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command},
+                          "cwd": str(cwd or Path.cwd())})
     result = subprocess.run(
         ["bash", str(guard)],
         input=payload,
         capture_output=True,
         text=True,
         check=True,
+        cwd=cwd,
     )
     if not result.stdout.strip():
         return None
@@ -56,10 +59,20 @@ def decision(output: dict | None) -> str:
 
 
 class SecretGuardParityTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Full dispatchers inspect commit candidates. Give synthetic commands
+        # an owned repository so unrelated user staging cannot affect policy.
+        temporary = tempfile.TemporaryDirectory(prefix="secret-guard-parity-")
+        cls.addClassCleanup(temporary.cleanup)
+        cls.repo = Path(temporary.name)
+        subprocess.run(["git", "init", "--quiet", str(cls.repo)], check=True)
+
     def assert_both(self, command: str, expected: str) -> None:
         for tool, guard in GUARDS.items():
             with self.subTest(tool=tool, command=command):
-                self.assertEqual(decision(run_guard(guard, command)), expected)
+                output = run_guard(guard, command, cwd=self.repo)
+                self.assertEqual(decision(output), expected, output)
 
     def test_direct_op_is_denied(self):
         self.assert_both("op read op://Employee/Example/credential", "deny")

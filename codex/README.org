@@ -225,6 +225,10 @@ personal/plugin identities and exact name boundaries, and handles task-start
 context, hidden inputs, and fractional timestamps. Counts remain reconstructed
 evidence, not native invocation telemetry or proof of workflow completion.
 
+The =diagnose= skill separates configured, loaded, triggered and acted-on evidence
+for the incident's actual runtime. It preserves uncertain/mixed causes, requires
+practical enforcement coverage, and tests legitimate and unsafe guard cases.
+
 The =design-audit= skill accepts explicit plain-language refactoring requests,
 requires concrete maintenance benefits, and preserves runtime/public contracts.
 Counts, local call searches and single implementations alone do not justify edits.

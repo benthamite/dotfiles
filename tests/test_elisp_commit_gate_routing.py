@@ -227,6 +227,7 @@ class ElispCommitGateRoutingTests(unittest.TestCase):
         global_home.mkdir()
         global_env = os.environ.copy()
         global_env["HOME"] = str(global_home)
+        global_env["GIT_CONFIG_GLOBAL"] = str(global_home / ".gitconfig")
         subprocess.run(
             ["git", "config", "--global", "alias.user-ci", "commit"],
             check=True,

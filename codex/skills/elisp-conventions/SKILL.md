@@ -118,9 +118,12 @@ Update and stage the matching manual for changed documented behavior:
 - Standalone packages use their established manual, including a non-root Org
   manual. Use root `README.md` only when the project has no Org manual.
 
-The current commit guard mechanically requires a staged manual for every
-non-exempt production `.el` change when it finds a manual; it does not determine
-whether behavior changed or whether a staged manual belongs to that package.
+The current commit guard mechanically requires a selected manual for non-exempt
+production `.el` changes when it finds a manual; it does not determine whether
+behavior changed or whether that manual belongs to the package. Standard skill
+`scripts/*.el` helpers instead require changed, selected `SKILL.md` or
+`references/*.md` from each owning skill. Mixed package changes retain the
+independent manual requirement.
 Check the actual scoped commit paths. Never stage an unrelated manual or invent
 a documentation change to appease the guard. If a truthful no-doc change is
 blocked, diagnose the policy conflict; do not silently disable the guard.

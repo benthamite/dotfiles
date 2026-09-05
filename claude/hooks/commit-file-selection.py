@@ -159,7 +159,9 @@ def select(command):
         if all_files or include:
             real_index = Path(os.environ.get("COMMIT_FILE_CWD", os.getcwd())) / git("rev-parse", "--git-path", "index").strip()
             if real_index.exists():
-                shutil.copyfile(real_index, index)
+                # Git uses the index timestamp to detect racy cached stat
+                # entries. A newer copy can hide same-size worktree edits.
+                shutil.copy2(real_index, index)
             else:
                 git("read-tree", "--empty", env=env)
         else:

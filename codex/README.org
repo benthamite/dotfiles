@@ -261,6 +261,14 @@ It handles independent Texinfo/Info names without evaluating Org. Unrelated
 unstaged headers cannot hide outputs; ambiguous pending staging is refused with
 a reason to stage the intended manual separately.
 
+Elisp helpers under the four standard skill roots' =scripts/= directories
+require their own changed =SKILL.md= or =references/*.md= in the selected commit.
+An unrelated package manual or another skill's documentation cannot satisfy that
+requirement. Mixed package changes still need their manual; unresolved combined
+staging of skill helpers must be split into separate staging and commit calls.
+Candidate indexes preserve Git's original index timestamp so rapid same-size
+source edits remain visible to =--all= and =--include= checks.
+
 The =document-elisp-package= skill preserves established manual paths, credits,
 anchors and export identities. It separates documentation from new save automation
 and documents supported public contracts without evaluating package source.
@@ -319,6 +327,11 @@ The programmatic [[file:programmatic-skills/open-session-log/SKILL.md][open-sess
 session identity and exact transcript in its active account root. It opens
 that path in Emacs and checks the rendered buffer's identity before reporting
 success; concurrent sessions cannot be selected by recency or project alone.
+
+The =lint-elisp= runner uses literal file arguments, private bytecode output and
+separate compiler/checkdoc completion records. Errors and skipped compilation
+cannot become clean results. Its fixes preserve binding and initialization
+semantics, and source-first batch diagnostics do not prove live behavior.
 
 The =interpretability-audit= skill distinguishes sampled from exhaustive coverage,
 accepts plain-language fix requests, and grounds clarity findings in actual reader

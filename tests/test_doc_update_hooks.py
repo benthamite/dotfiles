@@ -626,6 +626,233 @@ def deny_reason(result: subprocess.CompletedProcess[str]) -> str:
     return output["hookSpecificOutput"].get("permissionDecisionReason", "")
 
 
+class SkillHelperDocUpdateHookTests(unittest.TestCase):
+    """Keep skill-helper documentation independent of package manuals."""
+
+    git = DocUpdateHookTests.git
+    assert_selection = DocUpdateHookTests.assert_selection
+
+    def run_hook(self, hook, command_field, command="git commit -m test"):
+        payload = {
+            "tool_name": "exec_command",
+            "tool_input": {command_field: command, "workdir": str(self.repo)},
+        }
+        # Execute the actual shebang, including macOS /bin/bash 3.2; PATH may
+        # otherwise choose Homebrew Bash and hide native array/nounset failures.
+        return subprocess.run([str(hook)], input=json.dumps(payload), text=True,
+                              capture_output=True, check=False)
+
+    def setUp(self):
+        DocUpdateHookTests.setUp(self)
+        self.manual = "emacs/extras/doc/example.org"
+        path = self.repo / self.manual
+        path.parent.mkdir(parents=True)
+        path.write_text("#+title: Example package\n")
+        self.git("add", self.manual)
+        self.git("-c", "user.name=Test", "-c", "user.email=test@example.com",
+                 "commit", "-qm", "package manual fixture")
+
+    def prepare_skill(self, root="claude/skills", name="example"):
+        owner = f"{root}/{name}"
+        paths = {
+            "helper": f"{owner}/scripts/check.el",
+            "skill": f"{owner}/SKILL.md",
+            "reference": f"{owner}/references/diagnostics.md",
+        }
+        for label, relative in paths.items():
+            path = self.repo / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("(kill-emacs 0)\n" if label == "helper" else "Before.\n")
+        self.git("add", "--force", "--", *paths.values())
+        self.git("-c", "user.name=Test", "-c", "user.email=test@example.com",
+                 "commit", "-qm", "skill fixture")
+        (self.repo / paths["helper"]).write_text("(kill-emacs 1)\n")
+        return paths
+
+    def change_document(self, relative):
+        (self.repo / relative).write_text("Updated documented behavior.\n")
+
+    def test_all_four_explicit_skill_roots_accept_selected_own_skill(self):
+        for root in ("claude/skills", "codex/skills", ".claude/skills", ".codex/skills"):
+            with self.subTest(root=root):
+                paths = self.prepare_skill(root)
+                self.change_document(paths["skill"])
+                self.git("add", "--force", "--", paths["helper"], paths["skill"])
+                self.assert_selection("git commit -m test", "allow")
+
+    def test_selected_reference_satisfies_only_its_owner(self):
+        paths = self.prepare_skill()
+        other = self.prepare_skill("codex/skills")
+        self.change_document(paths["reference"])
+        self.git("add", "--", paths["helper"], paths["reference"])
+        self.assert_selection("git commit -m test", "allow")
+        self.git("add", "--", other["helper"])
+        self.assert_selection("git commit -m test", "deny")
+
+    def test_helper_requires_changed_selected_own_documentation(self):
+        paths = self.prepare_skill()
+        self.git("add", "--", paths["helper"])
+        self.assert_selection("git commit -m test", "deny")
+        self.change_document(paths["skill"])
+        self.assert_selection("git commit -m test", "deny")
+        unrelated = self.repo / "codex/skills/other/SKILL.md"
+        unrelated.parent.mkdir(parents=True)
+        unrelated.write_text("Unrelated skill.\n")
+        self.git("add", "--", str(unrelated))
+        self.assert_selection("git commit -m test", "deny")
+        self.git("add", "--", paths["skill"])
+        self.assert_selection("git commit -m test", "allow")
+
+    def test_only_helper_cannot_borrow_unselected_skill_documentation(self):
+        paths = self.prepare_skill()
+        self.change_document(paths["skill"])
+        self.git("add", "--", paths["helper"], paths["skill"])
+        self.assert_selection(f"git commit --only -m test -- {paths['helper']}", "deny")
+        self.assert_selection(
+            f"git commit --only -m test -- {paths['helper']} {paths['skill']}", "allow")
+
+    def test_deleted_documentation_does_not_satisfy_helper(self):
+        paths = self.prepare_skill()
+        (self.repo / paths["skill"]).unlink()
+        self.git("add", "--", paths["helper"], paths["skill"])
+        self.assert_selection("git commit -m test", "deny")
+        self.assert_selection(
+            f"git commit --only -m test -- {paths['helper']} {paths['skill']}", "deny")
+
+    def test_document_presence_uses_candidate_not_unstaged_worktree(self):
+        paths = self.prepare_skill()
+        self.change_document(paths["skill"])
+        self.git("add", "--", paths["helper"], paths["skill"])
+        (self.repo / paths["skill"]).unlink()
+        self.assert_selection("git commit -m test", "allow")
+        self.assert_selection(
+            f"git commit --only -m test -- {paths['helper']} {paths['skill']}", "deny")
+
+    def test_skill_documentation_does_not_satisfy_mixed_package_change(self):
+        paths = self.prepare_skill()
+        self.change_document(paths["skill"])
+        package = self.repo / "emacs/extras/example.el"
+        package.write_text("(provide 'example)\n")
+        self.git("add", "--", paths["helper"], paths["skill"], str(package))
+        self.assert_selection("git commit -m test", "deny")
+        self.change_document(self.manual)
+        self.git("add", "--", self.manual)
+        self.assert_selection("git commit -m test", "allow")
+
+    def test_package_manual_does_not_satisfy_undocumented_skill_helper(self):
+        paths = self.prepare_skill()
+        self.change_document(self.manual)
+        self.git("add", "--", paths["helper"], self.manual)
+        self.assert_selection("git commit -m test", "deny")
+
+    def test_non_script_and_nonstandard_root_paths_still_require_package_docs(self):
+        paths = self.prepare_skill()
+        self.change_document(paths["skill"])
+        candidates = (
+            "scripts/check.el", "claude/skills/example/assets/example.el",
+            "claude/skills/example/example.el", "claude/skills/example/nested/scripts/check.el",
+            "other/claude/skills/example/scripts/check.el", "claude/skills/example/scripts/../outside.el",
+        )
+        for relative in candidates:
+            with self.subTest(path=relative):
+                self.git("reset", "-q", "HEAD", "--")
+                path = self.repo / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("(provide 'example)\n")
+                self.git("add", "--", str(path), paths["skill"])
+                self.assert_selection("git commit -m test", "deny")
+
+    def test_helper_documentation_is_required_without_a_package_manual(self):
+        self.git("rm", "--", "README.md", self.manual)
+        self.git("-c", "user.name=Test", "-c", "user.email=test@example.com",
+                 "commit", "-qm", "remove package manuals")
+        paths = self.prepare_skill()
+        self.git("add", "--", paths["helper"])
+        self.assert_selection("git commit -m test", "deny")
+        self.change_document(paths["skill"])
+        self.git("add", "--", paths["skill"])
+        self.assert_selection("git commit -m test", "allow")
+
+    def test_combined_staging_of_skill_helpers_requires_separate_staging(self):
+        paths = self.prepare_skill()
+        self.change_document(paths["skill"])
+        for command in (
+            f"git add {paths['helper']} {paths['skill']} && git commit -m test",
+            "git add claude/skills/example && git commit -m test",
+            "git add -A && git commit -m test",
+        ):
+            with self.subTest(command=command):
+                for hook, field in HOOKS:
+                    result = self.run_hook(hook, field, command)
+                    self.assertEqual(permission_decision(result), "deny", result.stdout)
+                    self.assertIn("separately", deny_reason(result))
+        self.git("add", "--", paths["helper"], paths["skill"])
+        self.assert_selection("git commit -m test", "allow")
+
+    def test_resolved_all_amend_and_combined_only_candidates_are_supported(self):
+        paths = self.prepare_skill()
+        self.assert_selection("git commit --all -m test", "deny")
+        self.change_document(paths["skill"])
+        self.assert_selection("git commit --all -m test", "allow")
+        self.assert_selection(
+            f"git add {paths['skill']} && git commit --only -m test -- "
+            f"{paths['helper']} {paths['skill']}", "allow")
+        # The amend's inherited addition already contains this owner's docs.
+        self.assert_selection(
+            f"git commit --amend --only -m test -- {paths['helper']}", "allow")
+
+    def test_amend_only_cannot_borrow_unselected_skill_documentation(self):
+        paths = self.prepare_skill()
+        self.git("add", "--", paths["helper"])
+        self.git("-c", "user.name=Test", "-c", "user.email=test@example.com",
+                 "commit", "-qm", "helper-only amend fixture")
+        (self.repo / paths["helper"]).write_text("(kill-emacs 2)\n")
+        self.change_document(paths["skill"])
+        self.git("add", "--", paths["skill"])
+        self.assert_selection(
+            f"git commit --amend --only -m test -- {paths['helper']}", "deny")
+        self.assert_selection(
+            f"git commit --amend --only -m test -- {paths['helper']} {paths['skill']}", "allow")
+
+    def test_copied_index_preserves_racy_source_detection_for_all_and_include(self):
+        paths = self.prepare_skill()
+        source = self.repo / paths["helper"]
+        index = self.repo / ".git/index"
+        # Model a same-size edit within the index timestamp's precision. The
+        # real index correctly treats this cached stat entry as racy; copying
+        # it with a newer timestamp must not turn it into a false clean entry.
+        self.git("config", "core.trustctime", "false")
+        self.git("config", "core.checkStat", "minimal")
+        timestamp = 1_700_000_000_000_000_000
+        source.write_text("(kill-emacs 0)\n")
+        os.utime(source, ns=(timestamp, timestamp))
+        self.git("add", "--", paths["helper"])
+        source.write_text("(kill-emacs 1)\n")
+        os.utime(source, ns=(timestamp, timestamp))
+        os.utime(index, ns=(timestamp, timestamp))
+        original_index = index.read_bytes()
+        self.assertIn(paths["helper"], self.git("--no-optional-locks", "diff", "--name-only"))
+        for command in ("git commit --all -m test",
+                        f"git commit --include -m test -- {paths['helper']}"):
+            for hook, field in HOOKS:
+                with self.subTest(command=command, hook=hook):
+                    result = subprocess.run(
+                        ["python3", "-B", str(hook.with_name("commit-file-selection.py"))],
+                        input=command, env={**os.environ, "COMMIT_FILE_CWD": str(self.repo)},
+                        text=True, capture_output=True, check=False,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    candidate = json.loads(result.stdout)
+                    self.assertEqual(candidate.get("mode"), "selection", candidate)
+                    self.assertIn(paths["helper"], candidate["staged"].splitlines())
+                    self.assertIn("M\t" + paths["helper"], candidate["status"].splitlines())
+                    self.assertEqual(index.read_bytes(), original_index)
+                    self.assertEqual(index.stat().st_mtime_ns, timestamp)
+                    guarded = self.run_hook(hook, field, command)
+                    self.assertEqual(guarded.returncode, 0, guarded.stderr)
+                    self.assertEqual(permission_decision(guarded), "deny", guarded.stdout)
+
+
 class DocUpdateHookRepoPathTests(unittest.TestCase):
     """Cover a repository whose path contains a space, as ~/My Drive/dotfiles does.
 

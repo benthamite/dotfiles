@@ -5,133 +5,101 @@ description: Fix byte-compile warnings, checkdoc notes, and other Elisp diagnost
 
 # Lint Elisp
 
-Fix all byte-compile warnings and checkdoc notes in the target file(s), then verify the fixes produce a clean diagnostic run.
+Diagnose and fix the requested Elisp diagnostics without changing intended
+behavior. A completed diagnostic run is not the same as a warning-free run;
+an error, skipped compiler or incomplete check must never become “clean.”
 
-## Step 1: Determine targets
+Use `elisp-conventions` for Elisp edits and verification, and `dotfiles-context`
+when canonical package or paired configuration routing is needed.
 
-Check `$ARGUMENTS` for a file or directory path.
+## 1. Resolve scope and source
 
-- **File path provided**: lint that single file.
-- **Directory path provided**: lint all `.el` files in that directory (non-recursive). Skip files that are auto-generated (e.g. `*-autoloads.el`, `*-pkg.el`).
-- **No argument provided**: ask the user which target to lint. Use the
-  available structured input mechanism (`AskUserQuestion` in Claude Code,
-  `request_user_input` in Codex Plan mode); if none is available, ask a concise
-  plain-text question with these choices:
-  - **Current file** — lint the main `.el` file in the current working directory (find it with `*.el` glob, excluding `-autoloads.el` and `-pkg.el`; if multiple, pick the one matching the directory name).
-  - **Current directory** — lint all `.el` files in the current working directory.
-  - **Custom path** — the user will type a file or directory path via the "Other" option.
+Use the actual request and reliable current-file context, not just a literal
+`$ARGUMENTS` placeholder. A review, diagnosis-only or “show diagnostics” request is read-only;
+a request to fix/lint the named targets authorizes scoped diagnostic fixes.
 
-## Step 2: Collect diagnostics
+- A file request selects that exact source, including its owning repository and
+  any unsaved buffer state. Do not overwrite a conflicting buffer or pick another
+  file from its basename.
+- A directory request defaults to immediate `.el` children unless recursive or
+  exhaustive coverage was requested. Record the inventory and exclusions.
+  Generated files such as `*-autoloads.el` and `*-pkg.el` normally route to their
+  source/generator, not hand edits. Do not silently skip an explicitly named file.
+- With no path, use an unambiguous target already established in the conversation.
+  Ask one concise question only if that identity remains genuinely ambiguous;
+  do not guess a “main file” from the directory name.
 
-For each target `.el` file, collect diagnostics from two sources in parallel.
-Use an absolute `FILE` value; the examples below are safe for paths containing
-spaces. If `emacsclient` cannot return `init-current-profile`, stop and report
-that the active profile could not be resolved instead of guessing.
+Resolve managed sources and required dependency locations through the actual
+registry/project workflow. Do not construct a profile path from a string returned
+by `emacsclient`, scan profiles for a plausible checkout, or use the package's
+build as its source. An unavailable required registry/dependency context is a
+reported limitation, not permission to guess. Unmanaged or self-contained Elisp
+uses its own documented clean batch context; it does not require a live profile
+merely to check a built-in-only file.
 
-### Byte-compile warnings
+## 2. Collect complete diagnostics
 
-Resolve the elpaca profile and build a load-path that includes all `elpaca/builds/*/` directories plus the file's own directory. Then byte-compile:
+Read [the runner contract](references/diagnostics.md) before running
+[scripts/lint-file.el](scripts/lint-file.el). Use a fresh `emacs -Q --batch`
+process for each exact target with literal arguments and verified source-first
+dependency paths. Never interpolate a filename into an Elisp expression.
 
-```bash
-FILE="/absolute/path/to/file.el"
-DIR="$(dirname "$FILE")"
-PROFILE=$(emacsclient -e 'init-current-profile' 2>/dev/null | tr -d '"')
-test -n "$PROFILE" || { echo "Could not resolve init-current-profile"; exit 1; }
-ELPACA="$HOME/.config/emacs-profiles/$PROFILE/elpaca"
+Byte compilation can execute macros, `eval-when-compile` and required libraries.
+Inspect relevant code/project commands before execution; `-Q` and temporary
+output are not a sandbox or authority for network, installation or live-runtime
+effects. If those effects exceed the request, report the blocked check. Do not
+load the target into the active Emacs session to make compilation succeed.
 
-emacs --batch \
-  --eval "(dolist (dir (file-expand-wildcards \"$ELPACA/builds/*/\")) (add-to-list 'load-path dir))" \
-  -L "$DIR" \
-  --eval "
-(progn
-  (require 'bytecomp)
-  (let* ((file (expand-file-name \"$FILE\"))
-         (temp-dir (make-temp-file \"lint-elisp-byte-compile-\" t))
-         (byte-compile-dest-file-function
-          (lambda (source)
-            (expand-file-name
-             (concat (file-name-nondirectory
-                      (file-name-sans-extension source))
-                     \".elc\")
-             temp-dir))))
-    (unwind-protect
-        (progn
-          (setq byte-compile-warnings 'all)
-          (byte-compile-file file))
-      (delete-directory temp-dir t))))" \
-  2>&1
-```
+Record each stage's completion, diagnostics and errors, plus the target identity,
+Emacs version and dependency context used. Preserve the initial findings so fixed,
+remaining and newly introduced diagnostics can be distinguished. A successful
+process exit alone, empty grep output or a missing callback proves nothing about
+a check that did not complete. Treat `no-byte-compile` as an explicit skip, not
+a clean compile; do not remove the directive merely to satisfy the checker.
 
-Parse lines matching `Warning:` from stderr. The temporary destination keeps
-byte-compilation from leaving `.elc` files beside the source.
+## 3. Fix causes, not warning counts
 
-### Checkdoc notes
+Read each diagnostic in its declaration/caller context before editing. Common
+cases are investigation routes, not automatic transformations:
 
-Run flymake's checkdoc backend directly in batch mode on the same file:
-
-```bash
-FILE="/absolute/path/to/file.el"
-DIR="$(dirname "$FILE")"
-PROFILE=$(emacsclient -e 'init-current-profile' 2>/dev/null | tr -d '"')
-test -n "$PROFILE" || { echo "Could not resolve init-current-profile"; exit 1; }
-ELPACA="$HOME/.config/emacs-profiles/$PROFILE/elpaca"
-
-emacs --batch \
-  --eval "(dolist (dir (file-expand-wildcards \"$ELPACA/builds/*/\")) (add-to-list 'load-path dir))" \
-  -L "$DIR" \
-  --eval "
-(progn
-  (require 'flymake)
-  (require 'elisp-mode)
-  (find-file (expand-file-name \"$FILE\"))
-  (let (diagnostics)
-    (elisp-flymake-checkdoc
-     (lambda (diags &rest _args)
-       (setq diagnostics diags)))
-    (dolist (d diagnostics)
-      (message \"%s:%d: %s: %s\"
-               (buffer-name)
-               (line-number-at-pos (flymake-diagnostic-beg d))
-               (flymake-diagnostic-type d)
-               (flymake-diagnostic-text d)))))" \
-  2>&1
-```
-
-Parse lines containing `:note:` or `:warning:`.
-
-If both sources return no diagnostics for a file, skip it — it is already clean.
-
-## Step 3: Fix each diagnostic
-
-Read the relevant lines of the file and fix each issue. Common patterns:
-
-| Diagnostic | Typical fix |
+| Diagnostic | Behavior-preserving approach |
 |---|---|
-| **Free variable reference** | The `defvar`/`defcustom`/`defconst` is defined after its first use. Move the definition earlier (into the customization or variables section), or add a `(defvar VAR)` forward declaration if moving is impractical. |
-| **Unused lexical variable** | Remove the variable, or prefix with `_` if it must remain (e.g. destructuring). |
-| **Argument should appear in doc string** | Mention the argument (UPPERCASED) in the docstring. Weave it into the existing first sentence when possible rather than appending mechanically. |
-| **"verb" should be imperative** | Checkdoc expects the first sentence of a docstring to use imperative mood. Reword: "Returns X" → "Return X", "contains X" → "contain X". If the flagged word is not actually a verb (e.g. "calls" as a noun in "tool calls"), rephrase to avoid the false positive. |
-| **Doc string wider than 80 characters** | Rewrap or split the first line. |
-| **First sentence should end with period** | Add a period. |
+| Free variable | Check spelling, lexical binding, macro expansion and the defining dependency. Use a forward `(defvar VAR)` only for an established special variable; it changes binding interpretation within its scope. Do not invent a global declaration to conceal a missing local binding. |
+| Later variable definition | Check initialization, custom setters, dependency and load order before moving `defvar`, `defcustom` or `defconst`. Moving an initializer is not just formatting. Prefer an accurate declaration when it preserves the established contract. |
+| Unknown function | Check the actual provider and intended optional/eager loading. Use a truthful `declare-function` or appropriate dependency fix; do not add an eager `require` solely to suppress a warning. |
+| Unused binding | Preserve initializer evaluation, ordering and side effects. An ignored local name may be suitable; deleting the binding is safe only if its evaluation is unnecessary. Check keyword, public and introspected argument contracts before renaming formals. |
+| Argument missing from docstring | Describe the actual argument in uppercase without inventing behavior or padding the prose. |
+| Imperative or punctuation note | Apply the rule to the actual declaration type and meaning. Function-docstring guidance is not a universal rewrite of variable documentation. |
+| Width note | Use the project's/checker's actual width and preserve literals, URLs, syntax and readable meaning; do not assume every diagnostic uses 80 columns. |
 
-When fixing docstrings, preserve the meaning and do not add unnecessary verbosity. If a fix would make the docstring worse, note it and skip.
+Preserve docstring semantics and public interfaces. Do not disable warning
+classes, change algorithms, or add dummy definitions to manufacture a clean run.
+If a diagnosed false positive or necessary semantic change cannot be handled by
+a sound scoped edit, retain it with the reason. Keep unrelated user hunks out.
 
-When moving definitions (e.g. a `defcustom` forward), place them in the section where similar definitions live — do not just shove them above the first use.
+## 4. Verify and stop accurately
 
-## Step 4: Verify
+Re-run both stages for every changed target under the same established context.
+Compare source identities and the diagnostic ledger; do not use stale results
+after concurrent changes. Fix new diagnostics caused by the edit, but stop a
+non-progressing cycle with an explicit unresolved result rather than rewriting
+the same docstring indefinitely.
 
-Re-run both diagnostic commands from Step 2 on every file that was modified. If new diagnostics appear (e.g. a rewording triggered a new checkdoc note, or a line became too wide), fix those too. Repeat until the output is clean.
+Follow the layout-specific `elisp-conventions` checks: the managed package's
+source-bound batch evidence, an unmanaged project's own checks, or the owning
+workflow for non-package/test-only Elisp. Add focused behavior assertions when
+bindings, definitions or executable code changed. Follow its supported
+post-commit live-verification path when applicable; do not substitute a bare
+`emacsclient -e` call or manually reload package code. A clean lint run is
+diagnostic evidence, not proof of runtime behavior.
 
-For edited `.el` files, also run the relevant `elisp-conventions`
-verification: `batch-test.sh PACKAGE` before commit, then a targeted live
-`emacsclient -e` check after commit when the file belongs to a loaded package.
+Inspect the final diff and index, and commit only owned authorized changes under
+project policy. File selection alone does not isolate foreign hunks. Do not
+push, publish or restart sessions as lint bookkeeping.
 
-## Step 5: Report
+## 5. Report
 
-Print a short summary:
-- Number of files checked
-- Number of diagnostics found and fixed
-- Any diagnostics intentionally skipped, with reason
-
-Inspect `git status --short`, stage only files modified by this lint run, and
-commit them with a message summarizing what was fixed.
+Briefly state the checked scope, meaningful fixes and any remaining diagnostics
+or incomplete checks. Give counts only from the recorded results. Distinguish
+“no diagnostics in completed checks” from “all requested checks passed,” and
+never describe intentionally skipped findings as fixed.

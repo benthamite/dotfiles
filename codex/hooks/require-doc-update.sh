@@ -1,8 +1,7 @@
 #!/bin/bash
-# PreToolUse hook: block git commit when .el files are staged but the
-# package manual is not also staged.
+# PreToolUse hook: require owning documentation for committed Elisp changes.
 #
-# Applies to repos that have either:
+# The package-manual rule applies to repos that have either:
 #   - a doc/ directory (at root or nested) → expects a doc/*.org file staged
 #   - a README.org at the root             → expects README.org staged
 #   - only README.md at the root           → expects README.md staged
@@ -10,6 +9,9 @@
 # NOTE: README.md is normally the GitHub-facing intro, not the manual. This
 # hook treats it as a manual only for repos that have no doc/ directory and no
 # root README.org.
+#
+# Standard skill scripts require their own selected SKILL.md or reference
+# Markdown instead. Package and per-skill requirements remain independent.
 #
 # Reads JSON from stdin (Claude Code PreToolUse format).
 # Outputs JSON with permissionDecision to allow or deny.
@@ -79,11 +81,6 @@ if [ -f "$REPO_ROOT/README.org" ]; then
 fi
 if [ "$HAS_DOC_DIR" = false ] && [ "$HAS_README_ORG" = false ] && [ -f "$REPO_ROOT/README.md" ]; then
   HAS_README_MD=true
-fi
-
-# Only apply in repos that have some form of manual
-if [ "$HAS_DOC_DIR" = false ] && [ "$HAS_README_ORG" = false ] && [ "$HAS_README_MD" = false ]; then
-  exit 0
 fi
 
 # .el files exempt from the manual requirement: machine-generated files
@@ -197,14 +194,72 @@ git_add_paths() {
 source "$SCRIPT_DIR/lib-staged-files.sh"
 
 HAS_EL=false
+SKILL_HELPER_OWNERS=()
 HAS_DOC_ORG=false
 HAS_README_ORG_STAGED=false
 HAS_README_MD_STAGED=false
+
+# Batch helpers inside a standard skill's scripts directory belong to that
+# skill's documentation, not to an unrelated package manual in the same repo.
+skill_script_owner() {
+  local file="$1" root relative skill
+  case "$file" in
+    "$REPO_ROOT"/*) file=${file#"$REPO_ROOT"/} ;;
+  esac
+  case "$file" in
+    claude/skills/* | codex/skills/* | .claude/skills/* | .codex/skills/*) ;;
+    *) return 1 ;;
+  esac
+  root="${file%%/skills/*}/skills"
+  relative=${file#"$root"/}
+  skill=${relative%%/*}
+  case "$skill" in "" | . | ..) return 1 ;; esac
+  relative=${relative#*/}
+  case "/$relative/" in */../* | */./*) return 1 ;; esac
+  case "$relative" in
+    scripts/*.el) printf '%s/%s\n' "$root" "$skill" ;;
+    *) return 1 ;;
+  esac
+}
+
+record_elisp_requirement() {
+  local file="$1" owner recorded
+  is_doc_exempt_el "$file" && return 0
+  is_version_bump_only "$file" && return 0
+  if owner=$(skill_script_owner "$file"); then
+    if [ "${#SKILL_HELPER_OWNERS[@]}" -gt 0 ]; then
+      for recorded in "${SKILL_HELPER_OWNERS[@]}"; do
+        [ "$recorded" != "$owner" ] || return 0
+      done
+    fi
+    SKILL_HELPER_OWNERS+=("$owner")
+  else
+    HAS_EL=true
+  fi
+}
+
+skill_document_selected() {
+  local owner="$1" status before after file
+  # Name-status comes from the actual index or lib-staged-files' proposed
+  # commit. A deleted or unselected Markdown file cannot satisfy this owner.
+  while IFS=$'\t' read -r status before after; do
+    case "$status" in
+      A | M | T | R[0-9]* | C[0-9]*) ;;
+      *) continue ;;
+    esac
+    file=${after:-$before}
+    case "$file" in
+      "$owner"/SKILL.md | "$owner"/references/*.md) return 0 ;;
+    esac
+  done <<< "$STAGED_STATUS"
+  return 1
+}
+
 if [ -n "$STAGED" ]; then
   while IFS= read -r file; do
     case "$file" in
       *.el)
-        is_doc_exempt_el "$file" || is_version_bump_only "$file" || HAS_EL=true
+        record_elisp_requirement "$file"
         ;;
       doc/*.org | */doc/*.org)
         HAS_DOC_ORG=true
@@ -229,15 +284,11 @@ if [ "$STAGED_SELECTION" = 1 ]; then
   ADD_ARGS=""
 fi
 if [ -n "$ADD_ARGS" ]; then
-  if [ "$HAS_EL" = false ]; then
-    # Extract literal .el paths from git add args without evaluating the shell.
-    while IFS= read -r -d '' el_file; do
-      if ! is_doc_exempt_el "$el_file" && ! is_version_bump_only "$el_file"; then
-        HAS_EL=true
-        break
-      fi
-    done < <(printf '%s' "$COMMAND" | git_add_elisp_paths)
-  fi
+  # Inspect every literal Elisp path: a mixed commit has independent package
+  # and per-skill requirements, even after its first production file is found.
+  while IFS= read -r -d '' el_file; do
+    record_elisp_requirement "$el_file"
+  done < <(printf '%s' "$COMMAND" | git_add_elisp_paths)
   if [ "$HAS_DOC_ORG" = false ] && echo "$ADD_ARGS" | grep -qE '(^|/)doc/[^ ]*\.org'; then
     # Verify at least one doc/*.org file has actual modifications
     for doc_file in $(echo "$ADD_ARGS" | grep -oE '(^|[/ ])[^ ]*doc/[^ ]*\.org' || true); do
@@ -463,6 +514,9 @@ if [ -n "$PENDING_UNCERTAIN_ADDS" ]; then
   else
     while IFS= read -r file; do
       if pending_source_uncertain_p "$file"; then
+        if skill_script_owner "$file" >/dev/null; then
+          record_elisp_requirement "$file"
+        fi
         check_texinfo_manual_source "$file"
       fi
     done <<< "$pending_changed"
@@ -493,7 +547,34 @@ if [ "${#DIRTY_GENERATED_DOCS[@]}" -gt 0 ]; then
   exit 0
 fi
 
+MISSING_SKILL_DOCS=()
+if [ "${#SKILL_HELPER_OWNERS[@]}" -gt 0 ]; then
+  for owner in "${SKILL_HELPER_OWNERS[@]}"; do
+    if ! skill_document_selected "$owner"; then
+      MISSING_SKILL_DOCS+=("$owner")
+    fi
+  done
+fi
+if [ "${#SKILL_HELPER_OWNERS[@]}" -gt 0 ] && [ -n "$ADD_ARGS" ]; then
+  REASON="BLOCKED: stage skill-helper changes and their owning skill documentation separately before committing. Combined staging has no resolved final documentation selection."
+elif [ "${#MISSING_SKILL_DOCS[@]}" -gt 0 ]; then
+  REASON="BLOCKED: skill helper changes require a changed, non-deleted SKILL.md or references/*.md from each owning skill in this commit: ${MISSING_SKILL_DOCS[*]}. An unrelated package manual or another skill's documentation cannot satisfy this requirement."
+else
+  REASON=""
+fi
+if [ -n "$REASON" ]; then
+  jq -n --arg reason "$REASON" '{hookSpecificOutput: {
+    hookEventName: "PreToolUse", permissionDecision: "deny",
+    permissionDecisionReason: $reason}}'
+  exit 0
+fi
+
 if [ "$HAS_EL" = false ]; then
+  exit 0
+fi
+
+# Ordinary production Elisp retains the existing package-manual rule.
+if [ "$HAS_DOC_DIR" = false ] && [ "$HAS_README_ORG" = false ] && [ "$HAS_README_MD" = false ]; then
   exit 0
 fi
 

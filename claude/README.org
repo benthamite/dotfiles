@@ -93,6 +93,9 @@ return allow or deny and never prompt as an approval mechanism.
 The secret guard inspects replacement text and notebook cell source as well
 as whole-file writes. Security-hook bootstrap and unexpected runtime failures
 block with exit code 2; the [[file:hooks/README.org][hook contracts]] describe the covered guards.
+The regression fixtures check malformed input, missing dependencies, missing
+startup helpers, and benign or secret-shaped replacement text without executing
+the proposed tools.
 
 Claude-specific browser, OAuth, hosted connector, and account state stay in
 Claude's native stores. Shared MCP wiring is audited only when it is declared in
@@ -127,6 +130,11 @@ roots, and maintenance. The generated
 [[file:../agents/skill-inventory.org][tracked skill inventory]] is the repository-wide catalog. It covers tracked
 public skills only; runtime plugins, private skills, ignored system content,
 and skills owned by other repositories are outside its scope.
+
+The project-local =config-audit= respects a requested subset and includes
+procedural bodies when full skill audits are requested. It distinguishes
+skill discovery from instruction loading and checks actual hook coverage
+before recommending removal of an overlapping instruction.
 
 The programmatic =open-session-log= helper resolves the current runtime's
 session identity and exact transcript in its active account root. It opens

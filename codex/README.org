@@ -174,6 +174,11 @@ Native =[[skills.config]]= entries can disable a tracked skill without deleting
 it. Programmatic skills remain outside ordinary interactive discovery and are
 invoked explicitly by the runner.
 
+The project-local =config-audit= respects a requested subset and includes
+procedural bodies when full skill audits are requested. It distinguishes
+skill discovery from instruction loading and checks actual hook coverage
+before recommending removal of an overlapping instruction.
+
 The programmatic =open-session-log= helper resolves the current runtime's
 session identity and exact transcript in its active account root. It opens
 that path in Emacs and checks the rendered buffer's identity before reporting
@@ -205,6 +210,8 @@ of depending on the nested runtime to dispatch a separate pre-tool event.
 Security guards block unexpected runtime and bootstrap failures with exit code
 2. Secret scans include native =Write.content= and =Edit.new_string= as well
 as patch text; the [[file:hooks/README.org][hook contracts]] list the covered entry points.
+The regression fixtures exercise those actual entry points with malformed
+input, missing dependencies and startup helpers, and harmless editing payloads.
 
 The secret guard denies direct agent-shell invocations of raw =op=, =pass=,
 macOS =security=, and =pbpaste=, including wrappers, nested shells, process

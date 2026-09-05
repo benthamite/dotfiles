@@ -10,6 +10,11 @@ Perform a comprehensive audit of all agent instruction sources to find redundanc
 ## Scope and safety
 
 - Use this for agent configuration audits, not ordinary app config linting, code review, repo architecture review, or general security scans unless the question is specifically about agent instructions or automation behavior.
+- Honor the requested subset. A skills-only audit may read governing instructions
+  and relevant hooks for context, but does not authorize rewriting unrelated
+  settings, memory, or global instructions. When the user asks for full skill
+  audits, read procedural bodies and required resources too; the ordinary
+  instruction-overlap limits below do not narrow that request.
 - Treat settings, MCP configuration, memory, and hook payload examples as potentially sensitive. Read them locally, but do not quote secrets, OAuth tokens, API keys, credential helper output, or unnecessary account identifiers in the report. Redact values and report only the setting names or rule effects needed for the audit.
 - If the audit runs inside this dotfiles repo and secret material may be involved, follow the repo secret-handling instructions before inspecting credential-related files.
 - If an expected source is missing, unreadable, generated, or intentionally absent, record that explicitly instead of inferring its contents.
@@ -17,7 +22,12 @@ Perform a comprehensive audit of all agent instruction sources to find redundanc
 
 ## Phase 1: Discovery
 
-Create an inventory first, then read every instruction source in the setup. For each source, record the resolved path, symlink target when relevant, whether it is tracked, and what role it plays. Use subagents in parallel when available; when they are not available, partition the inventory manually and use parallel file reads where possible.
+Create an inventory first, then read every instruction source in the requested
+scope. For each source, record the resolved path, symlink target when relevant,
+whether it is tracked, and what role it plays. Use parallel investigation only
+when compatible with the user's requested order. For a one-by-one audit,
+complete and verify the current item before advancing; parallel help may
+independently check that same item.
 
 ### Instruction files
 
@@ -28,7 +38,10 @@ Create an inventory first, then read every instruction source in the setup. For 
 ### Skills
 
 - Every `SKILL.md` in `~/.claude/skills/ or ~/.codex/skills/` and the project's skill directories
-- Focus on skills with `user-invocable: false` (context skills) — these are loaded automatically and contribute rules to every relevant session
+- Distinguish discovery metadata from loaded instructions. Claude's
+  `user-invocable: false` hides a skill from direct user invocation; it does
+  not preload the body. Check actual loading and invocation policy for each
+  runtime before classifying a skill as always-loaded context.
 - For user-invocable skills, check only the frontmatter and any top-level rules outside procedural sections — the procedural body is loaded on demand and doesn't compete for attention with CLAUDE.md or AGENTS.md
 
 ### Memory
@@ -41,7 +54,8 @@ Create an inventory first, then read every instruction source in the setup. For 
 
 - Read `settings.json` to find all hook definitions
 - Read each hook script to understand what it enforces mechanically
-- A hook that enforces a rule makes an instruction-level statement of that same rule partially or fully redundant
+- Compare a hook's actual runtime and tool coverage with the instruction.
+  Enforcement overlap alone does not prove the instruction is redundant.
 
 ### Settings
 
@@ -80,7 +94,7 @@ The active agent system prompt and training already establish many behaviors. In
 
 **Examples of likely defaults**: don't mix unrelated changes in a commit, use descriptive variable names, don't introduce security vulnerabilities.
 
-**Examples of likely NOT defaults**: commit all changes immediately (system prompt says the opposite), use `trash` instead of `rm`, use the most capable available model for subagents.
+**Examples of likely NOT defaults**: commit all changes immediately, use `trash` instead of `rm`, use the most capable available model for subagents. Check the active runtime's instructions; do not assume another model or tool has the same defaults. A predicted default alone is not sufficient evidence to remove a useful user preference.
 
 ### Criterion 2: Conflicts
 
@@ -102,7 +116,8 @@ Check for:
 - Exact duplicates across files (same rule, same words)
 - Semantic duplicates (different words, same effect)
 - Subset rules (rule A says "commit everything immediately"; rule B says "commit skills immediately" — B is a strict subset of A)
-- Rules that are now mechanically enforced by a hook, making the instruction-level statement redundant
+- Rules also enforced by a hook; treat these as candidate overlap until runtime
+  coverage and the instruction's remaining guidance have been checked
 
 When a rule appears in N places, identify the **canonical location** (usually CLAUDE.md or AGENTS.md or the most general file) and flag the others as duplicates.
 
@@ -131,7 +146,10 @@ Note: most well-written rules with examples or specific constraints will pass th
 
 ## Phase 4: Output
 
-Present results in this order:
+Keep the user-facing report proportional to the findings. For comprehensive
+audits, preserve detailed per-source analysis in an audit artifact and lead
+with actionable findings. Use the sections below only where they apply to
+the requested scope.
 
 ### 1. Per-rule analysis table
 
@@ -153,7 +171,8 @@ Every conflict found, with:
 
 ### 4. Cleaned-up CLAUDE.md or AGENTS.md
 
-A rewritten version of the global CLAUDE.md or AGENTS.md with:
+When global instructions are in scope and need changes, a rewritten version
+of the global CLAUDE.md or AGENTS.md with:
 - Dead weight removed
 - Overlapping rules merged
 - Conflicts resolved
@@ -190,7 +209,16 @@ Before calling the audit complete:
 ## Guidelines
 
 - **Do not remove rules that are working.** If a rule changes behavior in a useful way and isn't duplicated elsewhere, it stays — even if it was reactive in origin.
-- **Canonical location principle.** When a rule must exist somewhere, prefer CLAUDE.md or AGENTS.md (always loaded) over context skills (loaded conditionally) over memory (loaded per-project). If a rule is in CLAUDE.md or AGENTS.md AND a skill, cut it from the skill.
-- **Hooks trump instructions.** If a hook mechanically enforces a rule, the instruction-level statement is documentation at best. It can be cut unless it provides context the hook can't (e.g., explaining *why* the rule exists).
-- **Don't touch procedural skills.** The body of user-invocable skills is procedural, not a competing instruction set. Don't recommend cutting steps from user-invocable procedural skills (release-dotfiles, publish-dotfiles, etc.) unless they contain general rules that duplicate CLAUDE.md or AGENTS.md.
+- **Canonical location principle.** Keep general preferences in global
+  instructions and task-specific constraints in the skill that needs them.
+  Remove a duplicate only when the canonical rule is available in every
+  supported context; preserve standalone portability and useful local context.
+- **Check enforcement coverage.** A hook may prevent an action without teaching
+  the agent the intended workflow, and it may cover only one runtime or tool.
+  Remove an overlapping instruction only after checking coverage and confirming
+  that no useful guidance or user preference would be lost.
+- **Distinguish procedure from always-loaded rules.** In an ordinary config
+  audit, do not cut useful procedural steps merely to reduce context. In an
+  explicitly requested skill audit, inspect the full workflow for defects,
+  authorization errors, broken references, and verification gaps.
 - **Respect the confirmation boundary.** `--accept` or an explicit apply request authorizes high-confidence cleanup; otherwise, present the full analysis and wait for confirmation before changing files.

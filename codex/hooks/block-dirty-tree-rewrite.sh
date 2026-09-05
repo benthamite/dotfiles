@@ -22,10 +22,19 @@
 
 set -euo pipefail
 
+# Install before sources or external commands: ordinary nonzero hook exits
+# are nonblocking. Keep this bootstrap dependency-free, including when jq fails.
+hook_bootstrap_complete=0
+trap 'hook_status=$?; if [ "$hook_status" -ne 0 ] || [ "$hook_bootstrap_complete" -ne 1 ]; then
+  printf "%s\n" "Security hook failed; tool execution denied." >&2
+  exit 2
+fi' EXIT
+
 SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
 # shellcheck source=lib-codex-hook-json.sh
 source "$SCRIPT_DIR/lib-codex-hook-json.sh"
 
+hook_bootstrap_complete=1
 INPUT=$(cat)
 
 COMMAND=$(codex_shell_command "$INPUT")

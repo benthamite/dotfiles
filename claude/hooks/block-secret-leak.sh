@@ -1,5 +1,5 @@
 #!/bin/bash
-# PreToolUse hook: block Bash commands and Write operations that would
+# PreToolUse hook: block Bash commands and file/notebook edits that would
 # expose secrets in terminal output or write them to unencrypted files.
 #
 # Matches common secret patterns (AWS keys, GitHub tokens, Slack tokens,
@@ -7,13 +7,22 @@
 # control for auto/bypass permission modes — it enforces what CLAUDE.md's
 # "never echo or print secrets" instruction cannot guarantee.
 #
-# Matchers: Bash, Write
+# Matchers: Bash, Write, Edit, NotebookEdit
 
 set -euo pipefail
+
+# Install before sources or external commands: ordinary nonzero hook exits
+# are nonblocking. Keep this bootstrap dependency-free, including when jq fails.
+hook_bootstrap_complete=0
+trap 'hook_status=$?; if [ "$hook_status" -ne 0 ] || [ "$hook_bootstrap_complete" -ne 1 ]; then
+  printf "%s\n" "Security hook failed; tool execution denied." >&2
+  exit 2
+fi' EXIT
 
 # shellcheck source=lib-heredoc.sh
 source "$(dirname "$0")/lib-heredoc.sh"
 
+hook_bootstrap_complete=1
 INPUT=$(cat)
 
 TOOL_NAME=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty')
@@ -26,6 +35,12 @@ case "$TOOL_NAME" in
     ;;
   Write)
     CONTENT=$(printf '%s' "$INPUT" | jq -r '(.tool_input.file_path // "") + "\n" + (.tool_input.content // "")')
+    ;;
+  Edit)
+    CONTENT=$(printf '%s' "$INPUT" | jq -r '(.tool_input.file_path // "") + "\n" + (.tool_input.new_string // "")')
+    ;;
+  NotebookEdit)
+    CONTENT=$(printf '%s' "$INPUT" | jq -r '(.tool_input.notebook_path // "") + "\n" + (.tool_input.new_source // "")')
     ;;
   *)
     exit 0

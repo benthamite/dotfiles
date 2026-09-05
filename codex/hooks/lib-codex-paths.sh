@@ -71,4 +71,9 @@ codex_patch_content_for_scan() {
   direct=$(codex_direct_file_path "$input")
   patch=$(codex_patch_text "$input")
   printf '%s\n%s\n' "$direct" "$patch"
+  # Native Write/Edit payloads carry their new text outside the patch fields.
+  codex_hook_jq "$input" '
+    [codex_tool_input.content // "", codex_tool_input.new_string // ""] |
+    join("\n")
+  '
 }

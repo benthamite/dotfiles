@@ -16,6 +16,16 @@ or the need for user authorization.
 
 * Operational contracts
 
+The security guards for secrets, sensitive reads, destructive commands,
+GitHub writes, paid Ahrefs access, dirty-tree rewrites, LaunchAgents, and
+walk-list data convert unexpected failures to blocking exit code 2. Their
+dependency-free handler is installed before external commands, and required
+source files fail explicitly even on macOS Bash. Ordinary successful checks
+retain their allow/deny decisions and never introduce approval prompts.
+
+The secret guard scans =Write.content= and =Edit.new_string= as well as patch
+text. The Claude counterpart also covers notebook cell source.
+
 The destructive-command guard is registered directly here. Claude carries the
 same logic inline in its =pretooluse-bash.sh= dispatcher, so both implementations
 must change and be tested together. Decisions are allow or deny, never approval

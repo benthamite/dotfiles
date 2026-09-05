@@ -96,6 +96,7 @@ block with exit code 2; the [[file:hooks/README.org][hook contracts]] describe t
 The regression fixtures check malformed input, missing dependencies, missing
 startup helpers, and benign or secret-shaped replacement text without executing
 the proposed tools.
+These guards run with the agent's OS user and filesystem access.
 
 Claude-specific browser, OAuth, hosted connector, and account state stay in
 Claude's native stores. Shared MCP wiring is audited only when it is declared in

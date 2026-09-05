@@ -17,9 +17,18 @@
 
 set -euo pipefail
 
+# Install before sources or external commands: ordinary nonzero hook exits
+# are nonblocking. Keep this bootstrap dependency-free, including when jq fails.
+hook_bootstrap_complete=0
+trap 'hook_status=$?; if [ "$hook_status" -ne 0 ] || [ "$hook_bootstrap_complete" -ne 1 ]; then
+  printf "%s\n" "Security hook failed; tool execution denied." >&2
+  exit 2
+fi' EXIT
+
 # shellcheck source=lib-heredoc.sh
 source "$(dirname "$0")/lib-heredoc.sh"
 
+hook_bootstrap_complete=1
 INPUT=$(cat)
 TOOL_NAME=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty')
 

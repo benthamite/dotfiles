@@ -212,6 +212,7 @@ Security guards block unexpected runtime and bootstrap failures with exit code
 as patch text; the [[file:hooks/README.org][hook contracts]] list the covered entry points.
 The regression fixtures exercise those actual entry points with malformed
 input, missing dependencies and startup helpers, and harmless editing payloads.
+These guards run with the agent's OS user and filesystem access.
 
 The secret guard denies direct agent-shell invocations of raw =op=, =pass=,
 macOS =security=, and =pbpaste=, including wrappers, nested shells, process

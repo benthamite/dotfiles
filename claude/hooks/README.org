@@ -15,6 +15,18 @@ directory does not.
 
 * Operational contracts
 
+The Bash dispatcher and security guards for secrets, sensitive reads,
+destructive commands, paid Ahrefs access, dirty-tree rewrites, LaunchAgents,
+and walk-list data convert unexpected failures to blocking exit code 2.
+Their dependency-free handler is installed before external commands; required
+source files also fail explicitly, because macOS Bash can report a failed
+source as status zero inside an EXIT trap. Ordinary successful checks retain
+their allow/deny decisions and never introduce approval prompts.
+
+The secret guard scans new content from =Write=, =Edit=, and =NotebookEdit=,
+including replacement text and notebook cell source. Removing an existing
+secret does not require copying it into the replacement text.
+
 The destructive-command policy is registered as a standalone Codex hook but is
 inlined into Claude's =pretooluse-bash.sh= dispatcher. Change and test those two
 implementations together. Both are deny-only and never ask for approval;

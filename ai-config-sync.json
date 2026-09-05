@@ -355,7 +355,7 @@
       "claude": "claude/hooks/block-github-write-command.sh",
       "codex": "codex/hooks/block-github-write-command.sh",
       "status": "paired-dispatched",
-      "note": "paired GitHub write gate for shell commands; blocks git pushes and recognized mutating gh operations unless the target repo matches an exact OWNER/REPO entry or OWNER/* account wildcard in agents/github-write-allowlist.txt. Codex independently classifies literal nested functions.exec exec_command records and denies ambiguous records via the shared lib-codex-hook-json.sh parser; Claude side is delegated by pretooluse-bash.sh."
+      "note": "paired GitHub write gate for shell commands; blocks git pushes and recognized mutating gh operations unless the target repo matches an exact OWNER/REPO entry or OWNER/* account wildcard in agents/github-write-allowlist.txt. Codex independently classifies literal nested functions.exec exec_command records and denies ambiguous records via the shared lib-codex-hook-json.sh parser; its directly registered entry blocks bootstrap failures with exit 2. Claude delegates through pretooluse-bash.sh, which already converts delegated failures into denials."
     },
     {
       "name": "block-secret-leak.sh",
@@ -440,7 +440,7 @@
       "claude": null,
       "codex": "codex/hooks/lib-codex-paths.sh",
       "status": "codex-only",
-      "note": "Codex apply_patch path extraction helper; uses lib-codex-hook-json.sh for object-or-string payload normalization."
+      "note": "Codex apply_patch path extraction helper; uses lib-codex-hook-json.sh for object-or-string payload normalization, and includes native Write.content and Edit.new_string in secret scans. Claude reads its native edit and notebook fields directly."
     },
     {
       "name": "lib-elisp-evidence.sh",
@@ -510,7 +510,7 @@
       "claude": "claude/hooks/pretooluse-bash.sh",
       "codex": null,
       "status": "claude-only",
-      "note": "Claude Bash PreToolUse dispatcher in ~/.claude/settings.json. Runs cheap guards in-process and delegates heavier git/filesystem checks, including GitHub writes, to standalone hooks. Delegated failures, malformed JSON, and interactive approvals deny; decision JSON is parsed structurally. Rewrites replace only command in the full tool_input, preserving timeout/run_in_background. Codex registers shell hooks directly in codex/hooks.json; it has no Bash rewrite or delegated-response aggregator."
+      "note": "Claude Bash PreToolUse dispatcher in ~/.claude/settings.json. Runs cheap guards in-process and delegates heavier git/filesystem checks, including GitHub writes, to standalone hooks. Bootstrap failures block with exit 2; delegated failures, malformed JSON, and interactive approvals deny. Rewrites replace only command in the full tool_input, preserving timeout/run_in_background. Codex registers shell hooks directly in codex/hooks.json; its security guards also block bootstrap failures, without a Bash rewrite or delegated-response aggregator."
     },
     {
       "name": "regenerate-manual-after-edit.sh",

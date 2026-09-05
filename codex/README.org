@@ -133,6 +133,11 @@ serializing a lockfile. It uses supported GitHub PR fields, strict release tags,
 path-only version commits, and the same approved notes file for review and
 release creation. Preparation alone grants no publication authority.
 
+The paired =triage-personal-todos= skill keeps brief-only requests read-only,
+binds the personal corpus and canonical repository, and verifies current task
+evidence before selection. Confirmed completion uses the shared helper's
+prepared update, with Org workflow/date checks and explicit rollback limits.
+
 The paired =test-suite= skill binds tests to the intended source and independent
 behavior contracts, isolates side effects, and checks discovery and failure
 sensitivity. Tests-only work preserves product code and reports valid failing

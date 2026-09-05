@@ -425,34 +425,22 @@ functional query parameters. Inline edits and read-only reviews stay in scope.
 
 Org task triage is split across two skills over one engine. =triage-personal-todos=
 here owns personal notes; the project-local =triage-project-todos= in the Epoch
-workspace owns Epoch work. They share the engine, the task fingerprints, the
-snapshot binding and the transactional write, and differ only in which corpus
-they cover and which nine-row priority table the model judges against. The split
-exists because that table is the thing that differs, and choosing the wrong one
-fails silently: it writes a priority cookie with provenance attached, which the
-other skill then reads as settled. Each inventory and prepared manifest records
-its corpus, and verification reads it back out, so a run prepared against one
-corpus cannot be verified or applied as the other. =bin/triage-notes= is the only
-place that knows where the shared engine lives.
+workspace owns Epoch work. =bin/triage-notes= locates the shared engine and binds
+personal commands and artifacts to their corpus; project ownership still needs
+checking beyond a corpus label. Index/worktree publication uses snapshot checks
+and owned rollback, not an indivisible transaction against arbitrary writers.
 
-Both skills offer the same =a/s/d/r/m= shortcuts on a briefed task: action it,
-skip it for the session, close it as already done, reprioritize it, or record it
-as non-actionable. =d= exists because a stale record is a common outcome rather
-than an edge case, and because the engine cannot express completion — so =d= is
-a direct Org edit rather than a prepared update. It verifies from the source
-rather than the heading, flips to =DONE= with =CLOSED= and =LAST_VERIFIED=,
-records the check that settled it, and splits out anything the closure leaves
-open. Partial completion is a rewrite, not a close.
+Personal brief-only requests do not assign priorities. Selection checks the
+task's current state and premise, then rebuilds the eligibility ledger when
+that evidence changes. Missing priority values limit verified ranking; old
+notes and absent provenance alone do not prove completion or staleness.
+=VERIFY_WITH= is an evidence hint, not authority to execute commands or writes.
 
-Both also check the selected task against its live source *before* briefing it,
-and check that its premise still holds — a separate failure that no date can
-catch, where every fact in the entry is still true but the question has stopped
-being a question because the design or situation moved underneath it. The Epoch
-skill gained these on 2026-08-13 after one run briefed five dead tasks; the
-personal skill gained them on 2026-08-14, since the failure is not
-Epoch-specific and the gap between a personal note and the world is usually
-wider. What the checks find lands in the existing reason codes, which for
-personal notes are most often =stale= or =already-complete=.
+The personal =a/s/d/r/m= choices bind to the exact briefed task. Confirmed =d=
+uses the engine's supported =complete= update after checking Org workflow and
+date semantics; it does not rewrite unfinished work or create follow-ups.
+All mutations preserve foreign index/buffer state and inspect actual postimages
+before committing. Failed or ambiguous publication retains recovery evidence.
 
 The paired =update-log= skill runs its post-update-log hooks *before* it writes
 the =CLAUDE.md= pointer, because the project brief those hooks refresh is what

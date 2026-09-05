@@ -107,11 +107,23 @@ def default_registry_path(start):
     return state_home / "security-audit" / "credential-incidents.json"
 
 
-def reject_secret_text(value, field):
+def reject_secret_text(value, field, *, identifier=False, repository_path=False):
     if not isinstance(value, str):
         return
-    for pattern in SECRET_TEXT:
+    if any(ord(character) < 32 or ord(character) == 127 for character in value):
+        raise RegistryError(f"{field} contains control characters")
+    for pattern in SECRET_TEXT[:-1]:
         if pattern.search(value):
+            raise RegistryError(f"{field} appears to contain credential material")
+    # Paths contain separators and provider IDs may be hexadecimal hashes.
+    # Preserve these metadata shapes without exempting recognizable credentials.
+    candidates = value.split("/") if repository_path else [value]
+    for candidate in candidates:
+        if (identifier or repository_path) and re.fullmatch(
+            r"(?:[0-9a-fA-F]{32}|[0-9a-fA-F]{40}|[0-9a-fA-F]{64})", candidate
+        ):
+            continue
+        if SECRET_TEXT[-1].search(candidate):
             raise RegistryError(f"{field} appears to contain credential material")
 
 
@@ -126,7 +138,7 @@ def require_text(record, field, limit=240):
 def require_choice(record, field, choices):
     value = require_text(record, field, 80)
     if value not in choices:
-        raise RegistryError(f"unsupported {field}: {value}")
+        raise RegistryError(f"unsupported {field}")
     return value
 
 
@@ -145,10 +157,11 @@ def validate_references(value):
     for reference in value:
         if not isinstance(reference, dict) or set(reference) != {"kind", "id"}:
             raise RegistryError("provider_references entries require only kind and id")
-        if reference["kind"] not in REFERENCE_KINDS:
-            raise RegistryError(f"unsupported provider reference kind: {reference['kind']}")
+        if not isinstance(reference["kind"], str) or reference["kind"] not in REFERENCE_KINDS:
+            raise RegistryError("unsupported provider reference kind")
         if not isinstance(reference["id"], str) or not REFERENCE_ID.fullmatch(reference["id"]):
             raise RegistryError("provider reference id has an unsafe format")
+        reject_secret_text(reference["id"], "provider reference id", identifier=True)
 
 
 def validate_locations(value):
@@ -168,6 +181,7 @@ def validate_locations(value):
             or len(path) > 300
         ):
             raise RegistryError("location path must be a safe repository-relative path")
+        reject_secret_text(path, "location path", repository_path=True)
         commits = location.get("commits", [])
         if not isinstance(commits, list) or any(
             not isinstance(commit, str) or not COMMIT.fullmatch(commit) for commit in commits
@@ -179,11 +193,12 @@ def validate_locations(value):
 def validate_record(incident_id, record):
     if not isinstance(incident_id, str) or not INCIDENT_ID.fullmatch(incident_id):
         raise RegistryError("incident_id must be a lowercase hyphenated identifier")
+    reject_secret_text(incident_id, "incident_id")
     if not isinstance(record, dict):
-        raise RegistryError(f"incident {incident_id} must be an object")
+        raise RegistryError("incident must be an object")
     extra = set(record) - RECORD_FIELDS
     if extra:
-        raise RegistryError(f"incident {incident_id} has unsupported fields: {', '.join(sorted(extra))}")
+        raise RegistryError("incident has unsupported fields")
     require_text(record, "provider", 100)
     require_text(record, "credential_type", 100)
     credential_fingerprint = require_text(record, "credential_fingerprint", 20)
@@ -208,7 +223,7 @@ def validate_record(incident_id, record):
 def validate_state(state):
     if not isinstance(state, dict) or set(state) != {"schema", "incidents"}:
         raise RegistryError("registry must contain only schema and incidents")
-    if state["schema"] != SCHEMA or not isinstance(state["incidents"], dict):
+    if type(state["schema"]) is not int or state["schema"] != SCHEMA or not isinstance(state["incidents"], dict):
         raise RegistryError("unsupported credential incident registry schema")
     for incident_id, record in state["incidents"].items():
         validate_record(incident_id, record)
@@ -217,12 +232,12 @@ def validate_state(state):
 
 def check_private_path(path):
     if path.is_symlink():
-        raise RegistryError(f"registry is a symlink: {path}")
+        raise RegistryError("registry is a symlink")
     if path.parent.is_symlink():
-        raise RegistryError(f"registry parent is a symlink: {path.parent}")
+        raise RegistryError("registry parent is a symlink")
     if path.parent.exists():
         if not path.parent.is_dir():
-            raise RegistryError(f"registry parent is not a directory: {path.parent}")
+            raise RegistryError("registry parent is not a directory")
         parent_mode = stat.S_IMODE(path.parent.stat().st_mode)
         if parent_mode & 0o077:
             raise RegistryError(
@@ -242,7 +257,7 @@ def load_state(path):
     try:
         return validate_state(json.loads(path.read_text(encoding="utf-8")))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
-        raise RegistryError(f"could not read registry: {error}") from error
+        raise RegistryError("could not read registry") from error
 
 
 def write_state(path, state):
@@ -271,18 +286,18 @@ def read_input(path):
     try:
         mode = stat.S_IMODE(path.stat().st_mode)
     except OSError as error:
-        raise RegistryError(f"could not inspect record input: {error}") from error
+        raise RegistryError("could not inspect record input") from error
     if mode & 0o077:
         raise RegistryError(f"record input is group- or world-accessible (mode {mode:o})")
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
-        raise RegistryError(f"could not read record input: {error}") from error
+        raise RegistryError("could not read record input") from error
     if not isinstance(payload, dict):
         raise RegistryError("record input must be one JSON object")
     extra = set(payload) - INPUT_FIELDS
     if extra:
-        raise RegistryError(f"record input has unsupported fields: {', '.join(sorted(extra))}")
+        raise RegistryError("record input has unsupported fields")
     incident_id = payload.pop("incident_id", None)
     payload["updated_at"] = utc_now()
     validate_record(incident_id, payload)
@@ -351,7 +366,7 @@ def main():
     if args.command == "show":
         record = state["incidents"].get(args.id)
         if record is None:
-            raise RegistryError(f"unknown incident: {args.id}")
+            raise RegistryError("unknown incident")
         print_record(args.id, record)
         return 0
     if args.command == "lookup":
@@ -373,7 +388,7 @@ def main():
         write_state(path, state)
         print(f"recorded: {incident_id}")
         return 0
-    raise RegistryError(f"unsupported command: {args.command}")
+    raise RegistryError("unsupported command")
 
 
 if __name__ == "__main__":
@@ -381,4 +396,7 @@ if __name__ == "__main__":
         raise SystemExit(main())
     except RegistryError as error:
         print(f"error: {error}", file=sys.stderr)
+        raise SystemExit(2)
+    except OSError:
+        print("error: registry filesystem operation failed", file=sys.stderr)
         raise SystemExit(2)

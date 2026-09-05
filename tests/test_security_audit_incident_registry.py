@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+import copy
 import json
 import stat
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -54,11 +56,13 @@ class CredentialIncidentRegistryTests(unittest.TestCase):
         }
 
     def write_input(self, record=None, mode=0o600):
-        self.input.write_text(json.dumps(record or self.record), encoding="utf-8")
+        self.input.write_text(json.dumps(self.record if record is None else record), encoding="utf-8")
         self.input.chmod(mode)
 
     def run_helper(self, *arguments, check=True):
         command = [
+            sys.executable,
+            "-B",
             str(HELPERS["codex"]),
             "--registry",
             str(self.registry),
@@ -77,10 +81,24 @@ class CredentialIncidentRegistryTests(unittest.TestCase):
         self.assertEqual(SKILLS["claude"].read_text(), SKILLS["codex"].read_text())
         for path in HELPERS.values():
             self.assertTrue(path.stat().st_mode & stat.S_IXUSR)
-        for path in SKILLS.values():
-            text = path.read_text()
-            self.assertIn("scripts/credential-incident-registry.py", text)
-            self.assertIn("A registry record is evidence,\nnot an allowlist", text)
+
+    def write_state(self, record):
+        record = copy.deepcopy(record)
+        incident_id = record.pop("incident_id")
+        record["updated_at"] = "2026-09-01T12:00:00Z"
+        self.registry.parent.mkdir(mode=0o700, exist_ok=True)
+        self.registry.write_text(
+            json.dumps({"schema": 1, "incidents": {incident_id: record}}), encoding="utf-8"
+        )
+        self.registry.chmod(0o600)
+
+    def assert_safe_rejection(self, result, forbidden=()):
+        self.assertEqual(2, result.returncode)
+        self.assertEqual("", result.stdout)
+        self.assertTrue(result.stderr.startswith("error: "), result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+        for value in forbidden:
+            self.assertNotIn(value, result.stdout + result.stderr)
 
     def test_record_list_lookup_and_validate(self):
         self.write_input()
@@ -159,6 +177,138 @@ class CredentialIncidentRegistryTests(unittest.TestCase):
         result = self.run_helper("validate", check=False)
         self.assertEqual(2, result.returncode)
         self.assertIn("registry is a symlink", result.stderr)
+
+
+    def test_record_rejects_credentials_in_metadata_without_writing_or_echoing(self):
+        marker = "ghp_" + "A" * 36
+        slack_marker = "xoxb-" + "synthetic-credential"
+        cases = []
+        for field in ("provider", "credential_type", "summary", "status", "last_verified_at"):
+            record = copy.deepcopy(self.record)
+            record[field] = marker
+            cases.append((field, record))
+        for field in ("id", "kind"):
+            record = copy.deepcopy(self.record)
+            record["provider_references"][0][field] = marker
+            cases.append(("reference " + field, record))
+        for value in (marker, "archive/" + marker + "/config.json", "token=" + marker):
+            record = copy.deepcopy(self.record)
+            record["locations"][0]["path"] = value
+            cases.append(("path " + str(len(value)), record))
+        for field in ("incident_id", "next_action", "last_verified_result", "verification_method"):
+            record = copy.deepcopy(self.record)
+            record[field] = marker
+            cases.append((field, record))
+        record = copy.deepcopy(self.record)
+        record[marker] = "redacted"
+        cases.append(("unknown field", record))
+        record = copy.deepcopy(self.record)
+        record["incident_id"] = slack_marker
+        cases.append(("valid-shaped secret incident id", record))
+        for name, record in cases:
+            with self.subTest(name=name):
+                self.write_input(record)
+                result = self.run_helper("record", "--input", str(self.input), check=False)
+                self.assert_safe_rejection(result, (marker, slack_marker))
+                self.assertFalse(self.registry.parent.exists())
+
+    def test_unlabelled_reference_and_path_tokens_are_rejected(self):
+        marker = "SyntheticUnlabelledCredential" + "Z" * 12
+        for field in ("reference", "path"):
+            with self.subTest(field=field):
+                record = copy.deepcopy(self.record)
+                if field == "reference":
+                    record["provider_references"][0]["id"] = marker
+                else:
+                    record["locations"][0]["path"] = "config/" + marker
+                self.write_input(record)
+                self.assert_safe_rejection(
+                    self.run_helper("record", "--input", str(self.input), check=False), (marker,)
+                )
+                self.assertFalse(self.registry.exists())
+
+    def test_structured_ids_and_realistic_git_paths_round_trip(self):
+        self.record["provider_references"] += [
+            {"kind": "provider-ticket", "id": "123e4567-e89b-12d3-a456-426614174000"},
+            {"kind": "provider-ticket", "id": "abcdef0123456789" * 2},
+        ]
+        self.record["locations"] += [
+            {"path": "macos/.codex/skills/security-audit/scripts/credential-incident-registry.py"},
+            {"path": "archive/" + "a" * 40 + "/config/service.json"},
+        ]
+        self.write_input()
+        self.run_helper("record", "--input", str(self.input))
+        actual = json.loads(self.run_helper("show", "--id", self.record["incident_id"]).stdout)
+        self.assertEqual(self.record["provider_references"], actual["provider_references"])
+        self.assertEqual(self.record["locations"], actual["locations"])
+
+    def test_malformed_registry_is_rejected_before_any_output_or_write(self):
+        marker = "ghp_" + "B" * 36
+        cases = []
+        for field in ("id", "kind"):
+            record = copy.deepcopy(self.record)
+            record["provider_references"][0][field] = marker
+            cases.append(record)
+        record = copy.deepcopy(self.record)
+        record["locations"][0]["path"] = "config/" + marker
+        cases.append(record)
+        record = copy.deepcopy(self.record)
+        record[marker] = "redacted"
+        cases.append(record)
+        for kind in ([], {}, None, 42):
+            record = copy.deepcopy(self.record)
+            record["provider_references"][0]["kind"] = kind
+            cases.append(record)
+        for index, record in enumerate(cases):
+            self.write_state(record)
+            before = self.registry.read_bytes()
+            modified = self.registry.stat().st_mtime_ns
+            for arguments in (("list",), ("lookup", "--fingerprint", "0123456789abcdef0123")):
+                with self.subTest(record=index, command=arguments[0]):
+                    self.assert_safe_rejection(self.run_helper(*arguments, check=False), (marker,))
+                    self.assertEqual(before, self.registry.read_bytes())
+                    self.assertEqual(modified, self.registry.stat().st_mtime_ns)
+
+    def test_valid_and_missing_registry_reads_do_not_change_state(self):
+        commands = (("list",), ("lookup", "--fingerprint", "0123456789abcdef0123"))
+        for arguments in commands:
+            self.run_helper(*arguments, check=False)
+            self.assertFalse(self.registry.parent.exists())
+        self.write_state(self.record)
+        before = self.registry.read_bytes()
+        modified = self.registry.stat().st_mtime_ns
+        for arguments in commands:
+            self.run_helper(*arguments)
+            self.assertEqual(before, self.registry.read_bytes())
+            self.assertEqual(modified, self.registry.stat().st_mtime_ns)
+
+    def test_rejected_update_preserves_existing_registry(self):
+        self.write_state(self.record)
+        before = self.registry.read_bytes()
+        self.record["provider_references"][0]["id"] = "ghp_" + "C" * 36
+        self.write_input()
+        self.assert_safe_rejection(
+            self.run_helper("record", "--input", str(self.input), check=False),
+            (self.record["provider_references"][0]["id"],),
+        )
+        self.assertEqual(before, self.registry.read_bytes())
+
+    def test_errors_do_not_echo_unknown_ids_or_filesystem_paths(self):
+        marker = "ghp_" + "D" * 36
+        self.assert_safe_rejection(
+            self.run_helper("show", "--id", marker, check=False), (marker,)
+        )
+        self.assert_safe_rejection(
+            self.run_helper("record", "--input", str(self.root / marker), check=False), (marker,)
+        )
+
+    def test_malformed_json_and_schema_fail_cleanly(self):
+        self.registry.parent.mkdir(mode=0o700)
+        for content in ("{", "[]", '{"schema": true, "incidents": {}}'):
+            self.registry.write_text(content, encoding="utf-8")
+            self.registry.chmod(0o600)
+            self.assert_safe_rejection(self.run_helper("list", check=False))
+            self.assertEqual(content, self.registry.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

@@ -1,116 +1,138 @@
 ---
 name: test-suite
-description: Create or expand high-value test suites for a codebase or specific module. Use when the user asks to add or write tests, improve coverage, bootstrap testing, create regression tests, or test a module/codebase; not for ordinary bug-fixing unless tests are the requested deliverable.
+description: Create or expand high-value test suites for a codebase or specific module. Use when new tests, regression tests, coverage improvements, or test infrastructure are the deliverable; not for merely running an existing suite, reviewing code, or ordinary bug-fixing without a requested test deliverable.
 ---
 
 # Test suite
 
-Create a comprehensive test suite for $ARGUMENTS (if no argument provided, default to the current project). The goal is to produce **tests that catch real bugs** - not ceremonial tests that merely confirm the code runs without crashing.
+Build tests for the requested project, module or risk area. If no target was
+provided, use the established current project; treat supplied paths as data,
+not shell commands. Prioritize behavior whose failure would matter, not test
+counts or a nominal coverage percentage.
 
-Use subagents to explore the codebase in parallel where appropriate (e.g., one for backend, one for frontend, one for shared utilities). Read actual code, understand its behavior, and write tests against that behavior.
+## Establish scope and the test environment
 
-## Scope boundaries
+Read applicable project instructions, testing documentation, runner/config,
+CI commands, and representative existing tests. Inspect the selected worktree
+and preserve unrelated edits. Identify the production entry points, external
+boundaries and known test conventions before choosing new infrastructure.
+Delegate independent bounded areas when useful, with disjoint edit ownership
+and the same privacy, environment and verification constraints.
 
-Use this skill when the deliverable is new or substantially improved tests. Do not use it for ordinary debugging, code review, lint cleanup, PR validation, or one-off command verification unless the user explicitly asks to add tests as part of that work. Route those requests to the neighboring debugging, audit, lint, or PR verification workflows.
+Distinguish writing tests from merely running or assessing them. A tests-only
+request does not authorize product repairs, refactoring, shared CI/service
+changes or external writes. If no runner exists and test setup is within the
+request, use the smallest compatible conventional runner and update its
+manifest/lockfile through normal tooling. Do not silently replace an existing
+framework or enable a paid/live service.
 
-Keep the work scoped to the requested project, module, or risk area. If comprehensive coverage would require a broad architecture change, live service credentials, or a new test framework that conflicts with project conventions, document that limit instead of forcing a workaround.
+Before executing even the existing suite, inspect setup/teardown and commands
+for side effects. Use owned disposable fixtures and explicit isolated homes,
+config, credentials, databases and network destinations where relevant.
+Never inherit a real account or production store just because a runner calls
+it “test.” Mock or disable external writes by default; live integration checks
+need applicable authorization and a confirmed isolated destination. Keep
+dependencies, caches, builds and temporary artifacts outside Drive. Register
+cleanup for owned files, processes, ports and fixtures, including failures.
 
-## Process
+Record the relevant baseline when safe and practical. Identify the command,
+selected tests, source checkout/revision, interpreter/runtime and fixture
+environment. Verify imports/load paths or built artifacts refer to the
+intended changed source, not a stale installed copy. Missing prerequisites
+or unsafe effects are explicit limits, not silently successful checks.
 
-### 1. Reconnaissance
+## Choose meaningful contracts
 
-Before writing any tests:
+Derive expectations from requirements, public contracts, independently worked
+examples or trusted domain rules. Read implementation to understand paths,
+not to turn its current output into the expected answer. When requirements
+are ambiguous, distinguish characterization of existing behavior from a
+correctness claim and resolve material uncertainty before inventing assertions.
 
-- **Read project instructions**: check `AGENTS.md`, `CLAUDE.md`, README testing sections, package scripts, and CI config so the suite follows local rules.
-- **Check worktree state**: note unrelated dirty files before editing and avoid overwriting user changes.
-- **Identify the tech stack**: languages, frameworks, existing test runners, assertion libraries, and fixture patterns already in use. Adopt the project's existing conventions.
-- **Find existing tests**: look for test directories, test files, config files (`pytest.ini`, `vitest.config.ts`, `jest.config.js`, `.mocharc.yml`, etc.). Study the patterns and style already established.
-- **Identify verification commands**: find the targeted test command, full suite command, lint/typecheck commands for tests, and any required environment setup.
-- **Map the codebase**: identify the modules, entry points, data flows, and external boundaries (APIs, databases, file I/O, third-party services).
-- **Find the critical paths**: which code handles money, auth, data persistence, user input parsing, or state transitions? These get tested first.
-- **Define coverage goals**: state which behavior, module, or risk area the new tests must cover before writing them.
+Select cases by impact and the requested scope:
 
-If there is no testing infrastructure at all, set up the smallest idiomatic runner, config, and directory structure before writing tests. Prefer tools already standard for the language or framework; if adding dependencies, update the relevant manifest and lockfile and explain the choice.
+- Data integrity: exact persisted state and absence of corruption or unintended
+  writes, including partial failure and recovery.
+- Input boundaries: valid, empty, malformed, type-confused and size-limit cases;
+  keep resource-stress cases bounded to owned test capacity.
+- State transitions: allowed and rejected transitions, retries, cancellation,
+  errors and recovery, especially where authorization or persistence changes.
+- Business logic: representative calculations, ordering, matching and boundary
+  cases with independently established expected values.
+- Integrations: actual wiring across owned components and framework boundaries,
+  not only isolated mocks that agree with each other.
+- Idempotency: repeated calls leave the promised state and side effects intact;
+  identical return values alone are not proof. Include ambiguous/partial retry
+  behavior when the operation claims to handle it.
+- Concurrency: controlled interleavings, ordering, cancellation and bounded
+  deadlock detection, rather than relying on a lucky scheduler.
+- Regressions/configuration/serialization: relevant past defects, missing or
+  invalid configuration, known-value encodings and information preservation.
+  A round trip alone can hide matching encoder/decoder defects.
 
-### 2. What to test
+Use synthetic representative fixtures by default. Small examples are valuable
+when they isolate a boundary. Do not read/copy private project data, transcripts,
+credentials or customer material into tests merely for realism; sanitization
+alone does not establish permission to store or publish it.
 
-Prioritize tests by the damage a bug would cause:
+## Write discriminating tests
 
-#### Critical (test these first)
+Follow the established test style, names and discovery rules. Keep a coherent
+behavior per test, with enough assertions to verify its result, state changes
+and forbidden side effects. Parameterize meaningful systematic variation with
+identifiable cases; do not impose arbitrary assertion or case-count limits.
 
-- **Data integrity**: functions that write, transform, or delete data — verify they produce correct output and don't corrupt state
-- **Input boundaries**: parsers, validators, API endpoints — test with valid input, invalid input, empty input, huge input, and type-confused input
-- **State transitions**: anything with multiple states (auth flows, multi-step wizards, reconciliation pipelines) — test every transition and the illegal ones
-- **Error paths**: what happens when the database is down, the file doesn't exist, the API returns 500, the JSON is malformed? Test that errors are handled, not swallowed
+Exercise the real production entry point at the appropriate layer. Mock
+unavailable or externally mutating boundaries, not the behavior being claimed
+as tested. Use real isolated filesystem/database/runtime paths where the
+contract depends on them, and state what mocks leave unmeasured. Framework
+wiring, schema migrations and application configuration are valid test targets
+even when framework internals themselves need no retesting.
 
-#### Important
+Ground boundary doubles in the actual supported interface or authoritative
+contract, not guessed fields or event ordering. Add a decisive unmocked
+interface check when safe and relevant; a synthetic double alone cannot
+establish compatibility with the installed runtime or remote service.
 
-- **Business logic**: calculations, scoring, matching, filtering, sorting — test with representative real-world data AND edge cases
-- **Integrations**: test that components work together correctly (API route -> service -> database, frontend -> API client -> backend)
-- **Idempotency**: operations that claim to be idempotent (imports, upserts, sync) — run them twice and verify identical results
-- **Concurrency**: if the code uses threads, async, or parallel processing — test for race conditions, deadlocks, and ordering issues
+Prefer event/barrier synchronization, test clocks and bounded condition waits.
+Give event/barrier waits finite deadlines too; a missing signal must not hang
+the suite indefinitely.
+Do not use fixed delays as evidence that async work finished. Testing actual
+timeout or scheduler behavior may require real elapsed time; bound it, explain
+the need and observe the condition that proves success or failure.
 
-#### Useful
+Avoid vacuous assertions, broad exception swallowing and tests that merely
+duplicate implementation logic. Do not remove existing tests because they
+look similar: establish their distinct contracts and preserve intentional
+regressions. Any consolidation must stay within scope and preserve coverage.
 
-- **Regressions**: if the codebase has a bug history (git log, issue tracker), write tests that would have caught past bugs
-- **Configuration**: test that the system handles missing config, invalid config, and config with edge-case values
-- **Serialization round-trips**: encode then decode, serialize then deserialize — verify nothing is lost or mangled
+## Failures and verification
 
-### 3. How to write good tests
+1. Run the new tests in isolation and confirm they were discovered and executed.
+   A zero-test run, unexpected skip/xfail, or collection error is not a pass.
+2. Demonstrate that important assertions discriminate: for a regression,
+   reproduce the defect before an authorized repair; otherwise use a known
+   failing example or a controlled mutation in an isolated owned copy when
+   practical. Do not edit or reset the user's production tree to manufacture
+   red evidence. Record a gap when only static assertion review was possible.
+3. Diagnose failures as test/fixture defects, product defects or environment
+   limits using the baseline and evidence. Fix owned faulty tests or setup.
+   Keep a valid failing reproduction; do not weaken expectations, regenerate
+   snapshots from unexplained output, broadly skip, or repeatedly rerun until
+   one lucky green result hides flakiness.
+4. Repair product code only when implementation is also authorized and within
+   scope. A tests-only request may finish with a useful failing regression and
+   an explicit unresolved product defect, but never a claim that the suite is
+   green or the bug fixed. Continue unaffected in-scope test work.
+5. Run the relevant existing suite, and the full suite when safe and practical,
+   plus applicable checks for changed tests. Reconcile new failures with the
+   baseline; unexplained failures remain unresolved.
+6. For tests claiming live/runtime acceptance, observe the decisive surface,
+   not just a mock or unit assertion. Report the tested source and evidence
+   boundaries accurately. Clean up owned disposable artifacts and processes.
 
-- **Test behavior, not implementation**: test what a function does, not how it does it. Tests that break when you refactor internals are a liability.
-- **One assertion per logical concept**: each test should verify one thing. If it fails, you should know exactly what broke without reading the test body.
-- **Descriptive names**: test names should describe the scenario and expected outcome (e.g., `test_matching_rejects_empty_title`, not `test_matching_3`).
-- **Arrange-Act-Assert**: set up state, perform the action, check the result. Keep these phases visually distinct.
-- **Use real-ish data**: don't test a CSV parser with `"a,b,c"` — use data that resembles the actual inputs the code will process. Copy sanitized examples from the project's own data files when possible.
-- **Test the unhappy path**: for every happy-path test, write at least one test for the corresponding failure mode.
-- **Avoid mocking internals**: mock at system boundaries (network, filesystem, database), not between your own modules. Over-mocking creates tests that pass while the real code is broken.
-- **No sleeping**: don't use `time.sleep()` or `setTimeout()` in tests. Use proper async waiting, test clocks, or event-based synchronization.
-
-### 4. What NOT to do
-
-- **Don't test framework code**: don't verify that FastAPI returns 200 for a valid route definition or that SQLAlchemy can connect to a database. Trust the framework.
-- **Don't test trivial getters/setters**: a property that returns `self._name` doesn't need a test.
-- **Don't write tests that always pass**: a test with no meaningful assertion, or one that catches all exceptions and passes anyway, is worse than no test — it gives false confidence.
-- **Don't duplicate tests**: if two tests exercise the same code path with the same logic, keep the more descriptive one and delete the other.
-- **Don't over-parametrize**: parametrized tests are powerful, but 50 cases in one parametrized test are harder to debug than 5 focused tests. Use parametrize for systematic variation (e.g., all date formats), not as a substitute for thinking about what to test.
-- **Don't ignore test failures**: if a test you wrote fails, investigate. It might have found a real bug. Don't delete or skip it to make the suite green.
-
-### 5. Handling failures and bugs
-
-- Run new tests in isolation before running the broader suite, so failures are easy to localize.
-- If a failure comes from a bad test, fixture, or test infrastructure, fix the test code.
-- If a failure exposes a real product bug, keep the test as the reproduction. Fix the bug only when it is within the requested scope and the fix is narrow; otherwise report the failing command, the suspected bug, and the smallest next step.
-- Do not weaken assertions, add broad skips, or introduce silent fallbacks just to make the suite pass.
-
-## Verification
-
-Before reporting completion:
-
-1. Run the targeted new tests.
-2. Run the relevant existing suite, or the full suite when it is practical.
-3. Run project-standard lint, typecheck, formatting, or compile checks that cover the changed tests.
-4. Re-read changed tests and fixtures to confirm assertions would fail for the wrong behavior, not just for crashes.
-
-If any check cannot be run, state the exact command or check that was skipped and why.
-
-## Output format
-
-Organize the work into:
-
-1. **Test infrastructure**: any setup needed (new dependencies, config files, fixtures, factories, test utilities)
-2. **Tests by priority**: write critical tests first, then important, then useful — so even if time runs out, the highest-value tests exist
-3. **Coverage summary**: after writing tests, summarize what is and isn't covered, and note any areas that were deliberately skipped (with reasons)
-
-For each test file, include:
-- A brief comment at the top explaining what module/functionality it covers
-- Tests grouped by function or feature being tested
-
-After writing the tests, **run them** and fix failures caused by the tests or infrastructure before reporting results. If a remaining failure exposes a real product bug that is out of scope to fix, report it as an unresolved blocker; do not call the suite complete.
-
-At the end, report:
-
-- Test files and infrastructure changed
-- Commands run and their results
-- Coverage added and important gaps left
-- Bugs uncovered, whether they were fixed, and any unresolved failures or follow-up work
+Summarize the coverage added, important gaps, commands/results and any discovered
+unresolved defects. Distinguish writing the requested tests from obtaining a
+green suite or verifying a product repair. Include paths and setup details only
+where they help the handoff; do not force a report section or boilerplate file
+comment for every test.

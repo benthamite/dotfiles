@@ -360,6 +360,11 @@ serializing a lockfile. It uses supported GitHub PR fields, strict release tags,
 path-only version commits, and the same approved notes file for review and
 release creation. Preparation alone grants no publication authority.
 
+The paired =test-suite= skill binds tests to the intended source and independent
+behavior contracts, isolates side effects, and checks discovery and failure
+sensitivity. Tests-only work preserves product code and reports valid failing
+regressions without claiming a green suite or a repaired bug.
+
 The paired =symptom-check= skill evaluates a proposed repair against a supported
 invariant and related code paths. It preserves read-only diagnosis, allows an
 explicitly pending disposition, and requires direct symptom evidence before

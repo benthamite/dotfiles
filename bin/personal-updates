@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -19,6 +20,7 @@ DEFAULT_FAST_BREW_FILE = DEFAULT_POLICY_DIR / "fast-brew.txt"
 DEFAULT_FAST_BREW_PACKAGES = ("claude-code@latest", "codex")
 DEFAULT_MIN_AGE_DAYS = 7
 KINDS = ("brew_formula", "brew_cask")
+BREW_HELPER = Path(__file__).with_name("personal-updates-brew.rb")
 
 
 def now_utc():
@@ -116,9 +118,10 @@ def save_json(path, data):
     tmp_path.replace(path)
 
 
-def run(command, *, check=True):
+def run(command, *, check=True, env_overrides=None):
     env = os.environ.copy()
     env["HOMEBREW_NO_INSTALL_CLEANUP"] = "1"
+    env.update(env_overrides or {})
     return subprocess.run(command, check=check, text=True, capture_output=True, env=env)
 
 
@@ -127,9 +130,11 @@ def brew_update(run_command=run):
     run_command(["brew", "update"])
 
 
-def brew_outdated():
-    brew_update()
-    result = run(["brew", "outdated", "--json=v2"], check=False)
+def brew_outdated(*, refresh=True):
+    if refresh:
+        brew_update()
+    result = run(["brew", "outdated", "--json=v2"], check=False,
+                 env_overrides={"HOMEBREW_NO_AUTO_UPDATE": "1"})
     if result.returncode not in (0, 1):
         raise RuntimeError(result.stderr.strip() or result.stdout.strip())
     data = json.loads(result.stdout or "{}")
@@ -153,18 +158,65 @@ def brew_outdated():
     }
 
 
-def upgrade_brew(eligible):
+def brew_helper(mode, request, upgrade_args=()):
+    # Never put generated request files under the Drive-backed repository.
+    with tempfile.TemporaryDirectory(prefix="personal-updates-", dir="/private/tmp") as directory:
+        request_path = Path(directory) / "request.json"
+        with open(request_path, "x", opener=lambda path, flags: os.open(path, flags, 0o600)) as handle:
+            json.dump(request, handle)
+        result = run(["brew", "ruby", "--", str(BREW_HELPER), mode, str(request_path), *upgrade_args], check=False,
+                   env_overrides={"HOMEBREW_NO_AUTO_UPDATE": "1", "HOMEBREW_NO_ASK": "1",
+                                  "HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK": "1",
+                                  "HOMEBREW_NO_ANALYTICS": "1", "HOMEBREW_DEV_CMD_RUN": "1"})
+        if result.returncode:
+            reasons = [line for line in result.stderr.splitlines() if "Delayed update refused:" in line]
+            raise RuntimeError("; ".join(reasons) or f"Homebrew {mode} failed (exit {result.returncode}); no unguarded retry was attempted")
+        return result
+
+
+def observe_artifacts(updates):
+    return json.loads(brew_helper("observe", updates).stdout)
+
+
+def merge_observations(previous, observed, now):
+    result = {}
+    for kind in KINDS:
+        result[kind] = {}
+        for name, entry in observed.get(kind, {}).items():
+            old = previous.get(kind, {}).get(name, {})
+            unchanged = old.get("artifact") and old.get("artifact") == entry.get("artifact")
+            result[kind][name] = {**entry, "first_seen": old["first_seen"] if unchanged else now.isoformat()}
+    return result
+
+
+def age_qualified_artifacts(observations, min_age_days, now, holds, excluded_casks):
+    cutoff = now - timedelta(days=min_age_days)
+    allowed = {kind: {} for kind in KINDS}
+    for kind in KINDS:
+        for alias, entry in observations.get(kind, {}).items():
+            name = entry["name"]
+            short_name = name.rsplit("/", 1)[-1]
+            if any(is_held(kind, n, holds) for n in (alias, name, short_name)):
+                continue
+            if kind == "brew_cask" and {alias, name, short_name} & excluded_casks:
+                continue
+            if entry.get("artifact") and datetime.fromisoformat(entry["first_seen"]) <= cutoff:
+                allowed[kind][name] = entry
+    return allowed
+
+
+def upgrade_brew(eligible, allowed):
     for command in brew_upgrade_commands_for_eligible(eligible):
-        run(command)
+        brew_helper("upgrade", allowed, command[2:])
     run(["brew", "doctor"], check=False)
 
 
 def brew_upgrade_commands_for_eligible(eligible):
     commands = []
     for name in eligible.get("brew_formula", []):
-        commands.append(["brew", "upgrade", name])
+        commands.append(["brew", "upgrade", "--formula", name])
     for name in eligible.get("brew_cask", []):
-        commands.append(["brew", "upgrade", "--cask", "--greedy", name])
+        commands.append(["brew", "upgrade", "--cask", "--greedy", "--require-sha", name])
     return commands
 
 
@@ -188,27 +240,54 @@ def command_scan(args):
     state = load_json(args.state_file, {})
     updates = brew_outdated()
     new_state = merge_scan(state, updates, now_utc())
+    new_state["observations"] = merge_observations(
+        state.get("observations", {}), observe_artifacts(updates), now_utc())
     save_json(args.state_file, new_state)
-    append_log(args.log_dir, f"scan recorded {sum(len(v) for v in new_state.values())} pending updates")
+    append_log(args.log_dir, f"scan recorded {sum(len(new_state.get(k, {})) for k in KINDS)} pending updates")
     print(json.dumps(new_state, indent=2, sort_keys=True))
 
 
 def command_delayed(args, now=None):
     state = load_json(args.state_file, {})
+    now = now or now_utc()
+    # Reconcile saved eligibility with today's candidates. The in-process Ruby
+    # guard below also covers changes after this check and implicit dependencies.
+    updates = brew_outdated(refresh=False)
+    current = merge_scan(state, updates, now)
+    observations = merge_observations(state.get("observations", {}), observe_artifacts(updates), now)
+    current["observations"] = observations
+    holds = load_holds(args.hold_file)
+    excluded_casks = load_excluded_casks(args.excluded_casks_file)
+    allowed = age_qualified_artifacts(observations, args.min_age_days, now, holds, excluded_casks)
     eligible = eligible_updates(
-        state,
+        current,
         args.min_age_days,
-        now or now_utc(),
-        load_holds(args.hold_file),
-        load_excluded_casks(args.excluded_casks_file),
+        now,
+        holds,
+        excluded_casks,
     )
+    deferred = []
+    for kind, names in eligible.items():
+        accepted = []
+        for name in names:
+            observed = observations.get(kind, {}).get(name, {})
+            if observed.get("name") in allowed[kind]:
+                accepted.append(name)
+            else:
+                deferred.append(f"{kind}/{name}: artifact is unchecked or has not completed the waiting period")
+        eligible[kind] = accepted
+    eligible = {kind: names for kind, names in eligible.items() if names}
     if args.dry_run:
-        print(json.dumps(eligible, indent=2, sort_keys=True))
+        print(json.dumps({"eligible": eligible, "deferred": deferred}, indent=2, sort_keys=True))
         return
+    save_json(args.state_file, current)
+    for reason in deferred:
+        append_log(args.log_dir, f"delayed deferred {reason}")
+        print(f"Delayed update deferred: {reason}", file=sys.stderr)
     if not eligible:
         append_log(args.log_dir, "delayed found 0 eligible updates")
         return
-    upgrade_brew(eligible)
+    upgrade_brew(eligible, allowed)
     append_log(args.log_dir, f"delayed upgraded {sum(len(v) for v in eligible.values())} updates")
     command_scan(args)
 

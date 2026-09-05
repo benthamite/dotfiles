@@ -181,6 +181,13 @@ The shared rebuild helper requires runtime-, source- and token-bound completion
 evidence. It rejects unqualified cached success and keeps uncertain requests
 recorded so cooperating callers cannot silently launch a competing rebuild.
 
+The =elisp-conventions= skill distinguishes registry IDs, checkout evidence
+labels, unmanaged packages and non-package files. Batch and ERT runners use a
+clean source-first Emacs without deleting bytecode or falling back to the
+package's build. Staged project checks validate a private indexed snapshot,
+not unrelated working-tree bytes. A file rename does not authorize whole-package
+unloading, and a metadata predicate does not prove a live menu works.
+
 The =document-elisp-package= skill preserves established manual paths, credits,
 anchors and export identities. It separates documentation from new save automation
 and documents supported public contracts without evaluating package source.
@@ -485,7 +492,7 @@ index entries, so a live Emacs never loads tests or a partially resolved tree.
 Test-only Elisp commits likewise do not require package-manual updates.
 
 Live-verification evidence for a standalone-package label binds to the
-package's own checkout, resolved through =bin/elpaca-package-path=, never to
+package's own checkout, resolved through =bin/elpaca-package-resolve=, never to
 the shell's working directory. The verify-after-commit gate keys its debt to
 the committing repository while blocking =cd=, so a harness that pins the
 working directory to the dotfiles root could otherwise never clear a debt for

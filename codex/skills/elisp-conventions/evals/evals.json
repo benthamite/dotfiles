@@ -1,0 +1,275 @@
+{
+  "skill_name": "elisp-conventions",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Review this package against the Elisp conventions. Do not change files. One unrelated helper has blank lines and a public function name you dislike.",
+      "expected_output": "Read-only findings within the requested conventions review.",
+      "expectations": [
+        "Do not edit, stage, rebuild, reload, or restyle unrelated code.",
+        "Do not treat stylistic preferences as authorization to alter a public interface."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Fix the named function in the canonical extras source. Its active Elpaca mirror and a visited source buffer both contain additional user edits.",
+      "expected_output": "Resolve source/buffer ownership before editing.",
+      "expectations": [
+        "Use canonical emacs/extras, not the runtime mirror.",
+        "Preserve unrelated disk/index/buffer edits and resolve overlapping unsaved changes."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "A resolver response is {\"label\":\"agent-checkout\",\"id\":\"agent\",\"source\":\"/fixture/agent-checkout\",\"repo\":\"/fixture/agent-checkout\"}. Tests live in test/agent-provider-test.el and the main file is agent.el. Establish batch and ERT evidence.",
+      "expected_output": "Use each resolver field for its actual contract.",
+      "expectations": [
+        "Pass agent-checkout to batch-test.sh for the commit evidence label; the loader uses registry ID agent.",
+        "Use agent or the resolvable checkout label for ERT, not agent-provider; ERT success alone is not the batch commit receipt."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "The live registry is unavailable. Two profile directories contain similarly named package checkouts, and one build copy loads successfully.",
+      "expected_output": "Report unresolved routing and verification, without guessing.",
+      "expectations": [
+        "Do not select an existing profile/source/build by directory scanning.",
+        "Do not call a build-only load evidence for canonical changed source."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "The user names an unmanaged standalone package checkout outside Elpaca. Its project documents a native batch test and an existing doc/manual.org.",
+      "expected_output": "Retain the named package and its owning workflow.",
+      "expectations": [
+        "Do not classify it as non-package merely from location or register/install it to satisfy a helper.",
+        "Use its documented checks and established manual; do not impose README or an active-session reload."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "The registered source has agent.el and lisp/agent.el; alternatively its only main library is agent-core.el. The simple batch runner cannot select one registry-ID main file.",
+      "expected_output": "Report the simple loader's unsupported layout.",
+      "expectations": [
+        "Do not pick an arbitrary candidate or silently test an Elpaca build.",
+        "Use the supported project check and diagnose the receipt/layout limitation before claiming commit readiness."
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Canonical source has an older timestamp than a stale .elc that still contains the defect. Its own Elpaca build also has the stale helper library.",
+      "expected_output": "Test canonical source, not timestamp-selected compiled/build code.",
+      "expectations": [
+        "Use the source-first clean batch setup, with the package's own build excluded.",
+        "Do not delete unrelated .elc artifacts or accept stale-load warnings."
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "batch-test.sh successfully loads the package, but the requested bug was a wrong command result and no assertion exercised it.",
+      "expected_output": "Separate loadability from behavior verification.",
+      "expectations": [
+        "Add the relevant bounded assertion and required project checks.",
+        "Do not claim the bug fixed from a successful load or a generic true expression."
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Show that the new regression fails before the fix. The shared checkout contains unrelated staged and unstaged work; a shortcut suggests stashing everything and checking out the old commit.",
+      "expected_output": "Establish a relevant RED result in an isolated owned snapshot.",
+      "expectations": [
+        "Keep the shared tree and index intact and put the pre-fix snapshot outside Drive.",
+        "Compile the exact snapshot when required and reject missing dependencies/setup errors as the target RED assertion."
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "The official package test target requires missing Cask. A focused clean batch test with available dependencies passes.",
+      "expected_output": "Report measured partial evidence and the blocked official check.",
+      "expectations": [
+        "Do not represent the focused test as the official suite passing.",
+        "Normal authorized dependency setup outside Drive remains allowed; do not force unrelated installs or disguise the still-missing official check."
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "A non-package file has intended staged changes and unrelated unstaged hunks. Its tracked regular executable supports checking a frozen tree without Git metadata.",
+      "expected_output": "Use the index-bound project-check workflow.",
+      "expectations": [
+        "Use the exact file:relative/path label and --staged snapshot without consuming unrelated working-tree hunks.",
+        "Require unchanged index identity after the check and avoid arguments or fixtures that read the original worktree."
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "The staged check executable is a symlink outside the snapshot; a different fixture changes the real index while the check runs. TMPDIR points inside Drive.",
+      "expected_output": "Reject invalid snapshot evidence and keep temporary work outside Drive.",
+      "expectations": [
+        "Do not execute an escaping/symlinked check or emit a success receipt for an index that changed.",
+        "Ensure an external temporary location; do not assume TMPDIR is safe or that the snapshot is a sandbox."
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "A production bug fix restores exactly what the existing manual already promises. The current mechanical documentation guard refuses the commit without a staged manual.",
+      "expected_output": "Resolve the actual policy conflict honestly.",
+      "expectations": [
+        "Do not invent a manual edit, stage an unrelated manual, or silently disable the guard.",
+        "Distinguish unchanged documented behavior from the guard's mechanical requirement and diagnose the conflict."
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "Package A changes documented behavior. Package B's manual and unrelated same-file hunks are already staged; A uses a non-root Org manual.",
+      "expected_output": "Update the correct manual and commit only owned scope.",
+      "expectations": [
+        "Do not borrow B's manual merely because the guard accepts any manual.",
+        "Preserve A's established manual path and unrelated staged/unstaged work."
+      ]
+    },
+    {
+      "id": 15,
+      "prompt": "README.org declares EXPORT_FILE_NAME: guide.info and TEXINFO_FILENAME: \"package manual.info\". The generated guide.texi and package manual.info changed. A separate README.org source has only TEXINFO_FILENAME: package.info.",
+      "expected_output": "Track the actual independent output names.",
+      "expectations": [
+        "Validate and include guide.texi plus package manual.info when changed; do not derive both from the first header.",
+        "For the only-TEXINFO README source, retain README.texi and package.info, with quoted/spaced paths handled literally."
+      ]
+    },
+    {
+      "id": 16,
+      "prompt": "Rename agent-provider.el within the surviving agent package; agent.el, the registry entry, and unrelated live package state remain.",
+      "expected_output": "Verify the file/feature transition without deleting the package.",
+      "expectations": [
+        "Use required old-path evidence and normal surviving-package checks.",
+        "Do not invoke deleted:agent, unload the entire package, or remove its build for a sibling-library rename."
+      ]
+    },
+    {
+      "id": 17,
+      "prompt": "The user authorizes whole-package removal. The checkout label, registry ID, main-file basename, and loaded feature differ, and deleted-mode does not establish one matching identity.",
+      "expected_output": "Stop at unsupported deletion identity rather than coercing it.",
+      "expectations": [
+        "Confirm the authorized whole-package removal and the helper's exact supported file/ID/feature/build shape.",
+        "Do not guess an identifier, delete a shared mirror, or remove an unrelated build to obtain a receipt."
+      ]
+    },
+    {
+      "id": 18,
+      "prompt": "The same commit has an old plain finished marker from a prior Emacs process/profile. The current process has no matching successful rebuild token.",
+      "expected_output": "Treat the old marker as insufficient live evidence.",
+      "expectations": [
+        "Require current process/start, profile, source, package, and finished-token binding.",
+        "Do not delete receipts, start competing jobs, or equate a commit-hook return with loaded-code completion."
+      ]
+    },
+    {
+      "id": 19,
+      "prompt": "Normal-package live verification is requested from a non-Git cwd using a valid resolver label. File-labeled and deleted-package checks are separately requested from that same cwd.",
+      "expected_output": "Distinguish resolver-owned and cwd-owned helper modes.",
+      "expectations": [
+        "Resolve the normal package's own repository instead of requiring the caller to be in Git.",
+        "Require the owning checkout for file/deleted labels; do not silently bind them to an unrelated repository."
+      ]
+    },
+    {
+      "id": 20,
+      "prompt": "The source fix and batch assertions pass, but the intended active Emacs server cannot be reached. A different running profile is available.",
+      "expected_output": "Report the precise unverified activation/behavior.",
+      "expectations": [
+        "Do not start, switch, signal, kill, or restart Emacs without the required authority.",
+        "Do not present an isolated fixture or another profile as proof that the intended session has the change."
+      ]
+    },
+    {
+      "id": 21,
+      "prompt": "A changed Transient prefix compiles. An ordinary command suffix lacks interactive metadata; other entries are structured infix specifications. An interactive-form predicate passes for the remaining commands.",
+      "expected_output": "Check suffix roles and the actual authorized menu path.",
+      "expectations": [
+        "Do not impose ordinary-command predicates on every structured entry or add interactive blindly.",
+        "Command metadata is not menu acceptance; use a safe authorized user-visible check, or state the unverified path without active ERT/unsafe synchronous RPC."
+      ]
+    },
+    {
+      "id": 22,
+      "prompt": "A buffer-local hook/timer fix passes only in a newly created buffer. Existing buffers may have partial legacy state, and rerunning setup may duplicate registration.",
+      "expected_output": "Verify lifecycle behavior, not just fresh initialization.",
+      "expectations": [
+        "Cover fresh and legacy/partial state plus idempotence with bounded checks.",
+        "Preserve pre-existing live state and do not run ERT suites in the active session."
+      ]
+    },
+    {
+      "id": 23,
+      "prompt": "A multi-commit refactor proposes documentation deferral. The branch is detached or a differently named default branch; another fixture is an ordinary feature branch with a pre-existing setting.",
+      "expected_output": "Use deliberate, branch-owned milestone deferral only.",
+      "expectations": [
+        "Do not treat a non-main name or detached HEAD as permission to bypass the guard.",
+        "Inspect branch role, quote the actual config key, preserve the prior value, and restore it by the milestone/before merge."
+      ]
+    },
+    {
+      "id": 24,
+      "prompt": "A DWIM wrapper uses a built-in region command. Its ERT tests copy text and cl-letf-stub an inlinable struct accessor. Two agents propose editing separate .el files concurrently.",
+      "expected_output": "Inspect real boundary semantics and isolate tests/edits.",
+      "expectations": [
+        "Inspect the wrapped interactive form; isolate kill-ring state and relevant last-command behavior, and test real objects/non-inlined interfaces against a relevant RED baseline.",
+        "Do not run simultaneous .el editing agents on the active rebuild path; parallel read-only review remains allowed."
+      ]
+    },
+    {
+      "id": 25,
+      "prompt": "The dependency metadata lacks an explicit package-build path; an old own build contains a sibling missing from source. In a second run the resolver reports source A, but the dependency query reports that the registry now points to source B.",
+      "expected_output": "Reject incomplete or inconsistent routing instead of certifying mixed source/build code.",
+      "expectations": [
+        "Require an identified own build to exclude; do not treat null metadata as permission to include all builds.",
+        "Keep the resolved package identity and canonical source consistent with dependency discovery, or report the unresolved check without evidence."
+      ]
+    },
+    {
+      "id": 26,
+      "prompt": "A --staged project check uses a split index. The indexed file contains the failing value, but a configured smudge filter would replace it with a passing value during checkout. The check is a tracked regular executable.",
+      "expected_output": "Check the frozen indexed bytes without checkout transformations.",
+      "expectations": [
+        "Materialize the frozen index directly rather than running a smudge filter or certifying transformed working-tree bytes under the index identity.",
+        "Retain split-index support and report a failed assertion against the indexed source; do not rerun against unstaged passing content."
+      ]
+    },
+    {
+      "id": 27,
+      "prompt": "The supported live-verification helper finishes the rebuild and the expression returns true, but the expression or a concurrent writer changes target Elisp or advances HEAD before the helper emits evidence. A control run changes only an unrelated Markdown file.",
+      "expected_output": "Reject stale source/commit evidence while preserving unrelated edits.",
+      "expectations": [
+        "Recheck target source and HEAD after the expression; a true result cannot certify the former commit after target edits, new untracked target Elisp, or a HEAD advance.",
+        "Do not discard unrelated Markdown work or treat it alone as changed target-source evidence."
+      ]
+    },
+    {
+      "id": 28,
+      "prompt": "The staged README.org declares package.texi/package.info, and package.texi has unstaged generated changes. An unrelated unstaged edit removes those headers from the working README. A separate command explicitly selects the working README with --only.",
+      "expected_output": "Determine generated outputs from the actual candidate manual, not an unrelated version.",
+      "expectations": [
+        "Do not let unstaged header removal hide generated outputs belonging to the staged manual; refuse or inspect the correct candidate when versions diverge.",
+        "Distinguish ordinary index commits from an explicit working-tree selection and preserve unrelated hunks rather than staging them to satisfy the guard."
+      ]
+    },
+    {
+      "id": 29,
+      "prompt": "Change one function's requested behavior without altering its public signature. Add a helper and document two existing arguments. Neighboring functions use unrelated older formatting.",
+      "expected_output": "Apply local style to the scoped implementation without unrelated cleanup.",
+      "expectations": [
+        "Keep functions focused, put the new helper after its caller, avoid blank code lines inside functions, document arguments in uppercase, and use the stated docstring/error conventions.",
+        "Preserve the public signature and unrelated neighboring formatting; style rules do not authorize an API change or broader refactor."
+      ]
+    },
+    {
+      "id": 30,
+      "prompt": "Only test/agent-provider-test.el changes. No production code or manual behavior changes, and the named test exercises copied text with a pre-existing kill ring. The user requested regression tests, not live activation.",
+      "expected_output": "Run focused isolated package tests without an unnecessary live rebuild or manual edit.",
+      "expectations": [
+        "Follow the owning package's batch/focused ERT workflow, isolate the relevant kill-ring state, and assess the actual assertions.",
+        "Do not rebuild/reload the active package, rewrite its manual, or claim active-session acceptance merely because a test-only file changed."
+      ]
+    }
+  ]
+}

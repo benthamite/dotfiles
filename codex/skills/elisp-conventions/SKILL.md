@@ -9,6 +9,10 @@ Use this skill before changing a `.el` file and keep it active through
 verification. For an explicit read-only conventions review, apply only the
 relevant style rules; do not turn the review into an edit or live-Emacs task.
 
+Apply these rules to the requested change, not as permission to restyle unrelated
+code, alter public interfaces, or operate on the active session. Preserve user
+edits and inspect unsaved buffers before changing a visited source file.
+
 Use `lint-elisp` in addition when the user asks for compiler, checkdoc, or lint
 diagnostics. Use `document-elisp-package` when an Org manual must be created or
 refreshed.
@@ -34,11 +38,15 @@ Every edited `.el` file uses one of these paths:
    `~/My Drive/dotfiles/emacs/extras/`. This is canonical source; the active
    Elpaca dotfiles checkout is a committed mirror. Use `dotfiles-context` for
    source routing.
-2. **Standalone Elpaca package:** source under the active profile's
-   `elpaca/sources/<package>/`. The source checkout is canonical.
-3. **Non-package Elisp:** files such as `.dir-locals.el`, `lockfile.el`, and
-   files outside the two package roots. Use the owning project's checks. Do not
-   force an Elpaca package rebuild or package-manual workflow onto these files.
+2. **Standalone package:** identify the owning package from its metadata and
+   project instructions. For an Elpaca-managed package, use `dotfiles-context`
+   and `bin/elpaca-package-resolve` to obtain the actual registry ID, canonical
+   source, repository, and evidence label; do not guess from profile-directory
+   names. Unmanaged packages use their own documented checks and loading path.
+3. **Non-package Elisp:** configuration and support files such as
+   `.dir-locals.el` or `lockfile.el` use the owning project's checks. Location
+   outside an Elpaca root does not by itself make a package non-package code.
+   Do not force an Elpaca rebuild or package manual onto unrelated files.
 
 Test-only files inside a package follow the package's batch and focused ERT
 paths, but they do not need a rebuild, live package reload, or manual update
@@ -50,8 +58,13 @@ unless they also change production code or user documentation.
 2. Establish clean batch evidence for the changed code:
    - For a dotfiles extra, run the absolute `batch-test.sh PACKAGE` command
      below. It must load the canonical extras source.
-   - For standalone production source, run `batch-test.sh PACKAGE` against the
-     canonical source. The live rebuild is a later, separate check.
+   - For managed standalone production source, run `batch-test.sh PACKAGE`
+     using the resolver's evidence `.label` (the checkout label), not a guessed
+     library name. The runner resolves the package ID internally. An unmanaged
+     package uses its documented clean batch/compile/test workflow; do not
+     register or install it just to satisfy this skill.
+   - A load-only check proves loadability, not the changed behavior. Exercise
+     the relevant assertion and required project checks as well.
    - For non-package Elisp, run the owning project's clean batch or compile
      check through `elisp-check-evidence file:RELATIVE-PATH -- PROJECT-CHECK`.
      `PROJECT-CHECK` must be a tracked executable in that repository. Do not
@@ -66,9 +79,13 @@ unless they also change production code or user documentation.
    - After the verified commit, use `elisp-live-verify PACKAGE -- EXPR` for a
      standalone package or dotfiles extra. It waits for the package rebuild,
      exercises the named live path, and emits package/commit-bound evidence.
+     Confirm the helper supports this package before using it. An isolated
+     fixture does not establish that an existing live session has the change.
    - For a deleted package, use `elisp-live-verify deleted:PACKAGE -- EXPR`.
      The helper removes only that package's safe Elpaca build, unloads the
      feature, and requires a non-nil expression that verifies its absence.
+     This destructive mode is only for an authorized whole-package removal,
+     not a library/file rename within a surviving package.
    - Non-package Elisp uses its owning workflow; do not load it into the active
      session unless that workflow makes the operation safe.
 
@@ -84,7 +101,10 @@ Test evidence counts only when it identifies the repository, package, and
 source revision or equivalent content identity that was tested. A generic
 session marker or a clean test for another package is not evidence for the
 current change. Live evidence must also identify the committed repository and
-package. Treat any stale-load warning as a failed verification.
+package and establish the intended runtime, profile, source checkout, and
+successful rebuild token. A true return value is not sufficient unless the
+expression directly checks the requested behavior. Treat any stale-load warning
+as a failed verification.
 
 Never use `load-file`, `eval-buffer`, `eval-defun`, or manual
 `byte-compile-file` to reload edited package code. Use the bounded rebuild helper
@@ -92,12 +112,24 @@ and the layout-specific sequence above.
 
 ## Documentation and commit gates
 
-For behavior-changing production `.el` files, stage the matching package manual
-when one exists:
+Update and stage the matching manual for changed documented behavior:
 
 - Dotfiles extras use `emacs/extras/doc/<package>.org`.
-- Standalone packages normally use root `README.org`, or `README.md` only when
-  there is no Org manual.
+- Standalone packages use their established manual, including a non-root Org
+  manual. Use root `README.md` only when the project has no Org manual.
+
+The current commit guard mechanically requires a staged manual for every
+non-exempt production `.el` change when it finds a manual; it does not determine
+whether behavior changed or whether a staged manual belongs to that package.
+Check the actual scoped commit paths. Never stage an unrelated manual or invent
+a documentation change to appease the guard. If a truthful no-doc change is
+blocked, diagnose the policy conflict; do not silently disable the guard.
+When generated Texinfo/Info outputs change, validate and stage the destinations
+actually declared by the manual, which need not share a basename.
+Read declarations from the proposed commit's manual bytes, not unrelated
+unstaged headers. For combined staging/commit syntax the guard cannot resolve,
+stage the intended files separately and rerun the check without borrowing other
+staged changes.
 
 Manual updates are not required only because a commit changes a test file or a
 generated/machine-owned file such as `lockfile.el`, `*-autoloads.el`, or

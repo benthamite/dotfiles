@@ -168,6 +168,10 @@ personal/plugin identities and exact name boundaries, and handles task-start
 context, hidden inputs, and fractional timestamps. Counts remain reconstructed
 evidence, not native invocation telemetry or proof of workflow completion.
 
+The =add-to-emacs-packages= workflow checks the list, existing manual and profile
+card independently. It resolves canonical sources, preserves note IDs and keeps
+local registration separate from clone and publication authorization.
+
 The =add-bib-entry= workflow resolves active bibliography state and serializes
 attachment callbacks. It verifies work identity and labels uncertain metadata;
 its opt-in DOI downloader rejects unsafe destinations and unsupported mutations.

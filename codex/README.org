@@ -133,6 +133,11 @@ serializing a lockfile. It uses supported GitHub PR fields, strict release tags,
 path-only version commits, and the same approved notes file for review and
 release creation. Preparation alone grants no publication authority.
 
+The paired =symptom-check= skill evaluates a proposed repair against a supported
+invariant and related code paths. It preserves read-only diagnosis, allows an
+explicitly pending disposition, and requires direct symptom evidence before
+claiming repair or closing an architectural issue.
+
 The paired =session-learning-capture= skill records proposals only after checking
 session provenance and permission to use the Drive-synced personal inbox.
 Stable full-session record keys and no-clobber publication protect retries;

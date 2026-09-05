@@ -165,6 +165,11 @@ delivery, the helper rebinds to the discovered transcript once it provably
 contains the run's marker-bearing prompt. Its helper reuses the same shared
 =agent_session_lib= module.
 
+Delivery and manual reconciliation require the prompt's marker in a new user
+message after the saved transcript boundary. Busy state and unrelated transcript
+growth do not acknowledge delivery. Emacs client calls time out after 15 seconds;
+an ambiguous result leaves the submission pending for receipt reconciliation.
+
 Native =[[skills.config]]= entries can disable a tracked skill without deleting
 it. Programmatic skills remain outside ordinary interactive discovery and are
 invoked explicitly by the runner.

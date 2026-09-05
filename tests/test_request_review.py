@@ -437,6 +437,9 @@ class CrossReviewRunTests(unittest.TestCase):
         state = reviewer.load_review(self.run_file)
         state["pending_submission"] = {"transcript_offset": 0}
         reviewer.save_review(self.run_file, state)
+        marker = reviewer._review_marker(state["plan"]["commit"])
+        record = {"type": "user", "message": {"role": "user", "content": f"body\n{marker}"}}
+        self.transcript.write_text(json.dumps(record) + "\n", encoding="utf-8")
         with redirect_stdout(io.StringIO()):
             reviewer.reconcile_submission(
                 SimpleNamespace(run_file=str(self.run_file), delivered=True)
@@ -445,19 +448,35 @@ class CrossReviewRunTests(unittest.TestCase):
         self.assertEqual(state["status"], "review-active")
         self.assertEqual(state["submission"], {"transcript_offset": 0})
 
-    def test_reconcile_not_delivered_fails_closed_on_advanced_transcript(self):
+    def test_reconcile_not_delivered_fails_closed_on_marker_in_transcript(self):
         self.create_run()
         state = reviewer.load_review(self.run_file)
         state["pending_submission"] = {"transcript_offset": 0}
         reviewer.save_review(self.run_file, state)
-        self.transcript.write_text("delivered prompt record\n", encoding="utf-8")
+        marker = reviewer._review_marker(state["plan"]["commit"])
+        record = {"type": "user", "message": {"role": "user", "content": f"body\n{marker}"}}
+        self.transcript.write_text(json.dumps(record) + "\n", encoding="utf-8")
 
-        with self.assertRaisesRegex(SystemExit, "advanced past the recorded boundary"):
+        with self.assertRaisesRegex(SystemExit, "past the recorded boundary"):
             reviewer.reconcile_submission(
                 SimpleNamespace(run_file=str(self.run_file), delivered=False)
             )
         state = reviewer.load_review(self.run_file)
         self.assertIsNotNone(state["pending_submission"])
+
+    def test_reconcile_not_delivered_clears_when_growth_lacks_the_marker(self):
+        self.create_run()
+        state = reviewer.load_review(self.run_file)
+        state["pending_submission"] = {"transcript_offset": 0}
+        reviewer.save_review(self.run_file, state)
+        bookkeeping = {"type": "attachment", "attachment": {"type": "agent_listing_delta"}}
+        self.transcript.write_text(json.dumps(bookkeeping) + "\n", encoding="utf-8")
+
+        reviewer.reconcile_submission(
+            SimpleNamespace(run_file=str(self.run_file), delivered=False)
+        )
+        state = reviewer.load_review(self.run_file)
+        self.assertIsNone(state["pending_submission"])
 
     def test_restart_burns_the_single_flag_before_external_contact(self):
         self.create_run()

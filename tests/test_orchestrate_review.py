@@ -81,7 +81,7 @@ class SkillWorkflowTests(unittest.TestCase):
             "swaps the entire role bundle",
             "delegate top-level stages sequentially, one stage per fresh Agent 1 session",
             "Internal plan tasks stay inside their stage's single session",
-            "STAGE ATOMICITY — HARD RULE",
+            "The entire stage is the smallest orchestration unit",
             "Never report progress as `Task N`",
             "Never inspect or steer Agent 1's internal tasks",
             "Never run independent acceptance gates at internal task boundaries",

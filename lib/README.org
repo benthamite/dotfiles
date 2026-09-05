@@ -8,9 +8,13 @@ top-level configuration directory.
 Python modules loaded by resolved file path from more than one consumer.
 
 - =agent_session_lib.py= — single-actor Emacs =agent.el= session primitives
-  (guarded prompt delivery, transcript-boundary acknowledgment, marker-gated
+  (guarded prompt delivery, marker-in-transcript delivery acknowledgment, marker-gated
   transcript reads, buffer lifecycle inspection). Consumed by the paired
   =orchestrate-review= and =request-review= skill helpers on both
   the Claude and Codex sides; tested by =tests/test_agent_session_lib.py=.
+  Emacs IPC has a 15-second client timeout. A timeout leaves delivery ambiguous,
+  not failed; pending submissions remain available for receipt reconciliation.
+  Manual delivered reconciliation requires the marker-bearing user message,
+  just like ordinary delivery and retry checks.
   Consumers call every primitive through the loaded module object
   (=session.<name>=) so tests have exactly one patch point per primitive.

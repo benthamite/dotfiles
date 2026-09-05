@@ -28,17 +28,72 @@ class ElispStringTests(unittest.TestCase):
         self.assertTrue(encoded.startswith('"') and encoded.endswith('"'))
 
 
-class TranscriptAdvanceTests(unittest.TestCase):
-    def test_missing_transcript_has_not_advanced(self):
-        self.assertFalse(session._transcript_advanced("/nonexistent/t.jsonl", 0))
+class MarkerDeliveredTests(unittest.TestCase):
+    def write(self, directory, records):
+        transcript = Path(directory) / "t.jsonl"
+        transcript.write_text(
+            "".join(json.dumps(r) + "\n" for r in records), encoding="utf-8"
+        )
+        return transcript
 
-    def test_growth_past_offset_counts_as_advanced(self):
+    @staticmethod
+    def claude_user(text):
+        return {"type": "user", "message": {"role": "user", "content": text}}
+
+    @staticmethod
+    def codex_user(text):
+        return {
+            "type": "response_item",
+            "payload": {
+                "type": "message",
+                "role": "user",
+                "content": [{"type": "input_text", "text": text}],
+            },
+        }
+
+    def test_missing_transcript_is_not_delivered(self):
+        self.assertFalse(session._marker_delivered("/nonexistent/t.jsonl", 0, "M"))
+
+    def test_marker_bearing_user_message_past_offset_is_delivered(self):
         with tempfile.TemporaryDirectory() as directory:
-            transcript = Path(directory) / "t.jsonl"
-            transcript.write_text("one line\n", encoding="utf-8")
-            size = transcript.stat().st_size
-            self.assertFalse(session._transcript_advanced(str(transcript), size))
-            self.assertTrue(session._transcript_advanced(str(transcript), size - 1))
+            first = self.claude_user("earlier prompt")
+            transcript = self.write(directory, [first])
+            offset = transcript.stat().st_size
+            with transcript.open("a", encoding="utf-8") as stream:
+                stream.write(json.dumps(self.claude_user("ORCHESTRATOR RULING x")) + "\n")
+            self.assertTrue(
+                session._marker_delivered(str(transcript), offset, "ORCHESTRATOR RULING")
+            )
+            self.assertTrue(
+                session._marker_delivered(str(transcript), 0, "earlier prompt")
+            )
+
+    def test_growth_without_the_marker_is_not_delivered(self):
+        with tempfile.TemporaryDirectory() as directory:
+            transcript = self.write(directory, [self.claude_user("earlier prompt")])
+            offset = transcript.stat().st_size
+            bookkeeping = [
+                {"type": "attachment", "attachment": {"type": "agent_listing_delta"}},
+                {"type": "system", "subtype": "compact_boundary"},
+                {"type": "assistant", "message": {"role": "assistant",
+                                                  "content": [{"type": "text", "text": "MARKER"}]}},
+            ]
+            with transcript.open("a", encoding="utf-8") as stream:
+                for record in bookkeeping:
+                    stream.write(json.dumps(record) + "\n")
+            self.assertGreater(transcript.stat().st_size, offset)
+            self.assertFalse(session._marker_delivered(str(transcript), offset, "MARKER"))
+
+    def test_marker_before_the_offset_does_not_count(self):
+        with tempfile.TemporaryDirectory() as directory:
+            transcript = self.write(directory, [self.claude_user("MARKER old")])
+            offset = transcript.stat().st_size
+            self.assertFalse(session._marker_delivered(str(transcript), offset, "MARKER"))
+
+    def test_codex_user_shape_is_recognized(self):
+        with tempfile.TemporaryDirectory() as directory:
+            transcript = self.write(directory, [self.codex_user("body\nREVIEW: go")])
+            self.assertTrue(session._marker_delivered(str(transcript), 0, "REVIEW: go"))
 
 
 class TranscriptOffsetTests(unittest.TestCase):

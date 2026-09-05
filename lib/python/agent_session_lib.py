@@ -23,7 +23,9 @@ from pathlib import Path
 from typing import Any
 
 VALID_BACKENDS = {"claude-code", "codex"}
-DELIVERY_INITIAL_WAIT_SECONDS = 2.0
+# A busy actor queues the prompt; Claude Code records the queued user message
+# in the transcript within seconds, so the marker check covers that case too.
+DELIVERY_INITIAL_WAIT_SECONDS = 20.0
 DELIVERY_RETRY_WAIT_SECONDS = 8.0
 DELIVERY_POLL_SECONDS = 0.1
 
@@ -39,11 +41,19 @@ def _write_all(fd: int, data: bytes) -> None:
 
 
 def run_emacs_eval(expr: str) -> str:
-    proc = subprocess.run(
-        ["emacsclient", "--eval", expr],
-        capture_output=True,
-        check=False,
-    )
+    try:
+        proc = subprocess.run(
+            ["emacsclient", "--eval", expr],
+            capture_output=True,
+            check=False,
+            timeout=15,
+        )
+    except subprocess.TimeoutExpired:
+        # Only the client is stopped. Emacs may still evaluate the request,
+        # so callers must preserve pending delivery for reconciliation.
+        raise EmacsClientError(
+            "emacsclient timed out after 15 seconds; evaluation outcome is unknown"
+        ) from None
     stdout = proc.stdout.decode("utf-8", "replace")
     stderr = proc.stderr.decode("utf-8", "replace")
     if proc.returncode != 0:
@@ -260,6 +270,38 @@ def agent_transcript_path(buffer: str, backend: str) -> str | None:
     return None if returned == "none" else returned
 
 
+def _user_message_text(obj: dict[str, Any]) -> str | None:
+    """Return the text of OBJ when it is a user message, else None.
+
+    Handles the Codex app-server shape (``response_item`` / ``message`` /
+    ``role: user`` with ``input_text`` parts) and the Claude Code shape
+    (``type: user`` with a string or ``text``-part list under ``message``).
+    """
+    payload = obj.get("payload") or {}
+    if (
+        obj.get("type") == "response_item"
+        and payload.get("type") == "message"
+        and payload.get("role") == "user"
+    ):
+        return "\n".join(
+            item.get("text", "")
+            for item in (payload.get("content") or [])
+            if isinstance(item, dict) and item.get("type") == "input_text"
+        )
+    message = obj.get("message") or {}
+    if obj.get("type") == "user" and message.get("role") == "user":
+        content = message.get("content")
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            return "\n".join(
+                item.get("text", "")
+                for item in content
+                if isinstance(item, dict) and item.get("type") == "text"
+            )
+    return None
+
+
 def _user_marker_offset(path: Path | str, marker: str) -> int | None:
     transcript = Path(path)
     try:
@@ -276,21 +318,46 @@ def _user_marker_offset(path: Path | str, marker: str) -> int | None:
             except json.JSONDecodeError:
                 offset += len(line)
                 continue
-            payload = obj.get("payload") or {}
-            if (
-                obj.get("type") == "response_item"
-                and payload.get("type") == "message"
-                and payload.get("role") == "user"
-            ):
-                text = "\n".join(
-                    item.get("text", "")
-                    for item in (payload.get("content") or [])
-                    if isinstance(item, dict) and item.get("type") == "input_text"
-                )
-                if marker in text:
-                    return offset
+            text = _user_message_text(obj)
+            if text is not None and marker in text:
+                return offset
             offset += len(line)
     return None
+
+
+def _marker_delivered(transcript: str, offset: int, marker: str) -> bool:
+    """Return whether a user message containing MARKER was appended past OFFSET.
+
+    This is the only acknowledgement of a delivery: the delivered text itself,
+    recorded in the actor's own transcript after the boundary captured before
+    the submit.  Transcript growth from bookkeeping records and a busy
+    terminal (a session still starting up, compacting, or mid-turn) are not
+    evidence that the prompt was received.
+    """
+    path = Path(transcript)
+    try:
+        if path.stat().st_size <= offset:
+            return False
+        with path.open("rb") as stream:
+            stream.seek(offset)
+            data = stream.read()
+    except FileNotFoundError:
+        return False
+    except OSError as error:
+        raise EmacsClientError(
+            f"cannot inspect transcript delivery boundary {transcript}: {error}"
+        ) from None
+    for line in data.split(b"\n"):
+        if not line.strip():
+            continue
+        try:
+            obj = json.loads(line.decode("utf-8", "replace"))
+        except json.JSONDecodeError:
+            continue
+        text = _user_message_text(obj)
+        if text is not None and marker in text:
+            return True
+    return False
 
 
 def _wait_for_transcript_path(buffer: str, backend: str, timeout: float) -> str | None:
@@ -305,38 +372,15 @@ def _wait_for_transcript_path(buffer: str, backend: str, timeout: float) -> str 
         time.sleep(min(DELIVERY_POLL_SECONDS, remaining))
 
 
-def _transcript_advanced(transcript: str, offset: int) -> bool:
-    try:
-        return Path(transcript).stat().st_size > offset
-    except FileNotFoundError:
-        return False
-    except OSError as error:
-        raise EmacsClientError(
-            f"cannot inspect transcript delivery boundary {transcript}: {error}"
-        ) from None
-
-
-def _delivery_observed(
-    buffer: str, transcript: str, offset: int, *, accept_busy: bool = True
-) -> bool:
-    if _transcript_advanced(transcript, offset):
-        return True
-    return accept_busy and buffer_state(buffer).get("state") == "busy"
-
-
 def _wait_for_delivery(
-    buffer: str,
     transcript: str,
     offset: int,
+    marker: str,
     timeout: float,
-    *,
-    accept_busy: bool = True,
 ) -> bool:
     deadline = time.monotonic() + timeout
     while True:
-        if _delivery_observed(
-            buffer, transcript, offset, accept_busy=accept_busy
-        ):
+        if _marker_delivered(transcript, offset, marker):
             return True
         remaining = deadline - time.monotonic()
         if remaining <= 0:
@@ -383,11 +427,10 @@ def submit_to_agent(
         prompt_path.unlink(missing_ok=True)
 
     if _wait_for_delivery(
-        buffer,
         transcript,
         transcript_offset,
+        delivery_marker,
         DELIVERY_INITIAL_WAIT_SECONDS,
-        accept_busy=not one_pass,
     ):
         return
     if one_pass:
@@ -402,9 +445,9 @@ def submit_to_agent(
         )
     send_return_to_agent(buffer, backend)
     if not _wait_for_delivery(
-        buffer,
         transcript,
         transcript_offset,
+        delivery_marker,
         DELIVERY_RETRY_WAIT_SECONDS,
     ):
         raise EmacsClientError(

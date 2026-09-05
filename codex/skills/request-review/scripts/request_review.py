@@ -450,18 +450,26 @@ def reconcile_submission(args: argparse.Namespace) -> None:
         if pending is None:
             raise SystemExit("no pending submission requires reconciliation")
         if args.delivered:
+            if not session._marker_delivered(
+                state["reviewer"]["transcript"],
+                pending["transcript_offset"],
+                _review_marker(state["plan"]["commit"]),
+            ):
+                raise SystemExit("delivery receipt is missing; pending submission retained")
             state["submission"] = pending
             state["pending_submission"] = None
             state["status"] = "review-active"
             outcome = "delivered"
         else:
-            if session._transcript_advanced(
-                state["reviewer"]["transcript"], pending["transcript_offset"]
+            if session._marker_delivered(
+                state["reviewer"]["transcript"],
+                pending["transcript_offset"],
+                _review_marker(state["plan"]["commit"]),
             ):
                 raise SystemExit(
-                    "the reviewer transcript advanced past the recorded boundary; "
-                    "an unnoticed delivery may have happened, so reconcile with "
-                    "--delivered instead of clearing the submission"
+                    "the marker-bearing review prompt is in the reviewer transcript "
+                    "past the recorded boundary; the delivery happened, so reconcile "
+                    "with --delivered instead of clearing the submission"
                 )
             state["pending_submission"] = None
             outcome = "not-delivered"
@@ -479,7 +487,8 @@ def retry_delivery(args: argparse.Namespace) -> None:
         reviewer = state["reviewer"]
         transcript = reviewer["transcript"]
         offset = pending["transcript_offset"]
-        if session._delivery_observed(reviewer["buffer"], transcript, offset):
+        marker = _review_marker(state["plan"]["commit"])
+        if session._marker_delivered(transcript, offset, marker):
             state["submission"] = pending
             state["pending_submission"] = None
             state["status"] = "review-active"
@@ -492,7 +501,6 @@ def retry_delivery(args: argparse.Namespace) -> None:
                 f"reviewer is {live.get('state', 'unknown')}; "
                 "delivery retry requires awaiting input"
             )
-        marker = _review_marker(state["plan"]["commit"])
         if not session.pending_prompt_contains(
             reviewer["buffer"], reviewer["backend"], marker
         ):
@@ -502,9 +510,9 @@ def retry_delivery(args: argparse.Namespace) -> None:
             )
         session.send_return_to_agent(reviewer["buffer"], reviewer["backend"])
         if not session._wait_for_delivery(
-            reviewer["buffer"],
             transcript,
             offset,
+            marker,
             session.DELIVERY_RETRY_WAIT_SECONDS,
         ):
             raise EmacsClientError(

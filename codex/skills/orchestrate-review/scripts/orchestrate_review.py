@@ -688,9 +688,10 @@ def reconcile_submission(args: argparse.Namespace) -> None:
             raise SystemExit("no pending submission requires reconciliation")
         if pending["phase"] == "implementation" and (
             not args.delivered
-            or not session._transcript_advanced(
+            or not session._marker_delivered(
                 state[pending["actor"]]["transcript"],
                 pending["transcript_offset"],
+                _delivery_marker(state["stage"], pending["phase"]),
             )
         ):
             _freeze_pending_implementation(
@@ -698,6 +699,12 @@ def reconcile_submission(args: argparse.Namespace) -> None:
             )
             outcome = "implementation-stopped"
         elif args.delivered:
+            if not session._marker_delivered(
+                state[pending["actor"]]["transcript"],
+                pending["transcript_offset"],
+                _delivery_marker(state["stage"], pending["phase"]),
+            ):
+                raise SystemExit("delivery receipt is missing; pending submission retained")
             _finalize_pending(state)
             outcome = "delivered"
         else:
@@ -719,8 +726,9 @@ def retry_delivery(args: argparse.Namespace) -> None:
         actor = state[submission["actor"]]
         transcript = actor["transcript"]
         offset = submission["transcript_offset"]
+        marker = _delivery_marker(state["stage"], submission["phase"])
         if submission["phase"] == "implementation":
-            if session._transcript_advanced(transcript, offset):
+            if session._marker_delivered(transcript, offset, marker):
                 _finalize_pending(state)
                 save_run(args.run_file, state)
                 print(
@@ -732,7 +740,7 @@ def retry_delivery(args: argparse.Namespace) -> None:
                 "implementation delivery cannot be retried; reconcile the pending "
                 "attempt, which freezes the one-pass run without another agent contact"
             )
-        if session._delivery_observed(actor["buffer"], transcript, offset):
+        if session._marker_delivered(transcript, offset, marker):
             _finalize_pending(state)
             save_run(args.run_file, state)
             print(
@@ -747,7 +755,6 @@ def retry_delivery(args: argparse.Namespace) -> None:
                 f"{submission['actor']} is {live.get('state', 'unknown')}; "
                 "delivery retry requires awaiting input"
             )
-        marker = _delivery_marker(state["stage"], submission["phase"])
         if not session.pending_prompt_contains(
             actor["buffer"], actor["backend"], marker
         ):
@@ -757,9 +764,9 @@ def retry_delivery(args: argparse.Namespace) -> None:
             )
         session.send_return_to_agent(actor["buffer"], actor["backend"])
         if not session._wait_for_delivery(
-            actor["buffer"],
             transcript,
             offset,
+            marker,
             session.DELIVERY_RETRY_WAIT_SECONDS,
         ):
             raise EmacsClientError(

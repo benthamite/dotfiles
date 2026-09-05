@@ -131,10 +131,10 @@ contains_raw_shell_op_command() {
 contains_raw_op_command() {
   local nested
   contains_raw_shell_op_command "$CONTENT" && return 0
-  if [ "$TOOL_NAME" = "functions.exec" ]; then
-    while IFS= read -r -d '' nested; do
+  if [ "$TOOL_NAME" = "functions.exec" ] && [ "${#SECRET_NESTED_COMMANDS[@]}" -gt 0 ]; then
+    for nested in "${SECRET_NESTED_COMMANDS[@]}"; do
       contains_raw_shell_op_command "$nested" && return 0
-    done < <(printf '%s' "$CONTENT" | codex_nested_exec_commands)
+    done
   fi
   return 1
 }
@@ -148,10 +148,10 @@ contains_op_reveal_output() {
 contains_any_op_reveal_output() {
   local nested
   contains_op_reveal_output "$CONTENT" && return 0
-  if [ "$TOOL_NAME" = "functions.exec" ]; then
-    while IFS= read -r -d '' nested; do
+  if [ "$TOOL_NAME" = "functions.exec" ] && [ "${#SECRET_NESTED_COMMANDS[@]}" -gt 0 ]; then
+    for nested in "${SECRET_NESTED_COMMANDS[@]}"; do
       contains_op_reveal_output "$nested" && return 0
-    done < <(printf '%s' "$CONTENT" | codex_nested_exec_commands)
+    done
   fi
   return 1
 }
@@ -160,7 +160,13 @@ contains_secret_output_command() {
   local raw scan normalized protected boundary wrapper executable delimiter
   # Heredoc bodies fed to a data sink are data, not command words; keep
   # bodies fed to interpreters or pipelines in the scan (see lib-heredoc.sh).
-  raw=$(mask_heredoc_bodies "$1")
+  # Python's Pass node is not the password-manager executable. Parse only an
+  # unambiguous quoted stdin program; leave unsupported source unchanged and
+  # deny protected references before shell quote masking can erase them.
+  # This function is used as an if-condition, so do not rely on set -e here:
+  # a failed classifier must explicitly take the denial path.
+  raw=$(printf '%s' "$1" | python3 "$(dirname "$0")/lib-python-heredoc.py" 2>/dev/null) || return 0
+  raw=$(mask_heredoc_bodies "$raw")
   # 1Password brokers are classified by lib-op-policy.py (see the gate below);
   # this rule covers the tools whose output *is* the secret.
   protected='(^|[^A-Za-z0-9_-])(pbpaste|pass|security)([^A-Za-z0-9_-]|$)'
@@ -230,10 +236,10 @@ contains_secret_output_command() {
 contains_any_secret_output_command() {
   local nested
   contains_secret_output_command "$CONTENT" && return 0
-  if [ "$TOOL_NAME" = "functions.exec" ]; then
-    while IFS= read -r -d '' nested; do
+  if [ "$TOOL_NAME" = "functions.exec" ] && [ "${#SECRET_NESTED_COMMANDS[@]}" -gt 0 ]; then
+    for nested in "${SECRET_NESTED_COMMANDS[@]}"; do
       contains_secret_output_command "$nested" && return 0
-    done < <(printf '%s' "$CONTENT" | codex_nested_exec_commands)
+    done
   fi
   return 1
 }
@@ -308,6 +314,39 @@ deny_secret_output_command() {
   exit 0
 }
 
+deny_unclassified_nested_command() {
+  jq -n '{"hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "deny",
+    "permissionDecisionReason": "BLOCKED: nested exec commands could not be classified safely; tool execution denied."
+  }}'
+  exit 0
+}
+
+# Capture the extractor status before considering ANY record. JSON contexts
+# escape embedded newlines/NUL, so converting framing NULs to LF is lossless
+# and no NUL byte enters command substitution. A partial failed extraction is
+# not an empty-success result. Reuse these checked commands in all four gates.
+SECRET_NESTED_COMMANDS=()
+if [ "$TOOL_NAME" = "functions.exec" ]; then
+  secret_contexts=$(printf '%s' "$CONTENT" | codex_nested_exec_contexts 2>/dev/null | tr '\000' '\n') \
+    || deny_unclassified_nested_command
+  while IFS= read -r secret_context; do
+    [ -z "$secret_context" ] && continue
+    # A non-newline sentinel protects the command's trailing LF bytes from
+    # command substitution. Remove only that appended sentinel after capture.
+    secret_nested=$(printf '%s' "$secret_context" | jq -er '
+      if (.ambiguous == false and (.cmd | type) == "string"
+          and (.cmd | contains("\u0000") | not)
+          and (.workdir == null or ((.workdir | type) == "string"
+               and (.workdir | contains("\u0000") | not))))
+      then .cmd + "." else error("unsupported nested command context") end
+    ' 2>/dev/null) || deny_unclassified_nested_command
+    secret_nested=${secret_nested%.}
+    SECRET_NESTED_COMMANDS[${#SECRET_NESTED_COMMANDS[@]}]="$secret_nested"
+  done <<< "$secret_contexts"
+fi
+
 # --- Allowlist: commands that do not return secret-manager output ---
 if codex_shell_tool_p "$TOOL_NAME"; then
   if contains_any_secret_output_command; then
@@ -318,15 +357,17 @@ if codex_shell_tool_p "$TOOL_NAME"; then
     # in the program (built dynamically, or in code the extractor cannot see)
     # is unclassifiable and denied.
     op_residual="$CONTENT"
-    while IFS= read -r -d '' nested; do
-      if op_reason=$(op_policy_denial "$nested"); then
-        deny_op_secret_output "$op_reason"
-      fi
-      if contains_normalized_raw_op "$nested"; then
-        deny_raw_op_command
-      fi
-      op_residual=${op_residual//"$nested"/}
-    done < <(printf '%s' "$CONTENT" | codex_nested_exec_commands)
+    if [ "${#SECRET_NESTED_COMMANDS[@]}" -gt 0 ]; then
+      for nested in "${SECRET_NESTED_COMMANDS[@]}"; do
+        if op_reason=$(op_policy_denial "$nested"); then
+          deny_op_secret_output "$op_reason"
+        fi
+        if contains_normalized_raw_op "$nested"; then
+          deny_raw_op_command
+        fi
+        op_residual=${op_residual//"$nested"/}
+      done
+    fi
     if printf '%s' "$op_residual" | sed -E "s/['\"\\\\]//g" | grep -qE 'op-automations|op-desktop|OP_RUN_NO_MASKING'; then
       deny_op_secret_output "a 1Password broker is named outside a literal nested exec command"
     fi

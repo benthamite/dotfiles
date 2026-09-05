@@ -433,7 +433,7 @@
       "claude": null,
       "codex": "codex/hooks/lib-codex-hook-json.sh",
       "status": "codex-only",
-      "note": "Codex payload and functions.exec normalizer; emits literal command/workdir records and rejects ambiguous fields. Recovers omitted nested workdir only from a unique matching parent call. Claude reads native payloads but also sources this file's shared Git classifier. That classifier distinguishes inert quoted search text and quoted git-commit stdin from executable interpreter heredocs; unknown syntax stays conservative."
+      "note": "Codex payload and functions.exec normalizer; emits literal command/workdir records, preserves valid UTF-16 surrogate pairs, and rejects ambiguous fields, unpaired surrogates and NULs. The Codex secret guard checks extraction status and every context before classifying commands. Recovers omitted nested workdir only from a unique matching parent call. Claude reads native payloads but also sources this file's shared Git classifier. That classifier distinguishes inert quoted search text and quoted git-commit stdin from executable interpreter heredocs; unknown syntax stays conservative."
     },
     {
       "name": "lib-codex-paths.sh",
@@ -455,6 +455,13 @@
       "codex": "codex/hooks/lib-heredoc.sh",
       "status": "paired-utility",
       "note": "Identical heredoc-aware masking helper for the secret-leak and sensitive-read guards: heredoc bodies fed to a known data sink are dropped from command-word scans; bodies fed to shells, interpreters, or pipelines stay in the scan."
+    },
+    {
+      "name": "lib-python-heredoc.py",
+      "claude": "claude/hooks/lib-python-heredoc.py",
+      "codex": "codex/hooks/lib-python-heredoc.py",
+      "status": "paired-utility",
+      "note": "Identical two-stage classifier for narrowly recognized quoted Python stdin heredocs in the secret-output guards. Python protected-name scanning exempts only parsed Pass statements; remaining protected names stay conservatively denied even inside Python strings. Only after that check is the body excluded from outer-shell lexical scanning. Unknown or malformed source is not masked; original input remains available to other secret checks, and outside shell text is preserved. This token guard is not a Python sandbox."
     },
     {
       "name": "lib-op-policy.py",

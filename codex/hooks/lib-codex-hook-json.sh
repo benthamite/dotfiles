@@ -109,7 +109,11 @@ def read_string(pos):
     while pos < n:
         char = source[pos]
         if char == quote:
-            return "".join(value), pos + 1
+            # JavaScript unicode escapes carry UTF-16 code units. Combine a
+            # valid surrogate pair before UTF-8 serialization; reject lone
+            # surrogates rather than losing the entire extracted command.
+            decoded = "".join(value).encode("utf-16-le", "surrogatepass").decode("utf-16-le")
+            return decoded, pos + 1
         if char == "\\" and pos + 1 < n:
             escaped = source[pos + 1]
             if escaped == "x" and pos + 3 < n:
@@ -411,6 +415,8 @@ while pos < n:
             )
         break
     fields, ambiguous = parse_object(obj, end)
+    if any("\0" in value for value in fields.values()):
+        raise ValueError("NUL is unsupported in nested command or workdir")
     command = fields.get("cmd")
     if mode == "commands":
         if command is not None:

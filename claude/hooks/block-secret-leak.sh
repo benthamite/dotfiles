@@ -140,7 +140,13 @@ contains_secret_output_command() {
   local raw="$1" scan normalized protected boundary wrapper executable delimiter
   # Heredoc bodies fed to a data sink are data, not command words; keep
   # bodies fed to interpreters or pipelines in the scan (see lib-heredoc.sh).
-  raw=$(mask_heredoc_bodies "$1")
+  # Python's Pass node is not the password-manager executable. Parse only an
+  # unambiguous quoted stdin program; leave unsupported source unchanged and
+  # deny protected references before shell quote masking can erase them.
+  # This function is used as an if-condition, so do not rely on set -e here:
+  # a failed classifier must explicitly take the denial path.
+  raw=$(printf '%s' "$1" | python3 "$(dirname "$0")/lib-python-heredoc.py" 2>/dev/null) || return 0
+  raw=$(mask_heredoc_bodies "$raw")
   # 1Password brokers are classified by lib-op-policy.py (see the gate below);
   # this rule covers the tools whose output *is* the secret.
   protected='(^|[^A-Za-z0-9_-])(pbpaste|pass|security)([^A-Za-z0-9_-]|$)'

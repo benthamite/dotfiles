@@ -225,6 +225,10 @@ personal/plugin identities and exact name boundaries, and handles task-start
 context, hidden inputs, and fractional timestamps. Counts remain reconstructed
 evidence, not native invocation telemetry or proof of workflow completion.
 
+The =build= skill preserves the requested spec/planning/implementation endpoint.
+It investigates before interviewing, records decisions incrementally, separates
+real blockers from assumptions, and keeps execution plans tied to the accepted spec.
+
 The =automate= skill distinguishes advice, construction and runtime activation.
 It chooses among deterministic, gptel, skill and scheduled implementations,
 preserves scope and authorization, and verifies loading separately from behavior.

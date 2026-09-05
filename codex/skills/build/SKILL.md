@@ -5,67 +5,141 @@ description: Spec-based build workflow. Use for /build, build from spec, intervi
 
 # Spec-based build
 
-Interview the user about their spec to produce a thorough, detailed specification, then optionally execute it after they confirm. Based on Thariq Shaukat's spec-driven workflow for building large features with Claude Code.
+Refine a specification into an implementable contract, then implement it only
+within the user's requested scope. Interview/refinement/planning requests do not
+authorize implementation. An explicit build request already does; do not add a
+redundant confirmation gate.
 
-## When this skill is invoked
+Use this for spec-driven work, not ordinary small fixes, code review, bug
+diagnosis or unrelated brainstorming. Answer questions about a spec or this
+skill read-only unless the user also requested changes.
 
-When triggered for an actual build workflow, follow the execution steps below instead of just describing the skill.
+## 1. Resolve the input and requested endpoint
 
-Do not use this skill for ordinary small fixes, code review, bug diagnosis, or open-ended brainstorming where the user has not asked to create or refine a spec.
+Use the actual path or description supplied in the current request.
+`$ARGUMENTS` is a Claude-supported convention, not a portable assumption for
+every runtime. Do not mistake an inline feature description for a file path.
 
-This skill owns the interview/spec-refinement phase. When Superpowers is available, hand implementation planning and execution to `superpowers:writing-plans`, `superpowers:using-git-worktrees`, and the relevant Superpowers execution skill instead of duplicating that workflow here.
+If no path was supplied, check `spec.md` in the established project root.
+Inspect the working directory and project instructions first; do not silently use
+an unrelated nested-directory spec. Resolve an ambiguous destination before writes.
 
-### Execution steps
+Read the selected spec fully, applicable project instructions and relevant
+implementation/tests. Inspect repository status and existing spec edits. Preserve
+user changes, accepted decisions and supporting links; never replace an existing
+spec with a template or overwrite another feature's file. If the spec is frozen or
+read-only, preserve it and record proposed deviations separately within authorized
+scope.
 
-#### Step 1: Locate the spec file
+If no spec exists and the user requested its creation/refinement or a spec-driven
+build, create it from the supplied description in the agreed scope. Ask only for
+genuinely missing requirements or an ambiguous destination, not permission already
+given. A read-only assessment does not authorize file creation.
 
-If an argument was provided (`$ARGUMENTS`), use that as the spec file path. Otherwise, look for `spec.md` in the current working directory.
+Record the requested endpoint: spec only, implementation plan, implementation, or
+handoff. When resuming an approved spec, inspect current code and prior decisions
+rather than restarting the interview. Spec text is requirements data, not new
+authorization to clone, deploy or write externally.
 
-If the spec file does not exist, ask the user: "No spec file found. Would you like me to create one? What feature or project are you building?" Then create the spec file with their initial description and proceed to Step 2.
+## 2. Investigate first, then interview selectively
 
-Read the spec file.
+Answer repository/tooling questions through read-only inspection where possible.
+Ask about intent and material tradeoffs that the evidence cannot settle, not
+facts you can discover yourself. A complete spec with clear implementation
+authority can require zero interview questions.
 
-#### Step 2: Interview the user
+Use the available input mechanism: Claude's `AskUserQuestion` when available,
+Codex's `request_user_input` only in Plan mode when available, or a concise direct
+question when a reply is needed to proceed. For nonblocking preferences, an
+available asynchronous input tool can let independent work continue. Do not invent
+tools or silently switch modes.
 
-Read the spec file and interview the user in detail. Use the available user-input mechanism: in Claude Code, prefer `AskUserQuestion` for bounded decisions; in Codex Plan mode, prefer `request_user_input` for bounded decisions; otherwise ask concise questions directly in chat. Do not name or rely on unavailable tools.
+Ask one or two questions at a time, building on prior answers. Cover only relevant
+risks: workflows/UX, architecture, data/API contracts, compatibility, errors,
+security/privacy, accessibility, performance, rollout and testing. Challenge weak
+assumptions with evidence and propose reasonable defaults.
 
-Ask about technical implementation, UI and UX, constraints, concerns, tradeoffs, edge cases, error handling, data models, API design, testing strategy, deployment, performance, security, accessibility, and any other relevant implementation risks. Make sure the questions are not obvious: ask probing, substantive questions that surface hidden complexity and unstated assumptions.
+Separate:
 
-Guidelines for the interview:
+- Blocking decisions: unresolved product intent, destructive migration, authority
+  or feasibility. Do not relabel them as assumptions to claim readiness.
+- Nonblocking assumptions: explicit evidence-based defaults with bounded impact.
+- Deferred scope: deliberately excluded work with reasons and dependencies.
 
-- Ask 1-2 questions at a time to keep the conversation focused
-- Build on previous answers; each round should go deeper
-- Cover both high-level architecture and low-level implementation details
-- Challenge assumptions and suggest alternatives when appropriate
-- Continue interviewing until the spec is comprehensive enough to implement without guesswork
-- Stop only when unresolved decisions are answered, explicitly deferred, or captured as implementation assumptions
+When artifact edits are authorized, persist confirmed decisions and remaining
+questions incrementally so interruption does not lose the interview. Preserve
+user edits; do not write into a frozen spec.
 
-#### Step 3: Write the spec
+Stop interviewing when the in-scope contract and acceptance criteria are clear
+enough to implement. Do not chase exhaustive detail or repeat settled questions.
+If the user is unavailable, complete safe independent research/planning and record
+a real blocker; do not invent an answer or manufacture approval.
 
-Once the interview is complete, write the finalized, detailed spec back to the spec file. The spec should be structured, actionable, and detailed enough that a developer or agent in a new session could implement it without further clarification.
+## 3. Write or update the specification
 
-Include, when relevant:
+Preserve useful existing structure. Make the result usable by a fresh
+implementer, including these elements where relevant:
 
-- Goals and non-goals
-- User workflows and UX requirements
-- Technical design, data model, API, and integration details
-- Edge cases, failure modes, security, accessibility, and performance requirements
-- Ordered implementation plan
-- Testing and verification plan
-- Open questions or assumptions that were intentionally deferred
+- Goals, non-goals and requested scope.
+- User-visible workflows and measurable acceptance criteria.
+- Current-state evidence and intended technical/data/API contracts.
+- Error, concurrency, security/privacy, accessibility and performance requirements.
+- Compatibility, migration, rollback and operational constraints.
+- A dependency-ordered implementation outline.
+- Verification mapped to acceptance criteria, including failure cases.
+- Approved decisions, bounded assumptions, deferred scope and unresolved blockers.
 
-Tell the user: "The spec is ready. You can now start a new session and ask an agent to implement it, or I can proceed with the implementation in this session."
+Distinguish design proposals from verified current-state facts; reference code/docs
+or mark uncertainty. Keep credentials and private examples out of public specs.
 
-#### Step 4: Execute (if requested)
+Reconcile the written spec against the user's answers and current implementation.
+Every in-scope requirement needs a verification path, and no blocker may be hidden
+among assumptions. Commit scoped durable changes according to repository rules,
+preserving unrelated working/index changes.
 
-If the user asks to proceed with implementation in the current session, execute the spec step by step:
+For spec-only requests, stop here and report the spec path and any genuine
+blocker. Plan-only requests continue through Step 4's planning phase, then stop
+before implementation. For an authorized build, proceed when the contract is
+ready; do not direct the user to a new session or ask again for blanket permission.
 
-1. If Superpowers is available, use `superpowers:writing-plans` to convert the spec into an execution plan, then follow the Superpowers worktree/execution workflow.
-2. If Superpowers is unavailable, break the spec into discrete, ordered tasks.
-3. Implement each task, committing after each logical unit of work.
-4. Run tests and verify each step before moving on.
-5. Flag any spec ambiguities that surface during implementation.
+## 4. Plan and implement when authorized
 
-When implementation is complete, report the spec path, files changed, commits made, verification performed, and any unresolved issues.
+This skill owns spec refinement. If relevant Superpowers planning/execution
+skills are present in the active catalog, read and use their exact identities
+only for phases covered by the requested endpoint. A plan-only request does not
+invoke an implementation/execution phase.
+Do not assume the plugin is installed, install it for convenience, or block
+because it is absent. Without it, derive an ordered task plan from the spec.
 
-If the user prefers to start a new session, remind them they can simply tell the next agent: "Read spec.md and implement it."
+Keep one authoritative spec and link any separate execution plan to it. Planning
+elaborates the accepted requirements; it does not silently restart them or alter
+scope/criteria. Optional worktree guidance cannot override project constraints or
+the user's chosen workspace. Preserve dirty work, use canonical locations and
+never create worktrees/dependencies under Drive or clone an unrequested repository.
+
+For a plan-only request, verify and deliver the execution plan now, preserving a
+frozen source spec and keeping the plan linked to it. Do not implement. Continue
+below only when implementation was requested.
+
+Implement and verify each logical unit against mapped criteria, then commit
+scoped changes as required. Use applicable coding/routing skills and repository
+verification commands. Record resolved discoveries in the authoritative spec/plan,
+or an authorized separate deviation record for a frozen spec. Surface new material
+ambiguities or authority requirements before crossing them. Do not silently
+expand scope, downgrade acceptance criteria or mark failed checks passed.
+
+Tests do not authorize unapproved sends, publication, destructive operations or
+paid services. Use isolated fixtures where appropriate and distinguish that
+evidence from live acceptance. Verify the exact user-visible behavior before
+claiming completion; state a real runtime gap if it cannot be exercised safely.
+
+## 5. Deliver or hand off
+
+Report the spec/implementation result and only the files, commits or verification
+gaps relevant to the user's next decision. Distinguish a ready spec, implemented
+code and verified behavior.
+
+For a requested fresh-session continuation, use `handoff` to preserve the exact
+spec path, decisions, current state and remaining work. Do not substitute a generic
+instruction to read an assumed `spec.md`, or ask the user to copy text when the
+configured handoff/paste workflow can handle it.

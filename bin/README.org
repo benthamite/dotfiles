@@ -144,7 +144,7 @@ Mail activation and credential lookup are documented further in
 | Command | Contract |
 |---------+----------|
 | =auto-subtitle= | Transcribes media with WhisperX and post-processes the resulting SRT. |
-| =ci-after-push= | Pushes a branch, waits for matching GitHub Actions runs, and prints failed logs. |
+| =ci-after-push= | Requires an explicit repository/SHA/branch; observes Actions without pushing and reports JSON snapshots, failures and incomplete coverage. |
 | =compressPDF= | Replaces a PDF only when OCR and compression produce a worthwhile valid result. |
 | =git-move= | Replays a path’s first-parent patch history into another repository. |
 | =move-files-recursively= | Flattens descendant files into the current directory, prefixing collisions. |

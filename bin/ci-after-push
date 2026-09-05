@@ -1,235 +1,282 @@
-#!/usr/bin/env bash
-# Push the current branch and wait for GitHub Actions runs for the pushed SHA.
+#!/usr/bin/env python3
+"""Observe an explicitly selected GitHub Actions snapshot; never push or rerun."""
 
-set -euo pipefail
+import argparse
+import json
+import re
+import subprocess
+import sys
+import time
+from urllib.parse import urlsplit
 
-usage() {
-  cat <<'EOF'
-Usage: ci-after-push [OPTIONS]
 
-Push the current branch, wait for GitHub Actions runs triggered by the pushed
-commit, print failed logs, and exit non-zero if any run fails.
+STATUSES = {"queued", "completed", "in_progress", "requested", "waiting", "pending"}
+CONCLUSIONS = {"action_required", "cancelled", "failure", "neutral", "skipped", "stale",
+               "startup_failure", "success", "timed_out"}
+FAILURES = CONCLUSIONS - {"success", "skipped", "neutral"}
+RUN_FIELDS = ("databaseId", "attempt", "status", "conclusion", "name", "workflowName",
+              "workflowDatabaseId", "event", "headBranch", "headSha", "url", "updatedAt")
+COVERAGE = ("Observed snapshot only: this does not prove a push occurred, exclude delayed "
+            "workflows, enumerate expected checks, or establish branch-protection coverage.")
 
-Options:
-  --no-push          Do not run git push; check the selected commit only
-  --repo OWNER/REPO  GitHub repository to inspect (default: gh repo view)
-  --commit SHA       Commit SHA to inspect (default: HEAD)
-  --branch BRANCH    Branch name to report (default: current branch)
-  --event EVENT      GitHub Actions event to inspect (default: push)
-  --timeout SECONDS  Maximum time to wait for runs (default: 900)
-  --interval SECONDS Polling interval (default: 10)
-  --limit N          Maximum matching runs to inspect (default: 20)
-  -h, --help         Show this help
-EOF
-}
 
-push=true
-repo=""
-commit=""
-branch=""
-event="push"
-timeout=900
-interval=10
-limit=20
+class ObservationError(Exception):
+    """A sanitized, non-CI evidence failure."""
 
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    -h|--help)
-      usage
-      exit 0
-      ;;
-    --no-push)
-      push=false
-      shift
-      ;;
-    --repo)
-      repo="${2:-}"
-      if [ -z "$repo" ]; then
-        printf 'Missing value for --repo\n' >&2
-        exit 2
-      fi
-      shift 2
-      ;;
-    --repo=*)
-      repo="${1#--repo=}"
-      shift
-      ;;
-    --commit)
-      commit="${2:-}"
-      if [ -z "$commit" ]; then
-        printf 'Missing value for --commit\n' >&2
-        exit 2
-      fi
-      shift 2
-      ;;
-    --commit=*)
-      commit="${1#--commit=}"
-      shift
-      ;;
-    --branch)
-      branch="${2:-}"
-      if [ -z "$branch" ]; then
-        printf 'Missing value for --branch\n' >&2
-        exit 2
-      fi
-      shift 2
-      ;;
-    --branch=*)
-      branch="${1#--branch=}"
-      shift
-      ;;
-    --event)
-      event="${2:-}"
-      if [ -z "$event" ]; then
-        printf 'Missing value for --event\n' >&2
-        exit 2
-      fi
-      shift 2
-      ;;
-    --event=*)
-      event="${1#--event=}"
-      shift
-      ;;
-    --timeout)
-      timeout="${2:-}"
-      if ! [[ "$timeout" =~ ^[0-9]+$ ]]; then
-        printf 'Invalid --timeout value: %s\n' "$timeout" >&2
-        exit 2
-      fi
-      shift 2
-      ;;
-    --timeout=*)
-      timeout="${1#--timeout=}"
-      if ! [[ "$timeout" =~ ^[0-9]+$ ]]; then
-        printf 'Invalid --timeout value: %s\n' "$timeout" >&2
-        exit 2
-      fi
-      shift
-      ;;
-    --interval)
-      interval="${2:-}"
-      if ! [[ "$interval" =~ ^[0-9]+$ ]] || [ "$interval" -eq 0 ]; then
-        printf 'Invalid --interval value: %s\n' "$interval" >&2
-        exit 2
-      fi
-      shift 2
-      ;;
-    --interval=*)
-      interval="${1#--interval=}"
-      if ! [[ "$interval" =~ ^[0-9]+$ ]] || [ "$interval" -eq 0 ]; then
-        printf 'Invalid --interval value: %s\n' "$interval" >&2
-        exit 2
-      fi
-      shift
-      ;;
-    --limit)
-      limit="${2:-}"
-      if ! [[ "$limit" =~ ^[0-9]+$ ]] || [ "$limit" -eq 0 ]; then
-        printf 'Invalid --limit value: %s\n' "$limit" >&2
-        exit 2
-      fi
-      shift 2
-      ;;
-    --limit=*)
-      limit="${1#--limit=}"
-      if ! [[ "$limit" =~ ^[0-9]+$ ]] || [ "$limit" -eq 0 ]; then
-        printf 'Invalid --limit value: %s\n' "$limit" >&2
-        exit 2
-      fi
-      shift
-      ;;
-    -*)
-      printf 'Unknown option: %s\n' "$1" >&2
-      exit 2
-      ;;
-    *)
-      printf 'Unexpected argument: %s\n' "$1" >&2
-      exit 2
-      ;;
-  esac
-done
 
-command -v git >/dev/null 2>&1 || { printf 'git is required.\n' >&2; exit 127; }
-command -v gh >/dev/null 2>&1 || { printf 'gh is required.\n' >&2; exit 127; }
-command -v jq >/dev/null 2>&1 || { printf 'jq is required.\n' >&2; exit 127; }
+class ObservationTimeout(ObservationError):
+    """The bounded observation did not finish."""
 
-if ! git rev-parse --show-toplevel >/dev/null 2>&1; then
-  printf 'ci-after-push must run inside a git repository.\n' >&2
-  exit 2
-fi
 
-if [ -z "$repo" ]; then
-  repo="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
-fi
+class Parser(argparse.ArgumentParser):
+    def error(self, message):
+        raise ObservationError(message)
 
-if [ -z "$commit" ]; then
-  commit="$(git rev-parse HEAD)"
-fi
 
-if [ -z "$branch" ]; then
-  branch="$(git rev-parse --abbrev-ref HEAD)"
-fi
+def arguments(argv):
+    parser = Parser(description=__doc__, epilog=(
+        "Exit 0: observed successful runs (see job caveats); 1: observed run/job failure; "
+        "2: invalid, incomplete or unverified evidence; 124: observation timeout. "
+        "Every gh call is bounded to at most 30 seconds."))
+    parser.add_argument("--repo", required=True, metavar="[HOST/]OWNER/REPO")
+    parser.add_argument("--commit", required=True, metavar="FULL_SHA")
+    parser.add_argument("--branch", required=True)
+    parser.add_argument("--event", default="push")
+    parser.add_argument("--no-push", action="store_true", help="compatibility no-op; never pushes")
+    parser.add_argument("--timeout", type=int, default=900, metavar="SECONDS",
+                        help="total observation budget; 0 takes one snapshot with a 30s budget")
+    parser.add_argument("--interval", type=int, default=10, metavar="SECONDS")
+    parser.add_argument("--limit", type=int, default=20, metavar="N",
+                        help="run-list bound (1..1000); a full result is incomplete")
+    args = parser.parse_args(argv)
+    parts = args.repo.split("/")
+    if (len(parts) not in (2, 3)
+            or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", parts[-2])
+            or not re.fullmatch(r"[A-Za-z0-9_.-]+", parts[-1]) or parts[-1] in (".", "..")
+            or (len(parts) == 3 and not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9.-]*", parts[0]))):
+        raise ObservationError("--repo must be [HOST/]OWNER/REPO, without a URL or credentials")
+    args.host = parts[0].lower() if len(parts) == 3 else "github.com"
+    args.repo_path = "/".join(parts[-2:])
+    args.request_repo = args.host + "/" + args.repo_path
+    if not re.fullmatch(r"[0-9a-fA-F]{40}|[0-9a-fA-F]{64}", args.commit):
+        raise ObservationError("--commit must be a full hexadecimal commit SHA")
+    args.commit = args.commit.lower()
+    if not args.branch or any(ord(char) < 32 or ord(char) == 127 for char in args.branch):
+        raise ObservationError("--branch must be a nonempty literal branch name")
+    if not re.fullmatch(r"[A-Za-z0-9_]+", args.event):
+        raise ObservationError("--event must be a literal Actions event name")
+    if args.timeout < 0 or not 1 <= args.interval <= 60 or not 1 <= args.limit <= 1000:
+        raise ObservationError("Require timeout >= 0, interval 1..60, and limit 1..1000")
+    return args
 
-if [ "$push" = true ]; then
-  printf 'Pushing %s (%s) to %s...\n' "$branch" "$commit" "$repo"
-  git push
-else
-  printf 'Checking existing %s run(s) for %s (%s) in %s...\n' "$event" "$branch" "$commit" "$repo"
-fi
 
-deadline=$(( $(date +%s) + timeout ))
-runs_json="[]"
+def strict_json(value):
+    def pairs(items):
+        result = {}
+        for key, item in items:
+            if key in result:
+                raise ValueError("duplicate key")
+            result[key] = item
+        return result
 
-while :; do
-  runs_json="$(
-    gh run list \
-      --repo "$repo" \
-      --commit "$commit" \
-      --event "$event" \
-      --limit "$limit" \
-      --json databaseId,status,conclusion,name,workflowName,url,headBranch,headSha,createdAt,updatedAt
-  )"
+    def invalid_number(_value):
+        raise ValueError("non-integer JSON number")
 
-  count="$(printf '%s\n' "$runs_json" | jq 'length')"
-  incomplete="$(printf '%s\n' "$runs_json" | jq '[.[] | select(.status != "completed")] | length')"
+    try:
+        return json.loads(value, object_pairs_hook=pairs, parse_constant=invalid_number,
+                          parse_float=invalid_number)
+    except (ValueError, TypeError, RecursionError) as error:
+        raise ObservationError("gh returned malformed JSON") from error
 
-  if [ "$count" -gt 0 ] && [ "$incomplete" -eq 0 ]; then
-    break
-  fi
 
-  now="$(date +%s)"
-  if [ "$now" -ge "$deadline" ]; then
-    printf 'Timed out waiting for GitHub Actions runs for %s after %ss.\n' "$commit" "$timeout" >&2
-    printf '%s\n' "$runs_json" | jq -r '.[] | "\(.databaseId)\t\(.status)\t\(.conclusion // "pending")\t\(.name)\t\(.url)"'
-    exit 124
-  fi
+def positive_id(value, label):
+    if type(value) is not int or value <= 0:
+        raise ObservationError(f"Invalid {label}")
 
-  if [ "$count" -eq 0 ]; then
-    printf 'Waiting for GitHub Actions runs to appear for %s...\n' "$commit"
-  else
-    printf 'Waiting for %s/%s GitHub Actions run(s) to complete...\n' "$incomplete" "$count"
-  fi
-  sleep "$interval"
-done
 
-printf 'GitHub Actions runs for %s:\n' "$commit"
-printf '%s\n' "$runs_json" | jq -r '.[] | "- \(.conclusion // .status): \(.name) \(.url)"'
+def state(record, label):
+    status, conclusion = record.get("status"), record.get("conclusion")
+    if not isinstance(status, str) or status not in STATUSES:
+        raise ObservationError(f"Invalid {label} status")
+    if status == "completed":
+        if not isinstance(conclusion, str) or conclusion not in CONCLUSIONS:
+            raise ObservationError(f"Invalid completed {label} conclusion")
+    elif conclusion not in (None, ""):
+        raise ObservationError(f"Inconsistent pending {label} conclusion")
 
-failed_ids="$(
-  printf '%s\n' "$runs_json" |
-    jq -r '.[] | select(.conclusion != "success" and .conclusion != "skipped" and .conclusion != "neutral") | .databaseId'
-)"
 
-if [ -n "$failed_ids" ]; then
-  printf '\nFailed GitHub Actions logs:\n' >&2
-  while IFS= read -r run_id; do
-    [ -n "$run_id" ] || continue
-    printf '\n===== run %s =====\n' "$run_id" >&2
-    gh run view "$run_id" --repo "$repo" --log-failed >&2 || true
-  done <<EOF
-$failed_ids
-EOF
-  exit 1
-fi
+def run_record(value, args, *, view_attempt=None):
+    if not isinstance(value, dict) or any(field not in value for field in RUN_FIELDS):
+        raise ObservationError("Incomplete run record")
+    for field in ("databaseId", "attempt", "workflowDatabaseId"):
+        positive_id(value[field], "run " + field)
+    for field in ("name", "workflowName", "event", "headBranch", "headSha", "url", "updatedAt"):
+        if not isinstance(value[field], str):
+            raise ObservationError("Invalid run " + field)
+    state(value, "run")
+    if (value["headBranch"] != args.branch or value["headSha"] != args.commit
+            or value["event"] != args.event):
+        raise ObservationError("Returned run does not match selected branch/SHA/event")
+    try:
+        url = urlsplit(value["url"])
+        expected_path = f"/{args.repo_path}/actions/runs/{value['databaseId']}"
+        attempt_suffix = f"/attempts/{view_attempt}" if view_attempt is not None else ""
+        expected_path += attempt_suffix
+        if (url.scheme != "https" or url.netloc.lower() != args.host or url.query or url.fragment
+                or url.path.lower() != expected_path.lower()
+                or (attempt_suffix and not url.path.endswith(attempt_suffix))):
+            raise ValueError("mismatch")
+    except ValueError as error:
+        raise ObservationError("Returned run URL does not match selected repository/run/attempt") from error
+    return {field: value[field] for field in RUN_FIELDS}
 
-printf 'All GitHub Actions runs for %s completed successfully.\n' "$commit"
+
+def job_records(value):
+    if not isinstance(value, list):
+        raise ObservationError("Missing or invalid jobs evidence")
+    result, seen = [], set()
+    for job in value:
+        if not isinstance(job, dict) or any(field not in job for field in (
+                "databaseId", "name", "url", "status", "conclusion")):
+            raise ObservationError("Invalid job record")
+        positive_id(job.get("databaseId"), "job databaseId")
+        if job["databaseId"] in seen:
+            raise ObservationError("Duplicate job identity")
+        seen.add(job["databaseId"])
+        if not isinstance(job.get("name"), str) or not isinstance(job.get("url"), str):
+            raise ObservationError("Missing job name or URL")
+        state(job, "job")
+        result.append({field: job[field] for field in ("databaseId", "name", "url", "status", "conclusion")})
+    return result
+
+
+class Observer:
+    def __init__(self, args):
+        self.args = args
+        self.deadline = time.monotonic() + (args.timeout or 30)
+        self.runs = []
+        self.logs = []
+        self.caveats = []
+
+    def command(self, argv, context):
+        remaining = self.deadline - time.monotonic()
+        if remaining <= 0:
+            raise ObservationTimeout("Observation deadline reached")
+        try:
+            result = subprocess.run(["gh", *argv], capture_output=True, text=True,
+                                    timeout=min(30, remaining))
+        except subprocess.TimeoutExpired as error:
+            raise ObservationTimeout(context + " exceeded its observation deadline") from error
+        except (OSError, UnicodeError) as error:
+            raise ObservationError(context + " could not provide readable evidence") from error
+        if result.returncode:
+            # Never echo arbitrary gh stderr/API bodies (which may contain private data).
+            raise ObservationError(f"{context} failed with exit status {result.returncode}")
+        return result.stdout
+
+    def listing(self):
+        args = self.args
+        raw = strict_json(self.command([
+            "run", "list", "--repo", args.request_repo, "--commit", args.commit,
+            "--branch", args.branch, "--event", args.event, "--limit", str(args.limit),
+            "--json", ",".join(RUN_FIELDS)], "Run listing"))
+        if not isinstance(raw, list):
+            raise ObservationError("Run listing is not an array")
+        runs = [run_record(value, args) for value in raw]
+        if len({run["databaseId"] for run in runs}) != len(runs):
+            raise ObservationError("Duplicate run identity")
+        # Filtered REST search is capped at 1000 even if a larger gh limit were used.
+        if len(runs) >= args.limit:
+            self.runs = runs
+            raise ObservationError("Run-list limit reached; matching-run coverage is incomplete")
+        return sorted(runs, key=lambda run: run["databaseId"])
+
+    def details(self, run):
+        # gh fetches all jobs pages for this exact attempt (not the latest rerun).
+        # https://cli.github.com/manual/gh_run_view
+        raw = strict_json(self.command([
+            "run", "view", str(run["databaseId"]), "--attempt", str(run["attempt"]),
+            "--repo", self.args.request_repo, "--json", ",".join((*RUN_FIELDS, "jobs"))],
+            f"Run {run['databaseId']} attempt {run['attempt']} inspection"))
+        observed = run_record(raw, self.args, view_attempt=run["attempt"])
+        # GetRun appends /attempts/N for --attempt N, unlike run-list URLs:
+        # https://github.com/cli/cli/blob/trunk/pkg/cmd/run/shared/shared.go#L525-L560
+        # Ignore only this validated format difference when comparing; retain
+        # the exact-attempt URL returned by gh in the resulting evidence.
+        if {**observed, "url": run["url"]} != run:
+            raise ObservationError("Run changed during attempt inspection; take another observation")
+        return {**observed, "jobs": job_records(raw.get("jobs"))}
+
+    def failed_logs(self, runs):
+        for run in runs:
+            entry = {"runId": run["databaseId"], "attempt": run["attempt"]}
+            try:
+                entry["text"] = self.command([
+                    "run", "view", str(run["databaseId"]), "--attempt", str(run["attempt"]),
+                    "--repo", self.args.request_repo, "--log-failed"],
+                    f"Run {run['databaseId']} attempt {run['attempt']} failed-log retrieval")
+                entry["status"] = "fetched"
+            except ObservationError as error:
+                entry.update(status="unavailable", reason=str(error))
+            self.logs.append(entry)
+
+    def observe(self):
+        while True:
+            listed = self.listing()
+            self.runs = listed
+            if listed and all(run["status"] == "completed" for run in listed):
+                self.runs = [self.details(run) for run in listed]
+                # A second listing catches visible late runs/reruns, not future ones.
+                latest = self.listing()
+                if latest == listed:
+                    failures = [run for run in self.runs if run["conclusion"] in FAILURES or any(
+                        job["conclusion"] in FAILURES for job in run["jobs"])]
+                    self.caveats = [
+                        {"runId": run["databaseId"], "attempt": run["attempt"],
+                         "jobId": job["databaseId"], "conclusion": job["conclusion"]}
+                        for run in self.runs for job in run["jobs"]
+                        if job["conclusion"] in ("skipped", "neutral")]
+                    if failures:
+                        self.failed_logs(failures)
+                        return 1, "observed_failure", (
+                            "Run/job failure evidence observed; job applicability or continue-on-error "
+                            "policy still requires workflow review")
+                    if any(run["conclusion"] != "success" for run in self.runs):
+                        return 2, "not_verified_success", "Skipped/neutral run is not executed-success evidence"
+                    if any(not run["jobs"] for run in self.runs):
+                        return 2, "incomplete", "Completed run has no observable jobs evidence"
+                    if all(job["status"] == "completed" for run in self.runs for job in run["jobs"]):
+                        return 0, "observed_success", (
+                            "Matching runs report success; skipped/neutral jobs, if any, are separate caveats")
+                else:
+                    self.runs = latest
+            if self.args.timeout == 0 or time.monotonic() >= self.deadline:
+                raise ObservationTimeout("No stable, completed observation within the wait budget")
+            time.sleep(min(self.args.interval, max(0, self.deadline - time.monotonic())))
+
+
+def main(argv=None):
+    args = None
+    observer = None
+    try:
+        args = arguments(argv)
+        observer = Observer(args)
+        code, status, reason = observer.observe()
+    except ObservationTimeout as error:
+        code, status, reason = 124, "pending_or_changed", str(error)
+    except ObservationError as error:
+        code, status, reason = 2, "incomplete", str(error)
+    result = {"schemaVersion": 1, "status": status, "reason": reason,
+              "coverage": "observed_snapshot_only", "coverageNote": COVERAGE,
+              "runs": observer.runs if observer else [],
+              "jobCaveats": observer.caveats if observer else [],
+              "failedLogs": observer.logs if observer else []}
+    if args:
+        result["target"] = {"repository": args.repo, "commit": args.commit,
+                            "branch": args.branch, "event": args.event}
+    print(json.dumps(result, ensure_ascii=True))
+    return code
+
+
+if __name__ == "__main__":
+    sys.exit(main())

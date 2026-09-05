@@ -158,6 +158,12 @@ profile, including explicit-owner/config-only timing exceptions. It reuses the
 shared PR and profile lifecycle and distinguishes a configured recipe from an
 installed revision and verified loaded behavior.
 
+The =post-push-ci= skill observes an exact pushed target without pushing again.
+Its helper reports a bounded run snapshot; expected-check coverage, run attempts
+and pending or non-success outcomes remain explicit. Status checks alone do
+not authorize repairs, reruns or publication. Attempt inspection validates
+GitHub's attempt-specific URL against the listed run and exact attempt.
+
 The project-local =config-audit= respects a requested subset and includes
 procedural bodies when full skill audits are requested. It distinguishes
 skill discovery from instruction loading and checks actual hook coverage

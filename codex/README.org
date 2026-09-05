@@ -225,6 +225,11 @@ personal/plugin identities and exact name boundaries, and handles task-start
 context, hidden inputs, and fractional timestamps. Counts remain reconstructed
 evidence, not native invocation telemetry or proof of workflow completion.
 
+The =dotfiles-context= skill resolves canonical sources without guessing from
+stale profile directories. It checks buffer and profile identity before tangling,
+preserves runtime-specific pairing, and binds local PR pins to the exact reviewed
+change while keeping generated files distinct from live activation.
+
 The =document-elisp-package= skill preserves established manual paths, credits,
 anchors and export identities. It separates documentation from new save automation
 and documents supported public contracts without evaluating package source.

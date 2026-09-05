@@ -189,6 +189,10 @@ Native =[[skills.config]]= entries can disable a tracked skill without deleting
 it. Programmatic skills remain outside ordinary interactive discovery and are
 invoked explicitly by the runner.
 
+The =org-note-conventions= skill applies only to personal notes. It distinguishes
+root-backed and rootless heading layouts, preserves established structure, and
+joins soft prose wrapping without removing intentional Org hard line breaks.
+
 The project-local =config-audit= respects a requested subset and includes
 procedural bodies when full skill audits are requested. It distinguishes
 skill discovery from instruction loading and checks actual hook coverage

@@ -132,6 +132,10 @@ roots, and maintenance. The generated
 public skills only; runtime plugins, private skills, ignored system content,
 and skills owned by other repositories are outside its scope.
 
+The =org-note-conventions= skill applies only to personal notes. It distinguishes
+root-backed and rootless heading layouts, preserves established structure, and
+joins soft prose wrapping without removing intentional Org hard line breaks.
+
 The project-local =config-audit= respects a requested subset and includes
 procedural bodies when full skill audits are requested. It distinguishes
 skill discovery from instruction loading and checks actual hook coverage

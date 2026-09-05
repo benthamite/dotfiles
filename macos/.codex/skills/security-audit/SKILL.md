@@ -1,175 +1,117 @@
 ---
 name: security-audit
-description: "Scan for exposed API keys and leaked credentials, audit dependency vulnerabilities, review macOS hardening settings, and evaluate Claude Code configuration risks. Use when the user wants a security review, vulnerability scan, dependency audit, secrets check, or periodic security posture assessment."
-argument-hint: "[--secrets] [--deps] [--machine] [--claude] [dir]"
+description: "Audit development-environment secrets, supply chains, macOS security controls, and Claude/Codex agent permissions. Use for environment security reviews, secrets checks, dependency audits, or periodic security posture assessments; use specialist skills for app-binary assessments or application-code reviews."
 ---
 
 # Security audit
 
-Audit the development environment for security risks across four domains. Run all four by default, or pass flags to audit specific domains.
+Audit the development environment and explain the exposure each finding
+establishes. Run all four domains by default, or select `--secrets`, `--deps`,
+`--machine`, or `--agents`. Keep `--claude` as a compatibility selector for
+the Claude-only portion of `--agents`.
 
-If `dir` is provided, scope the `--secrets` and `--deps` domains to that directory. Otherwise, audit the current working directory plus well-known config locations (`~/.claude.json`, `~/.zshenv`, etc.).
+An optional directory scopes secrets and dependency checks to that directory.
+Without one, use the current directory plus relevant shell and agent
+configuration locations. Machine checks concern the current Mac; agent checks
+cover installed agents, their active account/profile configurations, and the
+current project's overrides. State these roots before scanning; do not silently
+expand into unrelated repositories or accounts.
 
-Use subagents to explore in parallel where appropriate. Give each subagent the same safety boundaries below. Read actual files — don't guess from paths.
+Read the selected domain references completely before running their checks:
+
+| Domain | Required reference |
+|---|---|
+| Secrets and credential incidents | [secrets](references/secrets.md) |
+| Dependencies and other executable supply chains | [supply chain](references/supply-chain.md) |
+| macOS controls, isolation, and recovery | [machine](references/machine.md) |
+| Claude, Codex, MCP, plugins, and browser automation | [agents](references/agents.md) |
+
+Independent domains may use subagents. Give each the resolved scope, relevant
+reference, and all safety boundaries below. Deduplicate findings that cross
+domains.
 
 ## Safety boundaries
 
-This skill is audit-only unless the user explicitly asks for remediation. Do not rotate credentials, change account settings, post externally visible updates, or mutate external systems while auditing.
+An audit is read-only unless the user authorizes remediation. Do not rotate
+credentials, change settings, install audit dependencies, resolve/build project
+dependencies, activate project code, or mutate accounts while auditing.
+Authorized remediation remains limited to the requested targets and actions.
 
-A remediation that changes what a guard *permits*, rather than fixing how it enforces the rule the owner already set, is a policy decision, not a fix: state the proposed rule in one paragraph and get an explicit yes before committing it or rewriting the policy prose that describes it (2026-08-31: an audit remediation replaced "never print a secret" with "never invoke the secret tool" and blocked every `op-automations` call for three days).
+Preserve the owner's guard policy. Repairing enforcement of an existing rule
+does not authorize changing what the rule permits. A different rule requires
+an explicit decision on that proposed policy; existing authorization for the
+same change suffices. In Pablo's configuration, guards must allow or deny,
+never introduce interactive approval prompts.
 
-When scanning for secrets, never emit raw matching lines to the terminal or final report. Use quiet/list/count modes or a redacting helper that outputs only the path, line number, secret type, and a short fingerprint when needed to distinguish duplicates. Do not read secret store contents, private keys, browser cookies, or credential files; check metadata, references, encryption status, or configured paths instead. When `pass` lookup is necessary, use full paths and `pass find`; do not use `pass ls | grep`.
+Before credential-related work, read
+`~/My Drive/dotfiles/claude/context/secrets.md`. Use its personal/Epoch
+placement and broker rules; this skill does not redefine them. For service
+access use `claude/context/service-access.md`; for MCP placement use
+`claude/context/mcp-servers.md`, resolved under that dotfiles root.
 
-If a check is unavailable, unsafe to run, or would expose raw secrets, mark it as not checked with the concrete reason rather than guessing.
+Never emit matching secret values or raw config/history lines. Use an approved
+local scanner or metadata-only helper that reports path, line, type, and a
+keyed fingerprint when necessary. Do not open vault contents, private keys,
+browser cookies/session databases, or credential files for content inspection.
+The bundled shell classifier supplies value-free output for shell-file reads
+permitted by the guard; other checks must stay within the existing read policy. A
+metadata-only output is not permission to bypass a denied input read.
+Do not source a target shell file, load an editor config, run `direnv allow`,
+start an MCP server, or execute a project-supplied scanner to inspect it.
 
-## Threat model
+Inspect a check's execution, output, and network effects before running it.
+Capture and filter potentially sensitive stdout **and stderr** locally before
+tool output reaches the transcript. Do not send secrets, config files, or
+private dependency metadata to a remote scanner; verify the destination and
+data scope for advisory queries. Temporary sanitized artifacts must be private,
+outside Drive, and cleaned up. Mark unavailable, unsafe, denied, or unsupported
+checks as not checked, with the concrete reason. Do not weaken a guard to
+complete a check.
 
-You will eventually run malware via supply chain compromise. The goal is to limit what it can do when that happens.
+## Threat model and evidence
 
-User-level malware on macOS can read browser cookies and session tokens. Once malware is running as your user, it can steal already-authenticated sessions — bypassing 2FA entirely, because the authentication already happened. 2FA remains critical for other vectors (credential theft, phishing, account takeover from other devices), but for malware already on the machine, **isolation** is the primary defense.
+Assume a dependency or agent workflow could execute malicious code. Assess
+which files, authenticated services, devices, and credentials that process can
+reach, and how the owner would recover. Consider credential theft/phishing,
+physical loss, persistence, and prompt injection where relevant.
 
-This threat model shapes the audit: checks that reduce the blast radius of a compromised process (isolation, per-process secrets, browser separation) are weighted higher than checks that assume prevention alone.
+OS permissions and actual sandbox/VM boundaries constrain processes. A browser
+profile separates browser state; it does not protect another profile from
+malware running as the same OS user. A VM application's presence does not
+establish isolation. Per-process secret injection reduces inheritance but still
+exposes the injected values to that process and its descendants. Encryption at
+rest does not establish protection while data is unlocked.
 
-## Domains
+Distinguish a configured control from an observed effective control. Use safe
+synthetic fixtures to verify a guard's decisions or isolation behavior when
+needed; never probe with actual credentials or destructive actions. Do not
+equate installed tools, hook counts, famous publishers, or a scanner's silence
+with security. Keep an unverified claim explicitly unverified.
 
-### `--secrets` — Secrets hygiene
+## Report
 
-Scan for exposed credentials and secrets mismanagement.
+Give a compact coverage table per selected domain: checked (with or without a
+finding), not checked (reason), or not applicable (reason). Identify roots,
+tool versions, and reference dates only where they affect the conclusion.
+Track skipped subchecks so a partial scan cannot look complete.
 
-**Credential incident memory:**
+For each deduplicated finding include location, observed evidence, confidence,
+the concrete exposure and affected workflow, severity rationale, and a scoped
+remedy. Separate findings from optional hardening and unresolved questions.
 
-Before investigating a detected credential, run the bundled
-`scripts/credential-incident-registry.py` with `--start TARGET list`, resolving
-both the helper and target to absolute paths. In a Git repository it reads the
-mode-0600 registry at
-`GIT_DIR/dotfiles-publish/credential-incidents.json`; outside Git it uses
-`$XDG_STATE_HOME/security-audit/credential-incidents.json` (or
-`~/.local/state/security-audit/credential-incidents.json`). Use `lookup
---fingerprint FINGERPRINT` when a scanner supplied a fingerprint.
+- Critical: evidence of an immediately consequential exposure, such as a
+  currently usable credential exposed publicly or active compromise.
+- High: an established, substantial access or execution path to sensitive assets.
+- Medium: a material control gap with a plausible but constrained exposure.
+- Low: optional hardening or limited-impact gaps.
 
-The registry records only keyed fingerprints, provider status, verification
-method and time, redacted provider references, historical locations, and the
-next action. It never stores a credential value. Reuse a matching record's
-provider research and completed verification instead of repeating them. For a
-pending record, perform only its recorded next action and refresh the live
-validity check when remediation is authorized. A registry record is evidence,
-not an allowlist: it never suppresses a scanner finding. For public Git history,
-`dotfiles-publish incident-record` remains the only command that resolves an
-exact finding after rejection of the old credential has been verified.
+A scanner match is a candidate until classified; do not test a credential's
+live validity without authorization. Advisory severity, local exposure,
+confidence, and fix availability are separate facts. Keep relevant unfixed
+transitive and dev-tool vulnerabilities visible; no upgrade path does not
+remove the risk. Do not label a whole domain safe when consequential checks
+were unavailable.
 
-Ordinary audit mode is read-only, so do not create or update the registry during
-an audit. During explicitly authorized remediation, update the record
-immediately after a provider action or live verification with the helper's
-`record --input FILE` command. The input must be a mode-0600 temporary JSON file;
-trash it after recording. Run `validate` after every update.
-
-**What to check:**
-
-- **Plaintext secrets in config files**: scan `~/.claude.json`, project `.env` files, `launchd` plists, and similar for API keys, tokens, passwords, and OAuth secrets. Match common patterns:
-  - AWS: `AKIA[0-9A-Z]{16}`
-  - GitHub: `gh[ps]_[A-Za-z0-9_]{36,}`, `github_pat_[A-Za-z0-9_]{22,}`
-  - Generic: `(api[_-]?key|secret|token|password)\s*[=:]\s*['"][A-Za-z0-9/+=_-]{20,}`
-  - Slack: `xox[bporca]-[A-Za-z0-9-]+`
-  - Private keys: `-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----`
-  - Do **not** flag public identifiers such as Google OAuth client IDs by themselves. Only flag actual secrets (client secrets, tokens, private keys, plaintext passwords).
-- **Globally exported secrets in shell rc files**: scan `~/.zshrc`, `~/.bashrc`, `~/.profile`, `~/.zshenv`, `.zshenv-secrets`, and similar for `export` statements setting secret-bearing variables. For sensitive shell files, run the bundled `scripts/classify-shell-exports.py FILE` with the helper and target given as their absolute path, resolved relative to this `SKILL.md`. It reports only line number, variable name, scope, and classification; it never prints values. Do not infer ambient secrets from export counts, comments, or assignments inside per-process wrapper functions. Treat only global `credential-*` results as credential findings. Identity exports such as email addresses and usernames are not credentials and stay out of the secrets finding count unless the user explicitly asks to audit personal-data exposure. Flag two distinct credential issues:
-  1. **Literal secrets** (severity: **critical**): API keys, tokens, passwords, and private keys hardcoded as plaintext values in the file. Even if the file is git-crypt encrypted on disk, these values are loaded into the shell environment at startup and readable by every child process via `printenv`. Remediation: move each secret into `pass` or the OS keychain and inject per-process only (see item 2).
-  2. **Globally exported secrets from encrypted stores** (severity: **high**): e.g. `export FOO=$(pass ...)` or `export FOO=$(op read ...)`. The secret isn't stored in plaintext on disk, but it's still injected into the global shell environment where every child process can read it. A single rogue dependency running `printenv` gets everything. Remediation: replace global exports with per-process injection — `envchain` (macOS Keychain, injects secrets only into the prefixed command's environment), per-process `op run --`, or inline `FOO=$(pass ...) command` so secrets never enter the global environment.
-- **`.envrc` files**: if direnv is in use, check that `.envrc` files fetch secrets from a keychain (`pass`, `op`, `envchain`) rather than containing plaintext values.
-- **Git-crypt coverage**: verify `.gitattributes` lists all files containing secrets. Check that encrypted files are actually encrypted in the repo (not committed in plaintext before git-crypt was configured).
-- **`.gitignore` coverage**: verify `.env` files are gitignored. Flag any `.env` that is both present on disk and tracked by git.
-- **Shell history**: check `~/.zsh_history` for leaked secrets in command arguments (e.g. `curl -H "Authorization: Bearer sk-..."`)
-- **1Password integration**: if `.env.op` files exist, verify they use `op://` references rather than plaintext values. Check whether the resolved `.env` is gitignored.
-- **Pass store consistency**: if `~/.password-store/` exists, flag any env variable or config value that contains a raw secret where a `pass` reference would be appropriate.
-
-**What NOT to check:**
-
-- Secrets in encrypted stores (pass, 1Password, Keychain) — these are fine by definition.
-- `.zshenv-secrets` when properly git-crypt encrypted — verify encryption status, don't flag the file itself.
-
-### `--deps` — Supply chain
-
-Audit dependencies for known vulnerabilities and supply chain risk.
-
-**What to check:**
-
-- **Install scripts**: check the global `~/.npmrc` and any project-level `.npmrc` for `ignore-scripts=true`. If absent, flag as **high** — postinstall scripts are the most common npm supply chain vector. When a package legitimately needs build scripts (esbuild, sharp, etc.), it should be allowlisted explicitly (pnpm supports `onlyBuiltDependencies`; note any such allowlist rather than flagging it).
-- **Python install-time code**: note that Python has no equivalent to `ignore-scripts` — `setup.py` can run arbitrary code at install time. For Python packages not fully trusted, recommend running installs inside a VM (OrbStack, Docker) or via Claude Code Web. Flag any `pip install` of non-PyPI or non-mainstream packages outside an isolated environment.
-- **Known vulnerabilities**: run `npm audit` (Node), `pip audit` (Python), `cargo audit` (Rust), `gh api /repos/{owner}/{repo}/dependabot/alerts` (GitHub) as applicable. Report severity, CVE or advisory ID, and whether a fix is available.
-- **Unpinned dependencies**: flag `^`, `~`, `>=`, or `*` version ranges in `package.json`, unpinned entries in `requirements.txt` or `pyproject.toml`. These are how supply chain attacks propagate. Check that CI and install commands use `--frozen-lockfile` (pnpm), `npm ci` (npm), or equivalent to prevent lockfile drift.
-- **Lockfile integrity**: verify lockfiles exist and are committed. Flag repos that have a manifest but no lockfile.
-- **Release age policy**: for npm, require `min-release-age=3` in `.npmrc` and npm 11.10 or newer. Verify both `npm --version` and that `npm config ls -l` recognizes `min-release-age`; `npm config get` alone is insufficient because older npm versions echo unknown user keys without enforcing them. Do not reuse this key for other package managers: pnpm uses `minimumReleaseAge` in minutes in `pnpm-workspace.yaml`, while Bun uses `minimumReleaseAge` in seconds in `bunfig.toml`. For Python, note `uv --exclude-newer` as the equivalent.
-- **Dependency freshness**: flag dependencies more than 2 major versions behind — they likely have unpatched vulnerabilities.
-- **Socket.dev** (GitHub repos): for repos with dependencies hosted on GitHub, check whether Socket.dev is installed as a GitHub App (reviews PRs for suspicious package behavior: obfuscated code, network calls at install time, unexpected filesystem access). Recommend it if absent.
-
-**What NOT to check:**
-
-- Transitive dependency vulnerabilities with no upgrade path (note them but don't flag as directly actionable unless the repo can mitigate them another way).
-- Do **not** automatically downgrade dev-only dependencies. In a development-environment audit they still run on the developer machine and can be a real supply-chain path. Lower severity only when you can explain why the vulnerable package is isolated from actual developer workflows.
-
-### `--machine` — Machine posture
-
-Audit macOS system security configuration.
-
-**What to check:**
-
-- **Software updates**: `softwareupdate -l` for pending updates. Flag any pending security update.
-- **FileVault**: `fdesetup status` — must be enabled.
-- **Firewall**: `/usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate` — should be enabled.
-- **Gatekeeper**: `spctl --status` — must be enabled.
-- **SIP**: `csrutil status` — must be enabled.
-- **Lockdown Mode**: check `defaults read /var/db/SystemPolicyConfiguration/mdm MDMProfileIdentifier 2>/dev/null` or look for indicators in system settings. Lockdown Mode disables JIT compilation in Safari, blocks unknown USB accessories, and restricts message attachment types. Recommend enabling it (System Settings > Privacy & Security > Lockdown Mode). Note: web fonts may not display correctly in Safari; Chrome is unaffected.
-- **Code execution isolation**: check whether OrbStack, UTM, Docker Desktop, or another VM tool is installed for sandboxing untrusted code. Per the threat model, running untrusted code (npm/pip installs, experiments) on the primary machine is the highest-risk activity. Recommend Claude Code Web for npm/pip work where possible (code executes on Anthropic's infrastructure), and a Linux VM for everything else. Flag if no isolation tooling is found.
-- **Browser profile separation**: check whether Chrome has multiple profiles (inspect `~/Library/Application Support/Google/Chrome/` for `Profile *` directories) or whether multiple browsers are in use. If all browsing (dev, email, banking) happens in one profile, flag as **medium** — a cookie theft from the dev browser should not yield email/financial sessions. Recommend: one browser or profile for email/finances, another for development.
-- **Google Advanced Protection**: cannot be checked programmatically, but include as a **low** recommendation if not previously acknowledged — enrollment takes 5 minutes (phone as passkey, no hardware key needed), restricts third-party app access to Gmail/Drive, hardens account recovery.
-- **Password manager**: check whether a password manager is installed (`/Applications/1Password*.app`, `Bitwarden.app`, `KeePassXC.app`, or similar) and whether the corresponding browser extension is present. Flag as **high** if no password manager is found — unique passwords per service limit the blast radius of any single credential breach.
-- **Hardware security keys**: note as a **low** recommendation if not already in use — YubiKeys upgrade phishing defense from phone passkeys to hardware keys.
-- **SSH keys**: flag keys without passphrases (`ssh-keygen -y -P "" -f <key>` returns 0 = no passphrase). Flag `~/.ssh/authorized_keys` entries that are unfamiliar.
-- **Browser extensions**: list installed extensions for Chrome and Firefox. Flag extensions that are not from major, well-known publishers (per Kim's Glasswing guidance: "be skeptical of lesser-known browser extensions").
-- **Network egress**: check for an outbound firewall (Little Snitch, LuLu, or Radio Silence). Report its status. If none is installed, note the absence as a gap.
-- **Login items**: `osascript -e 'tell application "System Events" to get the name of every login item'` — flag unfamiliar entries.
-- **Remote access**: verify Screen Sharing and Remote Login are disabled unless intentionally enabled.
-
-**What NOT to check:**
-
-- Application-level security (use `/audit-mac-app` for that).
-- MDM status (organizational concern, not individual).
-
-### `--claude` — Claude Code attack surface
-
-Audit the Claude Code configuration for security risks.
-
-**What to check:**
-
-- **Permission mode**: report whether `bypassPermissions` is active. If so, flag the absence of compensating controls (hooks that enforce safety). Calculate the "unguarded surface" — tools that have no PreToolUse hook and run without permission prompts.
-- **MCP server credentials**: scan `~/.claude.json` for plaintext tokens and secrets in MCP server `env` blocks. Recommend moving them to env variables sourced from an encrypted store.
-- **Hook coverage**: map which tool categories have PreToolUse guards and which don't. Flag gaps where a hook could prevent secret exfiltration or destructive actions.
-- **CLAUDE.md safety instructions**: identify safety-relevant instructions (e.g. "never echo secrets") that are not backed by an enforced hook. These are suggestions, not controls — a prompt injection can bypass them.
-- **Skill permissions**: scan skill SKILL.md files for instructions that grant broad access (e.g. "run any command", "bypass checks"). Flag skills that could be exploited via prompt injection to escalate privileges.
-- **Memory exposure**: check whether memory files contain secrets, credentials, or sensitive information that could leak into future sessions.
-
-**What NOT to check:**
-
-- MCP server functionality (only credential storage).
-- Claude Code version currency (managed by Anthropic).
-
-## Output format
-
-For each domain, produce:
-
-1. **Status**: one-line summary (e.g. "3 critical, 2 high, 1 medium")
-2. **Critical**: issues requiring immediate action (exposed secrets, active vulnerabilities, disabled security features)
-3. **High**: issues that significantly increase attack surface (unpinned deps, unguarded tools, plaintext tokens in config, untrusted code running without isolation)
-4. **Medium**: gaps worth closing but not urgently exploitable (missing lockfiles, absent egress controls, single-profile browsing)
-5. **Low**: hardening recommendations (release age policies, additional hooks, hardware keys, Advanced Protection)
-
-For each finding, include:
-- Location (file path and line, or system setting)
-- What's wrong (be specific — "Slack token in plaintext at ~/.claude.json line 47", not "credentials could be more secure")
-- Remediation (concrete command or change)
-
-Never echo or paste the full secret value into the report. Redact secrets by default; mention the secret type, location, and at most a short fingerprint or prefix/suffix when needed to distinguish duplicates.
-
-## Final section
-
-End with an **overall risk posture** paragraph and offer to fix the critical and high findings.
+End with the material risk and coverage limits, plus prioritized do/skip/defer
+recommendations. If remediation was authorized, perform it within that scope
+and verify the reported behavior before claiming it resolved.

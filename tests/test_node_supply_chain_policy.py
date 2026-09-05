@@ -60,8 +60,8 @@ class NodeSupplyChainPolicyTests(unittest.TestCase):
 
     def test_security_audit_skills_prescribe_the_npm_setting(self):
         skill_paths = (
-            DOTFILES / "macos/.claude/skills/security-audit/SKILL.md",
-            DOTFILES / "macos/.codex/skills/security-audit/SKILL.md",
+            DOTFILES / "macos/.claude/skills/security-audit/references/supply-chain.md",
+            DOTFILES / "macos/.codex/skills/security-audit/references/supply-chain.md",
         )
         for skill_path in skill_paths:
             with self.subTest(skill=skill_path):

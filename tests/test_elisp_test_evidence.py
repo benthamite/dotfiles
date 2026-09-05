@@ -25,7 +25,7 @@ EVIDENCE_LIB = DOTFILES / "claude/hooks/lib-elisp-evidence.sh"
 def write_rebuild_emacsclient(path):
     """Disposable fake transport shared by the rebuild and live-verify tests."""
     path.write_text('''#!/usr/bin/env python3
-import base64, json, os, pathlib, sys
+import base64, json, os, pathlib, subprocess, sys
 args = " ".join(sys.argv[1:])
 for key in ("EMACSCLIENT_CALLED", "FAKE_EMACSCLIENT_LOG"):
     if os.environ.get(key):
@@ -73,6 +73,11 @@ elif "elpaca-rebuild-context-v1" in args:
 elif "unload-feature" in args:
     print("t")
 else:
+    if os.environ.get("FAKE_LIVE_EDIT_SOURCE"):
+        pathlib.Path(os.environ["FAKE_LIVE_EDIT_SOURCE"]).write_text("(provide 'live-changed)\\n")
+    if os.environ.get("FAKE_LIVE_COMMIT_REPO"):
+        subprocess.run(["git", "-C", os.environ["FAKE_LIVE_COMMIT_REPO"],
+                        "commit", "--allow-empty", "-qm", "fixture concurrent commit"], check=True)
     print(os.environ.get("FAKE_LIVE_RESULT", "t"))
 ''')
     path.chmod(0o755)
@@ -169,7 +174,16 @@ class BatchTestTests(unittest.TestCase):
         self.fake_bin = self.root / "bin"
         self.fake_bin.mkdir()
         emacsclient = self.fake_bin / "emacsclient"
-        emacsclient.write_text("#!/bin/sh\nprintf '\"test\"\\n'\n")
+        emacsclient.write_text(
+            "#!/usr/bin/env python3\n"
+            "import base64, json, os, sys\n"
+            "source = os.environ['FAKE_BATCH_SOURCE']\n"
+            "encode = lambda value: base64.b64encode(value.encode()).decode()\n"
+            "if 'elpaca-extras-resolve-package' in ' '.join(sys.argv):\n"
+            "    print(json.dumps('example:' + encode(source) + ':' + encode('example')))\n"
+            "else:\n"
+            "    print(json.dumps(encode(json.dumps({'id': 'example', 'source': source, 'builds': [], 'package_build': source + '/build'}))))\n"
+        )
         emacsclient.chmod(0o755)
         emacs = self.fake_bin / "emacs"
         emacs.write_text(
@@ -189,6 +203,7 @@ class BatchTestTests(unittest.TestCase):
         env["HOME"] = str(self.home)
         env["PATH"] = f"{self.fake_bin}:{env['PATH']}"
         env["ELISP_EVIDENCE_RECEIPT_DIR"] = str(self.receipt_dir)
+        env["FAKE_BATCH_SOURCE"] = str(self.source)
         if stale:
             env["FAKE_EMACS_STALE"] = "1"
         return env
@@ -196,8 +211,9 @@ class BatchTestTests(unittest.TestCase):
     def test_loads_canonical_standalone_source_and_emits_evidence(self):
         result = run([str(BATCH_TEST), "example"], env=self.environment())
         self.assertEqual(result.returncode, 0, result.stderr)
-        encoded_source = base64.b64encode(str(self.source / "example.el").encode()).decode()
-        encoded_source_dir = base64.b64encode(str(self.source).encode()).decode()
+        encoded_source = base64.b64encode(str((self.source / "example.el").resolve()).encode()).decode()
+        encoded_source_dir = base64.b64encode(str(self.source.resolve()).encode()).decode()
+        self.assertTrue(result.stdout.startswith("-Q\n--batch\n"))
         self.assertIn(encoded_source, result.stdout)
         self.assertIn(
             f"add-to-list 'load-path (decode-coding-string (base64-decode-string \"{encoded_source_dir}\")",
@@ -222,6 +238,259 @@ class BatchTestTests(unittest.TestCase):
 
 
 class ElispCheckEvidenceTests(unittest.TestCase):
+    def project_check_fixture(self, root, body="exit 0\n"):
+        repo = init_repo(root / "project", ".dir-locals.el")
+        check = repo / "check.sh"
+        check.write_text("#!/bin/sh\n" + body)
+        check.chmod(0o755)
+        subprocess.run(["git", "-C", str(repo), "add", "check.sh"], check=True)
+        subprocess.run(["git", "-C", str(repo), "commit", "-qm", "add check"], check=True)
+        return repo, check
+
+    def snapshot_fixture_environment(self, root, repo, action):
+        fake_bin = root / "bin"
+        fake_bin.mkdir()
+        real_git = run(["which", "git"]).stdout.strip()
+        git = fake_bin / "git"
+        git.write_text('''#!/usr/bin/env python3
+import os, pathlib, subprocess, sys
+real = os.environ["ELISP_FIXTURE_REAL_GIT"]
+args = sys.argv[1:]
+if "cat-file" in args and "--batch" in args:
+    if os.environ["ELISP_FIXTURE_CHECKOUT_ACTION"] == "fail":
+        sys.exit(42)
+    result = subprocess.run([real, *args], check=False)
+    if result.returncode:
+        sys.exit(result.returncode)
+    repo = pathlib.Path(os.environ["ELISP_FIXTURE_REPO"])
+    (repo / ".dir-locals.el").write_text("((nil . ((fill-column . 81))))\\n")
+    original_env = os.environ.copy()
+    original_env.pop("GIT_INDEX_FILE", None)
+    subprocess.run([real, "-C", str(repo), "add", ".dir-locals.el"],
+                   env=original_env, check=True)
+    sys.exit(0)
+os.execv(real, [real, *args])
+''')
+        git.chmod(0o755)
+        real_mktemp = run(["which", "mktemp"]).stdout.strip()
+        mktemp = fake_bin / "mktemp"
+        mktemp.write_text('''#!/usr/bin/env python3
+import os, subprocess, sys
+result = subprocess.run([os.environ["ELISP_FIXTURE_REAL_MKTEMP"], *sys.argv[1:]],
+                        text=True, capture_output=True)
+if result.returncode == 0:
+    with open(os.environ["ELISP_FIXTURE_ALLOCATION_LOG"], "a") as log:
+        log.write(result.stdout)
+print(result.stdout, end="")
+print(result.stderr, end="", file=sys.stderr)
+sys.exit(result.returncode)
+''')
+        mktemp.chmod(0o755)
+        scratch = root / "scratch"
+        scratch.mkdir()
+        env = evidence_environment(root / "receipts")
+        env.update(ELISP_FIXTURE_REAL_GIT=real_git,
+                   ELISP_FIXTURE_REPO=str(repo),
+                   ELISP_FIXTURE_CHECKOUT_ACTION=action,
+                   ELISP_FIXTURE_REAL_MKTEMP=real_mktemp,
+                   ELISP_FIXTURE_ALLOCATION_LOG=str(root / "allocations"),
+                   TMPDIR=str(scratch), PATH=f"{fake_bin}:{env['PATH']}")
+        return env
+
+    def test_index_change_during_materialization_cannot_certify_older_snapshot(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo, check = self.project_check_fixture(
+                root, "touch \"$ELISP_FIXTURE_CHECK_RAN\"\ngrep -q 'fill-column . 80' .dir-locals.el\n")
+            (repo / ".dir-locals.el").write_text("((nil . ((fill-column . 80))))\n")
+            subprocess.run(["git", "-C", str(repo), "add", ".dir-locals.el"], check=True)
+            env = self.snapshot_fixture_environment(root, repo, "advance")
+            marker = root / "check-ran"
+            env["ELISP_FIXTURE_CHECK_RAN"] = str(marker)
+            result = run([str(CHECK_EVIDENCE), "--staged", "file:.dir-locals.el",
+                          "--", str(check)], cwd=repo, env=env)
+            self.assertNotEqual(result.returncode, 0, result.stdout)
+            self.assertNotIn("ELISP_TEST_EVIDENCE_", result.stdout)
+            self.assertFalse(marker.exists(), "do not run a snapshot already known to be stale")
+            self.assertEqual(list((root / "scratch").iterdir()), [])
+            self.assertTrue((root / "allocations").read_text().strip())
+            self.assertTrue(all(not Path(path).exists() for path in (root / "allocations").read_text().splitlines()))
+
+    def test_executable_symlink_cannot_escape_owner_or_staged_snapshot(self):
+        for staged in (False, True):
+            with self.subTest(staged=staged), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                repo, check = self.project_check_fixture(root)
+                outside = root / "outside.sh"
+                outside.write_text("#!/bin/sh\ntouch \"$ELISP_FIXTURE_CHECK_RAN\"\n")
+                outside.chmod(0o755)
+                check.unlink()
+                check.symlink_to(outside)
+                subprocess.run(["git", "-C", str(repo), "add", "check.sh"], check=True)
+                marker = root / "escaped"
+                env = evidence_environment(root / "receipts")
+                env["ELISP_FIXTURE_CHECK_RAN"] = str(marker)
+                args = [str(CHECK_EVIDENCE)] + (["--staged"] if staged else [])
+                result = run(args + ["file:.dir-locals.el", "--", str(check)], cwd=repo, env=env)
+                self.assertNotEqual(result.returncode, 0, result.stdout)
+                self.assertFalse(marker.exists())
+                self.assertNotIn("ELISP_TEST_EVIDENCE_", result.stdout)
+
+    def test_staged_executable_symlink_is_rejected_when_worktree_file_is_regular(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo, check = self.project_check_fixture(root)
+            outside = root / "outside.sh"
+            outside.write_text("#!/bin/sh\ntouch \"$ELISP_FIXTURE_CHECK_RAN\"\n")
+            outside.chmod(0o755)
+            check.unlink()
+            check.symlink_to(outside)
+            subprocess.run(["git", "-C", str(repo), "add", "check.sh"], check=True)
+            check.unlink()
+            check.write_text("#!/bin/sh\nexit 0\n")
+            check.chmod(0o755)
+            marker = root / "escaped"
+            env = evidence_environment(root / "receipts")
+            env["ELISP_FIXTURE_CHECK_RAN"] = str(marker)
+            result = run([str(CHECK_EVIDENCE), "--staged", "file:.dir-locals.el",
+                          "--", str(check)], cwd=repo, env=env)
+            self.assertNotEqual(result.returncode, 0, result.stdout)
+            self.assertFalse(marker.exists())
+            self.assertNotIn("ELISP_TEST_EVIDENCE_", result.stdout)
+
+    def test_failed_snapshot_materialization_cleans_temporary_artifacts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo, check = self.project_check_fixture(root)
+            env = self.snapshot_fixture_environment(root, repo, "fail")
+            result = run([str(CHECK_EVIDENCE), "--staged", "file:.dir-locals.el",
+                          "--", str(check)], cwd=repo, env=env)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(list((root / "scratch").iterdir()), [])
+            self.assertTrue((root / "allocations").read_text().strip())
+            self.assertTrue(all(not Path(path).exists() for path in (root / "allocations").read_text().splitlines()))
+
+    def test_staged_source_symlink_cannot_read_outside_snapshot(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo, check = self.project_check_fixture(root, "grep -q 'fill-column . 99' .dir-locals.el\n")
+            outside = root / "outside.el"
+            outside.write_text("((nil . ((fill-column . 99))))\n")
+            source = repo / ".dir-locals.el"
+            source.unlink()
+            source.symlink_to(outside)
+            subprocess.run(["git", "-C", str(repo), "add", ".dir-locals.el"], check=True)
+            result = run([str(CHECK_EVIDENCE), "--staged", "file:.dir-locals.el",
+                          "--", str(check)], cwd=repo,
+                         env=evidence_environment(root / "receipts"))
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("symlink escapes", result.stderr)
+            self.assertNotIn("ELISP_TEST_EVIDENCE_", result.stdout)
+
+    def test_staged_internal_source_symlink_reads_indexed_target(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo, check = self.project_check_fixture(root, "grep -q 'fill-column . 80' .dir-locals.el\n")
+            source = repo / ".dir-locals.el"
+            source.unlink()
+            source.symlink_to("options.el")
+            options = repo / "options.el"
+            options.write_text("((nil . ((fill-column . 80))))\n")
+            subprocess.run(["git", "-C", str(repo), "add", ".dir-locals.el", "options.el"], check=True)
+            options.write_text("((nil . ((fill-column . 99))))\n")
+            result = run([str(CHECK_EVIDENCE), "--staged", "file:.dir-locals.el",
+                          "--", str(check)], cwd=repo,
+                         env=evidence_environment(root / "receipts"))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("ELISP_TEST_EVIDENCE_", result.stdout)
+
+    def test_staged_snapshot_supports_split_index(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo, check = self.project_check_fixture(root, "grep -q 'fill-column . 80' .dir-locals.el\n")
+            source = repo / ".dir-locals.el"
+            source.write_text("((nil . ((fill-column . 80))))\n")
+            subprocess.run(["git", "-C", str(repo), "add", ".dir-locals.el"], check=True)
+            subprocess.run(["git", "-C", str(repo), "update-index", "--split-index"], check=True)
+            source.write_text("((nil . ((fill-column . 99))))\n")
+            result = run([str(CHECK_EVIDENCE), "--staged", "file:.dir-locals.el",
+                          "--", str(check)], cwd=repo,
+                         env=evidence_environment(root / "receipts"))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn(run([str(REVISION_HELPER), "--index", str(repo)]).stdout.strip(), result.stdout)
+
+    def test_output_allocation_failure_cleans_materialized_snapshot(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo, check = self.project_check_fixture(root)
+            fake_bin = root / "bin"
+            fake_bin.mkdir()
+            real_mktemp = run(["which", "mktemp"]).stdout.strip()
+            mktemp = fake_bin / "mktemp"
+            mktemp.write_text('''#!/usr/bin/env python3
+import os, subprocess, sys
+if any("/elisp-check." in arg for arg in sys.argv[1:]):
+    sys.exit(42)
+real = os.environ["ELISP_FIXTURE_REAL_MKTEMP"]
+result = subprocess.run([real, *sys.argv[1:]], text=True, capture_output=True)
+if result.returncode == 0:
+    with open(os.environ["ELISP_FIXTURE_ALLOCATION_LOG"], "a") as log:
+        log.write(result.stdout)
+print(result.stdout, end="")
+print(result.stderr, end="", file=sys.stderr)
+sys.exit(result.returncode)
+''')
+            mktemp.chmod(0o755)
+            scratch = root / "scratch"
+            scratch.mkdir()
+            env = evidence_environment(root / "receipts")
+            env.update(ELISP_FIXTURE_REAL_MKTEMP=real_mktemp,
+                       ELISP_FIXTURE_ALLOCATION_LOG=str(root / "allocations"),
+                       TMPDIR=str(scratch), PATH=f"{fake_bin}:{env['PATH']}")
+            result = run([str(CHECK_EVIDENCE), "--staged", "file:.dir-locals.el",
+                          "--", str(check)], cwd=repo, env=env)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(list(scratch.iterdir()), [])
+            self.assertTrue((root / "allocations").read_text().strip())
+            self.assertTrue(all(not Path(path).exists() for path in (root / "allocations").read_text().splitlines()))
+
+    def test_staged_materialization_uses_raw_blobs_without_smudge_filters(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo, check = self.project_check_fixture(root, "grep -q 'fill-column . 80' .dir-locals.el\n")
+            (repo / ".dir-locals.el").write_text("((nil . ((fill-column . 80))))\n")
+            (repo / ".gitattributes").write_text(".dir-locals.el filter=fixture\n")
+            subprocess.run(["git", "-C", str(repo), "add", ".dir-locals.el", ".gitattributes"], check=True)
+            smudge = root / "smudge.sh"
+            smudge.write_text("#!/bin/sh\ntouch \"$ELISP_FIXTURE_SMUDGE_RAN\"\nsed 's/80/99/g'\n")
+            smudge.chmod(0o755)
+            subprocess.run(["git", "-C", str(repo), "config", "filter.fixture.smudge", str(smudge)], check=True)
+            marker = root / "smudge-ran"
+            env = evidence_environment(root / "receipts")
+            env["ELISP_FIXTURE_SMUDGE_RAN"] = str(marker)
+            result = run([str(CHECK_EVIDENCE), "--staged", "file:.dir-locals.el",
+                          "--", str(check)], cwd=repo, env=env)
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            self.assertFalse(marker.exists(), "snapshot creation must not execute configured smudge filters")
+            self.assertIn(run([str(REVISION_HELPER), "--index", str(repo)]).stdout.strip(), result.stdout)
+
+    def test_staged_snapshot_uses_private_tmp_even_when_TMPDIR_is_inside_repo(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo, check = self.project_check_fixture(root, "pwd > \"$ELISP_FIXTURE_RUN_ROOT\"\n")
+            unsafe = repo / "scratch"
+            unsafe.mkdir()
+            recorded = root / "run-root"
+            env = evidence_environment(root / "receipts")
+            env.update(TMPDIR=str(unsafe), ELISP_FIXTURE_RUN_ROOT=str(recorded))
+            result = run([str(CHECK_EVIDENCE), "--staged", "file:.dir-locals.el",
+                          "--", str(check)], cwd=repo, env=env)
+            self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+            snapshot = Path(recorded.read_text().strip())
+            self.assertEqual(snapshot.parent.parent.resolve(), Path("/tmp").resolve())
+            self.assertFalse(snapshot.exists())
+            self.assertEqual(list(unsafe.iterdir()), [])
+
     def test_project_check_emits_file_labeled_evidence(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -1173,6 +1442,46 @@ class ElispLiveVerifyTests(unittest.TestCase):
             result.stdout,
             r"(?m)^ELISP_LIVE_EVIDENCE_V2:[^:]+:[^:]+:[0-9a-f]{40,64}:receipt\.[A-Za-z0-9]+$",
         )
+
+    def test_normal_package_resolves_from_a_nonrepository_working_directory(self):
+        result = run([str(LIVE_VERIFY), "example", "--", "(example-status)"],
+                     cwd=self.root, env=self.environment())
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("ELISP_LIVE_EVIDENCE_V2:", result.stdout)
+
+    def test_source_edit_during_live_expression_emits_no_commit_evidence(self):
+        env = self.environment()
+        env["FAKE_LIVE_EDIT_SOURCE"] = str(self.repo / "example.el")
+        result = run([str(LIVE_VERIFY), "example", "--", "(example-status)"],
+                     cwd=self.repo, env=env)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn("ELISP_LIVE_EVIDENCE_", result.stdout)
+
+    def test_commit_change_during_live_expression_emits_no_stale_evidence(self):
+        env = self.environment()
+        env["FAKE_LIVE_COMMIT_REPO"] = str(self.repo)
+        result = run([str(LIVE_VERIFY), "example", "--", "(example-status)"],
+                     cwd=self.repo, env=env)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn("ELISP_LIVE_EVIDENCE_", result.stdout)
+
+    def test_new_untracked_source_during_live_expression_is_not_committed_evidence(self):
+        env = self.environment()
+        env["FAKE_LIVE_EDIT_SOURCE"] = str(self.repo / "new-library.el")
+        result = run([str(LIVE_VERIFY), "example", "--", "(example-status)"],
+                     cwd=self.repo, env=env)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn("ELISP_LIVE_EVIDENCE_", result.stdout)
+
+    def test_unrelated_non_source_edit_during_live_expression_is_preserved(self):
+        env = self.environment()
+        unrelated = self.repo / "unrelated.md"
+        env["FAKE_LIVE_EDIT_SOURCE"] = str(unrelated)
+        result = run([str(LIVE_VERIFY), "example", "--", "(example-status)"],
+                     cwd=self.repo, env=env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(unrelated.exists())
+        self.assertIn("ELISP_LIVE_EVIDENCE_", result.stdout)
 
     def test_repository_label_uses_package_id_but_remains_evidence_label(self):
         repo = init_repo(self.root / "emacs-slack", "slack.el")

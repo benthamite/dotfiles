@@ -21,11 +21,10 @@ script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
 dotfiles_root=$(cd -- "$script_dir/../.." && pwd)
 # shellcheck source=../hooks/lib-elisp-evidence.sh
 source "$dotfiles_root/claude/hooks/lib-elisp-evidence.sh"
-repo=$(git rev-parse --show-toplevel)
 verification_label=$label
 package_id=""
 case "$label" in
-  file:* | deleted:*) ;;
+  file:* | deleted:*) repo=$(git rev-parse --show-toplevel) ;;
   *)
     resolution=$(DOTFILES_ROOT="$dotfiles_root" \
       "$dotfiles_root/bin/elpaca-package-resolve" "$label")
@@ -90,7 +89,8 @@ fi
 # The evidence names a commit. Do not certify a different staged or working
 # source version under that commit identity.
 if ! git -C "$repo" diff --quiet -- "$target_pathspec" ||
-   ! git -C "$repo" diff --cached --quiet -- "$target_pathspec"; then
+   ! git -C "$repo" diff --cached --quiet -- "$target_pathspec" ||
+   [ -n "$(git -C "$repo" ls-files --others --exclude-standard -- "$target_pathspec")" ]; then
   echo "Live verification requires committed, unchanged source for $label" >&2
   exit 1
 fi
@@ -156,6 +156,17 @@ live_result=$(timeout 30 emacsclient --eval "$expression")
 printf '%s\n' "$live_result"
 if [ -z "$live_result" ] || [ "$live_result" = nil ]; then
   echo "The live verification expression returned nil for $label" >&2
+  exit 1
+fi
+
+# The expression and concurrent writers can change the source after rebuild.
+# Do not attach an old commit identity to those unverified bytes.
+commit_after=$(git -C "$repo" rev-parse HEAD)
+if [ "$commit_after" != "$commit" ] ||
+   ! git -C "$repo" diff --quiet -- "$target_pathspec" ||
+   ! git -C "$repo" diff --cached --quiet -- "$target_pathspec" ||
+   [ -n "$(git -C "$repo" ls-files --others --exclude-standard -- "$target_pathspec")" ]; then
+  echo "Live verification rejected a source or HEAD change during the check" >&2
   exit 1
 fi
 

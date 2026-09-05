@@ -53,32 +53,124 @@ case "$check_path" in
     ;;
 esac
 check_relative=${check_path#"$repo"/}
-if [ ! -x "$check_path" ] ||
+if [ -L "$check_path" ] || [ ! -f "$check_path" ] || [ ! -x "$check_path" ] ||
    ! git -C "$repo" ls-files --error-unmatch -- "$check_relative" >/dev/null 2>&1; then
-  echo "Evidence command must be tracked and executable: $check_relative" >&2
+  echo "Evidence command must be a tracked regular executable, not a symlink: $check_relative" >&2
   exit 2
 fi
 run_root="$repo"
 run_command="$check_path"
 snapshot_root=""
-revision_arguments=("$repo")
-if [ "$staged" = true ]; then
-  snapshot_root=$(mktemp -d "${TMPDIR:-/tmp}/elisp-index.XXXXXX")
-  git -C "$repo" checkout-index --all --prefix="$snapshot_root/"
-  run_root="$snapshot_root"
-  run_command="$snapshot_root/$check_relative"
-  revision_arguments=(--index "$repo")
-fi
-output_file=$(mktemp "${TMPDIR:-/tmp}/elisp-check.XXXXXX")
+output_file=""
 cleanup() {
-  rm -f "$output_file"
+  if [ -n "$output_file" ]; then
+    rm -f "$output_file"
+  fi
   if [ -n "$snapshot_root" ] && [ -d "$snapshot_root" ]; then
     find "$snapshot_root" -depth -delete 2>/dev/null || true
   fi
 }
+# Allocation and checkout failures must clean up too, before a check is run.
 trap cleanup EXIT
 
-revision_before=$("$revision_helper" "${revision_arguments[@]}")
+revision_arguments=("$repo")
+if [ "$staged" = true ]; then
+  snapshot_root=$(mktemp -d "/tmp/elisp-index.XXXXXX")
+  snapshot_index="$snapshot_root/index"
+  run_root="$snapshot_root/worktree"
+  mkdir "$run_root"
+  # Freeze one tree with Git instead of copying an index that may depend on a
+  # shared split-index file. The revision and raw blobs use this same tree.
+  snapshot_tree=$(git -C "$repo" write-tree)
+  GIT_INDEX_FILE="$snapshot_index" git -C "$repo" read-tree "$snapshot_tree"
+  revision_before=$(GIT_INDEX_FILE="$snapshot_index" "$revision_helper" --index "$repo")
+  # checkout-index would run smudge filters and apply encoding/EOL attributes.
+  # Materialize raw blobs instead, without executing repository filters.
+  python3 - "$repo" "$snapshot_tree" "$run_root" <<'PY'
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+repo, tree, destination = sys.argv[1:]
+root = Path(destination)
+try:
+    listing = subprocess.check_output(["git", "-C", repo, "ls-tree", "-rz", "--full-tree", tree])
+    links = []
+    with subprocess.Popen(["git", "-C", repo, "cat-file", "--batch"],
+                          stdin=subprocess.PIPE, stdout=subprocess.PIPE) as blobs:
+        for record in listing.split(b"\0"):
+            if not record:
+                continue
+            metadata, name = record.split(b"\t", 1)
+            mode, kind, identity = metadata.split()
+            parts = name.split(b"/")
+            if any(part in (b"", b".", b"..") for part in parts):
+                raise ValueError("invalid indexed path")
+            path = root.joinpath(*(os.fsdecode(part) for part in parts))
+            if mode == b"160000" and kind == b"commit":
+                path.mkdir(parents=True, exist_ok=True)
+                continue
+            if kind != b"blob" or mode not in (b"100644", b"100755", b"120000"):
+                raise ValueError("unsupported indexed entry")
+            blobs.stdin.write(identity + b"\n")
+            blobs.stdin.flush()
+            header = blobs.stdout.readline().split()
+            if len(header) != 3 or header[:2] != [identity, b"blob"] or not header[2].isdigit():
+                raise ValueError("invalid indexed blob response")
+            content = blobs.stdout.read(int(header[2]))
+            if len(content) != int(header[2]) or blobs.stdout.read(1) != b"\n":
+                raise ValueError("incomplete indexed blob")
+            path.parent.mkdir(parents=True, exist_ok=True)
+            if mode == b"120000":
+                links.append((path, os.fsdecode(content)))
+            else:
+                with path.open("xb") as stream:
+                    stream.write(content)
+                path.chmod(0o755 if mode == b"100755" else 0o644)
+        blobs.stdin.close()
+        if blobs.wait() != 0:
+            raise ValueError("cannot read indexed blobs")
+    # Create links last so no blob write can traverse an indexed symlink.
+    for path, target in links:
+        path.symlink_to(target)
+except (OSError, ValueError, subprocess.SubprocessError):
+    print("Cannot materialize the raw indexed snapshot", file=sys.stderr)
+    sys.exit(1)
+PY
+  run_command="$run_root/$check_relative"
+  revision_arguments=(--index "$repo")
+  if [ "$("$revision_helper" "${revision_arguments[@]}")" != "$revision_before" ]; then
+    echo "elisp-check-evidence rejected an index change during snapshot creation" >&2
+    exit 1
+  fi
+  if [ -L "$run_command" ] || [ ! -f "$run_command" ] || [ ! -x "$run_command" ]; then
+    echo "Staged evidence command must be a regular executable, not a symlink: $check_relative" >&2
+    exit 2
+  fi
+  # Indexed inputs must not redirect the check into the original worktree or
+  # another external directory. Internal snapshot links remain supported.
+  python3 - "$run_root" <<'PY'
+import os
+from pathlib import Path
+import sys
+
+root = Path(sys.argv[1]).resolve()
+for directory, directories, files in os.walk(root, followlinks=False):
+    for name in directories + files:
+        path = Path(directory) / name
+        if path.is_symlink():
+            try:
+                path.resolve().relative_to(root)
+            except (OSError, RuntimeError, ValueError):
+                print(f"Staged snapshot symlink escapes the repository: {path.relative_to(root)}",
+                      file=sys.stderr)
+                sys.exit(2)
+PY
+else
+  revision_before=$("$revision_helper" "${revision_arguments[@]}")
+fi
+output_file=$(mktemp "/tmp/elisp-check.XXXXXX")
 
 set +e
 (cd -- "$run_root" && "$run_command" "$@") >"$output_file" 2>&1

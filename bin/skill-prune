@@ -160,10 +160,10 @@ def iter_jsonl(paths: list[Path], needles: tuple[str, ...] = ()):
                         continue
                     try:
                         yield path, json.loads(line)
-                    except json.JSONDecodeError:
-                        continue
-        except OSError:
-            continue
+                    except json.JSONDecodeError as error:
+                        raise UsageEvidenceError(f"Cannot parse usage record in {path}") from error
+        except OSError as error:
+            raise UsageEvidenceError(f"Cannot read usage history: {path}") from error
 
 
 def text_parts(value) -> list[str]:
@@ -234,8 +234,32 @@ def note_match(last_used: dict[str, dict[str, float]], tool: str, name: str, tim
         last_used[tool][name] = timestamp
 
 
-def scan_claude(skill_names: set[str], cutoff_ts: float, last_used: dict[str, dict[str, float]]) -> None:
-    root = Path.home() / ".claude" / "projects"
+class UsageEvidenceError(ValueError):
+    """Incomplete history cannot establish that a skill is unused."""
+
+
+def account_homes(tool: str) -> list[Path]:
+    """Read the literal account registry in the canonical Emacs configuration."""
+    source = (ROOT / "emacs/config.org").read_text()
+    match = re.search(r"\(agent-" + tool + r"-accounts\s+'\((.*?)\)\)", source, re.S)
+    if not match:
+        raise UsageEvidenceError(f"Cannot read {tool} account registry in emacs/config.org")
+    # Only the two registry forms in use are accepted: dotted pairs and
+    # :home/:pool plists. Unknown expressions must not omit an account silently.
+    body = match.group(1) + ")"
+    entry = re.compile(r'\("[^"\\]+"\s+(?:\.\s*|:home\s*)"([^"\\]+)"(?:\s+:pool\s+"[^"\\]+")?\)')
+    matches = list(entry.finditer(body))
+    if not matches or entry.sub("", body).strip():
+        raise UsageEvidenceError(f"Unsupported {tool} account registry syntax")
+    values = [str(Path.home() / f".{tool}"), *(m.group(1) for m in matches)]
+    active = os.environ.get("CLAUDE_CONFIG_DIR" if tool == "claude" else "CODEX_HOME")
+    if active:
+        values.append(active)
+    return list(dict.fromkeys(Path(value).expanduser().resolve() for value in values))
+
+
+def scan_claude(skill_names: set[str], cutoff_ts: float, last_used: dict[str, dict[str, float]], home: Path | None = None) -> None:
+    root = (home or Path.home() / ".claude") / "projects"
     if not root.exists():
         return
     files = [path for path in root.rglob("*.jsonl") if path.stat().st_mtime >= cutoff_ts]
@@ -263,8 +287,9 @@ def scan_claude(skill_names: set[str], cutoff_ts: float, last_used: dict[str, di
                 note_match(last_used, "claude", name, timestamp)
 
 
-def scan_codex_rollouts(skill_names: set[str], cutoff_ts: float, last_used: dict[str, dict[str, float]]) -> None:
-    roots = [Path.home() / ".codex" / "sessions", Path.home() / ".codex" / "archived_sessions"]
+def scan_codex_rollouts(skill_names: set[str], cutoff_ts: float, last_used: dict[str, dict[str, float]], home: Path | None = None) -> None:
+    home = home or Path.home() / ".codex"
+    roots = [home / "sessions", home / "archived_sessions"]
     files: list[Path] = []
     for root in roots:
         if root.exists():
@@ -294,12 +319,12 @@ def scan_codex_rollouts(skill_names: set[str], cutoff_ts: float, last_used: dict
                 note_match(last_used, "codex", name, timestamp)
 
 
-def scan_codex_sqlite(skill_names: set[str], cutoff_ts: float, last_used: dict[str, dict[str, float]]) -> None:
-    db = Path.home() / ".codex" / "logs_2.sqlite"
+def scan_codex_sqlite(skill_names: set[str], cutoff_ts: float, last_used: dict[str, dict[str, float]], home: Path | None = None) -> None:
+    db = (home or Path.home() / ".codex") / "logs_2.sqlite"
     if not db.exists():
         return
     try:
-        conn = sqlite3.connect(db)
+        conn = sqlite3.connect(db.as_uri() + "?mode=ro", uri=True)
         rows = conn.execute(
             """select ts, feedback_log_body from logs
                where ts >= ?
@@ -313,8 +338,8 @@ def scan_codex_sqlite(skill_names: set[str], cutoff_ts: float, last_used: dict[s
                 continue
             for name in announced_skill_names(body, skill_names) | explicit_skill_names(body, skill_names):
                 note_match(last_used, "codex", name, float(timestamp))
-    except sqlite3.Error:
-        return
+    except sqlite3.Error as error:
+        raise UsageEvidenceError(f"Cannot read Codex usage database: {db}") from error
     finally:
         try:
             conn.close()
@@ -323,12 +348,25 @@ def scan_codex_sqlite(skill_names: set[str], cutoff_ts: float, last_used: dict[s
 
 
 def scan_usage(skills: list[Skill], days: int) -> dict[str, dict[str, float]]:
+    try:
+        return _scan_usage(skills, days)
+    except OSError as error:
+        raise UsageEvidenceError("Cannot read configured account usage evidence") from error
+
+
+def _scan_usage(skills: list[Skill], days: int) -> dict[str, dict[str, float]]:
     cutoff_ts = datetime.now(timezone.utc).timestamp() - days * 86400
     names = {skill.name for skill in skills}
     last_used = {"claude": {}, "codex": {}}
-    scan_claude(names, cutoff_ts, last_used)
-    scan_codex_rollouts(names, cutoff_ts, last_used)
-    scan_codex_sqlite(names, cutoff_ts, last_used)
+    for home in account_homes("claude"):
+        if not (home / "projects").is_dir():
+            raise UsageEvidenceError(f"Claude history is unavailable: {home / 'projects'}")
+        scan_claude(names, cutoff_ts, last_used, home)
+    for home in account_homes("codex"):
+        if not any((home / name).exists() for name in ("sessions", "archived_sessions", "logs_2.sqlite")):
+            raise UsageEvidenceError(f"Codex history is unavailable: {home}")
+        scan_codex_rollouts(names, cutoff_ts, last_used, home)
+        scan_codex_sqlite(names, cutoff_ts, last_used, home)
     return last_used
 
 
@@ -662,4 +700,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except UsageEvidenceError as error:
+        print(f"Incomplete usage evidence; no stale-skill decision made: {error}", file=sys.stderr)
+        sys.exit(1)

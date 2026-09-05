@@ -3,11 +3,15 @@ from __future__ import annotations
 import importlib.machinery
 import importlib.util
 import json
+import os
+import sqlite3
 import sys
 import tempfile
 import tomllib
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
+from unittest import mock
 
 
 DOTFILES = Path(__file__).resolve().parents[1]
@@ -26,6 +30,74 @@ class SkillPruneTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.module = load_script("skill_prune_script", DOTFILES / "bin" / "skill-prune")
+
+    def test_account_registry_and_active_home_are_deduplicated(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "emacs").mkdir()
+            account = root / "account"
+            account.mkdir()
+            alias = root / "alias"
+            alias.symlink_to(account, target_is_directory=True)
+            (root / "emacs/config.org").write_text(
+                f'(agent-claude-accounts \'(("first" . "{account}") ("alias" . "{alias}")))\n'
+                f'(agent-codex-accounts \'(("work" :home "{account}" :pool "pool")))\n'
+            )
+            with mock.patch.object(self.module, "ROOT", root), \
+                 mock.patch.dict(os.environ, {"CLAUDE_CONFIG_DIR": str(alias), "CODEX_HOME": str(account)}, clear=True):
+                for tool in ("claude", "codex"):
+                    homes = self.module.account_homes(tool)
+                    self.assertEqual(homes.count(account.resolve()), 1)
+                    self.assertEqual(len(homes), 2)
+
+    def test_all_collectors_count_alternate_account_usage(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            claude = root / "claude-work"
+            codex = root / "codex-work"
+            (claude / "projects").mkdir(parents=True)
+            (codex / "sessions").mkdir(parents=True)
+            now = datetime.now(timezone.utc)
+            (claude / "projects/session.jsonl").write_text(json.dumps({
+                "timestamp": now.isoformat(), "type": "assistant",
+                "message": {"content": [{"type": "tool_use", "name": "Skill", "input": {"skill": "claude-example"}}]},
+            }) + "\n")
+            (codex / "sessions/session.jsonl").write_text(json.dumps({
+                "timestamp": now.isoformat(), "payload": {"role": "assistant",
+                    "content": "Using rollout-example skill from /codex/skills/rollout-example/SKILL.md"},
+            }) + "\n")
+            with sqlite3.connect(codex / "logs_2.sqlite") as connection:
+                connection.execute("CREATE TABLE logs (ts INTEGER, feedback_log_body TEXT)")
+                connection.execute("INSERT INTO logs VALUES (?, ?)", (int(now.timestamp()),
+                    "Using sqlite-example skill from /codex/skills/sqlite-example/SKILL.md"))
+            skills = [self.module.Skill(name, None, None, "paired")
+                      for name in ("claude-example", "rollout-example", "sqlite-example")]
+            with mock.patch.object(self.module, "account_homes", side_effect=lambda tool: [claude if tool == "claude" else codex]):
+                result = self.module.scan_usage(skills, 60)
+            self.assertIn("claude-example", result["claude"])
+            self.assertIn("rollout-example", result["codex"])
+            self.assertIn("sqlite-example", result["codex"])
+
+    def test_missing_account_history_prevents_apply(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            with mock.patch.object(self.module, "load_skills", return_value=[]), \
+                 mock.patch.object(self.module, "load_disabled", return_value={}), \
+                 mock.patch.object(self.module, "account_homes", return_value=[Path(temporary)]), \
+                 mock.patch.object(self.module, "save_disabled") as save, \
+                 mock.patch.object(self.module, "install") as install:
+                with self.assertRaisesRegex(self.module.UsageEvidenceError, "unavailable"):
+                    self.module.apply(type("Args", (), {"days": 60})())
+                save.assert_not_called()
+                install.assert_not_called()
+
+    def test_unrecognized_registry_is_not_silently_omitted(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "emacs").mkdir()
+            (root / "emacs/config.org").write_text('(agent-claude-accounts \'(("work" . (getenv "ACCOUNT"))))')
+            with mock.patch.object(self.module, "ROOT", root):
+                with self.assertRaises(self.module.UsageEvidenceError):
+                    self.module.account_homes("claude")
 
     def test_strip_codex_block_removes_a_complete_generated_region(self):
         managed = "/repo/.codex/skills/example/SKILL.md"

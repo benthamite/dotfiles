@@ -195,6 +195,11 @@ requested from Codex. It preserves documented endpoint paths, uses an explicit
 secret resolver, and distinguishes configured, authenticated, and tool-tested
 states before reporting readiness.
 
+The project-local =optimize-agent-instructions= verifies instruction placement
+for each target runtime before externalizing guidance. It preserves routed
+references and useful rules, and does not assume Claude imports or path rules
+load in Codex.
+
 The programmatic =open-session-log= helper resolves the current runtime's
 session identity and exact transcript in its active account root. It opens
 that path in Emacs and checks the rendered buffer's identity before reporting

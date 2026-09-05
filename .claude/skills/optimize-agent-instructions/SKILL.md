@@ -9,13 +9,20 @@ argument-choices: "--accept"
 
 Analyze and rewrite the project's agent instruction files to maximize agent instruction-following while minimizing context waste. Treat flags such as `--accept` as flags, not paths. If a non-flag path is given in `$ARGUMENTS`, use that file; otherwise, look for `CLAUDE.md or AGENTS.md` in the current project root (or `.claude/CLAUDE.md or AGENTS.md`).
 
-Use this skill for persistent agent instructions: `CLAUDE.md or AGENTS.md`, `.claude/CLAUDE.md or AGENTS.md`, `CLAUDE.local.md`, and `.claude/rules/**/*.md`. If `--accept` is present in `$ARGUMENTS`, apply all high-confidence changes without asking for confirmation. Otherwise, present the analysis and proposed rewrite, then wait for approval.
+Use this skill for persistent agent instructions: `CLAUDE.md`, `AGENTS.md`,
+`.claude/CLAUDE.md`, `CLAUDE.local.md`, and `.claude/rules/**/*.md`, according
+to the target runtime. `--accept` or an explicit request to apply the changes
+authorizes high-confidence edits. A review-only request stays read-only.
 
 Use the canonical placement policy in `agents/instruction-placement.org` from the dotfiles repo root when deciding whether guidance belongs in an instruction file, skill, hook, linter, reference doc, or project brief.
 
 ## Background: why this matters
 
-Claude Code or Codex loads CLAUDE.md or AGENTS.md files, imports, local memories, and rules as context rather than enforced configuration. They are high-leverage because they shape every relevant session, but the instruction budget is finite: every line in persistent instructions competes for attention with the system prompt and with every other rule, and specific stale or vague instructions degrade behavior more than volume does.
+Instruction files provide context rather than mechanically enforced
+configuration. Their loading rules differ by runtime: Claude's `@` imports
+and `.claude/rules` are not native Codex instruction mechanisms. Check the
+target tool's actual loading path before moving guidance. Stale or vague
+instructions can degrade behavior more than volume alone does.
 
 Long, vague, stale, or non-universal instructions consume context and reduce adherence. The goal is not to make instructions clever; it is to keep them scoped, concrete, current, and easy for the agent to verify.
 
@@ -23,7 +30,9 @@ Long, vague, stale, or non-universal instructions consume context and reduce adh
 
 1. Read the target CLAUDE.md or AGENTS.md in full
 2. Resolve and read all `@`-imported files, noting import depth and size
-3. Read the Claude Code or Codex instruction sources that affect the target: `.claude/CLAUDE.md or AGENTS.md` if separate, `CLAUDE.local.md` if present, and `.claude/rules/**/*.md` if present
+3. Read applicable ancestor and nested instruction files for each supported
+   runtime, including Claude local/rules files and Codex `AGENTS.md` files as
+   relevant. Record which tool actually loads each source.
 4. Treat local or personal instruction files as private context: use them to detect conflicts, but do not quote sensitive content or copy local-only rules into shared files unless the user explicitly targets those files
 5. Count:
    - Total lines
@@ -36,9 +45,12 @@ For each discrete instruction or rule, evaluate against these criteria. Use suba
 
 ### Criterion 1: Universal applicability
 
-"Would this instruction be useful in every single session, regardless of what task the user is working on?"
+"Is this important in nearly every session in this file's scope?"
 
-Instructions that only matter for specific tasks (e.g., database schema conventions, deployment procedures, API endpoint patterns) should be moved to `.claude/rules/` files with `paths` frontmatter, skills, or referenced docs — not in the root instruction file or AGENTS.md. The root file must contain only universally applicable guidance.
+Keep the project map, hard invariants, and useful routing in root instructions.
+Consider moving detailed task-specific procedures into a supported path-scoped
+rule, skill, or reference. Preserve a discoverable route and verify that each
+supported runtime still receives the guidance where needed.
 
 ### Criterion 2: Specificity and verifiability
 
@@ -53,19 +65,27 @@ Vague instructions waste budget and may be interpreted differently every time. E
 
 "Does this embed information that exists authoritatively elsewhere?"
 
-Prefer `@path/to/file` imports or `file:line` references to authoritative source code over pasting snippets that become stale. CLAUDE.md or AGENTS.md should point to the truth, not duplicate it.
+Prefer a concise routed link to authoritative content over a copy that can
+become stale. Claude `@` imports load their target into context; they reduce
+duplication but do not provide on-demand context savings. A plain link with a
+clear read-when condition can serve on-demand disclosure in either runtime.
 
 ### Criterion 4: Linter's job
 
 "Is this a code style rule that a linter or formatter could enforce deterministically?"
 
-Never send an LLM to do a linter's job. LLMs are comparably expensive and incredibly slow compared to traditional tools for style enforcement. Style rules in CLAUDE.md or AGENTS.md bloat context and degrade instruction-following across the board. Move these to linter configs, pre-commit hooks, or Claude Code or Codex stop hooks.
+Prefer existing deterministic enforcement for mechanical rules. Do not remove
+a useful instruction because a linter or hook could hypothetically replace it.
+First establish actual coverage across tools and runtimes. New enforcement is
+a separate implementation change and must fit the requested scope.
 
 ### Criterion 5: Default behavior
 
 "Would the active agent do this anyway without being told?"
 
-the active agent system prompt and training already establish many behaviors. Instructions that restate defaults consume tokens without changing anything. If removing the instruction wouldn't change behavior, it's dead weight.
+Check active instructions and observed behavior before treating a preference as
+a default. Model/runtime defaults vary; predicted behavior alone is insufficient
+reason to remove a useful user requirement.
 
 Examples of likely defaults: don't mix unrelated changes in a commit, use descriptive variable names, don't introduce security vulnerabilities.
 
@@ -73,17 +93,25 @@ Examples of likely defaults: don't mix unrelated changes in a commit, use descri
 
 "Does this contradict another instruction in CLAUDE.md or AGENTS.md, rules files, or the system prompt?"
 
-Contradictions cause arbitrary behavior — the active agent picks one at random. Review for direct contradictions, semantic tension, and instructions that give different guidance for the same situation.
+Review direct contradictions, semantic tension, and instructions that give
+different guidance for the same situation. Apply instruction precedence and
+distinguish intentional overrides from accidental conflict.
 
 ### Criterion 7: Operational vs. reference
 
 "Is this operational (trigger → action) or reference (a fact to look up)?"
 
-Operational content — procedures the agent must execute correctly (commands, workflows, behavioral rules shaped like *"when the user says X, do Y"*) — belongs in a **skill**, not an `@`-import or linked doc. Skills load their description into the system reminder, match against the user's request via keyword triggers, and carry a "BLOCKING REQUIREMENT" to invoke when they match. `@`-imports and linked docs expand inline but can be skimmed past, especially when the user's phrasing doesn't explicitly cue the reference.
+Repeatable task workflows often belong in skills; stable project invariants and
+short required verification commands may belong in the project instructions.
+Skill discovery depends on the runtime, metadata, and invocation policy. It is
+not a guaranteed keyword hook, and an explicit-only skill must remain explicit.
 
-Reference content — facts, lookups, infrequent data the agent retrieves on demand (calendar links, token rotation commands, architectural background) — belongs in an `@`-import or linked doc. No procedure to trigger; the agent reads when it needs the info.
+Reference content — facts, lookups, and architectural background — can live in a
+linked document with a clear condition for reading it. Use a Claude `@` import
+only when that content should load with the parent instruction file.
 
-Diagnostic: if removing the content from CLAUDE.md or AGENTS.md and not putting it in a skill would cause the agent to silently skip an expected action, it's operational → skill. If it would only cause the agent to ask the user for the fact, it's reference → `@`-import.
+Before externalizing content, test how an agent will find it for a realistic
+request. Retain essential routing if removing it would hide an expected action.
 
 ### Criterion 8: Instruction positioning
 
@@ -107,14 +135,19 @@ Check which dimensions are covered, which are missing, and which are over-repres
 
 Content that doesn't need to be in every session should be externalized. Match the externalization mechanism to the content type (see Criterion 7):
 
-- **Operational content** (trigger → action procedures, behavioral rules tied to user intent) → skills. Skills are the only mechanism with keyword-triggered auto-loading and a blocking invocation requirement. `@`-imports are unreliable for operational content — the agent may fail to attend to it when the triggering situation arises.
-- **File-type-specific conventions** → `.claude/rules/` with `paths` frontmatter. Auto-loaded when the agent touches matching files.
-- **Reference material** (facts, lookups, infrequent data) → separate docs referenced with `@` imports.
+- **Repeatable task workflows** → skills with discriminating descriptions and
+  the existing intended invocation policy.
+- **File-specific conventions** → path-scoped rules where supported; otherwise
+  a supported scoped instruction file, skill, or routed reference.
+- **Reference material** → linked docs with read-when conditions; Claude `@`
+  imports only for content intended to load with the parent.
 - **Lengthy architectural explanations** → standalone files with brief CLAUDE.md or AGENTS.md pointers (agent pulls on demand).
 
 CLAUDE.md or AGENTS.md should list available resources with one-line descriptions so the agent knows they exist, not embed their full contents.
 
-Anti-pattern to flag: `See [context/foo.md](context/foo.md)` with no surrounding context, pointing to operational content. Plain links are the weakest externalization — weaker than `@`-imports, which at least expand inline. If the target is operational, convert it to a skill. If it's reference, at minimum use an `@`-import.
+Flag links whose purpose or read-when condition is missing. Add useful routing
+before choosing a more elaborate mechanism; do not convert every link into a
+skill or an always-loaded import.
 
 ### Structure
 
@@ -123,7 +156,11 @@ Anti-pattern to flag: `See [context/foo.md](context/foo.md)` with no surrounding
 
 ## Phase 4: Output and applied-mode closeout
 
-For analysis-only runs, provide the full report below. For `--accept` runs, apply the safe edits first, then give a concise closeout with before/after metrics, files changed, verification performed, commit hash if committed, and unresolved issues. Do not paste a full rewritten CLAUDE.md or AGENTS.md after applying it unless the user asks.
+For analysis-only runs, report actionable findings and the proposed revision,
+using the detail below when it helps. For authorized apply runs, apply the safe
+edits first, then give a concise closeout with material changes, verification,
+and unresolved issues. Counts measure size, not instruction quality. Do not
+paste a full rewritten file after applying it unless the user asks.
 
 ### 1. Metrics
 
@@ -148,16 +185,17 @@ A table with columns: Instruction (short), Universal?, Specific?, Pointer?, Not 
 
 For each change, state:
 - What to cut, move, merge, rewrite, or add
-- Where it goes (stays in CLAUDE.md or AGENTS.md, moves to `.claude/rules/`, becomes a skill, becomes an `@`-import)
+- Where it goes, using a mechanism the target runtime supports (scoped
+  `AGENTS.md`, Claude rules/imports, a skill, or a routed reference)
 - Why
 
 ### 5. Rewritten CLAUDE.md or AGENTS.md
 
 A complete rewritten version with:
 - Dead weight removed
-- Non-universal instructions externalized
+- Task-specific detail externalized where discoverability is preserved
 - Vague instructions made specific or cut
-- Style rules removed (moved to linter/hook)
+- Style-rule duplicates removed only when equivalent enforcement is verified
 - Pointers replacing embedded copies
 - Critical instructions at top and bottom
 - Clear WHAT/WHY/HOW structure
@@ -167,7 +205,9 @@ Show a diff summary of what changed.
 
 ### 6. Externalized files
 
-For each file that needs to be created (`.claude/rules/*.md`, imported docs), provide the full content. In `--accept` mode, create or edit those files directly and summarize them in the closeout.
+Describe any required new scoped instructions, rules, or referenced docs. In
+authorized apply mode, create or edit those files directly and summarize them
+in the closeout; a review-only run presents the proposed content without writes.
 
 ## Phase 5: Verification
 
@@ -175,7 +215,9 @@ When edits are applied:
 
 1. Re-read every changed instruction file for consistency and scope drift
 2. Recount lines, discrete instructions, imports, and rules for the edited instruction set
-3. Verify all `@` imports and rules paths resolve, and confirm no private/local-only instruction was copied into a shared file unintentionally
+3. Verify links, imports, and rule paths resolve in each supported runtime,
+   including intended path matching; confirm no private/local-only instruction
+   was copied into a shared file unintentionally
 4. Run project-specific checks or docs-sync checks when available
 5. Inspect `git diff` and `git status --short` before committing or reporting completion
 
@@ -183,7 +225,12 @@ When edits are applied:
 
 - **Don't add content.** This skill optimizes existing instructions — it consolidates, restructures, externalizes, and cuts. It does not invent new rules.
 - **Preserve intent.** Every instruction that survives should mean the same thing it meant before. Rewriting for clarity is fine; changing the rule is not.
-- **Respect intentional overrides.** Some instructions deliberately override the active agent system prompt defaults (e.g., "commit all changes immediately" overrides the default "only commit when asked"). These are high-value — flag them as intentional overrides, don't cut them.
-- **Hooks trump instructions.** If a hook mechanically enforces a rule, the CLAUDE.md or AGENTS.md statement is redundant unless it provides context the hook can't (explaining *why*).
-- **Context skills trump CLAUDE.md or AGENTS.md for scoped rules.** If a rule only applies in certain contexts (e.g., Elisp conventions), it belongs in a context skill or `.claude/rules/`, not the root instruction file or AGENTS.md.
-- **Ask before applying** unless `--accept` is present. In `--accept` mode, apply only high-confidence, scope-preserving edits; report risky or broad changes as unresolved issues instead of half-applying them.
+- **Respect intentional overrides.** Preserve deliberate user preferences and
+  project overrides; do not assume every runtime has the same defaults.
+- **Check enforcement coverage.** Keep guidance that remains useful despite a
+  hook, or that supports a runtime/tool the hook does not cover.
+- **Preserve discoverability.** Externalized guidance must still reach every
+  supported runtime for the intended task.
+- **Respect authorization.** `--accept` or an explicit apply request authorizes
+  high-confidence changes. Keep review-only runs read-only and report material
+  scope expansions separately.

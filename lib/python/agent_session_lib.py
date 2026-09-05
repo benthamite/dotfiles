@@ -14,6 +14,7 @@ are symlinks into dotfiles) and call every function through the module object
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
 import os
 import subprocess
@@ -128,11 +129,108 @@ def _submit_function(backend: str) -> str:
     return "agent-submit"
 
 
-def send_return_to_agent(buffer: str, backend: str) -> None:
+def _actor_identity_expr() -> str:
+    """Sample identity and lifecycle together in the selected Emacs buffer."""
+    return '''
+(let* ((backend (agent--detect-backend (current-buffer)))
+       (identity (pcase backend
+                   ('claude-code (agent-claude--parse-status-file))
+                   ('codex (codex-session-identity (current-buffer)))))
+       (session-id (plist-get identity (if (eq backend 'codex)
+                                          :session-id :session_id)))
+       (file (pcase backend
+               ('claude-code (plist-get identity :transcript_path))
+               ('codex (or (and (boundp 'codex--session-transcript-file)
+                                codex--session-transcript-file)
+                           (and session-id
+                                (codex--find-session-transcript session-id))))))
+       (display-state (when (fboundp 'agent-session-display-state)
+                        (agent-session-display-state (current-buffer)))))
+  `((buffer . ,(buffer-name))
+    (backend . ,(and backend (symbol-name backend)))
+    (directory . ,(directory-file-name (file-truename default-directory)))
+    (transcript . ,(and file (file-truename (expand-file-name file))))
+    (session_id . ,session-id)
+    (state . ,(pcase display-state
+                ((or 'waiting 'background-waiting) "awaiting-input")
+                ('busy "busy")
+                (_ (if (boundp 'agent--session-state)
+                       (format "%s" agent--session-state) "unknown"))))))
+'''
+
+
+def actor_identity(buffer: str) -> dict[str, Any]:
+    """Return the selected actor's canonical identity and state in one sample."""
+    identity = run_emacs_json(
+        f"(with-current-buffer {elisp_string(buffer)} {_actor_identity_expr()})"
+    )
+    if not isinstance(identity, dict) or identity.get("buffer") != buffer:
+        raise EmacsClientError("actor identity did not resolve the selected buffer")
+    if identity.get("backend") not in VALID_BACKENDS:
+        raise EmacsClientError("actor identity has no supported backend")
+    for key in ("directory", "transcript"):
+        value = identity.get(key)
+        if value is not None:
+            if not isinstance(value, str) or not value:
+                raise EmacsClientError("actor identity has an invalid path")
+            identity[key] = str(Path(value).resolve())
+    return identity
+
+
+def _identity_guard(buffer: str, backend: str,
+                    expected: dict[str, Any] | None) -> str:
+    """Build a same-evaluation guard, before any dispatch or buffer switch."""
+    if expected is None:
+        return ""
+    if expected.get("buffer") != buffer or expected.get("backend") != backend:
+        raise EmacsClientError("expected actor identity does not match dispatch target")
+    comparisons = []
+    for key in ("buffer", "backend", "directory", "session_id", "transcript", "state"):
+        # A new session can gain its first transcript, but not change identity.
+        if key == "transcript" and expected.get(key) is None:
+            continue
+        value = expected.get(key)
+        if value is not None and not isinstance(value, str):
+            raise EmacsClientError("invalid expected actor identity")
+        literal = "nil" if value is None else elisp_string(value)
+        comparisons.append(f"(equal (alist-get '{key} live) {literal})")
+    return f'''
+  (let ((live {_actor_identity_expr()}))
+    (unless (and {' '.join(comparisons)})
+      (error "actor identity or lifecycle changed before dispatch")))
+'''
+
+
+def _same_actor(expected: dict[str, Any], actual: dict[str, Any]) -> bool:
+    return all(
+        actual.get(key) == expected.get(key)
+        for key in ("buffer", "backend", "directory", "session_id", "transcript")
+        if key != "transcript" or expected.get(key) is not None
+    )
+
+
+def send_return_to_agent(
+    buffer: str, backend: str, *,
+    expected_identity: dict[str, Any] | None = None,
+    expected_prompt_sha256: str | None = None,
+) -> None:
     if backend not in VALID_BACKENDS:
         raise SystemExit("--backend must be claude-code or codex")
+    prompt_guard = ""
+    if expected_prompt_sha256 is not None:
+        if backend != "codex":
+            raise EmacsClientError("this backend cannot prove an exact pending composer")
+        prompt_guard = f'''
+  (let ((input (codex-prompt-input (current-buffer))))
+    (unless (and (stringp input)
+                 (equal (secure-hash 'sha256 (encode-coding-string input 'utf-8-unix))
+                        {elisp_string(expected_prompt_sha256)}))
+      (error "pending composer changed before Return")))
+'''
     expr = f'''
 (with-current-buffer {elisp_string(buffer)}
+  {_identity_guard(buffer, backend, expected_identity)}
+  {prompt_guard}
   (let ((target (agent-send-return (get-buffer {elisp_string(buffer)}))))
     (unless (buffer-live-p target)
       (error "agent return dispatch did not resolve a live buffer"))
@@ -209,17 +307,30 @@ def claude_session_initialized(buffer: str, transcript: str) -> bool:
     return returned == "initialized"
 
 
-def pending_prompt_contains(buffer: str, backend: str, marker: str) -> bool:
+def pending_prompt_contains(
+    buffer: str, backend: str, marker: str, *,
+    expected_prompt_sha256: str | None = None,
+) -> bool:
     """Return whether BUFFER's last visible composer contains MARKER.
 
     Only the boolean result crosses the Emacs boundary; prompt text stays in
     the fixed top-level session buffer.
     """
+    if backend not in VALID_BACKENDS:
+        raise SystemExit("--backend must be claude-code or codex")
+    if backend == "claude-code" and expected_prompt_sha256 is not None:
+        # Terminal rendering is not an exact composer API. The installed
+        # agent-claude predicate matches only a prefix; it cannot prove a hash.
+        return False
     if backend == "codex":
+        exact = (f"(equal (secure-hash 'sha256 (encode-coding-string input 'utf-8-unix)) "
+                 f"{elisp_string(expected_prompt_sha256)})"
+                 if expected_prompt_sha256 is not None else "t")
         expr = f'''
 (with-current-buffer {elisp_string(buffer)}
   (let ((input (codex-prompt-input (current-buffer))))
     (if (and (stringp input)
+             {exact}
              (string-match-p (regexp-quote {elisp_string(marker)}) input))
         (princ "present")
       (princ "absent"))))
@@ -277,32 +388,49 @@ def _user_message_text(obj: dict[str, Any]) -> str | None:
     ``role: user`` with ``input_text`` parts) and the Claude Code shape
     (``type: user`` with a string or ``text``-part list under ``message``).
     """
-    payload = obj.get("payload") or {}
+    if not isinstance(obj, dict):
+        return None
+    payload = obj.get("payload")
+    payload = payload if isinstance(payload, dict) else {}
     if (
         obj.get("type") == "response_item"
         and payload.get("type") == "message"
         and payload.get("role") == "user"
     ):
-        return "\n".join(
-            item.get("text", "")
-            for item in (payload.get("content") or [])
-            if isinstance(item, dict) and item.get("type") == "input_text"
-        )
-    message = obj.get("message") or {}
+        content = payload.get("content")
+        return _text_parts(content, "input_text")
+    message = obj.get("message")
+    message = message if isinstance(message, dict) else {}
     if obj.get("type") == "user" and message.get("role") == "user":
         content = message.get("content")
         if isinstance(content, str):
             return content
         if isinstance(content, list):
-            return "\n".join(
-                item.get("text", "")
-                for item in content
-                if isinstance(item, dict) and item.get("type") == "text"
-            )
+            return _text_parts(content, "text")
     return None
 
 
-def _user_marker_offset(path: Path | str, marker: str) -> int | None:
+def _text_parts(content: Any, kind: str) -> str | None:
+    if not isinstance(content, list):
+        return None
+    parts = [item["text"] for item in content
+             if isinstance(item, dict) and item.get("type") == kind
+             and isinstance(item.get("text"), str)]
+    return "\n".join(parts) if parts else None
+
+
+def _prompt_matches(text: str | None, marker: str,
+                    expected_prompt_sha256: str | None) -> bool:
+    return (text is not None and marker in text
+            and (expected_prompt_sha256 is None
+                 or hashlib.sha256(text.encode("utf-8")).hexdigest()
+                 == expected_prompt_sha256))
+
+
+def _user_marker_offset(
+    path: Path | str, marker: str, *,
+    expected_prompt_sha256: str | None = None,
+) -> int | None:
     transcript = Path(path)
     try:
         stream = transcript.open("rb")
@@ -319,13 +447,16 @@ def _user_marker_offset(path: Path | str, marker: str) -> int | None:
                 offset += len(line)
                 continue
             text = _user_message_text(obj)
-            if text is not None and marker in text:
+            if _prompt_matches(text, marker, expected_prompt_sha256):
                 return offset
             offset += len(line)
     return None
 
 
-def _marker_delivered(transcript: str, offset: int, marker: str) -> bool:
+def _marker_delivered(
+    transcript: str, offset: int, marker: str, *,
+    expected_prompt_sha256: str | None = None,
+) -> bool:
     """Return whether a user message containing MARKER was appended past OFFSET.
 
     This is the only acknowledgement of a delivery: the delivered text itself,
@@ -355,7 +486,7 @@ def _marker_delivered(transcript: str, offset: int, marker: str) -> bool:
         except json.JSONDecodeError:
             continue
         text = _user_message_text(obj)
-        if text is not None and marker in text:
+        if _prompt_matches(text, marker, expected_prompt_sha256):
             return True
     return False
 
@@ -377,10 +508,13 @@ def _wait_for_delivery(
     offset: int,
     marker: str,
     timeout: float,
+    *,
+    expected_prompt_sha256: str | None = None,
 ) -> bool:
     deadline = time.monotonic() + timeout
     while True:
-        if _marker_delivered(transcript, offset, marker):
+        if _marker_delivered(transcript, offset, marker,
+                             expected_prompt_sha256=expected_prompt_sha256):
             return True
         remaining = deadline - time.monotonic()
         if remaining <= 0:
@@ -393,12 +527,23 @@ def submit_to_agent(
     backend: str,
     prompt: str,
     *,
-    transcript: str,
+    transcript: str | None,
     transcript_offset: int,
     delivery_marker: str,
     one_pass: bool = False,
-) -> None:
+    expected_identity: dict[str, Any] | None = None,
+) -> str:
     fn = _submit_function(backend)
+    if transcript is None and (
+        expected_identity is None or not expected_identity.get("session_id")
+        or transcript_offset != 0
+    ):
+        raise EmacsClientError("a fresh transcript requires a stable session identity and zero boundary")
+    if (expected_identity is not None and transcript is not None
+            and expected_identity.get("transcript") is not None
+            and str(Path(transcript).resolve()) != expected_identity["transcript"]):
+        raise EmacsClientError("dispatch transcript does not match expected actor identity")
+    prompt_sha256 = hashlib.sha256(prompt.encode("utf-8")).hexdigest()
     fd, temporary = tempfile.mkstemp(prefix="agent-orch-prompt-", suffix=".txt")
     prompt_path = Path(temporary)
     try:
@@ -408,6 +553,8 @@ def submit_to_agent(
         fd = -1
         expr = f'''
 (with-current-buffer {elisp_string(buffer)}
+  {_identity_guard(buffer, backend, expected_identity)}
+  (let ((agent-claude-submit-retries 0))
   (with-temp-buffer
     (insert-file-contents {elisp_string(str(prompt_path))})
     (let ((target
@@ -416,7 +563,7 @@ def submit_to_agent(
             (get-buffer {elisp_string(buffer)}))))
       (unless (buffer-live-p target)
         (error "agent submit dispatch did not resolve a live buffer"))
-      (princ "submitted"))))
+      (princ "submitted")))))
 '''
         returned = run_emacs_eval(expr)
         if returned != "submitted":
@@ -426,34 +573,63 @@ def submit_to_agent(
             os.close(fd)
         prompt_path.unlink(missing_ok=True)
 
+    # The first transcript may be created only after a fresh actor receives
+    # its prompt. Never discover it by scanning other sessions or accepting
+    # a buffer that has switched identity while the delivery was in flight.
+    if expected_identity is not None:
+        deadline = time.monotonic() + DELIVERY_INITIAL_WAIT_SECONDS
+        while True:
+            actual = actor_identity(buffer)
+            if not _same_actor(expected_identity, actual):
+                raise EmacsClientError("actor identity changed during delivery")
+            if actual.get("transcript"):
+                transcript = actual["transcript"]
+                expected_identity = {**expected_identity, "transcript": transcript}
+                break
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise EmacsClientError("the selected session has not published its transcript")
+            time.sleep(min(DELIVERY_POLL_SECONDS, remaining))
+    assert transcript is not None
     if _wait_for_delivery(
         transcript,
         transcript_offset,
         delivery_marker,
         DELIVERY_INITIAL_WAIT_SECONDS,
+        expected_prompt_sha256=prompt_sha256,
     ):
-        return
+        if expected_identity is not None and not _same_actor(
+                expected_identity, actor_identity(buffer)):
+            raise EmacsClientError("actor identity changed during acknowledgement")
+        return str(Path(transcript).resolve())
     if one_pass:
         raise EmacsClientError(
             "implementation delivery was not independently acknowledged; "
             "the one-pass run remains pending and no Return retry was sent"
         )
-    if not pending_prompt_contains(buffer, backend, delivery_marker):
+    if not pending_prompt_contains(buffer, backend, delivery_marker,
+                                   expected_prompt_sha256=prompt_sha256):
         raise EmacsClientError(
             "submission returned without delivery acknowledgement and the exact "
             "pending prompt could not be proved in the composer"
         )
-    send_return_to_agent(buffer, backend)
+    send_return_to_agent(buffer, backend, expected_identity=expected_identity,
+                         expected_prompt_sha256=prompt_sha256)
     if not _wait_for_delivery(
         transcript,
         transcript_offset,
         delivery_marker,
         DELIVERY_RETRY_WAIT_SECONDS,
+        expected_prompt_sha256=prompt_sha256,
     ):
         raise EmacsClientError(
             "submission delivery was not acknowledged after retrying only the "
             "submit keystroke"
         )
+    if expected_identity is not None and not _same_actor(
+            expected_identity, actor_identity(buffer)):
+        raise EmacsClientError("actor identity changed during acknowledgement")
+    return str(Path(transcript).resolve())
 
 
 def _transcript_offset(state: dict[str, Any], actor: str) -> int:
@@ -487,6 +663,161 @@ def _bootstrap_fresh_claude_waiting(
         reconcile_agent1_waiting(actor["buffer"])
         return buffer_state(actor["buffer"])
     return live
+
+
+def _evidence_records(path: Path | str, offset: int) -> list[dict[str, Any]]:
+    """Read a complete JSONL suffix or refuse to draw an evidence conclusion."""
+    if isinstance(offset, bool) or not isinstance(offset, int) or offset < 0:
+        raise EmacsClientError("invalid transcript evidence boundary")
+    try:
+        with Path(path).open("rb") as stream:
+            size = os.fstat(stream.fileno()).st_size
+            if offset > size:
+                raise EmacsClientError("transcript was truncated past its evidence boundary")
+            if offset:
+                stream.seek(offset - 1)
+                if stream.read(1) != b"\n":
+                    raise EmacsClientError("transcript evidence boundary is not a JSONL boundary")
+            stream.seek(offset)
+            data = stream.read()
+    except OSError:
+        raise EmacsClientError("transcript evidence is unavailable") from None
+    if data and not data.endswith(b"\n"):
+        raise EmacsClientError("transcript evidence contains an incomplete record")
+    records = []
+    for line in data.split(b"\n"):
+        if not line.strip(b" \t\r"):
+            continue
+        try:
+            obj = json.loads(line.decode("utf-8"))
+        except (UnicodeError, json.JSONDecodeError):
+            raise EmacsClientError("transcript evidence contains an invalid record") from None
+        if not isinstance(obj, dict):
+            raise EmacsClientError("transcript evidence contains an unsupported record")
+        records.append(obj)
+    return records
+
+
+def _record_output(obj: dict[str, Any]) -> bool:
+    """Conservatively recognize actor/tool activity, including no-text output."""
+    payload = obj.get("payload")
+    message = obj.get("message")
+    if isinstance(message, dict) and message.get("role") == "assistant":
+        return True
+    if obj.get("type") == "assistant":
+        return True
+    if isinstance(payload, dict):
+        if obj.get("type") == "response_item":
+            return payload.get("type") != "message" or payload.get("role") != "user"
+        if obj.get("type") == "event_msg":
+            return payload.get("type") in {
+                "agent_message", "agent_reasoning", "task_complete", "turn_aborted",
+                "item_started", "item_completed", "error",
+            }
+    # Claude tool results have user role, but they prove a tool was dispatched.
+    if isinstance(message, dict) and isinstance(message.get("content"), list):
+        return any(isinstance(part, dict) and part.get("type") == "tool_result"
+                   for part in message["content"])
+    return False
+
+
+def transcript_has_output(path: Path | str, offset: int = 0) -> bool:
+    """Prove absence of actor output only from a readable, complete suffix."""
+    return any(_record_output(obj) for obj in _evidence_records(path, offset))
+
+
+def transcript_is_startup_only(
+    path: Path | str, *, expected_session_id: str | None = None,
+    expected_directory: str | None = None, backend: str | None = None,
+) -> bool:
+    """Recognize an empty transcript or only identity-matched Codex headers.
+
+    A nonempty transcript with no assistant text is not necessarily fresh:
+    user prompts, tool calls, turn contexts and unknown history all refuse.
+    No Claude initialization-only persisted record is assumed here.
+    """
+    for obj in _evidence_records(path, 0):
+        payload = obj.get("payload")
+        if (backend not in (None, "codex") or obj.get("type") != "session_meta"
+                or not isinstance(payload, dict)):
+            return False
+        session_id = payload.get("id")
+        directory = payload.get("cwd")
+        if (not isinstance(session_id, str) or not session_id
+                or not isinstance(directory, str) or not directory
+                or not Path(directory).is_absolute()):
+            return False
+        if expected_session_id is not None and session_id != expected_session_id:
+            return False
+        if (expected_directory is not None
+                and Path(directory).resolve() != Path(expected_directory).resolve()):
+            return False
+    return True
+
+
+def latest_transcript_return(
+    path: Path | str, offset: int = 0, *,
+    expected_prompt_sha256: str | None = None,
+) -> dict[str, str] | None:
+    """Return the latest terminal candidate in the requested user turn.
+
+    This is transcript evidence, not a lifecycle check: the caller must also
+    require authoritative waiting state. Claude records can have a null stop
+    reason; text-only returns are eligible, but tool use, reasoning-only
+    output, explicit non-final phases and later activity invalidate them.
+    """
+    candidate = None
+    current_turn = expected_prompt_sha256 is None
+    for obj in _evidence_records(path, offset):
+        payload = obj.get("payload")
+        payload = payload if isinstance(payload, dict) else {}
+        message = obj.get("message")
+        message = message if isinstance(message, dict) else {}
+        user = _user_message_text(obj)
+        if (user is None and obj.get("type") == "event_msg"
+                and payload.get("type") == "user_message"
+                and isinstance(payload.get("message"), str)):
+            user = payload["message"]
+        if user is not None:
+            candidate = None
+            current_turn = (expected_prompt_sha256 is None
+                            or hashlib.sha256(user.encode("utf-8")).hexdigest()
+                            == expected_prompt_sha256)
+            continue
+        if not _record_output(obj):
+            continue
+        candidate = None
+        text = None
+        kind = ""
+        if obj.get("type") == "event_msg" and payload.get("type") == "task_complete":
+            text = payload.get("last_agent_message")
+            kind = "complete"
+        elif obj.get("type") == "response_item" and payload.get("type") == "message":
+            if (payload.get("role") == "assistant"
+                    and payload.get("phase") in (None, "final_answer")
+                    and payload.get("channel") in (None, "final")):
+                text = _text_parts(payload.get("content"), "output_text")
+                kind = "message"
+        elif message.get("role") == "assistant":
+            content = message.get("content")
+            text_only = isinstance(content, str) or (
+                isinstance(content, list) and bool(content)
+                and all(isinstance(part, dict) and part.get("type") == "text"
+                        for part in content)
+            )
+            terminal_blocks = (isinstance(content, list) and bool(content)
+                               and all(isinstance(part, dict) and part.get("type") in {
+                                   "text", "thinking", "redacted_thinking"}
+                                   for part in content))
+            stop_reason = message.get("stop_reason")
+            if ((text_only and stop_reason in (None, "end_turn", "stop_sequence"))
+                    or (terminal_blocks and stop_reason in ("end_turn", "stop_sequence"))):
+                text = content if isinstance(content, str) else _text_parts(content, "text")
+                kind = "assistant"
+        if current_turn and isinstance(text, str) and text.strip():
+            candidate = {"timestamp": str(obj.get("timestamp", "")),
+                         "kind": kind, "text": text}
+    return candidate
 
 
 def transcript_messages(

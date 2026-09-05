@@ -1,4 +1,5 @@
 import argparse
+import hashlib
 import importlib.util
 import io
 import json
@@ -123,6 +124,37 @@ class StageAtomicRunTests(unittest.TestCase):
         self.evidence_file.write_text("Whole-phase completion evidence", encoding="utf-8")
         self.agent1_transcript = self.directory / "agent1.jsonl"
         self.agent2_transcript = self.directory / "agent2.jsonl"
+        self.agent1_transcript.touch()
+        self.agent2_transcript.touch()
+        self.identities = {
+            "*claude:stage-2*": {"backend": "claude-code", "session_id": "author-session",
+                                  "transcript": str(self.agent1_transcript.resolve())},
+            "*codex:stage-2*": {"backend": "codex", "session_id": "reviewer-session",
+                                 "transcript": str(self.agent2_transcript.resolve())},
+        }
+        self.real_buffer_state = orchestrator.session.buffer_state
+        # Every runtime call in this class is synthetic; an unmocked RPC fails.
+        for patcher in (
+            mock.patch.object(orchestrator.session, "run_emacs_eval",
+                              side_effect=AssertionError("unexpected live Emacs RPC")),
+            mock.patch.object(orchestrator.session, "buffer_state",
+                              return_value={"state": "awaiting-input"}),
+            mock.patch.object(orchestrator.session, "actor_identity", side_effect=self.actor_identity),
+        ):
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def actor_identity(self, buffer):
+        return {"buffer": buffer, "directory": str(Path("/tmp/example-repo").resolve()),
+                **self.identities[buffer],
+                "state": orchestrator.session.buffer_state(buffer)["state"]}
+
+    def append_record(self, path, record):
+        with Path(path).open("a", encoding="utf-8") as stream:
+            stream.write(json.dumps(record) + "\n")
+
+    def append_user(self, path, prompt):
+        self.append_record(path, {"type": "user", "message": {"role": "user", "content": prompt}})
 
     def init_args(self, **overrides):
         values = {
@@ -200,6 +232,11 @@ class StageAtomicRunTests(unittest.TestCase):
             redirect_stdout(io.StringIO()),
         ):
             orchestrator.submit(self.submit_args(phase))
+        state = orchestrator.load_run(self.run_file)
+        attempt = state["attempts"][-1]
+        prompt = attempt["receipt"] + "\n\n" + orchestrator._phase_prompt(
+            state, phase, self.prompt_file.read_text(), self.run_file)
+        self.append_user(state[attempt["actor"]]["transcript"], prompt)
 
     def finish_args(self, phase):
         return argparse.Namespace(run_file=str(self.run_file), phase=phase)
@@ -398,7 +435,7 @@ class StageAtomicRunTests(unittest.TestCase):
         self.finish_phase("implementation")
 
     def test_implementation_continuation_commands_are_not_public(self):
-        for command in ("resume-stage", "switch-model"):
+        for command in ("resume-stage", "switch-model", "ask", "interrupt"):
             with (
                 self.subTest(command=command),
                 redirect_stderr(io.StringIO()),
@@ -493,7 +530,7 @@ class StageAtomicRunTests(unittest.TestCase):
             "timestamp": "2026-08-02T12:00:00Z",
             "message": {"role": "assistant", "content": "Checkpoint."},
         }
-        self.agent1_transcript.write_text(json.dumps(record) + "\n", encoding="utf-8")
+        self.append_record(self.agent1_transcript, record)
         with (
             mock.patch.object(
                 orchestrator.session,
@@ -522,7 +559,7 @@ class StageAtomicRunTests(unittest.TestCase):
             "timestamp": "2026-08-02T12:00:00Z",
             "message": {"role": "assistant", "content": "Capture failed."},
         }
-        self.agent1_transcript.write_text(json.dumps(record) + "\n", encoding="utf-8")
+        self.append_record(self.agent1_transcript, record)
         with (
             mock.patch.object(
                 orchestrator.session, "buffer_state", return_value={"state": "awaiting-input"}
@@ -552,11 +589,21 @@ class StageAtomicRunTests(unittest.TestCase):
             orchestrator.steer_stage(args)
         with (
             mock.patch.object(orchestrator.session, "submit_to_agent") as second_submit,
-            self.assertRaisesRegex(SystemExit, "already received"),
+            self.assertRaisesRegex(SystemExit, "pending submission requires reconciliation"),
         ):
             orchestrator.steer_stage(args)
         self.assertEqual(submit.call_count, 1)
         second_submit.assert_not_called()
+        with redirect_stdout(io.StringIO()):
+            orchestrator.reconcile_submission(SimpleNamespace(run_file=str(self.run_file), delivered=False))
+        state = orchestrator.load_run(self.run_file)
+        self.assertIsNone(state["pending_submission"])
+        self.assertEqual(state["status"], "implementation-stopped")
+        self.assertFalse(state["attempts"][-1]["acknowledged"])
+        with mock.patch.object(orchestrator.session, "submit_to_agent") as third_submit:
+            with self.assertRaisesRegex(SystemExit, "already received a steering attempt"):
+                orchestrator.steer_stage(args)
+            third_submit.assert_not_called()
 
     def test_new_stage_rejects_reused_agent1_transcript(self):
         self.agent1_transcript.write_text("prior stage", encoding="utf-8")
@@ -642,7 +689,11 @@ class StageAtomicRunTests(unittest.TestCase):
         self.assertIsNone(orchestrator.load_run(self.run_file)["pending_submission"])
 
     def test_submit_retries_only_return_when_prompt_remains_in_composer(self):
-        self.create_run()
+        self.create_run(
+            agent1_buffer="*codex:stage-2*", agent1_backend="codex",
+            agent1_transcript=str(self.agent2_transcript),
+            agent2_buffer="*claude:stage-2*", agent2_backend="claude-code",
+            agent2_transcript=str(self.agent1_transcript))
         with (
             mock.patch.object(
                 orchestrator.session,
@@ -668,7 +719,8 @@ class StageAtomicRunTests(unittest.TestCase):
         ):
             orchestrator.submit(self.submit_args("spec"))
 
-        send_return.assert_called_once_with("*claude:stage-2*", "claude-code")
+        self.assertEqual(send_return.call_args.args, ("*codex:stage-2*", "codex"))
+        self.assertEqual(send_return.call_args.kwargs["expected_identity"]["state"], "awaiting-input")
         self.assertEqual(wait_for_delivery.call_count, 2)
         state = orchestrator.load_run(self.run_file)
         self.assertIsNone(state["pending_submission"])
@@ -706,7 +758,11 @@ class StageAtomicRunTests(unittest.TestCase):
         self.assertNotIn("agent-claude-submit-command", captured["expr"])
 
     def test_submit_keeps_pending_when_return_retry_is_not_acknowledged(self):
-        self.create_run()
+        self.create_run(
+            agent1_buffer="*codex:stage-2*", agent1_backend="codex",
+            agent1_transcript=str(self.agent2_transcript),
+            agent2_buffer="*claude:stage-2*", agent2_backend="claude-code",
+            agent2_transcript=str(self.agent1_transcript))
         with (
             mock.patch.object(
                 orchestrator.session,
@@ -807,12 +863,8 @@ class StageAtomicRunTests(unittest.TestCase):
             reviews_complete=True,
         )
         state = orchestrator.load_run(self.run_file)
-        state["pending_submission"] = {
-            "kind": "phase",
-            "phase": "implementation",
-            "actor": "agent1",
-            "transcript_offset": 0,
-        }
+        orchestrator._new_attempt(state, "phase", "implementation", "context", "prompt",
+                                  state["agent1"]["identity"])
         orchestrator.save_run(self.run_file, state)
 
         with (
@@ -855,6 +907,9 @@ class StageAtomicRunTests(unittest.TestCase):
             self.submit_phase("spec-review")
 
         fresh_transcript = self.directory / "fresh-agent2.jsonl"
+        fresh_transcript.touch()
+        self.identities["*codex:stage-2*"].update(
+            session_id="fresh-reviewer", transcript=str(fresh_transcript.resolve()))
         args = SimpleNamespace(
             run_file=str(self.run_file),
             prompt_file=str(self.prompt_file),
@@ -881,11 +936,11 @@ class StageAtomicRunTests(unittest.TestCase):
         self.assertIn("Phase context", sent.args[2])
         self.assertEqual(sent.kwargs["transcript_offset"], 0)
         state = orchestrator.load_run(self.run_file)
-        self.assertEqual(state["agent2"]["transcript"], str(fresh_transcript))
+        self.assertEqual(state["agent2"]["transcript"], str(fresh_transcript.resolve()))
         self.assertEqual(state["submissions"][-1]["transcript_offset"], 0)
         self.assertEqual(state["status"], "phase-active")
 
-    def test_restart_phase_adopts_existing_fresh_transcript_without_resubmit(self):
+    def test_restart_phase_refuses_unrelated_static_marker_history(self):
         self.create_run()
         with mock.patch.object(orchestrator.session, "submit_to_agent"):
             self.submit_phase("spec")
@@ -913,6 +968,8 @@ class StageAtomicRunTests(unittest.TestCase):
             + "\n",
             encoding="utf-8",
         )
+        self.identities["*codex:stage-2*"].update(
+            session_id="fresh-reviewer", transcript=str(fresh_transcript.resolve()))
         args = SimpleNamespace(
             run_file=str(self.run_file),
             prompt_file=str(self.prompt_file),
@@ -931,12 +988,13 @@ class StageAtomicRunTests(unittest.TestCase):
             ),
             mock.patch.object(orchestrator.session, "submit_to_agent") as submit,
             redirect_stdout(io.StringIO()),
+            self.assertRaisesRegex(SystemExit, "no static marker adoption"),
         ):
             orchestrator.restart_phase(args)
 
         submit.assert_not_called()
         state = orchestrator.load_run(self.run_file)
-        self.assertEqual(state["agent2"]["transcript"], str(fresh_transcript))
+        self.assertEqual(state["agent2"]["transcript"], str(self.agent2_transcript.resolve()))
 
     def test_restart_phase_rejects_after_reviewer_returned_any_message(self):
         self.create_run()
@@ -977,6 +1035,7 @@ class StageAtomicRunTests(unittest.TestCase):
                 "buffer_state",
                 side_effect=(
                     {"state": "unknown"},
+                    {"state": "awaiting-input"},
                     {"state": "awaiting-input"},
                 ),
             ),
@@ -1244,11 +1303,358 @@ class StageAtomicRunTests(unittest.TestCase):
             }
 
         with mock.patch.object(orchestrator.session, "run_emacs_json", side_effect=return_state):
-            state = orchestrator.session.buffer_state("*codex:fresh*")
+            state = self.real_buffer_state("*codex:fresh*")
 
         self.assertEqual(state["state"], "awaiting-input")
         self.assertIn("agent-session-display-state", captured["expr"])
         self.assertIn("background-waiting", captured["expr"])
+
+    def acknowledge(self, buffer, backend, prompt, **kwargs):
+        pending = orchestrator.load_run(self.run_file)["pending_submission"]
+        self.assertEqual(pending["prompt_sha256"], hashlib.sha256(prompt.encode()).hexdigest())
+        self.assertEqual(prompt.splitlines()[0], pending["receipt"])
+        self.assertEqual(kwargs["expected_identity"]["state"], "awaiting-input")
+        path = self.identities[buffer]["transcript"]
+        self.append_user(path, prompt)
+        return path
+
+    def start_review(self):
+        self.create_run()
+        with mock.patch.object(orchestrator.session, "submit_to_agent"):
+            self.submit_phase("spec")
+        self.finish_phase("spec")
+        with mock.patch.object(orchestrator.session, "submit_to_agent"):
+            self.submit_phase("spec-review")
+
+    def fresh_reviewer(self, *, metadata=False):
+        path = self.directory / "new-reviewer.jsonl"
+        path.touch()
+        self.identities["*codex:stage-2*"].update(
+            session_id="new-reviewer-session", transcript=str(path.resolve()))
+        if metadata:
+            self.append_record(path, {"type": "session_meta", "payload": {
+                "id": "new-reviewer-session", "cwd": str(Path("/tmp/example-repo").resolve())}})
+        return path
+
+    def stop_and_steering(self):
+        self.start_implementation()
+        self.append_record(self.agent1_transcript, {"message": {
+            "role": "assistant", "content": "Capture tool failed; stage remains unfinished."}})
+        with redirect_stdout(io.StringIO()):
+            orchestrator.stage_return(SimpleNamespace(run_file=str(self.run_file)))
+        prompt = self.directory / "targeted-steering.txt"
+        prompt.write_text(
+            "Obstacle: The capture tool failed before final acceptance could complete.\n"
+            "Resolution: Use the documented alternate capture method already in scope.\n"
+            "Whole-stage direction: Complete the whole stage and all final acceptance checks.\n")
+        prompt.chmod(0o600)
+        return SimpleNamespace(run_file=str(self.run_file), prompt_file=str(prompt))
+
+    def test_fixed_actor_drift_refuses_before_any_submission(self):
+        self.create_run()
+        original = dict(self.identities["*claude:stage-2*"])
+        for key, value in (("backend", "codex"), ("session_id", "replacement"),
+                           ("transcript", str(self.directory / "unrelated.jsonl")),
+                           ("directory", str(self.directory / "wrong-project"))):
+            with self.subTest(key=key):
+                self.identities["*claude:stage-2*"] = {**original, key: value}
+                with mock.patch.object(orchestrator.session, "submit_to_agent") as send:
+                    with self.assertRaisesRegex(SystemExit, "identity changed"):
+                        orchestrator.submit(self.submit_args("spec"))
+                    send.assert_not_called()
+                self.assertIsNone(orchestrator.load_run(self.run_file)["pending_submission"])
+
+    def test_roles_cannot_alias_one_buffer_transcript_or_session(self):
+        cases = ({"agent2_buffer": "*claude:stage-2*"},
+                 {"agent2_transcript": str(self.agent1_transcript)},
+                 {"agent2_backend": "claude-code"})
+        for override in cases:
+            with self.subTest(override=override):
+                if "agent2_backend" in override:
+                    self.identities["*codex:stage-2*"].update(
+                        backend="claude-code", session_id="author-session")
+                with self.assertRaisesRegex(SystemExit, "distinct sessions"):
+                    self.create_run(**override)
+                self.assertFalse(self.run_file.exists())
+
+    def test_reversed_roles_allow_identity_matched_startup_metadata(self):
+        self.append_record(self.agent2_transcript, {"type": "session_meta", "payload": {
+            "id": "reviewer-session", "cwd": str(Path("/tmp/example-repo").resolve())}})
+        state = self.create_run(
+            agent1_buffer="*codex:stage-2*", agent1_backend="codex",
+            agent1_transcript=str(self.agent2_transcript),
+            agent2_buffer="*claude:stage-2*", agent2_backend="claude-code",
+            agent2_transcript=str(self.agent1_transcript))
+        self.assertEqual(state["agent1"]["identity"]["session_id"], "reviewer-session")
+        with mock.patch.object(orchestrator.session, "submit_to_agent", side_effect=self.acknowledge), redirect_stdout(io.StringIO()):
+            orchestrator.submit(self.submit_args("spec"))
+        self.assertGreater(orchestrator.load_run(self.run_file)["submissions"][-1]["transcript_offset"], 0)
+
+    def test_positive_receipt_cannot_be_discarded_as_not_delivered(self):
+        self.create_run()
+        def delivered_then_timeout(*args, **kwargs):
+            self.acknowledge(*args, **kwargs)
+            raise orchestrator.EmacsClientError("transport timeout")
+        with mock.patch.object(orchestrator.session, "submit_to_agent", side_effect=delivered_then_timeout):
+            with self.assertRaisesRegex(orchestrator.EmacsClientError, "timeout"):
+                orchestrator.submit(self.submit_args("spec"))
+        before = self.run_file.read_bytes()
+        with self.assertRaisesRegex(SystemExit, "positively acknowledged"):
+            orchestrator.reconcile_submission(SimpleNamespace(run_file=str(self.run_file), delivered=False))
+        self.assertEqual(self.run_file.read_bytes(), before)
+        with redirect_stdout(io.StringIO()):
+            orchestrator.reconcile_submission(SimpleNamespace(run_file=str(self.run_file), delivered=True))
+        self.assertEqual(len(orchestrator.load_run(self.run_file)["submissions"]), 1)
+
+    def test_receipt_requires_entire_current_prompt_not_static_or_nonce_alone(self):
+        self.create_run()
+        with mock.patch.object(orchestrator.session, "submit_to_agent", side_effect=RuntimeError("unknown")):
+            with self.assertRaises(RuntimeError):
+                orchestrator.submit(self.submit_args("spec"))
+        pending = orchestrator.load_run(self.run_file)["pending_submission"]
+        for text in ("PHASE COMPLETE: spec", pending["receipt"], pending["receipt"] + "\nAltered task"):
+            self.append_user(self.agent1_transcript, text)
+        before = self.run_file.read_bytes()
+        with self.assertRaisesRegex(SystemExit, "delivery.*acknowledged|receipt"):
+            orchestrator.reconcile_submission(SimpleNamespace(run_file=str(self.run_file), delivered=True))
+        self.assertEqual(self.run_file.read_bytes(), before)
+
+    def test_restart_pending_is_durable_and_reconciles_once_after_timeout(self):
+        self.start_review()
+        fresh = self.fresh_reviewer(metadata=True)
+        def delivered_then_timeout(*args, **kwargs):
+            self.assertEqual(orchestrator.load_run(self.run_file)["pending_submission"]["kind"], "restart")
+            self.acknowledge(*args, **kwargs)
+            raise orchestrator.EmacsClientError("transport timeout")
+        args = SimpleNamespace(run_file=str(self.run_file), prompt_file=str(self.prompt_file))
+        with mock.patch.object(orchestrator.session, "submit_to_agent", side_effect=delivered_then_timeout) as send:
+            with self.assertRaises(orchestrator.EmacsClientError):
+                orchestrator.restart_phase(args)
+            with self.assertRaisesRegex(SystemExit, "pending submission"):
+                orchestrator.restart_phase(args)
+            self.assertEqual(send.call_count, 1)
+        with redirect_stdout(io.StringIO()):
+            orchestrator.reconcile_submission(SimpleNamespace(run_file=str(self.run_file), delivered=True))
+        state = orchestrator.load_run(self.run_file)
+        self.assertEqual(state["agent2"]["transcript"], str(fresh.resolve()))
+        self.assertEqual(len(state["submissions"]), 2)
+        self.assertGreater(state["submissions"][-1]["transcript_offset"], 0)
+        self.append_record(fresh, {"message": {"role": "assistant", "content": "Reviewed.\nPHASE COMPLETE: spec-review"}})
+        with redirect_stdout(io.StringIO()):
+            orchestrator.finish_phase(self.finish_args("spec-review"))
+
+    def test_restart_refuses_changed_context_and_old_tool_output(self):
+        self.start_review()
+        self.fresh_reviewer()
+        self.prompt_file.write_text("Different review request")
+        args = SimpleNamespace(run_file=str(self.run_file), prompt_file=str(self.prompt_file))
+        with mock.patch.object(orchestrator.session, "submit_to_agent") as send:
+            with self.assertRaisesRegex(SystemExit, "original phase context"):
+                orchestrator.restart_phase(args)
+            self.prompt_file.write_text("Phase context")
+            self.append_record(self.agent2_transcript, {"type": "response_item", "payload": {
+                "type": "function_call", "name": "fixture-tool", "arguments": "{}"}})
+            with self.assertRaisesRegex(SystemExit, "already returned assistant output"):
+                orchestrator.restart_phase(args)
+            send.assert_not_called()
+
+    def test_delivered_steering_timeout_recovers_its_new_return(self):
+        args = self.stop_and_steering()
+        def delivered_then_timeout(*positional, **kwargs):
+            self.assertEqual(orchestrator.load_run(self.run_file)["pending_submission"]["kind"], "steering")
+            self.acknowledge(*positional, **kwargs)
+            self.append_record(self.agent1_transcript, {"message": {
+                "role": "assistant", "content": "The entire stage is verified.\nSTAGE COMPLETE: 2"}})
+            raise orchestrator.EmacsClientError("receipt transport failed")
+        with mock.patch.object(orchestrator.session, "submit_to_agent", side_effect=delivered_then_timeout) as send:
+            with self.assertRaises(orchestrator.EmacsClientError):
+                orchestrator.steer_stage(args)
+            with self.assertRaisesRegex(SystemExit, "pending submission"):
+                orchestrator.steer_stage(args)
+            self.assertEqual(send.call_count, 1)
+        before = self.run_file.read_bytes()
+        with self.assertRaisesRegex(SystemExit, "positively acknowledged"):
+            orchestrator.reconcile_submission(SimpleNamespace(run_file=str(self.run_file), delivered=False))
+        self.assertEqual(self.run_file.read_bytes(), before)
+        with redirect_stdout(io.StringIO()):
+            orchestrator.reconcile_submission(SimpleNamespace(run_file=str(self.run_file), delivered=True))
+        output = io.StringIO()
+        with redirect_stdout(output):
+            orchestrator.finish_phase(self.finish_args("implementation"))
+        state = orchestrator.load_run(self.run_file)
+        text = "The entire stage is verified.\nSTAGE COMPLETE: 2"
+        self.assertTrue(output.getvalue().endswith(text + "\n"))
+        self.assertEqual(state["completions"][-1]["evidence_sha256"], hashlib.sha256(text.encode()).hexdigest())
+        self.assertNotIn(text, self.run_file.read_text())
+
+    def test_acknowledged_steering_does_not_reuse_previous_stop(self):
+        args = self.stop_and_steering()
+        with mock.patch.object(orchestrator.session, "submit_to_agent", side_effect=self.acknowledge), redirect_stdout(io.StringIO()):
+            orchestrator.steer_stage(args)
+        before = self.run_file.read_bytes()
+        with self.assertRaisesRegex(SystemExit, "no bounded implementation return"):
+            orchestrator.stage_return(SimpleNamespace(run_file=str(self.run_file)))
+        self.assertEqual(self.run_file.read_bytes(), before)
+
+    def test_unrelated_later_user_and_final_cannot_complete_phase(self):
+        self.create_run()
+        with mock.patch.object(orchestrator.session, "submit_to_agent"):
+            self.submit_phase("spec")
+        self.write_phase_return("spec")
+        self.append_user(self.agent1_transcript, "Unrelated later work")
+        self.write_phase_return("spec")
+        with self.assertRaisesRegex(SystemExit, "no returned assistant message"):
+            orchestrator.finish_phase(self.finish_args("spec"))
+
+    def test_transcript_replacement_refuses_receipt_and_terminal_acceptance(self):
+        self.create_run()
+        with mock.patch.object(orchestrator.session, "submit_to_agent"):
+            self.submit_phase("spec")
+        self.write_phase_return("spec")
+        replacement = self.directory / "replacement.jsonl"
+        replacement.write_bytes(self.agent1_transcript.read_bytes())
+        replacement.replace(self.agent1_transcript)
+        with self.assertRaisesRegex(orchestrator.EmacsClientError, "identity or pre-submit prefix changed"):
+            orchestrator.finish_phase(self.finish_args("spec"))
+
+    def test_pending_receipt_refuses_replaced_transcript_even_with_exact_prompt(self):
+        self.create_run()
+        def delivered_then_timeout(*args, **kwargs):
+            self.acknowledge(*args, **kwargs)
+            raise orchestrator.EmacsClientError("timeout")
+        with mock.patch.object(orchestrator.session, "submit_to_agent", side_effect=delivered_then_timeout):
+            with self.assertRaises(orchestrator.EmacsClientError):
+                orchestrator.submit(self.submit_args("spec"))
+        replacement = self.directory / "new-inode.jsonl"
+        replacement.write_bytes(self.agent1_transcript.read_bytes())
+        replacement.replace(self.agent1_transcript)
+        before = self.run_file.read_bytes()
+        with self.assertRaisesRegex(orchestrator.EmacsClientError, "identity or pre-submit prefix changed"):
+            orchestrator.reconcile_submission(SimpleNamespace(run_file=str(self.run_file), delivered=True))
+        self.assertEqual(self.run_file.read_bytes(), before)
+
+    def replace_transcript_after_read(self, reader, path):
+        def read_then_replace(*args, **kwargs):
+            result = reader(*args, **kwargs)
+            self.assertTrue(result)
+            replacement = self.directory / "replacement-after-read.jsonl"
+            replacement.write_bytes(path.read_bytes())
+            replacement.replace(path)
+            return result
+        return read_then_replace
+
+    def test_reconcile_refuses_transcript_replaced_during_receipt_read(self):
+        self.create_run()
+        def delivered_then_timeout(*args, **kwargs):
+            self.acknowledge(*args, **kwargs)
+            raise orchestrator.EmacsClientError("timeout")
+        with mock.patch.object(orchestrator.session, "submit_to_agent", side_effect=delivered_then_timeout):
+            with self.assertRaises(orchestrator.EmacsClientError):
+                orchestrator.submit(self.submit_args("spec"))
+        reader = orchestrator.session._marker_delivered
+        before = self.run_file.read_bytes()
+        with mock.patch.object(orchestrator.session, "_marker_delivered",
+                               side_effect=self.replace_transcript_after_read(reader, self.agent1_transcript)):
+            with self.assertRaisesRegex(orchestrator.EmacsClientError, "identity or pre-submit prefix changed"):
+                orchestrator.reconcile_submission(SimpleNamespace(run_file=str(self.run_file), delivered=True))
+        self.assertEqual(self.run_file.read_bytes(), before)
+
+    def test_stage_return_refuses_transcript_replaced_during_terminal_read(self):
+        self.start_implementation()
+        self.append_record(self.agent1_transcript, {"message": {
+            "role": "assistant", "content": "The capture failed; stage remains incomplete."}})
+        reader = orchestrator.session.latest_transcript_return
+        before = self.run_file.read_bytes()
+        with mock.patch.object(orchestrator.session, "latest_transcript_return",
+                               side_effect=self.replace_transcript_after_read(reader, self.agent1_transcript)):
+            with self.assertRaisesRegex(orchestrator.EmacsClientError, "identity or pre-submit prefix changed"):
+                orchestrator.stage_return(SimpleNamespace(run_file=str(self.run_file)))
+        self.assertEqual(self.run_file.read_bytes(), before)
+
+    def test_steering_refuses_transcript_replaced_during_terminal_read(self):
+        args = self.stop_and_steering()
+        reader = orchestrator.session.latest_transcript_return
+        before = self.run_file.read_bytes()
+        with mock.patch.object(orchestrator.session, "latest_transcript_return",
+                               side_effect=self.replace_transcript_after_read(reader, self.agent1_transcript)), \
+                mock.patch.object(orchestrator.session, "submit_to_agent") as send:
+            with self.assertRaisesRegex(orchestrator.EmacsClientError, "identity or pre-submit prefix changed"):
+                orchestrator.steer_stage(args)
+            send.assert_not_called()
+        self.assertEqual(self.run_file.read_bytes(), before)
+
+    def test_pending_save_failure_prevents_external_contact(self):
+        self.create_run()
+        before = self.run_file.read_bytes()
+        with mock.patch.object(orchestrator, "save_run", side_effect=OSError("fixture disk failure")), mock.patch.object(orchestrator.session, "submit_to_agent") as send:
+            with self.assertRaises(OSError):
+                orchestrator.submit(self.submit_args("spec"))
+            send.assert_not_called()
+        self.assertEqual(self.run_file.read_bytes(), before)
+
+    def test_steering_refuses_a_recorded_return_replaced_by_new_activity(self):
+        args = self.stop_and_steering()
+        self.append_user(self.agent1_transcript, "Unrelated external prompt")
+        self.append_record(self.agent1_transcript, {"message": {"role": "assistant", "content": "Unrelated return"}})
+        with mock.patch.object(orchestrator.session, "submit_to_agent") as send:
+            with self.assertRaisesRegex(SystemExit, "no bounded implementation return"):
+                orchestrator.steer_stage(args)
+            send.assert_not_called()
+
+    def test_preexisting_prefix_edit_refuses_even_with_current_exact_receipt(self):
+        self.create_run(adopt_implementation=True, spec_commit="abc", plan_commit="def", reviews_complete=True)
+        self.append_record(self.agent1_transcript, {"type": "progress", "value": "before"})
+        with mock.patch.object(orchestrator.session, "submit_to_agent", side_effect=self.acknowledge), redirect_stdout(io.StringIO()):
+            orchestrator.submit(self.submit_args("implementation"))
+        data = self.agent1_transcript.read_bytes().replace(b"before", b"edited")
+        self.agent1_transcript.write_bytes(data)
+        self.write_phase_return("implementation")
+        with self.assertRaisesRegex(orchestrator.EmacsClientError, "identity or pre-submit prefix changed"):
+            orchestrator.finish_phase(self.finish_args("implementation"))
+
+    def legacy_state(self, state):
+        state["version"] = 2
+        for name in ("agent1", "agent2"):
+            state[name].pop("identity", None)
+        state.pop("attempts", None)
+        state.pop("phase_context_sha256", None)
+        self.run_file.write_text(json.dumps(state))
+
+    def test_legacy_status_and_unambiguous_active_migration_preserve_evidence(self):
+        self.create_run()
+        with mock.patch.object(orchestrator.session, "submit_to_agent"):
+            self.submit_phase("spec")
+        self.write_phase_return("spec")
+        self.legacy_state(orchestrator.load_run(self.run_file))
+        output = io.StringIO()
+        with redirect_stdout(output):
+            orchestrator.run_status(SimpleNamespace(run_file=str(self.run_file), json=True))
+        self.assertEqual(json.loads(output.getvalue())["version"], 2)
+        with self.assertRaisesRegex(SystemExit, "migrate-run"):
+            orchestrator.finish_phase(self.finish_args("spec"))
+        with redirect_stdout(io.StringIO()):
+            orchestrator.migrate_run(SimpleNamespace(run_file=str(self.run_file)))
+            orchestrator.finish_phase(self.finish_args("spec"))
+        state = orchestrator.load_run(self.run_file)
+        self.assertTrue(state["legacy_history"])
+        self.assertEqual(state["attempts"], [])
+        self.assertEqual(state["expected_phase"], "spec-review")
+
+    def test_legacy_ambiguous_migration_preserves_original_bytes(self):
+        state = self.create_run()
+        state["pending_submission"] = {"kind": "phase", "phase": "spec", "actor": "agent1", "transcript_offset": 0}
+        self.legacy_state(state)
+        before = self.run_file.read_bytes()
+        with self.assertRaisesRegex(SystemExit, "ambiguous legacy"):
+            orchestrator.migrate_run(SimpleNamespace(run_file=str(self.run_file)))
+        self.assertEqual(self.run_file.read_bytes(), before)
+
+    def test_injected_contract_respects_host_wait_and_authority(self):
+        contract = orchestrator.IMPLEMENTATION_CONTRACT
+        for forbidden in ("Python sleep", "10 minutes", "sleep is blocked", "circumvent"):
+            self.assertNotIn(forbidden, contract)
+        for required in ("obey guard denials", "host-required commentary", "Persistence never expands", "user or system authorization"):
+            self.assertIn(required, contract)
 
 
 class WatchVerdictTests(unittest.TestCase):

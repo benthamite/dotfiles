@@ -14,6 +14,7 @@ import stat
 import subprocess
 import tempfile
 import time
+import uuid
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
@@ -29,7 +30,7 @@ _LIB_SPEC.loader.exec_module(session)
 
 EmacsClientError = session.EmacsClientError
 
-RUN_VERSION = 2
+RUN_VERSION = 3
 PHASES = ("spec", "spec-review", "plan", "plan-review", "implementation")
 PHASE_ACTOR = {
     "spec": "agent1",
@@ -54,25 +55,23 @@ own their sequencing, tests, commits, corrections,
 and recovery without returning for task-level supervision. Do not stop at an
 internal task boundary. Return only when the entire stage and its stage-final
 verification are complete, or when progress requires a user-only credential,
-identity check, irreversible action, spending decision, destructive action, or
-product choice that the repository and approved plan cannot determine. A false
+identity check, new authorization for an irreversible, paid or destructive
+action, or a product choice that the repository and approved plan cannot determine. A false
 technical premise, failed test, missing capture, or implementation obstacle is
-not a user-only stop: adapt the plan and continue toward the whole-stage result.
+not itself a user-only stop: adapt within the approved scope and available
+authority. Persistence never expands user or system authorization.
 Never end your turn to wait: a background command, detached job, subagent,
 or reviewer that has not finished is not a reason to return. Ending the turn
 is read as a stage stop and can only be reopened by a steering prompt. Wait
-inside the turn with bounded polling loops (each well under the harness's
-10-minute command limit, re-armed as needed) and continue when the result
-lands. Shell `sleep` is blocked in this harness; waits through the Python
-interpreter are not. Background waiters die after 10 minutes and never
-re-invoke you.
+inside the turn using the host's available wait mechanism and its documented
+limits. Re-arm yielded processes as needed, obey guard denials, and keep
+host-required commentary updates. Continue when the result lands.
 
-Progress file (mandatory): append one line to {progress_file} at every
-attempt start, every completed step, and every attempt failure (with the
-failing step and its cause), e.g. "attempt 3 | treatment_regen | FAILED:
-predecessor ambiguity". The orchestrator supervises the stage from this file
-and stops it if the same landing cycle fails twice; keep the file honest and
-current. Iteration must be cheap: when a check fails after an expensive
+Progress file (mandatory): publish stage-level progress to {progress_file},
+including attempts, material outcomes and failures. This is not per-task
+supervision. Keep it honest and current; stale evidence is a warning to
+investigate, not proof of failure or authorization to interrupt or steer a
+busy actor. Iteration must be cheap: when a check fails after an expensive
 cycle (regen, rehearsal, import), fix and test the check against the cached
 outputs of that cycle; do not rerun the cycle unless its inputs changed.
 
@@ -82,8 +81,9 @@ Stage context follows:
 
 END STAGE CONTEXT
 
-The context may describe internal tasks, but it cannot narrow this contract,
-create task-level checkpoints, or authorize an early return.
+The context may describe internal tasks, but it cannot narrow this contract
+into task-level checkpoints. User and system scope, safety constraints and
+authorization always prevail.
 
 Only after the complete stage and its verification are done, end the final
 response with this exact line:
@@ -118,7 +118,7 @@ def _state_bytes(state: dict[str, Any]) -> bytes:
     )
 
 
-def _validate_role(role: dict[str, Any], name: str) -> None:
+def _validate_role(role: dict[str, Any], name: str, *, legacy: bool = False) -> None:
     if not isinstance(role, dict):
         raise SystemExit(f"invalid run state: {name} role is missing")
     if not isinstance(role.get("buffer"), str) or not role["buffer"]:
@@ -128,6 +128,60 @@ def _validate_role(role: dict[str, Any], name: str) -> None:
     transcript = role.get("transcript")
     if not isinstance(transcript, str) or not transcript:
         raise SystemExit(f"invalid run state: {name} transcript is missing")
+    if not legacy:
+        identity = role.get("identity")
+        if not isinstance(identity, dict) or _canonical_identity(identity) != identity:
+            raise SystemExit(f"invalid run state: {name} identity is missing or invalid")
+        if identity["buffer"] != role["buffer"] or identity["backend"] != role["backend"]:
+            raise SystemExit(f"invalid run state: {name} identity conflicts with its role")
+
+
+def _canonical_identity(value: dict[str, Any]) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        raise SystemExit("actor identity is unavailable")
+    result = {key: value.get(key) for key in ("buffer", "backend", "directory", "transcript", "session_id")}
+    if (not all(isinstance(result[key], str) and result[key]
+                for key in ("buffer", "directory", "session_id"))
+            or result["backend"] not in session.VALID_BACKENDS
+            or (result["transcript"] is not None and not isinstance(result["transcript"], str))):
+        raise SystemExit("actor identity is unavailable; initialize the fixed session before proceeding")
+    result["directory"] = str(Path(result["directory"]).resolve())
+    result["transcript"] = str(Path(result["transcript"]).resolve()) if result["transcript"] else None
+    return result
+
+
+def _observe_actor(state: dict[str, Any], name: str, *, expected=None, fresh=False):
+    role = state[name]
+    live = session.actor_identity(role["buffer"])
+    identity = _canonical_identity(live)
+    if (identity["buffer"] != role["buffer"] or identity["backend"] != role["backend"]
+            or identity["directory"] != str(Path(state["repo"]).resolve())):
+        raise SystemExit("fixed actor backend, buffer or repository identity changed")
+    binding = expected if expected is not None else role.get("identity")
+    if not fresh:
+        if binding is not None:
+            for key in ("buffer", "backend", "directory", "session_id"):
+                if identity[key] != binding[key]:
+                    raise SystemExit("fixed actor session identity changed")
+            transcript = binding["transcript"]
+        else:
+            transcript = str(Path(role["transcript"]).resolve())
+        if transcript is not None and identity["transcript"] != transcript:
+            raise SystemExit("fixed actor transcript identity changed")
+        if binding is not None and transcript is None and expected is None:
+            if identity["transcript"] not in (None, str(Path(role["transcript"]).resolve())):
+                raise SystemExit("fixed actor transcript identity changed")
+    return identity, live.get("state", "unknown")
+
+
+def _distinct_roles(state: dict[str, Any]) -> None:
+    left, right = state["agent1"], state["agent2"]
+    if (left["buffer"] == right["buffer"]
+            or Path(left["transcript"]).resolve() == Path(right["transcript"]).resolve()
+            or (left.get("identity") and right.get("identity")
+                and (left["identity"]["backend"], left["identity"]["session_id"])
+                == (right["identity"]["backend"], right["identity"]["session_id"]))):
+        raise SystemExit("author and reviewer must be distinct sessions")
 
 
 def _validate_phase_entries(
@@ -162,17 +216,20 @@ def _validate_phase_entries(
     return entries
 
 
-def _validate_pending(pending: Any) -> None:
+def _validate_pending(pending: Any, *, legacy=False) -> None:
     if pending is None:
         return
-    if not isinstance(pending, dict) or set(pending) != {
+    keys = {
         "kind",
         "phase",
         "actor",
         "transcript_offset",
-    }:
+    }
+    if not legacy:
+        keys |= {"receipt", "prompt_sha256", "context_sha256", "identity", "transcript", "stop_sha256", "boundary"}
+    if not isinstance(pending, dict) or set(pending) != keys:
         raise SystemExit("invalid run state: malformed pending submission")
-    if pending["kind"] != "phase":
+    if pending["kind"] not in (("phase",) if legacy else ("phase", "restart", "steering")):
         raise SystemExit("invalid run state: malformed pending submission")
     if pending["phase"] not in PHASES:
         raise SystemExit("invalid run state: malformed pending submission")
@@ -180,15 +237,38 @@ def _validate_pending(pending: Any) -> None:
         raise SystemExit("invalid run state: malformed pending submission")
     if not isinstance(pending["transcript_offset"], int) or pending["transcript_offset"] < 0:
         raise SystemExit("invalid run state: malformed pending submission")
+    if not legacy:
+        if (not isinstance(pending["receipt"], str)
+                or re.fullmatch(r"ORCHESTRATION ATTEMPT: [0-9a-f]{32}", pending["receipt"]) is None
+                or any(not isinstance(pending[key], str) or re.fullmatch(r"[0-9a-f]{64}", pending[key]) is None
+                       for key in ("prompt_sha256", "context_sha256"))
+                or _canonical_identity(pending["identity"]) != pending["identity"]
+                or pending["transcript"] != pending["identity"]["transcript"]):
+            raise SystemExit("invalid run state: pending attempt identity is invalid")
+        boundary = pending["boundary"]
+        if boundary is not None and (
+            not isinstance(boundary, dict)
+            or set(boundary) != {"path", "device", "inode", "length", "sha256"}
+            or boundary["path"] != pending["transcript"]
+            or boundary["length"] != pending["transcript_offset"]
+            or any(type(boundary[key]) is not int or boundary[key] < 0
+                   for key in ("device", "inode", "length"))
+            or not isinstance(boundary["sha256"], str)
+            or re.fullmatch(r"[0-9a-f]{64}", boundary["sha256"]) is None
+        ):
+            raise SystemExit("invalid run state: transcript boundary is invalid")
 
 
-def validate_run(state: Any) -> dict[str, Any]:
-    if not isinstance(state, dict) or state.get("version") != RUN_VERSION:
+def validate_run(state: Any, *, allow_legacy=False) -> dict[str, Any]:
+    if not isinstance(state, dict) or state.get("version") not in ((2, RUN_VERSION) if allow_legacy else (RUN_VERSION,)):
         raise SystemExit("invalid or unsupported orchestration run state")
+    legacy = state["version"] == 2
     if not isinstance(state.get("stage"), str) or not state["stage"]:
         raise SystemExit("invalid run state: stage is missing")
-    _validate_role(state.get("agent1"), "Agent 1")
-    _validate_role(state.get("agent2"), "Agent 2")
+    _validate_role(state.get("agent1"), "Agent 1", legacy=legacy)
+    _validate_role(state.get("agent2"), "Agent 2", legacy=legacy)
+    if not legacy:
+        _distinct_roles(state)
     if not isinstance(state.get("repo"), str) or not state["repo"]:
         raise SystemExit("invalid run state: repository is missing")
     if state.get("status") not in RUN_STATUSES:
@@ -213,7 +293,21 @@ def validate_run(state: Any) -> dict[str, Any]:
         for index, entry in enumerate(completions)
     ]:
         raise SystemExit("invalid run state: submissions and completions are incoherent")
-    _validate_pending(state.get("pending_submission"))
+    _validate_pending(state.get("pending_submission"), legacy=legacy)
+    if not legacy:
+        attempts = state.get("attempts")
+        if not isinstance(attempts, list):
+            raise SystemExit("invalid run state: attempt history is missing")
+        for attempt in attempts:
+            if not isinstance(attempt, dict) or type(attempt.get("acknowledged")) is not bool:
+                raise SystemExit("invalid run state: attempt acknowledgement is invalid")
+            _validate_pending({key: value for key, value in attempt.items() if key != "acknowledged"})
+        contexts = state.get("phase_context_sha256")
+        if (not isinstance(contexts, dict)
+                or any(key not in PHASES or not isinstance(value, str)
+                       or re.fullmatch(r"[0-9a-f]{64}", value) is None
+                       for key, value in contexts.items())):
+            raise SystemExit("invalid run state: phase context digests are invalid")
     steering_prompts = state.get("steering_prompts", [])
     if not isinstance(steering_prompts, list) or any(
         not isinstance(entry, dict)
@@ -282,12 +376,19 @@ def validate_run(state: Any) -> dict[str, Any]:
 
     pending = state.get("pending_submission")
     if pending:
-        if status != "ready" or pending["phase"] != expected:
+        kind = pending["kind"]
+        coherent_pending = (
+            (kind == "phase" and status == "ready" and pending["phase"] == expected)
+            or (kind == "restart" and status == "phase-active" and pending["phase"] == active_phase)
+            or (kind == "steering" and status == "implementation-stopped" and pending["phase"] == "implementation"
+                and pending["stop_sha256"] == state["stop_evidence"]["sha256"])
+        )
+        if not coherent_pending:
             raise SystemExit("invalid run state: pending phase is incoherent")
     return state
 
 
-def load_run(path: Path | str) -> dict[str, Any]:
+def load_run(path: Path | str, *, allow_legacy=False) -> dict[str, Any]:
     run_path = Path(path)
     try:
         metadata = run_path.lstat()
@@ -301,7 +402,9 @@ def load_run(path: Path | str) -> dict[str, Any]:
         state = json.loads(run_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
         raise SystemExit(f"cannot read orchestration run file {run_path}: {error}") from None
-    return validate_run(state)
+    if isinstance(state, dict) and state.get("version") == 2 and not allow_legacy:
+        raise SystemExit("legacy v2 run requires explicit migrate-run; source state retained")
+    return validate_run(state, allow_legacy=allow_legacy)
 
 
 def _create_run_file(path: Path, state: dict[str, Any]) -> None:
@@ -367,14 +470,6 @@ def create_run(args: argparse.Namespace) -> None:
         raise SystemExit("invalid Agent 2 backend")
     if not str(args.stage).strip():
         raise SystemExit("stage must not be empty")
-    agent1_transcript = Path(args.agent1_transcript) if args.agent1_transcript else None
-    if (
-        not args.adopt_implementation
-        and agent1_transcript is not None
-        and agent1_transcript.exists()
-        and agent1_transcript.stat().st_size
-    ):
-        raise SystemExit("a new stage requires a fresh Agent 1 transcript")
     adopted_evidence = None
     expected_phase = "spec"
     submissions: list[dict[str, str]] = []
@@ -425,14 +520,64 @@ def create_run(args: argparse.Namespace) -> None:
         "steering_prompts": [],
         "adopted_evidence": adopted_evidence,
         "acceptance_evidence": None,
+        "phase_context_sha256": {},
+        "attempts": [],
     }
+    for name in ("agent1", "agent2"):
+        _validate_role(state[name], name.replace("agent", "Agent "), legacy=True)
+    _distinct_roles(state)
+    for name in ("agent1", "agent2"):
+        identity, _ = _observe_actor(state, name, fresh=True)
+        if identity["transcript"] not in (None, str(Path(state[name]["transcript"]).resolve())):
+            raise SystemExit("configured actor transcript does not match the live session")
+        state[name]["transcript"] = str(Path(state[name]["transcript"]).resolve())
+        state[name]["identity"] = identity
+    if not args.adopt_implementation:
+        _require_fresh_transcript(state["agent1"]["identity"], state["agent1"]["transcript"],
+                                  "a new stage requires a fresh Agent 1 transcript")
     validate_run(state)
     _create_run_file(Path(args.run_file), state)
     print(session.json_for_display(state))
 
 
+def _require_fresh_transcript(identity, transcript, reason):
+    if transcript is None or not os.path.lexists(transcript):
+        return
+    try:
+        fresh = session.transcript_is_startup_only(
+            transcript, expected_session_id=identity["session_id"],
+            expected_directory=identity["directory"], backend=identity["backend"])
+    except EmacsClientError:
+        raise SystemExit(reason + "; transcript freshness could not be established") from None
+    if not fresh:
+        raise SystemExit(reason)
+
+
+def migrate_run(args: argparse.Namespace) -> None:
+    """Explicitly bind unambiguous legacy state without inventing receipts."""
+    with run_lock(args.run_file):
+        state = load_run(args.run_file, allow_legacy=True)
+        if state["version"] == RUN_VERSION:
+            raise SystemExit("run already uses the current schema")
+        if (state.get("pending_submission") or state.get("steering_prompts")
+                or (state.get("stop_evidence") or {}).get("kind") == "delivery-ambiguous"):
+            raise SystemExit("ambiguous legacy pending/steering state cannot be migrated; source retained")
+        for name in ("agent1", "agent2"):
+            identity, _ = _observe_actor(state, name)
+            state[name]["identity"] = identity
+        _distinct_roles(state)
+        state["version"] = RUN_VERSION
+        state["phase_context_sha256"] = {}
+        state["attempts"] = []
+        # Completed history and an unambiguous active boundary retain their
+        # original semantics.  They are not represented as nonce receipts.
+        state["legacy_history"] = True
+        save_run(args.run_file, state)
+    print("migrated unambiguous legacy state; no delivery receipts were invented")
+
+
 def state_cmd(args: argparse.Namespace) -> None:
-    run = load_run(args.run_file)
+    run = load_run(args.run_file, allow_legacy=True)
     if (
         run["status"]
         in {
@@ -445,7 +590,7 @@ def state_cmd(args: argparse.Namespace) -> None:
         raise SystemExit(
             "only Agent 1 top-level state is available during implementation"
         )
-    state = session.buffer_state(run[args.actor]["buffer"])
+    state = _actor_status(run, args.actor)
     if args.json:
         print(session.json_for_display(state))
     else:
@@ -498,7 +643,50 @@ def _evidence_digest(path: Path | str) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def _phase_evidence(state: dict[str, Any], phase: str) -> str:
+def _active_attempt(state):
+    phase = state["submissions"][-1]["phase"] if state["submissions"] else None
+    return next((attempt for attempt in reversed(state.get("attempts", []))
+                 if attempt.get("acknowledged") and attempt["phase"] == phase), None)
+
+
+def _active_prompt_hash(state):
+    attempt = _active_attempt(state)
+    if attempt:
+        _verify_boundary(attempt)
+    return attempt["prompt_sha256"] if attempt else None
+
+
+def _capture_boundary(transcript, offset=None):
+    """Pin the pre-submit file and prefix while allowing later append-only output."""
+    if transcript is None:
+        return None
+    path = Path(transcript)
+    try:
+        with path.open("rb") as stream:
+            before = os.fstat(stream.fileno())
+            length = before.st_size if offset is None else offset
+            prefix = stream.read(length)
+            after = path.stat()
+    except FileNotFoundError:
+        if offset not in (None, 0):
+            raise EmacsClientError("transcript boundary disappeared") from None
+        return None
+    if ((before.st_dev, before.st_ino) != (after.st_dev, after.st_ino)
+            or not stat.S_ISREG(before.st_mode) or len(prefix) != length):
+        raise EmacsClientError("transcript boundary changed during inspection")
+    return {"path": str(path.resolve()), "device": before.st_dev, "inode": before.st_ino,
+            "length": length, "sha256": hashlib.sha256(prefix).hexdigest()}
+
+
+def _verify_boundary(attempt):
+    expected = attempt.get("boundary")
+    if expected is not None:
+        observed = _capture_boundary(attempt["transcript"], expected["length"])
+        if observed != expected:
+            raise EmacsClientError("transcript identity or pre-submit prefix changed")
+
+
+def _phase_evidence(state: dict[str, Any], phase: str, *, include_text=False):
     actor = PHASE_ACTOR[phase]
     transcript = state[actor].get("transcript")
     if not transcript:
@@ -506,14 +694,14 @@ def _phase_evidence(state: dict[str, Any], phase: str) -> str:
     submission = state["submissions"][-1]
     if submission["phase"] != phase:
         raise SystemExit("phase submission boundary is incoherent")
-    messages = session.transcript_messages(
-        Path(transcript), offset=submission["transcript_offset"]
-    )
-    if not messages:
+    returned = session.latest_transcript_return(
+        Path(transcript), offset=submission["transcript_offset"],
+        expected_prompt_sha256=_active_prompt_hash(state))
+    if returned is None:
         raise SystemExit(
             "phase transcript contains no returned assistant message after current submission"
         )
-    text = messages[-1]["text"]
+    text = returned["text"]
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     marker = (
         f"STAGE COMPLETE: {state['stage']}"
@@ -522,7 +710,9 @@ def _phase_evidence(state: dict[str, Any], phase: str) -> str:
     )
     if not lines or lines[-1] != marker:
         raise SystemExit(f"{phase} completion marker is missing")
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+    digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    _active_prompt_hash(state)
+    return (digest, text) if include_text else digest
 
 
 def _require_no_pending(state: dict[str, Any]) -> None:
@@ -532,23 +722,89 @@ def _require_no_pending(state: dict[str, Any]) -> None:
         )
 
 
-def _finalize_pending(state: dict[str, Any]) -> None:
+def _new_attempt(state, kind, phase, context, prompt, identity):
+    receipt = "ORCHESTRATION ATTEMPT: " + uuid.uuid4().hex
+    prompt = receipt + "\n\n" + prompt
+    transcript = identity["transcript"]
+    boundary = _capture_boundary(transcript)
+    offset = boundary["length"] if boundary else 0
+    pending = {"kind": kind, "phase": phase, "actor": PHASE_ACTOR[phase],
+               "transcript_offset": offset, "receipt": receipt,
+               "prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
+               "context_sha256": hashlib.sha256(context.encode()).hexdigest(),
+               "identity": identity, "transcript": transcript, "boundary": boundary,
+               "stop_sha256": (state.get("stop_evidence") or {}).get("sha256")}
+    state["pending_submission"] = pending
+    return prompt
+
+
+def _pending_receipt(state):
+    pending = state["pending_submission"]
+    identity, lifecycle = _observe_actor(state, pending["actor"], expected=pending["identity"])
+    transcript = identity["transcript"]
+    _verify_boundary(pending)
+    found = bool(transcript and session._marker_delivered(
+        transcript, pending["transcript_offset"], pending["receipt"],
+        expected_prompt_sha256=pending["prompt_sha256"]))
+    _verify_boundary(pending)
+    if found:
+        pending["transcript"] = transcript
+        pending["identity"] = identity
+        if pending["boundary"] is None:
+            pending["boundary"] = _capture_boundary(transcript, pending["transcript_offset"])
+    return found, identity, lifecycle
+
+
+def _deliver_pending(state, run_file, prompt):
+    """The durable attempt exists before any external submission."""
+    save_run(run_file, state)
+    pending = state["pending_submission"]
+    actor = state[pending["actor"]]
+    _verify_boundary(pending)
+    resolved = session.submit_to_agent(
+        actor["buffer"], actor["backend"], prompt,
+        transcript=pending["transcript"], transcript_offset=pending["transcript_offset"],
+        delivery_marker=pending["receipt"],
+        expected_identity=dict(pending["identity"], state="awaiting-input"),
+        one_pass=pending["phase"] == "implementation")
+    if isinstance(resolved, str) and resolved:
+        pending["transcript"] = str(Path(resolved).resolve())
+        pending["identity"] = dict(pending["identity"], transcript=pending["transcript"])
+    if not pending["transcript"]:
+        raise EmacsClientError("delivery has no resolved transcript; pending attempt retained")
+    _verify_boundary(pending)
+    if pending["boundary"] is None:
+        pending["boundary"] = _capture_boundary(pending["transcript"], pending["transcript_offset"])
+    _finalize_pending(state)
+    save_run(run_file, state)
+
+
+def _finalize_pending(state: dict[str, Any], *, acknowledged=True) -> None:
     pending = state["pending_submission"]
     if pending is None:
         raise SystemExit("no pending submission to finalize")
     phase = pending["phase"]
-    state["submissions"].append(
-        {
-            "phase": phase,
-            "actor": pending["actor"],
-            "transcript_offset": pending["transcript_offset"],
-        }
-    )
+    actor = state[pending["actor"]]
+    if pending["transcript"]:
+        actor["transcript"] = pending["transcript"]
+    actor["identity"] = pending["identity"]
+    if pending["kind"] == "phase":
+        state["submissions"].append({"phase": phase, "actor": pending["actor"],
+                                     "transcript_offset": pending["transcript_offset"]})
+    else:
+        state["submissions"][-1]["transcript_offset"] = pending["transcript_offset"]
+    if pending["kind"] == "steering":
+        state.setdefault("steering_prompts", []).append({
+            "prompt_sha256": pending["context_sha256"], "stop_sha256": pending["stop_sha256"]})
+    else:
+        state.setdefault("phase_context_sha256", {})[phase] = pending["context_sha256"]
+    state.setdefault("attempts", []).append(dict(pending, acknowledged=acknowledged))
     state["status"] = (
         "implementation-active" if phase == "implementation" else "phase-active"
     )
     state["active_phase"] = phase
     state["expected_phase"] = None
+    state["stop_evidence"] = None
     state["pending_submission"] = None
 
 
@@ -557,7 +813,7 @@ def _freeze_pending_implementation(state: dict[str, Any], reason: str) -> None:
     pending = state["pending_submission"]
     if pending is None or pending["phase"] != "implementation":
         raise SystemExit("no pending implementation can be frozen")
-    _finalize_pending(state)
+    _finalize_pending(state, acknowledged=False)
     state["status"] = "implementation-stopped"
     state["active_phase"] = None
     state["stop_evidence"] = {
@@ -599,33 +855,19 @@ def submit(args: argparse.Namespace) -> None:
             )
         actor_name = PHASE_ACTOR[args.phase]
         actor = state[actor_name]
-        live = session.buffer_state(actor["buffer"])
-        live = session._bootstrap_fresh_claude_waiting(state, actor_name, live)
-        if live.get("state") != "awaiting-input":
+        identity, lifecycle = _observe_actor(state, actor_name)
+        if lifecycle == "unknown":
+            session._bootstrap_fresh_claude_waiting(state, actor_name, {"state": lifecycle})
+            identity, lifecycle = _observe_actor(state, actor_name)
+        if lifecycle != "awaiting-input":
             label = "Agent 1" if actor_name == "agent1" else "Agent 2"
             raise SystemExit(
-                f"{label} is {live.get('state', 'unknown')}; "
+                f"{label} is {lifecycle}; "
                 "phase submission requires awaiting input"
             )
-        prompt = _phase_prompt(state, args.phase, context, args.run_file)
-        state["pending_submission"] = {
-            "kind": "phase",
-            "phase": args.phase,
-            "actor": actor_name,
-            "transcript_offset": session._transcript_offset(state, actor_name),
-        }
-        save_run(args.run_file, state)
-        session.submit_to_agent(
-            actor["buffer"],
-            actor["backend"],
-            prompt,
-            transcript=actor["transcript"],
-            transcript_offset=state["pending_submission"]["transcript_offset"],
-            delivery_marker=_delivery_marker(state["stage"], args.phase),
-            one_pass=args.phase == "implementation",
-        )
-        _finalize_pending(state)
-        save_run(args.run_file, state)
+        prompt = _new_attempt(state, "phase", args.phase, context,
+                              _phase_prompt(state, args.phase, context, args.run_file), identity)
+        _deliver_pending(state, args.run_file, prompt)
     print(f"submitted stage={state['stage']} phase={args.phase} actor={actor_name}")
 
 
@@ -654,14 +896,14 @@ def finish_phase(args: argparse.Namespace) -> None:
                 f"active phase is {state['active_phase']}; refusing {args.phase} completion"
             )
         actor_name = PHASE_ACTOR[args.phase]
-        live = session.buffer_state(state[actor_name]["buffer"])
-        if live.get("state") != "awaiting-input":
+        _, lifecycle = _observe_actor(state, actor_name)
+        if lifecycle != "awaiting-input":
             label = "Agent 1" if actor_name == "agent1" else "Agent 2"
             raise SystemExit(
-                f"{label} is {live.get('state', 'unknown')}; "
+                f"{label} is {lifecycle}; "
                 "phase completion requires awaiting input"
             )
-        digest = _phase_evidence(state, args.phase)
+        digest, returned_text = _phase_evidence(state, args.phase, include_text=True)
         state["completions"].append(
             {
                 "phase": args.phase,
@@ -678,6 +920,9 @@ def finish_phase(args: argparse.Namespace) -> None:
             state["expected_phase"] = PHASES[PHASES.index(args.phase) + 1]
         save_run(args.run_file, state)
     print(f"finished stage={state['stage']} phase={args.phase} actor={actor_name}")
+    if args.phase == "implementation":
+        print("--- validated implementation return (text not retained in run file) ---")
+        print(returned_text)
 
 
 def reconcile_submission(args: argparse.Namespace) -> None:
@@ -686,28 +931,28 @@ def reconcile_submission(args: argparse.Namespace) -> None:
         pending = state["pending_submission"]
         if pending is None:
             raise SystemExit("no pending submission requires reconciliation")
-        if pending["phase"] == "implementation" and (
-            not args.delivered
-            or not session._marker_delivered(
-                state[pending["actor"]]["transcript"],
-                pending["transcript_offset"],
-                _delivery_marker(state["stage"], pending["phase"]),
-            )
-        ):
+        delivered, _, lifecycle = _pending_receipt(state)
+        if delivered and not args.delivered:
+            raise SystemExit("delivery is positively acknowledged; --not-delivered cannot discard its receipt")
+        if args.delivered:
+            if not delivered:
+                raise SystemExit("exact current-attempt delivery receipt is missing; pending submission retained")
+            _finalize_pending(state)
+            outcome = "delivered"
+        elif lifecycle != "awaiting-input":
+            raise SystemExit("not-delivered reconciliation requires the fixed actor awaiting input")
+        elif pending["phase"] == "implementation" and pending["kind"] == "phase":
             _freeze_pending_implementation(
                 state, "implementation delivery outcome was not independently verified"
             )
             outcome = "implementation-stopped"
-        elif args.delivered:
-            if not session._marker_delivered(
-                state[pending["actor"]]["transcript"],
-                pending["transcript_offset"],
-                _delivery_marker(state["stage"], pending["phase"]),
-            ):
-                raise SystemExit("delivery receipt is missing; pending submission retained")
-            _finalize_pending(state)
-            outcome = "delivered"
         else:
+            # This explicit operator assertion does not silently retry a send.
+            # Preserve the failed steering attempt's at-most-once constraint.
+            if pending["kind"] == "steering":
+                state.setdefault("steering_prompts", []).append({
+                    "prompt_sha256": pending["context_sha256"], "stop_sha256": pending["stop_sha256"]})
+            state.setdefault("attempts", []).append(dict(pending, acknowledged=False))
             state["pending_submission"] = None
             outcome = "not-delivered"
         save_run(args.run_file, state)
@@ -722,25 +967,9 @@ def retry_delivery(args: argparse.Namespace) -> None:
         if pending is None:
             raise SystemExit("only a pending submission is eligible for delivery retry")
         submission = pending
-
         actor = state[submission["actor"]]
-        transcript = actor["transcript"]
-        offset = submission["transcript_offset"]
-        marker = _delivery_marker(state["stage"], submission["phase"])
-        if submission["phase"] == "implementation":
-            if session._marker_delivered(transcript, offset, marker):
-                _finalize_pending(state)
-                save_run(args.run_file, state)
-                print(
-                    f"delivery already observed stage={state['stage']} "
-                    "phase=implementation"
-                )
-                return
-            raise SystemExit(
-                "implementation delivery cannot be retried; reconcile the pending "
-                "attempt, which freezes the one-pass run without another agent contact"
-            )
-        if session._marker_delivered(transcript, offset, marker):
+        delivered, identity, lifecycle = _pending_receipt(state)
+        if delivered:
             _finalize_pending(state)
             save_run(args.run_file, state)
             print(
@@ -748,31 +977,42 @@ def retry_delivery(args: argparse.Namespace) -> None:
                 f"phase={submission['phase']}"
             )
             return
-
-        live = session.buffer_state(actor["buffer"])
-        if live.get("state") != "awaiting-input":
+        if submission["phase"] == "implementation":
+            raise SystemExit("implementation delivery cannot be retried; reconcile the pending attempt without another contact")
+        if lifecycle != "awaiting-input":
             raise SystemExit(
-                f"{submission['actor']} is {live.get('state', 'unknown')}; "
+                f"{submission['actor']} is {lifecycle}; "
                 "delivery retry requires awaiting input"
             )
         if not session.pending_prompt_contains(
-            actor["buffer"], actor["backend"], marker
+            actor["buffer"], actor["backend"], submission["receipt"],
+            expected_prompt_sha256=submission["prompt_sha256"]
         ):
             raise SystemExit(
-                "exact pending phase marker is not present in the current composer; "
+                "exact pending attempt is not present in the current composer; "
                 "refusing delivery retry"
             )
-        session.send_return_to_agent(actor["buffer"], actor["backend"])
+        session.send_return_to_agent(actor["buffer"], actor["backend"],
+                                     expected_identity=dict(identity, state="awaiting-input"),
+                                     expected_prompt_sha256=submission["prompt_sha256"])
+        transcript = identity["transcript"] or session._wait_for_transcript_path(
+            actor["buffer"], actor["backend"], session.DELIVERY_RETRY_WAIT_SECONDS)
+        if not transcript:
+            raise EmacsClientError("retry has no resolved transcript; pending attempt retained")
         if not session._wait_for_delivery(
             transcript,
-            offset,
-            marker,
+            submission["transcript_offset"],
+            submission["receipt"],
             session.DELIVERY_RETRY_WAIT_SECONDS,
+            expected_prompt_sha256=submission["prompt_sha256"],
         ):
             raise EmacsClientError(
                 "submission delivery was not acknowledged after retrying only the "
                 "submit keystroke"
             )
+        delivered, _, _ = _pending_receipt(state)
+        if not delivered:
+            raise EmacsClientError("current actor delivery could not be reconciled; pending attempt retained")
         _finalize_pending(state)
         save_run(args.run_file, state)
     print(
@@ -797,55 +1037,33 @@ def restart_phase(args: argparse.Namespace) -> None:
         actor_name = PHASE_ACTOR[phase]
         actor = state[actor_name]
         submission = state["submissions"][-1]
-        returned = session.transcript_messages(
+        _active_prompt_hash(state)
+        returned = session.transcript_has_output(
             Path(actor["transcript"]), offset=submission["transcript_offset"]
         )
         if returned:
             raise SystemExit(
                 "active phase already returned assistant output; refusing restart"
             )
-        live = session.buffer_state(actor["buffer"])
-        if live.get("state") != "awaiting-input":
+        identity, lifecycle = _observe_actor(state, actor_name, fresh=True)
+        if lifecycle != "awaiting-input":
             raise SystemExit(
-                f"{actor_name} is {live.get('state', 'unknown')}; "
+                f"{actor_name} is {lifecycle}; "
                 "phase restart requires a fresh waiting session"
             )
-        marker = _delivery_marker(state["stage"], phase)
-        old_transcript = str(Path(actor["transcript"]).resolve())
-        fresh = session.agent_transcript_path(actor["buffer"], actor["backend"])
-        marker_offset = session._user_marker_offset(fresh, marker) if fresh else None
-        if marker_offset is None:
-            if fresh and str(Path(fresh).resolve()) == old_transcript:
-                raise SystemExit(
-                    "fixed actor still points at the failed transcript; "
-                    "phase restart requires a fresh session"
-                )
-            starting_offset = session._transcript_offset(
-                {actor_name: {"transcript": fresh or "/nonexistent"}}, actor_name
-            )
-            prompt = _phase_prompt(state, phase, context)
-            session.submit_to_agent(
-                actor["buffer"],
-                actor["backend"],
-                prompt,
-                transcript=fresh or "/nonexistent",
-                transcript_offset=starting_offset,
-                delivery_marker=marker,
-            )
-            fresh = session._wait_for_transcript_path(
-                actor["buffer"], actor["backend"], session.DELIVERY_RETRY_WAIT_SECONDS
-            )
-            if not fresh:
-                raise EmacsClientError(
-                    "fresh phase delivery was acknowledged but its transcript path "
-                    "is not yet available"
-                )
-            marker_offset = starting_offset
-        if str(Path(fresh).resolve()) == old_transcript:
-            raise SystemExit("phase restart did not acquire a fresh transcript")
-        actor["transcript"] = fresh
-        submission["transcript_offset"] = marker_offset
-        save_run(args.run_file, state)
+        if (identity["session_id"] == actor["identity"]["session_id"]
+                or identity["transcript"] == str(Path(actor["transcript"]).resolve())):
+            raise SystemExit("phase restart requires a fresh fixed-role session")
+        other = state["agent2" if actor_name == "agent1" else "agent1"]
+        if (identity["backend"], identity["session_id"]) == (other["backend"], other["identity"]["session_id"]):
+            raise SystemExit("restart cannot reuse the other role's session")
+        expected_context = state.get("phase_context_sha256", {}).get(phase)
+        if expected_context != hashlib.sha256(context.encode()).hexdigest():
+            raise SystemExit("restart requires the original phase context; legacy runs without its digest cannot restart")
+        _require_fresh_transcript(identity, identity["transcript"],
+                                  "fresh restart transcript already has history; no static marker adoption is permitted")
+        prompt = _new_attempt(state, "restart", phase, context, _phase_prompt(state, phase, context), identity)
+        _deliver_pending(state, args.run_file, prompt)
     print(
         f"restarted stage={state['stage']} phase={phase} actor={actor_name} "
         "with fresh transcript"
@@ -853,12 +1071,13 @@ def restart_phase(args: argparse.Namespace) -> None:
 
 
 def run_status(args: argparse.Namespace) -> None:
-    state = load_run(args.run_file)
+    state = load_run(args.run_file, allow_legacy=True)
     display = {
         "stage": state["stage"],
         "phase": run_phase(state),
         "status": state["status"],
         "pending_reconciliation": state["pending_submission"] is not None,
+        "version": state["version"],
     }
     if getattr(args, "json", False):
         print(session.json_for_display(display))
@@ -907,12 +1126,13 @@ def stage_return(args: argparse.Namespace) -> None:
     """Record and print a genuine incomplete implementation return."""
     with run_lock(args.run_file):
         state = load_run(args.run_file)
+        _require_no_pending(state)
         if state["status"] != "implementation-active":
             raise SystemExit("stage implementation is not active")
-        live = session.buffer_state(state["agent1"]["buffer"])
-        if live.get("state") != "awaiting-input":
+        _, lifecycle = _observe_actor(state, "agent1")
+        if lifecycle != "awaiting-input":
             raise SystemExit(
-                f"Agent 1 is {live.get('state', 'unknown')}; "
+                f"Agent 1 is {lifecycle}; "
                 "stage return is available only after Agent 1 awaits input"
             )
         text = _latest_implementation_return(state)
@@ -953,6 +1173,7 @@ def steer_stage(args: argparse.Namespace) -> None:
     prompt_sha = hashlib.sha256(context.encode("utf-8")).hexdigest()
     with run_lock(args.run_file):
         state = load_run(args.run_file)
+        _require_no_pending(state)
         if state["status"] != "implementation-stopped":
             raise SystemExit("stage steering requires a recorded incomplete return")
         evidence = state["stop_evidence"]
@@ -963,44 +1184,31 @@ def steer_stage(args: argparse.Namespace) -> None:
             raise SystemExit("this incomplete return already received a steering attempt")
         if any(entry["prompt_sha256"] == prompt_sha for entry in prior):
             raise SystemExit("this steering message was already sent")
-        live = session.buffer_state(state["agent1"]["buffer"])
-        if live.get("state") != "awaiting-input":
+        identity, lifecycle = _observe_actor(state, "agent1")
+        if lifecycle != "awaiting-input":
             raise SystemExit(
-                f"Agent 1 is {live.get('state', 'unknown')}; steering requires awaiting input"
+                f"Agent 1 is {lifecycle}; steering requires awaiting input"
             )
-        prompt = STEERING_CONTRACT.format(stage=state["stage"], context=context)
-        state.setdefault("steering_prompts", []).append(
-            {
-                "prompt_sha256": prompt_sha,
-                "stop_sha256": evidence["sha256"],
-            }
-        )
-        save_run(args.run_file, state)
-        session.submit_to_agent(
-            state["agent1"]["buffer"],
-            state["agent1"]["backend"],
-            prompt,
-            transcript=state["agent1"]["transcript"],
-            transcript_offset=session._transcript_offset(state, "agent1"),
-            delivery_marker=f"TARGETED WHOLE-STAGE STEERING\n\nThis message responds",
-            one_pass=True,
-        )
-        state["status"] = "implementation-active"
-        state["active_phase"] = "implementation"
-        state["stop_evidence"] = None
-        save_run(args.run_file, state)
+        current_return = _latest_implementation_return(state)
+        if hashlib.sha256(current_return.encode("utf-8")).hexdigest() != evidence["sha256"]:
+            raise SystemExit("recorded incomplete return changed before steering")
+        prompt = _new_attempt(state, "steering", "implementation", context,
+                              STEERING_CONTRACT.format(stage=state["stage"], context=context), identity)
+        _deliver_pending(state, args.run_file, prompt)
     print(f"steered stage={state['stage']} actor=agent1")
 
 
 def _latest_implementation_return(state: dict[str, Any]) -> str:
     submission = state["submissions"][-1]
-    messages = session.transcript_messages(
+    returned = session.latest_transcript_return(
         Path(state["agent1"]["transcript"]),
         offset=submission["transcript_offset"],
+        expected_prompt_sha256=_active_prompt_hash(state),
     )
-    if not messages:
+    _active_prompt_hash(state)
+    if returned is None:
         raise SystemExit("no bounded implementation return is available")
-    return messages[-1]["text"]
+    return returned["text"]
 
 
 def switch_model(args: argparse.Namespace) -> None:
@@ -1026,8 +1234,15 @@ def git_status(repo: Path) -> dict[str, str]:
     }
 
 
+def _actor_status(state, name):
+    if state["version"] == 2:
+        return session.buffer_state(state[name]["buffer"])
+    identity, lifecycle = _observe_actor(state, name)
+    return {"buffer": identity["buffer"], "state": lifecycle, "directory": identity["directory"]}
+
+
 def status(args: argparse.Namespace) -> dict[str, Any]:
-    state = load_run(args.run_file)
+    state = load_run(args.run_file, allow_legacy=True)
     result: dict[str, Any] = {
         "run": {
             "stage": state["stage"],
@@ -1041,7 +1256,7 @@ def status(args: argparse.Namespace) -> dict[str, Any]:
         "implementation-stopped",
         "implementation-returned",
     }:
-        result["agent1"] = session.buffer_state(state["agent1"]["buffer"])
+        result["agent1"] = _actor_status(state, "agent1")
         progress = latest_progress(args.run_file)
         if progress is not None:
             result["progress"] = progress
@@ -1049,7 +1264,7 @@ def status(args: argparse.Namespace) -> dict[str, Any]:
 
     result["repo"] = git_status(Path(state["repo"]))
     for actor in ("agent1", "agent2"):
-        result[actor] = session.buffer_state(state[actor]["buffer"])
+        result[actor] = _actor_status(state, actor)
         transcript = state[actor].get("transcript")
         if not transcript:
             continue
@@ -1171,84 +1386,6 @@ def watch(args: argparse.Namespace) -> None:
         time.sleep(args.interval)
 
 
-def _raw_transcript_texts(path: Path, kinds: set[str]) -> list[tuple[str, str]]:
-    out: list[tuple[str, str]] = []
-    if not path.exists():
-        return out
-    for line in path.read_text(errors="replace").splitlines():
-        try:
-            d = json.loads(line)
-        except Exception:
-            continue
-        if d.get("type") not in kinds:
-            continue
-        c = d.get("message", {}).get("content")
-        if isinstance(c, str):
-            txt = c
-        elif isinstance(c, list):
-            txt = " ".join(
-                (x.get("text") or "") for x in c if isinstance(x, dict)
-            )
-        else:
-            txt = ""
-        if txt.strip():
-            out.append((d["type"], txt))
-    return out
-
-
-def ask_cmd(args: argparse.Namespace) -> None:
-    """Post a direct question to a run actor, confirm it landed, print the reply.
-
-    Direct communication for supervision. Posting is confirmed from the actor's
-    transcript (the message text appears there), never inferred from the
-    terminal screen. Claude sessions queue a message until the current turn
-    ends; pass --interrupt to end the turn first (ESC to the eat terminal).
-    """
-    state = load_run(args.run_file)
-    actor = state[args.actor]
-    text = Path(args.prompt_file).read_text()
-    marker = text.strip().splitlines()[0][:80]
-    transcript = Path(actor["transcript"])
-    before = len(_raw_transcript_texts(transcript, {"assistant"}))
-    if args.interrupt:
-        session.run_emacs_eval(
-            f'(with-current-buffer {session.elisp_string(actor["buffer"])} '
-            f'(when (and (boundp (quote eat-terminal)) eat-terminal) '
-            f'(eat-term-send-string eat-terminal "\\e")) t)'
-        )
-        time.sleep(4)
-    session.run_emacs_eval(
-        f'(progn (agent-submit {session.elisp_string(text)} '
-        f'(get-buffer {session.elisp_string(actor["buffer"])})) t)'
-    )
-    deadline = time.time() + args.timeout
-    posted = False
-    while time.time() < deadline:
-        if any(marker in t for k, t in _raw_transcript_texts(transcript, {"user"})):
-            posted = True
-            break
-        time.sleep(5)
-    print("posted" if posted else "NOT CONFIRMED POSTED (still queued or lost)")
-    while time.time() < deadline:
-        replies = _raw_transcript_texts(transcript, {"assistant"})
-        if len(replies) > before:
-            print("reply:")
-            print(replies[-1][1])
-            return
-        time.sleep(5)
-    print("no reply within timeout")
-
-
-def interrupt_cmd(args: argparse.Namespace) -> None:
-    """Send ESC to a run actor's eat terminal to end its current turn."""
-    state = load_run(args.run_file)
-    actor = state[args.actor]
-    session.run_emacs_eval(
-        f'(with-current-buffer {session.elisp_string(actor["buffer"])} '
-        f'(when (and (boundp (quote eat-terminal)) eat-terminal) '
-        f'(eat-term-send-string eat-terminal "\\e")) t)'
-    )
-    print(f"interrupt sent to {actor['buffer']}")
 
 
 def add_status_args(parser: argparse.ArgumentParser) -> None:
@@ -1285,6 +1422,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--plan-commit")
     p.add_argument("--reviews-complete", action="store_true")
     p.set_defaults(func=create_run)
+
+    p = sub.add_parser("migrate-run", help="Explicitly bind unambiguous v2 state without inventing receipts")
+    p.add_argument("--run-file", required=True)
+    p.set_defaults(func=migrate_run)
 
     p = sub.add_parser("run-status", help="Inspect guarded stage run state")
     p.add_argument("--run-file", required=True)
@@ -1350,27 +1491,6 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--run-file", required=True)
     p.set_defaults(func=stage_return)
 
-    ask_p = sub.add_parser("ask", help="Post a direct question to an actor, confirm it posted, print the reply")
-
-    ask_p.add_argument("--run-file", required=True)
-
-    ask_p.add_argument("--actor", choices=["agent1", "agent2"], default="agent1")
-
-    ask_p.add_argument("--prompt-file", required=True)
-
-    ask_p.add_argument("--interrupt", action="store_true", help="End the actor's current turn first (ESC to eat)")
-
-    ask_p.add_argument("--timeout", type=int, default=300)
-
-    ask_p.set_defaults(func=ask_cmd)
-
-    int_p = sub.add_parser("interrupt", help="Send ESC to an actor's eat terminal")
-
-    int_p.add_argument("--run-file", required=True)
-
-    int_p.add_argument("--actor", choices=["agent1", "agent2"], default="agent1")
-
-    int_p.set_defaults(func=interrupt_cmd)
 
 
     p = sub.add_parser(

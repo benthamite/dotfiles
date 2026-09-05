@@ -1,6 +1,6 @@
 ---
 name: orchestrate-review
-description: Use when coordinating two live Emacs agent sessions for a staged implementation that needs independent artifact review, fixed author/reviewer roles, unattended completion, or role reversal.
+description: Use when coordinating two live Emacs agent sessions for a staged implementation that needs independent artifact review, fixed author/reviewer roles, unattended completion, or role reversal. Not for auditing this skill or merely explaining orchestration.
 ---
 
 # orchestrate-review
@@ -12,6 +12,10 @@ Agent 1 owns every authoring and implementation phase; Agent 2 independently
 reviews the specification and plan once each. The helper enforces phase order,
 fixed roles, one initial whole-stage implementation handoff, and targeted
 whole-stage steering only after a genuine incomplete return.
+
+Reading or auditing this skill does not authorize live orchestration. Start or
+contact sessions only when the user requested that workflow. Persistence never
+expands the user's scope or overrides higher-priority instructions or guards.
 
 ## Role contract
 
@@ -33,8 +37,9 @@ whole-stage steering only after a genuine incomplete return.
   one stage per fresh Agent 1 session. Do not reuse that implementation session
   for the next stage. Internal plan tasks stay inside their stage's single
   session and never receive separate orchestration delegations. `init-run`
-  rejects a nonempty Agent 1 transcript for a new, non-adopted stage; sequencing
-  the stage runs remains the orchestrator's responsibility.
+  rejects prior user or actor history for a new, non-adopted stage. A matching
+  Codex startup header is allowed; unknown records are not assumed harmless.
+  Sequencing the stage runs remains the orchestrator's responsibility.
 
 ## Stage atomicity
 
@@ -44,8 +49,10 @@ stage. Agent 1 owns implementation and stage-final verification.
 Agent 1 must never end its turn to wait: the injected implementation
 contract tells it that an unfinished background job, subagent, or reviewer is
 not a reason to return, and that it must wait inside the turn with bounded
-polling (under the 10-minute command limit, re-armed as needed). An ended turn
-is a stop; the orchestrator's only remedy is one targeted steer.
+waiting through the host's supported wait or recurring-monitor mechanism,
+within its documented limits. Resume yielded operations through their existing
+handles; do not launch duplicate work. An ended turn is a stop, not evidence
+that the background operation failed or finished.
 
 - Never report progress as `Task N`; report only the stage and current phase.
 - Never inspect or steer Agent 1's internal tasks, subagents, task transcripts,
@@ -72,53 +79,41 @@ is a stop; the orchestrator's only remedy is one targeted steer.
 
 ## Supervision and stop-loss
 
-Stage atomicity governs *prompting*, not *watching*. The orchestrator
-supervises the stage from the evidence Agent 1 publishes and stops a stage
-that is burning time without landing anything. "Never inspect internal
-tasks" does not mean "never look at progress."
+Observe the stage through the fixed actor's lifecycle state and the evidence
+Agent 1 publishes. Monitoring does not authorize interrupting a busy actor.
 
-- The injected implementation contract names a progress file
-  (`<run-file>.progress`). Agent 1 appends one line per completed step,
-  per attempt start, and per attempt failure (with the failing step and
-  cause). `status` and `watch` print the latest line and its age during
-  implementation. Reading it is required, not a violation.
-- Check the progress file at least every 30 minutes while Agent 1 is busy.
-  Report progress to the user in plain language at least hourly on any stage
-  running longer than an hour: what landed, what failed, what is running.
-- Stop-loss, enforced by the orchestrator: if the progress file shows the
-  same landing step (a regen, rehearsal, or import cycle) failing twice, or
-  no new progress line for 60 minutes while Agent 1 reports busy, do not let
-  the loop continue. Read the state, and either steer Agent 1 to change the
-  iteration method (for example: fix and test against cached artifacts, do
-  not rerun the full cycle) or stop the stage and report to the user. A
-  third full-cycle retry of the same landing is never acceptable.
-- Watch for silence, not only signals. A change-triggered watcher misses the
-  worst failures, which emit no event at all: a detached runner that dies
-  silently between steps (a crash before its first log line included), and a
-  session stuck on an auth or error prompt (for example "Login expired").
-  Every supervision watcher must also alert when (a) no runner process
-  exists while the landing state says one should be running, (b) the
-  progress file has been silent longer than ~15 minutes while Agent 1
-  reports busy, or (c) the actor transcript's tail shows a login or
-  fatal-error prompt. When an alert fires, act within minutes — set the
-  enforcement timer the moment the anomaly is seen, not when convenient.
-- Retries must be cheap. If a stage's landing cycle costs more than a few
-  minutes, the plan must include (or the orchestrator must demand before the
-  first retry) a resume-from-cached-outputs path so that a failure in a
-  post-cycle check does not repeat the cycle.
-- Harness facts to put in every handoff: shell `sleep` is blocked but
-  Python-interpreter waits are not; background commands and waiters are
-  killed after 10 minutes and do not re-invoke the session; an ended turn is
-  a stop.
+- The implementation contract names a progress file (`<run-file>.progress`).
+  Agent 1 publishes stage-level progress and obstacles there. `status` and
+  `watch` expose its latest line and age; do not use it to supervise internal
+  tasks or infer completion without a final return.
+- Keep the host's required commentary cadence while waiting. Explain material
+  phase changes or stale progress plainly; do not imply that a quiet file
+  proves the actor has stopped.
+- Treat repeated reported failures or prolonged silence as an anomaly to
+  report and track, not permission to send a busy-session steering prompt.
+  Recheck the fixed actor's state. Diagnose and steer only after a genuine
+  incomplete return. If interruption is necessary, it requires separate
+  authority; this helper does not provide an out-of-band interrupt route.
+- The helper does not inspect runner processes or login/error screens during
+  implementation, automatically alert on a silence threshold, or enforce a
+  timed stop-loss. Do not promise those capabilities. It displays evidence;
+  the orchestrator owns supervision within the allowed surfaces.
+- Plan efficient retries before implementation: reuse valid cached outputs
+  when a failed downstream check does not require repeating an expensive
+  cycle. Agent 1 owns those decisions during the stage.
+- Use only supported waiting mechanisms and actual documented host limits.
+  Never route around a denied wait command through a different interpreter.
 
 Internal decomposition is allowed; external task-level orchestration is not.
 The absence of another Agent 2 review does not make task-level supervision
 acceptable.
 
-Use the helper script for deterministic Emacs/session operations:
+Use the helper script for deterministic Emacs/session operations. In the
+examples, `SKILL_DIR` means the absolute directory containing this `SKILL.md`;
+resolve it explicitly rather than assuming the host defines that variable.
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_review.py" --help
+python3 "$SKILL_DIR/scripts/orchestrate_review.py" --help
 ```
 
 ## Operating rules
@@ -133,7 +128,11 @@ python "$SKILL_DIR/scripts/orchestrate_review.py" --help
   after the plan. Do not add implementation review unless the user explicitly
   requests a separate review phase.
 - Use the guarded run file for every submission. Do not call the underlying
-  Emacs submit functions directly.
+  Emacs submit functions directly or create ad-hoc ask/interrupt bypasses.
+- Stage atomicity does not override a user stop request or a safety constraint.
+  Stop new handoffs at that boundary; do not continue merely to obtain a marker.
+  Stopping orchestration does not cancel a busy actor. Report its actual state
+  and use only a separately authorized cancellation path.
 - Preserve unrelated worktree changes. If the repo is dirty for unrelated reasons, report it and avoid staging or committing those files.
 - Never use the interactive `agent-start-new-session` path for unattended runs when an instance-name prompt is possible. Start sessions with explicit instance names.
 
@@ -159,13 +158,16 @@ probe resolves only the two fixed top-level actors from the run file.
 Live Emacs status is transferred through one-shot mode-`0600` temp files while
 the evaluated Emacs form returns `nil`, so structured status data does not
 travel through the `emacsclient --eval` return channel. The status contract
-contains buffer name, state, and directory; it does not include buffer text.
+contains buffer name, state, and directory; identity checks additionally bind
+the backend, session ID, and transcript. They do not include buffer text.
 
-Create a guarded mode-`0600` run file outside the repo or under an ignored
-state directory:
+Create a private directory outside the repository with `mktemp -d` and use
+unique paths inside it for the run, prompts, and evidence. The illustrative
+paths below are placeholders, not shared filenames to overwrite. Keep prompt
+and evidence files mode `0600`; the helper creates the run exclusively:
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_review.py" init-run \
+python3 "$SKILL_DIR/scripts/orchestrate_review.py" init-run \
   --run-file /tmp/improvement-5-run.json \
   --repo /path/to/repo \
   --stage 5 \
@@ -177,11 +179,24 @@ python "$SKILL_DIR/scripts/orchestrate_review.py" init-run \
 
 The file fixes the complete role bundles and permits exactly these phases in
 order: `spec`, `spec-review`, `plan`, `plan-review`, `implementation`.
+The author and reviewer must be distinct live sessions in the declared repo;
+a buffer name alone is not identity proof. Wait for their session identities
+to initialize before creating the run.
 
 To adopt a run whose two reviews already occurred, use
 `--adopt-implementation`, `--spec-commit`, `--plan-commit`, and
 `--reviews-complete`. Adoption starts at the one whole-stage implementation
-handoff; it does not import task state.
+handoff; it does not import task state. The supplied commit/review flags are
+operator attestations, not automatic checks that those reviews actually ran.
+Verify the cited artifacts and handoffs before using adoption.
+
+New runs use schema version 3. `run-status` can inspect legacy version-2 files.
+Use `migrate-run --run-file <run>` explicitly to bind an unambiguous legacy run
+to its original live actors. Migration preserves completed history and an
+unambiguous active boundary; it does not fabricate delivery receipts. Legacy
+pending submissions, prior steering, and ambiguous delivery stops refuse
+migration without changing the file. Migrated phases lacking an original
+context digest cannot use `restart-phase`.
 
 ## Step 2: Start fresh sessions when needed
 
@@ -207,11 +222,13 @@ other unknown sessions as waiting.
 
 ## Step 3: Submit guarded phases
 
-Write phase context to a mode-`0600` temp file, submit it through the run, then
-delete it:
+Write phase context to a mode-`0600` file in the private run directory and
+submit it through the run. Retain those exact bytes until the phase completes:
+process-loss recovery needs the original context. Keep ambiguous attempts'
+context while recovery remains possible; remove it after successful completion:
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_review.py" submit \
+python3 "$SKILL_DIR/scripts/orchestrate_review.py" submit \
   --run-file /tmp/improvement-5-run.json \
   --phase spec \
   --prompt-file /tmp/prompt.txt
@@ -220,65 +237,80 @@ python "$SKILL_DIR/scripts/orchestrate_review.py" submit \
 The helper selects the actor from the phase and rejects out-of-order,
 duplicate, wrong-role, busy-actor, and post-implementation arbitrary
 submissions. Before delivery it records the fixed transcript byte boundary;
-only after a busy transition or transcript growth acknowledges delivery does
-it record the phase as active. If the initial submit call returns without that
-acknowledgement, the helper may retry only the submit keystroke when the exact
-phase marker proves that the original prompt remains in the fixed actor's
-composer. For Codex app-server sessions it reads that composer through
-`codex-prompt-input` instead of applying terminal prompt syntax. It never
-retransmits the prompt. It does not enable the next handoff
+only a current user-message receipt matching the attempt token and full
+prompt hash marks the phase active. If the initial submit call returns without that
+acknowledgement, a non-implementation Codex phase may retry only the submit
+keystroke when both its receipt token and full prompt hash match the fixed
+actor's composer. It uses `codex-prompt-input`, not terminal prompt syntax.
+Claude's terminal API cannot prove an exact composer, so guarded Claude
+submissions do not retry Return. The helper also disables the Claude backend's
+independent delayed Return retries. It never retransmits the prompt. It does not enable the next handoff
 merely because the prompt was delivered. Every phase prompt ends with a fixed
 completion marker contract, and the implementation prompt also contains a
-non-overridable whole-stage contract. Implementation is stricter: only
-transcript growth independently acknowledges delivery, and neither the initial
-submission nor a CLI recovery command retries Return.
+whole-stage contract subordinate to user scope and higher-priority safety
+instructions. Delivery requires the full submitted text's hash and a unique
+attempt receipt token in a user record, not the reusable phase-completion marker. Implementation is stricter: only its current user
+receipt acknowledges delivery, and neither the initial submission nor a CLI
+recovery command retries Return.
 
 After the fixed top-level actor is awaiting input, record the return:
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_review.py" finish-phase \
+python3 "$SKILL_DIR/scripts/orchestrate_review.py" finish-phase \
   --run-file /tmp/improvement-5-run.json \
   --phase spec
 ```
 
 `finish-phase` reads only bytes appended to that fixed actor's configured
 top-level transcript after the current submission and requires the exact
-completion marker. It rejects stale or missing evidence and premature or
-mismatched phases. Every actor, including implementation, must be authoritatively
+completion marker in a terminal assistant return. Tool calls, reasoning,
+intermediate commentary, and unrelated user prompts are not completion
+proof. It rejects stale or missing evidence and premature or mismatched phases. Every actor, including implementation, must be authoritatively
 awaiting input; transcript text never overrides a busy lifecycle state. Only
 then does the next handoff become available.
 
-The helper persists a pending record before every external submission. If
-delivery fails ambiguously, all further actions stop until the operator uses
-`reconcile-submission --delivered` or `--not-delivered` based on concrete
-session evidence. When the exact current phase marker is still present in the
-composer, use `retry-delivery --run-file <run>`; it rechecks the transcript and
-session state, sends only Return, and refuses to paste the prompt again. Never
-retry or retransmit an ambiguous prompt automatically. Neither path sends
-Return for implementation. Reconciliation activates implementation only when
-the guarded transcript actually grew; every other ambiguous implementation
-outcome freezes the run permanently.
+The helper records a pending attempt before every submission, including
+restart and steering. An ambiguous failure blocks further handoffs until
+reconciliation; read-only status remains available. Use
+`reconcile-submission --delivered` only when the exact current receipt exists.
+`--not-delivered` requires concrete non-delivery evidence and an awaiting
+actor; it cannot override a positive receipt. Absence of a receipt alone is
+not proof of non-delivery, particularly after a timed-out Emacs request.
+
+`retry-delivery --run-file <run>` first checks for an existing receipt. It may
+send only Return for a non-implementation Codex attempt whose exact composer
+and actor still match. It never pastes the prompt again. Initial implementation
+and steering do not retry Return. A negatively reconciled initial
+implementation freezes the run; an acknowledged attempt can be reconciled
+without another contact. A negatively reconciled steering attempt still counts
+against its one-attempt-per-return limit. Keep unresolved delivery pending
+rather than asserting a negative merely to unblock the workflow.
 
 If a non-implementation actor's process exits after accepting the phase prompt
 but before returning any assistant output, start a fresh fixed-role session and
 use `restart-phase --run-file <run> --prompt-file <same-context>`. The helper
-requires authoritative waiting state, proves that the failed transcript has no
-assistant output after the guarded boundary, submits the same whole phase once
-to the fresh Claude or Codex session, and atomically rebinds the run to its new
-transcript. It
-refuses recovery after any reviewer or author output, so this is process-loss
-recovery rather than another review pass. Fresh app-server sessions are treated
+requires authoritative waiting state and a genuinely fresh session identity.
+It checks the original context digest and proves the failed transcript has no
+actor output after the guarded boundary, including tool calls or reasoning.
+Unreadable, malformed, or truncated evidence cannot prove absence of output.
+It records the new attempt before contact and rebinds the role only after that
+attempt's exact receipt. An unrelated transcript containing a static phase
+marker cannot be adopted. This is zero-output process-loss recovery, not
+another review pass; ambiguous restart delivery uses the same pending-attempt
+reconciliation and must not be resubmitted. Fresh app-server sessions are treated
 as waiting from the backend's authoritative inactive-turn state even when the
 cached event state is still `unknown`.
 
 ## Step 4: Monitor without ending the turn
 
-Use Python-based polling, not shell `sleep`, because the reviewed agents may run broad process probes such as `pkill -f "sleep 20"` that can kill sleep-based monitor commands.
+Use the host's supported monitoring or wait facility to supervise the watcher.
+Keep waits bounded so commentary and new user input remain responsive. Do not
+use broad process-kill commands to manage waiters.
 
 For a one-shot status check:
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_review.py" status \
+python3 "$SKILL_DIR/scripts/orchestrate_review.py" status \
   --run-file /tmp/improvement-5-run.json
 ```
 
@@ -289,13 +321,14 @@ output.
 For a polling loop:
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_review.py" watch \
+python3 "$SKILL_DIR/scripts/orchestrate_review.py" watch \
   --run-file /tmp/improvement-5-run.json \
   --interval 20
 ```
 
-This prints one concise line when state changes. If it produces no output, the
-state has not changed. All repository, buffer, and transcript sources come from
+This prints when its rendered status changes, including progress age. Silence
+alone does not prove unchanged state or a healthy watcher: retain the process
+handle and check its exit/error result. All repository, buffer, and transcript sources come from
 the guarded run; callers cannot substitute a task buffer or transcript. Do not
 use a reviewer verdict as a permission gate: a returned review with its fixed
 completion marker advances the workflow.
@@ -307,10 +340,11 @@ During specification and planning, use the bounded transcript evidence needed
 to pass artifacts between agents. During implementation, the helper disables
 transcript and repository monitoring and exposes the run's stage/phase,
 Agent 1's fixed top-level session state, and the latest progress-file line
-with its age (the supervision channel). The only exception is the marker
-validator inside `finish-phase`; it never overrides a busy lifecycle state or
-prints transcript content. Do not bypass it to read internal task/subagent
-output or inspect per-task repository/process state.
+with its age (the supervision channel). Return-handling commands inspect only
+the fixed actor's bounded terminal return after it is awaiting input;
+`finish-phase` validates its marker and prints only the completed implementation
+return. Do not bypass it to read internal task/subagent output or inspect
+per-task repository/process state.
 
 If Agent 1 is awaiting input and `finish-phase --phase implementation` rejects
 the return because its final marker is missing, run `stage-return --run-file
@@ -318,13 +352,14 @@ the return because its final marker is missing, run `stage-return --run-file
 its digest. It is unavailable while Agent 1 is busy and refuses a completed
 marker.
 
-Classify the stated reason. If progress truly requires a user-only credential,
-identity check, irreversible action, spending decision, destructive action, or
-underdetermined product choice, report that blocker. Otherwise write a specific
+Classify the stated reason. Report a blocker if progress requires credentials
+or identity only the user holds, new authority for an external or consequential
+action, or a product decision the approved scope cannot determine. An action
+already expressly authorized is not a blocker merely because it is consequential. Otherwise write a specific
 diagnosis to a mode-`0600` prompt file and steer the same fixed Agent 1:
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_review.py" steer-stage \
+python3 "$SKILL_DIR/scripts/orchestrate_review.py" steer-stage \
   --run-file /tmp/improvement-5-run.json \
   --prompt-file /tmp/improvement-5-steering.txt
 ```
@@ -344,8 +379,8 @@ It never names an internal task sequence. The helper rejects generic,
 repeated, busy-session, ambiguous-delivery, and unrecorded-return steering.
 
 Send commentary when the stage phase changes, when the guarded run reaches a
-terminal state, and — on long stages — at least hourly in plain language from
-the progress file (see SUPERVISION AND STOP-LOSS). Do not prompt Agent 1
+terminal state, and at the host's required update cadence while waiting, using
+the progress file without treating it as completion proof. Do not prompt Agent 1
 while it is busy; do read its progress file.
 
 ## Step 5: Create and review the spec
@@ -373,8 +408,10 @@ the implementation plan while adjudicating every finding. Valid feedback must
 change the plan; rejected feedback must receive a concise recorded reason.
 Proceed directly to the plan rather than revising and resubmitting the spec.
 
-Use the repository's required planning workflow; when unspecified, use
-`superpowers:writing-plans`. Commit the plan once, then submit it to Agent 2 for
+Use the repository's required planning workflow. If it names a skill, verify
+that skill is available and read it; do not assume a Superpowers plugin exists.
+When no workflow is specified, write an implementation-ready plan covering
+scope, dependencies, and acceptance checks. Commit the plan once, then submit it to Agent 2 for
 one independent implementation-readiness review. Record each whole-phase
 return with `finish-phase --phase plan` and then
 `finish-phase --phase plan-review`; never advance merely because the prior
@@ -398,8 +435,8 @@ implements the plan while adjudicating every finding. Valid feedback must
 change the implementation or its verification; rejected feedback must receive
 a concise recorded reason. Do not revise and resubmit the plan first.
 
-Use the implementation workflow required by the plan; when unspecified, use
-`superpowers:executing-plans`. Agent 1 implements the whole stage using the
+Use the implementation workflow required by the plan and available in the
+current session. Agent 1 implements the whole stage using the
 plan's internal task boundaries for its own tests and commits. The orchestrator
 does not observe or manage those boundaries. Do not transfer implementation to
 Agent 2 merely because Agent 2 performed the reviews.
@@ -410,17 +447,18 @@ The final top-level response must end with the helper-injected exact stage
 completion marker. Once Agent 1 is awaiting input, run:
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_review.py" finish-phase \
+python3 "$SKILL_DIR/scripts/orchestrate_review.py" finish-phase \
   --run-file /tmp/improvement-5-run.json \
   --phase implementation
 ```
 
-This command rejects a premature return without the stage marker. Save Agent
-1's reported stage-final verification evidence to a mode-`0600` evidence file
-and close the run:
+This command rejects a premature return without the stage marker and exposes
+the validated terminal implementation report. Preserve that report's stated
+checks, outcomes, and limitations in a mode-`0600` evidence file, then close
+the run. A completion marker alone is not verification evidence:
 
 ```bash
-python "$SKILL_DIR/scripts/orchestrate_review.py" complete-stage \
+python3 "$SKILL_DIR/scripts/orchestrate_review.py" complete-stage \
   --run-file /tmp/improvement-5-run.json \
   --evidence-file /tmp/improvement-5-acceptance.txt
 ```
@@ -432,69 +470,34 @@ perform verification itself.
 A user-requested post-implementation review is separate, not an implicit third
 handoff.
 
-## Red flags
-
-Stop before acting if you are about to say or do any of these:
-
-- “Task 7 is running”
-- “Tasks 1–6 are committed”
-- “I will inspect the current task's process or transcript”
-- “I will send a focused correction for this task”
-- “I will rerun the full gate before the stage is complete”
-- “Continue.”
-
-All indicate that internal decomposition or generic prompting has leaked into
-orchestration. Return to the stage/phase view. A genuine incomplete return may
-receive one specific whole-stage steering message; an internal task may not.
-
-## Common rationalizations
-
-| Rationalization | Required response |
-|---|---|
-| “I am not adding another review, so task supervision is harmless.” | Task supervision itself violates stage atomicity. |
-| “A ten-minute pause justifies inspecting Task N.” | Busy means wait; elapsed time is not a return. |
-| “The user needs a detailed status.” | Report the stage and phase, not Agent 1's internal decomposition. |
-| “A suspicious test command needs immediate correction.” | Agent 1 owns corrections and verification until the stage returns. |
-| “Continue is harmless after a return.” | Diagnose the actual obstacle and send a novel whole-stage steer, or send nothing. |
-
 ## Stop conditions
 
 Stop and report a blocker when:
 
 - a session is awaiting input but the expected prompt cannot be submitted
-- the worktree has overlapping uncommitted changes not produced by the active actor
+- overlapping uncommitted changes cannot be isolated while preserving other work
 - review feedback exposes a missing user decision that prevents the next stage
-- an external permission, destructive action, or user-only credential is needed
-- Agent 1 returns with a blocker that genuinely requires the user's identity,
-  credential, irreversible authority, spending, destructive action, or an
-  underdetermined product choice
+- new authority for an external, destructive, or consequential action is needed
+- Agent 1 returns with a blocker that genuinely requires credentials or identity
+  only the user holds, or a decision the approved scope cannot determine
 
 ## Session cleanup
 
-Stage sessions are disposable. Kill both fixed actor sessions as soon as the
-run reaches a terminal state (`complete-stage`, a frozen run, or an abandoned
-stage) and before starting the next stage's fresh sessions:
+Track which sessions this run created and which existing sessions it adopted.
+After completion, close only run-owned sessions confirmed inactive, using the
+backend's normal cleanup path. Preserve adopted or user-owned sessions unless
+the user explicitly authorized closing them. A frozen run is not proof its
+actor stopped; never force-kill a busy session as cleanup or send signals to
+active Emacs without explicit confirmation.
 
-```elisp
-(dolist (b '("*claude:...*" "*codex:...*"))
-  (when (get-buffer b) (agent--force-kill-buffer (get-buffer b))))
-```
-
-Never leave finished, superseded, or primed-but-unused agent sessions open;
-the user finds stray sessions distracting. Also kill any session you started
-for priming or discovery that did not become a run actor. Report the kills in
-the final report.
+Apply the same ownership and inactivity checks to unused priming sessions.
+Remove owned temporary prompts and finished watcher processes; retain private
+run/evidence files while needed for recovery. Report any sessions deliberately
+preserved because ownership, activity, or cleanup authority is unresolved.
 
 ## Final report
 
-When complete, report:
-
-- final status per area
-- spec commit hash and spec-review handoff
-- plan commit hash and plan-review handoff
-- implementation commit or commit range
-- Agent 1 and Agent 2 assignments
-- repo branch and ahead/behind state
-- whether the working tree is clean
-- any automation friction observed
-- confirmation that both stage sessions were killed
+Report the stage outcome, actor assignments, spec/plan review handoffs, and
+implementation commits. Include branch/worktree state, consequential
+verification limitations, and cleanup performed or deliberately deferred.
+Keep it brief; expand only when the user needs the details.

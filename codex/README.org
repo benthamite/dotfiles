@@ -152,23 +152,18 @@ updates cover thread =cwd=, not independent project associations; unsupported
 generations and schema side effects refuse before writes.
 
 The paired =orchestrate-review= skill coordinates fixed Claude and Codex
-sessions through one guarded, stage-atomic workflow. Its helper recognizes the
-canonical =claude-code= and =codex= backends, uses Codex's public prompt reader
-for app-server delivery recovery, and can rebind a failed author or reviewer
-phase to a fresh transcript without enumerating unrelated sessions. The
-single-actor session primitives it relies on — guarded prompt delivery,
-transcript-boundary acknowledgment, marker-gated transcript reads, and buffer
-lifecycle inspection — live in the shared =lib/python/agent_session_lib.py=
-module, which its helper loads by resolved file path. Stage sessions are
-disposable: the skill requires killing both fixed actor sessions (and any
-priming session) as soon as a run reaches a terminal state, so no finished or
-unused agent buffers linger. The injected implementation contract also forbids
-Agent 1 from ending its turn to wait on background jobs or subagents; it must
-poll inside the turn with bounded loops. The orchestrator supervises through
-a progress file Agent 1 appends to, reports hourly on long stages, and enforces
-a stop-loss: the same landing cycle failing twice ends the stage. Terminal
-interrupts encode ESC explicitly so the paired Python helpers compile without
-unknown-escape warnings while sending the same Emacs Lisp input.
+sessions through one guarded, stage-atomic workflow. Its helper binds each
+actor's backend, repository, and transcript, and records delivery attempts
+before contact. Unique user-message receipts distinguish delivery from
+background transcript growth; terminal assistant returns distinguish completion
+from tool activity. Ambiguous restarts and steering require reconciliation,
+not another submission. Shared session primitives live in
+=lib/python/agent_session_lib.py=. During implementation, monitoring exposes
+the fixed actor's state and its published progress, not internal task
+transcripts or processes. The watcher does not automatically enforce a timed
+stop-loss or detect login screens. Agents use supported host waiting mechanisms
+and keep the host's required update cadence. Cleanup closes only run-owned,
+confirmed-inactive sessions; adopted or busy sessions remain protected.
 
 The paired =request-review= skill runs one cross-model review of a
 committed plan from inside the authoring session: it anchors the review to

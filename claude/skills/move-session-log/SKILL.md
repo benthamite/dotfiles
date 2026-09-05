@@ -2,250 +2,106 @@
 name: move-session-log
 description: Use when the user asks to relocate or import a session log into the current project, or to make session history and resume follow a renamed project directory in the current tool; not for merely opening or inspecting the current session log.
 argument-hint: "<session-id> | --rename <old-project-path> <new-project-path>"
-tools: Bash, Glob
 ---
 
-# Move session log
+# Move Claude session history
 
-Relocate one or all Claude Code session logs and rewrite every embedded path (`history.jsonl` `project` field, `.jsonl` `cwd` fields, `~/.claude.json` `projects` map key) so `agent-log-resume-session` and `claude --resume` continue to work.
+Relocate one explicitly identified Claude Code session, or its history after a
+project-directory rename. This does not rename the project itself, merge stores,
+or authorize changes to Codex sessions. Simple inspection belongs to
+`open-session-log`. A review, diagnosis or planning request remains read-only.
 
-This is the Claude Code version of the workflow. It must operate on
-`~/.claude/projects`, `~/.claude/history.jsonl`, and `~/.claude.json`. Do not
-use it for Codex sessions, which live under `~/.codex/sessions` and are handled
-by the Codex-side `move-session-log` skill; that adapter also searches Codex's
-`archived_sessions/` trees. Unlike Claude's per-profile project
-directories, Codex profiles can share one session store while keeping separate
-thread databases, so the Codex adapter updates every profile attached to that
-store.
+Use the bundled [adapter](scripts/move_session_log.py) and its
+[safety helper](scripts/migration_safety.py). Do not substitute inline `mv`,
+truncating JSON rewrites, or another account's store if the helpers fail.
 
-Do not use this skill to inspect or open the current conversation log; use
-`open-session-log` for that.
+## Establish identity and scope
 
-## Modes
+- Identify the actual account/configuration directory and target project from
+  reliable context. The adapter honors `CLAUDE_CONFIG_DIR`; otherwise it uses
+  `~/.claude`. Inspect resolved symlink destinations, not a guessed profile.
+  Discovery is limited to that configuration root. Sibling/custom profiles'
+  separate histories are not inventoried, even when their projects store is
+  shared. Report this boundary and absent history stores as unupdated.
+- Import requires the exact UUID and matching transcript metadata. Pass an
+  explicit absolute `--project` when the shell directory is not the target.
+  With no ID the adapter only lists candidates; select from established context
+  or ask one concise question. Do not import the newest candidate automatically.
+- Rename takes absolute old and new paths, in that order. It relocates history,
+  not the filesystem project. Claude's encoded paths are lossy: different
+  projects can share a bucket. Refuse ambiguous/mixed origins, unknown root
+  artifacts or destination collisions instead of merging or overwriting.
+- Inventory the exact transcript, recursively nested sidecars, selected history
+  records and resolved shared files. Only supported `subagents/agent-*.jsonl`
+  sidecars contain routing metadata; tool results remain opaque regardless of
+  extension. Verify existing destination ownership before importing. A later
+  different `cwd` does not by itself establish another originating project.
 
-- **Single session**: `move-session-log <session-id>` — move a specific session from another project's logs to the **current** project's logs. Use when one session got recorded under the wrong project (e.g., you `cd`'d during a session, or invoked Claude from the wrong dir).
-- **Whole-project rename**: `move-session-log --rename <old-project-path> <new-project-path>` — move all session data when a project's filesystem path changes. Used by the `rename-project` skill and by the Drive workspace migration tooling. This is also the per-package primitive that `migrate-profile` performs in bulk; that skill stays separate because it adds merge semantics and `~/.claude.json` profile-path rewrites that the simple rename doesn't need.
+## Preview both modes
 
-## Bundled script (preferred)
-
-Both modes are implemented by the bundled adapter, which mirrors the Codex
-`move-session-log` script interface and has byte-equivalent path-mapping
-semantics (enforced by `tests/test_move_session_log_parity.py` in dotfiles):
-
-```bash
-python3 "/Users/pablostafforini/My Drive/dotfiles/claude/skills/move-session-log/scripts/move_session_log.py" <session-id>
-python3 "/Users/pablostafforini/My Drive/dotfiles/claude/skills/move-session-log/scripts/move_session_log.py" --dry-run --rename <old-project-path> <new-project-path>
-python3 "/Users/pablostafforini/My Drive/dotfiles/claude/skills/move-session-log/scripts/move_session_log.py" --rename <old-project-path> <new-project-path>
-```
-
-Run `--dry-run` first for renames and inspect the reported counts. The script
-honors `CLAUDE_CONFIG_DIR` (config file at `$CLAUDE_CONFIG_DIR/.claude.json`)
-and defaults to `~/.claude` + `~/.claude.json`. The manual step-by-step
-recipes below remain as the reference description of what it does and as a
-fallback if the script is unavailable.
-
-## Path encoding
-
-Claude Code encodes project paths as directory names under `~/.claude/projects/` by replacing every `/`, `.`, and space with `-`. The leading `/` becomes a leading `-`.
+Use this skill's resolved directory for `SKILL_DIR`. Pass literal quoted
+arguments, never paths interpolated into Python or shell source.
 
 ```bash
-encode() { echo "$1" | sed 's|[/. ]|-|g'; }
+python3 "$SKILL_DIR/scripts/move_session_log.py" --dry-run --project "$TARGET_PROJECT" "$SESSION_ID"
+python3 "$SKILL_DIR/scripts/move_session_log.py" --dry-run --rename "$OLD_PROJECT" "$NEW_PROJECT"
 ```
 
-Example: `/Users/pablostafforini/My Drive/Epoch/projects/ai-productivity-digest` becomes `-Users-pablostafforini-My-Drive-Epoch-projects-ai-productivity-digest`.
+Review every selected identity, store, destination and proposed count. Resolve
+unknown ownership, malformed inputs, unexpected symlinks, conflicting metadata,
+reversed paths or unexpectedly broad scope before writing. Dry-run is a preview
+of observed inputs, not a reservation or proof that a later plan is identical.
 
-## Single-session mode
+## Apply only to offline stores
 
-`$ARGUMENTS` must contain a session ID (a UUID like `ea9393a8-9a19-457a-bcb2-d5ca0c5ded55`). If empty, list all `.jsonl` files across `~/.claude/projects/` that are NOT in the current project's directory (sorted by mtime, most recent first, top 10), and ask the user to pick one.
+Establish that affected Claude sessions and other writers of shared history are
+stopped. Do not kill sessions, close Emacs, restart applications or switch
+accounts merely to satisfy this step. An active session cannot safely replace
+its own append-only transcript. If quiescence cannot be established within the
+request, preserve the preview and report that boundary.
 
-### Steps
+Apply requires `--offline` and an explicit, new absolute `--backup-dir` outside
+Google Drive. The flag asserts established quiescence; it does not stop writers.
+The helper also revalidates captured inputs and inspects kernel device/inode
+records using the supported Darwin/libproc `lsof` 4.91 format. Unrecognized
+formats or diagnostics refuse the operation. This inspection can miss processes
+the OS hides and cannot exclude future writers; it does not establish quiescence.
 
-1. **Derive the current project's encoded directory.**
+```bash
+python3 "$SKILL_DIR/scripts/move_session_log.py" --offline --backup-dir "$NEW_PRIVATE_BACKUP" --project "$TARGET_PROJECT" "$SESSION_ID"
+python3 "$SKILL_DIR/scripts/move_session_log.py" --offline --backup-dir "$NEW_PRIVATE_BACKUP" --rename "$OLD_PROJECT" "$NEW_PROJECT"
+```
 
-   ```bash
-   current_dir="$HOME/.claude/projects/$(echo "$PWD" | sed 's|[/. ]|-|g')"
-   ```
+Choose a durable uniquely named location under a private off-Drive state root.
+Protected originals and a recovery journal are created before writes. They
+contain private history, not disposable scratch: do not publish, commit or
+delete them as cleanup. Follow secret-handling rules when settings are in scope.
 
-   Verify the directory exists; stop if not.
+Only known top-level runtime path metadata and selected history ownership fields
+change. Mapping is exact origin-to-target: unrelated and descendant directories
+are preserved, not flattened or prefix-replaced. Report remaining descendant
+contexts when relevant. Historical tool arguments, results, prose and untouched
+JSONL records remain unchanged.
 
-2. **Find the session file in another project's directory.**
+Project settings in `.claude.json` remain untouched by default: they can contain
+trust, tool permissions and MCP approvals. Only a separately explicit request
+to carry settings to the same verified renamed project permits
+`--migrate-project-settings` on both preview and apply. Relocating history alone
+does not grant that authority. Existing destination settings are not merged.
 
-   ```bash
-   find "$HOME/.claude/projects" -maxdepth 2 -name "<session-id>.jsonl" ! -path "$current_dir/*"
-   ```
+## Verify and recover honestly
 
-   Stop if not found.
+Check exit status and journal, then independently inspect exact destination
+layout, source disposition, metadata and preservation of unrelated records and
+symlink identities. A repeated preview should show no remaining intended
+metadata changes; explain unsupported contexts or missing stores instead of
+calling counts complete coverage.
 
-3. **Move the `.jsonl` and the matching same-name subdirectory** (the latter holds tool-results / subagents and may be absent):
+Per-file replacement is not one transaction across every transcript, move and
+history file. On failure, stop and inspect completed operations and retained
+originals. Do not blindly retry, roll back over newer state or claim that failure
+changed nothing.
 
-   ```bash
-   mv "<source>/<session-id>.jsonl" "$current_dir/"
-   mv "<source>/<session-id>" "$current_dir/" 2>/dev/null
-   ```
-
-4. **Rewrite `history.jsonl`** — set the `project` field on entries matching this `sessionId` to the current project root:
-
-   ```python
-   import json, os
-
-   history = os.path.expanduser("~/.claude/history.jsonl")
-   new_project = os.getcwd()
-
-   lines = []
-   with open(history) as f:
-       for line in f:
-           entry = json.loads(line)
-           if entry.get("sessionId") == "<session-id>":
-               entry["project"] = new_project
-           lines.append(json.dumps(entry, ensure_ascii=False))
-
-   with open(history, "w") as f:
-       f.write("\n".join(lines) + "\n")
-   ```
-
-5. **Rewrite `cwd` in the moved `.jsonl`** to the current project root:
-
-   ```python
-   import json, os
-
-   session_file = os.path.join(current_dir, "<session-id>.jsonl")
-   new_cwd = os.getcwd()
-
-   lines = []
-   with open(session_file) as f:
-       for line in f:
-           line = line.rstrip("\n")
-           if not line.strip():
-               lines.append(line); continue
-           try:
-               entry = json.loads(line)
-           except json.JSONDecodeError:
-               lines.append(line); continue
-           if "cwd" in entry:
-               entry["cwd"] = new_cwd
-           lines.append(json.dumps(entry, ensure_ascii=False))
-
-   with open(session_file, "w") as f:
-       f.write("\n".join(lines) + "\n")
-   ```
-
-6. **Confirm**: report what was moved, from where, and that `history.jsonl` + `cwd` were rewritten.
-
-## Whole-project rename mode
-
-`$ARGUMENTS` is `--rename <old-project-path> <new-project-path>`. Both paths must be absolute. The two paths refer to the project's filesystem location before and after the rename.
-
-### Steps
-
-1. **Encode both paths**:
-
-   ```bash
-   src="$HOME/.claude/projects/$(echo '<old-project-path>' | sed 's|[/. ]|-|g')"
-   dst="$HOME/.claude/projects/$(echo '<new-project-path>' | sed 's|[/. ]|-|g')"
-   ```
-
-2. **Move the session-log directory if it hasn't moved already.** Idempotent — the `rename-project` skill may have already done the `mv` before invoking this skill, in which case the source is gone and only path rewrites remain.
-
-   ```bash
-   if [ -d "$src" ] && [ -d "$dst" ]; then
-     echo "ERROR: both source and destination exist; refusing to merge. Investigate."; exit 1
-   elif [ -d "$src" ] && [ ! -d "$dst" ]; then
-     mv "$src" "$dst"
-   elif [ ! -d "$src" ] && [ -d "$dst" ]; then
-     :  # already moved; proceed to path rewrites
-   else
-     echo "Neither $src nor $dst exists; nothing to rename."; exit 0
-   fi
-   ```
-
-3. **Rewrite `~/.claude/history.jsonl`** — every entry whose `project` is exactly the old path becomes the new path:
-
-   ```python
-   import json, os
-
-   history = os.path.expanduser("~/.claude/history.jsonl")
-   old, new = "<old-project-path>", "<new-project-path>"
-
-   n = 0
-   lines = []
-   with open(history) as f:
-       for line in f:
-           line = line.rstrip("\n")
-           if not line.strip():
-               lines.append(line); continue
-           try:
-               entry = json.loads(line)
-           except json.JSONDecodeError:
-               lines.append(line); continue
-           if entry.get("project") == old:
-               entry["project"] = new
-               n += 1
-           lines.append(json.dumps(entry, ensure_ascii=False))
-
-   with open(history, "w") as f:
-       f.write("\n".join(lines) + "\n")
-   print(f"history.jsonl: rewrote {n} entries")
-   ```
-
-4. **Rewrite `cwd` in every `.jsonl` under the destination directory.** Iterate top-level files only — the same-name session subdirs may contain tool-result files but those don't have `cwd` fields. (If subagent `.jsonl` files turn up in subdirectories, extend the glob.)
-
-   ```python
-   import json, os, glob
-
-   dst = os.path.expanduser('~/.claude/projects/' + '<new-project-path>'.replace('/', '-').replace('.', '-').replace(' ', '-'))
-   old, new = "<old-project-path>", "<new-project-path>"
-
-   total = 0
-   for jsonl in glob.glob(os.path.join(dst, "*.jsonl")) + glob.glob(os.path.join(dst, "*", "*.jsonl")):
-       n = 0
-       lines = []
-       with open(jsonl) as f:
-           for line in f:
-               line = line.rstrip("\n")
-               if not line.strip():
-                   lines.append(line); continue
-               try:
-                   entry = json.loads(line)
-               except json.JSONDecodeError:
-                   lines.append(line); continue
-               if entry.get("cwd") == old:
-                   entry["cwd"] = new
-                   n += 1
-               lines.append(json.dumps(entry, ensure_ascii=False))
-       if n:
-           with open(jsonl, "w") as f:
-               f.write("\n".join(lines) + "\n")
-           total += n
-           print(f"{os.path.basename(jsonl)}: rewrote {n} cwd entries")
-   print(f"total cwd rewrites: {total}")
-   ```
-
-5. **Migrate the `~/.claude.json` projects-map entry** if one exists for the old path. This entry stores per-project trust state, MCP server allowlists, and tool permissions — without it Claude Code re-prompts the trust dialog after the rename.
-
-   ```python
-   import json, os
-
-   path = os.path.expanduser("~/.claude.json")
-   old, new = "<old-project-path>", "<new-project-path>"
-   data = json.load(open(path))
-   projects = data.get("projects", {})
-   if old in projects and new not in projects:
-       projects[new] = projects.pop(old)
-       data["projects"] = projects
-       json.dump(data, open(path, "w"), indent=2)
-       print(f"~/.claude.json: migrated projects['{old}'] → projects['{new}']")
-   elif old in projects and new in projects:
-       print("~/.claude.json: both old and new entries exist; left as-is. Inspect manually.")
-   else:
-       print("~/.claude.json: no projects entry for old path; skipped.")
-   ```
-
-6. **Confirm**: report counts (history entries rewritten, cwd rewrites across N files, projects-map status).
-
-## When to use which
-
-| Scenario | Mode |
-|---|---|
-| One session got logged under the wrong project | single |
-| A project directory was renamed and you want session resume to keep working | --rename |
-| Bulk migration across an elpaca profile change | use the `migrate-profile` skill instead — it handles merge semantics and profile-path rewrites that this skill doesn't |
+Use `end-to-end` for a claim that actual project-filtered history/resume now works.
+Offline fixtures or metadata counts do not establish live resume behavior. Report
+the relocated identity, meaningful result and material recovery/verification gaps.

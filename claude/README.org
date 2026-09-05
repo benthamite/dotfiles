@@ -286,8 +286,13 @@ Codex-App handoff skill. Claude therefore carries no pointer skill or helper
 command for moving a Codex thread into the desktop app.
 
 The =move-session-log= adapter reassigns individual resumable sessions or whole
-renamed projects by moving Claude's per-project session artifacts and rewriting
-the corresponding history and project metadata.
+renamed projects by moving verified Claude transcript/sidecar owners and selected
+history metadata. Preview precedes apply; offline stores, writer checks and private
+recovery backups protect against overwrite and lost appends. Encoded-path and
+destination collisions fail before mutation. Historical tool records remain
+unchanged, and project trust/settings remain untouched unless separately
+authorized. A recovery journal records partial failures; metadata counts alone
+do not establish live resume behavior.
 
 Model-invocable tracked skills do not preapprove bare high-risk tools through
 =allowed-tools=. Loading a skill therefore leaves Bash, write, edit, agent, and
@@ -398,18 +403,6 @@ so such a claim belongs on the task holding =VERIFY_WITH= and =LAST_VERIFIED=.
 A derived field may repeat it; it must not be where it first appears. Epoch's
 =NEXT_STEP= and =STATUS_DETAIL= take the same rule through
 =projects/context/project-doc-conventions.md=.
-
-The =move-session-log= skill bundles a Python adapter
-(=skills/move-session-log/scripts/move_session_log.py=) that mirrors the Codex
-adapter's interface — single-session import plus =--dry-run=/=--rename OLD
-NEW= — with byte-equivalent path-mapping semantics, so the Drive workspace
-migration tooling can relocate session history for either tool. Its JSONL
-rewrites resolve symlinks before writing, so a profile that shares its
-=history.jsonl= via symlink (e.g. =~/.claude-epoch= → =~/.claude=) keeps the
-link intact instead of getting a diverged copy. The Codex counterpart also
-updates every profile-local thread database attached to the shared session
-store, preventing a moved session from remaining hidden under another
-profile's old project path.
 
 The paired =orchestrate-review= skill coordinates fixed Claude and Codex
 sessions through one guarded, stage-atomic workflow. Its helper recognizes the

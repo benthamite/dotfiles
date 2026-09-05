@@ -140,15 +140,16 @@ destination before rejecting paths into this Drive-synced tree. Its package
 commands continue to read the skill-local scripts and =.env= file.
 
 The paired =move-session-log= skill rewrites session metadata and Codex's
-project-filtered thread index. Because several Codex profiles share the same
-session directory but keep separate =state_5.sqlite= databases, its Codex
-adapter searches both active =sessions/= and profile-associated
-=archived_sessions/= trees, and updates every profile attached to that shared
-store. A relocation
-therefore remains visible from =codex resume= regardless of which profile
-performed it. The adapter closes each SQLite connection explicitly after its
-transaction; Python's connection context manager commits or rolls back but
-does not close the connection.
+project-filtered thread index using exact session identities and known metadata
+fields, preserving historical tool records. It inventories discovered shared
+profiles' active/archive stores, history, indexes and databases; absent artifacts
+and discovery limits are explicit. Dry-run reads captured SQLite snapshots,
+including WAL state, without opening originals for recovery. Apply requires
+offline stores, writer checks and private recovery backups. Per-file and SQLite
+operations are not one transaction; a journal records partial failures. Metadata
+readback is distinct from observing the actual live resume consumer. Database
+updates cover thread =cwd=, not independent project associations; unsupported
+generations and schema side effects refuse before writes.
 
 The paired =orchestrate-review= skill coordinates fixed Claude and Codex
 sessions through one guarded, stage-atomic workflow. Its helper recognizes the

@@ -3,11 +3,12 @@
 Both move_session_log.py scripts must support
 
     python3 scripts/move_session_log.py --dry-run --rename OLD NEW
-    python3 scripts/move_session_log.py --rename OLD NEW
+    python3 scripts/move_session_log.py --rename OLD NEW --offline --backup-dir NEW_PRIVATE_BACKUP
 
-and must apply byte-equivalent path-mapping semantics: an exact-match OLD
-path value in a session path field becomes exactly NEW, other values are
-untouched, and --dry-run modifies nothing. The session-root layouts differ
+and must apply equivalent mapping to runtime-owned metadata: an exact-match OLD
+path becomes exactly NEW, other values are untouched, and --dry-run modifies
+nothing. Applying requires offline stores and private recovery backups.
+The session-root layouts differ
 (Codex: ~/.codex/sessions + history + index; Claude: ~/.claude/projects with
 encoded directory names + history + ~/.claude.json), so the scripts are not
 byte-identical; the mapping behavior must be.
@@ -23,6 +24,7 @@ import sqlite3
 import subprocess
 import tempfile
 import unittest
+import uuid
 from contextlib import closing
 from pathlib import Path
 
@@ -155,6 +157,8 @@ class MoveSessionLogParityTest(unittest.TestCase):
         return database
 
     def run_codex(self, home: Path, *args: str) -> subprocess.CompletedProcess:
+        if args and "--dry-run" not in args:
+            args += ("--offline", "--backup-dir", str(home.parent / f"recovery-{uuid.uuid4()}"))
         result = subprocess.run(
             ["python3", str(CODEX_SCRIPT), *args],
             capture_output=True,
@@ -169,6 +173,8 @@ class MoveSessionLogParityTest(unittest.TestCase):
         return result
 
     def run_claude(self, config: Path, *args: str) -> subprocess.CompletedProcess:
+        if args and "--dry-run" not in args:
+            args += ("--offline", "--backup-dir", str(config.parent / f"recovery-{uuid.uuid4()}"))
         return subprocess.run(
             ["python3", str(CLAUDE_SCRIPT), *args],
             capture_output=True,
@@ -220,7 +226,9 @@ class MoveSessionLogParityTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
             claude_config = self.make_claude_config(base)
-            result = self.run_claude(claude_config, "--rename", OLD, NEW)
+            result = self.run_claude(
+                claude_config, "--rename", OLD, NEW, "--migrate-project-settings"
+            )
             self.assertEqual(result.returncode, 0, result.stderr)
 
             self.assertFalse((claude_config / "projects" / encode_claude(OLD)).exists())
@@ -240,6 +248,14 @@ class MoveSessionLogParityTest(unittest.TestCase):
             self.assertEqual(
                 [entry["project"] for entry in history], [NEW, OTHER]
             )
+
+    def test_claude_rename_preserves_project_settings_by_default(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config = self.make_claude_config(Path(tmp))
+            original = (config / ".claude.json").read_bytes()
+            result = self.run_claude(config, "--rename", OLD, NEW)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual((config / ".claude.json").read_bytes(), original)
 
     def test_rewrite_preserves_history_symlink_on_both_sides(self):
         # Profiles may share one history store via a symlink (e.g.
@@ -358,7 +374,7 @@ class MoveSessionLogParityTest(unittest.TestCase):
 
             result = self.run_codex(codex_home, "--project", NEW, SESSION_ID)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn(f"session: {archived_file}", result.stdout)
+            self.assertIn(f"session: {archived_file.resolve()}", result.stdout)
             self.assertNotIn(OLD, collect_path_values(archived))
             self.assertIn(NEW, collect_path_values(archived))
 

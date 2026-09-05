@@ -3,141 +3,111 @@ name: move-session-log
 description: Use when the user asks to relocate or import a session log into the current project, or to make session history and resume follow a renamed project directory in the current tool; not for merely opening or inspecting the current session log.
 ---
 
-# Move session log
+# Relocate Codex session metadata
 
-Import one Codex session into the current project, or rewrite Codex session
-metadata after a project directory rename.
+Import one explicitly identified Codex session into a project, or relocate
+metadata after a project-directory rename. Codex stores transcripts globally:
+this changes metadata, not their physical project directory. It does not rename
+the project, unarchive sessions, merge histories or operate on Claude stores.
+Use `open-session-log` for simple inspection. Review, diagnosis and planning
+requests remain read-only.
 
-Codex stores active sessions globally under `$CODEX_HOME/sessions/YYYY/MM/DD/`
-when `CODEX_HOME` is set, otherwise under `~/.codex/sessions/YYYY/MM/DD/`.
-Archived sessions live in a sibling `archived_sessions/` directory and are
-included by the adapter. Do not use `~/.claude/projects`,
-`~/.claude/history.jsonl`, or `~/.claude.json` for this skill. For Codex, the
-"move" is a metadata rewrite, not a filesystem move. Current Codex also stores
-the resumable thread list in a profile-local `state_5.sqlite`. Profiles can
-share the global session files while keeping separate thread databases. The
-script therefore updates every `~/.codex*` profile whose `sessions` directory
-resolves to the active session store; updating only the active `$CODEX_HOME`
-can leave the session hidden in another profile's project-filtered `/resume`
-list.
+Use the bundled [adapter](scripts/move_session_log.py) and its
+[safety helper](scripts/migration_safety.py). Do not invent an inline SQL or
+transcript-rewrite fallback when the helpers or preflight fail.
 
-Do not use this skill to inspect or open the current conversation log; use
-`open-session-log` for that. Do not use it for Claude Code logs, which are
-handled by the Claude-side `move-session-log` skill.
+## Establish identity and scope
 
-Use the bundled script:
+- Resolve the actual active `CODEX_HOME`, defaulting to `~/.codex` only when
+  unset. Inspect resolved store identities, not a guessed account or recent file.
+  Import requires the exact UUID and one matching `session_meta.payload.id`;
+  a filename substring is not identity evidence.
+- Resolve the absolute target project; pass `--project` explicitly when it is
+  not the shell directory. With no ID the adapter only lists candidates. Choose
+  from reliable context or ask one identity question; do not select the newest.
+- Rename takes absolute old and new paths, in that order. Mapping is exact, not
+  prefix replacement. Report descendant contexts that also need relocation.
+- Inventory active `sessions/`, associated `archived_sessions/`, and each
+  discovered profile's history, session index and thread database. Discovery
+  covers the active home and sibling `.codex*` homes sharing its resolved session
+  store, not arbitrarily located profiles. Deduplicate resolved shared files.
+  Report absent artifacts as unupdated; do not create a replacement index or
+  claim complete coverage from this bounded discovery.
 
-```bash
-python3 /Users/pablostafforini/My\ Drive/dotfiles/codex/skills/move-session-log/scripts/move_session_log.py <session-id>
-```
+## Preview both modes
 
-The script defaults to the current working directory as the target project.
-In single-session mode, the target project path is resolved to its canonical
-absolute path before writing, so symlinked paths such as `/tmp` may be reported
-under their resolved location.
-
-## Modes
-
-- **Single session**: `move-session-log <session-id>` - import one Codex
-  session into the current project by setting structured path metadata in its
-  session JSONL to `PWD`. This includes direct `cwd`/`project` fields and
-  parsed JSON tool-call `workdir` fields that `/resume` can treat as the latest
-  session directory. Also update matching `history.jsonl` and
-  `session_index.jsonl` rows if those files contain path fields in the future,
-  plus matching `state_5.sqlite` `threads.cwd` rows in every Codex profile that
-  shares the session store.
-- **Whole-project rename**:
-  `move-session-log --rename <old-project-path> <new-project-path>` - rewrite
-  Codex session metadata from an old absolute project path to a new absolute
-  project path across all session JSONL files and Codex index/history files.
-
-## Single-session mode
-
-`$ARGUMENTS` usually contains a session ID, for example
-`019df86a-a988-7632-a9b1-603858683498`.
-
-Run:
+Use this skill's resolved directory for `SKILL_DIR`; pass literal quoted
+arguments, not paths or IDs interpolated into SQL, Python or shell source.
 
 ```bash
-python3 /Users/pablostafforini/My\ Drive/dotfiles/codex/skills/move-session-log/scripts/move_session_log.py "$ARGUMENTS"
+python3 "$SKILL_DIR/scripts/move_session_log.py" --dry-run --project "$TARGET_PROJECT" "$SESSION_ID"
+python3 "$SKILL_DIR/scripts/move_session_log.py" --dry-run --rename "$OLD_PROJECT" "$NEW_PROJECT"
 ```
 
-The script:
+Validate the whole selected inventory, JSONL identity and SQLite schemas before
+any apply phase. Database inspection uses owned temporary snapshots with captured
+WAL state, not a connection that can recover/checkpoint originals. Refuse
+malformed/truncated targeted files, identity conflicts, unsupported existing
+schemas or unstable inputs. Resolve reversed paths or unexpected scope. Zero
+matches do not prove the search was complete.
 
-1. Finds the matching session JSONL under the active `sessions` tree or any
-   `archived_sessions` tree belonging to a Codex profile that shares it.
-   Codex filenames usually look like
-   `rollout-YYYY-MM-DDTHH-MM-SS-<session-id>.jsonl`; the script also inspects
-   `session_meta.payload.id` if needed.
-2. Rewrites structured path fields in that session file to the current project
-   root. Current Codex logs store direct session context at `payload.cwd` on
-   `session_meta` and `turn_context`, and can also store tool-call directories
-   as JSON-encoded `payload.arguments.workdir`.
-3. Rewrites matching rows in the Codex home `history.jsonl` and
-   `session_index.jsonl` only if those rows contain structured path fields.
-   Current Codex history rows may contain only `session_id`, `ts`, and `text`;
-   that is normal.
-4. Rewrites matching `state_5.sqlite` `threads.cwd` rows across every Codex
-   profile that shares the session store. Codex `/resume` reads its active
-   profile's thread-store row for project filtering and the "Session
-   directory" prompt.
-5. Reports counts and matching shell snapshots under the Codex home
-   `shell_snapshots` directory. Shell snapshots are session-global, not
-   project-specific, so they are not moved.
+The database adapter supports the reviewed `state_5.sqlite` thread schema and
+known triggers that do not fire on `cwd` updates. Unhandled generations or side effects
+refuse before writes. Its database scope is thread `cwd`, not independent project
+associations: observed `project_id`, project tables or project roots are reported
+as unchanged. Do not claim those associations were migrated.
 
-If no session ID is supplied, list recent sessions from the Codex home
-`sessions` directory whose `session_meta.payload.cwd` is not the current
-project and ask the user which one to import.
+## Apply only to offline stores
 
-If the target project is not the shell's current directory, pass it explicitly:
+Establish that affected sessions and every writer of shared files/databases are
+stopped. An active session must not replace its own append-only transcript:
+existing writers can keep appending successfully to an unlinked old file.
+Do not kill sessions, close Emacs, restart Codex or switch accounts just to make
+this possible. If quiescence cannot be established within the request, keep the
+preview and report that boundary.
+
+Apply requires `--offline` and a new absolute `--backup-dir` outside Google Drive.
+The flag asserts established quiescence; it does not stop writers. The helper
+revalidates inputs and inspects kernel device/inode records using the supported
+Darwin/libproc `lsof` 4.91 format. Unrecognized formats or diagnostics refuse the
+operation. This can miss processes the OS hides and cannot exclude future writers;
+it does not independently establish quiescence.
 
 ```bash
-python3 /Users/pablostafforini/My\ Drive/dotfiles/codex/skills/move-session-log/scripts/move_session_log.py --project '<target-project-path>' '<session-id>'
+python3 "$SKILL_DIR/scripts/move_session_log.py" --offline --backup-dir "$NEW_PRIVATE_BACKUP" --project "$TARGET_PROJECT" "$SESSION_ID"
+python3 "$SKILL_DIR/scripts/move_session_log.py" --offline --backup-dir "$NEW_PRIVATE_BACKUP" --rename "$OLD_PROJECT" "$NEW_PROJECT"
 ```
 
-## Whole-project rename mode
+Choose a durable uniquely named location under a private off-Drive state root.
+Protected originals and the recovery journal contain private user history, not
+scratch or public repository artifacts. Do not publish or delete them as cleanup.
 
-Both paths must be absolute:
+Only consumer-relevant `session_meta`/`turn_context` payload `cwd` and supported
+top-level history/index metadata are eligible. Import maps the identified
+original project to the target, preserving different contexts. SQLite updates
+match exact thread IDs, never `rollout_path LIKE` or a nested arbitrary `id`.
+Historical tool arguments, results, prose and unrelated records stay unchanged.
+Archives remain archived; shell snapshots are not moved.
 
-```bash
-python3 /Users/pablostafforini/My\ Drive/dotfiles/codex/skills/move-session-log/scripts/move_session_log.py --dry-run --rename '<old-project-path>' '<new-project-path>'
-python3 /Users/pablostafforini/My\ Drive/dotfiles/codex/skills/move-session-log/scripts/move_session_log.py --rename '<old-project-path>' '<new-project-path>'
-```
+## Verify the right result
 
-The script rewrites exact structured path fields only:
+Inspect exit status and journal; independently read back selected metadata,
+exact thread rows and unchanged unrelated records. Compare the actual result
+with the preview and explain changed inputs or coverage limits. Repeat a preview
+for remaining intended changes: matching counts alone are not proof.
 
-- `cwd` fields equal to the old path
-- `project` fields equal to the old path
-- `workdir` and `working_dir` fields equal to the old path
-- those same fields inside valid JSON `arguments` objects
+Files and profile-local SQLite transactions are not one atomic transaction. On
+failure, stop and inspect completed operations and retained originals. Report
+partial application and its recovery path. Do not blindly retry or roll back
+over newer state.
 
-It does not perform raw string replacement in transcript text, command output,
-or command strings inside function-call arguments.
+The installed app-server interface accepts a `cwd` override for `thread/resume`,
+and the Emacs client sends it. That alone does not establish durable relocation
+of the original rollout header. Project-filtered listing also uses stored
+metadata and can repair it from JSONL; changing only a database row is insufficient
+consistency evidence.
 
-The script also rewrites exact `threads.cwd` matches in every profile-local
-`state_5.sqlite` that shares the active session store.
-
-Always run the dry run first for `--rename`, inspect the reported counts, and
-stop if the old/new paths appear reversed or the count is unexpectedly broad.
-
-## Verification
-
-After the script runs, verify the reported counts. For a single-session import,
-the session file should have no structured `cwd` values left for the old project
-path and should have no parsed JSON tool-call `workdir` values left for the old
-project path.
-Report:
-
-- the session file path
-- the previous `session_meta.payload.cwd`, if found
-- the number of session JSONL path fields rewritten
-- whether `history.jsonl` or `session_index.jsonl` had path fields to update
-- whether shell snapshots were found
-
-For `--rename`, report whether the dry run matched the final run's counts:
-
-- session files scanned and rewritten
-- session path fields rewritten
-- `history.jsonl` path fields rewritten
-- `session_index.jsonl` path fields rewritten
-- profile-local `state_5.sqlite` files checked and `threads.cwd` rows rewritten
+Use `end-to-end` when claiming that the actual history/resume consumer now works.
+Do not start a live session as part of a dry run or an audit of this skill.
+Report the session/project, material outcome and any partial-state, coverage or
+live-verification gap briefly.

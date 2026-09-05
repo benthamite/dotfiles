@@ -551,9 +551,96 @@ def load_builtin_commands():
 builtin_commands = load_builtin_commands()
 
 
+def without_literal_heredocs(program):
+    """Remove quoted commit-message input before identifying Git arguments.
+
+    Only a literal git commit reading its message from stdin is a proven data
+    sink here. Shells, interpreters, unknown sinks, and unquoted heredocs remain
+    visible to the existing conservative parser.
+    """
+    masked = list(program)
+    pending = []
+    quote = None
+    pos = 0
+    while pos < len(program):
+        char = program[pos]
+        if quote:
+            if char == chr(92) and quote != chr(39):
+                pos += 2
+                continue
+            if char == quote:
+                quote = None
+        elif char == chr(92):
+            pos += 2
+            continue
+        elif char in (chr(39), chr(34), chr(96)):
+            quote = char
+        elif char == "#":
+            end = program.find("\n", pos)
+            pos = len(program) if end < 0 else end
+            continue
+        elif program.startswith("<<", pos) and not program.startswith("<<<", pos):
+            start = program.rfind("\n", 0, pos) + 1
+            try:
+                prefix_lexer = shlex.shlex(program[start:pos], posix=True,
+                                           punctuation_chars=";&|()")
+                prefix_lexer.whitespace_split = True
+                words = []
+                for token in prefix_lexer:
+                    if token and all(c in ";&|()" for c in token):
+                        words = []
+                    else:
+                        words.append(token)
+            except ValueError:
+                return program
+            message_stdin = any(words[i] in {"-F", "--file"} and words[i + 1] == "-"
+                                for i in range(len(words) - 1)) or "--file=-" in words
+            if words[:2] != ["git", "commit"] or not message_stdin:
+                pos += 2
+                continue
+            end = pos + 2
+            strip_tabs = end < len(program) and program[end] == "-"
+            if strip_tabs:
+                end += 1
+            while end < len(program) and program[end] in " \t":
+                end += 1
+            if end < len(program) and program[end] in (chr(39), chr(34)):
+                closing = program.find(program[end], end + 1)
+                delimiter = program[end + 1:closing] if closing >= 0 else ""
+                if delimiter and all(c.isalnum() or c == "_" for c in delimiter):
+                    pending.append((delimiter, strip_tabs))
+                    for index in range(pos, closing + 1):
+                        masked[index] = " "
+                    pos = closing + 1
+                    continue
+        if char == "\n" and pending and quote is None:
+            body_start = pos + 1
+            for delimiter, strip_tabs in pending:
+                cursor = body_start
+                while cursor < len(program):
+                    end = program.find("\n", cursor)
+                    if end < 0:
+                        end = len(program)
+                    line = program[cursor:end]
+                    if (line.lstrip("\t") if strip_tabs else line) == delimiter:
+                        for index in range(body_start, end):
+                            if masked[index] != "\n":
+                                masked[index] = " "
+                        body_start = end + (end < len(program))
+                        break
+                    cursor = end + 1
+                else:
+                    return program
+            pending = []
+            pos = body_start
+            continue
+        pos += 1
+    return program if pending else "".join(masked)
+
+
 def tokenize(program):
     try:
-        lexer = shlex.shlex(program, posix=True, punctuation_chars=";&|()\n")
+        lexer = shlex.shlex(without_literal_heredocs(program), posix=True, punctuation_chars=";&|()\n")
         lexer.whitespace = " \t\r"
         lexer.whitespace_split = True
         lexer.commenters = "#"

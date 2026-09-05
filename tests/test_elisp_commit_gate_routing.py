@@ -105,6 +105,12 @@ class ElispCommitGateRoutingTests(unittest.TestCase):
     def leave_elisp_change_unstaged(self):
         (self.repo / "lisp/example.el").write_text("(provide 'changed)\n")
 
+    def test_quoted_interpreter_heredoc_keeps_git_commands_visible(self):
+        for shell in ("bash", "sh", "unknown-runner"):
+            with self.subTest(shell=shell):
+                records = self.git_records(shell + " <<'EOF'\ngit push origin main\ngit commit -m test\nEOF", self.repo)
+                self.assertEqual([record["subcommand"] for record in records], ["push", "commit"])
+
     def test_nested_bash_recovers_workdir_before_routing(self):
         self.stage_elisp_change()
         (self.fallback / "README.md").write_text("changed\n")

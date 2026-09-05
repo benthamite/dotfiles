@@ -433,7 +433,7 @@
       "claude": null,
       "codex": "codex/hooks/lib-codex-hook-json.sh",
       "status": "codex-only",
-      "note": "Codex-only payload normalizer for object-or-string tool input and output. Its non-evaluating functions.exec parser emits literal nested command/workdir records, rejects overridable fields as ambiguous, and ignores inert quoted text when classifying commits. For nested Bash events that omit workdir, it matches the exact command against recent parent functions.exec calls in the session transcript and returns only one unique literal existing workdir. Claude has no functions.exec wrapper and reads native payloads directly."
+      "note": "Codex payload and functions.exec normalizer; emits literal command/workdir records and rejects ambiguous fields. Recovers omitted nested workdir only from a unique matching parent call. Claude reads native payloads but also sources this file's shared Git classifier. That classifier distinguishes inert quoted search text and quoted git-commit stdin from executable interpreter heredocs; unknown syntax stays conservative."
     },
     {
       "name": "lib-codex-paths.sh",

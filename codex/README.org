@@ -63,7 +63,7 @@ tier. Those are Codex preferences, not cross-tool parity requirements.
 =bin/skill-prune= owns managed =[[skills.config]]= disable entries and keeps
 them aligned with Claude's native skill overrides and
 =skills-disabled.json=. Usage checks include default and active homes plus every
-account home declared in =emacs/config.org=, deduplicate resolved history paths,
+account home declared in =emacs/config.org=, deduplicate resolved account homes,
 and refuse stale-skill decisions when evidence is unavailable or malformed.
 =bin/codex-config-prune= removes stale project and hook
 trust state. Generated or managed entries should be changed through their owner,
@@ -267,6 +267,9 @@ excludes untracked siblings. Untracked documentation cannot satisfy a requiremen
 for a commit that would omit it. Inspection rejects configured clean filters
 without executing them. Unsupported selection syntax is denied with a reason
 rather than checked against a different candidate.
+Quoted commit-message heredoc delimiters, like their bodies, are shell input
+rather than Git path selections. Interpreter-fed heredocs remain visible to
+the command classifier.
 
 Guards that inspect a Git command read its arguments only, never its message.
 Heredoc bodies are dropped before lexing, because an apostrophe in prose made

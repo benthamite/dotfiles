@@ -32,7 +32,7 @@ def select(command):
             for body in lines:
                 if body.strip() == match.group(2):
                     break
-    lexer = shlex.shlex("\n".join(kept), posix=True, punctuation_chars=";&|\n")
+    lexer = shlex.shlex("\n".join(kept), posix=True, punctuation_chars=";&|\n<")
     lexer.whitespace_split = True
     tokens = list(lexer)
     starts = [i + 2 for i in range(len(tokens) - 1) if tokens[i:i + 2] == ["git", "commit"]]
@@ -40,6 +40,20 @@ def select(command):
     if record is not None:
         args = record["args"]
     elif len(starts) != 1:
+        # Regex callers can match inert quoted text (for example an rg
+        # pattern). Only the shared invocation classifier can prove this is
+        # not a commit; a parser failure or actual/ambiguous commit still denies.
+        library = Path(__file__).resolve().parents[2] / "codex/hooks/lib-codex-hook-json.sh"
+        classified = subprocess.check_output(
+            ["bash", "-c", "set -euo pipefail; source \"$1\"; codex_git_invocations \"$2\"",
+             "commit-classifier", str(library), os.environ.get("COMMIT_FILE_CWD", os.getcwd())],
+            input=command.encode(), stderr=subprocess.PIPE,
+        )
+        records = [json.loads(item) for item in classified.split(b"\0") if item]
+        if any(not isinstance(item, dict) or not isinstance(item.get("subcommand"), str) for item in records):
+            raise ValueError("invalid invocation-classifier response")
+        if not any(item["subcommand"] == "commit" for item in records):
+            return {"mode": "inspection", "staged": "", "status": "", "diffs": {}}
         raise ValueError("cannot resolve multiple or indirect commit commands")
     else:
         args = []
@@ -61,6 +75,13 @@ def select(command):
         if arg == "--":
             paths.extend(args[i:])
             break
+        if arg == "<<":
+            # A stdin heredoc belongs to shell input, not Git's pathspecs.
+            # Its body was removed above; consume the remaining delimiter.
+            if i == len(args):
+                raise ValueError("missing heredoc delimiter")
+            i += 1
+            continue
         if arg in {"--help", "-h", "--dry-run"}:
             return {"mode": "inspection", "staged": "", "status": "", "diffs": {}}
         if arg == "--only":

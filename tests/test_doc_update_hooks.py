@@ -274,6 +274,19 @@ class DocUpdateHookTests(unittest.TestCase):
         self.prepare_selection()
         self.assert_selection("git commit -h", "allow")
 
+    def test_read_only_search_for_commit_text_is_not_a_commit(self):
+        self.prepare_selection()
+        self.assert_selection("rg --files tests | rg secret_guard_parity; git status --short tests/test_secret_guard_parity.py; rg -n 'git commit|cwd|Temporary|setUp|class ' tests/test_secret_guard_parity.py", "allow")
+
+    def test_stdin_heredoc_message_is_not_a_commit_path(self):
+        (self.repo / "script.sh").write_text("echo changed\n")
+        self.git("add", "script.sh")
+        command = "git commit -q -F - <<'EOF'\nA commit message\nEOF"
+        self.assert_selection(command, "allow")
+        for hook, field in HOOKS:
+            result = self.run_hook(hook.with_name("require-elisp-test-before-commit.sh"), field, command)
+            self.assertEqual(permission_decision(result), "allow", result.stdout)
+
     def test_all_includes_unstaged_elisp(self):
         self.prepare_selection()
         self.git("reset", "-q", "HEAD", "--", "example.el")

@@ -14,10 +14,40 @@ identifier=$1
 relative=${2:-}
 script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
 resolution=$("$script_dir/elpaca-package-resolve" "$identifier")
-base=$(printf '%s' "$resolution" | jq -er '.source')
+base=$(printf '%s' "$resolution" | jq -er '.source | select(type == "string" and length > 0)')
 
-if [ -n "$relative" ]; then
-  printf '%s\n' "$base/$relative"
-else
-  printf '%s\n' "$base"
-fi
+python3 - "$base" "$relative" <<'PY'
+from pathlib import Path
+import sys
+
+try:
+    base = Path(sys.argv[1])
+    relative = Path(sys.argv[2])
+    if not base.is_absolute() or relative.is_absolute():
+        raise ValueError("Expected an absolute source and a relative target")
+    base = base.resolve(strict=True)
+    if not base.is_dir():
+        raise ValueError("Source is not a directory")
+    target = base / relative
+    try:
+        target = target.resolve(strict=True)
+    except FileNotFoundError:
+        # New children are valid, but existing symlink ancestors still determine
+        # containment. Strictly check the deepest existing ancestor so a
+        # non-strict resolver cannot silently accept a symlink loop.
+        target = target.resolve(strict=False)
+        ancestor = target
+        while True:
+            try:
+                ancestor.lstat()
+                break
+            except FileNotFoundError:
+                ancestor = ancestor.parent
+        ancestor.resolve(strict=True)
+    target.relative_to(base)
+except (OSError, RuntimeError, ValueError):
+    print("Cannot resolve a contained package-relative path from the package source.", file=sys.stderr)
+    sys.exit(1)
+
+print(target)
+PY

@@ -95,7 +95,7 @@ boundary.
 
 | Command | Contract |
 |---------+----------|
-| =elpaca-package-path= | Resolves the editable source directory from an Elpaca package ID or checkout label. |
+| =elpaca-package-path= | Resolves the canonical editable source directory from an Elpaca package ID or checkout label; optional relative targets stay within that source, including through symlink parents. |
 | =elpaca-package-resolve= | Resolves an Elpaca package ID or checkout label to its distinct evidence label, package ID, source directory, and repository. |
 | =emacs= | Launches Emacs.app, optionally with a named profile, while filtering one known startup warning. |
 | =emacs-client= | Runs =emacsclient= with an empty alternate-editor fallback. |

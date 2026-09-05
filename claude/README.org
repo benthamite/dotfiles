@@ -148,6 +148,11 @@ consumers, and treats ambiguous provider responses as inconclusive. Its
 =bin/gitguardian-incidents= reader rejects HTTP redirects so authenticated
 requests cannot forward credentials to another endpoint.
 
+The project-local =install-mcp-server= preserves documented endpoint paths and
+uses explicit secret resolution: Claude expands environment references but
+does not dereference =op://= values. It distinguishes configured, authenticated,
+and tool-tested states before reporting readiness.
+
 The programmatic =open-session-log= helper resolves the current runtime's
 session identity and exact transcript in its active account root. It opens
 that path in Emacs and checks the rendered buffer's identity before reporting

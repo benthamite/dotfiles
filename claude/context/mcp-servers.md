@@ -16,18 +16,36 @@ Claude Code can load MCP servers through five mechanisms:
 
 Do not use `~/.claude.json`'s `projects.<path>.mcpServers` block. Claude Code supports it, but it duplicates `<project>/.mcp.json` in a hidden location. Always put project-scoped MCPs in `<project>/.mcp.json`.
 
-When source code for an MCP server needs to be cloned locally, use `~/repos/mcp-servers/<name>/`, never a path under `~/My Drive` (the Drive sync root holds no repositories or dependency trees).
+When an explicitly requested MCP repository needs to be cloned locally, use
+`~/repos/mcp-servers/<name>/`; do not create repositories or dependency trees
+under Google Drive. The canonical dotfiles tree is the existing exception.
 
 ## Multi-account notes
 
 Claude Code reads `.claude.json` from `$CLAUDE_CONFIG_DIR`, not `$HOME`, when that variable is set. The canonical user-level source of truth is `~/.claude.json`; run `claude/bin/sync-mcp-servers.sh` after adding or removing any user-level MCP server there.
 
-When an MCP server needs different credentials per account, place `op://` references or plain text values directly in each per-account `.claude.json` file's MCP server `env` block. Claude Code resolves `op://` natively. The sync function deep-merges `mcpServers` per server, preserving per-account `env` entries. To add a new account-specific secret:
+Claude Code expands `${VAR}` references but does not resolve `op://` secrets
+natively. Use an explicit resolver or an approved parent-process environment
+injection path. For Epoch Automations credentials, the stdio server can run
+through `bin/op-automations run --env-file FILE -- SERVER ...`; follow
+`secrets.md` for the owning account and never route personal/Tlön secrets
+through the Epoch service account. HTTP header expansion needs the resolved
+value in Claude's parent environment.
 
-1. Add the `env` entry to each per-account `.claude.json`, such as `~/.claude-tlon/.claude.json` or `~/.claude-epoch/.claude.json`.
+For account-specific credentials, keep references in each account's MCP `env`
+block only when the configured launcher will resolve them. Do not place raw
+values in tracked configuration. The sync function deep-merges `mcpServers`
+per server, preserving per-account `env` entries. To add an account-specific
+reference:
+
+1. Add the reference to the appropriate per-account `.claude.json`, such as
+   `~/.claude-tlon/.claude.json` or `~/.claude-epoch/.claude.json`, and verify
+   that account's launcher can resolve it without displaying the value.
 2. Leave the canonical `~/.claude.json` with an empty `env` for that server.
 
-Chrome integration uses three Chrome profiles, one per Claude Code account. Browser automation from a given Claude Code session targets the Chrome profile its account is paired to. Full Chrome integration details live in `README.org` under "Chrome integration and multi-account".
+Browser automation from a Claude Code session targets the Chrome profile its
+account is paired to. Current account/profile details live in `README.org`
+under "Chrome integration and multi-account".
 
 ## Current inventory
 

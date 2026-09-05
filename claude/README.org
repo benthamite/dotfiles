@@ -303,13 +303,12 @@ session identity and exact transcript in its active account root. It opens
 that path in Emacs and checks the rendered buffer's identity before reporting
 success; concurrent sessions cannot be selected by recency or project alone.
 
-The =profile-ai-cli-performance= skill benchmarks clean and configured Claude
-Code and Codex processes with pinned per-client settings, preflight checks, and
-comparable latency metrics. Its =--only= flag restricts the run to named
-conditions, which keeps the Claude clean-versus-configured comparison available
-when the other client fails preflight on quota or authentication. The isolation
-checks then apply to the selected conditions only, and the cross-client
-comparison stays unavailable.
+The =profile-ai-cli-performance= skill measures selected client conditions
+with exact terminal-success evidence and nullable, failure-aware paired metrics.
+Dry runs do not access credentials or launch clients; selected conditions alone
+determine dependencies. Unsafe token duplication and identity/provider changes
+cannot be hidden as clean baselines. Private reports preserve incomplete cohorts
+and unobserved isolation; timing completion does not establish a causal claim.
 
 The =paste-via-kill-ring= skill owns the procedure for handing over text the
 user must paste himself (Emacs kill ring, clipboard for Chrome or native

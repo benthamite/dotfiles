@@ -579,6 +579,23 @@ heredoc in its denial when a path is mentioned only inside an
 interpreter-fed program. A shell =eval= is recognized only at a word
 boundary, so an =emacsclient --eval= argument is Elisp, not shell.
 
+Since 2026-09-05 the protected names =pbpaste=, =pass= and =security= are
+denied only where something could run them: as a command word, behind
+=env=, =sudo=, =xargs= or =find -exec=, joined with === (=git -c
+core.pager=…=), inside =bash -c= source, or inside a heredoc body fed to a
+shell or interpreter, where a string literal counts as a reference. A plain
+argument of a read-only text tool (=grep -rn pass docs/=, =git log -S
+pbpaste=, =ls /usr/bin/pbpaste=) is inert and passes; =lib-inert-mentions.py=
+performs that projection. Heredoc bodies fed to known non-shell interpreters
+(python, node, ruby, emacs, sqlite3, jq, …) are no longer scanned for
+executable globs, so =?= and =[= in a script are not misread as shell words,
+and the Python classifier recognizes =cd x && python3 - "$S" <<'EOF'= shapes.
+Wrappers consume only their options, assignments and durations, so
+=env FOO=2 grep pass f= runs =grep=. The audited =bin/op-clipboard-store=
+consumer is the sanctioned route from a console Copy button into 1Password;
+=tests/test_secret_guard_inert_mentions.py= pins the allowed and denied shapes
+for all three guard entry points.
+
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged
 index entries, so a live Emacs never loads tests or a partially resolved tree.

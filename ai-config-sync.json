@@ -464,6 +464,13 @@
       "note": "Identical two-stage classifier for narrowly recognized quoted Python stdin heredocs in the secret-output guards. Python protected-name scanning exempts only parsed Pass statements; remaining protected names stay conservatively denied even inside Python strings. Only after that check is the body excluded from outer-shell lexical scanning. Unknown or malformed source is not masked; original input remains available to other secret checks, and outside shell text is preserved. This token guard is not a Python sandbox."
     },
     {
+      "name": "lib-inert-mentions.py",
+      "claude": "claude/hooks/lib-inert-mentions.py",
+      "codex": "codex/hooks/lib-inert-mentions.py",
+      "status": "paired-utility",
+      "note": "Identical projection used by both block-secret-leak.sh copies once a protected tool name (pbpaste, pass, security) appears in quoted-literal-masked command text: the name is masked only when it is a plain argument of a read-only text tool (grep, rg, wc, cat, ls, git log/show/...), so searches and listings are not denied as credential reads. Command words, shell/xargs/find/env arguments, =-joined values and git with -c or a writing subcommand are left for the fail-closed rules."
+    },
+    {
       "name": "lib-op-policy.py",
       "claude": "claude/hooks/lib-op-policy.py",
       "codex": "codex/hooks/lib-op-policy.py",

@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# Audited clipboard consumer: store a one-time secret from the macOS clipboard
+# in 1Password without the value ever reaching agent output, argv, or a file.
+#
+# Provider consoles show a new key once and offer a Copy button. After that
+# click, run this in the very next shell call. It reads the clipboard, checks
+# that the content has the expected shape, writes it into a 1Password item
+# through the desktop broker (Touch ID may prompt once), reads it back through
+# the same broker to prove the write, and prints only the op:// reference.
+#
+# Usage:
+#   op-clipboard-store --vault VAULT --title TITLE [--field credential]
+#                      [--category "API Credential"] [--prefix sk-or-v1-]
+#                      [--min 40] [--max 250] [--url HOST] [--note TEXT]
+#                      [--force]
+#
+# --force replaces the field on an existing item instead of refusing.
+# Exit 1 on a shape mismatch (the clipboard probably holds something else:
+# copy the key again and rerun), 2 on usage errors, 3 on 1Password failures.
+set -euo pipefail
+
+vault="" title="" field="credential" category="API Credential" prefix=""
+min=8 max=250 url="" note="" force=0
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --vault) vault="$2"; shift 2 ;;
+    --title) title="$2"; shift 2 ;;
+    --field) field="$2"; shift 2 ;;
+    --category) category="$2"; shift 2 ;;
+    --prefix) prefix="$2"; shift 2 ;;
+    --min) min="$2"; shift 2 ;;
+    --max) max="$2"; shift 2 ;;
+    --url) url="$2"; shift 2 ;;
+    --note) note="$2"; shift 2 ;;
+    --force) force=1; shift ;;
+    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
+    *) echo "op-clipboard-store: unknown argument $1" >&2; exit 2 ;;
+  esac
+done
+[ -n "$vault" ] && [ -n "$title" ] || { echo "op-clipboard-store: --vault and --title are required" >&2; exit 2; }
+case "$field" in
+  *[!A-Za-z0-9_-]*|"") echo "op-clipboard-store: --field must be a plain identifier" >&2; exit 2 ;;
+esac
+
+SECRET="$(pbpaste)"
+trap 'unset SECRET' EXIT
+
+bytes=$(printf %s "$SECRET" | wc -c | tr -d ' ')
+newlines=$(printf %s "$SECRET" | tr -cd '\n' | wc -c | tr -d ' ')
+printf 'clipboard candidate: len=%s nl=%s\n' "$bytes" "$newlines"
+if [ -n "$prefix" ]; then
+  case "$SECRET" in
+    "$prefix"*) : ;;
+    *) echo "op-clipboard-store: clipboard content does not start with the expected prefix" >&2; exit 1 ;;
+  esac
+fi
+if [ "$bytes" -lt "$min" ] || [ "$bytes" -gt "$max" ] || [ "$newlines" -ne 0 ]; then
+  echo "op-clipboard-store: clipboard content does not match the expected secret shape" >&2
+  exit 1
+fi
+
+ref="op://$vault/$title/$field"
+exists=0
+if op-desktop item get "$title" --vault "$vault" --format json >/dev/null 2>&1; then
+  exists=1
+fi
+if [ "$exists" -eq 1 ] && [ "$force" -ne 1 ]; then
+  echo "op-clipboard-store: '$title' already exists in $vault; pass --force to replace its $field field" >&2
+  exit 3
+fi
+
+args=()
+[ -n "$url" ] && args+=("--url" "$url")
+[ -n "$note" ] && args+=("notesPlain=$note")
+if [ "$exists" -eq 1 ]; then
+  op-desktop item edit "$title" --vault "$vault" "$field[concealed]=$SECRET" "${args[@]+"${args[@]}"}" >/dev/null \
+    || { echo "op-clipboard-store: 1Password edit failed" >&2; exit 3; }
+else
+  op-desktop item create --category "$category" --title "$title" --vault "$vault" \
+    "$field[concealed]=$SECRET" "${args[@]+"${args[@]}"}" >/dev/null \
+    || { echo "op-clipboard-store: 1Password create failed" >&2; exit 3; }
+fi
+op-desktop read "$ref" >/dev/null || { echo "op-clipboard-store: stored but read-back failed for $ref" >&2; exit 3; }
+echo "stored $ref"

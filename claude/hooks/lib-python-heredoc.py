@@ -37,12 +37,22 @@ class ProtectedPythonReference(ValueError):
 
 
 def _python_stdin(prefix: str) -> bool:
-    # Do not reinterpret nested shells, expansions, continuations or pipelines.
-    if re.search(r"[;&|<>()`$\\\r\n#]", prefix):
+    # Earlier simple commands in a sequence (`cd x && python3 -`, `A=1; python3 -`)
+    # do not change which program reads the heredoc: only the last one does.
+    prefix = re.split(r"\|\||&&|;", prefix)[-1]
+    # Do not reinterpret nested shells, pipelines, redirections or continuations.
+    if re.search(r"[&|<>()`\\\r\n#]", prefix):
         return False
     try:
         words = shlex.split(prefix, posix=True)
     except ValueError:
+        return False
+    # An expansion may name a script argument after `-`, never the interpreter.
+    try:
+        stdin_marker = words.index("-")
+    except ValueError:
+        stdin_marker = len(words)
+    if any("$" in word for word in words[:stdin_marker + 1]):
         return False
     while words and ASSIGNMENT.fullmatch(words[0]):
         words.pop(0)

@@ -170,6 +170,18 @@ contains_secret_output_command() {
   # 1Password brokers are classified by lib-op-policy.py (see the gate below);
   # this rule covers the tools whose output *is* the secret.
   protected='(^|[^A-Za-z0-9_-])(pbpaste|pass|security)([^A-Za-z0-9_-]|$)'
+  # A heredoc body still present here feeds a shell or an interpreter, so it
+  # is program source: a protected name in it is denied even inside a string
+  # literal, as lib-python-heredoc.py already does for recognized Python.
+  if printf '%s' "$raw" | grep -qE "$protected"; then
+    local shell_text
+    shell_text=$(mask_heredoc_bodies "$raw" all)
+    # diff exits 1 whenever bodies exist; under pipefail that would hide the
+    # match, so collect the body lines first.
+    local body_lines
+    body_lines=$(diff <(printf '%s\n' "$shell_text") <(printf '%s\n' "$raw") | grep -E '^> ' || true)
+    printf '%s' "$body_lines" | grep -qE "$protected" && return 0
+  fi
 
   # A literal mention printed by a simple nested echo/printf program is data,
   # provided the program contains no expansion or shell control operator.
@@ -190,7 +202,14 @@ contains_secret_output_command() {
      ! printf '%s' "$scan" | grep -qE '[;&|`]|\$\(|[<>]\('; then
     return 1
   fi
-  printf '%s' "$scan" | grep -qE "$protected" && return 0
+  # A protected name that is only a search pattern or path argument of a
+  # read-only text tool (`grep -rn pass docs/`, `git log -S pbpaste`) is inert;
+  # lib-inert-mentions.py masks exactly those and leaves every other position
+  # (command words, xargs/find/env arguments, `=`-joined values) for denial.
+  if printf '%s' "$scan" | grep -qE "$protected"; then
+    scan=$(printf '%s' "$scan" | python3 "$(dirname "$0")/lib-inert-mentions.py" 2>/dev/null) || return 0
+    printf '%s' "$scan" | grep -qE "$protected" && return 0
+  fi
 
   # Quoting becomes executable source under an interpreter. Fail closed on any
   # protected tool named in that program, regardless of its shell grammar.
@@ -210,7 +229,10 @@ contains_secret_output_command() {
   # Normalize the shell's lexical removal of backslashes and adjacent quotes,
   # then classify the resulting command word. Executable globs are rejected
   # because their resolved program cannot be known before expansion.
-  normalized=$(normalize_shell_words "$raw")
+  # Heredoc bodies fed to known non-shell interpreters are that program's
+  # source, not the outer shell's command words: their `?`, `*` and `[` are
+  # not executable globs. Their protected tool names were scanned above.
+  normalized=$(normalize_shell_words "$(mask_heredoc_bodies "$raw" nonshell)")
   # A case statement's default `*)` is a pattern, not an executable glob.
   # `$?` expands to the numeric exit status, never a program name, so its `?`
   # is not a glob either (e.g. `rc=$?`).
@@ -219,10 +241,14 @@ contains_secret_output_command() {
     -e 's/(^|;;[[:space:]]*)\*[[:space:]]*\)/\1CASE_DEFAULT)/g' \
     -e 's/\$\?/EXIT_STATUS/g')
   boundary='(^[[:space:]]*|[;&|(!`][[:space:]]*|\$\([[:space:]]*)'
-  wrapper='(([^;&|[:space:]]*/)?(command|env|sudo|timeout|nice|exec|nohup|time|builtin)([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+|[A-Za-z_][A-Za-z0-9_]*=[^;&|[:space:]]*[[:space:]]+)'
+  # A wrapper's own words are options, assignments or durations; any other
+  # word is the program it runs (so `env FOO=2 grep pass f` runs grep).
+  wrapper='(([^;&|[:space:]]*/)?(command|env|sudo|timeout|nice|exec|nohup|time|builtin|xargs)([[:space:]]+(-[^;&|[:space:]]*|[A-Za-z_][A-Za-z0-9_]*=[^;&|[:space:]]*|[0-9]+[smhd]?))*[[:space:]]+|[A-Za-z_][A-Za-z0-9_]*=[^;&|[:space:]]*[[:space:]]+)'
   executable='([^;&|[:space:]]*/)?(pbpaste|pass|security)'
   delimiter='([[:space:];|&)`]|$)'
   printf '%s' "$normalized" | grep -qE "${boundary}(${wrapper})*${executable}${delimiter}" && return 0
+  # find -exec runs its argument as a program.
+  printf '%s' "$normalized" | grep -qE "(-exec|-execdir|-ok|-okdir)[[:space:]]+${executable}${delimiter}" && return 0
   printf '%s' "$normalized" | grep -qE "${boundary}(${wrapper})*[^;&|[:space:]]*([?*]|\\\[[^]]*)[^;&|[:space:]]*${delimiter}" && return 0
   printf '%s' "$normalized" | grep -qE "find[[:space:]].*-exec[[:space:]]+[^;&|[:space:]]*([?*]|\\\[[^]]*)[^;&|[:space:]]*${delimiter}" && return 0
   # `eval` needs a left word boundary: `emacsclient --eval '(let* ...)'` is

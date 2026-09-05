@@ -25,7 +25,13 @@ everything else including shapes it cannot place:
   masking).
 - `X=$(op-automations read REF)` used by a non-printing command in the same
   call; `read REF > file`; `read REF | pbcopy` / `gh secret set` / `wrangler
-  secret put` / `ssh-add -` / `docker login --password-stdin`. A bare `read`,
+  secret put` / `ssh-add -` / `docker login --password-stdin`.
+- Clipboard → 1Password goes through the audited wrapper `op-clipboard-store`
+  (dotfiles `claude/bin`): shape check, `op-desktop item create|edit`, read-back,
+  and only the `op://` reference on stdout. `pbpaste` itself stays denied in
+  every agent-shell shape; a protected tool *name* is allowed only as a plain
+  argument of a read-only text tool (`grep -rn pass docs/`, `git log -S pbpaste`),
+  see `hooks/lib-inert-mentions.py`. A bare `read`,
   `read 2>/dev/null`, `read | cat`, `> /dev/stdout`, `>&2`, or `echo "$X"`
   afterwards is denied.
 - `item get|list … | jq <filter>` where the filter names only metadata keys

@@ -17,6 +17,11 @@
 #   MODE "all" drops every heredoc body regardless of sink; guards use it to
 #   tell "mentioned only inside an interpreter-fed heredoc" apart from
 #   "mentioned as a command argument" when wording a denial.
+#   MODE "nonshell" additionally drops bodies fed to known non-shell
+#   interpreters (python, node, ruby, emacs, sqlite3, jq, ...). Their source is
+#   never the outer shell's command words, so `?`, `*` and `[` in it are not
+#   executable globs. Callers must still scan those bodies for protected tool
+#   *names* in the default mode; only the shell-lexical rules use "nonshell".
 
 mask_heredoc_bodies() {
   printf '%s\n' "$1" | awk -v mode="${2:-sinks}" '
@@ -40,6 +45,7 @@ mask_heredoc_bodies() {
       }
       if (word == "") return 0
       p = word; sub(/.*\//, "", p)
+      if (mode == "nonshell" && p ~ /^(python[0-9.]*|node|nodejs|deno|bun|ruby|perl|php|osascript|emacs|emacsclient|sqlite3|psql|mysql|jq|yq|Rscript|lua|luajit|swift|julia|g?awk|mawk|sed|bc|dc)$/) return 1
       return (p in sinks)
     }
     BEGIN {

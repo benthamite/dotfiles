@@ -168,6 +168,11 @@ personal/plugin identities and exact name boundaries, and handles task-start
 context, hidden inputs, and fractional timestamps. Counts remain reconstructed
 evidence, not native invocation telemetry or proof of workflow completion.
 
+The =dx-audit= skill distinguishes observed collaboration friction from imagined
+or unmeasured gaps. Its bounded implementation mode accepts plain-language
+requests, respects runtime-specific instruction discovery and checks command
+effects before running diagnostics.
+
 The =dotfiles-context= skill resolves canonical sources without guessing from
 stale profile directories. It checks buffer and profile identity before tangling,
 preserves runtime-specific pairing, and binds local PR pins to the exact reviewed

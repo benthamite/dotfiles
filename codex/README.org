@@ -225,6 +225,12 @@ personal/plugin identities and exact name boundaries, and handles task-start
 context, hidden inputs, and fractional timestamps. Counts remain reconstructed
 evidence, not native invocation telemetry or proof of workflow completion.
 
+The =document-elisp-package= skill preserves established manual paths, credits,
+anchors and export identities. It separates documentation from new save automation
+and documents supported public contracts without evaluating package source.
+Automatic exports preserve validated declared sibling names, including a
+=README.org= manual that generates package-named Texinfo and Info artifacts.
+
 The =document-elisp-extras= batch separates coverage-only reports from authorized
 manual updates, accounts for every source, and preserves per-package ownership.
 Exports use reviewed destinations and distinguish format generation from accuracy.

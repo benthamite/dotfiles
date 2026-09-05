@@ -5,11 +5,18 @@ description: Create or update an Org manual for an Emacs Lisp package in the Den
 
 # Document an Elisp package
 
-Create or update an `.org` documentation file for an Emacs Lisp package, matching the style, rigor, and comprehensiveness of Protesilaos Stavrou's Denote manual.
+Create or update an Org manual with the usage context and reference detail of
+[Protesilaos Stavrou's Denote manual](https://protesilaos.com/emacs/denote).
+The organization and metadata below are local conventions inspired by that
+manual, not a claim that Denote requires this exact template.
 
 **Dotfiles monorepo override:** In `~/My Drive/dotfiles/`, documentation for `emacs/extras/<package>.el` goes in `emacs/extras/doc/<package>.org` (one file per package), NOT `README.org`. When invoked for a package under `emacs/extras/`, use that path instead of the standalone-repo convention below.
 
-For standalone package repositories, the manual is always `README.org` in the repository root. If a case-variant exists instead (e.g. `readme.org`), rename it to `README.org` using `git mv` and commit the rename before proceeding. If the package spans multiple `.el` files (e.g., `foo.el`, `foo-db.el`, `foo-utils.el`), consolidate all public definitions from every file into the single `README.org` documentation file, organizing them thematically rather than by source file.
+For standalone packages, prefer an established manual path and the user's explicit target; use root `README.org` for a new manual when no convention exists. Do not force a rename, case-only move or consolidation of an existing multi-manual layout as an incidental documentation change. If a rename is actually requested, inspect collisions and inbound/build references, preserve history and use a safe two-step case-only move when the filesystem requires it. Cover the package's supported source files thematically, not vendored dependencies, unrelated libraries or tests.
+
+If several existing manuals could be authoritative, inspect project references
+and export configuration to resolve the target. If that evidence cannot settle
+it, ask for the missing path choice rather than rewriting every candidate.
 
 ## Scope boundary
 
@@ -19,10 +26,10 @@ Do not use this skill when the user only wants a Markdown `README.md`; use `gene
 
 ## Workflow
 
-1. Resolve the package context: identify the canonical repository, the relevant `.el` source file(s), and the manual path (`README.org` for standalone packages, `emacs/extras/doc/<package>.org` for dotfiles extras).
-2. Inventory the public surface from all source files before editing prose. Include user options, faces, variables, commands, public non-interactive functions/macros, and public mode definitions; exclude private `--` definitions and test helpers.
-3. Compare the inventory with any existing manual. Note added, removed, renamed, and behavior-changed symbols, plus sections that no longer meet the quality standard below.
-4. Edit the manual in place, preserving accurate existing prose while adding missing coverage, removing stale coverage, and improving terse sections.
+1. Resolve the canonical repository, relevant source files and actual manual/build layout. Use `dotfiles-context` for extras or Elpaca-managed package routing. Read applicable instructions and inspect working tree/index plus unsaved source/manual buffers before disk edits. Preserve foreign changes. A review-only request ends with evidence and recommendations, not edits, renames or exports into the repository.
+2. Read the complete supported source surface before writing. Inventory options, faces, variables/keymaps, commands, public functions/macros, modes and compatibility aliases, including conditional or generated definitions. Verify actual public/interactive status; a name regex alone is not authority. Do not load/evaluate the package to enumerate it: initialization and macros can have effects.
+3. Compare with the existing manual and supported versions. Record added, renamed, retired and behavior-changed symbols and concrete prose gaps. Keep supported compatibility/migration explanations; absence from one current source file is not sufficient reason to erase historical guidance.
+4. For authorized documentation updates, edit in place, preserve accurate prose and stable anchors, and fix concrete gaps. Do not expand concise sufficient sections just to meet a length target. Recheck source changes before accepting worker output or committing. Report source defects separately instead of changing code to fit the manual.
 5. Handle Texinfo export setup only where this skill says it applies. Avoid creating broad repository-level hooks in the dotfiles monorepo.
 6. Verify the manual against the source and report the changed files, verification performed, and any definitions intentionally left undocumented. Commit changes only when the user requested commits or the local repository conventions require them.
 
@@ -32,16 +39,19 @@ Extract all public definitions from the package's `.el` source file(s):
 
 - `defcustom` (user options)
 - `defface` (customizable faces)
-- `defvar`, `defconst`, and `defvar-keymap` (public variables/keymaps, no `--` prefix)
+- `defvar`, `defconst`, `defvar-keymap` and groups (public variables/keymaps and customization organization)
 - Interactive `defun`, `cl-defun`, and mode forms such as `define-minor-mode` or `define-derived-mode` (commands)
-- Non-interactive `defun`, `cl-defun`, `defsubst`, and `defmacro` without a `--` prefix (public functions/macros)
+- Public non-interactive `defun`, `cl-defun`, `defsubst`, `defmacro` and `cl-defmacro`
+- Public aliases, obsolete aliases and generated/conditional interfaces still supported by the package
+
+In the usual naming convention, `package--helper` is internal: the marker is the double hyphen after the package name, not a literal prefix at the start of the symbol. Treat naming as evidence alongside callers, docstrings and supported contracts. Exclude test helpers and private internals from required reference coverage, but retain necessary implementation context or documented extension points explicitly.
 
 If documentation already exists, perform a structural diff: identify definitions that are added, removed, or renamed relative to what the `.org` file documents. Also check whether existing descriptions still accurately reflect the current docstrings and behavior, and whether the documentation meets the quality standard below.
 
 When updating existing docs:
 
 - Add documentation for new items in the appropriate section.
-- Remove documentation for deleted items.
+- Remove obsolete current-API claims while preserving useful supported-version and migration information.
 - Update descriptions for items whose behavior has changed.
 - Rewrite terse sections to meet the quality standard.
 - Ensure the Overview accurately reflects the package's current feature set.
@@ -50,6 +60,13 @@ When updating existing docs:
 ## Documentation format
 
 ### Front matter
+
+Preserve established author, license, attribution and publication metadata. The
+following defaults are for a new manual owned/authored by Pablo; do not assign
+his identity to a third party's manual automatically. For prose he will publish
+as his own, use `personalize` while respecting this technical documentation style.
+Do not copy private account details, credentials or machine-specific configuration
+into public examples. Placeholders must be clearly marked and explained.
 
 ```org
 #+title: PACKAGE-NAME: Short description
@@ -68,7 +85,7 @@ When updating existing docs:
 Follow the front matter with a one-line introduction:
 
 ```
-This manual describes the features and customization options for the Emacs Lisp file =PACKAGE-NAME.el=.
+This manual describes the features and customization options for =PACKAGE-NAME=.
 ```
 
 ### Section structure
@@ -78,12 +95,19 @@ Every doc file must include these sections in this order. Omit a section only if
 1. `* Overview`
 2. `* User options` — for `defcustom` variables
 3. `* Faces` — for public `defface` definitions
-4. `* Commands` — for interactive functions
-5. `* Functions` — for public non-interactive functions worth documenting
-6. Integration-specific sections — if the package integrates with other packages in notable ways (e.g., `* Embark integration`, `* Transient menus`)
-7. `* Indices` — always last
+4. `* Variables and keymaps` — for public non-option state/keymaps users can use
+5. `* Commands` — for interactive functions and modes
+6. `* Functions` — for public non-interactive functions and macros worth documenting
+7. Integration-specific sections — if the package integrates with other packages in notable ways (e.g., `* Embark integration`, `* Transient menus`)
+8. `* Indices` — always last
 
-The Indices section always contains exactly:
+Preserve an established equivalent organization when rearranging it would break
+useful navigation. A configuration-only package need not invent commands. Group
+metadata belongs with its relevant options rather than an artificial reference entry.
+
+For a new Indices section, use the following function and variable index layout.
+Preserve established stable IDs and equivalent index organization in existing
+manuals; do not break incoming links just to copy these default IDs.
 
 ```org
 * Indices
@@ -131,7 +155,11 @@ Every heading at every level must have a `:PROPERTIES:` drawer with `:CUSTOM_ID:
 :END:
 ```
 
-Convention for CUSTOM_ID values:
+Preserve existing stable IDs even when headings are renamed. New IDs must be
+unique within the manual; check every internal link after adding or moving them.
+
+Convention for new CUSTOM_ID values:
+
 - Top-level sections: `h:overview`, `h:user-options`, `h:faces`, `h:commands`, `h:functions`, `h:indices`
 - Thematic subsections: `h:DESCRIPTIVE-SLUG` (e.g., `h:file-handling`, `h:entry-processing`)
 - Individual symbols (when they have their own heading): `h:SYMBOL-NAME` (e.g., `h:ebib-extras-download-use-vpn`)
@@ -140,7 +168,7 @@ Convention for CUSTOM_ID values:
 
 Place these directives immediately after the `:END:` of the PROPERTIES drawer, before the prose:
 
-- `#+findex: FUNCTION-NAME` for every documented function and command.
+- `#+findex: FUNCTION-NAME` for every documented function, macro, mode command and command alias.
 - `#+vindex: VARIABLE-NAME` for every documented variable, user option, and face.
 
 When multiple functions are documented under one subsection, place all their `#+findex:` entries together at the top of that subsection.
@@ -153,7 +181,7 @@ Link liberally within the same doc file using Org internal links:
 This function uses ~ebib-extras-get-file~ internally ([[#h:file-handling][File handling]]).
 ```
 
-Whenever you mention a function, variable, or concept documented elsewhere in the same file, add a cross-reference. This is a key quality marker of the Denote style.
+Add a cross-reference when it helps navigation, especially at the first meaningful mention or between related workflows. Avoid repeated links that add no information. Every target must exist and identify the intended section; a formatting example is not evidence that a target exists in the real manual.
 
 For references to other packages, use verbatim markup: `=PACKAGE-NAME.el=`.
 
@@ -181,7 +209,7 @@ Do not merely list features. The overview should:
 
 Each `defcustom` must include:
 
-- Its default value.
+- Its source-defined default, including a default expression when environment-dependent. Distinguish that from a current user's customized value; do not evaluate private configuration just to print it.
 - The type of value it accepts (boolean, string, integer, list, choice, etc.).
 - A clear explanation of what the option controls.
 - *When* and *why* a user would want to change it from the default.
@@ -194,109 +222,141 @@ Each interactive command must include:
 - A contextual explanation of *when* and *why* a user would invoke the command.
 - The context in which it operates (e.g., "while in the Ebib index buffer", "with point on an Org heading").
 - Its arguments, prefix argument behavior, and DWIM branches.
-- What happens in edge cases (empty region, no file found, etc.).
+- What source evidence establishes about edge cases, errors, cancellation and side effects. For asynchronous work, distinguish starting a request from completion and state relevant callback/buffer assumptions; do not invent successful outcomes.
 - Cross-references to related commands, options, and functions.
 
-Do NOT just paraphrase the docstring. Add value by explaining usage context, workflows, and relationships that are not obvious from the docstring alone.
+Do not merely paraphrase the docstring. Explain usage context and relationships
+that the source, tests or maintained examples support. Sparse evidence is not
+permission to invent a workflow, guarantee or edge-case outcome.
 
 ### Functions
 
-Document public (non-`--` prefixed) non-interactive functions when they are:
+Document public non-interactive functions and macros when they are:
+
 - Useful for customization or hooks.
 - Part of workflows that users might want to extend.
 - Called by documented commands (helps the reader understand the architecture).
 
-Internal (`--` prefixed) functions should NOT be documented.
+Private `package--helper` symbols do not require public reference entries. Mention internals only where needed to explain a supported contract, clearly labeled as implementation details; do not promote them to stable APIs.
+
+For public macros, explain argument evaluation and binding/expansion semantics
+where material; do not describe them as ordinary function calls. For public hooks
+or mode interfaces, document arguments, locality and enable/disable effects from
+the actual implementation.
 
 ### Prose style
 
 - Write in a direct, informative, second-person tone. The Denote manual says things like "The user option ~denote-directory~ specifies..." — do the same.
 - Explain *why* before *how*. Provide context before reference details.
 - Use complete sentences. No telegram-style fragments.
-- Keep paragraphs to 2-4 sentences.
+- Prefer short paragraphs; use the space the explanation needs rather than padding every entry to a fixed count.
 - Use Elisp code blocks (`#+begin_src emacs-lisp ... #+end_src`) when an example clarifies usage.
 - Refer to Emacs commands in the standard way when mentioning interactive invocation: =M-x command-name=.
 - When a command has a noteworthy implementation detail (e.g., uses `el-patch`, calls an external process, depends on a specific mode), mention it briefly — the reader should know what's happening under the hood without reading the source.
 
-## Texinfo auto-export
+## Texinfo export and automation
 
-For standalone package repositories, after creating or updating the `.org` documentation file, ensure the package repository has a `.dir-locals.el` that automatically exports to Texinfo on every save. If `.dir-locals.el` already exists, add the `org-mode` entry to it; if it doesn't exist, create it.
+Reuse the established export/build policy. A documentation request is not by
+itself permission to install a repository-wide after-save evaluator. Do not add
+or replace `.dir-locals.el` automatically. If export automation is explicitly
+requested or required by repository policy, inspect existing settings, merge
+without duplicate/shadowed alist entries, restrict it to the intended manuals
+and owned outputs, and verify the actual save path before calling it active.
+Do not install a lambda that blindly exports every Org file in the repository.
 
-For dotfiles extras packages under `~/My Drive/dotfiles/emacs/extras/`, do not create or modify a repository-level `.dir-locals.el` solely for this skill. Keep the edit scoped to `emacs/extras/doc/<package>.org` and any generated Texinfo artifacts that the existing dotfiles hooks update.
+For dotfiles extras, keep the manual at `emacs/extras/doc/<package>.org` and use
+the existing reviewed export path. The current save wrapper supplies title=t and
+preserve-breaks=nil defaults; file-level options can override them. The paired
+agent after-edit hooks generate owned sibling outputs without local/Babel
+evaluation and explicitly refuse unsupported evaluation/include/raw-export forms.
+A refusal is an export gap to investigate, not permission to bypass protections.
 
-The required content:
+Before direct export, inspect includes, setup files, macros, file options and
+destination directives. Disable file/directory-local evaluation before visiting
+and Babel before export. Use an explicit reviewed output path. Do not follow
+external data references, enable evaluation or install missing dependencies as
+an implicit verification step. Keep scratch exports and Info validation outputs
+outside Drive; only intentional tracked generated manuals belong in the repository.
 
-```elisp
-((org-mode . ((eval . (add-hook 'after-save-hook
-                                (lambda ()
-                                  (require 'ox-texinfo)
-                                  (let ((inhibit-message t))
-                                    (org-texinfo-export-to-texinfo)))
-                                nil t)))))
+After replacing placeholders with exact paths, a clean direct export is:
+
+```sh
+emacs --batch -Q \
+  --eval "(setq enable-local-variables nil enable-local-eval nil enable-dir-local-variables nil)" \
+  --visit "/ABS/SOURCE/MANUAL.org" \
+  --eval "(progn (require 'ox-texinfo) (let ((org-export-use-babel nil) (org-export-allow-bind-keywords nil)) (org-export-to-file 'texinfo \"/ABS/OUTPUT/MANUAL.texi\" nil nil nil nil '(:preserve-breaks nil :with-title t))))"
 ```
 
-This hook runs `org-texinfo-export-to-texinfo` silently whenever an Org file in the repository is saved, producing a `.texi` file alongside the `.org` source. The `inhibit-message` binding suppresses the "Exporting..." messages.
-
-If the repository already has a `.dir-locals.el` with this hook, no action is needed. If it has a `.dir-locals.el` without this hook, merge the `org-mode` entry into the existing alist.
-
-Commit the `.dir-locals.el` change separately from the documentation commit (e.g., "Add .dir-locals.el for auto Texinfo export on save").
+This is for inspected input, not a sandbox for arbitrary Org export extensions.
+Per-file options may override defaults; check the actual title, paragraph breaks,
+node links and indexes. For an authorized tracked update, use the repository's
+exact output naming convention; do not silently replace a configured package
+Info basename with a README basename. The automatic hooks preserve validated
+literal sibling basenames: `EXPORT_FILE_NAME` selects the Texinfo stem and
+`TEXINFO_FILENAME` independently selects the Info name. Paths, ambiguous
+declarations and unsupported names are refused explicitly; inspect that result.
 
 ## Verification
 
-Before finishing, re-read the source inventory and the edited manual. Confirm that every documented public symbol still exists, every newly public user-facing symbol is either documented or explicitly reported as intentionally omitted, deleted symbols are removed, every heading has a `:CUSTOM_ID:`, and the Indices section matches the required structure.
+Reconcile each public inventory entry with the manual or a reasoned omission.
+Check factual behavior, signatures/defaults, setup, examples, supported versions
+and dependency requirements against source and authoritative APIs. Distinguish
+read-through examples from safely executed examples. Do not call a shell/network/
+editor example verified unless that exact authorized behavior was exercised.
 
-When practical, run a Texinfo export for the edited manual:
+Check unique/stable anchors, all internal links, index directives and the final
+Indices section. Export changed manuals when tooling permits, then inspect the
+actual generated content and use available Texinfo validation in a disposable
+location. Export success establishes format generation, not prose correctness.
+No active Emacs restart, global setting change or source execution is authorized
+merely to obtain an export.
 
-```bash
-emacs --batch -Q --visit README.org --eval "(progn (require 'ox-texinfo) (org-texinfo-export-to-texinfo))"
-```
+If verification is incomplete, state the exact gap. Do not assume an Org manual
+requires loading its package: investigate the actual exporter dependency first.
+Review the source/manual/generated diff and confirm no stale or unexpected output
+was staged. Commit logical owned documentation changes according to the user's
+request and repository policy, preserving unrelated index entries. Commit any
+separately authorized automation change as its own verified logical change.
 
-Use the actual manual path for dotfiles extras docs. If export cannot run because the package needs the user's live Emacs configuration or missing dependencies, state that limitation and perform the structural checks manually.
+End with concise changed files, relevant verification, commits and unresolved
+documentation gaps. For review-only work, distinguish recommendations from edits.
 
-End with a concise report of files changed, verification performed, commits made if any, and unresolved documentation gaps.
+## Illustrative examples
 
-## Example
-
-Here is an example of a well-documented command section, showing the expected level of detail and style:
-
-```org
-** Switching to the last window
-:PROPERTIES:
-:CUSTOM_ID: h:switch-to-last-window
-:END:
-
-#+findex: window-extras-switch-to-last-window
-A common workflow involves editing in one window, briefly switching to
-another for reference, and then wanting to return. The command
-~window-extras-switch-to-last-window~ selects the most recently used
-window in the current frame, providing a quick toggle between two
-windows without relying on directional movement or window numbers.
-
-If the minibuffer was the last selected window and is currently active,
-the command will switch to it. This makes it easy to return to an
-ongoing minibuffer session after checking something in a file buffer.
-
-Internally, the command uses ~window-extras-get-last-window~ to
-determine the target window ([[#h:utility-functions][Utility functions]]).
-```
-
-And a well-documented user option:
+These symbols and values are fictional examples of format and depth, not claims
+about installed packages. Derive real names, defaults and behavior from the
+package being documented. Cross-reference targets shown here belong in the
+complete manual before these fragments are used.
 
 ```org
-** ~ebib-extras-download-use-vpn~
+** Revisiting recent entries
 :PROPERTIES:
-:CUSTOM_ID: h:ebib-extras-download-use-vpn
+:CUSTOM_ID: h:revisiting-entries
 :END:
 
-#+vindex: ebib-extras-download-use-vpn
-When set to non-nil, download commands such as ~ebib-extras-download-book~
-route their requests through a VPN connection ([[#h:downloading][Downloading files]]).
-This is useful when accessing resources that are geo-restricted or when
-you want to avoid revealing your IP address to file hosting services.
+#+findex: sample-open-recent-entry
+Use =M-x sample-open-recent-entry= to choose an entry from the recent-entry
+list while working in a sample buffer. The command displays the chosen
+entry without modifying its contents. With a prefix argument, it opens
+the entry in another window.
 
-The VPN integration relies on the =mullvad= package. You must have
-Mullvad VPN installed and configured separately.
+The list is limited by ~sample-recent-entry-limit~
+([[#h:recent-entry-limit][Recent-entry limit]]). If the list is empty,
+the command reports that no recent entry is available.
+```
 
-The default value is ~nil~, meaning downloads use your direct internet
-connection.
+```org
+** Recent-entry limit
+:PROPERTIES:
+:CUSTOM_ID: h:recent-entry-limit
+:END:
+
+#+vindex: sample-recent-entry-limit
+The user option ~sample-recent-entry-limit~ controls how many recent entries
+are retained for ~sample-open-recent-entry~
+([[#h:revisiting-entries][Revisiting recent entries]]).
+
+The default is =20=. The value must be a positive integer. Increase it if
+you regularly revisit older entries; a smaller value keeps the selection
+list shorter.
 ```

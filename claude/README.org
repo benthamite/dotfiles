@@ -181,6 +181,11 @@ The shared rebuild helper requires runtime-, source- and token-bound completion
 evidence. It rejects unqualified cached success and keeps uncertain requests
 recorded so cooperating callers cannot silently launch a competing rebuild.
 
+The =end-to-end= skill separates disposable test fixtures from retained results,
+checks startup effects and runtime identity, and accepts automation that observes
+the real criterion. Historical scheduler evidence and black-box service checks
+are credited only for what they establish; retry cohorts cannot erase failures.
+
 The =elisp-conventions= skill distinguishes registry IDs, checkout evidence
 labels, unmanaged packages and non-package files. Batch and ERT runners use a
 clean source-first Emacs without deleting bytecode or falling back to the

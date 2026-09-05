@@ -360,6 +360,11 @@ serializing a lockfile. It uses supported GitHub PR fields, strict release tags,
 path-only version commits, and the same approved notes file for review and
 release creation. Preparation alone grants no publication authority.
 
+The paired =record-decisions= skill records evidenced choices and dated amendments
+without rewriting decision history. It preserves numeric IDs beyond three digits,
+keeps summaries consistent with records, and leaves no-op runs unchanged. Reading
+the skill does not authorize writes or imply automatic summary loading.
+
 The paired =proofread= skill resolves one external Node dependency runtime for
 both setup and execution, canonicalizing both its root and actual =node_modules=
 destination before rejecting paths into this Drive-synced tree. Only the LLM

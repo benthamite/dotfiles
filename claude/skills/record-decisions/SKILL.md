@@ -1,78 +1,77 @@
 ---
 name: record-decisions
-description: Extract and record architectural, algorithmic, or design decisions from the current session. Use at the end of a session (usually via /update-log), when the user asks to record/capture an ADR or decision, or when a significant trade-off was made.
+description: Extract and record architectural, algorithmic, or design decisions from the current session. Use for an explicit ADR/decision request, authorized end-of-session bookkeeping, or a significant chosen trade-off within an implementation task; not for unchosen proposals or read-only reviews.
 user-invocable: true
 argument-hint: "[optional: specific decision to record]"
 ---
 
 # Record decisions
 
-Review the current session and create or update concise decision records in the project's `decisions/` directory.
+Create or update concise records of actual choices grounded in the current session or an explicit recording request. Loading this skill during an audit or a read-only review does not authorize writing records. Use it for an explicit recording request, authorized bookkeeping, or a significant chosen trade-off within an implementation task's scope.
 
-**Prerequisite**: This skill requires a `decisions/` directory in the project root. If it does not exist, stop without creating it; `/update-log` handles offering to create it during first-run setup. If `decisions/` exists but `decisions-summary.md` is missing, create the summary file with the standard header before recording entries.
+## Prerequisite and evidence
 
-If `$ARGUMENTS` names a specific decision, file, or subsystem, use it to focus the review. Still skip recording if the material does not meet the criteria below.
+Resolve the project root and its instructions first. This skill requires an existing `decisions/` directory there. If absent, report `no decisions/ directory` without creating it or invoking `update-log`; first-run setup belongs to an explicitly requested bookkeeping workflow. Reject unexpected symlink destinations before writing.
 
-## What counts as a decision
+Use `$ARGUMENTS`, when supplied, to focus the review. Read the existing `decisions-summary.md` and records relevant to the same question before deciding whether anything needs writing. If the summary is missing, defer its creation until a qualifying creation or update exists. Do not manufacture an empty artifact on a no-op run.
 
-A decision is worth recording when **alternatives were explicitly considered and one was chosen over others for non-obvious reasons.** The goal is to prevent future sessions from re-proposing rejected alternatives.
+A decision normally qualifies when alternatives were considered and one was chosen for non-obvious reasons: architectural choices, algorithmic choices, failed approaches, or design trade-offs. An actual decision the user explicitly asks to record also qualifies without discussed alternatives; state that limit instead of inventing rejections. An unchosen proposal is not a decision. A provisional choice is a decision, but is not final.
 
-Do NOT record:
-- Routine code changes or bug fixes (unless they involve choosing between fix strategies)
-- Decisions that are obvious from reading the code
-- Every small implementation choice
-- General session summaries, changelog entries, TODOs, or notes where no choice was made
+By default, exclude routine edits and choices obvious from code; an explicit request to record an actual decision overrides those filters. General session summaries and TODOs without a choice are not decision records. A re-proposed alternative is a reason to check both records and retrieval, not proof that its rejection was never recorded. If the choice is already recorded unchanged, do not duplicate it.
 
-DO record:
-- Algorithmic choices where a different approach was tried and failed
-- Architectural decisions where multiple valid approaches existed
-- Design trade-offs with known consequences
-- Anything the user explicitly asked to be recorded
+Distinguish observed evidence, reported constraints, inference, and pending validation. Include useful specifics without secrets, private correspondence, or unrelated personal/employer data. Sanitize commands and errors, use repository-relative file references, and apply the repository's publication constraints. Do not copy raw session transcripts.
 
-Do not invent rejected alternatives. If the user explicitly asks to record a decision but no alternatives were discussed, say that in the record instead of fabricating evidence.
+## Record and summary format
 
-## Format
-
-Each entry follows this template (keep it concise: 5-15 lines):
+Preserve a documented existing scheme; the following is the default for new records. Keep the record concise without omitting material rationale or uncertainty:
 
 ```markdown
 ## NNN: Title (YYYY-MM-DD)
 
-**Decision:** What we decided, in one or two sentences.
+**Status:** Final | Tentative | Re-evaluate | Superseded
 
-**Rejected:**
-- **Alternative A:** Why it was rejected. Include specific evidence (numbers, error descriptions, etc.).
-- **Alternative B:** Why it was rejected.
+**Decision:** The chosen approach and its consequences.
 
-**Files:** Key files affected (optional, only if useful for future reference).
+**Rejected:** Alternatives actually discussed and why; or "Not discussed."
+
+**Evidence:** Relevant observations and any validation still pending.
+**Files:** Useful repository-relative paths, if any.
 ```
 
-## Steps
+Choose one status, not the literal list. `Final` means the choice is settled, not that every claimed result was verified. Use `Tentative` for provisional choices awaiting validation; `Re-evaluate` requires a stated trigger or review date. `Superseded` identifies an old choice replaced by a linked newer record. If an existing project restricts statuses, follow its schema and express supersession with an explicit linked note instead.
 
-1. **List `decisions/` directory** to find the current highest entry number.
+Keep the original decision date. Record later amendments with their own dates. Use the current local session date for choices made now; if recording an earlier choice, use its evidenced date or explicitly distinguish the recording date from an unknown decision date.
 
-2. **Read existing decision context** before writing:
-   - Scan `decisions-summary.md` when present.
-   - Read any existing `decisions/NNN.md` entry that appears to cover the same subsystem or question.
-   - Use the next zero-padded number after existing `decisions/[0-9][0-9][0-9].md` files.
+The default root summary is:
 
-3. **Review the session conversation** for moments where:
-   - Multiple approaches were discussed and one was chosen
-   - An approach was tried and abandoned
-   - The user or agent explicitly said "we should record this"
-   - A previously rejected approach was accidentally re-proposed (this means the original rejection wasn't recorded)
+```markdown
+# Decisions summary
 
-4. **For each new decision found**, create a new file `decisions/NNN.md` with the next sequential number. Use the current local session date in `YYYY-MM-DD` format. Be specific about why alternatives were rejected; vague reasons like "didn't work" are useless. Include exact evidence where available, such as error messages, benchmark numbers, failed commands, or user constraints.
+| ID | Topic | One-line decision | Status |
+| --- | --- | --- | --- |
+| NNN | Topic | Concise chosen approach | Tentative |
+```
 
-5. **Update `decisions-summary.md`** to match. This file contains a compact one-line-per-decision table that is auto-loaded into context. For each new or modified decision, add or update the corresponding row. The format is: `| NNN | Topic | One-line decision | Status |` where Status is one of:
-   - `Final`: the choice is settled unless new facts appear.
-   - `Tentative`: the choice is provisional or awaiting validation.
-   - `Re-evaluate`: the record names a condition or date for revisiting the choice.
+Keep rows compact and escape table delimiters in content. The summary is an index, not a replacement for rationale. It is loaded automatically only if the project's actual context configuration arranges that; do not add hooks or instruction imports as part of recording decisions.
 
-6. **Do not duplicate existing entries.** If a decision is already recorded, skip it. If an existing entry needs updating (for example, new evidence or a status change), edit the existing file in `decisions/NNN.md` and update the corresponding row in `decisions-summary.md`.
+## Creation and updates
 
-7. **If no new decisions were made this session**, leave files unchanged. Not every session produces decisions.
+1. Inventory the directory's filenames and summary IDs. For the default numeric `NNN.md` scheme, parse the entire numeric stem and allocate one above the numeric maximum, with a minimum width of three digits: `999.md` and `1000.md` imply `1001.md`. Never restrict discovery to exactly three digits or reuse gaps. Account for all IDs already reserved in the summary as well.
+
+   This inventory is read-only. If filenames use another scheme, follow its documented allocation rule. Do not silently ignore numbered variants such as `007-topic.md`, duplicate numeric IDs, or dangling/mismatched summary entries. Plan reconciliation from the records where unambiguous, but write only after qualifying work is identified below. Otherwise stop allocation and explain the specific inconsistency. Do not renumber existing history.
+
+2. Classify each qualifying item as a new choice, a supported amendment, or unchanged. Supported evidence/status updates may qualify even when no new choice was made. If every item is unchanged or nothing qualifies, leave every file unchanged, including a missing summary.
+
+3. For an amendment, preserve the original choice, rationale, and date. Add a dated amendment identifying new evidence, corrected factual claims, or the supported status change; update the summary to match. Do not silently replace history. For a substantive reversal, create a new record linked to the old one and add a dated supersession link to the old record. Do not represent the old choice as still current.
+
+4. Allocate and write one new record at a time. Check existing paths and preimages again immediately before changes. Use an available project-supported lock covering record and summary updates when writers may overlap, or exclusive no-clobber publication for new files and equivalent protected updates for existing files; an existence/preimage check alone is not concurrency protection. If the permitted tools cannot protect a conflicting write, stop that write rather than overwrite another record. A newly occupied ID requires re-reading the inventory and reallocating, not force replacement.
+
+5. Add or update the matching summary row without disturbing other rows or unrelated text. For a missing summary, build its index from the existing records plus the qualifying change, not just the latest record; verify their identities/statuses instead of guessing. Recheck the summary's preimage before writing and reconcile concurrent changes rather than replacing them with a stale copy.
+
+   Record and summary writes are not inherently one transaction. If interrupted or partially unsuccessful, report and reconcile the specific mismatch from the surviving records. Do not claim success with a missing row, delete a valid record to conceal partial failure, or roll back another writer's work.
 
 ## Verification and report
 
-Before finishing, re-read every created or edited decision file and `decisions-summary.md` to confirm numbering, dates, summary rows, and status values match. Report which files were created or updated. If nothing qualified, report the skip reason (`no decisions/ directory`, `no qualifying decision`, or `already recorded`).
+Re-read every affected record and the summary. Confirm unique identities, correct allocation, preserved historical dates/rationale, supported statuses, matching rows, and valid amendment/supersession links. Check the final diff for unrelated changes and sensitive material. Report the created or amended files only after this reconciliation.
+
+For a no-op, report `no decisions/ directory`, `no qualifying decision or update`, or `already recorded`. Report unresolved numbering, concurrent-write, and partial-write problems explicitly; they are not successful no-op runs.

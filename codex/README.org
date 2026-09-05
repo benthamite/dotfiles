@@ -245,6 +245,12 @@ package's build. Staged project checks validate a private indexed snapshot,
 not unrelated working-tree bytes. A file rename does not authorize whole-package
 unloading, and a metadata predicate does not prove a live menu works.
 
+The documentation guard reads generated-output declarations from the proposed
+commit's manual bytes, including explicit selections and inherited amendments.
+It handles independent Texinfo/Info names without evaluating Org. Unrelated
+unstaged headers cannot hide outputs; ambiguous pending staging is refused with
+a reason to stage the intended manual separately.
+
 The =document-elisp-package= skill preserves established manual paths, credits,
 anchors and export identities. It separates documentation from new save automation
 and documents supported public contracts without evaluating package source.

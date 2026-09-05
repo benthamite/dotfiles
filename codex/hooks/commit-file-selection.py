@@ -193,7 +193,24 @@ def select(command):
         status = git("diff", "--cached", "--name-status", "-M", base, env=env).rstrip("\n")
         diffs = {name: git("diff", "--no-ext-diff", "--no-textconv", "--cached", "--unified=0", base, "--", name, env=env)
                  for name in names.splitlines() if name.endswith(".el")}
+        # Keep manual bytes from this exact candidate before its private index
+        # disappears. Reading the working tree later can inspect another version.
+        manual_contents = {}
+        for name in names.splitlines():
+            if not (name == "README.org" or
+                    (name.endswith(".org") and (name.startswith("doc/") or "/doc/" in name))):
+                continue
+            entries = git("ls-files", "--stage", "-z", "--", ":(literal)" + name, env=env).rstrip("\0")
+            if not entries:
+                manual_contents[name] = None  # Deleted in this candidate.
+                continue
+            metadata, actual = entries.split("\t", 1)
+            mode, oid, stage = metadata.split()
+            if actual != name or stage != "0" or "\0" in entries:
+                raise ValueError("cannot resolve candidate manual contents")
+            manual_contents[name] = git("cat-file", "blob", oid, env=env)
         return {"mode": "selection", "staged": names, "status": status, "diffs": diffs,
+                "manual_contents": manual_contents,
                 "paths": paths, "amend": amend, "only": not (all_files or include)}
 
 

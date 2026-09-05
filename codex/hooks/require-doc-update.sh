@@ -265,62 +265,130 @@ if [ -n "$ADD_ARGS" ]; then
 fi
 
 texinfo_manual_outputs() {
-  local source_rel="$1"
-  local source_abs="$REPO_ROOT/$source_rel"
-  local source_dir_rel target texi info out rel
-  [ -f "$source_abs" ] || return 0
-  target=$(
-    awk 'BEGIN { IGNORECASE = 1 }
-         /^#\+(texinfo_filename|export_file_name):/ {
-           sub(/^[^:]*:[ \t]*/, "", $0)
-           gsub(/^[ \t]+|[ \t]+$/, "", $0)
-           print
-           exit
-         }' "$source_abs"
-  )
-  [ -n "$target" ] || return 0
-  case "$target" in
-    *.info)
-      texi="${target%.info}.texi"
-      info="$target"
-      ;;
-    *.texi)
-      texi="$target"
-      info="${target%.texi}.info"
-      ;;
-    *)
-      texi="$target.texi"
-      info="$target.info"
-      ;;
-  esac
-  source_dir_rel=$(dirname "$source_rel")
-  for out in "$texi" "$info"; do
-    case "$out" in
-      /*)
-        case "$out" in
-          "$REPO_ROOT"/*) rel="${out#$REPO_ROOT/}" ;;
-          *) continue ;;
-        esac
-        ;;
-      *)
-        if [ "$source_dir_rel" = "." ]; then
-          rel="$out"
-        else
-          rel="$source_dir_rel/$out"
-        fi
-        ;;
-    esac
-    if [ -e "$REPO_ROOT/$rel" ] || git -C "$REPO_ROOT" ls-files --error-unmatch "$rel" >/dev/null 2>&1; then
+  local source_rel="$1" source_kind="$2" outputs rel
+  # Parse the manual version selected for the commit, never an unrelated
+  # unstaged header. No Org visit, filter, or source evaluation is needed.
+  if ! outputs=$(python3 - "$REPO_ROOT" "$source_rel" "$source_kind" 3<<<"$STAGED_MANUAL_CONTENTS" <<'PY'
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+
+def index_contents(root, relative):
+    def git(*args):
+        return subprocess.check_output(["git", "-C", str(root), *args],
+                                       stderr=subprocess.PIPE)
+    entry = git("ls-files", "--stage", "-z", "--", ":(literal)" + relative).rstrip(b"\0")
+    if not entry:
+        return None
+    metadata, actual = entry.split(b"\t", 1)
+    mode, oid, stage = metadata.split()
+    if actual.decode() != relative or stage != b"0" or b"\0" in entry:
+        raise ValueError("Unresolved index manual")
+    return git("cat-file", "blob", oid.decode()).decode("utf-8")
+
+def working_contents(source, root):
+    try:
+        source.resolve(strict=True).relative_to(root)
+        return source.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return None
+
+def output_paths(contents, source, root):
+    if contents is None:
+        return []
+    declarations = {"EXPORT_FILE_NAME": [], "TEXINFO_FILENAME": []}
+    literal = None
+    for line in contents.splitlines():
+        if literal:
+            if re.match(r"^[ \t]*#\+end_" + literal + r"[ \t]*$", line, re.I):
+                literal = None
+            continue
+        block = re.match(r"^[ \t]*#\+begin_(src|example|comment|export)(?:[ \t]|$)", line, re.I)
+        if block:
+            literal = block.group(1).lower()
+            continue
+        match = re.match(r"^[ \t]*#\+(EXPORT_FILE_NAME|TEXINFO_FILENAME):[ \t]*(.*)$", line, re.I)
+        if match:
+            declarations[match.group(1).upper()].append(match.group(2).strip())
+    exports, infos = declarations.values()
+    if not exports and not infos:
+        return []
+    if len(exports) > 1 or len(infos) > 1:
+        raise ValueError("Ambiguous declarations")
+    export = exports[0] if exports else source.name
+    texi = os.path.splitext(export)[0] + ".texi"
+    info = infos[0] if infos else os.path.splitext(texi)[0] + ".info"
+    # Only TEXINFO_FILENAME passes through org-strip-quotes.
+    if len(info) >= 2 and info.startswith('"') and info.endswith('"'):
+        info = info[1:-1]
+    for name in (export, texi, info):
+        if (not name or name != name.strip() or name.startswith("~")
+                or re.search(r'[\x00-\x1f\x7f@"\x27{}\\$]', name)):
+            raise ValueError("Unsupported output name")
+    paths = []
+    for name in (texi, info):
+        target = (source.parent / name).resolve(strict=False)
+        relative = target.relative_to(root)
+        if target == root or target == source:
+            raise ValueError("Invalid output destination")
+        paths.append(relative.as_posix())
+    return paths
+
+try:
+    root = Path(sys.argv[1]).resolve(strict=True)
+    relative, kind = sys.argv[2:]
+    source = root / relative
+    source.parent.resolve(strict=False).relative_to(root)
+    if kind == "selection":
+        contents = json.load(os.fdopen(3))
+        if relative not in contents or not (contents[relative] is None or isinstance(contents[relative], str)):
+            raise ValueError("Missing candidate manual")
+        paths = output_paths(contents[relative], source, root)
+    elif kind == "worktree":
+        paths = output_paths(working_contents(source, root), source, root)
+    else:
+        paths = output_paths(index_contents(root, relative), source, root)
+        if kind == "uncertain":
+            other = output_paths(working_contents(source, root), source, root)
+            if paths != other:
+                raise ValueError("Stage pending manual changes separately")
+    for path in paths:
+        print(path)
+except (OSError, UnicodeError, ValueError, RuntimeError, subprocess.CalledProcessError):
+    sys.exit(1)
+PY
+  ); then
+    return 1
+  fi
+  while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    if [ -e "$REPO_ROOT/$rel" ] || git -C "$REPO_ROOT" ls-files --error-unmatch -- "$rel" >/dev/null 2>&1; then
       printf '%s\n' "$rel"
     fi
-  done
+  done <<< "$outputs"
 }
 
 PENDING_ADDS=""
+PENDING_UNCERTAIN_ADDS=""
 if [ "$STAGED_SELECTION" = 1 ]; then
   PENDING_ADDS="$STAGED"$'\n'
 else
   while IFS= read -r -d '' _pending; do
+    case "$_pending" in
+      -- | --force | -f) continue ;;
+      "$REPO_ROOT"/*) _pending=${_pending#"$REPO_ROOT"/} ;;
+      /* | -* | *'$'* | *'`'* | *'*'* | *'?'* | *'['*)
+        PENDING_UNCERTAIN_ADDS="$PENDING_UNCERTAIN_ADDS."$'\n'
+        continue
+        ;;
+    esac
+    if [ -d "$REPO_ROOT/$_pending" ]; then
+      PENDING_UNCERTAIN_ADDS="$PENDING_UNCERTAIN_ADDS$_pending"$'\n'
+      continue
+    fi
     PENDING_ADDS="$PENDING_ADDS$_pending"$'\n'
   done < <(printf '%s' "$COMMAND" | git_add_paths)
 fi
@@ -333,11 +401,35 @@ pending_add_p() {
   esac
 }
 
+pending_source_uncertain_p() {
+  local prefix
+  while IFS= read -r prefix; do
+    [ -n "$prefix" ] || continue
+    case "$1" in
+      "$prefix" | "$prefix"/*) return 0 ;;
+    esac
+    [ "$prefix" != . ] || return 0
+  done <<< "$PENDING_UNCERTAIN_ADDS"
+  return 1
+}
+
 DIRTY_GENERATED_DOCS=()
+UNRESOLVED_MANUAL_OUTPUTS=()
 check_texinfo_manual_source() {
-  local file="$1"
+  local file="$1" outputs source_kind=index
   case "$file" in
     README.org | doc/*.org | */doc/*.org)
+      if [ "$STAGED_SELECTION" = 1 ]; then
+        source_kind=selection
+      elif pending_add_p "$file"; then
+        source_kind=worktree
+      elif pending_source_uncertain_p "$file"; then
+        source_kind=uncertain
+      fi
+      if ! outputs=$(texinfo_manual_outputs "$file" "$source_kind"); then
+        UNRESOLVED_MANUAL_OUTPUTS+=("$file")
+        return 0
+      fi
       while IFS= read -r generated; do
         [ -n "$generated" ] || continue
         pending_add_p "$generated" && continue
@@ -345,7 +437,7 @@ check_texinfo_manual_source() {
            [ -n "$(git -C "$REPO_ROOT" ls-files --others --exclude-standard -- "$generated")" ]; then
           DIRTY_GENERATED_DOCS+=("$generated")
         fi
-      done < <(texinfo_manual_outputs "$file")
+      done <<< "$outputs"
       ;;
   esac
 }
@@ -357,9 +449,36 @@ if [ -n "$STAGED" ]; then
 fi
 
 if [ -n "$ADD_ARGS" ]; then
-  for file in $(echo "$ADD_ARGS" | grep -oE '([^ ]*/)?README\.org|([^ ]*/)?doc/[^ ]*\.org' || true); do
+  while IFS= read -r file; do
     check_texinfo_manual_source "$file"
-  done
+  done <<< "$PENDING_ADDS"
+fi
+
+# Directory/options/dynamic pending adds are not exact file selections. Inspect
+# potentially affected changed manuals, but do not guess which header wins.
+if [ -n "$PENDING_UNCERTAIN_ADDS" ]; then
+  if ! pending_changed=$(git -C "$REPO_ROOT" diff --no-ext-diff --no-textconv --name-only -- &&
+       git -C "$REPO_ROOT" ls-files --others --exclude-standard); then
+    UNRESOLVED_MANUAL_OUTPUTS+=("pending git add")
+  else
+    while IFS= read -r file; do
+      if pending_source_uncertain_p "$file"; then
+        check_texinfo_manual_source "$file"
+      fi
+    done <<< "$pending_changed"
+  fi
+fi
+
+if [ "${#UNRESOLVED_MANUAL_OUTPUTS[@]}" -gt 0 ]; then
+  REASON=$(printf 'BLOCKED: cannot safely determine generated Texinfo output names for: %s. Review ambiguous or unsupported declarations, keep destinations inside the repository, and stage pending manual changes separately when their candidate headers are uncertain.' "${UNRESOLVED_MANUAL_OUTPUTS[*]}")
+  jq -n --arg reason "$REASON" '{
+    "hookSpecificOutput": {
+      "hookEventName": "PreToolUse",
+      "permissionDecision": "deny",
+      "permissionDecisionReason": $reason
+    }
+  }'
+  exit 0
 fi
 
 if [ "${#DIRTY_GENERATED_DOCS[@]}" -gt 0 ]; then
@@ -388,9 +507,9 @@ fi
 
 # Block the commit
 if [ "$HAS_DOC_DIR" = true ]; then
-  REASON="BLOCKED: Elisp files are staged but no doc/*.org file is included. Update the org manual in the relevant doc/ directory to reflect your changes, then try again. Use /doc-elisp to generate or update documentation."
+  REASON="BLOCKED: Elisp files are staged but no doc/*.org file is included. Update the org manual in the relevant doc/ directory to reflect your changes, then try again. Use document-elisp-package to generate or update documentation."
 elif [ "$HAS_README_ORG" = true ]; then
-  REASON="BLOCKED: Elisp files are staged but README.org is not included. Update the manual (README.org) to reflect your changes, then try again. Use /doc-elisp to update the manual. README.md is the GitHub intro, not the manual — only update it when the high-level picture changes."
+  REASON="BLOCKED: Elisp files are staged but README.org is not included. Update the manual (README.org) to reflect your changes, then try again. Use document-elisp-package to update the manual. README.md is the GitHub intro, not the manual — only update it when the high-level picture changes."
 else
   REASON="BLOCKED: Elisp files are staged but README.md is not included. This repo has no Org manual, so update README.md to reflect your changes, then try again."
 fi

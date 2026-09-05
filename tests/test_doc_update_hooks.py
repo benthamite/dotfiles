@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -359,6 +360,263 @@ class DocUpdateHookTests(unittest.TestCase):
         # must reject its filter before staging selected worktree content.
         self.assert_selection("git commit --only -m test -- example.el", "deny")
         self.assertFalse((self.repo / "filter-ran").exists())
+
+    def prepare_generated_manual(self, headers, outputs, manual="README.org"):
+        source = self.repo / manual
+        source.parent.mkdir(parents=True, exist_ok=True)
+        source.write_text(headers + "\nBody.\n")
+        for output in outputs:
+            target = self.repo / output
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text("generated before\n")
+        self.git("add", "--", manual, *outputs)
+        self.git("-c", "user.name=Test", "-c", "user.email=test@example.com",
+                 "commit", "-qm", "manual fixture")
+        source.write_text(headers + "\nChanged body.\n")
+        self.git("add", "--", manual)
+
+    def assert_generated_refusal(self, path, command="git commit -m test"):
+        before = (self.repo / ".git/index").read_bytes()
+        for hook, field in HOOKS:
+            with self.subTest(hook=hook, path=path):
+                result = self.run_hook(hook, field, command)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(permission_decision(result), "deny", result.stdout)
+                self.assertIn(path, deny_reason(result))
+                self.assertEqual(json.loads(result.stdout)["hookSpecificOutput"]["hookEventName"],
+                                 "PreToolUse")
+                self.assertEqual((self.repo / ".git/index").read_bytes(), before)
+
+    def test_texinfo_only_header_keeps_source_texi_basename(self):
+        self.prepare_generated_manual("#+TEXINFO_FILENAME: package.info",
+                                      ["README.texi", "package.info"])
+        (self.repo / "README.texi").write_text("changed texi\n")
+        self.assert_generated_refusal("README.texi")
+        self.assert_selection("git add README.texi && git commit -m test", "allow")
+
+    def test_unstaged_manual_header_edit_cannot_hide_index_outputs(self):
+        self.prepare_generated_manual("#+EXPORT_FILE_NAME: package.info",
+                                      ["package.texi", "package.info"])
+        (self.repo / "package.texi").write_text("changed texi\n")
+        (self.repo / "README.org").write_text("#+TITLE: Unstaged different header\n")
+        self.assert_generated_refusal("package.texi")
+        self.assert_selection("git add package.texi && git commit -m test", "allow")
+
+    def test_unstaged_manual_removal_cannot_hide_index_outputs(self):
+        self.prepare_generated_manual("#+EXPORT_FILE_NAME: package.info", ["package.texi"])
+        (self.repo / "README.org").unlink()
+        (self.repo / "package.texi").write_text("changed texi\n")
+        self.assert_generated_refusal("package.texi")
+
+    def test_unselected_working_manual_header_does_not_require_its_outputs(self):
+        self.prepare_generated_manual("#+TITLE: Plain manual", ["foreign.texi"])
+        (self.repo / "README.org").write_text("#+EXPORT_FILE_NAME: foreign.info\n")
+        (self.repo / "foreign.texi").write_text("foreign output\n")
+        self.assert_selection("git commit -m test", "allow")
+
+    def test_only_commit_reads_selected_working_manual_header(self):
+        self.prepare_generated_manual("#+EXPORT_FILE_NAME: old.info", ["old.texi", "new.texi"])
+        (self.repo / "README.org").write_text("#+EXPORT_FILE_NAME: new.info\n")
+        (self.repo / "new.texi").write_text("changed new output\n")
+        self.assert_generated_refusal("new.texi", "git commit --only -m test -- README.org")
+        self.assert_selection("git commit --only -m test -- README.org new.texi", "allow")
+
+    def test_amend_only_reads_inherited_manual_from_candidate(self):
+        self.prepare_generated_manual("#+EXPORT_FILE_NAME: package.info", ["package.texi"])
+        (self.repo / "script.sh").write_text("before\n")
+        self.git("add", "script.sh")
+        self.git("-c", "user.name=Test", "-c", "user.email=test@example.com",
+                 "commit", "-qm", "manual and script")
+        (self.repo / "README.org").write_text("#+TITLE: Unselected header\n")
+        (self.repo / "script.sh").write_text("after\n")
+        (self.repo / "package.texi").write_text("changed output\n")
+        self.assert_generated_refusal("package.texi",
+                                      "git commit --amend --only -m test -- script.sh")
+
+    def test_literal_pending_add_reads_working_manual_header(self):
+        self.prepare_generated_manual("#+EXPORT_FILE_NAME: old.info", ["old.texi", "new.texi"])
+        (self.repo / "README.org").write_text("#+EXPORT_FILE_NAME: new.info\n")
+        (self.repo / "new.texi").write_text("changed output\n")
+        self.assert_generated_refusal("new.texi", "git add README.org && git commit -m test")
+        self.assert_selection("git add README.org new.texi && git commit -m test", "allow")
+
+    def test_uncertain_pending_add_header_requires_separate_staging(self):
+        self.prepare_generated_manual("#+EXPORT_FILE_NAME: old.info",
+                                      ["doc/old.texi", "doc/new.texi"], manual="doc/manual.org")
+        (self.repo / "doc/manual.org").write_text("#+EXPORT_FILE_NAME: new.info\n")
+        (self.repo / "doc/new.texi").write_text("changed output\n")
+        for command in ("git add doc && git commit -m test",
+                        "git add -A && git commit -m test",
+                        'git add "$TARGET" && git commit -m test'):
+            self.assert_generated_refusal("stage pending manual changes separately", command)
+
+    def test_pending_unrelated_directory_does_not_consume_manual_drift(self):
+        self.prepare_generated_manual("#+EXPORT_FILE_NAME: old.info", ["old.texi", "foreign.texi"])
+        (self.repo / "README.org").write_text("#+EXPORT_FILE_NAME: foreign.info\n")
+        (self.repo / "foreign.texi").write_text("unselected output\n")
+        (self.repo / "scripts").mkdir()
+        (self.repo / "scripts/check.sh").write_text("echo checked\n")
+        self.assert_selection("git add scripts && git commit -m test", "allow")
+
+    def test_uncertain_add_without_generated_manual_remains_allowed(self):
+        self.prepare_generated_manual("#+TITLE: Plain manual", [])
+        (self.repo / "README.org").write_text("#+TITLE: Changed plain manual\n")
+        self.assert_selection("git add -A && git commit -m test", "allow")
+
+    def test_large_candidate_manual_is_not_passed_through_argv(self):
+        self.prepare_generated_manual("#+EXPORT_FILE_NAME: package.info", ["package.texi"])
+        manual = self.repo / "README.org"
+        manual.write_text("#+EXPORT_FILE_NAME: package.info\n" + "ordinary body\n" * 25000)
+        (self.repo / "package.texi").write_text("changed output\n")
+        self.assert_generated_refusal("package.texi", "git commit --only -m test -- README.org")
+
+    def test_distinct_headers_bind_info_independently(self):
+        self.prepare_generated_manual(
+            "#+EXPORT_FILE_NAME: guide.info\n#+TEXINFO_FILENAME: package.info",
+            ["guide.texi", "package.info"])
+        (self.repo / "package.info").write_text("changed info\n")
+        self.assert_generated_refusal("package.info")
+        self.assert_selection("git add package.info && git commit -m test", "allow")
+
+    def test_deleted_dash_prefixed_generated_output_is_still_checked(self):
+        self.prepare_generated_manual(
+            "#+EXPORT_FILE_NAME: -guide.info", ["-guide.texi"])
+        (self.repo / "-guide.texi").unlink()
+        self.assert_generated_refusal("-guide.texi")
+
+    def test_reversed_mixed_case_headers_bind_texi_independently(self):
+        self.prepare_generated_manual(
+            "  #+TeXiNfO_FiLeNaMe: package.info\n#+ExPoRt_FiLe_NaMe: guide.texi",
+            ["guide.texi", "package.info"])
+        (self.repo / "guide.texi").write_text("changed texi\n")
+        self.assert_generated_refusal("guide.texi")
+
+    def test_quoted_info_and_shell_quoted_spaced_paths(self):
+        self.prepare_generated_manual(
+            '#+EXPORT_FILE_NAME: user guide.info\n#+TEXINFO_FILENAME: "package manual.info"',
+            ["doc/user guide.texi", "doc/package manual.info"],
+            manual="doc/source manual.org")
+        self.git("reset", "-q", "HEAD", "--", "doc/source manual.org")
+        (self.repo / "doc/package manual.info").write_text("changed info\n")
+        command = 'git add "doc/source manual.org" && git commit -m test'
+        self.assert_generated_refusal("doc/package manual.info", command)
+        self.assert_selection(
+            'git add "doc/source manual.org" "doc/package manual.info" && git commit -m test',
+            "allow")
+
+    def test_contained_relative_and_absolute_outputs_are_preserved(self):
+        self.prepare_generated_manual(
+            f'#+EXPORT_FILE_NAME: ../generated/guide.info\n#+TEXINFO_FILENAME: "{self.repo}/generated/package.info"',
+            ["generated/guide.texi", "generated/package.info"],
+            manual="doc/manual.org")
+        (self.repo / "generated/package.info").write_text("changed info\n")
+        self.assert_generated_refusal("generated/package.info")
+        (self.repo / "generated/guide.texi").write_text("changed texi\n")
+        self.git("add", "generated/package.info")
+        self.assert_generated_refusal("generated/guide.texi")
+        self.assert_selection(
+            "git add generated/guide.texi && git commit -m test", "allow")
+
+    def test_literal_block_headers_are_not_output_declarations(self):
+        for kind in ("src org", "example", "comment", "export texinfo"):
+            with self.subTest(kind=kind):
+                headers = (f"#+begin_{kind}\n#+TEXINFO_FILENAME: ignored.info\n"
+                           f"#+end_{kind.split()[0]}\n#+TEXINFO_FILENAME: package.info")
+                self.prepare_generated_manual(headers, ["README.texi", "package.info"])
+                (self.repo / "README.texi").write_text("changed texi\n")
+                self.assert_generated_refusal("README.texi")
+                self.git("add", "README.texi")
+
+    def test_nonliteral_block_output_declarations_remain_active(self):
+        self.prepare_generated_manual(
+            "#+begin_quote\n#+EXPORT_FILE_NAME: guide.info\n#+end_quote\n"
+            "#+begin_special\n#+TEXINFO_FILENAME: package.info\n#+end_special",
+            ["guide.texi", "package.info"])
+        (self.repo / "package.info").write_text("changed info\n")
+        self.assert_generated_refusal("package.info")
+
+    def test_ambiguous_and_escaping_output_names_fail_closed(self):
+        cases = (
+            "#+TEXINFO_FILENAME: one.info\n#+TEXINFO_FILENAME: two.info",
+            "#+EXPORT_FILE_NAME: one.info\n#+EXPORT_FILE_NAME: two.info",
+            "#+TEXINFO_FILENAME: ../outside.info",
+            f"#+TEXINFO_FILENAME: {self.repo.parent}/outside.info",
+            '#+EXPORT_FILE_NAME: "guide.info"\n#+TEXINFO_FILENAME: package.info',
+        )
+        for headers in cases:
+            with self.subTest(headers=headers):
+                (self.repo / "README.org").write_text(headers + "\nBody.\n")
+                self.git("add", "README.org")
+                self.assert_generated_refusal("output names")
+
+    def test_symlink_output_escape_fails_closed(self):
+        outside = self.repo.parent / "outside"
+        outside.mkdir()
+        (self.repo / "generated").symlink_to(outside, target_is_directory=True)
+        (self.repo / "README.org").write_text("#+TEXINFO_FILENAME: generated/package.info\n")
+        self.git("add", "README.org")
+        self.assert_generated_refusal("output names")
+
+    def test_non_texinfo_manual_does_not_require_generated_outputs(self):
+        self.prepare_generated_manual("#+TITLE: Guide", ["README.texi"])
+        (self.repo / "README.texi").write_text("unrelated output\n")
+        self.assert_selection("git commit -m test", "allow")
+
+    def test_export_filename_replaces_its_final_extension(self):
+        self.prepare_generated_manual("#+EXPORT_FILE_NAME: guide.manual", ["guide.texi"])
+        (self.repo / "guide.texi").write_text("changed texi\n")
+        self.assert_generated_refusal("guide.texi")
+
+    def test_org_manual_diagnostic_names_the_available_skill(self):
+        (self.repo / "README.org").write_text("#+TITLE: Guide\n")
+        (self.repo / "example.el").write_text("(provide 'example)\n")
+        self.git("add", "example.el")
+        for hook, field in HOOKS:
+            result = self.run_hook(hook, field)
+            self.assertEqual(permission_decision(result), "deny", result.stdout)
+            self.assertIn("document-elisp-package", deny_reason(result))
+            self.assertNotIn("/doc-elisp", deny_reason(result))
+
+    @unittest.skipUnless(shutil.which("emacs") and shutil.which("makeinfo"),
+                         "native Org and makeinfo are required")
+    def test_native_org_relative_info_and_default_output_paths(self):
+        expression = r"""(progn
+          (setq enable-local-variables nil enable-local-eval nil
+                enable-dir-local-variables nil)
+          (require 'ox-texinfo)
+          (setq org-export-use-babel nil org-export-before-processing-hook nil
+                org-export-before-parsing-hook nil)
+          (with-temp-buffer
+            (setq buffer-file-name (getenv "TEST_MANUAL_SOURCE")
+                  default-directory (file-name-directory buffer-file-name))
+            (insert-file-contents buffer-file-name)
+            (org-mode)
+            (org-export-to-file 'texinfo
+              (org-export-output-file-name ".texi"))))"""
+        for suffix, info_header, expected in (
+            ("relative", "#+TEXINFO_FILENAME: package.info\n", "doc/package.info"),
+            ("default", "", "generated/guide.info"),
+        ):
+            with self.subTest(case=suffix):
+                self.prepare_generated_manual(
+                    "#+TITLE: Fixture\n#+EXPORT_FILE_NAME: ../generated/guide.info\n" + info_header,
+                    ["generated/guide.texi"], manual="doc/manual.org")
+                result = subprocess.run(
+                    ["emacs", "--batch", "-Q", "--eval", expression],
+                    env={**os.environ, "TEST_MANUAL_SOURCE": str(self.repo / "doc/manual.org")},
+                    cwd=self.repo / "doc", text=True, capture_output=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                result = subprocess.run(
+                    ["makeinfo", "--no-split", "../generated/guide.texi"],
+                    cwd=self.repo / "doc", text=True, capture_output=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                actual = sorted(str(path.relative_to(self.repo))
+                                for path in self.repo.rglob("*.info"))
+                self.assertIn(expected, actual)
+                self.assert_generated_refusal(expected)
+                # The next fixture checks a distinct export without stale Info files.
+                for path in self.repo.rglob("*.info"):
+                    path.unlink()
 
 
 def deny_reason(result: subprocess.CompletedProcess[str]) -> str:

@@ -168,6 +168,10 @@ personal/plugin identities and exact name boundaries, and handles task-start
 context, hidden inputs, and fractional timestamps. Counts remain reconstructed
 evidence, not native invocation telemetry or proof of workflow completion.
 
+The =design-audit= skill accepts explicit plain-language refactoring requests,
+requires concrete maintenance benefits, and preserves runtime/public contracts.
+Counts, local call searches and single implementations alone do not justify edits.
+
 The =code-audit= skill requires supported failure evidence, distinguishes defects
 from generic hardening, and checks exact failing behavior after fixes. Audit-only
 checks cannot smuggle in snapshot rewrites, installs or external side effects.

@@ -107,7 +107,9 @@ is_doc_exempt_el() {
 # documentation edit to satisfy this gate.
 is_version_bump_only() {
   local file="$1" diff body
-  if [ -n "${STAGED_BASE:-}" ]; then
+  if [ "${STAGED_SELECTION:-0}" = 1 ]; then
+    diff=$(printf '%s' "$STAGED_ELISP_DIFFS" | jq -r --arg file "$file" '.[$file] // empty')
+  elif [ -n "${STAGED_BASE:-}" ]; then
     diff=$(git -C "$REPO_ROOT" diff --cached --unified=0 "$STAGED_BASE" -- "$file" 2>/dev/null || true)
   else
     diff=$(git -C "$REPO_ROOT" diff --cached --unified=0 -- "$file" 2>/dev/null || true)
@@ -223,6 +225,9 @@ fi
 # Extract only the `git add` arguments to avoid false positives from
 # commit messages or other parts of the command that mention .el files.
 ADD_ARGS=$(echo "$COMMAND" | grep -oE 'git\s+add\s+[^;&|]*' || true)
+if [ "$STAGED_SELECTION" = 1 ]; then
+  ADD_ARGS=""
+fi
 if [ -n "$ADD_ARGS" ]; then
   if [ "$HAS_EL" = false ]; then
     # Extract literal .el paths from git add args without evaluating the shell.
@@ -312,9 +317,13 @@ texinfo_manual_outputs() {
 }
 
 PENDING_ADDS=""
-while IFS= read -r -d '' _pending; do
-  PENDING_ADDS="$PENDING_ADDS$_pending"$'\n'
-done < <(printf '%s' "$COMMAND" | git_add_paths)
+if [ "$STAGED_SELECTION" = 1 ]; then
+  PENDING_ADDS="$STAGED"$'\n'
+else
+  while IFS= read -r -d '' _pending; do
+    PENDING_ADDS="$PENDING_ADDS$_pending"$'\n'
+  done < <(printf '%s' "$COMMAND" | git_add_paths)
+fi
 unset _pending
 
 pending_add_p() {

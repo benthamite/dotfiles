@@ -478,6 +478,13 @@
       "note": "Shared staged-file helper copied for commit gates; Codex usage comment references lib-codex-hook-json.sh."
     },
     {
+      "name": "commit-file-selection.py",
+      "claude": "claude/hooks/commit-file-selection.py",
+      "codex": "codex/hooks/commit-file-selection.py",
+      "status": "paired-utility",
+      "note": "Resolves proposed commit path selection using a disposable index, preserving unrelated staged changes."
+    },
+    {
       "name": "load-elisp-after-edit.sh",
       "claude": "claude/hooks/load-elisp-after-edit.sh",
       "codex": "codex/hooks/load-elisp-after-edit.sh",

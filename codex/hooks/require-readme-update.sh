@@ -51,7 +51,7 @@ fi
 
 # Also catch git add ... && git commit in a single bash command.
 # At hook-fire time git diff --cached doesn't see the new files yet.
-if [ "$HAS_CLAUDE_CHANGES" = false ]; then
+if [ "$HAS_CLAUDE_CHANGES" = false ] && [ "$STAGED_SELECTION" = 0 ]; then
   if echo "$COMMAND" | grep -qE '\bgit\s+add\b'; then
     # Direct path in git add args (e.g., git add claude/skills/foo/SKILL.md)
     # Exclude runtime data paths (digests, last-run, vetted)
@@ -71,7 +71,7 @@ fi
 # other README satisfied it -- `git add claude/skills/... claude/bin/README.org`
 # passed the guard and the overview went unwritten -- and so did a commit message
 # that merely mentioned the file.
-if [ "$HAS_README" = false ]; then
+if [ "$HAS_README" = false ] && [ "$STAGED_SELECTION" = 0 ]; then
   # Only the `git add` arguments count, never the rest of the command: a commit
   # message that mentions the file is not an update to it.
   README_ADD_ARGS=$(echo "$COMMAND" | grep -oE 'git[[:space:]]+add[[:space:]]+[^;&|]*' || true)

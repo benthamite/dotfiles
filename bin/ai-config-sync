@@ -966,16 +966,16 @@ def is_commit_all_arg(arg: str) -> bool:
     return arg in {"-a", "--all", "-am"} or arg.startswith("-am")
 
 
-def commit_content_problem(args: list[str]) -> str | None:
-    """Return why a commit's content cannot be represented by the candidate index."""
+def commit_selection(args: list[str]) -> tuple[list[str] | None, str | None]:
+    """Parse a literal path-only commit; None selects the ordinary index."""
+    selected: list[str] = []
+    only = False
     unsupported = {
         "-p",
         "--patch",
         "--interactive",
         "-i",
         "--include",
-        "-o",
-        "--only",
         "--pathspec-from-file",
         "--pathspec-file-nul",
     }
@@ -1024,14 +1024,17 @@ def commit_content_problem(args: list[str]) -> str | None:
     while i < len(args):
         arg = args[i]
         if arg == "--":
-            if i + 1 < len(args):
-                return "Cannot safely model git commit with positional pathspecs."
-            return None
+            selected.extend(args[i + 1:])
+            break
+        if arg in {"-o", "--only"}:
+            only = True
+            i += 1
+            continue
         if arg in unsupported or arg.startswith("--pathspec-from-file="):
-            return f"Cannot safely model git commit content option {arg}."
+            return None, f"Cannot safely model git commit content option {arg}."
         if arg in options_with_values:
             if i + 1 >= len(args):
-                return f"Cannot safely model incomplete git commit option {arg}."
+                return None, f"Cannot safely model incomplete git commit option {arg}."
             i += 2
             continue
         if arg.startswith(value_prefixes):
@@ -1039,7 +1042,7 @@ def commit_content_problem(args: list[str]) -> str | None:
             continue
         if arg == "-am":
             if i + 1 >= len(args):
-                return "Cannot safely model incomplete git commit option -am."
+                return None, "Cannot safely model incomplete git commit option -am."
             i += 2
             continue
         if arg.startswith("-am") and len(arg) > 3:
@@ -1055,15 +1058,32 @@ def commit_content_problem(args: list[str]) -> str | None:
             i += 1
             continue
         if arg.startswith("-"):
-            return f"Cannot safely model git commit option {arg}."
-        return "Cannot safely model git commit with positional pathspecs."
-    return None
+            return None, f"Cannot safely model git commit option {arg}."
+        selected.append(arg)
+        i += 1
+    if selected or only:
+        if any(is_commit_all_arg(arg) for arg in args):
+            return None, "Cannot safely model git commit combining --all and selected paths."
+        if not selected and "--amend" not in args:
+            return None, "Cannot safely model git commit --only without paths or --amend."
+        if any(not path or any(char in path for char in ':*?[\\\n\r') for path in selected):
+            return None, "Cannot safely model git commit pathspec magic, globs, or unusual paths."
+        return selected, None
+    return None, None
+
+
+def commit_content_problem(args: list[str]) -> str | None:
+    return commit_selection(args)[1]
 
 
 def command_paths_and_commit_repos(
     command: str,
     cwd: Path,
+    *,
+    head_based_repos: set[Path] | None = None,
 ) -> tuple[dict[Path, set[str]], set[Path], dict[Path, list[str]]]:
+    if head_based_repos is None:
+        head_based_repos = set()
     try:
         tokens = shell_tokens(command)
     except ValueError:
@@ -1132,6 +1152,10 @@ def command_paths_and_commit_repos(
             # failed first commit stops the chain); anything looser is refused
             # below like any other non-deterministic add chain.
             repeat = repo in commit_repos
+            if repeat and repo in head_based_repos:
+                commit_problems_by_repo.setdefault(repo, []).append(
+                    "Cannot safely model multiple git commits after selected paths."
+                )
             if repeat and connector != "&&":
                 commit_problems_by_repo.setdefault(repo, []).append(
                     "Cannot safely model a second git commit unless && links it "
@@ -1160,9 +1184,43 @@ def command_paths_and_commit_repos(
                         "adds lead directly to git commit through &&."
                     )
                     commit_paths.clear()
-            commit_problem = commit_content_problem(args)
+            selection, commit_problem = commit_selection(args)
             if commit_problem:
                 commit_problems_by_repo[repo].append(commit_problem)
+            if selection is not None:
+                if not safe_prefix or (planning_add_seen and not planning_chain_safe):
+                    commit_problems_by_repo[repo].append(
+                        "Cannot safely model selected paths after other shell operations."
+                    )
+                if repeat:
+                    commit_problems_by_repo[repo].append(
+                        "Cannot safely model selected paths across multiple git commits."
+                    )
+                tracked = set(git_lines(["ls-files", "--cached"], repo))
+                tracked.update(git_lines(["ls-tree", "-r", "--name-only", "HEAD"], repo))
+                tracked.update(commit_paths)
+                selected_paths: set[str] = set()
+                for token in selection:
+                    target = Path(os.path.abspath(git_cwd / token))
+                    try:
+                        relative = target.relative_to(repo).as_posix()
+                    except ValueError:
+                        commit_problems_by_repo[repo].append(
+                            "Cannot safely model git commit path outside its repository."
+                        )
+                        continue
+                    matches = tracked if relative == "." else {
+                        path for path in tracked
+                        if path == relative or path.startswith(relative.rstrip("/") + "/")
+                    }
+                    if not matches:
+                        commit_problems_by_repo[repo].append(
+                            f"Cannot safely model unmatched git commit path {token}."
+                        )
+                    selected_paths.update(matches)
+                commit_paths = selected_paths
+                if head_based_repos is not None:
+                    head_based_repos.add(repo)
             commit_paths_by_repo[repo] = commit_paths
             if any(is_commit_all_arg(arg) for arg in args):
                 commit_paths_by_repo[repo].update(tracked_dirty_paths(repo))
@@ -1675,15 +1733,40 @@ def contained_non_symlink_regular_file(repo_root: Path, relative: str) -> bool:
     return True
 
 
+class CandidateTreeReadError(ValueError):
+    """The base tree cannot be read reliably enough to audit a commit."""
+
+
 @dataclass(frozen=True)
 class CommitCandidateTree:
-    """The tree a guarded commit would create: index plus planned git-add paths."""
+    """Index plus planned additions, or HEAD plus an explicit path selection."""
 
     repo_root: Path
     planned_paths: frozenset[str]
+    head_based: bool = False
 
     @cached_property
     def index_entries(self) -> dict[str, tuple[str, str, str] | None]:
+        if self.head_based:
+            proc = run_git(["ls-tree", "-r", "-z", "HEAD"], self.repo_root)
+            if proc.returncode:
+                raise CandidateTreeReadError("Cannot inspect HEAD for selected commit paths.")
+            if proc.stdout and not proc.stdout.endswith("\0"):
+                raise CandidateTreeReadError("Cannot parse HEAD for selected commit paths.")
+            entries = {}
+            for record in proc.stdout.split("\0")[:-1]:
+                metadata, separator, path = record.partition("\t")
+                fields = metadata.split()
+                if (
+                    not separator or not path or len(fields) != 3
+                    or fields[0] not in {"100644", "100755", "120000", "160000"}
+                    or fields[1] not in {"blob", "commit"}
+                    or re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", fields[2]) is None
+                    or path in entries
+                ):
+                    raise CandidateTreeReadError("Cannot parse HEAD for selected commit paths.")
+                entries[path] = (fields[0], fields[2], "0")
+            return entries
         proc = run_git(["ls-files", "--stage", "-z"], self.repo_root)
         if proc.returncode != 0:
             return {}
@@ -2625,11 +2708,14 @@ def guard_changed_paths(
 def guard_commit() -> None:
     data = read_input_json()
     command = str(tool_input_object(data).get("command") or "")
+    head_based_repos: set[Path] = set()
     (
         paths_by_repo,
         commit_repos,
         command_problems_by_repo,
-    ) = command_paths_and_commit_repos(command, hook_cwd(data))
+    ) = command_paths_and_commit_repos(
+        command, hook_cwd(data), head_based_repos=head_based_repos
+    )
     if not commit_repos:
         return
 
@@ -2638,7 +2724,7 @@ def guard_commit() -> None:
     documentation_candidate: CommitCandidateTree | None = None
     for repo_root in sorted(commit_repos, key=str):
         changed = dirty_paths(repo_root)
-        staged = staged_paths(repo_root)
+        staged = set() if repo_root in head_based_repos else staged_paths(repo_root)
         include_global = same_path(repo_root, ROOT)
         # A command this guard cannot model is only worth blocking when the
         # commit could carry something the guard would have checked. In the
@@ -2657,7 +2743,14 @@ def guard_commit() -> None:
         ):
             problems.extend(gatable)
         command_paths = paths_by_repo.get(repo_root, set())
-        candidate_tree = CommitCandidateTree(repo_root, frozenset(command_paths))
+        candidate_tree = CommitCandidateTree(
+            repo_root, frozenset(command_paths), repo_root in head_based_repos
+        )
+        try:
+            candidate_tree.index_entries
+        except CandidateTreeReadError as error:
+            problems.append(str(error))
+            continue
         paths = staged | command_paths
         changed_paths = {path for path in paths if path_has_change(path, changed)}
         if not changed_paths:
@@ -3874,7 +3967,9 @@ def candidate_documentation_audit_problems(
     try:
         git_dir_result = git_process(["rev-parse", "--absolute-git-dir"])
         objects_result = git_process(["rev-parse", "--git-path", "objects"])
-        tree_result = git_process(["write-tree"])
+        tree_result = git_process(
+            ["rev-parse", "HEAD^{tree}"] if candidate_tree.head_based else ["write-tree"]
+        )
         checker_result = git_process(
             ["show", "HEAD:bin/docs-audit"], text=False
         )

@@ -2055,7 +2055,6 @@ if os.path.lexists(mode_link) and (
         codex_skill = ".codex/skills/example/SKILL.md"
         commands = (
             f"git commit --include {claude_skill} {codex_skill} -m test",
-            f"git commit --only {claude_skill} {codex_skill} -m test",
             "git commit --patch -m test",
             "git commit --pathspec-from-file=paths.txt -m test",
         )
@@ -2082,6 +2081,122 @@ if os.path.lexists(mode_link) and (
 
                 self.assertTrue(output.getvalue())
                 self.assertIn("Cannot safely model git commit", output.getvalue())
+
+    def test_selected_commit_uses_worktree_pair_and_excludes_staged_changes(self):
+        claude = ".claude/skills/example/SKILL.md"
+        codex = ".codex/skills/example/SKILL.md"
+        for mode in ("--only", ""):
+            with self.subTest(mode=mode):
+                repo = self.make_repo([claude, codex, "unrelated.el"]).resolve()
+                self.write_file(repo, "unrelated.el", "staged unrelated\n")
+                self.run_git(repo, "add", "unrelated.el")
+                self.write_file(repo, claude, "paired version two\n")
+                self.write_file(repo, codex, "paired version two\n")
+                index_before = (repo / ".git/index").read_bytes()
+                head_based = set()
+                paths, _, problems = self.module.command_paths_and_commit_repos(
+                    f"git commit {mode} -m test -- {claude} {codex}", repo,
+                    head_based_repos=head_based,
+                )
+                self.assertFalse(problems[repo])
+                self.assertIn(repo, head_based)
+                tree = self.module.CommitCandidateTree(repo, frozenset(paths[repo]), True)
+                self.assertEqual(tree.read_regular_file(claude), "paired version two\n")
+                expected = self.module.git_text(["show", "HEAD:unrelated.el"], repo)
+                self.assertEqual(tree.read_regular_file("unrelated.el"), expected)
+                self.assertEqual((repo / ".git/index").read_bytes(), index_before)
+                self.run_git(repo, "commit", "--only", "-m", "selected", "--", claude, codex)
+                self.assertEqual(
+                    self.module.git_text(["show", f"HEAD:{claude}"], repo),
+                    tree.read_regular_file(claude),
+                )
+                self.assertEqual(self.module.git_text(["show", "HEAD:unrelated.el"], repo), expected)
+                self.assertEqual(self.module.staged_paths(repo), {"unrelated.el"})
+
+    def test_selected_commit_cannot_borrow_staged_counterpart(self):
+        claude = ".claude/skills/example/SKILL.md"
+        codex = ".codex/skills/example/SKILL.md"
+        repo = self.make_repo([claude, codex])
+        for path in (claude, codex):
+            self.write_file(repo, path, "version two\n")
+        self.run_git(repo, "add", codex)
+        output = io.StringIO()
+        with mock.patch.object(self.module, "read_input_json", return_value={
+            "tool_input": {"command": f"git commit --only -m test -- {claude}", "cwd": str(repo)}
+        }), redirect_stdout(output):
+            self.module.guard_commit()
+        self.assertIn("counterpart", output.getvalue())
+
+    def test_selected_directory_excludes_untracked_but_includes_staged_new(self):
+        repo = self.make_repo(["selected/tracked.sh", "other.el"]).resolve()
+        self.write_file(repo, "selected/tracked.sh", "updated\n")
+        self.write_file(repo, "selected/staged.sh", "new staged\n")
+        self.write_file(repo, "selected/untracked.sh", "not selected by git\n")
+        self.write_file(repo, "other.el", "unrelated staged\n")
+        self.run_git(repo, "add", "selected/staged.sh", "other.el")
+        paths, _, problems = self.module.command_paths_and_commit_repos(
+            "git commit --only -m directory -- selected", repo
+        )
+        self.assertFalse(problems[repo])
+        self.assertEqual(paths[repo], {"selected/tracked.sh", "selected/staged.sh"})
+        tree = self.module.CommitCandidateTree(repo, frozenset(paths[repo]), True)
+        self.assertFalse(tree.path_exists("selected/untracked.sh"))
+        expected = tree.regular_files_under("selected")
+        self.run_git(repo, "commit", "--only", "-m", "directory", "--", "selected")
+        actual = set(self.module.git_lines(["ls-tree", "-r", "--name-only", "HEAD", "--", "selected"], repo))
+        self.assertEqual(actual, expected)
+        self.assertEqual(self.module.staged_paths(repo), {"other.el"})
+
+    def test_only_amend_without_paths_uses_unchanged_head(self):
+        repo = self.make_repo(["unrelated.el"]).resolve()
+        self.write_file(repo, "unrelated.el", "staged\n")
+        self.run_git(repo, "add", "unrelated.el")
+        head_based = set()
+        paths, _, problems = self.module.command_paths_and_commit_repos(
+            "git commit --only --amend --no-edit", repo, head_based_repos=head_based
+        )
+        self.assertEqual(paths[repo], set())
+        self.assertFalse(problems[repo])
+        self.assertIn(repo, head_based)
+
+    def test_selected_commit_blocks_unreadable_or_malformed_head(self):
+        repo = self.make_repo(["selected.sh"])
+        self.write_file(repo, "selected.sh", "changed\n")
+        real_run_git = self.module.run_git
+        for returncode, stdout in ((1, ""), (0, "malformed\0")):
+            with self.subTest(returncode=returncode):
+                def run_git(args, root=self.module.ROOT):
+                    if args == ["ls-tree", "-r", "-z", "HEAD"]:
+                        return subprocess.CompletedProcess(args, returncode, stdout, "private diagnostic")
+                    return real_run_git(args, root)
+                output = io.StringIO()
+                with mock.patch.object(self.module, "run_git", side_effect=run_git), \
+                     mock.patch.object(self.module, "read_input_json", return_value={
+                         "tool_input": {"command": "git commit --only -m test -- selected.sh", "cwd": str(repo)}
+                     }), redirect_stdout(output):
+                    self.module.guard_commit()
+                self.assertIn('"permissionDecision": "deny"', output.getvalue())
+                self.assertIn("HEAD for selected commit paths", output.getvalue())
+                self.assertNotIn("private diagnostic", output.getvalue())
+
+    def test_selected_candidate_docs_ignore_unrelated_bad_index(self):
+        repo = self.make_candidate_docs_repo()
+        self.write_file(repo, "README.org", "* forbidden\n")
+        self.run_git(repo, "add", "README.org")
+        self.write_file(repo, "claude/README.org", "updated clean docs\n")
+        index_before = (repo / ".git/index").read_bytes()
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset({"claude/README.org"}), True)
+            )
+        self.assertEqual([], problems)
+        self.assertEqual((repo / ".git/index").read_bytes(), index_before)
+        self.write_file(repo, "claude/README.org", "* forbidden\n")
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset({"claude/README.org"}), True)
+            )
+        self.assertEqual(["bad candidate docs"], problems)
 
     def test_redirections_are_not_mistaken_for_commit_pathspecs(self):
         commands = (

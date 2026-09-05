@@ -135,6 +135,174 @@ class DocUpdateHookTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(permission_decision(result), "deny")
 
+    def git(self, *args):
+        return subprocess.check_output(["git", "-C", str(self.repo), *args], text=True)
+
+    def prepare_selection(self):
+        (self.repo / "script.sh").write_text("echo before\n")
+        (self.repo / "example.el").write_text(";; Version: 1.0\n(provide 'example)\n")
+        self.git("add", "script.sh", "example.el")
+        self.git("-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "fixture")
+        (self.repo / "script.sh").write_text("echo after\n")
+        (self.repo / "example.el").write_text(";; Version: 1.0\n(message \"changed\")\n")
+        self.git("add", "example.el")
+
+    def assert_selection(self, command, expected):
+        before = (self.repo / ".git/index").read_bytes()
+        for hook, field in HOOKS:
+            with self.subTest(hook=hook, command=command):
+                result = self.run_hook(hook, field, command)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(permission_decision(result), expected, result.stdout)
+                self.assertEqual((self.repo / ".git/index").read_bytes(), before)
+
+    def test_only_shell_ignores_unrelated_staged_elisp(self):
+        self.prepare_selection()
+        self.assert_selection("git commit --only -m test -- script.sh", "allow")
+        self.assert_selection("git add example.el && git commit -m test script.sh", "allow")
+        self.assert_selection("git commit -omtest -- script.sh", "allow")
+        self.assert_selection("git commit -m test", "deny")
+        self.git("-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "--only", "-qm", "actual", "--", "script.sh")
+        self.assertEqual(self.git("show", "--format=", "--name-only", "HEAD").strip(), "script.sh")
+        self.assertEqual(self.git("diff", "--cached", "--name-only").strip(), "example.el")
+
+    def test_explicit_selection_uses_tool_workdir_over_session_cwd(self):
+        self.prepare_selection()
+        elsewhere = self.repo.parent / "session"
+        elsewhere.mkdir()
+        for hook, field in HOOKS:
+            payload = {
+                "cwd": str(elsewhere),
+                "tool_input": {field: "git commit --only -m test -- script.sh", "workdir": str(self.repo)},
+            }
+            result = subprocess.run(["bash", str(hook)], input=json.dumps(payload),
+                                    cwd=elsewhere, text=True, capture_output=True)
+            self.assertEqual(permission_decision(result), "allow", result.stdout)
+
+    def test_only_elisp_cannot_borrow_unselected_docs(self):
+        self.prepare_selection()
+        (self.repo / "README.md").write_text("# Updated\n")
+        self.git("add", "README.md")
+        self.assert_selection("git commit --only -m test -- example.el", "deny")
+        self.assert_selection("git add README.md && git commit --only -m test -- example.el", "deny")
+        self.assert_selection("git commit --only -m test -- example.el README.md", "allow")
+
+    def test_directory_selection_omits_untracked_documentation(self):
+        self.prepare_selection()
+        (self.repo / "package/doc").mkdir(parents=True)
+        source = self.repo / "package/example.el"
+        source.write_text("(provide 'package)\n")
+        self.git("add", "package/example.el")
+        self.git("-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "--only", "-qm", "package", "--", "package/example.el")
+        source.write_text("(message \"changed\")\n")
+        (self.repo / "package/doc/manual.org").write_text("Untracked manual\n")
+        self.assert_selection("git commit --only -m test -- package", "deny")
+        # Git confirms the untracked manual is excluded from that commit.
+        self.git("-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "--only", "-qm", "actual", "--", "package")
+        self.assertEqual(self.git("show", "--format=", "--name-only", "HEAD").strip(), "package/example.el")
+
+    def test_only_includes_new_files_already_known_to_real_index(self):
+        self.prepare_selection()
+        (self.repo / "new.sh").write_text("echo new\n")
+        self.git("add", "new.sh")
+        self.assert_selection("git commit --only -m test -- new.sh", "allow")
+
+    def test_only_uses_worktree_diff_for_version_exemption(self):
+        self.prepare_selection()
+        # The real index now contains only a version bump, but the candidate
+        # working tree changes behavior. The version exemption must see that.
+        (self.repo / "example.el").write_text(";; Version: 1.1\n(provide 'example)\n")
+        self.git("add", "example.el")
+        (self.repo / "example.el").write_text(";; Version: 1.1\n(message \"changed\")\n")
+        self.assert_selection("git commit --only -m test -- example.el", "deny")
+
+    def test_only_amend_preserves_inherited_elisp_requirements(self):
+        self.prepare_selection()
+        self.assert_selection("git commit --amend --only -m test -- script.sh", "deny")
+        self.assert_selection("git commit --amend --only --no-edit", "deny")
+
+    def test_unsupported_dynamic_paths_fail_closed(self):
+        self.prepare_selection()
+        self.assert_selection('git commit --only -m test -- "$TARGET"', "deny")
+        self.assert_selection("git commit --pathspec-from-file=paths -m test", "deny")
+
+    def test_help_does_not_inspect_unrelated_staging(self):
+        self.prepare_selection()
+        self.assert_selection("git commit -h", "allow")
+
+    def test_all_includes_unstaged_elisp(self):
+        self.prepare_selection()
+        self.git("reset", "-q", "HEAD", "--", "example.el")
+        self.assert_selection("git commit -am test", "deny")
+
+    def test_all_cannot_omit_a_pending_untracked_add(self):
+        self.prepare_selection()
+        self.git("reset", "-q", "HEAD", "--", "example.el")
+        (self.repo / "example.el").write_text(";; Version: 1.0\n(provide 'example)\n")
+        (self.repo / "new.el").write_text("(message \"new\")\n")
+        self.assert_selection("git add new.el && git commit -am test", "deny")
+
+    def test_elisp_evidence_gate_ignores_unselected_pending_add(self):
+        self.prepare_selection()
+        for hook, field in HOOKS:
+            result = self.run_hook(
+                hook.with_name("require-elisp-test-before-commit.sh"), field,
+                "git add example.el && git commit --only -m test -- script.sh",
+            )
+            self.assertEqual(permission_decision(result), "allow", result.stdout)
+
+    def test_readme_gate_cannot_borrow_unselected_pending_readme(self):
+        self.prepare_selection()
+        (self.repo / "claude/hooks").mkdir(parents=True)
+        (self.repo / "claude/hooks/example.sh").write_text("echo hook\n")
+        (self.repo / "claude/README.org").write_text("Overview\n")
+        self.git("add", "claude/hooks/example.sh", "claude/README.org")
+        for hook, field in HOOKS:
+            result = self.run_hook(
+                hook.with_name("require-readme-update.sh"), field,
+                "git add claude/README.org && git commit --only -m test -- claude/hooks/example.sh",
+            )
+            self.assertEqual(permission_decision(result), "deny", result.stdout)
+            result = self.run_hook(
+                hook.with_name("require-readme-update.sh"), field,
+                "git add claude/hooks/example.sh && git commit --only -m test -- script.sh",
+            )
+            self.assertEqual(permission_decision(result), "allow", result.stdout)
+
+    def test_helper_failure_and_invalid_data_deny(self):
+        library = self.repo / "lib-staged-files.sh"
+        library.write_text((HOOKS[0][0].parent / library.name).read_text())
+        helper = self.repo / "commit-file-selection.py"
+        for body in ("raise SystemExit(1)", "print('null')", "print('{\"mode\": \"selection\"}')"):
+            helper.write_text(body + "\n")
+            result = subprocess.run(
+                ["bash", "-c", 'source "$TEST_LIBRARY"; echo wrongly-allowed'],
+                env={**os.environ, "TEST_LIBRARY": str(library), "COMMAND": "git commit -m test"},
+                cwd=self.repo, text=True, capture_output=True,
+            )
+            self.assertEqual(permission_decision(result), "deny", result.stdout)
+
+    def test_candidate_does_not_execute_clean_filters(self):
+        self.prepare_selection()
+        (self.repo / ".gitattributes").write_text("*.el filter=watch-test\n")
+        self.git("config", "filter.watch-test.clean", "touch filter-ran; cat")
+        self.assert_selection("git commit --only -m test -- example.el", "deny")
+        self.assertFalse((self.repo / "filter-ran").exists())
+
+    def test_candidate_checks_attributes_in_its_own_index(self):
+        self.prepare_selection()
+        attributes = self.repo / ".gitattributes"
+        attributes.write_text("*.el filter=watch-test\n")
+        self.git("add", ".gitattributes")
+        self.git("-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "--only", "-qm", "attributes", "--", ".gitattributes")
+        attributes.unlink()
+        self.git("add", ".gitattributes")
+        self.git("config", "filter.watch-test.clean", "touch filter-ran; cat")
+        # The real index sees no attributes; the candidate restores HEAD and
+        # must reject its filter before staging selected worktree content.
+        self.assert_selection("git commit --only -m test -- example.el", "deny")
+        self.assertFalse((self.repo / "filter-ran").exists())
+
 
 def deny_reason(result: subprocess.CompletedProcess[str]) -> str:
     if not result.stdout.strip():

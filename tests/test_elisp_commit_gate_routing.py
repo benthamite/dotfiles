@@ -105,6 +105,28 @@ class ElispCommitGateRoutingTests(unittest.TestCase):
     def leave_elisp_change_unstaged(self):
         (self.repo / "lisp/example.el").write_text("(provide 'changed)\n")
 
+    def test_nested_bash_recovers_workdir_before_routing(self):
+        self.stage_elisp_change()
+        (self.fallback / "README.md").write_text("changed\n")
+        command = "git commit --only -m fixture -- README.md"
+        transcript = self.root / "nested.jsonl"
+        transcript.write_text(json.dumps({
+            "type": "response_item",
+            "payload": {"type": "custom_tool_call", "name": "exec",
+                        "input": "text(await tools.exec_command(" + json.dumps({
+                            "cmd": command, "workdir": str(self.fallback),
+                        }) + "));"},
+        }) + "\n")
+        payload = {"tool_name": "Bash", "cwd": str(self.repo),
+                   "transcript_path": str(transcript),
+                   "tool_input": {"command": command}}
+        for tool, hook in GATES.items():
+            with self.subTest(tool=tool):
+                result = subprocess.run(["bash", str(hook)], input=json.dumps(payload),
+                                        cwd=self.repo, text=True, capture_output=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stdout.strip(), "", result.stdout)
+
     def test_global_options_route_commit_for_both_gates(self):
         self.stage_elisp_change()
         commands = (

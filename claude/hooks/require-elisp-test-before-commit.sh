@@ -27,6 +27,14 @@ if [[ "$CODEX_GIT_PARSE_CONTEXT" != /* ]]; then
 fi
 [ -d "$CODEX_GIT_PARSE_CONTEXT" ] || CODEX_GIT_PARSE_CONTEXT=$PWD
 
+# Nested Bash events may retain the session cwd but omit the exec_command
+# workdir. Recover it before routing creates a reduced per-repository payload.
+_parent_exec_workdir=$(codex_parent_exec_workdir "$INPUT" "$COMMAND" || true)
+if [ -n "$_parent_exec_workdir" ]; then
+  CODEX_GIT_PARSE_CONTEXT="$_parent_exec_workdir"
+fi
+unset _parent_exec_workdir
+
 deny() {
   local reason="$1"
   jq -n --arg reason "$reason" '{
@@ -160,7 +168,7 @@ while IFS= read -r -d '' record; do
   [ "$(printf '%s' "$record" | jq -r '.subcommand')" = add ] || continue
   ADD_REPO_ROOT=$(codex_git_invocation_repo "$record" "${REPO_COMMAND_CONTEXT:-$REPO_ROOT}" || true)
   [ "$ADD_REPO_ROOT" = "$REPO_ROOT" ] || continue
-  if codex_git_add_selects_elisp "$REPO_ROOT" "$record"; then
+  if [ "$STAGED_SELECTION" = 0 ] && codex_git_add_selects_elisp "$REPO_ROOT" "$record"; then
   REASON="BLOCKED: Stage Elisp source in a separate command before git commit. A combined git add and git commit call cannot bind test evidence to the future index."
   jq -n --arg reason "$REASON" '{
     "hookSpecificOutput": {

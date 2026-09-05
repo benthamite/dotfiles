@@ -8,9 +8,9 @@
 # itself instead of being noticed months later.
 #
 # Notifies only when the set of unaccounted-for methods changes, so an untriaged
-# finding does not nag every day. Nothing is lost if a notification is missed:
-# the baseline lives in git, so the finding persists until triaged and any later
-# run reports it again.
+# finding does not nag every day. Record delivery only after a notification
+# command succeeds; if every channel fails, the next run retries the finding.
+# Command success acknowledges submission, not that the user read the alert.
 #
 # Run by com.stafforini.codex-protocol-watch. Safe to run by hand; pass --force
 # to notify even when the finding is unchanged.
@@ -67,17 +67,33 @@ if (( force == 0 )) && [[ -f "$signature_file" ]] &&
   echo "[codex-protocol-watch] same finding as last notification; staying quiet"
   exit 0
 fi
-printf '%s' "$signature" > "$signature_file"
-
 new_count=$(grep -cE '^\s{4,}[a-zA-Z]+/' "$report" || true)
 summary="Codex added protocol methods codex-app-server.el does not handle"
 detail="$new_count method(s). See $state_dir/report.txt"
 echo "[codex-protocol-watch] NOTIFYING: $summary ($new_count)"
 
-osascript -e "display notification \"$detail\" with title \"$summary\"" \
-  >/dev/null 2>&1 || true
+delivered=0
+if osascript -e "display notification \"$detail\" with title \"$summary\""; then
+  delivered=1
+else
+  echo "[codex-protocol-watch] macOS notification failed"
+fi
 if command -v emacsclient >/dev/null 2>&1; then
-  emacsclient -e "(message \"codex-protocol-watch: $summary ($new_count)\")" \
-    >/dev/null 2>&1 || true
+  if emacsclient -e "(message \"codex-protocol-watch: $summary ($new_count)\")"; then
+    delivered=1
+  else
+    echo "[codex-protocol-watch] Emacs notification failed"
+  fi
+fi
+if (( delivered == 0 )); then
+  echo "[codex-protocol-watch] all notification channels failed; will retry"
+  exit 1
+fi
+# Publish atomically after submission, preserving the old signature if writing
+# fails. The lock serializes writers; a crash before rename permits a retry.
+if ! printf '%s' "$signature" > "$signature_file.tmp" ||
+   ! mv "$signature_file.tmp" "$signature_file"; then
+  echo "[codex-protocol-watch] could not record notification; will retry"
+  exit 1
 fi
 exit 0

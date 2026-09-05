@@ -90,6 +90,10 @@ lesson capture belongs to the Emacs =agent-before-exit= flow and must not be
 silently reintroduced as a Stop hook. The permission mode is automatic: guards
 return allow or deny and never prompt as an approval mechanism.
 
+The secret guard inspects replacement text and notebook cell source as well
+as whole-file writes. Security-hook bootstrap and unexpected runtime failures
+block with exit code 2; the [[file:hooks/README.org][hook contracts]] describe the covered guards.
+
 Claude-specific browser, OAuth, hosted connector, and account state stay in
 Claude's native stores. Shared MCP wiring is audited only when it is declared in
 =ai-config-sync.json=; placement and account guidance lives in
@@ -123,6 +127,11 @@ roots, and maintenance. The generated
 [[file:../agents/skill-inventory.org][tracked skill inventory]] is the repository-wide catalog. It covers tracked
 public skills only; runtime plugins, private skills, ignored system content,
 and skills owned by other repositories are outside its scope.
+
+The programmatic =open-session-log= helper resolves the current runtime's
+session identity and exact transcript in its active account root. It opens
+that path in Emacs and checks the rendered buffer's identity before reporting
+success; concurrent sessions cannot be selected by recency or project alone.
 
 The =profile-ai-cli-performance= skill benchmarks clean and configured Claude
 Code and Codex processes with pinned per-client settings, preflight checks, and

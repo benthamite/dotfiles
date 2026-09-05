@@ -12,61 +12,76 @@ as a fallback; concurrent sessions can make that wrong.
 ## Claude Code
 
 1. Find the session ID by walking up the process tree from `$PPID` to find the
-   Claude Code PID with a matching file in `~/.claude/sessions/`:
+   Claude Code PID with a matching file in the active Claude configuration
+   root (`CLAUDE_CONFIG_DIR`, or `~/.claude` when unset):
 
    ```bash
-   pid=$PPID
-   while [ "$pid" -gt 1 ] && [ ! -f "$HOME/.claude/sessions/${pid}.json" ]; do
-     pid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
+   session_root="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/sessions"
+   session_pid=$PPID
+   while [ -n "$session_pid" ] && [ "$session_pid" -gt 1 ] && [ ! -f "$session_root/${session_pid}.json" ]; do
+     session_pid=$(ps -o ppid= -p "$session_pid" 2>/dev/null | tr -d ' ')
    done
-   cat "$HOME/.claude/sessions/${pid}.json" 2>/dev/null || echo "NOT FOUND"
+   if [ -n "$session_pid" ] && [ -f "$session_root/${session_pid}.json" ]; then
+     jq -er '.sessionId // .session_id // empty' "$session_root/${session_pid}.json"
+   else
+     echo "NOT FOUND"
+   fi
    ```
 
-2. Extract the `sessionId` field from the JSON output.
-3. Open it in Emacs:
+2. Keep the non-empty session ID returned by the command.
+3. Resolve and open its transcript using the shared procedure below.
 
-   ```bash
-   emacsclient --eval '(agent-log-open-session "SESSION_ID")'
-   ```
-
-If the session file cannot be found, report that and suggest running
-`M-x agent-log-open-current-session` from the Claude Code buffer in Emacs.
+If the process metadata is unavailable, inspect the live Emacs agent buffers
+for an exact runtime identity. Call `agent-log-open-current-session` in that
+buffer only when the identity matches; a matching project directory alone is
+insufficient. Report an unresolved identity if neither source establishes it.
 
 ## Codex
 
-1. Emit a unique marker in its own shell command, then keep the printed value:
+1. Read `CODEX_THREAD_ID` from the current tool environment. When present,
+   use that identity and proceed to transcript resolution; no marker search
+   is needed.
+2. If the thread ID is absent, inspect the live Emacs agent buffer metadata for
+   an exact process/session match. Do not choose a buffer by project alone.
+3. Only if neither source supplies the identity, emit a unique marker in its
+   own shell command, then keep the printed value:
 
    ```bash
    marker="codex-open-session-log-$(date +%s)-$$-$RANDOM"
    printf '%s\n' "$marker"
    ```
 
-2. Search recent Codex session logs for that exact marker:
+4. Search the active Codex root (`CODEX_HOME`, or `~/.codex` when unset),
+   including `sessions/` and `archived_sessions/`, for the exact emitted
+   marker. Parse matching JSONL records and require the marker in the tool's
+   output, not merely a quoted command. Read the owning `session_meta` ID;
+   accept only one distinct session ID. If writes are delayed, retry briefly
+   with a bounded wait. Never take the first file from multiple matches.
+5. Resolve and open its transcript using the shared procedure below.
 
-   ```bash
-   marker='PASTE_MARKER_HERE'
-   file=$(
-     find "$HOME/.codex/sessions" -type f -name '*.jsonl' -mmin -60 -print0 |
-       xargs -0 rg -l --fixed-strings "$marker" 2>/dev/null |
-       head -n 1
-   )
-   if [ -z "$file" ]; then
-     echo "NOT FOUND"
-   else
-     python3 -c 'import json, sys; handle = open(sys.argv[1], encoding="utf-8"); print(json.loads(handle.readline()).get("payload", {}).get("id") or "NOT FOUND")' "$file"
-   fi
-   ```
+If lookup fails or remains ambiguous, report the unresolved identity.
 
-3. Open the resulting session ID in Emacs:
+## Resolve and open the transcript
 
-   ```bash
-   emacsclient --eval '(agent-log-open-session "SESSION_ID")'
-   ```
+Resolve the established session ID to a transcript in the runtime's active
+configuration root. Prefer the exact transcript path from process or buffer
+metadata when available. Otherwise, search that root's Claude `projects/` or
+Codex `sessions/` and `archived_sessions/` paths. Validate candidate contents
+against the established session ID; do not rely on a filename alone.
 
-If marker lookup fails, report that and suggest running
-`M-x agent-log-open-current-session` from the Codex buffer in Emacs.
+Open the verified absolute path with `agent-log-open-file`. This avoids an
+Emacs account selection resolving an ID under a different configuration root.
+Quote the path as an Elisp string when constructing the expression:
+
+```bash
+emacsclient --eval '(agent-log-open-file "/absolute/path/to/transcript.jsonl")'
 
 ## Reporting
 
-If `emacsclient` exits successfully, say the log was opened in Emacs. If it
-errors, report the error instead of claiming success.
+After opening, inspect the rendered buffer's `agent-log--session-id` and
+`agent-log--source-file` and confirm they identify the requested session.
+Report success only after that check; an IPC exit status alone does not prove
+the right conversation was opened.
+If the displayed identity differs, recheck the exact transcript and retry
+once via `agent-log-open-file`; report any remaining mismatch without claiming
+success.

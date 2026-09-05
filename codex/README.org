@@ -182,24 +182,18 @@ stop-loss or detect login screens. Agents use supported host waiting mechanisms
 and keep the host's required update cadence. Cleanup closes only run-owned,
 confirmed-inactive sessions; adopted or busy sessions remain protected.
 
-The paired =request-review= skill runs one cross-model review of a
-committed plan from inside the authoring session: it anchors the review to
-the exact committed blob (the reviewer reads =git show <commit>:<path>=,
-never the working tree), enforces an opposite-backend fresh-reviewer identity
-invariant at initialization (verified against the buffer's detected backend,
-not just the declared label), permits exactly one marker-gated review pass
-(markerless returns are terminal) and one zero-output process-loss restart,
-and leaves adjudication and implementation in the current session. Once
-=finish-review= has recorded the return, the reviewer session is killed;
-the run file and transcript path are the inspection record. Because a
-fresh Codex session materializes its rollout transcript only on first
-delivery, the helper rebinds to the discovered transcript once it provably
-contains the run's marker-bearing prompt. Its helper reuses the same shared
-=agent_session_lib= module.
+The paired =request-review= skill requests one opposite-CLI review of an
+immutable committed plan. It preserves review-only scope, binds a stable
+session identity and exact run-specific prompt before dispatch, and accepts
+only a terminal return from that submitted turn. Ambiguous delivery remains
+pending; missing evidence cannot authorize retransmission or an unsupported
+process-loss restart. Its helper reuses =agent_session_lib= and records private
+recovery evidence. Cleanup protects active, reused and unowned sessions.
 
-Delivery and manual reconciliation require the prompt's marker in a new user
-message after the saved transcript boundary. Busy state and unrelated transcript
-growth do not acknowledge delivery. Emacs client calls time out after 15 seconds;
+Delivery and manual reconciliation require the exact frozen prompt, including
+its marker, in a new user message after the saved transcript boundary. Busy state
+and unrelated transcript growth do not acknowledge delivery. Emacs client calls
+time out after 15 seconds;
 an ambiguous result leaves the submission pending for receipt reconciliation.
 
 Native =[[skills.config]]= entries can disable a tracked skill without deleting

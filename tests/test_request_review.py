@@ -1,13 +1,15 @@
+"""Offline public-command regressions; all Git files and actor records are owned fixtures."""
 import argparse
 import importlib.util
 import io
 import json
+import os
+import shlex
 import subprocess
 import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stdout, redirect_stderr
 from pathlib import Path
-from types import SimpleNamespace
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,17 +17,9 @@ CODEX_SCRIPT = ROOT / "codex/skills/request-review/scripts/request_review.py"
 CLAUDE_SCRIPT = ROOT / "claude/skills/request-review/scripts/request_review.py"
 CODEX_SKILL = ROOT / "codex/skills/request-review/SKILL.md"
 CLAUDE_SKILL = ROOT / "claude/skills/request-review/SKILL.md"
-
-
-def load_module():
-    spec = importlib.util.spec_from_file_location("request_review", CODEX_SCRIPT)
-    module = importlib.util.module_from_spec(spec)
-    assert spec.loader is not None
-    spec.loader.exec_module(module)
-    return module
-
-
-reviewer = load_module()
+spec = importlib.util.spec_from_file_location("request_review", CODEX_SCRIPT)
+reviewer = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(reviewer)
 
 
 class SkillPairingTests(unittest.TestCase):
@@ -35,612 +29,621 @@ class SkillPairingTests(unittest.TestCase):
     def test_paired_skills_stay_identical_and_registered(self):
         self.assertEqual(CODEX_SKILL.read_bytes(), CLAUDE_SKILL.read_bytes())
         manifest = json.loads((ROOT / "ai-config-sync.json").read_text())
-        paired = {
-            entry["name"] for entry in manifest["skills"]
-            if entry.get("status") == "paired"
-        }
-        self.assertIn("request-review", paired)
-
-    def test_skill_encodes_single_pass_and_terminal_rules(self):
-        skill = " ".join(CODEX_SKILL.read_text(encoding="utf-8").split())
-        required = (
-            "opposite backend",
-            "git show",
-            "terminal incomplete review",
-            "exactly one",
-            "never asked to re-review",
-        )
-        for rule in required:
-            with self.subTest(rule=rule):
-                self.assertIn(rule, skill)
+        self.assertIn("request-review", {item["name"] for item in manifest["skills"]
+                                       if item.get("status") == "paired"})
 
 
 class CrossReviewRunTests(unittest.TestCase):
     def setUp(self):
-        self.temporary_directory = tempfile.TemporaryDirectory()
-        self.addCleanup(self.temporary_directory.cleanup)
-        self.directory = Path(self.temporary_directory.name)
+        self.temporary = tempfile.TemporaryDirectory(prefix="request-review-test-")
+        self.addCleanup(self.temporary.cleanup)
+        self.directory = Path(self.temporary.name).resolve()
+        fixture_home = self.directory / "home"
+        fixture_home.mkdir()
+        clean = mock.patch.dict(os.environ, {
+            "PATH": "/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+            "HOME": str(fixture_home), "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_CONFIG_GLOBAL": "/dev/null", "GIT_TERMINAL_PROMPT": "0",
+            "LC_ALL": "C", "PYTHONDONTWRITEBYTECODE": "1",
+        }, clear=True)
+        clean.start()
+        self.addCleanup(clean.stop)
         self.repo = self.directory / "repo"
         self.repo.mkdir()
-        self._git("init", "--quiet")
-        plan = self.repo / "docs" / "plan.md"
+        self.git("init", "-q", "-b", "main")
+        plan = self.repo / "docs/plan.md"
         plan.parent.mkdir()
-        plan.write_text("# The plan\n", encoding="utf-8")
-        self._git("add", "docs/plan.md")
-        self._git(
-            "-c", "user.name=Test", "-c", "user.email=test@example.com",
-            "commit", "--quiet", "-m", "add plan",
-        )
-        self.commit = self._git("rev-parse", "HEAD").strip()
-        self.run_file = self.directory / "review-run.json"
+        plan.write_text("# A synthetic plan\n", encoding="utf-8")
+        self.git("add", "--", "docs/plan.md")
+        self.git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                 "commit", "-q", "-m", "fixture plan")
+        self.commit = self.git("rev-parse", "HEAD").strip()
+        self.run_file = self.directory / "run.json"
         self.transcript = self.directory / "reviewer.jsonl"
-        self.marker = f"REVIEW COMPLETE: {self.commit[:12]}"
-        backend_probe = mock.patch.object(
-            reviewer.session, "buffer_backend", return_value="codex"
-        )
-        backend_probe.start()
-        self.addCleanup(backend_probe.stop)
-
-    def _git(self, *argv):
-        proc = subprocess.run(
-            ["git", "-C", str(self.repo), *argv],
-            text=True,
-            capture_output=True,
-            check=True,
-        )
-        return proc.stdout
-
-    def init_args(self, **overrides):
-        values = {
-            "run_file": str(self.run_file),
-            "repo": str(self.repo),
-            "plan_path": "docs/plan.md",
-            "plan_commit": self.commit,
-            "caller_backend": "claude-code",
-            "reviewer_buffer": "*codex:review*",
-            "reviewer_backend": "codex",
-            "reviewer_transcript": str(self.transcript),
-        }
-        values.update(overrides)
-        return argparse.Namespace(**values)
-
-    def waiting_reviewer(self):
-        return mock.patch.object(
-            reviewer.session,
-            "buffer_state",
-            return_value={
-                "state": "awaiting-input",
-                "buffer": "*codex:review*",
-                "directory": str(self.repo) + "/",
-            },
-        )
-
-    def matching_transcript(self, value=None):
-        return mock.patch.object(
-            reviewer.session, "agent_transcript_path", return_value=value
-        )
-
-    def create_run(self, **overrides):
-        with (
-            self.waiting_reviewer(),
-            self.matching_transcript(),
-            redirect_stdout(io.StringIO()),
+        self.transcript.write_bytes(b"")
+        self.actor = {"buffer": "*fixture-review*", "backend": "codex", "session_id": "fixture-session",
+                      "directory": str(self.repo), "transcript": str(self.transcript),
+                      "state": "awaiting-input"}
+        self.sent = []
+        self.prompt = None
+        self.delivery = "receipt"
+        for name, change in (
+            ("actor_identity", {"side_effect": lambda _: dict(self.actor)}),
+            ("submit_to_agent", {"side_effect": self.dispatch}),
+            ("run_emacs_eval", {"side_effect": AssertionError("no real session access in offline tests")}),
         ):
-            reviewer.init_review(self.init_args(**overrides))
+            patch = mock.patch.object(reviewer.session, name, **change)
+            patch.start()
+            self.addCleanup(patch.stop)
+
+    def git(self, *argv):
+        return subprocess.run(["git", "-C", str(self.repo), *argv], check=True,
+                              capture_output=True, text=True, timeout=10).stdout
+
+    def cli(self, command, *arguments):
+        output, errors = io.StringIO(), io.StringIO()
+        with redirect_stdout(output), redirect_stderr(errors):
+            result = reviewer.main([command, "--run-file", str(self.run_file), *arguments])
+        self.assertEqual(result, 0)
+        return output.getvalue()
+
+    def create_run(self, **changes):
+        values = {"repo": str(self.repo), "plan-path": "docs/plan.md", "plan-commit": self.commit,
+                  "caller-backend": "claude-code", "reviewer-buffer": self.actor["buffer"],
+                  "reviewer-backend": self.actor["backend"]}
+        values.update(changes)
+        arguments = [part for key, value in values.items() for part in ("--" + key, value)]
+        self.cli("init-review", *arguments)
         return reviewer.load_review(self.run_file)
 
-    def submit(self):
-        with (
-            self.waiting_reviewer(),
-            self.matching_transcript(),
-            mock.patch.object(
-                reviewer.session, "_wait_for_transcript_path", return_value=None
-            ),
-            redirect_stdout(io.StringIO()),
-        ):
-            reviewer.submit_review(
-                SimpleNamespace(run_file=str(self.run_file), context_file=None)
-            )
+    def state(self):
+        return reviewer.load_review(self.run_file)
 
-    def write_reviewer_return(self, text):
-        record = {
-            "timestamp": "2026-08-24T12:00:00Z",
-            "message": {"role": "assistant", "content": text},
-        }
-        with self.transcript.open("a", encoding="utf-8") as stream:
-            stream.write(json.dumps(record) + "\n")
+    def append(self, obj):
+        with self.transcript.open("ab") as stream:
+            stream.write((json.dumps(obj) + "\n").encode())
 
-    def test_declared_backend_must_match_detected_backend(self):
-        with (
-            self.waiting_reviewer(),
-            self.matching_transcript(),
-            mock.patch.object(
-                reviewer.session, "buffer_backend", return_value="claude-code"
-            ),
-            self.assertRaisesRegex(SystemExit, "actual backend is claude-code"),
-        ):
-            reviewer.init_review(self.init_args())
+    def user(self, text):
+        if self.actor["backend"] == "codex":
+            self.append({"type": "response_item", "payload": {
+                "type": "message", "role": "user", "content": [{"type": "input_text", "text": text}]}})
+        else:
+            self.append({"type": "user", "message": {"role": "user", "content": text}})
 
-    def test_init_resolves_a_ref_name_to_the_full_commit_oid(self):
-        branch = self._git("rev-parse", "--abbrev-ref", "HEAD").strip()
-        state = self.create_run(plan_commit=branch)
-        self.assertEqual(state["plan"]["commit"], self.commit)
-        self.assertEqual(len(state["plan"]["commit"]), 40)
+    def output(self, text=None, *, phase="final_answer"):
+        if text is None:
+            text = "One bounded finding.\n" + reviewer._review_marker(self.state())
+        if self.actor["backend"] == "codex":
+            self.append({"type": "response_item", "payload": {
+                "type": "message", "role": "assistant", "phase": phase,
+                "content": [{"type": "output_text", "text": text}]}})
+        else:
+            self.append({"type": "assistant", "message": {"role": "assistant",
+                         "content": text, "stop_reason": "end_turn"}})
 
-    def test_same_backend_reviewer_is_rejected(self):
-        with self.assertRaisesRegex(SystemExit, "opposite of the caller backend"):
-            reviewer.init_review(self.init_args(reviewer_backend="claude-code"))
+    def dispatch(self, buffer, backend, prompt, **options):
+        self.sent.append((buffer, backend, prompt, options))
+        self.prompt = prompt
+        self.assertIsNotNone(self.state()["pending_submission"])
+        if self.delivery == "error":
+            raise reviewer.EmacsClientError("synthetic ambiguous dispatch")
+        if self.actor["transcript"] is None:
+            self.actor["transcript"] = str(self.transcript)
+        if self.delivery == "receipt":
+            self.user(prompt)
+        return self.actor["transcript"]
 
-    def test_uncommitted_plan_is_rejected(self):
-        uncommitted = self.repo / "docs" / "draft.md"
-        uncommitted.write_text("draft\n", encoding="utf-8")
-        with self.assertRaisesRegex(SystemExit, "not committed"):
-            reviewer.init_review(self.init_args(plan_path="docs/draft.md"))
+    def pending(self):
+        self.create_run()
+        self.delivery = "error"
+        with self.assertRaises(SystemExit):
+            self.cli("submit-review")
+        self.assertIsNotNone(self.state()["pending_submission"])
 
-    def test_unknown_commit_and_non_repo_are_rejected(self):
-        with self.assertRaisesRegex(SystemExit, "does not resolve"):
-            reviewer.init_review(self.init_args(plan_commit="0" * 40))
-        outside = self.directory / "not-a-repo"
-        outside.mkdir()
-        with self.assertRaisesRegex(SystemExit, "not a git repository"):
-            reviewer.init_review(self.init_args(repo=str(outside)))
-
-    def test_plan_path_outside_repository_is_rejected(self):
-        with self.assertRaisesRegex(SystemExit, "outside the repository"):
-            reviewer.init_review(
-                self.init_args(plan_path=str(self.directory / "elsewhere.md"))
-            )
-
-    def test_non_fresh_reviewer_transcript_is_rejected(self):
-        self.transcript.write_text("history\n", encoding="utf-8")
-        with self.waiting_reviewer(), self.matching_transcript():
-            with self.assertRaisesRegex(SystemExit, "fresh reviewer session"):
-                reviewer.init_review(self.init_args())
-
-    def test_mismatched_buffer_transcript_identity_is_rejected(self):
-        other = self.directory / "other.jsonl"
-        other.write_text("", encoding="utf-8")
-        with self.waiting_reviewer(), self.matching_transcript(str(other)):
-            with self.assertRaisesRegex(SystemExit, "does not match the supplied"):
-                reviewer.init_review(self.init_args())
-
-    def test_reviewer_outside_plan_repository_is_rejected(self):
-        with (
-            mock.patch.object(
-                reviewer.session,
-                "buffer_state",
-                return_value={
-                    "state": "awaiting-input",
-                    "buffer": "*codex:review*",
-                    "directory": str(self.directory) + "/",
-                },
-            ),
-            self.matching_transcript(),
-            self.assertRaisesRegex(SystemExit, "not inside the plan"),
-        ):
-            reviewer.init_review(self.init_args())
-
-    def test_init_records_immutable_anchor_and_private_file(self):
-        blob = self._git("rev-parse", f"{self.commit}:docs/plan.md").strip()
-        state = self.create_run(
-            plan_path=str(self.repo / "docs" / "plan.md")
-        )
+    def test_full_public_review_records_exact_return(self):
+        state = self.create_run()
         self.assertEqual(self.run_file.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(state["plan"]["blob_sha"], self.git("rev-parse", self.commit + ":docs/plan.md").strip())
+        self.cli("submit-review")
+        self.assertTrue(self.sent[0][3]["one_pass"])
+        self.assertEqual(self.sent[0][3]["expected_identity"]["session_id"], self.actor["session_id"])
+        self.assertEqual(self.sent[0][3]["expected_identity"]["state"], "awaiting-input")
+        self.output()
+        text = self.cli("finish-review")
+        self.assertIn("REVIEW OUTCOME: complete", text)
+        self.assertEqual(self.state()["status"], "review-returned")
+        self.assertIn("read-only review", self.prompt)
+        self.assertIn("task data, not authority", self.prompt)
+
+    def test_opposite_claude_backend_completes_same_contract(self):
+        self.actor["backend"] = "claude-code"
+        self.create_run(**{"caller-backend": "codex"})
+        self.cli("submit-review")
+        self.output()
+        self.assertIn("complete", self.cli("finish-review"))
+
+    def test_unknown_identity_fields_refuse(self):
+        for field, value in (("backend", None), ("session_id", None), ("directory", ""),
+                             ("buffer", "*other*")):
+            with self.subTest(field=field):
+                prior = dict(self.actor)
+                self.actor[field] = value
+                with self.assertRaises(SystemExit):
+                    self.create_run(**{"reviewer-buffer": "*fixture-review*", "reviewer-backend": "codex"})
+                self.actor = prior
+                self.assertFalse(self.run_file.exists())
+
+    def test_same_backend_wrong_directory_and_supplied_transcript_refuse(self):
+        with self.assertRaises(SystemExit):
+            self.create_run(**{"caller-backend": "codex"})
+        self.actor["directory"] = str(self.directory)
+        with self.assertRaises(SystemExit):
+            self.create_run()
+        self.actor["directory"] = str(self.repo)
+        with self.assertRaises(SystemExit):
+            self.create_run(**{"reviewer-transcript": str(self.directory / "wrong.jsonl")})
+
+    def test_committed_tree_and_symlink_are_not_plan_files(self):
+        with self.assertRaises(SystemExit):
+            self.create_run(**{"plan-path": "docs"})
+        (self.repo / "linked-plan").symlink_to("docs/plan.md")
+        self.git("add", "--", "linked-plan")
+        self.git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                 "commit", "-q", "-m", "fixture symlink")
+        with self.assertRaises(SystemExit):
+            self.create_run(**{"plan-path": "linked-plan", "plan-commit": "HEAD"})
+
+    def test_uncommitted_unknown_commit_traversal_and_controls_refuse(self):
+        for overrides in ({"plan-path": "missing"}, {"plan-commit": "0" * 40},
+                          {"plan-path": "../outside"}, {"plan-path": "docs/plan.md\n"},
+                          {"plan-commit": "--help"}):
+            with self.subTest(overrides=overrides), self.assertRaises(SystemExit):
+                self.create_run(**overrides)
+        self.assertFalse(self.run_file.exists())
+
+    def test_current_symlink_does_not_change_committed_path_identity(self):
+        original = self.repo / "docs/plan.md"
+        original.unlink()
+        original.symlink_to(self.directory / "missing")
+        state = self.create_run(**{"plan-path": str(original)})
         self.assertEqual(state["plan"]["path"], "docs/plan.md")
-        self.assertEqual(state["plan"]["commit"], self.commit)
-        self.assertEqual(state["plan"]["blob_sha"], blob)
-        self.assertEqual(state["status"], "ready")
-        self.assertFalse(state["restart_used"])
 
-    def test_submit_sends_anchored_prompt_with_marker_contract(self):
+    def test_prompt_command_preserves_literal_argv(self):
+        state = self.create_run()
+        state["repo"] = str(self.directory / "space and ' quote")
+        state["plan"]["path"] = "docs/plan with ' quote.md"
+        prompt = reviewer._review_prompt(state, "")
+        line = next(line.strip() for line in prompt.splitlines() if line.strip().startswith("git "))
+        self.assertEqual(shlex.split(line), ["git", "--no-pager", "--no-replace-objects", "-C",
+                         state["repo"], "show", "--no-ext-diff", "--no-textconv",
+                         self.commit + ":" + state["plan"]["path"]])
+
+    def test_same_commit_runs_have_distinct_receipts(self):
+        first = self.create_run()
+        self.run_file = self.directory / "other-run.json"
+        second = self.create_run()
+        self.assertNotEqual(reviewer._review_marker(first), reviewer._review_marker(second))
+
+    def test_metadata_only_codex_is_fresh_but_any_other_history_is_not(self):
+        self.append({"type": "session_meta", "payload": {
+            "id": self.actor["session_id"], "cwd": self.actor["directory"]}})
         self.create_run()
-        with (
-            self.waiting_reviewer(),
-            self.matching_transcript(),
-            mock.patch.object(reviewer.session, "submit_to_agent") as submit,
-            mock.patch.object(
-                reviewer.session, "_wait_for_transcript_path", return_value=None
-            ),
-            redirect_stdout(io.StringIO()),
-        ):
-            reviewer.submit_review(
-                SimpleNamespace(run_file=str(self.run_file), context_file=None)
-            )
+        self.cli("submit-review")
+        self.output()
+        self.cli("finish-review")
+        self.run_file = self.directory / "another.json"
+        with self.assertRaises(SystemExit):
+            self.create_run()
 
-        buffer, backend, prompt = submit.call_args.args
-        self.assertEqual((buffer, backend), ("*codex:review*", "codex"))
-        self.assertIn(f"show {self.commit}:docs/plan.md", prompt)
-        self.assertIn("Do not read the working-tree copy", prompt)
-        self.assertIn("do not request a revised plan", prompt)
-        self.assertTrue(prompt.endswith(self.marker))
-        state = reviewer.load_review(self.run_file)
-        self.assertEqual(state["status"], "review-active")
+    def test_unknown_or_malformed_startup_history_refuses(self):
+        for data in (b"not json\n", b"{}\n", b'{"type":"session_meta"',
+                     b'{"type":"session_meta","payload":{"id":"other","cwd":"/tmp"}}\n'):
+            with self.subTest(data=data):
+                self.transcript.write_bytes(data)
+                with self.assertRaises((SystemExit, reviewer.EmacsClientError)):
+                    self.create_run()
 
-    def test_submit_adopts_marker_bearing_transcript_created_on_delivery(self):
-        placeholder = self.directory / "not-yet-created.jsonl"
-        self.create_run(reviewer_transcript=str(placeholder))
-        fresh = self.directory / "rollout-fresh.jsonl"
-        filler = {
-            "type": "response_item",
-            "payload": {
-                "type": "message",
-                "role": "user",
-                "content": [{"type": "input_text", "text": "unrelated"}],
-            },
-        }
-        prompt_record = {
-            "type": "response_item",
-            "payload": {
-                "type": "message",
-                "role": "user",
-                "content": [{"type": "input_text", "text": f"prompt\n{self.marker}"}],
-            },
-        }
-        fresh.write_text(
-            json.dumps(filler) + "\n" + json.dumps(prompt_record) + "\n",
-            encoding="utf-8",
-        )
-        with (
-            self.waiting_reviewer(),
-            mock.patch.object(
-                reviewer.session, "agent_transcript_path", return_value=None
-            ),
-            mock.patch.object(reviewer.session, "submit_to_agent"),
-            mock.patch.object(
-                reviewer.session,
-                "_wait_for_transcript_path",
-                return_value=str(fresh),
-            ),
-            redirect_stdout(io.StringIO()),
-        ):
-            reviewer.submit_review(
-                SimpleNamespace(run_file=str(self.run_file), context_file=None)
-            )
-
-        state = reviewer.load_review(self.run_file)
-        self.assertEqual(state["reviewer"]["transcript"], str(fresh))
-        self.assertEqual(
-            state["submission"],
-            {"transcript_offset": len(json.dumps(filler)) + 1},
-        )
-        self.assertEqual(state["status"], "review-active")
-
-    def test_submit_keeps_binding_when_discovered_transcript_lacks_marker(self):
-        placeholder = self.directory / "not-yet-created.jsonl"
-        self.create_run(reviewer_transcript=str(placeholder))
-        foreign = self.directory / "rollout-foreign.jsonl"
-        foreign.write_text(
-            json.dumps(
-                {
-                    "type": "response_item",
-                    "payload": {
-                        "type": "message",
-                        "role": "user",
-                        "content": [{"type": "input_text", "text": "other session"}],
-                    },
-                }
-            )
-            + "\n",
-            encoding="utf-8",
-        )
-        with (
-            self.waiting_reviewer(),
-            mock.patch.object(
-                reviewer.session, "agent_transcript_path", return_value=None
-            ),
-            mock.patch.object(reviewer.session, "submit_to_agent"),
-            mock.patch.object(
-                reviewer.session,
-                "_wait_for_transcript_path",
-                return_value=str(foreign),
-            ),
-            redirect_stdout(io.StringIO()),
-        ):
-            reviewer.submit_review(
-                SimpleNamespace(run_file=str(self.run_file), context_file=None)
-            )
-
-        state = reviewer.load_review(self.run_file)
-        self.assertEqual(state["reviewer"]["transcript"], str(placeholder))
-
-    def test_finish_review_adopts_late_marker_bearing_transcript(self):
-        placeholder = self.directory / "never-created.jsonl"
-        self.create_run(reviewer_transcript=str(placeholder))
-        with mock.patch.object(reviewer.session, "submit_to_agent"):
-            self.submit()
-
-        fresh = self.directory / "rollout-late.jsonl"
-        prompt_record = {
-            "type": "response_item",
-            "payload": {
-                "type": "message",
-                "role": "user",
-                "content": [{"type": "input_text", "text": f"prompt\n{self.marker}"}],
-            },
-        }
-        reply_record = {
-            "timestamp": "2026-08-24T12:00:00Z",
-            "type": "response_item",
-            "payload": {
-                "type": "message",
-                "content": [
-                    {"type": "output_text", "text": f"Findings.\n{self.marker}"}
-                ],
-            },
-        }
-        fresh.write_text(
-            json.dumps(prompt_record) + "\n" + json.dumps(reply_record) + "\n",
-            encoding="utf-8",
-        )
-
-        output = io.StringIO()
-        with (
-            self.waiting_reviewer(),
-            mock.patch.object(
-                reviewer.session,
-                "_wait_for_transcript_path",
-                return_value=str(fresh),
-            ),
-            redirect_stdout(output),
-        ):
-            reviewer.finish_review(SimpleNamespace(run_file=str(self.run_file)))
-
-        self.assertIn("REVIEW OUTCOME: complete", output.getvalue())
-        state = reviewer.load_review(self.run_file)
-        self.assertEqual(state["reviewer"]["transcript"], str(fresh))
-        self.assertEqual(state["status"], "review-returned")
-
-    def test_double_submission_is_rejected(self):
+    def test_fresh_unallocated_transcript_adopts_only_same_session_receipt(self):
+        self.actor["transcript"] = None
+        self.transcript.unlink()
         self.create_run()
-        with mock.patch.object(reviewer.session, "submit_to_agent"):
-            self.submit()
-        with self.assertRaisesRegex(SystemExit, "already active"):
-            reviewer.submit_review(
-                SimpleNamespace(run_file=str(self.run_file), context_file=None)
-            )
+        self.cli("submit-review")
+        self.assertEqual(self.state()["reviewer"]["transcript"], str(self.transcript))
+        self.assertIsNotNone(self.state()["submission"]["boundary"])
 
-    def test_failed_submission_stays_pending_until_reconciled(self):
+    def test_no_receipt_or_dispatch_exception_keeps_pending(self):
+        for outcome in ("no-receipt", "error"):
+            with self.subTest(outcome=outcome):
+                self.run_file = self.directory / (outcome + ".json")
+                self.create_run()
+                self.delivery = outcome
+                with self.assertRaises(SystemExit):
+                    self.cli("submit-review")
+                self.assertIsNotNone(self.state()["pending_submission"])
+                with self.assertRaises(SystemExit):
+                    self.cli("submit-review")
+
+    def test_exact_late_receipt_reconciles_without_resending(self):
+        self.pending()
+        self.user(self.prompt)
+        self.cli("reconcile-submission", "--delivered")
+        self.assertEqual(len(self.sent), 1)
+        self.assertEqual(self.state()["status"], "review-active")
+
+    def test_same_marker_wrong_prompt_cannot_reconcile(self):
+        self.pending()
+        self.user("wrong prompt\n" + reviewer._review_marker(self.state()))
+        with self.assertRaises(SystemExit):
+            self.cli("reconcile-submission", "--delivered")
+        self.assertIsNotNone(self.state()["pending_submission"])
+
+    def test_missing_or_malformed_transcript_never_clears_nondelivery(self):
+        self.pending()
+        self.transcript.unlink()
+        with self.assertRaises(SystemExit):
+            self.cli("reconcile-submission", "--not-delivered")
+        self.transcript.write_bytes(b"not json\n")
+        with self.assertRaises(SystemExit):
+            self.cli("reconcile-submission", "--delivered")
+        self.assertIsNotNone(self.state()["pending_submission"])
+
+    def test_identity_drift_blocks_submit_retry_finish_and_status(self):
         self.create_run()
-        with (
-            self.waiting_reviewer(),
-            self.matching_transcript(),
-            mock.patch.object(
-                reviewer.session,
-                "submit_to_agent",
-                side_effect=reviewer.EmacsClientError("ambiguous failure"),
-            ),
-            self.assertRaisesRegex(reviewer.EmacsClientError, "ambiguous failure"),
-        ):
-            reviewer.submit_review(
-                SimpleNamespace(run_file=str(self.run_file), context_file=None)
-            )
+        self.actor["session_id"] = "reused-buffer"
+        with self.assertRaises(SystemExit):
+            self.cli("submit-review")
+        self.assertEqual(self.sent, [])
+        self.actor["session_id"] = "fixture-session"
+        self.cli("submit-review")
+        self.output()
+        self.actor["session_id"] = "reused-buffer"
+        for command in ("finish-review", "status"):
+            with self.subTest(command=command), self.assertRaises(SystemExit):
+                self.cli(command)
+        self.assertEqual(self.state()["status"], "review-active")
 
-        state = reviewer.load_review(self.run_file)
-        self.assertIsNotNone(state["pending_submission"])
-        with self.assertRaisesRegex(SystemExit, "requires reconciliation"):
-            reviewer.submit_review(
-                SimpleNamespace(run_file=str(self.run_file), context_file=None)
-            )
-        with self.assertRaisesRegex(SystemExit, "requires reconciliation"):
-            reviewer.finish_review(SimpleNamespace(run_file=str(self.run_file)))
-
-        with redirect_stdout(io.StringIO()):
-            reviewer.reconcile_submission(
-                SimpleNamespace(run_file=str(self.run_file), delivered=False)
-            )
-        state = reviewer.load_review(self.run_file)
-        self.assertIsNone(state["pending_submission"])
-        self.assertEqual(state["status"], "ready")
-
-    def test_reconcile_delivered_activates_the_review(self):
+    def test_busy_reviewer_cannot_receive_or_finish(self):
         self.create_run()
-        state = reviewer.load_review(self.run_file)
-        state["pending_submission"] = {"transcript_offset": 0}
-        reviewer.save_review(self.run_file, state)
-        marker = reviewer._review_marker(state["plan"]["commit"])
-        record = {"type": "user", "message": {"role": "user", "content": f"body\n{marker}"}}
-        self.transcript.write_text(json.dumps(record) + "\n", encoding="utf-8")
-        with redirect_stdout(io.StringIO()):
-            reviewer.reconcile_submission(
-                SimpleNamespace(run_file=str(self.run_file), delivered=True)
-            )
-        state = reviewer.load_review(self.run_file)
-        self.assertEqual(state["status"], "review-active")
-        self.assertEqual(state["submission"], {"transcript_offset": 0})
+        self.actor["state"] = "busy"
+        with self.assertRaises(SystemExit):
+            self.cli("submit-review")
+        self.actor["state"] = "awaiting-input"
+        self.cli("submit-review")
+        self.output()
+        self.actor["state"] = "busy"
+        with self.assertRaises(SystemExit):
+            self.cli("finish-review")
 
-    def test_reconcile_not_delivered_fails_closed_on_marker_in_transcript(self):
+    def test_retry_uses_exact_prompt_hash_and_same_eval_actor_guard(self):
+        self.pending()
+        digest = self.state()["pending_submission"]["prompt_sha256"]
+        with mock.patch.object(reviewer.session, "pending_prompt_contains", return_value=True) as contains, \
+             mock.patch.object(reviewer.session, "send_return_to_agent", side_effect=lambda *a, **k: self.user(self.prompt)) as send:
+            self.cli("retry-delivery")
+        self.assertEqual(contains.call_args.kwargs["expected_prompt_sha256"], digest)
+        self.assertEqual(send.call_args.kwargs["expected_prompt_sha256"], digest)
+        self.assertEqual(send.call_args.kwargs["expected_identity"]["state"], "awaiting-input")
+        self.assertEqual(len(self.sent), 1)
+
+    def test_claude_exact_composer_retry_is_unsupported(self):
+        self.actor["backend"] = "claude-code"
+        self.create_run(**{"caller-backend": "codex"})
+        self.delivery = "error"
+        with self.assertRaises(SystemExit):
+            self.cli("submit-review")
+        with mock.patch.object(reviewer.session, "send_return_to_agent") as send:
+            with self.assertRaises(SystemExit):
+                self.cli("retry-delivery")
+        send.assert_not_called()
+
+    def test_retry_without_pending_or_after_identity_drift_never_sends(self):
         self.create_run()
-        state = reviewer.load_review(self.run_file)
-        state["pending_submission"] = {"transcript_offset": 0}
-        reviewer.save_review(self.run_file, state)
-        marker = reviewer._review_marker(state["plan"]["commit"])
-        record = {"type": "user", "message": {"role": "user", "content": f"body\n{marker}"}}
-        self.transcript.write_text(json.dumps(record) + "\n", encoding="utf-8")
+        with self.assertRaises(SystemExit):
+            self.cli("retry-delivery")
+        self.delivery = "error"
+        with self.assertRaises(SystemExit):
+            self.cli("submit-review")
+        self.actor["session_id"] = "other"
+        with mock.patch.object(reviewer.session, "send_return_to_agent") as send:
+            with self.assertRaises(SystemExit):
+                self.cli("retry-delivery")
+        send.assert_not_called()
 
-        with self.assertRaisesRegex(SystemExit, "past the recorded boundary"):
-            reviewer.reconcile_submission(
-                SimpleNamespace(run_file=str(self.run_file), delivered=False)
-            )
-        state = reviewer.load_review(self.run_file)
-        self.assertIsNotNone(state["pending_submission"])
-
-    def test_reconcile_not_delivered_clears_when_growth_lacks_the_marker(self):
+    def test_restart_never_contacts_even_with_changed_context(self):
         self.create_run()
-        state = reviewer.load_review(self.run_file)
-        state["pending_submission"] = {"transcript_offset": 0}
-        reviewer.save_review(self.run_file, state)
-        bookkeeping = {"type": "attachment", "attachment": {"type": "agent_listing_delta"}}
-        self.transcript.write_text(json.dumps(bookkeeping) + "\n", encoding="utf-8")
+        self.cli("submit-review")
+        context = self.directory / "context"
+        context.write_text("changed instructions", encoding="utf-8")
+        original = self.run_file.read_bytes()
+        with self.assertRaises(SystemExit):
+            self.cli("restart-review", "--context-file", str(context))
+        self.assertEqual(self.run_file.read_bytes(), original)
+        self.assertEqual(len(self.sent), 1)
 
-        reviewer.reconcile_submission(
-            SimpleNamespace(run_file=str(self.run_file), delivered=False)
-        )
-        state = reviewer.load_review(self.run_file)
-        self.assertIsNone(state["pending_submission"])
-
-    def test_restart_burns_the_single_flag_before_external_contact(self):
+    def test_markerless_return_is_terminal_and_blocks_further_contact(self):
         self.create_run()
-        with mock.patch.object(reviewer.session, "submit_to_agent"):
-            self.submit()
+        self.cli("submit-review")
+        self.output("Partial findings.")
+        self.assertIn("terminal-incomplete", self.cli("finish-review"))
+        self.assertEqual(self.state()["return_evidence"]["kind"], "markerless")
+        for command in ("submit-review", "restart-review", "retry-delivery", "finish-review"):
+            with self.subTest(command=command), self.assertRaises(SystemExit):
+                self.cli(command)
+        self.assertEqual(len(self.sent), 1)
 
-        with (
-            self.waiting_reviewer(),
-            mock.patch.object(
-                reviewer.session, "agent_transcript_path", return_value=None
-            ),
-            mock.patch.object(
-                reviewer.session,
-                "submit_to_agent",
-                side_effect=RuntimeError("crash before save"),
-            ),
-            self.assertRaisesRegex(RuntimeError, "crash before save"),
-        ):
-            reviewer.restart_review(
-                SimpleNamespace(run_file=str(self.run_file), context_file=None)
-            )
-
-        state = reviewer.load_review(self.run_file)
-        self.assertTrue(state["restart_used"])
-        with self.assertRaisesRegex(SystemExit, "restart was already used"):
-            reviewer.restart_review(
-                SimpleNamespace(run_file=str(self.run_file), context_file=None)
-            )
-
-    def test_retry_delivery_requires_a_pending_submission(self):
+    def test_nonfinal_and_later_user_or_tool_activity_do_not_complete(self):
         self.create_run()
-        with (
-            mock.patch.object(reviewer.session, "send_return_to_agent") as send_return,
-            self.assertRaisesRegex(SystemExit, "only a pending submission"),
-        ):
-            reviewer.retry_delivery(SimpleNamespace(run_file=str(self.run_file)))
-        send_return.assert_not_called()
+        self.cli("submit-review")
+        base = self.transcript.read_bytes()
+        for variant in ("commentary", "later-user", "later-tool"):
+            with self.subTest(variant=variant):
+                self.transcript.write_bytes(base)
+                self.output(phase="commentary" if variant == "commentary" else "final_answer")
+                if variant == "later-user":
+                    self.user("unrelated next task")
+                    self.output()
+                if variant == "later-tool":
+                    self.append({"type": "response_item", "payload": {"type": "function_call"}})
+                with self.assertRaises(SystemExit):
+                    self.cli("finish-review")
+                self.assertEqual(self.state()["status"], "review-active")
 
-    def test_finish_review_requires_return_and_marker_completion(self):
+    def test_malformed_partial_missing_and_replaced_transcripts_refuse_finish(self):
         self.create_run()
-        with mock.patch.object(reviewer.session, "submit_to_agent"):
-            self.submit()
+        self.cli("submit-review")
+        original = self.transcript.read_bytes()
+        for data in (original + b"bad\n", original + b"{", b""):
+            with self.subTest(data=data[-5:]):
+                self.transcript.write_bytes(data)
+                with self.assertRaises(SystemExit):
+                    self.cli("finish-review")
+        self.transcript.write_bytes(original)
+        replacement = self.directory / "replaced.jsonl"
+        replacement.write_bytes(original)
+        os.replace(replacement, self.transcript)
+        with self.assertRaises(SystemExit):
+            self.cli("finish-review")
 
-        with (
-            self.waiting_reviewer(),
-            mock.patch.object(
-                reviewer.session, "_wait_for_transcript_path", return_value=None
-            ),
-            self.assertRaisesRegex(SystemExit, "no returned assistant message"),
-        ):
-            reviewer.finish_review(SimpleNamespace(run_file=str(self.run_file)))
+    def test_receipt_read_replacement_or_append_is_not_accepted(self):
+        self.pending()
+        self.user(self.prompt)
+        original = reviewer.session._marker_delivered
+        def changed(*a, **k):
+            result = original(*a, **k)
+            self.user("concurrent turn")
+            return result
+        with mock.patch.object(reviewer.session, "_marker_delivered", side_effect=changed):
+            with self.assertRaises(SystemExit):
+                self.cli("reconcile-submission", "--delivered")
+        self.assertIsNotNone(self.state()["pending_submission"])
 
-        with (
-            mock.patch.object(
-                reviewer.session, "buffer_state", return_value={"state": "busy"}
-            ),
-            mock.patch.object(
-                reviewer.session, "_wait_for_transcript_path", return_value=None
-            ),
-            self.assertRaisesRegex(SystemExit, "reviewer is busy"),
-        ):
-            reviewer.finish_review(SimpleNamespace(run_file=str(self.run_file)))
-
-        self.write_reviewer_return(f"1. High — finding.\n{self.marker}")
-        output = io.StringIO()
-        with self.waiting_reviewer(), redirect_stdout(output):
-            reviewer.finish_review(SimpleNamespace(run_file=str(self.run_file)))
-
-        self.assertIn("REVIEW OUTCOME: complete", output.getvalue())
-        self.assertIn("High — finding", output.getvalue())
-        state = reviewer.load_review(self.run_file)
-        self.assertEqual(state["status"], "review-returned")
-        self.assertEqual(state["return_evidence"]["kind"], "marker")
-
-    def test_markerless_return_is_terminal_and_blocks_recontact(self):
+    def test_terminal_read_append_cannot_certify_stale_return(self):
         self.create_run()
-        with mock.patch.object(reviewer.session, "submit_to_agent"):
-            self.submit()
-        self.write_reviewer_return("I stopped early without finishing.")
+        self.cli("submit-review")
+        self.output()
+        original = reviewer.session.latest_transcript_return
+        def changed(*a, **k):
+            result = original(*a, **k)
+            self.append({"type": "response_item", "payload": {"type": "function_call"}})
+            return result
+        with mock.patch.object(reviewer.session, "latest_transcript_return", side_effect=changed):
+            with self.assertRaises(SystemExit):
+                self.cli("finish-review")
+        self.assertEqual(self.state()["status"], "review-active")
 
-        output = io.StringIO()
-        with self.waiting_reviewer(), redirect_stdout(output):
-            reviewer.finish_review(SimpleNamespace(run_file=str(self.run_file)))
-
-        self.assertIn("REVIEW OUTCOME: terminal-incomplete", output.getvalue())
-        state = reviewer.load_review(self.run_file)
-        self.assertEqual(state["status"], "review-incomplete")
-        self.assertEqual(state["return_evidence"]["kind"], "markerless")
-
-        with self.assertRaisesRegex(SystemExit, "never re-contacts"):
-            reviewer.submit_review(
-                SimpleNamespace(run_file=str(self.run_file), context_file=None)
-            )
-        with self.assertRaisesRegex(SystemExit, "only an active review"):
-            reviewer.restart_review(
-                SimpleNamespace(run_file=str(self.run_file), context_file=None)
-            )
-
-    def test_completed_review_blocks_further_contact(self):
+    def test_state_replacement_is_preserved(self):
         self.create_run()
-        with mock.patch.object(reviewer.session, "submit_to_agent"):
-            self.submit()
-        self.write_reviewer_return(f"Findings.\n{self.marker}")
-        with self.waiting_reviewer(), redirect_stdout(io.StringIO()):
-            reviewer.finish_review(SimpleNamespace(run_file=str(self.run_file)))
+        state = self.state()
+        foreign = self.directory / "foreign"
+        foreign.write_bytes(b"foreign state\n")
+        foreign.chmod(0o600)
+        os.replace(foreign, self.run_file)
+        with self.assertRaises(SystemExit):
+            reviewer.save_review(self.run_file, state)
+        self.assertEqual(self.run_file.read_bytes(), b"foreign state\n")
 
-        with self.assertRaisesRegex(SystemExit, "never re-contacts"):
-            reviewer.submit_review(
-                SimpleNamespace(run_file=str(self.run_file), context_file=None)
-            )
+    def test_invalid_json_duplicate_keys_and_boolean_version_refuse(self):
+        state = self.create_run()
+        for raw in (b'{"version":2,"version":2}', b'{"version":NaN}',
+                    json.dumps({**state, "version": True}).encode()):
+            with self.subTest(raw=raw):
+                self.run_file.write_bytes(raw)
+                with self.assertRaises(SystemExit):
+                    self.state()
 
-    def test_restart_refuses_after_any_reviewer_output(self):
+    def test_private_run_directory_and_symlink_lock_are_enforced(self):
+        self.directory.chmod(0o755)
+        with self.assertRaises(SystemExit):
+            self.create_run()
+        self.directory.chmod(0o700)
+        foreign = self.directory / "foreign"
+        foreign.write_bytes(b"keep")
+        self.run_file.with_name(self.run_file.name + ".lock").symlink_to(foreign)
+        with self.assertRaises(SystemExit):
+            self.create_run()
+        self.assertEqual(foreign.read_bytes(), b"keep")
+
+    def test_existing_run_is_not_clobbered(self):
+        self.run_file.write_bytes(b"foreign")
+        self.run_file.chmod(0o600)
+        with self.assertRaises(SystemExit):
+            self.create_run()
+        self.assertEqual(self.run_file.read_bytes(), b"foreign")
+
+    def test_two_commands_cannot_hold_the_same_lock(self):
+        with reviewer.review_lock(self.run_file):
+            with self.assertRaises(SystemExit):
+                self.create_run()
+        self.assertFalse(self.run_file.exists())
+
+    def test_post_dispatch_save_failure_stays_reconcilable(self):
         self.create_run()
-        with mock.patch.object(reviewer.session, "submit_to_agent"):
-            self.submit()
-        self.write_reviewer_return("partial output")
+        original = reviewer.save_review
+        calls = []
+        def fail_second(*a):
+            calls.append(1)
+            if len(calls) == 2:
+                raise SystemExit("injected save failure")
+            return original(*a)
+        with mock.patch.object(reviewer, "save_review", side_effect=fail_second):
+            with self.assertRaises(SystemExit):
+                self.cli("submit-review")
+        self.assertIsNotNone(self.state()["pending_submission"])
+        self.cli("reconcile-submission", "--delivered")
+        self.assertEqual(len(self.sent), 1)
 
-        with self.assertRaisesRegex(SystemExit, "already returned assistant output"):
-            reviewer.restart_review(
-                SimpleNamespace(run_file=str(self.run_file), context_file=None)
-            )
-
-    def test_restart_runs_once_on_zero_output_process_loss(self):
+    def test_legacy_state_is_read_only_without_reinterpreting_receipts(self):
         self.create_run()
-        with mock.patch.object(reviewer.session, "submit_to_agent"):
-            self.submit()
+        state = dict(self.state())
+        state["version"] = 1
+        self.run_file.write_text(json.dumps(state), encoding="utf-8")
+        original = self.run_file.read_bytes()
+        self.assertIn("unverified-legacy", self.cli("status", "--json"))
+        for command in ("submit-review", "finish-review", "retry-delivery", "restart-review"):
+            with self.subTest(command=command), self.assertRaises(SystemExit):
+                self.cli(command)
+        self.assertEqual(self.run_file.read_bytes(), original)
 
-        fresh = self.directory / "fresh-reviewer.jsonl"
-        with (
-            self.waiting_reviewer(),
-            mock.patch.object(
-                reviewer.session,
-                "agent_transcript_path",
-                side_effect=(None, str(fresh)),
-            ),
-            mock.patch.object(reviewer.session, "submit_to_agent") as submit,
-            redirect_stdout(io.StringIO()),
-        ):
-            reviewer.restart_review(
-                SimpleNamespace(run_file=str(self.run_file), context_file=None)
-            )
+    def test_watch_invalid_intervals_refuse_before_session_calls(self):
+        for value in ("nan", "inf", "0", "-1", "61"):
+            with self.subTest(value=value), self.assertRaises(SystemExit):
+                self.cli("watch", "--interval", value)
 
-        buffer, backend, prompt = submit.call_args.args
-        self.assertEqual((buffer, backend), ("*codex:review*", "codex"))
-        self.assertTrue(prompt.endswith(self.marker))
-        state = reviewer.load_review(self.run_file)
-        self.assertTrue(state["restart_used"])
-        self.assertEqual(state["reviewer"]["transcript"], str(fresh))
-        self.assertEqual(state["submission"], {"transcript_offset": 0})
-
-        with self.assertRaisesRegex(SystemExit, "restart was already used"):
-            reviewer.restart_review(
-                SimpleNamespace(run_file=str(self.run_file), context_file=None)
-            )
-
-    def test_status_reports_run_and_reviewer(self):
+    def test_context_frozen_by_exact_prompt_digest(self):
         self.create_run()
-        output = io.StringIO()
-        with self.waiting_reviewer(), redirect_stdout(output):
-            reviewer.status_cmd(
-                SimpleNamespace(run_file=str(self.run_file), json=False)
-            )
-        self.assertIn("status=ready", output.getvalue())
-        self.assertIn("awaiting-input", output.getvalue())
+        context = self.directory / "context"
+        context.write_bytes(b"Scope context.\r\n")
+        self.cli("submit-review", "--context-file", str(context))
+        self.assertIn("Scope context.\r\n", self.prompt)
+        self.assertEqual(self.state()["submission"]["prompt_sha256"],
+                         reviewer._digest(self.prompt.encode("utf-8")))
+        context.write_text("changed", encoding="utf-8")
+        self.output()
+        self.cli("finish-review")
+
+    def test_context_read_cannot_hide_a_prior_conversation_in_new_boundary(self):
+        self.create_run()
+        def changed(_):
+            self.user("Unrelated prior task")
+            self.output("Earlier task completed")
+            return "review context"
+        with mock.patch.object(reviewer, "_read_context", side_effect=changed):
+            with self.assertRaises(SystemExit):
+                self.cli("submit-review")
+        self.assertEqual(self.sent, [])
+
+    def test_startup_parser_cannot_swap_the_inspected_file(self):
+        self.create_run()
+        original = reviewer.session.transcript_is_startup_only
+        def changed(*args, **kwargs):
+            result = original(*args, **kwargs)
+            replacement = self.directory / "new-transcript"
+            replacement.write_bytes(b"")
+            os.replace(replacement, self.transcript)
+            return result
+        with mock.patch.object(reviewer.session, "transcript_is_startup_only", side_effect=changed):
+            with self.assertRaises(SystemExit):
+                self.cli("submit-review")
+        self.assertEqual(self.sent, [])
+
+    def test_inaccessible_transcript_is_not_missing(self):
+        blocked = self.directory / "blocked"
+        blocked.mkdir()
+        path = blocked / "transcript"
+        path.write_bytes(b"")
+        blocked.chmod(0)
+        try:
+            with self.assertRaises(SystemExit):
+                reviewer._capture_boundary(str(path))
+        finally:
+            blocked.chmod(0o700)
+
+    def test_real_legacy_shape_has_read_only_status_in_old_public_parent(self):
+        self.create_run()
+        legacy = dict(self.state())
+        legacy["version"] = 1
+        legacy.pop("run_id")
+        legacy["reviewer"] = {key: legacy["reviewer"][key] for key in ("buffer", "backend", "transcript")}
+        legacy["restart_used"] = False
+        public = self.directory / "public"
+        public.mkdir(mode=0o755)
+        self.run_file = public / "old-run.json"
+        self.run_file.write_text(json.dumps(legacy), encoding="utf-8")
+        self.run_file.chmod(0o600)
+        before = self.run_file.read_bytes()
+        self.assertIn("unverified-legacy", self.cli("status", "--json"))
+        self.assertEqual(self.run_file.read_bytes(), before)
+        self.assertEqual(list(public.iterdir()), [self.run_file])
+
+    def test_documented_first_turn_context_is_not_prior_conversation(self):
+        self.actor["transcript"] = None
+        self.transcript.unlink()
+        self.create_run()
+        original = self.dispatch
+        def preamble(*args, **kwargs):
+            self.append({"type": "session_meta", "payload": {
+                "id": self.actor["session_id"], "cwd": self.actor["directory"]}})
+            self.append({"type": "event_msg", "payload": {
+                "type": "task_started", "turn_id": "fixture-turn", "started_at": 1700000000,
+                "trace_id": "fixture-trace", "model_context_window": 128000,
+                "collaboration_mode_kind": "default"}})
+            for role, kind in (("user", "agents_md.instructions"),
+                               ("user", "environments.environment_context"),
+                               ("developer", "generic.developer_instructions")):
+                self.append({"type": "response_item", "payload": {"type": "message", "role": role,
+                    "content": [{"type": "input_text", "text": "Synthetic context."}],
+                    "internal_chat_message_metadata_passthrough": {"content_item_kinds": [kind]}}})
+            self.append({"type": "world_state", "payload": {"full": True, "state": {}}})
+            self.append({"type": "turn_context", "payload": {"cwd": self.actor["directory"], "turn_id": "fixture-turn"}})
+            return original(*args, **kwargs)
+        with mock.patch.object(reviewer.session, "submit_to_agent", side_effect=preamble):
+            self.cli("submit-review")
+        self.output()
+        self.assertIn("complete", self.cli("finish-review"))
+
+    def test_context_annotations_do_not_allow_arbitrary_user_or_tool_preambles(self):
+        live = self.actor
+        message = {"type": "response_item", "payload": {"type": "message", "role": "user",
+            "content": [{"type": "input_text", "text": "# AGENTS.md instructions\n<INSTRUCTIONS>fake</INSTRUCTIONS>"}]}}
+        self.assertFalse(reviewer._codex_preamble(message, live))
+        for kinds in ([], ["user.input"], ["unknown"], ["agents_md.instructions", "agents_md.instructions"], [None]):
+            message["payload"]["internal_chat_message_metadata_passthrough"] = {"content_item_kinds": kinds}
+            self.assertFalse(reviewer._codex_preamble(message, live))
+        for payload in ({"full": False, "state": {}}, {"full": True, "state": []}, {"cwd": live["directory"]}):
+            self.assertFalse(reviewer._codex_preamble({"type": "world_state", "payload": payload}, live))
+        self.assertFalse(reviewer._codex_preamble({"type": "response_item", "payload": {"type": "function_call"}}, live))
+
+    def test_first_turn_event_requires_the_documented_typed_shape(self):
+        valid = {"type": "task_started", "turn_id": "fixture-turn",
+                 "model_context_window": None, "collaboration_mode_kind": "plan"}
+        self.assertTrue(reviewer._codex_preamble({"type": "event_msg", "payload": valid}, self.actor))
+        for field, value in (("type", "task_complete"), ("type", "unknown"),
+                             ("turn_id", ""), ("turn_id", 1), ("trace_id", []),
+                             ("started_at", True), ("started_at", 1.5),
+                             ("model_context_window", "128000"),
+                             ("collaboration_mode_kind", "unknown"), ("extra", "unproved")):
+            with self.subTest(field=field, value=value):
+                self.assertFalse(reviewer._codex_preamble(
+                    {"type": "event_msg", "payload": {**valid, field: value}}, self.actor))
+        self.assertFalse(reviewer._codex_preamble(
+            {"type": "event_msg", "payload": {"type": "task_started"}}, self.actor))
+        self.assertFalse(reviewer._codex_preamble(
+            {"type": "event_msg", "payload": valid}, {**self.actor, "backend": "claude-code"}))
+
+    def test_same_bytes_replacement_during_receipt_read_refuses(self):
+        self.pending()
+        self.user(self.prompt)
+        original = reviewer.session._marker_delivered
+        def replaced(*args, **kwargs):
+            result = original(*args, **kwargs)
+            other = self.directory / "same-bytes"
+            other.write_bytes(self.transcript.read_bytes())
+            os.replace(other, self.transcript)
+            return result
+        with mock.patch.object(reviewer.session, "_marker_delivered", side_effect=replaced):
+            with self.assertRaises(SystemExit):
+                self.cli("reconcile-submission", "--delivered")
+        self.assertIsNotNone(self.state()["pending_submission"])
 
 
 if __name__ == "__main__":

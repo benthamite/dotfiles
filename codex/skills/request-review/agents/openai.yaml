@@ -1,4 +1,4 @@
 interface:
   display_name: "Cross-Model Plan Reviewer"
   short_description: "One opposite-backend review pass on a committed plan"
-  default_prompt: "Use $request-review to hand the committed plan to a fresh session of the other CLI for one review pass, monitor it, and implement here while adjudicating the findings."
+  default_prompt: "Use $request-review for one opposite-CLI review of the committed plan, monitor its exact return and adjudicate here. Preserve review-only scope; implement only when already authorized."

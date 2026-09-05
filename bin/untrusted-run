@@ -1,0 +1,168 @@
+#!/opt/homebrew/bin/python3 -I
+"""Run an untrusted command in a pinned, networkless Docker Desktop VM container.
+
+Only a fresh disposable output directory and explicit read-only inputs are shared.
+Normal trusted sessions remain full-access. There is no native/unsandboxed fallback.
+"""
+
+import argparse
+import os
+from pathlib import Path
+import re
+import signal
+import subprocess
+import sys
+import tempfile
+import uuid
+
+
+DOCKER = "/usr/local/bin/docker"
+SECCOMP = Path(__file__).resolve().with_name("untrusted-run-seccomp.json")
+# Docker Official Image node:22.23.2-bookworm-slim, linux/arm64, verified 2026-09-04.
+IMAGE = "node@sha256:8d342e46d3b2883df69f797cb60fc71d8a0b65de65ddfbf4bf63fdc02049615f"
+
+
+def safe_host_path(value):
+    original = Path(value).absolute()
+    # macOS's fixed system aliases are safe; artifact-controlled symlinks are
+    # not. Check each component before resolving, including bundle parents.
+    for alias, canonical in (("/tmp", "/private/tmp"), ("/var", "/private/var")):
+        if str(original) == alias or str(original).startswith(alias + "/"):
+            original = Path(canonical + str(original)[len(alias):])
+    cursor = Path("/")
+    for component in original.parts[1:]:
+        if component == "..":
+            raise ValueError("Input paths must not contain parent traversal")
+        cursor /= component
+        if cursor.is_symlink():
+            raise ValueError("Input roots and their parents must not be symlinks")
+    path = original.resolve(strict=True)
+    if "," in str(path) or "\n" in str(path):
+        raise ValueError("Unsupported character in mount path")
+    if not (path.is_file() or path.is_dir()):
+        raise ValueError("Inputs must be ordinary files or directories, never sockets/devices")
+    if path in (Path("/"), Path.home(), Path.home().parent, Path("/private/tmp")):
+        raise ValueError("Broad host roots are not valid inputs")
+    protected = {".ssh", ".gnupg", ".password-store", ".docker", ".codex", ".claude",
+                 ".git", ".config", "keychains", ".env", ".netrc", ".npmrc", ".pypirc",
+                 ".zshenv-secrets"}
+    if any(part.lower() in protected or part.startswith(".env.") for part in path.parts):
+        raise ValueError("Credential and agent-control paths are not valid inputs")
+    if path.is_dir():
+        for directory, _, files in os.walk(path, followlinks=False):
+            for name in files:
+                entry = Path(directory) / name
+                if not entry.is_symlink() and not entry.is_file():
+                    raise ValueError("Input trees must not contain sockets or devices")
+    return path
+
+
+def run(args):
+    if sys.platform != "darwin" or not Path(DOCKER).is_file():
+        raise ValueError("Requires macOS Docker Desktop; no unsandboxed fallback")
+    command = args.command[1:] if args.command[:1] == ["--"] else args.command
+    if not command:
+        raise ValueError("A container command is required after --")
+    destination = Path(args.workspace).absolute()
+    parent = destination.parent.resolve(strict=True)
+    destination = parent / destination.name
+    if destination.exists() or destination.is_symlink():
+        raise ValueError("Workspace must be a fresh, nonexistent destination")
+    if (Path.home() / "My Drive") in (parent, *parent.parents):
+        raise ValueError("Disposable workspaces must be outside Google Drive")
+    if "," in str(destination) or "\n" in str(destination):
+        raise ValueError("Unsupported character in workspace path")
+    mounts = []
+    names = set()
+    for value in args.read:
+        name, separator, source = value.partition("=")
+        if not separator or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", name) or name in names:
+            raise ValueError("Read grants must be unique NAME=HOST_PATH pairs")
+        path = safe_host_path(source)
+        mounts.extend(["--mount", f"type=bind,source={path},target=/inputs/{name},readonly,bind-propagation=rprivate,bind-recursive=readonly"])
+        names.add(name)
+
+    # Never select a user/remote Docker context or load its credential helpers.
+    # The host control socket is not mounted or passed into the container.
+    socket = Path.home() / ".docker/run/docker.sock"
+    if not socket.is_socket():
+        raise ValueError("The local Docker Desktop socket is unavailable")
+    with tempfile.TemporaryDirectory(prefix="untrusted-run-", dir="/private/tmp") as temporary:
+        control = Path(temporary)
+        environment = {"PATH": "/usr/bin:/bin", "HOME": str(control), "LC_ALL": "C"}
+        docker = [DOCKER, "--config", str(control), "--host", "unix://" + str(socket)]
+        def control_run(arguments, **kwargs):
+            return subprocess.run(docker + arguments, env=environment, stdin=subprocess.DEVNULL,
+                                  close_fds=True, timeout=30, **kwargs)
+        version = control_run(["version", "--format", "{{.Server.Version}}"],
+                              capture_output=True, text=True)
+        if version.returncode or version.stdout.strip() != "29.1.3":
+            raise ValueError("Requires reviewed Docker Engine 29.1.3; rebase and verify the seccomp profile for other versions")
+        present = control_run(["image", "inspect", IMAGE], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if present.returncode:
+            raise ValueError("Pinned isolation image is unavailable; provision the documented exact digest first")
+        uid, gid = os.getuid(), os.getgid()
+        if uid == 0:
+            raise ValueError("Refusing a root caller")
+        destination.mkdir(mode=0o700)
+        name = "untrusted-run-" + uuid.uuid4().hex
+        invocation = [
+            "run", "--name", name, "--pull", "never", "--platform", "linux/arm64",
+            "--network", "none", "--cap-drop", "ALL", "--security-opt", "no-new-privileges:true",
+            "--security-opt", "seccomp=" + str(SECCOMP),
+            "--read-only", "--user", f"{uid}:{gid}", "--pids-limit", "64",
+            "--memory", "1g", "--memory-swap", "1g", "--cpus", "2",
+            "--ulimit", "fsize=268435456:268435456", "--ulimit", "nofile=256:256",
+            "--tmpfs", f"/tmp:rw,noexec,nosuid,nodev,size=64m,uid={uid},gid={gid},mode=700",
+            "--mount", f"type=bind,source={destination},target=/workspace",
+            *mounts, "--workdir", "/workspace", "--entrypoint", "/usr/bin/env", IMAGE,
+            "-i", "PATH=/usr/local/bin:/usr/bin:/bin", "HOME=/tmp/home", "TMPDIR=/tmp", "LANG=C",
+            "/bin/sh", "-c", 'mkdir -m 700 /tmp/home && exec "$@"', "untrusted-run", *command,
+        ]
+        process = None
+        try:
+            process = subprocess.Popen(docker + invocation, env=environment, stdin=subprocess.DEVNULL,
+                                       close_fds=True, start_new_session=True)
+            try:
+                status = process.wait(timeout=args.timeout)
+            except (subprocess.TimeoutExpired, KeyboardInterrupt):
+                print("untrusted-run: command stopped at its deadline", file=sys.stderr)
+                status = 124
+        finally:
+            # Remove the entire PID namespace/cgroup, including daemonized children.
+            try:
+                removed = control_run(["container", "rm", "--force", name],
+                                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except (OSError, subprocess.SubprocessError):
+                removed = None
+            finally:
+                if process is not None and process.poll() is None:
+                    process.kill()
+                    process.wait()
+            if removed is None or removed.returncode:
+                raise ValueError(f"Cleanup could not confirm removal of container {name}")
+        return status
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--workspace", required=True, help="Fresh host output directory, mounted at /workspace")
+    parser.add_argument("--read", action="append", default=[], help="NAME=HOST_PATH, mounted read-only at /inputs/NAME")
+    parser.add_argument("--timeout", type=float, default=120)
+    parser.add_argument("command", nargs=argparse.REMAINDER)
+    args = parser.parse_args()
+    if not 0 < args.timeout <= 600:
+        parser.error("timeout must be greater than zero and at most 600 seconds")
+    def interrupted(signum, frame):
+        raise KeyboardInterrupt
+    signal.signal(signal.SIGTERM, interrupted)
+    signal.signal(signal.SIGHUP, interrupted)
+    try:
+        return run(args)
+    except (OSError, ValueError, subprocess.SubprocessError) as error:
+        print(f"untrusted-run: refused: {error}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

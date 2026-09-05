@@ -9,8 +9,24 @@ fi
 
 ARCHIVE=$1
 DESTINATION=$2
-SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+SCRIPT_DIR=$(cd -P -- "$(dirname -- "$0")" && pwd)
 SKILL_DIR=$(cd -- "$SCRIPT_DIR/.." && pwd)
+ISOLATOR="$SKILL_DIR/../../../../bin/untrusted-run"
+
+# A fresh directory prevents archive entries from following old destination
+# symlinks. Dependency installation never receives the artifact as input.
+if [ ! -f "$ARCHIVE" ] || [ -e "$DESTINATION" ] || [ -L "$DESTINATION" ]; then
+    echo "Extraction requires an archive file and a destination that does not exist." >&2
+    exit 2
+fi
+if [ -L "${ARCHIVE}.unpacked" ]; then
+    echo "Refusing a symlinked unpacked-archive root." >&2
+    exit 2
+fi
+if [ ! -x "$ISOLATOR" ]; then
+    echo "The required Docker VM untrusted-run isolator is unavailable." >&2
+    exit 2
+fi
 
 compatible_node() {
     local candidate=$1
@@ -106,4 +122,11 @@ if [ ! -f "$ASAR_MODULE" ]; then
     trap - EXIT
 fi
 
-PATH="$NODE_DIR:$PATH" "$NODE_BIN" "$ASAR_MODULE" extract "$ARCHIVE" "$DESTINATION"
+READ_INPUTS=(--read "archive.asar=$ARCHIVE")
+if [ -d "${ARCHIVE}.unpacked" ]; then
+    READ_INPUTS+=(--read "archive.asar.unpacked=${ARCHIVE}.unpacked")
+fi
+exec "$ISOLATOR" --workspace "$DESTINATION" \
+    --read "dependencies=$INSTALL_DIR" "${READ_INPUTS[@]}" \
+    -- node /inputs/dependencies/node_modules/@electron/asar/bin/asar.mjs \
+    extract /inputs/archive.asar /workspace

@@ -1,7 +1,7 @@
 #+title: Command index
 #+author: Pablo Stafforini
 
-This index covers the 56 tracked files under =bin/= whose Git mode is
+This index covers the 57 tracked files under =bin/= whose Git mode is
 =100755=. Non-executable libraries and data files are intentionally omitted.
 The first column is machine-readable and should contain every executable
 exactly once.
@@ -39,6 +39,54 @@ documented in [[file:../agents/README.org][the agent manual]]. Skill names and t
 | =stage-for-user= | Copies a file, literal, or stdin to the Emacs kill ring and macOS clipboard without echoing it. |
 | =sync-agent-c-worktrees= | Compatibility entry point for =sync-reasoning-tasks-worktrees=. |
 | =sync-reasoning-tasks-worktrees= | Runs the guarded reasoning-task sync across eligible task worktrees. |
+| =untrusted-run= | Runs a command in a pinned, networkless Docker Desktop Linux container with fresh output and explicit read-only inputs; no host credentials or process namespace are shared. |
+
+** Untrusted commands
+
+=untrusted-run --workspace /absolute/new-output --read source=/absolute/input --
+node /inputs/source/script.js= runs in the pinned Node 22.23.2 image, with
+=/workspace= as its working directory. The output directory must not exist and
+must be outside Google Drive. Inputs must not be credential/control paths,
+symlinked roots/parents, or trees containing sockets/devices. Only explicitly
+selected inputs are exposed: never grant a home directory, account configuration,
+or credential store. Treat all output as untrusted, including symlinks.
+
+Docker Desktop must already be running, with the reviewed Engine 29.1.3; other
+engine versions are refused until the seccomp default is rebased and verified.
+Provision the reviewed ARM64 image once:
+
+#+begin_src sh
+docker pull --platform linux/arm64 node@sha256:8d342e46d3b2883df69f797cb60fc71d8a0b65de65ddfbf4bf63fdc02049615f
+#+end_src
+
+The runner refuses a missing image; it never pulls a mutable tag or falls back
+to host execution. The paired =audit-mac-app= ASAR extractors require this path.
+Their locked dependency bootstrap runs before parsing; archive extraction itself
+has no network. Trusted agent sessions and other execution paths remain
+full-access: this is an opt-in isolation boundary, not a global permission change.
+
+The container is non-root, drops all capabilities, forbids privilege escalation,
+uses a read-only root filesystem, and receives no Docker/SSH sockets, host PID
+namespace, terminal input, or ambient environment. Only fresh output is writable
+on the host. Limits are 1 GiB memory, two CPUs, 64 processes, 64 MiB temporary
+storage, 256 MiB per output file, and 120 seconds by default (600 maximum).
+The host output directory has no aggregate disk quota; many files can still fill
+disk. Container removal on completion/timeout kills daemonized descendants;
+an unavailable Docker daemon can prevent confirmed cleanup and produces failure.
+
+Native macOS Seatbelt was rejected after a synthetic =KERN_PROCARGS2= test read
+another same-user process's argv/environment despite explicit deny rules. The
+Linux VM avoids sharing that host process namespace. VM/kernel vulnerabilities,
+unsafe explicit input grants, and subsequent execution of output remain risks.
+
+=untrusted-run-seccomp.json= preserves the [[https://github.com/moby/moby/blob/fbf3ed25f893e6ce21336f1101590e40a13934f4/vendor/github.com/moby/profiles/seccomp/default.json][Docker Engine 29.1.3 default]]
+(source SHA-256 =01536f1d1df938ae611eba20d6349e0de7a99b6ecdee1549427a0b01b8301e28=),
+with only the [[https://github.com/moby/profiles/commit/dec315c57e60de0ffb1e07485815eb71d7b820e8][upstream AF_ALG socket restriction]] added. It still denies
+AF_VSOCK and defaults to =SCMP_ACT_ERRNO=; no general syscall permissions were
+broadened. This modified Moby resource is covered by
+[[file:untrusted-run-seccomp.LICENSE][Apache License 2.0]]. Re-review its upstream default when upgrading the engine;
+do not replace it with a permissive custom profile. Runtime-image provenance:
+[[https://hub.docker.com/_/node][Docker Official Node image]].
 
 * Emacs
 

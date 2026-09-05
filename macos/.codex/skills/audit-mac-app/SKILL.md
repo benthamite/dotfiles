@@ -106,6 +106,13 @@ file "$APP_PATH/Contents/MacOS/"*
 
 For Electron apps, extract the source code:
 
+The helper requires Docker Desktop and the pinned isolation image documented in
+`bin/README.org`. It always runs the parser inside a networkless Linux VM
+container, with the archive, unpacked inputs, and locked dependencies read-only.
+Use a fresh destination outside Google Drive; existing directories and symlinked
+input roots/parents are refused. Never bypass isolation when extraction fails.
+Extracted files remain untrusted: do not execute them or follow their symlinks.
+
 ```bash
 APP_NAME=$(basename "$APP_PATH" .app)
 AUDIT_DIR="$HOME/.cache/app-audits/$APP_NAME/$(date +%Y%m%d)"
@@ -252,8 +259,10 @@ To compare between app versions after an update:
 
 ```bash
 # Extract both versions to temp directories
-OLD_DIR=$(mktemp -d "${TMPDIR:-/tmp}/old-version.XXXXXX")
-NEW_DIR=$(mktemp -d "${TMPDIR:-/tmp}/new-version.XXXXXX")
+OLD_PARENT=$(mktemp -d "${TMPDIR:-/tmp}/old-version.XXXXXX")
+NEW_PARENT=$(mktemp -d "${TMPDIR:-/tmp}/new-version.XXXXXX")
+OLD_DIR="$OLD_PARENT/extracted"
+NEW_DIR="$NEW_PARENT/extracted"
 OLD_URLS=$(mktemp "${TMPDIR:-/tmp}/old-urls.XXXXXX")
 NEW_URLS=$(mktemp "${TMPDIR:-/tmp}/new-urls.XXXXXX")
 "$SKILL_DIR/scripts/extract-asar.sh" /Applications/OldApp.app/Contents/Resources/app.asar "$OLD_DIR"

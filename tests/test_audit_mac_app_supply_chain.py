@@ -4,6 +4,7 @@ import filecmp
 import json
 import os
 import subprocess
+import struct
 import tempfile
 import unittest
 from pathlib import Path
@@ -25,6 +26,55 @@ def relative_files(root: Path) -> set[Path]:
 
 
 class AuditMacAppSupplyChainTests(unittest.TestCase):
+    def test_real_archive_relative_paths_and_unpacked_inputs(self):
+        with tempfile.TemporaryDirectory(dir="/private/tmp") as temp:
+            root = Path(temp)
+            contents = b'{"name":"synthetic-isolation-fixture"}\n'
+            unpacked_contents = b"synthetic unpacked asset\n"
+            header = json.dumps({"files": {
+                "package.json": {"size": len(contents), "offset": "0"},
+                "asset.txt": {"size": len(unpacked_contents), "unpacked": True},
+            }}).encode()
+            padded = header + b"\0" * (-len(header) % 4)
+            archive = root / "app.asar"
+            archive.write_bytes(struct.pack("<IIII", 4, 8 + len(padded), 4 + len(padded), len(header)) + padded + contents)
+            unpacked = root / "app.asar.unpacked"
+            unpacked.mkdir()
+            (unpacked / "asset.txt").write_bytes(unpacked_contents)
+            for index, skill in enumerate(SKILL_DIRS):
+                result = subprocess.run(
+                    [str(skill / "scripts/extract-asar.sh"), "app.asar", f"output-{index}"],
+                    cwd=root, capture_output=True, text=True, timeout=120,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual((root / f"output-{index}/package.json").read_bytes(), contents)
+                self.assertEqual((root / f"output-{index}/asset.txt").read_bytes(), unpacked_contents)
+            self.assertEqual((unpacked / "asset.txt").read_bytes(), unpacked_contents)
+
+    def test_unpacked_and_parent_symlink_inputs_are_refused(self):
+        with tempfile.TemporaryDirectory(dir="/private/tmp") as temp:
+            root = Path(temp)
+            outside = root / "outside"
+            outside.mkdir()
+            (outside / "canary").write_text("unchanged")
+            bundle = root / "bundle"
+            bundle.mkdir()
+            (bundle / "app.asar").touch()
+            (bundle / "app.asar.unpacked").symlink_to(outside)
+            parent_link = root / "parent-link"
+            parent_link.symlink_to(outside)
+            (outside / "app.asar").touch()
+            for skill in SKILL_DIRS:
+                for archive in (bundle / "app.asar", parent_link / "app.asar"):
+                    destination = root / "must-not-be-created"
+                    result = subprocess.run(
+                        [str(skill / "scripts/extract-asar.sh"), str(archive), str(destination)],
+                        capture_output=True, text=True, timeout=30,
+                    )
+                    self.assertEqual(result.returncode, 2, result.stderr)
+                    self.assertFalse(destination.exists())
+            self.assertEqual((outside / "canary").read_text(), "unchanged")
+
     def test_mirrored_skill_trees_are_byte_identical(self):
         claude, codex = SKILL_DIRS
         claude_files = relative_files(claude)
@@ -116,7 +166,6 @@ if [ "${1:-}" = "-e" ]; then
     exit 0
 fi
 if [ "${2:-}" = "extract" ]; then
-    mkdir -p "$4"
     printf '{}\\n' >"$4/package.json"
     exit 0
 fi
@@ -134,7 +183,7 @@ done
 [ -f package.json ]
 [ -f package-lock.json ]
 mkdir -p node_modules/@electron/asar/bin
-: >node_modules/@electron/asar/bin/asar.mjs
+printf '%s\\n' 'import{writeFileSync}from"node:fs";writeFileSync("/workspace/package.json","{}");' >node_modules/@electron/asar/bin/asar.mjs
 """,
                     encoding="utf-8",
                 )

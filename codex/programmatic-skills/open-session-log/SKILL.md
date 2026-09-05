@@ -75,6 +75,7 @@ Quote the path as an Elisp string when constructing the expression:
 
 ```bash
 emacsclient --eval '(agent-log-open-file "/absolute/path/to/transcript.jsonl")'
+```
 
 ## Reporting
 

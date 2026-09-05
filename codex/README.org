@@ -225,7 +225,7 @@ personal/plugin identities and exact name boundaries, and handles task-start
 context, hidden inputs, and fractional timestamps. Counts remain reconstructed
 evidence, not native invocation telemetry or proof of workflow completion.
 
-The programmatic =open-session-log= helper resolves the current runtime's
+The programmatic [[file:programmatic-skills/open-session-log/SKILL.md][open-session-log]] helper resolves the current runtime's
 session identity and exact transcript in its active account root. It opens
 that path in Emacs and checks the rendered buffer's identity before reporting
 success; concurrent sessions cannot be selected by recency or project alone.

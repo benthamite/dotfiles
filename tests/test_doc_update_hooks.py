@@ -207,6 +207,50 @@ class DocUpdateHookTests(unittest.TestCase):
         self.git("add", "new.sh")
         self.assert_selection("git commit --only -m test -- new.sh", "allow")
 
+    def prepare_ignored_selection(self, filename="existing.sh"):
+        self.prepare_selection()
+        directory = self.repo / ".claude/skills/example"
+        directory.mkdir(parents=True)
+        (self.repo / ".gitignore").write_text("**/.claude/\n")
+        source = directory / filename
+        source.write_text("before\n")
+        selected = str(source.relative_to(self.repo))
+        self.git("add", "--force", ".gitignore", selected)
+        self.git("-c", "user.name=Test", "-c", "user.email=test@example.com",
+                 "commit", "--only", "-qm", "ignored fixture", "--", ".gitignore", selected)
+        source.write_text("after\n")
+        return directory
+
+    def test_only_commits_tracked_and_force_staged_ignored_files(self):
+        directory = self.prepare_ignored_selection()
+        (directory / "new.sh").write_text("echo new\n")
+        (directory / "untracked.el").write_text("(message \"untracked\")\n")
+        self.git("add", "--force", ".claude/skills/example/new.sh")
+        self.assert_selection(
+            "git commit --only -m test -- .claude/skills/example/existing.sh "
+            ".claude/skills/example/new.sh", "allow")
+        self.assert_selection("git commit --only -m test -- .claude", "allow")
+        self.git("-c", "user.name=Test", "-c", "user.email=test@example.com",
+                 "commit", "--only", "-qm", "actual", "--", ".claude")
+        self.assertEqual(
+            self.git("show", "--format=", "--name-only", "HEAD").splitlines(),
+            [".claude/skills/example/existing.sh", ".claude/skills/example/new.sh"])
+        self.assertEqual(self.git("diff", "--cached", "--name-only").strip(), "example.el")
+        self.assertTrue((directory / "untracked.el").exists())
+
+    def test_ignored_directory_selection_cannot_borrow_untracked_docs(self):
+        directory = self.prepare_ignored_selection("existing.el")
+        (directory / "doc").mkdir()
+        (directory / "doc/manual.org").write_text("Untracked manual\n")
+        self.assert_selection("git commit --only -m test -- .claude", "deny")
+
+    def test_ignored_selection_still_rejects_clean_filters_without_execution(self):
+        self.prepare_ignored_selection()
+        (self.repo / ".gitattributes").write_text("*.sh filter=watch-test\n")
+        self.git("config", "filter.watch-test.clean", "touch filter-ran; cat")
+        self.assert_selection("git commit --only -m test -- .claude", "deny")
+        self.assertFalse((self.repo / "filter-ran").exists())
+
     def test_only_uses_worktree_diff_for_version_exemption(self):
         self.prepare_selection()
         # The real index now contains only a version bump, but the candidate

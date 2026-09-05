@@ -262,9 +262,11 @@ command, while the original transcript metadata is still available.
 
 Commit guards check explicit path selections against a disposable candidate
 index, leaving unrelated staging untouched. An =--only= directory selection
-includes only files known to Git; untracked documentation cannot satisfy a
-requirement for a commit that would omit it. Unsupported selection syntax is
-denied with a reason rather than checked against a different candidate.
+includes tracked files and staged additions even below ignored directories, but
+excludes untracked siblings. Untracked documentation cannot satisfy a requirement
+for a commit that would omit it. Inspection rejects configured clean filters
+without executing them. Unsupported selection syntax is denied with a reason
+rather than checked against a different candidate.
 
 Guards that inspect a Git command read its arguments only, never its message.
 Heredoc bodies are dropped before lexing, because an apostrophe in prose made

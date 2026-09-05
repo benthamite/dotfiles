@@ -1,9 +1,8 @@
 # Prevent high-confidence credential patterns from reaching persistent history.
 source "$HOME/My Drive/dotfiles/shell/zsh-history-security.zsh"
 
-# nvm lazy loading (NVM_DIR is in .zshenv; path must also be set here
-# because macOS path_helper in /etc/zprofile reorders PATH after .zshenv)
-export PATH="$NVM_DIR/versions/node/v20.18.2/bin:$PATH"
+# nvm lazy loading (NVM_DIR is in .zshenv). The default alias is `system`,
+# so loading nvm does not silently restore an end-of-life project runtime.
 
 # No post-install npm wrapper here: the old node_modules relocation hook
 # (move node_modules to a cache dir and symlink it back into Drive) was the

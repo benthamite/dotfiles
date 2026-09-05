@@ -1,3 +1,12 @@
-#! /bin/bash
-cd ~/source/translation-server
-npm start
+#!/bin/bash
+set -eo pipefail
+
+cd "$HOME/source/translation-server"
+# This legacy server uses util.isRegExp, removed in Node 23. Select supported
+# Node 22 LTS explicitly, independent of the shell's newer default runtime.
+export NVM_DIR="$HOME/.nvm"
+source /opt/homebrew/opt/nvm/nvm.sh --no-use
+node_binary="$(nvm which 22)"
+# node-config merges this last, preserving other local settings while keeping
+# this unauthenticated development service off the LAN.
+exec "$node_binary" src/server.js '--NODE_CONFIG={"host":"127.0.0.1"}'

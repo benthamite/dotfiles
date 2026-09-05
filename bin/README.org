@@ -75,7 +75,7 @@ not be used to print or document secret values; the placement rules are in
 | =op-desktop= | Reuses one terminal-backed desktop authorization for 1Password CLI calls and securely forwards piped item templates. |
 | =trajectory-open= | Opens a URL through the =trajectory= Chrome profile alias. |
 | =transfer-github-issues= | Transfers the issue numbers in the configured input file between two fixed repositories. |
-| =translation-server= | Starts the local translation-server project with npm. |
+| =translation-server= | Starts the local translation server with Node 22 LTS, bound only to =127.0.0.1:1969=. |
 
 Mail activation and credential lookup are documented further in
 [[file:../mbsync/README.org][the mbsync README]].

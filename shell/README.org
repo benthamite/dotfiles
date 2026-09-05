@@ -25,6 +25,15 @@ machine-local override. At the time this README was written, the home path was
 a dangling symlink to the absent =shell/.zshrc.local=; the guard in =.zshrc=
 therefore skips it.
 
+* Default Node runtime
+
+Shell startup uses Homebrew's =node= instead of a hard-coded nvm Node 20 path.
+The machine-local =~/.nvm/alias/default= is =system=, so lazy-loading nvm
+preserves that choice. Explicit project-specific =nvm use= remains available;
+old installed runtimes are not deleted. The translation-server launcher
+selects the newest installed Node 22 LTS explicitly: its legacy dependencies
+still require =util.isRegExp=, removed in Node 23. It never falls back to Node 20.
+
 * Codex account selection
 
 =.zshenv= points =CODEX_HOME= at the account named in

@@ -489,7 +489,7 @@
       "claude": "claude/hooks/load-elisp-after-edit.sh",
       "codex": "codex/hooks/load-elisp-after-edit.sh",
       "status": "paired",
-      "note": "paired for apply_patch/Edit/Write path lists; both copies emit PostToolUse JSON per the shared hook contract: hookSpecificOutput must carry hookEventName and additionalContext (a bare message field fails Claude's schema validation and is dropped), and failure branches must exit 0 with decision/reason because JSON printed alongside a non-zero exit is ignored"
+      "note": "Runtime-specific apply_patch/Edit/Write path adapters share the bounded manual export behavior. Both emit PostToolUse hookSpecificOutput with hookEventName and additionalContext, including sanitized partial-failure counts; a bare message field is invalid. Export failures use visible context with exit 0 because JSON accompanying a nonzero exit is ignored. No hook registration change is needed for the export-boundary repair."
     },
     {
       "name": "notify-emacs-notification.sh",

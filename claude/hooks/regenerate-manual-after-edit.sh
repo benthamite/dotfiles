@@ -1,69 +1,204 @@
 #!/usr/bin/env bash
-# PostToolUse hook: regenerate Texinfo manual (.texi and .info) after editing
-# an .org source that drives a Texinfo export.
-#
-# Fires on Edit|Write.  The .dir-locals.el in these repos runs
-# `org-texinfo-export-to-texinfo` from `after-save-hook`, which fires only on
-# interactive Emacs saves.  Claude's Edit/Write tools bypass that hook, so the
-# generated manual silently drifts from its org source.  This hook closes that
-# gap for Claude's edit path.
-#
-# Criteria to fire:
-#   - edited file ends in .org
-#   - file contains `#+texinfo_filename:` or `#+export_file_name: *.info`
-#
-# Actions:
-#   - regenerate <name>.texi via ox-texinfo
-#   - if <name>.info exists next to the .texi, regenerate it via makeinfo
-
+# PostToolUse: regenerate declared Texinfo manuals after agent edits.
+# Export only the owned sibling artifacts. Refuse unreviewed evaluation and
+# external-data directives; use private staging and sanitized partial reports.
 set -euo pipefail
 
+changed_manual_paths() {
+  printf '%s' "$1" | jq -r '.tool_input.file_path // empty'
+}
 input=$(cat)
-file_path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // empty')
 
-[ -n "$file_path" ]            || exit 0
-[[ "$file_path" == *.org ]]    || exit 0
-[ -f "$file_path" ]            || exit 0
+record_failure() {
+  failed=$((failed + 1))
+  failures="$failures$1: $2"$'\n'
+}
 
-# Only regenerate when the .org declares a Texinfo export target.
-grep -qiE '^#\+(texinfo_filename|export_file_name):' "$file_path" || exit 0
+artifact_state() {
+  python3 - "$1" <<'PY'
+import json, os, stat, sys
+try:
+    entry = os.lstat(sys.argv[1])
+except FileNotFoundError:
+    print("missing")
+    sys.exit(0)
+if not stat.S_ISREG(entry.st_mode):
+    sys.exit(1)
+print(json.dumps([entry.st_dev, entry.st_ino, entry.st_size, entry.st_mtime_ns, entry.st_ctime_ns]))
+PY
+}
 
-dir=$(dirname "$file_path")
+publish_artifact() {
+  python3 - "$1" "$2" "$3" <<'PY'
+import json, os, stat, sys
+source, destination, expected = sys.argv[1:]
+try:
+    entry = os.lstat(destination)
+    if not stat.S_ISREG(entry.st_mode):
+        sys.exit(1)
+    current = json.dumps([entry.st_dev, entry.st_ino, entry.st_size, entry.st_mtime_ns, entry.st_ctime_ns])
+except FileNotFoundError:
+    current = "missing"
+if current != expected:
+    sys.exit(1)
+if current != "missing":
+    os.chmod(source, stat.S_IMODE(entry.st_mode))
+os.replace(source, destination)
+PY
+}
 
-# Run ox-texinfo in a clean batch Emacs.
-if ! texi_output=$(emacs --batch -Q "$file_path" --eval '
-(progn
-  (setq create-lockfiles nil
-        make-backup-files nil)
-  (require (quote org))
-  (require (quote ox-texinfo))
-  (setq org-export-with-broken-links t)
-  (princ (concat "\n::codex-texi::"
-                 (org-texinfo-export-to-texinfo)
-                 "\n")))' 2>&1); then
-  jq -n --arg msg "Texinfo export failed: $(echo "$texi_output" | tail -5 | tr '\n' ' ')" \
-    '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":$msg}}'
+total_texi=0
+total_info=0
+failed=0
+failures=""
+if ! scratch=$(mktemp -d /tmp/manual-export-hook.XXXXXX); then
+  jq -n '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":"Texinfo export failed: private staging could not be created; no generated files were changed"}}'
   exit 0
 fi
+cleanup() {
+  rm -f "$scratch/manual.texi" "$scratch/manual.info"
+  rmdir "$scratch"
+}
+trap cleanup EXIT
 
-texi=$(printf '%s\n' "$texi_output" | sed -n 's/^::codex-texi:://p' | tail -1)
-[ -n "$texi" ] || exit 0
-case "$texi" in
-  /*) ;;
-  *) texi="$dir/$texi" ;;
-esac
-[ -f "$texi" ] || exit 0
+while IFS= read -r file_path; do
+  [ -n "$file_path" ] || continue
+  [[ "$file_path" == *.org ]] || continue
+  [ -f "$file_path" ] || continue
+  if [ -L "$file_path" ]; then
+    record_failure "$file_path" "Manual source symlinks require an explicit reviewed export"
+    continue
+  fi
+  # A generic Markdown/PDF export filename is not a Texinfo trigger.
+  if ! grep -qiE '^[[:space:]]*#\+(texinfo_filename:[[:space:]]*[^[:space:]]|export_file_name:[[:space:]]*.+\.info[[:space:]]*$)' "$file_path"; then
+    continue
+  fi
+  if ! dir=$(cd -- "$(dirname -- "$file_path")" 2>/dev/null && pwd -P); then
+    record_failure "$file_path" "Manual directory could not be resolved"
+    continue
+  fi
+  base=$(basename -- "$file_path" .org)
+  file_path="$dir/$base.org"
+  texi="$dir/$base.texi"
+  info="$dir/$base.info"
+  if ! source_state=$(artifact_state "$file_path" 2>/dev/null) ||
+     ! texi_state=$(artifact_state "$texi" 2>/dev/null) ||
+     ! info_state=$(artifact_state "$info" 2>/dev/null); then
+    record_failure "$file_path" "Generated output is not an ordinary owned sibling file"
+    continue
+  fi
+  rm -f "$scratch/manual.texi" "$scratch/manual.info"
+  export_status=0
+  MANUAL_EXPORT_SOURCE="$file_path" MANUAL_EXPORT_OUTPUT="$scratch/manual.texi" \
+  MANUAL_EXPORT_INFO="$base.info" emacs --batch -Q --eval '
+(progn
+  (setq enable-local-variables nil
+        enable-local-eval nil
+        enable-dir-local-variables nil
+        create-lockfiles nil
+        make-backup-files nil
+        auto-save-default nil)
+  (require (quote org))
+  (require (quote ox-texinfo))
+  (setq org-export-use-babel nil
+        org-export-allow-bind-keywords nil
+        org-export-global-macros nil
+        org-export-before-processing-hook nil
+        org-export-before-parsing-hook nil
+        org-element-use-cache nil)
+  (define-error (quote manual-export-unsupported) "Unsupported automatic manual export")
+  (condition-case nil
+      (let ((source (getenv "MANUAL_EXPORT_SOURCE"))
+            (output (getenv "MANUAL_EXPORT_OUTPUT"))
+            (info (getenv "MANUAL_EXPORT_INFO"))
+            (case-fold-search t))
+        (when (string-match-p "[@{}\\\\\n\r]" info)
+          (signal (quote manual-export-unsupported) nil))
+        (with-temp-buffer
+          (insert-file-contents source)
+          (org-element-map (org-element-parse-buffer)
+              (quote (keyword babel-call export-block export-snippet))
+            (lambda (element)
+              (let ((kind (org-element-type element))
+                    (key (org-element-property :key element))
+                    (value (org-element-property :value element)))
+                (when
+                    (or (eq kind (quote babel-call))
+                        (and (eq kind (quote keyword))
+                             (or (member key (quote ("MACRO" "BIND" "CALL" "INCLUDE" "SETUPFILE"
+                                                     "TEXINFO_HEADER" "TEXINFO_POST_HEADER")))
+                                 (and (equal key "TEXINFO")
+                                      (not (string-match-p
+                                            "^[ \t]*@printindex[ \t]+\\(?:fn\\|vr\\|cp\\|ky\\|pg\\|tp\\)[ \t]*$"
+                                            value)))))
+                        (and (eq kind (quote export-block))
+                             (equal (downcase (or (org-element-property :type element) "")) "texinfo"))
+                        (and (eq kind (quote export-snippet))
+                             (equal (downcase (or (org-element-property :back-end element) "")) "texinfo")))
+                  (signal (quote manual-export-unsupported) nil)))))
+          (setq buffer-file-name source
+                default-directory (file-name-directory source))
+          (org-mode)
+          (let ((org-export-preserve-breaks nil)
+                (org-export-with-title t))
+            (org-export-to-file (quote texinfo) output nil nil nil nil
+                                (quote (:preserve-breaks nil :with-title t)))))
+        (with-temp-buffer
+          (insert-file-contents output)
+          (let ((filename-count 0))
+            (while (re-search-forward "\\(@+\\)\\([[:alpha:]]+\\)" nil t)
+              (when (= (% (length (match-string 1)) 2) 1)
+                (let ((directive (downcase (match-string 2))))
+                  (when (member directive (quote ("include" "verbatiminclude" "image" "macro" "rmacro"
+                                                   "alias" "definfoenclose")))
+                    (signal (quote manual-export-unsupported) nil))
+                  (when (equal directive "setfilename")
+                    (setq filename-count (1+ filename-count))))))
+            (unless (= filename-count 1)
+              (signal (quote manual-export-unsupported) nil))
+            (goto-char (point-min))
+            (unless (re-search-forward "^@setfilename .*$" nil t)
+              (signal (quote manual-export-unsupported) nil))
+            (replace-match (concat "@setfilename " info) t t)
+            (write-region (point-min) (point-max) output nil (quote silent)))))
+    (manual-export-unsupported (kill-emacs 42))
+    (error (kill-emacs 1))))' >/dev/null 2>&1 || export_status=$?
+  if [ "$export_status" -ne 0 ] || [ ! -s "$scratch/manual.texi" ]; then
+    if [ "$export_status" -eq 42 ]; then
+      record_failure "$file_path" "Texinfo export refused unsupported evaluation, include, raw Texinfo or image directives; use a reviewed manual export"
+    else
+      record_failure "$file_path" "Texinfo export failed; previous generated files were preserved"
+    fi
+    continue
+  fi
+  info_ready=0
+  if [ "$info_state" != missing ]; then
+    if ! makeinfo --no-split "$scratch/manual.texi" -o "$scratch/manual.info" >/dev/null 2>&1 ||
+       [ ! -s "$scratch/manual.info" ]; then
+      record_failure "$file_path" "Info regeneration failed; the previous .info was preserved"
+    else
+      info_ready=1
+    fi
+  fi
+  if ! current_source=$(artifact_state "$file_path" 2>/dev/null) ||
+     [ "$current_source" != "$source_state" ]; then
+    record_failure "$file_path" "Manual source changed during export; generated artifacts were not published"
+    continue
+  fi
+  if ! publish_artifact "$scratch/manual.texi" "$texi" "$texi_state" 2>/dev/null; then
+    record_failure "$file_path" "Texinfo publication failed or its sibling changed; no success was confirmed"
+    continue
+  fi
+  total_texi=$((total_texi + 1))
+  if [ "$info_ready" -eq 1 ]; then
+    if ! publish_artifact "$scratch/manual.info" "$info" "$info_state" 2>/dev/null; then
+      record_failure "$file_path" "Info publication failed or its sibling changed; no success was confirmed"
+      continue
+    fi
+    total_info=$((total_info + 1))
+  fi
+done < <(changed_manual_paths "$input" | awk '!seen[$0]++')
 
-# ox-texinfo drops the .texi alongside the .org.  Regenerate the matching
-# .info only when that .info is already part of the repository layout.
-info_count=0
-texi_count=1
-info="${texi%.texi}.info"
-if [ -f "$info" ] && makeinfo --no-split "$texi" -o "$info" >/dev/null 2>&1; then
-  info_count=1
-fi
-
-[ "$texi_count" -gt 0 ] || exit 0
-
-jq -n --arg dir "$dir" --argjson t "$texi_count" --argjson i "$info_count" \
-  '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":("Regenerated " + ($t|tostring) + " .texi and " + ($i|tostring) + " .info file(s) in " + $dir)}}'
+[ "$total_texi" -gt 0 ] || [ "$failed" -gt 0 ] || exit 0
+jq -n --argjson t "$total_texi" --argjson i "$total_info" --argjson failed "$failed" --arg failures "$failures" \
+  '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":("Regenerated " + ($t|tostring) + " .texi and " + ($i|tostring) + " .info file(s). Failures: " + ($failed|tostring) + (if $failed > 0 then "\n" + $failures else "" end))}}'

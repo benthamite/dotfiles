@@ -59,10 +59,7 @@ for arg in "$@"; do
     *.org) org="$arg" ;;
   esac
 done
-dir=$(dirname "$org")
-base=$(basename "$org" .org)
-printf 'Generated %s.texi\n' "$base" > "$dir/$base.texi"
-printf '\n::codex-texi::%s.texi\n' "$base"
+printf 'Generated Texinfo fixture\n' > "$MANUAL_EXPORT_OUTPUT"
 """
 
 FAKE_MAKEINFO = r"""#!/bin/sh

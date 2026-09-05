@@ -225,6 +225,10 @@ personal/plugin identities and exact name boundaries, and handles task-start
 context, hidden inputs, and fractional timestamps. Counts remain reconstructed
 evidence, not native invocation telemetry or proof of workflow completion.
 
+The =document-elisp-extras= batch separates coverage-only reports from authorized
+manual updates, accounts for every source, and preserves per-package ownership.
+Exports use reviewed destinations and distinguish format generation from accuracy.
+
 The =diagnose= skill separates configured, loaded, triggered and acted-on evidence
 for the incident's actual runtime. It preserves uncertain/mixed causes, requires
 practical enforcement coverage, and tests legitimate and unsafe guard cases.

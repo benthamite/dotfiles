@@ -360,6 +360,11 @@ serializing a lockfile. It uses supported GitHub PR fields, strict release tags,
 path-only version commits, and the same approved notes file for review and
 release creation. Preparation alone grants no publication authority.
 
+The paired =refresh-cr-tracker= skill separates local generation from authorized
+publication to its existing artifact. It requires a verified checkout, complete
+source retrieval, matching output hashes and the actual deployment capability;
+missing tools do not authorize a hosting migration or a success claim.
+
 The paired =record-decisions= skill records evidenced choices and dated amendments
 without rewriting decision history. It preserves numeric IDs beyond three digits,
 keeps summaries consistent with records, and leaves no-op runs unchanged. Reading
@@ -580,6 +585,9 @@ the shell's working directory. The verify-after-commit gate keys its debt to
 the committing repository while blocking =cd=, so a harness that pins the
 working directory to the dotfiles root could otherwise never clear a debt for
 a commit in a package repository.
+Commit inspection with =--dry-run=, status-format options, or help does not
+create a live-verification obligation. Those words in message arguments or
+pathspecs do not exempt an actual commit.
 
 Hooks that judge a Git command resolve the repository from the command itself,
 via =hooks/lib-repo-root.sh=. A =cd= at any command head decides the repository,

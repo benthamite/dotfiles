@@ -133,6 +133,11 @@ serializing a lockfile. It uses supported GitHub PR fields, strict release tags,
 path-only version commits, and the same approved notes file for review and
 release creation. Preparation alone grants no publication authority.
 
+The paired =refresh-cr-tracker= skill separates local generation from authorized
+publication to its existing artifact. It requires a verified checkout, complete
+source retrieval, matching output hashes and the actual deployment capability;
+missing tools do not authorize a hosting migration or a success claim.
+
 The paired =record-decisions= skill records evidenced choices and dated amendments
 without rewriting decision history. It preserves numeric IDs beyond three digits,
 keeps summaries consistent with records, and leaves no-op runs unchanged. Reading
@@ -484,6 +489,10 @@ production package across multi-commit commands. Only =elisp-live-verify= can
 clear one matching repository/package/commit obligation. The helper rejects
 dirty source, waits for the package reload, and then runs the package-named live
 expression. Unrelated =emacsclient= calls do not clear the gate.
+Commit inspection with =--dry-run=, status-format options, or help does not
+create a live-verification obligation. Native nested Bash events that omit
+=workdir= recover it from the matching literal parent call before tracking a
+commit; otherwise the tracker uses the explicit payload context.
 
 Emacs-owned sessions use eight explicit =codex-hook-wrapper= registrations for
 lifecycle forwarding. The wrapper comes from the Emacs package source tree

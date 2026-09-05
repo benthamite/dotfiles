@@ -230,6 +230,8 @@ anchors and export identities. It separates documentation from new save automati
 and documents supported public contracts without evaluating package source.
 Automatic exports preserve validated declared sibling names, including a
 =README.org= manual that generates package-named Texinfo and Info artifacts.
+Private staging also preserves those basenames inside the generated Info file's
+navigation headers.
 
 The =document-elisp-extras= batch separates coverage-only reports from authorized
 manual updates, accounts for every source, and preserves per-package ownership.

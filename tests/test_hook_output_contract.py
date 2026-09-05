@@ -50,6 +50,10 @@ esac
 """
 
 FAKE_EMACS = r"""#!/bin/sh
+if [ "$MANUAL_EXPORT_MODE" = names ]; then
+  printf '["manual.texi","manual.info"]\n'
+  exit 0
+fi
 if [ "$FAKE_MODE" = "export-fails" ]; then
   echo "Symbol's value as variable is void: boom" >&2
   exit 1

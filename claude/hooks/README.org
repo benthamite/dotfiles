@@ -160,7 +160,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =pretooluse-bash.sh= | Dispatches the Bash guards and output wrapper registered for PreToolUse. |
 | =redact-secrets.sh= | Masks recognized secret literals in a command's combined output. |
 | =regenerate-coverage-map.sh= | Refreshes the CR rubric visualizer coverage map after relevant edits. |
-| =regenerate-manual-after-edit.sh= | Regenerates owned sibling Texinfo and existing Info output from supported Org manuals; disables local/Babel evaluation, refuses unsupported export directives, and reports partial failures without raw private errors. |
+| =regenerate-manual-after-edit.sh= | Regenerates validated declared sibling Texinfo and existing Info names independently; disables local/Babel evaluation, refuses unsafe destinations or unsupported export directives, and reports partial failures without raw private errors. |
 | =register-coverage-hook.py= | Idempotently installs the coverage-map hook registration. |
 | =remind-ai-config-sync.sh= | Issues the paired Claude/Codex configuration reminder after relevant edits. |
 | =remind-claude-readme-update.sh= | Reminds an agent when a write from any project changed the tracked Claude configuration. |

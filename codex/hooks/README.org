@@ -144,7 +144,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =lib-staged-files.sh= | Lists proposed commit paths and name-status data, including explicit path selections and the complete amended commit. |
 | =commit-file-selection.py= | Resolves explicit commit selections with a disposable index, leaving shared staging untouched. |
 | =load-elisp-after-edit.sh= | Rebuilds and reloads the owning Elpaca package after an Elisp edit, including paths recovered from a nested composed-tool patch; skips test-only files and active or unresolved Git operations. |
-| =regenerate-manual-after-edit.sh= | Regenerates owned sibling Texinfo and existing Info output from supported Org manuals; disables local/Babel evaluation, refuses unsupported export directives, and reports partial failures without raw private errors. |
+| =regenerate-manual-after-edit.sh= | Regenerates validated declared sibling Texinfo and existing Info names independently; disables local/Babel evaluation, refuses unsafe destinations or unsupported export directives, and reports partial failures without raw private errors. |
 | =remind-ai-config-sync.sh= | Delegates paired Claude/Codex update reminders to =bin/ai-config-sync=. |
 | =remind-claude-readme-update.sh= | Reminds work outside dotfiles when a symlinked edit changed the Claude configuration. |
 | =remind-plan-review.sh= | Reminds the agent to obtain an independent review after editing an implementation plan. |

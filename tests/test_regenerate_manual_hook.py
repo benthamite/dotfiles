@@ -16,7 +16,7 @@ HOOKS = tuple(ROOT / runtime / "hooks/regenerate-manual-after-edit.sh" for runti
 NATIVE_EMACS = shutil.which("emacs")
 NATIVE_MAKEINFO = shutil.which("makeinfo")
 SENTINEL = "fixture-private-error-never-a-real-secret"
-HEADER = "#+title: Fixture manual\n#+texinfo_filename: ignored.info\n\n* Overview\n"
+HEADER = "#+title: Fixture manual\n#+texinfo_filename: {info}\n\n* Overview\n"
 
 
 @unittest.skipUnless(NATIVE_EMACS and shutil.which("jq"), "Native batch Emacs and jq are required")
@@ -34,6 +34,7 @@ class RegenerateManualHookTests(unittest.TestCase):
                         MANUAL_TEST_TRACE=str(self.trace), MANUAL_TEST_MODE="native",
                         MANUAL_INFO_MODE="fake", MANUAL_TEST_SENTINEL=SENTINEL)
         self.script("emacs", '''#!/usr/bin/env bash
+if [ "$MANUAL_EXPORT_MODE" = names ]; then exec "$NATIVE_EMACS" "$@"; fi
 printf '%s\\n' "$MANUAL_EXPORT_OUTPUT" >> "$MANUAL_TEST_TRACE"
 case "$MANUAL_TEST_MODE" in
   fail) printf '%s\\n' "$MANUAL_TEST_SENTINEL" >&2; exit 7 ;;
@@ -69,12 +70,12 @@ fi
         script.write_text(source)
         script.chmod(0o755)
 
-    def manual(self, body="Body.\n", *, header=HEADER, name="manual with spaces"):
+    def manual(self, body="Body.\n", *, header=None, name="manual with spaces"):
         self.counter += 1
         directory = self.root / f"case {self.counter}"
         directory.mkdir()
         source = directory / f"{name}.org"
-        source.write_text(header + body)
+        source.write_text((HEADER.format(info=f"{name}.info") if header is None else header) + body)
         return source
 
     def run_hook(self, hook, source=None, *, payload=None, environment=None):
@@ -118,7 +119,8 @@ fi
                 with self.subTest(hook=hook, target=target):
                     source = self.manual(header=f"#+title: Fixture\n#+export_file_name: {target}\n\n* Overview\n")
                     message = self.run_hook(hook, source)
-                    self.assertEqual(source.with_suffix(".texi").exists(), expected)
+                    selected = source.parent / "manual.texi" if expected else source.with_suffix(".texi")
+                    self.assertEqual(selected.exists(), expected)
                     self.assertEqual(bool(message), expected)
 
     def test_babel_and_local_evaluation_never_execute(self):
@@ -172,20 +174,76 @@ fi
             self.assertIn("Regenerated 1 .texi", message)
             self.assertIn("@@include", source.with_suffix(".texi").read_text())
 
-    def test_headers_cannot_redirect_output(self):
+    def test_unsafe_headers_are_refused_without_overwriting_artifacts(self):
         for hook in HOOKS:
             for target in ["../outside.info", str(self.root / "outside.info"), "https://example.invalid/out.info",
-                           'arbitrary "quoted" name.info']:
+                           'arbitrary "quoted" name.info', "raw@name.info", "raw{value}.info"]:
                 with self.subTest(hook=hook, target=target):
                     source = self.manual(header=f"#+title: Fixture\n#+texinfo_filename: {target}\n"
                                                f"#+export_file_name: {target}\n\n* Overview\n")
+                    source.with_suffix(".texi").write_text("previous texi")
+                    source.with_suffix(".info").write_text("previous info")
                     message = self.run_hook(hook, source)
-                    self.assertIn("Regenerated 1 .texi", message)
-                    output = source.with_suffix(".texi").read_text()
-                    self.assertIn(f"@setfilename {source.stem}.info", output)
-                    self.assertEqual(sorted(p.name for p in source.parent.iterdir()),
-                                     [source.name, source.with_suffix(".texi").name])
+                    self.assertIn("output-name preflight failed", message)
+                    self.assertIn("Regenerated 0 .texi", message)
+                    self.assertEqual(source.with_suffix(".texi").read_text(), "previous texi")
+                    self.assertEqual(source.with_suffix(".info").read_text(), "previous info")
                     self.assertFalse((self.root / "outside.texi").exists())
+
+    def test_standard_readme_preserves_declared_package_artifacts(self):
+        for hook in HOOKS:
+            source = self.manual(name="README", header="#+title: Package\n#+export_file_name: package.info\n"
+                                 "#+texinfo_filename: package.info\n#+texinfo_dir_title: Package: (package)\n\n* Overview\n")
+            selected_info = source.parent / "package.info"
+            selected_info.write_text("previous package info")
+            unrelated_info = source.parent / "README.info"
+            unrelated_info.write_text("independent README info")
+            message = self.run_hook(hook, source)
+            self.assertIn("Regenerated 1 .texi and 1 .info", message)
+            output = (source.parent / "package.texi").read_text()
+            self.assertIn("@setfilename package.info", output)
+            self.assertIn("(package)", output)
+            self.assertEqual(selected_info.read_text(), "fixture info\n")
+            self.assertEqual(unrelated_info.read_text(), "independent README info")
+            self.assertFalse(source.with_suffix(".texi").exists())
+
+    def test_export_and_info_declarations_are_independent(self):
+        for hook in HOOKS:
+            for export_name, texi_name in [(None, "README.texi"), ("guide.info", "guide.texi")]:
+                with self.subTest(hook=hook, export_name=export_name):
+                    export = f"#+export_file_name: {export_name}\n" if export_name else ""
+                    source = self.manual(name="README", header=f"#+title: Package\n{export}"
+                                         "#+texinfo_filename: package.info\n\n* Overview\n")
+                    info = source.parent / "package.info"
+                    info.write_text("previous package info")
+                    message = self.run_hook(hook, source)
+                    self.assertIn("Regenerated 1 .texi and 1 .info", message)
+                    self.assertIn("@setfilename package.info", (source.parent / texi_name).read_text())
+                    self.assertEqual(info.read_text(), "fixture info\n")
+                    self.assertFalse((source.parent / "README.info").exists())
+
+    def test_ambiguous_output_declarations_require_review(self):
+        for hook in HOOKS:
+            source = self.manual(header="#+title: Package\n#+texinfo_filename: package.info\n"
+                                 "#+export_file_name: first.info\n#+export_file_name: second.info\n\n* Overview\n")
+            message = self.run_hook(hook, source)
+            self.assertIn("output-name preflight failed", message)
+            self.assertEqual(list(source.parent.glob("*.texi")), [])
+
+    def test_each_independent_header_is_validated_before_any_write(self):
+        for hook in HOOKS:
+            for export, info in [("../outside.info", "package.info"), ("package.info", "../outside.info")]:
+                with self.subTest(hook=hook, export=export, info=info):
+                    source = self.manual(name="README", header=f"#+title: Package\n#+export_file_name: {export}\n"
+                                         f"#+texinfo_filename: {info}\n\n* Overview\n")
+                    texi = source.parent / "package.texi"
+                    info_file = source.parent / "package.info"
+                    texi.write_text("previous selected texi")
+                    info_file.write_text("previous selected info")
+                    message = self.run_hook(hook, source)
+                    self.assertIn("output-name preflight failed", message)
+                    self.assertEqual(texi.read_text(), "previous selected texi")
+                    self.assertEqual(info_file.read_text(), "previous selected info")
 
     def test_symlink_output_and_concurrent_replacement_are_preserved(self):
         for hook in HOOKS:
@@ -259,8 +317,29 @@ fi
             self.assertIn("Regenerated 1 .texi and 1 .info", message)
             self.assertIn("Fixture manual", source.with_suffix(".info").read_text())
 
+    @unittest.skipUnless(NATIVE_MAKEINFO, "Native makeinfo is required")
+    def test_real_info_internal_identity_matches_independent_declared_names(self):
+        for hook in HOOKS:
+            for export_name, info_name in [("reviewed.info", "reviewed.info"), ("guide.info", "reviewed.info"),
+                                           ("guide with spaces.info", "reviewed with spaces.info")]:
+                with self.subTest(hook=hook, export_name=export_name):
+                    source = self.manual(name="README", header=f"#+title: Package\n#+export_file_name: {export_name}\n"
+                                         f"#+texinfo_filename: {info_name}\n\n* Overview\n")
+                    info = source.parent / info_name
+                    info.write_text("previous info")
+                    message = self.run_hook(hook, source, environment={"MANUAL_INFO_MODE": "real"})
+                    self.assertIn("Regenerated 1 .texi and 1 .info", message)
+                    generated = info.read_text()
+                    header = " ".join(generated.split("\n\n", 1)[0].split())
+                    self.assertIn(f"This is {info_name},", header)
+                    self.assertIn(f"from {Path(export_name).stem}.texi.", header)
+                    self.assertIn(f"File: {info_name},", generated)
+                    self.assertNotIn("File: manual.info,", generated)
+                    self.assertNotIn("File: guide.info,", generated)
+        self.assert_staging_clean()
+
     def test_codex_patch_dispatch_continues_after_one_failed_manual(self):
-        good, bad = self.manual(name="good"), self.manual("#+include: unsupported.org\n", name="bad")
+        good, bad = self.manual(name="good"), self.manual("[[file:fixture.png]]\n", name="bad")
         patch = f"*** Begin Patch\n*** Update File: {bad}\n@@\n+Body\n*** Update File: {good}\n@@\n+Body\n*** End Patch"
         for tool_input in [{"patch": patch}, json.dumps({"input": patch})]:
             message = self.run_hook(HOOKS[1], payload={"tool_name": "apply_patch", "tool_input": tool_input})
@@ -268,6 +347,7 @@ fi
             self.assertIn("Failures: 1", message)
             self.assertTrue(good.with_suffix(".texi").exists())
             self.assertFalse(bad.with_suffix(".texi").exists())
+        self.assert_staging_clean()
 
     def test_hook_export_implementations_match_after_runtime_dispatch(self):
         bodies = [hook.read_text().split("record_failure()", 1)[1] for hook in HOOKS]

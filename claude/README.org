@@ -442,24 +442,19 @@ date semantics; it does not rewrite unfinished work or create follow-ups.
 All mutations preserve foreign index/buffer state and inspect actual postimages
 before committing. Failed or ambiguous publication retains recovery evidence.
 
-The paired =update-log= skill runs its post-update-log hooks *before* it writes
-the =CLAUDE.md= pointer, because the project brief those hooks refresh is what
-the map summarises; the reverse order digests the state the project was in
-before the session. The step order encodes that dependency rather than
-describing it. Until 2026-08-13 the pointer step came first while instructing
-the reader to work from a brief the hooks had not refreshed yet, so in practice
-the digest came from the session log.
+The paired =update-log= skill runs only on an explicit bookkeeping request or
+the deliberate =--auto= chain. It preserves established map modes, intentionally
+different agent instructions, foreign changes and actual file-tracking policy.
+Ignore rules do not make tracked or Drive-synced content private. Post-update-log
+hooks refresh the brief before its map is derived, within the caller's authority;
+derived fields cannot originate unverified claims.
 
-Two writing rules follow from the same defect. =Current focus= selects from the
-brief's open tasks deterministically — priority order, non-actionable keywords
-skipped unless everything is blocked, each task carried by its own heading text
-rather than paraphrased, defined empty state — so two runs over one brief agree.
-And no derived field may *originate* a claim that work is outstanding, pending,
-blocked, or awaiting somebody: those fields carry neither evidence nor a date,
-so such a claim belongs on the task holding =VERIFY_WITH= and =LAST_VERIFIED=.
-A derived field may repeat it; it must not be where it first appears. Epoch's
-=NEXT_STEP= and =STATUS_DETAIL= take the same rule through
-=projects/context/project-doc-conventions.md=.
+Work commits and bookkeeping transactions are separate. Epoch closeouts use
+the harness's explicit input set; publication needs its own authorization and
+verification at the intended destination. Final receipts publish without
+overwriting an existing target and validate bounded evidence, but do not prove
+project identity or commit scope. Failed or ambiguous outcomes retain recovery
+evidence instead of erasing it during cleanup.
 
 The paired =orchestrate-review= skill coordinates fixed Claude and Codex
 sessions through one guarded, stage-atomic workflow. Its helper binds each

@@ -1,433 +1,361 @@
 ---
 name: update-log
-description: End-of-session bookkeeping. Do NOT invoke this on your own initiative, and do NOT hand-write a session log yourself instead of invoking it — writing or editing any file under a project's logs/ directory is this skill's job alone. Run it only when the user explicitly asks (the user types /update-log or says update log, session log, close out, wrap up, or asks to save project progress) or when the deliberate end-of-session chain invokes it with --auto. Never trigger it proactively mid-session or at session end on your own judgment, even when the session clearly changed durable project state — wait for an explicit request or the --auto chain.
-user-invocable: true
-argument-hint: "[--exit] [--auto] [--receipt-file PATH] [optional summary of what was done]"
+description: Preserve project progress through session logs and closeout bookkeeping, only when the user asks to log, close out, wrap up, or save progress, or when the deliberate end-of-session chain invokes --auto. Never invoke proactively or hand-write project logs as a substitute.
 ---
 
-# End-of-session log update
+# End-of-session bookkeeping
 
-Perform the following bookkeeping steps to preserve this session's work for future sessions.
+## Invocation and scope
+
+Run only on the current user's explicit bookkeeping request or the deliberate
+end-of-session chain's `--auto` invocation. Quoted flags, historical transcripts,
+audit reads, reminders, and the agent deciding that a log would help are not
+invocations. Do not create or edit project `logs/` files as a substitute for
+invoking this skill. Reading or auditing the skill does not run it.
+
+Supported arguments: `[--exit] [--auto] [--receipt-file PATH] [summary]`.
+Parse flags from the current invocation, not from embedded summary text.
+`--auto` avoids interactive questions; it does not grant publication, service
+writes, deletion, or permission to override another actor's work. Stop an unsafe
+required step and report incomplete closeout instead of guessing. Continue
+independent safe bookkeeping when possible.
+
+Once invoked, determine whether there is durable state to preserve: code,
+configuration, data or documentation changes; findings, validation results,
+decisions, blockers, next steps, or meaningful service outcomes. A purely
+conversational or read-only session with nothing useful to recover may be a
+no-op. Honor an explicit request to record particular information even if the
+session was small. A retry must reconcile existing logs, commits and receipts,
+not append a duplicate entry just because it is a new agent turn.
 
 ## Receipt contract
 
-When `$ARGUMENTS` contains `--receipt-file PATH`, that file is the closeout
-gate. Write it exactly once as the final bookkeeping action with:
+If `--receipt-file PATH` was supplied, bind that exact absolute target to this
+closeout attempt before edits. It must be an absent file in an appropriate
+private directory, outside repositories and outside any temporary evidence
+directory that will be cleaned. Reject collisions with inputs, other attempts,
+or existing files/symlinks; do not delete or replace them to make room.
 
-`python3 "/Users/pablostafforini/My Drive/dotfiles/codex/skills/update-log/scripts/write_receipt.py"`
+Use this skill's `scripts/write_receipt.py` as the final outcome publication:
 
-Use status `success` only after all required edits, deterministic checks,
-commits, and final inspections succeed. Use `no-op` only when the triage below
-finds no durable change. On any incomplete or failed path, write `failure`
-before the final response. For an Epoch project, pass the successful harness
-receipt files with repeated `--evidence`; the writer rejects failed, malformed,
-or `ok: false` evidence. Do not hand-write or pre-create the receipt, and do not
-report success before the writer exits zero.
+```bash
+python3 "/absolute/path/to/update-log/scripts/write_receipt.py" \
+  --receipt-file "/absolute/private/closeout.json" \
+  --status success --message "Local closeout completed; publication not authorized."
+```
 
-> **The prohibition is on the act, not just on the skill.** Do not write a session
-> log by hand as a substitute for invoking this skill. Creating or editing any file
-> under a project's `logs/` directory is this skill's job, and only when invoked as
-> below. Bypassing the skill and writing the file directly is the same violation,
-> not a way around it — that is exactly how the rule gets defeated in practice,
-> because the agent never consults a policy attached to a skill it did not consider
-> using. If the same reasoning would stop you invoking `update-log`, it stops you
-> hand-writing the log.
->
-> **Invocation policy:** Do not invoke this skill on your own initiative. Run it only when (a) the user explicitly asks — `/update-log`, or asking to log / close out / wrap up / save progress — or (b) the deliberate end-of-session chain invokes it with `--auto` (see *Non-interactive runs* below). Both of those are intentional; what is prohibited is the agent proactively deciding to run it mid-session or at session end on its own judgment, even when the session clearly changed durable state. If you think a log would help but neither (a) nor (b) applies, you may briefly suggest it, then stop — do not run it until asked.
+Resolve the script relative to the loaded skill; do not assume the other CLI's
+installation exists. Add repeated `--evidence "/absolute/path.json"` for
+successful Epoch apply receipts. The writer validates receipt syntax and
+successful status, not provenance, project identity, actual commits, or
+permission. Check those independently below. Receipts may embed sensitive
+evidence; keep them in private storage, never a public commit. The host may
+delete its receipt directory after consuming the result, including failures.
+Keep durable recovery evidence outside that host-owned directory.
 
-## Triage first (may be a no-op)
+- Use `success` only after required edits, checks, commits and final inspections.
+- Use `no-op` when no requested durable change remains, not when work was skipped
+  because access or verification failed. An Epoch apply no-op is evidence about
+  that transaction, not proof that the whole session had no durable changes.
+- Use `failure` for incomplete required work. Explicit failure intentionally
+  returns nonzero even when the failure receipt was successfully written.
 
-Before touching any file, decide whether this session changed durable project state, using the criteria in **What counts as durable project state** below. This decision is part of the skill: even once invoked (explicitly or via the `--auto` chain), **doing nothing is a valid, friction-free outcome** if the session changed nothing durable.
+The writer publishes once and refuses an existing destination. Read back the
+exact receipt after execution. If writing fails or its outcome is ambiguous,
+inspect the target before any retry; never overwrite a possible earlier
+success with failure. Report that the gate remains unsatisfied when no matching
+receipt exists. Preserve recovery evidence on uncertain or failed outcomes.
 
-- **If nothing durable changed** (purely conversational Q&A, a quick read-only lookup, or trivial edits with nothing a future agent would need to recover), write no log, change no project files, and make no commit. If a receipt path was supplied, write a `no-op` receipt as specified above. Report `No durable changes — skipping update-log.` and stop.
-- **Otherwise**, proceed to Step 0.
+For triage no-op, change no project files and make no commit. Write the
+requested no-op receipt, report that no durable changes needed recording, and
+honor `--exit` only through the host's normal mechanism.
 
-Exception: if the user explicitly typed `/update-log` or asked for specific bookkeeping, honor it — proceed even if the session was marginal, and do what was asked.
+## 0. Resolve the project and baseline
 
-### Non-interactive runs (`--auto`)
+1. Resolve the canonical project directory, Git worktree and repository from
+   the actual session context. A nested cwd is not automatically the project
+   root. Read governing instructions and declared logging conventions before
+   choosing a destination. Do not infer another project's ownership from a
+   shared basename or a symlink.
 
-`--auto` marks a run from the end-of-session chain rather than a deliberate user invocation. In this mode, never block on input:
-
-- If the project has no existing log conventions, perform **First-run setup**
-  with deterministic defaults instead of asking. For an Epoch notes project,
-  use the tracked `logs/` directory and tracked `CLAUDE.md` / `AGENTS.md` map.
-  For any other project, use `logs/` and keep session bookkeeping local-only by
-  adding the log directory, `CLAUDE.md`, and `AGENTS.md` to `.gitignore`. Do not
-  create `decisions/` or `decisions-summary.md`; create or update `CLAUDE.md`,
-  then continue to write the session log.
-- Make no other interactive prompts. If a step would need a decision only the user can make, record it in the log and final report and continue with the safe default or skip that step, rather than asking.
-
-## What counts as durable project state
-
-Once invoked (explicitly or via the `--auto` chain), use these criteria for the triage decision above (write a log vs. no-op). Durable project state includes:
-
-- code, docs, configuration, workflow, or data changes;
-- new findings, debugging results, validation results, or service-state changes that future sessions should know;
-- decisions, active TODOs, blockers, next steps, or status changes;
-- external-service work whose outcome matters later, such as Slack/Google/GitHub/Asana changes;
-- any session whose results should be visible in the project note, current project list, or next meeting prep.
-
-Do not run it after purely conversational Q&A, quick read-only lookups, or sessions where nothing durable changed. If uncertain, prefer running it when the project already has logs and the session produced information a future agent would otherwise need to recover from the transcript.
-
-The deliberate end-of-session chain invokes this skill with `--auto` (see *Non-interactive runs* above); that path is intentional and should run normally. What is prohibited is the *agent* invoking the skill on its own initiative — proactively mid-session, or at session end by its own judgment — outside that chain or an explicit user request. A non-`--auto` reminder may surface that durable state looks unsaved and suggest `/update-log`, but the agent must not silently perform the workflow itself.
-
-If the user explicitly invokes `/update-log` or otherwise asks for end-of-session
-bookkeeping after a log, pointer, or opportunistic summary was already written,
-still run the complete checklist below. An existing log or `CLAUDE.md` pointer is
-only a starting state: continue through decision-record review, post-update-log
-hooks, staging verification, commit completeness, and publish checks. Do not
-stop at "the log already exists" unless every later step has also been checked.
-
-## Step 0: Detect project setup
-
-Determine the project's log directory and whether decisions are tracked:
-
-0. **Resolve an Epoch notes project before using cwd as the project root.** Run:
+2. When an Epoch notes project or registered code checkout may own the work,
+   use its supported resolver:
 
    ```bash
-   python3 "/Users/pablostafforini/My Drive/Epoch/projects/shared/scripts/project_harness.py" resolve --cwd "$PWD"
+   python3 "/Users/pablostafforini/My Drive/Epoch/projects/shared/scripts/project_harness.py" \
+     resolve --cwd "/absolute/session/directory"
    ```
 
-   If it succeeds, use the returned notes `directory` as the bookkeeping
-   project root even when the session started in `~/repos/epoch/...` or an
-   approved linked worktree. Record the returned slug, primary brief, and all
-   declared local repositories for later checks. If it reports no match, use
-   the generic project-root discovery below. If it reports ambiguity or an
-   invalid project model, stop and write a failure receipt; do not fall back to
-   creating logs in the code checkout.
+   Require a successful `command: resolve`, `ok: true` result for this cwd.
+   Use the returned notes `directory`, slug, primary brief and declared local
+   repositories. Only `error_code: no-match` permits generic discovery; ambiguity,
+   malformed results, pending recovery, invalid routing data, or an
+   unavailable resolver for known Epoch work is an incomplete closeout, not a
+   reason to create logs in the code checkout. Do not run unrelated recovery
+   implicitly. Resolution establishes routing, not full closeout validity;
+   inspect returned semantic findings without treating them as routing failure.
+   On a rejected pending-recovery or reserved-output request, read the failure
+   from stdout: no optional harness receipt file may have been published.
 
-1. **Snapshot the working tree before editing** with `git status --short`. If `CLAUDE.md`, `decisions-summary.md`, existing `decisions/` files, or any hook-managed status files are already dirty, inspect their current diff before changing them. For an Epoch project, snapshot both the Epoch notes repo and every returned local repository. Use this baseline in Step 5 so pre-existing user or concurrent-agent hunks do not get staged with this bookkeeping commit.
+3. Before editing, snapshot relevant worktree diffs, index entries and HEADs:
+   the bookkeeping repo, repositories actually touched, and declared local
+   repos whose state matters to this closeout. Include dirty maps, logs,
+   decisions and hook-managed files. Track session-owned changes separately
+   from pre-existing or concurrent changes. Recheck preimages before each write;
+   never autosave a dirty live buffer or overwrite another writer's updates.
 
-2. **Read `CLAUDE.md`** in the project root. For this workflow, `CLAUDE.md` is the canonical session-log index unless the project explicitly says otherwise; in Codex sessions, `AGENTS.md` may contain agent instructions but is not the session-log pointer. Look for a reference to a session log file — either:
-   - A path like `<dir>/YYYY-MM-DD.md` in a "Latest session" section (current format), or
-   - A legacy `@<dir>/YYYY-MM-DD.md` import (old format — will be migrated in Step 4).
-   
-   Extract the directory portion — that is the log directory.
+4. Read the session map named by project convention; normally `CLAUDE.md`.
+   Read sibling `AGENTS.md` too, preserving runtime-specific instructions.
+   Discover log directories from explicit conventions, existing session
+   pointers, or `Read first` links. A `Current focus` map without a dated
+   `Latest session` pointer is an established mode, not first-run setup.
+   Preserve map mode. Conflicting modes or destinations need reconciliation.
 
-3. **Check for a decisions directory**: look for a `decisions/` directory in the project root and a `decisions-summary.md` file.
-
-4. **If no log reference was found in CLAUDE.md** (or CLAUDE.md doesn't exist), this is a first-run setup. Proceed to the **First-run setup** section below. Otherwise, skip to **Step 1**.
+5. Check whether decision tracking already exists. Do not create it merely
+   because this session involved a design choice.
 
 ### First-run setup
 
-This project doesn't have session logging set up. In an interactive generic
-project run, gather setup preferences before proceeding. In a generic `--auto`
-run, do not ask: use `logs/` as a local-only directory in the repo working tree,
-add the log directory, `CLAUDE.md`, and `AGENTS.md` to `.gitignore`, leave
-decision tracking disabled, create or update `CLAUDE.md`, and continue.
+For resolved Epoch projects, use the tracked `logs/`, canonical Org brief and
+paired maps under the notes directory. Do not add them to ignore rules.
 
-For a project resolved through the Epoch harness, do not ask these setup
-questions and do not add notes files to `.gitignore`. Use tracked `logs/`,
-tracked maps, and the primary Org brief under the returned notes directory.
+For a generic project with no convention, use `logs/` as the local-only
+default and leave new decision tracking disabled in `--auto`. In an interactive
+run, ask only for choices that materially change the result and lack a safe
+default: shared versus local logs, a different path, or opting into decisions.
 
-1. If not running with `--auto`, ask all first-run questions together. If a structured user-input tool such as `AskUserQuestion` is available, use it; otherwise ask a concise plain-text question:
-   - "Keep a local session-log folder inside this repo's working tree?" Recommend Yes for public repos or any repo where session logs might contain private context; No is valid when the user wants shared, committed logs or a path outside the repo.
-   - "Where should session logs be stored?" If the user wants local logs in the repo, suggest `logs/` as the default and `docs/logs/` as an alternative, while allowing a custom path. If not, ask for the intended shared or external path.
-   - "Track architectural decisions in a `decisions/` directory?" Both Yes and No are valid.
-   If running with `--auto`, set the answers internally to "Yes, keep local
-   logs in the repo", `logs/`, and "No decisions."
+Before creating anything, establish whether the chosen path is tracked,
+ignored, outside the repository, symlinked, or Drive-synced. Gitignore is not a
+privacy boundary against cloud sync or tools. Do not put secrets, unnecessary
+personal information, or private conversation excerpts into shared logs.
 
-2. Create the chosen log directory if it doesn't exist.
+For local-only in-repo logs, add a root-relative ignore pattern such as
+`/logs/` only if needed; preserve unrelated rules. Newly created untracked
+agent maps may likewise be ignored. **Ignore rules do not untrack existing
+files.** Preserve tracked instructions and their tracking; never silently
+untrack, delete or force-add them. Put only shareable summaries/pointers in
+tracked maps. If that cannot satisfy the requested privacy, leave the pointer
+unchanged and report the unresolved choice; `--auto` does not override it.
+Verify actual tracking and ignore status, not just the presence of a pattern.
 
-3. If the user chose to keep a local session-log folder inside the repo, ensure
-   the chosen log directory and agent pointer files are ignored before writing
-   the first log:
-     - Add a root-relative directory pattern for the log directory to
-       `.gitignore` if no existing ignore rule already covers it, e.g. `/logs/`
-       for `logs/` or `/docs/logs/` for `docs/logs/`.
-     - Add root-relative file patterns for `/CLAUDE.md` and `/AGENTS.md` if no
-       existing ignore rule already covers them.
-     - Do not remove existing `.gitignore` entries or reorder unrelated rules.
-     - Verify the dated log path, `CLAUDE.md`, and `AGENTS.md` will be ignored
-       with `git check-ignore -v` after they exist.
+Create or update only the requested map sections; preserve all other guidance.
+For an established map, do not add `Latest session`. If the user opted into
+decisions, create the project's summary/index and directory using its decision
+conventions; otherwise leave them absent.
 
-4. If decisions were opted in:
-     - Create `decisions/` directory.
-     - Create `decisions-summary.md` with the initial table header:
-       ```
-       # Decision records (summary)
+## 1. Record the session
 
-       Full details with rejected alternatives and evidence are in `decisions/`. Read the relevant file before proposing changes to a covered subsystem.
+Use the current session date in the established local timezone for
+`<log_dir>/YYYY-MM-DD.md`; preserve actual event dates in the narrative. If
+date context conflicts, state the selected date/timezone before writing.
 
-       | #   | Topic | Decision | Status |
-       |-----|-------|----------|--------|
-       ```
-     - Add a `@decisions-summary.md` reference to CLAUDE.md so decisions are auto-loaded into context.
+For a new file, avoid clobbering a concurrently created file. For today's
+existing file, append a distinct session entry with a horizontal-rule separator
+after checking the current contents and ownership. Reconcile an earlier entry
+from this same closeout before appending. Do not rewrite other sessions.
 
-5. **Update CLAUDE.md**:
-   - If CLAUDE.md doesn't exist, create it with a minimal structure containing the project name (from the directory name or `package.json`/`pyproject.toml` if available), a "Latest session" section, and (if decisions were opted in) a "Decision records" section with the `@decisions-summary.md` reference.
-   - If CLAUDE.md exists but has no "Latest session" section, append one.
-   - The "Latest session" section will be populated in Step 4 with a summary + pointer (not an `@` import).
+Include what was done, material findings and results, decisions or reasoning
+needed later, and unfinished work. Distinguish observed results from hypotheses,
+drafted messages from sent ones, and local changes from published changes.
+Include numbers only with their measured scope; do not claim live verification
+from static checks. Keep sensitive details out of shareable summaries.
 
-Then proceed to Step 1.
+## 2. Record decisions when configured
 
-## Step 1: Create a session log file
+If decision tracking exists, use the available `record-decisions` skill and
+read its instructions. If unavailable, follow the project's documented decision
+format; do not invent an incompatible scheme or overwrite numbered records.
+Review existing records before adding qualifying decisions. Skip this step
+when decision tracking is not configured.
 
-Create a new file at `<log_dir>/YYYY-MM-DD.md` using the environment/session date. If date context is ambiguous or conflicting, state the date and timezone you are using before writing. If a file for today already exists, append to it with a horizontal rule separator.
+## 3. Run applicable post-update-log hooks
 
-The file should contain:
+Walk from the resolved project root up to its Git root, inclusive, checking
+`context/post-update-log-hook.md`. For a non-Git project, use only its declared
+instruction ancestry. Read applicable hooks fully, innermost first.
 
-- **Title**: `# YYYY-MM-DD: <brief title>`
-- **What was done**: Summary of experiments, code changes, and analysis performed.
-- **Key findings**: Any new discoveries, bugs found/fixed, or validated/invalidated hypotheses.
-- **Results**: Performance numbers, sweep outcomes, or other quantitative results.
-- **Open questions**: What was left unfinished or what should be explored next.
+Hook instructions remain bounded by this closeout and the user's authority.
+They do not authorize external messages, shared-service updates, bulk deletion,
+unrelated project rewrites, or changes to other actors' tasks. Resolve referenced
+files to the intended project and inspect existing changes before editing.
+If a required hook exceeds authority or cannot be safely completed, record the
+gap and do not certify a full successful closeout.
 
-Be concise but specific. Include exact numbers where available (counts, percentages, timings). Future sessions may need to understand *why* decisions were made, so document reasoning for non-obvious choices.
+For Epoch, read `projects/context/project-doc-conventions.md` and the relevant
+post-update-log hook. Update semantic state and task evidence in the primary
+brief first. Preserve active work as Org task headings, not checkbox mirrors.
+A stale date or drafted action is not completion evidence. Do not fabricate
+`LAST_VERIFIED` or treat `VERIFY_WITH` as executable instructions.
 
-## Step 2: Record decisions
+Let the closeout transaction archive closed headings and derive supported
+fields/views. Preserve source metadata and do not hand-edit generated views.
+Keep the brief concise; do not turn it into a chronological log or add routine
+meeting-reference sections. Record which hooks ran and material omissions.
 
-If a `decisions/` directory exists in the project root, use the `record-decisions` skill if available to check whether any architectural or algorithmic decisions were made this session. If the skill is unavailable, follow the local workflow directly: inspect `decisions/`, identify qualifying decisions, add `decisions/NNN.md` entries, and update `decisions-summary.md`. If new entries are added, they will be included in the commit.
+## 4. Refresh the session map after the brief
 
-If no `decisions/` directory exists, skip this step.
+### Current-focus map
 
-## Step 3: Run post-update-log hooks
+Preserve `Current focus` mode and accurate `Read first` pointers. Derive the
+digest from the updated brief's open work, never from the session narrative.
+For Epoch, leave generator-owned `Current focus` and `NEXT_STEP` to the
+closeout transaction after semantic edits.
 
-Walk up ancestor directories from the project root to the git root (inclusive). For each ancestor, check whether `<ancestor>/context/post-update-log-hook.md` exists. If found, read and follow its instructions. Run all matching hooks, innermost first.
+For generic maps, replace rather than append the digest. Use the brief's
+priority convention, stable source order for ties, and each task's own heading
+or link. Respect workflow state, dependencies and explicit deferrals; a TODO
+keyword alone does not prove actionability. If all open work is blocked, say
+so without presenting it as actionable. If none remains, say so without
+inventing a reason or filling the section with history.
 
-This lets parent directories define project-family-level bookkeeping — master project list updates, shared status syncing, meeting action item reconciliation, etc. — that fires automatically after every `/update-log` invocation, without bloating per-session CLAUDE.md context.
+Derived fields must not originate stale-sensitive claims. Record supported
+claims and their evidence on the source task first. An unverified task remains
+unverified when copied into a map. Keep summaries within project word caps.
 
-For Epoch project notes, the main project `.org` file is a concise ground-truth brief, not a chronological session dossier; its target shape is defined in `projects/context/project-doc-conventions.md`. When a hook or local convention asks you to update it:
+### Latest-session map
 
-- refresh current-state fields and sections from the session log just written;
-- keep active work as org `TODO` headings, not checkbox mirrors;
-- archive completed `DONE` headings and stale historical narrative into `<project>_archive.org`;
-- do not create routine `** Meeting references` sections; only record meeting links when they support durable decisions or constraints.
+For an established `Latest session` map, update only that section with a short
+summary of this session and `Full details: <log_dir>/YYYY-MM-DD.md`. Do not use
+an `@` import for the full log. Migrate a legacy dated-log import without
+removing unrelated imports or instructions. Attribute event-dependent claims
+to the time of the actual check; do not turn an old observation into present
+certainty.
 
-If no such file is found at any level, skip this step. In the final report, state which hooks were found, which hooks ran, and which files they changed.
+### Sibling maps
 
-## Step 4: Update the CLAUDE.md session pointer
+Determine mirror semantics from explicit project policy and the pre-edit files.
+For established identical mirrors, edit the canonical map and propagate only
+the intended change after checking neither file acquired foreign edits.
+The project-local `bin/mirror-claude-agents`, or the dotfiles helper of that
+name, may copy the whole file: use it only when whole-file mirroring is safe.
+Its `--check` reports drift, not ownership or merge safety.
 
-This step runs after the hooks on purpose. The project brief is the source the
-map summarises, so it has to be current before the map is written; doing it the
-other way round produces a digest of the state the project was in before this
-session.
+For intentionally different maps, edit corresponding session sections
+independently and preserve their other contents; do not run the copying helper
+or require byte equality. Unexpected drift in a required mirror must be
+reconciled, not erased. Verify final sections and preserved baseline content.
 
-How CLAUDE.md is maintained depends on its shape — the file itself tells you which mode to use:
+## 4.5. Preview an Epoch closeout
 
-### Map mode
+Skip for generic projects. From the Epoch root, identify exact session-owned
+inputs: brief, log, maps and other changed project files. Pass them with
+`--path`; use `--related-path` for eligible related notes outside the project.
+Omit unused options. A whole-file input must not contain another actor's hunk.
+Do not list generated views as inputs.
 
-CLAUDE.md has a `## Current focus` section (and no `## Latest session`). The file is a stable map and the session narrative belongs in the project's brief (e.g. the `.org`), not here. Step 3 has already refreshed that brief. In this mode:
-
-For a project resolved through the Epoch harness, do not hand-compose Current
-focus. Finish the semantic task and state edits, keep the two map files
-mirrored, and let the maintenance transaction below derive Current focus and
-`NEXT_STEP` from canonical Active TODOs. The detailed rules below remain the
-contract that the generator and its output must satisfy. For generic projects,
-apply them directly.
-
-1. **Regenerate `## Current focus` from the brief's open work, replacing the previous content — never append to it.** For `.org` briefs the open work is the `** Active TODOs` headings. Output a short digest: a one-line orientation followed by the few highest-priority live open tasks, one bullet each. It is an index into the brief, not a summary of it. **No dates and no session narrative** (e.g. "On 2026-06-29 did X") — those live in `logs/`; durable state lives in the brief.
-   - **Why replace, not append:** appending is what turns `Current focus` into a chronological blob that duplicates the log and the brief. Replacing loses nothing — the session log you just wrote holds the narrative, and the brief's `** Active TODOs` hold the live state. `Current focus` is only a convenience index into those.
-   - If the existing `Current focus` is already a multi-paragraph blob, this run is the moment to compact it down to the digest; do not preserve the old chronology.
-   - **Choose what to list deterministically**, not by impression, so two runs over the same brief produce the same digest:
-     - take open tasks in priority order, highest first;
-     - skip tasks whose keyword marks them as not actionable (`WAITING`, `SOMEDAY`, `MAYBE`, `LATER`, `DELEGATED`). If *every* open task is one of those, say so in the orientation line and name what the work is waiting on, rather than listing a blocked task as though it were available;
-     - carry each task's own heading text, or a link to it. Do not paraphrase a task into a fresh sentence — a paraphrase is a second copy of the task that can disagree with the original;
-     - if there are no open tasks, write one line saying so and naming what closed the last of them. Do not fill the section with recent history.
-   - **Do not originate a claim here.** A statement that work is outstanding, pending, blocked, or awaiting somebody is only worth as much as the last time somebody checked, and this section records no evidence and no date. Such a claim belongs on the task that carries the evidence for it — in Epoch briefs, a `TODO` with `VERIFY_WITH` and `LAST_VERIFIED`. `Current focus` may repeat a claim that a task already carries; it must not be the first place the claim appears. If the session established something outstanding that no task records, add or update the task first, then let the digest reflect it.
-2. Keep the `## Read first` pointers accurate if any referenced file moved or was added.
-3. Do **not** add a `## Latest session` narrative. If the brief's `STATUS_DETAIL` / `NEXT_STEP` dashboard abstracts have themselves blobbed past their word caps (≤120 / ≤40), compact them the same way while updating the brief in Step 3 — they are derived summaries of `** Current state` / `** Active TODOs`, not changelogs.
-
-This is the shape defined by a project's documentation conventions (for Epoch, `projects/context/project-doc-conventions.md`). When in doubt about what belongs in the map versus the brief, follow that doc.
-
-### Latest-session mode
-
-CLAUDE.md has a `## Latest session` section, or neither section (default/legacy). Update the "Latest session" section with:
-
-1. A **2–4 sentence summary** of this session's work (what was done, key outcomes, important numbers). Omit anything a fresh session recovers from the repository itself — commit hashes, file lists, mechanism details — since this section loads into every session; the log file holds them.
-2. A **pointer** to the full log file: `Full details: <log_dir>/YYYY-MM-DD.md`
-
-Example:
-
-```
-## Latest session
-
-Externalized reconciliation conventions from CLAUDE.md, removing @-imports of session log and decisions summary. Effective context load dropped from 479 to 62 lines. Created `docs/reconciliation_conventions.md` as the new authoritative location.
-
-Full details: session-logs/2026-04-13.md
-```
-
-Do NOT use an `@` import — the full log can be hundreds of lines and should not be injected into every session. The summary gives the next session enough context to orient; the pointer lets it read deeper on demand.
-
-This mode is a record of what happened in one session, so it may say what was
-found or left unfinished. It still must not assert that some outside party has
-not yet acted unless the session actually checked — write "asked Matt on
-2026-08-06, no reply as of that check" rather than "waiting on Matt", which
-reads as current however old it gets.
-
-If CLAUDE.md currently has a legacy `@<log_dir>/...` import, replace it with the summary + pointer format.
-
-### Sibling AGENTS.md
-
-Many Epoch projects keep a sibling `AGENTS.md` next to `CLAUDE.md` as a Codex-side mirror of the same content. When that pairing exists, the same edit must land in both files in this run; project-local hooks otherwise fire a reciprocal reminder and block the bookkeeping commit. Procedure:
-
-1. Before editing, `diff -u CLAUDE.md AGENTS.md`. If they were already in sync, treat them as mirrors. If they were already drifted, do not assume mirror semantics — apply the Latest-session edit by hand in both, preserving each file's intended divergence.
-2. After updating CLAUDE.md, mirror the change with the first available helper:
-   use the project-local `bin/mirror-claude-agents <project-dir>` when present,
-   otherwise fall back to
-   `/Users/pablostafforini/My Drive/dotfiles/bin/mirror-claude-agents
-   <project-dir>`. The helper copies CLAUDE.md → AGENTS.md, no-ops if they're
-   already in sync, and reports if only one of the two exists. Pass `--check`
-   first to confirm exactly what it would copy, then run the same helper without
-   `--check` if mirroring is needed.
-3. Verify with a final `diff -u CLAUDE.md AGENTS.md` returning no output before staging.
-
-## Step 4.5: Preview the isolated Epoch closeout
-
-Skip this step for a project that was not resolved through the Epoch harness.
-For an Epoch project, build the exact list of session-owned files. Pass files
-under `projects/<slug>/` with `--path`; include the brief, the log, both map
-files, and any other changed project file. Pass a project-related meeting or
-text/config reference outside that directory with `--related-path`. Do not
-include a file that contains a pre-existing or concurrent hunk. Run this preview
-from the Epoch root after semantic Org edits and map mirroring are complete.
-First run `mktemp -d /tmp/epoch-closeout.XXXXXX`, record the printed absolute
-path as `RECEIPT_DIR`, and substitute it literally below. Do not depend on a
-shell variable persisting between tool calls:
+Create an owned private evidence directory outside Drive and repositories with
+`mktemp -d /tmp/epoch-closeout.XXXXXX`. Record the literal path; do not assume
+shell variables survive tool calls. Use a fresh receipt filename per invocation:
 
 ```bash
 python3 projects/shared/scripts/project_harness.py \
-  --receipt-file RECEIPT_DIR/preview.json \
+  --receipt-file "/absolute/evidence/preview.json" \
   closeout --project <slug> \
-  --path projects/<slug>/<first-owned-file> \
-  --path projects/<slug>/<next-owned-file> \
-  --related-path <optional-owned-meeting-or-reference>
+  --path projects/<slug>/<owned-file>
 ```
 
-Continue only when the receipt has status `needs-apply` or `no-op` and does not
-report `ok: false`. The preview starts from exact `HEAD`, overlays only the
-listed files, archives closed tasks, derives map/brief summaries, validates the
-full canonical model and instruction mirrors, and renders both generated views
-without reading unrelated dirty project state. Never edit generated views by
-hand or list them as inputs.
+Require exit zero, `command: closeout`, the intended project and exact inputs,
+`ok: true`, and status `needs-apply` or `no-op`. Inspect candidate outputs and
+validation findings. The harness validates selected projects and new/worsened
+findings relative to HEAD; it may retain unrelated baseline findings. Do not
+describe that as an unqualified clean-corpus check.
 
-## Step 5: Commit and publish only when authorized
+Preview is not application. Keep its base commit and candidate binding; if
+inputs or HEAD change before apply, refresh the preview and review the new
+candidate. Never recover an unrelated transaction merely to clear a gate.
 
-Commit each logical local change. A push changes a shared system: perform it
-only when the user explicitly asked to publish/push in this session or the
-invoking workflow carries that authority. `--auto` does not authorize a push.
-An authorized publish is incomplete while a relevant repo remains ahead. A
-local-only closeout may succeed with intentional ahead commits, but the receipt
-and final report must say which commits were not published.
+## 5. Commit owned changes; publish only with authority
 
-### Step 5A: Publish work repos
+### Work repositories first
 
-Identify all git repos touched by the session before committing the bookkeeping
-repo. Include at least:
+Identify repositories actually changed by the session and relevant declared
+local checkouts. Merely naming a repository does not authorize committing or
+publishing its unrelated changes. Separate code/work commits from the
+bookkeeping transaction: **do not commit the Epoch notes or generic bookkeeping
+paths here**, because the next step owns those commits.
 
-- the project root repo from `git rev-parse --show-toplevel`;
-- every local repository returned by the Epoch harness resolver;
-- any other repository where files were edited, committed, or referenced as the
-  source of runtime changes.
+For each owned logical change, run relevant checks, inspect exact staged
+contents and commit scope, and commit according to repository conventions.
+Preserve pre-existing staged blobs and foreign hunks. Hunk staging by itself
+does not isolate an ordinary commit from other already-staged files. Use the
+repository's supported ownership-aware procedure; do not bypass guards or
+silently clear another actor's index. If safe separation is unavailable, retain
+the changes and report incomplete commit work.
 
-For each relevant repo:
+Unchanged or already committed intended content is not a missing commit.
+Unexpected changes require investigation; known preserved foreign changes are
+not a closeout failure.
 
-1. Run `git status --short --branch`.
-2. If the repo has unstaged, staged, or untracked changes, inspect the diff and
-   commit all intended session changes before moving on. Use separate logical
-   commits when there are unrelated hunks. Do not commit secrets, credential
-   files, generated junk, or unrelated pre-existing user edits; if such changes
-   are present and cannot be safely separated, stop and ask rather than leaving
-   the repo silently dirty.
-3. If verification has not already been run for code/config changes in that
-   repo, run the project-appropriate test or check before committing. If
-   verification is impossible, record exactly why in the session log and final
-   report.
-4. If publishing is authorized, push every intended local commit. If the target
-   is ambiguous, do not guess. In `--auto`, record the ambiguity and leave the
-   commit local. In an interactive run, ask only when no safe target follows
-   from the checked upstream.
-5. Re-run `git status --short --branch`. For an authorized publish, the repo
-   must not show `ahead N`; resolve a rejection or report failure. For a
-   local-only closeout, record the exact ahead count and commit hashes.
+### Bookkeeping transaction
 
-### Step 5B: Commit bookkeeping
-
-For an Epoch project, do not stage or run `git commit` by hand. After Step 5A
-has committed every intended code change, run the same isolated closeout with
-`--apply`, a descriptive notes commit message, and a new durable receipt path:
+For Epoch, do not stage or commit the notes by hand. After intended work commits
+and a current preview, use the same explicit input set with a fresh receipt:
 
 ```bash
 python3 projects/shared/scripts/project_harness.py \
-  --receipt-file RECEIPT_DIR/apply.json \
+  --receipt-file "/absolute/evidence/apply.json" \
   closeout --project <slug> \
-  --path projects/<slug>/<first-owned-file> \
-  --path projects/<slug>/<next-owned-file> \
-  --related-path <optional-owned-meeting-or-reference> \
+  --path projects/<slug>/<owned-file> \
   --message "Update <slug> project state" --apply
 ```
 
-The command must return `success` or `no-op`. It commits only the explicit
-project files and derived views from its validated `HEAD` candidate, preserves
-unrelated index and worktree state, and keeps a recovery journal until the
-receipt is durable. Verify the returned commit and its exact path set. If a
-session-owned file also contains another actor's changes, stop instead of
-passing the whole file to closeout. Omit `--related-path` when it does not
-apply.
+Require exit zero, matching command/project/inputs, `ok: true`, and status
+`success` or `no-op`. For success, verify `applied: true`, the returned commit,
+its exact paths and postimages, and preserved unrelated index/worktree state.
+For no-op, the current interface returns `applied: false`,
+`read_only: true`, and no commit even when `--apply` was used; verify the
+invocation and that no intended change remains. A preview no-op alone is not
+proof that apply ran. Retain the apply receipt for final evidence. Recovery
+journals and rollback attempts are not permission to discard ambiguous state.
 
-For a non-Epoch project, use the generic staging procedure below.
+For generic projects, stage only owned shareable log/map changes, opted-in
+decisions, necessary ignore rules and in-scope hook changes. Keep local-only
+paths untracked and unstaged; never force-add them. Classify each intended path
+as changed/staged, already committed/unchanged, deliberately local-only, or
+unresolved. Investigate a missing intended change instead of treating every
+absent cached path as an ignore problem. Explicitly adding an ignored file
+normally fails; a broad add may simply omit it. Verify index contents directly.
 
-Stage and commit only the new log file when logs are intended to be shared,
-updated CLAUDE.md, updated AGENTS.md when it is a sibling mirror, the
-`.gitignore` entries for local-only first-run bookkeeping, any changes to
-`decisions/` or `decisions-summary.md`, and any files modified by post-hooks
-with a descriptive message. If the first-run setup chose a local log folder in
-the repo, do not stage or force-add the ignored log file, `CLAUDE.md`, or
-`AGENTS.md`; they remain available only in the local working copy. If any
-intended file was already dirty in the Step 0 baseline, use hunk-level staging
-or an index patch so the commit contains only the changes made by this
-`/update-log` run; do not stage the whole file unless every hunk belongs to this
-run.
+Check the entire staged diff for foreign material before the normal commit.
+Inspect the resulting commit and confirm intended local-only files stayed out.
+Do not make an empty bookkeeping commit just to produce a hash.
 
-**Before running `git commit`, verify that every intended path was actually staged.** `git add` silently exits 0 for gitignored paths; if the project's notes are accidentally ignored at a parent repo, the log file you just created will not be committed and the orphaning will go undetected. Concretely:
+### Authorized publication
 
-1. Build a list of paths you intended to stage (the new log file, `CLAUDE.md`,
-   and `AGENTS.md` unless local-only, `.gitignore`, etc.) and a separate list of
-   local-only paths that must remain unstaged.
-2. After `git add`, compare the intended staged paths against
-   `git diff --cached --name-only`. For any intended staged path that does not
-   appear in the cached diff, run `git check-ignore -v <path>` to identify the
-   matching ignore rule.
-3. If any intended staged path is ignored, **stop**: report the path and the
-   matching `.gitignore` rule to the user, and ask whether to un-ignore the path
-   (preferred — likely a misconfigured parent repo, as in
-   `backlinks-health-automation` 2026-05-04) or to force-add with `git add -f`
-   (only if the user confirms the ignore is intentional and they want this
-   single file through anyway). Do not silently proceed with a partial commit.
-4. For each local-only path, including the log path, `CLAUDE.md`, and
-   `AGENTS.md`, verify `git check-ignore -v <path>` identifies the intended
-   `.gitignore` rule and verify the path is absent from
-   `git diff --cached --name-only`.
-5. Inspect `git diff --cached` and confirm the staged content contains only the intended bookkeeping changes before committing.
+`--auto` and bookkeeping alone do not authorize pushes. When publishing was
+explicitly requested, bind the intended repositories, remote, destination ref
+and exact commits. Inspect outgoing ancestry: pushing HEAD can include
+pre-existing unrelated commits. Stop when that would exceed authority.
 
-After committing the bookkeeping change, publish the bookkeeping repo only
-under the same explicit authority. Verify the resulting ahead state and record
-it in the receipt/report.
+Use applicable repository publishing checks and the `post-push-ci` skill when
+available. Verify the intended commit at the actual destination and required
+CI outcome; `ahead 0` against a possibly different tracking branch is not
+sufficient. Without publication authority, leave commits local and record that
+fact. Without an upstream, report that limitation instead of inventing an ahead
+count. Never force-push to finish closeout.
 
-## Step 6: Report and exit (if requested)
+## 6. Final inspection, receipt and optional exit
 
-Before reporting, write the requested receipt as the final bookkeeping action.
-For a successful Epoch closeout, pass
-`RECEIPT_DIR/apply.json` from Step 5B as evidence, with the recorded absolute
-path substituted.
-The message must name the notes commit and say whether publishing was authorized
-and completed. For a generic successful closeout, write `success` without Epoch
-evidence. For any incomplete required step, write `failure`. Remove only the
-temporary evidence directory created by this run after the final receipt
-exists. For an Epoch closeout, run `trash RECEIPT_DIR` after the
-final receipt writer succeeds. Also remove this run's evidence directory on
-every failure path before reporting.
+Verify the log entry, map mode/pointer, decisions, applicable hooks, actual
+commits and preserved baseline changes. Record any required verification or
+publication gaps as incomplete. Do not equate known unrelated dirt with failure,
+or local-only ahead commits with a failed unrequested push.
 
-Report the log file path, whether the log folder and agent pointer files were
-committed or kept local-only by `.gitignore`, the `CLAUDE.md` pointer that was
-written, any decisions created or skipped, hooks found and run, files changed by
-hooks, the commit hash, the verification performed for staging and commit
-completeness, and a per-repo publish record: repo path, commits created or
-already present, push target when authorized, and final
-`git status --short --branch`. Treat an unexpected dirty tree as failure. Treat
-an ahead branch as failure only when publishing was authorized; otherwise
-identify it as an intentional local-only result.
+Write the requested final receipt with successful Epoch apply evidence only
+after these checks. Name the resulting notes commit, or accurately explain the
+no-op/local-only outcome; state publication authority and actual result.
 
-If `--exit` was passed in the arguments, end the session using the host environment's normal exit mechanism after all steps are complete. If no explicit exit mechanism is available, state that bookkeeping is complete and stop.
+Keep failed or uncertain recovery artifacts until reconciled. After a verified
+successful final receipt, clean only this run's disposable evidence directory
+with `trash`, provided no pending recovery journal or consumer still needs it.
+Never delete the final receipt, required durable evidence, or another run's
+files. With no requested final receipt, retain required evidence in appropriate
+private durable storage before cleaning disposable scratch.
 
-$ARGUMENTS
+Report the log location, committed versus local-only outcome, and material
+omissions or remaining unpublished work concisely. Put detailed per-repository
+and hook evidence in the log/receipt instead of dumping routine status output.
+
+If `--exit` was requested, use only the host's normal exit mechanism after
+closeout is complete. Do not kill a terminal, agent or Emacs process. If the
+host exposes no exit action, state the result and stop.

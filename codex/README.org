@@ -188,6 +188,20 @@ readback is distinct from observing the actual live resume consumer. Database
 updates cover thread =cwd=, not independent project associations; unsupported
 generations and schema side effects refuse before writes.
 
+The paired =update-log= skill runs only on an explicit bookkeeping request or
+the deliberate =--auto= chain. It preserves established map modes, intentionally
+different agent instructions, foreign changes and actual file-tracking policy.
+Ignore rules do not make tracked or Drive-synced content private. Post-update-log
+hooks refresh the brief before its map is derived, within the caller's authority;
+derived fields cannot originate unverified claims.
+
+Work commits and bookkeeping transactions are separate. Epoch closeouts use
+the harness's explicit input set; publication needs its own authorization and
+verification at the intended destination. Final receipts publish without
+overwriting an existing target and validate bounded evidence, but do not prove
+project identity or commit scope. Failed or ambiguous outcomes retain recovery
+evidence instead of erasing it during cleanup.
+
 The paired =orchestrate-review= skill coordinates fixed Claude and Codex
 sessions through one guarded, stage-atomic workflow. Its helper binds each
 actor's backend, repository, and transcript, and records delivery attempts

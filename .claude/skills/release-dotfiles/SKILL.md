@@ -1,423 +1,338 @@
 ---
 name: release-dotfiles
-description: Release a new version of the dotfiles repo. Use when the user says `/release-dotfiles`, asks to cut/publish/prepare a dotfiles release, bump the dotfiles version, or create the GitHub release after local profile testing. Do not use for standalone Emacs package releases; use release instead.
+description: Release a new version of the dotfiles repo. Use when the user says `/release-dotfiles`, asks to cut/publish/prepare a dotfiles release, bump the dotfiles version, or create the GitHub release after local profile testing. Do not use for standalone Emacs package releases; use release-package instead.
 ---
 
 # Dotfiles release
 
-Cut a new release for the dotfiles repo (benthamite/dotfiles) on GitHub. Before releasing, verify that every repo in the elpaca sources directory has a clean working tree.
+Prepare and release `benthamite/dotfiles`. Use `dotfiles-context` for canonical
+source routing and paired configuration checks, and `publish-dotfiles` for
+every dotfiles push. Reading this procedure does not authorize its side effects.
 
-This workflow has externally visible side effects: pushing package repos, pushing the dotfiles branch and tag, and creating the GitHub release. Do not perform those actions until the workflow reaches the step that authorizes them.
+## Modes and resumption
 
-## Elpaca profile resolution
+- A preparation or version-bump request stays local. Do not push package repos,
+  publish tags, or create a GitHub release without explicit publication authority.
+- A release request may proceed only through the gates below.
+- `--accept` skips the version/notes confirmation in step 8. For a publication
+  request it also approves the reported clean, unpushed package repos in step 1,
+  after their ownership and push destinations are verified. It does not expand a
+  preparation request into publication or authorize unrelated repositories.
+- `--accept` never skips the post-lockfile profile test in steps 9–10 or either
+  security-review layer in step 11.
 
-Resolve the active elpaca profile dynamically — never hard-code a profile name:
+When resuming, identify the exact prepared candidate, approved version and notes,
+and completed gates. Do not repeat a lockfile commit, tag, push, or release
+creation merely because the session restarted. Reconcile any existing artifact
+with the exact candidate and approved content before reusing it. A prior profile
+test applies only to the unchanged candidate that was actually tested.
 
-```bash
-PROFILE=$(emacsclient -e 'init-current-profile' | tr -d '"')
-ELPACA_SOURCES=~/.config/emacs-profiles/$PROFILE/elpaca/sources
-```
+## Step 0: resolve the repository and active profile
 
-## Mode selection
-
-Parse `$ARGUMENTS`:
-
-- `--accept` → skip the pre-release confirmation gate (step 7), and treat clean unpushed package-repo commits in step 1 as approved to push. All other gates still run normally.
-
-`--accept` never skips the post-lockfile profile-test gate in step 9, the release gate in step 10, or either security review in step 11. No `--accept` behaviour may skip the deterministic scan or the exhaustive publication review.
-
----
-
-## Step 0: Verify dotfiles repo
-
-Confirm we are inside the dotfiles git repo:
+Confirm the canonical dotfiles checkout and its exact `origin` identity:
 
 ```bash
 git remote get-url origin
-```
-
-The remote must match `benthamite/dotfiles`. If not, stop and tell the user to navigate to the dotfiles repo.
-
-Do NOT clone the repo — the user must already be in it.
-
----
-
-## Step 1: Check all elpaca source repos are clean and pushed
-
-Iterate over every subdirectory in `$ELPACA_SOURCES` that is a git repository. For each, check for uncommitted changes **and** unpushed commits. The goal is to ensure no local changes are lost when switching to a new elpaca profile.
-
-### Cleanliness check
-
-For each git repo in `$ELPACA_SOURCES`:
-
-```bash
-git -C "$ELPACA_SOURCES/<dir>" status --porcelain
-```
-
-If the output is non-empty, the repo is **dirty**.
-
-```bash
-unpushed=$(git -C "$ELPACA_SOURCES/<dir>" log --oneline @{u}..HEAD 2>/dev/null)
-rc=$?
-```
-
-If `rc` is non-zero, the branch has **no upstream configured** — warn but do not abort. If `rc` is zero and the output is non-empty, the repo has **unpushed commits**.
-
-### Handle clean unpushed repos
-
-For repos that are **clean but have unpushed commits** (i.e., not dirty), do not push immediately. First report them in a separate table:
-
-```
-| Package          | Status                   |
-|------------------|--------------------------|
-| org-roam-extras  | clean + 2 unpushed       |
-```
-
-If `--accept` was passed, push these clean unpushed repos after reporting them. Without `--accept`, ask the user whether to push them before proceeding. Report any push failures (e.g., permission denied on forks). If a push fails, continue auditing the remaining repos, then stop and ask the user how to handle the failed package before proceeding with the release.
-
-### Report dirty repos
-
-Only report repos that are **dirty**. Present a table of problems:
-
-```
-| Package          | Status                   |
-|------------------|--------------------------|
-| bib              | dirty                    |
-| gdocs            | dirty + 51 unpushed      |
-| emacs-slack      | dirty + no upstream      |
-```
-
-### Pre-clean: move artifacts to Trash
-
-Before reporting dirty repos, automatically clean up untracked build artifacts:
-
-- **Untracked `.elc` files** (byte-compiled Elisp): move them to Trash with `trash`. They are regenerable and should never be committed. Only touch files reported as untracked (`??`) by `git status --porcelain`. If `trash` is unavailable, stop and ask rather than deleting them with `rm`.
-
-Use `git -C "$repo" ls-files --others --exclude-standard -z -- '*.elc'` to identify artifact candidates instead of parsing human-oriented status output for paths.
-
-After moving artifacts to Trash, re-check whether the repo is still dirty. If the only untracked files were artifacts, the repo is now clean.
-
-### Offer to commit dirty repos
-
-If any repos are still dirty after pre-cleaning, **ask the user** whether they want you to commit and push all changes in all dirty repos. Make clear that accepting authorizes both local commits and external pushes. If the user accepts:
-
-1. For each dirty repo, stage all changes (`git add -A`) and create a focused commit with a descriptive message based on the changes.
-2. After committing, push each repo.
-3. Report any push failures.
-4. Then ask the user whether to proceed with the release.
-
-If the user declines, abort the release.
-
----
-
-## Step 2: Check temporary Elpaca PR pins
-
-Before checking the dotfiles working tree, scan `emacs/config.org` for
-Elpaca recipes that are temporarily pinned to a fork branch for an upstream
-pull request. These are usually `use-package` `:ensure` recipes with an
-`awaiting PR merge` marker near the temporary `:repo` or `:branch` fields, for
-example:
-
-```elisp
-(use-package some-package
-  :ensure (:host github
-                 :repo "benthamite/some-package"
-                 :branch "fix/something") ; awaiting PR merge: https://github.com/upstream/some-package/pull/123
-  ...)
-```
-
-Dependency-only packages may instead use an explicit Elpaca order before the
-dependent package is queued:
-
-```elisp
-(elpaca (some-package :host github
-                      :repo "benthamite/some-package"
-                      :branch "fix/something")) ; awaiting PR merge: https://github.com/upstream/some-package/pull/123
-```
-
-Use `rg -n "awaiting PR merge: .*github\\.com/.*/.*/pull/[0-9]+|github\\.com/.*/.*/pull/[0-9]+" emacs/config.org`
-to find candidate pins. Prefer the explicit `awaiting PR merge` marker; treat
-a bare PR URL as a legacy candidate to inspect and normalize if you edit it.
-For each candidate:
-
-1. Parse the PR URL and query GitHub:
-
-   ```bash
-   gh pr view "$PR_URL" \
-     --json state,merged,baseRepository,baseRefName,headRepository,headRefName,url
-   ```
-
-2. Inspect the enclosing `use-package` form or explicit `elpaca` order and
-   confirm the current recipe points at the PR head repo and head branch. If it
-   does not, report it as "comment only / already restored" and leave it
-   unchanged.
-3. If the PR is **open**, keep the pin but include it in the pre-release
-   summary as an intentional temporary fork pin.
-4. If the PR is **closed but not merged**, stop and ask the user how to
-   proceed. Do not cut a release with a fork pin for an abandoned PR unless
-   the user explicitly confirms it.
-5. If the PR is **merged**, restore the recipe to the PR base repository:
-   - Change `:repo` from the head repo to the base repo.
-   - Remove `:branch` when it names the PR head branch and the PR base branch
-     is the base repository's default branch.
-   - Otherwise change `:branch` to the PR base branch.
-   - Remove the PR URL comment only when it was attached to the temporary
-     `:branch` line that is being removed. If the comment has additional
-     explanatory text or the branch line remains, keep or update it
-     conservatively. The expected marker for any remaining temporary pin is
-     `; awaiting PR merge: <PR URL>`.
-
-After restoring any merged PR pins:
-
-1. Run the profile-aware tangle:
-
-   ```bash
-   emacsclient -e '(init-build-profile (file-name-directory user-init-file))'
-   ```
-
-2. Review `git diff -- emacs/config.org` and verify it contains only the
-   intended recipe restorations.
-3. Commit the restoration separately before continuing:
-
-   ```bash
-   git add emacs/config.org
-   git commit -m "emacs: restore merged package recipe pins"
-   ```
-
-4. Re-run the temporary-pin scan and continue only when all remaining pins
-   are open PRs that are reported in the pre-release summary.
-
----
-
-## Step 3: Check dotfiles working tree
-
-```bash
 git status --porcelain
 ```
 
-If the output is non-empty, **refuse to proceed**. Tell the user to commit or stash changes first.
+Require the GitHub owner/repository to be exactly `benthamite/dotfiles`, not a
+substring match. Use the existing canonical checkout if the current directory is
+wrong; do not clone or modify the Elpaca dotfiles mirror.
 
----
+Resolve the live Emacs values of `init-current-profile`,
+`elpaca-sources-directory`, and `init-master-lockfile-path`. Require successful
+queries, valid strings, and an existing source directory. Do not reconstruct
+paths from a profile label or strip quotes from an unchecked error. The lockfile
+destination must resolve to the canonical repo's `emacs/lockfile.el`.
 
-## Step 4: Sync with remote
+Inspect the dotfiles worktree and index before any release edit. Preserve
+unrelated or concurrent changes. Do not stash or commit them implicitly; obtain
+a decision about a conflicting change rather than telling the user to perform
+routine work the agent can do. Release preparation requires a clean, agreed
+baseline before modifying recipes or writing the lockfile.
+
+## Step 1: check Elpaca source reproducibility
+
+Inventory each distinct Git checkout under the live Elpaca source directory,
+including Git worktrees whose `.git` is a file. Resolve real paths and deduplicate
+shared checkouts. Inspect working-tree and staged changes with:
 
 ```bash
-git fetch origin
-git status -sb
+git -C "$PACKAGE_REPO" status --porcelain
 ```
 
-If the local branch is behind the remote, warn the user and ask whether to pull before proceeding.
+The `sources/dotfiles` checkout is a read-only runtime mirror. Check that it
+matches the canonical committed source through the supported synchronization
+path; never commit or push that mirror as an ordinary package repo.
 
----
+For other packages, distinguish detached HEAD, missing upstream, Git command
+failure, behind/diverged history, and genuine unpushed commits. Check upstream
+existence separately before querying its range:
 
-## Step 5: Fetch latest tag and list unreleased commits
+```bash
+git -C "$PACKAGE_REPO" rev-parse --verify '@{upstream}'
+git -C "$PACKAGE_REPO" log --oneline '@{upstream}..HEAD'
+```
+
+An arbitrary nonzero exit is not proof of a missing upstream. Fetch the relevant
+remote refs before judging visibility. For a detached or upstream-less package,
+verify whether its exact HEAD is reachable from the intended remote's advertised
+branch/tag history. No upstream is not automatically a blocker, but an
+unpublished or unverifiable lockfile commit is. A lockfile hash cannot preserve
+changes that exist only in a dirty worktree.
+
+Report dirty repos and clean-but-unpublished repos separately, with the exact
+target and proposed action. In publication mode, `--accept` permits pushing the
+reported clean package repos within its scope; otherwise obtain scoped
+confirmation. Never infer a writable fork destination from an upstream URL.
+Inspect outgoing changes before pushing and use `post-push-ci` after each push.
+A failed push does not stop the inventory, but unresolved reproducibility or CI
+failures block the release.
+
+Untracked byte-compiled artifacts may be cleaned with `trash` only after
+inspecting the exact candidates and confirming they are disposable generated
+files, not tracked files, symlinks, or source material. Identify candidates with:
+
+```bash
+git -C "$PACKAGE_REPO" ls-files --others --exclude-standard -z -- '*.elc'
+```
+
+Preserve NUL-delimited paths. Recheck status after cleanup. If `trash` is
+unavailable, leave the files and report the blocked cleanup; do not substitute
+destructive deletion.
+
+For remaining dirty repos, ask which exact changes may be committed and pushed;
+make both effects explicit. After approval, inspect the diffs, split logical
+changes, and stage only the agreed paths. Do not use a blanket `git add -A`
+across work owned by concurrent sessions. Recheck cleanliness, remote visibility,
+and CI before proceeding. Preparation-only mode may report a future push without
+performing it; that unresolved gate must be satisfied before publication.
+
+## Step 2: reconcile temporary Elpaca PR pins
+
+Scan `emacs/config.org` for `awaiting PR merge` markers and legacy GitHub PR
+URLs. Inspect each enclosing `use-package :ensure` recipe or explicit
+`elpaca` order. A bare PR URL is a candidate, not proof of an active pin.
+
+For each actual pin, query supported CLI fields:
+
+```bash
+gh pr view "$PR_URL" \
+  --json state,mergedAt,baseRefName,headRepository,headRepositoryOwner,headRefName,url
+```
+
+Use `state == MERGED` / non-null `mergedAt`; `merged` and
+`baseRepository` are not supported `gh pr view --json` fields. Derive the
+base owner/repo from the returned PR URL, and query its default branch:
+
+```bash
+gh repo view "$BASE_REPO" --json nameWithOwner,defaultBranchRef
+```
+
+Compare the recipe with the actual head repository owner/name and branch; handle
+a deleted head repository explicitly instead of guessing.
+
+- If the recipe no longer points to that PR head, report “comment only / already
+  restored” and leave it unchanged.
+- If the PR is open, retain and report the intentional pin.
+- If it is closed without merge, obtain a decision before retaining or replacing
+  abandoned code in a release.
+- If merged, restore the base repo. Remove the branch only when the PR base is
+  the repo's default branch; otherwise retain the base branch explicitly.
+
+Preserve unrelated recipe options and explanatory comments. Remove the PR marker
+only where it no longer describes a temporary pin. Keep one install recipe per
+package, including dependency-only orders.
+
+After restoration, tangle through `dotfiles-context` and commit only the recipe
+changes as a separate logical change. Tangling does **not** update the live
+Elpaca queue or source checkout. Before writing a lockfile, use the supported
+Elpaca reconfiguration/update path and verify the live recipe and checkout match
+the restored upstream. The lockfile writer serializes the live queue and source
+HEADs, not merely `config.org`. If activation requires a reload or new profile,
+complete that transition and its checks first; never fabricate queue state or
+hand-edit a lockfile to claim it happened.
+
+Recheck all remaining pins and the source-reproducibility gate after transition.
+
+## Step 3: recheck the dotfiles baseline
+
+Require a clean worktree/index after the agreed prerequisite commits. If new
+changes appeared, inspect and reconcile them with their owner; do not sweep them
+into the release. Recheck the Elpaca mirror against the committed source.
+
+## Step 4: synchronize the release branch
+
+Fetch `origin` and inspect the configured upstream and ahead/behind counts.
+Treat fetch/query failures as failures, not “already synchronized.” Resolve a
+behind, diverged, detached, or incorrectly targeted branch before continuing.
+Do not force-push or silently merge unrelated work.
+
+## Step 5: select the previous release and unreleased range
+
+After a successful tag fetch, enumerate reachable tags:
 
 ```bash
 git fetch --tags origin
-LATEST_TAG=$(git describe --tags --abbrev=0 --match '[0-9]*.[0-9]*.[0-9]*' 2>/dev/null)
-if [ -n "$LATEST_TAG" ]; then
-  git log "$LATEST_TAG"..HEAD --oneline
-else
-  git log --oneline
-fi
+git tag --merged HEAD --list --sort=-version:refname
 ```
 
-If no semver tag is found, treat this as a first release and classify the entire history.
+Filter the successful listing to exact canonical numeric `MAJOR.MINOR.PATCH`
+names, with no `v` prefix, prerelease suffix, or leading-zero components except
+zero itself. Take the highest numeric version as `LATEST_TAG`. Do not use a
+loose glob or treat a failed lookup as “no releases.”
+The exact-name filter is `^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$`.
 
-If there are **zero** commits since the last tag, stop — there is nothing to release.
+If no canonical tag exists, report `none` and classify the full history.
+Otherwise read every commit in `"$LATEST_TAG"..HEAD`. If the range is empty,
+there is nothing to release.
 
----
+## Step 6: propose the version
 
-## Step 6: Classify commits and suggest bump
+The version lives in the tag, not a package `Version:` header.
 
-The dotfiles uses a `MAJOR.MINOR.PATCH` version scheme (e.g., `7.1.29`). There is no `Version:` header — the version lives only in the git tag.
+- Breaking changes require a major bump.
+- New functionality requires a minor bump.
+- Bug/configuration fixes require a patch bump.
+- Docs/chore-only changes do not imply a bump by themselves; obtain a version
+  decision if the user still wants a release.
 
-Read each commit since the last tag. Classify into:
+Let the user override the suggestion. Store the accepted canonical version in
+`NEW_VERSION`; check for local and remote tag/release collisions before making
+the release commit. Do not overwrite an existing version. For a legitimate
+resumption, verify the existing artifact belongs to this exact candidate.
 
-- **Breaking** — backwards-incompatible changes (e.g., major restructuring, dropped support) → bump MAJOR
-- **Feature** — new functionality (new packages, new extras, new skills) → bump MINOR
-- **Fix** — bug fixes, config corrections → bump PATCH
-- **Docs/chore/other** — no bump on their own
+## Step 7: draft and freeze release notes
 
-Suggest the appropriate semver bump based on the highest-priority category present. Present the suggestion but let the user override.
+Apply the user's outgoing-prose conventions (`personalize` when publishing as
+Pablo). Write user-facing descriptions rather than copying terse commit messages.
+Group features, fixes, and other changes; for a large range, summarize by theme
+while accounting for the significant changes.
 
----
+Keep notes in a uniquely named temporary workspace outside Drive. Record the
+file as `RELEASE_NOTES_FILE`. After approval, freeze its content and record its
+SHA-256 digest. The exact same file must be reviewed and passed to GitHub; do not
+retype a heredoc or publish literal placeholders later. A content change requires
+renewed approval where applicable and a fresh public-text review.
 
-## Step 7: Draft release notes
+## Step 8: pre-release confirmation
 
-Group commits by category and draft release notes in this format:
+Present the previous/proposed versions, included commit count, package
+reproducibility/CI status, remaining PR pins, and notes. Wait for explicit
+confirmation unless `--accept` applies. Do not skip unresolved prerequisite
+gates. A preparation request still does not authorize publication.
 
-```markdown
-## What's changed
+## Step 9: write the lockfile and release commit
 
-### Features
-- Description of feature (sha[:7])
+Only after the live recipes/checkouts and approved version/notes are ready:
 
-### Fixes
-- Description of fix (sha[:7])
-
-### Other
-- Description (sha[:7])
+```bash
+emacsclient -e '(elpaca-extras-write-lock-file-excluding init-master-lockfile-path)'
 ```
 
-Write clear, user-facing descriptions — do not just copy commit messages verbatim. Rewrite terse or unclear messages into readable prose.
+Verify the call succeeded and wrote the expected canonical lockfile. Inspect its
+diff and ensure it reflects the intended live packages, repositories, and refs.
+The writer does not create or test a new profile.
 
-If there are many commits (e.g., 100+), summarize by theme rather than listing every commit individually. Group related changes together and highlight the most significant ones.
+Commit only that file, allowing an empty version commit when it is unchanged:
 
----
+```bash
+git add -- emacs/lockfile.el
+git commit --only --allow-empty -m "$NEW_VERSION" -- emacs/lockfile.el
+```
 
-## Step 8: Pre-release summary
+This must not consume unrelated staged paths. Record the release candidate's
+exact commit ID, then stop for the user to test the new profile.
 
-Present a summary:
+## Step 10: profile-test and publication gate
 
-- Current version (from tag, or `none` for a first release)
-- New version (proposed bump)
-- Number of commits included
-- Elpaca sources cleanliness status (all clean)
-- Temporary Elpaca PR pins that remain, with package, recipe repo/branch, PR
-  URL, and PR state
-- Release notes draft
+Wait for explicit confirmation that the profile built and worked at the exact
+release candidate, and that publication should continue. `--accept` cannot
+supply this post-lockfile evidence in advance.
 
-**Wait for explicit user confirmation before proceeding** (unless `--accept` was passed). Do not take any action until the user says yes. If the user wants changes to the version or notes, revise and re-present.
+If fixes or a lockfile rewrite change the candidate, incorporate only the agreed
+changes and repeat the relevant profile test. Do not silently amend untested
+changes into a confirmed release. Preserve a preparation-only result until the
+user authorizes publication.
 
----
+## Step 11: guarded publication review
 
-## Step 9: Write lockfile and commit
-
-After the user confirms the version and notes:
-
-1. **Write lockfile**:
-
-   ```bash
-   emacsclient -e '(elpaca-extras-write-lock-file-excluding init-master-lockfile-path)'
-   ```
-
-   This writes the current elpaca lockfile to `emacs/lockfile.el` in the dotfiles repo.
-
-2. **Commit the lockfile**:
-
-   If the lockfile changed (`git status --porcelain emacs/lockfile.el` is non-empty), stage and commit it:
-
-   ```bash
-   git add emacs/lockfile.el
-   git commit -m "NEW_VERSION"
-   ```
-
-   If the lockfile did **not** change, create an empty commit:
-
-   ```bash
-   git commit --allow-empty -m "NEW_VERSION"
-   ```
-
-   The commit message is just the version number (e.g., `7.2.0`).
-
-3. **Stop and wait.** Tell the user the lockfile commit is ready and ask them to test the new profile. Explain that once they confirm the profile builds without errors, the release will proceed. If there are problems, the user can make further changes and amend the commit before releasing.
-
----
-
-## Step 10: Release gate
-
-**Wait for explicit user confirmation** that the profile tested successfully. Do not proceed until the user explicitly says to continue.
-
-If the user made additional dotfiles changes after step 8 (e.g., fixing issues found during testing), check whether those changes have been committed. If uncommitted changes exist, offer to amend the release commit to include them before proceeding.
-
----
-
-## Step 11: Guarded publication review
-
-A release publishes a branch and a tag to a public repository, so it goes
-through the same two-layer review as any other publication. Use the
-`publish-dotfiles` skill for the details; the executable it drives is
-`bin/dotfiles-publish`.
-
-Run this **after** the user confirms the profile tested successfully and
-**before** any tag exists. Write the approved notes to a file first:
+Follow `publish-dotfiles`, including any due full-history audit, before creating
+a new tag. A full-audit receipt requires successful status and
+`full-audit-recorded:`, not merely a clean-looking review count.
 
 ```bash
 bin/dotfiles-publish scan --mode release \
-  --release-notes /tmp/release-notes.md \
-  --tag NEW_VERSION
+  --release-notes "$RELEASE_NOTES_FILE" \
+  --tag "$NEW_VERSION"
 ```
 
-Exit 2 means findings, not failure: continue into the review. Then review every
-manifest unit, exactly as `publish-dotfiles` describes:
+Capture the printed run ID as `RUN_ID` and candidate as `CANDIDATE`. Continue review after
+exit 2; fail closed on scanner/setup failure. Display and adjudicate every unit,
+including the release notes and exact tag name. Do not record blanket clean
+verdicts. Check public text for private paths, internal details, and unapproved
+plans as well as credentials. Require a successful, complete clean review.
 
-```bash
-bin/dotfiles-publish review-list --run "$RUN_ID"
-bin/dotfiles-publish review-show --run "$RUN_ID" --unit "$UNIT"
-bin/dotfiles-publish review-record --run "$RUN_ID" --unit "$UNIT" --verdict clean
-bin/dotfiles-publish review-status --run "$RUN_ID"
-```
+If repair changes the candidate, invalidate the earlier profile confirmation,
+refresh the live source/lockfile where affected, obtain a new profile test, and
+rescan/review. Never delete or move a preexisting/public tag. Clean up only this
+workflow's own unpublished tag after verifying its exact identity and absence
+from the remote.
 
-Release mode adds `public-text` units holding the release notes and the tag
-name. Review the release notes for meaning, not just for secrets: they are
-written for the public, so check that they name no private path, no internal
-host, and no unreleased plan.
+## Step 12: tag, publish, and create the release
 
-**If the review repairs history**, the release you tested no longer exists:
+Recheck the candidate, approved version, notes digest, and applicable authority.
 
-1. the earlier profile confirmation is void — say so plainly;
-2. delete any release tag you already created locally, and never push one;
-3. rerun step 9's lockfile write and the profile test on the repaired commit;
-4. create a fresh scan for the new candidate and review every unit again.
-
-Nothing carries over from the previous run.
-
----
-
-## Step 12: Tag, push, and create release
-
-Only after the user confirms and `review-status` prints `clean: yes`:
-
-1. **Tag** the reviewed candidate with a lightweight tag:
+1. Create a lightweight tag on the exact reviewed candidate, not an unchecked
+   current HEAD:
 
    ```bash
-   git tag NEW_VERSION
+   git tag "$NEW_VERSION" "$CANDIDATE"
    ```
 
-2. **Publish the branch and the tag in one authorized push**:
+2. Publish the branch and tag together:
 
    ```bash
    bin/dotfiles-publish push --run "$RUN_ID" --tag "$NEW_VERSION"
    ```
 
-   This authorizes exactly two ref updates, pushes them, and verifies both on
-   the remote before returning. There is no other way to push from this
-   repository: the `origin` push URL is a refusing transport, and the pre-push
-   hook demands a fresh single-use authorization.
+   Require success and verified remote refs. Follow `publish-dotfiles` for
+   recovery, remote-tracking refresh, and `post-push-ci`. Do not create the
+   GitHub release unless the tagged candidate passes required CI. A code fix
+   after publication requires a newly tested candidate/version, not moving the
+   public tag or assuming branch CI certifies the old tagged commit.
 
-3. **Create GitHub release**, only after that verification succeeded:
+3. Recheck that the notes file still has the approved and reviewed digest, then
+   create the release using that file:
 
    ```bash
-   gh release create NEW_VERSION \
+   gh release create "$NEW_VERSION" \
      --repo benthamite/dotfiles \
-     --title "NEW_VERSION" \
+     --title "$NEW_VERSION" \
      --verify-tag \
-     --notes-file - <<'EOF'
-   RELEASE_NOTES
-   EOF
+     --notes-file "$RELEASE_NOTES_FILE"
    ```
 
-   Use a heredoc with `--notes-file -` to preserve formatting and `--verify-tag` so GitHub does not create a release from an unexpected target if the pushed tag is missing.
+   If the request times out or returns an ambiguous failure, query the exact
+   release before retrying. Do not duplicate, delete, or replace a possibly
+   successful release blindly. Reconcile an existing release in a resumed
+   workflow instead of recreating it.
 
----
-
-## Step 13: Post-release verification
-
-After the release is created:
+## Step 13: verify and clean up
 
 ```bash
-gh release view NEW_VERSION --repo benthamite/dotfiles
-git ls-remote --tags origin "refs/tags/NEW_VERSION"
+gh release view "$NEW_VERSION" --repo benthamite/dotfiles \
+  --json tagName,body,url,isDraft,isPrerelease
+git ls-remote --tags origin "refs/tags/$NEW_VERSION"
 ```
 
-Confirm the exact tag and release are live. Report success or any errors.
+Verify the remote lightweight tag equals the reviewed candidate, the release has
+the intended publication state, and its body matches the reviewed notes. A
+successful command alone is not proof of those facts. Report the release URL and
+any unresolved gate. Remove this workflow's temporary notes/evidence only after
+verification or a deliberate abort; preserve them securely for a pending resume.
 
----
-
-## Error handling
-
-- **No semver tags exist**: treat the entire history as unreleased. Use `none` as the current version in the summary.
-- **API rate limiting**: if `gh api` returns 403/429, report it and suggest the user wait or authenticate with a higher-rate token.
-- **Emacs not running**: if `emacsclient` fails, stop and tell the user to start Emacs first (needed to resolve the elpaca profile).
-- **Tag format**: dotfiles tags have no `v` prefix (e.g., `7.1.29`). Preserve this convention.
+For access, network, or Emacs-query failures, diagnose the exact error and use
+available authorized recovery paths. Do not label every 403 as rate limiting,
+switch credentials speculatively, or claim success with an unmeasured gate.

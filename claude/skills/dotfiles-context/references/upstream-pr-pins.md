@@ -7,8 +7,15 @@ or updating a PR by itself.
 1. Record the PR metadata from the package checkout:
 
    ```bash
-   gh pr view --json url,state,merged,baseRepository,baseRefName,headRepository,headRefName
+   gh pr view --json url,state,mergedAt,baseRefName,headRepository,headRepositoryOwner,headRefName
    ```
+
+   Use `state == MERGED` or non-null `mergedAt` to recognize a merge. Derive
+   the base owner/repository from the returned PR URL; `merged` and
+   `baseRepository` are not supported CLI JSON fields. Query the base repo's
+   default branch with `gh repo view "$BASE_REPO" --json nameWithOwner,defaultBranchRef`
+   when deciding whether an explicit recipe branch is needed. If the head repo
+   was deleted, do not guess its identity from a missing value.
 
 2. If the PR is open, edit the package's existing Elpaca recipe in
    `~/My Drive/dotfiles/emacs/config.org` so it points to the PR head repository
@@ -21,14 +28,17 @@ or updating a PR by itself.
    ; awaiting PR merge: https://github.com/OWNER/REPO/pull/NUMBER
    ```
 
-4. Tangle with the profile-aware command in the parent `SKILL.md`.
+4. Tangle with the profile-aware command in the parent `SKILL.md`. Tangling
+   does not update the live Elpaca recipe or checkout. Apply the supported
+   reconfiguration/update path and verify the live source before claiming the
+   pin is active or writing a lockfile from the live queue.
 5. Review and commit the dotfiles pin in the dotfiles repository, independent of
    the package checkout:
 
    ```bash
    git -C "$HOME/My Drive/dotfiles" diff -- emacs/config.org
-   git -C "$HOME/My Drive/dotfiles" add emacs/config.org
-   git -C "$HOME/My Drive/dotfiles" commit -m "emacs: pin PACKAGE to pr branch"
+   git -C "$HOME/My Drive/dotfiles" add -- emacs/config.org
+   git -C "$HOME/My Drive/dotfiles" commit --only -m "emacs: pin PACKAGE to pr branch" -- emacs/config.org
    ```
 
 If the PR is merged, use the upstream/base recipe and do not pin it. If the PR

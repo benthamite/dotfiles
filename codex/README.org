@@ -123,6 +123,12 @@ checks never authorize history repair or provider-side credential changes.
 Audit receipts bind the reviewed scan and manifest, including across concurrent
 same-boundary rescans; earlier clean status cannot certify a replacement.
 
+The paired =release-dotfiles= skill preserves the profile-test gate, excludes the
+read-only Elpaca mirror from package pushes, and verifies live recipes before
+serializing a lockfile. It uses supported GitHub PR fields, strict release tags,
+path-only version commits, and the same approved notes file for review and
+release creation. Preparation alone grants no publication authority.
+
 The paired =proofread= skill resolves one external Node dependency runtime for
 both setup and execution, canonicalizing both its root and actual =node_modules=
 destination before rejecting paths into this Drive-synced tree. Its package

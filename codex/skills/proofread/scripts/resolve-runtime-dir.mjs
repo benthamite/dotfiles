@@ -51,6 +51,10 @@ function assertOutsideDrive(candidate, driveRoot) {
 }
 
 function main() {
+  const args = process.argv.slice(2);
+  if (args.length > 1 || (args.length === 1 && args[0] !== "--runtime-root")) {
+    throw new Error("Usage: resolve-runtime-dir.mjs [--runtime-root]");
+  }
   const home = process.env.HOME;
   if (!home) {
     throw new Error("HOME must be set to resolve the proofread runtime");
@@ -67,7 +71,7 @@ function main() {
   const nodeModulesDir = canonicalizeAllowMissing(join(runtimeDir, "node_modules"));
   assertOutsideDrive(nodeModulesDir, driveRoot);
 
-  process.stdout.write(`${nodeModulesDir}\n`);
+  process.stdout.write(`${args[0] === "--runtime-root" ? runtimeDir : nodeModulesDir}\n`);
 }
 
 try {

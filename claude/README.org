@@ -362,8 +362,11 @@ release creation. Preparation alone grants no publication authority.
 
 The paired =proofread= skill resolves one external Node dependency runtime for
 both setup and execution, canonicalizing both its root and actual =node_modules=
-destination before rejecting paths into this Drive-synced tree. Its package
-commands continue to read the skill-local scripts and =.env= file.
+destination before rejecting paths into this Drive-synced tree. Only the LLM
+engine consumes an injected provider key; skill-local plaintext =.env= files
+are no longer loaded. Review-only work does not write copies or imply provider
+transfer. Editing preserves source files, requires validated literal changes,
+and distinguishes engine failures and protected-syntax gaps from clean results.
 
 The paired =personalize= skill carries a hard concision rule: outgoing drafts
 carry only what the recipient needs to act or decide, lead with the ask, and

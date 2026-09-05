@@ -142,6 +142,12 @@ Act mode uses private outputs, token-based task accounting and an idempotent
 ledger; only verified outcomes justify completion, and budget limits produce
 deferrals. Existing ledger history requires explicit migration, not a reset.
 
+The =paste-via-kill-ring= skill separates manual handoff from sending. It
+verifies exact non-secret ring placement without implicit clipboard forwarding,
+while honoring text-transform acceptance and checking an independent payload copy.
+Credentials follow the secrets workflow, not the persisted Emacs kill ring;
+clipboard placement and verification are reported separately.
+
 The project-local =config-audit= respects a requested subset and includes
 procedural bodies when full skill audits are requested. It distinguishes
 skill discovery from instruction loading and checks actual hook coverage

@@ -485,6 +485,7 @@ class PublicationFixture(unittest.TestCase):
             "run_id": run_id,
             "public_refs": {},
             "incident_flag": False,
+            "incident_digest": run["incident_digest"],
         }
         path = self.state_dir() / "full-audit.json"
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -578,6 +579,69 @@ class DotfilesPublishDocumentationTests(unittest.TestCase):
 
 
 class DotfilesPublishStateTests(PublicationFixture):
+    def test_readiness_preserves_stale_tracking_refs_and_fetch_head(self):
+        base = self.publish_base()
+        published = self.commit("published work", {"docs/public.md": "public\n"})
+        self.git(
+            "-c", "core.hooksPath=/dev/null", "push", "--quiet",
+            str(self.remote), "HEAD:refs/heads/master",
+        )
+        self.commit("candidate work", {"docs/candidate.md": "candidate\n"})
+        self.assertEqual(base, self.git("rev-parse", "origin/master").stdout.strip())
+        refs = self.git("for-each-ref").stdout
+        fetch_head = (self.repo / ".git/FETCH_HEAD").read_bytes()
+
+        proc, run_id = self.scan("--mode", "readiness")
+
+        self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
+        run = self.read_json(self.run_dir(run_id) / "run.json")
+        self.assertEqual("readiness", run["mode"])
+        self.assertEqual(published, run["remote_oid"])
+        self.assertEqual(refs, self.git("for-each-ref").stdout)
+        self.assertEqual(fetch_head, (self.repo / ".git/FETCH_HEAD").read_bytes())
+        self.assertFalse((self.state_dir() / "full-audit.json").exists())
+        self.assertFalse((self.state_dir() / "authorization.json").exists())
+
+    def test_readiness_fetches_missing_tip_without_updating_refs_on_refusal(self):
+        self.publish_base()
+        remote_tip = self.advance_remote_elsewhere()
+        self.assertNotEqual(
+            0, self.git("cat-file", "-e", remote_tip, check=False).returncode
+        )
+        refs = self.git("for-each-ref").stdout
+        fetch_head = (self.repo / ".git/FETCH_HEAD").read_bytes()
+
+        proc = self.cli("scan", "--mode", "readiness")
+
+        self.assertNotEqual(0, proc.returncode)
+        self.assertIn("not an ancestor", proc.stderr)
+        self.assertEqual(0, self.git("cat-file", "-e", remote_tip).returncode)
+        self.assertEqual(refs, self.git("for-each-ref").stdout)
+        self.assertEqual(fetch_head, (self.repo / ".git/FETCH_HEAD").read_bytes())
+
+    def test_readiness_cannot_authorize_push_or_start_repair(self):
+        self.publish_base()
+        self.commit("candidate work", {"docs/candidate.md": "candidate\n"})
+        proc, run_id = self.scan("--mode", "readiness")
+        self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
+        self.review_all(run_id)
+        self.write_full_audit_receipt(run_id)
+        self.advance_remote_elsewhere()
+        refs = self.git("for-each-ref").stdout
+        fetch_head = (self.repo / ".git/FETCH_HEAD").read_bytes()
+        remote_before = self.remote_tip()
+
+        for command in ("authorize", "push", "repair-start"):
+            with self.subTest(command=command):
+                refused = self.cli(command, "--run", run_id)
+                self.assertNotEqual(0, refused.returncode)
+                self.assertIn("readiness run", refused.stderr)
+                self.assertEqual(refs, self.git("for-each-ref").stdout)
+                self.assertEqual(fetch_head, (self.repo / ".git/FETCH_HEAD").read_bytes())
+                self.assertFalse((self.state_dir() / "authorization.json").exists())
+                self.assertFalse((self.state_dir() / "repairs.json").exists())
+                self.assertEqual(remote_before, self.remote_tip())
+
     def test_scan_discovers_repository_from_a_subdirectory(self):
         self.publish_base()
         self.commit("add notes", {"docs/notes.md": "notes\n"})
@@ -2013,6 +2077,42 @@ class DotfilesPublishAuthorizationTests(PublicationFixture):
         self.assertIn("release run", refused.stderr)
         self.assertNotIn("refs/tags/", self.git("ls-remote", str(self.remote)).stdout)
 
+    def test_release_refuses_a_substituted_or_omitted_reviewed_tag(self):
+        self.publish_base()
+        self.commit("release candidate", {"docs/release.md": "release\n"})
+        self.git("tag", "v1.0.0")
+        self.git("tag", "unreviewed-tag")
+        proc, run_id = self.scan("--mode", "release", "--tag", "v1.0.0")
+        self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
+        self.review_all(run_id)
+        self.write_full_audit_receipt(run_id)
+        remote_before = self.remote_tip()
+
+        for command in ("authorize", "push"):
+            for tag_arguments in (("--tag", "unreviewed-tag"), ()):
+                with self.subTest(command=command, tag_arguments=tag_arguments):
+                    refused = self.cli(command, "--run", run_id, *tag_arguments)
+                    self.assertNotEqual(0, refused.returncode)
+                    self.assertIn("reviewed release tag", refused.stderr)
+                    self.assertFalse((self.state_dir() / "authorization.json").exists())
+                    self.assertEqual(remote_before, self.remote_tip())
+                    self.assertEqual("", self.git("ls-remote", "--tags", str(self.remote)).stdout)
+
+    def test_release_refuses_adding_a_tag_that_was_not_scanned(self):
+        self.publish_base()
+        self.commit("release candidate", {"docs/release.md": "release\n"})
+        proc, run_id = self.scan("--mode", "release")
+        self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
+        self.review_all(run_id)
+        self.write_full_audit_receipt(run_id)
+        self.git("tag", "unreviewed-tag")
+
+        refused = self.cli("push", "--run", run_id, "--tag", "unreviewed-tag")
+
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("reviewed release tag", refused.stderr)
+        self.assertFalse((self.state_dir() / "authorization.json").exists())
+
     def test_hook_rejects_extra_refs_and_deletions(self):
         run_id = self.prepare_authorized_run()
         run = self.read_json(self.run_dir(run_id) / "run.json")
@@ -2878,9 +2978,16 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
             self.assertEqual(0, recorded.returncode, recorded.stderr)
 
         after = self.cli("review-status", "--run", run_id)
-        self.assertEqual(0, after.returncode, after.stdout + after.stderr)
+        self.assertNotEqual(0, after.returncode)
         self.assertIn("clean: yes", after.stdout)
-        self.assertIn("full-audit-recorded: ", after.stdout)
+        self.assertIn("incident state changed", after.stderr)
+        self.assertFalse((self.state_dir() / "full-audit.json").exists())
+
+        _, rescanned_run = self.scan("--mode", "full-audit")
+        self.assertEqual(run_id, rescanned_run)
+        completed = self.cli("review-status", "--run", rescanned_run)
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+        self.assertIn("full-audit-recorded: ", completed.stdout)
 
     def test_incident_record_rejects_broad_or_value_bearing_evidence(self):
         self.publish_a_secret()
@@ -3016,6 +3123,143 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
 
         advanced, publish_run = self.scan()
         self.assertIn("full-audit-due: false", advanced.stdout)
+
+    def test_review_status_cannot_refresh_an_old_audit_without_rescanning(self):
+        self.publish_base()
+        self.commit("ordinary work", {"docs/notes.md": "notes\n"})
+        _, run_id = self.scan("--mode", "full-audit")
+        self.review_all(run_id)
+        self.assertEqual(0, self.cli("review-status", "--run", run_id).returncode)
+        receipt_path = self.state_dir() / "full-audit.json"
+        receipt = receipt_path.read_bytes()
+        scanner_calls = self.scanner_log.read_bytes()
+
+        self.now += 10 * DAY
+        unchanged = self.cli("review-status", "--run", run_id)
+        self.assertEqual(0, unchanged.returncode, unchanged.stdout + unchanged.stderr)
+        self.assertEqual(receipt, receipt_path.read_bytes())
+        self.now += 21 * DAY
+        expired = self.cli("review-status", "--run", run_id)
+        self.assertNotEqual(0, expired.returncode)
+        self.assertIn("recent scan time", expired.stderr)
+        self.assertEqual(receipt, receipt_path.read_bytes())
+        self.assertEqual(scanner_calls, self.scanner_log.read_bytes())
+        overdue, _ = self.scan()
+        self.assertIn("full-audit-due: true", overdue.stdout)
+
+        _, rescanned_run = self.scan("--mode", "full-audit")
+        self.assertEqual(run_id, rescanned_run)
+        complete = self.cli("review-status", "--run", rescanned_run)
+        self.assertEqual(0, complete.returncode, complete.stdout + complete.stderr)
+        self.assertEqual(self.now, self.read_json(receipt_path)["completed_epoch"])
+
+    def test_review_status_cannot_clear_later_incident_invalidation(self):
+        self.publish_a_secret()
+        _, run_id = self.scan("--mode", "full-audit")
+        self.review_all(run_id)
+        self.assertEqual(0, self.cli("review-status", "--run", run_id).returncode)
+        finding = self.public_incident(run_id)
+        recorded = self.cli(
+            "incident-record", "--run", run_id,
+            "--fingerprint", finding["fingerprint"], "--resolution", "revoked",
+            "--evidence", str(self.write_evidence(finding["fingerprint"])),
+        )
+        self.assertEqual(0, recorded.returncode, recorded.stderr)
+        receipt_path = self.state_dir() / "full-audit.json"
+        invalidated = receipt_path.read_bytes()
+
+        refused = self.cli("review-status", "--run", run_id)
+
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("incident state changed", refused.stderr)
+        self.assertEqual(invalidated, receipt_path.read_bytes())
+        self.assertTrue(self.read_json(receipt_path)["incident_flag"])
+
+        # Even a stale concurrent receipt write that clears the flag cannot
+        # erase the independently checked change in incident state.
+        stale_receipt = self.read_json(receipt_path)
+        stale_receipt["incident_flag"] = False
+        receipt_path.write_text(json.dumps(stale_receipt))
+        due, _ = self.scan()
+        self.assertIn("full-audit-due: true", due.stdout)
+        self.assertIn("incident state changed", due.stdout)
+
+    def test_review_status_cannot_issue_receipt_after_ruleset_changes(self):
+        self.publish_base()
+        self.commit("ordinary work", {"docs/notes.md": "notes\n"})
+        _, run_id = self.scan("--mode", "full-audit")
+        self.review_all(run_id)
+        (self.repo / ".gitignore").write_text("temporary-output/\n")
+
+        refused = self.cli("review-status", "--run", run_id)
+
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("ruleset changed", refused.stderr)
+        self.assertFalse((self.state_dir() / "full-audit.json").exists())
+
+    def test_full_audit_refuses_advertised_tips_excluded_by_fetch_refspec(self):
+        self.publish_base()
+        self.git(
+            "config", "remote.origin.fetch",
+            "+refs/heads/master:refs/remotes/origin/master",
+        )
+        self.advance_remote_elsewhere("other public branch")
+        clone = sorted(self.base.glob("clone-*"))[-1]
+        other_tip = self.git("rev-parse", "HEAD", cwd=clone).stdout.strip()
+        self.git(
+            "-c", "core.hooksPath=/dev/null", "push", "--quiet",
+            str(self.remote), "HEAD:refs/heads/other", cwd=clone,
+        )
+        base_tip = self.head()
+        self.git("update-ref", "refs/heads/master", base_tip, cwd=self.remote)
+        self.assertNotEqual(
+            0, self.git("cat-file", "-e", other_tip, check=False).returncode
+        )
+
+        refused = self.cli("scan", "--mode", "full-audit")
+
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("advertised public tip objects are missing", refused.stderr)
+        self.assertNotIn("run: ", refused.stdout)
+        self.assertFalse((self.state_dir() / "full-audit.json").exists())
+        self.assertEqual(
+            "", self.git("for-each-ref", "--format=%(refname)", "refs/dotfiles-publish/audit/").stdout
+        )
+
+        self.git(
+            "fetch", "--quiet", "--no-write-fetch-head", "--no-tags", "--refmap=",
+            str(self.remote), "refs/heads/other",
+        )
+        self.assertEqual(0, self.git("cat-file", "-e", other_tip).returncode)
+        self.assertEqual("", self.git("for-each-ref", "--contains", other_tip).stdout)
+
+        unreferenced = self.cli("scan", "--mode", "full-audit")
+
+        self.assertNotEqual(0, unreferenced.returncode)
+        self.assertIn("public commits are outside the audited ref surface", unreferenced.stderr)
+        self.assertNotIn("run: ", unreferenced.stdout)
+        self.assertFalse((self.state_dir() / "full-audit.json").exists())
+
+    def test_full_audit_refuses_partial_public_history_from_failed_rev_list(self):
+        base = self.publish_base()
+        self.commit("ordinary work", {"docs/notes.md": "notes\n"})
+        wrapper = self.tools / "git"
+        wrapper.write_text(
+            "#!%s\nimport os, sys\n" % sys.executable
+            + "args = sys.argv[1:]\n"
+            + "if 'rev-list' in args and args[args.index('rev-list') + 1:] == [%r]:\n" % base
+            + "    print(%r)\n    sys.exit(9)\n" % base
+            + "os.execv(%r, [%r, *args])\n" % (GIT, GIT)
+        )
+        wrapper.chmod(0o700)
+
+        refused = self.cli("scan", "--mode", "full-audit")
+
+        self.assertEqual(3, refused.returncode, refused.stdout + refused.stderr)
+        self.assertIn("rev-list", refused.stderr)
+        self.assertIn("failed (9)", refused.stderr)
+        self.assertNotIn("run: ", refused.stdout)
+        self.assertFalse((self.state_dir() / "full-audit.json").exists())
 
     def test_an_incident_receipt_invalidates_the_full_audit(self):
         self.publish_a_secret()

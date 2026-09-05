@@ -115,6 +115,12 @@ byte-column spans. Schema-4 runs separate scrub values from keyed review
 signatures. Review writes are locked so bounded agent pools cannot overwrite one
 another's verdicts.
 
+Readiness uses an enforced non-publishing scan mode that preserves refs and
+=FETCH_HEAD=. Full-audit receipts age from the scan and cannot clear later
+incident invalidations; missing advertised public objects fail the audit closed.
+Release authorization binds the exact tag name reviewed by the scan. Read-only
+checks never authorize history repair or provider-side credential changes.
+
 The paired =proofread= skill resolves one external Node dependency runtime for
 both setup and execution, canonicalizing both its root and actual =node_modules=
 destination before rejecting paths into this Drive-synced tree. Its package

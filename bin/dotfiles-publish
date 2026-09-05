@@ -24,6 +24,7 @@ import fcntl
 import hashlib
 import hmac
 import json
+import math
 import os
 import re
 import secrets
@@ -71,7 +72,7 @@ RULESET_POLICY_FILES = (
     "bin/dotfiles-publish",
 )
 
-MODES = ("publish", "release", "full-audit")
+MODES = ("publish", "release", "full-audit", "readiness")
 
 
 class PublishError(Exception):
@@ -385,7 +386,7 @@ class Boundary:
     candidate_oid: str
 
 
-def resolve_boundary(repo, fetch=True):
+def resolve_boundary(repo, fetch=True, fetch_missing_objects=False):
     if fetch:
         fetched = run_git(repo.root, "fetch", "--quiet", repo.remote_name, check=False)
         if fetched.code != 0:
@@ -402,6 +403,22 @@ def resolve_boundary(repo, fetch=True):
         )
     remote_oid = lines[0].split()[0]
     present = run_git(repo.root, "cat-file", "-e", remote_oid + "^{commit}", check=False)
+    if present.code != 0 and fetch_missing_objects:
+        fetched = run_git(
+            repo.root,
+            "fetch", "--quiet", "--no-write-fetch-head", "--no-tags",
+            "--no-prune", "--no-recurse-submodules", "--no-auto-maintenance",
+            "--refmap=", repo.fetch_url, repo.remote_ref,
+            check=False,
+        )
+        if fetched.code != 0:
+            raise PublishError(
+                "could not fetch the remote tip without changing refs: %s"
+                % fetched.error_text.strip()
+            )
+        present = run_git(
+            repo.root, "cat-file", "-e", remote_oid + "^{commit}", check=False
+        )
     if present.code != 0:
         raise PublishError("remote tip %s is not present locally; fetch first" % remote_oid)
 
@@ -442,6 +459,7 @@ RUN_IDENTITY_FIELDS = (
     "remote_oid",
     "candidate_oid",
     "ruleset_id",
+    "release_tag",
 )
 
 
@@ -525,6 +543,8 @@ def full_audit_staleness(repo, ruleset_id, now):
         return "no full audit has been recorded"
     if receipt.get("incident_flag"):
         return "an incident was recorded after the last full audit"
+    if receipt.get("incident_digest") != incident_state_digest(repo):
+        return "the incident state changed or was not captured by the last full audit"
     if receipt.get("ruleset_id") != ruleset_id:
         return "the ruleset changed since the last full audit"
     completed = receipt.get("completed_epoch")
@@ -1451,16 +1471,24 @@ def fetch_public_refs(repo):
 
 def present_objects(repo, oids):
     present = []
+    missing = []
     for oid in sorted(oids):
         if run_git(repo.root, "cat-file", "-e", oid, check=False).code == 0:
             present.append(oid)
+        else:
+            missing.append(oid)
+    if missing:
+        raise PublishError(
+            "full audit is incomplete: %d advertised public tip objects are missing locally; "
+            "fetch the missing refs and scan again" % len(missing)
+        )
     return present
 
 
 def reachable_commits(repo, tips):
     if not tips:
         return set()
-    listing = run_git(repo.root, "rev-list", *tips, check=False)
+    listing = run_git(repo.root, "rev-list", *tips)
     return set(listing.text.split())
 
 
@@ -1564,6 +1592,12 @@ def scan_full_audit(repo, key):
         public_tips = present_objects(repo, set(remote_refs.values()))
         public_commits = reachable_commits(repo, public_tips)
         commits = audit_commits(repo)
+        missing_commits = public_commits - set(commits)
+        if missing_commits:
+            raise PublishError(
+                "full audit is incomplete: %d public commits are outside the audited ref surface; "
+                "fetch the missing refs and scan again" % len(missing_commits)
+            )
 
         with scan_workspace(repo) as work:
             results = run_gitleaks(repo, work, git_range=" ".join(AUDIT_SURFACE))
@@ -1807,6 +1841,12 @@ def load_incidents(repo):
     data = read_json(path)
     data.setdefault("incidents", {})
     return data
+
+
+def incident_state_digest(repo):
+    """Bind an audit to the exact incident ledger it scanned after."""
+    payload = json.dumps(load_incidents(repo), sort_keys=True).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
 
 
 def flag_incident(repo):
@@ -2545,17 +2585,41 @@ def record_full_audit(repo, run_id, status):
     record = load_run(repo, run_id)
     if record["mode"] != "full-audit" or not status.clean:
         return None
+    scanned = record.get("scanned_epoch")
     now = now_epoch()
+    if (
+        not isinstance(scanned, (int, float))
+        or isinstance(scanned, bool)
+        or not math.isfinite(scanned)
+        or scanned > now
+        or now - scanned > FULL_AUDIT_MAX_AGE_SECONDS
+    ):
+        raise PublishError(
+            "the full audit has no recent scan time; scan again before recording a receipt",
+            EXIT_REFUSED,
+        )
+    if record.get("incident_digest") != incident_state_digest(repo):
+        raise PublishError(
+            "the incident state changed after this full-audit scan; scan again before recording a receipt",
+            EXIT_REFUSED,
+        )
+    if record["ruleset_id"] != ruleset_identity(repo.root):
+        raise PublishError(
+            "the ruleset changed after this full-audit scan; scan again before recording a receipt",
+            EXIT_REFUSED,
+        )
     receipt = {
         "schema": SCHEMA,
-        "completed_at": rfc3339(now),
-        "completed_epoch": now,
+        "completed_at": rfc3339(scanned),
+        "completed_epoch": scanned,
         "ruleset_id": record["ruleset_id"],
         "run_id": run_id,
         "public_refs": record.get("public_refs") or [],
         "incident_flag": False,
+        "incident_digest": record["incident_digest"],
     }
-    write_json(repo.state_dir / "full-audit.json", receipt)
+    if full_audit_receipt(repo) != receipt:
+        write_json(repo.state_dir / "full-audit.json", receipt)
     return receipt
 
 
@@ -2593,11 +2657,16 @@ def command_scan(args):
 
     ruleset_id = ruleset_identity(repo.root)
     key = fingerprint_key(repo)
-    boundary = resolve_boundary(repo)
+    boundary = resolve_boundary(
+        repo,
+        fetch=args.mode != "readiness",
+        fetch_missing_objects=args.mode == "readiness",
+    )
     notes_digest = notes_digest_of(args.release_notes)
     run_id = compute_run_id(args.mode, repo, boundary, ruleset_id, args.tag, notes_digest)
     now = now_epoch()
     staleness = full_audit_staleness(repo, ruleset_id, now)
+    incident_digest = incident_state_digest(repo)
 
     public_refs = []
     if args.mode == "full-audit":
@@ -2613,6 +2682,7 @@ def command_scan(args):
         "mode": args.mode,
         "run_id": run_id,
         "created_at": rfc3339(now),
+        "scanned_epoch": now,
         "repository": str(repo.root),
         "remote_name": repo.remote_name,
         "remote_url": repo.fetch_url,
@@ -2623,6 +2693,8 @@ def command_scan(args):
         "manifest_id": manifest["manifest_id"],
         "full_audit_due": staleness is not None,
         "public_refs": public_refs,
+        "incident_digest": incident_digest,
+        "release_tag": args.tag,
     }
     store_run(repo, record)
     store_findings(repo, run_id, result)
@@ -2712,6 +2784,8 @@ def command_repair_start(args):
     repo = discover_repository()
     fingerprint_key(repo)
     record = load_run(repo, args.run)
+    if record["mode"] == "readiness":
+        raise PublishError("a readiness run cannot start a history repair", EXIT_REFUSED)
     status = review_status(repo, args.run)
     if not (status.deterministic or status.unit_findings):
         raise PublishError(
@@ -2950,9 +3024,17 @@ def authorization_updates(repo, record, tag):
 
 
 def authorize_run(repo, run_id, tag, now):
-    record, _ = revalidate_run(repo, run_id)
+    record = load_run(repo, run_id)
     if record["mode"] == "full-audit":
         raise PublishError("a full audit run never publishes", EXIT_REFUSED)
+    if record["mode"] == "readiness":
+        raise PublishError("a readiness run cannot authorize a push", EXIT_REFUSED)
+    record, _ = revalidate_run(repo, run_id)
+    if record["mode"] == "release" and tag != record.get("release_tag"):
+        raise PublishError(
+            "the requested tag does not match the reviewed release tag; scan and review the intended tag",
+            EXIT_REFUSED,
+        )
     staleness = full_audit_staleness(repo, record["ruleset_id"], now)
     if staleness:
         raise PublishError("full audit required: %s" % staleness, EXIT_REFUSED)

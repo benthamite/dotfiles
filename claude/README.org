@@ -320,6 +320,11 @@ The paired =personalize= skill carries a hard concision rule: outgoing drafts
 carry only what the recipient needs to act or decide, lead with the ask, and
 hold Slack replies to a few sentences.
 
+The =interpretability-audit= skill distinguishes sampled from exhaustive coverage,
+accepts plain-language fix requests, and grounds clarity findings in actual reader
+misunderstandings. Renames and extractions require contract checks; unknown rationale
+does not become an invented comment, and audit-only checks cannot rewrite files.
+
 The paired =humanize= skill owns the single tells catalogue that =personalize=
 reads by reference. Beyond the Wikipedia-derived tells it launched with, the
 catalogue covers the engagement register (throat-clearing openers, faux-insight

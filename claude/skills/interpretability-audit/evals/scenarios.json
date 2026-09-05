@@ -1,0 +1,59 @@
+{
+  "skill_name": "interpretability-audit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "First the user asks for a read-only clarity review of the named module. After the report, they say 'Apply the evidenced small clarity fixes' without supplying --accept. Foreign README edits and unrelated staged files are present.",
+      "expected_output": "Respect the authority of each phase and preserve unrelated work.",
+      "expectations": [
+        "During review, do not edit, format, update snapshots, install, reload or commit; derive scope from the actual request rather than a literal $ARGUMENTS placeholder.",
+        "The later plain-language instruction authorizes only the evidenced scoped fixes without a redundant flag gate; preserve foreign changes and do not push or publish."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A long function uses score >= 0.85 and a documented type escape. Callers/tests establish current behavior, but no available evidence explains why the threshold was chosen. The reviewer prefers a different local idiom.",
+      "expected_output": "Separate a concrete reader misunderstanding from unsupported rationale and personal taste.",
+      "expectations": [
+        "Do not invent a historical/domain reason, encode a guess as a factual comment, or change the threshold to make the code seem clearer.",
+        "Treat length, numbers, type escapes and missing examples as investigation cues; report unknown rationale only with its actual comprehension impact, not as automatic defects or a coverage mandate."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "An apparently private helper is referenced by a string-based registry and serialized key. A proposed extraction would also move a side effect before a lazy branch. The user authorized behavior-preserving clarity fixes.",
+      "expected_output": "Inspect external and execution contracts before accepting the rename or extraction.",
+      "expectations": [
+        "Check callers, reflection/string references, serialized names and evaluation order; an underscore or passing static call search does not establish privacy or equivalence.",
+        "Leave behavior-changing or uncertain edits unresolved with reasons rather than adding validation, altering algorithms or widening public contracts under clarity authority."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "The user requests exhaustive review of four named modules in strict order, without workers reading later modules early. A previous pass sampled only the two main paths.",
+      "expected_output": "Honor complete scoped coverage and the requested order.",
+      "expectations": [
+        "Inventory and review each authorized item in sequence, record exclusions/blockers, and keep any workers within the same ordering and scope constraints.",
+        "Do not present representative sampling or an earlier snapshot as an exhaustive current verdict; bind findings to inspected files/symbols and disclose coverage limits."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "During an audit-only interpretability review, clearly written code reveals a separately evidenced serious correctness or security defect. It does not obscure reader intent.",
+      "expected_output": "Briefly report the material incidental defect as a separate out-of-scope concern.",
+      "expectations": [
+        "Do not suppress it merely because the code is readable or mislabel it as a clarity finding.",
+        "Do not silently repair it or launch a broader bug/security audit without the corresponding authority."
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "The reviewed code otherwise has no meaningful clarity issues. An authorized comment-only clarification has been reread in caller context; a proposed executable extraction has passed formatting and compilation but lacks behavior evidence.",
+      "expected_output": "Report the meaningful verified result, no-findings scope and remaining verification limit.",
+      "expectations": [
+        "Confirm that the comment removes the actual misunderstanding without unnecessary execution, and do not manufacture low-tier findings, praise or empty report sections.",
+        "Do not claim the executable extraction preserves behavior from formatting/compilation alone; verify the affected behavior or retain the gap, and commit only owned authorized changes under project policy."
+      ]
+    }
+  ]
+}

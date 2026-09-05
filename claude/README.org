@@ -164,6 +164,11 @@ and pending or non-success outcomes remain explicit. Status checks alone do
 not authorize repairs, reruns or publication. Attempt inspection validates
 GitHub's attempt-specific URL against the listed run and exact attempt.
 
+The =pr-audit= skill binds the requested PR and tested artifact to frozen
+base/head revisions. It separates commit selection from the net PR patch,
+reviews merge parents explicitly, and keeps readiness evidence distinct from
+permission to repair, rewrite history or publish.
+
 The project-local =config-audit= respects a requested subset and includes
 procedural bodies when full skill audits are requested. It distinguishes
 skill discovery from instruction loading and checks actual hook coverage

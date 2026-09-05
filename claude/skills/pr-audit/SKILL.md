@@ -1,88 +1,164 @@
 ---
 name: pr-audit
-description: Verify a PR or PR-ready branch before submitting, pushing, merging, or after revision. Runs build/test checks, commit review, upstream alignment, file hygiene, and remote CI checks when available.
+description: Audit a specified PR or PR-ready branch for submission or post-revision readiness. Bind the exact base/head, review commits and net changes, run safe project checks and inspect applicable CI. An audit alone does not authorize fixes, history changes or publication.
 ---
 
 # PR verification
 
-Thoroughly verify the current branch's PR before it is pushed or after it has been revised. The goal is to catch every class of problem that would be embarrassing if a maintainer found it.
+Audit the requested PR or branch, not necessarily the current checkout. Keep
+review-only requests read-only apart from safe diagnostic artifacts. If the
+user also requested fixes, implement confirmed in-scope defects and re-audit
+the changed revision. Do not push, merge, rebase, create a PR, post a review,
+rerun CI or change shared settings without the corresponding authority.
+Do not invoke a branch-completion menu merely because another plugin exists.
 
-Parallelize independent checks where the runtime supports it, and use subagents when available. Keep dependencies explicit: discover the base before reviewing commits, and check remote CI only after a branch or PR has been pushed.
+Parallelize independent checks when supported, after binding their common
+base/head and tested artifact. Subagents return evidence, not independent
+permission to mutate the branch. Reading or auditing this skill does not
+request a real PR audit or authorize account operations.
 
-If a check is not applicable or cannot be run because required tooling, auth, network access, or project metadata is unavailable, mark it as **not run** with the concrete reason. Do not silently skip it.
+Use `code-audit` for defect review not tied to PR readiness, `design-audit` for
+architecture, and `diagnose` for a specific tooling/workflow incident. A request
+to run one known check does not need this full workflow.
 
-Do not push, force-push, create a PR, post comments, approve reviews, or otherwise change remote/shared state unless the user explicitly asked for that action.
+## Bind scope and revisions
 
-When Superpowers is available, use `superpowers:finishing-a-development-branch` for the normal branch-completion menu. Use this skill when the user asks for PR readiness, pre-submit verification, post-revision verification, or a deeper audit than the branch-completion workflow provides.
+Record the requested repository/forge, PR identity if any, intended base,
+full head SHA, and whether the target is committed code or an explicitly
+included working-tree proposal. Inspect branch, remotes, index and dirty paths;
+preserve unrelated changes and do not treat them as part of the PR.
 
-## When not to use
+For GitHub, use the mandated service route and an explicit PR identifier plus
+repository, for example after resolving both variables:
 
-- General bug, application-security, or architecture review of code that is not tied to PR readiness; use `code-audit` or `design-audit` instead. Dedicated machine, dependency, secrets, or agent-security posture reviews are also outside this skill's scope.
-- A narrow request to run one known command, unless the user also asks for PR readiness or pre-submit verification.
-- Investigation of why a check failed without a full PR audit; use `diagnose` when the user wants root-cause analysis first.
+```bash
+gh pr view "$PR_NUMBER" --repo "$PR_REPO" --json url,state,baseRefName,baseRefOid,headRefName,headRefOid,headRepository,headRepositoryOwner,isCrossRepository
+```
 
-## 0. Scope and base discovery
+Validate the returned URL, base repository and fork/head identity against the
+request. Bare `gh pr view` selects the checkout's PR; it is not sufficient when
+a URL, fork or another revision was requested. See the
+[CLI fields](https://cli.github.com/manual/gh_pr_view).
+For another forge, use its supported equivalent rather than inventing gh fields.
 
-- Record the current branch, `git status --short`, remotes, and whether the branch has an open PR. Treat unrelated dirty files as out of scope unless they are part of the requested PR audit.
-- Identify the base branch and current upstream HEAD. Prefer `gh pr view --json baseRefName,baseRefOid,headRefName,headRefOid,url` for an existing GitHub PR; otherwise use the branch's upstream or the repository default branch from `refs/remotes/origin/HEAD`.
-- Fetch the relevant remote refs when network/auth is available so stale-base checks use current data. If fetching is unavailable, report that upstream freshness is unverified.
-- Define the commit range once, usually `<base>..HEAD`, and use it consistently for commit, diff, and file-level checks.
+Without a PR, determine the intended integration branch from the request or
+repository policy. A tracking upstream can be the topic branch itself; it is
+not automatically the merge target. Neither `origin` nor a cached default-branch
+symbolic ref proves the intended target. Resolve safely from existing evidence;
+ask only if the remaining choice materially changes the audit.
 
-## 1. Build and test
+Fetch only relevant refs from verified remotes when permitted, preserving the
+current checkout and index. Do not clone an unrequested repository. Freeze and
+record full `BASE_SHA` and `HEAD_SHA` plus freshness evidence before comparisons.
+If a ref moves, distinguish the frozen audit from the newer state. Missing
+objects, unavailable network or unknown base remain explicit evidence gaps.
 
-- Discover the project's documented checks from files such as `README`, `Makefile`, package manifests, CI config, or local project instructions.
-- **Byte-compile / type-check / lint**: run the standard static analysis command. For Elisp, prefer the project command if present; otherwise use an appropriate batch compile command such as `eask compile` or `emacs --batch -L . -f batch-byte-compile`.
-- **Run the full test suite**: use the project's test runner (`make test`, `eask test ert`, `pytest`, etc.). Report the exact command, pass/fail counts, and any warnings.
-- Distinguish pre-existing warnings or failures from warnings or failures plausibly introduced by the PR.
+Use different comparisons for different questions:
 
-## 2. Commit structure review
+- Select branch commits with `git log "$BASE_SHA..$HEAD_SHA"`.
+- Find all merge bases with `git merge-base --all "$BASE_SHA" "$HEAD_SHA"`.
+  For one merge base, bind `MERGE_BASE_SHA` and review the net PR patch with
+  `git diff --find-renames "$MERGE_BASE_SHA" "$HEAD_SHA"` (equivalently the
+  three-dot diff of the frozen base/head). An endpoint two-dot diff can include
+  changes made only on the newer base. Missing or multiple merge bases require
+  explicit handling; do not turn command failure or an arbitrary choice into
+  an empty/complete review. See [Git diff semantics](https://git-scm.com/docs/git-diff).
+- Treat staged/unstaged changes separately if explicitly in scope. They are not
+  evidence about the committed head until the reviewed artifact is identified.
 
-For each commit on the branch (relative to the PR base):
+## Review commits and final changes
 
-- **Read the full diff** (`git show --stat --patch --find-renames <sha>`) and verify:
-  - The commit touches only what its message describes — no unrelated changes leak in.
-  - Changes are not duplicated across commits.
-  - No changes are missing (nothing accidentally left out of the split).
-  - Docstring and comment updates are in the same commit as the code they describe.
-- **Check commit messages**: they should be concise, accurate, and follow the project's conventions.
-- **Verify the final state** matches intent: if commits were restructured, compare the final diff against the saved pre-rewrite state or the original ref supplied by the user.
+Read every selected commit's full patch, not just its stat or a truncated tool
+response. For merges, inspect the relevant parents explicitly; for example
+`git show --diff-merges=separate --stat --patch --find-renames COMMIT_SHA`.
+Ordinary combined output can omit files or resolution hunks; per-parent views
+also contain inherited changes, so attribute them correctly rather than calling
+every displayed hunk newly introduced. See [merge formats](https://git-scm.com/docs/git-show).
 
-## 3. Diff against upstream
+Check scope, correctness, omissions, accidental duplication and commit-message
+accuracy against the project's conventions. Review the complete final net
+patch as well: individually plausible commits can compose incorrectly.
+Confirm code, docs and tests describe the same final behavior. For restructured
+history, compare against the saved pre-rewrite revision when available; do not
+invent an earlier baseline or rewrite history to satisfy a cosmetic preference.
 
-- Verify the branch is based on the current upstream HEAD. For GitHub PRs, compare against the base ref reported by `gh pr view`; otherwise compare against the fetched upstream/default branch.
-- Flag a stale base if the current upstream base is not an ancestor of `HEAD`.
-- Check `git log <base>..HEAD` and, when useful, `git log --left-right --cherry-pick --oneline <base>...HEAD` to confirm only intended commits are included.
+Inspect the PR for unintended generated/debug/temp artifacts, file modes,
+symlink changes, binary files and accidentally included sensitive data. Legitimate
+logging, fixtures or commented examples are not defects merely because a keyword
+search found them. Follow secret-handling rules before credential inspection;
+report locations and risk, never credential values or private payloads.
+Run `git diff --check "$MERGE_BASE_SHA" "$HEAD_SHA"` for the identified net patch;
+keep any working-tree whitespace check separately scoped. Preserve intentional
+literal whitespace/line-ending requirements rather than applying blanket cleanup.
 
-## 4. File-level checks
+## Verify the actual artifact
 
-- **No temporary or debug artifacts**: no leftover `console.log`, `print`, temp files, `.orig` files, commented-out code added by us.
-- **No secrets or credentials** accidentally staged or introduced in the PR diff. Follow local secret-handling rules and never quote credential values in the report.
-- **File endings and whitespace**: run `git diff --check` for the PR range and working tree as applicable; flag unintended whitespace changes or mixed line endings.
+Discover project checks and their effects from instructions, manifests, build
+files and CI. Inspect commands before executing them: test/install hooks and
+so-called dry runs can write shared state, use credentials or delete files.
+Do not execute untrusted scripts, install dependencies or invoke services merely
+because a PR names them. Use authorized local checks and explicit isolated
+fixtures; unavailable or unsafe checks are not run, not passed.
 
-## 5. CI configuration (if changed)
+Bind each result to the exact tested revision/tree and environment. A passing
+dirty checkout does not prove the committed PR head passes. When isolation is
+needed, use an owned checkout/worktree at the configured outside-Drive location,
+after checking checkout hooks/filters and other effects; preserve the user's
+checkout/index. Include dependencies and relevant generated inputs in the
+provenance. Clean up only owned artifacts. If exact-revision testing is not
+possible, report that gap instead of borrowing results from a nearby commit.
 
-- If CI config was modified, verify the changes are syntactically valid (e.g., YAML lint for GitHub Actions).
-- Confirm that test commands referenced in CI actually exist in the Makefile/config.
-- If possible, do a dry-run of the CI command locally.
+Run the documented build/type/lint checks and full applicable test suite when
+safe and feasible. Apply `elisp-conventions` for Elisp verification instead of
+inventing a batch-compile command or affecting a live Emacs profile. Record
+commands, exit status, meaningful counts and warnings. Passing a static check
+is not proof of user-visible behavior; directly cover the changed requirement
+where applicable, within the task's authority.
 
-## 6. Remote CI results
+Classify baseline failures only with comparable evidence, such as the same
+check on the base under the same environment. A warning's age or a failure's
+plausible infrastructure explanation is not proof it predates the PR. Preserve
+uncertainty and do not hide failures by weakening checks or changing runtimes.
 
-If the branch or PR has already been pushed, check the CI results on the remote. Do not push just to make this step possible.
+## Check integration and CI
 
-- **Poll CI status** (`gh pr checks`, `gh run view`, etc.) and wait for results if still pending.
-- **Inspect failures**: for any failing job, fetch the logs (`gh run view <id> --job <job-id> --log`) and determine whether the failure is caused by our changes or is a pre-existing/infrastructure issue.
-- **Report clearly**: distinguish our failures (must fix) from environmental ones (e.g., dependency resolution bugs on a specific Emacs/OS version, flaky CI infra).
+Assess integration against the frozen current base and applicable repository
+policy. Being behind the base is not inherently a blocking defect: strict
+checks, loose checks and merge queues have different requirements. Record
+conflicts, policy requirements and freshness gaps separately. Do not merge or
+rebase the user's branch as an audit step. If mergeability is unknown, say so;
+ancestry alone does not establish conflict-free integration.
 
-## Output
+If CI configuration changed, check supported syntax and semantics: actual
+commands, dependencies/runtimes, matrix entries, trigger/path filters, required
+check names, permissions and secret exposure. YAML parsing or a local dry run
+alone does not prove the workflow will trigger or pass remotely.
 
-Report results in this order:
+For an existing pushed revision, use `post-push-ci` in its read-only observation
+mode with explicit repository, SHA, event and run attempt. Bind PR merge-ref or
+merge-queue checks to the actual tested commit and its relationship to this
+head/base; an old green run or unrelated push workflow does not cover this PR.
+Include expected required checks and non-Actions checks, not merely returned
+rows. Keep pending, failed, skipped/neutral, not applicable and unknown distinct;
+platform acceptance of a skip does not prove the work executed. No push or
+workflow dispatch is authorized just to obtain missing evidence.
 
-1. **Scope**: branch, base, PR URL if any, dirty-tree notes
-2. **Build/test results**: commands run, pass/fail counts, warnings
-3. **Commit review**: any issues found per commit
-4. **Upstream alignment**: base branch status and whether freshness was verified
-5. **File checks**: artifacts, secrets, whitespace, line endings
-6. **Remote CI**: status, failures inspected, or why not run
-7. **Overall verdict**: ready to push/merge, or list of items to fix first
+Inspect failing jobs and exact-attempt logs safely. Follow requested monitoring
+with bounded, responsive checks; ordinary pending state is not an infrastructure
+failure. Distinguish confirmed PR regressions from demonstrated baseline or
+external failures without claiming an unknown cause is environmental. A
+review-only finding stays a finding; repair and publication require scope.
 
-If everything passes, say so clearly. If there are issues, list them all before offering to fix. Mention every not-run check and its reason.
+## Verdict
+
+Lead with ready for the audited scope, not ready, or inconclusive. Tie that
+verdict to the exact target and required gates; no blanket ready-to-merge claim
+when approvals, policy or required CI remain unknown. Distinguish failed,
+pending, not run and genuinely not applicable checks in the audit evidence.
+
+Give actionable findings first, then material evidence gaps and the concise
+check results needed to understand the conclusion. Keep a complete per-check
+record without forcing a seven-section reply; use private artifacts when
+needed, never unsolicited project session logs. Do not offer an unsolicited
+publication menu. If fixes were authorized, perform them within scope and
+verify the new revision before updating the verdict.

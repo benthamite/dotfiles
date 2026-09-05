@@ -133,6 +133,11 @@ serializing a lockfile. It uses supported GitHub PR fields, strict release tags,
 path-only version commits, and the same approved notes file for review and
 release creation. Preparation alone grants no publication authority.
 
+The paired =release-package= skill distinguishes candidate audits and preparation
+from publication. It binds versions, notes, checks and exact branch/tag objects,
+compares versions without losing patch components, and reconciles partial releases
+without moving published tags or silently widening push destinations.
+
 The paired =refresh-cr-tracker= skill separates local generation from authorized
 publication to its existing artifact. It requires a verified checkout, complete
 source retrieval, matching output hashes and the actual deployment capability;

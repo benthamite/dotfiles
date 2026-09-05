@@ -322,6 +322,8 @@ Commit gates resolve explicit path selections against a disposable candidate ind
 
 The Elisp evidence gate recovers a nested =functions.exec= command's working directory before routing it to a repository. The reduced routing payload cannot recover the parent transcript context afterward. Directory selections include files known to Git, so an untracked manual cannot satisfy the documentation gate.
 
+The Bash dispatcher denies commands when a delegated guard exits unsuccessfully or returns invalid decision JSON. It parses decisions independently of formatting and rejects interactive approval responses. Failure diagnostics identify the guard and exit status without exposing its failed output or the command payload.
+
 The secret-leak guard denies direct agent-shell invocations of raw =op=,
 =pass=, macOS =security=, and =pbpaste=, including wrappers, nested shells,
 process substitution, executable globs, and shell-word obfuscation. The

@@ -6,10 +6,8 @@
 # aggregated hookSpecificOutput. Replaces ~13 bash+jq spawns per Bash command
 # with one.
 #
-# Claude Code runs all hooks matched to an event and aggregates their outputs
-# with precedence deny > ask > allow; permissionDecision and updatedInput may
-# coexist. A single dispatcher that emits one aggregated decision is therefore
-# behaviorally equivalent to the separate hooks.
+# Aggregate denials and command rewrites into one response. Delegated failures
+# deny explicitly, and interactive approval decisions are not supported.
 #
 # Self-contained, always-run checks are ported here (the only way to drop their
 # per-command spawn). Checks that do git/filesystem work behind a cheap regex
@@ -53,16 +51,41 @@ updated_input_json() {
   printf '%s' "$INPUT" | jq -c --arg cmd "$UPDATED_CMD" '.tool_input + {command:$cmd}'
 }
 
-# Delegate to an unchanged standalone hook; fold any deny it emits into the
-# accumulator. Used for checks that do git/fs work behind a cheap gate, so they
-# only spawn when relevant.
+# A delegated guard must exit successfully and either remain silent or emit
+# one structured decision. A crash or invalid response is not authorization.
+# Do not echo failed stdout/stderr: a broken guard may include input secrets.
 delegate() {
-  local out reason
-  out=$(printf '%s' "$INPUT" | bash "$DIR/$1" 2>/dev/null) || true
-  if printf '%s' "$out" | grep -q '"permissionDecision": "deny"'; then
-    reason=$(printf '%s' "$out" | jq -r '.hookSpecificOutput.permissionDecisionReason // empty' 2>/dev/null || true)
-    add_deny "$reason"
+  local out reason status response decision
+  if out=$(printf '%s' "$INPUT" | bash "$DIR/$1" 2>/dev/null); then
+    status=0
+  else
+    status=$?
   fi
+  if [ "$status" -ne 0 ]; then
+    add_deny "BLOCKED: delegated guard $1 failed with exit status $status; its policy check did not complete."
+    return 0
+  fi
+  [[ "$out" =~ ^[[:space:]]*$ ]] && return 0
+  if ! response=$(printf '%s' "$out" | jq -ces '
+      if length != 1 then error("expected one response") else .[0] end |
+      if type != "object" then error("expected object") else .hookSpecificOutput end |
+      if type == "object" and (.permissionDecision | type == "string") and
+         ((.permissionDecisionReason == null) or (.permissionDecisionReason | type == "string"))
+      then . else error("invalid decision") end' 2>/dev/null); then
+    add_deny "BLOCKED: delegated guard $1 returned invalid decision JSON; its policy check could not be interpreted."
+    return 0
+  fi
+  decision=$(printf '%s' "$response" | jq -r '.permissionDecision')
+  case "$decision" in
+    deny)
+      reason=$(printf '%s' "$response" | jq -r '.permissionDecisionReason // empty')
+      [ -n "$reason" ] || reason="BLOCKED: delegated guard $1 denied the command without a reason."
+      add_deny "$reason"
+      ;;
+    allow) ;;
+    *) add_deny "BLOCKED: delegated guard $1 returned an unsupported decision; guards must allow or deny without requesting approval." ;;
+  esac
+  return 0
 }
 
 # ============================================================================

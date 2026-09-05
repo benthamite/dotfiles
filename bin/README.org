@@ -31,7 +31,7 @@ documented in [[file:../agents/README.org][the agent manual]]. Skill names and t
 | =docs-audit= | Generates the tracked skill inventory and audits documentation ownership, links, and generated pairs. |
 | =dotfiles-pre-push= | Passes proposed dotfiles pushes to the publication authorizer and otherwise refuses them. |
 | =dotfiles-publish= | Scans, redacts, reviews, and authorizes one exact guarded publication; raw scanner reports exist only in a private off-tree temporary workspace, and legacy unsafe manifests are refused. |
-| =drive-errors= | Reads every page of Google Drive's native sync-error panel, preserves exact rows and reasons, and inventories candidate paths without claiming basename matches identify the offending instance. |
+| =drive-errors= | Reads complete, ordered native sync-error pages with bounded accessibility calls; labels fixture input and account-independent candidate roots, and refuses incomplete or malformed evidence. Filesystem inventories are symlink and known-name candidates, not exact offending-instance proof. |
 | =git-remote-dotfiles-blocked= | Refuses ordinary dotfiles pushes before Git can bypass the publication workflow. |
 | =install-private-skills= | Installs ignored local shims for skills named by the encrypted private manifest. |
 | =mirror-claude-agents= | Copies between a project’s =CLAUDE.md= and =AGENTS.md= when they are intentional mirrors. |
@@ -112,7 +112,7 @@ not be used to print or document secret values; the placement rules are in
 | =check_tlon_pass_changes= | Pulls remote changes for the Tlon password-store repository. |
 | =chrome-profile-open= | Opens URLs in a Chrome profile selected by a configured alias. |
 | =chrome-work-tab= | Opens URLs in the work Chrome profile, with a Codex-specific external-browser guard. |
-| =epoch-doc-link= | Creates private =epoch-doc:= shortcuts and opens them only through the configured Epoch Chrome profile. |
+| =epoch-doc-link= | Creates exact, no-overwrite =epoch-doc:= shortcuts in a pinned parent directory, verifies the saved file, and opens document URIs through the configured Epoch Chrome profile. Saved-file/OS-handler acceptance is a separate live check. |
 | =gam= | Launches the local GAMADV-XTD3 installation. |
 | =gmail-maildir-sync= | Runs the Gmail-to-Maildir package with its Google Workspace authentication context. |
 | =gitguardian-incidents= | Lists fixed-schema metadata for open or closed GitGuardian incidents and retrieves one incident's paginated occurrence coordinates while keeping credentials and matched values out of agent output. |

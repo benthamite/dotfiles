@@ -4,12 +4,13 @@
 from __future__ import annotations
 
 import argparse
+import errno
 import os
 import re
+import secrets
 import stat
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 
@@ -51,48 +52,109 @@ def parse_link_url(value: str) -> str:
     return document_id
 
 
+def file_identity(metadata: os.stat_result) -> tuple[int, int]:
+    return metadata.st_dev, metadata.st_ino
+
+
+def file_state(metadata: os.stat_result) -> tuple[int, ...]:
+    return (*file_identity(metadata), metadata.st_mode, metadata.st_size,
+            metadata.st_mtime_ns, metadata.st_ctime_ns)
+
+
+def verify_parent(destination: Path, directory: int) -> None:
+    if file_identity(os.stat(destination.parent)) != file_identity(os.fstat(directory)):
+        raise LinkError(f"Destination directory changed during creation: {destination.parent}")
+
+
+def inspect_shortcut(destination: Path, directory: int, content: bytes,
+                     expected_identity: tuple[int, int] | None = None) -> bool:
+    """Read one regular file without following a replaced shortcut path."""
+    try:
+        descriptor = os.open(destination.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK,
+                             dir_fd=directory)
+    except FileNotFoundError:
+        return False
+    except OSError as error:
+        if error.errno == errno.ELOOP:
+            raise LinkError(f"Refusing to replace symlink: {destination}") from error
+        raise
+    try:
+        before = os.fstat(descriptor)
+        if not stat.S_ISREG(before.st_mode):
+            raise LinkError(f"Refusing to replace non-file: {destination}")
+        with os.fdopen(descriptor, "rb", closefd=False) as handle:
+            if handle.read(len(content) + 1) != content:
+                raise LinkError(f"Refusing to replace different regular file: {destination}")
+        if stat.S_IMODE(before.st_mode) != 0o644:
+            raise LinkError(f"Existing shortcut has unexpected mode: {destination}")
+        after = os.fstat(descriptor)
+        current = os.stat(destination.name, dir_fd=directory, follow_symlinks=False)
+        if (file_state(before) != file_state(after) or file_state(after) != file_state(current)
+                or (expected_identity is not None and file_identity(after) != expected_identity)):
+            raise LinkError(f"Shortcut changed during verification: {destination}")
+    finally:
+        os.close(descriptor)
+    return True
+
+
 def create_shortcut(document_id: str, destination: Path) -> None:
     if destination.suffix != ".url":
         raise LinkError("Shortcut destination must end in .url")
-    if not destination.parent.is_dir():
-        raise LinkError(f"Destination directory does not exist: {destination.parent}")
-    if destination.is_symlink():
-        raise LinkError(f"Refusing to replace symlink: {destination}")
-    if destination.exists() and not destination.is_file():
-        raise LinkError(f"Refusing to replace non-file: {destination}")
-
     content = shortcut_text(document_id).encode("ascii")
-    if destination.exists():
-        try:
-            existing = destination.read_bytes()
-        except OSError as error:
-            raise LinkError(
-                f"Cannot inspect existing destination: {destination}"
-            ) from error
-        if existing == content:
-            if stat.S_IMODE(destination.stat().st_mode) != 0o644:
-                raise LinkError(f"Existing shortcut has unexpected mode: {destination}")
-            return
-        raise LinkError(f"Refusing to replace different regular file: {destination}")
-
-    descriptor, temporary = tempfile.mkstemp(
-        prefix=f".{destination.name}.", dir=destination.parent
-    )
-    temporary_path = Path(temporary)
     try:
-        with os.fdopen(descriptor, "wb") as handle:
-            handle.write(content)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.chmod(temporary_path, 0o644)
         try:
-            os.link(temporary_path, destination)
-        except FileExistsError as error:
-            raise LinkError(
-                f"Destination appeared during shortcut creation: {destination}"
-            ) from error
-    finally:
-        temporary_path.unlink(missing_ok=True)
+            parent_before = os.stat(destination.parent)
+            directory = os.open(destination.parent, os.O_RDONLY | os.O_DIRECTORY)
+        except (FileNotFoundError, NotADirectoryError) as error:
+            raise LinkError(f"Destination directory does not exist: {destination.parent}") from error
+        try:
+            if file_identity(parent_before) != file_identity(os.fstat(directory)):
+                raise LinkError(f"Destination directory changed during creation: {destination.parent}")
+            verify_parent(destination, directory)
+            if inspect_shortcut(destination, directory, content):
+                verify_parent(destination, directory)
+                return
+
+            # Every write and cleanup stays anchored to this directory even if
+            # its pathname is renamed or replaced by a symlink concurrently.
+            temporary = f".{destination.name}.{secrets.token_hex(12)}"
+            descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                                 0o600, dir_fd=directory)
+            with os.fdopen(descriptor, "wb") as handle:
+                temporary_identity = file_identity(os.fstat(handle.fileno()))
+                try:
+                    handle.write(content)
+                    handle.flush()
+                    os.fchmod(handle.fileno(), 0o644)
+                    os.fsync(handle.fileno())
+                    created = os.fstat(handle.fileno())
+                    verify_parent(destination, directory)
+                    current = os.stat(temporary, dir_fd=directory, follow_symlinks=False)
+                    if file_state(created) != file_state(current):
+                        raise LinkError(f"Temporary shortcut changed during creation: {destination}")
+                    try:
+                        os.link(temporary, destination.name, src_dir_fd=directory,
+                                dst_dir_fd=directory, follow_symlinks=False)
+                    except FileExistsError as error:
+                        raise LinkError(f"Destination appeared during shortcut creation: {destination}") from error
+                    if not inspect_shortcut(destination, directory, content, file_identity(created)):
+                        raise LinkError(f"Shortcut disappeared during verification: {destination}")
+                    verify_parent(destination, directory)
+                finally:
+                    # Keep the original inode open through cleanup. Do not
+                    # delete a temporary name replaced by another writer, or a
+                    # published destination after failed readback.
+                    try:
+                        current = os.stat(temporary, dir_fd=directory, follow_symlinks=False)
+                    except FileNotFoundError as error:
+                        raise LinkError(f"Temporary shortcut disappeared during creation: {destination}") from error
+                    if file_identity(current) != temporary_identity:
+                        raise LinkError(f"Temporary shortcut changed; leaving replacement untouched: {destination}")
+                    os.unlink(temporary, dir_fd=directory)
+        finally:
+            os.close(directory)
+    except OSError as error:
+        raise LinkError(f"Cannot create or verify shortcut {destination}: {error.strerror or error}") from error
 
 
 def open_shortcut(value: str, opener: Path = PROFILE_OPENER) -> int:

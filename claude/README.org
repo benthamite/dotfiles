@@ -168,6 +168,10 @@ personal/plugin identities and exact name boundaries, and handles task-start
 context, hidden inputs, and fractional timestamps. Counts remain reconstructed
 evidence, not native invocation telemetry or proof of workflow completion.
 
+The =code-audit= skill requires supported failure evidence, distinguishes defects
+from generic hardening, and checks exact failing behavior after fixes. Audit-only
+checks cannot smuggle in snapshot rewrites, installs or external side effects.
+
 The =chrome-permission-audit= helper defaults to non-recording reads and requires
 exclusive closed-browser store access. Revocations consume reviewed exact plans,
 preserve deny/transient records, and retain permission-key-only recovery backups.

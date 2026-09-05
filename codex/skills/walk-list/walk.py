@@ -2,8 +2,8 @@
 """walk-list: strict one-at-a-time OR N-at-a-time item processor.
 
 On `start`, the input file is MOVED to ~/.claude/walk-list-data/<uuid>/source.json
-and replaced at the original path with a stub. A PreToolUse hook blocks
-every tool from accessing the protected store except walk.py itself.
+and replaced at the original path with a stub. Where installed, the hook rejects
+recognized direct store access; it does not provide a universal access guarantee.
 
 Sequential mode (default, max_concurrent=1):
     walk.py start <file>
@@ -30,10 +30,15 @@ Utilities:
 """
 import contextlib
 import fcntl
+import functools
+import io
 import json
+import math
+import os
 import shlex
 import shutil
 import sys
+import tempfile
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -41,6 +46,7 @@ from pathlib import Path
 
 DATA_ROOT = Path.home() / ".claude" / "walk-list-data"
 REGISTRY_PATH = DATA_ROOT / "registry.json"
+OUTPUT_ROOT = DATA_ROOT.parent / "walk-list-out"
 STUB_MARKER = "_walk_locked"
 DEFAULT_MAX = 1
 
@@ -60,7 +66,7 @@ def parse_non_negative_float(raw: str, label: str) -> float:
         value = float(raw)
     except ValueError as exc:
         raise SystemExit(f"ERROR: {label} must be a non-negative number: {raw}") from exc
-    if value < 0:
+    if not math.isfinite(value) or value < 0:
         raise SystemExit(f"ERROR: {label} must be a non-negative number: {raw}")
     return value
 
@@ -84,7 +90,49 @@ def load_registry() -> dict:
 
 def save_registry(reg: dict) -> None:
     ensure_root()
-    REGISTRY_PATH.write_text(json.dumps(reg, indent=2), encoding="utf-8")
+    atomic_json(REGISTRY_PATH, reg)
+
+
+def stage_bytes(path: Path, data: bytes) -> Path:
+    """Prepare a complete sibling file; never truncate an existing destination."""
+    fd, name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    staged = Path(name)
+    try:
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+    except BaseException:
+        staged.unlink(missing_ok=True)
+        raise
+    return staged
+
+
+def atomic_json(path: Path, data: dict) -> None:
+    encoded = json.dumps(data, indent=2, ensure_ascii=False).encode("utf-8")
+    staged = stage_bytes(path, encoded)
+    try:
+        os.replace(staged, path)
+    finally:
+        staged.unlink(missing_ok=True)
+
+
+def serialized_command(function):
+    """Keep identity resolution and all lifecycle mutations in one lock domain."""
+    @functools.wraps(function)
+    def serialized(*args, **kwargs):
+        ensure_root()
+        with (DATA_ROOT / "registry.lock").open("a") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            try:
+                output = io.StringIO()
+                with contextlib.redirect_stdout(output):
+                    result = function(*args, **kwargs)
+                print(output.getvalue(), end="")
+                return result
+            finally:
+                fcntl.flock(lock, fcntl.LOCK_UN)
+    return serialized
 
 
 def canonical_key(input_file: Path) -> str:
@@ -96,17 +144,13 @@ def resolve_session(input_file: Path) -> tuple[str, Path]:
     key = canonical_key(input_file)
     sid = reg.get(key)
     if not sid:
-        for k, v in reg.items():
-            if Path(k).name == input_file.name:
-                sid = v
-                break
-    if not sid:
         raise SystemExit(
             f"ERROR: no active walk for {input_file}. Run: walk.py start {input_file}"
         )
     sdir = DATA_ROOT / sid
     if not sdir.exists():
         raise SystemExit(f"ERROR: registry points to missing session dir {sdir}")
+    require_owned_stub(input_file, sid)
     return sid, sdir
 
 
@@ -116,19 +160,17 @@ def locked_state(sdir: Path):
     walk.py invocations (e.g. subagents calling `record` simultaneously) don't
     clobber each other."""
     state_path = sdir / "state.json"
-    with open(state_path, "r+", encoding="utf-8") as f:
+    with open(sdir / "state.lock", "a", encoding="utf-8") as f:
         fcntl.flock(f.fileno(), fcntl.LOCK_EX)
         try:
-            f.seek(0)
-            data = json.load(f)
+            original = state_path.read_text(encoding="utf-8")
+            data = json.loads(original)
             data.setdefault("in_flight", {})
             data.setdefault("to_redispatch", [])
             data.setdefault("max_concurrent", 1)
             yield data
-            f.seek(0)
-            f.truncate()
-            json.dump(data, f, indent=2, ensure_ascii=False)
-            f.flush()
+            if data != json.loads(original):
+                atomic_json(state_path, data)
         finally:
             fcntl.flock(f.fileno(), fcntl.LOCK_UN)
 
@@ -138,7 +180,18 @@ def parse_items(raw: str) -> list:
     if not raw:
         return []
     if raw.startswith("["):
-        data = json.loads(raw)
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            # Multiple JSONL arrays are not one top-level JSON document.
+            lines = [line.strip() for line in raw.splitlines() if line.strip()]
+            try:
+                records = [json.loads(line) for line in lines]
+            except json.JSONDecodeError:
+                raise SystemExit("ERROR: malformed JSON array or JSONL input") from exc
+            if len(records) > 1:
+                return records
+            raise SystemExit("ERROR: malformed JSON array input") from exc
         if not isinstance(data, list):
             raise SystemExit("ERROR: top-level JSON must be an array")
         return data
@@ -171,6 +224,27 @@ def is_stub(path: Path) -> bool:
         return False
 
 
+def require_owned_stub(path: Path, sid: str) -> None:
+    if path.is_symlink() or not is_stub(path):
+        raise SystemExit(f"ERROR: input is not this walk's owned stub: {path}")
+    stub = json.loads(path.read_text(encoding="utf-8"))
+    matches = (stub["session_id"] == sid if "session_id" in stub
+               else stub.get("session_prefix") == sid[:8])
+    if not matches:
+        raise SystemExit(f"ERROR: input stub belongs to another session: {path}")
+
+
+def pending_index(state: dict, total: int):
+    if state["to_redispatch"]:
+        return state["to_redispatch"][0]
+    return state["cursor"] if state["cursor"] < total else None
+
+
+def file_identity(path: Path) -> tuple:
+    stat = path.lstat()
+    return stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns
+
+
 def print_item(index: int, total: int, item) -> None:
     print(f"=== ITEM {index + 1} OF {total} ===")
     if isinstance(item, (dict, list)):
@@ -179,7 +253,10 @@ def print_item(index: int, total: int, item) -> None:
         print(item)
 
 
+@serialized_command
 def cmd_start(input_file: Path, max_concurrent: int) -> None:
+    if input_file.is_symlink():
+        raise SystemExit("ERROR: symlink inputs are not supported; use the real file path.")
     if is_stub(input_file):
         sid, sdir = resolve_session(input_file)
         items = load_source_items(sdir)
@@ -193,12 +270,14 @@ def cmd_start(input_file: Path, max_concurrent: int) -> None:
                 f"Total: {len(items)}  Done: {done}  In-flight: {len(in_flight)}  "
                 f"Cursor: {cursor}  Redispatch-queue: {len(state['to_redispatch'])}"
             )
-            if done >= len(items) and not in_flight:
+            index = pending_index(state, len(items))
+            if done >= len(items) and not in_flight and index is None:
                 print(f"WALK COMPLETE. Run: walk.py restore {input_file}")
                 return
-            if max_c == 1 and not in_flight and cursor < len(items):
+            if max_c == 1 and not in_flight and index is not None:
                 print()
-                print_item(cursor, len(items), items[cursor])
+                print_item(index, len(items), items[index])
+                state["sequential_index"] = index
                 print()
                 print(f"When done: walk.py next {input_file} '<decision>'")
             else:
@@ -207,7 +286,14 @@ def cmd_start(input_file: Path, max_concurrent: int) -> None:
 
     if not input_file.exists():
         raise SystemExit(f"ERROR: input file not found: {input_file}")
-    items = parse_items(input_file.read_text(encoding="utf-8"))
+    key = canonical_key(input_file)
+    reg = load_registry()
+    if key in reg:
+        raise SystemExit("ERROR: active walk exists but its input stub was replaced.")
+    max_concurrent = parse_positive_int(str(max_concurrent), "max_concurrent")
+    original_identity = file_identity(input_file)
+    original_bytes = input_file.read_bytes()
+    items = parse_items(original_bytes.decode("utf-8"))
     if not items:
         raise SystemExit(f"ERROR: no items found in {input_file}")
 
@@ -216,27 +302,29 @@ def cmd_start(input_file: Path, max_concurrent: int) -> None:
     sdir = DATA_ROOT / sid
     sdir.mkdir(parents=True, exist_ok=False)
     source_path = sdir / "source.json"
-    shutil.move(str(input_file), str(source_path))
+    # Preserve the original until source, state and stub are all staged.
+    with source_path.open("xb") as source:
+        source.write(original_bytes)
+        source.flush()
+        os.fsync(source.fileno())
+    shutil.copystat(input_file, source_path)
     state = {
         "cursor": 0,
         "in_flight": {},
         "to_redispatch": [],
         "decisions": [],
         "max_concurrent": max_concurrent,
-        "original_path": str(input_file),
+        "original_path": key,
+        "sequential_index": 0 if max_concurrent == 1 else None,
     }
-    (sdir / "state.json").write_text(
-        json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8"
-    )
-    reg = load_registry()
-    reg[canonical_key(input_file)] = sid
-    save_registry(reg)
+    atomic_json(sdir / "state.json", state)
 
     input_arg = str(input_file)
     stub = {
         STUB_MARKER: True,
         "message": "Locked by walk-list. Use walk.py commands to interact.",
         "session_prefix": sid[:8],
+        "session_id": sid,
         "max_concurrent": max_concurrent,
         "commands": {
             "dispatch (pool)": walk_command("dispatch", input_arg),
@@ -247,7 +335,21 @@ def cmd_start(input_file: Path, max_concurrent: int) -> None:
             "restore": walk_command("restore", input_arg),
         },
     }
-    input_file.write_text(json.dumps(stub, indent=2), encoding="utf-8")
+    staged_stub = stage_bytes(input_file, json.dumps(stub, indent=2).encode("utf-8"))
+    try:
+        if input_file.is_symlink() or file_identity(input_file) != original_identity:
+            raise SystemExit("ERROR: input changed during start; original copy retained.")
+        new_registry = dict(reg, **{key: sid})
+        save_registry(new_registry)
+        try:
+            if input_file.is_symlink() or file_identity(input_file) != original_identity:
+                raise SystemExit("ERROR: input changed during start; original copy retained.")
+            os.replace(staged_stub, input_file)
+        except BaseException:
+            save_registry(reg)
+            raise
+    finally:
+        staged_stub.unlink(missing_ok=True)
 
     print(
         f"STARTED walk (session {sid[:8]}). {len(items)} items locked. "
@@ -264,12 +366,15 @@ def cmd_start(input_file: Path, max_concurrent: int) -> None:
         )
 
 
+@serialized_command
 def cmd_next(input_file: Path, decision: str) -> None:
     if not decision.strip():
         raise SystemExit("ERROR: decision text required.")
     sid, sdir = resolve_session(input_file)
     items = load_source_items(sdir)
     with locked_state(sdir) as state:
+        if state["max_concurrent"] != 1:
+            raise SystemExit("ERROR: next requires sequential mode; use dispatch/record.")
         if state["in_flight"]:
             raise SystemExit(
                 "ERROR: in-flight claims exist. Use `walk.py record <token> <decision>` "
@@ -279,6 +384,17 @@ def cmd_next(input_file: Path, decision: str) -> None:
         if cursor >= len(items) and not state["to_redispatch"]:
             print(f"Already complete. Run: walk.py restore {input_file}")
             return
+        index = pending_index(state, len(items))
+        if "sequential_index" not in state:
+            # Legacy sequential walks already exposed their cursor. Pool history
+            # or redispatch requires an explicit resume before a sequential verdict.
+            stub = json.loads(input_file.read_text(encoding="utf-8"))
+            legacy_sequential = (not state["to_redispatch"]
+                                 and stub.get("max_concurrent", 1) == 1
+                                 and not any("claim_token" in d for d in state["decisions"]))
+            state["sequential_index"] = index if legacy_sequential else None
+        if state["sequential_index"] != index:
+            raise SystemExit("ERROR: item not shown sequentially; run start to resume first.")
         # In sequential mode, consume either a redispatch-queue entry or cursor
         if state["to_redispatch"]:
             index = state["to_redispatch"].pop(0)
@@ -286,8 +402,10 @@ def cmd_next(input_file: Path, decision: str) -> None:
             index = cursor
             state["cursor"] = cursor + 1
         state["decisions"].append(
-            {"index": index, "item": items[index], "decision": decision.strip()}
+            {"index": index, "item": items[index], "decision": decision.strip(),
+             "recorded_at": datetime.now(timezone.utc).isoformat()}
         )
+        state["sequential_index"] = pending_index(state, len(items))
         remaining = (len(items) - state["cursor"]) + len(state["to_redispatch"])
         print(f"Recorded decision for item {index + 1}. Remaining: {remaining}")
         if remaining == 0:
@@ -304,6 +422,7 @@ def cmd_next(input_file: Path, decision: str) -> None:
         print(f"When done: walk.py next {input_file} '<decision>'")
 
 
+@serialized_command
 def cmd_dispatch(input_file: Path) -> None:
     sid, sdir = resolve_session(input_file)
     items = load_source_items(sdir)
@@ -323,6 +442,7 @@ def cmd_dispatch(input_file: Path) -> None:
             index = cursor
             state["cursor"] = cursor + 1
         token = uuid.uuid4().hex
+        state["sequential_index"] = None
         state["in_flight"][token] = {
             "index": index,
             "item": items[index],
@@ -341,6 +461,7 @@ def cmd_dispatch(input_file: Path) -> None:
         print(item)
 
 
+@serialized_command
 def cmd_record(input_file: Path, token: str, decision: str) -> None:
     if not decision.strip():
         raise SystemExit("ERROR: decision text required.")
@@ -369,6 +490,7 @@ def cmd_record(input_file: Path, token: str, decision: str) -> None:
     )
 
 
+@serialized_command
 def cmd_pool_status(input_file: Path) -> None:
     sid, sdir = resolve_session(input_file)
     items = load_source_items(sdir)
@@ -378,7 +500,7 @@ def cmd_pool_status(input_file: Path) -> None:
         done = len(state["decisions"])
         cursor = state["cursor"]
         max_c = state["max_concurrent"]
-        available = max_c - in_flight
+        available = max(0, max_c - in_flight)
         remaining_to_claim = (total - cursor) + len(state["to_redispatch"])
         out = {
             "session": sid[:8],
@@ -394,6 +516,7 @@ def cmd_pool_status(input_file: Path) -> None:
     print(json.dumps(out, indent=2))
 
 
+@serialized_command
 def cmd_status(input_file: Path) -> None:
     sid, sdir = resolve_session(input_file)
     items = load_source_items(sdir)
@@ -415,10 +538,11 @@ def cmd_status(input_file: Path) -> None:
                     f"dispatched_at {claim['dispatched_at']}"
                 )
         if state["decisions"]:
-            last = sorted(state["decisions"], key=lambda x: x.get("recorded_at", x.get("index")))[-1]
+            last = state["decisions"][-1]
             print(f"Last decision (item {last['index'] + 1}): {last['decision']}")
 
 
+@serialized_command
 def cmd_show_decisions(input_file: Path) -> None:
     sid, sdir = resolve_session(input_file)
     with locked_state(sdir) as state:
@@ -429,6 +553,7 @@ def cmd_show_decisions(input_file: Path) -> None:
             print(f"[{d['index'] + 1}] {d['decision']}")
 
 
+@serialized_command
 def cmd_release_stale(input_file: Path, max_age_seconds: str) -> None:
     sid, sdir = resolve_session(input_file)
     threshold = parse_non_negative_float(max_age_seconds, "age-seconds")
@@ -445,6 +570,8 @@ def cmd_release_stale(input_file: Path, max_age_seconds: str) -> None:
             else:
                 new_in_flight[token] = claim
         state["in_flight"] = new_in_flight
+        if released:
+            state["sequential_index"] = None
     if released:
         for idx, tok, age in released:
             print(
@@ -455,42 +582,78 @@ def cmd_release_stale(input_file: Path, max_age_seconds: str) -> None:
         print("No stale claims.")
 
 
+@serialized_command
 def cmd_set_max_concurrent(input_file: Path, n: str) -> None:
     sid, sdir = resolve_session(input_file)
     max_concurrent = parse_positive_int(n, "max_concurrent")
     with locked_state(sdir) as state:
+        if max_concurrent < len(state["in_flight"]):
+            raise SystemExit("ERROR: cap cannot be lower than the number of in-flight claims.")
+        if max_concurrent != state["max_concurrent"]:
+            state["sequential_index"] = None
         state["max_concurrent"] = max_concurrent
     print(f"max_concurrent set to {max_concurrent}")
 
 
+@serialized_command
 def cmd_restore(input_file: Path, preserve: bool = True) -> None:
     sid, sdir = resolve_session(input_file)
     source_path = sdir / "source.json"
-    state_path = sdir / "state.json"
     with locked_state(sdir) as state:
-        if state["in_flight"] and preserve:
-            print(
-                f"WARNING: {len(state['in_flight'])} in-flight claims will be discarded. "
-                "Use `walk.py release-stale <file> 0` first if you want them re-queued."
-            )
-    if preserve and state_path.exists():
-        # Write decisions outside the input file's directory. Walks are often
-        # run over a file inside a git repo, and a sidecar dropped next to it
-        # shows up as untracked junk the user then has to notice and ignore.
-        # Named from the input file's stem alone, so callers can predict the
-        # path without knowing the session id.
-        out_dir = Path.home() / ".claude" / "walk-list-out"
-        out_dir.mkdir(parents=True, exist_ok=True)
-        out = out_dir / f"{input_file.stem}.walk-decisions.json"
-        shutil.copy(str(state_path), str(out))
+        if state["in_flight"]:
+            raise SystemExit("ERROR: in-flight claims exist; stop workers and record or release claims before closing.")
+        total = len(load_source_items(sdir))
+        if preserve and (state["to_redispatch"]
+                         or state["cursor"] != total
+                         or sorted(d["index"] for d in state["decisions"]) != list(range(total))):
+            raise SystemExit("ERROR: walk unfinished; complete it or explicitly abort to discard progress.")
+        snapshot = dict(state, session_id=sid)
+    if preserve:
+        OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        out = OUTPUT_ROOT / f"{input_file.stem}.{sid}.{uuid.uuid4().hex}.walk-decisions.json"
+        # Exclusive creation preserves earlier exports, including retry attempts.
+        with out.open("x", encoding="utf-8") as stream:
+            try:
+                json.dump(snapshot, stream, indent=2, ensure_ascii=False)
+                stream.flush()
+                os.fsync(stream.fileno())
+            except BaseException:
+                out.unlink()
+                raise
         print(f"Decisions preserved at: {out}")
-    if input_file.exists():
-        input_file.unlink()
-    shutil.move(str(source_path), str(input_file))
-    reg = load_registry()
-    reg.pop(canonical_key(input_file), None)
-    save_registry(reg)
-    shutil.rmtree(sdir)
+
+    require_owned_stub(input_file, sid)
+    original_stub = input_file.read_bytes()
+    staged_source = stage_bytes(input_file, source_path.read_bytes())
+    staged_stub = None
+    try:
+        shutil.copystat(source_path, staged_source)
+        staged_stub = stage_bytes(input_file, original_stub)
+        require_owned_stub(input_file, sid)
+        restored_identity = file_identity(staged_source)
+        os.replace(staged_source, input_file)
+        try:
+            reg = load_registry()
+            reg.pop(canonical_key(input_file), None)
+            save_registry(reg)
+        except BaseException:
+            # Never roll back over somebody else's replacement.
+            if not input_file.is_symlink() and file_identity(input_file) == restored_identity:
+                os.replace(staged_stub, input_file)
+            raise
+    finally:
+        staged_source.unlink(missing_ok=True)
+        if staged_stub is not None:
+            staged_stub.unlink(missing_ok=True)
+
+    # The source and completed evidence are safe. Never recursively erase
+    # unexpected files that may have been added to a session directory.
+    for name in ("source.json", "state.json", "state.lock"):
+        (sdir / name).unlink(missing_ok=True)
+    if any(sdir.iterdir()):
+        print(f"Retained unexpected session files at: {sdir}")
+    else:
+        sdir.rmdir()
     print(f"Restored {input_file}.")
 
 

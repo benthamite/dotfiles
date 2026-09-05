@@ -133,6 +133,11 @@ serializing a lockfile. It uses supported GitHub PR fields, strict release tags,
 path-only version commits, and the same approved notes file for review and
 release creation. Preparation alone grants no publication authority.
 
+The paired =session-learning-capture= skill records proposals only after checking
+session provenance and permission to use the Drive-synced personal inbox.
+Stable full-session record keys and no-clobber publication protect retries;
+capture does not promote lessons or imply that a review consumer is installed.
+
 The paired =release-package= skill distinguishes candidate audits and preparation
 from publication. It binds versions, notes, checks and exact branch/tag objects,
 compares versions without losing patch components, and reconciles partial releases

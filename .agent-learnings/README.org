@@ -1,19 +1,21 @@
 #+title: Agent-learning workflow state
 #+author: Pablo Stafforini
 
-This directory is local workflow state for the two-stage agent-learning
-process. It is not durable agent memory and nothing here is loaded as an
-instruction merely because a file exists.
+This directory is Drive-synced personal workflow state for candidate agent
+lessons. It is not durable agent memory and a record grants no instruction or
+implementation authority. Git ignore rules do not prevent synchronization or
+authorize transferring employer, customer or other restricted information here.
 
 The =session-learning-capture= workflow may write a candidate record to
 =inbox/= at the end of a session. Capture stops there: it does not implement a
-proposal, edit instructions, or promote a lesson. The separate
-=session-retro= workflow reviews inbox records with the user and decides
-whether an accepted lesson belongs in a skill, hook, instruction file, test,
-or other owner. Processed records may be retained under =archive/=.
+proposal, edit instructions, or promote a lesson. A later explicitly authorized
+review decides whether a candidate belongs in a skill, hook, instruction file,
+test or other owner. Do not assume a =session-retro= consumer is installed or
+that review happens automatically. Capture does not move records to =archive/=.
 
 Actual inbox and archive records are ignored by Git; only the two =.gitkeep=
 files and this README are public. Both directories may contain provisional or
 private context, so their contents should not be staged as ordinary dotfiles
-documentation. A record is evidence for later review, not authority to change
-behavior.
+documentation. Bind records to their full source-session identity, preserve
+existing candidates on retries, and refuse collisions or uncertain writes.
+Scores and autonomy labels are proposed routing metadata, never authorization.

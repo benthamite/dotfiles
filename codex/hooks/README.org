@@ -156,7 +156,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =require-elisp-test-before-commit.sh= | Routes direct and composed commits to the target repository, blocks combined staging, and requires matching package or deletion-check evidence for the proposed Elisp source. |
 | =require-elisp-verify-after-commit.sh= | Allows only exact rebuild/live helpers until repository/package/commit-bound evidence clears an Elisp commit. |
 | =require-readme-update.sh= | Requires the Claude README with staged Claude skills, hooks, or settings changes. |
-| =session-learning-capture.sh= | Retained unregistered helper for requesting session-learning capture at session end. |
+| =session-learning-capture.sh= | Retained unregistered helper; validates Stop input and canonical cwd, emits escaped untrusted metadata, and reports malformed input without requesting capture. It writes no lesson records. |
 | =track-elisp-test.sh= | Consumes a one-time receipt, then validates and records successful repository/package/source-revision evidence from the source-aware batch runner. When a detected wrapper run cannot be recorded (piped command, stale load, invalid receipt, revision mismatch), it reports the cause to the model instead of failing silently. |
 | =track-elisp-verify.sh= | Records every production package across direct or composed Elisp commits and consumes one-time receipts before clearing matching bound live evidence. When a detected live-verify run cannot be consumed, it reports the cause to the model instead of failing silently. |
 

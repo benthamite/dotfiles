@@ -173,7 +173,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =require-elisp-test-before-commit.sh= | Routes commits to the target repository, blocks combined staging, and requires matching package or deletion-check evidence for the proposed Elisp source. |
 | =require-elisp-verify-after-commit.sh= | Blocks later commands until the exact helper emits repository/package/commit-bound live evidence. |
 | =require-readme-update.sh= | Requires Claude configuration documentation with staged Claude configuration changes. |
-| =session-learning-capture.sh= | Retained unregistered Stop helper for requesting reusable-lesson capture. |
+| =session-learning-capture.sh= | Retained unregistered helper; validates Stop input and canonical cwd, emits escaped untrusted metadata, and reports malformed input without requesting capture. It writes no lesson records. |
 | =sync-agent-c-worktree.sh= | Compatibility wrapper for the renamed reasoning-task worktree synchronization hook. |
 | =sync-reasoning-tasks-worktree.sh= | Repairs and updates an eligible reasoning-task worktree at SessionStart without pushing it. |
 | =track-elisp-skill.sh= | Records that the Elisp conventions skill was loaded in the current session. |

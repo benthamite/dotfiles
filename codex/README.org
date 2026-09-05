@@ -193,6 +193,12 @@ The =org-note-conventions= skill applies only to personal notes. It distinguishe
 root-backed and rootless heading layouts, preserves established structure, and
 joins soft prose wrapping without removing intentional Org hard line breaks.
 
+The =overnight-todos= skill requires an explicit personal-TODO run. Its default
+dry run classifies metadata without reading note bodies or starting workers.
+Act mode uses private outputs, token-based task accounting and an idempotent
+ledger; only verified outcomes justify completion, and budget limits produce
+deferrals. Existing ledger history requires explicit migration, not a reset.
+
 The project-local =config-audit= respects a requested subset and includes
 procedural bodies when full skill audits are requested. It distinguishes
 skill discovery from instruction loading and checks actual hook coverage

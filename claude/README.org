@@ -326,6 +326,11 @@ catalogue covers the engagement register (throat-clearing openers, faux-insight
 setups, colon reveals, fake-profound kickers, and kin) merged from
 petergyang/no-ai-slop.
 
+Its patterns are editing heuristics, not authorship tests or numerical quotas.
+It preserves meaningful qualifications, list items, citations and functional
+markup; citation lookup failures do not justify deletion, and URL cleanup keeps
+functional query parameters. Inline edits and read-only reviews stay in scope.
+
 Org task triage is split across two skills over one engine. =triage-personal-todos=
 here owns personal notes; the project-local =triage-project-todos= in the Epoch
 workspace owns Epoch work. They share the engine, the task fingerprints, the

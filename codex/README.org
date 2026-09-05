@@ -315,6 +315,11 @@ session identity and exact transcript in its active account root. It opens
 that path in Emacs and checks the rendered buffer's identity before reporting
 success; concurrent sessions cannot be selected by recency or project alone.
 
+The paired =humanize= catalogue preserves meaning, quotations, citations and
+functional markup. It uses style heuristics rather than authorship tests or
+word quotas, keeps functional URL parameters, and does not delete unverified
+citations. Inline edits and read-only reviews do not imply file or public writes.
+
 The =handoff= skill separates drafting, saving and user-triggered replacement.
 It saves private per-session artifacts without later overwrites, preserves shared slots,
 and requires exact source/artifact checks and a one-invocation file binding

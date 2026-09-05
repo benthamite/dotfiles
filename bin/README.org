@@ -110,7 +110,7 @@ not be used to print or document secret values; the placement rules are in
 |---------+----------|
 | =annas-mcp= | Starts the local Anna’s Archive client with its configured endpoint, download path, and credential. |
 | =check_tlon_pass_changes= | Pulls remote changes for the Tlon password-store repository. |
-| =chrome-profile-open= | Opens URLs in a Chrome profile selected by a configured alias. |
+| =chrome-profile-open= | Opens URLs using the inspected Chrome root and configured profile alias. Missing recorded account/name metadata refuses opening; root precedence is explicit flag, environment, saved config, then default. Launch success is not proof of document access. |
 | =chrome-work-tab= | Opens URLs in the work Chrome profile, with a Codex-specific external-browser guard. |
 | =epoch-doc-link= | Creates exact, no-overwrite =epoch-doc:= shortcuts in a pinned parent directory, verifies the saved file, and opens document URIs through the configured Epoch Chrome profile. Saved-file/OS-handler acceptance is a separate live check. |
 | =gam= | Launches the local GAMADV-XTD3 installation. |

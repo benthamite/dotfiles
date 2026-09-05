@@ -169,7 +169,7 @@ def load_alias_config(
     if not isinstance(profile_directory, str) or not profile_directory:
         raise ConfigError(f"Alias '{alias}' has no profileDirectory: {config_path}")
 
-    root = chrome_root or Path(data.get("chromeRoot") or DEFAULT_CHROME_ROOT)
+    root = (chrome_root or Path(data.get("chromeRoot") or DEFAULT_CHROME_ROOT)).resolve()
     profiles = discover_profiles(root)
     profile = _profile_by_directory(profiles, profile_directory)
     if profile is None:
@@ -180,12 +180,12 @@ def load_alias_config(
 
     expected_user = entry.get("userName") or ""
     expected_name = entry.get("profileName") or ""
-    if expected_user and profile.user_name and expected_user != profile.user_name:
+    if expected_user and expected_user != profile.user_name:
         raise ConfigError(
             f"Alias '{alias}' profile identity changed: expected {expected_user}, "
             f"found {profile.user_name}"
         )
-    if expected_name and profile.name and expected_name != profile.name:
+    if expected_name and expected_name != profile.name:
         raise ConfigError(
             f"Alias '{alias}' profile identity changed: expected {expected_name}, "
             f"found {profile.name}"
@@ -207,7 +207,10 @@ def build_chrome_command(
     chrome_path: Path = DEFAULT_CHROME_PATH,
     new_window: bool = False,
 ) -> list[str]:
-    chrome_args = [f"--profile-directory={config.profile_directory}"]
+    chrome_args = [
+        f"--user-data-dir={config.chrome_root}",
+        f"--profile-directory={config.profile_directory}",
+    ]
     if new_window:
         chrome_args.append("--new-window")
     chrome_args.extend(urls)
@@ -283,8 +286,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--chrome-root",
         type=Path,
-        default=Path(os.environ.get("CHROME_PROFILE_OPEN_CHROME_ROOT", DEFAULT_CHROME_ROOT)),
-        help="Chrome user data root",
+        default=(
+            Path(os.environ["CHROME_PROFILE_OPEN_CHROME_ROOT"])
+            if os.environ.get("CHROME_PROFILE_OPEN_CHROME_ROOT")
+            else None
+        ),
+        help="Chrome user data root (otherwise use the stored alias root)",
     )
     parser.add_argument(
         "--chrome",
@@ -312,8 +319,9 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_intermixed_args(argv)
 
     try:
+        discovery_root = args.chrome_root or DEFAULT_CHROME_ROOT
         if args.list_profiles:
-            print_profiles(discover_profiles(args.chrome_root))
+            print_profiles(discover_profiles(discovery_root))
             return 0
 
         if args.list_aliases:
@@ -321,14 +329,14 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if args.setup:
-            profiles = discover_profiles(args.chrome_root)
+            profiles = discover_profiles(discovery_root)
             if not profiles:
-                raise ConfigError(f"No Chrome profiles found in {args.chrome_root}")
+                raise ConfigError(f"No Chrome profiles found in {discovery_root}")
             profile_directory = args.profile_directory or _select_profile_interactively(
                 profiles, args.setup
             )
             config = write_alias_config(
-                args.config, args.chrome_root, args.setup, profile_directory
+                args.config, discovery_root, args.setup, profile_directory
             )
             print(
                 f"Configured Chrome profile alias '{config.alias}': "

@@ -1,5 +1,7 @@
+import contextlib
 import importlib.machinery
 import importlib.util
+import io
 import json
 import pathlib
 import subprocess
@@ -110,6 +112,7 @@ class ChromeProfileOpenTest(unittest.TestCase):
             ["/usr/bin/open", "-n", "-b", "com.google.Chrome", "--args"],
         )
         self.assertIn("--profile-directory=Profile 4", command)
+        self.assertIn("--user-data-dir=/tmp/Chrome", command)
         self.assertEqual(command[-1], "http://127.0.0.1:8770/")
 
     def test_custom_chrome_path_keeps_direct_executable_launch(self):
@@ -130,7 +133,134 @@ class ChromeProfileOpenTest(unittest.TestCase):
 
         self.assertEqual(command[0], "/tmp/fake-chrome")
         self.assertIn("--profile-directory=Profile 4", command)
+        self.assertIn("--user-data-dir=/tmp/Chrome", command)
         self.assertEqual(command[-1], "http://127.0.0.1:8770/")
+
+    def test_load_alias_refuses_missing_recorded_identity(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = pathlib.Path(temp_dir)
+            chrome_root = temp / "Chrome"
+            config_path = temp / "profiles.json"
+            original = {"name": "Research", "user_name": "owner@example.test"}
+            self.write_local_state(chrome_root, {"Profile 2": original})
+            self.mod.write_alias_config(config_path, chrome_root, "research", "Profile 2")
+
+            for field in ("name", "user_name"):
+                for state in ("empty", "null", "missing"):
+                    with self.subTest(field=field, state=state):
+                        current = dict(original)
+                        if state == "missing":
+                            del current[field]
+                        else:
+                            current[field] = "" if state == "empty" else None
+                        self.write_local_state(chrome_root, {"Profile 2": current})
+                        with self.assertRaisesRegex(
+                            self.mod.ConfigError, "profile identity changed"
+                        ):
+                            self.mod.load_alias_config(config_path, "research", chrome_root)
+                        output, error = io.StringIO(), io.StringIO()
+                        with (
+                            mock.patch.object(self.mod.subprocess, "run") as launch,
+                            contextlib.redirect_stdout(output),
+                            contextlib.redirect_stderr(error),
+                        ):
+                            status = self.mod.main([
+                                "--config", str(config_path),
+                                "--chrome-root", str(chrome_root),
+                                "research", "https://example.test/document",
+                            ])
+                        self.assertEqual(status, 2)
+                        self.assertIn("profile identity changed", error.getvalue())
+                        self.assertEqual(output.getvalue(), "")
+                        launch.assert_not_called()
+
+    def test_load_alias_binds_canonical_inspected_root(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = pathlib.Path(temp_dir)
+            chrome_root = temp / "Actual Chrome"
+            linked_root = temp / "Chrome Alias"
+            config_path = temp / "profiles.json"
+            self.write_local_state(
+                chrome_root,
+                {"Profile 2": {"name": "Research", "user_name": "owner@example.test"}},
+            )
+            linked_root.symlink_to(chrome_root, target_is_directory=True)
+            self.mod.write_alias_config(config_path, linked_root, "research", "Profile 2")
+
+            config = self.mod.load_alias_config(config_path, "research")
+            command = self.mod.build_chrome_command(
+                config, ["https://example.test/document"],
+                chrome_path=pathlib.Path("/tmp/fake-chrome"),
+            )
+
+            self.assertEqual(config.chrome_root, chrome_root.resolve())
+            self.assertIn(f"--user-data-dir={chrome_root.resolve()}", command)
+
+    def test_cli_root_precedence_binds_inspection_and_launch(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = pathlib.Path(temp_dir)
+            roots = {name: temp / f"{name} Chrome" for name in ("flag", "env", "config", "default")}
+            config_path = temp / "profiles.json"
+            for chrome_root in roots.values():
+                self.write_local_state(
+                    chrome_root,
+                    {"Profile 2": {"name": "Research", "user_name": "owner@example.test"}},
+                )
+            cases = (
+                ("config", False, False, True),
+                ("env", False, True, True),
+                ("flag", True, True, True),
+                ("default", False, False, False),
+            )
+            for expected, explicit, environment, stored in cases:
+                with self.subTest(expected=expected):
+                    self.mod.write_alias_config(config_path, roots["config"], "research", "Profile 2")
+                    if not stored:
+                        payload = json.loads(config_path.read_text())
+                        del payload["chromeRoot"]
+                        config_path.write_text(json.dumps(payload))
+                    argv = ["--config", str(config_path), "--dry-run", "research", "https://example.test/document"]
+                    if explicit:
+                        argv.extend(["--chrome-root", str(roots["flag"])])
+                    environ = {"CHROME_PROFILE_OPEN_CHROME_ROOT": str(roots["env"])} if environment else {}
+                    output, error = io.StringIO(), io.StringIO()
+                    with (
+                        mock.patch.dict(self.mod.os.environ, environ, clear=True),
+                        mock.patch.object(self.mod, "DEFAULT_CHROME_ROOT", roots["default"]),
+                        mock.patch.object(self.mod, "discover_profiles", wraps=self.mod.discover_profiles) as discover,
+                        mock.patch.object(self.mod.subprocess, "run") as launch,
+                        contextlib.redirect_stdout(output),
+                        contextlib.redirect_stderr(error),
+                    ):
+                        status = self.mod.main(argv)
+                    self.assertEqual(status, 0, error.getvalue())
+                    launch.assert_not_called()
+                    discover.assert_called_once_with(roots[expected].resolve())
+                    command = json.loads(output.getvalue())
+                    self.assertIn(f"--user-data-dir={roots[expected].resolve()}", command)
+
+    def test_setup_and_list_keep_default_root_without_override(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp = pathlib.Path(temp_dir)
+            chrome_root = temp / "Default Chrome"
+            config_path = temp / "profiles.json"
+            self.write_local_state(
+                chrome_root,
+                {"Profile 2": {"name": "Research", "user_name": "owner@example.test"}},
+            )
+            with (
+                mock.patch.dict(self.mod.os.environ, {}, clear=True),
+                mock.patch.object(self.mod, "DEFAULT_CHROME_ROOT", chrome_root),
+                mock.patch.object(self.mod.subprocess, "run") as launch,
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                self.assertEqual(self.mod.main(["--list-profiles"]), 0)
+                self.assertEqual(self.mod.main([
+                    "--setup", "research", "--profile-directory", "Profile 2",
+                    "--config", str(config_path),
+                ]), 0)
+            launch.assert_not_called()
+            self.assertEqual(json.loads(config_path.read_text())["chromeRoot"], str(chrome_root))
 
     def test_multiple_aliases_share_one_config(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -286,6 +416,7 @@ class ChromeProfileOpenTest(unittest.TestCase):
             ["/usr/bin/open", "-n", "-b", "com.google.Chrome", "--args"],
         )
         self.assertIn("--profile-directory=Profile 4", command)
+        self.assertIn(f"--user-data-dir={chrome_root.resolve()}", command)
         self.assertEqual(command[-1], "http://127.0.0.1:8770/")
 
 

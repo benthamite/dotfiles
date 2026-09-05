@@ -8,9 +8,11 @@ reaches standard output, standard error, or persisted state.
 
 from __future__ import annotations
 
+import copy
 import json
 import os
 import re
+import runpy
 import shutil
 import stat
 import subprocess
@@ -19,6 +21,7 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PUBLISH = REPO_ROOT / "bin" / "dotfiles-publish"
@@ -477,12 +480,30 @@ class PublicationFixture(unittest.TestCase):
     def write_full_audit_receipt(self, run_id, completed_epoch=None):
         """Record a clean full audit without running one, for publication tests."""
         run = self.read_json(self.run_dir(run_id) / "run.json")
+        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        audit_id = "fixture-audit-" + run_id
+        completed = completed_epoch if completed_epoch is not None else self.now
+        # The shortcut certifies a separate synthetic audit, never the outgoing
+        # publication run: production receipts require a stored full-audit scan.
+        run.update(
+            run_id=audit_id, mode="full-audit", scanned_epoch=completed,
+            scan_id="fixture-" + run["scan_id"],
+        )
+        manifest["run_id"] = audit_id
+        audit_dir = self.run_dir(audit_id)
+        audit_dir.mkdir(parents=True, mode=0o700, exist_ok=True)
+        for name, payload in (("run.json", run), ("manifest.json", manifest)):
+            path = audit_dir / name
+            path.write_text(json.dumps(payload))
+            path.chmod(0o600)
         receipt = {
             "schema": 4,
-            "completed_epoch": completed_epoch if completed_epoch is not None else self.now,
+            "completed_epoch": completed,
             "completed_at": "2026-01-01T00:00:00Z",
             "ruleset_id": run["ruleset_id"],
-            "run_id": run_id,
+            "run_id": audit_id,
+            "scan_id": run["scan_id"],
+            "manifest_id": manifest["manifest_id"],
             "public_refs": {},
             "incident_flag": False,
             "incident_digest": run["incident_digest"],
@@ -2273,6 +2294,139 @@ class DotfilesPublishInstallTests(PublicationFixture):
         self.assertEqual(self.head(), self.remote_tip())
 
 
+class DotfilesPublishFullAuditSnapshotTests(unittest.TestCase):
+    """Exercise actual receipt/authorization logic with deterministic interleavings."""
+
+    def setUp(self):
+        loaded = runpy.run_path(str(PUBLISH), run_name="isolated_receipt_tests")
+        self.functions = loaded["record_full_audit"].__globals__
+        self.repo = SimpleNamespace(
+            root=Path("/synthetic-repo"), state_dir=Path("/synthetic-state")
+        )
+        self.audit_id = "same-audit-run"
+        self.publish_id = "outgoing-publish-run"
+        self.records = {
+            self.audit_id: {
+                "mode": "full-audit", "scan_id": "scan-A",
+                "manifest_id": "manifest-A", "scanned_epoch": FIXED_NOW,
+                "ruleset_id": "policy", "incident_digest": "unchanged-incidents",
+                "public_refs": ["refs/heads/master old-public-tip"],
+            },
+            self.publish_id: {
+                "mode": "publish", "scan_id": "publish-scan",
+                "manifest_id": "publish-manifest", "ruleset_id": "policy",
+                "candidate_oid": "b" * 40, "remote_oid": "a" * 40,
+                "remote_ref": "refs/heads/master", "remote_url": "synthetic-no-network",
+            },
+        }
+        self.manifests = {
+            self.audit_id: {
+                "manifest_id": "manifest-A", "units": [{"unit_id": "A", "kind": "patch"}],
+            },
+            self.publish_id: {
+                "manifest_id": "publish-manifest", "units": [{"unit_id": "P", "kind": "patch"}],
+            },
+        }
+        self.reviews = {
+            self.audit_id: {"manifest_id": "manifest-A", "entries": {"A": {"verdict": "clean"}}},
+            self.publish_id: {"manifest_id": "publish-manifest", "entries": {"P": {"verdict": "clean"}}},
+        }
+        self.writes = {}
+        self.receipt_path = self.repo.state_dir / "full-audit.json"
+        self.authorization_path = self.repo.state_dir / "authorization.json"
+
+        def write_json(path, payload):
+            self.writes[path] = copy.deepcopy(payload)
+
+        self.functions.update({
+            "load_run": lambda repo, run_id: copy.deepcopy(self.records[run_id]),
+            "load_manifest": lambda repo, run_id: copy.deepcopy(self.manifests[run_id]),
+            "load_review": lambda repo, run_id, manifest: copy.deepcopy(self.reviews[run_id]),
+            "load_findings": lambda repo, run_id: {"findings": []},
+            "resolved_fingerprints": lambda repo: frozenset(),
+            "incident_state_digest": lambda repo: "unchanged-incidents",
+            "ruleset_identity": lambda root: "policy",
+            "now_epoch": lambda: FIXED_NOW,
+            "full_audit_receipt": lambda repo: copy.deepcopy(self.writes.get(self.receipt_path)),
+            "write_json": write_json,
+            "revalidate_run": lambda repo, run_id: (copy.deepcopy(self.records[run_id]), None),
+        })
+
+    def replace_scan(self, changed_manifest=True):
+        # Both scans intentionally have the same boundary and wall-clock second.
+        self.records[self.audit_id]["scan_id"] = "scan-B"
+        if changed_manifest:
+            self.records[self.audit_id].update(
+                manifest_id="manifest-B",
+                public_refs=["refs/heads/master old-public-tip", "refs/heads/other new-public-tip"],
+            )
+            self.manifests[self.audit_id] = {
+                "manifest_id": "manifest-B",
+                "units": [{"unit_id": "A", "kind": "patch"}, {"unit_id": "B-unreviewed", "kind": "patch"}],
+            }
+
+    def test_clean_status_cannot_certify_a_replacement_manifest(self):
+        status = self.functions["review_status"](self.repo, self.audit_id)
+        self.assertTrue(status.clean)
+        self.replace_scan()
+
+        with self.assertRaisesRegex(self.functions["PublishError"], "changed after review"):
+            self.functions["record_full_audit"](self.repo, self.audit_id, status)
+
+        self.assertNotIn(self.receipt_path, self.writes)
+        with self.assertRaisesRegex(self.functions["PublishError"], "different manifest"):
+            self.functions["review_status"](self.repo, self.audit_id)
+        with self.assertRaisesRegex(self.functions["PublishError"], "full audit required"):
+            self.functions["authorize_run"](self.repo, self.publish_id, None, FIXED_NOW)
+        self.assertNotIn(self.authorization_path, self.writes)
+
+    def test_same_second_identical_rescan_requires_status_for_current_scan(self):
+        status = self.functions["review_status"](self.repo, self.audit_id)
+        self.replace_scan(changed_manifest=False)
+
+        with self.assertRaisesRegex(self.functions["PublishError"], "changed after review"):
+            self.functions["record_full_audit"](self.repo, self.audit_id, status)
+
+        # Existing verdicts remain safe for a byte-identical manifest, but the
+        # status that certifies the newly completed scan must be computed anew.
+        current = self.functions["review_status"](self.repo, self.audit_id)
+        receipt = self.functions["record_full_audit"](self.repo, self.audit_id, current)
+        self.assertEqual("scan-B", receipt["scan_id"])
+        self.assertIsNone(self.functions["full_audit_staleness"](self.repo, "policy", FIXED_NOW))
+
+    def test_replacement_during_receipt_write_cannot_authorize_publication(self):
+        status = self.functions["review_status"](self.repo, self.audit_id)
+        original_write = self.functions["write_json"]
+
+        def replace_before_write(path, payload):
+            self.replace_scan()
+            original_write(path, payload)
+
+        self.functions["write_json"] = replace_before_write
+        receipt = self.functions["record_full_audit"](self.repo, self.audit_id, status)
+
+        self.assertEqual("scan-A", receipt["scan_id"])
+        self.assertEqual("manifest-A", receipt["manifest_id"])
+        self.assertEqual(["refs/heads/master old-public-tip"], receipt["public_refs"])
+        self.assertIn("replaced", self.functions["full_audit_staleness"](self.repo, "policy", FIXED_NOW))
+        with self.assertRaisesRegex(self.functions["PublishError"], "full audit required.*replaced"):
+            self.functions["authorize_run"](self.repo, self.publish_id, None, FIXED_NOW)
+        self.assertNotIn(self.authorization_path, self.writes)
+
+    def test_review_status_rejects_mixed_run_and_manifest_snapshots(self):
+        self.records[self.audit_id]["manifest_id"] = "manifest-B"
+
+        with self.assertRaisesRegex(self.functions["PublishError"], "changed during review"):
+            self.functions["review_status"](self.repo, self.audit_id)
+
+    def test_receipt_revalidation_checks_the_stored_manifest(self):
+        status = self.functions["review_status"](self.repo, self.audit_id)
+        self.functions["record_full_audit"](self.repo, self.audit_id, status)
+        self.manifests[self.audit_id]["manifest_id"] = "manifest-B"
+
+        self.assertIn("replaced", self.functions["full_audit_staleness"](self.repo, "policy", FIXED_NOW))
+
+
 class DotfilesPublishFullAuditTests(PublicationFixture):
     def test_full_audit_due_after_thirty_days_or_ruleset_change(self):
         self.publish_base()
@@ -3152,6 +3306,39 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         complete = self.cli("review-status", "--run", rescanned_run)
         self.assertEqual(0, complete.returncode, complete.stdout + complete.stderr)
         self.assertEqual(self.now, self.read_json(receipt_path)["completed_epoch"])
+
+    def test_same_boundary_rescan_invalidates_receipt_until_current_status(self):
+        self.publish_base()
+        self.commit("ordinary work", {"docs/notes.md": "notes\n"})
+        _, audit_id = self.scan("--mode", "full-audit")
+        self.review_all(audit_id)
+        self.assertEqual(0, self.cli("review-status", "--run", audit_id).returncode)
+        receipt_path = self.state_dir() / "full-audit.json"
+        receipt = self.read_json(receipt_path)
+        _, publish_id = self.scan()
+        self.review_all(publish_id)
+
+        rescanned, repeated_id = self.scan("--mode", "full-audit")
+
+        self.assertEqual(0, rescanned.returncode, rescanned.stdout + rescanned.stderr)
+        self.assertEqual(audit_id, repeated_id)
+        self.assertIn("full-audit-due: true", rescanned.stdout)
+        self.assertIn("pending review", rescanned.stdout)
+        current = self.read_json(self.run_dir(audit_id) / "run.json")
+        self.assertTrue(current["full_audit_due"])
+        self.assertEqual(receipt["completed_epoch"], current["scanned_epoch"])
+        self.assertEqual(receipt["manifest_id"], current["manifest_id"])
+        self.assertNotEqual(receipt["scan_id"], current["scan_id"])
+        refused = self.cli("authorize", "--run", publish_id)
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("full audit scan or manifest was replaced", refused.stderr)
+        self.assertFalse((self.state_dir() / "authorization.json").exists())
+
+        reviewed = self.cli("review-status", "--run", audit_id)
+        self.assertEqual(0, reviewed.returncode, reviewed.stdout + reviewed.stderr)
+        self.assertEqual(current["scan_id"], self.read_json(receipt_path)["scan_id"])
+        authorized = self.cli("authorize", "--run", publish_id)
+        self.assertEqual(0, authorized.returncode, authorized.stdout + authorized.stderr)
 
     def test_review_status_cannot_clear_later_incident_invalidation(self):
         self.publish_a_secret()

@@ -120,6 +120,8 @@ Readiness uses an enforced non-publishing scan mode that preserves refs and
 incident invalidations; missing advertised public objects fail the audit closed.
 Release authorization binds the exact tag name reviewed by the scan. Read-only
 checks never authorize history repair or provider-side credential changes.
+Audit receipts bind the reviewed scan and manifest, including across concurrent
+same-boundary rescans; earlier clean status cannot certify a replacement.
 
 The paired =proofread= skill resolves one external Node dependency runtime for
 both setup and execution, canonicalizing both its root and actual =node_modules=

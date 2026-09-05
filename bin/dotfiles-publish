@@ -552,6 +552,23 @@ def full_audit_staleness(repo, ruleset_id, now):
         return "the full audit receipt has no completion time"
     if now - completed > FULL_AUDIT_MAX_AGE_SECONDS:
         return "the last full audit is older than 30 days"
+    if not receipt.get("scan_id") or not receipt.get("manifest_id"):
+        return "the full audit receipt has no scan and manifest binding"
+    try:
+        record = load_run(repo, receipt["run_id"])
+        manifest = load_manifest(repo, receipt["run_id"])
+    except (KeyError, OSError, ValueError, PublishError):
+        return "the full audit scan or manifest is unavailable; scan and review again"
+    if (
+        record.get("mode") != "full-audit"
+        or record.get("scan_id") != receipt["scan_id"]
+        or record.get("manifest_id") != receipt["manifest_id"]
+        or manifest.get("manifest_id") != receipt["manifest_id"]
+        or record.get("scanned_epoch") != completed
+        or record.get("ruleset_id") != receipt["ruleset_id"]
+        or record.get("incident_digest") != receipt["incident_digest"]
+    ):
+        return "the full audit scan or manifest was replaced; scan and review again"
     return None
 
 
@@ -2486,6 +2503,9 @@ def command_review_record(args):
 
 @dataclass
 class ReviewStatus:
+    run_id: str
+    scan_id: str
+    manifest_id: str
     total: int
     recorded: int
     missing: list
@@ -2548,6 +2568,11 @@ def review_status(repo, run_id):
     record = load_run(repo, run_id)
     resolved = resolved_fingerprints(repo) if record["mode"] == "full-audit" else frozenset()
     manifest = load_manifest(repo, run_id)
+    if record.get("manifest_id") != manifest["manifest_id"]:
+        raise PublishError(
+            "the scan and manifest changed during review; scan and review again",
+            EXIT_REFUSED,
+        )
     review = load_review(repo, run_id, manifest)
     expected = [unit["unit_id"] for unit in manifest["units"]]
     recorded = set(review["entries"])
@@ -2571,6 +2596,9 @@ def review_status(repo, run_id):
         if not deterministic_is_resolved(finding, units_by_id, review["entries"], resolved)
     ]
     return ReviewStatus(
+        run_id=run_id,
+        scan_id=record.get("scan_id", ""),
+        manifest_id=manifest["manifest_id"],
         total=len(expected),
         recorded=len(recorded),
         missing=missing,
@@ -2585,6 +2613,18 @@ def record_full_audit(repo, run_id, status):
     record = load_run(repo, run_id)
     if record["mode"] != "full-audit" or not status.clean:
         return None
+    manifest = load_manifest(repo, run_id)
+    if (
+        status.run_id != run_id
+        or not status.scan_id
+        or status.scan_id != record.get("scan_id")
+        or status.manifest_id != record.get("manifest_id")
+        or status.manifest_id != manifest["manifest_id"]
+    ):
+        raise PublishError(
+            "the full-audit scan or manifest changed after review; review the current scan",
+            EXIT_REFUSED,
+        )
     scanned = record.get("scanned_epoch")
     now = now_epoch()
     if (
@@ -2614,6 +2654,8 @@ def record_full_audit(repo, run_id, status):
         "completed_epoch": scanned,
         "ruleset_id": record["ruleset_id"],
         "run_id": run_id,
+        "scan_id": status.scan_id,
+        "manifest_id": status.manifest_id,
         "public_refs": record.get("public_refs") or [],
         "incident_flag": False,
         "incident_digest": record["incident_digest"],
@@ -2672,6 +2714,11 @@ def command_scan(args):
     if args.mode == "full-audit":
         result, public_refs = scan_full_audit(repo, key)
         manifest = build_audit_manifest(repo, run_id, result)
+        receipt = full_audit_receipt(repo)
+        if not staleness and receipt and receipt.get("run_id") == run_id:
+            # Storing this generation will replace the scan backing the current
+            # receipt, even when the manifest and scan timestamp are unchanged.
+            staleness = "the new full-audit scan is pending review"
     else:
         result = scan_outgoing(repo, boundary, key)
         manifest = build_manifest(
@@ -2683,6 +2730,7 @@ def command_scan(args):
         "run_id": run_id,
         "created_at": rfc3339(now),
         "scanned_epoch": now,
+        "scan_id": secrets.token_hex(16),
         "repository": str(repo.root),
         "remote_name": repo.remote_name,
         "remote_url": repo.fetch_url,

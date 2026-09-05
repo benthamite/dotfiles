@@ -433,7 +433,7 @@
       "claude": null,
       "codex": "codex/hooks/lib-codex-hook-json.sh",
       "status": "codex-only",
-      "note": "Codex payload and functions.exec normalizer; emits literal command/workdir records, preserves valid UTF-16 surrogate pairs, and rejects ambiguous fields, unpaired surrogates and NULs. The Codex secret guard checks extraction status and every context before classifying commands. Recovers omitted nested workdir only from a unique matching parent call. Claude reads native payloads but also sources this file's shared Git classifier. That classifier distinguishes inert quoted search text and quoted git-commit stdin from executable interpreter heredocs; unknown syntax stays conservative."
+      "note": "Codex payload/functions.exec normalizer: preserves UTF-16 surrogate pairs and rejects ambiguous fields, lone surrogates and NULs. The secret guard checks extraction status and every context. Recovers omitted workdir only from a unique matching parent call. Claude reads native payloads but sources this shared Git classifier, including commit inspection detection for paired live trackers. It distinguishes inert quoted search text and git-commit stdin from executable interpreter heredocs; unknown syntax stays conservative."
     },
     {
       "name": "lib-codex-paths.sh",
@@ -657,7 +657,7 @@
       "claude": "claude/hooks/track-elisp-verify.sh",
       "codex": "codex/hooks/track-elisp-verify.sh",
       "status": "paired",
-      "note": "paired for direct shell-tool verification tracking; Codex additionally accepts exitCode and exit_code payload keys and uses its Codex-only functions.exec parser to attribute each literal nested commit to the matching workdir without inspecting the hook cwd. Unattributed or repeated nested commits conservatively retain verification, and only exact direct successful emacsclient events clear it."
+      "note": "paired for direct shell-tool verification tracking; both skip non-writing commit inspection and consume only repository/package/commit-bound live evidence. Codex additionally accepts exitCode and exit_code payload keys, pairs functions.exec commands with literal workdirs, and recovers workdirs omitted by native Bash events from their matching parent calls before consulting payload context. Repeated nested commits conservatively retain verification."
     },
     {
       "name": "wrap-bash-output.sh",

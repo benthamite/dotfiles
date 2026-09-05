@@ -207,6 +207,7 @@ collect_command_commits() {
   local found index
   while IFS= read -r -d '' record; do
     [ "$(printf '%s' "$record" | jq -r '.subcommand')" = commit ] || continue
+    codex_git_commit_inspection_p "$record" && continue
     # A successful direct `A && B` event proves that A succeeded. Nested calls
     # do not expose a trustworthy per-call status, and other shell forms do not
     # prove the parsed commit's result.
@@ -309,7 +310,14 @@ if [ "$TOOL_NAME" = functions.exec ]; then
     fi
   fi
 elif [ "$EXIT_CODE" = 0 ]; then
-  command_workdir=$(codex_tool_input_field "$INPUT" workdir)
+  command_workdir=$(codex_hook_jq "$INPUT" '
+    codex_tool_input.workdir // codex_tool_input.cwd //
+    codex_tool_input.working_directory // codex_tool_input.working_dir //
+    .workdir // .cwd // .working_directory // .working_dir // empty')
+  # Native nested Bash events can omit exec_command workdir and retain the
+  # session cwd. Match the literal parent call, as the pre-commit gate does.
+  parent_workdir=$(codex_parent_exec_workdir "$INPUT" "$COMMAND" || true)
+  [ -z "$parent_workdir" ] || command_workdir=$parent_workdir
   [ -n "$command_workdir" ] || command_workdir=$PWD
   if [[ "$command_workdir" != /* ]]; then command_workdir="$PWD/$command_workdir"; fi
   process_command "$COMMAND" "$command_workdir"

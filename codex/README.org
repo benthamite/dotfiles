@@ -494,6 +494,11 @@ create a live-verification obligation. Native nested Bash events that omit
 =workdir= recover it from the matching literal parent call before tracking a
 commit; otherwise the tracker uses the explicit payload context.
 
+Both evidence trackers must have trusted current definitions in the active
+profile. A modified test tracker is skipped even when the commit guard remains
+trusted. Restore its trust through the native hook settings, then rerun the
+source check; manually creating an evidence marker does not repair dispatch.
+
 Emacs-owned sessions use eight explicit =codex-hook-wrapper= registrations for
 lifecycle forwarding. The wrapper comes from the Emacs package source tree
 because the build tree does not contain that script; its configured source path

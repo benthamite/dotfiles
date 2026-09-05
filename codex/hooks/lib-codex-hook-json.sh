@@ -1537,6 +1537,71 @@ print(len(re.findall(pattern, scan, flags=re.MULTILINE)))
 ' "$1"
 }
 
+# Return success only for a parsed commit invocation that cannot create a
+# commit. Consume option values and honor -- so message text and pathspecs
+# named --dry-run never suppress a real post-commit obligation.
+codex_git_commit_inspection_p() {
+  printf '%s' "$1" | python3 -c '
+import json
+import sys
+
+args = json.load(sys.stdin).get("args", [])
+values = {
+    "--message", "--file", "--reuse-message", "--reedit-message",
+    "--author", "--date", "--cleanup", "--trailer", "--fixup", "--squash",
+    "--template", "--pathspec-from-file", "--unified", "--inter-hunk-context",
+}
+flags = {
+    "--all", "--include", "--only", "--amend", "--no-edit", "--edit",
+    "--quiet", "--verbose", "--signoff", "--no-verify", "--verify",
+    "--allow-empty", "--allow-empty-message", "--reset-author",
+    "--no-post-rewrite", "--post-rewrite", "--gpg-sign", "--no-gpg-sign",
+    "--status", "--no-status", "--branch", "--no-branch",
+    "--ahead-behind", "--no-ahead-behind", "--interactive", "--patch",
+    "--pathspec-file-nul", "--untracked-files", "--no-untracked-files",
+}
+dry_run = False
+status_output = False
+position = 0
+while position < len(args):
+    arg = args[position]
+    position += 1
+    if arg == "--":
+        break
+    if arg in {"--help", "-h"}:
+        sys.exit(0)
+    if arg == "--dry-run":
+        dry_run = True
+    elif arg == "--no-dry-run":
+        dry_run = False
+    elif arg in {"--short", "--long", "--porcelain"}:
+        status_output = True
+    elif arg in values:
+        position += 1
+    elif arg.partition("=")[0] in values | {"--gpg-sign", "--untracked-files"}:
+        pass
+    elif arg in flags:
+        pass
+    elif arg.startswith("--"):
+        # Unknown options, including abbreviations and negated status modes,
+        # do not establish that this invocation was only an inspection.
+        sys.exit(1)
+    elif arg.startswith("-"):
+        for offset, flag in enumerate(arg[1:], 1):
+            if flag in "mFCctU":
+                if offset == len(arg) - 1:
+                    position += 1
+                break
+            if flag in "Su":
+                break  # Optional short-option values must be attached.
+            if flag == "h":
+                sys.exit(0)
+            if flag not in "qvsenaiop":
+                sys.exit(1)
+sys.exit(0 if dry_run or status_output else 1)
+'
+}
+
 codex_git_commit_count() {
   codex_git_subcommand_count commit "${1:-${CODEX_GIT_PARSE_CONTEXT:-}}"
 }

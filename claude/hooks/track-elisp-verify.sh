@@ -207,6 +207,7 @@ if [ "$EXIT_CODE" = 0 ]; then
   counts=()
   while IFS= read -r -d '' record; do
     [ "$(printf '%s' "$record" | jq -r '.subcommand')" = commit ] || continue
+    codex_git_commit_inspection_p "$record" && continue
     # A successful direct `A && B` event proves that A succeeded. Other
     # control flow, substitutions, pipelines, or later commands do not prove
     # the parsed commit's result.

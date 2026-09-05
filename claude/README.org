@@ -589,6 +589,10 @@ Commit inspection with =--dry-run=, status-format options, or help does not
 create a live-verification obligation. Those words in message arguments or
 pathspecs do not exempt an actual commit.
 
+The Codex counterparts also depend on native hook trust: a modified test
+tracker can be skipped while the commit guard continues to require its evidence.
+Restore trust for the reviewed tracker definition before rerunning the check.
+
 Hooks that judge a Git command resolve the repository from the command itself,
 via =hooks/lib-repo-root.sh=. A =cd= at any command head decides the repository,
 the last one winning, because a session working in one repository routinely

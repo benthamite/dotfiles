@@ -421,6 +421,85 @@ class ElispVerifyTrackingHookTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(marker.exists())
 
+    def test_commit_inspection_does_not_arm_live_gate(self):
+        repo = self.make_repo("inspect-elisp", "fixture.el")
+        (repo / "fixture.el").write_text("(provide 'changed)\n")
+        subprocess.run(["git", "-C", str(repo), "add", "fixture.el"], check=True)
+        before = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"])
+        for option in ("--dry-run", "--short", "--long", "--porcelain", "-h"):
+            checked = subprocess.run(
+                ["git", "-C", str(repo), "commit", option],
+                text=True, capture_output=True, check=False,
+            )
+            self.assertEqual(
+                subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"]),
+                before,
+            )
+            for tool in ("claude", "codex", "nested"):
+                with self.subTest(option=option, tool=tool):
+                    session = f"inspect-{tool}-{option.lstrip('-')}-{os.getpid()}"
+                    command = f"git commit {option}"
+                    if tool == "nested":
+                        source = "text(await tools.exec_command(" + json.dumps(
+                            {"cmd": command, "workdir": str(repo)}
+                        ) + "));"
+                        result, marker = self.run_source(repo, source, session)
+                    else:
+                        result, marker = self.run_direct(
+                            repo, command, session, checked.returncode, False,
+                            output=checked.stdout, tool=tool,
+                        )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertFalse(marker.exists())
+
+    def test_inspection_words_in_commit_message_do_not_hide_real_commit(self):
+        repo = self.make_repo("inspection-message", "fixture.el")
+        for arguments in (
+            "-m --dry-run", "-qm --dry-run", "--message=--dry-run",
+            "--dry-run --no-dry-run -m fixture", "-m fixture -- --dry-run",
+        ):
+            for tool in ("claude", "codex"):
+                with self.subTest(arguments=arguments, tool=tool):
+                    result, marker = self.run_direct(
+                        repo, f"git commit {arguments}",
+                        f"inspection-message-{tool}-{os.getpid()}", 0, False,
+                        tool=tool,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertTrue(marker.exists())
+
+    def test_direct_commit_context_recovers_nested_workdir(self):
+        fallback = self.make_repo("context-fallback", "fixture.el")
+        target = self.make_repo("context-target", "fixture.el")
+        transcript = self.root / "parent.jsonl"
+        command = "git commit -m fixture"
+        transcript.write_text(json.dumps({"payload": {
+            "type": "custom_tool_call", "name": "exec",
+            "input": "text(await tools.exec_command(" + json.dumps(
+                {"cmd": command, "workdir": str(target)}
+            ) + "));",
+        }}) + "\n")
+        for context in ("payload-cwd", "parent-transcript"):
+            with self.subTest(context=context):
+                session = f"direct-context-{context}-{os.getpid()}"
+                marker = Path(f"/tmp/claude-elisp-verify-needed-{session}")
+                self.addCleanup(marker.unlink, missing_ok=True)
+                payload = {
+                    "tool_name": "Bash", "session_id": session,
+                    "tool_input": {"command": command},
+                    "tool_response": {"exit_code": 0},
+                    "cwd": str(target if context == "payload-cwd" else fallback),
+                }
+                if context == "parent-transcript":
+                    payload["transcript_path"] = str(transcript)
+                result = subprocess.run(
+                    ["bash", str(VERIFY_TRACKERS["codex"])],
+                    input=json.dumps(payload), text=True, capture_output=True,
+                    check=False, cwd=fallback, env=self.evidence_env,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(marker.read_text().split(":")[0], self.encoded_repo(target))
+
 
     def test_nested_elisp_commit_uses_its_explicit_workdir(self):
         fallback_repo = self.make_repo("fallback-shell", "fixture.sh")

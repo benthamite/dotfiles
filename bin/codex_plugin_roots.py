@@ -36,15 +36,19 @@ def load_codex_plugin_list(codex_home: Path, codex_program: str = "codex") -> li
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             env=env,
+            timeout=30,
         )
-    except OSError:
-        return []
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise RuntimeError("Codex plugin inventory is unavailable; discovery is incomplete") from error
     if proc.returncode != 0:
-        return []
+        raise RuntimeError("Codex plugin inventory command failed; discovery is incomplete")
     try:
         data = json.loads(proc.stdout)
-    except json.JSONDecodeError:
-        return []
+    except json.JSONDecodeError as error:
+        raise RuntimeError("Codex plugin inventory is not valid JSON; discovery is incomplete") from error
+    entries = data.get("installed") if isinstance(data, dict) else data
+    if not isinstance(entries, list) or any(not isinstance(entry, dict) for entry in entries):
+        raise RuntimeError("Codex plugin inventory has an unsupported schema; discovery is incomplete")
     return codex_plugin_entries(data)
 
 

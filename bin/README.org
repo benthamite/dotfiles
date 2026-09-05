@@ -14,7 +14,7 @@ documented in [[file:../agents/README.org][the agent manual]]. Skill names and t
 
 | Command | Contract |
 |---------+----------|
-| =agent-skill= | Resolves a Claude or Codex skill by name across the active skill roots. |
+| =agent-skill= | Resolves skill files across native and local compatibility roots, honoring account and installed plugin-version identity; discovery is not an enabled-runtime catalog. |
 | =ahrefs-api-guard= | Delegates Ahrefs API access to the guarded Claude-side wrapper. |
 | =ai-config-sync= | Audits and guards paired Claude and Codex configuration while treating each tool's hook README as independent documentation. |
 | =check-config-org= | Parses every tangled Elisp block in =emacs/config.org= and runs the profile-aware tangle; the evidence check for config.org commits. |

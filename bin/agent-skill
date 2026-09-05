@@ -15,6 +15,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 HOME = Path.home()
 BIN_DIR = Path(__file__).resolve().parent
+CODEX_ADMIN_SKILLS = Path("/etc/codex/skills")
 if str(BIN_DIR) not in sys.path:
     sys.path.insert(0, str(BIN_DIR))
 
@@ -31,6 +32,8 @@ class SkillRoot:
     tool: str
     source: str
     priority: int
+    plugin: str | None = None
+    marketplace: str | None = None
 
 
 @dataclass(frozen=True)
@@ -43,16 +46,12 @@ class SkillFile:
     @property
     def match_names(self) -> set[str]:
         names = {self.name, self.folder}
-        if "plugins/cache" in str(self.path):
-            parts = self.path.parts
-            try:
-                cache_index = parts.index("cache")
-                marketplace = parts[cache_index + 1]
-                plugin = parts[cache_index + 2]
-                names.add(f"{plugin}:{self.name}")
-                names.add(f"{plugin}@{marketplace}:{self.name}")
-            except (ValueError, IndexError):
-                pass
+        if self.root.plugin and self.root.marketplace:
+            plugin = self.root.plugin
+            for name in tuple(names):
+                suffix = name.removeprefix(f"{plugin}:")
+                names.add(f"{plugin}:{suffix}")
+                names.add(f"{plugin}@{self.root.marketplace}:{suffix}")
         return names
 
 
@@ -68,6 +67,15 @@ def ancestors(cwd: Path) -> list[Path]:
     return [resolved, *resolved.parents]
 
 
+def codex_project_ancestors(cwd: Path) -> list[Path]:
+    """Bound standard project roots by the nearest Git directory/worktree marker."""
+    parents = ancestors(cwd)
+    for depth, parent in enumerate(parents):
+        if (parent / ".git").exists():
+            return parents[:depth + 1]
+    return parents[:1]
+
+
 def add_root(
     roots: list[SkillRoot],
     seen: set[tuple[str, str]],
@@ -75,6 +83,8 @@ def add_root(
     tool: str,
     source: str,
     priority: int,
+    plugin: str | None = None,
+    marketplace: str | None = None,
 ) -> None:
     if not existing_dir(path):
         return
@@ -86,7 +96,10 @@ def add_root(
     if key in seen:
         return
     seen.add(key)
-    roots.append(SkillRoot(path=path, tool=tool, source=source, priority=priority))
+    roots.append(SkillRoot(
+        path=path, tool=tool, source=source, priority=priority,
+        plugin=plugin, marketplace=marketplace,
+    ))
 
 
 def plugin_path_is_orphaned(path: Path) -> bool:
@@ -102,11 +115,18 @@ def enabled_claude_plugins(claude_home: Path) -> list[str]:
     settings = claude_home / "settings.json"
     try:
         data = json.loads(settings.read_text())
-    except (OSError, json.JSONDecodeError):
+    except FileNotFoundError:
         return []
-    enabled = data.get("enabledPlugins") or {}
-    if not isinstance(enabled, dict):
-        return []
+    except (OSError, json.JSONDecodeError) as error:
+        raise RuntimeError("Claude plugin settings could not be read; discovery is incomplete") from error
+    if not isinstance(data, dict):
+        raise RuntimeError("Claude plugin settings are malformed; discovery is incomplete")
+    enabled = data.get("enabledPlugins", {})
+    if not isinstance(enabled, dict) or any(
+        not isinstance(plugin_id, str) or not isinstance(active, bool)
+        for plugin_id, active in enabled.items()
+    ):
+        raise RuntimeError("Claude enabledPlugins is malformed; discovery is incomplete")
     return sorted(plugin_id for plugin_id, active in enabled.items() if active)
 
 
@@ -114,25 +134,54 @@ def add_claude_plugin_roots(
     roots: list[SkillRoot],
     seen: set[tuple[str, str]],
     claude_home: Path,
+    cwd: Path,
 ) -> None:
-    cache = claude_home / "plugins" / "cache"
-    for plugin_id in enabled_claude_plugins(claude_home):
+    enabled = enabled_claude_plugins(claude_home)
+    if not enabled:
+        return
+    try:
+        registry = json.loads((claude_home / "plugins" / "installed_plugins.json").read_text())
+    except (OSError, json.JSONDecodeError) as error:
+        raise RuntimeError("Claude installed plugin registry could not be read; discovery is incomplete") from error
+    if (
+        not isinstance(registry, dict)
+        or registry.get("version") != 2
+        or not isinstance(registry.get("plugins"), dict)
+    ):
+        raise RuntimeError("Claude installed plugin registry has an unsupported schema; discovery is incomplete")
+    for plugin_id in enabled:
         if "@" not in plugin_id:
-            continue
+            raise RuntimeError("Claude enabled plugin identifier is malformed; discovery is incomplete")
         plugin, marketplace = plugin_id.rsplit("@", 1)
-        plugin_cache = cache / marketplace / plugin
-        if not existing_dir(plugin_cache):
-            continue
-        for version_dir in sorted(path for path in plugin_cache.iterdir() if path.is_dir()):
-            if (version_dir / ".orphaned_at").exists():
+        entries = registry["plugins"].get(plugin_id)
+        if not isinstance(entries, list) or not entries:
+            raise RuntimeError("An enabled Claude plugin has no installed registry entry; discovery is incomplete")
+        for entry in entries:
+            if not isinstance(entry, dict) or entry.get("scope") not in {"user", "project", "local"}:
+                raise RuntimeError("Claude installed plugin scope is unsupported; discovery is incomplete")
+            if entry["scope"] in {"project", "local"}:
+                project = entry.get("projectPath")
+                if not isinstance(project, str) or not Path(project).is_absolute():
+                    raise RuntimeError("Claude plugin project path is malformed; discovery is incomplete")
+                if not cwd.resolve().is_relative_to(Path(project).resolve()):
+                    continue
+            install = entry.get("installPath")
+            if not isinstance(install, str) or not Path(install).is_absolute():
+                raise RuntimeError("Claude plugin install path is malformed; discovery is incomplete")
+            install_path = Path(install)
+            if not existing_dir(install_path):
+                raise RuntimeError("A registered Claude plugin installation is missing; discovery is incomplete")
+            if plugin_path_is_orphaned(install_path):
                 continue
             add_root(
                 roots,
                 seen,
-                version_dir / "skills",
+                install_path / "skills",
                 "claude",
                 f"claude-plugin-cache:{plugin_id}",
                 200,
+                plugin,
+                marketplace,
             )
 
 
@@ -140,6 +189,14 @@ def discover_roots(cwd: Path, tool: str) -> list[SkillRoot]:
     roots: list[SkillRoot] = []
     seen: set[tuple[str, str]] = set()
     wanted = {"codex", "claude"} if tool == "any" else {tool}
+
+    if "codex" in wanted:
+        for depth, parent in enumerate(codex_project_ancestors(cwd)):
+            if parent != HOME:
+                add_root(
+                    roots, seen, parent / ".agents" / "skills", "codex",
+                    f"project-local:{parent}", 10 + depth,
+                )
 
     for depth, parent in enumerate(ancestors(cwd)):
         if parent == HOME:
@@ -185,25 +242,39 @@ def discover_roots(cwd: Path, tool: str) -> list[SkillRoot]:
 
     if "codex" in wanted:
         codex_home = Path(os.environ.get("CODEX_HOME", HOME / ".codex"))
+        add_root(roots, seen, HOME / ".agents" / "skills", "codex", "user-agents", 100)
         add_root(roots, seen, codex_home / "skills", "codex", "CODEX_HOME", 100)
         add_root(roots, seen, REPO_ROOT / "codex" / "skills", "codex", "dotfiles", 110)
+        add_root(roots, seen, CODEX_ADMIN_SKILLS, "codex", "admin", 300)
 
         for skills_dir in codex_plugin_skill_roots(
             codex_home,
             load_codex_plugin_list(codex_home),
         ):
-            add_root(roots, seen, skills_dir, "codex", "codex-plugin-cache", 200)
+            marketplace, plugin = skills_dir.relative_to(codex_home / "plugins" / "cache").parts[:2]
+            add_root(
+                roots, seen, skills_dir, "codex", "codex-plugin-cache", 200,
+                plugin, marketplace,
+            )
 
     if "claude" in wanted:
-        claude_home = Path(os.environ.get("CLAUDE_HOME", HOME / ".claude"))
-        add_root(roots, seen, claude_home / "skills", "claude", "CLAUDE_HOME", 100)
+        # CLAUDE_HOME is a legacy resolver compatibility option, used only when
+        # Claude's native CLAUDE_CONFIG_DIR variable is unset.
+        claude_home = Path(os.environ.get(
+            "CLAUDE_CONFIG_DIR", os.environ.get("CLAUDE_HOME", HOME / ".claude")
+        ))
+        source = "CLAUDE_CONFIG_DIR" if "CLAUDE_CONFIG_DIR" in os.environ else "CLAUDE_HOME"
+        add_root(roots, seen, claude_home / "skills", "claude", source, 100)
         add_root(roots, seen, REPO_ROOT / "claude" / "skills", "claude", "dotfiles", 110)
-        add_claude_plugin_roots(roots, seen, claude_home)
+        add_claude_plugin_roots(roots, seen, claude_home, cwd)
 
     expanded: list[SkillRoot] = []
     expanded_seen: set[tuple[str, str]] = set()
     for root in sorted(roots, key=lambda root: (root.priority, str(root.path))):
-        add_root(expanded, expanded_seen, root.path, root.tool, root.source, root.priority)
+        add_root(
+            expanded, expanded_seen, root.path, root.tool, root.source, root.priority,
+            root.plugin, root.marketplace,
+        )
         add_root(
             expanded,
             expanded_seen,
@@ -211,6 +282,8 @@ def discover_roots(cwd: Path, tool: str) -> list[SkillRoot]:
             root.tool,
             f"{root.source}:system",
             root.priority + 1,
+            root.plugin,
+            root.marketplace,
         )
 
     return sorted(expanded, key=lambda root: (root.priority, str(root.path)))
@@ -299,7 +372,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     args = build_parser().parse_args()
-    roots = discover_roots(Path(args.cwd), args.tool)
+    try:
+        roots = discover_roots(Path(args.cwd), args.tool)
+    except (OSError, RuntimeError) as error:
+        print(f"Skill discovery failed: {error}", file=sys.stderr)
+        return 2
 
     if args.command == "roots":
         for root in roots:

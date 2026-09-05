@@ -157,6 +157,11 @@ The project-local =optimize-agent-instructions= distinguishes always-loaded
 imports from references read on demand. It preserves useful instructions until
 replacement enforcement and discovery have been checked for each target runtime.
 
+The project-local =skill-resolver= honors exact session-catalog paths before
+name lookup and keeps project edits in their original scope. Its filesystem
+inventory is distinct from the runtime's enabled skill catalog; account and
+installed plugin-version evidence determine which sources it searches.
+
 The project-local =skill-audit= remains explicit-invocation-only. Its historical
 collector distinguishes failed reads from successful output envelopes, preserves
 personal/plugin identities and exact name boundaries, and handles task-start

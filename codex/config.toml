@@ -872,3 +872,9 @@ enabled = false
 path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/symptom-check/SKILL.md"
 enabled = false
 # END skill-prune disabled skills
+
+[hooks.state."/Users/pablostafforini/.codex-epoch2/hooks.json:post_tool_use:0:1"]
+trusted_hash = "sha256:4e972dbb0de7c1a08a95bb53ce4befc2a4b1abf763eed0bed8c63ba6b76bd167"
+
+[hooks.state."/Users/pablostafforini/.codex-epoch2/hooks.json:post_tool_use:0:2"]
+trusted_hash = "sha256:28f3bb2d1496516fb6a62169eae480d9b1bd681090491206a3422a2c836e5228"

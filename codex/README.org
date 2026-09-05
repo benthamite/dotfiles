@@ -57,6 +57,11 @@ and feature flags. =[features].hooks= enables the tracked hook integration.
 Codex-only trust, plugin, theme, application, and MCP state does not need a
 fictional Claude counterpart.
 
+Hook trust belongs to an exact source path, handler key, and current definition.
+Review the command identity when approving changed hooks; event labels alone
+can name several handlers. Trust changes use Codex's configuration API and must
+preserve unrelated settings and hook approvals.
+
 The current default is =gpt-5.6-sol= with =xhigh= reasoning and the fast service
 tier. Those are Codex preferences, not cross-tool parity requirements.
 

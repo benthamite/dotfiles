@@ -749,7 +749,7 @@
       "path": "codex/config.toml",
       "tracked": true,
       "live_path": "~/.codex/config.toml",
-      "note": "Tracked global config at ~/.codex/config.toml; Codex-only trust, plugins, theme, MCP, accounts, and models. Project-doc fallbacks disabled; [features].hooks enables hooks. bin/skill-prune replaces managed [[skills.config]] tables without comment markers; scans default, active, and configured account homes, deduplicates resolved histories, and rejects unavailable evidence before pruning. Disabled state: skills-disabled.json. bin/codex-config-prune removes dead records. Repo moves need rewritten trust keys; duplicates invalidate TOML. See codex/README.org."
+      "note": "Codex-only trust, plugins, theme, MCP, accounts and models; project-doc fallbacks off, hooks on. Approve exact source/key/current-hash hook trust via Codex's API; preserve other state. bin/skill-prune replaces managed skill tables without markers, scans default/active/configured homes, deduplicates histories and rejects unavailable evidence. Disabled state: skills-disabled.json. bin/codex-config-prune removes dead records. Repo moves require rewritten trust keys; duplicates invalidate TOML. See codex/README.org."
     },
     {
       "tool": "Codex",

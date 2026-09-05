@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Audit evidence of Codex skill invocations from rollout JSONL files.
 
-Codex does not record a native ``skill_invoked`` event.  This collector therefore
-uses a deliberately strict evidence rule: a confirmed invocation needs a matching
-assistant announcement, a read-like tool call for the skill's main ``SKILL.md``,
-and returned frontmatter for that skill.  Weaker evidence is reported separately
-and never added to the confirmed counts.
+This collector reconstructs evidence from supported rollout reads and assistant
+announcements, rather than native invocation telemetry. A confirmed invocation
+needs a matching announcement, a read-like tool call for the skill's main
+``SKILL.md``, and returned frontmatter for that skill. Weaker evidence is reported
+separately and never added to the confirmed counts.
 """
 
 from __future__ import annotations
@@ -34,6 +34,7 @@ DEFAULT_SKILL_ROOTS = (
     REPO_ROOT / "codex" / "skills",
 )
 HUMAN_AMBIGUOUS_LIMIT = 25
+SKILL_NAME_END = r"(?![A-Za-z0-9_@+-]|[.:](?=[A-Za-z0-9_.:@+-]))"
 SKILL_PATH_RE = re.compile(
     r"(?:^|[./])skills/(?P<system>\.system/)?"
     r"(?P<skill>[A-Za-z0-9_.:@+-]+)/SKILL\.md"
@@ -56,9 +57,9 @@ FRONTMATTER_NAME_RE = re.compile(
     re.MULTILINE,
 )
 NONZERO_EXIT_RE = re.compile(
-    r"(?:Process exited with code|exit(?:ed)?(?: with)?(?: status| code)?)\s+"
-    r"(?P<code>[1-9][0-9]*)",
-    re.IGNORECASE,
+    r"^(?:Process exited with code|exit(?:ed)?(?: with)?(?: status| code)?)\s+"
+    r"(?P<code>[1-9][0-9]*)[ \t]*$",
+    re.IGNORECASE | re.MULTILINE,
 )
 ROLLOUT_CALL_PATTERN = (
     r'(?:"type"\s*:\s*"(?:function_call|custom_tool_call)"[^\n]*'
@@ -119,6 +120,14 @@ class ToolCall:
     turn_id: str
 
 
+@dataclass(frozen=True)
+class ToolOutput:
+    """Text evidence and failure status retained from a tool result envelope."""
+
+    text: str
+    failed: bool = False
+
+
 def parse_timestamp(value: str) -> datetime:
     """Parse an ISO-8601 timestamp and return an aware UTC datetime."""
 
@@ -165,10 +174,37 @@ def call_text(payload: dict[str, Any]) -> str:
     return json.dumps(value, sort_keys=True, separators=(",", ":"))
 
 
-def response_text(payload: dict[str, Any]) -> str:
-    """Extract output from legacy or current tool-call output payloads."""
+def tool_output(value: Any) -> ToolOutput:
+    """Unpack text blocks and JSON execution envelopes without losing status."""
 
-    return content_text(payload.get("output"))
+    if isinstance(value, str):
+        if value.lstrip().startswith(("{", "[")):
+            try:
+                decoded = json.loads(value)
+            except json.JSONDecodeError:
+                decoded = None
+            if isinstance(decoded, (dict, list)):
+                return tool_output(decoded)
+        # Legacy transports print status before their Output: delimiter or the
+        # file's frontmatter. Exit examples inside the skill are content, not
+        # transport status.
+        header = re.split(r"(?m)^(?:Output:|---)[ \t]*\r?$", value, maxsplit=1)[0]
+        return ToolOutput(value, bool(NONZERO_EXIT_RE.search(header)))
+    if isinstance(value, list):
+        parts = [tool_output(item) for item in value]
+        return ToolOutput(
+            "\n".join(part.text for part in parts),
+            any(part.failed for part in parts),
+        )
+    if isinstance(value, dict):
+        status = value.get("exit_code")
+        failed = bool(value.get("isError")) or status not in (None, 0, "0")
+        for key in ("output", "text", "content"):
+            if key in value:
+                nested = tool_output(value[key])
+                return ToolOutput(nested.text, failed or nested.failed)
+        return ToolOutput("", failed)
+    return ToolOutput("")
 
 
 def payload_turn_id(payload: dict[str, Any], fallback: str | None) -> str | None:
@@ -188,33 +224,37 @@ def payload_turn_id(payload: dict[str, Any], fallback: str | None) -> str | None
 def find_candidates(text: str) -> list[SkillCandidate]:
     """Find canonical skill main-file reads named in a tool call."""
 
-    plugins_by_skill: dict[str, set[str]] = defaultdict(set)
-    for match in PLUGIN_PATH_RE.finditer(text):
-        plugins_by_skill[match.group("skill")].add(match.group("plugin"))
+    plugin_paths = list(PLUGIN_PATH_RE.finditer(text))
 
     candidates: dict[tuple[str, str | None, str], SkillCandidate] = {}
     for match in SKILL_PATH_RE.finditer(text):
         basename = match.group("skill")
         system = bool(match.group("system"))
-        plugins = plugins_by_skill.get(basename) or {None}
-        for plugin in plugins:
-            requested = f"{plugin}:{basename}" if plugin else basename
-            path_hint = (
-                f"plugins/{plugin}/skills/{basename}/SKILL.md"
-                if plugin
-                else (
-                    f"skills/.system/{basename}/SKILL.md"
-                    if system
-                    else f"skills/{basename}/SKILL.md"
-                )
+        plugin = next(
+            (
+                path.group("plugin")
+                for path in plugin_paths
+                if path.start() <= match.start() and match.end() <= path.end()
+            ),
+            None,
+        )
+        requested = f"{plugin}:{basename}" if plugin else basename
+        path_hint = (
+            f"plugins/{plugin}/skills/{basename}/SKILL.md"
+            if plugin
+            else (
+                f"skills/.system/{basename}/SKILL.md"
+                if system
+                else f"skills/{basename}/SKILL.md"
             )
-            candidate = SkillCandidate(
-                basename=basename,
-                requested_name=requested,
-                plugin=plugin,
-                path_hint=path_hint,
-            )
-            candidates[(basename, plugin, path_hint)] = candidate
+        )
+        candidate = SkillCandidate(
+            basename=basename,
+            requested_name=requested,
+            plugin=plugin,
+            path_hint=path_hint,
+        )
+        candidates[(basename, plugin, path_hint)] = candidate
 
     for match in AGENT_SKILL_CAT_RE.finditer(text):
         requested = match.group("skill")
@@ -257,7 +297,9 @@ def name_aliases(candidate: SkillCandidate, output_name: str) -> set[str]:
 def skill_token(name: str) -> str:
     """Return a regex fragment for a named skill token."""
 
-    return rf"`?[$/]?{re.escape(name)}`?(?:\s+skill)?"
+    # A final period or colon can be punctuation; '.extra' and ':extra' extend
+    # the skill name instead.
+    return rf"`?[$/]?{re.escape(name)}{SKILL_NAME_END}`?(?:\s+skill\b)?"
 
 
 def user_invocation_phrase(name: str) -> re.Pattern[str]:
@@ -274,9 +316,12 @@ def user_invocation_phrase(name: str) -> re.Pattern[str]:
         rf"(?:do\s+not|don['’]t)\s+(?:forget|hesitate)"
         rf"(?:\s+to|,\s*)\s*{action}\s+(?:the\s+)?{token}|"
         rf"i(?:'d|\s+would)?\s+(?:like|want|need)\s+you\s+to\s+{action}\s+"
-        rf"(?:the\s+)?{token})\b"
+        rf"(?:the\s+)?{token})"
     )
-    marker = rf"(?P<marker>[`]?[$/]{re.escape(name)}`?)(?=$|\s|[.,;:!?])"
+    marker = (
+        rf"(?P<marker>[`]?[$/]{re.escape(name)}{SKILL_NAME_END}`?)"
+        rf"(?=$|\s|[.,;:!?])"
+    )
     return re.compile(rf"(?P<request>{request})|{marker}", re.IGNORECASE)
 
 
@@ -290,9 +335,9 @@ def assistant_invocation_phrase(name: str) -> re.Pattern[str]:
         r"(?:\s+am|['’]m)\s+going\s+to\s+(?:use|invoke|apply|run))"
     )
     return re.compile(
-        rf"(?:\bi(?:{present}|{future})\s+(?:the\s+)?{token}\b|"
+        rf"(?:\bi(?:{present}|{future})\s+(?:the\s+)?{token}|"
         rf"(?:^|[.;,!?\n]\s*)(?:using|invoking|applying|running)\s+"
-        rf"(?:the\s+)?{token}\b)",
+        rf"(?:the\s+)?{token})",
         re.IGNORECASE,
     )
 
@@ -468,6 +513,9 @@ def candidate_rollouts(inputs: Iterable[Path]) -> list[Path]:
         raise RuntimeError("ripgrep (rg) is required to scan rollout roots")
     command = [
         executable,
+        "--no-config",
+        "--hidden",
+        "--no-ignore",
         "--files-with-matches",
         "--glob",
         "*.jsonl",
@@ -496,7 +544,7 @@ def scan_rollout(path: Path, cutoff: datetime) -> dict[str, Any]:
 
     session_id = path.stem
     calls: dict[str, ToolCall] = {}
-    outputs: dict[str, str] = {}
+    outputs: dict[str, ToolOutput] = {}
     user_messages: dict[str, list[TimedText]] = defaultdict(list)
     event_user_messages: dict[str, list[TimedText]] = defaultdict(list)
     assistant_messages: dict[str, list[TimedText]] = defaultdict(list)
@@ -583,6 +631,7 @@ def scan_rollout(path: Path, cutoff: datetime) -> dict[str, Any]:
             relevant = (
                 "session_meta" in raw_line
                 or "turn_context" in raw_line
+                or "task_started" in raw_line
                 or "user_message" in raw_line
                 or ('"role"' in raw_line and ("user" in raw_line or "assistant" in raw_line))
                 or call_id_pattern.search(raw_line)
@@ -657,7 +706,7 @@ def scan_rollout(path: Path, cutoff: datetime) -> dict[str, Any]:
                 "function_call_output",
                 "custom_tool_call_output",
             }:
-                outputs[call_id] = response_text(payload)
+                outputs[call_id] = tool_output(payload.get("output"))
 
     calls = {call_id: call for call_id, call in calls.items() if call.turn_id}
     for turn_id, messages in event_user_messages.items():
@@ -709,10 +758,11 @@ def collect(
             candidates = find_candidates(call.text)
             if not candidates:
                 continue
-            output = scan["outputs"].get(call.call_id, "")
+            result = scan["outputs"].get(call.call_id, ToolOutput(""))
+            output = result.text
             names = frontmatter_names(output)
             read_like = is_read_like(call.text)
-            failed = bool(NONZERO_EXIT_RE.search(output))
+            failed = result.failed
 
             for candidate in candidates:
                 candidate_reads_seen += 1
@@ -795,7 +845,7 @@ def collect(
                         evidence["classification"] = classification
                         evidence["classification_confidence"] = class_confidence
                         evidence["classification_evidence"] = class_evidence
-                    if call.timestamp_text < evidence["timestamp"]:
+                    if call.timestamp < parse_timestamp(evidence["timestamp"]):
                         evidence["timestamp"] = call.timestamp_text
                     continue
 
@@ -836,15 +886,17 @@ def collect(
                 evidence["call_ids"].append(call.call_id)
                 evidence["session_ids"].append(session_id)
                 evidence["session_id"] = min(evidence["session_ids"])
+                if call.timestamp < parse_timestamp(evidence["timestamp"]):
+                    evidence["timestamp"] = call.timestamp_text
 
     invocations = sorted(
         confirmed.values(),
-        key=lambda item: (item["timestamp"], item["session_id"], item["skill"]),
+        key=lambda item: (parse_timestamp(item["timestamp"]), item["session_id"], item["skill"]),
     )
     ambiguous_reads = sorted(
         ambiguous.values(),
         key=lambda item: (
-            item["timestamp"],
+            parse_timestamp(item["timestamp"]),
             item["session_id"],
             item["skill"],
             item["reason"],

@@ -445,6 +445,243 @@ class SkillInvocationCollectorTests(unittest.TestCase):
         self.assertEqual("autonomous", invocation["classification"])
         self.assertEqual("medium", invocation["classification_confidence"])
 
+    def test_task_started_recovers_turn_without_per_item_metadata(self) -> None:
+        records = self.turn_records(
+            turn_id="event-only", user_text="Use /diagnose.",
+            assistant_text="I am using diagnose.", skill="diagnose", call_id="event-only-call",
+        )
+        records[0]["type"] = "event_msg"
+        records[0]["payload"]["type"] = "task_started"
+        for item in records[1:]:
+            item["payload"].pop("internal_chat_message_metadata_passthrough", None)
+        path = self.write_rollout("event-only.jsonl", records)
+
+        report = COLLECTOR.collect([path], self.cutoff)
+
+        self.assertEqual(1, report["summary"]["confirmed_invocations"])
+        self.assertEqual("event-only", report["invocations"][0]["turn_id"])
+        self.assertEqual("explicit", report["invocations"][0]["classification"])
+
+    def test_current_exec_json_envelope_preserves_successful_read(self) -> None:
+        records = self.turn_records(
+            turn_id="json-envelope", user_text="Use /diagnose.",
+            assistant_text="I am using diagnose.", skill="diagnose", call_id="json-call",
+        )
+        body = "---\nname: diagnose\ndescription: fixture\n---\nbody\n"
+        records[-2] = current_call(
+            "2026-08-19T10:00:03Z", "json-envelope", "json-call",
+            "cat /tmp/.codex/skills/diagnose/SKILL.md",
+        )
+        records[-2]["payload"]["input"] = records[-2]["payload"]["input"].replace(
+            "text(r.output)", "text(r)"
+        )
+        records[-1] = current_output(
+            "2026-08-19T10:00:04Z", "json-call",
+            json.dumps({"exit_code": 0, "output": body}),
+        )
+        path = self.write_rollout("json-envelope.jsonl", records)
+
+        report = COLLECTOR.collect([path], self.cutoff)
+
+        self.assertEqual(1, report["summary"]["confirmed_invocations"])
+        self.assertEqual(0, report["summary"]["ambiguous_reads"])
+
+    def test_failed_structured_outputs_never_certify_returned_frontmatter(self) -> None:
+        body = "---\nname: diagnose\ndescription: fixture\n---\npartial body\n"
+        outputs = (
+            {"exit_code": 1, "output": body},
+            [{"type": "input_text", "text": json.dumps({"exit_code": 2, "output": body})}],
+            {"exit_code": 0, "output": json.dumps({"exit_code": 3, "output": body})},
+        )
+        for index, output in enumerate(outputs):
+            with self.subTest(output=index):
+                records = self.turn_records(
+                    turn_id="failed-envelope", user_text="Use /diagnose.",
+                    assistant_text="I am using diagnose.", skill="diagnose", call_id="failed-call",
+                )
+                records[-1]["payload"]["output"] = output
+                path = self.write_rollout(f"failed-envelope-{index}.jsonl", records)
+
+                report = COLLECTOR.collect([path], self.cutoff)
+
+                self.assertEqual(0, report["summary"]["confirmed_invocations"])
+                self.assertEqual(1, report["summary"]["ambiguous_reads"])
+                self.assertIn("nonzero", report["ambiguous_reads"][0]["reason"])
+
+    def test_exit_status_examples_in_skill_body_are_not_transport_failures(self) -> None:
+        body = (
+            "---\nname: diagnose\ndescription: fixture\n---\n"
+            "Exit 2 means findings, not failure.\n"
+            "Process exited with code 1\nexit 1\n"
+        )
+        outputs = (
+            body,
+            "Process exited with code 0\nOutput:\n" + body,
+            "Warning: output truncated\n" + body,
+            {"exit_code": 0, "output": body},
+            json.dumps({"exit_code": 0, "output": body}),
+        )
+        for index, output in enumerate(outputs):
+            with self.subTest(output=index):
+                records = self.turn_records(
+                    turn_id="status-example", user_text="Use /diagnose.",
+                    assistant_text="I am using diagnose.", skill="diagnose", call_id="example-call",
+                )
+                records[-1]["payload"]["output"] = output
+                path = self.write_rollout(f"status-example-{index}.jsonl", records)
+
+                report = COLLECTOR.collect([path], self.cutoff)
+
+                self.assertEqual(1, report["summary"]["confirmed_invocations"])
+
+    def test_qualified_and_personal_paths_keep_separate_namespace_identity(self) -> None:
+        records = self.turn_records(
+            turn_id="combined-namespaces", user_text="Use /diagnose and /other:diagnose.",
+            assistant_text="I am using diagnose. I am using other:diagnose.",
+            skill="diagnose", call_id="namespaces-call",
+        )
+        command = (
+            "cat /tmp/.codex/skills/diagnose/SKILL.md "
+            "/tmp/plugins/cache/vendor/other/hash/skills/diagnose/SKILL.md"
+        )
+        records[-2]["payload"]["arguments"] = json.dumps({"cmd": command})
+        path = self.write_rollout("combined-namespaces.jsonl", records)
+        candidates = COLLECTOR.find_candidates(command)
+        self.assertEqual(
+            [("diagnose", None), ("other:diagnose", "other")],
+            [(candidate.requested_name, candidate.plugin) for candidate in candidates],
+        )
+
+        report = COLLECTOR.collect([path], self.cutoff, allowed_skills={"diagnose"})
+
+        self.assertEqual(["diagnose"], [item["skill"] for item in report["invocations"]])
+        self.assertEqual(2, report["summary"]["candidate_reads_seen"])
+        self.assertEqual(1, report["summary"]["ignored_candidate_reads"])
+        all_skills = COLLECTOR.collect([path], self.cutoff)
+        self.assertEqual(
+            {"diagnose", "other:diagnose"},
+            {item["skill"] for item in all_skills["invocations"]},
+        )
+
+    def test_earliest_evidence_timestamp_uses_time_not_iso_string_order(self) -> None:
+        for announcement in ("I am using diagnose.", "I am inspecting the skill file."):
+            with self.subTest(announcement=announcement):
+                records = self.turn_records(
+                    turn_id="fractional-time", user_text="Use /diagnose.",
+                    assistant_text=announcement, skill="diagnose", call_id="first-call",
+                )
+                records.extend([
+                    legacy_call(
+                        "2026-08-19T10:00:03.1Z", "fractional-time", "later-call",
+                        "cat /tmp/.codex/skills/diagnose/SKILL.md",
+                    ),
+                    legacy_output(
+                        "2026-08-19T10:00:04.1Z", "later-call",
+                        "---\nname: diagnose\ndescription: fixture\n---\nbody\n",
+                    ),
+                ])
+                earlier = self.write_rollout("z-earlier.jsonl", records[:5])
+                later = self.write_rollout("a-later.jsonl", records[:3] + records[5:])
+
+                report = COLLECTOR.collect([earlier, later], self.cutoff)
+
+                evidence = report["invocations"] or report["ambiguous_reads"]
+                self.assertEqual(1, len(evidence))
+                self.assertEqual("2026-08-19T10:00:03Z", evidence[0]["timestamp"])
+
+    def test_fractional_timestamp_evidence_is_reported_in_chronological_order(self) -> None:
+        for announcement in ("I am using diagnose.", "I am inspecting the skill file."):
+            with self.subTest(announcement=announcement):
+                records = []
+                for turn_id, timestamp in (
+                    ("later", "2026-08-19T10:00:03.1Z"),
+                    ("earlier", "2026-08-19T10:00:03Z"),
+                ):
+                    turn = self.turn_records(
+                        turn_id=turn_id, user_text="Use /diagnose.",
+                        assistant_text=announcement, skill="diagnose", call_id=turn_id,
+                    )
+                    turn[-2]["timestamp"] = timestamp
+                    records.extend(turn)
+                path = self.write_rollout("chronological.jsonl", records)
+
+                report = COLLECTOR.collect([path], self.cutoff)
+
+                evidence = report["invocations"] or report["ambiguous_reads"]
+                self.assertEqual(["earlier", "later"], [item["turn_id"] for item in evidence])
+
+    def test_rollout_selection_includes_hidden_and_ignored_discovered_files(self) -> None:
+        coverage = self.root / "coverage"
+        for name in (".hidden", "ignored"):
+            self.write_rollout(
+                f"coverage/{name}/session.jsonl",
+                self.turn_records(
+                    turn_id=name, user_text="Use /diagnose.",
+                    assistant_text="I am using diagnose.", skill="diagnose", call_id=name,
+                ),
+            )
+        (coverage / ".ignore").write_text("ignored/\n", encoding="utf-8")
+
+        report = COLLECTOR.collect([coverage], self.cutoff)
+
+        self.assertEqual(2, report["summary"]["rollout_files_considered"])
+        self.assertEqual(2, report["summary"]["rollout_files_scanned"])
+        self.assertEqual(2, report["summary"]["confirmed_invocations"])
+
+    def test_longer_skill_names_do_not_match_shorter_invocation_tokens(self) -> None:
+        for suffix in ("-extra", ".extra", ":extra", "+extra", "_extra", "@extra", "extra"):
+            with self.subTest(suffix=suffix):
+                longer = "diagnose" + suffix
+                records = self.turn_records(
+                    turn_id="name-boundary", user_text=f"Use /{longer}.",
+                    assistant_text=f"I am using {longer}.",
+                    skill="diagnose", call_id="boundary-call",
+                )
+                path = self.write_rollout("name-boundary.jsonl", records)
+
+                report = COLLECTOR.collect([path], self.cutoff)
+
+                self.assertEqual(0, report["summary"]["confirmed_invocations"])
+                self.assertEqual(1, report["summary"]["ambiguous_reads"])
+                records[2]["payload"]["content"][0]["text"] = "I am using diagnose."
+                path = self.write_rollout("name-boundary.jsonl", records)
+                report = COLLECTOR.collect([path], self.cutoff)
+                self.assertNotEqual("explicit", report["invocations"][0]["classification"])
+
+    def test_skill_name_ending_in_nonword_character_remains_matchable(self) -> None:
+        records = self.turn_records(
+            turn_id="nonword-name", user_text="Use /fixture+.",
+            assistant_text="I am using `fixture+`.", skill="fixture+", call_id="nonword-call",
+        )
+        path = self.write_rollout("nonword-name.jsonl", records)
+
+        report = COLLECTOR.collect([path], self.cutoff)
+
+        self.assertEqual(1, report["summary"]["confirmed_invocations"])
+        self.assertEqual("explicit", report["invocations"][0]["classification"])
+
+    def test_colon_punctuation_preserves_announcements_and_user_invocations(self) -> None:
+        for prompt in (
+            "Use diagnose: inspect this failure.",
+            "$diagnose: inspect this failure.",
+            "/diagnose: inspect this failure.",
+        ):
+            for announcement in (
+                "I am using diagnose: inspect this failure.",
+                "Using diagnose: inspect this failure.",
+            ):
+                with self.subTest(prompt=prompt, announcement=announcement):
+                    records = self.turn_records(
+                        turn_id="colon-punctuation", user_text=prompt,
+                        assistant_text=announcement, skill="diagnose", call_id="colon-call",
+                    )
+                    path = self.write_rollout("colon-punctuation.jsonl", records)
+
+                    report = COLLECTOR.collect([path], self.cutoff)
+
+                    self.assertEqual(1, report["summary"]["confirmed_invocations"])
+                    self.assertEqual("explicit", report["invocations"][0]["classification"])
+
     def test_plugin_qualification_uses_announced_canonical_name(self) -> None:
         records = [
             record(

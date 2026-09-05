@@ -1,18 +1,18 @@
 # Codex invocation evidence audit
 
-Codex rollouts do not contain a native `skill_invoked` event. Use the bundled
-collector to reconstruct conservative evidence from active and archived JSONL
-rollouts. Do not count raw text matches: developer catalogs, quoted logs,
+The bundled collector reconstructs conservative invocation evidence from active
+and archived Codex JSONL rollouts; it does not consume native invocation telemetry.
+Do not count raw text matches: developer catalogs, quoted logs,
 retries, and audit reads contain skill names without proving invocation.
 
 ## Run the collector
 
-Record the exclusive cutoff before opening any target skill, then run from this
-skill directory:
+Record the exclusive UTC cutoff in `CUTOFF` before opening any target skill,
+then run from this skill directory:
 
 ```bash
 python3 scripts/audit_invocations.py \
-  --cutoff 2026-08-19T20:17:09Z \
+  --cutoff "$CUTOFF" \
   --format json
 ```
 
@@ -28,8 +28,10 @@ the dotfiles `.codex/skills` and `codex/skills` roots. Useful options are:
   review.
 
 The collector requires `rg`. It scans rollout files that can contain candidate
-calls, but it does not decode, count, or retain evidence at or after the cutoff,
-and it does not include prompt text in its report.
+calls and parses records to apply the timestamp cutoff. Evidence at or after
+the cutoff is excluded from invocation counts and retained evidence. Input
+diagnostics for missing timestamps or malformed lines cannot always be assigned
+to that window. The report does not include prompt text.
 
 ## Evidence model
 
@@ -38,6 +40,12 @@ A confirmed invocation requires all of these in one turn:
 1. an assistant message that announces the named skill;
 2. a read-like tool call for that skill's main `SKILL.md`;
 3. successful tool output containing matching YAML frontmatter.
+
+The collector recognizes task-start and turn-context records and supported
+plain or structured command-output envelopes. A nonzero command status must not
+become successful evidence when its output still contains frontmatter. These
+signals establish invocation evidence, not completion of the workflow or proof
+that the entire instruction body was loaded.
 
 The collector deduplicates repeated evidence by turn and canonical skill,
 including copies in forked or archived rollouts. It then classifies the direct
@@ -49,6 +57,10 @@ user prompt:
   marker;
 - **unknown, low confidence:** no direct user-message event is available, or the
   prompt names the skill without a proven positive invocation marker.
+
+Match full skill names, not name prefixes. A plugin and a personal skill with
+the same basename retain separate identities even in a combined read. Earliest
+evidence is ordered by parsed timestamps, including fractional seconds.
 
 Reads without a matching announcement or frontmatter remain ambiguous. They
 often come from skill editing, audits, interrupted calls, or truncated output.

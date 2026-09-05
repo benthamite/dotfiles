@@ -7,8 +7,8 @@ skill before task actions. A negative case must not read or announce it.
 
 Should load:
 
-- `/skill-audit code-audit`
-- `$skill-audit diagnose --accept`
+- In Claude: `/skill-audit code-audit`
+- In Codex: `$skill-audit diagnose --accept`
 
 Must not load automatically:
 
@@ -31,3 +31,10 @@ Must not load automatically:
   autonomous, and ambiguous totals; deduplicates repeated evidence in a turn;
   excludes injected catalogs and post-cutoff reads; and produces identical
   output when repeated on the same input.
+
+Collector regression fixtures must also cover task-start-only turn context;
+successful JSON-wrapped output; nonzero structured status despite returned
+frontmatter; simultaneous personal/plugin reads with a shared basename; exact
+skill-name boundaries; fractional-second earliest evidence; and hidden/ignored
+rollout files within an explicitly selected input directory. These tests use
+synthetic transcripts, never the user's real history as a fixture.

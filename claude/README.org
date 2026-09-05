@@ -157,6 +157,12 @@ The project-local =optimize-agent-instructions= distinguishes always-loaded
 imports from references read on demand. It preserves useful instructions until
 replacement enforcement and discovery have been checked for each target runtime.
 
+The project-local =skill-audit= remains explicit-invocation-only. Its historical
+collector distinguishes failed reads from successful output envelopes, preserves
+personal/plugin identities and exact name boundaries, and handles task-start
+context, hidden inputs, and fractional timestamps. Counts remain reconstructed
+evidence, not native invocation telemetry or proof of workflow completion.
+
 The programmatic =open-session-log= helper resolves the current runtime's
 session identity and exact transcript in its active account root. It opens
 that path in Emacs and checks the rendered buffer's identity before reporting

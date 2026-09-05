@@ -29,9 +29,10 @@ explicitly asks to fix or improve the audited skills. Limit edits to
 high-confidence, scope-preserving changes and their directly required tests,
 metadata, and documentation.
 
-Do not present reconstructed invocation counts as native telemetry. Codex has
-no dedicated skill-invocation event. Report the evidence window, confidence,
-coverage gaps, and ambiguous cases.
+Do not present reconstructed invocation counts as native telemetry. This
+collector uses supported rollout reads and announcements, not native invocation
+telemetry. Report the evidence window, confidence, coverage gaps, and ambiguous
+cases.
 
 ## Targeted audit
 

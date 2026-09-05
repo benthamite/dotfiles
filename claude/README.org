@@ -137,6 +137,11 @@ procedural bodies when full skill audits are requested. It distinguishes
 skill discovery from instruction loading and checks actual hook coverage
 before recommending removal of an overlapping instruction.
 
+The project-local =find-skills= checks the selected agent and project/global
+destination before installation. It preserves canonical paired roots and uses
+copies for Drive-backed destinations, then resolves the installed skill to
+verify discovery.
+
 The programmatic =open-session-log= helper resolves the current runtime's
 session identity and exact transcript in its active account root. It opens
 that path in Emacs and checks the rendered buffer's identity before reporting

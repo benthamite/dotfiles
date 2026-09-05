@@ -28,8 +28,8 @@ task can be handled directly with the current tools and the user is not asking
 about reusable/installable capabilities, do the task instead.
 
 Do not use this skill for local skill authoring or editing. Use `skill-creator`
-when the user wants to create or improve a skill, and `skill-audit` when they
-want to review an existing skill.
+when the user wants to create or improve a skill. Preserve `skill-audit`'s
+explicit-only invocation policy; an ordinary review request does not activate it.
 
 ## Sources and Commands
 
@@ -119,15 +119,30 @@ Installing a skill changes the user's local/global agent configuration. Do not
 install, update, or run `npx skills add` unless the user has explicitly asked to
 install that exact package or confirms after seeing the recommendation.
 
-After approval, install with:
+After approval, resolve the requested scope, target agents, and canonical
+installation directories. Preserve a project-local or single-agent request;
+use `-g` only for a global installation. Check the CLI's current destination
+mapping against the repository's conventions before running it.
+
+For a destination compatible with the CLI, select only the approved skill
+and agents, for example:
 
 ```bash
-npx skills add <owner/repo@skill> -g -y
+npx skills add <owner/repo> --skill <skill> --agent <agent> --copy -y
 ```
 
-Use `-y` only after the exact package is approved. Then verify the installation
-with the CLI output and, when possible, by resolving or reading the installed
-`SKILL.md` from the reported location.
+Use `-y` only after the exact package is approved. In dotfiles, preserve the
+paired tracked roots unless the user selected one agent. Use copy installation
+where a target resolves under Google Drive; symlinks there cannot sync. Keep
+downloads, staging checkouts, and package-manager caches outside Drive. If the
+CLI's destination differs from the canonical root, stage the approved source
+outside Drive and install the inspected files into that root with the available
+skill installer or file tools. Do not silently create a second skill root.
+
+Inspect an existing same-name skill before replacing it. Then resolve and read
+the installed `SKILL.md`, confirm its real location and contents, and run the
+repository's pairing/documentation checks. CLI success alone does not establish
+that the active agent can discover the intended copy.
 
 ### 6. When No Good Skill Exists
 

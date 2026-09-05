@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import base64
+from contextlib import contextmanager
 import json
 import os
 from pathlib import Path
+import runpy
 import subprocess
 import tempfile
+import time
 import unittest
+from unittest import mock
 
 
 DOTFILES = Path(__file__).resolve().parents[1]
@@ -16,6 +20,62 @@ REBUILD_WAIT = DOTFILES / "claude/bin/elpaca-rebuild-wait"
 CHECK_EVIDENCE = DOTFILES / "claude/bin/elisp-check-evidence"
 LIVE_VERIFY = DOTFILES / "claude/bin/elisp-live-verify"
 EVIDENCE_LIB = DOTFILES / "claude/hooks/lib-elisp-evidence.sh"
+
+
+def write_rebuild_emacsclient(path):
+    """Disposable fake transport shared by the rebuild and live-verify tests."""
+    path.write_text('''#!/usr/bin/env python3
+import base64, json, os, pathlib, sys
+args = " ".join(sys.argv[1:])
+for key in ("EMACSCLIENT_CALLED", "FAKE_EMACSCLIENT_LOG"):
+    if os.environ.get(key):
+        with open(os.environ[key], "a") as stream:
+            stream.write(args + "\\034")
+source = os.environ["FAKE_PACKAGE_SOURCE"]
+package = os.environ["FAKE_PACKAGE_ID"]
+def emit(value):
+    print(json.dumps(base64.b64encode(json.dumps(value).encode()).decode()))
+if "elpaca-extras-resolve-package" in args:
+    if os.environ.get("FAKE_RESOLVE_ERROR"):
+        print(os.environ["FAKE_RESOLVE_ERROR"], file=sys.stderr)
+        sys.exit(1)
+    enc = lambda value: base64.b64encode(value.encode()).decode()
+    print(json.dumps(package + ":" + enc(source + "/") + ":" + enc(pathlib.Path(source).name)))
+elif "elpaca-rebuild-context-v1" in args:
+    runtime = dict(package=package, pid=int(os.environ.get("FAKE_PID", "123")),
+                   start=os.environ.get("FAKE_START", "fixture-start"),
+                   profile=os.environ.get("FAKE_PROFILE", str(pathlib.Path(source).parent)),
+                   source=os.environ.get("FAKE_RUNTIME_SOURCE", source))
+    runtime_file = os.environ.get("FAKE_RUNTIME_FILE")
+    if runtime_file and pathlib.Path(runtime_file).exists():
+        runtime.update(json.loads(pathlib.Path(runtime_file).read_text()))
+    if "elpaca-extras-rebuild-and-reload" in args:
+        if os.environ.get("FAKE_REQUEST_MARKER"):
+            pathlib.Path(os.environ["FAKE_REQUEST_MARKER"]).write_text("requested")
+        if os.environ.get("FAKE_REQUEST_ERROR"):
+            print(os.environ["FAKE_REQUEST_ERROR"], file=sys.stderr)
+            sys.exit(1)
+        if os.environ.get("FAKE_AFTER_REQUEST"):
+            pathlib.Path(runtime_file).write_text(os.environ["FAKE_AFTER_REQUEST"])
+        if os.environ.get("FAKE_DIRTY_AFTER_REQUEST"):
+            pathlib.Path(os.environ["FAKE_DIRTY_AFTER_REQUEST"]).write_text("changed")
+        if os.environ.get("FAKE_STATUS_REPLACE_AFTER_REQUEST"):
+            status = pathlib.Path(os.environ["FAKE_STATUS_REPLACE_AFTER_REQUEST"])
+            replacement = status.with_name("producer-temporary")
+            replacement.write_text("pending:queued by post-commit\\n")
+            replacement.replace(status)
+        emit(dict(token=os.environ.get("FAKE_TOKEN", "token-1")))
+    elif "elpaca-extras-build-reload-status" in args:
+        emit(dict(runtime=runtime, package=os.environ.get("FAKE_TOKEN_PACKAGE", package),
+                  state=os.environ.get("FAKE_TOKEN_STATE", "finished")))
+    else:
+        emit(runtime)
+elif "unload-feature" in args:
+    print("t")
+else:
+    print(os.environ.get("FAKE_LIVE_RESULT", "t"))
+''')
+    path.chmod(0o755)
 
 
 def run(command: list[str], **kwargs) -> subprocess.CompletedProcess[str]:
@@ -742,42 +802,274 @@ class ElpacaRebuildWaitTests(unittest.TestCase):
         env["EMACSCLIENT_CALLED"] = str(self.called)
         env["FAKE_PACKAGE_ID"] = "example"
         env["FAKE_PACKAGE_SOURCE"] = str(self.dotfiles)
+        env["FAKE_RUNTIME_SOURCE"] = str(self.mirror)
         env["PATH"] = f"{self.fake_bin}:{env['PATH']}"
         return env
 
     def write_emacsclient(self):
-        counter = self.root / "counter"
-        script = self.fake_bin / "emacsclient"
-        script.write_text(
-            "#!/bin/sh\n"
-            "printf '%s\\034' \"$*\" >> \"$EMACSCLIENT_CALLED\"\n"
-            "if [ -n \"${FAKE_EMACSCLIENT_LOG:-}\" ]; then printf '%s\\034' \"$*\" >> \"$FAKE_EMACSCLIENT_LOG\"; fi\n"
-            f"counter={counter!s}\n"
-            "case \"$*\" in\n"
-            "  *elpaca-extras-resolve-package*)\n"
-            "    source=$(printf '%s' \"$FAKE_PACKAGE_SOURCE/\" | base64 | tr -d '\\n')\n"
-            "    label=$(basename \"$FAKE_PACKAGE_SOURCE\" | base64 | tr -d '\\n')\n"
-            "    printf '\"%s:%s:%s\"\\n' \"$FAKE_PACKAGE_ID\" \"$source\" \"$label\" ;;\n"
-            "  *format-build-reload-status*)\n"
-            "    count=$(sed -n '1p' \"$counter\" 2>/dev/null || printf '0')\n"
-            "    count=$((count + 1)); printf '%s\\n' \"$count\" > \"$counter\"\n"
-            "    if [ \"$count\" -ge 2 ]; then printf '\"finished:loaded\"\\n'; else printf '\"queued:building\"\\n'; fi ;;\n"
-            "  *) printf '\"token-1\"\\n' ;;\n"
-            "esac\n"
-        )
-        script.chmod(0o755)
+        write_rebuild_emacsclient(self.fake_bin / "emacsclient")
+
+    def status_path(self):
+        commit = run(["git", "-C", str(self.dotfiles), "rev-parse", "HEAD"]).stdout.strip()
+        return self.state / commit / "example.status"
+
+    def rebuild(self, **changes):
+        self.write_emacsclient()
+        env = self.environment()
+        env.update(changes)
+        return run([str(REBUILD_WAIT), "example"], env=env, cwd=self.dotfiles)
+
+    def requests(self):
+        if not self.called.exists():
+            return 0
+        return self.called.read_text().count("elpaca-extras-rebuild-and-reload")
+
+    def test_legacy_finished_is_not_runtime_evidence(self):
+        status = self.status_path()
+        status.parent.mkdir(parents=True)
+        status.write_text("finished:private old message\n")
+        result = self.rebuild()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("ELPACA_RELOAD_OWNER=1", result.stderr)
+        self.assertNotIn("private old", result.stderr)
+        self.assertEqual(self.requests(), 0)
+        self.assertEqual(status.read_text(), "finished:private old message\n")
+
+    def test_pending_producer_startup_gap_is_wait_only(self):
+        status = self.status_path()
+        status.parent.mkdir(parents=True)
+        status.write_text("pending:queued by post-commit\n")
+        result = self.rebuild(ELPACA_RELOAD_TIMEOUT_SECONDS="0.1")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("existing owner", result.stderr)
+        self.assertEqual(self.requests(), 0)
+        self.assertEqual(status.read_text(), "pending:queued by post-commit\n")
+
+    def test_pending_never_reuses_previous_finished_receipt(self):
+        self.assertEqual(self.rebuild(ELPACA_RELOAD_OWNER="1").returncode, 0)
+        self.status_path().write_text("pending:queued by post-commit\n")
+        result = self.rebuild(ELPACA_RELOAD_TIMEOUT_SECONDS="0.1")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.requests(), 1)
+
+    def test_runtime_restart_or_profile_change_invalidates_cached_success(self):
+        self.assertEqual(self.rebuild(ELPACA_RELOAD_OWNER="1").returncode, 0)
+        other_profile = self.root / "other-profile"
+        other_profile.mkdir()
+        for changes in ({"FAKE_PID": "456"}, {"FAKE_START": "new-start"},
+                        {"FAKE_PROFILE": str(other_profile)}):
+            with self.subTest(changes=changes):
+                result = self.rebuild(**changes)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("unverified completion", result.stderr)
+        self.assertEqual(self.requests(), 1)
+
+    def test_actual_registry_mirror_not_cached_profile_is_checked(self):
+        cache = self.home / ".config/emacs-profiles/.current-profile"
+        cache.write_text("nonexistent-stale-profile\n")
+        result = self.rebuild(ELPACA_RELOAD_OWNER="1")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        receipt = json.loads(self.status_path().with_suffix(".status.receipt.json").read_text())
+        self.assertEqual(receipt["context"]["runtime"]["source"], str(self.mirror.resolve()))
+
+    def test_dirty_same_head_mirror_and_target_source_refused(self):
+        for target in (self.mirror / "emacs/extras/example.el", self.dotfiles / "emacs/extras/example.el"):
+            with self.subTest(target=target):
+                original = target.read_bytes()
+                target.write_text("dirty source\n")
+                result = self.rebuild(ELPACA_RELOAD_OWNER="1")
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("uncommitted", result.stderr)
+                self.assertEqual(self.requests(), 0)
+                target.write_bytes(original)
+
+    def test_unrelated_primary_changes_do_not_block_package_rebuild(self):
+        (self.dotfiles / "unrelated.md").write_text("unrelated staged user work\n")
+        subprocess.run(["git", "-C", str(self.dotfiles), "add", "unrelated.md"], check=True)
+        (self.dotfiles / "another.md").write_text("unrelated untracked user work\n")
+        result = self.rebuild(ELPACA_RELOAD_OWNER="1")
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_runtime_or_source_change_during_request_cannot_finish(self):
+        runtime_file = self.root / "runtime.json"
+        result = self.rebuild(ELPACA_RELOAD_OWNER="1", FAKE_RUNTIME_FILE=str(runtime_file),
+                              FAKE_AFTER_REQUEST=json.dumps({"pid": 456}))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotEqual(self.status_path().read_text().split(":")[0], "finished")
+        self.assertFalse(self.status_path().with_suffix(".status.receipt.json").exists())
+
+    def test_source_changes_during_build_cannot_finish(self):
+        target = self.mirror / "emacs/extras/example.el"
+        original = target.read_bytes()
+        result = self.rebuild(ELPACA_RELOAD_OWNER="1",
+                              FAKE_DIRTY_AFTER_REQUEST=str(target))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("uncommitted", result.stderr)
+        self.assertFalse(self.status_path().with_suffix(".status.receipt.json").exists())
+        self.assertEqual(self.status_path().read_text().split(":")[0], "failed")
+        target.write_bytes(original)
+        retried = self.rebuild(ELPACA_RELOAD_OWNER="1")
+        self.assertEqual(retried.returncode, 0, retried.stderr)
+        self.assertEqual(self.requests(), 2, "rejected token must not be reused after restoring source")
+
+    def test_owner_preflight_failure_terminates_producer_pending_status(self):
+        status = self.status_path()
+        status.parent.mkdir(parents=True)
+        status.write_text("pending:queued by post-commit\n")
+        (self.mirror / "emacs/extras/example.el").write_text("dirty mirror\n")
+        result = self.rebuild(ELPACA_RELOAD_OWNER="1")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(status.read_text(), "failed:owner preflight failed; no rebuild requested\n")
+        self.assertEqual(self.requests(), 0)
+
+    def test_new_producer_pending_is_not_overwritten_by_prior_completion(self):
+        result = self.rebuild(ELPACA_RELOAD_OWNER="1",
+                              FAKE_STATUS_REPLACE_AFTER_REQUEST=str(self.status_path()))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("status replaced", result.stderr)
+        self.assertEqual(self.status_path().read_text(), "pending:queued by post-commit\n")
+        self.assertFalse(self.status_path().with_suffix(".status.receipt.json").exists())
+
+    def test_old_commit_producer_cannot_label_current_source_rebuild(self):
+        status = self.state / ("a" * 40) / "example.status"
+        status.parent.mkdir(parents=True)
+        status.write_text("pending:queued by post-commit\n")
+        result = self.rebuild(ELPACA_RELOAD_OWNER="1", ELPACA_RELOAD_STATUS_FILE=str(status))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("status revision", result.stderr)
+        self.assertEqual(self.requests(), 0)
+        self.assertEqual(status.read_text(), "failed:owner preflight failed; no rebuild requested\n")
+
+    def test_wrong_package_or_missing_token_never_certifies_completion(self):
+        self.assertEqual(self.rebuild(ELPACA_RELOAD_OWNER="1").returncode, 0)
+        for changes in ({"FAKE_TOKEN_PACKAGE": "other"}, {"FAKE_TOKEN_STATE": "missing"}):
+            with self.subTest(changes=changes):
+                result = self.rebuild(**changes)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("another package", result.stderr)
+        self.assertEqual(self.requests(), 1)
+
+    def test_malformed_token_is_not_evaluated_and_request_remains_uncertain(self):
+        result = self.rebuild(ELPACA_RELOAD_OWNER="1", FAKE_TOKEN='bad-token\") (error "sentinel")')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn("sentinel", result.stderr)
+        self.assertNotIn("elpaca-extras-build-reload-status", self.called.read_text())
+        second = self.rebuild(ELPACA_RELOAD_OWNER="1")
+        self.assertNotEqual(second.returncode, 0)
+        self.assertIn("unresolved rebuild", second.stderr)
+        self.assertEqual(self.requests(), 1)
+
+    def test_request_transport_error_is_sanitized_and_blocks_duplicate(self):
+        result = self.rebuild(ELPACA_RELOAD_OWNER="1", FAKE_REQUEST_ERROR="private-sentinel")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertNotIn("private-sentinel", result.stdout + result.stderr)
+        second = self.rebuild(ELPACA_RELOAD_OWNER="1")
+        self.assertNotEqual(second.returncode, 0)
+        self.assertEqual(self.requests(), 1)
+
+    def test_timeout_owner_can_resume_same_token_without_new_request(self):
+        first = self.rebuild(ELPACA_RELOAD_OWNER="1", FAKE_TOKEN_STATE="queued",
+                             ELPACA_RELOAD_TIMEOUT_SECONDS="0.3")
+        self.assertNotEqual(first.returncode, 0)
+        second = self.rebuild(ELPACA_RELOAD_OWNER="1")
+        self.assertEqual(second.returncode, 0, second.stderr)
+        self.assertEqual(self.requests(), 1)
+
+    def test_concurrent_owner_is_refused_before_another_request(self):
+        self.write_emacsclient()
+        env = self.environment()
+        marker = self.root / "request-started"
+        env.update(ELPACA_RELOAD_OWNER="1", FAKE_TOKEN_STATE="queued",
+                   ELPACA_RELOAD_TIMEOUT_SECONDS="2", FAKE_REQUEST_MARKER=str(marker))
+        process = subprocess.Popen([str(REBUILD_WAIT), "example"], env=env,
+                                   cwd=self.dotfiles, text=True, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+        try:
+            deadline = time.monotonic() + 3
+            while not marker.exists() and time.monotonic() < deadline:
+                time.sleep(0.01)
+            self.assertTrue(marker.exists())
+            second = self.rebuild(ELPACA_RELOAD_OWNER="1")
+            self.assertNotEqual(second.returncode, 0)
+            self.assertIn("another rebuild owner", second.stderr)
+        finally:
+            process.communicate(timeout=5)
+        self.assertEqual(self.requests(), 1)
+
+    def test_nonowner_rechecks_missing_status_after_acquiring_owner_lock(self):
+        self.write_emacsclient()
+        loaded = runpy.run_path(str(REBUILD_WAIT), run_name="fixture_rebuild")
+        namespace = loaded["main"].__globals__
+        original_lock = namespace["owner_lock"]
+        @contextmanager
+        def interleaving(root, package):
+            completed = self.rebuild(ELPACA_RELOAD_OWNER="1")
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            with original_lock(root, package) as directory:
+                yield directory
+        with mock.patch.dict(namespace, owner_lock=interleaving), \
+                mock.patch.dict(os.environ, self.environment(), clear=True), \
+                mock.patch.object(loaded["sys"], "argv", [str(REBUILD_WAIT), "example"]):
+            with self.assertRaisesRegex(loaded["RebuildError"], "another owner published status"):
+                loaded["main"]()
+        self.assertEqual(self.requests(), 1)
+
+    def test_large_poll_interval_cannot_exceed_observer_or_owner_deadline(self):
+        status = self.status_path()
+        status.parent.mkdir(parents=True)
+        status.write_text("pending:queued by post-commit\n")
+        for owner in ("0", "1"):
+            with self.subTest(owner=owner):
+                start = time.monotonic()
+                result = self.rebuild(ELPACA_RELOAD_OWNER=owner, FAKE_TOKEN_STATE="queued",
+                                      ELPACA_RELOAD_TIMEOUT_SECONDS="0.4",
+                                      ELPACA_RELOAD_POLL_INTERVAL_SECONDS="10000")
+                self.assertNotEqual(result.returncode, 0)
+                self.assertLess(time.monotonic() - start, 3)
+
+    def test_malformed_owner_state_cannot_start_another_request(self):
+        self.assertEqual(self.rebuild(ELPACA_RELOAD_OWNER="1").returncode, 0)
+        operation = self.state / "owners/example.json"
+        value = json.loads(operation.read_text())
+        value["state"] = "unknown"
+        operation.write_text(json.dumps(value))
+        result = self.rebuild(ELPACA_RELOAD_OWNER="1")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("invalid owner record", result.stderr)
+        self.assertEqual(self.requests(), 1)
+
+    def test_invalid_timeout_values_refuse_before_runtime_calls(self):
+        for value in ("NaN", "Inf", "-1"):
+            with self.subTest(value=value):
+                result = self.rebuild(ELPACA_RELOAD_TIMEOUT_SECONDS=value)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertFalse(self.called.exists())
+
+    def test_atomic_receipt_replace_failure_preserves_prior_json(self):
+        loaded = runpy.run_path(str(REBUILD_WAIT), run_name="fixture_rebuild")
+        target = self.root / "receipt.json"
+        target.write_text('{"old": true}\n')
+        with mock.patch.object(loaded["os"], "replace", side_effect=OSError("fixture")):
+            with self.assertRaises(OSError):
+                loaded["write_json"](target, {"new": True})
+        self.assertEqual(json.loads(target.read_text()), {"old": True})
+        self.assertEqual(list(self.root.glob(".reload-*")), [])
 
     def test_observes_finished_post_commit_state_without_new_request(self):
         commit = run(["git", "-C", str(self.dotfiles), "rev-parse", "HEAD"]).stdout.strip()
         status = self.state / commit / "example.status"
-        status.parent.mkdir(parents=True)
-        status.write_text("finished:already loaded\n")
         self.write_emacsclient()
+        owner_env = self.environment()
+        owner_env["ELPACA_RELOAD_OWNER"] = "1"
+        first = run([str(REBUILD_WAIT), "example"], env=owner_env, cwd=self.dotfiles)
+        self.assertEqual(first.returncode, 0, first.stderr)
+        self.called.write_text("")
         result = run(
             [str(REBUILD_WAIT), "example"], env=self.environment(), cwd=self.dotfiles
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertFalse(self.called.exists())
+        self.assertNotIn("elpaca-extras-rebuild-and-reload", self.called.read_text())
+        self.assertIn("elpaca-extras-build-reload-status", self.called.read_text())
 
     def test_owner_request_waits_for_finished_and_persists_status(self):
         self.write_emacsclient()
@@ -800,6 +1092,7 @@ class ElpacaRebuildWaitTests(unittest.TestCase):
         env = self.environment()
         env["FAKE_PACKAGE_ID"] = "standalone"
         env["FAKE_PACKAGE_SOURCE"] = str(standalone)
+        env["FAKE_RUNTIME_SOURCE"] = str(standalone)
         result = run(
             [str(REBUILD_WAIT), "standalone"],
             env=env,
@@ -816,6 +1109,7 @@ class ElpacaRebuildWaitTests(unittest.TestCase):
         env = self.environment()
         env["FAKE_PACKAGE_ID"] = "slack"
         env["FAKE_PACKAGE_SOURCE"] = str(standalone)
+        env["FAKE_RUNTIME_SOURCE"] = str(standalone)
         env["FAKE_EMACSCLIENT_LOG"] = str(log)
         result = run(
             [str(REBUILD_WAIT), "emacs-slack"], env=env, cwd=standalone
@@ -844,7 +1138,7 @@ class ElpacaRebuildWaitTests(unittest.TestCase):
         )
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("does not match source HEAD", result.stderr)
-        self.assertFalse(self.called.exists())
+        self.assertNotIn("elpaca-extras-rebuild-and-reload", self.called.read_text())
 
 
 class ElispLiveVerifyTests(unittest.TestCase):
@@ -856,21 +1150,7 @@ class ElispLiveVerifyTests(unittest.TestCase):
         self.fake_bin = self.root / "bin"
         self.fake_bin.mkdir()
         emacsclient = self.fake_bin / "emacsclient"
-        emacsclient.write_text(
-            "#!/bin/sh\n"
-            "if [ -n \"${FAKE_EMACSCLIENT_LOG:-}\" ]; then printf '%s\\034' \"$*\" >> \"$FAKE_EMACSCLIENT_LOG\"; fi\n"
-            "case \"$*\" in\n"
-            "  *elpaca-extras-resolve-package*)\n"
-            "    source=$(printf '%s' \"$FAKE_PACKAGE_SOURCE/\" | base64 | tr -d '\\n')\n"
-            "    label=$(basename \"$FAKE_PACKAGE_SOURCE\" | base64 | tr -d '\\n')\n"
-            "    printf '\"%s:%s:%s\"\\n' \"$FAKE_PACKAGE_ID\" \"$source\" \"$label\" ;;\n"
-            "  *format-build-reload-status*) printf '%s\\n' '\"finished:loaded\"' ;;\n"
-            "  *elpaca-extras-rebuild-and-reload*) printf '%s\\n' '\"token-1\"' ;;\n"
-            "  *unload-feature*) printf '%s\\n' 't' ;;\n"
-            "  *) printf '%s\\n' \"${FAKE_LIVE_RESULT:-t}\" ;;\n"
-            "esac\n"
-        )
-        emacsclient.chmod(0o755)
+        write_rebuild_emacsclient(emacsclient)
 
     def environment(self) -> dict[str, str]:
         env = os.environ.copy()

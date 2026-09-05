@@ -1,170 +1,334 @@
-#!/usr/bin/env bash
-# Rebuild and reload one Elpaca package, then wait for a terminal status.
+#!/usr/bin/env python3
+"""Wait for a rebuild bound to one runtime and clean, committed source.
 
-set -euo pipefail
+The first-line status protocol is retained for post-commit callers. Its JSON
+sidecar is evidence, not a cache of unqualified success. A per-package lock and
+durable in-flight record prevent cooperating invocations from competing.
+"""
 
-if [ "$#" -ne 1 ]; then
-  echo "Usage: elpaca-rebuild-wait PACKAGE" >&2
-  exit 2
-fi
+import base64
+from contextlib import contextmanager
+import fcntl
+import hashlib
+import json
+import math
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+import tempfile
+import time
 
-identifier="$1"
-case "$identifier" in
-  *[!A-Za-z0-9+_.-]* | "")
-    echo "Invalid package identifier: $identifier" >&2
-    exit 2
-    ;;
-esac
 
-script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
-tool_root=$(cd -- "$script_dir/../.." && pwd)
-dotfiles_root=${DOTFILES_ROOT:-$tool_root}
-dotfiles_root=$(cd -- "$dotfiles_root" && pwd -P)
-resolution=$(DOTFILES_ROOT="$dotfiles_root" \
-  "$tool_root/bin/elpaca-package-resolve" "$identifier")
-package=$(printf '%s' "$resolution" | jq -er '.id')
-source_repo=$(printf '%s' "$resolution" | jq -er '.repo')
-state_root=${ELPACA_RELOAD_STATE_DIR:-$HOME/.cache/dotfiles/elpaca-reload}
-reload_timeout=${ELPACA_RELOAD_TIMEOUT_SECONDS:-120}
-reload_poll_interval=${ELPACA_RELOAD_POLL_INTERVAL_SECONDS:-1}
-owner=${ELPACA_RELOAD_OWNER:-0}
-dotfiles_package=0
-if [ "$source_repo" = "$dotfiles_root" ] &&
-   [ -f "$dotfiles_root/emacs/extras/$package.el" ]; then
-  dotfiles_package=1
-else
-  # Standalone source checkouts can change without the dotfiles HEAD changing.
-  # Always request a fresh rebuild instead of reusing dotfiles commit state.
-  owner=1
-fi
+class RebuildError(Exception):
+    pass
 
-if [ -n "${ELPACA_RELOAD_STATUS_FILE:-}" ]; then
-  status_file=$ELPACA_RELOAD_STATUS_FILE
-else
-  commit=$(git -C "$source_repo" rev-parse HEAD 2>/dev/null) || {
-    echo "Cannot resolve the source commit" >&2
-    exit 1
-  }
-  status_file="$state_root/$commit/$package.status"
-fi
 
-status_dir=$(dirname -- "$status_file")
-mkdir -p "$status_dir"
+def command(args, timeout=10):
+    try:
+        result = subprocess.run(args, capture_output=True, text=True,
+                                timeout=timeout, check=False)
+    except (OSError, subprocess.SubprocessError, UnicodeError):
+        raise RebuildError("command transport failed") from None
+    if result.returncode:
+        raise RebuildError("command failed; raw output suppressed")
+    return result.stdout.strip()
 
-write_status() {
-  local value="$1"
-  local temporary="$status_file.tmp.$$"
-  printf '%s\n' "$value" > "$temporary"
-  mv -f "$temporary" "$status_file"
-}
 
-read_status() {
-  if [ -f "$status_file" ]; then
-    sed -n '1p' "$status_file"
-  fi
-}
+def atomic_write(path, text):
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    fd, name = tempfile.mkstemp(prefix=".reload-", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w") as stream:
+            stream.write(text)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(name, path)
+    finally:
+        if os.path.exists(name):
+            os.unlink(name)
 
-validate_dotfiles_mirror() {
-  local profile elpaca_base mirror source_head mirror_head
-  [ "$dotfiles_package" = 1 ] || return 0
-  profile=$(sed -n '1p' "$HOME/.config/emacs-profiles/.current-profile" 2>/dev/null)
-  [ -n "$profile" ] || {
-    write_status "failed:cannot resolve the active Emacs profile"
-    return 1
-  }
-  elpaca_base="$HOME/.config/emacs-profiles/$profile/elpaca"
-  if git -C "$elpaca_base/sources/dotfiles" rev-parse --git-dir >/dev/null 2>&1; then
-    mirror="$elpaca_base/sources/dotfiles"
-  elif git -C "$elpaca_base/repos/dotfiles" rev-parse --git-dir >/dev/null 2>&1; then
-    mirror="$elpaca_base/repos/dotfiles"
-  else
-    write_status "failed:cannot resolve the active dotfiles mirror"
-    return 1
-  fi
-  source_head=$(git -C "$source_repo" rev-parse HEAD 2>/dev/null) || {
-    write_status "failed:cannot resolve source HEAD for $source_repo"
-    return 1
-  }
-  mirror_head=$(git -C "$mirror" rev-parse HEAD 2>/dev/null) || {
-    write_status "failed:cannot resolve active dotfiles mirror HEAD for $mirror"
-    return 1
-  }
-  if [ "$mirror_head" != "$source_head" ]; then
-    write_status "failed:active dotfiles mirror HEAD $mirror_head does not match source HEAD $source_head"
-    return 1
-  fi
-}
 
-wait_for_existing() {
-  local deadline status
-  deadline=$(( $(date +%s) + reload_timeout ))
-  while (( $(date +%s) <= deadline )); do
-    status=$(read_status)
-    case "$status" in
-      finished:*) printf '%s\n' "$status"; return 0 ;;
-      failed:*) printf '%s\n' "$status" >&2; return 1 ;;
-    esac
-    sleep "$reload_poll_interval"
-  done
-  echo "Timed out after ${reload_timeout}s waiting for $package (last status: ${status:-missing})" >&2
-  return 1
-}
+def write_json(path, value):
+    atomic_write(path, json.dumps(value, sort_keys=True) + "\n")
 
-if ! validate_dotfiles_mirror; then
-  printf '%s\n' "$(read_status)" >&2
-  exit 1
-fi
 
-if [ "$owner" != 1 ] && [ -f "$status_file" ]; then
-  wait_for_existing
-  exit $?
-fi
+def read_json(path):
+    try:
+        return json.loads(path.read_text())
+    except FileNotFoundError:
+        return None
+    except (OSError, ValueError, UnicodeError):
+        raise RebuildError("invalid rebuild receipt; reconcile its owner") from None
 
-write_status "pending:requesting rebuild"
 
-strip_emacs_string() {
-  sed 's/^"//; s/"$//'
-}
+def read_status(path):
+    try:
+        return path.read_text().splitlines()[0].split(":", 1)[0]
+    except FileNotFoundError:
+        return "missing"
+    except (OSError, IndexError, UnicodeError):
+        raise RebuildError("unreadable rebuild status") from None
 
-if ! raw_token=$(timeout 30 emacsclient -e "(when (elpaca-get '$package) (elpaca-extras-rebuild-and-reload '$package))" 2>&1); then
-  write_status "failed:could not request rebuild: $raw_token"
-  printf '%s\n' "$(read_status)" >&2
-  exit 1
-fi
 
-token=$(printf '%s' "$raw_token" | strip_emacs_string)
-if [ -z "$token" ] || [ "$token" = nil ]; then
-  write_status "failed:no completion token returned"
-  printf '%s\n' "$(read_status)" >&2
-  exit 1
-fi
+def status_identity(path):
+    with path.open("rb") as stream:
+        stat = os.fstat(stream.fileno())
+        digest = hashlib.sha256(stream.read()).hexdigest()
+    return [stat.st_dev, stat.st_ino, stat.st_mtime_ns, stat.st_size, digest]
 
-deadline=$(( $(date +%s) + reload_timeout ))
-status="queued"
-message="Build queued"
-while (( $(date +%s) <= deadline )); do
-  if raw_status=$(timeout 10 emacsclient -e "(elpaca-extras-format-build-reload-status \"$token\")" 2>&1); then
-    status_result=$(printf '%s' "$raw_status" | strip_emacs_string)
-  else
-    status_result="poll-error:$raw_status"
-  fi
-  status=${status_result%%:*}
-  message=${status_result#*:}
-  case "$status" in
-    finished)
-      write_status "finished:$message"
-      printf '%s\n' "$(read_status)"
-      exit 0
-      ;;
-    failed)
-      write_status "failed:$message"
-      printf '%s\n' "$(read_status)" >&2
-      exit 1
-      ;;
-  esac
-  sleep "$reload_poll_interval"
-done
 
-write_status "failed:timed out after ${reload_timeout}s; last status: $status: $message"
-printf '%s\n' "$(read_status)" >&2
-exit 1
+@contextmanager
+def owner_lock(root, package):
+    directory = root / "owners"
+    directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+    with (directory / f"{package}.lock").open("a") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise RebuildError("another rebuild owner is active; wait for that owner") from None
+        yield directory
+
+
+def runtime_form(package):
+    # Values come from this process and the live registry, not .current-profile.
+    return f"""(let* ((entry (elpaca-get '{package}))
+      (source (and entry (or (elpaca<-source-dir entry)
+                            (elpaca-source-dir entry)))))
+      (unless (and source (not (file-remote-p source))) (error "Missing source"))
+      `((package . ,(symbol-name '{package})) (pid . ,(emacs-pid))
+        (start . ,(prin1-to-string before-init-time))
+        (profile . ,(directory-file-name (file-truename user-emacs-directory)))
+        (source . ,(directory-file-name (file-truename source)))))"""
+
+
+def emacs_json(form):
+    wrapped = f"""(progn (require 'json)
+      ;; elpaca-rebuild-context-v1
+      (base64-encode-string (encode-coding-string
+        (json-encode {form}) 'utf-8) t))"""
+    raw = command(["emacsclient", "-e", wrapped], timeout=30)
+    try:
+        encoded = json.loads(raw)
+        if not isinstance(encoded, str):
+            raise ValueError()
+        return json.loads(base64.b64decode(encoded, validate=True).decode("utf-8"))
+    except (ValueError, TypeError, UnicodeError):
+        raise RebuildError("invalid Emacs protocol response; raw output suppressed") from None
+
+
+def validate_runtime(value, package):
+    if (not isinstance(value, dict) or set(value) != {"package", "pid", "start", "profile", "source"}
+            or value["package"] != package or type(value["pid"]) is not int
+            or value["pid"] <= 0):
+        raise RebuildError("invalid runtime identity")
+    for key in ("start", "profile", "source"):
+        if not isinstance(value[key], str) or not value[key] or any(ord(c) < 32 for c in value[key]):
+            raise RebuildError("invalid runtime identity")
+    for key in ("profile", "source"):
+        if not Path(value[key]).is_absolute():
+            raise RebuildError("invalid runtime path")
+        value[key] = str(Path(value[key]).resolve(strict=True))
+    return value
+
+
+def source_identity(repo, pathspec=None):
+    repo = Path(command(["git", "-C", str(repo), "rev-parse", "--show-toplevel"])).resolve(strict=True)
+    head = command(["git", "-C", str(repo), "rev-parse", "HEAD"])
+    if not re.fullmatch(r"[0-9a-f]{40,64}", head):
+        raise RebuildError("invalid source revision")
+    args = ["git", "-C", str(repo), "status", "--porcelain", "--untracked-files=normal"]
+    if pathspec:
+        args.extend(["--", pathspec])
+    if command(args):
+        raise RebuildError("source or active mirror has uncommitted changes")
+    stat = repo.stat()
+    return {"repo": str(repo), "head": head, "device": stat.st_dev, "inode": stat.st_ino}
+
+
+def context(package, source_repo, extras):
+    runtime = validate_runtime(emacs_json(runtime_form(package)), package)
+    pathspec = f"emacs/extras/{package}.el" if extras else "*.el"
+    source = source_identity(source_repo, pathspec)
+    active = source_identity(runtime["source"], None if extras else pathspec)
+    if extras:
+        if active["head"] != source["head"]:
+            raise RebuildError("active dotfiles mirror HEAD does not match source HEAD")
+    elif active["repo"] != source["repo"]:
+        raise RebuildError("active registry source does not match resolved source")
+    return {"runtime": runtime, "source": source, "active": active}
+
+
+def token_status(package, token, expected_runtime):
+    if not isinstance(token, str) or not re.fullmatch(r"[A-Za-z0-9+_.-]{1,256}", token):
+        raise RebuildError("invalid completion token")
+    value = emacs_json(f"""(let ((status (elpaca-extras-build-reload-status {json.dumps(token)})))
+      `((runtime . ,{runtime_form(package)})
+        (package . ,(and (plist-get status :package)
+                        (symbol-name (plist-get status :package))))
+        (state . ,(symbol-name (or (plist-get status :state) 'missing)))))""")
+    if not isinstance(value, dict) or validate_runtime(value.get("runtime"), package) != expected_runtime:
+        raise RebuildError("Emacs runtime changed while waiting")
+    if value.get("package") != package or value.get("state") not in ("queued", "finished", "failed"):
+        raise RebuildError("completion token is missing or belongs to another package")
+    return value["state"]
+
+
+def request(package, expected):
+    # Compare in the same Emacs evaluation that queues the build. No transport
+    # output or provider message is interpolated into executable forms.
+    checks = " ".join(
+        f"(equal (alist-get '{key} runtime) {json.dumps(value)})"
+        for key, value in expected.items()
+    )
+    value = emacs_json(f"""(let ((runtime {runtime_form(package)}))
+      (unless (and {checks}) (error "Runtime changed"))
+      `((token . ,(elpaca-extras-rebuild-and-reload '{package}))))""")
+    token = value.get("token") if isinstance(value, dict) else None
+    if not isinstance(token, str) or not re.fullmatch(r"[A-Za-z0-9+_.-]{1,256}", token):
+        raise RebuildError("no valid completion token; rebuild outcome is uncertain")
+    return token
+
+
+def seconds(name, default, positive=False):
+    try:
+        value = float(os.environ.get(name, default))
+        if not math.isfinite(value) or value < 0 or (positive and value == 0):
+            raise ValueError()
+        return value
+    except ValueError:
+        raise RebuildError("invalid timeout or poll interval") from None
+
+
+def poll_sleep(interval, deadline):
+    time.sleep(min(interval, max(0, deadline - time.monotonic())))
+
+
+def main():
+    if len(sys.argv) != 2 or not re.fullmatch(r"[A-Za-z0-9+_.-]+", sys.argv[1]):
+        raise RebuildError("Usage: elpaca-rebuild-wait PACKAGE (valid identifier required)")
+    tool_root = Path(__file__).resolve().parents[2]
+    dotfiles = Path(os.environ.get("DOTFILES_ROOT", tool_root)).resolve(strict=True)
+    resolution = json.loads(command([str(tool_root / "bin/elpaca-package-resolve"), sys.argv[1]]))
+    package, source_repo = resolution["id"], Path(resolution["repo"]).resolve(strict=True)
+    if not isinstance(package, str) or not re.fullmatch(r"[A-Za-z0-9+_.-]+", package):
+        raise RebuildError("invalid resolved package")
+    extras = source_repo == dotfiles and (dotfiles / "emacs/extras" / f"{package}.el").is_file()
+    owner = os.environ.get("ELPACA_RELOAD_OWNER", "0")
+    if owner not in ("0", "1"):
+        raise RebuildError("ELPACA_RELOAD_OWNER must be 0 or 1")
+    owner = owner == "1" or not extras
+    timeout = seconds("ELPACA_RELOAD_TIMEOUT_SECONDS", "120", positive=True)
+    interval = seconds("ELPACA_RELOAD_POLL_INTERVAL_SECONDS", "1")
+    root = Path(os.environ.get("ELPACA_RELOAD_STATE_DIR", Path.home() / ".cache/dotfiles/elpaca-reload"))
+    commit = command(["git", "-C", str(source_repo), "rev-parse", "HEAD"])
+    status_file = Path(os.environ.get("ELPACA_RELOAD_STATUS_FILE", root / commit / f"{package}.status")).absolute()
+    try:
+        initial = context(package, source_repo, extras)
+        if (status_file.parent.parent == root.absolute()
+                and re.fullmatch(r"[0-9a-f]{40,64}", status_file.parent.name)
+                and status_file.parent.name != initial["source"]["head"]):
+            raise RebuildError("post-commit status revision no longer matches source HEAD")
+    except RebuildError:
+        if owner:
+            with owner_lock(root, package) as directory:
+                previous = read_json(directory / f"{package}.json")
+                if ((previous is None or (isinstance(previous, dict) and
+                     previous.get("state") in ("finished", "failed", "rejected")))
+                        and read_status(status_file) == "pending"):
+                    atomic_write(status_file, "failed:owner preflight failed; no rebuild requested\n")
+        raise
+    receipt_file = status_file.with_name(status_file.name + ".receipt.json")
+    deadline = time.monotonic() + timeout
+
+    if not owner and read_status(status_file) != "missing":
+        while time.monotonic() <= deadline:
+            state = read_status(status_file)
+            if state == "finished":
+                receipt = read_json(receipt_file)
+                if (not isinstance(receipt, dict) or receipt.get("version") != 1
+                        or receipt.get("context") != initial or receipt.get("state") != "finished"):
+                    raise RebuildError("unverified completion; request a fresh owner with ELPACA_RELOAD_OWNER=1")
+                if token_status(package, receipt.get("token"), initial["runtime"]) != "finished":
+                    raise RebuildError("completion token is not finished")
+                if context(package, source_repo, extras) != initial or read_json(receipt_file) != receipt or read_status(status_file) != "finished":
+                    raise RebuildError("completion context changed during verification")
+                print("finished:loaded")
+                return
+            if state == "failed":
+                raise RebuildError("existing rebuild failed; request a fresh owner")
+            if state not in ("pending", "missing"):
+                raise RebuildError("invalid rebuild status")
+            poll_sleep(interval, deadline)
+        raise RebuildError("timed out waiting for the existing owner; no rebuild requested")
+
+    with owner_lock(root, package) as lock_dir:
+        if context(package, source_repo, extras) != initial:
+            raise RebuildError("source or runtime changed before rebuild")
+        if not owner and read_status(status_file) != "missing":
+            raise RebuildError("another owner published status; retry to observe that owner")
+        operation_file = lock_dir / f"{package}.json"
+        operation = read_json(operation_file)
+        if operation is not None:
+            if (not isinstance(operation, dict) or operation.get("version") != 1
+                    or operation.get("state") not in ("requesting", "pending", "finished", "failed", "rejected")
+                    or not isinstance(operation.get("context"), dict)
+                    or not isinstance(operation.get("status_file"), str)
+                    or not Path(operation["status_file"]).is_absolute()
+                    or (operation["state"] != "requesting" and
+                        (not isinstance(operation.get("token"), str) or
+                         not re.fullmatch(r"[A-Za-z0-9+_.-]{1,256}", operation["token"])))):
+                raise RebuildError("invalid owner record; reconcile its owner")
+        if operation and operation.get("state") in ("requesting", "pending"):
+            if (operation.get("context") != initial or operation.get("status_file") != str(status_file)
+                    or not operation.get("token")
+                    or operation.get("status_identity") != status_identity(status_file)):
+                raise RebuildError("an unresolved rebuild exists; reconcile its owner before requesting another")
+            token = operation["token"]
+        else:
+            operation = {"version": 1, "context": initial, "status_file": str(status_file), "state": "requesting"}
+            write_json(operation_file, operation)
+            atomic_write(status_file, "pending:requesting rebuild\n")
+            operation["status_identity"] = status_identity(status_file)
+            write_json(operation_file, operation)
+            token = request(package, initial["runtime"])
+            operation.update(token=token, state="pending")
+            write_json(operation_file, operation)
+        while time.monotonic() <= deadline:
+            state = token_status(package, token, initial["runtime"])
+            if state in ("finished", "failed"):
+                # Once terminal completion fails validation this token must never
+                # become evidence, even if the source later returns to its HEAD.
+                operation["state"] = "rejected"
+                write_json(operation_file, operation)
+                try:
+                    if context(package, source_repo, extras) != initial:
+                        raise RebuildError("source or runtime changed during rebuild; completion not certified")
+                    if operation["status_identity"] != status_identity(status_file):
+                        raise RebuildError("status replaced by another producer; completion not certified")
+                except RebuildError:
+                    if operation["status_identity"] == status_identity(status_file):
+                        atomic_write(status_file, "failed:completion context could not be verified\n")
+                    raise
+                operation["state"] = state
+                write_json(operation_file, operation)
+                if state == "failed":
+                    atomic_write(status_file, "failed:build or reload failed\n")
+                    raise RebuildError("build or reload failed; raw diagnostics suppressed")
+                write_json(receipt_file, {"version": 1, "context": initial, "token": token, "state": "finished"})
+                atomic_write(status_file, "finished:loaded\n")
+                print("finished:loaded")
+                return
+            poll_sleep(interval, deadline)
+        raise RebuildError("timed out; rebuild may still be running, retained owner record")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (RebuildError, OSError, ValueError, KeyError, TypeError) as error:
+        # Only our controlled messages may cross the terminal/status boundary.
+        message = str(error) if isinstance(error, RebuildError) else "invalid configuration or local I/O failure"
+        print("failed:" + message, file=sys.stderr)
+        sys.exit(1)

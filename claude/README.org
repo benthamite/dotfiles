@@ -172,6 +172,9 @@ The =dotfiles-context= skill resolves canonical sources without guessing from
 stale profile directories. It checks buffer and profile identity before tangling,
 preserves runtime-specific pairing, and binds local PR pins to the exact reviewed
 change while keeping generated files distinct from live activation.
+The shared rebuild helper requires runtime-, source- and token-bound completion
+evidence. It rejects unqualified cached success and keeps uncertain requests
+recorded so cooperating callers cannot silently launch a competing rebuild.
 
 The =document-elisp-package= skill preserves established manual paths, credits,
 anchors and export identities. It separates documentation from new save automation

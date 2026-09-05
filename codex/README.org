@@ -315,6 +315,11 @@ session identity and exact transcript in its active account root. It opens
 that path in Emacs and checks the rendered buffer's identity before reporting
 success; concurrent sessions cannot be selected by recency or project alone.
 
+The =handoff= skill separates drafting, saving and user-triggered replacement.
+It saves private per-session artifacts without later overwrites, preserves shared slots,
+and requires exact source/artifact checks and a one-invocation file binding
+before preparing a consumer command. Source inspection is not live readiness.
+
 The =google-sheets-comments= skill binds account/file/thread/reply identity,
 uses current API evidence rather than email notifications, and preserves exact
 action authority. Its gdoc contract records projection and receipt limitations;

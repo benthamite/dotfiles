@@ -426,6 +426,11 @@ delivery, the helper rebinds to the discovered transcript once it provably
 contains the run's marker-bearing prompt. Its helper reuses the same shared
 =agent_session_lib= module.
 
+The =handoff= skill separates drafting, saving and user-triggered replacement.
+It saves private per-session artifacts without later overwrites, preserves shared slots,
+and requires exact source/artifact checks and a one-invocation file binding
+before preparing a consumer command. Source inspection is not live readiness.
+
 The =google-sheets-comments= skill binds account/file/thread/reply identity,
 uses current API evidence rather than email notifications, and preserves exact
 action authority. Its gdoc contract records projection and receipt limitations;

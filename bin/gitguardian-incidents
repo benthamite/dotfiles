@@ -137,10 +137,25 @@ def _validate_api_url(url: str) -> str:
     return url
 
 
+class _RejectRedirects(urllib.request.HTTPRedirectHandler):
+    """Never forward an authenticated request to an HTTP redirect target."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise urllib.error.HTTPError(
+            req.full_url, code, "GitGuardian API redirect refused", headers, fp
+        )
+
+
+def _open_api_request(request: urllib.request.Request, *, timeout: int):
+    return urllib.request.build_opener(_RejectRedirects()).open(
+        request, timeout=timeout
+    )
+
+
 def _api_get(
     url: str,
     token: str,
-    opener: Callable[..., Any] = urllib.request.urlopen,
+    opener: Callable[..., Any] = _open_api_request,
     sleeper: Callable[[float], None] = time.sleep,
 ) -> tuple[Any, str | None]:
     request = urllib.request.Request(

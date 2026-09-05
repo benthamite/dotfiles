@@ -11,7 +11,10 @@ import pathlib
 import unittest
 import urllib.error
 import urllib.request
+import urllib.response
 from contextlib import redirect_stderr, redirect_stdout
+from email.message import Message
+from unittest.mock import patch
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -65,6 +68,48 @@ class GitGuardianIncidentTests(unittest.TestCase):
                 "https://api.gitguardian.com/v1/incidents/secrets",
                 '<https://attacker.invalid/steal>; rel="next"',
             )
+
+    def test_default_transport_rejects_redirect_before_forwarding_token(self):
+        origin = "https://api.gitguardian.com/v1/incidents/secrets"
+        targets = (
+            "https://attacker.invalid/steal",
+            "https://api.gitguardian.com/v1/redirected",
+        )
+        for code in (301, 302, 303, 307, 308):
+            for target in targets:
+                with self.subTest(code=code, target=target):
+                    requests = []
+
+                    class RecordingHTTPSHandler(urllib.request.HTTPSHandler):
+                        def https_open(self, request):
+                            requests.append(request)
+                            headers = Message()
+                            if len(requests) == 1:
+                                headers["Location"] = target
+                                response_code = code
+                            else:
+                                response_code = 200
+                            response = urllib.response.addinfourl(
+                                io.BytesIO(b"[]"), headers, request.full_url,
+                                response_code,
+                            )
+                            response.msg = "redirect" if len(requests) == 1 else "OK"
+                            return response
+
+                    with patch.object(
+                        urllib.request, "HTTPSHandler", RecordingHTTPSHandler
+                    ):
+                        with self.assertRaisesRegex(
+                            MODULE.TriageError, f"HTTP {code}$"
+                        ) as failure:
+                            MODULE._api_get(origin, "gg_pat_private")
+
+                    self.assertEqual([request.full_url for request in requests], [origin])
+                    self.assertEqual(
+                        requests[0].get_header("Authorization"), "Token gg_pat_private"
+                    )
+                    self.assertNotIn(target, str(failure.exception))
+                    self.assertNotIn("gg_pat_private", str(failure.exception))
 
     def test_rate_limit_retry_is_bounded(self):
         calls = []

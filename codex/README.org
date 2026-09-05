@@ -184,6 +184,12 @@ destination before installation. It preserves canonical paired roots and uses
 copies for Drive-backed destinations, then resolves the installed skill to
 verify discovery.
 
+The project-local =gitguardian-triage= separates read-only classification from
+authorized rotation and closure, verifies exact credential ownership and
+consumers, and treats ambiguous provider responses as inconclusive. Its
+=bin/gitguardian-incidents= reader rejects HTTP redirects so authenticated
+requests cannot forward credentials to another endpoint.
+
 The programmatic =open-session-log= helper resolves the current runtime's
 session identity and exact transcript in its active account root. It opens
 that path in Emacs and checks the rendered buffer's identity before reporting

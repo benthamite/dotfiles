@@ -426,13 +426,13 @@ delivery, the helper rebinds to the discovered transcript once it provably
 contains the run's marker-bearing prompt. Its helper reuses the same shared
 =agent_session_lib= module.
 
-The =fix-drive-errors= skill treats the fully paginated native Drive panel as
-the source of truth. Its helper preserves duplicate rows and exact error
-reasons, inventories all candidate paths without claiming a basename match is
-the offending instance, and fails closed when accessibility traversal is
-incomplete. The skill also covers rejected cross-account =.gdoc= pointers and
-routes their replacement through ordinary =epoch-doc:= URL shortcuts rather
-than sharing changes or another Drive-hosted symlink.
+The =fix-drive-errors= skill separates read-only diagnosis from authorized
+repairs and binds live evidence to the displayed account and sync root. Its
+reader preserves duplicate rows and exact reasons, refuses incomplete scans,
+and labels simulated panels and heuristic filesystem candidates. Repairs
+preserve exact files and consumers; Epoch =.gdoc= replacements require checking
+the actual saved =.url= → OS handler → Epoch document route before authorized
+trashing of an unchanged original. Restart and settling checks are bounded.
 
 * Hooks
 

@@ -315,6 +315,14 @@ session identity and exact transcript in its active account root. It opens
 that path in Emacs and checks the rendered buffer's identity before reporting
 success; concurrent sessions cannot be selected by recency or project alone.
 
+The =fix-drive-errors= skill separates read-only diagnosis from authorized
+repairs and binds live evidence to the displayed account and sync root. Its
+reader preserves duplicate rows and exact reasons, refuses incomplete scans,
+and labels simulated panels and heuristic filesystem candidates. Repairs
+preserve exact files and consumers; Epoch =.gdoc= replacements require checking
+the actual saved =.url= → OS handler → Epoch document route before authorized
+trashing of an unchanged original. Restart and settling checks are bounded.
+
 * Hooks and rules
 
 The tracked =hooks.json= is the registration source. It lives outside the

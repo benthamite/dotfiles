@@ -28,6 +28,7 @@ GENERATED_NAMES = {
 DRIVE_ROOT = Path(
     os.environ.get("DRIVE_ERRORS_DRIVE_ROOT", str(Path.home() / "My Drive"))
 )
+JXA_TIMEOUT_SECONDS = 30
 
 
 OPEN_ERROR_LIST_JXA = r'''
@@ -138,8 +139,10 @@ for (var scan = 0; scan < 3 && summary === null && !sawUpToDate; scan++) {
 }
 
 if (summary === null) {
-  JSON.stringify({state: sawUpToDate && !traversalFailed ? "clean" : "unrecognized"});
+  JSON.stringify({state: sawUpToDate && !traversalFailed ? "clean" : "unrecognized",
+                  traversalFailed: traversalFailed});
 } else {
+  if (traversalFailed) throw new Error("Google Drive summary traversal was incomplete");
   var view = null, inside = descendants(summary, 0);
   for (var vi = 0; vi < inside.length; vi++) {
     var title = titleOf(inside[vi]);
@@ -149,11 +152,12 @@ if (summary === null) {
     }
   }
   if (view === null) throw new Error("Found the error summary but not its View button");
+  if (traversalFailed) throw new Error("Google Drive summary traversal was incomplete");
   view.click();
   if (waitForWindowPresent("Google Drive Error list") === null) {
     throw new Error("Google Drive Error list did not open");
   }
-  JSON.stringify({state: "errors", errorCount: errorCount});
+  JSON.stringify({state: "errors", errorCount: errorCount, traversalFailed: traversalFailed});
 }
 '''
 
@@ -192,11 +196,15 @@ function descendants(el, depth) {
 }
 function reasonUnder(el) {
   var all = [el].concat(descendants(el, 0));
+  var reason = null;
   for (var i = 0; i < all.length; i++) {
     var title = titleOf(all[i]);
-    if (reasons.indexOf(title) !== -1) return title;
+    if (reasons.indexOf(title) !== -1) {
+      if (reason !== null && reason !== title) traversalFailed = true;
+      reason = title;
+    }
   }
-  return null;
+  return reason;
 }
 function collectRows(el, rows, depth) {
   if (depth > 14) { traversalFailed = true; return; }
@@ -206,6 +214,7 @@ function collectRows(el, rows, depth) {
       var reason = reasonUnder(children[i + 1]);
       var name = titleOf(children[i]);
       if (reason !== null && name !== "") rows.push({name: name, reason: reason});
+      else traversalFailed = true;
     }
   }
   for (var j = 0; j < children.length; j++) collectRows(children[j], rows, depth + 1);
@@ -228,7 +237,14 @@ for (var ci = 0; ci < controls.length; ci++) {
   if (roleOf(controls[ci]) === "AXButton" && title === "Previous page") previous = true;
   if (roleOf(controls[ci]) === "AXButton" && title === "Next page") next = true;
   var match = title.match(/^(\d+)\/(\d+)$/);
-  if (match) { page = Number(match[1]); total = Number(match[2]); }
+  if (match) {
+    var foundPage = Number(match[1]), foundTotal = Number(match[2]);
+    if (page !== null && (page !== foundPage || total !== foundTotal)) {
+      traversalFailed = true;
+    }
+    page = foundPage;
+    total = foundTotal;
+  }
 }
 if (page === null || !previous || !next) {
   throw new Error("Could not identify the error-list pagination controls");
@@ -242,15 +258,18 @@ JSON.stringify({page: page, total: total, rows: rows, traversalFailed: traversal
 NEXT_PAGE_JXA = r'''
 var se = Application("System Events");
 var proc = se.processes.byName("Google Drive");
-function roleOf(el) { try { return String(el.role()); } catch (_) { return ""; } }
+var traversalFailed = false;
+function roleOf(el) { try { return String(el.role()); } catch (_) { traversalFailed = true; return ""; } }
 function titleOf(el) {
-  try { var value = el.title(); if (value) return String(value); } catch (_) {}
-  try { var value = el.value(); if (value) return String(value); } catch (_) {}
+  var titleRead = false, valueRead = false;
+  try { var value = el.title(); titleRead = true; if (value) return String(value); } catch (_) {}
+  try { var value = el.value(); valueRead = true; if (value) return String(value); } catch (_) {}
+  if (!titleRead || !valueRead) traversalFailed = true;
   return "";
 }
-function childrenOf(el) { try { return el.uiElements(); } catch (_) { return []; } }
+function childrenOf(el) { try { return el.uiElements(); } catch (_) { traversalFailed = true; return []; } }
 function descendants(el, depth) {
-  if (depth > 14) return [];
+  if (depth > 14) { traversalFailed = true; return []; }
   var out = [], children = childrenOf(el);
   for (var i = 0; i < children.length; i++) {
     out.push(children[i]);
@@ -276,9 +295,10 @@ for (var ai = 0; ai < all.length; ai++) {
   }
 }
 if (next === null) throw new Error("Could not reacquire the Next page button");
+if (traversalFailed) throw new Error("Google Drive pagination traversal was incomplete");
 next.click();
 delay(2);
-JSON.stringify({clicked: true});
+JSON.stringify({clicked: true, traversalFailed: false});
 '''
 
 
@@ -290,62 +310,86 @@ class Panel(Protocol):
     def next_page(self) -> None: ...
 
 
+def require_complete_traversal(result: dict[str, Any]) -> None:
+    if result.get("traversalFailed") is not False:
+        raise RuntimeError("Google Drive accessibility traversal was incomplete or unknown")
+
+
+def summary_count(result: Any) -> int | None:
+    if not isinstance(result, dict):
+        raise RuntimeError("Google Drive returned malformed panel data")
+    state = result.get("state")
+    if state not in ("errors", "clean"):
+        raise RuntimeError("Google Drive panel state was unrecognized; refusing to report it clean")
+    require_complete_traversal(result)
+    error_count = result.get("errorCount")
+    if state == "clean":
+        if "errorCount" in result and (type(error_count) is not int or error_count != 0):
+            raise RuntimeError("Google Drive clean summary contradicted its error count")
+        return None
+    if type(error_count) is not int or error_count < 1:
+        raise RuntimeError("Google Drive error summary had an invalid count")
+    return error_count
+
+
 class AccessibilityPanel:
     @staticmethod
     def _run_jxa(source: str) -> dict[str, Any]:
-        result = subprocess.run(
-            ["osascript", "-l", "JavaScript", "-e", source],
-            text=True,
-            capture_output=True,
-            check=False,
-        )
-        if result.returncode != 0:
-            message = result.stderr.strip() or "unknown accessibility error"
-            raise RuntimeError(message)
         try:
-            return json.loads(result.stdout)
-        except json.JSONDecodeError as error:
-            raise RuntimeError("Google Drive returned malformed panel data") from error
+            result = subprocess.run(
+                ["osascript", "-l", "JavaScript", "-e", source],
+                text=True,
+                capture_output=True,
+                check=False,
+                timeout=JXA_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired:
+            raise RuntimeError("Google Drive accessibility request timed out; result is inconclusive") from None
+        except (OSError, UnicodeError):
+            raise RuntimeError("Could not run Google Drive accessibility request") from None
+        if result.returncode != 0:
+            raise RuntimeError("Google Drive accessibility request failed; panel state is inconclusive")
+        try:
+            parsed = json.loads(result.stdout)
+        except (ValueError, TypeError):
+            raise RuntimeError("Google Drive returned malformed panel data") from None
+        if not isinstance(parsed, dict):
+            raise RuntimeError("Google Drive returned malformed panel data")
+        return parsed
 
     def open_error_list(self) -> int | None:
-        result = self._run_jxa(OPEN_ERROR_LIST_JXA)
-        state = result.get("state")
-        if state == "errors":
-            error_count = result.get("errorCount")
-            if not isinstance(error_count, int) or error_count < 1:
-                raise RuntimeError("Google Drive error summary had an invalid count")
-            return error_count
-        if state == "clean":
-            return None
-        raise RuntimeError("Google Drive panel state was unrecognized; refusing to report it clean")
+        return summary_count(self._run_jxa(OPEN_ERROR_LIST_JXA))
 
     def read_page(self) -> dict[str, Any]:
         return self._run_jxa(READ_PAGE_JXA)
 
     def next_page(self) -> None:
-        self._run_jxa(NEXT_PAGE_JXA)
+        result = self._run_jxa(NEXT_PAGE_JXA)
+        require_complete_traversal(result)
+        if result.get("clicked") is not True:
+            raise RuntimeError("Google Drive did not confirm the next-page action")
 
 
 class FixturePanel:
     def __init__(self, fixture: dict[str, Any]) -> None:
         self.fixture = fixture
+        self.error_count = summary_count(fixture)
         self.pages = fixture.get("pages", [])
+        if not isinstance(self.pages, list) or any(not isinstance(page, dict) for page in self.pages):
+            raise RuntimeError("Fixture pages must be an array of page objects")
+        if self.error_count is None:
+            if self.pages:
+                raise RuntimeError("Fixture clean state contradicted its error pages")
+        elif not self.pages or self.pages[0].get("total") != len(self.pages):
+            raise RuntimeError("Fixture pagination does not contain all declared pages")
         self.index = 0
 
     def open_error_list(self) -> int | None:
-        state = self.fixture.get("state")
-        if state == "unrecognized":
-            raise RuntimeError("Google Drive panel state was unrecognized")
-        if state == "clean":
-            return None
-        if not self.pages:
-            return None
-        error_count = self.fixture.get("errorCount")
-        if error_count is None:
-            error_count = sum(len(page.get("rows", [])) for page in self.pages)
-        return error_count
+        return self.error_count
 
     def read_page(self) -> dict[str, Any]:
+        if self.index >= len(self.pages):
+            raise RuntimeError("Fixture pagination ran out of pages")
         return self.pages[self.index]
 
     def next_page(self) -> None:
@@ -356,14 +400,20 @@ def collect_rows(panel: Panel) -> list[dict[str, str]]:
     expected_count = panel.open_error_list()
     if expected_count is None:
         return []
+    if type(expected_count) is not int or expected_count < 1:
+        raise RuntimeError("Google Drive error summary had an invalid count")
     rows: list[dict[str, str]] = []
     expected_page = 1
     expected_total: int | None = None
     while True:
         page_data = panel.read_page()
+        if not isinstance(page_data, dict):
+            raise RuntimeError("Invalid page data from Google Drive")
+        require_complete_traversal(page_data)
         page = page_data.get("page")
         total = page_data.get("total")
-        if not isinstance(page, int) or not isinstance(total, int) or total < 1:
+        if (type(page) is not int or type(total) is not int
+                or not 1 <= page <= total <= expected_count):
             raise RuntimeError("Invalid pagination metadata from Google Drive")
         if page != expected_page or (expected_total is not None and total != expected_total):
             raise RuntimeError("Google Drive error-list pagination was not sequential")
@@ -382,6 +432,8 @@ def collect_rows(panel: Panel) -> list[dict[str, str]]:
             if not isinstance(name, str) or not name:
                 raise RuntimeError("Google Drive error row has no filename")
             rows.append({"name": name, "reason": row["reason"]})
+        if len(rows) > expected_count:
+            raise RuntimeError("Google Drive error-list rows exceeded its summary count")
         if page == total:
             if len(rows) != expected_count:
                 raise RuntimeError(
@@ -439,7 +491,13 @@ def panel_from_environment() -> Panel:
 
 def cmd_list(root: Path) -> int:
     print("=== Drive error panel ===")
-    rows = collect_rows(panel_from_environment())
+    panel = panel_from_environment()
+    if isinstance(panel, FixturePanel):
+        print("FIXTURE mode: synthetic panel data, not live Google Drive evidence.")
+    else:
+        print("Scope: observed Drive panel only; not account-bound and not all accounts.")
+    print(f"Candidate filesystem root (independent of panel account): {root}")
+    rows = collect_rows(panel)
     if not rows:
         print("No error rows found in the panel.")
         return 0
@@ -477,11 +535,11 @@ def cmd_locate(root: Path) -> int:
         ),
         key=lambda path: str(path),
     )
-    print("=== symlinks under Drive (Drive cannot represent these at all) ===")
+    print("=== symlinks under Drive (potential sync-hostile paths; inspect each candidate) ===")
     for path in symlinks:
         print(relative(path, root))
     print()
-    print("=== real generated directories under Drive ===")
+    print("=== real generated directories matching the helper's known-name set ===")
     for path in generated:
         print(relative(path, root))
     return 0

@@ -205,6 +205,11 @@ while honoring text-transform acceptance and checking an independent payload cop
 Credentials follow the secrets workflow, not the persisted Emacs kill ring;
 clipboard placement and verification are reported separately.
 
+The =personalize= skill keeps private voice examples out of public artifacts
+and separates voice matching from factual or personal claims. Missing samples
+are explicit; concision preserves required answers, and prose preferences do
+not alter quotations, code or links. Drafting does not authorize sending.
+
 The project-local =config-audit= respects a requested subset and includes
 procedural bodies when full skill audits are requested. It distinguishes
 skill discovery from instruction loading and checks actual hook coverage

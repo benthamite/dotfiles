@@ -168,6 +168,10 @@ personal/plugin identities and exact name boundaries, and handles task-start
 context, hidden inputs, and fractional timestamps. Counts remain reconstructed
 evidence, not native invocation telemetry or proof of workflow completion.
 
+The =add-bib-entry= workflow resolves active bibliography state and serializes
+attachment callbacks. It verifies work identity and labels uncertain metadata;
+its opt-in DOI downloader rejects unsafe destinations and unsupported mutations.
+
 Both interactive and programmatic =walk-list= copies use exact input identity
 and recoverable, locked lifecycle transitions. Workers must finish or stop before
 claim reuse; completing the queue preserves session-specific evidence and never

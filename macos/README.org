@@ -73,6 +73,10 @@ loads them only while working in this project scope. Their current names,
 descriptions, and paths are generated in the
 [[file:../agents/skill-inventory.org][tracked agent skill inventory]].
 
+The security-audit isolation checks include synthetic peer-process argument
+and environment probes. Filesystem and network restrictions alone are not
+accepted as evidence of credential separation.
+
 The design record for the read-only LuLu alert reviewer is retained at
 [[file:docs/superpowers/specs/2026-08-01-review-lulu-alert-design.md][its local specification]]. Design records explain decisions; they are not
 loaded as executable configuration.

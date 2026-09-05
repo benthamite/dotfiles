@@ -50,6 +50,17 @@ because its vendor ships updates.
 - Check whether the agent can rewrite its guards, configuration, executables,
   or future-session instructions through an allowed path. Hooks executed under
   the same unrestricted OS user are not an independent malware boundary.
+- When evaluating credential isolation, also test OS process-inspection paths
+  against a second process that you created with only synthetic arguments and
+  environment values. Never inspect unrelated processes' arguments or
+  environments. Clear the probe's environment, target only its recorded PID,
+  and terminate and reap it afterwards. On macOS 26.6.1, a deny-default
+  Seatbelt fixture still recovered a synthetic same-user peer's arguments and
+  environment through `KERN_PROCARGS2`, even with explicit process/sysctl
+  denials. File and network denial plus an empty child environment therefore
+  did not establish credential separation. Verify a separate-UID or VM boundary
+  for the actual untrusted workflow; do not generalize this version-specific
+  observation into a claim about every sandbox or future OS version.
 - Treat CLAUDE.md/AGENTS.md and skill instructions as behavioral guidance. Broad
   wording is a review lead; a skill cannot create OS privilege by prose alone.
   Establish the tool/sandbox capability and untrusted-input path that make a

@@ -79,8 +79,10 @@ OS permissions and actual sandbox/VM boundaries constrain processes. A browser
 profile separates browser state; it does not protect another profile from
 malware running as the same OS user. A VM application's presence does not
 establish isolation. Per-process secret injection reduces inheritance but still
-exposes the injected values to that process and its descendants. Encryption at
-rest does not establish protection while data is unlocked.
+exposes the injected values to that process and its descendants; same-user OS
+process inspection can expose them to peers too. Test that channel with the
+synthetic fixture described in the agents reference when evaluating credential
+isolation. Encryption at rest does not establish protection while data is unlocked.
 
 Distinguish a configured control from an observed effective control. Use safe
 synthetic fixtures to verify a guard's decisions or isolation behavior when

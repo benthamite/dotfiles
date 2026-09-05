@@ -4,119 +4,176 @@ description: Design and build a reusable AI automation. Use for automate, create
 argument-hint: <description of what to automate>
 ---
 
-# Automate: meta-skill for AI workflow design
+# Automate: reusable workflow design
 
-Given a description of something the user wants to automate with AI, analyze the requirements, choose the right implementation approach, and build it.
+Choose and, when requested, implement the smallest maintainable automation that
+meets the user's workflow. A request for advice or a comparison is read-only; an
+explicit build request authorizes normal in-scope local implementation. Neither
+authorizes new external effects, accounts, paid services or deployment.
 
-If the request is still creative or underspecified, use Superpowers `brainstorming` first when available. This skill owns the automation-type decision and implementation path after the shape of the workflow is clear.
+## 1. Establish the workflow and success criteria
 
-## Arguments
+Use the user's actual request and conversation context. Some runtimes expose
+`$ARGUMENTS`; it is not a portable interpolation mechanism. Ask for a description
+only if the workflow is genuinely absent. Resolve material ambiguities with
+focused questions, but do not ask again for build approval already given.
 
-`$ARGUMENTS` contains the user's description of what they want to automate. If empty, ask them to describe the workflow.
+If creative exploration would help, use an available brainstorming skill within
+the user's scope. Do not install a plugin or block a clear implementation request
+merely because an optional brainstorming skill is unavailable.
 
-## Step 1: Analyze the requirements
+Identify:
 
-Consider these dimensions:
+- Trigger: manual invocation, buffer action, event or schedule.
+- Inputs and trust: exact sources, sensitive content, provider/account access and
+  which input is data rather than instructions.
+- Output and effects: destination, editable preview versus mutation, recipients,
+  persistence and the exact user-visible result.
+- Operational needs: latency, expected volume, state, concurrency, retries,
+  duplicate prevention, cancellation and failure visibility.
+- Authorization and acceptance: which actions are already approved, which require
+  a new user decision, and a representative success and failure example.
 
-| Dimension | Favors gptel (Emacs) | Favors agent skill |
-|---|---|---|
-| **Context source** | Already in an Emacs buffer (email, code, org entry) | Spread across files, needs discovery |
-| **Tool access** | None needed — pure text transformation | Needs filesystem, shell, git, web, MCP |
-| **Multi-step reasoning** | Single-shot parse/transform/summarize | Branching logic, iterative exploration |
-| **Speed** | Needs to be fast / inline | Latency is acceptable |
-| **Emacs integration** | Should modify buffers, use Emacs APIs | Operates on files outside Emacs |
-| **Authoring cost** | Requires writing + maintaining Elisp | Just a markdown prompt file |
-| **Interactivity** | One-shot, no clarifying questions | May need back-and-forth with the user |
+Inspect existing nearby automations before creating another one. Reuse the right
+implementation, not just a similar name. Deterministic transformations normally
+belong in a function or script; add a model only where its judgment is useful.
 
-### Sub-types within each approach
+## 2. Recommend an implementation
 
-**gptel has three sub-types:**
-- **Directive**: Just a system prompt preset for a category of conversations. Use when the automation is "talk to AI with specific context/persona." Stored in `gptel-directives` alist.
-- **Tool**: A capability gptel can invoke during conversations (via `gptel-make-tool`). Use when the automation is a well-defined function with clear inputs/outputs that the model should be able to call.
-- **Command**: A standalone Elisp command using `gptel-request`. Use when the automation is a specific workflow triggered by the user — the Elisp handles context extraction and result insertion, gptel does the AI reasoning in between.
+These are tendencies, not capability limits. gptel can use tools and multi-step
+workflows; an agent skill can also invoke Emacs. Compare the actual configured
+runtime, data flow and maintenance cost.
 
-**Agent skills have two local variants:**
-- **Claude Code skill**: A markdown file under `claude/skills/<name>/SKILL.md`. Use when the workflow is meant for Claude Code.
-- **Codex skill**: A markdown file under `codex/skills/<name>/SKILL.md`. Use when the workflow is meant for Codex.
+| Need | Likely implementation |
+|---|---|
+| Conversation context/persona without a new workflow | gptel directive or preset |
+| A callable capability with typed inputs/outputs | gptel tool or existing mapped service tool |
+| A buffer-oriented action with controlled insertion | Elisp command using gptel where needed |
+| A reusable agent-led workflow across files/tools | Skill in the intended runtime and scope |
+| A deterministic repeatable operation | Function or script, optionally exposed by a tool/skill |
+| Event-driven or scheduled unattended execution | Supported scheduler/automation plus an explicit execution contract |
 
-Honor an explicit single-tool target only when the user clearly asks for a Claude-only or Codex-only skill. Otherwise, check whether the active repository uses paired global or project-local skill roots before choosing where to write the skill.
+A skill is instructions, not a scheduler or persistent background worker. For
+Codex-specific schedules, settings, tool availability or runtime capabilities,
+use `openai-docs` and inspect the current local setup. Do not invent an API or
+claim a mechanism is installed from its documentation alone.
 
-## Step 2: Present the recommendation
+Briefly state the recommendation, reason and expected files. If the request was
+advisory, stop with the recommendation. If it was to build, implement the
+reasonable in-scope choice; ask only where a material choice or new authority is
+needed. Honor an explicit runtime target, and otherwise use the user's active
+environment and established pairing conventions rather than defaulting to Claude.
 
-Present your analysis concisely:
+## 3. Implement in the canonical location
 
-1. Which approach you recommend and why (1-2 sentences)
-2. If it's a borderline case, explain the tradeoff
-3. The concrete files you expect to create or edit
-4. Ask the user to confirm before building, unless they already explicitly asked you to implement the chosen approach
+Use `dotfiles-context` when routing dotfiles, paired configuration or Elpaca
+changes, and `elisp-conventions` for Elisp edits/tests. Resolve package checkouts
+with the canonical helper; do not guess active profiles or edit generated mirrors.
+The current home skill paths link into dotfiles, but verify a path's actual source
+and target scope before edits rather than treating that layout as universal.
 
-If required details are missing, ask focused questions before building. Do not ask the user to add code or move files manually when you can make the change yourself.
+Check existing skill, directive, preset, tool, function and binding definitions
+before choosing names. Reuse the intended definition where appropriate; preserve
+unrelated definitions and resolve collisions rather than overwriting/shadowing them.
 
-## Step 3: Build it
+### Agent skill
 
-Work in the repository's canonical paths. In this dotfiles repo, `~/.claude/skills` and `~/.codex/skills` are symlinks into `claude/skills` and `codex/skills`; edit the dotfiles paths directly.
+1. Use `skill-creator` for both creation and updates. Inspect a small number of
+   relevant neighboring skills as conventions, not blanket authority.
+2. Resolve identity and destination first. Honor the exact supplied/runtime-catalog
+   path for updates; inspect project instructions and supported roots for new
+   skills, including native `.agents/skills` when applicable. Do not move a
+   project skill into global scope or edit a disposable plugin cache.
+3. Follow existing paired global/project conventions. Create/update both
+   `claude/skills` and `codex/skills`, or paired `.claude/skills` and
+   `.codex/skills`, where that is the established layout. An explicit single-tool
+   target requires any divergence record mandated by the repository; do not
+   fabricate an exception or silently break parity.
+4. Check for an existing name/qualified identity collision before creation.
+   Metadata must be supported by the target runtime and local integrations;
+   preserve intentional tool-specific arguments. Do not copy arbitrary fields
+   just because a neighboring file has them.
+5. Write clear triggers, scope, inputs, procedure, failure behavior and verification.
+   Add scripts/resources where deterministic handling is safer than prose; keep
+   dependencies and generated caches outside Drive and declare their setup.
+6. Update required documentation and discovery/catalog metadata. Keep auxiliary
+   files paired as well as the main instructions, except documented differences.
 
-### If building an agent skill
+### gptel directive or preset
 
-1. Derive a short kebab-case name for the skill.
-2. Resolve the target root before writing:
-   - If the user clearly asked for Claude-only or Codex-only, use only that tool's root and record or justify the missing counterpart according to local conventions.
-   - Otherwise, inspect the active repository's `README.org`, `AGENTS.md`, `CLAUDE.md`, and nearby conventions for project-local skill roots before choosing.
-   - If the repo uses paired project-local skills under `.claude/skills/<name>/` and `.codex/skills/<name>/`, create or update both copies up front. Keep bodies and auxiliary files equivalent except tool-specific frontmatter or argument metadata, and update the repo-local `README.org` Skills section when local conventions or guards require it.
-   - If editing global paired dotfiles skills under `claude/skills/<name>/` and `codex/skills/<name>/`, update both copies unless `ai-config-sync.json` records an explicit artifact-specific divergence, keep the paired-copy expectations intact, and run the relevant parity or audit guard.
-   - If the active repo has only one local skill root and no paired convention, use that root.
-3. Read 2-3 nearby skills for conventions, plus `skill-creator` if you are creating a skill from scratch.
-4. Write `SKILL.md` following the conventions of existing skills:
-   - Frontmatter: `name`, `description`, and optional fields already used by that tool's local skills.
-   - Body: clear procedural steps the agent should follow.
-5. If you change `claude/` or `codex/`, update `claude/README.org` or `codex/README.org` when the repo instructions require it.
-6. Tell the user the skill is ready and how to invoke it, either by slash command if supported or by trigger phrases in the description.
+Inspect the installed configuration to choose the supported directive, preset or
+package custom variable. This dotfiles setup uses presets as well as prompts.
+Do not assume an old `gptel-directives` alist is the right integration point.
 
-### If building a gptel directive
+Keep the prompt's data access and intended context explicit. Add it to the
+canonical config or owning package under the existing build authority, without
+duplicating registration or changing unrelated defaults/models.
 
-1. Draft the directive (a system prompt string).
-2. Inspect the local gptel configuration to decide whether this should be a directive, preset, or package-level custom variable.
-3. After approval, add it to the canonical Emacs config file yourself. In this repo, likely locations are `emacs/config.org` for gptel setup and `emacs/extras/gptel-extras.el` for reusable package code.
-4. Use the exact Elisp form when appropriate:
-   ```elisp
-   ("name" . "system prompt")
-   ```
+### gptel tool
 
-### If building a gptel tool
+Inspect the installed `gptel-make-tool` API and nearby supported registrations.
+Validate inputs in deterministic code; give side effects and output/failure
+semantics explicit descriptions. A model's decision to call a tool is not user
+authorization. Preserve existing approval scope and enforce disallowed actions;
+do not add generic ask-style tool gates to an auto-mode environment.
 
-1. Write a `gptel-make-tool` form.
-2. Keep side effects explicit in the tool description and require confirmation before destructive or externally visible actions.
-3. After approval, add it to `emacs/extras/gptel-extras.el` or the relevant gptel config block, following nearby patterns.
+Use the mapped service tools and account/secret guidance before external access.
+Do not embed credentials in code, prompts, fixtures or logs. Do not add unrequested
+services, privileges, tools or model access as an implicit implementation step.
 
-### If building a gptel command
+### gptel command
 
-1. Write the Elisp function:
-   - Extract context from the appropriate Emacs source (buffer, mu4e message, region, etc.)
-   - Call `gptel-request` with a focused system prompt and the extracted context as the user message
-   - In the callback, process the response (insert into buffer, create org entry, etc.)
-   - Use `interactive` spec so it can be bound to a key or called via `M-x`
-2. Show the full function to the user for review when the behavior or insertion point is not already clear.
-3. After approval, write it to `emacs/extras/gptel-extras.el` or the relevant package file.
-4. Add a keybinding only when the user requested one or an existing nearby convention clearly applies.
+Extract the intended context explicitly and minimize what is sent to a provider.
+Inspect the installed `gptel-request` callback/streaming contract before coding.
+For asynchronous results:
 
-## Step 4: Verify and close out
+- Capture the original buffer and markers, not whichever buffer is current when
+  the callback runs. Check their liveness and whether the source changed.
+- Validate the response type/schema before mutation; handle empty, malformed,
+  failed, cancelled and partial responses without damaging existing content.
+- Define how overlapping calls, retries and late callbacks are reconciled.
+  Do not insert the same result twice or overwrite newer user edits.
+- Keep parsing and structured I/O in Elisp. Treat model-returned code as data,
+  never something to `eval` merely to complete response processing.
 
-Verify the artifact before calling it done:
+Make the command interactive when appropriate. Add bindings only when requested
+or clearly covered by an established convention; preserve existing bindings.
+Explain a material behavior/insertion choice when needed, without dumping a full
+function for manual copying or asking the user to install it themselves.
 
-- Agent skill: re-read the edited `SKILL.md`, run the local skill resolver if available, and do a dry-run walkthrough against the user's example prompt. For paired skills, run a direct diff or normalization-aware parity check across both copies, including auxiliary files. When editing dotfiles paired configuration or skills, run `bin/ai-config-sync audit`.
-- Emacs Lisp: byte-compile changed `.el` files, run relevant ERT tests when available, and tangle `emacs/config.org` if you changed it.
-- Documentation: update required docs for touched subsystems.
-- Git: commit each logical change unless the user explicitly asked not to.
+### Scheduled or event-driven execution
 
-Final response:
+Use an existing supported scheduler only when this trigger was requested.
+Make timezone, inputs, approved effects, state location, retry/idempotency policy
+and failure reporting explicit. Decide how credentials and permissions work
+without an interactive user. Distinguish a reusable job definition from a request
+to enable recurring execution; building the former does not authorize activating
+it. Do not silently weaken authorization to make an unattended job succeed, or
+start recurring jobs during an advisory request.
 
-- State the chosen automation type and why.
-- List changed files.
-- Include the verification performed.
-- Mention any unresolved setup or follow-up.
+## 4. Verify the actual contract
 
-## Important
+- Skill: validate metadata/resources, test representative success/failure prompts
+  against the instructions, and check scope and paired auxiliary files. Resolver
+  discovery is not proof the active runtime loaded that identity; verify actual
+  availability/invocation using the target runtime when feasible. A new session
+  may be needed; do not claim immediate availability from file existence alone.
+- Elisp: follow `elisp-conventions` for targeted compilation/tests, dependency
+  setup and active-code verification. For `emacs/config.org`, follow
+  `dotfiles-context`'s profile-aware `init-build-profile` path, not a generic
+  `org-babel-tangle-file` call.
+- Behavior: exercise the intended input-to-output action and relevant failure
+  cases. For live acceptance use `end-to-end` when its trigger applies. Testing
+  does not authorize new messages, destructive effects, paid jobs or publication;
+  use isolated fixtures when necessary and state the remaining runtime gap.
+- Scheduling: distinguish registration from a successful execution and from
+  confirmed delivery/persistence. Do not leave throwaway recurring jobs running.
+- Integration: update required docs; run `bin/ai-config-sync audit` for paired
+  dotfiles changes and the catalog checks required by `dotfiles-context`.
+- Delivery: commit scoped logical changes, preserve unrelated work, and clean up
+  owned test artifacts/processes. Push or deploy only with separate authority.
 
-- When building gptel commands, handle response processing in Elisp, not by asking the model to produce Elisp. The model's job is text transformation; Elisp handles the structured I/O.
-- If the task could reasonably go either way, prefer the approach that minimizes ongoing maintenance. Typically that means: Claude Code skill for complex/evolving workflows, gptel command for stable/well-defined ones.
-- Preserve user confirmation boundaries for external side effects: do not post messages, open PRs, send email, or take other externally visible actions unless the user explicitly confirmed that behavior.
+Report the implemented type and relevant result. Distinguish built, loaded and
+behavior-verified states; mention an unresolved gap only where it changes the
+user's next decision. Never claim an automation is ready merely because a prompt
+file was written or a dry-run walkthrough looked plausible.

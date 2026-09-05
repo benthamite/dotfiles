@@ -168,6 +168,10 @@ personal/plugin identities and exact name boundaries, and handles task-start
 context, hidden inputs, and fractional timestamps. Counts remain reconstructed
 evidence, not native invocation telemetry or proof of workflow completion.
 
+The =automate= skill distinguishes advice, construction and runtime activation.
+It chooses among deterministic, gptel, skill and scheduled implementations,
+preserves scope and authorization, and verifies loading separately from behavior.
+
 The =add-to-emacs-packages= workflow checks the list, existing manual and profile
 card independently. It resolves canonical sources, preserves note IDs and keeps
 local registration separate from clone and publication authorization.

@@ -1,209 +1,101 @@
-# macOS Entitlements Security Guide
+# Interpret signing, entitlements and privacy evidence
 
-This reference classifies macOS app entitlements by security risk level.
+Use this reference before interpreting scanner output. Record the inspected
+code object, architecture, tool status and exact typed values. A key's presence,
+a diagnostic substring or a top-level result is not a permission inventory.
 
-## Risk Levels
+## Separate the claims
 
-| Level | Meaning |
-|-------|---------|
-| **CRITICAL** | Can enable arbitrary code execution or bypass core security |
-| **HIGH** | Grants access to sensitive user data or system control |
-| **MEDIUM** | Elevated privileges that could be misused |
-| **LOW** | Standard app capabilities with minimal risk |
-| **INFO** | Informational, generally positive security indicators |
+| Evidence | What it establishes | What it does not establish |
+|---|---|---|
+| Signature display | Available signing metadata for the inspected object/slice | Integrity, expected publisher, benign behavior |
+| Successful signature verification | The tool accepted the checked signature/sealed content | Semantic safety or every runtime behavior |
+| Gatekeeper assessment | Current policy result under the assessment conditions | A standalone notarization verdict or permanent safety |
+| Notarization evidence | Automated checks accepted submitted software | App Review or absence of all malicious behavior |
+| Stapled ticket | An attached ticket is available/valid as checked | That unstapled software was never notarized |
+| Enabled entitlement | A declared capability or protection exception for that process | A current privacy grant or actual use |
+| Usage-description string | The app supplies an explanation for an access request | Authorization, necessity or observed collection |
 
----
+Apple describes signing's limited guarantees in its
+[Code Signing Guide](https://developer.apple.com/library/archive/documentation/Security/Conceptual/CodeSigningGuide/Introduction/Introduction.html).
+Keep signature failure causes open: corruption, packaging defects, an unsupported
+tool result and malicious modification are different hypotheses. Do not re-sign
+the app or remove quarantine to make a failed check pass.
 
-## CRITICAL Entitlements
+The installed `codesign(1)` documents different defaults: verification checks
+all architectures, while display selects the host-native architecture.
+Top-level `codesign -d` therefore does not enumerate every helper or slice.
+Record unassessed XPC services, embedded apps, extensions, frameworks and plug-ins.
+`--deep` verification is not a semantic code review; its signing deprecation
+does not make verification itself deprecated.
+[Apple nested-code guidance](https://developer.apple.com/library/archive/technotes/tn2206/_index.html)
 
-These entitlements significantly weaken macOS security protections:
+## Read values, not key substrings
 
-### `com.apple.security.cs.disable-library-validation`
-**Risk:** Allows loading unsigned or differently-signed dynamic libraries
-**Impact:** App can load malicious code not reviewed by Apple
-**Legitimate use:** Plugins, extensions from third parties
+For documented Boolean keys, only a Boolean true means enabled. Boolean false
+means explicitly disabled; a string `"true"`, number, malformed plist or tool
+error is not equivalent. Some entitlements legitimately use arrays, strings or
+other types, so consult the exact key's documented schema. Absence can be
+meaningful only after successful, correctly scoped inspection.
+[Apple security entitlement catalog](https://developer.apple.com/documentation/bundleresources/security-entitlements)
 
-### `com.apple.security.cs.allow-dyld-environment-variables`
-**Risk:** Allows DYLD environment variables to affect the app
-**Impact:** Attackers can inject malicious libraries via environment
-**Legitimate use:** Rare - debugging, some legacy compatibility
+### Hardening and containment
 
-### `com.apple.security.cs.disable-executable-page-protection`
-**Risk:** Allows writable and executable memory pages
-**Impact:** Easier exploitation of memory corruption bugs
-**Legitimate use:** JIT compilers, emulators
+| Key suffix | Context to inspect |
+|---|---|
+| `cs.disable-library-validation` | Relaxes Apple/same-Team-ID library restrictions; verify plug-in provenance and untrusted library reachability |
+| `cs.allow-dyld-environment-variables` | Enables DYLD environment influence otherwise restricted by Hardened Runtime; inspect actual injection prerequisites |
+| `cs.disable-executable-page-protection` | Broadly removes executable/code-signing protections; not merely an ordinary JIT switch |
+| `cs.allow-unsigned-executable-memory` | Permits a broader executable-memory path than narrowly managed JIT; justify the actual engine/use |
+| `cs.allow-jit` | Supports JIT/MAP_JIT behavior; common legitimate engine requirement |
+| `app-sandbox` | Configures App Sandbox when true; inspect other exceptions and process boundaries |
 
----
+These suffixes use the `com.apple.security.` prefix. A hardened-runtime
+exception needs contextual justification, not an automatic CRITICAL or malware
+label. For third-party plug-ins, “signed” alone is not the same-Team-ID condition.
+[Library validation](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.security.cs.disable-library-validation),
+[Executable page protection](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.security.cs.disable-executable-page-protection)
 
-## HIGH Entitlements
+Sandbox absence is not root access or exemption from TCC/SIP. Network client/server
+entitlements govern sandbox capabilities; missing keys do not establish that
+every unsandboxed app is unable to network. Conversely, a sandboxed process does
+not gain a documented bypass just by calling a framework.
+[App Sandbox](https://developer.apple.com/documentation/security/protecting-user-data-with-app-sandbox)
 
-These grant access to sensitive data or system capabilities:
+### Privacy and resource access
 
-### `com.apple.security.device.screen-capture`
-**Risk:** Can record screen contents silently
-**Impact:** Can capture passwords, private messages, documents
-**Legitimate use:** Screen recorders, video conferencing, accessibility tools
+- Both `com.apple.security.device.microphone` (App Sandbox) and
+  `com.apple.security.device.audio-input` (Hardened Runtime resource access)
+  are documented Boolean keys. Do not reject one as invented or replace them
+  universally with each other.
+  [Microphone](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.security.device.microphone),
+  [Audio Input](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.security.device.audio-input)
+- Camera, contacts, calendars, photos, location and Apple Events declarations
+  require interpretation in the relevant platform/entitlement context. They do
+  not prove that the user has granted access.
+  [Resource access and consent](https://developer.apple.com/documentation/xcode/configuring-the-hardened-runtime)
+- The exact purported keys `com.apple.security.device.screen-capture` and
+  `com.apple.security.device.accessibility` are not substantiated by the
+  reviewed public catalog. Report an observed key as undocumented/unverified,
+  not permission to capture silently. Do not generalize that uncertainty into
+  a claim that no screen-capture entitlement exists: Apple documents the
+  separately restricted `com.apple.developer.persistent-content-capture`.
+  [Persistent Content Capture](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.persistent-content-capture)
+- Screen recording and Accessibility have separate authorization controls.
+  Never infer a current grant from entitlement/usage-description strings,
+  trigger a permission prompt or inspect private TCC databases merely to fill
+  a static-audit gap.
+  [Screen recording controls](https://support.apple.com/en-ie/guide/mac-help/mchld6aa7d23/26/mac/26),
+  [App access controls](https://support.apple.com/guide/security/controlling-app-access-to-files-secddd1d86a6/web)
 
-### `com.apple.security.device.accessibility`
-**Risk:** Can control other applications, read UI elements
-**Impact:** Keylogging, automation of other apps, data extraction
-**Legitimate use:** Accessibility tools, automation software
+## Assign severity to demonstrated paths
 
-### `com.apple.security.cs.allow-unsigned-executable-memory`
-**Risk:** Can map unsigned executable memory
-**Impact:** Enables JIT compilation but increases attack surface
-**Legitimate use:** JavaScript engines, emulators
+Distinguish declared capability, enabled configuration, reachable behavior,
+permission/privilege prerequisites and observed impact. A screen-capture API plus
+a URL does not prove recording or upload; a helper's entitlement cannot simply
+be combined with another process's network string into an exploit.
 
-### `com.apple.security.device.audio-input`
-**Risk:** Can record audio from microphone
-**Impact:** Eavesdropping, unauthorized recording
-**Legitimate use:** Voice apps, video calls, dictation
-
-### `com.apple.security.personal-information.addressbook`
-**Risk:** Can read contacts database
-**Impact:** Privacy breach, data exfiltration
-**Legitimate use:** Email clients, social apps
-
-### `com.apple.security.personal-information.calendars`
-**Risk:** Can read calendar events
-**Impact:** Privacy breach, schedule tracking
-**Legitimate use:** Calendar apps, scheduling tools
-
-### `com.apple.security.personal-information.location`
-**Risk:** Can access device location
-**Impact:** Privacy breach, location tracking
-**Legitimate use:** Maps, weather, location-based services
-
-### `com.apple.security.personal-information.photos-library`
-**Risk:** Can access Photos library
-**Impact:** Privacy breach, access to personal photos
-**Legitimate use:** Photo editors, backup tools
-
----
-
-## MEDIUM Entitlements
-
-Elevated privileges that warrant attention:
-
-### `com.apple.security.cs.allow-jit`
-**Risk:** Just-In-Time compilation allowed
-**Impact:** More flexible code execution
-**Legitimate use:** JavaScript engines, VMs (common in Electron)
-
-### `com.apple.security.device.camera`
-**Risk:** Can access camera
-**Impact:** Unauthorized video recording
-**Legitimate use:** Video calls, photo apps
-
-### `com.apple.security.device.microphone`
-**Risk:** Can access microphone
-**Impact:** Unauthorized audio recording
-**Legitimate use:** Voice apps, video calls
-
-### `com.apple.security.device.bluetooth`
-**Risk:** Can access Bluetooth
-**Impact:** Device scanning, data transfer
-**Legitimate use:** Peripheral connectivity
-
-### `com.apple.security.device.usb`
-**Risk:** Can access USB devices
-**Impact:** Data transfer to/from USB devices
-**Legitimate use:** Device management, file transfer
-
-### `com.apple.security.automation.apple-events`
-**Risk:** Can send Apple Events to other apps
-**Impact:** Automation, potential control of other apps
-**Legitimate use:** Automation tools, scripting
-
-### `com.apple.security.files.downloads.read-write`
-**Risk:** Read/write access to Downloads folder
-**Impact:** Access to downloaded files
-**Legitimate use:** Download managers, file utilities
-
----
-
-## LOW Entitlements
-
-Standard capabilities with limited security impact:
-
-### `com.apple.security.app-sandbox`
-**Risk:** None - this is a security feature
-**Impact:** POSITIVE - Restricts app to sandbox
-**Note:** Apps WITH this entitlement are more secure
-
-### `com.apple.security.network.client`
-**Risk:** Can make outbound network connections
-**Impact:** Standard networking capability
-**Legitimate use:** Almost all networked apps
-
-### `com.apple.security.network.server`
-**Risk:** Can accept incoming network connections
-**Impact:** App can run a server
-**Legitimate use:** Server apps, P2P, local services
-
-### `com.apple.security.files.user-selected.read-only`
-**Risk:** Can read files user explicitly selects
-**Impact:** Minimal - user controls access
-**Legitimate use:** Document editors, file viewers
-
-### `com.apple.security.files.user-selected.read-write`
-**Risk:** Can read/write files user explicitly selects
-**Impact:** Minimal - user controls access
-**Legitimate use:** Document editors, file managers
-
-### `com.apple.security.files.bookmarks.app-scope`
-**Risk:** Can create app-scoped bookmarks
-**Impact:** Remember file access across launches
-**Legitimate use:** Document-based apps
-
-### `com.apple.security.files.bookmarks.document-scope`
-**Risk:** Can create document-scoped bookmarks
-**Impact:** Remember related file access
-**Legitimate use:** Apps working with file references
-
----
-
-## Entitlement Combinations to Watch
-
-### High-Risk Combinations
-
-| Combination | Risk |
-|-------------|------|
-| `disable-library-validation` + `network.client` | Can download and load unsigned code |
-| `accessibility` + `network.client` | Keylogger with exfiltration capability |
-| `screen-capture` + `network.client` | Screen recording with upload |
-| `allow-unsigned-executable-memory` + `disable-library-validation` | Maximum code execution flexibility |
-
-### Safer Alternatives
-
-| Instead of | Consider |
-|------------|----------|
-| `disable-library-validation` | Ship signed plugins or use XPC |
-| `accessibility` | Use system accessibility APIs with user consent |
-| No sandbox | Sandbox with explicit file access entitlements |
-
----
-
-## Quick Reference: Command to Extract Entitlements
-
-```bash
-# Extract all entitlements
-codesign -d --entitlements - /path/to/App.app 2>&1
-
-# Pretty print as XML
-codesign -d --entitlements :- /path/to/App.app 2>&1
-```
-
-## Interpreting Missing Entitlements
-
-- **No sandbox entitlement**: App runs with full user privileges (older apps or by design)
-- **No network entitlements**: App may still use network via frameworks
-- **Missing expected entitlements**: May indicate privilege escalation risk
-
----
-
-## References
-
-- [Apple Entitlement Key Reference](https://developer.apple.com/documentation/bundleresources/entitlements)
-- [Hardened Runtime](https://developer.apple.com/documentation/security/hardened_runtime)
-- [App Sandbox](https://developer.apple.com/documentation/security/app_sandbox)
+A confirmed untrusted-input path to privileged execution or sensitive disclosure
+can justify a high-severity finding. A hardening exception, keyword match or
+unresolved dependency is a review lead until the relevant path is established.
+Report inspection gaps even when no confirmed issue is found.

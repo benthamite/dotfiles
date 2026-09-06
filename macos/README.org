@@ -73,6 +73,11 @@ loads them only while working in this project scope. Their current names,
 descriptions, and paths are generated in the
 [[file:../agents/skill-inventory.org][tracked agent skill inventory]].
 
+The =audit-mac-app= scanner emits bounded static observations and explicit
+coverage gaps, not a safety verdict. Gatekeeper assessment and isolated Electron
+extraction are selected separately; entitlement declarations are not privacy
+grants. No target app is launched and no permissions are changed by the scan.
+
 The security-audit isolation checks include synthetic peer-process argument
 and environment probes. Filesystem and network restrictions alone are not
 accepted as evidence of credential separation.

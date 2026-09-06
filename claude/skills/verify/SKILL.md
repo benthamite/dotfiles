@@ -5,85 +5,129 @@ user-invocable: true
 argument-hint: <task description>
 ---
 
-# Verified task execution
+# Criteria-driven verification
 
-Execute $ARGUMENTS with self-generated verification criteria that close the agentic loop. The goal: never declare a task "done" without concrete evidence that it was done correctly.
+Translate the user's actual requirements into checks, evaluate the intended
+artifact or outcome, and report what the evidence establishes. A verification
+request alone does not authorize implementing fixes or changing the target.
 
-## When not to use
+## Scope and authority
 
-- Do not use for a simple direct check where the user asked for one command or one fact and no verification loop is needed.
-- For a plain request to verify a live software workflow, use `end-to-end` alone. Combine the skills only when the user explicitly asks for generated success criteria or a criteria-driven loop: this skill owns the outer loop, and `end-to-end` owns each decisive live criterion.
-- Do not use for ordinary coding, debugging, PR, security, or design-review work when a narrower local skill already defines the right verification path. Use that skill's checks instead.
-- Do not use as the ordinary final gate for code changes. Superpowers `verification-before-completion` owns the mandatory "before claiming done" check when available; use this skill only when the user explicitly requested a criteria-driven verification loop or when no narrower workflow applies.
-- Do not use self-generated criteria as a substitute for required external confirmation, domain authority, or user approval for irreversible or externally visible actions.
+- For one direct check or a narrower coding, debugging, PR or audit workflow,
+  use its verification path instead of adding this outer loop.
+- For plain live-software acceptance, use `end-to-end` alone. Combine it with
+  this skill when the user explicitly requested generated criteria or a
+  criteria-driven loop: this skill owns the requirements and `end-to-end`
+  owns decisive live observations.
+- Use available workflow checks; do not assume a named plugin is installed or
+  that it overrides the active runtime's completion rules.
+- Separate verifying existing work, proposing criteria, and executing or
+  repairing work. Only carry out the modes the user authorized. Evidence
+  collection must respect access, privacy, cost and external-write boundaries.
+  A criterion is not permission to send a message, publish, delete, or obtain
+  credentials. Use isolated fixtures where appropriate and label their limits.
 
-### Execution steps
+## 1. Establish the target
 
-#### Phase 1: Understand the task
+Read the request and relevant source material. Identify the exact artifact,
+version, environment and outcome to verify. Preserve user-supplied acceptance
+criteria and distinguish requirements from examples or optional preferences.
+For a changed or live target, record enough identity and observation time to
+avoid attributing one version's result to another.
 
-Read the task description. Gather any context needed (files, codebase, prior work, external references). Identify the domain and the type of output expected.
+Read-only inspection needed to define criteria may precede execution. Do not
+claim that criteria were fixed in advance if work or evaluation already began.
+If the task is only to propose a verification plan, deliver that plan without
+running the underlying workflow.
 
-#### Phase 2: Generate verification criteria
+## 2. Define criteria and evidence
 
-Before doing any work on the task itself, generate a set of **concrete, testable verification criteria** — your equivalent of unit tests for this domain. These criteria must be:
+Map each material requirement to an observable check and its evidence source.
+Keep this proportional to the task; a small task may need only a few sentences.
+For each criterion, establish:
 
-- **Specific**: not "the analysis should be good" but "the analysis should address arguments X, Y, Z and provide evidence for each"
-- **Testable by you**: you must be able to evaluate each criterion programmatically or through careful inspection — no criterion should require human judgment you can't approximate
-- **Comprehensive**: cover the main success dimensions (correctness, completeness, coherence, format, edge cases as applicable)
-- **Independent**: each criterion should be evaluable on its own
+- What would count as success and failure, including relevant edge cases.
+- Where the expectation comes from: user requirements, a source record,
+  authoritative specification or a clearly identified assumption.
+- How to observe the result directly, with scope, tolerances and sampling
+  limits stated when they matter.
+- Whether the check is available, safe and within authority. Keep required
+  human judgment, external approval or inaccessible evidence visible as a gap;
+  do not remove the requirement or replace it with an unapproved proxy just
+  because the agent cannot evaluate it.
 
-**Examples by domain:**
+Criteria should cover the important dimensions without imposing unrelated
+standards. A five-year source cutoff, empty-list output or exact tone rubric
+is appropriate only when the task warrants it. For historical or stable facts,
+source relevance and reliability matter more than an arbitrary recency window.
 
-| Domain | Example criteria |
-|---|---|
-| Writing | Does each claim have supporting evidence? Are there logical gaps between sections? Does the tone match the target audience? Is the word count within range? |
-| Classification | Correctly classifies curated edge cases: [case1] -> A, [case2] -> B, [case3] -> A. Handles ambiguous cases by flagging rather than guessing. |
-| Research | Every factual claim is traceable to a primary source. Sources are from the last 5 years (or justified if older). No circular citations. |
-| Data transformation | Sample input X produces output Y. Empty input produces []. Malformed input raises a clear error, not garbage output. |
-| Summarization | All key points from the source are represented. No claims appear in the summary that aren't in the source. Length is within N% of target. |
+Separate mechanical checks from qualitative judgment. Word counts are directly
+measurable; audience fit may need a rubric and a qualified assessment. Passing
+the former does not prove the latter. An agent's confidence is not evidence of
+quality, user approval or domain authority.
 
-Briefly state the criteria before proceeding when that helps the user understand the work. Do not stop for user review unless the user asked to approve criteria, the criteria require domain judgment you cannot approximate, or the choice of criteria changes scope, cost, risk, or externally visible behavior. If you do ask for review, make the tradeoff explicit and keep the question focused.
+State proposed criteria before substantial execution when useful. Ask only
+when a missing decision materially changes scope or success and no reasonable
+default exists, or when the user requested approval of the criteria. Otherwise
+use explicit, reversible assumptions and proceed within scope.
 
-#### Phase 2.5: Meta-verify the criteria (recursive)
+## 3. Check whether the criteria are adequate
 
-After generating criteria, assess your confidence in them:
+Before applying the checks, look for missing requirements, circular tests and
+weak proxies. Expected values must not simply copy the current output under
+test. Ask whether a plausible wrong result would fail the checks; use known
+positive and negative cases or independent references when useful.
 
-- **High confidence**: the criteria are concrete, testable, and you can see exactly how you'd evaluate each one. Proceed to Phase 3.
-- **Low confidence**: some criteria are vague, subjective, or you're not sure they capture what matters. **Treat the problem of generating better criteria as its own task and recurse.** Specifically:
-  1. Ask: "What would good verification criteria look like for this type of task?" Research or inspect authoritative rubrics when useful; for unfamiliar or time-sensitive domains, use current authoritative sources rather than guessing.
-  2. Generate improved criteria based on your research.
-  3. Assess confidence again.
-  4. If still uncertain after 2 levels of recursion, surface to the user: "I couldn't generate criteria I'm confident in. Here's what I considered and why it fell short. Can you help me define what 'done right' looks like?"
+If a criterion remains vague, consult the relevant authoritative rubric or
+source and refine its observable meaning. Keep this investigation bounded.
+There is no guarantee that recursively evaluating the criteria will converge.
+When safe avenues are exhausted, preserve the unresolved requirement and
+explain the evidence or judgment needed, instead of declaring it testable by
+approximation. Continue independent checks that remain meaningful.
 
-The recursion converges because each meta-level is easier than the one below it. Verifying criteria quality ("are these criteria concrete and testable?") is simpler than the original task.
+Do not relax acceptance thresholds, drop a failing requirement or alter source
+evidence to get a pass. Correct a demonstrably mistaken check with an explicit
+reason, preserve the original requirement, and re-evaluate affected results.
+Material changes to user-approved criteria require renewed agreement.
 
-#### Phase 3: Execute the task
+## 4. Execute only authorized work and evaluate
 
-Do the work. Use subagents where appropriate. At each major step, check progress against the relevant criteria — don't wait until the end to discover a fundamental problem.
+If the user requested implementation as well as verification, do that work and
+check relevant criteria along the way. For verification-only requests, inspect
+the target and report defects without silently repairing it. Subagents may
+provide independent evaluation when available and authorized; give them the
+requirements and raw evidence, not a demanded verdict.
 
-#### Phase 4: Verify against criteria
+Evaluate every applicable criterion using the bound target:
 
-Systematically evaluate the output against every criterion from Phase 2. For each criterion, report:
+- **Pass:** the required observation supports it; cite or retain that evidence.
+- **Fail:** evidence contradicts it; identify the concrete discrepancy.
+- **Uncertain:** evidence is missing, stale, conflicting, sampled too narrowly,
+  or requires judgment the agent cannot supply. State the limitation.
+- **Not applicable:** justify why it does not apply; never use this to discard
+  an inconvenient required check.
 
-- **Pass**: criterion met, with evidence
-- **Fail**: criterion not met, with explanation of the gap
-- **Uncertain**: unable to evaluate confidently (explain why)
+If using a curated case set, run every declared case and report the denominator,
+failures and exclusions. Accuracy on those cases is not population accuracy.
+For qualitative reviews, distinguish source-backed findings from assessments.
+Mocked results, static checks and fixture runs cannot silently stand in for a
+required live outcome.
 
-If using curated test cases (e.g., classification), run every case and report accuracy.
+## 5. Recheck or report
 
-#### Phase 5: Loop or complete
+When repairs are authorized, fix supported failures, then rerun failed checks
+and all checks affected by the change. Rebind evidence if the target changed.
+Stop repeating an approach when it is not yielding new evidence or progress;
+surface the unresolved issue without broadening authority.
 
-- **All pass**: present the result to the user with the verification report. Done.
-- **Some fail**: fix the failures, then re-verify (only the failed criteria, plus any that might have been affected by the fix). Loop until all pass or you've exhausted reasonable approaches.
-- **Some uncertain**: flag these to the user. Ask whether they want to provide judgment, modify the criteria, or accept the uncertainty.
+For verification-only work, a report of failures can complete the requested
+review while the target remains incorrect. Do not describe the target as fixed.
+For execution work, call it complete only when the material requirements are
+covered and their required checks pass. An all-green table over an incomplete
+or self-selected subset does not establish completion.
 
-If repeated fixes are not converging on a criterion, stop and surface the issue to the user rather than continuing to iterate.
-
-Keep the final response proportionate to the task. Include the result or artifact, the criteria evaluated, pass/fail/uncertain status with evidence, and any unresolved uncertainty. For small tasks, a terse verification summary is enough; for larger tasks, use a compact table or checklist.
-
-## Key principles
-
-1. **Verification criteria are first-class work.** Generating them is not a formality — it's often the hardest and most valuable part of the process. Spend real effort here.
-2. **The quality ceiling is set by verification, not generation.** You can generate excellent work, but without a way to *know* it's excellent, you're hoping. The criteria make quality legible.
-3. **When in doubt, recurse.** If you can't verify something, treat "how to verify this" as its own problem. The meta-levels converge.
-4. **When recursion bottoms out, escalate.** Making the epistemic situation transparent ("I don't know how to verify this and here's why") is itself a valuable output.
+Deliver the result or artifact with concise pass/fail/uncertain findings and
+material evidence gaps. Put a detailed criterion-to-evidence record in an
+appropriate audit artifact when useful, not an unsolicited session log.
+State exactly what was verified; preserve unresolved uncertainty instead of
+asking the user to waive it as the default path to a success claim.

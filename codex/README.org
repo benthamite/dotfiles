@@ -138,6 +138,12 @@ binds the personal corpus and canonical repository, and verifies current task
 evidence before selection. Confirmed completion uses the shared helper's
 prepared update, with Org workflow/date checks and explicit rollback limits.
 
+The paired =verify= skill maps actual requirements to version-bound evidence.
+Verification-only requests do not authorize repair. Human judgment and missing
+evidence stay visible rather than becoming agent-approved proxies. Criteria
+cannot be relaxed to obtain a pass, and completing a review does not certify
+that its target is correct. Sampling and fixture limits remain explicit.
+
 The paired =test-suite= skill binds tests to the intended source and independent
 behavior contracts, isolates side effects, and checks discovery and failure
 sensitivity. Tests-only work preserves product code and reports valid failing

@@ -429,18 +429,26 @@ def local_sync_message_for_path(rel: str, repo_root: Path) -> str:
         return ""
 
     if Path(rel).name == "CLAUDE.md":
+        if local_artifact_single_agent(repo_root, "instructions"):
+            return ""
         counterpart = Path(rel).with_name("AGENTS.md").as_posix()
         return f"Project-local {rel} changed; update {counterpart} in the same repo."
     if Path(rel).name == "AGENTS.md":
+        if local_artifact_single_agent(repo_root, "instructions"):
+            return ""
         counterpart = Path(rel).with_name("CLAUDE.md").as_posix()
         return f"Project-local {rel} changed; update {counterpart} in the same repo."
     if rel.startswith(".claude/skills/"):
+        if local_artifact_single_agent(repo_root, "skills"):
+            return ""
         skill = rel.removeprefix(".claude/skills/").split("/", 1)[0]
         return (
             f"Project-local .claude/skills/{skill} changed; "
             f"update .codex/skills/{skill} in the same repo."
         )
     if rel.startswith(".codex/skills/"):
+        if local_artifact_single_agent(repo_root, "skills"):
+            return ""
         skill = rel.removeprefix(".codex/skills/").split("/", 1)[0]
         return (
             f"Project-local .codex/skills/{skill} changed; "
@@ -2033,7 +2041,7 @@ def local_manifest(repo_root: Path) -> dict:
         return {}
     try:
         data = json.loads(path.read_text())
-    except (json.JSONDecodeError, OSError):
+    except (json.JSONDecodeError, OSError, UnicodeError):
         return {}
     return data if isinstance(data, dict) else {}
 

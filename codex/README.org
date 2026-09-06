@@ -591,6 +591,13 @@ command is modelled in sequence when =&&= links it to the first: the adds
 between the two commits are its content, and the guard audits the union,
 which is the tree the whole command leaves behind.
 
+Project-local pairing reminders follow the repository's =ai-config-sync.json=
+policy for =local.skills= and =local.instructions=. Explicit single-agent
+statuses such as =claude-only= or =codex-only= suppress counterpart reminders
+for that artifact type only; unrelated hook reminders still apply. Missing,
+unreadable or malformed manifests, including invalid text encoding, retain the
+default pairing reminders. These are advisory messages, not commit approval.
+
 * Verification
 
 After changing shared configuration, run =bin/ai-config-sync audit=. After a

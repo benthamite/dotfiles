@@ -675,6 +675,13 @@ root =~/repos/.worktrees/<repository>/<branch>= — never inside a repository
 checkout or =~/My Drive= — while maintenance helpers keep covering legacy
 worktree locations until those are migrated.
 
+Project-local pairing reminders follow the repository's =ai-config-sync.json=
+policy for =local.skills= and =local.instructions=. Explicit single-agent
+statuses such as =claude-only= or =codex-only= suppress counterpart reminders
+for that artifact type only; unrelated hook reminders still apply. Missing,
+unreadable or malformed manifests, including invalid text encoding, retain the
+default pairing reminders. These are advisory messages, not commit approval.
+
 * Verification
 
 Run =bin/ai-config-sync audit= after changing shared configuration. When a

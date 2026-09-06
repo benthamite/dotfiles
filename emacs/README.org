@@ -110,3 +110,8 @@ uses the runtime-specific =move-session-log= adapters for offline history
 relocation. It preserves unsupported memory/configuration merges and conflicting
 sources, keeps trust transfer and additional deletion separately authorized, and
 distinguishes metadata checks from live history/resume verification.
+
+The =rename-package= workflow separates library/API edits from hosted repository
+renames, publication, checkout relocation and live activation. It resolves the
+actual package registry/source and verification support before changing a main
+library, and preserves unrelated commits, trust state and older profiles.

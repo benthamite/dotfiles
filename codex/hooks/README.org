@@ -152,7 +152,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =remind-plan-review.sh= | Reminds the agent to obtain an independent review after editing an implementation plan. |
 | =require-ai-config-sync.sh= | Delegates paired-configuration commit blocking to =bin/ai-config-sync=. |
 | =require-codex-readme-update.sh= | Requires the Codex README with staged Codex integration or sync changes. |
-| =require-doc-update.sh= | Requires a selected manual for production Elisp, or each skill helper's own selected Markdown documentation; checks declared Texinfo and Info outputs without evaluating Org. |
+| =require-doc-update.sh= | Requires a selected manual for production Elisp, or each global/project-local skill helper's own selected Markdown documentation; checks declared Texinfo and Info outputs without evaluating Org. |
 | =require-elisp-test-before-commit.sh= | Routes direct and composed commits to the target repository, blocks combined staging, and requires matching package or deletion-check evidence for the proposed Elisp source. |
 | =require-elisp-verify-after-commit.sh= | Allows only exact rebuild/live helpers until repository/package/commit-bound evidence clears an Elisp commit. |
 | =require-readme-update.sh= | Requires the Claude README with staged Claude skills, hooks, or settings changes. |

@@ -204,11 +204,15 @@ skill_script_owner() {
   case "$file" in
     "$REPO_ROOT"/*) file=${file#"$REPO_ROOT"/} ;;
   esac
+  case "$file" in /*) return 1 ;; esac
+  case "/$file/" in */../* | */./*) return 1 ;; esac
   case "$file" in
-    claude/skills/* | codex/skills/* | .claude/skills/* | .codex/skills/*) ;;
+    claude/skills/* | codex/skills/* | .claude/skills/* | .codex/skills/*)
+      root="${file%%/skills/*}/skills" ;;
+    */.claude/skills/*) root="${file%/.claude/skills/*}/.claude/skills" ;;
+    */.codex/skills/*) root="${file%/.codex/skills/*}/.codex/skills" ;;
     *) return 1 ;;
   esac
-  root="${file%%/skills/*}/skills"
   relative=${file#"$root"/}
   skill=${relative%%/*}
   case "$skill" in "" | . | ..) return 1 ;; esac

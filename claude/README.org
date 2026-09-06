@@ -236,8 +236,9 @@ It handles independent Texinfo/Info names without evaluating Org. Unrelated
 unstaged headers cannot hide outputs; ambiguous pending staging is refused with
 a reason to stage the intended manual separately.
 
-Elisp helpers under the four standard skill roots' =scripts/= directories
-require their own changed =SKILL.md= or =references/*.md= in the selected commit.
+Elisp helpers under standard skill roots' =scripts/= directories, including
+project-local =.claude/skills/= and =.codex/skills/=, require their own changed
+=SKILL.md= or =references/*.md= in the selected commit.
 An unrelated package manual or another skill's documentation cannot satisfy that
 requirement. Mixed package changes still need their manual; unresolved combined
 staging of skill helpers must be split into separate staging and commit calls.

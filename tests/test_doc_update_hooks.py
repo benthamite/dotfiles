@@ -689,6 +689,45 @@ class SkillHelperDocUpdateHookTests(unittest.TestCase):
         self.git("add", "--", other["helper"])
         self.assert_selection("git commit -m test", "deny")
 
+    def test_project_local_hidden_roots_accept_selected_own_documentation(self):
+        roots = ("macos/.claude/skills", "macos/.codex/skills",
+                 "projects/space project/.codex/skills",
+                 "projects/skills/nested/.claude/skills")
+        for index, root in enumerate(roots):
+            with self.subTest(root=root):
+                paths = self.prepare_skill(root)
+                document = paths["skill" if index % 2 == 0 else "reference"]
+                self.change_document(document)
+                self.git("add", "--force", "--", paths["helper"], document)
+                self.assert_selection("git commit -m test", "allow")
+
+    def test_project_local_helper_cannot_borrow_other_or_unselected_docs(self):
+        paths = self.prepare_skill("macos/.claude/skills")
+        other = self.prepare_skill("macos/.codex/skills")
+        self.change_document(other["skill"])
+        self.change_document(paths["skill"])
+        self.git("add", "--force", "--", paths["helper"], other["skill"])
+        self.assert_selection("git commit -m test", "deny")
+        self.git("add", "--force", "--", paths["skill"])
+        self.assert_selection("git commit -m test", "allow")
+        self.assert_selection(f"git commit --only -m test -- {paths['helper']}", "deny")
+        self.assert_selection(
+            f"git commit --only -m test -- {paths['helper']} {paths['skill']}", "allow")
+        (self.repo / paths["skill"]).unlink()
+        self.git("add", "--force", "--", paths["skill"])
+        self.assert_selection("git commit -m test", "deny")
+
+    def test_project_local_docs_do_not_replace_mixed_package_manual(self):
+        paths = self.prepare_skill("macos/.codex/skills")
+        self.change_document(paths["skill"])
+        package = self.repo / "emacs/extras/example.el"
+        package.write_text("(provide 'example)\n")
+        self.git("add", "--force", "--", paths["helper"], paths["skill"], str(package))
+        self.assert_selection("git commit -m test", "deny")
+        self.change_document(self.manual)
+        self.git("add", "--", self.manual)
+        self.assert_selection("git commit -m test", "allow")
+
     def test_helper_requires_changed_selected_own_documentation(self):
         paths = self.prepare_skill()
         self.git("add", "--", paths["helper"])

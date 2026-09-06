@@ -64,12 +64,12 @@ The focused regression suite is:
 python3 -m unittest tests.test_personal_updates -v
 #+end_src
 
-* Project-local security skills
+* Project-local skills
 
 Paired macOS-only skills live under =macos/.claude/skills/= and
-=macos/.codex/skills/=. They cover application inspection, LuLu alert review,
-and machine security audits, but they are not global skills: agent discovery
-loads them only while working in this project scope. Their current names,
+=macos/.codex/skills/=. They cover contact reconciliation, application inspection,
+LuLu alert review and machine security audits, but they are not global skills:
+agent discovery loads them only while working in this project scope. Their current names,
 descriptions, and paths are generated in the
 [[file:../agents/skill-inventory.org][tracked agent skill inventory]].
 
@@ -77,6 +77,12 @@ The =audit-mac-app= scanner emits bounded static observations and explicit
 coverage gaps, not a safety verdict. Gatekeeper assessment and isolated Electron
 extraction are selected separately; entitlement declarations are not privacy
 grants. No target app is launched and no permissions are changed by the scan.
+
+The =reconcile-contacts= helpers require explicit BBDB and Contacts source paths.
+They compare a supported field projection and generate review-only identity
+candidates, not executable merge/deletion batches. Equal counts do not establish
+complete reconciliation; account scope, ambiguity and unassessed fields remain
+part of the result.
 
 The security-audit isolation checks include synthetic peer-process argument
 and environment probes. Filesystem and network restrictions alone are not

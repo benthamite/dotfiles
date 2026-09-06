@@ -4,8 +4,8 @@
 //
 // Reads the currently visible LuLu alert through the macOS Accessibility API
 // and writes one JSON object to stdout. It never presses a button, never
-// changes the rule scope or duration, and never creates a LuLu rule: every
-// Accessibility call it makes is a read.
+// changes the rule scope or duration, and never creates a LuLu rule. It reads
+// Accessibility attributes and configures only this reader's IPC timeout.
 //
 // Usage:
 //   inspect-lulu-alert              read the live alert, print the parsed JSON
@@ -17,18 +17,23 @@
 //   0   read succeeded (an alert was present, or provably was not)
 //   64  usage error
 //   69  LuLu is not running
-//   70  Accessibility read failed
+//   70  capture failed, was incomplete, or could not select a unique alert
 //   77  Accessibility permission denied
 //
 
 import Cocoa
 import ApplicationServices
+import Darwin
 
 let kLuLuBundleID = "com.objective-see.lulu.app"
 let kAlertWindowTitle = "lulu alert"
 let kDumpSchema = "lulu-alert-ax-dump/1"
 let kMaxDepth = 40
 let kMaxElements = 4000
+let kMaxFixtureBytes = 8 * 1024 * 1024
+let kMaxTextBytes = 16 * 1024
+let kMaxRawPairBytes = 64 * 1024
+let kMaxRawPairs = 64
 
 // MARK: - Exit
 
@@ -136,10 +141,14 @@ struct Dump {
     var alertWindowCount: Int
     var matchedBy: String?
     var elements: [Element]
+    var readIssues: [String] = []
+    var capturedAt: String?
 
     var asJSON: [String: Any] {
         [
             "schema": kDumpSchema,
+            "read_issues": readIssues,
+            "captured_at": capturedAt ?? NSNull(),
             "lulu": [
                 "bundle_id": kLuLuBundleID,
                 "running": luluRunning,
@@ -160,9 +169,29 @@ struct Dump {
 
 // MARK: - Accessibility reads
 
+var captureIssues: [String] = []
+var captureDeadline: TimeInterval?
+
+func captureIssue(_ message: String) {
+    if !captureIssues.contains(message) { captureIssues.append(message) }
+}
+
+func withinCaptureBudget() -> Bool {
+    if let deadline = captureDeadline, ProcessInfo.processInfo.systemUptime >= deadline {
+        captureIssue("Accessibility capture exceeded its 20-second read budget")
+        return false
+    }
+    return true
+}
+
 func axCopy(_ element: AXUIElement, _ attribute: String) -> CFTypeRef? {
+    guard withinCaptureBudget() else { return nil }
     var value: CFTypeRef?
-    guard AXUIElementCopyAttributeValue(element, attribute as CFString, &value) == .success else {
+    let status = AXUIElementCopyAttributeValue(element, attribute as CFString, &value)
+    guard status == .success else {
+        if status != .noValue && status != .attributeUnsupported {
+            captureIssue("Accessibility attribute read failed: \(attribute) (\(status.rawValue))")
+        }
         return nil
     }
     return value
@@ -171,10 +200,18 @@ func axCopy(_ element: AXUIElement, _ attribute: String) -> CFTypeRef? {
 func axString(_ element: AXUIElement, _ attribute: String) -> String? {
     guard let raw = axCopy(element, attribute) else { return nil }
     if let string = raw as? String {
+        guard string.utf8.count <= kMaxTextBytes else {
+            captureIssue("Accessibility text exceeded the 16 KiB field limit")
+            return nil
+        }
         let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
     }
     if let attributed = raw as? NSAttributedString {
+        guard attributed.string.utf8.count <= kMaxTextBytes else {
+            captureIssue("Accessibility text exceeded the 16 KiB field limit")
+            return nil
+        }
         let trimmed = attributed.string.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
     }
@@ -213,11 +250,18 @@ func axSize(_ element: AXUIElement, _ attribute: String) -> CGSize? {
     return size
 }
 
-func axChildren(_ element: AXUIElement) -> [AXUIElement] {
-    guard let raw = axCopy(element, kAXChildrenAttribute as String) as? [AXUIElement] else {
+func axChildren(_ element: AXUIElement, role: String?) -> [AXUIElement] {
+    guard let raw = axCopy(element, kAXChildrenAttribute as String) else {
+        if ["AXWindow", "AXGroup", "AXScrollArea", "AXRadioGroup", "AXTabGroup", "AXSplitGroup"].contains(role ?? "") {
+            captureIssue("Accessibility container children were unavailable")
+        }
         return []
     }
-    return raw
+    guard let children = raw as? [AXUIElement] else {
+        captureIssue("Accessibility children had an unsupported type")
+        return []
+    }
+    return children
 }
 
 /// Flatten one window's element tree, depth first, bounded so a pathological
@@ -227,10 +271,15 @@ func flatten(window: AXUIElement) -> [Element] {
     var stack: [(AXUIElement, Int)] = [(window, 0)]
 
     while let (node, depth) = stack.popLast() {
-        if out.count >= kMaxElements { break }
+        guard withinCaptureBudget() else { break }
+        if out.count >= kMaxElements {
+            captureIssue("Accessibility element limit truncated the capture")
+            break
+        }
 
         var element = Element(index: out.count, depth: depth)
         element.role = axString(node, kAXRoleAttribute as String)
+        if element.role == nil { captureIssue("An Accessibility element role was unreadable") }
         element.subrole = axString(node, kAXSubroleAttribute as String)
         element.title = axString(node, kAXTitleAttribute as String)
         element.value = axString(node, kAXValueAttribute as String)
@@ -249,10 +298,13 @@ func flatten(window: AXUIElement) -> [Element] {
         }
         out.append(element)
 
+        let children = axChildren(node, role: element.role)
         if depth < kMaxDepth {
-            for child in axChildren(node).reversed() {
+            for child in children.reversed() {
                 stack.append((child, depth + 1))
             }
+        } else if !children.isEmpty {
+            captureIssue("Accessibility depth limit truncated the capture")
         }
     }
     return out
@@ -267,9 +319,20 @@ func readLiveDump() -> Dump {
             """)
     }
 
+    // This configures IPC timeouts in this reader process, not LuLu UI state.
+    guard AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0.5) == .success else {
+        fail(.readFailed, "could not bound Accessibility messaging")
+    }
+    captureDeadline = ProcessInfo.processInfo.systemUptime + 20
     let running = NSRunningApplication.runningApplications(withBundleIdentifier: kLuLuBundleID)
     guard let lulu = running.first else {
-        fail(.notRunning, "LuLu (\(kLuLuBundleID)) is not running; there can be no alert to read.")
+        fail(.notRunning, "no running application matches LuLu's supported bundle identifier; no alert was read.")
+    }
+    guard running.count == 1 else {
+        return Dump(luluPID: nil, luluVersion: nil, luluRunning: true, windowFound: false,
+                    windowTitle: nil, windowCount: 0, alertWindowCount: 0, matchedBy: nil,
+                    elements: [], readIssues: ["Multiple LuLu instances; no instance selected"],
+                    capturedAt: iso8601Now())
     }
 
     var version: String?
@@ -278,9 +341,6 @@ func readLiveDump() -> Dump {
     }
 
     let app = AXUIElementCreateApplication(lulu.processIdentifier)
-    var windowsRef: CFTypeRef?
-    let status = AXUIElementCopyAttributeValue(app, kAXWindowsAttribute as CFString, &windowsRef)
-
     var dump = Dump(
         luluPID: Int(lulu.processIdentifier),
         luluVersion: version,
@@ -290,22 +350,21 @@ func readLiveDump() -> Dump {
         windowCount: 0,
         alertWindowCount: 0,
         matchedBy: nil,
-        elements: []
+        elements: [],
+        capturedAt: iso8601Now()
     )
 
-    switch status {
-    case .success:
-        break
-    case .noValue, .attributeUnsupported:
-        // No windows attribute at all: LuLu is running with nothing on screen.
-        return dump
-    case .apiDisabled, .notImplemented:
-        fail(.accessibilityDenied, "the Accessibility API is disabled for this process.")
-    default:
-        fail(.readFailed, "could not read LuLu's window list (AXError \(status.rawValue)).")
+    func windowList() -> [AXUIElement]? {
+        guard let raw = axCopy(app, kAXWindowsAttribute as String), let windows = raw as? [AXUIElement] else {
+            captureIssue("LuLu window list was unavailable or had an unsupported type")
+            return nil
+        }
+        return windows
     }
-
-    let windows = (windowsRef as? [AXUIElement]) ?? []
+    guard let windows = windowList() else {
+        dump.readIssues = captureIssues
+        return dump
+    }
     dump.windowCount = windows.count
 
     /// An alert shows LuLu's "<name> is connecting to <destination>" line. The
@@ -316,80 +375,195 @@ func readLiveDump() -> Dump {
         var sawConnecting = false
         var sawAllow = false
         var sawBlock = false
-        var sawRuleChoice = false
         for element in elements {
             guard let text = element.text?.lowercased() else { continue }
             if text.contains("is connecting to") { sawConnecting = true }
-            if text.hasPrefix("rule scope") || text.hasPrefix("rule duration") {
-                sawRuleChoice = true
-            }
             if element.role == "AXButton" {
                 if text == "allow" { sawAllow = true }
                 if text == "block" { sawBlock = true }
             }
         }
-        return sawConnecting || (sawAllow && sawBlock && sawRuleChoice)
+        return sawConnecting && sawAllow && sawBlock
     }
 
     // Prefer the window LuLu titles "LuLu Alert". Rules, Preferences and the
     // status-bar popover are also AX windows, so title matching keeps the read
     // off them; content matching is the fallback for a retitled release.
-    let titled = windows.filter { window in
-        (axString(window, kAXTitleAttribute as String) ?? "").lowercased().contains(kAlertWindowTitle)
-    }
-
-    var byContent: [(AXUIElement, [Element])] = []
-    if titled.isEmpty {
-        for window in windows {
-            let elements = flatten(window: window)
-            if looksLikeAnAlert(elements) { byContent.append((window, elements)) }
+    var candidates: [(AXUIElement, [Element], String, String?)] = []
+    for window in windows {
+        guard withinCaptureBudget() else { break }
+        let title = axString(window, kAXTitleAttribute as String)
+        let elements = flatten(window: window)
+        if normalize(title ?? "") == kAlertWindowTitle {
+            candidates.append((window, elements, "title", title))
+        } else if looksLikeAnAlert(elements) {
+            candidates.append((window, elements, "content", title))
+        } else {
+            captureIssue("A LuLu window was not recognized as a supported alert; absence is unconfirmed")
         }
     }
-
-    dump.alertWindowCount = titled.isEmpty ? byContent.count : titled.count
-
-    if let target = titled.first {
+    dump.alertWindowCount = candidates.count
+    if candidates.count > 1 {
+        captureIssue("Multiple alert windows; no alert selected")
+    } else if let (target, elements, matchedBy, title) = candidates.first {
         dump.windowFound = true
-        dump.matchedBy = "title"
-        dump.windowTitle = axString(target, kAXTitleAttribute as String)
-        dump.elements = flatten(window: target)
-    } else if let (target, elements) = byContent.first {
-        dump.windowFound = true
-        dump.matchedBy = "content"
-        dump.windowTitle = axString(target, kAXTitleAttribute as String)
+        dump.matchedBy = matchedBy
+        dump.windowTitle = title
         dump.elements = elements
+        // Detect an observed replacement or edit. Two matching reads are not
+        // an atomic snapshot and cannot bind a later click to this evidence.
+        let repeated = flatten(window: target)
+        let originalJSON = try? JSONSerialization.data(withJSONObject: elements.map { $0.asJSON }, options: .sortedKeys)
+        let repeatedJSON = try? JSONSerialization.data(withJSONObject: repeated.map { $0.asJSON }, options: .sortedKeys)
+        if originalJSON == nil || originalJSON != repeatedJSON {
+            captureIssue("Selected alert changed during the read")
+        }
     }
+    if let repeated = windowList() {
+        if windows.count != repeated.count || !zip(windows, repeated).allSatisfy({ CFEqual($0.0, $0.1) }) {
+            captureIssue("LuLu window list changed during the read")
+        }
+    }
+    dump.readIssues = captureIssues
     return dump
 }
 
 func readFixtureDump(path: String) -> Dump {
-    guard let data = FileManager.default.contents(atPath: path) else {
-        fail(.usage, "cannot read fixture file: \(path)")
+    let descriptor = open(path, O_RDONLY | O_NOFOLLOW | O_NONBLOCK)
+    guard descriptor >= 0 else { fail(.usage, "cannot read fixture file") }
+    let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
+    defer { try? handle.close() }
+    var before = stat()
+    guard fstat(descriptor, &before) == 0, before.st_mode & S_IFMT == S_IFREG,
+          before.st_size >= 0, before.st_size <= kMaxFixtureBytes,
+          let data = try? handle.read(upToCount: kMaxFixtureBytes + 1), data.count <= kMaxFixtureBytes else {
+        fail(.usage, "fixture must be a readable regular file within the 8 MiB limit")
     }
-    guard
-        let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
-    else {
-        fail(.usage, "fixture is not a JSON object: \(path)")
+    var after = stat()
+    guard fstat(descriptor, &after) == 0, data.count == before.st_size,
+          before.st_dev == after.st_dev, before.st_ino == after.st_ino,
+          before.st_mode == after.st_mode, before.st_size == after.st_size,
+          before.st_mtimespec.tv_sec == after.st_mtimespec.tv_sec,
+          before.st_mtimespec.tv_nsec == after.st_mtimespec.tv_nsec,
+          before.st_ctimespec.tv_sec == after.st_ctimespec.tv_sec,
+          before.st_ctimespec.tv_nsec == after.st_ctimespec.tv_nsec else {
+        fail(.usage, "fixture changed during the bounded read")
     }
-    if let schema = root["schema"] as? String, schema != kDumpSchema {
-        fail(.usage, "fixture schema is \(schema); expected \(kDumpSchema)")
+    guard let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
+        fail(.usage, "fixture is not a JSON object")
     }
-
-    let lulu = root["lulu"] as? [String: Any] ?? [:]
-    let window = root["window"] as? [String: Any] ?? [:]
-    let rawElements = root["elements"] as? [[String: Any]] ?? []
-
-    return Dump(
-        luluPID: lulu["pid"] as? Int,
+    guard root["schema"] as? String == kDumpSchema else {
+        fail(.usage, "fixture schema must be \(kDumpSchema)")
+    }
+    func keys(_ object: [String: Any], _ allowed: Set<String>) {
+        guard Set(object.keys).isSubset(of: allowed) else { fail(.usage, "fixture contains unsupported fields") }
+    }
+    func number(_ value: Any?) -> Double? {
+        guard let n = value as? NSNumber, CFGetTypeID(n) != CFBooleanGetTypeID(), n.doubleValue.isFinite else { return nil }
+        return n.doubleValue
+    }
+    func integer(_ value: Any?, minimum: Int = 0, maximum: Int = Int(Int32.max)) -> Int? {
+        guard let n = number(value), n >= Double(minimum), n <= Double(maximum), n.rounded() == n else { return nil }
+        return Int(n)
+    }
+    func flag(_ value: Any?) -> Bool? {
+        guard let n = value as? NSNumber, CFGetTypeID(n) == CFBooleanGetTypeID() else { return nil }
+        return n.boolValue
+    }
+    func optionalString(_ object: [String: Any], _ key: String) {
+        if let value = object[key], !(value is NSNull), !(value is String) {
+            fail(.usage, "fixture has an invalid string field")
+        }
+    }
+    keys(root, ["schema", "lulu", "window", "elements", "read_issues", "captured_at"])
+    guard let lulu = root["lulu"] as? [String: Any],
+          let window = root["window"] as? [String: Any],
+          let rawElements = root["elements"] as? [[String: Any]], rawElements.count <= kMaxElements,
+          lulu["bundle_id"] as? String == kLuLuBundleID,
+          let running = flag(lulu["running"]), let found = flag(window["found"]),
+          let windowCount = integer(window["app_window_count"], maximum: kMaxElements),
+          let alertCount = integer(window["alert_window_count"], maximum: kMaxElements), alertCount <= windowCount else {
+        fail(.usage, "fixture has missing or invalid source, window or element metadata")
+    }
+    keys(lulu, ["bundle_id", "running", "pid", "version"])
+    keys(window, ["found", "title", "app_window_count", "alert_window_count", "matched_by"])
+    optionalString(lulu, "version")
+    optionalString(window, "title")
+    optionalString(window, "matched_by")
+    optionalString(root, "captured_at")
+    if let captured = root["captured_at"] as? String, ISO8601DateFormatter().date(from: captured) == nil {
+        fail(.usage, "fixture captured_at is not an ISO 8601 timestamp")
+    }
+    let pid = integer(lulu["pid"], minimum: 1)
+    if let raw = lulu["pid"], !(raw is NSNull), pid == nil { fail(.usage, "fixture has an invalid LuLu PID") }
+    var issues: [String] = []
+    if let raw = root["read_issues"] {
+        guard let strings = raw as? [String], strings.count <= 100,
+              strings.allSatisfy({ !$0.isEmpty && $0.count <= 500 }) else { fail(.usage, "fixture has invalid read_issues") }
+        issues = strings
+    }
+    guard (!running || pid != nil || !issues.isEmpty),
+          (!found || ["title", "content"].contains(window["matched_by"] as? String ?? "")),
+          (found || window["matched_by"] == nil || window["matched_by"] is NSNull) else {
+        fail(.usage, "fixture lacks valid source or selection identity")
+    }
+    guard (!found || running && alertCount > 0 && !rawElements.isEmpty),
+          (found || rawElements.isEmpty), (running || windowCount == 0),
+          (found || alertCount == 0 || !issues.isEmpty) else {
+        fail(.usage, "fixture window and source metadata contradict its elements")
+    }
+    var indexes = Set<Int>()
+    for item in rawElements {
+        keys(item, ["index", "depth", "role", "subrole", "title", "value", "number_value", "description",
+                    "help", "identifier", "enabled", "x", "y", "width", "height"])
+        guard let index = integer(item["index"], maximum: kMaxElements - 1), indexes.insert(index).inserted,
+              integer(item["depth"], maximum: kMaxDepth) != nil else {
+            fail(.usage, "fixture has invalid or duplicate element indexes/depths")
+        }
+        for key in ["role", "subrole", "title", "value", "description", "help", "identifier"] {
+            optionalString(item, key)
+        }
+        if let role = item["role"] as? String {
+            guard !role.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                fail(.usage, "fixture has a blank element role")
+            }
+        } else if issues.isEmpty {
+            fail(.usage, "fixture has an unreadable role without a capture issue")
+        }
+        for key in ["x", "y", "width", "height", "number_value"] {
+            if let raw = item[key], !(raw is NSNull) {
+                guard let n = number(raw), (!["width", "height"].contains(key) || n >= 0) else {
+                    fail(.usage, "fixture has an invalid numeric element field")
+                }
+            }
+        }
+        if let raw = item["enabled"], !(raw is NSNull), flag(raw) == nil {
+            fail(.usage, "fixture has an invalid enabled flag")
+        }
+    }
+    var dump = Dump(
+        luluPID: pid,
         luluVersion: lulu["version"] as? String,
-        luluRunning: lulu["running"] as? Bool ?? true,
-        windowFound: window["found"] as? Bool ?? !rawElements.isEmpty,
+        luluRunning: running,
+        windowFound: found,
         windowTitle: window["title"] as? String,
-        windowCount: window["app_window_count"] as? Int ?? 0,
-        alertWindowCount: window["alert_window_count"] as? Int ?? 0,
+        windowCount: windowCount,
+        alertWindowCount: alertCount,
         matchedBy: window["matched_by"] as? String,
-        elements: rawElements.enumerated().map { Element(json: $1, fallbackIndex: $0) }
+        elements: rawElements.enumerated().map { Element(json: $1, fallbackIndex: $0) },
+        readIssues: issues,
+        capturedAt: root["captured_at"] as? String
     )
+    if alertCount > 1 {
+        dump.windowFound = false
+        dump.elements = []
+        dump.windowTitle = nil
+        dump.matchedBy = nil
+        if !dump.readIssues.contains("Multiple alert windows; no alert selected") {
+            dump.readIssues.append("Multiple alert windows; no alert selected")
+        }
+    }
+    return dump
 }
 
 // MARK: - Parsing
@@ -449,7 +623,20 @@ let controlRoles: Set<String> = ["AXRadioButton", "AXCheckBox", "AXPopUpButton"]
 
 func parse(dump: Dump) -> ParsedAlert {
     var parsed = ParsedAlert()
-    let elements = dump.elements
+    let elements = dump.elements.map { original -> Element in
+        var element = original
+        if [element.value, element.title, element.elementDescription].contains(where: {
+            ($0?.utf8.count ?? 0) > kMaxTextBytes
+        }) {
+            // Keep geometry/control identity, but never substitute another
+            // attribute after discarding an oversized value.
+            element.value = nil
+            element.title = nil
+            element.elementDescription = nil
+            if !parsed.unreadable.contains("oversized_text") { parsed.unreadable.append("oversized_text") }
+        }
+        return element
+    }
 
     // Texts that are chrome rather than data: they must never be picked up as
     // the value belonging to some other label.
@@ -465,30 +652,51 @@ func parse(dump: Dump) -> ParsedAlert {
     /// value inside the label's own frame, so this compares left edges rather
     /// than starting past the label's right edge.
     func valueRightOf(_ label: Element) -> String? {
+        // The next column's label is a boundary, not a replacement value.
+        // Section headers also bound a missing field whose peer label is gone.
+        let rowBoundaries = textElements.filter { candidate in
+            candidate.minX > label.minX + 4 && verticalOverlap(candidate, label) >= 0.5
+                && detailLabels.contains(where: { $0.label == normalize(candidate.text!) })
+        }.map { $0.minX }
+        let sectionBoundaries = textElements.filter { candidate in
+            candidate.minX > label.minX + 4 && candidate.minY < label.minY
+                && ["process:", "connection:"].contains(normalize(candidate.text!))
+        }.map { $0.minX }
+        let rightEdge = min(label.maxX, (rowBoundaries + sectionBoundaries).min() ?? Double.infinity)
         let candidates = textElements.filter { candidate in
             candidate.index != label.index
                 && candidate.minX > label.minX + 4
+                && candidate.minX < rightEdge
                 && verticalOverlap(candidate, label) >= 0.5
+                && ["AXStaticText", "AXTextArea", "AXTextField"].contains(candidate.role ?? "")
                 && !nonValueTexts.contains(normalize(candidate.text!))
                 && !normalize(candidate.text!).hasPrefix(timestampPrefix)
                 && !controlRoles.contains(candidate.role ?? "")
         }
-        return candidates.min(by: { $0.minX < $1.minX })?.text
+        let ordered = candidates.sorted { $0.minX < $1.minX }
+        guard let first = ordered.first,
+              ordered.count == 1 || ordered[1].minX - first.minX > 1 else { return nil }
+        return first.text
     }
 
     for (field, label) in detailLabels {
-        let labelElement = textElements.first {
-            normalize($0.text!) == label && !controlRoles.contains($0.role ?? "")
+        let labels = textElements.filter {
+            normalize($0.text!) == label && $0.role == "AXStaticText"
         }
-        guard let labelElement, let value = valueRightOf(labelElement) else {
+        guard labels.count == 1, let labelElement = labels.first, let value = valueRightOf(labelElement) else {
             parsed.unreadable.append(field)
             continue
         }
         switch field {
         case "process_id":
             parsed.processID = Int(value)
-            if parsed.processID == nil { parsed.unreadable.append(field) }
-        case "process_path": parsed.processPath = value
+            if parsed.processID == nil || parsed.processID! <= 0 || parsed.processID! > Int32.max {
+                parsed.processID = nil
+                parsed.unreadable.append(field)
+            }
+        case "process_path":
+            if value.hasPrefix("/") { parsed.processPath = value }
+            else { parsed.unreadable.append(field) }
         case "process_args": parsed.processArgs = value
         case "ip_address": parsed.ipAddress = value
         case "port_protocol": parsed.portProtocol = value
@@ -498,7 +706,8 @@ func parse(dump: Dump) -> ParsedAlert {
     }
 
     // LuLu draws the timestamp as one string, not as a label/value pair.
-    if let stamp = textElements.first(where: { normalize($0.text!).hasPrefix(timestampPrefix) }) {
+    let stamps = textElements.filter { $0.role == "AXStaticText" && normalize($0.text!).hasPrefix(timestampPrefix) }
+    if stamps.count == 1, let stamp = stamps.first {
         parsed.timestamp = String(stamp.text!.dropFirst(timestampPrefix.count))
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
@@ -509,18 +718,35 @@ func parse(dump: Dump) -> ParsedAlert {
 
     // Every static-text "label:" -> value pair, so a relabelled LuLu release
     // stays readable even when the canonical fields above come back empty.
+    var rawPairBytes = 0
+    var rawLabelsExamined = 0
     for element in textElements where element.text!.hasSuffix(":") {
         guard element.role == "AXStaticText" else { continue }
         let key = normalize(element.text!)
         if groupLabels.contains(key) || sectionHeaders.contains(key) { continue }
+        rawLabelsExamined += 1
+        guard rawLabelsExamined <= kMaxRawPairs else {
+            parsed.unreadable.append("raw_label_pairs_truncated")
+            break
+        }
         if let value = valueRightOf(element) {
+            let bytes = element.text!.utf8.count + value.utf8.count
+            guard rawPairBytes + bytes <= kMaxRawPairBytes else {
+                parsed.unreadable.append("raw_label_pairs_truncated")
+                break
+            }
+            rawPairBytes += bytes
             parsed.labelPairs.append(["label": element.text!, "value": value])
         }
     }
 
     // The headline reads "<name> is connecting to <destination>"; LuLu splits it
     // across a bold name above and a text area below.
-    if let connecting = textElements.first(where: { normalize($0.text!).contains("is connecting to") }) {
+    let detailTop = textElements.filter { ["process:", "connection:"].contains(normalize($0.text!)) }
+        .map { $0.minY }.min() ?? Double.infinity
+    let headlines = textElements.filter { $0.minY < detailTop && $0.role == "AXTextArea"
+        && normalize($0.text!).contains("is connecting to") }
+    if headlines.count == 1, let connecting = headlines.first {
         parsed.headline = connecting.text
         let above = textElements.filter { candidate in
             candidate.index != connecting.index
@@ -538,7 +764,7 @@ func parse(dump: Dump) -> ParsedAlert {
     // Rule scope and duration sit under their labels in separate columns, and
     // LuLu renders scope as a pop-up button but duration as radio buttons.
     // Assign each control to the label above it that it lines up with.
-    let allControls = elements.filter { controlRoles.contains($0.role ?? "") && $0.hasFrame }
+    let allControls = elements.filter { controlRoles.contains($0.role ?? "") }
     let groupLabelElements = groupLabels.compactMap { wanted in
         textElements.first { normalize($0.text!) == wanted }
     }
@@ -548,18 +774,19 @@ func parse(dump: Dump) -> ParsedAlert {
     }
 
     func controls(under groupLabel: String) -> [Element] {
-        guard let label = textElements.first(where: { normalize($0.text!) == groupLabel }) else {
+        let labels = textElements.filter { normalize($0.text!) == groupLabel }
+        guard labels.count == 1, let label = labels.first else {
             return []
         }
         return allControls
             .filter { control in
-                guard control.minY > label.minY else { return false }
+                guard control.hasFrame, control.minY > label.minY else { return false }
                 let ownOverlap = horizontalOverlap(control, label)
                 guard ownOverlap > 0 else { return false }
                 // A control that lines up better with the other group's label
                 // belongs to that group instead.
                 return groupLabelElements.allSatisfy { other in
-                    other.index == label.index || horizontalOverlap(control, other) <= ownOverlap
+                    other.index == label.index || horizontalOverlap(control, other) < ownOverlap
                 }
             }
             .sorted { $0.minY < $1.minY }
@@ -569,10 +796,13 @@ func parse(dump: Dump) -> ParsedAlert {
     /// flag, and reporting `false` next to a matching `rule.scope` reads as a
     /// contradiction.
     func describe(_ control: Element) -> [String: Any] {
-        [
+        var selected: Any = NSNull()
+        if control.role == "AXPopUpButton" || control.numberValue == 1 { selected = true }
+        else if control.numberValue == 0 { selected = false }
+        return [
             "label": control.text ?? NSNull(),
             "role": control.role ?? NSNull(),
-            "selected": control.role == "AXPopUpButton" || (control.numberValue ?? 0) >= 1,
+            "selected": selected,
         ]
     }
 
@@ -580,11 +810,18 @@ func parse(dump: Dump) -> ParsedAlert {
     /// menu is opened, which is a click. So for a pop-up the list holds the
     /// current choice alone, and the alert offers others we cannot name.
     func optionsAreComplete(_ controls: [Element]) -> Bool {
-        !controls.isEmpty && !controls.contains { $0.role == "AXPopUpButton" }
+        dump.readIssues.isEmpty && !uncertainControlLayout && !controls.isEmpty && controls.allSatisfy {
+            $0.text != nil && $0.role == "AXRadioButton" && ($0.numberValue == 0 || $0.numberValue == 1)
+        }
     }
 
     let scopeControls = controls(under: "rule scope:")
     let durationControls = controls(under: "rule duration:")
+    let assigned = Set((scopeControls + durationControls).map { $0.index })
+    let uncertainControlLayout = allControls.contains { control in
+        !control.hasFrame || (groupLabelElements.contains { control.minY > $0.minY }
+            && !assigned.contains(control.index))
+    }
     parsed.scopeOptions = scopeControls.map(describe)
     parsed.durationOptions = durationControls.map(describe)
     parsed.scopeOptionsComplete = optionsAreComplete(scopeControls)
@@ -593,25 +830,30 @@ func parse(dump: Dump) -> ParsedAlert {
     /// A pop-up button reports its current choice as its own text; radio
     /// buttons report theirs through whichever one is selected.
     func selection(from controls: [Element]) -> String? {
-        if let popUp = controls.first(where: { $0.role == "AXPopUpButton" }) {
-            return popUp.text
-        }
-        return controls.first(where: { ($0.numberValue ?? 0) >= 1 })?.text
+        guard !uncertainControlLayout, controls.allSatisfy({ $0.text != nil }) else { return nil }
+        if controls.count == 1, controls[0].role == "AXPopUpButton" { return controls[0].text }
+        guard controls.allSatisfy({ $0.role == "AXRadioButton" && ($0.numberValue == 0 || $0.numberValue == 1) }) else { return nil }
+        let selected = controls.filter { $0.numberValue == 1 }
+        return selected.count == 1 ? selected[0].text : nil
     }
 
     parsed.ruleScope = selection(from: scopeControls)
     parsed.ruleDuration = selection(from: durationControls)
 
     // "Expires in:" carries its hours and minutes in adjacent text fields.
-    if let expires = durationControls.first(where: {
-        ($0.numberValue ?? 0) >= 1 && normalize($0.text ?? "").hasPrefix("expires in")
+    if parsed.ruleDuration != nil, let expires = durationControls.first(where: {
+        $0.numberValue == 1 && normalize($0.text ?? "").hasPrefix("expires in")
     }) {
         let fields = elements
-            .filter { $0.role == "AXTextField" && $0.hasFrame && verticalOverlap($0, expires) >= 0.5 }
+            .filter { $0.role == "AXTextField" && $0.hasFrame && $0.minX >= expires.minX
+                && verticalOverlap($0, expires) >= 0.5 }
             .sorted { $0.minX < $1.minX }
             .compactMap { $0.value }
-        if !fields.isEmpty {
+        if fields.count == 2, let hours = Int(fields[0]), let minutes = Int(fields[1]),
+           hours >= 0, (0...59).contains(minutes) {
             parsed.ruleDuration = "Expires in: " + fields.joined(separator: ":")
+        } else {
+            parsed.ruleDuration = nil
         }
     }
 
@@ -639,19 +881,27 @@ func report(dump: Dump, source: String) -> [String: Any] {
         "bundle_id": kLuLuBundleID,
         "pid": dump.luluPID ?? NSNull(),
         "version": dump.luluVersion ?? NSNull(),
+        "running": dump.luluRunning,
     ]
 
-    guard dump.windowFound else {
-        return [
-            "alert_present": false,
-            "source": source,
-            "read_at": iso8601Now(),
-            "lulu": lulu,
-        ]
-    }
+    var presence: Any = NSNull()
+    if dump.windowFound { presence = true }
+    else if dump.readIssues.isEmpty { presence = false }
+    var result: [String: Any] = [
+        "alert_present": presence,
+        "source": source,
+        "read_at": iso8601Now(),
+        "captured_at": dump.capturedAt ?? NSNull(),
+        "read_status": dump.readIssues.isEmpty ? "complete" : "incomplete",
+        "read_issues": dump.readIssues,
+        "snapshot_atomic": false,
+        "lulu": lulu,
+        "alert_windows_open": dump.alertWindowCount,
+    ]
+    guard dump.windowFound else { return result }
 
     let parsed = parse(dump: dump)
-    return [
+    let detail: [String: Any] = [
         "alert_present": true,
         "source": source,
         "read_at": iso8601Now(),
@@ -684,9 +934,11 @@ func report(dump: Dump, source: String) -> [String: Any] {
         "unreadable_fields": parsed.unreadable,
         "raw_label_pairs": parsed.labelPairs,
     ]
+    result.merge(detail) { _, new in new }
+    return result
 }
 
-func emit(_ object: [String: Any]) -> Never {
+func emit(_ object: [String: Any], code: ExitCode = .ok) -> Never {
     guard
         let data = try? JSONSerialization.data(
             withJSONObject: object,
@@ -697,7 +949,7 @@ func emit(_ object: [String: Any]) -> Never {
     }
     FileHandle.standardOutput.write(data)
     FileHandle.standardOutput.write("\n".data(using: .utf8)!)
-    exit(ExitCode.ok.rawValue)
+    exit(code.rawValue)
 }
 
 let usage = """
@@ -728,6 +980,7 @@ while !arguments.isEmpty {
     case "--dump":
         wantDump = true
     case "--fixture":
+        guard fixturePath == nil else { fail(.usage, "--fixture may be specified only once") }
         guard !arguments.isEmpty else { fail(.usage, "--fixture needs a file path") }
         fixturePath = arguments.removeFirst()
     case "-h", "--help":
@@ -739,4 +992,5 @@ while !arguments.isEmpty {
 }
 
 let dump = fixturePath.map { readFixtureDump(path: $0) } ?? readLiveDump()
-emit(wantDump ? dump.asJSON : report(dump: dump, source: fixturePath == nil ? "live" : "fixture"))
+emit(wantDump ? dump.asJSON : report(dump: dump, source: fixturePath == nil ? "live" : "fixture"),
+     code: dump.readIssues.isEmpty ? .ok : .readFailed)

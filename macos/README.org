@@ -84,6 +84,11 @@ candidates, not executable merge/deletion batches. Equal counts do not establish
 complete reconciliation; account scope, ambiguity and unassessed fields remain
 part of the result.
 
+The =review-lulu-alert= helper distinguishes incomplete captures from a verified
+absence of alerts. Reviews do not answer prompts or alter rules; saved captures
+remain historical evidence. Its routine tests use fixtures, with live
+Accessibility checks reserved for a separately selected integration run.
+
 The security-audit isolation checks include synthetic peer-process argument
 and environment probes. Filesystem and network restrictions alone are not
 accepted as evidence of credential separation.

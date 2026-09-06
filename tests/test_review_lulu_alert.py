@@ -2,12 +2,16 @@ from __future__ import annotations
 
 import filecmp
 import json
+import os
 import shutil
 import subprocess
+import sys
+import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
-DOTFILES = Path("/Users/pablostafforini/My Drive/dotfiles")
+DOTFILES = Path(__file__).resolve().parents[1]
 SKILL_DIRS = (
     DOTFILES / "macos/.claude/skills/review-lulu-alert",
     DOTFILES / "macos/.codex/skills/review-lulu-alert",
@@ -21,14 +25,23 @@ FIXTURES = DOTFILES / "tests/fixtures/review-lulu-alert"
 MUTATING_AX_CALLS = (
     "AXUIElementPerformAction",
     "AXUIElementSetAttributeValue",
-    "AXUIElementSetMessagingTimeout",
     "AXUIElementPostKeyboardEvent",
     "CGEventPost",
     "CGEventCreateMouseEvent",
 )
 
 SWIFT = shutil.which("swift")
-requires_swift = unittest.skipUnless(SWIFT, "swift is not available")
+requires_swift = unittest.skipUnless(SWIFT and sys.platform == "darwin", "macOS Swift is not available")
+TEST_ROOT = None
+
+
+def setUpModule():
+    global TEST_ROOT
+    TEST_ROOT = tempfile.TemporaryDirectory(prefix="current63-lulu-tests-", dir="/private/tmp" if sys.platform == "darwin" else "/tmp")
+
+
+def tearDownModule():
+    TEST_ROOT.cleanup()
 
 
 def yaml_scalar(value: str) -> str:
@@ -75,11 +88,17 @@ def interface_scalars(text: str) -> dict[str, str]:
 
 
 def run_helper(*args: str) -> subprocess.CompletedProcess[str]:
+    if "--fixture" not in args and (not args or "--dump" in args):
+        if os.environ.get("REVIEW_LULU_ALERT_LIVE") != "1":
+            raise AssertionError("live reads require explicit REVIEW_LULU_ALERT_LIVE=1")
     return subprocess.run(
         [str(HELPER), *args],
         capture_output=True,
         text=True,
         timeout=120,
+        cwd=TEST_ROOT.name,
+        env=dict(os.environ, CLANG_MODULE_CACHE_PATH=TEST_ROOT.name + "/clang-cache",
+                 SWIFT_MODULECACHE_PATH=TEST_ROOT.name + "/swift-cache"),
     )
 
 
@@ -141,6 +160,7 @@ class HelperIsReadOnlyTests(unittest.TestCase):
             with self.subTest(call=call):
                 self.assertNotIn(call, source)
 
+    @requires_swift
     def test_helper_declares_no_action_flags(self):
         result = run_helper("--help")
         self.assertEqual(0, result.returncode, result.stderr)
@@ -278,11 +298,14 @@ class FixtureParsingTests(unittest.TestCase):
         for field in ("process_id", "process_path", "ip_address", "rule_scope"):
             self.assertIn(field, report["unreadable_fields"])
 
-    def test_queued_alerts_are_counted(self):
-        report = parse_fixture("alert-queued-second.json")
-
+    def test_multiple_windows_are_counted_without_selecting_an_alert(self):
+        result = run_helper("--fixture", str(FIXTURES / "alert-queued-second.json"))
+        self.assertEqual(70, result.returncode)
+        report = json.loads(result.stdout)
         self.assertEqual(2, report["alert_windows_open"])
-        self.assertEqual("/usr/bin/curl", report["process"]["path"])
+        self.assertIsNone(report["alert_present"])
+        self.assertEqual("incomplete", report["read_status"])
+        self.assertNotIn("process", report)
 
     def test_no_alert_state_is_a_clean_success(self):
         result = run_helper("--fixture", str(FIXTURES / "no-alert.json"))
@@ -311,7 +334,7 @@ class HelperErrorHandlingTests(unittest.TestCase):
     def test_fixture_with_wrong_schema_is_rejected(self):
         import tempfile
 
-        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
+        with tempfile.NamedTemporaryFile("w", suffix=".json", dir=TEST_ROOT.name, delete=False) as handle:
             json.dump({"schema": "something-else/9", "elements": []}, handle)
             path = handle.name
         self.addCleanup(Path(path).unlink)
@@ -323,10 +346,238 @@ class HelperErrorHandlingTests(unittest.TestCase):
 
 
 @requires_swift
+class SyntheticSafetyTests(unittest.TestCase):
+    def fixture(self, changes):
+        fixture = json.loads((FIXTURES / "alert-signed-tool.json").read_text())
+        changes(fixture)
+        with tempfile.NamedTemporaryFile("w", suffix=".json", dir=TEST_ROOT.name, delete=False) as handle:
+            json.dump(fixture, handle)
+        self.addCleanup(Path(handle.name).unlink)
+        return run_helper("--fixture", handle.name)
+
+    def test_missing_left_value_does_not_borrow_connection_data(self):
+        result = self.fixture(lambda root: root.__setitem__("elements", [
+            item for item in root["elements"] if item["index"] not in (24, 34)]))
+        report = json.loads(result.stdout)
+        self.assertIsNone(report["process"]["args"])
+        self.assertIsNone(report["process"]["path"])
+        self.assertIn("process_args", report["unreadable_fields"])
+        self.assertIn("process_path", report["unreadable_fields"])
+
+    def test_missing_peer_labels_do_not_remove_the_detail_cell_boundary(self):
+        result = self.fixture(lambda root: root.__setitem__("elements", [
+            item for item in root["elements"] if item["index"] not in (18, 24, 25)]))
+        report = json.loads(result.stdout)
+        self.assertIsNone(report["process"]["args"])
+        self.assertIn("process_args", report["unreadable_fields"])
+
+    def test_duplicate_labels_are_ambiguous(self):
+        def duplicate(root):
+            item = dict(next(item for item in root["elements"] if item.get("value") == "pid:"))
+            item["index"] = 100
+            root["elements"].append(item)
+        report = json.loads(self.fixture(duplicate).stdout)
+        self.assertIsNone(report["process"]["pid"])
+        self.assertIn("process_id", report["unreadable_fields"])
+
+    def test_multiple_selected_durations_are_not_arbitrarily_chosen(self):
+        def duplicate(root):
+            next(item for item in root["elements"] if item.get("title") == "Always")["number_value"] = 1
+        report = json.loads(self.fixture(duplicate).stdout)
+        self.assertIsNone(report["rule"]["duration"])
+        self.assertIn("rule_duration", report["unreadable_fields"])
+
+    def test_malformed_fixture_does_not_claim_no_alert(self):
+        for invalid in ({}, {"schema": "lulu-alert-ax-dump/1", "elements": "not an array"}):
+            with self.subTest(invalid=invalid):
+                result = self.fixture(lambda root: (root.clear(), root.update(invalid)))
+                self.assertEqual(64, result.returncode)
+                self.assertEqual("", result.stdout)
+
+    def test_boolean_pid_is_rejected(self):
+        result = self.fixture(lambda root: root["lulu"].__setitem__("pid", True))
+        self.assertEqual(64, result.returncode)
+
+    def test_duplicate_fixture_option_is_rejected(self):
+        result = run_helper("--fixture", str(FIXTURES / "no-alert.json"),
+                            "--fixture", str(FIXTURES / "alert-signed-tool.json"))
+        self.assertEqual(64, result.returncode)
+        self.assertEqual("", result.stdout)
+
+    def test_unknown_control_state_is_not_false_or_complete(self):
+        def unknown(root):
+            next(item for item in root["elements"] if item.get("title") == "Always")["number_value"] = None
+        report = json.loads(self.fixture(unknown).stdout)
+        self.assertIsNone(report["rule"]["duration"])
+        self.assertIsNone(report["rule"]["duration_options"][0]["selected"])
+        self.assertFalse(report["rule"]["duration_options_complete"])
+
+    def test_new_rule_labels_are_read_as_data(self):
+        def newer(root):
+            popup = next(item for item in root["elements"] if item["role"] == "AXPopUpButton")
+            popup["title"] = "Process + Kids"
+            selected = next(item for item in root["elements"] if item.get("title") == "Process lifetime")
+            selected["title"] = "Once"
+        report = json.loads(self.fixture(newer).stdout)
+        self.assertEqual("Process + Kids", report["rule"]["scope"])
+        self.assertEqual("Once", report["rule"]["duration"])
+
+    def test_unreadable_control_label_cannot_disappear_from_a_complete_group(self):
+        def hidden(root):
+            control = next(item for item in root["elements"] if item.get("title") == "Always")
+            control["title"] = None
+            control["number_value"] = 1
+        report = json.loads(self.fixture(hidden).stdout)
+        self.assertIsNone(report["rule"]["duration"])
+        self.assertFalse(report["rule"]["duration_options_complete"])
+        self.assertIsNone(report["rule"]["duration_options"][0]["label"])
+
+    def test_unlocated_control_cannot_make_selection_look_complete(self):
+        def unlocated(root):
+            next(item for item in root["elements"] if item.get("title") == "Always")["x"] = None
+        report = json.loads(self.fixture(unlocated).stdout)
+        self.assertIsNone(report["rule"]["duration"])
+        self.assertFalse(report["rule"]["duration_options_complete"])
+
+    def test_capture_issues_survive_replay_and_are_not_a_no_alert_success(self):
+        result = self.fixture(lambda root: (root.__setitem__("read_issues", ["Synthetic AX failure"]),
+                                           root.__setitem__("elements", []),
+                                           root["window"].update(found=False, alert_window_count=0, matched_by=None)))
+        self.assertEqual(70, result.returncode)
+        report = json.loads(result.stdout)
+        self.assertEqual(["Synthetic AX failure"], report["read_issues"])
+        self.assertIsNone(report["alert_present"])
+        self.assertNotIn("process", report)
+
+    def test_partial_capture_does_not_claim_complete_radio_options(self):
+        result = self.fixture(lambda root: root.__setitem__("read_issues", ["Synthetic truncated tree"]))
+        self.assertEqual(70, result.returncode)
+        report = json.loads(result.stdout)
+        self.assertTrue(report["alert_present"])
+        self.assertFalse(report["rule"]["duration_options_complete"])
+
+    def test_capture_time_is_preserved_not_replaced_by_replay_time(self):
+        report = json.loads(self.fixture(lambda root: root.__setitem__("captured_at", "2020-01-02T03:04:05Z")).stdout)
+        self.assertEqual("2020-01-02T03:04:05Z", report["captured_at"])
+        self.assertNotEqual(report["read_at"], report["captured_at"])
+        self.assertFalse(report["snapshot_atomic"])
+
+    def test_unsupported_and_contradictory_shapes_are_rejected(self):
+        changes = [
+            lambda root: root["lulu"].__setitem__("bundle_id", "example.invalid.wrong"),
+            lambda root: root["window"].__setitem__("found", False),
+            lambda root: root["window"].__setitem__("alert_window_count", True),
+            lambda root: root["elements"][1].__setitem__("x", True),
+            lambda root: root["elements"][1].__setitem__("index", 0),
+            lambda root: root["elements"][1].__setitem__("depth", 41),
+            lambda root: root["elements"][1].__setitem__("role", " "),
+            lambda root: root["elements"][1].__setitem__("role", None),
+            lambda root: root["elements"][1].__setitem__("index", 4000),
+            lambda root: root["lulu"].__setitem__("pid", 2147483648),
+            lambda root: root["lulu"].__setitem__("pid", None),
+            lambda root: root["window"].__setitem__("matched_by", "guessed"),
+            lambda root: root.__setitem__("unsupported", "not silently ignored"),
+            lambda root: root.__setitem__("read_issues", "wrong type"),
+        ]
+        for index, change in enumerate(changes):
+            with self.subTest(case=index):
+                result = self.fixture(change)
+                self.assertEqual(64, result.returncode)
+                self.assertEqual("", result.stdout)
+
+    def test_non_regular_and_oversized_fixtures_are_rejected_without_blocking(self):
+        with tempfile.TemporaryDirectory(dir=TEST_ROOT.name) as staging:
+            root = Path(staging)
+            fifo = root / "owned.fifo"
+            os.mkfifo(fifo)
+            large = root / "oversized.json"
+            with large.open("wb") as stream:
+                stream.truncate(8 * 1024 * 1024 + 1)
+            link = root / "owned-link.json"
+            link.symlink_to(FIXTURES / "no-alert.json")
+            for path in (fifo, root, large, link):
+                with self.subTest(kind=path.name):
+                    result = run_helper("--fixture", str(path))
+                    self.assertEqual(64, result.returncode)
+
+    def test_missing_expiry_fields_do_not_imply_a_known_duration(self):
+        def expires(root):
+            for item in root["elements"]:
+                if item["role"] == "AXRadioButton":
+                    item["number_value"] = int(item.get("title") == "Expires in:")
+        report = json.loads(self.fixture(expires).stdout)
+        self.assertIsNone(report["rule"]["duration"])
+        self.assertIn("rule_duration", report["unreadable_fields"])
+
+    def test_oversized_text_is_explicitly_unreadable(self):
+        def large(root):
+            next(item for item in root["elements"] if item["index"] == 24)["value"] = "x" * (16 * 1024 + 1)
+        report = json.loads(self.fixture(large).stdout)
+        self.assertIsNone(report["process"]["args"])
+        self.assertIn("oversized_text", report["unreadable_fields"])
+        self.assertIn("process_args", report["unreadable_fields"])
+
+    def test_invalid_alert_pid_is_unknown_not_an_actionable_process(self):
+        for pid in ("0", "-1", "2147483648"):
+            with self.subTest(pid=pid):
+                def invalid(root):
+                    next(item for item in root["elements"] if item["index"] == 20)["value"] = pid
+                report = json.loads(self.fixture(invalid).stdout)
+                self.assertIsNone(report["process"]["pid"])
+                self.assertIn("process_id", report["unreadable_fields"])
+
+    def test_repeated_label_values_have_a_bounded_projection(self):
+        def repeated(root):
+            root["elements"] = [dict(index=index, depth=1, role="AXStaticText", value=f"custom {index}:",
+                                      x=1, y=1, width=10, height=10) for index in range(100)]
+            root["elements"].append(dict(index=100, depth=1, role="AXStaticText", value="x" * 16000,
+                                         x=10, y=1, width=10, height=10))
+        result = self.fixture(repeated)
+        self.assertEqual(0, result.returncode, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertIn("raw_label_pairs_truncated", report["unreadable_fields"])
+        self.assertLess(len(result.stdout), 80000)
+
+    def test_opt_in_live_assertions_accept_fixture_backed_complete_and_incomplete_results(self):
+        partial = json.loads((FIXTURES / "alert-signed-tool.json").read_text())
+        partial["read_issues"] = ["Synthetic AX read failure"]
+        with tempfile.NamedTemporaryFile("w", suffix=".json", dir=TEST_ROOT.name, delete=False) as handle:
+            json.dump(partial, handle)
+        self.addCleanup(Path(handle.name).unlink)
+        fixtures = [FIXTURES / name for name in ("no-alert.json", "alert-signed-tool.json", "alert-queued-second.json")]
+        fixtures.append(Path(handle.name))
+        actual_run = run_helper
+        for fixture in fixtures:
+            with self.subTest(fixture=fixture.name):
+                parsed = actual_run("--fixture", str(fixture))
+                report = json.loads(parsed.stdout)
+                report["source"] = "live"  # Only the adapter label is replaced; data came from the fixture CLI.
+                live_result = subprocess.CompletedProcess([], parsed.returncode, json.dumps(report), parsed.stderr)
+                case = LiveReadTests("test_live_read_reports_complete_or_incomplete_alert_evidence")
+                with mock.patch(__name__ + ".run_helper", return_value=live_result):
+                    case.test_live_read_reports_complete_or_incomplete_alert_evidence()
+
+                dumped = actual_run("--dump", "--fixture", str(fixture))
+                def fixture_only(*args):
+                    if args == ("--dump",):
+                        return dumped
+                    if len(args) == 2 and args[0] == "--fixture":
+                        return actual_run(*args)
+                    raise AssertionError("unexpected live invocation in fixture-backed assertion check")
+                case = LiveReadTests("test_live_dump_round_trips_through_the_fixture_parser")
+                try:
+                    with mock.patch(__name__ + ".run_helper", side_effect=fixture_only):
+                        case.test_live_dump_round_trips_through_the_fixture_parser()
+                finally:
+                    case.doCleanups()
+
+
+@requires_swift
+@unittest.skipUnless(os.environ.get("REVIEW_LULU_ALERT_LIVE") == "1", "live AX reads require explicit opt-in")
 class LiveReadTests(unittest.TestCase):
     """Exercises the live Accessibility path against whatever LuLu is doing now."""
 
-    def test_live_read_succeeds_and_reports_a_boolean_alert_state(self):
+    def test_live_read_reports_complete_or_incomplete_alert_evidence(self):
         result = run_helper()
 
         if result.returncode == 69:
@@ -334,9 +585,16 @@ class LiveReadTests(unittest.TestCase):
         if result.returncode == 77:
             self.skipTest("Accessibility permission is not granted to the test runner")
 
-        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertIn(result.returncode, (0, 70), result.stderr)
         report = json.loads(result.stdout)
-        self.assertIn(report["alert_present"], (True, False))
+        if result.returncode == 0:
+            self.assertIsInstance(report["alert_present"], bool)
+            self.assertEqual("complete", report["read_status"])
+            self.assertEqual([], report["read_issues"])
+        else:
+            self.assertTrue(report["alert_present"] is None or report["alert_present"] is True)
+            self.assertEqual("incomplete", report["read_status"])
+            self.assertTrue(report["read_issues"])
         self.assertEqual("live", report["source"])
         self.assertEqual("com.objective-see.lulu.app", report["lulu"]["bundle_id"])
 
@@ -345,18 +603,24 @@ class LiveReadTests(unittest.TestCase):
 
         if dumped.returncode in (69, 77):
             self.skipTest("LuLu is unavailable or Accessibility is denied")
-        self.assertEqual(0, dumped.returncode, dumped.stderr)
+        self.assertIn(dumped.returncode, (0, 70), dumped.stderr)
+        raw = json.loads(dumped.stdout)
+        self.assertEqual(dumped.returncode == 70, bool(raw["read_issues"]))
 
         import tempfile
 
-        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
+        with tempfile.NamedTemporaryFile("w", suffix=".json", dir=TEST_ROOT.name, delete=False) as handle:
             handle.write(dumped.stdout)
             path = handle.name
         self.addCleanup(Path(path).unlink)
 
         replayed = run_helper("--fixture", path)
-        self.assertEqual(0, replayed.returncode, replayed.stderr)
-        self.assertEqual("fixture", json.loads(replayed.stdout)["source"])
+        self.assertEqual(dumped.returncode, replayed.returncode, replayed.stderr)
+        report = json.loads(replayed.stdout)
+        self.assertEqual("fixture", report["source"])
+        self.assertEqual("incomplete" if dumped.returncode == 70 else "complete", report["read_status"])
+        self.assertEqual(raw["read_issues"], report["read_issues"])
+        self.assertEqual(raw["captured_at"], report["captured_at"])
 
 
 if __name__ == "__main__":

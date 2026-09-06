@@ -94,3 +94,7 @@ Individual packages have focused batch commands described in the
 Project-local Emacs skills live under =emacs/.claude/= and =emacs/.codex/=.
 Their names and trigger descriptions are generated in the
 [[file:../agents/skill-inventory.org][tracked agent skill inventory]] rather than copied into this README.
+
+The project-local =document-elisp-extras= entries load the matching runtime's
+global workflow from this repository. They keep local discovery without a
+second procedure that can drift from the maintained documentation rules.

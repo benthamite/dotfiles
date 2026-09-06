@@ -3,103 +3,23 @@ name: document-elisp-extras
 description: Audit, create, or refresh documentation for all Emacs extras packages in the dotfiles repo. Use when the user asks to document every extras package, fill missing extras docs, refresh outdated extras docs, check extras documentation coverage, or bring emacs/extras/doc up to date with emacs/extras sources.
 ---
 
-# Document extras packages
+# Project-local extras documentation entry
 
-Scan all Emacs extras packages, identify missing or outdated documentation, and create or update their `.org` manuals.
+Load the maintained global workflow before doing any documentation work.
+This entry preserves project-local discovery without duplicating its procedures.
 
-Use `document-elisp-package` for the detailed documentation style and source-analysis rules. This skill is the batch workflow for the dotfiles extras tree.
+Resolve the dotfiles root relative to **this SKILL.md file**, not the current
+working directory: it is four parent directories above this skill directory.
+Then read the complete file for the active runtime:
 
-## When not to use
+- Codex: `codex/skills/document-elisp-extras/SKILL.md` under that root.
+- Claude: `claude/skills/document-elisp-extras/SKILL.md` under that root.
 
-- For a single Elisp package or file, use `document-elisp-package` directly.
-- For generating GitHub-facing Markdown from an existing Org manual, use `generate-readme`.
-- For linting, byte-compilation, or release readiness, use the relevant Elisp lint or release workflow instead.
-- For non-extras packages outside `~/My Drive/dotfiles/emacs/extras/`, use `document-elisp-package` unless the user explicitly asks for a broader batch documentation pass.
+Use that exact file path. A name-only lookup may select this local entry again;
+an `@path` string is not a portable automatic import. Follow the global workflow
+and its required documentation instructions, preserving the user's requested
+package scope, audit-only versus editing mode, and processing order.
 
-## Documentation guidelines
-
-@claude/skills/document-elisp-package/SKILL.md
-
-## File locations
-
-- **Source files**: `~/My Drive/dotfiles/emacs/extras/*.el`
-- **Doc files**: `~/My Drive/dotfiles/emacs/extras/doc/*.org`
-- **Emacs config** (for sample configurations): `~/My Drive/dotfiles/emacs/config.org`
-- **Texinfo export hook**: `~/My Drive/dotfiles/emacs/extras/doc/.dir-locals.el`
-
-Each top-level `.el` file should have a corresponding `.org` file in `doc/` with the same base name (for example, `ebib-extras.el` -> `doc/ebib-extras.org`). This includes files such as `paths.el` whose name does not end in `-extras`.
-
-## Procedure
-
-### 1. Prepare
-
-- Read `document-elisp-package` before judging documentation quality.
-- Check `git status --short` and note unrelated dirty files. Do not stage or rewrite unrelated changes.
-- If editing this paired global skill itself, update both `claude/skills/document-elisp-extras/SKILL.md` and `codex/skills/document-elisp-extras/SKILL.md` unless `ai-config-sync.json` records an explicit divergence.
-
-### 2. Scan and classify
-
-Scan top-level `.el` files in the extras directory. For each source file, check whether a corresponding `.org` file exists in `doc/`. A useful inventory command is:
-
-```bash
-while IFS= read -r src; do
-  base=$(basename "$src" .el)
-  test -f "emacs/extras/doc/$base.org" || printf 'missing %s\n' "$base"
-done < <(find emacs/extras -maxdepth 1 -type f -name '*.el' | sort)
-```
-
-Classify each package as:
-
-- **Missing**: no `.org` file, so create documentation from scratch.
-- **Existing**: `.org` file present, so compare against source for staleness and quality.
-
-### 3. Analyze existing docs for staleness
-
-For packages with existing docs, perform the structural diff, content diff, and quality check described in `document-elisp-package`.
-
-At minimum, compare the documented public surface against the public definitions in the source:
-
-```bash
-rg -n '^\((defcustom|defvar|defconst|defun)\s+' emacs/extras/PACKAGE.el
-```
-
-Exclude internal `--` symbols from the required documentation set unless the existing manual explains them as implementation context. For commands, confirm whether each `defun` is interactive before deciding it belongs in the `Commands` section.
-
-### 4. Process packages
-
-Use subagents when available, ideally one package per worker. Each worker must read the `.el` source and the existing `.org` manual, then either create a new manual or update the existing one according to `document-elisp-package`.
-
-If subagents are unavailable, process packages in small independent batches. Do not skip the source/doc comparison just because many packages need attention.
-
-### 5. Verify
-
-Before committing any package documentation change:
-
-- Re-read the changed `.org` manual and compare it with the source definitions.
-- Confirm each changed manual has required front matter, `CUSTOM_ID` drawers, Texinfo index entries, and the final `* Indices` section from `document-elisp-package`.
-- Export changed manuals to Texinfo, or save them in Emacs so `emacs/extras/doc/.dir-locals.el` exports them. When running a direct export, use:
-
-```bash
-emacs --batch -Q --visit emacs/extras/doc/PACKAGE.org \
-  --eval "(require 'ox-texinfo)" \
-  --funcall org-texinfo-export-to-texinfo
-```
-
-- Check `git diff -- emacs/extras/PACKAGE.el emacs/extras/doc/PACKAGE.org emacs/extras/doc/PACKAGE.texi` to ensure only intended documentation and generated Texinfo changes are present.
-
-### 6. Commit changes
-
-After processing all packages, commit changes to git. Use one commit per package:
-- For newly created docs: `PACKAGE: create documentation`
-- For updated docs: `PACKAGE: update documentation`
-
-Stage only the package's documentation files and generated Texinfo for that commit. If unrelated dirty files are present, leave them unstaged.
-
-## Final response
-
-Report:
-
-- Packages documented or updated.
-- Verification performed, including Texinfo export status.
-- Commit hashes created.
-- Any packages left unresolved and why.
+If the matching global file is missing, unreadable or resolves back to this
+entry, report the unavailable prerequisite. Do not proceed from an old duplicate
+or silently load a different runtime's workflow.

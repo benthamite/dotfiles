@@ -4,6 +4,11 @@ import importlib.util
 import io
 import json
 import multiprocessing
+import os
+import shlex
+import stat
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -275,7 +280,7 @@ class WalkListTests(unittest.TestCase):
         prior = {"/unrelated/path": "untouched"}
         self.walk.save_registry(prior)
         original_atomic = self.walk.atomic_json
-        original_replace = self.walk.os.replace
+        original_exchange = self.walk.exchange_paths
 
         def fail_state(path, data):
             if path.name == "state.json":
@@ -285,12 +290,12 @@ class WalkListTests(unittest.TestCase):
         def fail_stub(source, target):
             if Path(target) == self.source:
                 raise OSError("fixture stub failure")
-            return original_replace(source, target)
+            return original_exchange(source, target)
 
         for target, replacement in (("atomic_json", fail_state),
                                     ("save_registry", mock.Mock(side_effect=OSError("fixture registry failure"))),
-                                    ("os.replace", fail_stub)):
-            owner, name = (self.walk.os, "replace") if target == "os.replace" else (self.walk, target)
+                                    ("exchange_paths", fail_stub)):
+            owner, name = self.walk, target
             with self.subTest(target=target), mock.patch.object(owner, name, replacement):
                 with self.assertRaises(OSError):
                     self.call("start", self.source, 1)
@@ -336,15 +341,15 @@ class WalkListTests(unittest.TestCase):
         sid, directory, _ = self.start()
         self.complete()
         stub, state = self.source.read_bytes(), (directory / "state.json").read_bytes()
-        original_replace = self.walk.os.replace
+        original_exchange = self.walk.exchange_paths
 
         def fail_replace(source, target):
             if Path(target) == self.source:
                 raise OSError("fixture restore failure")
-            return original_replace(source, target)
+            return original_exchange(source, target)
 
         for owner, name, replacement in [
-                (self.walk.os, "replace", fail_replace),
+                (self.walk, "exchange_paths", fail_replace),
                 (self.walk, "save_registry", mock.Mock(side_effect=OSError("fixture registry failure")))]:
             with self.subTest(name=name), mock.patch.object(owner, name, replacement):
                 with self.assertRaises(OSError):
@@ -403,6 +408,432 @@ class WalkListTests(unittest.TestCase):
         self.assertNotIn("Recorded", captured.getvalue())
         self.assertNotIn("second", captured.getvalue())
         self.assertEqual((directory / "state.json").read_bytes(), original)
+
+    def recovery_directories(self):
+        return sorted(self.root.glob(f".{self.source.name}.walk-recovery-*"))
+
+    def publication_race(self, command, *, second_replacement=False):
+        original = self.source.read_bytes()
+        if command == "restore":
+            self.start()
+            self.complete()
+        native_exchange = self.walk.exchange_paths
+        replacements = [b"foreign replacement one\n", b"foreign replacement two\n"]
+        calls = []
+
+        def replace_at_exchange(staged, target):
+            if not calls or (second_replacement and len(calls) == 1):
+                self.source.unlink()
+                self.source.write_bytes(replacements[len(calls)])
+            calls.append(True)
+            return native_exchange(staged, target)
+
+        expected_error = (self.walk.PublicationRecoveryError if second_replacement else SystemExit)
+        output = io.StringIO()
+        with mock.patch.object(self.walk, "exchange_paths", side_effect=replace_at_exchange):
+            with contextlib.redirect_stdout(output), self.assertRaises(expected_error):
+                if command == "start":
+                    self.walk.cmd_start(self.source, 1)
+                else:
+                    self.walk.cmd_restore(self.source)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(self.source.read_bytes(), replacements[0])
+        self.assertNotIn("STARTED", output.getvalue())
+        self.assertNotIn("Restored", output.getvalue())
+        saved_sources = list(self.walk.DATA_ROOT.glob("*/source.json"))
+        self.assertEqual([path.read_bytes() for path in saved_sources], [original])
+        if second_replacement:
+            retained = self.recovery_directories()
+            self.assertEqual(len(retained), 1)
+            self.assertEqual(stat.S_IMODE(retained[0].stat().st_mode), 0o700)
+            self.assertEqual((retained[0] / "entry").read_bytes(), replacements[1])
+            self.assertTrue(self.walk.load_registry())
+        else:
+            self.assertEqual(self.recovery_directories(), [])
+            self.assertEqual(bool(self.walk.load_registry()), command == "restore")
+
+    def test_start_preserves_replacement_at_actual_native_exchange(self):
+        self.publication_race("start")
+
+    def test_restore_preserves_replacement_at_actual_native_exchange(self):
+        self.publication_race("restore")
+
+    def test_start_retains_both_foreign_files_when_rollback_also_races(self):
+        self.publication_race("start", second_replacement=True)
+
+    def test_restore_retains_both_foreign_files_when_rollback_also_races(self):
+        self.publication_race("restore", second_replacement=True)
+
+    def test_symlink_replacement_is_restored_without_touching_its_referent(self):
+        self.start()
+        self.complete()
+        target = self.root / "foreign.txt"
+        target.write_bytes(b"referent must not change")
+        native_exchange = self.walk.exchange_paths
+        calls = []
+
+        def insert_link(staged, destination):
+            if not calls:
+                self.source.unlink()
+                self.source.symlink_to(target)
+            calls.append(True)
+            return native_exchange(staged, destination)
+
+        with mock.patch.object(self.walk, "exchange_paths", side_effect=insert_link):
+            with self.assertRaisesRegex(SystemExit, "replacement preserved"):
+                self.call("restore", self.source)
+        self.assertTrue(self.source.is_symlink())
+        self.assertEqual(target.read_bytes(), b"referent must not change")
+        self.assertEqual(self.recovery_directories(), [])
+
+    def test_successful_exchange_followed_by_error_is_rolled_back(self):
+        original = self.source.read_bytes()
+        native_exchange = self.walk.exchange_paths
+        calls = []
+
+        def exchange_then_error(staged, target):
+            native_exchange(staged, target)
+            calls.append(True)
+            if len(calls) == 1:
+                raise OSError("fixture interrupted after completed native exchange")
+
+        with mock.patch.object(self.walk, "exchange_paths", side_effect=exchange_then_error):
+            with self.assertRaisesRegex(OSError, "interrupted"):
+                self.call("start", self.source, 1)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(self.source.read_bytes(), original)
+        self.assertEqual(self.walk.load_registry(), {})
+        self.assertEqual(self.recovery_directories(), [])
+
+    def test_unavailable_native_exchange_never_uses_replace_fallback(self):
+        original = self.source.read_bytes()
+        with mock.patch.object(self.walk.sys, "platform", "unsupported-fixture"):
+            with self.assertRaisesRegex(OSError, "unavailable"):
+                self.call("start", self.source, 1)
+        self.assertEqual(self.source.read_bytes(), original)
+        self.assertEqual(self.walk.load_registry(), {})
+        self.assertEqual(self.recovery_directories(), [])
+
+    def test_missing_destination_at_exchange_is_not_recreated(self):
+        original = self.source.read_bytes()
+        native_exchange = self.walk.exchange_paths
+
+        def remove_before_exchange(staged, target):
+            self.source.unlink()
+            return native_exchange(staged, target)
+
+        with mock.patch.object(self.walk, "exchange_paths", side_effect=remove_before_exchange):
+            with self.assertRaisesRegex(self.walk.PublicationRecoveryError, "retained"):
+                self.call("start", self.source, 1)
+        self.assertFalse(self.source.exists())
+        self.assertEqual(len(self.recovery_directories()), 1)
+        copies = list(self.walk.DATA_ROOT.glob("*/source.json"))
+        self.assertEqual([path.read_bytes() for path in copies], [original])
+
+    def test_private_created_modes_and_original_input_mode_mtime_restore(self):
+        previous_mask = os.umask(0o022)
+        self.addCleanup(os.umask, previous_mask)
+        self.source.chmod(0o640)
+        original_times = (1_600_000_000_000_000_000, 1_600_000_001_000_000_000)
+        os.utime(self.source, ns=original_times)
+        _, directory, _ = self.start()
+        for path in (self.walk.DATA_ROOT, directory):
+            self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o700)
+        for path in (directory / "source.json", directory / "state.json",
+                     self.walk.REGISTRY_PATH, self.walk.DATA_ROOT / "registry.lock"):
+            self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
+        self.complete()
+        self.assertEqual(stat.S_IMODE((directory / "state.lock").stat().st_mode), 0o600)
+        self.call("restore", self.source)
+        self.assertEqual(stat.S_IMODE(self.walk.OUTPUT_ROOT.stat().st_mode), 0o700)
+        self.assertEqual(stat.S_IMODE(self.outputs()[0].stat().st_mode), 0o600)
+        self.assertEqual(stat.S_IMODE(self.source.stat().st_mode), 0o640)
+        self.assertEqual(self.source.stat().st_mtime_ns, original_times[1])
+
+    def test_existing_readable_roots_are_not_chmodded_and_new_copies_are_private(self):
+        self.walk.ensure_root()
+        self.walk.DATA_ROOT.chmod(0o755)
+        self.walk.OUTPUT_ROOT.mkdir(mode=0o755)
+        previous = self.walk.OUTPUT_ROOT / "existing-evidence.txt"
+        previous.write_bytes(b"existing user file")
+        previous.chmod(0o644)
+        _, directory, _ = self.start()
+        self.assertEqual(stat.S_IMODE(directory.stat().st_mode), 0o700)
+        self.assertEqual(stat.S_IMODE((directory / "source.json").stat().st_mode), 0o600)
+        self.complete()
+        self.call("restore", self.source)
+        for path in (self.walk.DATA_ROOT, self.walk.OUTPUT_ROOT):
+            self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o755)
+        self.assertEqual(stat.S_IMODE(previous.stat().st_mode), 0o644)
+        self.assertEqual(previous.read_bytes(), b"existing user file")
+        self.assertEqual(stat.S_IMODE(self.outputs()[0].stat().st_mode), 0o600)
+
+    def test_legacy_source_metadata_defaults_restore_without_migration(self):
+        _, directory, _ = self.start()
+        state = self.state(directory)
+        for key in ("source_mode", "source_atime_ns", "source_mtime_ns"):
+            state.pop(key)
+        self.walk.atomic_json(directory / "state.json", state)
+        stored = directory / "source.json"
+        stored.chmod(0o640)
+        os.utime(stored, ns=(1_500_000_000_000_000_000, 1_500_000_001_000_000_000))
+        self.complete()
+        self.call("restore", self.source)
+        self.assertEqual(stat.S_IMODE(self.source.stat().st_mode), 0o640)
+        self.assertEqual(self.source.stat().st_mtime_ns, 1_500_000_001_000_000_000)
+
+    def test_original_mode_comes_from_the_same_captured_preimage(self):
+        original_capture = self.walk.capture_entry
+        changed = []
+
+        def chmod_at_capture(path, **kwargs):
+            if path == self.source and not changed:
+                self.source.chmod(0o640)
+                changed.append(True)
+            return original_capture(path, **kwargs)
+
+        with mock.patch.object(self.walk, "capture_entry", side_effect=chmod_at_capture):
+            _, directory, _ = self.start()
+        self.assertEqual(self.state(directory)["source_mode"], 0o640)
+        self.complete()
+        self.call("restore", self.source)
+        self.assertEqual(stat.S_IMODE(self.source.stat().st_mode), 0o640)
+
+    def test_symlink_store_root_is_refused_without_chmod_or_writes(self):
+        target = self.root / "foreign-root"
+        target.mkdir(mode=0o755)
+        self.walk.DATA_ROOT.symlink_to(target, target_is_directory=True)
+        with self.assertRaisesRegex(SystemExit, "non-symlink"):
+            self.call("start", self.source, 1)
+        self.assertEqual(list(target.iterdir()), [])
+        self.assertEqual(stat.S_IMODE(target.stat().st_mode), 0o755)
+
+    def test_symlink_session_root_is_refused_without_traversal(self):
+        sid, directory, _ = self.start()
+        retained = self.root / "relocated-session"
+        directory.rename(retained)
+        directory.symlink_to(retained, target_is_directory=True)
+        with self.assertRaisesRegex(SystemExit, "non-symlink"):
+            self.call("status", self.source)
+        self.assertTrue((retained / "source.json").is_file())
+        self.assertEqual(self.walk.load_registry()[str(self.source)], sid)
+
+    def test_unowned_session_directory_is_refused_without_permission_changes(self):
+        _, directory, _ = self.start()
+        before = directory.stat().st_mode
+        foreign_uid = os.getuid() + 1
+        with mock.patch.object(self.walk.os, "getuid", return_value=foreign_uid):
+            with self.assertRaisesRegex(SystemExit, "owned"):
+                self.walk.resolve_session(self.source)
+        self.assertEqual(directory.stat().st_mode, before)
+
+    def test_start_reconciles_verified_registry_write_after_reported_error(self):
+        original_save = self.walk.save_registry
+
+        def saved_then_failed(registry):
+            original_save(registry)
+            raise OSError("fixture lost registry acknowledgement")
+
+        errors = io.StringIO()
+        with mock.patch.object(self.walk, "save_registry", side_effect=saved_then_failed):
+            with contextlib.redirect_stderr(errors):
+                _, directory, output = self.start()
+        self.assertIn("exact intended bytes", errors.getvalue())
+        self.assertIn("STARTED", output)
+        self.assertTrue(self.walk.is_stub(self.source))
+        self.assertEqual(self.state(directory)["cursor"], 0)
+        self.assertEqual(self.recovery_directories(), [])
+
+    def test_restore_reconciles_verified_registry_removal_after_reported_error(self):
+        original = self.source.read_bytes()
+        _, directory, _ = self.start()
+        self.complete()
+        original_save = self.walk.save_registry
+
+        def saved_then_failed(registry):
+            original_save(registry)
+            raise OSError("fixture lost registry acknowledgement")
+
+        errors = io.StringIO()
+        with mock.patch.object(self.walk, "save_registry", side_effect=saved_then_failed):
+            with contextlib.redirect_stderr(errors):
+                output = self.call("restore", self.source)
+        self.assertIn("exact intended bytes", errors.getvalue())
+        self.assertIn("Restored", output)
+        self.assertEqual(self.source.read_bytes(), original)
+        self.assertEqual(self.walk.load_registry(), {})
+        self.assertFalse(directory.exists())
+        self.assertEqual(self.recovery_directories(), [])
+
+    def test_unknown_registry_postimage_is_retained_without_false_rollback(self):
+        original = self.source.read_bytes()
+        self.walk.ensure_root()
+        prior = {"/unrelated": "keep"}
+        self.walk.save_registry(prior)
+        original_save = self.walk.save_registry
+
+        def unexpected_postimage(registry):
+            original_save(dict(registry, **{"/concurrent": "preserve"}))
+            raise OSError("fixture unexpected registry postimage")
+
+        output = io.StringIO()
+        with mock.patch.object(self.walk, "save_registry", side_effect=unexpected_postimage):
+            with contextlib.redirect_stdout(output):
+                with self.assertRaisesRegex(self.walk.RegistryRecoveryError, "uncertain"):
+                    self.walk.cmd_start(self.source, 1)
+        self.assertEqual(self.source.read_bytes(), original)
+        observed = self.walk.load_registry()
+        self.assertEqual(observed["/unrelated"], "keep")
+        self.assertEqual(observed["/concurrent"], "preserve")
+        self.assertIn(str(self.source), observed)
+        self.assertEqual(len(self.recovery_directories()), 1)
+        self.assertEqual(len(list(self.walk.DATA_ROOT.glob("*/source.json"))), 1)
+        self.assertNotIn("STARTED", output.getvalue())
+
+    def test_unreadable_registry_error_readback_is_explicit_uncertainty(self):
+        original = self.source.read_bytes()
+        original_save = self.walk.save_registry
+        original_read = self.walk.registry_bytes
+        reads = []
+
+        def saved_then_failed(registry):
+            original_save(registry)
+            raise OSError("fixture write failure")
+
+        def unreadable_after_write():
+            reads.append(True)
+            if len(reads) > 1:
+                raise PermissionError("fixture unavailable registry")
+            return original_read()
+
+        with mock.patch.object(self.walk, "save_registry", side_effect=saved_then_failed):
+            with mock.patch.object(self.walk, "registry_bytes", side_effect=unreadable_after_write):
+                with self.assertRaisesRegex(self.walk.RegistryRecoveryError, "unreadable"):
+                    self.call("start", self.source, 1)
+        self.assertEqual(self.source.read_bytes(), original)
+        self.assertEqual(len(self.recovery_directories()), 1)
+        self.assertTrue(self.walk.load_registry())
+
+    def test_start_retains_staging_if_registry_rollback_fails_before_effect(self):
+        original = self.source.read_bytes()
+        original_save = self.walk.save_registry
+        calls = []
+
+        def fail_second_save(registry):
+            calls.append(True)
+            if len(calls) == 2:
+                raise OSError("fixture rollback write failed before effect")
+            original_save(registry)
+
+        with mock.patch.object(self.walk, "save_registry", side_effect=fail_second_save):
+            with mock.patch.object(self.walk, "exchange_paths", side_effect=OSError("fixture exchange failed")):
+                with self.assertRaisesRegex(self.walk.RegistryRecoveryError, "rollback failed"):
+                    self.call("start", self.source, 1)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(self.source.read_bytes(), original)
+        self.assertTrue(self.walk.load_registry())
+        self.assertEqual(len(self.recovery_directories()), 1)
+        self.assertTrue((self.recovery_directories()[0] / "entry").is_file())
+        self.assertEqual(len(list(self.walk.DATA_ROOT.glob("*/source.json"))), 1)
+
+    def test_fifo_registry_lock_refuses_without_waiting_for_a_reader(self):
+        original = self.source.read_bytes()
+        self.walk.ensure_root()
+        os.mkfifo(self.walk.DATA_ROOT / "registry.lock", mode=0o600)
+        status, _ = self.result(self.worker("start", [str(self.source), 1]))
+        self.assertEqual(status, "error")
+        self.assertEqual(self.source.read_bytes(), original)
+
+    def test_fifo_state_lock_refuses_without_waiting_for_a_reader(self):
+        _, directory, _ = self.start()
+        before = (directory / "state.json").read_bytes()
+        os.mkfifo(directory / "state.lock", mode=0o600)
+        status, _ = self.result(self.worker("next", [str(self.source), "never recorded"]))
+        self.assertEqual(status, "error")
+        self.assertEqual((directory / "state.json").read_bytes(), before)
+
+    def test_private_text_files_explicitly_use_utf8_and_binary_mode_stays_binary(self):
+        target = self.root / "unicode-evidence.json"
+        native_fdopen = self.walk.os.fdopen
+        with mock.patch.object(self.walk.os, "fdopen", wraps=native_fdopen) as opened:
+            with self.walk.private_file(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, "w") as stream:
+                stream.write("caf\u00e9 \U0001f680")
+        self.assertEqual(opened.call_args.kwargs, {"encoding": "utf-8"})
+        self.assertEqual(target.read_bytes(), "caf\u00e9 \U0001f680".encode("utf-8"))
+        binary = self.root / "binary-copy"
+        with self.walk.private_file(binary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, "wb") as stream:
+            stream.write(b"\xff\x00")
+        self.assertEqual(binary.read_bytes(), b"\xff\x00")
+
+    def test_unicode_export_roundtrips_under_ascii_default_file_encoding(self):
+        code = (
+            "import contextlib,io,locale,sys\n"
+            "from pathlib import Path\n"
+            "from test_walk_list import load_walk\n"
+            "root=Path(sys.argv[1]); walk=load_walk(root)\n"
+            "source=root/'unicode.json'\n"
+            "source.write_bytes('[\"caf\\u00e9 \\U0001f680\"]'.encode('utf-8'))\n"
+            "with contextlib.redirect_stdout(io.StringIO()):\n"
+            " walk.cmd_start(source,1)\n"
+            " walk.cmd_next(source,'r\\u00e9sum\\u00e9')\n"
+            " walk.cmd_restore(source)\n"
+            "print(locale.getencoding())\n"
+        )
+        root = self.root / "ascii-native"
+        root.mkdir()
+        result = subprocess.run(
+            [sys.executable, "-c", code, str(root)],
+            env={"PATH": "/usr/bin:/bin", "TMPDIR": str(self.root),
+                 "PYTHONPATH": str(REPO / "tests"), "PYTHONDONTWRITEBYTECODE": "1",
+                 "PYTHONUTF8": "0", "PYTHONCOERCECLOCALE": "0",
+                 "PYTHONIOENCODING": "utf-8", "LC_ALL": "C"},
+            capture_output=True, text=True, encoding="utf-8", timeout=15,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(result.stdout.strip().lower(), {"ascii", "ansi_x3.4-1968", "us-ascii"})
+        evidence = next((root / "out").glob("*.walk-decisions.json"))
+        data = json.loads(evidence.read_text(encoding="utf-8"))
+        self.assertEqual(data["decisions"][0]["item"], "caf\u00e9 \U0001f680")
+        self.assertEqual(data["decisions"][0]["decision"], "r\u00e9sum\u00e9")
+
+    def test_actionable_hints_quote_exact_script_path_input_and_placeholders(self):
+        source = self.root / "items ;$(printf never) 'quoted'.json"
+        source.write_bytes(self.source.read_bytes())
+        _, _, output = self.start(source=source)
+
+        def command_after(text, prefix):
+            line = next(line for line in text.splitlines() if prefix in line)
+            return shlex.split(line.split(prefix, 1)[1].split("  (", 1)[0])
+
+        prefix = ["python", str(SCRIPT)]
+        self.assertEqual(command_after(output, "When done: "),
+                         prefix + ["next", str(source), "<decision>"])
+        next_output = self.call("next", source, "first literal verdict")
+        self.assertEqual(command_after(next_output, "When done: "),
+                         prefix + ["next", str(source), "<decision>"])
+        completed = self.call("next", source, "second literal verdict")
+        self.assertEqual(command_after(completed, "Run: "), prefix + ["restore", str(source)])
+        self.call("restore", source)
+        with self.assertRaises(SystemExit) as error:
+            self.call("status", source)
+        self.assertEqual(shlex.split(str(error.exception).split("Run: ", 1)[1]),
+                         prefix + ["start", str(source)])
+        _, _, pool = self.start(cap=2, source=source)
+        self.assertEqual(command_after(pool, "Use: "), prefix + ["dispatch", str(source)])
+
+    def test_inflight_hints_include_literal_argv_and_worker_safety_boundary(self):
+        self.start()
+        self.claim()
+        with self.assertRaises(SystemExit) as error:
+            self.call("next", self.source, "unrecorded")
+        message = str(error.exception)
+        hints = message.split("`")
+        self.assertEqual(shlex.split(hints[1]),
+                         ["python", str(SCRIPT), "record", str(self.source), "<token>", "<decision>"])
+        self.assertEqual(shlex.split(hints[3]),
+                         ["python", str(SCRIPT), "release-stale", str(self.source), "<age-seconds>"])
+        self.assertIn("confirming worker termination", message)
+        self.assertIn("reconciling its effects", message)
 
     def worker(self, command, args, **kwargs):
         ctx = multiprocessing.get_context("spawn")

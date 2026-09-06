@@ -399,9 +399,11 @@ attachment callbacks. It verifies work identity and labels uncertain metadata;
 its opt-in DOI downloader rejects unsafe destinations and unsupported mutations.
 
 Both interactive and programmatic =walk-list= copies use exact input identity
-and recoverable, locked lifecycle transitions. Workers must finish or stop before
-claim reuse; completing the queue preserves session-specific evidence and never
-overwrites an unrelated replacement file.
+and locked lifecycle transitions. Native atomic exchange detects displaced-file
+races and retains uncertain recovery data; new stored copies and evidence use
+owner-only mode bits. Workers must finish or stop before claim reuse. Reconcile
+lost command acknowledgements before retrying, and distinguish a fully recorded
+queue from successful task outcomes.
 
 The programmatic Hartree trial queue reviews source before execution, keeps
 trial dependencies outside Drive, and promotes only a user-accepted candidate.

@@ -29,6 +29,8 @@ Utilities:
     walk.py abort <file>
 """
 import contextlib
+import ctypes
+import errno
 import fcntl
 import functools
 import io
@@ -37,6 +39,7 @@ import math
 import os
 import shlex
 import shutil
+import stat
 import sys
 import tempfile
 import uuid
@@ -79,7 +82,46 @@ def walk_command(*args: str) -> str:
 
 
 def ensure_root() -> None:
-    DATA_ROOT.mkdir(parents=True, exist_ok=True)
+    ensure_private_directory(DATA_ROOT)
+
+
+def ensure_private_directory(path: Path) -> None:
+    """Create private directories without changing permissions of existing ones."""
+    try:
+        existing = path.lstat()
+    except FileNotFoundError:
+        if not path.parent.exists():
+            ensure_private_directory(path.parent)
+        try:
+            path.mkdir(mode=0o700)
+        except FileExistsError:
+            pass
+        existing = path.lstat()
+    require_owned_directory(path)
+
+
+def require_owned_directory(path: Path) -> None:
+    """Validate an existing directory without creating or chmodding it."""
+    existing = path.lstat()
+    if not stat.S_ISDIR(existing.st_mode) or existing.st_uid != os.getuid():
+        raise SystemExit(f"ERROR: expected an owned, non-symlink directory: {path}")
+
+
+@contextlib.contextmanager
+def private_file(path: Path, flags: int, mode: str):
+    """Open owned regular files without following links; new files request 0600."""
+    fd = os.open(path, flags | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
+    try:
+        metadata = os.fstat(fd)
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_uid != os.getuid():
+            raise SystemExit(f"ERROR: expected an owned regular file: {path}")
+        text_options = {} if "b" in mode else {"encoding": "utf-8"}
+        with os.fdopen(fd, mode, **text_options) as stream:
+            fd = None
+            yield stream
+    finally:
+        if fd is not None:
+            os.close(fd)
 
 
 def load_registry() -> dict:
@@ -91,6 +133,42 @@ def load_registry() -> dict:
 def save_registry(reg: dict) -> None:
     ensure_root()
     atomic_json(REGISTRY_PATH, reg)
+
+
+def registry_bytes():
+    try:
+        return REGISTRY_PATH.read_bytes()
+    except FileNotFoundError:
+        return None
+
+
+def save_registry_checked(reg: dict) -> None:
+    """Distinguish an unchanged registry from a committed-but-reported failure."""
+    try:
+        before = registry_bytes()
+    except OSError as error:
+        raise RegistryRecoveryError(
+            "registry preimage is unreadable; session/recovery data retained"
+        ) from error
+    desired = json.dumps(reg, indent=2, ensure_ascii=False).encode("utf-8")
+    try:
+        save_registry(reg)
+    except BaseException as error:
+        try:
+            observed = registry_bytes()
+        except OSError as read_error:
+            raise RegistryRecoveryError(
+                "registry write outcome is unreadable; session/recovery data retained"
+            ) from read_error
+        if observed == before and observed != desired:
+            raise
+        if observed == desired and isinstance(error, Exception):
+            print("WARNING: registry write reported a failure; exact intended bytes "
+                  "were verified before continuing.", file=sys.stderr)
+            return
+        raise RegistryRecoveryError(
+            "registry write outcome is uncertain or interrupted; session/recovery data retained"
+        ) from error
 
 
 def stage_bytes(path: Path, data: bytes) -> Path:
@@ -122,7 +200,7 @@ def serialized_command(function):
     @functools.wraps(function)
     def serialized(*args, **kwargs):
         ensure_root()
-        with (DATA_ROOT / "registry.lock").open("a") as lock:
+        with private_file(DATA_ROOT / "registry.lock", os.O_CREAT | os.O_APPEND | os.O_WRONLY, "a") as lock:
             fcntl.flock(lock, fcntl.LOCK_EX)
             try:
                 output = io.StringIO()
@@ -145,11 +223,12 @@ def resolve_session(input_file: Path) -> tuple[str, Path]:
     sid = reg.get(key)
     if not sid:
         raise SystemExit(
-            f"ERROR: no active walk for {input_file}. Run: walk.py start {input_file}"
+            f"ERROR: no active walk for {input_file}. Run: {walk_command('start', str(input_file))}"
         )
     sdir = DATA_ROOT / sid
     if not sdir.exists():
         raise SystemExit(f"ERROR: registry points to missing session dir {sdir}")
+    require_owned_directory(sdir)
     require_owned_stub(input_file, sid)
     return sid, sdir
 
@@ -160,7 +239,7 @@ def locked_state(sdir: Path):
     walk.py invocations (e.g. subagents calling `record` simultaneously) don't
     clobber each other."""
     state_path = sdir / "state.json"
-    with open(sdir / "state.lock", "a", encoding="utf-8") as f:
+    with private_file(sdir / "state.lock", os.O_CREAT | os.O_APPEND | os.O_WRONLY, "a") as f:
         fcntl.flock(f.fileno(), fcntl.LOCK_EX)
         try:
             original = state_path.read_text(encoding="utf-8")
@@ -245,6 +324,173 @@ def file_identity(path: Path) -> tuple:
     return stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns
 
 
+def capture_entry(path: Path, *, with_metadata=False) -> tuple:
+    """Capture an entry itself, never a symlink's referent."""
+    before = path.lstat()
+    identity = (before.st_dev, before.st_ino, before.st_mode,
+                before.st_size, before.st_mtime_ns)
+    if stat.S_ISREG(before.st_mode):
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+        with os.fdopen(fd, "rb") as stream:
+            opened = os.fstat(stream.fileno())
+            if (opened.st_dev, opened.st_ino) != identity[:2]:
+                raise OSError("input changed while capturing its preimage")
+            content = stream.read()
+    elif stat.S_ISLNK(before.st_mode):
+        content = os.readlink(path)
+    else:
+        content = None
+    after = path.lstat()
+    if identity != (after.st_dev, after.st_ino, after.st_mode,
+                    after.st_size, after.st_mtime_ns):
+        raise OSError("input changed while capturing its preimage")
+    captured = identity, content
+    return (captured, before) if with_metadata else captured
+
+
+def matches_entry(path: Path, expected: tuple) -> bool:
+    try:
+        return capture_entry(path) == expected
+    except OSError:
+        return False
+
+
+def exchange_paths(left: Path, right: Path) -> None:
+    """Native atomic exchange, with pinned parent descriptors and no fallback.
+
+    Darwin sys/stdio.h defines RENAME_SWAP=2 for renameatx_np.
+    Linux uapi/linux/fs.h defines RENAME_EXCHANGE=(1 << 1) for renameat2.
+    Both entries must exist; unsupported kernels/filesystems refuse.
+    """
+    name = "renameatx_np" if sys.platform == "darwin" else (
+        "renameat2" if sys.platform.startswith("linux") else None)
+    libc = ctypes.CDLL(None, use_errno=True)
+    function = getattr(libc, name, None) if name else None
+    if function is None:
+        raise OSError(errno.ENOTSUP, "native atomic exchange is unavailable")
+    function.argtypes = [ctypes.c_int, ctypes.c_char_p,
+                         ctypes.c_int, ctypes.c_char_p, ctypes.c_uint]
+    function.restype = ctypes.c_int
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    left_fd = os.open(left.parent.resolve(strict=True), flags)
+    try:
+        right_fd = os.open(right.parent.resolve(strict=True), flags)
+        try:
+            if function(left_fd, os.fsencode(left.name),
+                        right_fd, os.fsencode(right.name), 2):
+                code = ctypes.get_errno()
+                raise OSError(code, os.strerror(code))
+        finally:
+            os.close(right_fd)
+    finally:
+        os.close(left_fd)
+
+
+class PublicationRecoveryError(OSError):
+    """Publication is uncertain; retained files must not be discarded."""
+
+
+class RegistryRecoveryError(PublicationRecoveryError):
+    """The registry cannot be reconciled with a known lifecycle transition."""
+
+
+class InputPublication:
+    """Exchange a staged input and retain every unproven displaced entry."""
+
+    def __init__(self, target: Path, content: bytes, expected: tuple,
+                 *, mode: int = 0o600, times=None):
+        self.target = target
+        self.expected = expected
+        self.directory = Path(tempfile.mkdtemp(
+            prefix=f".{target.name}.walk-recovery-", dir=target.parent)).resolve()
+        self.staged = self.directory / "entry"
+        self.published = None
+        self.exchanged = False
+        self.uncertain = False
+        try:
+            with private_file(self.staged, os.O_WRONLY | os.O_CREAT | os.O_EXCL, "wb") as stream:
+                stream.write(content)
+                stream.flush()
+                os.fsync(stream.fileno())
+                os.fchmod(stream.fileno(), mode)
+                if times is not None:
+                    os.utime(stream.fileno(), ns=times)
+            self.published = capture_entry(self.staged)
+        except BaseException as error:
+            # Retain partially staged data rather than guessing its ownership.
+            raise self.recovery_error() from error
+
+    def recovery_error(self):
+        self.uncertain = True
+        return PublicationRecoveryError(
+            f"input publication uncertain; retained recovery files at {self.directory}; "
+            "source and session state were not discarded")
+
+    def rollback(self) -> None:
+        """Attempt at most one swap-back; retain both sides of another race."""
+        if not matches_entry(self.target, self.published):
+            raise self.recovery_error()
+        try:
+            displaced = capture_entry(self.staged)
+        except OSError:
+            raise self.recovery_error() from None
+        try:
+            exchange_paths(self.staged, self.target)
+        except BaseException as error:
+            # A reported transport/syscall failure may follow a completed swap.
+            if not (matches_entry(self.target, displaced)
+                    and matches_entry(self.staged, self.published)):
+                raise self.recovery_error() from error
+        if not (matches_entry(self.target, displaced)
+                and matches_entry(self.staged, self.published)):
+            raise self.recovery_error()
+        self.exchanged = False
+
+    def publish(self) -> None:
+        try:
+            exchange_paths(self.staged, self.target)
+        except BaseException as error:
+            if (matches_entry(self.staged, self.published)
+                    and matches_entry(self.target, self.expected)):
+                raise
+            if matches_entry(self.target, self.published):
+                self.exchanged = True
+                self.rollback()
+                raise error
+            raise self.recovery_error() from error
+        self.exchanged = True
+        if not (matches_entry(self.staged, self.expected)
+                and matches_entry(self.target, self.published)):
+            self.rollback()
+            raise SystemExit("ERROR: input changed at publication; replacement preserved.")
+
+    def commit(self) -> None:
+        if not (matches_entry(self.staged, self.expected)
+                and matches_entry(self.target, self.published)):
+            raise self.recovery_error()
+        # The displaced original is now safely represented by the source copy
+        # (start) or completed evidence/source state (restore).
+        try:
+            self.staged.unlink()
+            self.exchanged = False
+            self.directory.rmdir()
+        except BaseException as error:
+            raise self.recovery_error() from error
+
+    def close(self) -> None:
+        if self.uncertain or self.exchanged or not self.directory.exists():
+            return
+        if self.staged.exists() or self.staged.is_symlink():
+            if self.published is None or not matches_entry(self.staged, self.published):
+                raise self.recovery_error()
+            self.staged.unlink()
+        try:
+            self.directory.rmdir()
+        except OSError as error:
+            # Unknown additions belong to their writer, not this operation.
+            raise self.recovery_error() from error
+
+
 def print_item(index: int, total: int, item) -> None:
     print(f"=== ITEM {index + 1} OF {total} ===")
     if isinstance(item, (dict, list)):
@@ -272,16 +518,16 @@ def cmd_start(input_file: Path, max_concurrent: int) -> None:
             )
             index = pending_index(state, len(items))
             if done >= len(items) and not in_flight and index is None:
-                print(f"WALK COMPLETE. Run: walk.py restore {input_file}")
+                print(f"WALK COMPLETE. Run: {walk_command('restore', str(input_file))}")
                 return
             if max_c == 1 and not in_flight and index is not None:
                 print()
                 print_item(index, len(items), items[index])
                 state["sequential_index"] = index
                 print()
-                print(f"When done: walk.py next {input_file} '<decision>'")
+                print(f"When done: {walk_command('next', str(input_file), '<decision>')}")
             else:
-                print(f"Use: walk.py dispatch {input_file}  (to claim items)")
+                print(f"Use: {walk_command('dispatch', str(input_file))}  (to claim items)")
         return
 
     if not input_file.exists():
@@ -292,7 +538,10 @@ def cmd_start(input_file: Path, max_concurrent: int) -> None:
         raise SystemExit("ERROR: active walk exists but its input stub was replaced.")
     max_concurrent = parse_positive_int(str(max_concurrent), "max_concurrent")
     original_identity = file_identity(input_file)
-    original_bytes = input_file.read_bytes()
+    original_entry, original_metadata = capture_entry(input_file, with_metadata=True)
+    if not stat.S_ISREG(original_entry[0][2]):
+        raise SystemExit("ERROR: input must be a regular file.")
+    original_bytes = original_entry[1]
     items = parse_items(original_bytes.decode("utf-8"))
     if not items:
         raise SystemExit(f"ERROR: no items found in {input_file}")
@@ -300,14 +549,15 @@ def cmd_start(input_file: Path, max_concurrent: int) -> None:
     ensure_root()
     sid = uuid.uuid4().hex
     sdir = DATA_ROOT / sid
-    sdir.mkdir(parents=True, exist_ok=False)
+    sdir.mkdir(mode=0o700, parents=True, exist_ok=False)
     source_path = sdir / "source.json"
     # Preserve the original until source, state and stub are all staged.
-    with source_path.open("xb") as source:
+    with private_file(source_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, "wb") as source:
         source.write(original_bytes)
         source.flush()
         os.fsync(source.fileno())
-    shutil.copystat(input_file, source_path)
+        os.utime(source.fileno(), ns=(original_metadata.st_atime_ns,
+                                     original_metadata.st_mtime_ns))
     state = {
         "cursor": 0,
         "in_flight": {},
@@ -315,6 +565,9 @@ def cmd_start(input_file: Path, max_concurrent: int) -> None:
         "decisions": [],
         "max_concurrent": max_concurrent,
         "original_path": key,
+        "source_mode": stat.S_IMODE(original_metadata.st_mode),
+        "source_atime_ns": original_metadata.st_atime_ns,
+        "source_mtime_ns": original_metadata.st_mtime_ns,
         "sequential_index": 0 if max_concurrent == 1 else None,
     }
     atomic_json(sdir / "state.json", state)
@@ -335,21 +588,35 @@ def cmd_start(input_file: Path, max_concurrent: int) -> None:
             "restore": walk_command("restore", input_arg),
         },
     }
-    staged_stub = stage_bytes(input_file, json.dumps(stub, indent=2).encode("utf-8"))
+    publication = InputPublication(
+        input_file, json.dumps(stub, indent=2).encode("utf-8"), original_entry)
     try:
-        if input_file.is_symlink() or file_identity(input_file) != original_identity:
+        if (input_file.is_symlink() or file_identity(input_file) != original_identity
+                or not matches_entry(input_file, original_entry)):
             raise SystemExit("ERROR: input changed during start; original copy retained.")
         new_registry = dict(reg, **{key: sid})
-        save_registry(new_registry)
+        save_registry_checked(new_registry)
         try:
-            if input_file.is_symlink() or file_identity(input_file) != original_identity:
+            if (input_file.is_symlink() or file_identity(input_file) != original_identity
+                    or not matches_entry(input_file, original_entry)):
                 raise SystemExit("ERROR: input changed during start; original copy retained.")
-            os.replace(staged_stub, input_file)
+            publication.publish()
+            publication.commit()
         except BaseException:
-            save_registry(reg)
+            if not publication.uncertain:
+                try:
+                    save_registry_checked(reg)
+                except BaseException as error:
+                    publication.uncertain = True
+                    raise RegistryRecoveryError(
+                        f"registry rollback failed; recovery files retained at {publication.directory}"
+                    ) from error
             raise
+    except RegistryRecoveryError:
+        publication.uncertain = True
+        raise
     finally:
-        staged_stub.unlink(missing_ok=True)
+        publication.close()
 
     print(
         f"STARTED walk (session {sid[:8]}). {len(items)} items locked. "
@@ -359,10 +626,10 @@ def cmd_start(input_file: Path, max_concurrent: int) -> None:
         print()
         print_item(0, len(items), items[0])
         print()
-        print(f"When done: walk.py next {input_file} '<decision>'")
+        print(f"When done: {walk_command('next', str(input_file), '<decision>')}")
     else:
         print(
-            f"Use: walk.py dispatch {input_file}  (claim up to {max_concurrent} items in flight)"
+            f"Use: {walk_command('dispatch', str(input_file))}  (claim up to {max_concurrent} items in flight)"
         )
 
 
@@ -377,12 +644,14 @@ def cmd_next(input_file: Path, decision: str) -> None:
             raise SystemExit("ERROR: next requires sequential mode; use dispatch/record.")
         if state["in_flight"]:
             raise SystemExit(
-                "ERROR: in-flight claims exist. Use `walk.py record <token> <decision>` "
-                "for pool-mode advance, or `walk.py release-stale` to reclaim stuck claims."
+                f"ERROR: in-flight claims exist. Use `{walk_command('record', str(input_file), '<token>', '<decision>')}` "
+                "for the completed worker's verdict. Only after confirming worker termination "
+                "and reconciling its effects, release abandoned claims with "
+                f"`{walk_command('release-stale', str(input_file), '<age-seconds>')}`."
             )
         cursor = state["cursor"]
         if cursor >= len(items) and not state["to_redispatch"]:
-            print(f"Already complete. Run: walk.py restore {input_file}")
+            print(f"Already complete. Run: {walk_command('restore', str(input_file))}")
             return
         index = pending_index(state, len(items))
         if "sequential_index" not in state:
@@ -409,7 +678,7 @@ def cmd_next(input_file: Path, decision: str) -> None:
         remaining = (len(items) - state["cursor"]) + len(state["to_redispatch"])
         print(f"Recorded decision for item {index + 1}. Remaining: {remaining}")
         if remaining == 0:
-            print(f"WALK COMPLETE. Run: walk.py restore {input_file}")
+            print(f"WALK COMPLETE. Run: {walk_command('restore', str(input_file))}")
             return
         # Show next item
         if state["to_redispatch"]:
@@ -419,7 +688,7 @@ def cmd_next(input_file: Path, decision: str) -> None:
         print()
         print_item(next_index, len(items), items[next_index])
         print()
-        print(f"When done: walk.py next {input_file} '<decision>'")
+        print(f"When done: {walk_command('next', str(input_file), '<decision>')}")
 
 
 @serialized_command
@@ -609,10 +878,10 @@ def cmd_restore(input_file: Path, preserve: bool = True) -> None:
             raise SystemExit("ERROR: walk unfinished; complete it or explicitly abort to discard progress.")
         snapshot = dict(state, session_id=sid)
     if preserve:
-        OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        ensure_private_directory(OUTPUT_ROOT)
         out = OUTPUT_ROOT / f"{input_file.stem}.{sid}.{uuid.uuid4().hex}.walk-decisions.json"
         # Exclusive creation preserves earlier exports, including retry attempts.
-        with out.open("x", encoding="utf-8") as stream:
+        with private_file(out, os.O_WRONLY | os.O_CREAT | os.O_EXCL, "w") as stream:
             try:
                 json.dump(snapshot, stream, indent=2, ensure_ascii=False)
                 stream.flush()
@@ -623,28 +892,33 @@ def cmd_restore(input_file: Path, preserve: bool = True) -> None:
         print(f"Decisions preserved at: {out}")
 
     require_owned_stub(input_file, sid)
-    original_stub = input_file.read_bytes()
-    staged_source = stage_bytes(input_file, source_path.read_bytes())
-    staged_stub = None
+    original_stub = capture_entry(input_file)
+    source_metadata = source_path.stat()
+    source_mode = state.get("source_mode", stat.S_IMODE(source_metadata.st_mode))
+    if type(source_mode) is not int or not 0 <= source_mode <= 0o7777:
+        raise SystemExit("ERROR: stored original input mode is invalid.")
+    times = (state.get("source_atime_ns", source_metadata.st_atime_ns),
+             state.get("source_mtime_ns", source_metadata.st_mtime_ns))
+    if any(type(value) is not int for value in times):
+        raise SystemExit("ERROR: stored original input timestamps are invalid.")
+    publication = InputPublication(input_file, source_path.read_bytes(), original_stub,
+                                   mode=source_mode, times=times)
     try:
-        shutil.copystat(source_path, staged_source)
-        staged_stub = stage_bytes(input_file, original_stub)
         require_owned_stub(input_file, sid)
-        restored_identity = file_identity(staged_source)
-        os.replace(staged_source, input_file)
+        publication.publish()
         try:
             reg = load_registry()
             reg.pop(canonical_key(input_file), None)
-            save_registry(reg)
-        except BaseException:
-            # Never roll back over somebody else's replacement.
-            if not input_file.is_symlink() and file_identity(input_file) == restored_identity:
-                os.replace(staged_stub, input_file)
+            save_registry_checked(reg)
+        except RegistryRecoveryError:
+            publication.uncertain = True
             raise
+        except BaseException:
+            publication.rollback()
+            raise
+        publication.commit()
     finally:
-        staged_source.unlink(missing_ok=True)
-        if staged_stub is not None:
-            staged_stub.unlink(missing_ok=True)
+        publication.close()
 
     # The source and completed evidence are safe. Never recursively erase
     # unexpected files that may have been added to a session directory.

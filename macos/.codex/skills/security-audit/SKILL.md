@@ -6,13 +6,21 @@ description: "Audit development-environment secrets, supply chains, macOS securi
 # Security audit
 
 Audit the development environment and explain the exposure each finding
-establishes. Run all four domains by default, or select `--secrets`, `--deps`,
-`--machine`, or `--agents`. Keep `--claude` as a compatibility selector for
-the Claude-only portion of `--agents`.
+establishes. Honor the user's natural-language scope: a dependency-only request
+selects that domain without requiring a literal flag. Run all four domains only
+for a comprehensive environment audit. Explicit selectors are `--secrets`,
+`--deps`, `--machine`, or `--agents`. Keep `--claude` as a compatibility selector for
+the Claude-only portion of `--agents`. These are skill-request selectors, not
+flags for a bundled all-domain scanner.
+
+When reviewing or testing this skill itself, inspect its artifacts and use only
+synthetic fixtures. Do not run the four domains against the real machine,
+credentials, histories, account state or live agent configuration. Inspect test
+entry points before running them; related repository suites include live checks.
 
 An optional directory scopes secrets and dependency checks to that directory.
-Without one, use the current directory plus relevant shell and agent
-configuration locations. Machine checks concern the current Mac; agent checks
+Without one, use the current directory plus configuration locations relevant
+only to the selected domains. Machine checks concern the current Mac; agent checks
 cover installed agents, their active account/profile configurations, and the
 current project's overrides. State these roots before scanning; do not silently
 expand into unrelated repositories or accounts.
@@ -63,10 +71,11 @@ Inspect a check's execution, output, and network effects before running it.
 Capture and filter potentially sensitive stdout **and stderr** locally before
 tool output reaches the transcript. Do not send secrets, config files, or
 private dependency metadata to a remote scanner; verify the destination and
-data scope for advisory queries. Temporary sanitized artifacts must be private,
-outside Drive, and cleaned up. Mark unavailable, unsafe, denied, or unsupported
-checks as not checked, with the concrete reason. Do not weaken a guard to
-complete a check.
+data scope for advisory queries. All temporary captures and sanitized artifacts
+must be private (0700 directories, 0600 files), outside Drive, and cleaned up.
+Do not treat redaction as permission to acquire a prohibited input. Mark
+unavailable, unsafe, denied, or unsupported checks as not checked, with the
+concrete reason. Do not weaken a guard to complete a check.
 
 ## Threat model and evidence
 
@@ -105,7 +114,8 @@ remedy. Separate findings from optional hardening and unresolved questions.
   currently usable credential exposed publicly or active compromise.
 - High: an established, substantial access or execution path to sensitive assets.
 - Medium: a material control gap with a plausible but constrained exposure.
-- Low: optional hardening or limited-impact gaps.
+- Low: an established limited-impact gap. Keep optional hardening separate from
+  vulnerability findings rather than assigning it a severity by default.
 
 A scanner match is a candidate until classified; do not test a credential's
 live validity without authorization. Advisory severity, local exposure,

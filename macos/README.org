@@ -93,6 +93,12 @@ The security-audit isolation checks include synthetic peer-process argument
 and environment probes. Filesystem and network restrictions alone are not
 accepted as evidence of credential separation.
 
+Auditing the security-audit skill itself uses synthetic artifacts, not live
+environment scans. Its shell classifier reports incomplete coverage with a
+nonzero status and does not certify values from variable names. The credential
+incident helper keeps read-only operations free of state creation and serializes
+authorized updates from cooperating helper processes.
+
 The design record for the read-only LuLu alert reviewer is retained at
 [[file:docs/superpowers/specs/2026-08-01-review-lulu-alert-design.md][its local specification]]. Design records explain decisions; they are not
 loaded as executable configuration.

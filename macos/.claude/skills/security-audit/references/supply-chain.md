@@ -17,9 +17,10 @@ to audit them. A missing scanner is a coverage gap.
   workflow overrides. An allowlisted build can be deliberate. Script suppression
   does not protect against malicious runtime code.
 - For pnpm, check installed-version documentation and `pnpm-workspace.yaml`.
-  Versions 11 and later use `allowBuilds`; older versions used
-  `onlyBuiltDependencies`/`ignoredBuiltDependencies`. Inspect broad bypasses
-  such as `dangerouslyAllowAllBuilds` and executable `.pnpmfile` hooks.
+  `allowBuilds` was added in 10.26.0; version 11 removed legacy controls such as
+  `onlyBuiltDependencies`/`ignoredBuiltDependencies`. Late version 10 can therefore
+  use the newer map too. Inspect the selected release's supported keys, broad
+  bypasses such as `dangerouslyAllowAllBuilds`, and executable `.pnpmfile` hooks.
   Do not infer pnpm policy from an npm-only key.
 - For Bun, inspect `trustedDependencies`, its version-specific default trusted
   list, and overrides. Missing npm settings do not establish missing controls.
@@ -87,7 +88,8 @@ Include the following when present in the authorized scope:
 
 ## Reference maintenance
 
-Checked 2026-09-04. Recheck manager/version-sensitive behavior before prescribing
+Rechecked pnpm build controls 2026-09-06; other references checked 2026-09-04.
+Recheck manager/version-sensitive behavior before prescribing
 a key; do not copy a policy across managers on the strength of its name.
 
 - [npm audit effects](https://docs.npmjs.com/cli/v11/commands/npm-audit/)

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -12,25 +14,30 @@ CLASSIFIERS = {
     tool: DOTFILES / f"macos/.{tool}/skills/security-audit/scripts/classify-shell-exports.py"
     for tool in ("claude", "codex")
 }
+SYNTHETIC_ENV = {"PATH": "/usr/bin:/bin", "LC_ALL": "C", "PYTHONDONTWRITEBYTECODE": "1"}
+TEMP_PARENT = "/private/tmp" if sys.platform == "darwin" else "/tmp"
 
 
 class SecurityAuditShellExportTests(unittest.TestCase):
     def classify(self, content: str) -> list[dict[str, object]]:
         outputs = []
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory(prefix="current64-shell-tests-", dir=TEMP_PARENT) as directory:
             fixture = Path(directory) / "synthetic-shell-fixture"
             fixture.write_text(content)
             original = fixture.read_bytes()
             for tool, script in CLASSIFIERS.items():
                 with self.subTest(tool=tool):
                     result = subprocess.run(
-                        ["python3", "-B", str(script), str(fixture)],
+                        [sys.executable, "-I", "-B", str(script), str(fixture)],
                         capture_output=True, text=True, check=False,
+                        env=SYNTHETIC_ENV, cwd=directory, timeout=10,
                     )
-                    self.assertEqual(result.returncode, 0, result.stderr)
                     self.assertEqual(result.stderr, "")
                     self.assertNotIn("synthetic-value", result.stdout)
-                    outputs.append(json.loads(result.stdout))
+                    rows = json.loads(result.stdout)
+                    expected = 2 if any(row["classification"] == "not-checked" for row in rows) else 0
+                    self.assertEqual(result.returncode, expected, result.stderr)
+                    outputs.append(rows)
             self.assertEqual(original, fixture.read_bytes())
             self.assertEqual([fixture], list(Path(directory).iterdir()))
         self.assertEqual(outputs[0], outputs[1])
@@ -72,11 +79,12 @@ false || export FIFTH_TOKEN="synthetic-value-five"
         for declaration in ("load_tokens() {", "load_tokens()\n{", "function load_tokens {", "function load_tokens() {"):
             with self.subTest(declaration=declaration):
                 for invocation in ("", "load_tokens\n"):
-                    rows = self.exports(declaration + '\n export SERVICE_TOKEN="synthetic-value-one"\n}\n' + invocation)
-                    row = rows["SERVICE_TOKEN"]
+                    rows = self.classify(declaration + '\n export SERVICE_TOKEN="synthetic-value-one"\n}\n' + invocation)
+                    row = next(row for row in rows if row.get("name") == "SERVICE_TOKEN")
                     self.assertEqual(row["classification"], "credential-literal")
                     self.assertEqual(row["scope"], "function")
                     self.assertEqual(row["certainty"], "conditional")
+                    self.assertEqual(bool(invocation), any(row["classification"] == "not-checked" for row in rows))
 
     def test_explicit_locals_and_subshells_are_distinct(self):
         rows = self.exports('''\
@@ -231,7 +239,7 @@ true && { export SECOND_TOKEN=synthetic-value; export THIRD_TOKEN=synthetic-valu
         self.assertTrue(all(row["certainty"] == "conditional" for row in rows.values()))
 
     def test_classifier_never_executes_target_commands(self):
-        with tempfile.TemporaryDirectory() as directory:
+        with tempfile.TemporaryDirectory(prefix="current64-shell-tests-", dir=TEMP_PARENT) as directory:
             marker = Path(directory) / "must-not-exist"
             rows = self.exports(f'export SERVICE_TOKEN="$(touch {marker})"\n')
             self.assertEqual(rows["SERVICE_TOKEN"]["classification"], "credential-indirect")
@@ -240,23 +248,25 @@ true && { export SECOND_TOKEN=synthetic-value; export THIRD_TOKEN=synthetic-valu
     def test_actual_shell_function_export_reaches_child(self):
         # Execute this fixed synthetic command only, never the inspected file.
         result = subprocess.run(
-            ["/bin/zsh", "-f", "-c",
+            ["/bin/bash", "--noprofile", "--norc", "-c",
              "load_fixture() { export SYNTHETIC_AUDIT_TOKEN=synthetic-value; }; "
-             "load_fixture; /bin/zsh -f -c "
+             "load_fixture; /bin/bash --noprofile --norc -c "
              "'[[ ${SYNTHETIC_AUDIT_TOKEN-} == synthetic-value ]]'"],
             capture_output=True, text=True, check=False,
+            env=SYNTHETIC_ENV, timeout=10,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, "")
 
     def test_actual_shell_local_and_subshell_exports_do_not_escape(self):
         result = subprocess.run(
-            ["/bin/zsh", "-f", "-c",
+            ["/bin/bash", "--noprofile", "--norc", "-c",
              "unset SYNTHETIC_AUDIT_LOCAL_TOKEN SYNTHETIC_AUDIT_SUBSHELL_TOKEN; "
              "load_fixture() { local -x SYNTHETIC_AUDIT_LOCAL_TOKEN=synthetic-value; }; "
              "load_fixture; (export SYNTHETIC_AUDIT_SUBSHELL_TOKEN=synthetic-value); "
              "[[ -z ${SYNTHETIC_AUDIT_LOCAL_TOKEN+x} && -z ${SYNTHETIC_AUDIT_SUBSHELL_TOKEN+x} ]]"],
             capture_output=True, text=True, check=False,
+            env=SYNTHETIC_ENV, timeout=10,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout, "")
@@ -269,12 +279,156 @@ true && { export SECOND_TOKEN=synthetic-value; export THIRD_TOKEN=synthetic-valu
             '! export SYNTHETIC_AUDIT_TOKEN=synthetic-value',
         ):
             result = subprocess.run(
-                ["/bin/zsh", "-f", "-c", setup +
-                 "; /bin/zsh -f -c '[[ ${SYNTHETIC_AUDIT_TOKEN-} == synthetic-value ]]'"],
+                ["/bin/bash", "--noprofile", "--norc", "-c", setup +
+                 "; /bin/bash --noprofile --norc -c '[[ ${SYNTHETIC_AUDIT_TOKEN-} == synthetic-value ]]'"],
                 capture_output=True, text=True, check=False,
+                env=SYNTHETIC_ENV, timeout=10,
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(result.stdout, "")
+
+    def test_for_loop_binding_does_not_reuse_preloop_empty_value(self):
+        rows = self.classify('SERVICE_TOKEN=""; for SERVICE_TOKEN in synthetic-value; do export SERVICE_TOKEN; done\n')
+        self.assertNotEqual(rows[-1]["classification"], "credential-empty")
+
+    def test_loop_binding_of_an_exported_variable_is_an_exposure_row(self):
+        rows = self.classify('export SERVICE_TOKEN=""; for SERVICE_TOKEN in synthetic-value; do :; done\n')
+        self.assertEqual(rows[-1]["classification"], "credential-indirect")
+        self.assertEqual(rows[-1]["certainty"], "conditional")
+
+    def test_unsupported_function_body_is_not_misread_as_global_exports(self):
+        rows = self.classify('f() if true; then export SERVICE_TOKEN=synthetic-value; fi\n')
+        self.assertTrue(any(row["classification"] == "not-checked" for row in rows))
+        self.assertFalse(any(row.get("name") == "SERVICE_TOKEN" for row in rows))
+
+    def test_function_value_is_not_inferred_from_definition_time(self):
+        rows = self.classify('SERVICE_TOKEN=""; f() { export SERVICE_TOKEN; }; SERVICE_TOKEN=synthetic-value; f\n')
+        exported = next(row for row in rows if row.get("name") == "SERVICE_TOKEN")
+        self.assertEqual(exported["classification"], "credential-indirect")
+
+    def test_known_function_call_invalidates_stale_values(self):
+        for declaration in ("f() {", "function f {", "function f() {"):
+            with self.subTest(declaration=declaration):
+                rows = self.classify('SERVICE_TOKEN=""; ' + declaration + ' SERVICE_TOKEN=synthetic-value; }; f; export SERVICE_TOKEN\n')
+                self.assertNotEqual(rows[-1]["classification"], "credential-empty")
+
+    def test_nonexport_declaration_updates_existing_export(self):
+        for declaration in ("readonly", "typeset", "declare"):
+            with self.subTest(declaration=declaration):
+                rows = self.classify(f'export SERVICE_TOKEN=""; {declaration} SERVICE_TOKEN=synthetic-value\n')
+                self.assertEqual(rows[-1]["classification"], "credential-literal")
+
+    def test_shell_variable_mutation_is_not_silently_ignored(self):
+        for command in ("read -r SERVICE_TOKEN", "unset SERVICE_TOKEN", "printf -v SERVICE_TOKEN synthetic-value"):
+            with self.subTest(command=command):
+                rows = self.classify(f'SERVICE_TOKEN=""; {command}; export SERVICE_TOKEN\n')
+                self.assertTrue(any(row["classification"] == "not-checked" for row in rows))
+                self.assertNotEqual(rows[-1]["classification"], "credential-empty")
+
+    def test_single_quote_backslash_newline_is_not_an_empty_value(self):
+        rows = self.exports("export SERVICE_TOKEN='\\\n'\n")
+        self.assertEqual(rows["SERVICE_TOKEN"]["classification"], "credential-literal")
+
+    def test_store_command_prefix_does_not_authenticate_other_value_parts(self):
+        for value in ('"synthetic-value$(pass fixture/ref)"', '"$(pass fixture/ref; printf synthetic-value)"'):
+            with self.subTest(value=value):
+                rows = self.exports(f'export SERVICE_TOKEN={value}\n')
+                self.assertEqual(rows["SERVICE_TOKEN"]["classification"], "credential-indirect")
+
+    def test_nonexport_declaration_retains_conditional_export_attribute(self):
+        rows = self.classify('unknown && export SERVICE_TOKEN=""; readonly SERVICE_TOKEN=synthetic-value\n')
+        self.assertEqual(rows[-1]["classification"], "credential-literal")
+        self.assertEqual(rows[-1]["certainty"], "conditional")
+
+    def test_local_declaration_cannot_inherit_a_known_empty_value(self):
+        rows = self.exports('SERVICE_TOKEN=""; f() { local SERVICE_TOKEN; export SERVICE_TOKEN; }\n')
+        self.assertEqual(rows["SERVICE_TOKEN"]["classification"], "credential-indirect")
+
+    def test_name_classifications_are_explicit_heuristics(self):
+        rows = self.exports('export DATABASE_URL=synthetic-value\n')
+        self.assertEqual(rows["DATABASE_URL"]["classification"], "non-secret")
+        self.assertEqual(rows["DATABASE_URL"]["classification_basis"], "name-heuristic")
+
+    def test_dynamic_effects_invalidate_prior_empty_values(self):
+        for command in ('eval "SERVICE_TOKEN=synthetic-value"', 'echo "${SERVICE_TOKEN:=synthetic-value}"'):
+            rows = self.classify(f'SERVICE_TOKEN=""; {command}; export SERVICE_TOKEN\n')
+            self.assertTrue(any(row["classification"] == "not-checked" for row in rows))
+            self.assertEqual(rows[-1]["classification"], "credential-indirect")
+
+    def test_declaration_expansions_invalidate_other_variables(self):
+        for value in ('"${OTHER_TOKEN:=synthetic-value}"', '"$((OTHER_TOKEN=1))"',
+                      '"${UNSET_VARIABLE:-${OTHER_TOKEN:=synthetic-value}}"'):
+            with self.subTest(value=value):
+                rows = self.classify(f'OTHER_TOKEN=""; export SERVICE_TOKEN={value}; export OTHER_TOKEN\n')
+                self.assertTrue(any(row["classification"] == "not-checked" for row in rows))
+                self.assertEqual(rows[-1]["classification"], "credential-indirect")
+
+    def test_literal_or_child_substitution_does_not_mutate_caller_state(self):
+        for value in ("'${OTHER_TOKEN:=synthetic-value}'", "'${OTHER_TOKEN:=$((1))}'",
+                      '"$(printf \'%s\' "${OTHER_TOKEN:=synthetic-value}")"'):
+            rows = self.exports(f'OTHER_TOKEN=""; export SERVICE_TOKEN={value}; export OTHER_TOKEN\n')
+            self.assertEqual(rows["OTHER_TOKEN"]["classification"], "credential-empty")
+
+    def test_append_mutation_is_explicitly_not_checked(self):
+        rows = self.classify('export SERVICE_TOKEN=""; SERVICE_TOKEN+=synthetic-value; export SERVICE_TOKEN\n')
+        self.assertTrue(any(row["classification"] == "not-checked" for row in rows))
+        self.assertEqual(rows[-1]["classification"], "credential-indirect")
+
+    def test_recognizable_sensitive_and_oversized_names_are_not_emitted(self):
+        names = ["ghp_" + "A" * 36, "PREFIX_" + "AKIA" + "A" * 16, "github_pat_" + "A" * 22,
+                 "sk_live_" + "A" * 20, "A" * 129]
+        for name in names:
+            with self.subTest(kind=names.index(name)):
+                rows = self.classify(f'export {name}=synthetic-value\n')
+                self.assertEqual(len(rows), 1)
+                self.assertEqual(rows[0]["reason"], "sensitive-or-oversized-identifier")
+                self.assertNotIn(name, json.dumps(rows))
+
+    def test_bounded_reader_refuses_nonregular_invalid_and_oversized_inputs(self):
+        with tempfile.TemporaryDirectory(prefix="current64-shell-tests-", dir=TEMP_PARENT) as directory:
+            root = Path(directory)
+            fifo = root / "owned-fifo"
+            os.mkfifo(fifo)
+            large = root / "owned-large"
+            with large.open("wb") as stream:
+                stream.truncate(1024 * 1024 + 1)
+            invalid = root / "owned-invalid"
+            invalid.write_bytes(b"\xffsynthetic-value")
+            link = root / "owned-link"
+            link.symlink_to(invalid)
+            for script in CLASSIFIERS.values():
+                for path in (fifo, large, invalid, link, root, root / "missing"):
+                    with self.subTest(script=script, input=path.name):
+                        result = subprocess.run([sys.executable, "-I", "-B", str(script), str(path)],
+                                                cwd=root, env=SYNTHETIC_ENV, capture_output=True, text=True, timeout=5)
+                        self.assertEqual(result.returncode, 2, result.stderr)
+                        self.assertEqual(result.stderr, "")
+                        self.assertNotIn("synthetic-value", result.stdout)
+                        self.assertEqual(json.loads(result.stdout)[0]["classification"], "not-checked")
+
+    def test_shell_frame_and_token_limits_report_partial_coverage(self):
+        for content in ("{ " * 130 + "}" * 130, ";\n" * 26000):
+            rows = self.classify(content)
+            self.assertTrue(any(row["classification"] == "not-checked" for row in rows))
+
+    def test_fixed_synthetic_shell_confirms_loop_function_and_declaration_exposure(self):
+        setups = (
+            'export SYNTHETIC_AUDIT_TOKEN=""; for SYNTHETIC_AUDIT_TOKEN in synthetic-value; do :; done',
+            'SYNTHETIC_AUDIT_TOKEN=""; f() { SYNTHETIC_AUDIT_TOKEN=synthetic-value; }; f; export SYNTHETIC_AUDIT_TOKEN',
+            'SYNTHETIC_AUDIT_TOKEN=""; function f { SYNTHETIC_AUDIT_TOKEN=synthetic-value; }; f; export SYNTHETIC_AUDIT_TOKEN',
+            'export SYNTHETIC_AUDIT_TOKEN=""; readonly SYNTHETIC_AUDIT_TOKEN=synthetic-value',
+            'SYNTHETIC_AUDIT_TOKEN=""; export OTHER_TOKEN="${SYNTHETIC_AUDIT_TOKEN:=synthetic-value}"; export SYNTHETIC_AUDIT_TOKEN',
+            'export SYNTHETIC_AUDIT_TOKEN=""; SYNTHETIC_AUDIT_TOKEN+=synthetic-value',
+        )
+        for setup in setups:
+            with self.subTest(case=setups.index(setup)):
+                result = subprocess.run(
+                    ["/bin/bash", "--noprofile", "--norc", "-c", setup +
+                     "; /bin/bash --noprofile --norc -c '[[ ${SYNTHETIC_AUDIT_TOKEN-} == synthetic-value ]]'"],
+                    env=SYNTHETIC_ENV, capture_output=True, text=True, timeout=5)
+                self.assertEqual(result.returncode, 0)
+                self.assertEqual(result.stdout, "")
+                self.assertEqual(result.stderr, "")
 
 
 if __name__ == "__main__":

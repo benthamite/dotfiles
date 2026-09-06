@@ -19,7 +19,18 @@ directory.
 
 ## Browser-only flows
 
-When opening Chrome manually for a browser-only service flow, use
-`chrome-profile-open <alias> URL`; configure aliases with
-`chrome-profile-open --setup <alias>`. Project wrappers may call it, for
-example `trajectory-open URL` for Trajectory/CR pages.
+For Codex automation that depends on an existing Chrome session, use the
+installed Chrome plugin through its `control-chrome` skill and browser client.
+Verify the connection with a read-only tab listing before navigating. A failed
+generic Playwright or guessed CDP connection does not show that Chrome control
+is unavailable.
+
+`chrome-profile-open <alias> URL` is only a launcher for a page the user wants
+opened manually. It activates Chrome and can steal focus. Never use it,
+AppleScript, System Events, screenshots, or coordinate clicking as a fallback
+for Codex browser automation. If the Chrome plugin cannot connect after its
+documented checks, fail closed and report the connection problem.
+
+Configure launcher aliases with `chrome-profile-open --setup <alias>`.
+Project wrappers may call the launcher when manual opening is the requested
+action, for example `trajectory-open URL` for Trajectory/CR pages.

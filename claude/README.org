@@ -318,7 +318,10 @@ user must paste himself (Emacs kill ring, clipboard for Chrome or native
 forms, opening the target thread). The global instructions only point at it,
 and the service-access routing table lives in
 [[file:context/service-access.md][context/service-access.md]] for the same reason: procedures load on demand,
-while the always-loaded file keeps one trigger line each.
+while the always-loaded file keeps one trigger line each. That routing table
+uses the extension-backed Chrome plugin for Codex automation and reserves
+=chrome-profile-open= for explicit manual page launching because it activates
+Chrome and can steal focus.
 
 Browser control is runtime-owned rather than mirrored through a tracked
 Codex-App handoff skill. Claude therefore carries no pointer skill or helper

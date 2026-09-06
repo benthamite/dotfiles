@@ -6,495 +6,215 @@ argument-hint: "[old-profile] to [new-profile]"
 
 # Post-profile-switch migration
 
-Run the housekeeping needed immediately after switching to a new Emacs/elpaca profile. This includes profile-state checks, remote/local repo drift checks, per-package agent directory migration, and Claude Code/Codex state migration. Claude data needs project-directory merging under `~/.claude/projects/`; Codex data needs in-place structured path rewrites across `~/.codex` session, history, index, and archive JSONL files. Package-local `.claude/` and `.codex/` directories need non-destructive copying from old-profile package directories to their new-profile package directories. No explicit package list is needed for Claude project directories.
-
-> **Related skills.** The per-package logic here is essentially the same operation as `move-session-log --rename` (whole-project rename mode), applied in bulk. This skill stays separate because it adds (a) merge semantics — multiple sources can flow into one target — and (b) profile-path rewrites in `~/.claude.json` keyed on the elpaca profile name rather than a single old/new pair. For a single project rename outside an elpaca-profile bump, use the `move-session-log` skill directly (and `rename-project` for full project renames).
-
-Treat this as destructive-adjacent: it retargets a profile symlink, may pull profile repos after confirmation, rewrites agent state files, and eventually trashes old Claude project directories. Always produce the dry run first and get explicit confirmation before changing symlinks, pulling repos, copying data, rewriting JSON/JSONL/log files, or deleting sources.
-
-## Scope
-
-Migrate both stores unless the user explicitly asks for only one:
-
-- **Profile state**: `~/.config/emacs-profiles/.current-profile` and `~/.config/emacs-profiles/active`.
-- **New-profile repos**: git repositories under `~/.config/emacs-profiles/<new-profile>/elpaca/sources/` and `repos/`.
-- **Package-local agent directories**: `.claude/` and `.codex/` directories inside old-profile elpaca package directories, copied into the corresponding new-profile package directories.
-- **Claude Code**: `~/.claude/projects/`, `~/.claude.json`, `~/.claude/history.jsonl`, and copied session `.jsonl` files.
-- **Codex**: `~/.codex/history.jsonl`, `~/.codex/session_index.jsonl`, `~/.codex/sessions/**/*.jsonl`, and `~/.codex/archived_sessions/**/*.jsonl`.
-
-Codex currently stores sessions by date/rollout ID rather than by encoded project directory. Do not look for Codex equivalents of `~/.claude/projects`; instead, count and rewrite structured `cwd` and `project` fields whose value is an exact elpaca package path under the old profile.
-
-## Determine profiles
-
-- If `$ARGUMENTS` uses `OLD to NEW` or `OLD -> NEW` (e.g., `8.2.0-dev to 8.3.0-dev`), migrate only from `OLD_PROFILE` to `NEW_PROFILE`.
-- If `$ARGUMENTS` names one profile (e.g., `8.3.0-dev`), treat that as `NEW_PROFILE` and discover all older elpaca profile sources.
-- If `$ARGUMENTS` is empty, auto-detect `NEW_PROFILE`:
-
-```bash
-emacsclient -e 'init-current-profile' | tr -d '"'
-```
-
-- If `emacsclient` is unavailable and no `NEW_PROFILE` was given, ask the user.
-- When `OLD_PROFILE` is explicit, dry-run and migrate only matching Claude/Codex references for that old profile. Do not migrate data from other old profiles in the same run.
-
-## Detect partial migrations
-
-Migrations performed before this skill existed — or with only the Claude step run — leave the stores inconsistent in ways the directory-based discovery below does not catch. In particular, the Claude session **files** may already have been moved (so `~/.claude/projects/` contains no old-profile directories) while these remain stale:
-
-- **Codex** structured `cwd`/`project` fields still point at the old profile. Codex is migrated in place, so nothing moves it implicitly; if the Codex step was never run, every old session keeps its old path.
-- **Claude `history.jsonl`** `project` fields still point at old paths, sometimes for sessions whose `.jsonl` files were already deleted (orphan entries that no longer surface in `agent-log` but still clutter history).
-- **`~/.claude.json`** trust entries still exist for old profiles, often for profiles *older* than the immediate predecessor — an `8.2 -> 8.3` run leaves `7.x` and `8.0` entries untouched.
-
-Therefore do not gate discovery on old-profile directories existing under `~/.claude/projects/`. Independently scan, for **every** profile token that is not `NEW_PROFILE` (not just the named `OLD_PROFILE`):
-
-- Codex: structured `cwd`/`project` fields (see Codex migration).
-- Claude: `project` fields in `history.jsonl` and keys in `~/.claude.json` `projects`.
-
-Report each store's stale count separately in the dry run; a clean result in one store does not imply the others are clean. This is the most common real-world entry point: the symptom is usually old-profile sessions still showing in `agent-log` (which reads the Codex store directly), long after the Claude side looks done.
-
-## Path encoding
-
-Claude Code encodes project paths as directory names under `~/.claude/projects/` by replacing every `/` with `-`. The leading `/` becomes a leading `-`. Dots are also replaced with `-`.
-
-Example: `/Users/pablostafforini/.config/emacs-profiles/8.0.0-dev/elpaca/sources/elfeed-ai` becomes `-Users-pablostafforini--config-emacs-profiles-8-0-0-dev-elpaca-sources-elfeed-ai`.
-
-Codex stores normal filesystem paths inside JSON/JSONL content, so Codex migration rewrites structured `cwd` and `project` fields from old package paths to new package paths:
-
-```text
-/Users/pablostafforini/.config/emacs-profiles/<old-profile>/elpaca/
-/Users/pablostafforini/.config/emacs-profiles/<new-profile>/elpaca/
-```
-
-Do not perform raw string replacement across Codex transcript text, command output, function-call arguments, or logs. Preserve historical prompts and outputs.
-
-## Profile state checks
-
-There are two profile markers with different meanings:
-
-- `~/.config/emacs-profiles/.current-profile` is the real active-profile cache written by Emacs at startup from `init-current-profile`. Git hooks use this cache to avoid `emacsclient` deadlocks.
-- `~/.config/emacs-profiles/active` is a stable/legacy symlink used by any path that intentionally wants a profile-independent filesystem location.
-
-During the dry run, report:
-
-- `NEW_PROFILE` from arguments or `emacsclient -e 'init-current-profile'`
-- `.current-profile` contents and whether it matches `NEW_PROFILE`
-- `active` symlink target and whether it points at `NEW_PROFILE`
-
-If `.current-profile` does not match `NEW_PROFILE`, stop before mutating anything unless the user explicitly confirms that Emacs has not yet been restarted into the new profile or that the mismatch is expected.
-
-After confirmation, retarget `active` only if it exists or if the dry run found paths that use it. Use:
-
-```bash
-ln -sfn "$HOME/.config/emacs-profiles/$NEW_PROFILE" "$HOME/.config/emacs-profiles/active"
-```
-
-Do not rewrite `.current-profile` by hand. It is generated by Emacs startup; if it is wrong, ask the user to start/restart Emacs in the intended profile or explicitly confirm continuing despite the mismatch.
-
-## New-profile repo drift check
-
-After a profile switch, the new profile may contain stale clones if work continued in the previous profile and was pushed before the user started using the new profile. Check every git repository under:
-
-```text
-~/.config/emacs-profiles/<new-profile>/elpaca/sources/
-~/.config/emacs-profiles/<new-profile>/elpaca/repos/
-```
-
-For each repo:
-
-1. Record dirty worktree state with `git status --porcelain`.
-2. Find the upstream with `git rev-parse --abbrev-ref --symbolic-full-name @{u}`. If no upstream exists, report `no upstream` and do not fetch/pull it automatically.
-3. Run `git fetch --prune` for repos with upstreams.
-4. Compare local vs upstream with `git rev-list --left-right --count HEAD...@{u}`.
-
-Dry-run report columns:
-
-- package/repo name
-- path
-- dirty? (`yes`/`no`)
-- upstream or `none`
-- local-only commits
-- remote-only commits
-- status: `current`, `needs pull`, `local ahead`, `diverged`, `dirty`, or `no upstream`
-
-After confirmation, pull only repos that are clean, have an upstream, have remote-only commits, and have no local-only commits:
-
-```bash
-git -C "$repo" pull --ff-only
-```
-
-Do not pull dirty repos or diverged repos. Report them as manual follow-up items.
-
-## Discover and group projects
-
-Scan `~/.claude/projects/` for all directories matching the elpaca pattern. Extract the package name by splitting on `-elpaca-repos-` or `-elpaca-sources-` (these are unambiguous delimiters — they correspond to the literal directory structure `elpaca/repos/` or `elpaca/sources/`).
-
-```bash
-CLAUDE_PROJECTS=~/.claude/projects
-NEW_PROFILE_ENCODED=$(echo "$NEW_PROFILE" | tr './' '-')
-
-declare -A targets sources_map
-
-for dir in "$CLAUDE_PROJECTS"/-Users-pablostafforini--config-emacs-profiles-*-elpaca-*; do
-  [ -d "$dir" ] || continue
-  base=$(basename "$dir")
-
-  # Extract package name by splitting on the elpaca subdir delimiter
-  if [[ "$base" == *-elpaca-repos-* ]]; then
-    pkg="${base##*-elpaca-repos-}"
-  elif [[ "$base" == *-elpaca-sources-* ]]; then
-    pkg="${base##*-elpaca-sources-}"
-  else
-    continue
-  fi
-
-  # Classify as target or source based on whether it contains the new profile
-  if [[ "$base" == *"-${NEW_PROFILE_ENCODED}-elpaca-"* ]]; then
-    targets[$pkg]="$base"
-  else
-    sources_map[$pkg]+="$base "
-  fi
-done
-```
-
-## Find or create target directories
-
-For each package that has sources but no existing target in `~/.claude/projects/`, check whether the package exists on disk under the new profile and construct the target path:
-
-```bash
-for pkg in "${!sources_map[@]}"; do
-  if [[ -z "${targets[$pkg]}" ]]; then
-    for subdir in sources repos; do
-      if [ -d "/Users/pablostafforini/.config/emacs-profiles/$NEW_PROFILE/elpaca/$subdir/$pkg" ]; then
-        targets[$pkg]="-Users-pablostafforini--config-emacs-profiles-${NEW_PROFILE_ENCODED}-elpaca-${subdir}-${pkg}"
-        break
-      fi
-    done
-  fi
-done
-```
-
-If the package does not exist under the new profile at all, first try to **detect the rename automatically by git remote** before asking the user:
-
-1. Read the old clone's origin URL: `git -C <old-pkg-path> remote get-url origin`.
-2. Normalize to `owner/repo` and check whether any new-profile package shares the same origin. The directory name and the repo name can diverge — e.g. a `signel` directory whose remote is `benthamite/sgn.git` is really the `sgn` package, so the target is `sgn`, not a missing `signel`.
-3. If the repository itself was renamed on the host, the old URL redirects. Resolve it with `gh repo view <owner>/<old-repo> --json name,nameWithOwner`; a redirect returns the new name (e.g. `benthamite/ai-agent` resolves to `benthamite/agent`, so `ai-agent` -> `agent`).
-
-A match on origin URL — directly or via redirect — is strong evidence of a rename: record it as the target package and still surface it in the dry run. Some renames are not captured by the remote (e.g., `claude-log` -> `agent-log`, `infovore` -> `elfeed-ai`); when the remote heuristic is inconclusive, **ask the user**. If the user (or the heuristic) confirms a rename, verify the new package name exists under the new profile and keep both names in the migration record:
-
-- `source_pkg`: the old package name extracted from the source directory.
-- `target_pkg`: the package name under the new profile.
-- `target_encoded_dir`: the Claude project directory name for the target.
-- `new_path`: the actual target filesystem path under the new profile.
-
-Use `source_pkg` for matching old `history.jsonl` and session `cwd` values, and `new_path` for the replacement. If no rename applies, skip the package and note this in the summary.
-
-## Package-local agent directory migration
-
-Some package repositories contain agent-local state under `.claude/` or `.codex/`, such as:
-
-```text
-/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/tlon/.claude
-/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/tlon/.codex
-```
-
-For each migration record, check the old package path for `.claude/` and `.codex/`. If either exists, copy it to the verified `new_path` for that package without overwriting existing target files. Treat this as part of the same per-package migration record as the Claude project directory and Codex structured-path rewrite.
-
-Dry-run reporting:
-
-- Count source `.claude/` and `.codex/` directories found under old-profile package paths.
-- For each package, report whether the target `.claude/` or `.codex/` directory already exists, will be created, will receive only missing files, or is skipped because the package has no verified new-profile target.
-- Count files that would be copied and files that would be skipped because the target already has the same relative path.
-
-Execution rules:
-
-- Create `new_path/.claude/` or `new_path/.codex/` only when the corresponding source directory exists.
-- Copy files and subdirectories recursively while preserving metadata.
-- Do not overwrite existing target files. If both source and target contain the same relative file path, leave the target file untouched and count it as skipped.
-- Do not rewrite contents inside package-local `.claude/` or `.codex/` files unless a later explicit section says to; this step is a non-destructive directory merge only.
-- Do not trash the old package directory after copying these local agent directories. The profile cleanup only trashes old encoded directories under `~/.claude/projects/`.
-
-Example shell shape:
-
-```bash
-for agent_dir in .claude .codex; do
-  src="$old_path/$agent_dir"
-  dst="$new_path/$agent_dir"
-  [ -d "$src" ] || continue
-  mkdir -p "$dst"
-  (cd "$src" && find . -type d -exec mkdir -p "$dst/{}" \;)
-  (cd "$src" && find . -type f -print | while read -r rel; do
-    if [ ! -e "$dst/$rel" ]; then
-      cp -p "$src/$rel" "$dst/$rel"
-    fi
-  done)
-done
-```
-
-## Claude migration (non-destructive merge)
-
-For each package with both source(s) and a target:
-
-### 1. Create the target directory if needed
-
-```bash
-mkdir -p "$CLAUDE_PROJECTS/${targets[$pkg]}"
-```
-
-### 2. Copy session files
-
-Copy session `.jsonl` files and session subdirectories that do not already exist in the target:
-
-```bash
-for SOURCE_ENCODED in ${sources_map[$pkg]}; do
-  # Copy top-level .jsonl files that don't exist in target
-  for f in "$CLAUDE_PROJECTS/$SOURCE_ENCODED"/*.jsonl; do
-    [ -f "$f" ] || continue
-    base=$(basename "$f")
-    if [ ! -f "$CLAUDE_PROJECTS/${targets[$pkg]}/$base" ]; then
-      cp -p "$f" "$CLAUDE_PROJECTS/${targets[$pkg]}/$base"
-    fi
-  done
-
-  # Copy session subdirectories that don't exist in target
-  for d in "$CLAUDE_PROJECTS/$SOURCE_ENCODED"/*/; do
-    [ -d "$d" ] || continue
-    base=$(basename "$d")
-    [ "$base" = "memory" ] && continue  # handle memory separately
-    if [ ! -d "$CLAUDE_PROJECTS/${targets[$pkg]}/$base" ]; then
-      cp -Rp "$d" "$CLAUDE_PROJECTS/${targets[$pkg]}/$base"
-    fi
-  done
-done
-```
-
-### 3. Copy memory
-
-If any source has a `memory/` subdirectory, copy its files to the target's `memory/` directory without overwriting existing files:
-
-```bash
-for SOURCE_ENCODED in ${sources_map[$pkg]}; do
-  if [ -d "$CLAUDE_PROJECTS/$SOURCE_ENCODED/memory" ]; then
-    mkdir -p "$CLAUDE_PROJECTS/${targets[$pkg]}/memory"
-    for f in "$CLAUDE_PROJECTS/$SOURCE_ENCODED/memory/"*; do
-      [ -f "$f" ] || continue
-      base=$(basename "$f")
-      if [ ! -f "$CLAUDE_PROJECTS/${targets[$pkg]}/memory/$base" ]; then
-        cp -p "$f" "$CLAUDE_PROJECTS/${targets[$pkg]}/memory/$base"
-      fi
-    done
-  fi
-done
-```
-
-### 4. Migrate project trust entries
-
-Project authorization (trust dialog acceptance, onboarding state, tool permissions, MCP config) is stored in `~/.claude.json` under a `projects` object, keyed by the **actual filesystem path** (e.g., `/Users/pablostafforini/.config/emacs-profiles/8.0.0-dev/elpaca/sources/gdocs`). This is separate from session data. Without migrating these entries, Claude Code will prompt the user to re-authorize every project.
-
-For each migrated package, create a corresponding new-profile entry (if one doesn't already exist). Match exact elpaca project paths by package instead of doing a broad string replacement on a single `OLD_PROFILE`; a migration may include sources from several old profiles, and renamed packages need to match the old package name but write the new target path.
-
-```python
-import copy
-import json
-import os
-import re
-
-# Build this from the dry-run migration records: source package name ->
-# actual target path under the new profile.
-# For renamed packages, the key is the old package name and the value contains
-# the new package name, e.g. ".../elpaca/sources/agent-log".
-migrations = {}
-
-with open(os.path.expanduser("~/.claude.json"), "r") as f:
-    data = json.load(f)
-
-projects = data.get("projects", {})
-project_pattern = re.compile(
-    r"^/Users/pablostafforini/\.config/emacs-profiles/[^/]+/elpaca/(?:repos|sources)/([^/]+)$"
-)
-
-for old_path in list(projects.keys()):
-    match = project_pattern.match(old_path)
-    if not match:
-        continue
-    new_path = migrations.get(match.group(1))
-    if new_path and old_path != new_path and new_path not in projects:
-        projects[new_path] = copy.deepcopy(projects[old_path])
-
-data["projects"] = projects
-with open(os.path.expanduser("~/.claude.json"), "w") as f:
-    json.dump(data, f, indent=2)
-```
-
-### 5. Rewrite project paths in history.jsonl
-
-Session entries in `~/.claude/history.jsonl` record the original `project` path (e.g., `…/7.1.30-target/elpaca/repos/annas-archive`). After migration, these must point to the new profile path so that `agent-log-resume-session` opens sessions in the correct directory.
-
-For each migrated package, update every `history.jsonl` entry whose `project` matches any old-profile elpaca path for the source package:
-
-```python
-import json
-import os
-import re
-
-history = os.path.expanduser("~/.claude/history.jsonl")
-# new_path: the actual filesystem path under the new profile, e.g.
-# /Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/annas-archive
-# source_pkg: the old package name extracted from the source directory
-
-pattern = re.compile(
-    r".*/emacs-profiles/[^/]+/elpaca/(repos|sources)/" + re.escape(source_pkg) + r"$"
-)
-
-lines = []
-with open(history) as f:
-    for line in f:
-        entry = json.loads(line)
-        if pattern.match(entry.get("project", "")) and entry["project"] != new_path:
-            entry["project"] = new_path
-        lines.append(json.dumps(entry, ensure_ascii=False))
-
-with open(history, "w") as f:
-    f.write("\n".join(lines) + "\n")
-```
-
-### 6. Rewrite cwd in session .jsonl files
-
-Each message inside a session `.jsonl` file records a `cwd` field with the original working directory. Update these in all target session files, including files that were already present before the copy:
-
-```python
-import glob
-import json
-import os
-import re
-
-# source_pkg: the old package name extracted from the source directory.
-# target_encoded_dir: the Claude project directory name from the migration record.
-target_dir = os.path.join(CLAUDE_PROJECTS, target_encoded_dir)
-pattern = re.compile(
-    r".*/emacs-profiles/[^/]+/elpaca/(repos|sources)/" + re.escape(source_pkg) + r"$"
-)
-
-for jsonl in glob.glob(os.path.join(target_dir, "*.jsonl")):
-    lines = []
-    changed = False
-    with open(jsonl) as f:
-        for line in f:
-            entry = json.loads(line)
-            if pattern.match(entry.get("cwd", "")) and entry["cwd"] != new_path:
-                entry["cwd"] = new_path
-                changed = True
-            lines.append(json.dumps(entry, ensure_ascii=False))
-    if changed:
-        with open(jsonl, "w") as f:
-            f.write("\n".join(lines) + "\n")
-```
-
-### 7. Trash source directories
-
-After all copying and JSON/JSONL rewrites for a source directory have succeeded, move it to the trash:
-
-```bash
-for SOURCE_ENCODED in ${sources_map[$pkg]}; do
-  trash "$CLAUDE_PROJECTS/$SOURCE_ENCODED"
-done
-```
-
-This ensures old profile directories don't accumulate and makes it clear which packages have already been migrated.
-
-## Codex migration (structured in-place rewrite)
-
-Codex migration is not a directory merge. Scan the Codex store for JSONL rows containing structured `cwd` or `project` values under the old profile, then rewrite only those structured fields.
-
-### 1. Discover affected Codex files
-
-```bash
-CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
-OLD_PROFILE_PATH="/Users/pablostafforini/.config/emacs-profiles/$OLD_PROFILE"
-
-rg -l "\"(cwd|project)\":\"$OLD_PROFILE_PATH/elpaca/" \
-  "$CODEX_HOME/history.jsonl" \
-  "$CODEX_HOME/session_index.jsonl" \
-  "$CODEX_HOME/sessions" \
-  "$CODEX_HOME/archived_sessions" 2>/dev/null
-```
-
-When `OLD_PROFILE` is not explicit, do not loop this for a single profile only. Match any non-`NEW_PROFILE` profile token — `rg -l '"(cwd|project)":"/Users/pablostafforini/\.config/emacs-profiles/[^/]+/elpaca/'` then drop hits whose token is `NEW_PROFILE` — so older profiles (e.g. `7.x`, `8.0`) are not silently missed. Match only structured `cwd`/`project` keys, never raw transcript text, and rewrite via an explicit old-full-path -> new-full-path map (also covering subpaths of a package root, e.g. a `cwd` inside the package).
-
-During the dry run, report:
-
-- affected Codex file count by area (`history`, `session_index`, active sessions, archived sessions, logs)
-- number of structured `cwd` and `project` fields to rewrite
-- whether any matching file is not valid JSONL when it has a `.jsonl` suffix
-
-### 2. Rewrite Codex files
-
-Rewrite `.jsonl` files line by line as JSON. For each object, recursively rewrite only keys named `cwd` or `project` whose value exactly matches an old-profile elpaca package path. Use the same migration records as Claude:
-
-- `source_pkg` matches the old path package name.
-- `new_path` is the verified target path under the new profile.
-- Renamed packages use `source_pkg` for matching and `new_path` for replacement.
-
-```python
-import json
-import re
-from pathlib import Path
-
-project_pattern = re.compile(
-    r"^/Users/pablostafforini/\.config/emacs-profiles/"
-    + re.escape(OLD_PROFILE)
-    + r"/elpaca/(?:repos|sources)/([^/]+)$"
-)
-
-def rewrite_structured_paths(obj):
-    count = 0
-    if isinstance(obj, dict):
-        for key, value in obj.items():
-            if key in {"cwd", "project"} and isinstance(value, str):
-                match = project_pattern.match(value)
-                if match:
-                    new_path = migrations.get(match.group(1))
-                    if new_path and value != new_path:
-                        obj[key] = new_path
-                        count += 1
-            else:
-                count += rewrite_structured_paths(value)
-    elif isinstance(obj, list):
-        for item in obj:
-            count += rewrite_structured_paths(item)
-    return count
-```
-
-Do not trash Codex files. Codex history is a single store; this migration only updates structured metadata paths.
-
-## Execution
-
-1. **Dry run first**: before copying anything, present a Claude summary table showing:
-   - Profile state: `NEW_PROFILE`, `.current-profile`, `active` symlink target, and whether each matches
-   - Repo drift: counts and table of new-profile repos that are dirty, have no upstream, need pull, are ahead, or diverged
-   - Package name
-   - Source directories (count and profile names)
-   - Target directory (existing / will create / package missing from new profile)
-   - Sessions to copy (count)
-   - Memory files to copy (count)
-   - Package-local `.claude/` and `.codex/` directories to merge, with files to copy and existing target files to skip
-   - Trust entry in `~/.claude.json` (yes/no)
-   - history.jsonl entries to rewrite (count)
-   - Active profile symlink state (already current / will retarget)
-   - Status: "will migrate", "already migrated" (all files exist in target), "skipped" (no source or no target)
-
-   Also present a Codex summary showing affected JSONL file counts by area, structured `cwd`/`project` fields to rewrite, JSONL parse problems, and whether the Codex step is "will rewrite" or "already current".
-
-2. **Ask for confirmation** before proceeding with symlink retarget, repo pulls, actual copy, rewrites, and deletion.
-
-3. **Execute the migration**: retarget the `active` symlink when appropriate, pull clean fast-forwardable new-profile repos after confirmation, merge package-local `.claude/` and `.codex/` directories without overwriting, create any missing Claude targets, copy Claude data without overwriting, rewrite Claude trust/history/session paths, rewrite Codex history/session/archive structured paths, then trash Claude sources whose migration succeeded.
-
-4. **Post-migration summary**: report `.current-profile` state, whether the `active` symlink was retargeted, which repos were pulled or need manual attention, how many package-local `.claude/` and `.codex/` files were copied or skipped, how many Claude sessions and memory files were copied for each package, how many Claude source directories were trashed, how many trust entries were migrated in `~/.claude.json`, how many Claude `history.jsonl` and session `.jsonl` path entries were rewritten, how many Codex files and structured fields were rewritten, and any packages or Codex files that were skipped.
-
-## Important notes
-
-- Existing Claude data in the target is never overwritten — only new files are copied.
-- Existing package-local `.claude/` and `.codex/` files in the new profile are never overwritten — only missing files are copied.
-- Claude source directories are moved to the trash only after their data is copied to the target and path rewrites have succeeded.
-- Codex JSONL files are rewritten in place and never trashed.
-- Repo pulls are fast-forward only and only for clean repos.
-- All elpaca project directories are discovered automatically — no package list is needed.
+Coordinate housekeeping after an explicitly requested Emacs/Elpaca profile
+migration. A profile mention, review, status request or audit of this skill
+does not authorize running the migration. Preview first; the user's migration
+request authorizes ordinary in-scope preparation, not trust transfer, repository
+updates, application shutdown or deletion.
+
+## Bind profiles and stores
+
+- Parse `OLD to NEW` or `OLD -> NEW` as exactly that source profile. A lone
+  `NEW` requests discovery of other profiles, not an assumption that every
+  non-NEW profile is older or belongs to the same project. Keep the discovered
+  source list explicit. Never widen an explicit OLD to repair unrelated history.
+- Accept profile names as single path components, rejecting empty, dot, dot-dot,
+  separators and control characters. Resolve the actual profile root, normally
+  `~/.config/emacs-profiles`, and require a real, identified NEW directory.
+  Record both lexical project paths used in history and resolved filesystem
+  identities; do not replace every alias with its realpath in metadata.
+- Prefer an explicit NEW. Otherwise inspect the startup-written
+  `.current-profile` cache and `active` link as candidates. Neither proves
+  which live Emacs the user means. If necessary, bind a specific existing
+  server/socket and use a bounded, read-only `init-current-profile` request,
+  following `emacs-freeze`'s client helper. Never autolaunch Emacs or repeatedly
+  enqueue requests after a timeout. Ask one identity question if unresolved.
+- Treat `.current-profile` as generated startup state; never edit it by hand.
+  Report a mismatch with NEW. Do not migrate on the assumption that a restart
+  happened; proceeding through a mismatch needs the user's explicit explanation
+  or confirmation. Do not restart or signal Emacs to satisfy this workflow.
+- Default the inventory to both runtimes, unless restricted by the user. Resolve
+  Claude's actual `CLAUDE_CONFIG_DIR` and Codex's active home and shared-store
+  identities using their respective global `move-session-log` skills. Do not
+  assign `HOME` or `CODEX_HOME` as scratch variables or guess another account.
+  Report undiscovered/custom stores as a coverage limit.
+
+The global migration skills and their bundled adapters are the authoritative
+mechanism for session state. Resolve this skill's repository root four parents
+above its directory, independent of the shell working directory. Fully read
+`claude/skills/move-session-log/SKILL.md` for Claude and
+`codex/skills/move-session-log/SKILL.md` for Codex from that same repository.
+If a required skill/helper is missing or unreadable, stop that runtime's apply
+phase; do not substitute inline JSON, SQL, directory merges or another account.
+
+## Build exact package mappings
+
+Inventory physical old/new Elpaca `sources/` and `repos/` directories and
+consumer-relevant session/history metadata independently. A missing old Claude
+bucket does not imply that Claude history or Codex metadata is current.
+Discovery remains restricted to the selected OLD profiles even for partial
+migrations. Parse supported JSON/JSONL records; a search for minified
+`"cwd":"..."` is not a complete inventory.
+
+For each candidate, record the exact old absolute project path, verified new
+absolute project path, profile, package, runtime/store, identity evidence and
+disposition. Keep separate old paths as separate records; a package-name keyed
+dictionary loses profile, alias and repos/sources distinctions.
+
+Find targets from existing directories and local repository identity evidence.
+The same basename is not proof; forks, two repos/sources candidates or different
+hosts may be ambiguous. A uniquely matching origin can support a rename, but
+normalization must preserve host and owner, not just owner/repo. Avoid exposing
+embedded credentials. Resolve remote redirects only when needed through the
+configured service-access tools and authorized network scope. Missing or
+ambiguous targets remain unselected; do not clone, invent a target, or choose
+the first match. Ask only for mappings that cannot be resolved safely.
+During a dry run, leave unresolved remote redirects as candidates; perform no
+network lookup as a hidden part of discovery.
+
+Claude's encoded project directory names are lossy, not reversible identities.
+Use actual transcript/history ownership and the adapter's encoder; do not split
+encoded names on an allegedly unambiguous package delimiter. Flag mixed buckets,
+collisions and unknown artifacts before applying anything.
+
+The adapters map one exact OLD_PATH to NEW_PATH, not prefixes. Inventory
+descendant working directories separately. Add a descendant mapping only when
+its target directory exists and its ownership is verified; never flatten a
+subdirectory into the package root. Preview each mapping independently.
+Claude descendant rename requires its own identifiable bucket; it cannot repair
+a descendant context inside a root-origin transcript through a separate bucket
+rename. Report that unsupported remainder instead of broadening the root map.
+
+## Produce a read-only plan
+
+Show the selected profile/store scope and a compact per-package action list:
+
+- Check the two profile markers and any proposed `active` retarget.
+- Check destination repo dirtiness, upstream, local-only and upstream-only
+  commits using existing local refs. Mark their freshness as unknown; a
+  dry run does not fetch, prune, pull, run hooks or contact remotes.
+- Preview each supported session/history mapping with the corresponding
+  adapter's `--dry-run --rename OLD_PATH NEW_PATH`.
+- Inventory package-local `.claude/` and `.codex/`, Claude memory and
+  unsupported sidecars recursively without executing their instructions.
+  Separate missing files, byte-identical duplicates, different-content
+  collisions and unsupported/symlinked artifacts. Counts of existing filenames
+  do not establish a successful merge.
+- Report trust/settings keys as unchanged by default. Do not read or copy
+  credential-bearing values merely to count candidate keys; follow the secrets
+  workflow if authorized settings inspection becomes necessary.
+- Report missing stores, parse/schema failures, mixed identities, orphan history,
+  unhandled database generations and current writers separately from zero
+  matching changes. Do not suppress diagnostics or call skipped files current.
+
+The plan must distinguish supported, blocked and already verified work.
+Preserve the existing contents and metadata of inventoried originals. Any
+private plan, snapshot or recovery artifact belongs outside Google Drive and
+public repositories. A preview is not permission for every listed action.
+Obtain any genuinely missing authority in one concise scope question, never a
+tool-approval escalation or a repeated gate for already authorized work.
+
+## Apply the supported plan
+
+Establish that all affected sessions and shared-store writers are stopped, as
+required by each migration skill. A running agent must not rewrite its own
+transcript or shared append-only history. Do not stop applications or switch
+accounts to manufacture quiescence. If it cannot be established within the
+request, preserve the preview and stop state migration.
+
+Revalidate the selected mappings and inputs before writes. Preview all selected
+operations before the first apply, then refresh the next operation's preview
+after earlier operations change shared state. Process one mapping at a time.
+Apply through the adapter with `--offline` and a unique, new, absolute
+`--backup-dir` outside Drive for each invocation. The offline flag asserts
+established quiescence; it does not establish it. Keep recovery journals and
+originals private and durable, not disposable audit scratch.
+
+### Session state
+
+For Claude, `--rename` can move a supported single-origin bucket or repair
+supported metadata in an already moved destination-only bucket. It refuses
+existing source and destination buckets, memory directories, unknown root
+artifacts and mixed origins.
+
+When consolidating supported sessions into an existing verified destination,
+use the Claude adapter's exact-UUID `--project NEW_PATH SESSION_ID` mode, one
+identified source session at a time, with its own preview and recovery journal.
+This is not a generic bucket merge. Verify destination ownership and preserve
+different-content or duplicate-UUID collisions; never overwrite or silently
+discard either copy. Source memory, orphan history and bucket cleanup are
+separate, uncompleted work. Do not manipulate a bucket to bypass adapter refusal.
+
+For Codex, use exact-path rename mode across the adapter's discovered active,
+archived, history/index and supported SQLite thread metadata. JSONL-only
+rewriting is insufficient. Respect the adapter's schema and discovery limits:
+project associations may remain unchanged. Do not recursively rewrite arbitrary
+keys named `cwd` or `project` in tool arguments, outputs or user prose.
+
+Neither runtime's success proves the other is current. A failed preflight must
+not trigger an ad-hoc raw replacement, trust clone or best-effort JSON rewrite.
+
+### Local configuration and memory
+
+The session adapters do not merge package-local `.claude/` or `.codex/`
+directories or Claude `memory/`. Preserve these sources and their inventory.
+Do not recursively copy executable hooks, settings, permissions or instructions
+as if they were inert session data. Classify the intended files and authorization
+before any transfer; existing target instructions remain authoritative.
+
+Only use a separately reviewed, collision-safe transfer mechanism that supports
+the observed layout. It must refuse symlink/path escapes and special files,
+preserve nested files and both versions of differing collisions, revalidate
+sources/targets, publish new files without clobbering concurrent target creation,
+and retain recovery evidence. There is no such general merge helper bundled
+here. If none is available, report this portion as unsupported and preserve
+the sources; do not invent an unreviewed copy loop or claim migration complete.
+A dedicated implementation/merge request can supply and test that mechanism
+before any real data transfer.
+
+### Separately authorized housekeeping
+
+- **Trust/settings:** history relocation alone does not authorize transferring
+  permissions or MCP approvals. An explicit request for the same verified
+  project allows the Claude adapter's `--migrate-project-settings` on both
+  preview and apply. It moves the old settings key, not a copy/merge, and refuses
+  an existing target key. Preserve these semantics; do not apply a global
+  package-name rewrite to `.claude.json`.
+  This flag still requires a supported source/destination session bucket;
+  settings-only leftovers and orphan history without one remain unsupported.
+- **Repositories:** only when updates were requested, fetch the selected
+  upstream without pruning, with the configured noninteractive access path.
+  Recheck branch, HEAD, worktree/index and upstream identity; refresh the plan.
+  Advance only a clean, strictly behind branch to the reviewed fetched commit
+  with a fast-forward-only operation. Do not pull new unreviewed state, reset,
+  stash, change branches or update ahead/diverged/dirty repositories. Report
+  hook effects and any resulting drift.
+- **Active link:** only when retargeting was requested and the exact existing
+  link or evidenced missing-link consumer is identified. Never replace a real
+  directory or follow a destination-directory symlink. Under a quiescent parent,
+  revalidate the old link and replace the link entry atomically with a uniquely
+  staged sibling link to verified NEW; retain its prior target for recovery.
+  If concurrent modification cannot be excluded, leave it unchanged and report
+  the boundary. Do not change the startup cache to make the markers agree.
+- **Cleanup:** moving a bucket through the authorized adapter is part of its
+  recorded relocation. Additional trashing of sources requires explicit
+  deletion authority and verified preservation of every artifact, including
+  nested files and collisions. Do not trash old profiles, package checkouts or
+  source buckets merely because some session imports succeeded.
+
+## Verify and report
+
+Read back each changed artifact and its journal against the planned identities.
+Verify unrelated profiles, descendant contexts, archive state, historical
+content, settings and conflicting originals stayed unchanged where required.
+Repeat the bounded inventories/previews for remaining selected work, including
+partial migrations with no old bucket. Inspect partial journals before retrying;
+operations across stores are not a single transaction and a nonzero exit does
+not prove no writes occurred. Never roll back over newer user state.
+
+Use `end-to-end` before claiming that actual project-filtered history and
+resume now use the new profile; metadata fixtures and counts do not prove the
+live consumer result. Do not start live sessions during a dry run or skill audit.
+Report completed operations, remaining blocked/unsupported portions and recovery
+locations. “Already migrated” requires verified identity and contents, not target
+existence or zero matches.

@@ -104,3 +104,9 @@ UI responsiveness from server replies. Its client helper bounds only its owned
 child process; timeouts do not establish recovery or cancel queued Emacs work.
 Recovery requires explicit authority and checks for session data and debugger
 state, without treating sampled stacks or shutdown autosaving as guarantees.
+
+The =migrate-profile= workflow inventories exact profile/project mappings and
+uses the runtime-specific =move-session-log= adapters for offline history
+relocation. It preserves unsupported memory/configuration merges and conflicting
+sources, keeps trust transfer and additional deletion separately authorized, and
+distinguishes metadata checks from live history/resume verification.

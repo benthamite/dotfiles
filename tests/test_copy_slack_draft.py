@@ -1,6 +1,8 @@
 import importlib.machinery
 import importlib.util
+import io
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -14,11 +16,11 @@ SCRIPT = ROOT / "claude" / "bin" / "copy-slack-draft"
 THREAD_TS = "1710000000.000000"
 MESSAGE_TS = "1710000000.000100"
 THREAD_PERMALINK = (
-    f"https://epochai.slack.com/archives/C123/p1710000000000100"
-    f"?thread_ts={THREAD_TS}&cid=C123"
+    f"https://epochai.slack.com/archives/C12345678/p1710000000000100"
+    f"?thread_ts={THREAD_TS}&cid=C12345678"
 )
 MESSAGE_PERMALINK = (
-    "https://epochai.slack.com/archives/C123/p1710000000000100"
+    "https://epochai.slack.com/archives/C12345678/p1710000000000100"
 )
 
 
@@ -42,9 +44,9 @@ class CopySlackDraftTest(unittest.TestCase):
         with mock.patch.object(
             self.mod,
             "run_emacs_eval",
-            side_effect=lambda expr: captured.append(expr) or '"captured"',
+            side_effect=lambda expr, socket: captured.append(expr) or '"captured"',
         ):
-            self.mod.prefill_slack_reply(permalink, draft_path)
+            self.mod.prefill_slack_reply(permalink, draft_path, '/tmp/synthetic-socket')
         self.assertEqual(len(captured), 1)
         return captured[0]
 
@@ -59,6 +61,10 @@ class CopySlackDraftTest(unittest.TestCase):
         fetch_error=False,
         corrupt_target_after_insert=False,
         force_timeout=False,
+        open_only=False,
+        disconnected=False,
+        missing_linked_message=False,
+        replace_during_display=False,
     ):
         draft = "First line\nSecond line\n"
         target_ts = thread_ts or MESSAGE_TS
@@ -66,7 +72,7 @@ class CopySlackDraftTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             draft_path = pathlib.Path(temp_dir) / "draft.txt"
             draft_path.write_text(draft)
-            expression = self.capture_prefill_expression(permalink, draft_path)
+            expression = self.capture_prefill_expression(permalink, None if open_only else draft_path)
             thread_ts_form = "nil" if thread_ts is None else json.dumps(thread_ts)
             corrupt_hook = ""
             if corrupt_target_after_insert:
@@ -117,13 +123,14 @@ class CopySlackDraftTest(unittest.TestCase):
                 (defun slack-browse-url (&rest _) nil)
                 (defun slack-permalink-to-info (_)
                   (list :team-domain "epochai"
-                        :room-id "C123"
+                        :room-id "C12345678"
                         :ts {json.dumps(MESSAGE_TS)}
                         :thread-ts {thread_ts_form}))
                 (defun slack-team-find-by-domain (_) 'epoch-team)
-                (defun slack-team-connectedp (_) t)
+                (defun slack-team-connectedp (_) {"nil" if disconnected else "t"})
                 (defun slack-room-find (_ _) 'target-room)
-                (defun slack-start (&rest _) nil)
+                (defun slack-start (&rest _) (error "MUST NOT CONNECT"))
+                (defun slack-ts (message) (test-message-ts message))
                 (defun test-finish-fetch ()
                   (if test-fetch-error
                       (funcall
@@ -138,7 +145,8 @@ class CopySlackDraftTest(unittest.TestCase):
                        :data '(:ok nil :error "channel_not_found"))
                     (funcall
                      test-fetch-callback
-                     (list (make-test-message :ts test-fetch-ts))
+                     (append (list (make-test-message :ts test-fetch-ts))
+                             {"nil" if missing_linked_message else '(list (make-test-message :ts ' + json.dumps(MESSAGE_TS) + '))'})
                      "next-cursor"
                      t)))
                 (cl-defun slack-conversations-replies
@@ -186,6 +194,8 @@ class CopySlackDraftTest(unittest.TestCase):
                   (test-thread-buffer thread))
                 (defun slack-buffer-display (thread)
                   (setq test-display-count (1+ test-display-count))
+                  {'''(with-current-buffer test-target-buffer
+                        (erase-buffer) (insert "NEW USER INPUT"))''' if replace_during_display else ''}
                   (switch-to-buffer (test-thread-buffer thread)))
                 ;; Model the inherited implementation's generic opener.  Its
                 ;; target appears after the fixed wait has already selected a
@@ -266,6 +276,7 @@ class CopySlackDraftTest(unittest.TestCase):
                 ["emacs", "-Q", "--batch", "--eval", program],
                 text=True,
                 capture_output=True,
+                timeout=10,
             )
         self.assertEqual(result.returncode, 0, result.stderr)
         return draft, json.loads(result.stdout)
@@ -386,8 +397,201 @@ class CopySlackDraftTest(unittest.TestCase):
         with mock.patch.object(
             self.mod.subprocess, "run", return_value=completed
         ):
-            with self.assertRaisesRegex(RuntimeError, "broken"):
-                self.mod.run_emacs_eval("(error \"broken\")")
+            with self.assertRaisesRegex(RuntimeError, "not acknowledged"):
+                self.mod.run_emacs_eval("(error \"broken\")", "/tmp/synthetic-socket")
+
+    def test_open_only_preserves_existing_thread_input(self):
+        _, payload = self.evaluate_prefill(THREAD_PERMALINK, thread_ts=THREAD_TS,
+                                          target_input="UNSENT", open_only=True)
+        self.assertIsNone(payload["failure"])
+        self.assertEqual(payload["target"], "UNSENT")
+        self.assertEqual(payload["result"], "draft-opened")
+
+    def test_disconnected_team_is_not_started(self):
+        _, payload = self.evaluate_prefill(THREAD_PERMALINK, thread_ts=THREAD_TS,
+                                          disconnected=True)
+        self.assert_unchanged_on_failure(payload, target="")
+        self.assertEqual(payload["room-mutations"], 0)
+
+    def test_linked_message_must_be_in_fetched_thread(self):
+        _, payload = self.evaluate_prefill(THREAD_PERMALINK, thread_ts=THREAD_TS,
+                                          missing_linked_message=True)
+        self.assert_unchanged_on_failure(payload, target="")
+        self.assertEqual(payload["room-mutations"], 0)
+
+    def test_display_change_does_not_erase_new_user_input(self):
+        _, payload = self.evaluate_prefill(THREAD_PERMALINK, thread_ts=THREAD_TS,
+                                          replace_during_display=True)
+        self.assertIsNotNone(payload["failure"])
+        self.assertEqual(payload["target"], "NEW USER INPUT")
+
+    def batch(self, expression):
+        result = subprocess.run(["emacs", "-Q", "--batch", "--eval", expression],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
+    def test_ring_isolated_exact_and_transform_aware(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "unicode-😀.txt"
+            path.write_bytes("Draft 😀\r\n".encode())
+            captured = []
+            with mock.patch.object(self.mod, "run_emacs_eval", side_effect=lambda e, s: captured.append(e) or "draft-ring-staged"):
+                self.mod.copy_to_kill_ring(path, "/tmp/socket")
+            for reject in (False, True, "mutate"):
+                with self.subTest(reject=reject):
+                    output = self.batch(f'''(progn (require 'json)
+                    (let* ((kill-ring '("OLD")) (kill-ring-yank-pointer kill-ring)
+                           (copied nil) (read nil)
+                           (save-interprogram-paste-before-kill t)
+                           (interprogram-cut-function (lambda (&rest _) (setq copied t)))
+                           (interprogram-paste-function (lambda () (setq read t) "CLIPBOARD"))
+                           (kill-transform-function {"(lambda (s) (aset s 0 ?X) s)" if reject == "mutate" else "(lambda (_) nil)" if reject else "nil"})
+                           (result {captured[0]}))
+                      (princ (json-encode (list result copied read (car kill-ring))))))''')
+                    self.assertEqual(output[0], "draft-ring-failed" if reject else "draft-ring-staged")
+                    self.assertEqual(output[1:3], [None, None])
+                    self.assertEqual(output[3], "OLD" if reject else "Draft 😀\r\n")
+
+    def channel(self, *, existing="", corrupt=False, open_only=False, display_change=False):
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "draft"
+            path.write_text("DRAFT")
+            captured = []
+            with mock.patch.object(self.mod, "run_emacs_eval", side_effect=lambda e, s: captured.append(e) or "draft-composer-staged"):
+                self.mod.prefill_channel_message("C12345678", None if open_only else path, "/tmp/socket")
+            return self.batch(f'''(progn (require 'cl-lib) (require 'json)
+              (defvar slack-debug nil)
+              (defun slack-team-find-by-domain (domain)
+                (unless (equal domain "epochai") (error "Wrong workspace")) 'team)
+              (defun slack-room-find (&rest _) 'room)
+              (defun slack-team-connectedp (_) t)
+              (defun slack-create-message-buffer (_ cursor _)
+                (unless (equal cursor "") (error "Wrong cursor")) 'object)
+              (defun slack-buffer-buffer (_) (get-buffer-create "target"))
+              (defun slack-buffer-display (_)
+                (unless slack-debug (error "Unsafe display error handler"))
+                (switch-to-buffer "target")
+                {'''(erase-buffer) (insert "NEW USER INPUT")''' if display_change else ''})
+              (with-current-buffer (get-buffer-create "target")
+                (setq-local lui-input-marker (copy-marker (point-min)))
+                (insert {json.dumps(existing)})
+                {'''(add-hook 'after-change-functions
+                     (lambda (&rest _) (let ((inhibit-modification-hooks t))
+                       (goto-char (point-max)) (insert "CORRUPT"))) nil t)''' if corrupt else ''})
+              (let (result failure)
+                (condition-case nil (setq result {captured[0]}) (error (setq failure t)))
+                (princ (json-encode
+                  (list result failure (with-current-buffer "target" (buffer-string)))))))''')
+
+    def test_channel_exact_and_no_overwrite(self):
+        self.assertEqual(self.channel(), ["draft-composer-staged", None, "DRAFT"])
+        self.assertEqual(self.channel(existing="DRAFT"), ["draft-composer-staged", None, "DRAFT"])
+        self.assertEqual(self.channel(existing="UNSENT"), [None, True, "UNSENT"])
+
+    def test_channel_corruption_rolls_back(self):
+        self.assertEqual(self.channel(corrupt=True), [None, True, ""])
+
+    def test_channel_display_change_preserves_new_input(self):
+        self.assertEqual(self.channel(display_change=True), [None, True, "NEW USER INPUT"])
+
+    def test_channel_open_only_preserves_input(self):
+        self.assertEqual(self.channel(existing="UNSENT", open_only=True), ["draft-opened", None, "UNSENT"])
+
+    def test_client_is_bounded_and_rejects_untrusted_output(self):
+        for output in ("nil", '"PRIVATE DRAFT"', '*ERROR* PRIVATE DRAFT'):
+            with mock.patch.object(self.mod.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, output, "SECRET")) as run:
+                with self.assertRaises(self.mod.UncertainResult) as caught:
+                    self.mod.run_emacs_eval("(ignore)", "/tmp/explicit-socket")
+                self.assertNotIn("PRIVATE", str(caught.exception))
+                self.assertEqual(run.call_args.kwargs["timeout"], 65)
+                self.assertEqual(run.call_args.args[0][1:5], ["--socket-name", "/tmp/explicit-socket", "--alternate-editor", "false"])
+
+    def test_private_snapshot_preserves_bytes_and_freezes_source(self):
+        original_mkdtemp = tempfile.mkdtemp
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "draft😀"
+            path.write_bytes("original 😀\r\n".encode())
+            path.chmod(0o600)
+            with mock.patch.object(self.mod.tempfile, "mkdtemp", side_effect=lambda **_: original_mkdtemp(dir=directory)):
+                with self.mod.draft_snapshot(str(path)) as snapshot:
+                    self.assertTrue(snapshot.is_absolute())
+                    self.assertEqual(snapshot.stat().st_mode & 0o777, 0o600)
+                    path.write_text("changed")
+                    self.assertEqual(snapshot.read_bytes(), "original 😀\r\n".encode())
+                self.assertFalse(snapshot.exists())
+
+    def test_client_timeout_and_decode_errors_are_uncertain_and_safe(self):
+        for error in (subprocess.TimeoutExpired("emacsclient", 65, output="PRIVATE"),
+                      UnicodeDecodeError("utf8", b"SECRET\xff", 6, 7, "bad")):
+            with mock.patch.object(self.mod.subprocess, "run", side_effect=error):
+                with self.assertRaises((TimeoutError, self.mod.UncertainResult)) as caught:
+                    self.mod.run_emacs_eval("(ignore)", "/tmp/socket")
+                self.assertNotIn("SECRET", str(caught.exception))
+                self.assertNotIn("PRIVATE", str(caught.exception))
+
+    def test_socket_is_explicit_existing_owned_socket(self):
+        import stat
+        with self.assertRaises(ValueError):
+            self.mod.validate_socket("relative")
+        with mock.patch.object(pathlib.Path, "stat", return_value=mock.Mock(st_mode=stat.S_IFREG | 0o600, st_uid=os.getuid())):
+            with self.assertRaises(ValueError):
+                self.mod.validate_socket("/tmp/not-socket")
+        with mock.patch.object(pathlib.Path, "stat", return_value=mock.Mock(st_mode=stat.S_IFSOCK | 0o600, st_uid=os.getuid())):
+            self.assertEqual(self.mod.validate_socket("/tmp/socket"), "/tmp/socket")
+
+    def test_snapshot_refuses_public_symlink_and_invalid_utf8(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "draft"
+            path.write_bytes(b"draft")
+            path.chmod(0o644)
+            with self.assertRaises(ValueError):
+                with self.mod.draft_snapshot(str(path)): self.fail("Accepted public file")
+            path.chmod(0o600)
+            link = pathlib.Path(directory) / "link"
+            link.symlink_to(path)
+            with self.assertRaises(OSError):
+                with self.mod.draft_snapshot(str(link)): self.fail("Accepted symlink")
+            path.write_bytes(b"\xff")
+            with self.assertRaises(UnicodeError):
+                with self.mod.draft_snapshot(str(path)): self.fail("Accepted invalid UTF8")
+
+    def test_snapshot_survives_uncertain_outcome(self):
+        original_mkdtemp = tempfile.mkdtemp
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "draft"
+            path.write_text("DRAFT")
+            path.chmod(0o600)
+            with mock.patch.object(self.mod.tempfile, "mkdtemp", side_effect=lambda **_: original_mkdtemp(dir=directory)), mock.patch("sys.stderr", new_callable=io.StringIO) as err:
+                with self.assertRaises(TimeoutError):
+                    with self.mod.draft_snapshot(str(path)) as snapshot:
+                        raise TimeoutError()
+                self.assertTrue(snapshot.exists())
+                self.assertIn(str(snapshot), err.getvalue())
+
+    def test_invalid_target_does_not_touch_ring_or_client(self):
+        for url in ("https://evil.slack.com/archives/C12345678/p1710000000000000", THREAD_PERMALINK + "&cid=OTHER"):
+            with mock.patch.object(sys, "argv", ["copy", "--socket", "/tmp/socket", "--file", "/missing", "--permalink", url]), mock.patch.object(self.mod, "copy_to_kill_ring") as ring, mock.patch.object(self.mod, "run_emacs_eval") as client, mock.patch("sys.stdout", new_callable=io.StringIO):
+                self.assertEqual(self.mod.main(), 1)
+                ring.assert_not_called()
+                client.assert_not_called()
+
+    def test_open_only_main_never_reads_file_or_stages_ring(self):
+        with mock.patch.object(sys, "argv", ["copy", "--socket", "/tmp/socket", "--channel", "C12345678", "--open-only"]), mock.patch.object(self.mod, "validate_socket", return_value="/tmp/socket"), mock.patch.object(self.mod, "draft_snapshot") as snapshot, mock.patch.object(self.mod, "copy_to_kill_ring") as ring, mock.patch.object(self.mod, "prefill_channel_message", return_value="draft-opened") as stage, mock.patch("sys.stdout", new_callable=io.StringIO) as output:
+            self.assertEqual(self.mod.main(), 0)
+            snapshot.assert_not_called()
+            ring.assert_not_called()
+            stage.assert_called_once_with("C12345678", None, "/tmp/socket")
+            self.assertFalse(json.loads(output.getvalue())["composer"])
+
+    def test_composer_success_ring_failure_is_partial(self):
+        from contextlib import nullcontext
+        with mock.patch.object(sys, "argv", ["copy", "--socket", "/tmp/socket", "--channel", "C12345678", "--file", "/synthetic"]), mock.patch.object(self.mod, "validate_socket", return_value="/tmp/socket"), mock.patch.object(self.mod, "draft_snapshot", return_value=nullcontext(pathlib.Path("/snapshot"))), mock.patch.object(self.mod, "prefill_channel_message", return_value="draft-composer-staged"), mock.patch.object(self.mod, "copy_to_kill_ring", side_effect=self.mod.UncertainResult()), mock.patch("sys.stdout", new_callable=io.StringIO) as output:
+            self.assertEqual(self.mod.main(), 1)
+            result = json.loads(output.getvalue())
+            self.assertTrue(result["composer"])
+            self.assertFalse(result["ring"])
+            self.assertEqual((result["status"], result["stage"]), ("uncertain", "ring"))
 
 
 if __name__ == "__main__":

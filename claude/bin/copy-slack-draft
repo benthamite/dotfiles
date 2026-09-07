@@ -2,56 +2,110 @@
 """Copy a Slack draft to the Emacs kill ring and optionally prefill a reply."""
 
 import argparse
+import contextlib
+import importlib.util
 import json
+import os
+import re
+import shutil
+import stat
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
-def run_emacs_eval(expr: str) -> str:
-    result = subprocess.run(
-        ["emacsclient", "--eval", expr],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
+class UncertainResult(RuntimeError):
+    """The client did not prove whether the operation changed Emacs."""
+
+
+def run_emacs_eval(expr: str, socket: str) -> str:
+    expr = f"(let ((debug-on-error nil)) (condition-case nil {expr} (error 'draft-stage-failed)))"
+    try:
+        result = subprocess.run(
+            ["emacsclient", "--socket-name", socket,
+             "--alternate-editor", "false", "--eval", expr],
+            check=False, capture_output=True, text=True, timeout=65,
+        )
+    except subprocess.TimeoutExpired:
+        raise TimeoutError("Emacs result uncertain; do not retry") from None
+    except (UnicodeError, subprocess.SubprocessError):
+        raise UncertainResult("Emacs result could not be decoded") from None
+    except OSError:
+        raise RuntimeError("Emacs client failed") from None
     out = (result.stdout or "").strip()
-    if result.returncode != 0:
-        detail = (result.stderr or out).strip()
-        raise RuntimeError(detail or "emacsclient failed")
-    # emacsclient exits 0 even when the form signals an error; it reports the
-    # failure on stdout instead. Without this check every failure looks like a
-    # success.
-    if out.startswith("*ERROR*"):
-        raise RuntimeError(out)
+    if result.returncode != 0 or out not in {
+        "draft-ring-staged", "draft-composer-staged", "draft-opened"
+    }:
+        raise UncertainResult("Emacs staging was not acknowledged")
     return out
 
 
 def elisp_string(value: str) -> str:
-    # JSON strings are valid enough Elisp string literals for paths and URLs.
-    return json.dumps(value)
+    return json.dumps(value, ensure_ascii=False)
 
 
-def copy_to_kill_ring(path: Path) -> None:
-    expr = (
-        "(with-temp-buffer "
-        f"(insert-file-contents {elisp_string(str(path))}) "
-        "(kill-new (buffer-string)))"
-    )
-    run_emacs_eval(expr)
+def copy_to_kill_ring(path: Path, socket: str) -> None:
+    expr = f"""(condition-case nil
+      (let* ((draft (with-temp-buffer
+                     (let ((coding-system-for-read 'utf-8-unix))
+                       (insert-file-contents {elisp_string(str(path))}))
+                     (buffer-string)))
+             (interprogram-cut-function nil)
+             (interprogram-paste-function nil)
+             (save-interprogram-paste-before-kill nil)
+             (original-transform kill-transform-function)
+             (accepted nil)
+             (kill-transform-function
+              (lambda (text)
+                (let ((value (if original-transform
+                                 (funcall original-transform text) text)))
+                  (setq accepted (and (stringp value) (equal-including-properties value draft)))
+                  (and accepted value)))))
+        (kill-new (copy-sequence draft))
+        (unless (and accepted (equal-including-properties (car kill-ring) draft)
+                     (eq kill-ring-yank-pointer kill-ring))
+          (error "Staging rejected"))
+        'draft-ring-staged)
+      (error 'draft-ring-failed))"""
+    if run_emacs_eval(expr, socket) != "draft-ring-staged":
+        raise UncertainResult("Kill-ring staging was not acknowledged")
 
 
-def prefill_slack_reply(permalink: str, path: Path) -> str:
+def permalink_info(permalink: str) -> dict:
+    spec = importlib.util.spec_from_file_location("draft_slack_parser", Path(__file__).with_name("slack.py"))
+    module = importlib.util.module_from_spec(spec)
+    # Compile source directly: importing this sibling must not write a cache
+    # beside the maintained scripts inside Drive.
+    exec(compile(Path(spec.origin).read_bytes(), spec.origin, "exec"), module.__dict__)
+    module._workspace = "epoch"
+    return module.parse_permalink(permalink)
+
+
+def composer_expression(expr: str) -> str:
+    # Cancellation must not re-run the hook that caused an insertion mismatch.
+    return """(progn (require 'cl-lib)
+      (cl-macrolet ((draft-atomic (&rest body)
+        `(let ((draft-group (prepare-change-group)))
+           (unwind-protect
+               (progn (activate-change-group draft-group)
+                      ,@body
+                      (accept-change-group draft-group)
+                      (setq draft-group nil))
+             (when draft-group
+               (let ((inhibit-modification-hooks t))
+                 (cancel-change-group draft-group)))))))
+    """ + expr.replace("(atomic-change-group", "(draft-atomic") + "))"
+
+
+def prefill_slack_reply(permalink: str, path: Path | None, socket: str) -> str:
+    info = permalink_info(permalink)
     expr = f"""
 (progn
   (require 'cl-lib)
   (require 'eieio)
   (require 'subr-x)
   (require 'slack-team nil t)
-  (unless (fboundp 'slack-browse-url)
-    (require 'slack nil t))
-  (unless (fboundp 'slack-browse-url)
-    (error "slack-browse-url is not available"))
   (unless (fboundp 'slack-conversations-replies)
     (require 'slack-conversations nil t))
   (unless (fboundp 'slack-conversations-replies)
@@ -60,30 +114,23 @@ def prefill_slack_reply(permalink: str, path: Path) -> str:
     (require 'slack-thread-message-buffer nil t))
   (unless (fboundp 'slack-create-thread-message-buffer)
     (error "slack-create-thread-message-buffer is not available"))
-  (let* ((info (slack-permalink-to-info {elisp_string(permalink)}))
+  (let* ((info (list :team-domain {elisp_string(info['team_domain'])}
+                     :room-id {elisp_string(info['channel'])}
+                     :ts {elisp_string(info['message_ts'])}
+                     :thread-ts {elisp_string(info['thread_ts']) if info['thread_ts'] else 'nil'}))
          (team-domain (plist-get info :team-domain))
          (room-id (plist-get info :room-id))
          (ts (plist-get info :ts))
          (thread-ts (plist-get info :thread-ts))
          (target-ts (or thread-ts ts))
-         (team
-          (or (slack-team-find-by-domain team-domain)
-              (--find
-               (or (equal team-domain (oref it name))
-                   (and (string= team-domain "epochai")
-                        (equal (oref it name) "Epoch AI")))
-               (hash-table-values slack-teams-by-token)))))
+         (team (slack-team-find-by-domain team-domain)))
     (unless (and team-domain room-id ts)
       (error "Could not resolve Slack permalink: %s"
              {elisp_string(permalink)}))
     (unless team
       (error "No registered Slack team for %s" team-domain))
     (unless (slack-team-connectedp team)
-      (slack-start team)
-      (let ((deadline (+ (float-time) 20)))
-        (while (and (not (slack-team-connectedp team))
-                    (< (float-time) deadline))
-          (accept-process-output nil 0.25))))
+      (error "Epoch Slack is disconnected"))
     (let ((room (slack-room-find room-id team)))
       (unless room
         (error "Slack room %s is not loaded for team %s"
@@ -139,6 +186,8 @@ def prefill_slack_reply(permalink: str, path: Path) -> str:
                           (error
                            "Slack returned no message for %s in %s"
                            target-ts room-id))
+                        (unless (cl-some (lambda (message) (equal (slack-ts message) ts)) messages)
+                          (error "Linked message was not verified in the fetched thread page"))
                         (slack-room-set-messages room messages team)
                         (slack-message-set-replies
                          room target-ts messages)
@@ -163,15 +212,22 @@ def prefill_slack_reply(permalink: str, path: Path) -> str:
                                      thread parent room)
                                     (slack-buffer-buffer thread)))
                                  (draft
-                                  (with-temp-buffer
-                                    (insert-file-contents
-                                     {elisp_string(str(path))})
-                                    (buffer-string))))
+                                  (when { 't' if path else 'nil' }
+                                   (with-temp-buffer
+                                    (let ((coding-system-for-read 'utf-8-unix))
+                                      (insert-file-contents
+                                       {elisp_string(str(path))}))
+                                    (buffer-string)))))
                             (unless (buffer-live-p buf)
                               (error
                                "Slack reply buffer is not live for %s in %s"
                                target-ts room-id))
-                            (with-current-buffer buf
+                            (if (null draft)
+                                (progn (let ((slack-debug t)) (slack-buffer-display thread))
+                                       (unless (eq (window-buffer (selected-window)) buf)
+                                         (error "Target was not selected"))
+                                       (setq result 'draft-opened done t))
+                             (with-current-buffer buf
                               (unless
                                   (and
                                    (markerp lui-input-marker)
@@ -191,8 +247,7 @@ def prefill_slack_reply(permalink: str, path: Path) -> str:
                                   (error
                                    "Slack reply input in %s already contains unsent text"
                                    (buffer-name buf)))
-                                (condition-case insert-error
-                                    (progn
+                                (atomic-change-group
                                       (unless (equal existing draft)
                                         (goto-char lui-input-marker)
                                         (insert draft))
@@ -203,20 +258,17 @@ def prefill_slack_reply(permalink: str, path: Path) -> str:
                                         (unless (equal staged draft)
                                           (error
                                            "Slack reply input in %s does not exactly match the draft"
-                                           (buffer-name buf))))
-                                      (slack-buffer-display thread)
-                                      (setq result (buffer-name buf)
-                                            done t))
-                                  (error
-                                   (let ((inhibit-modification-hooks t)
-                                         (inhibit-read-only t))
-                                     (delete-region
-                                      lui-input-marker (point-max))
-                                     (goto-char lui-input-marker)
-                                     (insert existing))
-                                   (signal
-                                    (car insert-error)
-                                    (cdr insert-error)))))))))
+                                           (buffer-name buf)))))
+                                ;; Display may run user hooks: never roll back
+                                ;; newer input that arrives after insertion.
+                                (let ((slack-debug t)) (slack-buffer-display thread))
+                                (unless (eq (window-buffer (selected-window)) buf)
+                                  (error "Target was not selected"))
+                                (unless (equal draft (buffer-substring-no-properties
+                                                       lui-input-marker (point-max)))
+                                  (error "Composer changed after insertion"))
+                                (setq result 'draft-composer-staged
+                                      done t)))))))
                     (error (finish-with-error err)))))))
           (condition-case err
               (slack-conversations-replies
@@ -238,18 +290,11 @@ def prefill_slack_reply(permalink: str, path: Path) -> str:
              target-ts room-id))
            (t result)))))))
 """.strip()
-    return run_emacs_eval(expr)
+    return run_emacs_eval(composer_expression(expr), socket)
 
 
-def prefill_channel_message(channel: str, path: Path) -> str:
-    """Open a channel's own message buffer and prefill its composer.
-
-    The permalink path above always lands in a *thread*, which is wrong for a
-    top-level channel post. Resolving the team is the part worth centralising:
-    ``slack-teams-by-token`` holds every workspace Emacs knows about, and
-    taking the first one silently picks whichever happens to be first — a
-    workspace with no rooms loaded looks exactly like a missing channel.
-    """
+def prefill_channel_message(channel: str, path: Path | None, socket: str) -> str:
+    """Open the exact loaded Epoch room; stage PATH unless this is open-only."""
     expr = f"""
 (progn
   (require 'cl-lib)
@@ -260,35 +305,25 @@ def prefill_channel_message(channel: str, path: Path) -> str:
   (unless (fboundp 'slack-create-message-buffer)
     (error "slack-create-message-buffer is not available"))
   (let* ((channel-id {elisp_string(channel)})
-         (teams (hash-table-values slack-teams-by-token))
-         ;; Pick the team that actually has this room, not the first team.
-         (team (or (cl-find-if (lambda (tm) (slack-room-find channel-id tm)) teams)
-                   (error "No connected Slack team has room %s. Loaded teams: %s"
-                          channel-id
-                          (mapconcat (lambda (tm)
-                                       (format "%s(%d rooms)"
-                                               (slack-team-name tm)
-                                               (length (slack-team-channels tm))))
-                                     teams ", "))))
+         (team (or (slack-team-find-by-domain "epochai")
+                   (error "Epoch Slack team is not registered")))
          (room (slack-room-find channel-id team)))
+    (unless room (error "Epoch Slack room is not loaded"))
     (unless (slack-team-connectedp team)
-      (slack-start team)
-      (let ((deadline (+ (float-time) 20)))
-        (while (and (not (slack-team-connectedp team))
-                    (< (float-time) deadline))
-          (accept-process-output nil 0.25))))
+      (error "Epoch Slack is disconnected"))
     ;; The cursor slot is typed as a string. Passing nil happens to work when a
     ;; buffer for this room is already cached and blows up with "Invalid slot
     ;; type" when one has to be constructed, which is exactly the first time
     ;; any given DM is opened.
     (let* ((buffer (slack-create-message-buffer room "" team))
            (buf (slack-buffer-buffer buffer))
-           (draft (with-temp-buffer
-                    (insert-file-contents {elisp_string(str(path))})
-                    (buffer-string))))
+           (draft (when { 't' if path else 'nil' } (with-temp-buffer
+                    (let ((coding-system-for-read 'utf-8-unix))
+                      (insert-file-contents {elisp_string(str(path))}))
+                    (buffer-string)))))
       (unless (buffer-live-p buf)
         (error "Slack message buffer is not live for %s" channel-id))
-      (with-current-buffer buf
+      (when draft (with-current-buffer buf
         (unless (and (markerp lui-input-marker)
                      (eq (marker-buffer lui-input-marker) buf))
           (error "Slack message input is not available in %s" (buffer-name buf)))
@@ -297,13 +332,71 @@ def prefill_channel_message(channel: str, path: Path) -> str:
           (unless (or (string-empty-p existing) (equal existing draft))
             (error "Slack message input in %s already contains unsent text"
                    (buffer-name buf)))
-          (unless (equal existing draft)
-            (goto-char lui-input-marker)
-            (insert draft))))
-      (slack-buffer-display buffer)
-      (buffer-name buf))))
+          (atomic-change-group
+            (unless (equal existing draft)
+              (goto-char lui-input-marker)
+              (insert draft))
+            (unless (equal draft (buffer-substring-no-properties
+                                 lui-input-marker (point-max)))
+              (error "Composer insertion mismatch"))))))
+      (let ((slack-debug t)) (slack-buffer-display buffer))
+      (unless (eq (window-buffer (selected-window)) buf)
+        (error "Target was not selected"))
+      (when draft (with-current-buffer buf
+        (unless (equal draft (buffer-substring-no-properties
+                              lui-input-marker (point-max)))
+          (error "Composer changed after insertion"))))
+      (if draft 'draft-composer-staged 'draft-opened))))
 """.strip()
-    return run_emacs_eval(expr)
+    return run_emacs_eval(composer_expression(expr), socket)
+
+
+def validate_socket(value: str) -> str:
+    path = Path(value)
+    if not path.is_absolute():
+        raise ValueError("An absolute existing Emacs socket is required")
+    info = path.stat()
+    if not stat.S_ISSOCK(info.st_mode) or info.st_uid != os.getuid():
+        raise ValueError("An owned existing Emacs socket is required")
+    return str(path)
+
+
+@contextlib.contextmanager
+def draft_snapshot(value: str):
+    path = Path(value).expanduser().absolute()
+    parent = path.parent.resolve()
+    if parent.is_relative_to(Path.home() / "My Drive"):
+        raise ValueError("Draft files must be outside Drive")
+    directory_info = parent.stat()
+    if directory_info.st_uid != os.getuid() or directory_info.st_mode & 0o077:
+        raise ValueError("Draft parent must be an owned private directory")
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(descriptor, "rb") as source:
+        before = os.fstat(source.fileno())
+        if not stat.S_ISREG(before.st_mode) or before.st_uid != os.getuid() or before.st_mode & 0o077:
+            raise ValueError("Draft must be an owned private regular file")
+        raw = source.read()
+        after = os.fstat(source.fileno())
+        if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns):
+            raise ValueError("Draft changed while reading")
+    text = raw.decode("utf-8")
+    if text.startswith("\ufeff") or not text.strip() or "\x00" in text:
+        raise ValueError("Draft must be nonempty UTF-8 without BOM or NUL")
+    directory = Path(tempfile.mkdtemp(prefix="slack-draft-", dir="/tmp"))
+    snapshot = directory / "draft.txt"
+    retain = False
+    try:
+        descriptor = os.open(snapshot, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, "wb") as output:
+            output.write(raw)
+        yield snapshot
+    except (TimeoutError, KeyboardInterrupt, UncertainResult):
+        retain = True
+        sys.stderr.write(f"Recovery snapshot retained: {snapshot}\n")
+        raise
+    finally:
+        if not retain:
+            shutil.rmtree(directory)
 
 
 def main() -> int:
@@ -312,7 +405,9 @@ def main() -> int:
             "Copy a Slack draft to the Emacs kill ring and prefill its reply."
         )
     )
-    parser.add_argument("--file", required=True, help="Path to the draft text file")
+    parser.add_argument("--file", help="Owned private UTF-8 draft file outside Drive")
+    parser.add_argument("--socket", required=True, help="Absolute existing intended Emacs socket")
+    parser.add_argument("--open-only", action="store_true", help="Open target without changing composer or kill ring")
     parser.add_argument(
         "--permalink",
         help=(
@@ -331,65 +426,49 @@ def main() -> int:
         "--no-open",
         action="store_true",
         help=(
-            "Only copy the draft; do not open or prefill Slack. "
-            "Useful for smoke tests."
+            "Mutate only the kill ring; do not open or prefill Slack."
         ),
     )
     args = parser.parse_args()
 
-    draft_path = Path(args.file).expanduser()
-    if not draft_path.exists():
-        sys.stderr.write(f"ERROR: draft file does not exist: {draft_path}\n")
-        return 2
-    if not draft_path.is_file():
-        sys.stderr.write(f"ERROR: draft path is not a file: {draft_path}\n")
-        return 2
-    text = draft_path.read_text()
-    if not text.strip():
-        sys.stderr.write(f"ERROR: draft file is empty: {draft_path}\n")
-        return 2
-    if args.permalink and args.channel:
-        sys.stderr.write("ERROR: pass --permalink or --channel, not both\n")
-        return 2
-    if not args.no_open and not (args.permalink or args.channel):
-        sys.stderr.write(
-            "ERROR: --permalink (thread reply) or --channel (top-level post) "
-            "is required unless --no-open is used\n"
-        )
-        return 2
-
+    result = {"status": "failed", "stage": "validation", "opened": False, "composer": False, "ring": False}
     try:
-        copy_to_kill_ring(draft_path)
-    except RuntimeError as exc:
-        sys.stderr.write(f"ERROR: failed to copy draft to Emacs kill ring: {exc}\n")
-        return 1
-    print("Copied draft to Emacs kill ring")
-
-    if args.no_open:
+        if args.open_only and (args.file or args.no_open):
+            raise ValueError("Open-only cannot stage text")
+        if not args.open_only and not args.file:
+            raise ValueError("A draft file is required")
+        if args.no_open and (args.permalink or args.channel):
+            raise ValueError("Ring-only cannot specify a target")
+        if not args.no_open and bool(args.permalink) == bool(args.channel):
+            raise ValueError("Specify exactly one target")
+        if args.permalink:
+            permalink_info(args.permalink)
+        if args.channel and not re.fullmatch(r"[CGD][A-Z0-9]{8,}", args.channel):
+            raise ValueError("Invalid channel ID")
+        socket = validate_socket(args.socket)
+        with (contextlib.nullcontext(None) if args.open_only else draft_snapshot(args.file)) as snapshot:
+            if not args.no_open:
+                result["stage"] = "open" if args.open_only else "composer"
+                stage = prefill_channel_message if args.channel else prefill_slack_reply
+                ack = stage(args.channel or args.permalink, snapshot, socket)
+                expected = "draft-opened" if args.open_only else "draft-composer-staged"
+                if ack != expected:
+                    raise UncertainResult("Composer staging was not acknowledged")
+                result.update(opened=True, composer=not args.open_only)
+            if not args.open_only:
+                result["stage"] = "ring"
+                copy_to_kill_ring(snapshot, socket)
+                result["ring"] = True
+        result["status"] = "ok"
+        result["stage"] = "complete"
         return 0
-
-    if args.channel:
-        try:
-            buffer_name = prefill_channel_message(args.channel, draft_path)
-        except RuntimeError as exc:
-            sys.stderr.write(
-                "ERROR: failed to open the Slack channel and insert draft in "
-                f"Emacs: {exc}\n"
-            )
-            return 1
-        print(f"Inserted draft into the Slack message input of {buffer_name}")
-        return 0
-
-    try:
-        buffer_name = prefill_slack_reply(args.permalink, draft_path)
-    except RuntimeError as exc:
-        sys.stderr.write(
-            "ERROR: failed to open Slack reply input and insert draft in "
-            f"Emacs: {exc}\n"
-        )
+    except (TimeoutError, KeyboardInterrupt, UncertainResult):
+        result["status"] = "uncertain"
         return 1
-    print(f"Inserted draft into the Slack reply input of {buffer_name}")
-    return 0
+    except (OSError, UnicodeError, ValueError, RuntimeError):
+        return 1
+    finally:
+        print(json.dumps(result, sort_keys=True))
 
 
 if __name__ == "__main__":

@@ -435,6 +435,61 @@ class ClipboardTests(OfflineCase):
         self.assertEqual(self.invoke(broker)[0], 0)
         self.assertEqual(broker.stored["fields"][0]["value"], broker.clipboard)
 
+    def test_readback_requires_concealment_and_exact_prepared_field_id(self):
+        for key, value in (("type", "STRING"), ("type", None), ("id", "different_field")):
+            with self.subTest(key=key, value=value):
+                broker = FakeBroker(True)
+                def altered(argv, **kwargs):
+                    response = broker(argv, **kwargs)
+                    if argv[:3] == ["op-desktop", "item", "get"] and broker.stored:
+                        data = json.loads(response.stdout)
+                        data["fields"][0][key] = value
+                        return subprocess.CompletedProcess(argv, 0, json.dumps(data), "")
+                    return response
+                code, output, _ = self.invoke(altered, "--force")
+                self.assertEqual(code, 3)
+                self.assertEqual(output, "")
+
+    def test_explicit_account_is_pinned_on_every_desktop_call(self):
+        for existing in (False, True):
+            with self.subTest(existing=existing):
+                broker = FakeBroker(existing)
+                flags = ["--account", "epoch-team.1password.com"]
+                if existing:
+                    flags.append("--force")
+                self.assertEqual(self.invoke(broker, *flags)[0], 0)
+                for argv, _ in broker.calls:
+                    if argv[0] == "op-desktop":
+                        self.assertEqual(argv[-2:], ["--account", "epoch-team.1password.com"])
+                        self.assertEqual(argv.count("--account"), 1)
+                write = next(argv for argv, _ in broker.calls if "edit" in argv or "create" in argv)
+                self.assertEqual(write[:4], ["op-desktop", "item", "edit" if existing else "create", ITEM if existing else "-"])
+
+    def test_invalid_account_touches_neither_clipboard_nor_broker(self):
+        for value in ("", "-other", "https://epoch-team.1password.com", "user@host", "a/b", "a\nb", "a b", "a?x=1", "a\x00b"):
+            with self.subTest(value=repr(value)):
+                broker = FakeBroker()
+                self.assertEqual(self.invoke(broker, "--account=" + value)[0], 2)
+                self.assertEqual(broker.calls, [])
+
+    def test_existing_login_without_passkey_metadata_refused_before_intake(self):
+        broker = FakeBroker(True)
+        broker.template["category"] = "LOGIN"
+        self.assertNotIn("passkeys", broker.template)
+        code, output, _ = self.invoke(broker, "--force")
+        self.assertEqual(code, 3)
+        self.assertEqual(output, "")
+        self.assertFalse(any(argv == ["pbpaste"] for argv, _ in broker.calls))
+        self.assertFalse(any("edit" in argv or "create" in argv for argv, _ in broker.calls))
+        self.assertIsNone(broker.stored)
+
+    def test_fresh_login_creation_remains_supported(self):
+        broker = FakeBroker()
+        broker.template["category"] = "LOGIN"
+        self.assertEqual(self.invoke(broker, "--category", "Login")[0], 0)
+        self.assertEqual(broker.stored["category"], "LOGIN")
+        self.assertTrue(any("create" in argv for argv, _ in broker.calls))
+
 
 if __name__ == "__main__":
     unittest.main()

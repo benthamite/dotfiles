@@ -53,6 +53,18 @@ class DesktopStdinTest(unittest.TestCase):
         self.assertEqual(rc, 0)
         self.assertIn("stdin_b64", request)
 
+    def test_explicit_account_preserves_create_and_edit_stdin(self):
+        body = b'{"fields":[{"id":"credential","value":"SYNTHETIC"}]}'
+        for operation, target in (("create", "-"), ("edit", "a" * 26)):
+            with self.subTest(operation=operation):
+                argv = ["item", operation, target, "--vault", "v" * 26,
+                        "--format", "json", "--account", "epoch-team.1password.com"]
+                rc, request, _ = self.invoke(argv, body)
+                self.assertEqual(rc, 0)
+                self.assertEqual(request["argv"], argv)
+                self.assertEqual(base64.b64decode(request["stdin_b64"]), body)
+                self.assertNotIn("SYNTHETIC", repr(request["argv"]))
+
     def test_other_commands_and_interactive_input_do_not_consume_stdin(self):
         for argv, tty in [(["whoami"], False), (["item", "get", "synthetic-id"], False),
                           (["item", "edit", "--help"], False),

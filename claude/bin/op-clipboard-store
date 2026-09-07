@@ -33,6 +33,7 @@ class SafeParser(argparse.ArgumentParser):
 def parser():
     result = SafeParser(description=__doc__)
     result.add_argument("--vault", required=True)
+    result.add_argument("--account", help="Explicit desktop account selector (domain, ID or shorthand)")
     result.add_argument("--title", required=True)
     result.add_argument("--field", default="credential")
     result.add_argument("--category", default="API Credential")
@@ -46,6 +47,8 @@ def parser():
 
 
 def validate(args):
+    if args.account is not None and not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", args.account):
+        raise StoreError("--account must be a plain account identity", 2)
     for value in (args.vault, args.title):
         if not value or value != value.strip() or "/" in value or value.startswith("-"):
             raise StoreError("vault and title must be unambiguous reference segments", 2)
@@ -87,8 +90,13 @@ def item_id(value):
     return value
 
 
+def desktop(args, *command):
+    # Keep `item edit ID` first: the desktop broker detects its stdin template.
+    return ["op-desktop", *command, *(["--account", args.account] if args.account else [])]
+
+
 def unique_item(args):
-    entries = read_json(["op-desktop", "item", "list", "--vault", args.vault, "--format", "json"])
+    entries = read_json(desktop(args, "item", "list", "--vault", args.vault, "--format", "json"))
     if not isinstance(entries, list) or any(
         not isinstance(entry, dict) or not isinstance(entry.get("title"), str)
         or not isinstance(entry.get("id"), str) for entry in entries
@@ -158,10 +166,14 @@ def store(args):
     if existing_id and not args.force:
         raise StoreError("item already exists; --force is required to replace its field")
     if existing_id:
-        template = read_json(["op-desktop", "item", "get", existing_id, "--vault", args.vault, "--format", "json"])
+        template = read_json(desktop(args, "item", "get", existing_id, "--vault", args.vault, "--format", "json"))
     else:
-        template = read_json(["op-desktop", "item", "template", "get", args.category, "--format", "json"])
+        template = read_json(desktop(args, "item", "template", "get", args.category, "--format", "json"))
     validate_template(template, args, existing_id)
+    if existing_id and template["category"] == "LOGIN":
+        # JSON templates cannot preserve passkeys, which may be absent from
+        # exported metadata. Do not interpret an absent key as proof of safety.
+        raise StoreError("existing Login items require a passkey-preserving edit workflow")
     before = copy.deepcopy(template)
     template, secret_field = prepare_template(template, args)
     # Intake happens only after argument, ownership and template preconditions.
@@ -177,22 +189,27 @@ def store(args):
     secret_field["value"] = secret
     if existing_id:
         # Detect intervening edits, but do not claim a provider-side CAS/lock.
-        latest = read_json(["op-desktop", "item", "get", existing_id, "--vault", args.vault, "--format", "json"])
+        latest = read_json(desktop(args, "item", "get", existing_id, "--vault", args.vault, "--format", "json"))
         if latest != before:
             raise StoreError("item changed during preparation; no edit was submitted")
-        argv = ["op-desktop", "item", "edit", existing_id, "--vault", args.vault, "--format", "json"]
+        argv = desktop(args, "item", "edit", existing_id, "--vault", args.vault, "--format", "json")
     else:
-        argv = ["op-desktop", "item", "create", "-", "--vault", args.vault, "--format", "json"]
+        argv = desktop(args, "item", "create", "-", "--vault", args.vault, "--format", "json")
     written = read_json(argv, input_text=json.dumps(template))
     if not isinstance(written, dict):
         raise StoreError("1Password did not return the written item identity")
     written_id = item_id(written.get("id"))
     if existing_id and written_id != existing_id:
         raise StoreError("1Password returned a different edited item identity")
-    readback = read_json(["op-desktop", "item", "get", written_id, "--vault", args.vault, "--format", "json"])
+    readback = read_json(desktop(args, "item", "get", written_id, "--vault", args.vault, "--format", "json"))
     fields = validate_template(readback, args, written_id)
     if len(fields) != 1 or fields[0].get("section") or not isinstance(fields[0].get("value"), str):
         raise StoreError("stored item secret read-back was ambiguous")
+    if fields[0].get("type") != "CONCEALED":
+        raise StoreError("stored item secret read-back was not concealed")
+    expected_field_id = secret_field.get("id")
+    if isinstance(expected_field_id, str) and expected_field_id and fields[0].get("id") != expected_field_id:
+        raise StoreError("stored item secret field changed identity")
     try:
         verified = fields[0]["value"].encode("utf-8")
     except UnicodeError:

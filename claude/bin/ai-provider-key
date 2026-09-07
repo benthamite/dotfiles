@@ -43,11 +43,11 @@ DEFAULT_ANTHROPIC_ADMIN_REF = "op://Employee/Anthropic - api-provisioning-admin/
 DEFAULT_OPENAI_AUTOMATIONS_PROJECT_ID = "proj_mdM7wTXIQUFqquI4A1zCO2BF"
 DEFAULT_ANTHROPIC_AUTOMATIONS_WORKSPACE_ID = "wrkspc_016hokUAzbZA7qVGuAUjfZTb"
 DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD = 500.0
-# Retained helper ceiling from prior local approval, not a claim about current
-# provider controls. The caller must establish current scoped authority and
-# control evidence; this constant neither enforces nor allocates provider spend.
+# Retained helper ceiling, not a claim about current provider controls.
+# The caller must establish current scoped authority and control evidence;
+# this constant neither enforces nor allocates provider spend.
 MAX_AUTONOMOUS_MONTHLY_SPEND_USD_BY_PROVIDER = {
-    "anthropic": 1500.0,
+    "anthropic": 2000.0,
 }
 
 
@@ -619,7 +619,7 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Provider-console verified monthly cap for the target project/workspace. "
             "Required for non-dry-run key creation/storage and must be at or below "
-            "the retained helper ceiling ($500 OpenAI, $1500 Anthropic). "
+            "the retained helper ceiling ($500 OpenAI, $2000 Anthropic). "
             "Caller assertion only; not a per-key hard cap or API enforcement."
         ),
     )

@@ -1,98 +1,175 @@
-#!/bin/bash
-# cr-pull-pinned — pull the taigaLink-pinned Taiga job for a CR task, verified.
-#
-# Solves the three pull footguns that burned the 2026-07-04 #117 sessions:
-#   1. Review branches often predate `pull-taiga`/`runs.py`, so the engine must
-#      come from the MAIN worktree regardless of the target branch's age.
-#   2. `pull-taiga` has no --job flag; this always pins basic_info.taigaLink's
-#      job via fetch_runs(job_id=…) and verifies every epoch afterwards.
-#   3. Concurrent pulls interleave writes into the shared per-attempt dirs
-#      (1..10 are reused across jobs) and silently mix jobs; an atomic
-#      mkdir-lock serializes pulls per task dir, across sessions.
-#
-# Usage: cr-pull-pinned <slug> [--worktree PATH]
-#   PATH defaults to the git toplevel of the cwd (run it from the review
-#   worktree cr-review-worktree printed). Writes tasks/<slug>/taiga/ there.
-set -uo pipefail
+#!/usr/bin/env python3
+"""Fetch a confirmed Taiga job into staging; publish only verified artifacts.
 
-MAIN="$HOME/Trajectory/reasoning-tasks/main"
-ENV_DEFAULT="TGA-conceptual_domains_v001_TRJ"
+Usage: cr-pull-pinned <task-directory-name> [--worktree PATH]
+Existing locks require ownership investigation; never reclaim them automatically.
+"""
+import argparse
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import stat
+import subprocess
+import sys
+import tempfile
+from urllib.parse import parse_qs, urlparse
+from uuid import UUID
 
-die() { echo "cr-pull-pinned: $*" >&2; exit 1; }
+ENVIRONMENTS = {
+    "fbf70736-91c1-40ab-963f-a75187b340c6": "TGA-conceptual_domains_v001_TRJ",
+    "38398286-af03-4313-9f1e-57d94b867b55": "TGA-grantmaking_pilot_TRJ",
+}
 
-[ $# -ge 1 ] || die "usage: cr-pull-pinned <slug> [--worktree PATH]"
-slug="$1"; shift
-wt=""
-while [ $# -gt 0 ]; do
-  case "$1" in
-    --worktree) wt="${2:?--worktree needs a value}"; shift 2 ;;
-    *) die "unknown option: $1" ;;
-  esac
-done
-[ -n "$wt" ] || wt=$(git rev-parse --show-toplevel 2>/dev/null) \
-  || die "not inside a git worktree and no --worktree given"
 
-task_dir="$wt/tasks/$slug"
-[ -d "$task_dir" ] || die "no task dir: $task_dir"
-[ -d "$MAIN/tooling/engine" ] || die "main worktree engine missing: $MAIN/tooling/engine"
+def pin(link, problem):
+    if not isinstance(link, str):
+        raise ValueError("taigaLink must be a string")
+    url = urlparse(link)
+    if url.scheme != "https" or url.netloc != "taiga.ant.dev":
+        raise ValueError("taigaLink must be an HTTPS taiga.ant.dev URL")
+    query = parse_qs(url.query, keep_blank_values=True)
+    if any(len(values) != 1 for values in query.values()):
+        raise ValueError("taigaLink contains repeated query parameters")
+    env_id = query.get("environmentId", [None])[0]
+    if env_id not in ENVIRONMENTS:
+        raise ValueError("taigaLink needs an explicit supported environmentId")
+    if query.get("problemId", [problem])[0] != problem:
+        raise ValueError("taigaLink problemId differs from basic_info.id")
+    match = re.fullmatch(r"/jobs/([^/]+)/?", url.path)
+    query_id = query.get("id", [None])[0]
+    if match:
+        job = match.group(1)
+        if query_id and query_id != job:
+            raise ValueError("taigaLink path and query identify different jobs")
+    elif url.path.rstrip("/") == "/job":
+        job = query_id
+    elif url.path.rstrip("/") == "/transcripts" and query.get("referrer") == ["job"]:
+        job = query_id
+    else:
+        raise ValueError("ambiguous run link: provide a confirmed job URL with environmentId")
+    if not job or str(UUID(job)) != job.lower():
+        raise ValueError("taigaLink has no canonical job UUID")
+    return job.lower(), ENVIRONMENTS[env_id]
 
-# --- resolve the pinned job + env from basic_info.taigaLink ------------------
-link=$(jq -r '.taigaLink // empty' "$task_dir/basic_info.json") \
-  || die "cannot read $task_dir/basic_info.json"
-[ -n "$link" ] || die "basic_info.json has no taigaLink — derive and write it first (cr-taiga-run.md)"
-job=$(printf '%s' "$link" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)
-[ -n "$job" ] || die "no job UUID in taigaLink: $link"
-env_name="$ENV_DEFAULT"
-case "$link" in
-  *38398286-af03-4313-9f1e-57d94b867b55*) env_name="TGA-grantmaking_pilot_TRJ" ;;
-esac
-echo "pinned job: $job  env: $env_name"
 
-# --- exclusive per-task pull lock (atomic mkdir; survives across sessions) ---
-lock="$task_dir/.taiga-pull-lock"
-if ! mkdir "$lock" 2>/dev/null; then
-  holder=$(cat "$lock/pid" 2>/dev/null || echo "?")
-  if [ "$holder" != "?" ] && kill -0 "$holder" 2>/dev/null; then
-    die "another pull (pid $holder) holds $lock — never run two pulls concurrently; wait or kill it"
-  fi
-  echo "stale lock (pid $holder dead) — reclaiming" >&2
-  rmdir "$lock" 2>/dev/null; mkdir "$lock" || die "lock race — retry"
-fi
-echo $$ > "$lock/pid"
-cleanup() { rmdir "$lock" 2>/dev/null || { rm -f "$lock/pid"; rmdir "$lock" 2>/dev/null; }; }
-trap cleanup EXIT
+def read_regular(path):
+    """Read a regular file without following symlinks or waiting on a FIFO."""
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(fd, "rb") as stream:
+        if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+            raise ValueError(f"expected a regular file: {path}")
+        return stream.read()
 
-# --- clean slate, then job-pinned fetch via the main engine ------------------
-if [ -d "$task_dir/taiga" ]; then
-  trash "$task_dir/taiga" 2>/dev/null || die "could not clear existing $task_dir/taiga"
-fi
-pull_py=$(mktemp /tmp/cr-pull-pinned.XXXXXX.py)
-cat > "$pull_py" <<PYEOF
-import asyncio, sys
-sys.path.insert(0, "$MAIN/tooling/engine/src")
+
+def json_object(data, label):
+    parsed = json.loads(data)
+    if not isinstance(parsed, dict):
+        raise ValueError(f"expected a JSON object: {label}")
+    return parsed
+
+
+def validate_runs(taiga, job, problem):
+    if not taiga.is_dir() or taiga.is_symlink():
+        raise ValueError("fetch wrote no Taiga artifact directory")
+    if any(path.is_symlink() for path in taiga.rglob("*")):
+        raise ValueError("fetch produced symlinked artifacts")
+    epochs = list(taiga.glob("*/[0-9]*/run.json"))
+    if not epochs:
+        raise ValueError("fetch wrote no run.json epochs")
+    for epoch in epochs:
+        run = json_object(read_regular(epoch), epoch)
+        if run.get("job_id") != job or run.get("problem_id") != problem:
+            raise ValueError(f"wrong job or problem in {epoch.relative_to(taiga)}")
+    return len(epochs)
+
+
+FETCH = """import asyncio, sys
+sys.path.insert(0, sys.argv[1])
 from reasoning_engine.runs import fetch_runs
-asyncio.run(fetch_runs(
-    "$slug",
-    environment="$env_name",
-    save=True,
-    job_id="$job",
-    latest_job=False,
-    problem_id="$slug",
-))
-print("PULL-DONE")
-PYEOF
-( cd "$wt" && TMPDIR=/tmp uv run --project "$MAIN" --no-sync python "$pull_py" ) \
-  || { rm -f "$pull_py"; die "fetch failed — see output above"; }
-rm -f "$pull_py"
+asyncio.run(fetch_runs(sys.argv[2], environment=sys.argv[3], save=True,
+                      job_id=sys.argv[4], latest_job=False, problem_id=sys.argv[5]))
+"""
 
-# --- verify every epoch is the pinned job ------------------------------------
-shopt -s nullglob
-bad=0; n=0
-for f in "$task_dir"/taiga/*/[0-9]*/run.json; do
-  n=$((n+1))
-  got=$(jq -r '.job_id' "$f")
-  if [ "$got" != "$job" ]; then bad=$((bad+1)); echo "  MIXED: $f -> $got" >&2; fi
-done
-[ "$n" -gt 0 ] || die "no run.json epochs written"
-[ "$bad" -eq 0 ] || die "$bad/$n epochs are NOT the pinned job — another writer raced this pull; find and stop it, then re-run"
-echo "verified: $n/$n epochs are $job"
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("slug")
+    parser.add_argument("--worktree", type=Path)
+    args = parser.parse_args()
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", args.slug):
+        raise ValueError("task must be an exact directory basename, without path components")
+    wt = args.worktree or Path(subprocess.check_output(
+        ["git", "rev-parse", "--show-toplevel"], text=True).strip())
+    wt = wt.resolve(strict=True)
+    task = wt / "tasks" / args.slug
+    if not task.is_dir() or task.resolve() != task:
+        raise ValueError("task directory missing or reached through a symlink")
+    info_path = task / "basic_info.json"
+    if info_path.is_symlink():
+        raise ValueError("basic_info.json must not be a symlink")
+    info_bytes = read_regular(info_path)
+    info = json_object(info_bytes, info_path)
+    problem = info.get("id")
+    if not isinstance(problem, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", problem):
+        raise ValueError("basic_info.json needs an explicit id without path components")
+    job, environment = pin(info.get("taigaLink", ""), problem)
+    main_tree = Path.home() / "Trajectory/reasoning-tasks/main"
+    engine = main_tree / "tooling/engine/src"
+    if not engine.is_dir():
+        raise ValueError(f"main worktree engine missing: {engine}")
+    target = task / "taiga"
+    if target.is_symlink() or (target.exists() and not target.is_dir()):
+        raise ValueError("existing taiga target must be a real directory")
+    lock = task / ".taiga-pull-lock"
+    try:
+        lock.mkdir()
+    except FileExistsError:
+        raise ValueError(f"existing pull lock {lock}; inspect ownership and wait, never kill its writer or reclaim it automatically") from None
+    lock_identity = lock.stat().st_ino
+    pid_file = lock / "pid"
+    pid = str(os.getpid())
+    try:
+        pid_file.write_text(pid)
+        print(f"pinned job: {job}  env: {environment}", flush=True)
+        # Only owned scratch data is recursively cleaned; no credentials copied.
+        with tempfile.TemporaryDirectory(prefix="cr-pull-pinned-", dir="/tmp") as stage:
+            staged_task = Path(stage) / "tasks" / args.slug
+            staged_task.mkdir(parents=True)
+            (staged_task / "basic_info.json").write_bytes(info_bytes)
+            subprocess.run(["uv", "run", "--project", str(main_tree), "--no-sync",
+                            "python", "-c", FETCH, str(engine), args.slug,
+                            environment, job, problem], cwd=stage, check=True)
+            staged_taiga = staged_task / "taiga"
+            count = validate_runs(staged_taiga, job, problem)
+            if read_regular(info_path) != info_bytes:
+                raise ValueError("basic_info.json changed during fetch; original artifacts retained")
+            if target.is_symlink() or (target.exists() and not target.is_dir()):
+                raise ValueError("taiga target changed during fetch; refusing replacement")
+            # Copy first for an atomic final rename even across filesystems.
+            pending = Path(tempfile.mkdtemp(prefix=".taiga-publish-", dir=task))
+            try:
+                shutil.copytree(staged_taiga, pending / "taiga")
+                if target.exists():
+                    subprocess.run(["trash", str(target)], check=True)
+                (pending / "taiga").rename(target)
+            finally:
+                shutil.rmtree(pending)
+        print(f"verified: {count}/{count} epochs are job {job}, problem {problem}")
+    finally:
+        # Never delete a replacement lock or someone else's lock contents.
+        if (not lock.is_symlink() and lock.exists()
+                and lock.stat().st_ino == lock_identity
+                and not pid_file.is_symlink() and pid_file.is_file()
+                and pid_file.read_text() == pid):
+            pid_file.unlink()
+            lock.rmdir()
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (ValueError, OSError, subprocess.CalledProcessError) as exc:
+        print(f"cr-pull-pinned: {exc}", file=sys.stderr)
+        sys.exit(1)

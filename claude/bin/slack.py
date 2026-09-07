@@ -6,6 +6,9 @@ logged-in browser session and impersonate the user account, so
 mark/unread/saved-message operations work as your account sees them (unlike a
 bot OAuth token).
 
+Programmatic callers may use call_notifier() for an explicitly authorized
+Epoch Notifier private text message; it never changes the user CLI's sender.
+
 Multiple workspaces are supported via the WORKSPACES registry and the global
 `-w/--workspace` flag (or the SLACK_WORKSPACE env var; default: epoch):
 
@@ -221,23 +224,26 @@ def _tokens():
     return _xoxc, _xoxd
 
 
-def call(method, **params):
-    """POST to slack.com/api/<method> with the given form params."""
+def _api_url(method):
+    """Validate the exact API destination before acquiring credentials."""
     if not isinstance(method, str) or not _METHOD_RE.fullmatch(method):
         _fail("invalid Slack API method", 2)
     url = f"{API}/{method}"
     _validate_credential_url(url, "slack.com")
     if urllib.parse.urlsplit(url).path != f"/api/{method}" or urllib.parse.urlsplit(url).query:
         _fail("invalid Slack API base URL", 2)
-    xoxc, xoxd = _tokens()
+    return url
+
+
+def _post_form(url, params, headers):
+    """Make one authenticated request and return only a successful JSON object."""
     body = urllib.parse.urlencode({k: v for k, v in params.items() if v is not None}).encode()
     req = urllib.request.Request(
         url,
         data=body,
         method="POST",
         headers={
-            "Authorization": f"Bearer {xoxc}",
-            "Cookie": f"d={xoxd}",
+            **headers,
             "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
         },
     )
@@ -253,6 +259,49 @@ def call(method, **params):
         suffix = f": {error}" if isinstance(error, str) and error in _SAFE_API_ERRORS else ""
         _fail(f"Slack API rejected the request{suffix}")
     return data
+
+
+def call(method, **params):
+    """POST to slack.com/api/<method> using the selected browser-session user."""
+    url = _api_url(method)
+    xoxc, xoxd = _tokens()
+    return _post_form(url, params, {
+        "Authorization": f"Bearer {xoxc}", "Cookie": f"d={xoxd}",
+    })
+
+
+def call_notifier(method, **params):
+    """Authenticate Epoch Notifier or send one authorized private text message.
+
+    The caller must verify bot identity and returned channel/ts/text. A transport
+    failure can mean delivery is uncertain; reconcile it before retrying. This
+    function never retries or falls back to another credential or sender.
+    """
+    if method not in ("auth.test", "chat.postMessage"):
+        _fail("Epoch Notifier method is not allowed", 2)
+    url = _api_url(method)
+    if method == "auth.test":
+        if params:
+            _fail("Epoch Notifier auth.test accepts no parameters", 2)
+    else:
+        allowed = {
+            "channel", "text", "unfurl_links", "unfurl_media", "mrkdwn",
+            "parse", "link_names", "client_msg_id",
+        }
+        if set(params) - allowed:
+            _fail("Epoch Notifier message has unsupported parameters", 2)
+        recipient = params.get("channel")
+        if not isinstance(recipient, str) or not re.fullmatch(r"[UW][A-Z0-9]+", recipient):
+            _fail("Epoch Notifier requires one exact Slack user ID", 2)
+        text = params.get("text")
+        if not isinstance(text, str) or not text.strip():
+            _fail("Epoch Notifier requires nonblank message text", 2)
+    encoded_params = {
+        key: str(value).lower() if isinstance(value, bool) else value
+        for key, value in params.items()
+    }
+    token = _op_read("op://Automations/Slack - Epoch Notifier/credential")
+    return _post_form(url, encoded_params, {"Authorization": f"Bearer {token}"})
 
 
 def _permalink_ts_to_ts(permalink_ts):

@@ -194,6 +194,67 @@ class SlackTests(OfflineCase):
             sink.assert_not_called()
 
 
+class NotifierTests(OfflineCase):
+    failure = SlackTests.failure
+
+    def test_fixed_broker_and_bot_authorship_ignore_browser_and_environment(self):
+        body = {"ok": True, "channel": "D123", "ts": "1.2", "message": {"text": "Exact\ntext"}}
+        opener = mock.Mock()
+        response = Response(json.dumps(body).encode())
+        opener.open.return_value = response
+        with mock.patch.dict(SLACK.os.environ, {"SLACK_BOT_TOKEN": "ambient", "SLACK_WORKSPACE": "trajectory"}), mock.patch.object(SLACK, "_tokens", side_effect=tripwire), mock.patch.object(SLACK.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, MARKER, "")) as broker, mock.patch.object(SLACK.urllib.request, "build_opener", return_value=opener) as build:
+            out = SLACK.call_notifier("chat.postMessage", channel="U123", text="Exact\ntext", mrkdwn=False, parse="none", link_names=False)
+        self.assertEqual(out, body)
+        broker.assert_called_once_with(["op-automations", "read", "op://Automations/Slack - Epoch Notifier/credential"], check=False, capture_output=True, text=True, timeout=30)
+        request = opener.open.call_args.args[0]
+        self.assertEqual(request.get_header("Authorization"), f"Bearer {MARKER}")
+        self.assertIsNone(request.get_header("Cookie"))
+        self.assertEqual(SLACK.urllib.parse.parse_qs(request.data.decode()), {"channel": ["U123"], "text": ["Exact\ntext"], "mrkdwn": ["false"], "parse": ["none"], "link_names": ["false"]})
+        self.assertIsInstance(build.call_args.args[0], SLACK._NoCredentialRedirects)
+        self.assertEqual(opener.open.call_count, 1)
+        self.assertEqual(opener.open.call_args.kwargs, {"timeout": 30})
+        self.assertTrue(response.closed)
+
+    def test_auth_and_enterprise_user_are_supported(self):
+        with mock.patch.object(SLACK, "_op_read", return_value=MARKER), mock.patch.object(SLACK, "_open_authenticated", return_value=Response(b'{"ok":true,"bot_id":"B123"}')):
+            self.assertEqual(SLACK.call_notifier("auth.test")["bot_id"], "B123")
+            SLACK.call_notifier("chat.postMessage", channel="W123", text="Authorized")
+
+    def test_disallowed_calls_fail_before_broker(self):
+        calls = [
+            ("conversations.open", {}), ("chat.update", {}), (None, {}),
+            ("auth.test", {"token": MARKER}),
+        ]
+        for channel in [None, "C123", "D123", "#general", "U123,U456", "U123\n", "U", "u123", "U12 3"]:
+            calls.append(("chat.postMessage", {"channel": channel, "text": "hello"}))
+        for field in ["as_user", "username", "icon_url", "icon_emoji", "token", "blocks", "attachments"]:
+            calls.append(("chat.postMessage", {"channel": "U123", "text": "hello", field: MARKER}))
+        with mock.patch.object(SLACK, "_op_read", side_effect=tripwire):
+            for method, params in calls:
+                with self.subTest(method=method, params=params):
+                    self.failure(lambda: SLACK.call_notifier(method, **params), 2)
+            for base in ["https://evil.test/api", "http://slack.com/api", "https://slack.com/api?x=1"]:
+                with mock.patch.object(SLACK, "API", base):
+                    self.failure(lambda: SLACK.call_notifier("auth.test"), 2)
+
+    def test_broker_failure_never_falls_back_or_sends(self):
+        with mock.patch.object(SLACK.subprocess, "run", return_value=subprocess.CompletedProcess([], 1, MARKER, MARKER)), mock.patch.object(SLACK, "_tokens", side_effect=tripwire), mock.patch.object(SLACK, "_open_authenticated", side_effect=tripwire):
+            self.failure(lambda: SLACK.call_notifier("auth.test"))
+
+    def test_uncertain_delivery_has_one_attempt_and_safe_diagnostics(self):
+        for error in [TimeoutError(MARKER), urllib.error.URLError(MARKER), http.client.IncompleteRead(MARKER.encode())]:
+            opener = mock.Mock()
+            opener.open.side_effect = error
+            with mock.patch.object(SLACK, "_op_read", return_value=MARKER), mock.patch.object(SLACK.urllib.request, "build_opener", return_value=opener):
+                self.failure(lambda: SLACK.call_notifier("chat.postMessage", channel="U123", text="Exact"))
+            self.assertEqual(opener.open.call_count, 1)
+
+    def test_error_responses_are_sanitized(self):
+        for body in [MARKER.encode(), b'[]', b'{"ok":1}', json.dumps({"ok": False, "error": MARKER}).encode()]:
+            with mock.patch.object(SLACK, "_op_read", return_value=MARKER), mock.patch.object(SLACK, "_open_authenticated", return_value=Response(body)):
+                self.failure(lambda: SLACK.call_notifier("auth.test"))
+
+
 class FakeBroker:
     def __init__(self, existing=False):
         self.calls, self.existing, self.clipboard = [], existing, MARKER

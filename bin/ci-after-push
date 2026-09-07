@@ -150,6 +150,13 @@ def job_records(value):
     return result
 
 
+def same_run_snapshot(first, second):
+    """Compare validated execution records, retaining timestamps only as evidence."""
+    # GitHub's run-list and exact-attempt views can report different updatedAt
+    # values for the same completed execution. Keep every identity/state check.
+    return all(first[field] == second[field] for field in RUN_FIELDS if field != "updatedAt")
+
+
 class Observer:
     def __init__(self, args):
         self.args = args
@@ -201,9 +208,9 @@ class Observer:
         observed = run_record(raw, self.args, view_attempt=run["attempt"])
         # GetRun appends /attempts/N for --attempt N, unlike run-list URLs:
         # https://github.com/cli/cli/blob/trunk/pkg/cmd/run/shared/shared.go#L525-L560
-        # Ignore only this validated format difference when comparing; retain
-        # the exact-attempt URL returned by gh in the resulting evidence.
-        if {**observed, "url": run["url"]} != run:
+        # Normalize only this validated URL format difference; retain the
+        # exact-attempt URL and timestamp returned by gh in the evidence.
+        if not same_run_snapshot({**observed, "url": run["url"]}, run):
             raise ObservationError("Run changed during attempt inspection; take another observation")
         return {**observed, "jobs": job_records(raw.get("jobs"))}
 
@@ -228,7 +235,8 @@ class Observer:
                 self.runs = [self.details(run) for run in listed]
                 # A second listing catches visible late runs/reruns, not future ones.
                 latest = self.listing()
-                if latest == listed:
+                if (len(latest) == len(listed)
+                        and all(same_run_snapshot(new, old) for new, old in zip(latest, listed))):
                     failures = [run for run in self.runs if run["conclusion"] in FAILURES or any(
                         job["conclusion"] in FAILURES for job in run["jobs"])]
                     self.caveats = [

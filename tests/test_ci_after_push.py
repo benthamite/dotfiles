@@ -137,6 +137,34 @@ class CIAfterPushTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertEqual(self.calls(), [])
 
+    def test_list_and_attempt_update_timestamps_can_differ_for_completed_run(self):
+        # Recorded GitHub disagreement: the list endpoint ended at :50, while
+        # the exact completed attempt ended at :51. Execution fields agreed.
+        listed = run_record(updatedAt="2026-09-07T23:40:50Z")
+        detail = run_detail(run_record(updatedAt="2026-09-07T23:40:51Z"))
+        self.config.update(snapshots=[[listed]], details={"101": detail})
+        result = self.invoke()
+        self.assertEqual(result.returncode, 0, result.stdout)
+        receipt = json.loads(result.stdout)
+        self.assertEqual(receipt["status"], "observed_success")
+        self.assertEqual(receipt["runs"][0]["updatedAt"], "2026-09-07T23:40:51Z")
+        self.assertEqual(receipt["runs"][0]["attempt"], 2)
+
+    def test_timestamp_only_change_during_recheck_keeps_execution_evidence(self):
+        first = run_record(updatedAt="2026-09-07T23:40:50Z")
+        later = run_record(updatedAt="2026-09-07T23:40:51Z")
+        self.config.update(snapshots=[[first], [later]], details={"101": run_detail(first)})
+        result = self.invoke()
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertEqual(int((self.root / "list-count").read_text()), 2)
+
+    def test_timestamp_disagreement_does_not_hide_failed_jobs(self):
+        detail = run_detail(run_record(updatedAt="2026-09-07T23:40:51Z"), "failure")
+        self.config["details"]["101"] = detail
+        result = self.invoke()
+        self.assertEqual(result.returncode, 1, result.stdout)
+        self.assertEqual(json.loads(result.stdout)["runs"][0]["jobs"][0]["conclusion"], "failure")
+
     def test_run_from_other_branch_never_satisfies_selected_branch(self):
         self.config["snapshots"] = [[run_record(headBranch="other")]]
         self.assertEqual(self.invoke("--no-push").returncode, 2)
@@ -253,6 +281,11 @@ class CIAfterPushTests(unittest.TestCase):
 
     def test_detail_mismatch_or_malformed_response_is_incomplete(self):
         for record in (run_detail(run_record(attempt=3)), run_detail(run_record(headBranch="other")),
+                       run_detail(run_record(run_id=102)), run_detail(run_record(headSha="b" * 40)),
+                       run_detail(run_record(event="workflow_dispatch")),
+                       run_detail(run_record(workflowDatabaseId=8)),
+                       run_detail(run_record(status="in_progress", conclusion=None)),
+                       run_detail(run_record(conclusion="failure")),
                        {"raw": "UNTRUSTED_PRIVATE_ERROR"}):
             with self.subTest(record=record):
                 self.config["details"]["101"] = record

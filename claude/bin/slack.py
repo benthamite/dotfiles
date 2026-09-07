@@ -28,7 +28,9 @@ Usage:
   slack.py replies <channel-id> <thread-ts> [--limit=N] [--cursor=...] [--no-resolve-users]
       Fetch replies in a thread (conversations.replies), resolving user IDs by default.
   slack.py permalink <url> [--limit=N] [--cursor=...] [--no-resolve-users]
-      Fetch the message or thread context for a Slack permalink, resolving user IDs by default.
+      Fetch an exact target plus one context page, with explicit coverage.
+      Workspace URLs are bound to the selected account; workspaces without a
+      configured domain require an extra auth.test identity read.
   slack.py channels [--types=public_channel,private_channel,im,mpim] [--cursor=...]
       List channels (conversations.list).
   slack.py users-search <query> [--max=N]
@@ -118,6 +120,7 @@ def _open_authenticated(request):
 #             <cookie_field> (xoxd), e.g. the org-prefixed slack.com entries.
 WORKSPACES = {
     "epoch": {
+        "domain": "epochai.slack.com",
         "source": "op",
         "op_path": "op://Automations/Slack MCP - Epoch Unofficial",
     },
@@ -305,31 +308,40 @@ def call_notifier(method, **params):
 
 
 def _permalink_ts_to_ts(permalink_ts):
-    if not permalink_ts.isdigit() or len(permalink_ts) <= 6:
-        raise ValueError(f"invalid Slack permalink timestamp: {permalink_ts}")
+    if not re.fullmatch(r"[0-9]{7,}", permalink_ts):
+        raise ValueError("invalid Slack permalink timestamp")
     return f"{permalink_ts[:-6]}.{permalink_ts[-6:]}"
 
 
 def parse_permalink(url):
-    parsed = urllib.parse.urlparse(url)
-    if parsed.scheme not in ("http", "https") or not parsed.netloc.endswith(".slack.com"):
-        raise ValueError(f"not a Slack URL: {url}")
-
-    parts = [part for part in parsed.path.split("/") if part]
-    if len(parts) < 3 or parts[0] != "archives":
-        raise ValueError(f"not a Slack message permalink: {url}")
-
-    channel = parts[1]
-    message_part = parts[2]
-    if not message_part.startswith("p"):
-        raise ValueError(f"Slack permalink is missing p<timestamp>: {url}")
-
-    message_ts = _permalink_ts_to_ts(message_part[1:])
-    query = urllib.parse.parse_qs(parsed.query)
+    """Parse a canonical URL; bind configured domains without accessing services."""
+    if not isinstance(url, str) or any(ord(c) <= 32 or ord(c) == 127 for c in url) or "\\" in url or "#" in url:
+        raise ValueError("invalid Slack permalink URL")
+    parsed = urllib.parse.urlsplit(url)
+    if parsed.scheme != "https" or not re.fullmatch(r"[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.slack\.com", parsed.netloc):
+        raise ValueError("Slack permalink requires a canonical HTTPS workspace URL")
+    workspace = WORKSPACES.get(_workspace)
+    if workspace is None:
+        raise ValueError("unknown selected Slack workspace")
+    if workspace.get("domain") and parsed.netloc != workspace["domain"]:
+        raise ValueError("Slack permalink belongs to a different workspace")
+    match = re.fullmatch(r"/archives/([CGD][A-Z0-9]{8,})/p([0-9]{7,})", parsed.path)
+    if not match:
+        raise ValueError("invalid Slack message permalink path")
+    channel, timestamp = match.groups()
+    message_ts = _permalink_ts_to_ts(timestamp)
+    try:
+        query = urllib.parse.parse_qs(parsed.query, keep_blank_values=True, strict_parsing=True)
+    except ValueError:
+        raise ValueError("malformed Slack permalink query") from None
+    if set(query) - {"thread_ts", "cid"} or any(len(values) != 1 for values in query.values()):
+        raise ValueError("invalid or duplicate Slack permalink query parameter")
     thread_ts = (query.get("thread_ts") or [None])[0]
     cid = (query.get("cid") or [None])[0]
-    if cid and cid != channel:
-        raise ValueError(f"Slack permalink channel mismatch: path={channel}, cid={cid}")
+    if thread_ts is not None and not re.fullmatch(r"[0-9]+\.[0-9]{6}", thread_ts):
+        raise ValueError("invalid Slack thread timestamp")
+    if cid is not None and cid != channel:
+        raise ValueError("Slack permalink channel query does not match its path")
 
     return {
         "url": url,
@@ -340,6 +352,20 @@ def parse_permalink(url):
     }
 
 
+def _verify_permalink_workspace(info):
+    """Resolve an unconfigured domain through the selected account, never another."""
+    if WORKSPACES[_workspace].get("domain"):
+        return
+    identity = call("auth.test")
+    url = identity.get("url")
+    if not isinstance(url, str):
+        _fail("Slack account did not return a workspace URL")
+    if not re.fullmatch(r"https://[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.slack\.com/?", url):
+        _fail("Slack account returned an invalid workspace URL")
+    if urllib.parse.urlsplit(url).netloc != info["team_domain"] + ".slack.com":
+        _fail("Slack permalink belongs to a different selected workspace", 2)
+
+
 def _has_replies(message):
     try:
         return int(message.get("reply_count") or 0) > 0
@@ -347,8 +373,55 @@ def _has_replies(message):
         return False
 
 
+def _message_rows(out):
+    messages = out.get("messages")
+    if not isinstance(messages, list) or any(not isinstance(item, dict) for item in messages):
+        _fail("Slack returned an invalid message collection")
+    if any(not isinstance(item.get("ts"), str) or not re.fullmatch(r"[0-9]+\.[0-9]{6}", item["ts"]) for item in messages):
+        _fail("Slack returned an invalid message timestamp")
+    return messages
+
+
+def _exact_message(out, timestamp):
+    matches = [item for item in _message_rows(out) if item.get("ts") == timestamp]
+    if len(matches) != 1:
+        _fail("Requested Slack message was not found exactly; use a verified thread permalink for a reply")
+    return matches[0]
+
+
+def _require_thread_membership(message, thread_ts):
+    if message.get("ts") == thread_ts:
+        if message.get("thread_ts", thread_ts) != thread_ts:
+            _fail("Slack message does not belong to the requested thread")
+    elif message.get("thread_ts") != thread_ts:
+        _fail("Slack message does not belong to the requested thread")
+
+
+def _page_coverage(out, cursor):
+    metadata = out.get("response_metadata", {})
+    if not isinstance(metadata, dict):
+        _fail("Slack returned invalid pagination metadata")
+    next_cursor = metadata.get("next_cursor", "")
+    if not isinstance(next_cursor, str):
+        _fail("Slack returned an invalid pagination cursor")
+    has_more = out.get("has_more", False)
+    if type(has_more) is not bool:
+        _fail("Slack returned an invalid pagination status")
+    limited = out.get("is_limited", False)
+    if type(limited) is not bool:
+        _fail("Slack returned an invalid history limit status")
+    more = has_more or bool(next_cursor)
+    return {
+        "starts_at_beginning": not bool(cursor),
+        "has_more": more,
+        "next_cursor": next_cursor,
+        "is_limited": limited,
+        "complete": not cursor and not more and not limited,
+    }
+
+
 _user_cache = {}
-_USER_ID_RE = re.compile(r"^U[A-Z0-9]{8,}$")
+_USER_ID_RE = re.compile(r"^[UW][A-Z0-9]{8,}$")
 
 
 def _user_display(user):
@@ -458,6 +531,10 @@ def cmd_history(args):
 
 
 def cmd_replies(args):
+    if type(args.limit) is not int or args.limit <= 0:
+        _fail("Slack page limit must be a positive integer", 2)
+    if not re.fullmatch(r"[CGD][A-Z0-9]{8,}", args.channel) or not re.fullmatch(r"[0-9]+\.[0-9]{6}", args.thread_ts):
+        _fail("Invalid Slack thread channel or timestamp", 2)
     out = call(
         "conversations.replies",
         channel=args.channel,
@@ -465,52 +542,82 @@ def cmd_replies(args):
         limit=str(args.limit),
         cursor=args.cursor,
     )
+    for message in _message_rows(out):
+        _require_thread_membership(message, args.thread_ts)
+    if not args.cursor:
+        _exact_message(out, args.thread_ts)
+    out["coverage"] = _page_coverage(out, args.cursor)
     if args.resolve_users:
         resolve_users_in_response(out)
     print(json.dumps(out, indent=2))
 
 
 def cmd_permalink(args):
+    if type(args.limit) is not int or args.limit <= 0:
+        _fail("Slack page limit must be a positive integer", 2)
     try:
         info = parse_permalink(args.url)
     except ValueError as e:
         sys.stderr.write(f"ERROR: {e}\n")
         sys.exit(2)
 
-    if info["thread_ts"]:
-        out = call(
+    _verify_permalink_workspace(info)
+    thread_ts = info["thread_ts"]
+    if thread_ts:
+        target_result = call(
             "conversations.replies",
             channel=info["channel"],
-            ts=info["thread_ts"],
-            limit=str(args.limit),
-            cursor=args.cursor,
-        )
-        out["source"] = "conversations.replies"
-    else:
-        out = call(
-            "conversations.history",
-            channel=info["channel"],
+            ts=thread_ts,
+            oldest=info["message_ts"],
             latest=info["message_ts"],
             inclusive="true",
             limit="1",
         )
-        out["source"] = "conversations.history"
-        messages = out.get("messages") or []
-        if messages and _has_replies(messages[0]):
-            thread_ts = messages[0].get("thread_ts") or messages[0].get("ts")
-            info["thread_ts"] = thread_ts
-            out = call(
-                "conversations.replies",
-                channel=info["channel"],
-                ts=thread_ts,
-                limit=str(args.limit),
-                cursor=args.cursor,
-            )
-            out["source"] = "conversations.replies"
+        target = _exact_message(target_result, info["message_ts"])
+        _require_thread_membership(target, thread_ts)
+    else:
+        target_result = call(
+            "conversations.history",
+            channel=info["channel"],
+            oldest=info["message_ts"],
+            latest=info["message_ts"],
+            inclusive="true",
+            limit="1",
+        )
+        target = _exact_message(target_result, info["message_ts"])
+        thread_ts = target.get("thread_ts") or (target["ts"] if _has_replies(target) else None)
+
+    target_coverage = _page_coverage(target_result, None)
+    if thread_ts:
+        if not isinstance(thread_ts, str) or not re.fullmatch(r"[0-9]+\.[0-9]{6}", thread_ts):
+            _fail("Slack returned an invalid thread timestamp")
+        _require_thread_membership(target, thread_ts)
+        info["thread_ts"] = thread_ts
+        out = call(
+            "conversations.replies", channel=info["channel"], ts=thread_ts,
+            limit=str(args.limit), cursor=args.cursor,
+        )
+        for message in _message_rows(out):
+            _require_thread_membership(message, thread_ts)
+        if not args.cursor and not any(message["ts"] == thread_ts for message in out["messages"]):
+            _fail("Slack thread context is missing its parent message")
+        out["source"] = "conversations.replies"
+        out["coverage"] = _page_coverage(out, args.cursor)
+    else:
+        if args.cursor:
+            _fail("A standalone Slack message has no thread cursor")
+        out = {"ok": True, "messages": [target], "source": "conversations.history"}
+        out["coverage"] = _page_coverage(out, None)
+
+    if target_coverage["is_limited"]:
+        out["coverage"]["is_limited"] = True
+        out["coverage"]["complete"] = False
 
     out["permalink"] = info
     if args.resolve_users:
         resolve_users_in_response(out)
+        resolve_users_in_response({"messages": [target]})
+    out["target_message"] = target
     print(json.dumps(out, indent=2))
 
 

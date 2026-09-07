@@ -435,6 +435,7 @@ The paired =humanize= catalogue preserves meaning, quotations, citations and
 functional markup. It uses style heuristics rather than authorship tests or
 word quotas, keeps functional URL parameters, and does not delete unverified
 citations. Inline edits and read-only reviews do not imply file or public writes.
+Calling workflows invoke it explicitly; it is no longer a =wikipedia-article= phase.
 
 The =handoff= skill separates drafting, saving and user-triggered replacement.
 It saves private per-session artifacts without later overwrites, preserves shared slots,

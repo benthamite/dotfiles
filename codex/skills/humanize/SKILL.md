@@ -18,7 +18,7 @@ The user's explicit editing request can target a single occurrence.
 
 - The user runs `/humanize` on a file or pasted text.
 - The user says "de-slop", "remove AI tells", "make this sound less like ChatGPT/Claude", "humanise this", "kill the LLM register".
-- Another skill calls humanize as a final cleanup pass (e.g. `wikipedia-article` Phase 5).
+- Another skill explicitly calls for this cleanup within its authorized workflow.
 
 ## When NOT to use
 

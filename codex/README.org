@@ -188,7 +188,8 @@ fields, preserving historical tool records. It inventories discovered shared
 profiles' active/archive stores, history, indexes and databases; absent artifacts
 and discovery limits are explicit. Dry-run reads captured SQLite snapshots,
 including WAL state, without opening originals for recovery. Apply requires
-offline stores, writer checks and private recovery backups. Per-file and SQLite
+offline stores, writer checks and private recovery backups; a backup directory
+whose parent does not yet exist is refused by name. Per-file and SQLite
 operations are not one transaction; a journal records partial failures. Metadata
 readback is distinct from observing the actual live resume consumer. Database
 updates cover thread =cwd=, not independent project associations; unsupported

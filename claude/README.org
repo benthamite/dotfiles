@@ -331,7 +331,8 @@ The =move-session-log= adapter reassigns individual resumable sessions or whole
 renamed projects by moving verified Claude transcript/sidecar owners and selected
 history metadata. Preview precedes apply; offline stores, writer checks and private
 recovery backups protect against overwrite and lost appends. Encoded-path and
-destination collisions fail before mutation. Historical tool records remain
+destination collisions fail before mutation, as does a backup directory whose
+parent does not yet exist, each with a named reason. Historical tool records remain
 unchanged, and project trust/settings remain untouched unless separately
 authorized. A recovery journal records partial failures; metadata counts alone
 do not establish live resume behavior.

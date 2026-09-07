@@ -461,7 +461,10 @@ class MigrationPlan:
         directory = Path(directory)
         if not directory.is_absolute():
             raise MigrationError("Backup directory must be absolute")
-        directory = directory.parent.resolve(strict=True) / directory.name
+        try:
+            directory = directory.parent.resolve(strict=True) / directory.name
+        except OSError:
+            raise MigrationError("Backup directory parent must already exist") from None
         drive = (Path.home() / "My Drive").resolve()
         if _inside(directory, drive) or any(_inside(directory, tree["root"])
                                            for tree in self.moves + self.watched):

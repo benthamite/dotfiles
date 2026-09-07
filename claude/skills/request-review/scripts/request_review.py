@@ -496,7 +496,13 @@ def _codex_preamble(item, live):
 
     Sources: openai/codex codex-rs/context-fragments/src/fragment.rs and
     codex-rs/core/src/context/contextual_user_message.rs; protocol models
-    serialize host content_item_kinds annotations. Unknown legacy forms refuse.
+    serialize host content_item_kinds annotations (ContentItemKind is a
+    transparent string, so each fragment names its own kind). Developer
+    kinds come from codex-rs/core/src/context/developer_instructions.rs,
+    multi_agent_role_instructions.rs, multi_agent_mode_instructions.rs and
+    the codex_prompts crate (permissions, host skills, collaboration mode);
+    codex-cli 0.153.4 emits them together as the first developer messages.
+    Unknown legacy forms refuse.
     """
     if live["backend"] != "codex" or not isinstance(item.get("payload"), dict):
         return False
@@ -524,7 +530,9 @@ def _codex_preamble(item, live):
     if item.get("type") != "response_item" or payload.get("type") != "message":
         return False
     allowed = {"user": {"agents_md.instructions", "environments.environment_context"},
-               "developer": {"generic.developer_instructions"}}
+               "developer": {"generic.developer_instructions", "host_skills.instructions",
+                             "permissions.instructions", "collaboration_mode.instructions",
+                             "multi_agent.role_instructions", "multi_agent.mode_instructions"}}
     content = payload.get("content")
     metadata = payload.get("internal_chat_message_metadata_passthrough")
     kinds = metadata.get("content_item_kinds") if isinstance(metadata, dict) else None

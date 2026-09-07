@@ -601,6 +601,25 @@ class CrossReviewRunTests(unittest.TestCase):
         self.output()
         self.assertIn("complete", self.cli("finish-review"))
 
+    def test_codex_0_153_developer_preamble_is_not_prior_conversation(self):
+        # Observed 2026-09-07 from codex-cli 0.153.4 (originator codex.el): three
+        # developer messages precede the AGENTS.md user message; upstream emits
+        # each kind with role "developer" (core/src/context/*_instructions.rs).
+        live = self.actor
+        def message(role, kinds):
+            return {"type": "response_item", "payload": {"type": "message", "role": role,
+                "content": [{"type": "input_text", "text": f"<{kind}/>"} for kind in kinds],
+                "internal_chat_message_metadata_passthrough": {"content_item_kinds": kinds}}}
+        for kinds in (["host_skills.instructions", "permissions.instructions",
+                       "collaboration_mode.instructions"],
+                      ["multi_agent.role_instructions"], ["multi_agent.mode_instructions"]):
+            self.assertTrue(reviewer._codex_preamble(message("developer", kinds), live))
+            # The same kinds never launder a user-role message.
+            self.assertFalse(reviewer._codex_preamble(message("user", kinds), live))
+        self.assertFalse(reviewer._codex_preamble(
+            message("developer", ["host_skills.instructions", "user.text"]), live))
+        self.assertFalse(reviewer._codex_preamble(message("developer", ["skills.instructions"]), live))
+
     def test_context_annotations_do_not_allow_arbitrary_user_or_tool_preambles(self):
         live = self.actor
         message = {"type": "response_item", "payload": {"type": "message", "role": "user",

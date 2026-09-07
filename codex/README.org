@@ -229,7 +229,12 @@ session identity and exact run-specific prompt before dispatch, and accepts
 only a terminal return from that submitted turn. Ambiguous delivery remains
 pending; missing evidence cannot authorize retransmission or an unsupported
 process-loss restart. Its helper reuses =agent_session_lib= and records private
-recovery evidence. Cleanup protects active, reused and unowned sessions.
+recovery evidence. The receipt check treats only documented first-turn runtime
+context as non-conversation: the AGENTS.md and environment user fragments plus
+the developer fragments codex-cli 0.153 emits at startup (generic, host skills,
+permissions, collaboration mode, multi-agent role and mode instructions); any
+other preamble keeps the run pending. Cleanup protects active, reused and
+unowned sessions.
 
 Delivery and manual reconciliation require the exact frozen prompt, including
 its marker, in a new user message after the saved transcript boundary. Busy state

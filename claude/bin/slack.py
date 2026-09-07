@@ -21,8 +21,9 @@ Multiple workspaces are supported via the WORKSPACES registry and the global
 
 Usage:
   slack.py [-w WORKSPACE] <subcommand> ...
-  slack.py search '<query>' [--max=N] [--sort=score|timestamp]
-      Search messages workspace-wide (search.messages).
+  slack.py search '<query>' [--max=N] [--page=N] [--sort=score|timestamp]
+      Fetch one search.messages page; max and page must each be 1..100.
+      UI filters and collapsed nearby matches mean totals are not a full inventory.
   slack.py history <channel-id> [--limit=N] [--oldest=ts] [--latest=ts] [--cursor=...]
       Fetch a channel's recent messages (conversations.history).
   slack.py replies <channel-id> <thread-ts> [--limit=N] [--cursor=...] [--no-resolve-users]
@@ -41,6 +42,10 @@ Usage:
       Mark a channel as read up to <ts> (conversations.mark).
   slack.py unreads
       Per-channel unread counts via the internal client.counts endpoint.
+  slack.py saved-list [--limit=N]
+      Fetch one response from the internal saved.list endpoint.
+  slack.py unsave <channel-id> <ts>
+      Remove that exact message from Later using internal saved.delete.
 
 Output: raw JSON from Slack on stdout. Non-zero exit on API error.
 """
@@ -514,7 +519,12 @@ def resolve_users_in_response(out):
 
 
 def cmd_search(args):
-    out = call("search.messages", query=args.query, count=str(args.max), sort=args.sort)
+    for name in ("max", "page"):
+        value = getattr(args, name)
+        if type(value) is not int or not 1 <= value <= 100:
+            _fail(f"Search --{name} must be an integer from 1 to 100")
+    out = call("search.messages", query=args.query, count=str(args.max),
+               page=str(args.page), sort=args.sort)
     print(json.dumps(out, indent=2))
 
 
@@ -682,6 +692,10 @@ def cmd_saved_list(args):
 def cmd_unsave(args):
     """Remove a "Save for later" item (internal saved.delete endpoint).
     For message items, item_id is the CHANNEL id and ts the message ts."""
+    if not re.fullmatch(r"[CGD][A-Z0-9]{8,}", args.channel):
+        _fail("Unsave requires an exact channel ID")
+    if not re.fullmatch(r"[0-9]+\.[0-9]{6}", args.ts):
+        _fail("Unsave requires an exact message timestamp")
     out = call("saved.delete", item_id=args.channel, item_type="message", ts=args.ts)
     print(json.dumps(out, indent=2))
 
@@ -723,7 +737,8 @@ def main():
 
     s = sub.add_parser("search")
     s.add_argument("query")
-    s.add_argument("--max", type=int, default=20)
+    s.add_argument("--max", type=int, default=20, help="Results per page (1..100)")
+    s.add_argument("--page", type=int, default=1, help="Explicit result page (1..100); no automatic sweep")
     s.add_argument("--sort", choices=["score", "timestamp"], default="timestamp")
     s.set_defaults(func=cmd_search)
 

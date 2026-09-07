@@ -23,4 +23,24 @@ fi
 # exec must reach the real binary rather than re-entering the shim.
 export OP_SHIM_BYPASS=1
 
+# Workaround for a macOS 26 + 1Password CLI interaction (verified 2026-09-07):
+# on every account-bearing command `op` probes the desktop app's group
+# container (~/Library/Group Containers/2BUA8C4S2C.com.1password) to detect the
+# app integration, which the service-account path never uses. macOS 26 treats
+# that container as protected "app data" and, for a process whose responsible
+# binary holds no persistent grant (every launchd job rooted in an ad-hoc signed
+# Homebrew interpreter), raises a consent dialog that blocks `op` until someone
+# at the screen answers it -- for hours when the Mac is locked. Denying the read
+# up front makes `op` treat the app as absent without any prompt; it still
+# authenticates with the service account and resolves secrets normally.
+# Children of `op run` inherit the same narrow denial, which they never need.
+if [[ -x /usr/bin/sandbox-exec ]]; then
+  profile='(version 1)(allow default)'
+  for container in "$HOME/Library/Group Containers"/*2BUA8C4S2C*; do
+    [[ -e "$container" ]] || continue
+    profile+="(deny file-read* file-write* (subpath \"$container\"))"
+  done
+  exec /usr/bin/sandbox-exec -p "$profile" op "$@"
+fi
+
 exec op "$@"

@@ -18,15 +18,21 @@ Anthropic flow stores a key that was created in the console.
 from __future__ import annotations
 
 import argparse
+import copy
+import hmac
+import http.client
 import json
+import math
 import os
+import re
+import stat
 import subprocess
 import sys
 import tempfile
 import urllib.error
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -37,9 +43,9 @@ DEFAULT_ANTHROPIC_ADMIN_REF = "op://Employee/Anthropic - api-provisioning-admin/
 DEFAULT_OPENAI_AUTOMATIONS_PROJECT_ID = "proj_mdM7wTXIQUFqquI4A1zCO2BF"
 DEFAULT_ANTHROPIC_AUTOMATIONS_WORKSPACE_ID = "wrkspc_016hokUAzbZA7qVGuAUjfZTb"
 DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD = 500.0
-# Per-provider overrides of the autonomous ceiling for automation runtime keys.
-# Anthropic automation keys share one workspace cap, so this ceiling must
-# match the verified workspace cap to permit provisioning.
+# Retained helper ceiling from prior local approval, not a claim about current
+# provider controls. The caller must establish current scoped authority and
+# control evidence; this constant neither enforces nor allocates provider spend.
 MAX_AUTONOMOUS_MONTHLY_SPEND_USD_BY_PROVIDER = {
     "anthropic": 1500.0,
 }
@@ -63,23 +69,29 @@ class RuntimeCredential:
     env_name: str
     op_ref: str
     project_or_workspace_id: str
-    secret: str
+    secret: str = field(repr=False)
 
 
-def run(args: list[str], *, input_text: str | None = None, capture: bool = True) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        args,
-        input=input_text,
-        capture_output=capture,
-        text=True,
-        check=False,
-    )
+def run(args: list[str], *, input_text: str | None = None) -> subprocess.CompletedProcess[str]:
+    """Capture all broker output. Errors can contain credentials: never relay it."""
+    try:
+        return subprocess.run(args, input=input_text, capture_output=True, text=True,
+                              check=False, timeout=120)
+    except (OSError, subprocess.SubprocessError, UnicodeError):
+        raise ProvisionError("Credential broker failed or timed out; completion is unconfirmed. Do not retry a write blindly.") from None
+
+
+def validate_reference(reference: str) -> str:
+    if not isinstance(reference, str) or not re.fullmatch(r"op://[A-Za-z0-9 _-]+/[A-Za-z0-9 _.-]+/[A-Za-z0-9 _-]+", reference):
+        raise ProvisionError("Invalid 1Password reference; expected one vault/item/field reference.")
+    return reference.split("/")[2]
 
 
 def op_read(reference: str, *, desktop_session: bool = False) -> str:
+    vault = validate_reference(reference)
     if desktop_session:
-        args = ["env", "-u", "OP_SERVICE_ACCOUNT_TOKEN", "op", "read", reference]
-    elif reference.startswith("op://Automations/"):
+        args = ["op-desktop", "read", reference]
+    elif vault == DEFAULT_AUTOMATIONS_VAULT:
         args = ["op-automations", "read", reference]
     else:
         raise ProvisionError(
@@ -87,90 +99,151 @@ def op_read(reference: str, *, desktop_session: bool = False) -> str:
         )
     result = run(args)
     if result.returncode != 0:
-        raise ProvisionError(f"Could not read {reference}: {result.stderr.strip()}")
-    return result.stdout.rstrip("\n")
+        raise ProvisionError("Could not read the selected credential through its broker.")
+    secret = result.stdout.removesuffix("\n")
+    if not secret or len(secret) > 4096 or any(c.isspace() or ord(c) < 32 for c in secret):
+        raise ProvisionError("Selected credential has an unsupported shape.")
+    return secret
+
+
+def broker_json(args: list[str]) -> Any:
+    result = run(args)
+    if result.returncode != 0:
+        raise ProvisionError("1Password metadata lookup failed; absence is not established.")
+    try:
+        if len(result.stdout) > 4 * 1024 * 1024:
+            raise ValueError
+        return json.loads(result.stdout)
+    except (ValueError, TypeError):
+        raise ProvisionError("1Password returned unsupported metadata.") from None
+
+
+def lookup_item(title: str, vault: str) -> dict[str, Any] | None:
+    rows = broker_json(["op-automations", "item", "list", "--vault", vault, "--format", "json"])
+    if not isinstance(rows, list) or any(not isinstance(r, dict) or not isinstance(r.get("title"), str)
+                                       or not isinstance(r.get("id"), str)
+                                       or not re.fullmatch(r"[a-z0-9]{26}", r["id"]) for r in rows):
+        raise ProvisionError("Item inventory is incomplete or malformed.")
+    matches = [r for r in rows if r["title"] == title]
+    if len(matches) > 1:
+        raise ProvisionError("Multiple matching secret items; refusing ambiguous selection.")
+    return matches[0] if matches else None
 
 
 def op_item_exists(title: str, vault: str) -> bool:
-    result = run(["op-automations", "item", "get", title, "--vault", vault, "--format", "json"])
-    return result.returncode == 0
+    return lookup_item(title, vault) is not None
 
 
 def ensure_desktop_op_session() -> None:
-    result = run(["env", "-u", "OP_SERVICE_ACCOUNT_TOKEN", "op", "whoami"])
-    if result.returncode == 0:
-        return
-    signin = run(["env", "-u", "OP_SERVICE_ACCOUNT_TOKEN", "op", "signin"])
-    if signin.returncode != 0:
-        raise ProvisionError("1Password desktop session is unavailable; cannot write secret item.")
+    if run(["op-desktop", "whoami"]).returncode != 0:
+        raise ProvisionError("1Password desktop broker is unavailable; no raw CLI or forced sign-in fallback.")
 
 
-def create_or_update_automation_item(credential: RuntimeCredential, vault: str, *, force: bool) -> None:
-    if op_item_exists(credential.item_title, vault):
-        if not force:
-            raise ProvisionError(
-                f"{credential.item_title!r} already exists in {vault}; use --force to replace the credential field."
-            )
-        ensure_desktop_op_session()
-        result = run(
-            [
-                "env",
-                "-u",
-                "OP_SERVICE_ACCOUNT_TOKEN",
-                "op",
-                "item",
-                "edit",
-                credential.item_title,
-                "--vault",
-                vault,
-                f"credential[concealed]={credential.secret}",
-                f"provider[text]={credential.provider}",
-                f"scope[text]={credential.item_title.split(' - ', 1)[1]}",
-                f"env_var[text]={credential.env_name}",
-                f"provider_resource_id[text]={credential.project_or_workspace_id}",
-            ]
-        )
+@dataclass
+class ItemPlan:
+    title: str
+    vault: str
+    item_id: str | None
+    template: dict[str, Any] = field(repr=False)
+
+
+def validate_template(data: Any) -> dict[str, Any]:
+    if not isinstance(data, dict) or data.get("category") != "API_CREDENTIAL" or not isinstance(data.get("fields"), list):
+        raise ProvisionError("Expected an API Credential item/template.")
+    if data.get("files") or data.get("document") or data.get("sshKey") or data.get("passkeys"):
+        raise ProvisionError("Item has unsupported attached material; refusing a lossy template update.")
+    if any(not isinstance(f, dict) or not isinstance(f.get("type"), str)
+           or f["type"] in {"SSHKEY", "FILE", "PASSKEY"} for f in data["fields"]):
+        raise ProvisionError("Item contains unsupported fields.")
+    # Do not infer the installed category layout or append a second credential
+    # when the captured template exposes a section-scoped/custom alternative.
+    managed = ("credential", "provider", "scope", "env_var", "provider_resource_id")
+    for key in managed:
+        matching = [f for f in data["fields"] if f.get("id") == key or f.get("label") == key]
+        if len(matching) > 1 or any(f.get("section") for f in matching):
+            raise ProvisionError("Item has duplicate or section-scoped managed fields; unsupported template.")
+        if key == "credential" and (len(matching) != 1 or matching[0].get("id") != "credential"
+                                    or matching[0]["type"] != "CONCEALED"):
+            raise ProvisionError("Template lacks the supported unique credential field.")
+    return data
+
+
+def prepare_item(title: str, vault: str, *, force: bool) -> ItemPlan:
+    existing = lookup_item(title, vault)
+    if existing and not force:
+        raise ProvisionError("Selected item already exists; --force is required to replace its credential.")
+    if existing:
+        data = validate_template(broker_json(["op-automations", "item", "get", existing["id"], "--vault", vault, "--format", "json"]))
+        if data.get("id") != existing["id"] or data.get("title") != title:
+            raise ProvisionError("Selected item identity changed during preflight.")
     else:
-        ensure_desktop_op_session()
-        result = run(
-            [
-                "env",
-                "-u",
-                "OP_SERVICE_ACCOUNT_TOKEN",
-                "op",
-                "item",
-                "create",
-                "--category=API Credential",
-                f"--title={credential.item_title}",
-                f"--vault={vault}",
-                f"credential[concealed]={credential.secret}",
-                f"provider[text]={credential.provider}",
-                f"scope[text]={credential.item_title.split(' - ', 1)[1]}",
-                f"env_var[text]={credential.env_name}",
-                f"provider_resource_id[text]={credential.project_or_workspace_id}",
-            ]
-        )
-    if result.returncode != 0:
-        raise ProvisionError(f"Could not write {credential.item_title}: {result.stderr.strip()}")
+        data = validate_template(broker_json(["op-desktop", "item", "template", "get", "API Credential", "--format", "json"]))
+    return ItemPlan(title, vault, existing["id"] if existing else None, data)
 
-    verify = run(["op-automations", "read", credential.op_ref])
-    if verify.returncode != 0:
-        raise ProvisionError(f"Wrote item, but service-account read verification failed: {verify.stderr.strip()}")
+
+def create_or_update_automation_item(credential: RuntimeCredential, vault: str, *, force: bool,
+                                     prepared: ItemPlan | None = None) -> str:
+    prepared = prepared or prepare_item(credential.item_title, vault, force=force)
+    current = lookup_item(prepared.title, vault)
+    if (current["id"] if current else None) != prepared.item_id:
+        raise ProvisionError("Item identity changed after preflight; no write attempted.")
+    if prepared.item_id:
+        current_data = broker_json(["op-automations", "item", "get", prepared.item_id, "--vault", vault, "--format", "json"])
+        if current_data != prepared.template:
+            raise ProvisionError("Item contents changed after preflight; refusing overwrite.")
+    template = copy.deepcopy(prepared.template)
+    template["title"] = credential.item_title
+    values = {"credential": credential.secret, "provider": credential.provider,
+              "scope": credential.item_title.split(" - ", 1)[1], "env_var": credential.env_name,
+              "provider_resource_id": credential.project_or_workspace_id}
+    for key, value in values.items():
+        fields = [f for f in template["fields"] if f.get("id") == key or (f.get("label") == key and not f.get("section"))]
+        if len(fields) > 1:
+            raise ProvisionError("Item has ambiguous managed fields; refusing overwrite.")
+        target = fields[0] if fields else {"id": key, "label": key}
+        target.update(type="CONCEALED" if key == "credential" else "STRING", value=value)
+        if not fields:
+            template["fields"].append(target)
+    command = ["op-desktop", "item", "edit", prepared.item_id] if prepared.item_id else ["op-desktop", "item", "create", "-"]
+    result = run([*command, "--vault", vault], input_text=json.dumps(template))
+    if result.returncode != 0:
+        raise ProvisionError("Secret item write failed or has uncertain completion; reconcile before retrying.")
+    stored = lookup_item(credential.item_title, vault)
+    if not stored or (prepared.item_id and stored["id"] != prepared.item_id):
+        raise ProvisionError("Secret item was written but its unique identity could not be verified.")
+    reference = f"op://{vault}/{stored['id']}/credential"
+    if not hmac.compare_digest(op_read(reference), credential.secret):
+        raise ProvisionError("Secret item was written but exact read-back verification failed.")
+    return reference
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise ProvisionError("Provider redirect refused; credentials were not forwarded.")
 
 
 def request_json(url: str, *, method: str = "GET", headers: dict[str, str], body: dict[str, Any] | None = None) -> dict[str, Any]:
+    parsed = urllib.parse.urlsplit(url)
+    if parsed.scheme != "https" or parsed.netloc not in {"api.openai.com", "api.anthropic.com"} or parsed.fragment:
+        raise ProvisionError("Unsupported provider endpoint.")
     payload = None if body is None else json.dumps(body).encode("utf-8")
     request = urllib.request.Request(url, data=payload, method=method, headers=headers)
     try:
-        with urllib.request.urlopen(request, timeout=30) as response:
-            return json.loads(response.read())
+        # Do not forward Authorization/x-api-key through redirects. Preserve
+        # normal HTTPS proxy/TLS behavior; a failed POST is not retried.
+        opener = urllib.request.build_opener(NoRedirect())
+        with opener.open(request, timeout=30) as response:
+            raw = response.read(4 * 1024 * 1024 + 1)
+            if len(raw) > 4 * 1024 * 1024:
+                raise ProvisionError("Provider response exceeded the supported size.")
+            data = json.loads(raw)
+            if not isinstance(data, dict):
+                raise ProvisionError("Provider returned an unsupported response shape.")
+            return data
     except urllib.error.HTTPError as exc:
-        try:
-            error_body = json.loads(exc.read())
-        except Exception:
-            error_body = {"error": {"message": "non-json error response"}}
-        message = error_body.get("error", {}).get("message", error_body)
-        raise ProvisionError(f"{method} {url} failed with HTTP {exc.code}: {message}") from None
+        raise ProvisionError(f"Provider request failed with HTTP {exc.code}; response body withheld.") from None
+    except (OSError, ValueError, UnicodeError, http.client.HTTPException):
+        raise ProvisionError("Provider request failed or returned malformed data; details withheld.") from None
 
 
 def openai_headers(admin_key: str) -> dict[str, str]:
@@ -181,31 +254,60 @@ def openai_headers(admin_key: str) -> dict[str, str]:
 
 
 def list_openai_projects(admin_key: str) -> list[dict[str, Any]]:
-    url = "https://api.openai.com/v1/organization/projects?limit=100&include_archived=false"
-    data = request_json(url, headers=openai_headers(admin_key))
-    return data.get("data", [])
+    return paginated_resources("https://api.openai.com/v1/organization/projects?limit=100&include_archived=false",
+                               openai_headers(admin_key), "after")
+
+
+def paginated_resources(url: str, headers: dict[str, str], cursor_name: str) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    seen = set()
+    cursor = None
+    for _ in range(100):
+        data = request_json(url + ("&" + urllib.parse.urlencode({cursor_name: cursor}) if cursor else ""), headers=headers)
+        page = data.get("data")
+        if not isinstance(page, list) or type(data.get("has_more")) is not bool or any(
+            not isinstance(r, dict) or not isinstance(r.get("id"), str) or not isinstance(r.get("name"), str) for r in page
+        ):
+            raise ProvisionError("Provider inventory was incomplete; no resource will be created.")
+        for row in page:
+            if row["id"] in seen:
+                raise ProvisionError("Provider inventory repeated an identity; refusing uncertain creation.")
+            seen.add(row["id"])
+        rows.extend(page)
+        if not data["has_more"]:
+            return rows
+        cursor = data.get("last_id")
+        if not page or cursor != page[-1]["id"]:
+            raise ProvisionError("Provider inventory has an invalid continuation.")
+    raise ProvisionError("Provider inventory page bound exceeded; no resource will be created.")
 
 
 def get_or_create_openai_project(admin_key: str, name: str) -> tuple[str, bool]:
-    for project in list_openai_projects(admin_key):
-        if project.get("name") == name:
-            return project["id"], False
+    matches = [p for p in list_openai_projects(admin_key) if p["name"] == name]
+    if len(matches) > 1:
+        raise ProvisionError("Multiple provider projects match; select an explicit resource ID.")
+    if matches:
+        return resource_id(matches[0]["id"], "openai"), False
     data = request_json(
         "https://api.openai.com/v1/organization/projects",
         method="POST",
         headers=openai_headers(admin_key),
         body={"name": name},
     )
-    return data["id"], True
+    return resource_id(data.get("id"), "openai"), True
 
 
 def create_openai_service_account(admin_key: str, project_id: str, name: str) -> tuple[str, str]:
     url = f"https://api.openai.com/v1/organization/projects/{project_id}/service_accounts"
     data = request_json(url, method="POST", headers=openai_headers(admin_key), body={"name": name})
-    secret = (data.get("api_key") or {}).get("value")
-    if not secret:
+    key = data.get("api_key")
+    secret = key.get("value") if isinstance(key, dict) else None
+    if not isinstance(secret, str) or not re.fullmatch(r"sk-[A-Za-z0-9_-]{20,1024}", secret):
         raise ProvisionError("OpenAI did not return a service-account key value.")
-    return data["id"], secret
+    identity = data.get("id")
+    if not isinstance(identity, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", identity):
+        raise ProvisionError("OpenAI returned an unsupported service-account identity.")
+    return identity, secret
 
 
 def anthropic_headers(admin_key: str) -> dict[str, str]:
@@ -217,24 +319,23 @@ def anthropic_headers(admin_key: str) -> dict[str, str]:
 
 
 def list_anthropic_workspaces(admin_key: str) -> list[dict[str, Any]]:
-    data = request_json(
-        "https://api.anthropic.com/v1/organizations/workspaces?limit=100",
-        headers=anthropic_headers(admin_key),
-    )
-    return data.get("data", [])
+    return paginated_resources("https://api.anthropic.com/v1/organizations/workspaces?limit=100",
+                               anthropic_headers(admin_key), "after_id")
 
 
 def get_or_create_anthropic_workspace(admin_key: str, name: str) -> tuple[str, bool]:
-    for workspace in list_anthropic_workspaces(admin_key):
-        if workspace.get("name") == name and workspace.get("archived_at") is None:
-            return workspace["id"], False
+    matches = [w for w in list_anthropic_workspaces(admin_key) if w["name"] == name and w.get("archived_at") is None]
+    if len(matches) > 1:
+        raise ProvisionError("Multiple provider workspaces match; select an explicit resource ID.")
+    if matches:
+        return resource_id(matches[0]["id"], "anthropic"), False
     data = request_json(
         "https://api.anthropic.com/v1/organizations/workspaces",
         method="POST",
         headers=anthropic_headers(admin_key),
         body={"name": name},
     )
-    return data["id"], True
+    return resource_id(data.get("id"), "anthropic"), True
 
 
 def env_name_for(project_slug: str, provider: str) -> str:
@@ -242,39 +343,102 @@ def env_name_for(project_slug: str, provider: str) -> str:
     return f"{prefix}_{provider.upper()}_API_KEY"
 
 
-def write_env_op(repo: Path, env_name: str, op_ref: str, *, force: bool) -> None:
-    path = repo / ".env.op"
-    lines: list[str] = []
-    if path.exists():
-        lines = path.read_text(encoding="utf-8").splitlines()
-    entry = f"{env_name}={op_ref}"
-    replaced = False
-    next_lines = []
-    for line in lines:
-        if line.startswith(f"{env_name}="):
-            if not force and line != entry:
-                raise ProvisionError(f"{path} already defines {env_name}; use --force to replace it.")
-            next_lines.append(entry)
-            replaced = True
+def read_regular(path: Path, limit: int) -> bytes:
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    try:
+        before = os.fstat(fd)
+        if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1 or before.st_size > limit:
+            raise ProvisionError("Selected file must be a bounded regular, unshared file.")
+        with os.fdopen(fd, "rb", closefd=False) as stream:
+            data = stream.read(limit + 1)
+        after = os.fstat(fd)
+        identity = lambda s: (s.st_dev, s.st_ino, s.st_size, s.st_mtime_ns, s.st_ctime_ns)
+        if len(data) > limit or identity(before) != identity(after):
+            raise ProvisionError("Selected file changed during its bounded read.")
+        return data
+    finally:
+        os.close(fd)
+
+
+@dataclass
+class EnvPlan:
+    repo: Path
+    env_name: str
+    original: bytes | None = field(repr=False)
+    index: int | None
+    directory_identity: tuple[int, int]
+
+
+def prepare_env(repo: Path, env_name: str, op_ref: str, *, force: bool) -> EnvPlan:
+    if repo.is_symlink():
+        raise ProvisionError("Selected repository root must not be a symlink.")
+    repo = repo.resolve(strict=True)
+    if not repo.is_dir():
+        raise ProvisionError("Selected repository root is not a directory.")
+    try:
+        original = read_regular(repo / ".env.op", 256 * 1024)
+    except FileNotFoundError:
+        original = None
+    lines = original.decode("utf-8").splitlines(keepends=True) if original is not None else []
+    matches = [i for i, line in enumerate(lines) if re.match(r"^\s*(?:export\s+)?" + re.escape(env_name) + r"\s*=", line)]
+    if len(matches) > 1:
+        raise ProvisionError("The env file has duplicate definitions of the selected variable.")
+    index = matches[0] if matches else None
+    if index is not None and not force and lines[index].strip() != f"{env_name}={op_ref}":
+        raise ProvisionError("The env file defines another reference; --force is required to replace it.")
+    directory = repo.stat()
+    return EnvPlan(repo, env_name, original, index, (directory.st_dev, directory.st_ino))
+
+
+def write_env_op(repo: Path, env_name: str, op_ref: str, *, force: bool, prepared: EnvPlan | None = None) -> None:
+    prepared = prepared or prepare_env(repo, env_name, op_ref, force=force)
+    directory = prepared.repo.lstat()
+    if not stat.S_ISDIR(directory.st_mode) or (directory.st_dev, directory.st_ino) != prepared.directory_identity:
+        raise ProvisionError("Selected repository directory changed after preflight.")
+    path = prepared.repo / ".env.op"
+    try:
+        current = read_regular(path, 256 * 1024)
+    except FileNotFoundError:
+        current = None
+    if current != prepared.original:
+        raise ProvisionError("The env file changed after preflight; refusing overwrite.")
+    lines = current.decode("utf-8").splitlines(keepends=True) if current is not None else []
+    entry = f"{env_name}={op_ref}\n"
+    if prepared.index is not None:
+        lines[prepared.index] = entry
+    else:
+        if lines and not lines[-1].endswith("\n"):
+            lines[-1] += "\n"
+        lines.append(entry)
+    fd, temporary = tempfile.mkstemp(prefix=".env.op.", dir=prepared.repo)
+    try:
+        with os.fdopen(fd, "wb") as stream:
+            stream.write("".join(lines).encode("utf-8"))
+            stream.flush()
+            os.fsync(stream.fileno())
+        # Preflight/recheck is not a remote transaction or a lock against an
+        # adversarial writer racing the final replace. No blind retry follows.
+        try:
+            latest = read_regular(path, 256 * 1024)
+        except FileNotFoundError:
+            latest = None
+        if latest != current:
+            raise ProvisionError("The env file changed before publication.")
+        if current is None:
+            os.link(temporary, path)  # Exclusive publication; never replace a new competing file.
+            os.unlink(temporary)
         else:
-            next_lines.append(line)
-    if not replaced:
-        if next_lines and next_lines[-1].strip():
-            next_lines.append("")
-        if not next_lines:
-            next_lines.extend(
-                [
-                    "# 1Password secret references — resolved at runtime by `op-automations run --env-file .env.op`.",
-                    "# Project runtime keys only; never use ambient personal API keys.",
-                ]
-            )
-        next_lines.append(entry)
-    path.write_text("\n".join(next_lines) + "\n", encoding="utf-8")
+            os.replace(temporary, path)
+        if read_regular(path, 256 * 1024) != "".join(lines).encode("utf-8"):
+            raise ProvisionError("The env file write could not be verified.")
+    finally:
+        if os.path.lexists(temporary):
+            os.unlink(temporary)  # Only this owned non-secret temporary file.
 
 
 def create_openai(args: argparse.Namespace) -> RuntimeCredential:
     admin_ref = args.admin_key_ref or os.environ.get("EPOCH_OPENAI_ADMIN_KEY_REF") or DEFAULT_OPENAI_ADMIN_REF
-    admin_key = op_read(admin_ref, desktop_session=admin_ref.startswith("op://Employee/"))
+    admin_key = op_read(admin_ref, desktop_session=validate_reference(admin_ref) != DEFAULT_AUTOMATIONS_VAULT)
     if args.provider_resource_id:
         project_id = args.provider_resource_id
     elif args.provider_project_name:
@@ -289,15 +453,15 @@ def create_openai(args: argparse.Namespace) -> RuntimeCredential:
 
 
 def create_anthropic(args: argparse.Namespace) -> RuntimeCredential:
-    admin_ref = args.admin_key_ref or os.environ.get("EPOCH_ANTHROPIC_ADMIN_KEY_REF") or DEFAULT_ANTHROPIC_ADMIN_REF
-    admin_key = op_read(admin_ref, desktop_session=admin_ref.startswith("op://Employee/"))
+    secret = getattr(args, "imported_secret", None) or read_secret_argument(args)
     if args.provider_resource_id:
         workspace_id = args.provider_resource_id
     elif args.provider_project_name:
+        admin_ref = args.admin_key_ref or os.environ.get("EPOCH_ANTHROPIC_ADMIN_KEY_REF") or DEFAULT_ANTHROPIC_ADMIN_REF
+        admin_key = op_read(admin_ref, desktop_session=validate_reference(admin_ref) != DEFAULT_AUTOMATIONS_VAULT)
         workspace_id, _ = get_or_create_anthropic_workspace(admin_key, args.provider_project_name)
     else:
         workspace_id = DEFAULT_ANTHROPIC_AUTOMATIONS_WORKSPACE_ID
-    secret = read_secret_argument(args)
     item_title = f"Anthropic - {args.project}"
     env_name = args.env_name or env_name_for(args.project, "ANTHROPIC")
     op_ref = f"op://{args.vault}/{item_title}/credential"
@@ -325,8 +489,7 @@ def dry_run_plan(args: argparse.Namespace) -> dict[str, Any]:
     verified_cap = args.verified_monthly_spend_cap_usd
     if verified_cap is None:
         policy_status = (
-            "blocked: pass --verified-monthly-spend-cap-usd after checking "
-            "the LLM provider tracker and provider-controls.yml"
+            "blocked: supply a current, authorized project/workspace spend-control assertion"
         )
     elif verified_cap > max_autonomous_cap(args.provider):
         policy_status = (
@@ -334,7 +497,7 @@ def dry_run_plan(args: argparse.Namespace) -> dict[str, Any]:
             f"autonomous maximum ${max_autonomous_cap(args.provider):g}"
         )
     else:
-        policy_status = "allowed by helper cap check"
+        policy_status = "within helper ceiling; caller assertion only, not provider enforcement"
     return {
         "provider": args.provider,
         "provider_project_or_workspace": provider_resource,
@@ -342,6 +505,7 @@ def dry_run_plan(args: argparse.Namespace) -> dict[str, Any]:
         "admin_key_ref": admin_ref,
         "max_autonomous_monthly_spend_usd": max_autonomous_cap(args.provider),
         "verified_monthly_spend_cap_usd": verified_cap,
+        "spend_control_basis": "caller assertion; no API verification, per-key allocation or hard-cap enforcement",
         "provider_controls_policy_status": policy_status,
         "item_title": item_title,
         "env_name": env_name,
@@ -354,17 +518,17 @@ def dry_run_plan(args: argparse.Namespace) -> dict[str, Any]:
 
 def read_secret_argument(args: argparse.Namespace) -> str:
     if args.secret_file:
-        secret = Path(args.secret_file).read_text(encoding="utf-8").strip()
+        secret = read_regular(Path(args.secret_file), 4096).decode("utf-8").removesuffix("\n")
     elif args.secret_stdin:
-        secret = sys.stdin.read().strip()
+        secret = sys.stdin.read(4097).removesuffix("\n")
     else:
         raise ProvisionError(
             "Anthropic workspace creation is supported, but API-key creation is not exposed by the public Admin API. "
             "Create the key in the shared Anthropic Automations workspace "
             f"({DEFAULT_ANTHROPIC_AUTOMATIONS_WORKSPACE_ID}) and pass it with --secret-file or --secret-stdin."
         )
-    if not secret:
-        raise ProvisionError("Provided secret is empty.")
+    if not re.fullmatch(r"sk-ant-[A-Za-z0-9_-]{20,1024}", secret):
+        raise ProvisionError("Provided secret has an unsupported Anthropic key shape.")
     return secret
 
 
@@ -373,10 +537,12 @@ def enforce_spend_cap_precondition(args: argparse.Namespace) -> None:
     if verified_cap is None:
         raise ProvisionError(
             "Refusing to create/store an AI-provider runtime key without an explicit "
-            "--verified-monthly-spend-cap-usd value. Check the LLM API providers "
-            "tracker and provider-controls.yml first; for OpenAI Automations, the "
-            "project currently has no budget set."
+            "--verified-monthly-spend-cap-usd assertion backed by current scoped "
+            "authority and provider-control readback. The helper does not verify "
+            "or enforce a provider cap or allocate per-key spending."
         )
+    if not math.isfinite(verified_cap) or verified_cap < 0:
+        raise ProvisionError("The asserted spend cap must be finite and nonnegative.")
     if verified_cap > max_autonomous_cap(args.provider):
         raise ProvisionError(
             f"Refusing to create/store an AI-provider runtime key with verified "
@@ -385,17 +551,57 @@ def enforce_spend_cap_precondition(args: argparse.Namespace) -> None:
         )
 
 
+def resource_id(value: Any, provider: str) -> str:
+    prefix = "proj_" if provider == "openai" else "wrkspc_"
+    if not isinstance(value, str) or not re.fullmatch(re.escape(prefix) + r"[A-Za-z0-9_-]{1,120}", value):
+        raise ProvisionError("Unsupported provider project/workspace ID.")
+    return value
+
+
+def validate_args(args: argparse.Namespace) -> None:
+    if not re.fullmatch(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)*", args.project) or len(args.project) > 63:
+        raise ProvisionError("Project must be a lowercase, hyphenated slug of at most 63 characters.")
+    if args.vault != DEFAULT_AUTOMATIONS_VAULT:
+        raise ProvisionError("Automation runtime keys must use the Automations vault.")
+    if args.env_name is not None and not re.fullmatch(r"[A-Z_][A-Z0-9_]{0,127}", args.env_name):
+        raise ProvisionError("Invalid environment variable name.")
+    if args.provider_resource_id is not None:
+        resource_id(args.provider_resource_id, args.provider)
+    for value in (args.provider_project_name, args.key_name):
+        if value is not None and not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 _.-]{0,79}", value):
+            raise ProvisionError("Invalid provider resource/key name.")
+    ref = args.admin_key_ref or os.environ.get(f"EPOCH_{args.provider.upper()}_ADMIN_KEY_REF")
+    if args.admin_key_ref is not None and not args.admin_key_ref:
+        raise ProvisionError("An explicit admin reference must not be empty.")
+    if ref:
+        validate_reference(ref)
+    for path in (args.repo, args.secret_file):
+        if path is not None and (not str(path) or any(ord(c) < 32 for c in str(path))):
+            raise ProvisionError("Invalid selected file/directory path.")
+    if args.provider == "openai" and (args.secret_file is not None or args.secret_stdin):
+        raise ProvisionError("OpenAI is mint-only; imported secrets are not supported and will not be read.")
+    if args.verified_monthly_spend_cap_usd is not None:
+        enforce_spend_cap_precondition(args)
+
+
+class SafeParser(argparse.ArgumentParser):
+    def error(self, message):
+        # Argument diagnostics may otherwise repeat a misplaced credential.
+        self.exit(2, "Invalid arguments; use --help for the supported options.\n")
+
+
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = SafeParser(description=__doc__, allow_abbrev=False)
     subparsers = parser.add_subparsers(dest="command", required=True)
-    create = subparsers.add_parser("create-automation", help="Create/store an automation runtime key")
+    create = subparsers.add_parser("create-automation", help="Create/store an automation runtime key", allow_abbrev=False)
     create.add_argument("--provider", choices=("openai", "anthropic"), required=True)
     create.add_argument("--project", required=True, help="Automation project slug, e.g. automations-dashboard")
-    create.add_argument(
+    resource = create.add_mutually_exclusive_group()
+    resource.add_argument(
         "--provider-project-name",
         help="Override provider project/workspace name; defaults to the shared Automations resource",
     )
-    create.add_argument(
+    resource.add_argument(
         "--provider-resource-id",
         help="Override provider project/workspace id; defaults to the shared Automations resource",
     )
@@ -404,44 +610,68 @@ def build_parser() -> argparse.ArgumentParser:
     create.add_argument("--admin-key-ref", help="1Password reference for the provider admin/broker key")
     create.add_argument("--env-name", help="Runtime env var name to write to .env.op")
     create.add_argument("--repo", type=Path, help="Repo where .env.op should be created or updated")
-    create.add_argument("--secret-file", help="Existing provider key to store; required for Anthropic")
-    create.add_argument("--secret-stdin", action="store_true", help="Read existing provider key from stdin")
+    secret = create.add_mutually_exclusive_group()
+    secret.add_argument("--secret-file", help="Existing Anthropic key to store (regular file)")
+    secret.add_argument("--secret-stdin", action="store_true", help="Read an existing Anthropic key from stdin")
     create.add_argument(
         "--verified-monthly-spend-cap-usd",
         type=float,
         help=(
             "Provider-console verified monthly cap for the target project/workspace. "
             "Required for non-dry-run key creation/storage and must be at or below "
-            f"${DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD:g}."
+            "the retained helper ceiling ($500 OpenAI, $1500 Anthropic). "
+            "Caller assertion only; not a per-key hard cap or API enforcement."
         ),
     )
-    create.add_argument("--dry-run", action="store_true", help="Create provider key but do not store it")
+    create.add_argument("--dry-run", action="store_true", help="Print a pure plan; do not read secrets, query accounts or create/store anything")
     create.add_argument("--force", action="store_true", help="Replace existing 1Password field/.env.op entry")
     return parser
 
 
 def main() -> int:
+    options = [arg.split("=", 1)[0] for arg in sys.argv[1:] if arg.startswith("--")]
+    if len(options) != len(set(options)):
+        print("ERROR: Repeated options are not supported.", file=sys.stderr)
+        return 2
     args = build_parser().parse_args()
     if args.command != "create-automation":
         raise AssertionError(args.command)
+    side_effects_possible = False
     try:
+        validate_args(args)
         if args.dry_run:
             print(json.dumps(dry_run_plan(args), indent=2, sort_keys=True))
             return 0
         enforce_spend_cap_precondition(args)
+        # Validate/import before any admin lookup, biometric broker or mutation.
+        if args.provider == "anthropic":
+            args.imported_secret = read_secret_argument(args)
+        plan = dry_run_plan(args)
+        env_plan = prepare_env(args.repo, plan["env_name"], plan["op_ref"], force=args.force) if args.repo else None
+        item_plan = prepare_item(plan["item_title"], args.vault, force=args.force)
+        ensure_desktop_op_session()
+        side_effects_possible = True
         if args.provider == "openai":
             credential = create_openai(args)
         else:
             credential = create_anthropic(args)
-        create_or_update_automation_item(credential, args.vault, force=args.force)
+        reference = create_or_update_automation_item(credential, args.vault, force=args.force, prepared=item_plan)
+        credential = replace(credential, op_ref=reference)
         if args.repo:
-            write_env_op(args.repo, credential.env_name, credential.op_ref, force=args.force)
+            write_env_op(args.repo, credential.env_name, credential.op_ref, force=args.force, prepared=env_plan)
         print(f"stored {credential.op_ref}")
         if args.repo:
             print(f"updated {args.repo / '.env.op'}")
         return 0
     except ProvisionError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
+        if side_effects_possible:
+            print("Provider/store side effects may exist. Reconcile selected identities before retrying; no automatic rollback was attempted.", file=sys.stderr)
+        return 1
+    except (OSError, UnicodeError, ValueError, TypeError):
+        print("ERROR: Unsupported input or local I/O failure; details withheld.", file=sys.stderr)
+        if side_effects_possible:
+            print("Side effects may exist; reconcile before retrying.", file=sys.stderr)
         return 1
 
 

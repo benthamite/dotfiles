@@ -2,10 +2,11 @@
 # Audited clipboard consumer for console-created provider keys.
 #
 # Reads the macOS clipboard (populated by a provider console's Copy button),
-# validates that it looks like the expected provider's API key, and pipes it
+# validates that it looks like an Anthropic API key, and pipes it
 # straight into `ai-provider-key create-automation --secret-stdin`. The value
 # never reaches argv, agent output, or a file. Prints only length/newline
-# diagnostics and the helper's own non-secret output.
+# diagnostics and the helper's own non-secret output. OpenAI is mint-only;
+# passing a clipboard key to that flow would silently discard the import.
 #
 # Usage: ai-provider-key-from-clipboard --provider anthropic \
 #          --project <slug> --repo <path> --verified-monthly-spend-cap-usd <n> [...]
@@ -17,23 +18,49 @@ set -euo pipefail
 HELPER="$(dirname "$0")/ai-provider-key"
 
 provider=""
+has_cap=false
+plan_only=false
 args=("$@")
 for ((i = 0; i < ${#args[@]}; i++)); do
-  if [ "${args[$i]}" = "--provider" ]; then
-    provider="${args[$((i + 1))]:-}"
-  fi
+  case "${args[$i]}" in
+    --provider) provider="${args[$((i + 1))]:-}" ;;
+    --provider=*) provider="${args[$i]#--provider=}" ;;
+    --verified-monthly-spend-cap-usd|--verified-monthly-spend-cap-usd=*) has_cap=true ;;
+    --dry-run) plan_only=true ;;
+    --help|-h) exec "$HELPER" create-automation "$@" ;;
+    --secret-file|--secret-file=*|--secret-stdin)
+      echo "clipboard wrapper supplies the secret input; do not pass another secret source" >&2
+      exit 2 ;;
+  esac
 done
 
+if "$plan_only"; then
+  exec "$HELPER" create-automation "$@"
+fi
 case "$provider" in
   anthropic) prefix="sk-ant-" ;;
-  openai) prefix="sk-" ;;
+  openai)
+    echo "OpenAI is mint-only; clipboard import is unsupported and was not read" >&2
+    exit 2 ;;
   *)
-    echo "ai-provider-key-from-clipboard: pass --provider anthropic|openai" >&2
+    echo "ai-provider-key-from-clipboard: pass --provider anthropic" >&2
     exit 2
     ;;
 esac
 
-SECRET="$(pbpaste)"
+# Check the entire public CLI syntax/routing before touching the clipboard.
+if ! "$has_cap"; then
+  echo "pass the current authorized spend-control assertion before importing" >&2
+  exit 2
+fi
+"$HELPER" create-automation "$@" --secret-stdin --dry-run >/dev/null
+if ! SECRET="$(pbpaste 2>/dev/null && printf '.')"; then
+  echo "clipboard read failed; no provider operation attempted" >&2
+  exit 1
+fi
+# The sentinel preserves trailing newlines for validation; command substitution
+# would otherwise silently remove them. It is never part of the supplied key.
+SECRET="${SECRET%.}"
 trap 'unset SECRET' EXIT
 
 bytes=$(printf %s "$SECRET" | wc -c | tr -d ' ')
@@ -46,7 +73,7 @@ case "$SECRET" in
     exit 1
     ;;
 esac
-if [ "$bytes" -lt 40 ] || [ "$bytes" -gt 250 ] || [ "$newlines" -ne 0 ]; then
+if [ "$bytes" -lt 27 ] || [ "$bytes" -gt 1031 ] || [ "$newlines" -ne 0 ] || [[ ! "$SECRET" =~ ^sk-ant-[A-Za-z0-9_-]+$ ]]; then
   echo "clipboard content does not match expected key shape" >&2
   exit 1
 fi

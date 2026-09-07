@@ -13,10 +13,19 @@ these files by their repository paths. A similarly named command elsewhere on
 
 =ai-provider-key= keeps provider administrator credentials out of project
 repositories and stores project-scoped runtime credentials in the Automations
-vault. Before a non-dry-run create or update, its verified monthly spend cap
-must match the live provider control and remain within the configured autonomous
-ceiling; dry-run mode checks that prerequisite without creating or storing a
-credential.
+vault. Non-dry operations require a current, authorized spend-control assertion
+within the retained helper ceiling; the helper neither reads live limits nor
+enforces per-key budgets. Pure dry-run mode prepares metadata without account
+access. Provisioning preflights local/item conflicts, uses broker stdin for
+secret writes, and compares exact readback before wiring an immutable item
+reference. Provider, vault and local-file changes are not one transaction;
+reconcile an uncertain attempt before retrying or replacing a credential.
+
+=slack.py= uses the selected operator's browser session, not an automation bot.
+Its Epoch credential path uses =op-automations=; credential-bearing API/file
+requests refuse redirects and omit response payloads from failure diagnostics.
+Success payloads can still contain private data or newly created app secrets:
+callers must capture and selectively consume them, not print them wholesale.
 
 =ahrefs-api-guard= probes the free subscription-usage endpoint before every
 paid request. It requires a positive conservative =--estimated-cost= and valid
@@ -37,7 +46,7 @@ credentials carried in HTTP headers cannot reach stderr.
 | =_gworkspace_auth.py= | Internal OAuth and short-lived token-cache helper shared by the Gmail and Sheets wrappers. |
 | =ahrefs-api-guard= | Performs the required free quota preflight before a paid Ahrefs API request. |
 | =ai-provider-key= | Provisions and stores project-scoped provider runtime keys while keeping administrator credentials separate. |
-| =ai-provider-key-from-clipboard= | Consumes a console-created provider key from the clipboard, validates its shape, and pipes it to =ai-provider-key= without exposing the value. |
+| =ai-provider-key-from-clipboard= | Consumes a console-created Anthropic key without exposing it; OpenAI import is refused, and help/dry-run never reads the clipboard. |
 | =store-secret-from-clipboard= | Consumes any console-created API credential from the clipboard, validates its shape, and writes it to a 1Password item through =op-desktop= on stdin without exposing the value. |
 | =batch-test.sh= | Loads canonical package source in batch Emacs, rejects stale-load warnings, and emits repository/package/source-revision evidence with a one-time replay-correlation token. |
 | =check-elpaca-sync-hook= | Validates the embedded Elpaca sync hook and confirms that the installed hook is identical. |
@@ -51,7 +60,7 @@ credentials carried in HTTP headers cannot reach stderr.
 | =elpaca-rebuild-wait= | Resolves a package ID or checkout label, rebuilds and reloads the canonical Elpaca ID with bounded polling, or observes exact source/mirror-bound dotfiles post-commit reload state. |
 | =gmail.py= | Provides the multi-account Gmail read, search, draft, send, reply, attachment, and archive operations. |
 | =install-skills.sh= | Installs the live interactive and programmatic skill links, then applies skill pruning and private shims. |
-| =op-clipboard-store= | Audited clipboard consumer: reads a console-copied secret, checks its shape without printing it, stores it through =op-desktop= (one Touch ID prompt), reads it back, and prints only the =op://= reference. |
+| =op-clipboard-store= | Stores a validated console-copied secret through broker stdin, preserves unrelated item fields, and compares exact ID-bound readback without displaying the value; desktop authorization may prompt. |
 | =sheets.py= | Provides the multi-account Google Sheets read, write, append, clear, sheet-management, and metadata operations. |
 | =slack.py= | Provides multi-workspace Slack search, history, thread, user, saved-item, and read-state operations. |
 | =sync-mcp-servers.sh= | Copies canonical user MCP definitions into account configurations while preserving account-specific environments. |

@@ -28,8 +28,8 @@ Usage
 
 Standard input
 --------------
-Piped input for commands with a ``-`` stdin marker is forwarded through the
-protected 0600 broker socket. The child
+Piped input for commands with a ``-`` stdin marker, and JSON templates for
+``item edit <id>``, is forwarded through the protected 0600 broker socket. The child
 still belongs to the broker's terminal session, so 1Password reuses the same
 desktop authorization. This supports secret-safe JSON templates such as
 ``op item create -`` without exposing values in argv or bypassing the broker.
@@ -405,7 +405,11 @@ def main(argv) -> int:
         return 0
 
     stdin_content = None
-    if "-" in argv and not sys.stdin.isatty():
+    # `item edit ID` accepts a piped JSON template without a '-' argument.
+    # Keep that documented shape intact instead of losing its sensitive stdin
+    # or inventing an extra positional argument just to activate forwarding.
+    template_edit = len(argv) >= 3 and argv[:2] == ["item", "edit"] and not argv[2].startswith("-")
+    if ("-" in argv or template_edit) and not sys.stdin.isatty():
         stdin_content = sys.stdin.buffer.read(MAX_STDIN_BYTES + 1)
         if len(stdin_content) > MAX_STDIN_BYTES:
             print("op-desktop: stdin too large", file=sys.stderr)

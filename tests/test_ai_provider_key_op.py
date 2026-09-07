@@ -1,9 +1,12 @@
 import importlib.machinery
 import importlib.util
+import json
+import socket
 import subprocess
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,29 +26,33 @@ class AiProviderKeyOpTest(unittest.TestCase):
     def setUp(self):
         self.mod = load_module()
         self.calls = []
+        self.inputs = []
+        self.addCleanup(patch.stopall)
+        patch.object(socket, "socket", side_effect=AssertionError("offline only")).start()
+        patch.object(subprocess, "run", side_effect=AssertionError("all broker calls must be faked")).start()
 
     def fake_run(self, responses):
-        def run(args, **_kwargs):
+        def run(args, **kwargs):
             self.calls.append(args)
+            self.inputs.append(kwargs.get("input_text"))
             return responses.pop(0)
 
         self.mod.run = run
 
-    def test_desktop_session_reuses_whoami_then_signs_in_without_force(self):
+    def test_desktop_session_uses_broker_and_never_falls_back_to_signin(self):
         self.fake_run(
             [
                 subprocess.CompletedProcess([], 1, "", "not signed in"),
-                subprocess.CompletedProcess([], 0, "", ""),
             ]
         )
 
-        self.mod.ensure_desktop_op_session()
+        with self.assertRaises(self.mod.ProvisionError):
+            self.mod.ensure_desktop_op_session()
 
         self.assertEqual(
             self.calls,
             [
-                ["env", "-u", "OP_SERVICE_ACCOUNT_TOKEN", "op", "whoami"],
-                ["env", "-u", "OP_SERVICE_ACCOUNT_TOKEN", "op", "signin"],
+                ["op-desktop", "whoami"],
             ],
         )
 
@@ -67,12 +74,12 @@ class AiProviderKeyOpTest(unittest.TestCase):
         self.assertEqual(self.calls, [])
 
     def test_automation_item_lookup_uses_promptless_wrapper(self):
-        self.fake_run([subprocess.CompletedProcess([], 0, "{}", "")])
+        self.fake_run([subprocess.CompletedProcess([], 0, json.dumps([{"id": "a" * 26, "title": "Example"}]), "")])
 
         self.assertTrue(self.mod.op_item_exists("Example", "Automations"))
         self.assertEqual(
             self.calls,
-            [["op-automations", "item", "get", "Example", "--vault", "Automations", "--format", "json"]],
+            [["op-automations", "item", "list", "--vault", "Automations", "--format", "json"]],
         )
 
     def test_existing_item_without_force_never_starts_desktop_auth(self):
@@ -84,17 +91,17 @@ class AiProviderKeyOpTest(unittest.TestCase):
             project_or_workspace_id="proj_example",
             secret="not-a-real-secret",
         )
-        self.fake_run([subprocess.CompletedProcess([], 0, "{}", "")])
+        self.fake_run([subprocess.CompletedProcess([], 0, json.dumps([{"id": "a" * 26, "title": credential.item_title}]), "")])
 
         with self.assertRaises(self.mod.ProvisionError):
             self.mod.create_or_update_automation_item(credential, "Automations", force=False)
 
         self.assertEqual(
             self.calls,
-            [["op-automations", "item", "get", "OpenAI - example", "--vault", "Automations", "--format", "json"]],
+            [["op-automations", "item", "list", "--vault", "Automations", "--format", "json"]],
         )
 
-    def test_create_authenticates_only_after_lookup_and_verifies_promptlessly(self):
+    def test_create_uses_stdin_template_and_verifies_exact_value_by_captured_id(self):
         credential = self.mod.RuntimeCredential(
             provider="openai",
             item_title="OpenAI - example",
@@ -105,21 +112,25 @@ class AiProviderKeyOpTest(unittest.TestCase):
         )
         self.fake_run(
             [
-                subprocess.CompletedProcess([], 1, "", "not found"),
+                subprocess.CompletedProcess([], 0, "[]", ""),
+                subprocess.CompletedProcess([], 0, '{"category":"API_CREDENTIAL","fields":[{"id":"credential","type":"CONCEALED","value":""}]}', ""),
+                subprocess.CompletedProcess([], 0, "[]", ""),
                 subprocess.CompletedProcess([], 0, "", ""),
-                subprocess.CompletedProcess([], 0, "", ""),
-                subprocess.CompletedProcess([], 0, "value", ""),
+                subprocess.CompletedProcess([], 0, json.dumps([{"id": "a" * 26, "title": credential.item_title}]), ""),
+                subprocess.CompletedProcess([], 0, credential.secret + "\n", ""),
             ]
         )
 
         self.mod.create_or_update_automation_item(credential, "Automations", force=False)
 
         self.assertEqual(self.calls[0][0], "op-automations")
-        self.assertEqual(self.calls[1], ["env", "-u", "OP_SERVICE_ACCOUNT_TOKEN", "op", "whoami"])
-        self.assertEqual(self.calls[2][0:5], ["env", "-u", "OP_SERVICE_ACCOUNT_TOKEN", "op", "item"])
+        self.assertEqual(self.calls[1], ["op-desktop", "item", "template", "get", "API Credential", "--format", "json"])
+        self.assertEqual(self.calls[3], ["op-desktop", "item", "create", "-", "--vault", "Automations"])
+        self.assertNotIn(credential.secret, repr(self.calls))
+        self.assertIn(credential.secret, self.inputs[3])
         self.assertEqual(
-            self.calls[3],
-            ["op-automations", "read", "op://Automations/OpenAI - example/credential"],
+            self.calls[5],
+            ["op-automations", "read", "op://Automations/" + "a" * 26 + "/credential"],
         )
 
 

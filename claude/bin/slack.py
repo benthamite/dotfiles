@@ -41,15 +41,72 @@ Output: raw JSON from Slack on stdout. Non-zero exit on API error.
 """
 
 import argparse
+import http.client
 import json
 import os
 import re
 import subprocess
 import sys
+import urllib.error
 import urllib.parse
 import urllib.request
 
 API = "https://slack.com/api"
+REQUEST_TIMEOUT = 30
+_METHOD_RE = re.compile(r"[a-z][A-Za-z0-9_]*(?:\.[a-z][A-Za-z0-9_]*)+")
+_SAFE_API_ERRORS = frozenset({
+    "not_authed", "invalid_auth", "account_inactive", "token_revoked",
+    "missing_scope", "channel_not_found", "not_in_channel", "ratelimited",
+    "rate_limited", "restricted_action", "invalid_arguments", "invalid_arg_name",
+    "method_not_supported_for_channel_type", "user_not_found", "access_denied",
+})
+
+
+def _fail(message, code=1):
+    """Report only caller-owned diagnostics, never transport or broker payloads."""
+    sys.stderr.write(f"ERROR: {message}\n")
+    raise SystemExit(code)
+
+
+class _NoCredentialRedirects(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _validate_credential_url(url, host):
+    """Reject an untrusted origin before acquiring any account credentials."""
+    if not isinstance(url, str) or url != url.strip() or "\\" in url:
+        _fail("invalid Slack request URL", 2)
+    if any(ord(character) < 32 or ord(character) == 127 for character in url):
+        _fail("invalid Slack request URL", 2)
+    try:
+        parsed = urllib.parse.urlsplit(url)
+        valid = (
+            parsed.scheme == "https"
+            and parsed.netloc in (host, f"{host}:443")
+            and parsed.hostname == host
+            and parsed.port in (None, 443)
+            and parsed.username is None
+            and parsed.password is None
+            and not parsed.fragment
+        )
+    except ValueError:
+        valid = False
+    if not valid:
+        _fail("refusing credentials for an untrusted Slack request URL", 2)
+
+
+def _open_authenticated(request):
+    """No redirects or retries: an uncertain write must be reconciled first."""
+    try:
+        opener = urllib.request.build_opener(_NoCredentialRedirects())
+        return opener.open(request, timeout=REQUEST_TIMEOUT)
+    except urllib.error.HTTPError as error:
+        status = error.code
+        error.close()
+        _fail(f"Slack request failed with HTTP {status}")
+    except (OSError, ValueError, http.client.HTTPException):
+        _fail("Slack request failed before a response was received")
 
 # Workspace registry. Each entry describes where this workspace's xoxc/xoxd
 # session tokens come from. Two source kinds:
@@ -81,47 +138,47 @@ _workspace = DEFAULT_WORKSPACE
 
 
 def _pass_show(entry):
-    out = subprocess.run(
-        ["pass", "show", entry],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        out = subprocess.run(
+            ["pass", "show", entry], check=False, capture_output=True,
+            text=True, timeout=REQUEST_TIMEOUT,
+        )
+    except (OSError, UnicodeError, subprocess.TimeoutExpired):
+        _fail("personal Slack credential lookup failed")
     if out.returncode == 0 and out.stdout:
         return out.stdout.splitlines()[0]
     return ""
 
 
 def _op_read(path):
-    env = os.environ.copy()
-    if "OP_SERVICE_ACCOUNT_TOKEN" not in env:
-        token = _pass_show("epoch/1password-service-account-token")
-        if token:
-            env["OP_SERVICE_ACCOUNT_TOKEN"] = token
-    out = subprocess.run(
-        ["op", "read", path],
-        check=False,
-        capture_output=True,
-        env=env,
-        text=True,
-    )
+    if not path.startswith("op://Automations/"):
+        _fail("Slack browser-session credentials must use the Automations broker", 2)
+    try:
+        out = subprocess.run(
+            ["op-automations", "read", path], check=False, capture_output=True,
+            text=True, timeout=REQUEST_TIMEOUT,
+        )
+    except (OSError, UnicodeError, subprocess.TimeoutExpired):
+        _fail("Slack credential broker lookup failed")
     if out.returncode != 0:
-        sys.stderr.write(f"ERROR: op read {path}: {out.stderr.strip()}\n")
-        sys.exit(1)
-    return out.stdout.strip()
+        _fail("Slack credential broker lookup failed")
+    value = out.stdout.strip()
+    if not value or any(character.isspace() for character in value):
+        _fail("Slack credential broker returned an invalid credential")
+    return value
 
 
 def _pass_field(entry, field):
     """Return the value of a named field (e.g. "token: <value>") from a pass entry."""
-    out = subprocess.run(
-        ["pass", "show", entry],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        out = subprocess.run(
+            ["pass", "show", entry], check=False, capture_output=True,
+            text=True, timeout=REQUEST_TIMEOUT,
+        )
+    except (OSError, UnicodeError, subprocess.TimeoutExpired):
+        _fail("personal Slack credential lookup failed")
     if out.returncode != 0:
-        sys.stderr.write(f"ERROR: pass show {entry}: {out.stderr.strip()}\n")
-        sys.exit(1)
+        _fail("personal Slack credential lookup failed")
     prefix = f"{field}:"
     for line in out.stdout.splitlines():
         if line.startswith(prefix):
@@ -132,11 +189,12 @@ def _pass_field(entry, field):
 
 _xoxc = None
 _xoxd = None
+_token_workspace = None
 
 
 def _tokens():
-    global _xoxc, _xoxd
-    if _xoxc is None:
+    global _xoxc, _xoxd, _token_workspace
+    if _xoxc is None or _token_workspace != _workspace:
         ws = WORKSPACES.get(_workspace)
         if ws is None:
             valid = ", ".join(sorted(WORKSPACES))
@@ -145,25 +203,36 @@ def _tokens():
             )
             sys.exit(2)
         if ws["source"] == "op":
-            _xoxc = _op_read(f"{ws['op_path']}/xoxc_token")
-            _xoxd = _op_read(f"{ws['op_path']}/xoxd_token")
+            xoxc = _op_read(f"{ws['op_path']}/xoxc_token")
+            xoxd = _op_read(f"{ws['op_path']}/xoxd_token")
         elif ws["source"] == "pass":
-            _xoxc = _pass_field(ws["pass_entry"], ws["token_field"])
-            _xoxd = _pass_field(ws["pass_entry"], ws["cookie_field"])
+            xoxc = _pass_field(ws["pass_entry"], ws["token_field"])
+            xoxd = _pass_field(ws["pass_entry"], ws["cookie_field"])
         else:
             sys.stderr.write(
                 f"ERROR: workspace '{_workspace}' has invalid source '{ws['source']}'\n"
             )
             sys.exit(2)
+        if any(not value or any(c.isspace() for c in value) for value in (xoxc, xoxd)):
+            _fail("Slack credential source returned an invalid credential")
+        _xoxc, _xoxd = xoxc, xoxd
+        _token_workspace = _workspace
+        _user_cache.clear()
     return _xoxc, _xoxd
 
 
 def call(method, **params):
     """POST to slack.com/api/<method> with the given form params."""
+    if not isinstance(method, str) or not _METHOD_RE.fullmatch(method):
+        _fail("invalid Slack API method", 2)
+    url = f"{API}/{method}"
+    _validate_credential_url(url, "slack.com")
+    if urllib.parse.urlsplit(url).path != f"/api/{method}" or urllib.parse.urlsplit(url).query:
+        _fail("invalid Slack API base URL", 2)
     xoxc, xoxd = _tokens()
     body = urllib.parse.urlencode({k: v for k, v in params.items() if v is not None}).encode()
     req = urllib.request.Request(
-        f"{API}/{method}",
+        url,
         data=body,
         method="POST",
         headers={
@@ -173,14 +242,16 @@ def call(method, **params):
         },
     )
     try:
-        resp = urllib.request.urlopen(req)
-    except urllib.error.HTTPError as e:
-        sys.stderr.write(f"ERROR: HTTP {e.code} from {method}: {e.read().decode()}\n")
-        sys.exit(1)
-    data = json.loads(resp.read())
-    if not data.get("ok"):
-        sys.stderr.write(f"ERROR: slack API {method} failed: {data.get('error')}\n")
-        sys.exit(1)
+        with _open_authenticated(req) as response:
+            data = json.loads(response.read())
+    except (OSError, ValueError, http.client.HTTPException):
+        _fail("Slack returned an unreadable JSON response")
+    if not isinstance(data, dict):
+        _fail("Slack returned an invalid response object")
+    if data.get("ok") is not True:
+        error = data.get("error")
+        suffix = f": {error}" if isinstance(error, str) and error in _SAFE_API_ERRORS else ""
+        _fail(f"Slack API rejected the request{suffix}")
     return data
 
 
@@ -461,22 +532,18 @@ def cmd_unsave(args):
 
 def cmd_file(args):
     """Download a Slack-hosted file (files.slack.com url_private*) to a local path."""
+    _validate_credential_url(args.url, "files.slack.com")
     xoxc, xoxd = _tokens()
-    host = urllib.parse.urlparse(args.url).netloc
-    if host != "files.slack.com":
-        sys.stderr.write(f"ERROR: refusing to send Slack credentials to {host}\n")
-        sys.exit(2)
     req = urllib.request.Request(
         args.url,
         headers={"Authorization": f"Bearer {xoxc}", "Cookie": f"d={xoxd}"},
     )
     try:
-        resp = urllib.request.urlopen(req)
-    except urllib.error.HTTPError as e:
-        sys.stderr.write(f"ERROR: HTTP {e.code} downloading file\n")
-        sys.exit(1)
-    data = resp.read()
-    ctype = resp.headers.get("Content-Type", "")
+        with _open_authenticated(req) as response:
+            data = response.read()
+            ctype = response.headers.get("Content-Type", "")
+    except (OSError, ValueError, http.client.HTTPException):
+        _fail("Slack file response could not be read")
     if ctype.startswith("text/html"):
         sys.stderr.write("ERROR: got an HTML page instead of the file (auth or access problem)\n")
         sys.exit(1)

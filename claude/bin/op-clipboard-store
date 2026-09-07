@@ -1,84 +1,218 @@
-#!/usr/bin/env bash
-# Audited clipboard consumer: store a one-time secret from the macOS clipboard
-# in 1Password without the value ever reaching agent output, argv, or a file.
-#
-# Provider consoles show a new key once and offer a Copy button. After that
-# click, run this in the very next shell call. It reads the clipboard, checks
-# that the content has the expected shape, writes it into a 1Password item
-# through the desktop broker (Touch ID may prompt once), reads it back through
-# the same broker to prove the write, and prints only the op:// reference.
-#
-# Usage:
-#   op-clipboard-store --vault VAULT --title TITLE [--field credential]
-#                      [--category "API Credential"] [--prefix sk-or-v1-]
-#                      [--min 40] [--max 250] [--url HOST] [--note TEXT]
-#                      [--force]
-#
-# --force replaces the field on an existing item instead of refusing.
-# Exit 1 on a shape mismatch (the clipboard probably holds something else:
-# copy the key again and rerun), 2 on usage errors, 3 on 1Password failures.
-set -euo pipefail
+#!/usr/bin/env python3
+"""Store a console-copied secret through the desktop 1Password broker.
 
-vault="" title="" field="credential" category="API Credential" prefix=""
-min=8 max=250 url="" note="" force=0
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    --vault) vault="$2"; shift 2 ;;
-    --title) title="$2"; shift 2 ;;
-    --field) field="$2"; shift 2 ;;
-    --category) category="$2"; shift 2 ;;
-    --prefix) prefix="$2"; shift 2 ;;
-    --min) min="$2"; shift 2 ;;
-    --max) max="$2"; shift 2 ;;
-    --url) url="$2"; shift 2 ;;
-    --note) note="$2"; shift 2 ;;
-    --force) force=1; shift ;;
-    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
-    *) echo "op-clipboard-store: unknown argument $1" >&2; exit 2 ;;
-  esac
-done
-[ -n "$vault" ] && [ -n "$title" ] || { echo "op-clipboard-store: --vault and --title are required" >&2; exit 2; }
-case "$field" in
-  *[!A-Za-z0-9_-]*|"") echo "op-clipboard-store: --field must be a plain identifier" >&2; exit 2 ;;
-esac
+The secret travels only in captured clipboard output and broker stdin JSON,
+never argv, diagnostic output, or a plaintext file. The system clipboard is
+not cleared. Desktop operations may require one biometric authorization.
+"""
 
-SECRET="$(pbpaste)"
-trap 'unset SECRET' EXIT
+import argparse
+import copy
+import hmac
+import json
+import re
+import subprocess
+import sys
 
-bytes=$(printf %s "$SECRET" | wc -c | tr -d ' ')
-newlines=$(printf %s "$SECRET" | tr -cd '\n' | wc -c | tr -d ' ')
-printf 'clipboard candidate: len=%s nl=%s\n' "$bytes" "$newlines"
-if [ -n "$prefix" ]; then
-  case "$SECRET" in
-    "$prefix"*) : ;;
-    *) echo "op-clipboard-store: clipboard content does not start with the expected prefix" >&2; exit 1 ;;
-  esac
-fi
-if [ "$bytes" -lt "$min" ] || [ "$bytes" -gt "$max" ] || [ "$newlines" -ne 0 ]; then
-  echo "op-clipboard-store: clipboard content does not match the expected secret shape" >&2
-  exit 1
-fi
 
-ref="op://$vault/$title/$field"
-exists=0
-if op-desktop item get "$title" --vault "$vault" --format json >/dev/null 2>&1; then
-  exists=1
-fi
-if [ "$exists" -eq 1 ] && [ "$force" -ne 1 ]; then
-  echo "op-clipboard-store: '$title' already exists in $vault; pass --force to replace its $field field" >&2
-  exit 3
-fi
+TIMEOUT = 120
+ITEM_ID = re.compile(r"[a-z0-9]{26}")
 
-args=()
-[ -n "$url" ] && args+=("--url" "$url")
-[ -n "$note" ] && args+=("notesPlain=$note")
-if [ "$exists" -eq 1 ]; then
-  op-desktop item edit "$title" --vault "$vault" "$field[concealed]=$SECRET" "${args[@]+"${args[@]}"}" >/dev/null \
-    || { echo "op-clipboard-store: 1Password edit failed" >&2; exit 3; }
-else
-  op-desktop item create --category "$category" --title "$title" --vault "$vault" \
-    "$field[concealed]=$SECRET" "${args[@]+"${args[@]}"}" >/dev/null \
-    || { echo "op-clipboard-store: 1Password create failed" >&2; exit 3; }
-fi
-op-desktop read "$ref" >/dev/null || { echo "op-clipboard-store: stored but read-back failed for $ref" >&2; exit 3; }
-echo "stored $ref"
+
+class StoreError(Exception):
+    def __init__(self, message, code=3):
+        super().__init__(message)
+        self.code = code
+
+
+class SafeParser(argparse.ArgumentParser):
+    def error(self, message):
+        raise StoreError("invalid command arguments; use --help for supported flags", 2)
+
+
+def parser():
+    result = SafeParser(description=__doc__)
+    result.add_argument("--vault", required=True)
+    result.add_argument("--title", required=True)
+    result.add_argument("--field", default="credential")
+    result.add_argument("--category", default="API Credential")
+    result.add_argument("--prefix", default="")
+    result.add_argument("--min", type=int, default=8)
+    result.add_argument("--max", type=int, default=250)
+    result.add_argument("--url", default="")
+    result.add_argument("--note", default="")
+    result.add_argument("--force", action="store_true")
+    return result
+
+
+def validate(args):
+    for value in (args.vault, args.title):
+        if not value or value != value.strip() or "/" in value or value.startswith("-"):
+            raise StoreError("vault and title must be unambiguous reference segments", 2)
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", args.field):
+        raise StoreError("--field must be a plain identifier", 2)
+    if not args.category or args.category.startswith("-"):
+        raise StoreError("--category must name an item template", 2)
+    for value in (args.vault, args.title, args.field, args.category, args.prefix, args.url):
+        if any(ord(c) < 32 or ord(c) == 127 for c in value):
+            raise StoreError("arguments must not contain control characters", 2)
+    if "\x00" in args.note or not 1 <= args.min <= args.max <= 1048576:
+        raise StoreError("invalid note or secret length bounds", 2)
+
+
+def run(argv, *, input_text=None):
+    try:
+        result = subprocess.run(
+            argv, input=input_text, text=True, capture_output=True,
+            check=False, timeout=TIMEOUT,
+        )
+    except (OSError, UnicodeError, subprocess.TimeoutExpired):
+        raise StoreError("credential operation could not complete") from None
+    if result.returncode:
+        raise StoreError("credential operation failed; no response payload was displayed")
+    return result.stdout
+
+
+def read_json(argv, *, input_text=None):
+    try:
+        result = json.loads(run(argv, input_text=input_text))
+    except ValueError:
+        raise StoreError("1Password returned invalid JSON") from None
+    return result
+
+
+def item_id(value):
+    if not isinstance(value, str) or not ITEM_ID.fullmatch(value):
+        raise StoreError("1Password returned an invalid item identity")
+    return value
+
+
+def unique_item(args):
+    entries = read_json(["op-desktop", "item", "list", "--vault", args.vault, "--format", "json"])
+    if not isinstance(entries, list) or any(
+        not isinstance(entry, dict) or not isinstance(entry.get("title"), str)
+        or not isinstance(entry.get("id"), str) for entry in entries
+    ):
+        raise StoreError("1Password returned an invalid item inventory")
+    matches = [entry for entry in entries if entry["title"] == args.title]
+    if len(matches) > 1:
+        raise StoreError("multiple items have the requested title; its identity is ambiguous")
+    return item_id(matches[0]["id"]) if matches else None
+
+
+def validate_template(template, args, existing_id=None):
+    if not isinstance(template, dict) or not isinstance(template.get("category"), str):
+        raise StoreError("1Password returned an invalid item template")
+    fields = template.get("fields")
+    if not isinstance(fields, list) or any(not isinstance(field, dict) for field in fields):
+        raise StoreError("1Password returned invalid item fields")
+    if template.get("files") or template.get("passkeys"):
+        raise StoreError("item contains attachments or passkeys; use its dedicated secret workflow")
+    if existing_id is not None and (
+        template.get("id") != existing_id or template.get("title") != args.title
+    ):
+        raise StoreError("the selected 1Password item changed identity")
+    if existing_id is not None:
+        vault = template.get("vault")
+        if not isinstance(vault, dict) or args.vault not in (vault.get("id"), vault.get("name")):
+            raise StoreError("the selected 1Password item has an unexpected vault")
+    selected = [field for field in fields if field.get("id") == args.field or field.get("label") == args.field]
+    if len(selected) > 1:
+        raise StoreError("the selected item has ambiguous secret fields")
+    return selected
+
+
+def prepare_template(template, args):
+    result = copy.deepcopy(template)
+    fields = validate_template(result, args)
+    if fields:
+        secret_field = fields[0]
+        if secret_field.get("section"):
+            raise StoreError("sectioned fields require a section-qualified secret workflow")
+    else:
+        secret_field = {"id": args.field, "label": args.field}
+        result["fields"].append(secret_field)
+    secret_field["type"] = "CONCEALED"
+    result["title"] = args.title
+    if args.note:
+        notes = [field for field in result["fields"] if field.get("id") == "notesPlain"]
+        if len(notes) > 1:
+            raise StoreError("the selected item has ambiguous note fields")
+        if notes:
+            notes[0]["value"] = args.note
+        else:
+            result["fields"].append({"id": "notesPlain", "type": "STRING", "label": "notesPlain", "value": args.note})
+    if args.url:
+        urls = result.setdefault("urls", [])
+        if not isinstance(urls, list) or any(not isinstance(url, dict) for url in urls):
+            raise StoreError("the selected item has invalid URL metadata")
+        for url in urls:
+            url["primary"] = False
+        urls.append({"href": args.url, "primary": True})
+    return result, secret_field
+
+
+def store(args):
+    validate(args)
+    existing_id = unique_item(args)
+    if existing_id and not args.force:
+        raise StoreError("item already exists; --force is required to replace its field")
+    if existing_id:
+        template = read_json(["op-desktop", "item", "get", existing_id, "--vault", args.vault, "--format", "json"])
+    else:
+        template = read_json(["op-desktop", "item", "template", "get", args.category, "--format", "json"])
+    validate_template(template, args, existing_id)
+    before = copy.deepcopy(template)
+    template, secret_field = prepare_template(template, args)
+    # Intake happens only after argument, ownership and template preconditions.
+    secret = run(["pbpaste"])
+    try:
+        raw = secret.encode("utf-8")
+    except UnicodeError:
+        raise StoreError("clipboard content is not a valid text secret", 1) from None
+    if not args.min <= len(raw) <= args.max or any(ord(c) < 32 or ord(c) == 127 or c in "\u0085\u2028\u2029" for c in secret):
+        raise StoreError("clipboard content does not match the expected secret shape", 1)
+    if not secret.startswith(args.prefix):
+        raise StoreError("clipboard content does not start with the expected prefix", 1)
+    secret_field["value"] = secret
+    if existing_id:
+        # Detect intervening edits, but do not claim a provider-side CAS/lock.
+        latest = read_json(["op-desktop", "item", "get", existing_id, "--vault", args.vault, "--format", "json"])
+        if latest != before:
+            raise StoreError("item changed during preparation; no edit was submitted")
+        argv = ["op-desktop", "item", "edit", existing_id, "--vault", args.vault, "--format", "json"]
+    else:
+        argv = ["op-desktop", "item", "create", "-", "--vault", args.vault, "--format", "json"]
+    written = read_json(argv, input_text=json.dumps(template))
+    if not isinstance(written, dict):
+        raise StoreError("1Password did not return the written item identity")
+    written_id = item_id(written.get("id"))
+    if existing_id and written_id != existing_id:
+        raise StoreError("1Password returned a different edited item identity")
+    readback = read_json(["op-desktop", "item", "get", written_id, "--vault", args.vault, "--format", "json"])
+    fields = validate_template(readback, args, written_id)
+    if len(fields) != 1 or fields[0].get("section") or not isinstance(fields[0].get("value"), str):
+        raise StoreError("stored item secret read-back was ambiguous")
+    try:
+        verified = fields[0]["value"].encode("utf-8")
+    except UnicodeError:
+        raise StoreError("stored item secret read-back was malformed") from None
+    if not hmac.compare_digest(verified, raw):
+        raise StoreError("stored item secret did not match read-back")
+    if unique_item(args) != written_id:
+        raise StoreError("stored item title no longer selects its exact identity")
+    print(f"stored op://{args.vault}/{args.title}/{args.field}")
+
+
+def main(argv=None):
+    try:
+        args = parser().parse_args(argv)
+        store(args)
+    except StoreError as error:
+        print(f"op-clipboard-store: {error}", file=sys.stderr)
+        return error.code
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

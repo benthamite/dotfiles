@@ -498,7 +498,10 @@ brokers =op-automations= and =op-desktop= are the sanctioned access path:
 no credential (masked =run=, captured or filed =read=, metadata-only =jq= over
 item output, =--out-file= documents, writes without =--format=, metadata
 commands) and denies every other shape, including shapes it cannot place and
-a broker named outside a literal nested exec command. Shell expansions are
+a broker named outside a literal nested exec command. Broker paths passed to
+=ls=, =stat=, or =readlink= are inert file metadata arguments; broker execution
+elsewhere in the command is still checked. The exact =bash -n FILE= syntax-check
+form is also allowed; extra options are not. Shell expansions are
 fine in broker arguments; an expansion in the subcommand position is
 unclassifiable and denied. Quoted
 argument globs, including =rg= exclusion patterns beginning with =!=, remain

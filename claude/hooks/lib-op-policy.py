@@ -40,7 +40,7 @@ PRINTERS = {
 # Programs `op run` may not launch: they print the environment they were given.
 RUN_DENIED_PROGRAMS = {"env", "printenv", "set", "export", "declare", "typeset", "eval"} | SHELLS
 # Words that may take a broker name as inert data.
-DATA_COMMANDS = {"echo", "printf", "grep", "rg", "ripgrep", "git"}
+DATA_COMMANDS = {"echo", "printf", "grep", "rg", "ripgrep", "git", "ls", "stat", "readlink"}
 # Commands that may consume a piped secret without printing it.
 CONSUMERS = (
     ("pbcopy",),
@@ -663,6 +663,11 @@ def classify(command: str, *, context: str = "command", depth: int = 0) -> None:
                 for var in captured:
                     if re.search(r"\$\{?" + re.escape(var) + r"\b", r.target):
                         raise Deny("captured 1Password value used as a redirect target")
+            # Exactly `bash -n FILE` parses the file without executing it.
+            # Extra options (especially `+n`) could re-enable execution.
+            if (base == "bash" and len(words) == 3 and words[1].text == "-n"
+                    and not words[2].expands and not words[2].text.startswith("-")):
+                continue
             # Interpreter programs: a broker inside `bash -c '...'` or `eval`.
             if base in SHELLS or base == "eval":
                 for w in words[1:]:

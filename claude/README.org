@@ -563,7 +563,10 @@ path: =lib-op-policy.py= allows a closed list of command shapes whose stdout
 carries no credential (masked =run=, captured or filed =read=, metadata-only
 =jq= over item output, =--out-file= documents, writes without =--format=,
 metadata commands) and denies every other shape, including shapes it cannot
-place. Shell expansions are fine in broker arguments (=--env-file
+place. Broker paths passed to =ls=, =stat=, or =readlink= are inert file
+metadata arguments; broker execution elsewhere in the command is still checked.
+The exact =bash -n FILE= syntax-check form is also allowed; extra options are not.
+Shell expansions are fine in broker arguments (=--env-file
 "$ROOT/…"=); an expansion in the subcommand position is unclassifiable and
 denied. The Claude Bash dispatcher delegates this decision to the standalone
 guard instead of carrying a second inline policy copy. Quoted argument globs, including =rg=

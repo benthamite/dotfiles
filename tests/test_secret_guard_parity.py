@@ -77,6 +77,24 @@ class SecretGuardParityTests(unittest.TestCase):
     def test_direct_op_is_denied(self):
         self.assert_both("op read op://Employee/Example/credential", "deny")
 
+    def test_broker_metadata_inspection(self):
+        for command in (
+            "bash -n bin/op-automations",
+            "ls -l /Users/pablostafforini/bin/op-automations '/Users/pablostafforini/My Drive/dotfiles/bin/op-automations'",
+            "/usr/bin/stat /Users/pablostafforini/bin/op-desktop",
+            "readlink /Users/pablostafforini/bin/op-automations",
+        ):
+            self.assert_both(command, "allow")
+        for command in (
+            "bash -n +n bin/op-automations",
+            "bash bin/op-automations read op://Automations/X/credential",
+            "bash -c 'op-automations read op://Automations/X/credential'",
+            "ls -l op-automations; op-automations read op://Automations/X/credential",
+            "ls op-desktop | xargs op-desktop read op://Employee/X/credential",
+            "sh /Users/pablostafforini/bin/op-automations read op://Automations/X/credential",
+        ):
+            self.assert_both(command, "deny")
+
     def test_unbatched_env_u_op_is_denied(self):
         self.assert_both(
             "env -u OP_SERVICE_ACCOUNT_TOKEN op read op://Employee/Example/credential",

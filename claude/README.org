@@ -424,6 +424,8 @@ carry only what the recipient needs to act or decide, lead with the ask, and
 hold Slack replies to a few sentences. Short chat replies take a fast path
 that skips the =humanize= catalogue, whose clusters cannot form in a few
 sentences, so a one-line reply is one drafting step and one staging command.
+It also enforces act-first replies: the draft never says Pablo will do
+something he can do now; the work happens first and the reply reports it done.
 
 The =lint-elisp= runner uses literal file arguments, private bytecode output and
 separate compiler/checkdoc completion records. Errors and skipped compilation

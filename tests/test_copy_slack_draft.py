@@ -95,6 +95,10 @@ class CopySlackDraftTest(unittest.TestCase):
                          (setq test-float-time-calls
                                (1+ test-float-time-calls)))))
                 """
+            display_hook = ""
+            if replace_during_display:
+                display_hook = """(with-current-buffer test-target-buffer
+                        (erase-buffer) (insert "NEW USER INPUT"))"""
             program = f"""
               (progn
                 (require 'cl-lib)
@@ -194,8 +198,7 @@ class CopySlackDraftTest(unittest.TestCase):
                   (test-thread-buffer thread))
                 (defun slack-buffer-display (thread)
                   (setq test-display-count (1+ test-display-count))
-                  {'''(with-current-buffer test-target-buffer
-                        (erase-buffer) (insert "NEW USER INPUT"))''' if replace_during_display else ''}
+                  {display_hook}
                   (switch-to-buffer (test-thread-buffer thread)))
                 ;; Model the inherited implementation's generic opener.  Its
                 ;; target appears after the fixed wait has already selected a
@@ -460,6 +463,12 @@ class CopySlackDraftTest(unittest.TestCase):
             captured = []
             with mock.patch.object(self.mod, "run_emacs_eval", side_effect=lambda e, s: captured.append(e) or "draft-composer-staged"):
                 self.mod.prefill_channel_message("C12345678", None if open_only else path, "/tmp/socket")
+            display_snippet = '(erase-buffer) (insert "NEW USER INPUT")' if display_change else ""
+            corrupt_snippet = ""
+            if corrupt:
+                corrupt_snippet = """(add-hook 'after-change-functions
+                     (lambda (&rest _) (let ((inhibit-modification-hooks t))
+                       (goto-char (point-max)) (insert "CORRUPT"))) nil t)"""
             return self.batch(f'''(progn (require 'cl-lib) (require 'json)
               (defvar slack-debug nil)
               (defun slack-team-find-by-domain (domain)
@@ -472,13 +481,11 @@ class CopySlackDraftTest(unittest.TestCase):
               (defun slack-buffer-display (_)
                 (unless slack-debug (error "Unsafe display error handler"))
                 (switch-to-buffer "target")
-                {'''(erase-buffer) (insert "NEW USER INPUT")''' if display_change else ''})
+                {display_snippet})
               (with-current-buffer (get-buffer-create "target")
                 (setq-local lui-input-marker (copy-marker (point-min)))
                 (insert {json.dumps(existing)})
-                {'''(add-hook 'after-change-functions
-                     (lambda (&rest _) (let ((inhibit-modification-hooks t))
-                       (goto-char (point-max)) (insert "CORRUPT"))) nil t)''' if corrupt else ''})
+                {corrupt_snippet})
               (let (result failure)
                 (condition-case nil (setq result {captured[0]}) (error (setq failure t)))
                 (princ (json-encode

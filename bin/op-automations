@@ -35,11 +35,16 @@ export OP_SHIM_BYPASS=1
 # authenticates with the service account and resolves secrets normally.
 # Children of `op run` inherit the same narrow denial, which they never need.
 if [[ -x /usr/bin/sandbox-exec ]]; then
-  profile='(version 1)(allow default)'
-  for container in "$HOME/Library/Group Containers"/*2BUA8C4S2C*; do
-    [[ -e "$container" ]] || continue
-    profile+="(deny file-read* file-write* (subpath \"$container\"))"
-  done
+  sandbox_helper="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/op_automations_sandbox.py"
+  if python3 "$sandbox_helper" --check; then
+    # The outer sandbox already enforces the same protection. macOS rejects
+    # sandbox reinitialization; no environment flag can bypass this check.
+    exec op "$@"
+  else
+    check_status=$?
+    [[ "$check_status" == 1 ]] || exit "$check_status"
+  fi
+  profile="(version 1)(allow default)$(python3 "$sandbox_helper" --profile)"
   exec /usr/bin/sandbox-exec -p "$profile" op "$@"
 fi
 

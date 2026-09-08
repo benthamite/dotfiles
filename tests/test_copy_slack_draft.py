@@ -594,5 +594,45 @@ class CopySlackDraftTest(unittest.TestCase):
             self.assertEqual((result["status"], result["stage"]), ("uncertain", "ring"))
 
 
+    def test_stdin_draft_is_private_exact_and_strips_one_newline(self):
+        import stat as stat_module
+        stdin = mock.Mock()
+        stdin.buffer = io.BytesIO("draft ñ line\n".encode("utf-8"))
+        with mock.patch.object(sys, "stdin", stdin):
+            with self.mod.stdin_draft() as source:
+                path = pathlib.Path(source)
+                self.assertEqual(path.read_bytes(), "draft ñ line".encode("utf-8"))
+                self.assertEqual(stat_module.S_IMODE(path.stat().st_mode), 0o600)
+                self.assertEqual(stat_module.S_IMODE(path.parent.stat().st_mode), 0o700)
+                with self.mod.draft_snapshot(source) as snapshot:
+                    self.assertEqual(snapshot.read_bytes(), "draft ñ line".encode("utf-8"))
+        self.assertFalse(path.exists())
+
+    def test_main_uses_stdin_and_default_socket(self):
+        stdin = mock.Mock()
+        stdin.buffer = io.BytesIO(b"draft\n")
+        seen = []
+
+        def fake_stage(channel, snapshot, socket):
+            seen.append((channel, snapshot.read_bytes(), socket))
+            return "draft-composer-staged"
+
+        with mock.patch.object(sys, "argv", ["copy", "--stdin", "--channel", "C12345678"]), mock.patch.object(sys, "stdin", stdin), mock.patch.object(self.mod, "default_socket", return_value="/tmp/default-socket"), mock.patch.object(self.mod, "validate_socket") as validate, mock.patch.object(self.mod, "prefill_channel_message", side_effect=fake_stage), mock.patch.object(self.mod, "copy_to_kill_ring") as ring, mock.patch("sys.stdout", new_callable=io.StringIO) as output:
+            self.assertEqual(self.mod.main(), 0)
+            validate.assert_not_called()
+            self.assertEqual(seen, [("C12345678", b"draft", "/tmp/default-socket")])
+            ring.assert_called_once()
+            self.assertEqual(json.loads(output.getvalue())["status"], "ok")
+
+    def test_main_without_server_or_with_both_sources_fails_before_client(self):
+        stdin = mock.Mock()
+        stdin.buffer = io.BytesIO(b"draft")
+        for argv in (["copy", "--stdin", "--channel", "C12345678"], ["copy", "--stdin", "--file", "/x", "--channel", "C12345678"]):
+            with self.subTest(argv=argv), mock.patch.object(sys, "argv", argv), mock.patch.object(sys, "stdin", stdin), mock.patch.object(self.mod, "default_socket", return_value=None), mock.patch.object(self.mod, "run_emacs_eval") as client, mock.patch("sys.stdout", new_callable=io.StringIO) as output:
+                self.assertEqual(self.mod.main(), 1)
+                client.assert_not_called()
+                self.assertEqual(json.loads(output.getvalue())["stage"], "validation")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -36,12 +36,19 @@ not require reading private voice samples or drafting a message.
    Use suitable writing samples supplied for this task, or obtain agreement
    before offering an explicitly labelled style-only approximation. Do not
    search private message stores or rebuild a sample corpus without authority.
-4. Read the available sibling `humanize/SKILL.md` completely, including its
-   preservation and calibration rules. Use its catalogue as a reference inside
-   this pass, not as a recursive invocation or a second blanket cleanup.
-   Reload if it is no longer available in context; “read earlier this session”
-   is not sufficient. If unavailable, report the missing reference rather than
-   inventing its contents.
+4. For anything longer than a short chat message (roughly a paragraph, or any
+   text to be published), read the available sibling `humanize/SKILL.md`
+   completely, including its preservation and calibration rules. Use its
+   catalogue as a reference inside this pass, not as a recursive invocation or
+   a second blanket cleanup. Reload if it is no longer available in context;
+   “read earlier this session” is not sufficient. If unavailable, report the
+   missing reference rather than inventing its contents.
+
+   **Short-message fast path.** For a Slack or chat reply of a few sentences,
+   skip the catalogue: its clusters cannot form in that length, and the
+   preferences below already cover it. Read the voice samples, draft once,
+   check the supplied facts, and deliver. A one-line reply should take one
+   drafting step and, if staging is requested, one `kill-ring-put` command.
 
 The catalogue covers English. For another requested language, keep that
 language and its conventions; do not translate to English to apply the list.

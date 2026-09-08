@@ -147,11 +147,14 @@ Act mode uses private outputs, token-based task accounting and an idempotent
 ledger; only verified outcomes justify completion, and budget limits produce
 deferrals. Existing ledger history requires explicit migration, not a reset.
 
-The =paste-via-kill-ring= skill separates manual handoff from sending. It
-verifies exact non-secret ring placement without implicit clipboard forwarding,
-while honoring text-transform acceptance and checking an independent payload copy.
-Credentials follow the secrets workflow, not the persisted Emacs kill ring;
-clipboard placement and verification are reported separately.
+The =paste-via-kill-ring= skill separates manual handoff from sending and is
+one command: =claude/bin/kill-ring-put= reads the text from stdin or a file,
+finds the running Emacs server socket, and verifies exact non-secret ring
+placement without implicit clipboard forwarding, honoring text-transform
+acceptance and never echoing the payload. The Lisp form and private temp-file
+handling live in the helper, not the skill text. Credentials follow the secrets
+workflow, not the persisted Emacs kill ring; clipboard placement (=--clipboard=)
+is reported separately.
 
 The =personalize= skill keeps private voice examples out of public artifacts
 and separates voice matching from factual or personal claims. Missing samples
@@ -418,7 +421,9 @@ and distinguishes engine failures and protected-syntax gaps from clean results.
 
 The paired =personalize= skill carries a hard concision rule: outgoing drafts
 carry only what the recipient needs to act or decide, lead with the ask, and
-hold Slack replies to a few sentences.
+hold Slack replies to a few sentences. Short chat replies take a fast path
+that skips the =humanize= catalogue, whose clusters cannot form in a few
+sentences, so a one-line reply is one drafting step and one staging command.
 
 The =lint-elisp= runner uses literal file arguments, private bytecode output and
 separate compiler/checkdoc completion records. Errors and skipped compilation

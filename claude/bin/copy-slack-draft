@@ -351,6 +351,26 @@ def prefill_channel_message(channel: str, path: Path | None, socket: str) -> str
     return run_emacs_eval(composer_expression(expr), socket)
 
 
+def default_socket() -> str | None:
+    """Return the running Emacs server's default owned socket, or None."""
+    uid = os.getuid()
+    candidates = []
+    explicit = os.environ.get("EMACS_SOCKET_NAME")
+    if explicit:
+        candidates.append(Path(explicit))
+    for base in (os.environ.get("TMPDIR"), "/tmp"):
+        if base:
+            candidates.append(Path(base) / f"emacs{uid}" / "server")
+    for candidate in candidates:
+        try:
+            info = candidate.stat()
+        except OSError:
+            continue
+        if stat.S_ISSOCK(info.st_mode) and info.st_uid == uid:
+            return str(candidate)
+    return None
+
+
 def validate_socket(value: str) -> str:
     path = Path(value)
     if not path.is_absolute():
@@ -399,6 +419,23 @@ def draft_snapshot(value: str):
             shutil.rmtree(directory)
 
 
+@contextlib.contextmanager
+def stdin_draft():
+    """Write stdin to an owned private file so the draft never enters Lisp or a shell argument."""
+    raw = sys.stdin.buffer.read()
+    if raw.endswith(b"\n"):
+        raw = raw[:-1]
+    directory = Path(tempfile.mkdtemp(prefix="slack-draft-stdin-", dir="/tmp"))
+    try:
+        path = directory / "draft.txt"
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, "wb") as output:
+            output.write(raw)
+        yield str(path)
+    finally:
+        shutil.rmtree(directory, ignore_errors=True)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
@@ -406,7 +443,9 @@ def main() -> int:
         )
     )
     parser.add_argument("--file", help="Owned private UTF-8 draft file outside Drive")
-    parser.add_argument("--socket", required=True, help="Absolute existing intended Emacs socket")
+    parser.add_argument("--stdin", action="store_true",
+                        help="Read the draft from stdin (one trailing newline is stripped)")
+    parser.add_argument("--socket", help="Absolute existing Emacs socket (default: the running server's)")
     parser.add_argument("--open-only", action="store_true", help="Open target without changing composer or kill ring")
     parser.add_argument(
         "--permalink",
@@ -433,10 +472,12 @@ def main() -> int:
 
     result = {"status": "failed", "stage": "validation", "opened": False, "composer": False, "ring": False}
     try:
-        if args.open_only and (args.file or args.no_open):
+        if args.open_only and (args.file or args.stdin or args.no_open):
             raise ValueError("Open-only cannot stage text")
-        if not args.open_only and not args.file:
-            raise ValueError("A draft file is required")
+        if args.file and args.stdin:
+            raise ValueError("Use either --file or --stdin")
+        if not args.open_only and not (args.file or args.stdin):
+            raise ValueError("A draft file or --stdin is required")
         if args.no_open and (args.permalink or args.channel):
             raise ValueError("Ring-only cannot specify a target")
         if not args.no_open and bool(args.permalink) == bool(args.channel):
@@ -445,8 +486,14 @@ def main() -> int:
             permalink_info(args.permalink)
         if args.channel and not re.fullmatch(r"[CGD][A-Z0-9]{8,}", args.channel):
             raise ValueError("Invalid channel ID")
-        socket = validate_socket(args.socket)
-        with (contextlib.nullcontext(None) if args.open_only else draft_snapshot(args.file)) as snapshot:
+        socket = validate_socket(args.socket) if args.socket else default_socket()
+        if socket is None:
+            raise ValueError("No running Emacs server socket found; supply --socket")
+        with contextlib.ExitStack() as stack:
+            source = args.file
+            if args.stdin:
+                source = stack.enter_context(stdin_draft())
+            snapshot = None if args.open_only else stack.enter_context(draft_snapshot(source))
             if not args.no_open:
                 result["stage"] = "open" if args.open_only else "composer"
                 stage = prefill_channel_message if args.channel else prefill_slack_reply

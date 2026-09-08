@@ -152,11 +152,10 @@ class CommandTests(unittest.TestCase):
             patches.append(mock.patch.object(self.mod, "default_socket", return_value=Path("/tmp/fixture-socket")))
         else:
             patches.append(mock.patch.object(self.mod, "default_socket", return_value=None))
-        with mock.patch.multiple(self.mod, **{}):
-            for patch in patches:
-                patch.start()
-                self.addCleanup(patch.stop)
-            code = self.mod.main()
+        for patch in patches:
+            patch.start()
+            self.addCleanup(patch.stop)
+        code = self.mod.main()
         return code, out.getvalue(), err.getvalue(), calls
 
     def test_stdin_strips_one_trailing_newline_and_reports_without_payload(self):

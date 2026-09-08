@@ -60,17 +60,12 @@ def _pass_show(entry):
 
 
 def _op_read(ref):
-    env = os.environ.copy()
-    if "OP_SERVICE_ACCOUNT_TOKEN" not in env:
-        token = _pass_show("epoch/1password-service-account-token")
-        if token:
-            env["OP_SERVICE_ACCOUNT_TOKEN"] = token
     result = subprocess.run(
-        ["op", "read", ref],
+        ["op-automations", "read", ref],
         capture_output=True,
         check=False,
-        env=env,
         text=True,
+        timeout=45,
     )
     if result.returncode == 0:
         return result.stdout.strip()

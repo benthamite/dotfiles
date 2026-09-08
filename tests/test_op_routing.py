@@ -41,7 +41,6 @@ SHIMS_DIR = ROOT / "shell" / "shims"
 # needs the same property or a wrapper -- see op_reader_for() in ahrefs-api-guard.
 BARE_OP_ALLOWED = {
     "claude/bin/slack.py",
-    "claude/bin/_gworkspace_auth.py",
     "claude/bin/update-gworkspace-refresh-token",
 }
 

@@ -3,6 +3,11 @@
 
 * Overview
 
+Google Workspace helpers resolve Epoch OAuth credentials through
+=op-automations=. Calendar uses =gcalcli-epoch=, which validates the canonical
+grant and atomically refreshes gcalcli's credential cache before each operation.
+This prevents a separately expired Calendar grant from blocking automation.
+
 This directory contains the tracked parts of my Claude Code setup. The shared
 Claude/Codex contract lives in [[file:../agents/README.org][the agent configuration overview]]; this file covers
 Claude-specific layout, activation, and settings.

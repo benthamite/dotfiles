@@ -9,7 +9,7 @@ browser automation; each already carries the right account and auth.
 | Gmail | `claude/bin/gmail.py` |
 | Google Sheets | `claude/bin/sheets.py` |
 | Slack | `claude/bin/slack.py` |
-| Google Calendar | `gcalcli` |
+| Google Calendar | `gcalcli-epoch` (canonical Epoch OAuth grant; shared personal calendars) |
 | Google Docs / Drive | `gdoc` |
 | GitHub | `gh` |
 

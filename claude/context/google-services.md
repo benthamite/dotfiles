@@ -21,14 +21,20 @@ For the **Epoch** account (`pablo@epoch.ai`), use the local Google tools below. 
 | Drive    | `gdoc` CLI | `gdoc find --account epoch --title --plain '<query>'`. |
 | Gmail    | `claude/bin/gmail.py` | Subcommands: `query`, `get`, `raw`, `attachment`, `archive`, `draft`, `send`, `reply`, `send-draft`; `send`, `draft`, and `reply` support `--attach`. |
 | Sheets   | `claude/bin/sheets.py` | Subcommands: `read`, `write`, `append`, `clear`, `add-sheet`, `delete-sheet`, `create`, `info`. |
-| Calendar | `gcalcli` CLI | `gcalcli agenda/search/add/edit/delete`, with `--calendar '<name>'` to scope. |
+| Calendar | `gcalcli-epoch` CLI | `gcalcli-epoch agenda/search/add/edit/delete`, with `--calendar '<name>'` to scope. |
 | Slides   | none | Rare enough to handle ad-hoc via curl + Sheets/Drive APIs if ever needed. |
 
 For the **personal** account (`pablo.stafforini@gmail.com`):
 - Docs/Drive: `gdoc --account personal` (same CLI as Epoch, separate OAuth token under `~/.config/gdoc/accounts/personal/`).
 - Gmail: `gmail.py --account personal` (same CLI, separate refresh token; see "Auth" below).
 - Sheets: `sheets.py --account personal` (same CLI, same token as Gmail).
-- Calendar: `gcalcli` (already configured for both accounts via shared calendars; no per-account flag).
+- Calendar: `gcalcli-epoch` (both accounts via shared calendars; no per-account flag).
+
+`gcalcli-epoch` validates the canonical Epoch OAuth grant from 1Password and
+atomically refreshes `/Users/pablostafforini/Library/Application Support/gcalcli/oauth`
+before invoking the installed `gcalcli`. It refuses mismatched account identity
+and never falls back to an independently cached grant. Renew the canonical grant
+with `update-gworkspace-refresh-token --account epoch` when it is revoked.
 
 The personal-account OAuth grants are against the same `claude-code-gmail-490520` GCP project as the Epoch one, with `pablo.stafforini@gmail.com` added as a test user on the OAuth consent screen.
 
@@ -129,7 +135,7 @@ Use `gmail.py --account email-triage` for `email-triage@epoch.ai`.
 
 ### personal account
 
-No dedicated MCP server. Personal-account Docs/Drive go through `gdoc --account personal` (see "Tooling by service" above). Calendar through `gcalcli`. Gmail through `gmail.py --account personal`.
+No dedicated MCP server. Personal-account Docs/Drive go through `gdoc --account personal` (see "Tooling by service" above). Calendar through `gcalcli-epoch`. Gmail through `gmail.py --account personal`.
 
 ### Built-in (claude.ai integrations)
 

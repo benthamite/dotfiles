@@ -75,6 +75,11 @@ def _python_stdin(prefix: str) -> bool:
         words.pop(0)
         if words and words[0] == "--":
             words.pop(0)
+    # `pyenv exec <command> ...` selects the Python installation and forwards
+    # stdin and arguments to that command. Recognize only this literal shape;
+    # other pyenv subcommands and dynamic interpreter names stay unsupported.
+    if len(words) >= 2 and PurePosixPath(words[0]).name == "pyenv" and words[1] == "exec":
+        del words[:2]
     if not words or not PYTHON.fullmatch(PurePosixPath(words.pop(0)).name):
         return False
     while words:

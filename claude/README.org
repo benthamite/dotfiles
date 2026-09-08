@@ -593,7 +593,10 @@ guard first checks Python protected references, exempting only genuine =pass=
 statements, then excludes that body from shell lexical checks. Python varargs
 are not shell executable globs. Other secret checks still receive the original
 input; unknown source stays unmasked and safe protected-name string mentions
-remain conservatively denied. This classifier is not a Python sandbox.
+remain conservatively denied. Literal =pyenv exec python -= stdin programs use
+the same Python classification, including its protected-reference checks; other
+pyenv subcommands and dynamic interpreter names receive no exemption.
+This classifier is not a Python sandbox.
 The sensitive-read guard applies the data-sink rule and names the
 heredoc in its denial when a path is mentioned only inside an
 interpreter-fed program. A shell =eval= is recognized only at a word

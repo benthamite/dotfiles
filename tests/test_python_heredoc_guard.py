@@ -134,6 +134,34 @@ class NativePythonHeredocGuardTests(unittest.TestCase):
     def test_exact_original_denied_command_with_varargs_is_allowed(self):
         self.assert_hooks(ORIGINAL_DENIED_COMMAND, "allow")
 
+    def test_pyenv_exec_python_source_is_not_outer_shell_syntax(self):
+        for prefix in ("pyenv exec python -", "/opt/homebrew/bin/pyenv exec python3 -B -",
+                       "env PYENV_VERSION=3.11.9 pyenv exec python -"):
+            for body in ("def flush(self):\n    pass",
+                         "items = [1, 2]\nprint([item for item in items])"):
+                self.assert_hooks(heredoc(body, prefix=prefix), "allow")
+
+    def test_pyenv_tangodb_read_only_count_command(self):
+        command = """pyenv exec python - <<'PY'
+import json
+from pathlib import Path
+base=Path('backend/data/reconciliation/case_verdicts/2026-09-08-continuous')
+ids={v.get('pair_id') for p in base.glob('*.json') if (v:=json.loads(p.read_text())).get('pair_id')}
+merges=json.loads(Path('backend/data/reconciliation/recording_merges.json').read_text())['merges']
+print('Continuous-session merge corrections:',sum(m.get('judgment',{}).get('pair_id') in ids for m in merges))
+print('Verdict artifacts:',len(list(base.glob('*.json'))))
+PY"""
+        self.assert_hooks(command, "allow")
+
+    def test_pyenv_exec_keeps_credential_and_unknown_interpreter_checks(self):
+        for body in ('import subprocess\nsubprocess.run(["pass", "show", "fixture"])',
+                     'import os\nos.system("\\x70ass")'):
+            self.assert_hooks(heredoc(body, prefix="pyenv exec python -"), "deny")
+        for prefix in ("pyenv exec bash", "pyenv exec python -c something",
+                       "pyenv exec $PY -", "pyenv which python -"):
+            self.assert_hooks(heredoc("pass", prefix=prefix), "deny")
+        self.assert_hooks(heredoc("pass", prefix="pyenv exec python -", suffix="\npbpaste"), "deny")
+
     def test_literal_prefixes_quoted_delimiters_and_nested_pass_blocks_are_allowed(self):
         body = '@decorator\ndef outer():\n    name = "é🌱"; pass\n    def inner():\n        pass'
         for prefix in ("python3", "/usr/bin/python3 -B -", "env PYTHONPATH=tests python3 -",

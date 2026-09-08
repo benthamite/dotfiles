@@ -15167,6 +15167,9 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 
 /[[https://github.com/jwiegley/alert][alert]] is a Growl-like alerts notifier for Emacs./
 
+Native macOS notifications run asynchronously so a slow =osascript= does not
+block Emacs.  Subprocess failures are reported as warnings.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package alert
   :ensure nil ; Queued as a dependency before this configuration block.
@@ -15178,12 +15181,23 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
   (alert-default-style 'osx-notifier)
 
   :config
-  ;; This function has to be loaded manually, for some reason.
   (defun alert-osx-notifier-notify (info)
-    (apply #'call-process "osascript" nil nil nil "-e"
-           (list (format "display notification %S with title %S"
-                         (alert-encode-string (plist-get info :message))
-                         (alert-encode-string (plist-get info :title)))))
+    "Display the macOS notification described by INFO without blocking Emacs."
+    (make-process
+     :name "alert-osx-notifier"
+     :buffer nil
+     :command (list "osascript" "-e"
+                    (format "display notification %S with title %S"
+                            (alert-encode-string (plist-get info :message))
+                            (alert-encode-string (plist-get info :title))))
+     :connection-type 'pipe
+     :noquery t
+     :sentinel (lambda (process event)
+                 (when (and (memq (process-status process) '(exit signal))
+                            (not (zerop (process-exit-status process))))
+                   (display-warning 'alert
+                                    (concat "macOS notification failed: "
+                                            (string-trim event))))))
     (alert-message-notify info)))
 #+end_src
 

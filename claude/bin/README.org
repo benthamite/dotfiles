@@ -35,8 +35,9 @@ spending ceiling. Manual Ahrefs calls must use the guarded command; a similarly
 named PATH wrapper should not be assumed to be this tracked file without
 resolving it.
 
-=copy-slack-draft= requires the intended existing Emacs =--socket= and a private
-UTF-8 draft file outside Drive. It opens the exact Epoch destination, preserves
+=copy-slack-draft= takes the draft from =--stdin= or a private UTF-8 =--file=
+outside Drive, and finds the running Emacs server's socket unless =--socket=
+names another. It opens the exact Epoch destination, preserves
 conflicting unsent input, verifies composer insertion, then stages the same text
 in the kill ring without importing or exporting the system clipboard.
 =--open-only= opens without copying or inserting. Structured receipts distinguish
@@ -55,7 +56,7 @@ uncertainty. Raw request errors and draft contents are omitted from diagnostics.
 | =batch-test.sh= | Loads canonical package source in batch Emacs, rejects stale-load warnings, and emits repository/package/source-revision evidence with a one-time replay-correlation token. |
 | =check-elpaca-sync-hook= | Validates the embedded Elpaca sync hook and confirms that the installed hook is identical. |
 | =cloudflare-deploy-token= | Mints a per-project Cloudflare Worker-deploy API token using privately configured administrator references and stores it in the Automations vault. |
-| =copy-slack-draft= | Opens an exact Epoch Emacs target or stages a private draft in its composer and kill ring, using an explicit socket and per-stage receipts. |
+| =copy-slack-draft= | Opens an exact Epoch Emacs target or stages a draft (stdin or private file) in its composer and kill ring, resolving the running server's socket by default, with per-stage receipts. |
 | =cr-worktree-gc.sh= | Removes only clean, fully pushed transient CR review worktrees and preserves unfinished work. |
 | =elisp-ert= | Runs profile-aware ERT for a package, test file, and optional test selector. |
 | =elisp-check-evidence= | Runs a tracked project-owned non-package Elisp check against the working tree or an explicit index snapshot and emits repository/file/source-revision evidence with a one-time replay-correlation token. |
@@ -63,6 +64,7 @@ uncertainty. Raw request errors and draft contents are omitted from diagnostics.
 | =elisp-source-revision= | Computes the Git-and-content identity used to bind Elisp test evidence to the current source. |
 | =elpaca-rebuild-wait= | Resolves a package ID or checkout label, rebuilds and reloads the canonical Elpaca ID with bounded polling, or observes exact source/mirror-bound dotfiles post-commit reload state. |
 | =gmail.py= | Provides the multi-account Gmail read, search, draft, send, reply, attachment, and archive operations. |
+| =kill-ring-put= | Stages non-secret text from stdin or a file in the running Emacs kill ring in one command, optionally also on the macOS clipboard, without echoing the payload. |
 | =install-skills.sh= | Installs the live interactive and programmatic skill links, then applies skill pruning and private shims. |
 | =op-clipboard-store= | Stores a validated console-copied secret through broker stdin with optional account pinning; checks ID-bound concealed byte-equal readback and refuses existing Login JSON edits that cannot preserve passkeys. Desktop authorization may prompt. |
 | =sheets.py= | Provides the multi-account Google Sheets read, write, append, clear, sheet-management, and metadata operations. |

@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+"""Stage non-secret text in the running Emacs kill ring in one command.
+
+Reads the text from stdin (or ``--file``), finds the user's Emacs server socket,
+and pushes the exact text onto the kill ring through a verified form that never
+touches the system clipboard. Prints a one-line receipt and never echoes the
+payload. Add ``--clipboard`` to also copy the same bytes with ``pbcopy`` for a
+Chrome or native macOS paste target.
+
+Credentials do not belong here: the kill ring is persisted by savehist, and the
+secret guards deny piping a 1Password read into this command.
+"""
+
+import argparse
+import json
+import os
+import shutil
+import stat
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+# The path placeholder is replaced with a JSON-encoded absolute path, so the
+# payload itself never enters the Lisp text or a shell argument.
+STAGING_FORM = """(let ((interprogram-cut-function nil)
+      (interprogram-paste-function nil)
+      (save-interprogram-paste-before-kill nil)
+      (coding-system-for-read 'utf-8-unix)
+      (debug-on-error nil))
+  (condition-case nil
+      (with-temp-buffer
+        (insert-file-contents "/ABSOLUTE/PRIVATE/PAYLOAD")
+        (let* ((payload (buffer-string))
+               (paste-original-transform kill-transform-function)
+               (paste-accepted nil)
+               (kill-transform-function
+                (lambda (text)
+                  (let ((result (if paste-original-transform
+                                    (funcall paste-original-transform text)
+                                  text)))
+                    (setq paste-accepted (and result t))
+                    result))))
+          (kill-new (copy-sequence payload))
+          (unless (and paste-accepted
+                       (equal-including-properties payload (car kill-ring))
+                       (eq kill-ring-yank-pointer kill-ring))
+            (error "Paste staging mismatch"))
+          'paste-staged))
+    (error (error "Paste staging failed"))))"""
+
+ACK = "paste-staged"
+
+
+class Uncertain(RuntimeError):
+    """The client did not prove whether Emacs changed."""
+
+
+def default_socket() -> Path | None:
+    """Return the running Emacs server's default socket, or None."""
+    explicit = os.environ.get("EMACS_SOCKET_NAME")
+    candidates = []
+    if explicit:
+        candidates.append(Path(explicit))
+    uid = os.getuid()
+    for base in (os.environ.get("TMPDIR"), "/tmp"):
+        if base:
+            candidates.append(Path(base) / f"emacs{uid}" / "server")
+    for candidate in candidates:
+        try:
+            info = candidate.stat()
+        except OSError:
+            continue
+        if stat.S_ISSOCK(info.st_mode) and info.st_uid == uid:
+            return candidate
+    return None
+
+
+def validate_socket(value: str) -> str:
+    path = Path(value)
+    if not path.is_absolute():
+        raise ValueError("An absolute existing Emacs socket is required")
+    info = path.stat()
+    if not stat.S_ISSOCK(info.st_mode) or info.st_uid != os.getuid():
+        raise ValueError("An owned existing Emacs socket is required")
+    return str(path)
+
+
+def read_payload(file: str | None, keep_newline: bool) -> bytes:
+    if file:
+        raw = Path(file).read_bytes()
+    else:
+        raw = sys.stdin.buffer.read()
+        if not keep_newline and raw.endswith(b"\n"):
+            raw = raw[:-1]
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        raise ValueError("Payload must be UTF-8") from None
+    if text.startswith("﻿") or "\x00" in text or not text.strip():
+        raise ValueError("Payload must be nonempty UTF-8 without BOM or NUL")
+    return raw
+
+
+def stage_kill_ring(payload_path: Path, socket: str) -> None:
+    expr = STAGING_FORM.replace(
+        '"/ABSOLUTE/PRIVATE/PAYLOAD"', json.dumps(str(payload_path), ensure_ascii=False)
+    )
+    try:
+        result = subprocess.run(
+            ["emacsclient", "--socket-name", socket, "--alternate-editor", "false",
+             "--eval", expr],
+            check=False, capture_output=True, text=True, timeout=30,
+        )
+    except subprocess.TimeoutExpired:
+        raise Uncertain("Emacs did not answer; kill ring state unknown") from None
+    if result.returncode != 0 or result.stdout.strip() != ACK:
+        raise RuntimeError("Emacs rejected the staging form")
+
+
+def stage_clipboard(payload_path: Path) -> None:
+    if not shutil.which("pbcopy"):
+        raise RuntimeError("pbcopy is not available")
+    env = dict(os.environ, LANG="en_US.UTF-8", LC_ALL="en_US.UTF-8")
+    with payload_path.open("rb") as source:
+        result = subprocess.run(["pbcopy"], stdin=source, check=False, env=env,
+                                capture_output=True, timeout=10)
+    if result.returncode != 0:
+        raise RuntimeError("pbcopy failed")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Stage non-secret text from stdin or a file in the Emacs kill ring."
+    )
+    parser.add_argument("--file", help="Read the exact bytes of this UTF-8 file instead of stdin")
+    parser.add_argument("--socket", help="Emacs server socket (default: the running server's)")
+    parser.add_argument("--clipboard", action="store_true",
+                        help="Also copy the same text to the macOS clipboard with pbcopy")
+    parser.add_argument("--keep-newline", action="store_true",
+                        help="Keep a single trailing newline read from stdin (stripped by default)")
+    args = parser.parse_args()
+
+    staged = []
+    try:
+        socket = validate_socket(args.socket) if args.socket else default_socket()
+        if socket is None:
+            raise RuntimeError("No running Emacs server socket found; supply --socket")
+        payload = read_payload(args.file, args.keep_newline)
+        directory = Path(tempfile.mkdtemp(prefix="kill-ring-put-", dir="/tmp"))
+        try:
+            payload_path = directory / "payload.txt"
+            descriptor = os.open(payload_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(descriptor, "wb") as output:
+                output.write(payload)
+            stage_kill_ring(payload_path, str(socket))
+            staged.append("kill-ring")
+            if args.clipboard:
+                stage_clipboard(payload_path)
+                staged.append("clipboard")
+        finally:
+            shutil.rmtree(directory, ignore_errors=True)
+    except Uncertain as error:
+        print(f"uncertain: {error}", file=sys.stderr)
+        return 2
+    except (OSError, ValueError, RuntimeError) as error:
+        done = f" (already staged: {', '.join(staged)})" if staged else ""
+        print(f"failed: {error}{done}", file=sys.stderr)
+        return 1
+    print(f"staged: {', '.join(staged)}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

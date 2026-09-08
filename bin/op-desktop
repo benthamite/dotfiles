@@ -23,7 +23,7 @@ Usage
     op-desktop item get "Title" --vault Employee --format=json
     op-desktop item template get "API Credential" | op-desktop item create --vault Automations -
 
-    op-desktop --status     show broker state
+    op-desktop --status     show broker process state without checking authorization
     op-desktop --stop       stop the broker (drops the authorization)
 
 Standard input
@@ -356,22 +356,14 @@ def connect_or_start():
 
 
 def cmd_status() -> int:
+    # `whoami` is an authorization-bearing command: it can wait for Touch ID
+    # and queue behind another broker request. Status must not cause either.
     pid = broker_pid()
     if pid is None:
         print("op-desktop: no broker running (next command starts one, one prompt)")
         return 1
     print(f"op-desktop: broker running, pid {pid}, socket {SOCKET_PATH}")
-    conn = connect()
-    if conn:
-        with conn:
-            send_json(conn, {"argv": ["whoami"], "env": {}, "cwd": os.getcwd()})
-            reply = recv_json(conn) or {}
-        if reply.get("rc") == 0:
-            print("op-desktop: session is authorized")
-            sys.stdout.write(reply.get("out", ""))
-        else:
-            print("op-desktop: session is NOT authorized (next command prompts)")
-            sys.stderr.write(reply.get("err", ""))
+    print("op-desktop: authorization not checked (status does not contact 1Password)")
     return 0
 
 

@@ -80,6 +80,24 @@ class DesktopStdinTest(unittest.TestCase):
         self.assertEqual(rc, 2)
         self.assertIsNone(request)
 
+    def test_status_never_queues_a_request_even_when_broker_is_busy(self):
+        with patch.object(self.mod, "ensure_runtime_dir"), \
+             patch.object(self.mod, "broker_pid", return_value=123), \
+             patch.object(self.mod, "connect", side_effect=AssertionError("no broker request")), \
+             patch.object(self.mod, "connect_or_start", side_effect=AssertionError("no startup")), \
+             patch.object(sys, "stdout", io.StringIO()) as output:
+            self.assertEqual(self.mod.main(["--status"]), 0)
+        self.assertIn("broker running, pid 123", output.getvalue())
+        self.assertIn("authorization not checked", output.getvalue())
+
+    def test_status_does_not_start_a_missing_broker(self):
+        with patch.object(self.mod, "ensure_runtime_dir"), \
+             patch.object(self.mod, "broker_pid", return_value=None), \
+             patch.object(self.mod, "connect_or_start", side_effect=AssertionError("no startup")), \
+             patch.object(sys, "stdout", io.StringIO()) as output:
+            self.assertEqual(self.mod.main(["--status"]), 1)
+        self.assertIn("no broker running", output.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()

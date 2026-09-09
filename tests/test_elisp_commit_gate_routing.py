@@ -111,6 +111,46 @@ class ElispCommitGateRoutingTests(unittest.TestCase):
                 records = self.git_records(shell + " <<'EOF'\ngit push origin main\ngit commit -m test\nEOF", self.repo)
                 self.assertEqual([record["subcommand"] for record in records], ["push", "commit"])
 
+    def test_python_heredoc_data_does_not_invent_git_substitutions(self):
+        self.stage_elisp_change()
+        body = "print({'binding_repair_commit': None, 'quote': \"source ends in ` $(\"})"
+        for header in ("python3 - <<'PY'", 'pyenv exec python3 - <<"PY"'):
+            command = header + "\n" + body + "\nPY\n"
+            for tool in GATES:
+                for program in (command, command + command):
+                    with self.subTest(tool=tool, program=program):
+                        result = self.run_gate(tool, program, self.repo)
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        self.assertEqual(result.stdout.strip(), "", result.stdout)
+                        self.assertEqual(self.git_records(program, self.repo), [])
+                result = self.run_gate(tool, command + "git commit -m fixture", self.repo)
+                self.assertIn("matching test evidence", result.stdout)
+
+    def test_python_projection_keeps_unsafe_shell_forms_visible(self):
+        self.stage_elisp_change()
+        commands = (
+            "python3 - <<PY\nprint(\"$(git commit -m fixture)\")\nPY",
+            "bash <<'PY'\ngit commit -m fixture\nPY",
+            "python3 - <<'PY'\ngit commit -m fixture\nPY",
+            "python3 - <<'PY'\nprint('data')\nPY\ngit \"$operation\" -m fixture",
+            "python3 - <<'PY'\nimport os\nos.system(\"echo `git commit -m fixture`\")\nPY",
+            "python3 - <<'PY'\nimport os\nos.system(\"echo $(git commit -m fixture)\")\nPY",
+        )
+        for tool in GATES:
+            for command in commands:
+                with self.subTest(tool=tool, command=command):
+                    result = self.run_gate(tool, command, self.repo)
+                    self.assertIn("BLOCKED", result.stdout)
+
+    def test_commit_message_backticks_remain_data(self):
+        self.stage_elisp_change()
+        command = "git commit -F - <<'MSG'\nliteral ` $( message\nMSG"
+        for tool in GATES:
+            with self.subTest(tool=tool):
+                result = self.run_gate(tool, command, self.repo)
+                self.assertIn("matching test evidence", result.stdout)
+                self.assertNotIn("dynamic or ambiguous", result.stdout)
+
     def test_nested_bash_recovers_workdir_before_routing(self):
         self.stage_elisp_change()
         (self.fallback / "README.md").write_text("changed\n")

@@ -599,6 +599,11 @@ pyenv subcommands and dynamic interpreter names receive no exemption.
 Consecutive supported Python heredocs receive the same classification in order;
 unknown shell structure stops the scan without exempting the remaining text.
 This classifier is not a Python sandbox.
+The Git classifier also recognizes these quoted Python bodies before parsing
+shell substitutions. Backticks and substitution markers in data without
+standalone Git/commit references no longer fabricate ambiguous commits;
+Git-bearing interpreter source retains conservative scanning. Quoted Git
+commit-message input is excluded before substitution parsing as well.
 The inline-secret scan recognizes public MusicBrainz entity URLs before
 tokenizing their identifiers. Queries, fragments and credential arguments
 remain scanned; URL components never receive filesystem-path exemptions.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Project supported Python heredoc syntax for the secret-output guard.
+"""Project supported Python heredoc syntax for shell guards.
 
 First classify a closed, quoted Python stdin heredoc as Python: only genuine
 ast.Pass spans are exempt from protected-name scanning. Protected names
@@ -12,6 +12,8 @@ byte-preserved. Callers retain original input for all other secret checks.
 This is not a Python sandbox or a general shell parser. Unknown shell shapes,
 multiple redirections on one header and malformed Python remain unchanged for
 the existing guard. Consecutive supported Python heredocs are classified in order.
+The Git projection only neutralizes shell-substitution markers in valid quoted
+Python bodies and retains other source for the existing Git classifier.
 No source is evaluated, imported, or executed.
 """
 
@@ -136,7 +138,33 @@ def _project_body(body: str, strip_tabs: bool) -> str | None:
     return result
 
 
+def _git_shell_body(body: str, strip_tabs: bool) -> str | None:
+    """Keep Python visible to Git scanning without inventing shell expansions."""
+    runtime_body = "\n".join(line.lstrip("\t") if strip_tabs else line
+                             for line in body.split("\n"))
+    try:
+        ast.parse(runtime_body)
+    except (SyntaxError, ValueError):
+        return None
+    # Keep Git-bearing interpreter source conservative: a subprocess may run
+    # strings as shell code. This is deliberately not Python execution analysis.
+    if re.search(r"\b(?:git|commit)\b", body):
+        return body
+    # Quoted stdin never undergoes shell expansion. These characters in valid
+    # Python are strings/comments, not shell command substitutions. Retain all
+    # other source so this projection does not hide existing Git detections.
+    return body.replace(chr(96), " ").replace("$(", "__")
+
+
+def project_git_shell(command: str) -> str:
+    return _project_command(command, git_shell=True)
+
+
 def project_command(command: str) -> str:
+    return _project_command(command, git_shell=False)
+
+
+def _project_command(command: str, *, git_shell: bool) -> str:
     # Walk only consecutive known Python programs, never search arbitrary shell
     # text for an opener: it might be inside a quote or another program's body.
     lines = command.split("\n")  # Shell lines use LF, not Unicode separators.
@@ -159,12 +187,16 @@ def project_command(command: str) -> str:
         if closing is None:
             break
         body = "\n".join(lines[opener + 1:closing])
-        if _project_body(body, strip_tabs) is None:
+        projected = (_git_shell_body(body, strip_tabs) if git_shell
+                     else _project_body(body, strip_tabs))
+        if projected is None:
             break
-        # Python has received its own protected-reference classification; its
-        # operators are not shell globs. Preserve all bytes outside each body.
-        for index in range(opener + 1, closing):
-            lines[index] = " " * len(lines[index].encode("utf-8"))
+        # The secret projection masks its classified body; the Git projection
+        # preserves source except for inert substitution markers. Both retain
+        # all bytes outside each supported body.
+        for index, projected_line in enumerate(projected.split("\n"), opener + 1):
+            lines[index] = (projected_line if git_shell else
+                            " " * len(lines[index].encode("utf-8")))
         opener = closing + 1
     return "\n".join(lines)
 

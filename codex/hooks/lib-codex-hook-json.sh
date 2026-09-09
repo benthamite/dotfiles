@@ -512,12 +512,17 @@ for line in reversed(result.stdout.splitlines()):
 # `git -C repo commit` without evaluating the command.
 codex_git_invocations() {
   python3 -c '
+import importlib.util
 import json
 import os
 import shlex
 import subprocess
 import sys
 
+sys.dont_write_bytecode = True
+spec = importlib.util.spec_from_file_location("python_heredoc", sys.argv[2])
+python_heredoc = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(python_heredoc)
 source = sys.stdin.read()
 context_dir = sys.argv[1] if len(sys.argv) > 1 and os.path.isdir(sys.argv[1]) else os.getcwd()
 boundaries = {";", ";;", "&", "&&", "|", "||", "(", ")", "\n"}
@@ -1057,6 +1062,8 @@ def scan(program, depth=0, initial_dir=None):
         )]
     program = program.replace(chr(92) + "\n", "")
     records = []
+    program = python_heredoc.project_git_shell(program)
+    program = without_literal_heredocs(program)
     masked_program, substitutions, invalid_substitution = extract_substitutions(program)
     if invalid_substitution:
         return [ambiguous_commit(
@@ -1336,7 +1343,7 @@ for sequence, record in enumerate(scan(source)):
     sys.stdout.buffer.write(
         json.dumps(record, separators=(",", ":")).encode("utf-8") + b"\0"
     )
-' "${1:-${CODEX_GIT_PARSE_CONTEXT:-}}"
+' "${1:-${CODEX_GIT_PARSE_CONTEXT:-}}" "$(dirname -- "${BASH_SOURCE[0]}")/lib-python-heredoc.py"
 }
 
 codex_git_subcommand_count() {

@@ -461,7 +461,7 @@ check_pattern() {
       "hookSpecificOutput": {
         "hookEventName": "PreToolUse",
         "permissionDecision": "deny",
-        "permissionDecisionReason": ("BLOCKED: " + $tool + " command would expose a secret (" + $label + ").\n\nUse environment variables, `pass`, or `op://` references instead of literal secret values.\n\nIf this is a false positive (e.g. you are scanning for patterns, not echoing actual secrets), and you are confident the command is safe, tell the user and ask them to run it manually with `!`.")
+        "permissionDecisionReason": ("BLOCKED: " + $tool + " command would expose a secret (" + $label + ").\n\nUse environment variables, `pass`, or `op://` references instead of literal secret values.\n\nIf this is a false positive, diagnose and repair the classifier; do not bypass the guard.")
       }
     }'
     exit 0
@@ -549,10 +549,10 @@ if codex_shell_tool_p "$TOOL_NAME"; then
   # Only flags when a network tool AND a high-entropy string co-occur.
   if echo "$CONTENT" | grep -qE '\b(curl|wget|nc|ncat|python[23]?\s.*urllib|node\s.*fetch)\b'; then
     # Look for a contiguous alphanumeric+symbol string >= 30 chars that looks
-    # like a secret (not a URL, not a file path, not a common word).
-    # We exclude strings starting with http:// or https://, file paths
-    # starting with /, pure lowercase (English words), and strings that
-    # look like file paths (3+ slash-separated segments).
+    # like a secret (not a file path or a common word). URL components can
+    # carry credentials, so exempt public identifiers only with known context.
+    # Exclude file paths starting with /, pure lowercase (English words),
+    # and strings that look like file paths (3+ slash-separated segments).
     # Strip well-known public-blockchain artifacts first so query strings like
     # `?user=0x<40-hex>` (Ethereum wallet address) do not trip the heuristic.
     # 40-hex followed by a non-hex char (or end of string) is unambiguously a
@@ -560,13 +560,33 @@ if codex_shell_tool_p "$TOOL_NAME"; then
     # because the 41st char is still hex, so the pattern does not match.
     # macOS/BSD sed does not support \b word boundaries; use explicit hex
     # boundaries here.
+    # MusicBrainz entity URLs identify public database records. Match their
+    # complete host/path before tokenization: grep otherwise splits at the
+    # hostname dot and mistakes org/ws/2/recording/<UUID> for a credential.
+    # Do not exempt UUIDs or arbitrary URLs. Keep queries/fragments in the
+    # scan, require URL boundaries, and leave known-secret checks above intact.
+    # Documented schema: https://musicbrainz.org/doc/MusicBrainz_API
+    MB_ENTITY='(area|artist|collection|event|genre|instrument|label|place|recording|release|release-group|series|url|work)'
+    MB_UUID='[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}'
     HIGH_ENTROPY=$(echo "$CONTENT" | \
+      sed -E "s@(^|[[:space:]\"'])https?://musicbrainz\\.org/(ws/2/)?${MB_ENTITY}/${MB_UUID}([?#[:space:]\"']|$)@\\1https://musicbrainz.org/\\4@g" | \
       sed -E 's/0x[a-fA-F0-9]{40}([^a-fA-F0-9]|$)/\1/g' | \
-      grep -oE '[A-Za-z0-9/+=_-]{30,}' | \
-      grep -vE '^https?://' | \
-      grep -vE '^/' | \
-      grep -vE '^[a-z]+$' | \
-      grep -vE '[a-zA-Z]+/[a-zA-Z]+/[a-zA-Z]+' | \
+      awk '
+        {
+          for (field = 1; field <= NF; field++) {
+            rest = $field
+            is_url = (rest ~ /https?:\/\//)
+            while (match(rest, /[A-Za-z0-9\/+=_-]{30,}/)) {
+              candidate = substr(rest, RSTART, RLENGTH)
+              rest = substr(rest, RSTART + RLENGTH)
+              # File-path exemptions must not apply to URL fragments.
+              if (candidate !~ /^[a-z]+$/ &&
+                  (is_url || (candidate !~ /^\// &&
+                   candidate !~ /[a-zA-Z]+\/[a-zA-Z]+\/[a-zA-Z]+/)))
+                print candidate
+            }
+          }
+        }' | \
       head -1 || true)
     if [ -n "$HIGH_ENTROPY" ]; then
       # Require digits — virtually all API tokens contain digits, while

@@ -597,6 +597,10 @@ remain conservatively denied. Literal =pyenv exec python -= stdin programs use
 the same Python classification, including its protected-reference checks; other
 pyenv subcommands and dynamic interpreter names receive no exemption.
 This classifier is not a Python sandbox.
+The inline-secret scan recognizes public MusicBrainz entity URLs before
+tokenizing their identifiers. Queries, fragments and credential arguments
+remain scanned; URL components never receive filesystem-path exemptions.
+False positives require classifier repair, not manual guard bypass.
 The sensitive-read guard applies the data-sink rule and names the
 heredoc in its denial when a path is mentioned only inside an
 interpreter-fed program. A shell =eval= is recognized only at a word

@@ -602,6 +602,13 @@ This classifier is not a Python sandbox.
 The inline-secret scan recognizes public MusicBrainz entity URLs before
 tokenizing their identifiers. Queries, fragments and credential arguments
 remain scanned; URL components never receive filesystem-path exemptions.
+Literal file operands of isolated =cat=, =head= and =tail= reads are excluded
+from entropy scanning when a separate network check follows. Pipelines,
+redirects, shell expansions and unknown read options receive no exemption;
+known-secret checks still inspect the original command. Loopback ports and
+API-version prefixes are routing metadata; the remaining URL path, query and
+fragment remain scanned. Each candidate is classified before choosing a hit,
+so a harmless early string cannot conceal a later credential.
 False positives require classifier repair, not manual guard bypass.
 The sensitive-read guard applies the data-sink rule and names the
 heredoc in its denial when a path is mentioned only inside an

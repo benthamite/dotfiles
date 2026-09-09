@@ -482,9 +482,13 @@ if [ "$TOOL_NAME" = "Bash" ]; then
     # Documented schema: https://musicbrainz.org/doc/MusicBrainz_API
     MB_ENTITY='(area|artist|collection|event|genre|instrument|label|place|recording|release|release-group|series|url|work)'
     MB_UUID='[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}'
-    HIGH_ENTROPY=$(echo "$CONTENT" | \
+    # Normalize only loopback authority/API-version digits; retain all payload.
+    # Keep helper failure outside the head/SIGPIPE tolerance below.
+    ENTROPY_CONTENT=$(printf '%s' "$CONTENT" | python3 "$(dirname "$0")/lib-inert-mentions.py" --local-read-paths)
+    HIGH_ENTROPY=$(echo "$ENTROPY_CONTENT" | \
       sed -E "s@(^|[[:space:]\"'])https?://musicbrainz\\.org/(ws/2/)?${MB_ENTITY}/${MB_UUID}([?#[:space:]\"']|$)@\\1https://musicbrainz.org/\\4@g" | \
       sed -E 's/0x[a-fA-F0-9]{40}([^a-fA-F0-9]|$)/\1/g' | \
+      sed -E "s@(^|[[:space:]\"'])https?://(127\\.0\\.0\\.1|localhost|\\[::1\\])(:[0-9]+)?/api/v[0-9]+/@\\1http://localhost/api/@g" | \
       awk '
         {
           for (field = 1; field <= NF; field++) {
@@ -494,7 +498,10 @@ if [ "$TOOL_NAME" = "Bash" ]; then
               candidate = substr(rest, RSTART, RLENGTH)
               rest = substr(rest, RSTART + RLENGTH)
               # File-path exemptions must not apply to URL fragments.
-              if (candidate !~ /^[a-z]+$/ &&
+              # Filter every candidate before head: an innocuous long path
+              # must not conceal a later opaque credential.
+              classes = (candidate ~ /[A-Z]/) + (candidate ~ /[a-z]/) + (candidate ~ /[\/+=_-]/) + (candidate ~ /[0-9]/)
+              if (candidate ~ /[0-9]/ && classes >= 3 &&
                   (is_url || (candidate !~ /^\// &&
                    candidate !~ /[a-zA-Z]+\/[a-zA-Z]+\/[a-zA-Z]+/)))
                 print candidate
@@ -503,23 +510,7 @@ if [ "$TOOL_NAME" = "Bash" ]; then
         }' | \
       head -1 || true)
     if [ -n "$HIGH_ENTROPY" ]; then
-      # Require digits — virtually all API tokens contain digits, while
-      # file paths, English words, and CLI flags typically do not.
-      if echo "$HIGH_ENTROPY" | grep -q '[0-9]'; then
-        # Also require mixed case or symbols alongside digits
-        HAS_UPPER=$(echo "$HIGH_ENTROPY" | grep -c '[A-Z]' || true)
-        HAS_LOWER=$(echo "$HIGH_ENTROPY" | grep -c '[a-z]' || true)
-        HAS_SYMBOL=$(echo "$HIGH_ENTROPY" | grep -c '[/+=_-]' || true)
-        CLASSES=1  # already confirmed digits
-        [ "$HAS_UPPER" -gt 0 ] && CLASSES=$((CLASSES + 1))
-        [ "$HAS_LOWER" -gt 0 ] && CLASSES=$((CLASSES + 1))
-        [ "$HAS_SYMBOL" -gt 0 ] && CLASSES=$((CLASSES + 1))
-        # Require at least 3 character classes — typical of tokens/keys,
-        # uncommon in version strings or numeric IDs
-        if [ "$CLASSES" -ge 3 ]; then
-          check_pattern '.' 'network command with inline secret-like string (exfiltration risk)'
-        fi
-      fi
+      check_pattern '.' 'network command with inline secret-like string (exfiltration risk)'
     fi
   fi
 

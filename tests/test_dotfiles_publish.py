@@ -3066,10 +3066,22 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         )
 
     def test_a_recorded_incident_unblocks_its_own_review_verdict(self):
+        self.check_recorded_incident_unblocks_review("rotated")
+
+    def test_accepted_risk_unblocks_audit_and_guarded_push(self):
+        self.check_recorded_incident_unblocks_review("accepted-risk")
+
+    def check_recorded_incident_unblocks_review(self, resolution):
         # The run id is a pure function of the boundary and verdicts are
         # immutable, so a public incident must be clearable without inventing
         # a new run.
         self.publish_a_secret()
+        if resolution == "accepted-risk":
+            DotfilesPublishInstallTests.add_helpers(self)
+            installed = self.cli(
+                "install", env=self.env(DOTFILES_PUBLISH_EXPECTED_REMOTE=str(self.remote))
+            )
+            self.assertEqual(0, installed.returncode, installed.stdout + installed.stderr)
         _, run_id = self.scan("--mode", "full-audit")
         findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
         incidents = [
@@ -3117,7 +3129,7 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         self.assertNotEqual(0, before.returncode)
         self.assertFalse((self.state_dir() / "full-audit.json").exists())
 
-        for fingerprint in sorted(exposed):
+        for index, fingerprint in enumerate(sorted(exposed)):
             recorded = self.cli(
                 "incident-record",
                 "--run",
@@ -3125,11 +3137,23 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
                 "--fingerprint",
                 fingerprint,
                 "--resolution",
-                "rotated",
+                resolution,
                 "--evidence",
-                str(self.write_evidence(fingerprint)),
+                str(self.write_evidence(
+                    fingerprint,
+                    verification="Provider validity is unverified; owner accepts continued exposure."
+                    if resolution == "accepted-risk" else "Old credential is rejected.",
+                    rationale="Low-value historical credential with no important access.",
+                    authorization="Owner explicitly requested this exact exception.",
+                )),
             )
             self.assertEqual(0, recorded.returncode, recorded.stderr)
+            if index == 0 and len(exposed) > 1:
+                partial = self.cli("review-status", "--run", run_id)
+                self.assertNotEqual(0, partial.returncode)
+                self.assertNotIn("deterministic-finding: %s" % fingerprint, partial.stdout)
+                for other in exposed - {fingerprint}:
+                    self.assertIn("deterministic-finding: %s" % other, partial.stdout)
 
         after = self.cli("review-status", "--run", run_id)
         self.assertNotEqual(0, after.returncode)
@@ -3142,6 +3166,73 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         completed = self.cli("review-status", "--run", rescanned_run)
         self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
         self.assertIn("full-audit-recorded: ", completed.stdout)
+
+        if resolution == "accepted-risk":
+            self.commit(
+                "remove obsolete credential and continue ordinary work",
+                {"docs/follow-up.md": "ordinary change\n"},
+                remove=("config/service.conf",),
+            )
+            scanned, publish_run = self.scan()
+            self.assertEqual(0, scanned.returncode, scanned.stdout + scanned.stderr)
+            self.assertIn("full-audit-due: false", scanned.stdout)
+            self.review_all(publish_run)
+            pushed = self.cli("push", "--run", publish_run)
+            self.assertEqual(0, pushed.returncode, pushed.stdout + pushed.stderr)
+            self.assertIn("push authorized for run %s" % publish_run, pushed.stdout)
+            self.assertEqual(self.head(), self.remote_tip())
+
+    def test_accepted_risk_requires_explicit_rationale_and_authorization(self):
+        self.publish_a_secret()
+        _, run_id = self.scan("--mode", "full-audit")
+        finding = self.public_incident(run_id)
+        valid = {
+            "verification": "Continued validity is unverified.",
+            "rationale": "Low-value public credential.",
+            "authorization": "Owner explicitly accepts this exposure.",
+        }
+        for field in ("rationale", "authorization"):
+            for value in (None, "", "   ", True, 42, ["approved"]):
+                with self.subTest(field=field, value=value):
+                    evidence = dict(valid)
+                    if value is None:
+                        evidence.pop(field)
+                    else:
+                        evidence[field] = value
+                    refused = self.cli(
+                        "incident-record", "--run", run_id,
+                        "--fingerprint", finding["fingerprint"],
+                        "--resolution", "accepted-risk", "--evidence",
+                        str(self.write_evidence(finding["fingerprint"], **evidence)),
+                    )
+                    self.assertNotEqual(0, refused.returncode)
+                    self.assertIn(field, refused.stderr)
+                    self.assertFalse((self.state_dir() / "incidents.json").exists())
+        evidence_path = self.write_evidence(finding["fingerprint"], **valid)
+        accepted = self.cli(
+            "incident-record", "--run", run_id,
+            "--fingerprint", finding["fingerprint"],
+            "--resolution", "accepted-risk", "--evidence", str(evidence_path),
+        )
+        self.assertEqual(0, accepted.returncode, accepted.stdout + accepted.stderr)
+        entry = self.read_json(self.state_dir() / "incidents.json")["incidents"][finding["fingerprint"]]
+        self.assertEqual("accepted-risk", entry["resolution"])
+        self.assertEqual(self.read_json(evidence_path), entry["evidence"])
+        self.assertIn("evidence_sha256", entry)
+
+    def test_unknown_incident_resolution_does_not_clear_a_finding(self):
+        self.publish_a_secret()
+        _, run_id = self.scan("--mode", "full-audit")
+        finding = self.public_incident(run_id)
+        path = self.state_dir() / "incidents.json"
+        path.write_text(json.dumps({
+            "schema": 1,
+            "incidents": {finding["fingerprint"]: {"resolution": "pending"}},
+        }))
+        path.chmod(0o600)
+        status = self.cli("review-status", "--run", run_id)
+        self.assertNotEqual(0, status.returncode)
+        self.assertIn("deterministic-finding: %s" % finding["fingerprint"], status.stdout)
 
     def test_incident_record_rejects_broad_or_value_bearing_evidence(self):
         self.publish_a_secret()

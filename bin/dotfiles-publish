@@ -73,6 +73,7 @@ RULESET_POLICY_FILES = (
 )
 
 MODES = ("publish", "release", "full-audit", "readiness")
+INCIDENT_RESOLUTIONS = ("rotated", "revoked", "invalid", "accepted-risk")
 
 
 class PublishError(Exception):
@@ -1919,6 +1920,13 @@ def command_incident_record(args):
         raise PublishError(
             "the evidence names a different fingerprint than the finding", EXIT_REFUSED
         )
+    if args.resolution == "accepted-risk":
+        for required in ("rationale", "authorization"):
+            value = evidence.get(required)
+            if not isinstance(value, str) or not value.strip():
+                raise PublishError(
+                    "accepted-risk evidence requires %s" % required, EXIT_REFUSED
+                )
     for broad in ("path", "rule_id", "paths", "rules"):
         if evidence.get(broad) in ("*", ["*"]):
             raise PublishError(
@@ -1933,6 +1941,8 @@ def command_incident_record(args):
         "evidence_sha256": hashlib.sha256(evidence_bytes).hexdigest(),
         "rule_id": matching[0]["rule_id"],
     }
+    if args.resolution == "accepted-risk":
+        incidents["incidents"][args.fingerprint]["evidence"] = evidence
     write_json(incidents_path(repo), incidents)
     flag_incident(repo)
     print("incident: %s %s" % (args.fingerprint, args.resolution))
@@ -3000,7 +3010,11 @@ def resolved_fingerprints(repo):
     path = incidents_path(repo)
     if not path.exists():
         return frozenset()
-    return frozenset(read_json(path).get("incidents", {}))
+    return frozenset(
+        fingerprint
+        for fingerprint, incident in read_json(path).get("incidents", {}).items()
+        if incident.get("resolution") in INCIDENT_RESOLUTIONS
+    )
 
 
 def revalidate_run(repo, run_id):
@@ -3463,10 +3477,10 @@ def build_parser():
     repair_verify.add_argument("--allowed-path", action="append", default=[])
     repair_verify.set_defaults(handler=command_repair_verify)
 
-    incident = subparsers.add_parser("incident-record", help="record a resolved public incident")
+    incident = subparsers.add_parser("incident-record", help="record a public incident disposition")
     incident.add_argument("--run", required=True)
     incident.add_argument("--fingerprint", required=True)
-    incident.add_argument("--resolution", required=True, choices=("rotated", "revoked", "invalid"))
+    incident.add_argument("--resolution", required=True, choices=INCIDENT_RESOLUTIONS)
     incident.add_argument("--evidence", required=True)
     incident.set_defaults(handler=command_incident_record)
 

@@ -82,16 +82,25 @@ class PythonProjectionTests(unittest.TestCase):
                 with self.assertRaises(policy.ProtectedPythonReference):
                     policy.project_command(heredoc(body))
 
-    def test_unknown_malformed_unclosed_and_multiple_heredocs_are_unchanged(self):
+    def test_unknown_malformed_unclosed_and_ambiguous_heredocs_are_unchanged(self):
         commands = [heredoc("if :\n    pass"), heredoc("pass", delimiter="PY"),
                     heredoc("pass", prefix="bash"), heredoc("pass", prefix="sudo python3 -"),
                     heredoc("pass", prefix="python3 -c something"),
                     "python3 - <<'PY'\npass", "echo before\n" + heredoc("pass"),
-                    heredoc("pass") + "\n" + heredoc("pass", delimiter="'OTHER'"),
-                    "echo '" + heredoc("pass") + "'", heredoc("value = 1 << 2\npass")]
+                    "bash <<'SH'; " + heredoc("pass"),
+                    "echo '" + heredoc("pass") + "'"]
         for command in commands:
             with self.subTest(command=command):
                 self.assertEqual(policy.project_command(command), command)
+
+    def test_consecutive_bodies_and_python_shift_are_projected(self):
+        command = heredoc("value = 1 << 2\npass") + "\n\n" + heredoc("pass", delimiter="'OTHER'")
+        self.assertEqual(policy.project_command(command),
+                         heredoc(" " * 14 + "\n    ") + "\n\n" + heredoc("    ", delimiter="'OTHER'"))
+
+    def test_unknown_shell_tail_cannot_expose_a_fake_python_opener(self):
+        tail = "\nbash <<'SH'\n" + heredoc("pass") + "\nSH"
+        self.assertEqual(policy.project_command(heredoc("pass") + tail), heredoc("    ") + tail)
 
     def test_shell_text_after_the_terminator_is_never_projected(self):
         for tail in ("\npass", "\nsecurity find-generic-password -w -s fixture", "\npbpaste"):
@@ -133,6 +142,24 @@ class NativePythonHeredocGuardTests(unittest.TestCase):
 
     def test_exact_original_denied_command_with_varargs_is_allowed(self):
         self.assert_hooks(ORIGINAL_DENIED_COMMAND, "allow")
+
+    def test_consecutive_tangodb_python_heredocs_are_allowed(self):
+        command = heredoc("print('fixture first')", prefix="PYENV_VERSION=3.11.9 pyenv exec python -")
+        command += "\n" + heredoc(
+            "import json\npaths=[]\n"
+            "for p in paths:\n print('\\nFILE',p)\n"
+            " try:walk(json.load(open('data/'+p)))\n except FileNotFoundError:pass")
+        self.assert_hooks(command, "allow")
+
+    def test_consecutive_heredocs_keep_protected_references_and_shell_tails_denied(self):
+        safe = heredoc("pass")
+        unsafe = heredoc('import os\nos.system("\\x70ass")')
+        for command in (safe + "\n" + unsafe, unsafe + "\n" + safe,
+                        safe + "\n" + safe + "\npass show fixture",
+                        safe + "\nbash <<'SH'\n" + heredoc("pass") + "\nSH",
+                        safe + "\n" + heredoc("if :\n pass"),
+                        safe + "\npython3 - <<'PY'\npass"):
+            self.assert_hooks(command, "deny")
 
     def test_pyenv_exec_python_source_is_not_outer_shell_syntax(self):
         for prefix in ("pyenv exec python -", "/opt/homebrew/bin/pyenv exec python3 -B -",
@@ -258,7 +285,6 @@ PY"""
                     heredoc("pass", suffix="\n$(command -v pbpaste)"),
                     heredoc("pass", suffix="\np?ss show fixture/credential"),
                     heredoc("pass", prefix="sudo python3 -"),
-                    heredoc("pass") + "\n" + heredoc("pass", delimiter="'OTHER'"),
                     heredoc("if :\n    pass")]
         for command in commands:
             self.assert_hooks(command, "deny")

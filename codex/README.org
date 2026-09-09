@@ -518,6 +518,8 @@ input; unknown source stays unmasked and safe protected-name string mentions
 remain conservatively denied. Literal =pyenv exec python -= stdin programs use
 the same Python classification, including its protected-reference checks; other
 pyenv subcommands and dynamic interpreter names receive no exemption.
+Consecutive supported Python heredocs receive the same classification in order;
+unknown shell structure stops the scan without exempting the remaining text.
 This classifier is not a Python sandbox.
 The inline-secret scan recognizes public MusicBrainz entity URLs before
 tokenizing their identifiers. Queries, fragments and credential arguments

@@ -10,7 +10,8 @@ Python operators are not shell syntax. Everything outside that body is
 byte-preserved. Callers retain original input for all other secret checks.
 
 This is not a Python sandbox or a general shell parser. Unknown shell shapes,
-multiple heredocs and malformed Python remain unchanged for the existing guard.
+multiple redirections on one header and malformed Python remain unchanged for
+the existing guard. Consecutive supported Python heredocs are classified in order.
 No source is evaluated, imported, or executed.
 """
 
@@ -136,36 +137,36 @@ def _project_body(body: str, strip_tabs: bool) -> str | None:
 
 
 def project_command(command: str) -> str:
-    # This deliberately recognizes one unambiguous heredoc only. In particular,
-    # a fake Python opener inside another heredoc cannot gain an exemption.
-    if command.count("<<") != 1:
-        return command
-    lines = command.split("\n")  # The shell separates lines on LF, not Unicode separators.
-    opener = next((index for index, line in enumerate(lines) if line.strip()), None)
-    if opener is None:
-        return command
-    match = HEADER.fullmatch(lines[opener])
-    if match is None or not _python_stdin(match["prefix"]):
-        return command
-    delimiter = match["quoted"][1:-1]
-    strip_tabs = bool(match["strip"])
-    closing = next((index for index in range(opener + 1, len(lines))
-                    if (lines[index].lstrip("\t") if strip_tabs else lines[index]) == delimiter), None)
-    if closing is None:
-        return command
-    body = "\n".join(lines[opener + 1:closing])
-    if closing > opener + 1:
-        body += "\n"
-    projected = _project_body(body, strip_tabs)
-    if projected is None:
-        return command
-    prefix = "\n".join(lines[:opener + 1]) + "\n"
-    suffix = "\n".join(lines[closing:])
-    # Python has already received its own protected-reference classification.
-    # Its *args, **kwargs, multiplication, and indexing are not shell globs.
-    # Do not expose this body to the outer shell lexer a second time.
-    masked = bytes(10 if byte == 10 else 32 for byte in body.encode("utf-8")).decode("ascii")
-    return prefix + masked + suffix
+    # Walk only consecutive known Python programs, never search arbitrary shell
+    # text for an opener: it might be inside a quote or another program's body.
+    lines = command.split("\n")  # Shell lines use LF, not Unicode separators.
+    opener = 0
+    while opener < len(lines):
+        if not lines[opener].strip():
+            opener += 1
+            continue
+        # Multiple redirects on one shell header need a heredoc queue. Keep
+        # those unsupported, including a different sink before a Python command.
+        if lines[opener].count("<<") != 1:
+            break
+        match = HEADER.fullmatch(lines[opener])
+        if match is None or not _python_stdin(match["prefix"]):
+            break
+        delimiter = match["quoted"][1:-1]
+        strip_tabs = bool(match["strip"])
+        closing = next((index for index in range(opener + 1, len(lines))
+                        if (lines[index].lstrip("\t") if strip_tabs else lines[index]) == delimiter), None)
+        if closing is None:
+            break
+        body = "\n".join(lines[opener + 1:closing])
+        if _project_body(body, strip_tabs) is None:
+            break
+        # Python has received its own protected-reference classification; its
+        # operators are not shell globs. Preserve all bytes outside each body.
+        for index in range(opener + 1, closing):
+            lines[index] = " " * len(lines[index].encode("utf-8"))
+        opener = closing + 1
+    return "\n".join(lines)
 
 
 def main() -> int:

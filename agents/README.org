@@ -110,9 +110,15 @@ managed =.system= skills and dynamic plugin skills are runtime state, not
 repository-owned peers. Parent-Drive skill pairs outside Git are checked by the
 global audit because a commit guard cannot see them.
 
-The generated [[file:skill-inventory.org][tracked skill inventory]] is the sole catalog of public skills
-owned by this repository. It deliberately excludes dynamic plugins, ignored
-runtime system skills, private skills, and skills from other repositories.
+The [[file:skills/README.md][selected skills catalog]] provides source links for the skills chosen for
+sharing, including global, dotfiles, Emacs and macOS entry points. Its explicit
+selection requires a publication review before adding a skill. Source directories
+stay in place so their supporting files and relative paths remain intact.
+
+The generated [[file:skill-inventory.org][tracked skill inventory]] records all public skill sources owned by
+this repository, including sources outside that selection. It deliberately excludes
+dynamic plugins, ignored runtime system skills, private skills, and skills from
+other repositories. Catalog selection does not remove tracked files or history.
 Each =SKILL.md= owns behavior; [[file:../claude/skills/README.org][the Claude skill index]] and
 [[file:../codex/skills/README.org][the Codex skill index]] own their tree mechanics.
 

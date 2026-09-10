@@ -99,7 +99,8 @@ Auto mode routes every non-read tool call through Anthropic's server-side
 classifier, which reads only the user-level =~/.claude/settings.json= (never
 project or local settings) and drops broad =Bash= allow rules. Its false
 positives are tuned with the =autoMode= block, whose source of truth is
-=claude/auto-mode.json=: =environment= entries describe the trust boundary
+=claude/auto-mode.json= (git-crypt encrypted; unlock the checkout before
+using =apply-auto-mode=): =environment= entries describe the trust boundary
 (single-user laptop, the user's repositories as project scope, 1Password via the
 brokers, the Epoch services the user administers, Emacs agent orchestration) and
 =allow= entries name the built-in soft-deny rules that misfire on that work.

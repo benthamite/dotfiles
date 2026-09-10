@@ -73,7 +73,7 @@ _SAFE_API_ERRORS = frozenset({
 
 
 def _fail(message, code=1):
-    """Report only caller-owned diagnostics, never transport or broker payloads."""
+    """Report caller-owned diagnostics; broker stderr only as one masked line."""
     sys.stderr.write(f"ERROR: {message}\n")
     raise SystemExit(code)
 
@@ -161,6 +161,21 @@ def _pass_show(entry):
     return ""
 
 
+def _broker_hint(stderr):
+    """One line of broker stderr with token-shaped runs masked.
+
+    `op read` errors name the reference and the fault ("does not have a field
+    'token'", "could not connect"), never the value; the mask covers the
+    unexpected case anyway. Without this, the 2026-09-10 failure — one cold
+    lookup that a retry cleared — left nothing to diagnose.
+    """
+    for line in (stderr or "").splitlines():
+        line = line.strip()
+        if line:
+            return re.sub(r"[A-Za-z0-9_+/=-]{20,}", "…", line)[:200]
+    return "no diagnostic output"
+
+
 def _op_read(path):
     if not path.startswith("op://Automations/"):
         _fail("Slack browser-session credentials must use the Automations broker", 2)
@@ -169,10 +184,15 @@ def _op_read(path):
             ["op-automations", "read", path], check=False, capture_output=True,
             text=True, timeout=REQUEST_TIMEOUT,
         )
-    except (OSError, UnicodeError, subprocess.TimeoutExpired):
-        _fail("Slack credential broker lookup failed")
+    except subprocess.TimeoutExpired:
+        _fail(f"Slack credential broker lookup timed out after {REQUEST_TIMEOUT}s")
+    except (OSError, UnicodeError) as exc:
+        _fail(f"Slack credential broker could not run: {type(exc).__name__}")
     if out.returncode != 0:
-        _fail("Slack credential broker lookup failed")
+        _fail(
+            f"Slack credential broker lookup failed (exit {out.returncode}): "
+            f"{_broker_hint(out.stderr)}"
+        )
     value = out.stdout.strip()
     if not value or any(character.isspace() for character in value):
         _fail("Slack credential broker returned an invalid credential")

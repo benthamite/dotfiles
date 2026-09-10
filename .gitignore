@@ -61,3 +61,7 @@ codex/skills/*/scripts/__pycache__
 # Drive nosync symlinks (no trailing slash so the symlink is matched)
 .pytest_cache
 /trash-recovery-20260901/
+
+# Local publication workflow; its source is not distributed.
+/.claude/skills/publish-dotfiles/
+/.codex/skills/publish-dotfiles/

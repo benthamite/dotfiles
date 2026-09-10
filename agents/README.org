@@ -79,9 +79,11 @@ comments require the same committed repository authorization as other writes.
 ** Guarded dotfiles publication
 
 This repository is public, but ordinary =git push= is disabled by its push URL.
-The paired project-local skill lives at
-=.claude/skills/publish-dotfiles/= and =.codex/skills/publish-dotfiles/= and
-drives =bin/dotfiles-publish=. Its installer activates
+The paired project-local publication workflow is retained only in the owner's
+local checkout at =.claude/skills/publish-dotfiles/= and
+=.codex/skills/publish-dotfiles/=. Its sources are ignored and are not distributed
+with this repository. The public =bin/dotfiles-publish= command implements the
+publication guard independently of those local instructions. Its installer activates
 =bin/dotfiles-pre-push=, while the refusing push URL routes through
 =bin/git-remote-dotfiles-blocked= so =--no-verify= cannot bypass publication.
 The deterministic scan covers the exact outgoing history and candidate tree;

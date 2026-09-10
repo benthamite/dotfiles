@@ -142,13 +142,22 @@ sr_is_safe_op_run_loader() {
   # `op-automations run --env-file F -- <program>` is an environment loader in
   # the same sense as `source .env`: 1Password reads F and hands the values to
   # the program as environment, masking them in its output. Allowed when the
-  # only composition is leading VAR=value assignments (none OP_*) and file
-  # redirects, and the program is not an environment dumper or a shell.
+  # only composition is an optional leading `cd DIR &&`, leading VAR=value
+  # assignments (quoted values allowed, none OP_*) and file redirects, and the
+  # program is not an environment dumper or a shell.
   local command="$1" stripped
   printf '%s' "$command" | grep -q 'OP_RUN_NO_MASKING' && return 1
   printf '%s' "$command" | grep -qE '>[[:space:]]*(/dev/(std(out|err)|fd/|tty)|&|-([[:space:]]|$))' && return 1
   stripped=$(printf '%s' "$command" | sed -E 's/[[:space:]]*[12]?&?>>?[[:space:]]*[^[:space:];&|<>()]+//g')
-  printf '%s' "$stripped" | grep -qE '^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*=[^[:space:];&|<>()]*[[:space:]]+)*([^;&|[:space:]]*/)?op-automations[[:space:]]+run[[:space:]]+(--env-file(=|[[:space:]]+)[^[:space:];&|<>()]+[[:space:]]+)+--[[:space:]]+[^[:space:];&|<>()]+([[:space:]]+[^;&|<>()`]*)?$' || return 1
+  # A value or path may be double- or single-quoted (`DIR="/Users/x/My Drive"`);
+  # parentheses and backticks stay out of quotes so `$(…)` cannot hide there.
+  local sq="'" dq='"' word quoted_dq quoted_sq value path
+  quoted_dq="${dq}[^${dq}\`;&|<>()]*${dq}"
+  quoted_sq="${sq}[^${sq}]*${sq}"
+  word='[^[:space:];&|<>()]'
+  value="(${quoted_dq}|${quoted_sq}|${word}*)"
+  path="(${quoted_dq}|${quoted_sq}|${word}+)"
+  printf '%s' "$stripped" | grep -qE "^[[:space:]]*(cd[[:space:]]+${path}[[:space:]]*&&[[:space:]]*)?([A-Za-z_][A-Za-z0-9_]*=${value}[[:space:]]+)*([^;&|[:space:]]*/)?op-automations[[:space:]]+run[[:space:]]+(--env-file(=|[[:space:]]+)${path}[[:space:]]+)+--[[:space:]]+${word}+([[:space:]]+[^;&|<>()\`]*)?\$" || return 1
   printf '%s' "$stripped" | grep -qE '(^|[[:space:]])OP_[A-Za-z0-9_]*=' && return 1
   printf '%s' "$stripped" | grep -qE -- '--[[:space:]]+([^[:space:]]*/)?(env|printenv|set|export|declare|typeset|bash|sh|zsh|dash|ksh|eval)([[:space:]]|$)' && return 1
   printf '%s' "$stripped" | grep -qE '\$\(|`' && return 1
@@ -170,7 +179,7 @@ sr_label_for_text() {
     SENSITIVE_LABEL="password store (GPG-encrypted secrets)"
   elif echo "$text" | grep -qE '(^|[[:space:]/])\.mcp\.json\b|(^|[[:space:]/])mcp\.json\b'; then
     SENSITIVE_LABEL="MCP credential config"
-  elif echo "$text" | grep -qE '(^|[[:space:]/])\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]/])\.envrc\b'; then
+  elif echo "$text" | grep -qE '(^|[[:space:]/:=])\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]/:=])\.envrc\b'; then
     SENSITIVE_LABEL="environment secrets file"
   elif echo "$text" | grep -qE '(^|[ /=])\.ssh/id_[A-Za-z0-9_]+\b' && \
        ! echo "$text" | grep -qE '\.ssh/id_[A-Za-z0-9_]+\.pub\b'; then
@@ -218,7 +227,7 @@ This could expose secret values in the conversation context. Use a safe alternat
     return 0
   fi
   echo "$COMMAND" | grep -qE '^[[:space:]]*(pass[[:space:]]|op[[:space:]]|op-automations[[:space:]]|op-desktop[[:space:]]|git-crypt[[:space:]]|security[[:space:]])' && return 0
-  echo "$COMMAND" | grep -qE '^[[:space:]]*git[[:space:]]+(check-ignore|ls-files)([[:space:]]|$)' && return 0
+  echo "$COMMAND" | grep -qE '^[[:space:]]*git[[:space:]]+(-C[[:space:]]+[^[:space:];&|<>()]+[[:space:]]+)?(check-ignore|ls-files)([[:space:]]|$)' && return 0
   echo "$COMMAND" | grep -qE '^[[:space:]]*(ls|stat|file|basename|dirname|realpath)([[:space:]]|$)' && return 0
   echo "$COMMAND" | grep -qE '^[[:space:]]*wc([[:space:]]+-[lcwmL]+)*([[:space:]]|$)' && return 0
   echo "$COMMAND" | grep -qE '^[[:space:]]*(grep|rg|ripgrep)[[:space:]]+(-[a-zA-Z]*[lcqL][a-zA-Z]*[[:space:]]|--(files-with-matches|files-without-match|count|quiet|silent)[[:space:]])' && return 0

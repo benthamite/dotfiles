@@ -22,7 +22,10 @@ everything else including shapes it cannot place:
   the program's output; the program may not be a shell or an environment
   dumper (`env`, `printenv`, `set`, `export`, `declare`, `typeset`), and no
   `OP_*` variable may be set on the command (`OP_RUN_NO_MASKING` disables
-  masking).
+  masking). Because `F` is usually a `.env.op`, the sensitive-file guard also
+  inspects this shape: the only composition it accepts is an optional leading
+  `cd DIR &&`, leading `VAR=value` assignments (quoted values allowed) and file
+  redirects; a `;`, `||`, pipe or `$(…)` anywhere else denies.
 - `X=$(op-automations read REF)` used by a non-printing command in the same
   call; `read REF > file`; `read REF | pbcopy` / `gh secret set` / `wrangler
   secret put` / `ssh-add -` / `docker login --password-stdin`.

@@ -421,7 +421,10 @@ queue from successful task outcomes.
 
 The programmatic Hartree trial queue reviews source before execution, keeps
 trial dependencies outside Drive, and promotes only a user-accepted candidate.
-Its historical verdicts are preserved; a completed queue does not restart itself.
+Verdicts, pending evidence and prior verdict history live in one private progress
+file outside the repository: =~/.local/state/agent-skills/try-hartree-skills.json=,
+overridable with =HARTREE_SKILLS_STATE=. Public sources contain only the candidate
+queue and procedure; a completed private queue does not restart itself.
 
 The programmatic [[file:programmatic-skills/open-session-log/SKILL.md][open-session-log]] helper resolves the current runtime's
 session identity and exact transcript in its active account root. It opens

@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+"""Install the tracked auto-mode classifier block into the live Claude settings.
+
+The auto-mode classifier reads its ``autoMode`` configuration only from the
+user-level ``~/.claude/settings.json`` (every account directory symlinks to it).
+That file is a mutable regular file rewritten by Claude Code, so the block's
+source of truth is ``claude/auto-mode.json`` in dotfiles and this helper copies
+it into place.
+
+Usage:
+  apply-auto-mode           replace the live block with the tracked one (backup first)
+  apply-auto-mode --check   exit 0 if live and tracked blocks match, 1 otherwise
+
+Run it yourself, not from an agent session: the classifier's Self-Modification
+rule refuses to let a session widen its own permission config.
+"""
+import json
+import os
+import shutil
+import sys
+import time
+from collections import OrderedDict
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+TRACKED = os.path.join(HERE, "..", "auto-mode.json")
+SETTINGS = os.path.join(
+    os.environ.get("CLAUDE_CONFIG_DIR", os.path.expanduser("~/.claude")), "settings.json"
+)
+
+
+def load(path):
+    with open(path, encoding="utf-8") as fh:
+        return json.load(fh, object_pairs_hook=OrderedDict)
+
+
+def main(argv):
+    tracked = load(TRACKED)
+    settings = load(os.path.realpath(SETTINGS))
+    live = settings.get("autoMode")
+    if "--check" in argv:
+        if live == tracked:
+            print("auto-mode block: live matches tracked")
+            return 0
+        print("auto-mode block: live differs from tracked (run apply-auto-mode)")
+        return 1
+    target = os.path.realpath(SETTINGS)
+    backup = f"{target}.bak-automode-{time.strftime('%Y%m%d%H%M%S')}"
+    shutil.copy2(target, backup)
+    merged = OrderedDict()
+    placed = False
+    for key, value in settings.items():
+        if key == "autoMode":
+            continue
+        merged[key] = value
+        if key == "permissions":
+            merged["autoMode"] = tracked
+            placed = True
+    if not placed:
+        merged["autoMode"] = tracked
+    tmp = target + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        json.dump(merged, fh, indent=2, ensure_ascii=False)
+        fh.write("\n")
+    os.replace(tmp, target)
+    print(f"auto-mode block installed into {target}; backup at {backup}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

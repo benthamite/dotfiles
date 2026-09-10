@@ -745,6 +745,13 @@
       "note": "Mutable live global settings; hook registrations are added in place. load-elisp-after-edit.sh is registered with timeout 150 (matching codex/hooks.json) because it waits up to 120 s for the Elpaca rebuild before reporting. Stop forwards turn-end state to Emacs, while session-learning capture belongs to the Emacs agent-before-exit path because Stop is not true process exit. Ahrefs and GitHub guard registration is documented in claude/hooks/README.org. The LaunchAgent registry guard is registered on both the shell and edit matchers so plist writes and launchctl verbs are both covered."
     },
     {
+      "tool": "Claude Code",
+      "path": "claude/auto-mode.json",
+      "tracked": true,
+      "live_path": "~/.claude/settings.json#autoMode",
+      "note": "Tracked source of the auto-mode classifier configuration (environment and allow entries, each list starting with $defaults). Installed by claude/bin/apply-auto-mode, which also offers --check for drift; run by the user, since the classifier's Self-Modification rule blocks a session from widening its own permissions. Claude-only: Codex has no auto-mode classifier."
+    },
+    {
       "tool": "Codex",
       "path": "codex/hooks.json",
       "tracked": true,

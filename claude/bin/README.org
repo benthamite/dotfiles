@@ -51,6 +51,7 @@ uncertainty. Raw request errors and draft contents are omitted from diagnostics.
 | =_gworkspace_auth.py= | Internal OAuth and short-lived token-cache helper shared by the Gmail and Sheets wrappers. |
 | =ahrefs-api-guard= | Performs the required free quota preflight before a paid Ahrefs API request. |
 | =ai-provider-key= | Provisions and stores project-scoped provider runtime keys while keeping administrator credentials separate. |
+| =apply-auto-mode= | Installs the tracked =claude/auto-mode.json= classifier block into the live =~/.claude/settings.json= with a timestamped backup; =--check= reports drift. Run by the user, not from an agent session. |
 | =ai-provider-key-from-clipboard= | Consumes a console-created Anthropic key without exposing it; OpenAI import is refused, and help/dry-run never reads the clipboard. |
 | =store-secret-from-clipboard= | Consumes any console-created API credential from the clipboard, validates its shape, and writes it to a 1Password item through =op-desktop= on stdin without exposing the value. |
 | =batch-test.sh= | Loads canonical package source in batch Emacs, rejects stale-load warnings, and emits repository/package/source-revision evidence with a one-time replay-correlation token. |

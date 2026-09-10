@@ -95,6 +95,21 @@ lesson capture belongs to the Emacs =agent-before-exit= flow and must not be
 silently reintroduced as a Stop hook. The permission mode is automatic: guards
 return allow or deny and never prompt as an approval mechanism.
 
+Auto mode routes every non-read tool call through Anthropic's server-side
+classifier, which reads only the user-level =~/.claude/settings.json= (never
+project or local settings) and drops broad =Bash= allow rules. Its false
+positives are tuned with the =autoMode= block, whose source of truth is
+=claude/auto-mode.json=: =environment= entries describe the trust boundary
+(single-user laptop, the user's repositories as project scope, 1Password via the
+brokers, the Epoch services the user administers, Emacs agent orchestration) and
+=allow= entries name the built-in soft-deny rules that misfire on that work.
+Both lists begin with ="$defaults"= so the built-in rules stay and keep
+updating. =claude/bin/apply-auto-mode= copies the block into the live settings
+with a backup, and =--check= reports drift; run it yourself, because the
+classifier's Self-Modification rule refuses to let a session widen its own
+permissions. Add an entry only for a class of false positive that has actually
+recurred, and phrase it as the action and why it is inside the boundary.
+
 The secret guard inspects replacement text and notebook cell source as well
 as whole-file writes. Security-hook bootstrap and unexpected runtime failures
 block with exit code 2; the [[file:hooks/README.org][hook contracts]] describe the covered guards.

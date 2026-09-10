@@ -171,10 +171,9 @@ from publication. It binds versions, notes, checks and exact branch/tag objects,
 compares versions without losing patch components, and reconciles partial releases
 without moving published tags or silently widening push destinations.
 
-The paired =refresh-cr-tracker= skill separates local generation from authorized
-publication to its existing artifact. It requires a verified checkout, complete
-source retrieval, matching output hashes and the actual deployment capability;
-missing tools do not authorize a hosting migration or a success claim.
+Some retained local workflows are encrypted with =git-crypt= at their existing
+skill paths. Their working instructions remain available in an unlocked checkout;
+the encrypted bodies are not public skill catalog entries.
 
 The paired =record-decisions= skill records evidenced choices and dated amendments
 without rewriting decision history. It preserves numeric IDs beyond three digits,

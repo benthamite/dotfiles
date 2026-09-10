@@ -18,18 +18,116 @@ MODULE = importlib.util.module_from_spec(SPEC)
 LOADER.exec_module(MODULE)
 
 
-class BirthdayTests(unittest.TestCase):
-    def test_reconciliation_guard_rejects_any_difference(self):
-        report = {
-            "bbdb_count": 2800,
-            "contacts_count": 2800,
-            "birthday_conflicts": [{"name": "Conflict"}],
-            "self_check_problems": ["one conflict"],
-        }
-        completed = mock.Mock(returncode=1, stdout=json.dumps(report), stderr="")
+def clean_report(bbdb_file, **overrides):
+    """Return a schema-2 reconciliation report with no reported differences."""
+    report = {
+        "schema_version": 2,
+        "status": "no_reported_differences",
+        "bbdb_count": 2800,
+        "contacts_count": 2800,
+        "projection_sha256": "p" * 64,
+        "coverage": {"source_problems": []},
+        "sources": {"bbdb": {"sha256": MODULE.bbdb_digest(bbdb_file)}},
+        "candidate_matches": [{"requires_review": True}],
+    }
+    for key in MODULE.RECONCILIATION_DIFFERENCE_KEYS:
+        report[key] = []
+    report.update(overrides)
+    return report
+
+
+class ReconciliationGuardTests(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.bbdb = Path(self.directory.name) / "bbdb.el"
+        self.bbdb.write_text("reconciled content")
+        self.contacts_db = Path(self.directory.name) / "AddressBook-v22.abcddb"
+
+    def run_guard(self, report, returncode):
+        completed = mock.Mock(returncode=returncode, stdout=json.dumps(report), stderr="")
+        with mock.patch.object(MODULE.subprocess, "run", return_value=completed) as run:
+            result = MODULE.assert_reconciled(
+                self.contacts_db, self.bbdb, Path("reconcile.py")
+            )
+        return result, run
+
+    def test_passes_both_sources_explicitly_to_the_helper(self):
+        _, run = self.run_guard(clean_report(self.bbdb), 0)
+        argv = run.call_args.args[0]
+        self.assertEqual(argv[1:3], ["-B", "reconcile.py"])
+        self.assertEqual(argv[argv.index("--bbdb-file") + 1], str(self.bbdb))
+        self.assertEqual(argv[argv.index("--contacts-db") + 1], str(self.contacts_db))
+        self.assertIn("--json", argv)
+
+    def test_accepts_clean_report_despite_name_only_review_candidates(self):
+        report, _ = self.run_guard(clean_report(self.bbdb, status="review_required"), 1)
+        self.assertEqual(report["bbdb_count"], 2800)
+
+    def test_rejects_any_difference(self):
+        report = clean_report(
+            self.bbdb, birthday_conflicts=[{"bbdb_name": "Conflict"}],
+            status="review_required",
+        )
+        with self.assertRaisesRegex(RuntimeError, "not reconciled.*birthday_conflicts"):
+            self.run_guard(report, 1)
+
+    def test_rejects_uncompared_birthdays_and_count_mismatch(self):
+        report = clean_report(
+            self.bbdb, contacts_count=2833,
+            birthday_not_compared=[{"side": "bbdb", "record_index": 1}],
+        )
+        with self.assertRaisesRegex(RuntimeError, "BBDB=2800 Contacts=2833"):
+            self.run_guard(report, 1)
+
+    def test_rejects_unsupported_schema_version(self):
+        with self.assertRaisesRegex(RuntimeError, "schema 3"):
+            self.run_guard(clean_report(self.bbdb, schema_version=3), 0)
+
+    def test_rejects_report_missing_a_difference_list(self):
+        report = clean_report(self.bbdb)
+        del report["identity_errors"]
+        with self.assertRaisesRegex(RuntimeError, "lacks 'identity_errors'"):
+            self.run_guard(report, 0)
+
+    def test_rejects_incomplete_or_failed_helper_runs(self):
+        failure = {"schema_version": 2, "status": "input_error",
+                   "reason": "Selected input is unavailable"}
+        with self.assertRaisesRegex(RuntimeError, "did not complete.*unavailable"):
+            self.run_guard(failure, 2)
+        report = clean_report(
+            self.bbdb, status="incomplete", contacts_count=2833,
+            coverage={"source_problems": ["contacts: coverage gaps"]},
+        )
+        with self.assertRaisesRegex(
+            RuntimeError, r"not reconciled: assessment incomplete.*coverage gaps'\]; "
+            "BBDB=2800 Contacts=2833"
+        ):
+            self.run_guard(report, 1)
+
+    def test_rejects_report_for_a_different_bbdb_snapshot(self):
+        report = clean_report(self.bbdb)
+        self.bbdb.write_text("edited after the helper read it")
+        with self.assertRaisesRegex(RuntimeError, "changed while"):
+            self.run_guard(report, 0)
+
+    def test_rejects_non_json_helper_output(self):
+        completed = mock.Mock(returncode=2, stdout="", stderr="usage: required")
         with mock.patch.object(MODULE.subprocess, "run", return_value=completed):
-            with self.assertRaisesRegex(RuntimeError, "not reconciled"):
-                MODULE.assert_reconciled(Path("reconcile.py"))
+            with self.assertRaisesRegex(RuntimeError, "did not return JSON: usage"):
+                MODULE.assert_reconciled(self.contacts_db, self.bbdb, Path("r.py"))
+
+    def test_attestation_records_selected_contacts_store(self):
+        attestation_file = Path(self.directory.name) / "reconciliation.json"
+        attestation = MODULE.write_reconciliation_attestation(
+            clean_report(self.bbdb), attestation_file, self.bbdb, self.contacts_db
+        )
+        self.assertEqual(attestation["contacts_db"], str(self.contacts_db))
+        self.assertEqual(attestation["projection_sha256"], "p" * 64)
+        MODULE.assert_reconciliation_attested(attestation_file, self.bbdb)
+
+
+class BirthdayTests(unittest.TestCase):
 
     def test_reconciliation_attestation_accepts_only_exact_bbdb_snapshot(self):
         report = {"bbdb_count": 2800, "contacts_count": 2800}

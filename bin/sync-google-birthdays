@@ -44,10 +44,33 @@ WRITE_INTERVAL = 0.15
 API_ROOT = "https://www.googleapis.com/calendar/v3"
 
 
-def assert_reconciled(script=RECONCILE_SCRIPT):
-    """Fail unless BBDB and Contacts are structurally and birthday-identical."""
+RECONCILIATION_SCHEMA_VERSION = 2
+# Report lists that must be empty before BBDB birthdays may be mirrored.
+# Name-only candidate pairs (``candidate_matches[].requires_review``) are review
+# leads for merges, not source differences, so they do not block the guard.
+RECONCILIATION_DIFFERENCE_KEYS = (
+    "contacts_only", "bbdb_only", "bbdb_duplicates", "contacts_duplicates",
+    "contacts_collapsing", "bbdb_collapsing", "ambiguous_keys",
+    "ambiguous_matches", "identity_errors",
+    "birthday_bbdb_only", "birthday_contacts_only", "birthday_conflicts",
+    "birthday_precision_differences", "birthday_errors", "birthday_not_compared",
+)
+
+
+def assert_reconciled(contacts_db, bbdb_file=BBDB_FILE, script=RECONCILE_SCRIPT):
+    """Fail unless BBDB_FILE and the explicit CONTACTS_DB store agree.
+
+    Both sources are passed explicitly; the reconciliation helper performs no
+    account discovery. Only a complete schema-2 report whose difference lists
+    are all empty and whose BBDB digest matches the file on disk is accepted.
+    """
     result = subprocess.run(
-        [sys.executable, str(script), "--json"],
+        [
+            sys.executable, "-B", str(script),
+            "--bbdb-file", str(bbdb_file),
+            "--contacts-db", str(contacts_db),
+            "--json",
+        ],
         capture_output=True,
         text=True,
     )
@@ -57,20 +80,45 @@ def assert_reconciled(script=RECONCILE_SCRIPT):
         raise RuntimeError(
             f"Contact reconciliation did not return JSON: {result.stderr.strip()}"
         ) from error
-    guarded_keys = (
-        "contacts_only", "bbdb_only", "bbdb_duplicates", "contacts_duplicates",
-        "contacts_collapsing", "bbdb_collapsing", "ambiguous_keys",
-        "birthday_bbdb_only", "birthday_contacts_only", "birthday_conflicts",
-        "self_check_problems",
-    )
-    differences = {key: len(report.get(key, [])) for key in guarded_keys
-                   if report.get(key)}
-    if result.returncode or report.get("bbdb_count") != report.get("contacts_count") \
-            or differences:
+    if report.get("schema_version") != RECONCILIATION_SCHEMA_VERSION:
         raise RuntimeError(
-            "Refusing calendar sync because contacts are not reconciled: "
+            "Contact reconciliation report schema "
+            f"{report.get('schema_version')!r} is not the supported version "
+            f"{RECONCILIATION_SCHEMA_VERSION}; refusing calendar sync"
+        )
+    if "reason" in report or result.returncode not in (0, 1):
+        raise RuntimeError(
+            "Contact reconciliation did not complete: "
+            f"status={report.get('status')} reason={report.get('reason')}"
+        )
+    problems = []
+    if report.get("status") == "incomplete":
+        problems.append(
+            "assessment incomplete: "
+            f"{report.get('coverage', {}).get('source_problems')}"
+        )
+    differences = {}
+    for key in RECONCILIATION_DIFFERENCE_KEYS:
+        if key not in report:
+            raise RuntimeError(
+                f"Contact reconciliation report lacks {key!r}; refusing calendar sync"
+            )
+        if report[key]:
+            differences[key] = len(report[key])
+    if report.get("bbdb_count") != report.get("contacts_count") or differences:
+        problems.append(
             f"BBDB={report.get('bbdb_count')} Contacts={report.get('contacts_count')} "
             f"differences={differences}"
+        )
+    if problems:
+        raise RuntimeError(
+            "Refusing calendar sync because contacts are not reconciled: "
+            + "; ".join(problems)
+        )
+    reported_digest = report.get("sources", {}).get("bbdb", {}).get("sha256")
+    if reported_digest != bbdb_digest(bbdb_file):
+        raise RuntimeError(
+            "BBDB changed while it was being reconciled; refusing calendar sync"
         )
     return report
 
@@ -81,13 +129,15 @@ def bbdb_digest(bbdb_file=BBDB_FILE):
 
 
 def write_reconciliation_attestation(report, path=ATTESTATION_FILE,
-                                     bbdb_file=BBDB_FILE):
+                                     bbdb_file=BBDB_FILE, contacts_db=None):
     """Record that the exact current BBDB passed direct reconciliation."""
     attestation = {
         "version": 1,
         "bbdb_sha256": bbdb_digest(bbdb_file),
         "bbdb_count": report["bbdb_count"],
         "contacts_count": report["contacts_count"],
+        "contacts_db": str(contacts_db) if contacts_db else None,
+        "projection_sha256": report.get("projection_sha256"),
         "reconciled_at": dt.datetime.now(dt.timezone.utc).isoformat(),
     }
     atomic_write(path, json.dumps(attestation, indent=2, sort_keys=True) + "\n")
@@ -100,7 +150,7 @@ def assert_reconciliation_attested(path=ATTESTATION_FILE,
     if not path.exists():
         raise RuntimeError(
             "No reconciliation attestation; run --record-reconciliation-attestation "
-            "interactively after reconciling Contacts"
+            "--contacts-db PATH interactively after reconciling Contacts"
         )
     attestation = json.loads(path.read_text())
     if attestation.get("version") != 1 \
@@ -480,7 +530,19 @@ def main():
         action="store_true",
         help="reconcile Contacts directly, record the exact BBDB snapshot, and exit",
     )
+    parser.add_argument(
+        "--contacts-db",
+        type=Path,
+        help="explicitly selected private Contacts SQLite store to reconcile "
+             "against; required whenever Contacts are reconciled directly",
+    )
     args = parser.parse_args()
+    reconciles_directly = (
+        args.record_reconciliation_attestation
+        or not args.use_reconciliation_attestation
+    )
+    if reconciles_directly and args.contacts_db is None:
+        parser.error("--contacts-db is required when reconciling Contacts directly")
 
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     with LOCK_FILE.open("w") as lock:
@@ -490,9 +552,11 @@ def main():
             raise SystemExit("Another birthday sync is already running")
 
         if args.record_reconciliation_attestation:
-            report = assert_reconciled()
+            report = assert_reconciled(args.contacts_db)
             print(json.dumps(
-                write_reconciliation_attestation(report),
+                write_reconciliation_attestation(
+                    report, contacts_db=args.contacts_db
+                ),
                 indent=2,
                 sort_keys=True,
             ))
@@ -500,7 +564,7 @@ def main():
         if args.use_reconciliation_attestation:
             assert_reconciliation_attested()
         else:
-            assert_reconciled()
+            assert_reconciled(args.contacts_db)
         records = load_birthdays()
         desired = [desired_event(record) for record in records]
         auth = load_auth_helper()

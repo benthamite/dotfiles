@@ -13,6 +13,10 @@ sibling skills and private user configuration are declared in those sources.
 Supply your own account configuration, writing samples and other private inputs
 where required; those inputs are not part of this collection.
 
+`triage-personal-todos` also requires an independently supplied compatible Org
+triage engine and private excluded-root configuration. Neither the engine nor
+the notes are distributed here; its skill instructions describe that contract.
+
 Use the source variant for your runtime. Preserve the repository layout when a
 skill uses repository helpers or computes paths from its source location. For a
 standalone skill, retain its entire source directory and satisfy its declared

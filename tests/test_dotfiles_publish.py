@@ -603,6 +603,74 @@ class DotfilesPublishDocumentationTests(unittest.TestCase):
             self.assertTrue((skill / "evals" / "scenarios.md").is_file(), skill)
 
 
+class DotfilesPublishQuotedRedactionTests(unittest.TestCase):
+    def setUp(self):
+        self.functions = runpy.run_path(str(PUBLISH), run_name='isolated_quoted_redaction')
+
+    def test_quoted_separators_and_escaped_quotes_keep_only_surrounding_text(self):
+        for quote in ("'", '"'):
+            for delimiter in (';', '#', ',', ')', ' ', '\\' + quote, '\\\\'):
+                with self.subTest(quote=quote, delimiter=delimiter):
+                    literal = quote + 'SYNTHETIC_PREFIX_123' + delimiter + 'SYNTHETIC_SUFFIX_456' + quote
+                    source = 'Config(password=' + literal + ", username='fixture@example.invalid')"
+                    self.assertEqual("Config(password=" + quote + '[REDACTED:structural]' + quote + ", username='fixture@example.invalid')", self.functions['structural_redaction'](source))
+
+    def test_partial_scanner_match_cannot_erase_assignment_before_redaction(self):
+        prefix = 'SYNTHETIC_PASSWORD_PREFIX_123'
+        suffix = 'SYNTHETIC_SUFFIX_456'
+        source = "Config(password='" + prefix + ';' + suffix + "', username='fixture@example.invalid')"
+        redactor = self.functions['Redactor'](b'synthetic-only-key')
+        report = [{'Secret': prefix, 'Match': "password='" + prefix,
+                   'RuleID': 'dotfiles-credential-assignment', 'File': 'fixture.log',
+                   'Commit': 'a' * 40, 'StartLine': 1, 'EndLine': 1,
+                   'StartColumn': 18, 'EndColumn': 44}]
+        records = self.functions['convert_gitleaks_results'](report, b'synthetic-only-key', redactor, 'gitleaks-history', None)
+        marker = '[REDACTED:' + records[0]['fingerprint'] + ']'
+        result = redactor.scrub(source)
+        self.assertEqual("Config(password='" + marker + "', username='fixture@example.invalid')", result)
+        self.assertEqual(result, redactor.scrub(result))
+
+    def test_unquoted_shell_separators_do_not_hide_later_commands(self):
+        for separator in ('; echo visible', ' # visible comment', ', other=visible', ') visible'):
+            source = 'password=SYNTHETIC_PASSWORD_123' + separator
+            self.assertEqual('password=[REDACTED:structural]' + separator, self.functions['structural_redaction'](source))
+
+    def test_arrow_assignment_redacts_the_complete_literal(self):
+        source = "password => 'SYNTHETIC_PREFIX_123;SYNTHETIC_SUFFIX_456'"
+        self.assertEqual("password => '[REDACTED:structural]'", self.functions['structural_redaction'](source))
+
+    def test_json_quoted_key_is_redacted(self):
+        source = '{"password": "SYNTHETIC_PREFIX_123;SYNTHETIC_SUFFIX_456", "other": "visible"}'
+        self.assertEqual('{"password": "[REDACTED:structural]", "other": "visible"}', self.functions['structural_redaction'](source))
+
+    def test_old_findings_and_manifest_are_refused_without_changing_incidents(self):
+        with tempfile.TemporaryDirectory(prefix='dotfiles-redaction-version-') as directory:
+            state = Path(directory)
+            repo = SimpleNamespace(state_dir=state)
+            run_id = 'a' * 32
+            run_dir = state / 'runs' / run_id
+            run_dir.mkdir(parents=True)
+            digest = self.functions['hashlib'].sha256(b'dotfiles-publish-manifest\x00').hexdigest()
+            run = {'schema': self.functions['SCHEMA'], 'manifest_id': digest, 'mode': 'full-audit'}
+            (run_dir / 'run.json').write_text(json.dumps(run))
+            manifest = {'schema': self.functions['SCHEMA'], 'run_id': run_id, 'manifest_id': digest, 'units': []}
+            findings = {'schema': self.functions['SCHEMA'], 'run_id': run_id, 'findings': []}
+            incidents = {'schema': self.functions['SCHEMA'], 'incidents': {'synthetic-fingerprint': {'resolution': 'revoked'}}}
+            incident_path = state / 'incidents.json'
+            incident_path.write_text(json.dumps(incidents))
+            before = incident_path.read_bytes()
+            for name, data, loader in (('manifest.json', manifest, 'load_manifest'), ('findings.json', findings, 'load_findings')):
+                path = run_dir / name
+                path.write_text(json.dumps(data))
+                with self.assertRaisesRegex(self.functions['PublishError'], 'predates safe quoted-value redaction'):
+                    self.functions[loader](repo, run_id)
+                data['redaction_version'] = self.functions['REDACTION_VERSION']
+                path.write_text(json.dumps(data))
+                self.assertEqual(data, self.functions[loader](repo, run_id))
+            self.assertEqual(incidents, self.functions['load_incidents'](repo))
+            self.assertEqual(before, incident_path.read_bytes())
+
+
 class DotfilesPublishAtomicStateTests(unittest.TestCase):
     def test_concurrent_atomic_writes_preserve_a_complete_generation(self):
         loaded = runpy.run_path(str(PUBLISH), run_name="isolated_atomic_tests")
@@ -1166,6 +1234,35 @@ class DotfilesPublishScanTests(PublicationFixture):
 
 
 class DotfilesPublishRedactionTests(PublicationFixture):
+    @unittest.skipUnless(shutil.which('gitleaks'), 'gitleaks is not installed')
+    def test_live_truncated_match_hides_complete_quoted_value(self):
+        self.publish_base()
+        config = """title = "synthetic quoted assignment"
+[[rules]]
+id = "synthetic-truncated-assignment"
+description = "synthetic password prefix"
+regex = '''password='(DOTFILES_TEST_SECRET_[0-9a-f]{12})'''
+secretGroup = 1
+"""
+        secret = TEST_SECRET
+        suffix = 'SYNTHETIC_SUFFIX_456'
+        self.commit('add synthetic assignment', {'.gitleaks.toml': config, 'fixture.log': "Config(password='" + secret + ';' + suffix + "', username='fixture@example.invalid')\n"})
+        for mode in ('publish', 'full-audit'):
+            with self.subTest(mode=mode):
+                proc, run_id = self.scan('--mode', mode, env=self.env(DOTFILES_PUBLISH_GITLEAKS=shutil.which('gitleaks')))
+                self.assertEqual(2, proc.returncode, proc.stderr)
+                self.assertNotIn(suffix, proc.stdout + proc.stderr)
+                self.assertNotIn(secret, proc.stdout + proc.stderr)
+                for path in self.run_dir(run_id).iterdir():
+                    if path.is_file():
+                        self.assertNotIn(suffix, path.read_text())
+                        self.assertNotIn(secret, path.read_text())
+                for unit_id in self.unit_ids(run_id):
+                    result = self.cli('review-show', '--run', run_id, '--unit', unit_id)
+                    self.assertEqual(0, result.returncode, result.stderr)
+                    self.assertNotIn(suffix, result.stdout)
+                    self.assertNotIn(secret, result.stdout)
+
     @unittest.skipUnless(shutil.which("gitleaks"), "gitleaks is not installed")
     def test_live_gitleaks_report_is_read_privately_and_redacted_by_the_wrapper(self):
         self.publish_base()

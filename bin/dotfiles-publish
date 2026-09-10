@@ -39,6 +39,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 SCHEMA = 4
+REDACTION_VERSION = 1
 
 EXIT_OK = 0
 EXIT_REFUSED = 1
@@ -594,15 +595,44 @@ STRUCTURAL_RULES = (
 
 STRUCTURAL_TOKEN = "[REDACTED:structural]"
 
+QUOTED_ASSIGNMENT = re.compile(
+    r"(?i)(\b(?:api[_-]?key|api[_-]?secret|auth[_-]?token|access[_-]?token|refresh[_-]?token"
+    r"|client[_-]?secret|secret[_-]?key|token|secret|passwd|password|passphrase)\b[\"']?"
+    r"[ \t]*(?:[:=]|=>)[ \t]*)(\"(?:\\[\s\S]|[^\"\\])*\"|'(?:\\[\s\S]|[^'\\])*')"
+)
+
+
+def redact_quoted_assignments(text, scanner_values=None):
+    """Keep quoted delimiters inside the value, including escaped quotes."""
+    values = sorted((scanner_values or {}).items(), key=lambda pair: len(pair[0]), reverse=True)
+
+    def replace(match):
+        literal = match.group(2)
+        if len(literal[1:-1]) < 12 or re.fullmatch(r"\[REDACTED:[a-z0-9]+\]", literal[1:-1]):
+            return match.group(0)
+        marker = STRUCTURAL_TOKEN
+        for value, token in values:
+            if value in match.group(0):
+                marker = "[REDACTED:%s]" % token
+                break
+        return match.group(1) + literal[0] + marker + literal[-1]
+
+    return QUOTED_ASSIGNMENT.sub(replace, text)
+
 
 def structural_redaction(text):
+    text = redact_quoted_assignments(text)
     for rule in STRUCTURAL_RULES:
-        text = rule.sub(lambda match: match.group(1) + STRUCTURAL_TOKEN, text)
+        text = rule.sub(
+            lambda match: match.group(0) if re.fullmatch(r"\[REDACTED:[a-z0-9]+\]", match.group(2))
+            else match.group(1) + STRUCTURAL_TOKEN,
+            text,
+        )
     return text
 
 
 class Redactor:
-    """Replaces values the scanners found, then blunts credential shapes."""
+    """Protects whole quoted values before replacing scanner matches."""
 
     def __init__(self, key):
         self.key = key
@@ -636,6 +666,9 @@ class Redactor:
             return None
         if isinstance(text, bytes):
             text = text.decode("utf-8", "replace")
+        # Scanner Match may include the assignment prefix but only part of its
+        # value. Protect the whole literal before that prefix can disappear.
+        text = redact_quoted_assignments(text, self.values)
         for value in sorted(self.values, key=len, reverse=True):
             text = text.replace(value, "[REDACTED:%s]" % self.values[value])
         return structural_redaction(text)
@@ -1381,6 +1414,7 @@ def store_findings(repo, run_id, result):
         run_directory(repo, run_id) / "findings.json",
         {
             "schema": SCHEMA,
+            "redaction_version": REDACTION_VERSION,
             "run_id": run_id,
             "findings": result.findings,
             "value_signatures": result.redactor.value_signatures,
@@ -1841,6 +1875,7 @@ def build_audit_manifest(repo, run_id, result):
         digest.update(hashlib.sha256(encoded).digest())
     return {
         "schema": SCHEMA,
+        "redaction_version": REDACTION_VERSION,
         "run_id": run_id,
         "manifest_id": digest.hexdigest(),
         "counts": counts,
@@ -2214,6 +2249,7 @@ def build_manifest(repo, run_id, boundary, result, mode, tag, release_notes):
 
     return {
         "schema": SCHEMA,
+        "redaction_version": REDACTION_VERSION,
         "run_id": run_id,
         "manifest_id": manifest_id,
         "counts": counts,
@@ -2245,6 +2281,8 @@ def load_manifest(repo, run_id):
         digest.update(hashlib.sha256(encoded).digest())
     if digest.hexdigest() != manifest["manifest_id"]:
         raise PublishError("manifest content changed; scan and review again", EXIT_REFUSED)
+    if manifest.get("redaction_version") != REDACTION_VERSION:
+        raise PublishError("captured data predates safe quoted-value redaction; scan again", EXIT_REFUSED)
     return manifest
 
 
@@ -2258,6 +2296,8 @@ def load_findings(repo, run_id):
             "run %s predates safe scanner redaction; scan again" % run_id,
             EXIT_REFUSED,
         )
+    if findings.get("redaction_version") != REDACTION_VERSION:
+        raise PublishError("captured data predates safe quoted-value redaction; scan again", EXIT_REFUSED)
     return findings
 
 

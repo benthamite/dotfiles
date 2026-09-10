@@ -81,8 +81,10 @@ Apply the following preferences to new prose, not to protected literal content:
   Include greetings and closings only when useful for the relationship and
   channel; never add an offer or promise Pablo did not authorize.
 - Never write that Pablo will do something he can do now. Do the thing first,
-  then write the reply as already done. Announce a pending step only when it
-  depends on someone else or on an action only Pablo can take, and say which.
+  then write the reply as already done — and only once it actually succeeded;
+  a blocked or unverified action is never reported as done. Announce a pending
+  step only when it depends on someone else or on an action only Pablo can
+  take, and say which.
 - Preserve genuine epistemic qualifiers and separate a claim from its stated
   confidence. Use a credence or rough number only when actually supplied or
   supported, not as a stylistic flourish.

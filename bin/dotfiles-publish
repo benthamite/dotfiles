@@ -729,8 +729,12 @@ def run_gitleaks(repo, work, *, git_range=None, directory=None):
             "--report-path",
             str(report),
         ]
-        if git_range:
-            command.append("--log-opts=%s" % git_range)
+        if not directory:
+            # Public history is the stored Git bytes, never a decrypted view.
+            log_options = "--no-textconv --no-ext-diff"
+            if git_range:
+                log_options += " " + git_range
+            command.append("--log-opts=%s" % log_options)
         command.append(str(directory or repo.root))
         try:
             completed = subprocess.run(
@@ -843,6 +847,8 @@ def gitleaks_git_patch_values(repo, result):
         "--literal-pathspecs",
         "show",
         "--format=",
+        "--no-textconv",
+        "--no-ext-diff",
         "--patch",
         "-U0",
         commit,
@@ -2112,7 +2118,8 @@ def build_manifest(repo, run_id, boundary, result, mode, tag, release_notes):
             units.append(unit)
 
         patch = run_git(
-            repo.root, "diff-tree", "--root", "--find-renames", "--format=", "--patch", commit
+            repo.root, "diff-tree", "--root", "--find-renames", "--format=",
+            "--no-textconv", "--no-ext-diff", "--patch", commit
         ).text
         for ordinal, hunk in enumerate(split_patch_hunks(patch)):
             units.append(

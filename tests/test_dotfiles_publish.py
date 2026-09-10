@@ -105,7 +105,9 @@ def record(value, path, commit, line_number, line):
 
 
 def scan_git(repo, log_opts, compiled):
-    rev_args = ["--all"] if not log_opts else log_opts.split()
+    options = log_opts.split() if log_opts else []
+    patch_options = [arg for arg in options if arg in ("--no-textconv", "--no-ext-diff")]
+    rev_args = [arg for arg in options if arg not in patch_options] or ["--all"]
     git_environment = os.environ.copy()
     git_environment["DOTFILES_FAKE_GITLEAKS_CHILD"] = "1"
     listing = subprocess.run(
@@ -118,7 +120,7 @@ def scan_git(repo, log_opts, compiled):
     findings = []
     for commit in listing.stdout.split():
         patch = subprocess.run(
-            ["git", "-C", repo, "show", "--format=", "--patch", "--root", commit],
+            ["git", "-C", repo, "show", "--format=", "--patch", "--root", *patch_options, commit],
             capture_output=True,
             text=True,
             env=git_environment,
@@ -896,7 +898,7 @@ class DotfilesPublishScanTests(PublicationFixture):
             if argument.startswith("--log-opts=")
         ]
         self.assertIn(
-            "--log-opts=%s..%s" % (self.remote_tip(), candidate),
+            "--log-opts=--no-textconv --no-ext-diff %s..%s" % (self.remote_tip(), candidate),
             ranges,
             "the scanner was not pointed at the exact outgoing range",
         )
@@ -1206,6 +1208,51 @@ regex = '''DOTFILES_TEST_SECRET_[0-9a-f]{12}'''
             shown = self.cli("review-show", "--run", run_id, "--unit", unit_id)
             self.assertEqual(0, shown.returncode, shown.stderr)
             self.assertNotIn(TEST_SECRET, shown.stdout)
+
+    def _check_encrypted_history_stays_opaque(self, scanner):
+        self.publish_base()
+        marker = self.base / "textconv-ran"
+        driver = self.base / "decrypt-fixture.py"
+        driver.write_text(
+            "from pathlib import Path\n"
+            f"Path({str(marker)!r}).touch()\n"
+            f"print({TEST_SECRET!r})\n"
+        )
+        self.git("config", "diff.git-crypt.textconv", f"{sys.executable} {driver}")
+        ciphertext = b"\0GITCRYPT\0synthetic-ciphertext\xff"
+        self.commit("add encrypted fixture", {
+            ".gitattributes": "config/encrypted.env filter=git-crypt diff=git-crypt\n",
+            ".gitleaks.toml": (
+                '[[rules]]\nid="synthetic-only"\ndescription="synthetic fixture"\n'
+                'regex="""DOTFILES_TEST_SECRET_[0-9a-f]{12}"""\n'
+            ),
+            "config/encrypted.env": ciphertext,
+        })
+        # Outgoing scans and public-history scans must both keep ciphertext raw.
+        for mode in ("publish", "full-audit"):
+            with self.subTest(mode=mode):
+                if mode == "full-audit":
+                    self.git("-c", "core.hooksPath=/dev/null", "push", "--quiet", "origin", "master")
+                    self.git("fetch", "--quiet", "origin")
+                proc, run_id = self.scan("--mode", mode, env=self.env(DOTFILES_PUBLISH_GITLEAKS=scanner))
+                self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+                self.assertFalse(marker.exists(), "a private decryption driver ran")
+                findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
+                # The existing opaque-binary review obligation remains in force.
+                self.assertEqual({"binary-file"}, {finding["rule_id"] for finding in findings})
+                self.assertEqual({"objects"}, {finding["source"] for finding in findings})
+                for path in self.run_dir(run_id).rglob("*"):
+                    if path.is_file():
+                        self.assertNotIn(TEST_SECRET, path.read_text(errors="replace"))
+                self.assertIn("binary", (self.run_dir(run_id) / "manifest.json").read_text().lower())
+        self.assertEqual(ciphertext, (self.repo / "config/encrypted.env").read_bytes())
+
+    def test_encrypted_history_stays_opaque_with_scanner_double(self):
+        self._check_encrypted_history_stays_opaque(str(self.scanner))
+
+    @unittest.skipUnless(shutil.which("gitleaks"), "gitleaks is not installed")
+    def test_live_gitleaks_never_decrypts_encrypted_history(self):
+        self._check_encrypted_history_stays_opaque(shutil.which("gitleaks"))
 
     def test_scan_redacts_value_from_stdout_stderr_and_persisted_state(self):
         self.publish_base()
@@ -2788,18 +2835,19 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
             and finding["commit"] == leaking
             and finding["path"] == target
         )
-        self.assertGreater(historical["line"], 1)
+        self.assertEqual(1, historical["line"])
         self.assert_run_redacts(proc, run_id, encoded, historical["fingerprint"])
         manifest = (self.run_dir(run_id) / "manifest.json").read_text()
         self.assertIn("DECOY-CANARY", manifest)
 
-    def test_full_audit_hides_textconv_stderr_when_patch_recovery_fails(self):
+    def test_full_audit_source_recovery_never_runs_failing_textconv(self):
         encoded = TEST_SECRET.encode("utf-8").hex()
         canary = "TEXTCONV-SECRET-CANARY"
+        marker = self.base / "failing-textconv-ran"
         textconv = self.base / "failing-textconv.sh"
         textconv.write_text(
             "#!/bin/sh\n"
-            "if [ \"$DOTFILES_FAKE_GITLEAKS_CHILD\" = 1 ]; then /bin/cat \"$1\"; exit 0; fi\n"
+            f"touch {marker}\n"
             "printf '%s\\n' \"%s\" >&2\n"
             "exit 9\n" % ("%s", canary)
         )
@@ -2828,8 +2876,8 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
             ),
         )
 
-        self.assertEqual(3, proc.returncode, proc.stdout + proc.stderr)
-        self.assertIn("could not recover a decoded gitleaks finding", proc.stderr)
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        self.assertFalse(marker.exists())
         for value in (canary, encoded, TEST_SECRET):
             self.assertNotIn(value, proc.stdout + proc.stderr)
             for path in self.state_files():

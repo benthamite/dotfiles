@@ -137,6 +137,9 @@ The paired =triage-personal-todos= skill keeps brief-only requests read-only,
 binds the personal corpus and canonical repository, and verifies current task
 evidence before selection. Confirmed completion uses the shared helper's
 prepared update, with Org workflow/date checks and explicit rollback limits.
+The engine is a separate private dependency configured, with excluded roots, in
+=~/.config/triage-notes/config.json=; the launcher never discovers or copies it
+from another workspace.
 
 The paired =verify= skill maps actual requirements to version-bound evidence.
 Verification-only requests do not authorize repair. Human judgment and missing
@@ -390,6 +393,8 @@ The =chrome-permission-audit= helper defaults to non-recording reads and require
 exclusive closed-browser store access. Revocations consume reviewed exact plans,
 preserve deny/transient records, and retain permission-key-only recovery backups.
 Its classification rules do not infer safety from generic documentation hosts.
+Owner-specific rules live in =~/.claude/chrome-permission-audit/private-rules.json=;
+changes to them invalidate previously reviewed revocation plans.
 
 The =build= skill preserves the requested spec/planning/implementation endpoint.
 It investigates before interviewing, records decisions incrementally, separates

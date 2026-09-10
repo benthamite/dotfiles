@@ -281,6 +281,8 @@ The =chrome-permission-audit= helper defaults to non-recording reads and require
 exclusive closed-browser store access. Revocations consume reviewed exact plans,
 preserve deny/transient records, and retain permission-key-only recovery backups.
 Its classification rules do not infer safety from generic documentation hosts.
+Owner-specific rules live in =~/.claude/chrome-permission-audit/private-rules.json=;
+changes to them invalidate previously reviewed revocation plans.
 
 The =build= skill preserves the requested spec/planning/implementation endpoint.
 It investigates before interviewing, records decisions incrementally, separates
@@ -451,7 +453,8 @@ Calling workflows invoke it explicitly; it is no longer a =wikipedia-article= ph
 
 Org task triage is split across two skills over one engine. =triage-personal-todos=
 here owns personal notes; the project-local =triage-project-todos= in the Epoch
-workspace owns Epoch work. =bin/triage-notes= locates the shared engine and binds
+workspace owns Epoch work. =bin/triage-notes= loads its owner-supplied engine
+and excluded roots from =~/.config/triage-notes/config.json=, then binds
 personal commands and artifacts to their corpus; project ownership still needs
 checking beyond a corpus label. Index/worktree publication uses snapshot checks
 and owned rollback, not an indivisible transaction against arbitrary writers.

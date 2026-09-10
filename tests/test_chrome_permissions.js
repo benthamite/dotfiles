@@ -502,3 +502,20 @@ test('noncooperating state changes are detected before replacement', async t => 
   await rejectsCode(() => f.app.run(['audit', '--record']), 'STATE_CHANGED');
   assert.equal(f.app.loadState().state.overrides['other.test'].tier, 3);
 });
+
+test('private owner rules classify sites and stale an already reviewed plan', async t => {
+  const f = fixture(t);
+  fs.mkdirSync(f.stateDir, { mode: 0o700 });
+  const privateFile = path.join(f.stateDir, 'private-rules.json');
+  const write = tier => fs.writeFileSync(privateFile, JSON.stringify({ version: 1,
+    rules: [{ pattern: '^private\\.example\\.test$', tier, reason: 'private fixture' }] }));
+  write(1);
+  f.set([grant('private', { scope: { type: 'netloc', netloc: 'private.example.test' } })]);
+  assert.equal((await f.app.run(['audit'])).violations, 1);
+  await f.plan();
+  write(2);
+  await rejectsCode(() => f.apply(), 'PLAN_STALE');
+  assert.equal(f.putCount(), 0);
+  fs.writeFileSync(privateFile, '{invalid');
+  await rejectsCode(() => f.app.run(['audit']), 'RULES_INVALID');
+});

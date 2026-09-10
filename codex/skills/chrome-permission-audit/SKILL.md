@@ -89,7 +89,12 @@ the installed implementation when its schema or semantics change.
 | 3 | Explicitly named ordinary-site candidate; not a universal safety guarantee |
 | Unclassified | No supported rule; investigate rather than assume safe |
 
-`rules.json` uses ordered first-match rules. Generic prefixes such as `docs.`,
+`rules.json` uses ordered first-match rules. Owner-specific rules belong in
+`~/.claude/chrome-permission-audit/private-rules.json`, outside the skill tree,
+using the same `{ "version": 1, "rules": [...] }` schema. When present, these
+rules precede public rules and participate in saved-plan policy binding;
+invalid private rules stop the audit. No private rules file means only public
+rules and existing exact-site overrides apply. Generic prefixes such as `docs.`,
 `help.` or `support.` do not prove public/read-only access. Look-alike domains or
 arbitrary search-engine suffixes must not inherit a keep classification.
 Heuristics may raise concern, never grant Tier 3.

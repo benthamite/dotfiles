@@ -142,6 +142,7 @@ function createApp(injected = {}) {
   const stateFile = path.join(stateDir, 'state.json');
   const backupRoot = injected.backupRoot || path.join(home, 'Library/Application Support/claude-chrome-permission-backup');
   const rulesFile = injected.rulesFile || path.join(__dirname, 'rules.json');
+  const privateRulesFile = path.join(stateDir, 'private-rules.json');
   const driveRoot = injected.driveRoot || path.join(home, 'My Drive');
   const execute = injected.execFileSync || execFileSync;
   const print = injected.print || (text => process.stdout.write(text + '\n'));
@@ -232,9 +233,25 @@ function createApp(injected = {}) {
   }
   function loadRules() {
     let spec;
-    const raw = fs.readFileSync(rulesFile, 'utf8');
+    let raw = fs.readFileSync(rulesFile, 'utf8');
     try { spec = JSON.parse(raw); } catch { fail('RULES_INVALID', 'Classification rules are invalid JSON.'); }
     if (!object(spec) || spec.version !== 1 || !Array.isArray(spec.rules)) fail('RULES_INVALID', 'Classification rules schema is unsupported.');
+    // Owner-specific policy remains outside the distributable skill. A malformed
+    // configured policy is an error, never permission to omit its concerns.
+    outsideDrive(privateRulesFile);
+    try {
+      const privateRaw = fs.readFileSync(privateRulesFile, 'utf8');
+      let privateSpec;
+      try { privateSpec = JSON.parse(privateRaw); }
+      catch { fail('RULES_INVALID', 'Private classification rules are invalid JSON.'); }
+      if (!object(privateSpec) || privateSpec.version !== 1 || !Array.isArray(privateSpec.rules)) {
+        fail('RULES_INVALID', 'Private classification rules schema is unsupported.');
+      }
+      spec.rules = [...privateSpec.rules, ...spec.rules];
+      raw += '\nprivate-rules:\n' + privateRaw;
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
     const rules = spec.rules.map(rule => {
       if (!object(rule) || ![1, 2, 3].includes(rule.tier) || typeof rule.pattern !== 'string' ||
           typeof rule.reason !== 'string') fail('RULES_INVALID', 'Classification rule is malformed.');

@@ -44,6 +44,23 @@ in the kill ring without importing or exporting the system clipboard.
 acknowledged stages from uncertain outcomes; private recovery snapshots survive
 uncertainty. Raw request errors and draft contents are omitted from diagnostics.
 
+=cloudflare-deploy-token= reads an owner-only JSON file (mode 600) at
+=~/.config/agent-tools/cloudflare-deploy-token.json=. Keep its directory mode
+700 and outside shared repositories or sync roots. Set
+=CLOUDFLARE_DEPLOY_TOKEN_CONFIG= to use another private file. The file requires
+exactly three nonempty string fields: =default_account_id=,
+=automation_admin_reference=, and =desktop_admin_reference=. The references
+use =op://VAULT/ITEM/FIELD= syntax; store references, never credential values.
+=--account-id= overrides the default account. Missing, malformed or broadly
+readable configuration stops before any broker or provider call. The helper
+tries the automation reference first, then explicitly reports a fallback to the
+desktop reference if that read fails. Scope remains Workers Scripts Write,
+with =--kv= and =--d1= adding their respective permissions. Both create and
+update send the minted value through broker stdin, never command arguments.
+Update preserves the existing API credential item's other fields and rejects
+unsupported categories, attachments, passkeys or ambiguous credential fields
+before minting. Configuration symlinks and nonregular files are refused.
+
 * File index
 
 | File | Purpose |

@@ -162,7 +162,7 @@
       "claude": "claude/skills/move-session-log/SKILL.md",
       "codex": "codex/skills/move-session-log/SKILL.md",
       "status": "tool-specific-divergence",
-      "note": "Runtime-specific adapters share exact origin-to-target mapping over known session metadata, not arbitrary JSON. Both preview before apply and require offline stores plus private recovery backups. Claude moves verified transcript/sidecar owners; project-settings migration requires a separate explicit flag. Codex inventories shared-profile active/archive stores, inspects SQLite snapshots without mutating originals, and updates exact thread IDs. Shared safety helper and tests/test_move_session_log_parity.py cover common invariants; adapters are not byte-identical."
+      "note": "Both adapters map exact metadata paths, preview changes and retain private backups. Claude requires offline stores and verified transcript/sidecar ownership; project settings need explicit scope. Codex single-session imports permit unrelated live sessions using SQLite transactions and online backups; bulk rename and --offline retain full-store checks. The shared safety helper and test_move_session_log_parity.py cover offline invariants; test_codex_live_import.py covers concurrent Codex imports."
     },
     {
       "name": "orchestrate-review",

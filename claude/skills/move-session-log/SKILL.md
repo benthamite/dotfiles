@@ -54,6 +54,13 @@ of observed inputs, not a reservation or proof that a later plan is identical.
 
 ## Apply only to offline stores
 
+This is the Claude adapter's requirement. The paired Codex skill can import a
+closed session while unrelated Codex sessions remain open, using SQLite
+transactions. Do not transfer Claude's full-store offline requirement to that
+Codex operation; the transcript layouts and concurrency mechanisms differ.
+The Codex workflow also verifies the exact session's Emacs buffer and live
+working directory; a migrated history index does not rename an existing buffer.
+
 Establish that affected Claude sessions and other writers of shared history are
 stopped. Do not kill sessions, close Emacs, restart applications or switch
 accounts merely to satisfy this step. An active session cannot safely replace

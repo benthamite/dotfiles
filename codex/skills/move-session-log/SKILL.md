@@ -12,8 +12,9 @@ the project, unarchive sessions, merge histories or operate on Claude stores.
 Use `open-session-log` for simple inspection. Review, diagnosis and planning
 requests remain read-only.
 
-Use the bundled [adapter](scripts/move_session_log.py) and its
-[safety helper](scripts/migration_safety.py). Do not invent an inline SQL or
+Use the bundled [adapter](scripts/move_session_log.py), its
+[single-session importer](scripts/live_import.py), and
+[offline safety helper](scripts/migration_safety.py). Do not invent an inline SQL or
 transcript-rewrite fallback when the helpers or preflight fail.
 
 ## Establish identity and scope
@@ -44,9 +45,10 @@ python3 "$SKILL_DIR/scripts/move_session_log.py" --dry-run --project "$TARGET_PR
 python3 "$SKILL_DIR/scripts/move_session_log.py" --dry-run --rename "$OLD_PROJECT" "$NEW_PROJECT"
 ```
 
-Validate the whole selected inventory, JSONL identity and SQLite schemas before
-any apply phase. Database inspection uses owned temporary snapshots with captured
-WAL state, not a connection that can recover/checkpoint originals. Refuse
+Validate the selected inventory, JSONL identity and SQLite schemas before
+any apply phase. Single-session imports inspect SQLite read transactions and
+create consistent backups through its online backup API; offline operations capture the database and its WAL
+before inspecting an owned copy. Refuse
 malformed/truncated targeted files, identity conflicts, unsupported existing
 schemas or unstable inputs. Resolve reversed paths or unexpected scope. Zero
 matches do not prove the search was complete.
@@ -57,14 +59,40 @@ refuse before writes. Its database scope is thread `cwd`, not independent projec
 associations: observed `project_id`, project tables or project roots are reported
 as unchanged. Do not claim those associations were migrated.
 
-## Apply only to offline stores
+## Move one closed session while other sessions stay open
 
-Establish that affected sessions and every writer of shared files/databases are
-stopped. An active session must not replace its own append-only transcript:
-existing writers can keep appending successfully to an unlinked old file.
-Do not kill sessions, close Emacs, restart Codex or switch accounts just to make
-this possible. If quiescence cannot be established within the request, keep the
-preview and report that boundary.
+Single-session import uses the live-safe path by default. Establish that the
+identified session is closed; a user report plus the helper's target-file
+writer check supplies this boundary. When accessible, inspect the owning
+app-server's `thread/loaded/list` too. Do not resume the target during migration.
+The helper refuses the invoking session's ID and any open target-file writer.
+An active session must not replace its own append-only transcript: its writer
+could continue appending to an unlinked old file.
+
+Unrelated Codex sessions and their database connections may remain open.
+The importer uses SQLite transactions to lock and revalidate exact thread rows,
+with consistent database backups and a recovery journal. It does not hash live
+WAL or shared-memory files as if they were static transcripts. Shared history
+and index files that need no change are not replaced or treated as offline
+stores. If their selected metadata needs rewriting, their file writer guards
+still apply; report the specific blocking file rather than demanding that all
+Codex sessions stop.
+
+Apply with a new absolute `--backup-dir` outside Google Drive:
+
+```bash
+python3 "$SKILL_DIR/scripts/move_session_log.py" --backup-dir "$NEW_PRIVATE_BACKUP" --project "$TARGET_PROJECT" "$SESSION_ID"
+```
+
+Do not kill unrelated sessions, close Emacs, restart Codex or switch accounts
+to move a closed session. On a refusal, identify the actual target or input
+that failed instead of inferring that the shared database must be closed.
+
+## Bulk rename and explicitly offline import
+
+Bulk `--rename` retains the full-store offline procedure. Establish that
+affected sessions and every writer of shared files/databases are stopped.
+If quiescence cannot be established, keep the preview and report that boundary.
 
 Apply requires `--offline` and a new absolute `--backup-dir` outside Google Drive.
 The flag asserts established quiescence; it does not stop writers. The helper
@@ -82,7 +110,7 @@ Choose a durable uniquely named location under a private off-Drive state root.
 Protected originals and the recovery journal contain private user history, not
 scratch or public repository artifacts. Do not publish or delete them as cleanup.
 
-Only consumer-relevant `session_meta`/`turn_context` payload `cwd` and supported
+In either mode, only consumer-relevant `session_meta`/`turn_context` payload `cwd` and supported
 top-level history/index metadata are eligible. Import maps the identified
 original project to the target, preserving different contexts. SQLite updates
 match exact thread IDs, never `rollout_path LIKE` or a nested arbitrary `id`.
@@ -90,6 +118,28 @@ Historical tool arguments, results, prose and unrelated records stay unchanged.
 Archives remain archived; shell snapshots are not moved.
 
 ## Verify the right result
+
+When the user works in Emacs, relocation includes the buffer associated with
+the exact session ID, not just disk metadata or the history picker. Inspect all
+Codex buffers, including buffers whose processes have exited, before and after
+the operation. Match `codex--app-server-thread-id` or `codex--session-id`; do not
+infer identity from the buffer name. A buffer reopened during the operation can
+retain the old directory even after the disk migration succeeds.
+
+For an idle live app-server buffer whose persistent metadata is already moved,
+send `thread/settings/update` with the exact `threadId` and target `cwd` through
+that buffer's existing connection. Check the installed experimental schema and
+the response before updating buffer state. Set `default-directory` and
+`codex--buffer-directory` to the target, preserve the session ID, and update
+`codex--buffer-instance-name` and the buffer name together. If the target's
+instance name is occupied, choose a distinct instance such as `moved`; never
+replace the other buffer. Do not interrupt an active turn or pretend changing
+only the displayed name relocates the running session. Exited matching buffers
+still need their directory and name synchronized.
+
+Verify the resulting buffer name, directory, exact session ID and live server
+`thread/read` cwd. Verify persistent metadata separately. A passing history
+listing alone does not establish that an existing buffer moved.
 
 Inspect exit status and journal; independently read back selected metadata,
 exact thread rows and unchanged unrelated records. Compare the actual result

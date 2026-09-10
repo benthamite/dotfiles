@@ -192,14 +192,21 @@ The paired =move-session-log= skill rewrites session metadata and Codex's
 project-filtered thread index using exact session identities and known metadata
 fields, preserving historical tool records. It inventories discovered shared
 profiles' active/archive stores, history, indexes and databases; absent artifacts
-and discovery limits are explicit. Dry-run reads captured SQLite snapshots,
-including WAL state, without opening originals for recovery. Apply requires
-offline stores, writer checks and private recovery backups; a backup directory
+and discovery limits are explicit. Single-session imports require the target
+session to be closed, while unrelated sessions remain open. SQLite read
+transactions, online backups and exact-row updates coordinate live database
+access; only JSONL files requiring replacement need closed writers. Bulk rename
+and explicit =--offline= retain full-store offline checks and captured database/WAL
+snapshots. Both modes require writer checks and private recovery backups; a backup directory
 whose parent does not yet exist is refused by name. Per-file and SQLite
 operations are not one transaction; a journal records partial failures. Metadata
 readback is distinct from observing the actual live resume consumer. Database
 updates cover thread =cwd=, not independent project associations; unsupported
 generations and schema side effects refuse before writes.
+For Emacs sessions, completion also requires the matching buffer name and
+directory to agree with the live server and persistent metadata. Idle live
+buffers use =thread/settings/update= before their directory and name change;
+instance-name collisions preserve the existing buffer.
 
 The paired =update-log= skill runs only on an explicit bookkeeping request or
 the deliberate =--auto= chain. It preserves established map modes, intentionally

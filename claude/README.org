@@ -365,6 +365,11 @@ parent does not yet exist, each with a named reason. Historical tool records rem
 unchanged, and project trust/settings remain untouched unless separately
 authorized. A recovery journal records partial failures; metadata counts alone
 do not establish live resume behavior.
+The paired Codex adapter allows single closed-session imports while unrelated
+sessions remain open, using SQLite transactions and consistent recovery backups.
+Its bulk rename mode retains the full-store offline checks.
+Codex relocation also reconciles the exact session's Emacs buffer and live
+working directory, rather than treating a history-listing change as completion.
 
 Model-invocable tracked skills do not preapprove bare high-risk tools through
 =allowed-tools=. Loading a skill therefore leaves Bash, write, edit, agent, and

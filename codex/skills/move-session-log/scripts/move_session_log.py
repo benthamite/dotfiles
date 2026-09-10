@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""Relocate known Codex project metadata, offline and with recoverable backups.
+"""Relocate known Codex project metadata with recoverable backups.
 
 Historical messages, tool arguments and results are not routing metadata.
+Single-session imports allow unrelated sessions to remain online; bulk renames
+and explicitly offline imports retain the full-store offline checks.
 This adapter does not prove that an already-running Codex process has reloaded
 the changed metadata. Discovery covers the selected home and matching sibling
 .codex* homes, not every possible CODEX_HOME on the machine.
@@ -477,7 +479,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--project", help="single-session target; defaults to PWD")
     parser.add_argument("--rename", nargs=2, metavar=("OLD", "NEW"))
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--offline", action="store_true", help="assert all affected writers are stopped")
+    parser.add_argument("--offline", action="store_true",
+                        help="use full-store offline checks (required for bulk rename)")
     parser.add_argument("--backup-dir", type=Path, help="new absolute private backup directory outside Drive")
     args = parser.parse_args()
     if args.rename and (args.session_id or args.project is not None):
@@ -497,7 +500,12 @@ def main() -> int:
             if not args.session_id:
                 list_recent(project)
                 return 0
-            plan, report = make_plan(args.session_id, None, project)
+            if args.offline:
+                plan, report = make_plan(args.session_id, None, project)
+            else:
+                from live_import import make_live_plan
+                plan, report = make_live_plan(args.session_id, project,
+                                              adapter=sys.modules[__name__])
         backup = plan.run(dry_run=args.dry_run, offline=args.offline, backup_dir=args.backup_dir)
         print(f"dry run: {args.dry_run}")
         if report["session"] is not None:
@@ -528,6 +536,9 @@ def main() -> int:
         return 1
     except (OSError, UnicodeError):
         print("Migration refused or incomplete: metadata filesystem operation failed", file=sys.stderr)
+        return 1
+    except sqlite3.Error as error:
+        print(f"Migration refused or incomplete: SQLite preflight failed: {error}", file=sys.stderr)
         return 1
 
 

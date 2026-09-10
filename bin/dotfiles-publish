@@ -165,19 +165,20 @@ def write_json(path, payload, mode=FILE_MODE):
     """Write JSON atomically through a sibling temporary file."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.parent / ("." + path.name + ".tmp")
-    descriptor = os.open(str(temporary), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, mode)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix="." + path.name + ".", suffix=".tmp", dir=str(path.parent)
+    )
+    temporary = Path(temporary_name)
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            os.fchmod(handle.fileno(), mode)
             json.dump(payload, handle, indent=2, sort_keys=True)
             handle.write("\n")
             handle.flush()
             os.fsync(handle.fileno())
-    except BaseException:
+        os.replace(str(temporary), str(path))
+    finally:
         temporary.unlink(missing_ok=True)
-        raise
-    os.chmod(str(temporary), mode)
-    os.replace(str(temporary), str(path))
 
 
 def read_json(path):
@@ -449,24 +450,10 @@ def outgoing_commits(repo, boundary):
 # Run records
 # --------------------------------------------------------------------------
 
-RUN_IDENTITY_FIELDS = (
-    "schema",
-    "mode",
-    "run_id",
-    "repository",
-    "remote_name",
-    "remote_url",
-    "remote_ref",
-    "remote_oid",
-    "candidate_oid",
-    "ruleset_id",
-    "release_tag",
-)
-
-
-def compute_run_id(mode, repo, boundary, ruleset_id, tag, notes_digest):
+def compute_run_id(mode, repo, boundary, ruleset_id, tag, notes_digest, scan_id):
     return sha256_of(
         "dotfiles-publish-run",
+        scan_id,
         str(SCHEMA),
         mode,
         str(repo.root),
@@ -499,19 +486,13 @@ def load_run(repo, run_id):
 
 def store_run(repo, record):
     directory = run_directory(repo, record["run_id"])
-    directory.mkdir(parents=True, exist_ok=True)
+    directory.parent.mkdir(parents=True, exist_ok=True)
     os.chmod(str(directory.parent), DIRECTORY_MODE)
-    os.chmod(str(directory), DIRECTORY_MODE)
+    try:
+        directory.mkdir(mode=DIRECTORY_MODE)
+    except FileExistsError:
+        raise PublishError("run %s already exists; refusing to replace a scan" % record["run_id"], EXIT_REFUSED)
     path = directory / "run.json"
-    if path.exists():
-        existing = read_json(path)
-        for field in RUN_IDENTITY_FIELDS:
-            if existing.get(field) != record.get(field):
-                raise PublishError(
-                    "run %s already exists with a different %s; a changed input needs a new run"
-                    % (record["run_id"], field)
-                )
-        record["created_at"] = existing.get("created_at", record["created_at"])
     write_json(path, record)
     return path
 
@@ -537,9 +518,22 @@ def full_audit_receipt(repo):
     return read_json(path)
 
 
+def latest_audit_run(repo):
+    path = repo.state_dir / "full-audit-generation.json"
+    if not path.exists():
+        return None
+    run_id = read_json(path).get("run_id")
+    if not isinstance(run_id, str) or not re.fullmatch(r"[0-9a-f]{32}", run_id):
+        raise PublishError("invalid full-audit generation; scan and review again", EXIT_REFUSED)
+    return run_id
+
+
 def full_audit_staleness(repo, ruleset_id, now):
     """Return the reason a full audit is due, or None when the receipt holds."""
     receipt = full_audit_receipt(repo)
+    latest = latest_audit_run(repo)
+    if latest is not None and (receipt is None or receipt.get("run_id") != latest):
+        return "the new full-audit scan is pending review"
     if receipt is None:
         return "no full audit has been recorded"
     if receipt.get("incident_flag"):
@@ -1837,7 +1831,8 @@ def build_audit_manifest(repo, run_id, result):
     digest.update(b"dotfiles-publish-manifest\x00")
     for unit in units:
         digest.update(unit["unit_id"].encode("utf-8") + b"\x00")
-        digest.update(hashlib.sha256(unit["content"].encode("utf-8")).digest())
+        encoded = json.dumps(unit, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        digest.update(hashlib.sha256(encoded).digest())
     return {
         "schema": SCHEMA,
         "run_id": run_id,
@@ -2224,7 +2219,7 @@ def store_manifest(repo, run_id, manifest):
 
 
 def load_manifest(repo, run_id):
-    load_run(repo, run_id)
+    record = load_run(repo, run_id)
     path = run_directory(repo, run_id) / "manifest.json"
     if not path.exists():
         raise PublishError("run %s has no manifest; scan again" % run_id, EXIT_REFUSED)
@@ -2234,6 +2229,15 @@ def load_manifest(repo, run_id):
             "run %s predates safe scanner redaction; scan again" % run_id,
             EXIT_REFUSED,
         )
+    if manifest.get("run_id") != run_id or record.get("manifest_id") != manifest.get("manifest_id"):
+        raise PublishError("the scan and manifest changed during review; scan and review again", EXIT_REFUSED)
+    digest = hashlib.sha256(b"dotfiles-publish-manifest\x00")
+    for unit in manifest["units"]:
+        digest.update(unit["unit_id"].encode("utf-8") + b"\x00")
+        encoded = json.dumps(unit, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        digest.update(hashlib.sha256(encoded).digest())
+    if digest.hexdigest() != manifest["manifest_id"]:
+        raise PublishError("manifest content changed; scan and review again", EXIT_REFUSED)
     return manifest
 
 
@@ -2282,7 +2286,11 @@ def load_review(repo, run_id, manifest):
             "entries": {},
         }
     review = read_json(path)
-    review.setdefault("entries", {})
+    if (review.get("schema") != SCHEMA or review.get("run_id") != run_id
+            or review.get("manifest_id") != manifest["manifest_id"]):
+        raise PublishError("the review was recorded against a different manifest or run; scan and review again", EXIT_REFUSED)
+    if not isinstance(review.get("entries"), dict):
+        raise PublishError("invalid review entries; scan and review again", EXIT_REFUSED)
     return review
 
 
@@ -2485,6 +2493,9 @@ def command_review_record(args):
 
     digest = findings_digest(records)
     with review_write_lock(repo, args.run):
+        current = load_manifest(repo, args.run)
+        if current != manifest:
+            raise PublishError("manifest changed while recording review; scan and review again", EXIT_REFUSED)
         review = load_review(repo, args.run, manifest)
         if os.environ.get("DOTFILES_PUBLISH_TESTING") == "1":
             delay = float(os.environ.get("DOTFILES_PUBLISH_TEST_REVIEW_DELAY", "0"))
@@ -2499,7 +2510,6 @@ def command_review_record(args):
                 % args.unit,
                 EXIT_REFUSED,
             )
-        review["manifest_id"] = manifest["manifest_id"]
         review["entries"][args.unit] = {
             "verdict": args.verdict,
             "digest": digest,
@@ -2623,6 +2633,9 @@ def record_full_audit(repo, run_id, status):
     record = load_run(repo, run_id)
     if record["mode"] != "full-audit" or not status.clean:
         return None
+    latest = latest_audit_run(repo)
+    if latest is not None and latest != run_id:
+        raise PublishError("a newer full-audit scan is pending review", EXIT_REFUSED)
     manifest = load_manifest(repo, run_id)
     if (
         status.run_id != run_id
@@ -2715,8 +2728,11 @@ def command_scan(args):
         fetch_missing_objects=args.mode == "readiness",
     )
     notes_digest = notes_digest_of(args.release_notes)
-    run_id = compute_run_id(args.mode, repo, boundary, ruleset_id, args.tag, notes_digest)
+    scan_id = secrets.token_hex(16)
+    run_id = compute_run_id(args.mode, repo, boundary, ruleset_id, args.tag, notes_digest, scan_id)
     now = now_epoch()
+    if args.mode == "full-audit":
+        write_json(repo.state_dir / "full-audit-generation.json", {"run_id": run_id})
     staleness = full_audit_staleness(repo, ruleset_id, now)
     incident_digest = incident_state_digest(repo)
 
@@ -2724,11 +2740,6 @@ def command_scan(args):
     if args.mode == "full-audit":
         result, public_refs = scan_full_audit(repo, key)
         manifest = build_audit_manifest(repo, run_id, result)
-        receipt = full_audit_receipt(repo)
-        if not staleness and receipt and receipt.get("run_id") == run_id:
-            # Storing this generation will replace the scan backing the current
-            # receipt, even when the manifest and scan timestamp are unchanged.
-            staleness = "the new full-audit scan is pending review"
     else:
         result = scan_outgoing(repo, boundary, key)
         manifest = build_manifest(
@@ -2740,7 +2751,7 @@ def command_scan(args):
         "run_id": run_id,
         "created_at": rfc3339(now),
         "scanned_epoch": now,
-        "scan_id": secrets.token_hex(16),
+        "scan_id": scan_id,
         "repository": str(repo.root),
         "remote_name": repo.remote_name,
         "remote_url": repo.fetch_url,
@@ -3216,6 +3227,10 @@ def command_hook(args):
         )
     if authorization["ruleset_id"] != ruleset_identity(repo.root):
         raise PublishError("the ruleset changed after the authorization", EXIT_REFUSED)
+
+    staleness = full_audit_staleness(repo, authorization["ruleset_id"], now)
+    if staleness:
+        raise PublishError("full audit required: %s" % staleness, EXIT_REFUSED)
 
     for update in proposed:
         if set(update["local_oid"]) == {"0"}:

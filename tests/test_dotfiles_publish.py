@@ -9,6 +9,7 @@ reaches standard output, standard error, or persisted state.
 from __future__ import annotations
 
 import copy
+import concurrent.futures
 import json
 import os
 import re
@@ -19,6 +20,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import threading
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -599,6 +601,30 @@ class DotfilesPublishDocumentationTests(unittest.TestCase):
             self.assertTrue((skill / "evals" / "scenarios.md").is_file(), skill)
 
 
+class DotfilesPublishAtomicStateTests(unittest.TestCase):
+    def test_concurrent_atomic_writes_preserve_a_complete_generation(self):
+        loaded = runpy.run_path(str(PUBLISH), run_name="isolated_atomic_tests")
+        functions = loaded["write_json"].__globals__
+        barrier = threading.Barrier(2)
+        original_dump = json.dump
+
+        def simultaneous_dump(payload, handle, **kwargs):
+            barrier.wait(timeout=5)
+            original_dump(payload, handle, **kwargs)
+
+        functions["json"] = SimpleNamespace(dump=simultaneous_dump)
+        with tempfile.TemporaryDirectory(prefix="dotfiles-atomic-") as directory:
+            path = Path(directory) / "full-audit-generation.json"
+            payloads = [{"run_id": "a" * 32}, {"run_id": "b" * 32}]
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+                futures = [pool.submit(loaded["write_json"], path, payload) for payload in payloads]
+                for future in futures:
+                    future.result(timeout=10)
+            self.assertIn(json.loads(path.read_text()), payloads)
+            self.assertEqual([path], list(Path(directory).iterdir()))
+            self.assertEqual(0o600, stat.S_IMODE(path.stat().st_mode))
+
+
 class DotfilesPublishStateTests(PublicationFixture):
     def test_readiness_preserves_stale_tracking_refs_and_fetch_head(self):
         base = self.publish_base()
@@ -728,7 +754,9 @@ class DotfilesPublishStateTests(PublicationFixture):
 
         first, first_run = self.scan()
         second, second_run = self.scan()
-        self.assertEqual(first_run, second_run)
+        self.assertNotEqual(first_run, second_run)
+        self.assertEqual(self.read_json(self.run_dir(first_run) / "run.json")["ruleset_id"],
+                         self.read_json(self.run_dir(second_run) / "run.json")["ruleset_id"])
         first_ruleset = self.read_json(self.run_dir(first_run) / "run.json")["ruleset_id"]
 
         (self.repo / ".gitleaks.toml").write_text("[extend]\nuseDefault = true\n")
@@ -738,18 +766,73 @@ class DotfilesPublishStateTests(PublicationFixture):
         self.assertNotEqual(first_ruleset, third_ruleset)
         self.assertNotEqual(first_run, third_run)
 
-    def test_run_id_refuses_a_conflicting_reuse(self):
+    def test_repeated_scan_preserves_original_snapshot_and_review(self):
         self.publish_base()
         self.commit("add notes", {"docs/notes.md": "notes\n"})
         _, run_id = self.scan()
+        self.review_all(run_id)
+        before = {p.name: p.read_bytes() for p in self.run_dir(run_id).iterdir() if p.is_file()}
+        _, repeated = self.scan()
+        self.assertNotEqual(run_id, repeated)
+        self.assertEqual(before, {p.name: p.read_bytes() for p in self.run_dir(run_id).iterdir() if p.is_file()})
+        self.assertFalse((self.run_dir(repeated) / "review.json").exists())
+        self.assertNotEqual(0, self.cli("review-status", "--run", repeated).returncode)
 
+    def test_existing_run_directory_cannot_be_reused(self):
+        self.publish_base()
+        _, run_id = self.scan()
+        loaded = runpy.run_path(str(PUBLISH), run_name="isolated_storage_tests")
+        repo = SimpleNamespace(state_dir=self.state_dir())
         record = self.read_json(self.run_dir(run_id) / "run.json")
-        record["candidate_oid"] = "0" * 40
-        (self.run_dir(run_id) / "run.json").write_text(json.dumps(record))
+        before = (self.run_dir(run_id) / "run.json").read_bytes()
+        with self.assertRaisesRegex(loaded["PublishError"], "refusing to replace"):
+            loaded["store_run"](repo, record)
+        self.assertEqual(before, (self.run_dir(run_id) / "run.json").read_bytes())
 
-        proc = self.cli("scan")
-        self.assertNotEqual(0, proc.returncode)
-        self.assertIn("candidate_oid", proc.stderr)
+    def test_review_record_refuses_mismatched_boundary_without_rebinding(self):
+        self.publish_base()
+        self.commit("add notes", {"docs/notes.md": "notes\n"})
+        _, run_id = self.scan()
+        units = self.review_all(run_id)
+        path = self.run_dir(run_id) / "review.json"
+        original = self.read_json(path)
+        for field in ("manifest_id", "run_id", "schema"):
+            with self.subTest(field=field):
+                review = dict(original, **{field: "different"})
+                path.write_text(json.dumps(review))
+                before = path.read_bytes()
+                result = self.cli("review-record", "--run", run_id, "--unit", units[0], "--verdict", "clean")
+                self.assertNotEqual(0, result.returncode)
+                self.assertIn("different manifest or run", result.stderr)
+                self.assertEqual(before, path.read_bytes())
+
+    def test_review_record_refuses_mutated_manifest(self):
+        self.publish_base()
+        self.commit("add notes", {"docs/notes.md": "notes\n"})
+        _, run_id = self.scan()
+        unit = self.unit_ids(run_id)[0]
+        path = self.run_dir(run_id) / "manifest.json"
+        manifest = self.read_json(path)
+        manifest["units"][0]["content"] += " changed"
+        path.write_text(json.dumps(manifest))
+        result = self.cli("review-record", "--run", run_id, "--unit", unit, "--verdict", "clean")
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("manifest content changed", result.stderr)
+        self.assertFalse((self.run_dir(run_id) / "review.json").exists())
+
+    def test_full_audit_metadata_is_bound_to_manifest_digest(self):
+        self.publish_base()
+        self.commit("add notes", {"docs/notes.md": "notes\n"})
+        _, run_id = self.scan("--mode", "full-audit")
+        path = self.run_dir(run_id) / "manifest.json"
+        manifest = self.read_json(path)
+        unit = manifest["units"][0]["unit_id"]
+        manifest["units"][0]["path"] = "different-source"
+        path.write_text(json.dumps(manifest))
+        result = self.cli("review-record", "--run", run_id, "--unit", unit, "--verdict", "clean")
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("manifest content changed", result.stderr)
+        self.assertFalse((self.run_dir(run_id) / "review.json").exists())
 
     def test_fingerprint_key_is_created_once_and_permission_checked(self):
         self.publish_base()
@@ -1364,7 +1447,7 @@ class DotfilesPublishManifestTests(PublicationFixture):
         shown = self.cli("review-show", "--run", run_id, "--unit", path_unit["unit_id"])
 
         self.assertEqual(1, shown.returncode)
-        self.assertIn("predates safe redaction", shown.stderr)
+        self.assertIn("manifest content changed", shown.stderr)
 
     def test_concurrent_review_records_do_not_overwrite_each_other(self):
         self.publish_base()
@@ -1968,6 +2051,16 @@ class DotfilesPublishAuthorizationTests(PublicationFixture):
         )
         self.assertNotEqual(0, expired.returncode)
         self.assertIn("expired", (expired.stdout + expired.stderr).lower())
+
+    def test_new_audit_blocks_already_issued_push_authorization(self):
+        run_id = self.prepare_authorized_run()
+        authorized = self.cli("authorize", "--run", run_id)
+        self.assertEqual(0, authorized.returncode, authorized.stderr)
+        self.scan("--mode", "full-audit")
+        refused = self.cli("hook", "origin", str(self.remote), stdin=self.hook_input(run_id))
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("pending review", refused.stderr)
+        self.assertFalse((self.state_dir() / "authorization.json").exists())
 
     def test_changed_head_remote_ref_remote_tip_or_ruleset_invalidates_authorization(self):
         run_id = self.prepare_authorized_run()
@@ -3162,7 +3255,8 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         self.assertFalse((self.state_dir() / "full-audit.json").exists())
 
         _, rescanned_run = self.scan("--mode", "full-audit")
-        self.assertEqual(run_id, rescanned_run)
+        self.assertNotEqual(run_id, rescanned_run)
+        self.review_all(rescanned_run)
         completed = self.cli("review-status", "--run", rescanned_run)
         self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
         self.assertIn("full-audit-recorded: ", completed.stdout)
@@ -3393,7 +3487,8 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         self.assertIn("full-audit-due: true", overdue.stdout)
 
         _, rescanned_run = self.scan("--mode", "full-audit")
-        self.assertEqual(run_id, rescanned_run)
+        self.assertNotEqual(run_id, rescanned_run)
+        self.review_all(rescanned_run)
         complete = self.cli("review-status", "--run", rescanned_run)
         self.assertEqual(0, complete.returncode, complete.stdout + complete.stderr)
         self.assertEqual(self.now, self.read_json(receipt_path)["completed_epoch"])
@@ -3412,24 +3507,50 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         rescanned, repeated_id = self.scan("--mode", "full-audit")
 
         self.assertEqual(0, rescanned.returncode, rescanned.stdout + rescanned.stderr)
-        self.assertEqual(audit_id, repeated_id)
+        self.assertNotEqual(audit_id, repeated_id)
         self.assertIn("full-audit-due: true", rescanned.stdout)
         self.assertIn("pending review", rescanned.stdout)
-        current = self.read_json(self.run_dir(audit_id) / "run.json")
+        current = self.read_json(self.run_dir(repeated_id) / "run.json")
         self.assertTrue(current["full_audit_due"])
         self.assertEqual(receipt["completed_epoch"], current["scanned_epoch"])
         self.assertEqual(receipt["manifest_id"], current["manifest_id"])
         self.assertNotEqual(receipt["scan_id"], current["scan_id"])
         refused = self.cli("authorize", "--run", publish_id)
         self.assertNotEqual(0, refused.returncode)
-        self.assertIn("full audit scan or manifest was replaced", refused.stderr)
+        self.assertIn("pending review", refused.stderr)
         self.assertFalse((self.state_dir() / "authorization.json").exists())
 
-        reviewed = self.cli("review-status", "--run", audit_id)
+        old_review = self.cli("review-status", "--run", audit_id)
+        self.assertNotEqual(0, old_review.returncode)
+        self.assertIn("newer full-audit", old_review.stderr)
+        self.assertEqual(receipt, self.read_json(receipt_path))
+        self.assertNotEqual(0, self.cli("review-status", "--run", repeated_id).returncode)
+        self.review_all(repeated_id)
+        reviewed = self.cli("review-status", "--run", repeated_id)
         self.assertEqual(0, reviewed.returncode, reviewed.stdout + reviewed.stderr)
         self.assertEqual(current["scan_id"], self.read_json(receipt_path)["scan_id"])
         authorized = self.cli("authorize", "--run", publish_id)
         self.assertEqual(0, authorized.returncode, authorized.stdout + authorized.stderr)
+
+    def test_failed_new_audit_still_blocks_old_receipt(self):
+        self.publish_base()
+        self.commit("ordinary work", {"docs/notes.md": "notes\n"})
+        _, audit_id = self.scan("--mode", "full-audit")
+        self.review_all(audit_id)
+        self.assertEqual(0, self.cli("review-status", "--run", audit_id).returncode)
+        receipt_path = self.state_dir() / "full-audit.json"
+        original = receipt_path.read_bytes()
+        _, publish_id = self.scan()
+        self.review_all(publish_id)
+        failed = self.cli("scan", "--mode", "full-audit", env=self.env(DOTFILES_PUBLISH_GITLEAKS=str(self.base / "missing-scanner")))
+        self.assertNotEqual(0, failed.returncode)
+        self.assertEqual(original, receipt_path.read_bytes())
+        refused = self.cli("authorize", "--run", publish_id)
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("pending review", refused.stderr)
+        old = self.cli("review-status", "--run", audit_id)
+        self.assertNotEqual(0, old.returncode)
+        self.assertEqual(original, receipt_path.read_bytes())
 
     def test_review_status_cannot_clear_later_incident_invalidation(self):
         self.publish_a_secret()

@@ -306,6 +306,29 @@ class CorrelatedEvidenceTests(unittest.TestCase):
         self.write(self.user(), self.assistant())
         self.assertEqual(self.terminal()["text"], "PHASE COMPLETE: spec")
 
+    def test_harness_injected_user_records_do_not_end_the_prompt_turn(self):
+        teammate = ("Another Claude session sent a message:\n"
+                    "<teammate-message teammate_id=\"conn-asana\">done</teammate-message>")
+        task = "<task-notification>\n<task-id>b1</task-id>\n</task-notification>"
+        reminder = "<system-reminder>\n[SYSTEM NOTIFICATION - NOT USER INPUT]\n</system-reminder>"
+        for wakeup in (teammate, task, reminder):
+            with self.subTest(wakeup=wakeup[:20]):
+                self.write(self.user(), self.assistant("waiting", stop_reason="end_turn"),
+                           self.user(wakeup), self.assistant(stop_reason="end_turn"))
+                self.assertEqual(self.terminal()["text"], "PHASE COMPLETE: spec")
+        # An explicit non-human origin is injected even without a known wrapper.
+        origin_record = dict(self.user("plain text"), origin={"kind": "system"})
+        self.write(self.user(), origin_record, self.assistant(stop_reason="end_turn"))
+        self.assertEqual(self.terminal()["text"], "PHASE COMPLETE: spec")
+        # A human-origin record is a real prompt even when it looks like a wrapper.
+        human_record = dict(self.user(teammate), origin={"kind": "human"})
+        self.write(self.user(), human_record, self.assistant(stop_reason="end_turn"))
+        self.assertIsNone(self.terminal())
+        # An ordinary later prompt still ends the turn.
+        self.write(self.user(), self.user("unrelated follow-up"),
+                   self.assistant(stop_reason="end_turn"))
+        self.assertIsNone(self.terminal())
+
     def test_claude_tool_use_text_is_output_but_not_a_return(self):
         self.write(self.user(), self.assistant(stop_reason="tool_use", extra={
             "type": "tool_use", "id": "toolu_fixture", "name": "Read", "input": {}}))

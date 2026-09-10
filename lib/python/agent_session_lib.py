@@ -403,11 +403,36 @@ def _user_message_text(obj: dict[str, Any]) -> str | None:
     message = message if isinstance(message, dict) else {}
     if obj.get("type") == "user" and message.get("role") == "user":
         content = message.get("content")
-        if isinstance(content, str):
-            return content
-        if isinstance(content, list):
-            return _text_parts(content, "text")
+        text = content if isinstance(content, str) else _text_parts(content, "text")
+        if text is None or _injected_claude_user_record(obj, text):
+            return None
+        return text
     return None
+
+
+# Claude Code wakes a session with user-role records it writes itself: a
+# subagent's teammate message or a finished background task.  They open no
+# operator turn, so they must not end the phase prompt's turn either.
+_INJECTED_USER_PREFIXES = (
+    "Another Claude session sent a message:",
+    "<task-notification>",
+    "<system-reminder>",
+    "[SYSTEM NOTIFICATION",
+)
+
+
+def _injected_claude_user_record(obj: dict[str, Any], text: str) -> bool:
+    """Return whether a Claude user record was injected by the harness.
+
+    A typed or delivered prompt records ``origin.kind == "human"``; a record
+    that declares another origin is not an operator prompt.  Records without
+    any origin are classified by the wrapper the harness writes, so an older
+    transcript without the field still recognizes the known wake-ups.
+    """
+    origin = obj.get("origin")
+    if isinstance(origin, dict) and origin.get("kind") is not None:
+        return origin.get("kind") != "human"
+    return text.lstrip().startswith(_INJECTED_USER_PREFIXES)
 
 
 def _text_parts(content: Any, kind: str) -> str | None:

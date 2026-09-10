@@ -418,6 +418,8 @@ _INJECTED_USER_PREFIXES = (
     "<task-notification>",
     "<system-reminder>",
     "[SYSTEM NOTIFICATION",
+    # Auto-compaction replays the conversation summary as a user record.
+    "This session is being continued from a previous conversation",
 )
 
 

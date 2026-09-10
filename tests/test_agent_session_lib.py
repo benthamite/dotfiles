@@ -311,7 +311,9 @@ class CorrelatedEvidenceTests(unittest.TestCase):
                     "<teammate-message teammate_id=\"conn-asana\">done</teammate-message>")
         task = "<task-notification>\n<task-id>b1</task-id>\n</task-notification>"
         reminder = "<system-reminder>\n[SYSTEM NOTIFICATION - NOT USER INPUT]\n</system-reminder>"
-        for wakeup in (teammate, task, reminder):
+        compaction = ("This session is being continued from a previous conversation that "
+                      "ran out of context. The summary below covers the earlier portion.")
+        for wakeup in (teammate, task, reminder, compaction):
             with self.subTest(wakeup=wakeup[:20]):
                 self.write(self.user(), self.assistant("waiting", stop_reason="end_turn"),
                            self.user(wakeup), self.assistant(stop_reason="end_turn"))

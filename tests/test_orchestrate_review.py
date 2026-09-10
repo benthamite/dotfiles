@@ -877,6 +877,26 @@ class StageAtomicRunTests(unittest.TestCase):
 
         send_return.assert_not_called()
 
+    def test_attempt_hash_matches_the_prompt_as_a_terminal_records_it(self):
+        # Claude Code stores a submitted prompt without its trailing newline, so
+        # a newline-terminated contract (steering) must hash in that form.
+        self.create_run(
+            adopt_implementation=True,
+            spec_commit="abc123",
+            plan_commit="def456",
+            reviews_complete=True,
+        )
+        state = orchestrator.load_run(self.run_file)
+        steering = orchestrator.STEERING_CONTRACT.format(stage="5", context="Obstacle: x")
+        self.assertTrue(steering.endswith("\n"))
+        prompt = orchestrator._new_attempt(state, "steering", "implementation", "Obstacle: x",
+                                           steering, state["agent1"]["identity"])
+        self.assertFalse(prompt.endswith("\n"))
+        pending = state["pending_submission"]
+        self.assertEqual(pending["prompt_sha256"], hashlib.sha256(prompt.encode()).hexdigest())
+        self.assertTrue(orchestrator.session._prompt_matches(
+            prompt.rstrip("\n"), pending["receipt"], pending["prompt_sha256"]))
+
     def test_retry_delivery_rejects_an_acknowledged_active_submission(self):
         self.create_run()
         state = orchestrator.load_run(self.run_file)

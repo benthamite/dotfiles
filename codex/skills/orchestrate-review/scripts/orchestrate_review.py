@@ -724,7 +724,9 @@ def _require_no_pending(state: dict[str, Any]) -> None:
 
 def _new_attempt(state, kind, phase, context, prompt, identity):
     receipt = "ORCHESTRATION ATTEMPT: " + uuid.uuid4().hex
-    prompt = receipt + "\n\n" + prompt
+    # A terminal composer records the prompt without trailing newlines, so the
+    # acknowledgement hash must be taken over the text as it will be recorded.
+    prompt = (receipt + "\n\n" + prompt).rstrip("\n")
     transcript = identity["transcript"]
     boundary = _capture_boundary(transcript)
     offset = boundary["length"] if boundary else 0

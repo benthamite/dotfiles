@@ -95,7 +95,7 @@ today's blanket rule (out of scope, see open decisions).
 | `item create|edit …` | no `--format`, no `--reveal` (default output masks concealed fields). |
 | `item delete`, `document create|edit|delete`, `vault create` | write-only shapes; no credential output. |
 | `document get … --out-file <regular path>`, `inject … --out-file <regular path>` | regular path only; no redirect-to-terminal. |
-| `whoami`, `vault list|get`, `user list|get`, `group list|get`, `account list`, `document list`, `item template list|get`, `--status`, `--stop`, `--version` | metadata only. |
+| `whoami`, `vault list|get`, `user list|get`, `group list|get`, `vault user list`, `vault group list`, `group user list`, `account list`, `document list`, `item template list|get`, `--status`, `--stop`, `--version` | metadata only (the membership listings print names, emails and permission flags, not secret values). |
 
 Everything else is denied as unclassified. That includes, deliberately:
 bare `read`; `read 2>/dev/null`; `read \| cat|tee|head|…`; `item get --fields …`;

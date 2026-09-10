@@ -586,6 +586,10 @@ def classify_invocation(
         return
     if sub in ("vault", "user", "group") and args[:1] in (["list"], ["get"]):
         return
+    # Membership and permission listings (`vault user list`, `vault group list`,
+    # `group user list`) print names, emails and permission flags, not secrets.
+    if sub in ("vault", "group") and args[:2] in (["user", "list"], ["group", "list"]):
+        return
     if sub == "vault" and args[:1] == ["create"]:
         return
     if sub == "account" and args[:1] == ["list"]:

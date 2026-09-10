@@ -74,6 +74,11 @@ ALLOW = [
     "op-automations whoami",
     "op-desktop vault list",
     "op-desktop user list",
+    # membership/permission listings carry no secret values
+    "op-desktop vault user list Operations --format=json",
+    'op-desktop vault user list "Operations" --format=json | python3 -c "import json,sys; print(len(json.load(sys.stdin)))"',
+    "op-desktop vault group list Operations --format=json",
+    "op-desktop group user list 'Team Members' --format=json",
     "op-desktop item template list",
     "op-desktop document list --vault Automations",
     # inert documentation

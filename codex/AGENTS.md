@@ -11,7 +11,6 @@
 - When two or more items need action or decision, restate the complete list whenever any of them comes up, each as a verb-first action with a do/skip/defer recommendation.
 - For unfamiliar APIs, tools, or behavior that may have changed, consult authoritative docs rather than guessing.
 - Clean up temporary artifacts you created (scratch files, temp git worktrees, throwaway branches, background processes) autonomously as part of finishing — this is your job, not a decision to surface. Use `trash` (not `rm -rf`) for anything you did not create, and never delete a target you didn't create without inspecting it first.
-- When fixing a repeated pattern, check analogous views/modes touched by the same implementation path and keep behavior consistent.
 - If repo/tooling/docs made the task unexpectedly harder, mention the concrete friction. For deep investigation, use the `diagnose` skill.
 
 ## Safety

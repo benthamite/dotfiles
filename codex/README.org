@@ -92,6 +92,9 @@ managed =.system= content, pairing, and maintenance. The generated
 skills. Dynamic plugins, private skills, ignored runtime system skills, and
 skills in other repositories are outside its scope.
 
+Project skills use synthetic contact examples and route MCP credentials through
+the owning account's secrets context without listing account or vault topology.
+
 The =profile-ai-cli-performance= skill measures selected client conditions
 with exact terminal-success evidence and nullable, failure-aware paired metrics.
 Dry runs do not access credentials or launch clients; selected conditions alone

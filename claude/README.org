@@ -370,6 +370,8 @@ sessions remain open, using SQLite transactions and consistent recovery backups.
 Its bulk rename mode retains the full-store offline checks.
 Codex relocation also reconciles the exact session's Emacs buffer and live
 working directory, rather than treating a history-listing change as completion.
+When Agent Log is the entry point, its cached catalog, rendered file location
+and actual =agent-log-resume-session= command are checked together.
 
 Model-invocable tracked skills do not preapprove bare high-risk tools through
 =allowed-tools=. Loading a skill therefore leaves Bash, write, edit, agent, and

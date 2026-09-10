@@ -207,6 +207,9 @@ For Emacs sessions, completion also requires the matching buffer name and
 directory to agree with the live server and persistent metadata. Idle live
 buffers use =thread/settings/update= before their directory and name change;
 instance-name collisions preserve the existing buffer.
+Agent Log's separate catalog and rendered index are part of its resume path.
+Moves used through Agent Log are verified by invoking =agent-log-resume-session=
+from the original rendered file, then reconciling that file's indexed location.
 
 The paired =update-log= skill runs only on an explicit bookkeeping request or
 the deliberate =--auto= chain. It preserves established map modes, intentionally

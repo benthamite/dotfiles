@@ -60,6 +60,9 @@ transactions. Do not transfer Claude's full-store offline requirement to that
 Codex operation; the transcript layouts and concurrency mechanisms differ.
 The Codex workflow also verifies the exact session's Emacs buffer and live
 working directory; a migrated history index does not rename an existing buffer.
+Agent Log keeps a separate catalog and rendered index. When it is the resume
+entry point, verify its actual `agent-log-resume-session` command from the user's
+rendered log and reconcile the rendered artifact through Agent Log itself.
 
 Establish that affected Claude sessions and other writers of shared history are
 stopped. Do not kill sessions, close Emacs, restart applications or switch

@@ -119,6 +119,17 @@ Archives remain archived; shell snapshots are not moved.
 
 ## Verify the right result
 
+For Agent Log, test `agent-log-resume-session` from the user's rendered log.
+Agent Log has its own persistent `agent-log-thread-catalog.json` and rendered
+index, separate from Codex's SQLite database and Emacs session buffers. A stale
+catalog can send resume back to the original project. Ensure resume resolves
+the current project from the exact canonical transcript, refresh Agent Log's
+catalog through its own refresh mechanism, and use its rendered-file maintenance
+to relocate the indexed Markdown file and any visiting buffer. Keep the
+original rendered path available until its resume command has been exercised.
+Verify the newly resumed session's ID, restored history and actual directory;
+renaming a previously running Codex buffer does not test this entry point.
+
 When the user works in Emacs, relocation includes the buffer associated with
 the exact session ID, not just disk metadata or the history picker. Inspect all
 Codex buffers, including buffers whose processes have exited, before and after

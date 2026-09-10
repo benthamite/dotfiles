@@ -76,7 +76,12 @@ today's blanket rule (out of scope, see open decisions).
    broker word still occurs anywhere in the masked, normalized command outside
    a classified invocation (`<(op-* …)`, `>(…)`, `"$OP" …`, `$(command -v
    op-*)`, inside a `bash -c '…'`/`eval` program, as an argument to another
-   command), the command is denied as unclassified.
+   command), the command is denied as unclassified. One exception: a broker
+   *path* given to a read-only text tool (`cat`, `sed`, `head`, `tail`, `wc`,
+   `diff`, `file`, `shellcheck`, plus the data commands `grep`/`rg`/`git`/`ls`/
+   `stat`/`readlink`) is the script's source being read, and passes unless that
+   stage is piped into a shell or interpreter, which would run what it reads
+   (`cat bin/op-automations | bash -s read …` stays denied).
 4. Any env-prefix assignment to an `OP_*` variable on an invocation, or the
    string `OP_RUN_NO_MASKING` anywhere in the command, denies. (`op run`
    honours `OP_RUN_NO_MASKING`, CLI release 2.30.3; both brokers pass the

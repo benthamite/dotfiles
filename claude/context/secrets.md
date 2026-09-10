@@ -51,7 +51,10 @@ Denied by name: `--reveal` anywhere, `item share`, `signin` (`--raw` prints a
 session token), `environment read`, `service-account create`, `connect …`,
 `events-api create`, brokers inside `bash -c '…'`/`eval`, variable or
 `command -v` indirection, process substitution, and raw `op` in any spelling
-(Touch ID routing, next section). The policy and its residual risks are in
+(Touch ID routing, next section). Reading a broker's *source* is fine: a
+broker path handed to a read-only text tool (`cat bin/op-automations`,
+`sed -n 1,50p ~/My\ Drive/dotfiles/bin/op-automations`) passes unless that
+stage is piped into a shell or interpreter. The policy and its residual risks are in
 `docs/superpowers/plans/2026-09-02-secret-guard-op-output-policy.md`; the case
 table is `tests/test_op_policy.py`.
 

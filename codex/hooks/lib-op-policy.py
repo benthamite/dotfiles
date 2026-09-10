@@ -41,6 +41,12 @@ PRINTERS = {
 RUN_DENIED_PROGRAMS = {"env", "printenv", "set", "export", "declare", "typeset", "eval"} | SHELLS
 # Words that may take a broker name as inert data.
 DATA_COMMANDS = {"echo", "printf", "grep", "rg", "ripgrep", "git", "ls", "stat", "readlink"}
+# Read-only text tools. A broker *path* handed to one of these is the script's
+# source being read, not the broker being run: `cat bin/op-automations`,
+# `sed -n 1,50p ~/My\ Drive/dotfiles/bin/op-automations`, `wc -l …`. Denied
+# again when the stage feeds an interpreter, which would run what it reads.
+TEXT_READERS = {"cat", "head", "tail", "wc", "sed", "diff", "file", "less", "more", "shellcheck"}
+INTERPRETERS = SHELLS | {"eval", "source", ".", "xargs", "perl", "ruby", "node", "awk"}
 # Commands that may consume a piped secret without printing it.
 CONSUMERS = (
     ("pbcopy",),
@@ -682,9 +688,24 @@ def classify(command: str, *, context: str = "command", depth: int = 0) -> None:
             # Residual broker words as arguments.
             for w in words[1:]:
                 if _basename(w.text) in BROKERS and not w.quoted:
-                    if base in DATA_COMMANDS:
+                    if base in DATA_COMMANDS | TEXT_READERS and not _feeds_interpreter(nxt):
                         continue
                     raise Deny(f"1Password broker passed as an argument to `{base}`")
+
+
+def _feeds_interpreter(nxt: Simple | None) -> bool:
+    """Whether the next pipeline stage could execute what it reads.
+
+    `cat bin/op-automations` is a source read; `cat bin/op-automations | bash -s
+    read op://…` runs the broker. An unrecognizable next stage counts as one.
+    """
+    if nxt is None:
+        return False
+    words = _strip_wrappers(nxt.words)
+    if not words or words[0].expands:
+        return True
+    base = _basename(words[0].text)
+    return base in INTERPRETERS or base.startswith("python")
 
 
 def _classify_capture(inner: str, context: str, depth: int) -> None:

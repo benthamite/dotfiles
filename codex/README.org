@@ -621,6 +621,13 @@ excludes untracked siblings. Untracked documentation cannot satisfy a requiremen
 for a commit that would omit it. Inspection rejects configured clean filters
 without executing them. Unsupported selection syntax is denied with a reason
 rather than checked against a different candidate.
+Candidate documentation audits execute the checker committed at =HEAD=.
+They omit private skill entrypoints from the disposable audit index only when
+both their indexed =git-crypt= attribute and ciphertext header agree. This
+keeps encrypted skills out of the public inventory without reading unlocked
+private text or executing a staged checker. Declared encryption with a
+plaintext indexed blob fails the audit.
+
 Quoted commit-message heredoc delimiters, like their bodies, are shell input
 rather than Git path selections. Interpreter-fed heredocs remain visible to
 the command classifier.

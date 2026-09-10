@@ -4280,6 +4280,47 @@ def candidate_documentation_audit_problems(
             ):
                 return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
 
+            # The documentation inventory is public metadata. Keep encrypted
+            # private entrypoints opaque and omit them only from this private
+            # audit index, never from the candidate or the user's real index.
+            # This also lets the trusted HEAD checker audit its own encryption
+            # support update without executing an untrusted staged checker.
+            skill_paths = sorted(path for path in entries if path.endswith("/SKILL.md"))
+            if skill_paths:
+                attributes = git_process(
+                    ["check-attr", "--cached", "-z", "--stdin", "filter"],
+                    environment=candidate_environment,
+                    input_data="\0".join(skill_paths) + "\0",
+                )
+                if attributes.returncode:
+                    return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                fields = attributes.stdout.split("\0")
+                if fields[-1:] != [""] or len(fields[:-1]) != 3 * len(skill_paths):
+                    return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                seen_skills: set[str] = set()
+                for offset in range(0, len(fields) - 1, 3):
+                    relative, attribute, value = fields[offset:offset + 3]
+                    if relative not in skill_paths or relative in seen_skills or attribute != "filter":
+                        return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                    seen_skills.add(relative)
+                    if value != "git-crypt" and not value.startswith("git-crypt-"):
+                        continue
+                    if entries[relative][0] not in {"100644", "100755"}:
+                        return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+                    with (worktree / relative).open("rb") as encrypted:
+                        header = encrypted.read(10)
+                    if header != b"\0GITCRYPT\0":
+                        return [
+                            "Skill declares git-crypt but its indexed blob is not encrypted: "
+                            + relative
+                        ]
+                    removal = git_process(
+                        ["update-index", "--force-remove", "--", relative],
+                        environment=candidate_environment,
+                    )
+                    if removal.returncode:
+                        return [CANDIDATE_DOCS_MATERIALIZATION_ERROR]
+
             return _run_documentation_audit(
                 worktree,
                 trusted_checker,

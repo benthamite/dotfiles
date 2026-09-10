@@ -1276,6 +1276,49 @@ class DocsAuditInventoryTests(DocsAuditTestCase):
 
         self.assertEqual([], self.module.skill_inventory_rows(root))
 
+    def test_inventory_excludes_declared_encrypted_skills_locked_and_unlocked(self):
+        relative = "claude/skills/private-example/SKILL.md"
+        root = self.make_repo({
+            ".gitattributes": f"{relative} filter=git-crypt diff=git-crypt\n",
+            relative: b"\0GITCRYPT\0synthetic-ciphertext\xff",
+        })
+        for contents in (
+            b"\0GITCRYPT\0synthetic-ciphertext\xff",
+            self.skill_text("private-example", "Private description."),
+        ):
+            with self.subTest(locked=isinstance(contents, bytes)):
+                self.write_file(root, relative, contents)
+                with mock.patch.object(
+                    Path, "read_text",
+                    side_effect=AssertionError("private contents were read"),
+                ):
+                    self.assertEqual([], self.module.skill_inventory_rows(root))
+
+    def test_encryption_attribute_does_not_hide_plaintext_skill(self):
+        relative = "claude/skills/private-example/SKILL.md"
+        root = self.make_repo({
+            ".gitattributes": f"{relative} filter=git-crypt diff=git-crypt\n",
+            relative: self.skill_text("private-example", "Description."),
+        })
+        self.assertEqual(
+            [f"Skill declares git-crypt but its indexed blob is not encrypted: {relative}"],
+            self.module.skill_inventory_input_problems(root),
+        )
+
+    def test_undeclared_ciphertext_remains_an_inventory_error(self):
+        relative = "claude/skills/example/SKILL.md"
+        root = self.make_repo({relative: b"\0GITCRYPT\0synthetic-ciphertext\xff"})
+        self.assertEqual(
+            [f"Tracked skill could not be read: {relative}"],
+            self.module.skill_inventory_input_problems(root),
+        )
+
+    def test_unstaged_encryption_attribute_cannot_exclude_public_skill(self):
+        relative = "claude/skills/example/SKILL.md"
+        root = self.make_repo({relative: self.skill_text("example", "Description.")})
+        self.write_file(root, ".gitattributes", f"{relative} filter=git-crypt\n")
+        self.assertEqual(["example"], [row.name for row in self.module.skill_inventory_rows(root)])
+
     def test_public_skill_symlink_to_private_content_is_not_read(self):
         root = self.make_repo(
             {"claude/private-skills/secret/SKILL.md": b"\xff\xfeprivate"}

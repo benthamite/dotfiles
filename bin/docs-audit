@@ -315,6 +315,27 @@ def _excluded_skill_path(relative: str) -> bool:
     )
 
 
+def _skill_encryption_filters(root: Path, paths: list[str]) -> dict[str, str]:
+    """Read filter declarations from the same index that supplies skill paths."""
+    if not paths:
+        return {}
+    result = subprocess.run(
+        ["git", "check-attr", "--cached", "-z", "--stdin", "filter"],
+        cwd=root, input="\0".join(paths) + "\0", check=True,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, shell=False,
+    )
+    fields = result.stdout.split("\0")
+    if fields[-1:] != [""] or len(fields[:-1]) != 3 * len(paths):
+        raise ValueError("Cannot determine indexed skill encryption attributes")
+    filters = {}
+    for offset in range(0, len(fields) - 1, 3):
+        path, attribute, value = fields[offset:offset + 3]
+        if path not in paths or path in filters or attribute != "filter":
+            raise ValueError("Cannot determine indexed skill encryption attributes")
+        filters[path] = value
+    return filters
+
+
 def _skill_scope(relative: str) -> str | None:
     parts = PurePosixPath(relative).parts
     if parts[0] == "archive":
@@ -363,9 +384,10 @@ def _skill_row_sort_key(row: SkillInventoryRow) -> tuple[object, ...]:
 def _skill_inventory_result(root: Path) -> _SkillInventoryResult:
     definitions: list[_SkillDefinition] = []
     problems: list[str] = []
-    for relative in git_files(root):
-        if not relative.endswith("/SKILL.md") or _excluded_skill_path(relative):
-            continue
+    paths = [relative for relative in git_files(root)
+             if relative.endswith("/SKILL.md") and not _excluded_skill_path(relative)]
+    filters = _skill_encryption_filters(root, paths)
+    for relative in paths:
 
         scope = _skill_scope(relative)
         if scope is None:
@@ -397,6 +419,21 @@ def _skill_inventory_result(root: Path) -> _SkillInventoryResult:
             problems.append(
                 f"Tracked public skill resolves to excluded content: {relative}"
             )
+            continue
+        encryption_filter = filters[relative]
+        if encryption_filter == "git-crypt" or encryption_filter.startswith("git-crypt-"):
+            # A declaration alone must never hide accidentally committed
+            # plaintext. Inspect the indexed representation without decrypting
+            # or reading the private working-tree skill.
+            indexed = subprocess.run(
+                ["git", "show", f":{relative}"], cwd=root, check=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False,
+            ).stdout
+            if not indexed.startswith(b"\0GITCRYPT\0"):
+                problems.append(
+                    "Skill declares git-crypt but its indexed blob is not encrypted: "
+                    f"{relative}"
+                )
             continue
         try:
             text = path.read_text(encoding="utf-8")

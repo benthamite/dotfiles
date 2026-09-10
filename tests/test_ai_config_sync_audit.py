@@ -532,6 +532,56 @@ if os.path.lexists(mode_link) and (
         self.assertEqual([], problems)
         self.assertFalse(marker.exists())
 
+    def test_candidate_docs_keep_encrypted_skills_opaque_with_trusted_checker(self):
+        repo = self.make_candidate_docs_repo()
+        checker = repo / "bin/docs-audit"
+        # Model the prior trusted checker, which reads every indexed entrypoint.
+        checker.write_text(checker.read_text() + """
+import subprocess
+for name in subprocess.check_output(["git", "ls-files", "-z"], cwd=root).decode().split("\\0"):
+    if name.endswith("/SKILL.md"):
+        (root / name).read_text(encoding="utf-8")
+""")
+        self.run_git(repo, "add", "bin/docs-audit")
+        self.run_git(repo, "commit", "-m", "old inventory checker")
+        relative = "claude/skills/private-example/SKILL.md"
+        self.write_file(repo, relative)
+        encrypted = b"\0GITCRYPT\0synthetic-ciphertext\xff"
+        (repo / relative).write_bytes(encrypted)
+        self.write_file(repo, ".gitattributes", f"{relative} filter=git-crypt\n")
+        self.run_git(repo, "add", ".gitattributes", relative)
+        # The real checkout may be unlocked; it must never supply audit text.
+        (repo / relative).write_text("private frontmatter stays unread\n")
+        marker = repo / "candidate-checker-ran"
+        checker.write_text(f"from pathlib import Path\nPath({str(marker)!r}).touch()\n")
+        self.run_git(repo, "add", "bin/docs-audit")
+        # Populate the existing write-tree cache before measuring audit changes.
+        self.run_git(repo, "write-tree")
+        index = repo / ".git/index"
+        before = index.read_bytes()
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset())
+            )
+        self.assertEqual([], problems)
+        self.assertEqual(before, index.read_bytes())
+        self.assertFalse(marker.exists())
+        self.assertEqual("private frontmatter stays unread\n", (repo / relative).read_text())
+
+    def test_candidate_docs_encryption_attribute_cannot_hide_plaintext_skill(self):
+        repo = self.make_candidate_docs_repo()
+        relative = "claude/skills/private-example/SKILL.md"
+        self.write_file(repo, relative, "plaintext skill\n")
+        self.write_file(repo, ".gitattributes", f"{relative} filter=git-crypt\n")
+        self.run_git(repo, "add", ".gitattributes", relative)
+        with mock.patch.object(self.module, "ROOT", repo):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset())
+            )
+        self.assertEqual([
+            "Skill declares git-crypt but its indexed blob is not encrypted: " + relative
+        ], problems)
+
     def test_candidate_docs_preserve_executable_and_symlink_modes(self):
         repo = self.make_candidate_docs_repo()
         script = repo / "mode-script"

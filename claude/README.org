@@ -584,6 +584,13 @@ line numbers, scopes, and classifications without printing values.
 
 Commit gates resolve explicit path selections against a disposable candidate index. A =git commit --only= checks the selected working-tree changes, including inherited changes when amending, without counting unrelated staged Elisp or documentation. Unsupported selection syntax is denied with a reason; these checks do not alter the shared index.
 
+Candidate documentation audits execute the checker committed at =HEAD=.
+They omit private skill entrypoints from the disposable audit index only when
+both their indexed =git-crypt= attribute and ciphertext header agree. This
+keeps encrypted skills out of the public inventory without reading unlocked
+private text or executing a staged checker. Declared encryption with a
+plaintext indexed blob fails the audit.
+
 Quoted commit-message heredocs are shell input. Their delimiters and bodies are excluded from Git's selected paths; interpreter-fed heredocs remain visible to the command classifier.
 
 The Elisp evidence gate recovers a nested =functions.exec= command's working directory before routing it to a repository. The reduced routing payload cannot recover the parent transcript context afterward. Directory selections include files known to Git, so an untracked manual cannot satisfy the documentation gate.

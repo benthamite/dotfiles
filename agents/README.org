@@ -119,8 +119,12 @@ stay in place so their supporting files and relative paths remain intact.
 
 The generated [[file:skill-inventory.org][tracked skill inventory]] records all public skill sources owned by
 this repository, including sources outside that selection. It deliberately excludes
-dynamic plugins, ignored runtime system skills, private skills, and skills from
-other repositories. Catalog selection does not remove tracked files or history.
+dynamic plugins, ignored runtime system skills, private skills, encrypted skills,
+and skills from other repositories. An encrypted skill is excluded only when its
+indexed Git attributes declare =git-crypt= and its indexed blob has the encrypted
+header; a declaration over plaintext fails the audit. This works in locked
+checkouts and avoids reading decrypted private frontmatter in unlocked ones.
+Catalog selection does not remove tracked files or history.
 Each =SKILL.md= owns behavior; [[file:../claude/skills/README.org][the Claude skill index]] and
 [[file:../codex/skills/README.org][the Codex skill index]] own their tree mechanics.
 

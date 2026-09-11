@@ -1581,7 +1581,7 @@ class DocsAuditInventoryTests(DocsAuditTestCase):
             self.module.skill_inventory_input_problems(root),
         )
 
-    def test_rendering_escapes_org_cells_and_sorts_deterministically(self):
+    def test_rendering_bullets_preserves_prose_and_sorts_deterministically(self):
         rows = [
             self.module.SkillInventoryRow(
                 name="zeta",
@@ -1620,13 +1620,23 @@ class DocsAuditInventoryTests(DocsAuditTestCase):
                 "outside its scope.\n"
             )
         )
-        self.assertLess(rendered.index("| =Alpha= |"), rendered.index("| =zeta= |"))
+        self.assertLess(rendered.index("- =Alpha="), rendered.index("- =zeta="))
         self.assertLess(
             rendered.index("* Global"),
             rendered.index("* Project-local: dotfiles"),
         )
-        self.assertIn(r"A backslash \\\\ and a \| pipe.", rendered)
-        self.assertIn(r"=codex/skills/zeta\\\\part\|x/SKILL.md=", rendered)
+        self.assertIn(r"A backslash \\ and a | pipe.", rendered)
+        self.assertIn(r"[[file:../codex/skills/zeta\\part|x/SKILL.md][Codex]]", rendered)
+        self.assertIn(
+            "- =local= ([[file:../.codex/skills/local/SKILL.md][Codex]], "
+            "[[file:../.claude/skills/local/SKILL.md][Claude Code]]): Local.",
+            rendered,
+        )
+        self.assertNotIn("\n|", rendered)
+        self.assertIn(
+            "[[file:../../claude/skills/alpha/SKILL.md][Claude Code]]",
+            self.module.render_skill_inventory(rows, "docs/agents/inventory.org"),
+        )
         self.assertEqual(rendered, self.module.render_skill_inventory(list(reversed(rows))))
 
     def test_same_name_in_different_scopes_stays_separate(self):

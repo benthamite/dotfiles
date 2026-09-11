@@ -603,47 +603,30 @@ def manifest_note_problems(root: Path) -> list[str]:
     return sorted(problems)
 
 
-def _org_table_cell(value: str) -> str:
-    return value.replace("\\", "\\\\").replace("|", "\\|")
-
-
 def _org_code(value: str) -> str:
     return f"={value}=" if "=" not in value else value
 
 
-def render_skill_inventory(rows: list[SkillInventoryRow]) -> str:
-    """Render inventory rows as deterministic Org tables."""
+def render_skill_inventory(
+    rows: list[SkillInventoryRow], relative: str = "agents/skill-inventory.org"
+) -> str:
+    """Render skill bullets with links relative to the inventory file."""
     lines = SKILL_INVENTORY_HEADER.rstrip("\n").splitlines()
     ordered = sorted(rows, key=_skill_row_sort_key)
     for scope in SKILL_SCOPES:
         scoped_rows = [row for row in ordered if row.scope == scope]
         if not scoped_rows:
             continue
-        lines.extend(
-            [
-                "",
-                f"* {scope}",
-                "",
-                "| Skill | Tools | Description | Paths |",
-                "|-------+-------+-------------+-------|",
-            ]
-        )
+        lines.extend(["", f"* {scope}", ""])
         for row in scoped_rows:
-            tools = ", ".join(
-                tool for tool in SKILL_TOOLS if tool in row.tools
-            )
-            paths = ", ".join(
-                _org_code(path) for path in sorted(row.paths)
-            )
-            cells = (
-                _org_code(row.name),
-                tools,
-                row.description,
-                paths,
-            )
-            lines.append(
-                "| " + " | ".join(_org_table_cell(cell) for cell in cells) + " |"
-            )
+            links = []
+            for tool, label in (("Codex", "Codex"), ("Claude", "Claude Code")):
+                paths = sorted(path for path in row.paths if _skill_tool(path) == tool)
+                for path in paths:
+                    target = posixpath.relpath(path, posixpath.dirname(relative) or ".")
+                    link_label = f"{label}: {path}" if len(paths) > 1 else label
+                    links.append(f"[[file:{target}][{link_label}]]")
+            lines.append(f"- {_org_code(row.name)} ({', '.join(links)}): {row.description}")
     return "\n".join(lines) + "\n"
 
 
@@ -688,7 +671,7 @@ def skill_inventory_problems(root: Path, policy: dict) -> list[str]:
         actual = path.read_text(encoding="utf-8")
     except (OSError, UnicodeError):
         return [f"Generated skill inventory is invalid: {relative}"]
-    expected = render_skill_inventory(list(result.rows))
+    expected = render_skill_inventory(list(result.rows), relative)
     if actual != expected:
         return [f"Generated skill inventory is stale: {relative}"]
     return []
@@ -719,7 +702,7 @@ def write_skill_inventory(root: Path, policy: dict) -> list[str]:
             delete=False,
         ) as handle:
             temporary = Path(handle.name)
-            handle.write(render_skill_inventory(list(result.rows)))
+            handle.write(render_skill_inventory(list(result.rows), relative))
             handle.flush()
             os.fsync(handle.fileno())
         temporary.chmod(0o644)

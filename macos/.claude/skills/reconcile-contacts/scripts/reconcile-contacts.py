@@ -29,6 +29,10 @@ from urllib.parse import urlsplit
 
 MAX_BBDB_BYTES = 16 * 1024 * 1024
 MAX_CONTACT_ROWS = 100000
+# ZABCDRECORD stores every Core Data record kind; only this entity is a contact
+# card. Groups, the account container and the store's info row are not
+# unprojected contacts and must not make an otherwise complete read incomplete.
+CONTACT_ENTITY_NAMES = frozenset({"ABCDContact"})
 
 
 class InputError(ValueError):
@@ -353,6 +357,7 @@ def load_contacts(db_path: Path, *, metadata=None) -> list[dict]:
     records = {}
     row_count = 0
     orphan_rows = Counter()
+    non_contact_rows = Counter()
     started = time.monotonic()
     try:
         con = sqlite3.connect(selected.as_uri() + "?mode=ro", uri=True, timeout=5)
@@ -369,13 +374,24 @@ def load_contacts(db_path: Path, *, metadata=None) -> list[dict]:
                     raise InputError("Contacts exceeds the supported table-row limit")
                 yield row
 
+        entity_names = {}
+        for entity, name in rows("select Z_ENT, Z_NAME from Z_PRIMARYKEY"):
+            if not isinstance(entity, int) or not isinstance(name, str) or entity in entity_names:
+                raise InputError("Unsupported Contacts entity table")
+            entity_names[entity] = name
         for row in rows(
-            "select Z_PK, coalesce(ZFIRSTNAME,''), coalesce(ZMIDDLENAME,''), "
+            "select Z_PK, Z_ENT, coalesce(ZFIRSTNAME,''), coalesce(ZMIDDLENAME,''), "
             "coalesce(ZLASTNAME,''), coalesce(ZMAIDENNAME,''), coalesce(ZNICKNAME,''), "
             "coalesce(ZSUFFIX,''), coalesce(ZORGANIZATION,''), ZBIRTHDAY, ZUNIQUEID "
             "from ZABCDRECORD"
         ):
-            pk, first, mid, last, maiden, nick, sfx, org, birthday, uid = row
+            pk, entity, first, mid, last, maiden, nick, sfx, org, birthday, uid = row
+            entity_name = entity_names.get(entity)
+            if entity_name is None:
+                raise InputError("Unsupported Contacts record entity")
+            if entity_name not in CONTACT_ENTITY_NAMES:
+                non_contact_rows[entity_name] += 1
+                continue
             if not isinstance(pk, int) or pk in records or any(
                     not isinstance(value, str) for value in
                     (first, mid, last, maiden, nick, sfx, org)):
@@ -429,12 +445,14 @@ def load_contacts(db_path: Path, *, metadata=None) -> list[dict]:
                         schema="Private ZABCDRECORD/email/URL/phone column projection",
                         rows_read=row_count, records=len(included),
                         omitted_without_supported_fields=len(records) - len(included),
+                        non_contact_rows=dict(sorted(non_contact_rows.items())),
                         orphan_related_rows=dict(orphan_rows),
                         birthday_encoding="Assumed Apple 2001 UTC seconds; year 1604 means yearless",
                         limitations=["One SQLite read transaction, not a whole-store export",
                                      "SQL read-only may still create/use WAL or SHM sidecars",
                                      "Private schema and birthday conventions require source-specific review",
                                      "Rows without supported fields may still have unprojected addresses, notes or photos",
+                                     "Only ABCDContact entity rows are contacts; groups and account metadata rows are excluded and counted",
                                      "100000 total table rows and 30-second query budget"])
     elif len(included) != len(records) or orphan_rows:
         raise InputError("Contacts projection has omitted or orphan rows; metadata is required to expose these gaps")

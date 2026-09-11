@@ -59,7 +59,10 @@ Cancellation during batch parsing reports `interrupted` and exits with
 
 The Contacts adapter uses a version-sensitive private SQLite schema. Missing
 tables/fields, denied access, empty input and partial reads are not an empty
-successful reconciliation. Do not rewrite the database directly.
+successful reconciliation. Do not rewrite the database directly. Only rows of
+the contact entity are contacts: groups and account-metadata rows share the
+same record table and are excluded and counted, never treated as unprojected
+contacts; an unknown record entity fails closed.
 
 Read changing SQLite state with a read-only connection and consistent read
 transaction, preserving WAL context. Do not copy only the main file while

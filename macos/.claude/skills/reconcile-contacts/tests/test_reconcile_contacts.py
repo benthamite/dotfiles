@@ -161,18 +161,26 @@ class IdentityTests(unittest.TestCase):
         self.assertEqual(MODULE.reconcile(bbdb, contacts)["status"], "incomplete")
 
 
+# Entity numbers mirror the shape of the private store: several record kinds
+# share ZABCDRECORD and only the contact entity is a contact card.
+CONTACT_ENTITY = 22
+ENTITY_NAMES = {19: "ABCDGroup", CONTACT_ENTITY: "ABCDContact", 24: "ABCDInfo", 25: "CNCDContainer"}
+
+
 def create_contacts(path, records):
     with contextlib.closing(sqlite3.connect(path)) as connection:
         connection.executescript(
-            "CREATE TABLE ZABCDRECORD (Z_PK INTEGER PRIMARY KEY,ZFIRSTNAME TEXT,ZMIDDLENAME TEXT,"
+            "CREATE TABLE Z_PRIMARYKEY (Z_ENT INTEGER PRIMARY KEY,Z_NAME TEXT);"
+            "CREATE TABLE ZABCDRECORD (Z_PK INTEGER PRIMARY KEY,Z_ENT INTEGER,ZFIRSTNAME TEXT,ZMIDDLENAME TEXT,"
             "ZLASTNAME TEXT,ZMAIDENNAME TEXT,ZNICKNAME TEXT,ZSUFFIX TEXT,ZORGANIZATION TEXT,ZBIRTHDAY,ZUNIQUEID TEXT);"
             "CREATE TABLE ZABCDEMAILADDRESS (ZOWNER INTEGER,ZADDRESS TEXT);"
             "CREATE TABLE ZABCDURLADDRESS (ZOWNER INTEGER,ZURL TEXT);"
             "CREATE TABLE ZABCDPHONENUMBER (ZOWNER INTEGER,ZLABEL TEXT,ZFULLNUMBER TEXT);")
+        connection.executemany("INSERT INTO Z_PRIMARYKEY VALUES (?,?)", ENTITY_NAMES.items())
         for index, item in enumerate(records, 1):
-            connection.execute("INSERT INTO ZABCDRECORD VALUES (?,?,?,?,?,?,?,?,?,?)",
-                               (index, item['first'], item['mid'], item['last'], item['maiden'], item['nick'],
-                                item['sfx'], '; '.join(item['org']), item['birthday'], item['uuid']))
+            connection.execute("INSERT INTO ZABCDRECORD VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                               (index, CONTACT_ENTITY, item['first'], item['mid'], item['last'], item['maiden'],
+                                item['nick'], item['sfx'], '; '.join(item['org']), item['birthday'], item['uuid']))
             connection.executemany("INSERT INTO ZABCDEMAILADDRESS VALUES (?,?)", ((index, value) for value in item['mail']))
             connection.executemany("INSERT INTO ZABCDURLADDRESS VALUES (?,?)", ((index, value) for value in item['urls']))
             connection.executemany("INSERT INTO ZABCDPHONENUMBER VALUES (?,?,?)", ((index, label, number) for label, number in item['phones']))
@@ -207,7 +215,7 @@ class SourceTests(unittest.TestCase):
 
     def test_unknown_population_and_orphans_are_explicit_incomplete_coverage(self):
         with contextlib.closing(sqlite3.connect(self.db)) as connection, connection:
-            connection.execute("INSERT INTO ZABCDRECORD (Z_PK,ZUNIQUEID) VALUES (2,'unprojected-id')")
+            connection.execute("INSERT INTO ZABCDRECORD (Z_PK,Z_ENT,ZUNIQUEID) VALUES (2,22,'unprojected-id')")
             connection.execute("INSERT INTO ZABCDEMAILADDRESS VALUES (99,'orphan@example.invalid')")
         metadata = {}
         records = MODULE.load_contacts(self.db, metadata=metadata)
@@ -217,6 +225,43 @@ class SourceTests(unittest.TestCase):
         self.assertEqual(metadata['orphan_related_rows'], {'email': 1})
         with self.assertRaises(MODULE.InputError):
             MODULE.load_contacts(self.db)
+
+    def test_non_contact_entity_rows_are_excluded_without_incompleteness(self):
+        with contextlib.closing(sqlite3.connect(self.db)) as connection, connection:
+            connection.executemany(
+                "INSERT INTO ZABCDRECORD (Z_PK,Z_ENT,ZUNIQUEID) VALUES (?,?,?)",
+                [(2, 19, 'group-1:ABGroup'), (3, 19, 'group-2:ABGroup'),
+                 (4, 24, 'info:ABInfo'), (5, 25, 'container:ABContainer')])
+        metadata = {}
+        records = MODULE.load_contacts(self.db, metadata=metadata)
+        self.assertEqual([item['uuid'] for item in records], ['c1'])
+        self.assertEqual(metadata['status'], 'complete')
+        self.assertEqual(metadata['records'], 1)
+        self.assertEqual(metadata['omitted_without_supported_fields'], 0)
+        self.assertEqual(metadata['non_contact_rows'],
+                         {'ABCDGroup': 2, 'ABCDInfo': 1, 'CNCDContainer': 1})
+        self.assertEqual(len(MODULE.load_contacts(self.db)), 1)
+        with contextlib.closing(sqlite3.connect(self.db)) as connection, connection:
+            connection.execute("INSERT INTO ZABCDEMAILADDRESS VALUES (2,'group-owned@example.invalid')")
+        metadata = {}
+        MODULE.load_contacts(self.db, metadata=metadata)
+        self.assertEqual(metadata['status'], 'incomplete')
+        self.assertEqual(metadata['orphan_related_rows'], {'email': 1})
+
+    def test_unknown_or_missing_record_entities_fail_closed(self):
+        with contextlib.closing(sqlite3.connect(self.db)) as connection, connection:
+            connection.execute("INSERT INTO ZABCDRECORD (Z_PK,Z_ENT,ZFIRSTNAME,ZUNIQUEID) VALUES (2,99,'Nobody','c2')")
+        with self.assertRaises(MODULE.InputError):
+            MODULE.load_contacts(self.db, metadata={})
+        with contextlib.closing(sqlite3.connect(self.db)) as connection, connection:
+            connection.execute("UPDATE ZABCDRECORD SET Z_ENT=NULL WHERE Z_PK=2")
+        with self.assertRaises(MODULE.InputError):
+            MODULE.load_contacts(self.db, metadata={})
+        with contextlib.closing(sqlite3.connect(self.db)) as connection, connection:
+            connection.execute("DELETE FROM ZABCDRECORD WHERE Z_PK=2")
+            connection.execute("DROP TABLE Z_PRIMARYKEY")
+        with self.assertRaises(MODULE.InputError):
+            MODULE.load_contacts(self.db, metadata={})
 
     def test_one_transaction_prevents_torn_cross_table_snapshot(self):
         writer = sqlite3.connect(self.db)
@@ -261,7 +306,7 @@ class SourceTests(unittest.TestCase):
 
     def test_duplicate_ids_and_query_limits_fail_closed(self):
         with contextlib.closing(sqlite3.connect(self.db)) as connection, connection:
-            connection.execute("INSERT INTO ZABCDRECORD (Z_PK,ZFIRSTNAME,ZUNIQUEID) VALUES (2,'Other','c1')")
+            connection.execute("INSERT INTO ZABCDRECORD (Z_PK,Z_ENT,ZFIRSTNAME,ZUNIQUEID) VALUES (2,22,'Other','c1')")
         with self.assertRaisesRegex(MODULE.InputError, 'duplicate'):
             MODULE.load_contacts(self.db)
         with mock.patch.object(MODULE, "MAX_CONTACT_ROWS", 1):
@@ -372,7 +417,7 @@ class SourceTests(unittest.TestCase):
         self.assertEqual(report['status'], 'no_reported_differences')
         self.assertEqual(report['sources']['contacts']['status'], 'complete')
         with contextlib.closing(sqlite3.connect(self.db)) as connection, connection:
-            connection.execute("INSERT INTO ZABCDRECORD (Z_PK,ZUNIQUEID) VALUES (2,'unknown-fields')")
+            connection.execute("INSERT INTO ZABCDRECORD (Z_PK,Z_ENT,ZUNIQUEID) VALUES (2,22,'unknown-fields')")
         checked = subprocess.run([sys.executable, '-I', '-B', str(SCRIPT), '--bbdb-file', str(self.bbdb),
                                   '--contacts-db', str(self.db), '--json'], capture_output=True, timeout=20)
         self.assertEqual(checked.returncode, 1, checked.stderr)

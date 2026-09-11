@@ -497,6 +497,10 @@ class PublicationFixture(unittest.TestCase):
             scan_id="fixture-" + run["scan_id"],
         )
         manifest["run_id"] = audit_id
+        loaded = runpy.run_path(str(PUBLISH), run_name="fixture_policy")
+        policy = loaded["FULL_AUDIT_REVIEW_POLICY"]
+        run["review_policy"] = manifest["review_policy"] = policy
+        run["manifest_id"] = manifest["manifest_id"] = loaded["manifest_digest"](manifest["units"], policy)
         audit_dir = self.run_dir(audit_id)
         audit_dir.mkdir(parents=True, mode=0o700, exist_ok=True)
         for name, payload in (("run.json", run), ("manifest.json", manifest)):
@@ -512,6 +516,7 @@ class PublicationFixture(unittest.TestCase):
             "scan_id": run["scan_id"],
             "manifest_id": manifest["manifest_id"],
             "public_refs": {},
+            "review_policy": policy,
             "incident_flag": False,
             "incident_digest": run["incident_digest"],
         }
@@ -655,10 +660,11 @@ class DotfilesPublishQuotedRedactionTests(unittest.TestCase):
             run_id = 'a' * 32
             run_dir = state / 'runs' / run_id
             run_dir.mkdir(parents=True)
-            digest = self.functions['hashlib'].sha256(b'dotfiles-publish-manifest\x00').hexdigest()
-            run = {'schema': self.functions['SCHEMA'], 'manifest_id': digest, 'mode': 'full-audit'}
+            policy = self.functions['FULL_AUDIT_REVIEW_POLICY']
+            digest = self.functions['manifest_digest']([], policy)
+            run = {'schema': self.functions['SCHEMA'], 'manifest_id': digest, 'mode': 'full-audit', 'review_policy': policy}
             (run_dir / 'run.json').write_text(json.dumps(run))
-            manifest = {'schema': self.functions['SCHEMA'], 'run_id': run_id, 'manifest_id': digest, 'units': []}
+            manifest = {'schema': self.functions['SCHEMA'], 'run_id': run_id, 'manifest_id': digest, 'units': [], 'review_policy': policy}
             findings = {'schema': self.functions['SCHEMA'], 'run_id': run_id, 'findings': []}
             incidents = {'schema': self.functions['SCHEMA'], 'incidents': {'synthetic-fingerprint': {'resolution': 'revoked'}}}
             incident_path = state / 'incidents.json'
@@ -1010,7 +1016,7 @@ class DotfilesPublishStateTests(PublicationFixture):
 
     def test_full_audit_metadata_is_bound_to_manifest_digest(self):
         self.publish_base()
-        self.commit("add notes", {"docs/notes.md": "notes\n"})
+        self.commit("add notes", {"config/.env.example": "MODE=example\n"})
         _, run_id = self.scan("--mode", "full-audit")
         path = self.run_dir(run_id) / "manifest.json"
         manifest = self.read_json(path)
@@ -2682,6 +2688,9 @@ class DotfilesPublishFullAuditSnapshotTests(unittest.TestCase):
                 "manifest_id": "publish-manifest", "units": [{"unit_id": "P", "kind": "patch"}],
             },
         }
+        for run_id, record in self.records.items():
+            policy = loaded["review_policy"](record["mode"])
+            record["review_policy"] = self.manifests[run_id]["review_policy"] = policy
         self.reviews = {
             self.audit_id: {"manifest_id": "manifest-A", "entries": {"A": {"verdict": "clean"}}},
             self.publish_id: {"manifest_id": "publish-manifest", "entries": {"P": {"verdict": "clean"}}},
@@ -2717,6 +2726,7 @@ class DotfilesPublishFullAuditSnapshotTests(unittest.TestCase):
             )
             self.manifests[self.audit_id] = {
                 "manifest_id": "manifest-B",
+                "review_policy": self.functions["FULL_AUDIT_REVIEW_POLICY"],
                 "units": [{"unit_id": "A", "kind": "patch"}, {"unit_id": "B-unreviewed", "kind": "patch"}],
             }
 
@@ -2847,38 +2857,59 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         self.assertIn("rotate or revoke", proc.stdout)
         self.assertFalse((self.state_dir() / "authorization.json").exists())
 
-    def test_full_audit_reviews_bounded_complete_history_patches(self):
+    def test_full_audit_omits_ordinary_patches_but_outgoing_review_keeps_them(self):
         self.publish_base()
-        first = self.commit(
-            "first historical change",
-            {"docs/changes.md": "first historical line\n"},
-        )
-        second = self.commit(
-            "second historical change",
-            {"docs/changes.md": "first historical line\nsecond historical line\n"},
-        )
+        commit = self.commit("ordinary change", {"docs/changes.md": "ordinary text\n"})
+        proc, audit = self.scan("--mode", "full-audit")
+        self.assertEqual(0, proc.returncode, proc.stderr)
+        manifest = self.read_json(self.run_dir(audit) / "manifest.json")
+        self.assertFalse([u for u in manifest["units"] if u["kind"] in ("commit", "path", "patch")])
+        _, outgoing = self.scan()
+        units = self.read_json(self.run_dir(outgoing) / "manifest.json")["units"]
+        self.assertTrue(any(u["kind"] == "patch" and u["commit"] == commit for u in units))
+        self.assertTrue(any(u["kind"] == "path" and u["path"] == "docs/changes.md" for u in units))
 
-        proc, run_id = self.scan("--mode", "full-audit")
+    def test_review_policy_is_required_in_run_manifest_and_receipt(self):
+        self.publish_base()
+        _, run_id = self.scan("--mode", "full-audit")
+        self.review_all(run_id)
+        self.assertEqual(0, self.cli("review-status", "--run", run_id).returncode)
+        run_path = self.run_dir(run_id) / "run.json"
+        manifest_path = self.run_dir(run_id) / "manifest.json"
+        receipt_path = self.state_dir() / "full-audit.json"
+        for path in (run_path, manifest_path):
+            original = self.read_json(path)
+            for value in (None, "obsolete-policy-v0"):
+                with self.subTest(path=path.name, value=value):
+                    changed = dict(original)
+                    if value is None:
+                        changed.pop("review_policy")
+                    else:
+                        changed["review_policy"] = value
+                    path.write_text(json.dumps(changed))
+                    result = self.cli("review-status", "--run", run_id)
+                    self.assertNotEqual(0, result.returncode)
+                    self.assertIn("review policy changed", result.stderr)
+                    path.write_text(json.dumps(original))
+        receipt = self.read_json(receipt_path)
+        self.assertEqual(self.read_json(run_path)["review_policy"], receipt["review_policy"])
+        receipt.pop("review_policy")
+        receipt_path.write_text(json.dumps(receipt))
+        _, outgoing = self.scan()
+        self.assertTrue(self.read_json(self.run_dir(outgoing) / "run.json")["full_audit_due"])
 
-        self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
-        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
-        self.assertFalse(
-            [unit for unit in manifest["units"] if unit["kind"] in ("commit", "path")]
-        )
-        patches = [unit for unit in manifest["units"] if unit["kind"] == "patch"]
-        self.assertTrue(patches)
-        serialized = "\n".join(unit["content"] for unit in patches)
-        for expected in (
-            first,
-            second,
-            "first historical change",
-            "second historical change",
-            "+first historical line",
-            "+second historical line",
-        ):
-            self.assertIn(expected, serialized)
-        for unit in patches:
-            self.assertLessEqual(len(unit["content"].encode("utf-8")), 128 * 1024)
+    def test_review_source_requires_exact_audited_regular_blob_and_full_audit(self):
+        self.publish_base()
+        commit = self.commit("plain source", {"docs/source.txt": "ordinary source\n"})
+        for source in (commit + ":docs/*.txt", commit + ":docs/../source.txt",
+                       "0" * 40 + ":docs/source.txt", commit + ":docs"):
+            with self.subTest(source=source):
+                result = self.cli("scan", "--mode", "full-audit", "--review-source", source)
+                self.assertNotEqual(0, result.returncode)
+                self.assertIn("--review-source", result.stderr)
+        result = self.cli("scan", "--review-source", commit + ":docs/source.txt")
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("only meaningful in full-audit", result.stderr)
 
     def test_full_audit_finding_includes_redacted_source_context(self):
         self.publish_base()
@@ -3034,6 +3065,7 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         proc, run_id = self.scan(
             "--mode",
             "full-audit",
+            "--review-source", leaking + ":decoy.enc",
             env=self.env(
                 DOTFILES_FAKE_GITLEAKS_PATTERNS=re.escape(encoded),
                 DOTFILES_FAKE_GITLEAKS_REPORTED_SECRET=TEST_SECRET,
@@ -3117,6 +3149,7 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         proc, run_id = self.scan(
             "--mode",
             "full-audit",
+            "--review-source", leaking + ":docs/benign.md",
             env=self.env(
                 DOTFILES_FAKE_GITLEAKS_PATTERNS=re.escape(encoded),
                 DOTFILES_FAKE_GITLEAKS_REPORTED_SECRET=TEST_SECRET,
@@ -3191,7 +3224,7 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         self.assertNotIn(encoded, review)
         self.assertNotIn(line_prefix, review)
 
-    def test_full_audit_patch_bundles_include_merge_resolution_content(self):
+    def test_history_display_patch_bundles_include_merge_resolution_content(self):
         self.publish_base()
         self.commit("add merge fixture", {"docs/merge.md": "base\n"})
         self.git("switch", "--quiet", "-c", "side")
@@ -3209,7 +3242,10 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         proc, run_id = self.scan("--mode", "full-audit")
 
         self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
-        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        loaded = runpy.run_path(str(PUBLISH), run_name="history_display_test")
+        repo = SimpleNamespace(root=self.repo)
+        manifest = {"units": loaded["audit_history_units"](
+            repo, loaded["audit_commits"](repo), loaded["Redactor"](b"x" * 32))}
         serialized = "\n".join(
             unit["content"] for unit in manifest["units"] if unit["kind"] == "patch"
         )
@@ -3217,7 +3253,7 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         self.assertIn("merge resolved manually", serialized)
         self.assertIn("manual merge resolution", serialized)
 
-    def test_full_audit_patch_bundles_show_a_merge_equal_to_one_parent(self):
+    def test_history_display_patch_bundles_show_a_merge_equal_to_one_parent(self):
         self.publish_base()
         self.commit("add decision fixture", {"docs/decision.md": "base decision\n"})
         self.git("switch", "--quiet", "-c", "side")
@@ -3235,7 +3271,10 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         proc, run_id = self.scan("--mode", "full-audit")
 
         self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
-        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        loaded = runpy.run_path(str(PUBLISH), run_name="history_display_test")
+        repo = SimpleNamespace(root=self.repo)
+        manifest = {"units": loaded["audit_history_units"](
+            repo, loaded["audit_commits"](repo), loaded["Redactor"](b"x" * 32))}
         serialized = "\n".join(
             unit["content"] for unit in manifest["units"] if unit["kind"] == "patch"
         )
@@ -3272,7 +3311,7 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         }
         self.assertIn("config/.env.merge-only", high_risk)
 
-    def test_full_audit_chunking_preserves_a_long_multibyte_line(self):
+    def test_history_display_chunking_preserves_a_long_multibyte_line(self):
         self.publish_base()
         payload = "é" * 70000
         self.commit("add long line", {"docs/long.txt": payload + "\n"})
@@ -3280,7 +3319,10 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         proc, run_id = self.scan("--mode", "full-audit")
 
         self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
-        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        loaded = runpy.run_path(str(PUBLISH), run_name="history_display_test")
+        repo = SimpleNamespace(root=self.repo)
+        manifest = {"units": loaded["audit_history_units"](
+            repo, loaded["audit_commits"](repo), loaded["Redactor"](b"x" * 32))}
         patches = [unit for unit in manifest["units"] if unit["kind"] == "patch"]
         self.assertGreater(len(patches), 1)
         self.assertEqual(70000, sum(unit["content"].count("é") for unit in patches))
@@ -3427,10 +3469,11 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         self.git("-c", "core.hooksPath=/dev/null", "push", "--quiet", "origin", "master")
         self.git("fetch", "--quiet", "origin")
         private = self.commit("local configuration", {"docs/private.txt": "unpublished setting\n"})
-        _, run_id = self.scan("--mode", "full-audit")
+        _, run_id = self.scan("--mode", "full-audit", "--review-source", commit + ":docs/room.txt",
+                              "--review-source", private + ":docs/private.txt")
         self.assertEqual([], self.read_json(self.run_dir(run_id) / "findings.json")["findings"])
         manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
-        unit = next(u for u in manifest["units"] if commit in (u.get("detail") or {}).get("commits", []))
+        unit = next(u for u in manifest["units"] if u["commit"] == commit and u["path"] == "docs/room.txt")
         finding = {"rule_id": "manual-meeting-secret", "classification": "public-incident",
                    "commit": commit, "path": "docs/room.txt", "context": "synthetic historical access credential"}
         return run_id, unit, finding, private
@@ -3440,6 +3483,54 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         path.write_text(json.dumps(findings))
         return self.cli("review-record", "--run", run_id, "--unit", unit["unit_id"],
                         "--verdict", "finding", "--findings", str(path))
+
+    def test_manual_public_source_recovery_accepts_legacy_provenance_not_verdicts(self):
+        run_id, unit, finding, _ = self.manual_public_fixture()
+        recorded = self.record_manual_public(run_id, unit, [finding])
+        self.assertEqual(0, recorded.returncode, recorded.stderr)
+        loaded = runpy.run_path(str(PUBLISH), run_name="legacy_source_test")
+        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        manifest.pop("review_policy")
+        digest = loaded["manifest_digest"](manifest["units"])
+        for name in ("run.json", "manifest.json", "review.json"):
+            path = self.run_dir(run_id) / name
+            data = self.read_json(path)
+            data.pop("review_policy", None)
+            data["manifest_id"] = digest
+            path.write_text(json.dumps(data))
+        rejected = self.cli("review-status", "--run", run_id)
+        self.assertNotEqual(0, rejected.returncode)
+        self.assertIn("review policy changed", rejected.stderr)
+        result, fresh = self.scan("--mode", "full-audit")
+        self.assertEqual(0, result.returncode, result.stderr)
+        units = self.read_json(self.run_dir(fresh) / "manifest.json")["units"]
+        source = next(u for u in units if u["commit"] == finding["commit"] and u["path"] == finding["path"])
+        self.assertTrue(source["detail"]["manual_source"])
+        self.assertIn("synthetic meeting access setting", source["content"])
+        self.assertFalse((self.run_dir(fresh) / "review.json").exists())
+        status = self.cli("review-status", "--run", fresh)
+        self.assertNotEqual(0, status.returncode)
+        self.assertIn("missing-unit: " + source["unit_id"], status.stdout)
+        manual = source["detail"]["manual_findings"]
+        self.assertEqual(1, len(manual))
+        self.assertEqual(finding["rule_id"], manual[0]["rule_id"])
+        shown = self.cli("review-show", "--run", fresh, "--unit", source["unit_id"])
+        self.assertIn(manual[0]["fingerprint"], shown.stdout)
+        self.review_all(fresh)
+        blocked = self.cli("review-status", "--run", fresh)
+        self.assertNotEqual(0, blocked.returncode)
+        self.assertIn("deterministic-finding: " + manual[0]["fingerprint"], blocked.stdout)
+
+    def test_manual_public_source_recovery_refuses_tampered_provenance(self):
+        run_id, unit, finding, _ = self.manual_public_fixture()
+        self.assertEqual(0, self.record_manual_public(run_id, unit, [finding]).returncode)
+        path = self.run_dir(run_id) / "review.json"
+        review = self.read_json(path)
+        review["entries"][unit["unit_id"]]["digest"] = "0" * 64
+        path.write_text(json.dumps(review))
+        result = self.cli("scan", "--mode", "full-audit")
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("manual incident source review changed", result.stderr)
 
     def test_manual_public_incident_exact_resolution_and_fresh_audit(self):
         run_id, unit, finding, private = self.manual_public_fixture()
@@ -3469,7 +3560,7 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         self.assertIn("incident state changed", stale.stderr)
         _, fresh = self.scan("--mode", "full-audit")
         fresh_manifest = self.read_json(self.run_dir(fresh) / "manifest.json")
-        fresh_unit = next(u for u in fresh_manifest["units"] if finding["commit"] in (u.get("detail") or {}).get("commits", []))
+        fresh_unit = next(u for u in fresh_manifest["units"] if u["commit"] == finding["commit"] and u["path"] == finding["path"])
         borrowed = dict(finding, fingerprint=stored[0]["fingerprint"], commit=private,
                         path="docs/private.txt", source="review", classification="outgoing")
         rejected = self.record_manual_public(fresh, fresh_unit, [borrowed])
@@ -3528,13 +3619,13 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
     def test_manual_public_incident_cannot_borrow_resolved_scanner_identity(self):
         self.publish_a_secret()
         private = self.commit("local access configuration", {"docs/private.txt": "synthetic local access setting\n"})
-        _, run_id = self.scan("--mode", "full-audit")
+        _, run_id = self.scan("--mode", "full-audit", "--review-source", private + ":docs/private.txt")
         scanned = self.public_incident(run_id)
         resolved = self.cli("incident-record", "--run", run_id, "--fingerprint", scanned["fingerprint"],
                             "--resolution", "rotated", "--evidence", str(self.write_evidence(scanned["fingerprint"])))
         self.assertEqual(0, resolved.returncode, resolved.stderr)
         manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
-        unit = next(u for u in manifest["units"] if private in (u.get("detail") or {}).get("commits", []))
+        unit = next(u for u in manifest["units"] if u["commit"] == private and u["path"] == "docs/private.txt")
         claimed = dict(scanned, commit=private, path="docs/private.txt")
         proc = self.record_manual_public(run_id, unit, [claimed])
         self.assertNotEqual(0, proc.returncode)
@@ -3833,7 +3924,7 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         self.publish_base()
         self.commit("ordinary work", {"docs/notes.md": "notes\n"})
 
-        proc, run_id = self.scan("--mode", "full-audit")
+        proc, run_id = self.scan("--mode", "full-audit", "--review-source", self.head() + ":docs/notes.md")
         self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
         receipt_path = self.state_dir() / "full-audit.json"
 
@@ -3884,7 +3975,7 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
     def test_same_boundary_rescan_invalidates_receipt_until_current_status(self):
         self.publish_base()
         self.commit("ordinary work", {"docs/notes.md": "notes\n"})
-        _, audit_id = self.scan("--mode", "full-audit")
+        _, audit_id = self.scan("--mode", "full-audit", "--review-source", self.head() + ":docs/notes.md")
         self.review_all(audit_id)
         self.assertEqual(0, self.cli("review-status", "--run", audit_id).returncode)
         receipt_path = self.state_dir() / "full-audit.json"
@@ -3892,7 +3983,7 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         _, publish_id = self.scan()
         self.review_all(publish_id)
 
-        rescanned, repeated_id = self.scan("--mode", "full-audit")
+        rescanned, repeated_id = self.scan("--mode", "full-audit", "--review-source", self.head() + ":docs/notes.md")
 
         self.assertEqual(0, rescanned.returncode, rescanned.stdout + rescanned.stderr)
         self.assertNotEqual(audit_id, repeated_id)

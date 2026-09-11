@@ -74,7 +74,25 @@ RULESET_POLICY_FILES = (
 )
 
 MODES = ("publish", "release", "full-audit", "readiness")
+FULL_AUDIT_REVIEW_POLICY = "full-history-findings-and-risk-sources-v1"
+OUTGOING_REVIEW_POLICY = "exhaustive-outgoing-v1"
 INCIDENT_RESOLUTIONS = ("rotated", "revoked", "invalid", "accepted-risk")
+
+
+def review_policy(mode):
+    return FULL_AUDIT_REVIEW_POLICY if mode == "full-audit" else OUTGOING_REVIEW_POLICY
+
+
+def manifest_digest(units, policy=None):
+    """Bind coverage policy as well as every captured unit; None is legacy-only."""
+    digest = hashlib.sha256(b"dotfiles-publish-manifest\x00")
+    if policy is not None:
+        digest.update(b"review-policy\x00" + policy.encode("utf-8") + b"\x00")
+    for unit in units:
+        digest.update(unit["unit_id"].encode("utf-8") + b"\x00")
+        encoded = json.dumps(unit, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        digest.update(hashlib.sha256(encoded).digest())
+    return digest.hexdigest()
 
 
 class PublishError(Exception):
@@ -537,6 +555,8 @@ def full_audit_staleness(repo, ruleset_id, now):
         return "the new full-audit scan is pending review"
     if receipt is None:
         return "no full audit has been recorded"
+    if receipt.get("review_policy") != FULL_AUDIT_REVIEW_POLICY:
+        return "the full audit review policy changed; scan and review again"
     if receipt.get("incident_flag"):
         return "an incident was recorded after the last full audit"
     if receipt.get("incident_digest") != incident_state_digest(repo):
@@ -557,6 +577,8 @@ def full_audit_staleness(repo, ruleset_id, now):
         return "the full audit scan or manifest is unavailable; scan and review again"
     if (
         record.get("mode") != "full-audit"
+        or record.get("review_policy") != receipt["review_policy"]
+        or manifest.get("review_policy") != receipt["review_policy"]
         or record.get("scan_id") != receipt["scan_id"]
         or record.get("manifest_id") != receipt["manifest_id"]
         or manifest.get("manifest_id") != receipt["manifest_id"]
@@ -1812,10 +1834,10 @@ def finding_source_excerpt(finding, resolved, redactor):
     return redactor.scrub(excerpt)
 
 
-def build_audit_manifest(repo, run_id, result):
-    """Bounded history patches, high-risk files, and findings for review."""
+def build_audit_manifest(repo, run_id, result, review_sources=(), public_refs=()):
+    """Review findings and risky sources; deterministic scanning covers history."""
     redactor = result.redactor
-    units = audit_history_units(repo, result.commits, redactor)
+    units = []
 
     requests = []
     origin = {}
@@ -1842,6 +1864,48 @@ def build_audit_manifest(repo, run_id, result):
             units.append(
                 make_unit("high-risk-file", commit, path, 0, content, {"object": oid, "size": size})
             )
+
+    manual_sources = manual_incident_sources(repo)
+    sources = set(manual_sources)
+    for source in review_sources:
+        commit, separator, path = source.partition(":")
+        if (not separator or not re.fullmatch(r"[0-9a-f]{40}", commit)
+                or commit not in result.commits or not path or path.startswith("/")
+                or any(part in ("", ".", "..") for part in path.split("/"))):
+            raise PublishError("--review-source requires an audited exact COMMIT:PATH", EXIT_REFUSED)
+        rows = run_git(repo.root, "ls-tree", "-z", commit, "--", ":(literal)" + path).out.split(b"\x00")
+        rows = [row for row in rows if row]
+        if len(rows) != 1:
+            raise PublishError("--review-source requires one exact regular blob", EXIT_REFUSED)
+        metadata, actual_path = rows[0].split(b"\t", 1)
+        mode, kind, oid = metadata.decode("ascii").split()
+        if actual_path != path.encode("utf-8") or kind != "blob" or mode not in ("100644", "100755"):
+            raise PublishError("--review-source requires one exact regular blob", EXIT_REFUSED)
+        sources.add((commit, path, oid))
+    for commit, path, oid in sorted(sources):
+        if commit not in result.commits:
+            raise PublishError("manual incident source is outside the audited history; restore its ref and scan again")
+        size = blob_size(repo, oid)
+        manual_findings = list(manual_sources.get((commit, path, oid), {}).values())
+        content = blob_content(repo, oid, size, redactor)
+        if manual_findings:
+            content += "\n\nPreviously recorded manual source findings (fresh review required):\n"
+            content += json.dumps(manual_findings, indent=2, sort_keys=True)
+        unit = make_unit(
+            "high-risk-file", commit, path, 0, content,
+            {"object": oid, "size": size, "manual_source": True,
+             "manual_findings": manual_findings},
+        )
+        for finding in manual_findings:
+            bound = bind_manual_public_finding(
+                repo, {"mode": "full-audit", "public_refs": public_refs}, unit,
+                finding, fingerprint_key(repo), finding["fingerprint"],
+            )
+            if bound != finding:
+                raise PublishError("manual incident source changed in the current scan", EXIT_REFUSED)
+        units = [existing for existing in units
+                 if (existing["commit"], existing["path"]) != (commit, path)]
+        units.append(unit)
 
     finding_requests = sorted(
         {
@@ -1872,17 +1936,12 @@ def build_audit_manifest(repo, run_id, result):
     counts = {kind: 0 for kind in MANIFEST_KINDS}
     for unit in units:
         counts[unit["kind"]] = counts.get(unit["kind"], 0) + 1
-    digest = hashlib.sha256()
-    digest.update(b"dotfiles-publish-manifest\x00")
-    for unit in units:
-        digest.update(unit["unit_id"].encode("utf-8") + b"\x00")
-        encoded = json.dumps(unit, sort_keys=True, separators=(",", ":")).encode("utf-8")
-        digest.update(hashlib.sha256(encoded).digest())
     return {
         "schema": SCHEMA,
         "redaction_version": REDACTION_VERSION,
         "run_id": run_id,
-        "manifest_id": digest.hexdigest(),
+        "review_policy": FULL_AUDIT_REVIEW_POLICY,
+        "manifest_id": manifest_digest(units, FULL_AUDIT_REVIEW_POLICY),
         "counts": counts,
         "units": units,
     }
@@ -2244,18 +2303,13 @@ def build_manifest(repo, run_id, boundary, result, mode, tag, release_notes):
     for unit in units:
         counts[unit["kind"]] = counts.get(unit["kind"], 0) + 1
 
-    digest = hashlib.sha256()
-    digest.update(b"dotfiles-publish-manifest\x00")
-    for unit in units:
-        digest.update(unit["unit_id"].encode("utf-8") + b"\x00")
-        encoded = json.dumps(unit, sort_keys=True, separators=(",", ":")).encode("utf-8")
-        digest.update(hashlib.sha256(encoded).digest())
-    manifest_id = digest.hexdigest()
+    manifest_id = manifest_digest(units, OUTGOING_REVIEW_POLICY)
 
     return {
         "schema": SCHEMA,
         "redaction_version": REDACTION_VERSION,
         "run_id": run_id,
+        "review_policy": OUTGOING_REVIEW_POLICY,
         "manifest_id": manifest_id,
         "counts": counts,
         "units": units,
@@ -2279,12 +2333,10 @@ def load_manifest(repo, run_id):
         )
     if manifest.get("run_id") != run_id or record.get("manifest_id") != manifest.get("manifest_id"):
         raise PublishError("the scan and manifest changed during review; scan and review again", EXIT_REFUSED)
-    digest = hashlib.sha256(b"dotfiles-publish-manifest\x00")
-    for unit in manifest["units"]:
-        digest.update(unit["unit_id"].encode("utf-8") + b"\x00")
-        encoded = json.dumps(unit, sort_keys=True, separators=(",", ":")).encode("utf-8")
-        digest.update(hashlib.sha256(encoded).digest())
-    if digest.hexdigest() != manifest["manifest_id"]:
+    policy = review_policy(record["mode"])
+    if record.get("review_policy") != policy or manifest.get("review_policy") != policy:
+        raise PublishError("the review policy changed; scan and review again", EXIT_REFUSED)
+    if manifest_digest(manifest["units"], policy) != manifest["manifest_id"]:
         raise PublishError("manifest content changed; scan and review again", EXIT_REFUSED)
     if manifest.get("redaction_version") != REDACTION_VERSION:
         raise PublishError("captured data predates safe quoted-value redaction; scan again", EXIT_REFUSED)
@@ -2555,6 +2607,48 @@ def manual_public_incidents(repo, run_id, token, key):
     return matches
 
 
+def manual_incident_sources(repo):
+    """Recover source identities, never verdicts, from immutable prior reviews.
+
+    Legacy policy is accepted here only to revalidate existing manual source
+    provenance. It cannot make a legacy review or receipt eligible.
+    """
+    sources = {}
+    key = fingerprint_key(repo)
+    for path in sorted((repo.state_dir / "runs").glob("*/review.json")):
+        review = read_json(path)
+        candidates = [
+            (uid, entry, finding)
+            for uid, entry in review.get("entries", {}).items()
+            for finding in entry.get("findings") or []
+            if finding.get("source") == "manual-public-incident"
+        ]
+        if not candidates:
+            continue
+        run = load_run(repo, path.parent.name)
+        manifest = read_json(path.parent / "manifest.json")
+        if (manifest.get("schema") != SCHEMA
+                or manifest.get("run_id") != path.parent.name
+                or run.get("run_id") != path.parent.name
+                or run.get("manifest_id") != manifest.get("manifest_id")
+                or manifest_digest(manifest["units"], manifest.get("review_policy")) != manifest.get("manifest_id")
+                or review.get("schema") != SCHEMA
+                or review.get("run_id") != path.parent.name
+                or review.get("manifest_id") != manifest.get("manifest_id")):
+            raise PublishError("manual incident source provenance changed; inspect the stored review", EXIT_REFUSED)
+        units = {unit["unit_id"]: unit for unit in manifest["units"]}
+        for uid, entry, finding in candidates:
+            if (uid not in units or entry.get("verdict") != "finding"
+                    or entry.get("digest") != findings_digest(entry.get("findings") or [])):
+                raise PublishError("manual incident source review changed", EXIT_REFUSED)
+            bound = bind_manual_public_finding(repo, run, units[uid], finding, key, finding.get("fingerprint"))
+            if bound != finding:
+                raise PublishError("manual incident source binding changed", EXIT_REFUSED)
+            identity = (bound["commit"], bound["path"], bound["object"])
+            sources.setdefault(identity, {})[bound["fingerprint"]] = bound
+    return sources
+
+
 def command_review_list(args):
     repo = discover_repository()
     manifest = load_manifest(repo, args.run)
@@ -2774,6 +2868,14 @@ def review_status(repo, run_id):
         for finding in load_findings(repo, run_id).get("findings", [])
         if not deterministic_is_resolved(finding, units_by_id, review["entries"], resolved)
     ]
+    # Known real manual findings cannot disappear behind a clean blob verdict.
+    # Their source identities were revalidated when this manifest was captured.
+    deterministic += sorted({
+        finding["fingerprint"]
+        for unit in manifest["units"]
+        for finding in (unit.get("detail") or {}).get("manual_findings", [])
+        if finding["fingerprint"] not in resolved
+    })
     return ReviewStatus(
         run_id=run_id,
         scan_id=record.get("scan_id", ""),
@@ -2798,6 +2900,8 @@ def record_full_audit(repo, run_id, status):
     manifest = load_manifest(repo, run_id)
     if (
         status.run_id != run_id
+        or record.get("review_policy") != FULL_AUDIT_REVIEW_POLICY
+        or manifest.get("review_policy") != FULL_AUDIT_REVIEW_POLICY
         or not status.scan_id
         or status.scan_id != record.get("scan_id")
         or status.manifest_id != record.get("manifest_id")
@@ -2838,6 +2942,7 @@ def record_full_audit(repo, run_id, status):
         "run_id": run_id,
         "scan_id": status.scan_id,
         "manifest_id": status.manifest_id,
+        "review_policy": FULL_AUDIT_REVIEW_POLICY,
         "public_refs": record.get("public_refs") or [],
         "incident_flag": False,
         "incident_digest": record["incident_digest"],
@@ -2878,6 +2983,8 @@ def command_scan(args):
         raise PublishError("unknown mode: %s" % args.mode)
     if args.tag and args.mode != "release":
         raise PublishError("--tag is only meaningful in release mode")
+    if args.review_source and args.mode != "full-audit":
+        raise PublishError("--review-source is only meaningful in full-audit mode")
 
     ruleset_id = ruleset_identity(repo.root)
     key = fingerprint_key(repo)
@@ -2898,7 +3005,7 @@ def command_scan(args):
     public_refs = []
     if args.mode == "full-audit":
         result, public_refs = scan_full_audit(repo, key)
-        manifest = build_audit_manifest(repo, run_id, result)
+        manifest = build_audit_manifest(repo, run_id, result, args.review_source, public_refs)
     else:
         result = scan_outgoing(repo, boundary, key)
         manifest = build_manifest(
@@ -2919,6 +3026,7 @@ def command_scan(args):
         "candidate_oid": boundary.candidate_oid,
         "ruleset_id": ruleset_id,
         "manifest_id": manifest["manifest_id"],
+        "review_policy": manifest["review_policy"],
         "full_audit_due": staleness is not None,
         "public_refs": public_refs,
         "incident_digest": incident_digest,
@@ -3618,6 +3726,8 @@ def build_parser():
 
     scan = subparsers.add_parser("scan", help="capture and scan the outgoing boundary")
     scan.add_argument("--mode", default="publish", choices=MODES)
+    scan.add_argument("--review-source", action="append", default=[], metavar="COMMIT:PATH",
+                      help="capture an exact additional source in a new full-audit review")
     scan.add_argument("--release-notes", default=None)
     scan.add_argument("--tag", default=None)
     scan.set_defaults(handler=command_scan)

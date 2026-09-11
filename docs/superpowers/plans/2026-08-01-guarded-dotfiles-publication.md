@@ -203,6 +203,16 @@ git add .gitleaks.toml bin/dotfiles-publish tests/test_dotfiles_publish.py
 git commit -m "feat: scan outgoing dotfiles history"
 ```
 
+## September 11, 2026 scope revision
+
+The approved policy now retains automatic scanning of the complete reachable
+history and manual review of all findings, risky and opaque sources, and known
+manual incidents. Exhaustive patch review applies to outgoing commits. This
+supersedes the historical-patch manifest requirement in Task 8 below; the
+outgoing coverage and protected push requirements remain in effect. The current
+scope is specified in the companion design document and bound by a versioned
+review policy in scans, manifests and receipts.
+
 ## Task 4: Generate an exhaustive LLM manifest and enforce attestation
 
 **Files:**

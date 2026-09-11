@@ -101,11 +101,20 @@ the existing acceptance shortcut, skips the deterministic or LLM review.
 
 ### Full audit
 
-`publish-dotfiles --full-audit` reviews the complete reachable repository and
-public GitHub ref surface rather than only unpublished commits. Its scope
-includes local branches, remote branches, tags, and fetchable pull-request refs.
+`bin/dotfiles-publish scan --mode full-audit` automatically scans the complete
+reachable repository and public GitHub ref surface, including local branches,
+remote branches, tags, and fetchable pull-request refs. Manual review covers all
+deterministic findings, risky source files, opaque objects, and exact source
+objects for previously recorded manual incidents. Ordinary already-public
+historical patches are not manually reread. Exhaustive patch review remains
+required for the outgoing publication range, including merge comparisons.
 Temporary audit refs are placed under a private local namespace and removed
 afterward.
+
+This scope supersedes the original exhaustive historical manual-review policy
+as authorized on September 11, 2026. Runs, manifests and receipts bind an explicit
+review-policy version. An audit receipt attests to the selected scope and cannot
+inherit verdicts from another scan or claim omitted history was manually read.
 
 An explicitly invoked full audit does not publish the branch or rewrite public
 history. When a stale full audit is run as part of an explicit publication, a

@@ -380,9 +380,11 @@ scoped Bash pattern may be declared when a skill genuinely needs one.
 
 The paired =publish-dotfiles= skill is an ignored local workflow, excluded from
 this repository's public distribution. The public publication guard helpers
-review full history through bounded commit-and-patch bundles. Merge commits are compared with every parent, and
-scanner findings carry fingerprint-redacted source context, so fewer immutable
-review records do not reduce the audited surface. Raw scanner reports are
+scan the full history automatically and require manual review of all findings,
+risky and opaque source objects, and known manual incidents. Exhaustive patch
+review applies to outgoing commits, including comparisons with every merge
+parent. Scanner findings carry fingerprint-redacted source context. Runs,
+manifests and audit receipts bind the review-policy version and its scope. Raw scanner reports are
 confined to a private off-tree temporary workspace. Git scans use the same
 zero-context patch stream as Gitleaks and never reinterpret patch coordinates as
 blob lines; directory scans use authoritative source lines and advisory

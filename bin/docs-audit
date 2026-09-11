@@ -68,7 +68,7 @@ SKILL_SCOPES = (
     "Archived",
 )
 SKILL_TOOLS = ("Claude", "Codex")
-SKILL_INVENTORY_HEADER = "#+title: Tracked agent skill inventory\n"
+SKILL_INVENTORY_HEADER = "#+title: Skill inventory\n"
 YAML_NON_STRING_SCALARS = {
     "~",
     "null",

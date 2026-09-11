@@ -1610,7 +1610,7 @@ class DocsAuditInventoryTests(DocsAuditTestCase):
 
         self.assertTrue(
             rendered.startswith(
-                "#+title: Tracked agent skill inventory\n\n- =Alpha="
+                "#+title: Skill inventory\n\n- =Alpha="
             )
         )
         self.assertLess(rendered.index("- =Alpha="), rendered.index("- =zeta="))

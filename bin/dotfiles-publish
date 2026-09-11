@@ -1760,6 +1760,7 @@ def audit_history_units(repo, commits, redactor):
                 "".join(content),
                 {
                     "commit_count": len(content_commits),
+                    "commits": list(content_commits),
                     "first_commit": content_commits[0],
                     "last_commit": content_commits[-1],
                 },
@@ -1932,10 +1933,9 @@ def command_incident_record(args):
         if finding["fingerprint"] == args.fingerprint
     ]
     if not matching:
-        raise PublishError(
-            "run %s has no finding with fingerprint %s" % (args.run, args.fingerprint),
-            EXIT_REFUSED,
-        )
+        matching = manual_public_incidents(repo, args.run, args.fingerprint, key)
+    if not matching:
+        raise PublishError("run %s has no finding with fingerprint %s" % (args.run, args.fingerprint), EXIT_REFUSED)
     if matching[0].get("classification") != "public-incident":
         raise PublishError(
             "fingerprint %s is not published, so remove it from history instead of "
@@ -2005,6 +2005,7 @@ MANIFEST_KINDS = (
 )
 
 FINDING_FIELDS = {
+    "object",
     "source",
     "rule_id",
     "path",
@@ -2475,7 +2476,83 @@ def validate_review_findings(records, signatures, key, unit):
             "classification": record.get("classification") or "outgoing",
         }
         validated.append(complete)
+        if record.get("object") is not None:
+            complete["object"] = record["object"]
     return validated
+
+
+def bind_manual_public_finding(repo, run, unit, finding, key, supplied_fingerprint=None):
+    """Bind a manual incident to a reviewed, immutable, already-public blob."""
+    def require(condition, message):
+        if not condition:
+            raise PublishError("manual public incident: " + message, EXIT_REFUSED)
+
+    require(run["mode"] == "full-audit", "requires a full-audit run")
+    require(finding.get("classification") == "public-incident", "requires public classification")
+    commit, path = finding.get("commit"), finding.get("path")
+    require(isinstance(commit, str) and re.fullmatch(r"[0-9a-f]{40}", commit), "requires an exact commit")
+    require(isinstance(path, str) and path and not path.startswith("/")
+            and all(part not in ("", ".", "..") for part in path.split("/")), "requires an exact repository path")
+    if unit["kind"] == "patch" and unit["path"] == "full-history":
+        require(commit in ((unit.get("detail") or {}).get("commits") or []), "commit is outside the reviewed unit")
+    else:
+        require(commit == unit["commit"] and path == unit["path"], "coordinates differ from the reviewed unit")
+    require(any(changed_path == path and not status.startswith("D")
+                for status, changed_path in changed_entries(repo, commit)), "path is not a changed blob in the reviewed commit")
+    tips = []
+    for ref in run.get("public_refs") or []:
+        oid = ref.rsplit(" ", 1)[-1]
+        require(re.fullmatch(r"[0-9a-f]{40}", oid), "invalid captured public ref")
+        tips.append(oid)
+    require(commit in reachable_commits(repo, tips), "commit was not public in the captured scan")
+    tree = run_git(repo.root, "ls-tree", "-z", commit, "--", ":(literal)" + path).out
+    rows = [row for row in tree.split(b"\x00") if row]
+    require(len(rows) == 1, "source blob is missing or ambiguous")
+    metadata, actual_path = rows[0].split(b"\t", 1)
+    mode, kind, oid = metadata.decode("ascii").split()
+    require(actual_path == path.encode("utf-8") and kind == "blob" and mode in ("100644", "100755"), "source is not the exact regular blob")
+    require(finding.get("object") in (None, oid), "source object differs")
+    rule = finding.get("rule_id")
+    require(isinstance(rule, str) and rule.strip(), "requires a rule identifier")
+    for field in ("line", "column"):
+        coordinate = finding.get(field)
+        require(coordinate is None or (type(coordinate) is int and coordinate > 0), "invalid source coordinate")
+    require(finding.get("column") is None or finding.get("line") is not None, "column requires a source line")
+    if finding.get("line") is not None:
+        lines = blob_bytes(repo, oid).splitlines()
+        require(finding["line"] <= len(lines), "source line is outside the stored blob")
+        if finding.get("column") is not None:
+            require(finding["column"] <= len(lines[finding["line"] - 1]), "source byte column is outside the stored line")
+    token = fingerprint(key, "manual-public-incident-v1", commit, path, oid, rule,
+                        str(finding.get("line") or ""), str(finding.get("column") or ""))
+    require(supplied_fingerprint in (None, token), "fingerprint differs from immutable source identity")
+    return dict(finding, source="manual-public-incident", object=oid, fingerprint=token)
+
+
+def manual_public_incidents(repo, run_id, token, key):
+    """Resolve only recorded findings from the exact manifest, never loose JSON."""
+    run = load_run(repo, run_id)
+    manifest = load_manifest(repo, run_id)
+    review = load_review(repo, run_id, manifest)
+    units = {unit["unit_id"]: unit for unit in manifest["units"]}
+    matches = []
+    for uid, entry in review["entries"].items():
+        candidates = [finding for finding in entry.get("findings") or [] if finding.get("fingerprint") == token]
+        if not candidates:
+            continue
+        if uid not in units or entry.get("verdict") != "finding" or entry.get("digest") != findings_digest(entry.get("findings") or []):
+            raise PublishError("manual incident review provenance changed", EXIT_REFUSED)
+        for finding in candidates:
+            if finding.get("source") != "manual-public-incident":
+                raise PublishError("manual incident lacks verified public provenance", EXIT_REFUSED)
+            bound = bind_manual_public_finding(repo, run, units[uid], finding, key, token)
+            if bound != finding:
+                raise PublishError("manual incident source binding changed", EXIT_REFUSED)
+            matches.append(bound)
+    identities = {(f["commit"], f["path"], f["object"], f["rule_id"], f.get("line"), f.get("column")) for f in matches}
+    if len(identities) > 1:
+        raise PublishError("manual incident fingerprint is ambiguous", EXIT_REFUSED)
+    return matches
 
 
 def command_review_list(args):
@@ -2537,6 +2614,34 @@ def command_review_record(args):
         if isinstance(payload, dict):
             payload = payload.get("findings", [])
         records = validate_review_findings(payload, signatures, key, units[args.unit])
+        scanner_findings = load_findings(repo, args.run).get("findings", [])
+        for index, finding in enumerate(records):
+            scanner_matches = [scanned for scanned in scanner_findings if scanned["fingerprint"] == finding["fingerprint"]]
+            if scanner_matches:
+                unit = units[args.unit]
+                matching = [scanned for scanned in scanner_matches
+                            if scanned["commit"] == finding["commit"] and scanned["path"] == finding["path"]
+                            and all(payload[index].get(field) in (None, scanned.get(field)) for field in ("line", "column"))]
+                if payload[index].get("object") is not None:
+                    raise PublishError("scanner-linked review findings do not accept an object override", EXIT_REFUSED)
+                related = (unit["kind"] == "deterministic-finding"
+                           and (unit.get("detail") or {}).get("fingerprint") == finding["fingerprint"])
+                if unit["kind"] == "patch" and unit["path"] == "full-history":
+                    related = finding["commit"] in ((unit.get("detail") or {}).get("commits") or [])
+                elif unit["kind"] != "deterministic-finding":
+                    related = unit["commit"] == finding["commit"] and unit["path"] == finding["path"]
+                if not matching or not related or len({s["classification"] for s in matching}) != 1:
+                    raise PublishError("scanner-linked review finding has different source provenance", EXIT_REFUSED)
+                classification = matching[0]["classification"]
+                if payload[index].get("classification") not in (None, classification):
+                    raise PublishError("scanner-linked review finding has different classification", EXIT_REFUSED)
+                finding["classification"] = classification
+            elif finding.get("classification") == "public-incident" or finding.get("source") == "manual-public-incident":
+                records[index] = bind_manual_public_finding(
+                    repo, load_run(repo, args.run), units[args.unit], finding, key, payload[index].get("fingerprint")
+                )
+            elif finding["fingerprint"] != fingerprint(key, "review", args.unit, finding["rule_id"]):
+                raise PublishError("review fingerprint differs from the reviewed unit identity", EXIT_REFUSED)
         if not records:
             raise PublishError("a finding verdict needs at least one finding record", EXIT_REFUSED)
     elif args.findings:
@@ -2569,6 +2674,9 @@ def command_review_record(args):
         }
         write_json(review_path(repo, args.run), review)
     print("recorded: %s %s" % (args.unit, args.verdict))
+    for finding in records:
+        if finding.get("source") == "manual-public-incident":
+            print("manual-public-incident: %s" % finding["fingerprint"])
     return EXIT_OK
 
 

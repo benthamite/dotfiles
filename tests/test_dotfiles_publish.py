@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import copy
 import concurrent.futures
+import hashlib
 import json
 import os
 import re
@@ -3419,6 +3420,131 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         self.assertNotIn(
             "deterministic-finding: %s" % finding["fingerprint"], status.stdout
         )
+
+    def manual_public_fixture(self):
+        self.publish_base()
+        commit = self.commit("public meeting configuration", {"docs/room.txt": "synthetic meeting access setting\n"})
+        self.git("-c", "core.hooksPath=/dev/null", "push", "--quiet", "origin", "master")
+        self.git("fetch", "--quiet", "origin")
+        private = self.commit("local configuration", {"docs/private.txt": "unpublished setting\n"})
+        _, run_id = self.scan("--mode", "full-audit")
+        self.assertEqual([], self.read_json(self.run_dir(run_id) / "findings.json")["findings"])
+        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        unit = next(u for u in manifest["units"] if commit in (u.get("detail") or {}).get("commits", []))
+        finding = {"rule_id": "manual-meeting-secret", "classification": "public-incident",
+                   "commit": commit, "path": "docs/room.txt", "context": "synthetic historical access credential"}
+        return run_id, unit, finding, private
+
+    def record_manual_public(self, run_id, unit, findings):
+        path = self.base / "manual-public.json"
+        path.write_text(json.dumps(findings))
+        return self.cli("review-record", "--run", run_id, "--unit", unit["unit_id"],
+                        "--verdict", "finding", "--findings", str(path))
+
+    def test_manual_public_incident_exact_resolution_and_fresh_audit(self):
+        run_id, unit, finding, private = self.manual_public_fixture()
+        records = [finding, dict(finding, rule_id="manual-second-access-setting")]
+        recorded = self.record_manual_public(run_id, unit, records)
+        self.assertEqual(0, recorded.returncode, recorded.stderr)
+        self.review_all(run_id, skip=(unit["unit_id"],))
+        stored = self.read_json(self.run_dir(run_id) / "review.json")["entries"][unit["unit_id"]]["findings"]
+        printed = re.findall(r"^manual-public-incident: ([0-9a-f]+)$", recorded.stdout, re.MULTILINE)
+        self.assertEqual([r["fingerprint"] for r in stored], printed)
+        self.assertEqual(2, len({r["fingerprint"] for r in stored}))
+        for r in stored:
+            self.assertEqual("manual-public-incident", r["source"])
+            self.assertEqual(self.git("rev-parse", finding["commit"] + ":docs/room.txt").stdout.strip(), r["object"])
+        for index, r in enumerate(stored):
+            resolution = "rotated" if index == 0 else "accepted-risk"
+            evidence = self.write_evidence(r["fingerprint"], rationale="Synthetic exact exception.",
+                                           authorization="Owner authorized this exact synthetic incident.")
+            proc = self.cli("incident-record", "--run", run_id, "--fingerprint", r["fingerprint"],
+                            "--resolution", resolution, "--evidence", str(evidence))
+            self.assertEqual(0, proc.returncode, proc.stderr)
+            if index == 0:
+                self.assertNotEqual(0, self.cli("review-status", "--run", run_id).returncode)
+                self.assertNotIn(stored[1]["fingerprint"], self.read_json(self.state_dir() / "incidents.json")["incidents"])
+        stale = self.cli("review-status", "--run", run_id)
+        self.assertNotEqual(0, stale.returncode)
+        self.assertIn("incident state changed", stale.stderr)
+        _, fresh = self.scan("--mode", "full-audit")
+        fresh_manifest = self.read_json(self.run_dir(fresh) / "manifest.json")
+        fresh_unit = next(u for u in fresh_manifest["units"] if finding["commit"] in (u.get("detail") or {}).get("commits", []))
+        borrowed = dict(finding, fingerprint=stored[0]["fingerprint"], commit=private,
+                        path="docs/private.txt", source="review", classification="outgoing")
+        rejected = self.record_manual_public(fresh, fresh_unit, [borrowed])
+        self.assertNotEqual(0, rejected.returncode)
+        self.assertIn("review fingerprint differs", rejected.stderr)
+        self.assertEqual(0, self.record_manual_public(fresh, fresh_unit, records).returncode)
+        fresh_records = self.read_json(self.run_dir(fresh) / "review.json")["entries"][fresh_unit["unit_id"]]["findings"]
+        self.assertEqual(stored, fresh_records)
+        self.review_all(fresh, skip=(fresh_unit["unit_id"],))
+        status = self.cli("review-status", "--run", fresh)
+        self.assertEqual(0, status.returncode, status.stderr)
+        self.assertIn("full-audit-recorded:", status.stdout)
+
+    def test_manual_public_incident_rejects_forged_source_identity(self):
+        run_id, unit, finding, private = self.manual_public_fixture()
+        # A later public ref must not retroactively alter the captured boundary.
+        self.git("-c", "core.hooksPath=/dev/null", "push", "--quiet", "origin", "master")
+        self.git("fetch", "--quiet", "origin")
+        cases = [dict(finding, object="0" * 40), dict(finding, fingerprint="a" * 20),
+                 dict(finding, path="docs/missing.txt"), dict(finding, path="docs/*.txt"),
+                 dict(finding, commit="0" * 40), dict(finding, commit=private, path="docs/private.txt"),
+                 dict(finding, line=-1), dict(finding, line=999999), dict(finding, line=1, column=999999),
+                 dict(finding, source="manual-public-incident", classification="outgoing")]
+        for record in cases:
+            with self.subTest(record=record):
+                proc = self.record_manual_public(run_id, unit, [record])
+                self.assertNotEqual(0, proc.returncode)
+                self.assertIn("manual public incident", proc.stderr)
+        self.assertFalse((self.run_dir(run_id) / "review.json").exists())
+        self.assertFalse((self.state_dir() / "incidents.json").exists())
+
+    def test_manual_public_incident_revalidates_record_and_rejects_unknown(self):
+        run_id, unit, finding, _ = self.manual_public_fixture()
+        unknown = "a" * 20
+        proc = self.cli("incident-record", "--run", run_id, "--fingerprint", unknown, "--resolution", "rotated",
+                        "--evidence", str(self.write_evidence(unknown)))
+        self.assertNotEqual(0, proc.returncode)
+        self.assertEqual(0, self.record_manual_public(run_id, unit, [finding]).returncode)
+        path = self.run_dir(run_id) / "review.json"
+        original = self.read_json(path)
+        token = original["entries"][unit["unit_id"]]["findings"][0]["fingerprint"]
+        for tamper in ("digest", "object", "verdict", "classification"):
+            review = copy.deepcopy(original)
+            entry = review["entries"][unit["unit_id"]]
+            if tamper == "digest": entry["digest"] = "0" * 64
+            elif tamper == "verdict": entry["verdict"] = "clean"
+            else:
+                entry["findings"][0][tamper] = "0" * 40 if tamper == "object" else "outgoing"
+                entry["digest"] = hashlib.sha256(json.dumps(entry["findings"], sort_keys=True).encode()).hexdigest()
+            path.write_text(json.dumps(review))
+            proc = self.cli("incident-record", "--run", run_id, "--fingerprint", token, "--resolution", "rotated",
+                            "--evidence", str(self.write_evidence(token)))
+            self.assertNotEqual(0, proc.returncode, tamper)
+            self.assertFalse((self.state_dir() / "incidents.json").exists())
+
+    def test_manual_public_incident_cannot_borrow_resolved_scanner_identity(self):
+        self.publish_a_secret()
+        private = self.commit("local access configuration", {"docs/private.txt": "synthetic local access setting\n"})
+        _, run_id = self.scan("--mode", "full-audit")
+        scanned = self.public_incident(run_id)
+        resolved = self.cli("incident-record", "--run", run_id, "--fingerprint", scanned["fingerprint"],
+                            "--resolution", "rotated", "--evidence", str(self.write_evidence(scanned["fingerprint"])))
+        self.assertEqual(0, resolved.returncode, resolved.stderr)
+        manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
+        unit = next(u for u in manifest["units"] if private in (u.get("detail") or {}).get("commits", []))
+        claimed = dict(scanned, commit=private, path="docs/private.txt")
+        proc = self.record_manual_public(run_id, unit, [claimed])
+        self.assertNotEqual(0, proc.returncode)
+        self.assertIn("different source provenance", proc.stderr)
+        scanner_unit = next(u for u in manifest["units"] if (u.get("detail") or {}).get("fingerprint") == scanned["fingerprint"])
+        for override in ({"line": (scanned.get("line") or 1) + 1},
+                         {"column": (scanned.get("column") or 1) + 1}, {"object": "0" * 40}):
+            proc = self.record_manual_public(run_id, scanner_unit, [dict(scanned, **override)])
+            self.assertNotEqual(0, proc.returncode, override)
+            self.assertIn("scanner-linked", proc.stderr)
 
     def test_a_recorded_incident_unblocks_its_own_review_verdict(self):
         self.check_recorded_incident_unblocks_review("rotated")

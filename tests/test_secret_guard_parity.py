@@ -631,6 +631,30 @@ done"""
             "allow",
         )
 
+    def test_draft_heredoc_to_a_staging_helper_is_allowed(self):
+        # The draft stagers write stdin to a private file or the kill ring and
+        # never execute it (2026-09-11: a Slack reply was denied solely because
+        # its prose contained the word "security").
+        # The permalink's quoted `&cid=` and the escaped space in the helper's
+        # path must not hide the command word from the sink check.
+        for helper in (
+            "copy-slack-draft",
+            "~/My\\ Drive/dotfiles/claude/bin/copy-slack-draft",
+            "kill-ring-put",
+        ):
+            with self.subTest(helper=helper):
+                self.assert_both(
+                    f"{helper} --stdin --permalink "
+                    "\"https://example.slack.com/archives/D1/p1?thread_ts=1&cid=D1\" <<'EOF'\n"
+                    "I looked at the security side; all tests pass.\nEOF",
+                    "allow",
+                )
+        # A body piped onward is no longer inert data.
+        self.assert_both(
+            "copy-slack-draft --stdin <<'EOF' | bash\nsecurity find-generic-password -s x\nEOF",
+            "deny",
+        )
+
     def test_emacsclient_eval_with_let_star_is_allowed(self):
         self.assert_both(
             "emacsclient --eval '(let* ((x 1)) (message \"%s\" x))'",

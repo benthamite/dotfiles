@@ -25,10 +25,30 @@
 
 mask_heredoc_bodies() {
   printf '%s\n' "$1" | awk -v mode="${2:-sinks}" '
+    function neutralize(text,    out, i, n, c, sq, dq) {
+      # Quoted spans and escaped characters can hold neither a control
+      # operator nor a word break, so replace them before tokenizing: a `&`
+      # inside a quoted URL or an escaped space in the program path must not
+      # hide the command word that owns the heredoc.
+      out = ""; sq = 0; dq = 0; n = length(text)
+      for (i = 1; i <= n; i++) {
+        c = substr(text, i, 1)
+        if (sq) { out = out "x"; if (c == SQ) sq = 0; continue }
+        if (dq) {
+          if (c == BS) { out = out "xx"; i++; continue }
+          out = out "x"; if (c == DQ) dq = 0; continue
+        }
+        if (c == BS) { out = out "xx"; i++; continue }
+        if (c == SQ) { sq = 1; out = out "x"; continue }
+        if (c == DQ) { dq = 1; out = out "x"; continue }
+        out = out c
+      }
+      return out
+    }
     function maskable(prefix, suffix,    seg, k, ntok, tok, word, p) {
       if (mode == "all") return 1
       if (prefix ~ /[(`]/ || suffix ~ /[|(`]/) return 0
-      seg = prefix
+      seg = neutralize(prefix)
       # The simple command owning the heredoc starts after the last control
       # operator. Quoted separators earlier on the line only make the guard
       # keep the body, never drop it.
@@ -50,7 +70,7 @@ mask_heredoc_bodies() {
     }
     BEGIN {
       SQ = sprintf("%c", 39); DQ = "\""; BS = "\\"
-      nsinks = split("cat tee git gh head tail wc sort uniq grep rg diff cmp tr cut fold less more md5 md5sum shasum sha256sum column nl paste", arr, " ")
+      nsinks = split("cat tee git gh head tail wc sort uniq grep rg diff cmp tr cut fold less more md5 md5sum shasum sha256sum column nl paste copy-slack-draft kill-ring-put", arr, " ")
       for (k = 1; k <= nsinks; k++) sinks[arr[k]] = 1
       in_sq = 0; in_dq = 0; nq = 0
     }

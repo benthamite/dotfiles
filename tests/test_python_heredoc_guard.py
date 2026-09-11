@@ -1,4 +1,4 @@
-"""Synthetic guard inputs only: proposed Python/shell programs never execute."""
+"""Synthetic guard inputs; only the known document edit runs in owned fixtures."""
 
 import importlib.util
 import json
@@ -42,6 +42,23 @@ finally:
     case.doCleanups()
 PY
 """
+DOCUMENT_EDIT_BODY = '''import json
+from pathlib import Path
+p=Path('architectural-issues.md');s=p.read_text();old="  Independent112-test and root67-test selections passed. No rebuild/load.\\n";assert old in s
+s=s.replace(old,"  Independent112-test and root67-test selections passed. A later distinct-take\\n  census exposed two suffix bounds missed by the initial guard: Babo... Zeira...\\n  2000173586 and Ceferino200018516 print numeric date followed by `or earlier`.\\n  The guard now recognizes that bound too. Independent full comparison changes\\n  only those two rows (102 to104 unresolved), preserving all earlier unresolved\\n  rows and338 year rows;19 independent and37 root focused tests pass. No load.\\n");p.write_text(s)
+p=Path('backend/data/reconciliation/case_verdicts/2026-09-08-continuous/rie-payaso-dahr-qualified-dates.json');r=json.loads(p.read_text());r['suffix_bound_followup']={'reviewer':'dahr_suffix_bound_review','source_ids':['2000173586','200018516'],'raw_dates':['11/18/1931 or earlierRio de Janeiro, Brazil [unconfirmed]','9/6/1934 or earlierBuenos Aires, Argentina [unconfirmed]'],'invariant':'A numeric date followed by or earlier remains a bound even when another take has an exact date.','production_rows':3847,'additional_changed_rows':2,'unresolved_before':102,'unresolved_after':104,'all_prior_unresolved_and_338_year_rows_unchanged':True,'complete_take_evidence_preserved':True,'independent_tests':19,'root_tests':37,'date_identity_decisions':False,'rebuild_or_load':False};p.write_text(json.dumps(r,ensure_ascii=False,indent=2)+'\\n')'''
+DOCUMENT_UPDATE_BODY = '''from pathlib import Path
+import json
+path = Path('fixture.md')
+content = path.read_text()
+old = 'Checks remain pending.'
+new = 'The tests pass.'
+assert old in content
+path.write_text(content.replace(old, new))
+report_path = Path('fixture.json')
+report = json.loads(report_path.read_text())
+report.update({'status': 'The tests pass.'})
+report_path.write_text(json.dumps(report, indent=2) + '\\n')'''
 spec = importlib.util.spec_from_file_location("python_heredoc_policy", HELPERS[0])
 policy = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(policy)
@@ -274,6 +291,129 @@ PY"""
     def test_safe_data_mentions_remain_conservatively_denied(self):
         for body in ('print("pass")', 'text = """first\npass\nlast"""', '# pass is a keyword\npass'):
             self.assert_hooks(heredoc(body), "deny")
+
+    def test_reported_document_and_json_edit_is_allowed_and_runs_only_in_fixture(self):
+        command = heredoc(DOCUMENT_EDIT_BODY,
+                          prefix="/Users/pablostafforini/.pyenv/versions/3.11.9/bin/python -")
+        self.assert_hooks(command, "allow")
+        document = self.directory / "architectural-issues.md"
+        document.write_text("  Independent112-test and root67-test selections passed. No rebuild/load.\n")
+        evidence = self.directory / "backend/data/reconciliation/case_verdicts/2026-09-08-continuous/rie-payaso-dahr-qualified-dates.json"
+        evidence.parent.mkdir(parents=True)
+        evidence.write_text('{"preserved": true}\n')
+        # The synthetic negative controls below are never executed. This one
+        # known document edit executes only against owned temporary files.
+        result = subprocess.run(["python3", "-"], input=DOCUMENT_EDIT_BODY,
+                                cwd=self.directory, text=True, capture_output=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("root focused tests pass. No load.", document.read_text())
+        data = json.loads(evidence.read_text())
+        self.assertTrue(data["preserved"])
+        self.assertEqual(data["suffix_bound_followup"]["unresolved_after"], 104)
+
+    def test_document_literals_and_comments_are_allowed_in_closed_edit_language(self):
+        bodies = [
+            'from pathlib import Path\nPath("/tmp/documentation-fixture.md").write_text("root focused tests pass. No load.")',
+            'from pathlib import Path\n# security and pbpaste are documented here\nPath("docs/pass.md").write_text("pa" "ss", encoding="utf-8")',
+            'from pathlib import Path\nPath("docs/security.org").write_text("\\x70ass")',
+        ]
+        for body in bodies:
+            self.assert_hooks(heredoc(body), "allow")
+
+    def test_reported_mapping_update_is_allowed_and_runs_only_in_fixture(self):
+        command = heredoc(DOCUMENT_UPDATE_BODY)
+        self.assert_hooks(command, "allow")
+        program = ('text(await tools.exec_command({cmd:' + json.dumps(command)
+                   + ',workdir:' + json.dumps(str(self.directory)) + ',max_output_tokens:1000}));')
+        result = subprocess.run(["/bin/bash", str(ROOT/"codex/hooks/block-secret-leak.sh")],
+            input=json.dumps({"tool_name": "functions.exec", "tool_input": {"input": program},
+                              "cwd": str(self.directory)}), text=True, capture_output=True,
+            timeout=15, cwd=self.directory)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        output = json.loads(result.stdout) if result.stdout.strip() else {}
+        self.assertEqual(output.get("hookSpecificOutput", {}).get("permissionDecision", "allow"), "allow")
+        document = self.directory / "fixture.md"
+        report = self.directory / "fixture.json"
+        document.write_text("Checks remain pending.")
+        report.write_text('{"preserved": true}\n')
+        result = subprocess.run(["python3", "-"], input=DOCUMENT_UPDATE_BODY,
+                                cwd=self.directory, text=True, capture_output=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(document.read_text(), "The tests pass.")
+        self.assertEqual(json.loads(report.read_text()), {"preserved": True, "status": "The tests pass."})
+
+    def test_mapping_update_requires_bound_data_literal_dict_and_statement_context(self):
+        prefix = 'from pathlib import Path\nimport json\nreport = {}\n'
+        write = '\nPath("fixture.json").write_text(json.dumps(report) + "pass")'
+        calls = [
+            'report.update(status="pass")', 'report.update({"status": "pass"}, {})',
+            'report.update(report)', 'report.update({**report})',
+            'report.update({"status": unknown()})', 'unknown.update({"status": "pass"})',
+            'json.loads("{}").update({"status": "pass"})',
+            'report = unknown\nreport.update({"status": "pass"})',
+            'report.update = unknown\nreport.update({"status": "pass"})',
+            'update = report.update\nupdate({"status": "pass"})',
+            'result = report.update({"status": "pass"})',
+            'report.update({"nested": report.update({"status": "pass"})})',
+        ]
+        for call in calls:
+            self.assert_hooks(heredoc(prefix + call + write), "deny")
+        # Mutating in-memory data alone must not satisfy the required write.
+        self.assert_hooks(heredoc(prefix + 'report.update({"status": "pass"})'), "deny")
+
+    def test_document_exception_rejects_unknown_calls_bindings_and_execution(self):
+        safe = 'from pathlib import Path\nPath("fixture.md").write_text("pass")'
+        bodies = [
+            safe + '\nexec("print(1)")', safe + '\neval("1")',
+            safe + '\nunknown()', safe + '\nimport subprocess',
+            safe + '\nimport os\nos.system("\\x70ass")',
+            'from pathlib import Path\nPath = arbitrary\nPath("fixture.md").write_text("pass")',
+            'from pathlib import Path as P\nP("fixture.md").write_text("pass")',
+            'from pathlib import *\nPath("fixture.md").write_text("pass")',
+            'from pathlib import Path\np=Path("fixture.md")\nf=p.write_text\nf("pass")',
+            'import json\nfrom pathlib import Path\njson.loads = eval\nPath("fixture.md").write_text(json.loads("pass"))',
+            'import json\nfrom pathlib import Path\nPath("fixture.md").write_text(json.dumps({},default=eval)+"pass")',
+            'from pathlib import Path\nPath("fixture.py").write_text("pass")',
+            'from pathlib import Path\nPath("fixture.md").write_text(f"pass {unknown()}")',
+            'from pathlib import Path\nPath("fixture.md").write_text("pass", **options)',
+        ]
+        for body in bodies:
+            self.assert_hooks(heredoc(body), "deny")
+
+    def test_document_exception_rejects_shell_exterior_and_preserves_secret_checks(self):
+        safe = 'from pathlib import Path\nPath("fixture.md").write_text("pass")'
+        commands = [heredoc(safe, suffix="\npython3 fixture.md"),
+                    heredoc(safe, suffix="\npbpaste"), heredoc(safe) + "\n" + heredoc("pass"),
+                    heredoc(safe, prefix="true; python3 -"),
+                    heredoc(safe, prefix="PYTHONPATH=/tmp python3 -"),
+                    heredoc(safe, delimiter="PY")]
+        for command in commands:
+            self.assert_hooks(command, "deny")
+        marker = "-" * 5 + "BEGIN PRIVATE KEY" + "-" * 5
+        self.assert_hooks(heredoc(safe.replace('"pass"', repr(marker + " pass"))), "deny")
+
+    def test_document_exception_requires_one_complete_literal_orchestration(self):
+        command = heredoc('from pathlib import Path\nPath("fixture.md").write_text("pass")')
+        call = 'await tools.exec_command({cmd: ' + json.dumps(command) + '})'
+        programs = [
+            (call + '; await tools.exec_command({cmd: "sh fixture.md"});', "deny"),
+            ('await tools.exec_command({cmd: "true"});' + call + ';', "deny"),
+            (call + '; unknown();', "deny"),
+            ('const payload = {cmd: ' + json.dumps(command) + '}; await tools.exec_command(payload);', "deny"),
+            (call.replace('})', ', shell: "/bin/sh"})') + ';', "deny"),
+            (call.replace('})', ', unknown: sideEffect()})') + ';', "deny"),
+            ('text(' + call.replace('})', ', workdir: "/tmp", max_output_tokens: 1000, yield_time_ms: 1000})') + ');', "allow"),
+            (call + ';', "allow"),
+        ]
+        for program, expected in programs:
+            with self.subTest(program=program):
+                result = subprocess.run(["/bin/bash", str(ROOT/"codex/hooks/block-secret-leak.sh")],
+                    input=json.dumps({"tool_name": "functions.exec", "tool_input": {"input": program},
+                                      "cwd": str(self.directory)}), text=True, capture_output=True,
+                    timeout=15, cwd=self.directory)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                output = json.loads(result.stdout) if result.stdout.strip() else {}
+                self.assertEqual(output.get("hookSpecificOutput", {}).get("permissionDecision", "allow"), expected)
 
     def test_shell_and_interpolation_controls_remain_denied(self):
         commands = ["pass show fixture/credential", "security find-generic-password -w -s fixture", "pbpaste",

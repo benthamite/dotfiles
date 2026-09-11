@@ -534,11 +534,16 @@ similar) with no pipe or substitution around them are data too, so a commit
 message or a Markdown file written through a heredoc is never scanned as
 shell text; bodies fed to shells, interpreters, or unknown programs stay in
 the scan. For a narrowly recognized quoted Python stdin program, the secret
-guard first checks Python protected references, exempting only genuine =pass=
-statements, then excludes that body from shell lexical checks. Python varargs
-are not shell executable globs. Other secret checks still receive the original
-input; unknown source stays unmasked and safe protected-name string mentions
-remain conservatively denied. Literal =pyenv exec python -= stdin programs use
+guard first checks Python protected references, exempting genuine =pass=
+statements and a closed text/JSON document-edit language. Document edits permit
+validated standard imports, data bindings, text reads/replacements/writes and
+JSON conversions, including a bound data value's =update= with one validated
+dictionary literal. A mutation alone does not satisfy the required file write.
+This exception requires one standalone direct Python command and one complete
+literal =functions.exec= wrapper with inert metadata. Unknown calls, dynamic
+expressions, multi-call wrappers and shell tails retain conservative scanning.
+Python varargs are not shell executable globs. Other secret checks still receive
+the original input. Literal =pyenv exec python -= stdin programs use
 the same Python classification, including its protected-reference checks; other
 pyenv subcommands and dynamic interpreter names receive no exemption.
 Consecutive supported Python heredocs receive the same classification in order;

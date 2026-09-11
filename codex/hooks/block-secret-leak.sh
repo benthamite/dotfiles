@@ -158,14 +158,19 @@ contains_any_op_reveal_output() {
 
 contains_secret_output_command() {
   local raw scan normalized protected boundary wrapper executable delimiter
+  local document_flag=--allow-document-edits
+  if [ "$TOOL_NAME" = "functions.exec" ] && [ "${SECRET_LITERAL_EXEC:-false}" != true ]; then
+    document_flag=--no-document-edits
+  fi
   # Heredoc bodies fed to a data sink are data, not command words; keep
   # bodies fed to interpreters or pipelines in the scan (see lib-heredoc.sh).
-  # Python's Pass node is not the password-manager executable. Parse only an
-  # unambiguous quoted stdin program; leave unsupported source unchanged and
-  # deny protected references before shell quote masking can erase them.
+  # Python Pass nodes and the closed document-edit language are not credential
+  # invocations. Claude supplies one native shell command; Codex additionally
+  # validates its complete functions.exec wrapper before enabling document edits.
+  # Unknown source retains protected-name scanning before shell quote masking.
   # This function is used as an if-condition, so do not rely on set -e here:
   # a failed classifier must explicitly take the denial path.
-  raw=$(printf '%s' "$1" | python3 "$(dirname "$0")/lib-python-heredoc.py" 2>/dev/null) || return 0
+  raw=$(printf '%s' "$1" | python3 "$(dirname "$0")/lib-python-heredoc.py" "$document_flag" 2>/dev/null) || return 0
   raw=$(mask_heredoc_bodies "$raw")
   # 1Password brokers are classified by lib-op-policy.py (see the gate below);
   # this rule covers the tools whose output *is* the secret.
@@ -261,7 +266,12 @@ contains_secret_output_command() {
 
 contains_any_secret_output_command() {
   local nested
-  contains_secret_output_command "$CONTENT" && return 0
+  # A validated complete literal wrapper has no shell code outside its cmd.
+  # Its decoded command is checked below; all other JavaScript retains the
+  # conservative outer scan and cannot use the document-edit exception.
+  if [ "${SECRET_LITERAL_EXEC:-false}" != true ]; then
+    contains_secret_output_command "$CONTENT" && return 0
+  fi
   if [ "$TOOL_NAME" = "functions.exec" ] && [ "${#SECRET_NESTED_COMMANDS[@]}" -gt 0 ]; then
     for nested in "${SECRET_NESTED_COMMANDS[@]}"; do
       contains_secret_output_command "$nested" && return 0
@@ -354,6 +364,7 @@ deny_unclassified_nested_command() {
 # and no NUL byte enters command substitution. A partial failed extraction is
 # not an empty-success result. Reuse these checked commands in all four gates.
 SECRET_NESTED_COMMANDS=()
+SECRET_LITERAL_EXEC=false
 if [ "$TOOL_NAME" = "functions.exec" ]; then
   secret_contexts=$(printf '%s' "$CONTENT" | codex_nested_exec_contexts 2>/dev/null | tr '\000' '\n') \
     || deny_unclassified_nested_command
@@ -371,6 +382,10 @@ if [ "$TOOL_NAME" = "functions.exec" ]; then
     secret_nested=${secret_nested%.}
     SECRET_NESTED_COMMANDS[${#SECRET_NESTED_COMMANDS[@]}]="$secret_nested"
   done <<< "$secret_contexts"
+  if [ "${#SECRET_NESTED_COMMANDS[@]}" -eq 1 ] && \
+     printf '%s' "$CONTENT" | _codex_nested_exec_values literal-wrapper >/dev/null 2>&1; then
+    SECRET_LITERAL_EXEC=true
+  fi
 fi
 
 # --- Allowlist: commands that do not return secret-manager output ---

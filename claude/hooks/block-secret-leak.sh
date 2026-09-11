@@ -140,9 +140,10 @@ contains_secret_output_command() {
   local raw="$1" scan normalized protected boundary wrapper executable delimiter
   # Heredoc bodies fed to a data sink are data, not command words; keep
   # bodies fed to interpreters or pipelines in the scan (see lib-heredoc.sh).
-  # Python's Pass node is not the password-manager executable. Parse only an
-  # unambiguous quoted stdin program; leave unsupported source unchanged and
-  # deny protected references before shell quote masking can erase them.
+  # Python Pass nodes and the closed document-edit language are not credential
+  # invocations. Claude supplies one native shell command; Codex additionally
+  # validates its complete functions.exec wrapper before enabling document edits.
+  # Unknown source retains protected-name scanning before shell quote masking.
   # This function is used as an if-condition, so do not rely on set -e here:
   # a failed classifier must explicitly take the denial path.
   raw=$(printf '%s' "$1" | python3 "$(dirname "$0")/lib-python-heredoc.py" 2>/dev/null) || return 0

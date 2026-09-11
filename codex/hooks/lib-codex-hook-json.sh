@@ -85,6 +85,39 @@ mode = sys.argv[1]
 source = sys.stdin.read()
 n = len(source)
 
+# This is a deliberately smaller grammar than command extraction: the new
+# document-edit exception needs one complete orchestration, with no executable
+# metadata, dynamic expressions, extra calls or residual JavaScript. JSON string
+# decoding is shared with the standard library; no source is evaluated.
+if mode == "literal-wrapper":
+    opener = re.match(r"\s*(text\(\s*)?await\s+tools\.exec_command\(\s*\{", source)
+    if opener is None:
+        sys.exit(1)
+    pos = opener.end()
+    fields = {}
+    decoder = json.JSONDecoder()
+    try:
+        while True:
+            key = re.match(r"\s*(cmd|workdir|max_output_tokens|yield_time_ms)\s*:\s*", source[pos:])
+            if key is None or key[1] in fields:
+                sys.exit(1)
+            pos += key.end()
+            value, pos = decoder.raw_decode(source, pos)
+            expected = str if key[1] in {"cmd", "workdir"} else int
+            if type(value) is not expected:
+                sys.exit(1)
+            fields[key[1]] = value
+            separator = re.match(r"\s*([,}])", source[pos:])
+            if separator is None:
+                sys.exit(1)
+            pos += separator.end()
+            if separator[1] == "}":
+                break
+        tail = r"\s*\)\s*" + (r"\)\s*" if opener[1] else "") + r";?\s*"
+        sys.exit(0 if "cmd" in fields and re.fullmatch(tail, source[pos:]) else 1)
+    except (ValueError, UnicodeError):
+        sys.exit(1)
+
 
 def skip_space(pos):
     while pos < n:

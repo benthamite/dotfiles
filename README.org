@@ -34,10 +34,10 @@ against the tracked top-level tree.
 | Directory | Documentation |
 |-----------+---------------|
 | =.agent-learnings= | [[file:.agent-learnings/README.org][Pending and archived agent-learning workflow state]] |
-| =.claude= | [[file:agents/README.org][Dotfiles-local Claude skills and shared agent topology]] |
-| =.codex= | [[file:agents/README.org][Dotfiles-local Codex skills and shared agent topology]] |
+| =.claude= | [[file:agents/configuration.org][Dotfiles-local Claude skills and shared agent topology]] |
+| =.codex= | [[file:agents/configuration.org][Dotfiles-local Codex skills and shared agent topology]] |
 | =.github= | [[file:.github/workflows/test-extras.yml][GitHub Actions workflow for Emacs extras]] |
-| =agents= | [[file:agents/README.org][Cross-tool agent configuration and synchronization]] |
+| =agents= | [[file:agents/README.org][Skills and configuration for Codex and Claude Code]] |
 | =ai-marketplace-monitor= | [[file:ai-marketplace-monitor/README.org][AI marketplace monitor configuration]] |
 | =aider= | [[file:aider/README.org][Aider configuration and conventions]] |
 | =archive= | [[file:archive/README.org][Retired agent skills and their retained output]] |
@@ -84,7 +84,7 @@ such as local environment files, voice samples, and agent-learning candidates.
 Before publication, the guarded dotfiles workflow scans the exact outgoing
 history and candidate tree with deterministic rules and a model review.
 Ordinary =git push= is blocked; the publication design and controls are
-documented in [[file:agents/README.org][the agent configuration manual]].
+documented in [[file:agents/configuration.org][the agent configuration manual]].
 
 * Maintenance and verification
 

@@ -10,7 +10,7 @@ This is the canonical placement policy for agent-facing guidance in the
 dotfiles setup. Use it to decide whether guidance belongs in =CLAUDE.md=,
 =AGENTS.md=, a skill, a hook, a linter, a reference doc, or a project brief.
 
-It complements =agents/README.org=, which owns Claude/Codex topology and sync.
+It complements =agents/configuration.org=, which owns Claude/Codex topology and sync.
 Tool-specific READMEs document activation details. Project-specific convention
 docs may specialize this policy for a project family.
 
@@ -41,7 +41,7 @@ matter in nearly every session covered by that file.
 | Mechanical rule | Hook, linter, formatter, test, or script | Compliance can be checked deterministically or the tool can block bad actions directly. |
 | Path- or file-type-specific convention | Path-scoped rule where supported, otherwise a skill or local reference | It matters only for a subset of files or tasks. |
 | Reference fact or lookup | Reference doc, linked from the relevant map | It is information to consult, not a procedure to remember every turn. |
-| Claude/Codex artifact topology and sync | =agents/README.org= | It concerns counterpart paths, activation, sync checks, or non-portable tool differences. |
+| Claude/Codex artifact topology and sync | =agents/configuration.org= | It concerns counterpart paths, activation, sync checks, or non-portable tool differences. |
 
 * Decision Test
 :PROPERTIES:
@@ -79,7 +79,7 @@ matter in nearly every session covered by that file.
 :ID:       73CA286D-B25B-4C44-86D7-7111AEAAB49E
 :END:
 
-- =agents/README.org= defines the Claude/Codex synchronization topology.
+- =agents/configuration.org= defines the Claude/Codex synchronization topology.
 - =claude/README.org= and =codex/README.org= document tool-specific activation
   and local conventions.
 - =.claude/skills/optimize-agent-instructions/SKILL.md= and

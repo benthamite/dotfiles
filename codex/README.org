@@ -4,7 +4,7 @@
 * Overview
 
 This directory contains the version-controlled parts of my Codex setup. The
-shared Claude/Codex contract lives in [[file:../agents/README.org][the agent configuration overview]]; this
+shared Claude/Codex contract lives in [[file:../agents/configuration.org][the shared configuration guide]]; this
 file covers Codex-specific activation, settings, and native differences.
 
 * Layout and activation

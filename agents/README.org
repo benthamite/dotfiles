@@ -1,190 +1,40 @@
-#+title: Agent configuration synchronization
+#+title: AI skills and configuration
 #+author: Pablo Stafforini
 
-* Overview
-
-This document owns the shared Claude Code and Codex configuration model.
-Tool-specific activation belongs in [[file:../claude/README.org][the Claude overview]] and
-[[file:../codex/README.org][the Codex overview]]. The placement policy for instructions, skills, hooks,
-linters, reference material, and project briefs lives in
-[[file:instruction-placement.org][instruction-placement.org]].
-
-The two configurations are maintained as peer implementations. Hooks remind an
-agent to update a counterpart, and commit guards reject one-sided changes. The
-public manifest, =ai-config-sync.json=, records deliberate exceptions and
-tool-specific equivalents.
-
-* Topology
-
-| Tracked source | Live or project consumer |
-|----------------+--------------------------|
-| =claude/CLAUDE.md= | =~/.claude/CLAUDE.md= symlink |
-| =codex/AGENTS.md= | =~/.codex/AGENTS.md= symlink |
-| =claude/skills/= | =~/.claude/skills= symlink |
-| =codex/skills/= | =~/.codex/skills= symlink |
-| =claude/hooks/= | Absolute paths registered in mutable =~/.claude/settings.json= |
-| =codex/hooks.json= | =~/.codex/hooks.json= symlink |
-| =codex/config.toml= | =~/.codex/config.toml= symlink |
-| =CLAUDE.md= and =AGENTS.md= | Instructions for this dotfiles project only |
-| =<project>/.claude/= and =<project>/.codex/= | Configuration for that project only |
-
-Repo-root =.claude/= and =.codex/= directories are always project-local. They
-must never be global symlink targets. Claude's =settings.json= is intentionally
-a mutable regular file because Claude rewrites it; Codex's tracked configuration
-and hook registration are stable symlink targets.
-
-Claude account overlays selected with =CLAUDE_CONFIG_DIR= remain Claude-local.
-Private, runtime, and account state are not made public merely to force a
-symmetrical tree.
-
-* Peer model
-
-Neither tool is canonical. Either side may be edited first, but paired
-instructions, skills, auxiliary skill files, compatible hooks, and project-local
-counterparts must agree after tool-specific normalization.
-
-Project Codex instructions live in =AGENTS.md=. Codex does not use
-=project_doc_fallback_filenames= to load =CLAUDE.md=. The instruction audit
-normalizes Claude's =@context= syntax and equivalent Codex-safe paths before it
-compares the global pair.
-
-Some differences are genuine:
-
-- Claude =Read=, =Grep=, =Glob=, and =Skill= events have no Codex event here.
-- Claude Chrome hooks have no Codex counterpart.
-- Claude Notification events are replaced in Emacs-owned Codex sessions by
-  lifecycle forwarding through =codex-hook-wrapper=.
-- Settings, permission models, hook payloads, plugins, MCP lifecycle, and
-  model controls use different native formats.
-
-These differences belong in the manifest and the relevant tool overview, not
-in invented no-op counterparts.
-
-* External write gates
-
-Agent-initiated GitHub writes are denied unless the target is authorized by one
-of two committed sources:
-
-1. =agents/github-write-allowlist.txt=, which accepts exact =OWNER/REPO=
-   entries and explicit =OWNER/*= account wildcards;
-2. the fixed committed Epoch automations registry, whose exact repository list
-   is derived from project =:REPOS:= declarations.
-
-The guard never trusts a working-tree edit or a caller-selected registry path.
-Hook decisions are allow or deny; they never ask for approval.
-
-Contribution writes are not exempt: topic branches, pull requests, issues, and
-comments require the same committed repository authorization as other writes.
-
-** Guarded dotfiles publication
-
-This repository is public, but ordinary =git push= is disabled by its push URL.
-The paired project-local publication workflow is retained only in the owner's
-local checkout at =.claude/skills/publish-dotfiles/= and
-=.codex/skills/publish-dotfiles/=. Its sources are ignored and are not distributed
-with this repository. The public =bin/dotfiles-publish= command implements the
-publication guard independently of those local instructions. Its installer activates
-=bin/dotfiles-pre-push=, while the refusing push URL routes through
-=bin/git-remote-dotfiles-blocked= so =--no-verify= cannot bypass publication.
-The deterministic scan covers the exact outgoing history and candidate tree;
-the model review must give every manifest unit an explicit verdict. A short-lived
-authorization then names one exact push and is consumed before the hook decides.
-
-The same machinery performs a complete reachable-history audit when its receipt
-is missing, more than 30 days old, invalidated by a ruleset change, or followed
-by an incident. Already-public secrets are incidents: rotate or revoke first,
-then remove the source, and only then consider rewriting public history.
-
-Ordinary publication updates one branch. A formal dotfiles release adds one tag
-and reviews the release notes and tag text as additional units.
+My skills, instructions, hooks and supporting tools for Codex and Claude Code.
+They cover software development, writing, research, and maintaining my Emacs
+and macOS environment.
 
 * Skills
 
-The [[file:skill-inventory.org][skill list]] describes my skills and links to their Codex and Claude Code
-sources. It includes global and project-local skills, with archived and private
-skills excluded.
+The [[file:skill-inventory.org][skill list]] describes each skill and links directly to its Codex and
+Claude Code sources. It brings global and project-local skills together in one
+alphabetical list, excluding archived and private skills.
 
-Global reusable skills live in paired =claude/skills/<name>/= and
-=codex/skills/<name>/= directories. Project-local pairs use
-=.claude/skills/<name>/= and =.codex/skills/<name>/=. The sync audit compares
-bodies and auxiliary files after removing tool-only frontmatter.
+The collection includes code review and debugging, documentation and writing,
+research and bibliography workflows, and Emacs and macOS maintenance.
 
-Archived skills live under =archive/=. Programmatic skills are explicitly
-invoked rather than exposed to every interactive session. Encrypted private
-skills and their private manifest remain outside the public inventory. Codex's
-managed =.system= skills and dynamic plugin skills are runtime state, not
-repository-owned peers. Parent-Drive skill pairs outside Git are checked by the
-global audit because a commit guard cannot see them.
+To use a skill, start with its =SKILL.md= and the setup it references. Some skills
+are self-contained procedures; others depend on my dotfiles, local commands or
+private configuration. Keep supporting files with the skill, preserve any
+required repository layout, and supply your own accounts and private inputs.
 
-The [[file:skills/README.md][selected skills catalog]] provides source links for the skills chosen for
-sharing, including global, dotfiles, Emacs and macOS entry points. Its explicit
-selection requires a publication review before adding a skill. Source directories
-stay in place so their supporting files and relative paths remain intact.
+* Configuration
 
-The list is generated from tracked sources in this repository. It also excludes
-dynamic plugins, ignored runtime system skills, and skills from other repositories.
-An encrypted skill is excluded only when its
-indexed Git attributes declare =git-crypt= and its indexed blob has the encrypted
-header; a declaration over plaintext fails the audit. This works in locked
-checkouts and avoids reading decrypted private frontmatter in unlocked ones.
-Catalog selection does not remove tracked files or history.
-Each =SKILL.md= owns behavior; [[file:../claude/skills/README.org][the Claude skill index]] and
-[[file:../codex/skills/README.org][the Codex skill index]] own their tree mechanics.
+The tool overviews explain installation, settings and how the files become active:
 
-* Hooks
+- [[file:../codex/README.org][Codex]]: instructions, skills, hooks and configuration.
+- [[file:../claude/README.org][Claude Code]]: instructions, skills, hooks and configuration.
 
-Compatible hook scripts are paired, but registration remains native to each
-tool. Claude registrations live in mutable =~/.claude/settings.json=; Codex
-registrations live in tracked =codex/hooks.json=. Project-local activation is
-paired as =.claude/settings.json= and =.codex/hooks.json=.
+The [[file:instruction-placement.org][instruction placement guide]] explains which rules belong in project
+instructions, skills, hooks or reference files. The [[file:configuration.org][shared configuration guide]]
+covers directory layout, synchronization, publication guards and verification.
 
-Script ownership and event boundaries are documented in
-[[file:../claude/hooks/README.org][the Claude hook index]] and [[file:../codex/hooks/README.org][the Codex hook index]]. A script passing in
-isolation does not prove that the host invokes it with the intended event and
-payload.
+* Hooks and supporting tools
 
-* Guards and verification
+Hooks enforce workflow rules; command-line helpers provide the integrations
+used by skills and configuration. Their indexes describe each component:
 
-=bin/ai-config-sync= provides reminders, a staged-commit guard, and a global
-audit. It checks paired instructions, skills and their auxiliary files, hook
-inventory and registrations, live symlinks, declared MCP parity, and topology
-invariants. For agent-configuration commits in this repository, the commit
-guard runs the full audit; other repositories receive only their project-local
-pair and documentation-owner checks.
-
-For every commit in the canonical dotfiles checkout, the documentation guard
-audits the exact staged and planned candidate tree, not the working copy. It
-builds that view with a private alternate Git index, keeps git-crypt blobs
-encrypted while materializing it, and executes the already-committed
-=bin/docs-audit= rather than a candidate replacement. Thus an unstaged clean
-copy cannot hide bad staged documentation, and a dirty working copy cannot
-block a clean staged version. Conflicts or materialization failures close the
-gate. The broader AI configuration audit retains its narrower configuration
-change trigger.
-
-The canonical dotfiles audit now delegates to:
-
-#+begin_src sh
-python3 bin/docs-audit audit --root "$HOME/My Drive/dotfiles"
-#+end_src
-
-That documentation audit enforces README ownership, links, subtree indexes,
-the generated skill inventory, overview/catalog separation, and concise public
-manifest notes. It is not inherited by unrelated repositories.
-
-After changing configuration:
-
-1. update the peer artifact or record the deliberate exception;
-2. update the owning README or regenerate the tracked inventory when required;
-3. run =bin/docs-audit generate= after adding, removing, renaming, or changing
-   the catalog description of a tracked public skill;
-4. run =bin/ai-config-sync audit=;
-5. exercise the affected allow and deny paths through the actual host tool.
-
-* Limits
-
-Synchronization proves the repository's declared structural contract. It does
-not make the tools behaviorally identical, validate unregistered runtime state,
-or replace an end-to-end check of the feature that changed. Format, permission,
-event, plugin, MCP, and lifecycle differences remain explicit rather than being
-hidden behind fallbacks.
+- [[file:../codex/hooks/README.org][Codex hooks]] and [[file:../claude/hooks/README.org][Claude Code hooks]].
+- [[file:../codex/bin/README.org][Codex helpers]] and [[file:../claude/bin/README.org][Claude Code helpers]].
+- [[file:../bin/README.org][Shared commands]] for agents, Emacs and external services.

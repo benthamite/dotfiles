@@ -33,6 +33,7 @@ MAX_CONTACT_ROWS = 100000
 # card. Groups, the account container and the store's info row are not
 # unprojected contacts and must not make an otherwise complete read incomplete.
 CONTACT_ENTITY_NAMES = frozenset({"ABCDContact"})
+NON_CONTACT_ENTITY_NAMES = frozenset({"ABCDGroup", "ABCDInfo", "CNCDContainer"})
 
 
 class InputError(ValueError):
@@ -387,7 +388,7 @@ def load_contacts(db_path: Path, *, metadata=None) -> list[dict]:
         ):
             pk, entity, first, mid, last, maiden, nick, sfx, org, birthday, uid = row
             entity_name = entity_names.get(entity)
-            if entity_name is None:
+            if entity_name not in CONTACT_ENTITY_NAMES | NON_CONTACT_ENTITY_NAMES:
                 raise InputError("Unsupported Contacts record entity")
             if entity_name not in CONTACT_ENTITY_NAMES:
                 non_contact_rows[entity_name] += 1

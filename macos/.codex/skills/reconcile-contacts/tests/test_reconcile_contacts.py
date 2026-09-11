@@ -248,6 +248,19 @@ class SourceTests(unittest.TestCase):
         self.assertEqual(metadata['status'], 'incomplete')
         self.assertEqual(metadata['orphan_related_rows'], {'email': 1})
 
+    def test_mapped_unrecognized_record_entity_fails_closed(self):
+        with contextlib.closing(sqlite3.connect(self.db)) as connection, connection:
+            connection.execute("INSERT INTO Z_PRIMARYKEY VALUES (99,'FutureContactCard')")
+            connection.execute(
+                "INSERT INTO ZABCDRECORD (Z_PK,Z_ENT,ZFIRSTNAME,ZUNIQUEID) "
+                "VALUES (2,99,'Synthetic future card','future-card')")
+        metadata = {}
+        with self.assertRaisesRegex(MODULE.InputError, 'Unsupported Contacts record entity'):
+            MODULE.load_contacts(self.db, metadata=metadata)
+        self.assertNotIn('status', metadata)
+        with self.assertRaises(MODULE.InputError):
+            MODULE.load_contacts(self.db)
+
     def test_unknown_or_missing_record_entities_fail_closed(self):
         with contextlib.closing(sqlite3.connect(self.db)) as connection, connection:
             connection.execute("INSERT INTO ZABCDRECORD (Z_PK,Z_ENT,ZFIRSTNAME,ZUNIQUEID) VALUES (2,99,'Nobody','c2')")

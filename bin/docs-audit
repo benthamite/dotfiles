@@ -610,23 +610,24 @@ def _org_code(value: str) -> str:
 def render_skill_inventory(
     rows: list[SkillInventoryRow], relative: str = "agents/skill-inventory.org"
 ) -> str:
-    """Render skill bullets with links relative to the inventory file."""
+    """Render active skills as one alphabetical list with relative links."""
     lines = SKILL_INVENTORY_HEADER.rstrip("\n").splitlines()
-    ordered = sorted(rows, key=_skill_row_sort_key)
-    for scope in SKILL_SCOPES:
-        scoped_rows = [row for row in ordered if row.scope == scope]
-        if not scoped_rows:
+    lines.append("")
+    for row in sorted(rows, key=_skill_row_sort_key):
+        if row.scope == "Archived":
             continue
-        lines.extend(["", f"* {scope}", ""])
-        for row in scoped_rows:
-            links = []
-            for tool, label in (("Codex", "Codex"), ("Claude", "Claude Code")):
-                paths = sorted(path for path in row.paths if _skill_tool(path) == tool)
-                for path in paths:
-                    target = posixpath.relpath(path, posixpath.dirname(relative) or ".")
-                    link_label = f"{label}: {path}" if len(paths) > 1 else label
-                    links.append(f"[[file:{target}][{link_label}]]")
-            lines.append(f"- {_org_code(row.name)} ({', '.join(links)}): {row.description}")
+        links = []
+        for tool, label in (("Codex", "Codex"), ("Claude", "Claude Code")):
+            paths = sorted(path for path in row.paths if _skill_tool(path) == tool)
+            for path in paths:
+                target = posixpath.relpath(path, posixpath.dirname(relative) or ".")
+                link_label = f"{label}: {path}" if len(paths) > 1 else label
+                links.append(f"[[file:{target}][{link_label}]]")
+        description = row.description.replace("Pablo's", "my")
+        if "Pablo" in description:
+            description = description.replace("Pablo", "I").replace("himself", "myself")
+            description = description.replace("his private voice samples", "my private voice samples")
+        lines.append(f"- {_org_code(row.name)} [{' | '.join(links)}]: {description}")
     return "\n".join(lines) + "\n"
 
 

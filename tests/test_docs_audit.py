@@ -1621,15 +1621,12 @@ class DocsAuditInventoryTests(DocsAuditTestCase):
             )
         )
         self.assertLess(rendered.index("- =Alpha="), rendered.index("- =zeta="))
-        self.assertLess(
-            rendered.index("* Global"),
-            rendered.index("* Project-local: dotfiles"),
-        )
+        self.assertNotIn("\n* ", rendered)
         self.assertIn(r"A backslash \\ and a | pipe.", rendered)
         self.assertIn(r"[[file:../codex/skills/zeta\\part|x/SKILL.md][Codex]]", rendered)
         self.assertIn(
-            "- =local= ([[file:../.codex/skills/local/SKILL.md][Codex]], "
-            "[[file:../.claude/skills/local/SKILL.md][Claude Code]]): Local.",
+            "- =local= [[[file:../.codex/skills/local/SKILL.md][Codex]] | "
+            "[[file:../.claude/skills/local/SKILL.md][Claude Code]]]: Local.",
             rendered,
         )
         self.assertNotIn("\n|", rendered)
@@ -1638,6 +1635,23 @@ class DocsAuditInventoryTests(DocsAuditTestCase):
             self.module.render_skill_inventory(rows, "docs/agents/inventory.org"),
         )
         self.assertEqual(rendered, self.module.render_skill_inventory(list(reversed(rows))))
+
+    def test_inventory_omits_archived_skills_and_uses_first_person(self):
+        row = self.module.SkillInventoryRow(
+            name="personalize",
+            description="Draft text Pablo will publish as himself. Use his private voice samples and Pablo's notes.",
+            scope="Global", tools=("Codex",),
+            paths=("codex/skills/personalize/SKILL.md",),
+        )
+        archived = self.module.SkillInventoryRow(
+            name="old", description="Archived description.", scope="Archived",
+            tools=("Codex",), paths=("archive/codex/skills/old/SKILL.md",),
+        )
+        rendered = self.module.render_skill_inventory([row, archived])
+        self.assertIn("Draft text I will publish as myself. Use my private voice samples and my notes.", rendered)
+        self.assertNotIn("Archived description.", rendered)
+        self.assertNotIn("archive/", rendered)
+        self.assertNotIn("\n* ", rendered)
 
     def test_same_name_in_different_scopes_stays_separate(self):
         skill = self.skill_text("shared", "Same description.")

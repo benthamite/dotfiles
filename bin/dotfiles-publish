@@ -1039,10 +1039,14 @@ def convert_gitleaks_results(
         result["File"] = path
         rule = result.get("RuleID") or "unknown"
         line = result.get("StartLine") or None
+        # Directory fingerprints from Gitleaks contain the temporary export
+        # path. Repository coordinates below identify that occurrence stably;
+        # retain the scanner fingerprint unchanged for Git-history findings.
+        scanner_fingerprint = "" if directory is not None else result.get("Fingerprint") or ""
         token = fingerprint(
             key,
             "gitleaks",
-            result.get("Fingerprint") or "",
+            scanner_fingerprint,
             commit,
             path,
             rule,
@@ -1556,7 +1560,7 @@ def audit_tip_trees(repo):
         ]
     )
     trees = {}
-    for oid in {line.strip() for line in listing.text.splitlines() if line.strip()}:
+    for oid in sorted({line.strip() for line in listing.text.splitlines() if line.strip()}):
         resolved = run_git(repo.root, "rev-parse", "--quiet", "--verify", oid + "^{tree}", check=False)
         if resolved.code == 0:
             trees.setdefault(resolved.text.strip(), oid)

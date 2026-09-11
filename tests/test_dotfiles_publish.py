@@ -1,7 +1,8 @@
 """Integration tests for guarded dotfiles publication.
 
 Every test is offline: the "remote" is a local bare repository and the secret
-scanner is a test double.  The literal below is the only secret-shaped value
+scanner is a test double except for the synthetic local-scanner regression.
+The literal below is the only secret-shaped value
 used anywhere in the suite, so the redaction tests can assert that it never
 reaches standard output, standard error, or persisted state.
 """
@@ -159,7 +160,6 @@ def scan_dir(root, compiled):
             directories.remove(".git")
         for name in sorted(files):
             full = os.path.join(base, name)
-            relative = os.path.relpath(full, root)
             try:
                 with open(full, "r", encoding="utf-8", errors="replace") as handle:
                     text = handle.read()
@@ -169,7 +169,9 @@ def scan_dir(root, compiled):
                 for pattern in compiled:
                     match = pattern.search(line)
                     if match:
-                        findings.append(record(match.group(0), relative, "", number, line))
+                        # Real directory scans put the absolute export path
+                        # in both File and Fingerprint.
+                        findings.append(record(match.group(0), full, "", number, line))
     return findings
 
 
@@ -671,6 +673,119 @@ class DotfilesPublishQuotedRedactionTests(unittest.TestCase):
                 self.assertEqual(data, self.functions[loader](repo, run_id))
             self.assertEqual(incidents, self.functions['load_incidents'](repo))
             self.assertEqual(before, incident_path.read_bytes())
+
+
+class DotfilesPublishFingerprintTests(unittest.TestCase):
+    def setUp(self):
+        self.functions = runpy.run_path(str(PUBLISH))
+        temporary = tempfile.TemporaryDirectory(prefix="dotfiles-fingerprint-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.key = b"synthetic-fingerprint-test-key"
+        self.commit = "a" * 40
+
+    def report(self, path, line=1, rule="fixture-token", scanner_fingerprint="scanner-id"):
+        return {
+            "RuleID": rule, "File": str(path), "StartLine": line, "EndLine": line,
+            "StartColumn": 1, "EndColumn": len(TEST_SECRET),
+            "Line": TEST_SECRET, "Match": TEST_SECRET, "Secret": TEST_SECRET,
+            "Fingerprint": scanner_fingerprint,
+        }
+
+    def convert(self, report, directory=None, commit=None, source="gitleaks-tree"):
+        redactor = self.functions["Redactor"](self.key)
+        records = self.functions["convert_gitleaks_results"](
+            [copy.deepcopy(report)], self.key, redactor, source, None,
+            default_commit=commit or self.commit, strip_prefix=directory,
+            directory=directory,
+        )
+        self.assertNotIn(TEST_SECRET, json.dumps(records))
+        return records[0]
+
+    def test_directory_identity_uses_each_repository_coordinate(self):
+        for name in ("one", "two"):
+            directory = self.root / name
+            directory.mkdir()
+            for filename in ("fixture.txt", "other.txt"):
+                (directory / filename).write_text((TEST_SECRET + "\n") * 2)
+        one, two = self.root / "one", self.root / "two"
+        original = self.report(one / "fixture.txt")
+        first = self.convert(original, one)
+        second = self.convert(
+            self.report(two / "fixture.txt", scanner_fingerprint="different-export-id"), two
+        )
+        self.assertEqual("fixture.txt", first["path"])
+        self.assertEqual(first["fingerprint"], second["fingerprint"])
+        controls = [
+            self.convert(original, one, commit="b" * 40),
+            self.convert(self.report(one / "other.txt"), one),
+            self.convert(self.report(one / "fixture.txt", rule="other-rule"), one),
+            self.convert(self.report(one / "fixture.txt", line=2), one),
+        ]
+        fingerprints = {first["fingerprint"], *(record["fingerprint"] for record in controls)}
+        self.assertEqual(5, len(fingerprints))
+
+    def test_git_identity_keeps_original_scanner_fingerprint(self):
+        original = self.report("fixture.txt", scanner_fingerprint="original-git-location")
+        record = self.convert(original, source="gitleaks-history")
+        expected = self.functions["fingerprint"](
+            self.key, "gitleaks", "original-git-location", self.commit,
+            "fixture.txt", "fixture-token", "1",
+        )
+        self.assertEqual(expected, record["fingerprint"])
+        changed = dict(original, Fingerprint="different-git-location")
+        self.assertNotEqual(record["fingerprint"], self.convert(changed, source="gitleaks-history")["fingerprint"])
+
+    def test_tree_representatives_are_stable_across_hash_seeds(self):
+        script = '''
+import json, runpy, sys
+from types import SimpleNamespace
+functions = runpy.run_path(sys.argv[1])
+refs = {"1" * 40: "a" * 40, "2" * 40: "a" * 40, "3" * 40: "b" * 40}
+def run_git(root, command, *args, **kwargs):
+    if command == "for-each-ref":
+        return SimpleNamespace(text="\\n".join(["3" * 40, "2" * 40, "1" * 40, "2" * 40]), code=0)
+    assert command == "rev-parse"
+    return SimpleNamespace(text=refs[args[-1].removesuffix("^{tree}")], code=0)
+functions["audit_tip_trees"].__globals__["run_git"] = run_git
+print(json.dumps(functions["audit_tip_trees"](SimpleNamespace(root="fixture")), sort_keys=True))
+'''
+        expected = {"a" * 40: "1" * 40, "b" * 40: "3" * 40}
+        for seed in range(1, 9):
+            with self.subTest(seed=seed):
+                proc = subprocess.run(
+                    [sys.executable, "-c", script, str(PUBLISH)],
+                    env={**os.environ, "PYTHONHASHSEED": str(seed), "PYTHONDONTWRITEBYTECODE": "1"},
+                    text=True, capture_output=True, check=True,
+                )
+                self.assertEqual(expected, json.loads(proc.stdout))
+
+    @unittest.skipUnless(shutil.which("gitleaks"), "gitleaks is not installed")
+    def test_live_directory_scanner_and_converter_keep_identity_across_exports(self):
+        config = self.root / ".gitleaks.toml"
+        config.write_text(
+            'title = "Synthetic fingerprint regression"\n'
+            '[[rules]]\nid = "fixture-token"\n'
+            'description = "Synthetic test token"\n'
+            'regex = "DOTFILES_TEST_SECRET_[0-9a-f]{12}"\n'
+        )
+        self.functions["run_gitleaks"].__globals__["gitleaks_executable"] = lambda: shutil.which("gitleaks")
+        scanner_prints = []
+        records = []
+        for name in ("one", "two"):
+            directory = self.root / name
+            directory.mkdir()
+            (directory / "fixture.txt").write_text(TEST_SECRET + "\n")
+            results = self.functions["run_gitleaks"](
+                SimpleNamespace(root=self.root), self.root, directory=directory
+            )
+            self.assertEqual(1, len(results))
+            scanner_prints.append(results[0]["Fingerprint"])
+            records.append(self.convert(results[0], directory))
+            self.assertFalse((self.root / "gitleaks-report.json").exists())
+        self.assertNotEqual(scanner_prints[0], scanner_prints[1])
+        self.assertEqual("fixture.txt", records[0]["path"])
+        self.assertEqual(records[0]["fingerprint"], records[1]["fingerprint"])
 
 
 class DotfilesPublishAtomicStateTests(unittest.TestCase):

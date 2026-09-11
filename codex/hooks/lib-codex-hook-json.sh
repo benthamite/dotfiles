@@ -98,15 +98,15 @@ if mode == "literal-wrapper":
     decoder = json.JSONDecoder()
     try:
         while True:
-            key = re.match(r"\s*(cmd|workdir|max_output_tokens|yield_time_ms)\s*:\s*", source[pos:])
-            if key is None or key[1] in fields:
+            key = re.match(r"\s*(\"?)(cmd|workdir|max_output_tokens|yield_time_ms)\1\s*:\s*", source[pos:])
+            if key is None or key[2] in fields:
                 sys.exit(1)
             pos += key.end()
             value, pos = decoder.raw_decode(source, pos)
-            expected = str if key[1] in {"cmd", "workdir"} else int
+            expected = str if key[2] in {"cmd", "workdir"} else int
             if type(value) is not expected:
                 sys.exit(1)
-            fields[key[1]] = value
+            fields[key[2]] = value
             separator = re.match(r"\s*([,}])", source[pos:])
             if separator is None:
                 sys.exit(1)

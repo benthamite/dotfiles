@@ -566,8 +566,8 @@ if codex_shell_tool_p "$TOOL_NAME"; then
     # Look for a contiguous alphanumeric+symbol string >= 30 chars that looks
     # like a secret (not a file path or a common word). URL components can
     # carry credentials, so exempt public identifiers only with known context.
-    # Exclude file paths starting with /, pure lowercase (English words),
-    # and strings that look like file paths (3+ slash-separated segments).
+    # Only positively classified local file operands are projected out below.
+    # Slash structure alone never establishes that a candidate is a file path.
     # Strip well-known public-blockchain artifacts first so query strings like
     # `?user=0x<40-hex>` (Ethereum wallet address) do not trip the heuristic.
     # 40-hex followed by a non-hex char (or end of string) is unambiguously a
@@ -585,8 +585,16 @@ if codex_shell_tool_p "$TOOL_NAME"; then
     MB_UUID='[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}'
     # Normalize only loopback authority/API-version digits; retain all payload.
     # Keep helper failure outside the head/SIGPIPE tolerance below.
-    ENTROPY_CONTENT=$(printf '%s' "$CONTENT" | python3 "$(dirname "$0")/lib-inert-mentions.py" --local-read-paths)
+    if [ "$SECRET_LITERAL_EXEC" = true ]; then
+      ENTROPY_CONTENT=$(printf '%s' "${SECRET_NESTED_COMMANDS[0]}" | python3 "$(dirname "$0")/lib-inert-mentions.py" --local-read-paths)
+    else
+      ENTROPY_CONTENT=$(printf '%s' "$CONTENT" | python3 "$(dirname "$0")/lib-inert-mentions.py" --local-read-paths)
+    fi
+    # DAHR matrix routes contain a decimal public record ID. Normalize only
+    # that exact authority/routing prefix, retaining the free-form slug and
+    # every subsequent path/query/fragment byte for credential detection.
     HIGH_ENTROPY=$(echo "$ENTROPY_CONTENT" | \
+      sed -E "s@(^|[[:space:]\"'])https?://adp\\.library\\.ucsb\\.edu/index\\.php/matrix/detail/[0-9]+/@\\1https://adp.library.ucsb.edu/@g" | \
       sed -E "s@(^|[[:space:]\"'])https?://musicbrainz\\.org/(ws/2/)?${MB_ENTITY}/${MB_UUID}([?#[:space:]\"']|$)@\\1https://musicbrainz.org/\\4@g" | \
       sed -E 's/0x[a-fA-F0-9]{40}([^a-fA-F0-9]|$)/\1/g' | \
       sed -E "s@(^|[[:space:]\"'])https?://(127\\.0\\.0\\.1|localhost|\\[::1\\])(:[0-9]+)?/api/v[0-9]+/@\\1http://localhost/api/@g" | \
@@ -594,17 +602,13 @@ if codex_shell_tool_p "$TOOL_NAME"; then
         {
           for (field = 1; field <= NF; field++) {
             rest = $field
-            is_url = (rest ~ /https?:\/\//)
             while (match(rest, /[A-Za-z0-9\/+=_-]{30,}/)) {
               candidate = substr(rest, RSTART, RLENGTH)
               rest = substr(rest, RSTART + RLENGTH)
-              # File-path exemptions must not apply to URL fragments.
-              # Filter every candidate before head: an innocuous long path
-              # must not conceal a later opaque credential.
+              # Filter every candidate before head so an innocuous earlier
+              # string cannot conceal a later opaque credential.
               classes = (candidate ~ /[A-Z]/) + (candidate ~ /[a-z]/) + (candidate ~ /[\/+=_-]/) + (candidate ~ /[0-9]/)
-              if (candidate ~ /[0-9]/ && classes >= 3 &&
-                  (is_url || (candidate !~ /^\// &&
-                   candidate !~ /[a-zA-Z]+\/[a-zA-Z]+\/[a-zA-Z]+/)))
+              if (candidate ~ /[0-9]/ && classes >= 3)
                 print candidate
             }
           }

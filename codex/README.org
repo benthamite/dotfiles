@@ -557,6 +557,14 @@ commit-message input is excluded before substitution parsing as well.
 The inline-secret scan recognizes public MusicBrainz entity URLs before
 tokenizing their identifiers. Queries, fragments and credential arguments
 remain scanned; URL components never receive filesystem-path exemptions.
+DAHR matrix URLs normalize only the exact public host, fixed route and decimal
+record ID. Their free-form title slug, further path, query and fragment remain
+scanned, as do credential headers and request bodies.
+Slash structure never grants a filesystem-path exemption. Only positively
+classified literal file operands, including curl =@file= and output files,
+are omitted from the entropy scan. Unknown options and shell forms stay scanned.
+The closed single-call wrapper accepts the same literal fields with unquoted
+JavaScript keys or exact JSON-quoted keys; duplicate and dynamic fields deny.
 Literal file operands of isolated =cat=, =head= and =tail= reads are excluded
 from entropy scanning when a separate network check follows. Pipelines,
 redirects, shell expansions and unknown read options receive no exemption;

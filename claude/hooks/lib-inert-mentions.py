@@ -94,6 +94,68 @@ def mask_inert_mentions(command: str) -> str:
                    for part in parts if part is not None)
 
 
+def _network_file_operands(tokens: list[str]) -> list[tuple[int, str]]:
+    """Return file-value positions only for a fully recognized curl/wget argv.
+
+    Unknown options or shell syntax receive no exemptions. Payload arguments
+    are consumed as values, so a literal '-o' body cannot nominate a filename.
+    """
+    program = tokens[0] if tokens else ""
+    if program not in {"curl", "wget"}:
+        return []
+    curl = program == "curl"
+    files = ({"-o", "--output", "-T", "--upload-file", "-K", "--config"} if curl
+             else {"-O", "--output-document", "-o", "--output-file", "--post-file", "--body-file", "-i", "--input-file"})
+    values = ({"-H", "--header", "-d", "--data", "--data-ascii", "--data-binary",
+               "--data-raw", "--data-urlencode", "--json", "-F", "--form", "--form-string",
+               "-X", "--request", "--url", "--max-time", "--connect-timeout", "--retry",
+               "-A", "--user-agent", "-e", "--referer", "-u", "--user"} if curl
+              else {"--header", "--post-data", "--body-data", "--method", "--timeout", "--tries"})
+    switches = ({"--silent", "--show-error", "--location", "--fail", "--head", "--include", "--verbose", "--insecure", "--no-buffer"} if curl
+                else {"--quiet", "--no-verbose", "--verbose"})
+    paths = []
+    index = 1
+    while index < len(tokens):
+        token = tokens[index]
+        if token.startswith(("https://", "http://")):
+            index += 1
+            continue
+        if token in switches or (curl and re.fullmatch(r"-[sSLfqIivkN]+", token)) or (not curl and token in {"-q", "-nv", "-v"}):
+            index += 1
+            continue
+        option, separator, value = token.partition("=")
+        joined = token.startswith("--") and bool(separator)
+        if option in files | values and joined:
+            pass
+        elif token in files | values:
+            option = token
+            index += 1
+            if index >= len(tokens):
+                return []
+            value = tokens[index]
+        else:
+            # Combined options and other shell forms remain fully scanned.
+            return []
+        is_file = option in files
+        replacement = "LOCAL_NETWORK_FILE"
+        if curl and option == "--data-urlencode":
+            # curl selects name=value before its name@file/@file forms.
+            is_file = "=" not in value and "@" in value
+            if is_file:
+                replacement = value.partition("@")[0] + "@LOCAL_NETWORK_FILE"
+        elif curl and option in {"-H", "--header", "-d", "--data", "--data-ascii", "--data-binary", "--json"}:
+            is_file = value.startswith("@")
+        elif curl and option in {"-F", "--form"}:
+            # Only the simple file form; multipart metadata stays scanned.
+            is_file = bool(re.fullmatch(r"[^=]+=[@<][A-Za-z0-9_./-]+", value))
+            if is_file:
+                replacement = value.partition("=")[0] + "=" + value.partition("=")[2][0] + "LOCAL_NETWORK_FILE"
+        if is_file:
+            paths.append((index, option + "=" + replacement if joined else replacement))
+        index += 1
+    return paths
+
+
 def mask_local_read_paths(command: str) -> str:
     """Project literal, isolated file reads out of the entropy scan only.
 
@@ -144,6 +206,10 @@ def mask_local_read_paths(command: str) -> str:
                 for position in paths:
                     tokens[position] = "LOCAL_READ_PATH"
                     changed = True
+        elif segment and segment[0] in {"curl", "wget"}:
+            for position, replacement in _network_file_operands(segment):
+                tokens[start + position] = replacement
+                changed = True
         start = end + 1
     return shlex.join(tokens) if changed else command
 

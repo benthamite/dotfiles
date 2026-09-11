@@ -395,7 +395,16 @@ PY"""
     def test_document_exception_requires_one_complete_literal_orchestration(self):
         command = heredoc('from pathlib import Path\nPath("fixture.md").write_text("pass")')
         call = 'await tools.exec_command({cmd: ' + json.dumps(command) + '})'
+        quoted = 'await tools.exec_command(' + json.dumps({"cmd": command}) + ')'
         programs = [
+            ('text(' + quoted + ');', "allow"),
+            (quoted + '; await tools.exec_command({cmd: "true"});', "deny"),
+            (quoted.replace('})', ', cmd: "true"})') + ';', "deny"),
+            (call.replace('})', ', "cmd": "true"})') + ';', "deny"),
+            (quoted.replace('})', ', "max_output_tokens": "1000"})') + ';', "deny"),
+            (quoted.replace('})', ', "workdir": 1000})') + ';', "deny"),
+            (quoted.replace('})', ', "shell": "/bin/sh"})') + ';', "deny"),
+            (quoted.replace('})', ', "yield_time_ms": false})') + ';', "deny"),
             (call + '; await tools.exec_command({cmd: "sh fixture.md"});', "deny"),
             ('await tools.exec_command({cmd: "true"});' + call + ';', "deny"),
             (call + '; unknown();', "deny"),

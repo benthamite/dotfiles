@@ -141,7 +141,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =block-elpaca-rebuild-uncommitted.sh= | Blocks rebuilding or reloading when the relevant Elisp source is uncommitted. |
 | =block-github-write-command.sh= | Blocks Git pushes and recognized mutating =gh= operations unless the target matches an exact repo or account wildcard in the committed allowlist, or an exact Epoch project repo in the fixed committed automations registry. A registry match falls through silently to normal permission handling; it never explicitly approves a write. This includes topic-branch pushes, pull-request and issue creation or edits, and comments. Read-only inspection remains allowed. |
 | =block-long-pipeline-run-unchecked.sh= | Requires preflight, cleanliness, and checkpoint conditions for long consensus-trader jobs. |
-| =block-secret-leak.sh= | Blocks secret literals, unsafe secret-file writes, and secret-bearing output. |
+| =block-secret-leak.sh= | Blocks secret literals, unsafe secret-file writes, and secret-bearing output; normalizes exact public DAHR matrix routing prefixes while scanning their free-form URL tails. Inline header/body values never gain filesystem-path exemptions. |
 | =lib-op-policy.py= | Classifies 1Password broker commands for =block-secret-leak.sh=: a closed allowlist of shapes whose stdout carries no credential, everything else denied. |
 | =block-sensitive-read.sh= | Blocks content reads of credential-like paths while permitting narrow metadata checks and the exact value-free shell-export classifier. |
 | =block-texi-edit.sh= | Blocks direct edits to generated Texinfo and points to the Org source. |

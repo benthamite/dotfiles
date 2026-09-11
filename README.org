@@ -9,8 +9,6 @@ configuration rather than a portable installer: many files assume my directory
 layout, installed applications, or local accounts. The README in each directory
 records what the tracked files do and how, if at all, they become live.
 
-Browse my [[file:agents/skill-inventory.org][AI skills]] for Codex and Claude Code.
-
 * Activation model
 
 Cloning the repository does not activate most of it. The main activation

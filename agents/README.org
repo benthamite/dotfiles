@@ -3,8 +3,6 @@
 
 * Overview
 
-Browse my [[file:skill-inventory.org][AI skills]] for Codex and Claude Code.
-
 This document owns the shared Claude Code and Codex configuration model.
 Tool-specific activation belongs in [[file:../claude/README.org][the Claude overview]] and
 [[file:../codex/README.org][the Codex overview]]. The placement policy for instructions, skills, hooks,
@@ -102,6 +100,10 @@ and reviews the release notes and tag text as additional units.
 
 * Skills
 
+The [[file:skill-inventory.org][skill list]] describes my skills and links to their Codex and Claude Code
+sources. It includes global and project-local skills, with archived and private
+skills excluded.
+
 Global reusable skills live in paired =claude/skills/<name>/= and
 =codex/skills/<name>/= directories. Project-local pairs use
 =.claude/skills/<name>/= and =.codex/skills/<name>/=. The sync audit compares
@@ -119,10 +121,9 @@ sharing, including global, dotfiles, Emacs and macOS entry points. Its explicit
 selection requires a publication review before adding a skill. Source directories
 stay in place so their supporting files and relative paths remain intact.
 
-The generated [[file:skill-inventory.org][tracked skill inventory]] records all public skill sources owned by
-this repository, including sources outside that selection. It deliberately excludes
-dynamic plugins, ignored runtime system skills, private skills, encrypted skills,
-and skills from other repositories. An encrypted skill is excluded only when its
+The list is generated from tracked sources in this repository. It also excludes
+dynamic plugins, ignored runtime system skills, and skills from other repositories.
+An encrypted skill is excluded only when its
 indexed Git attributes declare =git-crypt= and its indexed blob has the encrypted
 header; a declaration over plaintext fails the audit. This works in locked
 checkouts and avoids reading decrypted private frontmatter in unlocked ones.

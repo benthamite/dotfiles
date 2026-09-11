@@ -16,8 +16,7 @@ research and bibliography workflows, and Emacs and macOS maintenance.
 
 To use a skill, start with its =SKILL.md= and the setup it references. Some skills
 are self-contained procedures; others depend on my dotfiles, local commands or
-private configuration. Keep supporting files with the skill, preserve any
-required repository layout, and supply your own accounts and private inputs.
+private configuration.
 
 * Configuration
 

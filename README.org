@@ -31,43 +31,43 @@ global Claude and Codex configuration lives under =claude/= and =codex/=.
 The first column is deliberately machine-readable: =bin/docs-audit= checks it
 against the tracked top-level tree.
 
-| Directory | Documentation |
-|-----------+---------------|
-| =.agent-learnings= | [[file:.agent-learnings/README.org][Pending and archived agent-learning workflow state]] |
-| =.claude= | [[file:agents/configuration.org][Dotfiles-local Claude skills and shared agent topology]] |
-| =.codex= | [[file:agents/configuration.org][Dotfiles-local Codex skills and shared agent topology]] |
-| =.github= | [[file:.github/workflows/test-extras.yml][GitHub Actions workflow for Emacs extras]] |
-| =agents= | [[file:agents/README.org][Skills and configuration for Codex and Claude Code]] |
-| =ai-marketplace-monitor= | [[file:ai-marketplace-monitor/README.org][AI marketplace monitor configuration]] |
-| =aider= | [[file:aider/README.org][Aider configuration and conventions]] |
-| =archive= | [[file:archive/README.org][Retired agent skills and their retained output]] |
-| =aspell= | [[file:aspell/README.org][Aspell dictionaries]] |
-| =bin= | [[file:bin/README.org][Command index]] |
-| =claude= | [[file:claude/README.org][Global Claude Code configuration]] |
-| =codex= | [[file:codex/README.org][Global Codex configuration]] |
-| =colima= | [[file:colima/README.org][Colima configuration]] |
-| =dark-reader= | [[file:dark-reader/README.org][Dark Reader settings export]] |
-| =docs= | [[file:docs/README.org][Design records, plans, and documentation policy]] |
-| =emacs= | [[file:emacs/README.org][Emacs configuration and extras packages]] |
-| =enchant= | [[file:enchant/README.org][Enchant dictionaries]] |
-| =enhancer-for-youtube= | [[file:enhancer-for-youtube/README.org][Enhancer for YouTube settings export]] |
-| =karabiner= | [[file:karabiner/README.org][Karabiner and Goku keyboard configuration]] |
-| =ledger= | [[file:ledger/README.org][Ledger configuration]] |
-| =letterboxd-extras= | [[file:letterboxd-extras/README.org][Letterboxd browser extension assets]] |
-| =lib= | [[file:lib/README.org][Shared library code loaded from multiple tools]] |
-| =macos= | [[file:macos/README.org][macOS defaults, scheduled jobs, and security tools]] |
-| =mbsync= | [[file:mbsync/README.org][mbsync mail configuration]] |
-| =moon+reader= | [[file:moon+reader/README.org][Moon+ Reader settings export]] |
-| =moonlander= | [[file:moonlander/README.org][Moonlander keyboard firmware source]] |
-| =mpv= | [[file:mpv/README.org][mpv configuration]] |
-| =pantalaimon= | [[file:pantalaimon/README.org][Pantalaimon configuration]] |
-| =qBittorrent= | [[file:qBittorrent/README.org][qBittorrent settings export]] |
-| =rectangle= | [[file:rectangle/README.org][Rectangle settings export]] |
-| =shell= | [[file:shell/README.org][zsh startup files, shims, and history filtering]] |
-| =tests= | [[file:tests/README.org][Repository test suite]] |
-| =uBlacklist= | [[file:uBlacklist/README.org][uBlacklist subscription list]] |
-| =uBlock= | [[file:uBlock/README.org][uBlock Origin filters and settings]] |
-| =vimium= | [[file:vimium/README.org][Vimium settings export]] |
+| Directory              | Documentation                                          |
+|------------------------+--------------------------------------------------------|
+| =.agent-learnings=       | [[file:.agent-learnings/README.org][Pending and archived agent-learning workflow state]]     |
+| =.claude=                | [[file:agents/configuration.org][Dotfiles-local Claude skills and shared agent topology]] |
+| =.codex=                 | [[file:agents/configuration.org][Dotfiles-local Codex skills and shared agent topology]]  |
+| =.github=                | [[file:.github/workflows/test-extras.yml][GitHub Actions workflow for Emacs extras]]               |
+| =agents=                 | [[file:agents/README.org][Skills and configuration for Codex and Claude Code]]     |
+| =ai-marketplace-monitor= | [[file:ai-marketplace-monitor/README.org][AI marketplace monitor configuration]]                   |
+| =aider=                  | [[file:aider/README.org][Aider configuration and conventions]]                    |
+| =archive=                | [[file:archive/README.org][Retired agent skills and their retained output]]         |
+| =aspell=                 | [[file:aspell/README.org][Aspell dictionaries]]                                    |
+| =bin=                    | [[file:bin/README.org][Command index]]                                          |
+| =claude=                 | [[file:claude/README.org][Global Claude Code configuration]]                       |
+| =codex=                  | [[file:codex/README.org][Global Codex configuration]]                             |
+| =colima=                 | [[file:colima/README.org][Colima configuration]]                                   |
+| =dark-reader=            | [[file:dark-reader/README.org][Dark Reader settings export]]                            |
+| =docs=                   | [[file:docs/README.org][Design records, plans, and documentation policy]]        |
+| =emacs=                  | [[file:emacs/README.org][Emacs configuration and extras packages]]                |
+| =enchant=                | [[file:enchant/README.org][Enchant dictionaries]]                                   |
+| =enhancer-for-youtube=   | [[file:enhancer-for-youtube/README.org][Enhancer for YouTube settings export]]                   |
+| =karabiner=              | [[file:karabiner/README.org][Karabiner and Goku keyboard configuration]]              |
+| =ledger=                 | [[file:ledger/README.org][Ledger configuration]]                                   |
+| =letterboxd-extras=      | [[file:letterboxd-extras/README.org][Letterboxd browser extension assets]]                    |
+| =lib=                    | [[file:lib/README.org][Shared library code loaded from multiple tools]]         |
+| =macos=                  | [[file:macos/README.org][macOS defaults, scheduled jobs, and security tools]]     |
+| =mbsync=                 | [[file:mbsync/README.org][mbsync mail configuration]]                              |
+| =moon+reader=            | [[file:moon+reader/README.org][Moon+ Reader settings export]]                           |
+| =moonlander=             | [[file:moonlander/README.org][Moonlander keyboard firmware source]]                    |
+| =mpv=                    | [[file:mpv/README.org][mpv configuration]]                                      |
+| =pantalaimon=            | [[file:pantalaimon/README.org][Pantalaimon configuration]]                              |
+| =qBittorrent=            | [[file:qBittorrent/README.org][qBittorrent settings export]]                            |
+| =rectangle=              | [[file:rectangle/README.org][Rectangle settings export]]                              |
+| =shell=                  | [[file:shell/README.org][zsh startup files, shims, and history filtering]]        |
+| =tests=                  | [[file:tests/README.org][Repository test suite]]                                  |
+| =uBlacklist=             | [[file:uBlacklist/README.org][uBlacklist subscription list]]                           |
+| =uBlock=                 | [[file:uBlock/README.org][uBlock Origin filters and settings]]                     |
+| =vimium=                 | [[file:vimium/README.org][Vimium settings export]]                                 |
 
 * Public and private material
 

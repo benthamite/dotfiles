@@ -1,4 +1,4 @@
-#+title: Tracked agent skill inventory
+#+title: Skill inventory
 
 - =add-bib-entry= [[[file:../codex/skills/add-bib-entry/SKILL.md][Codex]] | [[file:../claude/skills/add-bib-entry/SKILL.md][Claude Code]]]: Use when adding works to my bibliography, creating BibTeX/BibLaTeX entries, adding DOI/ISBN/URL references, resolving missing citekeys, or preparing notes that cite works not yet in the configured bibliography files.
 - =add-to-emacs-packages= [[[file:../codex/skills/add-to-emacs-packages/SKILL.md][Codex]] | [[file:../claude/skills/add-to-emacs-packages/SKILL.md][Claude Code]]]: Add or register one of the user's Emacs packages in my-emacs-packages.org, create its documentation note, and add its GitHub profile README card. Use when the user wants to update the public Emacs packages list for a specific package.

@@ -3,6 +3,8 @@
 
 * Overview
 
+Browse my [[file:skill-inventory.org][AI skills]] for Codex and Claude Code.
+
 This document owns the shared Claude Code and Codex configuration model.
 Tool-specific activation belongs in [[file:../claude/README.org][the Claude overview]] and
 [[file:../codex/README.org][the Codex overview]]. The placement policy for instructions, skills, hooks,

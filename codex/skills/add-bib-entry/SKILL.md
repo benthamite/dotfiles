@@ -1,13 +1,13 @@
 ---
 name: add-bib-entry
-description: Use when adding works to Pablo's bibliography, creating BibTeX/BibLaTeX entries, adding DOI/ISBN/URL references, resolving missing citekeys, or preparing notes that cite works not yet in the configured bibliography files.
+description: Use when adding works to Pablo's bibliography, creating BibTeX/BibLaTeX entries, adding DOI/ISBN/URL references, resolving missing citekeys, replicating zotra-extras-add-entry followed by ebib-extras-process-entry, or preparing notes that cite works not yet in the configured bibliography files.
 ---
 
 # Add Bib Entry
 
 ## Core Rule
 
-Use Pablo's Emacs bibliography workflow, not ad hoc BibTeX, whenever a work has a DOI, ISBN, URL, or other identifier. The desired end state is a clean BibLaTeX entry plus obtainable associated files: PDF/HTML for written works and subtitles for videos. Import success alone does not establish correct metadata or attachment completion.
+Use Pablo's Emacs bibliography workflow, not ad hoc BibTeX, whenever a work has a DOI, ISBN, URL, or other identifier. The canonical sequence is `zotra-extras-add-entry`, then `ebib-extras-process-entry` with point on the imported entry. The agent should carry out both steps, including downloading and attaching the paper; do not stop after metadata import. The desired end state is a clean BibLaTeX entry plus obtainable associated files: PDF/HTML for written works and subtitles for videos. Import success alone does not establish correct metadata or attachment completion.
 
 ## Workflow
 
@@ -33,7 +33,7 @@ Use Pablo's Emacs bibliography workflow, not ad hoc BibTeX, whenever a work has 
      ```bash
      emacsclient -e '(progn (require '\''gptel-extras) (gptel-extras-add-bib-entry-and-process "IDENTIFIER" "RESOLVED-BIBFILE"))'
      ```
-   - The current headless helper automatically answers prompts, including first-candidate choices. Inspect ambiguous book/language/crossref choices before using it; do not treat automatic answers as user approval. Prefer the interactive path when the intended candidate cannot be established without judgment.
+   - The headless helper calls the actual `ebib-extras-process-entry` and answers only recognized workflow prompts. It refuses ambiguous choices instead of selecting the first candidate. Inspect the imported entry and candidate metadata to resolve ordinary choices yourself; ask Pablo only when his preference is needed. If processing stops after import, resume processing the existing entry with `gptel-extras--process-bib-entry-headless` once the cause is resolved; do not import a duplicate. Save and re-read the final database.
    - Process one addition at a time. Anna's Archive attachment callbacks use a shared pending key. A returned result or attachment timeout does not prove the callback is finished: reconcile outstanding work before another addition so it cannot attach the previous download to the next key.
    - `add_bib_entry` is metadata-only: it deliberately passes `DO-NOT-OPEN` to `zotra-extras-add-entry`, so it does not run Ebib post-processing or attach files. Use it when that limited outcome was requested, or as a clearly labeled, justified and approved fallback.
 
@@ -41,7 +41,7 @@ Use Pablo's Emacs bibliography workflow, not ad hoc BibTeX, whenever a work has 
    - The full manual path calls `zotra-extras-open-in-ebib`, which confirms the entry type/key and invokes `ebib-extras-process-entry`.
    - `ebib-extras-process-entry` regenerates/validates the key, sets language, calls `ebib-extras-attach-files`, and checks crossrefs.
    - `ebib-extras-attach-files` chooses attachments from DOI, ISBN/book type, video URL, or online/article URL:
-     - DOI: searches/downloads through Anna's Archive.
+     - DOI: searches/downloads through Anna's Archive. This is the configured paper-download route; Sci-Hub is not a second implemented backend. Do not claim to have used it.
      - ISBN/book-like entries: searches/downloads through Anna's Archive.
      - Video URLs: obtains subtitle files, not a paper PDF.
      - Online/article URLs: generates PDF and HTML files with `eww-extras-url-to-file`.

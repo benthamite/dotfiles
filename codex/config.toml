@@ -833,10 +833,6 @@ NODE_REPL_TRUSTED_CODE_PATHS = "/Users/pablostafforini/.codex"
 # BEGIN skill-prune disabled skills
 
 [[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/add-bib-entry/SKILL.md"
-enabled = false
-
-[[skills.config]]
 path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/find-skills/SKILL.md"
 enabled = false
 

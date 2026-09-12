@@ -1,12 +1,5 @@
 {
   "disabled": {
-    "add-bib-entry": {
-      "claude_last_used": "not found",
-      "codex_last_used": "not found",
-      "disabled_at": "2026-08-11T14:28:04+00:00",
-      "reason": "Zero lifetime invocations in the merged Claude usage counters since creation on 2026-06-07.",
-      "threshold_days": 60
-    },
     "find-skills": {
       "claude_last_used": "not found",
       "codex_last_used": "not found",
@@ -76,6 +69,10 @@
     }
   },
   "enabled": {
+    "add-bib-entry": {
+      "enabled_at": "2026-09-12T22:24:35+00:00",
+      "reason": "Pablo requested a persistent agent workflow matching zotra-extras-add-entry followed by ebib-extras-process-entry."
+    },
     "generate-readme": {
       "enabled_at": "2026-05-10T16:01:41+00:00",
       "reason": "Renamed recently; historical usage is under the previous skill name."

@@ -344,7 +344,7 @@ deny_secret_output_command() {
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: " + $tool + " invokes a secret-printing credential or clipboard tool.\n\nAgent shell commands may not call `pass`, `security`, or `pbpaste`, whose output is the secret itself; wrappers, nested shells, pipes, and redirects are not trusted containment. Epoch secrets live in 1Password: use `op-automations`/`op-desktop` in one of the allowed non-printing shapes.")
+      "permissionDecisionReason": ("BLOCKED: " + $tool + " cannot be classified as safe from secret-printing credential or clipboard commands.\n\nThis guard denies executable protected tool names and unclassified interpreter programs containing those names, including prose strings. A denial does not establish that a credential command was invoked. Only recognized inert mentions and the closed Python document-edit language are exempt.\n\nAgent shell commands may not call `pass`, `security`, or `pbpaste`, whose output is the secret itself; wrappers, nested shells, pipes, and redirects are not trusted containment. Epoch secrets live in 1Password: use `op-automations`/`op-desktop` in one of the allowed non-printing shapes.")
     }
   }'
   exit 0

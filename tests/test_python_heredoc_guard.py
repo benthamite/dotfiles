@@ -141,6 +141,7 @@ class NativePythonHeredocGuardTests(unittest.TestCase):
             text=True, capture_output=True, timeout=15, cwd=self.directory)
         self.assertEqual(result.returncode, 0, result.stderr)
         output = json.loads(result.stdout) if result.stdout.strip() else {}
+        self.last_reason = output.get("hookSpecificOutput", {}).get("permissionDecisionReason", "")
         return output.get("hookSpecificOutput", {}).get("permissionDecision", "allow")
 
     def assert_hooks(self, command, expected):
@@ -291,6 +292,24 @@ PY"""
     def test_safe_data_mentions_remain_conservatively_denied(self):
         for body in ('print("pass")', 'text = """first\npass\nlast"""', '# pass is a keyword\npass'):
             self.assert_hooks(heredoc(body), "deny")
+
+    def test_unclassified_bibliography_program_denial_does_not_claim_execution(self):
+        # Faithful minimal incident: prose plus a benign subprocess preflight
+        # exceeds the closed document-edit language. No proposed program runs.
+        body = ('import subprocess\nfrom pathlib import Path\n'
+                'subprocess.check_output(["emacsclient", "--eval", "nil"], text=True)\n'
+                'Path("fixture.org").write_text("The first pass found 67 keys. "\n'
+                '    "Use this table for the substantive reading pass. A literature search hit "\n'
+                '    "is not a completed screening.")')
+        for command in (heredoc(body), "pass show fixture/credential", "pbpaste",
+                        heredoc('import subprocess\nsubprocess.run(["pass", "show", "fixture"])')):
+            for provider, tool in (("claude", "Bash"), ("codex", "Bash"),
+                                   ("codex", "functions.exec_command"), ("codex", "functions.exec")):
+                with self.subTest(provider=provider, tool=tool, command=command):
+                    self.assertEqual(self.guard(provider, command, tool), "deny")
+                    self.assertIn("cannot be classified as safe", self.last_reason)
+                    self.assertIn("including prose strings", self.last_reason)
+                    self.assertNotIn("invokes a secret-printing", self.last_reason)
 
     def test_reported_document_and_json_edit_is_allowed_and_runs_only_in_fixture(self):
         command = heredoc(DOCUMENT_EDIT_BODY,

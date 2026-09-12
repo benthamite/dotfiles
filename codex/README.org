@@ -537,7 +537,11 @@ message or a Markdown file written through a heredoc is never scanned as
 shell text; bodies fed to shells, interpreters, or unknown programs stay in
 the scan. For a narrowly recognized quoted Python stdin program, the secret
 guard first checks Python protected references, exempting genuine =pass=
-statements and a closed text/JSON document-edit language. Document edits permit
+statements and a closed text/JSON document-edit language. Denials describe a
+failure to classify the command safely, not proof that a credential tool ran:
+protected names in an unclassified program may be ordinary prose. Programs
+with subprocess calls remain outside this language even when those particular
+calls are benign. Document edits permit
 validated standard imports, data bindings, text reads/replacements/writes and
 JSON conversions, including a bound data value's =update= with one validated
 dictionary literal. A mutation alone does not satisfy the required file write.

@@ -637,6 +637,10 @@ imports, data bindings, text reads/replacements/writes and JSON conversions.
 Bound JSON data may receive an =update= statement with one validated dictionary
 literal; the mutation alone does not qualify as a document write.
 Unknown calls, executable targets and shell tails retain conservative scanning.
+Denials describe a failure to classify the command safely, not proof that a
+credential tool ran: protected names inside an unclassified Python program may
+be ordinary prose. Programs with subprocess calls remain outside the closed
+document-edit language even when those particular calls are benign.
 This exception requires one standalone direct Python command. Codex additionally
 requires one complete literal =functions.exec= wrapper with inert metadata;
 multi-call and dynamic orchestrations receive no document-edit exemption.

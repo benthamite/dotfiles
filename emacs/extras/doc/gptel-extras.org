@@ -494,7 +494,11 @@ Each result is a pair of =(FORMATTED-CITATION . CITE-KEY)=. The default limit is
 The tool *add_bib_entry* (~gptel-extras-add-bib-entry~) adds a bibliographic entry for a URL, ISBN, or DOI to a specified BibTeX file. It delegates to ~zotra-extras-add-entry~ from =zotra-extras.el= and returns the citation key of the newly added entry.
 
 #+findex: gptel-extras-add-bib-entry-and-process
-The tool *add_bib_entry_and_process* (~gptel-extras-add-bib-entry-and-process~) imports the entry, opens it in =Ebib=, and runs the same post-processing path used manually for key confirmation, language handling, crossref checks, and attachment lookup. In headless use, it answers confirmation prompts conservatively, including =read-answer= prompts, and returns the final citekey plus attachment status.
+The tool *add_bib_entry_and_process* (~gptel-extras-add-bib-entry-and-process~) imports the entry through Zotra, opens it in =Ebib=, and calls ~ebib-extras-process-entry~ for key validation, language handling, crossref checks, and attachment lookup. Pass the target bibliography explicitly. The helper refuses an import when that file has an unsaved visiting buffer or Ebib database, or when an earlier Anna's Archive attachment remains pending.
+
+The helper keeps an already valid key, accepts the existing identifier search string and configured language default, and selects an Anna's Archive result only when exactly one candidate is available. Other prompts stop with an error identifying the decision that needs review; ambiguous selections include their candidates. Resolve the existing entry before retrying processing rather than importing it again. The helper saves processing changes even when an attachment cannot be obtained.
+
+The result contains the final citekey, bibliography filename, existing attachment paths and count, file field, and =:pending-key=. Attachment waiting is bounded by the optional =timeout= argument, which defaults to ~gptel-extras-bib-entry-process-timeout~ (45 seconds). A timeout does not cancel an outstanding download. Reconcile pending work before adding another entry, and verify the downloaded file's identity and content before treating its presence as successful completion.
 
 ** Robustifying tool presets
 :PROPERTIES:

@@ -1065,6 +1065,11 @@ If no matches are found, returns nil."
 (defvar zotra-extras-most-recent-bibkey)
 (defvar zotra-extras-most-recent-bibfile)
 (defvar ebib--cur-db)
+(defvar ebib--databases)
+(defvar ebib-extras--annas-archive-pending-key nil)
+(declare-function ebib-db-modified-p "ebib-db")
+(declare-function ebib--db-get-current-entry-key "ebib-db")
+(declare-function ebib-extras-process-entry "ebib-extras")
 (declare-function zotra-extras-add-entry "zotra-extras")
 (declare-function ebib "ebib")
 (declare-function ebib--get-key-at-point "ebib")
@@ -1101,7 +1106,7 @@ argument."
   "Open KEY from BIBFILE in Ebib without asking processing questions."
   (require 'ebib)
   (require 'ebib-extras)
-  (ebib)
+  (ebib bibfile key)
   (when-let* ((db-number (ebib-extras-get-db-number bibfile)))
     (ebib-switch-to-database-nth db-number))
   (ebib-extras-open-or-switch)
@@ -1114,39 +1119,44 @@ argument."
   (ebib-extras-open-key key)
   (ebib-save-current-database t))
 
-(defun gptel-extras--first-completion (collection)
-  "Return the first value from COLLECTION for headless prompts."
-  (cond ((hash-table-p collection)
-         (catch 'result
-           (maphash (lambda (key _value) (throw 'result key)) collection)
-           nil))
-        ((functionp collection)
-         (let (result)
-           (funcall collection "" nil
-                    (lambda (candidate)
-                      (unless result
-                        (setq result candidate))))
-           result))
-        ((consp collection)
-         (let ((first (car collection)))
-           (if (consp first) (car first) first)))))
+(defun gptel-extras--bib-confirm (prompt &rest _args)
+  "Answer the known bibliography confirmation PROMPT or stop."
+  (if (member prompt '("Regenerate key? "
+                       "No results match configured file types. Try all supported types? "))
+      nil
+    (user-error "Bibliography confirmation needs review: %s" prompt)))
 
-(defun gptel-extras--headless-answer (answers)
-  "Return a conservative affirmative answer from ANSWERS."
-  (or (seq-some (lambda (preferred)
-                  (car (seq-find (lambda (answer)
-                                   (string= (car answer) preferred))
-                                 answers)))
-                '("session only" "yes" "always"))
-      (caar answers)))
+(defun gptel-extras--bib-read-string (prompt &optional initial &rest _args)
+  "Use INITIAL for the known identifier PROMPT or stop."
+  (if (and (equal prompt "Search string: ")
+           (stringp initial) (not (string-empty-p initial)))
+      initial
+    (user-error "Bibliography input needs review: %s" prompt)))
 
-(defun gptel-extras--bib-files-for-key (key)
-  "Return existing attachment files for bibliography entry KEY."
-  (when-let* ((file-field (ebib-extras-get-field "file" key)))
-    (seq-filter #'file-exists-p
-                (mapcar (lambda (file)
-                          (expand-file-name (string-trim file)))
-                        (ebib--split-files file-field)))))
+(defun gptel-extras--bib-completing-read
+    (prompt collection &optional predicate _require-match initial _history default
+            &rest _args)
+  "Resolve an unambiguous bibliography PROMPT from COLLECTION.
+Apply PREDICATE.  For the language prompt, honor a valid INITIAL or DEFAULT."
+  (let* ((candidates (all-completions "" collection predicate))
+         (preferred (or initial (if (listp default) (car default) default))))
+    (cond ((and (equal prompt "Select language: ")
+                (member preferred candidates))
+           preferred)
+          ((and (equal prompt "Select a link: ") (= (length candidates) 1))
+           (car candidates))
+          (t (user-error "Bibliography selection needs review: %s Candidates: %S"
+                         prompt candidates)))))
+
+(defun gptel-extras--bib-files-for-key (key &optional db)
+  "Return existing attachment files for bibliography entry KEY in DB.
+Use the current Ebib database when DB is nil."
+  (let ((ebib--cur-db (or db ebib--cur-db)))
+    (when-let* ((file-field (ebib-extras-get-field "file" key)))
+      (seq-filter #'file-exists-p
+                  (mapcar (lambda (file)
+                            (expand-file-name (string-trim file)))
+                          (ebib--split-files file-field))))))
 
 (defun gptel-extras--bib-attachment-process-live-p ()
   "Return non-nil when known bibliography attachment processes are live."
@@ -1157,52 +1167,47 @@ argument."
                     (process-name process))))
             (process-list)))
 
-(defun gptel-extras--wait-for-bib-attachments (key timeout)
-  "Wait up to TIMEOUT seconds for asynchronous attachments for KEY."
+(defun gptel-extras--wait-for-bib-attachments (key timeout &optional db)
+  "Wait up to TIMEOUT seconds for asynchronous attachments for KEY in DB.
+Use the current Ebib database when DB is nil."
   (let ((deadline (+ (float-time) timeout))
         files)
     (while (and (< (float-time) deadline)
                 (or (gptel-extras--bib-attachment-process-live-p)
                     (null files)))
       (accept-process-output nil 1)
-      (setq files (gptel-extras--bib-files-for-key key)))
-    (or files (gptel-extras--bib-files-for-key key))))
+      (setq files (gptel-extras--bib-files-for-key key db)))
+    (or files (gptel-extras--bib-files-for-key key db))))
 
 (defun gptel-extras--process-bib-entry-headless (&optional timeout)
   "Run Ebib post-processing for the current entry without prompting.
 Return a plist describing the resulting key and attachment files."
   (let ((timeout (or timeout gptel-extras-bib-entry-process-timeout)))
-    (cl-letf (((symbol-function 'y-or-n-p)
-               (lambda (prompt)
-                 (not (string-match-p "Regenerate key\\|Overwrite" prompt))))
-              ((symbol-function 'yes-or-no-p)
-               (lambda (_prompt) t))
-              ((symbol-function 'read-string)
-               (lambda (_prompt &optional initial-input &rest _args)
-                 (or initial-input "")))
-              ((symbol-function 'completing-read)
-               (lambda (_prompt collection &optional _predicate _require-match
-                                initial-input &rest _args)
-                 (or initial-input
-                     (gptel-extras--first-completion collection)
-                     "")))
+    (cl-letf (((symbol-function 'y-or-n-p) #'gptel-extras--bib-confirm)
+              ((symbol-function 'yes-or-no-p) #'gptel-extras--bib-confirm)
+              ((symbol-function 'read-string) #'gptel-extras--bib-read-string)
+              ((symbol-function 'completing-read) #'gptel-extras--bib-completing-read)
               ((symbol-function 'read-answer)
-               (lambda (_question answers)
-                 (gptel-extras--headless-answer answers))))
-      (let* ((initial-key (ebib--get-key-at-point))
-             (key (if (string-match-p "^[[:alnum:]_-]+[0-9][[:alnum:]_-]*$" initial-key)
-                      initial-key
-                    (ebib-generate-autokey)
-                    (ebib--get-key-at-point))))
-        (ebib-extras-get-or-set-language)
-        (ebib-extras-attach-files key)
-        (ebib-extras-check-crossref key)
-        (let ((files (gptel-extras--wait-for-bib-attachments key timeout)))
+               (lambda (question &rest _args)
+                 (user-error "Bibliography confirmation needs review: %s" question))))
+      (let ((db ebib--cur-db)
+            (key (ebib--get-key-at-point)))
+        (unwind-protect
+            (progn
+              (ebib-extras-process-entry)
+              (setq key (ebib--db-get-current-entry-key db)))
+          (let ((ebib--cur-db db))
+            (ebib-save-current-database t)))
+        (let ((files (gptel-extras--wait-for-bib-attachments key timeout db)))
+          (let ((ebib--cur-db db))
+            (ebib-save-current-database t))
           (list :key key
-                :bibfile (when ebib--cur-db (ebib-db-get-filename ebib--cur-db))
+                :bibfile (ebib-db-get-filename db)
                 :files files
                 :file-count (length files)
-                :file-field (ebib-extras-get-field "file" key)))))))
+                :pending-key ebib-extras--annas-archive-pending-key
+                :file-field (let ((ebib--cur-db db))
+                              (ebib-extras-get-field "file" key))))))))
 
 (defun gptel-extras-add-bib-entry-and-process (identifier bibfile &optional timeout)
   "Add IDENTIFIER to BIBFILE, run Ebib processing, and return attachment status.
@@ -1214,11 +1219,29 @@ attachment work for TIMEOUT seconds, and returns a plist with the final key and
 attached files."
   (require 'zotra-extras)
   (require 'ebib-extras)
-  (zotra-extras-add-entry identifier nil bibfile t)
-  (let ((key zotra-extras-most-recent-bibkey)
-        (zotra-extras-most-recent-bibfile bibfile))
-    (gptel-extras--open-bib-entry-for-processing bibfile key)
+  (gptel-extras--bib-import-preflight bibfile)
+  (let ((zotra-extras-most-recent-bibfile bibfile))
+    (zotra-extras-add-entry identifier nil bibfile t)
+    (gptel-extras--open-bib-entry-for-processing
+     bibfile zotra-extras-most-recent-bibkey)
     (gptel-extras--process-bib-entry-headless timeout)))
+
+(defun gptel-extras--bib-import-preflight (bibfile)
+  "Reject an import into BIBFILE with unsaved or outstanding bibliography work."
+  (when ebib-extras--annas-archive-pending-key
+    (user-error "Reconcile outstanding Anna's Archive work for %s before importing"
+                ebib-extras--annas-archive-pending-key))
+  (let ((target (file-truename bibfile)))
+    (dolist (buffer (buffer-list))
+      (when-let* ((file (buffer-file-name buffer))
+                  ((equal (file-truename file) target))
+                  ((buffer-modified-p buffer)))
+        (user-error "Bibliography buffer has unsaved changes: %s" bibfile)))
+    (dolist (db ebib--databases)
+      (when-let* ((file (ebib-db-get-filename db))
+                  ((equal (file-truename file) target))
+                  ((ebib-db-modified-p db)))
+        (user-error "Ebib database has unsaved changes: %s" bibfile)))))
 
 (gptel-make-tool
  :function #'gptel-extras-add-bib-entry

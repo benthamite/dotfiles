@@ -562,15 +562,85 @@ literal in the pattern."
 
 ;;;; Bibliography entry processing
 
-(ert-deftest gptel-extras-test-headless-answer-prefers-conservative-yes ()
-  "Headless prompt answers prefer session-scoped affirmative choices."
-  (should
-   (equal (gptel-extras--headless-answer
-           '(("no" . nil) ("session only" . session) ("always" . t)))
-          "session only"))
-  (should
-   (equal (gptel-extras--headless-answer '(("yes" . t) ("no" . nil)))
-          "yes")))
+(ert-deftest gptel-extras-test-bib-prompts-require-known-decisions ()
+  "Do not approve unknown permissions or select arbitrary editions."
+  (should-not (gptel-extras--bib-confirm "Regenerate key? "))
+  (should-error (gptel-extras--bib-confirm "Overwrite existing file? ")
+                :type 'user-error)
+  (should-error (gptel-extras--bib-confirm "Always allow access? ")
+                :type 'user-error)
+  (should (equal (gptel-extras--bib-read-string "Search string: " "10.1/example")
+                 "10.1/example"))
+  (should-error (gptel-extras--bib-read-string "Other input: " "yes")
+                :type 'user-error)
+  (should (equal (gptel-extras--bib-completing-read
+                  "Select a link: " '("Only edition") nil t)
+                 "Only edition"))
+  (should-error (gptel-extras--bib-completing-read
+                 "Select a link: " '("First edition" "Second edition") nil t)
+                :type 'user-error)
+  (should (equal (gptel-extras--bib-completing-read
+                  "Select language: " '("english" "spanish") nil t "english")
+                 "english"))
+  (should (equal (gptel-extras--bib-completing-read
+                  "Select language: " '("english" "spanish") nil t nil nil "spanish")
+                 "spanish")))
+
+(ert-deftest gptel-extras-test-bib-import-preflight-protects-state ()
+  "Reject dirty visiting buffers, dirty Ebib databases, and pending downloads."
+  (require 'ebib)
+  (require 'ebib-db)
+  (let* ((file (make-temp-file "bib-preflight-" nil ".bib"))
+         (db (ebib-db-new-database))
+         (ebib--databases (list db))
+         (ebib-extras--annas-archive-pending-key nil))
+    (unwind-protect
+        (progn
+          (ebib-db-set-filename file db)
+          (gptel-extras--bib-import-preflight file)
+          (with-temp-buffer
+            (setq buffer-file-name file)
+            (insert "unsaved")
+            (should-error (gptel-extras--bib-import-preflight file)
+                          :type 'user-error))
+          (ebib-db-set-modified t db)
+          (should-error (gptel-extras--bib-import-preflight file)
+                        :type 'user-error)
+          (ebib-db-set-modified nil db)
+          (let ((ebib-extras--annas-archive-pending-key "Prior2020Paper"))
+            (should-error (gptel-extras--bib-import-preflight file)
+                          :type 'user-error)))
+      (delete-file file))))
+
+(ert-deftest gptel-extras-test-bib-processing-uses-manual-key-validation ()
+  "Regenerate keys rejected by Ebib and persist even without an attachment."
+  (require 'ebib-extras)
+  (let* ((db (ebib-db-new-database))
+         (ebib--cur-db db)
+         (ebib-extras--annas-archive-pending-key nil)
+         (key "a1b")
+         saved attached)
+    (ebib-db-set-filename "/tmp/processing-test.bib" db)
+    (cl-letf (((symbol-function 'ebib--get-key-at-point) (lambda () key))
+              ((symbol-function 'ebib-generate-autokey)
+               (lambda ()
+                 (setq key "Author2020Paper")
+                 (ebib-db-set-entry key '(("title" . "Paper")) db)
+                 (ebib-db-set-current-entry-key key db)))
+              ((symbol-function 'ebib-extras-get-or-set-language) #'ignore)
+              ((symbol-function 'ebib-extras-attach-files)
+               (lambda (entry-key) (setq attached entry-key)))
+              ((symbol-function 'ebib-extras-check-crossref) #'ignore)
+              ((symbol-function 'ebib-save-current-database)
+               (lambda (&rest _) (push key saved)))
+              ((symbol-function 'gptel-extras--wait-for-bib-attachments)
+               (lambda (&rest _) nil))
+              ((symbol-function 'ebib-extras-get-field) (lambda (&rest _) nil)))
+      (let ((result (gptel-extras--process-bib-entry-headless 0)))
+        (should (equal (plist-get result :key) "Author2020Paper"))
+        (should (equal attached "Author2020Paper"))
+        (should (member "Author2020Paper" saved))
+        (should-not (plist-get result :files))))))
 
 (ert-deftest gptel-extras-test-add-bib-entry-and-process-orchestrates ()
   "Add-and-process imports metadata, opens the key, then processes attachments."
@@ -587,8 +657,10 @@ literal in the pattern."
                        (funcall old-require feature filename noerror))))
                   ((symbol-function 'zotra-extras-add-entry)
                    (lambda (identifier entry-format bibfile do-not-open)
+                     (should (equal zotra-extras-most-recent-bibfile bibfile))
                      (push (list 'add identifier entry-format bibfile do-not-open) calls)
                      (setq zotra-extras-most-recent-bibkey "smith2024test")))
+                  ((symbol-function 'gptel-extras--bib-import-preflight) #'ignore)
                   ((symbol-function 'gptel-extras--open-bib-entry-for-processing)
                    (lambda (bibfile key)
                      (push (list 'open bibfile key) calls)))

@@ -44,6 +44,8 @@ Every edited `.el` file uses one of these paths:
    and `bin/elpaca-package-resolve` to obtain the actual registry ID, canonical
    source, repository, and evidence label; do not guess from profile-directory
    names. Unmanaged packages use their own documented checks and loading path.
+   For an externally maintained package fix, also use `dotfiles-context`'s
+   upstream contribution workflow, even if the user did not mention a PR.
 3. **Non-package Elisp:** configuration and support files such as
    `.dir-locals.el` or `lockfile.el` use the owning project's checks. Location
    outside an Elpaca root does not by itself make a package non-package code.

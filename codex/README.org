@@ -496,14 +496,25 @@ Sensitive-read guards permit the security audit's shell-export classifier only
 for its exact absolute helper and target paths. The classifier reports names,
 line numbers, scopes, and classifications without printing values.
 
-The GitHub write guard requires committed repository authorization for every
-push and mutating =gh= operation, including topic branches, pull requests,
-issues, and comments. It classifies each literal shell command nested in
+The GitHub write guard requires repository authorization or an explicitly
+authorized scoped contribution grant for pushes and mutating =gh= operations. It classifies each literal shell command nested in
 =functions.exec= independently and refuses dynamic or ambiguous nested calls;
 read-only GitHub inspection remains available for undeclared repositories. A
 registry match falls through silently rather than explicitly approving the
 write, including for pull-request merges, so the normal permission layer and
 the global user-authorization rule still apply.
+The =dotfiles-context= and =elisp-conventions= workflows prepare a local topic
+branch, PR draft and retention plan for external-package fixes even when no PR
+was requested. Diagnosis-only and explicitly local-only tasks retain their scope;
+publication and profile activation still require applicable authorization.
+
+Scoped fork and PR-creation grants use
+[[file:../agents/github-operation-authorizations.md][the operation authorization procedure]] and a shared checker. Only committed,
+expiring records match; each binds an exact command and authenticated account,
+plus the PR body hash where applicable. These grants do not authorize other
+upstream writes or establish user consent. Completed grants are removed without
+editing the hooks or broadening repository access.
+
 The Elisp post-edit hook is registered on the outer composed-tool event as well
 as direct edit events, so it recovers changed paths from nested patches instead
 of depending on the nested runtime to dispatch a separate pre-tool event.

@@ -1,10 +1,58 @@
-# Keep an upstream Elisp PR active locally
+# Prepare an upstream Elisp fix and retain it locally
 
-Use this procedure only when the task already includes an upstream PR for a
-non-`dotfiles` Elpaca package and requires keeping its change active locally.
-A PR review or submission request alone does not authorize a local profile pin.
-This procedure does not authorize creating/updating a PR, pushing, cloning a
-new repository or switching a live profile by itself.
+Use this workflow for a fix to an externally maintained Elisp package, even
+when the user has not mentioned contributing upstream, or for keeping an
+existing upstream PR active in an Elpaca profile. A diagnosis-only request
+does not authorize edits; an explicit local-only request excludes contribution
+preparation. User-owned packages follow their own development workflow.
+
+## Prepare before requesting publication
+
+Identify the actual upstream from package metadata, repository instructions
+and existing remotes; do not assume `origin` is upstream. Resolve managed
+checkouts through the parent skill. Preserve the named checkout for unmanaged
+packages and do not introduce an Elpaca pin for them.
+
+For an authorized fix, use an isolated local topic branch, starting from the
+intended upstream base, and keep the patch focused enough to submit upstream.
+Preserve unrelated work and avoid carrying unrelated commits into the proposed
+PR. Use an existing checkout or a worktree under the established worktree root;
+creating a new clone still requires explicit authorization. Complete the fix,
+applicable package checks and requested behavior verification before presenting
+the contribution for approval. If the original issue remains unverified or the
+change addresses only a separate confirmed defect, say so in the PR draft.
+
+Prepare a PR title/body and identify the existing recipe and temporary fork
+branch needed to retain the change locally. When that requires configuration
+changes, prepare a reviewable patch before asking to activate it. Do not wait
+for the user to explain this workflow. If upstream contribution is unsuitable
+(for example, a personal customization), state the reason and retain the
+authorized local solution without preparing an inappropriate PR.
+
+## Publication and local retention
+
+Creating a fork, pushing and creating/updating a PR require explicit user
+authorization for the intended repositories and operation. A PR review or
+submission request alone does not authorize a local profile pin. Check existing
+session authorization before asking again; otherwise request the missing
+publication and activation approval together after the artifacts are ready.
+This workflow itself grants none of those permissions.
+
+For guarded GitHub fork creation or PR submission, follow
+[scoped operation authorization](../../../../agents/github-operation-authorizations.md)
+after explicit authorization. Prepare and commit only the grant for the exact
+reviewed command, account and PR body, then remove it after the action completes.
+The grant records authorization; it does not establish user consent by itself.
+Do not edit or disable the guard, broaden its standing allowlist, or substitute
+an unguarded API route. Other blocked operations remain blocked; report the
+concrete operation when no supported grant applies.
+
+Once publication and local activation are authorized, publish the reviewed
+branch/PR, then apply the temporary pin below. If publication is declined or
+blocked, preserve the local branch and draft, and report whether the local fix
+is loaded and how it will survive package updates; do not label it fork-pinned.
+
+## Activate and retire an Elpaca pin
 
 1. Bind the package checkout, forge and exact requested PR identity. For GitHub,
    query the explicit PR URL, not the current branch's implicit PR:

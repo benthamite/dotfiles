@@ -1,6 +1,6 @@
 ---
 name: dotfiles-context
-description: Route changes to emacs/config.org, dotfiles extras, Elpaca-managed package checkouts, and paired Claude/Codex configuration. Use when a task must choose the canonical edit location, tangle the active Emacs profile, or run paired-config checks; not for read-only or unrelated dotfiles work.
+description: Route changes to emacs/config.org, dotfiles extras, Elpaca-managed package checkouts, and paired Claude/Codex configuration. Use to prepare external-package fixes, choose the canonical edit location, tangle the active Emacs profile, or run paired-config checks; not for read-only or unrelated dotfiles work.
 user-invocable: false
 ---
 
@@ -74,10 +74,13 @@ report activation as pending. Do not start, switch or restart Emacs to conceal
 the gap. A successful tangle generates files; it does not reload configuration
 or prove an Elpaca recipe, checkout or package changed in the running session.
 
-When a task creates or updates an upstream PR and must keep its Elisp change
-active locally, read
-[references/upstream-pr-pins.md](references/upstream-pr-pins.md). Do not load
-that procedure for ordinary package edits.
+When a fix belongs to an externally maintained package, read
+[references/upstream-pr-pins.md](references/upstream-pr-pins.md) before editing,
+even when the user has not mentioned a PR. Prepare the upstream contribution
+and local retention plan within the requested scope; publication requires
+explicit authorization. Also use that reference for an existing upstream PR
+whose Elpaca change must remain active locally. Diagnosis-only requests stay
+read-only, and an explicit local-only request excludes PR preparation.
 
 If an authorized committed package change needs an explicit rebuild and an
 observable completion point, use the bounded helper and target the package,

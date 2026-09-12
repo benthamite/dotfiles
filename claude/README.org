@@ -734,14 +734,26 @@ had. =gh repo create= now refuses a command that names no =OWNER/REPO= at all,
 because a creation never acts on the current repository and so cannot borrow
 its authorization.
 
-Every GitHub write now requires committed repository authorization. Topic
-branches, pull requests, issues, and comments have no contribution exemption;
+GitHub writes require repository authorization or an explicitly authorized
+scoped contribution grant. Topic branches, issues, and comments have no exemption;
 read-only inspection remains available for undeclared repositories. A registry
 match makes the guard fall through silently rather than explicitly approving the
 write, including for pull-request merges, so the host's normal permission layer
 and the global user-authorization rule still apply. The
 allowlist, guard implementation, and hook registrations remain agent-editable;
 there is no separate self-edit guard.
+
+The =dotfiles-context= and =elisp-conventions= workflows prepare a local topic
+branch, PR draft and retention plan for external-package fixes even when no PR
+was requested. Diagnosis-only and explicitly local-only tasks retain their scope;
+publication and profile activation still require applicable authorization.
+
+Scoped fork and PR-creation grants use
+[[file:../agents/github-operation-authorizations.md][the operation authorization procedure]] and a shared checker. Only committed,
+expiring records match; each binds an exact command and authenticated account,
+plus the PR body hash where applicable. These grants do not authorize other
+upstream writes or establish user consent. Completed grants are removed without
+editing the hooks or broadening repository access.
 
 A change under =claude/skills=, =claude/hooks=, =claude/settings*.json= or
 =claude/CLAUDE.md= must be accompanied by an update to this file. The guard

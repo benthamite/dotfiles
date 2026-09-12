@@ -43,7 +43,7 @@ deny() {
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: " + $label + ".\n\n" + $detail + "\n\nGitHub writes are allowed only when the target matches an exact OWNER/REPO entry or OWNER/* account wildcard in `~/My Drive/dotfiles/agents/github-write-allowlist.txt`, or is declared by an Epoch project via :REPOS: and committed to the automations registry.")
+      "permissionDecisionReason": ("BLOCKED: " + $label + ".\n\n" + $detail + "\n\nAfter explicit user authorization, supported fork/PR commands may use committed scoped grants (agents/github-operation-authorizations.md). Otherwise GitHub writes require a target that matches an exact OWNER/REPO entry or OWNER/* account wildcard in `~/My Drive/dotfiles/agents/github-write-allowlist.txt`, or is declared by an Epoch project via :REPOS: and committed to the automations registry.")
     }
   }'
   exit 0
@@ -76,6 +76,16 @@ if [ "$TOOL_NAME" = "functions.exec" ]; then
   done < <(printf '%s' "$CMD" | codex_nested_exec_contexts)
   exit 0
 fi
+
+# Scoped contribution grants are separate from broad repository write access.
+# The checker reads committed, expiring records and never executes the command.
+operation_status=0
+printf '%s' "$COMMAND" | python3 "$SCRIPT_DIR/../../bin/github-operation-authorization" check || operation_status=$?
+case "$operation_status" in
+  0) exit 0 ;;
+  1) ;;
+  *) deny "scoped GitHub authorization check failed" "Repair or remove the invalid grant; do not bypass the guard." ;;
+esac
 
 normalize_repo() {
     local value="$1"

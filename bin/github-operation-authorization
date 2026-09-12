@@ -1,0 +1,153 @@
+#!/usr/bin/env python3
+"""Prepare and check expiring, exact-command GitHub contribution grants.
+
+Preparation emits a record for review; only committed records authorize commands.
+A record documents user authorization; this program cannot establish consent.
+"""
+from __future__ import annotations
+
+import argparse
+from datetime import datetime, timedelta, timezone
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shlex
+import subprocess
+import sys
+
+ROOT = Path(__file__).resolve().parent.parent
+MANIFEST = "agents/github-operation-authorizations.json"
+REPO = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\Z")
+ACCOUNT = re.compile(r"[A-Za-z0-9-]+\Z")
+
+
+def classify(command: str) -> tuple[str, dict[str, str]]:
+    """Accept only literal fork or fully specified PR creation commands."""
+    if any(c in command for c in '\n\r\x00;$`|&<>*?[]{}\\'):
+        raise ValueError("Use one literal command without shell expansion or operators")
+    words = shlex.split(command)
+    if (len(words) == 5 and words[:3] == ["gh", "repo", "fork"]
+            and REPO.fullmatch(words[3]) and words[4] == "--clone=false"):
+        return "fork", {"repo": words[3]}
+    if words[:3] != ["gh", "pr", "create"]:
+        raise ValueError("Only fork creation and PR creation support scoped grants")
+    options = {}
+    i = 3
+    while i < len(words):
+        key = words[i]
+        if key in options:
+            raise ValueError("Duplicate option")
+        if key == "--draft":
+            options[key] = "true"
+            i += 1
+        elif key in ("--repo", "--base", "--head", "--title", "--body-file") and i + 1 < len(words):
+            options[key] = words[i + 1]
+            i += 2
+        else:
+            raise ValueError("Unsupported option")
+    required = ("--repo", "--base", "--head", "--title", "--body-file")
+    if not all(options.get(k) for k in required):
+        raise ValueError("PR creation requires repo, base, owner:branch, title and body-file")
+    if not REPO.fullmatch(options["--repo"]):
+        raise ValueError("Invalid repository")
+    owner, sep, branch = options["--head"].partition(":")
+    if not sep or not ACCOUNT.fullmatch(owner) or not branch or branch.startswith("-"):
+        raise ValueError("Head must name an explicit owner and branch")
+    if options["--base"].startswith("-") or not Path(options["--body-file"]).is_absolute():
+        raise ValueError("Use an explicit base and absolute body-file")
+    return "pr-create", options
+
+
+def body_digest(options: dict[str, str]) -> str | None:
+    path = options.get("--body-file")
+    if path is None:
+        return None
+    p = Path(path)
+    if p.is_symlink() or not p.is_file() or p.stat().st_size > 1024 * 1024:
+        raise ValueError("Body must be a regular file smaller than 1 MiB")
+    return hashlib.sha256(p.read_bytes()).hexdigest()
+
+
+def prepare(command: str, account: str, evidence: str, hours: float) -> dict:
+    kind, options = classify(command)
+    if not ACCOUNT.fullmatch(account) or not evidence.strip() or not 0 < hours <= 24:
+        raise ValueError("Require account, authorization evidence and expiry within 24 hours")
+    if kind == "pr-create" and options["--head"].split(":")[0] != account:
+        raise ValueError("PR head owner must match the authorized account")
+    now = datetime.now(timezone.utc)
+    return dict(command=command, account=account, authorization=evidence,
+                created_at=now.isoformat(), expires_at=(now + timedelta(hours=hours)).isoformat(),
+                body_sha256=body_digest(options))
+
+
+def committed_records() -> list:
+    result = subprocess.run(["git", "-C", str(ROOT), "show", "HEAD:" + MANIFEST],
+                            capture_output=True, text=True, timeout=5)
+    if result.returncode:
+        return []
+    data = json.loads(result.stdout)
+    if not isinstance(data, dict) or data.get("version") != 1 or not isinstance(data.get("grants"), list):
+        raise ValueError("Invalid authorization manifest")
+    return data["grants"]
+
+
+def authorized(command: str) -> bool:
+    try:
+        kind, options = classify(command)
+    except ValueError:
+        return False
+    now = datetime.now(timezone.utc)
+    for record in committed_records():
+        if not isinstance(record, dict) or record.get("command") != command:
+            continue
+        for field in ("created_at", "expires_at", "account", "authorization"):
+            if not isinstance(record.get(field), str):
+                raise ValueError(f"Invalid grant field: {field}")
+        if record.get("body_sha256") is not None and not isinstance(record["body_sha256"], str):
+            raise ValueError("Invalid body hash")
+        created = datetime.fromisoformat(record["created_at"])
+        expires = datetime.fromisoformat(record["expires_at"])
+        if not (created <= now < expires and timedelta(0) < expires - created <= timedelta(hours=24)):
+            continue
+        account = record["account"]
+        if not ACCOUNT.fullmatch(account) or not record.get("authorization", "").strip():
+            continue
+        if kind == "pr-create" and options["--head"].split(":")[0] != account:
+            continue
+        if record.get("body_sha256") != body_digest(options):
+            continue
+        if os.environ.get("GH_HOST", "github.com") != "github.com":
+            continue
+        # Fork creation targets the authenticated account. Check it without
+        # reading tokens; the same binding also protects PR authorship.
+        result = subprocess.run(["gh", "api", "--hostname", "github.com", "user", "--jq", ".login"],
+                                capture_output=True, text=True, timeout=10)
+        return result.returncode == 0 and result.stdout.strip() == account
+    return False
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    sub = parser.add_subparsers(dest="mode", required=True)
+    sub.add_parser("check", help="Read command from stdin; 0 authorized, 1 no grant, 2 error")
+    p = sub.add_parser("prepare", help="Emit one inert record; user authorization is required first")
+    p.add_argument("--command-file", type=Path, required=True)
+    p.add_argument("--account", required=True)
+    p.add_argument("--authorization", required=True)
+    p.add_argument("--hours", type=float, default=4)
+    args = parser.parse_args()
+    try:
+        if args.mode == "check":
+            return 0 if authorized(sys.stdin.read()) else 1
+        command = args.command_file.read_text().removesuffix("\n")
+        print(json.dumps(prepare(command, args.account, args.authorization, args.hours), indent=2))
+        return 0
+    except (ValueError, TypeError, KeyError, OSError, subprocess.SubprocessError) as exc:
+        print(f"GitHub operation authorization: {exc}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

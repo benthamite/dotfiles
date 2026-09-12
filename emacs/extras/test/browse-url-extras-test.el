@@ -28,7 +28,7 @@
       (delete-file temp-file))))
 
 (ert-deftest browse-url-extras-test-set-handler-regexp-quotes-urls ()
-  "URLs are regexp-quoted so dots are literal."
+  "Handler patterns match literal domains only in URL hosts."
   (let ((browse-url-handlers nil)
         (temp-file (make-temp-file "browse-url-test")))
     (unwind-protect
@@ -37,12 +37,14 @@
             (insert "example.com"))
           (browse-url-extras-set-handler temp-file 'browse-url-default-browser)
           (let ((pattern (caar browse-url-handlers)))
-            ;; The dot should be escaped to literal dot
-            (should (string-match-p (regexp-quote ".") pattern))
-            ;; Should match the literal URL
-            (should (string-match-p pattern "example.com"))
-            ;; Should NOT match "exampleXcom" if properly escaped
-            (should-not (string-match-p pattern "exampleXcom"))))
+            (dolist (url '("https://example.com"
+                           "http://www.example.com:8080/path"))
+              (should (string-match-p pattern url)))
+            (dolist (url '("https://exampleXcom"
+                           "https://example.com.evil.test"
+                           "https://example.com@evil.test"
+                           "https://evil.test/?ref=example.com"))
+              (should-not (string-match-p pattern url)))))
       (delete-file temp-file))))
 
 (ert-deftest browse-url-extras-test-set-handler-empty-file ()

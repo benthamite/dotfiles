@@ -1138,6 +1138,8 @@ argument."
             &rest _args)
   "Resolve an unambiguous bibliography PROMPT from COLLECTION.
 Apply PREDICATE.  For the language prompt, honor a valid INITIAL or DEFAULT."
+  (unless (member prompt '("Select language: " "Select a link: "))
+    (user-error "Bibliography selection needs review: %s" prompt))
   (let* ((candidates (all-completions "" collection predicate))
          (preferred (or initial (if (listp default) (car default) default))))
     (cond ((and (equal prompt "Select language: ")
@@ -1181,33 +1183,82 @@ Use the current Ebib database when DB is nil."
 
 (defun gptel-extras--process-bib-entry-headless (&optional timeout)
   "Run Ebib post-processing for the current entry without prompting.
-Return a plist describing the resulting key and attachment files."
-  (let ((timeout (or timeout gptel-extras-bib-entry-process-timeout)))
-    (cl-letf (((symbol-function 'y-or-n-p) #'gptel-extras--bib-confirm)
-              ((symbol-function 'yes-or-no-p) #'gptel-extras--bib-confirm)
-              ((symbol-function 'read-string) #'gptel-extras--bib-read-string)
-              ((symbol-function 'completing-read) #'gptel-extras--bib-completing-read)
-              ((symbol-function 'read-answer)
-               (lambda (question &rest _args)
-                 (user-error "Bibliography confirmation needs review: %s" question))))
-      (let ((db ebib--cur-db)
-            (key (ebib--get-key-at-point)))
-        (unwind-protect
-            (progn
-              (ebib-extras-process-entry)
-              (setq key (ebib--db-get-current-entry-key db)))
-          (let ((ebib--cur-db db))
-            (ebib-save-current-database t)))
-        (let ((files (gptel-extras--wait-for-bib-attachments key timeout db)))
-          (let ((ebib--cur-db db))
-            (ebib-save-current-database t))
-          (list :key key
-                :bibfile (ebib-db-get-filename db)
-                :files files
-                :file-count (length files)
-                :pending-key ebib-extras--annas-archive-pending-key
-                :file-field (let ((ebib--cur-db db))
-                              (ebib-extras-get-field "file" key))))))))
+Return a plist describing the resulting key and attachment files.
+TIMEOUT bounds the attachment wait, after prompt handlers have been restored."
+  (let ((timeout (or timeout gptel-extras-bib-entry-process-timeout))
+        (db ebib--cur-db)
+        (key (ebib--get-key-at-point)))
+    (unwind-protect
+        (progn
+          (gptel-extras--call-bib-processing)
+          (setq key (ebib--db-get-current-entry-key db)))
+      (let ((ebib--cur-db db))
+        (ebib-save-current-database t)))
+    (let ((files (gptel-extras--wait-for-bib-attachments key timeout db)))
+      (let ((ebib--cur-db db))
+        (ebib-save-current-database t))
+      (list :key key
+            :bibfile (ebib-db-get-filename db)
+            :files files
+            :file-count (length files)
+            :pending-key ebib-extras--annas-archive-pending-key
+            :file-field (let ((ebib--cur-db db))
+                          (ebib-extras-get-field "file" key))))))
+
+(defun gptel-extras--call-bib-processing ()
+  "Process the current entry with handlers scoped to known bibliography calls."
+  (cl-letf (((symbol-function 'y-or-n-p)
+             (gptel-extras--bib-prompt-handler
+              'y-or-n-p #'gptel-extras--bib-confirm
+              '(ebib-extras-process-entry annas-archive--select-results
+                ebib-extras--af-install-file)))
+            ((symbol-function 'read-string)
+             (gptel-extras--bib-prompt-handler
+              'read-string #'gptel-extras--bib-read-string
+              '(ebib-extras-doi-attach ebib-extras-book-attach)))
+            ((symbol-function 'completing-read)
+             (gptel-extras--bib-prompt-handler
+              'completing-read #'gptel-extras--bib-completing-read
+              '(ebib-extras-get-or-set-language annas-archive--select-result))))
+    (ebib-extras-process-entry)))
+
+(defun gptel-extras--bib-prompt-handler (prompt-function policy callers)
+  "Apply POLICY only to PROMPT-FUNCTION calls owned by bibliography CALLERS.
+Other calls retain the original prompt implementation, including its advice."
+  (let ((original (symbol-function prompt-function))
+        (functions (append callers
+                           (mapcar (lambda (caller)
+                                     (and (fboundp caller)
+                                          (advice--cd*r (symbol-function caller))))
+                                   callers))))
+    (lambda (&rest args)
+      (apply (if (gptel-extras--bib-prompt-owned-p prompt-function functions)
+                 policy
+               original)
+             args))))
+
+(defun gptel-extras--bib-prompt-owned-p (prompt-function callers)
+  "Return non-nil for a direct PROMPT-FUNCTION call from bibliography CALLERS.
+Reject calls reentered through the command loop, debugger, or a timer."
+  (let* ((frames (backtrace-frames))
+         (prompt-frame (seq-find (lambda (frame)
+                                   (eq (nth 1 frame) prompt-function))
+                                 frames))
+         (tail (cdr (memq prompt-frame frames))))
+    (and (memq (nth 1 (car tail)) callers)
+         (catch 'owned
+           (dolist (frame tail)
+             (let ((function (nth 1 frame)))
+               (cond ((eq function 'gptel-extras--call-bib-processing)
+                      (throw 'owned t))
+                     ((memq function '(recursive-edit read-from-minibuffer
+                                       command-execute call-interactively
+                                       funcall-interactively timer-event-handler
+                                       accept-process-output sit-for sleep-for
+                                       read-event read-char read-char-exclusive
+                                       read-key debug debugger))
+                      (throw 'owned nil)))))
+           nil))))
 
 (defun gptel-extras-add-bib-entry-and-process (identifier bibfile &optional timeout)
   "Add IDENTIFIER to BIBFILE, run Ebib processing, and return attachment status.

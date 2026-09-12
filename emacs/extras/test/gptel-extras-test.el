@@ -612,6 +612,110 @@ literal in the pattern."
                           :type 'user-error)))
       (delete-file file))))
 
+(ert-deftest gptel-extras-test-bib-unknown-prompt-does-not-enumerate ()
+  "Do not enumerate an unrelated command's completion table."
+  (let (enumerated)
+    (should-error
+     (gptel-extras--bib-completing-read
+      "Where is command: " (lambda (&rest _) (setq enumerated t)))
+     :type 'user-error)
+    (should-not enumerated)))
+
+(defun gptel-extras-test--unrelated-prompt ()
+  "Exercise an unrelated command while bibliography processing is active."
+  (completing-read "Where is command: " obarray #'commandp t))
+
+(ert-deftest gptel-extras-test-bib-prompts-preserve-reentrant-input ()
+  "Route unrelated commands and timers through the original prompt handler."
+  (require 'ebib-extras)
+  (let (direct unrelated interactive-result timer-result prompts timer)
+    (cl-letf (((symbol-function 'completing-read)
+               (lambda (prompt &rest _) (push prompt prompts) 'original))
+              ((symbol-function 'ebib-extras-get-or-set-language)
+               (lambda () (interactive)
+                 (completing-read "Select language: "
+                                           '("english" "spanish") nil t "english")))
+              ((symbol-function 'ebib-extras-process-entry)
+               (lambda ()
+                 (setq direct (ebib-extras-get-or-set-language)
+                       unrelated (gptel-extras-test--unrelated-prompt)
+                       interactive-result
+                       (call-interactively 'ebib-extras-get-or-set-language))
+                 (setq timer
+                       (run-at-time 0 nil
+                                    (lambda ()
+                                      (setq timer-result
+                                            (ebib-extras-get-or-set-language)))))
+                 (accept-process-output nil 0.05))))
+      (unwind-protect
+          (gptel-extras--call-bib-processing)
+        (when timer (cancel-timer timer))))
+    (should (equal direct "english"))
+    (should (eq unrelated 'original))
+    (should (eq interactive-result 'original))
+    (should (eq timer-result 'original))
+    (should (equal (nreverse prompts)
+                   '("Where is command: " "Select language: " "Select language: ")))))
+
+(ert-deftest gptel-extras-test-bib-prompt-callers-survive-compilation-and-advice ()
+  "Recognize direct byte/native compiled callsites, including advised originals."
+  (require 'ebib-extras)
+  (require 'bytecomp)
+  (dolist (compiler (append (list #'identity #'byte-compile)
+                            (when (and (fboundp 'native-comp-available-p)
+                                       (native-comp-available-p))
+                              (list #'native-compile))))
+    (let ((caller (funcall compiler
+                           '(lambda ()
+                             (completing-read "Select language: "
+                                              '("english" "spanish") nil t "english"))))
+          (advice (lambda (original &rest args) (apply original args))))
+      (cl-letf (((symbol-function 'completing-read)
+                 (lambda (&rest _) 'unexpected-original))
+                ((symbol-function 'ebib-extras-get-or-set-language) caller)
+                ((symbol-function 'ebib-extras-process-entry)
+                 (lambda () (ebib-extras-get-or-set-language))))
+        (should (equal (gptel-extras--call-bib-processing) "english"))
+        (unwind-protect
+            (progn
+              (advice-add 'ebib-extras-get-or-set-language :around advice)
+              (should (equal (gptel-extras--call-bib-processing) "english")))
+          (advice-remove 'ebib-extras-get-or-set-language advice))))))
+
+(ert-deftest gptel-extras-test-bib-prompts-preserve-reentrant-process-filter ()
+  "A process filter cannot inherit a suspended bibliography call's prompt policy."
+  (require 'ebib-extras)
+  (let (process filter-result)
+    (cl-letf (((symbol-function 'read-string) (lambda (&rest _) 'original))
+              ((symbol-function 'ebib-extras-doi-attach)
+               (lambda () (read-string "Search string: " "10.1/example")))
+              ((symbol-function 'ebib-extras-process-entry)
+               (lambda ()
+                 (setq process
+                       (make-process
+                        :name "gptel-bib-prompt-fixture" :buffer nil :noquery t
+                        :command '("/bin/sh" "-c" "printf ready")
+                        :filter (lambda (&rest _)
+                                  (setq filter-result (ebib-extras-doi-attach)))))
+                 (accept-process-output process 1))))
+      (unwind-protect
+          (gptel-extras--call-bib-processing)
+        (when (and process (process-live-p process)) (delete-process process))))
+    (should (eq filter-result 'original))))
+
+(ert-deftest gptel-extras-test-bib-prompt-handlers-restore-after-quit ()
+  "Restore every temporary prompt handler after an interrupted bibliography call."
+  (let* ((symbols '(y-or-n-p read-string completing-read yes-or-no-p read-answer))
+         (originals (mapcar #'symbol-function symbols))
+         interrupted)
+    (cl-letf (((symbol-function 'ebib-extras-process-entry)
+               (lambda () (signal 'quit nil))))
+      (condition-case nil
+          (gptel-extras--call-bib-processing)
+        (quit (setq interrupted t))))
+    (should interrupted)
+    (should (equal (mapcar #'symbol-function symbols) originals))))
+
 (ert-deftest gptel-extras-test-bib-processing-uses-manual-key-validation ()
   "Regenerate keys rejected by Ebib and persist even without an attachment."
   (require 'ebib-extras)

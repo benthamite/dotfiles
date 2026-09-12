@@ -607,12 +607,29 @@ def render_skill_inventory(
     """Render active skills as one alphabetical list with relative links."""
     lines = SKILL_INVENTORY_HEADER.rstrip("\n").splitlines()
     lines.append("")
-    for row in sorted(rows, key=_skill_row_sort_key):
-        if row.scope == "Archived":
-            continue
+    grouped: dict[tuple[str, str], list[SkillInventoryRow]] = {}
+    for row in rows:
+        if row.scope != "Archived":
+            grouped.setdefault((row.name, row.description), []).append(row)
+    for group in sorted(grouped.values(), key=lambda group: _skill_row_sort_key(
+        min(group, key=_skill_row_sort_key)
+    )):
+        row = min(group, key=_skill_row_sort_key)
+        all_paths = {path for member in group for path in member.paths}
         links = []
         for tool, label in (("Codex", "Codex"), ("Claude", "Claude Code")):
-            paths = sorted(path for path in row.paths if _skill_tool(path) == tool)
+            paths = sorted(path for path in all_paths if _skill_tool(path) == tool)
+            # Link the shared installation when the same skill also has a
+            # project installation or a programmatic invocation entry point.
+            paths = [path for path in paths if not any(
+                alternative in all_paths and alternative != path
+                for alternative in (
+                    path.removeprefix("."),
+                    path.replace("/programmatic-skills/", "/skills/"),
+                    path.removeprefix(".").replace("/programmatic-skills/", "/skills/"),
+                    "/".join(PurePosixPath(path).parts[-4:]).removeprefix("."),
+                )
+            )]
             for path in paths:
                 target = posixpath.relpath(path, posixpath.dirname(relative) or ".")
                 link_label = f"{label}: {path}" if len(paths) > 1 else label

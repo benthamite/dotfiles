@@ -1646,22 +1646,42 @@ class DocsAuditInventoryTests(DocsAuditTestCase):
         self.assertNotIn("archive/", rendered)
         self.assertNotIn("\n* ", rendered)
 
-    def test_same_name_in_different_scopes_stays_separate(self):
+    def test_catalog_consolidates_installations_without_changing_source_inventory(self):
         skill = self.skill_text("shared", "Same description.")
         root = self.make_repo(
             {
                 "claude/skills/shared/SKILL.md": skill,
                 ".claude/skills/shared/SKILL.md": skill,
+                "claude/programmatic-skills/shared/SKILL.md": skill,
+                "emacs/.claude/skills/shared/SKILL.md": skill,
             }
         )
 
         rows = self.module.skill_inventory_rows(root)
 
-        self.assertEqual(2, len(rows))
+        self.assertEqual(4, len(rows))
         self.assertEqual(
-            {"Global", "Project-local: dotfiles"},
+            {"Global", "Project-local: dotfiles", "Project-local: emacs", "Programmatic"},
             {row.scope for row in rows},
         )
+        rendered = self.module.render_skill_inventory(rows)
+        self.assertEqual(1, rendered.count("- =shared="))
+        self.assertIn("[[file:../claude/skills/shared/SKILL.md][Claude Code]]", rendered)
+        self.assertNotIn("../.claude/", rendered)
+        self.assertNotIn("programmatic-skills", rendered)
+        self.assertNotIn("emacs/.claude", rendered)
+
+    def test_catalog_links_global_programmatic_copy_for_each_tool(self):
+        skill = self.skill_text("open-log", "Open the log.")
+        root = self.make_repo({
+            f"{prefix}/programmatic-skills/open-log/SKILL.md": skill
+            for prefix in ("claude", "codex", ".claude", ".codex")
+        })
+        rendered = self.module.render_skill_inventory(self.module.skill_inventory_rows(root))
+        self.assertEqual(1, rendered.count("- =open-log="))
+        self.assertEqual(2, rendered.count("[[file:"))
+        self.assertIn("../codex/programmatic-skills/open-log/SKILL.md][Codex]", rendered)
+        self.assertIn("../claude/programmatic-skills/open-log/SKILL.md][Claude Code]", rendered)
 
     def test_conflicting_descriptions_in_one_scope_fail_closed(self):
         root = self.make_repo(

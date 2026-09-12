@@ -241,6 +241,10 @@ change while keeping generated files distinct from live activation.
 The shared rebuild helper requires runtime-, source- and token-bound completion
 evidence. It rejects unqualified cached success and keeps uncertain requests
 recorded so cooperating callers cannot silently launch a competing rebuild.
+If the original waiter exits, an observer can acquire its now-free package lock
+and certify the same completion token after rechecking the recorded source,
+runtime and status identity. It neither replaces an active owner nor requests
+another rebuild to repair a missing completion receipt.
 
 The =end-to-end= skill separates disposable test fixtures from retained results,
 checks startup effects and runtime identity, and accepts automation that observes

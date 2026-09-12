@@ -1244,6 +1244,75 @@ class ElpacaRebuildWaitTests(unittest.TestCase):
         self.assertEqual(second.returncode, 0, second.stderr)
         self.assertEqual(self.requests(), 1)
 
+    def test_observer_certifies_completed_token_after_owner_timeout(self):
+        first = self.rebuild(ELPACA_RELOAD_OWNER="1", FAKE_TOKEN_STATE="queued",
+                             ELPACA_RELOAD_TIMEOUT_SECONDS="0.3")
+        self.assertNotEqual(first.returncode, 0)
+        operation_file = self.state / "owners/example.json"
+        before = json.loads(operation_file.read_text())
+        second = self.rebuild(ELPACA_RELOAD_TIMEOUT_SECONDS="0.5")
+        self.assertEqual(second.returncode, 0, second.stderr)
+        after = json.loads(operation_file.read_text())
+        self.assertEqual(after["token"], before["token"])
+        self.assertEqual(after["context"], before["context"])
+        self.assertEqual(after["state"], "finished")
+        self.assertEqual(self.status_path().read_text(), "finished:loaded\n")
+        self.assertEqual(self.requests(), 1)
+
+    def test_observer_does_not_certify_pending_token_for_changed_runtime(self):
+        first = self.rebuild(ELPACA_RELOAD_OWNER="1", FAKE_TOKEN_STATE="queued",
+                             ELPACA_RELOAD_TIMEOUT_SECONDS="0.3")
+        self.assertNotEqual(first.returncode, 0)
+        operation_file = self.state / "owners/example.json"
+        before = operation_file.read_bytes()
+        runtime_file = self.root / "changed-runtime.json"
+        runtime = json.loads(before)["context"]["runtime"]
+        runtime["pid"] += 1
+        runtime_file.write_text(json.dumps(runtime))
+        result = self.rebuild(FAKE_RUNTIME_FILE=str(runtime_file),
+                              ELPACA_RELOAD_TIMEOUT_SECONDS="0.5")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(operation_file.read_bytes(), before)
+        self.assertEqual(self.requests(), 1)
+
+    def test_observer_does_not_take_over_live_owner_lock(self):
+        first = self.rebuild(ELPACA_RELOAD_OWNER="1", FAKE_TOKEN_STATE="queued",
+                             ELPACA_RELOAD_TIMEOUT_SECONDS="0.3")
+        self.assertNotEqual(first.returncode, 0)
+        loaded = runpy.run_path(str(REBUILD_WAIT), run_name="fixture_rebuild")
+        operation_file = self.state / "owners/example.json"
+        before = operation_file.read_bytes()
+        with loaded["owner_lock"](self.state, "example"):
+            result = self.rebuild(ELPACA_RELOAD_TIMEOUT_SECONDS="0.2")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(operation_file.read_bytes(), before)
+        self.assertEqual(self.requests(), 1)
+
+    def test_observer_refuses_replaced_pending_status(self):
+        first = self.rebuild(ELPACA_RELOAD_OWNER="1", FAKE_TOKEN_STATE="queued",
+                             ELPACA_RELOAD_TIMEOUT_SECONDS="0.3")
+        self.assertNotEqual(first.returncode, 0)
+        operation_file = self.state / "owners/example.json"
+        before = operation_file.read_bytes()
+        status = self.status_path()
+        replacement = status.with_name("replacement.status")
+        replacement.write_bytes(status.read_bytes())
+        replacement.replace(status)
+        result = self.rebuild(ELPACA_RELOAD_TIMEOUT_SECONDS="0.5")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unresolved rebuild", result.stderr)
+        self.assertEqual(operation_file.read_bytes(), before)
+        self.assertEqual(self.requests(), 1)
+
+    def test_observer_records_failure_of_abandoned_token(self):
+        first = self.rebuild(ELPACA_RELOAD_OWNER="1", FAKE_TOKEN_STATE="queued",
+                             ELPACA_RELOAD_TIMEOUT_SECONDS="0.3")
+        self.assertNotEqual(first.returncode, 0)
+        result = self.rebuild(FAKE_TOKEN_STATE="failed")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(self.status_path().read_text(), "failed:build or reload failed\n")
+        self.assertEqual(self.requests(), 1)
+
     def test_concurrent_owner_is_refused_before_another_request(self):
         self.write_emacsclient()
         env = self.environment()

@@ -80,15 +80,93 @@ def status_identity(path):
 
 
 @contextmanager
-def owner_lock(root, package):
+def owner_lock(root, package, *, observe=False):
     directory = root / "owners"
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
     with (directory / f"{package}.lock").open("a") as lock:
         try:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
+            if observe:
+                yield None
+                return
             raise RebuildError("another rebuild owner is active; wait for that owner") from None
         yield directory
+
+
+def read_operation(operation_file):
+    operation = read_json(operation_file)
+    if operation is not None:
+        if (not isinstance(operation, dict) or operation.get("version") != 1
+                or operation.get("state") not in ("requesting", "pending", "finished", "failed", "rejected")
+                or not isinstance(operation.get("context"), dict)
+                or not isinstance(operation.get("status_file"), str)
+                or not Path(operation["status_file"]).is_absolute()
+                or (operation["state"] != "requesting" and
+                    (not isinstance(operation.get("token"), str) or
+                     not re.fullmatch(r"[A-Za-z0-9+_.-]{1,256}", operation["token"])))):
+            raise RebuildError("invalid owner record; reconcile its owner")
+    return operation
+
+
+def resume_token(operation, initial, status_file):
+    if (operation.get("context") != initial or operation.get("status_file") != str(status_file)
+            or not operation.get("token")
+            or operation.get("status_identity") != status_identity(status_file)):
+        raise RebuildError("an unresolved rebuild exists; reconcile its owner before requesting another")
+    return operation["token"]
+
+
+def wait_for_operation(package, source_repo, extras, initial, operation,
+                       operation_file, status_file, receipt_file, interval, deadline):
+    token = operation["token"]
+    while time.monotonic() <= deadline:
+        state = token_status(package, token, initial["runtime"])
+        if state in ("finished", "failed"):
+            # Once terminal completion fails validation this token must never
+            # become evidence, even if the source later returns to its HEAD.
+            operation["state"] = "rejected"
+            write_json(operation_file, operation)
+            try:
+                if context(package, source_repo, extras) != initial:
+                    raise RebuildError("source or runtime changed during rebuild; completion not certified")
+                if operation["status_identity"] != status_identity(status_file):
+                    raise RebuildError("status replaced by another producer; completion not certified")
+            except RebuildError:
+                if operation["status_identity"] == status_identity(status_file):
+                    atomic_write(status_file, "failed:completion context could not be verified\n")
+                raise
+            operation["state"] = state
+            write_json(operation_file, operation)
+            if state == "failed":
+                atomic_write(status_file, "failed:build or reload failed\n")
+                raise RebuildError("build or reload failed; raw diagnostics suppressed")
+            write_json(receipt_file, {"version": 1, "context": initial, "token": token, "state": "finished"})
+            atomic_write(status_file, "finished:loaded\n")
+            print("finished:loaded")
+            return
+        poll_sleep(interval, deadline)
+    raise RebuildError("timed out; rebuild may still be running, retained owner record")
+
+
+def observe_abandoned_operation(root, package, source_repo, extras, initial,
+                                status_file, receipt_file, interval, deadline):
+    """Resume certification under the free owner lock, never request a rebuild."""
+    with owner_lock(root, package, observe=True) as directory:
+        if directory is None or read_status(status_file) != "pending":
+            return False
+        operation_file = directory / f"{package}.json"
+        operation = read_operation(operation_file)
+        if operation is None:
+            return False  # The post-commit producer may not have started yet.
+        if operation["state"] == "rejected":
+            raise RebuildError("existing completion was rejected; reconcile its owner")
+        resume_token(operation, initial, status_file)
+        if context(package, source_repo, extras) != initial:
+            raise RebuildError("source or runtime changed before resuming rebuild")
+        wait_for_operation(package, source_repo, extras, initial, operation,
+                           operation_file, status_file, receipt_file, interval, deadline)
+        return True
 
 
 def runtime_form(package):
@@ -260,6 +338,10 @@ def main():
                 raise RebuildError("existing rebuild failed; request a fresh owner")
             if state not in ("pending", "missing"):
                 raise RebuildError("invalid rebuild status")
+            if state == "pending" and observe_abandoned_operation(
+                    root, package, source_repo, extras, initial, status_file,
+                    receipt_file, interval, deadline):
+                return
             poll_sleep(interval, deadline)
         raise RebuildError("timed out waiting for the existing owner; no rebuild requested")
 
@@ -269,23 +351,9 @@ def main():
         if not owner and read_status(status_file) != "missing":
             raise RebuildError("another owner published status; retry to observe that owner")
         operation_file = lock_dir / f"{package}.json"
-        operation = read_json(operation_file)
-        if operation is not None:
-            if (not isinstance(operation, dict) or operation.get("version") != 1
-                    or operation.get("state") not in ("requesting", "pending", "finished", "failed", "rejected")
-                    or not isinstance(operation.get("context"), dict)
-                    or not isinstance(operation.get("status_file"), str)
-                    or not Path(operation["status_file"]).is_absolute()
-                    or (operation["state"] != "requesting" and
-                        (not isinstance(operation.get("token"), str) or
-                         not re.fullmatch(r"[A-Za-z0-9+_.-]{1,256}", operation["token"])))):
-                raise RebuildError("invalid owner record; reconcile its owner")
+        operation = read_operation(operation_file)
         if operation and operation.get("state") in ("requesting", "pending"):
-            if (operation.get("context") != initial or operation.get("status_file") != str(status_file)
-                    or not operation.get("token")
-                    or operation.get("status_identity") != status_identity(status_file)):
-                raise RebuildError("an unresolved rebuild exists; reconcile its owner before requesting another")
-            token = operation["token"]
+            resume_token(operation, initial, status_file)
         else:
             operation = {"version": 1, "context": initial, "status_file": str(status_file), "state": "requesting"}
             write_json(operation_file, operation)
@@ -295,33 +363,8 @@ def main():
             token = request(package, initial["runtime"])
             operation.update(token=token, state="pending")
             write_json(operation_file, operation)
-        while time.monotonic() <= deadline:
-            state = token_status(package, token, initial["runtime"])
-            if state in ("finished", "failed"):
-                # Once terminal completion fails validation this token must never
-                # become evidence, even if the source later returns to its HEAD.
-                operation["state"] = "rejected"
-                write_json(operation_file, operation)
-                try:
-                    if context(package, source_repo, extras) != initial:
-                        raise RebuildError("source or runtime changed during rebuild; completion not certified")
-                    if operation["status_identity"] != status_identity(status_file):
-                        raise RebuildError("status replaced by another producer; completion not certified")
-                except RebuildError:
-                    if operation["status_identity"] == status_identity(status_file):
-                        atomic_write(status_file, "failed:completion context could not be verified\n")
-                    raise
-                operation["state"] = state
-                write_json(operation_file, operation)
-                if state == "failed":
-                    atomic_write(status_file, "failed:build or reload failed\n")
-                    raise RebuildError("build or reload failed; raw diagnostics suppressed")
-                write_json(receipt_file, {"version": 1, "context": initial, "token": token, "state": "finished"})
-                atomic_write(status_file, "finished:loaded\n")
-                print("finished:loaded")
-                return
-            poll_sleep(interval, deadline)
-        raise RebuildError("timed out; rebuild may still be running, retained owner record")
+        wait_for_operation(package, source_repo, extras, initial, operation,
+                           operation_file, status_file, receipt_file, interval, deadline)
 
 
 if __name__ == "__main__":

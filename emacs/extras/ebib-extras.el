@@ -540,31 +540,41 @@ the list.  Call this repeatedly to process all invalid files one by one."
 ;;;;; process entries
 
 (declare-function tlon-deepl-translate-abstract "tlon-deepl")
-(defun ebib-extras-process-entry ()
-  "Process the BibTeX entry at point comprehensively.
-This function performs several actions:
-
-1. Generates a BibTeX key if the current one is invalid or if prompted.
-
-2. Sets or confirms the entry's language using
-`ebib-extras-get-or-set-language'.
-
-3. Attaches relevant files using `ebib-extras-attach-files'.
-
-4. Checks that child entry types (e.g. `incollection') use `crossref'
-instead of hardcoding parent-level fields.
-
-It assumes that fields like `type', `author', `date', and `title' are
-correctly set."
+(defun ebib-extras-process-entry (&optional key db)
+  "Process entry KEY in DB and return its final key.
+KEY and DB default to the entry at point and current database.  Validate or
+regenerate the key, set the language, attach files, and check crossrefs.
+Stop if selection changes before another processing phase.  The entry's
+other metadata is assumed correct."
   (interactive)
-  (let (entry-key)
-    (when (or (not (ebib-extras-key-is-valid-p))
-	      (y-or-n-p "Regenerate key? "))
-      (ebib-generate-autokey))
-    (setq entry-key (ebib--get-key-at-point))
-    (ebib-extras-get-or-set-language)
-    (ebib-extras-attach-files entry-key)
-    (ebib-extras-check-crossref entry-key)))
+  (let* ((key (or key (ebib--get-key-at-point)))
+         (db (or db ebib--cur-db))
+         (entry (ebib-db-get-entry key db)))
+    (ebib-extras--check-processing-entry key db)
+    (when (or (not (ebib-extras-key-is-valid-p key))
+              (y-or-n-p "Regenerate key? "))
+      (ebib-extras--check-processing-entry key db)
+      (ebib-generate-autokey)
+      (let ((new-key (ebib--get-key-at-point)))
+        (unless (and (eq ebib--cur-db db)
+                     (eq entry (ebib-db-get-entry new-key db 'noerror)))
+          (user-error "Ebib selection changed while generating the entry key"))
+        (setq key new-key)))
+    (ebib-extras--check-processing-entry key db)
+    (ebib-extras-get-or-set-language key db)
+    (ebib-extras--check-processing-entry key db)
+    (ebib-extras-attach-files key)
+    (ebib-extras--check-processing-entry key db)
+    (ebib-extras-check-crossref key)
+    (ebib-extras--check-processing-entry key db)
+    key))
+
+(defun ebib-extras--check-processing-entry (key db)
+  "Require that KEY in DB is still the selected entry before processing."
+  (unless (and db (eq ebib--cur-db db)
+               (equal key (ebib--get-key-at-point))
+               (ebib-db-get-entry key db 'noerror))
+    (user-error "Ebib selection changed; resume processing entry %s explicitly" key)))
 
 (defun ebib-extras-set-abstract (&optional key)
   "Set the abstract for KEY if it's currently empty.
@@ -832,26 +842,31 @@ called with a prefix argument), OCR is forced even if text is already present."
 (declare-function tlon-lookup "tlon-core")
 (declare-function tlon-lookup-all "tlon-core")
 (declare-function bibtex-set-field "bibtex-extras")
-(defun ebib-extras-get-or-set-language ()
-  "Return the language of the current entry, prompting to set it if needed.
-Determines the appropriate field access functions based on `major-mode'
-\\=(`ebib-entry-mode' or `bibtex-mode').  If the \"langid\" field is empty or
-contains an invalid language (checked against `tlon-languages-properties'),
-prompts the user to select a language using `completing-read' and sets the
-field.  Returns the (potentially newly set) language."
-  (cl-destructuring-bind (get-field set-field)
-      (pcase major-mode
-        ('ebib-entry-mode '(ebib-extras-get-field ebib-extras-set-field))
-        ('bibtex-mode '(bibtex-extras-get-field bibtex-set-field)))
-    (let* ((get-lang (lambda () (funcall get-field "langid")))
-           (set-lang (lambda (lang) (funcall set-field "langid" lang)))
-           (lang (funcall get-lang))
-           (valid-lang (tlon-lookup tlon-languages-properties :standard :name lang)))
-      (or valid-lang
-          (funcall set-lang
-                   (completing-read "Select language: "
-                                    (tlon-lookup-all tlon-languages-properties :standard)
-                                    nil t "english"))))))
+(defun ebib-extras-get-or-set-language (&optional key db)
+  "Return or set the language of entry KEY in DB.
+KEY and DB default to the selected Ebib entry and database.  Explicit
+arguments select Ebib regardless of the current buffer.  With neither
+argument in `bibtex-mode', use the entry at point instead.  Check the Ebib
+entry again after prompting, before writing its language."
+  (unless (or key db (derived-mode-p 'ebib-entry-mode 'bibtex-mode))
+    (user-error "Select an Ebib or BibTeX entry to set its language"))
+  (let* ((ebib-mode (or key db (derived-mode-p 'ebib-entry-mode)))
+         (key (and ebib-mode (or key (ebib--get-key-at-point))))
+         (db (and ebib-mode (or db ebib--cur-db)))
+         (lang (if ebib-mode
+                   (let ((ebib--cur-db db)) (ebib-extras-get-field "langid" key))
+                 (bibtex-extras-get-field "langid")))
+         (valid-lang (tlon-lookup tlon-languages-properties :standard :name lang)))
+    (or valid-lang
+        (let ((language (completing-read
+                         "Select language: "
+                         (tlon-lookup-all tlon-languages-properties :standard)
+                         nil t "english")))
+          (if ebib-mode
+              (progn
+                (ebib-extras--check-processing-entry key db)
+                (ebib-extras-set-field "langid" language))
+            (bibtex-set-field "langid" language))))))
 
 (defconst ebib-extras-library-genesis
   '("Library Genesis"

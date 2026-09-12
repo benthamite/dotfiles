@@ -321,7 +321,7 @@ It sets or confirms the entry's language by calling @code{ebib-extras-get-or-set
 It calls @code{ebib-extras-attach-files} to download and attach the appropriate files based on available identifiers (@ref{Downloading and attaching from external sources}).
 @end enumerate
 
-This command assumes that the entry's type, author, date, and title fields are already correctly set.
+This command assumes that the entry's type, author, date, and title fields are already correctly set. Programmatic callers can provide the expected key and database as optional arguments. The command checks that they still identify the selected entry before each processing phase and returns the final key, including a regenerated key. If a prompt or attachment operation changes the selected entry or database, processing stops before continuing with a different entry. Language input also checks the selection before writing its result. Opening the attached PDF in another buffer does not by itself change the processing entry.
 
 In the Ebib entry buffer, @samp{RET} edits the field at point.  In the Ebib index buffer, @samp{RET} opens the selected entry for editing.  These bindings accept the keyboard Return event as well as the graphical Return event that @samp{ebib} binds by default.
 
@@ -471,9 +471,9 @@ If the entry type is @samp{online} or @samp{article} and a URL is available, it 
 
 @findex ebib-extras-doi-attach
 @findex ebib-extras-book-attach
-The command @code{ebib-extras-doi-attach} downloads a PDF using the entry's DOI via @code{annas-archive-download}. It sets up a one-shot hook on @code{annas-archive-post-download-hook} to automatically attach the downloaded file once the download completes.
+The command @code{ebib-extras-doi-attach} downloads a PDF using the entry's DOI via @code{annas-archive-download}. It prompts for the search string pre-filled with the DOI, so the identifier can be confirmed or edited before searching. Both commands install a single named handler, @code{ebib-extras--annas-archive-attach}, on @code{annas-archive-post-download-hook}; the handler removes itself when it runs, and reinstalling it is idempotent, so aborted searches never leave stale handlers that would fire on a later download.
 
-The command @code{ebib-extras-book-attach} searches for and downloads a book by ISBN or title via @code{annas-archive-download}. It prompts the user with a search string pre-filled from the entry's ISBN (if available) or title (for book-like entry types). Like @code{ebib-extras-doi-attach}, it uses a one-shot hook on @code{annas-archive-post-download-hook} to attach the file when the download finishes. If the download was initiated externally (not through @samp{eww}), it displays a message asking the user to attach the file manually.
+The command @code{ebib-extras-book-attach} searches for and downloads a book by ISBN or title via @code{annas-archive-download}. It prompts the user with a search string pre-filled from the entry's ISBN (if available) or title (for book-like entry types). If the download was initiated externally (not through @samp{eww}), it displays a message asking the user to attach the file manually.
 
 @node URL-based file generation
 @subsection URL-based file generation

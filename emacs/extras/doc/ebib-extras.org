@@ -159,7 +159,7 @@ The command ~ebib-extras-process-entry~ provides a unified workflow for preparin
 2. It sets or confirms the entry's language by calling ~ebib-extras-get-or-set-language~ ([[#h:language-handling][Language handling]]).
 3. It calls ~ebib-extras-attach-files~ to download and attach the appropriate files based on available identifiers ([[#h:downloading][Downloading and attaching from external sources]]).
 
-This command assumes that the entry's type, author, date, and title fields are already correctly set.
+This command assumes that the entry's type, author, date, and title fields are already correctly set. Programmatic callers can provide the expected key and database as optional arguments. The command checks that they still identify the selected entry before each processing phase and returns the final key, including a regenerated key. If a prompt or attachment operation changes the selected entry or database, processing stops before continuing with a different entry. Language input also checks the selection before writing its result. Opening the attached PDF in another buffer does not by itself change the processing entry.
 
 In the Ebib entry buffer, =RET= edits the field at point.  In the Ebib index buffer, =RET= opens the selected entry for editing.  These bindings accept the keyboard Return event as well as the graphical Return event that =ebib= binds by default.
 

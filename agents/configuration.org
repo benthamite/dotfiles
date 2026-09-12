@@ -86,14 +86,15 @@ with this repository. The public =bin/dotfiles-publish= command implements the
 publication guard independently of those local instructions. Its installer activates
 =bin/dotfiles-pre-push=, while the refusing push URL routes through
 =bin/git-remote-dotfiles-blocked= so =--no-verify= cannot bypass publication.
-The deterministic scan covers the exact outgoing history and candidate tree;
+The deterministic scan covers the exact outgoing history and the candidate
+versions of every path touched in that history;
 the model review must give every manifest unit an explicit verdict. A short-lived
 authorization then names one exact push and is consumed before the hook decides.
 
-The same machinery performs a complete reachable-history audit when its receipt
-is missing, more than 30 days old, invalidated by a ruleset change, or followed
-by an incident. Already-public secrets are incidents: rotate or revoke first,
-then remove the source, and only then consider rewriting public history.
+Publication audits every unpushed commit, including intermediate versions and
+merge comparisons, using published history as its baseline. Full-history audits
+are available on explicit request; their receipts do not gate publication.
+Already-public secrets are handled as separate incidents.
 
 Ordinary publication updates one branch. A formal dotfiles release adds one tag
 and reviews the release notes and tag text as additional units.

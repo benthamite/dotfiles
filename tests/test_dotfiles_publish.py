@@ -108,7 +108,7 @@ def record(value, path, commit, line_number, line):
 
 def scan_git(repo, log_opts, compiled):
     options = log_opts.split() if log_opts else []
-    patch_options = [arg for arg in options if arg in ("--no-textconv", "--no-ext-diff")]
+    patch_options = [arg for arg in options if arg in ("--no-textconv", "--no-ext-diff", "--diff-merges=separate")]
     rev_args = [arg for arg in options if arg not in patch_options] or ["--all"]
     git_environment = os.environ.copy()
     git_environment["DOTFILES_FAKE_GITLEAKS_CHILD"] = "1"
@@ -527,12 +527,11 @@ class PublicationFixture(unittest.TestCase):
         return receipt
 
     def prepare_authorized_run(self):
-        """Clean scan, exhaustive review, and a fresh full-audit receipt."""
+        """Clean outgoing scan and exhaustive review, without a historical audit."""
         self.publish_base()
         self.commit("add helper", {"docs/helper.md": "helper notes\n"})
         proc, run_id = self.scan()
         self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
-        self.write_full_audit_receipt(run_id)
         self.review_all(run_id)
         return run_id
 
@@ -1090,16 +1089,17 @@ class DotfilesPublishScanTests(PublicationFixture):
             if argument.startswith("--log-opts=")
         ]
         self.assertIn(
-            "--log-opts=--no-textconv --no-ext-diff %s..%s" % (self.remote_tip(), candidate),
+            "--log-opts=--no-textconv --no-ext-diff --diff-merges=separate %s..%s" % (self.remote_tip(), candidate),
             ranges,
             "the scanner was not pointed at the exact outgoing range",
         )
 
-    def test_candidate_tree_scan_finds_a_secret_inherited_from_published_history(self):
+    def test_candidate_tree_scan_only_rechecks_touched_inherited_files(self):
         self.commit(
             "public base with an inherited secret",
             {
                 "README.md": "public dotfiles\n",
+                "legacy.bin": "\x00published binary\n",
                 "config/legacy.conf": "token = %s\n" % TEST_SECRET,
             },
         )
@@ -1118,6 +1118,16 @@ class DotfilesPublishScanTests(PublicationFixture):
 
         proc, run_id = self.scan()
 
+        self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
+        findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
+        self.assertEqual([], findings)
+        self.review_all(run_id)
+        self.assertEqual(0, self.cli("authorize", "--run", run_id).returncode)
+        # Retaining an inherited secret in a changed file still requires review.
+        self.commit("edit legacy configuration", {
+            "config/legacy.conf": "token = %s\n# updated settings\n" % TEST_SECRET,
+        })
+        proc, run_id = self.scan()
         self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
         findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
         sources = {finding["source"] for finding in findings}
@@ -1131,14 +1141,55 @@ class DotfilesPublishScanTests(PublicationFixture):
             finding for finding in findings if finding["source"] == "gitleaks-tree"
         ]
         self.assertTrue(inherited)
-        for finding in inherited:
-            self.assertEqual(
-                "public-incident",
-                finding["classification"],
-                "an already-published secret was labelled as outgoing, which points "
-                "at a useless rewrite of unpublished commits",
-            )
         self.assert_run_redacts(proc, run_id, TEST_SECRET, inherited[0]["fingerprint"])
+
+    def test_outgoing_reverted_secret_and_deleted_file_remain_blocking(self):
+        self.publish_base()
+        self.commit("baseline file", {"config/reverted.conf": "ordinary setting\n"})
+        leaking = self.commit("temporary values", {
+            "config/reverted.conf": "token = %s\n" % TEST_SECRET,
+            "config/deleted.conf": "token = %s\n" % TEST_SECRET,
+        })
+        self.commit("restore ordinary settings", {
+            "config/reverted.conf": "ordinary setting\n",
+        }, remove=("config/deleted.conf",))
+        proc, run_id = self.scan()
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
+        self.assertEqual({"config/reverted.conf", "config/deleted.conf"}, {
+            f["path"] for f in findings if f["commit"] == leaking
+        })
+        units = self.read_json(self.run_dir(run_id) / "manifest.json")["units"]
+        self.review_all(run_id, skip=[u["unit_id"] for u in units
+                                     if u["kind"] == "deterministic-finding"])
+        refused = self.cli("authorize", "--run", run_id)
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("deterministic-finding", refused.stderr)
+
+    def test_outgoing_merge_resolution_has_patch_and_object_review(self):
+        self.publish_base()
+        self.commit("merge fixture", {"docs/merge.md": "base\n"})
+        self.git("checkout", "-b", "side")
+        self.commit("side change", {"docs/merge.md": "side\n"})
+        self.git("checkout", "master")
+        self.commit("main change", {"docs/merge.md": "main\n"})
+        self.assertNotEqual(0, self.git("merge", "--no-ff", "side", check=False).returncode)
+        self.commit("resolve merge", {"docs/merge.md": "token = %s\n" % TEST_SECRET})
+        merge_commit = self.head()
+        self.commit("remove merge credential", {"docs/merge.md": "ordinary resolution\n"})
+        proc, run_id = self.scan()
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        units = self.read_json(self.run_dir(run_id) / "manifest.json")["units"]
+        merge_units = [u for u in units if u["commit"] == merge_commit]
+        self.assertTrue(any(u["kind"] == "path" for u in merge_units))
+        patches = [u for u in merge_units if u["kind"] == "patch"]
+        self.assertGreaterEqual(len(patches), 2)
+        self.assertTrue(any("-side" in u["content"] for u in patches))
+        self.assertTrue(any("-main" in u["content"] for u in patches))
+        units = self.read_json(self.run_dir(run_id) / "manifest.json")["units"]
+        self.review_all(run_id, skip=[u["unit_id"] for u in units
+                                     if u["kind"] == "deterministic-finding"])
+        self.assertNotEqual(0, self.cli("authorize", "--run", run_id).returncode)
 
     def test_tree_finding_fingerprints_are_stable_across_runs(self):
         # A fingerprint keyed on the temporary extraction path would change
@@ -2283,6 +2334,28 @@ class DotfilesPublishAuthorizationTests(PublicationFixture):
             run["remote_oid"],
         )
 
+    def test_historical_state_does_not_block_but_missing_outgoing_review_does(self):
+        run_id = self.prepare_authorized_run()
+        for state in ("expired", "malformed", "pending"):
+            with self.subTest(state=state):
+                if state == "expired":
+                    self.write_full_audit_receipt(run_id, self.now - 31 * DAY)
+                elif state == "malformed":
+                    (self.state_dir() / "full-audit.json").write_text("invalid JSON")
+                else:
+                    (self.state_dir() / "full-audit-generation.json").write_text("invalid JSON")
+                proc, current = self.scan()
+                self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
+                self.assertNotIn("full-audit-due:", proc.stdout)
+                refused = self.cli("authorize", "--run", current)
+                self.assertNotEqual(0, refused.returncode)
+                self.assertIn("missing-unit", refused.stderr)
+                self.review_all(current)
+                authorized = self.cli("authorize", "--run", current)
+                self.assertEqual(0, authorized.returncode, authorized.stderr)
+                accepted = self.cli("hook", "origin", str(self.remote), stdin=self.hook_input(current))
+                self.assertEqual(0, accepted.returncode, accepted.stderr)
+
     def test_authorization_is_exact_short_lived_and_single_use(self):
         run_id = self.prepare_authorized_run()
 
@@ -2320,14 +2393,13 @@ class DotfilesPublishAuthorizationTests(PublicationFixture):
         self.assertNotEqual(0, expired.returncode)
         self.assertIn("expired", (expired.stdout + expired.stderr).lower())
 
-    def test_new_audit_blocks_already_issued_push_authorization(self):
+    def test_new_audit_does_not_block_already_issued_push_authorization(self):
         run_id = self.prepare_authorized_run()
         authorized = self.cli("authorize", "--run", run_id)
         self.assertEqual(0, authorized.returncode, authorized.stderr)
         self.scan("--mode", "full-audit")
-        refused = self.cli("hook", "origin", str(self.remote), stdin=self.hook_input(run_id))
-        self.assertNotEqual(0, refused.returncode)
-        self.assertIn("pending review", refused.stderr)
+        accepted = self.cli("hook", "origin", str(self.remote), stdin=self.hook_input(run_id))
+        self.assertEqual(0, accepted.returncode, accepted.stderr)
         self.assertFalse((self.state_dir() / "authorization.json").exists())
 
     def test_changed_head_remote_ref_remote_tip_or_ruleset_invalidates_authorization(self):
@@ -2438,7 +2510,6 @@ class DotfilesPublishAuthorizationTests(PublicationFixture):
         manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
         public = [unit for unit in manifest["units"] if unit["kind"] == "public-text"]
         self.assertEqual(2, len(public), "release notes and tag text must be reviewed")
-        self.write_full_audit_receipt(run_id)
         self.review_all(run_id)
 
         pushed = self.cli("push", "--run", run_id, "--tag", "v1.2.3")
@@ -2741,9 +2812,8 @@ class DotfilesPublishFullAuditSnapshotTests(unittest.TestCase):
         self.assertNotIn(self.receipt_path, self.writes)
         with self.assertRaisesRegex(self.functions["PublishError"], "different manifest"):
             self.functions["review_status"](self.repo, self.audit_id)
-        with self.assertRaisesRegex(self.functions["PublishError"], "full audit required"):
-            self.functions["authorize_run"](self.repo, self.publish_id, None, FIXED_NOW)
-        self.assertNotIn(self.authorization_path, self.writes)
+        self.functions["authorize_run"](self.repo, self.publish_id, None, FIXED_NOW)
+        self.assertIn(self.authorization_path, self.writes)
 
     def test_same_second_identical_rescan_requires_status_for_current_scan(self):
         status = self.functions["review_status"](self.repo, self.audit_id)
@@ -2759,7 +2829,7 @@ class DotfilesPublishFullAuditSnapshotTests(unittest.TestCase):
         self.assertEqual("scan-B", receipt["scan_id"])
         self.assertIsNone(self.functions["full_audit_staleness"](self.repo, "policy", FIXED_NOW))
 
-    def test_replacement_during_receipt_write_cannot_authorize_publication(self):
+    def test_replacement_during_receipt_write_does_not_affect_outgoing_authorization(self):
         status = self.functions["review_status"](self.repo, self.audit_id)
         original_write = self.functions["write_json"]
 
@@ -2774,9 +2844,8 @@ class DotfilesPublishFullAuditSnapshotTests(unittest.TestCase):
         self.assertEqual("manifest-A", receipt["manifest_id"])
         self.assertEqual(["refs/heads/master old-public-tip"], receipt["public_refs"])
         self.assertIn("replaced", self.functions["full_audit_staleness"](self.repo, "policy", FIXED_NOW))
-        with self.assertRaisesRegex(self.functions["PublishError"], "full audit required.*replaced"):
-            self.functions["authorize_run"](self.repo, self.publish_id, None, FIXED_NOW)
-        self.assertNotIn(self.authorization_path, self.writes)
+        self.functions["authorize_run"](self.repo, self.publish_id, None, FIXED_NOW)
+        self.assertIn(self.authorization_path, self.writes)
 
     def test_review_status_rejects_mixed_run_and_manifest_snapshots(self):
         self.records[self.audit_id]["manifest_id"] = "manifest-B"
@@ -2793,24 +2862,24 @@ class DotfilesPublishFullAuditSnapshotTests(unittest.TestCase):
 
 
 class DotfilesPublishFullAuditTests(PublicationFixture):
-    def test_full_audit_due_after_thirty_days_or_ruleset_change(self):
+    def test_publication_does_not_require_historical_audit_status(self):
         self.publish_base()
         self.commit("add notes", {"docs/notes.md": "notes\n"})
 
         first, run_id = self.scan()
-        self.assertIn("full-audit-due: true", first.stdout)
+        self.assertNotIn("full-audit-due:", first.stdout)
 
         self.write_full_audit_receipt(run_id)
 
         fresh, _ = self.scan(env=self.env(DOTFILES_PUBLISH_NOW=str(self.now + 29 * DAY)))
-        self.assertIn("full-audit-due: false", fresh.stdout)
+        self.assertNotIn("full-audit-due:", fresh.stdout)
 
         stale, _ = self.scan(env=self.env(DOTFILES_PUBLISH_NOW=str(self.now + 31 * DAY)))
-        self.assertIn("full-audit-due: true", stale.stdout)
+        self.assertNotIn("full-audit-due:", stale.stdout)
 
         (self.repo / ".gitleaks.toml").write_text("[extend]\nuseDefault = true\n")
         changed, _ = self.scan()
-        self.assertIn("full-audit-due: true", changed.stdout)
+        self.assertNotIn("full-audit-due:", changed.stdout)
 
     def publish_a_secret(self):
         """Put a secret on the public branch, the way a real leak arrives."""
@@ -2896,7 +2965,7 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         receipt.pop("review_policy")
         receipt_path.write_text(json.dumps(receipt))
         _, outgoing = self.scan()
-        self.assertTrue(self.read_json(self.run_dir(outgoing) / "run.json")["full_audit_due"])
+        self.assertFalse(self.read_json(self.run_dir(outgoing) / "run.json")["full_audit_due"])
 
     def test_review_source_requires_exact_audited_regular_blob_and_full_audit(self):
         self.publish_base()
@@ -3748,7 +3817,7 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
             )
             scanned, publish_run = self.scan()
             self.assertEqual(0, scanned.returncode, scanned.stdout + scanned.stderr)
-            self.assertIn("full-audit-due: false", scanned.stdout)
+            self.assertNotIn("full-audit-due:", scanned.stdout)
             self.review_all(publish_run)
             pushed = self.cli("push", "--run", publish_run)
             self.assertEqual(0, pushed.returncode, pushed.stdout + pushed.stderr)
@@ -3940,7 +4009,7 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         self.assertFalse(receipt["incident_flag"])
 
         advanced, publish_run = self.scan()
-        self.assertIn("full-audit-due: false", advanced.stdout)
+        self.assertNotIn("full-audit-due:", advanced.stdout)
 
     def test_review_status_cannot_refresh_an_old_audit_without_rescanning(self):
         self.publish_base()
@@ -3963,7 +4032,7 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         self.assertEqual(receipt, receipt_path.read_bytes())
         self.assertEqual(scanner_calls, self.scanner_log.read_bytes())
         overdue, _ = self.scan()
-        self.assertIn("full-audit-due: true", overdue.stdout)
+        self.assertNotIn("full-audit-due:", overdue.stdout)
 
         _, rescanned_run = self.scan("--mode", "full-audit")
         self.assertNotEqual(run_id, rescanned_run)
@@ -3994,10 +4063,9 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         self.assertEqual(receipt["completed_epoch"], current["scanned_epoch"])
         self.assertEqual(receipt["manifest_id"], current["manifest_id"])
         self.assertNotEqual(receipt["scan_id"], current["scan_id"])
-        refused = self.cli("authorize", "--run", publish_id)
-        self.assertNotEqual(0, refused.returncode)
-        self.assertIn("pending review", refused.stderr)
-        self.assertFalse((self.state_dir() / "authorization.json").exists())
+        authorized = self.cli("authorize", "--run", publish_id)
+        self.assertEqual(0, authorized.returncode, authorized.stderr)
+        self.assertTrue((self.state_dir() / "authorization.json").exists())
 
         old_review = self.cli("review-status", "--run", audit_id)
         self.assertNotEqual(0, old_review.returncode)
@@ -4024,9 +4092,8 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         failed = self.cli("scan", "--mode", "full-audit", env=self.env(DOTFILES_PUBLISH_GITLEAKS=str(self.base / "missing-scanner")))
         self.assertNotEqual(0, failed.returncode)
         self.assertEqual(original, receipt_path.read_bytes())
-        refused = self.cli("authorize", "--run", publish_id)
-        self.assertNotEqual(0, refused.returncode)
-        self.assertIn("pending review", refused.stderr)
+        authorized = self.cli("authorize", "--run", publish_id)
+        self.assertEqual(0, authorized.returncode, authorized.stderr)
         old = self.cli("review-status", "--run", audit_id)
         self.assertNotEqual(0, old.returncode)
         self.assertEqual(original, receipt_path.read_bytes())
@@ -4059,8 +4126,8 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         stale_receipt["incident_flag"] = False
         receipt_path.write_text(json.dumps(stale_receipt))
         due, _ = self.scan()
-        self.assertIn("full-audit-due: true", due.stdout)
-        self.assertIn("incident state changed", due.stdout)
+        self.assertNotIn("full-audit-due:", due.stdout)
+        self.assertNotIn("full-audit-reason:", due.stdout)
 
     def test_review_status_cannot_issue_receipt_after_ruleset_changes(self):
         self.publish_base()
@@ -4158,8 +4225,8 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         )
 
         after, _ = self.scan()
-        self.assertIn("full-audit-due: true", after.stdout)
-        self.assertIn("incident", after.stdout)
+        self.assertNotIn("full-audit-due:", after.stdout)
+        self.assertNotIn("full-audit-reason:", after.stdout)
 
     def test_a_reviewed_branch_advance_keeps_the_receipt_valid(self):
         self.publish_base()
@@ -4171,7 +4238,7 @@ module["cat_file_batch"](repo, [sys.argv[3]] + [sys.argv[4]] * 5000)
         self.commit("second change", {"docs/second.md": "second\n"})
         advanced, publish_run = self.scan()
 
-        self.assertIn("full-audit-due: false", advanced.stdout)
+        self.assertNotIn("full-audit-due:", advanced.stdout)
         self.review_all(publish_run)
         authorized = self.cli("authorize", "--run", publish_run)
         self.assertEqual(0, authorized.returncode, authorized.stdout + authorized.stderr)

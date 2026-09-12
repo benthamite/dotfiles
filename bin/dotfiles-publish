@@ -786,7 +786,7 @@ def run_gitleaks(repo, work, *, git_range=None, directory=None):
         ]
         if not directory:
             # Public history is the stored Git bytes, never a decrypted view.
-            log_options = "--no-textconv --no-ext-diff"
+            log_options = "--no-textconv --no-ext-diff --diff-merges=separate"
             if git_range:
                 log_options += " " + git_range
             command.append("--log-opts=%s" % log_options)
@@ -906,6 +906,7 @@ def gitleaks_git_patch_values(repo, result):
         "--no-ext-diff",
         "--patch",
         "-U0",
+        "--diff-merges=separate",
         commit,
         "--",
         path,
@@ -1290,8 +1291,8 @@ def tree_paths(repo, commit):
     ]
 
 
-def export_tree(repo, commit, destination):
-    """Write the exact committed bytes of every blob in one tree.
+def export_tree(repo, commit, destination, paths=None):
+    """Write exact committed blob bytes, optionally limited to selected paths.
 
     ``git archive`` is not usable here: it runs blobs through the smudge
     filter, so a git-crypt path would be exported as plaintext and the scan
@@ -1302,10 +1303,13 @@ def export_tree(repo, commit, destination):
     destination = Path(destination).resolve()
     listing = run_git(repo.root, "ls-tree", "-r", "-z", commit)
     wanted = {}
+    selected = None if paths is None else set(paths)
     for record in listing.out.split(b"\x00"):
         if not record.strip():
             continue
         metadata, _, name = record.partition(b"\t")
+        if selected is not None and name.decode("utf-8", "replace") not in selected:
+            continue
         parts = metadata.split()
         if len(parts) < 3:
             continue
@@ -1344,10 +1348,13 @@ class ScanResult:
 
 
 def scan_outgoing(repo, boundary, key):
-    """Scan the outgoing patch range, the candidate tree, and every object."""
+    """Scan every outgoing commit and the candidate versions of touched paths."""
     redactor = Redactor(key)
     findings = []
     commits = outgoing_commits(repo, boundary)
+    entries_by_commit = {commit: changed_entries(repo, commit) for commit in commits}
+    touched_paths = sorted({path for entries in entries_by_commit.values()
+                            for _, path in entries})
     with scan_workspace(repo) as work:
         range_expression = "%s..%s" % (boundary.remote_oid, boundary.candidate_oid)
         results = run_gitleaks(repo, work, git_range=range_expression)
@@ -1357,7 +1364,7 @@ def scan_outgoing(repo, boundary, key):
 
         extracted = work / "candidate-tree"
         extracted.mkdir(mode=DIRECTORY_MODE)
-        export_tree(repo, boundary.candidate_oid, extracted)
+        export_tree(repo, boundary.candidate_oid, extracted, paths=touched_paths)
         tree_results = run_gitleaks(repo, work, directory=extracted)
         findings += convert_gitleaks_results(
             tree_results,
@@ -1371,13 +1378,13 @@ def scan_outgoing(repo, boundary, key):
         )
 
     for commit in commits:
-        paths = [path for status, path in changed_entries(repo, commit) if status[0] != "D"]
+        paths = [path for status, path in entries_by_commit[commit] if status[0] != "D"]
         findings += inspect_paths(repo, commit, paths, key, redactor, "objects")
 
     findings += inspect_paths(
         repo,
         boundary.candidate_oid,
-        tree_paths(repo, boundary.candidate_oid),
+        touched_paths,
         key,
         redactor,
         "candidate-tree",
@@ -2218,7 +2225,7 @@ def build_manifest(repo, run_id, boundary, result, mode, tag, release_notes):
 
         patch = run_git(
             repo.root, "diff-tree", "--root", "--find-renames", "--format=",
-            "--no-textconv", "--no-ext-diff", "--patch", commit
+            "--no-textconv", "--no-ext-diff", "--diff-merges=separate", "--patch", commit
         ).text
         for ordinal, hunk in enumerate(split_patch_hunks(patch)):
             units.append(
@@ -2999,7 +3006,8 @@ def command_scan(args):
     now = now_epoch()
     if args.mode == "full-audit":
         write_json(repo.state_dir / "full-audit-generation.json", {"run_id": run_id})
-    staleness = full_audit_staleness(repo, ruleset_id, now)
+    staleness = (full_audit_staleness(repo, ruleset_id, now)
+                 if args.mode == "full-audit" else None)
     incident_digest = incident_state_digest(repo)
 
     public_refs = []
@@ -3068,9 +3076,10 @@ def command_scan(args):
                     finding["fingerprint"],
                 )
             )
-    print("full-audit-due: %s" % ("true" if staleness else "false"))
-    if staleness:
-        print("full-audit-reason: %s" % staleness)
+    if args.mode == "full-audit":
+        print("full-audit-due: %s" % ("true" if staleness else "false"))
+        if staleness:
+            print("full-audit-reason: %s" % staleness)
     return EXIT_FINDINGS if result.findings else EXIT_OK
 
 
@@ -3375,10 +3384,6 @@ def authorize_run(repo, run_id, tag, now):
             "the requested tag does not match the reviewed release tag; scan and review the intended tag",
             EXIT_REFUSED,
         )
-    staleness = full_audit_staleness(repo, record["ruleset_id"], now)
-    if staleness:
-        raise PublishError("full audit required: %s" % staleness, EXIT_REFUSED)
-
     status = review_status(repo, run_id)
     if not status.clean:
         details = []
@@ -3494,10 +3499,6 @@ def command_hook(args):
         )
     if authorization["ruleset_id"] != ruleset_identity(repo.root):
         raise PublishError("the ruleset changed after the authorization", EXIT_REFUSED)
-
-    staleness = full_audit_staleness(repo, authorization["ruleset_id"], now)
-    if staleness:
-        raise PublishError("full audit required: %s" % staleness, EXIT_REFUSED)
 
     for update in proposed:
         if set(update["local_oid"]) == {"0"}:

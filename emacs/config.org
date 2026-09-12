@@ -2956,6 +2956,9 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package breadcrumb
+  :ensure (:remotes (("fork" :host github :repo "benthamite/breadcrumb")
+                     "origin")
+           :branch "fix/imenu-actions") ; awaiting PR merge: https://github.com/joaotavora/breadcrumb/pull/58
   :custom
   (breadcrumb-project-max-length 0.5)
   (breadcrumb-project-crumb-separator "/")

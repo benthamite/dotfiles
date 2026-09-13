@@ -649,6 +649,10 @@ Both evidence trackers must have trusted current definitions in the active
 profile. A modified test tracker is skipped even when the commit guard remains
 trusted. Restore its trust through the native hook settings, then rerun the
 source check; manually creating an evidence marker does not repair dispatch.
+Test recorders skip the index hash when the working revision already matches,
+so an unnecessary index scan cannot exhaust the hook deadline after consuming
+the receipt but before saving the test result. Staged-only evidence still checks
+the index revision.
 
 Emacs-owned sessions use eight explicit =codex-hook-wrapper= registrations for
 lifecycle forwarding. The wrapper comes from the Emacs package source tree

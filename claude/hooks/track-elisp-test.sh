@@ -125,7 +125,12 @@ if [ "$EXIT_CODE" = 0 ] && [ "$EXPECTED_COUNT" -gt 0 ]; then
   DOTFILES_ROOT=$(cd -- "$SCRIPT_DIR/../.." && pwd)
   REVISION_HELPER="$DOTFILES_ROOT/claude/bin/elisp-source-revision"
   WORKING_REVISION=$("$REVISION_HELPER" "$REPO" 2>/dev/null || true)
-  INDEX_REVISION=$("$REVISION_HELPER" --index "$REPO" 2>/dev/null || true)
+  # Avoid the expensive index scan when working-tree evidence already matches:
+  # it can outlast the hook deadline after the one-time receipt is consumed.
+  INDEX_REVISION=""
+  if [ "$WORKING_REVISION" != "$REVISION" ]; then
+    INDEX_REVISION=$("$REVISION_HELPER" --index "$REPO" 2>/dev/null || true)
+  fi
   if [ ! -d "$REPO" ] || [ -z "$PACKAGE" ] ||
      { [ "$WORKING_REVISION" != "$REVISION" ] && [ "$INDEX_REVISION" != "$REVISION" ]; }; then
     report_unrecorded "the evidence does not match the current source revision. Re-run the check after the final source edit."

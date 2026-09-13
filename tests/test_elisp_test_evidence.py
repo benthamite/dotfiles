@@ -650,6 +650,34 @@ class TestEvidenceHookTests(unittest.TestCase):
                 self.assertEqual(required.returncode, 0, required.stderr)
                 self.assertEqual(required.stdout, "")
 
+    def test_matching_working_revision_does_not_read_index_blobs(self):
+        # Reading every index blob can exceed the post-tool hook deadline.
+        # A matching working revision already proves the required identity.
+        import shutil
+        real_git = shutil.which("git")
+        fake_bin = self.root / "git-probe"
+        fake_bin.mkdir()
+        index_read = self.root / "index-read"
+        probe = fake_bin / "git"
+        probe.write_text(
+            "#!/usr/bin/env python3\n"
+            "import os, pathlib, sys\n"
+            f"if 'show' in sys.argv[1:]: pathlib.Path({str(index_read)!r}).touch()\n"
+            f"os.execv({real_git!r}, [{real_git!r}] + sys.argv[1:])\n"
+        )
+        probe.chmod(0o755)
+        self.env["PATH"] = str(fake_bin) + os.pathsep + self.env["PATH"]
+        for tool in ("claude", "codex"):
+            with self.subTest(tool=tool):
+                index_read.unlink(missing_ok=True)
+                tracked, required, marker = self.run_hooks(
+                    tool, self.evidence(), f"skip-index-{tool}-{os.getpid()}"
+                )
+                self.assertEqual(tracked.returncode, 0, tracked.stderr)
+                self.assertTrue(marker.exists())
+                self.assertEqual(required.stdout, "")
+                self.assertFalse(index_read.exists())
+
     def test_package_mismatch_blocks_commit(self):
         tracked, required, marker = self.run_hooks(
             "codex", self.evidence("other"), f"mismatch-{os.getpid()}"

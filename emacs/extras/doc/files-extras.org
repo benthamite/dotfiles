@@ -239,8 +239,11 @@ selector.
 Programmatic callers may supply FILENAME and the fourth argument LANGUAGE to use an already validated document language without consulting the selected buffer or prompting. Ebib PDF postprocessing supplies both explicitly. The function returns its OCR process so callers can observe completion without searching unrelated process names.
 
 With a prefix argument, the command forces OCR even if the PDF already
-contains a text layer.  Without the prefix argument, =ocrmypdf= will
-skip files that have already been processed and report accordingly.
+contains a text layer.  Without the prefix argument, =ocrmypdf= skips
+pages with text and adds OCR to image-only pages, including in mixed
+documents.  Normal processing uses PDF output to preserve existing
+text instead of converting the document to PDF/A.  Tagged documents
+with text can therefore complete successfully without forcing OCR.
 
 The process runs asynchronously.  Status messages are displayed as the
 OCR proceeds, with duplicate messages suppressed.  The process filter

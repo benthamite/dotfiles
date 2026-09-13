@@ -337,7 +337,7 @@ The screenshot directory is specified by `files-extras-screenshot-directory'."
 If FILENAME is nil, use the PDF file at point or the file visited
 by the current buffer.  If FORCE is non-nil or called with a prefix
 argument, force OCR even if it has already been performed on the
-file.
+file.  Otherwise, preserve pages with text and OCR only image pages.
 
 Optionally, pass PARAMETERS to `ocrmypdf'.  If so, FORCE and
 FILENAME have no effect.  LANGUAGE, when supplied, is the validated
@@ -360,7 +360,8 @@ Return the OCR process so callers can observe its completion."
 	   (lang (tlon-lookup tlon-languages-properties :iso-639-2 :name language))
 	   (parameters
 	    (or parameters
-		(format (concat (when force "--force-ocr ") "--deskew -l %s \"%2$s\" \"%2$s\"")
+		(format (concat (if force "--force-ocr "
+                          "--skip-text --output-type pdf ") "--deskew -l %s \"%2$s\" \"%2$s\"")
 			lang filename)))
 	   (process (start-process-shell-command
 		     "ocrmypdf" "*ocr-pdf*"

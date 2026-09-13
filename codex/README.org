@@ -660,6 +660,17 @@ create a live-verification obligation. Native nested Bash events that omit
 =workdir= recover it from the matching literal parent call before tracking a
 commit; otherwise the tracker uses the explicit payload context.
 
+The live-verification gate permits literal read-only diagnosis through
+=lib-elisp-diagnostics.py= while retaining every pending check. Supported forms
+include =cat=, numeric =sed -n= ranges and =rg --no-config=. Git requires
+=--no-pager=; index-reading commands (=status=, =ls-files=, =diff=) additionally
+require =--no-optional-locks -c core.fsmonitor=false=. Diff, log and show
+require =--no-ext-diff --no-textconv=. Only closed option forms are accepted;
+required switches cannot be option values or paths after =--=. Shell composition, expansions,
+arbitrary interpreters and mutations remain blocked. Literal nested shell calls
+must each pass the same classification. Denials identify the pending package,
+commit and repository; inspection never supplies verification evidence.
+
 Both evidence trackers must have trusted current definitions in the active
 profile. A modified test tracker is skipped even when the commit guard remains
 trusted. Restore its trust through the native hook settings, then rerun the

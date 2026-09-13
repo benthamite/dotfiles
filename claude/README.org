@@ -754,6 +754,17 @@ Commit inspection with =--dry-run=, status-format options, or help does not
 create a live-verification obligation. Those words in message arguments or
 pathspecs do not exempt an actual commit.
 
+The live-verification gate permits literal read-only diagnosis through
+=lib-elisp-diagnostics.py= while retaining every pending check. Supported forms
+include =cat=, numeric =sed -n= ranges and =rg --no-config=. Git requires
+=--no-pager=; index-reading commands (=status=, =ls-files=, =diff=) additionally
+require =--no-optional-locks -c core.fsmonitor=false=. Diff, log and show
+require =--no-ext-diff --no-textconv=. Only closed option forms are accepted;
+required switches cannot be option values or paths after =--=. Shell composition, expansions,
+arbitrary interpreters and mutations remain blocked. Denials identify the
+pending package, commit and repository. Only successful bound live evidence
+clears the obligation.
+
 The Codex counterparts also depend on native hook trust: a modified test
 tracker can be skipped while the commit guard continues to require its evidence.
 Restore trust for the reviewed tracker definition before rerunning the check.

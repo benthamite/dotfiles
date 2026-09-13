@@ -593,7 +593,14 @@ if codex_shell_tool_p "$TOOL_NAME"; then
     # DAHR matrix routes contain a decimal public record ID. Normalize only
     # that exact authority/routing prefix, retaining the free-form slug and
     # every subsequent path/query/fragment byte for credential detection.
+    # PMLR volume numbers are public routing metadata. Retain article IDs and
+    # all further path/query/fragment content for the ordinary secret checks.
+    # Example: https://proceedings.mlr.press/v139/ecoffet21a.html
+    # This university repository's complete bitstream route names a public
+    # document UUID. Preserve query/fragment content and require its exact host.
     HIGH_ENTROPY=$(echo "$ENTROPY_CONTENT" | \
+      sed -E "s@(^|[[:space:]\"'])https?://ruj\\.uj\\.edu\\.pl/(bitstreams/${MB_UUID}/download|server/api/core/bitstreams/${MB_UUID}/content)([?#[:space:]\"']|$)@\\1https://ruj.uj.edu.pl/\\3@g" | \
+      sed -E "s@(^|[[:space:]\"'])https?://proceedings\\.mlr\\.press/v[0-9]+/@\\1https://proceedings.mlr.press/@g" | \
       sed -E "s@(^|[[:space:]\"'])https?://adp\\.library\\.ucsb\\.edu/index\\.php/matrix/detail/[0-9]+/@\\1https://adp.library.ucsb.edu/@g" | \
       sed -E "s@(^|[[:space:]\"'])https?://musicbrainz\\.org/(ws/2/)?${MB_ENTITY}/${MB_UUID}([?#[:space:]\"']|$)@\\1https://musicbrainz.org/\\4@g" | \
       sed -E 's/0x[a-fA-F0-9]{40}([^a-fA-F0-9]|$)/\1/g' | \

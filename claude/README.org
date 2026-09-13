@@ -675,6 +675,12 @@ remain scanned; URL components never receive filesystem-path exemptions.
 DAHR matrix URLs normalize only the exact public host, fixed route and decimal
 record ID. Their free-form title slug, further path, query and fragment remain
 scanned, as do credential headers and request bodies.
+PMLR proceedings URLs similarly normalize the public host and numeric volume
+route; article identifiers and all additional URL content remain scanned.
+Jagiellonian University repository URLs normalize only the exact
+=ruj.uj.edu.pl/bitstreams/UUID/download= route and the same host's
+=server/api/core/bitstreams/UUID/content= route. Queries, fragments and request
+credentials remain scanned; UUIDs elsewhere receive no exemption.
 Slash structure never grants a filesystem-path exemption. Only positively
 classified literal file operands, including curl =@file= and output files,
 are omitted from the entropy scan. Unknown options and shell forms stay scanned.

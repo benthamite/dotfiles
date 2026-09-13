@@ -108,6 +108,30 @@ class PublicURLScanTests(unittest.TestCase):
                         url + '?token=' + self.TOKEN, url + '#' + self.TOKEN):
             self.assertIsNotNone(scan.finding(f"curl '{changed}'"))
 
+    def test_brown_review_and_jagiellonian_metadata_routes(self):
+        urls = (
+            "https://www.brown.edu/Departments/Philosophy/bears/0301ridg.html",
+            "https://ruj.uj.edu.pl/entities/publication/c32ca7c6-ecdc-49e1-ba7d-e6c10816b5f6",
+        )
+        for url in urls:
+            with self.subTest(url=url):
+                self.assertIsNone(scan.finding(f"curl '{url}'"))
+                host = url.split('/')[2]
+                for changed in (
+                    url.replace(host, host + '.example.org'),
+                    url.replace(host, host + '@example.org'),
+                    url.replace('https://' + host + '/', 'https://' + host + '/private/'),
+                    url.rsplit('/', 1)[0] + '/' + self.TOKEN + '.html',
+                    url + '?token=' + self.TOKEN,
+                    url + '#' + self.TOKEN,
+                    url + '/' + self.TOKEN,
+                ):
+                    self.assertIsNotNone(scan.finding(f"curl '{changed}'"))
+                for option in ('-H', '-d'):
+                    self.assertIsNotNone(scan.finding(f"curl '{url}' {option} '{self.TOKEN}'"))
+        self.assertIsNotNone(scan.finding(f"curl '{urls[0].replace('/bears/', '/private/')}'"))
+        self.assertIsNotNone(scan.finding(f"curl '{urls[1].replace('/publication/', '/account/')}'"))
+
     def test_bibliography_public_routes_keep_payloads(self):
         urls = (
             "https://www.bobbeddor.com/uploads/3/2/0/3/32037343/fallibility_for_expressivists_final.pdf",

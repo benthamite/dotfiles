@@ -641,6 +641,10 @@ JESP’s migrated exact HTTPS host =www.jesp.org= recognizes the complete
 =/pdf/UUID= document route, with no trailing path exemption.
 Kent’s exact HTTPS host =blogs.kent.ac.uk= recognizes only the
 =/futureofnormativity/files/YYYY/MM/= public conference upload prefix.
+Brown’s exact HTTPS host =www.brown.edu= recognizes only the public
+=/Departments/Philosophy/bears/= review prefix. Jagiellonian’s exact HTTPS
+host =ruj.uj.edu.pl= also recognizes complete =/entities/publication/UUID=
+metadata routes.
 Filenames, query strings, fragments and request
 headers/bodies remain scanned; other accounts and lookalike authorities are
 not classified as these public routes.

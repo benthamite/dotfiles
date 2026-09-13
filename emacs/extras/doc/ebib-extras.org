@@ -153,6 +153,10 @@ Once the list is populated, the command ~ebib-extras-rename-next-invalid-file~ p
 :END:
 
 #+findex: ebib-extras-process-entry
+Cross-reference checks inspect fields stored directly in the child entry. Values inherited from the parent are permitted; duplicating parent-level fields in the child is still rejected.
+
+When a language must be selected, the language helper stores and returns the selected language string for subsequent PDF processing.
+
 The command ~ebib-extras-process-entry~ provides a unified workflow for preparing a newly created or imported BibTeX entry. It performs the following steps in sequence:
 
 1. If the entry's key is invalid (does not match ~ebib-extras-valid-key-regexp~), it regenerates the key via ~ebib-generate-autokey~. If the key is already valid, it asks whether to regenerate it anyway.

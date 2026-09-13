@@ -310,6 +310,10 @@ Once the list is populated, the command @code{ebib-extras-rename-next-invalid-fi
 @subsection Processing entries
 
 @findex ebib-extras-process-entry
+Cross-reference checks inspect fields stored directly in the child entry. Values inherited from the parent are permitted; duplicating parent-level fields in the child is still rejected.
+
+When a language must be selected, the language helper stores and returns the selected language string for subsequent PDF processing.
+
 The command @code{ebib-extras-process-entry} provides a unified workflow for preparing a newly created or imported Bib@TeX{} entry. It performs the following steps in sequence:
 
 @enumerate

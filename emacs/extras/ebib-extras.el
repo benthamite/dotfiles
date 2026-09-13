@@ -231,7 +231,7 @@ parent-level fields instead of using `crossref'."
 	  ;; Has crossref: warn about any leftover inherited fields.
 	  (let ((leftover (cl-remove-if-not
 			   (lambda (field)
-			     (ebib-extras-get-field field key))
+			     (ebib-db-get-field-value field key ebib--cur-db 'noerror))
 			   ebib-extras-crossref-inherited-fields)))
 	    (when leftover
 	      (user-error "Entry `%s' has `crossref' but still contains inherited fields: %s"
@@ -239,7 +239,7 @@ parent-level fields instead of using `crossref'."
 	;; No crossref: warn about hardcoded parent fields.
 	(let ((hardcoded (cl-remove-if-not
 			  (lambda (field)
-			    (ebib-extras-get-field field key))
+			    (ebib-db-get-field-value field key ebib--cur-db 'noerror))
 			  ebib-extras-crossref-inherited-fields)))
 	  (when hardcoded
 	    (user-error "Entry `%s' is of type `%s' and should use `crossref' \
@@ -877,7 +877,8 @@ entry again after prompting, before writing its language."
               (progn
                 (ebib-extras--check-processing-entry key db)
                 (ebib-extras-set-field "langid" language))
-            (bibtex-set-field "langid" language))))))
+            (bibtex-set-field "langid" language))
+          language))))
 
 (defconst ebib-extras-library-genesis
   '("Library Genesis"

@@ -319,8 +319,9 @@ local registration separate from clone and publication authorization.
 The =add-bib-entry= workflow stays enabled across sessions and follows
 =zotra-extras-add-entry= with the actual =ebib-extras-process-entry= command.
 It resolves active bibliography state and serializes attachment callbacks.
-It verifies work identity and labels uncertain metadata;
-its opt-in DOI downloader rejects unsafe destinations and unsupported mutations.
+It verifies work identity and labels uncertain metadata. Article PDF downloads
+reuse the existing website downloader; metadata, explicit attachment and entry
+processing stay in Emacs. The skill has no separate downloader or BibTeX writer.
 
 Paired configuration audits allow matching resource deletions within retained
 skills while still rejecting one-sided resource or whole-skill deletions.

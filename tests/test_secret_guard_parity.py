@@ -62,6 +62,19 @@ def decision(output: dict | None) -> str:
 
 
 class SecretGuardParityTests(unittest.TestCase):
+    def test_public_url_diagnostic_is_sanitized(self):
+        token = "Synthetic9Opaque_" * 3
+        encoded = ''.join(f'%{ord(char):02x}' for char in token)
+        url = "https://myweb.sabanciuniv.edu/ozgurkibris/files/2008/10/kibris-sertel-scw06.pdf"
+        for name, guard in GUARDS.items():
+            with self.subTest(guard=name):
+                output = run_guard(guard, f"curl '{url}?token={encoded}'", cwd=self.repo)
+                self.assertEqual(decision(output), "deny")
+                reason = output["hookSpecificOutput"]["permissionDecisionReason"]
+                self.assertIn("URL query: opaque token", reason)
+                self.assertNotIn(token, reason)
+                self.assertNotIn(encoded, reason)
+
     def test_public_sabanci_author_upload_route(self):
         url = "https://myweb.sabanciuniv.edu/ozgurkibris/files/2008/10/kibris-sertel-scw06.pdf"
         command = f"curl -fL '{url}' -o /tmp/kibris-ordinal-screen.pdf"

@@ -76,6 +76,15 @@ and request bodies. Other authors, private routes and lookalike authorities
 receive no exemption. =tests/test_secret_guard_parity.py= checks the actual
 public-PDF command and secret-bearing negative controls across both runtimes.
 
+Public routing is classified by =lib-public-url-scan.py=, whose declarative
+registry covers only verified authority/schema pairs. Only URL operands of
+recognized literal =curl=/=wget= commands receive routing projections;
+unknown command forms retain the conservative opaque-token scan. Headers,
+bodies, filenames and URL tails remain scanned, including bounded percent
+decoding. Denials identify the field and rule without printing suspect bytes.
+This does not exempt every public PDF or replace known-secret checks on the
+original command. =tests/test_public_url_scan.py= pins the parser boundaries.
+
 The GitHub write guard is deny-only. It refuses writes outside the committed
 repository registry, but a matching repository establishes only that boundary;
 the hook emits no explicit allow, including for pull-request merges. Authorized

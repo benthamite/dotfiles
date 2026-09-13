@@ -671,6 +671,15 @@ shell substitutions. Backticks and substitution markers in data without
 standalone Git/commit references no longer fabricate ambiguous commits;
 Git-bearing interpreter source retains conservative scanning. Quoted Git
 commit-message input is excluded before substitution parsing as well.
+Public routing is classified by =lib-public-url-scan.py=, whose declarative
+registry covers only verified authority/schema pairs. Only URL operands of
+recognized literal =curl=/=wget= commands receive routing projections;
+unknown command forms retain the conservative opaque-token scan. Headers,
+bodies, filenames and URL tails remain scanned, including bounded percent
+decoding. Denials identify the field and rule without printing suspect bytes.
+This does not exempt every public PDF or replace known-secret checks on the
+original command. =tests/test_public_url_scan.py= pins the parser boundaries.
+
 The inline-secret scan recognizes public MusicBrainz entity URLs before
 tokenizing their identifiers. Queries, fragments and credential arguments
 remain scanned; URL components never receive filesystem-path exemptions.

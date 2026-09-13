@@ -1,0 +1,84 @@
+"""Public routing classification must not classify request payloads as URLs."""
+import importlib.util
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SOURCE = ROOT / "claude/hooks/lib-public-url-scan.py"
+spec = importlib.util.spec_from_file_location("public_url_scan", SOURCE)
+scan = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(scan)
+
+
+class PublicURLScanTests(unittest.TestCase):
+    URL = "https://myweb.sabanciuniv.edu/ozgurkibris/files/2008/10/kibris-sertel-scw06.pdf"
+    TOKEN = "Synthetic9Opaque_" * 3
+
+    def test_paired_source(self):
+        self.assertEqual(SOURCE.read_bytes(),
+                         (ROOT / "codex/hooks/lib-public-url-scan.py").read_bytes())
+
+    def test_literal_url_operands(self):
+        for command in (f"curl -fL '{self.URL}' -o /tmp/paper.pdf",
+                        f"curl --url='{self.URL}'", f"wget -q '{self.URL}'"):
+            with self.subTest(command=command):
+                self.assertIsNone(scan.finding(command))
+
+    def test_url_in_header_body_or_option_value_is_not_exempt(self):
+        for option in ("-H", "--header", "-d", "--data", "--referer", "--output"):
+            with self.subTest(option=option):
+                self.assertIsNotNone(scan.finding(f"curl {option} '{self.URL}' https://example.org"))
+
+    def test_retained_fields_and_sanitized_labels(self):
+        for suffix, field in (("?token=", "query"), ("#", "fragment"), ("/", "path")):
+            for token in (self.TOKEN, ''.join(f'%{ord(c):02x}' for c in self.TOKEN)):
+                result = scan.finding(f"curl '{self.URL}{suffix}{token}'")
+                self.assertIn(field, result)
+                self.assertNotIn(self.TOKEN, result)
+                self.assertNotIn(token, result)
+        for option, field in (("-H", "header"), ("-d", "body")):
+            self.assertIn(field, scan.finding(f"curl {option} '{self.TOKEN}' '{self.URL}'"))
+
+    def test_url_reconstruction_does_not_add_a_slash(self):
+        # The host suffix plus path is exactly 29 characters, below the rule.
+        url = "https://example.org/" + "a" * 24 + "9"
+        self.assertFalse(scan.opaque(url))
+        self.assertIsNone(scan.finding(f"curl '{url}'"))
+
+    def test_split_path_credential_remains_detected(self):
+        token = '/'.join(["Opaque9Chunk"] * 4)
+        self.assertIsNotNone(scan.finding(f"curl 'https://example.org/{token}'"))
+
+    def test_authority_and_schema_boundaries(self):
+        for url in (self.URL.replace("sabanciuniv.edu", "sabanciuniv.edu.example.org"),
+                    self.URL.replace("sabanciuniv.edu", "sabanciuniv.edu@example.org"),
+                    self.URL.replace("myweb.", self.TOKEN + "@myweb."),
+                    self.URL.replace("/files/", "/private/"),
+                    self.URL.replace("/10/", "/99/"),
+                    self.URL.replace("/ozgurkibris/", "/otherauthor/"),
+                    'https://example.org/?next=' + self.URL):
+            with self.subTest(url=url):
+                self.assertIsNotNone(scan.finding(f"curl '{url}'"))
+
+    def test_unknown_commands_receive_no_exemption(self):
+        for command in (f"curl --unknown '{self.URL}'", f"env curl '{self.URL}'",
+                        f"curl '{self.URL}' > /tmp/output",
+                        f"curl '{self.URL}' $EXTRA", f"curl '{self.URL}"):
+            with self.subTest(command=command):
+                self.assertIsNotNone(scan.finding(command))
+
+    def test_literal_pipeline_and_quoted_payload_boundaries(self):
+        self.assertIsNone(scan.finding(f"sed -n '1,2p' source.py; curl '{self.URL}' | head -c 300"))
+        self.assertIsNone(scan.finding(f"wget -qO- '{self.URL}'"))
+        self.assertIsNotNone(scan.finding(f"curl -d '; curl {self.URL}' https://example.org"))
+        self.assertIsNotNone(scan.finding(f"curl --request ';' -d '{self.TOKEN}' '{self.URL}'"))
+
+    def test_full_identifier_route_retains_extra_bytes(self):
+        url = "https://digital.library.adelaide.edu.au/bitstreams/403aefae-ade4-4d86-98f0-32b0d6b0e62d/download"
+        self.assertIsNone(scan.finding(f"curl '{url}'"))
+        for tail in ("extra", "/", "?token=" + self.TOKEN):
+            self.assertIsNotNone(scan.finding(f"curl '{url}{tail}'"))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -62,6 +62,21 @@ def decision(output: dict | None) -> str:
 
 
 class SecretGuardParityTests(unittest.TestCase):
+    def test_public_uplopen_book_file_route(self):
+        url = "https://uplopen.com/en/books/5477/files/e94dfbc2-8339-49b8-9502-40405278f1aa.pdf"
+        self.assert_both(f"curl --fail --location --max-time 60 --output /tmp/papers/riedener.pdf '{url}'", "allow")
+        token = "Synthetic9Opaque_" * 3
+        for command in (
+            f"curl '{url}?token={token}'", f"curl '{url}#token={token}'",
+            f"curl '{url}' -H 'Authorization: Bearer {token}'", f"curl '{url}' -d '{token}'",
+            f"curl '{url}/{token}'", f"curl '{url}extra'",
+            f"curl '{url.replace('/files/', '/private/')}'",
+            f"curl '{url.replace('uplopen.com', 'uplopen.com.example.org')}'",
+            f"curl '{url.replace('uplopen.com', 'uplopen.com@example.org')}'",
+            f"curl 'https://example.org/?next={url}'",
+        ):
+            self.assert_both(command, "deny")
+
     RUJ_URL = "https://ruj.uj.edu.pl/bitstreams/0a3739bd-8953-4669-a2d2-eea6d0b0926b/download"
 
     def test_public_repository_rest_content_route_and_boundaries(self):

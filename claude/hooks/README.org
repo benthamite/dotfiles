@@ -77,6 +77,13 @@ commands and simple non-expanding =echo=/=printf= documentation remain
 available. The case table is =tests/test_op_policy.py=; the rationale is
 =docs/superpowers/plans/2026-09-02-secret-guard-op-output-policy.md=.
 
+The secret heuristic normalizes the exact public dated-upload prefix at
+=myweb.sabanciuniv.edu/ozgurkibris/files/YYYY/MM/= before testing opaque
+strings. It retains filenames, additional paths, queries, fragments, headers
+and request bodies. Other authors, private routes and lookalike authorities
+receive no exemption. =tests/test_secret_guard_parity.py= checks the actual
+public-PDF command and secret-bearing negative controls across both runtimes.
+
 The GitHub write guard is deny-only. It refuses writes outside the committed
 repository registry, but a matching repository establishes only that boundary;
 the hook emits no explicit allow, including for pull-request merges. Authorized

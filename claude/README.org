@@ -691,6 +691,9 @@ ZNU's exact =files.znu.edu.ua/files/Bibliobooks/InshiNUMBER/NUMBER.pdf= route
 receives the same treatment for its public library identifiers.
 Adelaide's exact =digital.library.adelaide.edu.au/bitstreams/UUID/download=
 route similarly normalizes its public document identifier.
+Sabanci's exact =myweb.sabanciuniv.edu/ozgurkibris/files/YYYY/MM/= HTTPS
+upload prefix is normalized without dropping filenames, request payloads or
+URL tails; other authors and routes remain subject to the original scan.
 HLI's exact =www.happierlivesinstitute.org/wp-content/uploads/YYYY/MM/= prefix
 normalizes public upload routing; filenames and all subsequent URL content stay
 scanned, along with credential headers and request bodies.

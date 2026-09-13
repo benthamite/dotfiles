@@ -600,7 +600,10 @@ if codex_shell_tool_p "$TOOL_NAME"; then
     # document UUID. Preserve query/fragment content and require its exact host.
     # HLI's dated WordPress upload prefix is public routing metadata. Retain
     # the entire filename and every subsequent byte for credential detection.
+    # This author's dated Sabanci upload prefix is public routing metadata.
+    # Keep filenames and all URL tails; other authors/routes remain unclassified.
     HIGH_ENTROPY=$(echo "$ENTROPY_CONTENT" | \
+      sed -E "s@(^|[[:space:]\"'])https://myweb\\.sabanciuniv\\.edu/ozgurkibris/files/[0-9]{4}/(0[1-9]|1[0-2])/@\\1https://myweb.sabanciuniv.edu/@g" | \
       sed -E "s@(^|[[:space:]\"'])https?://www\\.happierlivesinstitute\\.org/wp-content/uploads/[0-9]{4}/(0[1-9]|1[0-2])/@\\1https://www.happierlivesinstitute.org/@g" | \
       sed -E "s@(^|[[:space:]\"'])https?://digital\\.library\\.adelaide\\.edu\\.au/bitstreams/${MB_UUID}/download([?#[:space:]\"']|$)@\\1https://digital.library.adelaide.edu.au/\\2@g" | \
       sed -E "s@(^|[[:space:]\"'])https?://files\\.znu\\.edu\\.ua/files/Bibliobooks/Inshi[0-9]+/[0-9]+\\.pdf([?#[:space:]\"']|$)@\\1https://files.znu.edu.ua/\\2@g" | \

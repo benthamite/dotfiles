@@ -79,6 +79,35 @@ class PublicURLScanTests(unittest.TestCase):
         for tail in ("extra", "/", "?token=" + self.TOKEN):
             self.assertIsNotNone(scan.finding(f"curl '{url}{tail}'"))
 
+    def test_adelaide_rest_bitstream_content(self):
+        url = "https://digital.library.adelaide.edu.au/server/api/core/bitstreams/403aefae-ade4-4d86-98f0-32b0d6b0e62d/content"
+        self.assertIsNone(scan.finding(f"curl --fail --location --max-time 60 '{url}' --output /tmp/paper.pdf"))
+        for changed in (url.replace('/content', '/download'), url + 'extra',
+                        url.replace('adelaide.edu.au', 'adelaide.edu.au.example.org'),
+                        url.replace('adelaide.edu.au', 'adelaide.edu.au@example.org'),
+                        url + '?token=' + self.TOKEN, url + '#' + self.TOKEN):
+            self.assertIsNotNone(scan.finding(f"curl '{changed}'"))
+
+    def test_zora_public_eprint_file_keeps_filename_and_payload(self):
+        url = "https://www.zora.uzh.ch/id/eprint/174318/1/Riedener_constructivism.pdf"
+        self.assertIsNone(scan.finding(f"curl --fail --location --max-time 60 '{url}' --output /tmp/paper.pdf"))
+        for changed in (url.replace('/eprint/', '/private/'),
+                        url.replace('zora.uzh.ch', 'zora.uzh.ch.example.org'),
+                        url.replace('zora.uzh.ch', 'zora.uzh.ch@example.org'),
+                        url.rsplit('/', 1)[0] + '/' + self.TOKEN + '.pdf',
+                        url + '/' + self.TOKEN, url + '?token=' + self.TOKEN,
+                        url + '#' + self.TOKEN):
+            self.assertIsNotNone(scan.finding(f"curl '{changed}'"))
+
+    def test_ergo_public_galley_download(self):
+        url = "https://journals.publishing.umich.edu/ergo/article/7303/galley/4678/download/"
+        self.assertIsNone(scan.finding(f"curl -L --fail --max-time 45 '{url}' --output /tmp/paper.pdf"))
+        for changed in (url.replace('/galley/', '/private/'), url + self.TOKEN,
+                        url.replace('umich.edu', 'umich.edu.example.org'),
+                        url.replace('umich.edu', 'umich.edu@example.org'),
+                        url + '?token=' + self.TOKEN, url + '#' + self.TOKEN):
+            self.assertIsNotNone(scan.finding(f"curl '{changed}'"))
+
 
 if __name__ == "__main__":
     unittest.main()

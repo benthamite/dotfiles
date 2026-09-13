@@ -20,7 +20,9 @@ ENTITY = r"(?:area|artist|collection|event|genre|instrument|label|place|recordin
 ROUTES = (
     ("myweb.sabanciuniv.edu", rf"/ozgurkibris/files/{MONTH}/", False, ("https",)),
     ("www.happierlivesinstitute.org", rf"/wp-content/uploads/{MONTH}/", False, ("http", "https")),
-    ("digital.library.adelaide.edu.au", rf"/bitstreams/{UUID}/download", True, ("http", "https")),
+    ("digital.library.adelaide.edu.au", rf"/(?:bitstreams/{UUID}/download|server/api/core/bitstreams/{UUID}/content)", True, ("http", "https")),
+    ("www.zora.uzh.ch", r"/id/eprint/[0-9]+/[0-9]+/", False, ("https",)),
+    ("journals.publishing.umich.edu", r"/ergo/article/[0-9]+/galley/[0-9]+/download/", True, ("https",)),
     ("files.znu.edu.ua", r"/files/Bibliobooks/Inshi[0-9]+/[0-9]+\.pdf", True, ("http", "https")),
     ("ejpe.org", r"/journal/article/download/[0-9]+/[0-9]+/[0-9]+", True, ("http", "https")),
     ("uplopen.com", rf"/en/books/[0-9]+/files/{UUID}\.pdf", True, ("http", "https")),

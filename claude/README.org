@@ -713,7 +713,12 @@ normalizes public record IDs without exempting extra path or request content.
 ZNU's exact =files.znu.edu.ua/files/Bibliobooks/InshiNUMBER/NUMBER.pdf= route
 receives the same treatment for its public library identifiers.
 Adelaide's exact =digital.library.adelaide.edu.au/bitstreams/UUID/download=
-route similarly normalizes its public document identifier.
+route and its =server/api/core/bitstreams/UUID/content= counterpart normalize
+the public document identifier. ZORA's exact HTTPS host =www.zora.uzh.ch=
+normalizes only =/id/eprint/NUMBER/NUMBER/=; filenames remain scanned.
+Ergo's HTTPS =journals.publishing.umich.edu/ergo/article/NUMBER/galley/NUMBER/download/=
+route normalizes public article and galley IDs. These routes retain query,
+fragment, header and body checks; extra path and spoofed hosts stay scanned.
 Sabanci's exact =myweb.sabanciuniv.edu/ozgurkibris/files/YYYY/MM/= HTTPS
 upload prefix is normalized without dropping filenames, request payloads or
 URL tails; other authors and routes remain subject to the original scan.

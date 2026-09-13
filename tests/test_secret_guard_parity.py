@@ -133,6 +133,26 @@ class SecretGuardParityTests(unittest.TestCase):
         ):
             self.assert_both(command, "deny")
 
+    def test_public_repository_and_ergo_download_routes(self):
+        urls = (
+            "https://digital.library.adelaide.edu.au/server/api/core/bitstreams/403aefae-ade4-4d86-98f0-32b0d6b0e62d/content",
+            "https://www.zora.uzh.ch/id/eprint/174318/1/Riedener_constructivism.pdf",
+            "https://journals.publishing.umich.edu/ergo/article/7303/galley/4678/download/",
+        )
+        token = "Synthetic9Opaque_" * 3
+        for url in urls:
+            command = f"curl --fail --location --max-time 60 '{url}' --output /tmp/paper.pdf"
+            self.assert_both(command, "allow")
+            for unsafe in (
+                f"curl '{url}?token={token}'", f"curl '{url}#token={token}'",
+                f"curl '{url}' -H 'Authorization: Bearer {token}'",
+                f"curl '{url}' -d '{token}'", f"curl 'https://example.org/?next={url}'",
+            ):
+                self.assert_both(unsafe, "deny")
+            content = "text(await tools.exec_command(" + json.dumps({"cmd": command}) + "));"
+            self.assertEqual(decision(run_guard(GUARDS["codex"], content,
+                                               cwd=self.repo, tool="functions.exec")), "allow")
+
     def test_public_znu_bibliobook_route(self):
         url = "http://files.znu.edu.ua/files/Bibliobooks/Inshi71/0051436.pdf"
         self.assert_both(f"curl --fail --location --max-time 60 --output /tmp/papers/riedener.pdf {url}", "allow")

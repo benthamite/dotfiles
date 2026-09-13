@@ -150,27 +150,29 @@ or prompt the user for a file."
 (declare-function bibtex-extras-get-key "bibtex-extras")
 (declare-function ebib-extras-get-field "ebib-extras")
 ;;;###autoload
-(defun eww-extras-url-to-file (type &optional url callback key)
+(defun eww-extras-url-to-file (type &optional url callback key error-callback output-path)
   "Generate file of TYPE for URL and run CALLBACK function.
 CALLBACK is a function called when the process concludes.  The
 function takes two arguments: the file to attach and the BibTeX
 key of the entry from which this function was called, if any.
 KEY is an optional BibTeX key; when non-nil it is used as the
 filename stem and passed to the callback sentinel, bypassing the
-buffer-derived lookup."
+buffer-derived lookup.  ERROR-CALLBACK, when supplied, receives a failure
+message instead of signaling from the process sentinel.  OUTPUT-PATH, when
+supplied, selects an operation-owned destination instead of KEY.TYPE."
   (let* ((url (simple-extras-get-url url))
          (bibtex-key (or key
                          (pcase major-mode
                            ('bibtex-mode (bibtex-extras-get-key))
                            ((or 'ebib-entry-mode 'ebib-index-mode)
                             (ebib-extras-get-field "=key=")))))
-         (title (pcase major-mode
+         (title (or bibtex-key (pcase major-mode
                   ((or 'bibtex-mode 'ebib-entry-mode 'ebib-index-mode) bibtex-key)
                   (_ (pcase type
                        ("pdf" (buffer-name))
-                       ("html" (simple-extras-slugify (org-web-tools-extras-org-title-for-url url)))))))
+                       ("html" (simple-extras-slugify (org-web-tools-extras-org-title-for-url url))))))))
          (file-name (file-name-with-extension title type))
-         (output-file (file-name-concat paths-dir-downloads file-name))
+         (output-file (or output-path (file-name-concat paths-dir-downloads file-name)))
 	 (process-buffer
 	  (generate-new-buffer (format " *eww-extras download %s*" type)))
 	 (process (make-process
@@ -181,20 +183,24 @@ buffer-derived lookup."
     (message "Getting %s file…" type)
     (set-process-sentinel process
 			  (eww-extras-url-to-file-sentinel
-			   callback output-file bibtex-key process-buffer))))
+			   callback output-file bibtex-key process-buffer error-callback))))
 
 (defun eww-extras-url-to-file-sentinel
-    (callback output-file bibtex-key &optional process-buffer)
+    (callback output-file bibtex-key &optional process-buffer error-callback)
   "Create a process sentinel for URL-to-file operations.
 
 CALLBACK is a function to be called upon successful file download.
 OUTPUT-FILE is the path of the file being downloaded.
 BIBTEX-KEY is the BibTeX key associated with the download, if any.
 PROCESS-BUFFER is the private diagnostics buffer for this render.
+ERROR-CALLBACK receives a terminal failure message when supplied.
 
 The returned sentinel function takes two arguments:
 PROC, the process object, and EVENT, a string describing the process status."
-  (lambda (proc event)
+  (let ((finished nil))
+    (lambda (proc event)
+      (when (and (not finished) (memq (process-status proc) '(exit signal)))
+        (setq finished t)
     (let* ((exit-status (process-exit-status proc))
            (file-ok (and (file-exists-p output-file)
                          (file-regular-p output-file)
@@ -209,13 +215,15 @@ PROC, the process object, and EVENT, a string describing the process status."
            ((and (eq exit-status 0) file-ok)
             (eww-extras-run-callback callback output-file bibtex-key))
            ((eq exit-status 0)
-            (user-error "Process exited successfully but %s is empty or missing"
-                        (file-name-nondirectory output-file)))
+            (let ((msg (format "Process exited successfully but %s is empty or missing"
+                               (file-name-nondirectory output-file))))
+              (if error-callback (funcall error-callback msg) (user-error "%s" msg))))
            (t
-            (user-error "Could not get file (status %s): %s"
-                        exit-status (or diagnostic event))))
+            (let ((msg (format "Could not get file (status %s): %s"
+                               exit-status (or diagnostic event))))
+              (if error-callback (funcall error-callback msg) (user-error "%s" msg)))))
         (when (buffer-live-p process-buffer)
-          (kill-buffer process-buffer))))))
+          (kill-buffer process-buffer))))))))
 
 (defun eww-extras-url-to-file-make-command (url output-file type)
   "Make command to generate OUTPUT-FILE of TYPE from URL."

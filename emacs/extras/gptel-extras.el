@@ -1124,37 +1124,6 @@ argument."
     (ebib-save-current-database t)
     db))
 
-(defun gptel-extras--bib-confirm (prompt &rest _args)
-  "Answer the known bibliography confirmation PROMPT or stop."
-  (if (member prompt '("Regenerate key? "
-                       "No results match configured file types. Try all supported types? "))
-      nil
-    (user-error "Bibliography confirmation needs review: %s" prompt)))
-
-(defun gptel-extras--bib-read-string (prompt &optional initial &rest _args)
-  "Use INITIAL for the known identifier PROMPT or stop."
-  (if (and (equal prompt "Search string: ")
-           (stringp initial) (not (string-empty-p initial)))
-      initial
-    (user-error "Bibliography input needs review: %s" prompt)))
-
-(defun gptel-extras--bib-completing-read
-    (prompt collection &optional predicate _require-match initial _history default
-            &rest _args)
-  "Resolve an unambiguous bibliography PROMPT from COLLECTION.
-Apply PREDICATE.  For the language prompt, honor a valid INITIAL or DEFAULT."
-  (unless (member prompt '("Select language: " "Select a link: "))
-    (user-error "Bibliography selection needs review: %s" prompt))
-  (let* ((candidates (all-completions "" collection predicate))
-         (preferred (or initial (if (listp default) (car default) default))))
-    (cond ((and (equal prompt "Select language: ")
-                (member preferred candidates))
-           preferred)
-          ((and (equal prompt "Select a link: ") (= (length candidates) 1))
-           (car candidates))
-          (t (user-error "Bibliography selection needs review: %s Candidates: %S"
-                         prompt candidates)))))
-
 (defun gptel-extras--bib-files-for-key (key &optional db)
   "Return existing attachment files for bibliography entry KEY in DB.
 Use the current Ebib database when DB is nil."
@@ -1165,107 +1134,61 @@ Use the current Ebib database when DB is nil."
                             (expand-file-name (string-trim file)))
                           (ebib--split-files file-field))))))
 
-(defun gptel-extras--bib-attachment-process-live-p ()
-  "Return non-nil when known bibliography attachment processes are live."
-  (seq-some (lambda (process)
-              (and (process-live-p process)
-                   (string-match-p
-                    "\\`\\(?:url-to-\\|eww\\|url-retrieve\\)"
-                    (process-name process))))
-            (process-list)))
+(defun gptel-extras--wait-for-bib-attachments (key timeout &optional db operation)
+  "Wait TIMEOUT seconds for OPERATION's own tasks for KEY in DB.
+An existing file does not imply that its pending callbacks have completed."
+  (let ((deadline (+ (float-time) timeout)))
+    (while (and operation
+                (> (ebib-extras-operation-pending operation) 0)
+                (< (float-time) deadline))
+      (accept-process-output nil (min 1 (max 0 (- deadline (float-time))))))
+  (gptel-extras--bib-files-for-key key db)))
 
-(defun gptel-extras--wait-for-bib-attachments (key timeout &optional db)
-  "Wait up to TIMEOUT seconds for asynchronous attachments for KEY in DB.
-Use the current Ebib database when DB is nil."
-  (let ((deadline (+ (float-time) timeout))
-        files)
-    (while (and (< (float-time) deadline)
-                (or (gptel-extras--bib-attachment-process-live-p)
-                    (null files)))
-      (accept-process-output nil 1)
-      (setq files (gptel-extras--bib-files-for-key key db)))
-    (or files (gptel-extras--bib-files-for-key key db))))
-
-(defun gptel-extras--process-bib-entry-headless (&optional timeout key db)
-  "Process KEY in DB without prompting and return its attachment status.
-KEY and DB default to the selected entry and database.  Refuse a different
-selection.  TIMEOUT bounds attachment waiting after prompts are restored."
-  (let ((timeout (or timeout gptel-extras-bib-entry-process-timeout))
-        (db (or db ebib--cur-db))
-        (key (or key (ebib--get-key-at-point))))
-    (ebib-extras--check-processing-entry key db)
-    (unwind-protect
-        (setq key (gptel-extras--call-bib-processing key db))
-      (let ((ebib--cur-db db))
-        (ebib-save-current-database t)))
-    (let ((files (gptel-extras--wait-for-bib-attachments key timeout db)))
-      (let ((ebib--cur-db db))
-        (ebib-save-current-database t))
-      (list :key key
-            :bibfile (ebib-db-get-filename db)
-            :files files
-            :file-count (length files)
-            :pending-key ebib-extras--annas-archive-pending-key
+(defun gptel-extras--process-bib-entry-headless (&optional timeout key db operation)
+  "Process KEY in DB without prompts and report OPERATION's actual status.
+TIMEOUT bounds waiting for this operation's asynchronous tasks.  An existing
+OPERATION can include a staged attachment started before entry processing."
+  (let* ((timeout (or timeout gptel-extras-bib-entry-process-timeout))
+         (db (or db ebib--cur-db))
+         (key (or key (ebib--get-key-at-point)))
+         (operation (or operation (ebib-extras-make-operation key db t)))
+         started)
+    (unless (and (equal key (ebib-extras-operation-key operation))
+                 (eq db (ebib-extras-operation-db operation))
+                 (ebib-extras-operation-noninteractive-p operation))
+      (user-error "Headless operation does not match the explicit target"))
+    (condition-case err
+        (progn
+          (ebib-extras--operation-start operation)
+          (setq started t)
+          (setq key (gptel-extras--call-bib-processing key db operation))
+          (ebib-extras--operation-check operation)
+          (ebib-extras--operation-finish operation 'complete))
+      ((error quit)
+       (if started
+           (ebib-extras--operation-finish operation 'failed (error-message-string err))
+         (ebib-extras-operation-block operation (error-message-string err)))
+       (when (eq (car err) 'quit) (signal (car err) (cdr err)))))
+    (let ((files (gptel-extras--wait-for-bib-attachments key timeout db operation)))
+      (when (and (null files)
+                 (eq (ebib-extras-operation-status operation) 'complete))
+        (ebib-extras-operation-block operation "No existing attachment file was located"))
+      (list :operation-id (ebib-extras-operation-id operation)
+            :key key :bibfile (ebib-db-get-filename db)
+            :files files :file-count (length files)
+            :status (ebib-extras-operation-status operation)
+            :pending (ebib-extras-operation-pending operation)
+            :errors (reverse (ebib-extras-operation-errors operation))
             :file-field (let ((ebib--cur-db db))
                           (ebib-extras-get-field "file" key))))))
 
-(defun gptel-extras--call-bib-processing (&optional key db)
-  "Process KEY in DB with prompt handlers scoped to bibliography calls.
-KEY and DB default to the selected entry and database."
-  (cl-letf (((symbol-function 'y-or-n-p)
-             (gptel-extras--bib-prompt-handler
-              'y-or-n-p #'gptel-extras--bib-confirm
-              '(ebib-extras-process-entry annas-archive--select-results
-                ebib-extras--af-install-file)))
-            ((symbol-function 'read-string)
-             (gptel-extras--bib-prompt-handler
-              'read-string #'gptel-extras--bib-read-string
-              '(ebib-extras-doi-attach ebib-extras-book-attach)))
-            ((symbol-function 'completing-read)
-             (gptel-extras--bib-prompt-handler
-              'completing-read #'gptel-extras--bib-completing-read
-              '(ebib-extras-get-or-set-language annas-archive--select-result))))
-    (if key
-        (ebib-extras-process-entry key db)
-      (ebib-extras-process-entry))))
-
-(defun gptel-extras--bib-prompt-handler (prompt-function policy callers)
-  "Apply POLICY only to PROMPT-FUNCTION calls owned by bibliography CALLERS.
-Other calls retain the original prompt implementation, including its advice."
-  (let ((original (symbol-function prompt-function))
-        (functions (append callers
-                           (mapcar (lambda (caller)
-                                     (and (fboundp caller)
-                                          (advice--cd*r (symbol-function caller))))
-                                   callers))))
-    (lambda (&rest args)
-      (apply (if (gptel-extras--bib-prompt-owned-p prompt-function functions)
-                 policy
-               original)
-             args))))
-
-(defun gptel-extras--bib-prompt-owned-p (prompt-function callers)
-  "Return non-nil for a direct PROMPT-FUNCTION call from bibliography CALLERS.
-Reject calls reentered through the command loop, debugger, or a timer."
-  (let* ((frames (backtrace-frames))
-         (prompt-frame (seq-find (lambda (frame)
-                                   (eq (nth 1 frame) prompt-function))
-                                 frames))
-         (tail (cdr (memq prompt-frame frames))))
-    (and (memq (nth 1 (seq-find #'car tail)) callers)
-         (catch 'owned
-           (dolist (frame tail)
-             (let ((function (nth 1 frame)))
-               (cond ((eq function 'gptel-extras--call-bib-processing)
-                      (throw 'owned t))
-                     ((memq function '(recursive-edit read-from-minibuffer
-                                       command-execute call-interactively
-                                       funcall-interactively timer-event-handler
-                                       accept-process-output sit-for sleep-for
-                                       read-event read-char read-char-exclusive
-                                       read-key debug debugger))
-                      (throw 'owned nil)))))
-           nil))))
+(defun gptel-extras--call-bib-processing (&optional key db operation)
+  "Process KEY in DB using OPERATION's explicit noninteractive policy.
+No global input function is rebound, including during delayed callbacks."
+  (let* ((db (or db ebib--cur-db))
+         (key (or key (ebib--get-key-at-point)))
+         (operation (or operation (ebib-extras-make-operation key db t))))
+    (ebib-extras-process-entry key db operation)))
 
 (defun gptel-extras-add-bib-entry-and-process (identifier bibfile &optional timeout)
   "Add IDENTIFIER to BIBFILE, run Ebib processing, and return attachment status.
@@ -1284,10 +1207,7 @@ attached files."
       (gptel-extras--process-bib-entry-headless timeout key db))))
 
 (defun gptel-extras--bib-import-preflight (bibfile)
-  "Reject an import into BIBFILE with unsaved or outstanding bibliography work."
-  (when ebib-extras--annas-archive-pending-key
-    (user-error "Reconcile outstanding Anna's Archive work for %s before importing"
-                ebib-extras--annas-archive-pending-key))
+  "Reject an import into BIBFILE with unsaved or conflicting changes."
   (let ((target (file-truename bibfile)))
     (dolist (buffer (buffer-list))
       (when-let* ((file (buffer-file-name buffer))

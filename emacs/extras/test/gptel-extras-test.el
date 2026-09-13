@@ -564,30 +564,6 @@ literal in the pattern."
 
 ;;;; Bibliography entry processing
 
-(ert-deftest gptel-extras-test-bib-prompts-require-known-decisions ()
-  "Do not approve unknown permissions or select arbitrary editions."
-  (should-not (gptel-extras--bib-confirm "Regenerate key? "))
-  (should-error (gptel-extras--bib-confirm "Overwrite existing file? ")
-                :type 'user-error)
-  (should-error (gptel-extras--bib-confirm "Always allow access? ")
-                :type 'user-error)
-  (should (equal (gptel-extras--bib-read-string "Search string: " "10.1/example")
-                 "10.1/example"))
-  (should-error (gptel-extras--bib-read-string "Other input: " "yes")
-                :type 'user-error)
-  (should (equal (gptel-extras--bib-completing-read
-                  "Select a link: " '("Only edition") nil t)
-                 "Only edition"))
-  (should-error (gptel-extras--bib-completing-read
-                 "Select a link: " '("First edition" "Second edition") nil t)
-                :type 'user-error)
-  (should (equal (gptel-extras--bib-completing-read
-                  "Select language: " '("english" "spanish") nil t "english")
-                 "english"))
-  (should (equal (gptel-extras--bib-completing-read
-                  "Select language: " '("english" "spanish") nil t nil nil "spanish")
-                 "spanish")))
-
 (ert-deftest gptel-extras-test-bib-import-preflight-protects-state ()
   "Reject dirty visiting buffers, dirty Ebib databases, and pending downloads."
   (require 'ebib)
@@ -609,119 +585,76 @@ literal in the pattern."
           (should-error (gptel-extras--bib-import-preflight file)
                         :type 'user-error)
           (ebib-db-set-modified nil db)
-          (let ((ebib-extras--annas-archive-pending-key "Prior2020Paper"))
-            (should-error (gptel-extras--bib-import-preflight file)
-                          :type 'user-error)))
+          (gptel-extras--bib-import-preflight file))
       (delete-file file))))
 
-(ert-deftest gptel-extras-test-bib-unknown-prompt-does-not-enumerate ()
-  "Do not enumerate an unrelated command's completion table."
-  (let (enumerated)
-    (should-error
-     (gptel-extras--bib-completing-read
-      "Where is command: " (lambda (&rest _) (setq enumerated t)))
-     :type 'user-error)
-    (should-not enumerated)))
 
-(defun gptel-extras-test--unrelated-prompt ()
-  "Exercise an unrelated command while bibliography processing is active."
-  (completing-read "Where is command: " obarray #'commandp t))
-
-(ert-deftest gptel-extras-test-bib-prompts-preserve-reentrant-input ()
-  "Route unrelated commands and timers through the original prompt handler."
+(ert-deftest gptel-extras-test-headless-input-functions-never-rebound ()
+  "Commands, timers and advice keep their input functions during processing."
   (require 'ebib-extras)
-  (let (direct unrelated interactive-result timer-result prompts timer)
-    (cl-letf (((symbol-function 'completing-read)
-               (lambda (prompt &rest _) (push prompt prompts) 'original))
-              ((symbol-function 'ebib-extras-get-or-set-language)
-               (lambda () (interactive)
-                 (completing-read "Select language: "
-                                           '("english" "spanish") nil t "english")))
-              ((symbol-function 'ebib-extras-process-entry)
-               (lambda ()
-                 (setq direct (ebib-extras-get-or-set-language)
-                       unrelated (gptel-extras-test--unrelated-prompt)
-                       interactive-result
-                       (call-interactively 'ebib-extras-get-or-set-language))
-                 (setq timer
-                       (run-at-time 0 nil
-                                    (lambda ()
-                                      (setq timer-result
-                                            (ebib-extras-get-or-set-language)))))
-                 (accept-process-output nil 0.05))))
-      (unwind-protect
-          (gptel-extras--call-bib-processing)
-        (when timer (cancel-timer timer))))
-    (should (equal direct "english"))
-    (should (eq unrelated 'original))
-    (should (eq interactive-result 'original))
-    (should (eq timer-result 'original))
-    (should (equal (nreverse prompts)
-                   '("Where is command: " "Select language: " "Select language: ")))))
-
-(ert-deftest gptel-extras-test-bib-prompt-callers-survive-compilation-and-advice ()
-  "Recognize direct byte/native compiled callsites, including advised originals."
-  (require 'ebib-extras)
-  (require 'bytecomp)
-  (dolist (compiler (append (list #'identity #'byte-compile)
-                            (when (and (fboundp 'native-comp-available-p)
-                                       (native-comp-available-p))
-                              (list #'native-compile))))
-    (let ((caller (funcall compiler
-                           '(lambda ()
-                             (completing-read "Select language: "
-                                              '("english" "spanish") nil t "english"))))
-          (advice (lambda (original &rest args) (apply original args))))
-      (cl-letf (((symbol-function 'completing-read)
-                 (lambda (&rest _) 'unexpected-original))
-                ((symbol-function 'ebib-extras-get-or-set-language) caller)
-                ((symbol-function 'ebib-extras-process-entry)
-                 (lambda () (ebib-extras-get-or-set-language))))
-        (should (equal (gptel-extras--call-bib-processing) "english"))
-        (unwind-protect
-            (progn
-              (advice-add 'ebib-extras-get-or-set-language :around advice)
-              (should (equal (gptel-extras--call-bib-processing) "english")))
-          (advice-remove 'ebib-extras-get-or-set-language advice))))))
-
-(ert-deftest gptel-extras-test-bib-prompts-preserve-reentrant-process-filter ()
-  "A process filter cannot inherit a suspended bibliography call's prompt policy."
-  (require 'ebib-extras)
-  (let (process filter-result)
-    (cl-letf (((symbol-function 'read-string) (lambda (&rest _) 'original))
-              ((symbol-function 'ebib-extras-doi-attach)
-               (lambda () (read-string "Search string: " "10.1/example")))
-              ((symbol-function 'ebib-extras-process-entry)
-               (lambda ()
-                 (setq process
-                       (make-process
-                        :name "gptel-bib-prompt-fixture" :buffer nil :noquery t
-                        :command '("/bin/sh" "-c" "printf ready")
-                        :filter (lambda (&rest _)
-                                  (setq filter-result (ebib-extras-doi-attach)))))
-                 (accept-process-output process 1))))
-      (unwind-protect
-          (gptel-extras--call-bib-processing)
-        (when (and process (process-live-p process)) (delete-process process))))
-    (should (eq filter-result 'original))))
-
-(ert-deftest gptel-extras-test-bib-prompt-handlers-restore-after-quit ()
-  "Restore every temporary prompt handler after an interrupted bibliography call."
-  (let* ((symbols '(y-or-n-p read-string completing-read yes-or-no-p read-answer))
-         (originals (mapcar #'symbol-function symbols))
-         interrupted)
+  (let* ((db (ebib-db-new-database))
+         (ebib--databases (list db))
+         (key "Author2020Paper")
+         (ebib--cur-db db)
+         (original-read (symbol-function 'completing-read))
+         (original-confirm (symbol-function 'y-or-n-p))
+         timer observed)
+    (ebib-db-set-entry key '(("title" . "Paper")) db)
     (cl-letf (((symbol-function 'ebib-extras-process-entry)
-               (lambda () (signal 'quit nil))))
-      (condition-case nil
-          (gptel-extras--call-bib-processing)
-        (quit (setq interrupted t))))
-    (should interrupted)
-    (should (equal (mapcar #'symbol-function symbols) originals))))
+               (lambda (_key _db operation)
+                 (should (ebib-extras-operation-noninteractive-p operation))
+                 (should (eq original-read (symbol-function 'completing-read)))
+                 (should (eq original-confirm (symbol-function 'y-or-n-p)))
+                 (setq timer (run-at-time 0 nil
+                                         (lambda ()
+                                           (setq observed (eq original-read
+                                                              (symbol-function 'completing-read))))))
+                 (accept-process-output nil 0.05)
+                 key)))
+      (unwind-protect (gptel-extras--call-bib-processing key db)
+        (when timer (cancel-timer timer))))
+    (should observed)
+    (should (eq original-read (symbol-function 'completing-read)))))
+
+(ert-deftest gptel-extras-test-headless-quit-keeps-original-input-functions ()
+  "Quitting an operation leaves all user input functions unchanged."
+  (require 'ebib-extras)
+  (let* ((db (ebib-db-new-database))
+         (ebib--databases (list db))
+         (key "Author2020Paper")
+         (originals (mapcar #'symbol-function '(y-or-n-p read-string completing-read))))
+    (ebib-db-set-entry key '(("title" . "Paper")) db)
+    (let ((operation (ebib-extras-make-operation key db t)))
+      (cl-letf (((symbol-function 'ebib-extras-process-entry)
+                 (lambda (&rest _) (signal 'quit nil))))
+        (condition-case nil
+            (gptel-extras--process-bib-entry-headless 0 key db operation)
+          (quit nil)))
+      (should (zerop (ebib-extras-operation-pending operation)))
+      (should (eq (ebib-extras-operation-status operation) 'blocked)))
+    (should (equal originals (mapcar #'symbol-function '(y-or-n-p read-string completing-read))))))
+
+(ert-deftest gptel-extras-test-existing-file-does-not-complete-pending-operation ()
+  "An existing PDF cannot make an unfinished callback appear complete."
+  (require 'ebib-extras)
+  (let* ((db (ebib-db-new-database))
+         (ebib--databases (list db))
+         (key "Author2020Paper") operation)
+    (ebib-db-set-entry key '(("title" . "Paper")) db)
+    (setq operation (ebib-extras-make-operation key db t))
+    (ebib-extras--operation-start operation)
+    (cl-letf (((symbol-function 'gptel-extras--bib-files-for-key)
+               (lambda (&rest _) '("/tmp/already-attached.pdf"))))
+      (should (equal (gptel-extras--wait-for-bib-attachments key 0 db operation)
+                     '("/tmp/already-attached.pdf")))
+      (should (eq (ebib-extras-operation-status operation) 'pending))
+      (should (= (ebib-extras-operation-pending operation) 1)))))
 
 (ert-deftest gptel-extras-test-bib-processing-uses-manual-key-validation ()
   "Regenerate keys rejected by Ebib and persist even without an attachment."
   (require 'ebib-extras)
   (let* ((db (ebib-db-new-database))
+         (ebib--databases (list db))
          (ebib--cur-db db)
          (ebib-extras--annas-archive-pending-key nil)
          (key "a1b")
@@ -735,7 +668,7 @@ literal in the pattern."
                  (ebib-db-set-current-entry-key key db)))
               ((symbol-function 'ebib-extras-get-or-set-language) #'ignore)
               ((symbol-function 'ebib-extras-attach-files)
-               (lambda (entry-key) (setq attached entry-key)))
+               (lambda (entry-key &rest _) (setq attached entry-key)))
               ((symbol-function 'ebib-extras-check-crossref) #'ignore)
               ((symbol-function 'ebib-save-current-database)
                (lambda (&rest _) (push key saved)))
@@ -752,6 +685,7 @@ literal in the pattern."
   "Report the processed entry even when the database caches an unrelated key."
   (require 'ebib-extras)
   (let* ((db (ebib-db-new-database))
+         (ebib--databases (list db))
          (ebib--cur-db db)
          (key "Cotton-Barratt2020StatisticalNormalizationMethods")
          (other "Gilroy2007MichaelClayton")
@@ -764,11 +698,11 @@ literal in the pattern."
     (cl-letf (((symbol-function 'ebib--get-key-at-point) (lambda () key))
               ((symbol-function 'ebib-extras-get-or-set-language) #'ignore)
               ((symbol-function 'ebib-extras-attach-files)
-               (lambda (actual) (setq attached actual)))
+               (lambda (actual &rest _) (setq attached actual)))
               ((symbol-function 'ebib-extras-check-crossref) #'ignore)
               ((symbol-function 'ebib-save-current-database) #'ignore)
               ((symbol-function 'gptel-extras--wait-for-bib-attachments)
-               (lambda (actual _timeout actual-db)
+               (lambda (actual _timeout actual-db &rest _)
                  (setq waited (list actual actual-db))
                  '("/tmp/intended.pdf")))
               ((symbol-function 'ebib-extras-get-field) (lambda (&rest _) nil)))
@@ -779,11 +713,12 @@ literal in the pattern."
         (should (equal waited (list key db)))
         (should (equal (ebib-db-get-entry other db) '(("title" . "Film"))))))))
 
-(ert-deftest gptel-extras-test-bib-processing-stops-on-selection-change ()
-  "Stop after a yielding phase changes the selected entry or database."
+(ert-deftest gptel-extras-test-bib-processing-retains-target-on-selection-change ()
+  "Continue in the explicit target after user selection changes."
   (require 'ebib-extras)
   (dolist (switch-database '(nil t))
     (let* ((db (ebib-db-new-database))
+         (ebib--databases (list db))
            (other-db (ebib-db-new-database))
            (ebib--cur-db db)
            (target "Author2020Paper")
@@ -796,26 +731,27 @@ literal in the pattern."
       (cl-letf (((symbol-function 'ebib--get-key-at-point) (lambda () point-key))
                 ((symbol-function 'ebib-extras-get-or-set-language) #'ignore)
                 ((symbol-function 'ebib-extras-attach-files)
-                 (lambda (_key)
+                 (lambda (_key &rest _)
                    (if switch-database
                        (setq ebib--cur-db other-db)
                      (setq point-key "Other2020Paper"))))
                 ((symbol-function 'ebib-extras-check-crossref)
-                 (lambda (&rest _) (setq crossref t)))
+                 (lambda (&rest _) (setq crossref (eq ebib--cur-db db))))
                 ((symbol-function 'ebib-save-current-database)
                  (lambda (&rest _) (push ebib--cur-db saved)))
                 ((symbol-function 'gptel-extras--wait-for-bib-attachments)
-                 (lambda (&rest _) (setq waited t))))
-        (should-error (gptel-extras--process-bib-entry-headless 0 target db)
-                      :type 'user-error)
-        (should-not crossref)
-        (should-not waited)
-        (should (equal saved (list db)))))))
+                 (lambda (&rest _) (setq waited t) (list "/tmp/owned.pdf"))))
+        (should (eq (plist-get (gptel-extras--process-bib-entry-headless 0 target db)
+                               :status) 'complete))
+        (should crossref)
+        (should waited)
+        (should-not saved)))))
 
 (ert-deftest gptel-extras-test-bib-language-rechecks-selection-before-writing ()
   "Changing selection during language input must not write another entry."
   (require 'ebib-extras)
   (let* ((db (ebib-db-new-database))
+         (ebib--databases (list db))
          (ebib--cur-db db)
          (key "Author2020Paper")
          (tlon-languages-properties nil)
@@ -841,6 +777,7 @@ literal in the pattern."
   (require 'ebib-extras)
   (dolist (mode '(bibtex-mode pdf-view-mode))
     (let* ((db (ebib-db-new-database))
+         (ebib--databases (list db))
            (ebib--cur-db db)
            (key "Author2020Paper")
            (tlon-languages-properties nil)
@@ -867,6 +804,7 @@ literal in the pattern."
   "Opening a PDF without changing the selected entry permits completion."
   (require 'ebib-extras)
   (let* ((db (ebib-db-new-database))
+         (ebib--databases (list db))
          (ebib--cur-db db)
          (key "Author2020Paper")
          checked)
@@ -876,7 +814,7 @@ literal in the pattern."
                 ((symbol-function 'y-or-n-p) (lambda (&rest _) nil))
                 ((symbol-function 'ebib-extras-get-or-set-language) #'ignore)
                 ((symbol-function 'ebib-extras-attach-files)
-                 (lambda (_key) (setq major-mode 'pdf-view-mode)))
+                 (lambda (_key &rest _) (setq major-mode 'pdf-view-mode)))
                 ((symbol-function 'ebib-extras-check-crossref)
                  (lambda (actual) (setq checked actual))))
         (should (equal (ebib-extras-process-entry key db) key))

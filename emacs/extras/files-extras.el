@@ -341,7 +341,8 @@ file.
 
 Optionally, pass PARAMETERS to `ocrmypdf'.  If so, FORCE and
 FILENAME have no effect.  LANGUAGE, when supplied, is the validated
-language name to use instead of selecting it from the current buffer."
+language name to use instead of selecting it from the current buffer.
+Return the OCR process so callers can observe its completion."
   (interactive "P")
   (unless (executable-find "ocrmypdf")
     (user-error "`ocrmypdf' not found.  Please install it (e.g. `brew install ocrmypdf'"))
@@ -365,7 +366,8 @@ language name to use instead of selecting it from the current buffer."
 		     "ocrmypdf" "*ocr-pdf*"
 		     (concat "ocrmypdf " parameters))))
       (message "OCR process started for %s" filename)
-      (set-process-filter process 'files-extras-ocr-pdf-process-filter))))
+      (set-process-filter process 'files-extras-ocr-pdf-process-filter)
+      process)))
 
 (defvar-local files-extras-ocr-messages nil
   "Stores all OCR messages that have been displayed.")

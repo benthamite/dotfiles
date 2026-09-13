@@ -244,6 +244,8 @@ player.
 :END:
 
 #+findex: eww-extras-url-to-file
+An explicit KEY determines the output stem independently of the selected buffer. Optional OUTPUT-PATH permits a unique staging file for each operation, including simultaneous requests for the same key in different databases. Optional ERROR-CALLBACK receives terminal failures; without it, the sentinel retains its existing error behavior. Stop and continuation events do not complete the conversion, and each terminal callback runs once.
+
 #+findex: eww-extras-url-to-file-make-command
 #+findex: eww-extras-url-to-file-sentinel
 #+findex: eww-extras-run-callback

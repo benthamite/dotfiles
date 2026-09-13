@@ -105,7 +105,7 @@ If no file with the requested extension is found, all of these commands signal a
 
 #+findex: ebib-extras-attach-file
 #+findex: ebib-extras-attach-most-recent-file
-The command ~ebib-extras-attach-file~ is the primary way to attach a file to a BibTeX entry. It accepts three optional arguments: FILE, KEY, and POSTPROCESS. When called interactively, KEY defaults to the entry at point and POSTPROCESS is non-nil. The FILE argument determines where the source file comes from:
+The command ~ebib-extras-attach-file~ accepts optional FILE, KEY, POSTPROCESS, DB and OPERATION arguments. When called interactively, KEY defaults to the entry at point and POSTPROCESS is non-nil. The FILE argument determines where the source file comes from:
 
 - If FILE is ~nil~ (the default when called interactively without a prefix argument), the user is prompted to select a file, with completion over the downloads, PDF library, HTML library, and media library directories.
 - If FILE is the symbol ~most-recent~ (activated by calling with a prefix argument, =C-u=), the newest file in the downloads directory is used automatically.
@@ -113,7 +113,14 @@ The command ~ebib-extras-attach-file~ is the primary way to attach a file to a B
 
 The file is renamed to =KEY.EXT= and moved to the appropriate library directory based on its extension ([[#h:file-retrieval][File retrieval]]). The entry's =file= field is then updated. The command also calls ~ebib-extras-set-abstract~ to populate the abstract if it is empty ([[#h:entry-processing][Entry processing and field manipulation]]). When POSTPROCESS is non-nil and the attached file is a PDF, the command additionally writes PDF metadata ([[#h:pdf-metadata][PDF metadata]]), performs OCR, and opens the file.
 
-The behavior when a file with the same name already exists at the destination is controlled by ~ebib-extras-attach-existing-file-action~ ([[#h:ebib-extras-attach-existing-file-action][~ebib-extras-attach-existing-file-action~]]).
+For ordinary interactive calls, destination collisions follow ~ebib-extras-attach-existing-file-action~ ([[#h:ebib-extras-attach-existing-file-action][~ebib-extras-attach-existing-file-action~]]). Explicit noninteractive operations refuse to replace a different existing file.
+
+#+findex: ebib-extras-make-operation
+#+findex: ebib-extras-operation-status-for-id
+#+findex: ebib-extras-operation-block
+Programmatic callers create an operation with ~(ebib-extras-make-operation KEY DB t)~ and supply it to attachment and processing. The final ~t~ prohibits prompts. Supply and save the verified language before starting. Each operation retains the original entry and database, counts only its own download, abstract and OCR tasks, and reports ~complete~, ~pending~ or ~blocked~. Query a returned operation ID with ~ebib-extras-operation-status-for-id~. Navigation cannot redirect callbacks; a closed or replaced target, unsaved user edits or conflicting destination blocks further writes.
+
+Integration code can record a blocked result with ~ebib-extras-operation-block~, supplying the operation and a diagnostic string. This records the failure without changing the number of outstanding tasks; their callbacks must still finish normally.
 
 The convenience command ~ebib-extras-attach-most-recent-file~ calls ~ebib-extras-attach-file~ with the ~most-recent~ symbol, attaching the newest file from the downloads directory and post-processing it. This is useful after downloading a file from a browser.
 
@@ -163,7 +170,7 @@ The command ~ebib-extras-process-entry~ provides a unified workflow for preparin
 2. It sets or confirms the entry's language by calling ~ebib-extras-get-or-set-language~ ([[#h:language-handling][Language handling]]).
 3. It calls ~ebib-extras-attach-files~ to download and attach the appropriate files based on available identifiers ([[#h:downloading][Downloading and attaching from external sources]]).
 
-This command assumes that the entry's type, author, date, and title fields are already correctly set. Programmatic callers can provide the expected key and database as optional arguments. The command checks that they still identify the selected entry before each processing phase and returns the final key, including a regenerated key. If a prompt or attachment operation changes the selected entry or database, processing stops before continuing with a different entry. Language input also checks the selection before writing its result. Opening the attached PDF in another buffer does not by itself change the processing entry.
+This command assumes that type, author, date and title are already correct. Optional KEY and DB identify the target; an optional OPERATION carries its asynchronous state and noninteractive policy. Interactive calls retain selection checks and prompts. Explicit operations retain the original entry across user navigation and return its final key, including a regenerated key.
 
 In the Ebib entry buffer, =RET= edits the field at point.  In the Ebib index buffer, =RET= opens the selected entry for editing.  These bindings accept the keyboard Return event as well as the graphical Return event that =ebib= binds by default.
 
@@ -303,7 +310,7 @@ The command ~ebib-extras-attach-files~ is a DWIM command that tries to download 
 
 #+findex: ebib-extras-doi-attach
 #+findex: ebib-extras-book-attach
-The command ~ebib-extras-doi-attach~ downloads a PDF using the entry's DOI via ~annas-archive-download~. It prompts for the search string pre-filled with the DOI, so the identifier can be confirmed or edited before searching. Both commands install a single named handler, ~ebib-extras--annas-archive-attach~, on ~annas-archive-post-download-hook~; the handler removes itself when it runs, and reinstalling it is idempotent, so aborted searches never leave stale handlers that would fire on a later download.
+The command ~ebib-extras-doi-attach~ downloads using the entry's DOI. Interactive calls allow editing the search string. Every download receives its own callback carrying the original DB and entry; a later unrelated download cannot redirect it. Noninteractive operations use the captured identifier and report ambiguous results or browser-only downloads for review.
 
 The command ~ebib-extras-book-attach~ searches for and downloads a book by ISBN or title via ~annas-archive-download~. It prompts the user with a search string pre-filled from the entry's ISBN (if available) or title (for book-like entry types). If the download was initiated externally (not through =eww=), it displays a message asking the user to attach the file manually.
 

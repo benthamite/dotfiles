@@ -70,7 +70,8 @@
     (unwind-protect
         (progn
           (with-temp-file file (insert "pre-existing"))
-          (cl-letf (((symbol-function 'process-exit-status) (lambda (_proc) 1)))
+          (cl-letf (((symbol-function 'process-exit-status) (lambda (_proc) 1))
+                    ((symbol-function 'process-status) (lambda (_proc) 'exit)))
             (should-error
              (funcall (eww-extras-url-to-file-sentinel
                        (lambda (&rest _) (setq called t)) file nil)
@@ -147,6 +148,25 @@
       (let ((eww-data (list :url "https://example.com/page" :source "<p>test</p>")))
         ;; Should not error, should skip eww-readable
         (eww-extras-readable-autoview)))))
+
+(ert-deftest eww-extras-test-sentinel-ignores-nonterminal-and-duplicate-events ()
+  "Stop/continue notifications must not finish an active renderer."
+  (let ((file (make-temp-file "eww-terminal-"))
+        (status 'stop) (calls 0))
+    (unwind-protect
+        (progn
+          (with-temp-file file (insert "rendered"))
+          (cl-letf (((symbol-function 'process-status) (lambda (_) status))
+                    ((symbol-function 'process-exit-status) (lambda (_) 0)))
+            (let ((sentinel (eww-extras-url-to-file-sentinel
+                             (lambda (&rest _) (cl-incf calls)) file "Key")))
+              (funcall sentinel nil "stopped")
+              (should (zerop calls))
+              (setq status 'exit)
+              (funcall sentinel nil "finished")
+              (funcall sentinel nil "duplicate")
+              (should (= calls 1)))))
+      (delete-file file))))
 
 (provide 'eww-extras-test)
 ;;; eww-extras-test.el ends here

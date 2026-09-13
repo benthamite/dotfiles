@@ -143,31 +143,20 @@ first part (if multiple ISBNs are listed) is returned."
                         isbn))
             " ")))))
 
-(defun ebib-extras--update-file-field-contents (key file-name)
-  "Update the `file' field of entry KEY with FILE-NAME.
-This function operates directly on the Ebib database and avoids UI interaction,
-making it suitable for asynchronous callbacks.  If FILE-NAME is already present
-in the field, no change is made.  The database is marked as modified."
-  (let* ((db (catch 'found
-	       (dolist (d ebib--databases)
-		 (when (ebib-db-has-key key d)
-		   (throw 'found d)))
-	       nil))
-	 (field "file"))
-    (unless db
-      (error "Cannot find database containing key %s" key))
-    (let* ((entry (ebib-db-get-entry key db))
-	   (file-field-contents (alist-get field entry nil nil #'string-equal)))
-      (unless (and file-field-contents
-		   (catch 'file-exists
-		     (dolist (file (ebib--split-files file-field-contents))
-		       (when (string= (expand-file-name (string-trim file))
-				      (expand-file-name file-name))
-			 (throw 'file-exists file)))))
-	(ebib-set-field-value field file-name key db ";")
-	(ebib--set-modified t db)
-	(setq ebib--needs-update t)
-	(ebib-extras--save-database db)))))
+(defun ebib-extras--update-file-field-contents (key file-name &optional db)
+  "Add FILE-NAME to KEY's attachment field in explicit DB.
+DB defaults to the current database; never search other databases by key."
+  (let* ((db (or db ebib--cur-db))
+         (value (ebib-unbrace
+                 (ebib-db-get-field-value "file" key db 'noerror)))
+         (files (and value (ebib--split-files value))))
+    (unless (seq-some (lambda (file)
+                        (equal (expand-file-name (string-trim file))
+                               (expand-file-name file-name))) files)
+      (ebib-set-field-value "file" file-name key db ";")
+      (ebib-db-set-modified t db)
+      (setq ebib--needs-update t)
+      (ebib-extras--save-database db))))
 
 (defconst ebib-extras-book-like-entry-types
   (let ((lowercase '("book" "collection" "mvbook" "inbook" "incollection"
@@ -539,35 +528,124 @@ the list.  Call this repeatedly to process all invalid files one by one."
 
 ;;;;; process entries
 
+(cl-defstruct (ebib-extras-operation
+               (:constructor ebib-extras--make-operation))
+  id key db entry noninteractive-p abstract-started (pending 0) (status 'complete) errors)
+
+(defvar ebib-extras--operations (make-hash-table :test #'equal)
+  "Explicit bibliography operations indexed by their opaque IDs.")
+
+(defun ebib-extras-make-operation (key db &optional noninteractive-p)
+  "Capture entry KEY in DB for a bibliography operation.
+NONINTERACTIVE-P prohibits prompts and ambiguous destructive decisions."
+  (let* ((id (symbol-name (gensym "bib-operation-")))
+         (operation (ebib-extras--make-operation
+                     :id id :key key :db db :entry (ebib-db-get-entry key db)
+                     :noninteractive-p noninteractive-p)))
+    (puthash id operation ebib-extras--operations)
+    operation))
+
+(defun ebib-extras-operation-status-for-id (id)
+  "Return compact current status for bibliography operation ID."
+  (let ((operation (or (gethash id ebib-extras--operations)
+                       (user-error "Unknown bibliography operation: %s" id))))
+    (list :operation-id id :key (ebib-extras-operation-key operation)
+          :bibfile (ebib-db-get-filename (ebib-extras-operation-db operation))
+          :status (ebib-extras-operation-status operation)
+          :pending (ebib-extras-operation-pending operation)
+          :errors (reverse (ebib-extras-operation-errors operation)))))
+
+(defun ebib-extras--operation-check (operation &optional owned-write)
+  "Validate OPERATION target and conflicts before mutation.
+OWNED-WRITE permits the known operation write awaiting its immediate save."
+  (unless (memq (ebib-extras-operation-db operation) ebib--databases)
+    (user-error "Bibliography target database was closed"))
+  (unless (eq (ebib-extras-operation-entry operation)
+              (ebib-db-get-entry (ebib-extras-operation-key operation)
+                                 (ebib-extras-operation-db operation) 'noerror))
+    (user-error "Bibliography target was renamed, deleted or replaced"))
+  (when (ebib-extras-operation-noninteractive-p operation)
+    (let* ((db (ebib-extras-operation-db operation))
+           (file (ebib-db-get-filename db))
+           (buffer (and file (find-buffer-visiting file))))
+      (when (and (not owned-write) (ebib-db-modified-p db))
+        (user-error "Bibliography database has unsaved edits"))
+      (when (and buffer (buffer-modified-p buffer))
+        (user-error "Bibliography buffer has unsaved edits"))
+      (when (and file (file-exists-p file) (ebib-db-get-modtime db)
+                 (not (equal (ebib-db-get-modtime db) (ebib--get-file-modtime file))))
+        (user-error "Bibliography file changed externally; reconcile before saving")))))
+
+(defun ebib-extras--operation-start (operation)
+  "Register one pending task in OPERATION."
+  (ebib-extras--operation-check operation)
+  (cl-incf (ebib-extras-operation-pending operation))
+  (unless (eq (ebib-extras-operation-status operation) 'blocked)
+    (setf (ebib-extras-operation-status operation) 'pending)))
+
+(defun ebib-extras--operation-finish (operation status &optional error)
+  "Complete one OPERATION task with STATUS and optional ERROR.
+A blocked operation remains blocked even if its other tasks finish."
+  (cl-decf (ebib-extras-operation-pending operation))
+  (when (memq status '(failed blocked external))
+    (setf (ebib-extras-operation-status operation) 'blocked)
+    (push (or error "Bibliography operation needs review")
+          (ebib-extras-operation-errors operation)))
+  (when (and (zerop (ebib-extras-operation-pending operation))
+             (not (eq (ebib-extras-operation-status operation) 'blocked)))
+    (setf (ebib-extras-operation-status operation) 'complete)))
+
+(defun ebib-extras-operation-block (operation error)
+  "Record ERROR as a blocked OPERATION without changing its task count."
+  (setf (ebib-extras-operation-status operation) 'blocked)
+  (push error (ebib-extras-operation-errors operation)))
+
 (declare-function tlon-deepl-translate-abstract "tlon-deepl")
-(defun ebib-extras-process-entry (&optional key db)
+(defun ebib-extras-process-entry (&optional key db operation)
   "Process entry KEY in DB and return its final key.
 KEY and DB default to the entry at point and current database.  Validate or
 regenerate the key, set the language, attach files, and check crossrefs.
 Stop if selection changes before another processing phase.  The entry's
-other metadata is assumed correct."
+other metadata is assumed correct.  OPERATION retains explicit target and policy."
   (interactive)
   (let* ((key (or key (ebib--get-key-at-point)))
          (db (or db ebib--cur-db))
          (entry (ebib-db-get-entry key db)))
-    (ebib-extras--check-processing-entry key db)
+    (ebib-extras--check-operation-entry key db operation)
     (when (or (not (ebib-extras-key-is-valid-p key))
-              (y-or-n-p "Regenerate key? "))
+              (and (not (and operation (ebib-extras-operation-noninteractive-p operation)))
+                   (y-or-n-p "Regenerate key? ")))
+      (ebib-extras--check-operation-entry key db operation)
       (ebib-extras--check-processing-entry key db)
       (ebib-generate-autokey)
       (let ((new-key (ebib--get-key-at-point)))
         (unless (and (eq ebib--cur-db db)
                      (eq entry (ebib-db-get-entry new-key db 'noerror)))
           (user-error "Ebib selection changed while generating the entry key"))
-        (setq key new-key)))
-    (ebib-extras--check-processing-entry key db)
-    (ebib-extras-get-or-set-language key db)
-    (ebib-extras--check-processing-entry key db)
-    (ebib-extras-attach-files key)
-    (ebib-extras--check-processing-entry key db)
-    (ebib-extras-check-crossref key)
-    (ebib-extras--check-processing-entry key db)
+        (setq key new-key)
+        (when operation
+          (setf (ebib-extras-operation-key operation) key
+                (ebib-extras-operation-entry operation) entry)
+          (ebib-extras--operation-check operation t)
+          (ebib-extras--save-database db))))
+    (ebib-extras--check-operation-entry key db operation)
+    (ebib-extras-get-or-set-language key db operation)
+    (ebib-extras--check-operation-entry key db operation)
+    (ebib-extras-attach-files key db operation)
+    (ebib-extras--check-operation-entry key db operation)
+    (let ((ebib--cur-db db)) (ebib-extras-check-crossref key))
+    (ebib-extras--check-operation-entry key db operation)
     key))
+
+(defun ebib-extras--check-operation-entry (key db operation)
+  "Check KEY and DB against OPERATION, or require the interactive selection."
+  (if operation
+      (progn
+        (unless (and (equal key (ebib-extras-operation-key operation))
+                     (eq db (ebib-extras-operation-db operation)))
+          (user-error "Bibliography operation target does not match"))
+        (ebib-extras--operation-check operation))
+    (ebib-extras--check-processing-entry key db)))
 
 (defun ebib-extras--check-processing-entry (key db)
   "Require that KEY in DB is still the selected entry before processing."
@@ -576,21 +654,52 @@ other metadata is assumed correct."
                (ebib-db-get-entry key db 'noerror))
     (user-error "Ebib selection changed; resume processing entry %s explicitly" key)))
 
-(defun ebib-extras-set-abstract (&optional key db)
-  "Set the abstract for KEY if it's currently empty.
-If KEY or DB is nil, use the current entry's key or database.
-
-Attempt to fetch the abstract using `tlon-get-abstract-with-or-without-ai'."
+(defun ebib-extras-set-abstract (&optional key db operation source-file)
+  "Set an empty abstract for KEY in DB, retaining OPERATION's target.
+Without OPERATION, preserve the existing interactive entry workflow.
+SOURCE-FILE is the already verified attachment to summarize."
   (interactive)
   (let* ((db (or db ebib--cur-db))
          (key (or key (ebib--get-key-at-point)))
          (abstract (ebib-unbrace
                     (ebib-db-get-field-value "abstract" key db 'noerror))))
-    (unless (and (stringp abstract) (not (string-empty-p (string-trim abstract))))
-      (unless (eq db ebib--cur-db)
-        (user-error "Abstract target database is no longer selected"))
-      (ebib-extras-open-key key)
-      (tlon-get-abstract-with-or-without-ai nil t))))
+    (unless (or (and operation (ebib-extras-operation-abstract-started operation))
+                (and (stringp abstract) (not (string-empty-p (string-trim abstract)))))
+      (if operation
+          (let* ((ebib--cur-db db)
+                 (file (or source-file (ebib-extras-get-file-in-string
+                        (ebib-extras-get-field "file" key) "pdf")))
+                 (language (ebib-extras-get-or-set-language key db operation))
+                 (finished nil))
+            (setf (ebib-extras-operation-abstract-started operation) t)
+            (ebib-extras--operation-start operation)
+            (let ((callback
+                   (lambda (status &optional error)
+                     (unless finished
+                       (setq finished t)
+                       (let (cancelled)
+                        (condition-case err
+                           (progn
+                             (when (eq status 'complete)
+                               (ebib-extras--operation-check operation t)
+                               (ebib-extras--save-database db)))
+                          ((error quit)
+                           (setq status 'failed error (error-message-string err)
+                                 cancelled (and (eq (car err) 'quit) err))))
+                        (ebib-extras--operation-finish operation status error)
+                        (when cancelled (signal (car cancelled) (cdr cancelled))))))))
+              (condition-case err
+                  (tlon-get-abstract-with-or-without-ai
+                   nil t (list :key key :db db
+                               :entry (ebib-extras-operation-entry operation)
+                               :file file :language language :callback callback))
+                ((error quit)
+                 (funcall callback 'failed (error-message-string err))
+                 (when (eq (car err) 'quit) (signal (car err) (cdr err)))))))
+        (unless (eq db ebib--cur-db)
+          (user-error "Abstract target database is no longer selected"))
+        (ebib-extras-open-key key)
+        (tlon-get-abstract-with-or-without-ai nil t)))))
 
 ;;;;; attach downloads
 
@@ -598,7 +707,7 @@ Attempt to fetch the abstract using `tlon-get-abstract-with-or-without-ai'."
 (declare-function bibtex-extras-get-key "bibex-extras")
 (declare-function tlon-get-abstract-with-or-without-ai "tlon-ai")
 ;;;###autoload
-(defun ebib-extras-attach-file (&optional file key postprocess)
+(defun ebib-extras-attach-file (&optional file key postprocess db operation)
   "Attach FILE to BibTeX entry KEY and update the \"file\" field.
 When called interactively POSTPROCESS is non-nil so that, if the
 attached file is a PDF, metadata is written, OCR is attempted and
@@ -614,21 +723,41 @@ FILE can be:
 
 KEY defaults to the entry at point.  The file is renamed to
 KEY.EXT, moved to the appropriate library directory and the
-\"file\" field is updated."
+\"file\" field is updated.  DB and OPERATION retain the original target
+and noninteractive policy across callbacks."
   (interactive (list (if current-prefix-arg 'most-recent nil)
                      nil
                      t))
-  (let* ((db ebib--cur-db)
-         (key   (ebib-extras--af-resolve-key key))
-         (src   (ebib-extras--af-resolve-file file key))
-         (dest  (ebib-extras--af-install-file src key)))
-    (ebib-extras--update-file-field-contents key dest)
-    (ebib-extras-set-abstract key db)
-    (when (and postprocess (string= (file-name-extension dest) "pdf"))
-      ;; Dedup before postprocess: postprocess opens the PDF and switches to
-      ;; `pdf-view-mode', after which `ebib--execute-when' in dedup would fail.
-      (ebib-extras-dedup-file-field)
-      (ebib-extras--af-postprocess-pdf key db))))
+  (let* ((db (or db ebib--cur-db))
+         (key (or key (ebib--get-key-at-point)))
+         (operation (or operation (ebib-extras-make-operation key db)))
+         (ebib--cur-db db)
+         started)
+    (condition-case err
+        (progn
+          (ebib-extras--operation-start operation)
+          (setq started t)
+          (ebib-extras-check-valid-key key)
+          (when (ebib-extras-operation-noninteractive-p operation)
+            (unless (stringp file)
+              (user-error "An explicit attachment path is required"))
+            (ebib-extras-get-or-set-language key db operation))
+          (let* ((src (ebib-extras--af-resolve-file file key))
+                 (_checked (ebib-extras--operation-check operation))
+                 (dest (ebib-extras--af-install-file src key operation)))
+            (ebib-extras--operation-check operation)
+            (ebib-extras--update-file-field-contents key dest db)
+            (ebib-extras-set-abstract key db operation dest)
+            (when (and postprocess (equal (file-name-extension dest) "pdf"))
+              (ebib-extras--af-postprocess-pdf key db operation))
+            (ebib-extras--operation-finish operation 'complete)
+            dest))
+      ((error quit)
+       (if started
+           (ebib-extras--operation-finish operation 'failed (error-message-string err))
+         (setf (ebib-extras-operation-status operation) 'blocked)
+         (push (error-message-string err) (ebib-extras-operation-errors operation)))
+       (signal (car err) (cdr err))))))
 
 ;;;; helper functions for `ebib-extras-attach-file'
 
@@ -655,12 +784,18 @@ KEY.EXT, moved to the appropriate library directory and the
          (default (file-name-concat initial key)))
     (read-file-name "File to attach: " initial default)))
 
-(defun ebib-extras--af-install-file (src key)
-  "Move and rename the file at SRC to the appropriate library for KEY."
+(defun ebib-extras--af-install-file (src key &optional operation)
+  "Install SRC for KEY, honoring OPERATION's collision policy."
   (let* ((ext  (file-name-extension src))
          (dest-dir (ebib-extras--extension-directories ext))
          (dest (ebib-extras--rename-and-abbreviate-file dest-dir key ext)))
-    (if (file-regular-p dest)
+    (when (and operation (ebib-extras-operation-noninteractive-p operation)
+               (file-regular-p dest)
+               (not (file-equal-p src dest)))
+      (user-error "Attachment destination already exists: %s" dest))
+    (if (and (file-exists-p src) (file-exists-p dest) (file-equal-p src dest))
+        dest
+      (if (file-regular-p dest)
 	(pcase ebib-extras-attach-existing-file-action
 	  ('nil
 	   (user-error "File %s exists; aborting" (file-name-nondirectory dest)))
@@ -673,13 +808,14 @@ KEY.EXT, moved to the appropriate library directory and the
              (rename-file src dest t))
 	   dest))
       (rename-file src dest t)
-      dest)))
+      dest))))
 
 (defvar pdf-view-mode-hook)
-(defun ebib-extras--af-postprocess-pdf (key &optional db)
+(defun ebib-extras--af-postprocess-pdf (key &optional db operation)
   "Write metadata, OCR and open the PDF attached to KEY.
 Capture the database, PDF and language before metadata processing can yield.
-DB defaults to the selected Ebib database."
+DB defaults to the selected Ebib database; OPERATION retains prompt policy."
+  (when operation (ebib-extras--operation-check operation))
   (let* ((db (or db ebib--cur-db))
          (ebib--cur-db db)
          (files (seq-filter
@@ -688,12 +824,34 @@ DB defaults to the selected Ebib database."
          (file (if (= (length files) 1)
                    (expand-file-name (car files))
                  (user-error "No unique PDF attached to %s" key)))
-         (language (ebib-extras-get-or-set-language key db)))
+         (language (ebib-extras-get-or-set-language key db operation)))
     (ebib-extras-set-pdf-metadata key db)
-    (files-extras-ocr-pdf nil file nil language)
+    (when operation (ebib-extras--operation-check operation))
+    (let ((process (files-extras-ocr-pdf nil file nil language)))
+      (when (and operation (processp process))
+        (ebib-extras--track-ocr-process process operation)))
     ;; A replacement PDF can have fewer pages than its saved view position.
     (let ((pdf-view-mode-hook (remq 'pdf-view-restore-mode-conditionally pdf-view-mode-hook)))
       (find-file file))))
+
+(defun ebib-extras--track-ocr-process (process operation)
+  "Track PROCESS completion as one task in OPERATION."
+  (ebib-extras--operation-start operation)
+  (let ((original (process-sentinel process))
+        (finished nil))
+    (let ((sentinel
+           (lambda (proc event)
+             (when original (funcall original proc event))
+             (when (and (not finished) (memq (process-status proc) '(exit signal)))
+               (setq finished t)
+               (let ((code (process-exit-status proc)))
+                 (ebib-extras--operation-finish
+                  operation (if (and (eq (process-status proc) 'exit)
+                                     (memq code '(0 6))) 'complete 'failed)
+                  (unless (memq code '(0 6)) (format "OCR exited with status %s" code))))))))
+      (set-process-sentinel process sentinel)
+      (when (memq (process-status process) '(exit signal))
+        (funcall sentinel process "finished")))))
 
 (defun ebib-extras-attach-most-recent-file ()
   "Attach the most recent download to the current entry and post-process it."
@@ -703,34 +861,44 @@ DB defaults to the selected Ebib database."
 ;;;;; File attachment
 
 (declare-function eww-extras-url-to-file "eww-extras")
-(defun ebib-extras-url-to-file-attach (type &optional key)
+(defun ebib-extras-url-to-file-attach (type &optional key db operation)
   "Generate a file of TYPE (e.g., \"pdf\", \"html\") from the URL of entry KEY.
 The generated file is then attached to the entry.  If KEY is nil, uses the entry
 at point.  Uses `eww-extras-url-to-file' for generation and
 `ebib-extras-attach-file-to-entry' as a callback for attachment.
 TYPE is a string.  KEY is an optional BibTeX key string."
-  (let ((target-key (or key (ebib--get-key-at-point))))
-    (when-let* ((url (ebib-extras-get-field "url" target-key)))
-      (eww-extras-url-to-file type url
-                              (lambda (file &optional _status)
-                                (ebib-extras-attach-file-to-entry file target-key))
-                              target-key))))
+  (let* ((db (or db ebib--cur-db))
+         (target-key (or key (ebib--get-key-at-point)))
+         (operation (or operation (ebib-extras-make-operation target-key db)))
+         (ebib--cur-db db))
+    (when-let ((url (ebib-extras-get-field "url" target-key)))
+      (let* ((stage (make-temp-file
+                    (expand-file-name (concat target-key "-attachment-") paths-dir-downloads)
+                    nil (concat "." type)))
+             (callback (ebib-extras--attachment-callback operation)))
+        (condition-case err
+            (eww-extras-url-to-file
+             type url (lambda (file &optional status)
+                        (funcall callback (if file 'complete 'failed) file
+                                 (and (not file) (format "URL conversion failed: %s" status))))
+             target-key (lambda (error) (funcall callback 'failed nil error)) stage)
+          (error (funcall callback 'failed nil (error-message-string err))))))))
 
-(defun ebib-extras-url-to-pdf-attach (&optional key)
+(defun ebib-extras-url-to-pdf-attach (&optional key db operation)
   "Generate a PDF from the URL of entry KEY and attach it.
 If KEY is nil, uses the entry at point.  This is a wrapper around
 `ebib-extras-url-to-file-attach' with TYPE \"pdf\".
 KEY is an optional BibTeX key string, passed interactively as nil."
   (interactive (list nil))
-  (ebib-extras-url-to-file-attach "pdf" key))
+  (ebib-extras-url-to-file-attach "pdf" key db operation))
 
-(defun ebib-extras-url-to-html-attach (&optional key)
+(defun ebib-extras-url-to-html-attach (&optional key db operation)
   "Generate an HTML file from the URL of entry KEY and attach it.
 If KEY is nil, uses the entry at point.  This is a wrapper around
 `ebib-extras-url-to-file-attach' with TYPE \"html\".
 KEY is an optional BibTeX key string, passed interactively as nil."
   (interactive (list nil))
-  (ebib-extras-url-to-file-attach "html" key))
+  (ebib-extras-url-to-file-attach "html" key db operation))
 
 (defvar eww-extras-download-subtitles) ; Should be declared if special
 (defun ebib-extras-url-to-srt-attach (&optional key)
@@ -747,7 +915,7 @@ SRT file must be done manually."
       ;; Assuming eww-extras-download-subtitles is a format string taking the URL
       (shell-command (format eww-extras-download-subtitles url)))))
 
-(defun ebib-extras-book-attach (&optional key)
+(defun ebib-extras-book-attach (&optional key db operation)
   "Attempt to download and attach a PDF for the book-type entry with KEY.
 If KEY is nil, uses the entry at point.  It prompts for a search string
 pre-filled with the entry's ISBN or, for book-like types, its title, then
@@ -755,66 +923,71 @@ searches and downloads via `annas-archive-download'.  The downloaded file is
 attached by `ebib-extras--annas-archive-attach'.
 KEY is an optional BibTeX key string, passed interactively as nil."
   (interactive (list nil))
-  (let ((target-key (or key (ebib--get-key-at-point))))
-    (when-let* ((id (read-string "Search string: "
-				 (or (ebib-extras-get-isbn target-key)
-				     (let ((type (ebib-extras-get-field "=type=" target-key)))
-				       (and (member type ebib-extras-book-like-entry-types)
-					    (ebib-extras-get-field "title" target-key)))))))
-      (ebib-extras--annas-archive-download id target-key))))
+  (let* ((db (or db ebib--cur-db))
+         (ebib--cur-db db)
+         (key (or key (ebib--get-key-at-point)))
+         (default (or (ebib-extras-get-isbn key)
+                      (ebib-extras-get-field "title" key)))
+         (id (if (and operation (ebib-extras-operation-noninteractive-p operation))
+                 default
+               (read-string "Search string: " default))))
+    (ebib-extras--annas-archive-download id key db operation)))
 
-(defun ebib-extras-doi-attach (&optional key)
-  "Attempt to download and attach a PDF for the entry with KEY using its DOI.
-If KEY is nil, use the entry at point.  It prompts for a search string
-pre-filled with the DOI, so the identifier can be confirmed or edited, then
-searches and downloads via `annas-archive-download'.  The downloaded file is
-attached by `ebib-extras--annas-archive-attach'."
-  (interactive (list nil))
-  (let ((target-key (or key (ebib--get-key-at-point))))
-    (when-let* ((doi (ebib-extras-get-field "doi" target-key))
-		(id (read-string "Search string: " doi)))
-      (ebib-extras--annas-archive-download id target-key))))
+(defun ebib-extras-doi-attach (&optional key db operation)
+  "Download the DOI for KEY in DB, retaining OPERATION's policy."
+  (interactive)
+  (let* ((db (or db ebib--cur-db))
+         (ebib--cur-db db)
+         (key (or key (ebib--get-key-at-point)))
+         (doi (ebib-extras-get-field "doi" key)))
+    (when doi
+      (ebib-extras--annas-archive-download
+       (if (and operation (ebib-extras-operation-noninteractive-p operation))
+           doi
+         (read-string "Search string: " doi))
+       key db operation))))
 
 (defvar ebib-extras--annas-archive-pending-key nil
-  "BibTeX key awaiting the next Anna's Archive download, or nil.")
+  "Legacy pending-key display; attachment ownership uses explicit operations.")
 
-(defun ebib-extras--annas-archive-download (id key)
-  "Download ID from Anna's Archive and attach the result to entry KEY.
-ID is the search string.  KEY is the BibTeX key.  A single named handler is
-installed on `annas-archive-post-download-hook', so repeated or aborted calls
-never accumulate handlers; only the most recent KEY is attached."
-  (setq ebib-extras--annas-archive-pending-key key)
-  (add-hook 'annas-archive-post-download-hook #'ebib-extras--annas-archive-attach)
-  (annas-archive-download id))
+(defun ebib-extras--annas-archive-download (id key &optional db operation)
+  "Download ID for KEY in DB with OPERATION's explicit callback and policy."
+  (let* ((db (or db ebib--cur-db))
+         (operation (or operation (ebib-extras-make-operation key db)))
+         (callback (ebib-extras--attachment-callback operation)))
+    (condition-case err
+        (annas-archive-download
+         id callback (ebib-extras-operation-noninteractive-p operation))
+      (error (funcall callback 'failed nil (error-message-string err))))))
 
-(defun ebib-extras--annas-archive-attach (url &optional path)
-  "Attach the Anna's Archive download at PATH to the pending entry.
-URL is the download URL.  PATH is the local file when the download was made
-by Emacs, and nil when it was handed to an external browser.  The handler
-removes itself and clears `ebib-extras--annas-archive-pending-key' before
-attaching, so an error while attaching cannot leave a stale handler behind."
-  (let ((key ebib-extras--annas-archive-pending-key))
-    (setq ebib-extras--annas-archive-pending-key nil)
-    (remove-hook 'annas-archive-post-download-hook #'ebib-extras--annas-archive-attach)
-    (cond ((null key)
-	   (message "Anna's Archive download finished but no entry is pending (URL: %s)" url))
-	  (path
-	   (message "Anna's Archive download finished for %s, attaching file %s" key path)
-	   (ebib-extras-attach-file path key t))
-	  (t
-	   (message "Anna's Archive download initiated externally for %s (URL: %s). Attach file manually"
-		    key url)))))
+(defun ebib-extras--attachment-callback (operation)
+  "Return a once-only attachment completion callback for OPERATION."
+  (ebib-extras--operation-start operation)
+  (let ((finished nil))
+    (lambda (status &optional file error)
+      (unless finished
+        (setq finished t)
+        (let (cancelled)
+          (when (eq status 'complete)
+            (condition-case err
+              (progn
+                (ebib-extras--operation-check operation)
+                (unless (and (stringp file) (file-regular-p file))
+                  (user-error "Download did not produce an attachment file"))
+                (ebib-extras-attach-file
+                 file (ebib-extras-operation-key operation) t
+                 (ebib-extras-operation-db operation) operation))
+              ((error quit)
+               (setq status 'failed error (error-message-string err)
+                     cancelled (and (eq (car err) 'quit) err)))))
+          (ebib-extras--operation-finish operation status error)
+          (when cancelled (signal (car cancelled) (cdr cancelled))))))))
 
-(defun ebib-extras-attach-file-to-entry (&optional file key)
-  "Attach FILE to the BibTeX entry with KEY.
-This function is primarily intended as a callback for asynchronous downloaders.
-It calls `ebib-extras-attach-file' and messages success.
-FILE is the path to the file.  KEY is the BibTeX key string."
-  ;; Do not switch buffers here, pass the key directly to attach-file
-  (ebib-extras-attach-file file key)
-  (message "Attached `%s' to %s" file key))
+(defun ebib-extras-attach-file-to-entry (&optional file key db operation)
+  "Attach FILE to KEY in explicit DB, retaining OPERATION's policy."
+  (ebib-extras-attach-file file key nil db operation))
 
-(defun ebib-extras-attach-files (&optional key)
+(defun ebib-extras-attach-files (&optional key db operation)
   "Attach files appropriate for the entry with KEY (DWIM).
 If KEY is nil, use the entry at point.  If a file is already
 attached (i.e., the \"file\" field is non-empty), it attempts to
@@ -827,21 +1000,25 @@ available identifiers and entry type:
   `ebib-extras-url-to-html-attach'.
 KEY is an optional BibTeX key string, passed interactively as nil."
   (interactive (list nil))
-  (let ((target-key (or key (ebib--get-key-at-point))))
+  (let* ((db (or db ebib--cur-db))
+         (ebib--cur-db db)
+         (target-key (or key (ebib--get-key-at-point))))
     (cl-destructuring-bind (doi url isbn type file)
         (mapcar (lambda (field) (ebib-extras-get-field field target-key))
                 '("doi" "url" "isbn" "=type=" "file"))
       (if file
-          (ebib-extras-set-abstract target-key)
-        (cond (doi (ebib-extras-doi-attach target-key))
+          (ebib-extras-set-abstract target-key db operation)
+        (cond (doi (ebib-extras-doi-attach target-key db operation))
               ((or isbn (member type ebib-extras-book-like-entry-types))
-               (ebib-extras-book-attach target-key))
+               (ebib-extras-book-attach target-key db operation))
               ((and url (cl-some (lambda (regexp) (string-match regexp url))
                                  ebib-extras-video-websites))
-               (ebib-extras-url-to-srt-attach target-key))
-              ((and url (member (downcase type) '("online" "article")))
-               (ebib-extras-url-to-pdf-attach target-key)
-               (ebib-extras-url-to-html-attach target-key)))))))
+               (if (and operation (ebib-extras-operation-noninteractive-p operation))
+                   (user-error "Subtitle attachment requires a verified local file")
+                 (ebib-extras-url-to-srt-attach target-key)))
+              ((and url (member (downcase (or type "")) '("online" "article")))
+               (ebib-extras-url-to-pdf-attach target-key db operation)
+               (ebib-extras-url-to-html-attach target-key db operation)))))))
 
 ;;;;; ?
 
@@ -857,12 +1034,13 @@ called with a prefix argument), OCR is forced even if text is already present."
 (declare-function tlon-lookup "tlon-core")
 (declare-function tlon-lookup-all "tlon-core")
 (declare-function bibtex-set-field "bibtex-extras")
-(defun ebib-extras-get-or-set-language (&optional key db)
+(defun ebib-extras-get-or-set-language (&optional key db operation)
   "Return or set the language of entry KEY in DB.
 KEY and DB default to the selected Ebib entry and database.  Explicit
 arguments select Ebib regardless of the current buffer.  With neither
 argument in `bibtex-mode', use the entry at point instead.  Check the Ebib
-entry again after prompting, before writing its language."
+entry again after prompting, before writing its language.  OPERATION supplies
+the noninteractive policy; missing language then requires explicit review."
   (unless (or key db (derived-mode-p 'ebib-entry-mode 'bibtex-mode))
     (user-error "Select an Ebib or BibTeX entry to set its language"))
   (let* ((ebib-mode (or key db (derived-mode-p 'ebib-entry-mode)))
@@ -873,6 +1051,8 @@ entry again after prompting, before writing its language."
                  (bibtex-extras-get-field "langid")))
          (valid-lang (tlon-lookup tlon-languages-properties :standard :name lang)))
     (or valid-lang
+        (when (and operation (ebib-extras-operation-noninteractive-p operation))
+          (user-error "Entry %s needs a verified language before processing" key))
         (let ((language (completing-read
                          "Select language: "
                          (tlon-lookup-all tlon-languages-properties :standard)

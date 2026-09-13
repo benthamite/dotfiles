@@ -495,6 +495,7 @@ if [ "$TOOL_NAME" = "Bash" ]; then
     # This university repository's complete bitstream route names a public
     # document UUID. Preserve query/fragment content and require its exact host.
     HIGH_ENTROPY=$(echo "$ENTROPY_CONTENT" | \
+      sed -E "s@(^|[[:space:]\"'])https?://ejpe\\.org/journal/article/download/[0-9]+/[0-9]+/[0-9]+([?#[:space:]\"']|$)@\\1https://ejpe.org/\\2@g" | \
       sed -E "s@(^|[[:space:]\"'])https?://uplopen\\.com/en/books/[0-9]+/files/${MB_UUID}\\.pdf([?#[:space:]\"']|$)@\\1https://uplopen.com/\\2@g" | \
       sed -E "s@(^|[[:space:]\"'])https?://ruj\\.uj\\.edu\\.pl/(bitstreams/${MB_UUID}/download|server/api/core/bitstreams/${MB_UUID}/content)([?#[:space:]\"']|$)@\\1https://ruj.uj.edu.pl/\\3@g" | \
       sed -E "s@(^|[[:space:]\"'])https?://proceedings\\.mlr\\.press/v[0-9]+/@\\1https://proceedings.mlr.press/@g" | \

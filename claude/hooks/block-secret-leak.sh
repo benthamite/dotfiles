@@ -494,7 +494,10 @@ if [ "$TOOL_NAME" = "Bash" ]; then
     # Example: https://proceedings.mlr.press/v139/ecoffet21a.html
     # This university repository's complete bitstream route names a public
     # document UUID. Preserve query/fragment content and require its exact host.
+    # HLI's dated WordPress upload prefix is public routing metadata. Retain
+    # the entire filename and every subsequent byte for credential detection.
     HIGH_ENTROPY=$(echo "$ENTROPY_CONTENT" | \
+      sed -E "s@(^|[[:space:]\"'])https?://www\\.happierlivesinstitute\\.org/wp-content/uploads/[0-9]{4}/(0[1-9]|1[0-2])/@\\1https://www.happierlivesinstitute.org/@g" | \
       sed -E "s@(^|[[:space:]\"'])https?://digital\\.library\\.adelaide\\.edu\\.au/bitstreams/${MB_UUID}/download([?#[:space:]\"']|$)@\\1https://digital.library.adelaide.edu.au/\\2@g" | \
       sed -E "s@(^|[[:space:]\"'])https?://files\\.znu\\.edu\\.ua/files/Bibliobooks/Inshi[0-9]+/[0-9]+\\.pdf([?#[:space:]\"']|$)@\\1https://files.znu.edu.ua/\\2@g" | \
       sed -E "s@(^|[[:space:]\"'])https?://ejpe\\.org/journal/article/download/[0-9]+/[0-9]+/[0-9]+([?#[:space:]\"']|$)@\\1https://ejpe.org/\\2@g" | \

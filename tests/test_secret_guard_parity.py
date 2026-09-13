@@ -62,6 +62,22 @@ def decision(output: dict | None) -> str:
 
 
 class SecretGuardParityTests(unittest.TestCase):
+    def test_public_hli_upload_route(self):
+        url = "https://www.happierlivesinstitute.org/wp-content/uploads/2025/11/The-property-rights-approach-to-moral-uncertainty-MASTER.docx.pdf"
+        self.assert_both(f"curl --fail --location --max-time 40 '{url}' --output /tmp/moral-lloyd-property-rights.pdf", "allow")
+        token = "Synthetic9Opaque_" * 3
+        for command in (
+            f"curl '{url}?token={token}'", f"curl '{url}#token={token}'",
+            f"curl '{url}' -H 'Authorization: Bearer {token}'", f"curl '{url}' -d '{token}'",
+            f"curl '{url}/{token}'",
+            f"curl '{url.rsplit('/', 1)[0]}/{token}.pdf'",
+            f"curl '{url.replace('/uploads/', '/private/')}'",
+            f"curl '{url.replace('institute.org', 'institute.org.example.org')}'",
+            f"curl '{url.replace('institute.org', 'institute.org@example.org')}'",
+            f"curl 'https://example.org/?next={url}'",
+        ):
+            self.assert_both(command, "deny")
+
     def test_public_adelaide_bitstream_route(self):
         url = "https://digital.library.adelaide.edu.au/bitstreams/403aefae-ade4-4d86-98f0-32b0d6b0e62d/download"
         self.assert_both(f"curl --fail --location --max-time 60 --output /tmp/papers/harris.pdf {url}", "allow")

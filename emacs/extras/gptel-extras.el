@@ -1097,8 +1097,7 @@ If no matches are found, returns nil."
 IDENTIFIER can be a URL, ISBN, or DOI.  This function calls
 `zotra-extras-add-entry' with nil as the second argument and t as the fourth
 argument."
-  (zotra-extras-add-entry identifier nil bibfile t)
-  zotra-extras-most-recent-bibkey)
+  (zotra-extras-add-entry identifier nil bibfile t))
 
 (defcustom gptel-extras-bib-entry-process-timeout 45
   "Seconds to wait for asynchronous bibliography attachment processing."
@@ -1280,8 +1279,7 @@ attached files."
   (require 'ebib-extras)
   (gptel-extras--bib-import-preflight bibfile)
   (let ((zotra-extras-most-recent-bibfile bibfile))
-    (zotra-extras-add-entry identifier nil bibfile t)
-    (let* ((key zotra-extras-most-recent-bibkey)
+    (let* ((key (gptel-extras-add-bib-entry identifier bibfile))
            (db (gptel-extras--open-bib-entry-for-processing bibfile key)))
       (gptel-extras--process-bib-entry-headless timeout key db))))
 

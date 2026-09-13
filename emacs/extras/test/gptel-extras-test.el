@@ -882,6 +882,14 @@ literal in the pattern."
         (should (equal (ebib-extras-process-entry key db) key))
         (should (equal checked key))))))
 
+(ert-deftest gptel-extras-test-add-bib-entry-returns-import-result ()
+  "Use the importer's return value even when the global cache is stale."
+  (let ((zotra-extras-most-recent-bibkey "previous"))
+    (cl-letf (((symbol-function 'zotra-extras-add-entry)
+               (lambda (&rest _) "new-key")))
+      (should (equal (gptel-extras-add-bib-entry "10.123/example" "new.bib")
+                     "new-key")))))
+
 (ert-deftest gptel-extras-test-add-bib-entry-and-process-orchestrates ()
   "Add-and-process imports metadata, opens the key, then processes attachments."
   (let (calls

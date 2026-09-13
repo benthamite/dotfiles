@@ -138,13 +138,13 @@ The default value is @samp{("imdb.com")}. The type is a list of strings (@code{(
 @section Most recent bibliography file
 
 @vindex zotra-extras-most-recent-bibfile
-The variable @code{zotra-extras-most-recent-bibfile} holds the path of the bibliography file used by the most recently added entry. It is set by @code{zotra-extras-add-entry} (@ref{Adding entries}) when the user selects a bibliography file, and is read by @code{zotra-extras-open-in-ebib} (@ref{Ebib post-processing}) to switch to the correct @samp{ebib} database. The initial value is @code{nil}.
+The variable @code{zotra-extras-most-recent-bibfile} holds the path of the bibliography file selected for import. It is set by @code{zotra-extras-add-entry} (@ref{Adding entries}) for both interactive and explicit file arguments, and is read by @code{zotra-extras-open-in-ebib} (@ref{Ebib post-processing}) to switch to the correct @samp{ebib} database. The initial value is @code{nil}.
 
 @node Most recent bibliography key
 @section Most recent bibliography key
 
 @vindex zotra-extras-most-recent-bibkey
-The variable @code{zotra-extras-most-recent-bibkey} holds the Bib@TeX{} key of the most recently added entry. It is set by @code{zotra-extras-after-add-process-bibtex} (@ref{Bib@TeX{} cleanup}) after cleanup processing, and is read by the entry-opening workflow to navigate to the correct entry in @samp{ebib}. The initial value is @code{nil}.
+The variable @code{zotra-extras-most-recent-bibkey} holds the Bib@TeX{} key of the most recently inserted entry. It is updated only after saving the import. Programmatic callers should use the key returned directly by @code{zotra-extras-add-entry}; a failed import leaves the previous cached key unchanged. The initial value is @code{nil}.
 
 @node Default URL list file
 @section Default URL list file
@@ -186,6 +186,8 @@ The command @code{zotra-extras-add-entry} is the primary entry point for importi
 
 The optional arguments URL-OR-SEARCH-STRING, ENTRY-FORMAT, BIBFILE, and DO-NOT-OPEN can be supplied programmatically for non-interactive use.
 
+The command returns the final inserted key, or the last key when the source contains multiple entries. Cleanup runs before insertion, with errors propagated instead of saving a partially processed entry. Generated keys use the configured Org-ref transformer and Ebib's existing uniqueness routine against the target and configured @code{bibtex-files}; keys within one fetched result are also reserved. The insertion step checks for newly appeared conflicts and unsaved target-buffer edits before saving. Existing entries and their keys are preserved.
+
 @node Bibliography file selection
 @section Bibliography file selection
 
@@ -226,7 +228,7 @@ The function @code{zotra-extras-open-in-ebib} handles the workflow of opening a 
 
 @findex zotra-extras-after-add-process-bibtex
 @findex zotra-extras-fix-octal-sequences
-The function @code{zotra-extras-after-add-process-bibtex} performs several cleanup steps on a newly added Bib@TeX{} entry in the current buffer. It first signals an error if another buffer is visiting @code{zotra-extras-most-recent-bibfile} with unsaved changes, to prevent corrupting that work. It then converts @samp{titleaddon} fields to @samp{journaltitle}, sets a @samp{timestamp} field using the @samp{ebib} timestamp format, fixes octal encoding sequences, cleans the entry using @code{org-ref-clean-bibtex-entry}, replaces EAF URLs via @code{tlon-cleanup-eaf-replace-urls}, and records the entry key in @code{zotra-extras-most-recent-bibkey}.
+The function @code{zotra-extras-after-add-process-bibtex} performs several cleanup steps on a newly added Bib@TeX{} entry in the current buffer. It first signals an error if another buffer is visiting @code{zotra-extras-most-recent-bibfile} with unsaved changes, to prevent corrupting that work. It then converts @samp{titleaddon} fields to @samp{journaltitle}, sets a @samp{timestamp} field using the @samp{ebib} timestamp format, fixes octal encoding sequences, cleans the entry using @code{org-ref-clean-bibtex-entry} with collision-safe key generation, and replaces EAF URLs via @code{tlon-cleanup-eaf-replace-urls}. The last-key cache is updated after insertion succeeds, not during cleanup.
 
 The function @code{zotra-extras-fix-octal-sequences} addresses a specific issue where Zotero-imported Bib@TeX{} entries contain octal escape sequences (such as @samp{\302\267} for a middle dot) that Emacs does not decode automatically. The function iterates over a range of possible octal sequences and replaces each one with its corresponding UTF-8 character.
 

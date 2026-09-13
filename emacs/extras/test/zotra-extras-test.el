@@ -9,6 +9,107 @@
 (require 'cl-lib)
 (require 'zotra-extras)
 
+;;;; Import identity
+
+(require 'bibtex-completion)
+(require 'org-ref-bibtex)
+(require 'ebib-utils)
+
+(ert-deftest zotra-extras-test-import-uniquifies-against-bibliographies ()
+  "Preserve existing records and return the new entry's unique key."
+  (let* ((file (make-temp-file "zotra-collision-" nil ".bib"
+                               "@misc{SameKey, title={Existing}, file={existing.pdf}}\n"))
+         (other (make-temp-file "zotra-other-" nil ".bib"
+                                "@misc{SameKeyb, title={Other}}\n"))
+         (bibtex-files (list file other))
+         (zotra-extras-most-recent-bibkey "stale-key")
+         (zotra-extras-most-recent-bibfile nil)
+         (zotra-after-get-bibtex-entry-hook
+          '(zotra-extras-after-add-process-bibtex))
+         (org-ref-clean-bibtex-entry-hook '(orcb-key org-ref-sort-bibtex-entry))
+         (kill-ring nil)
+         (kill-ring-yank-pointer nil))
+    (unwind-protect
+        (cl-letf (((symbol-function 'zotra-get-entry-1)
+                   (lambda (&rest _)
+                     "@article{raw, author={Lloyd, Harry}, title={New}, journal={Journal}, year={2025}}"))
+                  ((symbol-function 'bibtex-generate-autokey) (lambda () "SameKey"))
+                  ((symbol-function 'tlon-cleanup-eaf-replace-urls) #'ignore))
+          (let ((key (zotra-extras-add-entry "10.123/example" nil file t)))
+            (with-temp-buffer
+              (insert-file-contents file)
+              (should (= 1 (how-many "@misc{SameKey," (point-min) (point-max))))
+              (should-not (string-match-p "@article{SameKey," (buffer-string)))
+              (should (string-match-p "file={existing.pdf}" (buffer-string))))
+            (should (equal key "SameKeyc"))
+            (should (equal zotra-extras-most-recent-bibkey key))))
+      (dolist (path (list file other))
+        (when-let ((buffer (find-buffer-visiting path))) (kill-buffer buffer))
+        (delete-file path)))))
+
+(ert-deftest zotra-extras-test-cleanup-error-does-not-insert ()
+  "A cleanup failure must leave the target unchanged and remain visible."
+  (let* ((file (make-temp-file "zotra-failed-cleanup-" nil ".bib"))
+         (bibtex-files (list file))
+         (zotra-extras-most-recent-bibkey "previous")
+         (zotra-after-get-bibtex-entry-hook
+          (list (lambda () (error "Cleanup failed")))))
+    (unwind-protect
+        (cl-letf (((symbol-function 'zotra-get-entry-1)
+                   (lambda (&rest _) "@misc{new, title={New}}")))
+          (should-error (zotra-extras-add-entry "10.123/example" nil file t)
+                        :type 'error)
+          (should (equal zotra-extras-most-recent-bibkey "previous"))
+          (should (zerop (file-attribute-size (file-attributes file)))))
+      (when-let ((buffer (find-buffer-visiting file))) (kill-buffer buffer))
+      (delete-file file))))
+
+(ert-deftest zotra-extras-test-import-reserves-keys-within-result ()
+  "Two fetched records sharing a generated key remain distinct."
+  (let* ((file (make-temp-file "zotra-multiple-" nil ".bib"))
+         (bibtex-files (list file))
+         (zotra-after-get-bibtex-entry-hook '(zotra-extras-after-add-process-bibtex))
+         (org-ref-clean-bibtex-entry-hook '(orcb-key org-ref-sort-bibtex-entry))
+         (kill-ring nil)
+         (kill-ring-yank-pointer nil))
+    (unwind-protect
+        (cl-letf (((symbol-function 'zotra-get-entry-1)
+                   (lambda (&rest _)
+                     (concat "@misc{one, author={Author}, title={First}, year={2025}}\n"
+                             "@misc{two, author={Author}, title={Second}, year={2025}}\n")))
+                  ((symbol-function 'bibtex-generate-autokey) (lambda () "Shared"))
+                  ((symbol-function 'tlon-cleanup-eaf-replace-urls) #'ignore))
+          (should (equal (zotra-extras-add-entry "10.123/example" nil file t)
+                         "Sharedb"))
+          (with-temp-buffer
+            (insert-file-contents file)
+            (should (string-match-p "@misc{Shared," (buffer-string)))
+            (should (string-match-p "@misc{Sharedb," (buffer-string)))))
+      (when-let ((buffer (find-buffer-visiting file))) (kill-buffer buffer))
+      (delete-file file))))
+
+(ert-deftest zotra-extras-test-import-preserves-concurrent-buffer-edit ()
+  "A target edit made during fetching must not be saved or overwritten."
+  (let* ((file (make-temp-file "zotra-concurrent-" nil ".bib"))
+         (bibtex-files (list file))
+         (zotra-after-get-bibtex-entry-hook nil))
+    (unwind-protect
+        (cl-letf (((symbol-function 'zotra-get-entry-1)
+                   (lambda (&rest _)
+                     (with-current-buffer (find-file-noselect file)
+                       (insert "% User edit\n"))
+                     "@misc{new, title={New}}")))
+          (should-error (zotra-extras-add-entry "10.123/example" nil file t)
+                        :type 'user-error)
+          (should (zerop (file-attribute-size (file-attributes file))))
+          (with-current-buffer (find-buffer-visiting file)
+            (should (equal (buffer-string) "% User edit\n"))
+            (should (buffer-modified-p))))
+      (when-let ((buffer (find-buffer-visiting file)))
+        (with-current-buffer buffer (set-buffer-modified-p nil))
+        (kill-buffer buffer))
+      (delete-file file))))
+
 ;;;; IMDb fallback
 
 (ert-deftest zotra-extras-test-imdb-id-from-url ()

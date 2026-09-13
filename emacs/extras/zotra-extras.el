@@ -89,6 +89,9 @@ Refer to the `mullvad' package documentation for details."
 (defvar zotra-extras-most-recent-bibkey nil
   "The bibkey of the most recently added entry.")
 
+(defvar zotra-extras--import-keys nil
+  "Temporary Ebib database reserving keys during one import.")
+
 (defconst zotra-extras-add-multiple-urls-from-file
   (file-name-concat paths-dir-downloads "zotra-add-multiple-urls.txt")
   "Default file for `zotra-extras-add-multiple-urls-from-file'.")
@@ -102,6 +105,8 @@ Refer to the `mullvad' package documentation for details."
 (declare-function bib--ensure-key "bib")
 (declare-function bib--http-get "bib")
 (declare-function bib--parse-json "bib")
+(declare-function ebib-db-new-database "ebib-db")
+(declare-function ebib-db-set-entry "ebib-db")
 (autoload 'eww-copy-page-url "eww")
 (autoload 'elfeed-extras-kill-link-url-of-entry "elfeed-extras")
 ;;;###autoload
@@ -110,15 +115,16 @@ Refer to the `mullvad' package documentation for details."
 Pass URL-OR-SEARCH-STRING and ENTRY-FORMAT to `zotra-get-entry' to get the
 entry.  BIBFILE is the file where the BibTeX entry should be saved; if nil,
 prompt the user to select it.  If DO-NOT-OPEN is non-nil, do not open the entry
-in Ebib after adding it."
+in Ebib after adding it.  Return the final key after successful insertion."
   (interactive)
   (pcase major-mode
     ('elfeed-show-mode (elfeed-extras-kill-link-url-of-entry))
     ('eww-mode (eww-copy-page-url)))
-  (let* ((bibfile (or bibfile
-		      (setq zotra-extras-most-recent-bibfile (zotra-extras-set-bibfile))))
+  (let* ((bibfile (or bibfile (zotra-extras-set-bibfile)))
 	 (url-or-search-string (or url-or-search-string
 				   (read-string "URL or search string: " (ignore-errors (current-kill 0 t))))))
+    (zotra-extras--check-target-buffer bibfile)
+    (setq zotra-extras-most-recent-bibfile bibfile)
     (when (and zotra-extras-use-mullvad-p
 	       (string-match-p "imdb\\.com" url-or-search-string))
       (message "IMDb URL detected and `zotra-extras-use-mullvad-p' is set. Connecting via Mullvad...")
@@ -149,9 +155,10 @@ If DO-NOT-OPEN is non-nil, do not open the new entry in Ebib."
 	 (item (zotra-extras--fetch-omdb-item imdb-id))
 	 (entry (zotra-extras--process-biblatex-entry
 		 (zotra-extras--omdb-item-to-biblatex item url))))
-    (zotra-extras--insert-entry entry bibfile)
-    (unless do-not-open
-      (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey))))
+    (let ((key (zotra-extras--insert-entry entry bibfile)))
+      (unless do-not-open
+        (zotra-extras-open-in-ebib key))
+      key)))
 
 (defun zotra-extras--imdb-id-from-url (url)
   "Return the IMDb title ID in URL, or nil if none is present."
@@ -226,36 +233,70 @@ If DO-NOT-OPEN is non-nil, do not open the new entry in Ebib."
     value))
 
 (defun zotra-extras--process-biblatex-entry (entry)
-  "Process BibLaTeX ENTRY using `zotra-after-get-bibtex-entry-hook'."
-  (with-temp-buffer
-    (insert "\n" entry)
-    (bibtex-mode)
-    (bibtex-set-dialect 'biblatex t)
-    (goto-char (point-min))
-    (while (bibtex-next-entry)
-      (save-excursion
-	(save-restriction
-	  (bibtex-narrow-to-entry)
-	  (dolist (hook zotra-after-get-bibtex-entry-hook)
-	    (bibtex-beginning-of-entry)
-	    (ignore-errors (funcall hook))))))
-    (buffer-string)))
+  "Process BibLaTeX ENTRY with cleanup errors propagated before insertion."
+  (let ((zotra-extras--import-keys
+         (zotra-extras--existing-keys zotra-extras-most-recent-bibfile)))
+    (with-temp-buffer
+      (insert "\n" entry)
+      (bibtex-mode)
+      (bibtex-set-dialect 'biblatex t)
+      (goto-char (point-min))
+      (while (bibtex-next-entry)
+        (save-excursion
+          (save-restriction
+            (bibtex-narrow-to-entry)
+            (dolist (hook zotra-after-get-bibtex-entry-hook)
+              (bibtex-beginning-of-entry)
+              (funcall hook)))))
+      (buffer-string))))
 
 (defun zotra-extras--insert-entry (entry bibfile)
-  "Insert BibLaTeX ENTRY into BIBFILE."
-  (with-current-buffer (or (find-buffer-visiting bibfile)
-			   (find-file-noselect bibfile))
-    (set-buffer-file-coding-system 'utf-8-unix t)
-    (save-excursion
-      (save-restriction
-	(widen)
-	(goto-char (point-max))
-	(unless (looking-at "^") (insert "\n"))
-	(insert entry)
-	(setq zotra-extras-most-recent-bibkey
-	      (zotra-extras--entry-key entry))))
-    (let ((coding-system-for-write 'utf-8-unix))
-      (save-buffer))))
+  "Insert BibLaTeX ENTRY into BIBFILE and return its final key.
+Reject conflicting keys or concurrent unsaved edits before changing BIBFILE."
+  (zotra-extras--check-target-buffer bibfile)
+  (let ((keys (zotra-extras--existing-keys bibfile))
+        last-key)
+    (with-temp-buffer
+      (insert entry)
+      (bibtex-set-dialect 'biblatex t)
+      (bibtex-map-entries
+       (lambda (key _start _end)
+         (ebib-db-set-entry key '(("=type=" . "misc")) keys)
+         (setq last-key key))))
+    (unless last-key (user-error "Zotra returned no BibTeX entries"))
+    (with-current-buffer (or (find-buffer-visiting bibfile)
+                            (find-file-noselect bibfile))
+      (set-buffer-file-coding-system 'utf-8-unix t)
+      (save-excursion
+        (save-restriction
+          (widen)
+          (goto-char (point-max))
+          (unless (looking-at "^") (insert "\n"))
+          (insert entry)))
+      (let ((coding-system-for-write 'utf-8-unix))
+        (save-buffer)))
+    (setq zotra-extras-most-recent-bibkey last-key)))
+
+(defun zotra-extras--check-target-buffer (bibfile)
+  "Reject BIBFILE when its visiting buffer has unsaved changes."
+  (when-let* ((buffer (find-buffer-visiting bibfile))
+              ((buffer-modified-p buffer)))
+    (user-error "Bibfile %s has unsaved changes" bibfile)))
+
+(defun zotra-extras--existing-keys (bibfile)
+  "Return an isolated Ebib database of keys in BIBFILE and `bibtex-files'."
+  (require 'ebib-db)
+  (let ((db (ebib-db-new-database)))
+    (dolist (file (delete-dups (delq nil (cons bibfile bibtex-files))))
+      (with-temp-buffer
+        (bibtex-set-dialect 'biblatex t)
+        (if-let ((buffer (find-buffer-visiting file)))
+            (insert-buffer-substring buffer)
+          (when (file-exists-p file) (insert-file-contents file)))
+        (bibtex-map-entries
+         (lambda (key _start _end)
+           (ebib-db-set-entry key '(("=type=" . "misc")) db 'overwrite)))))
+    db))
 
 (defun zotra-extras--entry-key (entry)
   "Return the BibTeX key in ENTRY."
@@ -271,13 +312,16 @@ If DO-NOT-OPEN is non-nil, do not open the new entry in Ebib."
   (format "https://books.google.com/books?vid=ISBN%s" (string-trim isbn)))
 
 (defun zotra-extras--add-and-maybe-open (url-or-search-string entry-format bibfile &optional do-not-open)
-  "Add entry using `zotra-add-entry' and, by default, open it in Ebib.
+  "Import an entry and return its key, optionally opening it in Ebib.
 Pass URL-OR-SEARCH-STRING and ENTRY-FORMAT to `zotra-get-entry' to get the
 entry.  BIBFILE is the file where the BibTeX entry should be saved.  If
 DO-NOT-OPEN is non-nil, do not open the entry in Ebib after adding it."
-  (zotra-add-entry url-or-search-string entry-format bibfile)
-  (unless do-not-open
-    (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey)))
+  (let* ((entry (let ((zotra-after-get-bibtex-entry-hook nil))
+                  (zotra-get-entry url-or-search-string entry-format)))
+         (key (zotra-extras--insert-entry
+               (zotra-extras--process-biblatex-entry entry) bibfile)))
+    (unless do-not-open (zotra-extras-open-in-ebib key))
+    key))
 
 ;;;;; Bibfile
 
@@ -323,6 +367,7 @@ DO-NOT-OPEN is non-nil, do not open the entry in Ebib after adding it."
 ;;;;; Cleanup
 
 (defvar ebib-timestamp-format)
+(defvar org-ref-clean-bibtex-key-function)
 (declare-function org-ref-clean-bibtex-entry "org-ref-bibtex")
 (declare-function bibtex-set-field "doi-utils")
 (declare-function bibtex-extras-get-key "bibtex-extras")
@@ -339,9 +384,16 @@ DO-NOT-OPEN is non-nil, do not open the entry in Ebib after adding it."
   (bibtex-extras-convert-titleaddon-to-journaltitle)
   (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
   (zotra-extras-fix-octal-sequences)
-  (org-ref-clean-bibtex-entry)
+  (let* ((keys (or zotra-extras--import-keys
+                   (zotra-extras--existing-keys zotra-extras-most-recent-bibfile)))
+         (transform org-ref-clean-bibtex-key-function)
+         (org-ref-clean-bibtex-key-function
+          (lambda (key)
+            (ebib-db-set-entry (funcall transform key)
+                               '(("=type=" . "misc")) keys 'uniquify))))
+    (org-ref-clean-bibtex-entry))
   (tlon-cleanup-eaf-replace-urls)
-  (setq zotra-extras-most-recent-bibkey (bibtex-extras-get-key)))
+  (bibtex-extras-get-key))
 
 (defun zotra-extras-fix-octal-sequences ()
   "Replace octal sequences with corresponding characters.

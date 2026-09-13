@@ -877,3 +877,6 @@ trusted_hash = "sha256:28f3bb2d1496516fb6a62169eae480d9b1bd681090491206a3422a2c8
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:0:2"]
 trusted_hash = "sha256:28f3bb2d1496516fb6a62169eae480d9b1bd681090491206a3422a2c836e5228"
+
+[agents]
+max_concurrent_threads_per_session = 32

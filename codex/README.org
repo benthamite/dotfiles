@@ -34,6 +34,11 @@ The subtree owners are [[file:bin/README.org][the command index]], [[file:hooks/
 
 * Instructions
 
+The native =agents.max_concurrent_threads_per_session= setting allows 32
+concurrent case workers, excluding the coordinator. This is an explicit
+operating limit, not a claimed Codex product maximum. Existing loaded threads
+may retain their previous limit; verify activation with actual worker launches.
+
 Codex reads user instructions from =AGENTS.md= in =$CODEX_HOME=. Project
 instructions also live in =AGENTS.md= files, next to their Claude =CLAUDE.md=
 peers. =project_doc_fallback_filenames= is deliberately absent: Codex does not

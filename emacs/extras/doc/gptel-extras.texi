@@ -592,12 +592,12 @@ The tool @strong{search@math{_bibliography}} (@code{gptel-extras-citar-search}) 
 Each result is a pair of @samp{(FORMATTED-CITATION . CITE-KEY)}. The default limit is 10 results; use -1 for no limit.
 
 @findex gptel-extras-add-bib-entry
-The tool @strong{add@math{_bib}@math{_entry}} (@code{gptel-extras-add-bib-entry}) adds a bibliographic entry for a URL, ISBN, or DOI to a specified Bib@TeX{} file. It delegates to @code{zotra-extras-add-entry} from @samp{zotra-extras.el} and returns the citation key of the newly added entry.
+The tool @strong{add@math{_bib}@math{_entry}} (@code{gptel-extras-add-bib-entry}) adds a bibliographic entry for a URL, ISBN, or DOI to a specified Bib@TeX{} file. It delegates to @code{zotra-extras-add-entry} from @samp{zotra-extras.el} and returns the citation key of the newly added entry. Import runs in a neutral buffer, so an active EWW or Elfeed buffer cannot copy its URL or alter the kill ring.
 
 Both bibliography tools use the importer's direct return value, so a failed cleanup cannot leave them reporting a previous entry's cached key. Zotra Extras resolves generated-key collisions through Ebib's uniqueness routine before saving and preserves existing records.
 
 @findex gptel-extras-add-bib-entry-and-process
-The tool @strong{add@math{_bib}@math{_entry}@math{_and}@math{_process}} (@code{gptel-extras-add-bib-entry-and-process}) imports the entry through Zotra, opens it in @samp{Ebib}, and calls @code{ebib-extras-process-entry} for key validation, language handling, crossref checks, and attachment lookup. Pass the target bibliography explicitly. The helper refuses an import when that file has an unsaved visiting buffer or Ebib database.
+The tool @strong{add@math{_bib}@math{_entry}@math{_and}@math{_process}} (@code{gptel-extras-add-bib-entry-and-process}) imports the entry through Zotra, loads or refreshes its explicit database in the background, and calls @code{ebib-extras-process-entry} for key validation, language handling, crossref checks, and attachment lookup. It does not select an Ebib entry, sort the UI, or change the caller's buffer or windows. Pass the target bibliography explicitly. The helper refuses an import or refresh when that file has an unsaved visiting buffer or Ebib database.
 
 The helper keeps an already valid key and uses the entry's identifier and verified language. Missing language, ambiguous archive results, file collisions and unresolved crossrefs produce a blocked result for review. No global input function is replaced; unrelated user commands retain normal input behavior.
 

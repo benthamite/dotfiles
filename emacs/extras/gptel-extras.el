@@ -1066,12 +1066,18 @@ If no matches are found, returns nil."
 (defvar zotra-extras-most-recent-bibfile)
 (defvar ebib--cur-db)
 (defvar ebib--databases)
+(defvar ebib--buffer-alist)
 (defvar ebib-extras--annas-archive-pending-key nil)
 (declare-function ebib-db-modified-p "ebib-db")
 (declare-function ebib--db-get-current-entry-key "ebib-db")
 (declare-function ebib-extras-process-entry "ebib-extras")
 (declare-function ebib-extras--check-processing-entry "ebib-extras")
 (declare-function ebib--get-db-from-filename "ebib")
+(declare-function ebib--buffer "ebib-utils")
+(declare-function ebib--load-bibtex-file-internal "ebib")
+(declare-function ebib--reload-database "ebib")
+(declare-function ebib--get-file-modtime "ebib-utils")
+(declare-function ebib-db-get-modtime "ebib-db")
 (declare-function ebib-db-get-entry "ebib-db")
 (declare-function zotra-extras-add-entry "zotra-extras")
 (declare-function ebib "ebib")
@@ -1096,8 +1102,9 @@ If no matches are found, returns nil."
   "Add bibliographic entry for IDENTIFIER to BIBFILE and return the entry’s bibkey.
 IDENTIFIER can be a URL, ISBN, or DOI.  This function calls
 `zotra-extras-add-entry' with nil as the second argument and t as the fourth
-argument."
-  (zotra-extras-add-entry identifier nil bibfile t))
+argument, in a neutral buffer that does not copy the user's browser URL."
+  (with-temp-buffer
+    (zotra-extras-add-entry identifier nil bibfile t)))
 
 (defcustom gptel-extras-bib-entry-process-timeout 45
   "Seconds to wait for asynchronous bibliography attachment processing."
@@ -1105,24 +1112,32 @@ argument."
   :group 'gptel-extras)
 
 (defun gptel-extras--open-bib-entry-for-processing (bibfile key)
-  "Open KEY from BIBFILE in Ebib and return its validated database."
+  "Load KEY from BIBFILE in the background and return its validated database.
+Refresh a clean loaded database when its file changed or KEY was just added.
+Do not change the selected entry, display buffers, sort or save the file."
   (require 'ebib)
   (require 'ebib-extras)
-  (ebib bibfile key)
-  (when-let* ((db-number (ebib-extras-get-db-number bibfile)))
-    (ebib-switch-to-database-nth db-number))
-  (ebib-extras-open-or-switch)
-  (when ebib--cur-db
-    (ebib-extras-reload-database-no-confirm ebib--cur-db))
-  (ebib--update-buffers)
-  (ebib bibfile key)
-  (ebib-extras-sort 'Timestamp)
-  (goto-char (point-min))
-  (ebib-extras-open-key key)
-  (let ((db (ebib--get-db-from-filename bibfile)))
-    (ebib-extras--check-processing-entry key db)
-    (ebib-save-current-database t)
-    db))
+  (let ((bibfile (file-truename bibfile)))
+    (unless (file-readable-p bibfile)
+      (user-error "Bibliography file is not readable: %s" bibfile))
+    (gptel-extras--bib-import-preflight bibfile)
+    ;; The background reader logs without creating or displaying Ebib's UI.
+    (unless (buffer-live-p (ebib--buffer 'log))
+      (setf (alist-get 'log ebib--buffer-alist) (get-buffer-create "*Ebib-log*")))
+    (let* ((existing
+            (cl-find-if (lambda (db)
+                          (when-let ((file (ebib-db-get-filename db)))
+                            (equal (file-truename file) bibfile)))
+                        ebib--databases))
+           (db (or existing (ebib--load-bibtex-file-internal bibfile))))
+      (when (and existing
+                 (or (not (ebib-db-get-entry key db 'noerror))
+                     (not (equal (ebib-db-get-modtime db) (ebib--get-file-modtime bibfile)))))
+        (let ((ebib--cur-db db))
+          (ebib--reload-database db)))
+      (unless (ebib-db-get-entry key db 'noerror)
+        (user-error "Entry %s is missing from bibliography %s" key bibfile))
+      db)))
 
 (defun gptel-extras--bib-files-for-key (key &optional db)
   "Return existing attachment files for bibliography entry KEY in DB.
@@ -1194,7 +1209,7 @@ No global input function is rebound, including during delayed callbacks."
   "Add IDENTIFIER to BIBFILE, run Ebib processing, and return attachment status.
 IDENTIFIER can be a URL, ISBN, DOI, or other string supported by Zotra.  This
 function is intended for agent/headless use: it imports metadata with
-`zotra-extras-add-entry', opens the new entry in Ebib, runs the same file
+`zotra-extras-add-entry', loads its database in the background, runs the same file
 attachment path as `ebib-extras-process-entry', waits for asynchronous
 attachment work for TIMEOUT seconds, and returns a plist with the final key and
 attached files."

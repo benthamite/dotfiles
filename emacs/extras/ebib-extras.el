@@ -612,6 +612,9 @@ other metadata is assumed correct.  OPERATION retains explicit target and policy
          (db (or db ebib--cur-db))
          (entry (ebib-db-get-entry key db)))
     (ebib-extras--check-operation-entry key db operation)
+    (when (and operation (ebib-extras-operation-noninteractive-p operation)
+               (not (ebib-extras-key-is-valid-p key)))
+      (user-error "Invalid bibliography key %s; correct the key before processing" key))
     (when (or (not (ebib-extras-key-is-valid-p key))
               (and (not (and operation (ebib-extras-operation-noninteractive-p operation)))
                    (y-or-n-p "Regenerate key? ")))
@@ -812,9 +815,10 @@ and noninteractive policy across callbacks."
 
 (defvar pdf-view-mode-hook)
 (defun ebib-extras--af-postprocess-pdf (key &optional db operation)
-  "Write metadata, OCR and open the PDF attached to KEY.
+  "Write metadata and OCR the PDF attached to KEY.
 Capture the database, PDF and language before metadata processing can yield.
-DB defaults to the selected Ebib database; OPERATION retains prompt policy."
+DB defaults to the selected Ebib database; OPERATION retains prompt policy.
+Only manual operations open the PDF for display."
   (when operation (ebib-extras--operation-check operation))
   (let* ((db (or db ebib--cur-db))
          (ebib--cur-db db)
@@ -830,9 +834,10 @@ DB defaults to the selected Ebib database; OPERATION retains prompt policy."
     (let ((process (files-extras-ocr-pdf nil file nil language)))
       (when (and operation (processp process))
         (ebib-extras--track-ocr-process process operation)))
-    ;; A replacement PDF can have fewer pages than its saved view position.
-    (let ((pdf-view-mode-hook (remq 'pdf-view-restore-mode-conditionally pdf-view-mode-hook)))
-      (find-file file))))
+    (unless (and operation (ebib-extras-operation-noninteractive-p operation))
+      ;; A replacement PDF can have fewer pages than its saved view position.
+      (let ((pdf-view-mode-hook (remq 'pdf-view-restore-mode-conditionally pdf-view-mode-hook)))
+        (find-file file)))))
 
 (defun ebib-extras--track-ocr-process (process operation)
   "Track PROCESS completion as one task in OPERATION."
@@ -1853,27 +1858,30 @@ to update the Author and Title fields in-place."
                              (ebib-extras-format-authors author-list ", " most-positive-fixnum)))
              (title         (ebib-extras-unbrace (funcall get-field "title")))
              (info-file     (make-temp-file "ebib-extras-pdftk-info"))
-             (output-file   (make-temp-file "ebib-extras-pdftk-output" nil ".pdf")))
-        ;; build the pdftk metadata file
-        (with-temp-file info-file
-          (when title
-            (insert "InfoBegin\nInfoKey: Title\nInfoValue: " title "\n"))
-          (when author-string
-            (insert "InfoBegin\nInfoKey: Author\nInfoValue: " author-string "\n"))
-          (insert "\n"))
-        ;; run pdftk and replace the original pdf
-        (let ((cmd (format "%s %s update_info_utf8 %s output %s"
-                           pdftk-cmd
-                           (shell-quote-argument file-absolute)
-                           (shell-quote-argument info-file)
-                           (shell-quote-argument output-file))))
-          (let ((exit-code (shell-command cmd)))
-            (if (zerop exit-code)
-                (progn
-                  (rename-file output-file file-absolute t)
-                  (delete-file info-file)
-                  (message "Updated PDF metadata using pdftk-java"))
-              (message "Failed to update PDF metadata using pdftk-java"))))))))
+             (output-file (make-temp-file "ebib-extras-pdftk-output" nil ".pdf"))
+             (diagnostics (generate-new-buffer " *ebib-pdf-metadata*")))
+        (unwind-protect
+            (progn
+              (with-temp-file info-file
+                (when title
+                  (insert "InfoBegin\nInfoKey: Title\nInfoValue: " title "\n"))
+                (when author-string
+                  (insert "InfoBegin\nInfoKey: Author\nInfoValue: " author-string "\n"))
+                (insert "\n"))
+              (let ((exit-code (process-file
+                                pdftk-cmd nil (list diagnostics t) nil
+                                file-absolute "update_info_utf8" info-file
+                                "output" output-file)))
+                (unless (and (integerp exit-code) (zerop exit-code))
+                  (error "PDF metadata update failed (%s): %s" exit-code
+                         (with-current-buffer diagnostics
+                           (string-trim (buffer-substring-no-properties
+                                         (point-min) (min (point-max) (+ (point-min) 500)))))))
+                (rename-file output-file file-absolute t)
+                (message "Updated PDF metadata using pdftk-java")))
+          (dolist (file (list info-file output-file))
+            (when (file-exists-p file) (delete-file file)))
+          (when (buffer-live-p diagnostics) (kill-buffer diagnostics)))))))
 
 (defun ebib-extras-get-authors-list (authors)
   "Split AUTHORS into a list of authors, reversing the first and last names.

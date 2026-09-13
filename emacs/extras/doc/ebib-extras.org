@@ -466,7 +466,9 @@ The command ~ebib-extras-set-pdf-metadata~ writes Author and Title metadata into
 
 The command ~ebib-extras-ocr-pdf~ performs OCR on the PDF file associated with the current entry using ~files-extras-ocr-pdf~. When called with a prefix argument (=C-u=), OCR is forced even if text is already present in the PDF.
 
-Attachment postprocessing captures the entry's PDF and validated language before metadata processing can yield. OCR and PDF opening use that captured file even if another buffer becomes current. Programmatic ~ebib-extras-set-pdf-metadata~ callers may supply KEY and DB explicitly to select the entry independently of the current buffer.
+Attachment postprocessing captures the entry's PDF and validated language before metadata processing can yield. OCR uses that captured file even if another buffer becomes current. Noninteractive operations never open or display the PDF; manual attachment keeps the existing display behavior. Invalid keys in noninteractive processing produce a blocked diagnostic instead of invoking the interactive key generator.
+
+Programmatic ~ebib-extras-set-pdf-metadata~ callers may supply KEY and DB explicitly to select the entry independently of the current buffer. Metadata updates use a direct process invocation with private diagnostics, so command output cannot open a window. A failed metadata process signals an error for operation reporting, and its temporary files and diagnostics buffer are cleaned on both success and failure.
 
 ** Identifier retrieval
 :PROPERTIES:

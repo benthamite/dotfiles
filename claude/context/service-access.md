@@ -17,6 +17,20 @@ Relative paths are under the dotfiles root, `~/My Drive/dotfiles/`. For
 Google account and auth details, read `google-services.md` in this
 directory.
 
+## Google Drive original files
+
+`gdoc download FILE_ID --account personal --output NEW_PATH` downloads the original
+bytes of a PDF or other stored file. Use the appropriate account from
+`google-services.md`. It refuses existing destinations and native Google Workspace
+files; `gdoc export` remains the command for converting native documents.
+
+The canonical `bin/gdoc` launcher extends the installed uv-managed CLI with
+`claude/bin/gdoc_download.py`, reusing its parser, account selection, authentication,
+and command allowlist. Existing commands are delegated unchanged. Downloads check
+Drive permission, size, and available MD5 metadata before installing the file. The
+installed package is not patched. If upstream adds `download`, the extension stops
+with an explicit retirement message rather than shadowing that implementation.
+
 ## Browser-only flows
 
 For Codex automation that depends on an existing Chrome session, use the

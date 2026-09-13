@@ -1,0 +1,9 @@
+#!/bin/sh
+# Extend the installed gdoc CLI without modifying its uv-managed package.
+set -eu
+GDOC_PYTHON="$HOME/.local/share/uv/tools/gdoc/bin/python"
+if [ ! -x "$GDOC_PYTHON" ]; then
+    echo 'ERR: the uv-managed gdoc Python environment is missing' >&2
+    exit 1
+fi
+exec "$GDOC_PYTHON" "$HOME/My Drive/dotfiles/claude/bin/gdoc_download.py" "$@"

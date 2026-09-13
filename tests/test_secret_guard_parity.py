@@ -62,6 +62,21 @@ def decision(output: dict | None) -> str:
 
 
 class SecretGuardParityTests(unittest.TestCase):
+    def test_public_znu_bibliobook_route(self):
+        url = "http://files.znu.edu.ua/files/Bibliobooks/Inshi71/0051436.pdf"
+        self.assert_both(f"curl --fail --location --max-time 60 --output /tmp/papers/riedener.pdf {url}", "allow")
+        token = "Synthetic9Opaque_" * 3
+        for command in (
+            f"curl '{url}?token={token}'", f"curl '{url}#token={token}'",
+            f"curl '{url}' -H 'Authorization: Bearer {token}'", f"curl '{url}' -d '{token}'",
+            f"curl '{url}/{token}'", f"curl '{url}extra'",
+            f"curl '{url.replace('/Bibliobooks/', '/private/')}'",
+            f"curl '{url.replace('files.znu.edu.ua', 'files.znu.edu.ua.example.org')}'",
+            f"curl '{url.replace('files.znu.edu.ua', 'files.znu.edu.ua@example.org')}'",
+            f"curl 'https://example.org/?next={url}'",
+        ):
+            self.assert_both(command, "deny")
+
     def test_public_ejpe_download_route(self):
         url = "https://ejpe.org/journal/article/download/93/90/177"
         self.assert_both(f"curl --fail --location --max-time 60 --output /tmp/papers/nissan-rozen.pdf {url}", "allow")

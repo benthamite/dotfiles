@@ -62,6 +62,22 @@ def decision(output: dict | None) -> str:
 
 
 class SecretGuardParityTests(unittest.TestCase):
+    def test_public_adelaide_bitstream_route(self):
+        url = "https://digital.library.adelaide.edu.au/bitstreams/403aefae-ade4-4d86-98f0-32b0d6b0e62d/download"
+        self.assert_both(f"curl --fail --location --max-time 60 --output /tmp/papers/harris.pdf {url}", "allow")
+        token = "Synthetic9Opaque_" * 3
+        for command in (
+            f"curl '{url}?token={token}'", f"curl '{url}#token={token}'",
+            f"curl '{url}' -H 'Authorization: Bearer {token}'", f"curl '{url}' -d '{token}'",
+            f"curl '{url}/{token}'", f"curl '{url}extra'",
+            f"curl '{url.replace('/bitstreams/', '/private/')}'",
+            f"curl '{url.replace('/download', '/content')}'",
+            f"curl '{url.replace('adelaide.edu.au', 'adelaide.edu.au.example.org')}'",
+            f"curl '{url.replace('adelaide.edu.au', 'adelaide.edu.au@example.org')}'",
+            f"curl 'https://example.org/?next={url}'",
+        ):
+            self.assert_both(command, "deny")
+
     def test_public_znu_bibliobook_route(self):
         url = "http://files.znu.edu.ua/files/Bibliobooks/Inshi71/0051436.pdf"
         self.assert_both(f"curl --fail --location --max-time 60 --output /tmp/papers/riedener.pdf {url}", "allow")

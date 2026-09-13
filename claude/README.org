@@ -689,6 +689,8 @@ EJPE's exact =ejpe.org/journal/article/download/NUMBER/NUMBER/NUMBER= route also
 normalizes public record IDs without exempting extra path or request content.
 ZNU's exact =files.znu.edu.ua/files/Bibliobooks/InshiNUMBER/NUMBER.pdf= route
 receives the same treatment for its public library identifiers.
+Adelaide's exact =digital.library.adelaide.edu.au/bitstreams/UUID/download=
+route similarly normalizes its public document identifier.
 Slash structure never grants a filesystem-path exemption. Only positively
 classified literal file operands, including curl =@file= and output files,
 are omitted from the entropy scan. Unknown options and shell forms stay scanned.

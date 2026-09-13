@@ -576,17 +576,20 @@ other metadata is assumed correct."
                (ebib-db-get-entry key db 'noerror))
     (user-error "Ebib selection changed; resume processing entry %s explicitly" key)))
 
-(defun ebib-extras-set-abstract (&optional key)
+(defun ebib-extras-set-abstract (&optional key db)
   "Set the abstract for KEY if it's currently empty.
-If KEY is nil, use the current entry's key.
+If KEY or DB is nil, use the current entry's key or database.
 
 Attempt to fetch the abstract using `tlon-get-abstract-with-or-without-ai'."
   (interactive)
-  (ebib-extras-open-key key)
-  (unless (if key
-	      (bibtex-extras-get-entry-as-string key "abstract")
-	    (ebib-extras-get-field "abstract"))
-    (tlon-get-abstract-with-or-without-ai)))
+  (let* ((db (or db ebib--cur-db))
+         (key (or key (ebib--get-key-at-point)))
+         (abstract (ebib-db-get-field-value "abstract" key db 'noerror)))
+    (unless (and (stringp abstract) (not (string-empty-p (string-trim abstract))))
+      (unless (eq db ebib--cur-db)
+        (user-error "Abstract target database is no longer selected"))
+      (ebib-extras-open-key key)
+      (tlon-get-abstract-with-or-without-ai nil t))))
 
 ;;;;; attach downloads
 
@@ -619,7 +622,7 @@ KEY.EXT, moved to the appropriate library directory and the
          (src   (ebib-extras--af-resolve-file file key))
          (dest  (ebib-extras--af-install-file src key)))
     (ebib-extras--update-file-field-contents key dest)
-    (ebib-extras-set-abstract key)
+    (ebib-extras-set-abstract key db)
     (when (and postprocess (string= (file-name-extension dest) "pdf"))
       ;; Dedup before postprocess: postprocess opens the PDF and switches to
       ;; `pdf-view-mode', after which `ebib--execute-when' in dedup would fail.

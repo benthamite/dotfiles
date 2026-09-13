@@ -529,5 +529,23 @@
       (should (equal (ebib-extras-get-field "langid" key) "english"))
       (should (string-match-p "-l eng" command)))))
 
+(ert-deftest ebib-extras-test-abstract-uses-selected-database ()
+  "Preserve the selected entry's abstract without searching BibTeX buffers."
+  (let* ((db (ebib-db-new-database))
+         (ebib--cur-db db)
+         fetched)
+    (ebib-db-set-entry "Author2020Paper"
+                       '(("=type=" . "article") ("abstract" . "Existing")) db)
+    (cl-letf (((symbol-function 'ebib-extras-open-key) #'ignore)
+              ((symbol-function 'bibtex-extras-get-entry-as-string)
+               (lambda (&rest _) (ert-fail "Wrong BibTeX-buffer lookup")))
+              ((symbol-function 'tlon-get-abstract-with-or-without-ai)
+               (lambda (&rest args) (setq fetched args))))
+      (ebib-extras-set-abstract "Author2020Paper")
+      (should-not fetched)
+      (ebib-db-set-field-value "abstract" "" "Author2020Paper" db 'overwrite)
+      (ebib-extras-set-abstract "Author2020Paper")
+      (should (equal fetched '(nil t))))))
+
 (provide 'ebib-extras-test)
 ;;; ebib-extras-test.el ends here

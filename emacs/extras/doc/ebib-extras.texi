@@ -344,7 +344,7 @@ The command @code{ebib-extras-sentence-case} converts the value of the field at 
 
 The command @code{ebib-extras-update-field} fetches a fresh value for the field at point (or a specified field) from external sources using Zotero translators (via @code{zotra-extras-get-field}). The lookup is based on the entry's existing DOI, ISBN, or URL (@ref{Identifier retrieval}). The fetched value overwrites the current field contents.
 
-The command @code{ebib-extras-set-abstract} populates the @samp{abstract} field for the entry at point (or a specified key) if it is currently empty. It uses @code{tlon-get-abstract-with-or-without-ai} to attempt fetching the abstract from external sources or generating it with AI@.
+The command @code{ebib-extras-set-abstract} populates the @samp{abstract} field for the entry at point (or a specified key and database) if it is currently empty. It reads the live Ebib database and preserves an existing abstract without prompting. It uses @code{tlon-get-abstract-with-or-without-ai} to attempt fetching the abstract from external sources or generating it with AI, with an explicit preservation policy that also protects abstracts added before a delayed response arrives.
 
 The command @code{ebib-extras-set-id} adds an identifier to the current entry when the appropriate field is empty. The field is chosen based on the entry's supertype: @samp{isbn} for books, @samp{doi} for articles, @samp{url} for films. If no ID is provided interactively, it attempts to fetch one using @code{ebib-extras-fetch-id-or-url} (@ref{Identifier retrieval}).
 

@@ -72,6 +72,8 @@ class SecretGuardParityTests(unittest.TestCase):
             "https://www.frontiersin.org/journals/artificial-intelligence/articles/10.3389/frai.2026.1754973/pdf",
             "https://80000hours.org/wp-content/uploads/2017/06/MacAskill-Normative-Uncertainty.pdf",
             "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/9DAA9A1E7577A374A1C31FFD9740DCC4/S0045509124000341a.pdf/supererogation_suberogation_and_maximizing_expected_choiceworthiness.pdf",
+            'https://blogs.kent.ac.uk/futureofnormativity/files/2018/05/Risberg-ethics-and-the-question-of-what-to-do.pdf',
+            'https://www.jesp.org/pdf/36346f73-90e0-8193-bf02-c929ee3765e5',
         )
         token = "Synthetic9Opaque_" * 3
         for url in urls:

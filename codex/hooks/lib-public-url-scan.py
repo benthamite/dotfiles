@@ -18,6 +18,8 @@ ENTITY = r"(?:area|artist|collection|event|genre|instrument|label|place|recordin
 # Exact authority, path prefix, whether the complete path must match, schemes.
 # Sources are the public routes pinned by test_secret_guard_parity.py.
 ROUTES = (
+    ("www.jesp.org", rf"/pdf/{UUID}", True, ("https",)),
+    ("blogs.kent.ac.uk", rf"/futureofnormativity/files/{MONTH}/", False, ("https",)),
     ("myweb.sabanciuniv.edu", rf"/ozgurkibris/files/{MONTH}/", False, ("https",)),
     ("www.happierlivesinstitute.org", rf"/wp-content/uploads/{MONTH}/", False, ("http", "https")),
     ("digital.library.adelaide.edu.au", rf"/(?:bitstreams/{UUID}/download|server/api/core/bitstreams/{UUID}/content)", True, ("http", "https")),

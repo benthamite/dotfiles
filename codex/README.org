@@ -637,6 +637,10 @@ UCL Discovery uses that same numeric eprint prefix on the exact HTTPS host
 HTTPS host =www.jacobbarrett.org= and public account prefix
 =/uploads/1/2/3/6/123631127/=. Bob Beddor’s exact HTTPS host
 =www.bobbeddor.com= similarly recognizes only =/uploads/3/2/0/3/32037343/=.
+JESP’s migrated exact HTTPS host =www.jesp.org= recognizes the complete
+=/pdf/UUID= document route, with no trailing path exemption.
+Kent’s exact HTTPS host =blogs.kent.ac.uk= recognizes only the
+=/futureofnormativity/files/YYYY/MM/= public conference upload prefix.
 Filenames, query strings, fragments and request
 headers/bodies remain scanned; other accounts and lookalike authorities are
 not classified as these public routes.

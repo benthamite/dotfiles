@@ -118,6 +118,8 @@ class PublicURLScanTests(unittest.TestCase):
             "https://www.frontiersin.org/journals/artificial-intelligence/articles/10.3389/frai.2026.1754973/pdf",
             "https://80000hours.org/wp-content/uploads/2017/06/MacAskill-Normative-Uncertainty.pdf",
             "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/9DAA9A1E7577A374A1C31FFD9740DCC4/S0045509124000341a.pdf/supererogation_suberogation_and_maximizing_expected_choiceworthiness.pdf",
+            'https://blogs.kent.ac.uk/futureofnormativity/files/2018/05/Risberg-ethics-and-the-question-of-what-to-do.pdf',
+            'https://www.jesp.org/pdf/36346f73-90e0-8193-bf02-c929ee3765e5',
         )
         for url in urls:
             with self.subTest(url=url):
@@ -136,6 +138,8 @@ class PublicURLScanTests(unittest.TestCase):
                     self.assertIsNotNone(scan.finding(f"curl '{changed}'"))
                 for option in ('-H', '-d'):
                     self.assertIsNotNone(scan.finding(f"curl '{url}' {option} '{self.TOKEN}'"))
+        self.assertIsNotNone(scan.finding(f"curl '{urls[-2].replace('/futureofnormativity/', '/otherproject/')}'"))
+        self.assertIsNotNone(scan.finding(f"curl '{urls[-1]}/{self.TOKEN}'"))
         self.assertIsNotNone(scan.finding(f"curl '{urls[0].replace('32037343', '32037344')}'"))
         self.assertIsNotNone(scan.finding(f"curl '{urls[2].replace('123631127', '123631128')}'"))
 

@@ -98,6 +98,8 @@ The constant ~zotra-extras-add-multiple-urls-from-file~ (the variable, not the c
 :END:
 
 #+findex: zotra-extras-add-entry
+Authorless online metadata with the exact challenge-page title ‘Making sure you're not a bot!’ is rejected before cleanup or insertion. The command reports an error without prompting or adding a record; ordinary titles about bots and attributed works remain importable.
+
 The command ~zotra-extras-add-entry~ is the primary entry point for importing bibliographic metadata. It improves on the standard ~zotra-add-entry~ in several ways:
 
 - *URL auto-detection.* When invoked from an =elfeed-show-mode= buffer, it copies the current entry's URL to the kill ring. In =eww-mode=, it copies the current page URL. In other modes, it pre-fills the prompt with the most recent kill ring entry.

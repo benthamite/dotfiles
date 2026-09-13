@@ -318,10 +318,28 @@ entry.  BIBFILE is the file where the BibTeX entry should be saved.  If
 DO-NOT-OPEN is non-nil, do not open the entry in Ebib after adding it."
   (let* ((entry (let ((zotra-after-get-bibtex-entry-hook nil))
                   (zotra-get-entry url-or-search-string entry-format)))
+         (_ (zotra-extras--reject-challenge-metadata entry))
          (key (zotra-extras--insert-entry
                (zotra-extras--process-biblatex-entry entry) bibfile)))
     (unless do-not-open (zotra-extras-open-in-ebib key))
     key))
+
+(defun zotra-extras--reject-challenge-metadata (entry)
+  "Reject ENTRY if it contains metadata for a known bot challenge page.
+Check every translated record before cleanup or insertion.  An authorless
+online record with the exact challenge title is not a fetched work."
+  (with-temp-buffer
+    (insert entry "\n")
+    (bibtex-set-dialect 'biblatex t)
+    (bibtex-map-entries
+     (lambda (_key _start _end)
+       (let* ((fields (save-excursion (bibtex-parse-entry t)))
+              (title (replace-regexp-in-string
+                      "[{}]" "" (or (cdr (assoc-string "title" fields t)) ""))))
+         (when (and (equal (downcase (or (cdr (assoc "=type=" fields)) "")) "online")
+                    (string-empty-p (string-trim (or (cdr (assoc-string "author" fields t)) "")))
+                    (equal (downcase (string-trim title)) "making sure you're not a bot!"))
+           (user-error "Zotra returned a bot challenge page instead of bibliographic metadata")))))))
 
 ;;;;; Bibfile
 

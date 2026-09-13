@@ -110,6 +110,41 @@
         (kill-buffer buffer))
       (delete-file file))))
 
+(ert-deftest zotra-extras-test-challenge-metadata-does-not-insert ()
+  "Reject the observed HAL challenge without touching the bibliography."
+  (let* ((original "@misc{existing,title={Existing}}\n")
+         (file (make-temp-file "zotra-challenge-" nil ".bib" original))
+         (bibtex-files (list file))
+         (zotra-extras-most-recent-bibkey "previous")
+         (response "@online{2026MakingSureYoure,title={Making sure you're not a bot!},url={https://theses.hal.science/tel-04576792v1},urldate={2026-09-13},timestamp={2026-09-13 17:02:47 (GMT)}}"))
+    (unwind-protect
+        (cl-letf (((symbol-function 'zotra-get-entry-1)
+                   (lambda (&rest _) response))
+                  ((symbol-function 'zotra-extras--process-biblatex-entry)
+                   (lambda (_) (ert-fail "Challenge reached cleanup")))
+                  ((symbol-function 'zotra-extras-open-in-ebib)
+                   (lambda (_) (ert-fail "Challenge opened Ebib"))))
+          (dolist (prefix '("" "@article{valid,author={Author},title={Valid}}\n"))
+            (setq response (concat prefix response))
+            (should-error
+             (zotra-extras-add-entry "https://theses.hal.science/tel-04576792v1" nil file t)
+             :type 'user-error))
+          (should (equal zotra-extras-most-recent-bibkey "previous"))
+          (should-not (find-buffer-visiting file))
+          (with-temp-buffer
+            (insert-file-contents file)
+            (should (equal (buffer-string) original))))
+      (when-let ((buffer (find-buffer-visiting file))) (kill-buffer buffer))
+      (delete-file file))))
+
+(ert-deftest zotra-extras-test-challenge-metadata-allows-works-about-bots ()
+  "Do not mistake ordinary works or attributed titles for challenges."
+  (dolist (entry '("@online{a,title={Making sure you're not a bot!},author={Smith, Alex}}"
+                   "@article{b,title={Making sure you're not a bot!}}"
+                   "@online{c,title={Making sure you're not a bot! A study}}"
+                   "@online{d,title={How bots work}}"))
+    (should-not (zotra-extras--reject-challenge-metadata entry))))
+
 ;;;; IMDb fallback
 
 (ert-deftest zotra-extras-test-imdb-id-from-url ()

@@ -203,7 +203,7 @@ def wait_for_operation(package, source_repo, extras, initial, operation,
 
 def observe_abandoned_operation(root, package, source_repo, extras, initial,
                                 status_file, receipt_file, interval, deadline):
-    """Resume certification under the free owner lock, never request a rebuild."""
+    """Resume a token, or reconcile a lost reply, under the free owner lock."""
     with owner_lock(root, package, observe=True) as directory:
         if directory is None or read_status(status_file) != "pending":
             return False

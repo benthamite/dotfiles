@@ -244,7 +244,7 @@ recorded so cooperating callers cannot silently launch a competing rebuild.
 If the original waiter exits, an observer can acquire its now-free package lock
 and certify the same completion token after rechecking the recorded source,
 runtime and status identity. It neither replaces an active owner nor requests
-another rebuild to repair a missing completion receipt.
+another rebuild when an existing completion token can be certified.
 If the request reply was lost before its token was recorded, the helper checks
 the live package under the exclusive owner lock. Only an idle package with no
 queued tokens and unchanged source, runtime and status permits archiving that

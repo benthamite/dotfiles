@@ -336,6 +336,8 @@ abstract generation and OCR, and polls its own pending task count. Existing
 abstracts are preserved; unresolved choices and conflicting edits produce a
 blocked result. After resolving a failure and draining callbacks, retry the
 existing entry with a new operation. No global input functions are rebound.
+Metadata corrections use Ebib's bracing field setter and contextual save wrapper;
+verification includes parsing the saved entry back to its original field values.
 
 Paired configuration audits allow matching resource deletions within retained
 skills while still rejecting one-sided resource or whole-skill deletions.

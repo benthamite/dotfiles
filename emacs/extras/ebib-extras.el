@@ -584,7 +584,8 @@ Attempt to fetch the abstract using `tlon-get-abstract-with-or-without-ai'."
   (interactive)
   (let* ((db (or db ebib--cur-db))
          (key (or key (ebib--get-key-at-point)))
-         (abstract (ebib-db-get-field-value "abstract" key db 'noerror)))
+         (abstract (ebib-unbrace
+                    (ebib-db-get-field-value "abstract" key db 'noerror))))
     (unless (and (stringp abstract) (not (string-empty-p (string-trim abstract))))
       (unless (eq db ebib--cur-db)
         (user-error "Abstract target database is no longer selected"))

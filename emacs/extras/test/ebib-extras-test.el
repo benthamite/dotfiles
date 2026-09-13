@@ -543,9 +543,11 @@
                (lambda (&rest args) (setq fetched args))))
       (ebib-extras-set-abstract "Author2020Paper")
       (should-not fetched)
-      (ebib-db-set-field-value "abstract" "" "Author2020Paper" db 'overwrite)
-      (ebib-extras-set-abstract "Author2020Paper")
-      (should (equal fetched '(nil t))))))
+      (dolist (empty '("" "{}" "\"\"" "{  }"))
+        (setq fetched nil)
+        (ebib-db-set-field-value "abstract" empty "Author2020Paper" db 'overwrite)
+        (ebib-extras-set-abstract "Author2020Paper")
+        (should (equal fetched '(nil t)))))))
 
 (provide 'ebib-extras-test)
 ;;; ebib-extras-test.el ends here

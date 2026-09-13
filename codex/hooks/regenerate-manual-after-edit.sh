@@ -67,6 +67,26 @@ print(json.dumps([entry.st_dev, entry.st_ino, entry.st_size, entry.st_mtime_ns, 
 PY
 }
 
+source_state() {
+  # Metadata-only sync activity does not change the manual being exported.
+  # Keep file identity and content checks separate from publication guards.
+  python3 - "$1" <<'PY'
+import hashlib, json, os, stat, sys
+descriptor = os.open(sys.argv[1], os.O_RDONLY | os.O_NOFOLLOW)
+with os.fdopen(descriptor, "rb") as source:
+    entry = os.fstat(source.fileno())
+    if not stat.S_ISREG(entry.st_mode):
+        sys.exit(1)
+    digest = hashlib.file_digest(source, "sha256").hexdigest()
+    current = os.lstat(sys.argv[1])
+    if (not stat.S_ISREG(current.st_mode) or
+            (entry.st_dev, entry.st_ino, entry.st_size) !=
+            (current.st_dev, current.st_ino, current.st_size)):
+        sys.exit(1)
+print(json.dumps([entry.st_dev, entry.st_ino, entry.st_size, digest]))
+PY
+}
+
 publish_artifact() {
   python3 - "$1" "$2" "$3" <<'PY'
 import json, os, stat, sys
@@ -124,7 +144,7 @@ while IFS= read -r file_path; do
   fi
   base=$(basename -- "$file_path" .org)
   file_path="$dir/$base.org"
-  if ! source_state=$(artifact_state "$file_path" 2>/dev/null) ||
+  if ! original_source=$(source_state "$file_path" 2>/dev/null) ||
      ! names=$(manual_output_names "$file_path") ||
      ! texi_name=$(printf '%s' "$names" | jq -er '.[0]' 2>/dev/null) ||
      ! info_name=$(printf '%s' "$names" | jq -er '.[1]' 2>/dev/null); then
@@ -233,8 +253,8 @@ while IFS= read -r file_path; do
       info_ready=1
     fi
   fi
-  if ! current_source=$(artifact_state "$file_path" 2>/dev/null) ||
-     [ "$current_source" != "$source_state" ]; then
+  if ! current_source=$(source_state "$file_path" 2>/dev/null) ||
+     [ "$current_source" != "$original_source" ]; then
     record_failure "$file_path" "Manual source changed during export; generated artifacts were not published"
     continue
   fi

@@ -43,6 +43,20 @@ case "$MANUAL_TEST_MODE" in
     "$NATIVE_EMACS" "$@" || exit "$?"
     printf '\\nConcurrent source change\\n' >> "$MANUAL_EXPORT_SOURCE"
     exit 0 ;;
+  source-metadata)
+    "$NATIVE_EMACS" "$@" || exit "$?"
+    chmod 600 "$MANUAL_EXPORT_SOURCE"
+    exit 0 ;;
+  source-replace)
+    "$NATIVE_EMACS" "$@" || exit "$?"
+    cp "$MANUAL_EXPORT_SOURCE" "$MANUAL_EXPORT_SOURCE.replacement"
+    mv "$MANUAL_EXPORT_SOURCE.replacement" "$MANUAL_EXPORT_SOURCE"
+    exit 0 ;;
+  source-symlink)
+    "$NATIVE_EMACS" "$@" || exit "$?"
+    mv "$MANUAL_EXPORT_SOURCE" "$MANUAL_EXPORT_SOURCE.original"
+    ln -s "$MANUAL_EXPORT_SOURCE.original" "$MANUAL_EXPORT_SOURCE"
+    exit 0 ;;
 esac
 exec "$NATIVE_EMACS" "$@"
 ''')
@@ -282,6 +296,30 @@ fi
             self.assertIn("Manual source changed", message)
             self.assertIn("Regenerated 0 .texi", message)
             self.assertEqual(source.with_suffix(".texi").read_text(), "previous texi")
+
+    def test_source_metadata_change_does_not_reject_unchanged_content(self):
+        for hook in HOOKS:
+            source = self.manual()
+            original = source.read_bytes()
+            before = source.stat()
+            message = self.run_hook(hook, source, environment={"MANUAL_TEST_MODE": "source-metadata"})
+            self.assertEqual(source.read_bytes(), original)
+            self.assertEqual(source.stat().st_mtime_ns, before.st_mtime_ns)
+            self.assertNotEqual(source.stat().st_ctime_ns, before.st_ctime_ns)
+            self.assertIn("Regenerated 1 .texi", message)
+            self.assertIn("Failures: 0", message)
+
+    def test_identical_content_source_replacement_is_rejected(self):
+        for hook in HOOKS:
+            for mode in ("source-replace", "source-symlink"):
+                with self.subTest(hook=hook, mode=mode):
+                    source = self.manual()
+                    original = source.read_bytes()
+                    source.with_suffix(".texi").write_text("previous texi")
+                    message = self.run_hook(hook, source, environment={"MANUAL_TEST_MODE": mode})
+                    self.assertEqual(source.read_bytes(), original)
+                    self.assertIn("Manual source changed", message)
+                    self.assertEqual(source.with_suffix(".texi").read_text(), "previous texi")
 
     def test_makeinfo_only_consumes_private_validated_texinfo(self):
         for hook in HOOKS:

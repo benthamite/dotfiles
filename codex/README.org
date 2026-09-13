@@ -374,6 +374,10 @@ It handles independent Texinfo/Info names without evaluating Org. Unrelated
 unstaged headers cannot hide outputs; ambiguous pending staging is refused with
 a reason to stage the intended manual separately.
 
+Automatic manual exports compare source identity and content, allowing
+metadata-only changes during export. Replaced sources, changed contents and
+symlinks remain rejected; generated destinations retain strict state checks.
+
 Elisp helpers under standard skill roots' =scripts/= directories, including
 project-local =.claude/skills/= and =.codex/skills/=, require their own changed
 =SKILL.md= or =references/*.md= in the selected commit.

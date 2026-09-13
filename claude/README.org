@@ -716,6 +716,23 @@ Adelaide's exact =digital.library.adelaide.edu.au/bitstreams/UUID/download=
 route and its =server/api/core/bitstreams/UUID/content= counterpart normalize
 the public document identifier. ZORA's exact HTTPS host =www.zora.uzh.ch=
 normalizes only =/id/eprint/NUMBER/NUMBER/=; filenames remain scanned.
+UCL Discovery uses that same numeric eprint prefix on the exact HTTPS host
+=discovery.ucl.ac.uk=. Jacob Barrett’s author site recognizes only the exact
+HTTPS host =www.jacobbarrett.org= and public account prefix
+=/uploads/1/2/3/6/123631127/=. Filenames, query strings, fragments and request
+headers/bodies remain scanned; other accounts and lookalike authorities are
+not classified as these public routes.
+LSE's exact HTTPS host =eprints.lse.ac.uk= projects only numeric record/file
+prefixes. JESP's =jesp.org= projects its complete numeric article-download
+route; Frontiers projects only the observed artificial-intelligence article
+route with a numeric =10.3389/frai.YEAR.NUMBER= DOI. The exact HTTPS host
+=80000hours.org= projects its dated WordPress uploads prefix. Cambridge's
+exact HTTPS host =www.cambridge.org= projects the public content-view prefix
+with a 32-character hexadecimal document ID and numeric article-file ID;
+the trailing descriptive filename remains scanned. These are verified source
+schemas, not domain exemptions. Unknown routes retain slash-spanning scans,
+because splitting every path at slashes would hide Base64 credentials that
+contain slashes or payloads distributed across path segments.
 Ergo's HTTPS =journals.publishing.umich.edu/ergo/article/NUMBER/galley/NUMBER/download/=
 route normalizes public article and galley IDs. These routes retain query,
 fragment, header and body checks; extra path and spoofed hosts stay scanned.

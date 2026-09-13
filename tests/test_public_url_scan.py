@@ -108,6 +108,35 @@ class PublicURLScanTests(unittest.TestCase):
                         url + '?token=' + self.TOKEN, url + '#' + self.TOKEN):
             self.assertIsNotNone(scan.finding(f"curl '{changed}'"))
 
+    def test_bibliography_public_routes_keep_payloads(self):
+        urls = (
+            "https://discovery.ucl.ac.uk/id/eprint/10086797/9/Knox_10086797_Thesis.pdf",
+            "https://www.jacobbarrett.org/uploads/1/2/3/6/123631127/barrett_and_schmidt_moral_uncertainty_and_public_justification.pdf",
+            "https://eprints.lse.ac.uk/110362/1/Makins_attitudinal_ambivalence_published.pdf",
+            "https://jesp.org/index.php/jesp/article/download/1117/433",
+            "https://www.frontiersin.org/journals/artificial-intelligence/articles/10.3389/frai.2026.1754973/pdf",
+            "https://80000hours.org/wp-content/uploads/2017/06/MacAskill-Normative-Uncertainty.pdf",
+            "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/9DAA9A1E7577A374A1C31FFD9740DCC4/S0045509124000341a.pdf/supererogation_suberogation_and_maximizing_expected_choiceworthiness.pdf",
+        )
+        for url in urls:
+            with self.subTest(url=url):
+                self.assertIsNone(scan.finding(
+                    f"curl --fail --location --max-time 45 '{url}' --output /tmp/paper.pdf"))
+                host = url.split('/')[2]
+                for changed in (
+                    url.replace(host, host + '.example.org'),
+                    url.replace(host, host + '@example.org'),
+                    url.replace(host, self.TOKEN + '@' + host),
+                    url.replace('https://' + host + '/', 'https://' + host + '/private/'),
+                    url.rsplit('/', 1)[0] + '/' + self.TOKEN + '.pdf',
+                    url + '?token=' + self.TOKEN, url + '#' + self.TOKEN,
+                    url + '?token=' + ''.join(f'%{ord(c):02x}' for c in self.TOKEN),
+                ):
+                    self.assertIsNotNone(scan.finding(f"curl '{changed}'"))
+                for option in ('-H', '-d'):
+                    self.assertIsNotNone(scan.finding(f"curl '{url}' {option} '{self.TOKEN}'"))
+        self.assertIsNotNone(scan.finding(f"curl '{urls[1].replace('123631127', '123631128')}'"))
+
 
 if __name__ == "__main__":
     unittest.main()

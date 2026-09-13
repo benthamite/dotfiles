@@ -1119,7 +1119,35 @@ class ElpacaRebuildWaitTests(unittest.TestCase):
         self.status_path().write_text("pending:queued by post-commit\n")
         result = self.rebuild(ELPACA_RELOAD_TIMEOUT_SECONDS="0.1")
         self.assertNotEqual(result.returncode, 0)
+        self.assertIn("timed out waiting for the existing owner", result.stderr)
         self.assertEqual(self.requests(), 1)
+
+    def test_new_revision_pending_waits_past_terminal_previous_owner(self):
+        self.assertEqual(self.rebuild(ELPACA_RELOAD_OWNER="1").returncode, 0)
+        operation_file = self.state / "owners/example.json"
+        old_operation = json.loads(operation_file.read_text())
+        subprocess.run(["git", "-C", str(self.dotfiles), "commit", "--allow-empty",
+                        "-qm", "new fixture revision"], check=True)
+        subprocess.run(["git", "-C", str(self.mirror), "pull", "--ff-only", "-q"], check=True)
+        status = self.status_path()
+        status.parent.mkdir(parents=True)
+        status.write_text("pending:queued by post-commit\n")
+        for terminal in ("finished", "failed", "rejected"):
+            with self.subTest(terminal=terminal):
+                old_operation["state"] = terminal
+                operation_file.write_text(json.dumps(old_operation))
+                before = operation_file.read_bytes()
+                result = self.rebuild(ELPACA_RELOAD_TIMEOUT_SECONDS="0.1")
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn("timed out waiting for the existing owner", result.stderr)
+                self.assertEqual(operation_file.read_bytes(), before)
+                self.assertEqual(status.read_text(), "pending:queued by post-commit\n")
+                self.assertEqual(self.requests(), 1)
+        # The observer did not claim ownership; the new producer can proceed.
+        result = self.rebuild(ELPACA_RELOAD_OWNER="1", FAKE_TOKEN="token-2")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.requests(), 2)
+        self.assertEqual(self.rebuild().returncode, 0)
 
     def test_runtime_restart_or_profile_change_invalidates_cached_success(self):
         self.assertEqual(self.rebuild(ELPACA_RELOAD_OWNER="1").returncode, 0)

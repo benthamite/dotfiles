@@ -159,8 +159,11 @@ def observe_abandoned_operation(root, package, source_repo, extras, initial,
         operation = read_operation(operation_file)
         if operation is None:
             return False  # The post-commit producer may not have started yet.
-        if operation["state"] == "rejected":
-            raise RebuildError("existing completion was rejected; reconcile its owner")
+        if operation["state"] in ("finished", "failed", "rejected"):
+            # A new producer publishes pending before replacing the package's
+            # previous owner record. Terminal tokens cannot be resumed or used
+            # as evidence for that pending status; wait for its actual owner.
+            return False
         resume_token(operation, initial, status_file)
         if context(package, source_repo, extras) != initial:
             raise RebuildError("source or runtime changed before resuming rebuild")

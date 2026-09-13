@@ -245,6 +245,9 @@ If the original waiter exits, an observer can acquire its now-free package lock
 and certify the same completion token after rechecking the recorded source,
 runtime and status identity. It neither replaces an active owner nor requests
 another rebuild to repair a missing completion receipt.
+A pending status alongside a terminal previous owner can be a producer startup
+gap: the observer waits for the new owner instead of resuming the old token. Active
+requests still require the exact recorded source, runtime and status identity.
 
 The =end-to-end= skill separates disposable test fixtures from retained results,
 checks startup effects and runtime identity, and accepts automation that observes

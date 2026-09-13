@@ -352,6 +352,9 @@ change while keeping generated files distinct from live activation.
 The shared rebuild helper requires runtime-, source- and token-bound completion
 evidence. It rejects unqualified cached success and keeps uncertain requests
 recorded so cooperating callers cannot silently launch a competing rebuild.
+A pending status alongside a terminal previous owner can be a producer startup
+gap: the observer waits for the new owner instead of resuming the old token. Active
+requests still require the exact recorded source, runtime and status identity.
 
 The =end-to-end= skill separates disposable test fixtures from retained results,
 checks startup effects and runtime identity, and accepts automation that observes

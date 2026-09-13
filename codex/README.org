@@ -447,7 +447,10 @@ The agent retains one explicit entry/database operation through attachment,
 abstract generation and OCR, and polls its own pending task count. Existing
 abstracts are preserved; unresolved choices and conflicting edits produce a
 blocked result. After resolving a failure and draining callbacks, retry the
-existing entry with a new operation. No global input functions are rebound.
+existing entry with a new operation. Agent runs load the database in the
+background without selecting Ebib entries, displaying PDFs or asking questions.
+Manual commands retain their interactive behavior. No global input functions
+are rebound.
 Metadata corrections use Ebib's bracing field setter and contextual save wrapper;
 verification includes parsing the saved entry back to its original field values.
 

@@ -325,6 +325,8 @@ It resolves active bibliography state and serializes attachment callbacks.
 It verifies work identity and labels uncertain metadata. Article PDF downloads
 reuse the existing website downloader; metadata, explicit attachment and entry
 processing stay in Emacs. The skill has no separate downloader or BibTeX writer.
+Before attachment it stores the verified document language; PDF processing keeps
+the intended file and language across buffer switches without a language prompt.
 
 Paired configuration audits allow matching resource deletions within retained
 skills while still rejecting one-sided resource or whole-skill deletions.

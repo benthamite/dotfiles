@@ -236,6 +236,8 @@ with the current Ebib or BibTeX entry.  It prompts for the language of
 the document, using either Ebib's language field or a general language
 selector.
 
+Programmatic callers may supply FILENAME and the fourth argument LANGUAGE to use an already validated document language without consulting the selected buffer or prompting. Ebib PDF postprocessing passes both explicitly so a buffer switch during metadata processing cannot change the OCR target or language.
+
 With a prefix argument, the command forces OCR even if the PDF already
 contains a text layer.  Without the prefix argument, =ocrmypdf= will
 skip files that have already been processed and report accordingly.

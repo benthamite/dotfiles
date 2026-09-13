@@ -419,5 +419,64 @@
   "Do not treat DOI strings as arXiv identifiers."
   (should-not (ebib-extras-arxiv-id-p "10.1000/example")))
 
+;;;; PDF postprocessing
+
+(require 'cl-lib)
+(require 'ebib-extras)
+(require 'files-extras)
+(defvar tlon-languages-properties)
+(defvar pdf-view-mode-hook)
+
+(ert-deftest ebib-extras-pdf-keeps-target-across-buffer-switch ()
+  "Postprocessing uses the entry PDF and language across metadata yields."
+  (dolist (mode '(ebib-entry-mode ebib-index-mode fundamental-mode))
+    (let* ((db (ebib-db-new-database))
+           (ebib--cur-db db)
+           (key "Author2020Paper")
+           (tlon-languages-properties nil)
+           (pdf-view-mode-hook nil)
+           (pdf "/tmp/verified-paper.pdf")
+           command opened)
+      (ebib-db-set-entry key `(("file" . ,pdf)) db)
+      (should-not (ebib-get-field-value "langid" key db 'noerror))
+      ;; The agent verifies the PDF's language before starting attachment.
+      (ebib-set-field-value "langid" "english" key db 'overwrite)
+      (with-temp-buffer
+        (setq major-mode mode)
+        (cl-letf (((symbol-function 'ebib-extras-set-pdf-metadata)
+                   (lambda (&rest _)
+                     (setq major-mode 'pdf-view-mode)
+                     (setq buffer-file-name "/tmp/unrelated-paper.pdf")
+                     (setq ebib--cur-db (ebib-db-new-database))))
+                  ((symbol-function 'executable-find) (lambda (_) "/usr/bin/ocrmypdf"))
+                  ((symbol-function 'tlon-lookup)
+                   (lambda (_table result _property language)
+                     (should (equal language "english"))
+                     (if (eq result :standard) "english" "eng")))
+                  ((symbol-function 'completing-read)
+                   (lambda (&rest _) (ert-fail "Unexpected language prompt")))
+                  ((symbol-function 'tlon-select-language)
+                   (lambda (&rest _) (ert-fail "Unexpected language prompt")))
+                  ((symbol-function 'start-process-shell-command)
+                   (lambda (_name _buffer text) (setq command text) :process))
+                  ((symbol-function 'set-process-filter) #'ignore)
+                  ((symbol-function 'find-file) (lambda (file) (setq opened file))))
+          (ebib-extras--af-postprocess-pdf key)
+          (should (string-match-p "-l eng" command))
+          (should (string-match-p (regexp-quote pdf) command))
+          (should (equal opened pdf)))))))
+
+(ert-deftest ebib-extras-pdf-refuses-multiple-pdfs-before-prompting ()
+  "Multiple attached PDFs must not select an arbitrary OCR target."
+  (let ((ebib--cur-db (ebib-db-new-database)))
+    (cl-letf (((symbol-function 'ebib-extras-get-field)
+               (lambda (&rest _) "first.pdf;second.pdf"))
+              ((symbol-function 'ebib--split-files)
+               (lambda (_) '("first.pdf" "second.pdf")))
+              ((symbol-function 'ebib-extras-get-or-set-language)
+               (lambda (&rest _) (ert-fail "Language requested before PDF validation"))))
+      (should-error (ebib-extras--af-postprocess-pdf "Author2020Paper")
+                    :type 'user-error))))
+
 (provide 'ebib-extras-test)
 ;;; ebib-extras-test.el ends here

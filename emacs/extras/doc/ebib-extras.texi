@@ -610,6 +610,8 @@ The command @code{ebib-extras-set-pdf-metadata} writes Author and Title metadata
 
 The command @code{ebib-extras-ocr-pdf} performs OCR on the PDF file associated with the current entry using @code{files-extras-ocr-pdf}. When called with a prefix argument (@samp{C-u}), OCR is forced even if text is already present in the PDF@.
 
+Attachment postprocessing captures the entry's PDF and validated language before metadata processing can yield. OCR and PDF opening use that captured file even if another buffer becomes current. Programmatic @code{ebib-extras-set-pdf-metadata} callers may supply KEY and DB explicitly to select the entry independently of the current buffer.
+
 @node Identifier retrieval
 @section Identifier retrieval
 

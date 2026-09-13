@@ -332,7 +332,7 @@ The screenshot directory is specified by `files-extras-screenshot-directory'."
 (declare-function tlon-select-language "tlon-core")
 (declare-function tlon-lookup "tlon-core")
 (defvar tlon-languages-properties)
-(defun files-extras-ocr-pdf (force &optional filename parameters)
+(defun files-extras-ocr-pdf (force &optional filename parameters language)
   "OCR the FILENAME.
 If FILENAME is nil, use the PDF file at point or the file visited
 by the current buffer.  If FORCE is non-nil or called with a prefix
@@ -340,7 +340,8 @@ argument, force OCR even if it has already been performed on the
 file.
 
 Optionally, pass PARAMETERS to `ocrmypdf'.  If so, FORCE and
-FILENAME have no effect."
+FILENAME have no effect.  LANGUAGE, when supplied, is the validated
+language name to use instead of selecting it from the current buffer."
   (interactive "P")
   (unless (executable-find "ocrmypdf")
     (user-error "`ocrmypdf' not found.  Please install it (e.g. `brew install ocrmypdf'"))
@@ -352,9 +353,9 @@ FILENAME have no effect."
 			 (_ (user-error "Could not determine file to OCR"))))))
     (unless (string= (file-name-extension filename) "pdf")
       (user-error "File is not a PDF"))
-    (let* ((language (pcase major-mode
+    (let* ((language (or language (pcase major-mode
 		       ('ebib-entry-mode (ebib-extras-get-or-set-language))
-		       (_ (tlon-select-language))))
+		       (_ (tlon-select-language)))))
 	   (lang (tlon-lookup tlon-languages-properties :iso-639-2 :name language))
 	   (parameters
 	    (or parameters

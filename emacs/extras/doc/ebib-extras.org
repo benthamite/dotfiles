@@ -455,6 +455,8 @@ The command ~ebib-extras-set-pdf-metadata~ writes Author and Title metadata into
 
 The command ~ebib-extras-ocr-pdf~ performs OCR on the PDF file associated with the current entry using ~files-extras-ocr-pdf~. When called with a prefix argument (=C-u=), OCR is forced even if text is already present in the PDF.
 
+Attachment postprocessing captures the entry's PDF and validated language before metadata processing can yield. OCR and PDF opening use that captured file even if another buffer becomes current. Programmatic ~ebib-extras-set-pdf-metadata~ callers may supply KEY and DB explicitly to select the entry independently of the current buffer.
+
 ** Identifier retrieval
 :PROPERTIES:
 :CUSTOM_ID: h:identifier-retrieval

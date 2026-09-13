@@ -614,7 +614,8 @@ KEY.EXT, moved to the appropriate library directory and the
   (interactive (list (if current-prefix-arg 'most-recent nil)
                      nil
                      t))
-  (let* ((key   (ebib-extras--af-resolve-key key))
+  (let* ((db ebib--cur-db)
+         (key   (ebib-extras--af-resolve-key key))
          (src   (ebib-extras--af-resolve-file file key))
          (dest  (ebib-extras--af-install-file src key)))
     (ebib-extras--update-file-field-contents key dest)
@@ -623,7 +624,7 @@ KEY.EXT, moved to the appropriate library directory and the
       ;; Dedup before postprocess: postprocess opens the PDF and switches to
       ;; `pdf-view-mode', after which `ebib--execute-when' in dedup would fail.
       (ebib-extras-dedup-file-field)
-      (ebib-extras--af-postprocess-pdf key))))
+      (ebib-extras--af-postprocess-pdf key db))))
 
 ;;;; helper functions for `ebib-extras-attach-file'
 
@@ -671,14 +672,24 @@ KEY.EXT, moved to the appropriate library directory and the
       dest)))
 
 (defvar pdf-view-mode-hook)
-(defun ebib-extras--af-postprocess-pdf (key)
-  "Write metadata, OCR and open the PDF attached to KEY."
-  (ebib-extras-set-pdf-metadata key)
-  (ebib-extras-ocr-pdf)
-  ;; Suppress `pdf-view-restore-mode' because the newly attached PDF may have a
-  ;; different page count than the file it replaced, causing "No such page" errors.
-  (let ((pdf-view-mode-hook (remq 'pdf-view-restore-mode-conditionally pdf-view-mode-hook)))
-    (ebib-extras-open-pdf-file)))
+(defun ebib-extras--af-postprocess-pdf (key &optional db)
+  "Write metadata, OCR and open the PDF attached to KEY.
+Capture the database, PDF and language before metadata processing can yield.
+DB defaults to the selected Ebib database."
+  (let* ((db (or db ebib--cur-db))
+         (ebib--cur-db db)
+         (files (seq-filter
+                 (lambda (path) (equal (file-name-extension path) "pdf"))
+                 (ebib--split-files (or (ebib-extras-get-field "file" key) ""))))
+         (file (if (= (length files) 1)
+                   (expand-file-name (car files))
+                 (user-error "No unique PDF attached to %s" key)))
+         (language (ebib-extras-get-or-set-language key db)))
+    (ebib-extras-set-pdf-metadata key db)
+    (files-extras-ocr-pdf nil file nil language)
+    ;; A replacement PDF can have fewer pages than its saved view position.
+    (let ((pdf-view-mode-hook (remq 'pdf-view-restore-mode-conditionally pdf-view-mode-hook)))
+      (find-file file))))
 
 (defun ebib-extras-attach-most-recent-file ()
   "Attach the most recent download to the current entry and post-process it."
@@ -1620,9 +1631,10 @@ DIRECTION can be `prev' or `next'."
 
 ;;;;; pdf metadata
 
-(defun ebib-extras-set-pdf-metadata (&optional key)
+(defun ebib-extras-set-pdf-metadata (&optional key db)
   "Set the metadata of the PDF associated with KEY.
-If KEY is nil, use the entry at point.
+If KEY is nil, use the entry at point.  Explicit DB selects the Ebib
+database independently of the current buffer, with KEY identifying its entry.
 
 This implementation uses `pdftk-java' (or `pdftk' if available)
 to update the Author and Title fields in-place."
@@ -1631,17 +1643,23 @@ to update the Author and Title fields in-place."
                        (executable-find "pdftk-java"))))
     (unless pdftk-cmd
       (user-error "Please install `pdftk-java` (e.g. 'brew install pdftk-java')"))
-    (unless (derived-mode-p 'ebib-entry-mode 'bibtex-mode)
+    (unless (or db (derived-mode-p 'ebib-entry-mode 'bibtex-mode))
       (user-error "Not in `ebib-entry-mode' or 'bibtex-mode'"))
-    (when-let* ((get-field (pcase major-mode
+    (when-let* ((get-field (if db
+                              (lambda (field)
+                                (let ((ebib--cur-db db))
+                                  (ebib-extras-get-field field key)))
+                            (pcase major-mode
                              ('ebib-entry-mode #'ebib-extras-get-field)
-                             ('bibtex-mode   #'bibtex-extras-get-field)))
-                (file (if key
+                             ('bibtex-mode   #'bibtex-extras-get-field))))
+                (file (if db
+                          (ebib-extras-get-file-in-string (funcall get-field "file") "pdf")
+                        (if key
                           (when-let* ((files (pcase major-mode
                                                ('ebib-entry-mode (ebib-extras-get-field "file" key))
                                                ('bibtex-mode (bibtex-extras-get-entry-as-string key "file")))))
                             (ebib-extras-get-file-in-string files "pdf"))
-                        (ebib-extras-get-file "pdf")))
+                          (ebib-extras-get-file "pdf"))))
                 (author (or (funcall get-field "author")
                             (funcall get-field "editor"))))
       (let* ((file-absolute (expand-file-name file))

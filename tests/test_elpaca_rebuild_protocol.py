@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 HELPER = Path(__file__).resolve().parents[1] / "claude/bin/elpaca-rebuild-wait"
@@ -35,6 +36,7 @@ class ElpacaRebuildProtocolTests(unittest.TestCase):
         self.profile.mkdir()
         self.status_package = "fixture-package"
         self.status_state = "finished"
+        self.queued = False
         self.calls = 0
         self.outputs = []
         self.helper.command = self.native_command
@@ -50,6 +52,11 @@ class ElpacaRebuildProtocolTests(unittest.TestCase):
             (and (eq package 'fixture-package) 'fixture-entry))
           (defun elpaca<-source-dir (_entry) {json.dumps(str(self.source))})
           (defun elpaca-source-dir (_entry) (error "Unexpected alternate source"))
+          (defun elpaca--status (_entry) 'finished)
+          (setq elpaca-extras--build-reload-statuses (make-hash-table :test 'equal))
+          (puthash "fixture-token" (list :package 'fixture-package
+            :state '{'queued' if self.queued else 'finished'})
+            elpaca-extras--build-reload-statuses)
           (defun elpaca-extras-rebuild-and-reload (package)
             (unless (eq package 'fixture-package) (error "Unexpected package"))
             "fixture-package-token-1")
@@ -111,6 +118,59 @@ class ElpacaRebuildProtocolTests(unittest.TestCase):
         with self.assertRaises(self.helper.RebuildError):
             self.helper.token_status("fixture-package", '\") (error "injected")', identity)
         self.assertEqual(self.calls, calls)
+
+    def lost_request(self):
+        initial = {"runtime": self.identity(), "source": "fixture", "active": "fixture"}
+        owner = self.root / "fixture-package.json"
+        status = self.root / "fixture-package.status"
+        with patch.object(self.helper, "request", side_effect=self.helper.RebuildError("lost reply")):
+            with self.assertRaises(self.helper.RebuildError):
+                self.helper.start_operation("fixture-package", initial, owner, status)
+        operation = self.helper.read_operation(owner)
+        self.assertEqual(operation["state"], "requesting")
+        self.assertNotIn("token", operation)
+        return initial, owner, status, operation
+
+    def reconcile(self, initial, owner, status, operation):
+        with patch.object(self.helper, "context", return_value=initial):
+            self.helper.reconcile_tokenless_request(
+                "fixture-package", self.source, False, initial, operation, owner, status)
+
+    def test_lost_reply_idle_package_is_archived_without_certifying_completion(self):
+        initial, owner, status, operation = self.lost_request()
+        self.reconcile(initial, owner, status, operation)
+        archives = list(self.root.glob("fixture-package.abandoned.*.json"))
+        self.assertEqual(len(archives), 1)
+        self.assertEqual(json.loads(archives[0].read_text())["state"], "abandoned")
+        self.assertEqual(self.helper.read_operation(owner), operation)
+        self.assertEqual(self.helper.read_status(status), "pending")
+        self.assertFalse(list(self.root.glob("*.receipt.json")))
+
+    def test_lost_reply_still_queued_is_not_abandoned(self):
+        initial, owner, status, operation = self.lost_request()
+        self.queued = True
+        with self.assertRaisesRegex(self.helper.RebuildError, "not confirmed idle"):
+            self.reconcile(initial, owner, status, operation)
+        self.assertFalse(list(self.root.glob("*.abandoned.*.json")))
+
+    def test_lost_reply_changed_runtime_is_not_abandoned(self):
+        initial, owner, status, operation = self.lost_request()
+        initial["runtime"]["pid"] += 1
+        with self.assertRaises(self.helper.RebuildError):
+            self.reconcile(initial, owner, status, operation)
+        self.assertFalse(list(self.root.glob("*.abandoned.*.json")))
+
+    def test_replaced_status_is_not_abandoned(self):
+        initial, owner, status, operation = self.lost_request()
+        self.helper.atomic_write(status, "pending:another producer\n")
+        with self.assertRaises(self.helper.RebuildError):
+            self.reconcile(initial, owner, status, operation)
+
+    def test_returned_token_uses_normal_resume_not_reconciliation(self):
+        initial, owner, status, operation = self.lost_request()
+        operation.update(state="pending", token="fixture-package-token-1")
+        with self.assertRaises(self.helper.RebuildError):
+            self.reconcile(initial, owner, status, operation)
 
 
 if __name__ == "__main__":

@@ -245,6 +245,11 @@ If the original waiter exits, an observer can acquire its now-free package lock
 and certify the same completion token after rechecking the recorded source,
 runtime and status identity. It neither replaces an active owner nor requests
 another rebuild to repair a missing completion receipt.
+If the request reply was lost before its token was recorded, the helper checks
+the live package under the exclusive owner lock. Only an idle package with no
+queued tokens and unchanged source, runtime and status permits archiving that
+abandoned request and starting a fresh bound rebuild. The abandoned request
+never counts as completion evidence.
 A pending status alongside a terminal previous owner can be a producer startup
 gap: the observer waits for the new owner instead of resuming the old token. Active
 requests still require the exact recorded source, runtime and status identity.

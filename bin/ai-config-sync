@@ -1353,6 +1353,12 @@ def audit_tracked_pair_deletions(problems: list[str], repo: Path = ROOT) -> None
         artifact = paired_artifact_root_for_path(path)
         if artifact is None:
             continue
+        relative = Path(path).relative_to(artifact.path)
+        counterpart_path = (Path(artifact.counterpart) / relative).as_posix()
+        if (counterpart_path in deleted_paths
+                and tracked_root_has_non_deleted_files(repo, artifact.path, deleted_paths)):
+            # Removing matching resources does not remove the surviving skill.
+            continue
         key = (artifact.path, artifact.counterpart)
         if key in reported:
             continue

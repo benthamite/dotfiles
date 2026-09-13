@@ -429,6 +429,9 @@ It resolves active bibliography state and serializes attachment callbacks.
 It verifies work identity and labels uncertain metadata;
 its opt-in DOI downloader rejects unsafe destinations and unsupported mutations.
 
+Paired configuration audits allow matching resource deletions within retained
+skills while still rejecting one-sided resource or whole-skill deletions.
+
 Both interactive and programmatic =walk-list= copies use exact input identity
 and locked lifecycle transitions. Native atomic exchange detects displaced-file
 races and retains uncertain recovery data; new stored copies and evidence use

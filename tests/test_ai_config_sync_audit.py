@@ -252,6 +252,33 @@ if os.path.lexists(mode_link) and (
             problems,
         )
 
+    def test_audit_allows_matched_auxiliary_deletions(self):
+        for staged in (False, True):
+            with self.subTest(staged=staged):
+                repo = self.make_repo([
+                    f"{side}/skills/example/{name}"
+                    for side in ("claude", "codex")
+                    for name in ("SKILL.md", "scripts/helper.py")
+                ])
+                for side in ("claude", "codex"):
+                    (repo / side / "skills/example/scripts/helper.py").unlink()
+                if staged:
+                    self.run_git(repo, "add", "-u")
+                problems = []
+                self.module.audit_tracked_pair_deletions(problems, repo)
+                self.assertEqual([], problems)
+
+    def test_audit_rejects_one_sided_auxiliary_deletion(self):
+        repo = self.make_repo([
+            f"{side}/skills/example/{name}"
+            for side in ("claude", "codex")
+            for name in ("SKILL.md", "scripts/helper.py")
+        ])
+        (repo / "claude/skills/example/scripts/helper.py").unlink()
+        problems = []
+        self.module.audit_tracked_pair_deletions(problems, repo)
+        self.assertEqual(1, len(problems))
+
     def test_audit_ignores_deleted_runtime_files(self):
         repo = self.make_repo(
             [

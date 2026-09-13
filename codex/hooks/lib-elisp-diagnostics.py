@@ -10,6 +10,23 @@ import sys
 from pathlib import Path
 
 
+ROOT = Path(__file__).resolve().parents[2]
+RECOVERY_TESTS = frozenset(str(ROOT / "tests" / name) for name in (
+    "test_elpaca_rebuild_protocol.py", "test_elisp_live_diagnostics.py",
+))
+PACKAGE = r"[a-z][a-z0-9-]*"
+TOKEN = r"[A-Za-z0-9][A-Za-z0-9_.:-]*"
+STATUS_QUERY = (
+    r'\(elpaca-extras-build-reload-status "' + TOKEN + r'"\)'
+)
+REGISTRY_QUERY = (
+    r'\(let \(rows\) \(maphash \(lambda \(token status\) '
+    r'\(when \(eq \(plist-get status :package\) \(quote ' + PACKAGE + r'\)\) '
+    r'\(push \(list token \(plist-get status :state\)\) rows\)\)\) '
+    r'elpaca-extras--build-reload-statuses\) \(seq-take rows 10\)\)'
+)
+
+
 def literal_options(args, flags, values, required=frozenset()):
     """Consume option values before counting required switches; reject unknowns."""
     seen = set()
@@ -128,6 +145,15 @@ def inspection_command(command: str) -> bool:
         return True
     if program in {"grep", "egrep", "fgrep"}:
         return True
+    # These recovery suites use synthetic processes/registries and temporary
+    # state. Isolate Python startup, forbid extra arguments, and retain debt.
+    if program == "python3":
+        return (len(args) == 3 and args[:2] == ["-I", "-B"]
+                and args[2] in RECOVERY_TESTS)
+    if program == "emacsclient":
+        return (len(args) == 2 and args[0] == "-e"
+                and any(re.fullmatch(pattern, args[1])
+                        for pattern in (STATUS_QUERY, REGISTRY_QUERY)))
     if program == "rg":
         return literal_options(args,
             {"--no-config", "-n", "--line-number", "-i", "--ignore-case",

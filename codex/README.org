@@ -713,6 +713,13 @@ commit; otherwise the tracker uses the explicit payload context.
 
 The live-verification gate permits literal read-only diagnosis through
 =lib-elisp-diagnostics.py= while retaining every pending check. Supported forms
+also include =emacsclient -e= with the exact rebuild-token status call or the
+bounded package-filtered registry query. Recovery protocol and diagnostic-gate
+tests may run as =python3 -I -B ABSOLUTE-TEST-PATH= for the two canonical test
+files =test_elpaca_rebuild_protocol.py= and =test_elisp_live_diagnostics.py=.
+These isolated fixture tests retain pending package/commit identities and never
+certify live behavior. Extra arguments and other Python programs stay blocked.
+Other supported forms
 include =cat=, numeric =sed -n= ranges and =rg --no-config=. Git requires
 =--no-pager=; index-reading commands (=status=, =ls-files=, =diff=) additionally
 require =--no-optional-locks -c core.fsmonitor=false=. Diff, log and show

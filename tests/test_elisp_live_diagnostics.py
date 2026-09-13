@@ -4,6 +4,7 @@ import base64
 import importlib.util
 import json
 import os
+import shlex
 from pathlib import Path
 import subprocess
 import tempfile
@@ -18,6 +19,27 @@ SPEC.loader.exec_module(MODULE)
 
 
 class InspectionCommands(unittest.TestCase):
+    def test_recovery_tests_and_status_queries_are_narrow(self):
+        tests = [f"python3 -I -B {shlex.quote(str(ROOT / 'tests' / name))}"
+                 for name in ('test_elpaca_rebuild_protocol.py', 'test_elisp_live_diagnostics.py')]
+        expression = ('(let (rows) (maphash (lambda (token status) '
+                      '(when (eq (plist-get status :package) (quote files-extras)) '
+                      '(push (list token (plist-get status :state)) rows))) '
+                      'elpaca-extras--build-reload-statuses) (seq-take rows 10))')
+        for command in tests + ["emacsclient -e " + shlex.quote(expression),
+                               'emacsclient -e \'(elpaca-extras-build-reload-status "files-extras-1")\'']:
+            self.assertTrue(MODULE.inspection_command(command), command)
+        for command in (
+            tests[0] + ' extra', tests[0].replace('-I ', ''),
+            tests[0].replace(str(ROOT), '/tmp/other'),
+            tests[0].replace('test_elpaca_rebuild_protocol.py', 'arbitrary.py'),
+            'python3 -I -B -c "print(1)"',
+            "emacsclient -e " + shlex.quote(expression.replace('(seq-take rows 10)', '(delete-file "file")')),
+            'emacsclient -e \'(elpaca-extras-rebuild-and-reload (quote files-extras))\'',
+            'emacsclient -e \'(progn (elpaca-extras-build-reload-status "x") (delete-file "file"))\'',
+        ):
+            self.assertFalse(MODULE.inspection_command(command), command)
+
     def test_literal_diagnostics(self):
         for command in (
             "cat '/tmp/source with spaces.el'", "head -100 source.el",
@@ -131,6 +153,16 @@ class PendingGate(unittest.TestCase):
             for tool, nested in (("claude", False), ("codex", False), ("codex", True)):
                 with self.subTest(tool=tool, nested=nested, command=command):
                     self.assertEqual(self.gate(tool, command, nested), "")
+
+    def test_recovery_commands_leave_pending_identity_unchanged(self):
+        command = f"python3 -I -B {shlex.quote(str(ROOT / 'tests/test_elpaca_rebuild_protocol.py'))}"
+        status = 'emacsclient -e \'(elpaca-extras-build-reload-status "files-extras-1")\''
+        for tool, nested in (("claude", False), ("codex", False), ("codex", True)):
+            for allowed in (command, status):
+                self.assertEqual(self.gate(tool, allowed, nested), "")
+            for denied in (command + ' extra', command.replace(str(ROOT), '/tmp/other'),
+                           status.replace('build-reload-status', 'rebuild-and-reload')):
+                self.assertIn('permissionDecision', self.gate(tool, denied, nested))
 
     def test_mutation_denial_names_outstanding_work(self):
         for tool, nested in (("claude", False), ("codex", False), ("codex", True)):

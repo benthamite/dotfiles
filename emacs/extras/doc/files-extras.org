@@ -236,7 +236,7 @@ with the current Ebib or BibTeX entry.  It prompts for the language of
 the document, using either Ebib's language field or a general language
 selector.
 
-Programmatic callers may supply FILENAME and the fourth argument LANGUAGE to use an already validated document language without consulting the selected buffer or prompting. Ebib PDF postprocessing supplies both explicitly. The function returns its OCR process so callers can observe completion without searching unrelated process names.
+Programmatic callers may supply FILENAME and the fourth argument LANGUAGE to use an already validated document language without consulting the selected buffer or prompting. Ebib PDF postprocessing supplies both explicitly. The function returns its OCR process so callers can observe completion without searching unrelated process names. Unless explicit PARAMETERS are supplied, a missing OCR language code raises an error before starting a subprocess.
 
 With a prefix argument, the command forces OCR even if the PDF already
 contains a text layer.  Without the prefix argument, =ocrmypdf= skips

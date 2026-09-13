@@ -342,6 +342,7 @@ file.  Otherwise, preserve pages with text and OCR only image pages.
 Optionally, pass PARAMETERS to `ocrmypdf'.  If so, FORCE and
 FILENAME have no effect.  LANGUAGE, when supplied, is the validated
 language name to use instead of selecting it from the current buffer.
+Without PARAMETERS, signal an error if LANGUAGE has no OCR code.
 Return the OCR process so callers can observe its completion."
   (interactive "P")
   (unless (executable-find "ocrmypdf")
@@ -357,7 +358,9 @@ Return the OCR process so callers can observe its completion."
     (let* ((language (or language (pcase major-mode
 		       ('ebib-entry-mode (ebib-extras-get-or-set-language))
 		       (_ (tlon-select-language)))))
-	   (lang (tlon-lookup tlon-languages-properties :iso-639-2 :name language))
+	   (lang (or (tlon-lookup tlon-languages-properties :iso-639-2 :name language)
+                     (unless parameters
+                       (user-error "No OCR language code configured for %s" language))))
 	   (parameters
 	    (or parameters
 		(format (concat (if force "--force-ocr "

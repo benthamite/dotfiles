@@ -428,5 +428,15 @@ which `file-name-as-directory' converts to \"./\"."
       (when (buffer-live-p buf) (kill-buffer buf))
       (delete-file file))))
 
+(ert-deftest files-extras-test-ocr-missing-language-code ()
+  "Reject missing OCR language codes before starting a subprocess."
+  (require 'tlon-core)
+  (cl-letf (((symbol-function 'executable-find) (lambda (_) "/usr/bin/ocrmypdf"))
+            ((symbol-function 'start-process-shell-command)
+             (lambda (&rest _) (error "OCR must not start"))))
+    (should-error
+     (files-extras-ocr-pdf nil "/tmp/unused.pdf" nil "unconfigured-language")
+     :type 'user-error)))
+
 (provide 'files-extras-test)
 ;;; files-extras-test.el ends here

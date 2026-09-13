@@ -24,6 +24,7 @@ ROUTES = (
     ("www.zora.uzh.ch", r"/id/eprint/[0-9]+/[0-9]+/", False, ("https",)),
     ("discovery.ucl.ac.uk", r"/id/eprint/[0-9]+/[0-9]+/", False, ("https",)),
     ("www.jacobbarrett.org", r"/uploads/1/2/3/6/123631127/", False, ("https",)),
+    ("www.bobbeddor.com", r"/uploads/3/2/0/3/32037343/", False, ("https",)),
     ("eprints.lse.ac.uk", r"/[0-9]+/[0-9]+/", False, ("https",)),
     ("jesp.org", r"/index\.php/jesp/article/download/[0-9]+/[0-9]+", True, ("https",)),
     ("www.frontiersin.org", r"/journals/artificial-intelligence/articles/10\.3389/frai\.[0-9]{4}\.[0-9]+/pdf", True, ("https",)),

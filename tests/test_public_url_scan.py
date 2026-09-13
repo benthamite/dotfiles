@@ -110,6 +110,7 @@ class PublicURLScanTests(unittest.TestCase):
 
     def test_bibliography_public_routes_keep_payloads(self):
         urls = (
+            "https://www.bobbeddor.com/uploads/3/2/0/3/32037343/fallibility_for_expressivists_final.pdf",
             "https://discovery.ucl.ac.uk/id/eprint/10086797/9/Knox_10086797_Thesis.pdf",
             "https://www.jacobbarrett.org/uploads/1/2/3/6/123631127/barrett_and_schmidt_moral_uncertainty_and_public_justification.pdf",
             "https://eprints.lse.ac.uk/110362/1/Makins_attitudinal_ambivalence_published.pdf",
@@ -135,7 +136,8 @@ class PublicURLScanTests(unittest.TestCase):
                     self.assertIsNotNone(scan.finding(f"curl '{changed}'"))
                 for option in ('-H', '-d'):
                     self.assertIsNotNone(scan.finding(f"curl '{url}' {option} '{self.TOKEN}'"))
-        self.assertIsNotNone(scan.finding(f"curl '{urls[1].replace('123631127', '123631128')}'"))
+        self.assertIsNotNone(scan.finding(f"curl '{urls[0].replace('32037343', '32037344')}'"))
+        self.assertIsNotNone(scan.finding(f"curl '{urls[2].replace('123631127', '123631128')}'"))
 
 
 if __name__ == "__main__":

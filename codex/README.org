@@ -635,7 +635,9 @@ normalizes only =/id/eprint/NUMBER/NUMBER/=; filenames remain scanned.
 UCL Discovery uses that same numeric eprint prefix on the exact HTTPS host
 =discovery.ucl.ac.uk=. Jacob Barrett’s author site recognizes only the exact
 HTTPS host =www.jacobbarrett.org= and public account prefix
-=/uploads/1/2/3/6/123631127/=. Filenames, query strings, fragments and request
+=/uploads/1/2/3/6/123631127/=. Bob Beddor’s exact HTTPS host
+=www.bobbeddor.com= similarly recognizes only =/uploads/3/2/0/3/32037343/=.
+Filenames, query strings, fragments and request
 headers/bodies remain scanned; other accounts and lookalike authorities are
 not classified as these public routes.
 LSE's exact HTTPS host =eprints.lse.ac.uk= projects only numeric record/file

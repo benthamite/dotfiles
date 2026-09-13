@@ -64,6 +64,7 @@ def decision(output: dict | None) -> str:
 class SecretGuardParityTests(unittest.TestCase):
     def test_public_bibliography_document_routes(self):
         urls = (
+            "https://www.bobbeddor.com/uploads/3/2/0/3/32037343/fallibility_for_expressivists_final.pdf",
             "https://discovery.ucl.ac.uk/id/eprint/10086797/9/Knox_10086797_Thesis.pdf",
             "https://www.jacobbarrett.org/uploads/1/2/3/6/123631127/barrett_and_schmidt_moral_uncertainty_and_public_justification.pdf",
             "https://eprints.lse.ac.uk/110362/1/Makins_attitudinal_ambivalence_published.pdf",

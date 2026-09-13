@@ -560,6 +560,8 @@ The command @code{ebib-extras-duplicate-entry} creates a copy of the entry at po
 @findex ebib-extras-remove-file-notify-watchers
 The function @code{ebib-extras-auto-save-databases} checks all Ebib databases for modifications and saves any that have been changed. It re-schedules itself via @code{run-with-timer} to run again after one second, creating a continuous auto-save loop. This function is called automatically when the file is loaded.
 
+Autosaves and asynchronous attachment updates use Ebib's regular save operation, which updates the database's saved timestamp. A subsequent save therefore does not mistake the preceding save for an external edit. Both paths retain Ebib's overwrite confirmation when the file has actually changed on disk; declining it preserves the external file and the database's unsaved changes.
+
 The command @code{ebib-extras-auto-reload-databases} sets up file-notify watchers on all database files so that when a file changes on disk (e.g., from an external edit or a sync), the corresponding Ebib database is automatically reloaded. It first removes any existing watchers (via @code{ebib-extras-remove-file-notify-watchers}) and then establishes a new watcher for each database using @code{ebib-extras-auto-reload-database}.
 
 The reload callback includes a 10-second cooldown per database file (tracked in @code{ebib-extras-last-reload-times}) to prevent rapid consecutive reloads from file sync systems like Dropbox.

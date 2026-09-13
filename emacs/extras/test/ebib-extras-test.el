@@ -13,6 +13,76 @@
 
 (require 'ebib-extras)
 
+;;;; Database save synchronization
+
+(defun ebib-extras-test--with-save-database (function)
+  "Call FUNCTION with an isolated real database and its file."
+  (let* ((file (make-temp-file "ebib-save-test-" nil ".bib"))
+         (db (ebib-db-new-database))
+         (ebib--cur-db db)
+         (ebib--databases (list db)))
+    (unwind-protect
+        (with-temp-buffer
+          (let ((ebib--buffer-alist `((index . ,(current-buffer)))))
+            (ebib-db-set-filename file db)
+            (ebib-db-set-backup nil db)
+            (ebib-db-set-entry "Author2020Paper"
+                               '(("=type=" . "article") ("title" . "Paper")) db)
+            (set-file-times file (time-subtract (current-time) 60))
+            (ebib-db-set-modtime (ebib--get-file-modtime file) db)
+            (funcall function db file)))
+      (delete-file file))))
+
+(ert-deftest ebib-extras-test-own-saves-refresh-modtime ()
+  "Attachment and timer saves must permit a subsequent save without prompts."
+  (dolist (operation '(attachment autosave))
+    (ebib-extras-test--with-save-database
+     (lambda (db file)
+       (let ((other-db (ebib-db-new-database))
+             (ebib--needs-update nil))
+         (cl-letf (((symbol-function 'yes-or-no-p)
+                    (lambda (&rest _) (ert-fail "Spurious overwrite prompt")))
+                   ((symbol-function 'run-with-timer) #'ignore))
+           (let ((ebib--cur-db other-db))
+             (if (eq operation 'attachment)
+                 (ebib-extras--update-file-field-contents
+                  "Author2020Paper" "/tmp/author-paper.pdf")
+               (ebib-db-set-modified t db)
+               (ebib-extras-auto-save-databases))
+             (should (eq ebib--cur-db other-db)))
+           (should (equal (ebib-db-get-modtime db) (ebib--get-file-modtime file)))
+           (ebib-save-current-database t)
+           (should-not (ebib-db-modified-p db))
+           (with-temp-buffer
+             (insert-file-contents file)
+             (should (search-forward "Author2020Paper" nil t))
+             (when (eq operation 'attachment)
+               (should (search-forward "/tmp/author-paper.pdf" nil t))))))))))
+
+(ert-deftest ebib-extras-test-own-saves-preserve-external-edits ()
+  "Refusing an external-file conflict preserves disk and unsaved database edits."
+  (dolist (operation '(attachment autosave))
+    (ebib-extras-test--with-save-database
+     (lambda (db file)
+       (let ((external "@Misc{External2026Entry, title = {External change}}\n")
+             (ebib--needs-update nil)
+             prompted)
+         (with-temp-file file (insert external))
+         (cl-letf (((symbol-function 'yes-or-no-p)
+                    (lambda (_prompt) (setq prompted t) nil))
+                   ((symbol-function 'run-with-timer) #'ignore))
+           (should-error
+            (if (eq operation 'attachment)
+                (ebib-extras--update-file-field-contents
+                 "Author2020Paper" "/tmp/author-paper.pdf")
+              (ebib-db-set-modified t db)
+              (ebib-extras-auto-save-databases)))
+           (should prompted)
+           (should (ebib-db-modified-p db))
+           (with-temp-buffer
+             (insert-file-contents file)
+             (should (equal (buffer-string) external)))))))))
+
 ;;;; Ebib return bindings
 
 (ert-deftest ebib-extras-test-return-edits-current-field ()

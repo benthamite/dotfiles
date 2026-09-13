@@ -167,7 +167,7 @@ in the field, no change is made.  The database is marked as modified."
 	(ebib-set-field-value field file-name key db ";")
 	(ebib--set-modified t db)
 	(setq ebib--needs-update t)
-	(ebib--save-database db '(16))))))
+	(ebib-extras--save-database db)))))
 
 (defconst ebib-extras-book-like-entry-types
   (let ((lowercase '("book" "collection" "mvbook" "inbook" "incollection"
@@ -1352,8 +1352,13 @@ is created following the same schema as notes created with
   "Check if any Ebib database has been modified and save it to its file if so."
   (dolist (db ebib--databases)
     (when (ebib-db-modified-p db)
-      (ebib--save-database db '(16))))
+      (ebib-extras--save-database db)))
   (run-with-timer 1 nil #'ebib-extras-auto-save-databases))
+
+(defun ebib-extras--save-database (db)
+  "Save DB and refresh its saved timestamp, preserving conflict checks."
+  (let ((ebib--cur-db db))
+    (ebib-save-current-database nil)))
 
 (ebib-extras-auto-save-databases)
 

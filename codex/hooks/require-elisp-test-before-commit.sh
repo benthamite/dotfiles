@@ -255,7 +255,7 @@ evidence_matches_package() {
 EXPECTED_PACKAGES=()
 INDEX_DIVERGENCE=""
 record_expected_package() {
-  local file="$1" change_kind="$2" package
+  local file="$1" change_kind="$2" package repo_package
   if [ "$change_kind" = deleted ]; then
     case "$file" in *.el|emacs/config.org) EXPECTED_PACKAGES+=("file:$file") ;; esac
   else
@@ -275,7 +275,18 @@ record_expected_package() {
       if [ "$REPO_ROOT" = "$DOTFILES_ROOT" ]; then
         EXPECTED_PACKAGES+=("file:$file")
       else
-        EXPECTED_PACKAGES+=("$(basename "$REPO_ROOT")")
+        # A repository is only treated as a package when it carries
+        # <name>.el or lisp/<name>.el, the paths elpaca-package-resolve
+        # accepts. Project Elisp elsewhere (a site's scripts/*.el) cannot
+        # produce package evidence, so it is checked through a tracked
+        # project check under a file: label instead.
+        repo_package=$(basename "$REPO_ROOT")
+        if [ -f "$REPO_ROOT/$repo_package.el" ] || \
+           [ -f "$REPO_ROOT/lisp/$repo_package.el" ]; then
+          EXPECTED_PACKAGES+=("$repo_package")
+        else
+          EXPECTED_PACKAGES+=("file:$file")
+        fi
       fi
       ;;
   esac

@@ -192,7 +192,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =require-ai-config-sync.sh= | Blocks commits that violate the paired Claude/Codex configuration contract. |
 | =require-doc-update.sh= | Requires a selected manual for production Elisp, or each global/project-local skill helper's own selected Markdown documentation; checks declared Texinfo and Info outputs without evaluating Org. |
 | =require-elisp-skill.sh= | Blocks Elisp edits until the Elisp conventions skill has been loaded. |
-| =require-elisp-test-before-commit.sh= | Routes commits to the target repository, blocks combined staging, and requires matching package or deletion-check evidence for the proposed Elisp source. |
+| =require-elisp-test-before-commit.sh= | Routes commits to the target repository, blocks combined staging, and requires matching package or deletion-check evidence for the proposed Elisp source. A repository without =<name>.el= or =lisp/<name>.el= is not a package: its Elisp is gated on file-labelled project-check evidence instead. |
 | =require-elisp-verify-after-commit.sh= | Keeps live verification mandatory while permitting a closed set of literal read-only diagnostics; denials name the pending package, commit and repository. Inspection cannot clear evidence. |
 | =require-readme-update.sh= | Requires Claude configuration documentation with staged Claude configuration changes. |
 | =session-learning-capture.sh= | Retained unregistered helper; validates Stop input and canonical cwd, emits escaped untrusted metadata, and reports malformed input without requesting capture. It writes no lesson records. |

@@ -1,0 +1,23 @@
+{
+  "skill_name": "download-paper",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Can you grab the PDF of 10.1111/phpr.12684 for me? Put it somewhere in /tmp, I just want to read it.",
+      "expected_output": "Runs `paper-fetch get 10.1111/phpr.12684 --out <dir outside Drive>`, reports status ok with the staged path and verification verdict, does not write a downloader or call Anna's Archive directly, does not create a bibliography entry.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Download Calvin Baker's 'Expected choiceworthiness and fanaticism' (Phil Studies 2024). The only copy I know of is on PhilPapers.",
+      "expected_output": "Runs paper-fetch; on `needs-browser`, uses the Chrome tool in the documented order (navigate to the item URL until the challenge clears, then to the origin root, run the job snippet, `paper-fetch collect`), and if collect reports no-downloads explains the one-time Chrome automatic-downloads permission instead of trying base64 or localhost transfers.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "paper-fetch says status not-member for 10.1017/s0953820819000165 — what's going on and can you fix it?",
+      "expected_output": "Explains that Anna's Archive answered 'Not a member' (lapsed paid membership, not a key problem), that only Pablo can renew it, and that after renewal the same command (or `--md5` with the md5 from the message) will download; does not attempt to work around the membership or print the key.",
+      "files": []
+    }
+  ]
+}

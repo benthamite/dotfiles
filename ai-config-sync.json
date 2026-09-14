@@ -81,6 +81,13 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
+      "name": "download-paper",
+      "claude": "claude/skills/download-paper/SKILL.md",
+      "codex": "codex/skills/download-paper/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
       "name": "dotfiles-context",
       "claude": "claude/skills/dotfiles-context/SKILL.md",
       "codex": "codex/skills/dotfiles-context/SKILL.md",

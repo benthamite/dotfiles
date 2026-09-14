@@ -7,6 +7,13 @@ top-level configuration directory.
 
 Python modules loaded by resolved file path from more than one consumer.
 
+- =paper_fetch.py= — paper acquisition core behind =bin/paper-fetch=: Anna's Archive
+  domain resolution and member fast-download API, LibGen DOI lookup, SciDB parsing,
+  bot-challenge detection, open-access resolution (Crossref, OpenAlex, Unpaywall,
+  arXiv), PDF identity verification and browser-job generation for challenged
+  hosts. Also imported by =stafforini.com/scripts/download-missing-pdfs.py= for its
+  book mode; tested by =tests/test_paper_fetch.py=. Reads the Anna's Archive key
+  in-process and never prints it.
 - =agent_session_lib.py= — single-actor Emacs =agent.el= session primitives
   (guarded prompt delivery, marker-in-transcript delivery acknowledgment, marker-gated
   transcript reads, buffer lifecycle inspection). Consumed by the paired

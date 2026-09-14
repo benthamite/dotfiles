@@ -109,7 +109,6 @@ not be used to print or document secret values; the placement rules are in
 
 | Command | Contract |
 |---------+----------|
-| =annas-mcp= | Starts the local Anna’s Archive client with its configured endpoint, download path, and credential. |
 | =check_tlon_pass_changes= | Pulls remote changes for the Tlon password-store repository. |
 | =chrome-profile-open= | Opens URLs using the inspected Chrome root and configured profile alias. Missing recorded account/name metadata refuses opening; root precedence is explicit flag, environment, saved config, then default. Launch success is not proof of document access. |
 | =chrome-work-tab= | Opens URLs in the work Chrome profile, with a Codex-specific external-browser guard. |
@@ -138,6 +137,7 @@ Mail activation and credential lookup are documented further in
 | =char_input= | Passes one character to the macOS input-character AppleScript. |
 | =install-epoch-doc-handler= | Safely builds, signs, installs, and registers the local =epoch-doc:= URL handler. |
 | =mdfind-wrapper= | Runs Spotlight’s =mdfind= while suppressing its known query-parser noise. |
+| =paper-fetch= | Downloads one paper PDF by DOI, URL, arXiv id, md5 or title through open-access, LibGen/Anna’s Archive fast-download and SciDB routes, verifies that the file is the requested work, and writes a browser job for challenge-protected hosts. Exit 0 ok, 2 needs-browser, 3 not-member, 4 unavailable. Shared logic: =lib/python/paper_fetch.py=. |
 | =personal-updates= | Applies the scheduled and manual update policy documented in [[file:../macos/README.org][the macOS README]]. |
 | =sync-google-birthdays= | Mirrors reconciled BBDB birthdays into the reminder-free personal Google calendar =Birthdays (managed)=. |
 | =switch-gnupg= | Replaces the Homebrew GnuPG formula with a requested historical version. |

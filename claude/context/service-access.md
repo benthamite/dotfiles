@@ -5,7 +5,7 @@ browser automation; each already carries the right account and auth.
 
 | Service | Tool |
 |---|---|
-| Anna's Archive | `annas-mcp` |
+| Paper PDFs (DOI, URL, arXiv, title; Anna's Archive, LibGen, open access) | `bin/paper-fetch` |
 | Gmail | `claude/bin/gmail.py` |
 | Google Sheets | `claude/bin/sheets.py` |
 | Slack | `claude/bin/slack.py` |
@@ -16,6 +16,19 @@ browser automation; each already carries the right account and auth.
 Relative paths are under the dotfiles root, `~/My Drive/dotfiles/`. For
 Google account and auth details, read `google-services.md` in this
 directory.
+
+## Paper PDFs
+
+`paper-fetch get IDENT` is the single implementation for obtaining a paper PDF:
+open-access routes first (Unpaywall, OpenAlex, arXiv, publisher page), then
+LibGen -> Anna's Archive member fast download, then Anna's Archive SciDB, then a
+browser job for hosts that only answer a real browser (PhilPapers, PhilArchive,
+Anna's Archive HTML). It verifies that the file's text matches the requested
+title or DOI before reporting `ok`. The `download-paper` skill drives it,
+including the browser fallback; `add-bib-entry` uses it for attachments. Shared
+logic lives in `lib/python/paper_fetch.py`; do not add another Anna's Archive
+client. The tool reads the Anna's Archive key itself (see `secrets.md`) and
+needs an active membership: `status: not-member` means the membership lapsed.
 
 ## Google Drive original files
 

@@ -118,6 +118,23 @@ class AnnasArchiveTests(unittest.TestCase):
         http = FakeHttp([("libgen", html(json.dumps(payload)))])
         self.assertEqual(pf.libgen_md5s(http, "10.1/x"), [MD5_A])
 
+    def test_libgen_isbn_lookup_returns_ranked_file_records(self):
+        editions = {"1": {"title": "Introduction to Algorithms", "year": "2009", "author": "Cormen",
+                          "files": {"9": {"f_id": "4493924", "md5": MD5_A}}}}
+        files = {"4493924": {"md5": MD5_A, "extension": "pdf", "filesize": "5076764", "pages": "1313",
+                             "scanned": "", "vector": "", "ocr": "Y", "locator": "L:\\bib\\Cormen.pdf"}}
+        http = FakeHttp([("libgen", lambda url, params: html(json.dumps(files if params.get("object") == "f" else editions)))])
+        records = pf.libgen_isbn_files(http, "978-0-262-03384-8")
+        self.assertEqual(len(records), 1)
+        record = records[0]
+        self.assertEqual((record["md5"], record["extension"], record["size_bytes"], record["filename"]),
+                         (MD5_A, "pdf", 5076764, "Cormen.pdf"))
+        self.assertEqual(record["title"], "Introduction to Algorithms")
+        # the API rejects formatted ISBNs, so the request must carry digits only
+        self.assertEqual(http.calls[0][1]["isbn"], "9780262033848")
+        self.assertEqual(pf.libgen_isbn_files(FakeHttp([("libgen", html("[]"))]), "9780199262479"), [])
+        self.assertEqual(pf.libgen_isbn_files(http, "12345"), [])
+
     def test_scidb_parser_ignores_related_cards(self):
         page = ('<div class="js-aarecord">scihub/10.1/other.pdf <a href="/md5/' + MD5_B + '">r</a></div>'
                 '<div class="js-aarecord">scihub/10.1/x.pdf <a href="/md5/' + MD5_A + '">r</a></div>')

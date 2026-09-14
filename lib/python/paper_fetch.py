@@ -455,6 +455,71 @@ def libgen_md5s(http: Http, doi: str) -> list[str]:
     return md5s
 
 
+def libgen_isbn_files(http: Http, isbn: str) -> list[dict]:
+    """ISBN -> LibGen file records (md5, extension, filesize, title, year, flags).
+
+    Same unchallenged JSON API as ``libgen_md5s``; hyphens and spaces are
+    stripped because the API rejects formatted ISBNs. Each record carries the
+    edition's title/year plus the file's ``extension``, ``filesize`` (int) and
+    the ``scanned``/``vector``/``ocr`` flags LibGen exposes, so callers can rank.
+    """
+    isbn = re.sub(r"[^0-9Xx]", "", isbn)
+    if len(isbn) not in (10, 13):
+        return []
+    response = http.get(LIBGEN_JSON_URL, params={"object": "e", "isbn": isbn}, timeout=45)
+    if response.status != 200:
+        return []
+    try:
+        editions = json.loads(response.text)
+    except ValueError:
+        return []
+    if not isinstance(editions, dict) or not editions:
+        return []
+    file_ids: dict[str, dict] = {}
+    for edition in editions.values():
+        if not isinstance(edition, dict):
+            continue
+        for file_ in (edition.get("files") or {}).values():
+            fid = str(file_.get("f_id") or "")
+            if fid and fid not in file_ids:
+                file_ids[fid] = {"title": edition.get("title") or "", "year": str(edition.get("year") or ""),
+                                 "author": edition.get("author") or ""}
+    if not file_ids:
+        return []
+    records: list[dict] = []
+    ids = list(file_ids)
+    for start in range(0, len(ids), 50):
+        chunk = ids[start:start + 50]
+        response = http.get(LIBGEN_JSON_URL, params={"object": "f", "ids": ",".join(chunk)}, timeout=45)
+        if response.status != 200:
+            continue
+        try:
+            files = json.loads(response.text)
+        except ValueError:
+            continue
+        if not isinstance(files, dict):
+            continue
+        for fid, info in files.items():
+            if not isinstance(info, dict):
+                continue
+            md5 = str(info.get("md5") or "").lower()
+            if not MD5_RE.match(md5):
+                continue
+            try:
+                size = int(info.get("filesize") or 0)
+            except ValueError:
+                size = 0
+            locator = str(info.get("locator") or "").replace("\\", "/")
+            records.append({
+                "md5": md5, "extension": (info.get("extension") or "").lower(), "size_bytes": size,
+                "pages": info.get("pages") or "", "scanned": info.get("scanned") == "Y",
+                "vector": info.get("vector") == "Y", "ocr": info.get("ocr") == "Y",
+                "filename": locator.rsplit("/", 1)[-1], "source": "libgen",
+                **file_ids.get(str(fid), {}),
+            })
+    return records
+
+
 def scidb_md5s_from_html(page: str, doi: str) -> list[str]:
     """md5s of result cards whose Sci-Hub filename matches DOI exactly.
 

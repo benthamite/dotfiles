@@ -632,21 +632,30 @@ BROWSER_SNIPPET = r"""
         a.href = URL.createObjectURL(b); a.download = item.name;
         document.body.appendChild(a); a.click(); a.remove();
         out.push({i: item.i, saved: item.name, bytes: b.size});
-      } else if (item.kind === 'scidb' && r.status === 200) {
-        const doc = new DOMParser().parseFromString(await b.text(), 'text/html');
-        const md5s = [...doc.querySelectorAll('a[href^="/md5/"]')].map(a => a.getAttribute('href').slice(5, 37));
-        const embed = doc.querySelector('iframe[src], embed[src], object[data]');
-        const src = embed && (embed.getAttribute('src') || embed.getAttribute('data'));
-        let saved = null;
-        if (src && !src.startsWith('data:')) {
-          const pr = await fetch(new URL(src, location.origin), {credentials: 'include'});
-          const pb = await pr.blob();
-          if (pr.status === 200 && (pb.type.includes('pdf') || (await pb.slice(0,5).text()) === '%PDF-')) {
-            const a = document.createElement('a'); a.href = URL.createObjectURL(pb); a.download = item.name;
-            document.body.appendChild(a); a.click(); a.remove(); saved = item.name;
-          }
+      } else if ((item.kind === 'scidb' || item.kind === 'md5') && r.status === 200) {
+        // Anna's Archive: resolve the record page, then start a slow partner download.
+        // Partner hosts block cross-origin reads, so a hidden iframe carries the
+        // download; Chrome saves it under the partner's filename, which embeds the md5.
+        let page = new DOMParser().parseFromString(await b.text(), 'text/html');
+        let md5Href = null;
+        if (item.kind === 'scidb') {
+          if (!r.url.includes('/scidb/')) { out.push({i: item.i, result: 'no-record'}); continue; }
+          const link = page.querySelector('a[href^="/md5/"]');
+          md5Href = link && link.getAttribute('href').slice(0, 37);
+          if (!md5Href) { out.push({i: item.i, result: 'no-md5-link'}); continue; }
+          page = new DOMParser().parseFromString(await (await fetch(md5Href, {credentials: 'include'})).text(), 'text/html');
         }
-        out.push({i: item.i, saved, md5_groups: md5s.map(m => m.match(/.{1,8}/g))});
+        const slow = [...page.querySelectorAll('a[href*="/slow_download/"]')].map(a => a.getAttribute('href'));
+        if (!slow.length) { out.push({i: item.i, result: 'no-slow-link'}); continue; }
+        let started = false;
+        for (const href of slow.slice(0, 3)) {
+          const sp = new DOMParser().parseFromString(await (await fetch(href, {credentials: 'include'})).text(), 'text/html');
+          const dl = [...sp.querySelectorAll('main a[href]')].find(a => /download now/i.test(a.textContent));
+          if (!dl) continue;
+          const f = document.createElement('iframe'); f.style.display = 'none'; f.src = dl.getAttribute('href');
+          document.body.appendChild(f); started = true; break;
+        }
+        out.push({i: item.i, result: started ? 'slow-download-started' : 'no-download-link'});
       } else {
         out.push({i: item.i, status: r.status, type: b.type, bytes: b.size});
       }
@@ -704,6 +713,10 @@ def collect_browser_downloads(job: BrowserJob, out_dir: Path, name: str = "") ->
     downloads = Path(job.downloads_dir)
     work = Work(**{k: v for k, v in job.work.items() if k in Work.__dataclass_fields__})
     candidates = sorted(downloads.glob(f"{DOWNLOAD_PREFIX}-{job.token}-*.pdf"))
+    created = Path(job.path).stat().st_mtime if job.path and Path(job.path).exists() else 0
+    for partner_file in downloads.glob("*Anna*Archive*.pdf"):
+        if partner_file.stat().st_mtime >= created - 5 and partner_file not in candidates:
+            candidates.append(partner_file)
     results = []
     installed = None
     for candidate in candidates:
@@ -1018,6 +1031,14 @@ class Fetcher:
                     outcome.attempts.append(Attempt("annas-fast-download", host, "ok"))
                     return self._finish(outcome, str(staged), "annas-fast-download", work)
                 outcome.attempts.append(Attempt("annas-fast-download", host, f"{result.status}: {result.detail}"))
+                if result.status == "quota":
+                    # Slow partner downloads are unlimited and do not need the API,
+                    # but their pages sit behind the bot challenge: hand the md5
+                    # page to the browser job.
+                    challenged.append((f"https://{host}/md5/{candidate}", "md5"))
+                    outcome.message = ("Fast-download quota exhausted for today; the browser job fetches "
+                                       "the slow partner copy instead.")
+                    return None
                 if result.status == "not-member":
                     outcome.status = "not-member"
                     outcome.message = ("Anna's Archive answered 'Not a member': the membership behind the "

@@ -116,6 +116,7 @@ not be used to print or document secret values; the placement rules are in
 | =epoch-doc-link= | Creates exact, no-overwrite =epoch-doc:= shortcuts in a pinned parent directory, verifies the saved file, and opens document URIs through the configured Epoch Chrome profile. Saved-file/OS-handler acceptance is a separate live check. |
 | =gam= | Launches the local GAMADV-XTD3 installation. |
 | =gmail-maildir-sync= | Runs the Gmail-to-Maildir package with its Google Workspace authentication context. |
+| =gdoc= | Runs the installed uv-managed gdoc CLI through =claude/bin/gdoc_download.py=, which adds original-file downloads and account routing without modifying the package. |
 | =gcalcli-epoch= | Validates the canonical Epoch OAuth grant, atomically refreshes gcalcli's credential cache, and runs the installed Calendar CLI without a stale-grant fallback. |
 | =gitguardian-incidents= | Lists fixed-schema metadata for open or closed GitGuardian incidents and retrieves one incident's paginated occurrence coordinates while keeping credentials and matched values out of agent output. |
 | =libby= | Searches for and downloads matching books through the configured library source. |

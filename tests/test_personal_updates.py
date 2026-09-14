@@ -409,12 +409,28 @@ class Item
   end
   def full_name = @name
   def pkg_version = @version
-  def stable = Struct.new(:checksum).new(@checksum)
+  # VCS_SOURCE models a git-tag or svn-revision stable source: no download checksum.
+  def stable = Struct.new(:checksum).new(ENV["VCS_SOURCE"] == "1" ? nil : @checksum)
   def head? = false
-  def urls_hash = {"stable" => {"checksum" => @checksum}}
+  def urls_hash = {"stable" => {"checksum" => stable.checksum}}
   def bottle_hash = {"files" => {"fixture" => {"sha256" => "b" * 64}}}
+  def bottle_specification
+    host = ENV["NO_BOTTLE"] == "1" ? nil : Struct.new(:checksum).new("b" * 64)
+    collector = Object.new
+    collector.define_singleton_method(:specification_for) { |_tag| host }
+    Struct.new(:collector).new(collector)
+  end
+  def deps = []
   def sha256 = @checksum
   def url = "https://example.invalid/fixture"
+end
+module Utils
+  module Bottles
+    def self.tag = "fixture"
+  end
+end
+module Formulary
+  def self.factory(name) = Item.new(name)
 end
 class FormulaInstaller
   attr_reader :formula
@@ -489,7 +505,8 @@ end
             (base / "cmd" / "upgrade.rb").write_text(self.STUB)
             (base / "formulary.rb").write_text("")
             (base / "cask" / "cask_loader.rb").write_text("")
-            artifact = ["1.1", {"stable": {"checksum": "a" * 64}},
+            source_checksum = None if scenario.get("VCS_SOURCE") == "1" else "a" * 64
+            artifact = ["1.1", {"stable": {"checksum": source_checksum}},
                         {"files": {"fixture": {"sha256": "b" * 64}}}] if kind == "brew_formula" else \
                        ["1.1", "a" * 64, "https://example.invalid/fixture"]
             digest = hashlib.sha256(json.dumps(artifact, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
@@ -502,6 +519,24 @@ end
                                      "upgrade", str(policy), "--formula" if kind == "brew_formula" else "--cask", "tool"],
                                     env=env, capture_output=True, text=True, timeout=20)
             return result, installed.read_text() if installed.exists() else None, uninstalled.exists()
+
+    def run_observe(self, **scenario):
+        if not pathlib.Path(self.RUBY).exists():
+            self.skipTest("Homebrew's Ruby runtime is not available")
+        with tempfile.TemporaryDirectory() as directory:
+            base = pathlib.Path(directory)
+            (base / "cmd").mkdir()
+            (base / "cask").mkdir()
+            (base / "cmd" / "upgrade.rb").write_text(self.STUB)
+            (base / "formulary.rb").write_text("")
+            (base / "cask" / "cask_loader.rb").write_text("")
+            request = base / "request.json"
+            request.write_text(json.dumps({"brew_formula": [{"name": "tool"}], "brew_cask": []}))
+            result = subprocess.run([self.RUBY, "-I", str(base), str(ROOT / "bin" / "personal-updates-brew.rb"),
+                                     "observe", str(request)], env={"PATH": "/usr/bin:/bin", **scenario},
+                                    capture_output=True, text=True, timeout=20)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return json.loads(result.stdout)["brew_formula"]["tool"]
 
     def test_installs_exact_qualified_formula(self):
         result, installed, _ = self.run_boundary()
@@ -548,6 +583,24 @@ end
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn("Delayed update refused", result.stderr)
                 self.assertIsNone(installed)
+
+    def test_vcs_sourced_bottled_formula_is_identified_by_host_bottle(self):
+        # Regression: aom, netpbm, bun, flyctl and glab pin a git tag or svn
+        # revision, so their stable source has no checksum. They were reported
+        # as unchecked forever, and every dependent upgrade was refused daily.
+        observed = self.run_observe(VCS_SOURCE="1")
+        self.assertRegex(observed["artifact"] or "", r"^[0-9a-f]{64}$")
+        result, installed, _ = self.run_boundary(VCS_SOURCE="1")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(installed, "1.1")
+
+    def test_vcs_sourced_formula_without_host_bottle_stays_unchecked(self):
+        observed = self.run_observe(VCS_SOURCE="1", NO_BOTTLE="1")
+        self.assertIsNone(observed["artifact"])
+        result, installed, _ = self.run_boundary(VCS_SOURCE="1", NO_BOTTLE="1")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("not age-qualified", result.stderr)
+        self.assertIsNone(installed)
 
     def test_checksum_free_cask_is_rejected(self):
         result, installed, uninstalled = self.run_boundary("brew_cask", CHECKSUM="no_check")

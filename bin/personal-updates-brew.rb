@@ -21,18 +21,29 @@ module PersonalUpdatePolicy
     end
   end
 
+  def self.checked?(checksum)
+    checksum.to_s.match?(/\A[0-9a-f]{64}\z/)
+  end
+
+  # The bottle Homebrew would pour on this host. Bottles built from a pinned
+  # VCS source (git tag, svn revision) carry the only download checksum.
+  def self.host_bottle_checksum(formula)
+    formula.bottle_specification.collector.specification_for(Utils::Bottles.tag)&.checksum
+  end
+
   def self.describe(kind, item)
     if kind == "brew_formula"
       version = item.pkg_version.to_s
-      checksum = item.stable&.checksum.to_s
       artifact = [version, item.urls_hash, item.bottle_hash]
-      # HEAD/VCS and unchecked sources cannot identify an immutable release.
-      supported = !item.head? && checksum.match?(/\A[0-9a-f]{64}\z/)
+      # HEAD builds cannot identify an immutable release. A checked source
+      # download or a checked host bottle can; the install guard already refuses
+      # source builds, so a bottle checksum alone is sufficient identity.
+      supported = !item.head? && (checked?(item.stable&.checksum) || checked?(host_bottle_checksum(item)))
     else
       version = item.version.to_s
       checksum = item.sha256.to_s
       artifact = [version, checksum, item.url.to_s]
-      supported = version != "latest" && checksum.match?(/\A[0-9a-f]{64}\z/)
+      supported = version != "latest" && checked?(checksum)
     end
     {"name" => item.full_name, "available" => version,
      "artifact" => supported ? Digest::SHA256.hexdigest(JSON.generate(canonical(artifact))) : nil}

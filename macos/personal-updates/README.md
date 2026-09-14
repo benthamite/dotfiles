@@ -19,7 +19,10 @@ an unrelated older cask or a fresh installation of the predecessor.
 
 The guard supports checksum-identified casks and bottled formulae. It refuses
 `latest`/checksum-free artifacts, source builds, and a bottle's fallback to a
-source build. Homebrew's separate build process can reload a changed recipe
+source build. A formula whose stable source is a pinned VCS checkout (a git tag
+or svn revision) has no source checksum; it is identified by the checksum of
+the bottle Homebrew would pour on this host, and it stays unchecked when no
+bottle applies. Homebrew's separate build process can reload a changed recipe
 after the parent installer check. Refusals are explicit errors or
 deferral messages; the updater never retries with an unguarded upgrade. The Ruby
 adapter uses Homebrew's installer classes and needs compatibility verification

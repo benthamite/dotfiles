@@ -19,30 +19,40 @@ mkdir -p "$(dirname "$log")" 2>/dev/null || true
 trace() { printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$log" 2>/dev/null || true; }
 
 input=$(cat 2>/dev/null) || { trace "no stdin"; exit 0; }
-tp=$(printf '%s' "$input" | jq -r '.transcript_path // empty' 2>/dev/null)
-[ -n "$tp" ] && [ -f "$tp" ] || { trace "no transcript_path in hook input"; exit 0; }
 
-# Text of the last assistant message that contains a text block. Slurp so a
-# multi-line message stays one unit (a naive `tail -n1` would grab only the
-# message's last physical line).
-text=$(tail -n 200 "$tp" 2>/dev/null \
-  | jq -rs 'map(select(.type=="assistant" and ((.message.content|type)=="array"))
-                | (.message.content | map(select(.type=="text").text) | join("\n")))
-            | map(select(length > 0)) | (last // "")' 2>/dev/null)
-[ -n "$text" ] || exit 0
+# Prefer the message text Claude Code hands the Stop hook directly. The hooks
+# reference documents that the transcript file is written asynchronously and
+# "may not yet include the current turn's final messages" when Stop fires, so
+# reading the transcript here silently missed the very message that contained
+# the command. Fall back to the transcript only for older clients that do not
+# send last_assistant_message.
+text=$(printf '%s' "$input" | jq -r '.last_assistant_message // empty' 2>/dev/null)
+source=last_assistant_message
+if [ -z "$text" ]; then
+  tp=$(printf '%s' "$input" | jq -r '.transcript_path // empty' 2>/dev/null)
+  [ -n "$tp" ] && [ -f "$tp" ] || { trace "no last_assistant_message and no transcript_path in hook input"; exit 0; }
+  # Slurp so a multi-line message stays one unit (a naive `tail -n1` would
+  # grab only the message's last physical line).
+  text=$(tail -n 200 "$tp" 2>/dev/null \
+    | jq -rs 'map(select(.type=="assistant" and ((.message.content|type)=="array"))
+                  | (.message.content | map(select(.type=="text").text) | join("\n")))
+              | map(select(length > 0)) | (last // "")' 2>/dev/null)
+  source=transcript
+fi
+[ -n "$text" ] || { trace "invoked: empty assistant text ($source)"; exit 0; }
 
 # `!`-prefixed command lines, with the leading `! ` stripped.
 cmds=$(printf '%s\n' "$text" \
   | grep -E '^[[:space:]]*![[:space:]]+[~/._[:alnum:]]' 2>/dev/null \
   | sed -E 's/^[[:space:]]*![[:space:]]?//')
-[ -n "$cmds" ] || { trace "invoked: no !-command in last assistant message"; exit 0; }
+[ -n "$cmds" ] || { trace "invoked: no !-command in last assistant message ($source)"; exit 0; }
 
 # Bound stage-for-user so a wedged Emacs server can never leave a hung process
 # (GNU timeout is `timeout` or `gtimeout` on macOS; run bare if neither exists).
 TO=$(command -v timeout || command -v gtimeout || true)
 # The hook must stay silent for Claude Code, so record the outcome in the log.
 if out=$(printf '%s\n' "$cmds" | ${TO:+"$TO" 5} stage-for-user 2>&1) && ! printf '%s' "$out" | grep -q "warning"; then
-  trace "staged $(printf '%s\n' "$cmds" | wc -l | tr -d ' ') command line(s)"
+  trace "staged $(printf '%s\n' "$cmds" | wc -l | tr -d ' ') command line(s) ($source)"
 else
   trace "FAILED: ${out:-stage-for-user failed}"
 fi

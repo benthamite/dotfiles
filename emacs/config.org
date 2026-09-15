@@ -713,6 +713,12 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 ;; where hundreds of packages are enqueued simultaneously. See elpaca--continue-build.
 
 (require 'elpaca-menu-elpa)
+;; Workaround for an Elpaca lock-file gap: the lock file stores org's recipe
+;; with the `:build' step `elpaca-menu-org--build' inherited from the Org menu,
+;; but only `elpaca-menu-org' itself is autoloaded. On a fresh profile the lock
+;; file serves that recipe, the Org menu is never consulted, and the build fails
+;; with a void-function error. Loading the menu library up front defines it.
+(require 'elpaca-menu-org)
 (setf (alist-get 'packages-url (alist-get 'gnu elpaca-menu-elpas))
       "https://raw.githubusercontent.com/emacsmirror/gnu_elpa/refs/heads/main/elpa-packages"
       (alist-get 'remote (alist-get 'gnu elpaca-menu-elpas))

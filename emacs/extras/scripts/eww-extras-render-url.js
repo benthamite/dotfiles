@@ -128,8 +128,12 @@ async function installAutoconsent(context, moduleRoot) {
   return state;
 }
 
-function blockingConsentExpression() {
-  const consentWords = /\b(cookie|consent|privacy|tracking|preferences)\b/i;
+// A subscribe or sign-in dialog cites the site's privacy policy without asking
+// for tracking consent; only a bare privacy mention counts as consent wording.
+const consentWordsSource = String.raw`\b(cookies?|consent|tracking|preferences)\b|\bprivacy\b(?!\s+(policy|notice|statement))`;
+
+function blockingConsentExpression(consentWordsSource) {
+  const consentWords = new RegExp(consentWordsSource, "i");
   const viewportArea = Math.max(1, innerWidth * innerHeight);
   for (const node of document.querySelectorAll("body *")) {
     const style = getComputedStyle(node);
@@ -149,7 +153,7 @@ function blockingConsentExpression() {
 async function findBlockingConsentUi(page) {
   for (const frame of page.frames()) {
     try {
-      if (await frame.evaluate(blockingConsentExpression)) return true;
+      if (await frame.evaluate(blockingConsentExpression, consentWordsSource)) return true;
     } catch (_) {
       // A frame can detach while the page settles.
     }
@@ -157,9 +161,9 @@ async function findBlockingConsentUi(page) {
   return false;
 }
 
-function cleanupResidualUiExpression() {
+function cleanupResidualUiExpression(consentWordsSource) {
   document.querySelector("style#autoconsent-prehide")?.remove();
-  const consentWords = /\b(cookie|consent|privacy|tracking|preferences)\b/i;
+  const consentWords = new RegExp(consentWordsSource, "i");
   const viewportArea = Math.max(1, innerWidth * innerHeight);
   for (const node of document.querySelectorAll("body *")) {
     const identity = `${node.id} ${node.className} ${node.getAttribute("aria-label") || ""} ${node.getAttribute("title") || ""}`;
@@ -168,7 +172,11 @@ function cleanupResidualUiExpression() {
     const style = getComputedStyle(node);
     const rect = node.getBoundingClientRect();
     const modal = node.getAttribute("role") === "dialog" || node.getAttribute("aria-modal") === "true";
-    const genericOverlay = /\b(modal|overlay|backdrop|subscribe|newsletter)\b/i.test(identity);
+    // An in-flow article can be classed "newsletter-post"; only an element
+    // taken out of the normal flow can overlay the content.
+    const outOfFlow = new Set(["fixed", "sticky", "absolute"]).has(style.position);
+    const genericOverlay = outOfFlow &&
+      /\b(modal|overlay|backdrop|subscribe|newsletter)\b/i.test(identity);
     const largePositioned = new Set(["fixed", "sticky"]).has(style.position) &&
       rect.width * rect.height >= viewportArea * 0.15;
     if (modal || genericOverlay || largePositioned) {
@@ -182,7 +190,7 @@ function cleanupResidualUiExpression() {
 async function cleanupResidualUi(page) {
   for (const frame of page.frames()) {
     try {
-      await frame.evaluate(cleanupResidualUiExpression);
+      await frame.evaluate(cleanupResidualUiExpression, consentWordsSource);
     } catch (_) {
       // A frame can detach while the page settles.
     }
@@ -314,6 +322,7 @@ if (require.main === module) {
 module.exports = {
   blockingConsentExpression,
   cleanupResidualUiExpression,
+  consentWordsSource,
   findBlockingConsentUi,
   isBrowserChallenge,
   parseArgs,

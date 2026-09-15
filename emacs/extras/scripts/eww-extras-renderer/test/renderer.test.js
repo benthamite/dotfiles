@@ -245,6 +245,42 @@ test("generic residual overlays are removed after consent verification", async (
   assert.doesNotMatch(html, /newsletter-overlay/);
 });
 
+test("a subscribe dialog citing a privacy policy is not a consent blocker", async (t) => {
+  const chromeProgram = process.env.EWW_EXTRAS_RENDERER_CHROME_PROGRAM;
+  if (!chromeProgram) {
+    t.skip("test-browser supplies system Chrome");
+    return;
+  }
+  const server = await startFixtureServer();
+  const temporary = await fs.mkdtemp(path.join(os.tmpdir(), "eww-render-test-"));
+  const output = path.join(temporary, "subscribe.html");
+  t.after(async () => {
+    await server.close();
+    await fs.rm(temporary, { recursive: true, force: true });
+  });
+
+  await renderer.render({
+    url: `${server.origin}/subscribe-dialog`,
+    output,
+    type: "html",
+    "chrome-program": chromeProgram,
+    "module-root": process.env.EWW_EXTRAS_RENDERER_MODULE_ROOT,
+  });
+  const html = await fs.readFile(output, "utf8");
+  assert.match(html, /newsletter-post post">Subscribe fixture content/);
+  assert.doesNotMatch(html, /Privacy Policy/);
+  assert.doesNotMatch(html, /Discover more/);
+});
+
+test("consent wording ignores privacy policy citations", () => {
+  const consentWords = new RegExp(renderer.consentWordsSource, "i");
+  assert.equal(consentWords.test("you agree to our Terms and Privacy Policy"), false);
+  assert.equal(consentWords.test("Read our privacy notice"), false);
+  assert.equal(consentWords.test("We value your privacy"), true);
+  assert.equal(consentWords.test("Choose your cookie preferences"), true);
+  assert.equal(consentWords.test("Manage tracking"), true);
+});
+
 test("internal deadline cleans output and browser profile", async (t) => {
   const chromeProgram = process.env.EWW_EXTRAS_RENDERER_CHROME_PROGRAM;
   if (!chromeProgram) {

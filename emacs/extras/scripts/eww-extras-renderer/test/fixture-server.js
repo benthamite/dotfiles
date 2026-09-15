@@ -38,6 +38,15 @@ const pages = {
       <p>Subscribe to our newsletter</p><button aria-label="Close">Close</button>
     </div>
   </body></html>`,
+  "/subscribe-dialog": `<!doctype html><html><body>
+    <article class="typography newsletter-post post">Subscribe fixture content</article>
+    <div style="position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.5)">
+      <div role="dialog" style="position:absolute;top:20%;left:30%;width:40%;background:white">
+        <p>Discover more from the fixture</p><button>Subscribe</button>
+        <p>By subscribing, you agree to our Terms of Use and Privacy Policy.</p>
+      </div>
+    </div>
+  </body></html>`,
   "/never-ready": `<!doctype html><html><body><script>
     document.body.textContent = '';
   </script></body></html>`,

@@ -123,8 +123,11 @@ later runs reuse that cache.  The dependency tree and browser profile are
 never created in the dotfiles repository or Google Drive.
 
 Before saving the file, the renderer uses DuckDuckGo Autoconsent to opt out of
-supported consent managers.  It then removes non-consent residual overlays
-and checks every frame for a remaining blocking consent prompt.  If a prompt
+supported consent managers.  It then checks every frame for a remaining
+blocking consent prompt and removes non-consent residual overlays, such as
+subscribe or newsletter dialogs.  A dialog that merely cites a privacy policy
+or notice is a residual overlay, not a consent prompt, and an in-flow element
+is never removed on the strength of its class name alone.  If a consent prompt
 remains, the process fails and does not create or modify the requested output.
 The renderer is intended for public pages; it does not carry authentication
 from a personal browser session.  Rendering has a 27-second internal deadline

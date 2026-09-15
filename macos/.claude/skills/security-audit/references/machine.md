@@ -91,6 +91,15 @@ Inspect profile metadata only, never cookies or session databases.
   from a demonstrated restore. A restore test belongs to explicitly authorized
   remediation/verification in a disposable destination; never overwrite live
   data. Consider whether the same compromised account can delete every copy.
+- Assess backup integrity separately from freshness and encryption: available
+  historical versions, their provenance, and whether a compromised host/account
+  could alter retained copies or contaminate new ones. After an established
+  incident, look for a trusted recovery point predating the earliest plausible
+  compromise; a timestamp alone does not prove cleanliness. Assess how executable
+  files, startup configuration, and restored credentials will be checked before
+  reuse. A successful restore or clean malware scan alone does not rule out
+  persistence. Unknown compromise timing or unavailable integrity evidence remains
+  a recovery gap; do not mount, execute, or restore suspect backups during an audit.
 
 ## Reference maintenance
 
@@ -109,3 +118,6 @@ commands or Settings paths differ; do not substitute undocumented defaults keys.
 - [Extension permissions](https://developer.chrome.com/docs/extensions/develop/concepts/declare-permissions)
 - [FIDO passkeys](https://fidoalliance.org/passkeys/)
 - [Advanced Protection compatibility](https://support.google.com/accounts/answer/7539956)
+
+Added 2026-09-15: recovery integrity, informed by backup poisoning described in
+[Anthropic's September 2026 report](https://www.anthropic.com/threat-intelligence-report-september-2026), p. 35.

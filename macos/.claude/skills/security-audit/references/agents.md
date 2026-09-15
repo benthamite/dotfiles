@@ -66,6 +66,40 @@ because its vendor ships updates.
   Establish the tool/sandbox capability and untrusted-input path that make a
   prompt-injection scenario consequential.
 
+## Prompt-injection paths
+
+When verifying injection resistance, follow a representative untrusted document
+or tool response through attempted secret access and outbound disclosure. Include
+handoffs to subagents or scheduled workers when the workflow uses them; a parent
+agent's denial does not establish a worker's boundary. Exercise the actual tool
+and guard paths with synthetic markers, recording whether the input was followed,
+the read was blocked, and the outbound attempt was blocked. A model declining one
+lure does not prove that the underlying access is denied.
+
+Use an isolated fixture with no real credentials or authenticated connectors and
+an owned local capture destination or non-forwarding tool stub. Do not transmit
+probes to third parties or weaken production controls to make a test possible.
+A stub demonstrates only the substituted path, not production network enforcement;
+report unexercised steps as not checked. If safe execution is unavailable, map the
+reachable assets and egress from permitted evidence without claiming runtime proof.
+
+## AI clients and data destinations
+
+Trace each in-scope AI workflow from client/install origin to its effective model
+endpoint, proxy/router, configured fallback providers, and declared downstream
+processors. Inspect overrides without emitting credential-bearing URLs or headers.
+A familiar client name or model label does not establish the executable's provenance
+or who receives its requests. Include third-party clients and discounted resellers;
+route a questionable downloaded app to `audit-mac-app` without launching it.
+
+Compare permitted data classes with provider evidence for prompt/tool-output
+retention, training use, onward sharing, and deletion, including remote session logs.
+Record the applicable product/account terms and date; a first-party API and a
+consumer subscription need not have the same policy. Distinguish configured routes,
+observed first-hop destinations, and provider declarations. Local inspection cannot
+prove undisclosed forwarding or actual downstream retention. Unknown handling is
+a coverage gap, not proof of resale; do not upload private material to test it.
+
 ## Integrations and data reach
 
 Inventory MCP servers, plugins, connectors, and local service tools by provenance,
@@ -97,6 +131,18 @@ local redaction, and inspect retention/sync/access metadata. Do not enumerate
 unrelated personal content. A memory scan is not permission to read auth stores
 or put sensitive findings into future memory.
 
+For AI credentials, check permitted usage/billing metadata for unexpected activity
+and the availability, configuration, and delivery evidence of usage alerts. Record
+effective spending limits by their actual scope (account, project, or key), reset
+period, enforcement delay, and any automatic increases or replenishment. An alert
+is not a hard cap, and a billing cap does not prevent data theft. Check current
+provider documentation; do not generate paid usage or change limits during an audit.
+Missing alerts or caps are optional hardening unless evidence establishes a
+concrete exposure or failure of an intended control; do not assign severity from
+their absence alone or infer unlimited spending from an unknown cap.
+If account reads are outside scope, mark these checks not checked. For access that
+can survive rotation, use the recovery checks in [secrets](secrets.md).
+
 ## Reference maintenance
 
 Checked 2026-09-04. Recheck installed-version hook, sandbox, update, and
@@ -108,3 +154,7 @@ configuration-precedence behavior before treating it as enforced.
 - [Claude configuration precedence](https://code.claude.com/docs/en/settings)
 - [Claude updates](https://code.claude.com/docs/en/setup#update-claude-code)
 - [MCP security practices](https://modelcontextprotocol.io/specification/latest/basic/security_best_practices)
+
+Added 2026-09-15: client/route trust, injection chains, and AI credential abuse,
+informed by [Anthropic's September 2026 report](https://www.anthropic.com/threat-intelligence-report-september-2026),
+pp. 28–31 and 144–152. These cases motivate checks; they do not establish local exposure.

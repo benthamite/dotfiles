@@ -43,6 +43,42 @@ still matter.
   secret references. Avoid dumping process environments or full process args.
   Do not recommend globally exported credentials as an MCP/config remedy.
 
+## Published artifacts
+
+Include in-scope published package archives, container image layers, generated
+client assets/source maps, and release/CI artifacts as separate credential-exposure
+surfaces. A clean source tree or final container filesystem does not establish
+that earlier layers or shipped files are clean. Record the selected artifact's
+identity and whether it matches the released version; a local candidate alone
+does not establish public exposure or coverage of the published artifact.
+
+Use trusted redacting inspection of already available, permitted artifacts; follow
+the service-access route for authorized remote artifacts. Do not build, install,
+run images, or execute archive contents to scan them. Bound archive/layer processing
+and prevent path traversal or links escaping private scratch space. Unavailable
+artifacts or unsupported formats remain explicit gaps, not permission to fetch
+unrelated releases or expand repository/account scope.
+
+## Recovery beyond rotation
+
+Within authorized account scope, inspect permitted metadata for active sessions,
+linked/registered devices, OAuth grants, newly created API keys/service identities,
+and relevant security events. Establish provenance and scope; an unfamiliar entry
+alone is not evidence of compromise. Never inspect token values or cookie stores.
+For agent-only audits, apply these checks to the selected agent integrations only.
+
+When a credential incident is established, assess which additional access could
+have been created and whether the compromised client/host still harvests replacement
+credentials. Rotation and rejection of the old key settle that credential's status,
+not the whole intrusion. Review the provider's current revocation semantics,
+including application-owned sessions and delayed expiry, before proposing recovery.
+During an audit, report a scoped containment/recovery plan and evidence gaps without
+revoking sessions or changing accounts. During authorized remediation, remove or
+isolate the credential-harvesting path before using replacement credentials there;
+verify affected access paths separately. Follow the existing incident registry and
+publishing workflow without treating a resolved scanner finding as incident closure.
+Use [machine](machine.md) for host persistence and trusted recovery copies.
+
 ## Shell export classifier
 
 Resolve `scripts/classify-shell-exports.py` relative to the directory containing
@@ -159,3 +195,9 @@ encryption semantics affect a finding; use installed-tool help for its version.
 - [Git-crypt scope and limitations](https://github.com/AGWA/git-crypt#limitations)
 - [GitHub secret-scanning pattern coverage](https://docs.github.com/en/code-security/secret-scanning/introduction/supported-secret-scanning-patterns)
 - [Direnv execution model](https://direnv.net/man/direnv.1.html)
+
+Added 2026-09-15: artifact exposure and recovery beyond rotation, informed by
+[Anthropic's September 2026 report](https://www.anthropic.com/threat-intelligence-report-september-2026),
+pp. 8–9, 12–19, and 29–30. For a concrete example of distinct identity-provider
+and application sessions, see [Microsoft's emergency revocation guidance](https://learn.microsoft.com/en-us/entra/identity/users/users-revoke-access);
+use the affected provider's semantics, not Microsoft defaults for every service.

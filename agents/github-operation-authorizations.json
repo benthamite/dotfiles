@@ -1,45 +1,4 @@
 {
   "version": 1,
-  "grants": [
-    {
-      "command": "gh repo fork jwiegley/alert --clone=false",
-      "account": "benthamite",
-      "authorization": "Pablo, /release-dotfiles session of 2026-09-15, approved forking alert and circe, pushing the fix branches and opening the upstream PRs for alert, circe and pdf-tools (release step 1, items 12 and 13)",
-      "created_at": "2026-09-15T13:46:16.219407+00:00",
-      "expires_at": "2026-09-15T19:46:16.219407+00:00",
-      "body_sha256": null
-    },
-    {
-      "command": "gh repo fork emacs-circe/circe --clone=false",
-      "account": "benthamite",
-      "authorization": "Pablo, /release-dotfiles session of 2026-09-15, approved forking alert and circe, pushing the fix branches and opening the upstream PRs for alert, circe and pdf-tools (release step 1, items 12 and 13)",
-      "created_at": "2026-09-15T13:46:16.509631+00:00",
-      "expires_at": "2026-09-15T19:46:16.509631+00:00",
-      "body_sha256": null
-    },
-    {
-      "command": "gh pr create --repo jwiegley/alert --base master --head benthamite:fix/async-macos-notifications --title \"Run native macOS notifications asynchronously\" --body-file /private/tmp/claude-501/-Users-pablostafforini-My-Drive-dotfiles/db33f991-1bbd-40e2-8a5b-85961197c95d/scratchpad/upstream-prs/pr-alert-body.md",
-      "account": "benthamite",
-      "authorization": "Pablo, /release-dotfiles session of 2026-09-15, approved forking alert and circe, pushing the fix branches and opening the upstream PRs for alert, circe and pdf-tools (release step 1, items 12 and 13)",
-      "created_at": "2026-09-15T13:46:16.952648+00:00",
-      "expires_at": "2026-09-15T19:46:16.952648+00:00",
-      "body_sha256": "ae2e34ec72509277614a54fea9d3c152037995f9c26d083206bb7b29ad7d5f1b"
-    },
-    {
-      "command": "gh pr create --repo emacs-circe/circe --base master --head benthamite:fix/shorten-prefix-comparisons --title \"Avoid all-pairs prefix comparisons when shortening buffer names\" --body-file /private/tmp/claude-501/-Users-pablostafforini-My-Drive-dotfiles/db33f991-1bbd-40e2-8a5b-85961197c95d/scratchpad/upstream-prs/pr-circe-body.md",
-      "account": "benthamite",
-      "authorization": "Pablo, /release-dotfiles session of 2026-09-15, approved forking alert and circe, pushing the fix branches and opening the upstream PRs for alert, circe and pdf-tools (release step 1, items 12 and 13)",
-      "created_at": "2026-09-15T13:46:17.427863+00:00",
-      "expires_at": "2026-09-15T19:46:17.427863+00:00",
-      "body_sha256": "9fb2257711444ed42e3fcf39cc3f6f445a6f0be46f2e508d1c83bec3066e41ca"
-    },
-    {
-      "command": "gh pr create --repo vedang/pdf-tools --base master --head benthamite:fix/query-callback-errors --title \"Fix query completion after response preprocessing errors\" --body-file /private/tmp/claude-501/-Users-pablostafforini-My-Drive-dotfiles/db33f991-1bbd-40e2-8a5b-85961197c95d/scratchpad/upstream-prs/pr-pdf-tools-body.md",
-      "account": "benthamite",
-      "authorization": "Pablo, /release-dotfiles session of 2026-09-15, approved forking alert and circe, pushing the fix branches and opening the upstream PRs for alert, circe and pdf-tools (release step 1, items 12 and 13)",
-      "created_at": "2026-09-15T13:46:17.795009+00:00",
-      "expires_at": "2026-09-15T19:46:17.795009+00:00",
-      "body_sha256": "8870cedf51f59d25642fa1159866968414dc5b975179e6c513c47298bfff06b0"
-    }
-  ]
+  "grants": []
 }

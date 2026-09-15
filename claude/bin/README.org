@@ -82,7 +82,7 @@ before minting. Configuration symlinks and nonregular files are refused.
 | =elisp-source-revision= | Computes the Git-and-content identity used to bind Elisp test evidence to the current source. |
 | =elpaca-rebuild-wait= | Resolves a package ID or checkout label, rebuilds and reloads the canonical Elpaca ID with bounded polling, or observes exact source/mirror-bound dotfiles post-commit reload state. An observer can resume certification of an abandoned request under its free package lock, retaining and verifying the original token, runtime, source and status identity without requesting another rebuild. |
 | =gdoc_download.py= | Extends the installed gdoc CLI with original-file downloads (Drive blobs via files.get_media, checked and atomically installed; native Workspace files still require export) and account routing. |
-| =gmail.py= | Provides the multi-account Gmail read, search, draft, send, reply, attachment, and archive operations. |
+| =gmail.py= | Provides the multi-account Gmail read, search, draft (optionally threaded onto an existing message), send, reply, delete-draft, attachment, and archive operations. |
 | =kill-ring-put= | Stages non-secret text from stdin or a file in the running Emacs kill ring in one command, optionally also on the macOS clipboard, without echoing the payload. |
 | =install-skills.sh= | Installs the live interactive and programmatic skill links, then applies skill pruning and private shims. |
 | =op-clipboard-store= | Stores a validated console-copied secret through broker stdin with optional account pinning; checks ID-bound concealed byte-equal readback and refuses existing Login JSON edits that cannot preserve passkeys. Desktop authorization may prompt. |

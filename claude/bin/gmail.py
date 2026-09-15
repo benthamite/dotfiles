@@ -22,14 +22,18 @@ Usage:
       Download an attachment to <output-path>.
   gmail.py [--account ...] archive <message-id>
       Remove the INBOX label from a message.
-  gmail.py [--account ...] draft --to=<addr> --subject=<s> [--body=<text> | --body-file=<path>] [--cc=<addr>] [--bcc=<addr>] [--attach=<path> ...]
-      Create a draft. Prints the new draft ID on stdout.
-  gmail.py [--account ...] send --to=<addr> --subject=<s> [--body=<text> | --body-file=<path>] [--cc=<addr>] [--bcc=<addr>] [--attach=<path> ...]
-      Send an email. Prints the sent message ID.
+  gmail.py [--account ...] draft --to=<addr> [--subject=<s>] [--reply-to=<message-id>] [--body=<text> | --body-file=<path>] [--cc=<addr>] [--bcc=<addr>] [--attach=<path> ...]
+      Create a draft. Prints the new draft ID on stdout. With --reply-to the
+      draft lands in that message's thread (In-Reply-To and References set,
+      subject defaults to "Re: <parent subject>").
+  gmail.py [--account ...] send --to=<addr> [--subject=<s>] [--reply-to=<message-id>] [--body=<text> | --body-file=<path>] [--cc=<addr>] [--bcc=<addr>] [--attach=<path> ...]
+      Send an email. Prints the sent message ID. --reply-to works as for draft.
   gmail.py [--account ...] reply <message-id> [--to=<addr>] [--body=<text> | --body-file=<path>] [--attach=<path> ...]
       Reply to a thread (preserves In-Reply-To and References).
   gmail.py [--account ...] send-draft <draft-id>
       Send a previously created draft.
+  gmail.py [--account ...] delete-draft <draft-id>
+      Delete a draft without sending it.
 """
 
 import argparse
@@ -131,17 +135,64 @@ def _add_attachments(msg, paths):
             )
 
 
-def _build_raw(args):
+def _reply_context(message_id, account):
+    """Return (threadId, headers) of the message a reply should attach to."""
+    parent = api_request(
+        "GET",
+        f"{API}/messages/{message_id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Message-ID&metadataHeaders=References",
+        account=account,
+    )
+    return parent.get("threadId"), _headers(parent)
+
+
+def _set_reply_headers(msg, parent_headers):
+    """Add the threading headers that make `msg` a reply to `parent_headers`."""
+    if "message-id" in parent_headers:
+        msg["In-Reply-To"] = parent_headers["message-id"]
+        msg["References"] = (
+            parent_headers.get("references", "") + " " + parent_headers["message-id"]
+        ).strip()
+
+
+def _reply_subject(parent_headers):
+    subject = parent_headers.get("subject", "")
+    if not subject.lower().startswith("re:"):
+        subject = "Re: " + subject
+    return subject
+
+
+def _build_message(args):
+    """Build the outgoing message for draft/send.
+
+    Returns (raw, threadId); threadId is None unless --reply-to was given.
+    """
+    thread_id = None
+    parent_headers = None
+    if getattr(args, "reply_to", None):
+        thread_id, parent_headers = _reply_context(args.reply_to, args.account)
+    subject = args.subject
+    if subject is None:
+        if parent_headers is None:
+            sys.exit("ERROR: --subject is required unless --reply-to is given")
+        subject = _reply_subject(parent_headers)
     msg = email.message.EmailMessage()
     msg["To"] = args.to
     if args.cc:
         msg["Cc"] = args.cc
     if args.bcc:
         msg["Bcc"] = args.bcc
-    msg["Subject"] = args.subject
+    msg["Subject"] = subject
+    if parent_headers is not None:
+        _set_reply_headers(msg, parent_headers)
     msg.set_content(_read_body(args))
     _add_attachments(msg, getattr(args, "attach", []))
-    return base64.urlsafe_b64encode(msg.as_bytes()).decode().rstrip("=")
+    return base64.urlsafe_b64encode(msg.as_bytes()).decode().rstrip("="), thread_id
+
+
+def _with_thread(body, thread_id):
+    if thread_id:
+        body["threadId"] = thread_id
+    return body
 
 
 def cmd_query(args):
@@ -222,43 +273,40 @@ def cmd_archive(args):
 
 
 def cmd_draft(args):
-    raw = _build_raw(args)
+    raw, thread_id = _build_message(args)
     out = api_request(
-        "POST", f"{API}/drafts", body={"message": {"raw": raw}}, account=args.account
+        "POST",
+        f"{API}/drafts",
+        body={"message": _with_thread({"raw": raw}, thread_id)},
+        account=args.account,
     )
     print(out["id"])
 
 
 def cmd_send(args):
-    raw = _build_raw(args)
-    out = api_request("POST", f"{API}/messages/send", body={"raw": raw}, account=args.account)
+    raw, thread_id = _build_message(args)
+    out = api_request(
+        "POST",
+        f"{API}/messages/send",
+        body=_with_thread({"raw": raw}, thread_id),
+        account=args.account,
+    )
     print(out["id"])
 
 
 def cmd_reply(args):
-    parent = api_request(
-        "GET",
-        f"{API}/messages/{args.id}?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Message-ID&metadataHeaders=References",
-        account=args.account,
-    )
-    h = _headers(parent)
-    subject = h.get("subject", "")
-    if not subject.lower().startswith("re:"):
-        subject = "Re: " + subject
-    body = _read_body(args)
+    thread_id, h = _reply_context(args.id, args.account)
     msg = email.message.EmailMessage()
     msg["To"] = args.to or h.get("from", "")
-    msg["Subject"] = subject
-    if "message-id" in h:
-        msg["In-Reply-To"] = h["message-id"]
-        msg["References"] = (h.get("references", "") + " " + h["message-id"]).strip()
-    msg.set_content(body)
+    msg["Subject"] = _reply_subject(h)
+    _set_reply_headers(msg, h)
+    msg.set_content(_read_body(args))
     _add_attachments(msg, args.attach)
     raw = base64.urlsafe_b64encode(msg.as_bytes()).decode().rstrip("=")
     out = api_request(
         "POST",
         f"{API}/messages/send",
-        body={"raw": raw, "threadId": parent.get("threadId")},
+        body=_with_thread({"raw": raw}, thread_id),
         account=args.account,
     )
     print(out["id"])
@@ -269,6 +317,11 @@ def cmd_send_draft(args):
         "POST", f"{API}/drafts/send", body={"id": args.id}, account=args.account
     )
     print(out["id"])
+
+
+def cmd_delete_draft(args):
+    api_request("DELETE", f"{API}/drafts/{args.id}", account=args.account)
+    print(f"Deleted draft {args.id}")
 
 
 def _account_parser(default):
@@ -326,7 +379,13 @@ def build_parser():
     for name, fn in [("draft", cmd_draft), ("send", cmd_send)]:
         s = sub.add_parser(name, parents=[sub_account])
         s.add_argument("--to", required=True)
-        s.add_argument("--subject", required=True)
+        s.add_argument("--subject", help="required unless --reply-to is given")
+        s.add_argument(
+            "--reply-to",
+            dest="reply_to",
+            metavar="MESSAGE_ID",
+            help="thread the message as a reply to this Gmail message ID",
+        )
         s.add_argument("--body")
         s.add_argument("--body-file", dest="body_file")
         s.add_argument("--cc")
@@ -345,6 +404,10 @@ def build_parser():
     sd = sub.add_parser("send-draft", parents=[sub_account])
     sd.add_argument("id")
     sd.set_defaults(func=cmd_send_draft)
+
+    dd = sub.add_parser("delete-draft", parents=[sub_account])
+    dd.add_argument("id")
+    dd.set_defaults(func=cmd_delete_draft)
 
     return p
 

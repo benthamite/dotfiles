@@ -1091,12 +1091,15 @@ exec "$(dirname "$0")/sync-elpaca-clone.sh" "$@"
 
   ;; Cache the profile name to a file so that git hooks can read it
   ;; without calling emacsclient (which deadlocks when the hook is
-  ;; spawned by a synchronous git process inside Emacs).
-  (with-temp-file (file-name-concat
-                   (file-name-directory
-                    (directory-file-name user-emacs-directory))
-                   ".current-profile")
-    (insert init-current-profile))
+  ;; spawned by a synchronous git process inside Emacs). Skip this in
+  ;; batch sessions: the deploy smoke test loads a freshly built profile
+  ;; in `emacs --batch', and it must not claim to be the current profile.
+  (unless noninteractive
+    (with-temp-file (file-name-concat
+                     (file-name-directory
+                      (directory-file-name user-emacs-directory))
+                     ".current-profile")
+      (insert init-current-profile)))
 
   :bind
   ("A-n" . init-menu))

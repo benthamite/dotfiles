@@ -193,6 +193,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#files-extras][files-extras]]
   - [[#locate][locate]]
   - [[#autorevert][autorevert]]
+  - [[#timer][timer]]
   - [[#dired][dired]]
   - [[#dired-x][dired-x]]
   - [[#dired-extras][dired-extras]]
@@ -9341,15 +9342,18 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (agent-project-registry-root "/Users/pablostafforini/My Drive/Epoch/projects/")
   (agent-claude-org-todo-in-progress-keyword "DOING")
   (agent-claude-accounts '(("personal"  . "~/.claude-personal")
-                           ("tlon"     . "~/.claude-tlon")
-                           ("epoch"    . "~/.claude-epoch")
-                           ("trajectory" . "~/.claude-trajectory")))
+			   ("personal2"  . "~/.claude-personal2")
+			   ("tlon"     . "~/.claude-tlon")
+			   ("epoch"    . "~/.claude-epoch")
+			   ("trajectory" . "~/.claude-trajectory")))
 
   (agent-codex-accounts '(("tlon"   . "~/.codex-tlon")
                           ("epoch"  :home "~/.codex-epoch"  :pool "epoch-pool")
                           ("epoch2" :home "~/.codex-epoch2" :pool "epoch-pool")
                           ("epoch3" :home "~/.codex-epoch3" :pool "epoch-pool")
-                          ("epoch4" :home "~/.codex-epoch4" :pool "epoch-pool")))
+                          ("epoch4" :home "~/.codex-epoch4" :pool "epoch-pool")
+                          ("epoch5" :home "~/.codex-epoch5" :pool "epoch-pool")
+                          ("epoch-plan" :home "~/.codex-epoch-plan" :pool "epoch-pool")))
 
   :bind
   ("H-e" . agent-menu)

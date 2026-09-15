@@ -535,7 +535,9 @@ for its exact absolute helper and target paths. The classifier reports names,
 line numbers, scopes, and classifications without printing values.
 
 The GitHub write guard requires repository authorization or an explicitly
-authorized scoped contribution grant for pushes and mutating =gh= operations. It classifies each literal shell command nested in
+authorized scoped contribution grant for pushes and mutating =gh= operations. It
+reads the allowlist and the automations registry from the committed =HEAD=
+revision, so a working-tree edit to either confers nothing. It classifies each literal shell command nested in
 =functions.exec= independently and refuses dynamic or ambiguous nested calls;
 read-only GitHub inspection remains available for undeclared repositories. A
 registry match falls through silently rather than explicitly approving the

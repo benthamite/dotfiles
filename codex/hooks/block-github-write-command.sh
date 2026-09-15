@@ -34,7 +34,15 @@ CMD=$(codex_shell_command "$INPUT")
 [ -n "$CMD" ] || exit 0
 COMMAND="$CMD"
 
-ALLOWLIST="$SCRIPT_DIR/../../agents/github-write-allowlist.txt"
+# Read from the committed blob, never the working tree: an agent that is
+# blocked can append its own target to a tracked file and retry, as one did on
+# 2026-08-31. The registry below is read the same way, for the same reason.
+ALLOWLIST_REPO="$SCRIPT_DIR/../.."
+ALLOWLIST_PATH="agents/github-write-allowlist.txt"
+
+allowlist_entries() {
+  git -C "$ALLOWLIST_REPO" show "HEAD:$ALLOWLIST_PATH" 2>/dev/null
+}
 
 deny() {
   local label="$1"
@@ -43,7 +51,7 @@ deny() {
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: " + $label + ".\n\n" + $detail + "\n\nAfter explicit user authorization, supported fork/PR commands may use committed scoped grants (agents/github-operation-authorizations.md). Otherwise GitHub writes require a target that matches an exact OWNER/REPO entry or OWNER/* account wildcard in `~/My Drive/dotfiles/agents/github-write-allowlist.txt`, or is declared by an Epoch project via :REPOS: and committed to the automations registry.")
+      "permissionDecisionReason": ("BLOCKED: " + $label + ".\n\n" + $detail + "\n\nAfter explicit user authorization, supported fork/PR commands may use committed scoped grants (agents/github-operation-authorizations.md). Otherwise GitHub writes require a target that matches an exact OWNER/REPO entry or OWNER/* account wildcard in the committed `~/My Drive/dotfiles/agents/github-write-allowlist.txt` (working-tree edits do not count), or is declared by an Epoch project via :REPOS: and committed to the automations registry.")
     }
   }'
   exit 0
@@ -201,7 +209,6 @@ declared_repos() {
 repo_allowed_p() {
   local repo pattern
   repo=$(normalize_repo "$1")
-  if [ -f "$ALLOWLIST" ]; then
   while IFS= read -r pattern; do
       case "$pattern" in
 	  */\*)
@@ -220,8 +227,7 @@ repo_allowed_p() {
       gsub(/\.git$/, "", repo)
       print tolower(repo)
     }
-  ' "$ALLOWLIST")
-  fi
+  ' < <(allowlist_entries))
 
   # Declared entries are exact repos, never wildcards.
   while IFS= read -r pattern; do

@@ -35,5 +35,11 @@ cmds=$(printf '%s\n' "$text" \
 # Bound stage-for-user so a wedged Emacs server can never leave a hung process
 # (GNU timeout is `timeout` or `gtimeout` on macOS; run bare if neither exists).
 TO=$(command -v timeout || command -v gtimeout || true)
-printf '%s\n' "$cmds" | ${TO:+"$TO" 5} stage-for-user >/dev/null 2>&1
+# Keep a one-line failure trail: the hook must stay silent for Claude Code, but
+# a silent staging failure is otherwise undiagnosable.
+log="${XDG_STATE_HOME:-$HOME/.local/state}/claude-stage-hook.log"
+mkdir -p "$(dirname "$log")" 2>/dev/null || true
+if ! out=$(printf '%s\n' "$cmds" | ${TO:+"$TO" 5} stage-for-user 2>&1) || printf '%s' "$out" | grep -q "warning"; then
+  printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "${out:-stage-for-user failed}" >> "$log" 2>/dev/null || true
+fi
 exit 0

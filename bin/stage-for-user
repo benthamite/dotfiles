@@ -31,8 +31,18 @@ if [ "$bytes" -eq 0 ]; then
 fi
 
 # Emacs kill ring (temp-file indirection avoids Elisp string-escaping issues).
-if command -v emacsclient >/dev/null 2>&1; then
-  emacsclient --eval "(with-temp-buffer (insert-file-contents \"$tmp\") (kill-new (buffer-string)))" >/dev/null 2>&1 \
+# Prefer the dotfiles emacsclient shim: it resolves the server socket from the
+# real macOS per-user temp dir, so staging still works when the caller runs
+# with TMPDIR overridden (Claude Code pins TMPDIR=/tmp/claude-$UID for hooks and
+# tool commands, which hides the socket from a bare emacsclient).
+shim="$HOME/My Drive/dotfiles/shell/shims/emacsclient"
+if [ -x "$shim" ]; then
+  emacsclient=$shim
+else
+  emacsclient=$(command -v emacsclient 2>/dev/null || true)
+fi
+if [ -n "$emacsclient" ]; then
+  "$emacsclient" --eval "(with-temp-buffer (insert-file-contents \"$tmp\") (kill-new (buffer-string)))" >/dev/null 2>&1 \
     || echo "stage-for-user: warning: emacsclient staging failed (no server?)" >&2
 fi
 

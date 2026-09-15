@@ -28,7 +28,7 @@
             (ebib-db-set-filename file db)
             (ebib-db-set-backup nil db)
             (ebib-db-set-entry "Author2020Paper"
-                               '(("=type=" . "article") ("title" . "Paper")) db)
+                               (copy-tree '(("=type=" . "article") ("title" . "Paper"))) db)
             (set-file-times file (time-subtract (current-time) 60))
             (ebib-db-set-modtime (ebib--get-file-modtime file) db)
             (funcall function db file)))

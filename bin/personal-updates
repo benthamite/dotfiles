@@ -205,6 +205,29 @@ def age_qualified_artifacts(observations, min_age_days, now, holds, excluded_cas
     return allowed
 
 
+def dependency_blockers(kind, name, observations, allowed):
+    """Transitive dependencies Homebrew would install with the item that are not age-qualified.
+
+    Observations record, per item, the dependencies that would be installed or
+    upgraded alongside it. A dependency without an observation counts as
+    unchecked. The in-Homebrew guard still verifies the actual installer objects.
+    """
+    blockers = []
+    seen = set()
+    stack = [(kind, name)]
+    while stack:
+        current_kind, current_name = stack.pop()
+        for reference in observations.get(current_kind, {}).get(current_name, {}).get("pending_deps", []):
+            dep_kind, dep_name = reference.split("/", 1)
+            if (dep_kind, dep_name) in seen:
+                continue
+            seen.add((dep_kind, dep_name))
+            if dep_name not in allowed.get(dep_kind, {}):
+                blockers.append(reference)
+            stack.append((dep_kind, dep_name))
+    return sorted(blockers)
+
+
 def upgrade_brew(eligible, allowed):
     for command in brew_upgrade_commands_for_eligible(eligible):
         brew_helper("upgrade", allowed, command[2:])
@@ -271,10 +294,15 @@ def command_delayed(args, now=None):
         accepted = []
         for name in names:
             observed = observations.get(kind, {}).get(name, {})
-            if observed.get("name") in allowed[kind]:
-                accepted.append(name)
-            else:
+            if observed.get("name") not in allowed[kind]:
                 deferred.append(f"{kind}/{name}: artifact is unchecked or has not completed the waiting period")
+                continue
+            blockers = dependency_blockers(kind, name, observations, allowed)
+            if blockers:
+                deferred.append(f"{kind}/{name}: dependencies {', '.join(blockers)} are unchecked "
+                                "or have not completed the waiting period")
+                continue
+            accepted.append(name)
         eligible[kind] = accepted
     eligible = {kind: names for kind, names in eligible.items() if names}
     if args.dry_run:

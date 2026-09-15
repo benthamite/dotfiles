@@ -49,26 +49,52 @@ module PersonalUpdatePolicy
      "artifact" => supported ? Digest::SHA256.hexdigest(JSON.generate(canonical(artifact))) : nil}
   end
 
+  # Dependencies Homebrew would install or upgrade together with the item.
+  # A formula upgrade brings runtime dependencies that are not at their latest
+  # version (FormulaInstaller may accept an older one that satisfies the
+  # bottle's recorded minimum, so this errs toward listing more). A cask
+  # install brings formulae without a linked installation and casks that are
+  # not installed (Cask::Installer#missing_cask_and_formula_dependencies).
+  def self.pending_dependencies(kind, item)
+    pending = []
+    if kind == "brew_formula"
+      item.deps.each do |dep|
+        next if dep.test? || dep.optional? || dep.build?
+
+        formula = dep.to_formula
+        pending << ["brew_formula", formula, formula.latest_version_installed?]
+      end
+    else
+      Array(item.depends_on.formula).each do |dep|
+        formula = Formulary.factory(dep)
+        pending << ["brew_formula", formula, formula.any_version_installed? && formula.optlinked?]
+      end
+      Array(item.depends_on.cask).each do |dep|
+        cask = Cask::CaskLoader.load(dep)
+        pending << ["brew_cask", cask, cask.installed?]
+      end
+    end
+    pending
+  end
+
   def self.observe(request)
     result = {"brew_formula" => {}, "brew_cask" => {}}
     visit = lambda do |kind, item|
       name = item.full_name
       return if result.fetch(kind).key?(name)
 
-      result.fetch(kind)[name] = describe(kind, item)
-      if kind == "brew_formula"
-        item.deps.each { |dep| visit.call("brew_formula", dep.to_formula) unless dep.test? || dep.optional? || dep.build? }
-      else
-        Array(item.depends_on.formula).each { |dep| visit.call("brew_formula", Formulary.factory(dep)) }
-        Array(item.depends_on.cask).each { |dep| visit.call("brew_cask", Cask::CaskLoader.load(dep)) }
-      end
+      entry = result.fetch(kind)[name] = describe(kind, item)
+      dependencies = pending_dependencies(kind, item)
+      entry["pending_deps"] = dependencies.reject { |_, _, satisfied| satisfied }
+                                          .map { |dep_kind, dep, _| "#{dep_kind}/#{dep.full_name}" }.sort
+      dependencies.each { |dep_kind, dep, _| visit.call(dep_kind, dep) }
     end
     request.each do |kind, updates|
       updates.each do |entry|
         item = kind == "brew_formula" ? Formulary.factory(entry.fetch("name")) : Cask::CaskLoader.load(entry.fetch("name"))
         visit.call(kind, item)
         # Keep the observed outdated name as an alias (core casks use full taps).
-        result.fetch(kind)[entry.fetch("name")] = describe(kind, item)
+        result.fetch(kind)[entry.fetch("name")] = result.fetch(kind).fetch(item.full_name)
       end
     end
     result

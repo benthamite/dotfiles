@@ -381,6 +381,62 @@ class PersonalUpdatesStateTest(unittest.TestCase):
         self.assertEqual(self.mod.age_qualified_artifacts(observations, 7, self.now, {"held"}, {"excluded"}),
                          {"brew_formula": {}, "brew_cask": {}})
 
+    def observation(self, name, first_seen, pending_deps=(), artifact="hash"):
+        return {"name": name, "available": "1", "artifact": artifact,
+                "first_seen": first_seen, "pending_deps": list(pending_deps)}
+
+    def test_dependency_blockers_follow_pending_edges_transitively(self):
+        aged, fresh = "2026-05-01T00:00:00+00:00", self.now.isoformat()
+        observations = {"brew_formula": {
+            "top": self.observation("top", aged, ["brew_formula/mid", "brew_formula/held"]),
+            "mid": self.observation("mid", aged, ["brew_formula/leaf", "brew_formula/unobserved"]),
+            "leaf": self.observation("leaf", fresh),
+            "held": self.observation("held", aged),
+            "current": self.observation("current", aged),
+        }, "brew_cask": {}}
+        allowed = self.mod.age_qualified_artifacts(observations, 7, self.now, {"held"}, set())
+        self.assertEqual(self.mod.dependency_blockers("brew_formula", "top", observations, allowed),
+                         ["brew_formula/held", "brew_formula/leaf", "brew_formula/unobserved"])
+        self.assertEqual(self.mod.dependency_blockers("brew_formula", "current", observations, allowed), [])
+
+    def test_delayed_defers_candidate_until_pending_dependency_qualifies(self):
+        # Regression: imagemagick and graphviz were selected while their
+        # dependency aom was still waiting, so the in-Homebrew guard raised a
+        # hard error and the job exited 1 every day of the waiting period.
+        aged = "2026-05-01T00:00:00+00:00"
+        for dep_first_seen, expect_upgrade in ((self.now.isoformat(), False), (aged, True)):
+            with self.subTest(dependency_qualified=expect_upgrade), tempfile.TemporaryDirectory() as directory:
+                base = pathlib.Path(directory)
+                args = Namespace(state_file=base / "state.json", log_dir=base / "logs",
+                                 hold_file=base / "holds", excluded_casks_file=base / "excluded",
+                                 min_age_days=7, dry_run=False)
+                observations = {"brew_formula": {
+                    "imagemagick": self.observation("imagemagick", aged, ["brew_formula/aom"]),
+                    "aom": self.observation("aom", dep_first_seen)}}
+                args.state_file.write_text(json.dumps({
+                    "brew_formula": {"imagemagick": {"installed": "0", "available": "1", "first_seen": aged},
+                                     "aom": {"installed": "0", "available": "1", "first_seen": dep_first_seen}},
+                    "observations": observations}))
+                current = {"brew_formula": [{"name": "imagemagick", "installed": "0", "available": "1"},
+                                            {"name": "aom", "installed": "0", "available": "1"}]}
+                observed = {kind: {name: {k: v for k, v in entry.items() if k != "first_seen"}
+                                   for name, entry in entries.items()} for kind, entries in observations.items()}
+                with patch.object(self.mod, "brew_outdated", return_value=current), \
+                     patch.object(self.mod, "observe_artifacts", return_value=observed), \
+                     patch.object(self.mod, "upgrade_brew") as upgrade, \
+                     patch.object(self.mod, "command_scan"), \
+                     patch.object(sys, "stderr"):
+                    self.mod.command_delayed(args, now=self.now)
+                log = "".join(path.read_text() for path in args.log_dir.iterdir())
+                if expect_upgrade:
+                    self.assertEqual(upgrade.call_args[0][0], {"brew_formula": ["aom", "imagemagick"]})
+                    self.assertNotIn("deferred", log)
+                else:
+                    upgrade.assert_not_called()
+                    self.assertIn("delayed deferred brew_formula/imagemagick: dependencies brew_formula/aom "
+                                  "are unchecked or have not completed the waiting period", log)
+                    self.assertNotIn("error", log)
+
     def test_helper_disables_auto_update_and_cleans_private_request(self):
         recorded = []
         def fake_run(command, **kwargs):
@@ -420,7 +476,13 @@ class Item
     collector.define_singleton_method(:specification_for) { |_tag| host }
     Struct.new(:collector).new(collector)
   end
-  def deps = []
+  # PENDING_DEP models a runtime dependency; DEP_INSTALLED marks it current.
+  def deps
+    return [] unless ENV["PENDING_DEP"] == "1" && @name == "tool"
+    dep = Struct.new(:to_formula) { def test? = false; def optional? = false; def build? = false }
+    [dep.new(Item.new("dep", "2.0")), dep.new(Item.new("build-only")).tap { |d| d.define_singleton_method(:build?) { true } }]
+  end
+  def latest_version_installed? = @name != "dep" || ENV["DEP_INSTALLED"] == "1"
   def sha256 = @checksum
   def url = "https://example.invalid/fixture"
 end
@@ -520,7 +582,7 @@ end
                                     env=env, capture_output=True, text=True, timeout=20)
             return result, installed.read_text() if installed.exists() else None, uninstalled.exists()
 
-    def run_observe(self, **scenario):
+    def run_observe(self, whole=False, **scenario):
         if not pathlib.Path(self.RUBY).exists():
             self.skipTest("Homebrew's Ruby runtime is not available")
         with tempfile.TemporaryDirectory() as directory:
@@ -536,7 +598,8 @@ end
                                      "observe", str(request)], env={"PATH": "/usr/bin:/bin", **scenario},
                                     capture_output=True, text=True, timeout=20)
             self.assertEqual(result.returncode, 0, result.stderr)
-            return json.loads(result.stdout)["brew_formula"]["tool"]
+            formulae = json.loads(result.stdout)["brew_formula"]
+            return formulae if whole else formulae["tool"]
 
     def test_installs_exact_qualified_formula(self):
         result, installed, _ = self.run_boundary()
@@ -601,6 +664,13 @@ end
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("not age-qualified", result.stderr)
         self.assertIsNone(installed)
+
+    def test_observe_records_dependencies_homebrew_would_install(self):
+        formulae = self.run_observe(whole=True, PENDING_DEP="1")
+        self.assertEqual(formulae["tool"]["pending_deps"], ["brew_formula/dep"])
+        self.assertRegex(formulae["dep"]["artifact"] or "", r"^[0-9a-f]{64}$")
+        self.assertNotIn("build-only", formulae)
+        self.assertEqual(self.run_observe(PENDING_DEP="1", DEP_INSTALLED="1")["pending_deps"], [])
 
     def test_checksum_free_cask_is_rejected(self):
         result, installed, uninstalled = self.run_boundary("brew_cask", CHECKSUM="no_check")

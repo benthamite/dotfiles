@@ -7,8 +7,16 @@ artifact checksums start a new waiting period, even if a displayed version has
 not changed. Existing state without artifact observations starts a fresh period
 on its next scan; old version-only timestamps do not authorize installation.
 
-The delayed lane also checks implicit dependencies. A dependency that has not
-completed its waiting period blocks the installation. Holds and excluded casks
+The delayed lane also checks implicit dependencies. Each scan records, per
+package, the dependencies Homebrew would install or upgrade with it: runtime
+formula dependencies not at their latest version, and for casks, formulae with
+no linked installation and casks not installed. A candidate whose transitive
+recorded dependencies are not all age-qualified is deferred with a message
+naming them, so the job exits cleanly while they age. The recorded set errs
+toward listing more: Homebrew may accept an older dependency that satisfies a
+bottle's minimum version, and the pre-check defers anyway. The in-Homebrew
+guard remains the authoritative check for a dependency that has not completed
+its waiting period, and it blocks the installation. Holds and excluded casks
 apply to these dependencies too. Metadata changes after candidate selection are
 checked against the actual installer object, before a formula install or the
 removal of a predecessor cask. Automatic Homebrew refresh and unrelated dependent

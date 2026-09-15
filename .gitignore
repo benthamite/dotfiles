@@ -43,6 +43,9 @@ claude/bin/__pycache__
 lib/python/__pycache__
 claude/skills/*/scripts/__pycache__
 codex/skills/*/scripts/__pycache__
+bin/__pycache__
+claude/hooks/__pycache__
+codex/hooks/__pycache__
 
 ## local agent-learning inbox
 .agent-learnings/**

@@ -1,0 +1,24 @@
+#!/bin/bash
+# Validate emacs/lockfile.el: the file must read as one Lisp form whose every
+# entry is (ID :source STRING :recipe PLIST) with a :ref in the recipe.
+# Used as the evidence check for lockfile commits (see
+# claude/bin/elisp-check-evidence).
+set -euo pipefail
+root=$(cd -- "$(dirname -- "$0")/.." && pwd)
+lockfile="$root/emacs/lockfile.el"
+emacs --batch -Q --eval "
+(with-temp-buffer
+  (insert-file-contents \"$lockfile\")
+  (goto-char (point-min))
+  (let ((entries (read (current-buffer))) (count 0))
+    (skip-chars-forward \" \\t\\n\")
+    (unless (eobp) (error \"lockfile.el: trailing content after the entry list\"))
+    (dolist (entry entries)
+      (let ((id (car-safe entry)) (recipe (plist-get (cdr-safe entry) :recipe)))
+        (unless (and (symbolp id) id) (error \"lockfile.el: entry without a symbol id: %S\" entry))
+        (unless (stringp (plist-get (cdr entry) :source)) (error \"lockfile.el: %s lacks a :source string\" id))
+        (unless (and (listp recipe) (stringp (plist-get recipe :ref)))
+          (error \"lockfile.el: %s lacks a :recipe with a :ref string\" id))
+        (setq count (1+ count))))
+    (message \"lockfile.el: %d entries validated\" count)))
+"

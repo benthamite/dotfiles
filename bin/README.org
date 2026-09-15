@@ -18,6 +18,7 @@ documented in [[file:../agents/README.org][the agent manual]]. Skill names and t
 | =ahrefs-api-guard= | Delegates Ahrefs API access to the guarded Claude-side wrapper. |
 | =ai-config-sync= | Audits and guards paired Claude and Codex configuration, accepts matching auxiliary-resource deletions in surviving skills, and treats each tool's hook README as independent documentation. |
 | =check-config-org= | Parses every tangled Elisp block in =emacs/config.org= and runs the profile-aware tangle; the evidence check for config.org commits. |
+| =check-lockfile= | Validates that =emacs/lockfile.el= reads as one entry list whose every entry has a symbol id, a =:source= string and a =:recipe= with a =:ref=; the evidence check for lockfile commits. |
 | =claude-stage-hook= | Stages explicitly marked Claude final-message commands on the user’s paste surfaces. |
 | =codex-config-prune= | Removes stale project-trust and hook-state entries from Codex configuration. |
 | =codex-protocol-watch= | Checks whether Codex has added protocol methods unsupported by the Emacs client. |

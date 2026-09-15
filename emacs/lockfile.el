@@ -318,9 +318,10 @@
 			. "breadcrumb")
 		       :tar "1.0.1" :host gnu :files ("*" (:exclude ".git"))
 		       :source "GNU ELPA" :id breadcrumb :remotes
-		       (("fork" :host github :repo "benthamite/breadcrumb")
+		       (("fork" :host github :repo "benthamite/breadcrumb"
+			 :branch "fix/imenu-actions")
 			"origin")
-		       :branch "fix/imenu-actions" :type git :protocol https
+		       :type git :protocol https
 		       :inherit t :depth treeless :ref
 		       "32f113c3d09a778b0faa01733372a9ce17361bab"))
  (browse-url-extras :source "elpaca-menu-lock-file" :recipe

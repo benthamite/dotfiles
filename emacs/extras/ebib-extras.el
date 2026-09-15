@@ -1557,9 +1557,24 @@ is created following the same schema as notes created with
   (run-with-timer 1 nil #'ebib-extras-auto-save-databases))
 
 (defun ebib-extras--save-database (db)
-  "Save DB and refresh its saved timestamp, preserving conflict checks."
-  (let ((ebib--cur-db db))
-    (ebib-save-current-database nil)))
+  "Save DB and refresh its saved timestamp, preserving conflict checks.
+Without a live Ebib index buffer, save headlessly: Ebib's own save redisplays
+the index mode line when DB is current, which fails before Ebib's buffers
+exist."
+  (if (buffer-live-p (ebib--buffer 'index))
+      (let ((ebib--cur-db db))
+        (ebib-save-current-database nil))
+    (ebib-extras--save-database-headless db)))
+
+(defun ebib-extras--save-database-headless (db)
+  "Save DB when Ebib's buffers do not exist and refresh its saved timestamp.
+A temporary buffer stands in for the index buffer so that Ebib's mode-line
+refresh has somewhere harmless to run; every other save step, including the
+on-disk conflict check, runs unchanged."
+  (with-temp-buffer
+    (let ((ebib--cur-db db)
+          (ebib--buffer-alist (cons (cons 'index (current-buffer)) ebib--buffer-alist)))
+      (ebib-save-current-database nil))))
 
 (ebib-extras-auto-save-databases)
 

@@ -72,6 +72,29 @@
                        (ebib-db-get-field-value "file" "Author2020Paper" db))
                       "~/library/Author2020Paper.pdf"))))))
 
+(ert-deftest ebib-extras-test-save-database-without-ebib-buffers ()
+  "Saving must work headlessly, before Ebib has created its index buffer."
+  (let* ((file (make-temp-file "ebib-headless-save-" nil ".bib"))
+         (db (ebib-db-new-database))
+         (ebib--buffer-alist nil)
+         (ebib--cur-db nil)
+         (ebib--databases (list db)))
+    (unwind-protect
+        (progn
+          (ebib-db-set-filename file db)
+          (ebib-db-set-backup nil db)
+          (ebib-db-set-entry "Author2020Paper"
+                             '(("=type=" . "article") ("title" . "Paper")) db)
+          (ebib-db-set-modtime (ebib--get-file-modtime file) db)
+          (ebib-db-set-modified t db)
+          (ebib-extras--save-database db)
+          (should-not (ebib-db-modified-p db))
+          (should (equal (ebib-db-get-modtime db) (ebib--get-file-modtime file)))
+          (with-temp-buffer
+            (insert-file-contents file)
+            (should (search-forward "Author2020Paper" nil t))))
+      (delete-file file))))
+
 (ert-deftest ebib-extras-test-own-saves-preserve-external-edits ()
   "Refusing an external-file conflict preserves disk and unsaved database edits."
   (dolist (operation '(attachment autosave))

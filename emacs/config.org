@@ -2956,9 +2956,12 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package breadcrumb
-  :ensure (:remotes (("fork" :host github :repo "benthamite/breadcrumb")
-                     "origin")
-           :branch "fix/imenu-actions") ; awaiting PR merge: https://github.com/joaotavora/breadcrumb/pull/58
+  ;; The branch lives in the fork, so declare it inside the fork remote spec.
+  ;; A top-level :branch is passed to `git clone' against the upstream URL and
+  ;; fails on a fresh profile because upstream has no such branch.
+  :ensure (:remotes (("fork" :host github :repo "benthamite/breadcrumb"
+                      :branch "fix/imenu-actions") ; awaiting PR merge: https://github.com/joaotavora/breadcrumb/pull/58
+                     "origin"))
   :custom
   (breadcrumb-project-max-length 0.5)
   (breadcrumb-project-crumb-separator "/")

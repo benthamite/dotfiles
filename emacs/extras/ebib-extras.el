@@ -588,12 +588,19 @@ OWNED-WRITE permits the known operation write awaiting its immediate save."
 A blocked operation remains blocked even if its other tasks finish."
   (cl-decf (ebib-extras-operation-pending operation))
   (when (memq status '(failed blocked external))
-    (setf (ebib-extras-operation-status operation) 'blocked)
-    (push (or error "Bibliography operation needs review")
-          (ebib-extras-operation-errors operation)))
+    (let ((error (or error "Bibliography operation needs review")))
+      (setf (ebib-extras-operation-status operation) 'blocked)
+      (push error (ebib-extras-operation-errors operation))
+      (ebib-extras--operation-report operation error)))
   (when (and (zerop (ebib-extras-operation-pending operation))
              (not (eq (ebib-extras-operation-status operation) 'blocked)))
     (setf (ebib-extras-operation-status operation) 'complete)))
+
+(defun ebib-extras--operation-report (operation error)
+  "Show ERROR of an interactive OPERATION in the echo area.
+A noninteractive operation is queried for its errors instead."
+  (unless (ebib-extras-operation-noninteractive-p operation)
+    (message "%s: %s" (ebib-extras-operation-key operation) error)))
 
 (defun ebib-extras-operation-block (operation error)
   "Record ERROR as a blocked OPERATION without changing its task count."
@@ -880,14 +887,24 @@ TYPE is a string.  KEY is an optional BibTeX key string."
       (let* ((stage (make-temp-file
                     (expand-file-name (concat target-key "-attachment-") paths-dir-downloads)
                     nil (concat "." type)))
-             (callback (ebib-extras--attachment-callback operation)))
+             (callback (ebib-extras--attachment-callback operation))
+             (fail (lambda (error)
+                     (ebib-extras--discard-attachment-stage stage)
+                     (funcall callback 'failed nil error))))
         (condition-case err
             (eww-extras-url-to-file
              type url (lambda (file &optional status)
-                        (funcall callback (if file 'complete 'failed) file
-                                 (and (not file) (format "URL conversion failed: %s" status))))
-             target-key (lambda (error) (funcall callback 'failed nil error)) stage)
-          (error (funcall callback 'failed nil (error-message-string err))))))))
+                        (if file
+                            (funcall callback 'complete file)
+                          (funcall fail (format "URL conversion failed: %s" status))))
+             target-key fail stage)
+          (error (funcall fail (error-message-string err))))))))
+
+(defun ebib-extras--discard-attachment-stage (stage)
+  "Delete the staging file STAGE that a failed download left empty."
+  (when (and (file-regular-p stage)
+             (zerop (file-attribute-size (file-attributes stage))))
+    (delete-file stage)))
 
 (defun ebib-extras-url-to-pdf-attach (&optional key db operation)
   "Generate a PDF from the URL of entry KEY and attach it.

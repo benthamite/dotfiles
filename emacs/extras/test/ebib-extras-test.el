@@ -700,6 +700,34 @@
     (should-not (ebib-db-get-field-value "file" key b 'noerror))
     (mapc #'delete-file stages)))
 
+(ert-deftest ebib-extras-test-failed-url-render-discards-stage-and-reports ()
+  "A failed render removes its empty staging file and tells an interactive user."
+  (dolist (noninteractive-p '(nil t))
+    (let* ((db (car (ebib-extras-test--operation-databases)))
+           (key "Author2020Paper")
+           (operation (ebib-extras-make-operation key db noninteractive-p))
+           (ebib--cur-db db)
+           (ebib--databases (list db))
+           (paths-dir-downloads temporary-file-directory)
+           (stage nil) (failed nil) (messages nil))
+      (ebib-db-set-field-value "url" "https://example.com/paper" key db t)
+      (cl-letf (((symbol-function 'eww-extras-url-to-file)
+                 (lambda (_type _url _callback _key failure path)
+                   (setq stage path failed failure)))
+                ((symbol-function 'message)
+                 (lambda (format-string &rest args)
+                   (push (apply #'format format-string args) messages))))
+        (ebib-extras-url-to-file-attach "html" key db operation)
+        (should (file-regular-p stage))
+        (funcall failed "verification: unresolved consent blocker"))
+      (should-not (file-exists-p stage))
+      (should (equal (ebib-extras-operation-errors operation)
+                     '("verification: unresolved consent blocker")))
+      (if noninteractive-p
+          (should-not messages)
+        (should (equal messages
+                       '("Author2020Paper: verification: unresolved consent blocker")))))))
+
 (ert-deftest ebib-extras-test-operation-rejects-closed-and-dirty-database ()
   "Callbacks cannot write closed databases or save unrelated user edits."
   (let* ((db (car (ebib-extras-test--operation-databases)))

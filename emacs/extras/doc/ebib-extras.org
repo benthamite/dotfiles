@@ -118,7 +118,7 @@ For ordinary interactive calls, destination collisions follow ~ebib-extras-attac
 #+findex: ebib-extras-make-operation
 #+findex: ebib-extras-operation-status-for-id
 #+findex: ebib-extras-operation-block
-Programmatic callers create an operation with ~(ebib-extras-make-operation KEY DB t)~ and supply it to attachment and processing. The final ~t~ prohibits prompts. Supply and save the verified language before starting. Each operation retains the original entry and database, counts only its own download, abstract and OCR tasks, and reports ~complete~, ~pending~ or ~blocked~. Query a returned operation ID with ~ebib-extras-operation-status-for-id~. Navigation cannot redirect callbacks; a closed or replaced target, unsaved user edits or conflicting destination blocks further writes.
+Programmatic callers create an operation with ~(ebib-extras-make-operation KEY DB t)~ and supply it to attachment and processing. The final ~t~ prohibits prompts. Supply and save the verified language before starting. Each operation retains the original entry and database, counts only its own download, abstract and OCR tasks, and reports ~complete~, ~pending~ or ~blocked~. Query a returned operation ID with ~ebib-extras-operation-status-for-id~. An interactive operation instead shows each failed task in the echo area as it happens, prefixed with the entry key. Navigation cannot redirect callbacks; a closed or replaced target, unsaved user edits or conflicting destination blocks further writes.
 
 Integration code can record a blocked result with ~ebib-extras-operation-block~, supplying the operation and a diagnostic string. This records the failure without changing the number of outstanding tasks; their callbacks must still finish normally.
 
@@ -325,6 +325,8 @@ The command ~ebib-extras-book-attach~ searches for and downloads a book by ISBN 
 The command ~ebib-extras-url-to-pdf-attach~ generates a PDF from the URL in the entry's =url= field using ~eww-extras-url-to-file~ and attaches it to the entry once the conversion completes (via callback).
 
 The command ~ebib-extras-url-to-html-attach~ works the same way but generates an HTML file instead.
+
+Each conversion renders into a staging file named after the entry key in the downloads directory. A successful render moves that file into the library; a failed render deletes the empty staging file and records the renderer's diagnostic on the operation, which an interactive call also shows in the echo area.
 
 The command ~ebib-extras-url-to-srt-attach~ downloads subtitles for the URL in the entry's =url= field using an external command (formatted by ~eww-extras-download-subtitles~, typically =yt-dlp=). The subtitles are downloaded to the downloads directory, but unlike the other commands in this group, the resulting file must be attached manually.
 

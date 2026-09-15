@@ -4,8 +4,13 @@
 sync_channel() {
     channel="$1"
     echo "Starting sync for $channel"
-    mbsync -q "$channel"
-    echo "Finished sync for $channel"
+    if mbsync -q "$channel"; then
+        echo "Finished sync for $channel"
+    else
+        status=$?
+        echo "Failed sync for $channel (exit $status)" >&2
+        return "$status"
+    fi
 }
 
 export -f sync_channel
@@ -40,5 +45,12 @@ gmail-maildir-sync sync &
 GMAIL_PID=$!
 
 echo "$channels" | parallel --will-cite sync_channel
+MBSYNC_STATUS=$?
 
 wait $GMAIL_PID
+GMAIL_STATUS=$?
+
+if [ "$GMAIL_STATUS" -ne 0 ]; then
+    exit "$GMAIL_STATUS"
+fi
+exit "$MBSYNC_STATUS"

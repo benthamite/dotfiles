@@ -17,14 +17,7 @@ pass_first_line() {
 }
 
 op_read() {
-  if [ -n "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
-    op read "$1" 2>/dev/null || true
-  else
-    token="$(pass_first_line epoch/1password-service-account-token)"
-    if [ -n "$token" ]; then
-      OP_SERVICE_ACCOUNT_TOKEN="$token" op read "$1" 2>/dev/null || true
-    fi
-  fi
+  op-automations read "$1" 2>/dev/null || true
 }
 
 GOOGLE_WORKSPACE_CLIENT_ID="${GOOGLE_WORKSPACE_CLIENT_ID:-$(pass_first_line env/google-workspace-client-id)}"

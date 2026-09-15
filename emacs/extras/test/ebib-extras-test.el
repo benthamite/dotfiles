@@ -60,6 +60,18 @@
              (when (eq operation 'attachment)
                (should (search-forward "/tmp/author-paper.pdf" nil t))))))))))
 
+(ert-deftest ebib-extras-test-update-file-field-without-existing-field ()
+  "A first attachment must not fail when the entry has no file field yet."
+  (ebib-extras-test--with-save-database
+   (lambda (db _file)
+     (cl-letf (((symbol-function 'run-with-timer) #'ignore))
+       (should-not (ebib-db-get-field-value "file" "Author2020Paper" db 'noerror))
+       (ebib-extras--update-file-field-contents
+        "Author2020Paper" "~/library/Author2020Paper.pdf" db)
+       (should (equal (ebib-unbrace
+                       (ebib-db-get-field-value "file" "Author2020Paper" db))
+                      "~/library/Author2020Paper.pdf"))))))
+
 (ert-deftest ebib-extras-test-own-saves-preserve-external-edits ()
   "Refusing an external-file conflict preserves disk and unsaved database edits."
   (dolist (operation '(attachment autosave))

@@ -147,8 +147,8 @@ first part (if multiple ISBNs are listed) is returned."
   "Add FILE-NAME to KEY's attachment field in explicit DB.
 DB defaults to the current database; never search other databases by key."
   (let* ((db (or db ebib--cur-db))
-         (value (ebib-unbrace
-                 (ebib-db-get-field-value "file" key db 'noerror)))
+         (raw (ebib-db-get-field-value "file" key db 'noerror))
+         (value (and raw (ebib-unbrace raw)))
          (files (and value (ebib--split-files value))))
     (unless (seq-some (lambda (file)
                         (equal (expand-file-name (string-trim file))

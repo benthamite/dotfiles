@@ -111,7 +111,7 @@ The command ~ebib-extras-attach-file~ accepts optional FILE, KEY, POSTPROCESS, D
 - If FILE is the symbol ~most-recent~ (activated by calling with a prefix argument, =C-u=), the newest file in the downloads directory is used automatically.
 - If FILE is a string, it is treated as the file path directly.
 
-The file is renamed to =KEY.EXT= and moved to the appropriate library directory based on its extension ([[#h:file-retrieval][File retrieval]]). The entry's =file= field is then updated. The command also calls ~ebib-extras-set-abstract~ to populate the abstract if it is empty ([[#h:entry-processing][Entry processing and field manipulation]]). When POSTPROCESS is non-nil and the attached file is a PDF, the command additionally writes PDF metadata ([[#h:pdf-metadata][PDF metadata]]), performs OCR, and opens the file.
+The file is renamed to =KEY.EXT= and moved to the appropriate library directory based on its extension ([[#h:file-retrieval][File retrieval]]). The entry's =file= field is then updated: an entry that has no =file= field yet receives one, and an entry that already lists the installed path is left unchanged. The command also calls ~ebib-extras-set-abstract~ to populate the abstract if it is empty ([[#h:entry-processing][Entry processing and field manipulation]]). When POSTPROCESS is non-nil and the attached file is a PDF, the command additionally writes PDF metadata ([[#h:pdf-metadata][PDF metadata]]), performs OCR, and opens the file.
 
 For ordinary interactive calls, destination collisions follow ~ebib-extras-attach-existing-file-action~ ([[#h:ebib-extras-attach-existing-file-action][~ebib-extras-attach-existing-file-action~]]). Explicit noninteractive operations refuse to replace a different existing file.
 

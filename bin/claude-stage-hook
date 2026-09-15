@@ -13,9 +13,14 @@
 # Hooks may run with a minimal PATH; make sure our tools resolve.
 export PATH="$HOME/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 
-input=$(cat 2>/dev/null) || exit 0
+# One-line trail per invocation, so "did the hook run at all?" is answerable.
+log="${XDG_STATE_HOME:-$HOME/.local/state}/claude-stage-hook.log"
+mkdir -p "$(dirname "$log")" 2>/dev/null || true
+trace() { printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >> "$log" 2>/dev/null || true; }
+
+input=$(cat 2>/dev/null) || { trace "no stdin"; exit 0; }
 tp=$(printf '%s' "$input" | jq -r '.transcript_path // empty' 2>/dev/null)
-[ -n "$tp" ] && [ -f "$tp" ] || exit 0
+[ -n "$tp" ] && [ -f "$tp" ] || { trace "no transcript_path in hook input"; exit 0; }
 
 # Text of the last assistant message that contains a text block. Slurp so a
 # multi-line message stays one unit (a naive `tail -n1` would grab only the
@@ -30,16 +35,15 @@ text=$(tail -n 200 "$tp" 2>/dev/null \
 cmds=$(printf '%s\n' "$text" \
   | grep -E '^[[:space:]]*![[:space:]]+[~/._[:alnum:]]' 2>/dev/null \
   | sed -E 's/^[[:space:]]*![[:space:]]?//')
-[ -n "$cmds" ] || exit 0
+[ -n "$cmds" ] || { trace "invoked: no !-command in last assistant message"; exit 0; }
 
 # Bound stage-for-user so a wedged Emacs server can never leave a hung process
 # (GNU timeout is `timeout` or `gtimeout` on macOS; run bare if neither exists).
 TO=$(command -v timeout || command -v gtimeout || true)
-# Keep a one-line failure trail: the hook must stay silent for Claude Code, but
-# a silent staging failure is otherwise undiagnosable.
-log="${XDG_STATE_HOME:-$HOME/.local/state}/claude-stage-hook.log"
-mkdir -p "$(dirname "$log")" 2>/dev/null || true
-if ! out=$(printf '%s\n' "$cmds" | ${TO:+"$TO" 5} stage-for-user 2>&1) || printf '%s' "$out" | grep -q "warning"; then
-  printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "${out:-stage-for-user failed}" >> "$log" 2>/dev/null || true
+# The hook must stay silent for Claude Code, so record the outcome in the log.
+if out=$(printf '%s\n' "$cmds" | ${TO:+"$TO" 5} stage-for-user 2>&1) && ! printf '%s' "$out" | grep -q "warning"; then
+  trace "staged $(printf '%s\n' "$cmds" | wc -l | tr -d ' ') command line(s)"
+else
+  trace "FAILED: ${out:-stage-for-user failed}"
 fi
 exit 0

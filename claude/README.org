@@ -558,9 +558,10 @@ evidence instead of erasing it during cleanup.
 The paired =orchestrate-review= skill coordinates fixed Claude and Codex
 sessions through one guarded, stage-atomic workflow. Its helper binds each
 actor's backend, repository, and transcript, and records delivery attempts
-before contact. Unique user-message receipts distinguish delivery from
-background transcript growth; terminal assistant returns distinguish completion
-from tool activity. Attempt hashes are taken over the prompt as the terminal
+before contact. A phase becomes active only when the marker-bearing prompt
+itself appears in the actor's transcript past the recorded boundary; a busy
+terminal or background transcript growth is not acknowledgement. Terminal
+assistant returns distinguish completion from tool activity. Attempt hashes are taken over the prompt as the terminal
 records it, without trailing newlines, and user-role records the harness
 injects (teammate messages, task notifications) do not end the prompt turn. Ambiguous restarts and steering require reconciliation,
 not another submission. Shared session primitives live in

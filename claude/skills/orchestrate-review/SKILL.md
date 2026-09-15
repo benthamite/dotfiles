@@ -237,8 +237,10 @@ python3 "$SKILL_DIR/scripts/orchestrate_review.py" submit \
 The helper selects the actor from the phase and rejects out-of-order,
 duplicate, wrong-role, busy-actor, and post-implementation arbitrary
 submissions. Before delivery it records the fixed transcript byte boundary;
-only a current user-message receipt matching the attempt token and full
-prompt hash marks the phase active. If the initial submit call returns without that
+only after the marker-bearing prompt itself appears in the actor's transcript
+past that boundary does it record the phase as active; a busy terminal or
+transcript growth alone (a session starting up, compacting, or writing
+bookkeeping records) is not acknowledgement. If the initial submit call returns without that
 acknowledgement, a non-implementation Codex phase may retry only the submit
 keystroke when both its receipt token and full prompt hash match the fixed
 actor's composer. It uses `codex-prompt-input`, not terminal prompt syntax.

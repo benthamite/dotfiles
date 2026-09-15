@@ -782,6 +782,12 @@ ENSURE, REST, and STATE are `use-package' handler arguments."
 (elpaca-wait)
 (require 'compat-31)
 
+;; `alert' is a dependency of packages ordered below (org-gcal, slack, telega).
+;; Order it here so the temporary fork pin precedes the dependency recipe.
+(elpaca (alert :host github
+               :repo "benthamite/alert"
+               :branch "fix/async-macos-notifications")) ; awaiting PR merge: https://github.com/jwiegley/alert/pull/123
+
 (use-package use-package
   :demand t
   :custom
@@ -5550,14 +5556,11 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 (That's the actively maintained fork; the [[https://github.com/myuhe/org-gcal.el/issues/124#issuecomment-642859466][official repository]] is no longer maintained.)
 
-Using my fork while awaiting merge of [[https://github.com/kidd/org-gcal.el/pull/276][kidd/org-gcal.el#276]].
-
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-gcal
   :ensure (:host github
-                 :repo "benthamite/org-gcal.el"
-                 :branch "fix/strip-html-descriptions"
-                 :build (:not elpaca-check-version)) ; https://github.com/kidd/org-gcal.el/pull/276
+                 :repo "kidd/org-gcal.el"
+                 :build (:not elpaca-check-version))
   :after auth-source-pass org-agenda
   :custom
   (org-gcal-client-id (auth-source-pass-get "host" "auth-sources/org-gcal"))
@@ -7931,6 +7934,9 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package pdf-tools
+  :ensure (:host github
+                 :repo "benthamite/pdf-tools"
+                 :branch "fix/query-callback-errors") ; awaiting PR merge: https://github.com/vedang/pdf-tools/pull/370
   :mode ("\\.pdf\\'" . pdf-view-mode)
   :after (:any dired-extras ebib)
   :init
@@ -12443,9 +12449,6 @@ We defer-load the package to activate the timer that in turn updates the bibliog
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ebib
-  :ensure (:host github
-                 :repo "benthamite/ebib"
-                 :branch "codex/handle-killed-ebib-buffers") ; awaiting PR merge: https://github.com/joostkremers/ebib/pull/325
   :custom
   (ebib-preload-bib-files paths-files-bibliography-all)
   (ebib-notes-directory paths-dir-bibliographic-notes)
@@ -13592,6 +13595,9 @@ CLOCK: [2021-10-07 Thu 14:31]--[2021-10-07 Thu 15:23] =>  0:52
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package circe
+  :ensure (:host github
+                 :repo "benthamite/circe"
+                 :branch "fix/shorten-prefix-comparisons") ; awaiting PR merge: https://github.com/emacs-circe/circe/pull/429
   :defer t)
 #+end_src
 
@@ -15191,7 +15197,7 @@ block Emacs.  Subprocess failures are reported as warnings.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package alert
-  :ensure nil ; Queued as a dependency before this configuration block.
+  :ensure nil ; Ordered near the top of the file, where its temporary fork pin lives.
   :defer t
   :custom
   ;; the settings below are not working; is it because `alert-default-style' is set to `notifier'?

@@ -547,7 +547,10 @@ authorized scoped contribution grant for pushes and mutating =gh= operations. It
 reads the allowlist and the automations registry from the committed =HEAD=
 revision, so a working-tree edit to either confers nothing. It classifies each literal shell command nested in
 =functions.exec= independently and refuses dynamic or ambiguous nested calls;
-read-only GitHub inspection remains available for undeclared repositories. A
+read-only GitHub inspection remains available for undeclared repositories and
+may be piped or chained, while a write inside a compound command is refused
+before any repository check, including a real push chained after a
+=--dry-run= one. A
 registry match falls through silently rather than explicitly approving the
 write, including for pull-request merges, so the normal permission layer and
 the global user-authorization rule still apply.

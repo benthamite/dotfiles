@@ -196,9 +196,20 @@ repo_allowed_p() {
     return 1
 }
 
+# Target extraction is command-wide. A compound command could let an unrelated
+# or earlier segment lend its repository to a write, so every write path
+# refuses one before anything else; read-only GitHub commands may be piped or
+# chained freely.
+deny_if_compound() {
+    if compound_shell_command_p; then
+	deny "compound GitHub command has no segment-local repository target" "Run each GitHub write in a separate tool call so the guard can bind it to exactly one repository."
+    fi
+}
+
 require_allowed_repo() {
     local action="$1"
     local repo="$2"
+    deny_if_compound
     if [ -z "$repo" ]; then
 	deny "$action has no unambiguous repository target" "The guard blocks ambiguous GitHub writes. Make the target repo explicit and add it to the allowlist only if Pablo personally created it."
     fi
@@ -366,13 +377,10 @@ raise SystemExit(1)
 '
 }
 
-# Target extraction is command-wide. Refuse compound GitHub commands instead
-# of letting an unrelated or earlier segment lend its repository to a write.
-if compound_shell_command_p && { git_push_command_p || printf '%s' "$COMMAND" | grep -qE '(^|[[:space:];|&])gh[[:space:]]'; }; then
-    deny "compound GitHub command has no segment-local repository target" "Run each GitHub command in a separate tool call so the guard can bind the write to exactly one repository."
-fi
-
 if git_push_command_p; then
+    # The dry-run shortcut reads the whole command, so a compound command
+    # could pair a dry run with a real push; refuse it before the shortcut.
+    deny_if_compound
     if echo "$COMMAND" | grep -qE '(^|[[:space:]])--dry-run([[:space:]]|$)'; then
 	exit 0
     fi

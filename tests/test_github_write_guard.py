@@ -204,6 +204,16 @@ exit 1
             with self.subTest(command=command):
                 self.assert_both(command, expected="deny")
 
+    def test_compound_read_only_commands_are_allowed(self) -> None:
+        for command in (
+            "gh run list --repo example/unowned --json status | head -3",
+            "gh api repos/example/unowned/releases --jq '.[0].tag_name' | tr -d '\\n'",
+            "gh pr view --repo example/unowned 1 && gh pr checks --repo example/unowned 1",
+            "cd /tmp && gh release view 1.0 --repo example/unowned",
+        ):
+            with self.subTest(command=command):
+                self.assert_both(command, expected="allow")
+
     def test_additional_repo_write_families_are_gated(self) -> None:
         for command in (
             "gh cache delete --all --repo example/unowned",

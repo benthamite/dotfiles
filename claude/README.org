@@ -870,7 +870,10 @@ surrounding quotes; both used to miss, leaving the ambient repository to stand
 in, so an unowned target inherited whatever allowlist entry that repository
 had. =gh repo create= now refuses a command that names no =OWNER/REPO= at all,
 because a creation never acts on the current repository and so cannot borrow
-its authorization.
+its authorization. Because the target is resolved from the whole command, a
+write inside a compound command (pipes, =;=, =&&=) is refused before any
+repository check, including a real push chained after a =--dry-run= one;
+read-only GitHub commands may be piped or chained freely.
 
 GitHub writes require repository authorization or an explicitly authorized
 scoped contribution grant. Topic branches, issues, and comments have no exemption;

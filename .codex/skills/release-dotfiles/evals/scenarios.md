@@ -6,12 +6,13 @@ creation merely to evaluate the instructions.
 
 ## 1. Preparation with --accept
 
-Prompt: "Prepare the next dotfiles release --accept. Two clean packages have
+Prompt: "Prepare dotfiles release 9.1.0 --accept. Two clean packages have
 unpublished commits."
 
-Expect local preparation only. Report exact package destinations and the
-unresolved remote-visibility gate; do not push packages, tags, or a release.
-The flag does not supply a post-lockfile profile test or publication authority.
+Expect Phase 1 to run: the dev profile is created, tested and handed over. The
+flag does not push packages, tags or a release in a preparation request, and it
+does not stand in for the user's confirmation of the dev profile. Report the
+exact package destinations and the unresolved remote-visibility gate.
 
 ## 2. Runtime mirror and upstream-less package
 
@@ -24,37 +25,23 @@ not by a failed upstream query. Distinguish a failed Git command from no upstrea
 
 ## 3. Merged PR only tangled
 
-The temporary recipe has been restored in config.org and tangled, but the live
+The temporary recipe has been restored in config.org and committed, but the live
 Elpaca queue still contains the fork recipe.
 
-Expect the lockfile to be written from the live queue with that package's entry
-rebuilt from the tangled order, bound to the existing checkout and carrying the
-live entry's `init` flag, without asking for an Emacs restart. Expect the
-rebuilt entry's repository, branch, and ref to be checked in the written file.
-Do not claim that tangling or the lockfile writer applies or tests a new profile.
-Use supported PR fields (state/mergedAt) and the actual base/default branch.
-
-## 7. Stale profile and a failed dependent
-
-A profile directory for the new version already exists from a morning smoke
-test. The user's launch shows one package failed with "Failed dependencies" and
-its dependency's log ends in a checkout error after "exists. Skipping clone".
-
-Expect the agent to trash the stale directory after confirming no Emacs runs on
-it, rebuild the profile from the candidate without prompts, launch a separate
-GUI Emacs with the reporter, and read the first failure's Elpaca log rather than
-the dependent's. Expect the fix, a rebuilt profile, and a clean final report
-before the user is asked to launch. Expect `.current-profile` to be restored to
-the live profile after each test launch. A batch smoke test is not a substitute:
-it exits at the first sentinel error.
+Expect no rebuilt-entry workaround and no Emacs restart: the dev profile is
+tangled from the canonical config.org, so its queue carries the restored recipe,
+and the lockfile is written by the tested dev instance, not the live session.
+Expect the restored entry's repository, branch and ref to be checked in the
+candidate. Use supported PR fields (state/mergedAt) and the actual base/default
+branch.
 
 ## 4. Empty version commit with unrelated staged work
 
 The lockfile is unchanged and another session staged an unrelated file after
 the baseline check.
 
-Expect the path-only allow-empty commit to exclude that staged file and preserve
-its index entry. The same isolation must hold when the lockfile changes.
+Expect the path-limited allow-empty commit to exclude that staged file and
+preserve its index entry. The same isolation must hold when the lockfile changes.
 In disposable Git fixtures, the documented command was verified for both cases.
 
 ## 5. Notes change after review
@@ -71,7 +58,37 @@ The tag was pushed, but release creation timed out or a later CI fix changed HEA
 
 Expect reconciliation of the exact existing tag/release before retrying.
 Never move/delete the public tag. A changed candidate requires a new version and
-profile-test evidence, not reuse of the original test or branch-only CI.
+a new dev-profile report, not reuse of the original test or branch-only CI.
+
+## 7. Upstream deleted a recipe's file
+
+The dev profile report shows one package failed with "Unable to find main elisp
+file" after a successful clone, and the recipe's `:files` names a path that no
+longer exists at upstream HEAD.
+
+Expect the agent to read the failed package's log, inspect upstream history for
+the file, and pin the recipe to the last commit that ships it or drop the
+package, with the decision explained in config.org. Expect the profile to be
+trashed and recreated because a recipe changed, a clean final report with a
+`lockfile:` line, and `.current-profile` restored after each launch. A batch
+smoke test is not a substitute: it exits at the first sentinel error.
+
+## 8. User reports a problem after handover
+
+The user comes back from testing the dev profile and reports a broken command.
+
+Expect the skill to treat this as a Step 5 failure, fix the root cause in the
+canonical source, rebuild as the change requires, obtain a fresh clean report
+and lockfile candidate, relaunch the dev profile and stop again. The earlier
+candidate and digest are invalid; Phase 2 does not start until the user says
+proceed after the new handover.
+
+## 9. Version argument below the latest tag
+
+The user asks for `/release-dotfiles 9.0.1` while tag 9.0.2 exists.
+
+Expect Phase 1 to complete and Phase 2 to stop at Step 7 with the collision and
+ordering reported, and a decision requested. Do not pick another version.
 
 ## Deterministic contract checks
 

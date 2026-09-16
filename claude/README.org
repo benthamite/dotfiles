@@ -340,8 +340,11 @@ md5 or title through =bin/paper-fetch=, the single paper-acquisition tool
 (shared logic in =lib/python/paper_fetch.py=). The tool exhausts every route
 that works from a shell and verifies the file's identity; the skill adds the
 one step the tool cannot take, a real Chrome session for hosts behind a bot
-challenge, and the exact order that step needs. It reports the tool's status
-taxonomy verbatim and hands a staged file to =add-bib-entry= for attachment.
+challenge, and the exact order that step needs. For Anna's Archive SciDB
+records it clicks the page's Download link and falls back to the page's
+Sci-Hub link when the partner server cannot serve the file. It reports the
+tool's status taxonomy verbatim and hands a staged file to =add-bib-entry= for
+attachment.
 Before attachment it stores the verified document language; PDF processing keeps
 the intended file and language across buffer switches without a language prompt.
 The agent retains one explicit entry/database operation through attachment,

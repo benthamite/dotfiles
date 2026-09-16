@@ -80,6 +80,28 @@ browser. Shared logic: `~/My Drive/dotfiles/lib/python/paper_fetch.py`.
    If the snippet reports `403` for an item, the challenge was not cleared or has
    expired (clearance lasts roughly half an hour): repeat step 1 for that item.
 
+   **Anna's Archive SciDB items** (`kind: scidb` or a DOI the API could not serve):
+   open `https://<annas-host>/scidb/DOI/` in the tab and, once the page has
+   loaded, click its **Download** link (`[...document.querySelectorAll('a')].find(a
+   => a.textContent.trim() === 'Download').click()`). That is a plain navigation
+   download from the partner server and works whenever the viewer would show the
+   PDF. Two failure shapes are known and are not worth retrying: the page redirects
+   to `/search` (no SciDB record), and the partner answers `404` for DOIs whose
+   suffix contains `/` or `:` (`10.1093/mind/fzv208`, `10.1023/a:…`) because the
+   partner path double-encodes the separator. For those, use the page's **Sci-Hub**
+   link instead: on `sci-hub.ru/DOI` the PDF is the `object`/`embed`/`iframe`
+   source; fetch it in-page and save through an anchor when it is same-origin, and
+   when it lives on another Sci-Hub host (`sci-hub.red`, `sci-net.xyz`) navigate the
+   tab to it and fetch from there. Sci-Hub shows an "Are you a robot? → No" gate
+   once per session; that click is Pablo's, not the agent's. The extension refuses
+   site-level permission for Sci-Hub hosts, so budget one approval per paper and
+   do the whole fetch-and-save in a single JavaScript action per DOI.
+
+   Chrome's automatic-download gate applies per site: the first download from
+   `sci-hub.ru`, `sci-hub.red`, `sci-net.xyz` or an Anna's host lands, later ones
+   are dropped silently until that site is allowed. Confirm each save in
+   `~/Downloads` before moving on rather than trusting the snippet's `saved`.
+
 4. Hand-off. A staged PDF is a file, not a bibliography attachment. When the paper
    belongs in the bibliography, continue with `add-bib-entry`, which imports the
    metadata and attaches the staged file through Ebib with the same operation.

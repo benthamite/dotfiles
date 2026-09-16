@@ -473,9 +473,13 @@ Stable full-session record keys and no-clobber publication protect retries;
 capture does not promote lessons or imply that a review consumer is installed.
 
 The paired =release-package= skill distinguishes candidate audits and preparation
-from publication. It binds versions, notes, checks and exact branch/tag objects,
-compares versions without losing patch components, and reconciles partial releases
-without moving published tags or silently widening push destinations.
+from publication. An explicit release request is itself the authorization to
+publish that one package, so the skill reports its plan and proceeds instead of
+asking again. It binds versions, notes, checks and exact branch/tag objects,
+compares versions without losing patch components, and reconciles partial
+releases without silently widening push destinations. When CI fails on the
+pushed release commit, it repairs the branch and moves the tag only while no
+GitHub release exists for it; a published release tag is never moved.
 
 Some retained local workflows are encrypted with =git-crypt= at their existing
 skill paths. Their working instructions remain available in an unlocked checkout;

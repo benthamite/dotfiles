@@ -221,7 +221,10 @@ SOURCEP means the selected load artifact is interpreted source, so forms in
    (t nil)))
 
 (defun elpaca-extras--contains-source-class-p (form)
-  "Return non-nil when executable FORM contains a class declaration."
+  "Return non-nil when executable FORM contains a class declaration.
+FORM may be an improper list, such as the dotted destructuring pattern
+\(ID . _) of a `cl-loop' clause, so walk its conses instead of treating
+it as a sequence."
   (cond
    ((not (consp form)) nil)
    ((eq (car form) 'defclass) t)
@@ -230,7 +233,11 @@ SOURCEP means the selected load artifact is interpreted source, so forms in
                  defsubst defun eval-when-compile function lambda quote))
         (eq (car form) (intern "`")))
     nil)
-   (t (cl-some #'elpaca-extras--contains-source-class-p (cdr form)))))
+   (t (let ((rest (cdr form)) found)
+        (while (and (consp rest) (not found))
+          (setq found (elpaca-extras--contains-source-class-p (car rest))
+                rest (cdr rest)))
+        found))))
 
 (defun elpaca-extras--source-class-layout (form)
   "Return the EIEIO class layout declared by defclass FORM."

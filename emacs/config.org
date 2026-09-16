@@ -11369,9 +11369,12 @@ CLOCK: [2023-02-26 Sun 13:15]--[2023-02-26 Sun 13:28] =>  0:13
 
 /[[https://repo.or.cz/org-contacts.git][org-contacts]] is a contacts management system for Org Mode./
 
+Upstream commit bc21e33 (5 September 2026) put an autoload cookie on a top-level ~(when org-contacts-capf-completing ...)~ form, so the generated autoloads read the variable before the package is loaded and every startup warns "Error loading org-contacts autoloads: (void-variable org-contacts-capf-completing)". The recipe pins the last commit before that change until upstream fixes it.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-contacts
-  :ensure (:build (:not elpaca-check-version))
+  :ensure (:ref "587ad5a8ff19a14f8bb626542821d29b01905dd0"
+           :build (:not elpaca-check-version))
   :after org tlon
   :defer t
   :custom

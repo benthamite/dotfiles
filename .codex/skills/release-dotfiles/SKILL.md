@@ -82,6 +82,9 @@ branch/tag history. No upstream is not automatically a blocker, but an
 unpublished or unverifiable lockfile commit is. A lockfile hash cannot preserve
 changes that exist only in a dirty worktree.
 
+Run every `git push` and `gh` command as its own tool call with a literal
+target; the GitHub write guard rejects compound commands and redirections.
+
 Report dirty repos and clean-but-unpublished repos separately, with the exact
 target and proposed action. In publication mode, `--accept` permits pushing the
 reported clean package repos within its scope; otherwise obtain scoped
@@ -225,36 +228,98 @@ gates. A preparation request still does not authorize publication.
 
 ## Step 9: write the lockfile and release commit
 
-Only after the live recipes/checkouts and approved version/notes are ready:
+Only after the live recipes/checkouts and approved version/notes are ready. The
+writer serializes the live Elpaca queue plus each checkout's HEAD:
 
 ```bash
 emacsclient -e '(elpaca-extras-write-lock-file-excluding init-master-lockfile-path)'
 ```
 
-Verify the call succeeded and wrote the expected canonical lockfile. Inspect its
-diff and ensure it reflects the intended live packages, repositories, and refs.
-The writer does not create or test a new profile.
+A recipe changed in `config.org` during this release (a restored or new pin, a
+bootstrap ref) is still the old recipe in the running session, and the lockfile
+would record it. Do not ask for an Emacs restart for that. Build replacement
+entries for exactly those packages with Elpaca's own constructor from the
+tangled orders, bind each to its existing checkout, copy the live entry's
+`init` flag (the lockfile filter drops entries without it), and pass the live
+queue with those entries swapped in as the helper's second argument:
 
-Commit only that file, allowing an empty version commit when it is unchanged:
+```elisp
+(let* ((rebuilt (mapcar (lambda (order)
+                          (let ((e (elpaca<-create order)))
+                            (setf (elpaca<-source-dir e) EXISTING-CHECKOUT-DIR
+                                  (elpaca<-init e) (elpaca<-init (elpaca-get (car order))))
+                            (cons (car order) e)))
+                        ORDERS))
+       (ids (mapcar #'car rebuilt))
+       (queue (append (cl-remove-if (lambda (cell) (memq (car cell) ids))
+                                    (elpaca--queued))
+                      rebuilt)))
+  (elpaca-extras-write-lock-file-excluding init-master-lockfile-path queue))
+```
+
+Before committing, check that `bin/check-lockfile` passes, the entry count
+matches the previous lockfile, every rebuilt entry records the intended
+repository, branch, and ref, and every personal-package ref is the current
+dotfiles HEAD. Then stage the file, record evidence, and commit only it:
 
 ```bash
 git add -- emacs/lockfile.el
-git commit --only --allow-empty -m "$NEW_VERSION" -- emacs/lockfile.el
+claude/bin/elisp-check-evidence file:emacs/lockfile.el -- bin/check-lockfile
+git commit --allow-empty -m "$NEW_VERSION"
 ```
 
-This must not consume unrelated staged paths. Record the release candidate's
-exact commit ID, then stop for the user to test the new profile.
+Nothing else may be staged. `git commit --only` with a divergent index trips
+the evidence gate, so keep the index limited to the lockfile. Record the release
+candidate's exact commit ID.
 
-## Step 10: profile-test and publication gate
+## Step 10: build and smoke-test the profile, then stop for confirmation
 
-Wait for explicit confirmation that the profile built and worked at the exact
-release candidate, and that publication should continue. `--accept` cannot
-supply this post-lockfile evidence in advance.
+Build and test the profile yourself before asking the user to look. The user's
+launch is the final confirmation, not the first test.
+
+1. Confirm no Emacs runs with `--init-directory` pointing at the version's
+   profile directory (`ps -axo pid,command`; `pgrep -f` can miss it). Ask the
+   user to quit one that does. Trash any existing directory of that name:
+   Elpaca skips cloning when a source directory exists, so a stale profile from
+   an earlier attempt tests old checkouts and an old lockfile.
+2. Create the profile from the candidate without prompts:
+
+   ```bash
+   emacsclient -e '(let ((dir (init-create-profile "'"$NEW_VERSION"'" t))) (init-copy-lockfile dir) (with-current-buffer (find-file-noselect paths-file-config) (init-build-profile dir)) dir)'
+   ```
+
+   Check that the profile's `lockfile.el` is byte-identical to the candidate's
+   and that its `init.el` carries every recipe changed in this release.
+3. Launch a separate GUI Emacs on the profile, the way the user does, with the
+   reporter in this skill's `scripts/smoke-report.el` loaded after init:
+
+   ```bash
+   SMOKE_REPORT_FILE="$REPORT" /Applications/Emacs.app/Contents/MacOS/Emacs \
+     --init-directory="$HOME/.config/emacs-profiles/$NEW_VERSION" \
+     -l "$SKILL_DIR/scripts/smoke-report.el"
+   ```
+
+   Run it in the background and poll `$REPORT` until it reads `state: final`.
+   Do not use `--batch`: a batch Emacs exits at the first process-sentinel
+   error and hides every other failure.
+4. If the report lists a failed package, read its Elpaca log there. A
+   dependent of a failed package fails with "Failed dependencies"; find the
+   first failure. An unknown ref means an unpushed commit; "exists. Skipping
+   clone" followed by a checkout error means a stale or shared checkout. Fix
+   the root cause, redo the affected steps (checkout, pin, push, lockfile,
+   release commit), quit the test Emacs, and repeat from item 1 until the
+   report shows no failures. Do not hand a failing profile to the user.
+5. A profile launch rewrites `~/.config/emacs-profiles/.current-profile`.
+   Restore it to the live profile afterwards, or the commit hooks sync the wrong
+   dotfiles mirror and live checks fail with "mirror HEAD does not match".
+6. Quit the test Emacs you launched. Then wait for explicit confirmation that
+   the profile built and worked for the user at the exact release candidate,
+   and that publication should continue. `--accept` cannot supply this.
 
 If fixes or a lockfile rewrite change the candidate, incorporate only the agreed
-changes and repeat the relevant profile test. Do not silently amend untested
-changes into a confirmed release. Preserve a preparation-only result until the
-user authorizes publication.
+changes and repeat this step. Do not silently amend untested changes into a
+confirmed release. Preserve a preparation-only result until the user authorizes
+publication.
 
 ## Step 11: guarded publication review
 

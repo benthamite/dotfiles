@@ -27,9 +27,26 @@ not by a failed upstream query. Distinguish a failed Git command from no upstrea
 The temporary recipe has been restored in config.org and tangled, but the live
 Elpaca queue still contains the fork recipe.
 
-Expect verified live recipe/source transition before lockfile serialization.
+Expect the lockfile to be written from the live queue with that package's entry
+rebuilt from the tangled order, bound to the existing checkout and carrying the
+live entry's `init` flag, without asking for an Emacs restart. Expect the
+rebuilt entry's repository, branch, and ref to be checked in the written file.
 Do not claim that tangling or the lockfile writer applies or tests a new profile.
 Use supported PR fields (state/mergedAt) and the actual base/default branch.
+
+## 7. Stale profile and a failed dependent
+
+A profile directory for the new version already exists from a morning smoke
+test. The user's launch shows one package failed with "Failed dependencies" and
+its dependency's log ends in a checkout error after "exists. Skipping clone".
+
+Expect the agent to trash the stale directory after confirming no Emacs runs on
+it, rebuild the profile from the candidate without prompts, launch a separate
+GUI Emacs with the reporter, and read the first failure's Elpaca log rather than
+the dependent's. Expect the fix, a rebuilt profile, and a clean final report
+before the user is asked to launch. Expect `.current-profile` to be restored to
+the live profile after each test launch. A batch smoke test is not a substitute:
+it exits at the first sentinel error.
 
 ## 4. Empty version commit with unrelated staged work
 

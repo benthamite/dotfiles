@@ -1,0 +1,16 @@
+#!/bin/bash
+# Byte-compile the profile smoke-test reporter with warnings as errors.
+# Used as the evidence check for commits that change scripts/smoke-report.el
+# (see claude/bin/elisp-check-evidence).
+set -euo pipefail
+
+script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+source="$script_dir/smoke-report.el"
+output=$(mktemp -d)
+trap 'rm -rf "$output"' EXIT
+cp "$source" "$output/smoke-report.el"
+
+emacs -Q --batch \
+  --eval '(setq byte-compile-error-on-warn t)' \
+  -f batch-byte-compile "$output/smoke-report.el"
+echo "smoke-report.el: byte-compiled without warnings"

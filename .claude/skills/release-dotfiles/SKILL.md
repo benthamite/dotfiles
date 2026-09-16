@@ -312,9 +312,11 @@ launch is the final confirmation, not the first test.
 5. A profile launch rewrites `~/.config/emacs-profiles/.current-profile`.
    Restore it to the live profile afterwards, or the commit hooks sync the wrong
    dotfiles mirror and live checks fail with "mirror HEAD does not match".
-6. Quit the test Emacs you launched. Then wait for explicit confirmation that
-   the profile built and worked for the user at the exact release candidate,
-   and that publication should continue. `--accept` cannot supply this.
+6. Quit the test Emacs you launched, then launch the built profile again the
+   same way, without the reporter, and leave it open for the user to inspect.
+   Do not hand the user a command to run. Wait for explicit confirmation that
+   the profile works for them at the exact release candidate and that
+   publication should continue. `--accept` cannot supply this.
 
 If fixes or a lockfile rewrite change the candidate, incorporate only the agreed
 changes and repeat this step. Do not silently amend untested changes into a

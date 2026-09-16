@@ -399,13 +399,20 @@ class FastDownload:
     quota: dict | None = None
 
 
-def annas_fast_download(http: Http, host: str, md5: str, key: str) -> FastDownload:
+def annas_fast_download(http: Http, host: str, md5: str, key: str, *, domain_index: int = 0,
+                        path_index: int = 0) -> FastDownload:
+    """Ask the member API for a signed download URL for MD5.
+
+    DOMAIN_INDEX selects the partner server; the first one occasionally 404s for
+    a file that another mirror still serves, so callers retry with the next index.
+    """
     if not ANNAS_HOST_RE.match(host):
         raise PaperFetchError(f"refusing to send the Anna's Archive key to {host}")
     if not key:
         return FastDownload("invalid-key", detail="no secret key configured")
     response = http.get(f"https://{host}/{FAST_DOWNLOAD_PATH}",
-                        params={"md5": md5, "key": key, "path_index": 0, "domain_index": 0})
+                        params={"md5": md5, "key": key, "path_index": path_index,
+                                "domain_index": domain_index})
     if response.is_challenge:
         return FastDownload("challenge", detail=f"HTTP {response.status} challenge page")
     try:
@@ -1017,9 +1024,19 @@ class Fetcher:
                     continue
                 if result.status == "ok":
                     response = self._safe(lambda: self.http.get(result.url, timeout=180))
+                    # The first partner mirror sometimes 404s a file another mirror
+                    # still serves; the API hands out a different mirror per domain_index.
+                    for domain_index in (1, 2, 3):
+                        if response is not None and response.is_pdf:
+                            break
+                        alt = self._safe(lambda: annas_fast_download(self.http, host, candidate, key,
+                                                                     domain_index=domain_index))
+                        if alt is None or alt.status != "ok":
+                            break
+                        response = self._safe(lambda: self.http.get(alt.url, timeout=180))
                     if response is None or not response.is_pdf:
                         outcome.attempts.append(Attempt("annas-fast-download", host,
-                                                        "download url did not return a PDF"))
+                                                        "download url did not return a PDF on any mirror"))
                         continue
                     staged = self._stage(response.content, work, name)
                     verification = verify_pdf(staged, work)

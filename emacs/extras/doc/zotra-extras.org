@@ -107,7 +107,7 @@ The command ~zotra-extras-add-entry~ is the primary entry point for importing bi
 - *VPN routing.* When ~zotra-extras-use-mullvad-p~ is non-nil and the URL matches =imdb.com=, the command connects through Mullvad VPN before fetching ([[#h:zotra-extras-use-mullvad-p][VPN for IMDb]]).
 - *IMDb fallback via OMDb.* When the input is an IMDb title URL, the command extracts the =tt= identifier and fetches movie metadata from OMDb instead of asking Zotero's IMDb translator to scrape the IMDb page ([[#h:imdb-fallback][IMDb fallback]]).
 - *ISBN fallback via Google Books.* When the input is a bare ISBN (10 or 13 digits) and the translation server's search translators return no results, the command automatically retries by looking up the ISBN on Google Books ([[#h:isbn-fallback][ISBN fallback]]).
-- *Backend fallback.* If the primary =zotra= backend fails with a JSON parse error indicating an internal server error, the command automatically retries with the =citoid= backend.
+- *Server errors are reported, not retried elsewhere.* If the =zotra= backend fails with a JSON parse error indicating an internal server error, the command signals a user error naming the request. It no longer retries with the =citoid= backend: that backend cannot produce biblatex entries, so the retry could only replace the server error with an unsupported-format error.
 - *Ebib integration.* After successfully adding the entry, it opens the new entry in =ebib= for review, unless the optional DO-NOT-OPEN argument is non-nil.
 
 The optional arguments URL-OR-SEARCH-STRING, ENTRY-FORMAT, BIBFILE, and DO-NOT-OPEN can be supplied programmatically for non-interactive use.

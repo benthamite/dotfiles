@@ -165,6 +165,8 @@ The constant @code{zotra-extras-add-multiple-urls-from-file} (the variable, not 
 @section Adding entries
 
 @findex zotra-extras-add-entry
+Authorless online metadata with the exact challenge-page title ‘Making sure you're not a bot!’ is rejected before cleanup or insertion. The command reports an error without prompting or adding a record; ordinary titles about bots and attributed works remain importable.
+
 The command @code{zotra-extras-add-entry} is the primary entry point for importing bibliographic metadata. It improves on the standard @code{zotra-add-entry} in several ways:
 
 @itemize
@@ -179,7 +181,7 @@ The command @code{zotra-extras-add-entry} is the primary entry point for importi
 @item
 @strong{ISBN fallback via Google Books.} When the input is a bare ISBN (10 or 13 digits) and the translation server's search translators return no results, the command automatically retries by looking up the ISBN on Google Books (@ref{ISBN fallback}).
 @item
-@strong{Backend fallback.} If the primary @samp{zotra} backend fails with a JSON parse error indicating an internal server error, the command automatically retries with the @samp{citoid} backend.
+@strong{Server errors are reported, not retried elsewhere.} If the @samp{zotra} backend fails with a JSON parse error indicating an internal server error, the command signals a user error naming the request. It no longer retries with the @samp{citoid} backend: that backend cannot produce biblatex entries, so the retry could only replace the server error with an unsupported-format error.
 @item
 @strong{Ebib integration.} After successfully adding the entry, it opens the new entry in @samp{ebib} for review, unless the optional DO-NOT-OPEN argument is non-nil.
 @end itemize

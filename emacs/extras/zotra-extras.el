@@ -143,9 +143,10 @@ in Ebib after adding it.  Return the final key after successful insertion."
 	      (zotra-extras--isbn-to-google-books-url url-or-search-string)
 	      entry-format bibfile do-not-open))
 	    ((string-match-p "JSON parse error: Internal Server Error" msg)
-	     (let ((zotra-backend 'citoid))
-	       (message "Request with main backend failed. Retrying with `citoid'...")
-	       (zotra-extras--add-and-maybe-open url-or-search-string entry-format bibfile do-not-open)))
+	     ;; The citoid backend cannot produce biblatex, so retrying there
+	     ;; only replaces a server error with an unsupported-format error.
+	     (user-error "Zotra server returned Internal Server Error for %s"
+			 url-or-search-string))
 	    (t (signal (car err) (cdr err))))))))))
 
 (defun zotra-extras--add-imdb-entry-and-maybe-open (url bibfile &optional do-not-open)

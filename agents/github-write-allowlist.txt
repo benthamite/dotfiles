@@ -7,3 +7,4 @@
 benthamite/*
 trajectory-labs-pbc/reasoning-tasks
 LessWrong2/ai-2027
+tlon-team/tlon.el

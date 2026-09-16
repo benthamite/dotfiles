@@ -626,7 +626,7 @@ class SecretGuardParityTests(unittest.TestCase):
             "op-desktop document get abc",
             "op-desktop item share abc",
             "op-desktop signin --raw",
-            "op-desktop environment read blgexucrwfr2dtsxe2q4uu7dp4",
+            "op-desktop environment read fakeenvironmentidfakefakefak",
             "op-desktop frobnicate",
         )
         for command in commands:

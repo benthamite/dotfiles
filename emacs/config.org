@@ -673,8 +673,8 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-sources-directory (expand-file-name "sources/" elpaca-directory))
-(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                              :ref "abda553407b8769006c241a8b2f0381fe66ad613" :depth nil :inherit ignore
+(defvar elpaca-order '(elpaca :repo "https://github.com/benthamite/elpaca.git" ; fork of progfolio/elpaca while its shared-source fix is upstreamed
+                              :ref "16eadb640be3c7dfe8a38ff28e29f70740221244" :depth nil :inherit ignore
                               :files (:defaults "elpaca-test.el" (:exclude "extensions"))
                               :build (:not elpaca-activate)))
 (let* ((repo  (expand-file-name "elpaca/" elpaca-sources-directory))

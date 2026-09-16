@@ -1133,11 +1133,23 @@ Do not change the selected entry, display buffers, sort or save the file."
       (when (and existing
                  (or (not (ebib-db-get-entry key db 'noerror))
                      (not (equal (ebib-db-get-modtime db) (ebib--get-file-modtime bibfile)))))
+        (gptel-extras--revert-stale-bib-buffer bibfile)
         (let ((ebib--cur-db db))
           (ebib--reload-database db)))
       (unless (ebib-db-get-entry key db 'noerror)
         (user-error "Entry %s is missing from bibliography %s" key bibfile))
       db)))
+
+(defun gptel-extras--revert-stale-bib-buffer (bibfile)
+  "Revert an unmodified buffer visiting BIBFILE when the file changed on disk.
+Ebib reads a bibliography through the buffer visiting it, so a reload after an
+external change would otherwise return the buffer's stale contents.  A buffer
+with unsaved edits is left alone."
+  (when-let* ((buffer (find-buffer-visiting bibfile)))
+    (with-current-buffer buffer
+      (when (and (not (buffer-modified-p))
+                 (not (verify-visited-file-modtime buffer)))
+        (revert-buffer :ignore-auto :noconfirm :preserve-modes)))))
 
 (defun gptel-extras--bib-files-for-key (key &optional db)
   "Return existing attachment files for bibliography entry KEY in DB.

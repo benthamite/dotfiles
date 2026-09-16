@@ -13520,7 +13520,7 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
            :repo "benthamite/sgn")
   :defer t
   :custom
-  (sgn-account "+14246668293"))
+  (sgn-account (auth-source-pass-get 'secret "auth-sources/signal")))
 #+end_src
 
 ** =wasabi=

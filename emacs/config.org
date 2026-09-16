@@ -13977,14 +13977,17 @@ CLOCK: [2021-11-19 Fri 12:33]--[2021-11-19 Fri 12:35] =>  0:02
 :ID:       CF3431E0-E5B0-41C3-924A-1C96AD3BB46F
 :END:
 
-/[[https://github.com/oantolin/emacs-config/blob/master/my-lisp/shr-heading.el][shr-heading]] supports heading navigation for shr-rendered buffers./
+/[[https://github.com/oantolin/emacs-config/blob/ff6cfa084f561c4d2de663059bddbeb9756ab2b7/my-lisp/shr-heading.el][shr-heading]] supports heading navigation for shr-rendered buffers./
 
 Discussion [[https://www.reddit.com/r/emacs/comments/u234pn/comment/i4i3gqg/?utm_source=share&utm_medium=web2x&context=3][here]].
+
+Upstream deleted the file in May 2026 (commit 14808180, "Remove shr-heading: it duplicates built-in functionality!"), so the recipe pins the last commit that still contains it. The ~shr-heading-next~ and ~shr-heading-previous~ bindings in the =eww=, =elfeed= and =mu4e= sections depend on it.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package shr-heading
   :ensure (:host github
              :repo "oantolin/emacs-config"
+             :ref "ff6cfa084f561c4d2de663059bddbeb9756ab2b7"
              :files ("my-lisp/shr-heading.el"))
   :after shr
   :hook

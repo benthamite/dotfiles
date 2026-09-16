@@ -9,8 +9,10 @@ on its next scan; old version-only timestamps do not authorize installation.
 
 The delayed lane also checks implicit dependencies. Each scan records, per
 package, the dependencies Homebrew would install or upgrade with it: runtime
-formula dependencies not at their latest version, and for casks, formulae with
-no linked installation and casks not installed. A candidate whose transitive
+formula dependencies not at their latest version anywhere in the expanded
+dependency tree (Homebrew skips a dependency that is already current but still
+expands the dependencies beneath it), and for casks, formulae with no linked
+installation and casks not installed. A candidate whose transitive
 recorded dependencies are not all age-qualified is deferred with a message
 naming them, so the job exits cleanly while they age. The recorded set errs
 toward listing more: Homebrew may accept an older dependency that satisfies a

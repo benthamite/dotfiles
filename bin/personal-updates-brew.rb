@@ -50,17 +50,22 @@ module PersonalUpdatePolicy
   end
 
   # Dependencies Homebrew would install or upgrade together with the item.
-  # A formula upgrade brings runtime dependencies that are not at their latest
-  # version (FormulaInstaller may accept an older one that satisfies the
-  # bottle's recorded minimum, so this errs toward listing more). A cask
-  # install brings formulae without a linked installation and casks that are
-  # not installed (Cask::Installer#missing_cask_and_formula_dependencies).
+  # A formula upgrade brings runtime dependencies anywhere in the expanded
+  # tree that are not at their latest version: FormulaInstaller skips a
+  # dependency that is already current but still expands that dependency's
+  # own dependencies (Dependency.expand treats SKIP as "recurse"), so an
+  # outdated dependency below a current one is upgraded with the item. The
+  # installer may accept an older dependency that satisfies the bottle's
+  # recorded minimum, so this errs toward listing more. A cask install brings
+  # formulae without a linked installation and casks that are not installed
+  # (Cask::Installer#missing_cask_and_formula_dependencies).
   def self.pending_dependencies(kind, item)
     pending = []
     if kind == "brew_formula"
-      item.deps.each do |dep|
-        next if dep.test? || dep.optional? || dep.build?
-
+      runtime = item.recursive_dependencies do |_dependent, dep|
+        Dependable::PRUNE if dep.test? || dep.optional? || dep.build?
+      end
+      runtime.each do |dep|
         formula = dep.to_formula
         pending << ["brew_formula", formula, formula.latest_version_installed?]
       end

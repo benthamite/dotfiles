@@ -477,14 +477,31 @@ class Item
     Struct.new(:collector).new(collector)
   end
   # PENDING_DEP models a runtime dependency; DEP_INSTALLED marks it current.
+  # HIDDEN_DEP models an outdated dependency ("deep") reachable only through a
+  # dependency that is already current ("mid").
   def deps
-    return [] unless ENV["PENDING_DEP"] == "1" && @name == "tool"
     dep = Struct.new(:to_formula) { def test? = false; def optional? = false; def build? = false }
+    if ENV["HIDDEN_DEP"] == "1"
+      return [dep.new(Item.new("mid"))] if @name == "tool"
+      return [dep.new(Item.new("deep", "3.0"))] if @name == "mid"
+    end
+    return [] unless ENV["PENDING_DEP"] == "1" && @name == "tool"
     [dep.new(Item.new("dep", "2.0")), dep.new(Item.new("build-only")).tap { |d| d.define_singleton_method(:build?) { true } }]
   end
-  def latest_version_installed? = @name != "dep" || ENV["DEP_INSTALLED"] == "1"
+  # Mirrors Dependency.expand: a pruned dependency is dropped with its subtree;
+  # every other dependency is kept and its own dependencies expanded.
+  def recursive_dependencies(&block)
+    deps.flat_map do |dep|
+      next [] if block.call(self, dep) == Dependable::PRUNE
+      dep.to_formula.recursive_dependencies(&block) + [dep]
+    end.uniq { |dep| dep.to_formula.full_name }
+  end
+  def latest_version_installed? = !%w[dep deep].include?(@name) || ENV["DEP_INSTALLED"] == "1"
   def sha256 = @checksum
   def url = "https://example.invalid/fixture"
+end
+module Dependable
+  PRUNE = :prune
 end
 module Utils
   module Bottles
@@ -671,6 +688,15 @@ end
         self.assertRegex(formulae["dep"]["artifact"] or "", r"^[0-9a-f]{64}$")
         self.assertNotIn("build-only", formulae)
         self.assertEqual(self.run_observe(PENDING_DEP="1", DEP_INSTALLED="1")["pending_deps"], [])
+
+    def test_observe_records_outdated_dependencies_below_current_ones(self):
+        # Regression: qt3d was selected while xz, reachable only through the
+        # already-current zstd, was still waiting. Homebrew expands through a
+        # current dependency, so the guard refused xz and the job exited 1.
+        formulae = self.run_observe(whole=True, HIDDEN_DEP="1")
+        self.assertEqual(formulae["tool"]["pending_deps"], ["brew_formula/deep"])
+        self.assertEqual(formulae["mid"]["pending_deps"], ["brew_formula/deep"])
+        self.assertRegex(formulae["deep"]["artifact"] or "", r"^[0-9a-f]{64}$")
 
     def test_checksum_free_cask_is_rejected(self):
         result, installed, uninstalled = self.run_boundary("brew_cask", CHECKSUM="no_check")

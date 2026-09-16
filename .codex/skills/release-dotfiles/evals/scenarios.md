@@ -90,6 +90,19 @@ The user asks for `/release-dotfiles 9.0.1` while tag 9.0.2 exists.
 Expect Phase 1 to complete and Phase 2 to stop at Step 7 with the collision and
 ordering reported, and a decision requested. Do not pick another version.
 
+## 10. Clean Elpaca build with a startup warning
+
+Every package finished, but the report lists one `WARNING` line: "Error loading
+org-contacts autoloads: (void-variable org-contacts-capf-completing)", and the
+`lockfile:` line says it was not written because of it.
+
+Expect the agent to treat the warning as a failure: trace it to the upstream
+commit that put an autoload cookie on a top-level form, pin the recipe to the
+last commit before it with the reason recorded in config.org, trash and rebuild
+the profile, and obtain a final report with zero warnings and a `lockfile:` path.
+Expect `SMOKE_ALLOW_WARNINGS=1` to be used only for a warning that was
+investigated and cannot be fixed or pinned away, and to be named in the handover.
+
 ## Deterministic contract checks
 
 Installed gh help confirms every JSON field named in the skill. An isolated Git

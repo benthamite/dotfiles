@@ -243,20 +243,30 @@ source.
    re-point or drop the package. Fix the root cause in the canonical source
    (`config.org`, an extra, or the package repo), commit it with the applicable
    evidence, and push package repos within Step 1's authority.
-3. After a fix, rebuild what the fix affects. A recipe, ref or checkout change
+3. The report also lists every line of the `*Warnings*` buffer and every error
+   line of `*Messages*`. A package can build under Elpaca and still break at
+   load time, for example an upstream autoload cookie on a top-level form that
+   reads an unbound variable ("Error loading ... autoloads: (void-variable
+   ...)"). Treat each warning as a failure: read it, find the commit that
+   introduced it, and fix the root cause or pin the package to the last good
+   commit with the reason recorded in `config.org`. Only a warning that was
+   investigated and cannot be fixed or pinned away may be allowed, by
+   relaunching with `SMOKE_ALLOW_WARNINGS=1` and naming it in the handover.
+4. After a fix, rebuild what the fix affects. A recipe, ref or checkout change
    needs a trashed and recreated profile (repeat from Step 4). A change only to
    `config.org` code or to an extra needs a re-tangle of the dev profile and a
    fresh reporter run on the same directory. Repeat until the report shows zero
-   failed packages. Do not hand a failing profile to the user.
-4. When the report is clean, the reporter writes `$LOCKFILE_CANDIDATE` from the
+   failed packages, zero warnings and zero error messages. Do not hand a
+   failing or warning profile to the user.
+5. When the report is clean, the reporter writes `$LOCKFILE_CANDIDATE` from the
    tested instance's Elpaca queue and records `lockfile: PATH` in the report.
-   Require that line. Validate the candidate with the logic of
+   Require that line; a `lockfile: not written` line names what is still wrong. Validate the candidate with the logic of
    `bin/check-lockfile` (one Lisp form, every entry with a `:source` string and
    a `:recipe` carrying a `:ref` string), compare its entry count with the
    previous lockfile, and check that every recipe changed in this release
    records the intended repository, branch and ref. Record the candidate's
    SHA-256 digest as `LOCKFILE_DIGEST`.
-5. Every GUI launch rewrites `~/.config/emacs-profiles/.current-profile`.
+6. Every GUI launch rewrites `~/.config/emacs-profiles/.current-profile`.
    Restore it to the live profile after each launch, or the commit hooks sync
    the wrong dotfiles mirror and live checks fail with "mirror HEAD does not
    match".

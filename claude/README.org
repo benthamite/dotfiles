@@ -818,7 +818,12 @@ create a live-verification obligation. Those words in message arguments or
 pathspecs do not exempt an actual commit.
 
 The live-verification gate permits literal read-only diagnosis through
-=lib-elisp-diagnostics.py= while retaining every pending check. Supported forms
+=lib-elisp-diagnostics.py= while retaining every pending check. It also admits
+the =git stash= operations =push=, =pop=, =apply=, =drop=, =list= and =show=,
+which move uncommitted work aside and back without executing any of it: when a
+commit leaves other Elisp uncommitted, stashing reaches the clean tree that
+=elisp-live-verify= requires, so the debt can be cleared without outside help.
+Interactive, branch-creating and ref-naming stash forms stay blocked. Supported forms
 also include =emacsclient -e= with the exact rebuild-token status call or the
 bounded package-filtered registry query. Recovery protocol and diagnostic-gate
 tests may run as =python3 -I -B ABSOLUTE-TEST-PATH= for the two canonical test

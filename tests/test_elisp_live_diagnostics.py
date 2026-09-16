@@ -56,6 +56,23 @@ class InspectionCommands(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertTrue(MODULE.inspection_command(command))
 
+    def test_stash_operations_reach_a_clean_tree_without_running_code(self):
+        for command in (
+            "git stash", "git stash push -u -m 'audit fixes awaiting commit' -- '*.el'",
+            "git -C '/tmp/a b' stash push --keep-index -- lisp/example.el",
+            "git stash pop", "git stash apply --index", "git stash drop",
+            "git stash list", "git --no-pager stash show --stat",
+        ):
+            with self.subTest(command=command):
+                self.assertTrue(MODULE.inspection_command(command))
+        for command in (
+            "git stash push --patch", "git stash branch topic", "git stash clear",
+            "git stash pop stash@{1}", "git stash push; touch saved.el",
+            "git stash push -m \"$(touch saved.el)\"", "git stash create",
+        ):
+            with self.subTest(command=command):
+                self.assertFalse(MODULE.inspection_command(command))
+
     def test_mutations_and_ambiguous_forms_stay_blocked(self):
         for command in (
             "cat source.el > saved.el", "cat source.el; touch saved.el",
@@ -150,6 +167,12 @@ class PendingGate(unittest.TestCase):
             "git --no-pager --no-optional-locks -c core.fsmonitor=false status --short",
             "elisp-live-verify ebib-extras -- '(ebib-extras-example)'",
         ):
+            for tool, nested in (("claude", False), ("codex", False), ("codex", True)):
+                with self.subTest(tool=tool, nested=nested, command=command):
+                    self.assertEqual(self.gate(tool, command, nested), "")
+
+    def test_stash_is_allowed_with_debt_retained(self):
+        for command in ("git stash push -u -m parked -- '*.el'", "git stash pop"):
             for tool, nested in (("claude", False), ("codex", False), ("codex", True)):
                 with self.subTest(tool=tool, nested=nested, command=command):
                     self.assertEqual(self.gate(tool, command, nested), "")

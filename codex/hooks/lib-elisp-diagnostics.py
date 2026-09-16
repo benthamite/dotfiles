@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Recognize literal inspection commands without clearing live-check debt."""
+"""Recognize literal commands that may run while a live check is pending.
+
+Two kinds qualify without clearing the debt: read-only inspection, and the
+`git stash` operations that move uncommitted work aside and back.  A live
+check certifies committed code, so it needs a tree whose Elisp is clean;
+stashing reaches that state without executing anything.
+"""
 
 from __future__ import annotations
 
@@ -112,8 +118,30 @@ def nested_inspection_source(source):
     return found
 
 
+STASH_OPERATIONS = frozenset({"push", "pop", "apply", "drop", "list", "show"})
+
+
+def stash_command(args) -> bool:
+    """Accept literal `git stash` forms that move work aside or back.
+
+    Interactive (`--patch`), branch-creating and ref-naming forms stay out:
+    only the operations needed to reach a clean tree and restore it qualify.
+    """
+    operation, rest = (args[0], args[1:]) if args and not args[0].startswith("-") else ("push", args)
+    if operation not in STASH_OPERATIONS:
+        return False
+    return literal_options(rest,
+        {"-u", "--include-untracked", "-k", "--keep-index", "--no-keep-index",
+         "-S", "--staged", "-q", "--quiet", "--index", "-a", "--all", "--stat"},
+        {"-m", "--message", "--pathspec-from-file"})
+
+
 def inspection_command(command: str) -> bool:
-    """Accept a closed set of single, literal, read-only command forms."""
+    """Accept a closed set of single, literal command forms.
+
+    Read-only diagnostics qualify, and so do the `git stash` operations
+    checked by `stash_command`.
+    """
     command = command.strip()
     if not command or any(char in command for char in "\n\r$`"):
         return False
@@ -185,9 +213,13 @@ def inspection_command(command: str) -> bool:
                 globals_seen.add(value)
         else:
             globals_seen.add(option)
-    if not args or "--no-pager" not in globals_seen:
+    if not args:
         return False
     subcommand, *args = args
+    if subcommand == "stash":
+        return stash_command(args)
+    if "--no-pager" not in globals_seen:
+        return False
     if subcommand in {"status", "ls-files", "diff"} and not {
             "--no-optional-locks", "core.fsmonitor=false"} <= globals_seen:
         return False

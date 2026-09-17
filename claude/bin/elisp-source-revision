@@ -10,16 +10,78 @@ import subprocess
 import sys
 
 
-def git(repo: Path, *args: str, check: bool = True) -> bytes:
+def git(
+    repo: Path, *args: str, check: bool = True, input: bytes | None = None
+) -> bytes:
     result = subprocess.run(
         ["git", "-C", str(repo), *args],
         check=False,
         capture_output=True,
+        input=input,
     )
     if check and result.returncode != 0:
         sys.stderr.buffer.write(result.stderr)
         raise SystemExit(result.returncode)
     return result.stdout
+
+
+def index_sources(repo: Path, pathspecs: tuple[str, ...]) -> dict[bytes, tuple[bytes, bytes]]:
+    """Read staged modes and blob contents without one Git process per path."""
+    listing = git(repo, "ls-files", "--stage", "-z", "--", *pathspecs)
+    entries: dict[bytes, tuple[bytes, bytes]] = {}
+    if listing and not listing.endswith(b"\0"):
+        invalid_index("unterminated index listing")
+    for record in listing.split(b"\0"):
+        if not record:
+            continue
+        metadata, separator, path = record.partition(b"\t")
+        fields = metadata.split()
+        if not separator or not path or len(fields) != 3:
+            invalid_index("malformed index entry")
+        mode, identity, stage = fields
+        if stage != b"0":
+            invalid_index("unmerged index entry")
+        if mode not in (b"100644", b"100755", b"120000"):
+            invalid_index("unsupported indexed object")
+        if len(identity) not in (40, 64) or any(
+            byte not in b"0123456789abcdef" for byte in identity
+        ):
+            invalid_index("malformed indexed object identity")
+        if path in entries:
+            invalid_index("duplicate index entry")
+        entries[path] = mode, identity
+    identities = list(dict.fromkeys(identity for _, identity in entries.values()))
+    if not identities:
+        return {}
+    output = git(repo, "cat-file", "--batch", input=b"\n".join(identities) + b"\n")
+    blobs: dict[bytes, bytes] = {}
+    cursor = 0
+    for identity in identities:
+        end = output.find(b"\n", cursor)
+        if end == -1:
+            invalid_index("missing batch object header")
+        header = output[cursor:end].split()
+        if (
+            len(header) != 3
+            or header[:2] != [identity, b"blob"]
+            or not header[2].isdigit()
+        ):
+            invalid_index("unexpected batch object header")
+        size = int(header[2])
+        cursor = end + 1
+        end = cursor + size
+        if end >= len(output) or output[end:end + 1] != b"\n":
+            invalid_index("incomplete batch object")
+        blobs[identity] = output[cursor:end]
+        cursor = end + 1
+    if cursor != len(output):
+        invalid_index("unexpected batch output")
+    return {path: (mode, blobs[identity]) for path, (mode, identity) in entries.items()}
+
+
+def invalid_index(reason: str) -> None:
+    print(f"Cannot read staged Elisp source: {reason}", file=sys.stderr)
+    raise SystemExit(1)
 
 
 def main() -> int:
@@ -38,7 +100,8 @@ def main() -> int:
     head = git(root, "rev-parse", "--verify", "HEAD", check=False).strip()
 
     pathspecs = (":(glob)**/*.el", "emacs/config.org")
-    tracked = set(
+    indexed = index_sources(root, pathspecs) if index_mode else {}
+    tracked = set(indexed) if index_mode else set(
         path
         for path in git(root, "ls-files", "-z", "--", *pathspecs).split(b"\0")
         if path
@@ -69,13 +132,9 @@ def main() -> int:
         digest.update(b"\0")
         relative = os.fsdecode(encoded_path)
         if index_mode:
-            entry = git(root, "ls-files", "-s", "--", relative).decode().strip()
-            if not entry:
-                digest.update(b"missing\0")
-            else:
-                mode = entry.split(maxsplit=1)[0]
-                digest.update(b"symlink\0" if mode == "120000" else b"file\0")
-                digest.update(git(root, "show", f":{relative}"))
+            mode, contents = indexed[encoded_path]
+            digest.update(b"symlink\0" if mode == b"120000" else b"file\0")
+            digest.update(contents)
         else:
             path = root / relative
             if path.is_symlink():

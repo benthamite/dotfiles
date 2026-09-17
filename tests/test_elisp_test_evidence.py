@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 from contextlib import contextmanager
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -134,6 +135,27 @@ def init_repo(path: Path, filename: str = "example.el") -> Path:
 
 
 class ElispSourceRevisionTests(unittest.TestCase):
+    def git_probe_environment(self, root: Path, body: str) -> dict[str, str]:
+        """Intercept only Git in a disposable fixture, retaining its real CLI."""
+        import shutil
+
+        executable = shutil.which("git")
+        self.assertIsNotNone(executable)
+        bin_dir = root / "git-probe"
+        bin_dir.mkdir(exist_ok=True)
+        probe = bin_dir / "git"
+        probe.write_text(
+            "#!/usr/bin/env python3\n"
+            "import json, os, pathlib, sys\n"
+            "args = sys.argv[1:]\n"
+            + body
+            + f"\nos.execv({executable!r}, [{executable!r}, *args])\n"
+        )
+        probe.chmod(0o755)
+        env = os.environ.copy()
+        env["PATH"] = str(bin_dir) + os.pathsep + env["PATH"]
+        return env
+
     def test_revision_tracks_source_content(self):
         with tempfile.TemporaryDirectory() as directory:
             repo = init_repo(Path(directory) / "example")
@@ -159,6 +181,139 @@ class ElispSourceRevisionTests(unittest.TestCase):
                 staged,
                 run([str(REVISION_HELPER), "--index", str(repo)]).stdout.strip(),
             )
+
+    def test_index_revision_preserves_v1_digest_for_raw_staged_sources(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = init_repo(Path(directory) / "example")
+            staged = {
+                b"regular.el": (b"file", b"(provide 'staged)\n"),
+                b"executable.el": (b"file", b"(provide 'executable)\n"),
+                b"missing-from-worktree.el": (b"file", b"indexed bytes\n"),
+                b"space name.el": (b"file", b"\0binary\xff\n"),
+                b"tab\tname.el": (b"file", b""),
+                b"line\nbreak.el": (b"file", b"same contents\n"),
+                b"nested/duplicate.el": (b"file", b"same contents\n"),
+                "unicode-λ.el".encode(): (b"file", b"unicode name\n"),
+                b"emacs/config.org": (b"file", b"#+begin_src emacs-lisp\n#+end_src\n"),
+                b"link.el": (b"symlink", b"../missing target\n"),
+            }
+            for name, (kind, content) in staged.items():
+                path = repo / os.fsdecode(name)
+                path.parent.mkdir(parents=True, exist_ok=True)
+                if kind == b"symlink":
+                    path.symlink_to(os.fsdecode(content))
+                else:
+                    path.write_bytes(content)
+            (repo / "executable.el").chmod(0o755)
+            (repo / "example.el").unlink()
+            subprocess.run(["git", "-C", str(repo), "add", "--all"], check=True)
+            # These changes must not affect an index-based identity.
+            (repo / "regular.el").write_text("(provide 'unstaged)\n")
+            (repo / "missing-from-worktree.el").unlink()
+            (repo / "untracked.el").write_text("(provide 'untracked)\n")
+            head = run(["git", "-C", str(repo), "rev-parse", "HEAD"]).stdout.strip()
+            expected = hashlib.sha256(b"elisp-source-revision-v1\0" + head.encode() + b"\0")
+            for name, (kind, content) in sorted(staged.items()):
+                expected.update(name + b"\0" + kind + b"\0" + content + b"\0")
+            result = run([str(REVISION_HELPER), "--index", str(repo)])
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout, expected.hexdigest() + "\n")
+
+    def test_index_revision_git_process_count_does_not_grow_with_source_count(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = init_repo(root / "example")
+            calls = root / "git-calls"
+            env = self.git_probe_environment(
+                root,
+                f"with open({str(calls)!r}, 'a') as log:\n"
+                "    log.write(json.dumps(args) + '\\n')\n",
+            )
+            counts = []
+            for count in (1, 80):
+                with self.subTest(sources=count):
+                    for index in range(1, count):
+                        (repo / f"source-{index:03}.el").write_text(f"(provide 'source-{index})\n")
+                    subprocess.run(["git", "-C", str(repo), "add", "--all"], check=True)
+                    calls.write_text("")
+                    result = run([str(REVISION_HELPER), "--index", str(repo)], env=env)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    counts.append(len(calls.read_text().splitlines()))
+            self.assertEqual(counts[0], counts[1], counts)
+            self.assertLessEqual(counts[1], 5, counts)
+
+    def test_index_revision_preserves_v1_digest_when_index_has_no_sources(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for unborn in (True, False):
+                with self.subTest(unborn=unborn):
+                    repo = Path(directory) / str(unborn)
+                    if unborn:
+                        subprocess.run(["git", "init", "-q", str(repo)], check=True)
+                        head = b"unborn"
+                    else:
+                        init_repo(repo)
+                        head = run(["git", "-C", str(repo), "rev-parse", "HEAD"]).stdout.strip().encode()
+                        subprocess.run(["git", "-C", str(repo), "update-index", "--force-remove", "example.el"], check=True)
+                    expected = hashlib.sha256(b"elisp-source-revision-v1\0" + head + b"\0")
+                    result = run([str(REVISION_HELPER), "--index", str(repo)])
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(result.stdout, expected.hexdigest() + "\n")
+
+    def test_index_revision_rejects_unmerged_entries(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = init_repo(Path(directory) / "example")
+            oid = run(["git", "-C", str(repo), "rev-parse", "HEAD:example.el"]).stdout.strip()
+            subprocess.run(["git", "-C", str(repo), "update-index", "--force-remove", "example.el"], check=True)
+            conflict = "".join(f"100644 {oid} {stage}\texample.el\n" for stage in (1, 2, 3))
+            updated = run(["git", "-C", str(repo), "update-index", "--index-info"], input=conflict)
+            self.assertEqual(updated.returncode, 0, updated.stderr)
+            result = run([str(REVISION_HELPER), "--index", str(repo)])
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(result.stdout, "")
+
+    def test_index_revision_rejects_malformed_index_listing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = init_repo(root / "example")
+            for listing in (b"malformed\0", b"100644 not-an-object 0\texample.el\0"):
+                with self.subTest(listing=listing):
+                    env = self.git_probe_environment(
+                        root,
+                        "if 'ls-files' in args and any(flag in args for flag in ('-s', '--stage')):\n"
+                        f"    sys.stdout.buffer.write({listing!r})\n"
+                        "    sys.exit(0)\n",
+                    )
+                    result = run([str(REVISION_HELPER), "--index", str(repo)], env=env)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertEqual(result.stdout, "")
+
+    def test_index_revision_rejects_invalid_batch_responses(self):
+        responses = {
+            "missing object": "identity + b' missing\\n'",
+            "non-blob object": "identity + b' tree 1\\nx\\n'",
+            "wrong object": "b'0' * len(identity) + b' blob 1\\nx\\n'",
+            "malformed header": "b'malformed\\n'",
+            "malformed size": "identity + b' blob nope\\n'",
+            "truncated content": "identity + b' blob 64\\nx'",
+            "missing delimiter": "identity + b' blob 1\\nx!'",
+            "unexpected trailing data": "identity + b' blob 1\\nx\\nextra'",
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = init_repo(root / "example")
+            for case, response in responses.items():
+                with self.subTest(case=case):
+                    env = self.git_probe_environment(
+                        root,
+                        "if 'cat-file' in args and '--batch' in args:\n"
+                        "    identity = sys.stdin.buffer.readline().strip()\n"
+                        f"    sys.stdout.buffer.write({response})\n"
+                        "    sys.stdout.buffer.flush()\n"
+                        "    sys.exit(0)\n",
+                    )
+                    result = run([str(REVISION_HELPER), "--index", str(repo)], env=env, timeout=5)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertEqual(result.stdout, "")
 
 
 class BatchTestTests(unittest.TestCase):
@@ -662,7 +817,7 @@ class TestEvidenceHookTests(unittest.TestCase):
         probe.write_text(
             "#!/usr/bin/env python3\n"
             "import os, pathlib, sys\n"
-            f"if 'show' in sys.argv[1:]: pathlib.Path({str(index_read)!r}).touch()\n"
+            f"if any(command in sys.argv[1:] for command in ('show', 'cat-file')): pathlib.Path({str(index_read)!r}).touch()\n"
             f"os.execv({real_git!r}, [{real_git!r}] + sys.argv[1:])\n"
         )
         probe.chmod(0o755)

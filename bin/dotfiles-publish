@@ -51,6 +51,12 @@ DIRECTORY_MODE = 0o700
 FILE_MODE = 0o600
 
 MIN_KNOWN_VALUE_CHARS = 4
+# Scrubbing replaces a learned value verbatim in every review unit, so the
+# value must be specific enough that unrelated text is unlikely to contain it
+# by accident; any four-letter word passes the known-value minimum. Eight is
+# the same threshold TOKEN_PATTERN uses for token-shaped text, and every
+# scanner rule in .gitleaks.toml captures at least that much.
+MIN_SCRUB_VALUE_CHARS = 8
 MAX_REVIEW_FIELD_CHARS = 4096
 MAX_REVIEW_FINDINGS = 256
 MAX_REVIEW_FINDINGS_BYTES = 64 * 1024
@@ -662,12 +668,27 @@ class Redactor:
         self.known_values = set()
 
     def learn(self, value, token=None, *, scrub=True):
-        if value and len(value) >= MIN_KNOWN_VALUE_CHARS:
-            self.known_values.add(value)
-            if scrub:
+        """Learn the trimmed value and, when it spans lines, each trimmed line.
+
+        Whitespace is never part of a secret. A scanner match can carry the
+        indentation and line breaks around what it captured, and replacing
+        such a fragment verbatim blanks every unrelated passage that shares
+        its layout, so the minimum lengths apply to the trimmed forms only.
+        """
+        if not value:
+            return
+        components = {value.strip(), *(line.strip() for line in value.splitlines())}
+        for component in sorted(components):
+            if len(component) < MIN_KNOWN_VALUE_CHARS:
+                continue
+            # A known value only refuses review evidence that quotes it, which
+            # the reviewer can recover from by citing the fingerprint instead,
+            # so a short fragment still counts as known but is never scrubbed.
+            self.known_values.add(component)
+            if scrub and len(component) >= MIN_SCRUB_VALUE_CHARS:
                 if not token:
                     raise PublishError("a scrubbed scanner value needs a fingerprint")
-                self.values[value] = token
+                self.values[component] = token
 
     @property
     def value_signatures(self):

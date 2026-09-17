@@ -639,6 +639,34 @@ class DotfilesPublishQuotedRedactionTests(unittest.TestCase):
         self.assertEqual("Config(password='" + marker + "', username='fixture@example.invalid')", result)
         self.assertEqual(result, redactor.scrub(result))
 
+    def test_whitespace_padded_scanner_fragments_do_not_scrub_ordinary_prose(self):
+        # A curl-auth-header finding in a guard hook once handed the redactor a
+        # fragment of indentation plus "fi", which then blanked "file", "first"
+        # and "finally" across every review unit.
+        redactor = self.functions['Redactor'](b'synthetic-only-key')
+        token = 'a1b2c3d4e5f6'
+        marker = '[REDACTED:' + token + ']'
+        for fragment in ('\n    fi', "'\n  fi", '    \n\n  ', ' file ', 'SYNTHETIC_HEADER_LINE_9\n    fi'):
+            redactor.learn(fragment, token)
+        prose = "the first file\n    finally the field is filed\n    fi\n"
+        self.assertEqual(prose, redactor.scrub(prose))
+        # Trimmed fragments below the scrub minimum stay known, so review
+        # evidence quoting them is still refused, but they are never scrubbed.
+        self.assertTrue(redactor.knows('file'))
+        self.assertFalse(redactor.knows(' file '))
+        self.assertFalse(redactor.knows('fi'))
+        self.assertNotIn('file', redactor.values)
+        minimum = self.functions['MIN_KNOWN_VALUE_CHARS']
+        self.assertTrue(all(signature['length'] >= minimum for signature in redactor.value_signatures))
+        # The meaningful line of a multi-line fragment is still scrubbed on its own.
+        self.assertEqual('see ' + marker + ' here', redactor.scrub('see SYNTHETIC_HEADER_LINE_9 here'))
+        real = 'SYNTHETIC_TOKEN_0123'
+        self.assertEqual(20, len(real))
+        redactor.learn('  ' + real + '\n', token)
+        self.assertEqual('value ' + marker + ' end', redactor.scrub('value ' + real + ' end'))
+        self.assertEqual("password='" + marker + "'", redactor.scrub("password='" + real + "'"))
+        self.assertEqual('    ' + marker + '\n', redactor.scrub('    ' + real + '\n'))
+
     def test_unquoted_shell_separators_do_not_hide_later_commands(self):
         for separator in ('; echo visible', ' # visible comment', ', other=visible', ') visible'):
             source = 'password=SYNTHETIC_PASSWORD_123' + separator

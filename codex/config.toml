@@ -880,3 +880,27 @@ trusted_hash = "sha256:28f3bb2d1496516fb6a62169eae480d9b1bd681090491206a3422a2c8
 
 [agents]
 max_concurrent_threads_per_session = 32
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:15"]
+trusted_hash = "sha256:287a010e74d2babbbeb42ae3f494f3a45b9b3a3011a1d08c3521e807a75f1ee4"
+
+[hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:pre_tool_use:0:15"]
+trusted_hash = "sha256:287a010e74d2babbbeb42ae3f494f3a45b9b3a3011a1d08c3521e807a75f1ee4"
+
+[hooks.state."/Users/pablostafforini/.codex-epoch-plan/hooks.json:pre_tool_use:0:15"]
+trusted_hash = "sha256:287a010e74d2babbbeb42ae3f494f3a45b9b3a3011a1d08c3521e807a75f1ee4"
+
+[hooks.state."/Users/pablostafforini/.codex-epoch2/hooks.json:pre_tool_use:0:15"]
+trusted_hash = "sha256:287a010e74d2babbbeb42ae3f494f3a45b9b3a3011a1d08c3521e807a75f1ee4"
+
+[hooks.state."/Users/pablostafforini/.codex-epoch3/hooks.json:pre_tool_use:0:15"]
+trusted_hash = "sha256:287a010e74d2babbbeb42ae3f494f3a45b9b3a3011a1d08c3521e807a75f1ee4"
+
+[hooks.state."/Users/pablostafforini/.codex-epoch4/hooks.json:pre_tool_use:0:15"]
+trusted_hash = "sha256:287a010e74d2babbbeb42ae3f494f3a45b9b3a3011a1d08c3521e807a75f1ee4"
+
+[hooks.state."/Users/pablostafforini/.codex-epoch5/hooks.json:pre_tool_use:0:15"]
+trusted_hash = "sha256:287a010e74d2babbbeb42ae3f494f3a45b9b3a3011a1d08c3521e807a75f1ee4"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:0:15"]
+trusted_hash = "sha256:287a010e74d2babbbeb42ae3f494f3a45b9b3a3011a1d08c3521e807a75f1ee4"

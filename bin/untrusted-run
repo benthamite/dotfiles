@@ -22,6 +22,21 @@ SECCOMP = Path(__file__).resolve().with_name("untrusted-run-seccomp.json")
 IMAGE = "node@sha256:8d342e46d3b2883df69f797cb60fc71d8a0b65de65ddfbf4bf63fdc02049615f"
 
 
+def protected_input_name(name):
+    """Recognize credential/control names at every level of a read grant."""
+    name = name.casefold()
+    return name in {
+        ".ssh", ".gnupg", ".password-store", ".docker", ".codex", ".claude",
+        ".claude.json", ".git", ".config", "keychains", ".env", ".netrc",
+        ".npmrc", ".pypirc", ".zshenv-secrets",
+    } or name.startswith((".env.", ".claude-", ".codex-", ".claude.json."))
+
+
+def input_walk_error(error):
+    """Refuse a grant when its complete descendant inventory is unavailable."""
+    raise ValueError("Input trees must be completely inspectable") from error
+
+
 def safe_host_path(value):
     original = Path(value).absolute()
     # macOS's fixed system aliases are safe; artifact-controlled symlinks are
@@ -43,13 +58,13 @@ def safe_host_path(value):
         raise ValueError("Inputs must be ordinary files or directories, never sockets/devices")
     if path in (Path("/"), Path.home(), Path.home().parent, Path("/private/tmp")):
         raise ValueError("Broad host roots are not valid inputs")
-    protected = {".ssh", ".gnupg", ".password-store", ".docker", ".codex", ".claude",
-                 ".git", ".config", "keychains", ".env", ".netrc", ".npmrc", ".pypirc",
-                 ".zshenv-secrets"}
-    if any(part.lower() in protected or part.startswith(".env.") for part in path.parts):
+    if any(protected_input_name(part) for part in path.parts):
         raise ValueError("Credential and agent-control paths are not valid inputs")
     if path.is_dir():
-        for directory, _, files in os.walk(path, followlinks=False):
+        for directory, directories, files in os.walk(path, followlinks=False,
+                                                    onerror=input_walk_error):
+            if any(protected_input_name(name) for name in directories + files):
+                raise ValueError("Input trees must not contain credential or agent-control paths; stage only the required files")
             for name in files:
                 entry = Path(directory) / name
                 if not entry.is_symlink() and not entry.is_file():

@@ -20,6 +20,21 @@ or the need for user authorization.
 
 * Operational contracts
 
+=block-untrusted-execution.sh= registers directly for shell tools and uses the
+paired =lib-untrusted-execution.py= classifier. Each literal nested
+=functions.exec= command retains its own workdir; ambiguous contexts deny.
+The classifier denies recognizable transient package runners, downloaded
+interpreter input, and host execution involving
+=~/.local/share/agent-untrusted/=. Plain source inspection and package metadata
+remain available. The canonical =bin/untrusted-run= command is allowed per
+invocation; its host substitutions and following commands remain checked.
+Quoted data heredocs are distinguished from shell commands. Unsupported
+relevant shell forms deny without an approval prompt. This is bounded routing,
+not arbitrary-program analysis or an independent same-user security boundary.
+The VM runner supplies the execution boundary. Synthetic hook decisions are
+covered by =tests/test_untrusted_execution_guard.py=. A new hook definition
+also needs native Codex trust before registration becomes effective.
+
 The security guards for secrets, sensitive reads, destructive commands,
 GitHub writes, paid Ahrefs access, dirty-tree rewrites, LaunchAgents, and
 walk-list data convert unexpected failures to blocking exit code 2. Their
@@ -163,6 +178,8 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =block-unguarded-ahrefs-api.sh= | Blocks paid Ahrefs API calls that do not pass through the quota guard. |
 | =block-unregistered-launchagent.sh= | Routes LaunchAgent installs, loads, and removals through the =~/repos/launchd= registry and its installer, covering shell payloads and =apply_patch= paths. |
 | =block-walk-list-access.sh= | Restricts direct access to the protected walk-list data store. |
+| =block-untrusted-execution.sh= | Checks recognizable untrusted execution, preserving each nested command's workdir. |
+| =lib-untrusted-execution.py= | Classifies transient runners, downloaded interpreter input, and execution involving untrusted staging without running proposed commands. |
 | =lib-codex-hook-json.sh= | Normalizes Codex hook payloads, including block-array responses from =functions.exec=, extracts literal command/workdir records without evaluating JavaScript, preserves valid UTF-16 pairs and rejects unpaired surrogates/NULs, recognizes Git global options, and recovers an exact nested Bash command's parent workdir from its transcript. The secret guard checks extraction status and every context before classification. |
 | =lib-codex-paths.sh= | Extracts changed paths from the supported Codex edit and patch payload forms. |
 | =lib-public-url-scan.py= | Classifies verified public URL routing fields while retaining credential-bearing payloads. |

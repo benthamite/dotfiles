@@ -714,6 +714,20 @@
       "codex": null,
       "status": "claude-only",
       "note": "Claude-only PreToolUse gate registered in each reasoning-tasks worktree's untracked settings.local.json. It blocks issue-comment posting when a newer comment has not been acknowledged, includes the newest comment in the denial, and intentionally fails open on API errors. Codex posting is routed to Claude. Details live in claude/hooks/README.org."
+    },
+    {
+      "name": "block-untrusted-execution.sh",
+      "claude": "claude/hooks/block-untrusted-execution.sh",
+      "codex": "codex/hooks/block-untrusted-execution.sh",
+      "status": "paired-dispatched",
+      "note": "Claude delegates through pretooluse-bash.sh; Codex registers directly in hooks.json and normalizes literal nested command/workdir contexts with lib-codex-hook-json.sh. Both use the mirrored static classifier for recognizable transient package execution, downloaded interpreter input, and designated untrusted staging. Guards allow or deny, never ask; unexpected failures block. New Codex definitions require native hook trust. This routing guard supplements the VM boundary and does not establish arbitrary-code or malicious-agent containment."
+    },
+    {
+      "name": "lib-untrusted-execution.py",
+      "claude": "claude/hooks/lib-untrusted-execution.py",
+      "codex": "codex/hooks/lib-untrusted-execution.py",
+      "status": "paired-utility",
+      "note": "Byte-identical static untrusted-execution classifier. Reuses the existing lib-op-policy.py quote-preserving tokenizer without invoking its credential policy or executing the proposed command. Coverage and limits live in both hook manuals; synthetic fixtures in tests/test_untrusted_execution_guard.py."
     }
   ],
   "mcp_servers": [
@@ -777,7 +791,7 @@
       "path": "codex/hooks.json",
       "tracked": true,
       "live_path": "~/.codex/hooks.json",
-      "note": "Tracked global registration, live through ~/.codex/hooks.json; it stays outside repo-root .codex to avoid double loading. Lifecycle entries use codex-hook-wrapper with an explicit Emacs socket. Shell matchers cover Bash, exec_command, functions.exec, and functions.exec_command; edit matchers are collapsed for trust review, and UserPromptSubmit has an empty matcher. Guards allow or deny, never ask. The Drive runtime-state guard was removed on 2026-08-03. The LaunchAgent registry guard runs on both the shell and edit matchers. See codex/README.org and codex/hooks/README.org."
+      "note": "Global registrations live through ~/.codex/hooks.json, outside repo-root .codex to avoid double loading. Lifecycle hooks use codex-hook-wrapper and an explicit Emacs socket. Shell matchers cover Bash, exec_command, functions.exec and functions.exec_command; edit matchers are collapsed for trust review. Guards allow or deny, never ask. The LaunchAgent guard covers shell and edits. Untrusted-execution routing is appended at shell index 15, preserving existing trust keys; new definitions require native trust and reload. See codex/README.org and codex/hooks/README.org."
     },
     {
       "tool": "Claude Code and Codex",
@@ -791,7 +805,7 @@
       "path": "codex/config.toml",
       "tracked": true,
       "live_path": "~/.codex/config.toml",
-      "note": "Codex-only trust, plugins, theme, MCP, accounts and models; the default model is gpt-6-astra, project-doc fallbacks are off, and hooks are on. Approve exact source/key/current-hash hook trust via Codex's API; preserve other state. bin/skill-prune replaces managed skill tables without markers, scans default/active/configured homes, deduplicates histories and rejects unavailable evidence. Disabled state: skills-disabled.json. bin/codex-config-prune removes dead records. Repo moves require rewritten trust keys; duplicates invalidate TOML. See codex/README.org."
+      "note": "Codex-only trust, plugins, theme, MCP, accounts and models; gpt-6-astra is default, project-doc fallbacks are off, hooks are on. Preserve existing state when trusting exact source/key/current-hash definitions. Untrusted-execution trust is recorded for eight homes; loaded sessions need reload. bin/skill-prune replaces managed tables, scans default/active/configured homes, deduplicates histories and rejects missing evidence; disabled state is skills-disabled.json. bin/codex-config-prune removes dead records. Repo moves require rewritten trust keys. See codex/README.org."
     },
     {
       "tool": "Codex",

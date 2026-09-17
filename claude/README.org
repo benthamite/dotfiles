@@ -68,6 +68,12 @@ API-key-authenticated Claude session.
 
 * Instructions and settings
 
+Unfamiliar code execution uses the shared =bin/untrusted-run= VM boundary;
+reviewed local workflows retain host execution. The existing Bash dispatcher
+delegates the paired routing guard for recognizable untrusted launchers and
+the designated staging directory. See [[file:hooks/README.org][the hook contracts]] for coverage and
+[[file:../bin/README.org][the runner contract]] for available runtimes and prerequisites.
+
 =claude/CLAUDE.md= is the user-level instruction source. A project may add a
 sibling =CLAUDE.md= and project-local settings. User and project settings are
 additive. Account selection changes which user-level native state is active; it

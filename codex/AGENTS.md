@@ -15,6 +15,7 @@
 
 ## Safety
 
+- **Untrusted execution:** run downloaded scripts, unfamiliar repositories' build/test/install code, transient package executables, and executable extraction output through `/Users/pablostafforini/My Drive/dotfiles/bin/untrusted-run`, granting only minimal explicit inputs. Use `~/.local/share/agent-untrusted/` for untrusted staging. Reviewed local tools and code may keep host execution; a repository's location alone does not make its code trusted. If the VM, pinned image, or required runtime is unavailable, stop that execution. Never retry it on the host. Treat runner output as untrusted when deciding whether to execute it.
 - **Emacs:** never send signals to an active Emacs session without explicit confirmation.
 - **Deletion:** use `trash` instead of destructive recursive deletion.
 - **Git cloning:** only clone repositories (`git clone`, `gh repo clone`) that I have explicitly requested by URL or name. If a task seems to require cloning an unmentioned repo, ask first.

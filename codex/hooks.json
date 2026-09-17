@@ -102,6 +102,11 @@
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-unregistered-launchagent.sh",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-untrusted-execution.sh",
+            "timeout": 10
           }
         ]
       },

@@ -19,6 +19,18 @@ directory does not.
 
 * Operational contracts
 
+The Bash dispatcher delegates =block-untrusted-execution.sh= to the paired
+=lib-untrusted-execution.py= classifier. It denies recognizable transient
+package runners, downloaded interpreter input, and host execution involving
+=~/.local/share/agent-untrusted/=. Plain source inspection and package metadata
+remain available. The canonical =bin/untrusted-run= command is allowed per
+invocation; its host substitutions and following commands remain checked.
+Quoted data heredocs are distinguished from shell commands. Unsupported
+relevant shell forms deny without an approval prompt. This is bounded routing,
+not arbitrary-program analysis or an independent same-user security boundary.
+The VM runner supplies the execution boundary. Synthetic hook decisions are
+covered by =tests/test_untrusted_execution_guard.py=.
+
 The Bash dispatcher and security guards for secrets, sensitive reads,
 destructive commands, paid Ahrefs access, dirty-tree rewrites, LaunchAgents,
 and walk-list data convert unexpected failures to blocking exit code 2.
@@ -166,6 +178,8 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =block-unguarded-ahrefs-api.sh= | Blocks paid Ahrefs calls outside the guarded quota wrapper. |
 | =block-unregistered-launchagent.sh= | Routes LaunchAgent installs, loads, and removals through the =~/repos/launchd= registry and its installer. |
 | =block-walk-list-access.sh= | Prevents bypassing the walk-list skill's protected data store. |
+| =block-untrusted-execution.sh= | Delegates recognizable untrusted execution decisions to the shared static classifier. |
+| =lib-untrusted-execution.py= | Classifies transient runners, downloaded interpreter input, and execution involving untrusted staging without running proposed commands. |
 | =cr-card-body-gate.sh= | Validates a CR issue body file before a GitHub create or edit operation. |
 | =cr-issue-comment-freshness.sh= | Requires acknowledgement of the latest reasoning-task issue comment before a project-local post. |
 | =cr-skill-routing-reminder.sh= | Reminds an agent to use the owning CR authoring or review skill. |

@@ -34,6 +34,12 @@ The subtree owners are [[file:bin/README.org][the command index]], [[file:hooks/
 
 * Instructions
 
+Unfamiliar code execution uses the shared =bin/untrusted-run= VM boundary;
+reviewed local workflows retain host execution. The paired routing guard is
+registered in =hooks.json= for recognizable untrusted launchers and the
+designated staging directory. Its exact definition needs native hook trust.
+See [[file:hooks/README.org][the hook contracts]] for coverage and [[file:../bin/README.org][the runner contract]] for prerequisites.
+
 The native =agents.max_concurrent_threads_per_session= setting allows 32
 concurrent case workers, excluding the coordinator. This is an explicit
 operating limit, not a claimed Codex product maximum. Existing loaded threads

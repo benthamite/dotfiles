@@ -493,6 +493,7 @@ echo "$COMMAND" | grep -qE '\bcommit\b' && IS_COMMIT=1
 # every Bash command so the registered standalone guard is the single live
 # implementation instead of maintaining a second inlined policy here.
 delegate block-secret-leak.sh
+delegate block-untrusted-execution.sh
 check_ahrefs
 if echo "$COMMAND" | grep -qE '(^|[[:space:];|&])(git[[:space:]]+push|gh[[:space:]]+(api|pr|issue|secret|variable|workflow|run|release|repo|label|milestone|gist)[[:space:]])'; then
   delegate block-github-write-command.sh

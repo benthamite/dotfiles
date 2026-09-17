@@ -7,6 +7,19 @@ artifact checksums start a new waiting period, even if a displayed version has
 not changed. Existing state without artifact observations starts a fresh period
 on its next scan; old version-only timestamps do not authorize installation.
 
+Discovery includes self-updating casks and reads their installed application
+bundle versions. Homebrew receipts can lag an application's own updater, and
+Homebrew's normal bundle comparison can miss Brave's Chromium-prefixed version
+format. The scan compares numeric release and build versions, normalizes that
+Brave-specific prefix, and omits bundles already at or ahead of the cask release.
+It checks installed bundles even when their receipts claim the current release.
+An older bundle with a current receipt is reported as needing a verified
+reinstall, because Homebrew's upgrade command would otherwise skip it.
+Missing or incomparable bundle versions appear with an explicit check error and
+are deferred by the delayed lane; an old receipt is not permission to overwrite
+an unverified self-updated application. These checks do not shorten the waiting
+period or exempt checksum-free artifacts.
+
 The delayed lane also checks implicit dependencies. Each scan records, per
 package, the dependencies Homebrew would install or upgrade with it: runtime
 formula dependencies not at their latest version anywhere in the expanded

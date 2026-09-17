@@ -248,6 +248,84 @@ class PersonalUpdatesStateTest(unittest.TestCase):
 
         self.assertEqual(commands, [["brew", "update-reset", "-q"], ["brew", "update"]])
 
+    def test_discovery_finds_brave_and_reports_actual_bundle_not_stale_receipt(self):
+        brave = {"token": "brave-browser", "version": "1.95.102.0", "installed": "1.80.122.0",
+                 "auto_updates": True, "bundle_short_version": "147.1.89.132", "bundle_version": "189.132"}
+        def brew(command, **kwargs):
+            self.assertEqual(kwargs["env_overrides"]["HOMEBREW_NO_AUTO_UPDATE"], "1")
+            if command[1] == "outdated":
+                # Homebrew's normal bundle comparison misses the Chromium
+                # prefix; greedy discovery can still find the old receipt.
+                casks = [{"name": "brave-browser", "current_version": brave["version"]}] \
+                    if "--greedy-auto-updates" in command else []
+                return subprocess.CompletedProcess(command, 0, json.dumps({"casks": casks}), "")
+            self.assertEqual(command[1:], ["info", "--json=v2", "--cask", "--installed"])
+            return subprocess.CompletedProcess(command, 0, json.dumps({"casks": [brave]}), "")
+        with patch.object(self.mod, "run", side_effect=brew), patch.object(self.mod, "brew_update") as refresh:
+            updates = self.mod.brew_outdated(refresh=False)
+        refresh.assert_not_called()
+        self.assertEqual(updates["brew_cask"], [{"name": "brave-browser", "available": "1.95.102.0",
+                                               "installed": "147.1.89.132", "installed_receipt": "1.80.122.0"}])
+
+    def test_bundle_discovery_detects_drift_even_when_receipt_is_current(self):
+        item = {"token": "brave-browser", "version": "1.95.102.0", "installed": "1.95.102.0",
+                "auto_updates": True, "bundle_short_version": "147.1.89.132", "bundle_version": "189.132"}
+        update = self.mod.cask_updates([], [item])[0]
+        self.assertEqual(update["installed"], "147.1.89.132")
+        self.assertIn("verified reinstall is required", update["version_check_error"])
+
+    def test_self_updated_or_newer_bundles_are_not_reinstalled_from_old_receipts(self):
+        for name, available, actual in (("brave-browser", "1.95.102.0", "153.1.95.102"),
+                                        ("brave-browser", "1.95.102.0", "1.95.102.0"),
+                                        ("brave-browser", "1.95.102.0", "154.1.96.1"),
+                                        ("google-chrome", "153.0.8010.48", "153.0.8010.48"),
+                                        ("firefox", "156.0", "157.0")):
+            with self.subTest(name=name, actual=actual):
+                item = {"token": name, "version": available, "installed": "0.1",
+                        "auto_updates": True, "bundle_short_version": actual}
+                self.assertEqual(self.mod.cask_updates([{"name": name}], [item]), [])
+
+    def test_bundle_comparison_checks_numeric_builds_and_limits_brave_normalization(self):
+        cases = (("tool", "2.61-2057", "2.61", "2057", 0),
+                 ("tool", "2026.9.2,2026.2995", "2026.9.2", "2026.2994", -1),
+                 ("keyboard-maestro", "11.1.1,1111", "11.1.1", "11.1.1", 0),
+                 ("plex-media-server", "1.43.4.10903,e5521bd8c", "1.43.4", "1.43.4.10903", 0),
+                 ("plex-media-server", "1.43.4.10903,e5521bd8c", "1.43.4", "1.43.4.10904", 1),
+                 ("descript", "114.0.4-release.20250509.32955", "114.0.4-release.20250509.32955", "20250509.32955", 0),
+                 ("tool", "1.95.102.0", "147.1.89.132", "189.132", 1))
+        for name, available, short, build, expected in cases:
+            item = {"token": name, "version": available, "bundle_short_version": short, "bundle_version": build}
+            self.assertEqual(self.mod.cask_bundle_comparison(item), (expected, None))
+
+    def test_missing_or_incomparable_bundle_versions_are_explicitly_unchecked(self):
+        for actual in (None, "preview-next"):
+            item = {"token": "tool", "version": "2.0", "installed": "1.0", "auto_updates": True,
+                    "bundle_short_version": actual}
+            update = self.mod.cask_updates([], [item])[0]
+            self.assertIn("version_check_error", update)
+            state = self.mod.merge_scan({}, {"brew_cask": [update]}, self.now)
+            self.assertEqual(state["brew_cask"]["tool"]["version_check_error"], update["version_check_error"])
+
+    def test_delayed_defers_unchecked_bundle_even_when_artifact_is_age_qualified(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = pathlib.Path(directory)
+            args = Namespace(state_file=base / "state.json", log_dir=base / "logs",
+                             hold_file=base / "holds", excluded_casks_file=base / "excluded",
+                             min_age_days=7, dry_run=False)
+            observation = self.observation("tool", "2026-05-01T00:00:00+00:00")
+            update = {"name": "tool", "installed": "unknown", "available": "1",
+                      "version_check_error": "installed application bundle version is unavailable"}
+            args.state_file.write_text(json.dumps({"brew_cask": {"tool": {
+                **update, "first_seen": observation["first_seen"]}},
+                "observations": {"brew_cask": {"tool": observation}}}))
+            with patch.object(self.mod, "brew_outdated", return_value={"brew_cask": [update]}), \
+                 patch.object(self.mod, "observe_artifacts", return_value={"brew_cask": {"tool": observation}}), \
+                 patch.object(self.mod, "upgrade_brew") as upgrade, patch.object(sys, "stderr"):
+                self.mod.command_delayed(args, now=self.now)
+            upgrade.assert_not_called()
+            log = "".join(path.read_text() for path in args.log_dir.iterdir())
+            self.assertIn("delayed deferred brew_cask/tool: installed application bundle version is unavailable", log)
+
     def test_brew_upgrade_commands_use_greedy_for_casks(self):
         result = self.mod.brew_upgrade_commands_for_eligible(
             {"brew_formula": ["ripgrep"], "brew_cask": ["visual-studio-code"]}

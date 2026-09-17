@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -44,6 +45,7 @@ def merge_scan(state, updates, now):
                 "installed": update.get("installed", ""),
                 "available": update["available"],
                 "first_seen": first_seen,
+                **{key: update[key] for key in ("installed_receipt", "version_check_error") if key in update},
             }
         if current or kind in state:
             merged[kind] = current
@@ -133,11 +135,16 @@ def brew_update(run_command=run):
 def brew_outdated(*, refresh=True):
     if refresh:
         brew_update()
-    result = run(["brew", "outdated", "--json=v2"], check=False,
+    result = run(["brew", "outdated", "--json=v2", "--greedy-auto-updates"], check=False,
                  env_overrides={"HOMEBREW_NO_AUTO_UPDATE": "1"})
     if result.returncode not in (0, 1):
         raise RuntimeError(result.stderr.strip() or result.stdout.strip())
     data = json.loads(result.stdout or "{}")
+    # Read installed bundles independently of receipts: an application can
+    # update itself, and even a current receipt can describe an older bundle.
+    info = run(["brew", "info", "--json=v2", "--cask", "--installed"],
+               env_overrides={"HOMEBREW_NO_AUTO_UPDATE": "1"})
+    casks = cask_updates(data.get("casks", []), json.loads(info.stdout)["casks"])
     return {
         "brew_formula": [
             {
@@ -147,15 +154,82 @@ def brew_outdated(*, refresh=True):
             }
             for item in data.get("formulae", [])
         ],
-        "brew_cask": [
-            {
-                "name": item["name"],
-                "installed": item.get("installed_versions", ""),
-                "available": item["current_version"],
-            }
-            for item in data.get("casks", [])
-        ],
+        "brew_cask": casks,
     }
+
+
+def numeric_version(value):
+    """Comparable numeric release components, ignoring trailing zeroes."""
+    if not value or not re.fullmatch(r"\d+(?:[.-]\d+)*", value):
+        return None
+    parts = tuple(int(part) for part in re.split(r"[.-]", value))
+    while len(parts) > 1 and parts[-1] == 0:
+        parts = parts[:-1]
+    return parts
+
+
+def cask_bundle_comparison(item):
+    """Return installed-versus-available ordering or an explicit check error."""
+    available, *builds = item["version"].split(",")
+    short, build = item.get("bundle_short_version"), item.get("bundle_version")
+    if not short:
+        return None, "installed application bundle version is unavailable"
+    installed = short
+    # Brave's macOS legacy bundle prefixes its release with Chromium's major
+    # version (147.1.89.132); the cask release is 1.89.132 or 1.89.132.0.
+    if item["token"] in ("brave-browser", "brave-browser@beta", "brave-browser@nightly"):
+        parts = short.split(".")
+        release = available.split(".")
+        if len(parts) == 4 and parts[0].isdigit() and int(parts[0]) >= 100 and parts[1] == release[0]:
+            installed = ".".join(parts[1:])
+    if "-" in available and numeric_version(available) is not None and build:
+        installed = f"{installed}-{build}"
+    # A full release can live in CFBundleVersion while the short field is
+    # abbreviated (Plex), and equal opaque versions need no ordering rule.
+    if installed == available or build == available:
+        comparison = 0
+    else:
+        actual, target = numeric_version(installed), numeric_version(available)
+        if actual is None or target is None:
+            return None, "installed and available version formats cannot be compared"
+        full_build = numeric_version(build)
+        if len(actual) < len(target) and full_build is not None and len(full_build) == len(target):
+            actual = full_build
+        comparison = (actual > target) - (actual < target)
+    if comparison == 0 and builds and numeric_version(builds[0]) is not None:
+        actual_build = numeric_version(build)
+        if actual_build is None:
+            return None, "installed application build version is unavailable or incomparable"
+        target_build = numeric_version(builds[0])
+        # A numeric CSV suffix is not necessarily CFBundleVersion (Keyboard
+        # Maestro uses 1111 for release 11.1.1). Compare only matching shapes.
+        if len(actual_build) == len(target_build):
+            comparison = (actual_build > target_build) - (actual_build < target_build)
+    return comparison, None
+
+
+def cask_updates(outdated, installed):
+    """Keep actual stale bundles; explicitly defer unverifiable self-updaters."""
+    candidates = {item["name"]: item for item in outdated}
+    updates = []
+    for item in installed:
+        name = item["token"]
+        if not item.get("installed") or (not item.get("auto_updates") and name not in candidates):
+            continue
+        entry = {"name": name, "installed": item["installed"], "available": item["version"]}
+        if item.get("auto_updates"):
+            comparison, error = cask_bundle_comparison(item)
+            if error:
+                entry["version_check_error"] = error
+            elif comparison >= 0:
+                continue
+            elif item["installed"] == item["version"]:
+                entry["version_check_error"] = (
+                    "installed bundle is older than its current Homebrew receipt; a verified reinstall is required")
+            entry["installed_receipt"] = item["installed"]
+            entry["installed"] = item.get("bundle_short_version") or "unknown"
+        updates.append(entry)
+    return updates
 
 
 def brew_helper(mode, request, upgrade_args=()):
@@ -289,10 +363,15 @@ def command_delayed(args, now=None):
         holds,
         excluded_casks,
     )
-    deferred = []
+    deferred = [f"{kind}/{name}: {entry['version_check_error']}"
+                for kind in KINDS for name, entry in current.get(kind, {}).items()
+                if entry.get("version_check_error")]
     for kind, names in eligible.items():
         accepted = []
         for name in names:
+            version_error = current.get(kind, {}).get(name, {}).get("version_check_error")
+            if version_error:
+                continue
             observed = observations.get(kind, {}).get(name, {})
             if observed.get("name") not in allowed[kind]:
                 deferred.append(f"{kind}/{name}: artifact is unchecked or has not completed the waiting period")

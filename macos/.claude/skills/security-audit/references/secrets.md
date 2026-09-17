@@ -159,6 +159,21 @@ Metadata validation rejects recognizable secret material; it cannot prove
 arbitrary text is secret-free. Keep summaries factual and avoid copying provider
 responses.
 
+An `accepted-risk` record keeps the credential's actual last verification result;
+acceptance does not mean revocation. New records require `risk_acceptance` with
+exactly `accepted_at`, `authorization`, and `rationale`: a UTC timestamp and
+nonblank, redacted evidence strings. `accepted_at` and `updated_at` accept `Z` or
+`+00:00`, with up to six fractional-second digits. Action values still use the
+documented enum. Acceptance in this registry does not suppress a scanner finding
+or replace the separate publication ledger's exact-fingerprint receipt.
+
+Readers explicitly support older accepted-risk records with a top-level
+`authorization` and a bounded, redacted prose `next_action`. This compatibility
+preserves existing evidence without rewriting the registry; that prose is not
+an executable action or authorization to act. New `record` inputs must use the
+structured form. When replacing an older record, preserve its authorization and
+rationale in `risk_acceptance` rather than discarding them.
+
 Use `lookup --fingerprint FINGERPRINT` only with a compatible registry
 fingerprint. Do not truncate or reinterpret another scanner's identifier, and
 do not generate a new fingerprint by reading a credential during an audit.

@@ -142,6 +142,125 @@ class CredentialIncidentRegistryTests(unittest.TestCase):
         self.assertEqual("", result.stdout)
         self.assertEqual("", result.stderr)
 
+    def accepted_risk_record(self):
+        record = copy.deepcopy(self.record)
+        record.update(status="accepted-risk", next_action="none", risk_acceptance={
+            "accepted_at": "2026-09-02T12:00:00.123456+00:00",
+            "authorization": "The owner explicitly accepted this historical exposure.",
+            "rationale": "The remaining access is limited to synthetic fixture data.",
+        })
+        return record
+
+    def test_accepted_risk_round_trip_preserves_evidence_and_validity_result(self):
+        record = self.accepted_risk_record()
+        self.write_input(record)
+        self.run_helper("record", "--input", str(self.input))
+        actual = json.loads(self.run_helper("lookup", "--fingerprint",
+                                           record["credential_fingerprint"]).stdout)
+        self.assertEqual(record["risk_acceptance"], actual["risk_acceptance"])
+        self.assertEqual("accepted-risk", actual["status"])
+        self.assertEqual("accepted", actual["last_verified_result"])
+        self.assertEqual("none", actual["next_action"])
+        self.assertIn("accepted-risk", self.run_helper("list").stdout)
+        self.run_helper("validate")
+
+    def test_existing_acceptance_formats_are_read_without_rewriting_evidence(self):
+        structured = self.accepted_risk_record()
+        legacy = copy.deepcopy(structured)
+        legacy["authorization"] = legacy.pop("risk_acceptance")["authorization"]
+        legacy["next_action"] = "No further revocation requested by the owner."
+        for record in (structured, legacy):
+            with self.subTest(legacy="authorization" in record):
+                self.write_state(record)
+                state = json.loads(self.registry.read_text())
+                state["incidents"][record["incident_id"]]["updated_at"] = (
+                    "2026-09-02T12:00:00.123456+00:00")
+                self.registry.write_text(json.dumps(state))
+                before = (self.registry.read_bytes(), self.registry.stat().st_mtime_ns,
+                          self.registry.stat().st_mode)
+                for command in ("list", "validate"):
+                    self.run_helper(command)
+                actual = json.loads(self.run_helper("show", "--id", record["incident_id"]).stdout)
+                found = json.loads(self.run_helper("lookup", "--fingerprint",
+                                                  record["credential_fingerprint"]).stdout)
+                self.assertEqual({"incident_id": record["incident_id"],
+                                  **state["incidents"][record["incident_id"]]}, actual)
+                self.assertEqual(actual, found)
+                self.assertEqual(before, (self.registry.read_bytes(), self.registry.stat().st_mtime_ns,
+                                         self.registry.stat().st_mode))
+                self.assertEqual([self.registry.name], [p.name for p in self.registry.parent.iterdir()])
+
+    def test_recording_another_incident_preserves_legacy_acceptance(self):
+        legacy = self.accepted_risk_record()
+        legacy["authorization"] = legacy.pop("risk_acceptance")["authorization"]
+        legacy["next_action"] = "The owner accepted the historical exposure."
+        self.write_state(legacy)
+        before = json.loads(self.registry.read_bytes())["incidents"][legacy["incident_id"]]
+        other = copy.deepcopy(self.record)
+        other["incident_id"] = "example-independent-incident"
+        other["credential_fingerprint"] = "f" * 20
+        self.write_input(other)
+        self.run_helper("record", "--input", str(self.input))
+        state = json.loads(self.registry.read_bytes())
+        self.assertEqual(before, state["incidents"][legacy["incident_id"]])
+        self.assertEqual(2, len(state["incidents"]))
+
+    def test_new_acceptances_require_structured_evidence_and_enum_next_action(self):
+        legacy = self.accepted_risk_record()
+        legacy["authorization"] = legacy.pop("risk_acceptance")["authorization"]
+        cases = [legacy]
+        missing = self.accepted_risk_record()
+        missing.pop("risk_acceptance")
+        cases.append(missing)
+        prose_action = self.accepted_risk_record()
+        prose_action["next_action"] = "No further action requested."
+        cases.append(prose_action)
+        mixed = self.accepted_risk_record()
+        mixed["authorization"] = "The owner accepted this historical exposure."
+        cases.append(mixed)
+        for record in cases:
+            with self.subTest(fields=sorted(record)):
+                self.write_input(record)
+                self.assert_safe_rejection(self.run_helper("record", "--input", str(self.input), check=False))
+                self.assertFalse(self.registry.exists())
+
+    def test_invalid_acceptance_evidence_is_rejected_on_reads_and_writes(self):
+        marker = "ghp_" + "Q" * 36
+        valid = self.accepted_risk_record()
+        cases = []
+        for value in (None, [], {}, {**valid["risk_acceptance"], "extra": "unexpected"}):
+            record = copy.deepcopy(valid)
+            record["risk_acceptance"] = value
+            cases.append(record)
+        for field in ("authorization", "rationale"):
+            for value in ("", " ", 42, "x" * 401, marker, "evidence\nwith controls"):
+                record = copy.deepcopy(valid)
+                record["risk_acceptance"][field] = value
+                cases.append(record)
+        for value in ("2026-02-30T12:00:00Z", "2026-09-02T12:00:00+03:00",
+                      "2026-09-02T12:00:00-00:00", "2026-09-02T12:00:00",
+                      "2026-09-02T12:00:00.1234567Z", "2026-09-02T12:00:00.Z"):
+            record = copy.deepcopy(valid)
+            record["risk_acceptance"]["accepted_at"] = value
+            cases.append(record)
+        legacy = copy.deepcopy(valid)
+        legacy["authorization"] = marker
+        legacy.pop("risk_acceptance")
+        cases.append(legacy)
+        legacy_action = copy.deepcopy(legacy)
+        legacy_action["authorization"] = "Owner accepted this exposure."
+        legacy_action["next_action"] = marker
+        cases.append(legacy_action)
+        for index, record in enumerate(cases):
+            with self.subTest(case=index):
+                self.write_state(record)
+                before = self.registry.read_bytes()
+                self.assert_safe_rejection(self.run_helper("list", check=False), (marker,))
+                self.write_input(record)
+                self.assert_safe_rejection(self.run_helper("record", "--input", str(self.input), check=False),
+                                           (marker,))
+                self.assertEqual(before, self.registry.read_bytes())
+
     def test_record_rejects_secret_bearing_or_unknown_fields(self):
         exposed = dict(self.record)
         exposed["summary"] = "token=abcdefghijklmnopqrstuvwxyz1234567890"

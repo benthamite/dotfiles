@@ -30,9 +30,14 @@ COMMIT = re.compile(r"^[0-9a-f]{40}$")
 INCIDENT_ID = re.compile(r"^[a-z0-9][a-z0-9-]{2,79}$")
 REFERENCE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$")
 RFC3339 = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
+UTC_TIMESTAMP = re.compile(
+    r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}"
+    r"(?:\.[0-9]{1,6})?(?:Z|\+00:00)$"
+)
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 STATUSES = {
+    "accepted-risk",
     "active-non-revocable",
     "awaiting-provider-revocation",
     "invalid",
@@ -79,6 +84,10 @@ RECORD_FIELDS = {
     "next_action",
     "summary",
     "updated_at",
+    "risk_acceptance",
+    # Historical acceptance records used this field before the structured form.
+    # Readers preserve it; new record inputs must use risk_acceptance instead.
+    "authorization",
 }
 INPUT_FIELDS = RECORD_FIELDS | {"incident_id"}
 SECRET_TEXT = (
@@ -228,7 +237,39 @@ def validate_locations(value):
         require_fingerprints(location.get("finding_fingerprints", []), "location finding_fingerprints")
 
 
-def validate_record(incident_id, record):
+def validate_utc_timestamp(record, field):
+    value = require_text(record, field, 32)
+    if not UTC_TIMESTAMP.fullmatch(value):
+        raise RegistryError(f"{field} must be a UTC RFC3339 timestamp")
+    try:
+        dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise RegistryError(f"{field} has an invalid calendar date or time") from error
+
+
+def validate_risk_acceptance(record, *, allow_legacy):
+    acceptance = record.get("risk_acceptance")
+    legacy = "authorization" in record
+    if "risk_acceptance" in record:
+        if not isinstance(acceptance, dict) or set(acceptance) != {
+            "accepted_at", "authorization", "rationale"
+        }:
+            raise RegistryError("risk_acceptance requires only accepted_at, authorization and rationale")
+        validate_utc_timestamp(acceptance, "accepted_at")
+        for field in ("authorization", "rationale"):
+            if not require_text(acceptance, field, 400).strip():
+                raise RegistryError(f"{field} must include evidence text")
+    if legacy:
+        if not allow_legacy or acceptance is not None or record["status"] != "accepted-risk":
+            raise RegistryError("legacy authorization requires an existing accepted-risk record")
+        if not require_text(record, "authorization", 400).strip():
+            raise RegistryError("authorization must include evidence text")
+    if record["status"] == "accepted-risk" and acceptance is None and not legacy:
+        raise RegistryError("accepted-risk requires risk_acceptance evidence")
+    return legacy
+
+
+def validate_record(incident_id, record, *, allow_legacy=False):
     if not isinstance(incident_id, str) or not INCIDENT_ID.fullmatch(incident_id):
         raise RegistryError("incident_id must be a lowercase hyphenated identifier")
     reject_secret_text(incident_id, "incident_id")
@@ -244,6 +285,7 @@ def validate_record(incident_id, record):
         raise RegistryError("credential_fingerprint must be 20 hexadecimal characters")
     require_fingerprints(record.get("finding_fingerprints"), "finding_fingerprints")
     require_choice(record, "status", STATUSES)
+    legacy_acceptance = validate_risk_acceptance(record, allow_legacy=allow_legacy)
     verified_at = require_text(record, "last_verified_at", 20)
     if not (RFC3339.fullmatch(verified_at) or DATE.fullmatch(verified_at)):
         raise RegistryError("last_verified_at must be an ISO date or UTC RFC3339 timestamp")
@@ -252,12 +294,14 @@ def validate_record(incident_id, record):
     require_choice(record, "verification_method", VERIFICATION_METHODS)
     validate_references(record.get("provider_references"))
     validate_locations(record.get("locations"))
-    require_choice(record, "next_action", NEXT_ACTIONS)
+    if legacy_acceptance:
+        # Older private records stored a redacted explanation instead of an
+        # action enum. Read it as historical evidence, never an instruction.
+        require_text(record, "next_action", 400)
+    else:
+        require_choice(record, "next_action", NEXT_ACTIONS)
     require_text(record, "summary", 400)
-    updated_at = require_text(record, "updated_at", 20)
-    if not RFC3339.fullmatch(updated_at):
-        raise RegistryError("updated_at must be UTC RFC3339 without fractional seconds")
-    validate_calendar(updated_at, "updated_at")
+    validate_utc_timestamp(record, "updated_at")
 
 
 def validate_calendar(value, field):
@@ -273,7 +317,7 @@ def validate_state(state):
     if type(state["schema"]) is not int or state["schema"] != SCHEMA or not isinstance(state["incidents"], dict):
         raise RegistryError("unsupported credential incident registry schema")
     for incident_id, record in state["incidents"].items():
-        validate_record(incident_id, record)
+        validate_record(incident_id, record, allow_legacy=True)
     return state
 
 

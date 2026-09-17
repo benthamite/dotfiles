@@ -701,17 +701,28 @@ URL tails; other authors and routes remain subject to the original scan.
 HLI's exact =www.happierlivesinstitute.org/wp-content/uploads/YYYY/MM/= prefix
 normalizes public upload routing; filenames and all subsequent URL content stay
 scanned, along with credential headers and request bodies.
+SEC EDGAR's exact HTTPS host =www.sec.gov= projects the complete
+=/Archives/edgar/data/CIK/ACCESSION/[SUBDIR/]FILE.EXT= archive route, whose
+CIK, 18-digit accession directory and dashed accession filename otherwise scan
+as one opaque run. The route requires an archive extension and bounds each
+component below the run length, so a token cannot stand in for the filename;
+queries, fragments, other hosts and plain HTTP stay scanned.
 Slash structure never grants a filesystem-path exemption. Only positively
 classified literal file operands, including curl =@file= and output files,
 are omitted from the entropy scan. Unknown options and shell forms stay scanned.
 The closed single-call wrapper accepts the same literal fields with unquoted
 JavaScript keys or exact JSON-quoted keys; duplicate and dynamic fields deny.
 Literal file operands of isolated =cat=, =head= and =tail= reads are excluded
-from entropy scanning when a separate network check follows. Pipelines,
+from entropy scanning when a separate network check follows, as are those of
+=wc=, =ls=, =stat= and =file=, which report a path's size, name or type without
+sending it anywhere. Those four accept short option clusters only. Pipelines,
 redirects, shell expansions and unknown read options receive no exemption;
 known-secret checks still inspect the original command. Loopback ports and
 API-version prefixes are routing metadata; the remaining URL path, query and
-fragment remain scanned. Each candidate is classified before choosing a hit,
+fragment remain scanned. A numeric port is dropped from the cross-component
+residual for every host, not only loopback: the authority field has already
+scanned it and urlsplit has already proved it is digits, so leaving it there
+only let its digits join an ordinary path into one run. Each candidate is classified before choosing a hit,
 so a harmless early string cannot conceal a later credential.
 False positives require classifier repair, not manual guard bypass.
 Nested shell commands are decoded with valid UTF-16 surrogate pairs preserved.

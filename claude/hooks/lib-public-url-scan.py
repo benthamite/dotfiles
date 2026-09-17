@@ -42,6 +42,10 @@ ROUTES = (
     ("proceedings.mlr.press", r"/v[0-9]+/", False, ("http", "https")),
     ("adp.library.ucsb.edu", r"/index\.php/matrix/detail/[0-9]+/", False, ("http", "https")),
     ("musicbrainz.org", rf"/(?:ws/2/)?{ENTITY}/{UUID}", True, ("http", "https")),
+    ("www.sec.gov",
+     r"/Archives/edgar/data/[0-9]+/[0-9]{18}/(?:[A-Za-z0-9_-]{1,29}/)?"
+     r"[A-Za-z0-9_.-]{1,29}\.(?:html?|xml|txt|pdf|json|csv)",
+     True, ("https",)),
 )
 OPAQUE = re.compile(r"[A-Za-z0-9/+=_-]{30,}")
 WALLET = re.compile(r"0x[a-fA-F0-9]{40}(?![a-fA-F0-9])")
@@ -101,7 +105,11 @@ def url_finding(url: str) -> str | None:
         if suspect(value):
             return f"URL {field}: opaque token"
     # Retain the old cross-component/slash-run detection after projection too.
-    residual = f"{parts.scheme}://{authority}{path}?{parts.query}#{parts.fragment}"
+    # Drop a validated numeric port first: urlsplit has already proved it is
+    # digits, the authority field above has already scanned it, and leaving it
+    # here lets its digits join an ordinary path into one run.
+    residual = (f"{parts.scheme}://{re.sub(r':[0-9]*$', '', authority)}"
+                f"{path}?{parts.query}#{parts.fragment}")
     if suspect(residual):
         return "URL retained routing/payload: opaque token"
     return None

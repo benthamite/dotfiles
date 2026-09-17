@@ -38,6 +38,11 @@ GIT_READ_ONLY = {
     "ls-tree", "name-rev", "reflog", "stash", "whatchanged",
 }
 WRAPPERS = {"command", "env", "sudo", "timeout", "nice", "exec", "nohup", "time", "builtin"}
+# Tools whose arguments are paths to read. READERS print file contents and
+# already carry the local-read projection; INSPECTORS only report a file's
+# size, name or type, and take short option clusters rather than counts.
+READERS = {"cat", "head", "tail"}
+INSPECTORS = {"wc", "ls", "stat", "file"}
 ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=")
 # Boundaries between simple commands. `$(` and backtick open a nested command;
 # a protected word right after them is a command word and is never masked.
@@ -186,7 +191,7 @@ def mask_local_read_paths(command: str) -> str:
         if end < len(tokens) and tokens[end] not in boundaries:
             continue
         segment = tokens[start:end]
-        if segment and segment[0] in {"cat", "head", "tail"}:
+        if segment and segment[0] in READERS | INSPECTORS:
             paths = []
             index = 1
             while index < len(segment):
@@ -195,6 +200,8 @@ def mask_local_read_paths(command: str) -> str:
                     index += 1
                     if index >= len(segment) or not re.fullmatch(r"[0-9]+", segment[index]):
                         break
+                elif segment[0] in INSPECTORS and re.fullmatch(r"-[A-Za-z]+", arg):
+                    pass
                 elif segment[0] in {"head", "tail"} and re.fullmatch(r"-[0-9]+", arg):
                     pass
                 elif re.fullmatch(r"(?:\.?\.?/)?[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+", arg) and not arg.startswith("-"):

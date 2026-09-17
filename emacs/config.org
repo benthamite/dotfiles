@@ -4205,7 +4205,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (find-file-visit-truename t); emacs.stackexchange.com/questions/14509/kill-process-buffer-without-confirmation
   (create-lockfiles nil) ; lockfiles are indexed by `org-roam', which causes problems with `org-agenda'
   (large-file-warning-threshold (* 200 1000 1000))
-  (enable-local-variables :all)
+  (enable-local-variables :safe)
   (insert-directory-program "/opt/homebrew/bin/gls") ; use coreutils to avoid 'listing directory failed' error
   (auto-save-no-message t)
   (delete-old-versions t)

@@ -67,10 +67,6 @@ class ZshrcRoutingTest(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="drive-routing-"))
         self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
-        # Satisfy the .zshrc preamble under the scratch HOME.
-        secfile = self.tmp / "My Drive" / "dotfiles" / "shell" / "zsh-history-security.zsh"
-        secfile.parent.mkdir(parents=True)
-        secfile.write_text("")
         self.stubs = self.tmp / "stub-bin"
         self.stubs.mkdir()
         self.log = self.tmp / "calls.log"

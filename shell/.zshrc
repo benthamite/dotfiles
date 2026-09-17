@@ -1,5 +1,6 @@
 # Prevent high-confidence credential patterns from reaching persistent history.
-source "$HOME/My Drive/dotfiles/shell/zsh-history-security.zsh"
+# Located relative to this file's real path so it works from any checkout.
+source "${${(%):-%N}:A:h}/zsh-history-security.zsh"
 
 # nvm lazy loading (NVM_DIR is in .zshenv). The default alias is `system`,
 # so loading nvm does not silently restore an end-of-life project runtime.

@@ -15,17 +15,24 @@ export GOPATH="$HOME/go"
 export PATH="$GOPATH/bin:$PATH"
 export GEM_HOME="$HOME/.gem"
 
+# Root of this repository, derived from this file's own real location so the
+# tracked shell files work wherever the checkout lives (~/My Drive/dotfiles on
+# this machine, elsewhere on others that symlink ~/.zshenv into their clone).
+# %N is the file zsh is currently reading ($0 stays "zsh" in startup files) and
+# :A resolves the ~/.zshenv symlink to the file inside the repository.
+export DOTFILES="${${(%):-%N}:A:h:h}"
+
 # Custom shims (must stay ahead of /opt/homebrew/bin). The emacsclient shim
 # resolves the server socket via getconf DARWIN_USER_TEMP_DIR so it works when
 # $TMPDIR is overridden (e.g. Claude Code pins TMPDIR=/tmp/claude-$UID).
-export PATH="$HOME/My Drive/dotfiles/shell/shims:$PATH"
+export PATH="$DOTFILES/shell/shims:$PATH"
 
 # Re-assert that precedence whenever something later prepends /opt/homebrew/bin
 # (`brew shellenv` in .zprofile does). Idempotent: the entry is moved to the
 # front rather than duplicated, so this is safe to call from .zprofile and .zshrc
 # too. Defined here because .zshenv is the one file every zsh reads.
 dotfiles_prefer_shims() {
-	local shims="$HOME/My Drive/dotfiles/shell/shims"
+	local shims="$DOTFILES/shell/shims"
 	path=("$shims" ${path:#"$shims"})
 }
 dotfiles_prefer_shims
@@ -42,11 +49,10 @@ dotfiles_prefer_shims
 # triggers a Touch ID prompt per invocation -- the thing op-desktop exists to
 # prevent. See shell/shims/op for the routing rules and escape hatches.
 op() {
-	"$HOME/My Drive/dotfiles/shell/shims/op" "$@"
+	"$DOTFILES/shell/shims/op" "$@"
 }
 
 # Essential environment variables
-export DOTFILES="$HOME/My Drive/dotfiles"
 export EDITOR="emacsclient -nw"
 export VISUAL="$EDITOR"
 

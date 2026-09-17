@@ -40,6 +40,9 @@ class EditingToolSecretCoverageTests(unittest.TestCase):
             for content, expected in (("ordinary replacement", "allow"), (marker, "deny")):
                 with self.subTest(provider=provider, tool=tool, expected=expected):
                     values = {"file_path": "/tmp/guard-fixture.txt", field: content}
+                    if tool == "apply_patch":
+                        values = {field: "*** Begin Patch\n*** Add File: /tmp/guard-fixture.txt\n"
+                                         + "+" + content + "\n*** End Patch"}
                     if tool == "NotebookEdit":
                         values["notebook_path"] = values.pop("file_path")
                     payload = json.dumps({"tool_name": tool, "tool_input": values})

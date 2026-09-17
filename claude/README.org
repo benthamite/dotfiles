@@ -657,6 +657,11 @@ The Elisp evidence gate recovers a nested =functions.exec= command's working dir
 
 The Bash dispatcher denies commands when a delegated guard exits unsuccessfully or returns invalid decision JSON. It parses decisions independently of formatting and rejects interactive approval responses. Failure diagnostics identify the guard and exit status without exposing its failed output or the command payload.
 
+Claude editing calls have one destination, so the native =Write= secret-file
+exception remains scoped to that file. The [[file:../codex/hooks/README.org][Codex patch guard]] separately
+classifies every destination in multi-file patches; an exempt file cannot
+suppress checks on ordinary files. Claude has no =apply_patch= entrypoint.
+
 The secret-leak guard denies direct agent-shell invocations of raw =op=,
 =pass=, macOS =security=, and =pbpaste=, including wrappers, nested shells,
 process substitution, executable globs, and shell-word obfuscation. The

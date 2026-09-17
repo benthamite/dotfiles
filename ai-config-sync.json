@@ -383,7 +383,7 @@
       "claude": "claude/hooks/block-secret-leak.sh",
       "codex": "codex/hooks/block-secret-leak.sh",
       "status": "paired-dispatched",
-      "note": "Paired secret-output guard. Claude delegates Bash from pretooluse-bash.sh; Codex also extracts functions.exec commands. Both deny credential-tool execution and apply lib-op-policy.py to 1Password brokers. Both permit the shared closed Python document-edit language. Codex enables that exception only for one complete literal exec wrapper; multi-call/dynamic programs retain conservative scanning. A validated wrapper is not scanned as shell; its decoded command and original secret-value checks still run. No registration change."
+      "note": "Claude delegates Bash; Codex extracts functions.exec calls. Both deny credential tools, classify brokers with lib-op-policy.py and permit closed Python document edits. Codex permits those edits only in a complete literal wrapper; decoded commands and original secret values remain scanned. Only Codex accepts apply_patch: lib-codex-paths.sh scopes exceptions per destination and denies moves out of secret files. Claude native Write/Edit/NotebookEdit policy and both registrations are unchanged."
     },
     {
       "name": "lib-op-policy.py",
@@ -461,7 +461,7 @@
       "claude": null,
       "codex": "codex/hooks/lib-codex-paths.sh",
       "status": "codex-only",
-      "note": "Codex apply_patch path extraction helper; uses lib-codex-hook-json.sh for object-or-string payload normalization, and includes native Write.content and Edit.new_string in secret scans. Claude reads its native edit and notebook fields directly."
+      "note": "Codex apply_patch path extraction helper; uses lib-codex-hook-json.sh for object-or-string payload normalization, and includes native Write.content and Edit.new_string in secret scans. Secret scanning validates native patch framing, keeps all nonexempt file sections, and denies moves from exempt to ordinary destinations without reading source contents. Native Write/Edit exceptions remain scoped to their single destination. Claude has no apply_patch entrypoint and reads its native edit and notebook fields directly."
     },
     {
       "name": "lib-elisp-evidence.sh",

@@ -28,7 +28,14 @@ source files fail explicitly even on macOS Bash. Ordinary successful checks
 retain their allow/deny decisions and never introduce approval prompts.
 
 The secret guard scans =Write.content= and =Edit.new_string= as well as patch
-text. The Claude counterpart also covers notebook cell source.
+text. Secret-file exceptions apply independently to each patch destination;
+an exempt addition, update, deletion, or move never exempts another file.
+Ordinary-file patch sections retain scanning of their complete text. Moving a
+secret file to an ordinary destination is denied because unchanged contents
+are absent from the patch; no target file is read. Malformed patch framing
+also denies. =tests/test_codex_secret_patch_guard.py= exercises these decisions
+without applying patches. Claude has one destination per native editing call
+and keeps its existing =Write= exception and notebook coverage.
 
 The destructive-command guard is registered directly here. Claude carries the
 same logic inline in its =pretooluse-bash.sh= dispatcher, so both implementations

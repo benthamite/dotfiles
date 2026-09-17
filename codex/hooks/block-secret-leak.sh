@@ -452,18 +452,8 @@ if codex_shell_tool_p "$TOOL_NAME"; then
   fi
 fi
 
-# For write-like tools, allow writing to known secret files.
-case "$TOOL_NAME" in
-  Write|Edit|apply_patch)
-    while IFS= read -r file_path; do
-      case "$file_path" in
-        *.zshenv-secrets|*.env.op|*.env.local|*/.password-store/*)
-          exit 0
-          ;;
-      esac
-    done < <(codex_changed_paths "$INPUT")
-    ;;
-esac
+# Write/Edit destinations and individual apply_patch sections were classified
+# during content extraction. No path in a patch can exempt another file.
 
 # --- Secret patterns ---
 # Each pattern is tested independently for clear error messages.

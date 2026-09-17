@@ -577,6 +577,12 @@ The regression fixtures exercise those actual entry points with malformed
 input, missing dependencies and startup helpers, and harmless editing payloads.
 These guards run with the agent's OS user and filesystem access.
 
+Secret-file exceptions apply per destination in native multi-file patches.
+Ordinary-file sections remain scanned even when the patch also changes or
+deletes an exempt file. Moves from exempt to ordinary destinations deny because
+unchanged source contents are unavailable without reading the file. Native
+=Write=/=Edit= exceptions retain their single-destination scope.
+
 The secret guard denies direct agent-shell invocations of raw =op=, =pass=,
 macOS =security=, and =pbpaste=, including wrappers, nested shells, process
 substitution, executable globs, and shell-word obfuscation. The 1Password

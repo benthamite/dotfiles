@@ -111,13 +111,17 @@ alias claude-personal='CLAUDE_CONFIG_DIR=~/.claude-personal claude'
 alias claude-tlon='CLAUDE_CONFIG_DIR=~/.claude-tlon claude'
 alias claude-epoch='CLAUDE_CONFIG_DIR=~/.claude-epoch claude'
 # Trajectory org disabled claude.ai sign-in, so this account must auth via its
-# provisioned API key. Inject the key (single source of truth: the CR studio
+# provisioned API key. Inject the key (single source of truth: the client's
 # .env) and flip the shim's allow-flag for THIS process only -- never exported,
 # so plain `claude` and the other accounts stay key-free and unaffected.
+# The client's paths (TRAJECTORY_ROOT: the checkout root; TRAJECTORY_KEYFILE:
+# the .env holding the key) live in the untracked ~/.zvars: they describe a
+# private tree and the location of a credential, so they stay out of this
+# public file.
 claude-trajectory() {
-  local keyfile=~/Trajectory/reasoning-tasks/reasoning-tasks-cr-studio/.claude/.env
-  local key; key=$(grep -m1 '^ANTHROPIC_API_KEY=' "$keyfile" | cut -d= -f2-)
-  if [ -z "$key" ]; then echo "claude-trajectory: no ANTHROPIC_API_KEY in $keyfile" >&2; return 1; fi
+  if [ -z "$TRAJECTORY_KEYFILE" ]; then echo "claude-trajectory: TRAJECTORY_KEYFILE is not set (define it in ~/.zvars)" >&2; return 1; fi
+  local key; key=$(grep -m1 '^ANTHROPIC_API_KEY=' "$TRAJECTORY_KEYFILE" | cut -d= -f2-)
+  if [ -z "$key" ]; then echo "claude-trajectory: no ANTHROPIC_API_KEY in $TRAJECTORY_KEYFILE" >&2; return 1; fi
   CLAUDE_CONFIG_DIR=~/.claude-trajectory CLAUDE_CODE_ALLOW_API_KEY_AUTH=1 ANTHROPIC_API_KEY="$key" claude "$@"
 }
 
@@ -129,13 +133,16 @@ claude-trajectory() {
 # Then: cd ~/repos/.worktrees/reasoning-tasks/pablo/<task-slug> && claude-trajectory
 newtask() {
   if [ -z "$1" ]; then echo "usage: newtask <task-slug>"; return 1; fi
-  local root=~/Trajectory/reasoning-tasks
+  if [ -z "$TRAJECTORY_ROOT" ] || [ -z "$TRAJECTORY_KEYFILE" ]; then
+    echo "newtask: TRAJECTORY_ROOT and TRAJECTORY_KEYFILE must be set (define them in ~/.zvars)" >&2; return 1
+  fi
+  local root="$TRAJECTORY_ROOT"
   local wt="$HOME/repos/.worktrees/reasoning-tasks/pablo/$1"
   git -C "$root/main" fetch origin main &&
     mkdir -p "${wt%/*}" &&
     git -C "$root/main" worktree add "$wt" -b "pablo/$1" origin/main &&
     mkdir -p "$wt/.claude" &&
-    ln -s "$root/reasoning-tasks-cr-studio/.claude/.env" "$wt/.claude/.env" &&
+    ln -s "$TRAJECTORY_KEYFILE" "$wt/.claude/.env" &&
     echo "ready: cd $wt && claude-trajectory"
 }
 

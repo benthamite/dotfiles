@@ -628,6 +628,22 @@ Then, I set some frame parameters to remove the title bar and maximize the frame
 (add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; maximize frame on startup
 #+end_src
 
+A GUI Emacs launched from the Dock or Finder inherits launchd's bare =PATH= (=/usr/bin:/bin:/usr/sbin:/sbin=), whereas one launched from a shell inherits the shell's. Native compilation needs Homebrew's =gcc= driver on =PATH= (libgccjit otherwise fails with "error invoking gcc driver" the first time it compiles a trampoline in a fresh cache), and every subprocess Emacs spawns (=git=, =gh=, =curl=, the shims) needs the same directories. So I make sure the essential user-level directories are present before anything spawns a process or compiles. Directories already on =PATH= are left where they are, so a shell-launched Emacs is unaffected.
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally nil t)
+(let ((path-dirs (split-string (or (getenv "PATH") "") ":" t)))
+  ;; Reverse so that the first directory listed ends up first on PATH.
+  (dolist (dir (reverse (list "/opt/homebrew/bin"
+                              "/opt/homebrew/sbin"
+                              (expand-file-name "~/.local/bin")
+                              (expand-file-name "~/bin"))))
+    (when (and (file-directory-p dir)
+               (not (member dir path-dirs)))
+      (push dir path-dirs)
+      (push dir exec-path)))
+  (setenv "PATH" (string-join path-dirs ":")))
+#+end_src
+
 Finally, I redirect the native compilation cache to a directory within my Emacs profile and define a function for debugging feature loading.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally nil t)

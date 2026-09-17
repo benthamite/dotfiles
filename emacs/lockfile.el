@@ -915,7 +915,7 @@
    "elpaca-menu-lock-file" :recipe
    (:source nil :package "elpaca" :id elpaca :repo
 	    "https://github.com/benthamite/elpaca.git" :ref
-	    "94c1896562794eb2e527ded16e5df22705188ecc" :depth nil :inherit
+	    "d3829f337fbb1cd9d5ef9e882b5cfe41420cf17f" :depth nil :inherit
 	    ignore :files (:defaults "elpaca-test.el" (:exclude "extensions"))
 	    :build (:not elpaca-activate) :type git :protocol https))
  (elpaca-extras :source "elpaca-menu-lock-file" :recipe
@@ -934,7 +934,7 @@
 			       (:not elpaca-build-docs) :source
 			       "Elpaca extensions" :id elpaca-use-package :type
 			       git :protocol https :inherit t :depth treeless
-			       :ref "94c1896562794eb2e527ded16e5df22705188ecc"))
+			       :ref "d3829f337fbb1cd9d5ef9e882b5cfe41420cf17f"))
  (elpy :source "elpaca-menu-lock-file" :recipe
        (:package "elpy" :fetcher github :repo "jorgenschaefer/elpy" :files
 		 ("*.el" "NEWS.rst" "snippets" "elpy") :source "MELPA" :id elpy

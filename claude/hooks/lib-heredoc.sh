@@ -45,9 +45,9 @@ mask_heredoc_bodies() {
       }
       return out
     }
-    function maskable(prefix, suffix,    seg, k, ntok, tok, word, p) {
+    function maskable(prefix, suffix,    seg, k, ntok, tok, word, p, owner) {
       if (mode == "all") return 1
-      if (prefix ~ /[(`]/ || suffix ~ /[|(`]/) return 0
+      if (suffix ~ /[|(`]/) return 0
       seg = neutralize(prefix)
       # The simple command owning the heredoc starts after the last control
       # operator. Quoted separators earlier on the line only make the guard
@@ -69,7 +69,15 @@ mask_heredoc_bodies() {
       }
       if (word == "") return 0
       p = word; sub(/.*\//, "", p)
+      # A substitution in an earlier command on the line (`f=$(ls x) && python -`)
+      # does not change who reads the body. For the glob rule alone, only the
+      # owning command must be free of one; sinks keep the whole-line check,
+      # since sink output inside `$(...)` becomes command words.
+      owner = substr(prefix, length(prefix) - length(seg) + 1)
+      if (mode != "nonshell" && prefix ~ /[(`]/) return 0
+      if (owner ~ /[(`]/) return 0
       if (mode == "nonshell" && p ~ /^(python[0-9.]*|node|nodejs|deno|bun|ruby|perl|php|osascript|emacs|emacsclient|sqlite3|psql|mysql|jq|yq|Rscript|lua|luajit|swift|julia|g?awk|mawk|sed|bc|dc)$/) return 1
+      if (prefix ~ /[(`]/) return 0
       return (p in sinks)
     }
     BEGIN {

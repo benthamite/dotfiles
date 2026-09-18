@@ -212,6 +212,12 @@ PY"""
         command = "NEW=/tmp/coord\ncd backend && " + heredoc(
             body, prefix="PYENV_VERSION=3.11.9 /opt/homebrew/bin/pyenv exec python3 -B -")
         self.assert_hooks(command, "allow")
+        # A substitution in an earlier command on the line does not change who
+        # reads the body; one around the interpreter itself keeps it scanned.
+        command = ('cd backend && f=$(ls "$TD"/agent-*.jsonl | head -1) && '
+                   + heredoc(body, prefix='pyenv exec python - "$f"'))
+        self.assert_hooks(command, "allow")
+        self.assert_hooks("x=$(" + heredoc(body, prefix="pyenv exec python -") + "\n)", "deny")
         # Protected names in such a body are still program source.
         command = "NEW=/tmp/coord\ncd backend; " + heredoc(
             'import subprocess\nsubprocess.run(["pass", "show", "fixture"])',

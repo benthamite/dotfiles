@@ -91,5 +91,17 @@ class GuardFailureSafetyTests(unittest.TestCase):
                     self.assert_blocks_failure(run_guard(copied, payload))
 
 
+class HookSyntaxTests(unittest.TestCase):
+    def test_every_shell_hook_parses(self):
+        # Guards fail closed, so one unparsable hook or sourced library denies
+        # every tool call in every session (2026-09-18: an apostrophe in a
+        # comment inside lib-heredoc.sh's quoted awk program).
+        for provider in ("claude", "codex"):
+            for hook in sorted((ROOT / provider / "hooks").glob("*.sh")):
+                with self.subTest(hook=str(hook.relative_to(ROOT))):
+                    result = subprocess.run(["bash", "-n", str(hook)], capture_output=True, text=True)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

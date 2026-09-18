@@ -4221,7 +4221,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (find-file-visit-truename t); emacs.stackexchange.com/questions/14509/kill-process-buffer-without-confirmation
   (create-lockfiles nil) ; lockfiles are indexed by `org-roam', which causes problems with `org-agenda'
   (large-file-warning-threshold (* 200 1000 1000))
-  (enable-local-variables :safe)
+  (enable-local-variables t) ; apply safe local variables silently and ask about the rest
   (insert-directory-program "/opt/homebrew/bin/gls") ; use coreutils to avoid 'listing directory failed' error
   (auto-save-no-message t)
   (delete-old-versions t)
@@ -4252,10 +4252,41 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 
   (add-to-list 'auto-mode-alist '("\\.mdx\\'" . markdown-mode))
 
-  (add-to-list 'safe-local-eval-forms
-               '(add-hook 'after-save-hook
-                          #'org-extras-export-manual-to-texinfo
-                          nil t))
+  ;; `custom-file' is temporary, so answering "!" at the local-variables prompt
+  ;; does not persist: forms and variables I trust are registered here instead.
+  (dolist (form '((add-hook 'after-save-hook #'org-extras-export-manual-to-texinfo nil t)
+                  (add-hook 'before-save-hook 'org-make-toc nil t)
+                  (run-with-timer 0.1 nil (lambda () (flycheck-mode -1)))
+                  (files-extras-buffer-local-set-key (kbd "H-;") 'org-extras-work-dispatch)
+                  (files-extras-buffer-local-set-key (kbd "H-:") 'org-extras-config-dispatch)
+                  (files-extras-buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
+                  (files-extras-buffer-local-set-key (kbd "s-y") 'org-decrypt-entry)
+                  (files-extras-buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)
+                  (files-extras-buffer-local-set-key (kbd "s-c") 'org2blog-complete)
+                  (add-hook 'after-save-hook #'tlon-babel-autofix-all nil t)
+                  (add-hook 'after-save-hook #'tlon-babel-check-file-title-match nil t)
+                  (add-hook 'after-save-hook #'tlon-babel-highlight-url-correspondences nil t)))
+    (add-to-list 'safe-local-eval-forms form))
+  (dolist (spec `((doom-modeline-enable-word-count . booleanp)
+                  (gdocs-account . stringp)
+                  (gdocs-folder-id . stringp)
+                  (org-archive-location . stringp)
+                  (org-crypt-key . stringp)
+                  (org-archive-default-command
+                   . ,(lambda (value)
+                        (memq value '(org-archive-subtree
+                                      org-archive-to-archive-sibling
+                                      org-archive-set-tag
+                                      org-archive-hierarchically))))
+                  (tlon-local-abbreviations
+                   . ,(lambda (value)
+                        (and (listp value)
+                             (seq-every-p (lambda (pair)
+                                            (and (consp pair)
+                                                 (stringp (car pair))
+                                                 (stringp (cdr pair))))
+                                          value))))))
+    (put (car spec) 'safe-local-variable (cdr spec)))
 
   :bind
   (("M--" . not-modified)

@@ -21,6 +21,8 @@ sys.path.insert(0, str(SCRIPT.parent))
 with mock.patch.dict(os.environ, {"CODEX_HOME": "/tmp/codex-migration-test-unopened-root"}):
     SPEC = importlib.util.spec_from_file_location("codex_migration_test_adapter", SCRIPT)
     ADAPTER = importlib.util.module_from_spec(SPEC)
+    # main() looks itself up through sys.modules for the live importer.
+    sys.modules[SPEC.name] = ADAPTER
     SPEC.loader.exec_module(ADAPTER)
 import migration_safety as SAFETY
 
@@ -36,8 +38,19 @@ def jsonl(*objects):
     return b"".join(json.dumps(obj, ensure_ascii=False).encode() + b"\n" for obj in objects)
 
 
-def metadata(identity=SESSION, cwd=OLD):
-    return {"type": "session_meta", "payload": {"id": identity, "cwd": cwd}}
+def metadata(identity=SESSION, cwd=OLD, **extra):
+    return {"type": "session_meta", "payload": {"id": identity, "cwd": cwd, **extra}}
+
+
+def ancestor(identity=OTHER_SESSION, cwd=OLD):
+    """Ancestor session_meta copied into a subagent fork's rollout by Codex >= 0.118."""
+    return metadata(identity, cwd, forked_from_id=None, source="cli")
+
+
+def fork_owner(parent=OTHER_SESSION, cwd=OLD):
+    spawn = {"parent_thread_id": parent, "depth": 1, "agent_path": None,
+             "agent_nickname": "Synthetic", "agent_role": "explorer"}
+    return metadata(SESSION, cwd, forked_from_id=parent, source={"subagent": {"thread_spawn": spawn}})
 
 
 def digest(root):
@@ -142,6 +155,104 @@ class CodexSessionMigrationTests(unittest.TestCase):
                 self.assertEqual(self.rollout.read_bytes(), original)
         self.apply()
         self.assertTrue(self.rollout.read_bytes().endswith(unrelated + tool + result + b"\n"))
+
+    def test_forked_rollout_remaps_only_records_whose_cwd_exactly_matches(self):
+        ancestor_line = jsonl(ancestor(cwd=OTHER))
+        descendant = jsonl({"type": "turn_context", "payload": {"cwd": OLD + "/nested"}})
+        self.rollout.write_bytes(jsonl(fork_owner()) + ancestor_line
+                                 + jsonl({"type": "turn_context", "payload": {"cwd": OLD}}) + descendant)
+        for rename in (False, True):
+            with self.subTest(rename=rename):
+                plan, report = self.make_plan(rename)
+                self.assertEqual((report["session_files_rewritten"], report["session_fields"]), (1, 2))
+                rewritten = plan.rewrites[self.rollout]
+                self.assertTrue(rewritten.endswith(ancestor_line
+                                                   + jsonl({"type": "turn_context", "payload": {"cwd": NEW}})
+                                                   + descendant))
+                self.assertEqual(json.loads(rewritten.split(b"\n")[0])["payload"]["cwd"], NEW)
+        self.apply(rename=True)
+        records = [json.loads(line) for line in self.rollout.read_bytes().splitlines()]
+        self.assertEqual([record["payload"]["cwd"] for record in records], [NEW, OTHER, NEW, OLD + "/nested"])
+        self.assertEqual(records[1]["payload"]["id"], OTHER_SESSION)
+
+    def test_forked_rollout_remaps_ancestor_metadata_that_also_matches(self):
+        self.rollout.write_bytes(jsonl(fork_owner(), ancestor(),
+                                       {"type": "turn_context", "payload": {"cwd": OLD}}))
+        for rename in (False, True):
+            with self.subTest(rename=rename):
+                _plan, report = self.make_plan(rename)
+                self.assertEqual(report["session_fields"], 3)
+        self.apply(rename=True)
+        records = [json.loads(line) for line in self.rollout.read_bytes().splitlines()]
+        self.assertEqual([record["payload"]["cwd"] for record in records], [NEW, NEW, NEW])
+        self.assertEqual([record["payload"].get("id") for record in records], [SESSION, OTHER_SESSION, None])
+
+    def test_rename_remaps_ancestor_metadata_when_only_the_ancestor_matches(self):
+        owner = jsonl(fork_owner(cwd=OTHER))
+        self.rollout.write_bytes(owner + jsonl(ancestor()))
+        _plan, report = self.make_plan(rename=True)
+        self.assertEqual((report["session_files_rewritten"], report["session_fields"]), (1, 1))
+        self.apply(rename=True)
+        self.assertTrue(self.rollout.read_bytes().startswith(owner))
+        records = [json.loads(line) for line in self.rollout.read_bytes().splitlines()]
+        self.assertEqual([record["payload"]["cwd"] for record in records], [OTHER, NEW])
+
+    def test_repeated_owner_metadata_with_changed_memory_mode_is_accepted(self):
+        # Codex 0.129-0.133 re-append the thread's own session_meta with memory_mode set.
+        self.rollout.write_bytes(jsonl(metadata(), {"type": "event_msg", "payload": {}},
+                                       metadata(memory_mode="enabled"),
+                                       {"type": "turn_context", "payload": {"cwd": OLD}},
+                                       metadata(memory_mode="enabled")))
+        for rename in (False, True):
+            with self.subTest(rename=rename):
+                _plan, report = self.make_plan(rename)
+                self.assertEqual(report["session_fields"], 4)
+        self.apply(rename=True)
+        records = [json.loads(line) for line in self.rollout.read_bytes().splitlines()]
+        self.assertEqual([record["payload"].get("cwd") for record in records], [NEW, None, NEW, NEW, NEW])
+        self.assertEqual(records[2]["payload"]["memory_mode"], "enabled")
+
+    def test_owner_metadata_must_be_the_first_record(self):
+        # An ancestor-first rollout is refused even though the owning record is present.
+        data = jsonl(ancestor(), fork_owner())
+        with self.assertRaisesRegex(SAFETY.MigrationError, "identity changed"):
+            ADAPTER.rewrite_rollout(data, OLD, NEW, SESSION)
+        self.rollout.write_bytes(data)
+        before = digest(self.home)
+        with self.assertRaisesRegex(SAFETY.MigrationError, "exact session identity"):
+            self.make_plan()
+        self.assertEqual(digest(self.home), before)
+
+    def test_conflicting_metadata_for_one_identity_is_refused_in_both_modes(self):
+        cases = {"owner": jsonl(metadata(), metadata(cwd=OTHER)),
+                 "ancestor": jsonl(fork_owner(), ancestor(), ancestor(cwd=OTHER)),
+                 "missing ancestor id": jsonl(fork_owner(), {"type": "session_meta", "payload": {"cwd": OLD}})}
+        for label, data in cases.items():
+            self.rollout.write_bytes(data)
+            before = digest(self.home)
+            for rename in (False, True):
+                with self.subTest(case=label, rename=rename):
+                    with self.assertRaisesRegex(SAFETY.MigrationError, "conflicting|canonical identity"):
+                        self.make_plan(rename)
+                    self.assertEqual(digest(self.home), before)
+                    self.assertFalse(self.backup.exists())
+
+    def test_cli_rename_dry_run_counts_forked_rollout_fields_without_writing(self):
+        self.rollout.write_bytes(jsonl(fork_owner(), ancestor(cwd=OTHER),
+                                       {"type": "turn_context", "payload": {"cwd": OLD}}))
+        second = self.home / "sessions" / f"rollout-{OTHER_SESSION}.jsonl"
+        second.write_bytes(jsonl(ancestor()))
+        before = digest(self.home)
+        output = io.StringIO()
+        with mock.patch.object(sys, "argv", [str(SCRIPT), "--dry-run", "--rename", OLD, NEW]):
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(ADAPTER.main(), 0)
+        self.assertIn("dry run: True\n", output.getvalue())
+        self.assertIn("session files scanned: 2\n", output.getvalue())
+        self.assertIn("session files rewritten: 2\n", output.getvalue())
+        self.assertIn("session path fields rewritten: 3\n", output.getvalue())
+        self.assertEqual(digest(self.home), before)
+        self.assertFalse(self.backup.exists())
 
     def test_index_uses_only_its_top_level_identity_and_origin(self):
         other = jsonl({"session_id": OTHER_SESSION, "cwd": OLD, "nested": {"id": SESSION}})
@@ -501,7 +612,9 @@ class CodexSessionMigrationTests(unittest.TestCase):
 
     def test_malformed_targeted_files_fail_before_any_change(self):
         valid = self.rollout.read_bytes()
-        cases = [valid + b'{"type":', valid + jsonl(metadata()),
+        cases = [valid + b'{"type":', valid + jsonl(metadata(cwd=OTHER)),
+                 valid + jsonl({"type": "session_meta", "payload": {"cwd": OLD}}),
+                 valid + jsonl({"type": "session_meta", "payload": {"id": SESSION[:8], "cwd": OLD}}),
                  valid + b'{"type":"turn_context","payload":{"cwd":"a","cwd":"b"}}\n']
         for damaged in cases:
             with self.subTest(damaged=damaged):

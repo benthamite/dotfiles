@@ -205,12 +205,21 @@ def replace_path_tokens(raw: bytes, replacements: dict[tuple[str, ...], str]) ->
 
 
 def rewrite_rollout(data: bytes, old: str, new: str, identity: str) -> tuple[bytes, int]:
+    """Map every routing cwd that exactly equals OLD to NEW.
+
+    The rollout's own identity is the first record. Forked and subagent threads
+    copy their ancestors' session_meta records behind that header, and Codex
+    0.129-0.133 re-append the thread's own record with a changed memory_mode, so
+    a rollout may hold several session_meta records and an id may recur. Every
+    record sharing an id must agree on cwd; ancestor records are remapped under
+    the same exact-match rule as the owning record and turn_context, never by
+    prefix.
+    """
     parsed = rows(data)
     meta = header(data)
     if meta["id"] != identity:
         raise MigrationError("The selected rollout identity changed")
-    if sum(isinstance(obj, dict) and obj.get("type") == "session_meta" for _, obj in parsed) != 1:
-        raise MigrationError("A rollout has multiple session metadata records")
+    cwd_by_id: dict[str, Any] = {}
     output: list[bytes] = []
     count = 0
     for raw, obj in parsed:
@@ -221,6 +230,13 @@ def rewrite_rollout(data: bytes, old: str, new: str, identity: str) -> tuple[byt
                 raise MigrationError("A rollout has malformed routing metadata")
             if "cwd" in payload and not isinstance(payload["cwd"], str):
                 raise MigrationError("A rollout has an unsupported cwd value")
+            if obj.get("type") == "session_meta":
+                try:
+                    record_id = session_uuid(payload.get("id"))
+                except MigrationError:
+                    raise MigrationError("A rollout has session metadata without a canonical identity") from None
+                if cwd_by_id.setdefault(record_id, payload.get("cwd")) != payload.get("cwd"):
+                    raise MigrationError("A rollout has conflicting session metadata for one identity")
             if payload.get("cwd") == old and old != new:
                 count += 1
                 changed = True

@@ -117,6 +117,14 @@ match exact thread IDs, never `rollout_path LIKE` or a nested arbitrary `id`.
 Historical tool arguments, results, prose and unrelated records stay unchanged.
 Archives remain archived; shell snapshots are not moved.
 
+A rollout may hold several `session_meta` records. Its identity is the first
+record; forked and subagent threads copy their ancestors' records behind it,
+and Codex 0.129–0.133 re-append the thread's own record with a changed
+`memory_mode`. Every `session_meta` `cwd` that exactly equals the original
+project is remapped, ancestor copies included; records sharing an `id` must
+agree on `cwd`, and a `session_meta` without a canonical `id`, a conflicting
+`cwd` for one `id`, or an owning record that is not first is refused.
+
 ## Verify the right result
 
 For Agent Log, test `agent-log-resume-session` from the user's rendered log.

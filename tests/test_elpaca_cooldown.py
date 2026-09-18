@@ -66,6 +66,12 @@ class RemoteTest(unittest.TestCase):
             "https://github.com/a/b",
         )
 
+    def test_remote_url_prefers_repo_over_an_inherited_url(self):
+        package = {"id": "bbdb", "host": "github", "repo": "benthamite/bbdb",
+                   "url": "https://git.savannah.nongnu.org/git/bbdb.git"}
+        self.assertEqual(self.mod.remote_url(package), "https://github.com/benthamite/bbdb.git")
+        self.assertEqual(self.mod.classify(package, {"benthamite"})[0], "own")
+
     def test_remote_url_rejects_unknown_hosts(self):
         with self.assertRaises(ValueError):
             self.mod.remote_url({"id": "p", "host": "bitbucket", "repo": "a/b"})

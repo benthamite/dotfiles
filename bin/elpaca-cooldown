@@ -72,9 +72,8 @@ def run_emacs(function, *arguments):
 
 
 def remote_url(package):
-    if package.get("url"):
-        return package["url"]
-    repo = package.get("repo")
+    """Return the URL Elpaca clones, where `:repo' wins over an inherited `:url'."""
+    repo = package.get("repo") or package.get("url")
     if not repo:
         raise ValueError(f"{package['id']}: recipe names no repository")
     if "://" in repo:

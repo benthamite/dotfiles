@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
-"""Plan and recoverably relocate offline Claude Code session metadata.
+"""Plan and recoverably relocate Claude Code session metadata.
 
 Applying requires --offline and a new absolute --backup-dir outside Google
-Drive. The offline assertion does not lock out Claude writers: the shared
-safety helper checks open handles and captured inputs, and records recoverable
-partial failures. Run the nonmutating --dry-run first.
+Drive. The offline assertion covers only the sessions whose files are moved or
+rewritten: every session in the affected project bucket must be closed, and the
+invoking session must not be one of them. Unrelated Claude sessions may stay
+open. They keep appending to the shared history.jsonl, which the safety helper
+replaces append-safely under an advisory lock: the bytes captured at preflight
+must still be a prefix of the file, and every byte appended since is carried
+over. The helper also checks open handles on the affected files and records
+recoverable partial failures. Run the nonmutating --dry-run first.
 
 Only runtime-owned top-level session cwd and matching history project values
 are changed. Project settings, including trust, stay untouched unless a
@@ -88,10 +93,10 @@ def strict_json(text: str) -> Any:
     return json.loads(text, object_pairs_hook=unique_object, parse_constant=reject_constant)
 
 
-def read_rows(plan: MigrationPlan, path: Path) -> Rows:
+def read_rows(plan: MigrationPlan, path: Path, *, append_only: bool = False) -> Rows:
     """Capture the complete input, rejecting ambiguous or incomplete JSONL."""
     try:
-        text = plan.read(path).decode("utf-8")
+        text = plan.read(path, append_only=append_only).decode("utf-8")
     except UnicodeError:
         raise MigrationError(f"Non-UTF-8 JSONL input: {path}") from None
     rows: Rows = []
@@ -138,10 +143,11 @@ def replace_field(raw: str, field: str, replacement: str) -> str:
 
 
 def history_rows(plan: MigrationPlan) -> tuple[Rows, str]:
+    """Every Claude session appends to this shared store; capture it append-only."""
     if not exists(HISTORY_FILE):
         plan.expect_absent(HISTORY_FILE)
         return [], f"absent/unupdated: {HISTORY_FILE}"
-    return read_rows(plan, HISTORY_FILE), f"captured: {HISTORY_FILE}"
+    return read_rows(plan, HISTORY_FILE, append_only=True), f"captured: {HISTORY_FILE}"
 
 
 def history_origin(rows: Rows, session_id: str) -> str | None:
@@ -358,6 +364,11 @@ def build_rename_plan(old: str, new: str, *, migrate_project_settings: bool = Fa
     bucket = source if exists(source) else destination
     plain_directory(bucket)
     plan.watch_tree(bucket)
+    if migrate_project_settings:
+        # Claude Code rewrites .claude.json wholesale, so it stays byte-pinned.
+        # Registered first, its rewrite is applied first: a concurrent settings
+        # write refuses before any transcript or history changes.
+        summary["project settings"] = settings_rename(plan, old, new)
     history, summary["history store"] = history_rows(plan)
     transcripts: dict[str, tuple[Path, Rows]] = {}
     sidecars = []
@@ -401,8 +412,6 @@ def build_rename_plan(old: str, new: str, *, migrate_project_settings: bool = Fa
             sid not in transcripts for _path, _rows, sid in root_agents)
         summary["opaque bucket-root sidecar files (kept byte-identical)"] = opaque
     summary["history project fields rewritten"] = rewrite_history(plan, history, {sid: old for sid in owners}, new)
-    if migrate_project_settings:
-        summary["project settings"] = settings_rename(plan, old, new)
     if bucket == source:
         plan.move(source, destination)
         summary["operation"] = "move project bucket"
@@ -458,7 +467,10 @@ def validate_destination(plan: MigrationPlan, directory: Path, history: Rows, pr
         if path.suffix == ".jsonl":
             if not path.is_file() or not UUID_RE.fullmatch(path.stem):
                 raise MigrationError(f"Unsupported destination transcript path: {path}")
-            origin = establish_origin(read_rows(plan, path), history, path.stem)
+            # Ownership is settled by the first records, so a session still
+            # running in the destination project may keep appending to this
+            # transcript; only truncation or replacement invalidates the plan.
+            origin = establish_origin(read_rows(plan, path, append_only=True), history, path.stem)
             if origin != project:
                 raise MigrationError("Existing destination bucket belongs to a different project origin")
             owners.add(path.stem)
@@ -540,7 +552,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--project", help="single-session target; defaults to PWD")
     parser.add_argument("--rename", nargs=2, metavar=("OLD", "NEW"))
     parser.add_argument("--dry-run", action="store_true", help="complete preflight without writes")
-    parser.add_argument("--offline", action="store_true", help="assert all affected Claude profiles are stopped")
+    parser.add_argument("--offline", action="store_true",
+                        help="assert that no Claude session is running in the affected project directories")
     parser.add_argument("--backup-dir", type=Path, help="new absolute recovery directory outside Google Drive")
     parser.add_argument("--migrate-project-settings", action="store_true",
                         help="separately authorized trust/settings migration; --rename only")

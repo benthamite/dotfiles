@@ -423,7 +423,11 @@ class MigrationSafetyTests(unittest.TestCase):
         process = b"p123\0\n"
         vanished = b"f3\0a \0nvnode: FD unavailable\0\n"
         self.mod._check_kernel_records(process + vanished, {(0x12, 34)})
-        self.mod._check_kernel_records(process + vanished.replace(b"vnode:", b"socket:"), {(0x12, 34)})
+        # Every Apple err2nm caller: a descriptor closed mid-scan is not a writer.
+        for prefix in (b"socket", b"pipe", b"kqueue", b"semaphore", b"POSIX shared memory"):
+            self.mod._check_kernel_records(process + vanished.replace(b"vnode", prefix), {(0x12, 34)})
+        with self.assertRaises(self.mod.MigrationError):
+            self.mod._check_kernel_records(process + vanished.replace(b"vnode", b"FD info error"), {(0x12, 34)})
         for record in (vanished.replace(b"f3", b"ftxt"),
                        vanished.replace(b"f3", b"ferr"),
                        vanished.replace(b"f3", b"f-1"),
@@ -529,6 +533,221 @@ class MigrationSafetyTests(unittest.TestCase):
                 child.terminate()
             child.wait(timeout=3)
             child.stdout.close()
+
+    # Append-only shared inputs: other sessions keep appending between preflight
+    # and apply, and the rewrite must carry every such byte over verbatim.
+
+    def append_only_plan(self, data=b'{"synthetic":"changed"}\n'):
+        plan = self.mod.MigrationPlan()
+        plan.read(self.source, append_only=True)
+        plan.rewrite(self.source, data)
+        return plan
+
+    def test_append_only_rewrite_preserves_concurrent_append_and_journals_tail(self):
+        plan = self.append_only_plan()
+        appended = b'{"synthetic":"appended by another session"}\n'
+        with self.source.open("ab") as handle:
+            handle.write(appended)
+        with mock.patch.object(self.mod, "_check_writers"):
+            plan.validate()  # growth alone never invalidates an append-only input
+        self.apply(plan)
+        self.assertEqual(self.source.read_bytes(), b'{"synthetic":"changed"}\n' + appended)
+        manifest = self.manifest()
+        self.assertTrue(manifest["inputs"][0]["appendOnly"])
+        self.assertEqual((self.backup / manifest["inputs"][0]["backup"]).read_bytes(), b'{"synthetic":"original"}\n')
+        entry = manifest["journal"][0]
+        self.assertEqual((entry["kind"], entry["status"], entry["appendedTailBytes"]), ("rewrite", "completed", len(appended)))
+        self.assertEqual((self.backup / entry["appendedTailBackup"]).read_bytes(), appended)
+        self.assertNotIn("lateAppendedTailBytes", entry)
+        self.assertFalse(list(self.root.glob(".session-migration-*")))
+
+    def test_append_only_rewrite_without_concurrent_append_journals_zero_tail(self):
+        self.apply(self.append_only_plan())
+        self.assertEqual(self.source.read_bytes(), b'{"synthetic":"changed"}\n')
+        entry = self.manifest()["journal"][0]
+        self.assertEqual(entry["appendedTailBytes"], 0)
+        self.assertNotIn("appendedTailBackup", entry)
+
+    def test_append_only_line_landing_in_rename_window_is_carried_over(self):
+        plan = self.append_only_plan()
+        late = b'{"synthetic":"written to the old inode during rename"}\n'
+        replace = self.mod.os.replace
+
+        def racing(source, destination):
+            # A writer that opened the path before our rename appends to the
+            # inode we are about to unlink.
+            with open(destination, "ab") as handle:
+                handle.write(late)
+            replace(source, destination)
+
+        with mock.patch.object(self.mod.os, "replace", side_effect=racing):
+            self.apply(plan)
+        self.assertEqual(self.source.read_bytes(), b'{"synthetic":"changed"}\n' + late)
+        entry = self.manifest()["journal"][0]
+        self.assertEqual((entry["appendedTailBytes"], entry["lateAppendedTailBytes"]), (0, len(late)))
+        self.assertEqual((self.backup / entry["lateAppendedTailBackup"]).read_bytes(), late)
+
+    def test_append_only_truncated_or_rewritten_input_refuses_without_writes(self):
+        for replacement in (b'{"synthetic":"orig', b'{"synthetic":"rewritten wholesale"}\n', b""):
+            with self.subTest(replacement=replacement):
+                self.source.write_bytes(b'{"synthetic":"original"}\n')
+                plan = self.append_only_plan()
+                self.source.write_bytes(replacement)
+                with self.assertRaisesRegex(self.mod.MigrationError, "truncated, rewritten or replaced") as caught:
+                    self.apply(plan)
+                self.assertIn(str(self.source), str(caught.exception))
+                self.assertEqual(self.source.read_bytes(), replacement)
+                self.assertFalse(self.backup.exists())
+        # The same refusal after backup, immediately before the replacement.
+        self.source.write_bytes(b'{"synthetic":"original"}\n')
+        plan = self.append_only_plan()
+        backup = plan._backup
+
+        def truncate(directory):
+            backup(directory)
+            self.source.write_bytes(b'{"synthetic":"truncated"}')
+
+        with mock.patch.object(plan, "_backup", side_effect=truncate):
+            with self.assertRaisesRegex(self.mod.MigrationError, "truncated") as caught:
+                self.apply(plan)
+        self.assertEqual(self.source.read_bytes(), b'{"synthetic":"truncated"}')
+        # Refused by the post-backup validation, before the first journaled write.
+        self.assertEqual(caught.exception.backup_dir, self.backup.resolve())
+        self.assertEqual(self.manifest()["journal"], [])
+        self.assertFalse(list(self.root.glob(".session-migration-*")))
+
+    def test_append_only_replaced_inode_refuses(self):
+        plan = self.append_only_plan()
+        other = self.root / "replacement.jsonl"
+        other.write_bytes(self.source.read_bytes())
+        other.replace(self.source)
+        with self.assertRaisesRegex(self.mod.MigrationError, "replaced"):
+            self.apply(plan)
+        self.assertFalse(self.backup.exists())
+
+    def test_append_only_rewrite_takes_and_releases_an_advisory_lock_beside_the_target(self):
+        lock = self.root / ".session.jsonl.migration-lock"
+        self.assertFalse(lock.exists())
+        calls = []
+        flock = self.mod.fcntl.flock
+
+        def recording(descriptor, operation):
+            calls.append((os.fstat(descriptor).st_ino, operation))
+            flock(descriptor, operation)
+
+        with mock.patch.object(self.mod.fcntl, "flock", side_effect=recording):
+            self.apply(self.append_only_plan())
+        self.assertTrue(lock.is_file())
+        self.assertEqual(stat.S_IMODE(lock.stat().st_mode), 0o600)
+        self.assertEqual(calls, [(lock.stat().st_ino, self.mod.fcntl.LOCK_EX | self.mod.fcntl.LOCK_NB),
+                                 (lock.stat().st_ino, self.mod.fcntl.LOCK_UN)])
+        self.assertIn(b"changed", self.source.read_bytes())
+
+    def test_append_only_rewrite_refuses_while_another_migration_holds_the_lock(self):
+        plan = self.append_only_plan()
+        lock = self.root / ".session.jsonl.migration-lock"
+        holder = subprocess.Popen([sys.executable, "-c",
+                                   "import fcntl,os,sys\n"
+                                   "fd=os.open(sys.argv[1],os.O_RDONLY|os.O_CREAT,0o600)\n"
+                                   "fcntl.flock(fd,fcntl.LOCK_EX)\n"
+                                   "print('locked',flush=True)\n"
+                                   "sys.stdin.readline()\n", str(lock)],
+                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+        try:
+            self.assertEqual(holder.stdout.readline().strip(), "locked")
+            with self.assertRaisesRegex(self.mod.MigrationError, "Another migration"):
+                self.apply(plan)
+        finally:
+            holder.stdin.write("done\n")
+            holder.stdin.close()
+            holder.wait(timeout=5)
+            holder.stdout.close()
+        self.assertEqual(self.source.read_bytes(), b'{"synthetic":"original"}\n')
+        self.assertEqual(self.manifest()["journal"][-1]["status"], "failed-or-uncertain")
+
+    def test_append_only_symlink_alias_rewrite_keeps_link_and_carries_tail(self):
+        alias = self.root / "history.jsonl"
+        alias.symlink_to(self.source.name)
+        plan = self.mod.MigrationPlan()
+        plan.read(alias, append_only=True)
+        plan.rewrite(alias, b"changed\n")
+        with self.source.open("ab") as handle:
+            handle.write(b"tail\n")
+        self.apply(plan)
+        self.assertTrue(alias.is_symlink())
+        self.assertEqual(self.source.read_bytes(), b"changed\ntail\n")
+        self.assertTrue((self.root / ".session.jsonl.migration-lock").is_file())
+
+    def test_release_forgets_only_inputs_no_write_depends_on(self):
+        unrelated = self.root / "unrelated.jsonl"
+        unrelated.write_bytes(b"unrelated")
+        plan = self.plan()
+        plan.read(unrelated)
+        plan.release(unrelated)
+        unrelated.write_bytes(b"rewritten by its own session")
+        self.apply(plan)
+        self.assertIn(b"changed", self.source.read_bytes())
+        self.assertEqual([entry["originalPath"] for entry in self.manifest()["inputs"]], [str(self.source)])
+        for path in (self.source, self.root / "never-captured"):
+            with self.subTest(path=path), self.assertRaises(self.mod.MigrationError):
+                self.plan(data=b"a further rewrite").release(path)
+        bucket = self.root / "bucket"
+        bucket.mkdir()
+        (bucket / "moved.jsonl").write_bytes(b"moved")
+        plan = self.mod.MigrationPlan()
+        plan.move(bucket, self.root / "elsewhere")
+        with self.assertRaises(self.mod.MigrationError):
+            plan.release(bucket / "moved.jsonl")
+
+    def test_backup_snapshots_are_saved_privately_before_any_write(self):
+        plan = self.plan()
+        order = []
+        plan.add_backup("synthetic database", lambda: order.append("snapshot") or b"consistent snapshot")
+        replace = self.mod.os.replace
+
+        def replacing(source, destination):
+            if Path(destination) == self.source.resolve():
+                order.append("replace")
+            replace(source, destination)
+
+        with mock.patch.object(self.mod.os, "replace", side_effect=replacing):
+            self.apply(plan)
+        self.assertEqual(order, ["snapshot", "replace"])
+        snapshot = self.manifest()["snapshots"][0]
+        self.assertEqual(snapshot["label"], "synthetic database")
+        self.assertEqual((self.backup / snapshot["backup"]).read_bytes(), b"consistent snapshot")
+        self.assertEqual(stat.S_IMODE((self.backup / snapshot["backup"]).stat().st_mode), 0o600)
+        with self.assertRaises(self.mod.MigrationError):
+            self.plan().add_backup("", lambda: b"")
+
+    def test_native_writer_check_covers_only_rewritten_or_moved_inputs(self):
+        unrelated = self.root / "unrelated.jsonl"
+        unrelated.write_bytes(b"pinned but neither rewritten nor moved")
+        bucket = self.root / "bucket"
+        bucket.mkdir()
+        moved = bucket / "moved.jsonl"
+        moved.write_bytes(b"moved")
+        plan = self.plan()
+        plan.read(unrelated)
+        plan.move(bucket, self.root / "elsewhere")
+        with unrelated.open("ab"):
+            plan.validate()  # an open handle on an unaffected input is not a refusal
+        with self.source.open("ab"):
+            with self.assertRaisesRegex(self.mod.MigrationError, "open writer"):
+                plan.validate()
+        with moved.open("ab"):
+            with self.assertRaisesRegex(self.mod.MigrationError, "open writer"):
+                plan.validate()
+
+    def test_native_open_writer_on_append_only_target_still_refuses(self):
+        plan = self.append_only_plan()
+        with self.source.open("ab") as writer:
+            with self.assertRaisesRegex(self.mod.MigrationError, "open writer"):
+                plan.run(offline=True, backup_dir=self.backup)
+            writer.write(b"later\n")
+        self.assertEqual(self.source.read_bytes(), b'{"synthetic":"original"}\nlater\n')
+        self.assertFalse(self.backup.exists())
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -1,8 +1,15 @@
-"""Conservative offline file migration; not a transaction or writer lock."""
+"""Conservative file migration; not a transaction or a lock against live writers.
+
+Captured inputs are pinned byte-for-byte, except inputs declared append-only:
+shared logs that unrelated sessions keep appending to.  Those are verified as
+prefix extensions and replaced append-safely under an advisory lock.
+"""
 from __future__ import annotations
 
+import contextlib
 import ctypes
 import errno
+import fcntl
 import hashlib
 import json
 import os
@@ -62,6 +69,55 @@ def _capture(path):
         if isinstance(error, MigrationError):
             raise
         raise MigrationError("Cannot read a stable regular input") from None
+
+
+_CAPTURE_FIELDS = ("path", "resolved", "link", "version", "data")
+
+
+def _same(current, snapshot):
+    return all(current[field] == snapshot[field] for field in _CAPTURE_FIELDS)
+
+
+def _extends(current, snapshot):
+    """The same alias and inode now hold the captured bytes plus an appended tail."""
+    return (current["path"] == snapshot["path"] and current["resolved"] == snapshot["resolved"]
+            and current["link"][:5] == snapshot["link"][:5]
+            and current["version"][:5] == snapshot["version"][:5]
+            and current["data"].startswith(snapshot["data"]))
+
+
+def _read_all(descriptor):
+    return b"".join(iter(lambda: os.read(descriptor, 1 << 20), b""))
+
+
+def _lock_path(target):
+    return target.with_name("." + target.name + ".migration-lock")
+
+
+@contextlib.contextmanager
+def _exclusive_lock(target):
+    """Serialise this helper's own append-safe replacements of one shared file.
+
+    Claude Code and Codex append without locking, so the advisory lock only
+    orders concurrent migrations.  It lives on a separate zero-byte file that
+    is never unlinked: removing it would let a later run lock a different inode
+    than a run already waiting on the old one.
+    """
+    try:
+        descriptor = os.open(_lock_path(target), os.O_RDONLY | os.O_CREAT | os.O_NOFOLLOW | os.O_CLOEXEC, 0o600)
+    except OSError:
+        raise MigrationError("Cannot open the migration lock beside a shared file") from None
+    try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise MigrationError("Migration lock is not a regular file")
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            raise MigrationError("Another migration is replacing the same shared file") from None
+        yield
+    finally:
+        fcntl.flock(descriptor, fcntl.LOCK_UN)
+        os.close(descriptor)
 
 
 def _lsof_safe_path(raw):
@@ -128,6 +184,10 @@ def _record_diagnostic(record):
     return f" [fields={keys}; access={access}; reason={category or 'unknown-redacted'}; descriptor={shape}]"
 
 
+_VANISHED_DESCRIPTORS = frozenset(prefix + b": FD unavailable" for prefix in (
+    b"vnode", b"socket", b"pipe", b"kqueue", b"semaphore", b"POSIX shared memory"))
+
+
 def _check_kernel_records(output, selected):
     """Reject matching writers, ambiguous references and incomplete records."""
     # Darwin vnode/socket/descriptor types from the reviewed source and native
@@ -154,14 +214,14 @@ def _check_kernel_records(output, selected):
             record[field[:1]] = field[1:]
         if not process or not record.get(b"f"):
             raise MigrationError("Writer-inspection record lacks process or descriptor identity")
-        # Apple dfile.c/dsock.c: process_vnode/process_socket -> err2nm maps
-        # EBADF to these exact messages.  The descriptor has closed; no inode or
-        # access information was obtained.  proc.c initializes access to one
-        # ASCII space and prints that selected field unconditionally.
-        # Do not extend this exact wire shape to revoked/EPERM.
+        # Apple dfile.c/dsock.c: process_{vnode,socket,pipe,kqueue,psem,pshm}
+        # call err2nm, which maps EBADF to exactly "<prefix>: FD unavailable".
+        # The descriptor closed between the descriptor list and its query, so it
+        # is not an open writer; no inode or access information was obtained.
+        # proc.c initializes access to one ASCII space and prints that selected
+        # field unconditionally.  Do not extend this wire shape to revoked/EPERM.
         if (record[b"f"].isdigit() and set(record) == {b"f", b"a", b"n"}
-                and record[b"a"] == b" "
-                and record[b"n"] in (b"vnode: FD unavailable", b"socket: FD unavailable")):
+                and record[b"a"] == b" " and record[b"n"] in _VANISHED_DESCRIPTORS):
             records += 1
             continue
         if record[b"f"] == b"err":
@@ -192,7 +252,8 @@ def _check_writers(paths):
     """Inspect kernel identities with the supported Darwin/libproc 4.91 route.
 
     This is not universal visibility: libproc may hide inaccessible processes,
-    and a new writer can open after inspection.  Apply still requires offline.
+    and a new writer can open after inspection.  Apply still requires the
+    caller's assertion that the affected sessions are closed.
     """
     selected = {(info.st_dev, info.st_ino) for info in (Path(path).stat() for path in paths)}
     if not selected:
@@ -251,13 +312,25 @@ def _sync_directory(path):
         os.close(descriptor)
 
 
+def _append(path, data):
+    descriptor = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_NOFOLLOW | os.O_CLOEXEC)
+    try:
+        view = memoryview(data)
+        while view:
+            view = view[os.write(descriptor, view):]
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
 class MigrationPlan:
     """Capture inputs first, then back up and apply with per-operation checks.
 
     Rewrites precede moves, irrespective of registration order.  Callbacks run
     last, must verify their own inputs immediately before writes, and own their
     post-write checks.  Their changes are not silently adopted as new snapshots.
-    Offline is a caller assertion: lsof and hashes do not lock out future writers.
+    Offline is a caller assertion about the files this plan rewrites or moves:
+    lsof and hashes do not lock out future writers.
     """
 
     def __init__(self):
@@ -269,17 +342,46 @@ class MigrationPlan:
         self.directories = {}
         self.actions = []
         self.checks = []
+        self.backups = []
         self.backup_dir = None
         self.journal = []
         self._used = False
 
-    def read(self, path):
+    def read(self, path, *, append_only=False):
+        """Capture PATH's bytes as of now.
+
+        An APPEND_ONLY input is a shared log other sessions keep appending to:
+        later bytes are tolerated, a rewrite carries them over, and truncation
+        or replacement refuses.  Any other input must stay byte-identical.
+        """
         path = _absolute(path)
         if path in self.files:
             self.verify(path)
         else:
             self.files[path] = _capture(path)
+        if append_only:
+            self.files[path]["appendOnly"] = True
         return self.files[path]["data"]
+
+    def release(self, path):
+        """Forget a captured input that no planned rewrite or move depends on."""
+        path = _absolute(path)
+        if path not in self.files:
+            raise MigrationError("Cannot release an input that was not captured")
+        if self._writes(path):
+            raise MigrationError("Cannot release an input that a planned write depends on")
+        del self.files[path]
+
+    def add_backup(self, label, producer):
+        """Save PRODUCER's bytes beside the input backups before the first write."""
+        if not isinstance(label, str) or not label or not callable(producer):
+            raise MigrationError("Backup snapshot requires a label and callable")
+        self.backups.append((label, producer))
+
+    def _writes(self, path):
+        """Whether a planned operation replaces or relocates this captured input."""
+        resolved = self.files[path]["resolved"]
+        return path in self.rewrites or any(_inside(resolved, move["root"]) for move in self.moves)
 
     def expect_absent(self, path):
         path = _absolute(path)
@@ -400,7 +502,13 @@ class MigrationPlan:
     def verify(self, path):
         path = _absolute(path)
         if path in self.files:
-            if _capture(self.files[path]["path"]) != self.files[path]:
+            snapshot = self.files[path]
+            current = _capture(snapshot["path"])
+            if snapshot.get("appendOnly"):
+                if not _extends(current, snapshot):
+                    raise MigrationError("Shared append-only input was truncated, rewritten or replaced "
+                                         f"since preflight: {snapshot['path']}")
+            elif not _same(current, snapshot):
                 raise MigrationError("Captured input changed")
         elif path not in self.absent:
             raise MigrationError("Input was not captured during preflight")
@@ -439,7 +547,9 @@ class MigrationPlan:
         for path, identity in self.directories.items():
             if identity is not None and (path.is_symlink() or _identity(path.stat()) != identity):
                 raise MigrationError("Created destination directory changed")
-        _check_writers(snapshot["resolved"] for snapshot in self.files.values())
+        # Only files this plan replaces or relocates need no open writer.  Other
+        # captured inputs are pinned by content; unrelated open handles are fine.
+        _check_writers(snapshot["resolved"] for path, snapshot in self.files.items() if self._writes(path))
 
     def _save_manifest(self):
         data = (json.dumps(self.manifest, indent=2, ensure_ascii=True) + "\n").encode()
@@ -485,8 +595,17 @@ class MigrationPlan:
             _private_file(directory / name, snapshot["data"])
             backups.append({"originalPath": str(path), "resolvedPath": str(snapshot["resolved"]),
                             "mode": stat.S_IMODE(snapshot["version"][2]), "backup": name,
-                            "sha256": hashlib.sha256(snapshot["data"]).hexdigest()})
-        self.manifest = {"schemaVersion": 1, "inputs": backups,
+                            "sha256": hashlib.sha256(snapshot["data"]).hexdigest(),
+                            "appendOnly": bool(snapshot.get("appendOnly"))})
+        snapshots = []
+        for number, (label, producer) in enumerate(self.backups):
+            data = producer()
+            if not isinstance(data, bytes):
+                raise MigrationError("Backup snapshot producer must return bytes")
+            name = f"snapshot-{number:06d}.bin"
+            _private_file(directory / name, data)
+            snapshots.append({"label": label, "backup": name, "sha256": hashlib.sha256(data).hexdigest()})
+        self.manifest = {"schemaVersion": 1, "inputs": backups, "snapshots": snapshots,
                          "expectedAbsent": list(map(str, self.absent)),
                          "moves": [{"source": str(m["source"]), "destination": str(m["destination"])}
                                    for m in self.moves], "journal": self.journal,
@@ -497,6 +616,9 @@ class MigrationPlan:
     def _rewrite(self, key, data):
         snapshot = self.files[key]
         target = snapshot["resolved"]
+        if snapshot.get("appendOnly"):
+            with _exclusive_lock(target):
+                return self._rewrite_append_only(key, data)
         self.verify(key)
         _check_writers([target])
         descriptor, name = tempfile.mkstemp(prefix=".session-migration-", dir=target.parent)
@@ -526,6 +648,73 @@ class MigrationPlan:
         finally:
             if os.path.lexists(stage) and _identity(stage.lstat()) == identity:
                 stage.unlink()
+
+    def _rewrite_append_only(self, key, data):
+        """Replace the captured prefix and carry over every byte appended since.
+
+        Live sessions append to the path without locking, so the tail is read
+        from the inode about to be replaced immediately before the rename, and
+        that inode is read once more afterwards: a line landing in the rename
+        window reaches the unlinked inode and is appended to the new file.  A
+        writer that keeps the file open beyond that is refused beforehand by
+        the writer check.  Returns the journal fields describing the tails.
+        """
+        snapshot = self.files[key]
+        target = snapshot["resolved"]
+        self.verify(key)
+        _check_writers([target])
+        self._run_checks()
+        record = {}
+        index = len(self.journal) - 1
+        old = os.open(target, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC)
+        try:
+            if _identity(os.fstat(old)) != snapshot["version"][:5]:
+                raise MigrationError(f"Shared append-only input was replaced before its rewrite: {snapshot['path']}")
+            descriptor, name = tempfile.mkstemp(prefix=".session-migration-", dir=target.parent)
+            stage = Path(name)
+            identity = _identity(os.fstat(descriptor))
+            try:
+                with os.fdopen(descriptor, "wb") as stream:
+                    stream.write(data)
+                    os.fchmod(stream.fileno(), stat.S_IMODE(snapshot["version"][2]))
+                    current = _read_all(old)
+                    if not current.startswith(snapshot["data"]):
+                        raise MigrationError("Shared append-only input was truncated or rewritten "
+                                             f"since preflight: {snapshot['path']}")
+                    tail = current[len(snapshot["data"]):]
+                    stream.write(tail)
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                    identity = _identity(os.fstat(stream.fileno()))
+                record["appendedTailBytes"] = len(tail)
+                if tail:
+                    record["appendedTailBackup"] = f"tail-{index:06d}.bin"
+                    _private_file(self.backup_dir / record["appendedTailBackup"], tail)
+                os.replace(stage, target)
+                late = _read_all(old)
+            finally:
+                if os.path.lexists(stage) and _identity(stage.lstat()) == identity:
+                    stage.unlink()
+        finally:
+            os.close(old)
+        output = data + tail
+        if late:
+            record["lateAppendedTailBytes"] = len(late)
+            record["lateAppendedTailBackup"] = f"late-tail-{index:06d}.bin"
+            _private_file(self.backup_dir / record["lateAppendedTailBackup"], late)
+            _append(target, late)
+        for alias in self.files.values():
+            if alias["resolved"] == target:
+                current = _capture(alias["path"])
+                if (current["version"][:5] != identity or not current["data"].startswith(output)
+                        or (stat.S_ISLNK(alias["link"][2]) and current["link"] != alias["link"])):
+                    raise MigrationError("Replacement identity changed")
+                alias.update(current)
+        for tree in self.moves + self.watched:
+            if _inside(target, tree["root"]):
+                tree["entries"][target.relative_to(tree["root"])] = identity
+        _sync_directory(target.parent)
+        return record
 
     def _move(self, move):
         self.validate()
@@ -598,7 +787,7 @@ class MigrationPlan:
                 entry = {"kind": kind, "label": label, "status": "started"}
                 self.journal.append(entry)
                 self._save_manifest()
-                operation()
+                entry.update(operation() or {})
                 entry["status"] = "completed"
                 self._save_manifest()
             self.validate()

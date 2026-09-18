@@ -116,11 +116,15 @@ tool-approval escalation or a repeated gate for already authorized work.
 
 ## Apply the supported plan
 
-Establish that all affected sessions and shared-store writers are stopped, as
-required by each migration skill. A running agent must not rewrite its own
-transcript or shared append-only history. Do not stop applications or switch
-accounts to manufacture quiescence. If it cannot be established within the
-request, preserve the preview and stop state migration.
+Establish that no agent session is running inside a directory being moved:
+the transcripts and rollouts of the selected mappings must have no open
+writers, and the invoking session must not itself sit in one of the old
+package directories. Unrelated Claude and Codex sessions may stay open; the
+adapters rewrite the shared append-only history files under a lock and
+re-append anything written meanwhile, so the migration runs from whatever
+session invoked it. Do not stop applications or switch accounts to
+manufacture quiescence. If a moved directory has a live session, preserve the
+preview for that mapping and report it.
 
 Revalidate the selected mappings and inputs before writes. Preview all selected
 operations before the first apply, then refresh the next operation's preview

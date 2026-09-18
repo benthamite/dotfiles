@@ -26,6 +26,9 @@ with mock.patch.dict(os.environ, {"CODEX_HOME": "/tmp/codex-migration-test-unope
     SPEC.loader.exec_module(ADAPTER)
 import migration_safety as SAFETY
 
+# Captured before setUp replaces it, for tests that exercise native inspection.
+REAL_CHECK_WRITERS = SAFETY._check_writers
+
 
 SESSION = "11111111-2222-3333-4444-555555555555"
 OTHER_SESSION = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
@@ -54,8 +57,15 @@ def fork_owner(parent=OTHER_SESSION, cwd=OLD):
 
 
 def digest(root):
+    """Store contents, minus the artifacts SQLite itself needs to read a WAL database.
+
+    Opening a WAL-mode database, even read-only, creates its shared-memory index
+    and an empty WAL when they are absent; neither holds store data.
+    """
     return {str(path.relative_to(root)): path.read_bytes()
-            for path in sorted(root.rglob("*")) if path.is_file()}
+            for path in sorted(root.rglob("*")) if path.is_file()
+            and not path.name.endswith("-shm")
+            and not (path.name.endswith("-wal") and path.stat().st_size == 0)}
 
 
 class CodexSessionMigrationTests(unittest.TestCase):
@@ -297,14 +307,14 @@ class CodexSessionMigrationTests(unittest.TestCase):
         with contextlib.closing(sqlite3.connect(database)) as conn:
             self.assertEqual(dict(conn.execute("SELECT id, cwd FROM threads")), {SESSION: NEW, OTHER_SESSION: OLD})
 
-    def test_dry_run_reads_committed_wal_without_mutating_original_artifacts(self):
+    def test_dry_run_reads_committed_wal_through_read_only_connections_only(self):
         database = self.wal_database()
         before = digest(self.home)
         real_connect = sqlite3.connect
         opened = []
 
         def connect(path, *args, **kwargs):
-            opened.append(str(path))
+            opened.append((str(path), kwargs.get("uri")))
             return real_connect(path, *args, **kwargs)
 
         with mock.patch.object(ADAPTER.sqlite3, "connect", side_effect=connect):
@@ -312,21 +322,24 @@ class CodexSessionMigrationTests(unittest.TestCase):
             plan.run(dry_run=True, backup_dir=self.backup)
         self.assertEqual(report["database_rows"], 1)
         self.assertTrue(opened)
-        self.assertTrue(all("codex-migration-sqlite-" in path for path in opened))
-        self.assertNotIn(str(database), opened)
+        self.assertEqual({item for item in opened}, {(database.resolve().as_uri() + "?mode=ro", True)})
         self.assertEqual(digest(self.home), before)
+        self.assertEqual(Path(str(database) + "-wal").stat().st_size > 0, True)
         self.assertFalse(self.backup.exists())
 
-    def test_apply_preserves_latest_wal_data_and_backs_up_original_companions(self):
+    def test_apply_preserves_latest_wal_data_and_backs_up_a_consistent_snapshot(self):
         database = self.wal_database()
-        wal = Path(str(database) + "-wal")
-        original_wal = wal.read_bytes()
         self.apply()
         with contextlib.closing(sqlite3.connect(database)) as conn:
             self.assertEqual(dict(conn.execute("SELECT id, cwd FROM threads")), {SESSION: NEW, OTHER_SESSION: OTHER})
         manifest = json.loads((self.backup / "manifest.json").read_bytes())
-        item = next(item for item in manifest["inputs"] if item["originalPath"] == str(wal))
-        self.assertEqual((self.backup / item["backup"]).read_bytes(), original_wal)
+        self.assertFalse(any(item["originalPath"].endswith(("-wal", "-shm", ".sqlite")) for item in manifest["inputs"]))
+        snapshot, = manifest["snapshots"]
+        self.assertEqual(snapshot["label"], f"Codex thread database snapshot: {database}")
+        with contextlib.closing(sqlite3.connect(self.backup / snapshot["backup"])) as conn:
+            self.assertEqual(conn.execute("PRAGMA quick_check").fetchall(), [("ok",)])
+            # The snapshot includes the rows that only the crashed writer's WAL held.
+            self.assertEqual(dict(conn.execute("SELECT id, cwd FROM threads")), {SESSION: OLD, OTHER_SESSION: OTHER})
         self.assertTrue(all(path.stat().st_mode & 0o077 == 0 for path in self.backup.iterdir()))
 
     def test_database_symlink_uses_resolved_wal_location(self):
@@ -573,9 +586,7 @@ class CodexSessionMigrationTests(unittest.TestCase):
 
         with mock.patch.object(ADAPTER.sqlite3, "connect", side_effect=lambda *args, **kwargs: FaultConnection(real_connect(*args, **kwargs))):
             with self.assertRaisesRegex(SAFETY.MigrationError, "not committed"):
-                ADAPTER.database_action(plan, database,
-                                        [database, *(Path(str(database) + suffix) for suffix in ADAPTER.SQLITE_COMPANIONS)],
-                                        [(SESSION, OLD)], NEW)
+                ADAPTER.database_action(database, ADAPTER.database_identity(database), [(SESSION, OLD)], NEW)
         self.assertEqual(commits, [])
         with contextlib.closing(real_connect(database)) as conn:
             self.assertEqual(dict(conn.execute("SELECT id, cwd FROM threads")), {SESSION: OLD, OTHER_SESSION: OTHER})
@@ -599,6 +610,87 @@ class CodexSessionMigrationTests(unittest.TestCase):
                 plan.run(offline=True, backup_dir=self.backup)
             writer.write(b"later synthetic append\n")
         self.assertEqual(self.rollout.read_bytes(), original + b"later synthetic append\n")
+        self.assertFalse(self.backup.exists())
+
+    def test_rename_tolerates_unrelated_rollouts_that_stay_open_and_grow(self):
+        # An unrelated session keeps its rollout open and appends to it after
+        # preflight; it is neither pinned, backed up, nor checked for writers.
+        unrelated = self.home / "sessions" / f"rollout-{OTHER_SESSION}.jsonl"
+        unrelated.write_bytes(jsonl(metadata(OTHER_SESSION, OTHER)))
+        appended = jsonl({"type": "event_msg", "payload": {"message": "still running"}})
+        with mock.patch.object(SAFETY, "_check_writers", REAL_CHECK_WRITERS):
+            with unrelated.open("ab") as writer:
+                plan, report = self.make_plan(rename=True)
+                writer.write(appended)
+                writer.flush()
+                self.assertEqual(plan.run(offline=True, backup_dir=self.backup), self.backup)
+        self.assertEqual(report["session_files_scanned"], 2)
+        self.assertEqual(json.loads(self.rollout.read_bytes())["payload"]["cwd"], NEW)
+        self.assertEqual(unrelated.read_bytes(), jsonl(metadata(OTHER_SESSION, OTHER)) + appended)
+        manifest = json.loads((self.backup / "manifest.json").read_bytes())
+        self.assertEqual([item["originalPath"] for item in manifest["inputs"]], [str(self.rollout)])
+
+    def test_rename_refuses_an_open_writer_on_an_affected_rollout(self):
+        before = digest(self.home)
+        with mock.patch.object(SAFETY, "_check_writers", REAL_CHECK_WRITERS):
+            plan, _report = self.make_plan(rename=True)
+            with self.rollout.open("ab") as writer:
+                with self.assertRaisesRegex(SAFETY.MigrationError, "open writer"):
+                    plan.run(offline=True, backup_dir=self.backup)
+                writer.write(b"later synthetic append\n")
+        self.assertEqual(self.rollout.read_bytes(), before[str(self.rollout.relative_to(self.home))] + b"later synthetic append\n")
+        self.assertFalse(self.backup.exists())
+
+    def test_rename_preserves_shared_index_lines_appended_after_preflight(self):
+        history = self.home / "history.jsonl"
+        index = self.home / "session_index.jsonl"
+        history.write_bytes(jsonl({"session_id": SESSION, "cwd": OLD}))
+        index.write_bytes(jsonl({"id": SESSION, "cwd": OLD}))
+        plan, _report = self.make_plan(rename=True)
+        late_history = jsonl({"session_id": OTHER_SESSION, "text": "appended by an open session"})
+        late_index = jsonl({"id": OTHER_SESSION, "cwd": OTHER})
+        with history.open("ab") as handle:
+            handle.write(late_history)
+        with index.open("ab") as handle:
+            handle.write(late_index)
+        plan.run(offline=True, backup_dir=self.backup)
+        self.assertEqual(history.read_bytes(), jsonl({"session_id": SESSION, "cwd": NEW}) + late_history)
+        self.assertEqual(index.read_bytes(), jsonl({"id": SESSION, "cwd": NEW}) + late_index)
+        manifest = json.loads((self.backup / "manifest.json").read_bytes())
+        tails = {entry["label"]: entry.get("appendedTailBytes") for entry in manifest["journal"] if entry["kind"] == "rewrite"}
+        self.assertEqual(tails, {str(self.rollout): None, str(history): len(late_history), str(index): len(late_index)})
+        self.assertTrue(all(item["appendOnly"] == (not item["originalPath"].endswith(self.rollout.name))
+                            for item in manifest["inputs"]))
+
+    def test_unrelated_session_started_after_preflight_does_not_refuse_the_rename(self):
+        plan, _report = self.make_plan(rename=True)
+        started = self.rollout.with_name(f"rollout-{OTHER_SESSION}.jsonl")
+        started.write_bytes(jsonl(metadata(OTHER_SESSION, OTHER)))
+        plan.run(offline=True, backup_dir=self.backup)
+        self.assertEqual(json.loads(self.rollout.read_bytes())["payload"]["cwd"], NEW)
+        self.assertEqual(started.read_bytes(), jsonl(metadata(OTHER_SESSION, OTHER)))
+
+    def test_rename_updates_thread_rows_while_an_unrelated_connection_stays_open(self):
+        database = self.wal_database()
+        with contextlib.closing(sqlite3.connect(database, timeout=5)) as live, \
+                mock.patch.object(SAFETY, "_check_writers", REAL_CHECK_WRITERS):
+            live.execute("UPDATE threads SET rollout_path = ? WHERE id = ?", ("touched", OTHER_SESSION))
+            live.commit()
+            report = self.apply(rename=True)
+            self.assertEqual(report["database_rows"], 1)
+            self.assertEqual(dict(live.execute("SELECT id, cwd FROM threads")), {SESSION: NEW, OTHER_SESSION: OTHER})
+            self.assertEqual(live.execute("SELECT rollout_path FROM threads WHERE id = ?", (OTHER_SESSION,)).fetchone(), ("touched",))
+        self.assertEqual(json.loads(self.rollout.read_bytes())["payload"]["cwd"], NEW)
+
+    def test_thread_acquiring_source_cwd_after_preflight_refuses_before_writes(self):
+        database = self.database(records=[(SESSION, "actual", OLD), (OTHER_SESSION, "other", OTHER)])
+        plan, _report = self.make_plan(rename=True)
+        with contextlib.closing(sqlite3.connect(database)) as conn, conn:
+            conn.execute("UPDATE threads SET cwd = ? WHERE id = ?", (OLD, OTHER_SESSION))
+        original = self.rollout.read_bytes()
+        with self.assertRaises(SAFETY.MigrationError):
+            plan.run(offline=True, backup_dir=self.backup)
+        self.assertEqual(self.rollout.read_bytes(), original)
         self.assertFalse(self.backup.exists())
 
     def test_apply_requires_offline_and_new_backup_directory(self):

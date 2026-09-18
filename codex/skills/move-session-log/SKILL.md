@@ -46,9 +46,9 @@ python3 "$SKILL_DIR/scripts/move_session_log.py" --dry-run --rename "$OLD_PROJEC
 ```
 
 Validate the selected inventory, JSONL identity and SQLite schemas before
-any apply phase. Single-session imports inspect SQLite read transactions and
-create consistent backups through its online backup API; offline operations capture the database and its WAL
-before inspecting an owned copy. Refuse
+any apply phase. Every mode inspects the thread database through read-only
+transactions on the live file and backs it up through SQLite's online backup
+API; live WAL and shared-memory bytes are never copied as static inputs. Refuse
 malformed/truncated targeted files, identity conflicts, unsupported existing
 schemas or unstable inputs. Resolve reversed paths or unexpected scope. Zero
 matches do not prove the search was complete.
@@ -90,16 +90,36 @@ that failed instead of inferring that the shared database must be closed.
 
 ## Bulk rename and explicitly offline import
 
-Bulk `--rename` retains the full-store offline procedure. Establish that
-affected sessions and every writer of shared files/databases are stopped.
-If quiescence cannot be established, keep the preview and report that boundary.
+Bulk `--rename` and `--offline` imports follow the same rule as the live
+import: unrelated Codex sessions may stay open. No session may be running
+inside a directory being moved, which for a rename means every session whose
+rollout records the old project path as its `session_meta` or `turn_context`
+`cwd`; those rollouts are rewritten and must have no open writer. The invoking
+session must not be one of them. Sessions started elsewhere while the rename
+runs are tolerated; one started in the old directory refuses the run. If the
+affected sessions cannot be closed within the request, keep the preview and
+report that boundary.
+
+Shared `history.jsonl` and `session_index.jsonl` need no quiescence. Open
+sessions keep appending to them, so the helper replaces each append-safely:
+under an exclusive advisory lock (a zero-byte `.<name>.migration-lock` beside
+the file, ordering only our own runs because Codex takes no locks) it re-reads
+the file, requires the preflight bytes to still be a prefix, writes the
+rewritten prefix followed verbatim by every byte appended since, renames it
+into place, and carries over a line that lands in the rename window. A file
+truncated or rewritten wholesale refuses with no write to it; the journal
+records the re-appended tail. `state_5.sqlite` may stay open in other Codex
+processes: the selected exact thread rows are re-checked before every
+operation and updated inside `BEGIN IMMEDIATE`, after an online-backup snapshot.
 
 Apply requires `--offline` and a new absolute `--backup-dir` outside Google Drive.
-The flag asserts established quiescence; it does not stop writers. The helper
-revalidates inputs and inspects kernel device/inode records using the supported
-Darwin/libproc `lsof` 4.91 format. Unrecognized formats or diagnostics refuse the
-operation. This can miss processes the OS hides and cannot exclude future writers;
-it does not independently establish quiescence.
+The flag asserts that the affected sessions are closed; it does not stop writers.
+The helper revalidates inputs and inspects kernel device/inode records using the
+supported Darwin/libproc `lsof` 4.91 format, refusing an open write handle on
+any rollout or index it rewrites. Handles on other files, and other Codex or
+Claude processes as such, are not refusals. Unrecognized formats or diagnostics
+refuse the operation. This can miss processes the OS hides and cannot exclude
+future writers; it does not independently establish quiescence.
 
 ```bash
 python3 "$SKILL_DIR/scripts/move_session_log.py" --offline --backup-dir "$NEW_PRIVATE_BACKUP" --project "$TARGET_PROJECT" "$SESSION_ID"

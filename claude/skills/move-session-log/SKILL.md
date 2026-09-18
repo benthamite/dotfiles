@@ -64,30 +64,49 @@ unknown ownership, malformed inputs, unexpected symlinks, conflicting metadata,
 reversed paths or unexpectedly broad scope before writing. Dry-run is a preview
 of observed inputs, not a reservation or proof that a later plan is identical.
 
-## Apply only to offline stores
+## Apply with the affected sessions closed
 
-This is the Claude adapter's requirement. The paired Codex skill can import a
-closed session while unrelated Codex sessions remain open, using SQLite
-transactions. Do not transfer Claude's full-store offline requirement to that
-Codex operation; the transcript layouts and concurrency mechanisms differ.
-The Codex workflow also verifies the exact session's Emacs buffer and live
-working directory; a migrated history index does not rename an existing buffer.
-Agent Log keeps a separate catalog and rendered index. When it is the resume
-entry point, verify its actual `agent-log-resume-session` command from the user's
-rendered log and reconcile the rendered artifact through Agent Log itself.
-
-Establish that affected Claude sessions and other writers of shared history are
-stopped. Do not kill sessions, close Emacs, restart applications or switch
-accounts merely to satisfy this step. An active session cannot safely replace
-its own append-only transcript. If quiescence cannot be established within the
+Unrelated Claude sessions may stay open, in any directory and any profile,
+throughout preview and apply. The quiescence rule is narrower: no session may
+be running inside a directory whose bucket this operation moves or rewrites.
+For a rename that is every session of the old project (and, when the bucket
+already sits at the new encoded name, every session of the new project); for
+an import it is the identified session only. Their transcripts and sidecars
+must have no open writer. The invoking session must not be one of them: an
+active session cannot safely replace or relocate its own append-only
+transcript. Do not kill sessions, close Emacs, restart applications or switch
+accounts to satisfy this; if the affected sessions cannot be closed within the
 request, preserve the preview and report that boundary.
 
+Shared `history.jsonl` needs no quiescence. Every open session appends to it,
+so the helper replaces it append-safely: under an exclusive advisory lock (a
+zero-byte `.history.jsonl.migration-lock` beside it, which orders only our own
+runs because Claude Code takes no locks) it re-reads the file, requires the
+bytes captured at preflight to still be a prefix, writes the rewritten prefix
+followed verbatim by every byte appended since, renames the result into place,
+and carries over a line that lands in the rename window. A history that was
+truncated or rewritten wholesale refuses with no write to it. The journal
+records the re-appended tail length and keeps the tail bytes beside the
+originals. Transcripts already owned by a session in the destination project
+are read the same way: their appends are tolerated, their rewrite is refused.
+
 Apply requires `--offline` and an explicit, new absolute `--backup-dir` outside
-Google Drive. The flag asserts established quiescence; it does not stop writers.
-The helper also revalidates captured inputs and inspects kernel device/inode
-records using the supported Darwin/libproc `lsof` 4.91 format. Unrecognized
-formats or diagnostics refuse the operation. This inspection can miss processes
-the OS hides and cannot exclude future writers; it does not establish quiescence.
+Google Drive. The flag asserts that the affected sessions are closed; it does
+not stop writers. The helper revalidates captured inputs and inspects kernel
+device/inode records using the supported Darwin/libproc `lsof` 4.91 format,
+refusing an open write handle on any file it moves or rewrites, including the
+history file at the moment of its replacement. Handles on other files, and
+other Claude or Codex processes as such, are not refusals. Unrecognized formats
+or diagnostics refuse the operation. This inspection can miss processes the OS
+hides and cannot exclude future writers; it does not establish quiescence.
+
+The paired Codex skill applies the same rule to rollouts, its shared JSONL
+indexes and its SQLite thread database, with runtime-specific mechanisms. The
+Codex workflow also verifies the exact session's Emacs buffer and live working
+directory; a migrated history index does not rename an existing buffer. Agent
+Log keeps a separate catalog and rendered index. When it is the resume entry
+point, verify its actual `agent-log-resume-session` command from the user's
+rendered log and reconcile the rendered artifact through Agent Log itself.
 
 ```bash
 python3 "$SKILL_DIR/scripts/move_session_log.py" --offline --backup-dir "$NEW_PRIVATE_BACKUP" --project "$TARGET_PROJECT" "$SESSION_ID"
@@ -110,6 +129,10 @@ trust, tool permissions and MCP approvals. Only a separately explicit request
 to carry settings to the same verified renamed project permits
 `--migrate-project-settings` on both preview and apply. Relocating history alone
 does not grant that authority. Existing destination settings are not merged.
+Claude Code rewrites this file wholesale, so it is not append-safe: it stays
+byte-pinned, its rewrite is applied before any transcript or history change,
+and a concurrent settings write by any open session refuses the whole run
+before those changes. Retry, or close the sessions, only for this option.
 
 ## Verify and recover honestly
 

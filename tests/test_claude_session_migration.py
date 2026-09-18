@@ -156,9 +156,9 @@ class ClaudeSessionMigrationTests(unittest.TestCase):
         adapter = self.load_adapter()
         original_read = adapter.MigrationPlan.read
 
-        def read(plan, path):
+        def read(plan, path, **options):
             self.assertNotEqual(Path(path).resolve(), auxiliary.resolve())
-            return original_read(plan, path)
+            return original_read(plan, path, **options)
 
         with mock.patch.object(adapter.MigrationPlan, "read", read):
             plan, _summary = adapter.build_single_plan(SID, NEW)
@@ -174,7 +174,9 @@ class ClaudeSessionMigrationTests(unittest.TestCase):
         plan, _summary = adapter.build_single_plan(SID, NEW)
         owner.write_bytes(jsonl({"sessionId": OTHER_SID, "cwd": OTHER}))
         before = tree_snapshot(self.config)
-        with self.assertRaisesRegex(adapter.MigrationError, "Captured input changed"):
+        # Appends by a destination session are tolerated; a wholesale rewrite
+        # of the ownership evidence is not.
+        with self.assertRaisesRegex(adapter.MigrationError, "truncated, rewritten or replaced"):
             plan.run(offline=True, backup_dir=self.backup)
         self.assertEqual(tree_snapshot(self.config), before)
         self.assertFalse(self.backup.exists())
@@ -273,18 +275,64 @@ class ClaudeSessionMigrationTests(unittest.TestCase):
         (self.target / self.transcript.name).write_bytes(jsonl({"sessionId": SID, "cwd": NEW}))
         self.assert_refused_without_changes(SID, "--project", NEW, reason="disagree about session origin")
 
-    def test_concurrent_history_append_invalidates_captured_plan(self):
+    def test_concurrent_history_append_is_preserved_verbatim_after_rewrite(self):
+        # Unrelated sessions keep appending to the shared history while the
+        # rename runs; their lines must follow the rewritten preflight prefix.
         adapter = self.load_adapter()
         plan, _summary = adapter.build_rename_plan(OLD, NEW)
         concurrent = jsonl({"sessionId": OTHER_SID, "project": OTHER, "display": "concurrent"})
         with self.history.open("ab") as handle:
             handle.write(concurrent)
+        plan.run(offline=True, backup_dir=self.backup)
+        self.assertEqual(self.history.read_bytes(),
+                         jsonl({"sessionId": SID, "project": NEW, "display": "fixture"}) + concurrent)
+        self.assertTrue((self.target / self.transcript.name).is_file())
+        manifest = json.loads((self.backup / "manifest.json").read_text())
+        history_entry = next(entry for entry in manifest["journal"] if entry["label"] == str(self.history))
+        self.assertEqual(history_entry["appendedTailBytes"], len(concurrent))
+        self.assertEqual((self.backup / history_entry["appendedTailBackup"]).read_bytes(), concurrent)
+        self.assertTrue((self.config / ".history.jsonl.migration-lock").is_file())
+
+    def test_truncated_or_rewritten_history_refuses_before_any_write(self):
+        adapter = self.load_adapter()
+        plan, _summary = adapter.build_rename_plan(OLD, NEW)
+        self.history.write_bytes(jsonl({"sessionId": OTHER_SID, "project": OTHER, "display": "rewritten wholesale"}))
         before = tree_snapshot(self.config)
-        with self.assertRaises(adapter.MigrationError):
+        with self.assertRaisesRegex(adapter.MigrationError, "truncated, rewritten or replaced"):
             plan.run(offline=True, backup_dir=self.backup)
         self.assertEqual(tree_snapshot(self.config), before)
-        self.assertTrue(self.history.read_bytes().endswith(concurrent))
-        self.assertTrue(self.transcript.is_file())
+        self.assertFalse(self.backup.exists())
+
+    def test_open_unrelated_destination_session_does_not_block_import(self):
+        # A session still running in the destination project holds its own
+        # transcript open; only the moved files must be free of writers.
+        self.target.mkdir()
+        owner = self.target / f"{OTHER_SID}.jsonl"
+        owner.write_bytes(jsonl({"sessionId": OTHER_SID, "cwd": NEW}))
+        appended = jsonl({"sessionId": OTHER_SID, "cwd": NEW, "type": "user"})
+        with owner.open("ab") as writer:
+            result = self.apply(SID, "--project", NEW)
+            writer.write(appended)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue((self.target / self.transcript.name).is_file())
+        self.assertEqual(owner.read_bytes(), jsonl({"sessionId": OTHER_SID, "cwd": NEW}) + appended)
+
+    def test_open_affected_transcript_still_refuses_the_rename(self):
+        with self.transcript.open("ab") as writer:
+            self.assert_refused_without_changes("--rename", OLD, NEW, reason="open writer")
+            writer.write(jsonl({"sessionId": SID, "cwd": OLD, "type": "user"}))
+        self.assertEqual(len(self.transcript.read_bytes().splitlines()), 2)
+
+    def test_settings_rewrite_after_planning_refuses_before_transcript_or_history_change(self):
+        settings = self.config / ".claude.json"
+        settings.write_text(json.dumps({"projects": {OLD: {"hasTrustDialogAccepted": True}}}))
+        adapter = self.load_adapter()
+        plan, _summary = adapter.build_rename_plan(OLD, NEW, migrate_project_settings=True)
+        settings.write_text(json.dumps({"projects": {OLD: {"hasTrustDialogAccepted": True}, OTHER: {}}}))
+        before = tree_snapshot(self.config)
+        with self.assertRaisesRegex(adapter.MigrationError, "Captured input changed"):
+            plan.run(offline=True, backup_dir=self.backup)
+        self.assertEqual(tree_snapshot(self.config), before)
 
     def test_already_relocated_bucket_membership_is_revalidated(self):
         self.source.rename(self.target)

@@ -2,8 +2,14 @@
 """Relocate known Codex project metadata with recoverable backups.
 
 Historical messages, tool arguments and results are not routing metadata.
-Single-session imports allow unrelated sessions to remain online; bulk renames
-and explicitly offline imports retain the full-store offline checks.
+Unrelated Codex sessions may stay open in every mode. Only the sessions whose
+rollouts are rewritten (those recording the old project path) must be closed,
+and the invoking session must not be one of them. Other sessions keep
+appending to the shared history.jsonl and session_index.jsonl, which the
+safety helper replaces append-safely under an advisory lock, and keep
+state_5.sqlite open, whose exact thread rows are updated inside a BEGIN
+IMMEDIATE transaction after a consistent online-backup snapshot. Bulk
+--rename and --offline imports still require the --offline assertion.
 This adapter does not prove that an already-running Codex process has reloaded
 the changed metadata. Discovery covers the selected home and matching sibling
 .codex* homes, not every possible CODEX_HOME on the machine.
@@ -18,12 +24,12 @@ import os
 import sqlite3
 import stat
 import sys
-import tempfile
 import uuid
 from contextlib import closing
 from pathlib import Path
 from typing import Any
 
+from live_import import connect_database, database_identity, snapshot_database
 from migration_safety import MigrationError, MigrationPlan
 
 
@@ -304,13 +310,13 @@ def cwd_only_authorizer(action: int, table: str | None, column: str | None,
     return sqlite3.SQLITE_OK
 
 
-def database_action(plan: MigrationPlan, database: Path, inputs: list[Path],
-                    changes: list[tuple[str, str]], new: str) -> None:
-    for path in inputs:
-        plan.verify(path)
+def database_action(database: Path, bound: tuple[Any, ...], changes: list[tuple[str, str]], new: str) -> None:
+    """Update exact thread rows while unrelated Codex connections stay open."""
+    if database_identity(database) != bound:
+        raise MigrationError("Database location or inode changed after preflight")
     try:
         with closing(sqlite3.connect(database.resolve().as_uri() + "?mode=rw",
-                                     uri=True, timeout=0)) as conn:
+                                     uri=True, timeout=5)) as conn:
             conn.execute("BEGIN IMMEDIATE")
             validate_thread_schema(conn)
             cursor = conn.execute("SELECT * FROM threads ORDER BY id")
@@ -337,54 +343,73 @@ def database_action(plan: MigrationPlan, database: Path, inputs: list[Path],
         raise MigrationError("SQLite migration failed; consult the backup journal for partial state") from None
 
 
+def select_threads(conn: sqlite3.Connection, old: str, identity: str | None) -> list[tuple[str, str]]:
+    if identity is None:
+        selected = conn.execute("SELECT id, cwd FROM threads WHERE cwd = ?", (old,)).fetchall()
+    else:
+        selected = conn.execute("SELECT id, cwd FROM threads WHERE id = ?", (identity,)).fetchall()
+    if len({row[0] for row in selected}) != len(selected):
+        raise MigrationError("Ambiguous duplicate SQLite thread identities")
+    for selected_id, current in selected:
+        session_uuid(selected_id)
+        absolute_project(current)
+    return selected
+
+
 def plan_database(plan: MigrationPlan, database: Path, old: str, new: str,
                   identity: str | None) -> tuple[int, list[str]]:
+    """Select exact thread rows from a read-only view of the live database.
+
+    Unrelated Codex processes may keep the database open. Its WAL and shared
+    memory are never copied as static inputs: the recovery backup is an
+    online-backup snapshot, the selection is re-checked before every operation,
+    and the rows are updated inside BEGIN IMMEDIATE at apply time.
+    """
     validate_state_generation(database.parent)
-    resolved = database.resolve()
-    inputs = [database, *(Path(str(resolved) + suffix) for suffix in SQLITE_COMPANIONS)]
-    captured: dict[str, bytes] = {}
-    for path, suffix in zip(inputs, ("", *SQLITE_COMPANIONS)):
-        if os.path.lexists(path):
-            captured["snapshot.sqlite" + suffix] = plan.read(path)
-        else:
-            plan.expect_absent(path)
-    if "snapshot.sqlite" not in captured:
-        if captured:
+    if not os.path.lexists(database):
+        resolved = database.resolve()
+        if any(os.path.lexists(Path(str(resolved) + suffix)) for suffix in SQLITE_COMPANIONS):
             raise MigrationError("SQLite companion files exist without their database")
+        plan.expect_absent(database)
         return 0, []
-    plan.validate()
+    bound = database_identity(database)
     try:
-        with tempfile.TemporaryDirectory(prefix="codex-migration-sqlite-", dir="/tmp") as temporary:
-            root = Path(temporary)
-            for name, data in captured.items():
-                destination = root / name
-                with destination.open("xb") as handle:
-                    os.chmod(destination, 0o600)
-                    handle.write(data)
-            with closing(sqlite3.connect(root / "snapshot.sqlite", timeout=0)) as conn:
-                columns, tables = validate_thread_schema(conn)
-                if conn.execute("PRAGMA quick_check").fetchall() != [("ok",)]:
-                    raise MigrationError("SQLite integrity preflight failed")
-                unupdated = ([f"{database}: threads.project_id"] if "project_id" in columns else [])
-                unupdated += [f"{database}: {table}" for table in ("projects", "project_roots") if table in tables]
-                if identity is None:
-                    selected = conn.execute("SELECT id, cwd FROM threads WHERE cwd = ?", (old,)).fetchall()
-                else:
-                    selected = conn.execute("SELECT id, cwd FROM threads WHERE id = ?", (identity,)).fetchall()
-                if len({row[0] for row in selected}) != len(selected):
-                    raise MigrationError("Ambiguous duplicate SQLite thread identities")
-                changes = []
-                for selected_id, current in selected:
-                    session_uuid(selected_id)
-                    absolute_project(current)
-                    if current != new:
-                        changes.append((selected_id, current))
+        with closing(connect_database(database)) as conn:
+            conn.execute("BEGIN")
+            columns, tables = validate_thread_schema(conn)
+            if conn.execute("PRAGMA quick_check").fetchall() != [("ok",)]:
+                raise MigrationError("SQLite integrity preflight failed")
+            unupdated = ([f"{database}: threads.project_id"] if "project_id" in columns else [])
+            unupdated += [f"{database}: {table}" for table in ("projects", "project_roots") if table in tables]
+            selected = select_threads(conn, old, identity)
     except sqlite3.Error:
-        raise MigrationError("Codex SQLite snapshot could not be validated") from None
-    plan.validate()
+        raise MigrationError("Codex thread database could not be inspected") from None
+    if database_identity(database) != bound:
+        raise MigrationError("Database location changed during preflight")
+    changes = [(selected_id, current) for selected_id, current in selected if current != new]
+    state = {"applied": False}
+
+    def check_selection() -> None:
+        """The selected rows still hold their preflight cwd, or ours once applied."""
+        if database_identity(database) != bound:
+            raise MigrationError("Database location or inode changed after preflight")
+        expected = {selected_id: new if state["applied"] else current for selected_id, current in selected}
+        with closing(connect_database(database)) as conn:
+            current_rows = dict(select_threads(conn, old, identity))
+            if identity is None and not state["applied"] and set(current_rows) - set(expected):
+                raise MigrationError("A thread acquired the source project cwd after preflight")
+            for selected_id, cwd in expected.items():
+                if conn.execute("SELECT cwd FROM threads WHERE id = ?", (selected_id,)).fetchall() != [(cwd,)]:
+                    raise MigrationError("Selected SQLite threads changed after preflight")
+
+    def apply() -> None:
+        database_action(database, bound, changes, new)
+        state["applied"] = True
+
+    plan.add_check(f"Codex thread selection: {database}", check_selection)
     if changes:
-        plan.add_action(f"update Codex thread cwd: {database}",
-                        lambda: database_action(plan, database, inputs, changes, new))
+        plan.add_backup(f"Codex thread database snapshot: {database}", lambda: snapshot_database(database))
+        plan.add_action(f"update Codex thread cwd: {database}", apply)
     return len(changes), unupdated
 
 
@@ -408,8 +433,16 @@ def make_plan(identity: str | None, old: str | None, new: str) -> tuple[Migratio
     plan = MigrationPlan()
 
     def check_inventory() -> None:
-        if discover() != (homes, roots, files):
+        current_homes, current_roots, current_files = discover()
+        if (current_homes, current_roots) != (homes, roots) or set(files) - set(current_files):
             raise MigrationError("Codex profile/session inventory changed after preflight")
+        for path in sorted(set(current_files) - set(files)):
+            # Sessions started elsewhere while this runs are unaffected. One
+            # started in the source project, or one reusing the selected
+            # identity, would be missed by this plan.
+            meta = captured_header(path)
+            if meta["cwd"] == old if identity is None else meta["id"] == identity:
+                raise MigrationError("A session started inside the source project after preflight")
         for path, meta in inventory.items():
             if captured_header(path)["id"] != meta["id"]:
                 raise MigrationError("A discovered session identity changed after preflight")
@@ -435,22 +468,28 @@ def make_plan(identity: str | None, old: str | None, new: str) -> tuple[Migratio
             plan.rewrite(path, updated)
             report["session_files_rewritten"] += 1
             report["session_fields"] += count
+        else:
+            # Nothing here records the old project: the session owning this
+            # rollout may stay open and keep appending to it.
+            plan.release(path)
     seen: set[Path] = set()
     for home in homes:
         for name, key, counter in (("history.jsonl", "session_id", "history_fields"),
                                    ("session_index.jsonl", "id", "index_fields")):
+            # Every Codex session appends to these shared stores; capture them
+            # append-only so unrelated sessions may continue writing.
             path = home / name
             resolved = path.resolve()
             if resolved in seen:
                 if os.path.lexists(path):
-                    plan.read(path)
+                    plan.read(path, append_only=True)
                 continue
             seen.add(resolved)
             if not os.path.lexists(path):
                 plan.expect_absent(path)
                 report["missing"].append(str(path))
                 continue
-            data = plan.read(path)
+            data = plan.read(path, append_only=True)
             updated, count = rewrite_index(data, key, old, new, identity)
             if count:
                 plan.rewrite(path, updated)
@@ -459,7 +498,9 @@ def make_plan(identity: str | None, old: str | None, new: str) -> tuple[Migratio
         resolved = database.resolve()
         if resolved in seen:
             if os.path.lexists(database):
-                plan.read(database)
+                bound = database_identity(database)
+                plan.add_check(f"Codex thread database alias: {database}",
+                               lambda alias=database, bound=bound: database_identity(alias) == bound)
             continue
         seen.add(resolved)
         if not os.path.lexists(database):
@@ -470,8 +511,7 @@ def make_plan(identity: str | None, old: str | None, new: str) -> tuple[Migratio
         report["database_rows"] += count
         report["unupdated_project_metadata"].extend(unupdated)
     plan.validate()
-    if discover() != (homes, roots, files):
-        raise MigrationError("Codex profile/session inventory changed during preflight")
+    check_inventory()
     return plan, report
 
 
@@ -496,7 +536,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--rename", nargs=2, metavar=("OLD", "NEW"))
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--offline", action="store_true",
-                        help="use full-store offline checks (required for bulk rename)")
+                        help="assert that no Codex session is running in the affected project directories "
+                             "(required for bulk rename)")
     parser.add_argument("--backup-dir", type=Path, help="new absolute private backup directory outside Drive")
     args = parser.parse_args()
     if args.rename and (args.session_id or args.project is not None):

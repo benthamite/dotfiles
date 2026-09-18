@@ -343,6 +343,7 @@ class MigrationPlan:
         self.actions = []
         self.checks = []
         self.backups = []
+        self.annotations = {}
         self.backup_dir = None
         self.journal = []
         self._used = False
@@ -377,6 +378,16 @@ class MigrationPlan:
         if not isinstance(label, str) or not label or not callable(producer):
             raise MigrationError("Backup snapshot requires a label and callable")
         self.backups.append((label, producer))
+
+    def annotate(self, key, value):
+        """Record adapter planning detail, such as per-mapping counts, in the manifest."""
+        if not isinstance(key, str) or not key:
+            raise MigrationError("Annotation requires a key")
+        try:
+            json.dumps(value)
+        except (TypeError, ValueError):
+            raise MigrationError("Annotation must be JSON-serialisable") from None
+        self.annotations[key] = value
 
     def _writes(self, path):
         """Whether a planned operation replaces or relocates this captured input."""
@@ -606,6 +617,7 @@ class MigrationPlan:
             _private_file(directory / name, data)
             snapshots.append({"label": label, "backup": name, "sha256": hashlib.sha256(data).hexdigest()})
         self.manifest = {"schemaVersion": 1, "inputs": backups, "snapshots": snapshots,
+                         "annotations": self.annotations,
                          "expectedAbsent": list(map(str, self.absent)),
                          "moves": [{"source": str(m["source"]), "destination": str(m["destination"])}
                                    for m in self.moves], "journal": self.journal,

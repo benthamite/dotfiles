@@ -210,8 +210,11 @@ def replace_path_tokens(raw: bytes, replacements: dict[tuple[str, ...], str]) ->
     return text.encode("utf-8")
 
 
-def rewrite_rollout(data: bytes, old: str, new: str, identity: str) -> tuple[bytes, int]:
-    """Map every routing cwd that exactly equals OLD to NEW.
+Mapping = dict[str, str]
+
+
+def remap_rollout(data: bytes, mapping: Mapping, identity: str) -> tuple[bytes, dict[str, int]]:
+    """Map every routing cwd that exactly equals a mapped source path to its destination.
 
     The rollout's own identity is the first record. Forked and subagent threads
     copy their ancestors' session_meta records behind that header, and Codex
@@ -219,7 +222,7 @@ def rewrite_rollout(data: bytes, old: str, new: str, identity: str) -> tuple[byt
     a rollout may hold several session_meta records and an id may recur. Every
     record sharing an id must agree on cwd; ancestor records are remapped under
     the same exact-match rule as the owning record and turn_context, never by
-    prefix.
+    prefix. Returns the rewritten bytes and the remapped field count per source.
     """
     parsed = rows(data)
     meta = header(data)
@@ -227,9 +230,9 @@ def rewrite_rollout(data: bytes, old: str, new: str, identity: str) -> tuple[byt
         raise MigrationError("The selected rollout identity changed")
     cwd_by_id: dict[str, Any] = {}
     output: list[bytes] = []
-    count = 0
+    counts = {old: 0 for old in mapping}
     for raw, obj in parsed:
-        changed = False
+        target = None
         if isinstance(obj, dict) and obj.get("type") in ("session_meta", "turn_context"):
             payload = obj.get("payload")
             if not isinstance(payload, dict):
@@ -243,29 +246,44 @@ def rewrite_rollout(data: bytes, old: str, new: str, identity: str) -> tuple[byt
                     raise MigrationError("A rollout has session metadata without a canonical identity") from None
                 if cwd_by_id.setdefault(record_id, payload.get("cwd")) != payload.get("cwd"):
                     raise MigrationError("A rollout has conflicting session metadata for one identity")
-            if payload.get("cwd") == old and old != new:
-                count += 1
-                changed = True
-        output.append(replace_path_tokens(raw, {("payload", "cwd"): new}) if changed else raw)
-    return b"".join(output), count
+            cwd = payload.get("cwd")
+            if isinstance(cwd, str) and cwd in mapping and mapping[cwd] != cwd:
+                counts[cwd] += 1
+                target = mapping[cwd]
+        output.append(replace_path_tokens(raw, {("payload", "cwd"): target}) if target is not None else raw)
+    return b"".join(output), counts
 
 
-def rewrite_index(data: bytes, key: str, old: str, new: str,
-                  identity: str | None) -> tuple[bytes, int]:
+def rewrite_rollout(data: bytes, old: str, new: str, identity: str) -> tuple[bytes, int]:
+    """Single-mapping form of remap_rollout."""
+    updated, counts = remap_rollout(data, {old: new}, identity)
+    return updated, counts[old]
+
+
+def remap_index(data: bytes, key: str, mapping: Mapping,
+                identity: str | None) -> tuple[bytes, dict[str, int]]:
     output: list[bytes] = []
-    count = 0
+    counts = {old: 0 for old in mapping}
     for raw, obj in rows(data):
         changes: dict[tuple[str, ...], str] = {}
         if isinstance(obj, dict) and isinstance(obj.get(key), str):
             selected = obj[key] == identity if identity is not None else True
             if selected:
                 for field in METADATA_FIELDS:
-                    if obj.get(field) == old and old != new:
+                    value = obj.get(field)
+                    if isinstance(value, str) and value in mapping and mapping[value] != value:
                         session_uuid(obj[key])
-                        changes[(field,)] = new
-        count += len(changes)
+                        changes[(field,)] = mapping[value]
+                        counts[value] += 1
         output.append(replace_path_tokens(raw, changes) if changes else raw)
-    return b"".join(output), count
+    return b"".join(output), counts
+
+
+def rewrite_index(data: bytes, key: str, old: str, new: str,
+                  identity: str | None) -> tuple[bytes, int]:
+    """Single-mapping form of remap_index."""
+    updated, counts = remap_index(data, key, {old: new}, identity)
+    return updated, counts[old]
 
 
 def validate_state_generation(home: Path) -> None:
@@ -310,8 +328,11 @@ def cwd_only_authorizer(action: int, table: str | None, column: str | None,
     return sqlite3.SQLITE_OK
 
 
-def database_action(database: Path, bound: tuple[Any, ...], changes: list[tuple[str, str]], new: str) -> None:
-    """Update exact thread rows while unrelated Codex connections stay open."""
+def database_action(database: Path, bound: tuple[Any, ...], changes: list[tuple[str, str, str]]) -> None:
+    """Update exact thread rows (id, original cwd, new cwd) in one transaction.
+
+    Unrelated Codex connections may stay open; BEGIN IMMEDIATE serialises them.
+    """
     if database_identity(database) != bound:
         raise MigrationError("Database location or inode changed after preflight")
     try:
@@ -323,15 +344,15 @@ def database_action(database: Path, bound: tuple[Any, ...], changes: list[tuple[
             columns = [column[0] for column in cursor.description]
             before = cursor.fetchall()
             id_column, cwd_column = columns.index("id"), columns.index("cwd")
-            selected = {identity for identity, _original in changes}
-            expected = [tuple(new if index == cwd_column and row[id_column] in selected else value
+            targets = {identity: new for identity, _original, new in changes}
+            expected = [tuple(targets[row[id_column]] if index == cwd_column and row[id_column] in targets else value
                               for index, value in enumerate(row)) for row in before]
-            for identity, original in changes:
+            for identity, original, _new in changes:
                 current = conn.execute("SELECT cwd FROM threads WHERE id = ?", (identity,)).fetchall()
                 if current != [(original,)]:
                     raise MigrationError("SQLite thread identity or cwd changed after preflight")
             conn.set_authorizer(cwd_only_authorizer)
-            for identity, original in changes:
+            for identity, original, new in changes:
                 cursor = conn.execute("UPDATE threads SET cwd = ? WHERE id = ? AND cwd = ?",
                                       (new, identity, original))
                 if cursor.rowcount != 1:
@@ -343,9 +364,11 @@ def database_action(database: Path, bound: tuple[Any, ...], changes: list[tuple[
         raise MigrationError("SQLite migration failed; consult the backup journal for partial state") from None
 
 
-def select_threads(conn: sqlite3.Connection, old: str, identity: str | None) -> list[tuple[str, str]]:
+def select_threads(conn: sqlite3.Connection, mapping: Mapping, identity: str | None) -> list[tuple[str, str]]:
     if identity is None:
-        selected = conn.execute("SELECT id, cwd FROM threads WHERE cwd = ?", (old,)).fetchall()
+        placeholders = ", ".join("?" for _old in mapping)
+        selected = conn.execute(f"SELECT id, cwd FROM threads WHERE cwd IN ({placeholders}) ORDER BY id",
+                                tuple(mapping)).fetchall()
     else:
         selected = conn.execute("SELECT id, cwd FROM threads WHERE id = ?", (identity,)).fetchall()
     if len({row[0] for row in selected}) != len(selected):
@@ -356,22 +379,24 @@ def select_threads(conn: sqlite3.Connection, old: str, identity: str | None) -> 
     return selected
 
 
-def plan_database(plan: MigrationPlan, database: Path, old: str, new: str,
-                  identity: str | None) -> tuple[int, list[str]]:
+def plan_database(plan: MigrationPlan, database: Path, mapping: Mapping,
+                  identity: str | None) -> tuple[dict[str, int], list[str]]:
     """Select exact thread rows from a read-only view of the live database.
 
     Unrelated Codex processes may keep the database open. Its WAL and shared
     memory are never copied as static inputs: the recovery backup is an
     online-backup snapshot, the selection is re-checked before every operation,
-    and the rows are updated inside BEGIN IMMEDIATE at apply time.
+    and every mapping's rows are updated in one BEGIN IMMEDIATE transaction at
+    apply time. Returns the changed row count per source path.
     """
     validate_state_generation(database.parent)
+    counts = {old: 0 for old in mapping}
     if not os.path.lexists(database):
         resolved = database.resolve()
         if any(os.path.lexists(Path(str(resolved) + suffix)) for suffix in SQLITE_COMPANIONS):
             raise MigrationError("SQLite companion files exist without their database")
         plan.expect_absent(database)
-        return 0, []
+        return counts, []
     bound = database_identity(database)
     try:
         with closing(connect_database(database)) as conn:
@@ -381,43 +406,120 @@ def plan_database(plan: MigrationPlan, database: Path, old: str, new: str,
                 raise MigrationError("SQLite integrity preflight failed")
             unupdated = ([f"{database}: threads.project_id"] if "project_id" in columns else [])
             unupdated += [f"{database}: {table}" for table in ("projects", "project_roots") if table in tables]
-            selected = select_threads(conn, old, identity)
+            selected = select_threads(conn, mapping, identity)
     except sqlite3.Error:
         raise MigrationError("Codex thread database could not be inspected") from None
     if database_identity(database) != bound:
         raise MigrationError("Database location changed during preflight")
-    changes = [(selected_id, current) for selected_id, current in selected if current != new]
+    # A single-session import maps the session's own origin wherever its row
+    # currently points; a rename maps each row by its exact current cwd.
+    changes: list[tuple[str, str, str]] = []
+    for selected_id, current in selected:
+        source = next(iter(mapping)) if identity is not None else current
+        new = mapping[source]
+        if current != new:
+            changes.append((selected_id, current, new))
+            counts[source] += 1
     state = {"applied": False}
 
     def check_selection() -> None:
         """The selected rows still hold their preflight cwd, or ours once applied."""
         if database_identity(database) != bound:
             raise MigrationError("Database location or inode changed after preflight")
-        expected = {selected_id: new if state["applied"] else current for selected_id, current in selected}
+        expected = dict(selected)
+        if state["applied"]:
+            expected.update({selected_id: new for selected_id, _original, new in changes})
         with closing(connect_database(database)) as conn:
-            current_rows = dict(select_threads(conn, old, identity))
+            current_rows = dict(select_threads(conn, mapping, identity))
             if identity is None and not state["applied"] and set(current_rows) - set(expected):
-                raise MigrationError("A thread acquired the source project cwd after preflight")
+                raise MigrationError("A thread acquired a source project cwd after preflight")
             for selected_id, cwd in expected.items():
                 if conn.execute("SELECT cwd FROM threads WHERE id = ?", (selected_id,)).fetchall() != [(cwd,)]:
                     raise MigrationError("Selected SQLite threads changed after preflight")
 
     def apply() -> None:
-        database_action(database, bound, changes, new)
+        database_action(database, bound, changes)
         state["applied"] = True
 
     plan.add_check(f"Codex thread selection: {database}", check_selection)
     if changes:
         plan.add_backup(f"Codex thread database snapshot: {database}", lambda: snapshot_database(database))
         plan.add_action(f"update Codex thread cwd: {database}", apply)
-    return len(changes), unupdated
+    return counts, unupdated
 
 
-def make_plan(identity: str | None, old: str | None, new: str) -> tuple[MigrationPlan, dict[str, Any]]:
-    if identity is not None:
-        session_uuid(identity)
-    absolute_project(new)
+def directory_versions(roots: list[Path]) -> dict[Path, tuple[int, ...]]:
+    """Identity, mtime, ctime and size of every directory an inventory change would touch.
+
+    Creating, removing or renaming an entry updates its parent directory's
+    mtime, so an unchanged snapshot proves that no rollout, session root or
+    sibling profile appeared or disappeared, without rescanning every rollout.
+    """
+    def version(directory: Path) -> tuple[int, ...]:
+        info = os.stat(directory)
+        return (info.st_ino, info.st_mtime_ns, info.st_ctime_ns, info.st_size)
+
+    def traversal_error(_error: OSError) -> None:
+        raise MigrationError("Session inventory traversal was incomplete")
+
+    versions: dict[Path, tuple[int, ...]] = {}
+    for directory in (CODEX_HOME.parent, CODEX_HOME, *sorted(CODEX_HOME.parent.glob(".codex*"))):
+        if directory.is_dir():
+            versions[directory] = version(directory)
+    for root in roots:
+        for current, _subdirs, _names in os.walk(root, onerror=traversal_error):
+            versions[Path(current)] = version(Path(current))
+    return versions
+
+
+def validate_mappings(pairs: list[tuple[str, str]]) -> Mapping:
+    """Exact, distinct, non-chaining path mappings whose destinations exist."""
+    if not pairs:
+        raise MigrationError("A batch rename needs at least one OLD NEW mapping")
+    mapping: Mapping = {}
+    for old, new in pairs:
+        absolute_project(old)
+        absolute_project(new)
+        if old == new:
+            raise MigrationError(f"A mapping maps a path to itself: {old}")
+        if old in mapping:
+            raise MigrationError(f"Duplicate source path in mappings: {old}")
+        mapping[old] = new
+    destinations = list(mapping.values())
+    if len(set(destinations)) != len(destinations):
+        raise MigrationError("Two mappings share one destination path")
+    chained = set(destinations) & set(mapping)
+    if chained:
+        raise MigrationError(f"A destination path is also a source path: {sorted(chained)[0]}")
+    for new in destinations:
+        if not Path(new).is_dir():
+            raise MigrationError(f"Destination directory does not exist: {new}")
+    return mapping
+
+
+def read_mapping_file(path: Path) -> list[tuple[str, str]]:
+    """One 'OLD<TAB>NEW' exact mapping per line; blank lines and # comments are skipped."""
+    pairs = []
+    for number, line in enumerate(path.read_text("utf-8").split("\n"), 1):
+        line = line.rstrip("\r")
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        fields = line.split("\t")
+        if len(fields) != 2 or not all(fields):
+            raise MigrationError(f"Mapping file line {number} is not OLD<TAB>NEW")
+        pairs.append((fields[0], fields[1]))
+    return pairs
+
+
+def plan_store(identity: str | None, mapping: Mapping | None, new: str | None
+               ) -> tuple[MigrationPlan, dict[str, Any]]:
+    """Scan the store once and plan every mapping's rewrites together.
+
+    A single-session import passes IDENTITY and NEW; its mapping is the
+    session's own recorded origin. A rename passes the validated MAPPING.
+    """
     homes, roots, files = discover()
+    versions = directory_versions(roots)
     inventory = {path: captured_header(path) for path in files}
     ids = [meta["id"] for meta in inventory.values()]
     if len(set(ids)) != len(ids):
@@ -426,30 +528,35 @@ def make_plan(identity: str | None, old: str | None, new: str) -> tuple[Migratio
         selected = [path for path, meta in inventory.items() if meta["id"] == identity]
         if len(selected) != 1:
             raise MigrationError("No unique rollout has the requested exact session identity")
-        old = inventory[selected[0]]["cwd"]
+        mapping = {inventory[selected[0]]["cwd"]: new}
     else:
         selected = files
-    absolute_project(old)
+    assert mapping is not None
     plan = MigrationPlan()
 
     def check_inventory() -> None:
+        nonlocal versions
+        for home in homes:
+            validate_state_generation(home)
+        current = directory_versions(roots)
+        if current == versions:
+            return  # No entry was created, removed or renamed under any inventoried directory.
         current_homes, current_roots, current_files = discover()
         if (current_homes, current_roots) != (homes, roots) or set(files) - set(current_files):
             raise MigrationError("Codex profile/session inventory changed after preflight")
         for path in sorted(set(current_files) - set(files)):
             # Sessions started elsewhere while this runs are unaffected. One
-            # started in the source project, or one reusing the selected
+            # started in a source project, or one reusing the selected
             # identity, would be missed by this plan.
             meta = captured_header(path)
-            if meta["cwd"] == old if identity is None else meta["id"] == identity:
-                raise MigrationError("A session started inside the source project after preflight")
-        for path, meta in inventory.items():
-            if captured_header(path)["id"] != meta["id"]:
-                raise MigrationError("A discovered session identity changed after preflight")
-        for home in homes:
-            validate_state_generation(home)
+            if meta["cwd"] in mapping if identity is None else meta["id"] == identity:
+                raise MigrationError("A session started inside a source project after preflight")
+        versions = current
 
     plan.add_check("Codex profile/session inventory", check_inventory)
+    per_mapping = {old: {"old": old, "new": target, "session_files_rewritten": 0, "session_fields": 0,
+                         "history_fields": 0, "index_fields": 0, "database_rows": 0}
+                   for old, target in mapping.items()}
     report: dict[str, Any] = {"homes": [str(path) for path in homes],
                               "session_roots": [str(path) for path in roots],
                               "session_files_scanned": len(files),
@@ -458,18 +565,27 @@ def make_plan(identity: str | None, old: str | None, new: str) -> tuple[Migratio
                               "database_files_checked": 0,
                               "session": str(selected[0]) if identity is not None else None,
                               "unupdated_project_metadata": [],
-                              "missing": []}
+                              "missing": [], "mappings": list(per_mapping.values())}
+
+    def tally(counts: dict[str, int], field: str, files_field: str | None = None) -> int:
+        for old, count in counts.items():
+            per_mapping[old][field] += count
+            if files_field is not None and count:
+                per_mapping[old][files_field] += 1
+        return sum(counts.values())
+
     for path in selected:
         data = plan.read(path)
         if header(data) != inventory[path]:
             raise MigrationError("Session metadata changed after inventory")
-        updated, count = rewrite_rollout(data, old, new, inventory[path]["id"])
+        updated, counts = remap_rollout(data, mapping, inventory[path]["id"])
+        count = tally(counts, "session_fields", "session_files_rewritten")
         if count:
             plan.rewrite(path, updated)
             report["session_files_rewritten"] += 1
             report["session_fields"] += count
         else:
-            # Nothing here records the old project: the session owning this
+            # Nothing here records a source project: the session owning this
             # rollout may stay open and keep appending to it.
             plan.release(path)
     seen: set[Path] = set()
@@ -490,7 +606,8 @@ def make_plan(identity: str | None, old: str | None, new: str) -> tuple[Migratio
                 report["missing"].append(str(path))
                 continue
             data = plan.read(path, append_only=True)
-            updated, count = rewrite_index(data, key, old, new, identity)
+            updated, counts = remap_index(data, key, mapping, identity)
+            count = tally(counts, counter)
             if count:
                 plan.rewrite(path, updated)
                 report[counter] += count
@@ -507,12 +624,28 @@ def make_plan(identity: str | None, old: str | None, new: str) -> tuple[Migratio
             report["missing"].append(str(database))
         else:
             report["database_files_checked"] += 1
-        count, unupdated = plan_database(plan, database, old, new, identity)
-        report["database_rows"] += count
+        counts, unupdated = plan_database(plan, database, mapping, identity)
+        report["database_rows"] += tally(counts, "database_rows")
         report["unupdated_project_metadata"].extend(unupdated)
+    plan.annotate("mappings", report["mappings"])
     plan.validate()
     check_inventory()
     return plan, report
+
+
+def make_plan(identity: str | None, old: str | None, new: str) -> tuple[MigrationPlan, dict[str, Any]]:
+    """Single-session import (IDENTITY, NEW) or single-mapping rename (OLD, NEW)."""
+    absolute_project(new)
+    if identity is not None:
+        session_uuid(identity)
+        return plan_store(identity, None, new)
+    absolute_project(old)
+    return plan_store(None, {old: new}, None)
+
+
+def make_batch_plan(pairs: list[tuple[str, str]]) -> tuple[MigrationPlan, dict[str, Any]]:
+    """Rename several exact project paths in one scan of the store."""
+    return plan_store(None, validate_mappings(pairs), None)
 
 
 def list_recent(project: str) -> None:
@@ -534,21 +667,38 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("session_id", nargs="?", help="complete Codex session UUID")
     parser.add_argument("--project", help="single-session target; defaults to PWD")
     parser.add_argument("--rename", nargs=2, metavar=("OLD", "NEW"))
+    parser.add_argument("--rename-file", type=Path, metavar="FILE",
+                        help="batch rename in one scan: one exact 'OLD<TAB>NEW' mapping per line; "
+                             "every NEW must be an existing directory")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--offline", action="store_true",
                         help="assert that no Codex session is running in the affected project directories "
                              "(required for bulk rename)")
     parser.add_argument("--backup-dir", type=Path, help="new absolute private backup directory outside Drive")
     args = parser.parse_args()
-    if args.rename and (args.session_id or args.project is not None):
-        parser.error("--rename cannot be combined with a session ID or --project")
+    if (args.rename or args.rename_file) and (args.session_id or args.project is not None):
+        parser.error("--rename/--rename-file cannot be combined with a session ID or --project")
+    if args.rename and args.rename_file:
+        parser.error("--rename and --rename-file are mutually exclusive")
     return args
+
+
+def print_mappings(report: dict[str, Any]) -> None:
+    for item in report["mappings"]:
+        print(f"mapping: {item['old']} -> {item['new']}")
+        print(f"  session files rewritten: {item['session_files_rewritten']}")
+        print(f"  session path fields rewritten: {item['session_fields']}")
+        print(f"  history path fields rewritten: {item['history_fields']}")
+        print(f"  session_index path fields rewritten: {item['index_fields']}")
+        print(f"  state_db thread cwd rows rewritten: {item['database_rows']}")
 
 
 def main() -> int:
     args = parse_args()
     try:
-        if args.rename:
+        if args.rename_file:
+            plan, report = make_batch_plan(read_mapping_file(args.rename_file))
+        elif args.rename:
             old, new = args.rename
             absolute_project(old)
             plan, report = make_plan(None, old, new)
@@ -574,6 +724,8 @@ def main() -> int:
         print(f"session_index path fields rewritten: {report['index_fields']}")
         print(f"state_db thread cwd rows rewritten: {report['database_rows']}")
         print(f"state_db files checked: {report['database_files_checked']}")
+        if args.rename_file:
+            print_mappings(report)
         for home in report["homes"]:
             print(f"profile checked: {home}")
         for missing in report["missing"]:

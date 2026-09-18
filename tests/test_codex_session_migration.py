@@ -586,7 +586,7 @@ class CodexSessionMigrationTests(unittest.TestCase):
 
         with mock.patch.object(ADAPTER.sqlite3, "connect", side_effect=lambda *args, **kwargs: FaultConnection(real_connect(*args, **kwargs))):
             with self.assertRaisesRegex(SAFETY.MigrationError, "not committed"):
-                ADAPTER.database_action(database, ADAPTER.database_identity(database), [(SESSION, OLD)], NEW)
+                ADAPTER.database_action(database, ADAPTER.database_identity(database), [(SESSION, OLD, NEW)])
         self.assertEqual(commits, [])
         with contextlib.closing(real_connect(database)) as conn:
             self.assertEqual(dict(conn.execute("SELECT id, cwd FROM threads")), {SESSION: OLD, OTHER_SESSION: OTHER})
@@ -692,6 +692,150 @@ class CodexSessionMigrationTests(unittest.TestCase):
             plan.run(offline=True, backup_dir=self.backup)
         self.assertEqual(self.rollout.read_bytes(), original)
         self.assertFalse(self.backup.exists())
+
+    # Batch rename: several exact mappings applied in one scan of the store.
+
+    THIRD_SESSION = "bbbbbbbb-cccc-dddd-eeee-ffffffffffff"
+    SECOND_OLD = "/synthetic/second old"
+
+    def batch_fixture(self):
+        """Two mappings, a rollout per mapping, a cross-mapping turn_context, and shared stores."""
+        first_new, second_new = self.base / "first-new", self.base / "second-new"
+        first_new.mkdir()
+        second_new.mkdir()
+        second = self.home / "sessions" / f"rollout-{OTHER_SESSION}.jsonl"
+        second.write_bytes(jsonl(metadata(OTHER_SESSION, self.SECOND_OLD),
+                                 {"type": "turn_context", "payload": {"cwd": OLD}}))
+        unrelated = self.home / "sessions" / f"rollout-{self.THIRD_SESSION}.jsonl"
+        unrelated.write_bytes(jsonl(metadata(self.THIRD_SESSION, OTHER)))
+        (self.home / "history.jsonl").write_bytes(jsonl({"session_id": SESSION, "cwd": OLD},
+                                                        {"session_id": OTHER_SESSION, "cwd": self.SECOND_OLD},
+                                                        {"session_id": self.THIRD_SESSION, "cwd": OTHER}))
+        (self.home / "session_index.jsonl").write_bytes(jsonl({"id": OTHER_SESSION, "cwd": self.SECOND_OLD}))
+        self.database(records=[(SESSION, "a", OLD), (OTHER_SESSION, "b", self.SECOND_OLD),
+                               (self.THIRD_SESSION, "c", OTHER)])
+        pairs = [(OLD, str(first_new)), (self.SECOND_OLD, str(second_new))]
+        expected = [
+            {"old": OLD, "new": str(first_new), "session_files_rewritten": 2, "session_fields": 2,
+             "history_fields": 1, "index_fields": 0, "database_rows": 1},
+            {"old": self.SECOND_OLD, "new": str(second_new), "session_files_rewritten": 1, "session_fields": 1,
+             "history_fields": 1, "index_fields": 1, "database_rows": 1},
+        ]
+        return pairs, expected, second, unrelated
+
+    def test_batch_preview_counts_per_mapping_and_in_total_without_writing(self):
+        pairs, expected, _second, _unrelated = self.batch_fixture()
+        before = digest(self.home)
+        plan, report = ADAPTER.make_batch_plan(pairs)
+        self.assertEqual(report["mappings"], expected)
+        self.assertEqual((report["session_files_scanned"], report["session_files_rewritten"], report["session_fields"],
+                          report["history_fields"], report["index_fields"], report["database_rows"]),
+                         (3, 2, 3, 2, 1, 2))
+        plan.run(dry_run=True, backup_dir=self.backup)
+        self.assertEqual(digest(self.home), before)
+        self.assertFalse(self.backup.exists())
+
+    def test_batch_apply_rewrites_rollouts_of_different_mappings_in_one_run(self):
+        pairs, expected, second, unrelated = self.batch_fixture()
+        first_new, second_new = pairs[0][1], pairs[1][1]
+        plan, _report = ADAPTER.make_batch_plan(pairs)
+        self.assertEqual(plan.run(offline=True, backup_dir=self.backup), self.backup)
+        self.assertEqual(json.loads(self.rollout.read_bytes())["payload"]["cwd"], first_new)
+        records = [json.loads(line) for line in second.read_bytes().splitlines()]
+        self.assertEqual([record["payload"]["cwd"] for record in records], [second_new, first_new])
+        self.assertEqual(json.loads(unrelated.read_bytes())["payload"]["cwd"], OTHER)
+        history = [json.loads(line)["cwd"] for line in (self.home / "history.jsonl").read_bytes().splitlines()]
+        self.assertEqual(history, [first_new, second_new, OTHER])
+        self.assertEqual(json.loads((self.home / "session_index.jsonl").read_bytes())["cwd"], second_new)
+        with contextlib.closing(sqlite3.connect(self.home / "state_5.sqlite")) as conn:
+            self.assertEqual(dict(conn.execute("SELECT id, cwd FROM threads")),
+                             {SESSION: first_new, OTHER_SESSION: second_new, self.THIRD_SESSION: OTHER})
+        manifest = json.loads((self.backup / "manifest.json").read_bytes())
+        self.assertEqual(manifest["annotations"]["mappings"], expected)
+        actions = [entry for entry in manifest["journal"] if entry["kind"] == "action"]
+        self.assertEqual(len(actions), 1)  # one SQLite transaction for every mapping's rows
+        self.assertEqual({entry["status"] for entry in manifest["journal"]}, {"completed"})
+        self.assertEqual(sorted(item["originalPath"] for item in manifest["inputs"]),
+                         sorted(str(path) for path in (self.rollout, second, self.home / "history.jsonl",
+                                                       self.home / "session_index.jsonl")))
+
+    def test_batch_refuses_invalid_mappings_before_reading_the_store(self):
+        first_new = self.base / "first-new"
+        first_new.mkdir()
+        cases = {
+            "self": ([(OLD, OLD)], "maps a path to itself"),
+            "duplicate source": ([(OLD, str(first_new)), (OLD, str(self.base))], "Duplicate source"),
+            "shared destination": ([(OLD, str(first_new)), (OTHER, str(first_new))], "share one destination"),
+            "chained": ([(OLD, str(first_new)), (str(first_new), str(self.base))], "also a source"),
+            "missing target": ([(OLD, str(self.base / "absent"))], "does not exist"),
+            "relative": ([(OLD, "relative/path")], "absolute"),
+            "empty": ([], "at least one"),
+        }
+        before = digest(self.home)
+        for label, (pairs, reason) in cases.items():
+            with self.subTest(case=label), mock.patch.object(ADAPTER, "discover") as scan:
+                with self.assertRaisesRegex(SAFETY.MigrationError, reason):
+                    ADAPTER.make_batch_plan(pairs)
+                scan.assert_not_called()
+        self.assertEqual(digest(self.home), before)
+        self.assertFalse(self.backup.exists())
+
+    def test_batch_scan_reads_each_rollout_once(self):
+        pairs, _expected, second, unrelated = self.batch_fixture()
+        captures = []
+        remaps = []
+        capture = SAFETY._capture
+        remap = ADAPTER.remap_rollout
+
+        def counting_capture(path):
+            captures.append(Path(path).resolve())
+            return capture(path)
+
+        def counting_remap(data, mapping, identity):
+            remaps.append(identity)
+            return remap(data, mapping, identity)
+
+        with mock.patch.object(SAFETY, "_capture", side_effect=counting_capture), \
+                mock.patch.object(ADAPTER, "remap_rollout", side_effect=counting_remap):
+            ADAPTER.make_batch_plan(pairs)
+        self.assertEqual(sorted(remaps), sorted([SESSION, OTHER_SESSION, self.THIRD_SESSION]))
+        # The scan captures every rollout once; the final validation re-reads only
+        # the two rollouts that will be rewritten.
+        self.assertEqual(captures.count(unrelated.resolve()), 1)
+        self.assertEqual(captures.count(self.rollout.resolve()), 2)
+        self.assertEqual(captures.count(second.resolve()), 2)
+
+    def test_rename_file_cli_previews_per_mapping_counts_and_rejects_malformed_lines(self):
+        pairs, expected, _second, _unrelated = self.batch_fixture()
+        mapping_file = self.base / "mappings.tsv"
+        mapping_file.write_text("# profile rename\n\n" + "".join(f"{old}\t{new}\n" for old, new in pairs))
+        before = digest(self.home)
+        output = io.StringIO()
+        with mock.patch.object(sys, "argv", [str(SCRIPT), "--dry-run", "--rename-file", str(mapping_file)]):
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(ADAPTER.main(), 0)
+        text = output.getvalue()
+        self.assertIn("session files rewritten: 2\n", text)
+        self.assertIn("state_db thread cwd rows rewritten: 2\n", text)
+        for item in expected:
+            self.assertIn(f"mapping: {item['old']} -> {item['new']}\n"
+                          f"  session files rewritten: {item['session_files_rewritten']}\n"
+                          f"  session path fields rewritten: {item['session_fields']}\n"
+                          f"  history path fields rewritten: {item['history_fields']}\n"
+                          f"  session_index path fields rewritten: {item['index_fields']}\n"
+                          f"  state_db thread cwd rows rewritten: {item['database_rows']}\n", text)
+        self.assertEqual(digest(self.home), before)
+        mapping_file.write_text(f"{OLD}\t{pairs[0][1]}\n{OLD} {pairs[1][1]}\n")
+        error = io.StringIO()
+        with mock.patch.object(sys, "argv", [str(SCRIPT), "--dry-run", "--rename-file", str(mapping_file)]):
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(error):
+                self.assertEqual(ADAPTER.main(), 1)
+        self.assertIn("line 2 is not OLD<TAB>NEW", error.getvalue())
+        for argv in ([str(SCRIPT), "--rename", OLD, NEW, "--rename-file", str(mapping_file)],
+                     [str(SCRIPT), SESSION, "--rename-file", str(mapping_file)]):
+            with mock.patch.object(sys, "argv", argv), contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit):
+                    ADAPTER.main()
 
     def test_apply_requires_offline_and_new_backup_directory(self):
         plan, _report = self.make_plan()

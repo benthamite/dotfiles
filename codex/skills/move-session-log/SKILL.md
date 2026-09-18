@@ -43,7 +43,18 @@ arguments, not paths or IDs interpolated into SQL, Python or shell source.
 ```bash
 python3 "$SKILL_DIR/scripts/move_session_log.py" --dry-run --project "$TARGET_PROJECT" "$SESSION_ID"
 python3 "$SKILL_DIR/scripts/move_session_log.py" --dry-run --rename "$OLD_PROJECT" "$NEW_PROJECT"
+python3 "$SKILL_DIR/scripts/move_session_log.py" --dry-run --rename-file "$MAPPING_FILE"
 ```
+
+`--rename-file` renames several projects in one scan of the store. The file
+holds one exact `OLD<TAB>NEW` mapping per line; blank lines and `#` comments
+are skipped. Sources must be distinct, no path may be both a source and a
+destination, no two mappings may share a destination, and every destination
+must already exist as a directory. Each rollout is read once and every
+matching mapping is applied to it under the exact-match rule; history and
+index files get one pass each, and each thread database one transaction for
+all its rows. The preview and the recovery manifest report counts per mapping
+as well as in total. Prefer it to repeated `--rename` runs over a large store.
 
 Validate the selected inventory, JSONL identity and SQLite schemas before
 any apply phase. Every mode inspects the thread database through read-only
@@ -124,6 +135,7 @@ future writers; it does not independently establish quiescence.
 ```bash
 python3 "$SKILL_DIR/scripts/move_session_log.py" --offline --backup-dir "$NEW_PRIVATE_BACKUP" --project "$TARGET_PROJECT" "$SESSION_ID"
 python3 "$SKILL_DIR/scripts/move_session_log.py" --offline --backup-dir "$NEW_PRIVATE_BACKUP" --rename "$OLD_PROJECT" "$NEW_PROJECT"
+python3 "$SKILL_DIR/scripts/move_session_log.py" --offline --backup-dir "$NEW_PRIVATE_BACKUP" --rename-file "$MAPPING_FILE"
 ```
 
 Choose a durable uniquely named location under a private off-Drive state root.

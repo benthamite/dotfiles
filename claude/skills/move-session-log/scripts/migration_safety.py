@@ -184,8 +184,13 @@ def _record_diagnostic(record):
     return f" [fields={keys}; access={access}; reason={category or 'unknown-redacted'}; descriptor={shape}]"
 
 
-_VANISHED_DESCRIPTORS = frozenset(prefix + b": FD unavailable" for prefix in (
-    b"vnode", b"socket", b"pipe", b"kqueue", b"semaphore", b"POSIX shared memory"))
+# err2nm renders EBADF as "<prefix>: FD unavailable" and ESRCH as
+# "<prefix>: process unavailable": the descriptor closed, or its process exited,
+# between the descriptor list and the query.  Neither is an open writer.
+_VANISHED_DESCRIPTORS = frozenset(
+    prefix + suffix
+    for prefix in (b"vnode", b"socket", b"pipe", b"kqueue", b"semaphore", b"POSIX shared memory")
+    for suffix in (b": FD unavailable", b": process unavailable"))
 
 
 def _check_kernel_records(output, selected):

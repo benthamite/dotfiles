@@ -426,8 +426,14 @@ class MigrationSafetyTests(unittest.TestCase):
         # Every Apple err2nm caller: a descriptor closed mid-scan is not a writer.
         for prefix in (b"socket", b"pipe", b"kqueue", b"semaphore", b"POSIX shared memory"):
             self.mod._check_kernel_records(process + vanished.replace(b"vnode", prefix), {(0x12, 34)})
-        with self.assertRaises(self.mod.MigrationError):
-            self.mod._check_kernel_records(process + vanished.replace(b"vnode", b"FD info error"), {(0x12, 34)})
+        # ESRCH from the same callers: the process exited mid-scan, so it is not a writer either.
+        exited = vanished.replace(b"FD unavailable", b"process unavailable")
+        for prefix in (b"vnode", b"socket", b"pipe", b"kqueue", b"semaphore", b"POSIX shared memory"):
+            self.mod._check_kernel_records(process + exited.replace(b"vnode", prefix), {(0x12, 34)})
+        for name in (b"FD info error: FD unavailable", b"FD info error: process unavailable",
+                     b"vnode: Permission denied", b"pipe: No such process"):
+            with self.assertRaises(self.mod.MigrationError):
+                self.mod._check_kernel_records(process + vanished.replace(b"vnode: FD unavailable", name), {(0x12, 34)})
         for record in (vanished.replace(b"f3", b"ftxt"),
                        vanished.replace(b"f3", b"ferr"),
                        vanished.replace(b"f3", b"f-1"),
@@ -441,7 +447,6 @@ class MigrationSafetyTests(unittest.TestCase):
                        vanished.replace(b"f3\0", b"f3\0D0x12\0"),
                        vanished.replace(b"f3\0", b"f3\0i34\0"),
                        vanished.replace(b"FD unavailable", b"FD unavailable extra"),
-                       vanished.replace(b"FD unavailable", b"process unavailable"),
                        b"f3\0nno more information\0\n", b"f3\0n(revoked)\0\n",
                        b"f3\0nprivate unknown error text\0\n"):
             for variant in (record, record.replace(b"vnode:", b"socket:")):
@@ -450,10 +455,10 @@ class MigrationSafetyTests(unittest.TestCase):
                 self.assertNotIn("private", str(caught.exception))
 
     def test_incomplete_diagnostics_expose_only_fixed_categories(self):
-        for message, category in ((b"vnode: process unavailable", "vnode-ESRCH"),
+        for message, category in ((b"vnode: Permission denied", "vnode-EACCES"),
                                   (b"no more information", "vnode-EPERM"),
                                   (b"(revoked)", "vnode-revoked"),
-                                  (b"socket: process unavailable", "socket-ESRCH"),
+                                  (b"socket: Operation not permitted", "socket-EPERM"),
                                   (b"vnode: " + os.strerror(13).encode(), "vnode-EACCES"),
                                   (b"/private/personal/unknown path", "unknown-redacted")):
             with self.assertRaises(self.mod.MigrationError) as caught:

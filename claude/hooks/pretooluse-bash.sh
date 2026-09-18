@@ -513,7 +513,12 @@ echo "$COMMAND" | grep -qE '\bcommit\b' && IS_COMMIT=1
 delegate block-secret-leak.sh
 delegate block-untrusted-execution.sh
 check_ahrefs
-if echo "$COMMAND" | grep -qE '(^|[[:space:];|&])(git[[:space:]]+push|gh[[:space:]]+(api|pr|issue|secret|variable|workflow|run|release|repo|label|milestone|gist)[[:space:]])'; then
+# Delegate whenever a git or gh command word appears, in any spelling the
+# standalone guard recognizes (`git -C DIR push`, `/usr/bin/git push`, a quoted
+# path). The guard itself decides what is a write; a narrower prefilter here
+# used to let `git -C DIR push` and `/usr/bin/git push` through unchecked
+# (found 2026-09-18 by the inbox triage).
+if echo "$COMMAND" | grep -qE '(^|[[:space:];|&(])("[^"]*/(git|gh)"|'"'"'[^'"'"']*/(git|gh)'"'"'|[^[:space:];|&]*/(git|gh)|git|gh)([[:space:]]|$)'; then
   delegate block-github-write-command.sh
 fi
 check_sensitive_read

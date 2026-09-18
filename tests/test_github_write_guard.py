@@ -439,5 +439,49 @@ exit 1
         self.assert_both(command, expected="allow")
 
 
+class DispatcherPrefilterTests(unittest.TestCase):
+    """The Claude Bash dispatcher must reach the guard for every push spelling.
+
+    Only pretooluse-bash.sh is registered for Claude, so a prefilter that
+    misses a form is a bypass, not a false negative in the guard. Until
+    2026-09-18 `git -C DIR push` and `/usr/bin/git push` slipped through it
+    (found by the learning-inbox triage).
+    """
+
+    DISPATCHER = ROOT / "claude" / "hooks" / "pretooluse-bash.sh"
+    UNOWNED = "https://github.com/someone-else/not-owned.git"
+
+    def run_dispatcher(self, command: str) -> str:
+        result = subprocess.run(
+            ["bash", str(self.DISPATCHER)],
+            input=payload("claude", command),
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=ROOT,
+        )
+        return decision(result)
+
+    def test_push_forms_with_git_options_reach_the_guard(self) -> None:
+        for command in (
+            f"git push {self.UNOWNED} master",
+            f"git -C /tmp/somerepo push {self.UNOWNED} master",
+            f"/usr/bin/git push {self.UNOWNED} master",
+            f"git -c core.quotepath=off push {self.UNOWNED} master",
+            f"pytest -q | tail -1 && git -C /tmp/somerepo push {self.UNOWNED} master",
+        ):
+            with self.subTest(command=command):
+                self.assertEqual(self.run_dispatcher(command), "deny")
+
+    def test_read_only_git_and_gh_still_pass_the_dispatcher(self) -> None:
+        for command in (
+            "git -C /tmp/somerepo status --short",
+            "git -C /tmp/somerepo status --short && gh pr view 12 --repo someone-else/not-owned",
+            "/usr/bin/git log --oneline -n 3",
+        ):
+            with self.subTest(command=command):
+                self.assertEqual(self.run_dispatcher(command), "allow")
+
+
 if __name__ == "__main__":
     unittest.main()

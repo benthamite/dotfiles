@@ -920,6 +920,14 @@ write inside a compound command (pipes, =;=, =&&=) is refused before any
 repository check, including a real push chained after a =--dry-run= one;
 read-only GitHub commands may be piped or chained freely.
 
+Only the Bash dispatcher (=pretooluse-bash.sh=) is registered for Claude, so
+its prefilter decides whether the guard runs at all. Until 2026-09-18 that
+prefilter matched only a bare =git push= or =gh <verb>=, and =git -C DIR push=
+and =/usr/bin/git push= to an unowned repository reached no guard. It now
+delegates on any =git= or =gh= command word, in every spelling the guard's own
+=git_push_command_p= accepts, and the guard decides what is a write.
+=tests/test_github_write_guard.py= runs those forms through the dispatcher.
+
 GitHub writes require repository authorization or an explicitly authorized
 scoped contribution grant. Topic branches, issues, and comments have no exemption;
 read-only inspection remains available for undeclared repositories. A registry

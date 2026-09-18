@@ -10005,7 +10005,7 @@ fixed stale element-cache state after edits inside lists
   (org-mark-ring-length 4)
   (org-pretty-entities nil)
   (org-image-actual-width '(800))
-  (org-link-elisp-confirm-function nil)
+  (org-link-elisp-confirm-function #'y-or-n-p) ; following an `elisp:' link runs code
   (org-file-apps '((auto-mode . emacs)
                    (directory . emacs)
                    ("\\.mm\\'" . default)

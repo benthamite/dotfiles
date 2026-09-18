@@ -306,6 +306,28 @@ class PersonalUpdatesStateTest(unittest.TestCase):
             state = self.mod.merge_scan({}, {"brew_cask": [update]}, self.now)
             self.assertEqual(state["brew_cask"]["tool"]["version_check_error"], update["version_check_error"])
 
+    def test_non_app_casks_read_versions_from_their_install_location(self):
+        import plistlib
+        with tempfile.TemporaryDirectory() as directory:
+            bundle = pathlib.Path(directory) / "Driver.fs"
+            (bundle / "Contents").mkdir(parents=True)
+            (bundle / "Contents/Info.plist").write_bytes(plistlib.dumps(
+                {"CFBundleShortVersionString": "5.1.3", "CFBundleVersion": "5.1.3"}))
+            version_file = pathlib.Path(directory) / "VERSION"
+            version_file.write_text("564.0.0\n")
+            sources = {"driver": bundle, "sdk": version_file, "gone": pathlib.Path(directory) / "Gone.app"}
+            items = [{"token": token, "version": available, "installed": installed, "auto_updates": True}
+                     for token, installed, available in (("driver", "5.1.3", "5.3.3"),
+                                                         ("sdk", "560.0.0", "564.0.0"),
+                                                         ("gone", "1.0", "2.0"))]
+            with patch.object(self.mod, "INSTALLED_VERSION_SOURCES", sources):
+                updates = {update["name"]: update for update in self.mod.cask_updates([], items)}
+        self.assertEqual(updates["driver"]["installed"], "5.1.3")
+        self.assertNotIn("version_check_error", updates["driver"])
+        # The SDK updated itself past its stale receipt, so it is not reinstalled.
+        self.assertNotIn("sdk", updates)
+        self.assertEqual(updates["gone"]["version_check_error"], "installed application bundle version is unavailable")
+
     def test_delayed_defers_unchecked_bundle_even_when_artifact_is_age_qualified(self):
         with tempfile.TemporaryDirectory() as directory:
             base = pathlib.Path(directory)

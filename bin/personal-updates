@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import plistlib
 import re
 import subprocess
 import sys
@@ -22,6 +23,16 @@ DEFAULT_FAST_BREW_PACKAGES = ("claude-code@latest", "codex")
 DEFAULT_MIN_AGE_DAYS = 7
 KINDS = ("brew_formula", "brew_cask")
 BREW_HELPER = Path(__file__).with_name("personal-updates-brew.rb")
+# Homebrew reports bundle versions only for `app` artifacts. These
+# self-updating casks install through a pkg or an installer script, so their
+# installed version is read from the location they actually install to.
+INSTALLED_VERSION_SOURCES = {
+    "gcloud-cli": Path("/opt/homebrew/share/google-cloud-sdk/VERSION"),
+    "google-drive": Path("/Applications/Google Drive.app"),
+    "karabiner-elements": Path("/Applications/Karabiner-Elements.app"),
+    "macfuse": Path("/Library/Filesystems/macfuse.fs"),
+    "mullvad-vpn": Path("/Applications/Mullvad VPN.app"),
+}
 
 
 def now_utc():
@@ -168,6 +179,30 @@ def numeric_version(value):
     return parts
 
 
+def installed_version_from_source(source):
+    """Return (short, build) versions from a bundle or a plain VERSION file."""
+    if source.suffix:
+        try:
+            with open(source / "Contents/Info.plist", "rb") as handle:
+                info = plistlib.load(handle)
+        except (OSError, plistlib.InvalidFileException):
+            return None, None
+        return info.get("CFBundleShortVersionString"), info.get("CFBundleVersion")
+    try:
+        return source.read_text().strip() or None, None
+    except OSError:
+        return None, None
+
+
+def with_installed_version(item):
+    """Fill in bundle versions Homebrew cannot report for non-app casks."""
+    source = INSTALLED_VERSION_SOURCES.get(item["token"])
+    if item.get("bundle_short_version") or source is None:
+        return item
+    short, build = installed_version_from_source(source)
+    return {**item, "bundle_short_version": short, "bundle_version": build}
+
+
 def cask_bundle_comparison(item):
     """Return installed-versus-available ordering or an explicit check error."""
     available, *builds = item["version"].split(",")
@@ -218,6 +253,7 @@ def cask_updates(outdated, installed):
             continue
         entry = {"name": name, "installed": item["installed"], "available": item["version"]}
         if item.get("auto_updates"):
+            item = with_installed_version(item)
             comparison, error = cask_bundle_comparison(item)
             if error:
                 entry["version_check_error"] = error

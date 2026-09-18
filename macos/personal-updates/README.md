@@ -12,6 +12,10 @@ bundle versions. Homebrew receipts can lag an application's own updater, and
 Homebrew's normal bundle comparison can miss Brave's Chromium-prefixed version
 format. The scan compares numeric release and build versions, normalizes that
 Brave-specific prefix, and omits bundles already at or ahead of the cask release.
+Homebrew reports bundle versions only for casks that install an app, so
+self-updating casks installed by a pkg or script (Karabiner-Elements, macFUSE,
+Mullvad VPN, Google Drive, gcloud-cli) have their install location listed in
+`INSTALLED_VERSION_SOURCES` in `bin/personal-updates`.
 It checks installed bundles even when their receipts claim the current release.
 An older bundle with a current receipt is reported as needing a verified
 reinstall, because Homebrew's upgrade command would otherwise skip it.

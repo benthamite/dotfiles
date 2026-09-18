@@ -17,6 +17,9 @@ trap 'hook_status=$?; if [ "$hook_status" -ne 0 ] || [ "$hook_bootstrap_complete
   exit 2
 fi' EXIT
 
+# shellcheck source=lib-heredoc.sh
+source "$(dirname "$0")/lib-heredoc.sh"
+
 hook_bootstrap_complete=1
 INPUT=$(cat)
 
@@ -26,7 +29,10 @@ TOOL_NAME=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty')
 CMD=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
 [ -n "$CMD" ] || exit 0
 
-if ! echo "$CMD" | grep -q 'api\.ahrefs\.com'; then
+# A commit message or a heredoc fed to a data sink that names the host is
+# prose, not a request (lib-heredoc.sh masks); a real call keeps the host.
+SCAN=$(mask_git_commit_messages "$(mask_heredoc_bodies "$CMD")")
+if ! echo "$SCAN" | grep -q 'api\.ahrefs\.com'; then
   exit 0
 fi
 

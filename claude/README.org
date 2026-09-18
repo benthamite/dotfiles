@@ -928,6 +928,18 @@ delegates on any =git= or =gh= command word, in every spelling the guard's own
 =git_push_command_p= accepts, and the guard decides what is a write.
 =tests/test_github_write_guard.py= runs those forms through the dispatcher.
 
+Also since 2026-09-18, the GitHub write, Ahrefs and walk-list guards scan text
+with =mask_heredoc_bodies= and =mask_git_commit_messages= applied, as the
+sensitive-read guard already did: a commit message or a heredoc fed to a data
+sink that names a push, the Ahrefs host or the walk-list store is prose, not a
+command. Target extraction still reads the raw command, heredocs fed to a shell
+or interpreter stay in the scan, and a shell =-c= body is unquoted before the
+scan so =sh -c 'git push …'= is read as the push it is (a quoted body used to
+hide it). The commit-selection helper stops at shell redirections (=2>&1=,
+=> file=) and accepts a joined =<<EOF= delimiter instead of reading them as
+pathspecs, and =ai-config-sync= accepts the =-qm= short-option cluster the
+helper already accepted. =tests/test_inert_text_scans.py= pins all of it.
+
 GitHub writes require repository authorization or an explicitly authorized
 scoped contribution grant. Topic branches, issues, and comments have no exemption;
 read-only inspection remains available for undeclared repositories. A registry

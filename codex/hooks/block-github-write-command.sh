@@ -23,6 +23,8 @@ fi' EXIT
 SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
 # shellcheck source=lib-codex-hook-json.sh
 source "$SCRIPT_DIR/lib-codex-hook-json.sh"
+# shellcheck source=lib-heredoc.sh
+source "$SCRIPT_DIR/lib-heredoc.sh"
 
 hook_bootstrap_complete=1
 INPUT=$(cat)
@@ -33,6 +35,16 @@ codex_shell_tool_p "$TOOL_NAME" || exit 0
 CMD=$(codex_shell_command "$INPUT")
 [ -n "$CMD" ] || exit 0
 COMMAND="$CMD"
+
+# Quoted commit messages and heredoc bodies fed to data sinks are data, not
+# commands: a note that mentions a push or a pull request must not trip the
+# write detection below. Target extraction still reads the raw command, and
+# a heredoc fed to a shell or interpreter stays in the scan (lib-heredoc.sh).
+SCAN_COMMAND=$(mask_git_commit_messages "$(mask_heredoc_bodies "$COMMAND")")
+# A shell's `-c` argument is a command, not data: drop the quote after `-c`
+# so `sh -c 'git push …'` is read as the push it is. (The detectors below
+# require a separator before `git`/`gh`, so a quoted body used to hide it.)
+SCAN_COMMAND=$(printf '%s' "$SCAN_COMMAND" | sed -E "s/((^|[[:space:];|&(])(bash|sh|zsh|dash|ksh)[[:space:]]+-[a-zA-Z]*c[a-zA-Z]*[[:space:]]+)['\"]/\1/g")
 
 # Read from the committed blob, never the working tree: an agent that is
 # blocked can append its own target to a tracked file and retry, as one did on
@@ -286,7 +298,7 @@ target_repo_for_api() {
 }
 
 is_gh_api_write() {
-    echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+api\b' || return 1
+    echo "$SCAN_COMMAND" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+api\b' || return 1
 
     # Explicit read methods are allowed unless write fields are present without
     # --method GET. `gh api graphql -f query=...` is read-only unless the query
@@ -391,7 +403,7 @@ repo_from_git_dir() {
 git_push_command_p() {
   local git_re
   git_re="(^|[[:space:];|&])(\"[^\"]*/git\"|'[^']*/git'|[^[:space:];|&]*/git|git)([[:space:]]+(-C|-c|--git-dir|--work-tree|--namespace)(=|[[:space:]]+)[^[:space:];|&]+|[[:space:]]+-[pP]|[[:space:]]+--(paginate|no-pager|bare|no-replace-objects|literal-pathspecs|glob-pathspecs|noglob-pathspecs|icase-pathspecs))*[[:space:]]+push\\b"
-  printf '%s' "$CMD" | grep -qE "$git_re"
+  printf '%s' "$SCAN_COMMAND" | grep -qE "$git_re"
 }
 
 compound_shell_command_p() {
@@ -452,36 +464,36 @@ fi
 
 # All mutating PR and issue operations require an allowed repository. Read-only
 # view, list, status, checks, and diff operations remain allowed by omission.
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+pr[[:space:]]+(close|comment|create|edit|reopen|merge|revert|review|ready|lock|unlock|update-branch)\b'; then
+if echo "$SCAN_COMMAND" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+pr[[:space:]]+(close|comment|create|edit|reopen|merge|revert|review|ready|lock|unlock|update-branch)\b'; then
   require_allowed_repo "gh pr write operation" "$(target_repo_for_gh)"
 fi
 
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+issue[[:space:]]+(close|comment|create|reopen|edit|lock|unlock|transfer|delete|pin|unpin|develop)\b'; then
+if echo "$SCAN_COMMAND" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+issue[[:space:]]+(close|comment|create|reopen|edit|lock|unlock|transfer|delete|pin|unpin|develop)\b'; then
   require_allowed_repo "gh issue write operation" "$(target_repo_for_gh)"
 fi
 
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+(secret|variable)[[:space:]]+(set|delete|remove)\b'; then
+if echo "$SCAN_COMMAND" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+(secret|variable)[[:space:]]+(set|delete|remove)\b'; then
   if echo "$CMD" | grep -qE '(^|[[:space:]])--(org|env|app)(=|[[:space:]]+)'; then
     deny "organization/environment/app GitHub secret or variable mutation" "This operation is not repo-scoped, so the repo allowlist cannot authorize it."
   fi
   require_allowed_repo "gh secret/variable write operation" "$(target_repo_for_gh)"
 fi
 
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+workflow[[:space:]]+(run|enable|disable)\b'; then
+if echo "$SCAN_COMMAND" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+workflow[[:space:]]+(run|enable|disable)\b'; then
   require_allowed_repo "gh workflow write operation" "$(target_repo_for_gh)"
 fi
 
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+run[[:space:]]+(cancel|delete|rerun)\b'; then
+if echo "$SCAN_COMMAND" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+run[[:space:]]+(cancel|delete|rerun)\b'; then
   require_allowed_repo "gh run write operation" "$(target_repo_for_gh)"
 fi
 
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+release[[:space:]]+(create|delete|delete-asset|edit|upload)\b'; then
+if echo "$SCAN_COMMAND" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+release[[:space:]]+(create|delete|delete-asset|edit|upload)\b'; then
   require_allowed_repo "gh release write operation" "$(target_repo_for_gh)"
 fi
 
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+repo[[:space:]]+(create|delete|edit|rename|archive|unarchive|sync)\b'; then
+if echo "$SCAN_COMMAND" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+repo[[:space:]]+(create|delete|edit|rename|archive|unarchive|sync)\b'; then
   repo=$(repo_from_gh_repo_positional || true)
-  if [ -z "$repo" ] && echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+repo[[:space:]]+create\b'; then
+  if [ -z "$repo" ] && echo "$SCAN_COMMAND" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+repo[[:space:]]+create\b'; then
       # Creation never acts on the surrounding checkout, so its remote must
       # not stand in for a target the command did not name.
       deny "gh repo create without an explicit OWNER/REPO target" "A repo creation does not act on the current directory's repository, so that repository's allowlist entry cannot authorize it. Name the target as OWNER/REPO."
@@ -490,26 +502,26 @@ if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+repo[[:space:]]+(crea
   require_allowed_repo "gh repo write operation" "$repo"
 fi
 
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+(label|milestone)[[:space:]]+(create|delete|edit)\b'; then
+if echo "$SCAN_COMMAND" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+(label|milestone)[[:space:]]+(create|delete|edit)\b'; then
   require_allowed_repo "gh label/milestone write operation" "$(target_repo_for_gh)"
 fi
 
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+gist[[:space:]]+(create|delete|edit|rename)\b'; then
+if echo "$SCAN_COMMAND" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+gist[[:space:]]+(create|delete|edit|rename)\b'; then
   deny "gh gist write operation" "Gists are not repo-scoped, so the repo allowlist cannot authorize them."
 fi
 
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+(cache[[:space:]]+delete|discussion[[:space:]]+(comment|create|edit)|repo[[:space:]]+(autolink[[:space:]]+(create|delete)|deploy-key[[:space:]]+(add|delete)))\b'; then
+if echo "$SCAN_COMMAND" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+(cache[[:space:]]+delete|discussion[[:space:]]+(comment|create|edit)|repo[[:space:]]+(autolink[[:space:]]+(create|delete)|deploy-key[[:space:]]+(add|delete)))\b'; then
   require_allowed_repo "gh repository write operation" "$(target_repo_for_gh)"
 fi
 
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+(agent-task[[:space:]]+create|label[[:space:]]+clone)\b'; then
+if echo "$SCAN_COMMAND" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+(agent-task[[:space:]]+create|label[[:space:]]+clone)\b'; then
   require_allowed_repo "gh repository write operation" "$(target_repo_for_gh)"
 fi
 
 # These mutations act on an account, organization, codespace, project, or a
 # newly created fork rather than one unambiguous existing repository. A repo
 # allowlist entry cannot authorize them.
-if echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+(codespace[[:space:]]+(create|delete|edit|rebuild|stop)|gpg-key[[:space:]]+(add|delete)|ssh-key[[:space:]]+(add|delete)|project[[:space:]]+(close|copy|create|delete|edit|field-create|field-delete|item-add|item-archive|item-create|item-delete|item-edit|link|mark-template|unlink)|repo[[:space:]]+fork)\b'; then
+if echo "$SCAN_COMMAND" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+(codespace[[:space:]]+(create|delete|edit|rebuild|stop)|gpg-key[[:space:]]+(add|delete)|ssh-key[[:space:]]+(add|delete)|project[[:space:]]+(close|copy|create|delete|edit|field-create|field-delete|item-add|item-archive|item-create|item-delete|item-edit|link|mark-template|unlink)|repo[[:space:]]+fork)\b'; then
   deny "non-repository-scoped gh write operation" "This operation has no single existing repository target that the repo allowlist can authorize."
 fi
 

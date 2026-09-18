@@ -1056,6 +1056,19 @@ def commit_selection(args: list[str]) -> tuple[list[str] | None, str | None]:
         if arg.startswith("-am") and len(arg) > 3:
             i += 1
             continue
+        # Other neutral short flags clustered with -m: `-qm MSG`, `-qsm MSG`,
+        # `-qmMSG`; the selection helper already accepts these.
+        if re.fullmatch(r"-[qsv]+m", arg):
+            if i + 1 >= len(args):
+                return None, f"Cannot safely model incomplete git commit option {arg}."
+            i += 2
+            continue
+        if re.fullmatch(r"-[qsv]+m.+", arg):
+            i += 1
+            continue
+        if re.fullmatch(r"-[qsv]+", arg):
+            i += 1
+            continue
         if arg.startswith("-m") and arg != "-m":
             i += 1
             continue

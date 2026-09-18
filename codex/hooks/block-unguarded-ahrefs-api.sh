@@ -20,6 +20,8 @@ fi' EXIT
 SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
 # shellcheck source=lib-codex-hook-json.sh
 source "$SCRIPT_DIR/lib-codex-hook-json.sh"
+# shellcheck source=lib-heredoc.sh
+source "$SCRIPT_DIR/lib-heredoc.sh"
 
 hook_bootstrap_complete=1
 INPUT=$(cat)
@@ -30,7 +32,10 @@ codex_shell_tool_p "$TOOL_NAME" || exit 0
 CMD=$(codex_shell_command "$INPUT")
 [ -n "$CMD" ] || exit 0
 
-if ! echo "$CMD" | grep -q 'api\.ahrefs\.com'; then
+# A commit message or a heredoc fed to a data sink that names the host is
+# prose, not a request (lib-heredoc.sh masks); a real call keeps the host.
+SCAN=$(mask_git_commit_messages "$(mask_heredoc_bodies "$CMD")")
+if ! echo "$SCAN" | grep -q 'api\.ahrefs\.com'; then
   exit 0
 fi
 

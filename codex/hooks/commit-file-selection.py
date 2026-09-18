@@ -22,15 +22,58 @@ def git(*args, env=None, input_data=b""):
     return subprocess.check_output(["git", "-C", directory, *args], env=env, input=input_data, stderr=subprocess.PIPE).decode()
 
 
+REDIRECTION = re.compile(r"^(\d*>>?|&>>?|\d*<)(.*)$")
+HEREDOC = re.compile(r"<<-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
+
+
+def mask_quoted(text):
+    """Replace quoted spans with x's, keeping positions and newlines.
+
+    A `<<EOF` inside a commit message is text, not a heredoc operator; only an
+    operator outside quotes starts a body. Quote state carries across lines
+    because a message may span several.
+    """
+    out, quote, escaped = [], None, False
+    for char in text:
+        if escaped:
+            out.append("\n" if char == "\n" else "x")
+            escaped = False
+        elif quote:
+            if char == quote:
+                quote = None
+                out.append(char)
+            elif char == "\\" and quote == '"':
+                escaped = True
+                out.append("x")
+            else:
+                out.append("\n" if char == "\n" else "x")
+        elif char == "\\":
+            escaped = True
+            out.append("x")
+        elif char in "'\"":
+            quote = char
+            out.append(char)
+        else:
+            out.append(char)
+    return "".join(out)
+
+
 def select(command):
-    # Heredoc message bodies are data, never commit arguments.
-    lines = iter(command.splitlines())
+    # Heredoc message bodies are data, never commit arguments. The operator
+    # is looked for on the quote-masked text so a `<<EOF` mentioned inside a
+    # quoted message does not swallow the rest of the command.
+    pairs = iter(zip(command.splitlines(), mask_quoted(command).splitlines()))
     kept = []
-    for line in lines:
+    for line, masked in pairs:
         kept.append(line)
-        for match in re.finditer(r"<<-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1", line):
-            for body in lines:
-                if body.strip() == match.group(2):
+        for match in HEREDOC.finditer(masked):
+            # The operator's own quoted delimiter (`<<'EOF'`) is masked too, so
+            # read the delimiter from the original line at the same position.
+            operator = HEREDOC.match(line, match.start())
+            if operator is None:
+                continue
+            for body, _ in pairs:
+                if body.strip() == operator.group(2):
                     break
     lexer = shlex.shlex("\n".join(kept), posix=True, punctuation_chars=";&|\n<")
     lexer.whitespace_split = True
@@ -57,10 +100,23 @@ def select(command):
         raise ValueError("cannot resolve multiple or indirect commit commands")
     else:
         args = []
-        for token in tokens[starts[0]:]:
+        rest = tokens[starts[0]:]
+        j = 0
+        while j < len(rest):
+            token = rest[j]
             if token and all(c in ";&|\n" for c in token):
                 break
+            redirect = REDIRECTION.match(token) if token != "<<" else None
+            if redirect:
+                # `2>&1`, `> file`, `>/dev/null`, `< file`: shell redirections
+                # after the commit are not pathspecs. Skip the operator and
+                # its target; `2>&1` lexes as `2>`, `&`, `1`.
+                j += 1
+                if not redirect.group(2):
+                    j += 2 if j < len(rest) and rest[j] == "&" else 1
+                continue
             args.append(token)
+            j += 1
     paths, only, include, all_files, amend = [], False, False, False, False
     values = {"-m", "-F", "-C", "-c", "--message", "--file", "--reuse-message",
               "--reedit-message", "--author", "--date", "--cleanup", "--trailer",
@@ -75,12 +131,14 @@ def select(command):
         if arg == "--":
             paths.extend(args[i:])
             break
-        if arg == "<<":
+        if arg.startswith("<<"):
             # A stdin heredoc belongs to shell input, not Git's pathspecs.
-            # Its body was removed above; consume the remaining delimiter.
-            if i == len(args):
-                raise ValueError("missing heredoc delimiter")
-            i += 1
+            # Its body was removed above; consume the delimiter, which the
+            # invocation classifier may pass joined to the operator (`<<EOF`).
+            if arg == "<<":
+                if i == len(args):
+                    raise ValueError("missing heredoc delimiter")
+                i += 1
             continue
         if arg in {"--help", "-h", "--dry-run"}:
             return {"mode": "inspection", "staged": "", "status": "", "diffs": {}}
@@ -222,6 +280,6 @@ if __name__ == "__main__":
     except subprocess.CalledProcessError as error:
         detail = error.stderr.decode(errors="replace").strip() if error.stderr else str(error)
         directory = os.environ.get("COMMIT_FILE_CWD", os.getcwd())
-        print(json.dumps({"error": f"Cannot determine proposed commit files in {directory}: {detail}"}))
+        print(json.dumps({"error": f"BLOCKED: cannot determine proposed commit files in {directory}: {detail}"}))
     except (ValueError, OSError) as error:
-        print(json.dumps({"error": f"Cannot determine proposed commit files: {error}"}))
+        print(json.dumps({"error": f"BLOCKED: cannot determine proposed commit files: {error}"}))

@@ -103,7 +103,11 @@ delegate() {
 
 # --- block-unguarded-ahrefs-api.sh ---
 check_ahrefs() {
-  echo "$COMMAND" | grep -q 'api\.ahrefs\.com' || return 0
+  # A commit message or a heredoc fed to a data sink that names the host is
+  # prose, not a request (lib-heredoc.sh masks); a real call keeps the host.
+  local scan
+  scan=$(mask_git_commit_messages "$(mask_heredoc_bodies "$COMMAND")")
+  echo "$scan" | grep -q 'api\.ahrefs\.com' || return 0
   echo "$COMMAND" | grep -qE '(^|[[:space:]/])ahrefs-api-guard([[:space:]]|$)' && return 0
   if echo "$COMMAND" | grep -q 'subscription-info/limits-and-usage' && \
      ! echo "$COMMAND" | grep -qE 'site-explorer|site-audit|keywords-explorer|rank-tracker|web-analytics|brand-radar|gsc|serp-overview|batch-analysis|public-crawler|management'; then
@@ -449,7 +453,10 @@ check_destructive() {
 # --- block-walk-list-access.sh (Bash branch) ---
 check_walk_list() {
   local EXPANDED_HOME="$HOME/.claude/walk-list-data"
-  if ! echo "$COMMAND" | grep -qE "(\.claude/walk-list-data|~/\.claude/walk-list-data|$EXPANDED_HOME)"; then
+  # A path named only in a commit message or a sink-fed heredoc is prose.
+  local scan
+  scan=$(mask_git_commit_messages "$(mask_heredoc_bodies "$COMMAND")")
+  if ! echo "$scan" | grep -qE "(\.claude/walk-list-data|~/\.claude/walk-list-data|$EXPANDED_HOME)"; then
     return 0
   fi
   if echo "$COMMAND" | grep -qE '(^|[;&|[:space:]])python[0-9.]*[[:space:]]+(-[a-zA-Z]+[[:space:]]+)*([^[:space:]]+/)?walk\.py([[:space:]]|$)'; then
@@ -518,7 +525,9 @@ check_ahrefs
 # path). The guard itself decides what is a write; a narrower prefilter here
 # used to let `git -C DIR push` and `/usr/bin/git push` through unchecked
 # (found 2026-09-18 by the inbox triage).
-if echo "$COMMAND" | grep -qE '(^|[[:space:];|&(])("[^"]*/(git|gh)"|'"'"'[^'"'"']*/(git|gh)'"'"'|[^[:space:];|&]*/(git|gh)|git|gh)([[:space:]]|$)'; then
+if echo "$COMMAND" | grep -qE '(^|[[:space:];|&("'"'"'])("[^"]*/(git|gh)"|'"'"'[^'"'"']*/(git|gh)'"'"'|[^[:space:];|&]*/(git|gh)|git|gh)([[:space:]]|$)'; then
+  # A quote counts as a separator too: `sh -c 'git push …'` must reach the
+  # guard, which unquotes shell -c bodies before deciding.
   delegate block-github-write-command.sh
 fi
 check_sensitive_read

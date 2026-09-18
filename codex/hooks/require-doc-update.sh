@@ -140,17 +140,52 @@ def without_heredoc_bodies(command):
     ("the hook own context") makes the lexer below raise, and this parser fails
     closed, so a commit staging no Elisp at all used to be refused.
     """
-    kept, lines, index = [], command.split("\n"), 0
+    # The operator is looked for on quote-masked text: a "<<EOF" mentioned
+    # inside a quoted commit message is prose, and treating it as an operator
+    # dropped the rest of the command, which then failed to lex and was
+    # reported as staged Elisp. The delimiter is read from the original line.
+    operator = re.compile(r"<<-?\s*([\x27\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
+    kept, lines, masked, index = [], command.split("\n"), mask_quoted(command).split("\n"), 0
     while index < len(lines):
-        line = lines[index]
+        line, shadow = lines[index], masked[index]
         kept.append(line)
         index += 1
-        for match in re.finditer(r"<<-?\s*([\x27\"]?)([A-Za-z_][A-Za-z0-9_]*)\1", line):
-            delimiter = match.group(2)
+        for match in operator.finditer(shadow):
+            real = operator.match(line, match.start())
+            if real is None:
+                continue
+            delimiter = real.group(2)
             while index < len(lines) and lines[index].strip() != delimiter:
                 index += 1
             index += 1  # drop the delimiter line too
     return "\n".join(kept)
+
+
+def mask_quoted(text):
+    """Replace quoted spans with x, keeping positions and newlines."""
+    out, quote, escaped = [], None, False
+    for char in text:
+        if escaped:
+            out.append("\n" if char == "\n" else "x")
+            escaped = False
+        elif quote:
+            if char == quote:
+                quote = None
+                out.append(char)
+            elif char == "\\" and quote == "\"":
+                escaped = True
+                out.append("x")
+            else:
+                out.append("\n" if char == "\n" else "x")
+        elif char == "\\":
+            escaped = True
+            out.append("x")
+        elif char in "\x27\"":
+            quote = char
+            out.append(char)
+        else:
+            out.append(char)
+    return "".join(out)
 
 
 suffix = None if "--all" in sys.argv[1:] else ".el"

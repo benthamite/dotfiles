@@ -29,6 +29,8 @@ fi' EXIT
 
 # shellcheck source=lib-codex-paths.sh
 source "$(dirname "$0")/lib-codex-paths.sh"
+# shellcheck source=lib-heredoc.sh
+source "$(dirname "$0")/lib-heredoc.sh"
 
 hook_bootstrap_complete=1
 INPUT=$(cat)
@@ -86,7 +88,9 @@ case "$TOOL_NAME" in
     CMD=$(codex_shell_command "$INPUT")
     [ -z "$CMD" ] && exit 0
     # If the command doesn't reference the guarded dir at all, allow.
-    if ! echo "$CMD" | grep -qE "(\.claude/walk-list-data|~/\.claude/walk-list-data|$EXPANDED_HOME)"; then
+    # A path named only in a commit message or a sink-fed heredoc is prose.
+    SCAN=$(mask_git_commit_messages "$(mask_heredoc_bodies "$CMD")")
+    if ! echo "$SCAN" | grep -qE "(\.claude/walk-list-data|~/\.claude/walk-list-data|$EXPANDED_HOME)"; then
       exit 0
     fi
     # Command references the guarded dir. Allow only if it's a walk.py invocation.

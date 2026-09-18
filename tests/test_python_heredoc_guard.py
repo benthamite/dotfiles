@@ -198,6 +198,29 @@ print('Verdict artifacts:',len(list(base.glob('*.json'))))
 PY"""
         self.assert_hooks(command, "allow")
 
+    def test_pyenv_heredoc_after_other_commands_is_not_outer_shell_syntax(self):
+        # The Python projection walks only leading heredocs. A body that
+        # follows other lines or commands is masked by lib-heredoc.sh, whose
+        # wrapper list must know that `pyenv exec` forwards stdin (2026-09-17:
+        # a tangodb count command was denied for `glob('.../*.json')`).
+        body = ("import json,glob,collections\nc=collections.Counter()\n"
+                "for f in glob.glob('data/case_verdicts/*.json'):\n"
+                "    c[json.load(open(f)).get('verdict')]+=1\nprint(dict(c))")
+        command = ("NEW=/tmp/coord\ncd backend && ls data/*.json | wc -l; "
+                   + heredoc(body, prefix="pyenv exec python -", suffix="\necho done"))
+        self.assert_hooks(command, "allow")
+        command = "NEW=/tmp/coord\ncd backend && " + heredoc(
+            body, prefix="PYENV_VERSION=3.11.9 /opt/homebrew/bin/pyenv exec python3 -B -")
+        self.assert_hooks(command, "allow")
+        # Protected names in such a body are still program source.
+        command = "NEW=/tmp/coord\ncd backend; " + heredoc(
+            'import subprocess\nsubprocess.run(["pass", "show", "fixture"])',
+            prefix="pyenv exec python -")
+        self.assert_hooks(command, "deny")
+        # Other pyenv subcommands are the program themselves.
+        command = "NEW=/tmp/coord\ncd backend; " + heredoc("pass", prefix="pyenv which python -")
+        self.assert_hooks(command, "deny")
+
     def test_pyenv_exec_keeps_credential_and_unknown_interpreter_checks(self):
         for body in ('import subprocess\nsubprocess.run(["pass", "show", "fixture"])',
                      'import os\nos.system("\\x70ass")'):

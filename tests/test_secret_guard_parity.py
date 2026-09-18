@@ -919,6 +919,26 @@ done"""
         # A real glob in the executable word must still be denied.
         self.assert_both("pbpast? --version", "deny")
 
+    def test_unclosed_substitution_in_assignment_does_not_hide_the_inner_command(self):
+        # In `f=$(ls x*.jsonl | head -1)` the glob is an argument of ls, the
+        # command inside the substitution, not a program run under an
+        # assignment prefix (2026-09-17: transcript lookups in a tangodb
+        # session were denied solely for this shape).
+        self.assert_both(
+            'f=$(ls "$TD"/agent-registry_tt_2139-*.jsonl | head -1); '
+            'grep -o \'"command":"[^"]*"\' "$f" | cut -c1-500',
+            "allow",
+        )
+        self.assert_both('cd backend && f=$(ls $TD/agent-*.jsonl | head -1) && wc -l "$f"', "allow")
+        # A closed substitution is still an assignment prefix, and the word
+        # after it is still the program; the substitution's own command word
+        # is scanned at its `$(` boundary.
+        self.assert_both("FOO=$(date) pass show fixture", "deny")
+        self.assert_both("FOO=$(date) pbpast? --version", "deny")
+        self.assert_both("FOO=bar pass show fixture", "deny")
+        self.assert_both("f=$(pass show fixture)", "deny")
+        self.assert_both("f=$(ls x*.jsonl | head -1) pbpast? --version", "deny")
+
     def test_deny_message_advises_op_desktop(self):
         for tool, guard in GUARDS.items():
             with self.subTest(tool=tool):

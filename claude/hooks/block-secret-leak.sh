@@ -224,7 +224,10 @@ contains_secret_output_command() {
   boundary='(^[[:space:]]*|[;&|(!`][[:space:]]*|\$\([[:space:]]*)'
   # A wrapper's own words are options, assignments or durations; any other
   # word is the program it runs (so `env FOO=2 grep pass f` runs grep).
-  wrapper='(([^;&|[:space:]]*/)?(command|env|sudo|timeout|nice|exec|nohup|time|builtin|xargs)([[:space:]]+(-[^;&|[:space:]]*|[A-Za-z_][A-Za-z0-9_]*=[^;&|[:space:]]*|[0-9]+[smhd]?))*[[:space:]]+|[A-Za-z_][A-Za-z0-9_]*=[^;&|[:space:]]*[[:space:]]+)'
+  # An assignment prefix's value may hold a closed `$(...)`; an unclosed one
+  # opens a command substitution whose words belong to the inner command
+  # (so in `f=$(ls x*.jsonl | head -1)` the glob is an argument of ls).
+  wrapper='(([^;&|[:space:]]*/)?(command|env|sudo|timeout|nice|exec|nohup|time|builtin|xargs)([[:space:]]+(-[^;&|[:space:]]*|[A-Za-z_][A-Za-z0-9_]*=[^;&|[:space:]]*|[0-9]+[smhd]?))*[[:space:]]+|[A-Za-z_][A-Za-z0-9_]*=([^;&|()`[:space:]]|\$\([^()]*\))*[[:space:]]+)'
   executable='([^;&|[:space:]]*/)?(pbpaste|pass|security)'
   delimiter='([[:space:];|&)`]|$)'
   printf '%s' "$normalized" | grep -qE "${boundary}(${wrapper})*${executable}${delimiter}" && return 0

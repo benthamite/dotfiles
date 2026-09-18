@@ -626,6 +626,12 @@ Python varargs are not shell executable globs. Other secret checks still receive
 the original input. Literal =pyenv exec python -= stdin programs use
 the same Python classification, including its protected-reference checks; other
 pyenv subcommands and dynamic interpreter names receive no exemption.
+When such a heredoc follows other commands, where that classification does not
+apply, =lib-heredoc.sh= still treats its body as interpreter source for the
+executable-glob rule only; names of credential tools in it remain denied.
+An assignment prefix may hold a closed command substitution; an unclosed one
+starts the inner command, so in =f=$(ls x*.jsonl | head -1)= the glob is an
+argument of =ls=, not a program name.
 Consecutive supported Python heredocs receive the same classification in order;
 unknown shell structure stops the scan without exempting the remaining text.
 This classifier is not a Python sandbox.

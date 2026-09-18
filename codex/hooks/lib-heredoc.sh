@@ -59,6 +59,10 @@ mask_heredoc_bodies() {
         if (tok[k] == "") continue
         if (tok[k] ~ /^[A-Za-z_][A-Za-z0-9_]*=/) continue
         if (tok[k] ~ /^(command|env|sudo|timeout|nice|exec|nohup|time|builtin)$/) continue
+        # `pyenv exec PROGRAM` forwards stdin to PROGRAM, exactly as
+        # lib-python-heredoc.py recognizes it; other pyenv subcommands are
+        # the program themselves.
+        if (tok[k] ~ /(^|\/)pyenv$/ && tok[k + 1] == "exec") { k++; continue }
         if (tok[k] ~ /^-/) continue
         if (tok[k] ~ /^[0-9]+[smhd]?$/) continue
         word = tok[k]; break

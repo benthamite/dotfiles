@@ -351,8 +351,11 @@ if [ "$TOOL_NAME" = "Bash" ]; then
   if echo "$CONTENT" | grep -qE '\$\{?[A-Z_]+\}?' && ! echo "$CONTENT" | grep -qE '(AKIA|ghp_|ghs_|github_pat_|xox[bporca]-|sk-[a-zA-Z0-9]{20,}|-----BEGIN)'; then
     exit 0
   fi
-  # Allow writing to encrypted/gitignored secret files
-  if echo "$CONTENT" | grep -qE '\.zshenv-secrets|\.env\.op'; then
+  # Allow writing to the encrypted shell secrets file. The `.env.op` template is
+  # deliberately not exempt: it holds op:// references only, and the
+  # sensitive-read guard trusts that, so a literal secret written into it
+  # must be denied like anywhere else.
+  if echo "$CONTENT" | grep -qE '\.zshenv-secrets'; then
     exit 0
   fi
 fi
@@ -361,7 +364,7 @@ fi
 if [ "$TOOL_NAME" = "Write" ]; then
   FILE_PATH=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty')
   case "$FILE_PATH" in
-    *.zshenv-secrets|*.env.op|*.env.local|*/.password-store/*)
+    *.zshenv-secrets|*.env.local|*/.password-store/*)
       exit 0
       ;;
   esac

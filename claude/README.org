@@ -648,6 +648,16 @@ Sensitive-read guards permit the security audit's shell-export classifier only
 for its exact absolute helper and target paths. The classifier reports names,
 line numbers, scopes, and classifications without printing values.
 
+Since 2026-09-18 the sensitive-read guards no longer classify =.env.op= as an
+environment secrets file. It is the 1Password reference template
+(=NAME=op://vault/item/field= lines, tracked in git, no values by construction),
+so reading it, editing prose that names it, or committing a message that
+mentions it passes; =.env=, =.env.local= and =.env.op.bak= stay covered. The
+secret-leak guard in turn stopped exempting =.env.op= from its pattern scan, so a
+literal token written into the template is denied like anywhere else.
+=tests/test_env_op_template_policy.py= runs both guards against both sides;
+the decision record is =docs/superpowers/plans/2026-09-18-env-op-template-classification.md=.
+
 Commit gates resolve explicit path selections against a disposable candidate index. A =git commit --only= checks the selected working-tree changes, including inherited changes when amending, without counting unrelated staged Elisp or documentation. Unsupported selection syntax is denied with a reason; these checks do not alter the shared index.
 
 Candidate documentation audits execute the checker committed at =HEAD=.

@@ -142,6 +142,7 @@ grep_scope_label() {
       printf '%s\n' "shell history"; return ;;
     "$HOME/.gmail-mcp-epoch/credentials"|"$HOME/.gmail-mcp-epoch/credentials/"*|/Users/pablostafforini/.gmail-mcp-epoch/credentials|/Users/pablostafforini/.gmail-mcp-epoch/credentials/*)
       printf '%s\n' "Gmail MCP credentials"; return ;;
+    .env.op|*/.env.op) return ;;
     .env|*/.env|.env.*|*/.env.*|.envrc|*/.envrc)
       printf '%s\n' "environment secrets file"; return ;;
     .mcp.json|*/.mcp.json|mcp.json|*/mcp.json)
@@ -180,8 +181,10 @@ if [ "$TOOL_NAME" = "Read" ]; then
   case "$EXPANDED_PATH" in
     *.zshenv-secrets) deny "shell secrets file" "$FILE_PATH" ;;
   esac
-  # Environment secret files
+  # Environment secret files. `.env.op` is the 1Password reference template
+  # (op:// references only; see mask_env_op_template below), not a secrets file.
   case "$EXPANDED_PATH" in
+    */.env.op) ;;
     */.env|*/.env.*|*/.envrc)
       deny "environment secrets file" "$FILE_PATH" ;;
   esac
@@ -252,16 +255,27 @@ fi
 # Bash tool branch — scan the command string for sensitive path mentions.
 # --------------------------------------------------------------------------
 
+# `.env.op` is a 1Password reference template: `NAME=op://vault/item/field`
+# lines that `op run --env-file` resolves at runtime. It holds no secret
+# values by construction (block-secret-leak.sh denies writing one into it),
+# so it is not an environment secrets file. Mask the exact basename before
+# classification; `.env`, `.env.local`, `.env.op.bak` and the rest stay covered.
+mask_env_op_template() {
+  printf '%s' "$1" | sed -E 's/\.env\.op$/ENV_OP_TEMPLATE/; s/\.env\.op([^A-Za-z0-9_.])/ENV_OP_TEMPLATE\1/g'
+}
+
 # Classify TEXT by the sensitive path it names; empty when it names none.
 sensitive_label_for_command() {
-  local text="$1" SENSITIVE_LABEL=""
+  local text SENSITIVE_LABEL=""
+  text=$(mask_env_op_template "$1")
   if   echo "$text" | grep -qE '\.zshenv-secrets\b'; then
     SENSITIVE_LABEL="shell secrets file"
   elif echo "$text" | grep -qE '\.password-store/'; then
     SENSITIVE_LABEL="password store (GPG-encrypted secrets)"
   elif echo "$text" | grep -qE '(^|[[:space:]/])\.mcp\.json\b|(^|[[:space:]/])mcp\.json\b'; then
     SENSITIVE_LABEL="MCP credential config"
-  elif echo "$text" | grep -qE '(^|[[:space:]/:=])\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]/:=])\.envrc\b'; then
+  elif echo "$text" | grep -qE '(^|[[:space:]/:=("'"'"'])\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]/:=("'"'"'])\.envrc\b'; then
+    # A quote or parenthesis in front of the name (`open('.env')`) names the file too.
     SENSITIVE_LABEL="environment secrets file"
   elif echo "$text" | grep -qE '(^|[ /=])\.ssh/id_[A-Za-z0-9_]+\b' && \
        ! echo "$text" | grep -qE '\.ssh/id_[A-Za-z0-9_]+\.pub\b'; then

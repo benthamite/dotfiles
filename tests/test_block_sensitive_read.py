@@ -31,21 +31,28 @@ ALLOW = [
     "git ls-files .env.op",
     "git -C /Users/x/repo ls-files .env.op",
     "git -C /Users/x/repo check-ignore -v .env.op",
+    # the same loader shapes over a real environment file
+    "op-automations run --env-file .env.local -- python3 script.py --check",
+    "cd ~/repos/x && op-automations run --env-file .env.local -- make test",
+    "git -C /Users/x/repo ls-files .env.local",
 ]
 
+# Since 2026-09-18 `.env.op` itself is not a secrets file (it holds op://
+# references only; see tests/test_env_op_template_policy.py), so the loader
+# shapes are exercised against a real environment file here.
 DENY = [
-    "cat .env.op",
-    "cd ~/repos/x && cat .env.op",
-    "cd ~/repos/x && op-automations run --env-file .env.op -- true; cat .env.op",
-    'X="$(cat .env.op)" op-automations run --env-file .env.op -- true',
-    "OP_RUN_NO_MASKING=1 op-automations run --env-file .env.op -- true",
-    'cd "$(cat .env.op)" && op-automations run --env-file .env.op -- true',
-    "cd ~/repos/x || cat .env.op && op-automations run --env-file .env.op -- true",
+    "cat .env.local",
+    "cd ~/repos/x && cat .env.local",
+    "cd ~/repos/x && op-automations run --env-file .env.local -- true; cat .env.local",
+    'X="$(cat .env.local)" op-automations run --env-file .env.local -- true',
+    "OP_RUN_NO_MASKING=1 op-automations run --env-file .env.local -- true",
+    'cd "$(cat .env.local)" && op-automations run --env-file .env.local -- true',
+    "cd ~/repos/x || cat .env.local && op-automations run --env-file .env.local -- true",
     # a revision or option separator in front of the name is still the file
-    "git -C /Users/x/repo show HEAD:.env.op",
-    "git show HEAD:.env.op",
-    "python3 dump.py --env-file=.env.op",
-    "git -C /Users/x/repo ls-files .env.op | xargs cat",
+    "git -C /Users/x/repo show HEAD:.env.local",
+    "git show HEAD:.env",
+    "python3 dump.py --env-file=.env.local",
+    "git -C /Users/x/repo ls-files .env.local | xargs cat",
 ]
 
 
@@ -55,6 +62,7 @@ DENY = [
 DENY_DISPATCHER_ONLY = [
     "op-automations run --env-file .env.op -- env",
     "op-automations run --env-file .env.op -- bash -c 'echo $SECRET'",
+    "op-automations run --env-file .env.local -- env",
 ]
 
 

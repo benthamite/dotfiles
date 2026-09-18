@@ -118,8 +118,18 @@ has_shell_composition() {
   return 1
 }
 
+# `.env.op` is a 1Password reference template: `NAME=op://vault/item/field`
+# lines that `op run --env-file` resolves at runtime. It holds no secret
+# values by construction (block-secret-leak.sh denies writing one into it),
+# so it is not an environment secrets file. Mask the exact basename before
+# classification; `.env`, `.env.local`, `.env.op.bak` and the rest stay covered.
+mask_env_op_template() {
+  printf '%s' "$1" | sed -E 's/\.env\.op$/ENV_OP_TEMPLATE/; s/\.env\.op([^A-Za-z0-9_.])/ENV_OP_TEMPLATE\1/g'
+}
+
 sensitive_label_for_text() {
-  local text="$1"
+  local text
+  text=$(mask_env_op_template "$1")
 
   if   echo "$text" | grep -qE '(^|[[:space:]/])\.mcp\.json\b|(^|[[:space:]/])mcp\.json\b'; then
     printf '%s\n' "MCP credential config"
@@ -140,7 +150,8 @@ sensitive_label_for_text() {
     printf '%s\n' "OAuth client secret"
   elif echo "$text" | grep -qE '(^|[[:space:]/])(credentials\.json|service-account[^/[:space:]]*\.json|tokens\.json)\b'; then
     printf '%s\n' "credential JSON"
-  elif echo "$text" | grep -qE '(^|[[:space:]/:=])\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]/:=])\.envrc\b'; then
+  elif echo "$text" | grep -qE '(^|[[:space:]/:=("'"'"'])\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]/:=("'"'"'])\.envrc\b'; then
+    # A quote or parenthesis in front of the name (`open('.env')`) names the file too.
     printf '%s\n' "environment secrets file"
   fi
 }

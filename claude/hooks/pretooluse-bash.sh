@@ -171,15 +171,25 @@ sr_has_shell_composition() {
   esac
   return 1
 }
+# `.env.op` is a 1Password reference template: `NAME=op://vault/item/field`
+# lines that `op run --env-file` resolves at runtime. It holds no secret
+# values by construction (block-secret-leak.sh denies writing one into it),
+# so it is not an environment secrets file. Mask the exact basename before
+# classification; `.env`, `.env.local`, `.env.op.bak` and the rest stay covered.
+sr_mask_env_op_template() {
+  printf '%s' "$1" | sed -E 's/\.env\.op$/ENV_OP_TEMPLATE/; s/\.env\.op([^A-Za-z0-9_.])/ENV_OP_TEMPLATE\1/g'
+}
 sr_label_for_text() {
-  local text="$1" SENSITIVE_LABEL=""
+  local text SENSITIVE_LABEL=""
+  text=$(sr_mask_env_op_template "$1")
   if   echo "$text" | grep -qE '\.zshenv-secrets\b'; then
     SENSITIVE_LABEL="shell secrets file"
   elif echo "$text" | grep -qE '\.password-store/'; then
     SENSITIVE_LABEL="password store (GPG-encrypted secrets)"
   elif echo "$text" | grep -qE '(^|[[:space:]/])\.mcp\.json\b|(^|[[:space:]/])mcp\.json\b'; then
     SENSITIVE_LABEL="MCP credential config"
-  elif echo "$text" | grep -qE '(^|[[:space:]/:=])\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]/:=])\.envrc\b'; then
+  elif echo "$text" | grep -qE '(^|[[:space:]/:=("'"'"'])\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]/:=("'"'"'])\.envrc\b'; then
+    # A quote or parenthesis in front of the name (`open('.env')`) names the file too.
     SENSITIVE_LABEL="environment secrets file"
   elif echo "$text" | grep -qE '(^|[ /=])\.ssh/id_[A-Za-z0-9_]+\b' && \
        ! echo "$text" | grep -qE '\.ssh/id_[A-Za-z0-9_]+\.pub\b'; then

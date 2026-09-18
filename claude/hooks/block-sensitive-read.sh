@@ -142,7 +142,7 @@ grep_scope_label() {
       printf '%s\n' "shell history"; return ;;
     "$HOME/.gmail-mcp-epoch/credentials"|"$HOME/.gmail-mcp-epoch/credentials/"*|/Users/pablostafforini/.gmail-mcp-epoch/credentials|/Users/pablostafforini/.gmail-mcp-epoch/credentials/*)
       printf '%s\n' "Gmail MCP credentials"; return ;;
-    .env.op|*/.env.op) return ;;
+    .env.op|*/.env.op|.env*.example|*/.env*.example) return ;;
     .env|*/.env|.env.*|*/.env.*|.envrc|*/.envrc)
       printf '%s\n' "environment secrets file"; return ;;
     .mcp.json|*/.mcp.json|mcp.json|*/mcp.json)
@@ -184,7 +184,7 @@ if [ "$TOOL_NAME" = "Read" ]; then
   # Environment secret files. `.env.op` is the 1Password reference template
   # (op:// references only; see mask_env_op_template below), not a secrets file.
   case "$EXPANDED_PATH" in
-    */.env.op) ;;
+    */.env.op|*/.env*.example) ;;
     */.env|*/.env.*|*/.envrc)
       deny "environment secrets file" "$FILE_PATH" ;;
   esac
@@ -258,16 +258,24 @@ fi
 # `.env.op` is a 1Password reference template: `NAME=op://vault/item/field`
 # lines that `op run --env-file` resolves at runtime. It holds no secret
 # values by construction (block-secret-leak.sh denies writing one into it),
-# so it is not an environment secrets file. Mask the exact basename before
-# classification; `.env`, `.env.local`, `.env.op.bak` and the rest stay covered.
+# so it is not an environment secrets file, and neither is a tracked
+# `.env.example` / `.env.op.<name>.example` template. Mask those exact names
+# before classification; `.env`, `.env.local`, `.env.op.bak` and the rest
+# stay covered.
 mask_env_op_template() {
-  printf '%s' "$1" | sed -E 's/\.env\.op$/ENV_OP_TEMPLATE/; s/\.env\.op([^A-Za-z0-9_.])/ENV_OP_TEMPLATE\1/g'
+  printf '%s' "$1" | sed -E \
+    -e 's/\.env(\.[A-Za-z0-9_-]+)*\.example$/ENV_EXAMPLE_TEMPLATE/' \
+    -e 's/\.env(\.[A-Za-z0-9_-]+)*\.example([^A-Za-z0-9_.])/ENV_EXAMPLE_TEMPLATE\2/g' \
+    -e 's/\.env\.op$/ENV_OP_TEMPLATE/' \
+    -e 's/\.env\.op([^A-Za-z0-9_.])/ENV_OP_TEMPLATE\1/g'
 }
 
 # Classify TEXT by the sensitive path it names; empty when it names none.
+# A quoted `git commit -m` message is stored data, not a file git reads, so
+# it is masked first (see lib-heredoc.sh).
 sensitive_label_for_command() {
   local text SENSITIVE_LABEL=""
-  text=$(mask_env_op_template "$1")
+  text=$(mask_env_op_template "$(mask_git_commit_messages "$1")")
   if   echo "$text" | grep -qE '\.zshenv-secrets\b'; then
     SENSITIVE_LABEL="shell secrets file"
   elif echo "$text" | grep -qE '\.password-store/'; then

@@ -127,3 +127,16 @@ mask_heredoc_bodies() {
       }
     }'
 }
+
+# mask_git_commit_messages COMMAND
+#   Prints COMMAND with quoted `git commit -m` / `--message=` arguments replaced
+#   by COMMIT_MESSAGE. The message is data git stores, never a file git reads,
+#   so a sensitive path named inside it is an inert mention. Only a quoted
+#   message that follows a `commit` word inside the same simple command is
+#   masked, and only when it holds no command substitution; `less -m FILE`,
+#   `git commit -F FILE` and `git commit -m "$(cat FILE)"` keep their text.
+mask_git_commit_messages() {
+  printf '%s' "$1" | perl -0pe '
+    1 while s{(\bcommit\b[^;&|\n]*?\s(?:-[a-zA-Z]*m|--message)(?:=|\s+))(?:\x27[^\x27`]*\x27|"(?:[^"`\\\$]|\\.|\$(?!\())*")}{$1COMMIT_MESSAGE}
+  '
+}

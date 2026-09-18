@@ -118,6 +118,57 @@ class TemplateIsReadable(unittest.TestCase):
                     self.assertEqual(run(guard, payload), expected)
 
 
+class InertMentionsAndExampleTemplates(unittest.TestCase):
+    """A commit message is stored data; a tracked *.example file is a template."""
+
+    ALLOW = [
+        "git commit -m 'staff-data: stop reading .env at import time'",
+        'git commit -q -m "note: .env.local is gitignored"',
+        "git -C /Users/x/repo commit -m 'drop the stale .env.local'",
+        "git add README.md && git commit -m 'docs: explain .env and .env.local'",
+        "git commit -m 'guards: real dotenv files\n\n.env, .env.local and .envrc stay covered.'",
+        "git commit -m 'first' -m 'second names .env.local'",
+        "cat .env.example",
+        "cat /Users/x/repos/epoch/paid-service-savings/.env.op.finance.example",
+        "sed -n 1,20p .env.op.example",
+        "diff .env.example .env.op.example",
+    ]
+    DENY = [
+        'git commit -m "$(cat .env)"',
+        "git commit -m 'x' && cat .env",
+        "git commit -m 'x'; cat .env.local",
+        "git commit -F .env",
+        "less -m '.env'",
+        "python3 -m '.env'",
+        "cat .env.example.bak",
+        "cat .env.op.finance",
+    ]
+
+    def test_inert_mentions_and_templates_are_allowed(self):
+        for name, guard in SENSITIVE_READ.items():
+            for command in self.ALLOW:
+                with self.subTest(guard=name, command=command):
+                    self.assertEqual(bash(guard, command), "allow")
+
+    def test_real_reads_beside_them_stay_denied(self):
+        for name, guard in SENSITIVE_READ.items():
+            for command in self.DENY:
+                with self.subTest(guard=name, command=command):
+                    self.assertEqual(bash(guard, command), "deny")
+
+    def test_read_tool_allows_example_templates(self):
+        for name in ("claude", "codex"):
+            guard = SENSITIVE_READ[name]
+            for path, expected in (
+                ("/Users/x/repo/.env.example", "allow"),
+                ("/Users/x/repo/.env.op.finance.example", "allow"),
+                ("/Users/x/repo/.env.op.finance", "deny"),
+            ):
+                with self.subTest(guard=name, path=path):
+                    payload = {"tool_name": "Read", "tool_input": {"file_path": path}}
+                    self.assertEqual(run(guard, payload), expected)
+
+
 class TemplateMayNotReceiveSecrets(unittest.TestCase):
     def test_bash_write_of_a_token_into_the_template_is_denied(self):
         for name, guard in SECRET_LEAK.items():

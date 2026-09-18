@@ -76,6 +76,26 @@ as naming the file, so the label regex now also accepts `(`, `"` and `'` in
 front of `.env` / `.envrc`. This tightens the guard; it does not touch the
 template exemption.
 
+## Follow-up from the learning-inbox review (same day)
+
+Reviewing the 29 inbox records that mention the template surfaced two more
+items of the same class, both implemented in the follow-up commit:
+
+3. Tracked `.env.example` and `.env.op.<name>.example` templates (16 in
+   `paid-service-savings` alone) are exempt on the same grounds as `.env.op`.
+   Two inbox candidates (2026-06-13, 2026-07-24) had asked for exactly this.
+   `.env.op.finance` without the suffix stays covered: it may be a real local
+   file.
+4. A quoted `git commit -m` / `--message=` argument is masked before the
+   sensitive-path scan (`mask_git_commit_messages` in `lib-heredoc.sh`). The
+   message is data git stores, never a file git reads, so naming `.env` or
+   `.env.local` in it is inert. The mask applies only to a quoted message that
+   follows a `commit` word in the same simple command and holds no command
+   substitution, so `git commit -m "$(cat .env)"`, `git commit -F .env`,
+   `less -m '.env'` and `git commit -m x && cat .env` still deny. This was the
+   residual friction left after item 1: the first two attempts to commit item 1
+   itself were refused because the message named the real dotenv files.
+
 Residual risk, accepted: a human commits a plaintext secret into a tracked
 `.env.op`. The file is then already exposed to every repository collaborator,
 the output redactor still masks well-formed tokens in tool output, and the

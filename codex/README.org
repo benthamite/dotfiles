@@ -555,6 +555,10 @@ so reading it, editing prose that names it, or committing a message that
 mentions it passes; =.env=, =.env.local= and =.env.op.bak= stay covered. The
 secret-leak guard in turn stopped exempting =.env.op= from its pattern scan, so a
 literal token written into the template is denied like anywhere else.
+Tracked =.env.example= / =.env.op.<name>.example= templates are exempt on the
+same grounds, and a quoted =git commit -m= message is masked before the scan
+(=mask_git_commit_messages= in =lib-heredoc.sh=), while =git commit -m "$(cat
+FILE)"=, =git commit -F FILE= and a following =cat FILE= still deny.
 =tests/test_env_op_template_policy.py= covers the Codex copies too.
 
 The GitHub write guard requires repository authorization or an explicitly

@@ -655,6 +655,11 @@ so reading it, editing prose that names it, or committing a message that
 mentions it passes; =.env=, =.env.local= and =.env.op.bak= stay covered. The
 secret-leak guard in turn stopped exempting =.env.op= from its pattern scan, so a
 literal token written into the template is denied like anywhere else.
+Tracked =.env.example= / =.env.op.<name>.example= templates are exempt on the
+same grounds, and a quoted =git commit -m= message is masked before the scan
+(=mask_git_commit_messages= in =lib-heredoc.sh=): the message is data git
+stores, so naming a real dotenv file in it is inert, while =git commit -m "$(cat
+FILE)"=, =git commit -F FILE= and a following =cat FILE= still deny.
 =tests/test_env_op_template_policy.py= runs both guards against both sides;
 the decision record is =docs/superpowers/plans/2026-09-18-env-op-template-classification.md=.
 

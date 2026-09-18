@@ -76,27 +76,27 @@
 ;;;; confirm-babel-evaluate
 
 (ert-deftest org-extras-test-confirm-babel-evaluate-safe-language ()
-  "Return non-nil for languages in the safe list."
+  "Return nil, meaning no prompt, for languages in the safe list."
   (let ((org-extras-confirm-babel-evaluate-languages '("emacs-lisp" "python")))
-    (should (org-extras-confirm-babel-evaluate "emacs-lisp" nil))
-    (should (org-extras-confirm-babel-evaluate "python" nil))))
+    (should-not (org-extras-confirm-babel-evaluate "emacs-lisp" nil))
+    (should-not (org-extras-confirm-babel-evaluate "python" nil))))
 
 (ert-deftest org-extras-test-confirm-babel-evaluate-unsafe-language ()
-  "Return nil for languages not in the safe list."
+  "Return non-nil, meaning prompt, for languages not in the safe list."
   (let ((org-extras-confirm-babel-evaluate-languages '("emacs-lisp" "python")))
-    (should-not (org-extras-confirm-babel-evaluate "shell" nil))
-    (should-not (org-extras-confirm-babel-evaluate "ruby" nil))))
+    (should (org-extras-confirm-babel-evaluate "shell" nil))
+    (should (org-extras-confirm-babel-evaluate "ruby" nil))))
 
 (ert-deftest org-extras-test-confirm-babel-evaluate-empty-list ()
-  "Return nil for any language when the safe list is empty."
+  "Return non-nil for any language when the safe list is empty."
   (let ((org-extras-confirm-babel-evaluate-languages nil))
-    (should-not (org-extras-confirm-babel-evaluate "emacs-lisp" nil))))
+    (should (org-extras-confirm-babel-evaluate "emacs-lisp" nil))))
 
 (ert-deftest org-extras-test-confirm-babel-evaluate-ignores-body ()
   "The second argument (body) is ignored; result depends only on language."
   (let ((org-extras-confirm-babel-evaluate-languages '("python")))
-    (should (org-extras-confirm-babel-evaluate "python" "print('hello')"))
-    (should (org-extras-confirm-babel-evaluate "python" nil))))
+    (should-not (org-extras-confirm-babel-evaluate "python" "print('hello')"))
+    (should-not (org-extras-confirm-babel-evaluate "python" nil))))
 
 ;;;; remove-link
 

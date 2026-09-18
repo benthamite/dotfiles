@@ -221,9 +221,9 @@ string.
 The user option ~org-extras-confirm-babel-evaluate-languages~ is a list
 of Org Babel language names (strings) for which code block evaluation
 proceeds without confirmation.  The function
-~org-extras-confirm-babel-evaluate~ checks this list and returns
-non-nil for languages it contains, which tells Org that no confirmation
-prompt is needed ([[#h:babel-and-encryption][Babel and encryption]]).
+~org-extras-confirm-babel-evaluate~ checks this list and returns nil
+for languages it contains, which tells Org that no confirmation prompt
+is needed ([[#h:babel-and-encryption][Babel and encryption]]).  Every other language is confirmed.
 
 The default value is =("emacs-lisp" "python")=.  Add additional
 language names (such as ="shell"= or ="ruby"=) if you trust their
@@ -1266,10 +1266,11 @@ remain folded.  It is used internally by
 #+findex: org-extras-confirm-babel-evaluate
 The function ~org-extras-confirm-babel-evaluate~ is suitable as a value
 for ~org-confirm-babel-evaluate~.  It receives the language name LANG
-and returns non-nil when the language is a member of
+and returns nil when the language is a member of
 ~org-extras-confirm-babel-evaluate-languages~ ([[#h:babel-evaluation-languages][Babel evaluation
 languages]]), indicating that no confirmation is needed for that
-language.
+language.  For any other language it returns non-nil, so Org prompts
+before evaluating the block.
 
 ** Refiling helpers
 :PROPERTIES:

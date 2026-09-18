@@ -1709,9 +1709,11 @@ keep the structure of the Org file."
 ;;;;; ob
 
 (defun org-extras-confirm-babel-evaluate (lang _)
-  "Confirm function before evaluating code block.
-LANG is the language of the code block."
-  (member lang org-extras-confirm-babel-evaluate-languages))
+  "Return non-nil if evaluating a LANG code block requires confirmation.
+Org prompts when the function in `org-confirm-babel-evaluate' returns
+non-nil, so only the languages in
+`org-extras-confirm-babel-evaluate-languages' are evaluated unprompted."
+  (not (member lang org-extras-confirm-babel-evaluate-languages)))
 
 (defun org-extras-babel-tangle ()
   "Widen buffer, save its contents, and tangle file."

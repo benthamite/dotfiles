@@ -4319,6 +4319,13 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
                                                         value)))))
                             '(tlon-local-abbreviations tlon-local-replacements))))
     (put (car spec) 'safe-local-variable (cdr spec)))
+  ;; `dired-safe-switches-p' rejects long options that take a value, such as
+  ;; "--time-style=long-iso"; "=" adds nothing a shell could interpret.
+  (with-eval-after-load 'dired
+    (put 'dired-actual-switches 'safe-local-variable
+         (lambda (value)
+           (and (stringp value)
+                (string-match-p "\\`[-[:alnum:] =]+\\'" value)))))
 
   :bind
   (("M--" . not-modified)

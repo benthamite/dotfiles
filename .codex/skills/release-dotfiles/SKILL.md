@@ -310,6 +310,15 @@ the reporter, and leave it open. Do not hand the user a command to run. Report
 what was fixed during Step 5 and ask whether to proceed to the release of
 `NEW_VERSION`. Then stop. `--accept` cannot supply this answer.
 
+Include the unused-package report in the handover. Run
+`bin/elpaca-cooldown unused` and relay its list: the third-party packages that
+the package usage log has not seen loaded in 60 days. Every package runs
+unsandboxed, so each one removed is one fewer upstream to trust. Present the
+list as candidates for the user to choose from, never as a recommendation to
+remove them all, and remove nothing in this release: a removal the user asks for
+is a `config.org` change for the next one. When the command says the log is too
+young, say so in one line and move on.
+
 - "Proceed" continues to Phase 2.
 - A reported problem is a Step 5 failure: fix the root cause, rebuild as Step 5
   item 3 requires, obtain a new clean report and a new lockfile candidate, and

@@ -6,6 +6,8 @@ named in the master lockfile.  `plan` writes a candidate lockfile for the next
 dev profile: my own packages at their remote tip, third-party packages at the
 newest tip first observed at least MIN_AGE_DAYS ago.  `verify-build` checks
 that a profile built from the candidate checked out exactly those refs.
+`unused` lists the third-party packages that the package usage log written by
+my Emacs configuration has not seen loaded for DAYS days.
 
 Nothing here executes package code: remotes are read with `git ls-remote` and
 commit-only bare clones, and lockfiles are read and printed as Lisp data.
@@ -26,6 +28,8 @@ DEFAULT_LOCKFILE = REPO_ROOT / "emacs/lockfile.el"
 DEFAULT_POLICY_DIR = REPO_ROOT / "emacs/elpaca-cooldown"
 DEFAULT_STATE_FILE = Path.home() / ".local/state/elpaca-cooldown/observations.json"
 DEFAULT_MIN_AGE_DAYS = 7
+DEFAULT_USAGE_LOG = Path.home() / ".config/emacs-profiles/var/package-usage.log"
+DEFAULT_UNUSED_DAYS = 60
 LOCKFILE_HELPER = Path(__file__).with_name("elpaca-cooldown-lockfile.el")
 HOST_URLS = {
     "github": "https://github.com/{}.git",
@@ -329,6 +333,51 @@ def command_verify_build(args):
         raise RuntimeError("the build did not check out the planned refs")
 
 
+# Unused packages
+
+
+def read_usage_log(path):
+    """Return ({package: last date loaded}, first date in the log)."""
+    last, first = {}, None
+    for line in path.read_text().splitlines():
+        day, _, package = line.partition(" ")
+        if not package:
+            continue
+        date = datetime.strptime(day, "%Y-%m-%d").date()
+        first = date if first is None else min(first, date)
+        last[package] = max(last.get(package, date), date)
+    return last, first
+
+
+def unused_packages(packages, exempt_owners, last_loaded, today, days):
+    """Return [(id, last date or None)] for third-party packages not loaded in DAYS days."""
+    cutoff = today - timedelta(days=days)
+    unused = []
+    for package in packages:
+        if classify(package, exempt_owners)[0] == "own":
+            continue
+        loaded = last_loaded.get(package["id"])
+        if loaded is None or loaded < cutoff:
+            unused.append((package["id"], loaded))
+    return sorted(unused)
+
+
+def command_unused(args):
+    if not args.usage_log.exists():
+        raise RuntimeError(f"{args.usage_log} does not exist; is the package usage log enabled?")
+    last_loaded, first = read_usage_log(args.usage_log)
+    today = now_utc().date()
+    covered = (today - first).days if first else 0
+    if covered < args.days:
+        print(f"The usage log covers {covered} days; {args.days} are needed before anything is reported.")
+        return
+    packages = export_lockfile(args.lockfile)
+    unused = unused_packages(packages, load_exempt_owners(args.policy_dir), last_loaded, today, args.days)
+    print(f"{len(unused)} third-party packages not loaded in the last {args.days} days (log starts {first}):")
+    for name, loaded in unused:
+        print(f"{name}: {'last loaded ' + loaded.isoformat() if loaded else 'never loaded'}")
+
+
 # CLI
 
 
@@ -346,6 +395,10 @@ def build_parser():
     plan.add_argument("--min-age-days", type=int, default=DEFAULT_MIN_AGE_DAYS)
     plan.add_argument("--take-now", action="append", default=[], metavar="PACKAGE")
     plan.add_argument("--drop", action="append", default=[], metavar="PACKAGE")
+    unused = commands.add_parser("unused", help="list third-party packages the usage log has not seen lately")
+    unused.add_argument("--lockfile", type=Path, default=DEFAULT_LOCKFILE)
+    unused.add_argument("--usage-log", type=Path, default=DEFAULT_USAGE_LOG)
+    unused.add_argument("--days", type=int, default=DEFAULT_UNUSED_DAYS)
     verify = commands.add_parser("verify-build", help="compare a built lockfile with the candidate")
     verify.add_argument("--candidate", type=Path, required=True)
     verify.add_argument("--built", type=Path, required=True)
@@ -358,6 +411,7 @@ def main(argv=None):
         "observe": command_observe,
         "plan": command_plan,
         "verify-build": command_verify_build,
+        "unused": command_unused,
     }
     try:
         commands[args.command](args)

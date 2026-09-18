@@ -173,6 +173,43 @@ class ReportTest(unittest.TestCase):
         self.assertNotIn("\nc:", report)
 
 
+class UnusedTest(unittest.TestCase):
+    def setUp(self):
+        self.mod = load_module()
+        self.directory = tempfile.TemporaryDirectory()
+        self.log = pathlib.Path(self.directory.name) / "package-usage.log"
+
+    def tearDown(self):
+        self.directory.cleanup()
+
+    def test_read_usage_log_keeps_last_load_and_first_date(self):
+        self.log.write_text("2026-07-01 vundo\n2026-09-01 vundo\n2026-08-01 wgrep\n\n")
+        last, first = self.mod.read_usage_log(self.log)
+        self.assertEqual(last["vundo"].isoformat(), "2026-09-01")
+        self.assertEqual(last["wgrep"].isoformat(), "2026-08-01")
+        self.assertEqual(first.isoformat(), "2026-07-01")
+
+    def test_unused_lists_stale_and_never_loaded_third_party_packages(self):
+        date = datetime(2026, 12, 1).date
+        packages = [
+            {"id": "fresh", "host": "github", "repo": "someone/fresh"},
+            {"id": "stale", "host": "github", "repo": "someone/stale"},
+            {"id": "never", "host": "github", "repo": "someone/never"},
+            {"id": "mine", "host": "github", "repo": "benthamite/mine"},
+        ]
+        last = {"fresh": datetime(2026, 11, 20).date(), "stale": datetime(2026, 9, 1).date()}
+        unused = self.mod.unused_packages(packages, {"benthamite"}, last, date(), 60)
+        self.assertEqual(unused, [("never", None), ("stale", datetime(2026, 9, 1).date())])
+
+    def test_young_log_reports_nothing(self):
+        today = self.mod.now_utc().date()
+        self.log.write_text(f"{today.isoformat()} vundo\n")
+        args = Namespace(usage_log=self.log, days=60, lockfile=None, policy_dir=None)
+        with redirect_stdout(io.StringIO()) as output:
+            self.mod.command_unused(args)
+        self.assertIn("covers 0 days", output.getvalue())
+
+
 @unittest.skipUnless(shutil.which("emacs"), "needs emacs")
 class LockfileTest(unittest.TestCase):
     def setUp(self):

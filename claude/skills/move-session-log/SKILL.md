@@ -33,9 +33,21 @@ truncating JSON rewrites, or another account's store if the helpers fail.
   artifacts or destination collisions instead of merging or overwriting.
 - Inventory the exact transcript, recursively nested sidecars, selected history
   records and resolved shared files. Only supported `subagents/agent-*.jsonl`
-  sidecars contain routing metadata; tool results remain opaque regardless of
-  extension. Verify existing destination ownership before importing. A later
-  different `cwd` does not by itself establish another originating project.
+  sidecars contain routing metadata; tool results and `agent-*.meta.json`
+  remain opaque regardless of extension. Verify existing destination ownership
+  before importing. A later different `cwd` does not by itself establish
+  another originating project.
+- Rename also accepts the legacy flat layout, `<bucket>/subagents/agent-*.jsonl`
+  (with `.meta.json` beside it) and `<bucket>/tool-results/*`, written by
+  Claude Code up to about 2.1.8x. Such root sidecars belong to the bucket they
+  sit in and name their session themselves; the live binary routes them by
+  bucket and `sessionId`, never by `cwd`, and in real buckets their `cwd`
+  records a resolved or since-renamed directory. They move with the bucket
+  with only exact-match `cwd` fields rewritten, including when their owning
+  transcript has been cleaned up (a sidecar-only bucket). Orphans add no
+  history rewrites. The preview reports their count and how many lack a
+  transcript; a bucket holding only `tool-results/` is refused for lack of any
+  session identity. Single-session import does not move root sidecars.
 
 ## Preview both modes
 

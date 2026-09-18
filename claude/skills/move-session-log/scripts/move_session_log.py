@@ -9,6 +9,21 @@ partial failures. Run the nonmutating --dry-run first.
 Only runtime-owned top-level session cwd and matching history project values
 are changed. Project settings, including trust, stay untouched unless a
 separately authorized --migrate-project-settings accompanies --rename.
+
+Bucket layouts. Current Claude Code writes a session's sidecars under
+<bucket>/<session-uuid>/{subagents,tool-results}. Releases up to about 2.1.8x
+wrote them flat at the bucket root: <bucket>/subagents/agent-<id>.jsonl with an
+optional agent-<id>.meta.json beside it, and <bucket>/tool-results/<id>.txt.
+The live binary routes such root sidecars by the bucket they sit in plus the
+sessionId inside the file (its adopt/relink sweep hard-links them under
+<session-uuid>/subagents/ when that transcript exists); it never routes by
+their cwd field or by .meta.json, whose schema carries agent presentation
+fields only. Root sidecars therefore belong to the bucket they are in, and
+their cwd and history values are not ownership evidence: in every observed
+real bucket they record a resolved or since-renamed directory that differs
+from the bucket's own path. When the owning transcript has been cleaned up,
+the root sidecars are orphans; they move with the bucket rather than being
+stranded at a stale encoded name, and only their exact-match cwd fields change.
 """
 
 from __future__ import annotations
@@ -243,6 +258,61 @@ def sidecar_rows(plan: MigrationPlan, directory: Path, session_id: str) -> list[
     return sorted(found)
 
 
+RootSidecars = list[tuple[Path, Rows, str]]
+META_SUFFIX = ".meta.json"
+
+
+def root_sidecar_identity(rows: Rows, path: Path) -> str:
+    """A bucket-root sidecar names its owning session itself; nothing else does."""
+    identities = {obj["sessionId"] for _raw, obj in rows if obj is not None and "sessionId" in obj}
+    if len(identities) != 1:
+        raise MigrationError(f"Root subagent transcript lacks one consistent session identity: {path}")
+    session_id = identities.pop()
+    if not isinstance(session_id, str) or not UUID_RE.fullmatch(session_id):
+        raise MigrationError(f"Root subagent transcript has a malformed session identity: {path}")
+    session_origin(rows, session_id, require_identity=True)
+    return session_id
+
+
+def root_subagents(plan: MigrationPlan, directory: Path) -> tuple[RootSidecars, int]:
+    """Inventory legacy flat <bucket>/subagents: agent transcripts plus opaque metadata.
+
+    Only agent-*.jsonl (including agent-acompact-*.jsonl) and agent-*.meta.json
+    regular files are known here. The .meta.json sidecar is opaque: the live
+    schema holds agentType, description, name, model, team and permission
+    fields, none of which is a path, so it moves byte-identical.
+    """
+    plain_directory(directory)
+    found: RootSidecars = []
+    opaque = 0
+    for path in sorted(directory.iterdir()):
+        if path.is_symlink() or not path.is_file():
+            raise MigrationError(f"Unsupported linked or special root subagent entry: {path}")
+        if path.name.startswith("agent-") and path.suffix == ".jsonl":
+            rows = read_rows(plan, path)
+            found.append((path, rows, root_sidecar_identity(rows, path)))
+        elif path.name.startswith("agent-") and path.name.endswith(META_SUFFIX):
+            opaque += 1
+        else:
+            raise MigrationError(f"Unsupported root subagent entry; ownership is unknown: {path}")
+    return found, opaque
+
+
+def root_tool_results(directory: Path) -> int:
+    """Legacy flat <bucket>/tool-results holds opaque persisted tool output only."""
+    plain_directory(directory)
+    count = 0
+    for current, directories, filenames in os.walk(directory, followlinks=False):
+        for name in directories:
+            plain_directory(Path(current) / name)
+        for name in filenames:
+            path = Path(current) / name
+            if path.is_symlink() or not path.is_file():
+                raise MigrationError(f"Unsupported linked or special tool-result file: {path}")
+            count += 1
+    return count
+
+
 def settings_rename(plan: MigrationPlan, old: str, new: str) -> str:
     if not exists(CLAUDE_JSON):
         plan.expect_absent(CLAUDE_JSON)
@@ -291,6 +361,8 @@ def build_rename_plan(old: str, new: str, *, migrate_project_settings: bool = Fa
     history, summary["history store"] = history_rows(plan)
     transcripts: dict[str, tuple[Path, Rows]] = {}
     sidecars = []
+    root_agents: RootSidecars = []
+    opaque = 0
     for path in sorted(bucket.iterdir()):
         if path.is_symlink():
             raise MigrationError(f"Unsupported linked bucket entry: {path}")
@@ -298,21 +370,36 @@ def build_rename_plan(old: str, new: str, *, migrate_project_settings: bool = Fa
             transcripts[path.stem] = (path, read_rows(plan, path))
         elif path.is_dir() and UUID_RE.fullmatch(path.name):
             sidecars.append(path)
+        elif path.is_dir() and path.name == "subagents":
+            root_agents, opaque = root_subagents(plan, path)
+        elif path.is_dir() and path.name == "tool-results":
+            opaque += root_tool_results(path)
         else:
             raise MigrationError(f"Unsupported bucket artifact; ownership is unknown: {path}")
-    if not transcripts:
-        raise MigrationError("No identifiable sessions in the project bucket")
+    if not transcripts and not root_agents:
+        raise MigrationError("No session or root subagent transcripts identify this project bucket")
     if any(path.name not in transcripts for path in sidecars):
         raise MigrationError("Orphan session sidecar has no transcript ownership evidence")
     owners = {sid: establish_origin(rows, history, sid) for sid, (_path, rows) in transcripts.items()}
     expected = {old} if bucket == source else {old, new}
-    if len(set(owners.values())) != 1 or not set(owners.values()).issubset(expected):
+    if transcripts and (len(set(owners.values())) != 1 or not set(owners.values()).issubset(expected)):
         raise MigrationError("Unknown or mixed project origins share this encoded bucket")
     for sid, (path, rows) in transcripts.items():
         files = [(path, rows), *sidecar_rows(plan, bucket / sid, sid)]
         for session_path, session_rows in files:
             summary["session files scanned"] += 1
             summary["session cwd fields rewritten"] += rewrite_session(plan, session_path, session_rows, sid, old, new)
+    # Root sidecars are owned by this bucket (see the module docstring). Their
+    # own sessionId selects the exact-match cwd rewrite; orphans whose transcript
+    # is gone add no history ownership, exactly like nested sidecars add none.
+    for path, rows, sid in root_agents:
+        summary["session files scanned"] += 1
+        summary["session cwd fields rewritten"] += rewrite_session(plan, path, rows, sid, old, new)
+    if root_agents or opaque:
+        summary["root subagent transcripts"] = len(root_agents)
+        summary["root subagent transcripts whose session transcript is absent"] = sum(
+            sid not in transcripts for _path, _rows, sid in root_agents)
+        summary["opaque bucket-root sidecar files (kept byte-identical)"] = opaque
     summary["history project fields rewritten"] = rewrite_history(plan, history, {sid: old for sid in owners}, new)
     if migrate_project_settings:
         summary["project settings"] = settings_rename(plan, old, new)

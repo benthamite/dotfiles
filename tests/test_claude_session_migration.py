@@ -79,6 +79,20 @@ class ClaudeSessionMigrationTests(unittest.TestCase):
         (self.source / SID / "tool-results" / "result.txt").write_text(OLD + " opaque fixture")
         return path
 
+    def add_root_sidecars(self, session_id=SID, cwd=OLD, *, meta=True, tool_result=True):
+        """Legacy flat layout: <bucket>/subagents/agent-*.jsonl and <bucket>/tool-results/*."""
+        directory = self.source / "subagents"
+        directory.mkdir(exist_ok=True)
+        agent = directory / "agent-a0123456789abcdef.jsonl"
+        agent.write_bytes(jsonl({"sessionId": session_id, "agentId": "a0123456789abcdef", "type": "user", "cwd": cwd},
+                                {"sessionId": session_id, "agentId": "a0123456789abcdef", "type": "assistant", "cwd": cwd}))
+        if meta:
+            (directory / "agent-a0123456789abcdef.meta.json").write_bytes(b'{"agentType":"general-purpose"}')
+        if tool_result:
+            (self.source / "tool-results").mkdir(exist_ok=True)
+            (self.source / "tool-results" / "toolu_fixture.txt").write_text(OLD + " opaque root tool output")
+        return agent
+
     def assert_refused_without_changes(self, *args, reason=None):
         before = tree_snapshot(self.config)
         result = self.apply(*args)
@@ -336,6 +350,120 @@ class ClaudeSessionMigrationTests(unittest.TestCase):
         unknown.unlink()
         (self.source / OTHER_SID).mkdir()
         self.assert_refused_without_changes("--rename", OLD, NEW, reason="Orphan session sidecar")
+
+    def test_rename_relocates_root_subagents_owned_by_a_transcript(self):
+        self.add_sidecar()
+        self.add_root_sidecars()
+        meta = (self.source / "subagents/agent-a0123456789abcdef.meta.json").read_bytes()
+        result = self.apply("--rename", OLD, NEW)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(self.source.exists())
+        moved = self.target / "subagents/agent-a0123456789abcdef.jsonl"
+        self.assertEqual([json.loads(line)["cwd"] for line in moved.read_text().splitlines()], [NEW, NEW])
+        self.assertEqual((self.target / "subagents/agent-a0123456789abcdef.meta.json").read_bytes(), meta)
+        self.assertEqual((self.target / "tool-results/toolu_fixture.txt").read_text(), OLD + " opaque root tool output")
+        self.assertIn("session files scanned: 3", result.stdout)
+        self.assertIn("session cwd fields rewritten: 4", result.stdout)
+        self.assertIn("root subagent transcripts: 1", result.stdout)
+        self.assertIn("root subagent transcripts whose session transcript is absent: 0", result.stdout)
+        self.assertIn("opaque bucket-root sidecar files (kept byte-identical): 2", result.stdout)
+
+    def test_orphaned_root_subagents_move_with_the_bucket_without_touching_foreign_metadata(self):
+        # Real buckets: the owning transcript was cleaned up, and the sidecar
+        # recorded a resolved or since-renamed directory rather than the bucket path.
+        agent = self.add_root_sidecars(OTHER_SID, OTHER)
+        original = agent.read_bytes()
+        with self.history.open("ab") as handle:
+            handle.write(jsonl({"sessionId": OTHER_SID, "project": OLD, "display": "orphan"}))
+        result = self.apply("--rename", OLD, NEW)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((self.target / "subagents" / agent.name).read_bytes(), original)
+        self.assertEqual([json.loads(line)["project"] for line in self.history.read_text().splitlines()], [NEW, OLD])
+        self.assertIn("session files scanned: 2", result.stdout)
+        self.assertIn("session cwd fields rewritten: 1", result.stdout)
+        self.assertIn("history project fields rewritten: 1", result.stdout)
+        self.assertIn("root subagent transcripts whose session transcript is absent: 1", result.stdout)
+
+    def test_sidecar_only_bucket_is_relocated_with_exact_cwd_mapping(self):
+        self.transcript.unlink()
+        self.history.write_bytes(b"")
+        self.add_root_sidecars(OTHER_SID, OTHER)
+        compact = self.source / "subagents/agent-acompact-0123456789abcdef.jsonl"
+        compact.write_bytes(jsonl({"sessionId": SID, "agentId": "acompact-0123456789abcdef", "type": "user", "cwd": OLD},
+                                  {"sessionId": SID, "agentId": "acompact-0123456789abcdef", "type": "user", "cwd": OTHER}))
+        result = self.apply("--rename", OLD, NEW)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(self.source.exists())
+        moved = self.target / "subagents" / compact.name
+        self.assertEqual([json.loads(line)["cwd"] for line in moved.read_text().splitlines()], [NEW, OTHER])
+        self.assertIn("operation: move project bucket", result.stdout)
+        self.assertIn("session files scanned: 2", result.stdout)
+        self.assertIn("session cwd fields rewritten: 1", result.stdout)
+        self.assertIn("history project fields rewritten: 0", result.stdout)
+        self.assertIn("root subagent transcripts: 2", result.stdout)
+        self.assertIn("root subagent transcripts whose session transcript is absent: 2", result.stdout)
+        self.assertIn("opaque bucket-root sidecar files (kept byte-identical): 2", result.stdout)
+
+    def test_root_meta_json_and_tool_results_stay_opaque_even_when_they_resemble_metadata(self):
+        self.add_root_sidecars()
+        meta = self.source / "subagents/agent-a0123456789abcdef.meta.json"
+        meta.write_bytes(('{"agentType":"general-purpose","cwd":"' + OLD + '","sessionId":"' + SID + '"}').encode())
+        metadata_like = self.source / "tool-results/metadata.jsonl"
+        metadata_like.write_bytes(jsonl({"sessionId": SID, "cwd": OLD, "type": "assistant"}))
+        (self.source / "tool-results/pdf").mkdir()
+        (self.source / "tool-results/pdf/page.txt").write_bytes(b'{"sessionId": truncated raw output')
+        expected = {path.relative_to(self.source): path.read_bytes()
+                    for path in [meta, metadata_like, self.source / "tool-results/pdf/page.txt"]}
+        result = self.apply("--rename", OLD, NEW)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for relative, raw in expected.items():
+            self.assertEqual((self.target / relative).read_bytes(), raw)
+        self.assertIn("opaque bucket-root sidecar files (kept byte-identical): 4", result.stdout)
+
+    def test_root_dry_run_reports_counts_and_writes_nothing(self):
+        self.add_root_sidecars(OTHER_SID, OTHER)
+        before = tree_snapshot(self.base)
+        result = self.run_cli("--rename", OLD, NEW, "--dry-run")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(tree_snapshot(self.base), before)
+        self.assertIn("dry run: True", result.stdout)
+        self.assertIn("session files scanned: 2", result.stdout)
+        self.assertIn("root subagent transcripts: 1", result.stdout)
+        self.assertIn("root subagent transcripts whose session transcript is absent: 1", result.stdout)
+        self.assertIn("opaque bucket-root sidecar files (kept byte-identical): 2", result.stdout)
+
+    def test_unknown_or_ambiguous_root_artifacts_are_still_refused(self):
+        agent = self.add_root_sidecars()
+        stray = self.source / "subagents/notes.txt"
+        stray.write_text("unknown")
+        self.assert_refused_without_changes("--rename", OLD, NEW, reason="Unsupported root subagent entry")
+        stray.unlink()
+        original = agent.read_bytes()
+        agent.write_bytes(jsonl({"sessionId": SID, "cwd": OLD}, {"sessionId": OTHER_SID, "cwd": OLD}))
+        self.assert_refused_without_changes("--rename", OLD, NEW, reason="one consistent session identity")
+        agent.write_bytes(jsonl({"agentId": "a0123456789abcdef", "cwd": OLD}))
+        self.assert_refused_without_changes("--rename", OLD, NEW, reason="one consistent session identity")
+        agent.write_bytes(original)
+        external = self.base / "external.txt"
+        external.write_text("outside")
+        link = self.source / "tool-results/link.txt"
+        link.symlink_to(external)
+        # The whole-bucket watch refuses links before the root inventory runs.
+        self.assert_refused_without_changes("--rename", OLD, NEW, reason="only regular files and directories")
+        link.unlink()
+        (self.source / "memory").mkdir()
+        self.assert_refused_without_changes("--rename", OLD, NEW, reason="Unsupported bucket artifact")
+        (self.source / "memory").rmdir()
+        (self.source / "workflows").mkdir()
+        self.assert_refused_without_changes("--rename", OLD, NEW, reason="Unsupported bucket artifact")
+
+    def test_tool_results_only_bucket_has_no_session_identity(self):
+        self.transcript.unlink()
+        self.add_root_sidecars(meta=False)
+        (self.source / "subagents/agent-a0123456789abcdef.jsonl").unlink()
+        (self.source / "subagents").rmdir()
+        self.assert_refused_without_changes("--rename", OLD, NEW,
+                                            reason="No session or root subagent transcripts identify")
 
     def test_single_import_does_not_move_unrelated_bucket_artifacts(self):
         unknown = self.source / "sessions-index.json"

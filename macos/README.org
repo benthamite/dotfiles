@@ -18,7 +18,7 @@ the repository is cloned.
 
 * LaunchAgents
 
-The five tracked plists under [[file:LaunchAgents/][LaunchAgents/]] are currently symlinked from
+The four tracked plists under [[file:LaunchAgents/][LaunchAgents/]] are currently symlinked from
 =~/Library/LaunchAgents/=. Their schedules and entry points are:
 
 | Label | Schedule | Entry point |
@@ -26,7 +26,6 @@ The five tracked plists under [[file:LaunchAgents/][LaunchAgents/]] are currentl
 | =com.stafforini.personal-updates.fast-brew= | 03:00 daily | =bin/personal-updates fast-brew= |
 | =com.stafforini.codex-protocol-watch= | 04:15 daily | =bin/codex-protocol-watch= |
 | =com.stafforini.personal-updates.scan= | 08:15 daily | =bin/personal-updates scan= |
-| =com.stafforini.elpaca-cooldown.observe= | 08:30 daily | =bin/elpaca-cooldown observe= |
 | =com.stafforini.personal-updates.delayed= | 09:00 daily | =bin/personal-updates delayed --min-age-days 7= |
 
 The plists write logs under =~/.local/state/= and use absolute paths into this
@@ -36,6 +35,8 @@ treating the change as active.
 The separate launchd repository owns scheduling for the reasoning-task
 worktree sync; this repository only supplies the
 [[file:../bin/README.org][=sync-reasoning-tasks-worktrees= command]].
+It also owns the daily =com.stafforini.elpaca-cooldown.observe= job (08:30),
+which runs [[file:../emacs/README.org][=bin/elpaca-cooldown observe=]] from this checkout.
 
 * Personal updates
 

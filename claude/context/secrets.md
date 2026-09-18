@@ -44,7 +44,7 @@ everything else including shapes it cannot place:
   are denied. Or redirect the JSON to a regular file.
 - `document get … --out-file F`, `inject … --out-file F`; `item create|edit`
   without `--format`; `item delete`, `document create|edit|delete`, `vault
-  create`; `whoami`, `vault|user|group list|get`, `vault user|group list`,
+  create`; `whoami`, `vault|user|group list|get`, `vault user|group list`, `vault user grant|revoke`,
   `group user list`, `account list`, `document list`, `item template
   list|get`, `--status`, `--stop`.
 

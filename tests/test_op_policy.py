@@ -79,6 +79,9 @@ ALLOW = [
     'op-desktop vault user list "Operations" --format=json | python3 -c "import json,sys; print(len(json.load(sys.stdin)))"',
     "op-desktop vault group list Operations --format=json",
     "op-desktop group user list 'Team Members' --format=json",
+    # vault access grants print permission flags, not secret values
+    'op-desktop vault user grant --vault "Impact assessment" --user member@example.com --permissions view_items,view_and_copy_passwords',
+    "op-desktop vault user revoke --vault Operations --user someone@epoch.ai",
     "op-desktop item template list",
     "op-desktop document list --vault Automations",
     # inert documentation

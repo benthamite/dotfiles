@@ -188,13 +188,18 @@ before any real data transfer.
   with a fast-forward-only operation. Do not pull new unreviewed state, reset,
   stash, change branches or update ahead/diverged/dirty repositories. Report
   hook effects and any resulting drift.
-- **Active link:** only when retargeting was requested and the exact existing
-  link or evidenced missing-link consumer is identified. Never replace a real
-  directory or follow a destination-directory symlink. Under a quiescent parent,
-  revalidate the old link and replace the link entry atomically with a uniquely
-  staged sibling link to verified NEW; retain its prior target for recovery.
-  If concurrent modification cannot be excluded, leave it unchanged and report
-  the boundary. Do not change the startup cache to make the markers agree.
+- **Active link:** an explicit `OLD to NEW` migration request authorizes
+  retargeting the existing `active` link to NEW without a further question
+  when the markers already agree on NEW: `.current-profile` names NEW and the
+  live Emacs runs with NEW as its init directory. Ask first only when they
+  disagree, or when no link exists and its consumer is unevidenced. Never
+  replace a real directory or follow a destination-directory symlink.
+  Revalidate the old link, then replace the link entry with `rename(2)` on a
+  uniquely staged sibling link to verified NEW (Python `os.replace`; `mv`
+  follows a link to a directory and moves the staged link inside it). Retain
+  the prior target for recovery. If concurrent modification cannot be
+  excluded, leave it unchanged and report the boundary. Do not change the
+  startup cache to make the markers agree.
 - **Cleanup:** moving a bucket through the authorized adapter is part of its
   recorded relocation. Additional trashing of sources requires explicit
   deletion authority and verified preservation of every artifact, including

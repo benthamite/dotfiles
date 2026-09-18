@@ -750,6 +750,40 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
       (file-name-concat (file-name-directory (directory-file-name elpaca-directory)) "lockfile.el"))
 #+end_src
 
+** package usage log
+:PROPERTIES:
+:ID:       F5E10D5E-E9BD-4E6F-A29F-63DFD482591C
+:END:
+
+/Records which packages actually get loaded, so that packages I no longer use can be found from evidence rather than memory./
+
+Each time Emacs loads a file that belongs to an Elpaca package, the package name and the date are appended to a log shared by all profiles. Started on 2026-09-18; after a couple of months, the third-party packages absent from the log are candidates for removal.
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(defvar init-package-usage-log
+  (expand-file-name "../var/package-usage.log" user-emacs-directory)
+  "File recording the date on which each Elpaca package was loaded.")
+
+(defvar init-package-usage-logged nil
+  "Packages already recorded in `init-package-usage-log' during this session.")
+
+(defun init-log-package-load (file)
+  "Record in `init-package-usage-log' that the package owning FILE was loaded today.
+Autoload files are skipped because Emacs loads them for every package at
+startup, whether or not the package is ever used."
+  (when (and (bound-and-true-p elpaca-builds-directory)
+             (string-prefix-p elpaca-builds-directory file)
+             (not (string-match-p "-autoloads\\.elc?\\'" file)))
+    (let ((package (car (split-string
+                         (file-relative-name file elpaca-builds-directory) "/"))))
+      (unless (member package init-package-usage-logged)
+        (push package init-package-usage-logged)
+        (write-region (format "%s %s\n" (format-time-string "%F") package)
+                      nil init-package-usage-log 'append 'silent)))))
+
+(add-hook 'after-load-functions #'init-log-package-load)
+#+end_src
+
 ** =use-package=
 :PROPERTIES:
 :ID:       C53EA5F9-B256-480E-9BCB-7AD2D0D5DDC2

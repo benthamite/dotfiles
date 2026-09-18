@@ -47,6 +47,16 @@ ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=")
 # Boundaries between simple commands. `$(` and backtick open a nested command;
 # a protected word right after them is a command word and is never masked.
 SEPARATOR = re.compile(r"(\|\||&&|[;|&\n()`]|\$\()")
+# The agent harness names its per-session scratch directory after the uid,
+# the sanitized working directory and the session UUID. Every tool call is
+# told to use that path, and it is not a credential, yet its mixed-class run
+# reads as an opaque token to the entropy scan. Project only that exact layout
+# at a token boundary; whatever follows it stays scanned.
+SCRATCHPAD = re.compile(
+    r"(?<![A-Za-z0-9_.:/?&#%-])/(?:private/)?tmp/claude-[0-9]+/[A-Za-z0-9._-]+/"
+    r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/scratchpad"
+    r"(?![A-Za-z0-9_.-])"
+)
 
 
 def _command_word(tokens: list[str]) -> tuple[str | None, int]:
@@ -168,7 +178,11 @@ def mask_local_read_paths(command: str) -> str:
     receive no exemption. Known-secret and sensitive-file checks still use the
     original command in the caller. Tokenize quotes before recognizing command
     boundaries so shell source passed as an argument cannot look like a read.
+
+    The harness scratchpad root is a fixed literal shape, so it is projected
+    before tokenization and regardless of expansions elsewhere in the command.
     """
+    command = SCRATCHPAD.sub("AGENT_SCRATCHPAD", command)
     if any(char in command for char in "$`\\"):
         return command
     # shlex removes quotes: quoted punctuation must not become a command

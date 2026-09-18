@@ -821,7 +821,14 @@ from entropy scanning when a separate network check follows, as are those of
 =wc=, =ls=, =stat= and =file=, which report a path's size, name or type without
 sending it anywhere. Those four accept short option clusters only. Pipelines,
 redirects, shell expansions and unknown read options receive no exemption;
-known-secret checks still inspect the original command. Loopback ports and
+known-secret checks still inspect the original command. The harness session
+scratchpad root (=/private/tmp/claude-UID/CWD-SLUG/SESSION-UUID/scratchpad=)
+is projected to =AGENT_SCRATCHPAD= wherever it appears as a literal path,
+before tokenization and regardless of expansions elsewhere: every tool call is
+told to use that directory, and its single mixed-class run otherwise denied
+any network command that named it as cwd or operand. Only that exact layout at
+a token boundary is projected; what follows it, a URL that embeds it, and any
+other root, UUID-less path or leaf name stay scanned. Loopback ports and
 API-version prefixes are routing metadata; the remaining URL path, query and
 fragment remain scanned. A numeric port is dropped from the cross-component
 residual for every host, not only loopback: the authority field has already

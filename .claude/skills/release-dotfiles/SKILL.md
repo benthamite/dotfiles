@@ -1,6 +1,6 @@
 ---
 name: release-dotfiles
-description: Deploy and release a new version of the dotfiles Emacs profile. Use when the user says `/release-dotfiles X.Y.Z`, asks to deploy profile X.Y.Z, cut/publish/prepare a dotfiles release, or bump the dotfiles version. The agent builds and tests the unpinned development profile first, hands it to the user, and releases the pinned version only after the user confirms. Do not use for standalone Emacs package releases; use release-package instead.
+description: Deploy and release a new version of the dotfiles Emacs profile. Use when the user says `/release-dotfiles X.Y.Z`, asks to deploy profile X.Y.Z, cut/publish/prepare a dotfiles release, or bump the dotfiles version. The agent builds and tests the development profile first, hands it to the user, and releases the pinned version only after the user confirms. Do not use for standalone Emacs package releases; use release-package instead.
 ---
 
 # Dotfiles profile deployment and release
@@ -16,8 +16,11 @@ The user gives a version number, for example `/release-dotfiles 9.0.2`. The
 skill owns everything from there in two phases with one stop between them.
 
 **Phase 1: deploy the development profile.** The agent creates
-`NEW_VERSION-dev`, an unpinned profile that clones every package at upstream
-HEAD, launches a GUI Emacs on it with the reporter in `scripts/smoke-report.el`,
+`NEW_VERSION-dev` from a cooldown lockfile: the user's own packages at their
+remote tip, third-party packages at the newest commit first observed at least
+seven days ago (`bin/elpaca-cooldown`; every package runs unsandboxed, so
+upstream HEAD is never built directly). It launches a GUI Emacs on the profile
+with the reporter in `scripts/smoke-report.el`,
 reads the plain-text report, fixes the root cause of every failure, and repeats
 until the report is clean. When it is clean the reporter instance writes the
 lockfile from its own Elpaca queue, so the pinned refs are exactly the checkouts
@@ -202,18 +205,36 @@ source.
    quit one that does. Trash any existing directory of that name after
    inspecting it: Elpaca skips cloning when a source directory exists, so a
    stale profile tests old checkouts.
-2. Create and tangle the profile from the live session, without a lockfile and
-   without prompts:
+2. Write the cooldown lockfile to the temporary workspace outside Drive:
+
+   ```bash
+   bin/elpaca-cooldown plan --out "$COOLDOWN_LOCKFILE" --report "$COOLDOWN_REPORT"
+   ```
+
+   Add `--drop PACKAGE` for every package whose recipe changed in Step 2 (a new
+   repository, branch or pin): its old ref may not exist in the new remote, so
+   it is left out and builds from the recipe in `config.org`. Add
+   `--take-now PACKAGE` only when the user asked for a specific upstream commit
+   before its cooldown ends, for example an urgent upstream fix; never add it
+   to make a build pass. Read the report. `held` packages keep the previous
+   release's ref and the report says why: "no observation is old enough yet" is
+   normal while the observation log is young, while a rewritten or diverged
+   history needs the user's decision. A remote that cannot be read fails the
+   plan; do not fall back to an unpinned build.
+3. Create and tangle the profile from the live session without prompts, then
+   install the cooldown lockfile as the profile's `lockfile.el` before anything
+   launches it:
 
    ```bash
    emacsclient -e '(let ((dir (init-create-profile "'"$NEW_VERSION"'-dev" t))) (with-current-buffer (find-file-noselect paths-file-config) (init-build-profile dir)) dir)'
+   cp -- "$COOLDOWN_LOCKFILE" "$HOME/.config/emacs-profiles/$NEW_VERSION-dev/lockfile.el"
    ```
 
    Do not call `init-deploy-profile`: it pulls, prompts and is meant for
-   interactive use. Check that the profile has no `lockfile.el`, that its
-   `init.el` carries every recipe changed in Step 2, and that
-   `.current-profile` still names the live profile (creation alone does not
-   launch).
+   interactive use. Check that the profile's `lockfile.el` is byte-identical to
+   `$COOLDOWN_LOCKFILE`, that its `init.el` carries every recipe changed in
+   Step 2, and that `.current-profile` still names the live profile (creation
+   alone does not launch).
 
 ## Step 5: build it until it builds
 
@@ -249,7 +270,8 @@ source.
    reads an unbound variable ("Error loading ... autoloads: (void-variable
    ...)"). Treat each warning as a failure: read it, find the commit that
    introduced it, and fix the root cause or pin the package to the last good
-   commit with the reason recorded in `config.org`. Only a warning that was
+   commit with the reason recorded in `config.org`. Do not reach for a newer
+   upstream commit with `--take-now` to get a build through. Only a warning that was
    investigated and cannot be fixed or pinned away may be allowed, by
    relaunching with `SMOKE_ALLOW_WARNINGS=1` and naming it in the handover.
 4. After a fix, rebuild what the fix affects. A recipe, ref or checkout change
@@ -264,7 +286,17 @@ source.
    `bin/check-lockfile` (one Lisp form, every entry with a `:source` string and
    a `:recipe` carrying a `:ref` string), compare its entry count with the
    previous lockfile, and check that every recipe changed in this release
-   records the intended repository, branch and ref. Record the candidate's
+   records the intended repository, branch and ref. Then confirm the build
+   honoured the cooldown:
+
+   ```bash
+   bin/elpaca-cooldown verify-build --candidate "$COOLDOWN_LOCKFILE" --built "$LOCKFILE_CANDIDATE"
+   ```
+
+   A drifted ref is a failure: find why Elpaca checked out something else
+   before continuing. The packages it lists as new were built at upstream HEAD
+   without a cooldown; name them, and any `--take-now` package, in the Step 6
+   handover so the user knows which code is fresh. Record the candidate's
    SHA-256 digest as `LOCKFILE_DIGEST`.
 6. Every GUI launch rewrites `~/.config/emacs-profiles/.current-profile`.
    Restore it to the live profile after each launch, or the commit hooks sync

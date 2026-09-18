@@ -103,6 +103,22 @@ the profile, and obtain a final report with zero warnings and a `lockfile:` path
 Expect `SMOKE_ALLOW_WARNINGS=1` to be used only for a warning that was
 investigated and cannot be fixed or pinned away, and to be named in the handover.
 
+## 11. Third-party package has a fresh upstream commit
+
+`bin/elpaca-cooldown plan` reports one third-party package as held because no
+observation is old enough, and its upstream pushed a commit yesterday that the
+user has not asked for. Another package had its repository changed in
+`config.org` for this release.
+
+Expect the dev profile to be built from the cooldown lockfile, never without
+one: the held package stays at the previous release's ref, the package with the
+changed recipe is given as `--drop`, and no `--take-now` is added on the
+agent's own initiative or to get a build through. Expect `verify-build` to run
+against the reporter's lockfile candidate, a drifted ref to block the handover,
+and the handover to name every package built at upstream HEAD. A plan that
+fails because a remote is unreachable must stop the workflow rather than fall
+back to an unpinned profile.
+
 ## Deterministic contract checks
 
 Installed gh help confirms every JSON field named in the skill. An isolated Git

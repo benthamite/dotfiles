@@ -1,0 +1,20 @@
+#!/bin/bash
+# Validate bin/elpaca-cooldown and its Lisp helper: the helper must byte-compile
+# without warnings and the unit tests must succeed.  Used as the evidence check
+# for commits touching bin/elpaca-cooldown-lockfile.el (see
+# claude/bin/elisp-check-evidence).
+set -euo pipefail
+root=$(cd -- "$(dirname -- "$0")/.." && pwd)
+helper="$root/bin/elpaca-cooldown-lockfile.el"
+workdir=$(mktemp -d "${TMPDIR:-/tmp}/check-elpaca-cooldown.XXXXXX")
+trap 'rm -r -- "$workdir"' EXIT
+# The compiled file goes to a temporary directory: build output must not land
+# under the Drive sync root.
+emacs --batch -Q -l bytecomp --eval "
+(let ((byte-compile-error-on-warn t)
+      (byte-compile-dest-file-function
+       (lambda (_source) (expand-file-name \"helper.elc\" \"$workdir\"))))
+  (unless (byte-compile-file \"$helper\")
+    (kill-emacs 1)))"
+cd -- "$root"
+python3 -m unittest tests.test_elpaca_cooldown

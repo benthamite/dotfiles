@@ -1,0 +1,4 @@
+# Repository owners whose packages skip the cooldown: I control what they publish.
+# Forks under these owners count too; they change only when I push.
+benthamite
+tlon-team

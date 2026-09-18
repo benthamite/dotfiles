@@ -102,6 +102,11 @@ The generated tracked-skill inventory is refreshed with
 python3 -m unittest discover -s tests -v
 #+end_src
 
+Third-party code is taken only after it has aged. Homebrew packages wait seven
+days under [[file:macos/README.org][=bin/personal-updates=]], and third-party Emacs packages wait seven
+days under [[file:emacs/README.org][=bin/elpaca-cooldown=]], whose Lisp helper is checked with
+=bin/check-elpaca-cooldown=.
+
 Emacs extras also have their own batch runner and the
 [[file:.github/workflows/test-extras.yml][GitHub Actions workflow]]. Changes to literate sources should be made in the
 source Org file, regenerated through its documented command, and reviewed as a

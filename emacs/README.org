@@ -58,6 +58,23 @@ abbreviation file.
 The release workflow rewrites it from the current profile with
 =elpaca-extras-write-lock-file-excluding=; it should not be maintained by hand.
 
+** Package cooldown
+
+Every package runs unsandboxed, and a fresh dev profile used to clone all
+third-party packages at upstream HEAD. =bin/elpaca-cooldown= keeps a
+compromised upstream commit from reaching a profile on the day it is pushed:
+
+| Command | Behavior |
+|---------+----------|
+| =observe= | Runs daily from a LaunchAgent. Records the tip of every third-party remote named in =lockfile.el= and when that tip was first seen, in =~/.local/state/elpaca-cooldown/observations.json=. It runs =git ls-remote= only. |
+| =plan --out FILE= | Writes the candidate lockfile a dev profile is built from. Packages whose remote owner is listed in [[file:elpaca-cooldown/exempt-owners.txt][exempt-owners.txt]] move to their remote tip. Third-party packages move to the newest tip first seen at least seven days ago, provided it is still in the branch and descends from the pinned commit; otherwise they keep the previous release's ref and the report says why. =--take-now PACKAGE= bypasses the wait for one package and is named in the report. |
+| =verify-build --candidate FILE --built FILE= | Fails when a profile built from the candidate checked out any other ref, and lists packages that are new in the release, which are built at upstream HEAD. |
+
+First-seen time is recorded locally because commit dates can be forged. Until
+an observation is seven days old a package stays where the last release pinned
+it. The cooldown does not protect against a maintainer who waits it out, nor
+cover binaries that a package downloads or compiles.
+
 * Commit-time synchronization and reload
 
 The canonical Git directory has =post-commit= and =post-rewrite= hooks that

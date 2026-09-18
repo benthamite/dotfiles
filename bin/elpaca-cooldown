@@ -1,0 +1,371 @@
+#!/usr/bin/env python3
+"""Hold third-party Emacs packages back until their commits have aged.
+
+`observe` records, once a day, the tip of every third-party package remote
+named in the master lockfile.  `plan` writes a candidate lockfile for the next
+dev profile: my own packages at their remote tip, third-party packages at the
+newest tip first observed at least MIN_AGE_DAYS ago.  `verify-build` checks
+that a profile built from the candidate checked out exactly those refs.
+
+Nothing here executes package code: remotes are read with `git ls-remote` and
+commit-only bare clones, and lockfiles are read and printed as Lisp data.
+"""
+
+import argparse
+import json
+import subprocess
+import sys
+import tempfile
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_LOCKFILE = REPO_ROOT / "emacs/lockfile.el"
+DEFAULT_POLICY_DIR = REPO_ROOT / "emacs/elpaca-cooldown"
+DEFAULT_STATE_FILE = Path.home() / ".local/state/elpaca-cooldown/observations.json"
+DEFAULT_MIN_AGE_DAYS = 7
+LOCKFILE_HELPER = Path(__file__).with_name("elpaca-cooldown-lockfile.el")
+HOST_URLS = {
+    "github": "https://github.com/{}.git",
+    "gitlab": "https://gitlab.com/{}.git",
+    "codeberg": "https://codeberg.org/{}.git",
+    "sourcehut": "https://git.sr.ht/~{}",
+}
+GIT_TIMEOUT_SECONDS = 120
+WORKERS = 16
+
+
+def now_utc():
+    return datetime.now(timezone.utc)
+
+
+# Lockfile
+
+
+def export_lockfile(lockfile):
+    result = run_emacs("elpaca-cooldown-export", str(lockfile))
+    return json.loads(result.stdout)
+
+
+def rewrite_lockfile(lockfile, refs, out):
+    with tempfile.NamedTemporaryFile("w", suffix=".json") as handle:
+        json.dump(refs, handle)
+        handle.flush()
+        run_emacs("elpaca-cooldown-rewrite", str(lockfile), handle.name, str(out))
+
+
+def run_emacs(function, *arguments):
+    command = ["emacs", "--batch", "-Q", "-l", str(LOCKFILE_HELPER), "-f", function, *arguments]
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"{function} failed: {result.stderr.strip()}")
+    return result
+
+
+# Packages
+
+
+def remote_url(package):
+    if package.get("url"):
+        return package["url"]
+    repo = package.get("repo")
+    if not repo:
+        raise ValueError(f"{package['id']}: recipe names no repository")
+    if "://" in repo:
+        return repo
+    template = HOST_URLS.get(package.get("host"))
+    if not template:
+        raise ValueError(f"{package['id']}: unsupported host {package.get('host')!r}")
+    return template.format(repo)
+
+
+def remote_owner(url):
+    parts = url.split("://", 1)[-1].split("/")
+    return parts[1].lstrip("~").lower() if len(parts) > 2 else ""
+
+
+def remote_key(url, branch):
+    return f"{url}#{branch or 'HEAD'}"
+
+
+def load_exempt_owners(policy_dir):
+    path = policy_dir / "exempt-owners.txt"
+    lines = path.read_text().splitlines()
+    return {line.strip().lower() for line in lines if line.strip() and not line.startswith("#")}
+
+
+def classify(package, exempt_owners):
+    """Return (kind, url) where kind is 'tagged', 'own' or 'third-party'."""
+    url = remote_url(package)
+    if package.get("tag"):
+        return "tagged", url
+    if remote_owner(url) in exempt_owners:
+        return "own", url
+    return "third-party", url
+
+
+# Git
+
+
+def git(*arguments, cwd=None):
+    result = subprocess.run(
+        ["git", *arguments], cwd=cwd, capture_output=True, text=True, timeout=GIT_TIMEOUT_SECONDS
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"git {' '.join(arguments)}: {result.stderr.strip()}")
+    return result.stdout
+
+
+def remote_tip(url, branch):
+    ref = f"refs/heads/{branch}" if branch else "HEAD"
+    for line in git("ls-remote", url, ref).splitlines():
+        sha, name = line.split("\t", 1)
+        if name == ref:
+            return sha
+    raise RuntimeError(f"{url} does not advertise {ref}")
+
+
+def history(repo, commit):
+    """Return the set of commits reachable from COMMIT in the bare clone REPO."""
+    return set(git("rev-list", commit, cwd=repo).split())
+
+
+def clone_commits(url, branch, directory):
+    arguments = ["clone", "--quiet", "--bare", "--filter=tree:0", "--single-branch"]
+    if branch:
+        arguments += ["--branch", branch]
+    git(*arguments, url, str(directory))
+
+
+# Observations
+
+
+def load_observations(path):
+    return json.loads(path.read_text()) if path.exists() else {}
+
+
+def save_observations(path, observations):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(".tmp")
+    temporary.write_text(json.dumps(observations, indent=1, sort_keys=True) + "\n")
+    temporary.replace(path)
+
+
+def record_tip(observations, key, sha, now):
+    history = observations.setdefault(key, [])
+    if not history or history[-1]["sha"] != sha:
+        history.append({"sha": sha, "first_seen": now.isoformat()})
+
+
+def aged_tip(history, now, min_age_days):
+    """Return the newest observation at least MIN_AGE_DAYS old, or None."""
+    cutoff = now - timedelta(days=min_age_days)
+    aged = [entry for entry in history if datetime.fromisoformat(entry["first_seen"]) <= cutoff]
+    return aged[-1] if aged else None
+
+
+def third_party_remotes(packages, exempt_owners):
+    remotes = {}
+    for package in packages:
+        kind, url = classify(package, exempt_owners)
+        if kind == "third-party":
+            remotes[remote_key(url, package.get("branch"))] = (url, package.get("branch"))
+    return remotes
+
+
+def fetch_tips(remotes):
+    """Return ({key: sha}, {key: error}) for the REMOTES mapping key -> (url, branch)."""
+    tips, errors = {}, {}
+
+    def fetch(item):
+        key, (url, branch) = item
+        try:
+            return key, remote_tip(url, branch), None
+        except Exception as error:
+            return key, None, str(error)
+
+    with ThreadPoolExecutor(max_workers=WORKERS) as pool:
+        for key, sha, error in pool.map(fetch, remotes.items()):
+            if error:
+                errors[key] = error
+            else:
+                tips[key] = sha
+    return tips, errors
+
+
+def command_observe(args):
+    packages = export_lockfile(args.lockfile)
+    remotes = third_party_remotes(packages, load_exempt_owners(args.policy_dir))
+    tips, errors = fetch_tips(remotes)
+    observations = load_observations(args.state_file)
+    now = now_utc()
+    for key, sha in tips.items():
+        record_tip(observations, key, sha, now)
+    save_observations(args.state_file, observations)
+    print(f"{now.isoformat()} observed {len(tips)} remotes, {len(errors)} failed")
+    for key, error in sorted(errors.items()):
+        print(f"  {key}: {error}", file=sys.stderr)
+    if errors:
+        raise RuntimeError(f"{len(errors)} remotes could not be read")
+
+
+# Plan
+
+
+def decide(package, kind, url, tip, history, now, min_age_days, take_now):
+    """Return (ref, (category, detail), needs_ancestry_check) for one package."""
+    previous = package["ref"]
+    if kind == "tagged":
+        return previous, ("pinned to a tag", package["tag"]), False
+    if kind == "own":
+        return tip, ("own" if tip != previous else "own, unchanged", ""), False
+    if package["id"] in take_now:
+        return tip, ("taken now without cooldown", ""), False
+    aged = aged_tip(history, now, min_age_days)
+    if aged is None:
+        return previous, ("held", "no observation is old enough yet"), False
+    if aged["sha"] == previous:
+        return previous, ("unchanged", ""), False
+    return aged["sha"], ("updated", f"tip first seen {aged['first_seen'][:10]}"), True
+
+
+def check_ancestry(url, branch, previous, chosen):
+    """Return None when CHOSEN may replace PREVIOUS, or the reason it may not."""
+    with tempfile.TemporaryDirectory(prefix="elpaca-cooldown-") as directory:
+        clone_commits(url, branch, directory)
+        if chosen not in history(directory, "HEAD"):
+            return "the aged commit is no longer in the branch (history was rewritten)"
+        if previous not in history(directory, chosen):
+            return "the aged commit does not descend from the pinned one"
+    return None
+
+
+def command_plan(args):
+    packages = export_lockfile(args.lockfile)
+    exempt_owners = load_exempt_owners(args.policy_dir)
+    known = {package["id"] for package in packages}
+    unknown = (set(args.take_now) | set(args.drop)) - known
+    if unknown:
+        raise RuntimeError(f"--take-now or --drop names packages not in the lockfile: {sorted(unknown)}")
+    classified = {package["id"]: classify(package, exempt_owners) for package in packages}
+    remotes = {
+        remote_key(url, package.get("branch")): (url, package.get("branch"))
+        for package in packages
+        for kind, url in [classified[package["id"]]]
+        if kind != "tagged"
+    }
+    tips, errors = fetch_tips(remotes)
+    if errors:
+        details = "\n".join(f"  {key}: {error}" for key, error in sorted(errors.items()))
+        raise RuntimeError(f"{len(errors)} remotes could not be read:\n{details}")
+    observations = load_observations(args.state_file)
+    now = now_utc()
+    decisions, pending = {}, []
+    for package in packages:
+        kind, url = classified[package["id"]]
+        key = remote_key(url, package.get("branch"))
+        ref, status, check = decide(
+            package, kind, url, tips.get(key), observations.get(key, []),
+            now, args.min_age_days, set(args.take_now),
+        )
+        decisions[package["id"]] = [ref, status]
+        if check:
+            pending.append((package, url))
+
+    def verify(item):
+        package, url = item
+        chosen = decisions[package["id"]][0]
+        return package, check_ancestry(url, package.get("branch"), package["ref"], chosen)
+
+    with ThreadPoolExecutor(max_workers=WORKERS) as pool:
+        for package, reason in pool.map(verify, pending):
+            if reason:
+                decisions[package["id"]] = [package["ref"], ("held", reason)]
+    for name in args.drop:
+        decisions[name] = [None, ("dropped, to be built at upstream HEAD", "")]
+    refs = {name: ref for name, (ref, _) in decisions.items()}
+    rewrite_lockfile(args.lockfile, refs, args.out)
+    report = format_report(packages, decisions, args.min_age_days)
+    if args.report:
+        args.report.write_text(report)
+    print(report, end="")
+
+
+def format_report(packages, decisions, min_age_days):
+    previous = {package["id"]: package["ref"] for package in packages}
+    groups = {}
+    for name, (ref, (heading, detail)) in sorted(decisions.items()):
+        groups.setdefault(heading, []).append((name, previous[name], ref, detail))
+    lines = [f"elpaca-cooldown plan (minimum age {min_age_days} days)"]
+    for heading in sorted(groups):
+        lines.append(f"{heading}: {len(groups[heading])}")
+    for heading in sorted(groups):
+        if heading in ("unchanged", "own, unchanged"):
+            continue
+        lines.append("")
+        lines.append(f"== {heading}")
+        for name, old, new, detail in groups[heading]:
+            change = f"{old[:10]} -> {new[:10]}" if new and old != new else old[:10]
+            lines.append(f"{name}: {change}" + (f" ({detail})" if detail else ""))
+    return "\n".join(lines) + "\n"
+
+
+# Verify
+
+
+def command_verify_build(args):
+    planned = {package["id"]: package["ref"] for package in export_lockfile(args.candidate)}
+    built = {package["id"]: package["ref"] for package in export_lockfile(args.built)}
+    drifted = sorted(name for name in planned if name in built and built[name] != planned[name])
+    added = sorted(set(built) - set(planned))
+    for name in added:
+        print(f"new, built at upstream HEAD without cooldown: {name} {built[name][:10]}")
+    for name in drifted:
+        print(f"DRIFT: {name} planned {planned[name][:10]} built {built[name][:10]}")
+    print(f"{len(added)} new packages, {len(drifted)} drifted refs")
+    if drifted:
+        raise RuntimeError("the build did not check out the planned refs")
+
+
+# CLI
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--policy-dir", type=Path, default=DEFAULT_POLICY_DIR)
+    parser.add_argument("--state-file", type=Path, default=DEFAULT_STATE_FILE)
+    commands = parser.add_subparsers(dest="command", required=True)
+    observe = commands.add_parser("observe", help="record today's tip of every third-party remote")
+    observe.add_argument("--lockfile", type=Path, default=DEFAULT_LOCKFILE)
+    plan = commands.add_parser("plan", help="write a candidate lockfile for the next dev profile")
+    plan.add_argument("--lockfile", type=Path, default=DEFAULT_LOCKFILE)
+    plan.add_argument("--out", type=Path, required=True)
+    plan.add_argument("--report", type=Path)
+    plan.add_argument("--min-age-days", type=int, default=DEFAULT_MIN_AGE_DAYS)
+    plan.add_argument("--take-now", action="append", default=[], metavar="PACKAGE")
+    plan.add_argument("--drop", action="append", default=[], metavar="PACKAGE")
+    verify = commands.add_parser("verify-build", help="compare a built lockfile with the candidate")
+    verify.add_argument("--candidate", type=Path, required=True)
+    verify.add_argument("--built", type=Path, required=True)
+    return parser
+
+
+def main(argv=None):
+    args = build_parser().parse_args(argv)
+    commands = {
+        "observe": command_observe,
+        "plan": command_plan,
+        "verify-build": command_verify_build,
+    }
+    try:
+        commands[args.command](args)
+    except Exception as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

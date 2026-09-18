@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.stafforini.elpaca-cooldown.observe</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/pablostafforini/My Drive/dotfiles/bin/elpaca-cooldown</string>
+    <string>observe</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOME</key>
+    <string>/Users/pablostafforini</string>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>8</integer>
+    <key>Minute</key>
+    <integer>30</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/pablostafforini/.local/state/elpaca-cooldown/launchd.observe.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/pablostafforini/.local/state/elpaca-cooldown/launchd.observe.err.log</string>
+</dict>
+</plist>

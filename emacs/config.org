@@ -1158,6 +1158,22 @@ exec "$(dirname "$0")/sync-elpaca-clone.sh" "$@"
                      ".current-profile")
       (insert init-current-profile)))
 
+  ;; Keep the `active' link, which `~/.emacs.d' resolves through, on the
+  ;; running profile so that it cannot drift from `.current-profile'. Only
+  ;; the link entry is replaced (via a staged sibling and `rename-file'); a
+  ;; real directory at that path, or an init directory outside the profiles
+  ;; directory, is left alone.
+  (unless noninteractive
+    (let* ((profile (directory-file-name (file-truename user-emacs-directory)))
+           (link (file-name-concat init-profiles-directory "active")))
+      (when (and (equal (file-name-directory profile)
+                        (file-name-as-directory (file-truename init-profiles-directory)))
+                 (or (file-symlink-p link) (not (file-attributes link)))
+                 (not (equal (file-symlink-p link) profile)))
+        (let ((staged (make-temp-name (file-name-concat init-profiles-directory ".active.stage."))))
+          (make-symbolic-link profile staged)
+          (rename-file staged link t)))))
+
   :bind
   ("A-n" . init-menu))
 #+end_src

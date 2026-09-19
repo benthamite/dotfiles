@@ -1,0 +1,3 @@
+#!/bin/sh
+# Keep Emacs's process a transport client; launchd owns actual Codex execution.
+exec /opt/homebrew/bin/python3 -B "$(dirname "$0")/codex_process_broker.py" client -- "$@"

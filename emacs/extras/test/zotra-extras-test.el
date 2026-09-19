@@ -110,6 +110,40 @@
         (kill-buffer buffer))
       (delete-file file))))
 
+(ert-deftest zotra-extras-test-import-inserts-into-read-only-buffer ()
+  "Insert into a target buffer that Ebib has left read-only."
+  (let* ((file (make-temp-file "zotra-read-only-" nil ".bib"
+                               "@misc{OldKey, title={Existing}}\n"))
+         (bibtex-files (list file))
+         (zotra-extras-most-recent-bibkey nil)
+         (zotra-extras-most-recent-bibfile nil)
+         (zotra-after-get-bibtex-entry-hook
+          '(zotra-extras-after-add-process-bibtex))
+         (org-ref-clean-bibtex-entry-hook '(orcb-key org-ref-sort-bibtex-entry))
+         (kill-ring nil)
+         (kill-ring-yank-pointer nil))
+    (unwind-protect
+        (cl-letf (((symbol-function 'zotra-get-entry-1)
+                   (lambda (&rest _)
+                     "@article{raw, author={Lloyd, Harry}, title={New}, journal={Journal}, year={2025}}"))
+                  ((symbol-function 'bibtex-generate-autokey) (lambda () "NewKey"))
+                  ((symbol-function 'tlon-cleanup-eaf-replace-urls) #'ignore))
+          (with-current-buffer (find-file-noselect file)
+            (read-only-mode 1))
+          (should (equal (zotra-extras-add-entry "10.123/example" nil file t)
+                         "NewKey"))
+          (with-current-buffer (find-buffer-visiting file)
+            (should buffer-read-only)
+            (should-not (buffer-modified-p)))
+          (with-temp-buffer
+            (insert-file-contents file)
+            (should (= 1 (how-many "@misc{OldKey," (point-min) (point-max))))
+            (should (= 1 (how-many "{NewKey," (point-min) (point-max))))))
+      (when-let ((buffer (find-buffer-visiting file)))
+        (with-current-buffer buffer (set-buffer-modified-p nil))
+        (kill-buffer buffer))
+      (delete-file file))))
+
 (ert-deftest zotra-extras-test-challenge-metadata-does-not-insert ()
   "Reject the observed HAL challenge without touching the bibliography."
   (let* ((original "@misc{existing,title={Existing}}\n")

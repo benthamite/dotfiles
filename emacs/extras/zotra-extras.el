@@ -268,12 +268,15 @@ Reject conflicting keys or concurrent unsaved edits before changing BIBFILE."
     (with-current-buffer (or (find-buffer-visiting bibfile)
                             (find-file-noselect bibfile))
       (set-buffer-file-coding-system 'utf-8-unix t)
-      (save-excursion
-        (save-restriction
-          (widen)
-          (goto-char (point-max))
-          (unless (looking-at "^") (insert "\n"))
-          (insert entry)))
+      ;; Ebib leaves the buffers of its loaded databases read-only
+      ;; (`ebib-use-read-only-buffer'), to guard against manual edits.
+      (let ((inhibit-read-only t))
+        (save-excursion
+          (save-restriction
+            (widen)
+            (goto-char (point-max))
+            (unless (looking-at "^") (insert "\n"))
+            (insert entry))))
       (let ((coding-system-for-write 'utf-8-unix))
         (save-buffer)))
     (setq zotra-extras-most-recent-bibkey last-key)))

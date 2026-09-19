@@ -112,7 +112,7 @@ The command ~zotra-extras-add-entry~ is the primary entry point for importing bi
 
 The optional arguments URL-OR-SEARCH-STRING, ENTRY-FORMAT, BIBFILE, and DO-NOT-OPEN can be supplied programmatically for non-interactive use.
 
-The command returns the final inserted key, or the last key when the source contains multiple entries. Cleanup runs before insertion, with errors propagated instead of saving a partially processed entry. Generated keys use the configured Org-ref transformer and Ebib's existing uniqueness routine against the target and configured ~bibtex-files~; keys within one fetched result are also reserved. The insertion step checks for newly appeared conflicts and unsaved target-buffer edits before saving. Existing entries and their keys are preserved.
+The command returns the final inserted key, or the last key when the source contains multiple entries. Cleanup runs before insertion, with errors propagated instead of saving a partially processed entry. Generated keys use the configured Org-ref transformer and Ebib's existing uniqueness routine against the target and configured ~bibtex-files~; keys within one fetched result are also reserved. The insertion step checks for newly appeared conflicts and unsaved target-buffer edits before saving. It inserts even when the target buffer is read-only, which is how =ebib= leaves the buffers of its loaded databases when ~ebib-use-read-only-buffer~ is non-nil; the buffer's read-only state is left unchanged. Existing entries and their keys are preserved.
 
 ** Bibliography file selection
 :PROPERTIES:

@@ -9610,15 +9610,12 @@ otherwise create it off `origin/main'."
 
 /[[https://github.com/benthamite/codex][codex]] is an Emacs client for [[https://openai.com/codex/][Codex]]./
 
-Run Codex through the launchd-owned [[file:../docs/codex-process-isolation.md][process broker]] so agent execution has a separate process container from Emacs.  The launcher refuses to run when the broker is unavailable.
-
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package codex
   :ensure (:host github
                  :repo "benthamite/codex")
   :defer t
   :custom
-  (codex-program (expand-file-name "~/My Drive/dotfiles/bin/codex-isolated"))
   (codex-terminal-backend 'app-server))
 #+end_src
 

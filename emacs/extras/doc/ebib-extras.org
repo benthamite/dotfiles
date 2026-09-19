@@ -695,7 +695,7 @@ These constants define which search commands are invoked for each supertype when
 
 #+vindex: ebib-extras-db-numbers
 #+vindex: ebib-extras-auto-save-files
-The constant ~ebib-extras-db-numbers~ is an association list mapping database file paths to their numeric identifiers. It associates the personal bibliography files and Tlon project files with numbers 1 through 5.
+The constant ~ebib-extras-db-numbers~ is an association list mapping database file paths to their numeric identifiers. It associates the personal bibliography files and Tlon project files with numbers 1 through 6, in the order in which ~paths-files-bibliography-all~ loads them.
 
 The constant ~ebib-extras-auto-save-files~ lists database files that should participate in auto-saving. By default, it includes the new personal bibliography and the Tlon fluid bibliography. Larger files containing older entries are excluded to avoid frequent writes.
 

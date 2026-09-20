@@ -86,6 +86,11 @@ skills and context files that load on demand. User-facing replies lead with the
 answer and stay plain and brief: short sentences, no preamble, and nothing that
 does not change what the user does or decides.
 
+Main agents running inside Emacs publish concise current-state descriptions
+through =bin/agent-status= at task boundaries and meaningful phase changes.
+These descriptions appear beside the session summary in the agent menu;
+subagents must not overwrite their parent's status.
+
 The global instructions state the repository-root contract shared with the
 Codex side: every repository lives outside Drive under =~/repos/= (Epoch
 repositories under =~/repos/epoch/=), nothing under the Drive sync root may

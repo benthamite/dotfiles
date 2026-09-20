@@ -31,6 +31,7 @@
 
 ## Agents
 
+- When running as the main agent in an Emacs session (`CODEX_BUFFER_NAME` or `CLAUDE_BUFFER_NAME` is set), publish a concise current-state description with `"$HOME/My Drive/dotfiles/bin/agent-status" "STATUS"` at task start, meaningful phase changes, blockers, and before the final response. Use a factual phrase of roughly 5–12 words (maximum 160 characters), such as “Testing pagination fix” or “Waiting for your decision about bindings”; describe the current state, not the conversation, and do not claim success beyond verified evidence. This updates only your menu status, not its state-age clock. Subagents must not publish to the parent’s session. If publishing fails, report the failure once and continue the task; do not guess another session or switch the Emacs server.
 - When subagents or agent teams are available, use them whenever independent investigation, implementation, review, or verification work can run in parallel or benefits from a separate context window.
 - For subagents, use the most capable available model and match the main agent's current effort level unless the user explicitly asks for a cheaper or faster path; prefer performance over speed/cost.
 

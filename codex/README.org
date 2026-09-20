@@ -55,6 +55,11 @@ The audit normalizes tool-specific titles, paths, and Claude =@context= syntax
 before comparison. User-facing replies use ASD-STE100 Simplified Technical
 English.
 
+Main agents running inside Emacs publish concise current-state descriptions
+through =bin/agent-status= at task boundaries and meaningful phase changes.
+These descriptions appear beside the session summary in the agent menu;
+subagents must not overwrite their parent's status.
+
 Instruction files, skills, and hook reminders state current rules with their
 reasons and without incident history, migration-relative wording, shouted
 emphasis, or numeric output caps. The

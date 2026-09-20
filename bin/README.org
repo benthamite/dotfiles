@@ -1,7 +1,7 @@
 #+title: Command index
 #+author: Pablo Stafforini
 
-This index covers the 58 tracked files under =bin/= whose Git mode is
+This index covers the 59 tracked files under =bin/= whose Git mode is
 =100755=. Non-executable libraries and data files are intentionally omitted.
 The first column is machine-readable and should contain every executable
 exactly once.
@@ -14,6 +14,7 @@ documented in [[file:../agents/README.org][the agent manual]]. Skill names and t
 
 | Command | Contract |
 |---------+----------|
+| =agent-status= | Publishes a concise agent-authored status to the caller’s live Emacs session through the registered agent package; rejects ambiguous session routing. |
 | =agent-skill= | Resolves skill files across native and local compatibility roots, honoring account and installed plugin-version identity; discovery is not an enabled-runtime catalog. |
 | =ahrefs-api-guard= | Delegates Ahrefs API access to the guarded Claude-side wrapper. |
 | =ai-config-sync= | Audits and guards paired Claude and Codex configuration, accepts matching auxiliary-resource deletions in surviving skills, and treats each tool's hook README as independent documentation. |

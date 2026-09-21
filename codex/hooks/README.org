@@ -107,12 +107,13 @@ decoding. Denials identify the field and rule without printing suspect bytes.
 This does not exempt every public PDF or replace known-secret checks on the
 original command. =tests/test_public_url_scan.py= pins the parser boundaries.
 
-The network heuristic treats hyphens as part of names, so package or Elisp
-names such as =curl-cffi= and =zotra-use-curl= do not activate it. Actual
+The network heuristic treats dots and hyphens as part of names, so =curl.py=,
+=curl-cffi= and =zotra-use-curl= do not activate it. Actual
 =curl=/=wget=/=nc=/=ncat= names, including interpreter subprocess arguments,
 retain the opaque-token scan. This does not exempt interpreter bodies or alter
 known-secret checks. =tests/test_secret_guard_network_names.py= covers the
-local wheel-provenance read and unsafe controls through both runtimes.
+local wheel-provenance and installed-source reads, and unsafe controls through
+both runtimes. Relative =./curl= and absolute =/usr/bin/curl= remain scanned.
 For a recognized literal =functions.exec= wrapper, Codex uses the decoded shell
 command for both activation and scanning; JavaScript newline escapes cannot
 conceal a following network command.

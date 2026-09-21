@@ -5782,9 +5782,15 @@ Using my fork while awaiting merge of [[https://github.com/ml729/calfw-blocks/pu
 
 /[[https://github.com/emacs-mirror/emacs/blob/e819413e24d81875abaf81c281115e695ad5cc28/lisp/time.el#L2][time]] provides facilities to display the current date and time, and a new-mail indicator mode line./
 
+The clock's overdue-update branch must cancel its timer before rescheduling it:
+the timer dispatcher has already requeued repeating timers before calling the
+handler.  Otherwise a slow update raises =Timer already activated=.  Preserve
+the triggered flag while rescheduling so the callback cannot reenter itself.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature time
   :demand t
+  :after el-patch
   :custom
   (zoneinfo-style-world-list '(("America/Buenos_Aires" "Buenos Aires")
                                ("Europe/London" "London")
@@ -5803,6 +5809,21 @@ Using my fork while awaiting merge of [[https://github.com/ml729/calfw-blocks/pu
   (display-time-default-load-average nil)
 
   :config
+  (el-patch-defun display-time-event-handler ()
+    (display-time-update)
+    (let* ((current (current-time))
+           (timer display-time-timer)
+           (el-patch-add (triggered (timer--triggered timer)))
+           (next-time (timer-relative-time
+                       (list (aref timer 1) (aref timer 2) (aref timer 3))
+                       (* 5 (aref timer 4)) 0)))
+      (or (time-less-p current next-time)
+          (progn
+            (el-patch-add (cancel-timer timer))
+            (timer-set-time timer (timer-next-integral-multiple-of-time
+                                  current display-time-interval)
+                            display-time-interval)
+            (timer-activate timer (el-patch-add triggered))))))
   (display-time-mode)
 
   :bind

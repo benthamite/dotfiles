@@ -6,6 +6,7 @@ browser automation; each already carries the right account and auth.
 | Service | Tool |
 |---|---|
 | Paper PDFs (DOI, URL, arXiv, title; Anna's Archive, LibGen, open access) | `bin/paper-fetch` |
+| Book PDF candidates, local registration, staging, inspection and reviewed selection | `bin/paper-fetch` (`book-*` commands) |
 | Gmail | `claude/bin/gmail.py` |
 | Google Sheets | `claude/bin/sheets.py` |
 | Slack | `claude/bin/slack.py` |
@@ -29,6 +30,11 @@ including the browser fallback; `add-bib-entry` uses it for attachments. Shared
 logic lives in `lib/python/paper_fetch.py`; do not add another Anna's Archive
 client. The tool reads the Anna's Archive key itself (see `secrets.md`) and
 needs an active membership: `status: not-member` means the membership lapsed.
+
+Book acquisition uses the same implementation. Its command and review-manifest
+contract is in [book-acquisition.md](../../docs/book-acquisition.md); edition,
+metadata and attachment decisions follow the shared
+[bibliography policy](../../agents/bibliography-policy.md).
 
 ## Google Drive original files
 

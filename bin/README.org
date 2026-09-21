@@ -1,7 +1,7 @@
 #+title: Command index
 #+author: Pablo Stafforini
 
-This index covers the 59 tracked files under =bin/= whose Git mode is
+This index covers the 60 tracked files under =bin/= whose Git mode is
 =100755=. Non-executable libraries and data files are intentionally omitted.
 The first column is machine-readable and should contain every executable
 exactly once.
@@ -18,6 +18,7 @@ documented in [[file:../agents/README.org][the agent manual]]. Skill names and t
 | =agent-skill= | Resolves skill files across native and local compatibility roots, honoring account and installed plugin-version identity; discovery is not an enabled-runtime catalog. |
 | =ahrefs-api-guard= | Delegates Ahrefs API access to the guarded Claude-side wrapper. |
 | =ai-config-sync= | Audits and guards paired Claude and Codex configuration, accepts matching auxiliary-resource deletions in surviving skills, and treats each tool's hook README as independent documentation. |
+| =bib-entry-check= | Checks exported Ebib entry/parent JSON against the shared bibliography policy, separating missing and invalid fields from required semantic review; optionally checks local attachment presence and PDF headers without writing bibliography data. |
 | =check-config-org= | Parses every tangled Elisp block in =emacs/config.org= and runs the profile-aware tangle; the evidence check for config.org commits. |
 | =check-elpaca-cooldown= | Byte-compiles =elpaca-cooldown-lockfile.el= without warnings into a temporary directory and runs the =elpaca-cooldown= unit tests; the evidence check for commits touching that helper. |
 | =check-lockfile= | Validates that =emacs/lockfile.el= reads as one entry list whose every entry has a symbol id, a =:source= string and a =:recipe= with a =:ref=; the evidence check for lockfile commits. |
@@ -44,6 +45,28 @@ documented in [[file:../agents/README.org][the agent manual]]. Skill names and t
 | =sync-agent-c-worktrees= | Compatibility entry point for =sync-reasoning-tasks-worktrees=. |
 | =sync-reasoning-tasks-worktrees= | Runs the guarded reasoning-task sync across eligible task worktrees. |
 | =untrusted-run= | Runs a command in a pinned, networkless Docker Desktop Linux container with fresh output and explicit read-only inputs; no host credentials or process namespace are shared. |
+
+** Bibliography validation
+
+=bib-entry-check --describe= prints the structural rules read directly from
+[[file:../agents/bibliography-policy.md][the shared bibliography policy]]. Run
+=bib-entry-check entries.json --parents parents.json= on exported JSON objects
+or lists shaped as ={entrytype, key, fields}=. Field values must be decoded
+strings, not serialized BibTeX entries. Omit =--parents= when there are no
+crossrefs; =-= reads the primary input from stdin. Supplied parents are checked
+as entries too. Missing parents, cycles and duplicate keys are explicit errors.
+
+=--check-files= checks recorded attachments for nonempty regular files and PDF
+headers. Relative paths require explicit =--file-root DIR= values. Missing
+attachments are reported as absent; they are not proof that acquisition is
+complete. No file is modified, and no network or Emacs request is made.
+
+Exit 0 means structural checks pass; edition evidence, field relevance,
+abstract quality and attachment identity/layout still require the separately
+reported semantic review. Exit 1 means structural defects, and exit 2 means
+the input or policy could not be checked. Unsupported date syntax is reported
+for review rather than normalized or guessed; ordinary ISO dates, ranges and
+labelled uncertainty are supported.
 
 ** Untrusted commands
 
@@ -152,7 +175,7 @@ Mail activation and credential lookup are documented further in
 | =char_input= | Passes one character to the macOS input-character AppleScript. |
 | =install-epoch-doc-handler= | Safely builds, signs, installs, and registers the local =epoch-doc:= URL handler. |
 | =mdfind-wrapper= | Runs Spotlight’s =mdfind= while suppressing its known query-parser noise. |
-| =paper-fetch= | Downloads one paper PDF by DOI, URL, arXiv id, md5 or title through open-access, LibGen/Anna’s Archive fast-download and SciDB routes, verifies that the file is the requested work, and writes a browser job for challenge-protected hosts. Exit 0 ok, 2 needs-browser, 3 not-member, 4 unavailable. Shared logic: =lib/python/paper_fetch.py=. |
+| =paper-fetch= | Downloads papers through shared acquisition routes, with browser jobs for challenged hosts. Its =book-*= commands inventory, register, stage, inspect and compare explicitly reviewed PDFs without writing bibliography data. Uses a dedicated runtime; [[file:../docs/book-acquisition.md][the acquisition contract]] defines manifests and statuses. |
 | =personal-updates= | Applies the scheduled and manual update policy documented in [[file:../macos/README.org][the macOS README]]. |
 | =sync-google-birthdays= | Mirrors reconciled BBDB birthdays into the reminder-free personal Google calendar =Birthdays (managed)=. |
 | =switch-gnupg= | Replaces the Homebrew GnuPG formula with a requested historical version. |

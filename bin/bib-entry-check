@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+"""Check exported Ebib JSON without changing bibliography data.
+
+Input is an object or list of {entrytype, key, fields}; field values must be
+decoded strings. --parents supplies additional entries for crossref inheritance.
+All structural field rules come from agents/bibliography-policy.md.
+
+Exit 0 means structure passes, not that edition/metadata/PDF quality is verified.
+Exit 1 means structural defects; exit 2 means invalid input or policy.
+"""
+
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import json
+import sys
+from pathlib import Path
+
+sys.dont_write_bytecode = True  # The checkout is under Drive, where caches do not belong.
+ROOT = Path(__file__).resolve().parents[1]
+SPEC = importlib.util.spec_from_file_location("bib_entry_check", ROOT / "lib/python/bib_entry_check.py")
+if SPEC is None or SPEC.loader is None:
+    raise SystemExit("Cannot load shared bibliography checker")
+checker = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(checker)
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("input", nargs="?", default="-", help="JSON file, or - for stdin")
+    parser.add_argument("--parents", type=Path, help="JSON entries explicitly supplied as crossref parents")
+    parser.add_argument("--policy", type=Path, default=ROOT / "agents/bibliography-policy.md")
+    parser.add_argument("--describe", action="store_true", help="Print the policy's machine-readable rules")
+    parser.add_argument("--check-files", action="store_true", help="Check recorded local attachments; absence remains explicit")
+    parser.add_argument("--file-root", action="append", type=Path, default=[],
+                        help="Permitted root for relative attachment paths; repeat for multiple roots")
+    args = parser.parse_args(argv)
+    try:
+        rules = checker.load_policy(args.policy)
+        if args.describe:
+            print(json.dumps({"bib_entry_check": rules}, indent=2, ensure_ascii=False))
+            return 0
+        text = sys.stdin.read() if args.input == "-" else Path(args.input).read_text(encoding="utf-8")
+        parents = checker.read_json(args.parents.read_text(encoding="utf-8")) if args.parents else None
+        result = checker.check_entries(checker.read_json(text), rules, parents=parents,
+                                       check_files=args.check_files, file_roots=args.file_root)
+        result["policy"] = str(args.policy)
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0 if result["structural_status"] == "pass" else 1
+    except (OSError, ValueError) as exc:
+        print(json.dumps({"error": str(exc)}, ensure_ascii=False))
+        return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

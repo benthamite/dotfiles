@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
+import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -12,6 +15,7 @@ from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 LIB = ROOT / "lib" / "python" / "paper_fetch.py"
+CLI = LIB.with_name("paper_fetch_cli.py")
 _SPEC = importlib.util.spec_from_file_location("paper_fetch", LIB)
 pf = importlib.util.module_from_spec(_SPEC)
 sys.modules["paper_fetch"] = pf
@@ -151,6 +155,14 @@ class ChallengeDetectionTests(unittest.TestCase):
 
 
 class VerificationTests(unittest.TestCase):
+    def test_header_check_does_not_read_the_entire_pdf(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "book.pdf"
+            path.write_bytes(pdf_bytes())
+            with mock.patch.object(Path, "read_bytes", side_effect=AssertionError("unbounded read")), \
+                 mock.patch.object(pf, "pdf_text", return_value=""), mock.patch.object(pf, "pdf_pages", return_value=1):
+                self.assertEqual(pf.verify_pdf(path, None).verdict, "unverified-no-metadata")
+
     def test_verifies_by_doi_or_title_and_rejects_mismatch(self):
         work = pf.Work(doi="10.1111/phpr.12684", title="Rational Moral Ignorance", authors=["Barnett, Zach"])
         with tempfile.TemporaryDirectory() as tmp:
@@ -162,6 +174,242 @@ class VerificationTests(unittest.TestCase):
                 self.assertEqual(pf.verify_pdf(good, work).verdict, "verified")
                 self.assertEqual(pf.verify_pdf(bad, work).verdict, "mismatch")
             self.assertEqual(pf.verify_pdf(notpdf, work).verdict, "not-pdf")
+
+
+BOOK_TARGET = {"title": "An Example Book", "author": "Smith, Alice", "year": "1960",
+               "edition": "first", "language": "english", "isbn": "9780262033848"}
+
+
+def reviewed_candidate(path, content):
+    """An independently supplied review of a disposable test PDF."""
+    return {"file": str(path), "sha256": hashlib.sha256(content).hexdigest(),
+            "identity": {"status": "verified", "evidence": "Title and author on title page."},
+            "edition": {"status": "verified", "evidence": "Copyright page: first edition, 1960."},
+            "language": {"status": "verified", "evidence": "English text checked on interior pages."},
+            "completeness": {"status": "verified", "evidence": "Contents and final page agree with published extent."},
+            "physical_pages": {"status": "verified", "evidence": "Rendered pages match the publisher's pagination."}}
+
+
+class BookCandidateTests(unittest.TestCase):
+    def test_local_publisher_candidate_enters_the_same_review_workflow_unapproved(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "publisher.pdf"
+            content = pdf_bytes("An Example Book")
+            source.write_bytes(content)
+            original = {"version": 1, "target": BOOK_TARGET, "candidates": [], "search_complete": False}
+            manifest = pf.register_book_candidate(original, source, "https://publisher.example/books/example")
+            self.assertEqual(original["candidates"], [])
+            candidate = manifest["candidates"][0]
+            self.assertEqual(candidate["title"], "")
+            self.assertEqual(candidate["language"], "")
+            self.assertEqual(candidate["size_bytes"], len(content))
+            self.assertEqual(candidate["md5"], hashlib.md5(content).hexdigest())
+            empty_reviews = {"version": 1, "target": BOOK_TARGET, "candidates": {}}
+            self.assertIsNone(pf.select_book_candidate(manifest, empty_reviews)["selected"])
+            staged = pf.stage_book_candidate(manifest, candidate["md5"], Path(tmp) / "stage")
+            self.assertEqual(staged["status"], "needs-review")
+            self.assertEqual(Path(staged["file"]).read_bytes(), content)
+            reviews = {"version": 1, "target": BOOK_TARGET, "candidates": {
+                candidate["md5"]: reviewed_candidate(Path(staged["file"]), content)}}
+            self.assertEqual(pf.select_book_candidate(manifest, reviews)["selected"]["md5"], candidate["md5"])
+
+    def test_registration_rejects_private_credentials_and_signed_source_urls(self):
+        for url in ("file:///tmp/book.pdf", "https://alice:password@example.com/book", "http://localhost/book",
+                    "http://127.0.0.1/book", "https://publisher.example/book?token=secret",
+                    "https://publisher.example/book?X-Amz-Signature=secret", "https://publisher.example/book#api_key=secret"):
+            with self.subTest(url=url), self.assertRaises(pf.PaperFetchError):
+                pf.public_book_source_url(url)
+        self.assertEqual(pf.public_book_source_url("https://books.example/books?id=123"),
+                         "https://books.example/books?id=123")
+
+    def test_discovery_retains_scan_hints_and_does_not_read_credentials(self):
+        editions = {"1": {"title": "An Example Book", "year": "1960", "author": "Smith, Alice",
+                          "files": {"9": {"f_id": "9", "md5": MD5_A}}}}
+        files = {"9": {"md5": MD5_A, "extension": "pdf", "filesize": "", "pages": "300",
+                       "scanned": "Y", "vector": "", "ocr": "Y", "locator": "scan.pdf"}}
+        http = FakeHttp([
+            ("libgen", lambda url, params: html(json.dumps(files if params.get("object") == "f" else editions))),
+            ("/search", html("<title>DDoS-Guard</title>", 403)),
+        ])
+        with mock.patch.object(pf, "annas_secret_key", side_effect=AssertionError("credentials not permitted")):
+            result = pf.discover_book_candidates(http, BOOK_TARGET, annas_host="annas-archive.gl")
+        self.assertEqual(result["status"], "needs-review")
+        self.assertFalse(result["search_complete"])
+        self.assertTrue(result["candidates"][0]["scanned"])
+        self.assertTrue(result["candidates"][0]["ocr"])
+        self.assertIsNone(result["candidates"][0]["size_bytes"])
+        self.assertNotIn("selected", result)
+
+    def test_search_distinguishes_a_recognized_empty_page_from_unknown_html(self):
+        self.assertEqual(pf.parse_annas_book_results("<div>No files found.</div>"), [])
+        with self.assertRaises(pf.PaperFetchError):
+            pf.parse_annas_book_results("<html>New site layout</html>")
+        with self.assertRaises(pf.PaperFetchError):
+            pf.libgen_isbn_files(FakeHttp([("libgen", html("{}", 500))]), "9780262033848", strict=True)
+        for payload in ({"error": "temporarily unavailable"}, {"1": {"title": "Book"}},
+                        {"1": {"files": {"9": {}}}}):
+            with self.subTest(payload=payload), self.assertRaises(pf.PaperFetchError):
+                pf.libgen_isbn_files(FakeHttp([("libgen", html(json.dumps(payload)))]), "9780262033848", strict=True)
+        http = FakeHttp([("libgen", lambda url, params: html(json.dumps(
+            {} if params.get("object") == "f" else {"1": {"files": {"9": {"f_id": "9"}}}})))])
+        with self.assertRaises(pf.PaperFetchError):
+            pf.libgen_isbn_files(http, "9780262033848", strict=True)
+
+    def test_candidate_parser_preserves_unknown_size_without_claiming_fidelity(self):
+        page = (f'<a href="/md5/{MD5_A}">scan.pdf</a><div>An Example Book</div><div>Alice Smith</div>'
+                '<div>English [en] · PDF · unknown · 1960 · Book</div>')
+        candidates = pf.parse_annas_book_results(page)
+        self.assertEqual(candidates[0]["title"], "An Example Book")
+        self.assertEqual(candidates[0]["year"], "1960")
+        self.assertEqual(candidates[0]["format"], "pdf")
+        self.assertIsNone(candidates[0]["size_bytes"])
+        self.assertNotIn("physical_pages", candidates[0])
+        for size in ("5MB", "120KB", "2GB", "5.2MB"):
+            parsed = pf.parse_annas_book_results(page.replace("unknown", size))[0]
+            self.assertEqual(parsed["format"], "pdf")
+            self.assertIsInstance(parsed["size_bytes"], int)
+
+    def test_filename_and_filesize_never_approve_a_candidate(self):
+        manifest = {"version": 1, "target": BOOK_TARGET, "candidates": [
+            {"md5": MD5_A, "format": "pdf", "filename": "publisher-scan.pdf", "size_bytes": 5000000},
+        ]}
+        result = pf.select_book_candidate(manifest, {"version": 1, "target": BOOK_TARGET, "candidates": {}})
+        self.assertEqual(result["status"], "needs-review")
+        self.assertIsNone(result["selected"])
+        self.assertEqual(result["pending"][0]["checks"], list(pf.BOOK_REVIEW_CHECKS))
+
+    def test_selects_by_measured_bytes_after_review_even_for_small_or_ebook_named_pdf(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            smaller = pdf_bytes("An Example Book")
+            larger = smaller + b" " * 5000
+            small_path, big_path = Path(tmp) / "ebook.pdf", Path(tmp) / "scan.pdf"
+            small_path.write_bytes(smaller)
+            big_path.write_bytes(larger)
+            small_md5, big_md5 = hashlib.md5(smaller).hexdigest(), hashlib.md5(larger).hexdigest()
+            manifest = {"version": 1, "target": BOOK_TARGET, "candidates": [
+                {"md5": big_md5, "format": "pdf", "size_bytes": None},
+                {"md5": small_md5, "format": "pdf", "filename": "ebook.pdf", "size_bytes": 9000000},
+            ]}
+            reviews = {"version": 1, "target": BOOK_TARGET, "candidates": {
+                small_md5: reviewed_candidate(small_path, smaller), big_md5: reviewed_candidate(big_path, larger)}}
+            result = pf.select_book_candidate(manifest, reviews)
+            self.assertEqual(result["status"], "ok")
+            self.assertFalse(result["search_complete"])
+            self.assertEqual(result["selected"]["md5"], small_md5)
+            self.assertEqual(result["selected"]["size_bytes"], len(smaller))
+            # A wrong-edition PDF is ineligible, however small.
+            reviews["candidates"][small_md5]["edition"] = {"status": "rejected", "evidence": "Second edition."}
+            result = pf.select_book_candidate(manifest, reviews)
+            self.assertEqual(result["selected"]["md5"], big_md5)
+            self.assertEqual(result["rejected"][0]["reason"], "edition")
+
+    def test_review_must_match_target_and_current_file_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            content = pdf_bytes()
+            path = Path(tmp) / "candidate.pdf"
+            path.write_bytes(content)
+            md5 = hashlib.md5(content).hexdigest()
+            manifest = {"version": 1, "target": BOOK_TARGET, "candidates": [{"md5": md5, "format": "pdf"}]}
+            reviews = {"version": 1, "target": BOOK_TARGET, "candidates": {md5: reviewed_candidate(path, content)}}
+            path.write_bytes(content + b"changed")
+            result = pf.select_book_candidate(manifest, reviews)
+            self.assertEqual(result["status"], "needs-review")
+            self.assertIn("bytes changed", result["pending"][0]["reason"])
+            reviews["target"] = {**BOOK_TARGET, "year": "1970"}
+            with self.assertRaises(pf.PaperFetchError):
+                pf.select_book_candidate(manifest, reviews)
+
+    def test_empty_evidence_and_unrecognized_statuses_are_not_approval(self):
+        review = {name: {"status": "verified", "evidence": " "} for name in pf.BOOK_REVIEW_CHECKS}
+        review["physical_pages"] = {"status": True, "evidence": "Looks plausible."}
+        manifest = {"version": 1, "target": BOOK_TARGET, "candidates": [{"md5": MD5_A, "format": "pdf"}]}
+        result = pf.select_book_candidate(manifest, {"version": 1, "target": BOOK_TARGET, "candidates": {MD5_A: review}})
+        self.assertIsNone(result["selected"])
+
+    def test_local_staging_is_explicit_preserves_source_and_checks_md5(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "download.pdf"
+            content = pdf_bytes()
+            source.write_bytes(content)
+            md5 = hashlib.md5(content).hexdigest()
+            manifest = {"version": 1, "target": BOOK_TARGET, "candidates": [{"md5": md5, "format": "pdf"}]}
+            result = pf.stage_book_candidate(manifest, md5, Path(tmp) / "stage", local_file=source)
+            self.assertEqual(result["status"], "needs-review")
+            self.assertEqual(Path(result["file"]).read_bytes(), content)
+            self.assertEqual(source.read_bytes(), content)
+            with self.assertRaises(pf.PaperFetchError):
+                pf.stage_book_candidate(manifest, MD5_A, Path(tmp) / "other", local_file=source)
+            source.write_bytes(content + b"wrong")
+            with self.assertRaises(pf.PaperFetchError):
+                pf.stage_book_candidate(manifest, md5, Path(tmp) / "other", local_file=source)
+            self.assertFalse((Path(tmp) / "other").exists())
+
+    def test_remote_staging_uses_existing_fetcher_and_rejects_wrong_download(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            downloaded = directory / "wrong.pdf"
+            downloaded.write_bytes(pdf_bytes())
+            fetcher = mock.Mock(out_dir=directory)
+            fetcher.fetch.return_value = pf.Outcome("ok", None, file=str(downloaded))
+            manifest = {"version": 1, "target": BOOK_TARGET, "candidates": [{"md5": MD5_A, "format": "pdf"}]}
+            with self.assertRaises(pf.PaperFetchError):
+                pf.stage_book_candidate(manifest, MD5_A, directory, fetcher=fetcher)
+            fetcher.fetch.assert_called_once_with(MD5_A, name=MD5_A)
+            self.assertFalse(downloaded.exists())
+
+    def test_book_staging_does_not_reject_a_valid_tiny_pdf_by_filesize(self):
+        content = pdf_bytes().rstrip()
+        self.assertLess(len(content), 2000)
+        md5 = hashlib.md5(content).hexdigest()
+        http = FakeHttp([
+            ("fast_download", html(json.dumps({"download_url": "https://partner.example/book.pdf"}))),
+            ("partner.example", pf.Response(200, content, "https://partner.example/book.pdf", "application/pdf")),
+        ])
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "stage"
+            fetcher = pf.Fetcher(http, out, Path(tmp) / "jobs", annas_host="annas-archive.gl", key_reader=lambda: "fixture")
+            manifest = {"version": 1, "target": BOOK_TARGET, "candidates": [{"md5": md5, "format": "pdf"}]}
+            result = pf.stage_book_candidate(manifest, md5, out, fetcher=fetcher)
+            self.assertEqual(result["status"], "needs-review")
+            self.assertEqual(Path(result["file"]).read_bytes(), content)
+
+    def test_cli_local_inspection_and_selection_need_no_network_or_credentials(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            source = directory / "example.pdf"
+            content = pdf_bytes("An Example Book Alice Smith first edition 1960")
+            source.write_bytes(content)
+            md5 = hashlib.md5(content).hexdigest()
+            manifest = directory / "candidates.json"
+            manifest.write_text(json.dumps({"version": 1, "target": BOOK_TARGET, "candidates": []}))
+            env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
+            registered_path = directory / "registered.json"
+            registered = subprocess.run([sys.executable, str(CLI), "book-register", str(manifest),
+                                         "--file", str(source), "--source", "https://publisher.example/book",
+                                         "--out", str(registered_path)], capture_output=True, text=True, env=env, timeout=30)
+            self.assertEqual(registered.returncode, 5, registered.stderr)
+            self.assertEqual(json.loads(manifest.read_text())["candidates"], [])
+            manifest = registered_path
+            staged = subprocess.run([sys.executable, str(CLI), "book-stage", str(manifest),
+                                     "--md5", md5, "--out", str(directory / "stage")],
+                                    capture_output=True, text=True, env=env, timeout=30)
+            self.assertEqual(staged.returncode, 5, staged.stderr)
+            staged_path = Path(json.loads(staged.stdout)["file"])
+            inspected = subprocess.run([sys.executable, str(CLI), "book-inspect", str(staged_path),
+                                        "--out", str(directory / "inspection")],
+                                       capture_output=True, text=True, env=env, timeout=60)
+            self.assertEqual(inspected.returncode, 5, inspected.stderr)
+            inspection = json.loads(inspected.stdout)
+            self.assertEqual(inspection["pages"], 1)
+            self.assertTrue(Path(inspection["images"][0]["file"]).read_bytes().startswith(b"\x89PNG"))
+            self.assertIn("An Example Book", Path(inspection["text_file"]).read_text())
+            reviews = directory / "reviews.json"
+            reviews.write_text(json.dumps({"version": 1, "target": BOOK_TARGET,
+                                           "candidates": {md5: reviewed_candidate(staged_path, content)}}))
+            selected = subprocess.run([sys.executable, str(CLI), "book-select", str(manifest),
+                                       "--reviews", str(reviews)], capture_output=True, text=True, env=env, timeout=30)
+            self.assertEqual(selected.returncode, 0, selected.stderr)
+            self.assertEqual(json.loads(selected.stdout)["selected"]["file"], str(staged_path))
 
 
 class FetcherTests(unittest.TestCase):
@@ -243,8 +491,8 @@ class CliTests(unittest.TestCase):
     def test_cli_loads_shared_library_and_maps_exit_codes(self):
         spec = importlib.util.spec_from_loader("paper_fetch_cli", loader=None)
         module = importlib.util.module_from_spec(spec)
-        module.__file__ = str(ROOT / "bin" / "paper-fetch")
-        code = (ROOT / "bin" / "paper-fetch").read_text()
+        module.__file__ = str(CLI)
+        code = CLI.read_text()
         exec(compile(code, "paper-fetch", "exec"), module.__dict__)
         self.assertIs(module.pf, sys.modules["paper_fetch"])
         self.assertEqual(module.EXIT_CODES["needs-browser"], 2)

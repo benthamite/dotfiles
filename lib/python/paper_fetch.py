@@ -30,7 +30,9 @@ outside ``annas-archive.*``. Signed download URLs are not printed either.
 from __future__ import annotations
 
 import dataclasses
+import hashlib
 import html
+import ipaddress
 import json
 import os
 import re
@@ -123,7 +125,10 @@ class Http:
 
     def __init__(self, timeout: int = 60, impersonate: str = "chrome"):
         if _requests is None:
-            raise PaperFetchError("curl_cffi is not importable; install it for python3")
+            raise PaperFetchError(
+                "curl_cffi is not importable; provision the dedicated paper-fetch runtime "
+                "from dotfiles/lib/python/paper-fetch-requirements.txt "
+                "(see dotfiles/docs/book-acquisition.md)")
         self.timeout = timeout
         self.session = _requests.Session(impersonate=impersonate)
 
@@ -462,35 +467,60 @@ def libgen_md5s(http: Http, doi: str) -> list[str]:
     return md5s
 
 
-def libgen_isbn_files(http: Http, isbn: str) -> list[dict]:
+def libgen_isbn_files(http: Http, isbn: str, *, strict: bool = False) -> list[dict]:
     """ISBN -> LibGen file records (md5, extension, filesize, title, year, flags).
 
     Same unchallenged JSON API as ``libgen_md5s``; hyphens and spaces are
     stripped because the API rejects formatted ISBNs. Each record carries the
     edition's title/year plus the file's ``extension``, ``filesize`` (int) and
-    the ``scanned``/``vector``/``ocr`` flags LibGen exposes, so callers can rank.
+    the ``scanned``/``vector``/``ocr`` flags LibGen exposes as inspection hints.
+    STRICT distinguishes failed/unknown responses from a recognized empty lookup.
     """
     isbn = re.sub(r"[^0-9Xx]", "", isbn)
     if len(isbn) not in (10, 13):
+        if strict:
+            raise PaperFetchError("Book lookup needs an ISBN-10 or ISBN-13")
         return []
     response = http.get(LIBGEN_JSON_URL, params={"object": "e", "isbn": isbn}, timeout=45)
     if response.status != 200:
+        if strict:
+            raise PaperFetchError(f"LibGen ISBN lookup returned HTTP {response.status}")
         return []
     try:
         editions = json.loads(response.text)
     except ValueError:
+        if strict:
+            raise PaperFetchError("LibGen ISBN lookup returned invalid JSON") from None
         return []
-    if not isinstance(editions, dict) or not editions:
+    if editions in ({}, []):
+        return []
+    if not isinstance(editions, dict):
+        if strict:
+            raise PaperFetchError("LibGen ISBN lookup returned an unknown layout")
         return []
     file_ids: dict[str, dict] = {}
     for edition in editions.values():
         if not isinstance(edition, dict):
+            if strict:
+                raise PaperFetchError("LibGen ISBN lookup returned a malformed edition")
             continue
-        for file_ in (edition.get("files") or {}).values():
+        edition_files = edition.get("files")
+        if not isinstance(edition_files, dict):
+            if strict:
+                raise PaperFetchError("LibGen ISBN lookup omitted the edition's files")
+            continue
+        for file_ in edition_files.values():
+            if not isinstance(file_, dict):
+                if strict:
+                    raise PaperFetchError("LibGen ISBN lookup returned a malformed file reference")
+                continue
             fid = str(file_.get("f_id") or "")
+            if not fid and strict:
+                raise PaperFetchError("LibGen ISBN lookup omitted a file identifier")
             if fid and fid not in file_ids:
                 file_ids[fid] = {"title": edition.get("title") or "", "year": str(edition.get("year") or ""),
-                                 "author": edition.get("author") or ""}
+                                 "author": edition.get("author") or "", "edition": str(edition.get("edition") or ""),
+                                 "language": edition.get("language") or ""}
     if not file_ids:
         return []
     records: list[dict] = []
@@ -499,18 +529,30 @@ def libgen_isbn_files(http: Http, isbn: str) -> list[dict]:
         chunk = ids[start:start + 50]
         response = http.get(LIBGEN_JSON_URL, params={"object": "f", "ids": ",".join(chunk)}, timeout=45)
         if response.status != 200:
+            if strict:
+                raise PaperFetchError(f"LibGen file lookup returned HTTP {response.status}")
             continue
         try:
             files = json.loads(response.text)
         except ValueError:
+            if strict:
+                raise PaperFetchError("LibGen file lookup returned invalid JSON") from None
             continue
         if not isinstance(files, dict):
+            if strict:
+                raise PaperFetchError("LibGen file lookup returned an unknown layout")
             continue
+        if strict and set(map(str, files)) != set(chunk):
+            raise PaperFetchError("LibGen file lookup returned an incomplete or mismatched file set")
         for fid, info in files.items():
             if not isinstance(info, dict):
+                if strict:
+                    raise PaperFetchError("LibGen file lookup returned a malformed file")
                 continue
             md5 = str(info.get("md5") or "").lower()
             if not MD5_RE.match(md5):
+                if strict:
+                    raise PaperFetchError("LibGen file lookup omitted a valid MD5")
                 continue
             try:
                 size = int(info.get("filesize") or 0)
@@ -525,6 +567,413 @@ def libgen_isbn_files(http: Http, isbn: str) -> list[dict]:
                 **file_ids.get(str(fid), {}),
             })
     return records
+
+
+# ---------------------------------------------------------------------------
+# Book candidates and explicit review
+# ---------------------------------------------------------------------------
+
+BOOK_REVIEW_CHECKS = ("identity", "edition", "language", "completeness", "physical_pages")
+
+
+def book_target(value: dict) -> dict:
+    """Validate the supplied edition identity, without choosing an edition.
+
+    The shared bibliography policy owns these decisions. Discovery metadata and
+    filenames are never evidence that the requested edition has been obtained.
+    """
+    if not isinstance(value, dict):
+        raise PaperFetchError("Book target must be a JSON object")
+    target = {}
+    for field in ("title", "author", "year", "edition", "language", "isbn", "query"):
+        item = value.get(field, "")
+        if not isinstance(item, str):
+            raise PaperFetchError(f"Book target {field} must be a string")
+        target[field] = item.strip()
+    for field in ("title", "year", "edition", "language"):
+        if not target[field]:
+            raise PaperFetchError(f"Book target needs an explicit {field}")
+    if not re.fullmatch(r"[0-9]{4}", target["year"]):
+        raise PaperFetchError("Book target year must contain four digits")
+    if target["isbn"]:
+        target["isbn"] = re.sub(r"[\s-]", "", target["isbn"]).upper()
+        if not re.fullmatch(r"(?:[0-9]{9}[0-9X]|[0-9]{13})", target["isbn"]):
+            raise PaperFetchError("Book target ISBN must be an ISBN-10 or ISBN-13")
+    return target
+
+
+def book_size_bytes(value: str) -> int | None:
+    """Parse a provider's rounded size; unknown sizes stay unknown."""
+    match = re.fullmatch(r"([0-9]+(?:\.[0-9]+)?)\s*([KMG])B", value.strip(), re.I)
+    if not match:
+        return None
+    size = int(float(match[1]) * {"K": 1024, "M": 1024**2, "G": 1024**3}[match[2].upper()])
+    return size if size > 0 else None
+
+
+def parse_annas_book_results(page: str) -> list[dict]:
+    """Extract book candidates using the website downloader's result format.
+
+    These are unverified search observations, never acceptance decisions. An
+    unrecognized response is an error, rather than evidence of no matching book.
+    """
+    page = re.sub(r"<(script|style)\b[^>]*>.*?</\1>", "", page, flags=re.I | re.S)
+    positions = []
+    seen = set()
+    for match in re.finditer(r'href=[\"\']/md5/([0-9a-f]{32})[\"\']', page, re.I):
+        md5 = match[1].lower()
+        if md5 not in seen:
+            seen.add(md5)
+            positions.append((md5, match.start()))
+    results = []
+    for i, (md5, start) in enumerate(positions):
+        end = positions[i + 1][1] if i + 1 < len(positions) else len(page)
+        block = page[start:end]
+        block = block[block.find(">") + 1:]
+        lines = [line.strip() for line in html.unescape(re.sub(r"<[^>]+>", "\n", block)).splitlines()
+                 if line.strip()]
+        metadata = next((line for line in lines if "·" in line and
+                         re.search(r"(?:^|·)\s*(?:PDF|EPUB|DJVU|MOBI|AZW3|FB2|CBR|TXT)\s*(?:·|$)", line, re.I)), "")
+        if not metadata:
+            continue
+        record = dict(md5=md5, title="", authors="", format="", size="", size_bytes=None,
+                      year="", language="", source="annas-archive", filename="", edition="")
+        for token in map(str.strip, metadata.split("·")):
+            if book_size_bytes(token) is not None:
+                record["size"], record["size_bytes"] = token, book_size_bytes(token)
+            elif re.fullmatch(r"[12][0-9]{3}", token):
+                record["year"] = token
+            elif re.fullmatch(r"PDF|EPUB|DJVU|MOBI|AZW3|FB2|CBR|TXT", token, re.I):
+                record["format"] = token.lower()
+            elif re.search(r"\[[a-z]{2,3}\]", token, re.I):
+                record["language"] = token
+        meaningful = [line for line in lines if "·" not in line and line != "*"
+                      and not line.startswith(("Read more", "Save", "Show more"))]
+        for line in meaningful:
+            if re.search(r"\.(?:pdf|epub|djvu|mobi|azw3|fb2|cbr|txt)$", line, re.I):
+                record["filename"] = line
+                break
+        meaningful = [line for line in meaningful if line != record["filename"]]
+        if meaningful:
+            record["title"] = meaningful[0]
+        if len(meaningful) > 1:
+            record["authors"] = meaningful[1]
+        results.append(record)
+    if positions and len(results) != len(positions):
+        raise PaperFetchError("Anna's book search returned an unrecognized result layout")
+    if not positions and not re.search(r"\bno (?:files|results)(?: were)? found\b", html.unescape(page), re.I):
+        raise PaperFetchError("Anna's book search returned an unrecognized page")
+    return results
+
+
+def search_annas_books(http: Http, query: str, base_url: str) -> list[dict]:
+    """Search book metadata through the shared HTTP client; never read a key."""
+    host = resolve_annas_hosts(None, base_url)[0]
+    response = http.get(f"https://{host}/search", params={"q": query, "content": "book_any"}, timeout=45)
+    if response.is_challenge:
+        raise PaperFetchError(f"Anna's book search needs a browser (HTTP {response.status})")
+    if response.status != 200:
+        raise PaperFetchError(f"Anna's book search returned HTTP {response.status}")
+    return parse_annas_book_results(response.text)
+
+
+def libgen_book_results(http: Http, isbn: str, *, strict: bool = False) -> list[dict]:
+    """Expose existing ISBN file records without discarding inspection hints."""
+    results = []
+    for record in libgen_isbn_files(http, isbn, strict=strict):
+        size = record.get("size_bytes")
+        size = size if isinstance(size, int) and not isinstance(size, bool) and size > 0 else None
+        results.append({**record, "authors": record.get("author", ""), "format": record.get("extension", ""),
+                        "size_bytes": size, "size": f"{size / 1024**2:.1f}MB" if size else ""})
+    return results
+
+
+def discover_book_candidates(http: Http, target: dict, *, annas_host: str = "") -> dict:
+    """Inventory files for an explicitly identified edition, without selecting one."""
+    target = book_target(target)
+    query = target["query"] or target["isbn"] or " ".join(filter(None, (target["title"], target["author"])))
+    attempts = []
+    observations = []
+    if target["isbn"]:
+        try:
+            records = libgen_book_results(http, target["isbn"], strict=True)
+            observations.extend(records)
+            attempts.append({"route": "libgen-isbn", "status": "ok", "count": len(records)})
+        except PaperFetchError as exc:
+            attempts.append({"route": "libgen-isbn", "status": "unknown", "error": str(exc)})
+        except Exception as exc:
+            attempts.append({"route": "libgen-isbn", "status": "error", "error": type(exc).__name__})
+    hosts = resolve_annas_hosts(http, annas_host)
+    try:
+        records = search_annas_books(http, query, hosts[0])
+        observations.extend(records)
+        attempts.append({"route": "annas-book-search", "status": "ok", "count": len(records), "host": hosts[0]})
+    except PaperFetchError as exc:
+        attempts.append({"route": "annas-book-search", "status": "unknown", "error": str(exc), "host": hosts[0]})
+    except Exception as exc:
+        attempts.append({"route": "annas-book-search", "status": "error", "error": type(exc).__name__, "host": hosts[0]})
+    candidates = {}
+    for record in observations:
+        md5 = record["md5"]
+        if md5 in candidates:
+            candidates[md5]["observations"].append(record)
+        else:
+            candidates[md5] = {**record, "observations": [record]}
+    complete = all(attempt["status"] == "ok" for attempt in attempts)
+    status = "needs-review" if candidates else ("unavailable" if complete else "unknown")
+    return {"version": 1, "target": target, "query": query, "candidates": list(candidates.values()),
+            "attempts": attempts, "status": status, "search_complete": complete}
+
+
+def read_book_candidates(path: Path) -> dict:
+    """Read a candidate inventory; its metadata conveys no approval."""
+    try:
+        manifest = json.loads(path.read_text())
+    except (OSError, ValueError) as exc:
+        raise PaperFetchError(f"Cannot read book candidates ({type(exc).__name__})") from None
+    if not isinstance(manifest, dict) or manifest.get("version") != 1:
+        raise PaperFetchError("Unsupported book candidate manifest")
+    manifest["target"] = book_target(manifest.get("target"))
+    candidates = manifest.get("candidates")
+    if not isinstance(candidates, list) or any(not isinstance(item, dict) for item in candidates):
+        raise PaperFetchError("Book manifest candidates must be objects")
+    ids = [item.get("md5") for item in candidates]
+    if any(not isinstance(md5, str) or not MD5_RE.fullmatch(md5) for md5 in ids) or len(ids) != len(set(ids)):
+        raise PaperFetchError("Book manifest needs unique valid candidate MD5s")
+    return manifest
+
+
+def book_pdf_facts(path: Path) -> dict:
+    """Bind review evidence to exact PDF bytes, without declaring them eligible."""
+    path = path.expanduser().resolve()
+    if not path.is_file():
+        raise PaperFetchError("Book PDF does not exist")
+    before = path.stat()
+    sha256, md5 = hashlib.sha256(), hashlib.md5()
+    with path.open("rb") as stream:
+        if stream.read(5) != b"%PDF-":
+            raise PaperFetchError("Book candidate is not a PDF")
+        stream.seek(0)
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            sha256.update(chunk)
+            md5.update(chunk)
+    after = path.stat()
+    if (before.st_ino, before.st_size, before.st_mtime_ns) != (after.st_ino, after.st_size, after.st_mtime_ns):
+        raise PaperFetchError("Book PDF changed while computing its identity")
+    return {"file": str(path), "md5": md5.hexdigest(), "sha256": sha256.hexdigest(),
+            "size_bytes": after.st_size}
+
+
+def public_book_source_url(value: str) -> str:
+    """Accept a public source reference, excluding credential/signed URL forms.
+
+    Use a landing or permanent public file URL; download session URLs do not
+    belong in an evidence manifest. This validates its form, not availability.
+    """
+    parsed = urllib.parse.urlsplit(value)
+    host = (parsed.hostname or "").lower()
+    if (parsed.scheme not in ("http", "https") or not host or parsed.username or parsed.password
+            or any(char.isspace() for char in value) or "\\" in value
+            or host == "localhost" or host.endswith((".localhost", ".local", ".internal"))):
+        raise PaperFetchError("Book source needs a public HTTP(S) URL without credentials")
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        if "." not in host:
+            raise PaperFetchError("Book source needs a public host") from None
+    else:
+        if not address.is_global:
+            raise PaperFetchError("Book source must not use a private or local address")
+    allowed_query = {"id", "isbn", "doi", "page", "pid", "lang", "download"}
+    if any(name.lower() not in allowed_query for name, _ in urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)):
+        raise PaperFetchError("Use a permanent book source URL without signed or session query parameters")
+    if re.search(r"(?:token|secret|signature|credential|password|api.?key)\s*=", parsed.fragment, re.I):
+        raise PaperFetchError("Book source fragment contains credential-like parameters")
+    return urllib.parse.urlunsplit(parsed)
+
+
+def register_book_candidate(manifest: dict, path: Path, source_url: str) -> dict:
+    """Add a local publisher/archive PDF as an unreviewed candidate.
+
+    Measure file facts and record provenance only. In particular, never copy the
+    desired target's title, author, language or edition into observed metadata.
+    """
+    source = public_book_source_url(source_url)
+    facts = book_pdf_facts(path)
+    observed = {"md5": facts["md5"], "sha256": facts["sha256"], "local_file": facts["file"],
+                "format": "pdf", "size_bytes": facts["size_bytes"], "source": source,
+                "filename": Path(facts["file"]).name, "title": "", "authors": "", "year": "",
+                "edition": "", "language": ""}
+    candidates = []
+    present = False
+    for item in manifest["candidates"]:
+        candidate = dict(item)
+        if candidate["md5"] == facts["md5"]:
+            candidate.update(local_file=facts["file"], sha256=facts["sha256"], size_bytes=facts["size_bytes"])
+            candidate["observations"] = list(candidate.get("observations", [dict(item)])) + [observed]
+            present = True
+        candidates.append(candidate)
+    if not present:
+        candidates.append({**observed, "observations": [observed]})
+    return {**manifest, "status": "needs-review", "candidates": candidates}
+
+
+def stage_book_candidate(manifest: dict, md5: str, out_dir: Path, *, fetcher: Fetcher | None = None,
+                         local_file: Path | None = None, name: str = "") -> dict:
+    """Stage only the named candidate for inspection, using the existing downloader.
+
+    A local file (for example a browser download) must match the same MD5. Neither
+    successful download nor file identity approves its edition or physical pages.
+    """
+    candidate = next((item for item in manifest["candidates"] if item["md5"] == md5), None)
+    if candidate is None or candidate.get("format") != "pdf":
+        raise PaperFetchError("Choose an explicit PDF candidate from the inventory")
+    if local_file is None and candidate.get("local_file"):
+        local_file = Path(candidate["local_file"])
+    stem = name or md5
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", stem):
+        raise PaperFetchError("Staged book name must contain only letters, digits, hyphens or underscores")
+    if local_file is not None:
+        facts = book_pdf_facts(local_file)
+        if facts["md5"] != md5:
+            raise PaperFetchError("Local book file does not match the candidate MD5")
+        if candidate.get("sha256") and facts["sha256"] != candidate["sha256"]:
+            raise PaperFetchError("Local book file no longer matches its registration SHA256")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        destination = out_dir / f"{stem}.pdf"
+        with destination.open("xb") as output:
+            try:
+                with Path(facts["file"]).open("rb") as source:
+                    shutil.copyfileobj(source, output)
+            except OSError:
+                destination.unlink()
+                raise
+        facts = book_pdf_facts(destination)
+        if facts["md5"] != md5:
+            destination.unlink()
+            raise PaperFetchError("Local book file changed during staging")
+        attempts = []
+    else:
+        if fetcher is None:
+            raise PaperFetchError("Remote book staging needs the existing paper downloader")
+        if fetcher.out_dir.resolve() != out_dir.resolve():
+            raise PaperFetchError("Book downloader staging directory does not match")
+        outcome = fetcher.fetch(md5, name=stem)
+        if outcome.status != "ok":
+            return outcome.to_dict()
+        facts = book_pdf_facts(Path(outcome.file))
+        if facts["md5"] != md5:
+            Path(outcome.file).unlink()  # Only this operation's newly staged bytes.
+            raise PaperFetchError("Downloaded book does not match the candidate MD5")
+        attempts = [dataclasses.asdict(attempt) for attempt in outcome.attempts]
+    return {"status": "needs-review", **facts, "target": manifest["target"], "attempts": attempts,
+            "checks_required": list(BOOK_REVIEW_CHECKS)}
+
+
+def inspect_book_pdf(path: Path, out_dir: Path, pages: str = "1,2,3,last") -> dict:
+    """Render selected pages and extract text/metadata for explicit agent review."""
+    for command in ("pdfinfo", "pdftotext", "pdftoppm"):
+        if not shutil.which(command):
+            raise PaperFetchError(f"Book inspection needs {command}")
+    facts = book_pdf_facts(path)
+    info = subprocess.run(["pdfinfo", facts["file"]], capture_output=True, text=True, timeout=60)
+    if info.returncode != 0:
+        raise PaperFetchError("pdfinfo could not read the book PDF")
+    count_match = re.search(r"^Pages:\s+([0-9]+)", info.stdout, re.M)
+    if not count_match or int(count_match[1]) < 1:
+        raise PaperFetchError("Book PDF has no readable pages")
+    count = int(count_match[1])
+    selected = []
+    for item in pages.split(","):
+        item = item.strip()
+        if item != "last" and not item.isdecimal():
+            raise PaperFetchError("Inspection pages must be comma-separated numbers or last")
+        page = count if item == "last" else int(item)
+        if page > count and pages == "1,2,3,last":
+            continue
+        if not 1 <= page <= count:
+            raise PaperFetchError(f"Inspection page {page} is outside the PDF")
+        if page not in selected:
+            selected.append(page)
+    out_dir.mkdir(parents=True, exist_ok=False)
+    (out_dir / "metadata.txt").write_text(info.stdout)
+    text_file = out_dir / "text.txt"
+    extracted = subprocess.run(["pdftotext", "-layout", facts["file"], str(text_file)], capture_output=True, timeout=120)
+    if extracted.returncode != 0:
+        raise PaperFetchError("pdftotext could not inspect the book PDF")
+    images = []
+    for page in selected:
+        prefix = out_dir / f"page-{page}"
+        rendered = subprocess.run(["pdftoppm", "-f", str(page), "-l", str(page), "-scale-to", "1600",
+                                   "-png", "-singlefile", facts["file"], str(prefix)],
+                                  capture_output=True, timeout=120)
+        image = prefix.with_suffix(".png")
+        if rendered.returncode != 0 or not image.is_file():
+            raise PaperFetchError(f"Could not render book page {page}")
+        images.append({"page": page, "file": str(image.resolve())})
+    if book_pdf_facts(Path(facts["file"])) != facts:
+        raise PaperFetchError("Book PDF changed during inspection; discard this inspection")
+    result = {"status": "needs-review", **facts, "pages": count, "images": images,
+              "text_file": str(text_file.resolve()), "metadata_file": str((out_dir / "metadata.txt").resolve()),
+              "checks_required": list(BOOK_REVIEW_CHECKS)}
+    (out_dir / "inspection.json").write_text(json.dumps(result, indent=2) + "\n")
+    return result
+
+
+def select_book_candidate(manifest: dict, reviews: dict) -> dict:
+    """Rank only explicitly reviewed, byte-bound PDFs by their measured size.
+
+    Reviews refer to the shared bibliography policy. This function enforces the
+    required evidence structure; it does not pretend to judge semantic evidence.
+    """
+    if not isinstance(reviews, dict) or reviews.get("version") != 1:
+        raise PaperFetchError("Unsupported book review manifest")
+    if book_target(reviews.get("target")) != book_target(manifest["target"]):
+        raise PaperFetchError("Book review target does not match the candidate inventory")
+    records = reviews.get("candidates")
+    if not isinstance(records, dict):
+        raise PaperFetchError("Book reviews need a candidates object keyed by MD5")
+    known = {candidate["md5"] for candidate in manifest["candidates"]}
+    if set(records) - known:
+        raise PaperFetchError("Book reviews contain candidates outside this inventory")
+    eligible, pending, rejected = [], [], []
+    for candidate in manifest["candidates"]:
+        md5 = candidate["md5"]
+        review = records.get(md5, {})
+        if not isinstance(review, dict):
+            raise PaperFetchError(f"Book review for {md5} must be an object")
+        if candidate.get("format") != "pdf":
+            rejected.append({"md5": md5, "reason": "Candidate format is not PDF"})
+            continue
+        negative = next((name for name in BOOK_REVIEW_CHECKS
+                         if isinstance(review.get(name), dict) and review[name].get("status") == "rejected"
+                         and isinstance(review[name].get("evidence"), str) and review[name]["evidence"].strip()), None)
+        if negative:
+            rejected.append({"md5": md5, "reason": negative, "evidence": review[negative]["evidence"]})
+            continue
+        missing = [name for name in BOOK_REVIEW_CHECKS if not isinstance(review.get(name), dict)
+                   or review[name].get("status") != "verified"
+                   or not isinstance(review[name].get("evidence"), str) or not review[name]["evidence"].strip()]
+        if missing:
+            pending.append({"md5": md5, "reason": "Missing positive review evidence", "checks": missing})
+            continue
+        if not isinstance(review.get("file"), str) or not isinstance(review.get("sha256"), str):
+            pending.append({"md5": md5, "reason": "Review needs the inspected file and SHA256"})
+            continue
+        try:
+            facts = book_pdf_facts(Path(review["file"]))
+        except (OSError, PaperFetchError) as exc:
+            pending.append({"md5": md5, "reason": f"Reviewed PDF is unavailable ({type(exc).__name__})"})
+            continue
+        if facts["md5"] != md5 or facts["sha256"] != review["sha256"]:
+            pending.append({"md5": md5, "reason": "Reviewed file bytes changed or identify another candidate"})
+            continue
+        eligible.append({**candidate, **facts})
+    eligible.sort(key=lambda candidate: (candidate["size_bytes"], candidate["md5"]))
+    return {"status": "ok" if eligible else "needs-review", "selected": eligible[0] if eligible else None,
+            "eligible": eligible, "pending": pending, "rejected": rejected,
+            "search_complete": manifest.get("search_complete", False), "attempts": manifest.get("attempts", []),
+            "selection_scope": "smallest measured file among explicitly reviewed eligible candidates"}
 
 
 def scidb_md5s_from_html(page: str, doi: str) -> list[str]:
@@ -594,7 +1043,10 @@ def pdf_pages(path: Path) -> int:
 
 
 def verify_pdf(path: Path, work: Work | None) -> Verification:
-    data = path.read_bytes()[:8] if path.exists() else b""
+    data = b""
+    if path.exists():
+        with path.open("rb") as stream:
+            data = stream.read(8)
     size = path.stat().st_size if path.exists() else 0
     if data[:5] != b"%PDF-" or size < 2000:
         return Verification(False, size, 0, 0.0, False, False, "not-pdf")

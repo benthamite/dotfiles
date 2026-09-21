@@ -7,13 +7,23 @@ top-level configuration directory.
 
 Python modules loaded by resolved file path from more than one consumer.
 
+- =bib_entry_check.py= — read-only structural checks behind =bin/bib-entry-check=.
+  Reads the single rules block in =agents/bibliography-policy.md=; checks explicit
+  parent inheritance, metadata syntax and optional file presence without claiming
+  semantic acceptance. Tested through the command and library by
+  =tests/test_bib_entry_check.py=.
 - =paper_fetch.py= — paper acquisition core behind =bin/paper-fetch=: Anna's Archive
   domain resolution and member fast-download API, LibGen DOI lookup, SciDB parsing,
   bot-challenge detection, open-access resolution (Crossref, OpenAlex, Unpaywall,
   arXiv), PDF identity verification and browser-job generation for challenged
-  hosts. Also imported by =stafforini.com/scripts/download-missing-pdfs.py= for its
-  book mode; tested by =tests/test_paper_fetch.py=. Reads the Anna's Archive key
-  in-process and never prints it.
+  hosts. Its book interfaces inventory, register, stage and inspect candidates,
+  then compare measured bytes only after explicit reviews. The website's
+  =download-missing-pdfs.py= imports these interfaces as a read-only adapter;
+  tested by =tests/test_paper_fetch.py=. Reads the Anna's Archive key in-process
+  and never prints it.
+- =paper_fetch_cli.py= — command entry point for =bin/paper-fetch=, using the
+  dedicated outside-Drive runtime pinned by =paper-fetch-requirements.txt=.
+  [[file:../docs/book-acquisition.md][The acquisition contract]] documents book commands, manifests and statuses.
 - =agent_session_lib.py= — single-actor Emacs =agent.el= session primitives
   (guarded prompt delivery, marker-in-transcript delivery acknowledgment, marker-gated
   transcript reads, buffer lifecycle inspection). Consumed by the paired

@@ -451,11 +451,20 @@ The =add-to-emacs-packages= workflow checks the list, existing manual and profil
 card independently. It resolves canonical sources, preserves note IDs and keeps
 local registration separate from clone and publication authorization.
 
+The =clean-citations= workflow resolves source references in selected personal
+Org notes, adds missing works through =add-bib-entry=, and preserves verified
+locators and resumable progress. The shared [[file:../agents/bibliography-policy.md][bibliography policy]] owns work and
+edition selection, metadata quality, and book PDF eligibility. Structural
+validation and hash-bound book reviews complement source-based semantic review.
+
 The =add-bib-entry= workflow stays enabled across sessions and follows
 =zotra-extras-add-entry= with the actual =ebib-extras-process-entry= command.
 It resolves active bibliography state and serializes attachment callbacks.
-It verifies work identity and labels uncertain metadata. Article PDF downloads
-go through =paper-fetch=; metadata, explicit attachment and entry
+It reviews all fields before and after processing with =bib-entry-check= and
+the shared policy. Book candidates, including registered publisher/archive PDFs,
+are inspected before attachment through =paper-fetch=; existing nonempty
+abstracts still require semantic review.
+Article PDF downloads go through =paper-fetch=; metadata, explicit attachment and entry
 processing stay in Emacs. The skill has no separate downloader or BibTeX writer.
 
 The =download-paper= workflow obtains one paper PDF by DOI, URL, arXiv id,

@@ -5,6 +5,9 @@ My skills, instructions, hooks and supporting tools for Codex and Claude Code.
 They cover software development, writing, research, and maintaining my Emacs
 and macOS environment.
 
+The [[file:bibliography-policy.md][bibliography policy]] is the shared source for work/edition selection,
+metadata acceptance and book PDF requirements used by both runtimes.
+
 * Skills
 
 The [[file:skill-inventory.org][skill list]] describes each skill and links directly to its Codex and

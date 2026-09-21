@@ -32,6 +32,13 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
+      "name": "clean-citations",
+      "claude": "claude/skills/clean-citations/SKILL.md",
+      "codex": "codex/skills/clean-citations/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
       "name": "automate",
       "claude": "claude/skills/automate/SKILL.md",
       "codex": "codex/skills/automate/SKILL.md",

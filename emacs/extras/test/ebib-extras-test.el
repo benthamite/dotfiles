@@ -119,6 +119,127 @@
              (insert-file-contents file)
              (should (equal (buffer-string) external)))))))))
 
+;;;; File notification reloads
+
+(defun ebib-extras-test--with-watched-database (function)
+  "Call FUNCTION with an isolated saved database and its watched file."
+  (let* ((file (make-temp-file "ebib-watch-test-" nil ".bib"))
+         (db (ebib-db-new-database))
+         (index (generate-new-buffer " *ebib-watch-index*"))
+         (log (generate-new-buffer " *ebib-watch-log*"))
+         (ebib--cur-db db)
+         (ebib--databases (list db))
+         (ebib--buffer-alist `((index . ,index) (log . ,log)))
+         (ebib-extras-last-reload-times (make-hash-table :test #'equal)))
+    (unwind-protect
+        (progn
+          (ebib-db-set-filename file db)
+          (ebib-db-set-buffer index db)
+          (ebib-db-set-backup nil db)
+          (ebib-db-set-entry "Says2010OnKeepingLogbook"
+                             (copy-tree '(("=type=" . "online")
+                                          ("title" . "{On keeping a logbook}"))) db)
+          (with-current-buffer index
+            (insert (propertize "Says2010OnKeepingLogbook" 'ebib-key
+                                "Says2010OnKeepingLogbook"))
+            (goto-char (point-min)))
+          (ebib-db-set-modtime (ebib--get-file-modtime file) db)
+          (ebib-db-set-modified t db)
+          (ebib-extras--save-database db)
+          (funcall function db file))
+      (when-let ((buffer (find-buffer-visiting file)))
+        (with-current-buffer buffer (set-buffer-modified-p nil))
+        (kill-buffer buffer))
+      (kill-buffer index)
+      (kill-buffer log)
+      (delete-file file))))
+
+(defun ebib-extras-test--write-external-change (file)
+  "Write a distinguishable external bibliography change to FILE."
+  (with-temp-file file
+    (insert "@online{Says2010OnKeepingLogbook, title = {External title}}\n"))
+  (set-file-times file (time-add (current-time) 2)))
+
+(ert-deftest ebib-extras-test-own-save-notification-preserves-operation ()
+  "A renamed entry's own save must not invalidate its pending attachment."
+  (ebib-extras-test--with-watched-database
+   (lambda (db file)
+     (let ((key "Kleon2010OnKeepingLogbook"))
+       (ebib-db-change-key "Says2010OnKeepingLogbook" key db)
+       (ebib-db-set-modified t db)
+       (ebib-extras--save-database db)
+       (let* ((entry (ebib-db-get-entry key db))
+              (operation (ebib-extras-make-operation key db t)))
+         (ebib-extras--operation-start operation)
+         (ebib-extras--auto-reload-callback (list nil 'changed file) 0 db file)
+         (should (eq entry (ebib-db-get-entry key db)))
+         (ebib-extras--operation-check operation)
+         (ebib-extras--operation-finish operation 'complete)
+         (should (eq (ebib-extras-operation-status operation) 'complete))
+         (should (zerop (ebib-extras-operation-pending operation)))
+         (should-not (gethash file ebib-extras-last-reload-times)))))))
+
+(ert-deftest ebib-extras-test-external-notification-reloads-current-file ()
+  "An external change refreshes the visiting buffer before reparsing it."
+  (ebib-extras-test--with-watched-database
+   (lambda (db file)
+     (let ((other (ebib-db-new-database)))
+       (ebib-extras-test--write-external-change file)
+       (let ((ebib--cur-db other))
+         (ebib-extras--auto-reload-callback (list nil 'changed file) 0 db file)
+         (should (eq ebib--cur-db other)))
+       (should (equal (ebib-unbrace
+                       (ebib-db-get-field-value "title"
+                                                "Says2010OnKeepingLogbook" db))
+                      "External title"))
+       (should (equal (ebib-db-get-modtime db) (ebib--get-file-modtime file)))
+       (should (gethash file ebib-extras-last-reload-times))))))
+
+(ert-deftest ebib-extras-test-external-notification-preserves-dirty-state ()
+  "Background notifications never discard or prompt about unsaved edits."
+  (dolist (dirty '(database buffer))
+    (ebib-extras-test--with-watched-database
+     (lambda (db file)
+       (let ((entry (ebib-db-get-entry "Says2010OnKeepingLogbook" db))
+             (saved-modtime (ebib-db-get-modtime db)))
+         (if (eq dirty 'database)
+             (progn
+               (ebib-db-set-field-value "title" "Local title"
+                                        "Says2010OnKeepingLogbook" db t)
+               (ebib-db-set-modified t db))
+           (with-current-buffer (find-buffer-visiting file)
+             (let ((inhibit-read-only t))
+               (goto-char (point-max))
+               (insert "\n% Unsaved local edit\n"))))
+         (ebib-extras-test--write-external-change file)
+         (cl-letf (((symbol-function 'yes-or-no-p)
+                    (lambda (&rest _) (ert-fail "Background reload prompted"))))
+           (ebib-extras--auto-reload-callback (list nil 'changed file) 0 db file))
+         (should (eq entry (ebib-db-get-entry "Says2010OnKeepingLogbook" db)))
+         (should (equal saved-modtime (ebib-db-get-modtime db)))
+         (should-not (gethash file ebib-extras-last-reload-times))
+         (if (eq dirty 'database)
+             (progn
+               (should (ebib-db-modified-p db))
+               (should (equal (ebib-db-get-field-value "title"
+                                                      "Says2010OnKeepingLogbook" db)
+                              "Local title")))
+           (with-current-buffer (find-buffer-visiting file)
+             (should (buffer-modified-p))
+             (should (string-match-p "Unsaved local edit" (buffer-string))))))))))
+
+(ert-deftest ebib-extras-test-external-notification-retains-cooldown ()
+  "A recent successful reload still suppresses rapid repeated notifications."
+  (ebib-extras-test--with-watched-database
+   (lambda (db file)
+     (let ((entry (ebib-db-get-entry "Says2010OnKeepingLogbook" db))
+           (last-reload (current-time)))
+       (puthash file last-reload ebib-extras-last-reload-times)
+       (ebib-extras-test--write-external-change file)
+       (ebib-extras--auto-reload-callback (list nil 'changed file) 0 db file)
+       (should (eq entry (ebib-db-get-entry "Says2010OnKeepingLogbook" db)))
+       (should (equal last-reload (gethash file ebib-extras-last-reload-times)))))))
+
 ;;;; Ebib return bindings
 
 (ert-deftest ebib-extras-test-return-edits-current-field ()

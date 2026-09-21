@@ -275,7 +275,7 @@ For ordinary interactive calls, destination collisions follow @code{ebib-extras-
 @findex ebib-extras-make-operation
 @findex ebib-extras-operation-status-for-id
 @findex ebib-extras-operation-block
-Programmatic callers create an operation with @code{(ebib-extras-make-operation KEY DB t)} and supply it to attachment and processing. The final @code{t} prohibits prompts. Supply and save the verified language before starting. Each operation retains the original entry and database, counts only its own download, abstract and OCR tasks, and reports @code{complete}, @code{pending} or @code{blocked}. Query a returned operation ID with @code{ebib-extras-operation-status-for-id}. Navigation cannot redirect callbacks; a closed or replaced target, unsaved user edits or conflicting destination blocks further writes.
+Programmatic callers create an operation with @code{(ebib-extras-make-operation KEY DB t)} and supply it to attachment and processing. The final @code{t} prohibits prompts. Supply and save the verified language before starting. Each operation retains the original entry and database, counts only its own download, abstract and OCR tasks, and reports @code{complete}, @code{pending} or @code{blocked}. Query a returned operation ID with @code{ebib-extras-operation-status-for-id}. An interactive operation instead shows each failed task in the echo area as it happens, prefixed with the entry key. Navigation cannot redirect callbacks; a closed or replaced target, unsaved user edits or conflicting destination blocks further writes.
 
 Integration code can record a blocked result with @code{ebib-extras-operation-block}, supplying the operation and a diagnostic string. This records the failure without changing the number of outstanding tasks; their callbacks must still finish normally.
 
@@ -496,6 +496,8 @@ The command @code{ebib-extras-url-to-pdf-attach} generates a PDF from the URL in
 
 The command @code{ebib-extras-url-to-html-attach} works the same way but generates an HTML file instead.
 
+Each conversion renders into a staging file named after the entry key in the downloads directory. A successful render moves that file into the library; a failed render deletes the empty staging file and records the renderer's diagnostic on the operation, which an interactive call also shows in the echo area.
+
 The command @code{ebib-extras-url-to-srt-attach} downloads subtitles for the URL in the entry's @samp{url} field using an external command (formatted by @code{eww-extras-download-subtitles}, typically @samp{yt-dlp}). The subtitles are downloaded to the downloads directory, but unlike the other commands in this group, the resulting file must be attached manually.
 
 @node Downloading PDFs and videos
@@ -575,7 +577,9 @@ Autosaves and asynchronous attachment updates use Ebib's regular save operation,
 
 The command @code{ebib-extras-auto-reload-databases} sets up file-notify watchers on all database files so that when a file changes on disk (e.g., from an external edit or a sync), the corresponding Ebib database is automatically reloaded. It first removes any existing watchers (via @code{ebib-extras-remove-file-notify-watchers}) and then establishes a new watcher for each database using @code{ebib-extras-auto-reload-database}.
 
-The reload callback includes a 10-second cooldown per database file (tracked in @code{ebib-extras-last-reload-times}) to prevent rapid consecutive reloads from file sync systems like Dropbox.
+The reload callback compares the file's modification time with the database's saved timestamp. It ignores notifications from Ebib's own saves, preserving entry objects captured by pending attachments. For an external change, it refreshes the clean visiting file buffer before reloading the corresponding database, even when another database is selected. Unsaved database or file-buffer changes prevent automatic reloads without prompting or discarding those edits.
+
+Successful reloads have a 10-second cooldown per database file (tracked in @code{ebib-extras-last-reload-times}) to prevent rapid consecutive reloads from file sync systems like Dropbox. Ignored notifications do not start the cooldown.
 
 The command @code{ebib-extras-reload-all-databases} reloads all databases at once, but only if no database buffer is currently modified (checked via @code{ebib-extras-no-db-modified-p}). It initializes Ebib if it has not been initialized yet. This is useful for forced reloads after bulk edits.
 
@@ -863,7 +867,7 @@ These constants define which search commands are invoked for each supertype when
 
 @vindex ebib-extras-db-numbers
 @vindex ebib-extras-auto-save-files
-The constant @code{ebib-extras-db-numbers} is an association list mapping database file paths to their numeric identifiers. It associates the personal bibliography files and Tlon project files with numbers 1 through 5.
+The constant @code{ebib-extras-db-numbers} is an association list mapping database file paths to their numeric identifiers. It associates the personal bibliography files and Tlon project files with numbers 1 through 6, in the order in which @code{paths-files-bibliography-all} loads them.
 
 The constant @code{ebib-extras-auto-save-files} lists database files that should participate in auto-saving. By default, it includes the new personal bibliography and the Tlon fluid bibliography. Larger files containing older entries are excluded to avoid frequent writes.
 

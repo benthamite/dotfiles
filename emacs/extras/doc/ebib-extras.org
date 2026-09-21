@@ -412,7 +412,9 @@ Autosaves and asynchronous attachment updates use Ebib's regular save operation,
 
 The command ~ebib-extras-auto-reload-databases~ sets up file-notify watchers on all database files so that when a file changes on disk (e.g., from an external edit or a sync), the corresponding Ebib database is automatically reloaded. It first removes any existing watchers (via ~ebib-extras-remove-file-notify-watchers~) and then establishes a new watcher for each database using ~ebib-extras-auto-reload-database~.
 
-The reload callback includes a 10-second cooldown per database file (tracked in ~ebib-extras-last-reload-times~) to prevent rapid consecutive reloads from file sync systems like Dropbox.
+The reload callback compares the file's modification time with the database's saved timestamp. It ignores notifications from Ebib's own saves, preserving entry objects captured by pending attachments. For an external change, it refreshes the clean visiting file buffer before reloading the corresponding database, even when another database is selected. Unsaved database or file-buffer changes prevent automatic reloads without prompting or discarding those edits.
+
+Successful reloads have a 10-second cooldown per database file (tracked in ~ebib-extras-last-reload-times~) to prevent rapid consecutive reloads from file sync systems like Dropbox. Ignored notifications do not start the cooldown.
 
 The command ~ebib-extras-reload-all-databases~ reloads all databases at once, but only if no database buffer is currently modified (checked via ~ebib-extras-no-db-modified-p~). It initializes Ebib if it has not been initialized yet. This is useful for forced reloads after bulk edits.
 

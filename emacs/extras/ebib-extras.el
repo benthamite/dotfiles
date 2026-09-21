@@ -1615,21 +1615,31 @@ Elements in this list are used to remove file-notify watches.")
 		    (ebib-extras--auto-reload-callback event nth db db-file))))))
 
 (defun ebib-extras--auto-reload-callback (_event _nth db db-file)
-  "Handle file change notifications for Ebib databases.
-This function is called from the callback in
-`ebib-extras-auto-reload-database'.  It checks if a reload is
-necessary based on a 5-second cooldown.  _EVENT is the file
-notification event.  _NTH is the database index.  DB is the ebib
-database object.  DB-FILE is the path to the database
-file."
+  "Reload DB after an external change to its watched DB-FILE.
+Ignore notifications for Ebib's own saves and preserve unsaved database or
+file-buffer edits.  Successful reloads have a 10-second cooldown.  _EVENT
+is the file notification event; _NTH is the database index."
   (let ((now (current-time))
-        (last-reload (gethash db-file ebib-extras-last-reload-times)))
-    (when (and (ebib-db-get-filename db)
+        (last-reload (gethash db-file ebib-extras-last-reload-times))
+        (disk-modtime (ebib--get-file-modtime db-file))
+        (file-buffer (find-buffer-visiting db-file)))
+    (when (and (memq db ebib--databases)
+               (equal (ebib-db-get-filename db) db-file)
                (buffer-live-p (ebib-db-get-buffer db))
+               disk-modtime
+               (not (equal (ebib-db-get-modtime db) disk-modtime))
+               (not (ebib-db-modified-p db))
+               (not (and file-buffer (buffer-modified-p file-buffer)))
                (or (not last-reload)
                    (> (time-to-seconds (time-subtract now last-reload)) 10)))
-      (puthash db-file now ebib-extras-last-reload-times)
-      (ebib-extras-reload-database-no-confirm db))))
+      (when file-buffer
+        (with-current-buffer file-buffer
+          (unless (verify-visited-file-modtime file-buffer)
+            (revert-buffer :ignore-auto :noconfirm :preserve-modes))))
+      (let ((ebib--cur-db db))
+        (ebib-extras-reload-database-no-confirm db))
+      (when (equal (ebib-db-get-modtime db) disk-modtime)
+        (puthash db-file now ebib-extras-last-reload-times)))))
 
 (declare-function file-notify-rm-watch "filenotify")
 (defun ebib-extras-remove-file-notify-watchers ()

@@ -270,6 +270,14 @@ sentinel that requires both a zero exit status and a nonempty output before it
 runs the callback.  Each render has a private diagnostics buffer, so concurrent
 PDF and HTML jobs cannot mix their errors.  Failed output is never attached.
 
+The renderer rejects unsuccessful HTTP responses for the main document,
+including redirect targets and later document navigations. Failed images or
+embedded frames do not turn a successful article response into an error. Known
+browser challenge pages, including Cloudflare's block-page structure, are also
+rejected even when the server reports HTTP success. These failures preserve an
+existing destination and never install a newly rendered error page. Previously
+verified local HTML can be supplied explicitly with a =file:= URL.
+
 The function ~eww-extras-run-callback~ safely executes the optional
 callback function with the output file and BibTeX key as arguments.
 

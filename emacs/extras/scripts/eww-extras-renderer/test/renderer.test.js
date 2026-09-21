@@ -5,6 +5,7 @@ const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
+const { pathToFileURL } = require("node:url");
 
 const { startFixtureServer } = require("./fixture-server.js");
 
@@ -382,3 +383,108 @@ test("newsletter text does not remove an ordinary content ancestor", async (t) =
   });
   assert.match(await fs.readFile(output, "utf8"), /Important article body/);
 });
+
+for (const type of ["html", "pdf"]) {
+  test(`HTTP errors cannot replace ${type} output`, async (t) => {
+    const fixture = await browserFixture(t, type);
+    if (!fixture) return;
+    for (const status of [403, 404, 500]) {
+      await t.test(`status ${status}`, async () => {
+        await fs.writeFile(fixture.output, "existing destination");
+        await assert.rejects(
+          fixture.render(`/http-error/${status}`),
+          new RegExp(`navigation: HTTP ${status}\\b`),
+        );
+        assert.equal(await fs.readFile(fixture.output, "utf8"), "existing destination");
+        assert.deepEqual(await fs.readdir(fixture.profiles), []);
+        assert.deepEqual((await fs.readdir(fixture.directory)).sort(),
+          [`output.${type}`, "profiles"]);
+      });
+    }
+  });
+
+  test(`Cloudflare block documents cannot become ${type} output`, async (t) => {
+    const fixture = await browserFixture(t, type);
+    if (!fixture) return;
+    await assert.rejects(
+      fixture.render("/cloudflare-block"),
+      /verification: browser challenge page/,
+    );
+    await assert.rejects(fs.access(fixture.output));
+  });
+}
+
+test("navigation checks follow successful and failed server redirects", async (t) => {
+  const fixture = await browserFixture(t, "html");
+  if (!fixture) return;
+  await fixture.render("/redirect-ok");
+  assert.match(await fs.readFile(fixture.output, "utf8"), /Plain fixture content/);
+  await fs.unlink(fixture.output);
+  await assert.rejects(fixture.render("/redirect-error"), /navigation: HTTP 403\b/);
+  await assert.rejects(fs.access(fixture.output));
+});
+
+test("navigation checks reject late error and block documents", async (t) => {
+  const fixture = await browserFixture(t, "html");
+  if (!fixture) return;
+  await assert.rejects(fixture.render("/late-http-error"), /navigation: HTTP 403\b/);
+  await assert.rejects(fs.access(fixture.output));
+  await assert.rejects(fixture.render("/late-cloudflare-block"),
+    /verification: browser challenge page/);
+  await assert.rejects(fs.access(fixture.output));
+});
+
+test("failed subresources do not reject a successful article", async (t) => {
+  const fixture = await browserFixture(t, "html");
+  if (!fixture) return;
+  await fixture.render("/failed-resources");
+  assert.match(await fs.readFile(fixture.output, "utf8"),
+    /Valid article with unavailable optional resources/);
+});
+
+test("ordinary articles may discuss browser block messages", async (t) => {
+  const fixture = await browserFixture(t, "html");
+  if (!fixture) return;
+  await fixture.render("/article-about-blocks");
+  assert.match(await fs.readFile(fixture.output, "utf8"),
+    /Cloudflare can display: Sorry, you have been blocked/);
+});
+
+test("verified local HTML can still be rendered to PDF", async (t) => {
+  const fixture = await browserFixture(t, "pdf");
+  if (!fixture) return;
+  const source = path.join(fixture.directory, "source.html");
+  await fs.writeFile(source,
+    "<!doctype html><html><body><article>Verified local article</article></body></html>");
+  await fixture.render(pathToFileURL(source).href);
+  assert.equal((await fs.readFile(fixture.output)).subarray(0, 4).toString(), "%PDF");
+});
+
+async function browserFixture(t, type) {
+  const chromeProgram = process.env.EWW_EXTRAS_RENDERER_CHROME_PROGRAM;
+  if (!chromeProgram) {
+    t.skip("test-browser supplies system Chrome");
+    return null;
+  }
+  const server = await startFixtureServer();
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "eww-http-test-"));
+  const profiles = path.join(directory, "profiles");
+  await fs.mkdir(profiles);
+  const output = path.join(directory, `output.${type}`);
+  t.after(async () => {
+    await server.close();
+    await fs.rm(directory, { recursive: true, force: true });
+  });
+  return {
+    directory,
+    profiles,
+    output,
+    render: (target) => renderer.render({
+      url: new URL(target, server.origin).href,
+      output,
+      type,
+      "chrome-program": chromeProgram,
+      "module-root": process.env.EWW_EXTRAS_RENDERER_MODULE_ROOT,
+    }, { temporaryRoot: profiles }),
+  };
+}

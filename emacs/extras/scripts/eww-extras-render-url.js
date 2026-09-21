@@ -201,6 +201,10 @@ async function isBrowserChallenge(page) {
   return page.evaluate(() => {
     const title = document.title.toLowerCase();
     const text = (document.body?.innerText || "").toLowerCase();
+    if (title === "attention required! | cloudflare" &&
+        document.querySelector("#cf-error-details.cf-error-details-wrapper")) {
+      return true;
+    }
     const signals = [
       title.includes("just a moment"),
       text.includes("performing security verification"),
@@ -210,6 +214,12 @@ async function isBrowserChallenge(page) {
     ];
     return signals.filter(Boolean).length >= 2;
   });
+}
+
+function verifyNavigationResponse(response) {
+  if (response && !response.ok()) {
+    throw new Error(`navigation: HTTP ${response.status()} ${response.statusText()}`.trim());
+  }
 }
 
 async function waitForConsent(page, state) {
@@ -276,7 +286,16 @@ async function render(rawArgs, options = {}) {
         const consentState = await installAutoconsent(context, args["module-root"]);
         const pages = context.pages();
         const page = pages[0] || await context.newPage();
-        await page.goto(args.url, { waitUntil: "commit", timeout: 15000 });
+        let documentResponse;
+        page.on("response", (response) => {
+          if (response.request().isNavigationRequest() &&
+              response.frame() === page.mainFrame()) {
+            documentResponse = response;
+          }
+        });
+        verifyNavigationResponse(
+          await page.goto(args.url, { waitUntil: "commit", timeout: 15000 }),
+        );
         await page.waitForLoadState("domcontentloaded", { timeout: 15000 });
         await page.waitForFunction(() => document.body?.textContent?.trim(), null, {
           timeout: 5000,
@@ -289,11 +308,16 @@ async function render(rawArgs, options = {}) {
           page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => null),
         ]);
         await wait(250);
+        verifyNavigationResponse(documentResponse);
+        if (await isBrowserChallenge(page)) {
+          throw new Error("verification: browser challenge page");
+        }
         if (await findBlockingConsentUi(page)) {
           throw new Error("verification: unresolved late consent blocker");
         }
         await cleanupResidualUi(page);
         await serialize(page, args.type, temporaryOutput);
+        verifyNavigationResponse(documentResponse);
         const metadata = await fs.stat(temporaryOutput);
         if (metadata.size === 0) throw new Error("serialization: empty output");
         await fs.rename(temporaryOutput, args.output);

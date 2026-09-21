@@ -182,8 +182,11 @@ later runs reuse that cache.  The dependency tree and browser profile are
 never created in the dotfiles repository or Google Drive.
 
 Before saving the file, the renderer uses DuckDuckGo Autoconsent to opt out of
-supported consent managers.  It then removes non-consent residual overlays
-and checks every frame for a remaining blocking consent prompt.  If a prompt
+supported consent managers.  It then checks every frame for a remaining
+blocking consent prompt and removes non-consent residual overlays, such as
+subscribe or newsletter dialogs.  A dialog that merely cites a privacy policy
+or notice is a residual overlay, not a consent prompt, and an in-flow element
+is never removed on the strength of its class name alone.  If a consent prompt
 remains, the process fails and does not create or modify the requested output.
 The renderer is intended for public pages; it does not carry authentication
 from a personal browser session.  Rendering has a 27-second internal deadline
@@ -315,6 +318,14 @@ The function @code{eww-extras-url-to-file-sentinel} creates a process
 sentinel that requires both a zero exit status and a nonempty output before it
 runs the callback.  Each render has a private diagnostics buffer, so concurrent
 PDF and HTML jobs cannot mix their errors.  Failed output is never attached.
+
+The renderer rejects unsuccessful HTTP responses for the main document,
+including redirect targets and later document navigations. Failed images or
+embedded frames do not turn a successful article response into an error. Known
+browser challenge pages, including Cloudflare's block-page structure, are also
+rejected even when the server reports HTTP success. These failures preserve an
+existing destination and never install a newly rendered error page. Previously
+verified local HTML can be supplied explicitly with a @samp{file:} URL@.
 
 The function @code{eww-extras-run-callback} safely executes the optional
 callback function with the output file and Bib@TeX{} key as arguments.

@@ -4,6 +4,26 @@ const http = require("node:http");
 
 const pages = {
   "/plain": `<!doctype html><html><body><main>Plain fixture content</main></body></html>`,
+  "/failed-resources": `<!doctype html><html><body>
+    <main>Valid article with unavailable optional resources</main>
+    <img src="/http-error/404"><iframe src="/http-error/403"></iframe>
+  </body></html>`,
+  "/late-http-error": `<!doctype html><html><body><main>Redirecting article</main>
+    <script>setTimeout(() => location.replace('/http-error/403'), 100);</script>
+  </body></html>`,
+  "/late-cloudflare-block": `<!doctype html><html><body><main>Redirecting article</main>
+    <script>setTimeout(() => location.replace('/cloudflare-block'), 100);</script>
+  </body></html>`,
+  "/cloudflare-block": `<!doctype html><html><head>
+    <title>Attention Required! | Cloudflare</title></head><body>
+    <div id="cf-error-details" class="cf-error-details-wrapper">
+      <h1>Sorry, you have been blocked</h1><p>You are unable to access this site</p>
+    </div>
+  </body></html>`,
+  "/article-about-blocks": `<!doctype html><html><head>
+    <title>What a Cloudflare block means</title></head><body>
+    <article>Cloudflare can display: Sorry, you have been blocked.</article>
+  </body></html>`,
   "/cookieconsent2": `<!doctype html>
     <html class="show--consent"><body>
       <main id="content" hidden>Unlocked fixture content</main>
@@ -68,6 +88,19 @@ const pages = {
 function startFixtureServer() {
   const server = http.createServer((request, response) => {
     const pathname = new URL(request.url, "http://localhost").pathname;
+    const errorStatus = /^\/http-error\/(403|404|500)$/.exec(pathname);
+    if (errorStatus) {
+      response.writeHead(Number(errorStatus[1]), { "content-type": "text/html" });
+      response.end("<!doctype html><html><body><main>Request failed</main></body></html>");
+      return;
+    }
+    if (pathname === "/redirect-ok" || pathname === "/redirect-error") {
+      response.writeHead(302, {
+        location: pathname === "/redirect-ok" ? "/plain" : "/http-error/403",
+      });
+      response.end();
+      return;
+    }
     if (pathname === "/dynamic-data") {
       setTimeout(() => {
         response.writeHead(200, { "content-type": "text/plain" });

@@ -47,6 +47,16 @@ edition appear to be the first. Pre-ISBN first editions need no invented ISBN.
 Validate imported metadata against the selected edition before finalizing its
 key.
 
+Distinguish an edition from a printing or impression. An unchanged later
+printing of the first edition may supply its attachment and locators when the
+publication pages and other authoritative evidence establish the same edition,
+text, layout and pagination. A printing number alone does not make it a later
+edition; a matching title or ISBN alone does not establish equivalence. Record
+the actual printing and its evidence in the attachment review, without claiming
+it is the first printing or copying a later edition's identifiers into the
+first-edition record. Revised or reset editions require their own identity and
+locator checks.
+
 The interpretation of "first edition" for a translation or substantially revised
 version has not yet been settled as a standing preference. Ask that material
 question when needed; continue independent unambiguous works. Do not infer an

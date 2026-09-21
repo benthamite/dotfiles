@@ -351,6 +351,8 @@ validation and hash-bound book reviews complement source-based semantic review.
 The =add-bib-entry= workflow stays enabled across sessions and follows
 =zotra-extras-add-entry= with the actual =ebib-extras-process-entry= command.
 It resolves active bibliography state and serializes attachment callbacks.
+Ad-hoc calls use =emacs-eval= to bound results before the live server prints
+them; complete selected-entry exports use UTF-8 files.
 It reviews all fields before and after processing with =bib-entry-check= and
 the shared policy. Book candidates, including registered publisher/archive PDFs,
 are inspected before attachment through =paper-fetch=; existing nonempty

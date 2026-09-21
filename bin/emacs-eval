@@ -1,0 +1,116 @@
+#!/usr/bin/env python3
+"""Evaluate a bounded Emacs operation without returning unbounded Lisp objects.
+
+This bounds response traversal/printing, not execution time inside Emacs.
+Use clean batch Emacs for expensive computation. A client timeout does not
+cancel an evaluation in the server and must not cause an automatic retry.
+"""
+
+from __future__ import annotations
+
+import argparse
+import base64
+import json
+from pathlib import Path
+import subprocess
+import sys
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def wrapped_expression(expression: str) -> str:
+    """Serialize results inside the evaluation, before the server calls pp."""
+    encoded = base64.b64encode(expression.encode("utf-8")).decode("ascii")
+    return r'''(progn
+  (require 'cl-lib)
+  (require 'json)
+  (let ((remaining 128) (shortened nil))
+    (cl-labels
+        ((brief (value depth)
+           (setq remaining (1- remaining))
+           (cond
+            ((or (< remaining 0) (> depth 5))
+             (setq shortened t) "<omitted>")
+            ((stringp value)
+             (if (> (length value) 1024)
+                 (progn (setq shortened t)
+                        (concat (substring-no-properties value 0 1024) "…"))
+               (substring-no-properties value)))
+            ((or (null value) (numberp value) (symbolp value)) value)
+            ((hash-table-p value)
+             (setq shortened t)
+             (format "<hash-table: %d entries>" (hash-table-count value)))
+            ((consp value)
+             (let ((tail value) (items nil) (count 0))
+               (while (and (consp tail) (< count 16) (> remaining 0))
+                 (push (brief (car tail) (1+ depth)) items)
+                 (setq tail (cdr tail) count (1+ count)))
+               (cond ((consp tail) (setq shortened t) (push "<more>" items))
+                     (tail (push (list :cdr (brief tail (1+ depth))) items)))
+               (nreverse items)))
+            ((vectorp value)
+             (let ((items nil))
+               (dotimes (i (min (length value) 16))
+                 (push (brief (aref value i) (1+ depth)) items))
+               (when (> (length value) 16)
+                 (setq shortened t) (push "<more>" items))
+               (vconcat (nreverse items))))
+            (t (setq shortened t) (format "<%s>" (type-of value))))))
+      (let* ((answer
+              (condition-case err
+                  (list t (brief
+                           (eval (car (read-from-string
+                                       (decode-coding-string
+                                        (base64-decode-string "ENCODED")
+                                        'utf-8-unix))) t) 0))
+                ((error quit)
+                 (list nil (brief (list :error (car err) :data (cdr err)) 0)))))
+             (print-length 16) (print-level 8) (print-circle t)
+             (print-escape-newlines t) (print-escape-control-characters t)
+             (result (prin1-to-string (cadr answer))))
+        (when (> (length result) 8192)
+          (setq shortened t result (concat (substring result 0 8192) "…")))
+        (base64-encode-string
+         (encode-coding-string
+          (json-encode
+           `((ok . ,(if (car answer) t :json-false))
+             (result . ,result)
+             (truncated . ,(if shortened t :json-false))))
+          'utf-8-unix) t))))))'''.replace("ENCODED", encoded)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("expression", nargs="?")
+    source.add_argument("--file", type=Path, help="Read one trusted Lisp expression")
+    parser.add_argument("--socket-name", help="Explicit existing server, for isolated checks")
+    parser.add_argument("--timeout", type=float, default=15,
+                        help="Client wait in seconds; does not cancel server work")
+    args = parser.parse_args()
+    if args.timeout <= 0:
+        parser.error("--timeout must be positive")
+    expression = args.file.read_text(encoding="utf-8") if args.file else args.expression
+    command = [str(ROOT / "shell/shims/emacsclient"), "--alternate-editor=false"]
+    if args.socket_name:
+        command += ["--socket-name", args.socket_name]
+    command += ["--eval", wrapped_expression(expression)]
+    try:
+        run = subprocess.run(command, capture_output=True, text=True, timeout=args.timeout)
+        if run.returncode:
+            print(json.dumps({"ok": False, "error": (run.stderr or run.stdout)[:2000]}))
+            return 1
+        payload = json.loads(base64.b64decode(json.loads(run.stdout.strip())).decode("utf-8"))
+        print(json.dumps(payload, ensure_ascii=False))
+        return 0 if payload["ok"] else 1
+    except subprocess.TimeoutExpired:
+        print(json.dumps({"ok": False, "error": "Client timed out; server evaluation may still be running. Do not retry automatically."}))
+        return 2
+    except (OSError, ValueError, KeyError) as exc:
+        print(json.dumps({"ok": False, "error": str(exc)[:2000]}))
+        return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -14,6 +14,13 @@ before selecting a work/edition, reviewing fields or accepting an attachment.
 That document owns these decisions; this skill owns how to apply them through
 Emacs. For whole-note source cleanup, use `clean-citations`.
 
+Use `/Users/pablostafforini/My Drive/dotfiles/bin/emacs-eval` for ad-hoc live
+expressions. It bounds results before Emacs prints them and reports truncation;
+it does not make expensive computation safe or cancel server work after a
+client timeout. Export complete selected-entry data to a private file. When
+writing native `json-serialize` output into a multibyte buffer, decode its UTF-8
+bytes first; use UTF-8 for the file. Do not change global coding settings.
+
 ## Workflow
 
 1. Establish the intended work and first edition under the shared policy, then check whether it is already present.
@@ -21,7 +28,7 @@ Emacs. For whole-note source cleanup, use `clean-citations`.
    - Otherwise search active bibliography files with `rg -n -F -- "IDENTIFIER" BIBFILE...`, then check title/author and alternate identifier forms. Reuse a matching work's existing key; distinguish editions/versions before creating a duplicate.
    - Get active paths from Emacs rather than guessing:
      ```bash
-     emacsclient -e '(progn (require '\''paths nil t) (mapcar (lambda (symbol) (cons symbol (and (boundp symbol) (symbol-value symbol)))) '\''(paths-file-personal-bibliography-new paths-file-personal-bibliography-old paths-files-bibliography-all citar-bibliography)))'
+     "/Users/pablostafforini/My Drive/dotfiles/bin/emacs-eval" '(progn (require '\''paths nil t) (mapcar (lambda (symbol) (cons symbol (and (boundp symbol) (symbol-value symbol)))) '\''(paths-file-personal-bibliography-new paths-file-personal-bibliography-old paths-files-bibliography-all citar-bibliography)))'
      ```
 
 2. Choose the target BibTeX file.
@@ -36,7 +43,7 @@ Emacs. For whole-note source cleanup, use `clean-citations`.
    - Headless/agent workflow: import metadata with `gptel-extras-add-bib-entry` (the `add_bib_entry` tool), after `gptel-extras--bib-import-preflight` on the explicit target. Load that key with `gptel-extras--open-bib-entry-for-processing` and review all imported fields under the shared policy before attachment. For DOI articles and books use the staged-download sequence below; for webpage/video routes process the SAME existing key with `gptel-extras--process-bib-entry-headless`. Never reimport merely to invoke `add_bib_entry_and_process`. The combined helper remains available for already-reviewed straightforward identifiers; it does not replace final field review. Retain the explicit DB and operation across callbacks and do not start competing downloads.
    - Metadata-import template (transport identifiers/paths as escaped Lisp strings through an argument vector, not shell interpolation):
      ```bash
-     emacsclient -e '(progn (require '\''gptel-extras) (require '\''zotra-extras) (require '\''ebib-extras) (gptel-extras--bib-import-preflight "RESOLVED-BIBFILE") (gptel-extras-add-bib-entry "IDENTIFIER" "RESOLVED-BIBFILE"))'
+     "/Users/pablostafforini/My Drive/dotfiles/bin/emacs-eval" --timeout 60 '(progn (require '\''gptel-extras) (require '\''zotra-extras) (require '\''ebib-extras) (gptel-extras--bib-import-preflight "RESOLVED-BIBFILE") (gptel-extras-add-bib-entry "IDENTIFIER" "RESOLVED-BIBFILE"))'
      ```
    - Programmatic Emacs calls must not select an Ebib entry, launch a viewer/browser or prompt. Use explicit entry/database and noninteractive operation policy. Inspect extracted text and rendered page images with agent tools; this does not require opening the user's PDF viewer. Browser acquisition, when needed, uses the mapped browser workflow. Manual commands retain their interactive behavior.
    - The headless helper calls the actual `ebib-extras-process-entry` without rebinding global input functions. It preserves an existing abstract and reports missing language, ambiguous choices, destination collisions or conflicting edits as blocked results instead of prompting. Inspect the document and candidate metadata to resolve ordinary choices yourself; ask Pablo only when his preference is needed. Preserve unrelated user edits.

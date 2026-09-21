@@ -272,7 +272,8 @@ Optional FILTER-SPEC can be:
              (title (nth 2 record))
              (priority (nth 3 record))
              (formatted-priority (if priority
-                                     (format "[#%c] " priority)
+                                     (format "[#%s] "
+                                             (org-roam-extras--priority-to-string priority))
                                    ""))
              (formatted-heading (concat formatted-priority title)))
         (push (cons formatted-heading `(lambda ()
@@ -670,7 +671,7 @@ ROW has shape (ID FILE TITLE PRIORITY TODO PROPERTIES OLP)."
   "Convert a PRIORITY value from org-roam-db to a string, or nil if absent."
   (cond
    ((null priority) nil)
-   ((characterp priority) (char-to-string priority))
+   ((integerp priority) (org-priority-to-string priority))
    ((stringp priority) priority)
    (t (format "%s" priority))))
 

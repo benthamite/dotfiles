@@ -431,5 +431,31 @@
     (should (equal (org-roam-extras-get-id-of-title "Title" nil "/tmp/notes")
                    "id-1"))))
 
+(ert-deftest org-roam-extras-test-priority-format ()
+  "Preserve numeric and alphabetic priority values."
+  (dolist (priority (number-sequence 1 9))
+    (should (equal (org-roam-extras--priority-to-string priority)
+                   (number-to-string priority))))
+  (should (equal (org-roam-extras--priority-to-string ?A) "A"))
+  (should-not (org-roam-extras--priority-to-string nil)))
+
+(ert-deftest org-roam-extras-test-special-numeric-priorities ()
+  "Pass readable numeric priorities in database order to completion."
+  (let (seen jumped)
+    (cl-letf (((symbol-function 'org-roam-db-query)
+               (lambda (&rest _)
+                 '(("one" "/tmp/a.org" "First" 1)
+                   ("six" "/tmp/b.org" "Sixth" 6)
+                   ("nine" "/tmp/c.org" "Last" 9))))
+              ((symbol-function 'consult--read)
+               (lambda (candidates &rest _)
+                 (setq seen (mapcar #'car candidates))
+                 (cadr seen)))
+              ((symbol-function 'org-id-goto)
+               (lambda (id) (setq jumped id))))
+      (org-roam-extras-node-find-special)
+      (should (equal seen '("[#1] First" "[#6] Sixth" "[#9] Last")))
+      (should (equal jumped "six")))))
+
 (provide 'org-roam-extras-test)
 ;;; org-roam-extras-test.el ends here

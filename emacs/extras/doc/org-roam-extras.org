@@ -142,7 +142,11 @@ The command ~org-roam-extras-node-find-special~ provides a filtered view
 of Org Roam nodes.  It queries the database for nodes that have a
 priority, have either no TODO state or the state "TODO", and do not have
 a SCHEDULED or DEADLINE timestamp.  The results are presented sorted by
-priority (ascending, so =#A= appears first).
+priority (ascending: =[#1]= through =[#9]= for numeric priorities,
+or =[#A]= first for alphabetic priorities).  Numeric priorities are
+displayed as numbers, not character codes.  After upgrading from an Org
+version that stored numeric priorities as character codes, rebuild the
+Org Roam cache so its stored priorities and sorting use the current format.
 
 The command accepts an optional FILTER-SPEC argument:
 

@@ -33,6 +33,11 @@ uv pip check --no-config --python "$HOME/.local/share/paper-fetch/venv/bin/pytho
 The same install command updates an existing environment from the pins; it does
 not recreate it. Verify the canonical `bin/paper-fetch` command afterward.
 
+The shared HTTP client verifies TLS with the pinned `certifi` CA bundle by
+default. Explicit `REQUESTS_CA_BUNDLE`, `CURL_CA_BUNDLE`, then `SSL_CERT_FILE`
+settings retain their existing precedence. This avoids silently selecting an
+older platform certificate file; it does not disable certificate verification.
+
 The Python entry point is `lib/python/paper_fetch_cli.py`. Both launcher and
 entry point disable bytecode writes so invoking the tool does not create a
 cache under Drive. Keep candidate manifests, staged PDFs and inspection output

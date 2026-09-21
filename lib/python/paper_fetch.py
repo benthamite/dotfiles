@@ -45,8 +45,10 @@ from pathlib import Path
 from typing import Any, Callable, Iterable
 
 try:  # pragma: no cover - import guard exercised by callers without curl_cffi
+    import certifi as _certifi
     from curl_cffi import requests as _requests
 except ImportError:  # pragma: no cover
+    _certifi = None
     _requests = None
 
 VERSION = 1
@@ -126,11 +128,15 @@ class Http:
     def __init__(self, timeout: int = 60, impersonate: str = "chrome"):
         if _requests is None:
             raise PaperFetchError(
-                "curl_cffi is not importable; provision the dedicated paper-fetch runtime "
+                "HTTP dependencies are not importable; provision the dedicated paper-fetch runtime "
                 "from dotfiles/lib/python/paper-fetch-requirements.txt "
                 "(see dotfiles/docs/book-acquisition.md)")
         self.timeout = timeout
-        self.session = _requests.Session(impersonate=impersonate)
+        # Preserve explicit CA overrides; otherwise use our pinned trust bundle
+        # instead of curl_cffi's possibly stale platform-default certificate file.
+        ca_bundle = (os.environ.get("REQUESTS_CA_BUNDLE") or os.environ.get("CURL_CA_BUNDLE")
+                     or os.environ.get("SSL_CERT_FILE") or _certifi.where())
+        self.session = _requests.Session(impersonate=impersonate, verify=ca_bundle)
 
     def get(self, url: str, *, params: dict | None = None, headers: dict | None = None,
             timeout: int | None = None) -> Response:

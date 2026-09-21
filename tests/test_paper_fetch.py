@@ -25,6 +25,34 @@ MD5_A = "a" * 32
 MD5_B = "b" * 32
 
 
+class HttpTrustTests(unittest.TestCase):
+    def test_default_uses_the_pinned_ca_bundle_with_verification_enabled(self):
+        with mock.patch.object(pf, "_requests") as requests, \
+             mock.patch.object(pf, "_certifi") as certifi, \
+             mock.patch.dict(os.environ, {}, clear=True):
+            certifi.where.return_value = "/runtime/certifi/cacert.pem"
+            pf.Http()
+        requests.Session.assert_called_once_with(
+            impersonate="chrome", verify="/runtime/certifi/cacert.pem")
+
+    def test_explicit_ca_overrides_keep_the_existing_precedence(self):
+        cases = [
+            ({"SSL_CERT_FILE": "/custom/ssl.pem"}, "/custom/ssl.pem"),
+            ({"SSL_CERT_FILE": "/custom/ssl.pem", "CURL_CA_BUNDLE": "/custom/curl.pem"},
+             "/custom/curl.pem"),
+            ({"SSL_CERT_FILE": "/custom/ssl.pem", "CURL_CA_BUNDLE": "/custom/curl.pem",
+              "REQUESTS_CA_BUNDLE": "/custom/requests.pem"}, "/custom/requests.pem"),
+        ]
+        for environment, expected in cases:
+            with self.subTest(environment=environment), \
+                 mock.patch.object(pf, "_requests") as requests, \
+                 mock.patch.object(pf, "_certifi") as certifi, \
+                 mock.patch.dict(os.environ, environment, clear=True):
+                pf.Http()
+                requests.Session.assert_called_once_with(impersonate="chrome", verify=expected)
+                certifi.where.assert_not_called()
+
+
 class FakeHttp:
     """Routes requests by URL substring to canned responses; records calls."""
 

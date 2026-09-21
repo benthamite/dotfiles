@@ -14,6 +14,29 @@ class PublicURLScanTests(unittest.TestCase):
     URL = "https://myweb.sabanciuniv.edu/ozgurkibris/files/2008/10/kibris-sertel-scw06.pdf"
     TOKEN = "Synthetic9Opaque_" * 3
 
+    def test_kb_cahiers_requires_exact_page_and_preserves_payloads(self):
+        url = ('https://collecties.kb.nl/en/collections/'
+               'collection-anny-antoine-louis-koopman/1951-1960/cahiers')
+        self.assertIsNone(scan.finding(f"curl -L --fail --max-time 30 -s '{url}' -o /tmp/kb-cahiers.html"))
+        self.assertIsNone(scan.finding(f"wget -q '{url}'"))
+        for changed in (
+            url.replace('https://', 'http://'),
+            url.replace('collecties.kb.nl', 'collecties.kb.nl.example.org'),
+            url.replace('collecties.kb.nl', 'collecties.kb.nl@example.org'),
+            url.replace('/collections/', '/private/'),
+            url.replace('/1951-1960/', '/1961-1975/'),
+            url.replace('/cahiers', '/other-title'),
+            url + 'extra', url + '/', url + '/' + self.TOKEN,
+            url + '?token=' + self.TOKEN, url + '#' + self.TOKEN,
+            url + '?token=' + ''.join(f'%{ord(c):02x}' for c in self.TOKEN),
+            'https://example.org/?next=' + url,
+        ):
+            with self.subTest(url=changed):
+                self.assertIsNotNone(scan.finding(f"curl '{changed}'"))
+        for option in ('-H', '-d'):
+            self.assertIsNotNone(scan.finding(f"curl '{url}' {option} '{self.TOKEN}'"))
+            self.assertIsNotNone(scan.finding(f"curl {option} '{url}' https://example.org"))
+
     def test_paired_source(self):
         self.assertEqual(SOURCE.read_bytes(),
                          (ROOT / "codex/hooks/lib-public-url-scan.py").read_bytes())

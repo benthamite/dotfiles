@@ -18,6 +18,7 @@ ENTITY = r"(?:area|artist|collection|event|genre|instrument|label|place|recordin
 # Exact authority, path prefix, whether the complete path must match, schemes.
 # Sources are the public routes pinned by test_secret_guard_parity.py.
 ROUTES = (
+    ("collecties.kb.nl", r"/en/collections/collection-anny-antoine-louis-koopman/1951-1960/cahiers", True, ("https",)),
     ("www.brown.edu", r"/Departments/Philosophy/bears/", False, ("https",)),
     ("ruj.uj.edu.pl", rf"/entities/publication/{UUID}", True, ("https",)),
     ("www.jesp.org", rf"/pdf/{UUID}", True, ("https",)),

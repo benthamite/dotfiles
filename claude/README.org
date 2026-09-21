@@ -766,6 +766,11 @@ decoding. Denials identify the field and rule without printing suspect bytes.
 This does not exempt every public PDF or replace known-secret checks on the
 original command. =tests/test_public_url_scan.py= pins the parser boundaries.
 
+The registry includes the exact HTTPS [[https://collecties.kb.nl/en/collections/collection-anny-antoine-louis-koopman/1951-1960/cahiers][KB Cahiers page]], whose collection slug
+and decade range resemble an opaque token. Only that complete authority/path
+is projected; other pages, changed paths, query/fragment values and request
+payloads retain the original checks.
+
 The network heuristic treats dots and hyphens as part of names, so =curl.py=,
 =curl-cffi= and =zotra-use-curl= do not activate it. Actual
 =curl=/=wget=/=nc=/=ncat= names, including interpreter subprocess arguments,

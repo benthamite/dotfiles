@@ -14,6 +14,25 @@ Provision this environment deliberately from reviewed packages. The launcher
 does not install dependencies, select ambient Python or use a uv cache path as
 its runtime. Missing runtime/dependency errors are configuration failures.
 
+For a missing environment, use an already installed Python 3.13:
+
+```sh
+uv venv --no-config --no-python-downloads --python 3.13 "$HOME/.local/share/paper-fetch/venv"
+```
+
+Once package installation and native execution meet the applicable agent policy,
+install the declared wheels without build scripts or unpinned dependencies:
+
+```sh
+uv pip install --no-config --no-python-downloads --only-binary :all: --no-deps \
+  --python "$HOME/.local/share/paper-fetch/venv/bin/python" \
+  --requirements "$HOME/My Drive/dotfiles/lib/python/paper-fetch-requirements.txt"
+uv pip check --no-config --python "$HOME/.local/share/paper-fetch/venv/bin/python"
+```
+
+The same install command updates an existing environment from the pins; it does
+not recreate it. Verify the canonical `bin/paper-fetch` command afterward.
+
 The Python entry point is `lib/python/paper_fetch_cli.py`. Both launcher and
 entry point disable bytecode writes so invoking the tool does not create a
 cache under Drive. Keep candidate manifests, staged PDFs and inspection output

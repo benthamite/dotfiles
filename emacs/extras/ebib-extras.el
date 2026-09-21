@@ -128,7 +128,7 @@ true.  It preserves the current entry key and updates buffers."
   (string-match ebib-extras-isbn-p string))
 
 (declare-function bibtex-extras-get-field "bibtex-extras")
-(declare-function s-replace "s")
+(autoload 's-replace "s")
 (defun ebib-extras-get-isbn (&optional key)
   "Return the ISBN for the entry with KEY, or the current entry if KEY is nil.
 The ISBN is retrieved from the \"isbn\" field, hyphens are removed, and only the
@@ -939,21 +939,21 @@ SRT file must be done manually."
 
 (defun ebib-extras-book-attach (&optional key db operation)
   "Attempt to download and attach a PDF for the book-type entry with KEY.
-If KEY is nil, uses the entry at point.  It prompts for a search string
-pre-filled with the entry's ISBN or, for book-like types, its title, then
-searches and downloads via `annas-archive-download'.  The downloaded file is
-attached by `ebib-extras--annas-archive-attach'.
-KEY is an optional BibTeX key string, passed interactively as nil."
+KEY and DB default to the selected entry and database.  Manual calls prompt
+for a search string pre-filled with the ISBN or title, then search and download
+via `annas-archive-download'.  A noninteractive OPERATION is blocked: books
+require a reviewed local PDF attached explicitly before processing."
   (interactive (list nil))
-  (let* ((db (or db ebib--cur-db))
-         (ebib--cur-db db)
-         (key (or key (ebib--get-key-at-point)))
-         (default (or (ebib-extras-get-isbn key)
-                      (ebib-extras-get-field "title" key)))
-         (id (if (and operation (ebib-extras-operation-noninteractive-p operation))
-                 default
-               (read-string "Search string: " default))))
-    (ebib-extras--annas-archive-download id key db operation)))
+  (if (and operation (ebib-extras-operation-noninteractive-p operation))
+      (ebib-extras-operation-block
+       operation "Book attachment requires a reviewed local PDF")
+    (let* ((db (or db ebib--cur-db))
+           (ebib--cur-db db)
+           (key (or key (ebib--get-key-at-point)))
+           (default (or (ebib-extras-get-isbn key)
+                        (ebib-extras-get-field "title" key)))
+           (id (read-string "Search string: " default)))
+      (ebib-extras--annas-archive-download id key db operation))))
 
 (defun ebib-extras-doi-attach (&optional key db operation)
   "Download the DOI for KEY in DB, retaining OPERATION's policy."
@@ -1020,7 +1020,8 @@ available identifiers and entry type:
 - Video URL: Uses `ebib-extras-url-to-srt-attach' (for subtitles).
 - Online or article type with URL: Uses `ebib-extras-url-to-pdf-attach' and
   `ebib-extras-url-to-html-attach'.
-KEY is an optional BibTeX key string, passed interactively as nil."
+DB defaults to the selected database.  A noninteractive OPERATION requires
+books and ISBN entries to have a reviewed local attachment before processing."
   (interactive (list nil))
   (let* ((db (or db ebib--cur-db))
          (ebib--cur-db db)
@@ -1030,7 +1031,10 @@ KEY is an optional BibTeX key string, passed interactively as nil."
                 '("doi" "url" "isbn" "=type=" "file"))
       (if file
           (ebib-extras-set-abstract target-key db operation)
-        (cond (doi (ebib-extras-doi-attach target-key db operation))
+        (cond ((and operation (ebib-extras-operation-noninteractive-p operation)
+                    (or isbn (member type ebib-extras-book-like-entry-types)))
+               (ebib-extras-book-attach target-key db operation))
+              (doi (ebib-extras-doi-attach target-key db operation))
               ((or isbn (member type ebib-extras-book-like-entry-types))
                (ebib-extras-book-attach target-key db operation))
               ((and url (cl-some (lambda (regexp) (string-match regexp url))

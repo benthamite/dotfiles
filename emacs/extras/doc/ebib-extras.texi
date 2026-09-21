@@ -464,7 +464,7 @@ The search engines are defined as constants (@ref{Search engine constants}), eac
 @subsection DWIM attachment
 
 @findex ebib-extras-attach-files
-The command @code{ebib-extras-attach-files} is a DWIM command that tries to download and attach the most appropriate file for the entry at point (or a specified key). If the @samp{file} field is already non-empty, it simply calls @code{ebib-extras-set-abstract} to fill in the abstract. Otherwise, it checks for available identifiers and entry type in the following order:
+The command @code{ebib-extras-attach-files} is a DWIM command that tries to download and attach the most appropriate file for the entry at point (or a specified key). If the @samp{file} field is already non-empty, it simply calls @code{ebib-extras-set-abstract} to fill in the abstract. A noninteractive operation without an attachment is blocked when the entry has an ISBN or a book-like type, even if it also has a DOI@. Attach a reviewed local PDF through @code{ebib-extras-attach-file} before processing. Blocking acquisition leaves the remaining metadata and cross-reference checks active. Other requests check the available identifiers and entry type in the following order:
 
 @enumerate
 @item
@@ -485,6 +485,13 @@ If the entry type is @samp{online} or @samp{article} and a URL is available, it 
 The command @code{ebib-extras-doi-attach} downloads using the entry's DOI@. Interactive calls allow editing the search string. Every download receives its own callback carrying the original DB and entry; a later unrelated download cannot redirect it. Noninteractive operations use the captured identifier and report ambiguous results or browser-only downloads for review.
 
 The command @code{ebib-extras-book-attach} searches for and downloads a book by ISBN or title via @code{annas-archive-download}. It prompts the user with a search string pre-filled from the entry's ISBN (if available) or title (for book-like entry types). If the download was initiated externally (not through @samp{eww}), it displays a message asking the user to attach the file manually.
+
+Noninteractive calls to this legacy book downloader record the blocked status
+@samp{Book attachment requires a reviewed local PDF} without starting a download.
+Candidate and edition review belongs to the shared bibliography policy and book
+acquisition tools; Ebib does not repeat that selection logic. Already attached
+books continue through ordinary processing, and manual downloads retain the
+search prompt and DOI precedence described above.
 
 @node URL-based file generation
 @subsection URL-based file generation

@@ -303,6 +303,13 @@ The command ~ebib-extras-attach-files~ is a DWIM command that tries to download 
 3. If the URL matches a known video website (YouTube), it calls ~ebib-extras-url-to-srt-attach~ to download subtitles.
 4. If the entry type is =online= or =article= and a URL is available, it calls both ~ebib-extras-url-to-pdf-attach~ and ~ebib-extras-url-to-html-attach~.  Entry-type matching is case-insensitive, so standard BibTeX forms such as =Online= and =Article= follow the same path.
 
+When attaching a PDF with postprocessing enabled, the operation waits for OCR
+to succeed before reading the document for an abstract. Processing the entry
+again during OCR does not start an early abstract request. OCR failures block
+that dependent work; existing abstracts, including ones added during OCR, are
+preserved. The operation stays pending through any subsequent abstract request.
+Attachments without PDF postprocessing retain immediate abstract processing.
+
 *** DOI and book attachment
 :PROPERTIES:
 :CUSTOM_ID: h:doi-book-attachment

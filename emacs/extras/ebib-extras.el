@@ -530,6 +530,8 @@ the list.  Call this repeatedly to process all invalid files one by one."
 
 (cl-defstruct (ebib-extras-operation
                (:constructor ebib-extras--make-operation))
+  "An owned attachment operation.
+ABSTRACT-STARTED is nil, `waiting-for-ocr', or t after an abstract request."
   id key db entry noninteractive-p abstract-started (pending 0) (status 'complete) errors)
 
 (defvar ebib-extras--operations (make-hash-table :test #'equal)
@@ -754,12 +756,22 @@ and noninteractive policy across callbacks."
             (ebib-extras-get-or-set-language key db operation))
           (let* ((src (ebib-extras--af-resolve-file file key))
                  (_checked (ebib-extras--operation-check operation))
-                 (dest (ebib-extras--af-install-file src key operation)))
+                 (dest (ebib-extras--af-install-file src key operation))
+                 (ocr-required (and postprocess (equal (file-name-extension dest) "pdf")))
+                 (owns-abstract (and ocr-required
+                                     (not (ebib-extras-operation-abstract-started operation)))))
             (ebib-extras--operation-check operation)
+            (when owns-abstract
+              (setf (ebib-extras-operation-abstract-started operation) 'waiting-for-ocr))
             (ebib-extras--update-file-field-contents key dest db)
-            (ebib-extras-set-abstract key db operation dest)
-            (when (and postprocess (equal (file-name-extension dest) "pdf"))
-              (ebib-extras--af-postprocess-pdf key db operation))
+            (if ocr-required
+                (ebib-extras--af-postprocess-pdf
+                 key db operation
+                 (lambda ()
+                   (when owns-abstract
+                     (setf (ebib-extras-operation-abstract-started operation) nil)
+                     (ebib-extras-set-abstract key db operation dest))))
+              (ebib-extras-set-abstract key db operation dest))
             (ebib-extras--operation-finish operation 'complete)
             dest))
       ((error quit)
@@ -821,11 +833,12 @@ and noninteractive policy across callbacks."
       dest))))
 
 (defvar pdf-view-mode-hook)
-(defun ebib-extras--af-postprocess-pdf (key &optional db operation)
+(defun ebib-extras--af-postprocess-pdf (key &optional db operation after-ocr)
   "Write metadata and OCR the PDF attached to KEY.
 Capture the database, PDF and language before metadata processing can yield.
 DB defaults to the selected Ebib database; OPERATION retains prompt policy.
-Only manual operations open the PDF for display."
+Only manual operations open the PDF for display.  AFTER-OCR, when non-nil,
+runs after successful OCR in the retained OPERATION."
   (when operation (ebib-extras--operation-check operation))
   (let* ((db (or db ebib--cur-db))
          (ebib--cur-db db)
@@ -839,31 +852,53 @@ Only manual operations open the PDF for display."
     (ebib-extras-set-pdf-metadata key db)
     (when operation (ebib-extras--operation-check operation))
     (let ((process (files-extras-ocr-pdf nil file nil language)))
-      (when (and operation (processp process))
-        (ebib-extras--track-ocr-process process operation)))
+      (cond ((and operation (processp process))
+             (ebib-extras--track-ocr-process process operation after-ocr))
+            (after-ocr (error "OCR did not start a process"))))
     (unless (and operation (ebib-extras-operation-noninteractive-p operation))
       ;; A replacement PDF can have fewer pages than its saved view position.
       (let ((pdf-view-mode-hook (remq 'pdf-view-restore-mode-conditionally pdf-view-mode-hook)))
         (find-file file)))))
 
-(defun ebib-extras--track-ocr-process (process operation)
-  "Track PROCESS completion as one task in OPERATION."
+(defun ebib-extras--track-ocr-process (process operation &optional after-ocr)
+  "Track PROCESS completion as one task in OPERATION.
+Run AFTER-OCR on success before finishing the task, retaining pending work
+started by that continuation."
   (ebib-extras--operation-start operation)
   (let ((original (process-sentinel process))
-        (finished nil))
+        (finished nil)
+        sentinel-error)
     (let ((sentinel
-           (lambda (proc event)
-             (when original (funcall original proc event))
-             (when (and (not finished) (memq (process-status proc) '(exit signal)))
-               (setq finished t)
-               (let ((code (process-exit-status proc)))
-                 (ebib-extras--operation-finish
-                  operation (if (and (eq (process-status proc) 'exit)
-                                     (memq code '(0 6))) 'complete 'failed)
-                  (unless (memq code '(0 6)) (format "OCR exited with status %s" code))))))))
+           (lambda (proc event &optional already-observed)
+             (unless finished
+               (when (and original (not already-observed))
+                 (condition-case err (funcall original proc event)
+                   ((error quit) (setq sentinel-error err))))
+               (when (memq (process-status proc) '(exit signal))
+                 (setq finished t)
+                 (ebib-extras--finish-ocr-operation
+                  proc operation after-ocr sentinel-error))))))
       (set-process-sentinel process sentinel)
       (when (memq (process-status process) '(exit signal))
-        (funcall sentinel process "finished")))))
+        (funcall sentinel process "finished" t)))))
+
+(defun ebib-extras--finish-ocr-operation (process operation after-ocr sentinel-error)
+  "Finish PROCESS's task in OPERATION and run AFTER-OCR only on success.
+SENTINEL-ERROR is an earlier error from the original process sentinel."
+  (let (failure)
+    (condition-case err
+        (progn
+          (when sentinel-error (signal (car sentinel-error) (cdr sentinel-error)))
+          (unless (and (eq (process-status process) 'exit)
+                       (memq (process-exit-status process) '(0 6)))
+            (error "OCR exited with status %s" (process-exit-status process)))
+          (when after-ocr
+            (ebib-extras--operation-check operation)
+            (funcall after-ocr)))
+      ((error quit) (setq failure err)))
+    (ebib-extras--operation-finish
+     operation (if failure 'failed 'complete) (and failure (error-message-string failure)))
+    (when (eq (car-safe failure) 'quit) (signal (car failure) (cdr failure)))))
 
 (defun ebib-extras-attach-most-recent-file ()
   "Attach the most recent download to the current entry and post-process it."

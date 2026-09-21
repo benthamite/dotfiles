@@ -14,6 +14,9 @@
 (require 'ebib-extras)
 (require 'tlon-core)
 
+(defconst ebib-extras-test--directory
+  (file-name-directory (or load-file-name buffer-file-name)))
+
 ;;;; Database save synchronization
 
 (defun ebib-extras-test--with-save-database (function)
@@ -1015,6 +1018,255 @@
         (should (zerop (ebib-extras-operation-pending operation)))
         (should (eq (ebib-extras-operation-status operation)
                     (if (memq code '(0 6)) 'complete 'blocked)))))))
+
+(defmacro ebib-extras-test-with-ocr-attachment (&rest body)
+  "Run BODY with an owned PDF, saved database and attachment operation."
+  (declare (indent 0))
+  `(let* ((directory (make-temp-file "ebib-ocr-order-" t))
+          (source (expand-file-name "source.pdf" directory))
+          (bibfile (expand-file-name "fixture.bib" directory))
+          (databases (ebib-extras-test--operation-databases))
+          (db (car databases)) (other (cadr databases))
+          (key "Author2020Paper")
+          (ebib--databases databases) (ebib--cur-db db)
+          (ebib--buffer-alist nil) (ebib--needs-update nil)
+          (paths-dir-pdf-library directory) (paths-dir-html-library directory)
+          (ebib-extras--operations (make-hash-table :test #'equal))
+          (tlon-languages-properties '((:name "english" :standard "english"
+                                        :iso-639-2 "eng")))
+          (ocr-buffer (generate-new-buffer " *ebib-ocr-order*"))
+          ocr-process operation)
+     (unwind-protect
+         (progn
+           (copy-file (expand-file-name "fixtures/files-extras-ocr-mixed.pdf"
+                                       ebib-extras-test--directory) source)
+           (write-region "" nil bibfile nil 'silent)
+           (ebib-db-set-filename bibfile db)
+           (ebib-db-set-backup nil db)
+           (ebib-db-set-field-value "abstract" nil key db t)
+           (ebib-db-set-field-value "author" "{Author, Example}" key db t)
+           (ebib-db-set-modtime (ebib--get-file-modtime bibfile) db)
+           (ebib-db-set-modified t db)
+           (ebib-extras--save-database db)
+           (setq operation (ebib-extras-make-operation key db t))
+           ,@body)
+       (when (processp ocr-process)
+         (set-process-sentinel ocr-process #'ignore)
+         (when (process-live-p ocr-process) (delete-process ocr-process)))
+       (kill-buffer ocr-buffer)
+       (when-let ((buffer (find-buffer-visiting bibfile)))
+         (with-current-buffer buffer (set-buffer-modified-p nil))
+         (kill-buffer buffer))
+       (delete-directory directory t))))
+
+(ert-deftest ebib-extras-test-image-only-abstract-waits-for-owned-ocr ()
+  "Extract real OCR text only after completion, despite intervening processing."
+  (dolist (command '("qpdf" "pdftotext" "ocrmypdf" "pdftk"))
+    (skip-unless (executable-find command)))
+  (ebib-extras-test-with-ocr-attachment
+    (let ((image-only (expand-file-name "image-only.pdf" directory))
+          (start (symbol-function 'start-process-shell-command))
+          target text pending-at-request)
+      (should (zerop (process-file "qpdf" nil nil nil source "--pages" "." "2"
+                                   "--" image-only)))
+      (setq source image-only)
+      (with-temp-buffer
+        (should (zerop (process-file "pdftotext" nil t nil source "-")))
+        (should (equal (buffer-string) "\f")))
+      (cl-letf (((symbol-function 'start-process-shell-command)
+                 (lambda (name _buffer command)
+                   (let ((process-connection-type nil))
+                     (setq ocr-process
+                           (funcall start name ocr-buffer
+                                    (concat "read task_ready; " command))))))
+                ((symbol-function 'tlon-get-abstract-with-or-without-ai)
+                 (lambda (_interactive _preserve captured)
+                   (should-not target)
+                   (setq target captured
+                         pending-at-request (ebib-extras-operation-pending operation)
+                         text (with-temp-buffer
+                                (should (zerop (process-file
+                                                 "pdftotext" nil t nil
+                                                 (plist-get captured :file) "-")))
+                                (buffer-string))))))
+        (ebib-extras-attach-file source key t db operation)
+        (should-not target)
+        (should (= (ebib-extras-operation-pending operation) 1))
+        (ebib-extras-process-entry key db operation)
+        (should-not target)
+        (setq ebib--cur-db other)
+        (process-send-string ocr-process "ready\n")
+        (ebib-extras-test--wait-for-ocr ocr-process)
+        (should (zerop (process-exit-status ocr-process)))
+        (should (string-match-p "SCANNED ONLY PAGE" text))
+        (should (eq (plist-get target :db) db))
+        (should (equal (plist-get target :key) key))
+        (should (= pending-at-request 2))
+        (should (= (ebib-extras-operation-pending operation) 1))
+        (ebib-db-set-field-value "abstract" "{Fixture abstract}" key db t)
+        (ebib-db-set-modified t db)
+        (funcall (plist-get target :callback) 'complete)
+        (funcall (plist-get target :callback) 'complete)
+        (should (zerop (ebib-extras-operation-pending operation)))
+        (should (eq (ebib-extras-operation-status operation) 'complete))
+        (should (equal (ebib-db-get-field-value "abstract" key other)
+                       "Existing abstract"))))))
+
+(defun ebib-extras-test--wait-for-ocr (process)
+  "Drain owned PROCESS until exit, bounded to 20 seconds."
+  (let ((deadline (+ (float-time) 20)))
+    (while (and (process-live-p process) (< (float-time) deadline))
+      (accept-process-output process 0.1)))
+  (accept-process-output process 0.01)
+  (should-not (process-live-p process)))
+
+(ert-deftest ebib-extras-test-ocr-failure-never-starts-dependent-abstract ()
+  "OCR startup, exit and retained-target failures cannot leak abstract work."
+  (dolist (failure '(metadata no-process startup exit replaced closed dirty sentinel))
+    (ebib-extras-test-with-ocr-attachment
+      (let (requested)
+        (cl-letf (((symbol-function 'ebib-extras-set-pdf-metadata)
+                   (lambda (&rest _) (when (eq failure 'metadata) (error "Metadata failed"))))
+                  ((symbol-function 'files-extras-ocr-pdf)
+                   (lambda (&rest _)
+                     (pcase failure
+                       ('no-process nil)
+                       ('startup (error "OCR startup failed"))
+                       (_ (setq ocr-process
+                                (make-process :name "owned-ocr-failure" :buffer ocr-buffer
+                                  :command (list "sh" "-c"
+                                    (format "read task_ready; exit %d"
+                                            (if (eq failure 'exit) 2 0)))
+                                  :connection-type 'pipe :noquery t))
+                          (when (eq failure 'sentinel)
+                            (set-process-sentinel ocr-process
+                              (lambda (&rest _) (error "Original sentinel failed"))))
+                          ocr-process))))
+                  ((symbol-function 'tlon-get-abstract-with-or-without-ai)
+                   (lambda (&rest _) (setq requested t))))
+          (if (memq failure '(metadata no-process startup))
+              (should-error (ebib-extras-attach-file source key t db operation))
+            (ebib-extras-attach-file source key t db operation)
+            (should-not requested)
+            (pcase failure
+              ('replaced (ebib-db-set-entry key '(("title" . "Replacement")) db 'overwrite))
+              ('closed (setq ebib--databases (list other)))
+              ('dirty (ebib-db-set-modified t db)))
+            (process-send-string ocr-process "ready\n")
+            (ebib-extras-test--wait-for-ocr ocr-process))
+          (should-not requested)
+          (should (zerop (ebib-extras-operation-pending operation)))
+          (should (eq (ebib-extras-operation-status operation) 'blocked))
+          (when (memq failure '(metadata no-process startup exit sentinel))
+            (ebib-extras-process-entry key db operation)
+            (should-not requested)))))))
+
+(ert-deftest ebib-extras-test-existing-or-late-abstract-survives-ocr ()
+  "Existing abstracts and fields filled during OCR suppress generation."
+  (dolist (late '(nil t))
+    (ebib-extras-test-with-ocr-attachment
+      (unless late
+        (ebib-db-set-field-value "abstract" "{Keep this abstract}" key db t)
+        (ebib-db-set-modified t db)
+        (ebib-extras--save-database db))
+      (cl-letf (((symbol-function 'ebib-extras-set-pdf-metadata) #'ignore)
+                ((symbol-function 'files-extras-ocr-pdf)
+                 (lambda (&rest _)
+                   (setq ocr-process (make-process :name "owned-ocr-preserve"
+                     :buffer ocr-buffer :command '("cat") :connection-type 'pipe :noquery t))))
+                ((symbol-function 'tlon-get-abstract-with-or-without-ai)
+                 (lambda (&rest _) (ert-fail "An existing abstract was ignored"))))
+        (ebib-extras-attach-file source key t db operation)
+        (when late
+          (ebib-db-set-field-value "abstract" "{Keep this abstract}" key db t)
+          (ebib-db-set-modified t db)
+          (ebib-extras--save-database db))
+        (process-send-eof ocr-process)
+        (ebib-extras-test--wait-for-ocr ocr-process)
+        (should (equal (ebib-unbrace (ebib-db-get-field-value "abstract" key db))
+                       "Keep this abstract"))
+        (should (eq (ebib-extras-operation-status operation) 'complete))
+        (should (zerop (ebib-extras-operation-pending operation)))))))
+
+(ert-deftest ebib-extras-test-attachments-without-ocr-process-abstract-immediately ()
+  "PDF opt-out and non-PDF attachments keep immediate abstract processing."
+  (dolist (type '(pdf html))
+    (ebib-extras-test-with-ocr-attachment
+      (when (eq type 'html)
+        (setq source (expand-file-name "source.html" directory))
+        (with-temp-file source (insert "<html><body>Source text</body></html>")))
+      (let (requested)
+        (cl-letf (((symbol-function 'files-extras-ocr-pdf)
+                   (lambda (&rest _) (ert-fail "Unexpected OCR")))
+                  ((symbol-function 'tlon-get-abstract-with-or-without-ai)
+                   (lambda (_interactive _preserve target)
+                     (setq requested t)
+                     (funcall (plist-get target :callback) 'complete))))
+          (ebib-extras-attach-file source key (eq type 'html) db operation)
+          (should requested)
+          (should (eq (ebib-extras-operation-status operation) 'complete))
+          (should (zerop (ebib-extras-operation-pending operation))))))))
+
+(ert-deftest ebib-extras-test-pdf-ocr-preserves-pending-html-abstract ()
+  "Completing PDF OCR cannot replace an earlier HTML abstract request."
+  (ebib-extras-test-with-ocr-attachment
+    (let ((html (expand-file-name "source.html" directory))
+          (requests 0) target)
+      (with-temp-file html (insert "<html><body>Source text</body></html>"))
+      (cl-letf (((symbol-function 'ebib-extras-set-pdf-metadata) #'ignore)
+                ((symbol-function 'files-extras-ocr-pdf)
+                 (lambda (&rest _)
+                   (setq ocr-process (make-process :name "owned-ocr-html-first"
+                     :buffer ocr-buffer :command '("cat") :connection-type 'pipe :noquery t))))
+                ((symbol-function 'tlon-get-abstract-with-or-without-ai)
+                 (lambda (_interactive _preserve captured)
+                   (cl-incf requests)
+                   (setq target captured))))
+        (ebib-extras-attach-file html key t db operation)
+        (should (= requests 1))
+        (should (= (ebib-extras-operation-pending operation) 1))
+        (ebib-extras-attach-file source key t db operation)
+        (should (eq (ebib-extras-operation-abstract-started operation) t))
+        (should (= (ebib-extras-operation-pending operation) 2))
+        (process-send-eof ocr-process)
+        (ebib-extras-test--wait-for-ocr ocr-process)
+        (should (= requests 1))
+        (should (= (ebib-extras-operation-pending operation) 1))
+        (ebib-db-set-field-value "abstract" "{HTML abstract}" key db t)
+        (ebib-db-set-modified t db)
+        (funcall (plist-get target :callback) 'complete)
+        (should (eq (ebib-extras-operation-status operation) 'complete))
+        (should (zerop (ebib-extras-operation-pending operation)))))))
+
+(ert-deftest ebib-extras-test-ocr-continuation-finishes-once ()
+  "Terminal OCR and continuation errors finish once without replaying sentinels."
+  (dolist (scenario '((exit 0 nil) (exit 6 nil) (exit 2 nil) (signal 6 nil)
+                      (exit 0 error) (exit 0 quit)))
+    (pcase-let* ((`(,status ,code ,failure) scenario)
+                 (db (car (ebib-extras-test--operation-databases)))
+                 (ebib--databases (list db))
+                 (operation (ebib-extras-make-operation "Author2020Paper" db t))
+                 (calls 0) (original-calls 0) (sentinel nil))
+      (cl-letf (((symbol-function 'process-sentinel)
+                 (lambda (_) (lambda (&rest _) (cl-incf original-calls))))
+                ((symbol-function 'set-process-sentinel)
+                 (lambda (_ callback) (setq sentinel callback)))
+                ((symbol-function 'process-status) (lambda (_) status))
+                ((symbol-function 'process-exit-status) (lambda (_) code)))
+        (condition-case nil
+            (ebib-extras--track-ocr-process
+             'finished-process operation
+             (lambda ()
+               (cl-incf calls)
+               (when failure (signal failure '("Continuation failed")))))
+          (quit nil))
+        (funcall sentinel 'finished-process "duplicate")
+        (should (zerop original-calls))
+        (should (= calls (if (and (eq status 'exit) (memq code '(0 6))) 1 0)))
+      (should (zerop (ebib-extras-operation-pending operation)))
+      (should (eq (ebib-extras-operation-status operation)
+                  (if (and (eq status 'exit) (memq code '(0 6)) (not failure))
+                      'complete 'blocked)))))))
 
 (ert-deftest ebib-extras-test-abstract-cancellation-finishes-owned-task ()
   "Cancellation during fetch or callback save leaves no pending abstract task."

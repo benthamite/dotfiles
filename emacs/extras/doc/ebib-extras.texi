@@ -477,6 +477,13 @@ If the URL matches a known video website (YouTube), it calls @code{ebib-extras-u
 If the entry type is @samp{online} or @samp{article} and a URL is available, it calls both @code{ebib-extras-url-to-pdf-attach} and @code{ebib-extras-url-to-html-attach}.  Entry-type matching is case-insensitive, so standard Bib@TeX{} forms such as @samp{Online} and @samp{Article} follow the same path.
 @end enumerate
 
+When attaching a PDF with postprocessing enabled, the operation waits for OCR
+to succeed before reading the document for an abstract. Processing the entry
+again during OCR does not start an early abstract request. OCR failures block
+that dependent work; existing abstracts, including ones added during OCR, are
+preserved. The operation stays pending through any subsequent abstract request.
+Attachments without PDF postprocessing retain immediate abstract processing.
+
 @node DOI and book attachment
 @subsection DOI and book attachment
 

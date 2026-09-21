@@ -766,6 +766,13 @@ decoding. Denials identify the field and rule without printing suspect bytes.
 This does not exempt every public PDF or replace known-secret checks on the
 original command. =tests/test_public_url_scan.py= pins the parser boundaries.
 
+The network heuristic treats hyphens as part of names, so package or Elisp
+names such as =curl-cffi= and =zotra-use-curl= do not activate it. Actual
+=curl=/=wget=/=nc=/=ncat= names, including interpreter subprocess arguments,
+retain the opaque-token scan. This does not exempt interpreter bodies or alter
+known-secret checks. =tests/test_secret_guard_network_names.py= covers the
+local wheel-provenance read and unsafe controls through both runtimes.
+
 The inline-secret scan recognizes public MusicBrainz entity URLs before
 tokenizing their identifiers. Queries, fragments and credential arguments
 remain scanned; URL components never receive filesystem-path exemptions.

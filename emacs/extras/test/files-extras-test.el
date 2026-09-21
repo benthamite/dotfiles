@@ -8,6 +8,9 @@
 (require 'ert)
 (require 'files-extras)
 
+(defconst files-extras-test--directory
+  (file-name-directory (or load-file-name buffer-file-name)))
+
 ;;;; bollp (beginning of last line predicate)
 
 (ert-deftest files-extras-test-bollp-at-last-line ()
@@ -437,6 +440,67 @@ which `file-name-as-directory' converts to \"./\"."
     (should-error
      (files-extras-ocr-pdf nil "/tmp/unused.pdf" nil "unconfigured-language")
      :type 'user-error)))
+
+(ert-deftest files-extras-test-ocr-preserves-scans-in-mixed-pdf ()
+  "Add searchable text without replacing original images in a mixed PDF."
+  (skip-unless (require 'tlon-core nil t))
+  (dolist (command '("ocrmypdf" "pdfimages" "pdftotext"))
+    (skip-unless (executable-find command)))
+  (let* ((directory (make-temp-file "files-extras-ocr-test-" t))
+         (file (expand-file-name "mixed.pdf" directory))
+         (tlon-languages-properties '((:name "english" :iso-639-2 "eng")))
+         process)
+    (unwind-protect
+        (progn
+          (copy-file (expand-file-name "fixtures/files-extras-ocr-mixed.pdf"
+                                       files-extras-test--directory) file)
+          (let ((images (files-extras-test--pdf-image-signatures
+                          file (expand-file-name "before" directory))))
+            (should (= (length images) 2))
+            (setq process (files-extras-ocr-pdf nil file nil "english"))
+            (let ((deadline (+ (float-time) 60)))
+              (while (and (process-live-p process) (< (float-time) deadline))
+                (accept-process-output process 0.1)))
+            (should (eq (process-status process) 'exit))
+            (should (zerop (process-exit-status process)))
+            (should (equal images (files-extras-test--pdf-image-signatures
+                                   file (expand-file-name "after" directory))))
+            (with-temp-buffer
+              (should (zerop (process-file "pdftotext" nil t nil file "-")))
+              (should (string-match-p "Existing searchable page" (buffer-string)))
+              (should (string-match-p "SCANNED ONLY PAGE" (buffer-string))))))
+      (when (and process (process-live-p process)) (delete-process process))
+      (when (and process (buffer-live-p (process-buffer process)))
+        (kill-buffer (process-buffer process)))
+      (delete-directory directory t))))
+
+(defun files-extras-test--pdf-image-signatures (file prefix)
+  "Return hashes of images extracted from FILE with PREFIX."
+  (with-temp-buffer
+    (should (zerop (process-file "pdfimages" nil t nil "-all" file prefix))))
+  (mapcar (lambda (image)
+            (with-temp-buffer
+              (insert-file-contents-literally image)
+              (secure-hash 'sha256 (current-buffer))))
+          (directory-files (file-name-directory prefix) t
+                           (concat "\\`" (regexp-quote (file-name-nondirectory prefix))
+                                   "-"))))
+
+(ert-deftest files-extras-test-explicit-ocr-options-retained ()
+  "Retain forced deskewing and explicitly supplied OCR parameters."
+  (skip-unless (require 'tlon-core nil t))
+  (let ((tlon-languages-properties '((:name "english" :iso-639-2 "eng")))
+        command)
+    (cl-letf (((symbol-function 'executable-find) (lambda (_) "/usr/bin/ocrmypdf"))
+              ((symbol-function 'start-process-shell-command)
+               (lambda (_name _buffer invocation) (setq command invocation)))
+              ((symbol-function 'set-process-filter) #'ignore))
+      (files-extras-ocr-pdf t "/tmp/scan.pdf" nil "english")
+      (should (string-match-p "--force-ocr --deskew" command))
+      (should-not (string-match-p "--skip-text\\|--optimize 0" command))
+      (files-extras-ocr-pdf nil "/tmp/scan.pdf" "--redo-ocr custom-in.pdf custom-out.pdf"
+                            "english")
+      (should (equal command "ocrmypdf --redo-ocr custom-in.pdf custom-out.pdf")))))
 
 (provide 'files-extras-test)
 ;;; files-extras-test.el ends here

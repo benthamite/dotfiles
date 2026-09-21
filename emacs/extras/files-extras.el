@@ -337,7 +337,8 @@ The screenshot directory is specified by `files-extras-screenshot-directory'."
 If FILENAME is nil, use the PDF file at point or the file visited
 by the current buffer.  If FORCE is non-nil or called with a prefix
 argument, force OCR even if it has already been performed on the
-file.  Otherwise, preserve pages with text and OCR only image pages.
+file.  Otherwise, preserve the original page images and add OCR only to
+pages without text, without deskewing or image optimization.
 
 Optionally, pass PARAMETERS to `ocrmypdf'.  If so, FORCE and
 FILENAME have no effect.  LANGUAGE, when supplied, is the validated
@@ -363,8 +364,9 @@ Return the OCR process so callers can observe its completion."
                        (user-error "No OCR language code configured for %s" language))))
 	   (parameters
 	    (or parameters
-		(format (concat (if force "--force-ocr "
-                          "--skip-text --output-type pdf ") "--deskew -l %s \"%2$s\" \"%2$s\"")
+		(format (concat (if force "--force-ocr --deskew "
+                          "--skip-text --output-type pdf --optimize 0 ")
+                                "-l %s \"%2$s\" \"%2$s\"")
 			lang filename)))
 	   (process (start-process-shell-command
 		     "ocrmypdf" "*ocr-pdf*"

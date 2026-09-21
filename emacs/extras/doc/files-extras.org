@@ -241,9 +241,13 @@ Programmatic callers may supply FILENAME and the fourth argument LANGUAGE to use
 With a prefix argument, the command forces OCR even if the PDF already
 contains a text layer.  Without the prefix argument, =ocrmypdf= skips
 pages with text and adds OCR to image-only pages, including in mixed
-documents.  Normal processing uses PDF output to preserve existing
-text instead of converting the document to PDF/A.  Tagged documents
-with text can therefore complete successfully without forcing OCR.
+documents.  Normal processing preserves original page images: it does
+not deskew or optimize them, and uses PDF output instead of converting
+the document to PDF/A.  This avoids replacing compact scans of covers,
+blank pages or illustrations with larger raster images merely because
+they have no text layer.  Tagged documents with text can complete
+successfully without forcing OCR.  Forced OCR still deskews and
+rasterizes pages; explicit PARAMETERS retain full control of the command.
 
 The process runs asynchronously.  Status messages are displayed as the
 OCR proceeds, with duplicate messages suppressed.  The process filter

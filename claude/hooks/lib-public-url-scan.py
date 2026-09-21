@@ -169,6 +169,8 @@ def arguments(tokens: list[str]) -> list[tuple[str, str]] | None:
     switches = ({"--silent", "--show-error", "--location", "--fail", "--head", "--include",
                  "--verbose", "--insecure", "--no-buffer"} if curl
                 else {"--quiet", "--no-verbose", "--verbose"})
+    output_options = ({"-o", "--output"} if curl else
+                      {"-O", "--output-document", "-o", "--output-file"})
     result = []
     index = 1
     while index < len(tokens):
@@ -186,7 +188,9 @@ def arguments(tokens: list[str]) -> list[tuple[str, str]] | None:
                 if index == len(tokens):
                     return None
                 value = tokens[index]
-            role = ("URL" if option == "--url" and value.startswith(("https://", "http://"))
+            role = ("output-file" if option in output_options
+                    and not re.match(r"[A-Za-z][A-Za-z0-9+.-]*:", value)
+                    else "URL" if option == "--url" and value.startswith(("https://", "http://"))
                     else "header" if option in {"-H", "--header"}
                     else "body" if option in {"-d", "--data", "--data-ascii", "--data-binary",
                                                "--data-raw", "--data-urlencode", "--json", "-F",
@@ -218,6 +222,12 @@ def finding(command: str) -> str | None:
                 return "unclassified command: opaque token"
             continue
         for role, value in values:
+            # A proven literal output destination is not sent to the server.
+            # Classify it here, after quote-aware argv parsing: a quoted URL's
+            # '&' may prevent the earlier shell-wide file-path projection.
+            # Known-secret checks still inspect the full original command.
+            if role == "output-file":
+                continue
             if role == "URL":
                 issue = url_finding(value)
                 if issue:

@@ -14,6 +14,31 @@ class PublicURLScanTests(unittest.TestCase):
     URL = "https://myweb.sabanciuniv.edu/ozgurkibris/files/2008/10/kibris-sertel-scw06.pdf"
     TOKEN = "Synthetic9Opaque_" * 3
 
+    def test_output_file_role_with_quoted_query_punctuation(self):
+        url = ('https://books.google.com/books?id=P9ViAAAAMAAJ'
+               '&jscmd=SearchWithinVolume2&q=impression')
+        destination = ('/Users/pablostafforini/.local/state/bibliography-cleanup/'
+                       'research-woolf-steinbeck-20260921/woolf-1959-impression.json')
+        for command in (
+            f"curl --fail --location --max-time 30 --silent --show-error '{url}' -o '{destination}'",
+            f"curl --output='{destination}' '{url}'",
+            f"wget --output-document '{destination}' '{url}'",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNone(scan.finding(command))
+        for command in (
+            f"curl '{url}' -H 'X-Token: {destination}'",
+            f"curl '{url}' -d '{destination}'",
+            f"curl '{url}&token={self.TOKEN}' -o '{destination}'",
+            f"curl '{url}' -H 'X-Token: {self.TOKEN}' -o '{destination}'",
+            f"curl '{url}' -d '{self.TOKEN}' -o '{destination}'",
+            f"curl '{url}' -d '-o' '{destination}'",
+            f"curl --unknown '{url}' -o '{destination}'",
+            f"env curl '{url}' -o '{destination}'",
+        ):
+            with self.subTest(command=command):
+                self.assertIsNotNone(scan.finding(command))
+
     def test_bsb_page_resource_routes_preserve_payloads(self):
         root = 'https://api.digitale-sammlungen.de'
         image_url = root + '/iiif/image/v2/bsb11252077_00025/full/full/0/default.jpg'

@@ -695,6 +695,12 @@ decoding. Denials identify the field and rule without printing suspect bytes.
 This does not exempt every public PDF or replace known-secret checks on the
 original command. =tests/test_public_url_scan.py= pins the parser boundaries.
 
+The quote-aware network parser classifies literal =curl=/=wget= output-file
+options itself. A quoted URL query containing =&= cannot turn its separate local
+destination into a network payload. URI-shaped output values, headers, bodies,
+URLs and unknown command forms remain scanned; known-secret checks still inspect
+the complete original command.
+
 The registry includes the exact HTTPS [[https://collecties.kb.nl/en/collections/collection-anny-antoine-louis-koopman/1951-1960/cahiers][KB Cahiers page]], whose collection slug
 and decade range resemble an opaque token. Only that complete authority/path
 is projected; other pages, changed paths, query/fragment values and request

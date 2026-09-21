@@ -106,6 +106,29 @@
               (when (buffer-live-p buffer) (kill-buffer buffer)))
             buffers))))
 
+(ert-deftest eww-extras-test-failure-keeps-renderer-diagnostic ()
+  "The real process sentinel reports stderr rather than pipe-status noise."
+  (let ((file (make-temp-file "eww-diagnostic-" nil ".html"))
+        (failure nil)
+        (completed nil)
+        (deadline (+ (float-time) 5)))
+    (unwind-protect
+        (progn
+          (cl-letf (((symbol-function 'eww-extras-url-to-file-make-command)
+                     (lambda (&rest _)
+                       '("/bin/sh" "-c"
+                         "printf 'navigation: HTTP 403\\n' >&2; exec 2>&-; sleep 0.15; exit 1"))))
+            (eww-extras-url-to-file
+             "html" "https://example.com/denied"
+             (lambda (&rest _) (setq completed t)) "Author2020Paper"
+             (lambda (error) (setq failure error)) file))
+          (while (and (not failure) (not completed) (< (float-time) deadline))
+            (accept-process-output nil 0.05))
+          (should-not completed)
+          (should (equal failure
+                         "Could not get file (status 1): navigation: HTTP 403")))
+      (delete-file file))))
+
 (ert-deftest eww-extras-test-copied-profile-api-is-retired ()
   "Rendering must not expose commands that copy personal Chrome state."
   (should-not (fboundp 'eww-extras-chrome-copy-data-dirs))

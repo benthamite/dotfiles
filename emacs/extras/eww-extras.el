@@ -178,7 +178,6 @@ supplied, selects an operation-owned destination instead of KEY.TYPE."
 	 (process (make-process
 		   :name (format "url-to-%s" type)
 		   :buffer process-buffer
-		   :stderr process-buffer
 		   :command (eww-extras-url-to-file-make-command url output-file type))))
     (message "Getting %s file…" type)
     (set-process-sentinel process

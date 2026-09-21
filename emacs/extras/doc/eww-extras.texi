@@ -317,7 +317,9 @@ shell command, @samp{npx}, or a Playwright-managed browser download.
 The function @code{eww-extras-url-to-file-sentinel} creates a process
 sentinel that requires both a zero exit status and a nonempty output before it
 runs the callback.  Each render has a private diagnostics buffer, so concurrent
-PDF and HTML jobs cannot mix their errors.  Failed output is never attached.
+PDF and HTML jobs cannot mix their errors. Standard error joins the main
+process output, preserving the renderer's diagnostic without an extra pipe
+sentinel's completion message. Failed output is never attached.
 
 The renderer rejects unsuccessful HTTP responses for the main document,
 including redirect targets and later document navigations. Failed images or

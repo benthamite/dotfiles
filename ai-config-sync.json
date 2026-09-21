@@ -812,7 +812,7 @@
       "path": "codex/config.toml",
       "tracked": true,
       "live_path": "~/.codex/config.toml",
-      "note": "Codex-only trust, plugins, theme, MCP, accounts and models; gpt-6-astra is default, project-doc fallbacks are off, hooks are on. Preserve existing state when trusting exact source/key/current-hash definitions. Untrusted-execution trust is recorded for eight homes; loaded sessions need reload. bin/skill-prune replaces managed tables, scans default/active/configured homes, deduplicates histories and rejects missing evidence; disabled state is skills-disabled.json. bin/codex-config-prune removes dead records. Repo moves require rewritten trust keys. See codex/README.org."
+      "note": "Codex trust, plugins, theme, MCP, accounts and models; gpt-6-astra default, project-doc fallbacks off, hooks on. Chrome MCP uses Homebrew Codex: the bundled CLI cannot parse current agent settings. Preserve source/key/hash trust. Untrusted-execution trust covers eight homes; reload loaded sessions. bin/skill-prune replaces managed tables across default/active/configured homes, deduplicates histories and rejects missing evidence; disabled state: skills-disabled.json. bin/codex-config-prune removes dead records. Repo moves require rewritten trust keys. See codex/README.org."
     },
     {
       "tool": "Codex",

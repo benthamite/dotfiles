@@ -122,6 +122,12 @@ Browser control is runtime-owned: the bundled Browser and Chrome plugins load
 directly through Codex. No tracked skill or helper command mediates a
 CLI/Emacs-to-App browser handoff.
 
+The Chrome MCP helper currently lives in =Codex.app=, but its
+=CODEX_CLI_PATH= points to the current Homebrew CLI. The older bundled CLI
+cannot parse current agent settings; its configuration-read failure is
+misreported by the browser as an enterprise network-policy denial. Keep the
+configuration reader current without disabling browser permission checks.
+
 Model-invocable tracked skills do not preapprove bare high-risk tools through
 =allowed-tools=. Loading a skill therefore leaves Bash, write, edit, agent, and
 user-question permission decisions to the ordinary runtime policy. A narrowly

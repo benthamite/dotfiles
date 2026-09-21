@@ -9,6 +9,8 @@
 (require 'ert)
 (require 'org-extras)
 (require 'org-clock)
+(require 'face-remap)
+(require 'org-indent)
 
 (defvar buffer-face-mode-hook)
 
@@ -261,7 +263,8 @@
       (should agenda-called)
       (should-not config-visited)
       (should (equal observed-hooks
-                     '(((change-hook) nil (org-hook) (outline-hook) (text-hook))))))))
+                     '(((change-hook) (org-extras--agenda-defer-buffer-setup)
+                        (org-hook) (outline-hook) (text-hook))))))))
 
 (ert-deftest org-extras-test-agenda-maintenance-without-agenda-avoids-ui ()
   "Maintain agenda state without creating or displaying an agenda."
@@ -437,7 +440,7 @@
          (variable-pitch-mode 1))))
     (should (equal observed-hooks
                    '((change-hook)
-                     nil
+                     (org-extras--agenda-defer-buffer-setup)
                      (org-hook)
                      (outline-hook)
                      (text-hook)
@@ -457,6 +460,62 @@
     (should (equal text-mode-hook '(text-hook jinx-mode)))
     (should (equal buffer-face-mode-hook
                    '(face-hook org-indent-pixel--maybe-activate)))))
+
+(ert-deftest org-extras-test-agenda-deferred-buffer-setup ()
+  "Finish background file setup once without losing edits or agenda positions."
+  (let* ((file (make-temp-file "org-extras-display-" nil ".org"
+                               (concat "* TODO First\nBody\n* Second\n"
+                                       "\n# Local Variables:\n"
+                                       "# fill-column: 61\n# End:\n")))
+         (org-mode-hook nil)
+         (text-mode-hook nil)
+         (outline-mode-hook '(variable-pitch-mode))
+         (find-file-hook '(visual-line-mode))
+         (org-startup-indented t)
+         (buffer nil))
+    (unwind-protect
+        (save-window-excursion
+          (org-extras-with-suppressed-agenda-file-opening-hooks
+           (lambda ()
+             (org-extras-with-suppressed-agenda-file-opening-hooks
+              (lambda () (setq buffer (find-file-noselect file))))))
+          (with-current-buffer buffer
+            (should org-extras--agenda-setup-pending)
+            (should-not buffer-face-mode)
+            (should-not visual-line-mode)
+            (should-not org-indent-mode)
+            (goto-char (point-max))
+            (insert "Unsaved text\n")
+            (goto-char 14)
+            (narrow-to-region 14 (point-max))
+            (let ((marker (copy-marker (point)))
+                  (text (buffer-string))
+                  (position (point)))
+              (set-window-buffer (selected-window) buffer)
+              (org-extras-with-suppressed-agenda-file-opening-hooks
+               (lambda ()
+                 (org-extras--agenda-finish-buffer-setup (selected-window))
+                 (should org-extras--agenda-setup-pending)))
+              (should-not org-extras--agenda-setup-pending)
+              (should buffer-face-mode)
+              (should visual-line-mode)
+              (should org-indent-mode)
+              (should (= fill-column 61))
+              (should (buffer-modified-p))
+              (should (equal text (buffer-string)))
+              (should (= position (point) (point-min) (marker-position marker)))
+              (visual-line-mode -1)
+              (org-extras--agenda-finish-buffer-setup (selected-window))
+              (should-not visual-line-mode)
+              (org-extras-with-suppressed-agenda-file-opening-hooks
+               (lambda () (find-file-noselect file)))
+              (should-not org-extras--agenda-setup-pending)
+              (should-not visual-line-mode)
+              (set-marker marker nil))))
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer (set-buffer-modified-p nil))
+        (kill-buffer buffer))
+      (delete-file file))))
 
 ;;;; Refile cache
 
@@ -591,7 +650,8 @@
                            (apply real-find-file-noselect args))))
                 (org-extras-agenda-toggle-anniversaries t)))
             (should (equal observed-hooks
-                           '(((ignore) nil (ignore) (ignore) (ignore)))))
+                           '(((ignore) (org-extras--agenda-defer-buffer-setup)
+                              (ignore) (ignore) (ignore)))))
             (with-temp-buffer
               (insert-file-contents file)
               (should (string-match-p "%%(org-bbdb-anniversaries-future 1)"

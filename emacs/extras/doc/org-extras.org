@@ -507,6 +507,12 @@ including ~variable-pitch-mode~, ~org-indent-mode~, ~org-indent-pixel-mode~,
 keeps presentation setup such as variable-pitch indentation and file-local
 eval forms from doing unrelated work while the agenda is being built.
 
+Newly opened Org buffers are marked for deferred initialization.  On their
+first display outside the scan, normal mode setup, local variables and
+file-opening hooks run without rereading the file.  This restores fonts,
+wrapping and indentation while preserving unsaved text, point and narrowing.
+Already open buffers and subsequent displays are left alone.
+
 *** Going to an agenda item and clocking in
 :PROPERTIES:
 :CUSTOM_ID: h:agenda-goto-clock

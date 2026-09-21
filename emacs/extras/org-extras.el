@@ -675,25 +675,59 @@ daily agenda only when its buffer already exists and is in `org-agenda-mode'."
     variable-pitch-mode)
   "Interactive setup functions to suppress during agenda file scans.")
 
+(defvar org-extras--agenda-opening-files nil
+  "Non-nil while agenda file setup is suppressed.")
+
+(defvar-local org-extras--agenda-setup-pending nil
+  "Non-nil when an agenda-opened buffer needs normal file setup.")
+
 (defun org-extras-with-suppressed-agenda-file-opening-hooks (fn)
-  "Call FN while suppressing interactive setup for agenda file scans."
-  (let ((change-major-mode-after-body-hook
-         (org-extras--agenda-filter-file-opening-hook
-          change-major-mode-after-body-hook))
-        (find-file-hook nil)
-        (org-mode-hook
-         (org-extras--agenda-filter-file-opening-hook org-mode-hook))
-        (org-startup-indented nil)
-        (enable-local-variables nil)
-        (outline-mode-hook
-         (org-extras--agenda-filter-file-opening-hook outline-mode-hook))
-        (text-mode-hook
-         (org-extras--agenda-filter-file-opening-hook text-mode-hook))
-        (buffer-face-mode-hook
-         (and (boundp 'buffer-face-mode-hook)
-              (org-extras--agenda-filter-file-opening-hook
-               buffer-face-mode-hook))))
-    (org-extras--with-ignored-agenda-file-opening-functions fn)))
+  "Call FN with interactive file setup deferred until first display.
+Agenda scans retain cheap setup; displayed files receive normal mode hooks,
+local variables and file hooks without rereading their contents."
+  (unwind-protect
+      (let ((org-extras--agenda-opening-files t)
+            (change-major-mode-after-body-hook
+             (org-extras--agenda-filter-file-opening-hook
+              change-major-mode-after-body-hook))
+            (find-file-hook '(org-extras--agenda-defer-buffer-setup))
+            (org-mode-hook
+             (org-extras--agenda-filter-file-opening-hook org-mode-hook))
+            (org-startup-indented nil)
+            (enable-local-variables nil)
+            (outline-mode-hook
+             (org-extras--agenda-filter-file-opening-hook outline-mode-hook))
+            (text-mode-hook
+             (org-extras--agenda-filter-file-opening-hook text-mode-hook))
+            (buffer-face-mode-hook
+             (and (boundp 'buffer-face-mode-hook)
+                  (org-extras--agenda-filter-file-opening-hook
+                   buffer-face-mode-hook))))
+        (org-extras--with-ignored-agenda-file-opening-functions fn))
+    (unless org-extras--agenda-opening-files
+      (walk-windows #'org-extras--agenda-finish-buffer-setup 'nomini 'visible))))
+
+(defun org-extras--agenda-defer-buffer-setup ()
+  "Arrange normal file setup when this agenda-opened Org buffer is displayed."
+  (when (derived-mode-p 'org-mode)
+    (setq org-extras--agenda-setup-pending t)
+    (add-hook 'window-buffer-change-functions
+              #'org-extras--agenda-finish-buffer-setup nil t)))
+
+(defun org-extras--agenda-finish-buffer-setup (window)
+  "Complete deferred file setup for the Org buffer displayed in WINDOW."
+  (when (window-live-p window)
+    (with-current-buffer (window-buffer window)
+      (when (and org-extras--agenda-setup-pending
+                 (not org-extras--agenda-opening-files))
+        (setq org-extras--agenda-setup-pending nil)
+        (remove-hook 'window-buffer-change-functions
+                     #'org-extras--agenda-finish-buffer-setup t)
+        (save-excursion
+          (save-restriction
+            (widen)
+            (normal-mode t)
+            (run-hooks 'find-file-hook)))))))
 
 (defun org-extras--agenda-filter-file-opening-hook (hook)
   "Return HOOK without agenda file-opening setup functions."

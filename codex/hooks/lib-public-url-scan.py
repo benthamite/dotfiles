@@ -14,10 +14,14 @@ from urllib.parse import unquote, urlsplit
 
 UUID = r"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
 MONTH = r"[0-9]{4}/(?:0[1-9]|1[0-2])"
+BSB_OBJECT = r"bsb[0-9]{8}(?:_[0-9]{5}_u[0-9]{3})?"
 ENTITY = r"(?:area|artist|collection|event|genre|instrument|label|place|recording|release|release-group|series|url|work)"
 # Exact authority, path prefix, whether the complete path must match, schemes.
 # Sources are the public routes pinned by test_secret_guard_parity.py.
 ROUTES = (
+    ("archive.org", r"/metadata/", False, ("https",)),
+    ("api.digitale-sammlungen.de", rf"/iiif/presentation/v2/{BSB_OBJECT}/manifest", True, ("https",)),
+    ("api.digitale-sammlungen.de", r"/iiif/image/v2/bsb[0-9]{8}_[0-9]{5}/full/full/0/default\.jpg", True, ("https",)),
     ("collecties.kb.nl", r"/en/collections/collection-anny-antoine-louis-koopman/1951-1960/cahiers", True, ("https",)),
     ("www.brown.edu", r"/Departments/Philosophy/bears/", False, ("https",)),
     ("ruj.uj.edu.pl", rf"/entities/publication/{UUID}", True, ("https",)),

@@ -14,6 +14,87 @@ class PublicURLScanTests(unittest.TestCase):
     URL = "https://myweb.sabanciuniv.edu/ozgurkibris/files/2008/10/kibris-sertel-scw06.pdf"
     TOKEN = "Synthetic9Opaque_" * 3
 
+    def test_bsb_page_resource_routes_preserve_payloads(self):
+        root = 'https://api.digitale-sammlungen.de'
+        image_url = root + '/iiif/image/v2/bsb11252077_00025/full/full/0/default.jpg'
+        ocr_url = root + '/ocr/bsb11252077/25'
+        for url in (image_url, image_url.replace('_00025/', '_00026/'),
+                    ocr_url, root + '/ocr/bsb00000001/00010'):
+            self.assertIsNone(scan.finding(f"curl '{url}'"))
+        for url in (image_url,):
+            for changed in (
+                url.replace('https://', 'http://'),
+                url.replace('api.digitale-sammlungen.de', 'api.digitale-sammlungen.de.example.org'),
+                url.replace('bsb11252077', 'bsb11252077' + self.TOKEN),
+                url + 'extra', url + '/', url + '/' + self.TOKEN,
+                url + '?token=' + self.TOKEN, url + '#' + self.TOKEN,
+            ):
+                with self.subTest(url=changed):
+                    self.assertIsNotNone(scan.finding(f"curl '{changed}'"))
+            for option in ('-H', '-d'):
+                self.assertIsNotNone(scan.finding(f"curl '{url}' {option} '{self.TOKEN}'"))
+                self.assertIsNotNone(scan.finding(f"curl {option} '{url}' https://example.org"))
+        for changed in (
+            image_url.replace('_00025/', '_000250/'),
+            image_url.replace('/full/full/', '/private/full/'),
+            image_url.replace('/default.jpg', '/other.jpg'),
+            ocr_url.replace('/25', '/' + self.TOKEN),
+        ):
+            self.assertIsNotNone(scan.finding(f"curl '{changed}'"))
+
+    def test_archive_metadata_prefix_retains_identifier_and_payloads(self):
+        # https://archive.org/developers/md-read.html documents the fixed
+        # route and partial reads. Identifiers themselves are never exempt.
+        base = 'https://archive.org/metadata/'
+        for suffix in ('isbn_9780312108298', 'in.ernet.dli.2015.101543',
+                       'xfetch/files/0?start=1&count=5'):
+            self.assertIsNone(scan.finding(f"curl '{base}{suffix}'"))
+        url = base + 'isbn_9780312108298'
+        for changed in (
+            url.replace('https://', 'http://'),
+            url.replace('archive.org', 'archive.org.example.org'),
+            url.replace('archive.org', 'archive.org@example.org'),
+            url.replace('/metadata/', '/private/'),
+            url.replace('/metadata/', '/metadata-lookalike/'),
+            base + self.TOKEN, base + 'isbn_' + self.TOKEN,
+            url + '/' + self.TOKEN, url + '?token=' + self.TOKEN,
+            url + '#' + self.TOKEN,
+            url + '?token=' + ''.join(f'%{ord(c):02x}' for c in self.TOKEN),
+            'https://example.org/?next=' + url,
+        ):
+            with self.subTest(url=changed):
+                self.assertIsNotNone(scan.finding(f"curl '{changed}'"))
+        for option in ('-H', '-d'):
+            self.assertIsNotNone(scan.finding(f"curl '{url}' {option} '{self.TOKEN}'"))
+            self.assertIsNotNone(scan.finding(f"curl {option} '{url}' https://example.org"))
+
+    def test_bsb_manifest_identifiers_and_retained_payloads(self):
+        # https://www.digitale-sammlungen.de/en/interfaces documents this
+        # endpoint and both the basic and suffixed object identifier forms.
+        base = 'https://api.digitale-sammlungen.de/iiif/presentation/v2/'
+        for identifier in ('bsb11252077', 'bsb00012345', 'bsb00130380_00157_u001'):
+            self.assertIsNone(scan.finding(f"curl '{base}{identifier}/manifest'"))
+        url = base + 'bsb11252077/manifest'
+        for changed in (
+            url.replace('https://', 'http://'),
+            url.replace('api.digitale-sammlungen.de', 'api.digitale-sammlungen.de.example.org'),
+            url.replace('api.digitale-sammlungen.de', 'api.digitale-sammlungen.de@example.org'),
+            url.replace('/presentation/', '/private/'),
+            url.replace('/v2/', '/v3/'),
+            url.replace('bsb11252077', 'bsb1125207'),
+            url.replace('bsb11252077', 'bsb11252077_' + self.TOKEN),
+            url.replace('/manifest', '/other'),
+            url + '/', url + 'extra', url + '/' + self.TOKEN,
+            url + '?token=' + self.TOKEN, url + '#' + self.TOKEN,
+            url + '?token=' + ''.join(f'%{ord(c):02x}' for c in self.TOKEN),
+            'https://example.org/?next=' + url,
+        ):
+            with self.subTest(url=changed):
+                self.assertIsNotNone(scan.finding(f"curl '{changed}'"))
+        for option in ('-H', '-d'):
+            self.assertIsNotNone(scan.finding(f"curl '{url}' {option} '{self.TOKEN}'"))
+            self.assertIsNotNone(scan.finding(f"curl {option} '{url}' https://example.org"))
+
     def test_kb_cahiers_requires_exact_page_and_preserves_payloads(self):
         url = ('https://collecties.kb.nl/en/collections/'
                'collection-anny-antoine-louis-koopman/1951-1960/cahiers')

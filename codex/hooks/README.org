@@ -112,6 +112,17 @@ and decade range resemble an opaque token. Only that complete authority/path
 is projected; other pages, changed paths, query/fragment values and request
 payloads retain the original checks.
 
+The [[https://www.digitale-sammlungen.de/en/interfaces][documented BSB IIIF Presentation API]] registers the HTTPS host
+=api.digitale-sammlungen.de= and complete =/iiif/presentation/v2/OBJECT/manifest=
+route for numeric BSB identifiers, including the documented suffixed form.
+Its full-size JPEG IIIF image route uses bounded numeric page identifiers.
+Other endpoints, altered identifiers and all URL/request payloads remain scanned.
+
+The [[https://archive.org/developers/md-read.html][Internet Archive metadata API]] projects only the fixed HTTPS
+=archive.org/metadata/= prefix. Item identifiers and partial-read suffixes remain
+scanned, as do query/fragment values, headers and bodies. No individual item or
+arbitrary identifier receives an exemption.
+
 The network heuristic treats dots and hyphens as part of names, so =curl.py=,
 =curl-cffi= and =zotra-use-curl= do not activate it. Actual
 =curl=/=wget=/=nc=/=ncat= names, including interpreter subprocess arguments,

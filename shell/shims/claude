@@ -10,8 +10,12 @@
 # still comes from permissions.defaultMode. Set CLAUDE_NO_BYPASS_OPTION=1 to
 # leave the mode out of the cycle entirely.
 
-REAL=/opt/homebrew/bin/claude
-[ -x "$REAL" ] || REAL=/usr/local/bin/claude
+# Use the native installer's stable entry point, which follows its updates.
+REAL="$HOME/.local/bin/claude"
+if [ ! -x "$REAL" ]; then
+	printf '%s\n' "Claude Code native installation not found at $REAL" >&2
+	exit 127
+fi
 
 if [ -z "$CLAUDE_CODE_ALLOW_API_KEY_AUTH" ]; then
 	unset ANTHROPIC_API_KEY

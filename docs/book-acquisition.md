@@ -172,5 +172,8 @@ operation's provenance and verify the installed document through that workflow.
 | 6 | `unknown` | Search was incomplete and produced no candidates |
 
 All book commands print JSON. `get`, `collect` and their article API remain
-unchanged. The website's old `download-missing-pdfs.py` is now a read-only
-discovery/review adapter; its blind-download and direct-BibTeX modes are retired.
+unchanged. The website's `download-missing-pdfs.py` is a read-only
+discovery/review adapter; its heuristic acceptance and direct-BibTeX modes are
+retired. Scheduled acquisition uses `download-missing-pdfs-batch.py` to run
+agent review and the explicit Ebib attachment workflow. These checks do not
+require human approval of every file or prohibit unattended acquisition.

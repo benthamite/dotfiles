@@ -70,6 +70,7 @@ An additional unpacking helper discovered only during a download is refused if
 it would need installation and has no age-qualified observation. The guard does
 not silently exempt those helpers.
 
-The fast lane for Claude Code and Codex, additional entries in `fast-brew.txt`,
+Claude Code uses its native installer and updater, outside Homebrew.
+The fast lane for Codex, additional entries in `fast-brew.txt`,
 the macOS update lane, and the existing hold/exclusion files retain their roles.
 The delayed lane does not prevent applications from using their own updaters.

@@ -45,7 +45,7 @@ updates that should age before installation:
 
 | Mode | Behavior |
 |------+----------|
-| =fast-brew= | Upgrades the fast lane; its built-in defaults include =claude-code@latest= and =codex=. |
+| =fast-brew= | Upgrades the fast lane; its built-in default is =codex=. Claude Code uses its native updater. |
 | =scan= | Records currently available formula and cask updates and when each version first appeared. |
 | =delayed= | Upgrades eligible entries after the configured minimum age, subject to holds and exclusions. |
 | =fast= | Installs recommended macOS system updates manually; it is not scheduled. |

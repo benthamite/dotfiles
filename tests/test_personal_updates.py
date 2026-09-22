@@ -212,20 +212,20 @@ class PersonalUpdatesStateTest(unittest.TestCase):
 
         self.assertEqual(result, {"visual-studio-code", "brew_formula/python"})
 
-    def test_default_fast_brew_packages_reflect_existing_launchd_jobs(self):
+    def test_default_fast_brew_packages_exclude_native_claude_install(self):
         self.assertEqual(
             self.mod.DEFAULT_FAST_BREW_PACKAGES,
-            ("claude-code@latest", "codex"),
+            ("codex",),
         )
 
     def test_brew_upgrade_commands_targets_each_fast_lane_package(self):
-        result = self.mod.brew_upgrade_commands(["claude-code@latest", "codex"])
+        result = self.mod.brew_upgrade_commands(["codex", "extra-tool"])
 
         self.assertEqual(
             result,
             [
-                ["brew", "upgrade", "claude-code@latest"],
                 ["brew", "upgrade", "codex"],
+                ["brew", "upgrade", "extra-tool"],
             ],
         )
 
@@ -239,7 +239,7 @@ class PersonalUpdatesStateTest(unittest.TestCase):
 
         result = self.mod.load_fast_brew_packages(FakePath())
 
-        self.assertEqual(result, ["claude-code@latest", "codex", "extra-tool"])
+        self.assertEqual(result, ["codex", "extra-tool"])
 
     def test_brew_update_uses_update_reset_before_update(self):
         commands = []

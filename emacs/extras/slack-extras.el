@@ -78,6 +78,34 @@ Extends `ol/slack-store-link' with support for
   (interactive)
   (org-capture nil "S"))
 
+;;;;; ActivityWatch context
+
+(defvar activity-watch-data-functions)
+
+(defun slack-extras-activity-watch-data ()
+  "Return local workspace and channel metadata for a sampled Slack buffer.
+Read the actual room object, not the buffer name or inherited directory.
+Direct messages, group direct messages and mixed-room views do not provide
+channel metadata.  No messages or network requests are involved."
+  (when (and (bound-and-true-p slack-current-buffer)
+             (object-of-class-p slack-current-buffer 'slack-buffer))
+    (let* ((team (slack-buffer-team slack-current-buffer))
+           (room (and team
+                      (object-of-class-p slack-current-buffer 'slack-room-buffer)
+                      (slack-buffer-room slack-current-buffer))))
+      (when team
+        (append `((app . "Slack")
+                  (workspace . ,(slack-team-name team))
+                  (workspace_id . ,(oref team id)))
+                (when (and room (object-of-class-p room 'slack-group)
+                           (not (slack-mpim-p room))
+                           (not (oref room is-im)))
+                  `((channel . ,(slack-room-name room team))
+                    (channel_id . ,(oref room id)))))))))
+
+(with-eval-after-load 'activity-watch-mode
+  (add-hook 'activity-watch-data-functions #'slack-extras-activity-watch-data))
+
 ;;;;; Tab-bar notifications
 
 (defvar tab-bar-extras-slack-notifications-enabled t

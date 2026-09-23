@@ -21,6 +21,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 - Extended org link storage that adds ~slack-activity-feed-buffer-mode~ support to =ol-emacs-slack= ([[#h:link-storage][Link storage]]).
 - Commands to capture the message at point to personal or work inboxes ([[#h:capture][Capture]]).
+- Local ActivityWatch channel context for selected channel and thread buffers ([[#h:activity-watch][ActivityWatch context]]).
 - A tab-bar notification element showing Slack unreads and mentions ([[#h:tab-bar-notifications][Tab-bar notifications]]).
 
 The package depends on =slack= and =ol=.
@@ -48,6 +49,16 @@ The command ~slack-extras-personal-capture~ captures the Slack message at point 
 
 #+findex: slack-extras-work-capture
 The command ~slack-extras-work-capture~ captures the Slack message at point to the work inbox via ~org-capture~ template =S=. It is bound to =E= in ~slack-activity-feed-buffer-mode-map~, ~slack-thread-message-buffer-mode-map~ and ~slack-message-buffer-mode-map~.
+
+* ActivityWatch context
+:PROPERTIES:
+:CUSTOM_ID: h:activity-watch
+:END:
+
+#+findex: slack-extras-activity-watch-data
+When =activity-watch-mode= is loaded, ~slack-extras-activity-watch-data~ contributes channel and workspace names and IDs through ~activity-watch-data-functions~. It reads the room object already held by the sampled Slack buffer. This lets a time tracker use the selected channel rather than the buffer's unrelated inherited working directory.
+
+Public and private channels, including their threads, provide channel context. Direct messages, group direct messages and mixed-room views provide only workspace context, allowing work conversations to remain general work without inventing a project. The integration reads no messages and makes no network requests. ActivityWatch receives the metadata only when its watcher samples the selected buffer of a focused frame.
 
 * Tab-bar notifications
 :PROPERTIES:

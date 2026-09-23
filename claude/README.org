@@ -267,6 +267,13 @@ never counts as completion evidence.
 A pending status alongside a terminal previous owner can be a producer startup
 gap: the observer waits for the new owner instead of resuming the old token. Active
 requests still require the exact recorded source, runtime and status identity.
+Commit and rewrite hooks leave every status write to the locked helper and
+observe an existing request, so an amend cannot overwrite its first rebuild's
+status or force a second rebuild. Each hook keeps its own diagnostic log.
+For the legacy overwritten-pending state, the helper requires the original
+token to be terminal and the same runtime to have no queued or unknown package
+requests. It archives the rejected owner and replacement status identity, then
+requires a fresh rebuild; the overwritten completion never becomes evidence.
 
 The =end-to-end= skill separates disposable test fixtures from retained results,
 checks startup effects and runtime identity, and accepts automation that observes

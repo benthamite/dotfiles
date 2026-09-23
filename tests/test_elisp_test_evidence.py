@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import runpy
+import shlex
 import subprocess
 import tempfile
 import time
@@ -67,8 +68,11 @@ elif "elpaca-rebuild-context-v1" in args:
             replacement.replace(status)
         emit(dict(token=os.environ.get("FAKE_TOKEN", "token-1")))
     elif "elpaca-extras-build-reload-status" in args:
+        state_file = os.environ.get("FAKE_TOKEN_STATE_FILE")
+        state = (pathlib.Path(state_file).read_text().strip() if state_file
+                 else os.environ.get("FAKE_TOKEN_STATE", "finished"))
         emit(dict(runtime=runtime, package=os.environ.get("FAKE_TOKEN_PACKAGE", package),
-                  state=os.environ.get("FAKE_TOKEN_STATE", "finished")))
+                  state=state))
     else:
         emit(runtime)
 elif "unload-feature" in args:
@@ -1619,6 +1623,84 @@ class ElpacaRebuildWaitTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertNotIn("elpaca-extras-rebuild-and-reload", self.called.read_text())
         self.assertIn("elpaca-extras-build-reload-status", self.called.read_text())
+
+    def test_actual_amend_hooks_share_one_rebuild_and_preserve_owner_status(self):
+        sync_hook = Path("/Users/pablostafforini/git-dirs/dotfiles/hooks/sync-elpaca-clone.sh")
+        helper = self.dotfiles / "claude/bin/elpaca-rebuild-wait"
+        helper.parent.mkdir(parents=True)
+        helper.write_text(f"#!/bin/sh\nexec {shlex.quote(str(REBUILD_WAIT))} \"$@\"\n")
+        helper.chmod(0o755)
+        subprocess.run(["git", "-C", str(self.dotfiles), "add", str(helper)], check=True)
+        subprocess.run(["git", "-C", str(self.dotfiles), "commit", "-qm", "fixture helper"], check=True)
+        previous = run(["git", "-C", str(self.dotfiles), "rev-parse", "HEAD"]).stdout.strip()
+        subprocess.run(["git", "-C", str(self.mirror), "pull", "--ff-only", "-q"], check=True)
+        request_marker = self.root / "request-started"
+        state_file = self.root / "token-state"
+        state_file.write_text("queued")
+        self.write_emacsclient()
+        env = self.environment()
+        env.update(FAKE_REQUEST_MARKER=str(request_marker),
+                   FAKE_TOKEN_STATE_FILE=str(state_file),
+                   ELPACA_RELOAD_TIMEOUT_SECONDS="10",
+                   ELPACA_RELOAD_POLL_INTERVAL_SECONDS="0.01")
+        # The real dotfiles repository has an absolute external gitdir. Bind
+        # the fixture identically; the hook and helper themselves are unchanged.
+        common = (f"export GIT_DIR={shlex.quote(str(self.dotfiles / '.git'))}\n"
+                  f"exec sh {shlex.quote(str(sync_hook))} \"$@\"\n")
+        post_commit = self.dotfiles / ".git/hooks/post-commit"
+        post_commit.write_text("#!/bin/sh\n" + common)
+        post_commit.chmod(0o755)
+        post_rewrite = self.dotfiles / ".git/hooks/post-rewrite"
+        # Force the formerly failing ordering: the second native amend hook
+        # reaches the producer only after the first request owns its status.
+        post_rewrite.write_text(
+            "#!/bin/sh\n" + f"marker={shlex.quote(str(request_marker))}\n"
+            "attempt=0\nwhile [ ! -f \"$marker\" ]; do\n"
+            "  attempt=$((attempt + 1))\n  [ \"$attempt\" -lt 500 ] || exit 2\n"
+            "  sleep 0.01\ndone\n" + common)
+        post_rewrite.chmod(0o755)
+        (self.dotfiles / "emacs/extras/example.el").write_text("(provide 'amended-example)\n")
+        subprocess.run(["git", "-C", str(self.dotfiles), "add", "emacs/extras/example.el"], check=True)
+        amended = run(["git", "-C", str(self.dotfiles), "commit", "--amend", "--no-edit", "-q"], env=env)
+        self.assertEqual(amended.returncode, 0, amended.stderr)
+        status = self.status_path()
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            operation = json.loads((self.state / "owners/example.json").read_text())
+            if operation.get("state") == "pending" and operation.get("token"):
+                break
+            time.sleep(0.01)
+        self.assertEqual(operation["state"], "pending")
+        self.assertIn("token", operation)
+        loaded = runpy.run_path(str(REBUILD_WAIT), run_name="fixture_rebuild")
+        self.assertEqual(operation["status_identity"], loaded["status_identity"](status))
+        self.assertEqual(self.requests(), 1)
+        state_file.write_text("finished")
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            logs = list(status.parent.glob("example.hook.*.log"))
+            if len(logs) == 2 and all("finished:loaded" in path.read_text() for path in logs):
+                break
+            time.sleep(0.02)
+        self.assertEqual(len(logs), 2)
+        self.assertTrue(all("finished:loaded" in path.read_text() for path in logs))
+        receipt = json.loads(status.with_suffix(".status.receipt.json").read_text())
+        self.assertEqual(receipt["token"], operation["token"])
+        self.assertEqual(self.requests(), 1)
+        # A delayed repeat after completion must observe the same receipt too.
+        head = run(["git", "-C", str(self.dotfiles), "rev-parse", "HEAD"]).stdout.strip()
+        repeated = run([str(post_rewrite), "amend"], input=f"{previous} {head}\n",
+                       cwd=self.dotfiles, env=env)
+        self.assertEqual(repeated.returncode, 0, repeated.stderr)
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            logs = list(status.parent.glob("example.hook.*.log"))
+            if len(logs) == 3 and all("finished:loaded" in path.read_text() for path in logs):
+                break
+            time.sleep(0.02)
+        self.assertEqual(len(logs), 3)
+        self.assertTrue(all("finished:loaded" in path.read_text() for path in logs))
+        self.assertEqual(self.requests(), 1)
 
     def test_owner_request_waits_for_finished_and_persists_status(self):
         self.write_emacsclient()

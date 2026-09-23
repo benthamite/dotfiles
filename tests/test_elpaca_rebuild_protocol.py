@@ -12,6 +12,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -171,6 +172,68 @@ class ElpacaRebuildProtocolTests(unittest.TestCase):
         operation.update(state="pending", token="fixture-package-token-1")
         with self.assertRaises(self.helper.RebuildError):
             self.reconcile(initial, owner, status, operation)
+
+    def replaced_request(self, state="pending"):
+        initial = {"runtime": self.identity(), "source": "fixture", "active": "fixture"}
+        owner = self.root / "owners/fixture-package.json"
+        status = self.root / "fixture-package.status"
+        operation = self.helper.start_operation("fixture-package", initial, owner, status)
+        operation["state"] = state
+        self.helper.write_json(owner, operation)
+        self.helper.atomic_write(status, "pending:queued by post-commit\n")
+        return initial, owner, status, operation
+
+    def reconcile_replaced(self, initial, owner, status, operation):
+        with self.helper.owner_lock(self.root, "fixture-package"), \
+                patch.object(self.helper, "context", return_value=initial):
+            self.helper.reconcile_replaced_pending(
+                "fixture-package", self.source, False, initial, operation, owner, status)
+
+    def test_replaced_terminal_status_is_archived_then_fresh_build_is_certified(self):
+        for state in ("pending", "rejected"):
+            with self.subTest(state=state):
+                initial, owner, status, operation = self.replaced_request(state)
+                receipt = status.with_suffix(".receipt.json")
+                with patch.object(self.helper, "context", return_value=initial), \
+                        patch.object(self.helper, "request", return_value="fresh-token") as request:
+                    self.assertTrue(self.helper.observe_abandoned_operation(
+                        self.root, "fixture-package", self.source, False, initial,
+                        status, receipt, 0, time.monotonic() + 5))
+                request.assert_called_once_with("fixture-package", initial["runtime"])
+                self.assertEqual(self.helper.read_json(receipt)["token"], "fresh-token")
+                archives = list((self.root / "owners").glob("fixture-package.rejected.*.json"))
+                archived = self.helper.read_json(max(archives, key=lambda path: path.stat().st_mtime_ns))
+                self.assertEqual(archived["token"], operation["token"])
+                self.assertEqual(archived["state"], "rejected")
+                self.assertEqual(archived["reconciliation"]["terminal_state"], "finished")
+
+    def test_replaced_status_with_queued_token_is_not_reconciled(self):
+        initial, owner, status, operation = self.replaced_request()
+        self.status_state = "queued"
+        with self.assertRaisesRegex(self.helper.RebuildError, "nonterminal"):
+            self.reconcile_replaced(initial, owner, status, operation)
+        self.assertEqual(self.helper.read_json(owner), operation)
+        self.assertFalse(list((self.root / "owners").glob("*.rejected.*.json")))
+
+    def test_replaced_terminal_status_with_another_queued_request_is_not_reconciled(self):
+        initial, owner, status, operation = self.replaced_request()
+        self.queued = True
+        with self.assertRaisesRegex(self.helper.RebuildError, "not confirmed idle"):
+            self.reconcile_replaced(initial, owner, status, operation)
+        self.assertFalse(list((self.root / "owners").glob("*.rejected.*.json")))
+
+    def test_unknown_replacement_producer_is_not_reconciled(self):
+        initial, owner, status, operation = self.replaced_request()
+        self.helper.atomic_write(status, "pending:unknown producer\n")
+        with self.assertRaisesRegex(self.helper.RebuildError, "legacy owner conflict"):
+            self.reconcile_replaced(initial, owner, status, operation)
+
+    def test_replaced_status_from_changed_runtime_is_not_reconciled(self):
+        initial, owner, status, operation = self.replaced_request()
+        initial["runtime"]["pid"] += 1
+        with self.assertRaises(self.helper.RebuildError):
+            self.reconcile_replaced(initial, owner, status, operation)
+        self.assertFalse(list((self.root / "owners").glob("*.rejected.*.json")))
 
 
 if __name__ == "__main__":

@@ -117,18 +117,8 @@ def resume_token(operation, initial, status_file):
     return operation["token"]
 
 
-def reconcile_tokenless_request(package, source_repo, extras, initial,
-                                operation, operation_file, status_file):
-    """Archive a lost reply only after proving the package is idle live.
-
-    Call only under the exclusive package owner lock.  An abandoned request
-    never supplies completion evidence; the caller must request a fresh build.
-    """
-    if (operation.get("state") != "requesting" or operation.get("token")
-            or operation.get("context") != initial
-            or operation.get("status_file") != str(status_file)
-            or operation.get("status_identity") != status_identity(status_file)):
-        raise RebuildError("unresolved request does not match the current owner context")
+def confirmed_idle(package, expected_runtime):
+    """Return live proof that no request for PACKAGE can still be running."""
     value = emacs_json(f"""(let ((queued 0) (unknown 0))
       (maphash (lambda (_token status)
         (when (eq (plist-get status :package) '{package})
@@ -142,18 +132,70 @@ def reconcile_tokenless_request(package, source_repo, extras, initial,
         (state . ,(symbol-name (or (elpaca--status (elpaca-get '{package}))
                                   'missing)))))""")
     if (not isinstance(value, dict)
-            or validate_runtime(value.get("runtime"), package) != initial["runtime"]
+            or validate_runtime(value.get("runtime"), package) != expected_runtime
             or type(value.get("queued")) is not int
             or type(value.get("unknown")) is not int
             or value["queued"] != 0 or value["unknown"] != 0
             or value.get("state") not in ("finished", "failed")):
-        raise RebuildError("request reply was lost but the live package is not confirmed idle")
+        raise RebuildError("the live package is not confirmed idle")
+    return value
+
+
+def reconcile_tokenless_request(package, source_repo, extras, initial,
+                                operation, operation_file, status_file):
+    """Archive a lost reply only after proving the package is idle live.
+
+    Call only under the exclusive package owner lock.  An abandoned request
+    never supplies completion evidence; the caller must request a fresh build.
+    """
+    if (operation.get("state") != "requesting" or operation.get("token")
+            or operation.get("context") != initial
+            or operation.get("status_file") != str(status_file)
+            or operation.get("status_identity") != status_identity(status_file)):
+        raise RebuildError("unresolved request does not match the current owner context")
+    try:
+        value = confirmed_idle(package, initial["runtime"])
+    except RebuildError as error:
+        raise RebuildError(f"unresolved rebuild: {error}") from None
     if (context(package, source_repo, extras) != initial
             or operation.get("status_identity") != status_identity(status_file)):
         raise RebuildError("owner context changed during request reconciliation")
     archive = dict(operation, state="abandoned", reconciliation=value)
     write_json(operation_file.with_name(
         f"{package}.abandoned.{time.time_ns()}.json"), archive)
+
+
+def reconcile_replaced_pending(package, source_repo, extras, initial,
+                               operation, operation_file, status_file):
+    """Archive a terminal token whose status the legacy commit hook replaced.
+
+    Call only under the exclusive package owner lock, then request a new build.
+    This is recovery evidence, never a completion receipt.  In particular, a
+    missing token, active request, different context, or unknown producer must
+    remain unresolved.
+    """
+    replaced_identity = status_identity(status_file)
+    if (operation.get("state") not in ("pending", "rejected")
+            or operation.get("context") != initial
+            or operation.get("status_file") != str(status_file)
+            or operation.get("status_identity") == replaced_identity
+            or status_file.read_text() != "pending:queued by post-commit\n"):
+        raise RebuildError("unresolved rebuild: replaced pending status does not match the legacy owner conflict")
+    terminal = token_status(package, operation.get("token"), initial["runtime"])
+    if terminal not in ("finished", "failed"):
+        raise RebuildError("replaced status still has a nonterminal live token")
+    idle = confirmed_idle(package, initial["runtime"])
+    if (context(package, source_repo, extras) != initial
+            or status_identity(status_file) != replaced_identity):
+        raise RebuildError("owner context changed during replaced-status reconciliation")
+    archive = dict(operation, state="rejected", reconciliation={
+        "reason": "legacy hook replaced status before acquiring owner lock",
+        "replacement_status_identity": replaced_identity,
+        "replacement_status": "pending:queued by post-commit",
+        "terminal_state": terminal, "idle": idle,
+    })
+    write_json(operation_file.with_name(
+        f"{package}.rejected.{time.time_ns()}.json"), archive)
 
 
 def start_operation(package, initial, operation_file, status_file):
@@ -211,12 +253,19 @@ def observe_abandoned_operation(root, package, source_repo, extras, initial,
         operation = read_operation(operation_file)
         if operation is None:
             return False  # The post-commit producer may not have started yet.
-        if operation["state"] in ("finished", "failed", "rejected"):
+        if (operation["state"] in ("pending", "rejected")
+                and operation.get("context") == initial
+                and operation.get("status_file") == str(status_file)
+                and operation.get("status_identity") != status_identity(status_file)):
+            reconcile_replaced_pending(package, source_repo, extras, initial,
+                                       operation, operation_file, status_file)
+            operation = start_operation(package, initial, operation_file, status_file)
+        elif operation["state"] in ("finished", "failed", "rejected"):
             # A new producer publishes pending before replacing the package's
             # previous owner record. Terminal tokens cannot be resumed or used
             # as evidence for that pending status; wait for its actual owner.
             return False
-        if operation["state"] == "requesting" and not operation.get("token"):
+        elif operation["state"] == "requesting" and not operation.get("token"):
             reconcile_tokenless_request(package, source_repo, extras, initial,
                                         operation, operation_file, status_file)
             operation = start_operation(package, initial, operation_file, status_file)
@@ -412,6 +461,14 @@ def main():
             raise RebuildError("another owner published status; retry to observe that owner")
         operation_file = lock_dir / f"{package}.json"
         operation = read_operation(operation_file)
+        if (operation and operation.get("state") in ("pending", "rejected")
+                and operation.get("context") == initial
+                and operation.get("status_file") == str(status_file)
+                and read_status(status_file) == "pending"
+                and operation.get("status_identity") != status_identity(status_file)):
+            reconcile_replaced_pending(package, source_repo, extras, initial,
+                                       operation, operation_file, status_file)
+            operation = None
         if operation and operation.get("state") == "requesting" and not operation.get("token"):
             reconcile_tokenless_request(package, source_repo, extras, initial,
                                         operation, operation_file, status_file)

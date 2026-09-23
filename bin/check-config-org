@@ -3,16 +3,27 @@
 # balanced Lisp, and the profile-aware tangle must succeed in the
 # active Emacs session.  Used as the evidence check for config.org
 # commits (see claude/bin/elisp-check-evidence).
+# Pass --snapshot when that runner uses --staged: inputs then come from
+# its indexed checkout and generated files stay outside the active profile.
 
 set -euo pipefail
 
 root=$(cd -- "$(dirname -- "$0")/.." && pwd)
 config="$root/emacs/config.org"
+snapshot=false
+case "${1:-}" in
+  --snapshot) snapshot=true; shift ;;
+esac
+if [ "$#" -ne 0 ]; then
+  echo "Usage: check-config-org [--snapshot]" >&2
+  exit 2
+fi
+config_lisp=$(python3 -c 'import json, sys; print(json.dumps(sys.argv[1]))' "$config")
 
 emacs --batch -Q --eval "
 (progn
   (require 'org)
-  (find-file \"$config\")
+  (find-file $config_lisp)
   (let ((count 0) line)
     (org-babel-map-src-blocks nil
       (when (and (string= lang \"emacs-lisp\")
@@ -30,8 +41,71 @@ emacs --batch -Q --eval "
                           line (error-message-string err)))))))
     (message \"config.org: %d Elisp blocks parsed\" count)))"
 
-if emacsclient -e '(init-build-profile (file-name-directory user-init-file))' >/dev/null; then
-  echo "config.org: profile tangle completed"
+if [ "$snapshot" = true ]; then
+  # The evidence runner materializes indexed bytes beside this script. Keep
+  # the active builder, but give it isolated inputs and output paths.
+  form=$(cat <<EOF
+(let ((input $config_lisp)
+      (previous-buffers (buffer-list))
+      (temporary (make-temp-file "config-org-check-" t)))
+  (unwind-protect
+      (progn
+        (when (or init-post-build-hook org-babel-post-tangle-hook)
+          (user-error "Snapshot validation requires reviewed build hooks"))
+        (dolist (file (list input init-user-config-file))
+          (when file
+            (when-let ((buffer (find-buffer-visiting file)))
+              (with-current-buffer buffer
+                (when (or (buffer-modified-p)
+                          (not (verify-visited-file-modtime buffer)))
+                  (user-error "Configuration buffer has unsaved or stale data"))))))
+        (let ((paths-file-config input)
+              (init-user-config-file
+               (when init-user-config-file
+                 (let ((copy (expand-file-name "user-config.org" temporary)))
+                   (copy-file init-user-config-file copy)
+                   copy)))
+              (init-file-early-init init-file-early-init)
+              (init-file-user-init init-file-user-init)
+              (init-file-late-init init-file-late-init)
+              (init-file-paths-override init-file-paths-override)
+              (init-file-code-override init-file-code-override)
+              (init-file-excluded-packages init-file-excluded-packages)
+              (init-excluded-packages (copy-tree init-excluded-packages)))
+          (save-window-excursion
+            (init-build-profile temporary))
+          (unless (file-exists-p (expand-file-name "init.el" temporary))
+            (error "Snapshot profile build did not produce init.el"))
+          (dolist (file (directory-files temporary t "\\\\.el\\\\'"))
+            (with-temp-buffer
+              (emacs-lisp-mode)
+              (insert-file-contents file)
+              (goto-char (point-min))
+              (condition-case err
+                  (while (progn (forward-comment (buffer-size)) (not (eobp)))
+                    (read (current-buffer)))
+                (error (error "Snapshot output %s: %s"
+                              (file-name-nondirectory file)
+                              (error-message-string err)))))))
+        t)
+    (dolist (buffer (buffer-list))
+      (when-let ((file (buffer-file-name buffer)))
+        (when (and (not (memq buffer previous-buffers))
+                   (or (equal file input) (file-in-directory-p file temporary)))
+          (with-current-buffer buffer (set-buffer-modified-p nil))
+          (kill-buffer buffer))))
+    (delete-directory temporary t)))
+EOF
+)
+else
+  form="(progn
+    (unless (file-equal-p paths-file-config $config_lisp)
+      (error \"Checker input is not the running profile's configuration\"))
+    (init-build-profile (file-name-directory user-init-file))
+    t)"
+fi
+if emacsclient -e "$form" >/dev/null; then
+  echo "config.org: profile tangle completed (snapshot=$snapshot)"
 else
   echo "config.org: profile tangle failed" >&2
   exit 1

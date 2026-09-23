@@ -5,6 +5,11 @@ The closed Python document-edit classifier permits =update= statements on bound
 JSON data with one validated dictionary literal and no keyword arguments.
 A mutation alone does not satisfy its required document write.
 
+Literal Python-file writers have a separate closed shape: one literal path and
+source, an optional existence guard, mode =0600=, and path-only print. The
+generated source is parsed with both writer exemptions disabled. Credential
+references, unknown calls and additional writes remain denied.
+
 * Activation and boundaries
 
 Claude's global hook registration lives in the mutable

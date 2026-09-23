@@ -666,6 +666,13 @@ dictionary literal. A mutation alone does not satisfy the required file write.
 This exception requires one standalone direct Python command and one complete
 literal =functions.exec= wrapper with inert metadata. Unknown calls, dynamic
 expressions, multi-call wrappers and shell tails retain conservative scanning.
+A separate closed writer permits a literal =.py= path and literal source, with
+an optional existence guard, mode =0600= and path-only print. Its generated
+source must parse as Python and pass the same protected-reference checks;
+only actual =pass= statements receive the syntax exemption. Other outer
+strings/comments, source transformations, additional writes and execution
+calls retain the original denial. The writer uses the same standalone-command
+and complete-wrapper restrictions as document edits.
 Python varargs are not shell executable globs. Other secret checks still receive
 the original input. Literal =pyenv exec python -= stdin programs use
 the same Python classification, including its protected-reference checks; other

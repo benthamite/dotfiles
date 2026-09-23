@@ -69,6 +69,17 @@ def heredoc(body, prefix="python3 -", delimiter="'PY'", suffix="", strip=False):
     return f"{prefix} <<{'-' if strip else ''}{delimiter}\n{body}\n{name}{suffix}"
 
 
+def python_source_writer(source, path="fixture.py"):
+    return ("from pathlib import Path\n"
+            f"p = Path({path!r})\n"
+            "if p.exists():\n"
+            "    raise SystemExit('Script already exists; inspect before proceeding')\n"
+            f"code = {source!r}\n"
+            "p.write_text(code)\n"
+            "p.chmod(0o600)\n"
+            "print(p)")
+
+
 class PythonProjectionTests(unittest.TestCase):
     def test_paired_helpers_are_identical(self):
         self.assertEqual(HELPERS[0].read_bytes(), HELPERS[1].read_bytes())
@@ -124,6 +135,29 @@ class PythonProjectionTests(unittest.TestCase):
             command = heredoc("pass", suffix=tail)
             self.assertEqual(policy.project_command(command), heredoc("    ", suffix=tail))
 
+    def test_source_writer_preserves_multiline_utf8_offsets_and_residual_checks(self):
+        source = "class Árbol:\n    pass\n"
+        body = python_source_writer(source).replace("code", "código")
+        bodies = [body,
+                  body.replace(repr(source), "'''" + source + "'''"),
+                  body.replace(repr(source), "('class Árbol:\\n'\n '    pass\\n')")]
+        for current in bodies:
+            with self.subTest(body=current):
+                projected = policy._project_body(current, False, document_edit=True)
+                self.assertIsNotNone(projected)
+                self.assertEqual(projected.count("\n"), current.count("\n"))
+                self.assertNotIn("pass", projected)
+                self.assertIn("p.write_text(código)", projected)
+        for current in (
+                body.replace(repr(source), "('class Árbol:\\n' # security\n '    pass\\n')"),
+                body.replace("'Script already exists; inspect before proceeding'", "'pa' 'ss'"),
+                body.replace("'Script already exists; inspect before proceeding'", "'\\x70ass'"),
+                body + "\n# pass remains a protected reference",
+        ):
+            with self.subTest(body=current):
+                with self.assertRaises(policy.ProtectedPythonReference):
+                    policy.project_command(heredoc(current))
+
 
 class NativePythonHeredocGuardTests(unittest.TestCase):
     def setUp(self):
@@ -160,6 +194,65 @@ class NativePythonHeredocGuardTests(unittest.TestCase):
 
     def test_exact_original_denied_command_with_varargs_is_allowed(self):
         self.assert_hooks(ORIGINAL_DENIED_COMMAND, "allow")
+
+    def test_reported_python_source_writer_is_allowed_and_writes_only_fixture(self):
+        source = ("class ProbeStop(RuntimeError):\n    pass\n"
+                  "try:\n    raise ProbeStop\nexcept ProbeStop:\n    pass\n")
+        body = python_source_writer(source)
+        self.assert_hooks(heredoc(body), "allow")
+        result = subprocess.run(["python3", "-"], input=body, cwd=self.directory,
+                                text=True, capture_output=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        path = self.directory / "fixture.py"
+        self.assertEqual(path.read_text(), source)
+        self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+        # The fixture source is inspected, never imported or executed.
+        result = subprocess.run(["python3", "-"], input=body, cwd=self.directory,
+                                text=True, capture_output=True, timeout=15)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(path.read_text(), source)
+
+    def test_python_source_writer_keeps_protected_execution_and_unknown_shapes_denied(self):
+        for name in ("pass", "security", "pbpaste"):
+            for source in (f'import subprocess\nsubprocess.run(["{name}"])',
+                           f'import os\nos.system("{name}")',
+                           f'exec("import os; os.system(\\\"{name}\\\")")'):
+                self.assert_hooks(heredoc(python_source_writer(source)), "deny")
+        for source in ('import os\nos.system("pa" "ss")',
+                       'import os\nos.system("\\x70ass")',
+                       '# pass is a keyword\npass', 'if :\n    pass'):
+            self.assert_hooks(heredoc(python_source_writer(source)), "deny")
+        body = python_source_writer("pass\n")
+        for command in (heredoc(body + "\nexec(code)"),
+                        heredoc(body.replace("p.chmod(0o600)", "p.chmod(0o700)")),
+                        heredoc(body.replace("print(p)", "print(code)")),
+                        heredoc(body.replace("code =", "code = transform(") + ")"),
+                        heredoc(body.replace("p.write_text(code)", "code = code.replace('x', 'y')\np.write_text(code)")),
+                        heredoc(body.replace("p.write_text(code)", "p.write_text(code)\np.write_text(code)")),
+                        heredoc(body.replace("raise SystemExit('Script already exists; inspect before proceeding')",
+                                             "raise SystemExit('exists') from unknown()")),
+                        heredoc(body.replace("if p.exists():", "if p.exists(unknown()):")),
+                        heredoc(body.replace("code =", "Path =")),
+                        heredoc(body.replace("code", "print")),
+                        heredoc(body.replace("code", "SystemExit")),
+                        heredoc(body.replace("p.write_text(code)", "unused = 'pass'\np.write_text(code)")),
+                        heredoc(body.replace("p.write_text(code)", "p.write_text(code, encoding=unknown())")),
+                        heredoc(body, suffix="\npython3 fixture.py"),
+                        heredoc(body, prefix="env python3 -"),
+                        heredoc(body, delimiter="PY")):
+            self.assert_hooks(command, "deny")
+
+    def test_python_source_writer_composed_exec_keeps_original_denial(self):
+        command = heredoc(python_source_writer("class Fixture:\n    pass\n"))
+        program = ("await tools.exec_command(" + json.dumps({"cmd": command}) + ");\n"
+                   "await tools.exec_command({cmd: 'true'});")
+        result = subprocess.run(["/bin/bash", str(ROOT/"codex/hooks/block-secret-leak.sh")],
+            input=json.dumps({"tool_name": "functions.exec", "tool_input": {"input": program},
+                              "cwd": str(self.directory)}), text=True, capture_output=True,
+            timeout=15, cwd=self.directory)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        output = json.loads(result.stdout) if result.stdout.strip() else {}
+        self.assertEqual(output.get("hookSpecificOutput", {}).get("permissionDecision"), "deny")
 
     def test_consecutive_tangodb_python_heredocs_are_allowed(self):
         command = heredoc("print('fixture first')", prefix="PYENV_VERSION=3.11.9 pyenv exec python -")

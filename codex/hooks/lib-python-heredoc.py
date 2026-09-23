@@ -4,8 +4,9 @@
 First classify a closed, quoted Python stdin heredoc as Python: only genuine
 ast.Pass spans are exempt from protected-name scanning. A separate closed AST
 classifier permits text/JSON document edits in a standalone heredoc. Protected
-names in every other Python shape remain conservatively denied; shell quoting
-cannot erase a subprocess argument.
+names in generated Python are checked recursively only for a closed literal
+source-file writer. Every other Python shape remains conservatively denied;
+shell quoting cannot erase a subprocess argument.
 Then mask the validated body for the outer shell command-word/glob scan, where
 Python operators are not shell syntax. Everything outside that body is
 byte-preserved. Callers retain original input for all other secret checks.
@@ -21,9 +22,11 @@ No source is evaluated, imported, or executed.
 from __future__ import annotations
 
 import ast
+import io
 import re
 import shlex
 import sys
+import tokenize
 from pathlib import PurePosixPath
 
 PROTECTED = re.compile(r"(?<![A-Za-z0-9_-])(?:pass|security|pbpaste)(?![A-Za-z0-9_-])")
@@ -211,6 +214,85 @@ def _document_edit(tree: ast.Module) -> bool:
     return wrote
 
 
+def _python_source_writer(tree: ast.Module) -> ast.Constant | None:
+    """Return the sole source literal in a closed Python-file writer.
+
+    The outer program can create one literal .py path, refuse an existing file,
+    write literal source, restrict permissions to 0600 and print that path.
+    Generated source is classified separately, without either writer exemption.
+    """
+    statements = list(tree.body)
+    if len(statements) < 4:
+        return None
+    imported = statements.pop(0)
+    if (not isinstance(imported, ast.ImportFrom) or imported.module != "pathlib"
+            or imported.level or len(imported.names) != 1
+            or imported.names[0].name != "Path" or imported.names[0].asname):
+        return None
+
+    def assignment(statement):
+        if (isinstance(statement, ast.Assign) and len(statement.targets) == 1
+                and isinstance(statement.targets[0], ast.Name)
+                and statement.targets[0].id not in {"Path", "print", "SystemExit"}):
+            return statement.targets[0].id, statement.value
+        return None, None
+
+    def call(node, name, method=None):
+        if not isinstance(node, ast.Call) or node.keywords:
+            return False
+        target = node.func
+        if method is not None:
+            if not isinstance(target, ast.Attribute) or target.attr != method:
+                return False
+            target = target.value
+        return isinstance(target, ast.Name) and target.id == name
+
+    def expression(statement):
+        return statement.value if isinstance(statement, ast.Expr) else None
+
+    path_name, path = assignment(statements.pop(0))
+    if (not call(path, "Path") or len(path.args) != 1
+            or not isinstance(path.args[0], ast.Constant)
+            or not isinstance(path.args[0].value, str)
+            or PurePosixPath(path.args[0].value).suffix != ".py"):
+        return None
+    if statements and isinstance(statements[0], ast.If):
+        guard = statements.pop(0)
+        if (not call(guard.test, path_name, "exists") or guard.test.args
+                or guard.orelse or len(guard.body) != 1
+                or not isinstance(guard.body[0], ast.Raise)):
+            return None
+        raised = guard.body[0]
+        if (raised.cause is not None or not call(raised.exc, "SystemExit")
+                or len(raised.exc.args) != 1
+                or not isinstance(raised.exc.args[0], ast.Constant)
+                or not isinstance(raised.exc.args[0].value, str)):
+            return None
+    if len(statements) < 2:
+        return None
+    source_name, source = assignment(statements.pop(0))
+    if (source_name is None or source_name == path_name
+            or not isinstance(source, ast.Constant) or not isinstance(source.value, str)):
+        return None
+    written = expression(statements.pop(0))
+    if (not call(written, path_name, "write_text") or len(written.args) != 1
+            or not isinstance(written.args[0], ast.Name) or written.args[0].id != source_name):
+        return None
+    if statements and call(expression(statements[0]), path_name, "chmod"):
+        changed = expression(statements.pop(0))
+        if (len(changed.args) != 1 or not isinstance(changed.args[0], ast.Constant)
+                or type(changed.args[0].value) is not int or changed.args[0].value != 0o600):
+            return None
+    if statements and call(expression(statements[0]), "print"):
+        printed = expression(statements.pop(0))
+        if (len(printed.args) != 1 or not isinstance(printed.args[0], ast.Name)
+                or printed.args[0].id != path_name):
+            return None
+    if statements or _project_body(source.value, False) is None:
+        return None
+    return source
+
+
 def _project_body(body: str, strip_tabs: bool, *, document_edit: bool = False) -> str | None:
     original_lines = body.split("\n")
     runtime_lines = [line.lstrip("\t") if strip_tabs else line for line in original_lines]
@@ -222,6 +304,13 @@ def _project_body(body: str, strip_tabs: bool, *, document_edit: bool = False) -
 
     if document_edit and _document_edit(tree):
         return body
+    source_literal = _python_source_writer(tree) if document_edit else None
+    if source_literal is not None:
+        # An AST Constant can span adjacent literals and intervening comments.
+        # Mask its string bytes only after retaining every protected comment.
+        for token in tokenize.generate_tokens(io.StringIO(runtime_body).readline):
+            if token.type == tokenize.COMMENT and PROTECTED.search(token.string):
+                raise ProtectedPythonReference
 
     original_bytes = body.encode("utf-8")
     starts = []
@@ -230,15 +319,22 @@ def _project_body(body: str, strip_tabs: bool, *, document_edit: bool = False) -
         starts.append(position)
         position += len(line.encode("utf-8")) + 1
     spans = []
+
+    def original_offset(line_number, column):
+        line = line_number - 1
+        stripped = len(original_lines[line].encode("utf-8")) - len(runtime_lines[line].encode("utf-8"))
+        return starts[line] + stripped + column
+
     for node in ast.walk(tree):
+        if node is source_literal:
+            spans.append((original_offset(node.lineno, node.col_offset),
+                          original_offset(node.end_lineno, node.end_col_offset)))
+            continue
         if isinstance(node, ast.Pass):
             if node.end_lineno != node.lineno:
                 return None
-            line = node.lineno - 1
-            stripped = len(original_lines[line].encode("utf-8")) - len(
-                runtime_lines[line].encode("utf-8"))
-            start = starts[line] + stripped + node.col_offset
-            end = starts[line] + stripped + node.end_col_offset
+            start = original_offset(node.lineno, node.col_offset)
+            end = original_offset(node.end_lineno, node.end_col_offset)
             if original_bytes[start:end] != b"pass":
                 return None
             spans.append((start, end))
@@ -248,7 +344,7 @@ def _project_body(body: str, strip_tabs: bool, *, document_edit: bool = False) -
                 raise ProtectedPythonReference
     projected = bytearray(original_bytes)
     for start, end in spans:
-        projected[start:end] = b" " * (end - start)
+        projected[start:end] = bytes(10 if value == 10 else 32 for value in projected[start:end])
     result = projected.decode("utf-8")
     if PROTECTED.search(result):
         raise ProtectedPythonReference

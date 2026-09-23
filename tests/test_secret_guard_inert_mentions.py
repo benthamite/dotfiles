@@ -60,6 +60,7 @@ ALLOWED = {
     "cat man page copy": "cat docs/pass.md",
     "wrapped grep": "A=1 env FOO=2 grep pass file.txt",
     "python heredoc after sequence": "cd /tmp && python3 - <<'EOF'\nif True:\n    pass\nEOF",
+    "python literal source writer": "python3 - <<'EOF'\nfrom pathlib import Path\np = Path('fixture.py')\ncode = 'class Fixture:\\n    pass\\n'\np.write_text(code)\nEOF",
     "python heredoc after assignment": "S=1; python3 - <<'EOF'\nx = [1, 2][0] if 3 * 4 else None\nEOF",
     "python heredoc with expanded script argument": "S=/tmp/x; python3 - \"$S\" <<'EOF'\nimport sys\nprint(sys.argv[1])\nEOF",
     "python heredoc with url query and indexing": DRIVE_PROBE,

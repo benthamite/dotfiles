@@ -489,7 +489,7 @@
       "claude": "claude/hooks/lib-python-heredoc.py",
       "codex": "codex/hooks/lib-python-heredoc.py",
       "status": "paired-utility",
-      "note": "Identical classifier for quoted Python stdin heredocs in secret-output guards. Exempts parsed Pass statements and a closed AST language for text/JSON document edits in one standalone, directly invoked heredoc. Every import, binding, statement and call is validated; unknown Python shapes retain conservative string scanning. Only classified bodies leave outer-shell lexical scanning. Original input remains available to other secret checks; outside shell text is preserved. Assumes normal interpreter/stdlib resolution, not a Python sandbox."
+      "note": "Identical classifier for quoted Python stdin in secret-output guards. Exempts actual Pass statements and closed document or literal .py writers in one standalone direct heredoc. Generated source is rechecked with writer exemptions disabled; only its supplying Constant is exempted outside. All imports, bindings and calls must match; unknown shapes stay conservative. Only classified bodies leave shell scanning. Other secret checks retain original input. Assumes normal interpreter/stdlib resolution; not a sandbox."
     },
     {
       "name": "lib-inert-mentions.py",

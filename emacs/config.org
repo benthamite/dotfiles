@@ -15580,19 +15580,17 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
 
 /[[https://github.com/wakatime/wakatime-mode][activity-watch-mode]] is an Emacs watcher for [[https://activitywatch.net/][ActivityWatch]]./
 
+The package is locally pinned while the focused non-file buffer fix awaits
+upstream publication. The retained patch and draft are in
+[[file:patches/activity-watch-mode/README.org][the local contribution record]].
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package activity-watch-mode
+  :ensure (:pin t)
   :defer 30
   :config
   (require 'magit)
-  (global-activity-watch-mode)
-
-  (advice-add 'activity-watch--save :around
-              (lambda (fn &rest args)
-                "Ignore errors from activity-watch (e.g. missing directories)."
-                (condition-case nil
-                    (apply fn args)
-                  (error nil)))))
+  (global-activity-watch-mode))
 #+end_src
 
 ** =custom=

@@ -1,0 +1,384 @@
+From ba263122be1b9d5eb7659daee91c2546d432dd17 Mon Sep 17 00:00:00 2001
+From: Pablo Stafforini <pablo@stafforini.com>
+Date: Wed, 23 Sep 2026 19:03:35 -0300
+Subject: [PATCH] Track focused non-file buffers with working-directory context
+
+---
+ README.md                        |  26 ++++++
+ activity-watch-mode.el           |  94 +++++++++++++++------
+ test/activity-watch-mode-test.el | 138 +++++++++++++++++++++++++++++++
+ 3 files changed, 231 insertions(+), 27 deletions(-)
+ create mode 100644 test/activity-watch-mode-test.el
+
+diff --git a/README.md b/README.md
+index 5849f0b..1b75ff8 100644
+--- a/README.md
++++ b/README.md
+@@ -22,6 +22,23 @@ It optionally depends on [Projectile](https://github.com/bbatsov/projectile) and
+ 
+ Enable ActivityWatch for the current buffer by invoking `M-x activity-watch-mode`.  If you wish to activate it globally, run `M-x global-activity-watch-mode`.
+ 
++The watcher requires Emacs 27.1 or later. It records the selected buffer while
++its frame has known keyboard focus, including non-file buffers such as shells,
++chat clients and agent sessions. Background process buffers, unfocused frames,
++minibuffers and buffers with the minor mode disabled do not generate activity.
++Deferred mode initialization stays in the buffer that enabled it, so keyboard
++activity there resumes heartbeats after the idle timer stops them.
++
++Each heartbeat includes the buffer name (`buffer`) and its working directory
++(`cwd`), in addition to the existing `language`, `project`, `file` and `branch`
++fields. A non-file buffer has `file: "unknown"`. The directory is context, not
++proof of which project a chat conversation concerns. Project-name caching is
++invalidated when the working directory changes. Remote or missing directories
++retain their `cwd` but have unknown project and branch metadata.
++
++Buffer names and paths may contain private information. These fields are sent
++to the configured ActivityWatch server along with the existing file paths.
++
+ 
+ ## Configuration
+ 
+@@ -33,6 +50,15 @@ By default, the extension will try to infer the name of the project by consultin
+ 
+ The default project name used when a proper one cannot be determined is "unknown" and can be customized via `activity-watch-project-name-default`.
+ 
++### Additional Buffer Context
++
++Add functions to `activity-watch-data-functions` to attach application-specific
++metadata. Each function runs in the sampled buffer with no arguments and returns
++an alist of additional JSON fields, or nil when not applicable. For example, a
++chat integration can return its actual channel and workspace identities. Use
++new field names; do not duplicate the built-in fields. These functions must read
++local metadata and should not perform network requests.
++
+ ### Org-mode Integration (Optional)
+ 
+ You can automatically link your tracked time to specific Org-mode tasks. When an Org clock is active, the watcher can inject a specific property from the clocked task into the ActivityWatch payload.
+diff --git a/activity-watch-mode.el b/activity-watch-mode.el
+index 94de3e1..8a2a7c2 100644
+--- a/activity-watch-mode.el
++++ b/activity-watch-mode.el
+@@ -7,7 +7,7 @@
+ ;; Website: https://activitywatch.net
+ ;; Homepage: https://github.com/pauldub/activity-watch-mode
+ ;; Keywords: calendar, comm
+-;; Package-Requires: ((emacs "25") (request "0") (json "0") (cl-lib "0"))
++;; Package-Requires: ((emacs "27.1") (request "0") (json "0") (cl-lib "0"))
+ ;; Version: 1.6.0
+ 
+ ;; This program is free software; you can redistribute it and/or modify
+@@ -53,12 +53,15 @@
+ (defvar activity-watch-init-finished nil)
+ (defvar activity-watch-bucket-created nil)
+ (defvar activity-watch-last-file-path nil)
++(defvar activity-watch-last-context nil)
+ (defvar activity-watch-pulse-time 30)
+ (defvar activity-watch-max-heartbeat-per-sec 1)
+ (defvar activity-watch-last-heartbeat-time nil)
+ 
+ (defvar-local activity-watch-project-name nil
+   "Cached value of the project this file belongs to")
++(defvar-local activity-watch-project-directory nil
++  "Directory for which `activity-watch-project-name' was cached.")
+ 
+ (defgroup activity-watch nil
+   "Customizations for Activity-Watch"
+@@ -75,6 +78,14 @@
+   :type 'string
+   :group 'activity-watch)
+ 
++(defcustom activity-watch-data-functions nil
++  "Functions supplying additional heartbeat data for the selected buffer.
++Each function takes no arguments and returns an alist of JSON fields, or nil.
++Functions run in the buffer being sampled.  Use additional field names rather
++than replacing the built-in language, project, file, branch, buffer or cwd keys."
++  :type 'hook
++  :group 'activity-watch)
++
+ (defcustom activity-watch-org-clock-active nil
+   "When non-nil, inject the active Org clock property into the payload.
+ This allows ActivityWatch to track time spent on specific Org tasks."
+@@ -202,20 +213,25 @@ use it to find the project's name." docstring)
+     (file-name-nondirectory (directory-file-name (expand-file-name default-directory)))))
+ 
+ (defun activity-watch--get-project (&optional refresh)
+-  "Return the name of the project. If REFRESH is non-nil, disable cache.
+-How the name is discoved depends on which resolvers are \
+-specified in `activity-watch-project-name-resolvers'."
+-       (setq-local activity-watch-project-name
+-                   (or (and (not refresh)
+-                            activity-watch-project-name)
+-                       (cl-dolist (res activity-watch-project-name-resolvers)
+-                         (if-let ((fun (intern (concat "activity-watch-project-name-"
+-                                                       (symbol-name res))))
+-                                  ((fboundp fun))
+-                                  (proj (funcall fun))
+-                                  ((not (activity-watch--s-blank proj))))
+-                             (cl-return proj)))
+-                       activity-watch-project-name-default)))
++  "Return the project name, refreshing the cache when REFRESH is non-nil.
++A changed `default-directory' also invalidates the cache.  Only local existing
++directories are passed to `activity-watch-project-name-resolvers'."
++  (let ((directory (expand-file-name default-directory)))
++    (unless (and (not refresh) activity-watch-project-name
++                 (equal directory activity-watch-project-directory))
++      (setq-local activity-watch-project-directory directory)
++      (setq-local activity-watch-project-name
++                  (or (and (not (file-remote-p directory))
++                           (file-directory-p directory)
++                           (cl-dolist (res activity-watch-project-name-resolvers)
++                             (let ((fun (intern (concat "activity-watch-project-name-"
++                                                        (symbol-name res)))))
++                               (when (fboundp fun)
++                                 (let ((project (funcall fun)))
++                                   (unless (activity-watch--s-blank project)
++                                     (cl-return project)))))))
++                      activity-watch-project-name-default)))
++    activity-watch-project-name))
+ 
+ (defun activity-watch--s-blank (string)
+   "Return non-nil if the STRING is empty or nil.  Expects string."
+@@ -246,18 +262,23 @@ specified in `activity-watch-project-name-resolvers'."
+                          (setq activity-watch-bucket-created t))))))
+ 
+ (defun activity-watch--create-heartbeat (time)
+-  "Create heartbeart to sent to the activity watch server.
+-Argument TIME time at which the heartbeat was computed."
++  "Create a heartbeat for the current buffer at TIME."
+   (let ((project-name (activity-watch--get-project))
+         (file-name (buffer-file-name (current-buffer)))
+-        (git-branch (when (fboundp 'magit-get-current-branch) (magit-get-current-branch))))
++        (git-branch (when (and (not (file-remote-p default-directory))
++                               (file-directory-p default-directory)
++                               (fboundp 'magit-get-current-branch))
++                      (magit-get-current-branch))))
+    (activity-watch--inject-org-property
+     `((timestamp . ,(ert--format-time-iso8601 time))
+       (duration . 0)
+       (data . ((language . ,(if (activity-watch--s-blank (symbol-name major-mode)) "unknown" major-mode))
+                (project . ,project-name)
+                (file . ,(if (activity-watch--s-blank file-name) "unknown" file-name))
+-               (branch . ,(or git-branch "unknown"))))))))
++               (branch . ,(or git-branch "unknown"))
++               (buffer . ,(buffer-name))
++               (cwd . ,(expand-file-name default-directory))
++               ,@(apply #'append (mapcar #'funcall activity-watch-data-functions))))))))
+ 
+ (cl-defun activity-watch--send-heartbeat (heartbeat &key (on-error nil) (on-success nil))
+   "Send HEARTBEAT to activity watch server, calling ON-ERROR on error and ON-SUCCESS on success."
+@@ -275,14 +296,17 @@ Argument TIME time at which the heartbeat was computed."
+   (activity-watch--create-bucket)
+   (let ((now (float-time))
+         (current-file-path (buffer-file-name (current-buffer)))
++        (context (list (current-buffer) (buffer-name) buffer-file-name
++                       default-directory major-mode))
+         (time-delta (+ (or activity-watch-last-heartbeat-time 0) activity-watch-max-heartbeat-per-sec))
+         (coding-system-for-read
+          (unless (eq coding-system-for-read 'auto-save-coding)
+            coding-system-for-read)))
+-    (if (or (not (string= (or activity-watch-last-file-path "") current-file-path))
++    (if (or (not (equal activity-watch-last-context context))
+             (< time-delta now))
+         (progn
+           (setq activity-watch-last-file-path current-file-path)
++          (setq activity-watch-last-context context)
+           (setq activity-watch-last-heartbeat-time now)
+           (activity-watch--send-heartbeat (activity-watch--create-heartbeat (current-time))
+                                           :on-error (cl-function (lambda (&key data &allow-other-keys)
+@@ -290,11 +314,19 @@ Argument TIME time at which the heartbeat was computed."
+           )))))
+ 
+ (defun activity-watch--save ()
+-  "Send save notice to Activity-Watch."
++  "Sample the selected buffer of the focused frame for ActivityWatch.
++Timer callbacks and background buffer changes must not select the activity.
++Do not submit heartbeats for unfocused frames, minibuffers, disabled buffers
++or auto-save files.  A buffer need not visit a file."
+   (save-match-data
+-    (when (and (buffer-file-name (current-buffer))
+-               (not (auto-save-file-name-p (buffer-file-name (current-buffer)))))
+-      (activity-watch--call))))
++    (let ((window (selected-window)))
++      (when (and (eq (frame-focus-state (window-frame window)) t)
++                 (not (window-minibuffer-p window)))
++        (with-current-buffer (window-buffer window)
++          (when (and activity-watch-mode
++                     (not (and buffer-file-name
++                               (auto-save-file-name-p buffer-file-name))))
++            (activity-watch--call)))))))
+ 
+ (defun activity-watch--start-timer ()
+   "Start timers for heartbeat submission and idling."
+@@ -332,14 +364,22 @@ Argument TIME time at which the heartbeat was computed."
+ 
+ (defun activity-watch-turn-on (defer)
+   "Turn on Activity-Watch.
+-Argument DEFER Wether initialization should be deferred."
++When DEFER is non-nil, defer initialization in the current buffer."
+   (if defer
+-      (run-at-time "1 sec" nil #'activity-watch-turn-on nil)
++      (run-at-time "1 sec" nil #'activity-watch--turn-on-buffer (current-buffer))
+     (progn
+       (activity-watch--init)
+       (if activity-watch-init-finished
+           (progn (activity-watch--bind-hooks) (activity-watch--start-timer))
+-        (run-at-time "1 sec" nil #'activity-watch-turn-on nil)))))
++        (run-at-time "1 sec" nil #'activity-watch--turn-on-buffer
++                     (current-buffer))))))
++
++(defun activity-watch--turn-on-buffer (buffer)
++  "Finish deferred initialization in live, enabled BUFFER."
++  (when (buffer-live-p buffer)
++    (with-current-buffer buffer
++      (when activity-watch-mode
++        (activity-watch-turn-on nil)))))
+ 
+ (defun activity-watch-turn-off ()
+   "Turn off Activity-Watch."
+diff --git a/test/activity-watch-mode-test.el b/test/activity-watch-mode-test.el
+new file mode 100644
+index 0000000..0e0c6f9
+--- /dev/null
++++ b/test/activity-watch-mode-test.el
+@@ -0,0 +1,138 @@
++;;; activity-watch-mode-test.el --- Heartbeat context tests -*- lexical-binding: t; -*-
++
++(require 'ert)
++(require 'cl-lib)
++(require 'activity-watch-mode)
++
++(ert-deftest activity-watch-non-file-buffer-context ()
++  (with-temp-buffer
++    (let* ((default-directory temporary-file-directory)
++           (activity-watch-project-name-resolvers '(cwd))
++           (activity-watch-data-functions
++            (list (lambda () `((channel . ,(buffer-name))))))
++           (data (alist-get 'data (activity-watch--create-heartbeat
++                                  (current-time)))))
++      (should (equal (alist-get 'file data) "unknown"))
++      (should (equal (alist-get 'buffer data) (buffer-name)))
++      (should (equal (alist-get 'channel data) (buffer-name)))
++      (should (equal (alist-get 'cwd data)
++                     (expand-file-name default-directory))))))
++
++(ert-deftest activity-watch-selected-buffer-not-background-buffer ()
++  (let ((foreground (generate-new-buffer " *aw-foreground*"))
++        (background (generate-new-buffer " *aw-background*"))
++        sampled)
++    (unwind-protect
++        (save-window-excursion
++          (set-window-buffer (selected-window) foreground)
++          (with-current-buffer foreground
++            (setq-local activity-watch-mode t))
++          (cl-letf (((symbol-function 'frame-focus-state) (lambda (&optional _) t))
++                    ((symbol-function 'activity-watch--call)
++                     (lambda () (setq sampled (current-buffer)))))
++            (with-current-buffer background (activity-watch--save)))
++          (should (eq sampled foreground)))
++      (kill-buffer foreground)
++      (kill-buffer background))))
++
++(ert-deftest activity-watch-does-not-record-unfocused-or-disabled-buffer ()
++  (let ((foreground (generate-new-buffer " *aw-ineligible*"))
++        sampled)
++    (unwind-protect
++        (save-window-excursion
++          (set-window-buffer (selected-window) foreground)
++          (with-current-buffer foreground
++            (setq-local activity-watch-mode t))
++          (cl-letf (((symbol-function 'activity-watch--call)
++                     (lambda () (setq sampled t))))
++            (dolist (focus '(nil unknown))
++              (cl-letf (((symbol-function 'frame-focus-state)
++                         (lambda (&optional _) focus)))
++                (activity-watch--save)
++                (should-not sampled)))
++            (with-current-buffer foreground
++              (setq-local activity-watch-mode nil))
++            (cl-letf (((symbol-function 'frame-focus-state)
++                       (lambda (&optional _) t)))
++              (activity-watch--save)
++              (should-not sampled))))
++      (kill-buffer foreground))))
++
++(ert-deftest activity-watch-project-cache-follows-directory ()
++  (let ((root (make-temp-file "aw-projects-" t)))
++    (unwind-protect
++        (progn
++          (make-directory (expand-file-name "first" root))
++          (make-directory (expand-file-name "second" root))
++          (with-temp-buffer
++            (let ((activity-watch-project-name-resolvers '(cwd)))
++              (setq default-directory (expand-file-name "first/" root))
++              (should (equal (activity-watch--get-project) "first"))
++              (setq default-directory (expand-file-name "second/" root))
++              (should (equal (activity-watch--get-project) "second")))))
++      (delete-directory root t))))
++
++(ert-deftest activity-watch-missing-directory-retains-context ()
++  (with-temp-buffer
++    (let* ((default-directory "/this-aw-test-directory-does-not-exist/")
++           (activity-watch-project-name-resolvers '(cwd))
++           (data (alist-get 'data (activity-watch--create-heartbeat
++                                  (current-time)))))
++      (should (equal (alist-get 'cwd data) default-directory))
++      (should (equal (alist-get 'project data) "unknown"))
++      (should (equal (alist-get 'branch data) "unknown")))))
++
++(ert-deftest activity-watch-buffer-switch-bypasses-heartbeat-throttle ()
++  (let ((activity-watch-last-context nil)
++        (activity-watch-last-file-path nil)
++        (activity-watch-last-heartbeat-time nil)
++        (activity-watch-max-heartbeat-per-sec 60)
++        (activity-watch-project-name-resolvers nil)
++        (count 0))
++    (cl-letf (((symbol-function 'activity-watch--create-bucket) #'ignore)
++              ((symbol-function 'activity-watch--send-heartbeat)
++               (lambda (&rest _) (cl-incf count))))
++      (with-temp-buffer (activity-watch--call))
++      (with-temp-buffer (activity-watch--call))
++      (should (= count 2)))))
++
++(ert-deftest activity-watch-deferred-enable-installs-hooks-in-origin-buffer ()
++  (let ((foreground (generate-new-buffer " *aw-deferred*"))
++        (background (generate-new-buffer " *aw-other*"))
++        (activity-watch-init-started nil)
++        (activity-watch-init-finished nil)
++        callback arguments)
++    (unwind-protect
++        (cl-letf (((symbol-function 'run-at-time)
++                   (lambda (_time _repeat function &rest args)
++                     (setq callback function arguments args)))
++                  ((symbol-function 'activity-watch--start-timer) #'ignore))
++          (with-current-buffer foreground
++            (setq-local activity-watch-mode t)
++            (activity-watch-turn-on t))
++          (with-current-buffer background
++            (apply callback arguments)
++            (should-not (memq #'activity-watch--start-timer pre-command-hook)))
++          (with-current-buffer foreground
++            (should (memq #'activity-watch--start-timer pre-command-hook))
++            (apply callback arguments)
++            (should (= 1 (cl-count #'activity-watch--start-timer
++                                   pre-command-hook)))))
++      (kill-buffer foreground)
++      (kill-buffer background))))
++
++(ert-deftest activity-watch-deferred-enable-skips-disabled-or-killed-buffer ()
++  (let ((buffer (generate-new-buffer " *aw-cancelled*"))
++        initialized)
++    (unwind-protect
++        (cl-letf (((symbol-function 'activity-watch-turn-on)
++                   (lambda (&rest _) (setq initialized t))))
++          (activity-watch--turn-on-buffer buffer)
++          (should-not initialized)
++          (kill-buffer buffer)
++          (activity-watch--turn-on-buffer buffer)
++          (should-not initialized))
++      (when (buffer-live-p buffer) (kill-buffer buffer)))))
++
++(provide 'activity-watch-mode-test)
++;;; activity-watch-mode-test.el ends here
+-- 
+2.55.0
+

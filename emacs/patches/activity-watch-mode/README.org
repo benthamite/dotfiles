@@ -1,0 +1,55 @@
+#+title: ActivityWatch non-file buffer context
+
+* Local retention
+
+The managed =pauldub/activity-watch-mode= checkout is on the local branch
+=fix/non-file-buffer-context= at =ba263122be1b9d5eb7659daee91c2546d432dd17=.
+Its base is =1a950ad310cbd0511bb01744b20c7012a1c0b0e8=, the existing
+=origin/master=. No fork, push or pull request has been published.
+
+=emacs/config.org= sets =:pin t= on the existing package recipe. Elpaca skips
+pinned packages during updates, preserving the local branch. The adjacent
+=non-file-buffer-context.patch= preserves the contribution in the canonical
+dotfiles repository as well. A fresh installation from upstream alone does
+not contain this unpublished fix; apply the retained patch to its stated base
+before enabling tracking there.
+
+After an authorized upstream contribution is merged, verify the chosen upstream
+revision contains this behavior before removing the local pin. If publication
+is desired before merge, the proposed temporary fork branch is
+=benthamite/activity-watch-mode:fix/non-file-buffer-context=; its creation and
+publication still require authorization.
+
+* Pull request draft
+
+** Title
+
+Track selected non-file buffers without sampling background activity
+
+** Body
+
+The timer currently ignores buffers without a visited file and samples whichever
+buffer happens to be current when its callback runs. Agent and chat buffers
+therefore disappear from editor activity, and background callbacks can choose
+the wrong buffer.
+
+Sample only the selected window of a frame with known focus. Include its buffer
+name and working directory, retain the existing file fields, and invalidate the
+cached project when the directory changes. Skip project and Git lookup for
+remote or nonexistent directories. An optional data hook lets integrations add
+local application metadata without adding client dependencies to the watcher.
+Deferred mode initialization retains its originating buffer, so its input hook
+can restart capture after the idle timer stops it.
+
+The focus API requires Emacs 27.1; the package requirement and README document
+that change and the additional recorded metadata. Eight focused ERT tests cover
+non-file context, background-buffer rejection, unfocused and disabled buffers,
+directory cache invalidation, missing directories, rapid buffer changes and
+deferred initialization after buffer switches or teardown.
+
+Live acceptance in the existing Emacs session exercised native deferred
+initialization, the idle callback, pre-command restart, selected non-file
+capture and an unfocused-frame negative control. The native sender persisted
+the non-file context and the local Slack integration's channel and direct
+message metadata in a disposable ActivityWatch bucket. The fixture and bucket
+were removed. No real Slack channel was opened or contacted by these checks.

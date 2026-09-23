@@ -12851,7 +12851,8 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (zotra-default-entry-format "biblatex")
   (zotra-download-attachment-default-directory paths-dir-downloads)
   (zotra-backend 'zotra-server)
-  (zotra-local-server-directory (file-name-concat paths-dir-external-repos "zotra-server/")))
+  ;; launchd owns the server through bin/translation-server.
+  (zotra-local-server-directory nil))
 #+end_src
 
 ** =zotra-extras=

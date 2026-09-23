@@ -70,12 +70,23 @@ and its locator in the selected first edition, or retain the accurate indirect
 attribution and report that reference as unresolved. Never pretend an unchecked
 original supports a directly verified quotation.
 
-Prefer documented facts. Record an evidence-based date estimate and its basis
-explicitly; an undated webpage, journal-entry date, upload timestamp or Wayback
-capture does not establish publication date by itself. If no defensible
-publication year exists, leave the entry incomplete and the reference
-unconverted. Do not invent a year to generate a key. Treat publication updates
-separately from original publication.
+Prefer a documented original publication date. Treat publication updates,
+journal-entry dates and upload timestamps separately from original publication.
+
+For an undated webpage whose original publication date cannot be established,
+use the year of its earliest verified Wayback Machine capture as the publication
+year. Set `date` to `YYYY`, ignoring the capture's month and day. This is Pablo's
+accepted dating convention: it estimates publication from archival evidence,
+without claiming that the first capture was the actual publication date.
+Check the original/canonical URL and known equivalent URL variants, and verify
+that the earliest capture contains the same work rather than a redirect, error
+or unrelated page. Retain the archive timestamp, snapshot URL, URL variants
+checked and the estimated basis in the entry's review evidence. Keep the
+original source URL in `url` and the actual access date in `urldate`.
+
+If neither a documented publication date nor a qualifying Wayback capture is
+available, leave the entry incomplete and the reference unconverted. Do not
+invent a year to generate a key.
 
 ## Metadata acceptance
 

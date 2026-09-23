@@ -57,11 +57,21 @@ it is the first printing or copying a later edition's identifiers into the
 first-edition record. Revised or reset editions require their own identity and
 locator checks.
 
-The interpretation of "first edition" for a translation or substantially revised
-version has not yet been settled as a standing preference. Ask that material
-question when needed; continue independent unambiguous works. Do not infer an
-answer from an old migration specification. A directly specified edition in
-the current task takes precedence over the standing preference.
+Apply the first-edition rule to the work and version actually used. For a
+quotation from a translation, select the first publication of that translation,
+not a different earlier translation or an original-language edition that does
+not contain the quoted wording. Record the original work's publication date in
+`origdate` when established; do not invent an unidentified translator.
+
+Prefer the original version when its relevant content and locators can be
+verified. When the source actually used is a substantially revised work or an
+independently edited transcription, select the first publication of that
+version and preserve its earlier publication history. Distinguish manuscript
+composition, first facsimile publication and first publication of a scholarly
+transcription. Do not claim an earlier version lacks a passage merely because
+its full text could not be inspected. Record that evidence limit and the
+selected version explicitly instead of leaving an ordinary edition choice
+pending. A directly specified edition in the current task takes precedence.
 
 Preserve the evidence for the wording and locator actually quoted. A PDF viewer
 page, printed page, folio and chapter/section number are different locators.

@@ -329,6 +329,13 @@ rejected even when the server reports HTTP success. These failures preserve an
 existing destination and never install a newly rendered error page. Previously
 verified local HTML can be supplied explicitly with a @samp{file:} URL@.
 
+Residual UI cleanup requires dialog semantics or an out-of-flow element with an
+overlay identity; a large fixed or sticky reading pane is not itself an overlay.
+An unnamed dialog backdrop is removed only when it contains no other content.
+Cleanup refuses to remove a main/article element or a first-level heading
+outside a dialog. Such ambiguous matches fail the render and preserve an
+existing destination, rather than attaching a partial document.
+
 The function @code{eww-extras-run-callback} safely executes the optional
 callback function with the output file and Bib@TeX{} key as arguments.
 

@@ -164,24 +164,47 @@ async function findBlockingConsentUi(page) {
 function cleanupResidualUiExpression(consentWordsSource) {
   document.querySelector("style#autoconsent-prehide")?.remove();
   const consentWords = new RegExp(consentWordsSource, "i");
-  const viewportArea = Math.max(1, innerWidth * innerHeight);
+  const dialogSelector = '[role="dialog"], [aria-modal="true"]';
+  const documentRoots = [...document.querySelectorAll('main, article, [role="main"], h1')]
+    .filter((node) => !node.closest(dialogSelector));
+  const removals = new Set();
   for (const node of document.querySelectorAll("body *")) {
     const identity = `${node.id} ${node.className} ${node.getAttribute("aria-label") || ""} ${node.getAttribute("title") || ""}`;
     const text = `${identity} ${node.textContent || ""}`;
     if (consentWords.test(text)) continue;
     const style = getComputedStyle(node);
-    const rect = node.getBoundingClientRect();
-    const modal = node.getAttribute("role") === "dialog" || node.getAttribute("aria-modal") === "true";
+    const modal = node.matches(dialogSelector);
     // An in-flow article can be classed "newsletter-post"; only an element
     // taken out of the normal flow can overlay the content.
     const outOfFlow = new Set(["fixed", "sticky", "absolute"]).has(style.position);
     const genericOverlay = outOfFlow &&
       /\b(modal|overlay|backdrop|subscribe|newsletter)\b/i.test(identity);
-    const largePositioned = new Set(["fixed", "sticky"]).has(style.position) &&
-      rect.width * rect.height >= viewportArea * 0.15;
-    if (modal || genericOverlay || largePositioned) {
-      node.remove();
+    // Fixed and sticky reading panes can occupy the entire viewport. Geometry
+    // alone is not evidence of an overlay: require dialog semantics or a name.
+    if (modal || genericOverlay) removals.add(node);
+    if (modal) {
+      // A dialog can have an unnamed backdrop. Remove a positioned ancestor
+      // only when its sole content is the dialog, never a shared article shell.
+      let child = node;
+      for (let parent = child.parentElement;
+        parent && parent !== document.body;
+        child = parent, parent = parent.parentElement) {
+        if (![...parent.childNodes].every((sibling) => sibling === child ||
+          (sibling.nodeType === Node.TEXT_NODE && !sibling.textContent.trim()))) break;
+        if (new Set(["fixed", "sticky", "absolute"]).has(getComputedStyle(parent).position)) {
+          removals.add(parent);
+        }
+      }
     }
+  }
+  // Ambiguous overlay names must not turn the main article into a successful
+  // header-only attachment. Check before removing any candidate.
+  if ([...removals].some((node) => documentRoots.some((root) => node.contains(root)))) {
+    throw new Error("verification: overlay cleanup would remove document content");
+  }
+  for (const node of removals) node.remove();
+  if (window === window.top && !document.body?.innerText.trim()) {
+    throw new Error("verification: no document text remains after overlay cleanup");
   }
   document.documentElement.style.overflow = "auto";
   if (document.body) document.body.style.overflow = "auto";
@@ -191,8 +214,9 @@ async function cleanupResidualUi(page) {
   for (const frame of page.frames()) {
     try {
       await frame.evaluate(cleanupResidualUiExpression, consentWordsSource);
-    } catch (_) {
-      // A frame can detach while the page settles.
+    } catch (error) {
+      // A disappearing subframe is harmless; failed content verification is not.
+      if (!frame.isDetached()) throw error;
     }
   }
 }

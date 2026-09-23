@@ -83,7 +83,33 @@ const pages = {
     <article>Important article body</article>
     <section id="newsletters">Newsletter recommendations</section>
   </main></body></html>`,
+  "/ambiguous-overlay": `<!doctype html><html><body><header>Site navigation</header>
+    <div class="content-overlay" style="position:fixed;inset:0">
+      <article><h1>Actual article</h1><p>The source must not disappear.</p></article>
+    </div>
+  </body></html>`,
+  "/shared-dialog-container": `<!doctype html><html><body>
+    <div style="position:fixed;inset:0">
+      <main><h1>Shared article shell</h1><p>Keep the article beside the dialog.</p></main>
+      <div role="dialog"><h1>Subscribe</h1><button>Close</button></div>
+    </div>
+  </body></html>`,
+  "/empty-frame": `<!doctype html><html><body>
+    <main>Article with an empty optional frame</main><iframe src="about:blank"></iframe>
+  </body></html>`,
 };
+
+for (const position of ["fixed", "sticky"]) {
+  pages[`/${position}-reader`] = `<!doctype html><html><body>
+    <header>Site navigation</header>
+    <div class="reading-pane" style="position:${position};top:0;width:100%;min-height:700px">
+      <div><h1>A complete document</h1>
+        <p>The opening paragraph belongs to the source.</p>
+        <p>The final paragraph must survive cleanup.</p>
+      </div>
+    </div>
+  </body></html>`;
+}
 
 function startFixtureServer() {
   const server = http.createServer((request, response) => {

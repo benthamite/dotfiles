@@ -271,6 +271,7 @@ test("a subscribe dialog citing a privacy policy is not a consent blocker", asyn
   assert.match(html, /newsletter-post post">Subscribe fixture content/);
   assert.doesNotMatch(html, /Privacy Policy/);
   assert.doesNotMatch(html, /Discover more/);
+  assert.doesNotMatch(html, /position:fixed/);
 });
 
 test("consent wording ignores privacy policy citations", () => {
@@ -382,6 +383,45 @@ test("newsletter text does not remove an ordinary content ancestor", async (t) =
     "module-root": process.env.EWW_EXTRAS_RENDERER_MODULE_ROOT,
   });
   assert.match(await fs.readFile(output, "utf8"), /Important article body/);
+});
+
+for (const position of ["fixed", "sticky"]) {
+  test(`a large ${position} reading pane survives overlay cleanup`, async (t) => {
+    const fixture = await browserFixture(t, "html");
+    if (!fixture) return;
+    await fixture.render(`/${position}-reader`);
+    const html = await fs.readFile(fixture.output, "utf8");
+    assert.match(html, /<h1>A complete document<\/h1>/);
+    assert.match(html, /<p>The final paragraph must survive cleanup\.<\/p>/);
+  });
+}
+
+for (const type of ["html", "pdf"]) {
+  test(`ambiguous overlay cleanup cannot replace ${type} with a partial document`, async (t) => {
+    const fixture = await browserFixture(t, type);
+    if (!fixture) return;
+    await fs.writeFile(fixture.output, "existing destination");
+    await assert.rejects(fixture.render("/ambiguous-overlay"),
+      /verification: overlay cleanup would remove document content/);
+    assert.equal(await fs.readFile(fixture.output, "utf8"), "existing destination");
+    assert.deepEqual(await fs.readdir(fixture.profiles), []);
+  });
+}
+
+test("dialog cleanup preserves its shared article container", async (t) => {
+  const fixture = await browserFixture(t, "html");
+  if (!fixture) return;
+  await fixture.render("/shared-dialog-container");
+  const html = await fs.readFile(fixture.output, "utf8");
+  assert.match(html, /Keep the article beside the dialog/);
+  assert.doesNotMatch(html, /<h1>Subscribe<\/h1>/);
+});
+
+test("an empty optional frame does not fail main-document verification", async (t) => {
+  const fixture = await browserFixture(t, "html");
+  if (!fixture) return;
+  await fixture.render("/empty-frame");
+  assert.match(await fs.readFile(fixture.output, "utf8"), /Article with an empty optional frame/);
 });
 
 for (const type of ["html", "pdf"]) {

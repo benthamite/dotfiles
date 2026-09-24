@@ -99,6 +99,38 @@ for a content-change claim (they were confirmed on an old release); the
 export-and-byte-compare method above is version-independent and is the
 reliable path regardless.
 
+## Reading comments and suggestions
+
+"Process the comments on a doc" means every feedback thread in the doc's
+comment panel: plain comments *and* suggestions, with their replies. Read them
+through the Google APIs via `gdoc`, never by assuming one command covers both.
+
+- `gdoc comments --all DOC` calls the Drive API (`comments.list`). It returns
+  plain comments and their replies only. It does **not** return suggestion
+  threads or replies posted on suggestions. On 2026-09-24 it returned 1 thread
+  for a doc whose panel held 11; the rest were suggestions with replies.
+- `gdoc structure --suggestions-view-mode suggestions_inline DOC` calls the
+  Docs API (`documents.get`) and returns pending suggestions as
+  `suggestedInsertionIds` / `suggestedDeletionIds` on the affected text. It
+  does not return who made the suggestion or any replies.
+- Suggestion threads with authors and replies come only from the Docs API's
+  Developer Preview comments view: `documents.get` with
+  `commentsViewMode=COMMENTS_VIEW_MODE_INCLUDED`, `includeTabsContent=true`
+  and `suggestionsViewMode=SUGGESTIONS_INLINE`. It works only for an OAuth
+  client whose Cloud project is enrolled in the Workspace Developer Preview.
+  `gdoc`'s client project (`573541886075`) is not enrolled, so Google rejects
+  the request with `Unknown name "comments_view_mode"`. `gdoc` uses this field
+  only as a probe before suggest-mode writes and has no read command for it.
+- Until that project is enrolled, the full thread list is not available through
+  any API. Fallback (explicitly labeled): read the doc's comment panel in
+  Chrome ("Show all comments"; the list renders only as it is scrolled, so
+  scroll through it, expanding "N more replies"). State in the result that the
+  API path was unavailable.
+- A suggestion survives as a thread even after its anchored text is deleted
+  ("Original content deleted"), so a doc whose body is overwritten by
+  automation keeps the threads but loses the text they were attached to.
+  Summarize each thread's proposed change from the thread itself.
+
 ## Auth
 
 `gmail.py`, `sheets.py`, `bin/gmail-maildir-sync`, and the shared `claude/bin/_gworkspace_auth.py` helper resolve credentials as described below. For the human accounts, the OAuth client (id and secret) is shared and only the refresh token differs per account. These variables are not globally exported from `.zshenv-secrets`; the wrappers accept explicit env vars for one-off overrides, but normally resolve values from the stores below:

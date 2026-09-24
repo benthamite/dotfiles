@@ -11,7 +11,7 @@ browser automation; each already carries the right account and auth.
 | Google Sheets | `claude/bin/sheets.py` |
 | Slack | `claude/bin/slack.py` |
 | Google Calendar | `gcalcli-epoch` (canonical Epoch OAuth grant; shared personal calendars) |
-| Google Docs / Drive | `gdoc` |
+| Google Docs / Drive | `gdoc` (comments vs. suggestions: see `google-services.md`, "Reading comments and suggestions") |
 | GitHub | `gh` |
 
 Relative paths are under the dotfiles root, `~/My Drive/dotfiles/`. For

@@ -118,8 +118,10 @@ through the Google APIs via `gdoc`, never by assuming one command covers both.
   `commentsViewMode=COMMENTS_VIEW_MODE_INCLUDED`, `includeTabsContent=true`
   and `suggestionsViewMode=SUGGESTIONS_INLINE`. It works only for an OAuth
   client whose Cloud project is enrolled in the Workspace Developer Preview.
-  `gdoc`'s client project (`573541886075`) is not enrolled, so Google rejects
-  the request with `Unknown name "comments_view_mode"`. `gdoc` uses this field
+  `gdoc`'s client project (`573541886075`) was not enrolled on 2026-09-24,
+  so Google rejected the request with `Unknown name "comments_view_mode"`;
+  Pablo applied for enrollment that day (access email `pablo@epoch.ai`).
+  Once confirmed, the same request should return the threads. `gdoc` uses this field
   only as a probe before suggest-mode writes and has no read command for it.
 - Until that project is enrolled, the full thread list is not available through
   any API. Fallback (explicitly labeled): read the doc's comment panel in

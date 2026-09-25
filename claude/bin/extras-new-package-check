@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Clean check for a new dotfiles extras package that Elpaca does not know yet.
+# batch-test.sh resolves packages through the live Elpaca registry, which
+# learns about a new extras package only after its first commit; this check
+# covers that first commit.  It byte-compiles emacs/extras/PACKAGE.el in
+# `emacs -Q' with warnings as errors and runs emacs/extras/test/PACKAGE-test.el
+# when present.  Only packages whose dependencies ship with Emacs qualify.
+# Usage: extras-new-package-check PACKAGE
+set -euo pipefail
+if [ "$#" -ne 1 ]; then
+  echo "Usage: extras-new-package-check PACKAGE" >&2
+  exit 2
+fi
+package=$1
+case "$package" in
+  *[!A-Za-z0-9+_.-]* | "") echo "Invalid package identifier" >&2; exit 2 ;;
+esac
+root=$(cd -- "$(dirname -- "$0")/../.." && pwd -P)
+source_file="$root/emacs/extras/$package.el"
+test_file="$root/emacs/extras/test/$package-test.el"
+[ -f "$source_file" ] || { echo "No such extras file: $source_file" >&2; exit 1; }
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+cp "$source_file" "$work/"
+emacs -Q --batch --eval '(setq byte-compile-error-on-warn t)' \
+  -f batch-byte-compile "$work/$package.el"
+if [ -f "$test_file" ]; then
+  emacs -Q --batch -L "$work" -l ert -l "$test_file" -f ert-run-tests-batch-and-exit
+fi

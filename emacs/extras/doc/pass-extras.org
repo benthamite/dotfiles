@@ -23,7 +23,6 @@ This manual describes the features and customization options for the Emacs Lisp 
 - Generating passwords of various types and copying them to the clipboard with automatic clearing ([[#h:generating-passwords][Generating passwords]]).
 - Storing external key files into the password store and exporting entries back out ([[#h:key-management][Key management]]).
 - Unlocking =git-crypt= repositories using keys stored in =pass= ([[#h:git-crypt-integration][Git-crypt integration]]).
-- Reminding you to touch a YubiKey when a decryption waits for one ([[#h:touch-reminder][YubiKey touch reminder]]).
 
 The package depends on =pass= and =password-generator=.
 
@@ -78,15 +77,6 @@ The reverse operation is provided by ~pass-extras-export-key~, which prompts for
 
 #+findex: pass-extras-git-crypt-unlock
 If you store =git-crypt= symmetric keys in =pass=, the command ~pass-extras-git-crypt-unlock~ can unlock a repository without ever writing the key to disk. It prompts for a =pass= entry containing the key (with completion) and runs =git-crypt unlock= with process substitution so the key is fed directly from =pass= into =git-crypt=. The command operates in the current ~default-directory~ unless an optional REPO argument is provided programmatically. It reports success or failure in the echo area.
-
-* YubiKey touch reminder
-:PROPERTIES:
-:CUSTOM_ID: h:touch-reminder
-:END:
-
-#+vindex: pass-extras-touch-reminder
-#+findex: pass-extras-remind-touch
-When the password store's decryption key lives on a YubiKey that requires a touch, a decryption waits silently until the key is touched and fails after about fifteen seconds. To make that wait visible, =pass-extras= displays ~pass-extras-touch-reminder~ in the echo area whenever a decrypting =pass= subcommand (=show=, =edit= or =otp=) starts, and whenever =auth-source-pass= reads an entry. Customize ~pass-extras-touch-reminder~ to change the text.
 
 * Indices
 :PROPERTIES:

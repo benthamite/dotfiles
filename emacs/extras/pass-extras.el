@@ -31,41 +31,7 @@
 (require 'pass)
 (require 'password-generator)
 
-;;;; User options
-
-(defgroup pass-extras ()
-  "Extensions for `pass'."
-  :group 'pass)
-
-(defcustom pass-extras-touch-reminder
-  "Touch the YubiKey if it blinks (type the YubiKey PIN first if a dialog asks)"
-  "Message shown when a pass decryption may be waiting for a YubiKey touch."
-  :type 'string
-  :group 'pass-extras)
-
-;;;; Variables
-
-(defconst pass-extras--decrypting-commands '("show" "edit" "otp")
-  "Pass subcommands that decrypt an entry.")
-
 ;;;; Functions
-
-;;;;; Touch reminder
-
-(defun pass-extras-remind-touch (&rest _)
-  "Tell the user that a decryption may be waiting for a YubiKey touch."
-  (message "%s" pass-extras-touch-reminder))
-
-(defun pass-extras--remind-touch-for-command (command &rest _)
-  "Remind the user to touch the YubiKey when COMMAND decrypts an entry."
-  (when (member command pass-extras--decrypting-commands)
-    (pass-extras-remind-touch)))
-
-(advice-add 'password-store--run :before #'pass-extras--remind-touch-for-command)
-(advice-add 'password-store--run-async :before #'pass-extras--remind-touch-for-command)
-(advice-add 'auth-source-pass--read-entry :before #'pass-extras-remind-touch)
-
-;;;;; Entries
 
 (defun pass-extras-open-at-point ()
   "Open the URL of the entry at point and its password to the clipboard."

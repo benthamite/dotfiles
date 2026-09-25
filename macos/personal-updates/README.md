@@ -74,3 +74,11 @@ Claude Code uses its native installer and updater, outside Homebrew.
 The fast lane for Codex, additional entries in `fast-brew.txt`,
 the macOS update lane, and the existing hold/exclusion files retain their roles.
 The delayed lane does not prevent applications from using their own updaters.
+
+Codex updates do not wait for running sessions to exit. Normal shell and Emacs
+launches use `shell/shims/codex`, which runs a retained immutable copy of the
+installed Homebrew package. Existing sessions keep their signed executable and
+resources when Homebrew removes its predecessor; new sessions select the new
+release. The Chrome helper's `CODEX_CLI_PATH` uses the same launcher. Direct
+launches through `/opt/homebrew/bin/codex` bypass this protection. See
+`shell/README.org` for runtime storage and retention details.

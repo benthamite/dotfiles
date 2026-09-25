@@ -123,7 +123,9 @@ directly through Codex. No tracked skill or helper command mediates a
 CLI/Emacs-to-App browser handoff.
 
 The Chrome MCP helper currently lives in =Codex.app=, but its
-=CODEX_CLI_PATH= points to the current Homebrew CLI. The older bundled CLI
+=CODEX_CLI_PATH= points to =shell/shims/codex=. This launches the current
+Homebrew release from a retained immutable runtime, so upgrading Homebrew does
+not delete the signed executable used by a running session. The older bundled CLI
 cannot parse current agent settings; its configuration-read failure is
 misreported by the browser as an enterprise network-policy denial. Keep the
 configuration reader current without disabling browser permission checks.

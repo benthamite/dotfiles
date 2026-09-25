@@ -1,0 +1,4 @@
+#!/bin/sh
+# Keep running Codex executables independent of Homebrew's replacement/cleanup.
+SHIM_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd) || exit 1
+exec /usr/bin/python3 "$SHIM_DIR/../../bin/codex-runtime" "$@"

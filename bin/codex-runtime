@@ -1,0 +1,106 @@
+#!/usr/bin/python3
+"""Launch a verified, retained snapshot of the currently installed Codex package."""
+
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import stat
+import sys
+import tempfile
+
+
+class RuntimeErrorDetected(Exception):
+    pass
+
+
+def installed_package():
+    """Never search PATH: its first Codex entry is this launcher's shim."""
+    for candidate in (Path('/opt/homebrew/bin/codex'), Path('/usr/local/bin/codex')):
+        if candidate.is_symlink() or candidate.exists():
+            binary = candidate.resolve(strict=True)
+            root = binary.parent.parent
+            manifest = json.loads((root / 'codex-package.json').read_text())
+            if (manifest.get('layoutVersion') != 1
+                    or manifest.get('entrypoint') != 'bin/codex'
+                    or binary != root / 'bin/codex'):
+                raise RuntimeErrorDetected('Unsupported Homebrew Codex package layout')
+            return root
+    raise RuntimeErrorDetected('No Homebrew Codex installation found')
+
+
+def inventory(root):
+    """Hash bytes and executable permissions; reject links and changing files."""
+    result = {}
+    for path in sorted(root.rglob('*')):
+        before = path.lstat()
+        if stat.S_ISDIR(before.st_mode):
+            continue
+        if not stat.S_ISREG(before.st_mode):
+            raise RuntimeErrorDetected('Unsupported nonregular package file: ' + str(path))
+        digest = hashlib.sha256()
+        with path.open('rb') as stream:
+            opened = os.fstat(stream.fileno())
+            if (opened.st_dev, opened.st_ino) != (before.st_dev, before.st_ino):
+                raise RuntimeErrorDetected('Codex package changed while opening ' + str(path))
+            for block in iter(lambda: stream.read(1024 * 1024), b''):
+                digest.update(block)
+            after = os.fstat(stream.fileno())
+        if (before.st_size, before.st_mtime_ns, before.st_ctime_ns) != (
+                after.st_size, after.st_mtime_ns, after.st_ctime_ns):
+            raise RuntimeErrorDetected('Codex package changed while reading ' + str(path))
+        result[path.relative_to(root).as_posix()] = [digest.hexdigest(), before.st_mode & 0o111]
+    for required in ('codex-package.json', 'bin/codex', 'bin/codex-code-mode-host'):
+        if required not in result:
+            raise RuntimeErrorDetected('Incomplete Codex package: missing ' + required)
+    if not all(result[name][1] for name in ('bin/codex', 'bin/codex-code-mode-host')):
+        raise RuntimeErrorDetected('Codex package executables are not executable')
+    return result
+
+
+def snapshot(source, store):
+    expected = inventory(source)
+    identity = hashlib.sha256(json.dumps(expected, sort_keys=True).encode()).hexdigest()
+    store.mkdir(mode=0o700, parents=True, exist_ok=True)
+    destination = store / identity
+    # Serialize only validation/publication, never the launched session.
+    with (store / '.publish.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if destination.exists():
+            if inventory(destination) != expected:
+                raise RuntimeErrorDetected('Retained Codex runtime failed integrity check: ' + str(destination))
+            return destination / 'bin/codex'
+        stage = Path(tempfile.mkdtemp(prefix='.stage-', dir=store))
+        try:
+            shutil.copytree(source, stage, dirs_exist_ok=True, symlinks=True)
+            if inventory(stage) != expected or inventory(source) != expected:
+                raise RuntimeErrorDetected('Codex updated during snapshot creation; retry after the update finishes')
+            # Restrict accidental edits. Never mutate or garbage-collect a published runtime.
+            for path in stage.rglob('*'):
+                path.chmod(0o500 if path.is_dir() else 0o400 | expected[path.relative_to(stage).as_posix()][1])
+            stage.chmod(0o500)
+            stage.rename(destination)
+            return destination / 'bin/codex'
+        finally:
+            if stage.exists():
+                # Only our unpublished temporary directory is removable.
+                stage.chmod(0o700)
+                for path in stage.rglob('*'):
+                    if not path.is_symlink() and path.is_dir():
+                        path.chmod(0o700)
+                shutil.rmtree(stage)
+
+
+def main():
+    try:
+        executable = snapshot(installed_package(), Path.home() / '.local/share/codex-runtimes')
+    except (OSError, ValueError, RuntimeErrorDetected) as error:
+        print('codex-runtime: ' + str(error), file=sys.stderr)
+        return 1
+    os.execv(str(executable), [str(executable), *sys.argv[1:]])
+
+
+if __name__ == '__main__':
+    sys.exit(main())

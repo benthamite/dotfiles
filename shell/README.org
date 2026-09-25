@@ -63,6 +63,7 @@ into =~/bin=:
 | Shim | Contract |
 |------+----------|
 | =claude= | Selects the allowed Claude authentication route and strips unintended ambient Anthropic credentials. |
+| =codex= | Launches a retained copy of the current Homebrew package so upgrades cannot remove a running session's executable or helpers. |
 | =emacsclient= | Finds the real Darwin temporary-directory socket when a caller overrides =$TMPDIR=. |
 | =op= | Routes read-only Automations-vault work to =op-automations= and supported desktop-vault work to =op-desktop=. |
 
@@ -70,6 +71,32 @@ The =dotfiles_prefer_shims= function moves this directory back to the front
 after Homebrew, nvm, pyenv, or a captured agent environment changes =PATH=.
 =.zshenv= also defines an =op= function because functions survive agent shell
 snapshots that may put Homebrew ahead of the shim directory.
+
+** Codex runtime retention
+
+The Codex shim calls [[file:../bin/codex-runtime][bin/codex-runtime]]. It resolves Homebrew's explicit
+=/opt/homebrew/bin/codex= or =/usr/local/bin/codex= link and copies the complete
+package, including its code-mode host and resources, to
+=~/.local/share/codex-runtimes/<content-hash>=. Published copies are read-only
+and never replaced. Each new invocation selects the currently installed package;
+existing sessions retain their own executable paths through Homebrew upgrades
+and cleanup. Embedded executable signatures retain exactly the original bytes.
+
+The launcher checks all package contents, rejects incomplete or concurrently
+changing copies, and publishes completed copies atomically. Its lock covers only
+publication and verification, not the running session. It fails explicitly if
+the source package is unavailable or a retained copy is damaged; it never
+silently starts an older version. Directly invoking Homebrew's absolute Codex
+path bypasses this protection. Existing sessions started before the shim also
+need restarting once.
+
+Retained versions are not automatically deleted because an older session may
+still need its signed executable or helper. Each current package uses about
+300 MB; safe process-aware retention cleanup is separate work. Focused tests:
+
+#+begin_src sh
+python3 -m unittest tests.test_codex_runtime -v
+#+end_src
 
 * History filtering
 

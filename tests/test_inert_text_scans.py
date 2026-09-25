@@ -209,8 +209,7 @@ class DocUpdateGateIgnoresHeredocTextInMessages(unittest.TestCase):
     middle line of a quoted message used to swallow the rest of the command,
     fail to lex, and be reported as staged Elisp."""
 
-    HOOKS = {"claude": ROOT / "claude" / "hooks" / "require-doc-update.sh",
-             "codex": ROOT / "codex" / "hooks" / "require-doc-update.sh"}
+    HOOKS = {"claude": ROOT / "claude" / "hooks" / "require-doc-update.sh"}
 
     def setUp(self):
         self.tempdir = tempfile.TemporaryDirectory()

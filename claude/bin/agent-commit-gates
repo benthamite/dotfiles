@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+"""Run the documentation and paired-config commit gates from git pre-commit.
+
+The gates used to run as agent PreToolUse hooks, which had to infer the
+commit's repository and files from the text of the shell command.  Inside
+pre-commit, git has already built the exact index the commit will record,
+so each gate is given a canonical `git commit` from the repository root and
+reads the staged files directly.  `--amend` is taken from git's own
+arguments, which the dispatcher passes in AGENT_GIT_ARGS.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+
+DOTFILES = Path(__file__).resolve().parents[2]
+GATES = [
+    [str(DOTFILES / "claude/hooks/require-doc-update.sh")],
+    [str(DOTFILES / "claude/hooks/require-readme-update.sh")],
+    [str(DOTFILES / "codex/hooks/require-codex-readme-update.sh")],
+    [str(DOTFILES / "bin/ai-config-sync"), "guard-commit"],
+]
+
+
+def main() -> int:
+    root = subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True,
+                          text=True, check=True).stdout.strip()
+    if throwaway_repo(Path(root)):
+        return 0
+    amend = "--amend" in os.environ.get("AGENT_GIT_ARGS", "").split()
+    payload = json.dumps({
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Bash",
+        "tool_input": {"command": "git commit --amend" if amend else "git commit"},
+        "cwd": root,
+        "session_id": os.environ.get("CLAUDE_CODE_SESSION_ID") or os.environ.get("CODEX_THREAD_ID", ""),
+    })
+    reasons = []
+    for gate in GATES:
+        result = subprocess.run(gate, input=payload, capture_output=True, text=True, cwd=root)
+        reason = denial(result.stdout)
+        if reason is None and result.returncode not in (0, 1):
+            reason = f"{Path(gate[0]).name} failed: {result.stderr.strip()}"
+        if reason:
+            reasons.append(reason)
+    if not reasons:
+        return 0
+    print("\n\n".join(reasons), file=sys.stderr)
+    return 1
+
+
+def throwaway_repo(root: Path) -> bool:
+    """Return non-nil when ROOT lies in a system temporary directory.
+    Mirrors the exemption in elisp-evidence: test fixtures commit such
+    repositories inside agent sessions."""
+    if os.environ.get("AGENT_ELISP_EVIDENCE_CHECK_TEMP"):
+        return False
+    temporary = {os.path.realpath(p) for p in (tempfile.gettempdir(), "/tmp", "/var/folders")}
+    return any(str(root.resolve()).startswith(t.rstrip("/") + "/") for t in temporary)
+
+
+def denial(output: str) -> str | None:
+    """Return the deny reason in a gate's hook OUTPUT, or nil if it allowed."""
+    for line in [output] + output.splitlines():
+        try:
+            decision = json.loads(line).get("hookSpecificOutput", {})
+        except (json.JSONDecodeError, AttributeError):
+            continue
+        if decision.get("permissionDecision") == "deny":
+            return decision.get("permissionDecisionReason", "commit gate denied")
+        return None
+    return None
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

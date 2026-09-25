@@ -964,6 +964,9 @@ reports the unpaid debts to the user instead of looping. No other command is
 blocked meanwhile. Every hook in =claude/git-hooks= then runs the
 repository's own hook of the same name, so repository hooks keep working. The
 only related command guard denies overriding =core.hooksPath=.
+The documentation, README, and paired-config commit gates also run from that
+=pre-commit= hook, through =claude/bin/agent-commit-gates=, so they read the
+staged files from the index instead of inferring them from command text.
 
 Hooks that judge a Git command resolve the repository from the command itself,
 via =hooks/lib-repo-root.sh=. A =cd= at any command head decides the repository,

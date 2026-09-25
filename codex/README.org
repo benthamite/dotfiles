@@ -875,6 +875,9 @@ is blocked meanwhile. Every hook in =claude/git-hooks= then runs the
 repository's own hook of the same name. =block-hookspath-override.sh= denies
 overriding =core.hooksPath=. Both registrations need trusted current
 definitions in the active Codex profile.
+The documentation, README, and paired-config commit gates also run from that
+=pre-commit= hook, through =claude/bin/agent-commit-gates=, so they read the
+staged files from the index instead of inferring them from command text.
 
 Emacs-owned sessions use eight explicit =codex-hook-wrapper= registrations for
 lifecycle forwarding. The wrapper comes from the Emacs package source tree

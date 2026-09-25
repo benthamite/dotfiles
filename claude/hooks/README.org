@@ -253,10 +253,9 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =remind-ai-config-sync.sh= | Issues the paired Claude/Codex configuration reminder after relevant edits. |
 | =remind-claude-readme-update.sh= | Reminds an agent when a write from any project changed the tracked Claude configuration. |
 | =remind-plan-review.sh= | Reminds an agent to obtain an independent review after editing an implementation plan. |
-| =require-ai-config-sync.sh= | Blocks commits that violate the paired Claude/Codex configuration contract. |
-| =require-doc-update.sh= | Requires a selected manual for production Elisp, or each global/project-local skill helper's own selected Markdown documentation; checks declared Texinfo and Info outputs without evaluating Org. |
+| =require-doc-update.sh= | Requires a selected manual for production Elisp, or each global/project-local skill helper's own selected Markdown documentation; checks declared Texinfo and Info outputs without evaluating Org. Run for both agents from the global Git =pre-commit= hook by =claude/bin/agent-commit-gates=, which reads the staged files from the index. |
 | =require-elisp-skill.sh= | Blocks Elisp edits until the Elisp conventions skill has been loaded. |
-| =require-readme-update.sh= | Requires Claude configuration documentation with staged Claude configuration changes. |
+| =require-readme-update.sh= | Requires Claude configuration documentation with staged Claude configuration changes. Run for both agents from the global Git =pre-commit= hook by =claude/bin/agent-commit-gates=, which reads the staged files from the index. |
 | =session-learning-capture.sh= | Retained unregistered helper; validates Stop input and canonical cwd, emits escaped untrusted metadata, and reports malformed input without requesting capture. It writes no lesson records. |
 | =sync-agent-c-worktree.sh= | Compatibility wrapper for the renamed reasoning-task worktree synchronization hook. |
 | =sync-reasoning-tasks-worktree.sh= | Repairs and updates an eligible reasoning-task worktree at SessionStart without pushing it. |

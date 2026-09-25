@@ -60,26 +60,6 @@
           },
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/require-doc-update.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/require-readme-update.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/require-codex-readme-update.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/require-ai-config-sync.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-elpaca-rebuild-uncommitted.sh",
             "timeout": 10
           },

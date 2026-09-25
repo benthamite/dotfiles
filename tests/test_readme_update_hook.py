@@ -10,7 +10,6 @@ from pathlib import Path
 DOTFILES = Path(__file__).resolve().parents[1]
 HOOKS = (
     (DOTFILES / "claude/hooks/require-readme-update.sh", "command"),
-    (DOTFILES / "codex/hooks/require-readme-update.sh", "cmd"),
 )
 
 

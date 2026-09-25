@@ -514,9 +514,6 @@ check_wrap() {
 # ============================================================================
 # Dispatch in settings.json order; reason concatenation follows the same order.
 # ============================================================================
-IS_COMMIT=0
-echo "$COMMAND" | grep -qE '\bcommit\b' && IS_COMMIT=1
-
 # Secret routing is security-sensitive and evolves independently. Delegate on
 # every Bash command so the registered standalone guard is the single live
 # implementation instead of maintaining a second inlined policy here.
@@ -536,13 +533,13 @@ fi
 check_sensitive_read
 check_destructive
 check_walk_list
-[ "$IS_COMMIT" -eq 1 ] && delegate require-doc-update.sh
-[ "$IS_COMMIT" -eq 1 ] && delegate require-readme-update.sh
+# The documentation and paired-config commit gates run from the global Git
+# pre-commit hook (claude/bin/agent-commit-gates), where the staged files
+# are known exactly, instead of being inferred from this command's text.
 check_hookspath_override
 if echo "$COMMAND" | grep -qE '\bemacsclient\b' && echo "$COMMAND" | grep -qE 'elpaca-rebuild|elpaca-extras-reload'; then
   delegate block-elpaca-rebuild-uncommitted.sh
 fi
-[ "$IS_COMMIT" -eq 1 ] && delegate require-ai-config-sync.sh
 if echo "$COMMAND" | grep -qE '(python3?|nohup)[^|]*setup_db\.py[^|]*(--full|--target)' || \
    echo "$COMMAND" | grep -qE '(bash|sh|nohup|\./|source )[^|]*refresh_data\.sh'; then
   delegate block-long-pipeline-run-unchecked.sh

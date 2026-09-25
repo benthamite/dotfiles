@@ -590,25 +590,18 @@
       "note": "paired PostToolUse reminder after Superpowers implementation plan files are edited, including repo docs/superpowers/plans paths and tool-specific temp/private plan directories; Claude emits plain stdout for Edit/Write, while Codex scans apply_patch/Edit/Write path lists and returns PostToolUse additionalContext JSON."
     },
     {
-      "name": "require-ai-config-sync.sh",
-      "claude": "claude/hooks/require-ai-config-sync.sh",
-      "codex": "codex/hooks/require-ai-config-sync.sh",
-      "status": "paired-dispatched",
-      "note": "paired as Claude/Codex wrappers around bin/ai-config-sync"
-    },
-    {
       "name": "require-codex-readme-update.sh",
       "claude": null,
       "codex": "codex/hooks/require-codex-readme-update.sh",
       "status": "codex-only",
-      "note": "Codex-only README commit gate scoped to this dotfiles repository. Its command-text fallback excludes project-local .codex paths, and the repo-root AGENTS.md project mirror is not treated as Codex integration. Dotfiles project-local skills use their configured documentation owner. Payload normalization and exact scope are documented in codex/hooks/README.org."
+      "note": "Codex README commit gate scoped to this dotfiles repository; the repo-root AGENTS.md project mirror is not treated as Codex integration. Runs for both agents from the global Git pre-commit hook through claude/bin/agent-commit-gates, which passes a canonical git commit so the staged files are read from the index."
     },
     {
       "name": "require-doc-update.sh",
       "claude": "claude/hooks/require-doc-update.sh",
-      "codex": "codex/hooks/require-doc-update.sh",
-      "status": "paired-dispatched",
-      "note": "paired for Bash git commit gate; Codex side normalizes string-wrapped tool_input and attributes nested functions.exec Bash events to their exact literal parent workdir via lib-codex-hook-json.sh"
+      "codex": null,
+      "status": "claude-only",
+      "note": "Documentation commit gate. Runs for both agents from the global Git pre-commit hook through claude/bin/agent-commit-gates, which passes a canonical git commit so the staged files are read from the index."
     },
     {
       "name": "require-elisp-skill.sh",
@@ -620,9 +613,9 @@
     {
       "name": "require-readme-update.sh",
       "claude": "claude/hooks/require-readme-update.sh",
-      "codex": "codex/hooks/require-readme-update.sh",
-      "status": "paired-dispatched",
-      "note": "paired for Claude config README gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
+      "codex": null,
+      "status": "claude-only",
+      "note": "Claude config README commit gate. Runs for both agents from the global Git pre-commit hook through claude/bin/agent-commit-gates, which passes a canonical git commit so the staged files are read from the index."
     },
     {
       "name": "session-learning-capture.sh",

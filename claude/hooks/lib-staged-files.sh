@@ -18,7 +18,7 @@
 # effect rather than by the newest index write alone.
 
 _amend_base() {
-  if echo "$COMMAND" | grep -qE '\b--amend\b'; then
+  if echo "$COMMAND" | grep -qE '(^|[[:space:]])--amend([[:space:]=]|$)'; then
     if git rev-parse HEAD~1 >/dev/null 2>&1; then
       echo "HEAD~1"
       return

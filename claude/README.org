@@ -949,7 +949,8 @@ exercised. =claude/bin/elisp-evidence= keeps these records under
 =~/.local/state/agent-elisp-evidence/=. The global Git hook directory
 =claude/git-hooks= (installed as =core.hooksPath= in =~/.gitconfig=) runs its
 checks only in agent sessions, identified by =CLAUDE_CODE_SESSION_ID= or
-=CODEX_THREAD_ID=: =pre-commit= rejects a commit whose staged Elisp no run
+=CODEX_THREAD_ID=, and skip repositories in system temporary directories such as test
+fixtures: =pre-commit= rejects a commit whose staged Elisp no run
 covered, and =post-commit= records a live check as owed for a production
 package, plus a test as owed when the commit skipped =pre-commit= through
 =--no-verify=. The Stop hook =elisp-evidence stop-check= keeps the committing

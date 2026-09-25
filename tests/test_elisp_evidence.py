@@ -35,6 +35,7 @@ class ElispEvidenceTest(unittest.TestCase):
             "GIT_CONFIG_GLOBAL": str(self.base / "gitconfig"),
             "GIT_CONFIG_NOSYSTEM": "1",
             "CLAUDE_CODE_SESSION_ID": SESSION,
+            "AGENT_ELISP_EVIDENCE_CHECK_TEMP": "1",
         })
         (self.base / "gitconfig").write_text(
             f"[core]\n\thooksPath = {HOOKS}\n[user]\n\tname = T\n\temail = t@example.com\n"
@@ -175,7 +176,13 @@ class ElispEvidenceTest(unittest.TestCase):
         self.write(worktree, "pkg.el", "(provide 'pkg) ;; untested\n")
         result = self.git(worktree, "commit", "-q", "-am", "untested", check=False)
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("batch-test.sh pkg", result.stderr)
+        self.assertRegex(result.stderr, r"batch-test\.sh'? pkg")
+
+    def test_temporary_repositories_are_not_checked(self) -> None:
+        repo = self.make_repo("pkg", {"pkg.el": "(provide 'pkg)\n"})
+        self.write(repo, "pkg.el", "(provide 'pkg) ;; fixture\n")
+        self.git(repo, "commit", "-q", "-am", "fixture", env={"AGENT_ELISP_EVIDENCE_CHECK_TEMP": ""})
+        self.assertIsNone(self.stop(repo))
 
     # --- post-commit and Stop -----------------------------------------------
 

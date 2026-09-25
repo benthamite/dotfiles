@@ -28,6 +28,7 @@ from pathlib import Path
 import shlex
 import subprocess
 import sys
+import tempfile
 import time
 
 TOOL_DIR = Path(__file__).resolve().parent
@@ -338,6 +339,17 @@ def agent_session() -> str | None:
     return None
 
 
+def throwaway_repo(root: Path) -> bool:
+    """Return non-nil when ROOT lies in a system temporary directory.
+    Test fixtures and scripts create and commit such repositories inside
+    agent sessions; evidence for them protects nothing.  Tests of this tool
+    set AGENT_ELISP_EVIDENCE_CHECK_TEMP to check them anyway."""
+    if os.environ.get("AGENT_ELISP_EVIDENCE_CHECK_TEMP"):
+        return False
+    temporary = {os.path.realpath(p) for p in (tempfile.gettempdir(), "/tmp", "/var/folders")}
+    return any(str(root).startswith(t.rstrip("/") + "/") for t in temporary)
+
+
 def debt_path(session: str) -> Path:
     key = hashlib.sha256(session.encode()).hexdigest()[:24]
     return state_root() / "debts" / f"{key}.jsonl"
@@ -404,6 +416,8 @@ def cmd_pre_commit(_args: list[str]) -> int:
     if agent_session() is None:
         return 0
     root = repo_root(Path.cwd())
+    if throwaway_repo(root):
+        return 0
     changes = staged_changes(root)
     if not changes:
         return 0
@@ -419,6 +433,8 @@ def cmd_post_commit(_args: list[str]) -> int:
     if session is None:
         return 0
     root = repo_root(Path.cwd())
+    if throwaway_repo(root):
+        return 0
     commit = git(root, "rev-parse", "HEAD").decode().strip()
     changes = commit_changes(root, commit)
     if not changes:

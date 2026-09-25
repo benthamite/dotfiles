@@ -801,22 +801,23 @@ dock-icon-preference = "codex-system"
 
 [mcp_servers.node_repl]
 args = []
-command = "/Applications/Codex.app/Contents/Resources/cua_node/bin/node_repl"
+command = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl"
 startup_timeout_sec = 120
 
 [mcp_servers.node_repl.env]
+NODE_REPL_TRUSTED_SERVICES = "{\"browser\":\"/Applications/ChatGPT.app/Contents/Resources/plugins/openai-bundled/plugins/chrome/scripts/browser-service.mjs\"}"
 NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
-NODE_REPL_NODE_MODULE_DIRS = "/Applications/Codex.app/Contents/Resources/cua_node/lib/node_modules"
-NODE_REPL_NODE_PATH = "/Applications/Codex.app/Contents/Resources/cua_node/bin/node"
-NODE_REPL_TRUSTED_CODE_PATHS = "/Users/pablostafforini/.codex"
+NODE_REPL_NODE_MODULE_DIRS = "/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules"
+NODE_REPL_NODE_PATH = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node"
+NODE_REPL_TRUSTED_CODE_PATHS = "/Users/pablostafforini/.codex:/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules:/Applications/ChatGPT.app/Contents/Resources/plugins/openai-bundled/plugins/chrome"
 CODEX_HOME = "/Users/pablostafforini/.codex"
-NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f,d0b55a8f9e8e7e9c88421416ea4ce9542c302abf43aa7fc871be4553ea70dd26"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "896dc33aba8a584b433bbaaed026198ed5d02f58b6e0bd2815822adc2929b145"
 BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
 NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
 NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
 NODE_REPL_INSTRUCTIONS_USE_CASE_COMPUTER_USE = "Control desktop apps on macOS through Computer Use."
 BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
-BROWSER_USE_CODEX_APP_VERSION = "26.715.72359"
+BROWSER_USE_CODEX_APP_VERSION = "26.917.71314"
 CODEX_CLI_PATH = "/Users/pablostafforini/My Drive/dotfiles/shell/shims/codex"
 
 [mcp_servers.computer-use]
@@ -827,8 +828,8 @@ enabled = false
 
 [shell_environment_policy.set]
 BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
-NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f,d0b55a8f9e8e7e9c88421416ea4ce9542c302abf43aa7fc871be4553ea70dd26"
-NODE_REPL_TRUSTED_CODE_PATHS = "/Users/pablostafforini/.codex"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "896dc33aba8a584b433bbaaed026198ed5d02f58b6e0bd2815822adc2929b145"
+NODE_REPL_TRUSTED_CODE_PATHS = "/Users/pablostafforini/.codex:/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules:/Applications/ChatGPT.app/Contents/Resources/plugins/openai-bundled/plugins/chrome"
 
 # BEGIN skill-prune disabled skills
 

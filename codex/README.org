@@ -122,8 +122,19 @@ Browser control is runtime-owned: the bundled Browser and Chrome plugins load
 directly through Codex. No tracked skill or helper command mediates a
 CLI/Emacs-to-App browser handoff.
 
-The Chrome MCP helper currently lives in =Codex.app=, but its
-=CODEX_CLI_PATH= points to =shell/shims/codex=. This launches the current
+The Chrome MCP helper lives in the supported =ChatGPT.app= replacement for the
+discontinued =Codex.app=. Its executable, Node/module paths, declared app version,
+and trusted browser-client hashes must match the same app release. The trusted
+code paths include the helper module directory and the bundled Chrome plugin.
+=NODE_REPL_TRUSTED_SERVICES= registers that plugin's =browser-service.mjs= as
+=browser=. These manual settings are not automatically synchronized by desktop
+updates; matching them repairs version skew but does not establish that Chrome
+command timeouts are resolved. Use that release's bundled
+Chrome skill and browser client; do not mix it with an older cached plugin.
+Homebrew can report the discontinued =codex-app= cask as current even when it
+contains an older runtime. Use the =chatgpt= cask for desktop updates.
+
+The helper's =CODEX_CLI_PATH= points to =shell/shims/codex=. This launches the current
 Homebrew release from a retained immutable runtime, so upgrading Homebrew does
 not delete the signed executable used by a running session. The older bundled CLI
 cannot parse current agent settings; its configuration-read failure is

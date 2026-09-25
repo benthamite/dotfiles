@@ -770,7 +770,7 @@
       "path": "codex/config.toml",
       "tracked": true,
       "live_path": "~/.codex/config.toml",
-      "note": "Codex trust, plugins, theme, MCP, accounts and models; gpt-6-astra default, hooks on. Chrome MCP uses shell/shims/codex to retain signed Homebrew runtimes across upgrades; bundled CLI cannot parse current agent settings. Preserve source/key/hash trust. Untrusted-execution trust covers eight homes; reload loaded sessions. bin/skill-prune manages default/active/configured homes, deduplicates histories and rejects missing evidence; disabled state: skills-disabled.json. bin/codex-config-prune removes dead records. Repo moves require rewritten trust keys. See codex/README.org."
+      "note": "Codex trust, plugins, theme, MCP, accounts and models; gpt-6-astra, hooks on. Chrome uses matching ChatGPT.app runtime and trusted browser service; static release settings need update synchronization. shell/shims/codex retains signed CLI runtimes. Preserve source/key/hash trust. Untrusted trust covers eight homes; reload sessions. skill-prune covers default/active/configured homes, deduplicates histories, requires evidence; state: skills-disabled.json. codex-config-prune removes dead records. Repo moves require trust-key rewrites. See codex/README.org."
     },
     {
       "tool": "Codex",

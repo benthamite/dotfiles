@@ -89,7 +89,7 @@ If you edit a file and immediately check whether Emacs picked up the change (e.g
 
 1. Edit =~/My Drive/dotfiles/emacs/extras/foo-extras.el=
 2. =load-elisp-after-edit.sh= fires on a direct edit or on changed paths recovered from a composed Codex patch; for extras this pre-commit rebuild can still use the committed mirror
-3. =require-elisp-test-before-commit.sh= blocks commit until source-aware batch evidence matches the repository, package, and source revision
+3. In agent sessions, the global =pre-commit= hook in =claude/git-hooks= blocks the commit until a successful runner has recorded evidence for the exact Elisp contents being committed
 4. Run =batch-test.sh=, which loads the canonical source path rather than package bytecode
 5. =git commit= -> =post-commit= hook -> =sync-elpaca-clone.sh=:
    a. Fetches committed changes into elpaca clone
@@ -97,4 +97,4 @@ If you edit a file and immediately check whether Emacs picked up the change (e.g
    c. Writes a =pending= state keyed by commit and package
    d. Starts bounded =elpaca-rebuild-wait= processing, which records =finished= or =failed=
 6. Run =elisp-live-verify foo-extras -- '(foo-extras-CHECK)'=; it waits for that exact post-commit result and then exercises the named live path
-7. Only its repository/package/commit-bound evidence clears that obligation; an unrelated live evaluation does not
+7. Only its repository/package/commit-bound evidence pays the live check the agent Stop hook requires before the turn ends; an unrelated live evaluation does not

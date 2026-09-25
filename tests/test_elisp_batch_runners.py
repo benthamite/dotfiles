@@ -30,8 +30,7 @@ class ElispBatchRunnerTests(unittest.TestCase):
         self.fake_bin.mkdir()
         self.tool = self.root / "dotfiles"
         for relative in ("claude/bin/batch-test.sh", "claude/bin/elisp-ert",
-                         "claude/bin/elisp-source-revision", "bin/elpaca-package-resolve",
-                         "claude/hooks/lib-elisp-evidence.sh"):
+                         "claude/bin/elisp-evidence", "bin/elpaca-package-resolve"):
             target = self.tool / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / relative, target)
@@ -43,7 +42,7 @@ class ElispBatchRunnerTests(unittest.TestCase):
                         GIT_CONFIG_GLOBAL="/dev/null", FAKE_PACKAGE_ID="example",
                         FAKE_SOURCE=str(self.source), FAKE_BUILD=str(self.build),
                         FAKE_CALLS=str(self.root / "client-calls"), NATIVE_EMACS=EMACS,
-                        ELISP_EVIDENCE_RECEIPT_DIR=str(self.root / "receipts"))
+                        AGENT_ELISP_EVIDENCE_DIR=str(self.root / "evidence"))
         client = self.fake_bin / "emacsclient"
         client.write_text('''#!/usr/bin/env python3
 import base64, json, os, pathlib, subprocess, sys
@@ -105,7 +104,7 @@ else:
         result = self.run_helper(self.batch, "example", "(unless (eq (example-value) 'current) (error \"Stale sibling\"))")
         self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
         self.assertEqual(compiled.read_bytes(), before)
-        self.assertIn("ELISP_TEST_EVIDENCE_V2:", result.stdout)
+        self.assertIn("recorded test evidence for", result.stdout)
 
     def test_ert_uses_source_sibling_without_deleting_compiled_files(self):
         compiled = self.stale_sibling()
@@ -113,7 +112,7 @@ else:
         result = self.run_helper(self.ert, "example", str(self.test_file))
         self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
         self.assertEqual(compiled.read_bytes(), before)
-        self.assertNotIn("ELISP_TEST_EVIDENCE_", result.stdout)
+        self.assertIn("recorded test evidence for example in", result.stdout)
 
     def test_batch_resolves_checkout_label_and_lisp_main_file(self):
         alternate = self.root / "nonstandard-profile/repos/emacs-slack"
@@ -126,9 +125,7 @@ else:
         self.env.update(FAKE_SOURCE=str(alternate), FAKE_PACKAGE_ID="slack")
         result = self.run_helper(self.batch, "emacs-slack")
         self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
-        self.assertIn("ELISP_TEST_EVIDENCE_V2:", result.stdout)
-        evidence = next(line for line in result.stdout.splitlines() if line.startswith("ELISP_TEST_EVIDENCE_V2:"))
-        self.assertEqual(base64.b64decode(evidence.split(":")[2]).decode(), "emacs-slack")
+        self.assertIn("recorded test evidence for emacs-slack in", result.stdout)
 
     def test_ert_refuses_missing_source_instead_of_loading_build(self):
         for source in self.source.glob("*.el"):
@@ -142,7 +139,7 @@ else:
     def test_batch_rejects_unsafe_identifier_before_any_emacs_execution(self):
         result = self.run_helper(self.batch, "example') (error \"injected\") ;")
         self.assertNotEqual(result.returncode, 0)
-        self.assertNotIn("ELISP_TEST_EVIDENCE_", result.stdout)
+        self.assertNotIn("recorded test evidence", result.stdout)
         self.assertFalse((self.root / "client-calls").exists())
 
     def test_native_metadata_queries_actual_dependency_root(self):
@@ -159,14 +156,14 @@ else:
         self.env["FAKE_SOURCE"] = str(legacy)
         result = self.run_helper(self.ert, "example", str(self.test_file), "example-current")
         self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
-        self.assertNotIn("ELISP_TEST_EVIDENCE_", result.stdout)
+        self.assertIn("recorded test evidence for example in", result.stdout)
 
     def test_ambiguous_root_and_lisp_main_files_refuse_without_evidence(self):
         self.write("lisp/example.el", "(provide 'example)\n")
         result = self.run_helper(self.batch, "example")
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("found 2", result.stderr)
-        self.assertNotIn("ELISP_TEST_EVIDENCE_", result.stdout)
+        self.assertNotIn("recorded test evidence", result.stdout)
 
     def test_ert_extra_preserves_existing_canonical_bytecode(self):
         extras = self.tool / "emacs/extras"
@@ -188,7 +185,7 @@ else:
         (self.source / "example-helper.el").unlink()
         result = self.run_helper(self.batch, "example")
         self.assertNotEqual(result.returncode, 0)
-        self.assertNotIn("ELISP_TEST_EVIDENCE_", result.stdout)
+        self.assertNotIn("recorded test evidence", result.stdout)
 
     def test_unknown_own_build_cannot_contaminate_source_check(self):
         self.env["FAKE_NO_OWN_BUILD"] = "1"
@@ -197,7 +194,7 @@ else:
         result = self.run_helper(self.batch, "example")
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("Invalid Elpaca dependency metadata", result.stderr)
-        self.assertNotIn("ELISP_TEST_EVIDENCE_", result.stdout)
+        self.assertNotIn("recorded test evidence", result.stdout)
 
     def test_registry_source_switch_cannot_mix_source_and_dependencies(self):
         other = self.root / "different-source"
@@ -206,7 +203,7 @@ else:
         result = self.run_helper(self.batch, "example")
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("Registry source changed", result.stderr)
-        self.assertNotIn("ELISP_TEST_EVIDENCE_", result.stdout)
+        self.assertNotIn("recorded test evidence", result.stdout)
 
 
 if __name__ == "__main__":

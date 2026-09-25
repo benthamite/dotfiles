@@ -18,16 +18,17 @@ fixture is not permission to restart Emacs or change an unrelated live state.
 The helper rejects dirty source, waits until the named package reaches a
 `finished` rebuild-and-reload state, then runs the expression in the active
 session. The expression must name and exercise the package and return a
-non-nil result. Its evidence is bound to the repository, package, and commit.
-Its rebuild helper validates the
-actual Emacs process/start identity, profile, registered source checkout, and
-package/token status before accepting completion or reusing a receipt. Old
-unbound `finished` files do not prove a rebuild. Do not retry uncertain ownership
-by starting competing jobs or delete a receipt to force success.
+non-nil result. Its evidence is bound to the repository, package, and commit,
+and it also covers every earlier commit of that package. The agent Stop hook
+accepts it for any owed live check on those commits. Its rebuild helper
+validates the actual Emacs process/start identity, profile, registered source
+checkout, and package/token status before accepting completion. Old unbound
+`finished` files do not prove a rebuild. Do not retry uncertain ownership by
+starting competing jobs.
 For a standalone-package label, the helper uses `elpaca-package-resolve` and
 binds evidence to the resolved checkout, independently of the current directory.
 The target source must remain committed and unchanged through the expression;
-a concurrent HEAD change or new target Elisp invalidates the receipt. Unrelated
+a concurrent HEAD change or new target Elisp invalidates the check. Unrelated
 non-source edits are not a reason to discard or overwrite user work.
 Do not infer completion from an edit event, a commit return value, another
 package, or an unrelated `emacsclient` call. For buffer-local state, hooks,

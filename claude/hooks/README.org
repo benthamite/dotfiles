@@ -168,16 +168,16 @@ The Elisp documentation gate may be deferred on a feature branch with
 The setting is ignored on =main= and =master= and should be removed when the
 branch merges. The Codex counterpart uses the same rule.
 
-Elisp test and live evidence includes a one-time correlation receipt. The
-tracker binds the evidence label to exactly one supported wrapper in executable
-position, rejects command events with another executable, and atomically
-consumes the receipt. A receipt can clear one matching event, and a second use
-fails. A textual mention, mismatched label, or compound output command does not
-count as the wrapper event. This is not authentication against another process
-running as the same user: such a process can source the public issuer or write
-the user-owned state files. On the next issue or consume operation, the helper
-removes only user-owned regular receipt and claim files older than one day. It
-never expires or removes test markers or live-verification obligations.
+Elisp test and live evidence is recorded by the wrappers themselves and
+checked by the global Git hooks in =claude/git-hooks= and the Stop hook, all
+through =claude/bin/elisp-evidence=; no hook reads command text to decide what
+was tested. This is not authentication against another process running as the
+same user, which can write the user-owned state files under
+=~/.local/state/agent-elisp-evidence/=. It prevents accidental skipping, not a
+determined forger.  The Stop hook is registered in
+=~/.claude/settings.json= as =~/My\ Drive/dotfiles/claude/bin/elisp-evidence
+stop-check --agent claude=, and =core.hooksPath= in =~/.gitconfig= names
+=~/My Drive/dotfiles/claude/git-hooks=.
 
 The reasoning-worktree SessionStart hook repairs required key links before its
 working-directory and origin checks. That repair loop therefore runs in every
@@ -236,8 +236,6 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =elpaca-run.sh= | Resolves the active Emacs profile and runs an executable from an Elpaca package. |
 | =fire-and-forget.sh= | Detaches nonblocking Notification and Stop hook work after consuming the event payload. |
 | =lib-public-url-scan.py= | Classifies verified public URL routing fields while retaining credential-bearing payloads. |
-| =lib-elisp-diagnostics.py= | Recognizes literal read-only diagnostics and describes outstanding live checks without clearing them. |
-| =lib-elisp-evidence.sh= | Issues and atomically consumes one-time correlation receipts for Elisp test and live evidence; these receipts prevent replay but do not authenticate against the same user. |
 | =lib-heredoc.sh= | Masks heredoc bodies that feed a known data sink through a plain simple command, so guards classify command words only; bodies fed to shells, interpreters, or pipelines stay in the scan, and an =all= mode lets a guard word its denial for a path named only inside an interpreter-fed program. |
 | =lib-python-heredoc.py= | Classifies narrowly recognized quoted Python stdin bodies before excluding them from outer-shell lexical scanning. Consecutive supported heredocs are classified in order; unknown shell structure stops that scan. Parsed =pass= statements and a closed text/JSON document-edit language are exempt from protected-name checks. Document edits require one standalone direct Python heredoc with validated imports, data bindings and calls; Codex additionally requires one complete literal exec wrapper. Unknown/dynamic/multi-call shapes retain conservative scanning. Unsupported source stays unmasked and other secret checks retain original input. The shared Git classifier separately neutralizes shell-substitution markers in valid quoted Python bodies while retaining the rest of the source; Python data without standalone Git/commit references cannot fabricate a shell substitution or an ambiguous commit. Git-bearing interpreter source retains conservative scanning because subprocess calls may execute its strings. Not a Python sandbox. |
 | =lib-inert-mentions.py= | Masks a protected tool name (=pbpaste=, =pass=, =security=) only where it is a plain argument of a read-only text tool, so =grep -rn pass docs/= or =git log -S pbpaste= is not denied as a credential read; command words, shell/xargs/find/env arguments and ==-joined values stay denied. |
@@ -247,7 +245,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =load-elisp-after-edit.sh= | Rebuilds and reloads an edited Elisp package through the live Emacs session, except for test-only files or while Git has an active operation or unmerged index entries. |
 | =notify-emacs-notification.sh= | Forwards a Claude Notification event to Emacs. |
 | =notify-emacs-session-end.sh= | Forwards a Claude Stop event to Emacs. |
-| =pretooluse-bash.sh= | Dispatches the Bash guards and output wrapper registered for PreToolUse. |
+| =pretooluse-bash.sh= | Dispatches the Bash guards and output wrapper registered for PreToolUse, and denies Git commands that override =core.hooksPath=, which would disable the Elisp evidence hooks in =claude/git-hooks=. |
 | =redact-secrets.sh= | Masks recognized secret literals in a command's combined output. |
 | =regenerate-coverage-map.sh= | Refreshes the CR rubric visualizer coverage map after relevant edits. |
 | =regenerate-manual-after-edit.sh= | Regenerates validated declared sibling Texinfo and existing Info names independently; disables local/Babel evaluation, refuses unsafe destinations or unsupported export directives, and reports partial failures without raw private errors. |
@@ -258,15 +256,11 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =require-ai-config-sync.sh= | Blocks commits that violate the paired Claude/Codex configuration contract. |
 | =require-doc-update.sh= | Requires a selected manual for production Elisp, or each global/project-local skill helper's own selected Markdown documentation; checks declared Texinfo and Info outputs without evaluating Org. |
 | =require-elisp-skill.sh= | Blocks Elisp edits until the Elisp conventions skill has been loaded. |
-| =require-elisp-test-before-commit.sh= | Routes commits to the target repository, blocks combined staging, and requires matching package or deletion-check evidence for the proposed Elisp source. A repository without =<name>.el= or =lisp/<name>.el= is not a package: its Elisp is gated on file-labelled project-check evidence instead. |
-| =require-elisp-verify-after-commit.sh= | Keeps live verification mandatory while permitting a closed set of literal read-only diagnostics; denials name the pending package, commit and repository. Inspection cannot clear evidence. |
 | =require-readme-update.sh= | Requires Claude configuration documentation with staged Claude configuration changes. |
 | =session-learning-capture.sh= | Retained unregistered helper; validates Stop input and canonical cwd, emits escaped untrusted metadata, and reports malformed input without requesting capture. It writes no lesson records. |
 | =sync-agent-c-worktree.sh= | Compatibility wrapper for the renamed reasoning-task worktree synchronization hook. |
 | =sync-reasoning-tasks-worktree.sh= | Repairs and updates an eligible reasoning-task worktree at SessionStart without pushing it. |
 | =track-elisp-skill.sh= | Records that the Elisp conventions skill was loaded in the current session. |
-| =track-elisp-test.sh= | Consumes a one-time receipt, then validates and records repository/package/source-revision evidence from the source-aware batch runner. When a detected wrapper run cannot be recorded (piped command, stale load, invalid receipt, revision mismatch), it reports the cause to the model instead of failing silently. |
-| =track-elisp-verify.sh= | Records each production package in an Elisp commit and consumes one-time receipts before clearing matching repository/package/commit live evidence. When a detected live-verify run cannot be consumed, it reports the cause to the model instead of failing silently. |
 | =wrap-bash-output.sh= | Routes plausible secret-printing command output through the redactor while preserving status. |
 
 The documentation audit requires every tracked direct child to appear exactly

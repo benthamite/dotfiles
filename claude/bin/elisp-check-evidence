@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Run a project-owned Elisp check and emit revision-bound commit evidence.
+# Run a project-owned Elisp check.  A successful run records test
+# evidence bound to the exact Elisp contents it covered.
 
 set -euo pipefail
 
@@ -25,9 +26,7 @@ esac
 
 script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
 dotfiles_root=$(cd -- "$script_dir/../.." && pwd)
-revision_helper="$dotfiles_root/claude/bin/elisp-source-revision"
-# shellcheck source=../hooks/lib-elisp-evidence.sh
-source "$dotfiles_root/claude/hooks/lib-elisp-evidence.sh"
+evidence="$dotfiles_root/claude/bin/elisp-evidence"
 check_command="$1"
 shift
 case "$check_command" in
@@ -74,6 +73,7 @@ cleanup() {
 trap cleanup EXIT
 
 revision_arguments=("$repo")
+snapshot_env=()
 if [ "$staged" = true ]; then
   snapshot_root=$(mktemp -d "/tmp/elisp-index.XXXXXX")
   snapshot_index="$snapshot_root/index"
@@ -83,7 +83,8 @@ if [ "$staged" = true ]; then
   # shared split-index file. The revision and raw blobs use this same tree.
   snapshot_tree=$(git -C "$repo" write-tree)
   GIT_INDEX_FILE="$snapshot_index" git -C "$repo" read-tree "$snapshot_tree"
-  revision_before=$(GIT_INDEX_FILE="$snapshot_index" "$revision_helper" --index "$repo")
+  snapshot_env=(env "GIT_INDEX_FILE=$snapshot_index")
+  revision_before=$("${snapshot_env[@]}" "$evidence" snapshot --index "$repo")
   # checkout-index would run smudge filters and apply encoding/EOL attributes.
   # Materialize raw blobs instead, without executing repository filters.
   python3 - "$repo" "$snapshot_tree" "$run_root" <<'PY'
@@ -140,7 +141,7 @@ except (OSError, ValueError, subprocess.SubprocessError):
 PY
   run_command="$run_root/$check_relative"
   revision_arguments=(--index "$repo")
-  if [ "$("$revision_helper" "${revision_arguments[@]}")" != "$revision_before" ]; then
+  if [ "$("${snapshot_env[@]}" "$evidence" snapshot "${revision_arguments[@]}")" != "$revision_before" ]; then
     echo "elisp-check-evidence rejected an index change during snapshot creation" >&2
     exit 1
   fi
@@ -168,7 +169,7 @@ for directory, directories, files in os.walk(root, followlinks=False):
                 sys.exit(2)
 PY
 else
-  revision_before=$("$revision_helper" "${revision_arguments[@]}")
+  revision_before=$("$evidence" snapshot "${revision_arguments[@]}")
 fi
 output_file=$(mktemp "/tmp/elisp-check.XXXXXX")
 
@@ -185,11 +186,5 @@ if grep -qE 'newer than byte-compiled file|using older file' "$output_file"; the
   exit 1
 fi
 
-revision_after=$("$revision_helper" "${revision_arguments[@]}")
-if [ "$revision_after" != "$revision_before" ]; then
-  echo "elisp-check-evidence rejected a source change that occurred during the check" >&2
-  exit 1
-fi
-repo_b64=$(printf '%s' "$repo" | base64 | tr -d '\n')
-label_b64=$(printf '%s' "$label" | base64 | tr -d '\n')
-elisp_evidence_emit test "$repo_b64" "$label_b64" "$revision_before"
+# Evidence is recorded only for source that did not change during the check.
+"${snapshot_env[@]}" "$evidence" record-test "${revision_arguments[@]}" "$label" "$revision_before"

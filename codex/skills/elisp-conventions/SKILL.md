@@ -80,7 +80,7 @@ unless they also change production code or user documentation.
    [references/live-verification.md](references/live-verification.md).
    - After the verified commit, use `elisp-live-verify PACKAGE -- EXPR` for a
      standalone package or dotfiles extra. It waits for the package rebuild,
-     exercises the named live path, and emits package/commit-bound evidence.
+     exercises the named live path, and records package/commit-bound evidence.
      Confirm the helper supports this package before using it. An isolated
      fixture does not establish that an existing live session has the change.
    - For a deleted package, use `elisp-live-verify deleted:PACKAGE -- EXPR`.
@@ -107,6 +107,17 @@ package and establish the intended runtime, profile, source checkout, and
 successful rebuild token. A true return value is not sufficient unless the
 expression directly checks the requested behavior. Treat any stale-load warning
 as a failed verification.
+
+These rules are enforced on content, not on command spelling, so pipes,
+chained `git add && git commit`, `git -C`, and multi-line messages all work.
+Each successful runner records which Elisp files, at which contents, it
+covered. In agent sessions the global Git `pre-commit` hook
+(`claude/git-hooks`) rejects a commit whose Elisp contents no run covered and
+prints the runner command to use. The `post-commit` hook records a live check
+as owed for a production package, and the Stop hook keeps the turn from
+ending until `elisp-live-verify` covers that commit or a later one. Nothing
+blocks other commands in between, so a bug the live check finds can be fixed,
+tested, and committed normally.
 
 Never use `load-file`, `eval-buffer`, `eval-defun`, or manual
 `byte-compile-file` to reload edited package code. Use the bounded rebuild helper

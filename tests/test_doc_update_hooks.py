@@ -284,9 +284,6 @@ class DocUpdateHookTests(unittest.TestCase):
         self.git("add", "script.sh")
         command = "git commit -q -F - <<'EOF'\nA commit message\nEOF"
         self.assert_selection(command, "allow")
-        for hook, field in HOOKS:
-            result = self.run_hook(hook.with_name("require-elisp-test-before-commit.sh"), field, command)
-            self.assertEqual(permission_decision(result), "allow", result.stdout)
 
     def test_all_includes_unstaged_elisp(self):
         self.prepare_selection()
@@ -299,15 +296,6 @@ class DocUpdateHookTests(unittest.TestCase):
         (self.repo / "example.el").write_text(";; Version: 1.0\n(provide 'example)\n")
         (self.repo / "new.el").write_text("(message \"new\")\n")
         self.assert_selection("git add new.el && git commit -am test", "deny")
-
-    def test_elisp_evidence_gate_ignores_unselected_pending_add(self):
-        self.prepare_selection()
-        for hook, field in HOOKS:
-            result = self.run_hook(
-                hook.with_name("require-elisp-test-before-commit.sh"), field,
-                "git add example.el && git commit --only -m test -- script.sh",
-            )
-            self.assertEqual(permission_decision(result), "allow", result.stdout)
 
     def test_readme_gate_cannot_borrow_unselected_pending_readme(self):
         self.prepare_selection()

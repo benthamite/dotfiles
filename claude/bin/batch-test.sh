@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Clean batch loading of canonical Elisp, with source-bound test evidence.
+# Clean batch loading or ERT run of canonical Elisp.  A successful run
+# records test evidence bound to the exact Elisp contents it covered.
 # Usage: batch-test.sh PACKAGE [ELISP-EXPRESSION...]
 # The private --ert mode shares source/dependency setup with elisp-ert.
 
@@ -26,9 +27,7 @@ if [ "$ERT_MODE" = true ]; then
 fi
 
 TOOL_ROOT=$(cd -- "$(dirname -- "$0")/../.." && pwd -P)
-REVISION_HELPER="$TOOL_ROOT/claude/bin/elisp-source-revision"
-# shellcheck source=../hooks/lib-elisp-evidence.sh
-source "$TOOL_ROOT/claude/hooks/lib-elisp-evidence.sh"
+EVIDENCE="$TOOL_ROOT/claude/bin/elisp-evidence"
 if ! RESOLUTION=$("$TOOL_ROOT/bin/elpaca-package-resolve" "$IDENTIFIER" 2>/dev/null); then
   echo "Cannot resolve the canonical package source" >&2
   exit 1
@@ -123,7 +122,7 @@ if [ -d "$SOURCE_DIR/lisp" ]; then
 fi
 SOURCE_DIR_B64=$(printf '%s' "$SOURCE_DIR" | base64 | tr -d '\n')
 ARGS+=(--eval "(add-to-list 'load-path (decode-coding-string (base64-decode-string \"$SOURCE_DIR_B64\") 'utf-8))")
-REVISION_BEFORE=$("$REVISION_HELPER" "$SOURCE_REPO")
+REVISION_BEFORE=$("$EVIDENCE" snapshot "$SOURCE_REPO")
 
 if [ "$ERT_MODE" = true ]; then
   ARGS+=(--eval "(require 'ert)" -l "$TEST_FILE")
@@ -163,13 +162,5 @@ if grep -qE 'newer than byte-compiled file|using older file' "$OUTPUT_FILE"; the
   echo "Batch runner rejected a stale-load warning" >&2
   exit 1
 fi
-REVISION_AFTER=$("$REVISION_HELPER" "$SOURCE_REPO")
-if [ "$REVISION_AFTER" != "$REVISION_BEFORE" ]; then
-  echo "Batch runner rejected a source change that occurred during the check" >&2
-  exit 1
-fi
-if [ "$ERT_MODE" = false ]; then
-  REPO_B64=$(printf '%s' "$SOURCE_REPO" | base64 | tr -d '\n')
-  PACKAGE_B64=$(printf '%s' "$IDENTIFIER" | base64 | tr -d '\n')
-  elisp_evidence_emit test "$REPO_B64" "$PACKAGE_B64" "$REVISION_BEFORE"
-fi
+# Evidence is recorded only for source that did not change during the run.
+"$EVIDENCE" record-test "$SOURCE_REPO" "$IDENTIFIER" "$REVISION_BEFORE"

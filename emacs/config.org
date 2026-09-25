@@ -992,19 +992,9 @@ if [ -n "$ELPACA_DOTFILES" ]; then
     fi
 
     # Keep bounded evidence without deleting a status referenced by any live
-    # verification obligation. A malformed obligation disables cleanup.
-    malformed_marker=false
-    active_commits=""
-    for marker in /tmp/claude-elisp-verify-needed-*; do
-        [ -f "$marker" ] || continue
-        if [ ! -s "$marker" ] || grep -qvE '^[^:]+:[0-9a-f]{40,64}:[^:]+$' "$marker"; then
-            malformed_marker=true
-            break
-        fi
-        active_commits="$active_commits
-$(awk -F: '{print $2}' "$marker")"
-    done
-    if [ "$malformed_marker" = false ] && [ -d "$state_root" ]; then
+    # verification debt. An unreadable debt store disables cleanup.
+    if active_commits=$("$PRIMARY_ROOT/claude/bin/elisp-evidence" pending-commits) &&
+       [ -d "$state_root" ]; then
         for old_dir in "$state_root"/*; do
             [ -d "$old_dir" ] || continue
             [ -n "$(find "$old_dir" -prune -mtime +30 -print)" ] || continue

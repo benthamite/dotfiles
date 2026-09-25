@@ -468,11 +468,14 @@ The walk-list protected store at ~/.claude/walk-list-data/ is unreadable by any 
   return 0
 }
 
-# --- require-elisp-verify-after-commit.sh (marker-gated delegation) ---
-check_elisp_verify() {
-  local MARKER="/tmp/claude-elisp-verify-needed-${SESSION_ID}"
-  [ -f "$MARKER" ] || return 0
-  delegate "require-elisp-verify-after-commit.sh"
+# --- Elisp evidence hook protection ---
+# Elisp test and live-verification evidence is enforced by the global Git
+# hooks in claude/git-hooks and by the Stop hook, not by reading commands.
+# The one command shape that would silently disable both is an override of
+# core.hooksPath, so only that is denied here.
+check_hookspath_override() {
+  printf '%s' "$COMMAND" | grep -qiE -- '-c[[:space:]]*core\.hookspath|(^|[^[:alnum:]_-])git[[:space:]][^|;&]*config[[:space:]][^|;&]*core\.hookspath' || return 0
+  add_deny "BLOCKED: Git commands may not override core.hooksPath. The global hooks in ~/My Drive/dotfiles/claude/git-hooks enforce Elisp test evidence and run each repository's own hooks."
   return 0
 }
 
@@ -533,10 +536,9 @@ fi
 check_sensitive_read
 check_destructive
 check_walk_list
-[ "$IS_COMMIT" -eq 1 ] && delegate require-elisp-test-before-commit.sh
 [ "$IS_COMMIT" -eq 1 ] && delegate require-doc-update.sh
 [ "$IS_COMMIT" -eq 1 ] && delegate require-readme-update.sh
-check_elisp_verify
+check_hookspath_override
 if echo "$COMMAND" | grep -qE '\bemacsclient\b' && echo "$COMMAND" | grep -qE 'elpaca-rebuild|elpaca-extras-reload'; then
   delegate block-elpaca-rebuild-uncommitted.sh
 fi

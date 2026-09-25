@@ -21,8 +21,8 @@ unmanaged packages follow their own clean batch workflow:
 Wrap multiple top-level expressions for `batch-test.sh PACKAGE EXPR` in
 `progn`; one `--eval` argument evaluates one form. Resolve `PACKAGE` first with
 `bin/elpaca-package-resolve`. For standalone commit
-evidence, pass its `.label`, since the tracker binds evidence to the literal
-command label and the commit guard expects the checkout label. The runner uses
+evidence, pass its `.label`, since the commit hook expects evidence recorded
+under the checkout label. The runner uses
 `.id` and `.source` to load code; the checkout name, registry ID, and main library
 can differ. For focused ERT, the registered ID or resolvable checkout label is
 accepted, not an arbitrary sibling library basename. For example, use
@@ -35,12 +35,12 @@ rewound, and exclude the package's own build. They do not delete `.elc` files.
 Missing canonical source fails instead of silently testing a build. The simple
 batch loader requires one unambiguous `<registry-id>.el` at the source root or
 `lisp/`; otherwise use the project's supported check and diagnose the unsupported
-layout. ERT loads the explicit test file and returns its status; it does not
-emit the batch wrapper's commit receipt.
+layout. ERT loads the explicit test file and returns its status; a successful run
+records commit evidence just as the batch loader does.
 
 For non-package Elisp, replace `RELATIVE-PATH` with the staged path relative to
 the repository root and replace `PROJECT-CHECK` with the owning project's
-actual batch, compile, or test command. The wrapper emits evidence only when
+actual batch, compile, or test command. The wrapper records evidence only when
 that command is a tracked executable in the repository and succeeds without a
 stale-load warning. For `emacs/config.org`, use the exact
 `file:emacs/config.org` label and a tracked check that tangles and validates the
@@ -62,8 +62,8 @@ live verification on a package that still exists.
 Use `--staged` only when the same file also has unrelated unstaged edits that
 must remain outside the commit. It materializes the Git index under a temporary
 directory outside Drive from one frozen index tree, runs the tracked project
-check there, and emits its index content identity only if the live index still
-matches. It materializes raw blobs without running smudge filters or applying
+check there, and records evidence for the index contents only if the live
+index still matches. It materializes raw blobs without running smudge filters or applying
 checkout transformations; transformed bytes cannot stand in for indexed bytes.
 The command must be a regular tracked executable; snapshot symlinks
 must remain inside that snapshot. This is not a sandbox: review command effects

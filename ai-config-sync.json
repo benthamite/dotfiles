@@ -372,13 +372,6 @@
       "note": "paired GitHub write gate for shell commands; blocks git pushes and recognized mutating gh operations unless the target repo matches an exact OWNER/REPO entry or OWNER/* account wildcard in agents/github-write-allowlist.txt. Codex independently classifies literal nested functions.exec exec_command records and denies ambiguous records via the shared lib-codex-hook-json.sh parser; its directly registered entry blocks bootstrap failures with exit 2. Claude delegates through pretooluse-bash.sh, which already converts delegated failures into denials."
     },
     {
-      "name": "lib-elisp-diagnostics.py",
-      "claude": "claude/hooks/lib-elisp-diagnostics.py",
-      "codex": "codex/hooks/lib-elisp-diagnostics.py",
-      "status": "paired-utility",
-      "note": "Identical closed literal inspection-command classifier and pending-identity formatter for the live-verification gate. Inspection never clears pending evidence; unknown command shapes, mutations and arbitrary execution remain blocked. Assumes normal installed tool resolution, not a shell sandbox."
-    },
-    {
       "name": "lib-public-url-scan.py",
       "claude": "claude/hooks/lib-public-url-scan.py",
       "codex": "codex/hooks/lib-public-url-scan.py",
@@ -469,13 +462,6 @@
       "codex": "codex/hooks/lib-codex-paths.sh",
       "status": "codex-only",
       "note": "Codex apply_patch path extraction helper; uses lib-codex-hook-json.sh for object-or-string payload normalization, and includes native Write.content and Edit.new_string in secret scans. Secret scanning validates native patch framing, keeps all nonexempt file sections, and denies moves from exempt to ordinary destinations without reading source contents. Native Write/Edit exceptions remain scoped to their single destination. Claude has no apply_patch entrypoint and reads its native edit and notebook fields directly."
-    },
-    {
-      "name": "lib-elisp-evidence.sh",
-      "claude": "claude/hooks/lib-elisp-evidence.sh",
-      "codex": "codex/hooks/lib-elisp-evidence.sh",
-      "status": "paired-utility",
-      "note": "Identical helper that issues and atomically consumes one-time correlation receipts for Elisp test and live evidence. Receipts prevent accidental copying and replay but do not authenticate against another process running as the same user. Unconsumed evidence expires after one day through cleanup of only user-owned regular receipt and claim files; test and live-verification markers do not expire."
     },
     {
       "name": "lib-heredoc.sh",
@@ -632,20 +618,6 @@
       "note": "Depends on Claude Skill PostToolUse markers; Codex has no matching Skill hook event in this setup."
     },
     {
-      "name": "require-elisp-test-before-commit.sh",
-      "claude": "claude/hooks/require-elisp-test-before-commit.sh",
-      "codex": "codex/hooks/require-elisp-test-before-commit.sh",
-      "status": "paired-dispatched",
-      "note": "paired for Bash git commit gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
-    },
-    {
-      "name": "require-elisp-verify-after-commit.sh",
-      "claude": "claude/hooks/require-elisp-verify-after-commit.sh",
-      "codex": "codex/hooks/require-elisp-verify-after-commit.sh",
-      "status": "paired-dispatched",
-      "note": "paired for Bash post-commit verification gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
-    },
-    {
       "name": "require-readme-update.sh",
       "claude": "claude/hooks/require-readme-update.sh",
       "codex": "codex/hooks/require-readme-update.sh",
@@ -679,20 +651,6 @@
       "codex": null,
       "status": "unsupported-or-replaced",
       "note": "Depends on Claude Skill PostToolUse events; Codex has no matching Skill hook event in this setup."
-    },
-    {
-      "name": "track-elisp-test.sh",
-      "claude": "claude/hooks/track-elisp-test.sh",
-      "codex": "codex/hooks/track-elisp-test.sh",
-      "status": "paired",
-      "note": "paired for Bash post-tool tracking; Codex side normalizes string-wrapped tool_input/tool_response via lib-codex-hook-json.sh"
-    },
-    {
-      "name": "track-elisp-verify.sh",
-      "claude": "claude/hooks/track-elisp-verify.sh",
-      "codex": "codex/hooks/track-elisp-verify.sh",
-      "status": "paired",
-      "note": "paired for direct shell-tool verification tracking; both skip non-writing commit inspection and consume only repository/package/commit-bound live evidence. Codex additionally accepts exitCode and exit_code payload keys, pairs functions.exec commands with literal workdirs, and recovers workdirs omitted by native Bash events from their matching parent calls before consulting payload context. Repeated nested commits conservatively retain verification."
     },
     {
       "name": "wrap-bash-output.sh",
@@ -735,6 +693,13 @@
       "codex": "codex/hooks/lib-untrusted-execution.py",
       "status": "paired-utility",
       "note": "Byte-identical static untrusted-execution classifier. Reuses the existing lib-op-policy.py quote-preserving tokenizer without invoking its credential policy or executing the proposed command. Coverage and limits live in both hook manuals; synthetic fixtures in tests/test_untrusted_execution_guard.py."
+    },
+    {
+      "name": "block-hookspath-override.sh",
+      "claude": null,
+      "codex": "codex/hooks/block-hookspath-override.sh",
+      "status": "codex-only",
+      "note": "Denies Git commands that override core.hooksPath, which would disable the global Elisp evidence hooks in claude/git-hooks. Claude implements the same check inline as check_hookspath_override in claude/hooks/pretooluse-bash.sh."
     }
   ],
   "mcp_servers": [
@@ -784,7 +749,7 @@
       "tool": "Claude Code",
       "path": "~/.claude/settings.json",
       "tracked": false,
-      "note": "Mutable live global settings; hook registrations are added in place. load-elisp-after-edit.sh is registered with timeout 150 (matching codex/hooks.json) because it waits up to 120 s for the Elpaca rebuild before reporting. Stop forwards turn-end state to Emacs, while session-learning capture belongs to the Emacs agent-before-exit path because Stop is not true process exit. Ahrefs and GitHub guard registration is documented in claude/hooks/README.org. The LaunchAgent registry guard is registered on both the shell and edit matchers so plist writes and launchctl verbs are both covered."
+      "note": "Mutable live global settings; hook registrations are added in place. load-elisp-after-edit.sh is registered with timeout 150 (matching codex/hooks.json) because it waits up to 120 s for the Elpaca rebuild before reporting. Stop forwards turn-end state to Emacs, while session-learning capture belongs to the Emacs agent-before-exit path because Stop is not true process exit. Ahrefs, GitHub and Elisp Stop hook registration: claude/hooks/README.org. The LaunchAgent registry guard is registered on both the shell and edit matchers so plist writes and launchctl verbs are both covered."
     },
     {
       "tool": "Claude Code",

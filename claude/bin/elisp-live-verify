@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Exercise committed Elisp in the live Emacs session and emit bound evidence.
+# Exercise committed Elisp in the live Emacs session.  A successful check
+# records live evidence for the commit, which the agent Stop hook accepts.
 
 set -euo pipefail
 
@@ -19,8 +20,6 @@ esac
 
 script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
 dotfiles_root=$(cd -- "$script_dir/../.." && pwd)
-# shellcheck source=../hooks/lib-elisp-evidence.sh
-source "$dotfiles_root/claude/hooks/lib-elisp-evidence.sh"
 verification_label=$label
 package_id=""
 case "$label" in
@@ -170,6 +169,5 @@ if [ "$commit_after" != "$commit" ] ||
   exit 1
 fi
 
-repo_b64=$(printf '%s' "$repo" | base64 | tr -d '\n')
-label_b64=$(printf '%s' "$verification_label" | base64 | tr -d '\n')
-elisp_evidence_emit live "$repo_b64" "$label_b64" "$commit"
+"$dotfiles_root/claude/bin/elisp-evidence" record-live \
+  "$repo" "$verification_label" "${package_id:-$label}" "$commit"

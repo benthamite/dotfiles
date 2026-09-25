@@ -851,55 +851,26 @@ boundary, so an =emacsclient --eval= argument is Elisp, not shell.
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged
 index entries, so a live Emacs never loads tests or a partially resolved tree.
-The batch runner loads canonical source and emits evidence bound to the
-repository, package, and source revision; commit guards reject stale or reused
-evidence.  Composed-tool responses arrive as arrays of text blocks; the hook
-payload normalizer joins those blocks before evidence tracking, so successful
-=functions.exec= checks create the same session marker as direct shell checks.
-Test-only Elisp commits likewise do not require package-manual
-updates. For =functions.exec= wrappers, post-commit verification pairs each
-literal nested shell command with its own =workdir=; it never guesses from the
-hook process directory and ignores inert quoted commit text. It records every
-production package across multi-commit commands. Only =elisp-live-verify= can
-clear one matching repository/package/commit obligation. The helper rejects
-dirty source, waits for the package reload, and then runs the package-named live
-expression. Unrelated =emacsclient= calls do not clear the gate.
-Commit inspection with =--dry-run=, status-format options, or help does not
-create a live-verification obligation. Native nested Bash events that omit
-=workdir= recover it from the matching literal parent call before tracking a
-commit; otherwise the tracker uses the explicit payload context.
+Test-only Elisp commits likewise do not require package-manual updates.
 
-The live-verification gate permits literal read-only diagnosis through
-=lib-elisp-diagnostics.py= while retaining every pending check. It also admits
-the =git stash= operations =push=, =pop=, =apply=, =drop=, =list= and =show=,
-which move uncommitted work aside and back without executing any of it: when a
-commit leaves other Elisp uncommitted, stashing reaches the clean tree that
-=elisp-live-verify= requires, so the debt can be cleared without outside help.
-Interactive, branch-creating and ref-naming stash forms stay blocked. Supported forms
-also include =emacsclient -e= with the exact rebuild-token status call or the
-bounded package-filtered registry query. Recovery protocol and diagnostic-gate
-tests may run as =python3 -I -B ABSOLUTE-TEST-PATH= for the two canonical test
-files =test_elpaca_rebuild_protocol.py= and =test_elisp_live_diagnostics.py=.
-These isolated fixture tests retain pending package/commit identities and never
-certify live behavior. Extra arguments and other Python programs stay blocked.
-Other supported forms
-include =cat=, numeric =sed -n= ranges and =rg --no-config=. Git requires
-=--no-pager=; index-reading commands (=status=, =ls-files=, =diff=) additionally
-require =--no-optional-locks -c core.fsmonitor=false=. Diff, log and show
-require =--no-ext-diff --no-textconv=. Only closed option forms are accepted;
-required switches cannot be option values or paths after =--=. Shell composition, expansions,
-arbitrary interpreters and mutations remain blocked. Literal nested shell calls
-must each pass the same classification. Denials identify the pending package,
-commit and repository; inspection never supplies verification evidence.
-
-Both evidence trackers must have trusted current definitions in the active
-profile. A modified test tracker is skipped even when the commit guard remains
-trusted. Restore its trust through the native hook settings, then rerun the
-source check; manually creating an evidence marker does not repair dispatch.
-Test recorders skip the index hash when the working revision already matches,
-so an unnecessary index scan cannot exhaust the hook deadline after consuming
-the receipt but before saving the test result. Staged-only evidence still checks
-the index revision.
+Elisp test and live-verification evidence is enforced on content, never on
+the spelling of a shell command, so direct and =functions.exec= commands behave
+alike. =batch-test.sh=, =elisp-ert= and =elisp-check-evidence= record, after a
+successful run, which Elisp files at which contents they covered;
+=elisp-live-verify= records the commit it exercised. =claude/bin/elisp-evidence=
+keeps these records under =~/.local/state/agent-elisp-evidence/=. The global
+Git hook directory =claude/git-hooks= (=core.hooksPath= in =~/.gitconfig=)
+runs its checks only in agent sessions, identified by =CODEX_THREAD_ID= or
+=CLAUDE_CODE_SESSION_ID=: =pre-commit= rejects a commit whose staged Elisp no
+run covered, and =post-commit= records a live check as owed for a production
+package, plus a test as owed when the commit skipped =pre-commit= through
+=--no-verify=. The Stop hook =elisp-evidence stop-check --agent codex= keeps
+the committing thread's turn from ending until those debts are paid, releasing
+after two consecutive blocks in one turn instead of looping. No other command
+is blocked meanwhile. Every hook in =claude/git-hooks= then runs the
+repository's own hook of the same name. =block-hookspath-override.sh= denies
+overriding =core.hooksPath=. Both registrations need trusted current
+definitions in the active Codex profile.
 
 Emacs-owned sessions use eight explicit =codex-hook-wrapper= registrations for
 lifecycle forwarding. The wrapper comes from the Emacs package source tree

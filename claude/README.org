@@ -941,46 +941,25 @@ skips test-only files and edits while Git has an active operation or unmerged
 index entries, so a live Emacs never loads tests or a partially resolved tree.
 Test-only Elisp commits likewise do not require package-manual updates.
 
-Live-verification evidence for a standalone-package label binds to the
-package's own checkout, resolved through =bin/elpaca-package-resolve=, never to
-the shell's working directory. The verify-after-commit gate keys its debt to
-the committing repository while blocking =cd=, so a harness that pins the
-working directory to the dotfiles root could otherwise never clear a debt for
-a commit in a package repository.
-Commit inspection with =--dry-run=, status-format options, or help does not
-create a live-verification obligation. Those words in message arguments or
-pathspecs do not exempt an actual commit.
-
-The live-verification gate permits literal read-only diagnosis through
-=lib-elisp-diagnostics.py= while retaining every pending check. It also admits
-the =git stash= operations =push=, =pop=, =apply=, =drop=, =list= and =show=,
-which move uncommitted work aside and back without executing any of it: when a
-commit leaves other Elisp uncommitted, stashing reaches the clean tree that
-=elisp-live-verify= requires, so the debt can be cleared without outside help.
-Interactive, branch-creating and ref-naming stash forms stay blocked. Supported forms
-also include =emacsclient -e= with the exact rebuild-token status call or the
-bounded package-filtered registry query. Recovery protocol and diagnostic-gate
-tests may run as =python3 -I -B ABSOLUTE-TEST-PATH= for the two canonical test
-files =test_elpaca_rebuild_protocol.py= and =test_elisp_live_diagnostics.py=.
-These isolated fixture tests retain pending package/commit identities and never
-certify live behavior. Extra arguments and other Python programs stay blocked.
-Other supported forms
-include =cat=, numeric =sed -n= ranges and =rg --no-config=. Git requires
-=--no-pager=; index-reading commands (=status=, =ls-files=, =diff=) additionally
-require =--no-optional-locks -c core.fsmonitor=false=. Diff, log and show
-require =--no-ext-diff --no-textconv=. Only closed option forms are accepted;
-required switches cannot be option values or paths after =--=. Shell composition, expansions,
-arbitrary interpreters and mutations remain blocked. Denials identify the
-pending package, commit and repository. Only successful bound live evidence
-clears the obligation.
-
-The Codex counterparts also depend on native hook trust: a modified test
-tracker can be skipped while the commit guard continues to require its evidence.
-Restore trust for the reviewed tracker definition before rerunning the check.
-Test recorders skip the index hash when the working revision already matches,
-so an unnecessary index scan cannot exhaust the hook deadline after consuming
-the receipt but before saving the test result. Staged-only evidence still checks
-the index revision.
+Elisp test and live-verification evidence is enforced on content, never on
+the spelling of a shell command. =batch-test.sh=, =elisp-ert= and
+=elisp-check-evidence= record, after a successful run, which Elisp files at
+which contents they covered; =elisp-live-verify= records the commit it
+exercised. =claude/bin/elisp-evidence= keeps these records under
+=~/.local/state/agent-elisp-evidence/=. The global Git hook directory
+=claude/git-hooks= (installed as =core.hooksPath= in =~/.gitconfig=) runs its
+checks only in agent sessions, identified by =CLAUDE_CODE_SESSION_ID= or
+=CODEX_THREAD_ID=: =pre-commit= rejects a commit whose staged Elisp no run
+covered, and =post-commit= records a live check as owed for a production
+package, plus a test as owed when the commit skipped =pre-commit= through
+=--no-verify=. The Stop hook =elisp-evidence stop-check= keeps the committing
+session's turn from ending until those debts are paid; live evidence for a
+later commit covers earlier ones, and an amended commit that no branch contains
+is dropped. After two consecutive blocks in one turn it lets the turn end and
+reports the unpaid debts to the user instead of looping. No other command is
+blocked meanwhile. Every hook in =claude/git-hooks= then runs the
+repository's own hook of the same name, so repository hooks keep working. The
+only related command guard denies overriding =core.hooksPath=.
 
 Hooks that judge a Git command resolve the repository from the command itself,
 via =hooks/lib-repo-root.sh=. A =cd= at any command head decides the repository,

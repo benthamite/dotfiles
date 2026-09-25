@@ -1,0 +1,551 @@
+#!/usr/bin/env python3
+"""Record and check evidence that agent Elisp changes were tested and verified.
+
+Evidence is bound to source content, never to the spelling of a shell
+command.  Test wrappers record which Elisp files, at which contents, a
+passing check covered.  Git hooks compare those records against what is
+actually being committed, and a Stop hook keeps an agent turn from ending
+while a commit it made still lacks test or live evidence.
+
+Subcommands:
+  snapshot [--index] REPO                 print the digest of REPO's Elisp source
+  record-test [--index] REPO LABEL DIGEST record a passing check of that source
+  record-live REPO LABEL PACKAGE COMMIT   record a passing live check of COMMIT
+  pre-commit                              git pre-commit hook body
+  post-commit                             git post-commit hook body
+  stop-check --agent claude|codex         agent Stop hook (hook JSON on stdin)
+  pending-commits                         print commits with unpaid live debts
+"""
+
+from __future__ import annotations
+
+import contextlib
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import shlex
+import subprocess
+import sys
+import time
+
+TOOL_DIR = Path(__file__).resolve().parent
+RECORD_LIMIT = 200
+DEBT_EXPIRY_SECONDS = 14 * 24 * 3600
+MAX_STOP_BLOCKS = 2
+
+
+# --- Git access -------------------------------------------------------------
+
+
+def git(repo: Path, *args: str, input: bytes | None = None, check: bool = True) -> bytes:
+    result = subprocess.run(
+        ["git", "-C", str(repo), *args],
+        input=input,
+        capture_output=True,
+        check=False,
+    )
+    if check and result.returncode != 0:
+        raise GitError(result.stderr.decode(errors="replace").strip())
+    return result.stdout
+
+
+class GitError(Exception):
+    pass
+
+
+def repo_root(path: Path) -> Path:
+    return Path(git(path, "rev-parse", "--show-toplevel").decode().strip()).resolve()
+
+
+def is_elisp(path: str) -> bool:
+    return path.endswith(".el") or path == "emacs/config.org"
+
+
+def is_dotfiles(root: Path) -> bool:
+    return (root / "emacs" / "extras").is_dir() and (root / "claude" / "bin").is_dir()
+
+
+# --- Source maps --------------------------------------------------------------
+# A source map sends each Elisp path to "<kind>:<git blob id>", where kind is
+# "f" for a file and "l" for a symlink.  Git blob ids make working-tree,
+# index and commit contents directly comparable.
+
+
+def worktree_map(root: Path) -> dict[str, str]:
+    listed = git(root, "ls-files", "-z", "--cached", "--others", "--exclude-standard")
+    paths = sorted({p for p in listed.decode().split("\0") if p and is_elisp(p)})
+    files, links = [], []
+    for relative in paths:
+        full = root / relative
+        if full.is_symlink():
+            links.append(relative)
+        elif full.is_file():
+            files.append(relative)
+    result: dict[str, str] = {}
+    if files:
+        ids = git(root, "hash-object", "--stdin-paths", input="\n".join(files).encode() + b"\n")
+        for relative, identity in zip(files, ids.decode().split()):
+            result[relative] = f"f:{identity}"
+    for relative in links:
+        target = os.fsencode(os.readlink(root / relative))
+        identity = git(root, "hash-object", "--stdin", "--no-filters", input=target).decode().strip()
+        result[relative] = f"l:{identity}"
+    return result
+
+
+def index_map(root: Path) -> dict[str, str]:
+    listing = git(root, "ls-files", "--stage", "-z")
+    result: dict[str, str] = {}
+    for record in listing.decode().split("\0"):
+        if not record:
+            continue
+        metadata, _, path = record.partition("\t")
+        mode, identity, stage = metadata.split()
+        if stage != "0":
+            raise GitError(f"unmerged index entry: {path}")
+        if is_elisp(path):
+            result[path] = ("l:" if mode == "120000" else "f:") + identity
+    return result
+
+
+def tree_map(root: Path, revision: str) -> dict[str, str]:
+    listing = git(root, "ls-tree", "-r", "-z", "--full-tree", revision)
+    result: dict[str, str] = {}
+    for record in listing.decode().split("\0"):
+        if not record:
+            continue
+        metadata, _, path = record.partition("\t")
+        mode, kind, identity = metadata.split()
+        if kind == "blob" and is_elisp(path):
+            result[path] = ("l:" if mode == "120000" else "f:") + identity
+    return result
+
+
+def digest(source: dict[str, str]) -> str:
+    hasher = hashlib.sha256(b"elisp-evidence-v1\0")
+    for path in sorted(source):
+        hasher.update(path.encode() + b"\0" + source[path].encode() + b"\0")
+    return hasher.hexdigest()
+
+
+# --- Changes and labels -------------------------------------------------------
+# A label names what a test run must cover: a package ("agent", or a dotfiles
+# extra's name) or a single file ("file:emacs/config.org").
+
+
+def parse_name_status(raw: bytes) -> list[tuple[str, bool]]:
+    """Return (path, deleted) pairs from `--name-status -z` output."""
+    fields = raw.decode().split("\0")
+    changes: list[tuple[str, bool]] = []
+    i = 0
+    while i < len(fields) and fields[i]:
+        status = fields[i]
+        if status[0] in "RC":
+            old, new = fields[i + 1], fields[i + 2]
+            if status[0] == "R":
+                changes.append((old, True))
+            changes.append((new, False))
+            i += 3
+        else:
+            changes.append((fields[i + 1], status[0] == "D"))
+            i += 2
+    return [(path, deleted) for path, deleted in changes if is_elisp(path)]
+
+
+def staged_changes(root: Path) -> list[tuple[str, bool]]:
+    return parse_name_status(
+        git(root, "diff", "--cached", "--name-status", "-z", "-M", "--no-ext-diff", "--no-textconv")
+    )
+
+
+def commit_changes(root: Path, commit: str) -> list[tuple[str, bool]]:
+    return parse_name_status(
+        git(root, "diff-tree", "-r", "--root", "--no-commit-id", "--name-status", "-z", "-M", commit)
+    )
+
+
+def common_dir(root: Path) -> Path:
+    """Return the Git directory ROOT shares with all of its worktrees."""
+    output = git(root, "rev-parse", "--path-format=absolute", "--git-common-dir")
+    return Path(output.decode().strip()).resolve()
+
+
+def checkout_names(root: Path) -> list[str]:
+    """Return ROOT's directory name, then its main checkout's when it is a worktree."""
+    names = [root.name]
+    common = common_dir(root)
+    if common.name == ".git" and common.parent.name not in names:
+        names.append(common.parent.name)
+    return names
+
+
+def package_repo_name(root: Path) -> str | None:
+    for name in checkout_names(root):
+        if (root / f"{name}.el").is_file() or (root / "lisp" / f"{name}.el").is_file():
+            return name
+    return None
+
+
+def test_label(root: Path, path: str, deleted: bool) -> str | None:
+    """Return the label whose test evidence must cover PATH, or nil if none.
+    Machine-generated files need no test of their own."""
+    base = os.path.basename(path)
+    if base == "lockfile.el" or base.endswith(("-autoloads.el", "-pkg.el")):
+        return None
+    if deleted or path == "emacs/config.org" or base == ".dir-locals.el":
+        return f"file:{path}"
+    if is_dotfiles(root):
+        if path.startswith("emacs/extras/") and "/" not in path[len("emacs/extras/"):]:
+            name = base[: -len(".el")]
+            name = name.removeprefix("test-")
+            for suffix in ("-tests", "-test"):
+                name = name.removesuffix(suffix)
+            return name
+        return f"file:{path}"
+    return package_repo_name(root) or f"file:{path}"
+
+
+def required_tests(root: Path, changes: list[tuple[str, bool]]) -> dict[str, dict]:
+    """Group changed paths by the label whose evidence must cover them.
+
+    A standalone package's evidence must cover all of its Elisp, because a
+    package test loads the whole checkout.  Other labels cover only the
+    changed paths they own."""
+    requirements: dict[str, dict] = {}
+    for path, deleted in changes:
+        label = test_label(root, path, deleted)
+        if label is None:
+            continue
+        entry = requirements.setdefault(
+            label,
+            {"paths": [], "whole_repo": label == package_repo_name(root) and not is_dotfiles(root)},
+        )
+        entry["paths"].append([path, deleted])
+    return requirements
+
+
+def live_label(root: Path, path: str, deleted: bool) -> str | None:
+    """Return the label a live check must cover after committing PATH, if any."""
+    parts = path.split("/")
+    if (
+        parts[0] in ("test", "tests")
+        or "test" in parts[:-1]
+        or "tests" in parts[:-1]
+        or path.endswith(("-test.el", "-tests.el"))
+        or parts[-1].startswith("test-")
+        or not path.endswith(".el")
+    ):
+        return None
+    if is_dotfiles(root):
+        if path.startswith("emacs/extras/") and len(parts) == 3:
+            name = parts[-1][: -len(".el")]
+            return f"deleted:{name}" if deleted else name
+        return None
+    if "/elpaca/sources/" not in f"{root}/" and "/elpaca/repos/" not in f"{root}/":
+        return None
+    name = package_repo_name(root) or root.name
+    if deleted and path in (f"{name}.el", f"lisp/{name}.el") and package_repo_name(root) is None:
+        return f"deleted:{name}"
+    return name
+
+
+# --- Evidence store -----------------------------------------------------------
+
+
+def state_root() -> Path:
+    configured = os.environ.get("AGENT_ELISP_EVIDENCE_DIR")
+    base = Path(configured) if configured else Path.home() / ".local" / "state" / "agent-elisp-evidence"
+    base.mkdir(parents=True, exist_ok=True)
+    return base
+
+
+def repo_dir(root: Path) -> Path:
+    """Return the evidence directory ROOT shares with its other worktrees.
+    Test records name paths relative to the checkout, and commits are shared,
+    so evidence from the main checkout also covers the same content in a
+    worktree."""
+    shared = common_dir(root)
+    key = hashlib.sha256(str(shared).encode()).hexdigest()[:16]
+    directory = state_root() / "repos" / key
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / "repo").write_text(str(shared) + "\n")
+    return directory
+
+
+@contextlib.contextmanager
+def locked(path: Path):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path.with_suffix(path.suffix + ".lock"), "a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        yield
+
+
+def read_records(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+    records = []
+    for line in path.read_text().splitlines():
+        with contextlib.suppress(json.JSONDecodeError):
+            records.append(json.loads(line))
+    return records
+
+
+def append_record(path: Path, record: dict) -> None:
+    with locked(path):
+        records = read_records(path)[-(RECORD_LIMIT - 1):] + [record]
+        write_records(path, records)
+
+
+def write_records(path: Path, records: list[dict]) -> None:
+    temporary = path.with_suffix(path.suffix + f".{os.getpid()}.tmp")
+    temporary.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in records))
+    temporary.replace(path)
+
+
+def covers(record: dict, requirement: dict, source: dict[str, str]) -> bool:
+    """Return non-nil when a test RECORD tested exactly the SOURCE REQUIREMENT needs."""
+    tested = record.get("files", {})
+    for path, deleted in requirement["paths"]:
+        if deleted:
+            if path in tested:
+                return False
+        elif tested.get(path) != source.get(path):
+            return False
+    if requirement["whole_repo"]:
+        return all(tested.get(path) == entry for path, entry in source.items())
+    return True
+
+
+def missing_tests(root: Path, requirements: dict[str, dict], source: dict[str, str]) -> list[str]:
+    records = read_records(repo_dir(root) / "tests.jsonl")
+    missing = []
+    for label, requirement in requirements.items():
+        if not any(r.get("label") == label and covers(r, requirement, source) for r in reversed(records)):
+            missing.append(label)
+    return missing
+
+
+# --- Agent sessions -----------------------------------------------------------
+
+
+def agent_session() -> str | None:
+    if os.environ.get("CLAUDE_CODE_SESSION_ID"):
+        return "claude:" + os.environ["CLAUDE_CODE_SESSION_ID"]
+    if os.environ.get("CODEX_THREAD_ID"):
+        return "codex:" + os.environ["CODEX_THREAD_ID"]
+    return None
+
+
+def debt_path(session: str) -> Path:
+    key = hashlib.sha256(session.encode()).hexdigest()[:24]
+    return state_root() / "debts" / f"{key}.jsonl"
+
+
+# --- Messages -----------------------------------------------------------------
+
+
+def test_command(label: str) -> str:
+    if label.startswith("file:"):
+        return f"{shlex.quote(str(TOOL_DIR / 'elisp-check-evidence'))} {shlex.quote(label)} -- PROJECT-CHECK"
+    return f"{shlex.quote(str(TOOL_DIR / 'batch-test.sh'))} {shlex.quote(label)}"
+
+
+def missing_test_message(root: Path, labels: list[str]) -> str:
+    lines = [
+        f"Elisp evidence: the Elisp being committed in {root} has no passing test of these exact contents.",
+        "Run, after the final edit (pipes and chained commands are fine):",
+    ]
+    lines += [f"  {test_command(label)}" for label in labels]
+    if any(label.startswith("file:") for label in labels):
+        lines.append("Replace PROJECT-CHECK with a tracked executable check in the repository.")
+    lines.append(
+        "If other uncommitted edits to the same files are in the working tree, stash them first, "
+        "or test the staged version with elisp-check-evidence --staged."
+    )
+    return "\n".join(lines)
+
+
+# --- Subcommands --------------------------------------------------------------
+
+
+def cmd_snapshot(args: list[str]) -> int:
+    index_mode, args = take_flag(args, "--index")
+    root = repo_root(Path(args[0]))
+    print(digest(index_map(root) if index_mode else worktree_map(root)))
+    return 0
+
+
+def cmd_record_test(args: list[str]) -> int:
+    index_mode, args = take_flag(args, "--index")
+    path, label, expected = args
+    root = repo_root(Path(path))
+    source = index_map(root) if index_mode else worktree_map(root)
+    if digest(source) != expected:
+        print("elisp-evidence: Elisp source changed during the check; no evidence recorded", file=sys.stderr)
+        return 1
+    append_record(repo_dir(root) / "tests.jsonl",
+                  {"label": label, "files": source, "time": time.time()})
+    print(f"elisp-evidence: recorded test evidence for {label} in {root}")
+    return 0
+
+
+def cmd_record_live(args: list[str]) -> int:
+    path, label, package, commit = args
+    root = repo_root(Path(path))
+    append_record(repo_dir(root) / "live.jsonl",
+                  {"label": label, "package": package, "commit": commit, "time": time.time()})
+    print(f"elisp-evidence: recorded live evidence for {label} at {commit[:12]}")
+    return 0
+
+
+def cmd_pre_commit(_args: list[str]) -> int:
+    if agent_session() is None:
+        return 0
+    root = repo_root(Path.cwd())
+    changes = staged_changes(root)
+    if not changes:
+        return 0
+    missing = missing_tests(root, required_tests(root, changes), index_map(root))
+    if not missing:
+        return 0
+    print(missing_test_message(root, missing), file=sys.stderr)
+    return 1
+
+
+def cmd_post_commit(_args: list[str]) -> int:
+    session = agent_session()
+    if session is None:
+        return 0
+    root = repo_root(Path.cwd())
+    commit = git(root, "rev-parse", "HEAD").decode().strip()
+    changes = commit_changes(root, commit)
+    if not changes:
+        return 0
+    debts = []
+    requirements = required_tests(root, changes)
+    for label in missing_tests(root, requirements, tree_map(root, commit)):
+        debts.append({"kind": "test", "label": label, **requirements[label]})
+    for label in sorted({l for p, d in changes if (l := live_label(root, p, d))}):
+        debts.append({"kind": "live", "label": label})
+    if not debts:
+        return 0
+    path = debt_path(session)
+    with locked(path):
+        records = read_records(path)
+        records += [{**d, "repo": str(root), "commit": commit, "time": time.time()} for d in debts]
+        write_records(path, records)
+    return 0
+
+
+def debt_satisfied(debt: dict) -> bool:
+    root = Path(debt["repo"])
+    commit = debt["commit"]
+    if not root.is_dir() or time.time() - debt.get("time", 0) > DEBT_EXPIRY_SECONDS:
+        return True
+    try:
+        # An amended or abandoned commit that no branch contains is superseded.
+        if not git(root, "for-each-ref", "--contains", commit, "--count=1",
+                   "refs/heads", "refs/remotes"):
+            return True
+        if debt["kind"] == "test":
+            requirement = {"paths": debt["paths"], "whole_repo": debt["whole_repo"]}
+            return not missing_tests(root, {debt["label"]: requirement}, tree_map(root, commit))
+        return any(
+            debt["label"] in (record.get("label"), record.get("package"))
+            and is_ancestor(root, commit, record["commit"])
+            for record in read_records(repo_dir(root) / "live.jsonl")
+        )
+    except GitError:
+        return True
+
+
+def is_ancestor(root: Path, ancestor: str, descendant: str) -> bool:
+    """Return non-nil when live evidence at DESCENDANT also covers ANCESTOR."""
+    result = subprocess.run(
+        ["git", "-C", str(root), "merge-base", "--is-ancestor", ancestor, descendant],
+        capture_output=True,
+    )
+    return result.returncode == 0
+
+
+def debt_instruction(debt: dict) -> str:
+    where = f"commit {debt['commit'][:12]} in {debt['repo']}"
+    if debt["kind"] == "test":
+        return f"- {where} changed {debt['label']} without a passing test of its contents. Run: {test_command(debt['label'])}"
+    verify = shlex.quote(str(TOOL_DIR / "elisp-live-verify"))
+    return (f"- {where} changed {debt['label']} and it has not been checked in the live Emacs. "
+            f"Run: {verify} {shlex.quote(debt['label'])} -- 'EXPRESSION' with an expression that exercises the change.")
+
+
+def cmd_stop_check(args: list[str]) -> int:
+    agent = args[args.index("--agent") + 1]
+    payload = json.load(sys.stdin)
+    session = payload.get("session_id")
+    if not session:
+        return 0
+    path = debt_path(f"{agent}:{session}")
+    if not path.exists():
+        return 0
+    with locked(path):
+        debts = [d for d in read_records(path) if not debt_satisfied(d)]
+        write_records(path, debts)
+    if not debts:
+        path.with_suffix(".blocks").unlink(missing_ok=True)
+        return 0
+    counter = path.with_suffix(".blocks")
+    blocks = int(counter.read_text() or 0) if counter.exists() and payload.get("stop_hook_active") else 0
+    instructions = "\n".join(debt_instruction(d) for d in debts)
+    if blocks >= MAX_STOP_BLOCKS:
+        counter.unlink(missing_ok=True)
+        if agent == "claude":
+            print(json.dumps({"systemMessage": "Unverified Elisp commits remain:\n" + instructions}))
+        return 0
+    counter.write_text(str(blocks + 1))
+    print(json.dumps({
+        "decision": "block",
+        "reason": "Before finishing, verify the Elisp this session committed:\n" + instructions,
+    }))
+    return 0
+
+
+def cmd_pending_commits(_args: list[str]) -> int:
+    commits = set()
+    for path in (state_root() / "debts").glob("*.jsonl"):
+        commits.update(d["commit"] for d in read_records(path) if d.get("kind") == "live")
+    for commit in sorted(commits):
+        print(commit)
+    return 0
+
+
+def take_flag(args: list[str], flag: str) -> tuple[bool, list[str]]:
+    return (True, args[1:]) if args[:1] == [flag] else (False, args)
+
+
+COMMANDS = {
+    "snapshot": cmd_snapshot,
+    "record-test": cmd_record_test,
+    "record-live": cmd_record_live,
+    "pre-commit": cmd_pre_commit,
+    "post-commit": cmd_post_commit,
+    "stop-check": cmd_stop_check,
+    "pending-commits": cmd_pending_commits,
+}
+
+
+def main() -> int:
+    if len(sys.argv) < 2 or sys.argv[1] not in COMMANDS:
+        print(__doc__, file=sys.stderr)
+        return 2
+    try:
+        return COMMANDS[sys.argv[1]](sys.argv[2:])
+    except (GitError, ValueError, IndexError) as error:
+        print(f"elisp-evidence {sys.argv[1]}: {error}", file=sys.stderr)
+        # post-commit re-checks every agent commit and records any gap as a
+        # debt, so a tool failure must not block a commit or end a turn.
+        return 0 if sys.argv[1] in ("pre-commit", "post-commit", "stop-check") else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

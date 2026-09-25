@@ -60,11 +60,6 @@
           },
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/require-elisp-test-before-commit.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/require-doc-update.sh",
             "timeout": 10
           },
@@ -85,11 +80,6 @@
           },
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/require-elisp-verify-after-commit.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-elpaca-rebuild-uncommitted.sh",
             "timeout": 10
           },
@@ -107,6 +97,11 @@
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-untrusted-execution.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-hookspath-override.sh",
+            "timeout": 5
           }
         ]
       },
@@ -159,16 +154,6 @@
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/load-elisp-after-edit.sh",
             "timeout": 150
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/track-elisp-test.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/track-elisp-verify.sh",
-            "timeout": 5
           }
         ]
       },
@@ -232,6 +217,15 @@
           {
             "type": "command",
             "command": "/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper Stop --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/bin/elisp-evidence stop-check --agent codex",
             "timeout": 30
           }
         ]

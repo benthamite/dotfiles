@@ -14,7 +14,7 @@ function label(desc) {
   if (desc ~ /Reset Code/)
     return ""
   if (desc ~ /unlock the card/ || desc ~ /PIN/)
-    return "YUBIKEY PIN%0A(the everyday PIN, not the Admin PIN, not the FIDO PIN)%0AAfter OK, touch the YubiKey.%0A%0A"
+    return "YUBIKEY PIN (the everyday one)%0A(not the Admin PIN, not the FIDO PIN)%0A%0A"
   if (desc ~ /passphrase/)
     return "GPG PASSPHRASE%0A(your long-standing GPG key password, not a YubiKey PIN)%0A%0A"
   return ""

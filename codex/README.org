@@ -118,28 +118,29 @@ determine dependencies. Unsafe token duplication and identity/provider changes
 cannot be hidden as clean baselines. Private reports preserve incomplete cohorts
 and unobserved isolation; timing completion does not establish a causal claim.
 
-Browser control is runtime-owned: the bundled Browser and Chrome plugins load
-directly through Codex. No tracked skill or helper command mediates a
-CLI/Emacs-to-App browser handoff.
+The documented OpenAI Chrome workflow uses the desktop app and its Chrome
+extension. Direct use of desktop browser components from CLI or Emacs is not
+established by that documentation as a supported standalone installation.
+Do not infer CLI support from the availability of a browser helper executable.
 
-The Chrome MCP helper lives in the supported =ChatGPT.app= replacement for the
-discontinued =Codex.app=. Its executable, Node/module paths, declared app version,
-and trusted browser-client hashes must match the same app release. The trusted
-code paths include the helper module directory and the bundled Chrome plugin.
-=NODE_REPL_TRUSTED_SERVICES= registers that plugin's =browser-service.mjs= as
-=browser=. These manual settings are not automatically synchronized by desktop
-updates; matching them repairs version skew but does not establish that Chrome
-command timeouts are resolved. Use that release's bundled
-Chrome skill and browser client; do not mix it with an older cached plugin.
-Homebrew can report the discontinued =codex-app= cask as current even when it
-contains an older runtime. Use the =chatgpt= cask for desktop updates.
+The desktop app generates its browser MCP configuration and installs bundled
+plugins for its active Codex home. These writable settings and plugin directories
+must remain account-local. The =agent= account manager seeds them once from the
+canonical home, preserves later account-local changes, and converts legacy
+shared symlinks into independent files and directories. Other shared resources,
+such as skills and session history, retain their existing sharing behavior.
+Changes to canonical preferences do not automatically update existing accounts.
 
-The helper's =CODEX_CLI_PATH= points to =shell/shims/codex=. This launches the current
-Homebrew release from a retained immutable runtime, so upgrading Homebrew does
-not delete the signed executable used by a running session. The older bundled CLI
-cannot parse current agent settings; its configuration-read failure is
-misreported by the browser as an enterprise network-policy denial. Keep the
-configuration reader current without disabling browser permission checks.
+Use the app's generated plugin registration and the standard plugin installer.
+A marketplace source belonging to another account can prevent the app from
+refreshing its bundled plugins. Do not compensate by maintaining a separate set
+of release versions, browser-client hashes, or broader trusted code paths.
+Homebrew's supported desktop package is =chatgpt=; the discontinued =codex-app=
+package can report its older runtime as current.
+
+The command-line =shell/shims/codex= launcher retains signed Homebrew runtimes
+so updates do not delete an executable backing a running CLI session. This
+protects CLI executable lifetime; it does not establish browser functionality.
 
 Model-invocable tracked skills do not preapprove bare high-risk tools through
 =allowed-tools=. Loading a skill therefore leaves Bash, write, edit, agent, and

@@ -30,6 +30,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 @menu
 * Overview::
 * Commands::
+* YubiKey touch reminder::
 * Indices::
 
 @detailmenu
@@ -64,6 +65,8 @@ Generating passwords of various types and copying them to the clipboard with aut
 Storing external key files into the password store and exporting entries back out (@ref{Key management}).
 @item
 Unlocking @samp{git-crypt} repositories using keys stored in @samp{pass} (@ref{Git-crypt integration}).
+@item
+Reminding you to touch a YubiKey when a decryption waits for one (@ref{YubiKey touch reminder}).
 @end itemize
 
 The package depends on @samp{pass} and @samp{password-generator}.
@@ -124,6 +127,13 @@ The reverse operation is provided by @code{pass-extras-export-key}, which prompt
 
 @findex pass-extras-git-crypt-unlock
 If you store @samp{git-crypt} symmetric keys in @samp{pass}, the command @code{pass-extras-git-crypt-unlock} can unlock a repository without ever writing the key to disk. It prompts for a @samp{pass} entry containing the key (with completion) and runs @samp{git-crypt unlock} with process substitution so the key is fed directly from @samp{pass} into @samp{git-crypt}. The command operates in the current @code{default-directory} unless an optional REPO argument is provided programmatically. It reports success or failure in the echo area.
+
+@node YubiKey touch reminder
+@chapter YubiKey touch reminder
+
+@vindex pass-extras-touch-reminder
+@findex pass-extras-remind-touch
+When the password store's decryption key lives on a YubiKey that requires a touch, a decryption waits silently until the key is touched and fails after about fifteen seconds. To make that wait visible, @samp{pass-extras} displays @code{pass-extras-touch-reminder} in the echo area whenever a decrypting @samp{pass} subcommand (@samp{show}, @samp{edit} or @samp{otp}) starts, and whenever @samp{auth-source-pass} reads an entry. Customize @code{pass-extras-touch-reminder} to change the text.
 
 @node Indices
 @chapter Indices

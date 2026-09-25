@@ -1,0 +1,29 @@
+#!/bin/bash
+# pinentry-mac wrapper that states, in every GnuPG dialog, which secret it wants.
+#
+# gpg-agent's own texts ("Please unlock the card", "PIN") do not distinguish the
+# YubiKey PIN, the YubiKey Admin PIN and the GPG key passphrase. This filter
+# rewrites the Assuan SETDESC/SETPROMPT lines gpg-agent sends to pinentry and
+# passes everything else through untouched. Configured as `pinentry-program` in
+# ~/.gnupg/gpg-agent.conf.
+
+/usr/bin/awk '
+function label(desc) {
+  if (desc ~ /Admin PIN/)
+    return "YUBIKEY ADMIN PIN%0A(rarely used: only for changing YubiKey settings)%0A%0A"
+  if (desc ~ /Reset Code/)
+    return ""
+  if (desc ~ /unlock the card/ || desc ~ /PIN/)
+    return "YUBIKEY PIN%0A(the everyday PIN, not the Admin PIN, not the FIDO PIN)%0AAfter OK, touch the YubiKey.%0A%0A"
+  if (desc ~ /passphrase/)
+    return "GPG PASSPHRASE%0A(your long-standing GPG key password, not a YubiKey PIN)%0A%0A"
+  return ""
+}
+/^SETDESC / { kind = label($0); if (kind != "") sub(/^SETDESC /, "SETDESC " kind) }
+/^SETPROMPT / {
+  if (kind ~ /^YUBIKEY ADMIN/) $0 = "SETPROMPT YubiKey ADMIN PIN:"
+  else if (kind ~ /^YUBIKEY PIN/) $0 = "SETPROMPT YubiKey PIN:"
+  else if (kind ~ /^GPG/) $0 = "SETPROMPT GPG passphrase:"
+}
+{ print; fflush() }
+' | /opt/homebrew/bin/pinentry-mac "$@"

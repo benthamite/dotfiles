@@ -1733,7 +1733,24 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package auth-source-extras
-  :demand t)
+  :demand t
+  :custom
+  ;; Every Automation item this configuration reads, fetched in one parallel
+  ;; batch per account on first use.
+  (auth-source-extras-op-prefetch
+   '((personal "org-gcal" "auth.wikimedia.org/Sir_Paul" "cloud.google.com"
+               "brave.com/pablo@stafforini.com" "slack.com/ae-racionalidad"
+               "github.com/benthamite" "home-assistant.io/stafforini" "omdbapi.com"
+               "themoviedb.org/stafforini" "signal" "erc/libera"
+               "slack.com/trajectorylabs" "deepgram.com/pablo@stafforini.com"
+               "accounts.spotify.com" "mercadolibre.com/benthamite"
+               "fatebook.io/pablo.stafforini@gmail.com")
+     (tlon "api.github.com/grip-mode" "deepl.com"
+           "openai.com" "anthropic.com"
+           "aistudio.google.com" "deepseek.com"
+           "perplexity.ai" "x.ai"
+           "slack.com/ea-translations" "isbndb.com"
+           "annas-archive"))))
 #+end_src
 
 ** =oauth2-auto=
@@ -5699,8 +5716,8 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
                  :build (:not elpaca-check-version))
   :after auth-source-pass org-agenda
   :custom
-  (org-gcal-client-id (auth-source-pass-get "host" "auth-sources/org-gcal"))
-  (org-gcal-client-secret (auth-source-pass-get 'secret "auth-sources/org-gcal"))
+  (org-gcal-client-id (auth-source-extras-op-get "org-gcal" "host"))
+  (org-gcal-client-secret (auth-source-extras-op-get "org-gcal" "password"))
   (org-gcal-fetch-file-alist `((,(getenv "PERSONAL_GMAIL") . ,paths-file-calendar)
                                (,(getenv "EPOCH_EMAIL") . ,paths-file-calendar)))
   (org-gcal-recurring-events-mode 'top-level)
@@ -7477,8 +7494,8 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
                ("s-w" . grip-mode)))
 
   :custom
-  (grip-github-user (auth-source-pass-get "user" "tlon/core/api.github.com/grip-mode"))
-  (grip-github-password (auth-source-pass-get 'secret "tlon/core/api.github.com/grip-mode"))
+  (grip-github-user (auth-source-extras-op-get "api.github.com/grip-mode" "username" 'tlon))
+  (grip-github-password (auth-source-extras-op-get "api.github.com/grip-mode" "password" 'tlon))
 
   :config
   (require 'xwidget))
@@ -7535,7 +7552,7 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
   (mediawiki-site-alist `(("Wikipedia"
                            "https://en.wikipedia.org/w/"
                            "Sir Paul"
-                           ,(auth-source-pass-get 'secret "chrome/auth.wikimedia.org/Sir_Paul") ""
+                           ,(auth-source-extras-op-get "auth.wikimedia.org/Sir_Paul" "password") ""
                            :description "English Wikipedia" :first-page "Main Page")))
   (mediawiki-draft-data-file (file-name-concat paths-dir-notes "drafts.wiki"))
 
@@ -7586,8 +7603,8 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
   :defer t
   :custom
   (gdocs-accounts
-   (let ((creds `((client-id . ,(auth-source-pass-get "gdocs-client-id" "chrome/cloud.google.com"))
-                  (client-secret . ,(auth-source-pass-get "gdocs-client-secret" "chrome/cloud.google.com")))))
+   (let ((creds `((client-id . ,(auth-source-extras-op-get "cloud.google.com" "gdocs-client-id"))
+                  (client-secret . ,(auth-source-extras-op-get "cloud.google.com" "gdocs-client-secret")))))
      `(("epoch" . ,creds)
        ("personal" . ,creds)))))
 #+end_src
@@ -7981,7 +7998,7 @@ the debugger's `recursive-edit' freezes Emacs inside the timer."
      ;; (gts-bing-engine)
      ;;(gts-google-engine)
      ;;(gts-google-rpc-engine)
-     (gts-deepl-engine :auth-key (auth-source-pass-get "key" (concat "tlon/babel/deepl.com/" tlon-email-shared)) :pro nil)
+     (gts-deepl-engine :auth-key (auth-source-extras-op-get "deepl.com" "key" 'tlon) :pro nil)
      ;; (gts-google-engine :parser (gts-google-summary-parser))
      ;;(gts-google-engine :parser (gts-google-parser))
      ;;(gts-google-rpc-engine :parser (gts-google-rpc-summary-parser) :url "https://translate.google.com")
@@ -9049,7 +9066,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (gptel-max-tokens 10000)
   (gptel-stream t)
   (gptel-confirm-tool-calls nil)
-  (gptel-api-key (auth-source-pass-get "gptel" (concat "tlon/core/openai.com/" tlon-email-shared)))
+  (gptel-api-key (auth-source-extras-op-get "openai.com" "gptel" 'tlon))
 
   :config
   (require 'tlon-core)
@@ -9063,15 +9080,15 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (setopt gptel-model 'claude-sonnet-4-5-20250929
           gptel-backend (gptel-make-anthropic "Claude"
                           :stream t
-                          :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
+                          :key (auth-source-extras-op-get "anthropic.com" "key" 'tlon)))
 
   ;; other models
   (gptel-make-gemini "Gemini"
     :stream t
-    :key (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared)))
+    :key (auth-source-extras-op-get "aistudio.google.com" "password" 'tlon))
 
   (gptel-make-anthropic "Claude-thinking"
-    :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))
+    :key (auth-source-extras-op-get "anthropic.com" "key" 'tlon)
     :stream t
     :models '(claude-sonnet-4-20250514)
     :header (lambda () (when-let* ((key (gptel--get-api-key)))
@@ -9087,7 +9104,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     :host "api.deepseek.com"
     :endpoint "/chat/completions"
     :stream t
-    :key (auth-source-pass-get "emacs" (concat "tlon/core/deepseek.com/" tlon-email-shared))
+    :key (auth-source-extras-op-get "deepseek.com" "emacs" 'tlon)
     :models '(;; <https://api-docs.deepseek.com/quick_start/pricing/
               (deepseek-chat
                :context-window 64.0
@@ -9104,7 +9121,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   (gptel-make-openai "Perplexity"
     :host "api.perplexity.ai"
-    :key (auth-source-pass-get "key" (concat "tlon/core/perplexity.ai/" tlon-email-shared))
+    :key (auth-source-extras-op-get "perplexity.ai" "key" 'tlon)
     :endpoint "/chat/completions"
     :stream t
     :models '(;; <https://docs.perplexity.ai/docs/model-cards>
@@ -9123,7 +9140,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   (gptel-make-openai "xAI"
     :host "api.x.ai"
-    :key (auth-source-pass-get "emacs" (concat "tlon/core/x.ai/" tlon-email-shared))
+    :key (auth-source-extras-op-get "x.ai" "emacs" 'tlon)
     :endpoint "/v1/chat/completions"
     :stream t
     :models '((grok-4-latest
@@ -9683,9 +9700,7 @@ servers use the correct version.
           ("brave-search" . (:command "npx"
                                       :args ("-y" "@brave/brave-search-mcp-server")
                                       :env (:BRAVE_API_KEY
-                                            ,(auth-source-pass-get
-                                              "key" (concat "chrome/brave.com/"
-                                                            (getenv "PERSONAL_EMAIL"))))))
+                                            ,(auth-source-extras-op-get (concat "brave.com/" (getenv "PERSONAL_EMAIL")) "key"))))
           ("fetch" . (:command "npx" :args ("mcp-fetch-server")))
           ("filesystem" . (:command "npx"
                                     :args ("-y" "@modelcontextprotocol/server-filesystem"
@@ -9721,15 +9736,11 @@ servers use the correct version.
                                              :args ("-y" "@modelcontextprotocol/server-sequential-thinking")))
           ("slack-ae-racionalidad" . (:command "npx"
                                                :args ("-y" "@modelcontextprotocol/server-slack")
-                                               :env (:SLACK_BOT_TOKEN ,(auth-source-pass-get
-                                                                        "bot-token"
-                                                                        "chrome/slack.com/ae-racionalidad")
+                                               :env (:SLACK_BOT_TOKEN ,(auth-source-extras-op-get "slack.com/ae-racionalidad" "bot-token")
                                                                       :SLACK_TEAM_ID "T04EYQYHG74")))
           ("slack-ea-translations" . (:command "npx"
                                                :args ("-y" "@modelcontextprotocol/server-slack")
-                                               :env (:SLACK_BOT_TOKEN ,(auth-source-pass-get
-                                                                        "bot-token"
-                                                                        "tlon/core/slack.com/ea-translations")
+                                               :env (:SLACK_BOT_TOKEN ,(auth-source-extras-op-get "slack.com/ea-translations" "bot-token" 'tlon)
                                                                       :SLACK_TEAM_ID "CA0JVRT5K")))))
 
   (when (string= (system-name) "Pablos-MacBook-Pro.local")
@@ -9744,23 +9755,19 @@ servers use the correct version.
                      (:command "npx"
                                :args ("-y" "@modelcontextprotocol/server-github")
                                :env (:GITHUB_PERSONAL_ACCESS_TOKEN
-                                     ,(auth-source-pass-get "github-mcp-owner-benthamite"
-                                                            (concat "chrome/github.com/benthamite")))))
+                                     ,(auth-source-extras-op-get "github.com/benthamite" "github-mcp-owner-benthamite"))))
                     ("github-benthamite-owner-tlon-team" .
                      (:command "npx"
                                :args ("-y" "@modelcontextprotocol/server-github")
                                :env (:GITHUB_PERSONAL_ACCESS_TOKEN
-                                     ,(auth-source-pass-get "github-mcp-owner-tlon-team"
-                                                            (concat "chrome/github.com/benthamite")))))))))
+                                     ,(auth-source-extras-op-get "github.com/benthamite" "github-mcp-owner-tlon-team"))))))))
 
   (when (simple-extras-connected-to-network-p "Pablo-mesh")
     (setq mcp-hub-servers
           (append mcp-hub-servers
                   `(("home-assistant" . (:command "mcp-proxy"
                                                   :env (:SSE_URL "http://homeassistant.local:8123/mcp_server/sse"
-                                                                 :API_ACCESS_TOKEN ,(auth-source-pass-get
-                                                                                     "ha-mcp"
-                                                                                     "chrome/home-assistant.io/stafforini"))))))))
+                                                                 :API_ACCESS_TOKEN ,(auth-source-extras-op-get "home-assistant.io/stafforini" "ha-mcp"))))))))
 
   (mcp-hub-start-all-server #'gptel-extras-connect-to-all-servers))
 #+end_src
@@ -9777,7 +9784,7 @@ servers use the correct version.
   :disabled
   :demand t
   :custom
-  (dall-e-shell-openai-key (auth-source-pass-get "gptel" (concat "tlon/core/openai.com/" tlon-email-shared))))
+  (dall-e-shell-openai-key (auth-source-extras-op-get "openai.com" "gptel" 'tlon)))
 #+end_src
 
 ** =llm=
@@ -9812,7 +9819,7 @@ servers use the correct version.
   (require 'tlon-core)
   (setq magit-gptcommit-llm-provider
         (make-llm-claude
-         :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))
+         :key (auth-source-extras-op-get "anthropic.com" "key" 'tlon)
          :chat-model "claude-haiku-4-5-20251001"))
   (magit-gptcommit-status-buffer-setup))
 #+end_src
@@ -12815,11 +12822,11 @@ The macro below generates the commands correctly. But attempting to define key b
   :defer t
   :custom
   (bib-isbndb-key
-   (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-email-shared)))
+   (auth-source-extras-op-get "isbndb.com" "key" 'tlon))
   (bib-omdb-key
-   (auth-source-pass-get 'secret "chrome/omdbapi.com"))
+   (auth-source-extras-op-get "omdbapi.com" "password"))
   (bib-tmdb-key
-   (auth-source-pass-get "key" "chrome/themoviedb.org/stafforini"))
+   (auth-source-extras-op-get "themoviedb.org/stafforini" "key"))
 
   :bind
   (:map ebib-index-mode-map
@@ -12898,7 +12905,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
                ("s-a" . annas-archive-download-file)))
 
   :custom
-  (annas-archive-secret-key (auth-source-pass-get 'secret "tlon/core/annas-archive"))
+  (annas-archive-secret-key (auth-source-extras-op-get "annas-archive" "password" 'tlon))
   (annas-archive-included-file-types '("pdf"))
   (annas-archive-title-column-width 130))
 #+end_src
@@ -13686,7 +13693,7 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
            :repo "benthamite/sgn")
   :defer t
   :custom
-  (sgn-account (auth-source-pass-get 'secret "auth-sources/signal")))
+  (sgn-account (auth-source-extras-op-get "signal" "password")))
 #+end_src
 
 ** =wasabi=
@@ -13736,8 +13743,8 @@ CLOCK: [2021-06-02 Wed 12:02]--[2021-06-02 Wed 12:39] =>  0:37
   :custom
   (erc-server "irc.libera.chat")
   (erc-user-full-name user-full-name)
-  (erc-nick (auth-source-pass-get "user" "auth-sources/erc/libera"))
-  (erc-password (auth-source-pass-get 'secret "auth-sources/erc/libera"))
+  (erc-nick (auth-source-extras-op-get "erc/libera" "username"))
+  (erc-password (auth-source-extras-op-get "erc/libera" "password"))
   (erc-prompt-for-nickserv-password nil)
   ;; erc-track-shorten-start 8 ; characters to display in modeline
   (erc-autojoin-channels-alist '(("irc.libera.chat")))
@@ -13825,8 +13832,8 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
    :animate-image t)
   (slack-register-team
    :name "Trajectory Labs"
-   :token (auth-source-pass-get "token" "trajectory/slack.com/trajectorylabs")
-   :cookie (auth-source-pass-get "cookie" "trajectory/slack.com/trajectorylabs")
+   :token (auth-source-extras-op-get "slack.com/trajectorylabs" "token")
+   :cookie (auth-source-extras-op-get "slack.com/trajectorylabs" "cookie")
    :animate-image t)
 
   :hook
@@ -15176,10 +15183,10 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
   :defer t
   :custom
   (esi-dictate-llm-provider (make-llm-openai
-                             :key (auth-source-pass-get "gptel" (concat "tlon/core/openai.com/" tlon-email-shared))
+                             :key (auth-source-extras-op-get "openai.com" "gptel" 'tlon)
                              :chat-model "gpt-4o-mini"))
 
-  (esi-dictate-dg-api-key (auth-source-pass-get "key" (concat "chrome/deepgram.com/" (getenv "PERSONAL_EMAIL"))))
+  (esi-dictate-dg-api-key (auth-source-extras-op-get (concat "deepgram.com/" (getenv "PERSONAL_EMAIL")) "key"))
 
   :bind (("A-h" . esi-dictate-start)
          :map esi-dictate-mode-map
@@ -15275,8 +15282,8 @@ result to a user-specified file."
                  :repo "benthamite/spofy")
   :defer t
   :custom
-  (spofy-client-id (auth-source-pass-get "spofy-id" "chrome/accounts.spotify.com"))
-  (spofy-client-secret (auth-source-pass-get "spofy-secret" "chrome/accounts.spotify.com"))
+  (spofy-client-id (auth-source-extras-op-get "accounts.spotify.com" "spofy-id"))
+  (spofy-client-secret (auth-source-extras-op-get "accounts.spotify.com" "spofy-secret"))
   (spofy-tab-bar-max-length nil)
   (spofy-tab-bar-alignment 'right)
   (spofy-enable-tab-bar t)
@@ -15627,8 +15634,8 @@ upstream publication. The retained patch and draft are in
                  :repo "benthamite/mercado-libre")
   :defer t
   :custom
-  (mercado-libre-client-id (auth-source-pass-get "app-id" "chrome/mercadolibre.com/benthamite"))
-  (mercado-libre-client-key (auth-source-pass-get "app-key" "chrome/mercadolibre.com/benthamite"))
+  (mercado-libre-client-id (auth-source-extras-op-get "mercadolibre.com/benthamite" "app-id"))
+  (mercado-libre-client-key (auth-source-extras-op-get "mercadolibre.com/benthamite" "app-key"))
   (mercado-libre-new-results-limit nil)
   (mercado-libre-listings-db-file
    (file-name-concat paths-dir-dropbox "Apps/Mercado Libre/mercado-libre-listings.el")))
@@ -15681,7 +15688,7 @@ upstream publication. The retained patch and draft are in
                  :files ("fatebook.el"))
   :commands fatebook-create-question
   :custom
-  (fatebook-api-key-function (lambda () (auth-source-pass-get "api" "chrome/fatebook.io"))))
+  (fatebook-api-key-function (lambda () (auth-source-extras-op-get "fatebook.io/pablo.stafforini@gmail.com" "api"))))
 #+end_src
 
 ** =keyboard-maestro=

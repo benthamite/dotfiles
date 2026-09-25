@@ -1697,7 +1697,7 @@ This feature is required by =org-gcal=. We create a new GPG key to use with =org
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature epg-config
   :custom
-  (epg-pinentry-mode 'loopback) ; use minibuffer for password entry
+  (epg-pinentry-mode nil) ; use gpg-agent's dialog, which `pinentry-labeled' labels per secret
   (epg-gpg-program "/opt/homebrew/bin/gpg"))
 #+end_src
 

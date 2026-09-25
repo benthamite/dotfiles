@@ -189,6 +189,9 @@ The paired =session-learning-capture= skill records proposals only after checkin
 session provenance and permission to use the Drive-synced personal inbox.
 Stable full-session record keys and no-clobber publication protect retries;
 capture does not promote lessons or imply that a review consumer is installed.
+Records are read and published only through the bundled
+=scripts/learning-record= helper, which owns the per-record lock so that no
+hand-written lock cleanup triggers a permission prompt.
 
 The paired =release-package= skill distinguishes candidate audits and preparation
 from publication. An explicit release request is itself the authorization to

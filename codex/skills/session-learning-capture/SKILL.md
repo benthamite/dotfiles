@@ -146,50 +146,50 @@ the catalog.
 1. Extract candidates before creating files. If none qualify, create nothing.
    With partial evidence, say “no candidates in the reviewed context,” not
    that the entire session contained no useful lessons.
-2. Inspect only the intended output directory and exact prospective record.
-   Verify the canonical destination, safe ownership, existing components and
-   ignore status. Reject symlinked output components or an unexpected tracked
-   record. Private modes (0700 for newly created directories, 0600 for records)
-   limit local access but do not disable Drive sync. Do not chmod or relocate
-   existing user directories to satisfy the gate.
-3. Use a filesystem-safe tool name and the full stable session ID, or a
-   collision-resistant digest of the tool plus full identity, in
-   `TOOL-SESSIONKEY.md`. Keep the capture date inside the record, not in its
+2. Use a filesystem-safe tool name and the full stable session ID, or a
+   collision-resistant digest of the tool plus full identity, as the record
+   key `TOOL-SESSIONKEY`. Keep the capture date inside the record, not in its
    identity, so separate invocations after midnight choose the same path.
    Never use a truncated prefix alone. For an explicitly context-only capture
    lacking a stable ID, use a unique run key and label that limitation; never
    pretend it deduplicates future invocations of an unidentified session.
-4. Acquire an exclusive stable per-record lock before reading an existing
-   record or publishing one, and hold it through merge, preimage check,
-   publication and readback. For example, create a private adjacent lock
-   directory exclusively; an existing lock stops this invocation. Release
-   only the lock this run created, including on failure. Do not remove an
-   unfamiliar or apparently stale lock to proceed. This serializes cooperating
-   captures, not arbitrary user editors; keep preimage checks and report that
-   remaining concurrency limit rather than claiming universal atomic updates.
-5. Create a new record without overwriting an existing path, using supported
-   exclusive/no-clobber file operations. Author an owned 0600 candidate with
-   the required editing tool in a private directory outside Drive, then
-   publish it with an operation that fails if the destination already exists
-   (for example, a supported exclusive hard link on the same filesystem).
-   Do not assume an add-file edit or ordinary move refuses an existing file.
-   If no safe exclusive publication is available, stop that write explicitly.
-   Inspect/read back the exact intended destination after publication.
-6. If the exact record exists, verify its full source identity and coverage
-   before treating it as this session's record. Do not overwrite another
-   session or a shortened-name collision. On a retry, reuse an identical
-   record without writing. For genuinely new evidence in the same session,
-   preserve previous candidates and review notes, append only distinct
-   candidates or a dated evidence amendment, and check the preimage before
-   writing. Do not silently replace or delete earlier proposals.
-7. After an error or timeout, inspect the exact target before retrying: the
-   write may have succeeded. Unknown outcome is not permission to create
-   another filename. Concurrent edits, uncertain ownership or identity
-   mismatch stop the affected write; do not bypass the collision.
-8. Read back identity, coverage, candidate count and content; verify the
-   record remains ignored/untracked and no target artifacts were changed or
-   staged. Clean only owned disposable local staging files. Never promote,
-   archive, delete or commit inbox records from this skill.
+3. Read and publish the record only through the bundled helper,
+   `scripts/learning-record` in this skill's directory. Invoke it by its
+   absolute path as a bare command, with no shell variables, chains or
+   `trap` around it; hand-written lock cleanup with variable paths triggers a
+   permission prompt on every run. The helper verifies that the inbox and its
+   parent are real directories, that the record is not a symlink and is
+   Git-ignored and untracked, and takes an exclusive per-record lock
+   (`KEY.md.lock`) that it holds through the preimage check, write and
+   readback. It releases only its own lock and never removes one it did not
+   create. It serializes cooperating captures, not arbitrary user editors.
+   - `learning-record show KEY` prints the record's sha256 on the first line,
+     then its content; exit 2 means no record exists.
+   - `learning-record publish KEY DRAFT` creates the record from DRAFT with
+     no-clobber semantics and mode 0600, reports `unchanged` for an identical
+     existing record, and exits 4 if a different record exists.
+   - `learning-record publish KEY DRAFT --expect-sha256 HASH` replaces an
+     existing record only if its sha256 still equals HASH from `show`
+     (exit 5 otherwise).
+   - Exit 3 means another run holds the lock: stop; do not remove it.
+   Author the draft with the required editing tool in a private directory
+   outside Drive. Private modes limit local access but do not disable Drive
+   sync. Do not chmod or relocate existing user directories.
+4. If the record exists, verify its full source identity and coverage before
+   treating it as this session's record. Do not overwrite another session or a
+   shortened-name collision. On a retry, reuse an identical record without
+   writing. For genuinely new evidence in the same session, preserve previous
+   candidates and review notes, append only distinct candidates or a dated
+   evidence amendment to the content from `show`, and publish with that
+   `--expect-sha256`. Do not silently replace or delete earlier proposals.
+5. After an error or timeout, run `show` before retrying: the write may have
+   succeeded. Unknown outcome is not permission to create another filename.
+   Concurrent edits, uncertain ownership or identity mismatch stop the
+   affected write; do not bypass the collision.
+6. Read back identity, coverage, candidate count and content; confirm no
+   target artifacts were changed or staged. Clean only owned disposable local
+   staging files. Never promote, archive, delete or commit inbox records from
+   this skill.
 
 Finish with a short capture outcome and the permitted record path, candidate
 titles and material scope/uncertainty. Include project/scores/routing metadata

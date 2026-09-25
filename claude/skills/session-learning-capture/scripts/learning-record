@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# Publish or read a session-learning record under a per-record lock.
+#
+#   learning-record show KEY
+#       Print the record's sha256 on the first line, then its content.
+#       Exit 2 if no record exists.
+#   learning-record publish KEY DRAFT [--expect-sha256 HASH]
+#       Without --expect-sha256, create the record from DRAFT; refuse if a
+#       different record already exists.  An identical record is left alone.
+#       With --expect-sha256, replace the existing record with DRAFT only if
+#       its current sha256 is HASH (preimage check for merges).
+#
+# KEY is TOOL-SESSIONID (e.g. claude-90001c89-...).  The inbox defaults to
+# ~/My Drive/dotfiles/.agent-learnings/inbox; SESSION_LEARNING_INBOX
+# overrides it for tests.  Exit codes: 0 ok, 1 usage/safety error,
+# 2 no record, 3 locked by another run, 4 record exists and differs,
+# 5 preimage mismatch.
+
+set -euo pipefail
+
+inbox=${SESSION_LEARNING_INBOX:-"$HOME/My Drive/dotfiles/.agent-learnings/inbox"}
+
+die() { printf 'learning-record: %s\n' "$2" >&2; exit "$1"; }
+
+[ "$#" -ge 2 ] || die 1 "usage: learning-record show KEY | publish KEY DRAFT [--expect-sha256 HASH]"
+mode=$1
+key=$2
+[[ "$key" =~ ^[a-z][a-z0-9]*-[A-Za-z0-9][A-Za-z0-9._-]{7,}$ ]] ||
+  die 1 "invalid record key: $key"
+
+# The inbox and its parent must be real directories, not symlinks.
+for dir in "$inbox" "$(dirname -- "$inbox")"; do
+  [ -d "$dir" ] && [ ! -L "$dir" ] || die 1 "not a real directory: $dir"
+done
+
+record="$inbox/$key.md"
+lock="$record.lock"
+[ ! -L "$record" ] || die 1 "record is a symlink: $record"
+
+# Refuse a record Git tracks; the inbox must stay ignored.
+if repo=$(git -C "$inbox" rev-parse --show-toplevel 2>/dev/null); then
+  rel=${record#"$repo/"}
+  if git -C "$repo" ls-files --error-unmatch -- "$rel" >/dev/null 2>&1; then
+    die 1 "record is tracked by Git: $record"
+  fi
+  git -C "$repo" check-ignore -q -- "$rel" || die 1 "record is not Git-ignored: $record"
+fi
+
+sha() { shasum -a 256 -- "$1" | cut -d' ' -f1; }
+
+mkdir -m 700 -- "$lock" 2>/dev/null || die 3 "locked by another run: $lock"
+release() { rmdir -- "$lock"; }
+trap release EXIT
+
+case "$mode" in
+  show)
+    [ "$#" -eq 2 ] || die 1 "usage: learning-record show KEY"
+    [ -f "$record" ] || die 2 "no record: $record"
+    sha "$record"
+    cat -- "$record"
+    ;;
+  publish)
+    [ "$#" -eq 3 ] || [ "$#" -eq 5 ] || die 1 "usage: learning-record publish KEY DRAFT [--expect-sha256 HASH]"
+    draft=$3
+    [ -f "$draft" ] && [ ! -L "$draft" ] && [ -O "$draft" ] ||
+      die 1 "draft must be a regular file you own: $draft"
+    expect=""
+    if [ "$#" -eq 5 ]; then
+      [ "$4" = --expect-sha256 ] || die 1 "unknown option: $4"
+      expect=$5
+    fi
+    if [ -z "$expect" ]; then
+      if [ -e "$record" ]; then
+        cmp -s -- "$draft" "$record" && { echo "unchanged $record"; exit 0; }
+        die 4 "record exists and differs; merge with show and --expect-sha256: $record"
+      fi
+      (umask 077; set -o noclobber; cat -- "$draft" > "$record") ||
+        die 4 "record appeared concurrently: $record"
+    else
+      [ -f "$record" ] || die 2 "no record to replace: $record"
+      [ "$(sha "$record")" = "$expect" ] || die 5 "record changed since it was read: $record"
+      tmp="$inbox/.$key.md.tmp.$$"
+      (umask 077; set -o noclobber; cat -- "$draft" > "$tmp")
+      mv -f -- "$tmp" "$record"
+    fi
+    cmp -s -- "$draft" "$record" || die 1 "readback mismatch: $record"
+    echo "published $record"
+    ;;
+  *)
+    die 1 "unknown mode: $mode"
+    ;;
+esac

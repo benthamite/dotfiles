@@ -4,6 +4,7 @@ import io
 import importlib.machinery
 import importlib.util
 import json
+import os
 import shlex
 import shutil
 import subprocess
@@ -517,6 +518,24 @@ if os.path.lexists(mode_link) and (
             )
 
         self.assertEqual([], problems)
+
+    def test_candidate_docs_read_the_index_of_a_pathspec_commit(self):
+        repo = self.make_candidate_docs_repo()
+        readme = repo / "claude" / "README.org"
+        readme.write_text("* forbidden\n", encoding="utf-8")
+        self.run_git(repo, "add", "claude/README.org")
+        git_dir = repo / ".git"
+        commit_index = git_dir / "next-index-1.lock"
+        commit_index.write_bytes((git_dir / "index").read_bytes())
+        (git_dir / "index.lock").write_bytes(b"")
+        with (
+            mock.patch.object(self.module, "ROOT", repo),
+            mock.patch.dict(os.environ, {"GIT_INDEX_FILE": str(commit_index)}),
+        ):
+            problems = self.module.candidate_documentation_audit_problems(
+                self.module.CommitCandidateTree(repo, frozenset())
+            )
+        self.assertEqual(["bad candidate docs"], problems)
 
     def test_candidate_docs_apply_planned_additions_and_deletions(self):
         repo = self.make_candidate_docs_repo()

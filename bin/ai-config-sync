@@ -3829,6 +3829,19 @@ def _open_candidate_parent(repo: Path, relative: str) -> tuple[int, str]:
         raise
 
 
+def _commit_index_environment(repo: Path) -> dict[str, str]:
+    """Return the sanitized environment, keeping the index Git is committing.
+
+    Inside pre-commit, `git commit -- PATH` records a temporary index named by
+    GIT_INDEX_FILE while it holds the lock on the real index, so a tree must be
+    written from that index rather than from the locked default."""
+    environment = _sanitized_git_environment()
+    index = os.environ.get("GIT_INDEX_FILE")
+    if index:
+        environment["GIT_INDEX_FILE"] = str((repo / index).resolve())
+    return environment
+
+
 def _sanitized_git_environment() -> dict[str, str]:
     """Return the process environment without inherited Git routing state."""
     environment = {
@@ -3995,7 +4008,8 @@ def candidate_documentation_audit_problems(
         git_dir_result = git_process(["rev-parse", "--absolute-git-dir"])
         objects_result = git_process(["rev-parse", "--git-path", "objects"])
         tree_result = git_process(
-            ["rev-parse", "HEAD^{tree}"] if candidate_tree.head_based else ["write-tree"]
+            ["rev-parse", "HEAD^{tree}"] if candidate_tree.head_based else ["write-tree"],
+            environment=_commit_index_environment(repo),
         )
         checker_result = git_process(
             ["show", "HEAD:bin/docs-audit"], text=False

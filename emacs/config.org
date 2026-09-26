@@ -9535,6 +9535,11 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (agent-claude-mode 1)
   (agent-codex-mode 1)
   (agent-tab-bar-mode 1)
+  ;; Serve the phone control page over Tailscale.  Demote errors so a
+  ;; disconnected Tailscale does not abort the rest of this configuration.
+  (require 'agent-remote)
+  (with-demoted-errors "agent-remote: %S"
+    (agent-remote-mode 1))
 
   :custom
   (agent-alert-on-ready t)

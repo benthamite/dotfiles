@@ -1750,7 +1750,16 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
            "aistudio.google.com" "deepseek.com"
            "perplexity.ai" "x.ai"
            "slack.com/ea-translations" "isbndb.com"
-           "annas-archive"))))
+           "annas-archive")))
+
+  :config
+  (add-to-list 'auth-sources '1password-automation)
+
+  :hook
+  ;; The modeline's GitHub count runs in an `emacs -Q' child that inherits
+  ;; `auth-sources' and `load-path' but must load the backend itself.
+  (doom-modeline-before-github-fetch-notification-hook
+   . (lambda () (require 'auth-source-extras))))
 #+end_src
 
 ** =oauth2-auto=
@@ -1853,14 +1862,11 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
 /auth-source-pass integrates auth-source with password-store./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+;; No longer an `auth-sources' backend: generic lookups read the 1Password
+;; Automation vaults through `auth-source-extras'.  Only the few remaining
+;; `auth-source-pass-get' calls use this package.
 (use-feature auth-source-pass
-  :demand t
-  :after auth-source pass
-  :config
-  (auth-source-pass-enable)
-
-  :hook
-  (doom-modeline-before-github-fetch-notification-hook . auth-source-pass-enable))
+  :after auth-source pass)
 #+end_src
 
 ** =password-generator=

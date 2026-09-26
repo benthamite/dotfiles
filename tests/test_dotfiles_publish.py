@@ -2297,6 +2297,47 @@ class DotfilesPublishRepairTests(PublicationFixture):
         self.assertIn("next: scan", accepted.stdout)
         self.assertIn("review-invalidated: true", accepted.stdout)
 
+    def test_repair_apply_replaces_a_path_across_outgoing_history(self):
+        self.publish_base()
+        self.commit("add configuration", {"config/service.conf": "token = %s\n" % TEST_SECRET})
+        self.commit("later work", {"docs/later.md": "later\n"})
+        proc, run_id = self.scan()
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        self.assertEqual(0, self.cli("repair-start", "--run", run_id).returncode)
+        (self.repo / "docs").mkdir(exist_ok=True)
+        (self.repo / "docs" / "wip.md").write_text("uncommitted\n")
+        clean = self.base / "clean.conf"
+        clean.write_text("token = from-op\n")
+        before = self.git("log", "-1", "--format=%an %ae %ad %s", "HEAD").stdout
+        applied = self.cli("repair-apply", "--run", run_id,
+                           "--replace", "config/service.conf=%s" % clean)
+        self.assertEqual(0, applied.returncode, applied.stdout + applied.stderr)
+        self.assertEqual(before, self.git("log", "-1", "--format=%an %ae %ad %s", "HEAD").stdout)
+        history = self.git("log", "-p", "%s..HEAD" % self.remote_tip()).stdout
+        self.assertNotIn(TEST_SECRET, history)
+        self.assertEqual(2, len(self.git("rev-list", "%s..HEAD" % self.remote_tip()).stdout.split()))
+        self.assertEqual("later\n", self.git("show", "HEAD:docs/later.md").stdout)
+        self.assertEqual("token = from-op\n", (self.repo / "config/service.conf").read_text())
+        self.assertEqual("uncommitted\n", (self.repo / "docs" / "wip.md").read_text())
+        self.assertEqual("", self.git("status", "--porcelain", "--", "config").stdout)
+        verified = self.cli("repair-verify", "--run", run_id, "--allowed-path", "config/service.conf")
+        self.assertEqual(0, verified.returncode, verified.stdout + verified.stderr)
+
+    def test_repair_apply_removes_a_path_and_leaves_the_file_untracked(self):
+        run_id, _ = self.start_repairable_run()
+        applied = self.cli("repair-apply", "--run", run_id, "--remove", "config/service.conf")
+        self.assertEqual(0, applied.returncode, applied.stdout + applied.stderr)
+        self.assertEqual("", self.git("ls-tree", "-r", "--name-only", "HEAD", "--", "config").stdout)
+        self.assertTrue((self.repo / "config/service.conf").exists())
+
+    def test_repair_apply_refuses_a_dirty_repaired_path(self):
+        run_id, _ = self.start_repairable_run()
+        (self.repo / "config/service.conf").write_text("edited\n")
+        refused = self.cli("repair-apply", "--run", run_id, "--remove", "config/service.conf")
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("uncommitted changes", refused.stderr)
+        self.assertEqual("edited\n", (self.repo / "config/service.conf").read_text())
+
     def test_repair_verify_requires_at_least_one_allowed_path(self):
         run_id, _ = self.start_repairable_run()
         self.rewrite_history()

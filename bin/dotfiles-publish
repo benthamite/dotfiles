@@ -3305,6 +3305,118 @@ def command_repair_start(args):
     return EXIT_OK
 
 
+def git_with_index(repo, index, *args, input_bytes=None):
+    """Run one Git command against the temporary INDEX, never the real one."""
+    environment = {key: value for key, value in os.environ.items()
+                   if key not in ("GIT_INDEX_FILE", "GIT_WORK_TREE")}
+    environment["GIT_INDEX_FILE"] = str(index)
+    completed = subprocess.run(["git", "-C", str(repo.root), *[str(a) for a in args]],
+                               input=input_bytes, stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE, env=environment)
+    if completed.returncode != 0:
+        raise PublishError("git %s failed: %s" % (" ".join(str(a) for a in args),
+                                                  completed.stderr.decode("utf-8", "replace").strip()))
+    return completed.stdout.decode("utf-8", "replace")
+
+
+def rewritten_commit(repo, index, commit, parents, edits):
+    """Return a copy of COMMIT on PARENTS with EDITS applied to its tree.
+
+    EDITS maps a path to None (remove it) or to a blob id that replaces it
+    wherever the commit has the path.  Author, committer, dates and message
+    are kept; the tree is edited in a temporary index, so no file is checked
+    out and no smudge filter (such as git-crypt's) runs."""
+    git_with_index(repo, index, "read-tree", commit + "^{tree}")
+    for path, blob in edits.items():
+        entry = run_git(repo.root, "ls-tree", commit, "--", path).text.strip()
+        if not entry:
+            continue
+        if blob is None:
+            git_with_index(repo, index, "update-index", "--force-remove", "--", path)
+        else:
+            mode = entry.split()[0]
+            git_with_index(repo, index, "update-index", "--cacheinfo", "%s,%s,%s" % (mode, blob, path))
+    tree = git_with_index(repo, index, "write-tree").strip()
+    fields = run_git(repo.root, "log", "-1", "--format=%an%x00%ae%x00%ad%x00%cn%x00%ce%x00%cd",
+                     "--date=raw", commit).text.rstrip("\n").split("\x00")
+    raw = run_git(repo.root, "cat-file", "commit", commit).out
+    message = raw.split(b"\n\n", 1)[1] if b"\n\n" in raw else b""
+    environment = dict(os.environ, GIT_AUTHOR_NAME=fields[0], GIT_AUTHOR_EMAIL=fields[1],
+                       GIT_AUTHOR_DATE=fields[2], GIT_COMMITTER_NAME=fields[3],
+                       GIT_COMMITTER_EMAIL=fields[4], GIT_COMMITTER_DATE=fields[5])
+    arguments = ["git", "-C", str(repo.root), "commit-tree", tree]
+    for parent in parents:
+        arguments += ["-p", parent]
+    completed = subprocess.run(arguments, input=message, stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE, env=environment)
+    if completed.returncode != 0:
+        raise PublishError("commit-tree failed: %s" % completed.stderr.decode("utf-8", "replace").strip())
+    return completed.stdout.decode().strip()
+
+
+def command_repair_apply(args):
+    """Rewrite the outgoing commits of a started repair without a checkout."""
+    repo = discover_repository()
+    entry = load_repairs(repo)["repairs"].get(args.run)
+    if not entry or entry.get("status") != "started":
+        raise PublishError("run %s has no started repair; run repair-start first" % args.run, EXIT_REFUSED)
+    original = entry["original_candidate"]
+    protected = run_git(repo.root, "rev-parse", "--verify", "--quiet", entry["recovery_ref"], check=False)
+    if protected.code != 0 or protected.text.strip() != original:
+        raise PublishError("the recovery ref no longer protects the original candidate", EXIT_REFUSED)
+    if run_git(repo.root, "rev-parse", "HEAD").text.strip() != original:
+        raise PublishError("HEAD is not the original candidate; apply the repair from there", EXIT_REFUSED)
+    branch = run_git(repo.root, "symbolic-ref", "--quiet", "HEAD", check=False)
+    if branch.code != 0:
+        raise PublishError("HEAD is detached; check out the branch being published", EXIT_REFUSED)
+    branch = branch.text.strip()
+    edits = {path: None for path in args.remove}
+    for spec in args.replace:
+        path, separator, source = spec.partition("=")
+        if not separator or not path or not source:
+            raise PublishError("--replace takes PATH=FILE", EXIT_REFUSED)
+        # --path applies the attributes of PATH, so a git-crypt path is stored encrypted.
+        edits[path] = run_git(repo.root, "hash-object", "-w", "--path", path, source).text.strip()
+    if not edits:
+        raise PublishError("name at least one --remove PATH or --replace PATH=FILE", EXIT_REFUSED)
+    dirty = run_git(repo.root, "status", "--porcelain", "--", *edits).text.strip()
+    if dirty:
+        raise PublishError("uncommitted changes in a repaired path; commit or move them first:\n" + dirty,
+                           EXIT_REFUSED)
+    commits = run_git(repo.root, "rev-list", "--reverse", "--topo-order",
+                      "%s..%s" % (entry["remote_oid"], original)).text.split()
+    mapping = {}
+    with tempfile.TemporaryDirectory(prefix="dotfiles-publish-repair-") as work:
+        index = Path(work) / "index"
+        for commit in commits:
+            parents = run_git(repo.root, "rev-list", "--parents", "-n", "1", commit).text.split()[1:]
+            if len(parents) > 1:
+                raise PublishError("the outgoing range has a merge commit (%s); repair it by hand" % commit[:12],
+                                   EXIT_REFUSED)
+            mapping[commit] = rewritten_commit(
+                repo, index, commit, [mapping.get(parent, parent) for parent in parents], edits)
+    new_candidate = mapping[commits[-1]] if commits else original
+    if new_candidate == original:
+        raise PublishError("the named paths do not occur in the outgoing commits", EXIT_REFUSED)
+    run_git(repo.root, "update-ref", "-m", "dotfiles-publish repair-apply", branch, new_candidate, original)
+    # Only the repaired paths move in the index and worktree; a removed path
+    # stays on disk untracked so it can be ignored or moved.
+    run_git(repo.root, "reset", "--quiet", new_candidate, "--", *edits)
+    replaced = [path for path, blob in edits.items() if blob is not None]
+    if replaced:
+        run_git(repo.root, "checkout", new_candidate, "--", *replaced)
+    hook = Path(run_git(repo.root, "rev-parse", "--path-format=absolute", "--git-common-dir").text.strip()) \
+        / "hooks" / "post-rewrite"
+    if os.access(str(hook), os.X_OK):
+        rewrites = "".join("%s %s\n" % pair for pair in mapping.items() if pair[0] != pair[1])
+        subprocess.run([str(hook), "rebase"], input=rewrites.encode(), cwd=str(repo.root))
+    for old, new in mapping.items():
+        print("rewritten: %s -> %s" % (old[:12], new[:12]))
+    print("new-candidate: %s" % new_candidate)
+    print("next: repair-verify %s" % " ".join("--allowed-path %s" % path for path in edits))
+    return EXIT_OK
+
+
 def command_repair_verify(args):
     repo = discover_repository()
     key = fingerprint_key(repo)
@@ -3900,6 +4012,13 @@ def build_parser():
     repair_start = subparsers.add_parser("repair-start", help="protect history before repair")
     repair_start.add_argument("--run", required=True)
     repair_start.set_defaults(handler=command_repair_start)
+
+    repair_apply = subparsers.add_parser(
+        "repair-apply", help="remove or replace paths in the outgoing commits without a checkout")
+    repair_apply.add_argument("--run", required=True)
+    repair_apply.add_argument("--remove", action="append", default=[], metavar="PATH")
+    repair_apply.add_argument("--replace", action="append", default=[], metavar="PATH=FILE")
+    repair_apply.set_defaults(handler=command_repair_apply)
 
     repair_verify = subparsers.add_parser("repair-verify", help="verify a repaired history")
     repair_verify.add_argument("--run", required=True)

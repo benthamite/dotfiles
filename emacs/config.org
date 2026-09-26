@@ -8396,6 +8396,9 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 (use-feature treesit
   :defer 30
   :config
+  ;; The grammar is compiled and loaded as native code, so install a release
+  ;; rather than whatever `master' holds that day.  v0.23.2 is commit f975a621;
+  ;; Emacs 30 clones with "-b", which takes a tag but not a commit.
   (setq treesit-language-source-alist
         '((typescript "https://github.com/tree-sitter/tree-sitter-typescript" "v0.23.2" "typescript/src")
           (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "v0.23.2" "tsx/src")))

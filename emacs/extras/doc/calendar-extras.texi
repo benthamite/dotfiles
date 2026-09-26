@@ -40,12 +40,14 @@ This manual describes the features and customization options for the Emacs Lisp 
 User options
 
 * Geolocation settings::
+* Archive settings::
 
 Commands
 
 * Geolocation::
 * Date utilities::
 * Block agenda::
+* Archive::
 
 Functions
 
@@ -79,11 +81,15 @@ The date utilities (@ref{Date utilities}) cover inserting formatted dates and
 generating date ranges.  A separate command (@ref{Block agenda}) displays
 the current day's Org agenda in the @samp{calfw} visual time-block view.
 
+The archive command (@ref{Archive}) moves old calendar entries to an
+archive file, keeping the main calendar file manageable.
+
 @node User options
 @chapter User options
 
 @menu
 * Geolocation settings::
+* Archive settings::
 @end menu
 
 @node Geolocation settings
@@ -109,6 +115,16 @@ controls whether geolocation features are active.  When non-nil,
 @code{calendar-extras-set-geolocation} can automatically determine and set
 location-related variables.  The default value is @code{nil}.
 
+@node Archive settings
+@section Archive settings
+
+@vindex calendar-extras-archive-age
+The user option @code{calendar-extras-archive-age} controls how many days
+old a calendar entry must be before
+@code{calendar-extras-archive-old-entries} will move it to the archive
+file.  Age is measured from the entry's deadline date.  The default
+value is 30.
+
 @node Commands
 @chapter Commands
 
@@ -116,6 +132,7 @@ location-related variables.  The default value is @code{nil}.
 * Geolocation::
 * Date utilities::
 * Block agenda::
+* Archive::
 @end menu
 
 @node Geolocation
@@ -125,8 +142,9 @@ location-related variables.  The default value is @code{nil}.
 When you move to a different city and want calendar computations
 (sunrise/sunset, holidays) to reflect your new location, invoke
 @code{calendar-extras-set-geolocation}.  The command calls the Geoapify
-API---using an API key retrieved from @samp{auth-source-pass} under the
-entry @samp{tlon/core/api.geoapify.com}---to look up your latitude,
+API---using the API key stored in the item @samp{api.geoapify.com} of the
+Tlon 1Password Automation vault, read with
+@code{auth-source-extras-op-get}---to look up your latitude,
 longitude, and city name from your IP address.  It then writes the
 result into @code{calendar-extras-personal-geolocation} and
 @code{calendar-extras-location-name} and confirms the update in the echo
@@ -156,6 +174,19 @@ visual, time-blocked view of your day, the command
 provides an at-a-glance alternative to the standard Org agenda
 dispatcher.
 
+@node Archive
+@section Archive
+
+@findex calendar-extras-archive-old-entries
+Over time, the calendar file accumulates hundreds of past events.  The
+command @code{calendar-extras-archive-old-entries} scans
+@code{paths-file-calendar} for top-level entries whose deadline is more than
+@code{calendar-extras-archive-age} days in the past (@ref{Archive settings}) and
+moves them to @samp{calendar.org} inside @code{paths-dir-archive}.  The command
+reports how many entries were archived.
+
+Entries without a deadline are left in place.
+
 @node Functions
 @chapter Functions
 
@@ -171,7 +202,8 @@ dispatcher.
 The function @code{calendar-extras-get-geolocation} performs the HTTP
 request to the Geoapify API and parses the JSON response.  It returns
 a plist with keys @samp{:lat}, @samp{:lon}, and @samp{:city}.  This function
-requires an API key configured via @samp{auth-source-pass}.  It is used by
+requires the Geoapify key in the Tlon Automation vault, read through
+@samp{auth-source-extras}.  It is used by
 @code{calendar-extras-set-geolocation} (@ref{Geolocation}) and can also be called
 programmatically when you need raw geolocation data without updating
 the user options.

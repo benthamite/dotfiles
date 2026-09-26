@@ -75,11 +75,11 @@ will be moved to the archive file by
 (defvar url-request-method)
 (defvar url-request-extra-headers)
 (autoload 'json-read "json")
-(declare-function auth-source-pass-get "auth-source-pass")
+(declare-function auth-source-extras-op-get "auth-source-extras")
 (defun calendar-extras-get-geolocation ()
   "Get geolocation from IP address.
 If IP is non-nil, use the local IP address."
-  (let* ((key (auth-source-pass-get 'secret "tlon/core/api.geoapify.com"))
+  (let* ((key (auth-source-extras-op-get "api.geoapify.com" "password" 'tlon))
 	 (url (format "https://api.geoapify.com/v1/ipinfo?&apiKey=%s" key))
 	 (url-request-method "GET")
 	 (url-request-extra-headers '(("Content-Type" . "application/json")))

@@ -92,8 +92,9 @@ value is 30.
 When you move to a different city and want calendar computations
 (sunrise/sunset, holidays) to reflect your new location, invoke
 ~calendar-extras-set-geolocation~.  The command calls the Geoapify
-API---using an API key retrieved from =auth-source-pass= under the
-entry =tlon/core/api.geoapify.com=---to look up your latitude,
+API---using the API key stored in the item =api.geoapify.com= of the
+Tlon 1Password Automation vault, read with
+~auth-source-extras-op-get~---to look up your latitude,
 longitude, and city name from your IP address.  It then writes the
 result into ~calendar-extras-personal-geolocation~ and
 ~calendar-extras-location-name~ and confirms the update in the echo
@@ -156,7 +157,8 @@ Entries without a deadline are left in place.
 The function ~calendar-extras-get-geolocation~ performs the HTTP
 request to the Geoapify API and parses the JSON response.  It returns
 a plist with keys =:lat=, =:lon=, and =:city=.  This function
-requires an API key configured via =auth-source-pass=.  It is used by
+requires the Geoapify key in the Tlon Automation vault, read through
+=auth-source-extras=.  It is used by
 ~calendar-extras-set-geolocation~ ([[#h:geolocation][Geolocation]]) and can also be called
 programmatically when you need raw geolocation data without updating
 the user options.

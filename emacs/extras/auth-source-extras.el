@@ -148,9 +148,14 @@ because the CLI fetches the items of a single invocation one after another."
 (defun auth-source-extras--op-start (account title)
   "Start a CLI process that prints item TITLE of ACCOUNT as JSON."
   (let* ((err (generate-new-buffer " *auth-source-extras-op-err*" t))
+         ;; An explicit pipe with a silent sentinel, so that the default
+         ;; sentinel's "Process ... finished" line does not land in ERR and
+         ;; masquerade as the CLI's error message.
+         (err-pipe (make-pipe-process :name "auth-source-extras-op-err" :buffer err
+                                      :noquery t :sentinel #'ignore))
          (proc (make-process :name "auth-source-extras-op"
                              :buffer (generate-new-buffer " *auth-source-extras-op*" t)
-                             :stderr err
+                             :stderr err-pipe
                              :command (list auth-source-extras-op-program
                                             (format "@%s" account) "item" "get" title
                                             "--vault" auth-source-extras-op-vault

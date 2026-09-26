@@ -59,7 +59,7 @@ Indices
 
 The first request for an account fetches the requested item together with every item listed for that account in @code{auth-source-extras-op-prefetch}. Each item is fetched by its own CLI process and all of them run in parallel, since a single @samp{op} invocation fetches items one after another. Fetched items stay in memory for the rest of the session, so later reads are instant and a session makes one round of requests per account.
 
-If an item cannot be read, for example because the account has no token in the Keychain or the item does not exist, the function returns nil and displays one warning per distinct reason, naming the affected items. This lets a shared configuration load on machines that can read only some of the accounts.
+If an item cannot be read, for example because the account has no token in the Keychain or the item does not exist, the function returns nil and displays one warning per distinct reason, naming the affected items. The reason is the last line of the CLI's own error output, such as @samp{"mbsync/password" isn't an item in the "Automation" vault} or @samp{no token in the Keychain for op-service-account/tlon-automation}; it never contains item values. This lets a shared configuration load on machines that can read only some of the accounts.
 
 @findex auth-source-extras-op-clear-cache
 @code{auth-source-extras-op-clear-cache} forgets every cached secret and vault listing, so the next read fetches fresh values, for example after rotating a key.

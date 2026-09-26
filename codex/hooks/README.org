@@ -246,6 +246,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =lib-repo-root.sh= | Resolves the effective Git repository from structured hook context, Git global options, or an exact unambiguous parent =functions.exec= record without shell re-evaluation. |
 | =lib-staged-files.sh= | Lists proposed commit paths and name-status data, including explicit path selections and the complete amended commit. |
 | =commit-file-selection.py= | Resolves explicit commit selections with a disposable index, leaving shared staging untouched. |
+| =epoch-brief-freshness.sh= | After a tool call reads an Epoch project brief, adds that brief's possibly stale TODOs (from =audit_project_todos.py=) to the agent's context once per session and brief, via the Epoch helper =projects/shared/scripts/brief_freshness_notice.py=; a silent no-op without the Epoch notes tree. |
 | =load-elisp-after-edit.sh= | Rebuilds and reloads the owning Elpaca package after an Elisp edit, including paths recovered from a nested composed-tool patch; skips test-only files and active or unresolved Git operations. |
 | =regenerate-manual-after-edit.sh= | Regenerates validated declared sibling Texinfo and existing Info names independently; disables local/Babel evaluation, refuses unsafe destinations or unsupported export directives, and reports partial failures without raw private errors. |
 | =remind-ai-config-sync.sh= | Delegates paired Claude/Codex update reminders to =bin/ai-config-sync=. |

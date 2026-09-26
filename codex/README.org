@@ -583,6 +583,10 @@ dotfiles repo's project-local =.codex/= directory so Codex does not load it
 twice. Registrations normalize Codex payload and tool-name differences before
 dispatching to the paired scripts documented in [[file:hooks/README.org][the hook index]].
 
+=epoch-brief-freshness.sh= runs after shell tool calls (PostToolUse) and dispatches only when the payload mentions an =.org= file. The Epoch helper decides whether a project brief was read, runs the TODO freshness audit for that project and returns the flagged TODOs as =additionalContext=, once per session and brief (subagents are keyed separately). An audit failure is reported in the notice rather than hidden. The registration timeout is 40 s, above the helper's 30 s audit timeout. Design: =Epoch/docs/superpowers/specs/2026-09-26-brief-freshness-and-document-reachability-design.md=; =tests/test_epoch_brief_freshness_hooks.py= covers the wrapper contract.
+
+Like any new definition, it runs only after native Codex hook trust is approved.
+
 Sensitive-read guards permit the security audit's shell-export classifier only
 for its exact absolute helper and target paths. The classifier reports names,
 line numbers, scopes, and classifications without printing values.

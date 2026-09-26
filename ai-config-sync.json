@@ -443,6 +443,13 @@
       "note": "Claude Emacs hook utility; Codex routes Emacs events through codex-hook-wrapper directly."
     },
     {
+      "name": "epoch-brief-freshness.sh",
+      "claude": "claude/hooks/epoch-brief-freshness.sh",
+      "codex": "codex/hooks/epoch-brief-freshness.sh",
+      "status": "paired",
+      "note": "paired PostToolUse wrappers around the Epoch helper projects/shared/scripts/brief_freshness_notice.py, which lists a just-read project brief's possibly stale TODOs once per session and brief. Claude registers on Read|Bash, Codex on its shell matcher; both with timeout 40 (the helper's audit times out at 30). The wrappers differ only in their header comment."
+    },
+    {
       "name": "fire-and-forget.sh",
       "claude": "claude/hooks/fire-and-forget.sh",
       "codex": null,
@@ -756,7 +763,7 @@
       "path": "codex/hooks.json",
       "tracked": true,
       "live_path": "~/.codex/hooks.json",
-      "note": "Global registrations live through ~/.codex/hooks.json, outside repo-root .codex to avoid double loading. Lifecycle hooks use codex-hook-wrapper and an explicit Emacs socket. Shell matchers cover Bash, exec_command, functions.exec and functions.exec_command; edit matchers are collapsed for trust review. Guards allow or deny, never ask. The LaunchAgent guard covers shell and edits. Untrusted-execution routing is appended at shell index 15, preserving existing trust keys; new definitions require native trust and reload. See codex/README.org and codex/hooks/README.org."
+      "note": "Global registrations live through ~/.codex/hooks.json, outside repo-root .codex to avoid double loading. Lifecycle hooks use codex-hook-wrapper and an explicit Emacs socket. Shell matchers cover Bash, exec_command, functions.exec and functions.exec_command; edit matchers are collapsed for trust review. Guards allow or deny, never ask. The LaunchAgent guard covers shell and edits. Untrusted-execution routing (shell index 15) and the Epoch brief notice (PostToolUse shell index 1) were appended to keep trust keys; new definitions need native trust. See codex/README.org and codex/hooks/README.org."
     },
     {
       "tool": "Claude Code and Codex",

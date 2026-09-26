@@ -134,6 +134,11 @@
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/load-elisp-after-edit.sh",
             "timeout": 150
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/epoch-brief-freshness.sh",
+            "timeout": 40
           }
         ]
       },

@@ -9542,7 +9542,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
                           ("epoch3" :home "~/.codex-epoch3" :pool "epoch-pool")
                           ("epoch4" :home "~/.codex-epoch4" :pool "epoch-pool")
                           ("epoch5" :home "~/.codex-epoch5" :pool "epoch-pool")
-                          ("epoch-plan" :home "~/.codex-epoch-plan" :pool "epoch-pool")))
+                          ("epoch-plan" :home "~/.codex-epoch-plan")))
 
   :bind
   ("H-e" . agent-menu)

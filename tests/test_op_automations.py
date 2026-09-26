@@ -77,27 +77,28 @@ class OpAutomationsTest(unittest.TestCase):
             calls = log_path.read_text() if log_path.exists() else ""
             return result, calls
 
-    def test_loads_service_account_once_and_passes_arguments(self):
+    def test_loads_epoch_token_from_keychain_once_and_passes_arguments(self):
         result, calls = self.run_wrapper()
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(calls.count("pass:"), 1)
-        self.assertIn("pass:show epoch/1password-service-account-token", calls)
-        self.assertIn("op-token:service-token", calls)
+        self.assertNotIn("pass:", calls)
+        self.assertEqual(calls.count("keychain:"), 1)
+        self.assertIn("-s op-service-account/epoch-automation -w", calls)
+        self.assertIn("op-token:keychain-token", calls)
         self.assertIn("op-args:item list --vault Automations", calls)
 
-    def test_reuses_inherited_service_account_without_reading_pass(self):
+    def test_reuses_inherited_service_account_without_reading_keychain(self):
         result, calls = self.run_wrapper(inherited_token="already-loaded")
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertNotIn("pass:", calls)
+        self.assertNotIn("keychain:", calls)
         self.assertIn("op-token:already-loaded", calls)
 
-    def test_refuses_to_run_op_when_bootstrap_entry_is_empty(self):
-        result, calls = self.run_wrapper(pass_output="")
+    def test_refuses_to_run_op_when_epoch_keychain_token_is_missing(self):
+        result, calls = self.run_wrapper(keychain_output="", keychain_status=44)
 
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("is empty", result.stderr)
+        self.assertIn("op-service-account/epoch-automation", result.stderr)
         self.assertNotIn("op-args:", calls)
 
     def test_account_selector_reads_keychain_and_ignores_inherited_token(self):

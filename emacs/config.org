@@ -954,7 +954,9 @@ elif [ -d "$ELPACA_BASE/repos/dotfiles/.git" ]; then
 fi
 
 if [ -n "$ELPACA_DOTFILES" ]; then
-    GITDIR="$GIT_DIR"
+    # Resolve the primary gitdir before unsetting the variables below; GIT_DIR
+    # is set only when a hook runs this, not when it is run by hand.
+    GITDIR=$(git rev-parse --absolute-git-dir)
     # The parent git process sets GIT_DIR, GIT_INDEX_FILE, and
     # GIT_WORK_TREE pointing at the Google Drive clone.  Unsetting them
     # is essential so that git commands target the elpaca clone.
@@ -1454,7 +1456,10 @@ has connection termination."
 (use-feature server
   :demand t
   :config
-  (unless (server-running-p)
+  ;; A test instance never starts a server: if the live server is busy,
+  ;; `server-running-p' reports it gone, and the test instance would take
+  ;; over the socket and delete it on exit, orphaning the live session.
+  (unless (or (getenv "INIT_TEST_INSTANCE") (server-running-p))
     (server-start)))
 #+end_src
 

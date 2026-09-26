@@ -1744,7 +1744,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
                "themoviedb.org/stafforini" "signal" "erc/libera"
                "slack.com/trajectorylabs" "deepgram.com/pablo@stafforini.com"
                "accounts.spotify.com" "mercadolibre.com/benthamite"
-               "fatebook.io/pablo.stafforini@gmail.com")
+               "fatebook.io/pablo.stafforini@gmail.com" "tlon-ai-github-token")
      (tlon "api.github.com/grip-mode" "deepl.com"
            "openai.com" "anthropic.com"
            "aistudio.google.com" "deepseek.com"
@@ -9723,8 +9723,7 @@ servers use the correct version.
            (:command "npx"
                      :args ("-y" "@modelcontextprotocol/server-github")
                      :env (:GITHUB_PERSONAL_ACCESS_TOKEN
-                           ,(auth-source-pass-get "github-mcp"
-                                                  (concat "tlon/core/github.com/tlon-ai")))))
+                           ,(auth-source-extras-op-get "tlon-ai-github-token" "password"))))
           ;; ("graphiti-stdio" .
           ;; (:command "python"
           ;; :args ("-u" "-m" "graphiti_mcp_server" "--transport" "stdio")

@@ -21,6 +21,10 @@
 ;; warnings that were investigated and judged harmless.  A GUI instance is used
 ;; deliberately: a batch Emacs exits at the first process-sentinel error and
 ;; hides every other failure.
+;;
+;; The instance quits itself after writing the final report, so the agent never
+;; has to signal an Emacs process.  Set SMOKE_KEEP_OPEN=1 to leave it running
+;; for inspection.
 
 (declare-function elpaca--queued "elpaca" (&optional n))
 (declare-function elpaca--status "elpaca" (e))
@@ -40,6 +44,9 @@
 
 (defvar smoke-report-allow-warnings (getenv "SMOKE_ALLOW_WARNINGS")
   "Non-nil to write the lockfile even when warnings or error messages exist.")
+
+(defvar smoke-report-keep-open (getenv "SMOKE_KEEP_OPEN")
+  "Non-nil to leave the instance running after the final report.")
 
 (defun smoke-report--write (final)
   "Write the current Elpaca status report.
@@ -128,7 +135,13 @@ Use the dotfiles writer, which honours the exclusion list, when it is loaded."
   "Write the final report once Elpaca has processed every queue.
 Wait a few seconds first so that warnings raised by deferred startup code
 appear in the report."
-  (run-with-timer 10 nil (lambda () (smoke-report--write t))))
+  (run-with-timer 10 nil #'smoke-report--finish))
+
+(defun smoke-report--finish ()
+  "Write the final report, then quit unless `smoke-report-keep-open' is set."
+  (smoke-report--write t)
+  (unless smoke-report-keep-open
+    (kill-emacs 0)))
 
 (add-hook 'elpaca-after-init-hook #'smoke-report--final 90)
 (run-with-timer 15 15

@@ -253,7 +253,10 @@ source.
      -l "$SKILL_DIR/scripts/smoke-report.el"
    ```
 
-   Run it in the background and poll `$REPORT` until it reads `state: final`.
+   Run it in the background and wait until the process exits: the reporter
+   quits the instance itself right after writing the final report, so never
+   signal it. The report then reads `state: final`; an exit without that line
+   is a crash to diagnose.
    A fresh profile clones and compiles several hundred packages; allow well
    over ten minutes before treating silence as a hang, and read the
    in-progress counts in the report rather than guessing. Do not use `--batch`:
@@ -309,8 +312,8 @@ source.
 
 ## Step 6: hand the dev profile to the user and stop
 
-Quit the reporter instance. Launch the dev profile again the same way, without
-the reporter, and leave it open. Do not hand the user a command to run. Report
+The reporter instance has already quit itself. Launch the dev profile again
+the same way, without the reporter, and leave it open; the user closes it. Do not hand the user a command to run. Report
 what was fixed during Step 5 and ask whether to proceed to the release of
 `NEW_VERSION`. Then stop. `--accept` cannot supply this answer.
 

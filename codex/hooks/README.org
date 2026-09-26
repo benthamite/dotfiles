@@ -223,7 +223,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | File | Purpose |
 |------+---------|
 | =block-destructive-command.sh= | Blocks hard-to-reverse shell operations, with quoted-text masking to avoid treating prose as a command. |
-| =block-hookspath-override.sh= | Denies Git commands that override =core.hooksPath=, which would disable the Elisp evidence hooks in =claude/git-hooks=. |
+| =block-hookspath-override.sh= | Denies Git commands that override =core.hooksPath=, which would disable the Elisp evidence hooks in =claude/git-hooks=; a plain read (=--get= or the bare key) is allowed. |
 | =block-dirty-tree-rewrite.sh= | Blocks Git history rewrites when the target repository has staged or unstaged tracked changes. |
 | =block-elpaca-dotfiles-edit.sh= | Denies writes to the read-only Elpaca dotfiles mirror and points to the canonical repository. |
 | =block-elpaca-rebuild-uncommitted.sh= | Blocks rebuilding an extras package while its canonical Elisp source has uncommitted changes. |

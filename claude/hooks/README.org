@@ -252,7 +252,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =load-elisp-after-edit.sh= | Rebuilds and reloads an edited Elisp package through the live Emacs session, except for test-only files or while Git has an active operation or unmerged index entries. |
 | =notify-emacs-notification.sh= | Forwards a Claude Notification event to Emacs. |
 | =notify-emacs-session-end.sh= | Forwards a Claude Stop event to Emacs. |
-| =pretooluse-bash.sh= | Dispatches the Bash guards and output wrapper registered for PreToolUse, and denies Git commands that override =core.hooksPath=, which would disable the Elisp evidence hooks in =claude/git-hooks=. |
+| =pretooluse-bash.sh= | Dispatches the Bash guards and output wrapper registered for PreToolUse, and denies Git commands that override =core.hooksPath=, which would disable the Elisp evidence hooks in =claude/git-hooks=; a plain read (=--get= or the bare key) is allowed. |
 | =redact-secrets.sh= | Masks recognized secret literals in a command's combined output. |
 | =regenerate-coverage-map.sh= | Refreshes the CR rubric visualizer coverage map after relevant edits. |
 | =regenerate-manual-after-edit.sh= | Regenerates validated declared sibling Texinfo and existing Info names independently; disables local/Babel evaluation, refuses unsafe destinations or unsupported export directives, and reports partial failures without raw private errors. |

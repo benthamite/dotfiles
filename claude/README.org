@@ -970,7 +970,8 @@ is dropped. After two consecutive blocks in one turn it lets the turn end and
 reports the unpaid debts to the user instead of looping. No other command is
 blocked meanwhile. Every hook in =claude/git-hooks= then runs the
 repository's own hook of the same name, so repository hooks keep working. The
-only related command guard denies overriding =core.hooksPath=.
+only related command guard denies overriding =core.hooksPath=; a plain read
+(=--get= or the bare key) is allowed.
 The documentation, README, and paired-config commit gates also run from that
 =pre-commit= hook, through =claude/bin/agent-commit-gates=, so they read the
 staged files from the index instead of inferring them from command text.

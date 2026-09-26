@@ -473,8 +473,24 @@ The walk-list protected store at ~/.claude/walk-list-data/ is unreadable by any 
 # hooks in claude/git-hooks and by the Stop hook, not by reading commands.
 # The one command shape that would silently disable both is an override of
 # core.hooksPath, so only that is denied here.
+# A read (`git config --get core.hooksPath`, or the bare key with no value)
+# changes nothing; every other `git config` form naming the key may write it.
+hookspath_read_only_p() {
+  local segments segment
+  printf '%s' "$1" | grep -qiE -- '-c[[:space:]]*core\.hookspath' && return 1
+  segments=$(printf '%s' "$1" | grep -oiE '(^|[^[:alnum:]_-])git[[:space:]][^|;&]*config[[:space:]][^|;&]*core\.hookspath[^|;&]*') || return 1
+  while IFS= read -r segment; do
+    printf '%s' "$segment" | grep -qiE -- '--(unset|unset-all|add|replace-all|rename-section|remove-section|edit)([[:space:]=]|$)|(^|[[:space:]])-e([[:space:]]|$)' && return 1
+    printf '%s' "$segment" | grep -qiE -- '--get(-all|-regexp|-urlmatch)?([[:space:]=]|$)' && continue
+    printf '%s' "$segment" | grep -qiE 'core\.hookspath[[:space:]]*$' && continue
+    return 1
+  done <<< "$segments"
+  return 0
+}
+
 check_hookspath_override() {
   printf '%s' "$COMMAND" | grep -qiE -- '-c[[:space:]]*core\.hookspath|(^|[^[:alnum:]_-])git[[:space:]][^|;&]*config[[:space:]][^|;&]*core\.hookspath' || return 0
+  hookspath_read_only_p "$COMMAND" && return 0
   add_deny "BLOCKED: Git commands may not override core.hooksPath. The global hooks in ~/My Drive/dotfiles/claude/git-hooks enforce Elisp test evidence and run each repository's own hooks."
   return 0
 }

@@ -897,7 +897,8 @@ the committing thread's turn from ending until those debts are paid, releasing
 after two consecutive blocks in one turn instead of looping. No other command
 is blocked meanwhile. Every hook in =claude/git-hooks= then runs the
 repository's own hook of the same name. =block-hookspath-override.sh= denies
-overriding =core.hooksPath=. Both registrations need trusted current
+overriding =core.hooksPath= and allows a plain read (=--get= or the bare
+key). Both registrations need trusted current
 definitions in the active Codex profile.
 The documentation, README, and paired-config commit gates also run from that
 =pre-commit= hook, through =claude/bin/agent-commit-gates=, so they read the

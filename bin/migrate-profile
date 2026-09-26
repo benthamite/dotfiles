@@ -1,0 +1,311 @@
+#!/usr/bin/env python3
+"""Move every Claude and Codex session from retired Emacs profiles to the current one.
+
+The current profile is the target of ~/.config/emacs-profiles/active; every
+other profile is retired. Each session whose project directory lies inside a
+retired profile is relocated to the same relative directory inside the current
+profile (an old elpaca/repos/PKG maps to elpaca/sources/PKG when only that
+exists). All writes go through the reviewed move-session-log adapters, one
+exact OLD->NEW mapping at a time for Claude and one batch for Codex, each with
+its own recovery backup under ~/.local/state/profile-migrations/.
+
+Nothing is asked. What cannot move is reported: sessions whose directory has
+no counterpart in the current profile, and mappings an adapter refused (most
+often because a process still has the old transcript open).
+
+Usage: migrate-profile [--dry-run]
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import sqlite3
+import subprocess
+import sys
+import tempfile
+import time
+from collections import Counter, defaultdict
+from pathlib import Path
+
+HOME = Path.home()
+DOTFILES = Path(__file__).resolve().parents[1]
+PROFILES = HOME / ".config" / "emacs-profiles"
+CLAUDE_ADAPTER = DOTFILES / "claude" / "skills" / "move-session-log" / "scripts" / "move_session_log.py"
+CODEX_ADAPTER = DOTFILES / "codex" / "skills" / "move-session-log" / "scripts" / "move_session_log.py"
+CLAUDE_CONFIG = Path(os.environ.get("CLAUDE_CONFIG_DIR") or HOME / ".claude")
+CODEX_HOME = Path(os.environ.get("CODEX_HOME") or HOME / ".codex")
+STATE = HOME / ".local" / "state" / "profile-migrations"
+UUID_RE = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
+MARKER = "/.config/emacs-profiles/"
+
+
+def encode(path: str) -> str:
+    """Claude's bucket-name encoding (lossy; see the Claude adapter)."""
+    return re.sub(r"[/. ]", "-", path)
+
+
+def current_profile() -> str:
+    active = PROFILES / "active"
+    new = os.path.realpath(active)
+    if not active.is_symlink() or Path(new).parent != PROFILES or not Path(new).is_dir():
+        sys.exit(f"migrate-profile: {active} does not point at a profile directory")
+    name = Path(new).name
+    cached = (PROFILES / ".current-profile").read_text().strip()
+    if cached != name:
+        sys.exit(f"migrate-profile: active -> {name} but .current-profile says {cached}; "
+                 "start Emacs with the profile you want first")
+    return name
+
+
+def retired(path: str, new: str) -> str | None:
+    """Return the profile name if PATH lies in a retired profile."""
+    prefix = str(PROFILES) + "/"
+    if not path.startswith(prefix):
+        return None
+    profile = path[len(prefix):].split("/", 1)[0]
+    if profile in ("", new, "active") or not (PROFILES / profile).is_dir():
+        return None
+    return profile
+
+
+def target_for(old: str, profile: str, new: str) -> str | None:
+    rest = old[len(str(PROFILES / profile)):]
+    candidates = [rest]
+    if rest.startswith("/elpaca/repos/"):
+        candidates.append("/elpaca/sources/" + rest[len("/elpaca/repos/"):])
+    for candidate in candidates:
+        target = str(PROFILES / new) + candidate
+        if Path(target).is_dir():
+            return target
+    return None
+
+
+def first_cwd(path: Path) -> str | None:
+    with path.open(errors="replace") as handle:
+        for line in handle:
+            if '"cwd"' not in line:
+                continue
+            try:
+                record = json.loads(line)
+            except ValueError:
+                continue
+            if isinstance(record, dict) and isinstance(record.get("cwd"), str):
+                return record["cwd"]
+    return None
+
+
+def claude_inventory(new: str):
+    """Old project paths with a bucket, history counts per old project, and
+    buckets under the profiles root whose origin cannot be pinned down."""
+    projects = CLAUDE_CONFIG / "projects"
+    prefix = encode(str(PROFILES) + "/")
+    buckets = [b for b in sorted(projects.iterdir()) if b.name.startswith(prefix) and b.is_dir()]
+    history: Counter[str] = Counter()
+    candidates: set[str] = set()
+    with (CLAUDE_CONFIG / "history.jsonl").open(errors="replace") as handle:
+        for line in handle:
+            if MARKER not in line:
+                continue
+            try:
+                project = json.loads(line).get("project")
+            except (ValueError, AttributeError):
+                continue
+            if isinstance(project, str):
+                candidates.add(project)
+                if retired(project, new):
+                    history[project] += 1
+    for bucket in buckets:
+        for path in [*bucket.glob("*.jsonl"), *bucket.glob("subagents/*.jsonl")]:
+            cwd = first_cwd(path)
+            if cwd:
+                candidates.add(cwd)
+    by_name = defaultdict(set)
+    for path in candidates:
+        by_name[encode(path)].add(path)
+    resolved: dict[str, Path] = {}
+    unresolved = []
+    for bucket in buckets:
+        paths = by_name.get(bucket.name, set())
+        if paths and not any(retired(path, new) for path in paths):
+            continue  # already in the current profile
+        if not paths and owning_profiles(bucket.name) == [new]:
+            continue  # e.g. a moved bucket holding only legacy root sidecars
+        if len(paths) == 1:
+            resolved[next(iter(paths))] = bucket
+        else:
+            unresolved.append(bucket.name)
+    return resolved, history, unresolved
+
+
+def owning_profiles(bucket: str) -> list[str]:
+    return [p.name for p in PROFILES.iterdir() if p.is_dir() and not p.is_symlink()
+            and (bucket == encode(str(p)) or bucket.startswith(encode(str(p)) + "-"))]
+
+
+def codex_inventory(new: str) -> Counter[str]:
+    found: Counter[str] = Counter()
+    for root in ("sessions", "archived_sessions"):
+        for path in (CODEX_HOME / root).rglob("*.jsonl"):
+            data = path.read_bytes()
+            if MARKER.encode() not in data:
+                continue
+            for line in data.splitlines():
+                if b'"cwd"' not in line or (b'"session_meta"' not in line and b'"turn_context"' not in line):
+                    continue
+                try:
+                    record = json.loads(line)
+                except ValueError:
+                    continue
+                cwd = (record.get("payload") or {}).get("cwd") if isinstance(record, dict) else None
+                if isinstance(cwd, str) and retired(cwd, new):
+                    found[cwd] += 1
+    for database in sorted({p.resolve() for p in HOME.glob(".codex*/state_5.sqlite")}):
+        with sqlite3.connect(f"file:{database}?mode=ro", uri=True) as conn:
+            for (cwd,) in conn.execute("SELECT cwd FROM threads WHERE cwd LIKE ?", (f"%{MARKER}%",)):
+                if isinstance(cwd, str) and retired(cwd, new):
+                    found[cwd] += 1
+    return found
+
+
+AGENT_COMMAND = re.compile(r"claude|codex|node|\d+\.\d+\.\d+", re.I)
+
+
+def agents_in_old_profiles(new: str) -> dict[str, list[str]]:
+    """Directory -> agent processes still running there; their sessions stay put."""
+    result = subprocess.run(["lsof", "-d", "cwd", "-Fpcn"], capture_output=True, text=True)
+    found, pid, command = defaultdict(list), None, None
+    for field in result.stdout.splitlines():
+        tag, value = field[:1], field[1:]
+        if tag == "p":
+            pid = value
+        elif tag == "c":
+            command = value
+        elif tag == "n" and retired(value, new) and AGENT_COMMAND.fullmatch(command or ""):
+            found[value].append(f"pid {pid} ({command})")
+    return found
+
+
+def blocked_by(old: str, live: dict[str, list[str]]) -> list[str]:
+    return [who for cwd, whos in live.items() if cwd == old or cwd.startswith(old + "/") for who in whos]
+
+
+class Runner:
+    def __init__(self, dry_run: bool, backups: Path):
+        self.dry_run = dry_run
+        self.backups = backups
+        self.count = 0
+        self.failures: list[str] = []
+
+    def run(self, adapter: Path, label: str, *args: str) -> str | None:
+        self.count += 1
+        command = [sys.executable, str(adapter), *args]
+        if self.dry_run:
+            command.append("--dry-run")
+        else:
+            command += ["--offline", "--backup-dir", str(self.backups / f"{self.count:03d}-{label}")]
+        result = subprocess.run(command, capture_output=True, text=True)
+        if result.returncode != 0:
+            reason = (result.stderr.strip().splitlines() or ["no diagnostic"])[-1]
+            self.failures.append(f"{label}: {reason}")
+            return None
+        return result.stdout
+
+
+def stat_line(output: str | None, key: str) -> int:
+    match = re.search(rf"^{re.escape(key)}: (\d+)$", output or "", re.M)
+    return int(match.group(1)) if match else 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--dry-run", action="store_true", help="preview through the adapters without writing")
+    args = parser.parse_args()
+    new = current_profile()
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    backups = STATE / f"{new}-{stamp}"
+    runner = Runner(args.dry_run, backups)
+    if not args.dry_run:
+        backups.mkdir(parents=True, mode=0o700)
+    print(f"current profile: {new}{'  (dry run)' if args.dry_run else ''}")
+    live = agents_in_old_profiles(new)
+    blocked: dict[str, list[str]] = {}
+
+    buckets, history, unresolved = claude_inventory(new)
+    codex = codex_inventory(new)
+    unmapped: Counter[str] = Counter()
+    moved = Counter()
+
+    # Claude: move each old bucket, merging session by session when the
+    # current checkout already has one; then the prompt history left behind.
+    for old in sorted(set(buckets) | set(history)):
+        profile = retired(old, new)
+        target = target_for(old, profile, new)
+        if target is None:
+            unmapped[old] += history.get(old, 0) + (len(list(buckets[old].glob("*.jsonl"))) if old in buckets else 0)
+            continue
+        if blocked_by(old, live):
+            blocked[old] = blocked_by(old, live)
+            continue
+        label = "claude-" + encode(old[len(str(PROFILES)) + 1:])[:80]
+        if old in buckets:
+            bucket = buckets[old]
+            if not (bucket.parent / encode(target)).exists():
+                out = runner.run(CLAUDE_ADAPTER, label, "--rename", old, target)
+                if out is not None:
+                    moved["claude sessions"] += len(list(bucket.glob("*.jsonl")))
+            else:
+                for transcript in sorted(bucket.glob("*.jsonl")):
+                    if not UUID_RE.fullmatch(transcript.stem):
+                        continue
+                    out = runner.run(CLAUDE_ADAPTER, f"{label}-{transcript.stem[:8]}",
+                                     "--project", target, transcript.stem)
+                    if out is not None:
+                        moved["claude sessions"] += 1
+                if not args.dry_run and bucket.exists() and any(bucket.iterdir()):
+                    runner.failures.append(f"{label}: old bucket keeps artifacts the per-session merge "
+                                           f"does not move: {bucket}")
+        # Prompt history whose transcripts are gone; after a bucket move only
+        # such orphans can remain. A bucket still in place (dry run, or a
+        # refused move) keeps its history for the adapter's --rename.
+        if old in history and not (old in buckets and buckets[old].exists()):
+            out = runner.run(CLAUDE_ADAPTER, label + "-history", "--rename-history", old, target)
+            moved["claude history entries"] += stat_line(out, "history project fields rewritten")
+
+    # Codex: one batch over every old path with a counterpart.
+    pairs = []
+    for old, count in sorted(codex.items()):
+        target = target_for(old, retired(old, new), new)
+        if target is None:
+            unmapped[old] += count
+        elif blocked_by(old, live):
+            blocked[old] = blocked_by(old, live)
+        else:
+            pairs.append((old, target))
+    if pairs:
+        with tempfile.TemporaryDirectory() as scratch:
+            mapping = (Path(scratch) if args.dry_run else backups) / "codex-mappings.tsv"
+            mapping.write_text("".join(f"{old}\t{target}\n" for old, target in pairs))
+            out = runner.run(CODEX_ADAPTER, "codex", "--rename-file", str(mapping))
+        moved["codex sessions"] += stat_line(out, "session files rewritten")
+        moved["codex thread rows"] += stat_line(out, "state_db thread cwd rows rewritten")
+
+    for key, value in moved.items():
+        print(f"{'would move' if args.dry_run else 'moved'}: {value} {key}")
+    for old, whos in sorted(blocked.items()):
+        print(f"not moved (agent still running there: {', '.join(whos)}): {old}")
+    for name in unresolved:
+        print(f"not moved (bucket of unknown origin): {name}")
+    for old, count in sorted(unmapped.items()):
+        print(f"not moved (no counterpart in {new}): {old} ({count} records)")
+    for failure in runner.failures:
+        print(f"refused: {failure}")
+    if backups.exists():
+        print(f"recovery backups: {backups}")
+    return 1 if runner.failures else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

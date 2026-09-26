@@ -49,8 +49,8 @@ python3 "$SKILL_DIR/scripts/move_session_log.py" --dry-run --rename-file "$MAPPI
 `--rename-file` renames several projects in one scan of the store. The file
 holds one exact `OLD<TAB>NEW` mapping per line; blank lines and `#` comments
 are skipped. Sources must be distinct, no path may be both a source and a
-destination, no two mappings may share a destination, and every destination
-must already exist as a directory. Each rollout is read once and every
+destination, and every destination must already exist as a directory. Several
+sources may share one destination. Each rollout is read once and every
 matching mapping is applied to it under the exact-match rule; history and
 index files get one pass each, and each thread database one transaction for
 all its rows. The preview and the recovery manifest report counts per mapping

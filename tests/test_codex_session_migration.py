@@ -759,13 +759,27 @@ class CodexSessionMigrationTests(unittest.TestCase):
                          sorted(str(path) for path in (self.rollout, second, self.home / "history.jsonl",
                                                        self.home / "session_index.jsonl")))
 
+    def test_batch_consolidates_several_sources_into_one_destination(self):
+        pairs, _expected, second, unrelated = self.batch_fixture()
+        first_new = pairs[0][1]
+        pairs = [(OLD, first_new), (self.SECOND_OLD, first_new)]
+        plan, report = ADAPTER.make_batch_plan(pairs)
+        self.assertEqual([(entry["old"], entry["new"]) for entry in report["mappings"]], pairs)
+        plan.run(offline=True, backup_dir=self.backup)
+        self.assertEqual(json.loads(self.rollout.read_bytes())["payload"]["cwd"], first_new)
+        records = [json.loads(line) for line in second.read_bytes().splitlines()]
+        self.assertEqual([record["payload"]["cwd"] for record in records], [first_new, first_new])
+        self.assertEqual(json.loads(unrelated.read_bytes())["payload"]["cwd"], OTHER)
+        with contextlib.closing(sqlite3.connect(self.home / "state_5.sqlite")) as conn:
+            self.assertEqual(dict(conn.execute("SELECT id, cwd FROM threads")),
+                             {SESSION: first_new, OTHER_SESSION: first_new, self.THIRD_SESSION: OTHER})
+
     def test_batch_refuses_invalid_mappings_before_reading_the_store(self):
         first_new = self.base / "first-new"
         first_new.mkdir()
         cases = {
             "self": ([(OLD, OLD)], "maps a path to itself"),
             "duplicate source": ([(OLD, str(first_new)), (OLD, str(self.base))], "Duplicate source"),
-            "shared destination": ([(OLD, str(first_new)), (OTHER, str(first_new))], "share one destination"),
             "chained": ([(OLD, str(first_new)), (str(first_new), str(self.base))], "also a source"),
             "missing target": ([(OLD, str(self.base / "absent"))], "does not exist"),
             "relative": ([(OLD, "relative/path")], "absolute"),

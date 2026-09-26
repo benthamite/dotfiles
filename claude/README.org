@@ -442,6 +442,10 @@ parent does not yet exist, each with a named reason. Historical tool records rem
 unchanged, and project trust/settings remain untouched unless separately
 authorized. A recovery journal records partial failures; metadata counts alone
 do not establish live resume behavior.
+Its =--rename-history= mode moves prompt-history entries of a project whose
+transcripts no longer exist, once no old bucket remains. =bin/migrate-profile=
+uses both modes to move every retired Emacs profile's sessions into the current
+profile.
 The paired Codex adapter allows single closed-session imports while unrelated
 sessions remain open, using SQLite transactions and consistent recovery backups.
 Its bulk rename mode retains the full-store offline checks.

@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import shutil
 import stat
 import subprocess
 import sys
@@ -103,6 +104,20 @@ class ClaudeSessionMigrationTests(unittest.TestCase):
         self.assertEqual(tree_snapshot(self.config), before)
         self.assertFalse(self.backup.exists())
         return result
+
+    def test_rename_history_rewrites_orphan_entries_with_and_without_session_ids(self):
+        shutil.rmtree(self.source)
+        self.history.write_bytes(jsonl({"sessionId": SID, "project": OLD, "display": "a"},
+                                       {"project": OLD, "display": "legacy entry without sessionId"},
+                                       {"sessionId": OTHER_SID, "project": OTHER, "display": "unrelated"}))
+        result = self.apply("--rename-history", OLD, NEW)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual([json.loads(line)["project"] for line in self.history.read_text().splitlines()],
+                         [NEW, NEW, OTHER])
+        self.assertIn("history project fields rewritten: 2", result.stdout)
+
+    def test_rename_history_refuses_while_the_old_bucket_still_exists(self):
+        self.assert_refused_without_changes("--rename-history", OLD, NEW, reason="relocate it with --rename first")
 
     def test_apply_requires_offline_and_new_backup(self):
         before = tree_snapshot(self.config)

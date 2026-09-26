@@ -49,6 +49,10 @@ truncating JSON rewrites, or another account's store if the helpers fail.
   transcript; a bucket holding only `tool-results/` is refused for lack of any
   session identity. Single-session import does not move root sidecars.
 
+- `--rename-history OLD NEW` rewrites prompt-history entries whose project is
+  exactly OLD, with or without a `sessionId`, once no OLD bucket remains.
+  It covers history left behind by transcripts that no longer exist.
+
 ## Preview both modes
 
 Use this skill's resolved directory for `SKILL_DIR`. Pass literal quoted

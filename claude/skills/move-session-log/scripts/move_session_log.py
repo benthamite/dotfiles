@@ -421,6 +421,41 @@ def build_rename_plan(old: str, new: str, *, migrate_project_settings: bool = Fa
     return plan, summary
 
 
+def build_history_plan(old: str, new: str) -> tuple[MigrationPlan, dict[str, Any]]:
+    """Rewrite prompt history left behind by sessions whose transcripts are gone.
+
+    Every entry whose project is exactly OLD moves to NEW, with or without a
+    sessionId (older Claude Code releases wrote none). A remaining OLD bucket
+    still owns live history, so it must be relocated first."""
+    absolute_project(old)
+    absolute_project(new)
+    plan = MigrationPlan()
+    summary: dict[str, Any] = {"history project fields rewritten": 0,
+                               "project settings": "unchanged (not requested)"}
+    if old == new:
+        summary["operation"] = "identical paths; no changes"
+        return plan, summary
+    projects_directory()
+    source = PROJECTS_DIR / encode_project_path(old)
+    if exists(source):
+        raise MigrationError("The old project still has a session bucket; relocate it with --rename first")
+    plan.expect_absent(source)
+    history, summary["history store"] = history_rows(plan)
+    count = 0
+    output = []
+    for raw, obj in history:
+        if obj is not None and obj.get("project") == old:
+            raw = replace_field(raw, "project", new)
+            count += 1
+        output.append(raw)
+    if count:
+        plan.rewrite(HISTORY_FILE, "".join(output).encode("utf-8"))
+    summary["history project fields rewritten"] = count
+    summary["operation"] = "rewrite orphan history"
+    plan.validate()
+    return plan, summary
+
+
 def session_candidates(session_id: str | None = None) -> list[Path]:
     projects_directory()
     found = []
@@ -551,6 +586,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("session_id", nargs="?", help="exact lowercase Claude session UUID")
     parser.add_argument("--project", help="single-session target; defaults to PWD")
     parser.add_argument("--rename", nargs=2, metavar=("OLD", "NEW"))
+    parser.add_argument("--rename-history", nargs=2, metavar=("OLD", "NEW"),
+                        help="rewrite prompt history of an OLD project that has no session bucket left")
     parser.add_argument("--dry-run", action="store_true", help="complete preflight without writes")
     parser.add_argument("--offline", action="store_true",
                         help="assert that no Claude session is running in the affected project directories")
@@ -558,7 +595,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--migrate-project-settings", action="store_true",
                         help="separately authorized trust/settings migration; --rename only")
     args = parser.parse_args()
-    if args.rename and (args.session_id or args.project is not None):
+    if args.rename and args.rename_history:
+        parser.error("--rename and --rename-history are separate operations")
+    if (args.rename or args.rename_history) and (args.session_id or args.project is not None):
         parser.error("--rename cannot be combined with a session ID or --project")
     if args.migrate_project_settings and not args.rename:
         parser.error("--migrate-project-settings requires --rename and separate authorization")
@@ -568,7 +607,9 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     try:
-        if args.rename:
+        if args.rename_history:
+            plan, summary = build_history_plan(*args.rename_history)
+        elif args.rename:
             plan, summary = build_rename_plan(*args.rename, migrate_project_settings=args.migrate_project_settings)
         elif args.session_id:
             plan, summary = build_single_plan(args.session_id, str(Path(args.project or os.getcwd()).resolve()))
@@ -581,7 +622,8 @@ def main() -> int:
             if not files:
                 print("No sessions outside the current project found.")
             return 0
-        if args.rename and args.rename[0] == args.rename[1]:
+        pair = args.rename or args.rename_history
+        if pair and pair[0] == pair[1]:
             print("Identical project paths; nothing changed.")
             return 0
         backup = plan.run(dry_run=args.dry_run, offline=args.offline, backup_dir=args.backup_dir)

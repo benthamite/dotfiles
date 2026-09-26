@@ -1,7 +1,7 @@
 #+title: Command index
 #+author: Pablo Stafforini
 
-This index covers the 62 tracked files under =bin/= whose Git mode is
+This index covers the 63 tracked files under =bin/= whose Git mode is
 =100755=. Non-executable libraries and data files are intentionally omitted.
 The first column is machine-readable and should contain every executable
 exactly once.
@@ -41,6 +41,7 @@ documented in [[file:../agents/README.org][the agent manual]]. Skill names and t
 | =git-remote-dotfiles-blocked= | Refuses ordinary dotfiles pushes before Git can bypass the publication workflow. |
 | =github-operation-authorization= | Prepares inert, expiring grants and checks committed exact-command authorization for explicitly approved forks and PR creation. |
 | =install-private-skills= | Installs ignored local shims for skills named by the encrypted private manifest. |
+| =migrate-profile= | Moves every Claude and Codex session, and orphan Claude prompt history, from retired Emacs profiles into the profile =active= points at, through the =move-session-log= adapters with private recovery backups; skips and names directories where an agent still runs, and lists directories with no counterpart. |
 | =mirror-claude-agents= | Copies between a project’s =CLAUDE.md= and =AGENTS.md= when they are intentional mirrors. |
 | =skill-prune= | Disables stale Claude and Codex skills through the tools’ native settings. |
 | =stage-for-user= | Copies a file, literal, or stdin to the Emacs kill ring and macOS clipboard without echoing it. |

@@ -252,6 +252,9 @@ operations are not one transaction; a journal records partial failures. Metadata
 readback is distinct from observing the actual live resume consumer. Database
 updates cover thread =cwd=, not independent project associations; unsupported
 generations and schema side effects refuse before writes.
+Bulk rename accepts several source paths sharing one destination, which
+=bin/migrate-profile= uses to consolidate retired Emacs profiles into the
+current one.
 For Emacs sessions, completion also requires the matching buffer name and
 directory to agree with the live server and persistent metadata. Idle live
 buffers use =thread/settings/update= before their directory and name change;

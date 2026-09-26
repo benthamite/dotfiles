@@ -473,7 +473,10 @@ def directory_versions(roots: list[Path]) -> dict[Path, tuple[int, ...]]:
 
 
 def validate_mappings(pairs: list[tuple[str, str]]) -> Mapping:
-    """Exact, distinct, non-chaining path mappings whose destinations exist."""
+    """Exact, distinct, non-chaining path mappings whose destinations exist.
+
+    Several sources may share one destination: consolidating the same project
+    from many retired checkouts into its current checkout is the main use."""
     if not pairs:
         raise MigrationError("A batch rename needs at least one OLD NEW mapping")
     mapping: Mapping = {}
@@ -486,8 +489,6 @@ def validate_mappings(pairs: list[tuple[str, str]]) -> Mapping:
             raise MigrationError(f"Duplicate source path in mappings: {old}")
         mapping[old] = new
     destinations = list(mapping.values())
-    if len(set(destinations)) != len(destinations):
-        raise MigrationError("Two mappings share one destination path")
     chained = set(destinations) & set(mapping)
     if chained:
         raise MigrationError(f"A destination path is also a source path: {sorted(chained)[0]}")

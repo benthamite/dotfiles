@@ -2802,6 +2802,97 @@ def command_review_record(args):
     return EXIT_OK
 
 
+# Only content-bearing units carry a verdict between identical bytes.  Commit
+# metadata, scanner findings and public text are always judged afresh.
+CARRYABLE_KINDS = ("path", "patch", "new-file", "high-risk-file")
+CARRY_SOURCE_RUNS = 3
+
+
+def unit_content_key(manifest, unit):
+    """Return the identity of what a reviewer read in UNIT, or None.
+
+    Two units with the same key show the same redacted bytes under the same
+    schema, redaction and review policy, so a clean verdict on one is a clean
+    verdict on the other whichever commit or run captured it."""
+    if unit["kind"] not in CARRYABLE_KINDS:
+        return None
+    payload = {
+        "schema": manifest.get("schema"),
+        "redaction_version": manifest.get("redaction_version"),
+        "review_policy": manifest.get("review_policy"),
+        "kind": unit["kind"],
+        "path": unit["path"],
+        "content": unit["content"],
+        "blob": unit.get("blob"),
+        "detail": unit.get("detail") or {},
+    }
+    return sha256_of("dotfiles-publish-carry", json.dumps(payload, sort_keys=True))
+
+
+def carry_sources(repo, run_id, requested):
+    """Return the runs whose clean verdicts may be carried into RUN_ID."""
+    if requested:
+        return [run_id] + [source for source in requested if source != run_id]
+    runs = [path.parent for path in (repo.state_dir / "runs").glob("*/review.json")]
+    runs = sorted((path for path in runs if path.name != run_id),
+                  key=lambda path: path.stat().st_mtime, reverse=True)
+    return [run_id] + [path.name for path in runs[:CARRY_SOURCE_RUNS]]
+
+
+def clean_verdicts_by_key(repo, source):
+    manifest = load_manifest(repo, source)
+    review = load_review(repo, source, manifest)
+    verdicts = {}
+    for unit in manifest["units"]:
+        entry = review["entries"].get(unit["unit_id"])
+        key = unit_content_key(manifest, unit)
+        if (key and entry and entry.get("verdict") == "clean" and not entry.get("findings")
+                and entry.get("digest") == findings_digest([])):
+            verdicts.setdefault(key, "%s/%s" % (source, unit["unit_id"]))
+    return verdicts
+
+
+def command_review_carry(args):
+    """Record clean verdicts for units byte-identical to already-cleared ones."""
+    repo = discover_repository()
+    manifest = load_manifest(repo, args.run)
+    carried = {}
+    with review_write_lock(repo, args.run):
+        if load_manifest(repo, args.run) != manifest:
+            raise PublishError("manifest changed while carrying verdicts; scan and review again", EXIT_REFUSED)
+        verdicts = {}
+        for source in carry_sources(repo, args.run, args.source):
+            try:
+                found = clean_verdicts_by_key(repo, source)
+            except PublishError as error:
+                if source == args.run or args.source:
+                    raise
+                print("skipped: %s (%s)" % (source, error))
+                continue
+            for key, origin in found.items():
+                verdicts.setdefault(key, origin)
+        review = load_review(repo, args.run, manifest)
+        for unit in manifest["units"]:
+            key = unit_content_key(manifest, unit)
+            if unit["unit_id"] in review["entries"] or key not in verdicts:
+                continue
+            review["entries"][unit["unit_id"]] = {
+                "verdict": "clean",
+                "digest": findings_digest([]),
+                "findings": [],
+                "recorded_at": rfc3339(now_epoch()),
+                "carried_from": verdicts[key],
+            }
+            carried[unit["unit_id"]] = verdicts[key]
+        write_json(review_path(repo, args.run), review)
+    for unit_id, origin in carried.items():
+        print("carried: %s clean from %s" % (unit_id, origin))
+    remaining = [unit["unit_id"] for unit in manifest["units"]
+                 if unit["unit_id"] not in review["entries"]]
+    print("carried: %d, still to review: %d" % (len(carried), len(remaining)))
+    return EXIT_OK
+
+
 @dataclass
 class ReviewStatus:
     run_id: str
@@ -3794,6 +3885,13 @@ def build_parser():
     review_record.add_argument("--verdict", required=True, choices=("clean", "finding"))
     review_record.add_argument("--findings", default=None)
     review_record.set_defaults(handler=command_review_record)
+
+    review_carry = subparsers.add_parser(
+        "review-carry", help="carry clean verdicts to byte-identical units")
+    review_carry.add_argument("--run", required=True)
+    review_carry.add_argument("--from", dest="source", action="append", default=[],
+                              help="run to carry from (default: this run and the latest others)")
+    review_carry.set_defaults(handler=command_review_carry)
 
     review_status = subparsers.add_parser("review-status", help="report review completeness")
     review_status.add_argument("--run", required=True)

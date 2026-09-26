@@ -1762,6 +1762,59 @@ class DotfilesPublishManifestTests(PublicationFixture):
         missing = self.cli("review-show", "--run", run_id, "--unit", "0" * 32)
         self.assertNotEqual(0, missing.returncode)
 
+    def test_review_carry_clears_only_byte_identical_content_units(self):
+        self.publish_base()
+        self.commit("add notes", {"docs/notes.md": "first notes\n"})
+        self.commit("add more", {"docs/more.md": "more notes\n"})
+        _, first = self.scan()
+        self.review_all(first)
+        self.git("commit", "--quiet", "--amend", "-m", "add more, reworded")
+        self.commit("change notes", {"docs/notes.md": "changed notes\n"})
+        _, second = self.scan()
+        self.assertNotEqual(first, second)
+
+        carried = self.cli("review-carry", "--run", second, "--from", first)
+        self.assertEqual(0, carried.returncode, carried.stderr)
+        manifest = self.read_json(self.run_dir(second) / "manifest.json")
+        review = self.read_json(self.run_dir(second) / "review.json")
+        entries = review["entries"]
+        for unit in manifest["units"]:
+            entry = entries.get(unit["unit_id"])
+            if unit["kind"] == "commit":
+                self.assertIsNone(entry, "commit metadata is never carried")
+            elif "changed notes" in unit["content"] or "changed notes" in (unit.get("blob") or ""):
+                self.assertIsNone(entry, "changed content is never carried")
+        self.assertTrue(any(entry.get("carried_from", "").startswith(first + "/")
+                            for entry in entries.values()))
+        status = self.cli("review-status", "--run", second)
+        self.assertIn("clean: no", status.stdout)
+        self.review_all(second, skip=set(entries))
+        status = self.cli("review-status", "--run", second)
+        self.assertIn("clean: yes", status.stdout)
+
+    def test_review_carry_never_carries_a_finding(self):
+        self.publish_base()
+        self.commit("add notes", {"docs/notes.md": "first notes\n"})
+        _, first = self.scan()
+        manifest = self.read_json(self.run_dir(first) / "manifest.json")
+        patch = next(unit for unit in manifest["units"] if unit["kind"] == "patch")
+        findings = self.base / "findings.json"
+        findings.write_text(json.dumps([{"rule_id": "review-private", "path": "docs/notes.md",
+                                         "context": "private detail"}]))
+        recorded = self.cli("review-record", "--run", first, "--unit", patch["unit_id"],
+                            "--verdict", "finding", "--findings", str(findings))
+        self.assertEqual(0, recorded.returncode, recorded.stderr)
+        self.git("commit", "--quiet", "--amend", "-m", "add notes, reworded")
+        _, second = self.scan()
+        self.cli("review-carry", "--run", second, "--from", first)
+        manifest = self.read_json(self.run_dir(second) / "manifest.json")
+        review = self.read_json(self.run_dir(second) / "review.json")
+        same = [unit["unit_id"] for unit in manifest["units"]
+                if unit["kind"] == "patch" and unit["content"] == patch["content"]]
+        self.assertTrue(same)
+        for unit_id in same:
+            self.assertNotIn(unit_id, review["entries"])
+
     def test_review_show_resolves_a_path_unit_to_its_actual_bytes(self):
         # Capture the redacted snapshot while scanner values are still in
         # memory; resolving the raw object later would lose that protection.

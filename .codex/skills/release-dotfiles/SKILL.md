@@ -247,6 +247,7 @@ source.
    uniquely named temporary workspace outside Drive:
 
    ```bash
+   INIT_TEST_INSTANCE=1 \
    SMOKE_REPORT_FILE="$REPORT" SMOKE_LOCKFILE_FILE="$LOCKFILE_CANDIDATE" \
      /Applications/Emacs.app/Contents/MacOS/Emacs \
      --init-directory="$HOME/.config/emacs-profiles/$NEW_VERSION-dev" \
@@ -305,15 +306,16 @@ source.
    without a cooldown; name them, and any `--take-now` package, in the Step 6
    handover so the user knows which code is fresh. Record the candidate's
    SHA-256 digest as `LOCKFILE_DIGEST`.
-6. Every GUI launch rewrites `~/.config/emacs-profiles/.current-profile`.
-   Restore it to the live profile after each launch, or the commit hooks sync
-   the wrong dotfiles mirror and live checks fail with "mirror HEAD does not
-   match".
+6. `INIT_TEST_INSTANCE=1` keeps the instance from claiming
+   `~/.config/emacs-profiles/.current-profile` and the `active` link, which
+   the commit hooks and `~/.emacs.d` rely on. Launch every test instance
+   with it, and check afterwards that both still name the live profile.
 
 ## Step 6: hand the dev profile to the user and stop
 
 The reporter instance has already quit itself. Launch the dev profile again
-the same way, without the reporter, and leave it open; the user closes it. Do not hand the user a command to run. Report
+the same way, with `INIT_TEST_INSTANCE=1` but without the reporter, and leave
+it open; the user closes it. Do not hand the user a command to run. Report
 what was fixed during Step 5 and ask whether to proceed to the release of
 `NEW_VERSION`. Then stop. `--accept` cannot supply this answer.
 

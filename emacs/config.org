@@ -1160,9 +1160,10 @@ exec "$(dirname "$0")/sync-elpaca-clone.sh" "$@"
   ;; Cache the profile name to a file so that git hooks can read it
   ;; without calling emacsclient (which deadlocks when the hook is
   ;; spawned by a synchronous git process inside Emacs). Skip this in
-  ;; batch sessions: the deploy smoke test loads a freshly built profile
-  ;; in `emacs --batch', and it must not claim to be the current profile.
-  (unless noninteractive
+  ;; batch sessions and in test instances launched with INIT_TEST_INSTANCE
+  ;; set: the release workflow builds and hands over a dev profile that must
+  ;; not claim to be the current profile or move the `active' link.
+  (unless (or noninteractive (getenv "INIT_TEST_INSTANCE"))
     (with-temp-file (file-name-concat
                      (file-name-directory
                       (directory-file-name user-emacs-directory))
@@ -1174,7 +1175,7 @@ exec "$(dirname "$0")/sync-elpaca-clone.sh" "$@"
   ;; the link entry is replaced (via a staged sibling and `rename-file'); a
   ;; real directory at that path, or an init directory outside the profiles
   ;; directory, is left alone.
-  (unless noninteractive
+  (unless (or noninteractive (getenv "INIT_TEST_INSTANCE"))
     (let* ((profile (directory-file-name (file-truename user-emacs-directory)))
            (link (file-name-concat init-profiles-directory "active")))
       (when (and (equal (file-name-directory profile)

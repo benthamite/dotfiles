@@ -256,8 +256,9 @@ source.
 
    Run it in the background and wait until the process exits: the reporter
    quits the instance itself right after writing the final report, so never
-   signal it. The report then reads `state: final`; an exit without that line
-   is a crash to diagnose.
+   signal it. It also finishes on a profile whose packages were already built,
+   where Elpaca completes before `-l` loads the reporter. The report then reads
+   `state: final`; an exit without that line is a crash to diagnose.
    A fresh profile clones and compiles several hundred packages; allow well
    over ten minutes before treating silence as a hang, and read the
    in-progress counts in the report rather than guessing. Do not use `--batch`:

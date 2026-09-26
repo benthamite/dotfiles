@@ -143,7 +143,12 @@ appear in the report."
   (unless smoke-report-keep-open
     (kill-emacs 0)))
 
-(add-hook 'elpaca-after-init-hook #'smoke-report--final 90)
+;; `-l' is processed after `after-init-hook'.  When every package is already
+;; built, Elpaca finishes before this file loads and its hook has already run,
+;; so report straight away.
+(if (bound-and-true-p elpaca-after-init-time)
+    (smoke-report--final)
+  (add-hook 'elpaca-after-init-hook #'smoke-report--final 90))
 (run-with-timer 15 15
                 (lambda ()
                   (unless (bound-and-true-p elpaca-after-init-time)

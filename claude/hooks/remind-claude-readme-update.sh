@@ -62,13 +62,16 @@ if [ "$REPO_ROOT" = "$DOTFILES_ROOT" ] || [ "$REPO_ROOT" = "$DOTFILES_ROOT_REAL"
   exit 0
 fi
 
-# Compute relative path for the message.  Claude Code displays this reminder
-# from plain stdout; the Codex port wraps its reminder as PostToolUse JSON.
+# Compute relative path for the message.  Plain PostToolUse stdout reaches only
+# the transcript, never Claude, so the reminder travels as additionalContext
+# JSON, as in the Codex port.
 REL_PATH="${REAL_PATH#$DOTFILES_CLAUDE_REAL/}"
 
-cat <<EOF
+MESSAGE=$(cat <<EOF
 You just modified claude/$REL_PATH (in the dotfiles repo, via symlink). Before finishing:
   1. Update claude/README.org to reflect this change.
   2. Commit in the dotfiles repo: cd "$DOTFILES_ROOT" && git add claude/ && git commit
 The require-readme-update.sh hook will block the commit if README.org is not staged.
 EOF
+)
+jq -n --arg message "$MESSAGE" '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":$message}}'

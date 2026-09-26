@@ -587,14 +587,14 @@
       "claude": "claude/hooks/remind-claude-readme-update.sh",
       "codex": "codex/hooks/remind-claude-readme-update.sh",
       "status": "paired",
-      "note": "paired for Codex apply_patch/Edit/Write path lists; Codex PostToolUse output must include hookEventName and use additionalContext rather than Claude's plain-text reminder. Codex side was re-indented and the in-dotfiles-repo short-circuit was lifted out of the per-path loop (cosmetic; Claude side was already correctly structured because it processes a single file_path)."
+      "note": "paired for Codex apply_patch/Edit/Write path lists; both emit PostToolUse additionalContext JSON with hookEventName (plain Claude stdout never reached the model; fixed 2026-09-26). Codex side was re-indented and the in-dotfiles-repo short-circuit was lifted out of the per-path loop (cosmetic; Claude side was already correctly structured because it processes a single file_path)."
     },
     {
       "name": "remind-plan-review.sh",
       "claude": "claude/hooks/remind-plan-review.sh",
       "codex": "codex/hooks/remind-plan-review.sh",
       "status": "paired",
-      "note": "paired PostToolUse reminder after Superpowers implementation plan files are edited, including repo docs/superpowers/plans paths and tool-specific temp/private plan directories; Claude emits plain stdout for Edit/Write, while Codex scans apply_patch/Edit/Write path lists and returns PostToolUse additionalContext JSON."
+      "note": "paired PostToolUse reminder after Superpowers implementation plan files are edited, including repo docs/superpowers/plans paths and tool-specific temp/private plan directories; Claude handles Edit/Write, Codex scans apply_patch/Edit/Write path lists; both return PostToolUse additionalContext JSON (plain Claude stdout never reached the model; fixed 2026-09-26)."
     },
     {
       "name": "require-codex-readme-update.sh",

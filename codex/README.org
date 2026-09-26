@@ -587,6 +587,10 @@ dispatching to the paired scripts documented in [[file:hooks/README.org][the hoo
 
 Like any new definition, it runs only after native Codex hook trust is approved.
 
+Reminder hooks (=remind-plan-review.sh=, =remind-claude-readme-update.sh=)
+return PostToolUse =additionalContext= JSON; plain stdout would not reach the
+model.
+
 Sensitive-read guards permit the security audit's shell-export classifier only
 for its exact absolute helper and target paths. The classifier reports names,
 line numbers, scopes, and classifications without printing values.

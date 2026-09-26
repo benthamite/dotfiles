@@ -21,9 +21,13 @@ case "$FILE_PATH" in
   *) exit 0 ;;
 esac
 
-cat <<EOF
+# Plain PostToolUse stdout reaches only the transcript, never Claude, so the
+# reminder travels as additionalContext JSON.
+MESSAGE=$(cat <<EOF
 REMINDER: You just modified an implementation plan:
   $FILE_PATH
 
 Before presenting this plan as ready, dispatch a plan-review subagent using the Superpowers writing-plans review prompt, or explicitly state why a subagent review is unavailable. Fix any blocking review findings before committing or handing off the plan.
 EOF
+)
+jq -n --arg message "$MESSAGE" '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":$message}}'

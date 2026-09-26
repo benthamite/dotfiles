@@ -101,6 +101,20 @@ class MigrateProfileTests(unittest.TestCase):
         again = self.run_script("--dry-run")
         self.assertNotIn("would move", again.stdout)
 
+    def test_renamed_package_follows_to_its_new_name(self):
+        renamed = self.profiles / "1.0" / "elpaca" / "sources" / "ai-agent"
+        renamed.mkdir()
+        agent = self.profiles / "2.0" / "elpaca" / "sources" / "agent"
+        agent.mkdir()
+        sid = "dddddddd-0000-0000-0000-000000000004"
+        bucket = self.claude / "projects" / encode(str(renamed))
+        bucket.mkdir()
+        (bucket / f"{sid}.jsonl").write_text(jsonl({"sessionId": sid, "type": "user", "cwd": str(renamed)}))
+        result = self.run_script()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        moved = self.claude / "projects" / encode(str(agent)) / f"{sid}.jsonl"
+        self.assertEqual(json.loads(moved.read_text())["cwd"], str(agent))
+
     def test_refuses_when_the_startup_cache_disagrees_with_active(self):
         (self.profiles / ".current-profile").write_text("1.1")
         result = self.run_script()

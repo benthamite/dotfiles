@@ -5,7 +5,7 @@ The current profile is the target of ~/.config/emacs-profiles/active; every
 other profile is retired. Each session whose project directory lies inside a
 retired profile is relocated to the same relative directory inside the current
 profile (an old elpaca/repos/PKG maps to elpaca/sources/PKG when only that
-exists). All writes go through the reviewed move-session-log adapters, one
+exists, and a package listed in RENAMED_PACKAGES maps to its new name). All writes go through the reviewed move-session-log adapters, one
 exact OLD->NEW mapping at a time for Claude and one batch for Codex, each with
 its own recovery backup under ~/.local/state/profile-migrations/.
 
@@ -40,6 +40,8 @@ CODEX_HOME = Path(os.environ.get("CODEX_HOME") or HOME / ".codex")
 STATE = HOME / ".local" / "state" / "profile-migrations"
 UUID_RE = re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 MARKER = "/.config/emacs-profiles/"
+# Packages whose checkout was renamed between profiles: old name -> new name.
+RENAMED_PACKAGES = {"ai-agent": "agent"}
 
 
 def encode(path: str) -> str:
@@ -76,6 +78,10 @@ def target_for(old: str, profile: str, new: str) -> str | None:
     candidates = [rest]
     if rest.startswith("/elpaca/repos/"):
         candidates.append("/elpaca/sources/" + rest[len("/elpaca/repos/"):])
+    for relative in list(candidates):
+        match = re.fullmatch(r"(/elpaca/sources/)([^/]+)(/.*)?", relative)
+        if match and match.group(2) in RENAMED_PACKAGES:
+            candidates.append(match.group(1) + RENAMED_PACKAGES[match.group(2)] + (match.group(3) or ""))
     for candidate in candidates:
         target = str(PROFILES / new) + candidate
         if Path(target).is_dir():

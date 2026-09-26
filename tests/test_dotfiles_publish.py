@@ -2707,6 +2707,50 @@ class DotfilesPublishInstallTests(PublicationFixture):
         self.assertEqual("#!/bin/sh\nexec ./scripts/lint.sh\n", hook.read_text())
         self.assertFalse(hook.is_symlink())
 
+    def write_dispatcher(self, directory, chain=True):
+        (directory / "lib").mkdir(parents=True, exist_ok=True)
+        stub = directory / "pre-push"
+        stub.write_text('#!/bin/sh\n. "$(dirname "$0")/lib/dispatch.sh"\n')
+        stub.chmod(0o755)
+        last = 'exec "$common_dir/hooks/$hook" "$@"' if chain else "exit 0"
+        (directory / "lib" / "dispatch.sh").write_text(
+            'hook=$(basename "$0")\n'
+            'common_dir=$(git rev-parse --path-format=absolute --git-common-dir) || exit 0\n'
+            'if [ -x "$common_dir/hooks/$hook" ]; then\n  %s\nfi\nexit 0\n' % last
+        )
+        return stub
+
+    def test_install_targets_repository_hooks_behind_the_global_dispatcher(self):
+        self.publish_base()
+        self.add_helpers()
+        dispatcher = Path(tempfile.mkdtemp()) / "git-hooks"
+        stub = self.write_dispatcher(dispatcher)
+        self.git("config", "core.hooksPath", str(dispatcher))
+
+        installed = self.cli("install", env=self.install_env())
+
+        self.assertEqual(0, installed.returncode, installed.stdout + installed.stderr)
+        hook = self.hooks_dir() / "pre-push"
+        self.assertTrue(hook.is_symlink())
+        self.assertEqual(
+            os.path.realpath(self.repo / "bin" / "dotfiles-pre-push"),
+            os.path.realpath(hook),
+        )
+        self.assertFalse(stub.is_symlink())
+
+    def test_install_still_refuses_a_hooks_path_that_does_not_chain(self):
+        self.publish_base()
+        self.add_helpers()
+        dispatcher = Path(tempfile.mkdtemp()) / "git-hooks"
+        stub = self.write_dispatcher(dispatcher, chain=False)
+        self.git("config", "core.hooksPath", str(dispatcher))
+
+        refused = self.cli("install", env=self.install_env())
+
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("merge it with bin/dotfiles-pre-push", refused.stderr)
+        self.assertFalse(stub.is_symlink())
+
     def test_install_is_idempotent(self):
         self.publish_base()
         self.add_helpers()

@@ -3646,12 +3646,37 @@ def require_gitleaks():
     return reported
 
 
+# The global core.hooksPath dispatcher (claude/git-hooks) ends every hook by
+# executing the repository's own hook from the common Git directory.
+DISPATCHER_CHAIN_LINE = 'exec "$common_dir/hooks/$hook" "$@"'
+
+
 def hooks_directory(repo):
     configured = run_git(repo.root, "config", "--get", "core.hooksPath", check=False).text.strip()
     if configured:
         path = Path(configured)
-        return path if path.is_absolute() else repo.root / path
-    return repo.git_dir / "hooks"
+        path = path if path.is_absolute() else repo.root / path
+        if not chains_to_repository_hooks(path):
+            return path
+    common = run_git(repo.root, "rev-parse", "--path-format=absolute", "--git-common-dir").text.strip()
+    return Path(common) / "hooks"
+
+
+def chains_to_repository_hooks(path):
+    """Return true when PATH is the dispatcher that runs the repository's own hooks.
+
+    Its pre-push only sources lib/dispatch.sh, which finishes by executing
+    <git-common-dir>/hooks/pre-push. The publication guard therefore belongs
+    there; the dispatcher itself is not an unrelated hook.
+    """
+    try:
+        stub = (path / "pre-push").read_text()
+        dispatch = (path / "lib" / "dispatch.sh").read_text()
+    except OSError:
+        return False
+    stub_lines = [line for line in stub.splitlines() if line.strip()]
+    return (stub_lines == ["#!/bin/sh", '. "$(dirname "$0")/lib/dispatch.sh"']
+            and any(line.strip() == DISPATCHER_CHAIN_LINE for line in dispatch.splitlines()))
 
 
 def install_pre_push_hook(repo):

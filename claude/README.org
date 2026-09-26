@@ -970,6 +970,10 @@ only related command guard denies overriding =core.hooksPath=.
 The documentation, README, and paired-config commit gates also run from that
 =pre-commit= hook, through =claude/bin/agent-commit-gates=, so they read the
 staged files from the index instead of inferring them from command text.
+An Elisp support file outside any package tree with its own =doc/=, such as a
+helper under =bin/=, is documented by the =README.org= of its directory or a
+parent; the Codex README gate ignores the project-local =.codex/skills/=
+mirrors, whose pairing =ai-config-sync guard-commit= checks.
 
 Hooks that judge a Git command resolve the repository from the command itself,
 via =hooks/lib-repo-root.sh=. A =cd= at any command head decides the repository,

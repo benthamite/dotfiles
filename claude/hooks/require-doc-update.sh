@@ -227,6 +227,7 @@ git_add_paths() {
 source "$SCRIPT_DIR/lib-staged-files.sh"
 
 HAS_EL=false
+PRODUCTION_EL=()
 SKILL_HELPER_OWNERS=()
 HAS_DOC_ORG=false
 HAS_README_ORG_STAGED=false
@@ -272,6 +273,7 @@ record_elisp_requirement() {
     SKILL_HELPER_OWNERS+=("$owner")
   else
     HAS_EL=true
+    PRODUCTION_EL+=("$file")
   fi
 }
 
@@ -621,6 +623,31 @@ fi
 # - README.md (fallback for repos that have no Org manual)
 if [ "$HAS_DOC_ORG" = true ] || [ "$HAS_README_ORG_STAGED" = true ] || [ "$HAS_README_MD_STAGED" = true ]; then
   exit 0
+fi
+
+# A support file outside any package, such as a helper under bin/, is
+# documented by the README.org of its own directory or a parent one.
+# Accept when every production Elisp file has such a README staged.
+ancestor_readme_staged() {
+  local dir="$1"
+  while [ "$dir" != "." ] && [ -n "$dir" ]; do
+    # A package tree with its own doc/ keeps its manual rule.
+    [ -d "$REPO_ROOT/$dir/doc" ] && return 1
+    if printf '%s\n' "$STAGED" | grep -qxF "$dir/README.org"; then
+      return 0
+    fi
+    [ "${dir#*/}" = "$dir" ] && return 1
+    dir=${dir%/*}
+  done
+  return 1
+}
+if [ "$STAGED_SELECTION" = 1 ] || [ -z "$ADD_ARGS" ]; then
+  ALL_DOCUMENTED=true
+  for file in "${PRODUCTION_EL[@]}"; do
+    case "$file" in */*) ;; *) ALL_DOCUMENTED=false; break ;; esac
+    ancestor_readme_staged "${file%/*}" || { ALL_DOCUMENTED=false; break; }
+  done
+  [ "$ALL_DOCUMENTED" = true ] && exit 0
 fi
 
 # Block the commit

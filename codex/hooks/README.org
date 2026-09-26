@@ -199,7 +199,9 @@ wrappers are safe outside Emacs: when =CODEX_BUFFER_NAME= is absent, they
 consume the payload and exit successfully without calling =emacsclient=.
 
 =require-codex-readme-update.sh= is a dotfiles-scoped commit gate. Its
-command-text fallback excludes project-local =.codex/= paths, and it excludes
+command-text fallback excludes project-local =.codex/= paths, its staged-file
+check excludes the project-local =.codex/skills/= mirrors that
+=ai-config-sync guard-commit= checks, and it excludes
 the repo-root =AGENTS.md= project mirror; the project-local dotfiles skill is
 handled by its configured documentation owner instead.
 

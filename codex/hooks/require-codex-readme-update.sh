@@ -39,6 +39,11 @@ if [ -n "$STAGED" ]; then
       codex/README.org)
         HAS_README=true
         ;;
+      .codex/skills/*)
+        # Project-local skill mirrors of .claude/skills; ai-config-sync
+        # guard-commit checks the pair, and codex/README.org does not
+        # document project-local skills.
+        ;;
       .codex/*|codex/*|ai-config-sync.json|bin/ai-config-sync)
         HAS_CODEX_CHANGES=true
         ;;

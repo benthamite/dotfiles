@@ -103,6 +103,27 @@ class DocUpdateHookTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(permission_decision(result), "deny")
 
+    def stage(self, relative: str, text: str):
+        path = self.repo / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+        subprocess.run(["git", "-C", str(self.repo), "add", relative], check=True)
+
+    def test_support_elisp_accepts_its_directory_readme(self):
+        self.stage("bin/helper.el", "(provide 'helper)\n")
+        hook, command_field = HOOKS[0]
+        self.assertEqual(permission_decision(self.run_hook(hook, command_field)), "deny")
+        self.stage("bin/README.org", "* Helpers\n")
+        self.assertEqual(permission_decision(self.run_hook(hook, command_field)), "allow")
+
+    def test_support_readme_does_not_cover_a_package_with_a_manual(self):
+        (self.repo / "emacs/extras/doc").mkdir(parents=True)
+        (self.repo / "emacs/extras/doc/pkg.org").write_text("* Manual\n")
+        self.stage("emacs/extras/pkg.el", "(provide 'pkg)\n")
+        self.stage("emacs/README.org", "* Emacs\n")
+        hook, command_field = HOOKS[0]
+        self.assertEqual(permission_decision(self.run_hook(hook, command_field)), "deny")
+
     def test_allows_quoted_test_path_in_one_shot_add_and_commit(self):
         test_file = self.repo / "test" / "helper file.el"
         test_file.parent.mkdir()

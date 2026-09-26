@@ -3,16 +3,16 @@
 # PassCmd helper for mbsync.
 #
 # If MBSYNC_PASSFILE is set and readable, read the password from there. This is
-# how mbsync-parallel avoids races on the GPG keyring lockfile when it runs
-# multiple channels concurrently.
+# how mbsync-parallel reads it once for all the channels it runs concurrently.
 #
-# Otherwise fall back to decrypting on demand, so direct invocations like
-# `mbsync gmail-inbox` still work.
+# Otherwise read it on demand from the personal 1Password Automation vault, so
+# direct invocations like `mbsync gmail-inbox` still work.
 
 set -eu
 
 if [ -n "${MBSYNC_PASSFILE:-}" ] && [ -r "$MBSYNC_PASSFILE" ]; then
     cat "$MBSYNC_PASSFILE"
 else
-    gpg --quiet --decrypt "$HOME/.password-store/auth-sources/mbsync/password.gpg"
+    op-automations @personal item get "mbsync/password" --vault Automation \
+        --fields label=password --reveal
 fi

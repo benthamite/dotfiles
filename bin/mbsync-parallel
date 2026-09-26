@@ -28,15 +28,15 @@ else
     channels=$(grep '^Channel ' ~/.mbsyncrc | awk '{print $2}' | grep -v '^epoch-' | grep -v -- '-all$' | sort -u)
 fi
 
-# Decrypt the IMAP password once to a secure temp file so the parallel mbsync
-# jobs below don't race on the GPG keyring lock (otherwise each channel's
-# PassCmd invokes gpg concurrently and some emit "gpg: lockfile disappeared").
+# Read the IMAP password once, from the personal 1Password Automation vault
+# through its read-only service account, into a private temp file, so the
+# parallel mbsync jobs below make one request instead of one per channel.
 # mbsync-passcmd reads from this file when MBSYNC_PASSFILE is set.
 MBSYNC_PASSFILE=$(mktemp -t mbsync-pass.XXXXXX)
 chmod 600 "$MBSYNC_PASSFILE"
 trap 'rm -f "$MBSYNC_PASSFILE"' EXIT
-gpg --quiet --decrypt "$HOME/.password-store/auth-sources/mbsync/password.gpg" \
-    > "$MBSYNC_PASSFILE"
+op-automations @personal item get "mbsync/password" --vault Automation \
+    --fields label=password --reveal > "$MBSYNC_PASSFILE"
 export MBSYNC_PASSFILE
 
 # Run gmail-maildir-sync in background (no GPG needed), mbsync in foreground

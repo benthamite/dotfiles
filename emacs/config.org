@@ -13778,7 +13778,7 @@ CLOCK: [2021-10-07 Thu 14:31]--[2021-10-07 Thu 15:23] =>  0:52
 (use-package circe
   :ensure (:host github
                  :repo "benthamite/circe"
-                 :branch "fix/shorten-prefix-comparisons") ; awaiting PR merge: https://github.com/emacs-circe/circe/pull/429
+                 :branch "fix/shorten-prefix-comparisons") ; kept deliberately: upstream declined https://github.com/emacs-circe/circe/pull/429 (2026-09-16)
   :defer t)
 #+end_src
 

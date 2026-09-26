@@ -54,7 +54,10 @@ everything else including shapes it cannot place:
 Denied by name: `--reveal` anywhere, `item share` without `--emails` (the
 link opens for anyone holding it), `signin` (`--raw` prints a
 session token), `environment read`, `service-account create`, `connect …`,
-`events-api create`, brokers inside `bash -c '…'`/`eval`, variable or
+`events-api create`, brokers inside `bash -c '…'`/`eval`, a broker named
+anywhere in an interpreter program (a `python3 -` or `node` heredoc,
+`python3 -c`, `perl -e`…) unless it is a recognized pathlib document edit,
+since the guard cannot tell a string from a `subprocess` call; variable or
 `command -v` indirection, process substitution, and raw `op` in any spelling
 (Touch ID routing, next section). Reading a broker's *source* is fine: a
 broker path handed to a read-only text tool (`cat bin/op-automations`,

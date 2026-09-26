@@ -94,8 +94,11 @@ with =--emails=, and metadata commands. Every other broker shape is denied,
 including =--reveal=, share links without =--emails=, =signin=,
 =environment read=, credential-minting subcommands, indirection, and any
 =OP_*= environment override. Quoted literals in ordinary commands and simple
-non-expanding =echo=/=printf= documentation remain available. The case table
-is =tests/test_op_policy.py=.
+non-expanding =echo=/=printf= documentation remain available. Interpreter
+source is never parsed as shell text: a Python heredoc naming a broker is
+denied unless =lib-python-heredoc.py --brokers= recognizes it as a pathlib
+document edit, and any other interpreter program naming a broker is denied.
+The case table is =tests/test_op_policy.py=.
 
 The secret heuristic normalizes the exact public dated-upload prefix at
 =myweb.sabanciuniv.edu/ozgurkibris/files/YYYY/MM/= before testing opaque

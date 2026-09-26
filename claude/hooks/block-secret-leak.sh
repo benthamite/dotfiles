@@ -262,6 +262,46 @@ op_policy_denial() {
   printf '%s' "$result" | jq -r '.reason // "unclassified 1Password command"' 2>/dev/null || echo "unclassified 1Password command"
 }
 
+# Interpreter programs are not shell text. A broker named in their source may
+# be an inert string or may be run through subprocess or os.system, and the
+# shell classifier cannot tell those apart: parsed as shell, a quoted
+# subprocess argument looks like data and a Markdown `code span` inside a
+# string looks like a command substitution. So inert Python document edits are
+# projected away first (lib-python-heredoc.py, as for the protected tool
+# names), any other interpreter program naming a broker is denied, and only
+# the remaining shell text goes to lib-op-policy.py.
+op_command_denial() {
+  local projected shell_text body_lines interpreter_program reason
+  reason="a 1Password broker is named inside an interpreter program, which the guard cannot tell apart from running it; edit text with the Edit tool or a pathlib read_text/replace/write_text document edit, and run brokers as shell commands so their shape can be checked"
+  # Exit 2: a recognized Python heredoc names a broker outside the document-edit
+  # language. Other failures leave the command unprojected, so any interpreter
+  # body naming a broker is still caught below.
+  projected=$(printf '%s' "$1" | python3 "$(dirname "$0")/lib-python-heredoc.py" --brokers 2>/dev/null)
+  case $? in
+    0) ;;
+    2) printf '%s' "$reason"; return 0 ;;
+    *) projected="$1" ;;
+  esac
+  shell_text=$(mask_heredoc_bodies "$projected" nonshell)
+  # Lines kept when only data-sink bodies are dropped but gone when
+  # interpreter-fed bodies are dropped too are interpreter source. diff exits
+  # 1 whenever they exist; collect the lines before matching.
+  body_lines=$(diff <(printf '%s\n' "$shell_text") <(printf '%s\n' "$(mask_heredoc_bodies "$projected")") | grep -E '^> ' || true)
+  # An inline program (`python3 -c`, `node -e`…) that only prints a broker's
+  # name is output, as tests/test_secret_guard_parity.py pins; one that can
+  # also start a process may run it.
+  interpreter_program='(^|[^A-Za-z0-9_./-])(python[0-9.]*|node|nodejs|deno|bun|ruby|perl|php|lua|osascript)[[:space:]]+([^;&|]*[[:space:]])?-(c|e|-eval)[[:space:]]'
+  process_start='subprocess|os\.(system|popen|exec|spawn)|popen|Popen|child_process|exec(Sync|File)?[[:space:]]*\(|spawn|system[[:space:]]*\(|`|qx|%x|do[[:space:]]+shell[[:space:]]+script'
+  if printf '%s' "$body_lines" | grep -qE 'op-automations|op-desktop' || {
+       printf '%s' "$shell_text" | grep -qE "$interpreter_program" &&
+       printf '%s' "$shell_text" | grep -qE 'op-automations|op-desktop' &&
+       printf '%s' "$shell_text" | grep -qE "$process_start"; }; then
+    printf '%s' "$reason"
+    return 0
+  fi
+  op_policy_denial "$shell_text"
+}
+
 contains_normalized_raw_op() {
   # Quote and backslash removal can spell raw `op` without writing it.
   local normalized
@@ -318,7 +358,7 @@ if [ "$TOOL_NAME" = "Bash" ]; then
   if contains_secret_output_command "$CONTENT"; then
     deny_secret_output_command
   fi
-  if op_reason=$(op_policy_denial "$(mask_heredoc_bodies "$CONTENT")"); then
+  if op_reason=$(op_command_denial "$CONTENT"); then
     deny_op_secret_output "$op_reason"
   fi
   if contains_normalized_raw_op "$CONTENT"; then

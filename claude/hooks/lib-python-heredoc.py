@@ -30,6 +30,10 @@ import tokenize
 from pathlib import PurePosixPath
 
 PROTECTED = re.compile(r"(?<![A-Za-z0-9_-])(?:pass|security|pbpaste)(?![A-Za-z0-9_-])")
+# With --brokers the same classification applies to the 1Password brokers: a
+# Python program that names one outside the closed document-edit language may
+# run it (subprocess, os.system), which a shell-text classifier cannot see.
+BROKERS = re.compile(r"(?<![A-Za-z0-9_-])(?:op-automations|op-desktop)(?![A-Za-z0-9_-])")
 ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=.*", re.DOTALL)
 PYTHON = re.compile(r"python(?:3(?:\.[0-9]+)?)?")
 HEADER = re.compile(
@@ -422,12 +426,19 @@ def _project_command(command: str, *, git_shell: bool, allow_document_edit: bool
 
 
 def main() -> int:
-    if sys.argv[1:] not in ([], ["--no-document-edits"], ["--allow-document-edits"]):
+    global PROTECTED
+    args = sys.argv[1:]
+    brokers = "--brokers" in args
+    if brokers:
+        args.remove("--brokers")
+        PROTECTED = BROKERS
+    if args not in ([], ["--no-document-edits"], ["--allow-document-edits"]):
         return 2
     try:
-        projected = project_command(sys.stdin.read(), allow_document_edit=sys.argv[1:] != ["--no-document-edits"])
+        projected = project_command(sys.stdin.read(), allow_document_edit=args != ["--no-document-edits"])
     except ProtectedPythonReference:
-        print("Python heredoc names a protected credential or clipboard tool.", file=sys.stderr)
+        print("Python heredoc names a 1Password broker." if brokers else
+              "Python heredoc names a protected credential or clipboard tool.", file=sys.stderr)
         return 2
     sys.stdout.write(projected)
     return 0

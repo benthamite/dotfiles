@@ -722,7 +722,9 @@ carries no credential (masked =run=, captured or filed =read=, metadata-only
 share links restricted with =--emails=, metadata commands, including the
 =vault user list= / =vault group list= / =group user list= membership
 listings) and denies every other shape, including unrestricted share links
-and shapes it cannot place. Broker paths passed to =ls=, =stat=, or =readlink= are inert file
+and shapes it cannot place. Interpreter programs are not parsed as shell: one
+that names a broker is denied unless it is a recognized Python document edit.
+Broker paths passed to =ls=, =stat=, or =readlink= are inert file
 metadata arguments; broker execution elsewhere in the command is still checked.
 The exact =bash -n FILE= syntax-check form is also allowed; extra options are not.
 Shell expansions are fine in broker arguments (=--env-file

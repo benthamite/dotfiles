@@ -94,7 +94,12 @@ interpreter program or reached through indirection, =--reveal=, share links
 without =--emails=, =signin=, =environment read=, credential-minting
 subcommands, and any =OP_*= environment override. Quoted literals in ordinary
 commands and simple non-expanding =echo=/=printf= documentation remain
-available. The case table is =tests/test_op_policy.py=; the rationale is
+available. Interpreter source is never parsed as shell text: a Python
+heredoc naming a broker is denied unless =lib-python-heredoc.py --brokers=
+recognizes it as a pathlib document edit, and any other interpreter program
+(=node= heredoc, =python3 -c=, =perl -e=…) naming a broker is denied, since
+a string and a =subprocess= call look alike. The case table is
+=tests/test_op_policy.py=; the rationale is
 =docs/superpowers/plans/2026-09-02-secret-guard-op-output-policy.md=.
 
 The secret heuristic normalizes the exact public dated-upload prefix at

@@ -658,7 +658,8 @@ brokers =op-automations= and =op-desktop= are the sanctioned access path:
 no credential (masked =run=, captured or filed =read=, metadata-only =jq= over
 item output, =--out-file= documents, writes without =--format=, share links
 restricted with =--emails=, metadata commands) and denies every other shape,
-including unrestricted share links, shapes it cannot place and
+including unrestricted share links, shapes it cannot place, interpreter
+programs naming a broker (unless a recognized Python document edit) and
 a broker named outside a literal nested exec command. Broker paths passed to
 =ls=, =stat=, or =readlink= are inert file metadata arguments; broker execution
 elsewhere in the command is still checked. The exact =bash -n FILE= syntax-check

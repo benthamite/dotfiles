@@ -63,6 +63,29 @@ def decision(output: dict | None) -> str:
 
 
 class SecretGuardParityTests(unittest.TestCase):
+    def test_interpreter_programs_naming_a_broker(self):
+        """Interpreter source is not shell text (2026-09-25 regression).
+
+        Parsed as shell, a broker run through subprocess or os.system looked
+        like a quoted argument and was allowed, while a Markdown code span in
+        a harmless string looked like a command substitution and was denied.
+        """
+        broker = "op-" + "desktop"
+        cases = {
+            "python3 - <<'EOF'\nimport subprocess\nsubprocess.run([\"%s\", \"item\", \"get\", \"x\", \"--reveal\"])\nEOF" % broker: "deny",
+            "python3 - <<'EOF'\nimport os\nos.system(\"%s item get x --reveal\")\nEOF" % broker: "deny",
+            "python3 -c 'import os; os.system(\"%s item get x --reveal\")'" % broker: "deny",
+            "node <<'EOF'\nrequire('child_process').execSync('%s item get x --reveal')\nEOF" % broker: "deny",
+            "python3 - <<'EOF'\nprint(\"see `%s item share` in docs\")\nEOF" % broker: "deny",
+            "python3 - <<'EOF'\nfrom pathlib import Path\np = Path(\"notes.md\")\ns = p.read_text()\ns = s.replace(\"a\", \"use `%s item share` sparingly\")\np.write_text(s)\nEOF" % broker: "allow",
+            "cat > /tmp/notes.md <<'EOF'\nuse `%s item share` sparingly\nEOF" % broker: "allow",
+            "python3 - <<'EOF'\nprint(1)\nEOF": "allow",
+        }
+        for name, guard in GUARDS.items():
+            for command, expected in cases.items():
+                with self.subTest(guard=name, command=command):
+                    self.assertEqual(decision(run_guard(guard, command)), expected)
+
     def test_wayback_lookup_and_replay_keep_secret_controls(self):
         target = ('collecties.kb.nl/en/collections/'
                   'collection-anny-antoine-louis-koopman/1951-1960/cahiers')

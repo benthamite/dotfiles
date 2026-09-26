@@ -189,7 +189,8 @@ def agents_in_old_profiles(new: str) -> dict[str, list[str]]:
 
 
 def blocked_by(old: str, live: dict[str, list[str]]) -> list[str]:
-    return [who for cwd, whos in live.items() if cwd == old or cwd.startswith(old + "/") for who in whos]
+    """Agents keep the directory they started in, so only an exact match writes OLD's sessions."""
+    return live.get(old, [])
 
 
 class Runner:
@@ -207,8 +208,11 @@ class Runner:
         else:
             command += ["--offline", "--backup-dir", str(self.backups / f"{self.count:03d}-{label}")]
         result = subprocess.run(command, capture_output=True, text=True)
+        if not self.dry_run:
+            (self.backups / f"{self.count:03d}-{label}.log").write_text(result.stdout + result.stderr)
         if result.returncode != 0:
-            reason = (result.stderr.strip().splitlines() or ["no diagnostic"])[-1]
+            lines = result.stderr.strip().splitlines()
+            reason = next((line for line in lines if "refused" in line.lower()), lines[-1] if lines else "no diagnostic")
             self.failures.append(f"{label}: {reason}")
             return None
         return result.stdout

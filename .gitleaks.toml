@@ -4,10 +4,12 @@
 # with secretGroup, so Gitleaks fingerprints and redacts the value rather than
 # the surrounding line.
 #
-# There is deliberately no allowlist.  A false positive is repaired by adding
-# the exact rule/path or fingerprint exception that a behaviour scenario
-# demonstrated; suppressing a whole path is forbidden, because that would hide
-# every future secret stored there.
+# There is no path-wide or rule-wide allowlist.  A false positive is repaired
+# by adding an exception nested under the one rule that fired, requiring the
+# path and the exact value together, after a scenario showed that a different
+# value in the same file and the same value in a different file still fire;
+# suppressing a whole path is forbidden, because that would hide every future
+# secret stored there.
 
 title = "dotfiles publication ruleset"
 
@@ -90,3 +92,21 @@ description = "Exported session, cookie, token, or credential environment variab
 regex = '''(?i)\bexport[ \t]+[A-Z0-9_]*(?:SESSION|COOKIE|TOKEN|SECRET|PASSWORD|CREDENTIAL)[A-Z0-9_]*[ \t]*=[ \t]*["']?([^\s"'#]{8,})["']?'''
 secretGroup = 1
 keywords = ["export"]
+
+[[rules.allowlists]]
+description = "tests/test_security_audit_shell_exports.py synthetic export fixtures, not credentials"
+condition = "AND"
+paths = ['''(^|/)tests/test_security_audit_shell_exports\.py$''']
+regexes = ['''^(synthetic-value[^\s]*|\{value\}[^\s]*|\$\(printf|\$\{SYNTHETIC_AUDIT_TOKEN:=synthetic-value\})$''']
+regexTarget = "secret"
+
+# Default rule: its allowlist is merged into the built-in rule of this id.
+[[rules]]
+id = "generic-api-key"
+
+[[rules.allowlists]]
+description = "tests/test_secret_guard_parity.py synthetic opaque token fixture, not a credential"
+condition = "AND"
+paths = ['''(^|/)tests/test_secret_guard_parity\.py$''']
+regexes = ['''^Synthetic9Opaque_$''']
+regexTarget = "secret"

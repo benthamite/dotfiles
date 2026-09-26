@@ -8,9 +8,13 @@
 ;;   emacs --batch -Q -l elpaca-cooldown-lockfile.el -f elpaca-cooldown-export LOCKFILE
 ;;   emacs --batch -Q -l elpaca-cooldown-lockfile.el -f elpaca-cooldown-rewrite LOCKFILE REFS OUT
 ;;
+;;   emacs --batch -Q -l elpaca-cooldown-lockfile.el -f elpaca-cooldown-config-pins CONFIG
+;;
 ;; `export' prints the lockfile's recipes as JSON.  `rewrite' copies LOCKFILE to
 ;; OUT with the `:ref' of every package named in the JSON object REFS replaced;
-;; a package mapped to null is left out of OUT.
+;; a package mapped to null is left out of OUT.  `config-pins' prints, as a
+;; JSON object, the `:ref' or `:tag' that the Org configuration CONFIG pins in a
+;; package's recipe; Elpaca honours such a pin over the lockfile.
 
 ;;; Code:
 
@@ -87,6 +91,91 @@ names to refs, and the destination."
         (coding-system-for-write 'utf-8))
     (with-temp-file file
       (pp entries (current-buffer)))))
+
+(defun elpaca-cooldown-config-pins ()
+  "Print the recipe pins of the Org configuration named on the command line.
+The output maps each package whose recipe carries `:ref' or `:tag' to an object
+with those two keys."
+  (let ((pins nil))
+    (dolist (form (elpaca-cooldown--config-forms (pop command-line-args-left)))
+      (elpaca-cooldown--collect-pins form (lambda (name pin)
+                                            (setq pins (elpaca-cooldown--add-pin name pin pins)))))
+    (princ (if pins (json-encode (nreverse pins)) "{}"))
+    (terpri)))
+
+(defun elpaca-cooldown--config-forms (file)
+  "Return the forms read from the Emacs Lisp source blocks of the Org FILE."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (goto-char (point-min))
+    (let ((case-fold-search t)
+          (forms nil))
+      (while (re-search-forward "^[ \t]*#\\+begin_src[ \t]+emacs-lisp\\b.*\n" nil t)
+        (let ((start (point)))
+          (unless (re-search-forward "^[ \t]*#\\+end_src" nil t)
+            (error "%s: unterminated source block at line %d" file (line-number-at-pos start)))
+          (setq forms (nconc forms (elpaca-cooldown--block-forms
+                                    (buffer-substring-no-properties start (match-beginning 0))
+                                    file (line-number-at-pos start))))))
+      forms)))
+
+(defun elpaca-cooldown--block-forms (text file line)
+  "Return the forms read from the source block TEXT at LINE of FILE."
+  (with-temp-buffer
+    (insert text)
+    (goto-char (point-min))
+    (let ((forms nil))
+      (condition-case nil
+          (while t
+            (push (read (current-buffer)) forms))
+        (end-of-file
+         (skip-chars-forward " \t\n")
+         (unless (or (eobp) (looking-at-p ";"))
+           (error "%s: unreadable source block at line %d" file line))))
+      (nreverse forms))))
+
+(defun elpaca-cooldown--collect-pins (form function)
+  "Call FUNCTION with the name and pin of every pinned recipe in FORM.
+Recipes are the `:ensure' argument of `use-package' and the order of `elpaca'."
+  (when (consp form)
+    (pcase form
+      (`(use-package ,(and name (pred symbolp)) . ,rest)
+       (when-let* ((recipe (plist-get (elpaca-cooldown--keyword-tail rest) :ensure)))
+         (elpaca-cooldown--recipe-pin name recipe function)))
+      (`(elpaca (,(and name (pred symbolp)) . ,recipe) . ,_)
+       (elpaca-cooldown--recipe-pin name recipe function)))
+    (while (consp form)
+      (elpaca-cooldown--collect-pins (car form) function)
+      (setq form (cdr form)))))
+
+(defun elpaca-cooldown--keyword-tail (arguments)
+  "Return ARGUMENTS from their first keyword on, as a property list."
+  (let ((tail arguments))
+    (while (and tail (not (keywordp (car tail))))
+      (setq tail (cdr tail)))
+    (let ((plist nil))
+      (while tail
+        (if (keywordp (car tail))
+            (setq plist (nconc plist (list (car tail) (cadr tail)))
+                  tail (cddr tail))
+          (setq tail (cdr tail))))
+      plist)))
+
+(defun elpaca-cooldown--recipe-pin (name recipe function)
+  "Call FUNCTION with NAME and the pin of RECIPE when RECIPE pins a revision."
+  (when (and (consp recipe) (keywordp (car recipe)) (proper-list-p recipe))
+    (let ((ref (plist-get recipe :ref))
+          (tag (plist-get recipe :tag)))
+      (when (or ref tag)
+        (funcall function name `((ref . ,(elpaca-cooldown--string ref))
+                                 (tag . ,(elpaca-cooldown--string tag))))))))
+
+(defun elpaca-cooldown--add-pin (name pin pins)
+  "Return the alist PINS with PIN added for NAME, rejecting conflicting pins."
+  (let ((existing (assq name pins)))
+    (cond ((null existing) (cons (cons name pin) pins))
+          ((equal (cdr existing) pin) pins)
+          (t (error "%s is pinned to two different revisions" name)))))
 
 (provide 'elpaca-cooldown-lockfile)
 ;;; elpaca-cooldown-lockfile.el ends here

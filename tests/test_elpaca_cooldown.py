@@ -36,6 +36,26 @@ LOCKFILE = """((mine :source "elpaca-menu-lock-file" :recipe
                    :ref "5555555555555555555555555555555555555555")))
 """
 
+CONFIG = """* Packages
+
+#+begin_src emacs-lisp
+(use-package theirs
+  :ensure (:host github :repo "someone/theirs" :ref "abcdef12")
+  :defer t)
+(with-eval-after-load 'org
+  (elpaca (forked :host github :repo "benthamite/forked" :tag "v2")))
+(use-package mine :ensure t)
+;; trailing comment
+#+end_src
+
+#+begin_src emacs-lisp
+(use-package tagged
+  :ensure (:host github :repo "someone/tagged" :tag "1.0"))
+(use-package absent
+  :ensure (:host github :repo "someone/absent" :ref "release_1"))
+#+end_src
+"""
+
 
 def load_module():
     loader = importlib.machinery.SourceFileLoader("elpaca_cooldown", str(SCRIPT))
@@ -252,13 +272,65 @@ class LockfileTest(unittest.TestCase):
             self.mod.rewrite_lockfile(self.lockfile, {"absent": "a" * 40}, out)
         self.assertFalse(out.exists())
 
-    def test_plan_holds_third_party_and_advances_own(self):
-        out = pathlib.Path(self.directory.name) / "candidate.el"
-        state = pathlib.Path(self.directory.name) / "observations.json"
-        args = Namespace(
-            lockfile=self.lockfile, policy_dir=ROOT / "emacs/elpaca-cooldown", state_file=state,
-            out=out, report=None, min_age_days=7, take_now=[], drop=["mirrored"],
+    def plan_args(self, config_text="", take_now=()):
+        config = pathlib.Path(self.directory.name) / "config.org"
+        config.write_text(config_text)
+        return Namespace(
+            lockfile=self.lockfile, config=config, policy_dir=ROOT / "emacs/elpaca-cooldown",
+            state_file=pathlib.Path(self.directory.name) / "observations.json",
+            out=pathlib.Path(self.directory.name) / "candidate.el", report=None, min_age_days=7,
+            take_now=list(take_now), drop=["mirrored"],
         )
+
+    def test_config_pins_reads_use_package_and_elpaca_recipes(self):
+        config = pathlib.Path(self.directory.name) / "config.org"
+        config.write_text(CONFIG)
+        self.assertEqual(self.mod.config_pins(config), {
+            "theirs": {"ref": "abcdef12", "tag": None},
+            "forked": {"ref": None, "tag": "v2"},
+            "tagged": {"ref": None, "tag": "1.0"},
+            "absent": {"ref": "release_1", "tag": None},
+        })
+
+    def test_config_pins_rejects_conflicting_pins(self):
+        config = pathlib.Path(self.directory.name) / "config.org"
+        config.write_text(CONFIG + CONFIG.replace('"abcdef12"', '"bbbbbbbb"'))
+        with self.assertRaises(RuntimeError):
+            self.mod.config_pins(config)
+
+    def test_resolve_pin_keeps_the_recorded_commit_of_an_abbreviated_pin(self):
+        package = {"id": "pkg", "ref": "abcdef12" + "0" * 32}
+        self.assertEqual(self.mod.resolve_pin(package, {"ref": "abcdef12"}, "url"), package["ref"])
+        self.assertEqual(self.mod.resolve_pin(package, {"ref": "c" * 40}, "url"), "c" * 40)
+        with self.assertRaises(RuntimeError):
+            self.mod.resolve_pin(package, {"ref": "1234567"}, "url")
+
+    def test_resolve_pin_prefers_the_peeled_tag_commit(self):
+        advertised = "a\trefs/tags/v2\nb\trefs/tags/v2^{}\n"
+        with patch.object(self.mod, "git", return_value=advertised):
+            self.assertEqual(self.mod.resolve_pin({"id": "pkg", "ref": "x"}, {"tag": "v2"}, "url"), "b")
+        with patch.object(self.mod, "git", return_value=""), self.assertRaises(RuntimeError):
+            self.mod.resolve_pin({"id": "pkg", "ref": "x"}, {"ref": "release_1"}, "url")
+
+    def test_plan_builds_config_pins_at_their_pin(self):
+        args = self.plan_args(CONFIG.replace('"abcdef12"', '"' + "c" * 40 + '"'))
+        tips = lambda remotes: ({key: "f" * 40 for key in remotes}, {})
+        with patch.object(self.mod, "fetch_tips", tips), patch.object(self.mod, "git", return_value="d" * 40 + "\trefs/tags/v2\n"), redirect_stdout(io.StringIO()):
+            self.mod.command_plan(args)
+        refs = {package["id"]: package["ref"] for package in self.mod.export_lockfile(args.out)}
+        self.assertEqual(refs["theirs"], "c" * 40)
+        self.assertEqual(refs["forked"], "d" * 40)
+        self.assertEqual(refs["mine"], "f" * 40)
+        self.assertEqual(refs["tagged"], "5" * 40)
+
+    def test_plan_refuses_take_now_for_a_config_pin(self):
+        args = self.plan_args(CONFIG.replace('"abcdef12"', '"' + "c" * 40 + '"'), take_now=["theirs"])
+        with self.assertRaises(RuntimeError):
+            self.mod.command_plan(args)
+
+    def test_plan_holds_third_party_and_advances_own(self):
+        args = self.plan_args()
+        out = args.out
         tips = lambda remotes: ({key: "f" * 40 for key in remotes}, {})
         with patch.object(self.mod, "fetch_tips", tips), redirect_stdout(io.StringIO()):
             self.mod.command_plan(args)

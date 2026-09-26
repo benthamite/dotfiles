@@ -4,7 +4,9 @@
 `observe` records, once a day, the tip of every third-party package remote
 named in the master lockfile.  `plan` writes a candidate lockfile for the next
 dev profile: my own packages at their remote tip, third-party packages at the
-newest tip first observed at least MIN_AGE_DAYS ago.  `verify-build` checks
+newest tip first observed at least MIN_AGE_DAYS ago, and packages whose recipe
+in config.org pins a `:ref` or `:tag` at that pin, which Elpaca honours over
+the lockfile.  `verify-build` checks
 that a profile built from the candidate checked out exactly those refs.
 `unused` lists the third-party packages that the package usage log written by
 my Emacs configuration has not seen loaded for DAYS days.
@@ -15,6 +17,7 @@ commit-only bare clones, and lockfiles are read and printed as Lisp data.
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -25,6 +28,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_LOCKFILE = REPO_ROOT / "emacs/lockfile.el"
+DEFAULT_CONFIG = REPO_ROOT / "emacs/config.org"
 DEFAULT_POLICY_DIR = REPO_ROOT / "emacs/elpaca-cooldown"
 DEFAULT_STATE_FILE = Path.home() / ".local/state/elpaca-cooldown/observations.json"
 DEFAULT_MIN_AGE_DAYS = 7
@@ -51,6 +55,11 @@ def now_utc():
 def export_lockfile(lockfile):
     result = run_emacs("elpaca-cooldown-export", str(lockfile))
     return json.loads(result.stdout)
+
+
+def config_pins(config):
+    """Return {package: {"ref": ..., "tag": ...}} for the recipes CONFIG pins."""
+    return json.loads(run_emacs("elpaca-cooldown-config-pins", str(config)).stdout)
 
 
 def rewrite_lockfile(lockfile, refs, out):
@@ -128,6 +137,28 @@ def remote_tip(url, branch):
         if name == ref:
             return sha
     raise RuntimeError(f"{url} does not advertise {ref}")
+
+
+def resolve_pin(package, pin, url):
+    """Return the commit that the config.org PIN of PACKAGE makes Elpaca check out."""
+    name = pin.get("ref") or pin.get("tag")
+    if re.fullmatch(r"[0-9a-f]{7,40}", name):
+        if package["ref"].startswith(name):
+            return package["ref"]
+        if len(name) == 40:
+            return name
+        raise RuntimeError(
+            f"{package['id']}: config.org pins the abbreviated commit {name}, which the "
+            "lockfile does not record; write the full commit in config.org"
+        )
+    refs = {}
+    for line in git("ls-remote", url, f"refs/tags/{name}", f"refs/tags/{name}^{{}}", f"refs/heads/{name}").splitlines():
+        sha, ref = line.split("\t", 1)
+        refs[ref] = sha
+    for ref in (f"refs/tags/{name}^{{}}", f"refs/tags/{name}", f"refs/heads/{name}"):
+        if ref in refs:
+            return refs[ref]
+    raise RuntimeError(f"{package['id']}: {url} does not advertise the config.org pin {name}")
 
 
 def history(repo, commit):
@@ -252,12 +283,16 @@ def command_plan(args):
     unknown = (set(args.take_now) | set(args.drop)) - known
     if unknown:
         raise RuntimeError(f"--take-now or --drop names packages not in the lockfile: {sorted(unknown)}")
+    pins = {name: pin for name, pin in config_pins(args.config).items() if name in known}
+    pinned_take_now = sorted(set(args.take_now) & set(pins))
+    if pinned_take_now:
+        raise RuntimeError(f"--take-now names packages that config.org pins: {pinned_take_now}")
     classified = {package["id"]: classify(package, exempt_owners) for package in packages}
     remotes = {
         remote_key(url, package.get("branch")): (url, package.get("branch"))
         for package in packages
         for kind, url in [classified[package["id"]]]
-        if kind != "tagged"
+        if kind != "tagged" and package["id"] not in pins
     }
     tips, errors = fetch_tips(remotes)
     if errors:
@@ -268,6 +303,11 @@ def command_plan(args):
     decisions, pending = {}, []
     for package in packages:
         kind, url = classified[package["id"]]
+        if kind != "tagged" and package["id"] in pins:
+            pin = pins[package["id"]]
+            ref = resolve_pin(package, pin, url)
+            decisions[package["id"]] = [ref, ("pinned in config.org", pin.get("ref") or pin.get("tag"))]
+            continue
         key = remote_key(url, package.get("branch"))
         ref, status, check = decide(
             package, kind, url, tips.get(key), observations.get(key, []),
@@ -389,6 +429,7 @@ def build_parser():
     observe.add_argument("--lockfile", type=Path, default=DEFAULT_LOCKFILE)
     plan = commands.add_parser("plan", help="write a candidate lockfile for the next dev profile")
     plan.add_argument("--lockfile", type=Path, default=DEFAULT_LOCKFILE)
+    plan.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     plan.add_argument("--out", type=Path, required=True)
     plan.add_argument("--report", type=Path)
     plan.add_argument("--min-age-days", type=int, default=DEFAULT_MIN_AGE_DAYS)

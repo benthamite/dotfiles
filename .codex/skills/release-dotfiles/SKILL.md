@@ -220,7 +220,11 @@ source.
    release's ref and the report says why: "no observation is old enough yet" is
    normal while the observation log is young, while a rewritten or diverged
    history needs the user's decision. A remote that cannot be read fails the
-   plan; do not fall back to an unpinned build.
+   plan; do not fall back to an unpinned build. Packages whose `config.org`
+   recipe carries a `:ref` or `:tag` are listed as "pinned in config.org" at
+   that pin, because Elpaca honours it over the lockfile; an abbreviated
+   commit the previous lockfile does not record fails the plan until the pin
+   is written in full.
 3. Create and tangle the profile from the live session without prompts, then
    install the cooldown lockfile as the profile's `lockfile.el` before anything
    launches it:

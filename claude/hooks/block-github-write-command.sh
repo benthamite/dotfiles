@@ -366,6 +366,27 @@ compound_shell_command_p() {
     printf '%s' "$COMMAND" | python3 -c '
 import sys
 
+import shlex
+
+# A write piped only into these readers of its output keeps one target: they
+# cannot run another command, write a file or name a repository.
+OUTPUT_FILTERS = {"tail", "head", "grep", "wc", "cat"}
+
+
+def output_filters_p(rest):
+    """Return non-nil when REST is a chain of plain output filters."""
+    if any(char in rest for char in ";&<>$`\\\n(){}"):
+        return False
+    for segment in rest.split("|"):
+        try:
+            words = shlex.split(segment)
+        except ValueError:
+            return False
+        if not words or words[0] not in OUTPUT_FILTERS:
+            return False
+    return True
+
+
 source = sys.stdin.read()
 quote = None
 escaped = False
@@ -383,6 +404,15 @@ for index, char in enumerate(source):
     if char in ("\"", chr(39), "`"):
         quote = char
         continue
+    if char == "&" and source[index - 1:index] == ">":
+        continue
+    if char == "|" and source[index + 1:index + 2] not in ("|", "&"):
+        head = source[:index].rstrip()
+        if head.endswith("2>&1"):
+            head = head[:-4]
+        if "&" not in head and output_filters_p(source[index + 1:]):
+            raise SystemExit(1)
+        raise SystemExit(0)
     if char in (";", "|", "&", "\n"):
         raise SystemExit(0)
 raise SystemExit(1)

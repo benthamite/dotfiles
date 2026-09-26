@@ -214,6 +214,23 @@ exit 1
             with self.subTest(command=command):
                 self.assert_both(command, expected="allow")
 
+    def test_a_write_piped_only_into_output_filters_keeps_its_target(self) -> None:
+        for command in (
+            "git push https://github.com/benthamite/scratch.git HEAD:topic 2>&1 | tail -3",
+            "gh issue create --repo benthamite/scratch --title T --body B | head -1",
+        ):
+            with self.subTest(command=command):
+                self.assert_both(command, expected="allow")
+        for command in (
+            "git push https://github.com/example/unowned.git HEAD:topic 2>&1 | tail -3",
+            "git push https://github.com/benthamite/scratch.git HEAD:topic | sh",
+            "git push https://github.com/benthamite/scratch.git HEAD:topic | tail -1 > out",
+            "git push https://github.com/benthamite/scratch.git HEAD:topic | tail $(x)",
+            "echo x && git push https://github.com/benthamite/scratch.git HEAD:topic | tail -1",
+        ):
+            with self.subTest(command=command):
+                self.assert_both(command, expected="deny")
+
     def test_additional_repo_write_families_are_gated(self) -> None:
         for command in (
             "gh cache delete --all --repo example/unowned",

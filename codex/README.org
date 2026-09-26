@@ -621,7 +621,9 @@ revision, so a working-tree edit to either confers nothing. It classifies each l
 read-only GitHub inspection remains available for undeclared repositories and
 may be piped or chained, while a write inside a compound command is refused
 before any repository check, including a real push chained after a
-=--dry-run= one. A
+=--dry-run= one. A single write piped only into =tail=, =head=, =grep=, =wc=
+or =cat=, optionally after =2>&1=, keeps its one target and is judged like
+the bare write. A
 registry match falls through silently rather than explicitly approving the
 write, including for pull-request merges, so the normal permission layer and
 the global user-authorization rule still apply.

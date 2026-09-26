@@ -1000,7 +1000,9 @@ because a creation never acts on the current repository and so cannot borrow
 its authorization. Because the target is resolved from the whole command, a
 write inside a compound command (pipes, =;=, =&&=) is refused before any
 repository check, including a real push chained after a =--dry-run= one;
-read-only GitHub commands may be piped or chained freely.
+read-only GitHub commands may be piped or chained freely. A single write
+piped only into =tail=, =head=, =grep=, =wc= or =cat=, optionally after
+=2>&1=, keeps its one target and is judged like the bare write.
 
 Only the Bash dispatcher (=pretooluse-bash.sh=) is registered for Claude, so
 its prefilter decides whether the guard runs at all. Until 2026-09-18 that

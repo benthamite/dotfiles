@@ -746,6 +746,27 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
       (alist-get 'remote (alist-get 'nongnu elpaca-menu-elpas))
       "https://github.com/emacsmirror/nongnu_elpa")
 
+;; My own packages are pushed from their Elpaca checkouts. In a treeless
+;; clone, Elpaca's default, a push fetches every tree it walks one request at
+;; a time and can take half an hour, so my repositories are cloned blobless.
+;; The owners match emacs/elpaca-cooldown/exempt-owners.txt.
+(defvar init-elpaca-own-owners '("benthamite" "tlon-team")
+  "GitHub owners whose repositories I push from their Elpaca checkouts.")
+
+(defun init-elpaca-own-repo-blobless (recipe)
+  "Return a blobless `:depth' for RECIPE when it clones one of my repositories.
+Only Elpaca's treeless default is replaced; an explicit depth is kept."
+  (let ((repo (plist-get recipe :repo)))
+    (when (and (eq (plist-get recipe :depth) 'treeless)
+               (stringp repo)
+               (member (car (split-string (replace-regexp-in-string
+                                           "\\`https://github\\.com/" "" repo)
+                                          "/"))
+                       init-elpaca-own-owners))
+      '(:depth blobless))))
+
+(add-hook 'elpaca-recipe-functions #'init-elpaca-own-repo-blobless)
+
 (toggle-debug-on-error) ; uncomment when debugging
 (setq elpaca-lock-file
       (file-name-concat (file-name-directory (directory-file-name elpaca-directory)) "lockfile.el"))

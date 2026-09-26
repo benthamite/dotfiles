@@ -99,12 +99,13 @@ today's blanket rule (out of scope, see open decisions).
 | `item get|list … > <regular path>` | regular path only. |
 | `item create|edit …` | no `--format`, no `--reveal` (default output masks concealed fields). |
 | `item delete`, `document create|edit|delete`, `vault create` | write-only shapes; no credential output. |
+| `op-desktop item share … --emails <addresses>` | added 2026-09-25: a link restricted to named recipients opens only after they confirm a code sent to their address, so the printed link is not a credential. Unrestricted links stay denied. Revision 2 denied every share link as "printing an access link", which broke the owner's standard way of sharing secrets; he always restricts links by email. |
 | `document get … --out-file <regular path>`, `inject … --out-file <regular path>` | regular path only; no redirect-to-terminal. |
 | `whoami`, `vault list|get`, `user list|get`, `group list|get`, `vault user list`, `vault group list`, `group user list`, `vault user grant|revoke`, `account list`, `document list`, `item template list|get`, `--status`, `--stop`, `--version` | metadata only (the membership listings print names, emails and permission flags, not secret values). |
 
 Everything else is denied as unclassified. That includes, deliberately:
 bare `read`; `read 2>/dev/null`; `read \| cat|tee|head|…`; `item get --fields …`;
-`item share`; `signin` (`--raw` prints a session token); `environment read`
+`item share` without `--emails`; `signin` (`--raw` prints a session token); `environment read`
 (prints variable values); `service-account create`, `connect …`, `events-api
 create`; `document get` without `--out-file`; `inject` to stdout; `--reveal`
 anywhere; `run --no-masking`; `run -- env`; global flags the parser does not

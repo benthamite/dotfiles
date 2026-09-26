@@ -46,8 +46,13 @@ everything else including shapes it cannot place:
   create`; `whoami`, `vault|user|group list|get`, `vault user|group list`, `vault user grant|revoke`,
   `group user list`, `account list`, `document list`, `item template
   list|get`, `--status`, `--stop`.
+- `op-desktop item share … --emails ADDRESSES`: a link restricted to named
+  recipients opens only after they confirm a code sent to their address, so
+  printing it leaks nothing. This is the standard way to hand someone a
+  secret; sending the link is still a separate step Pablo approves.
 
-Denied by name: `--reveal` anywhere, `item share`, `signin` (`--raw` prints a
+Denied by name: `--reveal` anywhere, `item share` without `--emails` (the
+link opens for anyone holding it), `signin` (`--raw` prints a
 session token), `environment read`, `service-account create`, `connect …`,
 `events-api create`, brokers inside `bash -c '…'`/`eval`, variable or
 `command -v` indirection, process substitution, and raw `op` in any spelling

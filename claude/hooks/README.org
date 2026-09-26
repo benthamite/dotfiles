@@ -87,10 +87,11 @@ classified by =lib-op-policy.py=, an allowlist of command shapes whose stdout
 carries no credential: masked =run= with a non-shell program, =read= captured
 into a variable, a regular file, or a listed consumer, item output piped to a
 metadata-only =jq= filter or a file, =document get=/=inject= with
-=--out-file=, writes without =--format=, and metadata commands. Every other
-broker shape is denied, including shapes the classifier cannot place, a
-broker named inside an interpreter program or reached through indirection,
-=--reveal=, =item share=, =signin=, =environment read=, credential-minting
+=--out-file=, writes without =--format=, =op-desktop item share= restricted
+with =--emails=, and metadata commands. Every other broker shape is denied,
+including shapes the classifier cannot place, a broker named inside an
+interpreter program or reached through indirection, =--reveal=, share links
+without =--emails=, =signin=, =environment read=, credential-minting
 subcommands, and any =OP_*= environment override. Quoted literals in ordinary
 commands and simple non-expanding =echo=/=printf= documentation remain
 available. The case table is =tests/test_op_policy.py=; the rationale is

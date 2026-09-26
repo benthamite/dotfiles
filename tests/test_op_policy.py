@@ -31,6 +31,10 @@ def load(path: Path):
 
 
 ALLOW = [
+    # share links restricted to named recipients: the standard way to hand a secret to someone
+    "op-desktop item share abc --vault Employee --account tln-team.1password.com --emails recipient@example.com --expires-in 7d",
+    "op-desktop item share abc --emails=recipient@example.com",
+    "op-desktop item share abc --emails first@example.com,second@example.org",
     # run: masked provisioning of a process
     "op-automations run --env-file=.env.op -- true",
     "op-automations run --env-file .env.op -- python3 script.py --flag",
@@ -166,7 +170,12 @@ DENY = [
     "op-automations inject --in-file=.env.op --out-file=/dev/stdout",
     "op-desktop document get abc",
     "op-desktop --no-color document get abc",
+    "op-automations item share abc --emails recipient@example.com",
+    # unrestricted share links open for anyone holding them
     "op-desktop item share abc",
+    "op-desktop item share abc --expires-in 7d",
+    "op-desktop item share abc --emails",
+    "op-desktop item share abc --emails --expires-in 7d",
     "op-desktop signin --raw",
     "op-desktop signin",
     "op-desktop environment read blgexucrwfr2dtsxe2q4uu7dp4",

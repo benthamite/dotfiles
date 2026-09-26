@@ -563,6 +563,18 @@ def classify_invocation(
             return
         if verb == "delete":
             return
+        # Share links restricted to named recipients are Pablo's standard way
+        # to hand a secret to someone. Such a link opens only after its
+        # recipient confirms a code sent to their address, so printing it
+        # leaks nothing. An unrestricted link opens for anyone holding it,
+        # which makes it as sensitive as the secret itself.
+        if verb == "share":
+            if _basename(words[0].text) != "op-desktop":
+                raise Deny("`item share` needs write access; use op-desktop")
+            emails = _flag_value(rest_args, ("--emails",))
+            if not emails or emails.startswith("-"):
+                raise Deny("`item share` without --emails prints a link anyone can open; restrict it to its recipients")
+            return
         if verb == "template" and rest_args[:1] in (["list"], ["get"]):
             return
         raise Deny(f"unclassified 1Password command `item {verb}`")

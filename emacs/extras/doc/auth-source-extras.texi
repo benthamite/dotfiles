@@ -30,6 +30,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 @menu
 * Overview::
 * Reading secrets::
+* Unlocking git-crypt repositories::
 * The auth-source backend::
 * Customization::
 * Setting up a machine::
@@ -63,6 +64,14 @@ If an item cannot be read, for example because the account has no token in the K
 
 @findex auth-source-extras-op-clear-cache
 @code{auth-source-extras-op-clear-cache} forgets every cached secret and vault listing, so the next read fetches fresh values, for example after rotating a key.
+
+Results are accepted only when the returned item's title matches the requested one exactly. When no item has a given title, the CLI can return another item whose website matches it, and that would hand out the wrong secret.
+
+@node Unlocking git-crypt repositories
+@chapter Unlocking git-crypt repositories
+
+@findex auth-source-extras-git-crypt-unlock
+@code{auth-source-extras-git-crypt-unlock} unlocks the @samp{git-crypt} repository in the current directory with a key stored as a Document item in the Tlon Automation vault. Called interactively, it offers the titles of that vault's documents. The binary key is written by the CLI straight to a private temporary file, byte for byte, passed to @samp{git-crypt unlock}, and deleted whatever the outcome. From Lisp, @samp{(auth-source-extras-git-crypt-unlock REPO KEY ACCOUNT)} also accepts another account.
 
 @node The auth-source backend
 @chapter The auth-source backend

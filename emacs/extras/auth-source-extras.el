@@ -179,16 +179,25 @@ never contains item values."
               (cond ((process-live-p proc) '(:error . "timed out"))
                     ((zerop (process-exit-status proc))
                      (accept-process-output proc 0 nil t)
-                     (cdr (auth-source-extras--op-item-fields
-                           (with-current-buffer out
-                             (json-parse-string (buffer-string)
-                                                :object-type 'alist :array-type 'list)))))
+                     (auth-source-extras--op-exact-fields
+                      title (with-current-buffer out
+                              (json-parse-string (buffer-string)
+                                                 :object-type 'alist :array-type 'list))))
                     (t (cons :error (auth-source-extras--op-error-reason proc err)))))
       (when (process-live-p proc) (delete-process proc))
       (kill-buffer out)
       (when-let* ((stderr-proc (get-buffer-process err)))
         (delete-process stderr-proc))
       (kill-buffer err))))
+
+(defun auth-source-extras--op-exact-fields (title item)
+  "Return the fields of parsed ITEM, or an error unless it is titled TITLE.
+When no item has the requested title, the CLI may return another item whose
+website matches it; accepting that would hand out the wrong secret."
+  (let ((parsed (auth-source-extras--op-item-fields item)))
+    (if (equal (car parsed) title)
+        (cdr parsed)
+      (cons :error (format "no item titled exactly `%s'" title)))))
 
 (defun auth-source-extras--op-error-reason (proc err)
   "Return the last line of PROC's error output in buffer ERR, or its status."
@@ -310,6 +319,50 @@ CANDIDATE is (ACCOUNT TITLE HOST PORT)."
       (let ((secret (cdr (assoc "password" fields))))
         (list :host host :port port :user user
               :secret (lambda () secret))))))
+
+;;;;; git-crypt keys
+
+;;;###autoload
+(defun auth-source-extras-git-crypt-unlock (&optional repo key account)
+  "Unlock the `git-crypt' repository REPO with KEY from ACCOUNT's automation vault.
+KEY is the title of a Document item holding the binary key; ACCOUNT defaults
+to `tlon'.  REPO defaults to `default-directory'.  The key passes through a
+private temporary file that is deleted whatever the outcome."
+  (interactive)
+  (let* ((account (or account 'tlon))
+         (default-directory (or repo default-directory))
+         (key (or key (completing-read "git-crypt key: "
+                                       (auth-source-extras--op-document-titles account)
+                                       nil t)))
+         (file (with-file-modes #o600 (make-temp-file "git-crypt-key"))))
+    (unwind-protect
+        (progn
+          (auth-source-extras--op-save-document account key file)
+          (unless (zerop (call-process "git-crypt" nil nil nil "unlock" file))
+            (user-error "Could not unlock `%s' with `%s'; perhaps the repository is dirty"
+                        default-directory key))
+          (message "Unlocked `%s' with `%s'" default-directory key))
+      (delete-file file))))
+
+(defun auth-source-extras--op-document-titles (account)
+  "Return the titles of the Document items in ACCOUNT's automation vault."
+  (with-temp-buffer
+    (unless (zerop (call-process auth-source-extras-op-program nil '(t nil) nil
+                                 (format "@%s" account) "item" "list" "--vault"
+                                 auth-source-extras-op-vault "--categories" "Document"
+                                 "--format" "json"))
+      (user-error "Cannot list the documents in the %s %s vault"
+                  account auth-source-extras-op-vault))
+    (mapcar (lambda (entry) (alist-get 'title entry))
+            (json-parse-string (buffer-string) :object-type 'alist :array-type 'list))))
+
+(defun auth-source-extras--op-save-document (account title file)
+  "Write the Document TITLE of ACCOUNT's automation vault to FILE, byte for byte."
+  (unless (zerop (call-process auth-source-extras-op-program nil nil nil
+                               (format "@%s" account) "document" "get" title "--vault"
+                               auth-source-extras-op-vault "--out-file" file "--force"))
+    (user-error "Cannot read the document `%s' from the %s %s vault"
+                title account auth-source-extras-op-vault)))
 
 ;;;;; Commands
 

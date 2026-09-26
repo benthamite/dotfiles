@@ -1,4 +1,13 @@
 {
   "version": 1,
-  "grants": []
+  "grants": [
+    {
+      "command": "gh repo fork pauldub/activity-watch-mode --clone=false",
+      "account": "benthamite",
+      "authorization": "Pablo approved publishing the activity-watch-mode fix as a fork branch for dotfiles release 9.0.2 (2026-09-26 session)",
+      "created_at": "2026-09-26T13:54:04.177381+00:00",
+      "expires_at": "2026-09-26T17:54:04.177381+00:00",
+      "body_sha256": null
+    }
+  ]
 }

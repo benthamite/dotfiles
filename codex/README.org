@@ -672,7 +672,9 @@ fine in broker arguments; an expansion in the subcommand position is
 unclassifiable and denied. Quoted
 argument globs, including =rg= exclusion patterns beginning with =!=, remain
 inert data rather than executable command words. A shell =case= default pattern
-is likewise grammar, not an executable glob. Heredoc bodies fed to a known data sink (=cat=, =tee=, =git=, =gh=, and
+is likewise grammar, not an executable glob. So is the =*= in a standalone assignment ended by a
+command separator, such as =l=${r##*:};=; an expansion in command position is
+still denied. Heredoc bodies fed to a known data sink (=cat=, =tee=, =git=, =gh=, and
 similar) with no pipe or substitution around them are data too, so a commit
 message or a Markdown file written through a heredoc is never scanned as
 shell text; bodies fed to shells, interpreters, or unknown programs stay in

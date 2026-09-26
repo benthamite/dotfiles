@@ -238,13 +238,19 @@ contains_secret_output_command() {
   # source, not the outer shell's command words: their `?`, `*` and `[` are
   # not executable globs. Their protected tool names were scanned above.
   normalized=$(normalize_shell_words "$(mask_heredoc_bodies "$raw" nonshell)")
-  # A case statement's default `*)` is a pattern, not an executable glob.
+  # A case statement's default `*)` is a pattern, not an executable glob,
+  # including when it is indented on its own line.
   # `$?` expands to the numeric exit status, never a program name, so its `?`
   # is not a glob either (e.g. `rc=$?`).
+  # A standalone assignment ended by a command separator runs no program, so
+  # a `*` in its value (e.g. `l=${r##*:};`) is not an executable glob.  An
+  # assignment followed by a space is a prefix of the command that follows
+  # and keeps being classified with it.
   normalized=$(printf '%s\n' "$normalized" | sed -E \
     -e 's/(case[[:space:]]+[^;&|()]+[[:space:]]+in[[:space:]]*)\*[[:space:]]*\)/\1CASE_DEFAULT)/g' \
-    -e 's/(^|;;[[:space:]]*)\*[[:space:]]*\)/\1CASE_DEFAULT)/g' \
-    -e 's/\$\?/EXIT_STATUS/g')
+    -e 's/(^[[:space:]]*|;;[[:space:]]*)\*[[:space:]]*\)/\1CASE_DEFAULT)/g' \
+    -e 's/\$\?/EXIT_STATUS/g' \
+    -e 's/(^[[:space:]]*|[;&|(][[:space:]]*)([A-Za-z_][A-Za-z0-9_]*)=[^;&|[:space:]]*([;&|]|$)/\1\2=ASSIGNED\3/g')
   boundary='(^[[:space:]]*|[;&|(!`][[:space:]]*|\$\([[:space:]]*)'
   # A wrapper's own words are options, assignments or durations; any other
   # word is the program it runs (so `env FOO=2 grep pass f` runs grep).

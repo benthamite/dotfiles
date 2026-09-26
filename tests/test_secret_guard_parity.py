@@ -1128,6 +1128,17 @@ done"""
 
         self.assert_both("o? read op://Employee/X/credential", "deny")
 
+    def test_indented_case_default_and_standalone_assignments_are_not_globs(self):
+        # 2026-09-26: reviewer loops were denied for an indented `*)` and for
+        # `l=${r##*:};`, whose `*` sits in an assignment value.
+        self.assert_both("case $x in\n  a) echo a ;;\n  *) echo other ;;\nesac", "allow")
+        self.assert_both("while read -r r; do l=${r##*:}; echo $l; done < f", "allow")
+        self.assert_both("c=${spec%%:*}; echo $c", "allow")
+        # An expansion in command position still hides the program it runs.
+        self.assert_both("${x##*/} show foo", "deny")
+        self.assert_both("x=1 ${y}* foo", "deny")
+        self.assert_both("x=abc; pbpast? --version", "deny")
+
     def test_exit_status_parameter_is_not_mistaken_for_executable_glob(self):
         # `$?` expands to digits, never a program name (2026-09-01: a Slack
         # draft helper call was denied solely for its `rc=$?` epilogue).

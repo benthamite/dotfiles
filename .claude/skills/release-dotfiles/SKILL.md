@@ -89,6 +89,17 @@ Do not stash or commit them implicitly; commit your own changes by path.
 
 ## Step 1: check Elpaca source reproducibility
 
+Start with one call that does the inventory below and reports only what needs
+attention, including the CI state of own repositories:
+
+```bash
+bin/release-preflight --convert
+```
+
+`--convert` makes own treeless clones blobless first, so the pushes this step
+may need finish in seconds. Act on each flagged checkout as described below;
+the rest of this step explains what the flags mean.
+
 The dev profile clones every package from its remote, so a commit that exists
 only in a local checkout is invisible to it and to the lockfile. Inventory each
 distinct Git checkout under the live Elpaca source directory, including Git

@@ -146,6 +146,7 @@ boundary.
 
 | Command | Contract |
 |---------+----------|
+| =release-preflight= | Lists, in one read-only call, the live profile's Elpaca checkouts that a dotfiles release would lose (uncommitted changes, commits on no branch or tag of origin, failed fetches) and the latest CI conclusion of each own repository. =--convert= makes own treeless clones blobless so pushes from them stay fast. |
 | =elpaca-cooldown= | Holds third-party Emacs packages back until their commits have aged: =observe= records remote tips daily, =plan= writes the candidate lockfile for a dev profile (honouring =config.org= =:ref= and =:tag= pins), =verify-build= checks that a build honoured it, =unused= lists third-party packages the usage log has not seen loaded lately. See [[file:../emacs/README.org][the Emacs README]]. Its Lisp reader and writer is the non-executable =elpaca-cooldown-lockfile.el=. |
 | =elpaca-package-path= | Resolves the canonical editable source directory from an Elpaca package ID or checkout label; optional relative targets stay within that source, including through symlink parents. |
 | =elpaca-package-resolve= | Resolves an Elpaca package ID or checkout label to its distinct evidence label, package ID, source directory, and repository. |

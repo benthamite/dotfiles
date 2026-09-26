@@ -1,0 +1,160 @@
+#!/usr/bin/env python3
+"""Report the Elpaca checkouts a dotfiles release would lose, in one call.
+
+For every Git checkout under the live profile's Elpaca sources, list the ones
+with uncommitted changes, commits missing from their upstream, a detached or
+upstream-less HEAD, or a failed fetch, and the latest CI conclusion of every
+own repository (owners in emacs/elpaca-cooldown/exempt-owners.txt) on GitHub.
+Nothing is pushed, committed or cleaned.
+
+`--convert` also turns own treeless clones (`--filter=tree:0`) into blobless
+ones.  Pushing from a treeless clone fetches each missing tree separately and
+can take half an hour; a blobless clone pushes in seconds.  The conversion
+refetches from the remote and changes only the local clone.
+"""
+
+import argparse
+import json
+import subprocess
+import sys
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+PROFILES = Path.home() / ".config/emacs-profiles"
+EXEMPT_OWNERS = REPO_ROOT / "emacs/elpaca-cooldown/exempt-owners.txt"
+WORKERS = 16
+TIMEOUT_SECONDS = 300
+
+
+def git(repo, *arguments):
+    result = subprocess.run(["git", "-C", str(repo), *arguments], capture_output=True,
+                            text=True, timeout=TIMEOUT_SECONDS)
+    return result.returncode, result.stdout.strip(), result.stderr.strip()
+
+
+def own_owners():
+    lines = EXEMPT_OWNERS.read_text().splitlines()
+    return {line.strip().lower() for line in lines if line.strip() and not line.startswith("#")}
+
+
+def github_slug(url):
+    """Return OWNER/REPO for a GitHub URL, or None."""
+    for prefix in ("https://github.com/", "git@github.com:"):
+        if url.startswith(prefix):
+            slug = url[len(prefix):].removesuffix("/").removesuffix(".git")
+            return slug if slug.count("/") == 1 else None
+    return None
+
+
+def checkouts(sources):
+    """Return the distinct real Git checkouts under SOURCES."""
+    seen = {}
+    for entry in sorted(sources.iterdir()):
+        if (entry / ".git").exists():
+            seen.setdefault(entry.resolve(), entry)
+    return list(seen.values())
+
+
+def inspect(repo, owners, convert, fetch):
+    """Return a dict describing the release-relevant state of REPO."""
+    state = {"name": repo.name, "problems": []}
+    _, url, _ = git(repo, "remote", "get-url", "origin")
+    slug = github_slug(url)
+    state["own"] = bool(slug) and slug.split("/")[0].lower() in owners
+    state["slug"] = slug
+    if state["own"] and convert:
+        _, flt, _ = git(repo, "config", "--get", "remote.origin.partialclonefilter")
+        if flt == "tree:0":
+            code, _, err = git(repo, "fetch", "--quiet", "--refetch", "--filter=blob:none", "origin")
+            if code == 0:
+                git(repo, "config", "remote.origin.partialclonefilter", "blob:none")
+                state["converted"] = True
+            else:
+                state["problems"].append("conversion to blobless failed: %s" % (err.splitlines() or ["?"])[-1])
+    _, status, _ = git(repo, "status", "--porcelain", "--untracked-files=no")
+    if status:
+        state["problems"].append("uncommitted changes (%d files)" % len(status.splitlines()))
+    if fetch:
+        code, _, err = git(repo, "fetch", "--quiet", "origin")
+        if code != 0:
+            state["problems"].append("fetch failed: %s" % (err.splitlines() or ["?"])[-1])
+    code, branch, _ = git(repo, "symbolic-ref", "--quiet", "--short", "HEAD")
+    if code != 0:
+        state["detached"] = True
+        check_published(repo, state, "detached HEAD")
+        return state
+    code, _, _ = git(repo, "rev-parse", "--verify", "--quiet", "@{upstream}")
+    if code != 0:
+        check_published(repo, state, "branch %s (no upstream)" % branch)
+        return state
+    _, counts, _ = git(repo, "rev-list", "--left-right", "--count", "@{upstream}...HEAD")
+    behind, ahead = (int(n) for n in counts.split())
+    if ahead:
+        state["problems"].append("%d commits not on %s" % (ahead, "upstream"))
+    if behind and ahead:
+        state["problems"].append("diverged from upstream (%d behind)" % behind)
+    return state
+
+
+def check_published(repo, state, label):
+    """Flag REPO's HEAD when no remote branch or tag contains it."""
+    _, remote_branches, _ = git(repo, "branch", "--remotes", "--contains", "HEAD")
+    _, tags, _ = git(repo, "tag", "--contains", "HEAD")
+    if not remote_branches and not tags:
+        state["problems"].append("%s is on no branch or tag fetched from origin" % label)
+
+
+def latest_ci(slug):
+    """Return the conclusion of the newest workflow run on SLUG's default branch."""
+    result = subprocess.run(
+        ["gh", "run", "list", "--repo", slug, "--limit", "1",
+         "--json", "conclusion,status,headBranch,url"],
+        capture_output=True, text=True, timeout=TIMEOUT_SECONDS)
+    if result.returncode != 0:
+        return "unknown (%s)" % (result.stderr.strip().splitlines() or ["gh failed"])[-1]
+    runs = json.loads(result.stdout or "[]")
+    if not runs:
+        return "no workflows"
+    run = runs[0]
+    return "%s %s" % (run.get("conclusion") or run.get("status"), run.get("url"))
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--profile", help="profile name (default: .current-profile)")
+    parser.add_argument("--convert", action="store_true",
+                        help="make own treeless clones blobless")
+    parser.add_argument("--no-fetch", action="store_true", help="do not fetch remotes")
+    parser.add_argument("--no-ci", action="store_true", help="skip CI queries")
+    args = parser.parse_args(argv)
+    profile = args.profile or (PROFILES / ".current-profile").read_text().strip()
+    sources = PROFILES / profile / "elpaca/sources"
+    owners = own_owners()
+    with ThreadPoolExecutor(max_workers=WORKERS) as pool:
+        states = list(pool.map(lambda repo: inspect(repo, owners, args.convert, not args.no_fetch),
+                               checkouts(sources)))
+    print("profile: %s (%d checkouts)" % (profile, len(states)))
+    # The dotfiles mirror follows the canonical checkout, which
+    # dotfiles-publish publishes; its lead over origin is expected.
+    flagged = [s for s in states if s["problems"] and s["name"] != "dotfiles"]
+    for state in flagged:
+        print("%s%s: %s" % (state["name"], " (own)" if state["own"] else "",
+                             "; ".join(state["problems"])))
+    converted = [s["name"] for s in states if s.get("converted")]
+    if converted:
+        print("converted to blobless: %s" % ", ".join(converted))
+    detached = sum(1 for s in states if s.get("detached"))
+    print("detached checkouts: %d" % detached)
+    if not args.no_ci:
+        own = sorted({s["slug"] for s in states if s["own"] and s["slug"]})
+        with ThreadPoolExecutor(max_workers=WORKERS) as pool:
+            for slug, ci in zip(own, pool.map(latest_ci, own)):
+                if not ci.startswith("success") and ci != "no workflows":
+                    print("CI %s: %s" % (slug, ci))
+    print("flagged: %d" % len(flagged))
+    return 1 if flagged else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -30,6 +30,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 @menu
 * Overview::
 * Reading secrets::
+* The auth-source backend::
 * Customization::
 * Setting up a machine::
 * Indices::
@@ -48,26 +49,29 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{auth-source-extras.el} reads secrets that Emacs needs without a person present, such as API keys and tokens, from a 1Password vault named ``Automation''. Each 1Password account has its own Automation vault and a read-only service account that can read nothing else. The service account's token is stored in the macOS login Keychain, so reads never prompt while you are logged in, and a leaked token exposes only that one vault.
+@samp{auth-source-extras.el} reads secrets that Emacs needs without a person present, such as API keys and tokens, from a 1Password vault named ``Automation''. Each 1Password account has its own Automation vault and a read-only service account that can read nothing else. The service account's token is stored in the macOS login Keychain and read by the @samp{op-automations} wrapper, so reads never prompt while you are logged in, and a leaked token exposes only that one vault.
 
 @node Reading secrets
 @chapter Reading secrets
 
 @findex auth-source-extras-op-get
-@code{auth-source-extras-op-get} returns one field of one item: @samp{(auth-source-extras-op-get ITEM FIELD ACCOUNT)}. ITEM is the item title, FIELD a field label or ID such as @samp{"credential"} or @samp{"password"}, and ACCOUNT a key of @code{auth-source-extras-op-accounts}, defaulting to @samp{personal}. For example, @samp{(auth-source-extras-op-get "openai.com" "credential" 'tlon)} reads the Tlon OpenAI key.
+@code{auth-source-extras-op-get} returns one field of one item: @samp{(auth-source-extras-op-get ITEM FIELD ACCOUNT)}. ITEM is the item title, FIELD a field label or ID such as @samp{"credential"} or @samp{"password"}, and ACCOUNT an account symbol such as @samp{personal} or @samp{tlon}, defaulting to @samp{personal}. For example, @samp{(auth-source-extras-op-get "openai.com" "credential" 'tlon)} reads the Tlon OpenAI key.
 
-The first request for an account fetches the requested item together with every item listed for that account in @code{auth-source-extras-op-prefetch}. Each item is fetched by its own @samp{op} process and all of them run in parallel, since a single @samp{op} invocation fetches items one after another. Fetched items stay in memory for the rest of the session, so later reads are instant and a session makes one round of requests per account.
+The first request for an account fetches the requested item together with every item listed for that account in @code{auth-source-extras-op-prefetch}. Each item is fetched by its own CLI process and all of them run in parallel, since a single @samp{op} invocation fetches items one after another. Fetched items stay in memory for the rest of the session, so later reads are instant and a session makes one round of requests per account.
 
-If an account has no token in the Keychain, or an item does not exist, the function displays a warning once and returns nil. This lets a shared configuration load on machines that can read only some of the accounts.
+If an item cannot be read, for example because the account has no token in the Keychain or the item does not exist, the function returns nil and displays one warning per distinct reason, naming the affected items. This lets a shared configuration load on machines that can read only some of the accounts.
 
 @findex auth-source-extras-op-clear-cache
-@code{auth-source-extras-op-clear-cache} forgets every cached secret and token, so the next read fetches fresh values, for example after rotating a key.
+@code{auth-source-extras-op-clear-cache} forgets every cached secret and vault listing, so the next read fetches fresh values, for example after rotating a key.
+
+@node The auth-source backend
+@chapter The auth-source backend
+
+@findex auth-source-extras-op-search
+Adding the symbol @samp{1password-automation} to @code{auth-sources} makes generic @code{auth-source-search} lookups, such as the GitHub tokens used by Forge and Magit or the SMTP password, read from the Automation vaults. Item titles follow the @samp{auth-source-pass} conventions @samp{HOST/USER}, @samp{USER@@HOST}, @samp{HOST:PORT/USER}, @samp{HOST:PORT} and @samp{HOST}, so items copied from the password store keep working under their existing names. A bare @samp{HOST} title matches only if its stored @samp{username} field, when it has one, is among the requested users. The backend lists each vault's titles once per session and fetches matched items through the same cache as @code{auth-source-extras-op-get}. It cannot create or delete entries.
 
 @node Customization
 @chapter Customization
-
-@vindex auth-source-extras-op-accounts
-@code{auth-source-extras-op-accounts} maps each account symbol to the name of the Keychain generic password holding its service-account token. The defaults are @samp{personal} (@samp{op-service-account/personal-automation}) and @samp{tlon} (@samp{op-service-account/tlon-automation}).
 
 @vindex auth-source-extras-op-prefetch
 @code{auth-source-extras-op-prefetch} lists, per account, the item titles to fetch together on first use. List every item the configuration reads at startup.
@@ -76,7 +80,10 @@ If an account has no token in the Keychain, or an item does not exist, the funct
 @code{auth-source-extras-op-vault} names the vault the service accounts can read, @samp{"Automation"} by default.
 
 @vindex auth-source-extras-op-program
-@code{auth-source-extras-op-program} is the path to the 1Password CLI@. It must be the CLI itself, not a wrapper that routes requests through the desktop app, because service-account requests must never prompt.
+@code{auth-source-extras-op-program} is the service-account wrapper, @samp{op-automations} by default. It is called as @samp{op-automations @@ACCOUNT ...} and reads that account's token from the login Keychain (@samp{op-service-account/ACCOUNT-automation}) itself, so no read can prompt.
+
+@vindex auth-source-extras-op-search-accounts
+@code{auth-source-extras-op-search-accounts} lists the accounts the @samp{auth-source} backend searches, in order: @samp{personal}, then @samp{tlon}.
 
 @vindex auth-source-extras-op-timeout
 @code{auth-source-extras-op-timeout} is how many seconds to wait for a batch of fetches before giving up on the items still pending.
@@ -84,7 +91,7 @@ If an account has no token in the Keychain, or an item does not exist, the funct
 @node Setting up a machine
 @chapter Setting up a machine
 
-An account admin creates one read-only service account per person and machine, with access only to that account's Automation vault, and hands its token over through 1Password. The recipient stores it in the login Keychain under the service name configured in @code{auth-source-extras-op-accounts}, for example with @samp{security add-generic-password -U -a "$USER" -s op-service-account/tlon-automation -w TOKEN}.
+An account admin creates one read-only service account per person and machine, with access only to that account's Automation vault, and hands its token over through 1Password. The recipient stores it in the login Keychain under the service name @samp{op-automations} expects, for example with @samp{security add-generic-password -U -a "$USER" -s op-service-account/tlon-automation -w TOKEN}.
 
 @node Indices
 @chapter Indices

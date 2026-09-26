@@ -4,7 +4,7 @@
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/auth-source-extras.el
-;; Version: 0.1
+;; Version: 0.2
 ;; Package-Requires: ((emacs "29.1"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -26,13 +26,16 @@
 
 ;; Extensions for `auth-source'.
 ;;
-;; Read secrets from a 1Password "Automation" vault with a read-only service
-;; account whose token lives in the macOS Keychain, so background reads never
-;; prompt.  Items are fetched in one batch per account and kept in memory for
-;; the rest of the session.
+;; Read secrets from 1Password "Automation" vaults through read-only service
+;; accounts, so background reads never prompt.  Items are fetched in parallel,
+;; one batch per account, and kept in memory for the rest of the session.  An
+;; `auth-source' backend answers generic host/user lookups from the same
+;; vaults.
 
 ;;; Code:
 
+(require 'auth-source)
+(require 'cl-lib)
 (require 'seq)
 (require 'subr-x)
 
@@ -42,19 +45,11 @@
   "Extensions for `auth-source'."
   :group 'auth-source)
 
-(defcustom auth-source-extras-op-program "/opt/homebrew/bin/op"
-  "Path to the 1Password CLI used with service-account tokens."
-  :type 'file
-  :group 'auth-source-extras)
-
-(defcustom auth-source-extras-op-accounts
-  '((personal . "op-service-account/personal-automation")
-    (tlon . "op-service-account/tlon-automation"))
-  "Alist of 1Password accounts and the Keychain services holding their tokens.
-Each key is a symbol naming the account; each value is the service name of a
-generic password in the login Keychain whose secret is a read-only service
-account token for that account's automation vault."
-  :type '(alist :key-type symbol :value-type string)
+(defcustom auth-source-extras-op-program "op-automations"
+  "Service-account wrapper for the 1Password CLI.
+It is called as PROGRAM @ACCOUNT OP-ARGS..., and must read ACCOUNT's read-only
+service-account token itself, so that no read can ever prompt."
+  :type 'string
   :group 'auth-source-extras)
 
 (defcustom auth-source-extras-op-vault "Automation"
@@ -65,14 +60,19 @@ account token for that account's automation vault."
 (defcustom auth-source-extras-op-prefetch nil
   "Alist of accounts and the item titles to fetch together on first use.
 When a secret from an account is first requested, every listed item of that
-account is fetched in the same batch, so a session needs one round trip per
-account instead of one per item."
+account is fetched in the same batch, so a session needs one round of requests
+per account instead of one per item."
   :type '(alist :key-type symbol :value-type (repeat string))
   :group 'auth-source-extras)
 
 (defcustom auth-source-extras-op-timeout 30
   "Seconds to wait for a batch of item fetches before giving up."
   :type 'number
+  :group 'auth-source-extras)
+
+(defcustom auth-source-extras-op-search-accounts '(personal tlon)
+  "Accounts the `auth-source' backend searches, in order."
+  :type '(repeat symbol)
   :group 'auth-source-extras)
 
 ;;;; Variables
@@ -82,24 +82,30 @@ account instead of one per item."
 Each value is an alist of field labels and IDs to values, or the symbol
 `missing' when the item could not be fetched.")
 
-(defvar auth-source-extras--op-tokens (make-hash-table :test #'eq)
-  "Service-account tokens by account, or `missing' when none is stored.")
+(defvar auth-source-extras--op-titles (make-hash-table :test #'eq)
+  "Item titles of each account's automation vault, or `missing'.")
 
 ;;;; Functions
+
+;;;;; Reading items
 
 (defun auth-source-extras-op-get (item field &optional account)
   "Return FIELD of ITEM in ACCOUNT's automation vault, or nil.
 ITEM is the item title and FIELD a field label or ID, such as \"credential\"
-or \"password\".  ACCOUNT is a key of `auth-source-extras-op-accounts' and
-defaults to `personal'.  A missing token or item is reported once as a warning
-and then returns nil."
-  (let ((account (or account 'personal)))
-    (unless (gethash (cons account item) auth-source-extras--op-cache)
-      (auth-source-extras--op-fetch
-       account (auth-source-extras--op-titles-to-fetch account item)))
-    (let ((fields (gethash (cons account item) auth-source-extras--op-cache)))
-      (when (listp fields)
-        (cdr (assoc field fields))))))
+or \"password\".  ACCOUNT is an account symbol understood by
+`auth-source-extras-op-program', such as `personal' or `tlon', and defaults to
+`personal'.  An item that cannot be read is reported once as a warning and then
+returns nil."
+  (let ((fields (auth-source-extras--op-item (or account 'personal) item)))
+    (when (listp fields)
+      (cdr (assoc field fields)))))
+
+(defun auth-source-extras--op-item (account item)
+  "Return the field alist of ITEM in ACCOUNT's vault, or `missing'."
+  (unless (gethash (cons account item) auth-source-extras--op-cache)
+    (auth-source-extras--op-fetch
+     account (auth-source-extras--op-titles-to-fetch account item)))
+  (gethash (cons account item) auth-source-extras--op-cache))
 
 (defun auth-source-extras--op-titles-to-fetch (account item)
   "Return ITEM plus the uncached prefetch titles of ACCOUNT."
@@ -110,88 +116,83 @@ and then returns nil."
                      (alist-get account auth-source-extras-op-prefetch)))))
 
 (defun auth-source-extras--op-fetch (account titles)
-  "Fetch TITLES from ACCOUNT's automation vault into the cache."
-  (condition-case err
-      (let ((items (auth-source-extras--op-items (auth-source-extras--op-token account)
-                                                 titles)))
-        (dolist (title titles)
-          (let ((fields (alist-get title items nil nil #'equal)))
-            (unless fields
-              (auth-source-extras--op-warn "No item `%s' in the %s %s vault"
-                                           title account auth-source-extras-op-vault))
-            (puthash (cons account title) (or fields 'missing)
-                     auth-source-extras--op-cache))))
-    (error
-     (auth-source-extras--op-warn "Cannot read the %s %s vault: %s" account
-                                  auth-source-extras-op-vault (error-message-string err))
-     (dolist (title titles)
-       (puthash (cons account title) 'missing auth-source-extras--op-cache)))))
+  "Fetch TITLES from ACCOUNT's automation vault into the cache.
+Titles that cannot be read are cached as `missing' and reported in one warning
+per distinct reason."
+  (let (failures)
+    (dolist (result (auth-source-extras--op-items account titles))
+      (let ((title (car result))
+            (fields (cdr result)))
+        (if (eq (car-safe fields) :error)
+            (push title (alist-get (cdr fields) failures nil nil #'equal))
+          (puthash (cons account title) fields auth-source-extras--op-cache))))
+    (dolist (failure failures)
+      (dolist (title (cdr failure))
+        (puthash (cons account title) 'missing auth-source-extras--op-cache))
+      (auth-source-extras--op-warn "Cannot read %s from the %s %s vault: %s"
+                                   (string-join (reverse (cdr failure)) ", ")
+                                   account auth-source-extras-op-vault (car failure)))))
 
-(defun auth-source-extras--op-token (account)
-  "Return the service-account token of ACCOUNT from the Keychain.
-Signal an error when ACCOUNT is unknown or has no stored token."
-  (let ((token (or (gethash account auth-source-extras--op-tokens)
-                   (puthash account (auth-source-extras--op-keychain-token account)
-                            auth-source-extras--op-tokens))))
-    (if (eq token 'missing)
-        (error "No service-account token for `%s' in the Keychain" account)
-      token)))
-
-(defun auth-source-extras--op-keychain-token (account)
-  "Read ACCOUNT's token from the login Keychain, or return `missing'."
-  (let ((service (alist-get account auth-source-extras-op-accounts)))
-    (or (and service
-             (with-temp-buffer
-               (when (zerop (call-process "/usr/bin/security" nil '(t nil) nil
-                                          "find-generic-password" "-a" (user-login-name)
-                                          "-s" service "-w"))
-                 (string-trim (buffer-string)))))
-        'missing)))
-
-(defun auth-source-extras--op-items (token titles)
-  "Return an alist of item titles to field alists for TITLES, using TOKEN.
-Each item is fetched by its own CLI process, all running in parallel, because
-the CLI fetches the items of a single invocation one after another.  Titles
-that cannot be fetched are omitted."
-  (let* ((procs (mapcar (lambda (title) (auth-source-extras--op-start token title))
+(defun auth-source-extras--op-items (account titles)
+  "Return an alist of TITLES to their fields in ACCOUNT's automation vault.
+Each value is a field alist, or (:error . REASON) when the item could not be
+read.  Each item is fetched by its own CLI process, all running in parallel,
+because the CLI fetches the items of a single invocation one after another."
+  (let* ((procs (mapcar (lambda (title) (auth-source-extras--op-start account title))
                         titles))
          (deadline (+ (float-time) auth-source-extras-op-timeout)))
     (while (and (seq-some #'process-live-p procs) (< (float-time) deadline))
       (accept-process-output nil 0.05))
-    (delq nil (mapcar #'auth-source-extras--op-collect procs))))
+    (mapcar #'auth-source-extras--op-collect procs)))
 
-(defun auth-source-extras--op-start (token title)
-  "Start a CLI process that prints item TITLE as JSON, using TOKEN."
-  (let* ((process-environment (cons (concat "OP_SERVICE_ACCOUNT_TOKEN=" token)
-                                    process-environment))
-         (err (generate-new-buffer " *auth-source-extras-op-err*" t))
+(defun auth-source-extras--op-start (account title)
+  "Start a CLI process that prints item TITLE of ACCOUNT as JSON."
+  (let* ((err (generate-new-buffer " *auth-source-extras-op-err*" t))
          (proc (make-process :name "auth-source-extras-op"
                              :buffer (generate-new-buffer " *auth-source-extras-op*" t)
                              :stderr err
-                             :command (list auth-source-extras-op-program "item" "get" title
+                             :command (list auth-source-extras-op-program
+                                            (format "@%s" account) "item" "get" title
                                             "--vault" auth-source-extras-op-vault
                                             "--format" "json")
                              :connection-type 'pipe
                              :noquery t
                              :sentinel #'ignore)))
     (process-put proc 'stderr-buffer err)
+    (process-put proc 'title title)
     proc))
 
 (defun auth-source-extras--op-collect (proc)
-  "Return (TITLE . FIELDS) from finished PROC, or nil, and kill its buffers."
+  "Return (TITLE . FIELDS) or (TITLE :error . REASON) for PROC; kill its buffers.
+REASON is the last line of the CLI's error output, which names the problem but
+never contains item values."
   (let ((out (process-buffer proc))
-        (err (process-get proc 'stderr-buffer)))
+        (err (process-get proc 'stderr-buffer))
+        (title (process-get proc 'title)))
     (unwind-protect
-        (when (and (eq (process-status proc) 'exit) (zerop (process-exit-status proc)))
-          (accept-process-output proc 0 nil t)
-          (auth-source-extras--op-item-fields
-           (with-current-buffer out
-             (json-parse-string (buffer-string) :object-type 'alist :array-type 'list))))
+        (cons title
+              (cond ((process-live-p proc) '(:error . "timed out"))
+                    ((zerop (process-exit-status proc))
+                     (accept-process-output proc 0 nil t)
+                     (cdr (auth-source-extras--op-item-fields
+                           (with-current-buffer out
+                             (json-parse-string (buffer-string)
+                                                :object-type 'alist :array-type 'list)))))
+                    (t (cons :error (auth-source-extras--op-error-reason proc err)))))
       (when (process-live-p proc) (delete-process proc))
       (kill-buffer out)
       (when-let* ((stderr-proc (get-buffer-process err)))
         (delete-process stderr-proc))
       (kill-buffer err))))
+
+(defun auth-source-extras--op-error-reason (proc err)
+  "Return the last line of PROC's error output in buffer ERR, or its status."
+  (when-let* ((stderr-proc (get-buffer-process err)))
+    (accept-process-output stderr-proc 0 nil t))
+  (let ((lines (split-string (with-current-buffer err (buffer-string)) "\n" t "[ \t]+")))
+    (if lines
+        (replace-regexp-in-string "\\`\\[ERROR\\] [0-9/]+ [0-9:]+ " "" (car (last lines)))
+      (format "exit status %s" (process-exit-status proc)))))
 
 (defun auth-source-extras--op-item-fields (item)
   "Return (TITLE . FIELDS) for parsed ITEM, keying values by label and ID."
@@ -208,15 +209,114 @@ that cannot be fetched are omitted."
   "Display a warning built from FORMAT-STRING and ARGS."
   (display-warning 'auth-source-extras (apply #'format format-string args)))
 
+;;;;; auth-source backend
+
+(defun auth-source-extras-op-backend-parse (entry)
+  "Return the 1Password backend when ENTRY in `auth-sources' names it.
+The backend is selected by the symbol `1password-automation'."
+  (when (eq entry '1password-automation)
+    (auth-source-backend
+     :source "1Password Automation vaults"
+     :type '1password-automation
+     :search-function #'auth-source-extras-op-search)))
+
+(cl-defun auth-source-extras-op-search (&rest spec &key host user port max create delete
+                                              &allow-other-keys)
+  "Search the automation vaults for HOST, USER and PORT; return up to MAX results.
+Item titles follow the `auth-source-pass' conventions HOST/USER, USER@HOST,
+HOST:PORT/USER, HOST:PORT and HOST.  CREATE and DELETE are not supported;
+the rest of SPEC is ignored."
+  (ignore spec)
+  (unless (or create delete)
+    (let (results)
+      (catch 'done
+        (dolist (candidate (auth-source-extras--op-candidates host user port))
+          (when-let* ((result (auth-source-extras--op-search-result candidate user)))
+            (push result results)
+            (when (>= (length results) (or max 1))
+              (throw 'done nil)))))
+      (nreverse results))))
+
+(defun auth-source-extras--op-candidates (hosts users ports)
+  "Return (ACCOUNT TITLE HOST PORT) candidates for HOSTS, USERS and PORTS.
+Each argument may be a single value or a list, as `auth-source-search' allows."
+  (let (candidates)
+    (dolist (account auth-source-extras-op-search-accounts)
+      (let ((titles (auth-source-extras--op-account-titles account)))
+        (dolist (host (auth-source-extras--op-strings hosts))
+          (dolist (port (or (auth-source-extras--op-strings ports) '(nil)))
+            (dolist (title (auth-source-extras--op-title-patterns
+                            host (auth-source-extras--op-strings users) port))
+              (when (member title titles)
+                (push (list account title host port) candidates)))))))
+    (seq-uniq (nreverse candidates))))
+
+(defun auth-source-extras--op-strings (value)
+  "Return VALUE, a string, number, symbol or list of them, as a list of strings."
+  (mapcar (lambda (v) (format "%s" v))
+          (delq nil (if (listp value) value (list value)))))
+
+(defun auth-source-extras--op-title-patterns (host users port)
+  "Return the item titles that can hold a secret for HOST, USERS and PORT."
+  (let ((host-port (and port (format "%s:%s" host port))))
+    (append (mapcan (lambda (user)
+                      (delq nil (list (and host-port (format "%s/%s" host-port user))
+                                      (format "%s/%s" host user)
+                                      (format "%s@%s" user host))))
+                    users)
+            (delq nil (list host-port host)))))
+
+(defun auth-source-extras--op-account-titles (account)
+  "Return the item titles in ACCOUNT's automation vault, listing them once."
+  (let ((titles (or (gethash account auth-source-extras--op-titles)
+                    (puthash account (auth-source-extras--op-list-titles account)
+                             auth-source-extras--op-titles))))
+    (unless (eq titles 'missing) titles)))
+
+(defun auth-source-extras--op-list-titles (account)
+  "List ACCOUNT's automation vault titles, or return `missing' with a warning."
+  (with-temp-buffer
+    (if (zerop (call-process auth-source-extras-op-program nil '(t nil) nil
+                             (format "@%s" account) "item" "list"
+                             "--vault" auth-source-extras-op-vault "--format" "json"))
+        (mapcar (lambda (entry) (alist-get 'title entry))
+                (json-parse-string (buffer-string) :object-type 'alist :array-type 'list))
+      (auth-source-extras--op-warn "Cannot list the %s %s vault" account
+                                   auth-source-extras-op-vault)
+      'missing)))
+
+(defun auth-source-extras--op-search-result (candidate users)
+  "Return an `auth-source' result for CANDIDATE, or nil if USERS rule it out.
+CANDIDATE is (ACCOUNT TITLE HOST PORT)."
+  (pcase-let* ((`(,account ,title ,host ,port) candidate)
+               (fields (auth-source-extras--op-item account title))
+               (users (auth-source-extras--op-strings users))
+               (stored-user (and (listp fields)
+                                 (or (cdr (assoc "username" fields))
+                                     (cdr (assoc "user" fields)))))
+               (user (or (and (not (string-empty-p (or stored-user ""))) stored-user)
+                         (car users))))
+    ;; A title naming the user already matched it; a bare HOST or HOST:PORT
+    ;; title matches only if its stored user, when it has one, is wanted.
+    (when (and (listp fields)
+               (or (null users) (null stored-user) (string-empty-p stored-user)
+                   (member stored-user users)
+                   (not (member title (list host (format "%s:%s" host port))))))
+      (let ((secret (cdr (assoc "password" fields))))
+        (list :host host :port port :user user
+              :secret (lambda () secret))))))
+
 ;;;;; Commands
 
 ;;;###autoload
 (defun auth-source-extras-op-clear-cache ()
-  "Forget all cached 1Password secrets and tokens."
+  "Forget all cached 1Password secrets and vault listings."
   (interactive)
   (clrhash auth-source-extras--op-cache)
-  (clrhash auth-source-extras--op-tokens)
+  (clrhash auth-source-extras--op-titles)
   (message "Cleared cached 1Password secrets"))
+
+(add-hook 'auth-source-backend-parser-functions #'auth-source-extras-op-backend-parse)
 
 (provide 'auth-source-extras)
 ;;; auth-source-extras.el ends here

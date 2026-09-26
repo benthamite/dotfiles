@@ -268,9 +268,14 @@ it as a sequence."
   "Return VALUE's quoted symbol, or nil when VALUE is not one."
   (and (eq (car-safe value) 'quote) (symbolp (cadr value)) (cadr value)))
 
-(defun elpaca-extras--assert-reloadable-class-layouts (package file-info)
-  "Reject unsafe EIEIO layouts before reloading PACKAGE's FILE-INFO."
-  (let ((layouts (elpaca-extras--class-layouts file-info)))
+(defun elpaca-extras--assert-reloadable-class-layouts
+    (package file-info &optional declaration-info)
+  "Reject unsafe EIEIO layouts before reloading PACKAGE's FILE-INFO.
+DECLARATION-INFO, defaulting to FILE-INFO, supplies the class declarations
+to check.  Pass every package file so that a class moved into a file that
+is not loaded yet is still found and compared."
+  (let ((layouts (elpaca-extras--class-layouts
+                  (or declaration-info file-info))))
     ;; Literal declarations can be checked before any package code changes.
     ;; A class previously created by one of these exact files but absent from
     ;; the literal declarations came from a macro or computed form.  Refuse it
@@ -563,7 +568,8 @@ preserved unless the new code changes their defaults."
                   (elpaca-extras--same-library-file-p
                    (plist-get info :artifact) located)))
             feature-info)))
-      (elpaca-extras--assert-reloadable-class-layouts package selected-info))
+      (elpaca-extras--assert-reloadable-class-layouts
+       package selected-info feature-info))
     ;; Preserve the main feature's established first-load behavior, then load
     ;; subfeatures after their in-package requirements.  In particular, an
     ;; unchanged EIEIO subclass must be redefined after its superclass.

@@ -613,6 +613,38 @@
          :classes nil)))
      :type 'elpaca-extras-restart-required)))
 
+(ert-deftest elpaca-extras-test-preflight-finds-class-moved-to-unloaded-file ()
+  "Compare a live class moved into another package file by that declaration."
+  (defclass elpaca-extras-test-moved-class () ((existing-slot)))
+  (let ((load-history
+         (cons
+          '("/fake/pkg.el"
+            (define-type . elpaca-extras-test-moved-class)
+            (provide . pkg))
+          load-history))
+        (selected '((:source "/fake/pkg.el"
+                     :artifact "/fake/pkg.el"
+                     :features (pkg)
+                     :classes nil)))
+        (moved (lambda (slots)
+                 (list :source "/fake/pkg-sub.el"
+                       :artifact "/fake/pkg-sub.el"
+                       :features '(pkg-sub)
+                       :classes
+                       (list (list :name 'elpaca-extras-test-moved-class
+                                   :parents nil
+                                   :slots slots))))))
+    (elpaca-extras--assert-reloadable-class-layouts
+     'pkg selected
+     (append selected (list (funcall moved '((existing-slot . :instance))))))
+    (should-error
+     (elpaca-extras--assert-reloadable-class-layouts
+      'pkg selected
+      (append selected
+              (list (funcall moved '((existing-slot . :instance)
+                                     (new-slot . :instance))))))
+     :type 'elpaca-extras-restart-required)))
+
 (ert-deftest elpaca-extras-test-source-class-in-eval-when-compile-follows-artifact ()
   "Inspect `eval-when-compile' only when the selected artifact is source."
   (cl-letf (((symbol-function 'insert-file-contents)

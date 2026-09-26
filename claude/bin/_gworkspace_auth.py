@@ -23,8 +23,9 @@ TOKEN_URL = "https://oauth2.googleapis.com/token"
 
 CLIENT_ID_ENV = "GOOGLE_WORKSPACE_CLIENT_ID"
 CLIENT_SECRET_ENV = "GOOGLE_WORKSPACE_CLIENT_SECRET"
-CLIENT_ID_PASS = "env/google-workspace-client-id"
-CLIENT_SECRET_PASS = "env/google-workspace-client-secret"
+# Items in the personal 1Password Automation vault.
+CLIENT_ID_ITEM = "google-workspace-client-id"
+CLIENT_SECRET_ITEM = "google-workspace-client-secret"
 
 # account name -> env var holding that account's refresh token
 REFRESH_TOKEN_ENV = {
@@ -32,8 +33,8 @@ REFRESH_TOKEN_ENV = {
     "personal": "GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL",
 }
 
-REFRESH_TOKEN_PASS = {
-    "personal": "env/google-workspace-refresh-token-personal",
+REFRESH_TOKEN_ITEM = {
+    "personal": "google-workspace-refresh-token-personal",
 }
 
 REFRESH_TOKEN_OP = {
@@ -47,12 +48,15 @@ TOKEN_FILE = {
 }
 
 
-def _pass_show(entry):
+def _personal_automation(title):
+    """Return the password field of TITLE in the personal Automation vault."""
     result = subprocess.run(
-        ["pass", "show", entry],
+        ["op-automations", "@personal", "item", "get", title, "--vault", "Automation",
+         "--fields", "label=password", "--reveal"],
         capture_output=True,
         check=False,
         text=True,
+        timeout=45,
     )
     if result.returncode == 0 and result.stdout:
         return result.stdout.splitlines()[0]
@@ -107,13 +111,13 @@ def _read_env(account):
         )
         sys.exit(1)
     refresh_token = os.environ.get(REFRESH_TOKEN_ENV[account])
-    if not refresh_token and account in REFRESH_TOKEN_PASS:
-        refresh_token = _pass_show(REFRESH_TOKEN_PASS[account])
+    if not refresh_token and account in REFRESH_TOKEN_ITEM:
+        refresh_token = _personal_automation(REFRESH_TOKEN_ITEM[account])
     if not refresh_token and account in REFRESH_TOKEN_OP:
         refresh_token = _op_read(REFRESH_TOKEN_OP[account])
 
-    client_id = os.environ.get(CLIENT_ID_ENV) or _pass_show(CLIENT_ID_PASS)
-    client_secret = os.environ.get(CLIENT_SECRET_ENV) or _pass_show(CLIENT_SECRET_PASS)
+    client_id = os.environ.get(CLIENT_ID_ENV) or _personal_automation(CLIENT_ID_ITEM)
+    client_secret = os.environ.get(CLIENT_SECRET_ENV) or _personal_automation(CLIENT_SECRET_ITEM)
 
     missing = []
     if not client_id:

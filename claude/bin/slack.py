@@ -120,9 +120,9 @@ def _open_authenticated(request):
 
 # Workspace registry. Each entry describes where this workspace's xoxc/xoxd
 # session tokens come from. Two source kinds:
-#   "op"   -> 1Password: read <op_path>/xoxc_token and <op_path>/xoxd_token.
-#   "pass" -> pass entry with named fields <token_field> (xoxc) and
-#             <cookie_field> (xoxd), e.g. the org-prefixed slack.com entries.
+#   "op"         -> 1Password: read <op_path>/xoxc_token and <op_path>/xoxd_token.
+#   "automation" -> item <item> of the personal 1Password Automation vault, with
+#                   fields <token_field> (xoxc) and <cookie_field> (xoxd).
 WORKSPACES = {
     "epoch": {
         "domain": "epochai.slack.com",
@@ -130,14 +130,14 @@ WORKSPACES = {
         "op_path": "op://Automations/Slack MCP - Epoch Unofficial",
     },
     "trajectory": {
-        "source": "pass",
-        "pass_entry": "trajectory/slack.com/trajectorylabs",
+        "source": "automation",
+        "item": "slack.com/trajectorylabs",
         "token_field": "token",
         "cookie_field": "cookie",
     },
     "altruismo-eficaz": {
-        "source": "pass",
-        "pass_entry": "chrome/slack.com/altruismo-eficaz",
+        "source": "automation",
+        "item": "slack.com/altruismo-eficaz",
         "token_field": "token",
         "cookie_field": "cookie",
     },
@@ -146,19 +146,6 @@ DEFAULT_WORKSPACE = "epoch"
 
 # Selected workspace key, set from --workspace / SLACK_WORKSPACE in main().
 _workspace = DEFAULT_WORKSPACE
-
-
-def _pass_show(entry):
-    try:
-        out = subprocess.run(
-            ["pass", "show", entry], check=False, capture_output=True,
-            text=True, timeout=REQUEST_TIMEOUT,
-        )
-    except (OSError, UnicodeError, subprocess.TimeoutExpired):
-        _fail("personal Slack credential lookup failed")
-    if out.returncode == 0 and out.stdout:
-        return out.stdout.splitlines()[0]
-    return ""
 
 
 def _broker_hint(stderr):
@@ -199,23 +186,23 @@ def _op_read(path):
     return value
 
 
-def _pass_field(entry, field):
-    """Return the value of a named field (e.g. "token: <value>") from a pass entry."""
+def _automation_field(item, field):
+    """Return FIELD of ITEM in the personal 1Password Automation vault."""
     try:
         out = subprocess.run(
-            ["pass", "show", entry], check=False, capture_output=True,
-            text=True, timeout=REQUEST_TIMEOUT,
+            ["op-automations", "@personal", "item", "get", item, "--vault", "Automation",
+             "--fields", f"label={field}", "--reveal"],
+            check=False, capture_output=True, text=True, timeout=REQUEST_TIMEOUT,
         )
     except (OSError, UnicodeError, subprocess.TimeoutExpired):
         _fail("personal Slack credential lookup failed")
     if out.returncode != 0:
-        _fail("personal Slack credential lookup failed")
-    prefix = f"{field}:"
-    for line in out.stdout.splitlines():
-        if line.startswith(prefix):
-            return line[len(prefix):].strip()
-    sys.stderr.write(f"ERROR: pass entry {entry} has no '{field}:' field\n")
-    sys.exit(1)
+        _fail(f"personal Slack credential lookup failed: {_broker_hint(out.stderr)}")
+    value = out.stdout.strip()
+    if not value:
+        sys.stderr.write(f"ERROR: Automation item {item} has no '{field}' field\n")
+        sys.exit(1)
+    return value
 
 
 _xoxc = None
@@ -236,9 +223,9 @@ def _tokens():
         if ws["source"] == "op":
             xoxc = _op_read(f"{ws['op_path']}/xoxc_token")
             xoxd = _op_read(f"{ws['op_path']}/xoxd_token")
-        elif ws["source"] == "pass":
-            xoxc = _pass_field(ws["pass_entry"], ws["token_field"])
-            xoxd = _pass_field(ws["pass_entry"], ws["cookie_field"])
+        elif ws["source"] == "automation":
+            xoxc = _automation_field(ws["item"], ws["token_field"])
+            xoxd = _automation_field(ws["item"], ws["cookie_field"])
         else:
             sys.stderr.write(
                 f"ERROR: workspace '{_workspace}' has invalid source '{ws['source']}'\n"

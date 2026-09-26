@@ -20,7 +20,8 @@ from typing import Any
 
 API_ORIGIN = "https://api.gitguardian.com"
 API_PREFIX = "/v1/"
-PASS_ENTRY = "auth-sources/api.gitguardian.com/pablo@stafforini.com"
+# Item in the personal 1Password Automation vault holding the API token.
+TOKEN_ITEM = "api.gitguardian.com/pablo@stafforini.com"
 MAX_RESPONSE_BYTES = 10 * 1024 * 1024
 MAX_RATE_LIMIT_RETRIES = 2
 MAX_RETRY_AFTER_SECONDS = 5.0
@@ -94,14 +95,15 @@ class TriageError(RuntimeError):
 
 
 def load_token() -> str:
-    """Read only the first line of the configured password-store entry."""
-    executable = shutil.which("pass")
+    """Read only the first line of the token from the personal Automation vault."""
+    executable = shutil.which("op-automations")
     if executable is None:
-        raise TriageError("password-store client is unavailable")
+        raise TriageError("op-automations is unavailable")
 
     try:
         proc = subprocess.Popen(
-            [executable, PASS_ENTRY],
+            [executable, "@personal", "item", "get", TOKEN_ITEM, "--vault", "Automation",
+             "--fields", "label=password", "--reveal"],
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
         )

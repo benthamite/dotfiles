@@ -12,16 +12,17 @@ if [ -z "$uv_bin" ]; then
   exit 127
 fi
 
-pass_first_line() {
-  pass show "$1" 2>/dev/null | sed -n '1p'
+# Read the password field of an item in the personal Automation vault.
+personal_automation() {
+  op-automations @personal item get "$1" --vault Automation --fields label=password --reveal 2>/dev/null || true
 }
 
 op_read() {
   op-automations read "$1" 2>/dev/null || true
 }
 
-GOOGLE_WORKSPACE_CLIENT_ID="${GOOGLE_WORKSPACE_CLIENT_ID:-$(pass_first_line env/google-workspace-client-id)}"
-GOOGLE_WORKSPACE_CLIENT_SECRET="${GOOGLE_WORKSPACE_CLIENT_SECRET:-$(pass_first_line env/google-workspace-client-secret)}"
+GOOGLE_WORKSPACE_CLIENT_ID="${GOOGLE_WORKSPACE_CLIENT_ID:-$(personal_automation google-workspace-client-id)}"
+GOOGLE_WORKSPACE_CLIENT_SECRET="${GOOGLE_WORKSPACE_CLIENT_SECRET:-$(personal_automation google-workspace-client-secret)}"
 GOOGLE_WORKSPACE_REFRESH_TOKEN="${GOOGLE_WORKSPACE_REFRESH_TOKEN:-$(op_read 'op://Automations/Google Workspace OAuth - Pablo Epoch/credential')}"
 EPOCH_EMAIL="${EPOCH_EMAIL:-pablo@epoch.ai}"
 

@@ -93,9 +93,9 @@ class SlackTests(OfflineCase):
         with mock.patch.object(SLACK, "_op_read", return_value="epoch-token"):
             SLACK._tokens()
         SLACK._workspace = "trajectory"
-        with mock.patch.object(SLACK, "_pass_field", side_effect=lambda entry, field: "personal-" + field) as read:
+        with mock.patch.object(SLACK, "_automation_field", side_effect=lambda item, field: "personal-" + field) as read:
             self.assertEqual(SLACK._tokens(), ("personal-token", "personal-cookie"))
-            self.assertEqual(read.call_args_list, [mock.call("trajectory/slack.com/trajectorylabs", "token"), mock.call("trajectory/slack.com/trajectorylabs", "cookie")])
+            self.assertEqual(read.call_args_list, [mock.call("slack.com/trajectorylabs", "token"), mock.call("slack.com/trajectorylabs", "cookie")])
 
     def test_invalid_methods_fail_before_credentials(self):
         with mock.patch.object(SLACK, "_tokens", side_effect=tripwire):

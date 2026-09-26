@@ -64,7 +64,8 @@ LIBGEN_JSON_URL = "https://libgen.li/json.php"
 CROSSREF_WORKS_URL = "https://api.crossref.org/works"
 OPENALEX_WORKS_URL = "https://api.openalex.org/works"
 UNPAYWALL_URL = "https://api.unpaywall.org/v2/"
-PASS_ENTRY = "tlon/core/annas-archive"
+# Item in the Tlon 1Password Automation vault holding the member secret key.
+ANNAS_ITEM = "annas-archive"
 
 # Hosts that serve PDFs only after a JavaScript bot challenge. Requests to them
 # from a CLI are wasted; they go straight to the browser job.
@@ -394,7 +395,10 @@ def annas_secret_key() -> str:
     if key:
         return key
     try:
-        out = subprocess.run(["pass", "show", PASS_ENTRY], capture_output=True, text=True, timeout=30)
+        out = subprocess.run(
+            ["op-automations", "@tlon", "item", "get", ANNAS_ITEM, "--vault", "Automation",
+             "--fields", "label=password", "--reveal"],
+            capture_output=True, text=True, timeout=30)
     except (OSError, subprocess.SubprocessError):
         return ""
     if out.returncode != 0 or not out.stdout:

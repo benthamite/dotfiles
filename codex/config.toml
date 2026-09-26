@@ -648,7 +648,7 @@ trusted_hash = "sha256:0a0706a13d0dc6af4f69989850abe704010133fd4d220a7e57a98934c
 trusted_hash = "sha256:4e972dbb0de7c1a08a95bb53ce4befc2a4b1abf763eed0bed8c63ba6b76bd167"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:0:1"]
-trusted_hash = "sha256:4e972dbb0de7c1a08a95bb53ce4befc2a4b1abf763eed0bed8c63ba6b76bd167"
+trusted_hash = "sha256:2c4a6c0429c109d0d770651675485e2bdd2c9bf07f312fc1557113312a747809"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:1:0"]
 trusted_hash = "sha256:96eaebc0ed457c50c41989d05bd6e2ea8e39e8794c7507fdd49605a4b24f2517"

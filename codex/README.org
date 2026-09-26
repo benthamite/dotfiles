@@ -76,7 +76,11 @@ fictional Claude counterpart.
 Hook trust belongs to an exact source path, handler key, and current definition.
 Review the command identity when approving changed hooks; event labels alone
 can name several handlers. Trust changes use Codex's configuration API and must
-preserve unrelated settings and hook approvals.
+preserve unrelated settings and hook approvals. Every Codex home (=~/.codex=
+and each =~/.codex-*= account home) keeps its own =config.toml=, so a new or
+changed hook runs only in homes whose trust was updated. For each home, run
+=hooks/list= and then =config/batchWrite= with =CODEX_HOME= set to that home.
+Missing one home makes the hook silently absent in sessions that use it.
 
 The current default model is =gpt-6-astra=. Model, reasoning, and service-tier
 choices are Codex preferences, not cross-tool parity requirements.

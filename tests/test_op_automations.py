@@ -29,7 +29,8 @@ def run_hook(path, payload):
 
 
 class OpAutomationsTest(unittest.TestCase):
-    def run_wrapper(self, *, inherited_token=None, pass_output="service-token\n"):
+    def run_wrapper(self, *, inherited_token=None, pass_output="service-token\n",
+                    prefix=(), keychain_output="keychain-token", keychain_status=0):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             log_path = tmp_path / "calls.log"
@@ -39,6 +40,15 @@ class OpAutomationsTest(unittest.TestCase):
                 #!/usr/bin/env bash
                 printf 'pass:%s\\n' "$*" >> {str(log_path)!r}
                 printf %s {pass_output!r}
+                """,
+            )
+            write_executable(
+                tmp_path / "security",
+                f"""
+                #!/usr/bin/env bash
+                printf 'keychain:%s\\n' "$*" >> {str(log_path)!r}
+                printf %s {keychain_output!r}
+                exit {keychain_status}
                 """,
             )
             write_executable(
@@ -57,7 +67,7 @@ class OpAutomationsTest(unittest.TestCase):
                 env["OP_SERVICE_ACCOUNT_TOKEN"] = inherited_token
 
             result = subprocess.run(
-                [str(WRAPPER), "item", "list", "--vault", "Automations"],
+                [str(WRAPPER), *prefix, "item", "list", "--vault", "Automations"],
                 text=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -88,6 +98,28 @@ class OpAutomationsTest(unittest.TestCase):
 
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("is empty", result.stderr)
+        self.assertNotIn("op-args:", calls)
+
+    def test_account_selector_reads_keychain_and_ignores_inherited_token(self):
+        result, calls = self.run_wrapper(prefix=("@personal",), inherited_token="epoch-token")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("pass:", calls)
+        self.assertIn("-s op-service-account/personal-automation -w", calls)
+        self.assertIn("op-token:keychain-token", calls)
+        self.assertIn("op-args:item list --vault Automations", calls)
+
+    def test_account_selector_refuses_to_run_op_without_keychain_token(self):
+        result, calls = self.run_wrapper(prefix=("@tlon",), keychain_output="", keychain_status=44)
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("op-service-account/tlon-automation", result.stderr)
+        self.assertNotIn("op-args:", calls)
+
+    def test_unknown_account_selector_is_rejected(self):
+        result, calls = self.run_wrapper(prefix=("@nosuch",))
+
+        self.assertEqual(result.returncode, 2)
         self.assertNotIn("op-args:", calls)
 
 

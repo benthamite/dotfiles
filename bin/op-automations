@@ -1,23 +1,55 @@
 #!/usr/bin/env bash
-# Run 1Password CLI commands with the read-only Epoch Automations service account.
+# Run 1Password CLI commands with a read-only service account.
+#
+# Usage: op-automations [@ACCOUNT] OP-ARGS...
+#
+# Without @ACCOUNT the service account is Epoch's Automations one.  @personal
+# and @tlon select the read-only service accounts of those 1Password accounts'
+# "Automation" vaults, whose tokens live in the login Keychain as generic
+# passwords named op-service-account/ACCOUNT-automation.  For those, an
+# inherited OP_SERVICE_ACCOUNT_TOKEN is ignored so that another account's
+# token can never be used by mistake.
 
 set -euo pipefail
 
 PASS_ENTRY="epoch/1password-service-account-token"
 
-if [[ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]]; then
-  if ! command -v pass >/dev/null 2>&1; then
-    printf 'op-automations: pass is required to load %s\n' "$PASS_ENTRY" >&2
-    exit 1
-  fi
-
-  OP_SERVICE_ACCOUNT_TOKEN=$(pass show "$PASS_ENTRY" | sed -n '1p')
-  if [[ -z "$OP_SERVICE_ACCOUNT_TOKEN" ]]; then
-    printf 'op-automations: %s is empty\n' "$PASS_ENTRY" >&2
-    exit 1
-  fi
-  export OP_SERVICE_ACCOUNT_TOKEN
+account=epoch
+if [[ "${1:-}" == @* ]]; then
+  account=${1#@}
+  shift
 fi
+
+case "$account" in
+  epoch)
+    if [[ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]]; then
+      if ! command -v pass >/dev/null 2>&1; then
+        printf 'op-automations: pass is required to load %s\n' "$PASS_ENTRY" >&2
+        exit 1
+      fi
+
+      OP_SERVICE_ACCOUNT_TOKEN=$(pass show "$PASS_ENTRY" | sed -n '1p')
+      if [[ -z "$OP_SERVICE_ACCOUNT_TOKEN" ]]; then
+        printf 'op-automations: %s is empty\n' "$PASS_ENTRY" >&2
+        exit 1
+      fi
+      export OP_SERVICE_ACCOUNT_TOKEN
+    fi
+    ;;
+  personal | tlon)
+    service="op-service-account/$account-automation"
+    if ! OP_SERVICE_ACCOUNT_TOKEN=$(security find-generic-password -a "$USER" -s "$service" -w 2>/dev/null) ||
+      [[ -z "$OP_SERVICE_ACCOUNT_TOKEN" ]]; then
+      printf 'op-automations: no token in the Keychain for %s\n' "$service" >&2
+      exit 1
+    fi
+    export OP_SERVICE_ACCOUNT_TOKEN
+    ;;
+  *)
+    printf 'op-automations: unknown account @%s\n' "$account" >&2
+    exit 2
+    ;;
+esac
 
 # shell/shims/op routes bare `op` back here for Automations-vault work, so this
 # exec must reach the real binary rather than re-entering the shim.

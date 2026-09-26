@@ -172,7 +172,7 @@ not be used to print or document secret values; the placement rules are in
 | =libby= | Searches for and downloads matching books through the configured library source. |
 | =mbsync-parallel= | Synchronizes non-Epoch mbsync channels in parallel while running the Epoch Gmail sync separately. |
 | =mbsync-passcmd= | Supplies mbsync with its password from the shared temporary file or the encrypted store. |
-| =op-automations= | Runs 1Password CLI reads with the read-only Automations service account. |
+| =op-automations= | Runs 1Password CLI reads with a read-only service account: Epoch's Automations one by default, or with a leading =@personal= or =@tlon= the service account for that account's "Automation" vault, whose token it reads from the login Keychain. |
 | =op-desktop= | Reuses one terminal-backed desktop authorization for 1Password CLI calls and securely forwards piped item templates. |
 | =trajectory-open= | Opens a URL through the =trajectory= Chrome profile alias. |
 | =transfer-github-issues= | Transfers the issue numbers in the configured input file between two fixed repositories. |

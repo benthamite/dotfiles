@@ -15604,7 +15604,11 @@ upstream publication. The retained patch and draft are in
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package activity-watch-mode
-  :ensure (:pin t)
+  ;; Fork branch carrying the non-file buffer context fix until it is merged
+  ;; upstream; see emacs/patches/activity-watch-mode/README.org.
+  :ensure (:host github
+           :repo "benthamite/activity-watch-mode"
+           :branch "fix/non-file-buffer-context")
   :defer 30
   :config
   (require 'magit)

@@ -2,23 +2,20 @@
 
 * Local retention
 
-The managed =pauldub/activity-watch-mode= checkout is on the local branch
-=fix/non-file-buffer-context= at =ba263122be1b9d5eb7659daee91c2546d432dd17=.
-Its base is =1a950ad310cbd0511bb01744b20c7012a1c0b0e8=, the existing
-=origin/master=. No fork, push or pull request has been published.
+The fix is published on the fork branch
+=benthamite/activity-watch-mode:fix/non-file-buffer-context= at
+=ba263122be1b9d5eb7659daee91c2546d432dd17= (created 2026-09-26 for dotfiles
+release 9.0.2). Its base is =1a950ad310cbd0511bb01744b20c7012a1c0b0e8=, the
+upstream =pauldub/activity-watch-mode= =master=. No pull request has been
+opened upstream yet.
 
-=emacs/config.org= sets =:pin t= on the existing package recipe. Elpaca skips
-pinned packages during updates, preserving the local branch. The adjacent
-=non-file-buffer-context.patch= preserves the contribution in the canonical
-dotfiles repository as well. A fresh installation from upstream alone does
-not contain this unpublished fix; apply the retained patch to its stated base
-before enabling tracking there.
+=emacs/config.org= builds the package from that fork branch, so fresh profiles
+include the fix. The adjacent =non-file-buffer-context.patch= preserves the
+contribution in the canonical dotfiles repository as well.
 
 After an authorized upstream contribution is merged, verify the chosen upstream
-revision contains this behavior before removing the local pin. If publication
-is desired before merge, the proposed temporary fork branch is
-=benthamite/activity-watch-mode:fix/non-file-buffer-context=; its creation and
-publication still require authorization.
+revision contains this behavior, then point the recipe back at
+=pauldub/activity-watch-mode=.
 
 * Pull request draft
 

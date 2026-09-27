@@ -1,7 +1,7 @@
 """False-positive regressions for the secret-output guard (2026-09-05).
 
 The 2026-08-31 guard denied a protected tool name (`pbpaste`, `pass`,
-`security`) anywhere in unquoted command text and scanned heredoc bodies fed
+`security`; `pass` was retired and dropped on 2026-09-27) anywhere in unquoted command text and scanned heredoc bodies fed
 to interpreters as outer-shell command words. That blocked searches such as
 `grep -c pbpaste README.md` and Python heredocs whose prefix carried `;`,
 `&&` or an expanded argument, or whose body contained `?`, `*` or `[`.
@@ -51,14 +51,14 @@ EOF'''
 
 ALLOWED = {
     "grep mention": "cd /tmp && grep -c pbpaste README.md",
-    "grep -rn pass": "grep -rn pass docs/ | head -5",
+    "grep -rn security": "grep -rn security docs/ | head -5",
     "rg with flags": "rg -n --hidden security ~/notes",
     "git log -S": "git log -S pbpaste --oneline -- claude/hooks",
-    "git grep": "git grep -n pass -- '*.md'",
+    "git grep": "git grep -n security -- '*.md'",
     "wc on a file named after the tool": "wc -l pbpaste.md",
     "ls listing": "ls -la /usr/bin/pbpaste",
-    "cat man page copy": "cat docs/pass.md",
-    "wrapped grep": "A=1 env FOO=2 grep pass file.txt",
+    "cat man page copy": "cat docs/security.md",
+    "wrapped grep": "A=1 env FOO=2 grep security file.txt",
     "python heredoc after sequence": "cd /tmp && python3 - <<'EOF'\nif True:\n    pass\nEOF",
     "python literal source writer": "python3 - <<'EOF'\nfrom pathlib import Path\np = Path('fixture.py')\ncode = 'class Fixture:\\n    pass\\n'\np.write_text(code)\nEOF",
     "python heredoc after assignment": "S=1; python3 - <<'EOF'\nx = [1, 2][0] if 3 * 4 else None\nEOF",
@@ -73,7 +73,7 @@ ALLOWED = {
 DENIED = {
     "bare": "pbpaste",
     "piped": "pbpaste | tee /tmp/leak",
-    "pass show": "pass show fixture/credential",
+    "security via command": "command security find-generic-password -w -s fixture",
     "security keychain": "security find-generic-password -w -s fixture",
     "xargs": "printf x | xargs pbpaste",
     "xargs with option": "printf x | xargs -0 pbpaste",
@@ -88,9 +88,9 @@ DENIED = {
     "bash heredoc body": "bash <<'EOF'\npbpaste\nEOF",
     "bash heredoc glob body": "bash <<'EOF'\np?ss show fixture/credential\nEOF",
     "node heredoc naming the tool": "node <<'EOF'\nrequire('child_process').execSync('pbpaste')\nEOF",
-    "python heredoc naming the tool": "cd /tmp && python3 - <<'EOF'\nimport subprocess\nsubprocess.run(['pass', 'show', 'x'])\nEOF",
-    "python heredoc via expanded interpreter": "PY=python3; $PY - <<'EOF'\npass\nEOF",
-    "python heredoc piped": "cat x | python3 - <<'EOF'\npass\nEOF",
+    "python heredoc naming the tool": "cd /tmp && python3 - <<'EOF'\nimport subprocess\nsubprocess.run(['security', 'find-generic-password', '-w', '-s', 'x'])\nEOF",
+    "python heredoc via expanded interpreter": "PY=python3; $PY - <<'EOF'\npbpaste\nEOF",
+    "python heredoc piped": "cat x | python3 - <<'EOF'\npbpaste\nEOF",
     "unknown program argument": "mytool pbpaste",
     "grep then execution": "grep -c pbpaste README.md; pbpaste",
 }
@@ -108,6 +108,14 @@ class InertMentionTests(unittest.TestCase):
             for label, command in DENIED.items():
                 with self.subTest(guard=name, case=label):
                     self.assertEqual(decision(run_guard(guard, command)), "deny")
+
+    def test_retired_pass_cli_is_not_protected(self):
+        # `pass` was retired (contents moved to 1Password on 2026-09-25) and
+        # dropped from the protected set on 2026-09-27 at the user's request.
+        for name, guard in GUARDS.items():
+            for command in ("pass show foo", "grep -rn pass docs/"):
+                with self.subTest(guard=name, command=command):
+                    self.assertEqual(decision(run_guard(guard, command)), "allow")
 
 
 if __name__ == "__main__":

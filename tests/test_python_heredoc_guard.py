@@ -104,8 +104,8 @@ class PythonProjectionTests(unittest.TestCase):
         self.assertEqual(policy._project_body(body, True), body.replace("pass", "    "))
 
     def test_strings_multiline_strings_and_comments_are_not_pass_nodes(self):
-        for body in ('text = "pass"', 'text = """first\npass\nlast"""',
-                     '# tests pass\npass', 'text = "\\x70ass"', 'text = "pa" "ss"'):
+        for body in ('text = "pbpaste"', 'text = """first\nsecurity\nlast"""',
+                     '# tests pbpaste\npass', 'text = "\\x70bpaste"', 'text = "secu" "rity"'):
             with self.subTest(body=body):
                 with self.assertRaises(policy.ProtectedPythonReference):
                     policy.project_command(heredoc(body))
@@ -150,9 +150,9 @@ class PythonProjectionTests(unittest.TestCase):
                 self.assertIn("p.write_text(código)", projected)
         for current in (
                 body.replace(repr(source), "('class Árbol:\\n' # security\n '    pass\\n')"),
-                body.replace("'Script already exists; inspect before proceeding'", "'pa' 'ss'"),
-                body.replace("'Script already exists; inspect before proceeding'", "'\\x70ass'"),
-                body + "\n# pass remains a protected reference",
+                body.replace("'Script already exists; inspect before proceeding'", "'pb' 'paste'"),
+                body.replace("'Script already exists; inspect before proceeding'", "'\\x70bpaste'"),
+                body + "\n# pbpaste remains a protected reference",
         ):
             with self.subTest(body=current):
                 with self.assertRaises(policy.ProtectedPythonReference):
@@ -213,16 +213,16 @@ class NativePythonHeredocGuardTests(unittest.TestCase):
         self.assertEqual(path.read_text(), source)
 
     def test_python_source_writer_keeps_protected_execution_and_unknown_shapes_denied(self):
-        for name in ("pass", "security", "pbpaste"):
+        for name in ("security", "pbpaste"):
             for source in (f'import subprocess\nsubprocess.run(["{name}"])',
                            f'import os\nos.system("{name}")',
                            f'exec("import os; os.system(\\\"{name}\\\")")'):
                 self.assert_hooks(heredoc(python_source_writer(source)), "deny")
-        for source in ('import os\nos.system("pa" "ss")',
-                       'import os\nos.system("\\x70ass")',
-                       '# pass is a keyword\npass', 'if :\n    pass'):
+        for source in ('import os\nos.system("pb" "paste")',
+                       'import os\nos.system("\\x70bpaste")',
+                       '# pbpaste is a clipboard tool\npass', 'if :\n    pbpaste'):
             self.assert_hooks(heredoc(python_source_writer(source)), "deny")
-        body = python_source_writer("pass\n")
+        body = python_source_writer("pbpaste\n")
         for command in (heredoc(body + "\nexec(code)"),
                         heredoc(body.replace("p.chmod(0o600)", "p.chmod(0o700)")),
                         heredoc(body.replace("print(p)", "print(code)")),
@@ -235,7 +235,7 @@ class NativePythonHeredocGuardTests(unittest.TestCase):
                         heredoc(body.replace("code =", "Path =")),
                         heredoc(body.replace("code", "print")),
                         heredoc(body.replace("code", "SystemExit")),
-                        heredoc(body.replace("p.write_text(code)", "unused = 'pass'\np.write_text(code)")),
+                        heredoc(body.replace("p.write_text(code)", "unused = 'security'\np.write_text(code)")),
                         heredoc(body.replace("p.write_text(code)", "p.write_text(code, encoding=unknown())")),
                         heredoc(body, suffix="\npython3 fixture.py"),
                         heredoc(body, prefix="env python3 -"),
@@ -243,7 +243,7 @@ class NativePythonHeredocGuardTests(unittest.TestCase):
             self.assert_hooks(command, "deny")
 
     def test_python_source_writer_composed_exec_keeps_original_denial(self):
-        command = heredoc(python_source_writer("class Fixture:\n    pass\n"))
+        command = heredoc('from pathlib import Path\nPath("fixture.md").write_text("pbpaste")')
         program = ("await tools.exec_command(" + json.dumps({"cmd": command}) + ");\n"
                    "await tools.exec_command({cmd: 'true'});")
         result = subprocess.run(["/bin/bash", str(ROOT/"codex/hooks/block-secret-leak.sh")],
@@ -264,12 +264,12 @@ class NativePythonHeredocGuardTests(unittest.TestCase):
 
     def test_consecutive_heredocs_keep_protected_references_and_shell_tails_denied(self):
         safe = heredoc("pass")
-        unsafe = heredoc('import os\nos.system("\\x70ass")')
+        unsafe = heredoc('import os\nos.system("\\x70bpaste")')
         for command in (safe + "\n" + unsafe, unsafe + "\n" + safe,
-                        safe + "\n" + safe + "\npass show fixture",
-                        safe + "\nbash <<'SH'\n" + heredoc("pass") + "\nSH",
-                        safe + "\n" + heredoc("if :\n pass"),
-                        safe + "\npython3 - <<'PY'\npass"):
+                        safe + "\n" + safe + "\npbpaste",
+                        safe + "\nbash <<'SH'\n" + heredoc("pbpaste") + "\nSH",
+                        safe + "\n" + heredoc("if :\n pbpaste"),
+                        safe + "\npython3 - <<'PY'\npbpaste"):
             self.assert_hooks(command, "deny")
 
     def test_pyenv_exec_python_source_is_not_outer_shell_syntax(self):
@@ -313,20 +313,20 @@ PY"""
         self.assert_hooks("x=$(" + heredoc(body, prefix="pyenv exec python -") + "\n)", "deny")
         # Protected names in such a body are still program source.
         command = "NEW=/tmp/coord\ncd backend; " + heredoc(
-            'import subprocess\nsubprocess.run(["pass", "show", "fixture"])',
+            'import subprocess\nsubprocess.run(["security", "find-generic-password", "-s", "fixture"])',
             prefix="pyenv exec python -")
         self.assert_hooks(command, "deny")
         # Other pyenv subcommands are the program themselves.
-        command = "NEW=/tmp/coord\ncd backend; " + heredoc("pass", prefix="pyenv which python -")
+        command = "NEW=/tmp/coord\ncd backend; " + heredoc("pbpaste", prefix="pyenv which python -")
         self.assert_hooks(command, "deny")
 
     def test_pyenv_exec_keeps_credential_and_unknown_interpreter_checks(self):
-        for body in ('import subprocess\nsubprocess.run(["pass", "show", "fixture"])',
-                     'import os\nos.system("\\x70ass")'):
+        for body in ('import subprocess\nsubprocess.run(["security", "find-generic-password", "-s", "fixture"])',
+                     'import os\nos.system("\\x70bpaste")'):
             self.assert_hooks(heredoc(body, prefix="pyenv exec python -"), "deny")
         for prefix in ("pyenv exec bash", "pyenv exec python -c something",
                        "pyenv exec $PY -", "pyenv which python -"):
-            self.assert_hooks(heredoc("pass", prefix=prefix), "deny")
+            self.assert_hooks(heredoc("pbpaste", prefix=prefix), "deny")
         self.assert_hooks(heredoc("pass", prefix="pyenv exec python -", suffix="\npbpaste"), "deny")
 
     def test_literal_prefixes_quoted_delimiters_and_nested_pass_blocks_are_allowed(self):
@@ -338,7 +338,7 @@ PY"""
                     self.assert_hooks(heredoc(body, prefix=prefix, delimiter=delimiter), "allow")
 
     def test_python_subprocess_os_and_exec_credential_literals_are_denied(self):
-        for name in ("pass", "security", "pbpaste"):
+        for name in ("security", "pbpaste"):
             for body in (f'import subprocess\nsubprocess.run(["{name}"])',
                          f'import os\nos.system("{name}")',
                          f'import os\nos.execvp("{name}", ["{name}"])',
@@ -348,12 +348,14 @@ PY"""
                     self.assert_hooks(heredoc("pass\n" + body), "deny")
 
     def test_decoded_and_adjacent_python_string_literals_are_denied(self):
-        for body in ('import os\nos.system("\\x70ass")',
-                     'import os\nos.system("pa" "ss")'):
+        for body in ('import os\nos.system("\\x70bpaste")',
+                     'import os\nos.system("pb" "paste")',
+                     'import os\nos.system("\\x73ecurity")',
+                     'import os\nos.system("secu" "rity")'):
             self.assert_hooks(heredoc(body), "deny")
 
     def test_nested_astral_unicode_does_not_skip_credential_classification(self):
-        command = heredoc('import subprocess\ntext = "🌱"\nsubprocess.run(["pass"])')
+        command = heredoc('import subprocess\ntext = "🌱"\nsubprocess.run(["pbpaste"])')
         self.assert_hooks(command, "deny")
 
     def test_invalid_nested_unicode_and_nul_are_denied(self):
@@ -412,7 +414,7 @@ PY"""
         self.assertEqual(result.stdout, b"".join(command.encode() + b"\0" for command in commands))
 
     def test_safe_data_mentions_remain_conservatively_denied(self):
-        for body in ('print("pass")', 'text = """first\npass\nlast"""', '# pass is a keyword\npass'):
+        for body in ('print("pbpaste")', 'text = """first\nsecurity\nlast"""', '# pbpaste is a clipboard tool\npass'):
             self.assert_hooks(heredoc(body), "deny")
 
     def test_unclassified_bibliography_program_denial_does_not_claim_execution(self):
@@ -423,8 +425,11 @@ PY"""
                 'Path("fixture.org").write_text("The first pass found 67 keys. "\n'
                 '    "Use this table for the substantive reading pass. A literature search hit "\n'
                 '    "is not a completed screening.")')
-        for command in (heredoc(body), "pass show fixture/credential", "pbpaste",
-                        heredoc('import subprocess\nsubprocess.run(["pass", "show", "fixture"])')):
+        # The retired `pass` CLI is no longer protected, so its prose is allowed.
+        self.assert_hooks(heredoc(body), "allow")
+        for command in (heredoc(body.replace("reading pass", "security review")),
+                        "security find-generic-password -w -s fixture", "pbpaste",
+                        heredoc('import subprocess\nsubprocess.run(["pbpaste"])')):
             for provider, tool in (("claude", "Bash"), ("codex", "Bash"),
                                    ("codex", "functions.exec_command"), ("codex", "functions.exec")):
                 with self.subTest(provider=provider, tool=tool, command=command):
@@ -485,44 +490,44 @@ PY"""
 
     def test_mapping_update_requires_bound_data_literal_dict_and_statement_context(self):
         prefix = 'from pathlib import Path\nimport json\nreport = {}\n'
-        write = '\nPath("fixture.json").write_text(json.dumps(report) + "pass")'
+        write = '\nPath("fixture.json").write_text(json.dumps(report) + "pbpaste")'
         calls = [
-            'report.update(status="pass")', 'report.update({"status": "pass"}, {})',
+            'report.update(status="pbpaste")', 'report.update({"status": "pbpaste"}, {})',
             'report.update(report)', 'report.update({**report})',
-            'report.update({"status": unknown()})', 'unknown.update({"status": "pass"})',
-            'json.loads("{}").update({"status": "pass"})',
-            'report = unknown\nreport.update({"status": "pass"})',
-            'report.update = unknown\nreport.update({"status": "pass"})',
-            'update = report.update\nupdate({"status": "pass"})',
-            'result = report.update({"status": "pass"})',
-            'report.update({"nested": report.update({"status": "pass"})})',
+            'report.update({"status": unknown()})', 'unknown.update({"status": "pbpaste"})',
+            'json.loads("{}").update({"status": "pbpaste"})',
+            'report = unknown\nreport.update({"status": "pbpaste"})',
+            'report.update = unknown\nreport.update({"status": "pbpaste"})',
+            'update = report.update\nupdate({"status": "pbpaste"})',
+            'result = report.update({"status": "pbpaste"})',
+            'report.update({"nested": report.update({"status": "pbpaste"})})',
         ]
         for call in calls:
             self.assert_hooks(heredoc(prefix + call + write), "deny")
         # Mutating in-memory data alone must not satisfy the required write.
-        self.assert_hooks(heredoc(prefix + 'report.update({"status": "pass"})'), "deny")
+        self.assert_hooks(heredoc(prefix + 'report.update({"status": "pbpaste"})'), "deny")
 
     def test_document_exception_rejects_unknown_calls_bindings_and_execution(self):
-        safe = 'from pathlib import Path\nPath("fixture.md").write_text("pass")'
+        safe = 'from pathlib import Path\nPath("fixture.md").write_text("pbpaste")'
         bodies = [
             safe + '\nexec("print(1)")', safe + '\neval("1")',
             safe + '\nunknown()', safe + '\nimport subprocess',
-            safe + '\nimport os\nos.system("\\x70ass")',
-            'from pathlib import Path\nPath = arbitrary\nPath("fixture.md").write_text("pass")',
-            'from pathlib import Path as P\nP("fixture.md").write_text("pass")',
-            'from pathlib import *\nPath("fixture.md").write_text("pass")',
-            'from pathlib import Path\np=Path("fixture.md")\nf=p.write_text\nf("pass")',
-            'import json\nfrom pathlib import Path\njson.loads = eval\nPath("fixture.md").write_text(json.loads("pass"))',
-            'import json\nfrom pathlib import Path\nPath("fixture.md").write_text(json.dumps({},default=eval)+"pass")',
-            'from pathlib import Path\nPath("fixture.py").write_text("pass")',
-            'from pathlib import Path\nPath("fixture.md").write_text(f"pass {unknown()}")',
-            'from pathlib import Path\nPath("fixture.md").write_text("pass", **options)',
+            safe + '\nimport os\nos.system("\\x70bpaste")',
+            'from pathlib import Path\nPath = arbitrary\nPath("fixture.md").write_text("pbpaste")',
+            'from pathlib import Path as P\nP("fixture.md").write_text("pbpaste")',
+            'from pathlib import *\nPath("fixture.md").write_text("pbpaste")',
+            'from pathlib import Path\np=Path("fixture.md")\nf=p.write_text\nf("pbpaste")',
+            'import json\nfrom pathlib import Path\njson.loads = eval\nPath("fixture.md").write_text(json.loads("pbpaste"))',
+            'import json\nfrom pathlib import Path\nPath("fixture.md").write_text(json.dumps({},default=eval)+"pbpaste")',
+            'from pathlib import Path\nPath("fixture.py").write_text("pbpaste")',
+            'from pathlib import Path\nPath("fixture.md").write_text(f"pbpaste {unknown()}")',
+            'from pathlib import Path\nPath("fixture.md").write_text("pbpaste", **options)',
         ]
         for body in bodies:
             self.assert_hooks(heredoc(body), "deny")
 
     def test_document_exception_rejects_shell_exterior_and_preserves_secret_checks(self):
-        safe = 'from pathlib import Path\nPath("fixture.md").write_text("pass")'
+        safe = 'from pathlib import Path\nPath("fixture.md").write_text("pbpaste")'
         commands = [heredoc(safe, suffix="\npython3 fixture.md"),
                     heredoc(safe, suffix="\npbpaste"), heredoc(safe) + "\n" + heredoc("pass"),
                     heredoc(safe, prefix="true; python3 -"),
@@ -531,10 +536,10 @@ PY"""
         for command in commands:
             self.assert_hooks(command, "deny")
         marker = "-" * 5 + "BEGIN PRIVATE KEY" + "-" * 5
-        self.assert_hooks(heredoc(safe.replace('"pass"', repr(marker + " pass"))), "deny")
+        self.assert_hooks(heredoc(safe.replace('"pbpaste"', repr(marker + " pbpaste"))), "deny")
 
     def test_document_exception_requires_one_complete_literal_orchestration(self):
-        command = heredoc('from pathlib import Path\nPath("fixture.md").write_text("pass")')
+        command = heredoc('from pathlib import Path\nPath("fixture.md").write_text("pbpaste")')
         call = 'await tools.exec_command({cmd: ' + json.dumps(command) + '})'
         quoted = 'await tools.exec_command(' + json.dumps({"cmd": command}) + ')'
         programs = [
@@ -566,16 +571,17 @@ PY"""
                 self.assertEqual(output.get("hookSpecificOutput", {}).get("permissionDecision", "allow"), expected)
 
     def test_shell_and_interpolation_controls_remain_denied(self):
-        commands = ["pass show fixture/credential", "security find-generic-password -w -s fixture", "pbpaste",
-                    heredoc("pass show fixture/credential", prefix="bash"),
-                    heredoc("pass show fixture/credential", prefix="cat") + "\npass",
-                    heredoc('text = "$(pass show fixture/credential)"', delimiter="PY"),
+        document = 'from pathlib import Path\nPath("fixture.md").write_text("pbpaste")'
+        commands = ["security find-generic-password -w -s fixture", "pbpaste",
+                    heredoc("security find-generic-password -w -s fixture", prefix="bash"),
+                    heredoc("security find-generic-password -w -s fixture", prefix="cat") + "\npbpaste",
+                    heredoc('text = "$(security find-generic-password -w -s fixture)"', delimiter="PY"),
                     heredoc('text = "`pbpaste`"', delimiter="PY"),
-                    heredoc("pass", suffix="\npass show fixture/credential"),
+                    heredoc("pass", suffix="\nsecurity find-generic-password -w -s fixture"),
                     heredoc("pass", suffix="\n$(command -v pbpaste)"),
-                    heredoc("pass", suffix="\np?ss show fixture/credential"),
-                    heredoc("pass", prefix="sudo python3 -"),
-                    heredoc("if :\n    pass")]
+                    heredoc("pass", suffix="\npbpast? --version"),
+                    heredoc(document, prefix="sudo python3 -"),
+                    heredoc("if :\n    " + document.replace("\n", "\n    "))]
         for command in commands:
             self.assert_hooks(command, "deny")
 

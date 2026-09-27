@@ -10,7 +10,7 @@ cannot place, is denied.
 
 Contract: read the (heredoc-masked) command on stdin, print one JSON object
 ``{"decision": "allow"}`` or ``{"decision": "deny", "reason": "..."}``.
-Raw ``op``, ``pass``, ``security``, ``pbpaste`` and executable globs are the
+Raw ``op``, ``security``, ``pbpaste`` and executable globs are the
 calling hook's business, not this module's.
 
 Plan and rationale: docs/superpowers/plans/2026-09-02-secret-guard-op-output-policy.md

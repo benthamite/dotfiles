@@ -95,7 +95,7 @@ class NetworkNameBoundaryTests(unittest.TestCase):
     def test_known_secret_checks_and_protected_interpreter_names_are_unchanged(self):
         marker = '-' * 5 + 'BEGIN PRIVATE KEY' + '-' * 5
         self.assert_hooks(f"python3 -B - <<'PY'\nprint({marker!r})\nPY", 'deny')
-        self.assert_hooks("python3 -B - <<'PY'\nprint('structural pass')\nPY", 'deny')
+        self.assert_hooks("python3 -B - <<'PY'\nprint('structural security')\nPY", 'deny')
 
 
 if __name__ == '__main__':

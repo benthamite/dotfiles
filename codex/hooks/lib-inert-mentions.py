@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Mask inert mentions of protected secret tools in the secret-output guard.
 
-The guard denies any command that names `pbpaste`, `pass` or `security`
+The guard denies any command that names `pbpaste` or `security`
 because those programs print the secret itself. A name is only a leak when
 something can *run* it. This helper reads the quoted-literal-masked command on
 stdin and replaces the protected word with `INERT_MENTION` when it is a plain
-argument of a read-only text tool (`grep -rn pass docs/`, `wc -l pbpaste.md`,
+argument of a read-only text tool (`grep -rn security docs/`, `wc -l pbpaste.md`,
 `git log -S pbpaste`), so a search or a listing is not mistaken for a
 credential read. Everything else is printed byte-for-byte: the command word
 itself, arguments of shells, `xargs`, `find -exec`, `env`, `sudo` and every
@@ -24,7 +24,7 @@ import re
 import shlex
 import sys
 
-PROTECTED = re.compile(r"(?<![A-Za-z0-9_=-])(?:pbpaste|pass|security)(?![A-Za-z0-9_-])")
+PROTECTED = re.compile(r"(?<![A-Za-z0-9_=-])(?:pbpaste|security)(?![A-Za-z0-9_-])")
 # Programs that only read their arguments as text, patterns or paths.
 TEXT_TOOLS = {
     "grep", "egrep", "fgrep", "rg", "ag", "ack", "wc", "cat", "less", "more",

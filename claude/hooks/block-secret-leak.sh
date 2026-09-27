@@ -150,7 +150,7 @@ contains_secret_output_command() {
   raw=$(mask_heredoc_bodies "$raw")
   # 1Password brokers are classified by lib-op-policy.py (see the gate below);
   # this rule covers the tools whose output *is* the secret.
-  protected='(^|[^A-Za-z0-9_-])(pbpaste|pass|security)([^A-Za-z0-9_-]|$)'
+  protected='(^|[^A-Za-z0-9_-])(pbpaste|security)([^A-Za-z0-9_-]|$)'
   # A heredoc body still present here feeds a shell or an interpreter, so it
   # is program source: a protected name in it is denied even inside a string
   # literal, as lib-python-heredoc.py already does for recognized Python.
@@ -184,7 +184,7 @@ contains_secret_output_command() {
     return 1
   fi
   # A protected name that is only a search pattern or path argument of a
-  # read-only text tool (`grep -rn pass docs/`, `git log -S pbpaste`) is inert;
+  # read-only text tool (`grep -rn security docs/`, `git log -S pbpaste`) is inert;
   # lib-inert-mentions.py masks exactly those and leaves every other position
   # (command words, xargs/find/env arguments, `=`-joined values) for denial.
   if printf '%s' "$scan" | grep -qE "$protected"; then
@@ -201,11 +201,11 @@ contains_secret_output_command() {
 
   # Quoted variable assignments and command-discovery substitutions are the
   # remaining common ways to hide the executable name from the masked scan.
-  if printf '%s' "$raw" | grep -qE '[A-Za-z_][A-Za-z0-9_]*=[[:space:]]*["'"'"']([^"'"'"']*/)?(pbpaste|pass|security)["'"'"']' && \
+  if printf '%s' "$raw" | grep -qE '[A-Za-z_][A-Za-z0-9_]*=[[:space:]]*["'"'"']([^"'"'"']*/)?(pbpaste|security)["'"'"']' && \
      printf '%s' "$raw" | grep -qE '\$\{?[A-Za-z_][A-Za-z0-9_]*\}?'; then
     return 0
   fi
-  printf '%s' "$raw" | grep -qE '\$\([[:space:]]*(command[[:space:]]+-v|which|type[[:space:]]+-P)[[:space:]]+(pbpaste|pass|security)[[:space:]]*\)' && return 0
+  printf '%s' "$raw" | grep -qE '\$\([[:space:]]*(command[[:space:]]+-v|which|type[[:space:]]+-P)[[:space:]]+(pbpaste|security)[[:space:]]*\)' && return 0
 
   # Normalize the shell's lexical removal of backslashes and adjacent quotes,
   # then classify the resulting command word. Executable globs are rejected
@@ -229,12 +229,12 @@ contains_secret_output_command() {
     -e 's/(^[[:space:]]*|[;&|(][[:space:]]*)([A-Za-z_][A-Za-z0-9_]*)=[^;&|[:space:]]*([;&|]|$)/\1\2=ASSIGNED\3/g')
   boundary='(^[[:space:]]*|[;&|(!`][[:space:]]*|\$\([[:space:]]*)'
   # A wrapper's own words are options, assignments or durations; any other
-  # word is the program it runs (so `env FOO=2 grep pass f` runs grep).
+  # word is the program it runs (so `env FOO=2 grep pbpaste f` runs grep).
   # An assignment prefix's value may hold a closed `$(...)`; an unclosed one
   # opens a command substitution whose words belong to the inner command
   # (so in `f=$(ls x*.jsonl | head -1)` the glob is an argument of ls).
   wrapper='(([^;&|[:space:]]*/)?(command|env|sudo|timeout|nice|exec|nohup|time|builtin|xargs)([[:space:]]+(-[^;&|[:space:]]*|[A-Za-z_][A-Za-z0-9_]*=[^;&|[:space:]]*|[0-9]+[smhd]?))*[[:space:]]+|[A-Za-z_][A-Za-z0-9_]*=([^;&|()`[:space:]]|\$\([^()]*\))*[[:space:]]+)'
-  executable='([^;&|[:space:]]*/)?(pbpaste|pass|security)'
+  executable='([^;&|[:space:]]*/)?(pbpaste|security)'
   delimiter='([[:space:];|&)`]|$)'
   printf '%s' "$normalized" | grep -qE "${boundary}(${wrapper})*${executable}${delimiter}" && return 0
   # find -exec runs its argument as a program.
@@ -353,7 +353,7 @@ deny_secret_output_command() {
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: " + $tool + " cannot be classified as safe from secret-printing credential or clipboard commands.\n\nThis guard denies executable protected tool names and unclassified interpreter programs containing those names, including prose strings. A denial does not establish that a credential command was invoked. Only recognized inert mentions and the closed Python document-edit language are exempt.\n\nAgent shell commands may not call `pass`, `security`, or `pbpaste`, whose output is the secret itself; wrappers, nested shells, pipes, and redirects are not trusted containment. Epoch secrets live in 1Password: use `op-automations`/`op-desktop` in one of the allowed non-printing shapes.")
+      "permissionDecisionReason": ("BLOCKED: " + $tool + " cannot be classified as safe from secret-printing credential or clipboard commands.\n\nThis guard denies executable protected tool names and unclassified interpreter programs containing those names, including prose strings. A denial does not establish that a credential command was invoked. Only recognized inert mentions and the closed Python document-edit language are exempt.\n\nAgent shell commands may not call `security` or `pbpaste`, whose output is the secret itself; wrappers, nested shells, pipes, and redirects are not trusted containment. Epoch secrets live in 1Password: use `op-automations`/`op-desktop` in one of the allowed non-printing shapes.")
     }
   }'
   exit 0
@@ -427,7 +427,7 @@ check_pattern() {
       "hookSpecificOutput": {
         "hookEventName": "PreToolUse",
         "permissionDecision": "deny",
-        "permissionDecisionReason": ("BLOCKED: " + $tool + " command would expose a secret (" + $label + ").\n\nUse environment variables, `pass`, or `op://` references instead of literal secret values.\n\nIf this is a false positive, diagnose and repair the classifier; do not bypass the guard.")
+        "permissionDecisionReason": ("BLOCKED: " + $tool + " command would expose a secret (" + $label + ").\n\nUse environment variables or `op://` references instead of literal secret values.\n\nIf this is a false positive, diagnose and repair the classifier; do not bypass the guard.")
       }
     }'
     exit 0

@@ -29,7 +29,7 @@ import sys
 import tokenize
 from pathlib import PurePosixPath
 
-PROTECTED = re.compile(r"(?<![A-Za-z0-9_-])(?:pass|security|pbpaste)(?![A-Za-z0-9_-])")
+PROTECTED = re.compile(r"(?<![A-Za-z0-9_-])(?:security|pbpaste)(?![A-Za-z0-9_-])")
 # With --brokers the same classification applies to the 1Password brokers: a
 # Python program that names one outside the closed document-edit language may
 # run it (subprocess, os.system), which a shell-text classifier cannot see.

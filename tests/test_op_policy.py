@@ -56,6 +56,12 @@ ALLOW = [
     "op-automations read op://Automations/X/credential | gh secret set MY_SECRET --repo o/r",
     "op-automations read op://Automations/X/credential | wrangler secret put TOKEN",
     "op-automations read op://Automations/X/credential | docker login ghcr.io -u me --password-stdin",
+    # the op-automations account selector changes no shape
+    'op-automations @personal read "op://Automation/x/credential" > /tmp/token.txt',
+    'X=$(op-automations @tlon read op://Automation/X/credential); curl -H "Authorization: Bearer $X" https://api.example',
+    "op-automations @personal run --env-file .env.op -- python3 script.py",
+    "op-automations @epoch read op://Automations/X/credential --out-file /tmp/token.txt",
+    "op-automations @personal read op://Automation/X/credential | gh secret set MY_SECRET -R o/r",
     # item output limited to metadata
     "op-desktop item list --format=json | jq '[.[] | {id,title}]'",
     "op-desktop item get abc --format=json | jq '[.fields[] | {label,purpose,type}]'",
@@ -234,6 +240,15 @@ DENY = [
     "env -u echo op-automations read op://Automations/X/credential",
     "op-automations $SUB op://Automations/X/credential > /tmp/x",
     'X=$(op-automations read op://Automations/X/credential); op-automations read op://Automations/Y/credential --out-file "$X"',
+    # the account selector does not relax a shape, and only known selectors pass
+    'op-automations @personal read "op://Automation/x/credential"',
+    "op-automations @tlon read op://Automation/X/credential | cat",
+    "echo $(op-automations @tlon read op://Automation/X/credential)",
+    "op-automations @personal run --env-file=.env.op -- printenv SECRET",
+    'op-automations @bogus read "op://Automation/x/credential" > /tmp/token.txt',
+    "op-automations @$ACCT read op://Automation/X/credential > /tmp/token.txt",
+    "op-automations @personal @tlon read op://Automation/X/credential > /tmp/token.txt",
+    "op-desktop @personal read op://Employee/X/credential > /tmp/token.txt",
 ]
 
 

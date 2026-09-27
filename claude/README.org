@@ -751,7 +751,9 @@ metadata arguments; broker execution elsewhere in the command is still checked.
 The exact =bash -n FILE= syntax-check form is also allowed; extra options are not.
 Shell expansions are fine in broker arguments (=--env-file
 "$ROOT/…"=); an expansion in the subcommand position is unclassifiable and
-denied. The Claude Bash dispatcher delegates this decision to the standalone
+denied. The =op-automations= account selector (=@epoch=, =@personal=,
+=@tlon=) is stripped before classification, so each shape behaves the same
+with or without it; any other =@…= word is denied. The Claude Bash dispatcher delegates this decision to the standalone
 guard instead of carrying a second inline policy copy. Quoted argument globs, including =rg=
 exclusion patterns beginning with =!=, remain inert data rather than executable
 command words. A shell =case= default pattern is likewise grammar, not an

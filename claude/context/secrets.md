@@ -27,6 +27,10 @@ everything else including shapes it cannot place:
 - `X=$(op-automations read REF)` used by a non-printing command in the same
   call; `read REF > file`; `read REF | pbcopy` / `gh secret set` / `wrangler
   secret put` / `ssh-add -` / `docker login --password-stdin`.
+- `op-automations` may take its account selector first (`@personal`,
+  `@tlon`, `@epoch`); the guard strips it and applies the same shapes, so
+  `op-automations @personal read REF > file` passes and a bare
+  `op-automations @personal read REF` is denied. Any other `@…` is denied.
 - Clipboard → 1Password goes through the audited wrapper `op-clipboard-store`
   (dotfiles `claude/bin`): shape check, `op-desktop item create|edit`, read-back,
   and only the `op://` reference on stdout. `pbpaste` itself stays denied in

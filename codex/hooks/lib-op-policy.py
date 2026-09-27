@@ -25,6 +25,9 @@ import sys
 from dataclasses import dataclass, field
 
 BROKERS = {"op-automations", "op-desktop"}
+# The optional first argument of `op-automations` that selects a service
+# account; keep in step with the `case` in bin/op-automations.
+OP_AUTOMATIONS_ACCOUNTS = {"@epoch", "@personal", "@tlon"}
 WRAPPERS = {"env", "sudo", "command", "timeout", "nice", "exec", "nohup", "time", "builtin"}
 SHELLS = {"bash", "sh", "zsh", "dash", "ksh"}
 CONTROL_WORDS = {"if", "then", "elif", "else", "fi", "while", "until", "do", "done", "case", "esac"}
@@ -490,7 +493,18 @@ def classify_invocation(
     """
     if any(a[0].startswith("OP_") for a in simple.assignments):
         raise Deny("OP_* environment assignment on a 1Password command (masking or auth override)")
-    texts = [w.text for w in words[1:]]
+    # `op-automations @ACCOUNT …` picks which read-only service account runs
+    # the command (bin/op-automations) and is consumed before `op` sees the
+    # rest, so every shape is classified identically with or without it. Only
+    # the literal selectors the broker accepts are stripped: an unknown `@foo`
+    # or an expanding `@$X` stays in the subcommand position and falls
+    # through to the unclassified denial.
+    args_words = words[1:]
+    if (_basename(words[0].text) == "op-automations" and args_words
+            and args_words[0].text in OP_AUTOMATIONS_ACCOUNTS
+            and not args_words[0].expands):
+        args_words = args_words[1:]
+    texts = [w.text for w in args_words]
     # Expansions in arguments (`--env-file "$ROOT/.env.op"`, `--out-file "$TMP"`)
     # do not change a shape's stdout; an expansion in the subcommand position
     # falls through to the unclassified denial below.

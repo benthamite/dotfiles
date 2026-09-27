@@ -827,10 +827,14 @@ route for numeric BSB identifiers, including the documented suffixed form.
 Its full-size JPEG IIIF image route uses bounded numeric page identifiers.
 Other endpoints, altered identifiers and all URL/request payloads remain scanned.
 
-The [[https://archive.org/developers/md-read.html][Internet Archive metadata API]] projects only the fixed HTTPS
-=archive.org/metadata/= prefix. Item identifiers and partial-read suffixes remain
-scanned, as do query/fragment values, headers and bodies. No individual item or
-arbitrary identifier receives an exemption.
+The [[https://archive.org/developers/md-read.html][Internet Archive metadata API]] projects the fixed HTTPS
+=archive.org/metadata/= prefix. A bounded =Caras_y_Caretas_Buenos_Aires_=
+date/issue identifier grammar is additionally recognized, matching 2,112 public
+search results. Its PDF and DjVu text download routes require the filename
+stem to equal the item identifier, as verified in issue 1006 metadata. Other
+identifiers and partial-read suffixes remain scanned, as do query/fragment
+values, headers and bodies. Literal =--get= searches are parsed as requests;
+=--data-urlencode= values retain payload scanning and output paths remain local.
 
 The network heuristic treats dots and hyphens as part of names, so =curl.py=,
 =curl-cffi= and =zotra-use-curl= do not activate it. Actual

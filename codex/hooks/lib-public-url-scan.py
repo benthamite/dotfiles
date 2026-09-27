@@ -15,6 +15,8 @@ from urllib.parse import unquote, unquote_plus, urlsplit
 UUID = r"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
 MONTH = r"[0-9]{4}/(?:0[1-9]|1[0-2])"
 BSB_OBJECT = r"bsb[0-9]{8}(?:_[0-9]{5}_u[0-9]{3})?"
+CARETAS_ITEM = (r"Caras_y_Caretas_Buenos_Aires_(?:18|19)[0-9]{2}-"
+                r"(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])_N_[0-9]{1,5}")
 ENTITY = r"(?:area|artist|collection|event|genre|instrument|label|place|recording|release|release-group|series|url|work)"
 # Exact authority, path prefix, whether the complete path must match, schemes.
 # Sources are the public routes pinned by test_secret_guard_parity.py.
@@ -22,6 +24,8 @@ ROUTES = (
     ("hemerotecadigital.bn.gob.ar",
      r"/collection/001181802/critica(?:/year/19(?:1[4-69]|[2-4][0-9]|5[0-7]))?",
      True, ("https",)),
+    ("archive.org", rf"/metadata/{CARETAS_ITEM}", True, ("https",)),
+    ("archive.org", rf"/download/(?P<caretas>{CARETAS_ITEM})/(?P=caretas)(?:\.pdf|_djvu\.txt)", True, ("https",)),
     ("archive.org", r"/metadata/", False, ("https",)),
     ("api.digitale-sammlungen.de", rf"/iiif/presentation/v2/{BSB_OBJECT}/manifest", True, ("https",)),
     ("api.digitale-sammlungen.de", r"/iiif/image/v2/bsb[0-9]{8}_[0-9]{5}/full/full/0/default\.jpg", True, ("https",)),
@@ -235,7 +239,7 @@ def arguments(tokens: list[str]) -> list[tuple[str, str]] | None:
                                    "--body-file", "-i", "--input-file", "--header", "--post-data",
                                    "--body-data", "--method", "--timeout", "--tries"})
     switches = ({"--silent", "--show-error", "--location", "--fail", "--head", "--include",
-                 "--verbose", "--insecure", "--no-buffer"} if curl
+                 "--verbose", "--insecure", "--no-buffer", "--get"} if curl
                 else {"--quiet", "--no-verbose", "--verbose"})
     output_options = ({"-o", "--output"} if curl else
                       {"-O", "--output-document", "-o", "--output-file"})

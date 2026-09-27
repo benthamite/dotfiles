@@ -63,6 +63,77 @@ def decision(output: dict | None) -> str:
 
 
 class SecretGuardParityTests(unittest.TestCase):
+    def test_archive_get_search_keeps_query_payload_checks(self):
+        command = ("curl -sS -L --max-time 50 --get 'https://archive.org/advancedsearch.php' "
+                   "--data-urlencode 'q=collection:revista-caras-y-caretas-argentina' "
+                   "--data-urlencode 'output=json' --data-urlencode 'rows=3000' "
+                   "--data-urlencode 'fl[]=identifier,title,date,item_size' "
+                   "-o /tmp/acq-cc2-collection-search.json")
+        token = 'Synthetic9Opaque_' * 3
+        cases = [(command, 'allow')]
+        cases.extend((command + f" {option} '{token}'", 'deny')
+                     for option in ('--data-urlencode', '-H', '-d'))
+        cases.append((command.replace('q=collection:', 'q=' + token + ':'), 'deny'))
+        for shell, expected in cases:
+            self.assert_both(shell, expected)
+            for tool in ('functions.exec_command', 'functions.exec'):
+                content = shell if tool != 'functions.exec' else (
+                    'text(await tools.exec_command(' + json.dumps({'cmd': shell}) + '));'
+                )
+                with self.subTest(tool=tool, command=shell):
+                    self.assertEqual(decision(run_guard(GUARDS['codex'], content,
+                                                       cwd=self.repo, tool=tool)), expected)
+
+    def test_caretas_archive_download_keeps_secret_controls(self):
+        item = 'Caras_y_Caretas_Buenos_Aires_1918-01-12_N_1006'
+        url = f'https://archive.org/download/{item}/{item}.pdf'
+        token = 'Synthetic9Opaque_' * 3
+        cases = [(f"curl -L --max-time 120 '{url}' -o /tmp/caretas-1006.pdf", 'allow'),
+                 (f"curl '{url.replace('.pdf', '_djvu.txt')}'", 'allow')]
+        variants = [url + suffix for suffix in ('/' + token, '?token=' + token, '#' + token)]
+        variants += [url.replace(before, after) for before, after in (
+            ('1006.pdf', '1007.pdf'), ('.pdf', '.exe'), ('download/', 'private/'),
+            ('archive.org', 'archive.org.example.org'), ('archive.org', 'archive.org@example.org'),
+            ('https://', 'http://'),
+        )]
+        cases.extend((f"curl '{variant}'", 'deny') for variant in variants)
+        cases.extend((f"curl '{url}' {option} '{token}'", 'deny') for option in ('-H', '-d'))
+        for shell, expected in cases:
+            self.assert_both(shell, expected)
+            for tool in ('functions.exec_command', 'functions.exec'):
+                content = shell if tool != 'functions.exec' else (
+                    'text(await tools.exec_command(' + json.dumps({'cmd': shell}) + '));'
+                )
+                with self.subTest(tool=tool, command=shell):
+                    self.assertEqual(decision(run_guard(GUARDS['codex'], content,
+                                                       cwd=self.repo, tool=tool)), expected)
+
+    def test_caretas_archive_metadata_keeps_secret_controls(self):
+        # Public Archive search returned 2,112 IDs in this bounded grammar,
+        # including these 1901 and 1918 issues; arbitrary IDs remain scanned.
+        url = 'https://archive.org/metadata/Caras_y_Caretas_Buenos_Aires_1918-01-12_N_1006'
+        token = 'Synthetic9Opaque_' * 3
+        cases = [(f"curl -L --max-time 40 '{url}' -o /tmp/acq-cc2-target-metadata.json", 'allow'),
+                 (f"curl '{url.replace('1918-01-12_N_1006', '1901-07-06_N_144')}'", 'allow')]
+        variants = [url + suffix for suffix in ('/' + token, '?token=' + token, '#' + token)]
+        variants += [url.replace(before, after) for before, after in (
+            ('1918-01-12', '1918-99-12'), ('N_1006', 'N_123456'),
+            ('Caras_y_Caretas', 'Other_title'), ('metadata/', 'download/'),
+            ('archive.org', 'archive.org.example.org'),
+            ('archive.org', 'archive.org@example.org'), ('https://', 'http://'),
+        )]
+        cases.extend((f"curl '{variant}'", 'deny') for variant in variants)
+        cases.extend((f"curl '{url}' {option} '{token}'", 'deny') for option in ('-H', '-d'))
+        for shell, expected in cases:
+            self.assert_both(shell, expected)
+            for tool in ('functions.exec_command', 'functions.exec'):
+                content = shell if tool != 'functions.exec' else (
+                    'text(await tools.exec_command(' + json.dumps({'cmd': shell}) + '));'
+                )
+                with self.subTest(tool=tool, command=shell):
+                    self.assertEqual(decision(run_guard(GUARDS['codex'], content,
+                                                       cwd=self.repo, tool=tool)), expected)
+
     def test_bn_critica_issue_locator_keeps_secret_controls(self):
         url = ('https://hemerotecadigital.bn.gob.ar/render.php?'
                'url=001181802/1947/BNA_S001181802_19470908N11872.pdf&system=001181802')

@@ -180,7 +180,7 @@ class PublicURLScanTests(unittest.TestCase):
 
     def test_archive_metadata_prefix_retains_identifier_and_payloads(self):
         # https://archive.org/developers/md-read.html documents the fixed
-        # route and partial reads. Identifiers themselves are never exempt.
+        # route and partial reads. Arbitrary identifiers are never exempt.
         base = 'https://archive.org/metadata/'
         for suffix in ('isbn_9780312108298', 'in.ernet.dli.2015.101543',
                        'xfetch/files/0?start=1&count=5'):

@@ -435,7 +435,9 @@ and the service-access routing table lives in
 while the always-loaded file keeps one trigger line each. That routing table
 uses the extension-backed Chrome plugin for Codex automation and reserves
 =chrome-profile-open= for explicit manual page launching because it activates
-Chrome and can steal focus.
+Chrome and can steal focus. It also separates page and REPL stalls from plugin
+communication failures, so a navigation timeout is recovered in a fresh tab
+rather than routed to the plugin's permission-gated new-window step.
 
 Browser control is runtime-owned rather than mirrored through a tracked
 Codex-App handoff skill. Claude therefore carries no pointer skill or helper

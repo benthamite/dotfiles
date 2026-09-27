@@ -214,6 +214,8 @@ exit 1
             "op-automations @tlon read op://Automation/x/credential | gh secret set TOKEN --repo=benthamite/scratch",
             "op-desktop read --account my.1password.com op://Employee/x/credential | gh secret set TOKEN -R benthamite/scratch",
             "op-desktop read op://Employee/x/credential | gh secret set -R benthamite/scratch TOKEN",
+            'op-automations @personal read --no-newline "op://Automation/x/credential" | gh secret set TOKEN -R benthamite/scratch',
+            "op-desktop read -n --account my.1password.com op://Employee/x/credential | gh secret set TOKEN -R benthamite/scratch",
         ):
             with self.subTest(command=command):
                 self.assert_both(command, expected="allow")
@@ -224,6 +226,8 @@ exit 1
             "op-automations @personal read op://Automation/x/credential | gh secret set TOKEN",
             "GH_REPO=benthamite/scratch op-automations read op://A/x/credential | gh secret set TOKEN",
             "op-automations read op://A/x/credential | GH_REPO=benthamite/scratch gh secret set TOKEN",
+            # a read option other than --no-newline/-n (and op-desktop --account)
+            "op-automations read --out-file /tmp/x op://A/x/credential | gh secret set TOKEN -R benthamite/scratch",
             # anything beyond the two stages
             "op-automations read op://A/x/credential | gh secret set TOKEN -R benthamite/scratch | cat",
             "op-automations read op://A/x/credential | gh secret set TOKEN -R benthamite/scratch && gh secret set T2 -R example/unowned",

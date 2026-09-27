@@ -25,7 +25,7 @@ documented in [[file:../agents/README.org][the agent manual]]. Skill names and t
 | =claude-stage-hook= | Stages explicitly marked Claude final-message commands on the user’s paste surfaces. |
 | =codex-config-prune= | Removes stale project-trust and hook-state entries from Codex configuration. |
 | =codex-protocol-watch= | Checks whether Codex has added protocol methods unsupported by the Emacs client. |
-| =codex-runtime= | Launches a retained immutable copy of the installed Homebrew Codex package so upgrades preserve active sessions' signed executables and resources. |
+| =codex-runtime= | Retains the installed Homebrew Codex runtime and reconciles stale account-local Chrome plugins with their signed app before local sessions start. |
 | =cr-pull-pinned= | Pulls and verifies the Taiga job pinned by a CR task. |
 | =cr-review-worktree= | Creates the canonical read-only review worktree for a CR task. |
 | =cr-taiga= | Maintains the private CR Taiga run ledger and exact-job comparisons. |

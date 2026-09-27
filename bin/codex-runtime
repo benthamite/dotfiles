@@ -16,6 +16,60 @@ class RuntimeErrorDetected(Exception):
     pass
 
 
+def browser_launch_options(arguments):
+    """Return config flags for local session launches, None for maintenance.
+
+    Parse option values before identifying a command so a model or path named
+    'plugin' does not accidentally exempt a real session from reconciliation.
+    """
+    values = {'-c', '--config', '--enable', '--disable', '-m', '--model',
+              '-C', '--cd', '-i', '--image', '-p', '--profile', '-s', '--sandbox',
+              '-a', '--ask-for-approval', '--add-dir', '--local-provider',
+              '--remote', '--remote-auth-token-env', '--listen'}
+    config_flags = {'-c', '--config', '--enable', '--disable', '-p', '--profile', '-C', '--cd'}
+    maintenance = {'agents', 'login', 'logout', 'mcp', 'plugin', 'remote-control',
+                   'app', 'completion', 'update', 'doctor', 'sandbox', 'debug',
+                   'apply', 'a', 'queue', 'archive', 'delete', 'migrate-rollouts',
+                   'unarchive', 'cloud', 'exec-server', 'features', 'help'}
+    flags = []
+    index = 0
+    command_seen = False
+    while index < len(arguments):
+        arg = arguments[index]
+        key = arg.split('=', 1)[0]
+        if arg in {'-h', '--help', '-V', '--version'} or key == '--remote':
+            return None
+        if arg == '--':
+            break
+        if arg.startswith('-c') and not arg.startswith('--') and arg != '-c':
+            flags.append(arg)
+            index += 1
+            continue
+        if key in values:
+            if key in config_flags:
+                flags.append(arg)
+            if '=' not in arg:
+                index += 1
+                if index >= len(arguments):
+                    return None  # Let Codex report the missing option value.
+                if key in config_flags:
+                    flags.append(arguments[index])
+        elif not arg.startswith('-'):
+            if not command_seen and arg in maintenance:
+                return None
+            if not command_seen and arg == 'app-server' and any(
+                    item in {'generate-ts', 'generate-json-schema', '--help', '-h'}
+                    for item in arguments[index + 1:]):
+                return None
+            if not command_seen and arg in {'exec', 'e', 'review', 'resume', 'fork', 'app-server'}:
+                command_seen = True
+                index += 1
+                continue
+            command_seen = True  # Prompt/session id; flags can still follow it.
+        index += 1
+    return flags
+
+
 def installed_package():
     """Never search PATH: its first Codex entry is this launcher's shim."""
     for candidate in (Path('/opt/homebrew/bin/codex'), Path('/usr/local/bin/codex')):
@@ -96,6 +150,14 @@ def snapshot(source, store):
 def main():
     try:
         executable = snapshot(installed_package(), Path.home() / '.local/share/codex-runtimes')
+        config_flags = browser_launch_options(sys.argv[1:])
+        if config_flags is not None:
+            from codex_browser_sync import synchronize, BrowserSyncError
+            try:
+                synchronize(Path(os.environ.get('CODEX_HOME', str(Path.home() / '.codex'))),
+                            executable, config_args=config_flags)
+            except BrowserSyncError as error:
+                raise RuntimeErrorDetected(str(error)) from error
     except (OSError, ValueError, RuntimeErrorDetected) as error:
         print('codex-runtime: ' + str(error), file=sys.stderr)
         return 1

@@ -19,6 +19,32 @@ LOADER.exec_module(runtime)
 
 
 class RuntimeTests(unittest.TestCase):
+    def test_browser_reconciliation_runs_for_session_entry_points(self):
+        for args in ([], ['exec', 'task'], ['resume', '--last'],
+                     ['app-server'], ['-m', 'plugin', 'task'],
+                     ['--cd', '/tmp/plugin', 'resume'], ['--', 'plugin']):
+            with self.subTest(args=args):
+                self.assertIsNotNone(runtime.browser_launch_options(args))
+
+    def test_browser_reconciliation_does_not_block_maintenance(self):
+        for args in (['--version'], ['--help'], ['plugin', 'list', '--json'],
+                     ['-c', 'model="x"', 'mcp', 'get', 'node_repl'],
+                     ['app-server', 'generate-json-schema'],
+                     ['--remote', 'ws://localhost:9999']):
+            with self.subTest(args=args):
+                self.assertIsNone(runtime.browser_launch_options(args))
+
+    def test_browser_reconciliation_preserves_global_config_overrides(self):
+        self.assertEqual(runtime.browser_launch_options(
+            ['-c', 'plugins.chrome.enabled=false', '--enable=example', 'resume']),
+            ['-c', 'plugins.chrome.enabled=false', '--enable=example'])
+        for args in (['resume', 'session', '-c', 'x=true'],
+                     ['exec', 'task', '-c', 'x=true'],
+                     ['app-server', '--listen', 'stdio://', '-c', 'x=true']):
+            self.assertEqual(runtime.browser_launch_options(args), ['-c', 'x=true'])
+        self.assertEqual(runtime.browser_launch_options(
+            ['--cd', '/tmp', 'exec', 'task', '-cx=true']), ['--cd', '/tmp', '-cx=true'])
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)

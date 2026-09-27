@@ -41,9 +41,9 @@ still require =util.isRegExp=, removed in Node 23. It never falls back to Node 2
 this, a terminal =codex= used whichever identity =~/.codex= was last logged in
 to, while Emacs used the selected account. The two accounts have separate
 quotas and billing, so the split stayed invisible until one of them reached a
-usage limit. Each =~/.codex-<account>= directory is a thin overlay in which
-=auth.json= is the only real file and everything else links back to =~/.codex=,
-so this selects the identity and changes nothing else. An explicit =CODEX_HOME=
+usage limit. Each =~/.codex-<account>= directory has its own authentication.
+Account settings and plugin state are independent writable copies; shared
+skills and history retain their configured links. An explicit =CODEX_HOME=
 always wins, and an empty, unknown, or absent account name leaves the variable
 unset so Codex falls back to =~/.codex=.
 
@@ -63,7 +63,7 @@ into =~/bin=:
 | Shim | Contract |
 |------+----------|
 | =claude= | Selects the allowed Claude authentication route and strips unintended ambient Anthropic credentials. |
-| =codex= | Launches a retained copy of the current Homebrew package so upgrades cannot remove a running session's executable or helpers. |
+| =codex= | Retains the current Homebrew runtime and reconciles Chrome's account-local plugin before local session launches. |
 | =emacsclient= | Finds the real Darwin temporary-directory socket when a caller overrides =$TMPDIR=. |
 | =op= | Routes read-only Automations-vault work to =op-automations= and supported desktop-vault work to =op-desktop=. |
 
@@ -97,6 +97,15 @@ still need its signed executable or helper. Each current package uses about
 #+begin_src sh
 python3 -m unittest tests.test_codex_runtime -v
 #+end_src
+
+Local session entry points also run =bin/codex_browser_sync.py=. It detects the
+desktop app from the configured browser runtime, verifies its signature and
+the configured browser-service bytes, then repairs stale Chrome source/cache
+through the standard installer. Reconciliation uses an account lock and keeps
+older installed versions for running sessions. Incompatible services or
+unexpected/shared marketplace paths stop startup with a specific error;
+maintenance commands such as =plugin= and =mcp= still run. Remote sessions and
+direct calls to a different Codex executable are outside this launch boundary.
 
 * History filtering
 

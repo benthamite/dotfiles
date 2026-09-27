@@ -452,22 +452,34 @@ except ValueError:
 
 REF = re.compile(r"op://[^\s]+")
 ACCOUNTS = {"@epoch", "@personal", "@tlon"}
+# `read` options that change neither where the value goes nor which item is
+# read. --no-newline matters here: without it the trailing newline becomes
+# part of the stored secret.
+NO_NEWLINE = {"--no-newline", "-n"}
+
+
+def read_args_ok(rest, allow_account):
+    """True when `rest` (after `read`) is only harmless options and one REF."""
+    while rest:
+        if rest[0] in NO_NEWLINE:
+            rest = rest[1:]
+        elif allow_account and rest[0] == "--account" and len(rest) >= 2:
+            rest = rest[2:]
+        elif allow_account and rest[0].startswith("--account="):
+            rest = rest[1:]
+        else:
+            break
+    return len(rest) == 1 and bool(REF.fullmatch(rest[0]))
+
+
 if reader[:1] == ["op-automations"]:
     rest = reader[1:]
     if rest[:1] and rest[0] in ACCOUNTS:
         rest = rest[1:]
-    reader_ok = len(rest) == 2 and rest[0] == "read" and REF.fullmatch(rest[1])
+    reader_ok = rest[:1] == ["read"] and read_args_ok(rest[1:], allow_account=False)
 elif reader[:1] == ["op-desktop"]:
     rest = reader[1:]
-    if rest[:1] == ["read"]:
-        rest = rest[1:]
-        if rest[:1] == ["--account"] and len(rest) >= 2:
-            rest = rest[2:]
-        elif rest[:1] and rest[0].startswith("--account="):
-            rest = rest[1:]
-        reader_ok = len(rest) == 1 and REF.fullmatch(rest[0])
-    else:
-        reader_ok = False
+    reader_ok = rest[:1] == ["read"] and read_args_ok(rest[1:], allow_account=True)
 else:
     reader_ok = False
 if not reader_ok:

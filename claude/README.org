@@ -36,6 +36,14 @@ The shared live settings set =disableClaudeAiConnectors= to =true=. Claude Code
 therefore does not load hosted claude.ai connectors or their tool schemas.
 Service access uses the canonical local CLIs and scripts documented in
 =CLAUDE.md= instead.
+
+The shared live settings also set =cleanupPeriodDays= to =36500=. Claude Code
+otherwise deletes session transcripts under =~/.claude/projects/= (plus
+tasks, shell snapshots and backups) older than 30 days at every startup. The
+setting has no "never" value: =0= is rejected or disables transcript writing,
+so a century stands in for "never". Codex needs no counterpart: it never
+prunes =~/.codex/sessions/=, and =history.jsonl= is trimmed only when
+=[history] max_bytes= is set, which =codex/config.toml= leaves unset.
 The [[file:context/service-access.md][service routing table]] maps paper downloads and book candidate inspection to
 =paper-fetch=; its [[file:../docs/book-acquisition.md][book acquisition contract]] and shared bibliography policy
 keep the procedure and eligibility decisions in one place each.

@@ -19,6 +19,9 @@ ENTITY = r"(?:area|artist|collection|event|genre|instrument|label|place|recordin
 # Exact authority, path prefix, whether the complete path must match, schemes.
 # Sources are the public routes pinned by test_secret_guard_parity.py.
 ROUTES = (
+    ("hemerotecadigital.bn.gob.ar",
+     r"/collection/001181802/critica(?:/year/19(?:1[4-69]|[2-4][0-9]|5[0-7]))?",
+     True, ("https",)),
     ("archive.org", r"/metadata/", False, ("https",)),
     ("api.digitale-sammlungen.de", rf"/iiif/presentation/v2/{BSB_OBJECT}/manifest", True, ("https",)),
     ("api.digitale-sammlungen.de", r"/iiif/image/v2/bsb[0-9]{8}_[0-9]{5}/full/full/0/default\.jpg", True, ("https",)),
@@ -94,6 +97,18 @@ def url_finding(url: str, *, allow_wayback: bool = True) -> str | None:
     except ValueError:
         return "URL syntax: unclassified opaque token" if suspect(url) else None
     path, query, fragment = parts.path, parts.query, parts.fragment
+    if (parts.scheme == "https" and parts.netloc == "hemerotecadigital.bn.gob.ar"
+            and path == "/render.php"):
+        # Exact public issue linked by the Crítica 1947 holdings page. Project
+        # only its file locator; retain every other field and reject ambiguous
+        # repeated selector keys, including percent-encoded spellings.
+        fields = query.split("&")
+        keys = [unquote_plus(field.partition("=")[0]) for field in fields]
+        locator = "url=001181802/1947/BNA_S001181802_19470908N11872.pdf"
+        if (keys.count("url") == keys.count("system") == 1
+                and locator in fields and "system=001181802" in fields):
+            fields[fields.index(locator)] = "url=PUBLIC_ISSUE"
+            query = "&".join(fields)
     if allow_wayback and parts.scheme == "https" and parts.netloc == "web.archive.org":
         # Documented replay and CDX envelopes contain another URL. Scan that
         # target with the ordinary URL rules, without recursively projecting

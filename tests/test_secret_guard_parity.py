@@ -63,6 +63,66 @@ def decision(output: dict | None) -> str:
 
 
 class SecretGuardParityTests(unittest.TestCase):
+    def test_bn_critica_issue_locator_keeps_secret_controls(self):
+        url = ('https://hemerotecadigital.bn.gob.ar/render.php?'
+               'url=001181802/1947/BNA_S001181802_19470908N11872.pdf&system=001181802')
+        token = 'Synthetic9Opaque_' * 3
+        command = f"curl -L --max-time 60 '{url}' -o /tmp/critica-1947-09-08.pdf"
+        cases = [(command, 'allow')]
+        variants = [url + suffix for suffix in (
+            '&extra=' + token, '#' + token, '&url=other', '&%75rl=other',
+            '&system=other', '&%73ystem=other',
+        )]
+        variants += [url.replace(before, after) for before, after in (
+            ('19470908', '19470909'), ('N11872.pdf', 'N11872.pdf' + token),
+            ('system=001181802', 'system=other'), ('render.php', 'private.php'),
+            ('bn.gob.ar', 'bn.gob.ar.example.org'),
+            ('bn.gob.ar', 'bn.gob.ar@example.org'), ('https://', 'http://'),
+        )]
+        cases.extend((f"curl '{variant}'", 'deny') for variant in variants)
+        cases.extend((command + f" {option} '{token}'", 'deny') for option in ('-H', '-d'))
+        for shell, expected in cases:
+            self.assert_both(shell, expected)
+            for tool in ('functions.exec_command', 'functions.exec'):
+                content = shell if tool != 'functions.exec' else (
+                    'text(await tools.exec_command(' + json.dumps({'cmd': shell}) + '));'
+                )
+                with self.subTest(tool=tool, command=shell):
+                    self.assertEqual(decision(run_guard(GUARDS['codex'], content,
+                                                       cwd=self.repo, tool=tool)), expected)
+
+    def test_bn_critica_collection_keeps_secret_controls(self):
+        # The public collection path is 29 characters; its authority suffix
+        # joins it into a 31-character opaque-looking run in the residual scan.
+        url = 'https://hemerotecadigital.bn.gob.ar/collection/001181802/critica'
+        command = f'curl -IL --max-time 30 {url}'
+        token = 'Synthetic9Opaque_' * 3
+        cases = [(command, 'allow')]
+        year_url = url + '/year/1947'
+        cases.append((f'curl -L --max-time 30 {year_url} -o /tmp/critica-1947.html', 'allow'))
+        cases.extend((f"curl '{year_url}{suffix}'", 'deny') for suffix in (
+            '/extra', '?token=' + token, '#' + token,
+        ))
+        cases.extend((f"curl '{url}/year/{year}'", 'deny') for year in ('1917', '1958', '19470'))
+        cases.extend((unsafe, 'deny') for unsafe in (
+            f"curl '{url}?token={token}'", f"curl '{url}#{token}'",
+            f"curl '{url}/{token}'", f"curl '{url}' -H 'X-Token: {token}'",
+            f"curl '{url}' -d '{token}'",
+            f"curl '{url.replace('bn.gob.ar', 'bn.gob.ar.example.org')}'",
+            f"curl '{url.replace('bn.gob.ar', 'bn.gob.ar@example.org')}'",
+            f"curl '{url.replace('001181802', '001181803')}'",
+            f"curl '{url.replace('https://', 'http://')}'",
+        ))
+        for shell, expected in cases:
+            self.assert_both(shell, expected)
+            for tool in ('functions.exec_command', 'functions.exec'):
+                content = shell if tool != 'functions.exec' else (
+                    'text(await tools.exec_command(' + json.dumps({'cmd': shell}) + '));'
+                )
+                with self.subTest(tool=tool, command=shell):
+                    self.assertEqual(decision(run_guard(GUARDS['codex'], content,
+                                                       cwd=self.repo, tool=tool)), expected)
+
     def test_interpreter_programs_naming_a_broker(self):
         """Interpreter source is not shell text (2026-09-25 regression).
 

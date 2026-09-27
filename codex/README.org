@@ -787,6 +787,14 @@ headers and bodies remain scanned. Two exact verified Matuschak note IDs
 (=Daily working log= and =My morning writing practice=) are registered from
 the [[https://web.archive.org/web/20200812125852/https://notes.andymatuschak.org/My_morning_writing_practice][author's archived links]]; no other opaque note ID is exempt.
 
+The exact HTTPS [[https://hemerotecadigital.bn.gob.ar/collection/001181802/critica][Biblioteca Nacional Crítica collection]] route is also registered:
+its numeric identifier and hostname suffix otherwise resemble an opaque token.
+The complete route also recognizes the collection page’s observed year links
+(1914–1916 and 1919–1957). Other paths and payloads retain all checks.
+The observed 8 September 1947 issue link also permits its exact =render.php=
+file locator and collection selector. Other query fields, fragments and request
+payloads stay scanned; repeated selector keys receive no projection.
+
 The registry includes the exact HTTPS [[https://collecties.kb.nl/en/collections/collection-anny-antoine-louis-koopman/1951-1960/cahiers][KB Cahiers page]], whose collection slug
 and decade range resemble an opaque token. Only that complete authority/path
 is projected; other pages, changed paths, query/fragment values and request

@@ -63,6 +63,27 @@ def decision(output: dict | None) -> str:
 
 
 class SecretGuardParityTests(unittest.TestCase):
+    def test_verified_caretas_legacy_volume_routes(self):
+        urls = ('https://archive.org/metadata/1909carasycaretas02buenuoft',
+                'https://archive.org/download/carasycaretas1929unse_0/carasycaretas1929unse_0_djvu.txt')
+        token = 'Synthetic9Opaque_' * 3
+        for url in urls:
+            cases = [(f"curl -sS -L --max-time 45 '{url}' -o /tmp/acq-gap-1929-nd.txt", 'allow')]
+            variants = [url + suffix for suffix in ('/' + token, '?token=' + token, '#' + token)]
+            variants += [url.replace('archive.org', 'archive.org.example.org'),
+                         url.replace('1909', '1908').replace('1929unse_0', '1929unse_1')]
+            cases.extend((f"curl '{variant}'", 'deny') for variant in variants)
+            cases.append((f"curl '{url}' -d '{token}'", 'deny'))
+            for shell, expected in cases:
+                self.assert_both(shell, expected)
+                for tool in ('functions.exec_command', 'functions.exec'):
+                    content = shell if tool != 'functions.exec' else (
+                        'text(await tools.exec_command(' + json.dumps({'cmd': shell}) + '));'
+                    )
+                    with self.subTest(tool=tool, command=shell):
+                        self.assertEqual(decision(run_guard(GUARDS['codex'], content,
+                                                           cwd=self.repo, tool=tool)), expected)
+
     def test_download_then_pdftotext_keeps_network_payload_checks(self):
         directory = '/Users/pablostafforini/.local/share/tangodb/source-library/book-reviews/acq-cs2-pandemonium'
         url = 'https://repository.upb.edu.co/bitstream/handle/20.500.11912/9954/Un%20pandemonium.pdf?isAllowed=y&sequence=1'

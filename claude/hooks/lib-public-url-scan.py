@@ -28,6 +28,8 @@ ROUTES = (
      r"/collection/001181802/critica(?:/year/19(?:1[4-69]|[2-4][0-9]|5[0-7]))?",
      True, ("https",)),
     ("archive.org", rf"/metadata/{CARETAS_ITEM}", True, ("https",)),
+    ("archive.org", r"/metadata/1909carasycaretas02buenuoft", True, ("https",)),
+    ("archive.org", r"/download/carasycaretas1929unse_0/carasycaretas1929unse_0_djvu\.txt", True, ("https",)),
     ("archive.org", rf"/download/(?P<caretas>{CARETAS_ITEM})/(?P=caretas)(?:\.pdf|_djvu\.txt)", True, ("https",)),
     ("archive.org", r"/metadata/", False, ("https",)),
     ("api.digitale-sammlungen.de", rf"/iiif/presentation/v2/{BSB_OBJECT}/manifest", True, ("https",)),

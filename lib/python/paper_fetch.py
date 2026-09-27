@@ -23,8 +23,8 @@ Route order for a paper (DOI, URL or title):
    browser download; ``collect`` then verifies and installs the files.
 
 The Anna's Archive secret key is read from ``ANNAS_SECRET_KEY`` or the
-``tlon/core/annas-archive`` pass entry, never printed, and never sent to a host
-outside ``annas-archive.*``. Signed download URLs are not printed either.
+``annas-archive`` item in the Tlon 1Password Automation vault, never printed, and
+never sent to a host outside ``annas-archive.*``. Signed download URLs are not printed either.
 """
 
 from __future__ import annotations

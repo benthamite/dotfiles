@@ -21,8 +21,8 @@ Book commands return JSON. Discovery/staging/inspection require review, never
 approve a book. See agents/bibliography-policy.md and docs/book-acquisition.md.
 Exit codes: 0 ok, 2 needs-browser, 3 not-member, 4 unavailable, 5 needs-review,
 6 unknown (search incomplete), 1 error.
-The Anna's Archive key comes from ANNAS_SECRET_KEY or the tlon/core/annas-archive
-pass entry; it is never printed. Shared logic lives in lib/python/paper_fetch.py.
+The Anna's Archive key comes from ANNAS_SECRET_KEY or the annas-archive item in
+the Tlon 1Password Automation vault; it is never printed. Shared logic lives in lib/python/paper_fetch.py.
 """
 
 from __future__ import annotations

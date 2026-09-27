@@ -50,6 +50,8 @@ class RedactToolOutputTest(unittest.TestCase):
     def test_clean_output_is_left_alone(self):
         self.assertIsNone(M.replacement(bash("32 passed in 1.1s\n")))
         self.assertIsNone(M.replacement(mcp('[{"deviceId":"b92bfc41-8f89-4a0a-9a61-8cec63c6ac9f"}]')))
+        # An encoded URL contains "s%3A" inside "https%3A"; it is not a session cookie.
+        self.assertIsNone(M.replacement(bash("redirect=https%3A%2F%2Fhingedaily.substack.com%2Fpublish%2Fsettings\n")))
         # Longer digit runs (tweet ids, timestamps) are not 16-digit numbers.
         self.assertIsNone(M.replacement(bash("x.com/a/status/1790549176458123456 at 1790549176458\n")))
 

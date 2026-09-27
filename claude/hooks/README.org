@@ -169,8 +169,9 @@ date/issue identifier grammar is additionally recognized, matching 2,112 public
 search results. Its PDF and DjVu text download routes require the filename
 stem to equal the item identifier, as verified in issue 1006 metadata. Other
 identifiers and partial-read suffixes remain scanned, as do query/fragment
-values, headers and bodies. The observed 1909 Toronto volume metadata and 1929 year-end volume OCR
-file have exact public route entries. Literal =--get= searches are parsed as requests;
+values, headers and bodies. Exact public routes also cover the observed 1909
+Toronto volume metadata/OCR and 1929 year-end volume PDF/OCR. Literal =--get=
+searches are parsed as requests;
 =--data-urlencode= values retain payload scanning and output paths remain local.
 
 Local-path projection preserves real newline, semicolon and =&&= command

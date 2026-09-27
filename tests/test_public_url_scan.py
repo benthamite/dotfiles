@@ -15,6 +15,18 @@ class PublicURLScanTests(unittest.TestCase):
     URL = "https://myweb.sabanciuniv.edu/ozgurkibris/files/2008/10/kibris-sertel-scw06.pdf"
     TOKEN = "Synthetic9Opaque_" * 3
 
+    def test_verified_legacy_caretas_downloads_retain_payload_checks(self):
+        for item, suffix in (('1909carasycaretas02buenuoft', '_djvu.txt'),
+                             ('carasycaretas1929unse_0', '.pdf')):
+            url = f'https://archive.org/download/{item}/{item}{suffix}'
+            self.assertIsNone(scan.finding(f"curl -sS -L --max-time 300 '{url}' -o /tmp/acq-gap-volume.pdf"))
+            for altered in (url + '?token=' + self.TOKEN, url + '#' + self.TOKEN,
+                            url + '/' + self.TOKEN, url.replace(suffix, '.exe'),
+                            url.replace('archive.org', 'archive.org.example.org'),
+                            url.replace('archive.org', 'archive.org@example.org')):
+                self.assertIsNotNone(scan.finding(f"curl '{altered}'"))
+            self.assertIsNotNone(scan.finding(f"curl '{url}' -H '{self.TOKEN}'"))
+
     def test_local_path_projection_preserves_command_separators(self):
         helper_spec = importlib.util.spec_from_file_location(
             'inert_mentions', ROOT / 'claude/hooks/lib-inert-mentions.py')

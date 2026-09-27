@@ -63,6 +63,28 @@ def decision(output: dict | None) -> str:
 
 
 class SecretGuardParityTests(unittest.TestCase):
+    def test_bn_public_news_diagnostic_keeps_payload_checks(self):
+        url = 'https://museo.bn.gov.ar/noticias/salio-cuaderno-de-la-bn-n0-22'
+        command = ("curl -I --max-time 20 'https://hemerotecadigital.bn.gob.ar/collection/001197339/maga'\n"
+                   f"curl -I --max-time 20 '{url}'")
+        token = 'Synthetic9Opaque_' * 3
+        cases = [(command, 'allow')]
+        variants = [url + suffix for suffix in ('/' + token, '?token=' + token, '#' + token)]
+        variants += [url.replace('museo.bn.gov.ar', 'museo.bn.gov.ar.example.org'),
+                     url.replace('museo.bn.gov.ar', 'museo.bn.gov.ar@example.org'),
+                     url.replace('n0-22', 'n0-23')]
+        cases.extend((f"curl -I '{variant}'", 'deny') for variant in variants)
+        cases.append((command + f" -H '{token}'", 'deny'))
+        for shell, expected in cases:
+            self.assert_both(shell, expected)
+            for tool in ('functions.exec_command', 'functions.exec'):
+                content = shell if tool != 'functions.exec' else (
+                    'text(await tools.exec_command(' + json.dumps({'cmd': shell}) + '));'
+                )
+                with self.subTest(tool=tool, command=shell):
+                    self.assertEqual(decision(run_guard(GUARDS['codex'], content,
+                                                       cwd=self.repo, tool=tool)), expected)
+
     def test_python_data_names_are_not_process_commands(self):
         command = ("python3 - <<'PY'\nimport pathlib,json,collections\n"
                    "for kind in ['sources','references']:\n"

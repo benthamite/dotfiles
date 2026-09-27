@@ -147,6 +147,9 @@ The observed 8 September 1947 issue link also permits its exact =render.php=
 file locator and collection selector. Other query fields, fragments and request
 payloads stay scanned; repeated selector keys receive no projection.
 
+The exact =museo.bn.gov.ar/noticias/salio-cuaderno-de-la-bn-n0-22=
+public news route is recognized without relaxing certificate verification.
+
 The public =www.utorpheus.com/file/catalog/pdf_musiche/lb018.pdf= excerpt
 and Galiciana’s =/recurso/caras-y-caretas-semanario-festivo-literario/UUID=
 catalogue routes use complete HTTPS authority/path matching. Their query,

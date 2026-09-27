@@ -21,6 +21,7 @@ ENTITY = r"(?:area|artist|collection|event|genre|instrument|label|place|recordin
 # Exact authority, path prefix, whether the complete path must match, schemes.
 # Sources are the public routes pinned by test_secret_guard_parity.py.
 ROUTES = (
+    ("museo.bn.gov.ar", r"/noticias/salio-cuaderno-de-la-bn-n0-22", True, ("https",)),
     ("www.utorpheus.com", r"/file/catalog/pdf_musiche/lb018\.pdf", True, ("https",)),
     ("prensahistorica.galiciana.gal",
      rf"/recurso/caras-y-caretas-semanario-festivo-literario/{UUID}", True, ("https",)),

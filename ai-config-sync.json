@@ -714,6 +714,13 @@
       "codex": null,
       "status": "claude-only",
       "note": "Claude PostToolUse/PostToolUseFailure hook on mcp__claude-in-chrome__.*: when the bridge reports no connected browser, checks the native-messaging host chain and opens the Chrome profile mapped to this CLAUDE_CONFIG_DIR in claude/chrome-extension-profiles.json, then tells the model to retry. No Codex counterpart: Codex drives Chrome through its own plugin, not the Claude in Chrome extension."
+    },
+    {
+      "name": "redact-tool-output.py",
+      "claude": "claude/hooks/redact-tool-output.py",
+      "codex": null,
+      "status": "claude-only",
+      "note": "Claude PostToolUse hook masking credentials in Bash and MCP tool output via updatedToolOutput/updatedMCPToolOutput, reusing redact-secrets.sh patterns. No Codex counterpart yet: Codex hooks have no verified output-replacement field; tracked as a gap."
     }
   ],
   "mcp_servers": [

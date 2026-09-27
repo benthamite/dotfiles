@@ -1076,6 +1076,11 @@ Codex has no counterpart to the Claude hook =chrome-bridge-recover.py=
 Chrome plugin and =control-chrome= skill, not the Claude in Chrome extension
 whose per-account profile that hook reopens.
 
+Codex also has no counterpart to the Claude hook =redact-tool-output.py=
+(=claude-only=), which masks credentials in Bash and MCP tool output
+before the model sees it: no Codex hook field for replacing tool output has
+been verified, so credential-bearing output remains a Codex gap.
+
 * Verification
 
 After changing shared configuration, run =bin/ai-config-sync audit=. After a

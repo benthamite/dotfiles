@@ -259,7 +259,8 @@ effects before running diagnostics.
 The =dotfiles-context= skill resolves canonical sources without guessing from
 stale profile directories. It checks buffer and profile identity before tangling,
 preserves runtime-specific pairing, and binds local PR pins to the exact reviewed
-change while keeping generated files distinct from live activation.
+change while keeping generated files distinct from live activation. Agent-facing
+guidance changes first consult the shared instruction-placement policy.
 The shared rebuild helper requires runtime-, source- and token-bound completion
 evidence. It rejects unqualified cached success and keeps uncertain requests
 recorded so cooperating callers cannot silently launch a competing rebuild.
@@ -437,11 +438,10 @@ forms, opening the target thread). The global instructions only point at it,
 and the service-access routing table lives in
 [[file:context/service-access.md][context/service-access.md]] for the same reason: procedures load on demand,
 while the always-loaded file keeps one trigger line each. That routing table
-uses the extension-backed Chrome plugin for Codex automation and reserves
-=chrome-profile-open= for explicit manual page launching because it activates
-Chrome and can steal focus. It also separates page and REPL stalls from plugin
-communication failures, so a navigation timeout is recovered in a fresh tab
-rather than routed to the plugin's permission-gated new-window step.
+defines non-disruptive background research and the authorization boundary for
+live Chrome use, including tab navigation. Within authorized browser tasks it
+selects the Chrome plugin, reserves =chrome-profile-open= for manual launching,
+and separates page/REPL stalls from communication failures.
 
 Browser control is runtime-owned rather than mirrored through a tracked
 Codex-App handoff skill. Claude therefore carries no pointer skill or helper

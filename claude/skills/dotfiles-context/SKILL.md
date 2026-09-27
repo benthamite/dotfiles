@@ -10,6 +10,10 @@ Use this context to choose the correct source tree and verification path. If the
 task changes Emacs Lisp, also use `elisp-conventions` for coding, batch-test,
 rebuild, and live-verification rules.
 
+Before adding or changing agent-facing guidance, read the canonical
+[instruction placement policy](../../../agents/instruction-placement.org),
+including its permission boundary for `AGENTS.md` and `CLAUDE.md`.
+
 ## Canonical sources
 
 - `~/My Drive/dotfiles/` is the canonical dotfiles source. It is the intentional

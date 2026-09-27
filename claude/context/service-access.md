@@ -52,6 +52,14 @@ with an explicit retirement message rather than shadowing that implementation.
 
 ## Browser-only flows
 
+For background web research, use the web search/browsing tool and the mapped
+service clients or direct public downloads. Do not switch to Pablo's live Chrome
+because an HTTP request fails or a site presents a challenge. Live Chrome
+automation can steal focus even when it only opens or navigates a tab; the
+restriction is not limited to launchers or new windows. Use that browser only
+when Pablo explicitly authorizes interaction with it for the current task.
+Otherwise record the blocked route and continue through non-disruptive routes.
+
 For Codex automation that depends on an existing Chrome session, use the
 installed Chrome plugin through its `control-chrome` skill and browser client.
 Verify the connection with a read-only tab listing before navigating. A failed
@@ -74,7 +82,8 @@ communication failure only if a fresh `browser.tabs.list()` also fails.
 
 Never open a new Chrome window, and never ask to: Pablo rejected an
 agent-opened window on 2026-09-25, and a window does not fix a page stall.
-Work in tabs of the existing window. If communication still fails after the
+When live Chrome use is authorized, work in tabs of the existing window.
+If communication still fails after the
 documented checks, report which check failed.
 
 `chrome-profile-open <alias> URL` is only a launcher for a page the user wants

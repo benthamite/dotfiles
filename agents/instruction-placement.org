@@ -27,6 +27,10 @@ only when needed; enforce mechanical rules with code.
 their scope. Add to them only when the guidance is both important and likely to
 matter in nearly every session covered by that file.
 
+Edit =AGENTS.md= or =CLAUDE.md= only with Pablo's explicit permission to
+change that instruction file. A request to fix a workflow or retain a preference
+does not itself authorize such an edit. Apply the placement policy below first.
+
 * Placement Matrix
 :PROPERTIES:
 :ID:       2BFE7317-3E34-4FE7-8D93-CEDCD0BE52EF

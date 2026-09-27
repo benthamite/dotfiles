@@ -9,11 +9,18 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import plistlib
+import re
 import shutil
 import stat
 import subprocess
 import tempfile
 import uuid
+
+from codex_browser_runtime import snapshot_runtime, snapshot_tree, snapshot_app_cli, RuntimeSnapshotError
+from codex_profile_plugins import (split_profile_args, chrome_enabled,
+                                   split_working_directory, preserve_chrome_preference,
+                                   ProfilePluginsError)
 
 
 class BrowserSyncError(Exception):
@@ -22,19 +29,20 @@ class BrowserSyncError(Exception):
 
 def _run(executable, home, arguments, config_args=()):
     # Never expose MCP environment values or arbitrary CLI diagnostics.
-    if arguments[0] == "plugin" and any(
-            flag in ("-p", "--profile") or flag.startswith("--profile=")
-            for flag in config_args):
-        raise BrowserSyncError("Codex's plugin commands cannot inspect --profile settings; "
-                               "Chrome startup reconciliation requires an account configuration")
+    try:
+        if arguments[0] == "plugin":
+            config_args, _ = split_profile_args(config_args)
+        config_args, cwd = split_working_directory(config_args)
+    except ProfilePluginsError:
+        raise BrowserSyncError("Codex browser configuration options are incomplete") from None
     try:
         result = subprocess.run(
             [str(executable), *config_args, *arguments], capture_output=True, text=True,
-            env={**os.environ, "CODEX_HOME": str(home)}, timeout=120,
+            env={**os.environ, "CODEX_HOME": str(home)}, timeout=120, cwd=cwd,
         )
     except subprocess.TimeoutExpired:
         raise BrowserSyncError("Codex browser reconciliation command timed out") from None
-    except OSError:
+    except (OSError, UnicodeError):
         raise BrowserSyncError("Codex browser reconciliation command could not start") from None
     if result.returncode:
         raise BrowserSyncError("Codex browser reconciliation command failed: "
@@ -89,28 +97,75 @@ def _inspect(home, executable, config_args=()):
     plugins = _run(executable, home, ["plugin", "list", "--json"], config_args)
     chrome = next((entry for entry in plugins.get("installed", [])
                    if entry.get("pluginId") == "chrome@openai-bundled"), None)
-    if chrome is None or not chrome.get("enabled"):
+    if chrome is None:
+        return None
+    current_version = chrome.get("version")
+    if not isinstance(current_version, str) or not current_version or Path(current_version).name != current_version or current_version in (".", ".."):
+        raise BrowserSyncError("Installed Chrome version is invalid")
+    current = home / "plugins/cache/openai-bundled/chrome" / current_version
+    try:
+        _, has_profile = split_profile_args(config_args)
+    except ProfilePluginsError:
+        raise BrowserSyncError("Codex browser profile options are incomplete") from None
+    if has_profile:
+        try:
+            enabled = chrome_enabled(executable, home, config_args, current)
+        except ProfilePluginsError:
+            raise BrowserSyncError("Could not establish the profile's effective Chrome settings") from None
+    else:
+        enabled = chrome.get("enabled")
+    if not enabled:
         return None
     runtime = _run(executable, home, ["mcp", "get", "node_repl", "--json"], config_args)
+    if not runtime.get("enabled"):
+        return None
     transport = runtime.get("transport", {})
     command = Path(transport.get("command", ""))
     app = next((parent for parent in command.parents if parent.suffix == ".app"), None)
-    if (not runtime.get("enabled") or app is None
-            or command != app / "Contents/Resources/cua_node/bin/node_repl"):
+    if app is None or command != app / "Contents/Resources/cua_node/bin/node_repl":
         raise BrowserSyncError("Chrome requires reconciliation by its owning desktop app")
     _unlinked(command)
+    resources = app / "Contents/Resources"
+    env = transport.get("env", {})
+    node_path = resources / "cua_node/bin/node"
+    module_path = resources / "cua_node/lib/node_modules"
+    cli_path = resources / "codex"
+    if (not command.is_file() or not node_path.is_file() or not module_path.is_dir()
+            or env.get("NODE_REPL_NODE_PATH") != str(node_path)
+            or env.get("NODE_REPL_NODE_MODULE_DIRS") != str(module_path)):
+        raise BrowserSyncError("Custom browser runtime paths require explicit reconciliation")
+    _unlinked(node_path)
+    _unlinked(module_path)
+    _unlinked(cli_path)
+    if not cli_path.is_file() or env.get("CODEX_CLI_PATH") != str(cli_path):
+        raise BrowserSyncError("Custom browser helper CLI requires explicit reconciliation")
     bundle = app / "Contents/Resources/plugins/openai-bundled/plugins/chrome"
     bundle_files = _inventory(bundle)
     try:
-        services = json.loads(transport.get("env", {}).get("NODE_REPL_TRUSTED_SERVICES", "{}"))
+        services = json.loads(env.get("NODE_REPL_TRUSTED_SERVICES", "{}"))
         service = Path(services["browser"])
     except (ValueError, KeyError, TypeError):
         raise BrowserSyncError("Desktop browser service registration needs reconciliation") from None
     _unlinked(service)
+    try:
+        service_parts = service.relative_to(home).parts
+    except ValueError:
+        service_parts = ()
+    if (len(service_parts) != 7 or service_parts[:3] != ("plugins", "cache", "openai-bundled")
+            or service_parts[3] not in ("chrome", "browser")
+            or service_parts[5:] != ("scripts", "browser-service.mjs")):
+        raise BrowserSyncError("Custom browser service must not be replaced automatically")
+    if not isinstance(services, dict) or any(
+            not isinstance(name, str) or not re.fullmatch(r"[A-Za-z][A-Za-z0-9_-]*", name)
+            or not isinstance(value, str) or "\n" in value or "\x00" in value
+            or not (Path(value).is_absolute() or value == "@oai/sky/service")
+            or (name != "browser" and value != "@oai/sky/service" and not Path(value).is_file())
+            for name, value in services.items()):
+        raise BrowserSyncError("Trusted service registration contains an unsupported value")
     bundled_service = bundle / "scripts/browser-service.mjs"
     _unlinked(bundled_service)
-    if not service.is_file() or not bundled_service.is_file() or service.read_bytes() != bundled_service.read_bytes():
-        raise BrowserSyncError("Desktop browser runtime changed; reconcile its browser service in the app")
+    if not bundled_service.is_file():
+        raise BrowserSyncError("Desktop Chrome bundle lacks its browser RPC service")
     expected = home / ".tmp/bundled-marketplaces/openai-bundled"
     source_info = chrome.get("marketplaceSource", {})
     if source_info.get("sourceType") != "local" or source_info.get("source") != str(expected):
@@ -129,16 +184,38 @@ def _inspect(home, executable, config_args=()):
     version = metadata.get("version")
     if metadata.get("name") != "chrome" or not isinstance(version, str) or not version or Path(version).name != version or version in (".", ".."):
         raise BrowserSyncError("Bundled Chrome metadata is invalid")
-    current_version = chrome.get("version")
-    if not isinstance(current_version, str) or not current_version or Path(current_version).name != current_version or current_version in (".", ".."):
-        raise BrowserSyncError("Installed Chrome version is invalid")
-    current = home / "plugins/cache/openai-bundled/chrome" / current_version
     _unlinked(current)
+    target_service = current.parent / version / "scripts/browser-service.mjs"
+    _unlinked(target_service)
+    roots = env.get("NODE_REPL_TRUSTED_CODE_PATHS", "").split(os.pathsep)
+    if str(module_path) not in roots or any(not Path(root).is_absolute() or "\n" in root or "\x00" in root or not Path(root).is_dir() for root in roots):
+        raise BrowserSyncError("Browser runtime's existing trusted module root cannot be relocated safely")
+    trusted = False
+    for root in roots:
+        if not Path(root).is_absolute() or not Path(root).is_dir():
+            continue
+        try:
+            target_service.resolve().relative_to(Path(root).resolve())
+            trusted = True
+        except ValueError:
+            pass
+    if not trusted:
+        raise BrowserSyncError("Current Chrome service is outside existing trusted code paths")
+    info_bytes = (app / "Contents/Info.plist").read_bytes()
+    info = plistlib.loads(info_bytes)
+    app_version = info.get("CFBundleShortVersionString")
+    if not isinstance(app_version, str) or not re.fullmatch(r"[A-Za-z0-9.+_-]+", app_version):
+        raise BrowserSyncError("Desktop app version metadata is invalid")
     source_matches = _inventory(source) == bundle_files
     installed_matches = current_version == version and _inventory(current) == bundle_files
     return dict(app=app, bundle=bundle, files=bundle_files, source=source,
                 source_matches=source_matches, installed_matches=installed_matches,
-                current=current, current_version=current_version, version=version)
+                current=current, current_version=current_version, version=version,
+                services=services, target_service=target_service, app_version=app_version,
+                command=command, node_path=node_path, module_path=module_path, trust_roots=roots,
+                cli_path=cli_path,
+                app_info=info_bytes,
+                app_seal=(app / "Contents/_CodeSignature/CodeResources").read_bytes())
 
 
 def _restore_previous_cache(current, recovery, expected, work):
@@ -161,19 +238,44 @@ def _restore_previous_cache(current, recovery, expected, work):
             shutil.rmtree(replacement)
 
 
-def synchronize(codex_home: Path, executable: Path, config_args=()):
-    """Return skipped/current/updated, or fail before launching an unsafe repair.
+def _launch_overrides(state, home):
+    """Return only validated paths/version metadata, never arbitrary env values."""
+    service_store = home / ".browser-runtimes"
+    if not any(service_store.resolve().is_relative_to(Path(root).resolve())
+               for root in state["trust_roots"]):
+        raise BrowserSyncError("Retained browser service is outside existing trusted code paths")
+    try:
+        retained_runtime = snapshot_runtime(state["app"] / "Contents/Resources/cua_node",
+                                            Path.home() / ".local/share/codex-browser-runtimes")
+        retained_cli = snapshot_app_cli(state["cli_path"].parent,
+                                        Path.home() / ".local/share/codex-browser-clis")
+        retained_plugin = snapshot_tree(state["bundle"], service_store)
+    except RuntimeSnapshotError as error:
+        raise BrowserSyncError("Browser runtime retention: " + str(error)) from None
+    if ((state["app"] / "Contents/Info.plist").read_bytes() != state["app_info"]
+            or (state["app"] / "Contents/_CodeSignature/CodeResources").read_bytes() != state["app_seal"]
+            or _inventory(state["bundle"]) != state["files"]):
+        raise BrowserSyncError("Desktop app changed while preparing its browser runtime; retry after the update")
+    retained_service = retained_plugin / "scripts/browser-service.mjs"
+    retained_modules = retained_runtime / "lib/node_modules"
+    trust_roots = [str(retained_modules) if root == str(state["module_path"]) else root
+                   for root in state["trust_roots"]]
+    services = dict(state["services"])
+    services["browser"] = str(retained_service)
+    values = {
+        "mcp_servers.node_repl.command": str(retained_runtime / "bin/node_repl"),
+        "mcp_servers.node_repl.env.NODE_REPL_NODE_PATH": str(retained_runtime / "bin/node"),
+        "mcp_servers.node_repl.env.NODE_REPL_NODE_MODULE_DIRS": str(retained_modules),
+        "mcp_servers.node_repl.env.NODE_REPL_TRUSTED_CODE_PATHS": os.pathsep.join(trust_roots),
+        "mcp_servers.node_repl.env.NODE_REPL_TRUSTED_SERVICES": json.dumps(services),
+        "mcp_servers.node_repl.env.BROWSER_USE_CODEX_APP_VERSION": state["app_version"],
+        "mcp_servers.node_repl.env.CODEX_CLI_PATH": str(retained_cli / "codex"),
+    }
+    return [part for name, value in values.items() for part in ("-c", name + "=" + json.dumps(value))]
 
-    Retain previous marketplace subtrees and installed versions as recovery
-    copies. Restore older cache versions removed by the standard installer so
-    already-running sessions can continue importing their original paths.
-    """
+
+def _synchronize(codex_home, executable, config_args, launch):
     home = Path(codex_home)
-    state = _inspect(home, executable, config_args)
-    if state is None:
-        return "skipped"
-    if state["source_matches"] and state["installed_matches"]:
-        return "current"
     work = home / ".tmp/browser-sync"
     _unlinked(work)
     work.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -183,10 +285,11 @@ def synchronize(codex_home: Path, executable: Path, config_args=()):
         fcntl.flock(lock, fcntl.LOCK_EX)
         state = _inspect(home, executable, config_args)
         if state is None:
-            return "skipped"
+            return "skipped", []
+        if launch or not (state["source_matches"] and state["installed_matches"]):
+            _signature(state["app"])
         if state["source_matches"] and state["installed_matches"]:
-            return "current"
-        _signature(state["app"])
+            return "current", _launch_overrides(state, home) if launch else []
         stage = Path(tempfile.mkdtemp(prefix="stage-", dir=work))
         replacement = stage / "chrome"
         previous = work / ("previous-chrome-" + uuid.uuid4().hex)
@@ -221,11 +324,18 @@ def synchronize(codex_home: Path, executable: Path, config_args=()):
                 replacement.rename(state["source"])
                 published = True
             if not state["installed_matches"]:
-                _run(executable, home, ["plugin", "add", "chrome@openai-bundled", "--json"], config_args)
+                try:
+                    with preserve_chrome_preference(executable, home, config_args):
+                        _run(executable, home, ["plugin", "add", "chrome@openai-bundled", "--json"], config_args)
+                except ProfilePluginsError as error:
+                    raise BrowserSyncError("Chrome preference preservation: " + str(error)) from None
             verified = _inspect(home, executable, config_args)
             if verified is None or not verified["source_matches"] or not verified["installed_matches"]:
                 raise BrowserSyncError("Chrome installer did not select the desktop app's matching bundle")
-            return "updated"
+            if (verified["app_info"] != state["app_info"] or verified["app_seal"] != state["app_seal"]
+                    or verified["files"] != state["files"]):
+                raise BrowserSyncError("Desktop app changed while installing Chrome; retry after the update")
+            return "updated", _launch_overrides(verified, home) if launch else []
         except BaseException:
             if published:
                 state["source"].rename(stage / "failed-publication")
@@ -239,3 +349,22 @@ def synchronize(codex_home: Path, executable: Path, config_args=()):
             finally:
                 # Only our unpublished copied artifacts are disposable.
                 shutil.rmtree(stage)
+
+
+def synchronize(codex_home: Path, executable: Path, config_args=()):
+    """Reconcile plugin assets and return skipped/current/updated.
+
+    Session launchers must use prepare_launch to also select the matching
+    browser service. This compatibility entry point updates assets only.
+    """
+    return _synchronize(codex_home, executable, config_args, launch=False)[0]
+
+
+def prepare_launch(codex_home: Path, executable: Path, config_args=()):
+    """Synchronize the signed browser unit and return effective launch overrides.
+
+    The browser client and RPC service come from the same installed Chrome
+    bundle. Old managed service registrations and app versions are superseded
+    for this launch without editing configuration or widening trusted roots.
+    """
+    return _synchronize(codex_home, executable, config_args, launch=True)[1]

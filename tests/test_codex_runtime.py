@@ -19,6 +19,14 @@ LOADER.exec_module(runtime)
 
 
 class RuntimeTests(unittest.TestCase):
+    def test_browser_overrides_win_without_rewriting_literal_prompt(self):
+        overrides = ['-c', 'mcp_servers.node_repl.env.browser_version="new"']
+        for args in (['app-server', '--listen', 'stdio://', '-c', 'x=true'],
+                     ['exec', 'task'], ['resume', 'session']):
+            self.assertEqual(runtime.with_browser_overrides(args, overrides), args + overrides)
+        self.assertEqual(runtime.with_browser_overrides(['exec', '--', '-literal'], overrides),
+                         ['exec', *overrides, '--', '-literal'])
+
     def test_browser_reconciliation_runs_for_session_entry_points(self):
         for args in ([], ['exec', 'task'], ['resume', '--last'],
                      ['app-server'], ['-m', 'plugin', 'task'],
@@ -30,6 +38,10 @@ class RuntimeTests(unittest.TestCase):
         for args in (['--version'], ['--help'], ['plugin', 'list', '--json'],
                      ['-c', 'model="x"', 'mcp', 'get', 'node_repl'],
                      ['app-server', 'generate-json-schema'],
+                     ['app-server', 'daemon', 'version'],
+                     ['app-server', 'daemon', 'stop'],
+                     ['app-server', 'proxy'],
+                     ['exec', '--ignore-user-config', 'task'],
                      ['--remote', 'ws://localhost:9999']):
             with self.subTest(args=args):
                 self.assertIsNone(runtime.browser_launch_options(args))
@@ -44,6 +56,8 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual(runtime.browser_launch_options(args), ['-c', 'x=true'])
         self.assertEqual(runtime.browser_launch_options(
             ['--cd', '/tmp', 'exec', 'task', '-cx=true']), ['--cd', '/tmp', '-cx=true'])
+        self.assertEqual(runtime.browser_launch_options(
+            ['-preview', '-C/tmp', 'exec', 'task']), ['-preview', '-C/tmp'])
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()

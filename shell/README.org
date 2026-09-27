@@ -98,14 +98,21 @@ still need its signed executable or helper. Each current package uses about
 python3 -m unittest tests.test_codex_runtime -v
 #+end_src
 
-Local session entry points also run =bin/codex_browser_sync.py=. It detects the
-desktop app from the configured browser runtime, verifies its signature and
-the configured browser-service bytes, then repairs stale Chrome source/cache
-through the standard installer. Reconciliation uses an account lock and keeps
-older installed versions for running sessions. Incompatible services or
-unexpected/shared marketplace paths stop startup with a specific error;
-maintenance commands such as =plugin= and =mcp= still run. Remote sessions and
-direct calls to a different Codex executable are outside this launch boundary.
+Local session entry points also run =bin/codex_browser_sync.py=. It reconciles
+Chrome with the signed app owning the configured runtime and derives matching
+service/version overrides for that launch. =bin/codex_browser_runtime.py= retains
+immutable runtime, matching app helper CLI, and service assets, so app updates
+cannot remove those files. =bin/codex_profile_plugins.py= checks effective plugin
+availability for supported named-profile launches without exposing prompt data.
+
+An account lock covers inspection and repair. Earlier installed versions remain
+available after this launcher's installer cleanup; a separate desktop plugin
+refresh can still remove the skill's client cache path. Custom services,
+inadequate existing trust, and unexpected/shared marketplace paths stop startup with a specific error;
+maintenance commands remain available. Remote sessions, direct calls to another
+Codex executable, daemon/proxy management, and servers started before this
+integration are outside this launch boundary. Retained browser releases consume disk space and are not
+removed automatically while sessions may still use them.
 
 * History filtering
 

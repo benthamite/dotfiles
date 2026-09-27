@@ -146,19 +146,30 @@ The command-line =shell/shims/codex= launcher retains signed Homebrew runtimes
 so updates do not delete an executable backing a running CLI session. This
 protects CLI executable lifetime; it does not establish browser functionality.
 
-Before local session launches, that launcher also reconciles the enabled Chrome
-plugin with the signed desktop app owning the configured browser runtime.
-The account-local marketplace can otherwise remain at an older protocol even
-when the runtime and trusted browser service have been updated. The local
-=bin/codex_browser_sync.py= integration compares the app's actual bundle,
-refreshes only Chrome's source, and uses the standard plugin installer. It
-does not maintain release pins or change trusted paths. It refuses a mismatched
-browser service or a shared/foreign marketplace source before changing files.
-Maintenance commands remain available for repair. This is local lifecycle
-integration, not a claim of vendor-supported standalone browser installation.
-The CLI's plugin inventory does not accept =--profile=; profile launches are
-currently rejected explicitly rather than reconciling against the wrong
-configuration. Account-based launches and their =-c= overrides are covered.
+Before local session launches, the launcher reconciles Chrome's source and
+installed plugin with the signed desktop app owning the configured runtime.
+It derives the browser service and app-version settings from that same app,
+including when saved settings still name a previous release. Launch overrides
+are temporary: account configuration and unrelated service registrations remain
+unchanged. Custom services and foreign/shared marketplace paths are refused.
+
+The browser runtime, its modules, its matching app helper CLI, and the Chrome
+service bundle are retained as verified immutable copies. New servers use those
+paths, so a subsequent app replacement cannot remove those files. The skill's
+client import still names the installed plugin cache: this launcher preserves
+old versions across its own installer calls, but a separate desktop plugin
+refresh can remove that client path before a worker reimports it. Existing
+servers launched before this integration keep their original paths; startup reconciliation does not
+reload them or run before each turn. Retention covers local component lifetime,
+not that separate cache lifetime, extension disconnections, upstream protocol
+changes, or network outages.
+
+Named-profile runtime settings and effective Chrome availability are inspected
+through the CLI's profile-aware diagnostics; installation metadata uses the
+separate plugin commands. Neither private diagnostic output nor credentials are
+printed. This local lifecycle integration uses the standard installer and does
+not maintain release pins or weaken trust. It is not a claim that OpenAI
+supports standalone desktop browser components in every CLI environment.
 
 Model-invocable tracked skills do not preapprove bare high-risk tools through
 =allowed-tools=. Loading a skill therefore leaves Bash, write, edit, agent, and

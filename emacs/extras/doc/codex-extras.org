@@ -1,0 +1,53 @@
+#+title: codex-extras: Private native Codex integration
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: codex-extras.info
+#+texinfo_filename: codex-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Codex Extras: (codex-extras)
+#+texinfo_dir_desc: Private native Codex browser integration
+
+This manual describes the private integration in =codex-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+The dotfiles Codex launcher retains a matching Chrome runtime bundle for each
+new native Emacs session. This adapter registers that bundle's original skills
+before the server starts, resumes, or forks a thread. Registration must succeed
+before startup continues. Later skill refreshes preserve the same retained root
+while incorporating the current =codex-skill-extra-roots= setting.
+
+This integration belongs to dotfiles; the public Codex package has no dependency
+on its launcher, paths, or environment contract. It uses private advice around
+existing native startup and skill-registration functions. Ordinary launchers and
+terminal sessions keep their existing behavior. Existing processes are not
+migrated when this adapter is enabled.
+
+* Functions
+:PROPERTIES:
+:CUSTOM_ID: h:functions
+:END:
+
+#+findex: codex-extras-enable-retained-browser-skills
+Call ~codex-extras-enable-retained-browser-skills~ from the package's
+=use-package= configuration. Loading the library alone does not enable its
+advice. Calling the setup function repeatedly is safe.
+
+New native processes advertise ~CODEX_RETAIN_BROWSER_SKILL=1~ to the private
+launcher. The launcher consumes this marker and suppresses mutable Chrome
+plugin discovery only when it also selects a validated retained runtime.
+The adapter reads that process's effective configuration, validates the retained
+Chrome manifest, client, service, and skill, then waits for the supported
+=skills/extraRoots/set= acknowledgement. Missing or invalid retained files and
+registration errors stop thread startup with a concise error, without printing
+configuration or provider error payloads.
+
+Callbacks are tied to their original buffer and process. An obsolete callback
+cannot change a replacement session. Retention does not freeze a running Chrome
+application or guarantee the availability of external sites or services.

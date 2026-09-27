@@ -106,12 +106,14 @@ cannot remove those files. =bin/codex_profile_plugins.py= checks effective plugi
 availability for supported named-profile launches without exposing prompt data.
 
 An account lock covers inspection and repair. Earlier installed versions remain
-available after this launcher's installer cleanup. The Emacs app-server client
+available after this launcher's installer cleanup. The private =codex-extras= adapter
 sets =CODEX_RETAIN_BROWSER_SKILL=1= to opt into retained skill discovery. Only
 that client's direct app-server launch disables the mutable Chrome plugin;
 Emacs registers the retained skill root before starting a thread. Other launch
 modes retain their usual plugin discovery and remain vulnerable to separate
 desktop cleanup of the client cache.
+The public Emacs Codex package is unchanged; this adapter and the launcher
+together own the configuration-specific integration.
 
 Custom services, inadequate existing trust, and unexpected/shared marketplace
 paths stop startup with a specific error; maintenance commands remain available.

@@ -49,6 +49,7 @@ The extras come with their own manuals and user options: everything is documente
 - [[#early-init][early-init]]
 - [[#package-management][package management]]
   - [[#elpaca][elpaca]]
+  - [[#package-usage-log][package usage log]]
   - [[#use-package][use-package]]
   - [[#use-package-extras][use-package-extras]]
   - [[#elpaca-extras][elpaca-extras]]
@@ -403,6 +404,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#agent-log][agent-log]]
   - [[#monet][monet]]
   - [[#codex][codex]]
+  - [[#codex-extras][codex-extras]]
   - [[#mcp][mcp]]
   - [[#dall-e-shell][dall-e-shell]]
   - [[#llm][llm]]
@@ -9699,6 +9701,22 @@ otherwise create it off `origin/main'."
   :defer t
   :custom
   (codex-terminal-backend 'app-server))
+#+end_src
+
+** =codex-extras=
+:PROPERTIES:
+:ID:       ABCC5961-53E1-41FD-B7A9-C5E8BFF3F44D
+:END:
+
+Private Chrome retention integrates the dotfiles launcher with Codex session
+startup. This policy belongs to this configuration, not the public Codex package.
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-personal-package codex-extras
+  :after codex
+  :demand t
+  :config
+  (codex-extras-enable-retained-browser-skills))
 #+end_src
 
 ** =mcp=

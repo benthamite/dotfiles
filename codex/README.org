@@ -159,7 +159,7 @@ The browser runtime, its modules, its matching app helper CLI, and the Chrome
 service bundle are retained as verified immutable copies. New servers use those
 paths, so a subsequent app replacement cannot remove those files.
 
-The Emacs app-server client additionally opts into client retention with
+The private =codex-extras= adapter opts Emacs sessions into client retention with
 =CODEX_RETAIN_BROWSER_SKILL=1=. For that direct app-server launch only, the
 launcher disables the mutable Chrome plugin through a process config override.
 Before starting or resuming a thread, Emacs registers the retained bundle's
@@ -167,6 +167,8 @@ skills through =skills/extraRoots/set= and waits for acknowledgement. The
 retained =chrome:control-chrome= skill then imports its matching retained client;
 later roots updates preserve that process's pinned directory. Invalid retained
 assets or a rejected roots request stop thread startup with an explicit error.
+This integration lives entirely in dotfiles; the public Emacs Codex package
+does not contain the retained-browser policy or depend on this configuration.
 
 Ordinary CLI/exec and other app-server clients do not opt in. Their client
 import still uses the installed plugin cache, which separate desktop cleanup

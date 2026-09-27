@@ -667,6 +667,10 @@ deletes an exempt file. Moves from exempt to ordinary destinations deny because
 unchanged source contents are unavailable without reading the file. Native
 =Write=/=Edit= exceptions retain their single-destination scope.
 
+The secret guard also blocks process listings that expose arguments or
+environments, including macOS =pgrep -fl=. PID/name diagnostics remain
+available; supported forms and limits are in [[file:hooks/README.org][the hook contracts]].
+
 The secret guard denies direct agent-shell invocations of raw =op=,
 macOS =security=, and =pbpaste=, including wrappers, nested shells, process
 substitution, executable globs, and shell-word obfuscation. The retired =pass=

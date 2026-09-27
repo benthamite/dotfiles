@@ -386,6 +386,13 @@
       "note": "Claude delegates Bash; Codex extracts functions.exec calls. Both deny credential tools, classify brokers with lib-op-policy.py and permit closed Python document edits. Codex permits those edits only in a complete literal wrapper; decoded commands and original secret values remain scanned. Only Codex accepts apply_patch: lib-codex-paths.sh scopes exceptions per destination and denies moves out of secret files. Claude native Write/Edit/NotebookEdit policy and both registrations are unchanged."
     },
     {
+      "name": "lib-process-output-policy.py",
+      "claude": "claude/hooks/lib-process-output-policy.py",
+      "codex": "codex/hooks/lib-process-output-policy.py",
+      "status": "paired-utility",
+      "note": "Identical process-output classifier. Both secret guards deny process argument/environment listings before permissive branches; Codex checks decoded nested exec commands. Safe PID/name diagnostics remain available."
+    },
+    {
       "name": "lib-op-policy.py",
       "claude": "claude/hooks/lib-op-policy.py",
       "codex": "codex/hooks/lib-op-policy.py",

@@ -437,8 +437,35 @@ if [ "$TOOL_NAME" = "functions.exec" ]; then
   fi
 fi
 
+process_output_denial() {
+  local result decision
+  result=$(printf '%s' "$1" | jq -Rs . | python3 "$(dirname "$0")/lib-process-output-policy.py" 2>/dev/null) \
+    || result='{"decision":"deny","reason":"process-output classifier failed"}'
+  decision=$(printf '%s' "$result" | jq -er '.decision // "deny"' 2>/dev/null) || decision=deny
+  [ "$decision" = allow ] && return 1
+  printf '%s' "$result" | jq -er '.reason // "unclassified process-output command"' 2>/dev/null \
+    || printf '%s' 'process-output classifier returned an invalid decision'
+}
+
+deny_process_output() {
+  jq -n --arg reason "$1" '{"hookSpecificOutput": {
+    "hookEventName": "PreToolUse", "permissionDecision": "deny",
+    "permissionDecisionReason": ("BLOCKED: " + $reason + ". Process arguments and environments can contain credentials. Use PID-only pgrep or ps with explicit safe columns such as pid,ppid,comm. Filtering or redirecting unsafe output does not remove this restriction.")
+  }}'
+  exit 0
+}
+
 # --- Allowlist: commands that do not return secret-manager output ---
 if codex_shell_tool_p "$TOOL_NAME"; then
+  if [ "$TOOL_NAME" = "functions.exec" ]; then
+    for process_nested in "${SECRET_NESTED_COMMANDS[@]}"; do
+      if process_reason=$(process_output_denial "$process_nested"); then
+        deny_process_output "$process_reason"
+      fi
+    done
+  elif process_reason=$(process_output_denial "$CONTENT"); then
+    deny_process_output "$process_reason"
+  fi
   if contains_any_secret_output_command; then
     deny_secret_output_command
   fi

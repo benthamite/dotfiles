@@ -217,6 +217,18 @@ print/list=. Heredoc bodies are masked so a commit message quoting a live path i
 not read as an invocation. =ALLOW_LAUNCHAGENT_CHANGE=1= is the narrow override
 for a change Pablo has authorized, such as a temporary bootout while debugging.
 
+The secret guard also checks process-listing commands before its permissive
+branches. On macOS, =pgrep -fl= can expose credentials in process arguments;
+=ps= default/full formats and environment output have the same risk. The
+paired =lib-process-output-policy.py= permits PID-only =pgrep=, name-only
+=pgrep -l=, and explicit safe =ps= fields. Pipes and redirects do not exempt
+unsafe listings. Literal wrappers, shell substitutions and compound commands
+are checked; relevant interpreter source that cannot be classified is denied.
+Computed executable names and external script contents are outside this
+static guard's coverage. The policy is not a general output redactor.
+=tests/test_process_output_policy.py= and =tests/test_process_output_guard.py=
+cover the policy and registered guard entry points with synthetic commands.
+
 * File index
 
 | File | Purpose |
@@ -229,6 +241,7 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 | =block-long-pipeline-run-unchecked.sh= | Requires preflight, cleanliness, and checkpoint conditions for long consensus-trader jobs. |
 | =block-secret-leak.sh= | Blocks secret literals, unsafe secret-file writes, and secret-bearing output; normalizes exact public DAHR matrix routing prefixes while scanning their free-form URL tails. Inline header/body values never gain filesystem-path exemptions. |
 | =lib-op-policy.py= | Classifies 1Password broker commands for =block-secret-leak.sh=: a closed allowlist of shapes whose stdout carries no credential, everything else denied. |
+| =lib-process-output-policy.py= | Prevents process argument/environment listings through =block-secret-leak.sh=; permits PID-only =pgrep= and explicit safe =ps= columns such as =pid,ppid,comm=. |
 | =block-sensitive-read.sh= | Blocks content reads of credential-like paths while permitting narrow metadata checks and the exact value-free shell-export classifier. |
 | =block-texi-edit.sh= | Blocks direct edits to generated Texinfo and points to the Org source. |
 | =block-unguarded-ahrefs-api.sh= | Blocks paid Ahrefs calls outside the guarded quota wrapper. |

@@ -31,6 +31,13 @@ browser. Shared logic: `~/My Drive/dotfiles/lib/python/paper_fetch.py`.
    download, then Anna's SciDB. It reads the Anna's Archive key itself; never pass
    or print a key or a signed download URL.
 
+   Anna's Archive's only API is that member fast-download endpoint, which takes
+   an md5; it has no search API, and the key does not unlock search. Going from a
+   title or ISBN to an Anna's md5 therefore needs either LibGen (inside the tool)
+   or Anna's `/search` in the browser. For books, that browser step is
+   `paper-fetch book-candidates`'s `annas_browser_search` handoff
+   (`docs/book-acquisition.md`, "Anna's Archive search").
+
 2. Read `status` and act on it:
 
    | status | meaning | next step |

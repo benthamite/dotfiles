@@ -13,6 +13,12 @@ as required by the main skill before credential-backed acquisition.
 2. Run `paper-fetch book-candidates --target TARGET.json --out CANDIDATES.json`.
    Inspect status/attempts and candidate metadata. Search results and catalogue
    flags are candidates, not proof. Preserve search limits and unavailable routes.
+   Anna's Archive has no search API, so its search normally returns
+   `needs-browser` with an `annas_browser_search` handoff (exit 2 when nothing
+   else was found). Run it in Chrome, save the page with its snippet, then rerun
+   with a new `--out` plus `--annas-search-html FILE`; follow the contract's
+   "Anna's Archive search" section. A pending, truncated or `incomplete` route
+   keeps `search_complete` false.
    Register independently obtained publisher/archive PDFs with
    `paper-fetch book-register CANDIDATES.json --file LOCAL.pdf --source PUBLIC-URL --out NEW-CANDIDATES.json`.
    Use the resulting inventory for subsequent steps. Registration records the

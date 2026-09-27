@@ -82,6 +82,8 @@ CHALLENGE_MARKERS = (
 )
 DOI_RE = re.compile(r"10\.\d{4,9}/[^\s\"'<>]+", re.IGNORECASE)
 MD5_RE = re.compile(r"^[0-9a-f]{32}$")
+# A file-format token in an Anna's result line ("English [en] · RTF · 2.2MB · …").
+ANNAS_FORMAT_RE = re.compile(r"[A-Z][A-Z0-9]{1,5}")
 ARXIV_RE = re.compile(r"(?:arxiv\.org/(?:abs|pdf)/|arxiv:\s*|^)([0-9]{4}\.[0-9]{4,5}(?:v\d+)?|[a-z-]+/[0-9]{7})(?:\.pdf)?$", re.I)
 DOWNLOAD_PREFIX = "paperfetch"
 DEFAULT_DOWNLOADS_DIR = Path.home() / "Downloads"
@@ -93,6 +95,10 @@ USER_AGENT = (
 
 class PaperFetchError(Exception):
     """Configuration or environment problem that no route can work around."""
+
+
+class AnnasSearchNeedsBrowser(PaperFetchError):
+    """Anna's /search answered with its bot challenge; only a browser can run it."""
 
 
 # ---------------------------------------------------------------------------
@@ -531,6 +537,11 @@ def libgen_isbn_files(http: Http, isbn: str, *, strict: bool = False) -> list[di
                 file_ids[fid] = {"title": edition.get("title") or "", "year": str(edition.get("year") or ""),
                                  "author": edition.get("author") or "", "edition": str(edition.get("edition") or ""),
                                  "language": edition.get("language") or ""}
+    return _libgen_file_records(http, file_ids, strict=strict)
+
+
+def _libgen_file_records(http: Http, file_ids: dict[str, dict], *, strict: bool = False) -> list[dict]:
+    """LibGen file ids (mapped to their edition metadata) -> file records via ``object=f``."""
     if not file_ids:
         return []
     records: list[dict] = []
@@ -577,6 +588,53 @@ def libgen_isbn_files(http: Http, isbn: str, *, strict: bool = False) -> list[di
                 **file_ids.get(str(fid), {}),
             })
     return records
+
+
+LIBGEN_SEARCH_URL = "https://libgen.li/index.php"
+LIBGEN_SEARCH_LIMIT = 100
+
+
+def _html_text(fragment: str) -> str:
+    return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", fragment))).strip()
+
+
+def libgen_search_files(http: Http, query: str, *, strict: bool = False) -> tuple[list[dict], int]:
+    """Free-text query -> (LibGen file records, total file hits LibGen reports).
+
+    LibGen has no JSON search endpoint, but its HTML search page is not behind a
+    bot challenge. Only the file ids and edition metadata are read from the
+    results table; md5, size and scan flags come from the same ``object=f`` JSON
+    API as the ISBN route. At most LIBGEN_SEARCH_LIMIT files are returned, so a
+    total above the record count means the search was truncated.
+    """
+    response = http.get(LIBGEN_SEARCH_URL, params={"req": query, "res": str(LIBGEN_SEARCH_LIMIT), "curtab": "f"},
+                        timeout=60)
+    if response.is_challenge:
+        raise PaperFetchError(f"LibGen search answered with a bot challenge (HTTP {response.status})")
+    if response.status != 200:
+        raise PaperFetchError(f"LibGen search returned HTTP {response.status}")
+    page = response.text
+    total = re.search(r'curtab=f[^"]*">\s*Files\s*<span[^>]*>\s*([0-9]+)\s*<', page)
+    if not total:
+        raise PaperFetchError("LibGen search returned an unrecognized page")
+    total_files = int(total[1])
+    if total_files == 0:
+        return [], 0
+    table = re.search(r'id="tablelibgen".*?<tbody>(.*?)</tbody>', page, re.S)
+    rows = re.findall(r"<tr\b[^>]*>(.*?)</tr>", table[1], re.S) if table else []
+    file_ids: dict[str, dict] = {}
+    for row in rows:
+        cells = re.findall(r"<td\b[^>]*>(.*?)</td>", row, re.S)
+        fid = re.search(r"file\.php\?id=([0-9]+)", row)
+        if len(cells) < 8 or not fid:
+            raise PaperFetchError("LibGen search returned an unrecognized result row")
+        titles = [_html_text(t) for t in re.findall(r'href="edition\.php\?id=[0-9]+"[^>]*>(.*?)</a>', cells[0], re.S)]
+        title = next((t for t in titles if t and not re.fullmatch(r"[0-9X;,\s-]+", t)), "")
+        file_ids.setdefault(fid[1], {"title": title, "author": _html_text(cells[1]), "year": _html_text(cells[3]),
+                                     "edition": "", "language": _html_text(cells[4])})
+    if not file_ids:
+        raise PaperFetchError("LibGen search reported files but its result table was not recognized")
+    return _libgen_file_records(http, file_ids, strict=strict), total_files
 
 
 # ---------------------------------------------------------------------------
@@ -643,7 +701,7 @@ def parse_annas_book_results(page: str) -> list[dict]:
         lines = [line.strip() for line in html.unescape(re.sub(r"<[^>]+>", "\n", block)).splitlines()
                  if line.strip()]
         metadata = next((line for line in lines if "·" in line and
-                         re.search(r"(?:^|·)\s*(?:PDF|EPUB|DJVU|MOBI|AZW3|FB2|CBR|TXT)\s*(?:·|$)", line, re.I)), "")
+                         any(ANNAS_FORMAT_RE.fullmatch(token.strip()) for token in line.split("·"))), "")
         if not metadata:
             continue
         record = dict(md5=md5, title="", authors="", format="", size="", size_bytes=None,
@@ -653,14 +711,14 @@ def parse_annas_book_results(page: str) -> list[dict]:
                 record["size"], record["size_bytes"] = token, book_size_bytes(token)
             elif re.fullmatch(r"[12][0-9]{3}", token):
                 record["year"] = token
-            elif re.fullmatch(r"PDF|EPUB|DJVU|MOBI|AZW3|FB2|CBR|TXT", token, re.I):
+            elif ANNAS_FORMAT_RE.fullmatch(token) and not record["format"]:
                 record["format"] = token.lower()
             elif re.search(r"\[[a-z]{2,3}\]", token, re.I):
                 record["language"] = token
         meaningful = [line for line in lines if "·" not in line and line != "*"
                       and not line.startswith(("Read more", "Save", "Show more"))]
         for line in meaningful:
-            if re.search(r"\.(?:pdf|epub|djvu|mobi|azw3|fb2|cbr|txt)$", line, re.I):
+            if re.search(r"\.[A-Za-z][A-Za-z0-9]{1,4}$", line):
                 record["filename"] = line
                 break
         meaningful = [line for line in meaningful if line != record["filename"]]
@@ -676,30 +734,103 @@ def parse_annas_book_results(page: str) -> list[dict]:
     return results
 
 
+def annas_search_url(host: str, query: str) -> str:
+    return f"https://{host}/search?" + urllib.parse.urlencode({"q": query, "content": "book_any"})
+
+
+def annas_search_save_name(query: str) -> str:
+    """Download name for a browser-saved search page, stable per query."""
+    return f"{DOWNLOAD_PREFIX}-annas-search-{hashlib.sha1(query.encode()).hexdigest()[:10]}.html"
+
+
+# Runs in a tab that already shows the search results (DDoS-Guard cleared). It
+# re-fetches the page so the file holds the server HTML, without the "Recent
+# downloads" links the page's JavaScript injects, and saves it as a download.
+ANNAS_SEARCH_SNIPPET = """
+(async () => {
+  const r = await fetch(location.href, {credentials: 'include'});
+  const body = await r.text();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([body], {type: 'text/html'}));
+  a.download = __NAME__;
+  document.body.appendChild(a); a.click(); a.remove();
+  return {status: r.status, bytes: body.length};
+})()
+""".strip()
+
+
+def annas_browser_search(host: str, query: str) -> dict:
+    """The browser step that replaces the challenged CLI search for QUERY."""
+    name = annas_search_save_name(query)
+    return {"url": annas_search_url(host, query), "save_as": str(DEFAULT_DOWNLOADS_DIR / name),
+            "snippet": ANNAS_SEARCH_SNIPPET.replace("__NAME__", json.dumps(name)),
+            "rerun_with": f"--annas-search-html {DEFAULT_DOWNLOADS_DIR / name}"}
+
+
+def annas_search_page_query(page: str) -> str:
+    """The query a saved Anna's search page was produced for ('' if absent)."""
+    match = re.search(r"<input\b[^>]*\bname=[\"']q[\"'][^>]*>", page, re.I)
+    value = re.search(r"\bvalue=[\"']([^\"']*)[\"']", match[0]) if match else None
+    return html.unescape(value[1]).strip() if value else ""
+
+
+ANNAS_NO_EXACT_MATCHES = ("Anna's page listed no exact matches; it says this can be a slow-search artifact, "
+                          "so reload the search in a new tab and save it again")
+
+
+def annas_page_incomplete(page: str) -> str:
+    """Why a recognized Anna's search page may not list every match ('' if it does not say so)."""
+    return ANNAS_NO_EXACT_MATCHES if re.search(r"\bNo files found\b", page) else ""
+
+
 def search_annas_books(http: Http, query: str, base_url: str) -> list[dict]:
-    """Search book metadata through the shared HTTP client; never read a key."""
+    """Search book metadata through the shared HTTP client; never read a key.
+
+    Anna's Archive has no search API (its /llms.txt: "We don't yet have a search
+    API"); the member key only unlocks /dyn/api/fast_download.json, which needs
+    an md5. /search sits behind DDoS-Guard, so from a CLI this normally raises
+    ``AnnasSearchNeedsBrowser``; ``annas_browser_search`` names the browser step.
+    """
     host = resolve_annas_hosts(None, base_url)[0]
     response = http.get(f"https://{host}/search", params={"q": query, "content": "book_any"}, timeout=45)
     if response.is_challenge:
-        raise PaperFetchError(f"Anna's book search needs a browser (HTTP {response.status})")
+        raise AnnasSearchNeedsBrowser(
+            f"Anna's Archive has no search API and DDoS-Guard challenges /search for non-browser "
+            f"clients (HTTP {response.status}). Open the search in Chrome, save it with the snippet, and "
+            f"rerun book-candidates with --annas-search-html (docs/book-acquisition.md, "
+            f"'Anna's Archive search')")
     if response.status != 200:
         raise PaperFetchError(f"Anna's book search returned HTTP {response.status}")
     return parse_annas_book_results(response.text)
 
 
+def _libgen_candidate(record: dict) -> dict:
+    size = record.get("size_bytes")
+    size = size if isinstance(size, int) and not isinstance(size, bool) and size > 0 else None
+    return {**record, "authors": record.get("author", ""), "format": record.get("extension", ""),
+            "size_bytes": size, "size": f"{size / 1024**2:.1f}MB" if size else ""}
+
+
 def libgen_book_results(http: Http, isbn: str, *, strict: bool = False) -> list[dict]:
     """Expose existing ISBN file records without discarding inspection hints."""
-    results = []
-    for record in libgen_isbn_files(http, isbn, strict=strict):
-        size = record.get("size_bytes")
-        size = size if isinstance(size, int) and not isinstance(size, bool) and size > 0 else None
-        results.append({**record, "authors": record.get("author", ""), "format": record.get("extension", ""),
-                        "size_bytes": size, "size": f"{size / 1024**2:.1f}MB" if size else ""})
-    return results
+    return [_libgen_candidate(record) for record in libgen_isbn_files(http, isbn, strict=strict)]
 
 
-def discover_book_candidates(http: Http, target: dict, *, annas_host: str = "") -> dict:
-    """Inventory files for an explicitly identified edition, without selecting one."""
+def book_text_query(target: dict) -> str:
+    """Title/author query for full-text search routes (never the ISBN)."""
+    return target["query"] or " ".join(filter(None, (target["title"], target["author"])))
+
+
+def discover_book_candidates(http: Http, target: dict, *, annas_host: str = "",
+                             annas_search_html: str | None = None) -> dict:
+    """Inventory files for an explicitly identified edition, without selecting one.
+
+    Non-browser routes: LibGen ISBN JSON (when an ISBN is given) and LibGen
+    full-text search. Anna's Archive search has no API and is challenged for a
+    CLI; pass ANNAS_SEARCH_HTML (the page a browser saved for the same query) to
+    include it. Otherwise its attempt is ``needs-browser`` and the manifest's
+    ``annas_browser_search`` names the browser step.
+    """
     target = book_target(target)
     query = target["query"] or target["isbn"] or " ".join(filter(None, (target["title"], target["author"])))
     attempts = []
@@ -713,15 +844,46 @@ def discover_book_candidates(http: Http, target: dict, *, annas_host: str = "") 
             attempts.append({"route": "libgen-isbn", "status": "unknown", "error": str(exc)})
         except Exception as exc:
             attempts.append({"route": "libgen-isbn", "status": "error", "error": type(exc).__name__})
-    hosts = resolve_annas_hosts(http, annas_host)
+    text_query = book_text_query(target)
     try:
-        records = search_annas_books(http, query, hosts[0])
-        observations.extend(records)
-        attempts.append({"route": "annas-book-search", "status": "ok", "count": len(records), "host": hosts[0]})
+        records, total = libgen_search_files(http, text_query, strict=True)
+        observations.extend(_libgen_candidate(record) for record in records)
+        attempt = {"route": "libgen-search", "status": "ok", "query": text_query, "count": len(records),
+                   "total": total}
+        if total > len(records):
+            attempt["truncated"] = True
+        attempts.append(attempt)
     except PaperFetchError as exc:
-        attempts.append({"route": "annas-book-search", "status": "unknown", "error": str(exc), "host": hosts[0]})
+        attempts.append({"route": "libgen-search", "status": "unknown", "query": text_query, "error": str(exc)})
     except Exception as exc:
-        attempts.append({"route": "annas-book-search", "status": "error", "error": type(exc).__name__, "host": hosts[0]})
+        attempts.append({"route": "libgen-search", "status": "error", "query": text_query,
+                         "error": type(exc).__name__})
+    hosts = resolve_annas_hosts(http, annas_host)
+    browser_search = None
+    if annas_search_html is not None:
+        page_query = annas_search_page_query(annas_search_html)
+        if " ".join(page_query.split()) != " ".join(query.split()):
+            raise PaperFetchError(f"Saved Anna's search page is for {page_query!r}, not the target query {query!r}")
+        records = parse_annas_book_results(annas_search_html)
+        observations.extend(records)
+        attempt = {"route": "annas-book-search", "status": "ok", "count": len(records), "source": "browser-html"}
+        if annas_page_incomplete(annas_search_html):
+            attempt["incomplete"] = annas_page_incomplete(annas_search_html)
+        attempts.append(attempt)
+    else:
+        try:
+            records = search_annas_books(http, query, hosts[0])
+            observations.extend(records)
+            attempts.append({"route": "annas-book-search", "status": "ok", "count": len(records), "host": hosts[0]})
+        except AnnasSearchNeedsBrowser as exc:
+            browser_search = annas_browser_search(hosts[0], query)
+            attempts.append({"route": "annas-book-search", "status": "needs-browser", "error": str(exc),
+                             "host": hosts[0]})
+        except PaperFetchError as exc:
+            attempts.append({"route": "annas-book-search", "status": "unknown", "error": str(exc), "host": hosts[0]})
+        except Exception as exc:
+            attempts.append({"route": "annas-book-search", "status": "error", "error": type(exc).__name__,
+                             "host": hosts[0]})
     candidates = {}
     for record in observations:
         md5 = record["md5"]
@@ -729,10 +891,19 @@ def discover_book_candidates(http: Http, target: dict, *, annas_host: str = "") 
             candidates[md5]["observations"].append(record)
         else:
             candidates[md5] = {**record, "observations": [record]}
-    complete = all(attempt["status"] == "ok" for attempt in attempts)
-    status = "needs-review" if candidates else ("unavailable" if complete else "unknown")
-    return {"version": 1, "target": target, "query": query, "candidates": list(candidates.values()),
-            "attempts": attempts, "status": status, "search_complete": complete}
+    complete = all(attempt["status"] == "ok" and not attempt.get("truncated") and not attempt.get("incomplete")
+                   for attempt in attempts)
+    if candidates:
+        status = "needs-review"
+    elif browser_search:
+        status = "needs-browser"
+    else:
+        status = "unavailable" if complete else "unknown"
+    result = {"version": 1, "target": target, "query": query, "candidates": list(candidates.values()),
+              "attempts": attempts, "status": status, "search_complete": complete}
+    if browser_search:
+        result["annas_browser_search"] = browser_search
+    return result
 
 
 def read_book_candidates(path: Path) -> dict:

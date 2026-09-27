@@ -3,7 +3,7 @@
 
     paper-fetch get IDENT [--out DIR] [--name STEM] [--author NAME] [--md5 MD5] [--json]
     paper-fetch collect JOB.json [--out DIR] [--name STEM] [--json]
-    paper-fetch book-candidates --target TARGET.json --out CANDIDATES.json
+    paper-fetch book-candidates --target TARGET.json --out CANDIDATES.json [--annas-search-html FILE]
     paper-fetch book-register CANDIDATES.json --file LOCAL.pdf --source URL --out NEW.json
     paper-fetch book-stage CANDIDATES.json --md5 MD5 --out DIR [--file LOCAL.pdf]
     paper-fetch book-inspect LOCAL.pdf --out NEW-DIR [--pages 1,2,3,last]
@@ -131,7 +131,14 @@ def cmd_book_candidates(args: argparse.Namespace) -> int:
     destination = Path(args.out).expanduser()
     if destination.exists():
         raise pf.PaperFetchError("Candidate manifest already exists; use a new output path")
-    result = pf.discover_book_candidates(pf.Http(), target, annas_host=args.annas_host or "")
+    annas_html = None
+    if args.annas_search_html:
+        try:
+            annas_html = Path(args.annas_search_html).expanduser().read_text(encoding="utf-8", errors="replace")
+        except OSError as exc:
+            raise pf.PaperFetchError(f"Cannot read the saved Anna's search page ({type(exc).__name__})") from None
+    result = pf.discover_book_candidates(pf.Http(), target, annas_host=args.annas_host or "",
+                                         annas_search_html=annas_html)
     destination.parent.mkdir(parents=True, exist_ok=True)
     with destination.open("x") as output:
         output.write(json.dumps(result, indent=2) + "\n")
@@ -204,6 +211,8 @@ def main(argv: list[str] | None = None) -> int:
     candidates = sub.add_parser("book-candidates", help="inventory book files without selecting or downloading")
     candidates.add_argument("--target", required=True, help="JSON describing the exact edition")
     candidates.add_argument("--out", required=True, help="new candidate-manifest path outside Drive")
+    candidates.add_argument("--annas-search-html", metavar="FILE",
+                            help="Anna's search page a browser saved for the same query (Anna's has no search API)")
     candidates.set_defaults(func=cmd_book_candidates)
 
     register = sub.add_parser("book-register", help="register a local publisher/archive PDF for review")

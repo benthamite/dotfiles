@@ -544,6 +544,10 @@ records it clicks the page's Download link and falls back to the page's
 Sci-Hub link when the partner server cannot serve the file. It reports the
 tool's status taxonomy verbatim and hands a staged file to =add-bib-entry= for
 attachment.
+Anna's Archive's only API is the member fast-download endpoint, which takes an
+md5; it has no search API, so its book search runs in Chrome and
+=paper-fetch book-candidates --annas-search-html= consumes the saved page, while
+LibGen's unchallenged search covers the CLI.
 Before attachment it stores the verified document language; PDF processing keeps
 the intended file and language across buffer switches without a language prompt.
 The agent retains one explicit entry/database operation through attachment,

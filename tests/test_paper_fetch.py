@@ -208,6 +208,44 @@ BOOK_TARGET = {"title": "An Example Book", "author": "Smith, Alice", "year": "19
                "edition": "first", "language": "english", "isbn": "9780262033848"}
 
 
+def libgen_search_page(rows, total=None):
+    """LibGen index.php result page in the live layout (Files tab counter + tablelibgen rows)."""
+    body = "".join(
+        f'<tr><td><a data-toggle="tooltip" title="ID: {fid}" href="edition.php?id=7{fid}">{title} <i></i></a>'
+        f'<br><a href="edition.php?id=7{fid}"><i><font color="green"> 9780262033848; 0262033844</font></a></i> '
+        f'<nobr><span class="badge badge-primary"><a title="Book">b</a></span></nobr></td>'
+        f'<td>{author}</td><td>Publisher</td><td><nobr>{year}</nobr></td><td>English</td><td>300</td>'
+        f'<td><nobr><a href="/file.php?id={fid}">5 MB</a></nobr></td><td>pdf</td>'
+        f'<td><nobr><a title="libgen" href="/ads.php?md5={"c" * 32}"><span>1</span></a></nobr></td></tr>'
+        for fid, title, author, year in rows)
+    total = len(rows) if total is None else total
+    return (f'<a class="nav-link active " href="/index.php?req=x&res=100&curtab=f">Files '
+            f'<span class="badge badge-primary">{total}</span></a>'
+            + (f'<table class="table" id="tablelibgen"><thead><tr><th>ID</th></tr></thead><tbody>{body}</tbody></table>'
+               if rows else ""))
+
+
+# One result card in the live Anna's Archive search layout (2026-09), with a
+# format outside the old PDF/EPUB/... whitelist.
+ANNAS_RESULT_CARD = f"""
+<div class="flex pt-3 pb-3 border-b">
+  <a href="/md5/{MD5_B}" class="custom-a block mr-2"><div class="w-20"><img src="x.jpg" alt="">
+    <div class="hidden js-aarecord-list-fallback-cover"><div data-content="Pride And Prejudice"></div></div></div></a>
+  <div class="max-w-full"><div>
+    <div class="text-[9px] font-mono">lgli/2005\\Jane Austen - Pride And Prejudice [Rtf].rtf</div>
+    <a href="/md5/{MD5_B}" class="line-clamp-[3] font-semibold text-lg">Pride And Prejudice</a>
+    <a href="/search?q=Austen, Jane" class="text-sm"><span class="icon"></span> Austen, Jane</a></div>
+    <div class="text-gray-800 font-semibold text-sm">English [en] · RTF · 2.2MB · 1813 · 📕&nbsp;Book (fiction) · 🚀/lgli/lgrs/zlib · <a href="#">Save</a></div>
+  </div>
+</div>"""
+
+
+def annas_search_page(query, cards=ANNAS_RESULT_CARD):
+    return (f'<html><head><title>{query} - Search</title></head><body>'
+            f'<input type="search" tabindex="0" name="q" placeholder="Title, author" value="{query}" class="js">'
+            f'{cards}</body></html>')
+
+
 def reviewed_candidate(path, content):
     """An independently supplied review of a disposable test PDF."""
     return {"file": str(path), "sha256": hashlib.sha256(content).hexdigest(),
@@ -256,12 +294,14 @@ class BookCandidateTests(unittest.TestCase):
         files = {"9": {"md5": MD5_A, "extension": "pdf", "filesize": "", "pages": "300",
                        "scanned": "Y", "vector": "", "ocr": "Y", "locator": "scan.pdf"}}
         http = FakeHttp([
+            ("libgen.li/index.php", html(libgen_search_page([]))),
             ("libgen", lambda url, params: html(json.dumps(files if params.get("object") == "f" else editions))),
             ("/search", html("<title>DDoS-Guard</title>", 403)),
         ])
         with mock.patch.object(pf, "annas_secret_key", side_effect=AssertionError("credentials not permitted")):
             result = pf.discover_book_candidates(http, BOOK_TARGET, annas_host="annas-archive.gl")
         self.assertEqual(result["status"], "needs-review")
+        self.assertEqual([a["status"] for a in result["attempts"]], ["ok", "ok", "needs-browser"])
         self.assertFalse(result["search_complete"])
         self.assertTrue(result["candidates"][0]["scanned"])
         self.assertTrue(result["candidates"][0]["ocr"])
@@ -282,6 +322,98 @@ class BookCandidateTests(unittest.TestCase):
             {} if params.get("object") == "f" else {"1": {"files": {"9": {"f_id": "9"}}}})))])
         with self.assertRaises(pf.PaperFetchError):
             pf.libgen_isbn_files(http, "9780262033848", strict=True)
+
+    def test_libgen_text_search_reads_ids_from_html_and_files_from_json(self):
+        files = {"11": {"md5": MD5_A, "extension": "pdf", "filesize": "5000000", "scanned": "Y", "locator": "a/b.pdf"}}
+        http = FakeHttp([
+            ("libgen.li/index.php", html(libgen_search_page([("11", "An Example Book", "Smith, Alice", "1960")],
+                                                            total=250))),
+            ("json.php", lambda url, params: html(json.dumps(files))),
+        ])
+        records, total = pf.libgen_search_files(http, "An Example Book Smith", strict=True)
+        self.assertEqual(total, 250)
+        self.assertEqual(records[0]["md5"], MD5_A)
+        self.assertEqual(records[0]["title"], "An Example Book")
+        self.assertEqual(records[0]["author"], "Smith, Alice")
+        self.assertEqual(records[0]["year"], "1960")
+        self.assertEqual(records[0]["size_bytes"], 5000000)
+        self.assertEqual(http.calls[-1][1], {"object": "f", "ids": "11"})
+        empty = FakeHttp([("libgen.li/index.php", html(libgen_search_page([])))])
+        self.assertEqual(pf.libgen_search_files(empty, "nothing", strict=True), ([], 0))
+        for page in ("<html>maintenance</html>", libgen_search_page([], total=3)):
+            with self.subTest(page=page[:30]), self.assertRaises(pf.PaperFetchError):
+                pf.libgen_search_files(FakeHttp([("libgen.li/index.php", html(page))]), "x", strict=True)
+
+    def test_truncated_text_search_keeps_the_inventory_incomplete(self):
+        target = {**BOOK_TARGET, "isbn": ""}
+        files = {"11": {"md5": MD5_A, "extension": "pdf", "filesize": "5000000"}}
+        http = FakeHttp([
+            ("libgen.li/index.php", html(libgen_search_page([("11", "An Example Book", "Smith, Alice", "1960")],
+                                                            total=250))),
+            ("json.php", lambda url, params: html(json.dumps(files))),
+        ])
+        result = pf.discover_book_candidates(http, target, annas_search_html=annas_search_page(
+            "An Example Book Smith, Alice"))
+        self.assertEqual(result["status"], "needs-review")
+        self.assertTrue(result["attempts"][0]["truncated"])
+        self.assertFalse(result["search_complete"])
+
+    def test_parser_reads_the_live_result_card_layout_with_any_format(self):
+        record = pf.parse_annas_book_results(annas_search_page("Austen Pride and Prejudice"))[0]
+        self.assertEqual(record["md5"], MD5_B)
+        self.assertEqual(record["format"], "rtf")
+        self.assertEqual(record["title"], "Pride And Prejudice")
+        self.assertEqual(record["authors"], "Austen, Jane")
+        self.assertEqual(record["size_bytes"], int(2.2 * 1024**2))
+        self.assertEqual(record["year"], "1813")
+        self.assertTrue(record["filename"].endswith("[Rtf].rtf"))
+
+    def test_challenged_annas_search_names_the_browser_step_instead_of_failing_opaquely(self):
+        target = {**BOOK_TARGET, "isbn": ""}
+        http = FakeHttp([
+            ("libgen.li/index.php", html(libgen_search_page([]))),
+            ("/search", html("<title>DDoS-Guard</title>", 403)),
+        ])
+        result = pf.discover_book_candidates(http, target, annas_host="annas-archive.gl")
+        self.assertEqual(result["status"], "needs-browser")
+        attempt = result["attempts"][-1]
+        self.assertEqual(attempt["status"], "needs-browser")
+        self.assertIn("no search API", attempt["error"])
+        browser = result["annas_browser_search"]
+        self.assertEqual(browser["url"],
+                         "https://annas-archive.gl/search?q=An+Example+Book+Smith%2C+Alice&content=book_any")
+        name = pf.annas_search_save_name("An Example Book Smith, Alice")
+        self.assertTrue(browser["save_as"].endswith(name))
+        self.assertIn(json.dumps(name), browser["snippet"])
+        self.assertIn("fetch(location.href", browser["snippet"])
+        self.assertEqual(browser["rerun_with"], f"--annas-search-html {browser['save_as']}")
+
+    def test_browser_saved_annas_page_completes_the_search_only_for_the_same_query(self):
+        target = {**BOOK_TARGET, "isbn": ""}
+        http = FakeHttp([("libgen.li/index.php", html(libgen_search_page([])))])
+        result = pf.discover_book_candidates(http, target, annas_search_html=annas_search_page(
+            "An Example  Book Smith, Alice"))
+        self.assertEqual(result["status"], "needs-review")
+        self.assertTrue(result["search_complete"])
+        self.assertEqual(result["candidates"][0]["md5"], MD5_B)
+        self.assertEqual(result["attempts"][-1]["source"], "browser-html")
+        self.assertFalse(any("/search" in url for url, _ in http.calls), "saved page replaces the live search")
+        self.assertNotIn("annas_browser_search", result)
+        with self.assertRaises(pf.PaperFetchError):
+            pf.discover_book_candidates(http, target, annas_search_html=annas_search_page("Another Book"))
+
+    def test_saved_page_without_exact_matches_does_not_complete_the_search(self):
+        # Anna's shows "No files found" (sometimes spuriously, when its search is slow)
+        # above partial matches; neither the empty nor the partial list is exhaustive.
+        target = {**BOOK_TARGET, "isbn": ""}
+        http = FakeHttp([("libgen.li/index.php", html(libgen_search_page([])))])
+        for cards in ("<div>No files found.</div>", "<div>No files found.</div>" + ANNAS_RESULT_CARD):
+            with self.subTest(cards=len(cards)):
+                result = pf.discover_book_candidates(http, target, annas_search_html=annas_search_page(
+                    "An Example Book Smith, Alice", cards=cards))
+                self.assertFalse(result["search_complete"])
+                self.assertIn("slow-search", result["attempts"][-1]["incomplete"])
+                self.assertEqual(result["status"], "needs-review" if "md5" in cards else "unknown")
 
     def test_candidate_parser_preserves_unknown_size_without_claiming_fidelity(self):
         page = (f'<a href="/md5/{MD5_A}">scan.pdf</a><div>An Example Book</div><div>Alice Smith</div>'

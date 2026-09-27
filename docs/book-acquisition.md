@@ -45,7 +45,7 @@ outside Drive until the Ebib attachment operation installs a selected file.
 
 ## Identify and discover
 
-`paper-fetch book-candidates --target TARGET.json --out NEW-CANDIDATES.json`
+`paper-fetch book-candidates --target TARGET.json --out NEW-CANDIDATES.json [--annas-search-html FILE]`
 
 The target identifies the already chosen edition. The tool validates the input
 shape; it does not choose the first edition or prove the supplied identity.
@@ -64,16 +64,62 @@ BibLaTeX name string. A query can identify a pre-ISBN work.
 }
 ```
 
-Discovery queries the shared LibGen ISBN lookup when applicable and Anna's book
-search. It reads no membership credential and downloads no book. Its output is
-a version-1 manifest with `target`, `query`, `candidates`, `attempts`, `status`
-and `search_complete`. Each candidate has a unique `md5`, observed metadata,
+Discovery runs three routes. It reads no membership credential and downloads no
+book.
+
+- `libgen-isbn`: LibGen's JSON API, when the target has an ISBN.
+- `libgen-search`: LibGen's full-text search for `query`, or title plus author.
+  LibGen has no JSON search, but its HTML search page is not challenged; the
+  tool reads file ids from it and md5/size/scan flags from the JSON API. It
+  keeps the first 100 files; `truncated: true` marks a larger hit count.
+- `annas-book-search`: Anna's Archive search. From the CLI this normally ends
+  in `needs-browser`; see [Anna's Archive search](#annas-archive-search).
+
+Its output is a version-1 manifest with `target`, `query`, `candidates`,
+`attempts`, `status` and `search_complete`, plus `annas_browser_search` when
+Anna's search needs the browser. Each candidate has a unique `md5`, observed metadata,
 `format`, optional `size_bytes`, and provider `observations`. Unknown sizes are
 null. Scan/vector/OCR flags and filenames remain observations, never approval.
 Provider failures and unfamiliar layouts remain explicit in `attempts`.
 
-The output file must be new. An empty recognized search yields `unavailable`;
-an incomplete empty search yields `unknown`. Neither means global absence.
+The output file must be new. With no candidates, a pending Anna's browser
+search yields `needs-browser`; an empty recognized search yields `unavailable`;
+any other incomplete empty search yields `unknown`. None means global absence.
+`search_complete` is false while any route failed, is pending, was truncated or
+is marked `incomplete`.
+
+### Anna's Archive search
+
+Anna's Archive has no search API. Its `/llms.txt` says so ("We don't yet have a
+search API"), and its FAQ names one stable JSON API: the member
+`/dyn/api/fast_download.json`, which needs an md5. The member key does not
+unlock search, `/md5/…` pages or `/db/…` record JSON (those want a logged-in
+browser session). `/search` sits behind DDoS-Guard and answers a CLI with a
+403 challenge page on every mirror. Bulk alternatives (the
+`aa_derived_mirror_metadata` torrents) are hundreds of gigabytes; they are not
+a lookup route.
+
+So Anna's search runs in Chrome, and the CLI consumes the saved page:
+
+1. `book-candidates` exits 2 (`needs-browser`) when nothing else was found, or
+   5 with candidates from LibGen. Either way `annas_browser_search` holds `url`,
+   `snippet`, `save_as` and `rerun_with`.
+2. In a new tab you created, open `url`. The DDoS-Guard check clears on its own
+   in about ten seconds; wait until the title ends in "Search - Anna's Archive".
+3. Evaluate `snippet` in that tab. It re-fetches the page (server HTML, without
+   the "Recent downloads" links the page's JavaScript adds) and saves it as
+   `save_as` in `~/Downloads`. Confirm the file exists.
+4. Rerun `book-candidates` with the same target, a new `--out`, and
+   `rerun_with` (`--annas-search-html FILE`). The page must be for the same
+   query; its results join the inventory as `annas-archive` observations.
+
+Chrome allows one automatic download per tab. A second save in the same tab is
+dropped silently, so use a fresh tab for each search (or have Pablo allow
+automatic downloads for that Anna's host once). When the saved page says "No
+files found", Anna's attempt carries `incomplete`: its own page warns that this
+can be a slow-search artifact, and the list below it holds only partial
+matches. Reload in a new tab and save again before treating the search as
+exhaustive.
 
 ## Register an independently obtained file
 
@@ -165,7 +211,7 @@ operation's provenance and verify the installed document through that workflow.
 |---|---|---|
 | 0 | `ok` | A reviewed eligible file was selected |
 | 1 | `error` | Configuration, input or local operation failure |
-| 2 | `needs-browser` | Existing downloader needs its browser route |
+| 2 | `needs-browser` | Existing downloader needs its browser route, or discovery found nothing and Anna's search needs the browser |
 | 3 | `not-member` | Existing downloader reports lapsed membership |
 | 4 | `unavailable` | Recognized searches/routes produced no candidate |
 | 5 | `needs-review` | Normal discovery, registration, staging or inspection; or no eligible reviewed file |

@@ -13,10 +13,13 @@ Python modules loaded by resolved file path from more than one consumer.
   semantic acceptance. Tested through the command and library by
   =tests/test_bib_entry_check.py=.
 - =paper_fetch.py= — paper acquisition core behind =bin/paper-fetch=: Anna's Archive
-  domain resolution and member fast-download API, LibGen DOI lookup, SciDB parsing,
+  domain resolution and member fast-download API, LibGen DOI/ISBN lookup and
+  full-text search, SciDB parsing,
   bot-challenge detection, open-access resolution (Crossref, OpenAlex, Unpaywall,
   arXiv), PDF identity verification and browser-job generation for challenged
-  hosts. Its book interfaces inventory, register, stage and inspect candidates,
+  hosts. Anna's Archive has no search API, so its book search takes a page a
+  browser saved (=--annas-search-html=). Its book interfaces inventory, register,
+  stage and inspect candidates,
   then compare measured bytes only after explicit reviews. The website's
   =download-missing-pdfs.py= imports these interfaces as a read-only adapter;
   tested by =tests/test_paper_fetch.py=. Reads the Anna's Archive key in-process

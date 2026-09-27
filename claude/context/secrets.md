@@ -26,7 +26,10 @@ everything else including shapes it cannot place:
   redirects; a `;`, `||`, pipe or `$(…)` anywhere else denies.
 - `X=$(op-automations read REF)` used by a non-printing command in the same
   call; `read REF > file`; `read REF | pbcopy` / `gh secret set` / `wrangler
-  secret put` / `ssh-add -` / `docker login --password-stdin`.
+  secret put` / `ssh-add -` / `docker login --password-stdin`. The GitHub
+  write guard accepts the `gh secret set` pipe only as exactly
+  `BROKER read REF | gh secret set NAME -R OWNER/REPO` with a literal,
+  allowlisted repo and nothing else in the command.
 - `op-automations` may take its account selector first (`@personal`,
   `@tlon`, `@epoch`); the guard strips it and applies the same shapes, so
   `op-automations @personal read REF > file` passes and a bare

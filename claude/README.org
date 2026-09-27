@@ -1025,7 +1025,13 @@ write inside a compound command (pipes, =;=, =&&=) is refused before any
 repository check, including a real push chained after a =--dry-run= one;
 read-only GitHub commands may be piped or chained freely. A single write
 piped only into =tail=, =head=, =grep=, =wc= or =cat=, optionally after
-=2>&1=, keeps its one target and is judged like the bare write.
+=2>&1=, keeps its one target and is judged like the bare write. The one other
+compound write accepted is the sanctioned secret-provisioning pipeline
+=op-automations [@ACCOUNT] read REF | gh secret set NAME -R OWNER/REPO= (or
+=op-desktop read [--account X] REF= as the reader): exactly two stages, a
+literal =-R=/=--repo= in the =gh= stage checked against the allowlist, no
+other flags, operators or substitutions, and the 1Password policy must
+approve the same command.
 
 Only the Bash dispatcher (=pretooluse-bash.sh=) is registered for Claude, so
 its prefilter decides whether the guard runs at all. Until 2026-09-18 that

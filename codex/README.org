@@ -634,7 +634,12 @@ may be piped or chained, while a write inside a compound command is refused
 before any repository check, including a real push chained after a
 =--dry-run= one. A single write piped only into =tail=, =head=, =grep=, =wc=
 or =cat=, optionally after =2>&1=, keeps its one target and is judged like
-the bare write. A
+the bare write. The one other compound write accepted is the sanctioned
+secret-provisioning pipeline =op-automations [@ACCOUNT] read REF | gh secret
+set NAME -R OWNER/REPO= (or =op-desktop read [--account X] REF= as the
+reader): exactly two stages, a literal =-R=/=--repo= in the =gh= stage checked
+against the allowlist, no other flags, operators or substitutions, and the
+1Password policy must approve the same command. A
 registry match falls through silently rather than explicitly approving the
 write, including for pull-request merges, so the normal permission layer and
 the global user-authorization rule still apply.

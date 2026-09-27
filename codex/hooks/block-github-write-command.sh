@@ -260,9 +260,15 @@ deny_if_compound() {
 }
 
 require_allowed_repo() {
+    deny_if_compound
+    require_allowed_segment_repo "$@"
+}
+
+# The allowlist check alone, for a caller that has already bound REPO to the
+# one segment that writes.
+require_allowed_segment_repo() {
     local action="$1"
     local repo="$2"
-    deny_if_compound
     if [ -z "$repo" ]; then
 	deny "$action has no unambiguous repository target" "The guard blocks ambiguous GitHub writes. Make the target repo explicit; use the allowlist only after Pablo explicitly authorizes agent writes to it."
     fi
@@ -462,6 +468,89 @@ for index, char in enumerate(source):
 raise SystemExit(1)
 '
 }
+
+# The one compound write this guard accepts: the sanctioned
+# `BROKER read REF | gh secret set NAME -R OWNER/REPO` pipeline from
+# context/secrets.md. The first stage runs no GitHub command and names no
+# repository, so the second stage's literal -R/--repo is the only target and
+# nothing can be lent to it. Anything beyond exactly these two stages (another
+# pipe, `;`, `&&`, `||`, a subshell, a substitution, a redirect, an assignment,
+# a comment, a glob, any other gh or git command, any other gh secret flag)
+# fails the match and meets the ordinary compound denial. Prints the lowercase
+# OWNER/REPO and exits 0 on a match, exits 1 otherwise.
+broker_secret_pipeline_repo() {
+    printf '%s' "$COMMAND" | python3 -c '
+import re
+import shlex
+import sys
+
+source = sys.stdin.read()
+if any(char in source for char in ";&<>()$`\\\n{}#*?[]~!") or source.count("|") != 1:
+    raise SystemExit(1)
+first, second = source.split("|")
+try:
+    reader = shlex.split(first)
+    writer = shlex.split(second)
+except ValueError:
+    raise SystemExit(1)
+
+REF = re.compile(r"op://[^\s]+")
+ACCOUNTS = {"@epoch", "@personal", "@tlon"}
+if reader[:1] == ["op-automations"]:
+    rest = reader[1:]
+    if rest[:1] and rest[0] in ACCOUNTS:
+        rest = rest[1:]
+    reader_ok = len(rest) == 2 and rest[0] == "read" and REF.fullmatch(rest[1])
+elif reader[:1] == ["op-desktop"]:
+    rest = reader[1:]
+    if rest[:1] == ["read"]:
+        rest = rest[1:]
+        if rest[:1] == ["--account"] and len(rest) >= 2:
+            rest = rest[2:]
+        elif rest[:1] and rest[0].startswith("--account="):
+            rest = rest[1:]
+        reader_ok = len(rest) == 1 and REF.fullmatch(rest[0])
+    else:
+        reader_ok = False
+else:
+    reader_ok = False
+if not reader_ok:
+    raise SystemExit(1)
+
+if writer[:3] != ["gh", "secret", "set"]:
+    raise SystemExit(1)
+REPO = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
+names, repos, index, args = [], [], 0, writer[3:]
+while index < len(args):
+    word = args[index]
+    if word in ("-R", "--repo"):
+        if index + 1 >= len(args):
+            raise SystemExit(1)
+        repos.append(args[index + 1])
+        index += 2
+        continue
+    if word.startswith("--repo="):
+        repos.append(word[len("--repo="):])
+    elif word.startswith("-"):
+        raise SystemExit(1)
+    else:
+        names.append(word)
+    index += 1
+if len(names) != 1 or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", names[0]):
+    raise SystemExit(1)
+if len(repos) != 1 or not REPO.fullmatch(repos[0]):
+    raise SystemExit(1)
+print(repos[0].lower(), end="")
+'
+}
+
+# The 1Password classifier must approve the same command; otherwise the
+# pipeline gets no exception here and falls through to the compound denial.
+if pipeline_repo=$(broker_secret_pipeline_repo) &&
+	printf '%s' "$COMMAND" | python3 "$SCRIPT_DIR/lib-op-policy.py" | grep -q '"decision": "allow"'; then
+    require_allowed_segment_repo "gh secret/variable write operation" "$pipeline_repo"
+    exit 0
+fi
 
 if git_push_command_p; then
   # The dry-run shortcut reads the whole command, so a compound command

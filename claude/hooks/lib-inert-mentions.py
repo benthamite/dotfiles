@@ -232,7 +232,10 @@ def mask_local_read_paths(command: str) -> str:
                 tokens[start + position] = replacement
                 changed = True
         start = end + 1
-    return shlex.join(tokens) if changed else command
+    # These separators were unquoted in the original command; quoting them
+    # would turn command boundaries into arguments for the downstream parser.
+    return " ".join(token if token in boundaries else shlex.quote(token)
+                    for token in tokens) if changed else command
 
 
 def main() -> int:

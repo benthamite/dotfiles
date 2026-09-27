@@ -820,6 +820,11 @@ The observed 8 September 1947 issue link also permits its exact =render.php=
 file locator and collection selector. Other query fields, fragments and request
 payloads stay scanned; repeated selector keys receive no projection.
 
+The public =www.utorpheus.com/file/catalog/pdf_musiche/lb018.pdf= excerpt
+and Galiciana’s =/recurso/caras-y-caretas-semanario-festivo-literario/UUID=
+catalogue routes use complete HTTPS authority/path matching. Their query,
+fragment and request payloads retain the ordinary checks.
+
 The registry includes the exact HTTPS [[https://collecties.kb.nl/en/collections/collection-anny-antoine-louis-koopman/1951-1960/cahiers][KB Cahiers page]], whose collection slug
 and decade range resemble an opaque token. Only that complete authority/path
 is projected; other pages, changed paths, query/fragment values and request
@@ -839,6 +844,13 @@ stem to equal the item identifier, as verified in issue 1006 metadata. Other
 identifiers and partial-read suffixes remain scanned, as do query/fragment
 values, headers and bodies. Literal =--get= searches are parsed as requests;
 =--data-urlencode= values retain payload scanning and output paths remain local.
+
+Local-path projection preserves real newline, semicolon and =&&= command
+boundaries; it does not quote them into inert arguments. Request payloads
+remain scanned across every command in a sequence.
+A closed =pdftotext= reader form accepts optional positive =-f= / =-l=
+page bounds, one absolute PDF pathname and stdout. Only its local pathname
+is projected; pipelines, wrappers, passwords and unknown options stay scanned.
 
 The network heuristic treats dots and hyphens as part of names, so =curl.py=,
 =curl-cffi= and =zotra-use-curl= do not activate it. Actual

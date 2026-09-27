@@ -21,6 +21,9 @@ ENTITY = r"(?:area|artist|collection|event|genre|instrument|label|place|recordin
 # Exact authority, path prefix, whether the complete path must match, schemes.
 # Sources are the public routes pinned by test_secret_guard_parity.py.
 ROUTES = (
+    ("www.utorpheus.com", r"/file/catalog/pdf_musiche/lb018\.pdf", True, ("https",)),
+    ("prensahistorica.galiciana.gal",
+     rf"/recurso/caras-y-caretas-semanario-festivo-literario/{UUID}", True, ("https",)),
     ("hemerotecadigital.bn.gob.ar",
      r"/collection/001181802/critica(?:/year/19(?:1[4-69]|[2-4][0-9]|5[0-7]))?",
      True, ("https",)),
@@ -222,6 +225,21 @@ def literal_tokens(command: str) -> list[tuple[str, bool]] | None:
 
 def arguments(tokens: list[str]) -> list[tuple[str, str]] | None:
     """Recognize literal download/setup argv, preserving option-value roles."""
+    if tokens and tokens[0] == "pdftotext":
+        # Closed local-reader form: page bounds, one absolute PDF, stdout.
+        # Passwords, unknown options, destinations and wrappers stay scanned.
+        index, seen = 1, set()
+        while index < len(tokens) and tokens[index] in {"-f", "-l"}:
+            option = tokens[index]
+            if (option in seen or index + 1 >= len(tokens)
+                    or not re.fullmatch(r"[1-9][0-9]{0,5}", tokens[index + 1])):
+                return None
+            seen.add(option)
+            index += 2
+        if (len(tokens[index:]) == 2 and tokens[-1] == "-"
+                and re.fullmatch(r"/[A-Za-z0-9_./ -]+\.pdf", tokens[index])):
+            return [("local-read-path", tokens[index])]
+        return None
     # An isolated, literal mkdir -p often prepares a download's destination.
     # These absolute directory names are local, even in a network command list.
     if (len(tokens) >= 3 and tokens[:2] == ["mkdir", "-p"]
@@ -300,7 +318,7 @@ def finding(command: str) -> str | None:
             # Classify it here, after quote-aware argv parsing: a quoted URL's
             # '&' may prevent the earlier shell-wide file-path projection.
             # Known-secret checks still inspect the full original command.
-            if role == "output-file" or (role == "local-directory" and not piped):
+            if role == "output-file" or (role in {"local-directory", "local-read-path"} and not piped):
                 continue
             if role == "URL":
                 issue = url_finding(value)

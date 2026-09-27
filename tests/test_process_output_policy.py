@@ -8,6 +8,12 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 ALLOW = [
+    "python3 - <<'PY'\nimport pathlib,json,collections\nfor kind in ['sources','references']:\n ps=list(pathlib.Path('research/source-catalog',kind).glob('acq-forum3-*.json'));print(kind,len(ps),collections.Counter(p.stem.split('-')[2] for p in ps))\nPY",
+    "python3 - <<'PY'\nlabel='á'; ps=[1,2]; print(len(ps))\nPY",
+    "python3 - <<'PY'\nlabel='a\u2028xé';\nps=[]; print(len(ps))\nPY",
+    "python3 - <<'PY'\nlabel='a\fxé';\nps=[]; print(len(ps))\nPY",
+    "python3 - <<'PY'\nlabel='a'\rps=[]; print(len(ps))\nPY",
+    "python3 - <<'PY'\npgrep=[1,2]; print(len(pgrep))\nPY",
     "pgrep emacs", "pgrep -f mcp", "pgrep -l emacs",
     "ps -axo pid,comm", "ps axo pid,ppid,comm,etime", "ps -p 12 -o pid= -o comm=",
     "ps -axo pid,comm | rg emacs", "env command /bin/ps -axo pid,comm",
@@ -21,6 +27,14 @@ ALLOW = [
     "printf '%s' \"$(pgrep -f emacs)\"", "# pgrep -fl mcp\ntrue",
 ]
 DENY = [
+    *["python3 - <<'PY'\n" + body + "\nPY" for body in (
+        "ps()", "ps.cmdline()", "ps.foo.bar()", "psutil = object()",
+        "import subprocess as ps", "# ps command\nprint(1)",
+        "import subprocess\nps='ps'; subprocess.run([ps,'aux'])",
+        "import subprocess\ncommand='ps aux'; subprocess.run(command)",
+        "ps = open('/proc/123/cmdline').read(); print(ps)", "ps = [",
+    )],
+    "python3 - <<PY\nps=[]; print('$(ps aux)')\nPY",
     "cat /proc/123/cmdline", "head /proc/123/environ",
     "cat <<'DATA'\nhello\nDATA\npython3 <<'PY'\nimport os\nos.system('ps aux')\nPY\n",
     "sudo --user root pgrep -fl mcp", "sudo --group staff ps aux",

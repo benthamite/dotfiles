@@ -5,6 +5,7 @@ Read a JSON command string (or {"cmd": string}); emit allow/deny JSON.
 Literal wrappers, compound commands, shell -c, and substitutions are covered.
 Computed executable names and programs loaded from external files are not.
 """
+import ast
 import importlib.util
 import json
 from pathlib import Path
@@ -114,6 +115,35 @@ def unwrap(words):
             else: break
     return words
 
+def project_python_names(source):
+    """Mask only ordinary ps/pgrep variable names, never executable evidence."""
+    try:
+        normalized = source.replace("\r\n", "\n").replace("\r", "\n")
+        tree = ast.parse(normalized)
+    except (SyntaxError, ValueError, RecursionError):
+        return source
+    source = normalized
+    protected = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Attribute):
+            protected.update(ast.walk(node.value))
+        elif isinstance(node, ast.Call):
+            protected.update(ast.walk(node.func))
+    lines = source.split("\n")
+    offsets, total = [], 0
+    for line in lines:
+        offsets.append(total)
+        total += len(line.encode("utf-8")) + 1
+    data = bytearray(source.encode("utf-8"))
+    for node in ast.walk(tree):
+        if (isinstance(node, ast.Name) and node.id in {"ps", "pgrep"}
+                and node not in protected):
+            start = offsets[node.lineno - 1] + node.col_offset
+            end = offsets[node.end_lineno - 1] + node.end_col_offset
+            data[start:end] = b"_" * (end - start)
+    return data.decode("utf-8")
+
+
 def classify(source, depth=0):
     if depth > 8: raise Denied("nested process inspection exceeds the classifier limit")
     relevant = RELEVANT.search(re.sub(r"[\\'\"]", "", source))
@@ -131,7 +161,11 @@ def classify(source, depth=0):
         base = Path(head[0].text).name if head else ""
         if base in SHELLS: classify(body, depth + 1)
         elif not match[1] or base not in {"cat", "tee", "sed", "grep", "rg"}:
-            if RELEVANT.search(body): raise Denied("process inspection inside interpreter source requires a directly checked shell command")
+            inspected = body
+            if (match[1] and re.fullmatch(r"python[0-9.]*", base)
+                    and [word.text for word in head[1:]] in ([], ["-"])):
+                inspected = project_python_names(body)
+            if RELEVANT.search(inspected): raise Denied("process inspection inside interpreter source requires a directly checked shell command")
         source = prefix + "\n" + source[match.end() + end.end():]
         match = re.search(r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n", source)
     try:

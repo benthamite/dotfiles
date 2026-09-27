@@ -63,6 +63,28 @@ def decision(output: dict | None) -> str:
 
 
 class SecretGuardParityTests(unittest.TestCase):
+    def test_python_data_names_are_not_process_commands(self):
+        command = ("python3 - <<'PY'\nimport pathlib,json,collections\n"
+                   "for kind in ['sources','references']:\n"
+                   " ps=list(pathlib.Path('research/source-catalog',kind).glob('acq-forum3-*.json'));"
+                   "print(kind,len(ps),collections.Counter(p.stem.split('-')[2] for p in ps))\nPY")
+        cases = [(command, 'allow')]
+        cases.extend(("python3 - <<'PY'\n" + body + "\nPY", 'deny') for body in (
+            "ps()", "ps.cmdline()", "import psutil\nprint(psutil.Process().cmdline())",
+            "import subprocess\nps='ps'; subprocess.run([ps,'aux'])",
+            "ps = open('/proc/123/cmdline').read(); print(ps)",
+        ))
+        cases.append(("python3 - <<PY\nps=[]; print('$(ps aux)')\nPY", 'deny'))
+        for shell, expected in cases:
+            self.assert_both(shell, expected)
+            for tool in ('functions.exec_command', 'functions.exec'):
+                content = shell if tool != 'functions.exec' else (
+                    'text(await tools.exec_command(' + json.dumps({'cmd': shell}) + '));'
+                )
+                with self.subTest(tool=tool, command=shell):
+                    self.assertEqual(decision(run_guard(GUARDS['codex'], content,
+                                                       cwd=self.repo, tool=tool)), expected)
+
     def test_verified_caretas_legacy_volume_routes(self):
         urls = ('https://archive.org/metadata/1909carasycaretas02buenuoft',
                 'https://archive.org/download/carasycaretas1929unse_0/carasycaretas1929unse_0_djvu.txt')

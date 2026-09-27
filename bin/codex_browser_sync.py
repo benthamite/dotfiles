@@ -238,7 +238,7 @@ def _restore_previous_cache(current, recovery, expected, work):
             shutil.rmtree(replacement)
 
 
-def _launch_overrides(state, home):
+def _launch_overrides(state, home, pin_client=False):
     """Return only validated paths/version metadata, never arbitrary env values."""
     service_store = home / ".browser-runtimes"
     if not any(service_store.resolve().is_relative_to(Path(root).resolve())
@@ -271,10 +271,17 @@ def _launch_overrides(state, home):
         "mcp_servers.node_repl.env.BROWSER_USE_CODEX_APP_VERSION": state["app_version"],
         "mcp_servers.node_repl.env.CODEX_CLI_PATH": str(retained_cli / "codex"),
     }
+    if pin_client:
+        if not (retained_plugin / "skills/control-chrome/SKILL.md").is_file():
+            raise BrowserSyncError("Retained Chrome bundle lacks its browser skill")
+        # The opted-in Emacs client registers the retained skill root before
+        # starting a thread. Suppress the whole mutable plugin so later cache
+        # refreshes cannot introduce a second, mismatched client version.
+        values["plugins.chrome@openai-bundled.enabled"] = False
     return [part for name, value in values.items() for part in ("-c", name + "=" + json.dumps(value))]
 
 
-def _synchronize(codex_home, executable, config_args, launch):
+def _synchronize(codex_home, executable, config_args, launch, pin_client=False):
     home = Path(codex_home)
     work = home / ".tmp/browser-sync"
     _unlinked(work)
@@ -289,7 +296,7 @@ def _synchronize(codex_home, executable, config_args, launch):
         if launch or not (state["source_matches"] and state["installed_matches"]):
             _signature(state["app"])
         if state["source_matches"] and state["installed_matches"]:
-            return "current", _launch_overrides(state, home) if launch else []
+            return "current", _launch_overrides(state, home, pin_client) if launch else []
         stage = Path(tempfile.mkdtemp(prefix="stage-", dir=work))
         replacement = stage / "chrome"
         previous = work / ("previous-chrome-" + uuid.uuid4().hex)
@@ -335,7 +342,7 @@ def _synchronize(codex_home, executable, config_args, launch):
             if (verified["app_info"] != state["app_info"] or verified["app_seal"] != state["app_seal"]
                     or verified["files"] != state["files"]):
                 raise BrowserSyncError("Desktop app changed while installing Chrome; retry after the update")
-            return "updated", _launch_overrides(verified, home) if launch else []
+            return "updated", _launch_overrides(verified, home, pin_client) if launch else []
         except BaseException:
             if published:
                 state["source"].rename(stage / "failed-publication")
@@ -360,11 +367,15 @@ def synchronize(codex_home: Path, executable: Path, config_args=()):
     return _synchronize(codex_home, executable, config_args, launch=False)[0]
 
 
-def prepare_launch(codex_home: Path, executable: Path, config_args=()):
+def prepare_launch(codex_home: Path, executable: Path, config_args=(), *, pin_client=False):
     """Synchronize the signed browser unit and return effective launch overrides.
 
     The browser client and RPC service come from the same installed Chrome
     bundle. Old managed service registrations and app versions are superseded
     for this launch without editing configuration or widening trusted roots.
+    PIN_CLIENT is only for clients that register the retained skill root through
+    skills/extraRoots/set before creating a thread; ordinary CLI launches leave
+    the installed plugin enabled.
     """
-    return _synchronize(codex_home, executable, config_args, launch=True)[1]
+    return _synchronize(codex_home, executable, config_args, launch=True,
+                        pin_client=pin_client)[1]

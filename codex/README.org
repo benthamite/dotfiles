@@ -157,14 +157,22 @@ unchanged. Custom services and foreign/shared marketplace paths are refused.
 
 The browser runtime, its modules, its matching app helper CLI, and the Chrome
 service bundle are retained as verified immutable copies. New servers use those
-paths, so a subsequent app replacement cannot remove those files. The skill's
-client import still names the installed plugin cache: this launcher preserves
-old versions across its own installer calls, but a separate desktop plugin
-refresh can remove that client path before a worker reimports it. Existing
-servers launched before this integration keep their original paths; startup reconciliation does not
-reload them or run before each turn. Retention covers local component lifetime,
-not that separate cache lifetime, extension disconnections, upstream protocol
-changes, or network outages.
+paths, so a subsequent app replacement cannot remove those files.
+
+The Emacs app-server client additionally opts into client retention with
+=CODEX_RETAIN_BROWSER_SKILL=1=. For that direct app-server launch only, the
+launcher disables the mutable Chrome plugin through a process config override.
+Before starting or resuming a thread, Emacs registers the retained bundle's
+skills through =skills/extraRoots/set= and waits for acknowledgement. The
+retained =chrome:control-chrome= skill then imports its matching retained client;
+later roots updates preserve that process's pinned directory. Invalid retained
+assets or a rejected roots request stop thread startup with an explicit error.
+
+Ordinary CLI/exec and other app-server clients do not opt in. Their client
+import still uses the installed plugin cache, which separate desktop cleanup
+can remove. Existing servers keep their original paths; this integration does
+not reload them. Retention covers local component lifetime, not extension
+disconnections, upstream protocol changes, or network outages.
 
 Named-profile runtime settings and effective Chrome availability are inspected
 through the CLI's profile-aware diagnostics; installation metadata uses the

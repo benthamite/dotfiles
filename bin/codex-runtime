@@ -17,7 +17,13 @@ class RuntimeErrorDetected(Exception):
 
 
 def browser_launch_options(arguments):
-    """Return config flags for local session launches, None for maintenance.
+    """Return config flags for local session launches, None for maintenance."""
+    launch = browser_launch(arguments)
+    return None if launch is None else launch[0]
+
+
+def browser_launch(arguments):
+    """Return configuration flags and the actual local session command.
 
     Parse option values before identifying a command so a model or path named
     'plugin' does not accidentally exempt a real session from reconciliation.
@@ -34,6 +40,7 @@ def browser_launch_options(arguments):
     flags = []
     index = 0
     command_seen = False
+    command = None
     while index < len(arguments):
         arg = arguments[index]
         key = arg.split('=', 1)[0]
@@ -63,12 +70,20 @@ def browser_launch_options(arguments):
                     for item in arguments[index + 1:]):
                 return None
             if not command_seen and arg in {'exec', 'e', 'review', 'resume', 'fork', 'app-server'}:
+                command = arg
                 command_seen = True
                 index += 1
                 continue
             command_seen = True  # Prompt/session id; flags can still follow it.
         index += 1
-    return flags
+    return flags, command
+
+
+def consume_browser_client_pin(launch, environment):
+    """Consume the aware-client marker so nested tool launches cannot inherit it."""
+    marker = environment.pop('CODEX_RETAIN_BROWSER_SKILL', None)
+    return (launch is not None and launch[1] == 'app-server'
+            and marker == '1')
 
 
 def installed_package():
@@ -158,13 +173,15 @@ def main():
     arguments = sys.argv[1:]
     try:
         executable = snapshot(installed_package(), Path.home() / '.local/share/codex-runtimes')
-        config_flags = browser_launch_options(sys.argv[1:])
-        if config_flags is not None:
+        launch = browser_launch(sys.argv[1:])
+        pin_client = consume_browser_client_pin(launch, os.environ)
+        if launch is not None:
             from codex_browser_sync import prepare_launch, BrowserSyncError
             try:
                 overrides = prepare_launch(
                     Path(os.environ.get('CODEX_HOME', str(Path.home() / '.codex'))),
-                    executable, config_args=config_flags)
+                    executable, config_args=launch[0],
+                    pin_client=pin_client)
                 arguments = with_browser_overrides(arguments, overrides)
             except BrowserSyncError as error:
                 raise RuntimeErrorDetected(str(error)) from error

@@ -272,11 +272,24 @@ class BrowserSyncTests(unittest.TestCase):
                          ["mcp", "get", "node_repl", "--json"], ("-C", str(project)))
         self.assertEqual(result["transport"]["command"], "PROJECT")
 
-    def launch_values(self):
-        overrides = sync.prepare_launch(self.home, self.root / "codex")
+    def launch_values(self, **options):
+        overrides = sync.prepare_launch(self.home, self.root / "codex", **options)
         self.assertEqual(overrides[::2], ["-c"] * (len(overrides) // 2))
         return {name: json.loads(value) for name, value in
                 (item.split("=", 1) for item in overrides[1::2])}
+
+    def test_only_aware_clients_suppress_mutable_chrome_plugin(self):
+        self.assertNotIn("plugins.chrome@openai-bundled.enabled", self.launch_values())
+        values = self.launch_values(pin_client=True)
+        self.assertIs(values["plugins.chrome@openai-bundled.enabled"], False)
+        services = json.loads(values["mcp_servers.node_repl.env.NODE_REPL_TRUSTED_SERVICES"])
+        self.assertIn(".browser-runtimes", services["browser"])
+        self.assertIs(self.enabled, True)
+
+    def test_client_pinning_rejects_bundle_without_skill(self):
+        (self.bundle / "skills/control-chrome/SKILL.md").unlink()
+        with self.assertRaisesRegex(sync.BrowserSyncError, "lacks its browser skill"):
+            self.launch_values(pin_client=True)
 
     def test_app_releases_refresh_client_service_and_version_as_unit(self):
         original_runtime = json.dumps(self.runtime, sort_keys=True)

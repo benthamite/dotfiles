@@ -19,6 +19,24 @@ LOADER.exec_module(runtime)
 
 
 class RuntimeTests(unittest.TestCase):
+    def test_client_pinning_requires_aware_client_and_actual_server_command(self):
+        aware = {'CODEX_RETAIN_BROWSER_SKILL': '1'}
+        for args in (['app-server'], ['-C', '/tmp', 'app-server', '--listen', 'stdio://']):
+            launch = runtime.browser_launch(args)
+            self.assertTrue(runtime.consume_browser_client_pin(launch, aware.copy()))
+            self.assertFalse(runtime.consume_browser_client_pin(launch, {}))
+        for args in ([], ['exec', 'app-server'], ['--', 'app-server'],
+                     ['-m', 'app-server', 'prompt'], ['app-server', 'proxy'],
+                     ['app-server', 'daemon', 'start']):
+            self.assertFalse(runtime.consume_browser_client_pin(runtime.browser_launch(args), aware.copy()))
+
+    def test_nested_commands_cannot_inherit_client_pinning_capability(self):
+        for launch in (runtime.browser_launch(['app-server']),
+                       runtime.browser_launch(['exec', 'task']), None):
+            environment = {'CODEX_RETAIN_BROWSER_SKILL': '1', 'OTHER': 'preserved'}
+            runtime.consume_browser_client_pin(launch, environment)
+            self.assertEqual(environment, {'OTHER': 'preserved'})
+
     def test_browser_overrides_win_without_rewriting_literal_prompt(self):
         overrides = ['-c', 'mcp_servers.node_repl.env.browser_version="new"']
         for args in (['app-server', '--listen', 'stdio://', '-c', 'x=true'],

@@ -2221,13 +2221,19 @@ def normalized_global_instruction_text(path: Path) -> str:
         "use full `pass` paths and `pass find`, not `pass ls` grep."
     )
     text = text.replace(codex_secrets_rule, "- @context/secrets.md")
-    claude_self_serve_clause = (
-        "including browser automation: if the session lacks browser tools, ask me to enable "
-        "`claude-in-chrome` (type `/chrome`, or restart with `--chrome`) rather than asking me "
-        "to perform the browser steps manually."
+    # Each tool gets its own browser-availability rule: Claude's comes from the
+    # claude-in-chrome extension, Codex's from the Chrome plugin's node_repl
+    # `js` tool, whose description never names the browser.
+    claude_browser_rule = (
+        "If the session lacks browser tools, ask me to enable `claude-in-chrome` "
+        "(`/chrome`, or restart with `--chrome`) rather than asking me to click through it myself."
     )
-    codex_self_serve_clause = "including browser automation where the session provides it."
-    text = text.replace(claude_self_serve_clause, codex_self_serve_clause)
+    codex_browser_rule = (
+        "Before saying browser control is unavailable, look up `mcp__node_repl__js` by exact "
+        "tool name: its description never mentions Chrome or browsers, so keyword searches miss it."
+    )
+    for rule in (claude_browser_rule, codex_browser_rule):
+        text = text.replace(rule, "<tool-specific browser availability rule>")
     return text
 
 

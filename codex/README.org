@@ -52,7 +52,9 @@ load project =CLAUDE.md= as a fallback.
 
 The global =codex/AGENTS.md= and =claude/CLAUDE.md= files are semantic peers.
 The audit normalizes tool-specific titles, paths, and Claude =@context= syntax
-before comparison. User-facing replies use ASD-STE100 Simplified Technical
+before comparison. It also masks each file's browser-availability rule: Claude
+asks for =claude-in-chrome=, while Codex must look up =mcp__node_repl__js= by
+exact name, because that tool's description never mentions Chrome or browsers. User-facing replies use ASD-STE100 Simplified Technical
 English.
 
 Main agents running inside Emacs publish concise current-state descriptions

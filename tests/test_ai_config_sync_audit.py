@@ -72,6 +72,17 @@ class AiConfigSyncAuditTests(unittest.TestCase):
             self.module.normalized_skill_content(codex),
         )
 
+    def test_global_instructions_keep_tool_specific_browser_rules(self):
+        claude = DOTFILES / self.module.GLOBAL_INSTRUCTION_CLAUDE
+        codex = DOTFILES / self.module.GLOBAL_INSTRUCTION_CODEX
+
+        self.assertEqual(
+            self.module.normalized_global_instruction_text(claude),
+            self.module.normalized_global_instruction_text(codex),
+        )
+        self.assertNotIn("claude-in-chrome", codex.read_text())
+        self.assertIn("`mcp__node_repl__js`", codex.read_text())
+
     def test_documentation_audit_captures_stdout_and_stderr(self):
         root = self.make_repo(["bin/docs-audit"])
         completed = subprocess.CompletedProcess(

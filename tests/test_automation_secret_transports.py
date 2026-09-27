@@ -330,6 +330,15 @@ class ClipboardTests(OfflineCase):
         self.assertEqual(edit[3], ITEM)
         self.assertNotIn("-", edit)
 
+    def test_token_with_wrapped_whitespace_is_rejected(self):
+        broker = FakeBroker()
+        broker.clipboard = broker.clipboard[:12] + " " + broker.clipboard[12:]
+        result, _, error = self.invoke(broker, "--token")
+        self.assertEqual(result, 1)
+        self.assertIn("whitespace", error)
+        self.assertIsNone(broker.stored)
+        self.assertEqual(self.invoke(FakeBroker(), "--token")[0], 0)
+
     def test_force_required_before_clipboard_intake(self):
         broker = FakeBroker(True)
         self.assertEqual(self.invoke(broker)[0], 3)

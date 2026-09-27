@@ -31,7 +31,7 @@ everything else including shapes it cannot place:
   `@tlon`, `@epoch`); the guard strips it and applies the same shapes, so
   `op-automations @personal read REF > file` passes and a bare
   `op-automations @personal read REF` is denied. Any other `@…` is denied.
-- Clipboard → 1Password goes through the audited wrapper `op-clipboard-store`
+- Clipboard → 1Password goes through the audited wrapper `op-clipboard-store` (pass `--token` for API tokens, so a terminal-wrapped copy with an inserted space is refused)
   (dotfiles `claude/bin`): shape check, `op-desktop item create|edit`, read-back,
   and only the `op://` reference on stdout. `pbpaste` itself stays denied in
   every agent-shell shape; a protected tool *name* is allowed only as a plain

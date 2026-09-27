@@ -87,7 +87,7 @@ before minting. Configuration symlinks and nonregular files are refused.
 | =gmail.py= | Provides the multi-account Gmail read, search, draft (optionally threaded onto an existing message), send, reply, delete-draft, attachment, and archive operations. |
 | =kill-ring-put= | Stages non-secret text from stdin or a file in the running Emacs kill ring in one command, optionally also on the macOS clipboard, without echoing the payload. |
 | =install-skills.sh= | Installs the live interactive and programmatic skill links, then applies skill pruning and private shims. |
-| =op-clipboard-store= | Stores a validated console-copied secret through broker stdin with optional account pinning; checks ID-bound concealed byte-equal readback and refuses existing Login JSON edits that cannot preserve passkeys. Desktop authorization may prompt. |
+| =op-clipboard-store= | Stores a validated console-copied secret through broker stdin with optional account pinning; checks ID-bound concealed byte-equal readback and refuses existing Login JSON edits that cannot preserve passkeys. Pass =--token= for API tokens: it refuses any whitespace, which a terminal-wrapped copy inserts. Desktop authorization may prompt. |
 | =sheets.py= | Provides the multi-account Google Sheets read, write, append, clear, sheet-management, and metadata operations. |
 | =slack.py= | Provides multi-workspace Slack search, history, thread, user, saved-item, and read-state operations. |
 | =sync-mcp-servers.sh= | Copies canonical user MCP definitions into account configurations while preserving account-specific environments. |

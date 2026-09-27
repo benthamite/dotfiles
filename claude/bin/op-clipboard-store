@@ -43,6 +43,8 @@ def parser():
     result.add_argument("--url", default="")
     result.add_argument("--note", default="")
     result.add_argument("--force", action="store_true")
+    result.add_argument("--token", action="store_true",
+                        help="the secret is a token, so reject any whitespace in it (passphrases may keep spaces)")
     return result
 
 
@@ -184,6 +186,10 @@ def store(args):
         raise StoreError("clipboard content is not a valid text secret", 1) from None
     if not args.min <= len(raw) <= args.max or any(ord(c) < 32 or ord(c) == 127 or c in "\u0085\u2028\u2029" for c in secret):
         raise StoreError("clipboard content does not match the expected secret shape", 1)
+    # A terminal that wraps a long token can put a space where the line broke;
+    # storing that corrupts the token silently (it fails only when used).
+    if args.token and any(c.isspace() for c in secret):
+        raise StoreError("clipboard token contains whitespace (a terminal-wrapped copy?)", 1)
     if not secret.startswith(args.prefix):
         raise StoreError("clipboard content does not start with the expected prefix", 1)
     secret_field["value"] = secret

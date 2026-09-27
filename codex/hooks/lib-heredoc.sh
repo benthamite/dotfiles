@@ -22,6 +22,9 @@
 #   never the outer shell's command words, so `?`, `*` and `[` in it are not
 #   executable globs. Callers must still scan those bodies for protected tool
 #   *names* in the default mode; only the shell-lexical rules use "nonshell".
+#   MODE "network" buffers until EOF and drops only the body of a terminal,
+#   quoted, simple cat write to a literal document pathname. It is solely an
+#   activation projection: callers must scan original bytes for payloads.
 
 mask_heredoc_bodies() {
   printf '%s\n' "$1" | awk -v mode="${2:-sinks}" '
@@ -78,6 +81,7 @@ mask_heredoc_bodies() {
       if (owner ~ /[(`]/) return 0
       if (mode == "nonshell" && p ~ /^(python[0-9.]*|node|nodejs|deno|bun|ruby|perl|php|osascript|emacs|emacsclient|sqlite3|psql|mysql|jq|yq|Rscript|lua|luajit|swift|julia|g?awk|mawk|sed|bc|dc)$/) return 1
       if (prefix ~ /[(`]/) return 0
+      if (mode == "network") return (prefix ~ /^[ \t]*cat[ \t]+>>?[ \t]*[A-Za-z0-9_.\/-]+\.(md|org|txt|json)[ \t]*$/ && suffix ~ /^[ \t]*$/)
       return (p in sinks)
     }
     BEGIN {
@@ -88,19 +92,26 @@ mask_heredoc_bodies() {
     }
     {
       line = $0
+      if (mode == "network") {
+        original[NR] = line
+        if (line !~ /^[ \t]*$/) last_nonempty = NR
+      }
       if (nq > 0) {
         t = line
         if (stripq[1]) sub(/^\t+/, "", t)
         if (t == term[1]) {
-          for (k = 1; k < nq; k++) { term[k] = term[k + 1]; stripq[k] = stripq[k + 1]; drop[k] = drop[k + 1] }
+          if (mode == "network" && drop[1]) { terminal_end = NR; terminal_id = identity[1] }
+          for (k = 1; k < nq; k++) { term[k] = term[k + 1]; stripq[k] = stripq[k + 1]; drop[k] = drop[k + 1]; identity[k] = identity[k + 1] }
           nq--
-          print line
+          if (mode != "network") print line
+        } else if (mode == "network") {
+          if (drop[1]) masked[NR] = identity[1]
         } else if (!drop[1]) {
           print line
         }
         next
       }
-      print line
+      if (mode != "network") print line
       m = length(line); j = 1
       while (j <= m) {
         c = substr(line, j, 1)
@@ -113,17 +124,23 @@ mask_heredoc_bodies() {
           rest0 = substr(line, j + 2); rest = rest0; strip = 0
           if (substr(rest, 1, 1) == "-") { strip = 1; rest = substr(rest, 2) }
           sub(/^[ \t]*/, "", rest)
-          word = ""; consumed = 0
-          if (match(rest, "^" SQ "[^" SQ "]*" SQ)) { word = substr(rest, 2, RLENGTH - 2); consumed = RLENGTH }
-          else if (match(rest, /^"[^"]*"/)) { word = substr(rest, 2, RLENGTH - 2); consumed = RLENGTH }
+          word = ""; consumed = 0; quoted = 0
+          if (match(rest, "^" SQ "[^" SQ "]*" SQ)) { word = substr(rest, 2, RLENGTH - 2); consumed = RLENGTH; quoted = 1 }
+          else if (match(rest, /^"[^"]*"/)) { word = substr(rest, 2, RLENGTH - 2); consumed = RLENGTH; quoted = 1 }
           else if (match(rest, /^[A-Za-z_][A-Za-z0-9_.-]*/)) { word = substr(rest, 1, RLENGTH); consumed = RLENGTH }
           if (word == "") { j += 2; continue }
-          nq++; term[nq] = word; stripq[nq] = strip
-          drop[nq] = maskable(substr(line, 1, j - 1), substr(rest, consumed + 1))
+          nq++; term[nq] = word; stripq[nq] = strip; identity[nq] = ++sequence
+          drop[nq] = maskable(substr(line, 1, j - 1), substr(rest, consumed + 1)) && (mode != "network" || (quoted && substr(original[NR - 1], length(original[NR - 1]), 1) != BS))
           j = j + 2 + (length(rest0) - length(rest)) + consumed
           continue
         }
         j++
+      }
+    }
+    END {
+      if (mode == "network") {
+        for (i = 1; i <= NR; i++)
+          if (!(terminal_end == last_nonempty && terminal_id && masked[i] == terminal_id)) print original[i]
       }
     }'
 }

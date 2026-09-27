@@ -640,7 +640,10 @@ if codex_shell_tool_p "$TOOL_NAME"; then
   if [ "$SECRET_LITERAL_EXEC" = true ]; then
     ENTROPY_COMMAND="${SECRET_NESTED_COMMANDS[0]}"
   fi
-  if echo "$ENTROPY_COMMAND" | grep -qE '(^|[^A-Za-z0-9_.-])(curl|wget|nc|ncat)([^A-Za-z0-9_.-]|$)|\b(python[23]?\s.*urllib|node\s.*fetch)\b'; then
+  # Only terminal quoted document prose is inert for activation. Once any
+  # network marker remains, the complete original content is still scanned.
+  NETWORK_ACTIVATION=$(mask_heredoc_bodies "$ENTROPY_COMMAND" network) || check_pattern '.' 'network-command classifier failed'
+  if echo "$NETWORK_ACTIVATION" | grep -qE '(^|[^A-Za-z0-9_.-])(curl|wget|nc|ncat)([^A-Za-z0-9_.-]|$)|\b(python[23]?\s.*urllib|node\s.*fetch)\b'; then
     # Classify only proven URL operands; unknown forms retain conservative scanning.
     # Known-secret checks above still inspect the complete original command.
     ENTROPY_CONTENT=$(printf '%s' "$ENTROPY_COMMAND" | python3 "$(dirname "$0")/lib-inert-mentions.py" --local-read-paths)

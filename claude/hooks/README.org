@@ -184,6 +184,13 @@ A closed =pdftotext= reader form accepts optional positive =-f= / =-l=
 page bounds, one absolute PDF pathname and stdout. Only its local pathname
 is projected; pipelines, wrappers, passwords and unknown options stay scanned.
 
+A terminal quoted =cat > literal.md/org/txt/json= heredoc is document data
+for network-command detection. Pipes, continuations, extra commands, unquoted
+bodies and executable destinations remain conservative. If a network marker
+exists elsewhere, the full original command is scanned; known-secret checks
+always retain the original bytes. This is a lexical boundary, not a filesystem
+or shell-rebinding sandbox.
+
 The network heuristic treats dots and hyphens as part of names, so =curl.py=,
 =curl-cffi= and =zotra-use-curl= do not activate it. Actual
 =curl=/=wget=/=nc=/=ncat= names, including interpreter subprocess arguments,

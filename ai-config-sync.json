@@ -707,6 +707,13 @@
       "codex": "codex/hooks/block-hookspath-override.sh",
       "status": "codex-only",
       "note": "Denies Git commands that override core.hooksPath, which would disable the global Elisp evidence hooks in claude/git-hooks. Claude implements the same check inline as check_hookspath_override in claude/hooks/pretooluse-bash.sh."
+    },
+    {
+      "name": "chrome-bridge-recover.py",
+      "claude": "claude/hooks/chrome-bridge-recover.py",
+      "codex": null,
+      "status": "claude-only",
+      "note": "Claude PostToolUse/PostToolUseFailure hook on mcp__claude-in-chrome__.*: when the bridge reports no connected browser, checks the native-messaging host chain and opens the Chrome profile mapped to this CLAUDE_CONFIG_DIR in claude/chrome-extension-profiles.json, then tells the model to retry. No Codex counterpart: Codex drives Chrome through its own plugin, not the Claude in Chrome extension."
     }
   ],
   "mcp_servers": [

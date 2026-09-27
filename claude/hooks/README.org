@@ -261,6 +261,7 @@ cover the policy and registered guard entry points with synthetic commands.
 | =cr-issue-comment-freshness.sh= | Requires acknowledgement of the latest reasoning-task issue comment before a project-local post. |
 | =cr-skill-routing-reminder.sh= | Reminds an agent to use the owning CR authoring or review skill. |
 | =elpaca-run.sh= | Resolves the active Emacs profile and runs an executable from an Elpaca package. |
+| =chrome-bridge-recover.py= | After a Claude in Chrome call reports no connected browser, checks the native-host chain, opens the Chrome profile mapped to this account's config dir (=../chrome-extension-profiles.json=) and tells the agent to retry; silent while connected. |
 | =epoch-brief-freshness.sh= | After a tool call reads an Epoch project brief, adds that brief's possibly stale TODOs (from =audit_project_todos.py=) to the agent's context once per session and brief, via the Epoch helper =projects/shared/scripts/brief_freshness_notice.py=; a silent no-op without the Epoch notes tree. |
 | =fire-and-forget.sh= | Detaches nonblocking Notification and Stop hook work after consuming the event payload. |
 | =lib-public-url-scan.py= | Classifies verified public URL routing fields while retaining credential-bearing payloads. |

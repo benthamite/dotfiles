@@ -1,0 +1,9 @@
+{
+  "_comment": "Which Chrome profile (chrome-profile-open alias) holds the Claude in Chrome extension signed in to each Claude Code account (CLAUDE_CONFIG_DIR basename). Read by claude/hooks/chrome-bridge-recover.py. The trajectory account is retired. The tlon entry was verified by a reconnection; the others follow each Chrome profile's own Google account and are verified on first recovery.",
+  "config_dirs": {
+    ".claude-personal": "personal",
+    ".claude-personal2": "stafforini",
+    ".claude-tlon": "tlon",
+    ".claude-epoch": "epoch"
+  }
+}

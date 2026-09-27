@@ -1030,6 +1030,11 @@ for that artifact type only; unrelated hook reminders still apply. Missing,
 unreadable or malformed manifests, including invalid text encoding, retain the
 default pairing reminders. These are advisory messages, not commit approval.
 
+Codex has no counterpart to the Claude hook =chrome-bridge-recover.py=
+(=claude-only= in =ai-config-sync.json=): Codex drives Chrome through its own
+Chrome plugin and =control-chrome= skill, not the Claude in Chrome extension
+whose per-account profile that hook reopens.
+
 * Verification
 
 After changing shared configuration, run =bin/ai-config-sync audit=. After a

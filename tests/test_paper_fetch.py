@@ -582,6 +582,46 @@ class FetcherTests(unittest.TestCase):
                                             "author": [{"family": "Barnett", "given": "Zach"}],
                                             "issued": {"date-parts": [[2021]]}, "URL": "https://doi.org/10.1111/phpr.12684"}}))
 
+    def test_url_identity_ignores_reference_dois(self):
+        url = "https://ojs.aamusicologia.ar/index.php/ram/en/article/view/472"
+        title = "Italianidad, criollismo y tango en la revista Armonía de 1905"
+        page = f"""<meta name='citation_title' content='{title}'>
+        <meta content='María de la Paz Tagliabue' name='citation_author'/>
+        <meta name='citation_date' content='2024/10/15'/>
+        <meta name='citation_reference' content='https://doi.org/10.24201/hm.v72i3.4586'>
+        <a href='https://doi.org/10.24201/hm.v72i3.4586'>Reference</a>
+        <script>{{"doi":"10.24201/hm.v72i3.4586"}}</script>"""
+        http = FakeHttp([(url, html(page))])
+        with tempfile.TemporaryDirectory() as tmp:
+            work, urls, _ = self._fetcher(http, tmp).resolve_work(url)
+        self.assertEqual(work.title, title)
+        self.assertEqual(work.authors, ["María de la Paz Tagliabue"])
+        self.assertEqual(work.year, "2024")
+        self.assertEqual(work.doi, "")
+        self.assertEqual(urls, [url])
+        self.assertEqual(len(http.calls), 1)
+
+    def test_url_explicit_doi_handles_attribute_order_and_case(self):
+        url = "https://publisher.example/article"
+        for name in ("citation_doi", "DC.Identifier", "DC.Identifier.DOI"):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as tmp:
+                http = FakeHttp([(url, html(f"<meta content='10.1111/phpr.12684' name='{name}'>")),
+                                 ("api.crossref.org", self.crossref())])
+                work, _, _ = self._fetcher(http, tmp).resolve_work(url)
+                self.assertEqual(work.title, "Rational Moral Ignorance")
+                self.assertEqual(work.url, url)
+
+    def test_url_rejects_registry_title_conflict(self):
+        url = "https://publisher.example/article"
+        http = FakeHttp([(url, html("<meta name='citation_title' content='An entirely different paper'>"
+                                   "<meta name='citation_doi' content='10.1111/phpr.12684'>")),
+                         ("api.crossref.org", self.crossref())])
+        with tempfile.TemporaryDirectory() as tmp:
+            work, _, _ = self._fetcher(http, tmp).resolve_work(url)
+        self.assertEqual(work.title, "An entirely different paper")
+        self.assertEqual(work.source, "url")
+        self.assertEqual(work.doi, "")
+
     def test_paywalled_doi_goes_libgen_then_fast_download(self):
         http = FakeHttp([
             ("api.crossref.org", self.crossref()),

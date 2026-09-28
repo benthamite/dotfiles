@@ -41,6 +41,7 @@ import subprocess
 import time
 import unicodedata
 import urllib.parse
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
@@ -1468,14 +1469,17 @@ class Fetcher:
                 work = found
             return work, urls, md5
         if kind == "url":
-            doi = normalize_doi(value) if "doi.org" in value else ""
-            if not doi:
-                doi = self._doi_from_landing(value)
-            if doi:
-                work = self._safe(lambda: crossref_lookup(self.http, doi=doi))
+            landing = self._work_from_landing(value)
+            if landing and landing.doi:
+                work = self._safe(lambda: crossref_lookup(self.http, doi=landing.doi))
+                # Publisher identity is independent evidence: an unrelated registry
+                # result must not replace it or redirect acquisition to another work.
+                if work and landing.title and title_similarity(landing.title, work.title) < 0.75:
+                    landing.doi = ""
+                    work = None
             if work is None:
-                work = Work(url=value, source="url")
-            work.url = work.url or value
+                work = landing or Work(url=value, source="url")
+            work.url = value
             urls.append(value)
             return work, urls, md5
         if kind == "doi":
@@ -1492,22 +1496,50 @@ class Fetcher:
             urls.extend(oa)
         return work, urls, md5
 
-    def _doi_from_landing(self, url: str) -> str:
+    def _work_from_landing(self, url: str) -> Work | None:
         host = urllib.parse.urlparse(url).netloc.lower()
         if host in CHALLENGED_HOSTS:
-            return ""
+            return None
         response = self._safe(lambda: self.http.get(url, timeout=40))
-        if not response or response.is_challenge or response.is_pdf:
-            return ""
-        head = response.text[:200000]
-        for pattern in (r'name="citation_doi"\s+content="([^"]+)"', r'name="dc\.identifier"\s+content="([^"]+)"',
-                        r'"doi"\s*:\s*"([^"]+)"', r'doi\.org/(10\.[^"\'<>\s]+)'):
-            match = re.search(pattern, head, re.I)
-            if match:
-                doi = normalize_doi(match.group(1))
+        if not response or response.status != 200 or response.is_challenge or response.is_pdf:
+            return None
+
+        class ArticleMeta(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.values: dict[str, list[str]] = {}
+
+            def handle_starttag(self, tag, attrs):
+                if tag.lower() != "meta":
+                    return
+                fields = dict(attrs)
+                name = (fields.get("name") or "").lower()
+                content = fields.get("content") or ""
+                if name and content:
+                    self.values.setdefault(name, []).append(content)
+
+        parser = ArticleMeta()
+        parser.feed(response.text[:200000])
+        metadata = parser.values
+        doi = ""
+        # Do not search arbitrary DOI strings: citation_reference and page-body
+        # bibliography links identify cited works, not this article.
+        for name in ("citation_doi", "dc.identifier", "dc.identifier.doi"):
+            for value in metadata.get(name, []):
+                doi = normalize_doi(value)
                 if doi:
-                    return doi
-        return ""
+                    break
+            if doi:
+                break
+        return Work(
+            doi=doi,
+            title=(metadata.get("citation_title") or [""])[0],
+            authors=metadata.get("citation_author", []),
+            year=(metadata.get("citation_date") or metadata.get("citation_publication_date") or [""])[0][:4],
+            container=(metadata.get("citation_journal_title") or [""])[0],
+            url=url,
+            source="url",
+        )
 
     def _safe(self, fn):
         try:

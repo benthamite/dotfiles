@@ -20,6 +20,37 @@ RUNNER = Path(__file__).resolve().parents[1] / "bin/untrusted-run"
 
 @unittest.skipUnless(sys.platform == "darwin", "Requires actual Docker Desktop on macOS")
 class UntrustedRunTests(unittest.TestCase):
+    def test_python_runtime_preserves_isolation(self):
+        with tempfile.TemporaryDirectory(dir="/private/tmp") as temp:
+            probe = '''import errno,json,os,socket,sys
+def denied_write(path):
+    try:
+        with open(path, 'w') as stream: stream.write('probe')
+    except OSError as error:
+        return error.errno in (errno.EACCES, errno.EROFS, errno.ENOENT)
+    return False
+checks = {'python': sys.version_info[:2] == (3, 11),
+          'nonroot': os.getuid() != 0,
+          'root_readonly': denied_write('/etc/isolation-probe'),
+          'no_docker_socket': not os.path.exists('/var/run/docker.sock')}
+for family in (38, 40):
+    try: socket.socket(family, socket.SOCK_STREAM)
+    except OSError as error: checks[str(family)] = error.errno == errno.EPERM
+    else: checks[str(family)] = False
+with socket.socket() as connection:
+    connection.settimeout(1)
+    checks['network_blocked'] = connection.connect_ex(('1.1.1.1', 443)) != 0
+with open('/workspace/result', 'w') as stream: json.dump(checks, stream)
+print(json.dumps(checks))
+'''
+            result = subprocess.run(
+                [str(RUNNER), "--runtime", "python", "--workspace", str(Path(temp) / "output"),
+                 "--", "python3", "-c", probe], capture_output=True, text=True, timeout=40,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            checks = json.loads(result.stdout)
+            self.assertTrue(all(checks.values()), checks)
+
     def test_seccomp_blocks_kernel_socket_escape_families(self):
         with tempfile.TemporaryDirectory(dir="/private/tmp") as temp:
             probe = '''for my $spec ([38,5],[40,1],[2,1]) {
@@ -51,7 +82,7 @@ class UntrustedRunTests(unittest.TestCase):
                      mock.patch.object(module.subprocess, "Popen", return_value=process):
                     with self.assertRaisesRegex(ValueError, "Cleanup could not confirm"):
                         module.run(argparse.Namespace(command=["node", "--version"],
-                            workspace=str(Path(temp) / "output"), read=[], timeout=10))
+                            workspace=str(Path(temp) / "output"), read=[], timeout=10, runtime="node"))
                 process.kill.assert_called_once()
                 self.assertEqual(process.wait.call_count, 2)
 

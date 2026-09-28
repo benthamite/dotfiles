@@ -101,7 +101,13 @@ Provision the reviewed ARM64 image once:
 
 #+begin_src sh
 docker pull --platform linux/arm64 node@sha256:8d342e46d3b2883df69f797cb60fc71d8a0b65de65ddfbf4bf63fdc02049615f
+docker pull --platform linux/arm64 python@sha256:bbc491ed39611eede47b1058ad4afb9ea957fb3bf4a7f1b442c6a5628ab93bdc
 #+end_src
+
+Select =--runtime python= for the pinned Python 3.11.16 slim-bookworm image.
+The default remains =--runtime node=. Both use the same isolation restrictions;
+arbitrary images are not accepted. Python dependencies must be supplied as
+explicit read-only inputs and installed offline inside the container.
 
 The runner refuses a missing image; it never pulls a mutable tag or falls back
 to host execution. Both agents must use it for downloaded scripts, unfamiliar
@@ -138,7 +144,8 @@ AF_VSOCK and defaults to =SCMP_ACT_ERRNO=; no general syscall permissions were
 broadened. This modified Moby resource is covered by
 [[file:untrusted-run-seccomp.LICENSE][Apache License 2.0]]. Re-review its upstream default when upgrading the engine;
 do not replace it with a permissive custom profile. Runtime-image provenance:
-[[https://hub.docker.com/_/node][Docker Official Node image]].
+[[https://hub.docker.com/_/node][Docker Official Node image]] and
+[[https://hub.docker.com/_/python][Docker Official Python image]].
 
 * Emacs
 

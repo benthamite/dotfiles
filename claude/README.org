@@ -743,9 +743,10 @@ The secret guard also blocks process listings that expose arguments or
 environments, including macOS =pgrep -fl=. PID/name diagnostics remain
 available; supported forms and limits are in [[file:hooks/README.org][the hook contracts]].
 Quoted Python-stdin heredocs distinguish ordinary =ps= / =pgrep= variable
-names from process inspection. A module-scope empty list with one binding may
-use =append=; rebinding, nested scopes and dynamic namespace access retain the
-conservative check. Indexed =read_text()= calls are also recognized for
+names from process inspection. An empty list with one binding in its own
+module or function scope may use =append=. Parameters, rebinding, closure
+receivers, =global=/=nonlocal= and dynamic namespaces remain conservative.
+Indexed =read_text()= calls are also recognized for
 uniquely bound lists from literal =pathlib.Path= joins and =glob= patterns;
 shadowed builtins/imports, dynamic receivers and mutations remain conservative.
 Other calls/attribute bases, imports, literals, =psutil= and =/proc= markers

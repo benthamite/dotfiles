@@ -131,28 +131,19 @@ def project_python_names(source):
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
                 return False
         return True
-    # Only the observed data-list case: one module-scope empty-list binding.
-    # Rebinding, shadowing and dynamic namespace mutation remain unclassified.
-    lists = set()
     dynamic = any(isinstance(node, ast.Name) and node.id in {"exec", "eval", "globals", "locals", "vars"}
                   or isinstance(node, ast.ImportFrom) and any(alias.name == "*" for alias in node.names)
                   for node in nodes)
-    for name in ("ps", "pgrep"):
-        stores = [node for node in nodes if isinstance(node, ast.Name)
-                  and node.id == name and isinstance(node.ctx, (ast.Store, ast.Del))]
-        if not dynamic and len(stores) == 1:
-            binding = parents.get(stores[0])
-            if (isinstance(binding, ast.Assign) and len(binding.targets) == 1
-                    and isinstance(binding.value, ast.List) and not binding.value.elts
-                    and module_scope(binding)):
-                lists.add(name)
-    def data_append(node):
-        return (isinstance(node, ast.Attribute) and node.attr == "append"
-                and isinstance(node.value, ast.Name) and node.value.id in lists
-                and module_scope(node))
-    # Prove only indexed reads from a uniquely bound literal pathlib-glob list.
-    # Other receivers stay conservative, including nested/dynamic namespaces.
-    bindings = {}
+    def lexical_scope(node):
+        while node in parents:
+            node = parents[node]
+            if isinstance(node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef,
+                                 ast.ClassDef, ast.Lambda, ast.ListComp, ast.SetComp,
+                                 ast.DictComp, ast.GeneratorExp)):
+                return node
+        return tree
+
+    bindings, scoped_bindings = {}, {}
     for node in nodes:
         name = (node.id if isinstance(node, ast.Name) and isinstance(node.ctx, (ast.Store, ast.Del))
                 else node.asname or node.name.split(".")[0] if isinstance(node, ast.alias)
@@ -161,6 +152,33 @@ def project_python_names(source):
                 else node.name if isinstance(node, (ast.MatchAs, ast.MatchStar)) else None)
         if name:
             bindings.setdefault(name, []).append(node)
+            scoped_bindings.setdefault((lexical_scope(node), name), []).append(node)
+    # A list must be proved in the receiver's own lexical scope. Do not infer
+    # closure values, or confuse a function local with the caller's binding.
+    redirected = {lexical_scope(node) for node in nodes
+                  if isinstance(node, (ast.Global, ast.Nonlocal))
+                  and {"ps", "pgrep"}.intersection(node.names)}
+    lists = {}
+    for (scope, name), bound in scoped_bindings.items():
+        if (not dynamic and name in {"ps", "pgrep"} and len(bound) == 1
+                and scope not in redirected
+                and isinstance(scope, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef))):
+            binding = parents.get(bound[0])
+            if (isinstance(binding, ast.Assign) and len(binding.targets) == 1
+                    and binding.targets[0] is bound[0]
+                    and isinstance(binding.value, ast.List) and not binding.value.elts):
+                lists[(scope, name)] = binding
+
+    def data_append(node):
+        if not (isinstance(node, ast.Attribute) and node.attr == "append"
+                and isinstance(node.value, ast.Name)):
+            return False
+        binding = lists.get((lexical_scope(node), node.value.id))
+        return (binding is not None
+                and (binding.lineno, binding.col_offset) < (node.lineno, node.col_offset))
+
+    # Prove only indexed reads from a uniquely bound literal pathlib-glob list.
+    # Other receivers stay conservative, including nested/dynamic namespaces.
     path_eligible = not dynamic and not any(
         isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda,
                           ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp, ast.Match))

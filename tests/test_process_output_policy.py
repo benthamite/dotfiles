@@ -7,6 +7,20 @@ import sys
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
+FUNCTION_LIST_COMMAND = """python3 - <<'PY'
+import unicodedata
+def mapped(t):
+ cs=[];ps=[]
+ for j,c in enumerate(t):
+  for d in unicodedata.normalize('NFD',c.lower()):
+   if unicodedata.combining(d):continue
+   if d.isspace():
+    if cs and cs[-1]!=' ':cs.append(' ');ps.append(j)
+   else:cs.append(d);ps.append(j)
+ return ''.join(cs),ps
+t='Tángo';n,ps=mapped(t);a=0;q='tango';start,end=ps[a],ps[a+len(q)-1]+1
+assert t[start:end]=='Tángo'
+PY"""
 PATH_READ_COMMAND = """python3 - <<'PY'
 import json,pathlib
 R=pathlib.Path('/Users/pablostafforini/repos/.worktrees/tangodb/biographical-sources');C=R/'research/source-catalog';ps=list((C/'acquisition-pass').glob('acq-forum5-*-reviewed-items.json'));print(len(ps));print(ps[0]);print(json.loads(ps[0].read_text()).keys());print(json.loads(ps[0].read_text())['items'][0]);base=pathlib.Path('/Users/pablostafforini/.local/share/tangodb/source-library/todotango-forum')
@@ -14,6 +28,7 @@ for name in ['standard-replay-unattempted-pass','standard-replay-after-redirect-
  p=base/name/'captures.json';x=json.loads(p.read_text());print(name,x.keys());print(x['captures'][0])
 PY"""
 ALLOW = [
+    FUNCTION_LIST_COMMAND,
     PATH_READ_COMMAND,
     "python3 - <<'PY'\nfor x in [1]:\n ps=[]\n ps.append(x)\n print(ps)\nPY",
     "python3 - <<'PY'\nimport pathlib,json,collections\nfor kind in ['sources','references']:\n ps=list(pathlib.Path('research/source-catalog',kind).glob('acq-forum3-*.json'));print(kind,len(ps),collections.Counter(p.stem.split('-')[2] for p in ps))\nPY",
@@ -72,6 +87,46 @@ DENY = [
 ]
 
 class PolicyTests(unittest.TestCase):
+    def test_list_bindings_are_local_to_each_scope(self):
+        allowed = [
+            'ps=[];ps.append(1)\ndef f():\n ps=[];ps.append(2)\n return ps',
+            'def f():\n ps=[]\n def g():\n  ps=[];ps.append(1)\n ps.append(2)\n return ps',
+        ]
+        denied = [
+            'def f(ps):\n ps.append(1)',
+            'def f(ps):\n ps=[];ps.append(1)',
+            'def f():\n ps=[];ps=object();ps.append(1)',
+            'ps=[]\ndef f():\n ps.append(1)',
+            'ps=[]\ndef f():\n global ps\n ps=[];ps.append(1)',
+            'def f():\n ps=[]\n def g():\n  nonlocal ps\n  ps.append(1)',
+            'def f():\n ps=[]\n def g(ps):\n  ps.append(1)',
+            'def f():\n ps=[]\n def g():\n  ps.append(1)',
+            'def f():\n ps=[];locals().update({});ps.append(1)',
+            'def f():\n ps=[];globals().update({});ps.append(1)',
+            'def f():\n ps=[];exec("pass");ps.append(1)',
+            'def f():\n ps=[];del ps;ps.append(1)',
+            'def f():\n ps=[];import subprocess as ps;ps.append(1)',
+            'def f():\n ps=[]\n try: pass\n except Exception as ps: ps.append(1)',
+            'def f():\n ps=[]\n match object():\n  case ps: ps.append(1)',
+            'class C:\n ps=[];ps.append(1)',
+            'ps=[]\nf=lambda: ps.append(1)',
+            'def f():\n ps=[];[ps.append(x) for x in [1]]',
+            'def f():\n ps=[];ps.cmdline()',
+            'def f():\n ps=[];ps()',
+            'def f():\n ps=[];ps.append("ps aux")',
+        ]
+        for family in ('claude', 'codex'):
+            spec = importlib.util.spec_from_file_location('scope_policy_' + family,
+                ROOT / family / 'hooks/lib-process-output-policy.py')
+            policy = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(policy)
+            for body in allowed:
+                policy.classify("python3 - <<'PY'\n" + body + '\nPY')
+            for body in denied:
+                with self.subTest(family=family, body=body):
+                    with self.assertRaises(policy.Denied):
+                        policy.classify("python3 - <<'PY'\n" + body + '\nPY')
+
     def test_indexed_path_read_boundaries(self):
         # Classify source only; none of these commands is executed.
         body = "import pathlib\nroot=pathlib.Path('/tmp');ps=list(root.glob('*.json'));print(ps[0].read_text())"

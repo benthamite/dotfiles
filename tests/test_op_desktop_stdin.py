@@ -20,7 +20,8 @@ class DesktopStdinTest(unittest.TestCase):
         self.mod = importlib.util.module_from_spec(spec)
         loader.exec_module(self.mod)
 
-    def invoke(self, argv, body=b'{"id":"synthetic-id","fields":[]}', tty=False, limit=None):
+    def invoke(self, argv, body=b'{"id":"synthetic-id","fields":[]}', tty=False, limit=None,
+               reply_rc=0):
         incoming = MagicMock()
         incoming.isatty.return_value = tty
         incoming.buffer = io.BytesIO(body)
@@ -28,7 +29,7 @@ class DesktopStdinTest(unittest.TestCase):
         with patch.object(self.mod, "ensure_runtime_dir"), \
              patch.object(self.mod, "connect_or_start", return_value=conn), \
              patch.object(self.mod, "send_json") as send, \
-             patch.object(self.mod, "recv_json", return_value={"rc": 0}), \
+             patch.object(self.mod, "recv_json", return_value={"rc": reply_rc}), \
              patch.object(self.mod.socket, "socket", side_effect=AssertionError("no sockets")), \
              patch.object(self.mod.subprocess, "run", side_effect=AssertionError("no subprocess")), \
              patch.object(self.mod, "MAX_STDIN_BYTES", limit or self.mod.MAX_STDIN_BYTES), \
@@ -52,6 +53,23 @@ class DesktopStdinTest(unittest.TestCase):
         rc, request, _ = self.invoke(["item", "create", "-", "--vault", "Automations"])
         self.assertEqual(rc, 0)
         self.assertIn("stdin_b64", request)
+
+    def test_edit_with_empty_implicit_stdin_does_not_supply_json_template(self):
+        for changes in (["--title", "Renamed"], ["username=SYNTHETIC"],
+                        ["--template", "/synthetic/template.json"]):
+            with self.subTest(changes=changes):
+                args = ["item", "edit", "synthetic-id", *changes]
+                rc, request, _ = self.invoke(args, body=b"")
+                self.assertEqual(rc, 0)
+                self.assertEqual(request["argv"], args)
+                self.assertNotIn("stdin_b64", request)
+
+    def test_explicit_empty_stdin_is_forwarded_and_cli_rejection_propagates(self):
+        for args in (["item", "create", "-"], ["item", "edit", "synthetic-id", "-"]):
+            with self.subTest(args=args):
+                rc, request, _ = self.invoke(args, body=b"", reply_rc=2)
+                self.assertEqual(rc, 2)
+                self.assertEqual(base64.b64decode(request["stdin_b64"]), b"")
 
     def test_explicit_account_preserves_create_and_edit_stdin(self):
         body = b'{"fields":[{"id":"credential","value":"SYNTHETIC"}]}'

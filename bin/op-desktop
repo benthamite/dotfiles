@@ -406,6 +406,11 @@ def main(argv) -> int:
         if len(stdin_content) > MAX_STDIN_BYTES:
             print("op-desktop: stdin too large", file=sys.stderr)
             return 2
+        # Agent calls also have non-tty stdin when editing with flags alone.
+        # An empty implicit stream is no template; an explicit '-' still asks
+        # the CLI to consume stdin and reject an empty template itself.
+        if not stdin_content and "-" not in argv:
+            stdin_content = None
 
     conn = connect_or_start()
     with conn:

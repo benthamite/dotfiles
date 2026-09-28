@@ -118,8 +118,13 @@ class SecretGuardParityTests(unittest.TestCase):
                    "for kind in ['sources','references']:\n"
                    " ps=list(pathlib.Path('research/source-catalog',kind).glob('acq-forum3-*.json'));"
                    "print(kind,len(ps),collections.Counter(p.stem.split('-')[2] for p in ps))\nPY")
-        cases = [(command, 'allow')]
+        cases = [(command, 'allow'),
+                 ("python3 - <<'PY'\nfor x in [1]:\n ps=[]\n ps.append(x)\n print(ps)\nPY", 'allow')]
         cases.extend(("python3 - <<'PY'\n" + body + "\nPY", 'deny') for body in (
+            "ps=[]; ps.append(1); ps=object()", "ps=[]; ps.cmdline()",
+            "ps=[]; globals()['ps']=object(); ps.append(1)",
+            "ps=[]; import subprocess as ps; ps.append(1)",
+            "ps=[]; ps.append('ps aux')", "ps=[]; ps()",
             "ps()", "ps.cmdline()", "import psutil\nprint(psutil.Process().cmdline())",
             "import subprocess\nps='ps'; subprocess.run([ps,'aux'])",
             "ps = open('/proc/123/cmdline').read(); print(ps)",

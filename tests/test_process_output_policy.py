@@ -8,6 +8,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 ALLOW = [
+    "python3 - <<'PY'\nfor x in [1]:\n ps=[]\n ps.append(x)\n print(ps)\nPY",
     "python3 - <<'PY'\nimport pathlib,json,collections\nfor kind in ['sources','references']:\n ps=list(pathlib.Path('research/source-catalog',kind).glob('acq-forum3-*.json'));print(kind,len(ps),collections.Counter(p.stem.split('-')[2] for p in ps))\nPY",
     "python3 - <<'PY'\nlabel='á'; ps=[1,2]; print(len(ps))\nPY",
     "python3 - <<'PY'\nlabel='a\u2028xé';\nps=[]; print(len(ps))\nPY",
@@ -28,6 +29,14 @@ ALLOW = [
 ]
 DENY = [
     *["python3 - <<'PY'\n" + body + "\nPY" for body in (
+        "ps=[]; ps.append(1); ps=object()", "ps=[]; ps.cmdline()",
+        "ps=[]; globals()['ps']=object(); ps.append(1)",
+        "ps=[]; del ps; ps.append(1)", "ps=[]; ps()",
+        "ps=[]; import subprocess as ps; ps.append(1)",
+        "ps=[]; ps.append('ps aux')", "ps=[]; exec('pass'); ps.append(1)",
+        "ps=[]\ndef f(ps): ps.append(1)",
+        "ps=[]\ntry: pass\nexcept Exception as ps: ps.append(1)",
+        "ps=[]\nmatch object():\n case ps: ps.append(1)",
         "ps()", "ps.cmdline()", "ps.foo.bar()", "psutil = object()",
         "import subprocess as ps", "# ps command\nprint(1)",
         "import subprocess\nps='ps'; subprocess.run([ps,'aux'])",

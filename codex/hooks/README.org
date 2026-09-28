@@ -265,8 +265,10 @@ checked; relevant interpreter source that cannot be classified is denied.
 Computed executable names and external script contents are outside this
 static guard's coverage. The policy is not a general output redactor.
 Quoted Python-stdin heredocs distinguish ordinary =ps= / =pgrep= variable
-names from process inspection. Calls, attribute bases, imports, literals,
-=psutil= and =/proc= markers remain checked; unquoted heredocs stay conservative.
+names from process inspection. A module-scope empty list with one binding may
+use =append=; rebinding, nested scopes and dynamic namespace access retain the
+conservative check. Other calls/attribute bases, imports, literals, =psutil=
+and =/proc= markers remain checked; unquoted heredocs stay conservative.
 =tests/test_process_output_policy.py= and =tests/test_process_output_guard.py=
 cover the policy and registered guard entry points with synthetic commands.
 

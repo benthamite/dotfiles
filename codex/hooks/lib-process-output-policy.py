@@ -123,11 +123,38 @@ def project_python_names(source):
     except (SyntaxError, ValueError, RecursionError):
         return source
     source = normalized
+    nodes = list(ast.walk(tree))
+    parents = {child: parent for parent in nodes for child in ast.iter_child_nodes(parent)}
+    def module_scope(node):
+        while node in parents:
+            node = parents[node]
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)):
+                return False
+        return True
+    # Only the observed data-list case: one module-scope empty-list binding.
+    # Rebinding, shadowing and dynamic namespace mutation remain unclassified.
+    lists = set()
+    dynamic = any(isinstance(node, ast.Name) and node.id in {"exec", "eval", "globals", "locals", "vars"}
+                  or isinstance(node, ast.ImportFrom) and any(alias.name == "*" for alias in node.names)
+                  for node in nodes)
+    for name in ("ps", "pgrep"):
+        stores = [node for node in nodes if isinstance(node, ast.Name)
+                  and node.id == name and isinstance(node.ctx, (ast.Store, ast.Del))]
+        if not dynamic and len(stores) == 1:
+            binding = parents.get(stores[0])
+            if (isinstance(binding, ast.Assign) and len(binding.targets) == 1
+                    and isinstance(binding.value, ast.List) and not binding.value.elts
+                    and module_scope(binding)):
+                lists.add(name)
+    def data_append(node):
+        return (isinstance(node, ast.Attribute) and node.attr == "append"
+                and isinstance(node.value, ast.Name) and node.value.id in lists
+                and module_scope(node))
     protected = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Attribute):
+    for node in nodes:
+        if isinstance(node, ast.Attribute) and not data_append(node):
             protected.update(ast.walk(node.value))
-        elif isinstance(node, ast.Call):
+        elif isinstance(node, ast.Call) and not data_append(node.func):
             protected.update(ast.walk(node.func))
     lines = source.split("\n")
     offsets, total = [], 0

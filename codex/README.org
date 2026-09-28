@@ -154,6 +154,11 @@ It derives the browser service and app-version settings from that same app,
 including when saved settings still name a previous release. Launch overrides
 are temporary: account configuration and unrelated service registrations remain
 unchanged. Custom services and foreign/shared marketplace paths are refused.
+Reconciliation preserves an existing =latest= cache alias when its own installer
+refresh removes it, after restoring any retained version it names. It accepts
+only sibling version targets and leaves a valid installer-created alias intact.
+This does not repair already-missing aliases, cover installers bypassing this
+launcher, or prove native-host compatibility after a plugin upgrade.
 
 The browser runtime, its modules, its matching app helper CLI, and the Chrome
 service bundle are retained as verified immutable copies. New servers use those

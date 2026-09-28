@@ -13,6 +13,7 @@ import plistlib
 import re
 import shutil
 import stat
+import sys
 import subprocess
 import tempfile
 import uuid
@@ -238,6 +239,50 @@ def _restore_previous_cache(current, recovery, expected, work):
             shutil.rmtree(replacement)
 
 
+def _cache_alias(cache):
+    """Capture only an existing latest alias to a real sibling version."""
+    alias = cache / "latest"
+    if not alias.is_symlink():
+        if alias.exists():
+            raise BrowserSyncError("Chrome latest cache entry is not a symlink")
+        return None
+    link = os.readlink(alias)
+    target = Path(link)
+    if not target.is_absolute():
+        target = cache / target
+    if target.parent != cache or target.name in (".", "..", "latest"):
+        raise BrowserSyncError("Chrome latest cache alias is outside its version directory")
+    _unlinked(target)
+    if not target.is_dir():
+        raise BrowserSyncError("Chrome latest cache alias has no installed target")
+    return link
+
+
+def _restore_cache_alias(cache, link):
+    """Preserve the installer's existing alias without inventing registration."""
+    if link is None:
+        return
+    alias = cache / "latest"
+    if alias.is_symlink() or alias.exists():
+        # A fresh installer-owned alias wins, provided it stays in this cache.
+        if _cache_alias(cache) is None:
+            raise BrowserSyncError("Chrome latest cache alias disappeared during recovery")
+        return
+    target = Path(link)
+    if not target.is_absolute():
+        target = cache / target
+    _unlinked(target)
+    if not target.is_dir():
+        raise BrowserSyncError("Chrome latest cache alias recovery target is missing")
+    try:
+        alias.symlink_to(link)
+    except FileExistsError:
+        # Do not overwrite a concurrent installer's publication.
+        pass
+    if _cache_alias(cache) is None:
+        raise BrowserSyncError("Chrome latest cache alias disappeared during recovery")
+
+
 def _launch_overrides(state, home, pin_client=False):
     """Return only validated paths/version metadata, never arbitrary env values."""
     service_store = home / ".browser-runtimes"
@@ -297,10 +342,13 @@ def _synchronize(codex_home, executable, config_args, launch, pin_client=False):
             _signature(state["app"])
         if state["source_matches"] and state["installed_matches"]:
             return "current", _launch_overrides(state, home, pin_client) if launch else []
+        cache_alias = _cache_alias(state["current"].parent)
         stage = Path(tempfile.mkdtemp(prefix="stage-", dir=work))
         replacement = stage / "chrome"
         previous = work / ("previous-chrome-" + uuid.uuid4().hex)
         cache_recoveries = []
+        alias_target_recovery = None
+        completed = False
         moved = False
         published = False
         try:
@@ -316,7 +364,9 @@ def _synchronize(codex_home, executable, config_args, launch, pin_client=False):
                     _unlinked(cached)
                     if not cached.is_dir():
                         raise BrowserSyncError("Chrome cache contains an unexpected non-directory entry")
-                    if cached.name == state["version"]:
+                    is_new_version = cached.name == state["version"]
+                    alias_target = (state["current"].parent / cache_alias).resolve() if cache_alias else None
+                    if is_new_version and cached != alias_target:
                         continue
                     cache_files = _inventory(cached)
                     cache_recovery = work / ("previous-cache-" + uuid.uuid4().hex)
@@ -324,7 +374,13 @@ def _synchronize(codex_home, executable, config_args, launch, pin_client=False):
                     if (_inventory(cache_recovery) != cache_files
                             or _inventory(cached) != cache_files):
                         raise BrowserSyncError("Installed Chrome changed while preserving its prior version")
-                    cache_recoveries.append((cached, cache_recovery, cache_files))
+                    recovery = (cached, cache_recovery, cache_files)
+                    if is_new_version:
+                        # Roll back a failed same-version refresh, but never
+                        # overwrite successful new contents with the old host.
+                        alias_target_recovery = recovery
+                    else:
+                        cache_recoveries.append(recovery)
             if not state["source_matches"]:
                 state["source"].rename(previous)
                 moved = True
@@ -342,7 +398,9 @@ def _synchronize(codex_home, executable, config_args, launch, pin_client=False):
             if (verified["app_info"] != state["app_info"] or verified["app_seal"] != state["app_seal"]
                     or verified["files"] != state["files"]):
                 raise BrowserSyncError("Desktop app changed while installing Chrome; retry after the update")
-            return "updated", _launch_overrides(verified, home, pin_client) if launch else []
+            overrides = _launch_overrides(verified, home, pin_client) if launch else []
+            completed = True
+            return "updated", overrides
         except BaseException:
             if published:
                 state["source"].rename(stage / "failed-publication")
@@ -350,9 +408,19 @@ def _synchronize(codex_home, executable, config_args, launch, pin_client=False):
                 previous.rename(state["source"])
             raise
         finally:
+            original_error = sys.exc_info()[1]
             try:
+                if not completed and alias_target_recovery is not None:
+                    cache_recoveries.append(alias_target_recovery)
                 for cached, cache_recovery, cache_files in cache_recoveries:
                     _restore_previous_cache(cached, cache_recovery, cache_files, work)
+                _restore_cache_alias(state["current"].parent, cache_alias)
+            except (OSError, BrowserSyncError) as recovery_error:
+                if original_error is None:
+                    raise
+                original_error.args = (str(original_error)
+                                       + "; Chrome cache recovery also failed: "
+                                       + str(recovery_error),)
             finally:
                 # Only our unpublished copied artifacts are disposable.
                 shutil.rmtree(stage)

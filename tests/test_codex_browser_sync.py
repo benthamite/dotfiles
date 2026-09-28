@@ -60,6 +60,8 @@ class BrowserSyncTests(unittest.TestCase):
         self.version = "old"
         self.enabled = True
         self.fail_install = False
+        self.remove_new_cache = False
+        self.remove_latest_alias = False
         self.remove_old_cache = False
         self.remove_all_old_caches = False
         self.change_old_cache = False
@@ -122,6 +124,8 @@ class BrowserSyncTests(unittest.TestCase):
         if arguments[:2] == ["plugin", "add"]:
             self.enabled = True
             next_version = json.loads((self.source / ".codex-plugin/plugin.json").read_text())["version"]
+            if self.remove_latest_alias:
+                (self.cache / "latest").unlink()
             if self.remove_all_old_caches:
                 for cached in self.cache.iterdir():
                     if cached.name != next_version and cached.is_dir():
@@ -130,6 +134,8 @@ class BrowserSyncTests(unittest.TestCase):
                 shutil.rmtree(self.cache / "old")
             if self.change_old_cache:
                 self.write(self.cache / "old/scripts/browser-client.mjs", "installer changed old version")
+            if self.remove_new_cache:
+                shutil.rmtree(self.cache / next_version)
             if self.fail_install:
                 raise sync.BrowserSyncError("installer failed")
             shutil.copytree(self.source, self.cache / next_version, dirs_exist_ok=True)
@@ -165,6 +171,92 @@ class BrowserSyncTests(unittest.TestCase):
         self.assertEqual(self.synchronize(), "updated")
         self.assertEqual(sync._inventory(self.cache / "old"), original)
         self.assertEqual(sync._inventory(self.cache / "new"), sync._inventory(self.bundle))
+
+    def test_same_version_reinstall_preserves_existing_latest_alias(self):
+        self.version = "new"
+        shutil.copytree(self.source, self.cache / "new")
+        alias = self.cache / "latest"
+        alias.symlink_to("new")
+        self.remove_latest_alias = True
+        self.assertEqual(self.synchronize(), "updated")
+        self.assertEqual(os.readlink(alias), "new")
+        self.assertEqual(sync._inventory(alias.resolve()), sync._inventory(self.bundle))
+
+    def test_upgrade_restores_latest_target_removed_by_installer(self):
+        alias = self.cache / "latest"
+        alias.symlink_to("old")
+        original = sync._inventory(self.cache / "old")
+        self.remove_old_cache = True
+        self.assertEqual(self.synchronize(), "updated")
+        self.assertEqual(os.readlink(alias), "old")
+        self.assertEqual(sync._inventory(alias.resolve()), original)
+
+    def test_failed_install_restores_existing_latest_alias(self):
+        alias = self.cache / "latest"
+        alias.symlink_to("old")
+        self.remove_latest_alias = True
+        self.remove_old_cache = True
+        self.fail_install = True
+        with self.assertRaisesRegex(sync.BrowserSyncError, "installer failed"):
+            self.synchronize()
+        self.assertEqual(os.readlink(alias), "old")
+        self.assertTrue(alias.is_dir())
+
+    def test_absent_latest_alias_is_not_created(self):
+        self.assertEqual(self.synchronize(), "updated")
+        self.assertFalse((self.cache / "latest").is_symlink())
+
+    def test_external_latest_alias_rejected_before_install(self):
+        (self.cache / "latest").symlink_to(self.source)
+        with self.assertRaisesRegex(sync.BrowserSyncError, "outside"):
+            self.synchronize()
+        self.assertFalse(any(args[:2] == ["plugin", "add"] for args, _ in self.calls))
+
+    def test_missing_latest_target_rejected_before_install(self):
+        (self.cache / "latest").symlink_to("missing")
+        with self.assertRaisesRegex(sync.BrowserSyncError, "no installed target"):
+            self.synchronize()
+        self.assertFalse(any(args[:2] == ["plugin", "add"] for args, _ in self.calls))
+
+    def test_recovery_preserves_valid_installer_alias(self):
+        shutil.copytree(self.source, self.cache / "new")
+        alias = self.cache / "latest"
+        alias.symlink_to("new")
+        sync._restore_cache_alias(self.cache, "old")
+        self.assertEqual(os.readlink(alias), "new")
+
+    def test_recovery_never_creates_dangling_alias(self):
+        with self.assertRaisesRegex(sync.BrowserSyncError, "target is missing"):
+            sync._restore_cache_alias(self.cache, "missing")
+        self.assertFalse((self.cache / "latest").is_symlink())
+
+    def test_non_symlink_latest_rejected_before_install(self):
+        self.write(self.cache / "latest", "unexpected file")
+        with self.assertRaisesRegex(sync.BrowserSyncError, "not a symlink"):
+            self.synchronize()
+        self.assertFalse(any(args[:2] == ["plugin", "add"] for args, _ in self.calls))
+
+    def test_failed_same_version_install_restores_alias_and_target(self):
+        self.version = "new"
+        shutil.copytree(self.source, self.cache / "new")
+        original = sync._inventory(self.cache / "new")
+        alias = self.cache / "latest"
+        alias.symlink_to("new")
+        self.remove_latest_alias = True
+        self.remove_new_cache = True
+        self.fail_install = True
+        with self.assertRaisesRegex(sync.BrowserSyncError, "installer failed"):
+            self.synchronize()
+        self.assertEqual(os.readlink(alias), "new")
+        self.assertEqual(sync._inventory(alias.resolve()), original)
+
+    def test_recovery_failure_keeps_original_install_error(self):
+        (self.cache / "latest").symlink_to("old")
+        self.fail_install = True
+        with patch.object(sync, "_restore_cache_alias", side_effect=OSError("recovery denied")):
+            with self.assertRaisesRegex(sync.BrowserSyncError,
+                                        "installer failed.*recovery also failed.*recovery denied"):
+                self.synchronize()
 
     def test_installer_changing_old_cache_preserves_and_restores_it(self):
         original = sync._inventory(self.cache / "old")

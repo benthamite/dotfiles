@@ -16,6 +16,8 @@ multiple redirections on one header and malformed Python remain unchanged for
 the existing guard. Consecutive supported Python heredocs are classified in order.
 The Git projection only neutralizes shell-substitution markers in valid quoted
 Python bodies and retains other source for the existing Git classifier.
+The network-activation projection masks ordinary data Name nodes only. Its
+callers retain original source for payload and known-secret inspection.
 No source is evaluated, imported, or executed.
 """
 
@@ -381,7 +383,40 @@ def project_command(command: str, *, allow_document_edit: bool = True) -> str:
     return _project_command(command, git_shell=False, allow_document_edit=allow_document_edit)
 
 
-def _project_command(command: str, *, git_shell: bool, allow_document_edit: bool = True) -> str:
+def _network_activation_body(body: str, strip_tabs: bool) -> str | None:
+    """Mask ordinary data names only; retain executable and literal evidence."""
+    if "\r" in body:
+        return None
+    lines = body.split("\n")
+    runtime = [line.lstrip("\t") if strip_tabs else line for line in lines]
+    try:
+        tree = ast.parse("\n".join(runtime))
+    except (SyntaxError, ValueError, RecursionError):
+        return None
+    protected = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Attribute):
+            protected.update(ast.walk(node.value))
+        elif isinstance(node, ast.Call):
+            protected.update(ast.walk(node.func))
+    starts, offset = [], 0
+    for line in lines:
+        starts.append(offset)
+        offset += len(line.encode("utf-8")) + 1
+    data = bytearray(body.encode("utf-8"))
+    for node in ast.walk(tree):
+        if (isinstance(node, ast.Name) and node.id in {"curl", "wget", "nc", "ncat"}
+                and node not in protected):
+            line = node.lineno - 1
+            stripped = len(lines[line].encode("utf-8")) - len(runtime[line].encode("utf-8"))
+            start = starts[line] + stripped + node.col_offset
+            end = start + node.end_col_offset - node.col_offset
+            data[start:end] = b"_" * (end - start)
+    return data.decode("utf-8")
+
+
+def _project_command(command: str, *, git_shell: bool, allow_document_edit: bool = True,
+                     network_activation: bool = False) -> str:
     # Walk only consecutive known Python programs, never search arbitrary shell
     # text for an opener: it might be inside a quote or another program's body.
     lines = command.split("\n")  # Shell lines use LF, not Unicode separators.
@@ -411,15 +446,15 @@ def _project_command(command: str, *, git_shell: bool, allow_document_edit: bool
                          and not any(line.strip() for line in lines[closing + 1:])
                          and re.fullmatch(r"\s*(?:/[A-Za-z0-9_./-]+/)?python(?:3(?:\.[0-9]+)?)?\s+-\s*",
                                           match["prefix"]) is not None)
-        projected = (_git_shell_body(body, strip_tabs) if git_shell
+        projected = (_network_activation_body(body, strip_tabs) if network_activation
+                     else _git_shell_body(body, strip_tabs) if git_shell
                      else _project_body(body, strip_tabs, document_edit=document_edit))
         if projected is None:
             break
-        # The secret projection masks its classified body; the Git projection
-        # preserves source except for inert substitution markers. Both retain
-        # all bytes outside each supported body.
+        # Secret mode masks the classified body. Git and network modes retain
+        # source except their specific inert spans. All retain outside bytes.
         for index, projected_line in enumerate(projected.split("\n"), opener + 1):
-            lines[index] = (projected_line if git_shell else
+            lines[index] = (projected_line if git_shell or network_activation else
                             " " * len(lines[index].encode("utf-8")))
         opener = closing + 1
     return "\n".join(lines)
@@ -428,6 +463,9 @@ def _project_command(command: str, *, git_shell: bool, allow_document_edit: bool
 def main() -> int:
     global PROTECTED
     args = sys.argv[1:]
+    if args == ["--network-activation"]:
+        sys.stdout.write(_project_command(sys.stdin.read(), git_shell=False, network_activation=True))
+        return 0
     brokers = "--brokers" in args
     if brokers:
         args.remove("--brokers")

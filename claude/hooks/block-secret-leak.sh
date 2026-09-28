@@ -541,6 +541,7 @@ if [ "$TOOL_NAME" = "Bash" ]; then
   # Only terminal quoted document prose is inert for activation. Once any
   # network marker remains, the complete original content is still scanned.
   NETWORK_ACTIVATION=$(mask_heredoc_bodies "$CONTENT" network) || check_pattern '.' 'network-command classifier failed'
+  NETWORK_ACTIVATION=$(printf '%s' "$NETWORK_ACTIVATION" | python3 "$(dirname "$0")/lib-python-heredoc.py" --network-activation) || check_pattern '.' 'Python network-activation classifier failed'
   if echo "$NETWORK_ACTIVATION" | grep -qE '(^|[^A-Za-z0-9_.-])(curl|wget|nc|ncat)([^A-Za-z0-9_.-]|$)|\b(python[23]?\s.*urllib|node\s.*fetch)\b'; then
     # Classify only proven URL operands; unknown forms retain conservative scanning.
     # Known-secret checks above still inspect the complete original command.

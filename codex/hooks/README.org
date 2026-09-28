@@ -189,6 +189,12 @@ exists elsewhere, the full original command is scanned; known-secret checks
 always retain the original bytes. This is a lexical boundary, not a filesystem
 or shell-rebinding sandbox.
 
+Quoted Python stdin may use =curl=, =wget=, =nc= or =ncat= as ordinary data
+variables without activating network detection. Callable/attribute receivers,
+imports, literals and unsupported source remain scanned. This projection only
+controls activation; actual network markers still trigger inspection of the
+original payload, and known-secret checks always retain the original bytes.
+
 The network heuristic treats dots and hyphens as part of names, so =curl.py=,
 =curl-cffi= and =zotra-use-curl= do not activate it. Actual
 =curl=/=wget=/=nc=/=ncat= names, including interpreter subprocess arguments,

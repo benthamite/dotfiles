@@ -720,8 +720,11 @@ available; supported forms and limits are in [[file:hooks/README.org][the hook c
 Quoted Python-stdin heredocs distinguish ordinary =ps= / =pgrep= variable
 names from process inspection. A module-scope empty list with one binding may
 use =append=; rebinding, nested scopes and dynamic namespace access retain the
-conservative check. Other calls/attribute bases, imports, literals, =psutil=
-and =/proc= markers remain checked; unquoted heredocs stay conservative.
+conservative check. Indexed =read_text()= calls are also recognized for
+uniquely bound lists from literal =pathlib.Path= joins and =glob= patterns;
+shadowed builtins/imports, dynamic receivers and mutations remain conservative.
+Other calls/attribute bases, imports, literals, =psutil= and =/proc= markers
+remain checked; unquoted heredocs stay conservative.
 
 The secret guard denies direct agent-shell invocations of raw =op=,
 macOS =security=, and =pbpaste=, including wrappers, nested shells, process

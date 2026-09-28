@@ -6,6 +6,7 @@ import subprocess
 import shutil
 import tempfile
 import unittest
+from test_process_output_policy import PATH_READ_COMMAND
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -29,6 +30,7 @@ class ProcessOutputGuardTests(unittest.TestCase):
 
     def test_guard_entry_points(self):
         cases = {
+            PATH_READ_COMMAND: "allow",
             "pgrep -fl 'synthetic-process-fixture'": "deny",
             "ps -axo pid,etime,command | rg synthetic": "deny",
             "ps aux > /tmp/synthetic-process-list": "deny",

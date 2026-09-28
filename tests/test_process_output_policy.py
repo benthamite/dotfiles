@@ -7,7 +7,14 @@ import sys
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
+PATH_READ_COMMAND = """python3 - <<'PY'
+import json,pathlib
+R=pathlib.Path('/Users/pablostafforini/repos/.worktrees/tangodb/biographical-sources');C=R/'research/source-catalog';ps=list((C/'acquisition-pass').glob('acq-forum5-*-reviewed-items.json'));print(len(ps));print(ps[0]);print(json.loads(ps[0].read_text()).keys());print(json.loads(ps[0].read_text())['items'][0]);base=pathlib.Path('/Users/pablostafforini/.local/share/tangodb/source-library/todotango-forum')
+for name in ['standard-replay-unattempted-pass','standard-replay-after-redirect-fix','standard-replay-after-unknown-stop']:
+ p=base/name/'captures.json';x=json.loads(p.read_text());print(name,x.keys());print(x['captures'][0])
+PY"""
 ALLOW = [
+    PATH_READ_COMMAND,
     "python3 - <<'PY'\nfor x in [1]:\n ps=[]\n ps.append(x)\n print(ps)\nPY",
     "python3 - <<'PY'\nimport pathlib,json,collections\nfor kind in ['sources','references']:\n ps=list(pathlib.Path('research/source-catalog',kind).glob('acq-forum3-*.json'));print(kind,len(ps),collections.Counter(p.stem.split('-')[2] for p in ps))\nPY",
     "python3 - <<'PY'\nlabel='á'; ps=[1,2]; print(len(ps))\nPY",
@@ -65,6 +72,43 @@ DENY = [
 ]
 
 class PolicyTests(unittest.TestCase):
+    def test_indexed_path_read_boundaries(self):
+        # Classify source only; none of these commands is executed.
+        body = "import pathlib\nroot=pathlib.Path('/tmp');ps=list(root.glob('*.json'));print(ps[0].read_text())"
+        mutations = [
+            "list=object()\n" + body,
+            body.replace("import pathlib", "import pathlib\npathlib=object()"),
+            body.replace("import pathlib", "from other import pathlib"),
+            body.replace("import pathlib", "import pathlib\nfrom other import list"),
+            body.replace("pathlib.Path('/tmp')", "get_path()"),
+            body.replace("pathlib.Path('/tmp')", "pathlib.Path(dynamic)"),
+            body.replace("'*.json'", "pattern"),
+            body.replace("ps[0]", "ps[index]"),
+            body.replace("ps[0].read_text()", "ps[0].cmdline()"),
+            body.replace("ps[0].read_text()", "ps.cmdline()"),
+            body.replace("ps[0].read_text()", "ps()"),
+            body.replace("print(ps", "ps=object();print(ps"),
+            body.replace("print(ps", "ps[0]=object();print(ps"),
+            body.replace("print(ps", "globals()['ps']=object();print(ps"),
+            body.replace("print(ps", "exec('pass');print(ps"),
+            body.replace("print(ps", "setattr(pathlib,'Path',object());print(ps"),
+            body.replace("print(ps", "pathlib.__dict__.update({});print(ps"),
+            body + "\nimport subprocess as ps",
+            body.replace("print(ps", "\ndef f():\n print(ps"),
+            body.replace("'/tmp'", "'/proc/123/cmdline'"),
+            body + "\nimport subprocess;subprocess.run(['ps','aux'])",
+        ]
+        for family in ("claude", "codex"):
+            spec = importlib.util.spec_from_file_location("path_policy_" + family,
+                ROOT / family / "hooks/lib-process-output-policy.py")
+            policy = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(policy)
+            policy.classify("python3 - <<'PY'\n" + body + "\nPY")
+            for source in mutations:
+                with self.subTest(family=family, source=source):
+                    with self.assertRaises(policy.Denied):
+                        policy.classify("python3 - <<'PY'\n" + source + "\nPY")
+
     def test_cases(self):
         for family in ("claude", "codex"):
             path = ROOT / family / "hooks/lib-process-output-policy.py"

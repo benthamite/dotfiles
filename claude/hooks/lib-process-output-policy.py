@@ -150,6 +150,74 @@ def project_python_names(source):
         return (isinstance(node, ast.Attribute) and node.attr == "append"
                 and isinstance(node.value, ast.Name) and node.value.id in lists
                 and module_scope(node))
+    # Prove only indexed reads from a uniquely bound literal pathlib-glob list.
+    # Other receivers stay conservative, including nested/dynamic namespaces.
+    bindings = {}
+    for node in nodes:
+        name = (node.id if isinstance(node, ast.Name) and isinstance(node.ctx, (ast.Store, ast.Del))
+                else node.asname or node.name.split(".")[0] if isinstance(node, ast.alias)
+                else node.arg if isinstance(node, ast.arg)
+                else node.name if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.ExceptHandler))
+                else node.name if isinstance(node, (ast.MatchAs, ast.MatchStar)) else None)
+        if name:
+            bindings.setdefault(name, []).append(node)
+    path_eligible = not dynamic and not any(
+        isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda,
+                          ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp, ast.Match))
+        or isinstance(node, (ast.Attribute, ast.Subscript)) and isinstance(node.ctx, (ast.Store, ast.Del))
+        or isinstance(node, ast.Attribute) and node.attr == "__dict__"
+        or isinstance(node, ast.Name) and node.id in {"setattr", "delattr", "__builtins__"}
+        for node in nodes)
+    imports = bindings.get("pathlib", [])
+    path_eligible = (path_eligible and "list" not in bindings and len(imports) == 1
+                     and isinstance(imports[0], ast.alias) and imports[0].name == "pathlib"
+                     and imports[0].asname is None and isinstance(parents[imports[0]], ast.Import))
+
+    def assignment(name, before):
+        bound = bindings.get(name, [])
+        if len(bound) == 1:
+            statement = parents.get(bound[0])
+            if (isinstance(statement, ast.Assign) and len(statement.targets) == 1
+                    and statement.targets[0] is bound[0] and module_scope(statement)
+                    and (statement.lineno, statement.col_offset) < (before.lineno, before.col_offset)):
+                return statement.value
+        return None
+
+    def literal_text(node):
+        return isinstance(node, ast.Constant) and isinstance(node.value, str)
+
+    def literal_path(node, seen=frozenset()):
+        if isinstance(node, ast.Name) and node.id not in seen:
+            value = assignment(node.id, node)
+            return value is not None and literal_path(value, seen | {node.id})
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+            return literal_path(node.left, seen) and literal_text(node.right)
+        return (isinstance(node, ast.Call) and not node.keywords and len(node.args) == 1
+                and literal_text(node.args[0]) and isinstance(node.func, ast.Attribute)
+                and node.func.attr == "Path" and isinstance(node.func.value, ast.Name)
+                and node.func.value.id == "pathlib")
+
+    path_reads = set()
+    if path_eligible:
+        for node in nodes:
+            if not (isinstance(node, ast.Name) and node.id in {"ps", "pgrep"}):
+                continue
+            sub = parents.get(node)
+            attr = parents.get(sub)
+            call = parents.get(attr)
+            value = assignment(node.id, node)
+            if not (isinstance(sub, ast.Subscript) and sub.value is node
+                    and isinstance(sub.slice, ast.Constant) and type(sub.slice.value) is int
+                    and isinstance(attr, ast.Attribute) and attr.value is sub and attr.attr == "read_text"
+                    and isinstance(call, ast.Call) and call.func is attr and not call.args and not call.keywords
+                    and isinstance(value, ast.Call) and isinstance(value.func, ast.Name)
+                    and value.func.id == "list" and len(value.args) == 1 and not value.keywords):
+                continue
+            glob = value.args[0]
+            if (isinstance(glob, ast.Call) and not glob.keywords and len(glob.args) == 1
+                    and literal_text(glob.args[0]) and isinstance(glob.func, ast.Attribute)
+                    and glob.func.attr == "glob" and literal_path(glob.func.value)):
+                path_reads.add(node)
     protected = set()
     for node in nodes:
         if isinstance(node, ast.Attribute) and not data_append(node):
@@ -164,7 +232,7 @@ def project_python_names(source):
     data = bytearray(source.encode("utf-8"))
     for node in ast.walk(tree):
         if (isinstance(node, ast.Name) and node.id in {"ps", "pgrep"}
-                and node not in protected):
+                and (node not in protected or node in path_reads)):
             start = offsets[node.lineno - 1] + node.col_offset
             end = offsets[node.end_lineno - 1] + node.end_col_offset
             data[start:end] = b"_" * (end - start)

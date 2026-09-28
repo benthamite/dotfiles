@@ -35,7 +35,14 @@ desktop authorization. This supports secret-safe JSON templates such as
 ``op item create -`` without exposing values in argv or bypassing the broker.
 
 The broker never writes secret values anywhere: command output goes back over a
-0600 unix socket to the caller and is not logged.
+0600 unix socket to the caller and is not logged. Requests run concurrently in
+the same terminal session, so a long-lived ``op run`` does not block other
+clients. At capacity, new requests fail explicitly instead of waiting behind
+long-lived programs. Active requests prevent the broker's idle shutdown.
+
+The concurrent broker uses a versioned runtime directory. Existing clients and
+programs attached to the legacy broker keep running there; new clients never
+stop it, remove its socket, or reuse its PID file.
 """
 
 from __future__ import annotations
@@ -53,10 +60,11 @@ import termios
 import threading
 import time
 
-RUNTIME_DIR = os.path.join(os.path.expanduser("~"), ".cache", "op-desktop")
+RUNTIME_DIR = os.path.join(os.path.expanduser("~"), ".cache", "op-desktop", "v2")
 SOCKET_PATH = os.path.join(RUNTIME_DIR, "sock")
 PID_PATH = os.path.join(RUNTIME_DIR, "pid")
 LOG_PATH = os.path.join(RUNTIME_DIR, "broker.log")
+LOCK_PATH = os.path.join(RUNTIME_DIR, "broker.lock")
 
 # Exit the broker after this long with no requests. Hygiene only -- the
 # authorization itself expires on 1Password's schedule regardless.
@@ -65,6 +73,8 @@ IDLE_EXIT_SECONDS = 3600
 START_TIMEOUT_SECONDS = 20
 RECV_CHUNK = 65536
 MAX_STDIN_BYTES = 16 * 1024 * 1024
+MAX_ACTIVE_REQUESTS = 16
+REQUEST_IO_TIMEOUT_SECONDS = 10
 
 # Run the real binary by absolute path. `shell/shims/op` routes bare `op` here,
 # so resolving "op" through PATH would make the broker re-enter its own shim and
@@ -162,8 +172,163 @@ def acquire_controlling_tty() -> int:
     return slave_fd
 
 
+def execute_request(request: dict, slave_fd: int) -> dict:
+    """Run one CLI child without changing the shared terminal or environment."""
+    argv = request.get("argv") or []
+    if not isinstance(argv, list) or not all(isinstance(a, str) for a in argv):
+        return {"rc": 2, "out": "", "err": "op-desktop: bad argv\n"}
+
+    env = dict(os.environ)
+    overrides = request.get("env") or {}
+    if not isinstance(overrides, dict) or not all(
+        isinstance(k, str) and isinstance(v, str) for k, v in overrides.items()
+    ):
+        return {"rc": 2, "out": "", "err": "op-desktop: bad environment\n"}
+    for key, value in overrides.items():
+        if key.startswith("OP_") and key != "OP_SERVICE_ACCOUNT_TOKEN":
+            env[key] = value
+    env.pop("OP_SERVICE_ACCOUNT_TOKEN", None)
+
+    cwd = request.get("cwd")
+    if not (isinstance(cwd, str) and os.path.isdir(cwd)):
+        cwd = os.path.expanduser("~")
+    env["OP_SHIM_BYPASS"] = "1"
+
+    stdin_payload = request.get("stdin_b64")
+    child_input = None
+    if stdin_payload is not None:
+        if not isinstance(stdin_payload, str):
+            return {"rc": 2, "out": "", "err": "op-desktop: bad stdin\n"}
+        try:
+            import base64
+
+            child_input = base64.b64decode(stdin_payload, validate=True)
+        except (ValueError, TypeError):
+            return {"rc": 2, "out": "", "err": "op-desktop: bad stdin\n"}
+        if len(child_input) > MAX_STDIN_BYTES:
+            return {"rc": 2, "out": "", "err": "op-desktop: stdin too large\n"}
+
+    log(f"op {' '.join(argv[:2])} ({len(argv)} args)")
+    try:
+        run_options = {
+            "stdout": subprocess.PIPE,
+            "stderr": subprocess.PIPE,
+            "env": env,
+            "cwd": cwd,
+        }
+        if child_input is None:
+            run_options["stdin"] = slave_fd
+        else:
+            run_options["input"] = child_input
+        completed = subprocess.run([OP_BINARY, *argv], **run_options)
+        payload = {
+            "rc": completed.returncode,
+            "out": completed.stdout.decode("utf-8", "replace"),
+            "err": completed.stderr.decode("utf-8", "replace"),
+        }
+    except FileNotFoundError:
+        payload = {"rc": 127, "out": "", "err": "op-desktop: `op` not found\n"}
+    except Exception:  # Do not expose exception text that might contain input.
+        payload = {"rc": 1, "out": "", "err": "op-desktop: child execution failed\n"}
+    log(f"  rc={payload['rc']}")
+    return payload
+
+
+def handle_connection(conn: socket.socket, slave_fd: int) -> None:
+    """Serve one caller; a stalled socket must not retain a worker forever."""
+    with conn:
+        conn.settimeout(REQUEST_IO_TIMEOUT_SECONDS)
+        try:
+            # Admission precedes upload, so a saturated broker can reject even
+            # large templates without breaking a client mid-send.
+            send_json(conn, {"ready": True})
+        except OSError:
+            return
+        try:
+            request = recv_json(conn)
+            if request is None:
+                return
+            if not isinstance(request, dict):
+                raise ValueError("bad request")
+        except (OSError, ValueError):
+            payload = {"rc": 2, "out": "", "err": "op-desktop: invalid or incomplete request\n"}
+        else:
+            # Socket timeouts do not limit the CLI child's lifetime.
+            payload = execute_request(request, slave_fd)
+        try:
+            send_json(conn, payload)
+        except OSError:
+            pass
+
+
+class BrokerRequests:
+    """Bound concurrent requests and measure idle time only after they finish."""
+
+    def __init__(self, slave_fd: int, limit: int = MAX_ACTIVE_REQUESTS):
+        self.slave_fd = slave_fd
+        self.limit = limit
+        self.active = 0
+        self.last_activity = time.monotonic()
+        self.lock = threading.Lock()
+
+    def start(self, conn: socket.socket):
+        with self.lock:
+            accepted = self.active < self.limit
+            if accepted:
+                self.active += 1
+                self.last_activity = time.monotonic()
+        if not accepted:
+            self.reject(conn, "broker busy; concurrent request limit reached")
+            return None
+        worker = threading.Thread(target=self.handle, args=(conn,), daemon=True)
+        try:
+            worker.start()
+        except RuntimeError:
+            self.finished()
+            self.reject(conn, "could not start request worker")
+            return None
+        return worker
+
+    @staticmethod
+    def reject(conn: socket.socket, reason: str) -> None:
+        with conn:
+            # Do not let a caller that stops reading stall the accept loop.
+            conn.settimeout(1)
+            try:
+                send_json(conn, {"rc": 75, "out": "", "err": f"op-desktop: {reason}\n"})
+            except OSError:
+                pass
+
+    def handle(self, conn: socket.socket) -> None:
+        try:
+            handle_connection(conn, self.slave_fd)
+        finally:
+            self.finished()
+
+    def finished(self) -> None:
+        with self.lock:
+            self.active -= 1
+            self.last_activity = time.monotonic()
+
+    def idle_expired(self) -> bool:
+        with self.lock:
+            return self.active == 0 and time.monotonic() - self.last_activity > IDLE_EXIT_SECONDS
+
+
 def run_broker() -> None:
     ensure_runtime_dir()
+    # Multiple fresh clients can race to start us. Only the lifetime lock owner
+    # may acquire a tty or replace this runtime version's stale socket/PID.
+    fd = os.open(LOCK_PATH, os.O_CREAT | os.O_RDWR, 0o600)
+    with os.fdopen(fd, "a") as lifetime_lock:
+        try:
+            fcntl.flock(lifetime_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            return
+        serve_broker()
+
+
+def serve_broker() -> None:
 
     # The whole point is a desktop-authorized session, so a service-account token
     # inherited from the environment must not shadow it.
@@ -180,7 +345,7 @@ def run_broker() -> None:
     finally:
         os.umask(old_umask)
     os.chmod(SOCKET_PATH, 0o600)
-    server.listen(8)
+    server.listen(MAX_ACTIVE_REQUESTS)
     server.settimeout(30)
 
     with open(PID_PATH, "w") as handle:
@@ -201,95 +366,17 @@ def run_broker() -> None:
     signal.signal(signal.SIGTERM, shutdown)
     signal.signal(signal.SIGINT, shutdown)
 
-    last_activity = time.time()
+    requests = BrokerRequests(slave_fd)
     while True:
         try:
             conn, _ = server.accept()
         except socket.timeout:
-            if time.time() - last_activity > IDLE_EXIT_SECONDS:
+            if requests.idle_expired():
                 log("idle timeout")
                 shutdown()
             continue
 
-        last_activity = time.time()
-        with conn:
-            try:
-                request = recv_json(conn)
-            except (OSError, ValueError):
-                continue
-            if not request:
-                continue
-
-            argv = request.get("argv") or []
-            if not isinstance(argv, list) or not all(isinstance(a, str) for a in argv):
-                send_json(conn, {"rc": 2, "out": "", "err": "op-desktop: bad argv\n"})
-                continue
-
-            env = dict(os.environ)
-            for key, value in (request.get("env") or {}).items():
-                if key.startswith("OP_") and key != "OP_SERVICE_ACCOUNT_TOKEN":
-                    env[key] = value
-            env.pop("OP_SERVICE_ACCOUNT_TOKEN", None)
-
-            cwd = request.get("cwd")
-            if not (isinstance(cwd, str) and os.path.isdir(cwd)):
-                cwd = os.path.expanduser("~")
-
-            # Belt and braces alongside OP_BINARY: if anything in this child's
-            # environment still resolves `op` through PATH, the shim sees this
-            # and passes straight through instead of routing back here.
-            env["OP_SHIM_BYPASS"] = "1"
-
-            stdin_payload = request.get("stdin_b64")
-            if stdin_payload is not None:
-                if not isinstance(stdin_payload, str):
-                    send_json(conn, {"rc": 2, "out": "", "err": "op-desktop: bad stdin\n"})
-                    continue
-                try:
-                    import base64
-
-                    child_input = base64.b64decode(stdin_payload, validate=True)
-                except (ValueError, TypeError):
-                    send_json(conn, {"rc": 2, "out": "", "err": "op-desktop: bad stdin\n"})
-                    continue
-                if len(child_input) > MAX_STDIN_BYTES:
-                    send_json(conn, {"rc": 2, "out": "", "err": "op-desktop: stdin too large\n"})
-                    continue
-            else:
-                child_input = None
-
-            log(f"op {' '.join(argv[:2])} ({len(argv)} args)")
-            try:
-                run_options = {
-                    "stdout": subprocess.PIPE,
-                    "stderr": subprocess.PIPE,
-                    "env": env,
-                    "cwd": cwd,
-                }
-                if child_input is None:
-                    run_options["stdin"] = slave_fd
-                else:
-                    run_options["input"] = child_input
-                completed = subprocess.run(
-                    [OP_BINARY, *argv],
-                    **run_options,
-                )
-                payload = {
-                    "rc": completed.returncode,
-                    "out": completed.stdout.decode("utf-8", "replace"),
-                    "err": completed.stderr.decode("utf-8", "replace"),
-                }
-            except FileNotFoundError:
-                payload = {"rc": 127, "out": "", "err": "op-desktop: `op` not found\n"}
-            except Exception as exc:  # noqa: BLE001 - report, don't kill the broker
-                payload = {"rc": 1, "out": "", "err": f"op-desktop: {exc}\n"}
-
-            log(f"  rc={payload['rc']}")
-            try:
-                send_json(conn, payload)
-            except OSError:
-                pass
-            last_activity = time.time()
+        requests.start(conn)
 
 
 def spawn_broker() -> None:
@@ -310,7 +397,8 @@ def spawn_broker() -> None:
         run_broker()
     except Exception as exc:  # noqa: BLE001
         log(f"broker crashed: {exc}")
-    os._exit(1)
+        os._exit(1)
+    os._exit(0)
 
 
 # --------------------------------------------------------------------------
@@ -333,13 +421,7 @@ def connect_or_start():
     if conn:
         return conn
 
-    # Stale socket from a dead broker.
-    if broker_pid() is None and os.path.exists(SOCKET_PATH):
-        try:
-            os.unlink(SOCKET_PATH)
-        except OSError:
-            pass
-
+    # Only the broker holding the lifetime lock may replace a stale socket.
     spawn_broker()
 
     deadline = time.time() + START_TIMEOUT_SECONDS
@@ -415,20 +497,19 @@ def main(argv) -> int:
     conn = connect_or_start()
     with conn:
         conn.settimeout(None)
-        request = {
-            "argv": argv,
-            "env": {k: v for k, v in os.environ.items() if k.startswith("OP_")},
-            "cwd": os.getcwd(),
-        }
-        if stdin_content is not None:
-            import base64
-
-            request["stdin_b64"] = base64.b64encode(stdin_content).decode("ascii")
-        send_json(
-            conn,
-            request,
-        )
         reply = recv_json(conn)
+        if reply is not None and reply.get("ready") is True:
+            request = {
+                "argv": argv,
+                "env": {k: v for k, v in os.environ.items() if k.startswith("OP_")},
+                "cwd": os.getcwd(),
+            }
+            if stdin_content is not None:
+                import base64
+
+                request["stdin_b64"] = base64.b64encode(stdin_content).decode("ascii")
+            send_json(conn, request)
+            reply = recv_json(conn)
 
     if reply is None:
         print("op-desktop: broker closed the connection", file=sys.stderr)

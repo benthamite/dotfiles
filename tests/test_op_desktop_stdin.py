@@ -29,7 +29,7 @@ class DesktopStdinTest(unittest.TestCase):
         with patch.object(self.mod, "ensure_runtime_dir"), \
              patch.object(self.mod, "connect_or_start", return_value=conn), \
              patch.object(self.mod, "send_json") as send, \
-             patch.object(self.mod, "recv_json", return_value={"rc": reply_rc}), \
+             patch.object(self.mod, "recv_json", side_effect=[{"ready": True}, {"rc": reply_rc}]), \
              patch.object(self.mod.socket, "socket", side_effect=AssertionError("no sockets")), \
              patch.object(self.mod.subprocess, "run", side_effect=AssertionError("no subprocess")), \
              patch.object(self.mod, "MAX_STDIN_BYTES", limit or self.mod.MAX_STDIN_BYTES), \

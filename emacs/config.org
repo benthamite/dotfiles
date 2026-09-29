@@ -9128,15 +9128,10 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (gptel-make-anthropic "Claude-thinking"
     :key (auth-source-extras-op-get "anthropic.com" "key" 'tlon)
     :stream t
-    :models '(claude-sonnet-4-20250514)
-    :header (lambda () (when-let* ((key (gptel--get-api-key)))
-                    `(("x-api-key" . ,key)
-                      ("anthropic-version" . "2023-06-01")
-                      ("anthropic-beta" . "pdfs-2024-09-25")
-                      ("anthropic-beta" . "output-128k-2025-02-19")
-                      ("anthropic-beta" . "prompt-caching-2024-07-31"))))
-    :request-params `(:thinking (:type "enabled" :budget_tokens ,(* 1024 16))
-                                :max_tokens ,(* 1024 32)))
+    :models '(gptel-extras-model-unavailable)
+    :request-params '(:thinking (:type "adaptive")
+                      :output_config (:effort "high")
+                      :max_tokens 32768))
 
   (gptel-make-openai "DeepSeek"
     :host "api.deepseek.com"
@@ -9238,6 +9233,8 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
    '((gptel-model . claude-sonnet-latest)
      (agent-log-search-scope-model . claude-sonnet-latest)
      (agent-log-search-model . claude-sonnet-latest)))
+  (gptel-extras-model-backend-bindings
+   '(("Claude-thinking" . claude-sonnet-latest)))
 
   :config
   (gptel-extras-model-discovery-mode 1)
@@ -9884,9 +9881,8 @@ servers use the correct version.
   :config
   (require 'tlon-core)
   (setq magit-gptcommit-llm-provider
-        (make-llm-claude
-         :key (auth-source-extras-op-get "anthropic.com" "key" 'tlon)
-         :chat-model "claude-haiku-4-5-20251001"))
+        (lambda ()
+          (gptel-extras-make-claude-provider 'claude-haiku-latest)))
   (magit-gptcommit-status-buffer-setup))
 #+end_src
 

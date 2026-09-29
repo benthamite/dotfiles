@@ -489,6 +489,23 @@ The setting is updated on every successful refresh; ordinary ~setq~ assignments
 elsewhere copy the alias's value only once. Buffer-local model choices are
 preserved. Consumers with a separate backend setting must select =Claude=.
 
+#+vindex: gptel-extras-model-backend-bindings
+For a backend with its own model list, use
+~gptel-extras-model-backend-bindings~. This alist defaults to ~nil~. Each entry
+maps an existing backend name to a discovered alias variable; its model list
+then contains only that alias's concrete model. The backend's request options
+must be compatible with that family. The =Claude-thinking= configuration uses
+this to follow Sonnet with adaptive thinking. A discovery failure makes managed
+backends unavailable, including when a buffer still holds an earlier model.
+
+#+findex: gptel-extras-make-claude-provider
+Consumers of the =llm= package can call ~gptel-extras-make-claude-provider~ with
+an alias variable's symbol. It returns an =llm-claude= provider using the alias's
+current concrete model and the =Claude= backend's API key. It rejects unknown
+or unresolved aliases. Call it for each request: retaining a provider object
+would retain its old model. Magit's commit-message generator accepts such a
+provider factory, so new commit-message requests follow the discovered Haiku.
+
 Discovered models are registered with the backend before defaults change, so
 gptel does not substitute a different model. Existing pricing and request
 parameters are preserved for known model IDs. New models use capabilities and

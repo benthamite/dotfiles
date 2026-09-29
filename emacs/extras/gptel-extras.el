@@ -68,6 +68,14 @@ are left alone.  These defaults become unavailable if discovery fails."
   :type '(alist :key-type symbol :value-type symbol)
   :group 'gptel-extras)
 
+(defcustom gptel-extras-model-backend-bindings nil
+  "Gptel backends whose model lists should track a discovered model.
+Each entry is (BACKEND-NAME . ALIAS), where ALIAS is a discovered Claude
+model variable.  The backend must already exist.  Its model list is
+replaced with the alias's current value on each refresh."
+  :type '(alist :key-type string :value-type symbol)
+  :group 'gptel-extras)
+
 (defvar gptel-extras-model-discovery-status nil
   "Discovery state: nil, `refreshing', `ready', or an error string.")
 
@@ -115,6 +123,9 @@ than silently using an old or unrelated model."
                    (plist-get args :model)
                  gptel-model)))
     (when (or (eq model 'gptel-extras-model-unavailable)
+              (and backend
+                   (memq 'gptel-extras-model-unavailable
+                         (gptel-backend-models backend)))
               (and gptel-extras-model-discovery-mode (null model) backend
                    (equal (gptel-backend-name backend) "Claude")))
       (user-error "Claude model discovery is not ready: %s"
@@ -206,9 +217,12 @@ The API key travels on standard input, never in process arguments."
                    (cons (cdr entry)
                          (gptel-extras--latest-model (car entry) models)))
                  gptel-extras--model-aliases)))
-    (dolist (binding gptel-extras-model-bindings)
+    (dolist (binding (append gptel-extras-model-bindings
+                             gptel-extras-model-backend-bindings))
       (unless (assq (cdr binding) selected)
         (error "Unknown model alias: %s" (cdr binding))))
+    (dolist (binding gptel-extras-model-backend-bindings)
+      (gptel-get-backend (car binding)))
     (dolist (entry selected)
       (let* ((info (cdr entry))
              (model (intern (plist-get info :id))))
@@ -265,21 +279,52 @@ or inherit another release's request parameters."
            (append (when mimes '(media)) '(tool-use cache)))))
   (cl-pushnew model (gptel-backend-models backend)))
 
-(defun gptel-extras--apply-model-bindings ()
-  "Copy alias values to configured defaults, preserving buffer-local choices."
+(defun gptel-extras--apply-model-bindings (&optional unavailable)
+  "Update configured defaults and backend lists from their model aliases.
+Preserve buffer-local choices.  If UNAVAILABLE is non-nil, invalidate
+managed settings without resolving aliases or requiring missing backends."
   (dolist (binding gptel-extras-model-bindings)
     (set-default (car binding)
-                 (or (symbol-value (cdr binding))
-                     'gptel-extras-model-unavailable))))
+                 (if unavailable 'gptel-extras-model-unavailable
+                   (or (symbol-value (cdr binding))
+                       'gptel-extras-model-unavailable))))
+  (dolist (binding gptel-extras-model-backend-bindings)
+    (when-let* ((backend (if unavailable
+                            (alist-get (car binding) gptel--known-backends
+                                       nil nil #'equal)
+                          (gptel-get-backend (car binding)))))
+      (setf (gptel-backend-models backend)
+            (list (if unavailable 'gptel-extras-model-unavailable
+                    (or (symbol-value (cdr binding))
+                        'gptel-extras-model-unavailable)))))))
 
 (defun gptel-extras--model-discovery-failed (message)
   "Invalidate managed defaults and report discovery failure MESSAGE."
   (setq gptel-extras-model-discovery-status message)
   (dolist (entry gptel-extras--model-aliases)
     (set (cdr entry) nil))
-  (gptel-extras--apply-model-bindings)
+  (gptel-extras--apply-model-bindings t)
   (display-warning 'gptel-extras
                    (concat "Claude model discovery failed: " message)))
+
+(declare-function make-llm-claude "llm-claude" (&rest args))
+
+;;;###autoload
+(defun gptel-extras-make-claude-provider (alias)
+  "Make an llm Claude provider using the current value of ALIAS.
+ALIAS must name one of the discovered Claude model variables.  Call
+this when starting a request rather than storing the provider, so later
+refreshes take effect.  Reuse the Claude gptel backend's API key."
+  (unless (memq alias (mapcar #'cdr gptel-extras--model-aliases))
+    (user-error "Unknown Claude model alias: %s" alias))
+  (let ((model (symbol-value alias)))
+    (unless model
+      (user-error "Claude model discovery is not ready: %s"
+                  gptel-extras-model-discovery-status))
+    (require 'llm-claude)
+    (make-llm-claude
+     :key (gptel--get-api-key (gptel-backend-key (gptel-get-backend "Claude")))
+     :chat-model (symbol-name model))))
 
 ;;;;; Aider
 

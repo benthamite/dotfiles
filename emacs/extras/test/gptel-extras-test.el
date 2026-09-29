@@ -136,6 +136,62 @@
         (advice-remove 'gptel--sanitize-model
                        #'gptel-extras--require-discovered-model)))))
 
+(ert-deftest gptel-extras-test-model-managed-backend-refresh ()
+  "Refresh a secondary backend and reject old selections after failure."
+  (let* ((backend (gptel--make-anthropic :name "Claude-thinking" :models '(old)))
+         (gptel--known-backends `(("Claude-thinking" . ,backend)))
+         (gptel-extras-model-bindings nil)
+         (gptel-extras-model-backend-bindings '(("Claude-thinking" . claude-sonnet-latest)))
+         (claude-opus-latest nil) (claude-haiku-latest nil)
+         (claude-sonnet-latest 'claude-sonnet-99)
+         (gptel-extras-model-discovery-status 'ready))
+    (gptel-extras--apply-model-bindings)
+    (should (equal (gptel-backend-models backend) '(claude-sonnet-99)))
+    (setq claude-sonnet-latest 'claude-sonnet-100)
+    (gptel-extras--apply-model-bindings)
+    (should (equal (gptel-backend-models backend) '(claude-sonnet-100)))
+    (cl-letf (((symbol-function 'display-warning) #'ignore))
+      (gptel-extras--model-discovery-failed "offline"))
+    (let ((gptel-backend backend) (gptel-model 'claude-sonnet-99))
+      (should-error (gptel-extras--require-discovered-model) :type 'user-error))))
+
+(ert-deftest gptel-extras-test-model-llm-provider-reads-current-alias ()
+  "Construct each llm provider from the current alias rather than a saved ID."
+  (require 'llm-claude)
+  (let* ((backend (gptel--make-anthropic :name "Claude" :key "test-only"))
+         (gptel--known-backends `(("Claude" . ,backend)))
+         (claude-haiku-latest 'claude-haiku-99))
+    (should (equal (llm-claude-chat-model
+                    (gptel-extras-make-claude-provider 'claude-haiku-latest))
+                   "claude-haiku-99"))
+    (setq claude-haiku-latest 'claude-haiku-100)
+    (should (equal (llm-claude-chat-model
+                    (gptel-extras-make-claude-provider 'claude-haiku-latest))
+                   "claude-haiku-100"))
+    (setq claude-haiku-latest nil)
+    (should-error (gptel-extras-make-claude-provider 'claude-haiku-latest)
+                  :type 'user-error)
+    (should-error (gptel-extras-make-claude-provider 'unknown) :type 'user-error)))
+
+(ert-deftest gptel-extras-test-model-missing-backend-reports-failure ()
+  "A missing configured backend cannot partially publish or hide an error."
+  (let ((gptel-extras-model-bindings nil)
+        (gptel-extras-model-backend-bindings '(("Missing" . claude-sonnet-latest)))
+        (gptel--known-backends nil)
+        (claude-opus-latest 'old-opus) (claude-sonnet-latest 'old-sonnet)
+        (claude-haiku-latest 'old-haiku)
+        (gptel-extras-model-discovery-status nil)
+        warning)
+    (should-error
+     (gptel-extras--publish-models
+      nil '((:id "claude-opus-99") (:id "claude-sonnet-99") (:id "claude-haiku-99"))))
+    (should (eq claude-sonnet-latest 'old-sonnet))
+    (cl-letf (((symbol-function 'display-warning)
+               (lambda (_type text &rest _args) (setq warning text))))
+      (gptel-extras--model-discovery-failed "Missing backend"))
+    (should (string-match-p "Missing backend" warning))
+    (should-not claude-sonnet-latest)))
+
 ;;;; Generate next heading
 
 (ert-deftest gptel-extras-test-generate-next-heading-no-number ()

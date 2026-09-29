@@ -79,7 +79,7 @@ Each recorded batch is (ACCOUNT . TITLES).  The account `broken' has no token."
 (ert-deftest auth-source-extras-op-item-fields-keys-by-label-and-id ()
   (should (equal (auth-source-extras--op-item-fields
                   '((title . "t") (fields ((id . "f1") (label . "api") (value . "V")))))
-                 '("t" ("api" . "V") ("f1" . "V")))))
+                 '("t" ("f1" . "V") ("api" . "V")))))
 
 (ert-deftest auth-source-extras-op-search-finds-host-slash-user ()
   (auth-source-extras-test--with-fake-op batches
@@ -102,8 +102,8 @@ Each recorded batch is (ACCOUNT . TITLES).  The account `broken' has no token."
 
 (ert-deftest auth-source-extras-op-search-refuses-create-and-unknown-hosts ()
   (auth-source-extras-test--with-fake-op batches
-    (should-not (auth-source-extras-op-search :host "api.github.com"
-                                              :user "benthamite^forge" :create t))
+    (should (auth-source-extras-op-search :host "api.github.com"
+                                          :user "benthamite^forge" :create t))
     (should-not (auth-source-extras-op-search :host "unknown.example.com"))))
 
 (ert-deftest auth-source-extras-op-backend-is-selected-by-its-symbol ()
@@ -142,6 +142,75 @@ Each recorded batch is (ACCOUNT . TITLES).  The account `broken' has no token."
       (should-error (auth-source-extras-git-crypt-unlock temporary-file-directory "repo-key")
                     :type 'user-error))
     (should-not (file-exists-p key-file))))
+
+(ert-deftest auth-source-extras-op-search-cached-smtp-survives-failed-listing ()
+  (auth-source-extras-test--with-fake-op batches
+    (puthash 'personal 'missing auth-source-extras--op-titles)
+    (puthash '(personal . "smtp.example.com/me")
+             '(("password" . "APP-PASSWORD")) auth-source-extras--op-cache)
+    (cl-letf (((symbol-function 'auth-source-extras--op-list-titles)
+               (lambda (&rest _) (ert-fail "Cached SMTP must not list any vault"))))
+      (let ((result (car (auth-source-extras-op-search
+                         :host "smtp.example.com" :port "465" :user "me"))))
+        (should (equal (funcall (plist-get result :secret)) "APP-PASSWORD"))))))
+
+(ert-deftest auth-source-extras-op-search-retries-failed-listing ()
+  (auth-source-extras-test--with-fake-op batches
+    (puthash 'personal 'missing auth-source-extras--op-titles)
+    (should (auth-source-extras-op-search :host "imap.example.com" :user "me@example.com"))))
+
+(ert-deftest auth-source-extras-op-search-does-not-list-unneeded-account ()
+  (auth-source-extras-test--with-fake-op batches
+    (cl-letf (((symbol-function 'auth-source-extras--op-list-titles)
+               (lambda (account)
+                 (should (eq account 'personal))
+                 '("imap.example.com"))))
+      (should (auth-source-extras-op-search :host "imap.example.com" :user "me@example.com")))))
+
+(ert-deftest auth-source-extras-op-search-listing-failure-is-not-cached ()
+  (auth-source-extras-test--with-fake-op batches
+    (cl-letf (((symbol-function 'auth-source-extras--op-list-titles)
+               (lambda (_) 'missing)))
+      (should-not (auth-source-extras-op-search :host "smtp.example.com" :user "me"))
+      (should-not (gethash 'personal auth-source-extras--op-titles)))))
+
+(ert-deftest auth-source-extras-op-search-rejects-empty-password ()
+  (auth-source-extras-test--with-fake-op batches
+    (dolist (fields '((("password" . "")) (("notesPlain" . "notes"))))
+      (puthash '(personal . "imap.example.com") fields auth-source-extras--op-cache)
+      (should-not (auth-source-extras--op-search-result
+                   '(personal "imap.example.com" "imap.example.com" "465")
+                   "me@example.com")))))
+
+(ert-deftest auth-source-extras-op-password-id-outranks-template-labels ()
+  (let* ((item '((title . "smtp.example.com/me")
+                 (fields ((id . "pop_password") (label . "password") (value . ""))
+                         ((id . "other") (label . "password") (value . "WRONG"))
+                         ((id . "password") (label . "password") (value . "CORRECT")))))
+         (fields (cdr (auth-source-extras--op-item-fields item))))
+    (should (equal (cdr (assoc "password" fields)) "CORRECT"))
+    (should (equal (cdr (assoc "pop_password" fields)) ""))))
+
+(ert-deftest auth-source-extras-op-search-preserves-known-specificity ()
+  (auth-source-extras-test--with-fake-op batches
+    (puthash 'personal '("smtp.example.com:465/me" "smtp.example.com")
+             auth-source-extras--op-titles)
+    (puthash '(personal . "smtp.example.com") '(("password" . "GENERIC"))
+             auth-source-extras--op-cache)
+    (cl-letf (((symbol-function 'auth-source-extras--op-items)
+               (lambda (_account _titles)
+                 '(("smtp.example.com:465/me" ("password" . "SPECIFIC"))))))
+      (let ((result (car (auth-source-extras-op-search
+                         :host "smtp.example.com" :user "me" :port "465"))))
+        (should (equal (funcall (plist-get result :secret)) "SPECIFIC"))))))
+
+(ert-deftest auth-source-extras-op-search-unavailable-vault-allows-other-account ()
+  (auth-source-extras-test--with-fake-op batches
+    (puthash '(tlon . "smtp.example.com/me") '(("password" . "AVAILABLE"))
+             auth-source-extras--op-cache)
+    (cl-letf (((symbol-function 'auth-source-extras--op-list-titles)
+               (lambda (_) 'missing)))
+      (should (auth-source-extras-op-search :host "smtp.example.com" :user "me")))))
 
 (provide 'auth-source-extras-test)
 ;;; auth-source-extras-test.el ends here

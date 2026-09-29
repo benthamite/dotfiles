@@ -209,15 +209,22 @@ website matches it; accepting that would hand out the wrong secret."
       (format "exit status %s" (process-exit-status proc)))))
 
 (defun auth-source-extras--op-item-fields (item)
-  "Return (TITLE . FIELDS) for parsed ITEM, keying values by label and ID."
-  (cons (alist-get 'title item)
-        (mapcan (lambda (field)
-                  (let ((value (or (alist-get 'value field) "")))
-                    (delq nil (list (when-let* ((label (alist-get 'label field)))
-                                      (cons label value))
-                                    (when-let* ((id (alist-get 'id field)))
-                                      (cons id value))))))
-                (alist-get 'fields item))))
+  "Return (TITLE . FIELDS) for ITEM, with field IDs preceding display labels.
+Template labels can repeat, including empty fields named password.  Stable
+IDs must take precedence so these cannot hide the actual password field."
+  (let ((fields (alist-get 'fields item)))
+    (cons (alist-get 'title item)
+          (append
+           (delq nil (mapcar (lambda (field)
+                              (when-let* ((id (alist-get 'id field)))
+                                (cons id (or (alist-get 'value field) ""))))
+                            fields))
+           (delq nil (mapcar (lambda (field)
+                              (when-let* ((label (alist-get 'label field))
+                                          (value (alist-get 'value field))
+                                          ((not (string-empty-p value))))
+                                (cons label value)))
+                            fields))))))
 
 (defun auth-source-extras--op-warn (format-string &rest args)
   "Display a warning built from FORMAT-STRING and ARGS."
@@ -236,34 +243,49 @@ The backend is selected by the symbol `1password-automation'."
 
 (cl-defun auth-source-extras-op-search (&rest spec &key host user port max create delete
                                               &allow-other-keys)
-  "Search the automation vaults for HOST, USER and PORT; return up to MAX results.
-Item titles follow the `auth-source-pass' conventions HOST/USER, USER@HOST,
-HOST:PORT/USER, HOST:PORT and HOST.  CREATE and DELETE are not supported;
-the rest of SPEC is ignored."
-  (ignore spec)
-  (unless (or create delete)
-    (let (results)
+  "Search automation vaults for HOST, USER and PORT, returning MAX results.
+Existing credentials are returned even when CREATE is non-nil, but new
+entries and DELETE are unsupported.  The rest of SPEC is ignored."
+  (ignore spec create)
+  (unless delete
+    (let (results seen)
       (catch 'done
-        (dolist (candidate (auth-source-extras--op-candidates host user port))
-          (when-let* ((result (auth-source-extras--op-search-result candidate user)))
-            (push result results)
-            (when (>= (length results) (or max 1))
-              (throw 'done nil)))))
+        (dolist (account auth-source-extras-op-search-accounts)
+          (dolist (cached '(t nil))
+            (dolist (candidate (auth-source-extras--op-candidates
+                               host user port account cached))
+              (unless (member candidate seen)
+                (push candidate seen)
+                (when-let* ((result (auth-source-extras--op-search-result candidate user)))
+                  (push result results)
+                  (when (>= (length results) (or max 1))
+                    (throw 'done nil))))))))
       (nreverse results))))
 
-(defun auth-source-extras--op-candidates (hosts users ports)
+(defun auth-source-extras--op-candidates (hosts users ports account cached)
   "Return (ACCOUNT TITLE HOST PORT) candidates for HOSTS, USERS and PORTS.
-Each argument may be a single value or a list, as `auth-source-search' allows."
-  (let (candidates)
-    (dolist (account auth-source-extras-op-search-accounts)
-      (let ((titles (auth-source-extras--op-account-titles account)))
-        (dolist (host (auth-source-extras--op-strings hosts))
-          (dolist (port (or (auth-source-extras--op-strings ports) '(nil)))
-            (dolist (title (auth-source-extras--op-title-patterns
-                            host (auth-source-extras--op-strings users) port))
-              (when (member title titles)
-                (push (list account title host port) candidates)))))))
+With CACHED non-nil, use only known items, without invoking the CLI."
+  (let ((titles (if cached
+                    (auth-source-extras--op-cached-titles account)
+                  (auth-source-extras--op-account-titles account)))
+        candidates)
+    (dolist (host (auth-source-extras--op-strings hosts))
+      (dolist (port (or (auth-source-extras--op-strings ports) '(nil)))
+        (dolist (title (auth-source-extras--op-title-patterns
+                       host (auth-source-extras--op-strings users) port))
+          (when (member title titles)
+            (push (list account title host port) candidates)))))
     (seq-uniq (nreverse candidates))))
+
+(defun auth-source-extras--op-cached-titles (account)
+  "Return known titles in ACCOUNT, preserving available listing precedence."
+  (let ((titles (let ((listed (gethash account auth-source-extras--op-titles)))
+                  (and (listp listed) (copy-sequence listed)))))
+    (maphash (lambda (key fields)
+               (when (and (eq (car key) account) (consp fields))
+                 (push (cdr key) titles)))
+             auth-source-extras--op-cache)
+    titles))
 
 (defun auth-source-extras--op-strings (value)
   "Return VALUE, a string, number, symbol or list of them, as a list of strings."
@@ -281,10 +303,13 @@ Each argument may be a single value or a list, as `auth-source-search' allows."
             (delq nil (list host-port host)))))
 
 (defun auth-source-extras--op-account-titles (account)
-  "Return the item titles in ACCOUNT's automation vault, listing them once."
-  (let ((titles (or (gethash account auth-source-extras--op-titles)
-                    (puthash account (auth-source-extras--op-list-titles account)
-                             auth-source-extras--op-titles))))
+  "Return ACCOUNT's cached vault listing, retrying a previously failed lookup."
+  (let ((titles (gethash account auth-source-extras--op-titles 'unlisted)))
+    (when (memq titles '(unlisted missing))
+      (remhash account auth-source-extras--op-titles)
+      (setq titles (auth-source-extras--op-list-titles account))
+      (unless (eq titles 'missing)
+        (puthash account titles auth-source-extras--op-titles)))
     (unless (eq titles 'missing) titles)))
 
 (defun auth-source-extras--op-list-titles (account)
@@ -317,8 +342,9 @@ CANDIDATE is (ACCOUNT TITLE HOST PORT)."
                    (member stored-user users)
                    (not (member title (list host (format "%s:%s" host port))))))
       (let ((secret (cdr (assoc "password" fields))))
-        (list :host host :port port :user user
-              :secret (lambda () secret))))))
+        (when (and user (stringp secret) (not (string-empty-p secret)))
+          (list :host host :port port :user user
+                :secret (lambda () secret)))))))
 
 ;;;;; git-crypt keys
 
@@ -372,6 +398,7 @@ private temporary file that is deleted whatever the outcome."
   (interactive)
   (clrhash auth-source-extras--op-cache)
   (clrhash auth-source-extras--op-titles)
+  (auth-source-forget-all-cached)
   (message "Cleared cached 1Password secrets"))
 
 (add-hook 'auth-source-backend-parser-functions #'auth-source-extras-op-backend-parse)

@@ -34,6 +34,8 @@ If an item cannot be read, for example because the account has no token in the K
 #+findex: auth-source-extras-op-clear-cache
 ~auth-source-extras-op-clear-cache~ forgets every cached secret and vault listing, so the next read fetches fresh values, for example after rotating a key.
 
+Field IDs take precedence over display labels. Empty template labels are ignored, so duplicate labels such as =password= cannot hide the actual password field.
+
 Results are accepted only when the returned item's title matches the requested one exactly. When no item has a given title, the CLI can return another item whose website matches it, and that would hand out the wrong secret.
 
 * Unlocking git-crypt repositories
@@ -50,7 +52,7 @@ Results are accepted only when the returned item's title matches the requested o
 :END:
 
 #+findex: auth-source-extras-op-search
-Adding the symbol =1password-automation= to ~auth-sources~ makes generic ~auth-source-search~ lookups, such as the GitHub tokens used by Forge and Magit or the SMTP password, read from the Automation vaults. Item titles follow the =auth-source-pass= conventions =HOST/USER=, =USER@HOST=, =HOST:PORT/USER=, =HOST:PORT= and =HOST=, so items copied from the password store keep working under their existing names. A bare =HOST= title matches only if its stored =username= field, when it has one, is among the requested users. The backend lists each vault's titles once per session and fetches matched items through the same cache as ~auth-source-extras-op-get~. It cannot create or delete entries.
+Adding the symbol =1password-automation= to ~auth-sources~ makes generic ~auth-source-search~ lookups, such as the GitHub tokens used by Forge and Magit or the SMTP password, read from the Automation vaults. Item titles follow the =auth-source-pass= conventions =HOST/USER=, =USER@HOST=, =HOST:PORT/USER=, =HOST:PORT= and =HOST=, so items copied from the password store keep working under their existing names. A bare =HOST= title matches only if its stored =username= field, when it has one, is among the requested users. The backend searches accounts in order and uses cached items before listing a vault. It stops once enough credentials are found, so a cached SMTP password needs no vault requests. Successful vault listings are cached; failed listings warn and are retried on the next lookup. Other accounts and authentication backends remain available when a vault cannot be listed. A known, more-specific item retains precedence over a cached generic credential. Entries without a nonempty password are not returned. Requests that allow credential creation can still retrieve existing entries, but the backend cannot create or delete entries.
 
 * Customization
 :PROPERTIES:

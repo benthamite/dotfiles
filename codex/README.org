@@ -274,7 +274,8 @@ authorizations live in those encrypted instructions, not the public catalog. Led
 with personal account names remain alongside the encrypted workflow. Payment
 preparation stops at review; the user executes account transfers. Quantity
 conventions, ticket-handling rules, receipt-sharing authorization and message
-templates belong in the encrypted workflow as well.
+templates belong in the encrypted workflow as well. Contact-sharing permissions,
+terms-acceptance preferences and receipt retrieval guidance stay there too.
 
 The paired =record-decisions= skill records evidenced choices and dated amendments
 without rewriting decision history. It preserves numeric IDs beyond three digits,

@@ -36,6 +36,7 @@
 (require 'paths)
 (require 'simple-extras)
 (require 'subr-x)
+(require 'url-util)
 
 (defvar gptel-use-tools)
 
@@ -44,6 +45,241 @@
 (defgroup gptel-extras ()
   "Extensions for `gptel'."
   :group 'gptel)
+
+;;;;; Automatic Claude model discovery
+
+(defvar claude-opus-latest nil
+  "Concrete model symbol for the newest discovered Claude Opus release.
+Nil until discovery succeeds, and after a failed refresh.")
+
+(defvar claude-sonnet-latest nil
+  "Concrete model symbol for the newest discovered Claude Sonnet release.
+Nil until discovery succeeds, and after a failed refresh.")
+
+(defvar claude-haiku-latest nil
+  "Concrete model symbol for the newest discovered Claude Haiku release.
+Nil until discovery succeeds, and after a failed refresh.")
+
+(defcustom gptel-extras-model-bindings nil
+  "Settings whose default values should track discovered model variables.
+Each entry is (SETTING . ALIAS), where ALIAS is `claude-opus-latest',
+`claude-sonnet-latest' or `claude-haiku-latest'.  Buffer-local choices
+are left alone.  These defaults become unavailable if discovery fails."
+  :type '(alist :key-type symbol :value-type symbol)
+  :group 'gptel-extras)
+
+(defvar gptel-extras-model-discovery-status nil
+  "Discovery state: nil, `refreshing', `ready', or an error string.")
+
+(defvar gptel-extras-model-discovery-time nil
+  "Time of the last successful model discovery.")
+
+(defvar gptel-extras--model-timer nil)
+(defvar gptel-extras--model-process nil)
+(defvar gptel-extras-model-discovery-mode nil)
+
+(defconst gptel-extras--model-aliases
+  '(("opus" . claude-opus-latest)
+    ("sonnet" . claude-sonnet-latest)
+    ("haiku" . claude-haiku-latest)))
+
+;;;###autoload
+(define-minor-mode gptel-extras-model-discovery-mode
+  "Discover Claude models asynchronously on enable and every 24 hours.
+Uses the existing Claude backend's API key.  No inference requests are
+made.  Failures are reported and managed defaults are blocked rather
+than silently using an old or unrelated model."
+  :global t
+  :group 'gptel-extras
+  (when (timerp gptel-extras--model-timer)
+    (cancel-timer gptel-extras--model-timer))
+  (setq gptel-extras--model-timer nil)
+  (if gptel-extras-model-discovery-mode
+      (progn
+        (gptel-extras--apply-model-bindings)
+        (advice-add 'gptel--sanitize-model :before
+                    #'gptel-extras--require-discovered-model)
+        (setq gptel-extras--model-timer
+              (run-at-time 0 86400 #'gptel-extras-refresh-models)))
+    (when (process-live-p gptel-extras--model-process)
+      (set-process-sentinel gptel-extras--model-process #'ignore)
+      (let ((buffer (process-buffer gptel-extras--model-process)))
+        (delete-process gptel-extras--model-process)
+        (when (buffer-live-p buffer) (kill-buffer buffer))))
+    (setq gptel-extras--model-process nil)))
+
+(defun gptel-extras--require-discovered-model (&rest args)
+  "Reject an unresolved managed Claude model before sanitizing ARGS."
+  (let ((backend (or (plist-get args :backend) gptel-backend))
+        (model (if (plist-member args :model)
+                   (plist-get args :model)
+                 gptel-model)))
+    (when (or (eq model 'gptel-extras-model-unavailable)
+              (and gptel-extras-model-discovery-mode (null model) backend
+                   (equal (gptel-backend-name backend) "Claude")))
+      (user-error "Claude model discovery is not ready: %s"
+                  gptel-extras-model-discovery-status))))
+
+;;;###autoload
+(defun gptel-extras-refresh-models ()
+  "Refresh the three latest Claude model variables and managed settings.
+Fetch every Models API page before publishing any result.  Select by
+numeric release version, then snapshot date, creation time, and ID.
+Preview and unrecognized ID formats are excluded."
+  (interactive)
+  (unless (process-live-p gptel-extras--model-process)
+    (setq gptel-extras-model-discovery-status 'refreshing)
+    (condition-case err
+        (let* ((backend (gptel-get-backend "Claude"))
+               (key (gptel--get-api-key (gptel-backend-key backend))))
+          (unless (and (stringp key) (not (string-empty-p key))
+                       (not (string-match-p "[\r\n]" key)))
+            (error "Claude API key is unavailable or invalid"))
+          (gptel-extras--fetch-model-page backend key nil nil nil))
+      (error (gptel-extras--model-discovery-failed
+              (error-message-string err))))))
+
+(defun gptel-extras--fetch-model-page (backend key cursor models cursors)
+  "Fetch a Models page for BACKEND with KEY after CURSOR.
+MODELS accumulates earlier pages; CURSORS detects pagination loops.
+The API key travels on standard input, never in process arguments."
+  (let* ((buffer (generate-new-buffer " *Claude model discovery*"))
+         (url (concat "https://api.anthropic.com/v1/models?limit=100"
+                      (when cursor
+                        (concat "&after_id=" (url-hexify-string cursor))))))
+    (condition-case err
+        (progn
+          (setq gptel-extras--model-process
+                (make-process
+                 :name "claude-model-discovery" :buffer buffer :noquery t
+                 :connection-type 'pipe
+                 :command (list "curl" "--disable" "--silent" "--show-error"
+                                "--fail" "--max-time" "30" "--header" "@-" url)
+                 :sentinel
+                 (lambda (process _event)
+                   (when (memq (process-status process) '(exit signal))
+                     (setq gptel-extras--model-process nil)
+                     (unwind-protect
+                         (condition-case error-data
+                             (with-current-buffer buffer
+                               (unless (zerop (process-exit-status process))
+                                 (error "Models API request failed (curl %s)"
+                                        (process-exit-status process)))
+                               (gptel-extras--receive-model-page
+                                backend key
+                                (json-parse-string
+                                 (buffer-string) :object-type 'plist
+                                 :array-type 'list :null-object nil
+                                 :false-object nil)
+                                models cursors))
+                           (error
+                            (gptel-extras--model-discovery-failed
+                             (error-message-string error-data))))
+                       (kill-buffer buffer))))))
+          (process-send-string
+           gptel-extras--model-process
+           (concat "x-api-key: " key "\nanthropic-version: 2023-06-01\n"))
+          (process-send-eof gptel-extras--model-process))
+      (error
+       (when (buffer-live-p buffer) (kill-buffer buffer))
+       (signal (car err) (cdr err))))))
+
+(defun gptel-extras--receive-model-page (backend key page models cursors)
+  "Process PAGE from BACKEND with KEY, earlier MODELS and CURSORS."
+  (unless (and (plist-member page :data) (listp (plist-get page :data))
+               (plist-member page :has_more))
+    (error "Malformed Models API response"))
+  (setq models (append models (plist-get page :data)))
+  (if (plist-get page :has_more)
+      (let ((cursor (plist-get page :last_id)))
+        (unless (and (stringp cursor) (not (string-empty-p cursor))
+                     (not (member cursor cursors)))
+          (error "Invalid or repeated Models API pagination cursor"))
+        (gptel-extras--fetch-model-page
+         backend key cursor models (cons cursor cursors)))
+    (gptel-extras--publish-models backend models)))
+
+(defun gptel-extras--publish-models (backend models)
+  "Register and publish the newest family releases from MODELS in BACKEND."
+  (let ((selected
+         (mapcar (lambda (entry)
+                   (cons (cdr entry)
+                         (gptel-extras--latest-model (car entry) models)))
+                 gptel-extras--model-aliases)))
+    (dolist (binding gptel-extras-model-bindings)
+      (unless (assq (cdr binding) selected)
+        (error "Unknown model alias: %s" (cdr binding))))
+    (dolist (entry selected)
+      (let* ((info (cdr entry))
+             (model (intern (plist-get info :id))))
+        (gptel-extras--register-model backend model info)
+        (set (car entry) model)))
+    (gptel-extras--apply-model-bindings)
+    (setq gptel-extras-model-discovery-status 'ready
+          gptel-extras-model-discovery-time (current-time))
+    (message "Claude models: Opus %s; Sonnet %s; Haiku %s"
+             claude-opus-latest claude-sonnet-latest claude-haiku-latest)))
+
+(defun gptel-extras--latest-model (family models)
+  "Return the newest recognized release in FAMILY from MODELS."
+  (let (best best-rank)
+    (dolist (model models)
+      (when-let* ((rank (gptel-extras--model-rank family model)))
+        (when (or (null best-rank) (string< best-rank rank))
+          (setq best model best-rank rank))))
+    (or best (error "No stable Claude %s model was discovered" family))))
+
+(defun gptel-extras--model-rank (family model)
+  "Return a sortable release key for MODEL in FAMILY, or nil."
+  (let ((id (plist-get model :id)))
+    (when (and (stringp id)
+               (string-match
+                (concat "\\`claude-" (regexp-quote family)
+                        "-\\([0-9]\\{1,3\\}\\)"
+                        "\\(?:-\\([0-9]\\{1,3\\}\\)\\)?"
+                        "\\(?:-\\([0-9]\\{8\\}\\)\\)?\\'") id))
+      (format "%03d.%03d.%s.%s.%s"
+              (string-to-number (match-string 1 id))
+              (string-to-number (or (match-string 2 id) "0"))
+              (or (match-string 3 id) "00000000")
+              (or (plist-get model :created_at) "") id))))
+
+(defun gptel-extras--register-model (backend model info)
+  "Register MODEL with BACKEND using Models API INFO.
+Preserve existing gptel metadata, including pricing.  Do not invent prices
+or inherit another release's request parameters."
+  (unless (get model :description)
+    (put model :description (plist-get info :display_name)))
+  (when-let* ((tokens (plist-get info :max_input_tokens))
+              ((numberp tokens)) ((> tokens 0)))
+    (put model :context-window (/ tokens 1000.0)))
+  (when-let* ((capabilities (plist-get info :capabilities)))
+    (let ((mimes
+           (append
+            (when (plist-get (plist-get capabilities :image_input) :supported)
+              '("image/jpeg" "image/png" "image/gif" "image/webp"))
+            (when (plist-get (plist-get capabilities :pdf_input) :supported)
+              '("application/pdf")))))
+      (put model :mime-types mimes)
+      (put model :capabilities
+           (append (when mimes '(media)) '(tool-use cache)))))
+  (cl-pushnew model (gptel-backend-models backend)))
+
+(defun gptel-extras--apply-model-bindings ()
+  "Copy alias values to configured defaults, preserving buffer-local choices."
+  (dolist (binding gptel-extras-model-bindings)
+    (set-default (car binding)
+                 (or (symbol-value (cdr binding))
+                     'gptel-extras-model-unavailable))))
+
+(defun gptel-extras--model-discovery-failed (message)
+  "Invalidate managed defaults and report discovery failure MESSAGE."
+  (setq gptel-extras-model-discovery-status message)
+  (dolist (entry gptel-extras--model-aliases)
+    (set (cdr entry) nil))
+  (gptel-extras--apply-model-bindings)
+  (display-warning 'gptel-extras
+                   (concat "Claude model discovery failed: " message)))
 
 ;;;;; Aider
 

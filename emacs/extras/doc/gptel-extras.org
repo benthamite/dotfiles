@@ -37,6 +37,8 @@ The extensions fall into several thematic areas:
 
 - *Gptel tools.* A collection of tools---filesystem editing, bibliography search, and entry addition---that =gptel= can invoke via its tool-use feature, plus a macro for defining tool presets ([[#h:tools][Tools]]).
 
+- *Automatic model discovery.* Track the newest Claude Opus, Sonnet, and Haiku releases and update configured model settings ([[#h:model-discovery][Automatic Claude model discovery]]).
+
 - *Model-specific workarounds.* Automatic Mullvad VPN activation for Gemini requests and a command for fixing garbled characters in LLM output ([[#h:model-workarounds][Model-specific workarounds]]).
 
 - *General convenience commands.* Toggling default major mode, navigating to the end of a buffer before sending, rewriting function definitions via Embark, and more ([[#h:misc-commands][General convenience commands]]).
@@ -456,6 +458,55 @@ For example:
 #+end_src
 
 This creates presets named =tools-web-search= (sets tools to the two specified) and =tools-web-search+= (adds them to existing tools).
+
+* Automatic Claude model discovery
+:PROPERTIES:
+:CUSTOM_ID: h:model-discovery
+:END:
+
+#+findex: gptel-extras-model-discovery-mode
+Enable ~gptel-extras-model-discovery-mode~ after creating a gptel backend named
+=Claude=. The mode queries Anthropic's Models API asynchronously when enabled
+and every 24 hours while Emacs is running. It uses that backend's existing API
+key and makes no inference requests. No credentials are stored in a cache or
+passed on the command line.
+
+#+vindex: claude-opus-latest
+#+vindex: claude-sonnet-latest
+#+vindex: claude-haiku-latest
+The variables ~claude-opus-latest~, ~claude-sonnet-latest~, and
+~claude-haiku-latest~ hold concrete model symbols. Discovery reads every page
+before updating them. Within each family it chooses the highest numeric release
+version, breaking ties by snapshot date, creation time, and ID. Preview IDs and
+unrecognized naming formats are excluded. The variables start as ~nil~; there is
+no persistent cache or manually maintained default model ID.
+
+#+vindex: gptel-extras-model-bindings
+Set ~gptel-extras-model-bindings~ to an alist of settings and the alias variables
+they should follow. Its default is ~nil~ (no managed settings). For example, an entry whose car is ~gptel-model~ and whose
+cdr is ~claude-sonnet-latest~ updates the global gptel default after discovery.
+The setting is updated on every successful refresh; ordinary ~setq~ assignments
+elsewhere copy the alias's value only once. Buffer-local model choices are
+preserved. Consumers with a separate backend setting must select =Claude=.
+
+Discovered models are registered with the backend before defaults change, so
+gptel does not substitute a different model. Existing pricing and request
+parameters are preserved for known model IDs. New models use capabilities and
+context limits supplied by the API; missing prices remain unknown rather than
+being copied from an older release. Automatic discovery cannot guarantee that
+future model generations will remain compatible with all request options.
+
+#+findex: gptel-extras-refresh-models
+#+vindex: gptel-extras-model-discovery-status
+#+vindex: gptel-extras-model-discovery-time
+Use ~gptel-extras-refresh-models~ to refresh immediately. Concurrent refreshes
+are coalesced. Inspect ~gptel-extras-model-discovery-status~ for ~refreshing~,
+~ready~, or an error message, and ~gptel-extras-model-discovery-time~ for the
+last successful refresh. A failed refresh displays a warning, clears the alias
+variables, and marks managed settings unavailable. Requests using those
+settings fail explicitly until discovery succeeds; they do not silently use a
+stale model or gptel's first registered model. Disabling the mode cancels its
+timer and any discovery request; it does not restore previous setting values.
 
 * Tools
 :PROPERTIES:

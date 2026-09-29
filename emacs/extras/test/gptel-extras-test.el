@@ -6,8 +6,135 @@
 
 (require 'ert)
 (require 'gptel-extras)
+(require 'gptel-anthropic)
 
 (defvar tlon-languages-properties)
+
+;;;; Model discovery
+
+(defvar gptel-extras-test-model nil)
+
+(ert-deftest gptel-extras-test-model-release-order ()
+  "Prefer numeric release versions over dates, aliases, and previews."
+  (let ((models '((:id "claude-opus-4-9-20261231")
+                  (:id "claude-opus-4-10")
+                  (:id "claude-opus-5")
+                  (:id "claude-opus-5-1-preview")
+                  (:id "claude-opus-99-latest")
+                  (:id "claude-sonnet-99"))))
+    (should (equal (plist-get (gptel-extras--latest-model "opus" models) :id)
+                   "claude-opus-5"))
+    (should (equal (plist-get (gptel-extras--latest-model "opus" (seq-take models 2)) :id)
+                   "claude-opus-4-10")))
+  (should (equal
+           (plist-get (gptel-extras--latest-model
+                       "haiku" '((:id "claude-haiku-4-5")
+                                 (:id "claude-haiku-4-5-20251001"))) :id)
+           "claude-haiku-4-5-20251001"))
+  (should-error (gptel-extras--latest-model "opus" '((:id "unknown")))))
+
+(ert-deftest gptel-extras-test-model-pagination ()
+  "Publish only after the final page, and reject repeated cursors."
+  (let (published fetched)
+    (cl-letf (((symbol-function 'gptel-extras--fetch-model-page)
+               (lambda (&rest args) (setq fetched args)))
+              ((symbol-function 'gptel-extras--publish-models)
+               (lambda (_backend models) (setq published models))))
+      (gptel-extras--receive-model-page
+       'backend "test" '(:data ((:id "first")) :has_more t :last_id "first") nil nil)
+      (should-not published)
+      (should (equal fetched '(backend "test" "first" ((:id "first")) ("first"))))
+      (gptel-extras--receive-model-page
+       'backend "test" '(:data ((:id "second")) :has_more nil)
+       '((:id "first")) '("first"))
+      (should (equal published '((:id "first") (:id "second"))))
+      (should-error
+       (gptel-extras--receive-model-page
+        'backend "test" '(:data nil :has_more t :last_id "first") nil '("first")))
+      (should-error
+       (gptel-extras--receive-model-page 'backend "test" '(:error "bad") nil nil)))))
+
+(ert-deftest gptel-extras-test-model-publish-and-request ()
+  "Publish concrete registered models and serialize the selected request ID."
+  (let* ((gptel-backend (gptel--make-anthropic :name "Claude" :models '(old)))
+         (gptel-extras-model-bindings '((gptel-extras-test-model . claude-sonnet-latest)))
+         (gptel-extras-test-model nil)
+         (claude-opus-latest nil) (claude-sonnet-latest nil) (claude-haiku-latest nil)
+         (gptel-extras-model-discovery-status nil)
+         (gptel-extras-model-discovery-time nil)
+         (models '((:id "claude-opus-99") (:id "claude-sonnet-99")
+                   (:id "claude-haiku-99")))
+         (model (intern "claude-sonnet-99"))
+         (original (symbol-plist model)))
+    (unwind-protect
+        (progn
+          (put model :input-cost 123)
+          (with-temp-buffer
+            (setq-local gptel-extras-test-model 'pinned)
+            (gptel-extras--publish-models gptel-backend models)
+            (should (eq gptel-extras-test-model 'pinned))
+            (should (eq (default-value 'gptel-extras-test-model) model)))
+          (should (eq gptel-extras-model-discovery-status 'ready))
+          (should (= (get model :input-cost) 123))
+          (let ((gptel-model claude-sonnet-latest)
+                (gptel-use-tools nil))
+            (gptel--sanitize-model)
+            (should (eq gptel-model model))
+            (should (equal (plist-get (gptel--request-data gptel-backend nil) :model)
+                           "claude-sonnet-99"))))
+      (setplist model original))))
+
+(ert-deftest gptel-extras-test-model-failure-blocks-fallback ()
+  "A failed refresh cannot silently select gptel's first backend model."
+  (let ((gptel-backend (gptel--make-anthropic :name "Claude" :models '(old)))
+        (gptel-extras-model-bindings '((gptel-extras-test-model . claude-sonnet-latest)))
+        (gptel-extras-test-model 'old)
+        (claude-opus-latest 'old) (claude-sonnet-latest 'old) (claude-haiku-latest 'old)
+        (gptel-extras-model-discovery-status 'ready))
+    (cl-letf (((symbol-function 'display-warning) #'ignore))
+      (gptel-extras--model-discovery-failed "offline"))
+    (should-not claude-sonnet-latest)
+    (let ((gptel-model gptel-extras-test-model))
+      (should-error (gptel-extras--require-discovered-model) :type 'user-error))
+    (let ((gptel-model 'explicit-pin))
+      (should-not (gptel-extras--require-discovered-model)))))
+
+(ert-deftest gptel-extras-test-model-missing-family-is-atomic ()
+  "Incomplete discovery leaves every alias untouched before failure handling."
+  (let ((claude-opus-latest 'old-opus)
+        (claude-sonnet-latest 'old-sonnet)
+        (claude-haiku-latest 'old-haiku))
+    (should-error (gptel-extras--publish-models
+                   nil '((:id "claude-opus-99") (:id "claude-sonnet-99"))))
+    (should (eq claude-opus-latest 'old-opus))
+    (should (eq claude-sonnet-latest 'old-sonnet))))
+
+(ert-deftest gptel-extras-test-model-timer-idempotent ()
+  "Re-enabling replaces the daily timer, and disabling removes it."
+  (let ((gptel-extras--model-timer nil)
+        (gptel-extras--model-process nil)
+        (gptel-extras-model-discovery-mode nil)
+        (gptel-extras-model-bindings nil)
+        timers cancelled)
+    (cl-letf (((symbol-function 'run-at-time)
+               (lambda (time repeat function)
+                 (should (= time 0)) (should (= repeat 86400))
+                 (should (eq function #'gptel-extras-refresh-models))
+                 (let ((timer (timer-create))) (push timer timers) timer)))
+              ((symbol-function 'cancel-timer)
+               (lambda (timer) (push timer cancelled))))
+      (unwind-protect
+          (progn
+            (gptel-extras-model-discovery-mode 1)
+            (gptel-extras-model-discovery-mode 1)
+            (should (= (length cancelled) 1))
+            (gptel-extras-model-discovery-mode -1)
+            (should (= (length cancelled) 2))
+            (should-not gptel-extras--model-timer)
+            (let ((gptel-model 'gptel-extras-model-unavailable))
+              (should-error (gptel--sanitize-model) :type 'user-error)))
+        (advice-remove 'gptel--sanitize-model
+                       #'gptel-extras--require-discovered-model)))))
 
 ;;;; Generate next heading
 

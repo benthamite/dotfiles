@@ -9115,7 +9115,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (put 'o3-mini :request-params '(:reasoning_effort "high" :stream :json-false))
 
   ;; default model
-  (setopt gptel-model 'claude-sonnet-4-5-20250929
+  (setopt gptel-model nil ; Set asynchronously by model discovery.
           gptel-backend (gptel-make-anthropic "Claude"
                           :stream t
                           :key (auth-source-extras-op-get "anthropic.com" "key" 'tlon)))
@@ -9234,8 +9234,13 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   ;; since these models take a while, we trigger a growl-like alert when they
   ;; finish, in case we want to do something else in the meantime
   (gptel-extras-alert-when-finished '(o3 o1))
+  (gptel-extras-model-bindings
+   '((gptel-model . claude-sonnet-latest)
+     (agent-log-search-scope-model . claude-sonnet-latest)
+     (agent-log-search-model . claude-sonnet-latest)))
 
   :config
+  (gptel-extras-model-discovery-mode 1)
   ;; the `gptel-extras-make-tool-presets' macro creates two sets of tools:
   ;; one that clears existing tools and replaces them with the new ones,
   ;; and another one that appends the new tools to the existing ones.
@@ -9664,6 +9669,8 @@ otherwise create it off `origin/main'."
   :demand t
   :custom
   (agent-log-summary-model 'gemini-flash-latest)
+  (agent-log-search-scope-backend "Claude")
+  (agent-log-search-backend "Claude")
   (agent-log-group-by-project nil)
   (agent-log-session-sort-key 'modification-time)
   (agent-log-auto-sync-sessions t)

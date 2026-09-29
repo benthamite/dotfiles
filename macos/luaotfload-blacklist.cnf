@@ -1,0 +1,3 @@
+% This 324-face collection makes LuaLaTeX font indexing take over 16 minutes.
+% Excluding it from name lookup does not change Emacs font availability.
+/Users/pablostafforini/Library/Fonts/Iosevka.ttc

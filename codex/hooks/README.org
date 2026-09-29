@@ -148,6 +148,11 @@ payloads stay scanned; repeated selector keys receive no projection.
 The exact =museo.bn.gov.ar/noticias/salio-cuaderno-de-la-bn-n0-22=
 public news route is recognized without relaxing certificate verification.
 
+The Hinge's verified public issue slug =the-hinge-2-29-september-2026=
+is recognized only on HTTPS =hingedaily.substack.com= at =/p/SLUG= and
+=/api/v1/posts/SLUG=. Headers, bodies, query values, fragments and altered
+authorities or paths retain the secret checks.
+
 The public =www.utorpheus.com/file/catalog/pdf_musiche/lb018.pdf= excerpt
 and Galiciana’s =/recurso/caras-y-caretas-semanario-festivo-literario/UUID=
 catalogue routes use complete HTTPS authority/path matching. Their query,

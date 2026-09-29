@@ -21,6 +21,7 @@ ENTITY = r"(?:area|artist|collection|event|genre|instrument|label|place|recordin
 # Exact authority, path prefix, whether the complete path must match, schemes.
 # Sources are the public routes pinned by test_secret_guard_parity.py.
 ROUTES = (
+    ("hingedaily.substack.com", r"/(?:api/v1/posts|p)/the-hinge-2-29-september-2026", True, ("https",)),
     ("museo.bn.gov.ar", r"/noticias/salio-cuaderno-de-la-bn-n0-22", True, ("https",)),
     ("www.utorpheus.com", r"/file/catalog/pdf_musiche/lb018\.pdf", True, ("https",)),
     ("prensahistorica.galiciana.gal",

@@ -189,3 +189,17 @@ not make the tools behaviorally identical, validate unregistered runtime state,
 or replace an end-to-end check of the feature that changed. Format, permission,
 event, plugin, MCP, and lifecycle differences remain explicit rather than being
 hidden behind fallbacks.
+
+* Non-Git notes workspaces
+
+=~/My Drive/Forethought/= keeps matching regular =CLAUDE.md= and =AGENTS.md=
+files at the workspace root and in each project. Claude loads ancestor
+instructions natively. Codex uses =project_root_markers = [".git",
+".agent-workspace"]= in the shared config and each existing account's writable
+config, with =.agent-workspace= at the Forethought root. This enables parent
+instruction loading without creating a Git repository under Drive. New account
+configs inherit the setting when seeded from the shared source.
+
+The Emacs project picker adds Forethought, its existing =prep/= directory, and
+immediate =projects/*/= directories with instruction files to every account's
+existing project sources. Project folders are discovered on each lookup.

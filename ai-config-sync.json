@@ -805,7 +805,7 @@
       "path": "codex/config.toml",
       "tracked": true,
       "live_path": "~/.codex/config.toml",
-      "note": "Codex models, trust, plugins, MCP and hooks. Alternate accounts keep independent writable configs and plugin state seeded by agent. Desktop generates browser settings per home; never pin runtime hashes. shell/shims/codex retains signed runtimes. Preserve source/key/hash trust; new hooks need hooks/list then config/batchWrite in every home. skill-prune manages disabled skills; codex-config-prune removes dead records. Repo moves need trust-key rewrites. Trajectory trust entries are retired. See codex/README.org."
+      "note": "Codex model/trust/plugin/MCP/hook config. Account copies are writable and seeded by agent; retain .git/.agent-workspace project_root_markers in each. Claude loads ancestors natively (no config counterpart). Desktop owns per-home browser hashes; the shim retains signed runtimes. Preserve hook source/key/hash trust; new hooks need hooks/list and config/batchWrite per home. skill-prune disables skills; codex-config-prune removes dead records. Moves require trust-key rewrites; Trajectory trust is retired. See codex/README.org."
     },
     {
       "tool": "Codex",

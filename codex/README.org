@@ -1130,3 +1130,21 @@ script.
 Codex's instruction discovery, tracked native configuration, lifecycle hooks,
 rules, plugin state, and managed system skills are genuine differences. They
 remain explicit rather than being hidden by fallback behavior.
+
+* Forethought notes workspace
+
+Forethought sessions launch from =~/My Drive/Forethought/= or the selected
+notes project. The Emacs project picker includes the workspace, =prep/=, and
+immediate =projects/*/= directories with instruction files, across existing
+accounts. Each project has an =AGENTS.md= file; the workspace =AGENTS.md= supplies
+shared context. Project creation guidance lives in
+=Forethought/context/project-workflow.md=.
+
+The notes folder stays outside Git. Codex's shared =project_root_markers=
+includes =.agent-workspace= alongside =.git=, and Forethought carries that
+marker so nested sessions load the parent instructions. Existing Codex account
+homes retain separate configuration files; keep this setting in those copies
+as well as the shared source. Shared instruction pairing is documented in
+=agents/configuration.org=.
+Code checkouts belong under =~/repos/forethought/=; start from the notes folder
+when the engagement instruction chain is needed.

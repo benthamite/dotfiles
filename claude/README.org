@@ -1195,3 +1195,17 @@ standalone decision logic and the real Claude event path; mutable
 Claude's settings format, event surface, permission model, browser integration,
 and account overlays are genuine tool-specific state. The sync contract records
 those differences rather than forcing them into Codex-shaped files.
+
+* Forethought notes workspace
+
+Forethought sessions launch from =~/My Drive/Forethought/= or the selected
+notes project. The Emacs project picker includes the workspace, =prep/=, and
+immediate =projects/*/= directories with instruction files, across existing
+accounts. Claude loads the workspace =CLAUDE.md= and then the project's
+=CLAUDE.md= through native ancestor discovery. Project creation guidance lives
+in =Forethought/context/project-workflow.md=.
+
+The notes folder stays outside Git. Code checkouts belong under
+=~/repos/forethought/=; start from the notes folder when the engagement
+instruction chain is needed. Shared instruction pairing and Codex root-marker
+configuration are documented in =agents/configuration.org=.

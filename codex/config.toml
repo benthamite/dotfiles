@@ -1,3 +1,5 @@
+# Include notes workspaces without requiring a Git repository under Drive.
+project_root_markers = [".git", ".agent-workspace"]
 model = "gpt-6-astra"
 model_reasoning_effort = "medium"
 service_tier = "fast"

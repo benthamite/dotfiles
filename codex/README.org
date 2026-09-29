@@ -32,6 +32,9 @@ project-local and must never be used as global symlink targets.
 The subtree owners are [[file:bin/README.org][the command index]], [[file:hooks/README.org][the hook index]], and
 [[file:skills/README.org][the skill index]].
 
+Trajectory project trust entries have been removed from the active configuration.
+Retained project files and session history do not grant automatic project trust.
+
 * Instructions
 
 Unfamiliar code execution uses the shared =bin/untrusted-run= VM boundary;

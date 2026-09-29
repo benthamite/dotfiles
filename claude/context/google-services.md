@@ -7,7 +7,6 @@ Pablo uses multiple human Google accounts plus a bot account, and accesses each 
 | Account                                  | Purpose                       |
 |------------------------------------------|-------------------------------|
 | `pablo@epoch.ai`                         | Epoch work account            |
-| `pablo.stafforini@trajectorylabs.net`    | Trajectory Docs/Drive account |
 | `pablo.stafforini@gmail.com`             | Personal account              |
 | `email-triage@epoch.ai`                  | Email-triage bot account      |
 
@@ -37,12 +36,6 @@ and never falls back to an independently cached grant. Renew the canonical grant
 with `update-gworkspace-refresh-token --account epoch` when it is revoked.
 
 The personal-account OAuth grants are against the same `claude-code-gmail-490520` GCP project as the Epoch one, with `pablo.stafforini@gmail.com` added as a test user on the OAuth consent screen.
-
-For **Trajectory-owned Google Docs/Drive**, use the Trajectory Labs account:
-`gdoc --account pablo.stafforini@trajectorylabs.net`. Do not fall back to
-`--account epoch` for Trajectory Docs/Drive access; fix sharing or OAuth access
-for the Trajectory account instead. This routing note is Docs/Drive-only and
-does not establish Gmail, Sheets, or Calendar support for the Trajectory account.
 
 For the **email-triage bot** account (`email-triage@epoch.ai`), use
 `gmail.py --account email-triage`. This account is only for email-triage
@@ -320,16 +313,8 @@ A browser opens; sign in as `pablo.stafforini@gmail.com`. Expect Google's
 
 The shared OAuth client lives in GCP project `claude-code-gmail-490520` (owned by
 `pablo@epoch.ai`) and is published as "In production", so refresh tokens do not
-expire on a 7-day schedule. Do not switch the app to "Internal": the client is shared across epoch, personal,
-and trajectory accounts, and Internal would restrict it to `@epoch.ai` users.
-
-### `access_denied` from `gdoc --account pablo.stafforini@trajectorylabs.net`
-
-Rerun:
-
-```bash
-gdoc auth --account pablo.stafforini@trajectorylabs.net
-```
+expire on a 7-day schedule. Do not switch the app to "Internal": the client is shared across epoch and personal accounts, and Internal would
+restrict it to `@epoch.ai` users.
 
 ### gmail.py reports "ERROR: missing env var"
 

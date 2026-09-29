@@ -110,53 +110,6 @@ emacsK() { while true; do emacsk; done }
 alias claude-personal='CLAUDE_CONFIG_DIR=~/.claude-personal claude'
 alias claude-tlon='CLAUDE_CONFIG_DIR=~/.claude-tlon claude'
 alias claude-epoch='CLAUDE_CONFIG_DIR=~/.claude-epoch claude'
-# Trajectory org disabled claude.ai sign-in, so this account must auth via its
-# provisioned API key. Inject the key (single source of truth: the client's
-# .env) and flip the shim's allow-flag for THIS process only -- never exported,
-# so plain `claude` and the other accounts stay key-free and unaffected.
-# The client's paths (TRAJECTORY_ROOT: the checkout root; TRAJECTORY_KEYFILE:
-# the .env holding the key) live in the untracked ~/.zvars: they describe a
-# private tree and the location of a credential, so they stay out of this
-# public file.
-claude-trajectory() {
-  if [ -z "$TRAJECTORY_KEYFILE" ]; then echo "claude-trajectory: TRAJECTORY_KEYFILE is not set (define it in ~/.zvars)" >&2; return 1; fi
-  local key; key=$(grep -m1 '^ANTHROPIC_API_KEY=' "$TRAJECTORY_KEYFILE" | cut -d= -f2-)
-  if [ -z "$key" ]; then echo "claude-trajectory: no ANTHROPIC_API_KEY in $TRAJECTORY_KEYFILE" >&2; return 1; fi
-  CLAUDE_CONFIG_DIR=~/.claude-trajectory CLAUDE_CODE_ALLOW_API_KEY_AUTH=1 ANTHROPIC_API_KEY="$key" claude "$@"
-}
-
-# Trajectory reasoning-tasks: create a new task worktree + wire its API-key symlink in one step.
-# Worktrees live OUTSIDE the repository checkout, under the shared external
-# root ~/repos/.worktrees/<repository>/<branch> — never inside ~/My Drive or
-# the repo tree itself.
-# Usage: newtask <task-slug>   (e.g. newtask compensate-misaligned-ais)
-# Then: cd ~/repos/.worktrees/reasoning-tasks/pablo/<task-slug> && claude-trajectory
-newtask() {
-  if [ -z "$1" ]; then echo "usage: newtask <task-slug>"; return 1; fi
-  if [ -z "$TRAJECTORY_ROOT" ] || [ -z "$TRAJECTORY_KEYFILE" ]; then
-    echo "newtask: TRAJECTORY_ROOT and TRAJECTORY_KEYFILE must be set (define them in ~/.zvars)" >&2; return 1
-  fi
-  local root="$TRAJECTORY_ROOT"
-  local wt="$HOME/repos/.worktrees/reasoning-tasks/pablo/$1"
-  git -C "$root/main" fetch origin main &&
-    mkdir -p "${wt%/*}" &&
-    git -C "$root/main" worktree add "$wt" -b "pablo/$1" origin/main &&
-    mkdir -p "$wt/.claude" &&
-    ln -s "$TRAJECTORY_KEYFILE" "$wt/.claude/.env" &&
-    echo "ready: cd $wt && claude-trajectory"
-}
-
-# Manually merge origin/main into the current reasoning-tasks worktree (skills/docs/etc).
-# Runs the same conflict-gated sync that fires automatically at session start.
-syncreasoningtasks() {
-  SYNC_REASONING_TASKS_VERBOSE=1 ~/My\ Drive/dotfiles/claude/hooks/sync-reasoning-tasks-worktree.sh </dev/null
-}
-
-# Legacy name kept during the agent-c -> reasoning-tasks migration.
-syncagentc() {
-  syncreasoningtasks "$@"
-}
-
 # make node use local certs
 export NODE_EXTRA_CA_CERTS="$HOME/Library/Application Support/mkcert/rootCA.pem"
 

@@ -357,16 +357,7 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/Epoch/projects/citation-tracker"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/Trajectory"]
-trust_level = "trusted"
-
-[projects."/Users/pablostafforini/Trajectory/reasoning-tasks/main"]
-trust_level = "trusted"
-
 [projects."/Users/pablostafforini/repos/rubric-visualizer"]
-trust_level = "trusted"
-
-[projects."/Users/pablostafforini/.claude/rendered/Trajectory"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/spofy"]

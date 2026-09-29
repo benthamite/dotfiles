@@ -94,4 +94,4 @@ documented checks, fail closed and report the connection problem.
 
 Configure launcher aliases with `chrome-profile-open --setup <alias>`.
 Project wrappers may call the launcher when manual opening is the requested
-action, for example `trajectory-open URL` for Trajectory/CR pages.
+action.

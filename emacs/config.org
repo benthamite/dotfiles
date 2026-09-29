@@ -400,7 +400,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#agent-shell][agent-shell]]
   - [[#claude-code][claude-code]]
   - [[#agent][agent]]
-  - [[#trajectory-new-cr-task][Trajectory: new CR task]]
   - [[#agent-log][agent-log]]
   - [[#monet][monet]]
   - [[#codex][codex]]
@@ -1771,7 +1770,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
                "brave.com/pablo@stafforini.com" "slack.com/ae-racionalidad"
                "github.com/benthamite" "home-assistant.io/stafforini" "omdbapi.com"
                "themoviedb.org/stafforini" "signal" "erc/libera"
-               "slack.com/trajectorylabs" "deepgram.com/pablo@stafforini.com"
+               "deepgram.com/pablo@stafforini.com"
                "accounts.spotify.com" "mercadolibre.com/benthamite"
                "fatebook.io/pablo.stafforini@gmail.com" "tlon-ai-github-token")
      (tlon "api.github.com/grip-mode" "deepl.com"
@@ -9563,15 +9562,13 @@ The author provides a good overview of the package in [[https://www.youtube.com/
          "~/My Drive/tlon/projects/cognitive-revolution"
          "~/My Drive/tlon/projects/ea.international"
          "~/My Drive/tlon/projects/ea.news"))
-     ("trajectory" . ("~/Trajectory/reasoning-tasks/*"))
      ("" . ("~/repos/*" "~/repos/.worktrees/*/*"))))
   (agent-project-registry-root "/Users/pablostafforini/My Drive/Epoch/projects/")
   (agent-claude-org-todo-in-progress-keyword "DOING")
   (agent-claude-accounts '(("personal"  . "~/.claude-personal")
 			   ("personal2"  . "~/.claude-personal2")
 			   ("tlon"     . "~/.claude-tlon")
-			   ("epoch"    . "~/.claude-epoch")
-			   ("trajectory" . "~/.claude-trajectory")))
+			   ("epoch"    . "~/.claude-epoch")))
 
   (agent-codex-accounts '(("tlon"   . "~/.codex-tlon")
                           ("epoch"  :home "~/.codex-epoch"  :pool "epoch-pool")
@@ -9590,65 +9587,6 @@ The author provides a good overview of the package in [[https://www.youtube.com/
                ("D" . agent-debug-backtrace))))
 #+end_src
 
-
-** Trajectory: new CR task
-:PROPERTIES:
-:ID:       879A65A9-B1CB-4685-B07F-62EBF693C15A
-:END:
-
-/Create (if needed) the reasoning-tasks worktree for a CR task and launch a Claude session in it, with no terminal step. The worktree lives under the shared external root =~/repos/.worktrees/reasoning-tasks/= (never inside the repository checkout or =~/My Drive=) and is based on =origin/main= so it always has current skills; the SessionStart hook (=sync-reasoning-tasks-worktree.sh=) wires its API-key symlink./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(defun ps/trajectory-new-task (slug)
-  "Create the reasoning-tasks worktree for SLUG if needed, then launch Claude in it.
-The worktree is created under the shared external worktrees root
-`~/repos/.worktrees/reasoning-tasks/pablo/SLUG' — outside the repository
-checkout and outside \"~/My Drive\" — and is based on `origin/main' so
-it always carries current CR skills; the SessionStart hook wires its
-API-key symlink, so there is no manual step.  When the worktree already
-exists (at the external root, or at the legacy sibling location for
-tasks created before the move), skip creation and just start a session.
-The session uses the `trajectory' Claude account."
-  (interactive (list (read-string "Task slug: ")))
-  (require 'agent)
-  (setq slug (string-trim slug))
-  (when (string-empty-p slug)
-    (user-error "Task slug must not be empty"))
-  (let* ((root (expand-file-name "~/Trajectory/reasoning-tasks"))
-         (dir (expand-file-name slug "~/repos/.worktrees/reasoning-tasks/pablo/"))
-         (legacy (expand-file-name slug root)))
-    (cond ((file-directory-p dir))
-          ((file-directory-p legacy) (setq dir legacy))
-          (t (ps/trajectory--add-worktree slug dir root)))
-    (agent-start-session
-     (agent-session-create
-      :backend 'claude-code :account "trajectory"
-      :directory (abbreviate-file-name (file-name-as-directory dir))))))
-
-(defun ps/trajectory--add-worktree (slug dir root)
-  "Add the reasoning-tasks worktree DIR for SLUG, based on `origin/main'.
-DIR is the external worktree destination under
-`~/repos/.worktrees/reasoning-tasks/'; ROOT is the repository directory
-holding the `main' clone.  Fetch first so the new task is not born
-behind upstream; reattach the `pablo/SLUG' branch if it already exists,
-otherwise create it off `origin/main'."
-  (let ((default-directory (expand-file-name "main" root))
-        (branch (concat "pablo/" slug))
-        (buffer "*trajectory-new-task*"))
-    (message "trajectory-new-task: creating worktree %s…" slug)
-    (make-directory (file-name-directory (directory-file-name dir)) t)
-    (call-process "git" nil nil nil "fetch" "--quiet" "origin" "main")
-    (let* ((have-branch (zerop (call-process "git" nil nil nil "rev-parse"
-                                             "--verify" "--quiet"
-                                             (concat "refs/heads/" branch))))
-           (args (if have-branch
-                     (list "worktree" "add" dir branch)
-                   (list "worktree" "add" dir "-b" branch "origin/main")))
-           (status (apply #'call-process "git" nil buffer nil args)))
-      (unless (zerop status)
-        (pop-to-buffer buffer)
-        (user-error "git worktree add failed for %s — see %s" slug buffer)))))
-#+end_src
 
 ** =agent-log=
 :PROPERTIES:
@@ -13891,11 +13829,6 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
    :name "Epoch AI"
    :token (auth-source-pass-get "token" "epoch/slack.com/epochai")
    :cookie (auth-source-pass-get "cookie" "epoch/slack.com/epochai")
-   :animate-image t)
-  (slack-register-team
-   :name "Trajectory Labs"
-   :token (auth-source-extras-op-get "slack.com/trajectorylabs" "token")
-   :cookie (auth-source-extras-op-get "slack.com/trajectorylabs" "cookie")
    :animate-image t)
 
   :hook

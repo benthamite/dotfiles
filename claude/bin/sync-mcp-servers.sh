@@ -24,7 +24,6 @@ TARGETS = [
     os.path.expanduser("~/.claude-epoch/.claude.json"),
     os.path.expanduser("~/.claude-personal/.claude.json"),
     os.path.expanduser("~/.claude-tlon/.claude.json"),
-    os.path.expanduser("~/.claude-trajectory/.claude.json"),
 ]
 
 if not os.path.isfile(CANONICAL):

@@ -121,7 +121,7 @@ class PermalinkTests(unittest.TestCase):
             self.assertEqual(error.exception.code, 2)
 
     def test_unknown_domain_is_bound_to_selected_account(self):
-        with mock.patch.object(SLACK, "_workspace", "trajectory"):
+        with mock.patch.object(SLACK, "_workspace", "altruismo-eficaz"):
             url = URL.replace("epochai", "verified-example")
             out, calls = self.invoke([
                 {"ok": True, "url": "https://verified-example.slack.com/"},

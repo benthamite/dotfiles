@@ -14,8 +14,6 @@ Multiple workspaces are supported via the WORKSPACES registry and the global
 
   epoch       -> 1Password: op://Automations/Slack MCP - Epoch Unofficial
                  (.../xoxc_token -> Bearer token, .../xoxd_token -> 'd' cookie)
-  trajectory  -> pass entry trajectory/slack.com/trajectorylabs
-                 (token: field -> Bearer token, cookie: field -> 'd' cookie)
   altruismo-eficaz -> pass entry chrome/slack.com/altruismo-eficaz
                  (token: field -> Bearer token, cookie: field -> 'd' cookie)
 
@@ -128,12 +126,6 @@ WORKSPACES = {
         "domain": "epochai.slack.com",
         "source": "op",
         "op_path": "op://Automations/Slack MCP - Epoch Unofficial",
-    },
-    "trajectory": {
-        "source": "automation",
-        "item": "slack.com/trajectorylabs",
-        "token_field": "token",
-        "cookie_field": "cookie",
     },
     "altruismo-eficaz": {
         "source": "automation",

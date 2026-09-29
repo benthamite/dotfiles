@@ -57,8 +57,8 @@ shared tracked artifacts.
 ** Multi-account activation
 
 Four OAuth accounts use separate configuration homes:
-=~/.claude-personal/=, =~/.claude-tlon/=, =~/.claude-epoch/=, and
-=~/.claude-trajectory/=. Each keeps its own OAuth identity, Keychain credentials,
+=~/.claude-personal/=, =~/.claude-personal2/=, =~/.claude-tlon/=, and
+=~/.claude-epoch/=. Each keeps its own OAuth identity, Keychain credentials,
 and =.claude.json=. Settings, skills, projects, history, and plugins are shared
 through symlinks to =~/.claude/=. The account homes do not contain a second
 =CLAUDE.md=, because the user-level file is already loaded from =~/.claude/=.
@@ -690,15 +690,9 @@ scans both hook trees for the invalid shape. The live registration gives
 =load-elisp-after-edit.sh= a 150 s timeout, matching Codex, because the script
 waits up to 120 s for the Elpaca rebuild before reporting.
 
-The SessionStart sync hook, =sync-reasoning-tasks-worktree.sh=, runs under a
-30 s registration timeout and budgets its network steps to stay inside it: the
-task-state banner is capped at 15 s (the script's own alarm fires at 12 s), the
-fetch at 10 s, and a TERM during the merge aborts the merge so no worktree is
-left with a stale =MERGE_HEAD= that later sessions would read as dirty. Its
-local-settings registration writes atomically.
-=tests/test_sync_reasoning_tasks_hook.py= executes the real hook against
-scratch repositories for the no-op, register-and-merge, and interrupted-merge
-paths.
+The Trajectory CR hooks are no longer registered globally. Their source and
+project history are retained, but new sessions do not run Trajectory sync,
+coverage regeneration, skill routing, or card gates.
 
 Sensitive-read guards permit the security audit's shell-export classifier only
 for its exact absolute helper and target paths. The classifier reports names,

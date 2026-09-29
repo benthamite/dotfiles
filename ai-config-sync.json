@@ -798,7 +798,7 @@
       "path": "codex/config.toml",
       "tracked": true,
       "live_path": "~/.codex/config.toml",
-      "note": "Codex models, trust, plugins, MCP and hooks. Canonical personal config remains tracked; alternate accounts keep independent writable configs and plugin state seeded once by agent. Desktop generates browser runtime settings per home; do not manually pin release hashes. shell/shims/codex retains signed CLI runtimes. Preserve source/key/hash trust; a new hook needs trust written in every home (hooks/list, then config/batchWrite). skill-prune manages disabled skills and account homes; codex-config-prune removes dead records. Repo moves require trust-key rewrites. See codex/README.org."
+      "note": "Codex models, trust, plugins, MCP and hooks. Alternate accounts keep independent writable configs and plugin state seeded by agent. Desktop generates browser settings per home; never pin runtime hashes. shell/shims/codex retains signed runtimes. Preserve source/key/hash trust; new hooks need hooks/list then config/batchWrite in every home. skill-prune manages disabled skills; codex-config-prune removes dead records. Repo moves need trust-key rewrites. Trajectory trust entries are retired. See codex/README.org."
     },
     {
       "tool": "Codex",

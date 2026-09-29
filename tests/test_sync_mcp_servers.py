@@ -106,7 +106,7 @@ class SyncMcpServersTests(unittest.TestCase):
             ".claude.json",
             {"mcpServers": {"example": {"command": "example-server"}}},
         )
-        accounts = ["epoch", "personal", "tlon", "trajectory"]
+        accounts = ["epoch", "personal", "tlon"]
         for account in accounts:
             (self.home / f".claude-{account}").mkdir()
 

@@ -11110,6 +11110,16 @@ CLOCK: [2021-07-25 Sun 13:14]--[2021-07-25 Sun 13:18] =>  0:04
 (use-feature ox-latex
   :after org ox
   :custom
+  (org-latex-compiler "lualatex") ; support Unicode text in PDF exports
+  ;; Use system symbol and emoji fonts for glyphs absent from the text font.
+  (org-latex-header-extra
+   (concat "\\ifdefined\\directlua\n"
+           "\\directlua{luaotfload.add_fallback(\"orgsymbols\", "
+           "{\"Apple Symbols:mode=node;\", \"Apple Color Emoji:mode=harf;\"})}\n"
+           "\\setmainfont{Latin Modern Roman}[RawFeature={fallback=orgsymbols}]\n"
+           "\\setsansfont{Latin Modern Sans}[RawFeature={fallback=orgsymbols}]\n"
+           "\\setmonofont{Menlo}[RawFeature={fallback=orgsymbols}]\n"
+           "\\fi\n"))
   ;; get rid of temporary LaTeX files upon export
   (org-latex-logfiles-extensions (quote
                                   ("lof" "lot" "tex" "aux" "idx" "log" "out" "toc" "nav" "snm" "vrb" "dvi" "fdb_latexmk" "blg" "brf" "fls" "entoc" "ps" "spl" "bbl" "pygtex" "pygstyle"))))

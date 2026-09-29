@@ -446,6 +446,8 @@ live Chrome use, including tab navigation. Within authorized browser tasks it
 selects the Chrome plugin, reserves =chrome-profile-open= for manual launching,
 and separates page/REPL stalls from communication failures.
 
+The service-access and [[file:context/google-services.md][Google account reference]] also record the dedicated Forethought Chrome profile (=forethought.org=, =pablo@forethought.org=). Forethought browser work uses that profile; its Google CLI authentication is not configured. Personal-profile guest access to the onboarding checklist is a separate, explicitly permitted route.
+
 Browser control is runtime-owned rather than mirrored through a tracked
 Codex-App handoff skill. Claude therefore carries no pointer skill or helper
 command for moving a Codex thread into the desktop app.

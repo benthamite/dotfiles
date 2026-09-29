@@ -8,6 +8,7 @@ Pablo uses multiple human Google accounts plus a bot account, and accesses each 
 |------------------------------------------|-------------------------------|
 | `pablo@epoch.ai`                         | Epoch work account            |
 | `pablo.stafforini@gmail.com`             | Personal account              |
+| `pablo@forethought.org`                  | Forethought work account      |
 | `email-triage@epoch.ai`                  | Email-triage bot account      |
 
 ## Tooling by service
@@ -42,6 +43,15 @@ For the **email-triage bot** account (`email-triage@epoch.ai`), use
 automation maintenance, bot mailbox checks, and related debugging. Do not use it
 for Pablo's Epoch inbox, Pablo's personal inbox, Mercury receipts, or one-off
 human-account email work.
+
+For the **Forethought** account (`pablo@forethought.org`), use the dedicated
+Forethought Chrome profile (browser discovery label `forethought.org`) for
+authorized browser work. Gmail and Calendar access were verified on 29 September
+2026. The mapped Google CLIs do not yet have configured Forethought credentials;
+do not assume `--account forethought` works or route work through Epoch/personal
+credentials. Some older documents were shared with the personal account; use
+that account only where the task explicitly calls for that access. Profile and
+Notion-account distinctions are recorded in `service-access.md`.
 
 ## Google Docs browser body edits
 

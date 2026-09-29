@@ -52,6 +52,22 @@ with an explicit retirement message rather than shadowing that implementation.
 
 ## Browser-only flows
 
+### Forethought Chrome profile
+
+Pablo has a dedicated Forethought Chrome profile, shown as `forethought.org`
+by browser discovery, signed in as `pablo@forethought.org` (verified 29 September
+2026). Use this profile for Forethought work services when browser interaction
+is authorized. Do not substitute the Personal or Epoch profile. The Personal
+profile also has guest access to Pablo's Forethought Notion onboarding checklist;
+Pablo explicitly permits using it for that checklist. This is distinct from the
+Forethought account's full Notion workspace access.
+
+Forethought CLI authentication has not been configured in the mapped Google
+tools. See `google-services.md` for account routing. Discover the connected
+profile at runtime; browser/tab IDs are session-specific.
+
+### Browser access rules
+
 For background web research, use the web search/browsing tool and the mapped
 service clients or direct public downloads. Do not switch to Pablo's live Chrome
 because an HTTP request fails or a site presents a challenge. Live Chrome

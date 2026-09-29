@@ -276,7 +276,9 @@ preparation stops at review; the user executes account transfers. Quantity
 conventions, ticket-handling rules, receipt-sharing authorization and message
 templates belong in the encrypted workflow as well. Tested browser routes and
 UI recovery notes remain in its encrypted supporting reference. Authorized ledger
-recording uses confirmed charges and preserves pending work across invocations. Contact-sharing permissions,
+recording uses confirmed charges and preserves pending work across invocations.
+Pickup instructions use the dedicated form field, with no meeting-option or chat
+substitution. Contact-sharing permissions,
 terms-acceptance preferences and receipt retrieval guidance stay there too.
 
 The paired =record-decisions= skill records evidenced choices and dated amendments

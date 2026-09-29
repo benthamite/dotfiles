@@ -543,7 +543,8 @@ the encrypted bodies are not public skill catalog entries. Personal ordering
 workflows use this layout too, keeping contact and delivery details encrypted
 without adding symlinks inside the Drive tree. Standing delivery spending
 authorizations live in those encrypted instructions, not the public catalog. Ledger templates
-with personal account names remain alongside the encrypted workflow.
+with personal account names remain alongside the encrypted workflow. Payment
+preparation stops at review; the user executes account transfers.
 
 The paired =record-decisions= skill records evidenced choices and dated amendments
 without rewriting decision history. It preserves numeric IDs beyond three digits,

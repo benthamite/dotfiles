@@ -12,7 +12,7 @@ Usage:
   gmail.py [--account epoch|personal|email-triage] query <gmail-search-query> [--max=N]
       Search Gmail. Returns one line per match: <id>\\t<from>\\t<date>\\t<subject>.
   gmail.py [--account ...] whoami
-      Print the authenticated Google account email.
+      Print the authenticated Gmail mailbox email.
   gmail.py [--account ...] get <message-id> [--format=full|metadata|raw]
       Fetch a message. Default format=full prints headers + plaintext body
       (or HTML stripped to text if no plaintext part exists).
@@ -49,7 +49,6 @@ sys.path.insert(0, os.path.dirname(__file__))
 from _gworkspace_auth import api_request  # noqa: E402
 
 API = "https://gmail.googleapis.com/gmail/v1/users/me"
-USERINFO_API = "https://www.googleapis.com/oauth2/v2/userinfo"
 ACCOUNTS = ["epoch", "personal", "email-triage"]
 
 
@@ -213,8 +212,13 @@ def cmd_query(args):
 
 
 def cmd_whoami(args):
-    out = api_request("GET", USERINFO_API, account=args.account)
-    print(out.get("email", ""))
+    # Gmail's profile endpoint accepts the same Gmail scopes as mailbox reads;
+    # OAuth userinfo would require a separate identity grant.
+    out = api_request("GET", f"{API}/profile", account=args.account)
+    address = out.get("emailAddress")
+    if not address:
+        sys.exit("ERROR: Gmail profile did not return an email address")
+    print(address)
 
 
 def cmd_get(args):

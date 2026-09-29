@@ -7,6 +7,9 @@ Google Workspace helpers resolve Epoch OAuth credentials through
 =op-automations=. Calendar uses =gcalcli-epoch=, which validates the canonical
 grant and atomically refreshes gcalcli's credential cache before each operation.
 This prevents a separately expired Calendar grant from blocking automation.
+The =gmail.py --account personal whoami= command verifies the authenticated
+mailbox through Gmail's profile endpoint using the existing Gmail grant;
+it does not require a separate OAuth user-info scope.
 
 This directory contains the tracked parts of my Claude Code setup. The shared
 Claude/Codex contract lives in [[file:../agents/configuration.org][the shared configuration guide]]; this file covers

@@ -539,7 +539,9 @@ GitHub release exists for it; a published release tag is never moved.
 
 Some retained local workflows are encrypted with =git-crypt= at their existing
 skill paths. Their working instructions remain available in an unlocked checkout;
-the encrypted bodies are not public skill catalog entries.
+the encrypted bodies are not public skill catalog entries. Personal ordering
+workflows use this layout too, keeping contact and delivery details encrypted
+without adding symlinks inside the Drive tree.
 
 The paired =record-decisions= skill records evidenced choices and dated amendments
 without rewriting decision history. It preserves numeric IDs beyond three digits,

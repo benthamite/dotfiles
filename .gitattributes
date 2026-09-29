@@ -11,3 +11,5 @@ qBittorrent/watched_folders.json filter=git-crypt diff=git-crypt
 claude/skills/refresh-cr-tracker/SKILL.md filter=git-crypt diff=git-crypt
 codex/skills/refresh-cr-tracker/SKILL.md filter=git-crypt diff=git-crypt
 claude/auto-mode.json filter=git-crypt diff=git-crypt
+claude/skills/order-salads/** filter=git-crypt diff=git-crypt
+codex/skills/order-salads/** filter=git-crypt diff=git-crypt

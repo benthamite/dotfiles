@@ -331,6 +331,13 @@
       "codex": "codex/skills/triage-personal-todos/SKILL.md",
       "status": "paired",
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
+      "name": "order-salads",
+      "claude": "claude/skills/order-salads/SKILL.md",
+      "codex": "codex/skills/order-salads/SKILL.md",
+      "status": "paired",
+      "equivalence": "Paired encrypted personal workflow; bodies and auxiliary files match."
     }
   ],
   "hooks": [

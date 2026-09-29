@@ -9526,6 +9526,11 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 
 /[[https://github.com/benthamite/agent][agent]] provides Emacs integration for AI coding agents./
 
+Forethought's workspace, preparation notes and project notes are available under
+every account.
+The project picker discovers directories under =Forethought/projects/= that
+contain =AGENTS.md= or =CLAUDE.md=, including directories without Git repositories.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package agent
   :ensure (:host github
@@ -9538,6 +9543,25 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (agent-claude-mode 1)
   (agent-codex-mode 1)
   (agent-tab-bar-mode 1)
+  (defun pablo/agent-add-forethought-projects (sources)
+    "Append Forethought's workspace and instruction-bearing projects to SOURCES."
+    (let* ((root (expand-file-name "~/My Drive/Forethought/"))
+           (projects (expand-file-name "projects/" root)))
+      (append sources
+              (when (file-directory-p root) (list root))
+              (let ((prep (expand-file-name "prep/" root)))
+                (when (pablo/agent-instruction-directory-p prep) (list prep)))
+              (when (file-directory-p projects)
+                (seq-filter #'pablo/agent-instruction-directory-p
+                            (directory-files projects t "\\`[^.]"))))))
+  (defun pablo/agent-instruction-directory-p (directory)
+    "Return non-nil if DIRECTORY contains project instructions."
+    (and (file-directory-p directory)
+         (seq-some (lambda (name)
+                     (file-regular-p (expand-file-name name directory)))
+                   '("AGENTS.md" "CLAUDE.md"))))
+  (advice-add 'agent-project--sources-for-account :filter-return
+              #'pablo/agent-add-forethought-projects)
   ;; Serve the phone control page over Tailscale.  Demote errors so a
   ;; disconnected Tailscale does not abort the rest of this configuration.
   (require 'agent-remote)

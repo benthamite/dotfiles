@@ -32,7 +32,7 @@ jobs:
             --eval "(package-refresh-contents)" \
             --eval "(dolist (pkg '(el-patch shut-up ebib magit forge consult
                                   org-noter org-pomodoro read-aloud
-                                  ledger-mode gptel no-littering
+                                  ledger-mode gptel llm no-littering
                                   doom-modeline orderless markdown-mode
                                   vulpea anki-editor aidermacs zotra
                                   f s inheritenv))

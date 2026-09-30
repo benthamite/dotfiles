@@ -53,6 +53,9 @@ DENY = [
     "git show HEAD:.env",
     "python3 dump.py --env-file=.env.local",
     "git -C /Users/x/repo ls-files .env.local | xargs cat",
+    # op-automations cached reads are plaintext 1Password values
+    "cat ~/.local/state/op-automations/cache/0123abcd",
+    'head -c 40 "$XDG_STATE_HOME/op-automations/cache/"*',
 ]
 
 

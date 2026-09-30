@@ -142,6 +142,8 @@ grep_scope_label() {
       printf '%s\n' "shell history"; return ;;
     "$HOME/.gmail-mcp-epoch/credentials"|"$HOME/.gmail-mcp-epoch/credentials/"*|/Users/pablostafforini/.gmail-mcp-epoch/credentials|/Users/pablostafforini/.gmail-mcp-epoch/credentials/*)
       printf '%s\n' "Gmail MCP credentials"; return ;;
+    */op-automations/cache|*/op-automations/cache/*|*/op-automations|*/.local/state|*/.local)
+      printf '%s\n' "1Password read cache"; return ;;
     .env.op|*/.env.op|.env*.example|*/.env*.example) return ;;
     .env|*/.env|.env.*|*/.env.*|.envrc|*/.envrc)
       printf '%s\n' "environment secrets file"; return ;;
@@ -207,6 +209,11 @@ if [ "$TOOL_NAME" = "Read" ]; then
   case "$EXPANDED_PATH" in
     "$HOME/.gmail-mcp-epoch/credentials/"*|/Users/pablostafforini/.gmail-mcp-epoch/credentials/*)
       deny "Gmail MCP credentials" "$FILE_PATH" ;;
+  esac
+  # op-automations cached reads (plaintext 1Password values)
+  case "$EXPANDED_PATH" in
+    */op-automations/cache|*/op-automations/cache/*)
+      deny "1Password read cache" "$FILE_PATH" ;;
   esac
   # OAuth client secrets
   case "$EXPANDED_PATH" in
@@ -295,6 +302,8 @@ sensitive_label_for_command() {
     SENSITIVE_LABEL="OAuth tokens"
   elif echo "$text" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.gmail-mcp-epoch/credentials/'; then
     SENSITIVE_LABEL="Gmail MCP credentials"
+  elif echo "$text" | grep -qE 'op-automations/cache\b'; then
+    SENSITIVE_LABEL="1Password read cache"
   elif echo "$text" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.config/[^/[:space:]]+/(secret\.json|client_secret[^"[:space:]]*\.json)\b'; then
     SENSITIVE_LABEL="OAuth client secret"
   elif echo "$text" | grep -qE '(^|[[:space:]/])(credentials\.json|service-account[^/[:space:]]*\.json|tokens\.json)\b'; then

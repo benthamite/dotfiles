@@ -212,6 +212,8 @@ sr_label_for_text() {
     SENSITIVE_LABEL="OAuth tokens"
   elif echo "$text" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.gmail-mcp-epoch/credentials/'; then
     SENSITIVE_LABEL="Gmail MCP credentials"
+  elif echo "$text" | grep -qE 'op-automations/cache\b'; then
+    SENSITIVE_LABEL="1Password read cache"
   elif echo "$text" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.config/[^/[:space:]]+/(secret\.json|client_secret[^"[:space:]]*\.json)\b'; then
     SENSITIVE_LABEL="OAuth client secret"
   elif echo "$text" | grep -qE '(^|[[:space:]/])(credentials\.json|service-account[^/[:space:]]*\.json|tokens\.json)\b'; then

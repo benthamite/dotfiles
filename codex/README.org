@@ -764,7 +764,10 @@ form is also allowed; extra options are not. Shell expansions are
 fine in broker arguments; an expansion in the subcommand position is
 unclassifiable and denied. The =op-automations= account selector (=@epoch=,
 =@personal=, =@tlon=) is stripped before classification, so each shape
-behaves the same with or without it; any other =@…= word is denied. Quoted
+behaves the same with or without it; any other =@…= word is denied. The
+broker's own =cache read= verb takes =read='s non-printing shapes (without
+=--out-file=) and =cache forget= is allowed; the sensitive-read guard denies
+naming the plaintext cache directory (=…/op-automations/cache=). Quoted
 argument globs, including =rg= exclusion patterns beginning with =!=, remain
 inert data rather than executable command words. A shell =case= default pattern
 is likewise grammar, not an executable glob. So is the =*= in a standalone assignment ended by a

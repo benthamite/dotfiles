@@ -62,6 +62,11 @@ ALLOW = [
     "op-automations @personal run --env-file .env.op -- python3 script.py",
     "op-automations @epoch read op://Automations/X/credential --out-file /tmp/token.txt",
     "op-automations @personal read op://Automation/X/credential | gh secret set MY_SECRET -R o/r",
+    # the broker's cached read takes read's shapes; forget prints nothing
+    'X=$(op-automations @personal cache read op://Automation/X/credential); curl -H "Authorization: Bearer $X" https://api.example',
+    "op-automations cache read --ttl 1h op://Automations/X/credential > /tmp/token.txt",
+    "op-automations @tlon cache read op://Automation/X/credential | pbcopy",
+    "op-automations @personal cache forget op://Automation/X/credential",
     # item output limited to metadata
     "op-desktop item list --format=json | jq '[.[] | {id,title}]'",
     "op-desktop item get abc --format=json | jq '[.fields[] | {label,purpose,type}]'",
@@ -249,6 +254,14 @@ DENY = [
     "op-automations @$ACCT read op://Automation/X/credential > /tmp/token.txt",
     "op-automations @personal @tlon read op://Automation/X/credential > /tmp/token.txt",
     "op-desktop @personal read op://Employee/X/credential > /tmp/token.txt",
+    # a cached read prints the secret as a plain read would
+    "op-automations @personal cache read op://Automation/X/credential",
+    "op-automations cache read op://Automations/X/credential | cat",
+    "echo $(op-automations cache read op://Automations/X/credential)",
+    "op-automations cache read op://Automations/X/credential --out-file /tmp/token.txt",
+    "op-automations --debug cache read op://Automations/X/credential > /tmp/token.txt",
+    "op-desktop cache read op://Employee/X/credential > /tmp/token.txt",
+    "op-automations cache dump op://Automations/X/credential",
 ]
 
 

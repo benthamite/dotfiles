@@ -154,6 +154,8 @@ sensitive_label_for_text() {
     printf '%s\n' "OAuth tokens"
   elif echo "$text" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.gmail-mcp-epoch/credentials/'; then
     printf '%s\n' "Gmail MCP credentials"
+  elif echo "$text" | grep -qE 'op-automations/cache\b'; then
+    printf '%s\n' "1Password read cache"
   elif echo "$text" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.config/[^/[:space:]]+/(secret\.json|client_secret[^"[:space:]]*\.json)\b'; then
     printf '%s\n' "OAuth client secret"
   elif echo "$text" | grep -qE '(^|[[:space:]/])(credentials\.json|service-account[^/[:space:]]*\.json|tokens\.json)\b'; then

@@ -64,7 +64,7 @@ CONSUMERS = (
 SUBCOMMANDS = {
     "read", "run", "inject", "item", "document", "vault", "user", "group", "whoami",
     "signin", "signout", "account", "connect", "events-api", "service-account",
-    "plugin", "completion", "update", "environment",
+    "plugin", "completion", "update", "environment", "cache",
 }
 GLOBAL_FLAGS_NO_VALUE = {"--status", "--stop", "--version", "--help", "-h", "--no-color", "--debug", "--cache", "--iso-timestamps"}
 META_JQ_KEYS = {
@@ -536,6 +536,22 @@ def classify_invocation(
         if context != "command":
             raise Deny("`run` inside a substitution captures the program's output")
         return
+
+    # `op-automations cache read|forget REF` is the broker's own cached read
+    # (bin/op-automations), consumed before `op` runs. `cache read` prints
+    # exactly what `read` would, so it takes the same non-printing shapes;
+    # `cache forget` deletes an entry and prints nothing.
+    if sub == "cache":
+        if _basename(words[0].text) != "op-automations" or flags:
+            raise Deny("`cache` is an op-automations verb and must follow the broker or its account selector")
+        verb = args[0] if args else ""
+        if verb == "forget":
+            return
+        if verb != "read":
+            raise Deny(f"unclassified 1Password command `cache {verb}`")
+        sub, args = "read", args[1:]
+        if _flag_value(args, ("--out-file", "-o")) is not None:
+            raise Deny("`cache read` has no --out-file; redirect it instead")
 
     if sub == "read":
         out_file = _flag_value(args, ("--out-file", "-o"))

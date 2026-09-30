@@ -114,6 +114,158 @@ class OpAutomationsTest(unittest.TestCase):
         self.assertNotIn("op-args:", calls)
 
 
+class OpAutomationsCacheTest(unittest.TestCase):
+    REF = "op://Automation/item/credential"
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        tmp_path = Path(self.tmp.name)
+        self.log_path = tmp_path / "calls.log"
+        self.status_path = tmp_path / "op-status"
+        self.status_path.write_text("0")
+        self.state = tmp_path / "state"
+        bin_dir = tmp_path / "bin"
+        bin_dir.mkdir()
+        write_executable(bin_dir / "security", "#!/usr/bin/env bash\nprintf keychain-token\n")
+        write_executable(bin_dir / "tmutil", f"#!/usr/bin/env bash\nprintf 'tmutil:%s\\n' \"$*\" >> {str(self.log_path)!r}\n")
+        write_executable(
+            bin_dir / "op",
+            f"""
+            #!/usr/bin/env bash
+            printf 'op-args:%s\\n' "$*" >> {str(self.log_path)!r}
+            status=$(cat {str(self.status_path)!r})
+            if [[ "$status" != 0 ]]; then
+              printf '[ERROR] Too many requests\\n' >&2
+              exit "$status"
+            fi
+            printf 'value-for-%s\\n' "${{OP_SERVICE_ACCOUNT_TOKEN:-}}"
+            """,
+        )
+        self.env = os.environ.copy()
+        self.env["PATH"] = f"{bin_dir}:{self.env['PATH']}"
+        self.env["XDG_STATE_HOME"] = str(self.state)
+        self.env.pop("OP_SERVICE_ACCOUNT_TOKEN", None)
+
+    def broker(self, *args):
+        return subprocess.run(
+            [str(WRAPPER), *args], text=True, capture_output=True, env=self.env, check=False
+        )
+
+    def op_calls(self):
+        text = self.log_path.read_text() if self.log_path.exists() else ""
+        return [line for line in text.splitlines() if line.startswith("op-args:")]
+
+    def cache_dir(self):
+        return self.state / "op-automations" / "cache"
+
+    def entries(self):
+        return sorted(p for p in self.cache_dir().iterdir() if not p.name.endswith(".failed"))
+
+    def test_miss_reads_once_and_hit_serves_private_file_without_op(self):
+        first = self.broker("@personal", "cache", "read", self.REF)
+        second = self.broker("@personal", "cache", "read", self.REF)
+
+        self.assertEqual(first.returncode, 0, first.stderr)
+        self.assertEqual(first.stdout, "value-for-keychain-token\n")
+        self.assertEqual(second.stdout, first.stdout)
+        self.assertEqual(self.op_calls(), [f"op-args:read {self.REF}"])
+        self.assertEqual(stat.S_IMODE(self.cache_dir().stat().st_mode), 0o700)
+        [entry] = self.entries()
+        self.assertEqual(stat.S_IMODE(entry.stat().st_mode), 0o600)
+        self.assertNotIn(self.REF, entry.name)
+        self.assertEqual([p.name for p in self.cache_dir().iterdir() if p.name.startswith(".")], [])
+        self.assertIn("tmutil:addexclusion", self.log_path.read_text())
+
+    def test_expired_entry_is_replaced_by_one_fresh_read(self):
+        self.broker("cache", "read", self.REF)
+        [entry] = self.entries()
+        old = entry.stat().st_mtime - 7200
+        os.utime(entry, (old, old))
+
+        result = self.broker("cache", "read", "--ttl", "1h", self.REF)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(self.op_calls()), 2)
+        self.assertGreater(entry.stat().st_mtime, old)
+
+    def test_ttl_is_honoured_for_younger_entries(self):
+        self.broker("cache", "read", self.REF)
+        [entry] = self.entries()
+        old = entry.stat().st_mtime - 1800
+        os.utime(entry, (old, old))
+
+        self.broker("cache", "read", "--ttl=1h", self.REF)
+
+        self.assertEqual(len(self.op_calls()), 1)
+
+    def test_forget_forces_exactly_one_fresh_read(self):
+        self.broker("cache", "read", self.REF)
+        forget = self.broker("cache", "forget", self.REF)
+        self.assertEqual((forget.returncode, forget.stdout), (0, ""))
+        self.assertEqual(self.entries(), [])
+
+        self.broker("cache", "read", self.REF)
+        self.broker("cache", "read", self.REF)
+
+        self.assertEqual(len(self.op_calls()), 2)
+
+    def test_failed_read_is_not_cached_and_backs_off_until_forgotten(self):
+        self.status_path.write_text("1")
+        failed = self.broker("@personal", "cache", "read", self.REF)
+        self.assertEqual(failed.returncode, 1)
+        self.assertEqual(failed.stdout, "")
+        self.assertIn("Too many requests", failed.stderr)
+        self.assertEqual(self.entries(), [])
+
+        self.status_path.write_text("0")
+        backing_off = self.broker("@personal", "cache", "read", self.REF)
+        self.assertEqual(backing_off.returncode, 1)
+        self.assertIn("not retrying", backing_off.stderr)
+        self.assertEqual(len(self.op_calls()), 1)
+
+        self.broker("@personal", "cache", "forget", self.REF)
+        recovered = self.broker("@personal", "cache", "read", self.REF)
+        self.assertEqual(recovered.returncode, 0, recovered.stderr)
+        self.assertEqual(len(self.op_calls()), 2)
+
+    def test_backoff_expires(self):
+        self.status_path.write_text("1")
+        self.broker("cache", "read", self.REF)
+        [marker] = self.cache_dir().glob("*.failed")
+        old = marker.stat().st_mtime - 601
+        os.utime(marker, (old, old))
+        self.status_path.write_text("0")
+
+        result = self.broker("cache", "read", self.REF)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(list(self.cache_dir().glob("*.failed")), [])
+
+    def test_accounts_have_separate_entries(self):
+        self.broker("@personal", "cache", "read", self.REF)
+        self.broker("@tlon", "cache", "read", self.REF)
+        self.broker("@personal", "cache", "forget", self.REF)
+
+        self.assertEqual(len(self.entries()), 1)
+        self.assertEqual(len(self.op_calls()), 2)
+
+    def test_malformed_requests_are_rejected_without_op(self):
+        for args in (
+            ("cache", "read", "Automation/item/credential"),
+            ("cache", "read", "--ttl", "soon", self.REF),
+            ("cache", "read", self.REF, "extra"),
+            ("cache", "forget", "--ttl", "1h", self.REF),
+            ("cache", "purge", self.REF),
+            ("cache",),
+        ):
+            with self.subTest(args=args):
+                result = self.broker(*args)
+                self.assertEqual(result.returncode, 2)
+                self.assertEqual(result.stdout, "")
+        self.assertEqual(self.op_calls(), [])
+
+
 class RawOpGuardTest(unittest.TestCase):
     def assert_denied(self, path, payload):
         result = run_hook(path, payload)

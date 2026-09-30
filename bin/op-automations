@@ -26,6 +26,107 @@ case "$account" in
     ;;
 esac
 
+# Cached reads for programs on timers:
+#
+#   op-automations [@ACCOUNT] cache read [--ttl DURATION] op://REF
+#   op-automations [@ACCOUNT] cache forget op://REF
+#
+# The personal account allows about 1,000 service-account requests a day, and
+# a job that reads its credential every minute exhausts that on its own; failed
+# requests count too. `cache read` prints what `read REF` would, from a
+# plaintext per-reference file when one younger than DURATION exists (default
+# 24h), otherwise from one fresh read that replaces the file. A failed fresh
+# read is not cached, but it starts a 10-minute backoff for that reference
+# during which `cache read` fails at once instead of spending another request.
+# A caller whose cached credential was rejected runs `cache forget REF`, which
+# removes the entry and its backoff, then reads again once. The cache lives in
+# a 0700 directory under XDG_STATE_HOME; secrets.md weighs that trade-off.
+cache_backoff_seconds=600
+
+cache_usage() {
+  printf 'usage: op-automations [@ACCOUNT] cache read [--ttl DURATION] op://REF\n' >&2
+  printf '       op-automations [@ACCOUNT] cache forget op://REF\n' >&2
+  exit 2
+}
+
+cache_seconds() {
+  local value=$1
+  [[ "$value" =~ ^([0-9]+)([smhd]?)$ ]] || return 1
+  case "${BASH_REMATCH[2]}" in
+    '' | s) printf '%s' "${BASH_REMATCH[1]}" ;;
+    m) printf '%s' $((BASH_REMATCH[1] * 60)) ;;
+    h) printf '%s' $((BASH_REMATCH[1] * 3600)) ;;
+    d) printf '%s' $((BASH_REMATCH[1] * 86400)) ;;
+  esac
+}
+
+cache_age() {
+  printf '%s' $(($(date +%s) - $(stat -f %m "$1")))
+}
+
+if [[ "${1:-}" == cache ]]; then
+  shift
+  cache_verb=${1:-}
+  shift || true
+  cache_ttl=86400
+  while [[ "${1:-}" == --ttl || "${1:-}" == --ttl=* ]]; do
+    [[ "$cache_verb" == read ]] || cache_usage
+    if [[ "$1" == --ttl ]]; then
+      [[ $# -ge 2 ]] || cache_usage
+      cache_ttl=$2
+      shift 2
+    else
+      cache_ttl=${1#--ttl=}
+      shift
+    fi
+    cache_ttl=$(cache_seconds "$cache_ttl") || cache_usage
+  done
+  [[ $# -eq 1 && "$1" == op://?* ]] || cache_usage
+  cache_ref=$1
+  cache_dir="${XDG_STATE_HOME:-$HOME/.local/state}/op-automations/cache"
+  cache_key=$(printf '%s\n%s' "$account" "$cache_ref" | shasum -a 256)
+  cache_entry="$cache_dir/${cache_key%% *}"
+
+  case "$cache_verb" in
+    forget)
+      rm -f "$cache_entry" "$cache_entry.failed"
+      exit 0
+      ;;
+    read) ;;
+    *) cache_usage ;;
+  esac
+
+  umask 077
+  if [[ ! -d "$cache_dir" ]]; then
+    mkdir -p "$cache_dir"
+    # Keep plaintext credentials out of Time Machine backups.
+    tmutil addexclusion "$cache_dir" >/dev/null 2>&1 ||
+      printf 'op-automations: could not exclude %s from Time Machine\n' "$cache_dir" >&2
+  fi
+  chmod 700 "$cache_dir"
+  if [[ -s "$cache_entry" ]] && (($(cache_age "$cache_entry") < cache_ttl)); then
+    cat "$cache_entry"
+    exit 0
+  fi
+  cache_failed_age=$cache_backoff_seconds
+  [[ -e "$cache_entry.failed" ]] && cache_failed_age=$(cache_age "$cache_entry.failed")
+  if ((cache_failed_age < cache_backoff_seconds)); then
+    printf 'op-automations: a fresh read of this reference failed %ss ago; not retrying for %ss (clear with "cache forget")\n' \
+      "$cache_failed_age" "$((cache_backoff_seconds - cache_failed_age))" >&2
+    exit 1
+  fi
+  cache_scratch=$(mktemp "$cache_dir/.read.XXXXXX")
+  trap 'rm -f "$cache_scratch"' EXIT
+  if "${BASH_SOURCE[0]}" "@$account" read "$cache_ref" >"$cache_scratch" && [[ -s "$cache_scratch" ]]; then
+    cat "$cache_scratch"
+    mv -f "$cache_scratch" "$cache_entry"
+    rm -f "$cache_entry.failed"
+    exit 0
+  fi
+  touch "$cache_entry.failed"
+  exit 1
+fi
+
 if [[ "$account" != epoch || -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]]; then
   service="op-service-account/$account-automation"
   if ! OP_SERVICE_ACCOUNT_TOKEN=$(security find-generic-password -a "$USER" -s "$service" -w 2>/dev/null) ||

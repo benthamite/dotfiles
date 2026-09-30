@@ -66,6 +66,41 @@ Each recorded batch is (ACCOUNT . TITLES).  The account `broken' has no token."
   (auth-source-extras-test--with-fake-op batches
     (should-not (auth-source-extras-op-get "alpha" "credential" 'broken))))
 
+(ert-deftest auth-source-extras-op-get-rate-limit-is-retried-on-next-call ()
+  (auth-source-extras-test--with-fake-op batches
+    (let ((limited t))
+      (cl-letf* ((fake (symbol-function 'auth-source-extras--op-items))
+                 ((symbol-function 'auth-source-extras--op-items)
+                  (lambda (account titles)
+                    (if limited
+                        (progn (push (cons account titles) batches)
+                               (mapcar (lambda (title)
+                                         (cons title '(:error . "Too many requests. Please try again later.")))
+                                       titles))
+                      (funcall fake account titles)))))
+        (should-not (auth-source-extras-op-get "alpha" "credential"))
+        (should-not (gethash '(personal . "alpha") auth-source-extras--op-cache))
+        (setq limited nil)
+        (should (equal (auth-source-extras-op-get "alpha" "credential") "A-SECRET"))
+        (should (equal batches '((personal "alpha") (personal "alpha"))))))))
+
+(ert-deftest auth-source-extras-op-get-unreadable-account-is-not-cached-as-missing ()
+  (auth-source-extras-test--with-fake-op batches
+    (auth-source-extras-op-get "alpha" "credential" 'broken)
+    (auth-source-extras-op-get "alpha" "credential" 'broken)
+    (should (equal batches '((broken "alpha") (broken "alpha"))))))
+
+(ert-deftest auth-source-extras-op-not-found-p-separates-absence-from-transient-failures ()
+  (should (auth-source-extras--op-not-found-p
+           "\"gamma\" isn't an item in the \"Automation\" vault. Specify the item with its UUID, name, or domain."))
+  (should (auth-source-extras--op-not-found-p "no item titled exactly `ea.news'"))
+  (dolist (reason '("Too many requests. Please try again later."
+                    "timed out"
+                    "op-automations: no token in the Keychain for op-service-account/personal-automation"
+                    "dial tcp: lookup my.1password.com: no such host"
+                    "exit status 1"))
+    (should-not (auth-source-extras--op-not-found-p reason))))
+
 (ert-deftest auth-source-extras-op-fetch-warns-once-per-reason ()
   (auth-source-extras-test--with-fake-op batches
     (let (warnings

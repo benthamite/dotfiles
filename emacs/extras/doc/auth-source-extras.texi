@@ -62,6 +62,8 @@ The first request for an account fetches the requested item together with every 
 
 If an item cannot be read, for example because the account has no token in the Keychain or the item does not exist, the function returns nil and displays one warning per distinct reason, naming the affected items. The reason is the last line of the CLI's own error output, such as @samp{"mbsync/password" isn't an item in the "Automation" vault} or @samp{no token in the Keychain for op-service-account/tlon-automation}; it never contains item values. This lets a shared configuration load on machines that can read only some of the accounts.
 
+Only an item that does not exist, reported by the CLI as @samp{isn't an item}, or one whose title only fuzzily matched, is remembered as missing for the rest of the session. Every other failure is transient: a rate limit (the personal account's service account allows about 1,000 requests a day, and the CLI answers @samp{Too many requests} once they are spent), a network error, a timeout or a missing Keychain token. It is warned about but not cached, so the next read tries the item again.
+
 @findex auth-source-extras-op-clear-cache
 @code{auth-source-extras-op-clear-cache} forgets every cached secret and vault listing, so the next read fetches fresh values, for example after rotating a key.
 

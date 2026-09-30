@@ -88,7 +88,13 @@ per account instead of one per item."
 (defvar auth-source-extras--op-cache (make-hash-table :test #'equal)
   "Fields of fetched items, keyed by (ACCOUNT . TITLE).
 Each value is an alist of field labels and IDs to values, or the symbol
-`missing' when the item could not be fetched.")
+`missing' when the item does not exist.  Transient failures are not cached.")
+
+(defconst auth-source-extras--op-not-found-regexp
+  "isn't an item\\|\\`no item titled exactly "
+  "Regexp matching the failure reasons that mean an item does not exist.
+The first alternative is the CLI's own message; the second is the one
+`auth-source-extras--op-exact-fields' returns for a fuzzy match.")
 
 (defvar auth-source-extras--op-titles (make-hash-table :test #'eq)
   "Item titles of each account's automation vault, or `missing'.")
@@ -102,8 +108,9 @@ Each value is an alist of field labels and IDs to values, or the symbol
 ITEM is the item title and FIELD a field label or ID, such as \"credential\"
 or \"password\".  ACCOUNT is an account symbol understood by
 `auth-source-extras-op-program', such as `personal' or `tlon', and defaults to
-`personal'.  An item that cannot be read is reported once as a warning and then
-returns nil."
+`personal'.  An item that does not exist is reported once as a warning and then
+returns nil.  A transient failure, such as a rate limit or a network error, is
+reported and returns nil, and the next call reads the item again."
   (let ((fields (auth-source-extras--op-item (or account 'personal) item)))
     (when (listp fields)
       (cdr (assoc field fields)))))
@@ -125,8 +132,9 @@ returns nil."
 
 (defun auth-source-extras--op-fetch (account titles)
   "Fetch TITLES from ACCOUNT's automation vault into the cache.
-Titles that cannot be read are cached as `missing' and reported in one warning
-per distinct reason."
+Titles that do not exist are cached as `missing'; other failures are left
+uncached so that a later call retries them.  Each distinct reason is reported
+in one warning."
   (let (failures)
     (dolist (result (auth-source-extras--op-items account titles))
       (let ((title (car result))
@@ -135,11 +143,19 @@ per distinct reason."
             (push title (alist-get (cdr fields) failures nil nil #'equal))
           (puthash (cons account title) fields auth-source-extras--op-cache))))
     (dolist (failure failures)
-      (dolist (title (cdr failure))
-        (puthash (cons account title) 'missing auth-source-extras--op-cache))
+      (when (auth-source-extras--op-not-found-p (car failure))
+        (dolist (title (cdr failure))
+          (puthash (cons account title) 'missing auth-source-extras--op-cache)))
       (auth-source-extras--op-warn "Cannot read %s from the %s %s vault: %s"
                                    (string-join (reverse (cdr failure)) ", ")
                                    account (auth-source-extras--op-vault account) (car failure)))))
+
+(defun auth-source-extras--op-not-found-p (reason)
+  "Return non-nil when failure REASON says the item does not exist.
+Anything else, such as a rate limit (\"Too many requests\"), a network error, a
+timeout or a missing broker token, is transient; caching it as `missing' would
+hide the item for the rest of the session."
+  (string-match-p auth-source-extras--op-not-found-regexp reason))
 
 (defun auth-source-extras--op-items (account titles)
   "Return an alist of TITLES to their fields in ACCOUNT's automation vault.

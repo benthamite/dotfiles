@@ -377,10 +377,33 @@ deny_process_output() {
   exit 0
 }
 
+function_body_denial() {
+  local result decision
+  # Cheap gate: the classifier only acts on these words.
+  printf '%s' "$1" | grep -qE 'which|where|whence|type|functions|declare|local|export|readonly|eval' || return 1
+  result=$(printf '%s' "$1" | jq -Rs . | python3 "$(dirname "$0")/lib-function-body-policy.py" 2>/dev/null) \
+    || result='{"decision":"deny","reason":"function-body classifier failed"}'
+  decision=$(printf '%s' "$result" | jq -er '.decision // "deny"' 2>/dev/null) || decision=deny
+  [ "$decision" = allow ] && return 1
+  printf '%s' "$result" | jq -er '.reason // "unclassified shell introspection"' 2>/dev/null \
+    || printf '%s' 'function-body classifier returned an invalid decision'
+}
+
+deny_function_body() {
+  jq -n --arg reason "$1" '{"hookSpecificOutput": {
+    "hookEventName": "PreToolUse", "permissionDecision": "deny",
+    "permissionDecisionReason": ("BLOCKED: " + $reason + ". Shell function bodies can contain credentials, and output redaction only masks known credential shapes. To learn what a name is, use `whence -w NAME` or `command -v NAME`; to read a function, read its source file (subject to the sensitive-read guard).")
+  }}'
+  exit 0
+}
+
 # --- Allowlist: commands that do not return secret-manager output ---
 if [ "$TOOL_NAME" = "Bash" ]; then
   if process_reason=$(process_output_denial "$CONTENT"); then
     deny_process_output "$process_reason"
+  fi
+  if body_reason=$(function_body_denial "$CONTENT"); then
+    deny_function_body "$body_reason"
   fi
   if contains_secret_output_command "$CONTENT"; then
     deny_secret_output_command
@@ -472,6 +495,9 @@ SECRET_PATTERNS=(
   '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----'                      # private key
   '"client_secret"\s*:\s*"[A-Za-z0-9_-]{20,}"'                           # Google OAuth secret
   'AIza[0-9A-Za-z_-]{35}'                                                # Google API key
+  'GOCSPX-[A-Za-z0-9_-]{20,}'                                             # Google OAuth client secret (bare)
+  '(^|[^A-Za-z0-9/])1//[A-Za-z0-9_-]{30,}'                              # Google OAuth refresh token
+  'ya29\.[A-Za-z0-9_-]{20,}'                                              # Google OAuth access token
   'glpat-[A-Za-z0-9_-]{20,}'                                             # GitLab token
   'eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+'               # JWT
   '(postgres|postgresql|mysql|mongodb|mongodb\+srv|redis|amqp|amqps|mssql)://[^:/ ]+:[^@/ ]+@'  # DB URL with creds
@@ -490,6 +516,9 @@ SECRET_LABELS=(
   'private key'
   'Google OAuth client secret'
   'Google API key'
+  'Google OAuth client secret'
+  'Google OAuth refresh token'
+  'Google OAuth access token'
   'GitLab token'
   'JWT'
   'database connection string with embedded credentials'

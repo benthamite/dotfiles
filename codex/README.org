@@ -1131,6 +1131,11 @@ Codex also has no counterpart to the Claude hook =redact-tool-output.py=
 (=claude-only=), which masks credentials in Bash and MCP tool output
 before the model sees it: no Codex hook field for replacing tool output has
 been verified, so credential-bearing output remains a Codex gap.
+The one output class Codex blocks before execution is a shell function body:
+=block-secret-leak.sh= denies =which=, =type= or =whence -c= on a shell
+function, =functions=, =typeset -f= and =$functions= through the paired
+=lib-function-body-policy.py=, because on 2026-09-30 such output carried
+literal Google OAuth credentials into a transcript.
 
 * Verification
 

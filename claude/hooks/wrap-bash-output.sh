@@ -38,6 +38,11 @@ wrap_needs_redaction() {
   printf '%s' "$COMMAND" | grep -qE '(^|[[:space:];|&(])(env|printenv)([[:space:];|&)]|$)' && return 0
   printf '%s' "$COMMAND" | grep -qE '(^|[[:space:];|&(])export[[:space:]]+-p([[:space:];|&)]|$)' && return 0
   printf '%s' "$COMMAND" | grep -qE '(^|[[:space:];|&(])(declare|typeset)([[:space:];|&)]|$)' && return 0
+  # Shell introspection prints function bodies, which can hold credentials
+  # (zsh `which` is `whence -c`). Bodies of known functions are denied by
+  # lib-function-body-policy.py; wrap the rest so their output is masked.
+  printf '%s' "$COMMAND" | grep -qE '(^|[[:space:];|&(])(which|where|whence|type|functions)([[:space:];|&)]|$)' && return 0
+  printf '%s' "$COMMAND" | grep -qE '[$][{]?([(][a-zA-Z@]*[)])?(dis_)?functions' && return 0
   printf '%s' "$COMMAND" | grep -qE '(^|[[:space:];|&(])set[[:space:]]*([;&|)]|$)' && return 0
   printf '%s' "$COMMAND" | grep -qE '\.zshenv-secrets|\.env\b|\.envrc\b|\.netrc\b|\.npmrc\b|\.pypirc\b|credentials|tokens\.json|keychain|\.pem\b|\.ssh/|\.gnupg/|_TOKEN|_SECRET|API_KEY|APIKEY|PASSWORD' && return 0
   return 1

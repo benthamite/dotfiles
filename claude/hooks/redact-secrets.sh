@@ -32,6 +32,9 @@ LC_ALL=C exec "$SED_BIN" -E --unbuffered \
   -e '/-----BEGIN [A-Z ]*PRIVATE KEY-----/{:a; /-----END [A-Z ]*PRIVATE KEY-----/!{$!{N;ba}}; s/-----BEGIN [A-Z ]*PRIVATE KEY-----[^-]*-----END [A-Z ]*PRIVATE KEY-----/[PRIVATE_KEY_REDACTED]/g}' \
   -e 's/gg_pat_[A-Za-z0-9_-]{40,80}/[GG_PAT_REDACTED]/g' \
   -e 's/AIza[0-9A-Za-z_-]{35}/[GOOGLE_API_KEY_REDACTED]/g' \
+  -e 's/GOCSPX-[A-Za-z0-9_-]{20,}/[GOOGLE_OAUTH_CLIENT_SECRET_REDACTED]/g' \
+  -e 's#(^|[^A-Za-z0-9/])1//[A-Za-z0-9_-]{30,}#\1[GOOGLE_REFRESH_TOKEN_REDACTED]#g' \
+  -e 's/ya29\.[A-Za-z0-9_-]{20,}/[GOOGLE_ACCESS_TOKEN_REDACTED]/g' \
   -e 's/ghp_[A-Za-z0-9]{36,40}/[GITHUB_PAT_REDACTED]/g' \
   -e 's/ghs_[A-Za-z0-9]{36,40}/[GITHUB_PAT_REDACTED]/g' \
   -e 's/gho_[A-Za-z0-9]{36,40}/[GITHUB_OAUTH_REDACTED]/g' \

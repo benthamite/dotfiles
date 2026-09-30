@@ -291,6 +291,22 @@ remain checked; unquoted heredocs stay conservative.
 =tests/test_process_output_policy.py= and =tests/test_process_output_guard.py=
 cover the policy and registered guard entry points with synthetic commands.
 
+The secret guard also denies shell introspection that would print a shell
+function's body. On 2026-09-30 =which NAME= printed a zsh function (zsh
+=which= is =whence -c=) whose body held literal Google OAuth credentials, and
+the output redactor knew neither shape. The paired
+=lib-function-body-policy.py= denies =functions=, =typeset/declare -f= and the
+=$functions= parameter outright, and =which=, =where=, =whence -c/-f/-x= and
+=type= when a named word is a shell function; it asks a zsh child =whence -w=,
+which prints only each name's kind. =whence -w=, =type -w=, =command -v=,
+=functions += and =${(k)functions}= stay available, as do lookups of
+commands and paths. Wrappers, substitutions, =sh -c=, =eval= and shell-fed
+heredocs are checked; other heredoc bodies are data. A classifier failure
+denies. =tests/test_function_body_guard.py= covers the policy, the guard entry
+points, the Google OAuth shapes (=GOCSPX-= client secrets, =1//= refresh
+tokens, =ya29.= access tokens) in the input guards and the redactor, and
+Claude's wrapping of introspection output through =redact-secrets.sh=.
+
 * File index
 
 | File | Purpose |
@@ -304,6 +320,7 @@ cover the policy and registered guard entry points with synthetic commands.
 | =block-secret-leak.sh= | Blocks literal secret disclosure and unsafe secret-bearing reads, writes, or output; normalizes exact public DAHR matrix routing prefixes while scanning their free-form URL tails. Inline header/body values never gain filesystem-path exemptions. |
 | =lib-op-policy.py= | Classifies 1Password broker commands for =block-secret-leak.sh=: a closed allowlist of shapes whose stdout carries no credential, everything else denied. |
 | =lib-process-output-policy.py= | Prevents process argument/environment listings through =block-secret-leak.sh=; permits PID-only =pgrep= and explicit safe =ps= columns such as =pid,ppid,comm=. |
+| =lib-function-body-policy.py= | Prevents shell introspection (=which=, =type=, =whence -c=, =functions=, =typeset -f=, =$functions=) from printing shell function bodies through =block-secret-leak.sh=; name-only lookups remain available. |
 | =block-sensitive-read.sh= | Blocks content reads of credential-like files while permitting narrowly defined metadata checks and the exact value-free shell-export classifier. |
 | =block-texi-edit.sh= | Blocks direct edits to generated Texinfo and points to the Org source. |
 | =block-unguarded-ahrefs-api.sh= | Blocks paid Ahrefs API calls that do not pass through the quota guard. |

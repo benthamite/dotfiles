@@ -400,6 +400,13 @@
       "note": "Identical process-output classifier. Both secret guards deny process argument/environment listings before permissive branches; Codex checks decoded nested exec commands. Safe PID/name diagnostics remain available."
     },
     {
+      "name": "lib-function-body-policy.py",
+      "claude": "claude/hooks/lib-function-body-policy.py",
+      "codex": "codex/hooks/lib-function-body-policy.py",
+      "status": "paired-utility",
+      "note": "Identical shell-introspection classifier. Both secret guards deny printing shell function bodies (which/where/whence -c/type on a function, functions, typeset -f, $functions); Codex checks decoded nested exec commands. Claude additionally wraps introspection output through redact-secrets.sh; Codex has no output redactor, so the denial is its only layer."
+    },
+    {
       "name": "lib-op-policy.py",
       "claude": "claude/hooks/lib-op-policy.py",
       "codex": "codex/hooks/lib-op-policy.py",

@@ -2,7 +2,7 @@
 
 Both hook copies of the module must agree. Every row here is a command an
 agent could type into a Bash tool call; the expected decision follows the
-allowlist in docs/superpowers/plans/2026-09-02-secret-guard-op-output-policy.md.
+allowlist in docs/plans/2026-09-02-secret-guard-op-output-policy.md.
 """
 
 from __future__ import annotations

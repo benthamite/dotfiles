@@ -294,7 +294,7 @@ contains_any_secret_output_command() {
 # lib-op-policy.py permits a closed list of command shapes whose stdout carries
 # no credential and denies everything else, including shapes it cannot place.
 # Raw `op` stays denied (Touch ID routing, see context/secrets.md).
-# Plan: docs/superpowers/plans/2026-09-02-secret-guard-op-output-policy.md
+# Plan: docs/plans/2026-09-02-secret-guard-op-output-policy.md
 op_policy_denial() {
   # Print the classifier's reason when the command would print a 1Password
   # secret; return 1 when it is allowed or names no broker.

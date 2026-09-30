@@ -3,8 +3,8 @@
 
 * Contents
 
-The =superpowers/specs/= directory retains design decisions and the
-=superpowers/plans/= directory retains implementation plans. These files
+The =specs/= directory retains design decisions and the =plans/= directory
+retains implementation plans. These files
 explain why a change was made and how it was intended to proceed. They are not
 shell configuration, agent instructions, or executable skills, and merely
 being tracked here does not load them into a session.

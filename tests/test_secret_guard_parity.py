@@ -1,7 +1,7 @@
 """Parity tests for the Claude and Codex secret-leak guards.
 
 Both copies of block-secret-leak.sh must enforce the same 1Password policy
-(docs/superpowers/plans/2026-09-02-secret-guard-op-output-policy.md):
+(docs/plans/2026-09-02-secret-guard-op-output-policy.md):
 - direct `op` commands are denied,
 - the unbatched `env -u OP_SERVICE_ACCOUNT_TOKEN op ...` form is denied,
 - the old batched `env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '...'` bypass is

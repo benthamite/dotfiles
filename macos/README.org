@@ -102,7 +102,7 @@ incident helper keeps read-only operations free of state creation and serializes
 authorized updates from cooperating helper processes.
 
 The design record for the read-only LuLu alert reviewer is retained at
-[[file:docs/superpowers/specs/2026-08-01-review-lulu-alert-design.md][its local specification]]. Design records explain decisions; they are not
+[[file:docs/specs/2026-08-01-review-lulu-alert-design.md][its local specification]]. Design records explain decisions; they are not
 loaded as executable configuration.
 
 * Epoch document links

@@ -321,7 +321,6 @@ cover the policy and registered guard entry points with synthetic commands.
 | =regenerate-manual-after-edit.sh= | Regenerates validated declared sibling Texinfo and existing Info names independently; disables local/Babel evaluation, refuses unsafe destinations or unsupported export directives, and reports partial failures without raw private errors. |
 | =remind-ai-config-sync.sh= | Delegates paired Claude/Codex update reminders to =bin/ai-config-sync=. |
 | =remind-claude-readme-update.sh= | Reminds work outside dotfiles when a symlinked edit changed the Claude configuration. |
-| =remind-plan-review.sh= | Reminds the agent to obtain an independent review after editing an implementation plan. |
 | =require-codex-readme-update.sh= | Requires the Codex README with staged Codex integration or sync changes. Run for both agents from the global Git =pre-commit= hook by =claude/bin/agent-commit-gates=, which reads the staged files from the index. |
 | =session-learning-capture.sh= | Retained unregistered helper; validates Stop input and canonical cwd, emits escaped untrusted metadata, and reports malformed input without requesting capture. It writes no lesson records. |
 

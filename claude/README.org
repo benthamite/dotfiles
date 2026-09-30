@@ -156,7 +156,7 @@ Claude's native stores. Shared MCP wiring is audited only when it is declared in
 Instruction files, skills, and hook reminders state current rules with their
 reasons and without incident history, migration-relative wording, shouted
 emphasis, or numeric output caps. The prompt audit recorded in
-[[file:../docs/superpowers/plans/2026-09-02-prompt-audit.md][the 2026-09-02 prompt-audit plan]] lists the removed patterns and the items
+[[file:../docs/plans/2026-09-02-prompt-audit.md][the 2026-09-02 prompt-audit plan]] lists the removed patterns and the items
 left in place on purpose, including the deliberate =model:= aliases on the
 GitGuardian, publication, and proofread skills.
 
@@ -695,7 +695,7 @@ manifest differences, not missing peers.
 
 =chrome-bridge-recover.py= runs after every =mcp__claude-in-chrome__= call (PostToolUse and PostToolUseFailure). The Claude in Chrome extension answers only sessions of the Claude account it is signed in to, and only while its Chrome profile is open; with one =CLAUDE_CONFIG_DIR= per account and several Chrome profiles, sessions regularly started with that profile closed and misreported "no browser access". When a result says the extension is not connected, the lookup timed out, or =list_connected_browsers= is empty, the hook checks that Chrome's native-messaging manifest points at a host wrapper whose =claude= binary exists, opens the profile mapped to this config dir in =chrome-extension-profiles.json= (via =bin/chrome-profile-open=, at most once per 90 s), and returns =additionalContext= telling the model to retry before reporting any browser problem. An unmapped config dir is reported as such, so the mapping is filled once rather than guessed. It is silent while the bridge is connected. =tests/test_chrome_bridge_recover.py= covers detection, the manifest checks, mapping and rate limiting.
 
-=epoch-brief-freshness.sh= runs after =Read= and =Bash= (PostToolUse) and dispatches only when the payload mentions an =.org= file. The Epoch helper decides whether a project brief was read, runs the TODO freshness audit for that project and returns the flagged TODOs as =additionalContext=, once per session and brief (subagents are keyed separately). An audit failure is reported in the notice rather than hidden. The registration timeout is 40 s, above the helper's 30 s audit timeout. Design: =Epoch/docs/superpowers/specs/2026-09-26-brief-freshness-and-document-reachability-design.md=; =tests/test_epoch_brief_freshness_hooks.py= covers the wrapper contract.
+=epoch-brief-freshness.sh= runs after =Read= and =Bash= (PostToolUse) and dispatches only when the payload mentions an =.org= file. The Epoch helper decides whether a project brief was read, runs the TODO freshness audit for that project and returns the flagged TODOs as =additionalContext=, once per session and brief (subagents are keyed separately). An audit failure is reported in the notice rather than hidden. The registration timeout is 40 s, above the helper's 30 s audit timeout. Design: =Epoch/docs/specs/2026-09-26-brief-freshness-and-document-reachability-design.md=; =tests/test_epoch_brief_freshness_hooks.py= covers the wrapper contract.
 
 Hooks that return JSON follow the Claude hook contract exactly:
 =hookSpecificOutput= carries =hookEventName= and =additionalContext=, and a
@@ -732,7 +732,7 @@ same grounds, and a quoted =git commit -m= message is masked before the scan
 stores, so naming a real dotenv file in it is inert, while =git commit -m "$(cat
 FILE)"=, =git commit -F FILE= and a following =cat FILE= still deny.
 =tests/test_env_op_template_policy.py= runs both guards against both sides;
-the decision record is =docs/superpowers/plans/2026-09-18-env-op-template-classification.md=.
+the decision record is =docs/plans/2026-09-18-env-op-template-classification.md=.
 
 Commit gates resolve explicit path selections against a disposable candidate index. A =git commit --only= checks the selected working-tree changes, including inherited changes when amending, without counting unrelated staged Elisp or documentation. Unsupported selection syntax is denied with a reason; these checks do not alter the shared index.
 

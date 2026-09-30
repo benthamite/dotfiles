@@ -604,13 +604,6 @@
       "note": "paired for Codex apply_patch/Edit/Write path lists; both emit PostToolUse additionalContext JSON with hookEventName (plain Claude stdout never reached the model; fixed 2026-09-26). Codex side was re-indented and the in-dotfiles-repo short-circuit was lifted out of the per-path loop (cosmetic; Claude side was already correctly structured because it processes a single file_path)."
     },
     {
-      "name": "remind-plan-review.sh",
-      "claude": "claude/hooks/remind-plan-review.sh",
-      "codex": "codex/hooks/remind-plan-review.sh",
-      "status": "paired",
-      "note": "paired PostToolUse reminder after Superpowers implementation plan files are edited, including repo docs/superpowers/plans paths and tool-specific temp/private plan directories; Claude handles Edit/Write, Codex scans apply_patch/Edit/Write path lists; both return PostToolUse additionalContext JSON (plain Claude stdout never reached the model; fixed 2026-09-26)."
-    },
-    {
       "name": "require-codex-readme-update.sh",
       "claude": null,
       "codex": "codex/hooks/require-codex-readme-update.sh",
@@ -791,7 +784,7 @@
       "path": "codex/hooks.json",
       "tracked": true,
       "live_path": "~/.codex/hooks.json",
-      "note": "Global registrations live through ~/.codex/hooks.json, outside repo-root .codex to avoid double loading. Lifecycle hooks use codex-hook-wrapper and an explicit Emacs socket. Shell matchers cover Bash, exec_command, functions.exec and functions.exec_command; edit matchers are collapsed for trust review. Guards allow or deny, never ask. The LaunchAgent guard covers shell and edits. Untrusted-execution routing (shell index 15) and the Epoch brief notice (PostToolUse shell index 1) were appended to keep trust keys; new definitions need native trust. See codex/README.org and codex/hooks/README.org."
+      "note": "Global registrations live through ~/.codex/hooks.json, outside repo-root .codex to avoid double loading. Lifecycle hooks use codex-hook-wrapper and an explicit Emacs socket. Shell matchers cover Bash, exec_command, functions.exec and functions.exec_command; edit matchers are collapsed for trust review. Guards allow or deny, never ask. The LaunchAgent guard covers shell and edits. Untrusted-execution routing (shell index 15) and the Epoch brief notice (PostToolUse shell index 1) were appended to keep trust keys; new definitions need native trust. Plan-review reminder removed 2026-09-30."
     },
     {
       "tool": "Claude Code and Codex",

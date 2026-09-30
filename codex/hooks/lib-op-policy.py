@@ -13,7 +13,7 @@ Contract: read the (heredoc-masked) command on stdin, print one JSON object
 Raw ``op``, ``security``, ``pbpaste`` and executable globs are the
 calling hook's business, not this module's.
 
-Plan and rationale: docs/superpowers/plans/2026-09-02-secret-guard-op-output-policy.md
+Plan and rationale: docs/plans/2026-09-02-secret-guard-op-output-policy.md
 """
 
 from __future__ import annotations

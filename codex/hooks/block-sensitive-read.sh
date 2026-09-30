@@ -32,7 +32,7 @@ deny() {
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: sensitive read: " + $label + " — " + $detail + ".\n\nThis could expose secret values in the conversation context. Use a safe alternative: pass/op/git-crypt/security for auth-managed secrets; ls/stat/file/wc or git check-ignore/git ls-files for metadata; grep/rg with -l, -c, -q, or -L for filename/count/quiet checks; or a purpose-built helper that returns only non-secret metadata.")
+      "permissionDecisionReason": ("BLOCKED: sensitive read: " + $label + " — " + $detail + ".\n\nThis could expose secret values in the conversation context. Use a safe alternative: op-automations/op-desktop/git-crypt/security for auth-managed secrets; ls/stat/file/wc or git check-ignore/git ls-files for metadata; grep/rg with -l, -c, -q, or -L for filename/count/quiet checks; or a purpose-built helper that returns only non-secret metadata.")
     }
   }'
   exit 0
@@ -204,7 +204,7 @@ case "$TOOL_NAME" in
     # Auth-aware tools manage secrets safely. op-automations and op-desktop
     # exec the real `op`; the Bash guard requires them in place of raw `op`,
     # so both must pass here too.
-    if echo "$COMMAND" | grep -qE '^[[:space:]]*(pass[[:space:]]|op[[:space:]]|op-automations[[:space:]]|op-desktop[[:space:]]|git-crypt[[:space:]]|security[[:space:]])'; then
+    if echo "$COMMAND" | grep -qE '^[[:space:]]*(op[[:space:]]|op-automations[[:space:]]|op-desktop[[:space:]]|git-crypt[[:space:]]|security[[:space:]])'; then
       exit 0
     fi
 

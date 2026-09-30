@@ -29,19 +29,11 @@ def run_hook(path, payload):
 
 
 class OpAutomationsTest(unittest.TestCase):
-    def run_wrapper(self, *, inherited_token=None, pass_output="service-token\n",
+    def run_wrapper(self, *, inherited_token=None,
                     prefix=(), keychain_output="keychain-token", keychain_status=0):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             log_path = tmp_path / "calls.log"
-            write_executable(
-                tmp_path / "pass",
-                f"""
-                #!/usr/bin/env bash
-                printf 'pass:%s\\n' "$*" >> {str(log_path)!r}
-                printf %s {pass_output!r}
-                """,
-            )
             write_executable(
                 tmp_path / "security",
                 f"""
@@ -81,7 +73,6 @@ class OpAutomationsTest(unittest.TestCase):
         result, calls = self.run_wrapper()
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertNotIn("pass:", calls)
         self.assertEqual(calls.count("keychain:"), 1)
         self.assertIn("-s op-service-account/epoch-automation -w", calls)
         self.assertIn("op-token:keychain-token", calls)
@@ -105,7 +96,6 @@ class OpAutomationsTest(unittest.TestCase):
         result, calls = self.run_wrapper(prefix=("@personal",), inherited_token="epoch-token")
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertNotIn("pass:", calls)
         self.assertIn("-s op-service-account/personal-automation -w", calls)
         self.assertIn("op-token:keychain-token", calls)
         self.assertIn("op-args:item list --vault Automations", calls)

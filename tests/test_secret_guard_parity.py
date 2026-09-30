@@ -12,7 +12,7 @@ Both copies of block-secret-leak.sh must enforce the same 1Password policy
   writes without `--format`, metadata commands) and denied in every other
   shape, including shapes the classifier cannot place,
 - clipboard and Keychain reads are denied regardless of pipes or
-  redirects (the retired `pass` CLI is no longer protected),
+  redirects,
 - deny messages advise `op-desktop`, not a path the policy blocks.
 The exhaustive broker case table lives in tests/test_op_policy.py; this file
 checks that every guard entry point wires the classifier in.

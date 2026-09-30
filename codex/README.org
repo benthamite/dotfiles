@@ -749,8 +749,7 @@ remain checked; unquoted heredocs stay conservative.
 
 The secret guard denies direct agent-shell invocations of raw =op=,
 macOS =security=, and =pbpaste=, including wrappers, nested shells, process
-substitution, executable globs, and shell-word obfuscation. The retired =pass=
-CLI is not protected (dropped 2026-09-27). The 1Password
+substitution, executable globs, and shell-word obfuscation. The 1Password
 brokers =op-automations= and =op-desktop= are the sanctioned access path:
 =lib-op-policy.py= allows a closed list of command shapes whose stdout carries
 no credential (masked =run=, captured or filed =read=, metadata-only =jq= over

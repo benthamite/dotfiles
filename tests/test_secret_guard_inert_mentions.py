@@ -1,7 +1,7 @@
 """False-positive regressions for the secret-output guard (2026-09-05).
 
-The 2026-08-31 guard denied a protected tool name (`pbpaste`, `pass`,
-`security`; `pass` was retired and dropped on 2026-09-27) anywhere in unquoted command text and scanned heredoc bodies fed
+The 2026-08-31 guard denied a protected tool name (`pbpaste`,
+`security`) anywhere in unquoted command text and scanned heredoc bodies fed
 to interpreters as outer-shell command words. That blocked searches such as
 `grep -c pbpaste README.md` and Python heredocs whose prefix carried `;`,
 `&&` or an expanded argument, or whose body contained `?`, `*` or `[`.
@@ -108,14 +108,6 @@ class InertMentionTests(unittest.TestCase):
             for label, command in DENIED.items():
                 with self.subTest(guard=name, case=label):
                     self.assertEqual(decision(run_guard(guard, command)), "deny")
-
-    def test_retired_pass_cli_is_not_protected(self):
-        # `pass` was retired (contents moved to 1Password on 2026-09-25) and
-        # dropped from the protected set on 2026-09-27 at the user's request.
-        for name, guard in GUARDS.items():
-            for command in ("pass show foo", "grep -rn pass docs/"):
-                with self.subTest(guard=name, command=command):
-                    self.assertEqual(decision(run_guard(guard, command)), "allow")
 
 
 if __name__ == "__main__":

@@ -66,8 +66,8 @@ class UpdateTokenTests(unittest.TestCase):
         stderr = io.StringIO()
         with (
             mock.patch.object(sys, "argv", [str(SCRIPT), "--account", "personal"]),
-            mock.patch.object(module, "read_pass_entry", side_effect=["id", "secret"]),
-            mock.patch.object(module, "update_pass_entry") as update,
+            mock.patch.object(module, "read_personal_automation", side_effect=["id", "secret"]),
+            mock.patch.object(module, "op_inject") as update,
             contextlib.redirect_stderr(stderr),
         ):
             module.main()
@@ -79,7 +79,7 @@ class UpdateTokenTests(unittest.TestCase):
             login_hint="pablo.stafforini@gmail.com",
         )
         update.assert_called_once_with(
-            "env/google-workspace-refresh-token-personal", "new-secret-token"
+            module.TOKEN_OP_ENTRIES["personal"], "new-secret-token"
         )
         self.assertNotIn("new-secret-token", stderr.getvalue())
 
@@ -96,14 +96,14 @@ class UpdateTokenTests(unittest.TestCase):
         module.InstalledAppFlow.from_client_config.return_value = flow
         with (
             mock.patch.object(sys, "argv", [str(SCRIPT), "--account", "personal"]),
-            mock.patch.object(module, "read_pass_entry", side_effect=["id", "secret"]),
-            mock.patch.object(module, "update_pass_entry") as update,
+            mock.patch.object(module, "read_personal_automation", side_effect=["id", "secret"]),
+            mock.patch.object(module, "op_inject") as update,
             mock.patch.dict(module.os.environ, {}, clear=True),
         ):
             module.main()
             self.assertEqual(module.os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"], "1")
         update.assert_called_once_with(
-            "env/google-workspace-refresh-token-personal", "new-secret-token"
+            module.TOKEN_OP_ENTRIES["personal"], "new-secret-token"
         )
 
 

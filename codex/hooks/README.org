@@ -71,7 +71,7 @@ avoid prose false positives. =ALLOW_DIRTY_REWRITE=1= is the explicit override.
 The sensitive-read guard denies content access to credential-bearing paths. It
 permits content-free metadata, quiet/count/name-only searches, existence tests,
 Git ignore/index queries, and auth-aware tools only in recognized narrow forms.
-The classifier recognizes =pass=, =git-crypt=, =security=, =op=,
+The classifier recognizes =git-crypt=, =security=, =op=,
 =op-automations=, and =op-desktop= as auth-aware tools; the independent
 secret-leak guard still denies their secret-printing shapes. It also permits
 =.env= or =.envrc= to be sourced solely as subprocess environment, and
@@ -82,7 +82,7 @@ parse, or dump that environment.
 The secret-leak guard applies the same command policy to every literal nested
 =cmd= inside a =functions.exec= program, including nested shell-tool calls; a
 1Password broker named anywhere else in the program is denied as
-unclassifiable. Raw =op=, =pass=, =security=, and =pbpaste= are denied even
+unclassifiable. Raw =op=, =security=, and =pbpaste= are denied even
 when wrapped, piped, filtered, redirected, dynamically resolved, or called
 through a literal nested shell. The brokers =op-automations= and =op-desktop=
 are classified by =lib-op-policy.py=, an allowlist of command shapes whose
@@ -312,7 +312,7 @@ cover the policy and registered guard entry points with synthetic commands.
 | =lib-public-url-scan.py= | Classifies verified public URL routing fields while retaining credential-bearing payloads. |
 | =lib-heredoc.sh= | Masks heredoc bodies that feed a known data sink through a plain simple command, so guards classify command words only; bodies fed to shells, interpreters, or pipelines stay in the scan, and an =all= mode lets a guard word its denial for a path named only inside an interpreter-fed program. |
 | =lib-python-heredoc.py= | Classifies narrowly recognized quoted Python stdin bodies before excluding them from outer-shell lexical scanning. Consecutive supported heredocs are classified in order; unknown shell structure stops that scan. Parsed =pass= statements and a closed text/JSON document-edit language are exempt from protected-name checks. Document edits require one standalone direct Python heredoc with validated imports, data bindings and calls; Codex additionally requires one complete literal exec wrapper. Unknown/dynamic/multi-call shapes retain conservative scanning. Unsupported source stays unmasked and other secret checks retain original input. The shared Git classifier separately neutralizes shell-substitution markers in valid quoted Python bodies while retaining the rest of the source; Python data without standalone Git/commit references cannot fabricate a shell substitution or an ambiguous commit. Git-bearing interpreter source retains conservative scanning because subprocess calls may execute its strings. Not a Python sandbox. |
-| =lib-inert-mentions.py= | Masks a protected tool name (=pbpaste=, =pass=, =security=) only where it is a plain argument of a read-only text tool, so =grep -rn pass docs/= or =git log -S pbpaste= is not denied as a credential read; command words, shell/xargs/find/env arguments and ==-joined values stay denied. |
+| =lib-inert-mentions.py= | Masks a protected tool name (=pbpaste=, =security=) only where it is a plain argument of a read-only text tool, so =grep -rn security docs/= or =git log -S pbpaste= is not denied as a credential read; command words, shell/xargs/find/env arguments and ==-joined values stay denied. |
 | =lib-repo-root.sh= | Resolves the effective Git repository from structured hook context, Git global options, or an exact unambiguous parent =functions.exec= record without shell re-evaluation. |
 | =lib-staged-files.sh= | Lists proposed commit paths and name-status data, including explicit path selections and the complete amended commit. |
 | =commit-file-selection.py= | Resolves explicit commit selections with a disposable index, leaving shared staging untouched. |

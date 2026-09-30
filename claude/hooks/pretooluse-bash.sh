@@ -245,10 +245,10 @@ check_sensitive_read() {
   if sr_has_shell_composition "$COMMAND"; then
     add_deny "BLOCKED: sensitive read: ${SENSITIVE_LABEL} — compound Bash command cannot use a metadata-command allowance safely.
 
-This could expose secret values in the conversation context. Use a safe alternative: pass/op/git-crypt for auth-managed secrets; ls/stat/file/wc -l/-c or git check-ignore/git ls-files for metadata; grep -l/-c/-q/-L for filename/count/quiet matches. Loading environment files into a subprocess is allowed only when the command does not print or inspect the loaded secrets."
+This could expose secret values in the conversation context. Use a safe alternative: op-automations/op-desktop/git-crypt for auth-managed secrets; ls/stat/file/wc -l/-c or git check-ignore/git ls-files for metadata; grep -l/-c/-q/-L for filename/count/quiet matches. Loading environment files into a subprocess is allowed only when the command does not print or inspect the loaded secrets."
     return 0
   fi
-  echo "$COMMAND" | grep -qE '^[[:space:]]*(pass[[:space:]]|op[[:space:]]|op-automations[[:space:]]|op-desktop[[:space:]]|git-crypt[[:space:]]|security[[:space:]])' && return 0
+  echo "$COMMAND" | grep -qE '^[[:space:]]*(op[[:space:]]|op-automations[[:space:]]|op-desktop[[:space:]]|git-crypt[[:space:]]|security[[:space:]])' && return 0
   echo "$COMMAND" | grep -qE '^[[:space:]]*git[[:space:]]+(-C[[:space:]]+[^[:space:];&|<>()]+[[:space:]]+)?(check-ignore|ls-files)([[:space:]]|$)' && return 0
   echo "$COMMAND" | grep -qE '^[[:space:]]*(ls|stat|file|basename|dirname|realpath)([[:space:]]|$)' && return 0
   echo "$COMMAND" | grep -qE '^[[:space:]]*wc([[:space:]]+-[lcwmL]+)*([[:space:]]|$)' && return 0
@@ -257,7 +257,7 @@ This could expose secret values in the conversation context. Use a safe alternat
 
   add_deny "BLOCKED: sensitive read: ${SENSITIVE_LABEL} — Bash command appears to read or process the contents of ${SENSITIVE_LABEL}.
 
-This could expose secret values in the conversation context. Use a safe alternative: pass/op/git-crypt for auth-managed secrets; ls/stat/file/wc -l/-c or git check-ignore/git ls-files for metadata; grep -l/-c/-q/-L for filename/count/quiet matches. Loading environment files into a subprocess is allowed only when the command does not print or inspect the loaded secrets."
+This could expose secret values in the conversation context. Use a safe alternative: op-automations/op-desktop/git-crypt for auth-managed secrets; ls/stat/file/wc -l/-c or git check-ignore/git ls-files for metadata; grep -l/-c/-q/-L for filename/count/quiet matches. Loading environment files into a subprocess is allowed only when the command does not print or inspect the loaded secrets."
   return 0
 }
 

@@ -10,7 +10,7 @@
 #   include sensitive files. Filename/count-only modes remain available.
 # - On Bash: scans the command for any mention of the same sensitive paths.
 #   Allowlists safe operations (ls/stat/file/wc/test, grep -l/-c/-q/-L,
-#   the auth-aware tools pass/op/git-crypt/security). Anything else that
+#   the auth-aware tools op/git-crypt/security). Anything else that
 #   touches a sensitive path content-extracts by default — block.
 #
 # Matchers in settings.json: Read, Grep, Bash
@@ -38,7 +38,7 @@ deny() {
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: sensitive read: " + $label + " — " + $detail + ".\n\nThis could expose secret values in the conversation context. Use a safe alternative: pass/op/git-crypt for auth-managed secrets; ls/stat/file/wc -l/-c or git check-ignore/git ls-files for metadata; grep -l/-c/-q/-L for filename/count/quiet matches. Loading environment files into a subprocess is allowed only when the command does not print or inspect the loaded secrets.")
+      "permissionDecisionReason": ("BLOCKED: sensitive read: " + $label + " — " + $detail + ".\n\nThis could expose secret values in the conversation context. Use a safe alternative: op-automations/op-desktop/git-crypt for auth-managed secrets; ls/stat/file/wc -l/-c or git check-ignore/git ls-files for metadata; grep -l/-c/-q/-L for filename/count/quiet matches. Loading environment files into a subprocess is allowed only when the command does not print or inspect the loaded secrets.")
     }
   }'
   exit 0
@@ -341,10 +341,10 @@ if [ "$TOOL_NAME" = "Bash" ]; then
   #    cannot extract file content.
 
   # Auth-aware tools (these manage secrets safely; allow even when the
-  # command names a sensitive path, e.g. `pass insert` or `git-crypt unlock`).
+  # command names a sensitive path, e.g. `git-crypt unlock`).
   # op-automations and op-desktop exec the real `op`; pretooluse-bash.sh
   # requires them in place of raw `op`, so both must pass here too.
-  if echo "$COMMAND" | grep -qE '^[[:space:]]*(pass[[:space:]]|op[[:space:]]|op-automations[[:space:]]|op-desktop[[:space:]]|git-crypt[[:space:]]|security[[:space:]])'; then
+  if echo "$COMMAND" | grep -qE '^[[:space:]]*(op[[:space:]]|op-automations[[:space:]]|op-desktop[[:space:]]|git-crypt[[:space:]]|security[[:space:]])'; then
     exit 0
   fi
 

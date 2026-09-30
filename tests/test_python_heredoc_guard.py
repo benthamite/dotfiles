@@ -425,7 +425,6 @@ PY"""
                 'Path("fixture.org").write_text("The first pass found 67 keys. "\n'
                 '    "Use this table for the substantive reading pass. A literature search hit "\n'
                 '    "is not a completed screening.")')
-        # The retired `pass` CLI is no longer protected, so its prose is allowed.
         self.assert_hooks(heredoc(body), "allow")
         for command in (heredoc(body.replace("reading pass", "security review")),
                         "security find-generic-password -w -s fixture", "pbpaste",

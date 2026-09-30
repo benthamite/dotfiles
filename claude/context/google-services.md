@@ -142,10 +142,10 @@ through the Google APIs via `gdoc`, never by assuming one command covers both.
 
 | Var | Account | Purpose |
 |---|---|---|
-| `GOOGLE_WORKSPACE_CLIENT_ID` | both | OAuth client ID (shared); stored in `pass` at `env/google-workspace-client-id` |
-| `GOOGLE_WORKSPACE_CLIENT_SECRET` | both | OAuth client secret (shared); stored in `pass` at `env/google-workspace-client-secret` |
+| `GOOGLE_WORKSPACE_CLIENT_ID` | both | OAuth client ID (shared); `password` field of `google-workspace-client-id` in the personal 1Password `Automation` vault |
+| `GOOGLE_WORKSPACE_CLIENT_SECRET` | both | OAuth client secret (shared); `password` field of `google-workspace-client-secret` in the personal 1Password `Automation` vault |
 | `GOOGLE_WORKSPACE_REFRESH_TOKEN` | epoch | refresh token authenticated as `pablo@epoch.ai`; stored in 1Password at `op://Automations/Google Workspace OAuth - Pablo Epoch/credential` |
-| `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL` | personal | refresh token authenticated as `pablo.stafforini@gmail.com`; stored in `pass` at `env/google-workspace-refresh-token-personal` and injected by the local wrappers |
+| `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL` | personal | refresh token authenticated as `pablo.stafforini@gmail.com`; `password` field of `google-workspace-refresh-token-personal` in the personal 1Password `Automation` vault, injected by the local wrappers |
 
 Pick the account with `--account epoch` (default), `--account personal`, or
 `--account email-triage` on `gmail.py`; `sheets.py` supports the two human
@@ -158,7 +158,7 @@ bot account uses the existing local OAuth credential file at
 
 The Epoch refresh token also powers `gdoc --account epoch` (which has its own auth flow but uses the same OAuth client). The personal refresh token is used only by `gmail.py`/`sheets.py`; `gdoc --account personal` has its own token under `~/.config/gdoc/accounts/personal/`.
 
-If a token expires (`invalid_grant` errors), regenerate it with `claude/bin/update-gworkspace-refresh-token --account <epoch|personal>`. The helper opens the OAuth browser flow, updates the appropriate backing store (1Password for the Epoch token, `pass` for the personal token), and prints only status metadata, never token values. The manual recipe under "Generating a new refresh token" remains available for unusual recovery cases.
+If a token expires (`invalid_grant` errors), regenerate it with `claude/bin/update-gworkspace-refresh-token --account <epoch|personal>`. The helper opens the OAuth browser flow, updates the appropriate backing store (the Epoch `Automations` vault for the Epoch token, the personal 1Password `Automation` vault for the personal token), and prints only status metadata, never token values. The manual recipe under "Generating a new refresh token" remains available for unusual recovery cases.
 
 ## Tooling by account
 
@@ -233,9 +233,9 @@ print('REFRESH_TOKEN=' + creds.refresh_token)
 "
 ```
 
-When the browser opens, sign in as the account you want the token for: `pablo@epoch.ai` for `GOOGLE_WORKSPACE_REFRESH_TOKEN`, `pablo.stafforini@gmail.com` for `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL`. The helper writes the Epoch token to 1Password at `op://Automations/Google Workspace OAuth - Pablo Epoch/credential` and the personal token to `pass` at `env/google-workspace-refresh-token-personal`.
+When the browser opens, sign in as the account you want the token for: `pablo@epoch.ai` for `GOOGLE_WORKSPACE_REFRESH_TOKEN`, `pablo.stafforini@gmail.com` for `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL`. The helper writes the Epoch token to 1Password at `op://Automations/Google Workspace OAuth - Pablo Epoch/credential` and the personal token to the `password` field of `google-workspace-refresh-token-personal` in the personal 1Password `Automation` vault.
 
-After printing, update the corresponding backing store, then `rm /tmp/gworkspace-access-token-<account>.json` to flush the wrapper's token cache. For the personal account, use `pass insert -m env/google-workspace-refresh-token-personal`; for the Epoch account, update the `credential` field of `Google Workspace OAuth - Pablo Epoch` in the Automations 1Password vault.
+After printing, update the corresponding backing store, then `rm /tmp/gworkspace-access-token-<account>.json` to flush the wrapper's token cache. For the personal account, update the `password` field of `google-workspace-refresh-token-personal` in the personal 1Password `Automation` vault (`op-desktop item edit`); for the Epoch account, update the `credential` field of `Google Workspace OAuth - Pablo Epoch` in the Automations 1Password vault.
 
 ### Without printing the token to the terminal
 
@@ -308,7 +308,7 @@ After running, clear `/tmp/gworkspace-access-token-email-triage.json` so the CLI
 The cached access token expired or the refresh token was revoked. Try in order:
 
 1. `rm /tmp/gworkspace-access-token-<account>.json` (`<account>` is `epoch` or `personal` — match whichever account you ran with) and re-run the command. If a stale cache was the only problem, this fixes it.
-2. If still failing, regenerate the refresh token (see "Generating a new refresh token" above), update the matching backing store (`op://Automations/Google Workspace OAuth - Pablo Epoch/credential` for epoch, `env/google-workspace-refresh-token-personal` in `pass` for personal), then clear `/tmp/gworkspace-access-token-<account>.json`.
+2. If still failing, regenerate the refresh token (see "Generating a new refresh token" above), update the matching backing store (`op://Automations/Google Workspace OAuth - Pablo Epoch/credential` for epoch, `google-workspace-refresh-token-personal` in the personal 1Password `Automation` vault for personal), then clear `/tmp/gworkspace-access-token-<account>.json`.
 
 ### `invalid_grant` from `gdoc --account personal`
 
@@ -328,7 +328,7 @@ restrict it to `@epoch.ai` users.
 
 ### gmail.py reports "ERROR: missing env var"
 
-The wrapper could not resolve one of the backing stores. Check that `pass show env/google-workspace-client-id`, `pass show env/google-workspace-client-secret`, and the account-specific refresh-token store are available.
+The wrapper could not resolve one of the backing stores. Check that `google-workspace-client-id` and `google-workspace-client-secret` in the personal 1Password `Automation` vault and the account-specific refresh-token item are readable, for example with `op-automations @personal item get google-workspace-client-id --vault Automation --format json | jq .id`.
 
 ### `gmail.py --account email-triage` reports missing or expired credentials
 

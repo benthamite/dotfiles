@@ -16,8 +16,8 @@ loader.exec_module(calendar)
 
 
 class CalendarAuthTests(unittest.TestCase):
-    def test_broker_read_never_invokes_raw_op_or_bootstrap_pass(self):
-        with mock.patch.object(calendar.auth.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "grant\n")) as run, mock.patch.object(calendar.auth, "_pass_show", side_effect=AssertionError("bootstrap bypass")):
+    def test_broker_read_never_invokes_raw_op(self):
+        with mock.patch.object(calendar.auth.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "grant\n")) as run:
             self.assertEqual(calendar.auth._op_read("op://Automations/item/credential"), "grant")
             self.assertEqual(run.call_args.args[0], ["op-automations", "read", "op://Automations/item/credential"])
             self.assertEqual(run.call_args.kwargs["timeout"], 45)

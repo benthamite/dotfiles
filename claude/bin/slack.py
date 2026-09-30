@@ -14,7 +14,7 @@ Multiple workspaces are supported via the WORKSPACES registry and the global
 
   epoch       -> 1Password: op://Automations/Slack MCP - Epoch Unofficial
                  (.../xoxc_token -> Bearer token, .../xoxd_token -> 'd' cookie)
-  altruismo-eficaz -> pass entry chrome/slack.com/altruismo-eficaz
+  altruismo-eficaz -> personal 1Password Automation vault: slack.com/altruismo-eficaz
                  (token: field -> Bearer token, cookie: field -> 'd' cookie)
 
 Usage:

@@ -2213,12 +2213,6 @@ def normalized_global_instruction_text(path: Path) -> str:
     text = text.replace("`claude/context/secrets.md`", "`context/secrets.md`")
     text = text.replace("`claude/context/service-access.md`", "`context/service-access.md`")
     text = text.replace("`claude/context/voice.md`", "`context/voice.md`")
-    codex_secrets_rule = (
-        "- **Secrets:** Read `context/secrets.md` before handling secrets. "
-        "In particular, never echo or print secrets from `pass`, `.zshenv-secrets`, or MCP credential resolution; "
-        "use full `pass` paths and `pass find`, not `pass ls` grep."
-    )
-    text = text.replace(codex_secrets_rule, "- @context/secrets.md")
     # Each tool gets its own browser-availability rule: Claude's comes from the
     # claude-in-chrome extension, Codex's from the Chrome plugin's node_repl
     # `js` tool, whose description never names the browser.

@@ -19,8 +19,53 @@ class CalendarAuthTests(unittest.TestCase):
     def test_broker_read_never_invokes_raw_op(self):
         with mock.patch.object(calendar.auth.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "grant\n")) as run:
             self.assertEqual(calendar.auth._op_read("op://Automations/item/credential"), "grant")
-            self.assertEqual(run.call_args.args[0], ["op-automations", "read", "op://Automations/item/credential"])
+            self.assertEqual(run.call_args.args[0], ["op-automations", "cache", "read", "op://Automations/item/credential"])
             self.assertEqual(run.call_args.kwargs["timeout"], 45)
+
+    def test_personal_items_use_the_cached_broker_read(self):
+        with mock.patch.object(calendar.auth.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "client\n")) as run:
+            self.assertEqual(calendar.auth._personal_automation("google-workspace-client-id"), "client")
+            self.assertEqual(
+                run.call_args.args[0],
+                ["op-automations", "@personal", "cache", "read", "op://Automation/google-workspace-client-id/password"],
+            )
+
+    def test_forget_drops_every_epoch_credential_once(self):
+        with mock.patch.object(calendar.auth.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "")) as run:
+            calendar.auth.forget_cached_credentials("epoch")
+        self.assertEqual(
+            [call.args[0] for call in run.call_args_list],
+            [
+                ["op-automations", "@personal", "cache", "forget", "op://Automation/google-workspace-client-id/password"],
+                ["op-automations", "@personal", "cache", "forget", "op://Automation/google-workspace-client-secret/password"],
+                ["op-automations", "cache", "forget", calendar.auth.REFRESH_TOKEN_OP["epoch"]],
+            ],
+        )
+
+    def test_rejected_cached_grant_is_forgotten_and_read_fresh_once(self):
+        credentials = mock.Mock()
+        service = mock.Mock()
+        service.calendars.return_value.get.return_value.execute.return_value = {"id": "someone@example.com"}
+        with mock.patch.object(calendar, "refreshed_credentials", side_effect=[calendar.RefreshError("invalid_grant"), credentials]) as refreshed, mock.patch.object(calendar.auth, "forget_cached_credentials") as forget, mock.patch.object(calendar, "build", return_value=service):
+            with self.assertRaisesRegex(ValueError, "wrong Calendar account"):
+                calendar.refresh_credentials()
+        forget.assert_called_once_with("epoch")
+        self.assertEqual(refreshed.call_count, 2)
+
+    def test_second_rejection_is_not_retried(self):
+        with mock.patch.object(calendar, "refreshed_credentials", side_effect=calendar.RefreshError("invalid_grant")) as refreshed, mock.patch.object(calendar.auth, "forget_cached_credentials"):
+            with self.assertRaises(calendar.RefreshError):
+                calendar.refresh_credentials()
+        self.assertEqual(refreshed.call_count, 2)
+
+    def test_rejected_token_refresh_forgets_and_retries_once(self):
+        rejection = calendar.auth.urllib.error.HTTPError(calendar.auth.TOKEN_URL, 400, "Bad Request", {}, None)
+        response = mock.Mock()
+        response.read.return_value = b'{"access_token": "token", "expires_in": 3600}'
+        with mock.patch.object(calendar.auth, "_request_access_token", side_effect=[rejection, response]) as request, mock.patch.object(calendar.auth, "forget_cached_credentials") as forget:
+            self.assertEqual(calendar.auth._refresh_access_token("epoch")["token"], "token")
+        forget.assert_called_once_with("epoch")
+        self.assertEqual(request.call_count, 2)
 
     def test_rejected_account_preserves_old_cache(self):
         self.check_refresh("wrong@example.com", False)

@@ -6,13 +6,18 @@
 # how mbsync-parallel reads it once for all the channels it runs concurrently.
 #
 # Otherwise read it on demand from the personal 1Password Automation vault, so
-# direct invocations like `mbsync gmail-inbox` still work.
+# direct invocations like `mbsync gmail-inbox` still work. The read is cached
+# for a day (mu4e syncs every five minutes); after changing the password, run
+# `op-automations @personal cache forget` with the reference below.
 
 set -eu
+
+# Item "mbsync/password" by ID: the slash in its title cannot appear in an
+# op:// reference.
+ref=op://Automation/v37scsqu7tccknafmswlgmkow4/password
 
 if [ -n "${MBSYNC_PASSFILE:-}" ] && [ -r "$MBSYNC_PASSFILE" ]; then
     cat "$MBSYNC_PASSFILE"
 else
-    op-automations @personal item get "mbsync/password" --vault Automation \
-        --fields label=password --reveal
+    op-automations @personal cache read "$ref"
 fi

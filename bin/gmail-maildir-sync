@@ -12,13 +12,17 @@ if [ -z "$uv_bin" ]; then
   exit 127
 fi
 
+# mu4e runs this every five minutes (through mbsync-parallel), so both reads
+# are the broker's day-long cached ones.  After rotating one of these values by
+# hand, run `op-automations [@personal] cache forget` with its reference.
+
 # Read the password field of an item in the personal Automation vault.
 personal_automation() {
-  op-automations @personal item get "$1" --vault Automation --fields label=password --reveal 2>/dev/null || true
+  op-automations @personal cache read "op://Automation/$1/password" 2>/dev/null || true
 }
 
 op_read() {
-  op-automations read "$1" 2>/dev/null || true
+  op-automations cache read "$1" 2>/dev/null || true
 }
 
 GOOGLE_WORKSPACE_CLIENT_ID="${GOOGLE_WORKSPACE_CLIENT_ID:-$(personal_automation google-workspace-client-id)}"

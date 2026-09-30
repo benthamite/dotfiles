@@ -119,6 +119,18 @@ def op_inject(spec, value):
         )
 
 
+def forget_cached_token(spec):
+    """Drop op-automations' cached copy of the old token so timers read the new one."""
+    selector = [] if spec["vault"] == "Automations" else ["@personal"]
+    ref = f"op://{spec['vault']}/{spec['item']}/{spec['field']}"
+    subprocess.run(
+        ["op-automations", *selector, "cache", "forget", ref],
+        capture_output=True,
+        check=False,
+        timeout=45,
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--account", choices=sorted(TOKEN_VARS), required=True)
@@ -168,6 +180,7 @@ def main():
     if args.account in TOKEN_OP_ENTRIES:
         spec = TOKEN_OP_ENTRIES[args.account]
         op_inject(spec, creds.refresh_token)
+        forget_cached_token(spec)
         print(
             f"Updated {var} in 1Password item {spec['vault']}/{spec['item']}/{spec['field']}",
             file=sys.stderr,

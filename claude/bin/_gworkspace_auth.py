@@ -3,7 +3,12 @@
 Each Google Workspace account has its own refresh token. Both accounts share
 the same OAuth client (client_id, client_secret), differing only in which
 account the refresh token authenticates as. Values are resolved from the
-account's canonical secret store when the corresponding env var is absent.
+account's canonical secret store when the corresponding env var is absent,
+through the broker's cached read (`op-automations cache read`): LaunchAgents
+build credentials every few minutes, and uncached reads exhausted the personal
+1Password account's daily request quota. When Google rejects the grant or
+client, `forget_cached_credentials` drops the cached copies so the caller can
+read them fresh once.
 
 Access tokens are cached at /tmp/gworkspace-access-token-<account>.json for
 the rest of their lifetime so back-to-back calls don't refresh on every
@@ -48,32 +53,42 @@ TOKEN_FILE = {
 }
 
 
-def _personal_automation(title):
-    """Return the password field of TITLE in the personal Automation vault."""
-    result = subprocess.run(
-        ["op-automations", "@personal", "item", "get", title, "--vault", "Automation",
-         "--fields", "label=password", "--reveal"],
+def _personal_ref(title):
+    return f"op://Automation/{title}/password"
+
+
+def _broker_cache(selector, verb, ref):
+    return subprocess.run(
+        ["op-automations", *selector, "cache", verb, ref],
         capture_output=True,
         check=False,
         text=True,
         timeout=45,
     )
+
+
+def _personal_automation(title):
+    """Return the password field of TITLE in the personal Automation vault."""
+    result = _broker_cache(["@personal"], "read", _personal_ref(title))
     if result.returncode == 0 and result.stdout:
         return result.stdout.splitlines()[0]
     return ""
 
 
 def _op_read(ref):
-    result = subprocess.run(
-        ["op-automations", "read", ref],
-        capture_output=True,
-        check=False,
-        text=True,
-        timeout=45,
-    )
+    result = _broker_cache([], "read", ref)
     if result.returncode == 0:
         return result.stdout.strip()
     return ""
+
+
+def forget_cached_credentials(account):
+    """Drop the broker's cached client and ACCOUNT refresh-token values."""
+    for title in (CLIENT_ID_ITEM, CLIENT_SECRET_ITEM, REFRESH_TOKEN_ITEM.get(account)):
+        if title:
+            _broker_cache(["@personal"], "forget", _personal_ref(title))
+    if account in REFRESH_TOKEN_OP:
+        _broker_cache([], "forget", REFRESH_TOKEN_OP[account])
 
 
 def _cache_path(account):
@@ -132,7 +147,7 @@ def _read_env(account):
     return client_id, client_secret, refresh_token
 
 
-def _refresh_access_token(account):
+def _request_access_token(account):
     client_id, client_secret, refresh_token = _read_env(account)
     data = urllib.parse.urlencode(
         {
@@ -142,8 +157,19 @@ def _refresh_access_token(account):
             "grant_type": "refresh_token",
         }
     ).encode()
+    return urllib.request.urlopen(urllib.request.Request(TOKEN_URL, data=data))
+
+
+def _refresh_access_token(account):
     try:
-        resp = urllib.request.urlopen(urllib.request.Request(TOKEN_URL, data=data))
+        try:
+            resp = _request_access_token(account)
+        except urllib.error.HTTPError as e:
+            if e.code not in (400, 401) or account in TOKEN_FILE:
+                raise
+            # A rotated grant or client leaves the cached copies stale.
+            forget_cached_credentials(account)
+            resp = _request_access_token(account)
     except urllib.error.HTTPError as e:
         sys.stderr.write(
             f"ERROR: token refresh failed (account={account}): {e.read().decode()}\n"

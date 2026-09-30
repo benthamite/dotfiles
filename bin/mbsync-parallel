@@ -31,12 +31,13 @@ fi
 # Read the IMAP password once, from the personal 1Password Automation vault
 # through its read-only service account, into a private temp file, so the
 # parallel mbsync jobs below make one request instead of one per channel.
-# mbsync-passcmd reads from this file when MBSYNC_PASSFILE is set.
+# mbsync-passcmd reads from this file when MBSYNC_PASSFILE is set. mu4e runs
+# this every five minutes, so the read is the broker's cached one; see
+# mbsync-passcmd for the reference.
 MBSYNC_PASSFILE=$(mktemp -t mbsync-pass.XXXXXX)
 chmod 600 "$MBSYNC_PASSFILE"
 trap 'rm -f "$MBSYNC_PASSFILE"' EXIT
-op-automations @personal item get "mbsync/password" --vault Automation \
-    --fields label=password --reveal > "$MBSYNC_PASSFILE"
+env -u MBSYNC_PASSFILE mbsync-passcmd > "$MBSYNC_PASSFILE"
 export MBSYNC_PASSFILE
 
 # Run gmail-maildir-sync in background (no GPG needed), mbsync in foreground

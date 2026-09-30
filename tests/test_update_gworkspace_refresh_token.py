@@ -68,6 +68,7 @@ class UpdateTokenTests(unittest.TestCase):
             mock.patch.object(sys, "argv", [str(SCRIPT), "--account", "personal"]),
             mock.patch.object(module, "read_personal_automation", side_effect=["id", "secret"]),
             mock.patch.object(module, "op_inject") as update,
+            mock.patch.object(module, "forget_cached_token") as forget,
             contextlib.redirect_stderr(stderr),
         ):
             module.main()
@@ -81,6 +82,7 @@ class UpdateTokenTests(unittest.TestCase):
         update.assert_called_once_with(
             module.TOKEN_OP_ENTRIES["personal"], "new-secret-token"
         )
+        forget.assert_called_once_with(module.TOKEN_OP_ENTRIES["personal"])
         self.assertNotIn("new-secret-token", stderr.getvalue())
 
     def test_incremental_consent_accepts_previously_granted_extra_scopes(self):
@@ -98,12 +100,28 @@ class UpdateTokenTests(unittest.TestCase):
             mock.patch.object(sys, "argv", [str(SCRIPT), "--account", "personal"]),
             mock.patch.object(module, "read_personal_automation", side_effect=["id", "secret"]),
             mock.patch.object(module, "op_inject") as update,
+            mock.patch.object(module, "forget_cached_token"),
             mock.patch.dict(module.os.environ, {}, clear=True),
         ):
             module.main()
             self.assertEqual(module.os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"], "1")
         update.assert_called_once_with(
             module.TOKEN_OP_ENTRIES["personal"], "new-secret-token"
+        )
+
+    def test_forget_targets_the_cached_reference_of_each_store(self):
+        module = load_module()
+        with mock.patch.object(module.subprocess, "run") as run:
+            module.forget_cached_token(module.TOKEN_OP_ENTRIES["personal"])
+            module.forget_cached_token(module.TOKEN_OP_ENTRIES["epoch"])
+        self.assertEqual(
+            [call.args[0] for call in run.call_args_list],
+            [
+                ["op-automations", "@personal", "cache", "forget",
+                 "op://Automation/google-workspace-refresh-token-personal/password"],
+                ["op-automations", "cache", "forget",
+                 "op://Automations/Google Workspace OAuth - Pablo Epoch/credential"],
+            ],
         )
 
 

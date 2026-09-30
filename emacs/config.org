@@ -87,10 +87,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#auth-source][auth-source]]
   - [[#auth-source-extras][auth-source-extras]]
   - [[#oauth2-auto][oauth2-auto]]
-  - [[#pass][pass]]
-  - [[#pass-extras][pass-extras]]
-  - [[#password-store-otp][password-store-otp]]
-  - [[#auth-source-pass][auth-source-pass]]
   - [[#password-generator][password-generator]]
 - [[#version-control][version control]]
   - [[#vc][vc]]
@@ -1748,7 +1744,6 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
   :custom
   (auth-source-debug nil) ; set to t for debugging
   (auth-source-do-cache t)
-  (auth-source-pass-extra-query-keywords t) ; stop full password-store scan on every auth lookup
   (auth-sources '(macos-keychain-internet macos-keychain-generic)))
 #+end_src
 
@@ -1805,96 +1800,6 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
   :after org-gcal
   :custom
   (oauth2-auto-plstore (no-littering-expand-var-file-name "oauth2-auto.plist")))
-#+end_src
-
-** =pass=
-:PROPERTIES:
-:ID:       518D3C1F-AFD6-4B72-8980-CAD10BBAEDDE
-:END:
-:LOGBOOK:
-CLOCK: [2022-06-03 Fri 16:18]--[2022-06-03 Fri 16:35] =>  0:17
-CLOCK: [2022-06-03 Fri 16:38]--[2022-06-03 Fri 16:44] =>  0:06
-CLOCK: [2021-07-20 Tue 09:33]--[2021-07-20 Tue 10:14] =>  0:41
-CLOCK: [2021-05-29 Sat 15:44]--[2021-05-29 Sat 16:28] =>  0:44
-CLOCK: [2021-05-26 Wed 17:46]--[2021-05-26 Wed 18:04] =>  0:18
-CLOCK: [2021-05-14 Fri 14:55]--[2021-05-14 Fri 15:07] =>  0:12
-CLOCK: [2021-04-12 Mon 13:12]--[2021-04-12 Mon 13:20] =>  0:08
-CLOCK: [2021-04-11 Sun 14:36]--[2021-04-11 Sun 14:47] =>  0:11
-CLOCK: [2021-04-11 Sun 12:14]--[2021-04-11 Sun 12:28] =>  0:14
-CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
-:END:
-
-/[[https://github.com/NicolasPetton/pass][pass]] is a major mode for [[https://en.wikipedia.org/wiki/Pass_(software)][pass]], the standard Unix password manager/
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package pass
-  :custom
-  (pass-suppress-confirmations t)
-  (pass-show-keybindings nil)
-
-  :config
-  (run-with-timer (* 5 60) t (lambda () (magit-extras-warn-if-repo-is-dirty paths-dir-google-drive-tlon-pass)))
-
-  :bind
-  (("A-H-o" . pass)
-   :map pass-mode-map
-   ("RET" . pass-edit)
-   ("c" . pass-copy)
-   ("D" . pass-kill)
-   :map pass-view-mode-map
-   ("s-p" . pass-view-toggle-password)
-   ("H-q" . pass-quit)
-   ("s-s" . server-edit)))
-#+end_src
-
-** =pass-extras=
-:PROPERTIES:
-:ID:       524FE3D7-EA5B-408E-A338-68E633528632
-:END:
-
-/[[file:extras/pass-extras.el][pass-extras]] collects my extensions for =pass=./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-personal-package pass-extras
-  :bind
-  (:map pass-mode-map
-        ("SPC" . pass-extras-open-at-point)
-        ("e" . pass-extras-edit)
-        ("G" . pass-extras-generate-password)
-        ("I" . pass-extras-insert-generated-no-symbols)))
-#+end_src
-
-** =password-store-otp=
-:PROPERTIES:
-:ID:       761A0B71-DA6A-42A1-8137-F4C857F029F0
-:END:
-
-/[[https://github.com/volrath/password-store-otp.el][password-store-otp]] provides integration with the pass-otp extension for pass./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package password-store-otp
-  :ensure nil ; `pass' queues this package as a dependency.
-  :after pass)
-#+end_src
-
-** =auth-source-pass=
-:PROPERTIES:
-:ID:       00772E1B-A97C-46B5-8DE9-77462AAE0189
-:END:
-:LOGBOOK:
-CLOCK: [2021-05-29 Sat 15:10]--[2021-05-29 Sat 15:44] =>  0:34
-CLOCK: [2021-05-29 Sat 13:52]--[2021-05-29 Sat 14:10] =>  0:18
-CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
-:END:
-
-/auth-source-pass integrates auth-source with password-store./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-;; No longer an `auth-sources' backend: generic lookups read the 1Password
-;; Automation vaults through `auth-source-extras'.  Only the few remaining
-;; `auth-source-pass-get' calls use this package.
-(use-feature auth-source-pass
-  :after auth-source pass)
 #+end_src
 
 ** =password-generator=
@@ -2210,9 +2115,7 @@ Using my fork for async transport-error handling.
                  :build (:not elpaca-check-version)
                  :repo "benthamite/ghub"
                  :branch "benthamite/async-transport-errors")
-  :defer t
-  :config
-  (require 'pass))
+  :defer t)
 #+end_src
 
 ** =forge=
@@ -2236,7 +2139,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
                  :repo "magit/forge"
                  :branch "main" ; github.com/progfolio/elpaca/issues/342
                  :build (:not elpaca-check-version))
-  :after magit ghub emacsql auth-source-pass
+  :after magit ghub emacsql auth-source-extras
   :init
   (with-eval-after-load 'magit-status
     (bind-keys :map 'magit-status-mode-map
@@ -3368,10 +3271,6 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
                ("l" . next-line)))
   (with-eval-after-load 'osa-chrome
     (bind-keys :map osa-chrome-mode-map
-               ("k" . previous-line)
-               ("l" . next-line)))
-  (with-eval-after-load 'pass
-    (bind-keys :map pass-mode-map
                ("k" . previous-line)
                ("l" . next-line)))
   (with-eval-after-load 'simple
@@ -4514,9 +4413,6 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
                ("s-g" . files-extras-grammarly-open-in-external-editor)))
   (with-eval-after-load 'mu4e
     (bind-keys :map mu4e-headers-mode-map
-               ("q" . files-extras-kill-this-buffer)))
-  (with-eval-after-load 'pass
-    (bind-keys :map pass-mode-map
                ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'pdf-view
     (bind-keys :map pdf-view-mode-map
@@ -5748,7 +5644,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   :ensure (:host github
                  :repo "kidd/org-gcal.el"
                  :build (:not elpaca-check-version))
-  :after auth-source-pass org-agenda
+  :after auth-source-extras org-agenda
   :custom
   (org-gcal-client-id (auth-source-extras-op-get "org-gcal" "host"))
   (org-gcal-client-secret (auth-source-extras-op-get "org-gcal" "password"))
@@ -9748,8 +9644,7 @@ servers use the correct version.
           ;; (:command "python"
           ;; :args ("-u" "-m" "graphiti_mcp_server" "--transport" "stdio")
           ;; :env (:OPENAI_API_KEY
-          ;; ,(auth-source-pass-get "gptel"
-          ;; (concat "tlon/core/openai.com/" tlon-email-shared))
+          ;; ,(auth-source-extras-op-get "openai.com" "gptel" 'tlon)
           ;; :NEO4J_URI "bolt://localhost:7687"
           ;; :NEO4J_USER "neo4j"
           ;; :NEO4J_PASSWORD "demodemo")))
@@ -13432,7 +13327,6 @@ I use this package to compose messages and to reply to messages composed in HTML
 
   :config
   (org-msg-mode)
-  (require 'pass)
 
   :hook
   (org-msg-mode-hook . (lambda () (auto-fill-mode -1)))
@@ -13773,7 +13667,7 @@ CLOCK: [2021-06-02 Wed 12:02]--[2021-06-02 Wed 12:39] =>  0:37
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature erc
-  :after auth-source-pass
+  :after auth-source-extras
   :defer t
   :custom
   (erc-server "irc.libera.chat")
@@ -13859,11 +13753,10 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   (slack-activity-feed-watch-channel-limit 15)
 
   :config
-  (require 'pass)
   (slack-register-team
    :name "Epoch AI"
-   :token (auth-source-pass-get "token" "epoch/slack.com/epochai")
-   :cookie (auth-source-pass-get "cookie" "epoch/slack.com/epochai")
+   :token (auth-source-extras-op-get "Slack MCP - Epoch Unofficial" "xoxc_token" 'epoch)
+   :cookie (auth-source-extras-op-get "Slack MCP - Epoch Unofficial" "xoxd_token" 'epoch)
    :animate-image t)
 
   :hook

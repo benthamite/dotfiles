@@ -2486,23 +2486,6 @@
 		     :source "elpaca-menu-lock-file" :id parsebib :type git
 		     :protocol https :inherit t :depth treeless :ref
 		     "5b837e0a5b91a69cc0e5086d8e4a71d6d86dac93"))
- (pass :source "elpaca-menu-lock-file" :recipe
-       (:package "pass" :fetcher github :repo "NicolasPetton/pass" :files
-		 ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo" "doc/dir"
-		  "doc/*.info" "doc/*.texi" "doc/*.texinfo" "lisp/*.el"
-		  "docs/dir" "docs/*.info" "docs/*.texi" "docs/*.texinfo"
-		  (:exclude ".dir-locals.el" "test.el" "tests.el" "*-test.el"
-			    "*-tests.el" "LICENSE" "README*" "*-pkg.el"))
-		 :source "elpaca-menu-lock-file" :id pass :type git :protocol
-		 https :inherit t :depth treeless :ref
-		 "143456809fd2dbece9f241f4361085e1de0b0e75"))
- (pass-extras :source "elpaca-menu-lock-file" :recipe
-	      (:host github :repo "benthamite/dotfiles" :files
-		     ("emacs/extras/pass-extras.el"
-		      "emacs/extras/doc/pass-extras.texi")
-		     :depth nil :source "dotfiles personal packages" :package
-		     "pass-extras" :id pass-extras :type git :protocol https
-		     :inherit t :ref "a346bc7829ddc3d6734b80411e079f0dcdfda04b"))
  (password-generator :source "elpaca-menu-lock-file" :recipe
 		     (:package "password-generator" :fetcher github :repo
 			       "vandrlexay/emacs-password-genarator" :files
@@ -2517,27 +2500,6 @@
 			       password-generator :host github :type git
 			       :protocol https :inherit t :depth treeless :ref
 			       "2d0deb52f2fd978bff9001e155e36ac5bd287d52"))
- (password-store :source "elpaca-menu-lock-file" :recipe
-		 (:package "password-store" :fetcher github :repo
-			   "zx2c4/password-store" :files ("contrib/emacs/*.el")
-			   :source "elpaca-menu-lock-file" :id password-store
-			   :type git :protocol https :inherit t :depth treeless
-			   :ref "3ca13cd8882cae4083c1c478858adbf2e82dd037"))
- (password-store-otp :source "elpaca-menu-lock-file" :recipe
-		     (:package "password-store-otp" :repo
-			       "volrath/password-store-otp.el" :fetcher github
-			       :files
-			       ("*.el" "*.el.in" "dir" "*.info" "*.texi"
-				"*.texinfo" "doc/dir" "doc/*.info" "doc/*.texi"
-				"doc/*.texinfo" "lisp/*.el" "docs/dir"
-				"docs/*.info" "docs/*.texi" "docs/*.texinfo"
-				(:exclude ".dir-locals.el" "test.el" "tests.el"
-					  "*-test.el" "*-tests.el" "LICENSE"
-					  "README*" "*-pkg.el"))
-			       :source "elpaca-menu-lock-file" :id
-			       password-store-otp :type git :protocol https
-			       :inherit t :depth treeless :ref
-			       "be3a00a981921ed1b2f78012944dc25eb5a0beca"))
  (paths :source "elpaca-menu-lock-file" :recipe
 	(:host github :repo "benthamite/dotfiles" :files
 	       ("emacs/extras/paths.el" "emacs/extras/doc/paths.texi") :depth

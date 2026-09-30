@@ -7,3 +7,4 @@
 benthamite/*
 LessWrong2/ai-2027
 tlon-team/tlon.el
+ForethoughtFoundation/ph-ps--autumn-sprint-shared

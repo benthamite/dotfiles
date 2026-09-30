@@ -12,8 +12,8 @@ set supplies authorization for those actions; do not ask for it again. Do not
 infer provider rotation, incident closure, or deletion from a read-only audit.
 
 Before handling credentials, read the local secrets context and service-access
-routing. Use personal/Tlön password-store entries and Epoch's 1Password brokers
-according to those instructions. Treat matches, replacement keys, provider
+routing. Use the personal, Tlön and Epoch 1Password brokers according to those
+instructions. Treat matches, replacement keys, provider
 responses, and consumer files as sensitive. Keep values out of tool arguments,
 process command lines, logs, chat, and screenshots.
 
@@ -141,16 +141,16 @@ as such. If no suitable probe exists, preserve the evidence boundary.
 ## 5. Find and update consumers
 
 Map the service to its credential sources and all active consumers. Literal
-search alone misses named fields inside multi-line password-store entries and
+search alone misses named fields inside multi-field 1Password items and
 indirection through environment variables, auth-source, 1Password, or Keychain.
 
 Check these relevant locations without dumping their contents:
 
 1. Local environment/config assignments, including `.zshenv-secrets`.
-2. Password-store entries for the service, comparing the actual named field
-   consumed by code, not only the first line.
-3. Source references to matching entry paths or parent prefixes, including
-   `auth-source-pass-get`, `auth-source-search`, and child-process readers.
+2. 1Password items for the service, comparing the actual named field consumed
+   by code, not only the primary credential field.
+3. Source references to matching item titles or `op://` paths, including
+   `auth-source-extras-op-get`, `auth-source-search`, and child-process readers.
 4. Direct occurrences in active code/config, excluding archives and transcripts
    from the live-consumer list.
 5. `op://` references and runtime broker injection, plus `gh`'s Keychain
@@ -159,7 +159,7 @@ Check these relevant locations without dumping their contents:
 Use protected pattern files or in-memory comparisons; output only matching
 locations and field names. Avoid broad vault decryption when service metadata
 can narrow the search. For Epoch credentials, use the approved 1Password broker
-rather than routing them through password-store or ambient environment values.
+rather than routing them through ambient environment values.
 Use the active credential-store configuration and record unreadable entries or
 failed searches as coverage gaps; an unsuccessful search does not prove absence.
 

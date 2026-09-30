@@ -870,8 +870,9 @@ without a guard each call would orphan the previous auto-save file."
 
 (ert-deftest simple-extras-test-detects-decrypted-temp-file ()
   "A buffer visiting a file in the temporary directory counts as holding a secret.
-This is the `pass edit' case: the file is a decrypted entry whatever it holds."
-  (let ((file (make-temp-file "pass.XXXXXXXXXXXXX-tlon-core-example.com-" nil ".txt")))
+This is the password-manager edit case: the file is a decrypted entry whatever
+it holds."
+  (let ((file (make-temp-file "secret.XXXXXXXXXXXXX-example.com-" nil ".txt")))
     (unwind-protect
         (with-temp-buffer
           (setq buffer-file-name file)

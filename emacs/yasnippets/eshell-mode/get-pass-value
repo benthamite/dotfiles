@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: get-pass-value
-# key: pgv
-# contributor: Pablo Stafforini
-# --
-pass show ${1:entry name} | grep "${2:key}:" | cut -d ' ' -f 2-

@@ -108,7 +108,22 @@ Each recorded batch is (ACCOUNT . TITLES).  The account `broken' has no token."
 
 (ert-deftest auth-source-extras-op-backend-is-selected-by-its-symbol ()
   (should (auth-source-extras-op-backend-parse '1password-automation))
-  (should-not (auth-source-extras-op-backend-parse 'password-store)))
+  (should-not (auth-source-extras-op-backend-parse 'macos-keychain-internet)))
+
+(ert-deftest auth-source-extras-op-vault-uses-account-specific-names ()
+  (let ((auth-source-extras-op-account-vaults '((epoch . "Automations"))))
+    (should (equal (auth-source-extras--op-vault 'epoch) "Automations"))
+    (should (equal (auth-source-extras--op-vault 'personal) "Automation"))))
+
+(ert-deftest auth-source-extras-op-start-passes-the-account-vault ()
+  (let ((auth-source-extras-op-account-vaults '((epoch . "Automations")))
+        command)
+    (cl-letf (((symbol-function 'make-process)
+               (lambda (&rest args) (setq command (plist-get args :command)) nil))
+              ((symbol-function 'make-pipe-process) #'ignore)
+              ((symbol-function 'process-put) #'ignore))
+      (auth-source-extras--op-start 'epoch "item"))
+    (should (equal (member "--vault" command) '("--vault" "Automations" "--format" "json")))))
 
 (ert-deftest auth-source-extras-op-exact-fields-rejects-a-fuzzy-match ()
   (let ((item '((title . "ea.news-api") (fields ((id . "password") (label . "password") (value . "X"))))))

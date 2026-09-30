@@ -53,8 +53,16 @@ service-account token itself, so that no read can ever prompt."
   :group 'auth-source-extras)
 
 (defcustom auth-source-extras-op-vault "Automation"
-  "Name of the vault the service accounts can read."
+  "Name of the vault the service accounts can read.
+Accounts listed in `auth-source-extras-op-account-vaults' use the name given
+there instead."
   :type 'string
+  :group 'auth-source-extras)
+
+(defcustom auth-source-extras-op-account-vaults '((epoch . "Automations"))
+  "Alist of accounts and the names of their automation vaults.
+Accounts not listed use `auth-source-extras-op-vault'."
+  :type '(alist :key-type symbol :value-type string)
   :group 'auth-source-extras)
 
 (defcustom auth-source-extras-op-prefetch nil
@@ -131,7 +139,7 @@ per distinct reason."
         (puthash (cons account title) 'missing auth-source-extras--op-cache))
       (auth-source-extras--op-warn "Cannot read %s from the %s %s vault: %s"
                                    (string-join (reverse (cdr failure)) ", ")
-                                   account auth-source-extras-op-vault (car failure)))))
+                                   account (auth-source-extras--op-vault account) (car failure)))))
 
 (defun auth-source-extras--op-items (account titles)
   "Return an alist of TITLES to their fields in ACCOUNT's automation vault.
@@ -158,7 +166,7 @@ because the CLI fetches the items of a single invocation one after another."
                              :stderr err-pipe
                              :command (list auth-source-extras-op-program
                                             (format "@%s" account) "item" "get" title
-                                            "--vault" auth-source-extras-op-vault
+                                            "--vault" (auth-source-extras--op-vault account)
                                             "--format" "json")
                              :connection-type 'pipe
                              :noquery t
@@ -166,6 +174,10 @@ because the CLI fetches the items of a single invocation one after another."
     (process-put proc 'stderr-buffer err)
     (process-put proc 'title title)
     proc))
+
+(defun auth-source-extras--op-vault (account)
+  "Return the name of ACCOUNT's automation vault."
+  (alist-get account auth-source-extras-op-account-vaults auth-source-extras-op-vault))
 
 (defun auth-source-extras--op-collect (proc)
   "Return (TITLE . FIELDS) or (TITLE :error . REASON) for PROC; kill its buffers.
@@ -317,11 +329,11 @@ With CACHED non-nil, use only known items, without invoking the CLI."
   (with-temp-buffer
     (if (zerop (call-process auth-source-extras-op-program nil '(t nil) nil
                              (format "@%s" account) "item" "list"
-                             "--vault" auth-source-extras-op-vault "--format" "json"))
+                             "--vault" (auth-source-extras--op-vault account) "--format" "json"))
         (mapcar (lambda (entry) (alist-get 'title entry))
                 (json-parse-string (buffer-string) :object-type 'alist :array-type 'list))
       (auth-source-extras--op-warn "Cannot list the %s %s vault" account
-                                   auth-source-extras-op-vault)
+                                   (auth-source-extras--op-vault account))
       'missing)))
 
 (defun auth-source-extras--op-search-result (candidate users)
@@ -375,10 +387,10 @@ private temporary file that is deleted whatever the outcome."
   (with-temp-buffer
     (unless (zerop (call-process auth-source-extras-op-program nil '(t nil) nil
                                  (format "@%s" account) "item" "list" "--vault"
-                                 auth-source-extras-op-vault "--categories" "Document"
+                                 (auth-source-extras--op-vault account) "--categories" "Document"
                                  "--format" "json"))
       (user-error "Cannot list the documents in the %s %s vault"
-                  account auth-source-extras-op-vault))
+                  account (auth-source-extras--op-vault account)))
     (mapcar (lambda (entry) (alist-get 'title entry))
             (json-parse-string (buffer-string) :object-type 'alist :array-type 'list))))
 
@@ -386,9 +398,9 @@ private temporary file that is deleted whatever the outcome."
   "Write the Document TITLE of ACCOUNT's automation vault to FILE, byte for byte."
   (unless (zerop (call-process auth-source-extras-op-program nil nil nil
                                (format "@%s" account) "document" "get" title "--vault"
-                               auth-source-extras-op-vault "--out-file" file "--force"))
+                               (auth-source-extras--op-vault account) "--out-file" file "--force"))
     (user-error "Cannot read the document `%s' from the %s %s vault"
-                title account auth-source-extras-op-vault)))
+                title account (auth-source-extras--op-vault account))))
 
 ;;;;; Commands
 

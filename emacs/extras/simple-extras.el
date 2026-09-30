@@ -961,9 +961,8 @@ The existing file is deleted because it may already contain the credential."
 
 (defun simple-extras-visiting-decrypted-file-p ()
   "Return non-nil iff the buffer visits a file in the temporary directory.
-A password manager decrypts an entry to a temporary file and opens an editor on
-it: `pass edit' writes to a `pass.XXXXXXXXXXXXX' directory under
-`temporary-file-directory', and `gpg' and `op' behave the same way.  Every such
+Password managers and encryption tools such as `gpg' and `op' decrypt an entry
+to a file under `temporary-file-directory' and open an editor on it.  Every such
 file is a decrypted secret, whatever its contents, so location is a surer test
 than any pattern.  A pattern must recognise the credential format in advance,
 and it never will for all of them -- a passphrase, a recovery code or a bank
@@ -994,10 +993,10 @@ cheap when called from frequently-run hooks."
 
 (defun simple-extras-backup-enable-predicate (name)
   "Return non-nil iff Emacs may write a backup of the file NAME.
-Refuses every file in `temporary-file-directory'.  A backup there is what leaked
-38 `pass' entries: `pass edit' decrypts an entry to a temporary file, Emacs kept
-a permanent copy of it, and the shredding `pass' does on exit then removed only
-its own file."
+Refuses every file in `temporary-file-directory'.  A backup there once leaked
+38 password entries: a password manager decrypted each entry to a temporary
+file, Emacs kept a permanent copy of it, and the manager's shredding on exit
+then removed only its own file."
   (and (not (file-in-directory-p name temporary-file-directory))
        (normal-backup-enable-predicate name)))
 

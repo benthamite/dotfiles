@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: auth-source-extras-op-get
+# key: aso
+# contributor: Pablo Stafforini
+# --
+(auth-source-extras-op-get "${1:item}" "${2:$$(yas-choose-value '("credential" "password" "username"))}"${3: '${4:$$(yas-choose-value '("personal" "tlon" "epoch"))}})

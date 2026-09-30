@@ -50,7 +50,7 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{auth-source-extras.el} reads secrets that Emacs needs without a person present, such as API keys and tokens, from a 1Password vault named ``Automation''. Each 1Password account has its own Automation vault and a read-only service account that can read nothing else. The service account's token is stored in the macOS login Keychain and read by the @samp{op-automations} wrapper, so reads never prompt while you are logged in, and a leaked token exposes only that one vault.
+@samp{auth-source-extras.el} reads secrets that Emacs needs without a person present, such as API keys and tokens, from a 1Password vault named ``Automation'' (``Automations'' in the Epoch account). Each 1Password account has its own Automation vault and a read-only service account that can read nothing else. The service account's token is stored in the macOS login Keychain and read by the @samp{op-automations} wrapper, so reads never prompt while you are logged in, and a leaked token exposes only that one vault.
 
 @node Reading secrets
 @chapter Reading secrets
@@ -65,6 +65,8 @@ If an item cannot be read, for example because the account has no token in the K
 @findex auth-source-extras-op-clear-cache
 @code{auth-source-extras-op-clear-cache} forgets every cached secret and vault listing, so the next read fetches fresh values, for example after rotating a key.
 
+Field IDs take precedence over display labels. Empty template labels are ignored, so duplicate labels such as @samp{password} cannot hide the actual password field.
+
 Results are accepted only when the returned item's title matches the requested one exactly. When no item has a given title, the CLI can return another item whose website matches it, and that would hand out the wrong secret.
 
 @node Unlocking git-crypt repositories
@@ -77,7 +79,7 @@ Results are accepted only when the returned item's title matches the requested o
 @chapter The auth-source backend
 
 @findex auth-source-extras-op-search
-Adding the symbol @samp{1password-automation} to @code{auth-sources} makes generic @code{auth-source-search} lookups, such as the GitHub tokens used by Forge and Magit or the SMTP password, read from the Automation vaults. Item titles follow the @samp{auth-source-pass} conventions @samp{HOST/USER}, @samp{USER@@HOST}, @samp{HOST:PORT/USER}, @samp{HOST:PORT} and @samp{HOST}, so items copied from the password store keep working under their existing names. A bare @samp{HOST} title matches only if its stored @samp{username} field, when it has one, is among the requested users. The backend lists each vault's titles once per session and fetches matched items through the same cache as @code{auth-source-extras-op-get}. It cannot create or delete entries.
+Adding the symbol @samp{1password-automation} to @code{auth-sources} makes generic @code{auth-source-search} lookups, such as the GitHub tokens used by Forge and Magit or the SMTP password, read from the Automation vaults. The backend looks for items titled @samp{HOST/USER}, @samp{USER@@HOST}, @samp{HOST:PORT/USER}, @samp{HOST:PORT} and @samp{HOST}. A bare @samp{HOST} title matches only if its stored @samp{username} field, when it has one, is among the requested users. The backend searches accounts in order and uses cached items before listing a vault. It stops once enough credentials are found, so a cached SMTP password needs no vault requests. Successful vault listings are cached; failed listings warn and are retried on the next lookup. Other accounts and authentication backends remain available when a vault cannot be listed. A known, more-specific item retains precedence over a cached generic credential. Entries without a nonempty password are not returned. Requests that allow credential creation can still retrieve existing entries, but the backend cannot create or delete entries.
 
 @node Customization
 @chapter Customization
@@ -87,6 +89,9 @@ Adding the symbol @samp{1password-automation} to @code{auth-sources} makes gener
 
 @vindex auth-source-extras-op-vault
 @code{auth-source-extras-op-vault} names the vault the service accounts can read, @samp{"Automation"} by default.
+
+@vindex auth-source-extras-op-account-vaults
+@code{auth-source-extras-op-account-vaults} maps accounts whose automation vault has another name to that name. By default it maps @samp{epoch} to @samp{"Automations"}, so @samp{(auth-source-extras-op-get ITEM FIELD 'epoch)} reads Epoch's Automations vault.
 
 @vindex auth-source-extras-op-program
 @code{auth-source-extras-op-program} is the service-account wrapper, @samp{op-automations} by default. It is called as @samp{op-automations @@ACCOUNT ...} and reads that account's token from the login Keychain (@samp{op-service-account/ACCOUNT-automation}) itself, so no read can prompt.

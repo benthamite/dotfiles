@@ -387,12 +387,6 @@ place."
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-google-drive-tlon-pass
-  (file-name-concat paths-dir-google-drive-tlon-core "pass/")
-  "Path to the Pass Google Drive directory."
-  :type 'directory
-  :group 'paths)
-
 (defcustom paths-dir-google-drive-tlon-uqbar
   (file-name-concat paths-dir-google-drive-tlon "uqbar/")
   "Path to the Uqbar Google Drive directory."

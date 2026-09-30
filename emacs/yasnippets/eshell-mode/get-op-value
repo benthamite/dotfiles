@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: get-op-value
+# key: pgv
+# contributor: Pablo Stafforini
+# --
+op-desktop read "op://${1:vault}/${2:item}/${3:field}"

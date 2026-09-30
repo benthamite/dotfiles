@@ -17,7 +17,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=auth-source-extras.el= reads secrets that Emacs needs without a person present, such as API keys and tokens, from a 1Password vault named "Automation". Each 1Password account has its own Automation vault and a read-only service account that can read nothing else. The service account's token is stored in the macOS login Keychain and read by the =op-automations= wrapper, so reads never prompt while you are logged in, and a leaked token exposes only that one vault.
+=auth-source-extras.el= reads secrets that Emacs needs without a person present, such as API keys and tokens, from a 1Password vault named "Automation" ("Automations" in the Epoch account). Each 1Password account has its own Automation vault and a read-only service account that can read nothing else. The service account's token is stored in the macOS login Keychain and read by the =op-automations= wrapper, so reads never prompt while you are logged in, and a leaked token exposes only that one vault.
 
 * Reading secrets
 :PROPERTIES:
@@ -52,7 +52,7 @@ Results are accepted only when the returned item's title matches the requested o
 :END:
 
 #+findex: auth-source-extras-op-search
-Adding the symbol =1password-automation= to ~auth-sources~ makes generic ~auth-source-search~ lookups, such as the GitHub tokens used by Forge and Magit or the SMTP password, read from the Automation vaults. Item titles follow the =auth-source-pass= conventions =HOST/USER=, =USER@HOST=, =HOST:PORT/USER=, =HOST:PORT= and =HOST=, so items copied from the password store keep working under their existing names. A bare =HOST= title matches only if its stored =username= field, when it has one, is among the requested users. The backend searches accounts in order and uses cached items before listing a vault. It stops once enough credentials are found, so a cached SMTP password needs no vault requests. Successful vault listings are cached; failed listings warn and are retried on the next lookup. Other accounts and authentication backends remain available when a vault cannot be listed. A known, more-specific item retains precedence over a cached generic credential. Entries without a nonempty password are not returned. Requests that allow credential creation can still retrieve existing entries, but the backend cannot create or delete entries.
+Adding the symbol =1password-automation= to ~auth-sources~ makes generic ~auth-source-search~ lookups, such as the GitHub tokens used by Forge and Magit or the SMTP password, read from the Automation vaults. The backend looks for items titled =HOST/USER=, =USER@HOST=, =HOST:PORT/USER=, =HOST:PORT= and =HOST=. A bare =HOST= title matches only if its stored =username= field, when it has one, is among the requested users. The backend searches accounts in order and uses cached items before listing a vault. It stops once enough credentials are found, so a cached SMTP password needs no vault requests. Successful vault listings are cached; failed listings warn and are retried on the next lookup. Other accounts and authentication backends remain available when a vault cannot be listed. A known, more-specific item retains precedence over a cached generic credential. Entries without a nonempty password are not returned. Requests that allow credential creation can still retrieve existing entries, but the backend cannot create or delete entries.
 
 * Customization
 :PROPERTIES:
@@ -64,6 +64,9 @@ Adding the symbol =1password-automation= to ~auth-sources~ makes generic ~auth-s
 
 #+vindex: auth-source-extras-op-vault
 ~auth-source-extras-op-vault~ names the vault the service accounts can read, ="Automation"= by default.
+
+#+vindex: auth-source-extras-op-account-vaults
+~auth-source-extras-op-account-vaults~ maps accounts whose automation vault has another name to that name. By default it maps =epoch= to ="Automations"=, so =(auth-source-extras-op-get ITEM FIELD 'epoch)= reads Epoch's Automations vault.
 
 #+vindex: auth-source-extras-op-program
 ~auth-source-extras-op-program~ is the service-account wrapper, =op-automations= by default. It is called as =op-automations @ACCOUNT ...= and reads that account's token from the login Keychain (=op-service-account/ACCOUNT-automation=) itself, so no read can prompt.

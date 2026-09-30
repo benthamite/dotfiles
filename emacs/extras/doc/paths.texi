@@ -301,8 +301,7 @@ These directories hold Citation Style Language resources, used by @samp{citeproc
 @vindex paths-dir-google-drive-tlon-fede
 @vindex paths-dir-google-drive-tlon-pablo
 @vindex paths-dir-google-drive-tlon-ledger
-@vindex paths-dir-google-drive-tlon-pass
-These directories organize shared team resources under @code{paths-dir-google-drive-tlon}. Each team member has a personal subdirectory, and shared resources (ledger, pass) live under the @samp{core} subdirectory.
+These directories organize shared team resources under @code{paths-dir-google-drive-tlon}. Each team member has a personal subdirectory, and shared resources such as the ledger live under the @samp{core} subdirectory.
 
 Active organization-wide directories sit at the root:
 

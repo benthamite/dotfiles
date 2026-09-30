@@ -44,7 +44,7 @@ IDENTITY_NAME_RE = re.compile(
     r"(?:^|_)(?:EMAIL|USERNAME|USER_NAME|PHONE|MOBILE)(?:_|$)", re.I,
 )
 STORE_COMMAND_RE = re.compile(
-    r"^\s*(?:command\s+)?(?:pass|op|op-desktop|op-automations|security|envchain)\s"
+    r"^\s*(?:command\s+)?(?:op|op-desktop|op-automations|security|envchain)\s"
 )
 MAX_INPUT_BYTES = 1024 * 1024
 MAX_TOKENS = 50000

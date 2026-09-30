@@ -176,7 +176,7 @@ run_service() {
 export PERSONAL_EMAIL="synthetic-value-email"
 export FIRST_TOKEN='synthetic-value$dollar'
 export SECOND_TOKEN="synthetic-value pass phrase"
-export THIRD_TOKEN="$(pass env/synthetic-value-ref)"
+export THIRD_TOKEN="$(op read op://synthetic/value/ref)"
 export FOURTH_TOKEN="$SYNTHETIC_EXISTING_TOKEN"
 export FIFTH_TOKEN="$(printf '%s' 'synthetic-value with } and {')"
 export EMPTY_TOKEN=""
@@ -330,7 +330,7 @@ true && { export SECOND_TOKEN=synthetic-value; export THIRD_TOKEN=synthetic-valu
         self.assertEqual(rows["SERVICE_TOKEN"]["classification"], "credential-literal")
 
     def test_store_command_prefix_does_not_authenticate_other_value_parts(self):
-        for value in ('"synthetic-value$(pass fixture/ref)"', '"$(pass fixture/ref; printf synthetic-value)"'):
+        for value in ('"synthetic-value$(op read op://fixture/ref/x)"', '"$(op read op://fixture/ref/x; printf synthetic-value)"'):
             with self.subTest(value=value):
                 rows = self.exports(f'export SERVICE_TOKEN={value}\n')
                 self.assertEqual(rows["SERVICE_TOKEN"]["classification"], "credential-indirect")

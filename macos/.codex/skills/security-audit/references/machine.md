@@ -70,7 +70,7 @@ Inspect profile metadata only, never cookies or session databases.
 
 ## Authentication and recovery
 
-- Recognize Apple Passwords, browser managers, `pass`, and CLI workflows, as
+- Recognize Apple Passwords, browser managers, and CLI workflows, as
   well as third-party apps. Installed software does not prove use; no detected
   app/extension does not prove absence. Never inspect saved passwords.
 - Phone passkeys and hardware security keys both provide phishing resistance.

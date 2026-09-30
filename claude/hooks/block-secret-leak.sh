@@ -448,7 +448,7 @@ check_pattern() {
       "hookSpecificOutput": {
         "hookEventName": "PreToolUse",
         "permissionDecision": "deny",
-        "permissionDecisionReason": ("BLOCKED: " + $tool + " command would expose a secret (" + $label + ").\n\nUse environment variables or `op://` references instead of literal secret values.\n\nIf this is a false positive, diagnose and repair the classifier; do not bypass the guard.")
+        "permissionDecisionReason": ("BLOCKED: " + $tool + " command would expose a secret (" + $label + ").\n\nUse environment variables or `op://` references instead of literal secret values.\n\nIf this is a false positive, do not add an exemption to the guard: fetch a public URL with WebFetch instead, and read ~/My Drive/dotfiles/docs/secret-guard.md before changing the guard. Do not bypass it.")
       }
     }'
     exit 0

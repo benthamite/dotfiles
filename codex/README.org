@@ -733,6 +733,12 @@ deletes an exempt file. Moves from exempt to ordinary destinations deny because
 unchanged source contents are unavailable without reading the file. Native
 =Write=/=Edit= exceptions retain their single-destination scope.
 
+Changes to the secret guard follow
+[[file:../docs/secret-guard.md][docs/secret-guard.md]]: its incident inventory, no new
+per-site exemptions (=tests/test_secret_guard_scope.py= freezes the route
+registry), and the 2026-09-30 redesign. The deny message points agents there
+and to WebFetch for public URLs instead of asking them to patch the classifier.
+
 The secret guard also blocks process listings that expose arguments or
 environments, including macOS =pgrep -fl=. PID/name diagnostics remain
 available; supported forms and limits are in [[file:hooks/README.org][the hook contracts]].

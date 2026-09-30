@@ -1,6 +1,10 @@
 #+title: Claude hook implementations
 #+author: Pablo Stafforini
 
+Before changing any secret-protection hook, read
+[[file:../../docs/secret-guard.md][docs/secret-guard.md]]: the incident inventory, the
+rules for changes (no new per-site exemptions) and the approved redesign.
+
 The closed Python document-edit classifier permits =update= statements on bound
 JSON data with one validated dictionary literal and no keyword arguments.
 A mutation alone does not satisfy its required document write.

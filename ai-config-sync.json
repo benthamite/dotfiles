@@ -342,13 +342,6 @@
   ],
   "hooks": [
     {
-      "name": "lib-public-url-scan.py",
-      "claude": "claude/hooks/lib-public-url-scan.py",
-      "codex": null,
-      "status": "claude-only",
-      "note": "Verified-route registry and literal curl/wget URL-operand classifier for agent_guard.policies.secret_leak. Unknown syntax keeps conservative scanning; payloads and raw/decoded URL tails stay scanned. Tested by tests/test_public_url_scan.py. The shared guard engine (lib/python/agent_guard, classifiers.py) loads this copy in-process for both runtimes; the Codex copy was removed at the 2026-10-01 cutover."
-    },
-    {
       "name": "lib-process-output-policy.py",
       "claude": "claude/hooks/lib-process-output-policy.py",
       "codex": null,

@@ -1,93 +1,58 @@
-#!/usr/bin/env python3
-"""Classify verified public URL routing without suppressing request payloads.
+"""The opaque-token heuristic, kept as a log-only signal.
 
-Print only a fixed diagnostic label when the legacy opaque-token heuristic
-matches. This is not a universal public-URL detector. The registry records
-previously verified routes; unknown syntax receives no routing exemption.
+The secret guards used to deny a network command carrying a long mixed-class
+token (claude/hooks/lib-public-url-scan.py), with a registry of verified
+public routes that exempted known URLs. No recorded exposure came through it;
+known secret values and prefixed token shapes are caught by their own checks.
+So it no longer denies (docs/plans/2026-10-01-guard-engine.md, intended
+difference 3): where it would have been the secret guard's only reason to
+deny, it appends one line to LOG naming the runtime, tool and a fixed label,
+never the value or the command.
+
+`finding` is the former classifier without its route registry, which existed
+only to exempt public URLs from the denial. Its other precision rules are
+kept, so the log records what the guard would have denied rather than every
+long identifier: quote-aware curl/wget argv roles (output files, local
+directories, closed pdftotext reads), Wayback envelopes, loopback API
+prefixes, and validated ports. The caller applies the local-read-path
+projection of lib-inert-mentions.py first, as the hook did.
+
+If the log ever shows a real secret, docs/secret-guard.md says how to restore
+the denial.
 """
+
 from __future__ import annotations
 
+import os
 import re
 import shlex
-import sys
+import time
+from pathlib import Path
 from urllib.parse import unquote, unquote_plus, urlsplit
 
-UUID = r"[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-MONTH = r"[0-9]{4}/(?:0[1-9]|1[0-2])"
-BSB_OBJECT = r"bsb[0-9]{8}(?:_[0-9]{5}_u[0-9]{3})?"
-CARETAS_ITEM = (r"Caras_y_Caretas_Buenos_Aires_(?:18|19)[0-9]{2}-"
-                r"(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])_N_[0-9]{1,5}")
-ENTITY = r"(?:area|artist|collection|event|genre|instrument|label|place|recording|release|release-group|series|url|work)"
-# Exact authority, path prefix, whether the complete path must match, schemes.
-# Sources are the public routes pinned by test_secret_guard_parity.py.
-ROUTES = (
-    ("hingedaily.substack.com", r"/(?:api/v1/posts|p)/the-hinge-2-29-september-2026", True, ("https",)),
-    ("museo.bn.gov.ar", r"/noticias/salio-cuaderno-de-la-bn-n0-22", True, ("https",)),
-    ("www.utorpheus.com", r"/file/catalog/pdf_musiche/lb018\.pdf", True, ("https",)),
-    ("prensahistorica.galiciana.gal",
-     rf"/recurso/caras-y-caretas-semanario-festivo-literario/{UUID}", True, ("https",)),
-    ("hemerotecadigital.bn.gob.ar",
-     r"/collection/001181802/critica(?:/year/19(?:1[4-69]|[2-4][0-9]|5[0-7]))?",
-     True, ("https",)),
-    ("archive.org", rf"/metadata/{CARETAS_ITEM}", True, ("https",)),
-    ("archive.org", r"/metadata/1909carasycaretas02buenuoft", True, ("https",)),
-    ("archive.org", r"/download/1909carasycaretas02buenuoft/1909carasycaretas02buenuoft_djvu\.txt", True, ("https",)),
-    ("archive.org", r"/download/carasycaretas1929unse_0/carasycaretas1929unse_0(?:\.pdf|_djvu\.txt)", True, ("https",)),
-    ("archive.org", rf"/download/(?P<caretas>{CARETAS_ITEM})/(?P=caretas)(?:\.pdf|_djvu\.txt)", True, ("https",)),
-    ("archive.org", r"/metadata/", False, ("https",)),
-    ("api.digitale-sammlungen.de", rf"/iiif/presentation/v2/{BSB_OBJECT}/manifest", True, ("https",)),
-    ("api.digitale-sammlungen.de", r"/iiif/image/v2/bsb[0-9]{8}_[0-9]{5}/full/full/0/default\.jpg", True, ("https",)),
-    ("collecties.kb.nl", r"/en/collections/collection-anny-antoine-louis-koopman/1951-1960/cahiers", True, ("https",)),
-    ("notes.andymatuschak.org",
-     r"/(?:z28QkpK3vRKQTacjFDfGYBhCXHqHuVWJzny9|zVFGpprS64TzmKGNzGxq9FiCDnAnCPwRU5T)",
-     True, ("https",)),
-    ("www.brown.edu", r"/Departments/Philosophy/bears/", False, ("https",)),
-    ("ruj.uj.edu.pl", rf"/entities/publication/{UUID}", True, ("https",)),
-    ("www.jesp.org", rf"/pdf/{UUID}", True, ("https",)),
-    ("blogs.kent.ac.uk", rf"/futureofnormativity/files/{MONTH}/", False, ("https",)),
-    ("myweb.sabanciuniv.edu", rf"/ozgurkibris/files/{MONTH}/", False, ("https",)),
-    ("www.happierlivesinstitute.org", rf"/wp-content/uploads/{MONTH}/", False, ("http", "https")),
-    ("digital.library.adelaide.edu.au", rf"/(?:bitstreams/{UUID}/download|server/api/core/bitstreams/{UUID}/content)", True, ("http", "https")),
-    ("www.zora.uzh.ch", r"/id/eprint/[0-9]+/[0-9]+/", False, ("https",)),
-    ("discovery.ucl.ac.uk", r"/id/eprint/[0-9]+/[0-9]+/", False, ("https",)),
-    ("www.jacobbarrett.org", r"/uploads/1/2/3/6/123631127/", False, ("https",)),
-    ("www.bobbeddor.com", r"/uploads/3/2/0/3/32037343/", False, ("https",)),
-    ("eprints.lse.ac.uk", r"/[0-9]+/[0-9]+/", False, ("https",)),
-    ("jesp.org", r"/index\.php/jesp/article/download/[0-9]+/[0-9]+", True, ("https",)),
-    ("www.frontiersin.org", r"/journals/artificial-intelligence/articles/10\.3389/frai\.[0-9]{4}\.[0-9]+/pdf", True, ("https",)),
-    ("80000hours.org", rf"/wp-content/uploads/{MONTH}/", False, ("https",)),
-    ("www.cambridge.org", r"/core/services/aop-cambridge-core/content/view/[A-F0-9]{32}/S[0-9]{16}a\.pdf/", False, ("https",)),
-    ("journals.publishing.umich.edu", r"/ergo/article/[0-9]+/galley/[0-9]+/download/", True, ("https",)),
-    ("files.znu.edu.ua", r"/files/Bibliobooks/Inshi[0-9]+/[0-9]+\.pdf", True, ("http", "https")),
-    ("ejpe.org", r"/journal/article/download/[0-9]+/[0-9]+/[0-9]+", True, ("http", "https")),
-    ("uplopen.com", rf"/en/books/[0-9]+/files/{UUID}\.pdf", True, ("http", "https")),
-    ("ruj.uj.edu.pl", rf"/(?:bitstreams/{UUID}/download|server/api/core/bitstreams/{UUID}/content)", True, ("http", "https")),
-    ("proceedings.mlr.press", r"/v[0-9]+/", False, ("http", "https")),
-    ("adp.library.ucsb.edu", r"/index\.php/matrix/detail/[0-9]+/", False, ("http", "https")),
-    ("musicbrainz.org", rf"/(?:ws/2/)?{ENTITY}/{UUID}", True, ("http", "https")),
-    ("www.sec.gov",
-     r"/Archives/edgar/data/[0-9]+/[0-9]{18}/(?:[A-Za-z0-9_-]{1,29}/)?"
-     r"[A-Za-z0-9_.-]{1,29}\.(?:html?|xml|txt|pdf|json|csv)",
-     True, ("https",)),
-)
-OPAQUE = re.compile(r"[A-Za-z0-9/+=_-]{30,}")
-WALLET = re.compile(r"0x[a-fA-F0-9]{40}(?![a-fA-F0-9])")
+from .core import HOME
+
+LOG = HOME / ".local/state/agent-guard/heuristic.log"
+LABEL = "network command with inline secret-like string (opaque token)"
+
+_OPAQUE = re.compile(r"[A-Za-z0-9/+=_-]{30,}")
+# Public Ethereum addresses are long hex runs, not keys.
+_WALLET = re.compile(r"0x[a-fA-F0-9]{40}(?![a-fA-F0-9])")
+_CLASSES = tuple(re.compile(pattern) for pattern in (r"[A-Z]", r"[a-z]", r"[/+=_-]", r"[0-9]"))
 
 
 def opaque(text: str) -> bool:
-    # Preserve the existing public Ethereum-address classification, not keys.
-    text = WALLET.sub("", text)
-    for match in OPAQUE.finditer(text):
+    """A 30+ character run with a digit and at least three character classes."""
+    for match in _OPAQUE.finditer(_WALLET.sub("", text)):
         value = match.group()
-        classes = sum(bool(re.search(pattern, value))
-                      for pattern in (r"[A-Z]", r"[a-z]", r"[/+=_-]", r"[0-9]"))
-        if re.search(r"[0-9]", value) and classes >= 3:
+        if re.search(r"[0-9]", value) and sum(bool(c.search(value)) for c in _CLASSES) >= 3:
             return True
     return False
 
 
 def suspect(text: str) -> bool:
-    """Scan raw bytes and bounded percent-decoding; never decode into routing."""
+    """`opaque` on TEXT and up to three rounds of percent-decoding; a value still
+    encoded after that counts as opaque."""
     for _ in range(4):
         if opaque(text):
             return True
@@ -95,7 +60,6 @@ def suspect(text: str) -> bool:
         if decoded == text:
             return False
         text = decoded
-    # Ambiguous deeply encoded values receive no speculative exemption.
     return bool(re.search(r"%[0-9a-fA-F]{2}", text)) or opaque(text)
 
 
@@ -109,18 +73,6 @@ def url_finding(url: str, *, allow_wayback: bool = True) -> str | None:
     except ValueError:
         return "URL syntax: unclassified opaque token" if suspect(url) else None
     path, query, fragment = parts.path, parts.query, parts.fragment
-    if (parts.scheme == "https" and parts.netloc == "hemerotecadigital.bn.gob.ar"
-            and path == "/render.php"):
-        # Exact public issue linked by the Crítica 1947 holdings page. Project
-        # only its file locator; retain every other field and reject ambiguous
-        # repeated selector keys, including percent-encoded spellings.
-        fields = query.split("&")
-        keys = [unquote_plus(field.partition("=")[0]) for field in fields]
-        locator = "url=001181802/1947/BNA_S001181802_19470908N11872.pdf"
-        if (keys.count("url") == keys.count("system") == 1
-                and locator in fields and "system=001181802" in fields):
-            fields[fields.index(locator)] = "url=PUBLIC_ISSUE"
-            query = "&".join(fields)
     if allow_wayback and parts.scheme == "https" and parts.netloc == "web.archive.org":
         # Documented replay and CDX envelopes contain another URL. Scan that
         # target with the ordinary URL rules, without recursively projecting
@@ -164,13 +116,6 @@ def url_finding(url: str, *, allow_wayback: bool = True) -> str | None:
                         return "Wayback target " + issue
                     fields[index] = "url=ARCHIVED_URL"
                     query = "&".join(fields)
-    for host, pattern, complete, schemes in ROUTES:
-        if parts.netloc != host or parts.scheme not in schemes:
-            continue
-        match = re.fullmatch(pattern, path) if complete else re.match(pattern, path)
-        if match:
-            path = "/" + path[match.end():]
-            break
     # Preserve existing loopback API prefix policy on actual URL operands only.
     authority = parts.netloc
     if (parts.scheme in {"http", "https"}
@@ -297,6 +242,7 @@ def arguments(tokens: list[str]) -> list[tuple[str, str]] | None:
 
 
 def finding(command: str) -> str | None:
+    """The field and rule of the first opaque token in COMMAND, or None."""
     tokens = literal_tokens(command)
     if tokens is None:
         return "unclassified command: opaque token" if suspect(command) else None
@@ -322,7 +268,6 @@ def finding(command: str) -> str | None:
             # mkdir diagnostics may name directories, so pipes retain them.
             # Classify it here, after quote-aware argv parsing: a quoted URL's
             # '&' may prevent the earlier shell-wide file-path projection.
-            # Known-secret checks still inspect the full original command.
             if role == "output-file" or (role in {"local-directory", "local-read-path"} and not piped):
                 continue
             if role == "URL":
@@ -334,7 +279,20 @@ def finding(command: str) -> str | None:
     return None
 
 
-if __name__ == "__main__":
-    issue = finding(sys.stdin.read())
-    if issue:
-        print(issue)
+def record(runtime: str, tool: str, log: Path | None = None) -> None:
+    """Append `TIMESTAMP RUNTIME TOOL LABEL` to LOG (directory 0700, file 0600).
+
+    Best effort by design: a log that cannot be written must never turn into a
+    denial or a crash of the guard."""
+    fields = [time.strftime("%Y-%m-%dT%H:%M:%S%z"), runtime, tool, LABEL]
+    log = log or LOG
+    line = "\t".join(re.sub(r"[\x00-\x1f\x7f]", "?", field) for field in fields) + "\n"
+    try:
+        log.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        descriptor = os.open(log, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600)
+        try:
+            os.write(descriptor, line.encode("utf-8", "replace"))
+        finally:
+            os.close(descriptor)
+    except OSError:
+        pass

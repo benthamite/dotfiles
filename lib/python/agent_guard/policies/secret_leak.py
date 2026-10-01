@@ -13,10 +13,11 @@ quirks decided calls: `grep -E`, `sed -E` and `echo` come from agent_guard.ere,
 `$(...)` drops trailing newlines (command_substitution), and the awk
 projections are ported as they ran.
 
-Intended difference: the hook's shell allowlist (grep/rg and git-crypt
+Intended differences: the hook's shell allowlist (grep/rg and git-crypt
 commands, `$VAR` references, mentions of the encrypted secrets file) returned
 before the known-value and secret-shape checks; here it skips only the
-exfiltration checks.
+exfiltration checks. The opaque-token heuristic no longer denies; it is
+logged (agent_guard.url_heuristic).
 """
 
 from __future__ import annotations
@@ -26,7 +27,7 @@ from collections import Counter
 
 import secret_index
 
-from .. import classifiers
+from .. import classifiers, url_heuristic
 from ..codex_paths import codex_patch_content_for_scan
 from ..codex_payload import (command_substitution, jq_alternative, jq_raw, jq_text, literal_exec_wrapper,
                              nested_exec_contexts)
@@ -552,7 +553,7 @@ def decide(call: Call) -> Result:
             return result
 
     if shell and not _skips_exfiltration_checks(content):
-        result = _exfiltration(tool, content, nested[0] if literal else content)
+        result = _exfiltration(call, tool, content, nested[0] if literal else content)
         if result is not None:
             return result
     return Result.allow()
@@ -659,9 +660,9 @@ def _known_secret_label(content: str) -> str | None:
     return f"contains a known secret value ({labels})"
 
 
-def _exfiltration(tool: str, content: str, entropy_command: str) -> Result | None:
-    """Sensitive files piped or uploaded to a network tool, and network commands
-    carrying an opaque inline string (lib-public-url-scan.py)."""
+def _exfiltration(call: Call, tool: str, content: str, entropy_command: str) -> Result | None:
+    """Sensitive files piped or uploaded to a network tool. A network command
+    carrying an opaque inline string is only logged (url_heuristic)."""
     if (grep(rf"(cat|base64|xxd)\s+[^\|;]*{_SENSITIVE_PATH}", content, echo=True)
             and grep(r"\|\s*(curl|wget|nc|ncat)\b", content, echo=True)):
         result = _secret_pattern_denial(tool, content, ".", "sensitive file piped to network tool (exfiltration risk)")
@@ -672,33 +673,34 @@ def _exfiltration(tool: str, content: str, entropy_command: str) -> Result | Non
         result = _secret_pattern_denial(tool, content, ".", "curl uploading sensitive file (exfiltration risk)")
         if result is not None:
             return result
+    _log_opaque_token(call, tool, content, entropy_command)
+    return None
 
-    try:
-        activation = mask_heredoc_bodies(entropy_command, "network")
-    except Exception:  # noqa: BLE001 - `|| check_pattern`: the awk projection failed
-        result = _secret_pattern_denial(tool, content, ".", "network-command classifier failed")
-        if result is not None:
-            return result
-        activation = ""
-    try:
-        activation = command_substitution(classifiers.load("python-heredoc")._project_command(
-            activation, git_shell=False, network_activation=True))
-    except Exception:  # noqa: BLE001 - `|| check_pattern`: the script exited 1 before printing
-        result = _secret_pattern_denial(tool, content, ".", "Python network-activation classifier failed")
-        if result is not None:
-            return result
-        activation = ""
+
+def _opaque_token_issue(entropy_command: str) -> str | None:
+    """The hook's opaque-token gate, unchanged: a network tool in the command's
+    network activation (outside terminal document prose and data-only Python
+    names), then the former URL classifier on the local-read-path projection."""
+    activation = mask_heredoc_bodies(entropy_command, "network")
+    activation = command_substitution(classifiers.load("python-heredoc")._project_command(
+        activation, git_shell=False, network_activation=True))
     if not grep(r"(^|[^A-Za-z0-9_.-])(curl|wget|nc|ncat)([^A-Za-z0-9_.-]|$)|\b(python[23]?\s.*urllib|node\s.*fetch)\b",
                 activation, echo=True):
         return None
-    # Both assignments ran under `set -e`: a failure exited through the trap.
+    scanned = command_substitution(classifiers.load("inert-mentions").mask_local_read_paths(entropy_command))
+    return url_heuristic.finding(scanned)
+
+
+def _log_opaque_token(call: Call, tool: str, content: str, entropy_command: str) -> None:
+    """Log where the opaque-token heuristic would have been the only reason to
+    deny. A failing projection used to deny as well, so it is logged too.
+    Nothing else depends on these projections, so logging never denies."""
     try:
-        scanned = command_substitution(classifiers.load("inert-mentions").mask_local_read_paths(entropy_command))
-        issue = classifiers.load("public-url-scan").finding(scanned)
-    except Exception as error:
-        raise HookFailure(f"network-command scan failed: {type(error).__name__}") from None
-    issue = command_substitution(issue + "\n") if issue else ""
-    if issue:
-        return _secret_pattern_denial(tool, content, ".",
-                                      f"network command with inline secret-like string ({issue}; exfiltration risk)")
-    return None
+        issue = _opaque_token_issue(entropy_command)
+    except Exception:  # noqa: BLE001 - the hook denied when a projection failed
+        issue = "projection failed"
+    try:
+        if issue and grep(".", content, echo=True):
+            url_heuristic.record(call.runtime, tool)
+    except Exception:  # noqa: BLE001 - logging must never deny
+        pass

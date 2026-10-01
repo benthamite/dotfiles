@@ -1,7 +1,8 @@
 # Guard engine: one fast process, then the end of the exemption cycle
 
-Status: cut over 2026-10-01 (both runtimes run the engine; old shell guards
-deleted). The opaque-token log-only change (item 3) lands as the next commit.
+Status: done 2026-10-01. Both runtimes run the engine, the old shell guards
+are deleted (2cacbc26b), and the opaque-token heuristic only logs (item 3, the
+commit after it).
 Approved 2026-10-01 (full scope). Completes items 5 and 6 of
 [2026-09-30-secret-guard-redesign.md](2026-09-30-secret-guard-redesign.md)
 plus the Codex streaming gap. Implemented end to end without intermediate
@@ -16,7 +17,8 @@ check-ins once approved; the stop rules below are the only exceptions.
    restarted, a silent staleness no guard may have.
 2. Every current guard decision preserved, proven by differential testing
    (below), except the single intended change in step 6.
-3. Guard test suite in-process: under 30 s (now ~9 minutes in parallel).
+3. Guard test suite in-process: under 30 s (achieved ~25 s; the shell suite
+   took ~9 minutes in parallel).
 4. Codex output streamed from long-running commands and error results masked.
 5. Opaque-token heuristic and its 42 per-site exemptions no longer deny.
 

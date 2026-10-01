@@ -20,7 +20,7 @@ from types import ModuleType
 from .core import DOTFILES
 
 HOOK_LIBS = ("op-policy", "process-output-policy", "function-body-policy", "inert-mentions",
-             "public-url-scan", "python-heredoc", "untrusted-execution")
+             "python-heredoc", "untrusted-execution")
 BIN_TOOLS = ("github-operation-authorization",)
 
 

@@ -13,15 +13,21 @@ redesign behind it is
 
 ## Rules
 
-1. **No new per-site exemptions.** Do not add entries to `ROUTES` in
-   `lib-public-url-scan.py` or other one-off allowances for a harmless command.
-   `tests/test_secret_guard_scope.py` fails if the registry grows. If a public
-   URL is blocked, fetch it with WebFetch or the browser instead. 63 of 76
-   guard commits from 2026-08-01 to 2026-09-30 were exemptions of this
-   kind; they fixed nothing and made the guard slower.
+1. **No per-site exemptions.** The opaque-token heuristic (a network command
+   carrying a long mixed-class string) no longer denies: where it would have
+   been the only reason, `agent_guard/url_heuristic.py` appends one line
+   (time, runtime, tool, label; never the value or command) to
+   `~/.local/state/agent-guard/heuristic.log`. Its 42-route exemption
+   registry is deleted, and `tests/test_secret_guard_scope.py` fails if one
+   comes back. 63 of 76 guard commits from 2026-08-01 to 2026-09-30 were
+   exemptions of this kind; they fixed nothing and made the guard slower. If a
+   public URL is blocked for another reason, fetch it with WebFetch or the
+   browser instead of adding an allowance.
 2. **Never loosen a check that maps to a real incident** (table below). The
-   heuristic for secret-looking literals in commands maps to none; it is
-   scheduled for removal only via the redesign's log-only trial.
+   opaque-token heuristic mapped to none, which is why it only logs. If the
+   log ever points at a real secret, restore the denial: revert the commit
+   "Guards: the opaque-token heuristic only logs" (`git log --grep`), which
+   brings back the denial, the route registry and their tests, then add the exposure to the table.
 3. **Every new exposure is recorded here** (a row in the table, no values),
    with the path it took. Changes to the guard must say which rows they close.
 4. **Tests must stay fast.** Guard tests call the engine in-process through

@@ -39,7 +39,6 @@ FULL=(
   tests/test_op_policy.py
   tests/test_process_output_guard.py
   tests/test_process_output_policy.py
-  tests/test_public_url_scan.py
   tests/test_python_heredoc_guard.py
   tests/test_redact_tool_output.py
   tests/test_retired_secrets_cli.py

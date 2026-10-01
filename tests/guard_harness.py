@@ -20,6 +20,9 @@ since policies and the secret index read it directly, and CWD is the process
 directory, as the hook's subprocess cwd was. `agent_guard.core.HOME` is fixed at import, so a test that
 changes HOME changes only what policies read from the environment.
 
+The opaque-token heuristic's log (agent_guard.url_heuristic.LOG) goes to a
+fresh temporary file per call; its lines are `GuardResult.heuristic`.
+
 Unless the caller's environment names one, SECRET_INDEX_PATH points at a
 missing file, so no test reads the real known-secret index (or its Keychain
 key).
@@ -33,6 +36,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from unittest import mock
@@ -41,7 +45,7 @@ sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "lib/python"))
 
-from agent_guard import engine  # noqa: E402
+from agent_guard import engine, url_heuristic  # noqa: E402
 from agent_guard.core import CLAUDE, CODEX  # noqa: E402
 
 POLICY_FOR = {
@@ -70,6 +74,7 @@ class GuardResult:
     returncode: int
     stdout: str
     stderr: str
+    heuristic: tuple[str, ...] = ()
 
     def decision(self) -> dict | None:
         """The parsed hookSpecificOutput, or None for a silent allow."""
@@ -123,11 +128,14 @@ def _environment(cwd, env):
 def _main(runtime: str, payload, cwd, env, decide=None) -> GuardResult:
     stdout, stderr = io.StringIO(), io.StringIO()
     patch = mock.patch.object(engine, "decide", decide) if decide else contextlib.nullcontext()
-    with _environment(cwd, env), patch, \
-            mock.patch.object(sys, "stdin", io.StringIO(_stdin_text(payload))), \
-            contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-        returncode = engine.main(runtime)
-    return GuardResult(returncode, stdout.getvalue(), stderr.getvalue())
+    with tempfile.TemporaryDirectory(prefix="guard-heuristic-") as directory:
+        log = Path(directory) / "heuristic.log"
+        with _environment(cwd, env), patch, mock.patch.object(url_heuristic, "LOG", log), \
+                mock.patch.object(sys, "stdin", io.StringIO(_stdin_text(payload))), \
+                contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            returncode = engine.main(runtime)
+        heuristic = tuple(log.read_text().splitlines()) if log.exists() else ()
+    return GuardResult(returncode, stdout.getvalue(), stderr.getvalue(), heuristic)
 
 
 def run_guard(hook, payload, *, runtime: str | None = None, cwd=None, env: dict | None = None) -> GuardResult:

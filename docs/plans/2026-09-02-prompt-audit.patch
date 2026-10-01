@@ -26,7 +26,7 @@ diff -ruN a/.claude/skills/gitguardian-triage/SKILL.md b/.claude/skills/gitguard
  ```
 -The earlier `head -1` shortcut misses every multi-field entry. Always scan the full content.
  
- **Search 3 — Elisp/code references to the matching pass entries.** For each `pass` entry that hit in Search 2, grep code for the **path prefix** (the entry's parent dir), because the actual call site usually concatenates a runtime variable for the leaf:
+ **Search 3 — Elisp/code references to the matching password-manager items.** For each item that hit in Search 2, grep code for the **path prefix** (the entry's parent dir), because the actual call site usually concatenates a runtime variable for the leaf:
  ```bash
 diff -ruN a/.claude/skills/install-mcp-server/SKILL.md b/.claude/skills/install-mcp-server/SKILL.md
 --- a/.claude/skills/install-mcp-server/SKILL.md	2026-08-06 10:28:14
@@ -185,7 +185,7 @@ diff -ruN a/.codex/skills/gitguardian-triage/SKILL.md b/.codex/skills/gitguardia
  ```
 -The earlier `head -1` shortcut misses every multi-field entry. Always scan the full content.
  
- **Search 3 — Elisp/code references to the matching pass entries.** For each `pass` entry that hit in Search 2, grep code for the **path prefix** (the entry's parent dir), because the actual call site usually concatenates a runtime variable for the leaf:
+ **Search 3 — Elisp/code references to the matching password-manager items.** For each item that hit in Search 2, grep code for the **path prefix** (the entry's parent dir), because the actual call site usually concatenates a runtime variable for the leaf:
  ```bash
 diff -ruN a/.codex/skills/install-mcp-server/SKILL.md b/.codex/skills/install-mcp-server/SKILL.md
 --- a/.codex/skills/install-mcp-server/SKILL.md	2026-08-06 10:28:14

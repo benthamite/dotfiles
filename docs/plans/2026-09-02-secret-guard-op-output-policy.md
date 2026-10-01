@@ -24,7 +24,7 @@ so the "program prints its environment" denial is pinned on the dispatcher.
 - Commit `875a20b95` (2026-08-31, "agents: deny direct secret-output commands")
   made `claude/hooks/block-secret-leak.sh` and its Codex twin deny any agent
   shell command whose executable is `op`, `op-automations`, `op-desktop`,
-  `pass`, `security` or `pbpaste`, whatever the subcommand, including
+  the then-current password-manager CLI, `security` or `pbpaste`, whatever the subcommand, including
   `op-automations run`. It rewrote `claude/context/secrets.md`, four READMEs and
   `ai-config-sync.json` to state the new rule, and added tests that pin it.
 - The commit came out of a Codex `$security-audit` session. The owner's
@@ -57,7 +57,7 @@ The brokers `op-automations` and `op-desktop` are the sanctioned access path.
 The guard permits a **closed list of command shapes whose stdout provably
 carries no credential** and denies every other broker invocation, including
 shapes it cannot classify. Raw `op` stays denied (Touch ID routing; the shim
-routes it in interactive shells anyway). `pass`, `security`, `pbpaste` keep
+routes it in interactive shells anyway). The password-manager CLI, `security` and `pbpaste` keep
 today's blanket rule (out of scope, see open decisions).
 
 ### Recognition, fail closed
@@ -156,7 +156,7 @@ runs the case table in `tests/`.
    `tests/test_op_policy.py` (every allow/deny row in this plan, the review's
    adversarial cases, and the decision matrix from revision 1).
 2. **Guards.** In both `block-secret-leak.sh` copies: remove the op family
-   from the blanket-deny sets (`pbpaste|pass|security` stay); call the
+   from the blanket-deny sets (`pbpaste`, `security` and the password-manager CLI stay); call the
    classifier when a broker word is present and emit `deny_op_secret_output`
    with the classifier's reason; keep and extend the `--reveal` detector to
    `op-desktop`; restore the raw-`op` message to the broker advice. Codex:
@@ -173,7 +173,7 @@ runs the case table in `tests/`.
 4. **Tests.** `tests/test_op_policy.py` (new); rewrite the pinned expectations
    in `tests/test_secret_guard_parity.py` and `tests/test_op_automations.py`
    to the table above, keeping every obfuscation, nested-shell, indirection,
-   glob, `pass`/`security`/`pbpaste` and `--reveal` case as deny; add the
+   glob, password-manager CLI/`security`/`pbpaste` and `--reveal` case as deny; add the
    loader cases to `tests/test_claude_bash_pretooluse.py` and the
    sensitive-read tests for the standalone copies; run
    `tests/test_security_hook_hardening.py` and `tests/test_op_routing.py`
@@ -232,8 +232,8 @@ rule as the dispatcher.
 
 ## Open decisions for the owner
 
-- `pass` and `security` remain blanket-denied by the 08-31 rule. The same
-  stdout-based argument applies (`X=$(pass show env/foo)` is the access
+- The password-manager CLI and `security` remain blanket-denied by the 08-31 rule. The same
+  stdout-based argument applies (capturing its output in a variable was the access
   pattern for personal secrets). Left out so this plan stays about 1Password;
   recommend a follow-up on the same allowlist model.
 - Raw `op` remains denied. The zsh shim routes bare `op` to the right broker

@@ -14,7 +14,7 @@ workspaces) without breaking any existing Epoch caller.
 
 ## Token storage
 
-Trajectory tokens are stored in `pass`, following the existing org-prefixed
+Trajectory tokens are stored in a local password-manager entry, following the existing org-prefixed
 session-token model already used by:
 
 - `epoch/slack.com/epochai` — fields `token:` (xoxc) and `cookie:` (xoxd)
@@ -36,7 +36,7 @@ store; session tokens live under org-prefixed paths.
 
 These session tokens do not exist yet — they must be scraped from a logged-in
 Trajectory Labs Slack browser tab (xoxc Bearer token + xoxd `d` cookie) and
-saved via `pass insert -m trajectory/slack.com/trajectorylabs`.
+saved as the multi-line entry `trajectory/slack.com/trajectorylabs`.
 
 ## Design
 
@@ -51,8 +51,8 @@ WORKSPACES = {
         "op_path": "op://Automations/Slack MCP - Epoch Unofficial",
     },
     "trajectory": {
-        "source": "pass",
-        "pass_entry": "trajectory/slack.com/trajectorylabs",
+        "source": "local",
+        "entry": "trajectory/slack.com/trajectorylabs",
         "token_field": "token",   # -> xoxc Bearer token
         "cookie_field": "cookie", # -> xoxd 'd' cookie
     },
@@ -74,13 +74,13 @@ An unknown workspace key exits non-zero with a clear error listing valid keys.
 
 ### Token resolution
 
-- New `_pass_field(entry, field)` helper: runs `pass show <entry>`, finds the
+- New `_entry_field(entry, field)` helper: reads the local entry, finds the
   line beginning `"<field>:"`, returns the trimmed value. Exits non-zero with a
   clear message if the entry or field is missing. Never prints the value.
 - `_tokens()` becomes workspace-aware: looks up the selected workspace in
   `WORKSPACES`; for `source == "op"` reads `<op_path>/xoxc_token` and
-  `<op_path>/xoxd_token` (today's behavior exactly); for `source == "pass"`
-  reads the two `pass` fields. Caching of `_xoxc`/`_xoxd` is preserved.
+  `<op_path>/xoxd_token` (today's behavior exactly); for `source == "local"`
+  reads the two local-entry fields. Caching of `_xoxc`/`_xoxd` is preserved.
 - The selected workspace is stored in a module-level variable set in `main()`
   from `args.workspace`, consumed by `_tokens()`.
 
@@ -107,5 +107,5 @@ branch reads the same 1Password item with the same field names as today.
 
 - Adding more workspaces beyond Epoch and Trajectory (the registry makes this a
   one-entry change later).
-- Migrating Epoch from `op://` to `pass` (left as-is).
+- Migrating Epoch from `op://` to the local password manager (left as-is).
 - Any write operations beyond what `slack.py` already supports.

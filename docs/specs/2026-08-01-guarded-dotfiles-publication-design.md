@@ -232,7 +232,7 @@ identifies every affected unpublished commit, and selects among four remedies:
    committed version and rewrite every affected blob so no plaintext revision
    remains in the outgoing range.
 3. **Externalize:** replace an embedded value with the repository's established
-   `pass`, 1Password, environment, or generated-local-file mechanism and rewrite
+   1Password, environment, or generated-local-file mechanism and rewrite
    all affected commits.
 4. **Allow:** add a narrow, reasoned rule/fingerprint exception for a confirmed
    false positive. Broad path or detector suppression is not allowed merely to
@@ -361,7 +361,7 @@ authorization remain mandatory.
 ## Non-goals
 
 - Concealing ordinary personal information or benign configuration topology.
-- Treating a private repository as a substitute for `pass`, 1Password, or
+- Treating a private repository as a substitute for 1Password or
   proper local secret generation.
 - Making local hooks resistant to an attacker who controls the user's account.
 - Automatically rewriting history that is already public without first

@@ -40,7 +40,7 @@ screenshot.
 | 07-21 | Slack app client/signing secrets | a | Slack create-app API response |
 | 07-28 | Anthropic key | d | screenshot |
 | 07-31 | Anthropic key | d | screenshot of key-reveal dialog |
-| 08-09 | GitHub password, 2FA recovery codes | a | `pass show` behind a partial filter |
+| 08-09 | GitHub password, 2FA recovery codes | a | password-manager CLI read behind a partial filter |
 | 08-12 | OpenAI admin key | d | console page data |
 | 08-18 | Anthropic key | d | screenshot |
 | 08-19 | Asana token (Codex config) | b | file read during diagnosis |

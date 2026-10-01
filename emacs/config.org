@@ -9546,7 +9546,15 @@ contain =AGENTS.md= or =CLAUDE.md=, including directories without Git repositori
   :ensure (:host github
                  :repo "stevemolitor/monet")
   :after claude-code
-  :demand t)
+  :demand t
+  :config
+  ;; Do not report the visited file and selection to Claude Code on every
+  ;; command: it makes Claude Code attach a "⧉ In FILE" context pill to the
+  ;; prompt. Monet has no option for this, so undo its hook registration.
+  (advice-add 'monet-register-hooks :after
+              (lambda (&rest _)
+                (remove-hook 'post-command-hook #'monet--track-selection-change))
+              '((name . my-monet-no-selection-tracking))))
 #+end_src
 
 ** =codex=

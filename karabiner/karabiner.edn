@@ -195,7 +195,7 @@
 
 :templates {:alfred "osascript -e 'tell application \"Alfred 4\" to run trigger \"%s\" in workflow \"%s\" with argument \"%s\"'"
             :open "open \"%s\""
-            :insert "~/My Drive/dotfiles/bin/char_input \"%s\""
+            :insert "\"$HOME/My Drive/dotfiles/bin/char_input\" \"%s\""
             }
 
 :main [

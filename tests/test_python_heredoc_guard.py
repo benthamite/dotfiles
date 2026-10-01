@@ -137,6 +137,20 @@ class PythonProjectionTests(unittest.TestCase):
         tail = "\nbash <<'SH'\n" + heredoc("pass") + "\nSH"
         self.assertEqual(policy.project_command(heredoc("pass") + tail), heredoc("    ") + tail)
 
+    def test_header_suffix_is_kept_and_the_body_projected(self):
+        # A control operator or output redirection after the delimiter leaves
+        # the heredoc a Python program; the suffix itself stays shell text.
+        for suffix in (" | head -3", " |& tee log", " && echo ok", " || true", "; echo ok",
+                       " &", " > out.txt", " 2>&1 | head", " >> log", " &> log"):
+            with self.subTest(suffix=suffix):
+                command = heredoc("pass").replace("<<'PY'", "<<'PY'" + suffix, 1)
+                expected = heredoc("    ").replace("<<'PY'", "<<'PY'" + suffix, 1)
+                self.assertEqual(policy.project_command(command), expected)
+        for suffix in (" x", " <in.txt", " $(date)"):
+            with self.subTest(suffix=suffix):
+                command = heredoc("pass").replace("<<'PY'", "<<'PY'" + suffix, 1)
+                self.assertEqual(policy.project_command(command), command)
+
     def test_shell_text_after_the_terminator_is_never_projected(self):
         for tail in ("\npass", "\nsecurity find-generic-password -w -s fixture", "\npbpaste"):
             command = heredoc("pass", suffix=tail)
@@ -197,6 +211,26 @@ class NativePythonHeredocGuardTests(unittest.TestCase):
                                ("codex", "functions.exec_command"), ("codex", "functions.exec")):
             with self.subTest(provider=provider, tool=tool, command=command):
                 self.assertEqual(self.guard(provider, command, tool), expected)
+
+    def test_piped_heredoc_body_is_not_read_as_shell_words(self):
+        # Follow-up 1 of the 2026-09-30 redesign: with `| head -3` on the
+        # header, a glob in Python source was scanned as an executable glob.
+        body = "def g(p):\n    return p\ny = g('*/**')\nprint(y)"
+        for suffix in ("", " | head -3", " 2>&1 | tail -5", " > out.txt"):
+            with self.subTest(suffix=suffix):
+                self.assert_hooks(heredoc(body).replace("<<'PY'", "<<'PY'" + suffix, 1), "allow")
+        for suffix in (" | security find-generic-password -w -s fixture", "; pbpaste"):
+            with self.subTest(suffix=suffix):
+                self.assert_hooks(heredoc(body).replace("<<'PY'", "<<'PY'" + suffix, 1), "deny")
+
+    def test_header_suffix_disables_the_document_edit_exemption(self):
+        # The document's text could reach a later command through the suffix.
+        command = heredoc('from pathlib import Path\n# security and pbpaste are documented here\n'
+                          'Path("docs/pass.md").write_text("pa" "ss", encoding="utf-8")')
+        self.assert_hooks(command, "allow")
+        for suffix in (" | sh", " | head -3", " > out.txt"):
+            with self.subTest(suffix=suffix):
+                self.assert_hooks(command.replace("<<'PY'", "<<'PY'" + suffix, 1), "deny")
 
     def test_original_incident_shape_and_minimal_pass_are_allowed(self):
         self.assert_hooks(heredoc("try:\n    raise ValueError\nexcept ValueError:\n    pass"), "allow")

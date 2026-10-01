@@ -41,7 +41,9 @@ PYTHON = re.compile(r"python(?:3(?:\.[0-9]+)?)?")
 HEADER = re.compile(
     r"(?P<prefix>.+?)(?<![0-9])<<(?P<strip>-?)[ \t]*"
     r"(?P<quoted>'[A-Za-z_][A-Za-z0-9_]*'|\"[A-Za-z_][A-Za-z0-9_]*\")"
-    r"[ \t]*(?:\#.*)?"
+    # A control operator or output redirection may follow the delimiter on the
+    # header line; that suffix stays in the shell text the outer scan checks.
+    r"[ \t]*(?:(?P<suffix>(?:\|\|?|\|&|&&|;|&|[0-9]*>>?|&>>?)[^\n]*)|\#.*)?"
 )
 
 
@@ -442,7 +444,8 @@ def _project_command(command: str, *, git_shell: bool, allow_document_edit: bool
         # A document could otherwise be executed by a later shell command.
         # This new exception therefore requires a single complete heredoc and
         # a direct literal interpreter invocation, without environment wrappers.
-        document_edit = (allow_document_edit and not any(line.strip() for line in lines[:opener])
+        document_edit = (allow_document_edit and not match["suffix"]
+                         and not any(line.strip() for line in lines[:opener])
                          and not any(line.strip() for line in lines[closing + 1:])
                          and re.fullmatch(r"\s*(?:/[A-Za-z0-9_./-]+/)?python(?:3(?:\.[0-9]+)?)?\s+-\s*",
                                           match["prefix"]) is not None)

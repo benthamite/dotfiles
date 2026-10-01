@@ -64,6 +64,18 @@ class SecretIndexTests(unittest.TestCase):
             self.assertNotIn("horse", raw)
             self.assertEqual(env.path.stat().st_mode & 0o777, 0o600)
 
+    def test_identifiers_are_never_indexed(self):
+        # 2026-10-01: the macOS username, a domain name and author emails were
+        # stored as concealed 1Password fields; indexing them denied every
+        # command naming a home path and masked every commit author.
+        key = os.urandom(32)
+        user = os.environ.get("USER", "someuser")  # excluded by the public-identifier stoplist
+        for value in (str(Path.home()), "stafforini.com", "Pablo Stafforini", "someone@example.org",
+                      "pablo.stafforini", user):
+            with self.subTest(value=value[:6]):
+                self.assertEqual(si.build_entries(key, [(value, "t")]), {}, value[:6])
+        self.assertTrue(si.build_entries(key, [(HEX, "t")]))
+
     def test_short_values_are_not_indexed(self):
         key = os.urandom(32)
         self.assertEqual(si.build_entries(key, [("short-pass", "t")]), {})

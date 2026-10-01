@@ -184,10 +184,53 @@ class Index:
         return "".join(parts), len(spans)
 
 
+def public_strings() -> set[str]:
+    """Identifiers that appear in ordinary output and must never count as secrets.
+
+    2026-10-01: a 1Password item held the macOS username as a concealed field,
+    so every command naming a home-directory path was denied and every path in
+    output masked. These are excluded at build time and pruned by `prune`.
+    """
+    import socket  # noqa: PLC0415
+
+    home = Path.home()
+    out = {os.environ.get("USER", ""), str(home), home.name, socket.gethostname(),
+           socket.gethostname().split(".")[0]}
+    out.update(part for part in home.parts if part != "/")
+    for key in ("user.name", "user.email"):
+        found = subprocess.run(["git", "config", "--global", key], capture_output=True, text=True)
+        value = found.stdout.strip()
+        if value:
+            out.update({value, value.split("@")[0]})
+    return {v for v in out if v}
+
+
+EMAIL = __import__("re").compile(r"^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$")
+
+
+IDENTIFIER = __import__("re").compile(r"^[A-Za-z .@_-]{1,23}$")
+
+
+def plausible_secret(value: str) -> bool:
+    """Shape rule: email addresses, and digit-free values under 24 characters
+    made of letters, spaces and ``.@_-`` (usernames, names, domain names), are
+    identifiers that fill ordinary output, not secrets worth masking.
+
+    2026-10-01: before this rule, items whose concealed fields held a domain
+    name, an author name or an email address matched 2,400 times in commit
+    messages alone.
+    """
+    v = value.strip()
+    return not (EMAIL.match(v) or IDENTIFIER.match(v))
+
+
 def build_entries(key: bytes, values: list[tuple[str, str]]) -> dict[str, list[list]]:
     entries: dict[str, list[list]] = {}
     seen: set[str] = set()
+    public = public_strings()
     for value, label in values:
+        if value.strip() in public or not plausible_secret(value):
+            continue
         for v in variants(value.strip()):
             full = _fp(key, v)
             if full in seen:
@@ -212,6 +255,24 @@ def write(entries: dict[str, list[list]], sources: dict[str, int], path: Path | 
     os.chmod(tmp, 0o600)
     os.replace(tmp, path)
     return path
+
+
+def prune(path: Path | None = None) -> int:
+    """Remove fingerprints of public identifiers from an existing index."""
+    path = path or index_path()
+    key = read_key()
+    data = json.loads(path.read_text())
+    doomed = {_fp(key, v) for p in public_strings() for v in variants(p) | {p}}
+    removed = 0
+    for prefix in list(data["entries"]):
+        kept = [hit for hit in data["entries"][prefix] if hit[1] not in doomed]
+        removed += len(data["entries"][prefix]) - len(kept)
+        if kept:
+            data["entries"][prefix] = kept
+        else:
+            del data["entries"][prefix]
+    write(data["entries"], data.get("sources", {}), path)
+    return removed
 
 
 def add(value: str, label: str, path: Path | None = None) -> int:

@@ -112,25 +112,15 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   :custom
   (org2blog/wp-blog-alist
         `(("Pablo's website"
-           :url "https://www.stafforini.com/xmlrpc.php"
-           :username ,(auth-source-extras-op-get "chrome/stafforini.com/wp-admin/admin" "user")
-           :password ,(auth-source-extras-op-get "chrome/stafforini.com/wp-admin/admin" "password"))
+           :url "https://www.stafforini.com/xmlrpc.php")
           ("Pablo's miscellany"
-           :url "https://www.stafforini.com/blog/xmlrpc.php"
-           :username ,(auth-source-extras-op-get "chrome/stafforini.com/blog/wp-admin/admin" "user")
-           :password ,(auth-source-extras-op-get "chrome/stafforini.com/blog/wp-admin/admin" "password"))
+           :url "https://www.stafforini.com/blog/xmlrpc.php")
           ("notatu dignum"
-           :url "https://www.stafforini.com/quotes/xmlrpc.php"
-           :username ,(auth-source-extras-op-get "chrome/stafforini.com/quotes/wp-admin/admin" "user")
-           :password ,(auth-source-extras-op-get "chrome/stafforini.com/quotes/wp-admin/admin" "password"))
+           :url "https://www.stafforini.com/quotes/xmlrpc.php")
           ("Puro compás"
-           :url "https://www.stafforini.com/tango/xmlrpc.php"
-           :username ,(auth-source-extras-op-get "chrome/stafforini.com/tango/wp-admin/admin" "user")
-           :password ,(auth-source-extras-op-get "chrome/stafforini.com/tango/wp-admin/admin" "password"))
+           :url "https://www.stafforini.com/tango/xmlrpc.php")
           ("EA Quotes"
-           :url "https://eaquotes.net/xmlrpc.php"
-           :username ,(auth-source-extras-op-get "tlon/EAQUOTES/eaquotes.net/wp_admin@eaquotes.net" "user")
-           :password ,(auth-source-extras-op-get "tlon/EAQUOTES/eaquotes.net/wp_admin@eaquotes.net" "password"))))
+           :url "https://eaquotes.net/xmlrpc.php")))
 
   (org2blog/wp-show-post-in-browser 'show)
   (org2blog/wp-track-posts (list paths-file-org2blog "Posts"))
@@ -281,8 +271,7 @@ CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
 (use-package grammarly
   :after tlon
   :custom
-  (grammarly-username tlon-email-shared)
-  (grammarly-password (auth-source-extras-op-get (concat "tlon/core/grammarly.com/" tlon-email-shared) "password")))
+  (grammarly-username tlon-email-shared))
 #+end_src
 
 ** lsp-grammarly
@@ -332,7 +321,6 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
   :init
 
   (setopt semext-provider (make-llm-gemini
-                           :key (auth-source-extras-op-get (concat "tlon/core/aistudio.google.com/" tlon-email-shared) "password")
                            :chat-model "gemini-2.5-pro-preview-03-25")))
 #+end_src
 
@@ -372,17 +360,9 @@ CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
   (require 'consult-web-embark)
   ;; not working
   (require 'consult-web-bing)
-  (setq consult-web-bing-api-key (auth-source-extras-op-get
-                                  (concat "tlon/core/azure.com/" tlon-email-shared) "consult-mu"))
   (require 'consult-web-brave)
-  (setq consult-web-brave-autosuggest-api-key (auth-source-extras-op-get
-                                               (concat "chrome/brave.com/" (getenv "PERSONAL_EMAIL"))
-                                               "consult-mu"))
   (require 'consult-web-google)
   (require 'consult-web-google-autosuggest)
-  (setq consult-web-google-customsearch-key (auth-source-extras-op-get
-                                             (concat "chrome/developers.google.com/" (getenv "PERSONAL_GMAIL"))
-                                             "consult-mu"))
   (setq consult-web-google-customsearch-cx "726594e5b929f4a80")
   (require 'consult-web-gptel)
   (require 'consult-web-wikipedia)
@@ -581,8 +561,6 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
   :defer 5
   :after ledger-mode
   :config
-  (setq ledger-prices-api-key-finnhub (auth-source-extras-op-get "chrome/api.finnhub.io" "password"))
-  (setq ledger-prices-api-key-exchangerates (auth-source-extras-op-get "chrome/api.exchangeratesapi.io" "password"))
   (setq ledger-prices-pricedb-file paths-file-ledger-db))
 #+end_src
 
@@ -1051,7 +1029,6 @@ CLOCK: [2021-03-29 Mon 17:15]--[2021-03-29 Mon 18:09] =>  0:54
   :after org yasnippet
   :commands org-ai-mode
   :config
-  (setq org-ai-openai-api-token (auth-source-extras-op-get (concat "tlon/core/openai.com/" tlon-email-shared) "key"))
   (setq org-ai-default-chat-model "gpt-4")
   (setq org-ai-default-chat-system-prompt "You are a helpful and competent assistant. Please omit any disclaimers")
   (setq org-ai-talk-say-words-per-minute 210)
@@ -1292,9 +1269,7 @@ CLOCK: [2022-06-22 Wed 14:50]--[2022-06-22 Wed 15:10] =>  0:20
   :demand t
   :config
   (setq espotify-service-name "spotify")
-  (setq espotify-use-system-bus-p t)
-  (setq espotify-client-id (auth-source-extras-op-get "auth-sources/spotify" "id"))
-  (setq espotify-client-secret (auth-source-extras-op-get "auth-sources/spotify" "password")))
+  (setq espotify-use-system-bus-p t))
 #+end_src
 
 ** mu4e-contrib
@@ -1497,8 +1472,6 @@ CLOCK: [2021-05-19 Wed 11:26]--[2021-05-19 Wed 12:23] =>  0:57
   :after auth-source-extras
   ;; :defer 600
   :config
-  (setq smudge-oauth2-client-id (auth-source-extras-op-get "auth-sources/spotify" "id"))
-  (setq smudge-oauth2-client-secret (auth-source-extras-op-get "auth-sources/spotify" "password"))
   (setq smudge-player-status-format "[%a - %t ◷ %l]")
   (setq smudge-api-search-limit 100) ; values >100 result in a 400 error
   (setq smudge-status-location nil)
@@ -1554,10 +1527,6 @@ CLOCK: [2021-05-19 Wed 11:26]--[2021-05-19 Wed 12:23] =>  0:57
 (use-package md4rd
   :config
   (setq md4rd-subs-active '(emacs))
-  (setq md4rd--oauth-access-token
-        (auth-source-extras-op-get "auth-sources/reddit" "password"))
-  (setq md4rd--oauth-refresh-token
-        (auth-source-extras-op-get "auth-sources/reddit" "refresh"))
 
   (add-hook 'md4rd-mode-hook #'md4rd-indent-all-the-lines))
 #+end_src
@@ -1638,19 +1607,16 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
     "Start a `twittering-mode' session with the `ea_dot_news' account."
     (interactive)
     (setq twittering-private-info-file (expand-file-name "~/.twittering-mode-ea-news.gpg"))
-    (auth-source-extras-op-get "auth-sources/twitter/ea_dot_news" "password")
     (ps/twittering-reload))
 
   (defun ps/twittering-future-matters ()
     "Start a `twittering-mode' session with the `futurematters_' account."
     (setq twittering-private-info-file (expand-file-name "~/.twittering-mode-future-matters.gpg"))
-    (auth-source-extras-op-get "auth-sources/twitter/futurematters_" "password")
     (ps/twittering-reload))
 
 (defun ps/twittering-anonymous ()
     "Start a `twittering-mode' session with anonymous account."
     (setq twittering-private-info-file (expand-file-name "~/.twittering-mode-anonymous.gpg"))
-    (auth-source-extras-op-get "auth-sources/twitter/anonymous" "password")
     (ps/twittering-reload))
 
   (defun ps/twittering-mode-get-uri ()
@@ -1841,7 +1807,6 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
            :repo "tmalsburg/txl.el")
   :config
   (setq txl-languages '(EN-US . ES))
-  (setq txl-deepl-api-key (auth-source-extras-op-get (concat "tlon/BAE/deepl.com/" ps/tlon-email) "key"))
   (setq txl-deepl-api-url "https://api-free.deepl.com/v2/translate")
 
   :general
@@ -2287,8 +2252,6 @@ CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
   :demand t
   :config
   (setq gptai-model "gpt-4")
-  (setq gptai-username (auth-source-extras-op-get "tlon/core/openai.com" "username"))
-  (setq gptai-api-key (auth-source-extras-op-get "tlon/core/openai.com" "key"))
   )
 #+end_src
 
@@ -2309,8 +2272,7 @@ No longer using ~chatgpt~.
   :elpaca (openai
              :host github
              :repo "emacs-openai/openai")
-  :config
-  (setq openai-key (auth-source-extras-op-get "tlon/core/openai.com" "key")))
+  :config)
 #+end_src
 
 ** chatgpt
@@ -2523,8 +2485,7 @@ CLOCK: [2021-02-05 Fri 19:09]--[2021-02-05 Fri 19:14] =>  0:05
              :repo "junjizhi/aide.el")
   :after request
   :commands aide-openai-complete-region
-  :config
-  (setq openai-api-key (auth-source-extras-op-get "auth-sources/openai.com" "password")))
+  :config)
 #+end_src
 
 ** cape-yasnippet
@@ -3078,7 +3039,6 @@ CLOCK: [2022-06-17 Fri 17:41]--[2022-06-17 Fri 17:55] =>  0:14
   :commands gpt-dwim
 
   :config
-  (setq gpt-openai-key (auth-source-extras-op-get "auth-sources/openai.com" "password"))
   (setq gpt-openai-engine "text-davinci-003")
 
   :general
@@ -3198,8 +3158,6 @@ Not using.
   (setq paradox-column-width-version 13)
   (setq paradox-execute-asynchronously t)
   (setq paradox-hide-wiki-packages t)
-  (setq paradox-github-token
-   (auth-source-extras-op-get "auth-sources/api.github.com" "password"))
   ;; (paradox-enable)
   (remove-hook 'paradox-after-execute-functions #'paradox--report-buffer-print))
 #+end_src
@@ -3623,7 +3581,6 @@ CLOCK: [2021-03-23 Tue 20:26]--[2021-03-23 Tue 21:13] =>  0:47
              :host github
              :repo "isamert/orgmdb.el")
   :config
-  (setq orgmdb-omdb-apikey (auth-source-extras-op-get "auth-sources/omdb" "password"))
   (defun ps/orgdmb-see-movie-in-imdb (&optional arg)
     "Visit the IMDb page of the movie at point.
 

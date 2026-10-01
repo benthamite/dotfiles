@@ -44,6 +44,12 @@ class AiConfigSyncAuditTests(unittest.TestCase):
             Path(self.module.__file__).resolve(),
         )
 
+    def test_command_executable_skips_environment_assignments(self):
+        self.assertEqual(
+            self.module.command_executable("STATUS_DIR=/tmp/x /bin/hook.sh /bin/next.sh activity"),
+            Path("/bin/hook.sh"),
+        )
+
     def test_ai_config_audit_propagates_docs_audit_failure(self):
         with mock.patch.object(
             self.module, "documentation_audit_problems", return_value=["broken docs"]

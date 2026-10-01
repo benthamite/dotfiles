@@ -1155,7 +1155,9 @@ literal Google OAuth credentials into a transcript.
 
 * Verification
 
-After changing shared configuration, run =bin/ai-config-sync audit=. After a
+After changing shared configuration, run =bin/ai-config-sync audit=. Its hook
+check resolves each command's executable after skipping leading =VAR=value=
+assignments and interpreter prefixes. After a
 tracked public skill name or catalog description changes, run
 =bin/docs-audit generate= first. For hook changes, verify the registration in
 =hooks.json= and exercise the real Codex event payload as well as the standalone

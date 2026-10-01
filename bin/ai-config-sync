@@ -3414,9 +3414,14 @@ def command_executable(command: str) -> Path | None:
         parts = shlex.split(command)
     except ValueError:
         return None
-    # Skip interpreter prefixes (e.g. `bash '/path with spaces/hook.sh'`) and
-    # their flags so the script path, not the interpreter name, is checked.
-    while parts and (Path(parts[0]).name in INTERPRETER_TOKENS or parts[0].startswith("-")):
+    # Skip leading environment assignments (e.g. `VAR=value /path/hook.sh`),
+    # interpreter prefixes (e.g. `bash '/path with spaces/hook.sh'`) and their
+    # flags so the script path, not the interpreter name, is checked.
+    while parts and (
+        re.match(r"[A-Za-z_][A-Za-z0-9_]*=", parts[0])
+        or Path(parts[0]).name in INTERPRETER_TOKENS
+        or parts[0].startswith("-")
+    ):
         parts.pop(0)
     if not parts:
         return None

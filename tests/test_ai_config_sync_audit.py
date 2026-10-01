@@ -297,6 +297,29 @@ if os.path.lexists(mode_link) and (
         self.module.audit_tracked_pair_deletions(problems, repo)
         self.assertEqual(1, len(problems))
 
+    def test_audit_allows_hook_deletion_declared_one_sided_in_manifest(self):
+        repo = self.make_repo(["claude/hooks/lib-x.py", "codex/hooks/lib-x.py"])
+        (repo / "codex/hooks/lib-x.py").unlink()
+        declared = {"hooks": [{"name": "lib-x.py", "claude": "claude/hooks/lib-x.py",
+                               "codex": None, "status": "claude-only"}]}
+        problems = []
+        self.module.audit_tracked_pair_deletions(problems, repo, declared)
+        self.assertEqual([], problems)
+
+    def test_audit_rejects_hook_deletion_the_manifest_still_pairs(self):
+        repo = self.make_repo(["claude/hooks/lib-x.py", "codex/hooks/lib-x.py"])
+        (repo / "codex/hooks/lib-x.py").unlink()
+        for entry in (
+            {"name": "lib-x.py", "claude": "claude/hooks/lib-x.py",
+             "codex": "codex/hooks/lib-x.py", "status": "paired"},
+            {"name": "lib-x.py", "claude": None,
+             "codex": "codex/hooks/lib-x.py", "status": "codex-only"},
+        ):
+            with self.subTest(entry=entry):
+                problems = []
+                self.module.audit_tracked_pair_deletions(problems, repo, {"hooks": [entry]})
+                self.assertEqual(1, len(problems))
+
     def test_audit_ignores_deleted_runtime_files(self):
         repo = self.make_repo(
             [

@@ -597,6 +597,9 @@ verification includes parsing the saved entry back to its original field values.
 
 Paired configuration audits allow matching resource deletions within retained
 skills while still rejecting one-sided resource or whole-skill deletions.
+A one-sided hook deletion passes only when the hook's manifest entry is
+not paired and names no file on the deleted side (for example
+=claude-only= with =codex: null=).
 
 Both interactive and programmatic =walk-list= copies use exact input identity
 and locked lifecycle transitions. Native atomic exchange detects displaced-file

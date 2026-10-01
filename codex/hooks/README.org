@@ -4,6 +4,9 @@
 Before changing any secret-protection hook, read
 [[file:../../docs/secret-guard.md][docs/secret-guard.md]]: the incident inventory, the
 rules for changes (no new per-site exemptions) and the approved redesign.
+Run =bin/test-guards= (all guard tests in parallel) before committing a guard
+change. The guards wrap =grep= so that an erroring or unstartable grep aborts
+the hook into a denial instead of reading as "no match".
 
 The closed Python document-edit classifier permits =update= statements on bound
 JSON data with one validated dictionary literal and no keyword arguments.

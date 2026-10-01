@@ -17,6 +17,21 @@ trap 'hook_status=$?; if [ "$hook_status" -ne 0 ] || [ "$hook_bootstrap_complete
   exit 2
 fi' EXIT
 
+# A grep that errors (status 2: a malformed pattern or unreadable input) or
+# cannot start (126/127) would read as "no match" inside an if-condition and
+# silently skip that check. Abort the hook instead; the EXIT trap denies.
+# Status 1 (no match) and signal exits such as SIGPIPE keep their meaning.
+hook_pid=$$
+trap 'exit 2' TERM
+grep() {
+  local grep_status=0
+  command grep "$@" || grep_status=$?
+  case "$grep_status" in
+    2|126|127) kill -TERM "$hook_pid" 2>/dev/null || true; exit 2 ;;
+  esac
+  return "$grep_status"
+}
+
 # shellcheck source=lib-codex-hook-json.sh
 source "$(dirname "$0")/lib-codex-hook-json.sh"
 # shellcheck source=lib-heredoc.sh

@@ -1,6 +1,8 @@
 # Secret guard redesign (proposal, 2026-09-30, revised after review)
 
-Status: approved by Pablo on 2026-09-30. Not yet implemented; start with item 0.
+Status: approved by Pablo on 2026-09-30. Item 0 done on 2026-09-30: suite green,
+`bin/test-guards` runs it in ~10 minutes in parallel (the <30 s target needs
+item 6), and a fail-open on grep errors was fixed. Next: items 1–2.
 
 ## Evidence
 

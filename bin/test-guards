@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Run the agent secret-guard test suite.
+#
+#   test-guards           every guard test, spread across all cores
+#   test-guards --fast    in-process classifier tests only (seconds)
+#   test-guards ARGS...   extra pytest arguments (e.g. -k parity, -x)
+#
+# Most guard tests start the real hook scripts, ~0.5 s each, so a serial run
+# takes over 30 minutes; pytest-xdist (fetched by uv, nothing installed
+# globally) brings that down to a few minutes. See docs/secret-guard.md.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+FAST=(
+  tests/test_op_policy.py
+  tests/test_process_output_policy.py
+  tests/test_public_url_scan.py
+  tests/test_secret_guard_scope.py
+  tests/test_redact_tool_output.py
+)
+FULL=(
+  "${FAST[@]}"
+  tests/test_secret_guard_parity.py
+  tests/test_python_heredoc_guard.py
+  tests/test_op_automations.py
+  tests/test_secret_guard_inert_mentions.py
+  tests/test_env_op_template_policy.py
+  tests/test_secret_guard_network_names.py
+  tests/test_network_activation_projection.py
+  tests/test_block_sensitive_read.py
+  tests/test_inert_text_scans.py
+  tests/test_function_body_guard.py
+  tests/test_security_hook_hardening.py
+  tests/test_process_output_guard.py
+  tests/test_codex_secret_patch_guard.py
+  tests/test_claude_bash_pretooluse.py
+  tests/test_hook_failure_safety.py
+)
+
+if [ "${1:-}" = "--fast" ]; then
+  shift
+  exec python3 -m pytest -q -p no:cacheprovider "${FAST[@]}" "$@"
+fi
+exec uv run --quiet --no-project --with pytest --with pytest-xdist \
+  python -m pytest -q -p no:cacheprovider -n auto --dist worksteal "${FULL[@]}" "$@"

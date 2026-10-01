@@ -20,7 +20,12 @@ Read this before changing any secret-protection hook
 3. **Every new exposure is recorded here** (a row in the table, no values),
    with the path it took. Changes to the guard must say which rows they close.
 4. **Tests must stay fast.** New guard tests call classifiers in-process;
-   add end-to-end hook invocations only to prove wiring.
+   add end-to-end hook invocations only to prove wiring. Run `bin/test-guards`
+   (all guard tests in parallel, ~10 minutes) before committing a guard
+   change; `bin/test-guards --fast` (seconds) while iterating.
+5. **A check that cannot run must deny.** Shell `if ... | grep -q` reads a
+   grep error as "no match"; the guards therefore wrap `grep` so a status of
+   2, 126 or 127 aborts the hook into a denial (`GrepFailureTests`).
 
 ## Incident inventory (agent exposures)
 
@@ -61,4 +66,9 @@ Tally: page/screenshot 9, command output 7, file read 3, **typed literal 0**.
 - The redactor recognises formats, not your actual values: hex Slack secrets,
   passwords in URLs and prefix-less tokens pass.
 - Each Claude Bash call spends ~0.6 s in the guard (~120 subprocesses); the
-  parity test file takes ~26 minutes.
+  full guard suite takes ~10 minutes even in parallel, because each case
+  starts real hook processes. Under 30 seconds needs the single-process
+  rewrite (redesign item 6).
+- Unexplained: on 2026-09-30 one Codex network-guard case was allowed once
+  while 19 test files ran concurrently; it did not recur in 120 parallel
+  runs or under process limits. If it recurs, keep the guard's stderr.

@@ -1168,5 +1168,44 @@
   (should-not (org-extras-id--update-excluded-p
                "/Users/x/My Drive/Epoch/projects/onboarding/onboarding.org")))
 
+;;;; Epoch meetings
+
+(ert-deftest org-extras-test-epoch-doc-id-from-url-and-bare-id ()
+  "Extract a Google Doc ID from a Docs URL or a bare ID."
+  (let ((id "1SyntheticDocIdForTestsOnly0000000000000000"))
+    (should (equal (org-extras-epoch-doc-id
+                    (concat "https://docs.google.com/document/d/" id "/edit?tab=t.0"))
+                   id))
+    (should (equal (org-extras-epoch-doc-id
+                    (concat "https://docs.google.com/document/u/1/d/" id "/"))
+                   id))
+    (should (equal (org-extras-epoch-doc-id (concat " " id "\n")) id))
+    (should-not (org-extras-epoch-doc-id "not-a-doc"))
+    (should-not (org-extras-epoch-doc-id "https://example.com/document/d/x"))))
+
+(ert-deftest org-extras-test-epoch-find-meeting-matches-any-doc-property ()
+  "Find the meeting note whose property records the Doc ID."
+  (let* ((dir (make-temp-file "org-extras-meetings-" t))
+         (org-extras-epoch-meetings-directory (file-name-as-directory dir))
+         (note (expand-file-name "maria/2026-09-01.org" dir)))
+    (unwind-protect
+        (progn
+          (make-directory (file-name-directory note) t)
+          (with-temp-file (expand-file-name "other.org" dir)
+            (insert "* Other\n:PROPERTIES:\n:GEMINI_DOC_ID: otherdoc\n:END:\n"))
+          (with-temp-file note
+            (insert "#+title: 1:1\n\n* Meeting\n:PROPERTIES:\n"
+                    ":GOOGLE_DOC_ID: abcdefghijklmnopqrstuvwxyz\n:END:\n"))
+          (let ((match (org-extras-epoch-find-meeting "abcdefghijklmnopqrstuvwxyz")))
+            (should (equal (car match) note))
+            (should (equal (cdr match) 38)))
+          (should-not (org-extras-epoch-find-meeting "abcdefghijklmnopqrstuvwxy")))
+      (delete-directory dir t))))
+
+(ert-deftest org-extras-test-epoch-find-meeting-without-directory ()
+  "Return nil when the meetings directory does not exist."
+  (let ((org-extras-epoch-meetings-directory "/nonexistent/org-extras-meetings/"))
+    (should-not (org-extras-epoch-find-meeting "abcdefghijklmnopqrstuvwxyz"))))
+
 (provide 'org-extras-test)
 ;;; org-extras-test.el ends here

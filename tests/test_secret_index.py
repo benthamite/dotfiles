@@ -70,8 +70,9 @@ class SecretIndexTests(unittest.TestCase):
         # command naming a home path and masked every commit author.
         key = os.urandom(32)
         user = os.environ.get("USER", "someuser")  # excluded by the public-identifier stoplist
+        slug = "some-org/" + "some-repository-name"  # 2026-10-01: an owner/repo slug was indexed
         for value in (str(Path.home()), "stafforini.com", "Pablo Stafforini", "someone@example.org",
-                      "pablo.stafforini", user):
+                      "pablo.stafforini", user, slug, "github.com:org/repo"):
             with self.subTest(value=value[:6]):
                 self.assertEqual(si.build_entries(key, [(value, "t")]), {}, value[:6])
         self.assertTrue(si.build_entries(key, [(HEX, "t")]))

@@ -184,6 +184,35 @@ class Index:
         return "".join(parts), len(spans)
 
 
+def repository_names() -> set[str]:
+    """owner/repo slugs and names of local clones' remotes: public, and common
+    in commands and output."""
+    import re  # noqa: PLC0415
+
+    names: set[str] = set()
+    roots = [Path.home() / "repos", Path.home() / "repos/epoch", Path.home() / "My Drive/dotfiles"]
+    for root in roots:
+        candidates = [root] if (root / ".git").exists() else list(root.glob("*")) if root.is_dir() else []
+        for repo in candidates:
+            if not (repo / ".git").exists():
+                continue
+            found = subprocess.run(["git", "-C", str(repo), "remote", "-v"], capture_output=True, text=True)
+            for url in re.findall(r"\s(\S+)\s\(fetch\)", found.stdout):
+                m = re.search(r"[:/]([^/:]+/[^/]+?)(?:\.git)?$", url)
+                if m:
+                    names.update({m.group(1), m.group(1).split("/")[1]})
+    # Repositories of the accounts and organisations gh is signed in to,
+    # including ones not cloned here (read-only API; skipped when gh fails).
+    owners = subprocess.run(["gh", "api", "user/orgs", "--jq", ".[].login"], capture_output=True, text=True)
+    me = subprocess.run(["gh", "api", "user", "--jq", ".login"], capture_output=True, text=True)
+    for owner in set(owners.stdout.split()) | set(me.stdout.split()):
+        listed = subprocess.run(["gh", "repo", "list", owner, "--limit", "2000", "--json", "nameWithOwner",
+                                 "--jq", ".[].nameWithOwner"], capture_output=True, text=True, timeout=120)
+        for slug in listed.stdout.split():
+            names.update({slug, slug.split("/")[-1]})
+    return names
+
+
 def public_strings() -> set[str]:
     """Identifiers that appear in ordinary output and must never count as secrets.
 
@@ -197,6 +226,7 @@ def public_strings() -> set[str]:
     out = {os.environ.get("USER", ""), str(home), home.name, socket.gethostname(),
            socket.gethostname().split(".")[0]}
     out.update(part for part in home.parts if part != "/")
+    out.update(repository_names())
     for key in ("user.name", "user.email"):
         found = subprocess.run(["git", "config", "--global", key], capture_output=True, text=True)
         value = found.stdout.strip()
@@ -209,6 +239,9 @@ EMAIL = __import__("re").compile(r"^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$")
 
 
 IDENTIFIER = __import__("re").compile(r"^[A-Za-z .@_-]{1,23}$")
+# owner/repo slugs, host:path and other digit-free names (2026-10-01: a
+# 1Password field held a GitHub owner/repo slug).
+NAME_PATH = __import__("re").compile(r"^[A-Za-z][A-Za-z._-]*([/:][A-Za-z._-]+)+$")
 
 
 def plausible_secret(value: str) -> bool:
@@ -221,7 +254,7 @@ def plausible_secret(value: str) -> bool:
     messages alone.
     """
     v = value.strip()
-    return not (EMAIL.match(v) or IDENTIFIER.match(v))
+    return not (EMAIL.match(v) or IDENTIFIER.match(v) or (len(v) <= 64 and NAME_PATH.match(v)))
 
 
 def build_entries(key: bytes, values: list[tuple[str, str]]) -> dict[str, list[list]]:

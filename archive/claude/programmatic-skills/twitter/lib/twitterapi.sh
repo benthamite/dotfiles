@@ -49,15 +49,11 @@ resolve_tlon_twitterapi_key() {
     printf '%s\n' "$TWITTERAPI_API_KEY_TLON"
     return
   fi
-  pass show env/TWITTERAPI_API_KEY_TLON
+  "$HOME/My Drive/dotfiles/bin/op-automations" @personal read "op://Automation/TWITTERAPI_API_KEY_TLON/credential"
 }
 
 op_read_automations() {
-  if [[ -n "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]]; then
-    op read "$1"
-    return
-  fi
-  OP_SERVICE_ACCOUNT_TOKEN="$(pass show epoch/1password-service-account-token)" op read "$1"
+  "$HOME/My Drive/dotfiles/bin/op-automations" read "$1"
 }
 
 resolve_epoch_twitterapi_key() {

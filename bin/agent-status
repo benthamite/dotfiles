@@ -2,5 +2,18 @@
 # Publish agent-authored status through the active Emacs package checkout.
 set -euo pipefail
 script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
-helper=$("$script_dir/elpaca-package-path" agent bin/agent-status)
-exec "$helper" "$@"
+errors=$(mktemp)
+trap 'rm -f "$errors"' EXIT
+# Locating the checkout queries Emacs, and a briefly stalled Emacs refuses
+# connections outright; retry those refusals as the helper itself does.
+for delay in 0.5 1 2 4 ""; do
+  if helper=$("$script_dir/elpaca-package-path" agent bin/agent-status 2>"$errors"); then
+    rm -f "$errors"
+    exec "$helper" "$@"
+  fi
+  if [ -z "$delay" ] || ! grep -qE "can't connect|error accessing socket" "$errors"; then
+    cat "$errors" >&2
+    exit 1
+  fi
+  sleep "$delay"
+done

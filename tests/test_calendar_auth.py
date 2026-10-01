@@ -19,15 +19,18 @@ class CalendarAuthTests(unittest.TestCase):
     def test_broker_read_never_invokes_raw_op(self):
         with mock.patch.object(calendar.auth.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "grant\n")) as run:
             self.assertEqual(calendar.auth._op_read("op://Automations/item/credential"), "grant")
-            self.assertEqual(run.call_args.args[0], ["op-automations", "cache", "read", "op://Automations/item/credential"])
+            self.assertEqual(run.call_args.args[0], [calendar.auth.BROKER,"cache", "read", "op://Automations/item/credential"])
             self.assertEqual(run.call_args.kwargs["timeout"], 45)
+
+    def test_broker_is_addressed_by_path_not_by_name(self):
+        self.assertEqual(calendar.auth.BROKER, str(ROOT / "bin/op-automations"))
 
     def test_personal_items_use_the_cached_broker_read(self):
         with mock.patch.object(calendar.auth.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "client\n")) as run:
             self.assertEqual(calendar.auth._personal_automation("google-workspace-client-id"), "client")
             self.assertEqual(
                 run.call_args.args[0],
-                ["op-automations", "@personal", "cache", "read", "op://Automation/google-workspace-client-id/password"],
+                [calendar.auth.BROKER,"@personal", "cache", "read", "op://Automation/google-workspace-client-id/password"],
             )
 
     def test_forget_drops_every_epoch_credential_once(self):
@@ -36,9 +39,9 @@ class CalendarAuthTests(unittest.TestCase):
         self.assertEqual(
             [call.args[0] for call in run.call_args_list],
             [
-                ["op-automations", "@personal", "cache", "forget", "op://Automation/google-workspace-client-id/password"],
-                ["op-automations", "@personal", "cache", "forget", "op://Automation/google-workspace-client-secret/password"],
-                ["op-automations", "cache", "forget", calendar.auth.REFRESH_TOKEN_OP["epoch"]],
+                [calendar.auth.BROKER,"@personal", "cache", "forget", "op://Automation/google-workspace-client-id/password"],
+                [calendar.auth.BROKER,"@personal", "cache", "forget", "op://Automation/google-workspace-client-secret/password"],
+                [calendar.auth.BROKER,"cache", "forget", calendar.auth.REFRESH_TOKEN_OP["epoch"]],
             ],
         )
 

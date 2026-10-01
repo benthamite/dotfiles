@@ -23,6 +23,11 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from pathlib import Path
+
+# LaunchAgents that call gmail.py run without the dotfiles bin on PATH, so the
+# broker is addressed by its location in this checkout, not by name.
+BROKER = str(Path(__file__).resolve().parents[2] / "bin" / "op-automations")
 
 TOKEN_URL = "https://oauth2.googleapis.com/token"
 
@@ -59,7 +64,7 @@ def _personal_ref(title):
 
 def _broker_cache(selector, verb, ref):
     return subprocess.run(
-        ["op-automations", *selector, "cache", verb, ref],
+        [BROKER, *selector, "cache", verb, ref],
         capture_output=True,
         check=False,
         text=True,

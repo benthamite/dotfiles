@@ -8,7 +8,8 @@ Google Workspace helpers resolve Epoch OAuth credentials through
 minutes do not exhaust the personal 1Password account's daily request quota; a
 grant or client Google rejects is forgotten from the cache and read fresh once,
 and =update-gworkspace-refresh-token= forgets the old token after storing a new
-one. Calendar uses =gcalcli-epoch=, which validates the canonical
+one. The helpers call the broker by its path in this checkout, because the
+LaunchAgents that use them do not put the dotfiles =bin= on =PATH=. Calendar uses =gcalcli-epoch=, which validates the canonical
 grant and atomically refreshes gcalcli's credential cache before each operation.
 This prevents a separately expired Calendar grant from blocking automation.
 The =gmail.py --account personal whoami= command verifies the authenticated

@@ -342,127 +342,32 @@
   ],
   "hooks": [
     {
-      "name": "block-destructive-command.sh",
-      "claude": "claude/hooks/block-destructive-command.sh",
-      "codex": "codex/hooks/block-destructive-command.sh",
-      "status": "paired-dispatched",
-      "note": "Codex registers this script directly; Claude inlines the same logic in pretooluse-bash.sh so its Bash matcher emits one decision. Change and test both implementations together. Decisions are allow or deny, never approval prompts; ALLOW_CLONE=1 is the narrow clone override. Codex normalizes supported shell-tool payloads with lib-codex-hook-json.sh. Operational details live in both hook READMEs.",
-      "equivalence": "Identical apart from the payload-normalization preamble; Claude's live behaviour comes from the inlined copy in pretooluse-bash.sh, not from this file."
-    },
-    {
-      "name": "block-dirty-tree-rewrite.sh",
-      "claude": "claude/hooks/block-dirty-tree-rewrite.sh",
-      "codex": "codex/hooks/block-dirty-tree-rewrite.sh",
-      "status": "paired",
-      "note": "Blocks filter-repo and filter-branch only when the resolved target has staged or unstaged tracked changes; untracked files are deliberately ignored. Resolution uses git -C, then the last applicable cd, then the hook cwd. Heredoc bodies are masked, and ALLOW_DIRTY_REWRITE=1 is the explicit override. Codex normalizes supported shell-tool payloads; the scripts are otherwise paired. Details live in both hook READMEs.",
-      "equivalence": "Identical apart from the payload-normalization preamble documented above."
-    },
-    {
-      "name": "block-elpaca-dotfiles-edit.sh",
-      "claude": "claude/hooks/block-elpaca-dotfiles-edit.sh",
-      "codex": "codex/hooks/block-elpaca-dotfiles-edit.sh",
-      "status": "paired",
-      "note": "paired for apply_patch/Edit/Write path guards"
-    },
-    {
-      "name": "block-elpaca-rebuild-uncommitted.sh",
-      "claude": "claude/hooks/block-elpaca-rebuild-uncommitted.sh",
-      "codex": "codex/hooks/block-elpaca-rebuild-uncommitted.sh",
-      "status": "paired-dispatched",
-      "note": "paired for Bash emacsclient guard; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
-    },
-    {
-      "name": "block-github-write-command.sh",
-      "claude": "claude/hooks/block-github-write-command.sh",
-      "codex": "codex/hooks/block-github-write-command.sh",
-      "status": "paired-dispatched",
-      "note": "paired GitHub write gate for shell commands; blocks git pushes and recognized mutating gh operations unless the target repo matches an exact OWNER/REPO entry or OWNER/* account wildcard in agents/github-write-allowlist.txt. Codex independently classifies literal nested functions.exec exec_command records and denies ambiguous records via the shared lib-codex-hook-json.sh parser; its directly registered entry blocks bootstrap failures with exit 2. Claude delegates through pretooluse-bash.sh, which already converts delegated failures into denials."
-    },
-    {
       "name": "lib-public-url-scan.py",
       "claude": "claude/hooks/lib-public-url-scan.py",
-      "codex": "codex/hooks/lib-public-url-scan.py",
-      "status": "paired-utility",
-      "note": "Identical verified-route registry and literal curl/wget URL-operand classifier. Unknown syntax retains conservative scanning; payloads and raw/decoded URL tails stay scanned. Emits sanitized field/rule labels; tested by tests/test_public_url_scan.py."
-    },
-    {
-      "name": "block-secret-leak.sh",
-      "claude": "claude/hooks/block-secret-leak.sh",
-      "codex": "codex/hooks/block-secret-leak.sh",
-      "status": "paired-dispatched",
-      "note": "Claude delegates Bash; Codex extracts functions.exec calls. Both deny credential tools, classify brokers with lib-op-policy.py and permit closed Python document edits. Codex permits those edits only in a complete literal wrapper; decoded commands and original secret values remain scanned. Only Codex accepts apply_patch: lib-codex-paths.sh scopes exceptions per destination and denies moves out of secret files. Claude native Write/Edit/NotebookEdit policy and both registrations are unchanged."
+      "codex": null,
+      "status": "claude-only",
+      "note": "Verified-route registry and literal curl/wget URL-operand classifier for agent_guard.policies.secret_leak. Unknown syntax keeps conservative scanning; payloads and raw/decoded URL tails stay scanned. Tested by tests/test_public_url_scan.py. The shared guard engine (lib/python/agent_guard, classifiers.py) loads this copy in-process for both runtimes; the Codex copy was removed at the 2026-10-01 cutover."
     },
     {
       "name": "lib-process-output-policy.py",
       "claude": "claude/hooks/lib-process-output-policy.py",
-      "codex": "codex/hooks/lib-process-output-policy.py",
-      "status": "paired-utility",
-      "note": "Identical process-output classifier. Both secret guards deny process argument/environment listings before permissive branches; Codex checks decoded nested exec commands. Safe PID/name diagnostics remain available."
+      "codex": null,
+      "status": "claude-only",
+      "note": "Process-output classifier for agent_guard.policies.secret_leak: denies process argument/environment listings before permissive branches, including decoded Codex nested exec commands. Safe PID/name diagnostics remain available. The shared guard engine (lib/python/agent_guard, classifiers.py) loads this copy in-process for both runtimes; the Codex copy was removed at the 2026-10-01 cutover."
     },
     {
       "name": "lib-function-body-policy.py",
       "claude": "claude/hooks/lib-function-body-policy.py",
-      "codex": "codex/hooks/lib-function-body-policy.py",
-      "status": "paired-utility",
-      "note": "Identical shell-introspection classifier. Both secret guards deny printing shell function bodies (which/where/whence -c/type on a function, functions, typeset -f, $functions); Codex checks decoded nested exec commands. Claude additionally wraps introspection output through redact-secrets.sh; Codex has no output redactor, so the denial is its only layer."
+      "codex": null,
+      "status": "claude-only",
+      "note": "Shell-introspection classifier for agent_guard.policies.secret_leak: denies printing shell function bodies (which/whence -c/type on a function, functions, typeset -f, $functions), including decoded Codex nested exec commands. The shared guard engine (lib/python/agent_guard, classifiers.py) loads this copy in-process for both runtimes; the Codex copy was removed at the 2026-10-01 cutover."
     },
     {
       "name": "lib-op-policy.py",
       "claude": "claude/hooks/lib-op-policy.py",
-      "codex": "codex/hooks/lib-op-policy.py",
-      "status": "paired",
-      "note": "identical 1Password broker output classifier called by both block-secret-leak.sh copies; tests/test_op_policy.py asserts byte-identity and runs the shared case table against both copies."
-    },
-    {
-      "name": "block-unguarded-ahrefs-api.sh",
-      "claude": "claude/hooks/block-unguarded-ahrefs-api.sh",
-      "codex": "codex/hooks/block-unguarded-ahrefs-api.sh",
-      "status": "paired-dispatched",
-      "note": "paired raw Ahrefs API guards; the Codex side accepts Bash, exec_command, functions.exec, and functions.exec_command events. Allows the free subscription-info quota endpoint and the ahrefs-api-guard wrapper, and blocks paid api.ahrefs.com shell calls that have not checked the live workspace reserve"
-    },
-    {
-      "name": "block-sensitive-read.sh",
-      "claude": "claude/hooks/block-sensitive-read.sh",
-      "codex": "codex/hooks/block-sensitive-read.sh",
-      "status": "paired",
-      "note": "paired; Codex side gates Bash, exec_command, functions.exec, and functions.exec_command sensitive-path reads and includes a Read branch for future tool-name compatibility, with Codex deny decisions replacing Claude ask decisions"
-    },
-    {
-      "name": "block-texi-edit.sh",
-      "claude": "claude/hooks/block-texi-edit.sh",
-      "codex": "codex/hooks/block-texi-edit.sh",
-      "status": "paired",
-      "note": "paired for apply_patch/Edit/Write path guards"
-    },
-    {
-      "name": "block-retired-secrets-cli.py",
-      "claude": "claude/hooks/block-retired-secrets-cli.py",
-      "codex": "codex/hooks/block-retired-secrets-cli.py",
-      "status": "paired",
-      "note": "Thin entry points for the shared policy in lib/python/retired_secrets_cli.py. Deny new text and shell commands that refer to the secrets CLI that 1Password replaced; removals and read-only searches stay allowed. Claude registers it for Bash and Edit|Write|NotebookEdit; Codex for its shell tools and apply_patch|Edit|Write.",
-      "equivalence": "Identical apart from the docstring naming the runtime's matchers."
-    },
-    {
-      "name": "block-unregistered-launchagent.sh",
-      "claude": "claude/hooks/block-unregistered-launchagent.sh",
-      "codex": "codex/hooks/block-unregistered-launchagent.sh",
-      "status": "paired",
-      "note": "Routes LaunchAgent changes through ~/repos/launchd, denying hand-installed plists in ~/Library/LaunchAgents and launchctl bootstrap/load/enable/submit and bootout/unload/disable/remove; the denial names bin/launchd-install.py. Read-only inspection stays allowed, as does anything routed through that installer. Heredoc bodies are masked so a quoted path is not read as an invocation. ALLOW_LAUNCHAGENT_CHANGE=1 is the narrow authorized-change override. Claude reads tool_input file_path and command; Codex uses lib-codex-paths.sh and codex_shell_command. Details in both hook READMEs.",
-      "equivalence": "Identical apart from the payload-extraction preamble documented above."
-    },
-    {
-      "name": "block-walk-list-access.sh",
-      "claude": "claude/hooks/block-walk-list-access.sh",
-      "codex": "codex/hooks/block-walk-list-access.sh",
-      "status": "paired",
-      "note": "paired; Codex version scans Bash, exec_command, functions.exec, functions.exec_command, and apply_patch paths via lib-codex-hook-json.sh. The Read|Grep|Glob|NotebookEdit branches in the case statement are unreachable on the Codex side (Codex does not dispatch those tool names) but are kept for structural parity with the Claude counterpart; documented in the script header."
-    },
-    {
-      "name": "block-long-pipeline-run-unchecked.sh",
-      "claude": "claude/hooks/block-long-pipeline-run-unchecked.sh",
       "codex": null,
       "status": "claude-only",
-      "note": "Claude PreToolUse Bash gate blocking long consensus-trader pipeline launches (setup_db.py --full/--target, refresh_data.sh) unless the tree is clean, checkpointing is on, and PREFLIGHT=ok is set. Project-scoped to the consensus-trader repo. No Codex counterpart: the pipeline is driven from Claude Code."
+      "note": "1Password broker output-policy classifier for agent_guard.policies.secret_leak and github_write: allows an op-automations/op-desktop invocation only when its stdout cannot carry a credential; unmatched shapes are denied. Tested by tests/test_op_policy.py. The shared guard engine (lib/python/agent_guard, classifiers.py) loads this copy in-process for both runtimes; the Codex copy was removed at the 2026-10-01 cutover."
     },
     {
       "name": "elpaca-run.sh",
@@ -490,49 +395,35 @@
       "claude": null,
       "codex": "codex/hooks/lib-codex-hook-json.sh",
       "status": "codex-only",
-      "note": "Codex payload/functions.exec normalizer: preserves UTF-16 surrogate pairs and rejects ambiguous fields, lone surrogates and NULs. A separate closed literal-wrapper grammar limits document-edit exemptions to one complete call with inert metadata. The secret guard checks extraction status and every context. Recovers workdir only from a unique parent call. Claude uses native payloads but sources the shared Git classifier for paired live trackers; unknown syntax stays conservative."
+      "note": "Codex payload/functions.exec normalizer for the remaining shell hooks (lib-codex-paths.sh, require-codex-readme-update.sh) and the shared Git invocation classifier that both commit-file-selection.py copies call. The guard engine uses its Python port, agent_guard.codex_payload."
     },
     {
       "name": "lib-codex-paths.sh",
       "claude": null,
       "codex": "codex/hooks/lib-codex-paths.sh",
       "status": "codex-only",
-      "note": "Codex apply_patch path extraction helper; uses lib-codex-hook-json.sh for object-or-string payload normalization, and includes native Write.content and Edit.new_string in secret scans. Secret scanning validates native patch framing, keeps all nonexempt file sections, and denies moves from exempt to ordinary destinations without reading source contents. Native Write/Edit exceptions remain scoped to their single destination. Claude has no apply_patch entrypoint and reads its native edit and notebook fields directly."
-    },
-    {
-      "name": "lib-heredoc.sh",
-      "claude": "claude/hooks/lib-heredoc.sh",
-      "codex": "codex/hooks/lib-heredoc.sh",
-      "status": "paired-utility",
-      "note": "Identical heredoc-aware masking helper for the secret-leak and sensitive-read guards: heredoc bodies fed to a known data sink are dropped from command-word scans; bodies fed to shells, interpreters, or pipelines stay in the scan."
+      "note": "Codex apply_patch/Edit/Write path extraction for the remaining shell hooks (load-elisp-after-edit.sh, regenerate-manual-after-edit.sh, remind-claude-readme-update.sh). The guard engine uses its Python port, agent_guard.codex_paths."
     },
     {
       "name": "lib-python-heredoc.py",
       "claude": "claude/hooks/lib-python-heredoc.py",
       "codex": "codex/hooks/lib-python-heredoc.py",
       "status": "paired-utility",
-      "note": "Identical classifier for quoted Python stdin in secret-output guards. Exempts actual Pass statements and closed document or literal .py writers in one standalone direct heredoc. Generated source is rechecked with writer exemptions disabled; only its supplying Constant is exempted outside. All imports, bindings and calls must match; unknown shapes stay conservative. Only classified bodies leave shell scanning. Other secret checks retain original input. Assumes normal interpreter/stdlib resolution; not a sandbox."
+      "note": "Classifier for quoted Python stdin heredocs. The guard engine loads the Claude copy (agent_guard.policies.secret_leak) and the Codex copy (Git projection in agent_guard.codex_payload, as lib-codex-hook-json.sh does). Unknown shapes stay conservative; not a sandbox."
     },
     {
       "name": "lib-inert-mentions.py",
       "claude": "claude/hooks/lib-inert-mentions.py",
-      "codex": "codex/hooks/lib-inert-mentions.py",
-      "status": "paired-utility",
-      "note": "Identical projection used by both block-secret-leak.sh copies once a protected tool name (pbpaste, pass, security) appears in quoted-literal-masked command text: the name is masked only when it is a plain argument of a read-only text tool (grep, rg, wc, cat, ls, git log/show/...), so searches and listings are not denied as credential reads. Command words, shell/xargs/find/env arguments, =-joined values and git with -c or a writing subcommand are left for the fail-closed rules."
-    },
-    {
-      "name": "lib-op-policy.py",
-      "claude": "claude/hooks/lib-op-policy.py",
-      "codex": "codex/hooks/lib-op-policy.py",
-      "status": "paired-utility",
-      "note": "Identical 1Password broker output-policy helper for the secret-leak guards: classifies an op-automations/op-desktop invocation as allow or deny by whether its stdout can carry a credential; unmatched shapes are denied."
+      "codex": null,
+      "status": "claude-only",
+      "note": "Projection for agent_guard.policies.secret_leak: masks a protected tool name (pbpaste, pass, security) only as a plain argument of a read-only text tool, so searches and listings are not denied as credential reads; other positions stay fail-closed. The shared guard engine (lib/python/agent_guard, classifiers.py) loads this copy in-process for both runtimes; the Codex copy was removed at the 2026-10-01 cutover."
     },
     {
       "name": "lib-repo-root.sh",
       "claude": "claude/hooks/lib-repo-root.sh",
       "codex": "codex/hooks/lib-repo-root.sh",
       "status": "paired-utility",
-      "note": "Shared repo-root helper copied for hooks that need command-context git roots. The Codex copy additionally asks lib-codex-hook-json.sh for an exact unambiguous parent functions.exec workdir when a nested Bash event omits it; Claude receives its native command context directly."
+      "note": "Repo-root helper for the commit gates (require-doc-update.sh, require-readme-update.sh, require-codex-readme-update.sh). The Codex copy also asks lib-codex-hook-json.sh for an unambiguous parent functions.exec workdir. The guard engine's port is agent_guard.repo."
     },
     {
       "name": "lib-staged-files.sh",
@@ -570,13 +461,6 @@
       "note": "Claude Stop event wrapper; Codex routes Stop through codex-hook-wrapper directly."
     },
     {
-      "name": "pretooluse-bash.sh",
-      "claude": "claude/hooks/pretooluse-bash.sh",
-      "codex": null,
-      "status": "claude-only",
-      "note": "Claude Bash PreToolUse dispatcher in ~/.claude/settings.json. Runs cheap guards in-process and delegates heavier git/filesystem checks, including GitHub writes, to standalone hooks. Bootstrap failures block with exit 2; delegated failures, malformed JSON, and interactive approvals deny. Rewrites replace only command in the full tool_input, preserving timeout/run_in_background. Codex registers shell hooks directly in codex/hooks.json; its security guards also block bootstrap failures, without a Bash rewrite or delegated-response aggregator."
-    },
-    {
       "name": "regenerate-manual-after-edit.sh",
       "claude": "claude/hooks/regenerate-manual-after-edit.sh",
       "codex": "codex/hooks/regenerate-manual-after-edit.sh",
@@ -602,7 +486,7 @@
       "claude": "claude/hooks/redact-secrets.sh",
       "codex": null,
       "status": "claude-only",
-      "note": "Claude Bash output redaction filter used by wrap-bash-output.sh; Codex does not use this Bash command-rewrite hook path."
+      "note": "Bash output redaction filter. The guard engine's output wrapping (agent_guard.policies.dispatcher for Claude, codex_wrap for Codex) pipes credential-prone commands through this one copy for both runtimes."
     },
     {
       "name": "remind-ai-config-sync.sh",
@@ -631,13 +515,6 @@
       "codex": null,
       "status": "claude-only",
       "note": "Documentation commit gate. Runs for both agents from the global Git pre-commit hook through claude/bin/agent-commit-gates, which passes a canonical git commit so the staged files are read from the index."
-    },
-    {
-      "name": "require-elisp-skill.sh",
-      "claude": "claude/hooks/require-elisp-skill.sh",
-      "codex": null,
-      "status": "unsupported-or-replaced",
-      "note": "Depends on Claude Skill PostToolUse markers; Codex has no matching Skill hook event in this setup."
     },
     {
       "name": "require-readme-update.sh",
@@ -675,13 +552,6 @@
       "note": "Depends on Claude Skill PostToolUse events; Codex has no matching Skill hook event in this setup."
     },
     {
-      "name": "wrap-bash-output.sh",
-      "claude": "claude/hooks/wrap-bash-output.sh",
-      "codex": null,
-      "status": "claude-only",
-      "note": "Claude PreToolUse Bash command wrapper that pipes output through redact-secrets.sh and preserves non-command Bash tool_input fields when emitting replacement-style updatedInput; Codex does not use this Bash command-rewrite hook path."
-    },
-    {
       "name": "cr-skill-routing-reminder.sh",
       "claude": "claude/hooks/cr-skill-routing-reminder.sh",
       "codex": null,
@@ -703,25 +573,11 @@
       "note": "Claude-only PreToolUse gate registered in each reasoning-tasks worktree's untracked settings.local.json. It blocks issue-comment posting when a newer comment has not been acknowledged, includes the newest comment in the denial, and intentionally fails open on API errors. Codex posting is routed to Claude. Details live in claude/hooks/README.org."
     },
     {
-      "name": "block-untrusted-execution.sh",
-      "claude": "claude/hooks/block-untrusted-execution.sh",
-      "codex": "codex/hooks/block-untrusted-execution.sh",
-      "status": "paired-dispatched",
-      "note": "Claude delegates through pretooluse-bash.sh; Codex registers directly in hooks.json and normalizes literal nested command/workdir contexts with lib-codex-hook-json.sh. Both use the mirrored static classifier for recognizable transient package execution, downloaded interpreter input, and designated untrusted staging. Guards allow or deny, never ask; unexpected failures block. New Codex definitions require native hook trust. This routing guard supplements the VM boundary and does not establish arbitrary-code or malicious-agent containment."
-    },
-    {
       "name": "lib-untrusted-execution.py",
       "claude": "claude/hooks/lib-untrusted-execution.py",
-      "codex": "codex/hooks/lib-untrusted-execution.py",
-      "status": "paired-utility",
-      "note": "Byte-identical static untrusted-execution classifier. Reuses the existing lib-op-policy.py quote-preserving tokenizer without invoking its credential policy or executing the proposed command. Coverage and limits live in both hook manuals; synthetic fixtures in tests/test_untrusted_execution_guard.py."
-    },
-    {
-      "name": "block-hookspath-override.sh",
-      "claude": null,
-      "codex": "codex/hooks/block-hookspath-override.sh",
-      "status": "codex-only",
-      "note": "Denies Git commands that override core.hooksPath, which would disable the global Elisp evidence hooks in claude/git-hooks. Claude implements the same check inline as check_hookspath_override in claude/hooks/pretooluse-bash.sh."
+      "codex": null,
+      "status": "claude-only",
+      "note": "Static untrusted-execution classifier for agent_guard.policies.untrusted_execution; never executes the proposed command. Synthetic fixtures in tests/test_untrusted_execution_guard.py. The shared guard engine (lib/python/agent_guard, classifiers.py) loads this copy in-process for both runtimes; the Codex copy was removed at the 2026-10-01 cutover."
     },
     {
       "name": "chrome-bridge-recover.py",
@@ -736,6 +592,13 @@
       "codex": "codex/hooks/redact-tool-output.py",
       "status": "paired",
       "note": "Both mask tool output through redact-secrets.sh patterns and the known-value index (lib/python/secret_index.py), failing closed. Claude replaces the result via updatedToolOutput/updatedMCPToolOutput for every tool; Codex has no rewrite field, so it returns decision block with the masked output as the reason, for shell and MCP tools. Codex misses write_stdin chunks and error results."
+    },
+    {
+      "name": "agent-guard.sh",
+      "claude": "claude/hooks/agent-guard.sh",
+      "codex": "codex/hooks/agent-guard.sh",
+      "status": "paired",
+      "note": "The only PreToolUse guard registration in both runtimes: runs lib/python/agent_guard (one policy module per former guard hook, chains in engine.py) and maps any status other than 0 to exit 2, so a missing interpreter, import error or crash denies. Intended differences from the shell guards: docs/plans/2026-10-01-guard-engine.md. Tests: bin/test-guards."
     }
   ],
   "mcp_servers": [
@@ -785,7 +648,7 @@
       "tool": "Claude Code",
       "path": "~/.claude/settings.json",
       "tracked": false,
-      "note": "Mutable live global settings; hook registrations are added in place. load-elisp-after-edit.sh is registered with timeout 150 (matching codex/hooks.json) because it waits up to 120 s for the Elpaca rebuild before reporting. Stop forwards turn-end state to Emacs, while session-learning capture belongs to the Emacs agent-before-exit path because Stop is not true process exit. Ahrefs, GitHub and Elisp Stop hook registration: claude/hooks/README.org. The LaunchAgent registry guard is registered on both the shell and edit matchers so plist writes and launchctl verbs are both covered."
+      "note": "Mutable live global settings; hook registrations are added in place. load-elisp-after-edit.sh is registered with timeout 150 (matching codex/hooks.json) because it waits up to 120 s for the Elpaca rebuild before reporting. Stop forwards turn-end state to Emacs, while session-learning capture belongs to the Emacs agent-before-exit path because Stop is not true process exit. Ahrefs, GitHub and Elisp Stop hook registration: claude/hooks/README.org. Since 2026-10-01 one PreToolUse registration, agent-guard.sh, runs every guard; chains in lib/python/agent_guard/engine.py."
     },
     {
       "tool": "Claude Code",
@@ -799,7 +662,7 @@
       "path": "codex/hooks.json",
       "tracked": true,
       "live_path": "~/.codex/hooks.json",
-      "note": "Global registrations live through ~/.codex/hooks.json, outside repo-root .codex to avoid double loading. Lifecycle hooks use codex-hook-wrapper and an explicit Emacs socket. Shell matchers cover Bash, exec_command and functions.exec(_command); edit matchers are collapsed for trust review. Guards allow or deny, never ask. The LaunchAgent guard covers shell and edits. Untrusted-execution routing (shell index 15), the Epoch brief notice (PostToolUse shell index 1) and the retired-CLI guard were appended to keep trust keys; new definitions need native trust. Output redactor 2026-09-30."
+      "note": "Global registrations live through ~/.codex/hooks.json, outside repo-root .codex to avoid double loading. Lifecycle hooks use codex-hook-wrapper and an explicit Emacs socket. Shell matchers cover Bash, exec_command and functions.exec(_command); edit matchers are collapsed for trust review. Guards allow or deny, never ask. Since 2026-10-01 the shell and apply_patch|Edit|Write PreToolUse groups each run only agent-guard.sh (chains in lib/python/agent_guard/engine.py); its trust was renewed per home via the app-server API. New definitions need native trust. Output redactor 2026-09-30."
     },
     {
       "tool": "Claude Code and Codex",

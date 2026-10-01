@@ -6,8 +6,11 @@ credential read, dependency import or Emacs expression is executed.
 
 import json
 from pathlib import Path
-import subprocess
+import sys
 import unittest
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guard_harness import run_guard  # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,17 +46,12 @@ class NetworkNameBoundaryTests(unittest.TestCase):
                               + json.dumps(command) + '}));'}
                 else:
                     values = {'command' if tool == 'Bash' else 'cmd': command}
-                result = subprocess.run(
-                    ['/bin/bash', str(ROOT / hook)],
-                    input=json.dumps({'tool_name': tool, 'tool_input': values,
-                                      'cwd': str(ROOT)}),
-                    capture_output=True, text=True, timeout=20,
-                )
+                result = run_guard(hook, {'tool_name': tool, 'tool_input': values, 'cwd': str(ROOT)})
                 self.assertEqual(result.returncode, 0, result.stderr)
-                output = json.loads(result.stdout) if result.stdout.strip() else {}
-                detail = output.get('hookSpecificOutput', {})
-                self.assertEqual(detail.get('permissionDecision', 'allow'),
-                                 expected, detail.get('permissionDecisionReason'))
+                detail = result.decision() or {}
+                denied = detail.get('permissionDecision') == 'deny'
+                actual = 'deny' if denied else 'allow'
+                self.assertEqual(actual, expected, detail.get('permissionDecisionReason'))
 
     def test_exact_local_wheel_provenance_read_is_allowed(self):
         self.assert_hooks(WHEEL_PROVENANCE_READ, 'allow')

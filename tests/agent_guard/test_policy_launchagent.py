@@ -1,0 +1,78 @@
+import sys
+import unittest
+from pathlib import Path
+
+sys.dont_write_bytecode = True
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "lib/python"))
+
+from agent_guard.core import CLAUDE, CODEX, Call  # noqa: E402
+from agent_guard.policies import launchagent  # noqa: E402
+
+ENV = {"HOME": "/h"}
+
+
+def call(runtime, tool, tool_input):
+    return Call.from_payload(runtime, {"tool_name": tool, "tool_input": tool_input}, env=ENV)
+
+
+def first_line(result):
+    return result.reason.split("\n", 1)[0] if result.decision == "deny" else "allow"
+
+
+class FileTests(unittest.TestCase):
+    def test_write_into_live_dir(self):
+        result = launchagent.decide(call(CLAUDE, "Write", {"file_path": "/h/Library/LaunchAgents/x.plist"}))
+        self.assertEqual(first_line(result), "BLOCKED: writing a plist directly into ~/Library/LaunchAgents.")
+        self.assertIn("\n\n/h/Library/LaunchAgents/x.plist\n\n", result.reason)
+
+    def test_other_paths_and_the_directory_itself(self):
+        for path in ("/h/Library/LaunchAgents", "/h/Library/LaunchAgentsX/a", "/other/Library/LaunchAgents/a"):
+            self.assertEqual(launchagent.decide(call(CLAUDE, "Write", {"file_path": path})).decision, "allow")
+
+    def test_claude_file_path_skips_the_command(self):
+        tool_input = {"file_path": "/tmp/a", "command": "launchctl load x"}
+        self.assertEqual(launchagent.decide(call(CLAUDE, "Edit", tool_input)).decision, "allow")
+        self.assertEqual(launchagent.decide(call(CODEX, "Edit", tool_input)).decision, "deny")
+
+    def test_codex_patch_paths(self):
+        patch = "*** Begin Patch\n*** Add File: /h/Library/LaunchAgents/x.plist\n+x\n*** End Patch"
+        self.assertEqual(launchagent.decide(call(CODEX, "apply_patch", {"patch": patch})).decision, "deny")
+
+
+class CommandTests(unittest.TestCase):
+    def label(self, command, runtime=CLAUDE):
+        return first_line(launchagent.decide(call(runtime, "Bash", {"command": command})))
+
+    def test_kinds(self):
+        self.assertEqual(self.label("cp a.plist ~/Library/LaunchAgents/"),
+                         "BLOCKED: installing a plist into ~/Library/LaunchAgents by hand.")
+        self.assertEqual(self.label("echo x > $HOME/Library/LaunchAgents/a.plist"),
+                         "BLOCKED: installing a plist into ~/Library/LaunchAgents by hand.")
+        self.assertEqual(self.label("launchctl bootstrap gui/501 x"),
+                         "BLOCKED: loading a LaunchAgent outside the launchd registry.")
+        self.assertEqual(self.label("launchctl bootout gui/501/x"),
+                         "BLOCKED: unloading or removing a LaunchAgent outside the launchd registry.")
+
+    def test_allowed(self):
+        for command in ("launchctl list", "ls ~/Library/LaunchAgents", "plutil -p ~/Library/LaunchAgents/a.plist",
+                        "defaults read ~/Library/LaunchAgents/a", "python3 ~/repos/launchd/bin/launchd-install.py a",
+                        "ALLOW_LAUNCHAGENT_CHANGE=1 launchctl load x", "cat <<EOF\nlaunchctl load x\nEOF"):
+            self.assertEqual(self.label(command), "allow", command)
+
+    def test_fragment_keeps_leading_operator(self):
+        result = launchagent.decide(call(CODEX, "exec_command", {"cmd": "x;\n\ncp a ~/Library/LaunchAgents/"}))
+        self.assertIn("\n\n  ;\n\ncp a ~/Library/LaunchAgents/\n\n", result.reason)
+
+    def test_long_command_with_early_match_is_denied(self):
+        # Intended difference 15: the hook's pre-filter lost this to SIGPIPE and exited 0.
+        self.assertEqual(self.label("launchctl bootstrap gui/501 x\n" + "x\n" * 200_001),
+                         "BLOCKED: loading a LaunchAgent outside the launchd registry.")
+
+    def test_override_needs_whitespace_boundaries(self):
+        self.assertEqual(self.label("echo ALLOW_LAUNCHAGENT_CHANGE=1x; launchctl load y"),
+                         "BLOCKED: loading a LaunchAgent outside the launchd registry.")
+
+
+if __name__ == "__main__":
+    unittest.main()

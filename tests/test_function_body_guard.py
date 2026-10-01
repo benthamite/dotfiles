@@ -12,16 +12,26 @@ secret-shaped literal. A throwaway ZDOTDIR defines the fixture function, so
 the classifier's zsh probe never sees the real shell configuration.
 """
 
+import contextlib
+import importlib.machinery
+import importlib.util
+import io
 import json
 import os
-import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guard_harness import run_guard as run_hook  # noqa: E402
+
+from agent_guard import classifiers  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-POLICIES = [ROOT / runtime / "hooks" / "lib-function-body-policy.py" for runtime in ("claude", "codex")]
+POLICIES = [ROOT / "claude/hooks/lib-function-body-policy.py"]  # the engine loads this copy
 REDACTOR = ROOT / "claude" / "hooks" / "redact-secrets.sh"
 
 CLIENT_SECRET = "GOCSPX" + "-" + "Fx7_" * 7
@@ -36,10 +46,27 @@ def fixture_env(directory):
     return dict(os.environ, ZDOTDIR=str(zdotdir))
 
 
-def classify(policy, command, env):
-    result = subprocess.run(["python3", str(policy)], input=json.dumps(command),
-                            capture_output=True, text=True, env=env, timeout=30)
-    return json.loads(result.stdout)["decision"]
+def load_policy(path):
+    """One copy of the classifier as its own module, so both copies are exercised."""
+    name = f"function_body_policy_{path.parent.parent.name}"
+    loader = importlib.machinery.SourceFileLoader(name, str(path))
+    module = importlib.util.module_from_spec(importlib.util.spec_from_loader(name, loader))
+    flag = sys.dont_write_bytecode
+    loader.exec_module(module)
+    sys.dont_write_bytecode = flag
+    return module
+
+
+MODULES = {policy: load_policy(policy) for policy in POLICIES}
+
+
+def classify(policy, stdin, env):
+    """The decision the classifier's stdin/stdout entry point prints for STDIN."""
+    out = io.StringIO()
+    with mock.patch.dict(os.environ, env, clear=True), mock.patch.object(sys, "stdin", io.StringIO(stdin)), \
+            contextlib.redirect_stdout(out):
+        MODULES[policy].main()
+    return json.loads(out.getvalue())["decision"]
 
 
 def run_guard(path, tool, command, env):
@@ -48,8 +75,7 @@ def run_guard(path, tool, command, env):
     else:
         tool_input = {"command" if tool == "Bash" else "cmd": command}
     payload = {"tool_name": tool, "tool_input": tool_input, "cwd": str(ROOT)}
-    result = subprocess.run(["bash", str(path)], input=json.dumps(payload),
-                            capture_output=True, text=True, cwd=ROOT, env=env, timeout=60)
+    result = run_hook(path, payload, cwd=ROOT, env=env)
     if result.returncode != 0:
         raise AssertionError(result.stderr)
     return json.loads(result.stdout) if result.stdout.strip() else {}
@@ -72,9 +98,6 @@ class FunctionBodyPolicyTest(unittest.TestCase):
         temp = tempfile.TemporaryDirectory(prefix="function-body-")
         self.addCleanup(temp.cleanup)
         self.env = fixture_env(temp.name)
-
-    def test_copies_are_identical(self):
-        self.assertEqual(POLICIES[0].read_bytes(), POLICIES[1].read_bytes())
 
     def test_cases(self):
         cases = {
@@ -123,13 +146,11 @@ class FunctionBodyPolicyTest(unittest.TestCase):
         for policy in POLICIES:
             for command, expected in cases.items():
                 with self.subTest(policy=policy.parent.parent.name, command=command):
-                    self.assertEqual(classify(policy, command, self.env), expected)
+                    self.assertEqual(classify(policy, json.dumps(command), self.env), expected)
 
     def test_malformed_input_denies(self):
         for policy in POLICIES:
-            result = subprocess.run(["python3", str(policy)], input="not json",
-                                    capture_output=True, text=True, env=self.env, timeout=30)
-            self.assertEqual(json.loads(result.stdout)["decision"], "deny")
+            self.assertEqual(classify(policy, "not json", self.env), "deny")
 
 
 class GuardEntryPointTest(unittest.TestCase):
@@ -151,16 +172,13 @@ class GuardEntryPointTest(unittest.TestCase):
                     self.assertEqual(decision(run_guard(path, tool, command, self.env)), expected)
 
     def test_classifier_failure_denies(self):
+        module = classifiers.load("function-body-policy")
         for runtime in ("claude", "codex"):
-            with tempfile.TemporaryDirectory(prefix="function-body-guard-") as directory:
-                hooks = Path(directory) / "hooks"
-                shutil.copytree(ROOT / runtime / "hooks", hooks)
-                helper = hooks / "lib-function-body-policy.py"
-                for source in ("raise SystemExit(1)\n", "print('not-json')\n"):
-                    helper.write_text(source)
-                    with self.subTest(runtime=runtime, source=source):
-                        output = run_guard(hooks / "block-secret-leak.sh", "Bash", "which ls", self.env)
-                        self.assertEqual(decision(output), "deny")
+            for failure in (RuntimeError("crashed"), ValueError("malformed")):
+                with self.subTest(runtime=runtime, failure=failure), \
+                        mock.patch.object(module, "classify", side_effect=failure):
+                    output = run_guard(ROOT / runtime / "hooks/block-secret-leak.sh", "Bash", "which ls", self.env)
+                    self.assertEqual(decision(output), "deny")
 
     def test_google_oauth_literals_are_denied_in_commands(self):
         commands = [
@@ -204,15 +222,13 @@ class RedactorTest(unittest.TestCase):
 
 class IntrospectionWrapTest(unittest.TestCase):
     def test_introspection_output_goes_through_the_redactor(self):
-        for script in ("pretooluse-bash.sh", "wrap-bash-output.sh"):
-            for command in ("which -a python3", "type ls", "whence -v ls", "print -l ${(k)functions}"):
-                with self.subTest(script=script, command=command):
-                    payload = {"tool_name": "Bash", "tool_input": {"command": command}}
-                    result = subprocess.run([str(ROOT / "claude/hooks" / script)], input=json.dumps(payload),
-                                            capture_output=True, text=True, timeout=60)
-                    self.assertEqual(result.returncode, 0, result.stderr)
-                    updated = json.loads(result.stdout)["hookSpecificOutput"]["updatedInput"]["command"]
-                    self.assertIn("redact-secrets.sh", updated)
+        for command in ("which -a python3", "type ls", "whence -v ls", "print -l ${(k)functions}"):
+            with self.subTest(command=command):
+                payload = {"tool_name": "Bash", "tool_input": {"command": command}}
+                result = run_hook(ROOT / "claude/hooks/pretooluse-bash.sh", payload)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                updated = result.decision()["updatedInput"]["command"]
+                self.assertIn("redact-secrets.sh", updated)
 
 
 if __name__ == "__main__":

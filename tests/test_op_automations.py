@@ -2,10 +2,14 @@ import json
 import os
 import stat
 import subprocess
+import sys
 import tempfile
 import textwrap
 import unittest
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guard_harness import run_guard  # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -18,14 +22,7 @@ def write_executable(path, content):
 
 
 def run_hook(path, payload):
-    return subprocess.run(
-        [str(ROOT / path)],
-        input=json.dumps(payload),
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=False,
-    )
+    return run_guard(path, payload)
 
 
 class OpAutomationsTest(unittest.TestCase):

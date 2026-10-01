@@ -1,35 +1,28 @@
 """The public-route registry must not grow; see docs/secret-guard.md."""
-import importlib.util
+import sys
 import unittest
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import guard_harness  # noqa: E402,F401 - puts lib/python on sys.path
+
+from agent_guard import classifiers  # noqa: E402
+from agent_guard.policies import secret_leak  # noqa: E402
+
 FROZEN_ROUTE_COUNT = 42
-
-
-def load(runtime):
-    source = ROOT / runtime / "hooks/lib-public-url-scan.py"
-    spec = importlib.util.spec_from_file_location(f"scan_{runtime}", source)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
 
 
 class SecretGuardScopeTests(unittest.TestCase):
     def test_public_route_registry_does_not_grow(self):
-        for runtime in ("claude", "codex"):
-            with self.subTest(runtime=runtime):
-                self.assertLessEqual(
-                    len(load(runtime).ROUTES), FROZEN_ROUTE_COUNT,
-                    "Do not add per-site exemptions to the secret guard; "
-                    "read docs/secret-guard.md (use WebFetch for public URLs).")
+        self.assertLessEqual(
+            len(classifiers.load("public-url-scan").ROUTES), FROZEN_ROUTE_COUNT,
+            "Do not add per-site exemptions to the secret guard; "
+            "read docs/secret-guard.md (use WebFetch for public URLs).")
 
     def test_deny_message_points_to_the_rules(self):
-        for runtime in ("claude", "codex"):
-            text = (ROOT / runtime / "hooks/block-secret-leak.sh").read_text()
-            with self.subTest(runtime=runtime):
-                self.assertIn("docs/secret-guard.md", text)
-                self.assertNotIn("diagnose and repair the classifier", text)
+        text = Path(secret_leak.__file__).read_text()
+        self.assertIn("docs/secret-guard.md", text)
+        self.assertNotIn("diagnose and repair the classifier", text)
 
 
 if __name__ == "__main__":

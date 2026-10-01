@@ -2,36 +2,32 @@
 
 import json
 from pathlib import Path
-import subprocess
-import shutil
 import sys
-import tempfile
 import unittest
+from unittest import mock
 
 # Reuse the policy test's commands from any working directory (pytest from the
 # repo root does not put tests/ on sys.path).
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_process_output_policy import PATH_READ_COMMAND, FUNCTION_LIST_COMMAND  # noqa: E402
+from guard_harness import run_guard  # noqa: E402
+
+from agent_guard import classifiers  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 class ProcessOutputGuardTests(unittest.TestCase):
     def test_classifier_failure_denies(self):
-        for provider in ("claude", "codex"):
-            with tempfile.TemporaryDirectory(prefix="process-guard-fixture-") as directory:
-                hooks = Path(directory) / "hooks"
-                shutil.copytree(ROOT / provider / "hooks", hooks)
-                helper = hooks / "lib-process-output-policy.py"
-                for source in ("raise SystemExit(1)\n", "print('not-json')\n"):
-                    helper.write_text(source)
+        module = classifiers.load("process-output-policy")
+        for hook in ("claude/hooks/block-secret-leak.sh", "codex/hooks/block-secret-leak.sh"):
+            for failure in (RuntimeError("crashed"), ValueError("malformed")):
+                with self.subTest(hook=hook, failure=failure), \
+                        mock.patch.object(module, "classify", side_effect=failure):
                     payload = {"tool_name": "Bash", "tool_input": {"command": "ps -axo pid,comm"}}
-                    result = subprocess.run(
-                        ["bash", str(hooks / "block-secret-leak.sh")],
-                        input=json.dumps(payload), capture_output=True, text=True,
-                    )
+                    result = run_guard(hook, payload)
                     self.assertEqual(result.returncode, 0, result.stderr)
-                    self.assertEqual(json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"], "deny")
+                    self.assertEqual(result.decision()["permissionDecision"], "deny")
 
     def test_guard_entry_points(self):
         cases = {
@@ -59,14 +55,10 @@ class ProcessOutputGuardTests(unittest.TestCase):
                     else:
                         tool_input = {"command" if tool == "Bash" else "cmd": command}
                     payload = {"tool_name": tool, "tool_input": tool_input, "cwd": str(ROOT)}
-                    result = subprocess.run(
-                        ["bash", str(ROOT / path)], input=json.dumps(payload),
-                        capture_output=True, text=True, cwd=ROOT,
-                    )
+                    result = run_guard(path, payload, cwd=ROOT)
                     self.assertEqual(result.returncode, 0, result.stderr)
-                    output = json.loads(result.stdout) if result.stdout.strip() else {}
-                    actual = output.get("hookSpecificOutput", {}).get("permissionDecision", "allow")
-                    self.assertEqual(actual, expected, result.stdout)
+                    decision = result.decision() or {}
+                    self.assertEqual(decision.get("permissionDecision", "allow"), expected, result.stdout)
 
 
 if __name__ == "__main__":

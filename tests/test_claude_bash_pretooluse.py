@@ -1,23 +1,23 @@
 import json
-import shlex
-import subprocess
-import tempfile
+import sys
+import types
 import unittest
 from pathlib import Path
+from unittest import mock
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guard_harness import run_engine, run_guard  # noqa: E402
 
-ROOT = Path(__file__).resolve().parents[1]
+from agent_guard.core import HookFailure, Result  # noqa: E402
+from agent_guard.policies import dispatcher  # noqa: E402
 
 
 def run_hook(script, payload):
-    return subprocess.run(
-        [str(ROOT / "claude" / "hooks" / script)],
-        input=json.dumps(payload),
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=False,
-    )
+    # wrap-bash-output.sh's rewrite is the dispatcher's last step; production
+    # runs it as part of the full Claude Bash chain.
+    if script == "wrap-bash-output.sh":
+        return run_engine("claude", payload)
+    return run_guard("claude/hooks/" + script, payload)
 
 
 class ClaudeBashPreToolUseTest(unittest.TestCase):
@@ -66,73 +66,68 @@ class ClaudeBashPreToolUseTest(unittest.TestCase):
 
 
 class DelegatedGuardFailuresTest(unittest.TestCase):
-    """Run the real dispatcher against a disposable standalone guard."""
+    """Run the real dispatcher against a disposable delegated policy.
+
+    The shell dispatcher parsed each delegated hook's stdout; in-process a
+    policy returns a Result or raises, so the malformed-output, invalid-shape,
+    "ask" and empty-stdout cases have no equivalent and were removed.
+    """
 
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(prefix="delegate-test-")
-        self.addCleanup(self.temp.cleanup)
-        self.directory = Path(self.temp.name)
-        for name in ("pretooluse-bash.sh", "lib-heredoc.sh"):
-            (self.directory / name).write_bytes((ROOT / "claude/hooks" / name).read_bytes())
-        self.guard = self.directory / "block-secret-leak.sh"
-        # Every other guard the dispatcher delegates to allows, so each test
-        # observes the disposable guard alone.
-        for name in ("block-untrusted-execution.sh", "block-github-write-command.sh",
-                     "block-elpaca-rebuild-uncommitted.sh", "block-long-pipeline-run-unchecked.sh"):
-            (self.directory / name).write_text("#!/bin/bash\ncat >/dev/null\n")
+        # Every other policy the dispatcher delegates to allows, so each test
+        # observes the disposable policy alone.
+        allow = types.SimpleNamespace(decide=lambda call: Result.allow())
+        for name in ("untrusted_execution", "github_write", "elpaca_rebuild", "long_pipeline"):
+            patcher = mock.patch.object(dispatcher, name, allow)
+            patcher.start()
+            self.addCleanup(patcher.stop)
 
-    def run_dispatcher(self, stdout="", stderr="", status=0):
-        self.guard.write_text(
-            "#!/bin/bash\ncat >/dev/null\n"
-            f"printf '%s' {shlex.quote(stdout)}\n"
-            f"printf '%s' {shlex.quote(stderr)} >&2\nexit {status}\n"
-        )
+    def run_dispatcher(self, decide):
         payload = {"tool_name": "Bash", "session_id": "disposable-delegate-fixture",
                    "tool_input": {"command": "git status --short"}}
-        return subprocess.run(["bash", str(self.directory / "pretooluse-bash.sh")],
-                              input=json.dumps(payload), text=True, capture_output=True)
+        with mock.patch.object(dispatcher, "secret_leak", types.SimpleNamespace(decide=decide)):
+            return run_guard("claude/hooks/pretooluse-bash.sh", payload)
 
     def assert_denied(self, result):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue(result.stdout.strip(), "dispatcher silently accepted the guard failure")
-        output = json.loads(result.stdout)["hookSpecificOutput"]
+        output = result.decision()
         self.assertEqual(output["permissionDecision"], "deny")
         self.assertTrue(output["permissionDecisionReason"])
         return output["permissionDecisionReason"]
 
     def test_crash_denies_without_echoing_guard_output(self):
         marker = "PRIVATE_FIXTURE_DO_NOT_ECHO"
-        result = self.run_dispatcher(stdout=marker, stderr=marker, status=7)
+
+        def crash(call):
+            raise HookFailure(marker, status=7)
+
+        result = self.run_dispatcher(crash)
         reason = self.assert_denied(result)
         self.assertIn("block-secret-leak.sh", reason)
         self.assertIn("7", reason)
         self.assertNotIn(marker, result.stdout + result.stderr)
 
-    def test_compact_json_denial_is_preserved(self):
-        result = self.run_dispatcher(json.dumps({"hookSpecificOutput": {
-            "permissionDecision": "deny", "permissionDecisionReason": "Fixture policy denial",
-        }}, separators=(",", ":")))
+    def test_unexpected_exception_fails_closed(self):
+        def broken(call):
+            raise RuntimeError("PRIVATE_FIXTURE_DO_NOT_ECHO")
+
+        result = self.run_dispatcher(broken)
+        self.assertEqual((result.returncode, result.stdout), (2, ""))
+        self.assertNotIn("PRIVATE_FIXTURE_DO_NOT_ECHO", result.stderr)
+
+    def test_policy_denial_is_preserved(self):
+        result = self.run_dispatcher(lambda call: Result.deny("Fixture policy denial"))
         self.assertEqual(self.assert_denied(result), "Fixture policy denial")
 
-    def test_malformed_output_denies_without_echoing_it(self):
-        marker = "PRIVATE_FIXTURE_DO_NOT_ECHO"
-        result = self.run_dispatcher(marker)
-        self.assert_denied(result)
-        self.assertNotIn(marker, result.stdout + result.stderr)
+    def test_denial_without_reason_still_denies(self):
+        reason = self.assert_denied(self.run_dispatcher(lambda call: Result.deny("")))
+        self.assertIn("block-secret-leak.sh", reason)
 
-    def test_invalid_shapes_and_interactive_decisions_deny(self):
-        for response in ("null", "[]", "{}", "{}\n{}",
-                         '{"hookSpecificOutput":{"permissionDecision":"ask"}}',
-                         '{"hookSpecificOutput":{"permissionDecision":"unknown"}}'):
-            with self.subTest(response=response):
-                self.assert_denied(self.run_dispatcher(response))
-
-    def test_empty_success_and_structured_allow_remain_allowed(self):
-        for response in ("", " \n", '{"hookSpecificOutput":{"permissionDecision":"allow"}}'):
-            with self.subTest(response=response):
-                result = self.run_dispatcher(response)
-                self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertEqual(result.stdout, "")
+    def test_allow_remains_allowed(self):
+        result = self.run_dispatcher(lambda call: Result.allow())
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "")
 
 
 if __name__ == "__main__":

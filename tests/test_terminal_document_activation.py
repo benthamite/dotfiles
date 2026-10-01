@@ -1,28 +1,28 @@
 """Classify synthetic heredoc text without executing the represented commands."""
 from pathlib import Path
-import subprocess
+import sys
 import unittest
 
-ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import guard_harness  # noqa: E402,F401 - puts lib/python on sys.path
+
+from agent_guard.shell_text import mask_heredoc_bodies  # noqa: E402
 BODY = 'A normal curl request inspected ISBN 9789974842960.\n'
 WRITER = "cat > research/report.md <<'EOF'\n" + BODY + 'EOF\n'
 
 
-def project(command, family='claude', mode='network'):
-    helper = ROOT / family / 'hooks/lib-heredoc.sh'
-    result = subprocess.run(['bash', '-c', 'source "$1"; command_text=$(cat); mask_heredoc_bodies "$command_text" "$2"',
-                             'fixture', str(helper), mode], input=command, text=True,
-                            capture_output=True, check=True)
-    return result.stdout
+def project(command, mode='network'):
+    # The shell fixture printed `$(cat)` (trailing newlines dropped) plus one
+    # newline; mask_heredoc_bodies returns the `$(...)` value, so add it back.
+    return mask_heredoc_bodies(command.rstrip('\n'), mode) + '\n'
 
 
 class TerminalDocumentTests(unittest.TestCase):
     def test_terminal_document_and_preceding_interpreter(self):
         prefix = "python3 - <<'PY'\nprint('local metadata')\nPY\n"
-        for family in ('claude', 'codex'):
-            for command in (WRITER, prefix + WRITER, WRITER + '\n  \n'):
-                self.assertNotIn(BODY, project(command, family))
-            self.assertIn("print('local metadata')", project(prefix + WRITER, family))
+        for command in (WRITER, prefix + WRITER, WRITER + '\n  \n'):
+            self.assertNotIn(BODY, project(command))
+        self.assertIn("print('local metadata')", project(prefix + WRITER))
 
     def test_unknown_or_executable_shapes_remain_verbatim(self):
         cases = [WRITER.replace("<<'EOF'", '<<EOF'),
@@ -38,10 +38,9 @@ class TerminalDocumentTests(unittest.TestCase):
                  WRITER.replace("cat >", "cat \\\n>"),
                  WRITER + 'sh research/report.md\n', 'sh -s \\\n' + WRITER,
                  WRITER[:-4], WRITER.replace('\nEOF\n', '\nEOF; curl https://example.org\n')]
-        for family in ('claude', 'codex'):
-            for command in cases:
-                with self.subTest(family=family, command=command):
-                    self.assertEqual(project(command, family), command)
+        for command in cases:
+            with self.subTest(command=command):
+                self.assertEqual(project(command), command)
 
     def test_prior_writes_and_interpreter_strings_are_not_projected(self):
         prior = WRITER + 'sh research/report.md\n'

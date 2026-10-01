@@ -88,9 +88,9 @@ API-key-authenticated Claude session.
 * Instructions and settings
 
 Unfamiliar code execution uses the shared =bin/untrusted-run= VM boundary;
-reviewed local workflows retain host execution. The existing Bash dispatcher
-delegates the paired routing guard for recognizable untrusted launchers and
-the designated staging directory. See [[file:hooks/README.org][the hook contracts]] for coverage and
+reviewed local workflows retain host execution. The guard engine's
+untrusted-execution policy, run for every Bash call, denies recognizable
+untrusted launchers and execution from the designated staging directory. See [[file:hooks/README.org][the hook contracts]] for coverage and
 [[file:../bin/README.org][the runner contract]] for available runtimes and prerequisites.
 
 =claude/CLAUDE.md= is the user-level instruction source. A project may add a
@@ -706,11 +706,23 @@ Claude has events with no Codex equivalent here, including =Read=, =Grep=,
 =Glob=, =Skill=, Notification, and Chrome-specific events. Those are explicit
 manifest differences, not missing peers.
 
-=block-retired-secrets-cli.py= (PreToolUse, registered for =Bash= and =Edit|Write|NotebookEdit= since 2026-10-01) keeps the secrets CLI that 1Password replaced from coming back. It denies new text, commit messages and shell commands that call or name that CLI, its store or its Emacs integration, and tells the agent to use =op-automations= or =op-desktop= as described in =context/secrets.md=. Text being removed is never inspected and read-only searches stay allowed, so stale references can be found and deleted. The patterns live only in the shared =lib/python/retired_secrets_cli.py= and =tests/test_retired_secrets_cli.py=, the two files exempt from it. Origin: on 2026-10-01 the Home Assistant health collector still called the retired CLI and failed; stale references kept resurfacing as warnings. The same day the sensitive-read, secret-leak and untrusted-run path lists dropped that store's directory, which no longer exists.
+Since 2026-10-01 every PreToolUse guard runs in one Python process:
+=~/.claude/settings.json= registers only =hooks/agent-guard.sh=, which runs the
+engine in =lib/python/agent_guard= and turns any failure into a denial. Each
+former guard hook is a policy module in =lib/python/agent_guard/policies/=
+(=secret_leak=, =sensitive_read=, =untrusted_execution=, =destructive=,
+=github_write= and so on), and =engine.py= runs them per tool in the order the
+old registrations did; for =Bash=, =agent_guard.policies.dispatcher= composes
+the checks the former shell dispatcher ran. The decisions the engine deliberately
+changed from the shell guards are listed in
+=docs/plans/2026-10-01-guard-engine.md=. =bin/test-guards= runs the guard
+tests in-process.
+
+=agent_guard.policies.retired_secrets= (run for =Bash= and =Edit|Write|NotebookEdit= since 2026-10-01) keeps the secrets CLI that 1Password replaced from coming back. It denies new text, commit messages and shell commands that call or name that CLI, its store or its Emacs integration, and tells the agent to use =op-automations= or =op-desktop= as described in =context/secrets.md=. Text being removed is never inspected and read-only searches stay allowed, so stale references can be found and deleted. The patterns live only in the shared =lib/python/retired_secrets_cli.py= and =tests/test_retired_secrets_cli.py=, the two files exempt from it. Origin: on 2026-10-01 the Home Assistant health collector still called the retired CLI and failed; stale references kept resurfacing as warnings. The same day the sensitive-read, secret-leak and untrusted-run path lists dropped that store's directory, which no longer exists.
 
 =redact-tool-output.py= runs after every tool call (PostToolUse, matcher =*= since 2026-09-30). It masks every string in the result, keeping its structure, through two layers: the shape patterns of =redact-secrets.sh= and the keyed-fingerprint index of this machine's actual secret values (=bin/secret-index=, =lib/python/secret_index.py=), which catches secrets with no recognisable shape. It drops screenshot images when the browser may be on a page listed in =agents/credential-pages.txt= (or when no URL can be found), and it fails closed: if masking cannot run, the output is withheld, keeping only block =type= fields so Claude Code accepts the replacement. Verified live 2026-09-30 for Read, Bash, subagent tool calls and Chrome screenshots. Not covered: the final report of a background subagent (a SubagentStop hook cannot rewrite it), so a subagent that deliberately transforms a secret it reads can still return it. Origin: on 2026-09-27 a Chrome =find= result echoed a new Cloudflare token and a 1Password title listing printed a Mullvad account number.
 
-On 2026-09-30 =which NAME= printed a zsh function whose body held a literal Google OAuth client secret and refresh token, shapes the redactor did not know. =redact-secrets.sh= now masks =GOCSPX-= client secrets, =1//= refresh tokens and =ya29.= access tokens (the input guards deny them in commands too), =pretooluse-bash.sh= routes shell introspection (=which=, =type=, =whence=, =functions=) through it, and =block-secret-leak.sh= denies printing the body of a known shell function outright through the paired =lib-function-body-policy.py=, since a body can hold a credential of any shape. =tests/test_function_body_guard.py= covers all three.
+On 2026-09-30 =which NAME= printed a zsh function whose body held a literal Google OAuth client secret and refresh token, shapes the redactor did not know. =redact-secrets.sh= now masks =GOCSPX-= client secrets, =1//= refresh tokens and =ya29.= access tokens (the input guards deny them in commands too), the Bash output wrapping (=agent_guard.policies.dispatcher=) routes shell introspection (=which=, =type=, =whence=, =functions=) through it, and =agent_guard.policies.secret_leak= denies printing the body of a known shell function outright through =lib-function-body-policy.py=, since a body can hold a credential of any shape. =tests/test_function_body_guard.py= covers all three.
 
 =chrome-bridge-recover.py= runs after every =mcp__claude-in-chrome__= call (PostToolUse and PostToolUseFailure). The Claude in Chrome extension answers only sessions of the Claude account it is signed in to, and only while its Chrome profile is open; with one =CLAUDE_CONFIG_DIR= per account and several Chrome profiles, sessions regularly started with that profile closed and misreported "no browser access". When a result says the extension is not connected, the lookup timed out, or =list_connected_browsers= is empty, the hook checks that Chrome's native-messaging manifest points at a host wrapper whose =claude= binary exists, opens the profile mapped to this config dir in =chrome-extension-profiles.json= (via =bin/chrome-profile-open=, at most once per 90 s), and returns =additionalContext= telling the model to retry before reporting any browser problem. An unmapped config dir is reported as such, so the mapping is filled once rather than guessed. It is silent while the bridge is connected. =tests/test_chrome_bridge_recover.py= covers detection, the manifest checks, mapping and rate limiting.
 
@@ -747,7 +759,7 @@ secret-leak guard in turn stopped exempting =.env.op= from its pattern scan, so 
 literal token written into the template is denied like anywhere else.
 Tracked =.env.example= / =.env.op.<name>.example= templates are exempt on the
 same grounds, and a quoted =git commit -m= message is masked before the scan
-(=mask_git_commit_messages= in =lib-heredoc.sh=): the message is data git
+(=mask_git_commit_messages= in =lib/python/agent_guard/shell_text.py=): the message is data git
 stores, so naming a real dotenv file in it is inert, while =git commit -m "$(cat
 FILE)"=, =git commit -F FILE= and a following =cat FILE= still deny.
 =tests/test_env_op_template_policy.py= runs both guards against both sides;
@@ -766,7 +778,7 @@ Quoted commit-message heredocs are shell input. Their delimiters and bodies are 
 
 The Elisp evidence gate recovers a nested =functions.exec= command's working directory before routing it to a repository. The reduced routing payload cannot recover the parent transcript context afterward. Directory selections include files known to Git, so an untracked manual cannot satisfy the documentation gate.
 
-The Bash dispatcher denies commands when a delegated guard exits unsuccessfully or returns invalid decision JSON. It parses decisions independently of formatting and rejects interactive approval responses. Failure diagnostics identify the guard and exit status without exposing its failed output or the command payload.
+The Bash dispatcher (=agent_guard.policies.dispatcher=) runs its former delegated guards in-process. A guard that cannot complete denies the command with a reason naming that guard, without exposing the command payload; no guard returns an interactive approval response.
 
 Claude editing calls have one destination, so the native =Write= secret-file
 exception remains scoped to that file. The [[file:../codex/hooks/README.org][Codex patch guard]] separately
@@ -816,8 +828,8 @@ with or without it; any other =@…= word is denied. The broker's own
 =cache read= verb prints what =read= would and takes the same non-printing
 shapes (without =--out-file=); =cache forget= prints nothing and is allowed.
 The sensitive-read guards deny reading, grepping or naming the cache directory
-(=…/op-automations/cache=) in a command, since it holds plaintext values. The Claude Bash dispatcher delegates this decision to the standalone
-guard instead of carrying a second inline policy copy. Quoted argument globs, including =rg=
+(=…/op-automations/cache=) in a command, since it holds plaintext values. Bash, =Read= and =Grep=
+reach this decision through the same =agent_guard.policies.sensitive_read= policy. Quoted argument globs, including =rg=
 exclusion patterns beginning with =!=, remain inert data rather than executable
 command words. A shell =case= default pattern is likewise grammar, not an
 executable glob. So is the =*= in a standalone assignment ended by a
@@ -853,7 +865,7 @@ the original input. Literal =pyenv exec python -= stdin programs use
 the same Python classification, including its protected-reference checks; other
 pyenv subcommands and dynamic interpreter names receive no exemption.
 When such a heredoc follows other commands, where that classification does not
-apply, =lib-heredoc.sh= still treats its body as interpreter source for the
+apply, the heredoc masking (=agent_guard/shell_text.py=) still treats its body as interpreter source for the
 executable-glob rule only; names of credential tools in it remain denied.
 An assignment prefix may hold a closed command substitution; an unclosed one
 starts the inner command, so in =f=$(ls x*.jsonl | head -1)= the glob is an
@@ -1144,8 +1156,9 @@ other flags except =--no-newline=/=-n= on =read= (which keeps the trailing
 newline out of the stored secret), no operators or substitutions, and the
 1Password policy must approve the same command.
 
-Only the Bash dispatcher (=pretooluse-bash.sh=) is registered for Claude, so
-its prefilter decides whether the guard runs at all. Until 2026-09-18 that
+For Claude, the Bash dispatcher (=agent_guard.policies.dispatcher=) runs the
+GitHub write guard behind a prefilter, so the prefilter decides whether the
+guard runs at all. Until 2026-09-18 that
 prefilter matched only a bare =git push= or =gh <verb>=, and =git -C DIR push=
 and =/usr/bin/git push= to an unowned repository reached no guard. It now
 delegates on any =git= or =gh= command word, in every spelling the guard's own

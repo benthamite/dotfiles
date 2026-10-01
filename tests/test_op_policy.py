@@ -17,7 +17,6 @@ from pathlib import Path
 DOTFILES = Path("/Users/pablostafforini/My Drive/dotfiles")
 MODULES = {
     "claude": DOTFILES / "claude" / "hooks" / "lib-op-policy.py",
-    "codex": DOTFILES / "codex" / "hooks" / "lib-op-policy.py",
 }
 
 
@@ -283,25 +282,6 @@ class OpPolicyTests(unittest.TestCase):
     def test_denied_shapes(self):
         for command in DENY:
             self.check(command, "deny")
-
-    def test_copies_are_identical(self):
-        self.assertEqual(MODULES["claude"].read_bytes(), MODULES["codex"].read_bytes())
-
-    def test_cli_contract(self):
-        for path in MODULES.values():
-            result = subprocess.run(
-                ["python3", str(path)],
-                input="op-automations read op://Automations/X/credential",
-                capture_output=True,
-                text=True,
-                check=True,
-            )
-            payload = json.loads(result.stdout)
-            self.assertEqual(payload["decision"], "deny")
-            self.assertIn("read", payload["reason"])
-            result = subprocess.run(["python3", str(path)], input="ls", capture_output=True, text=True, check=True)
-            self.assertEqual(json.loads(result.stdout), {"decision": "allow"})
-
 
 if __name__ == "__main__":
     unittest.main()

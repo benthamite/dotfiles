@@ -16,13 +16,14 @@ These tests pin the corrected boundary for all three guard entry points:
 
 from __future__ import annotations
 
-import json
-import subprocess
+import sys
 import unittest
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import guard_harness  # noqa: E402
 
-DOTFILES = Path("/Users/pablostafforini/My Drive/dotfiles")
+DOTFILES = Path(__file__).resolve().parents[1]
 GUARDS = {
     "claude-standalone": DOTFILES / "claude" / "hooks" / "block-secret-leak.sh",
     "claude-dispatcher": DOTFILES / "claude" / "hooks" / "pretooluse-bash.sh",
@@ -31,15 +32,17 @@ GUARDS = {
 
 
 def run_guard(guard: Path, command: str) -> dict | None:
-    payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(Path.cwd())})
-    result = subprocess.run(["bash", str(guard)], input=payload, capture_output=True, text=True, check=True)
-    return json.loads(result.stdout) if result.stdout.strip() else None
+    payload = {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(Path.cwd())}
+    result = guard_harness.run_guard(guard, payload)
+    if result.returncode != 0:
+        raise AssertionError(result.stderr)
+    return result.decision()
 
 
 def decision(output: dict | None) -> str:
     if output is None:
         return "allow"
-    return output.get("hookSpecificOutput", {}).get("permissionDecision", "allow")
+    return output.get("permissionDecision", "allow")
 
 
 DRIVE_PROBE = '''S="/tmp/x"; /Users/pablostafforini/.local/share/uv/tools/gdoc/bin/python3 - "$S" <<'EOF'

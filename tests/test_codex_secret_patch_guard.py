@@ -3,9 +3,12 @@
 import json
 import os
 from pathlib import Path
-import subprocess
+import sys
 import tempfile
 import unittest
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guard_harness import run_guard  # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,15 +39,13 @@ class SecretPatchGuardTests(unittest.TestCase):
         self.directory.chmod(0o700)
 
     def classify(self, tool_input, *, tool="apply_patch", guard=GUARD):
-        payload = json.dumps({"tool_name": tool, "tool_input": tool_input})
+        payload = {"tool_name": tool, "tool_input": tool_input}
         env = {
             "PATH": os.defpath + ":/opt/homebrew/bin:/usr/local/bin",
             "HOME": str(self.directory), "LANG": "C", "PYTHONDONTWRITEBYTECODE": "1",
+            "SECRET_INDEX_PATH": str(self.directory / "missing-secret-index"),
         }
-        result = subprocess.run(
-            ["/bin/bash", str(guard)], input=payload, capture_output=True,
-            text=True, cwd=self.directory, env=env, timeout=15,
-        )
+        result = run_guard(guard, payload, cwd=self.directory, env=env)
         self.assertNotIn(MARKER, result.stdout + result.stderr)
         self.assertIn(result.returncode, (0, 2))
         if result.returncode == 2:

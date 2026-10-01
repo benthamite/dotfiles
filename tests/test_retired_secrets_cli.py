@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-import json
-import subprocess
 import sys
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "lib/python"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import retired_secrets_cli as guard  # noqa: E402
+from guard_harness import GuardResult, run_guard  # noqa: E402
 
 HOOKS = (
     ROOT / "claude/hooks/block-retired-secrets-cli.py",
@@ -149,15 +149,15 @@ class ShellTests(unittest.TestCase):
 
 
 class HookProcessTests(unittest.TestCase):
-    def run_hook(self, hook: Path, data: object) -> subprocess.CompletedProcess[str]:
-        return subprocess.run([str(hook)], input=json.dumps(data), capture_output=True, text=True, timeout=30)
+    def run_hook(self, hook: Path, data: object) -> GuardResult:
+        return run_guard(hook, data)
 
     def test_both_entry_points_deny_and_allow(self) -> None:
         for hook in HOOKS:
             with self.subTest(hook=hook.parent.parent.name):
                 denied = self.run_hook(hook, payload("Bash", command="pass show env/x"))
                 self.assertEqual(denied.returncode, 0)
-                out = json.loads(denied.stdout)["hookSpecificOutput"]
+                out = denied.decision()
                 self.assertEqual(out["permissionDecision"], "deny")
                 self.assertIn("secrets.md", out["permissionDecisionReason"])
                 allowed = self.run_hook(hook, payload("Write", file_path="/tmp/a.py", content=INNOCENT[0]))
@@ -166,7 +166,7 @@ class HookProcessTests(unittest.TestCase):
     def test_malformed_input_fails_closed(self) -> None:
         for hook in HOOKS:
             with self.subTest(hook=hook.parent.parent.name):
-                result = subprocess.run([str(hook)], input="not json", capture_output=True, text=True, timeout=30)
+                result = self.run_hook(hook, "not json")
                 self.assertEqual(result.returncode, 2)
 
 

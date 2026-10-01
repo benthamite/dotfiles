@@ -1,4 +1,4 @@
-"""Exercise scoped grants through both real hook entrypoints, without GitHub writes."""
+"""Exercise scoped grants through both runtimes' GitHub-write policy, without GitHub writes."""
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
@@ -6,8 +6,16 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
+from unittest import mock
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guard_harness import run_guard  # noqa: E402
+
+from agent_guard import classifiers  # noqa: E402
+from agent_guard.policies import github_write  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 FORK = "gh repo fork external/package --clone=false"
@@ -18,12 +26,12 @@ class OperationGrants(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        for runtime in ("claude", "codex"):
-            target = self.root / runtime / "hooks"
-            target.mkdir(parents=True)
-            for source in (ROOT / runtime / "hooks").glob("*"):
-                if source.is_file() and (source.name.startswith("lib-") or source.name == "block-github-write-command.sh"):
-                    shutil.copy2(source, target / source.name)
+        # The policy reads the allowlist and the grant manifest from the
+        # dotfiles HEAD; point both at this fixture repository.
+        for patch in (mock.patch.object(github_write, "DOTFILES", self.root),
+                      mock.patch.object(classifiers.load("github-operation-authorization"), "ROOT", self.root)):
+            patch.start()
+            self.addCleanup(patch.stop)
         (self.root / "bin").mkdir()
         shutil.copy2(ROOT / "bin/github-operation-authorization", self.root / "bin")
         (self.root / "agents").mkdir()
@@ -80,9 +88,8 @@ class OperationGrants(unittest.TestCase):
                 else:
                     payload = dict(tool_name="Bash" if runtime == "claude" else "functions.exec_command",
                                    tool_input={"command" if runtime == "claude" else "cmd": command})
-                result = subprocess.run(["bash", str(self.root / runtime / "hooks/block-github-write-command.sh")],
-                                        input=json.dumps(payload), text=True, capture_output=True,
-                                        cwd=self.root, env=self.env)
+                result = run_guard(ROOT / runtime / "hooks/block-github-write-command.sh", payload,
+                                   cwd=self.root, env=self.env)
                 allowed = result.returncode == 0 and not result.stdout.strip()
                 self.assertEqual(allowed, expected, (result.stdout, result.stderr))
 

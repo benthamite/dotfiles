@@ -115,7 +115,7 @@ class PolicyTests(unittest.TestCase):
             'def f():\n ps=[];ps()',
             'def f():\n ps=[];ps.append("ps aux")',
         ]
-        for family in ('claude', 'codex'):
+        for family in ('claude',):
             spec = importlib.util.spec_from_file_location('scope_policy_' + family,
                 ROOT / family / 'hooks/lib-process-output-policy.py')
             policy = importlib.util.module_from_spec(spec)
@@ -153,7 +153,7 @@ class PolicyTests(unittest.TestCase):
             body.replace("'/tmp'", "'/proc/123/cmdline'"),
             body + "\nimport subprocess;subprocess.run(['ps','aux'])",
         ]
-        for family in ("claude", "codex"):
+        for family in ("claude",):
             spec = importlib.util.spec_from_file_location("path_policy_" + family,
                 ROOT / family / "hooks/lib-process-output-policy.py")
             policy = importlib.util.module_from_spec(spec)
@@ -165,7 +165,7 @@ class PolicyTests(unittest.TestCase):
                         policy.classify("python3 - <<'PY'\n" + source + "\nPY")
 
     def test_cases(self):
-        for family in ("claude", "codex"):
+        for family in ("claude",):
             path = ROOT / family / "hooks/lib-process-output-policy.py"
             spec = importlib.util.spec_from_file_location("process_policy_" + family, path)
             policy = importlib.util.module_from_spec(spec)
@@ -182,7 +182,3 @@ class PolicyTests(unittest.TestCase):
             result = subprocess.run([sys.executable, str(path)], input=json.dumps(command), text=True, capture_output=True, check=True)
             self.assertEqual(json.loads(result.stdout)["decision"], decision)
 
-    def test_copies_match(self):
-        self.assertEqual((ROOT / "claude/hooks/lib-process-output-policy.py").read_bytes(), (ROOT / "codex/hooks/lib-process-output-policy.py").read_bytes())
-
-if __name__ == "__main__": unittest.main()

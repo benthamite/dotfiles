@@ -1,21 +1,9 @@
-import json
-import subprocess
+import sys
 import unittest
 from pathlib import Path
 
-
-ROOT = Path(__file__).resolve().parents[1]
-
-
-def run_hook(path, payload):
-    return subprocess.run(
-        [str(ROOT / path)],
-        input=json.dumps(payload),
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=False,
-    )
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guard_harness import run_guard as run_hook  # noqa: E402
 
 
 class AhrefsApiHookTest(unittest.TestCase):

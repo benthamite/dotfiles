@@ -13,9 +13,12 @@ owner name in a fixture trips that guard when this file is edited.
 from __future__ import annotations
 
 import json
-import subprocess
+import sys
 import unittest
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guard_harness import GuardResult, run_guard  # noqa: E402
 
 DOTFILES = Path(__file__).resolve().parents[1]
 DESTRUCTIVE_GUARDS = (
@@ -27,15 +30,8 @@ CLONE_URL = "https://example.test/example-org/example-repo.git"
 CLONE_SLUG = "example-org/example-repo"
 
 
-def run_hook(script: Path, command: str) -> subprocess.CompletedProcess[str]:
-    payload = {"tool_name": "Bash", "tool_input": {"command": command}}
-    return subprocess.run(
-        ["bash", str(script)],
-        input=json.dumps(payload),
-        text=True,
-        capture_output=True,
-        check=False,
-    )
+def run_hook(script: Path, command: str) -> GuardResult:
+    return run_guard(script, {"tool_name": "Bash", "tool_input": {"command": command}})
 
 
 class CloneRuleTests(unittest.TestCase):
@@ -122,8 +118,6 @@ class DispatcherCloneRuleTests(CloneRuleTests):
     DISPATCHER = DOTFILES / "claude/hooks/pretooluse-bash.sh"
 
     def setUp(self):
-        if not self.DISPATCHER.exists():
-            self.skipTest("dispatcher not present")
         self._guards = (self.DISPATCHER,)
 
     @property
@@ -132,19 +126,15 @@ class DispatcherCloneRuleTests(CloneRuleTests):
 
 
 class NoAskDecisionTests(unittest.TestCase):
-    GUARDS = DESTRUCTIVE_GUARDS + (DOTFILES / "claude/hooks/pretooluse-bash.sh",)
+    ENGINE = DOTFILES / "lib/python/agent_guard"
 
     def test_no_guard_can_emit_an_ask_decision(self):
         """Structural, not incidental: no ask emitter may exist at all."""
-        for guard in self.GUARDS:
-            with self.subTest(guard=guard.name):
-                text = guard.read_text()
-                self.assertNotIn('"permissionDecision": "ask"', text)
-                self.assertNotIn('permissionDecision:"ask"', text)
-
-    def test_dispatcher_has_no_ask_accumulator(self):
-        dispatcher = DOTFILES / "claude/hooks/pretooluse-bash.sh"
-        self.assertNotIn("ASK_REASONS", dispatcher.read_text())
+        for source in sorted(self.ENGINE.rglob("*.py")):
+            with self.subTest(source=source.name):
+                text = source.read_text()
+                for spelling in ('"permissionDecision": "ask"', 'permissionDecision="ask"', '"ask"'):
+                    self.assertNotIn(spelling, text)
 
 
 if __name__ == "__main__":

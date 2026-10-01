@@ -6,10 +6,12 @@ agents actually type — a leading `cd DIR &&`, `VAR="value with spaces"` — an
 keep denying anything that could print the file.
 """
 
-import json
-import subprocess
+import sys
 import unittest
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guard_harness import run_guard  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 GUARDS = [
@@ -70,13 +72,10 @@ DENY_DISPATCHER_ONLY = [
 
 
 def decision(guard: Path, command: str) -> str | None:
-    payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
-    result = subprocess.run(["bash", str(guard)], input=payload, text=True,
-                            capture_output=True, check=False)
+    result = run_guard(guard, {"tool_name": "Bash", "tool_input": {"command": command}})
     assert result.returncode == 0, result.stderr
-    if not result.stdout.strip():
-        return None
-    return json.loads(result.stdout)["hookSpecificOutput"].get("permissionDecision")
+    output = result.decision()
+    return output.get("permissionDecision") if output else None
 
 
 class SensitiveReadBashTests(unittest.TestCase):

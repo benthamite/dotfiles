@@ -3,9 +3,8 @@
 Every secret moved to 1Password in September 2026 and the old CLI, its store
 and its Emacs integration were removed. Agents kept reintroducing calls to it
 and prose that names it, which then broke unattended jobs and resurfaced as
-stale warnings. This module is the single policy both runtimes share:
-``claude/hooks/block-retired-secrets-cli.py`` and
-``codex/hooks/block-retired-secrets-cli.py`` are thin entry points.
+stale warnings. This module is the single policy both runtimes share; the
+guard engine runs it as ``agent_guard.policies.retired_secrets``.
 
 The patterns live only here and in ``tests/test_retired_secrets_cli.py``;
 those two files are the only places allowed to name the retired CLI. File and

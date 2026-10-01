@@ -26,6 +26,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guard_harness import run_guard  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
 DISPATCHER = ROOT / "claude" / "hooks" / "pretooluse-bash.sh"
 GITHUB = {
@@ -52,12 +55,9 @@ def payload(name: str, command: str) -> str:
 
 
 def decision(guard: Path, name: str, command: str) -> str:
-    result = subprocess.run(["bash", str(guard)], input=payload(name, command), text=True,
-                            capture_output=True, check=False, cwd=ROOT)
+    result = run_guard(guard, payload(name, command), cwd=ROOT)
     assert result.returncode == 0, result.stderr
-    if not result.stdout.strip():
-        return "allow"
-    return json.loads(result.stdout)["hookSpecificOutput"].get("permissionDecision") or "allow"
+    return (result.decision() or {}).get("permissionDecision") or "allow"
 
 
 class GitHubGuardIgnoresProse(unittest.TestCase):

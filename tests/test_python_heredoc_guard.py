@@ -3,10 +3,17 @@
 import importlib.util
 import json
 from pathlib import Path
-import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
+from unittest import mock
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guard_harness import run_guard  # noqa: E402
+
+from agent_guard import classifiers, codex_payload  # noqa: E402
+from agent_guard.policies import secret_leak  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 HELPERS = [ROOT / provider / "hooks/lib-python-heredoc.py" for provider in ("claude", "codex")]
@@ -170,13 +177,20 @@ class NativePythonHeredocGuardTests(unittest.TestCase):
             values = {"input": "text(await tools.exec_command({cmd: " + json.dumps(command) + "}));"}
         else:
             values = {"command" if tool == "Bash" else "cmd": command}
-        result = subprocess.run(["/bin/bash", str(hook or ROOT/provider/"hooks/block-secret-leak.sh")],
-            input=json.dumps({"tool_name": tool, "tool_input": values, "cwd": str(self.directory)}),
-            text=True, capture_output=True, timeout=15, cwd=self.directory)
+        result = run_guard(hook or ROOT/provider/"hooks/block-secret-leak.sh",
+                           {"tool_name": tool, "tool_input": values, "cwd": str(self.directory)},
+                           cwd=self.directory)
         self.assertEqual(result.returncode, 0, result.stderr)
-        output = json.loads(result.stdout) if result.stdout.strip() else {}
-        self.last_reason = output.get("hookSpecificOutput", {}).get("permissionDecisionReason", "")
-        return output.get("hookSpecificOutput", {}).get("permissionDecision", "allow")
+        output = result.decision() or {}
+        self.last_reason = output.get("permissionDecisionReason", "")
+        return output.get("permissionDecision", "allow")
+
+    def run_codex_exec(self, program, **payload):
+        result = run_guard(ROOT/"codex/hooks/block-secret-leak.sh",
+                           {"tool_name": "functions.exec", "tool_input": {"input": program}, **payload},
+                           cwd=self.directory)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result
 
     def assert_hooks(self, command, expected):
         for provider, tool in (("claude", "Bash"), ("codex", "Bash"),
@@ -246,13 +260,8 @@ class NativePythonHeredocGuardTests(unittest.TestCase):
         command = heredoc('from pathlib import Path\nPath("fixture.md").write_text("pbpaste")')
         program = ("await tools.exec_command(" + json.dumps({"cmd": command}) + ");\n"
                    "await tools.exec_command({cmd: 'true'});")
-        result = subprocess.run(["/bin/bash", str(ROOT/"codex/hooks/block-secret-leak.sh")],
-            input=json.dumps({"tool_name": "functions.exec", "tool_input": {"input": program},
-                              "cwd": str(self.directory)}), text=True, capture_output=True,
-            timeout=15, cwd=self.directory)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        output = json.loads(result.stdout) if result.stdout.strip() else {}
-        self.assertEqual(output.get("hookSpecificOutput", {}).get("permissionDecision"), "deny")
+        result = self.run_codex_exec(program, cwd=str(self.directory))
+        self.assertEqual((result.decision() or {}).get("permissionDecision"), "deny")
 
     def test_consecutive_tangodb_python_heredocs_are_allowed(self):
         command = heredoc("print('fixture first')", prefix="PYENV_VERSION=3.11.9 pyenv exec python -")
@@ -364,54 +373,29 @@ PY"""
                 with self.subTest(field=field, codepoints=[ord(char) for char in value]):
                     values = {"cmd": "true", field: value}
                     program = "text(await tools.exec_command(" + json.dumps(values) + "));"
-                    result = subprocess.run(["/bin/bash", str(ROOT/"codex/hooks/block-secret-leak.sh")],
-                        input=json.dumps({"tool_name": "functions.exec", "tool_input": {"input": program}}),
-                        text=True, capture_output=True, timeout=15, cwd=self.directory)
-                    self.assertEqual(result.returncode, 0, result.stderr)
-                    self.assertEqual(json.loads(result.stdout)["hookSpecificOutput"]["permissionDecision"], "deny")
+                    result = self.run_codex_exec(program)
+                    self.assertEqual(result.decision()["permissionDecision"], "deny")
                     self.assertEqual(result.stderr, "")
 
     def test_failed_or_invalid_extraction_refuses_even_after_partial_output(self):
-        copied = self.directory / "copied-codex"
-        copied.mkdir()
-        for name in ("block-secret-leak.sh", "lib-heredoc.sh", "lib-python-heredoc.py",
-                     "lib-codex-paths.sh", "lib-codex-hook-json.sh"):
-            shutil.copyfile(ROOT/"codex/hooks"/name, copied/name)
-        library = copied/"lib-codex-hook-json.sh"
-        original = library.read_text()
-        record = json.dumps({"cmd": "true", "workdir": None, "ambiguous": False})
-        for output, status in (("", 7), (record, 7), ("{broken", 0),
-                               (json.dumps({"cmd": [], "workdir": None, "ambiguous": False}), 0)):
-            with self.subTest(output=output, status=status):
-                library.write_text(original + "\ncodex_nested_exec_contexts() {\n"
-                    + "  printf '%s\\0' '" + output + "'\n  return " + str(status) + "\n}\n")
-                self.assertEqual(self.guard("codex", "true", "functions.exec",
-                                            hook=copied/"block-secret-leak.sh"), "deny")
+        # The shell test replaced codex_nested_exec_contexts in a hook copy;
+        # here the extractor fails or returns an invalid record in-process.
+        # Its unparsable-record case has no equivalent: records are dicts.
+        record = {"cmd": "true", "workdir": None, "ambiguous": False}
+        for effect in (codex_payload.PartialOutput("exit 7", []), codex_payload.PartialOutput("exit 7", [record]),
+                       [{"cmd": [], "workdir": None, "ambiguous": False}]):
+            kind = "side_effect" if isinstance(effect, Exception) else "return_value"
+            with self.subTest(effect=repr(effect)), \
+                    mock.patch.object(secret_leak, "nested_exec_contexts", **{kind: effect}):
+                self.assertEqual(self.guard("codex", "true", "functions.exec"), "deny")
 
     def test_cached_commands_preserve_trailing_lf_and_backslash_lf_bytes(self):
-        copied = self.directory / "inspect-codex-cache"
-        copied.mkdir()
-        for name in ("block-secret-leak.sh", "lib-heredoc.sh", "lib-python-heredoc.py",
-                     "lib-codex-paths.sh", "lib-codex-hook-json.sh"):
-            shutil.copyfile(ROOT/"codex/hooks"/name, copied/name)
-        hook = copied/"block-secret-leak.sh"
-        # Stop this owned hook copy after real extraction/validation/caching.
-        # Inspect NUL-framed bytes instead of executing any proposed command.
-        marker = "# --- Allowlist: commands that do not return secret-manager output ---"
-        inspector = ('for secret_cached in "${SECRET_NESTED_COMMANDS[@]}"; do\n'
-                     '  printf "%s\\0" "$secret_cached"\ndone\nexit 0\n')
-        source = hook.read_text()
-        self.assertEqual(source.count(marker), 1)
-        hook.write_text(source.replace(marker, inspector + marker))
+        # The shell test stopped a hook copy to dump SECRET_NESTED_COMMANDS;
+        # the engine's equivalent is the command list it classifies.
         commands = ["printf fixture\\\n", "printf fixture\n\n\n", "printf é🌱\n", "", "printf dot."]
         program = "\n".join("await tools.exec_command(" + json.dumps({"cmd": command}) + ");"
                             for command in commands)
-        result = subprocess.run(["/bin/bash", str(hook)],
-            input=json.dumps({"tool_name": "functions.exec", "tool_input": {"input": program}}).encode(),
-            capture_output=True, timeout=15, cwd=self.directory)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stderr, b"")
-        self.assertEqual(result.stdout, b"".join(command.encode() + b"\0" for command in commands))
+        self.assertEqual(secret_leak._nested_commands(program), commands)
 
     def test_safe_data_mentions_remain_conservatively_denied(self):
         for body in ('print("pbpaste")', 'text = """first\nsecurity\nlast"""', '# pbpaste is a clipboard tool\npass'):
@@ -470,13 +454,8 @@ PY"""
         self.assert_hooks(command, "allow")
         program = ('text(await tools.exec_command({cmd:' + json.dumps(command)
                    + ',workdir:' + json.dumps(str(self.directory)) + ',max_output_tokens:1000}));')
-        result = subprocess.run(["/bin/bash", str(ROOT/"codex/hooks/block-secret-leak.sh")],
-            input=json.dumps({"tool_name": "functions.exec", "tool_input": {"input": program},
-                              "cwd": str(self.directory)}), text=True, capture_output=True,
-            timeout=15, cwd=self.directory)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        output = json.loads(result.stdout) if result.stdout.strip() else {}
-        self.assertEqual(output.get("hookSpecificOutput", {}).get("permissionDecision", "allow"), "allow")
+        result = self.run_codex_exec(program, cwd=str(self.directory))
+        self.assertEqual((result.decision() or {}).get("permissionDecision", "allow"), "allow")
         document = self.directory / "fixture.md"
         report = self.directory / "fixture.json"
         document.write_text("Checks remain pending.")
@@ -561,13 +540,8 @@ PY"""
         ]
         for program, expected in programs:
             with self.subTest(program=program):
-                result = subprocess.run(["/bin/bash", str(ROOT/"codex/hooks/block-secret-leak.sh")],
-                    input=json.dumps({"tool_name": "functions.exec", "tool_input": {"input": program},
-                                      "cwd": str(self.directory)}), text=True, capture_output=True,
-                    timeout=15, cwd=self.directory)
-                self.assertEqual(result.returncode, 0, result.stderr)
-                output = json.loads(result.stdout) if result.stdout.strip() else {}
-                self.assertEqual(output.get("hookSpecificOutput", {}).get("permissionDecision", "allow"), expected)
+                result = self.run_codex_exec(program, cwd=str(self.directory))
+                self.assertEqual((result.decision() or {}).get("permissionDecision", "allow"), expected)
 
     def test_shell_and_interpolation_controls_remain_denied(self):
         document = 'from pathlib import Path\nPath("fixture.md").write_text("pbpaste")'
@@ -590,22 +564,33 @@ PY"""
         self.assert_hooks(heredoc(f"text = {marker!r}\npass"), "deny")
 
     def test_missing_projection_helper_denies_instead_of_silently_allowing(self):
+        real_load = classifiers.load
+
+        def load(name):
+            if name == "python-heredoc":
+                raise FileNotFoundError("lib-python-heredoc.py")
+            return real_load(name)
+
         for provider in ("claude", "codex"):
-            copied = self.directory / provider
-            copied.mkdir()
-            names = ["block-secret-leak.sh", "lib-heredoc.sh"]
-            if provider == "codex":
-                names += ["lib-codex-paths.sh", "lib-codex-hook-json.sh"]
-            for name in names:
-                shutil.copyfile(ROOT/provider/"hooks"/name, copied/name)
-            self.assertEqual(self.guard(provider, heredoc("pass"), hook=copied/"block-secret-leak.sh"), "deny")
+            with self.subTest(provider=provider), mock.patch.object(classifiers, "load", side_effect=load):
+                result = run_guard(ROOT/provider/"hooks/block-secret-leak.sh",
+                                   {"tool_name": "Bash", "tool_input": {"command": heredoc("pass")}},
+                                   cwd=self.directory)
+                if result.returncode == 0:
+                    self.assertEqual(result.decision()["permissionDecision"], "deny")
+                else:
+                    self.assertEqual(result.returncode, 2)
+                    self.assertIn("Security hook failed", result.stderr)
 
 
 class NestedUnicodeDecoderTests(unittest.TestCase):
     def extract(self, program, mode):
-        return subprocess.run(["/bin/bash", "-c", 'source "$1"; _codex_nested_exec_values "$2"',
-            "unicode-decoder-fixture", str(ROOT/"codex/hooks/lib-codex-hook-json.sh"), mode],
-            input=program.encode(), capture_output=True, timeout=15)
+        """`_codex_nested_exec_values MODE`: (status, NUL-framed records)."""
+        function = codex_payload.nested_exec_commands if mode == "commands" else codex_payload.nested_exec_contexts
+        try:
+            return 0, function(program)
+        except codex_payload.PartialOutput as failure:
+            return 1, failure.values
 
     def test_literal_and_escaped_bmp_and_astral_text_round_trip_in_both_modes(self):
         command = "printf é🌱"
@@ -615,14 +600,12 @@ class NestedUnicodeDecoderTests(unittest.TestCase):
                 {"cmd": command, "workdir": workdir}, ensure_ascii=ascii_only) + ");"
             for mode in ("commands", "contexts"):
                 with self.subTest(ascii_only=ascii_only, mode=mode):
-                    result = self.extract(program, mode)
-                    self.assertEqual(result.returncode, 0, result.stderr)
-                    self.assertEqual(result.stderr, b"")
+                    status, values = self.extract(program, mode)
+                    self.assertEqual(status, 0)
                     if mode == "commands":
-                        self.assertEqual(result.stdout, command.encode() + b"\0")
+                        self.assertEqual(values, [command])
                     else:
-                        record = json.loads(result.stdout.removesuffix(b"\0"))
-                        self.assertEqual(record, {"cmd": command, "workdir": workdir, "ambiguous": False})
+                        self.assertEqual(values, [{"cmd": command, "workdir": workdir, "ambiguous": False}])
 
     def test_unpaired_surrogates_and_nul_fail_in_both_modes(self):
         for field in ("cmd", "workdir"):
@@ -630,9 +613,9 @@ class NestedUnicodeDecoderTests(unittest.TestCase):
                 program = "await tools.exec_command(" + json.dumps({"cmd": "true", field: value}) + ");"
                 for mode in ("commands", "contexts"):
                     with self.subTest(field=field, mode=mode, codepoints=[ord(char) for char in value]):
-                        result = self.extract(program, mode)
-                        self.assertNotEqual(result.returncode, 0)
-                        self.assertEqual(result.stdout, b"")
+                        status, values = self.extract(program, mode)
+                        self.assertNotEqual(status, 0)
+                        self.assertEqual(values, [])
 
 
 if __name__ == "__main__":

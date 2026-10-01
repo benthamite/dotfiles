@@ -1,23 +1,23 @@
 """The core.hooksPath guard denies overrides and lets plain reads through."""
 
-import json
-import subprocess
+import sys
 import unittest
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guard_harness import run_guard  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
 HOOKS = (
-    ROOT / "claude/hooks/pretooluse-bash.sh",
-    ROOT / "codex/hooks/block-hookspath-override.sh",
+    Path("claude/hooks/pretooluse-bash.sh"),
+    Path("codex/hooks/block-hookspath-override.sh"),
 )
 KEY = "core." + "hooksPath"
 
 
 def denied(hook, command):
-    payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command},
-                          "cwd": str(ROOT)})
-    result = subprocess.run(["bash", str(hook)], input=payload, text=True,
-                            capture_output=True, check=False, cwd=ROOT)
+    payload = {"tool_name": "Bash", "tool_input": {"command": command}, "cwd": str(ROOT)}
+    result = run_guard(hook, payload, cwd=ROOT)
     return "may not override " + KEY in result.stdout + result.stderr
 
 

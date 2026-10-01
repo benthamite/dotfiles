@@ -1,9 +1,13 @@
 """Classify synthetic commands at guard boundaries; never execute their bodies."""
-import importlib.util
 import json
 from pathlib import Path
-import subprocess
+import sys
 import unittest
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guard_harness import run_guard  # noqa: E402
+
+from agent_guard import classifiers  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT_COMMAND = """python3 - <<'PY'
@@ -22,20 +26,16 @@ TOKEN = 'SyntheticPayload0123456789abcdefghijklmnopqrstuv'
 
 class NetworkActivationTests(unittest.TestCase):
     def test_projection_preserves_executable_evidence(self):
-        for provider in ('claude', 'codex'):
-            spec = importlib.util.spec_from_file_location('heredoc_' + provider,
-                ROOT / provider / 'hooks/lib-python-heredoc.py')
-            helper = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(helper)
-            for name in ('curl', 'wget', 'nc', 'ncat'):
-                body = f"label='é'; {name}=[]; print(len({name}))"
-                expected = body.replace(name, '_' * len(name))
-                self.assertEqual(helper._network_activation_body(body, False), expected)
-                for body in (f'{name}()', f'{name}.send(payload)', f'import {name}',
-                             f'from subprocess import run as {name}', f"command='{name}'",
-                             f'{name} = ['):
-                    result = helper._network_activation_body(body, False)
-                    self.assertTrue(result is None or name in result, body)
+        helper = classifiers.load('python-heredoc')
+        for name in ('curl', 'wget', 'nc', 'ncat'):
+            body = f"label='é'; {name}=[]; print(len({name}))"
+            expected = body.replace(name, '_' * len(name))
+            self.assertEqual(helper._network_activation_body(body, False), expected)
+            for body in (f'{name}()', f'{name}.send(payload)', f'import {name}',
+                         f'from subprocess import run as {name}', f"command='{name}'",
+                         f'{name} = ['):
+                result = helper._network_activation_body(body, False)
+                self.assertTrue(result is None or name in result, body)
 
     def test_guard_routes(self):
         def python(body, quote="'"):
@@ -69,11 +69,11 @@ class NetworkActivationTests(unittest.TestCase):
                         data = {'input': 'text(await tools.exec_command(' + json.dumps({'cmd': command}) + '));'}
                     else:
                         data = {'command' if tool == 'Bash' else 'cmd': command}
-                    result = subprocess.run(['bash', str(ROOT / path)],
-                        input=json.dumps({'tool_name': tool, 'tool_input': data, 'cwd': str(ROOT)}),
-                        capture_output=True, text=True, check=True)
-                    output = json.loads(result.stdout) if result.stdout.strip() else {}
-                    self.assertEqual(output.get('hookSpecificOutput', {}).get('permissionDecision', 'allow'), expected)
+                    result = run_guard(path, {'tool_name': tool, 'tool_input': data, 'cwd': str(ROOT)})
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    denied = (result.decision() or {}).get('permissionDecision') == 'deny'
+                    actual = 'deny' if denied else 'allow'
+                    self.assertEqual(actual, expected)
 
 
 if __name__ == '__main__':

@@ -19,7 +19,7 @@ The tool list below describes the hook's intended matcher coverage, only where
 the hook is installed and recognizes the invocation; it is not universal access
 control or a confidentiality guarantee.
 
-A PreToolUse hook (`block-walk-list-access.sh`) blocks every tool (Read, Grep, Glob, Edit, Write, NotebookEdit, Bash) from touching `~/.claude/walk-list-data/` except `python .../walk.py` invocations.
+A PreToolUse guard (`agent_guard.policies.walk_list`, in the guard engine) blocks every tool (Read, Grep, Glob, Edit, Write, NotebookEdit, Bash) from touching `~/.claude/walk-list-data/` except `python .../walk.py` invocations.
 
 The hook is a cooperative workflow guard where its matcher is installed and
 recognizes the tool/path; it is not a filesystem sandbox or a guarantee covering

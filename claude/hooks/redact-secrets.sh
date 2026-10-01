@@ -1,9 +1,10 @@
 #!/bin/bash
 # Stdin → stdout filter that masks well-formed secret literals.
 #
-# Used as the sink of `wrap-bash-output.sh` so any tokens that escape
-# into a Bash command's stdout/stderr are replaced before the model
-# sees them. Patterns are anchored to recognizable prefixes / shapes —
+# Used as the sink of the guard engine's output wrapping
+# (agent_guard.policies.dispatcher for Claude, codex_wrap for Codex) so
+# any tokens that escape into a shell command's stdout/stderr are
+# replaced before the model sees them. Patterns are anchored to recognizable prefixes / shapes —
 # the false-positive cost is one `[…_REDACTED]` token in the rare line
 # that happens to match a prefix unintentionally.
 #

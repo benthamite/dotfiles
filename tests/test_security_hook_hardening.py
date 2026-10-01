@@ -1,9 +1,15 @@
 from __future__ import annotations
 
 import json
-import subprocess
+import sys
 import unittest
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import guard_harness  # noqa: E402
+
+from agent_guard import engine  # noqa: E402
+from agent_guard.policies import sensitive_read  # noqa: E402
 
 
 DOTFILES = Path(__file__).resolve().parents[1]
@@ -22,17 +28,11 @@ SENSITIVE_READ_HELPERS = {
 }
 
 
-def run_hook(script: Path, payload: dict) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        ["bash", str(script)],
-        input=json.dumps(payload),
-        text=True,
-        capture_output=True,
-        check=False,
-    )
+def run_hook(script: Path, payload: dict) -> guard_harness.GuardResult:
+    return guard_harness.run_guard(script, payload)
 
 
-def permission_decision(result: subprocess.CompletedProcess[str]) -> str:
+def permission_decision(result: guard_harness.GuardResult) -> str:
     if not result.stdout.strip():
         return "allow"
     output = json.loads(result.stdout)
@@ -60,7 +60,11 @@ class ProtectedHookRegistrationTests(unittest.TestCase):
         and broad home-directory content searches are denied.
         """
         config = json.loads((Path.home() / ".claude/settings.json").read_text())
-        matchers = hook_matchers(config, "block-sensitive-read.sh")
+        engine_tools = {tool for tool in ("Read", "Grep")
+                        if sensitive_read in engine.policies_for("claude", tool)}
+        self.assertEqual(engine_tools, {"Read", "Grep"})
+        # Before cutover the shell hook is registered; after it, the engine entry.
+        matchers = hook_matchers(config, "block-sensitive-read.sh") or hook_matchers(config, "agent-guard.sh")
         covered_tools = {
             tool
             for matcher in matchers
@@ -254,7 +258,7 @@ class ClaudeGrepSensitiveReadTests(unittest.TestCase):
 class HeredocSensitiveReadTests(unittest.TestCase):
     """Heredoc bodies fed to a data sink are data; bodies fed to interpreters are not."""
 
-    def run_all(self, command: str) -> list[tuple[Path, subprocess.CompletedProcess[str]]]:
+    def run_all(self, command: str) -> list[tuple[Path, guard_harness.GuardResult]]:
         payload = {"tool_name": "Bash", "tool_input": {"command": command}}
         return [(guard, run_hook(guard, payload)) for guard in SENSITIVE_READ_GUARDS]
 

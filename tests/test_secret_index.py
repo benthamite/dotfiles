@@ -16,6 +16,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / "lib/python"))
 import secret_index as si  # noqa: E402
+sys.path.insert(0, str(ROOT / "tests"))
+from guard_harness import run_guard  # noqa: E402
 
 HEX = "".join("0123456789abcdef"[(i * 5 + 3) % 16] for i in range(32))  # unprefixed hex secret
 PASSWORD = "correct-horse " + "battery " + "staple 7"                    # password with spaces
@@ -110,10 +112,9 @@ class GuardKnownValueTests(unittest.TestCase):
         with IndexEnv() as env:
             for guard, tool, tool_input in cases:
                 with self.subTest(guard=guard, tool=tool):
-                    payload = json.dumps({"tool_name": tool, "tool_input": tool_input, "cwd": "/tmp"})
-                    r = subprocess.run(["bash", str(ROOT / guard)], input=payload, capture_output=True,
-                                       text=True, env=env.env)
-                    out = json.loads(r.stdout)["hookSpecificOutput"]
+                    payload = {"tool_name": tool, "tool_input": tool_input, "cwd": "/tmp"}
+                    r = run_guard(guard, payload, env=env.env)
+                    out = r.decision()
                     self.assertEqual(out["permissionDecision"], "deny")
                     self.assertIn("known secret value", out["permissionDecisionReason"])
                     self.assertNotIn(HEX, r.stdout + r.stderr)
@@ -122,9 +123,8 @@ class GuardKnownValueTests(unittest.TestCase):
     def test_unusable_index_denies(self):
         with IndexEnv() as env:
             env.path.write_text("not json")
-            payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": "ls"}})
-            r = subprocess.run(["bash", str(ROOT / "claude/hooks/block-secret-leak.sh")], input=payload,
-                               capture_output=True, text=True, env=env.env)
+            payload = {"tool_name": "Bash", "tool_input": {"command": "ls"}}
+            r = run_guard("claude/hooks/block-secret-leak.sh", payload, env=env.env)
             self.assertIn("known-secret check failed", r.stdout)
 
 

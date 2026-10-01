@@ -22,13 +22,16 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 from urllib.parse import quote
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import guard_harness  # noqa: E402
 
-DOTFILES = Path("/Users/pablostafforini/My Drive/dotfiles")
+DOTFILES = Path(__file__).resolve().parents[1]
 GUARDS = {
     "claude-standalone": DOTFILES / "claude" / "hooks" / "block-secret-leak.sh",
     "claude-dispatcher": DOTFILES / "claude" / "hooks" / "pretooluse-bash.sh",
@@ -41,16 +44,10 @@ def run_guard(
 ) -> dict | None:
     """Run a guard with a synthetic tool payload; return its decision JSON."""
     field = "input" if tool == "functions.exec" else "cmd" if tool != "Bash" else "command"
-    payload = json.dumps({"tool_name": tool, "tool_input": {field: command},
-                          "cwd": str(cwd or Path.cwd())})
-    result = subprocess.run(
-        ["bash", str(guard)],
-        input=payload,
-        capture_output=True,
-        text=True,
-        check=True,
-        cwd=cwd,
-    )
+    payload = {"tool_name": tool, "tool_input": {field: command}, "cwd": str(cwd or Path.cwd())}
+    result = guard_harness.run_guard(guard, payload, cwd=cwd)
+    if result.returncode != 0:
+        raise AssertionError(result.stderr)
     if not result.stdout.strip():
         return None
     return json.loads(result.stdout)

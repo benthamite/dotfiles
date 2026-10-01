@@ -7,26 +7,21 @@ bin/launchd-install.py instead.
 """
 
 import json
-import subprocess
+import sys
 import unittest
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guard_harness import run_guard as run_hook  # noqa: E402
+
+from agent_guard import engine  # noqa: E402
+from agent_guard.core import CLAUDE, CODEX  # noqa: E402
+from agent_guard.policies import launchagent  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 CLAUDE_HOOK = "claude/hooks/block-unregistered-launchagent.sh"
 CODEX_HOOK = "codex/hooks/block-unregistered-launchagent.sh"
 LIVE_DIR = Path.home() / "Library/LaunchAgents"
-
-
-def run_hook(path, payload):
-    return subprocess.run(
-        [str(ROOT / path)],
-        input=json.dumps(payload),
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=False,
-    )
 
 
 def bash(path, command):
@@ -229,19 +224,13 @@ class CodexParityTest(unittest.TestCase):
                 self.assertEqual(bool(claude), bool(codex))
 
 
-class ManifestTest(unittest.TestCase):
-    def test_the_guard_is_recorded_as_paired(self):
-        manifest = json.loads((ROOT / "ai-config-sync.json").read_text())
-        entries = {hook["name"]: hook for hook in manifest["hooks"]}
-        entry = entries["block-unregistered-launchagent.sh"]
-        self.assertEqual(entry["status"], "paired")
-        self.assertEqual(entry["claude"], CLAUDE_HOOK)
-        self.assertEqual(entry["codex"], CODEX_HOOK)
-
-    def test_both_scripts_are_executable(self):
-        for path in (CLAUDE_HOOK, CODEX_HOOK):
-            with self.subTest(path=path):
-                self.assertTrue((ROOT / path).stat().st_mode & 0o111)
+class RegistrationTest(unittest.TestCase):
+    def test_both_runtimes_register_the_guard_for_shell_and_write_tools(self):
+        for runtime, tools in ((CLAUDE, ("Bash", "Write", "Edit")),
+                               (CODEX, ("functions.exec_command", "functions.exec", "apply_patch"))):
+            for tool in tools:
+                with self.subTest(runtime=runtime, tool=tool):
+                    self.assertIn(launchagent, list(engine.policies_for(runtime, tool)))
 
 
 if __name__ == "__main__":

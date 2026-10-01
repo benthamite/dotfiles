@@ -1,47 +1,65 @@
 #!/usr/bin/env bash
-# Run the agent secret-guard test suite.
+# Run the agent guard test suite (lib/python/agent_guard and the hooks' tests).
 #
-#   test-guards           every guard test, spread across all cores
-#   test-guards --fast    in-process classifier tests only (seconds)
-#   test-guards ARGS...   extra pytest arguments (e.g. -k parity, -x)
+#   test-guards                 every guard test, across all cores (~30 s)
+#   test-guards --fast          the engine's own unit tests (seconds)
+#   test-guards --differential  the engine against the real grep, sed and bash
+#   test-guards ARGS...         extra pytest arguments (e.g. -k secret_leak, -x)
 #
-# Most guard tests start the real hook scripts, ~0.5 s each, so a serial run
-# takes over 30 minutes; pytest-xdist (fetched by uv, nothing installed
-# globally) brings that down to a few minutes. See docs/secret-guard.md.
+# The guards are one Python engine (docs/plans/2026-10-01-guard-engine.md), so
+# the tests call it in-process through tests/guard_harness.py; a few
+# end-to-end tests run agent-guard.sh. pytest-xdist is fetched by uv (nothing
+# installed globally); its workers are processes, which the harness needs
+# because it swaps os.environ and the working directory per call. The
+# differential tier compares agent_guard/ere.py with /usr/bin/grep,
+# /usr/bin/sed and /bin/bash; run it after changing ere.py. See
+# docs/secret-guard.md.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-FAST=(
-  tests/test_op_policy.py
-  tests/test_process_output_policy.py
-  tests/test_public_url_scan.py
-  tests/test_secret_guard_scope.py
-  tests/test_redact_tool_output.py
-)
+FAST=(tests/agent_guard --ignore=tests/agent_guard/differential)
 FULL=(
   "${FAST[@]}"
-  tests/test_secret_guard_parity.py
-  tests/test_python_heredoc_guard.py
-  tests/test_op_automations.py
-  tests/test_secret_guard_inert_mentions.py
-  tests/test_env_op_template_policy.py
-  tests/test_secret_guard_network_names.py
-  tests/test_network_activation_projection.py
+  tests/test_ahrefs_api_hooks.py
   tests/test_block_sensitive_read.py
-  tests/test_inert_text_scans.py
-  tests/test_function_body_guard.py
-  tests/test_security_hook_hardening.py
-  tests/test_process_output_guard.py
-  tests/test_codex_secret_patch_guard.py
   tests/test_claude_bash_pretooluse.py
-  tests/test_hook_failure_safety.py
-  tests/test_secret_index.py
+  tests/test_codex_secret_patch_guard.py
   tests/test_credential_pages.py
+  tests/test_destructive_command_guard.py
+  tests/test_env_op_template_policy.py
+  tests/test_function_body_guard.py
+  tests/test_github_operation_authorization.py
+  tests/test_github_write_guard.py
+  tests/test_hook_failure_safety.py
+  tests/test_hookspath_guard.py
+  tests/test_inert_text_scans.py
+  tests/test_launchagent_registry_hooks.py
+  tests/test_network_activation_projection.py
+  tests/test_op_automations.py
+  tests/test_op_policy.py
+  tests/test_process_output_guard.py
+  tests/test_process_output_policy.py
+  tests/test_public_url_scan.py
+  tests/test_python_heredoc_guard.py
+  tests/test_redact_tool_output.py
+  tests/test_retired_secrets_cli.py
+  tests/test_secret_guard_inert_mentions.py
+  tests/test_secret_guard_network_names.py
+  tests/test_secret_guard_parity.py
+  tests/test_secret_guard_scope.py
+  tests/test_secret_index.py
+  tests/test_security_hook_hardening.py
+  tests/test_terminal_document_activation.py
+  tests/test_untrusted_execution_guard.py
 )
 
-if [ "${1:-}" = "--fast" ]; then
-  shift
-  exec python3 -m pytest -q -p no:cacheprovider "${FAST[@]}" "$@"
-fi
+case "${1:-}" in
+  --fast)
+    shift
+    exec python3 -m pytest -q -p no:cacheprovider "${FAST[@]}" "$@" ;;
+  --differential)
+    shift
+    exec python3 -m pytest -q -p no:cacheprovider tests/agent_guard/differential "$@" ;;
+esac
 exec uv run --quiet --no-project --with pytest --with pytest-xdist \
   python -m pytest -q -p no:cacheprovider -n auto --dist worksteal "${FULL[@]}" "$@"

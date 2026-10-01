@@ -48,7 +48,7 @@ documented in [[file:../agents/README.org][the agent manual]]. Skill names and t
 | =sync-agent-c-worktrees= | Compatibility entry point for =sync-reasoning-tasks-worktrees=. |
 | =sync-reasoning-tasks-worktrees= | Runs the guarded reasoning-task sync across eligible task worktrees. |
 | =secret-index= | Builds (=refresh=, run by Pablo with Touch ID) and queries the keyed-fingerprint index of this machine's secret values that the agent guards and output redactors use; never prints a value. |
-| =test-guards= | Runs the agent secret-guard tests: every file across all cores via uv-fetched pytest-xdist (about 10 minutes), or =--fast= for the in-process classifier tests (seconds). |
+| =test-guards= | Runs the agent guard tests in-process: every guard test across all cores via uv-fetched pytest-xdist (about 35 s), =--fast= for the engine's unit tests, or =--differential= to compare the grep/sed emulation with the real tools. |
 | =untrusted-run= | Runs a command in a pinned, networkless Docker Desktop Linux container with fresh output and explicit read-only inputs; no host credentials or process namespace are shared. |
 
 ** Bibliography validation

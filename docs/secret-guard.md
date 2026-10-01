@@ -1,9 +1,14 @@
 # Secret guard: evidence and rules for changing it
 
-Read this before changing any secret-protection hook
-(`{claude,codex}/hooks/block-secret-leak.sh`, `lib-*.py`,
-`redact-secrets.sh`, `redact-tool-output.py`, `block-sensitive-read.sh`,
-`pretooluse-bash.sh`). The approved redesign is
+Read this before changing any guard or output redactor. Since 2026-10-01
+every PreToolUse guard of both runtimes is one Python engine,
+`lib/python/agent_guard` (one module per policy in `policies/`), entered
+through `{claude,codex}/hooks/agent-guard.sh`; the output side is
+`{claude,codex}/hooks/redact-tool-output.py` and `redact-secrets.sh`. The
+engine replaced the shell guards decision for decision, apart from recorded
+intended differences:
+[plans/2026-10-01-guard-engine.md](plans/2026-10-01-guard-engine.md). The
+redesign behind it is
 [plans/2026-09-30-secret-guard-redesign.md](plans/2026-09-30-secret-guard-redesign.md).
 
 ## Rules
@@ -19,13 +24,17 @@ Read this before changing any secret-protection hook
    scheduled for removal only via the redesign's log-only trial.
 3. **Every new exposure is recorded here** (a row in the table, no values),
    with the path it took. Changes to the guard must say which rows they close.
-4. **Tests must stay fast.** New guard tests call classifiers in-process;
-   add end-to-end hook invocations only to prove wiring. Run `bin/test-guards`
-   (all guard tests in parallel, ~10 minutes) before committing a guard
-   change; `bin/test-guards --fast` (seconds) while iterating.
-5. **A check that cannot run must deny.** Shell `if ... | grep -q` reads a
-   grep error as "no match"; the guards therefore wrap `grep` so a status of
-   2, 126 or 127 aborts the hook into a denial (`GrepFailureTests`).
+4. **Tests must stay fast.** Guard tests call the engine in-process through
+   `tests/guard_harness.py`; add end-to-end runs of `agent-guard.sh` only to
+   prove wiring. Run `bin/test-guards` (every guard test, ~35 s) before
+   committing a guard change, `bin/test-guards --fast` while iterating, and
+   `bin/test-guards --differential` after changing `agent_guard/ere.py` (the
+   grep/sed emulation, compared with the real tools).
+5. **A check that cannot run must deny.** Any exception in a policy denies
+   (`engine.main` exits 2), and `agent-guard.sh` turns every non-zero status
+   of the interpreter, including a failed import, into exit 2. Before adding an
+   `except`, check what the old behaviour was and fail closed unless it was a
+   deliberate fallback.
 
 ## Incident inventory (agent exposures)
 
@@ -58,7 +67,7 @@ screenshot.
 
 Tally: page/screenshot 9, command output 7, file read 3, **typed literal 0**.
 
-## Protection in place (2026-09-30)
+## Protection in place (2026-10-01)
 
 - **Known values:** `bin/secret-index refresh` (Pablo, Touch ID) fingerprints
   every concealed 1Password field, `.zshenv-secrets` and known credential
@@ -70,21 +79,21 @@ Tally: page/screenshot 9, command output 7, file read 3, **typed literal 0**.
 - **Screenshots:** dropped on pages in `agents/credential-pages.txt`, or when
   the page cannot be determined.
 
-## Known gaps (2026-09-30)
+## Known gaps (2026-10-01)
 
 - A background subagent's final report is not masked (no hook can rewrite
   it); its own tool calls are, so this needs a subagent that deliberately
   transforms a secret.
-- Codex: chunks of still-running `exec_command` sessions, error results, and
-  Codex's raw logs are not masked.
+- Codex: chunks of still-running `exec_command` sessions and error results
+  are masked only for credential-prone commands (`policies/codex_wrap`, the
+  same rule as Claude's output wrapping); Codex's raw logs are not masked.
 - Secrets that are new and not yet indexed, shorter than 12 characters, or
   stored somewhere the index does not read (the Keychain, browser storage)
   are recognised only by shape.
 - A secret glued to the end of a word (`abcSECRET`) is not found.
-- Each Claude Bash call spends ~0.6 s in the guard (~120 subprocesses); the
-  full guard suite takes ~10 minutes even in parallel, because each case
-  starts real hook processes. Under 30 seconds needs the single-process
-  rewrite (redesign item 6).
-- Unexplained: on 2026-09-30 one Codex network-guard case was allowed once
-  while 19 test files ran concurrently; it did not recur in 120 parallel
-  runs or under process limits. If it recurs, keep the guard's stderr.
+- Each guarded tool call costs ~85 ms CPU in the engine (the shell guards
+  used ~800 ms). Under 50 ms would need a resident process, rejected because
+  it would keep enforcing old rules after a guard edit until restarted.
+- The 2026-09-30 one-off Codex allow under load is unexplained but belonged to
+  the shell guards' pipelines (`echo | grep -q` races, see intended difference
+  15); the engine has no such pipelines.

@@ -2,12 +2,20 @@
 
 from __future__ import annotations
 
+import functools
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guard_harness import GuardResult, run_guard  # noqa: E402
+
+from agent_guard.policies import github_write  # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,11 +37,28 @@ def payload(tool: str, command: str) -> str:
     return json.dumps(data)
 
 
-def decision(result: subprocess.CompletedProcess[str]) -> str:
+def checked(result: GuardResult) -> GuardResult:
+    """The shell runs used check=True: a guard failure is an error, not a deny."""
+    if result.returncode != 0:
+        raise AssertionError(result.stderr)
+    return result
+
+
+def decision(result: GuardResult) -> str:
     if not result.stdout.strip():
         return "allow"
     output = json.loads(result.stdout)
     return output["hookSpecificOutput"]["permissionDecision"]
+
+
+def setUpModule() -> None:
+    # Every check reads the allowlist and the declared-repo registry from
+    # their repositories' HEAD (two `git show` runs, ~100 ms on Drive). No test
+    # here commits, so read each blob once per run.
+    show = functools.lru_cache(maxsize=None)(functools.partial(github_write._git_show, env=None))
+    patch = mock.patch.object(github_write, "_git_show", lambda directory, spec, env: show(directory, spec))
+    patch.start()
+    unittest.addModuleCleanup(patch.stop)
 
 
 class GitHubWriteGuardParityTests(unittest.TestCase):
@@ -63,33 +88,17 @@ exit 1
         self,
         tool: str,
         command: str,
-    ) -> subprocess.CompletedProcess[str]:
+    ) -> GuardResult:
         if self.gh_log.exists():
             self.gh_log.unlink()
         env = os.environ.copy()
         env["PATH"] = os.pathsep.join((str(self.temp_path), env["PATH"]))
         env["FAKE_GH_LOG"] = str(self.gh_log)
-        return subprocess.run(
-            ["bash", str(GUARDS[tool])],
-            input=payload(tool, command),
-            capture_output=True,
-            text=True,
-            check=True,
-            cwd=ROOT,
-            env=env,
-        )
+        return checked(run_guard(GUARDS[tool], payload(tool, command), cwd=ROOT, env=env))
 
-    def run_codex_exec_guard(self, source: str) -> subprocess.CompletedProcess[str]:
+    def run_codex_exec_guard(self, source: str) -> GuardResult:
         data = {"tool_name": "functions.exec", "tool_input": {"input": source}}
-        return subprocess.run(
-            ["bash", str(GUARDS["codex"])],
-            input=json.dumps(data),
-            capture_output=True,
-            text=True,
-            check=True,
-            cwd=ROOT,
-            env=os.environ.copy(),
-        )
+        return checked(run_guard(GUARDS["codex"], data, cwd=ROOT))
 
     def assert_both(
         self,
@@ -515,15 +524,7 @@ class DispatcherPrefilterTests(unittest.TestCase):
     UNOWNED = "https://github.com/someone-else/not-owned.git"
 
     def run_dispatcher(self, command: str) -> str:
-        result = subprocess.run(
-            ["bash", str(self.DISPATCHER)],
-            input=payload("claude", command),
-            capture_output=True,
-            text=True,
-            check=True,
-            cwd=ROOT,
-        )
-        return decision(result)
+        return decision(checked(run_guard(self.DISPATCHER, payload("claude", command), cwd=ROOT)))
 
     def test_push_forms_with_git_options_reach_the_guard(self) -> None:
         for command in (

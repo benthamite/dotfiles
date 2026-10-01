@@ -14,10 +14,12 @@ construction. Two guards share that assumption and this file pins both sides:
 
 from __future__ import annotations
 
-import json
-import subprocess
+import sys
 import unittest
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guard_harness import run_guard  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 SENSITIVE_READ = {
@@ -34,12 +36,9 @@ FAKE_GITHUB_TOKEN = "ghp_" + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8S9t0"
 
 
 def run(guard: Path, payload: dict) -> str:
-    result = subprocess.run(["bash", str(guard)], input=json.dumps(payload), text=True,
-                            capture_output=True, check=False)
+    result = run_guard(guard, payload)
     assert result.returncode == 0, result.stderr
-    if not result.stdout.strip():
-        return "allow"
-    out = json.loads(result.stdout)["hookSpecificOutput"]
+    out = result.decision() or {}
     return out.get("permissionDecision") or "allow"
 
 

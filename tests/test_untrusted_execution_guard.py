@@ -3,10 +3,15 @@
 import json
 import os
 from pathlib import Path
-import shutil
-import subprocess
+import sys
 import tempfile
 import unittest
+from unittest import mock
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from guard_harness import run_e2e, run_guard  # noqa: E402
+
+from agent_guard import classifiers  # noqa: E402
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,11 +28,14 @@ class RoutingGuardTests(unittest.TestCase):
         self.stage = self.home / ".local/share/agent-untrusted"
         self.stage.mkdir(parents=True)
         self.environment = {**os.environ, "HOME": str(self.home), "PYTHONDONTWRITEBYTECODE": "1"}
+        # The classifier fixes its staging root from HOME at import; each shell
+        # hook run imported it afresh under the test HOME, the engine once.
+        staging = mock.patch.object(classifiers.load("untrusted-execution"), "STAGING", self.stage)
+        staging.start()
+        self.addCleanup(staging.stop)
 
     def run_payload(self, provider, payload, environment=None):
-        return subprocess.run(["/bin/bash", str(GUARDS[provider])], input=json.dumps(payload),
-                              text=True, capture_output=True, cwd=ROOT,
-                              env=environment or self.environment, timeout=15)
+        return run_guard(GUARDS[provider], payload, cwd=ROOT, env=environment or self.environment)
 
     def decide(self, result):
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -148,29 +156,17 @@ class RoutingGuardTests(unittest.TestCase):
 
     def test_malformed_inputs_and_missing_dependencies_fail_closed(self):
         for provider, guard in GUARDS.items():
-            result = subprocess.run(["/bin/bash", str(guard)], input="{broken", text=True, capture_output=True, env=self.environment)
+            result = run_guard(guard, "{broken", env=self.environment)
             self.assertEqual(result.returncode, 2, (provider, result))
         self.both("npx 'unterminated", "deny")
         result = self.run_payload("codex", {"tool_name":"functions.exec_command", "tool_input":{"cmd":42}})
         self.assertEqual(result.returncode, 2, result)
-        missing = self.home / "missing-jq"
-        missing.mkdir()
-        for name in ("dirname", "cat"):
-            (missing / name).symlink_to(shutil.which(name))
+        # The entry script finds its interpreter and library under $HOME; a
+        # HOME without them is the engine's missing dependency.
         for provider in GUARDS:
             payload = {"tool_name": "Bash", "tool_input": {"command": "true"}}
-            result = self.run_payload(provider, payload, {**self.environment, "PATH": str(missing)})
+            result = run_e2e(provider, payload, env=self.environment)
             self.assertEqual(result.returncode, 2, result)
-        copied = self.home / "codex-guard.sh"
-        shutil.copyfile(GUARDS["codex"], copied)
-        result = subprocess.run(["/bin/bash", str(copied)], input='{"tool_name":"Bash","tool_input":{"command":"true"}}',
-                                text=True, capture_output=True, env=self.environment)
-        self.assertEqual(result.returncode, 2, result)
-
-    def test_mirrored_classifier_is_identical(self):
-        self.assertEqual((ROOT / "claude/hooks/lib-untrusted-execution.py").read_bytes(),
-                         (ROOT / "codex/hooks/lib-untrusted-execution.py").read_bytes())
-
 
 if __name__ == "__main__":
     unittest.main()

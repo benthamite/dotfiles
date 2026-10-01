@@ -5,8 +5,7 @@ Before changing any secret-protection hook, read
 [[file:../../docs/secret-guard.md][docs/secret-guard.md]]: the incident inventory, the
 rules for changes (no new per-site exemptions) and the approved redesign.
 Run =bin/test-guards= (all guard tests in parallel) before committing a guard
-change. The guards wrap =grep= so that an erroring or unstartable grep aborts
-the hook into a denial instead of reading as "no match".
+change.
 
 The closed Python document-edit classifier permits =update= statements on bound
 JSON data with one validated dictionary literal and no keyword arguments.
@@ -16,6 +15,38 @@ Literal Python-file writers have a separate closed shape: one literal path and
 source, an optional existence guard, mode =0600=, and path-only print. The
 generated source is parsed with both writer exemptions disabled. Credential
 references, unknown calls and additional writes remain denied.
+
+* Guard engine
+
+Every PreToolUse guard runs in one Python process: =agent-guard.sh= starts
+=lib/python/agent_guard= (=engine.main= with runtime =claude=), which parses the
+payload once and runs the policies registered for the tool. Each former guard
+hook is a module in =lib/python/agent_guard/policies/=, and =engine.py= holds the
+per-tool chains in the order the old registrations ran: =Bash= runs
+=dispatcher= (secret leak, untrusted execution, sensitive read, destructive,
+Ahrefs, walk-list, =core.hooksPath=, GitHub write, Elpaca rebuild and
+long-pipeline checks, then output wrapping), =dirty_tree=, =launchagent= and
+=retired_secrets=; =Read= and =Grep= run =sensitive_read= and =walk_list=;
+=Edit=, =Write= and =NotebookEdit= run =secret_leak=, =retired_secrets=,
+=elpaca_dotfiles_edit=, =elisp_skill=, =texi_edit=, =walk_list= and
+=launchagent=; =Glob= runs =walk_list=. A denial from any policy denies, with
+the reasons joined in chain order.
+
+The Python classifiers in this directory (=lib-op-policy.py=,
+=lib-process-output-policy.py=, =lib-function-body-policy.py=,
+=lib-inert-mentions.py=, =lib-public-url-scan.py=, =lib-python-heredoc.py=,
+=lib-untrusted-execution.py=) are imported in-process through
+=agent_guard/classifiers.py= rather than run as scripts. Patterns the shell
+guards gave to =grep -E= and =sed -E= are evaluated by =agent_guard/ere.py=,
+which reproduces the BSD tools' semantics.
+
+The guard fails closed: =engine.main= denies on any exception or malformed
+payload, and =agent-guard.sh= turns every exit status other than 0 into exit 2,
+so a missing interpreter, a broken import or a crash blocks the call. Where
+the engine deliberately decides differently from the shell guards it replaced,
+the difference is listed in =docs/plans/2026-10-01-guard-engine.md=.
+=bin/test-guards= runs the guard tests in-process through
+=tests/guard_harness.py=, plus a few end-to-end runs of =agent-guard.sh=.
 
 * Activation and boundaries
 
@@ -31,8 +62,9 @@ directory does not.
 
 * Operational contracts
 
-The Bash dispatcher delegates =block-untrusted-execution.sh= to the paired
-=lib-untrusted-execution.py= classifier. It denies recognizable transient
+The untrusted-execution policy (=agent_guard.policies.untrusted_execution=,
+run by the Bash dispatcher) uses the =lib-untrusted-execution.py=
+classifier. It denies recognizable transient
 package runners, downloaded interpreter input, and host execution involving
 =~/.local/share/agent-untrusted/=. Plain source inspection and package metadata
 remain available. The canonical =bin/untrusted-run= command is allowed per
@@ -43,33 +75,29 @@ not arbitrary-program analysis or an independent same-user security boundary.
 The VM runner supplies the execution boundary. Synthetic hook decisions are
 covered by =tests/test_untrusted_execution_guard.py=.
 
-The Bash dispatcher and security guards for secrets, sensitive reads,
-destructive commands, paid Ahrefs access, dirty-tree rewrites, LaunchAgents,
-and walk-list data convert unexpected failures to blocking exit code 2.
-Their dependency-free handler is installed before external commands; required
-source files also fail explicitly, because macOS Bash can report a failed
-source as status zero inside an EXIT trap. Ordinary successful checks retain
-their allow/deny decisions and never introduce approval prompts.
+Every guard policy converts an unexpected failure into a denial: an
+exception denies the call ("Security hook failed; tool execution denied."),
+and the dispatcher reports a failed policy under that policy's former hook
+name. Ordinary successful checks retain their allow/deny decisions and never
+introduce approval prompts.
 
 The secret guard scans new content from =Write=, =Edit=, and =NotebookEdit=,
 including replacement text and notebook cell source. Removing an existing
 secret does not require copying it into the replacement text. Each native call
 has one destination; the =Write= secret-file exception remains unchanged.
-Codex separately classifies each destination in its multi-file patches.
 
-The destructive-command policy is registered as a standalone Codex hook but is
-inlined into Claude's =pretooluse-bash.sh= dispatcher. Change and test those two
-implementations together. Both are deny-only and never ask for approval;
+The destructive-command policy (=agent_guard.policies.destructive=) runs inside
+the Bash dispatcher. It is deny-only and never asks for approval;
 =ALLOW_CLONE=1= is the narrow explicit override for an otherwise blocked clone.
 
-The dirty-tree rewrite guard blocks =filter-repo= and =filter-branch= only when
+The dirty-tree rewrite guard (=agent_guard.policies.dirty_tree=) blocks =filter-repo= and =filter-branch= only when
 the target repository has staged or unstaged tracked changes. Untracked files
 are deliberately ignored. It resolves the target from =git -C=, the last
 applicable =cd=, and then the hook working directory, while masking heredoc
 bodies to avoid treating quoted examples as commands. =ALLOW_DIRTY_REWRITE=1=
 is its explicit override.
 
-The sensitive-read guard denies content access to credential-bearing paths.
+The sensitive-read guard (=agent_guard.policies.sensitive_read=) denies content access to credential-bearing paths.
 It permits content-free metadata commands, quiet/count/name-only searches,
 existence tests, Git ignore/index queries, and auth-aware tools only within the
 narrow forms recognized by the hook; a compound command cannot inherit an
@@ -80,13 +108,13 @@ secret-printing shapes. Sourcing a quoted or unquoted =.env= or =.envrc=
 solely as subprocess environment is allowed, including =set -a= wrappers, and
 so is =op-automations run --env-file .env.op -- <program>= with leading
 =VAR=value= assignments and file redirects (1Password reads the file and
-masks the values); printing, parsing, or dumping that environment is denied. Claude
-registers the standalone hook for =Read= and =Grep= and keeps its Bash logic
-inlined in =pretooluse-bash.sh=. Grep content searches remain available for
+masks the values); printing, parsing, or dumping that environment is denied. The
+policy runs for =Read= and =Grep=, and for Bash through the dispatcher. Grep
+content searches remain available for
 ordinary repository scopes and filename/count-only searches; sensitive paths,
 globs, and broad home-directory content searches are denied.
 
-The secret-leak guard blocks secret-shaped literals and secret-printing
+The secret-leak guard (=agent_guard.policies.secret_leak=) blocks secret-shaped literals and secret-printing
 commands. Raw =op=, =security=, and =pbpaste= are denied even when
 wrapped, piped, filtered, redirected, dynamically resolved, or called through
 a nested shell. The 1Password brokers =op-automations= and =op-desktop= are
@@ -102,8 +130,8 @@ without =--emails=, =signin=, =environment read=, credential-minting
 subcommands, and any =OP_*= environment override. Quoted literals in ordinary
 commands and simple non-expanding =echo=/=printf= documentation remain
 available. Interpreter source is never parsed as shell text: a Python
-heredoc naming a broker is denied unless =lib-python-heredoc.py --brokers=
-recognizes it as a pathlib document edit, and any other interpreter program
+heredoc naming a broker is denied unless the broker mode of
+=lib-python-heredoc.py= recognizes it as a pathlib document edit, and any other interpreter program
 (=node= heredoc, =python3 -c=, =perl -e=…) naming a broker is denied, since
 a string and a =subprocess= call look alike. The case table is
 =tests/test_op_policy.py=; the rationale is
@@ -217,7 +245,7 @@ known-secret checks. =tests/test_secret_guard_network_names.py= covers the
 local wheel-provenance and installed-source reads, and unsafe controls through
 both runtimes. Relative =./curl= and absolute =/usr/bin/curl= remain scanned.
 
-The GitHub write guard is deny-only. It refuses writes outside the committed
+The GitHub write guard (=agent_guard.policies.github_write=) is deny-only. It refuses writes outside the committed
 repository registry, but a matching repository establishes only that boundary;
 the hook emits no explicit allow, including for pull-request merges. Authorized
 writes continue through the host's normal permission layer and still require the
@@ -258,7 +286,7 @@ that newest comment in the denial; API failures are an intentional fail-open
 boundary. Codex has no SessionStart counterpart and routes this posting flow to
 Claude.
 
-The LaunchAgent registry guard routes every launchd change through
+The LaunchAgent registry guard (=agent_guard.policies.launchagent=) routes every launchd change through
 =~/repos/launchd=. It denies writing a plist into
 =~/Library/LaunchAgents=, redirecting into that directory, and
 =launchctl bootstrap/load/enable/submit= as well as
@@ -273,8 +301,8 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 
 The secret guard also checks process-listing commands before its permissive
 branches. On macOS, =pgrep -fl= can expose credentials in process arguments;
-=ps= default/full formats and environment output have the same risk. The
-paired =lib-process-output-policy.py= permits PID-only =pgrep=, name-only
+=ps= default/full formats and environment output have the same risk.
+=lib-process-output-policy.py= permits PID-only =pgrep=, name-only
 =pgrep -l=, and explicit safe =ps= fields. Pipes and redirects do not exempt
 unsafe listings. Literal wrappers, shell substitutions and compound commands
 are checked; relevant interpreter source that cannot be classified is denied.
@@ -295,7 +323,7 @@ cover the policy and registered guard entry points with synthetic commands.
 The secret guard also denies shell introspection that would print a shell
 function's body. On 2026-09-30 =which NAME= printed a zsh function (zsh
 =which= is =whence -c=) whose body held literal Google OAuth credentials, and
-the output redactor knew neither shape. The paired
+the output redactor knew neither shape.
 =lib-function-body-policy.py= denies =functions=, =typeset/declare -f= and the
 =$functions= parameter outright, and =which=, =where=, =whence -c/-f/-x= and
 =type= when a named word is a shell function; it asks a zsh child =whence -w=,
@@ -312,24 +340,11 @@ Claude's wrapping of introspection output through =redact-secrets.sh=.
 
 | File | Purpose |
 |------+---------|
-| =block-destructive-command.sh= | Blocks hard-to-reverse shell deletion and destructive operations. |
-| =block-dirty-tree-rewrite.sh= | Blocks Git history rewrites when the target repository has dirty tracked changes. |
-| =block-elpaca-dotfiles-edit.sh= | Denies writes to the read-only Elpaca dotfiles mirror and points to the canonical repository. |
-| =block-elpaca-rebuild-uncommitted.sh= | Blocks rebuilding or reloading when the relevant Elisp source is uncommitted. |
-| =block-github-write-command.sh= | Blocks Git pushes and recognized mutating =gh= operations unless the target matches an exact repo or account wildcard in the committed allowlist, or an exact Epoch project repo in the fixed committed automations registry. A registry match falls through silently to normal permission handling; it never explicitly approves a write. This includes topic-branch pushes, pull-request and issue creation or edits, and comments. Read-only inspection remains allowed. |
-| =block-long-pipeline-run-unchecked.sh= | Requires preflight, cleanliness, and checkpoint conditions for long consensus-trader jobs. |
-| =block-secret-leak.sh= | Blocks secret literals, unsafe secret-file writes, and secret-bearing output; normalizes exact public DAHR matrix routing prefixes while scanning their free-form URL tails. Inline header/body values never gain filesystem-path exemptions. |
-| =lib-op-policy.py= | Classifies 1Password broker commands for =block-secret-leak.sh=: a closed allowlist of shapes whose stdout carries no credential, everything else denied. |
-| =lib-process-output-policy.py= | Prevents process argument/environment listings through =block-secret-leak.sh=; permits PID-only =pgrep= and explicit safe =ps= columns such as =pid,ppid,comm=. |
-| =lib-function-body-policy.py= | Prevents shell introspection (=which=, =type=, =whence -c=, =functions=, =typeset -f=, =$functions=) from printing shell function bodies through =block-secret-leak.sh=; name-only lookups remain available. |
-| =block-sensitive-read.sh= | Blocks content reads of credential-like paths while permitting narrow metadata checks and the exact value-free shell-export classifier. |
-| =block-retired-secrets-cli.py= | Denies new text, commit messages and shell commands that call or name the secrets CLI that 1Password replaced, and points to =claude/context/secrets.md=. Registered for Bash and Edit/Write/NotebookEdit. The shared policy and its patterns live in =lib/python/retired_secrets_cli.py= (the only file, with =tests/test_retired_secrets_cli.py=, allowed to contain them). Removing a stale reference and read-only searches for one stay allowed. |
-| =block-texi-edit.sh= | Blocks direct edits to generated Texinfo and points to the Org source. |
-| =block-unguarded-ahrefs-api.sh= | Blocks paid Ahrefs calls outside the guarded quota wrapper. |
-| =block-unregistered-launchagent.sh= | Routes LaunchAgent installs, loads, and removals through the =~/repos/launchd= registry and its installer. |
-| =block-walk-list-access.sh= | Prevents bypassing the walk-list skill's protected data store. |
-| =block-untrusted-execution.sh= | Delegates recognizable untrusted execution decisions to the shared static classifier. |
-| =lib-untrusted-execution.py= | Classifies transient runners, downloaded interpreter input, and execution involving untrusted staging without running proposed commands. |
+| =agent-guard.sh= | The only PreToolUse guard registration: runs the guard engine (=lib/python/agent_guard=) and turns every exit status other than 0 into exit 2, so a missing interpreter, import error or crash denies. |
+| =lib-op-policy.py= | Classifies 1Password broker commands for =agent_guard.policies.secret_leak=: a closed allowlist of shapes whose stdout carries no credential, everything else denied. |
+| =lib-process-output-policy.py= | Prevents process argument/environment listings through =agent_guard.policies.secret_leak=; permits PID-only =pgrep= and explicit safe =ps= columns such as =pid,ppid,comm=. |
+| =lib-function-body-policy.py= | Prevents shell introspection (=which=, =type=, =whence -c=, =functions=, =typeset -f=, =$functions=) from printing shell function bodies through =agent_guard.policies.secret_leak=; name-only lookups remain available. |
+| =lib-untrusted-execution.py= | For =agent_guard.policies.untrusted_execution=, classifies transient runners, downloaded interpreter input, and execution involving untrusted staging without running proposed commands. |
 | =cr-card-body-gate.sh= | Validates a CR issue body file before a GitHub create or edit operation. |
 | =cr-issue-comment-freshness.sh= | Requires acknowledgement of the latest reasoning-task issue comment before a project-local post. |
 | =cr-skill-routing-reminder.sh= | Reminds an agent to use the owning CR authoring or review skill. |
@@ -338,7 +353,6 @@ Claude's wrapping of introspection output through =redact-secrets.sh=.
 | =epoch-brief-freshness.sh= | After a tool call reads an Epoch project brief, adds that brief's possibly stale TODOs (from =audit_project_todos.py=) to the agent's context once per session and brief, via the Epoch helper =projects/shared/scripts/brief_freshness_notice.py=; a silent no-op without the Epoch notes tree. |
 | =fire-and-forget.sh= | Detaches nonblocking Notification and Stop hook work after consuming the event payload. |
 | =lib-public-url-scan.py= | Classifies verified public URL routing fields while retaining credential-bearing payloads. |
-| =lib-heredoc.sh= | Masks heredoc bodies that feed a known data sink through a plain simple command, so guards classify command words only; bodies fed to shells, interpreters, or pipelines stay in the scan, and an =all= mode lets a guard word its denial for a path named only inside an interpreter-fed program. |
 | =lib-python-heredoc.py= | Classifies narrowly recognized quoted Python stdin bodies before excluding them from outer-shell lexical scanning. Consecutive supported heredocs are classified in order; unknown shell structure stops that scan. Parsed =pass= statements and a closed text/JSON document-edit language are exempt from protected-name checks. Document edits require one standalone direct Python heredoc with validated imports, data bindings and calls; Codex additionally requires one complete literal exec wrapper. Unknown/dynamic/multi-call shapes retain conservative scanning. Unsupported source stays unmasked and other secret checks retain original input. The shared Git classifier separately neutralizes shell-substitution markers in valid quoted Python bodies while retaining the rest of the source; Python data without standalone Git/commit references cannot fabricate a shell substitution or an ambiguous commit. Git-bearing interpreter source retains conservative scanning because subprocess calls may execute its strings. Not a Python sandbox. |
 | =lib-inert-mentions.py= | Masks a protected tool name (=pbpaste=, =security=) only where it is a plain argument of a read-only text tool, so =grep -rn security docs/= or =git log -S pbpaste= is not denied as a credential read; command words, shell/xargs/find/env arguments and ==-joined values stay denied. |
 | =lib-repo-root.sh= | Resolves the effective Git root from command context and supported Git global options. |
@@ -347,8 +361,7 @@ Claude's wrapping of introspection output through =redact-secrets.sh=.
 | =load-elisp-after-edit.sh= | Rebuilds and reloads an edited Elisp package through the live Emacs session, except for test-only files or while Git has an active operation or unmerged index entries. |
 | =notify-emacs-notification.sh= | Forwards a Claude Notification event to Emacs. |
 | =notify-emacs-session-end.sh= | Forwards a Claude Stop event to Emacs. |
-| =pretooluse-bash.sh= | Dispatches the Bash guards and output wrapper registered for PreToolUse, and denies Git commands that override =core.hooksPath=, which would disable the Elisp evidence hooks in =claude/git-hooks=; a plain read (=--get= or the bare key) is allowed. |
-| =redact-secrets.sh= | Masks recognized secret literals (including Google OAuth =GOCSPX-= client secrets, =1//= refresh tokens and =ya29.= access tokens) in a command's combined output; =pretooluse-bash.sh= routes shell introspection (=which=, =type=, =whence=, =functions=) through it. |
+| =redact-secrets.sh= | Masks recognized secret literals (including Google OAuth =GOCSPX-= client secrets, =1//= refresh tokens and =ya29.= access tokens) in a command's combined output; the guard engine's output wrapping (=agent_guard.policies.dispatcher=) routes credential-prone commands, including shell introspection (=which=, =type=, =whence=, =functions=), through it. |
 | =redact-tool-output.py= | After every tool call, masks known secret values (=bin/secret-index=), drops credential-page screenshots and fails closed; also masks the result's text through =redact-secrets.sh= and returns it as =updatedToolOutput= / =updatedMCPToolOutput=, so credentials in tool output (a Chrome =find= echo, a 1Password title) never reach the model or the transcript. |
 | =regenerate-coverage-map.sh= | Refreshes the CR rubric visualizer coverage map after relevant edits. |
 | =regenerate-manual-after-edit.sh= | Regenerates validated declared sibling Texinfo and existing Info names independently; disables local/Babel evaluation, refuses unsafe destinations or unsupported export directives, and reports partial failures without raw private errors. |
@@ -356,13 +369,11 @@ Claude's wrapping of introspection output through =redact-secrets.sh=.
 | =remind-ai-config-sync.sh= | Issues the paired Claude/Codex configuration reminder after relevant edits. |
 | =remind-claude-readme-update.sh= | Reminds an agent when a write from any project changed the tracked Claude configuration. |
 | =require-doc-update.sh= | Requires a selected manual for production Elisp (a support file outside any package tree with its own =doc/= may instead select the =README.org= of its directory or a parent), or each global/project-local skill helper's own selected Markdown documentation; checks declared Texinfo and Info outputs without evaluating Org. Run for both agents from the global Git =pre-commit= hook by =claude/bin/agent-commit-gates=, which reads the staged files from the index. |
-| =require-elisp-skill.sh= | Blocks Elisp edits until the Elisp conventions skill has been loaded. |
 | =require-readme-update.sh= | Requires Claude configuration documentation with staged Claude configuration changes. Run for both agents from the global Git =pre-commit= hook by =claude/bin/agent-commit-gates=, which reads the staged files from the index. |
 | =session-learning-capture.sh= | Retained unregistered helper; validates Stop input and canonical cwd, emits escaped untrusted metadata, and reports malformed input without requesting capture. It writes no lesson records. |
 | =sync-agent-c-worktree.sh= | Compatibility wrapper for the renamed reasoning-task worktree synchronization hook. |
 | =sync-reasoning-tasks-worktree.sh= | Repairs and updates an eligible reasoning-task worktree at SessionStart without pushing it. |
 | =track-elisp-skill.sh= | Records that the Elisp conventions skill was loaded in the current session. |
-| =wrap-bash-output.sh= | Routes plausible secret-printing command output through the redactor while preserving status. |
 
 The documentation audit requires every tracked direct child to appear exactly
 once in this table. After changing a registered hook, verify its mutable global

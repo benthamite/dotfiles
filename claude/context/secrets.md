@@ -14,7 +14,8 @@
 ## 1Password from an agent shell
 
 Invoking 1Password through the brokers is the normal way to use a secret; what
-the guard forbids is printing one. `claude/hooks/lib-op-policy.py` (paired for
+the guard forbids is printing one. `claude/hooks/lib-op-policy.py` (which the
+guard engine's `agent_guard.policies.secret_leak` loads for both Claude and
 Codex) classifies every broker command and allows only these shapes, denying
 everything else including shapes it cannot place:
 

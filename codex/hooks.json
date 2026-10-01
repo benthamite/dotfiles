@@ -30,63 +30,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-sensitive-read.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-secret-leak.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-unguarded-ahrefs-api.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-github-write-command.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-destructive-command.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-walk-list-access.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-elpaca-rebuild-uncommitted.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-dirty-tree-rewrite.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-unregistered-launchagent.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-untrusted-execution.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-hookspath-override.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-retired-secrets-cli.py",
-            "timeout": 5
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/agent-guard.sh",
+            "timeout": 30
           }
         ]
       },
@@ -95,33 +40,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-secret-leak.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-elpaca-dotfiles-edit.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-texi-edit.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-walk-list-access.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-unregistered-launchagent.sh",
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-retired-secrets-cli.py",
-            "timeout": 5
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/agent-guard.sh",
+            "timeout": 30
           }
         ]
       },

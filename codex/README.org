@@ -60,6 +60,14 @@ asks for =claude-in-chrome=, while Codex must look up =mcp__node_repl__js= by
 exact name, because that tool's description never mentions Chrome or browsers. User-facing replies use ASD-STE100 Simplified Technical
 English.
 
+Agents ask for a task's decisions once: before acting, they list every
+decision and approval the task needs through to completion, with a
+recommendation each, and after approval carry the task to the end. They come
+back only for a step that needs the user in person or a decision they could not
+foresee, and then list every open decision again. This replaced a rule that
+restated the open list whenever any item came up, which drip-fed decisions
+across turns (2026-10-01).
+
 Main agents running inside Emacs publish concise current-state descriptions
 through =bin/agent-status= at task boundaries and meaningful phase changes.
 These descriptions appear beside the session summary in the agent menu;

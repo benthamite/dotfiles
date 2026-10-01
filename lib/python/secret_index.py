@@ -184,7 +184,8 @@ class Index:
         return "".join(parts), len(spans)
 
 
-def repository_names() -> set[str]:
+@__import__("functools").lru_cache(maxsize=1)
+def repository_names() -> frozenset[str]:
     """owner/repo slugs and names of local clones' remotes: public, and common
     in commands and output."""
     import re  # noqa: PLC0415
@@ -210,7 +211,7 @@ def repository_names() -> set[str]:
                                  "--jq", ".[].nameWithOwner"], capture_output=True, text=True, timeout=120)
         for slug in listed.stdout.split():
             names.update({slug, slug.split("/")[-1]})
-    return names
+    return frozenset(names)
 
 
 def public_strings() -> set[str]:

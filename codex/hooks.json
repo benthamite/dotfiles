@@ -82,6 +82,11 @@
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-hookspath-override.sh",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-retired-secrets-cli.py",
+            "timeout": 5
           }
         ]
       },
@@ -111,6 +116,11 @@
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-unregistered-launchagent.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-retired-secrets-cli.py",
             "timeout": 5
           }
         ]

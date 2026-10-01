@@ -435,6 +435,14 @@
       "note": "paired for apply_patch/Edit/Write path guards"
     },
     {
+      "name": "block-retired-secrets-cli.py",
+      "claude": "claude/hooks/block-retired-secrets-cli.py",
+      "codex": "codex/hooks/block-retired-secrets-cli.py",
+      "status": "paired",
+      "note": "Thin entry points for the shared policy in lib/python/retired_secrets_cli.py. Deny new text and shell commands that refer to the secrets CLI that 1Password replaced; removals and read-only searches stay allowed. Claude registers it for Bash and Edit|Write|NotebookEdit; Codex for its shell tools and apply_patch|Edit|Write.",
+      "equivalence": "Identical apart from the docstring naming the runtime's matchers."
+    },
+    {
       "name": "block-unregistered-launchagent.sh",
       "claude": "claude/hooks/block-unregistered-launchagent.sh",
       "codex": "codex/hooks/block-unregistered-launchagent.sh",
@@ -791,7 +799,7 @@
       "path": "codex/hooks.json",
       "tracked": true,
       "live_path": "~/.codex/hooks.json",
-      "note": "Global registrations live through ~/.codex/hooks.json, outside repo-root .codex to avoid double loading. Lifecycle hooks use codex-hook-wrapper and an explicit Emacs socket. Shell matchers cover Bash, exec_command, functions.exec and functions.exec_command; edit matchers are collapsed for trust review. Guards allow or deny, never ask. The LaunchAgent guard covers shell and edits. Untrusted-execution routing (shell index 15) and the Epoch brief notice (PostToolUse shell index 1) were appended to keep trust keys; new definitions need native trust. Output redactor added 2026-09-30."
+      "note": "Global registrations live through ~/.codex/hooks.json, outside repo-root .codex to avoid double loading. Lifecycle hooks use codex-hook-wrapper and an explicit Emacs socket. Shell matchers cover Bash, exec_command and functions.exec(_command); edit matchers are collapsed for trust review. Guards allow or deny, never ask. The LaunchAgent guard covers shell and edits. Untrusted-execution routing (shell index 15), the Epoch brief notice (PostToolUse shell index 1) and the retired-CLI guard were appended to keep trust keys; new definitions need native trust. Output redactor 2026-09-30."
     },
     {
       "tool": "Claude Code and Codex",

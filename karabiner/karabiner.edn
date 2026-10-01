@@ -385,7 +385,6 @@
          [:t [:op "/System/Applications/Utilities/Terminal.app"]]
          [:v [:op "/Applications/mpv.app"]]
          [:w [:op "/Applications/HoudahSpot.app"]]
-         [:y [:op "/Applications/Spotify.app"]]
          [:comma [:op "/Applications/Home Assistant.app"]]
          [:period [:op "/Applications/Tor Browser.app"]]
          [:slash [:op "/Applications/Safari.app"]]

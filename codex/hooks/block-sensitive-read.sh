@@ -158,8 +158,6 @@ sensitive_label_for_text() {
     printf '%s\n' "MCP credential config"
   elif echo "$text" | grep -qE '\.zshenv-secrets\b'; then
     printf '%s\n' "shell secrets file"
-  elif echo "$text" | grep -qE '\.password-store/'; then
-    printf '%s\n' "password store"
   elif echo "$text" | grep -qE '(^|[ /=])\.ssh/id_[A-Za-z0-9_]+\b' && \
        ! echo "$text" | grep -qE '\.ssh/id_[A-Za-z0-9_]+\.pub\b'; then
     printf '%s\n' "SSH private key"

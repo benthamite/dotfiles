@@ -84,7 +84,7 @@ import sys
 space = " \t\n\r\v\f\u0085\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000"
 
 def exempt(path):
-    return path.endswith((".zshenv-secrets", ".env.op", ".env.local")) or "/.password-store/" in path
+    return path.endswith((".zshenv-secrets", ".env.op", ".env.local"))
 
 def project(text):
     lines = [line.removesuffix("\r") for line in text.strip(space).split("\n")]
@@ -157,7 +157,7 @@ except ValueError:
   # Native Write/Edit inputs have one destination. Embedded patch-looking
   # content must not introduce another destination or gain its exemption.
   case "$direct" in
-    *.zshenv-secrets|*.env.op|*.env.local|*/.password-store/*) return 0 ;;
+    *.zshenv-secrets|*.env.op|*.env.local) return 0 ;;
   esac
   printf '%s\n%s\n' "$direct" "$patch"
   # Native Write/Edit payloads carry their new text outside the patch fields.

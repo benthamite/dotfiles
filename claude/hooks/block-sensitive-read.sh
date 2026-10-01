@@ -149,8 +149,6 @@ grep_scope_label() {
       printf '%s\n' "broad directory scope containing user secrets"; return ;;
     "$HOME/.ssh"|"$HOME/.ssh/"*|/Users/pablostafforini/.ssh|/Users/pablostafforini/.ssh/*)
       printf '%s\n' "SSH directory"; return ;;
-    "$HOME/.password-store"|"$HOME/.password-store/"*|/Users/pablostafforini/.password-store|/Users/pablostafforini/.password-store/*)
-      printf '%s\n' "password store"; return ;;
     "$HOME/.gnupg"|"$HOME/.gnupg/"*|/Users/pablostafforini/.gnupg|/Users/pablostafforini/.gnupg/*)
       printf '%s\n' "GPG keyring"; return ;;
     "$HOME/.zsh_history"|"$HOME/.zsh_sessions"|"$HOME/.zsh_sessions/"*|/Users/pablostafforini/.zsh_history|/Users/pablostafforini/.zsh_sessions|/Users/pablostafforini/.zsh_sessions/*)
@@ -184,11 +182,6 @@ if [ "$TOOL_NAME" = "Read" ]; then
   # Expand ~ to the actual home directory for matching
   EXPANDED_PATH="${FILE_PATH/#\~/$HOME}"
 
-  # Password store
-  case "$EXPANDED_PATH" in
-    "$HOME/.password-store/"*|/Users/pablostafforini/.password-store/*)
-      deny "password store (GPG-encrypted secrets)" "$FILE_PATH" ;;
-  esac
   # MCP credential configs
   case "$EXPANDED_PATH" in
     */.mcp.json|*/mcp.json)
@@ -266,7 +259,7 @@ if [ "$TOOL_NAME" = "Grep" ]; then
   fi
 
   case "$GLOB" in
-    *".env"*|*".envrc"*|*".mcp.json"*|*"mcp.json"*|*".zshenv-secrets"*|*".zsh_history"*|*".zsh_sessions"*|*".password-store"*|*".gnupg"*|*"id_"*|*"credentials.json"*|*"service-account"*|*"tokens.json"*|*"secret.json"*|*"client_secret"*)
+    *".env"*|*".envrc"*|*".mcp.json"*|*"mcp.json"*|*".zshenv-secrets"*|*".zsh_history"*|*".zsh_sessions"*|*".gnupg"*|*"id_"*|*"credentials.json"*|*"service-account"*|*"tokens.json"*|*"secret.json"*|*"client_secret"*)
       deny "sensitive file glob" "Grep content output with glob $GLOB could return secret values" ;;
   esac
 
@@ -300,8 +293,6 @@ sensitive_label_for_command() {
   text=$(mask_env_op_template "$(mask_git_commit_messages "$1")")
   if   echo "$text" | grep -qE '\.zshenv-secrets\b'; then
     SENSITIVE_LABEL="shell secrets file"
-  elif echo "$text" | grep -qE '\.password-store/'; then
-    SENSITIVE_LABEL="password store (GPG-encrypted secrets)"
   elif echo "$text" | grep -qE '(^|[[:space:]/])\.mcp\.json\b|(^|[[:space:]/])mcp\.json\b'; then
     SENSITIVE_LABEL="MCP credential config"
   elif echo "$text" | grep -qE '(^|[[:space:]/:=("'"'"'])\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]/:=("'"'"'])\.envrc\b'; then

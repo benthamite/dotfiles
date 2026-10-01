@@ -95,7 +95,7 @@ def preflight(archive_value, destination_value):
         safe_input(str(cache))
     else:
         # Validate protected path components even before the directory exists.
-        protected = {".ssh", ".gnupg", ".password-store", ".docker", ".codex", ".claude",
+        protected = {".ssh", ".gnupg", ".docker", ".codex", ".claude",
                      ".git", ".config", "keychains", ".env", ".netrc", ".npmrc", ".pypirc",
                      ".zshenv-secrets"}
         if any(part.lower() in protected or part.startswith(".env.") for part in cache.parts):

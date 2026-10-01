@@ -59,7 +59,6 @@ class SecretPatchGuardTests(unittest.TestCase):
     def test_mixed_destinations_cannot_exempt_public_secret_in_either_order(self):
         for sensitive in (
             "/fixture/.zshenv-secrets", "/fixture/.env.op", EXEMPT,
-            "/fixture/.password-store/item",
         ):
             sections = (add(sensitive, "ordinary"), add(PUBLIC, MARKER))
             for ordered in (sections, sections[::-1]):

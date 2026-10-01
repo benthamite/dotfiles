@@ -211,8 +211,6 @@ sr_label_for_text() {
   text=$(sr_mask_env_op_template "$(mask_git_commit_messages "$1")")
   if   echo "$text" | grep -qE '\.zshenv-secrets\b'; then
     SENSITIVE_LABEL="shell secrets file"
-  elif echo "$text" | grep -qE '\.password-store/'; then
-    SENSITIVE_LABEL="password store (GPG-encrypted secrets)"
   elif echo "$text" | grep -qE '(^|[[:space:]/])\.mcp\.json\b|(^|[[:space:]/])mcp\.json\b'; then
     SENSITIVE_LABEL="MCP credential config"
   elif echo "$text" | grep -qE '(^|[[:space:]/:=("'"'"'])\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]/:=("'"'"'])\.envrc\b'; then

@@ -31,7 +31,7 @@ def protected_input_name(name):
     """Recognize credential/control names at every level of a read grant."""
     name = name.casefold()
     return name in {
-        ".ssh", ".gnupg", ".password-store", ".docker", ".codex", ".claude",
+        ".ssh", ".gnupg", ".docker", ".codex", ".claude",
         ".claude.json", ".git", ".config", "keychains", ".env", ".netrc",
         ".npmrc", ".pypirc", ".zshenv-secrets",
     } or name.startswith((".env.", ".claude-", ".codex-", ".claude.json."))

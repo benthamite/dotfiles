@@ -9489,6 +9489,8 @@ contain =AGENTS.md= or =CLAUDE.md=, including directories without Git repositori
 			   ("personal2"  . "~/.claude-personal2")
 			   ("tlon"     . "~/.claude-tlon")
 			   ("epoch"    . "~/.claude-epoch")))
+  (agent-claude-settings-package-directory
+   "~/.config/emacs-profiles/active/elpaca/sources/agent/")
 
   (agent-codex-accounts '(("tlon"   . "~/.codex-tlon")
                           ("epoch"  :home "~/.codex-epoch"  :pool "epoch-pool")

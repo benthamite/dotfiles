@@ -13,6 +13,7 @@ import json
 import re
 import subprocess
 import sys
+from pathlib import Path
 
 
 TIMEOUT = 120
@@ -225,6 +226,14 @@ def store(args):
     if unique_item(args) != written_id:
         raise StoreError("stored item title no longer selects its exact identity")
     print(f"stored op://{args.vault}/{args.title}/{args.field}")
+    # Fingerprint the new secret at once, so the agent guards and output
+    # redactors recognise it before the next `secret-index refresh`
+    # (docs/secret-guard.md). The value travels on stdin only.
+    indexer = Path(__file__).resolve().parents[2] / "bin/secret-index"
+    indexed = subprocess.run([sys.executable, "-B", str(indexer), "add", "--label", f"1password:{written_id}"],
+                             input=secret, capture_output=True, text=True, timeout=60)
+    if indexed.returncode != 0:
+        print("warning: not added to the secret index; run `secret-index refresh`", file=sys.stderr)
 
 
 def main(argv=None):

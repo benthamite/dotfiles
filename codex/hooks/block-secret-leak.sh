@@ -596,6 +596,18 @@ check_pattern() {
   fi
 }
 
+# Known secret values (keyed-fingerprint index, bin/secret-index): deny a
+# command or file write that carries one of this machine's actual secrets,
+# whatever its shape. Exit 0 = found, 1 = none or no index yet, other = the
+# check failed, which also denies.
+known_status=0
+known_labels=$(printf '%s' "$CONTENT" | python3 -B "$(dirname "$0")/../../bin/secret-index" contains 2>/dev/null) || known_status=$?
+case "$known_status" in
+  0) check_pattern '.' "contains a known secret value ($known_labels)" ;;
+  1) ;;
+  *) check_pattern '.' 'known-secret check failed' ;;
+esac
+
 # AWS access key
 check_pattern 'AKIA[0-9A-Z]{16}' 'AWS access key'
 

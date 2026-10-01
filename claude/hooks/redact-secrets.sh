@@ -27,7 +27,14 @@ SED_BIN=$(command -v gsed || command -v sed)
 # whole block on one substitution. Performed FIRST so subsequent line-
 # oriented rules don't see the base64 body. Single-line substitutions
 # follow on each line independently.
-LC_ALL=C exec "$SED_BIN" -E --unbuffered \
+# Second layer: this machine's actual secret values (bin/secret-index), for
+# secrets with no recognisable shape. Streams line by line. Callers that run
+# the index themselves (redact-tool-output.py) set REDACT_SKIP_INDEX=1.
+INDEX_PASS=(python3 -B "$(dirname "$0")/../../bin/secret-index" mask --stream)
+[ "${REDACT_SKIP_INDEX:-}" = 1 ] && INDEX_PASS=(cat)
+set -o pipefail
+
+LC_ALL=C "$SED_BIN" -E --unbuffered \
   ${EXTRA_FILE[@]+"${EXTRA_FILE[@]}"} \
   -e '/-----BEGIN [A-Z ]*PRIVATE KEY-----/{:a; /-----END [A-Z ]*PRIVATE KEY-----/!{$!{N;ba}}; s/-----BEGIN [A-Z ]*PRIVATE KEY-----[^-]*-----END [A-Z ]*PRIVATE KEY-----/[PRIVATE_KEY_REDACTED]/g}' \
   -e 's/gg_pat_[A-Za-z0-9_-]{40,80}/[GG_PAT_REDACTED]/g' \
@@ -50,4 +57,5 @@ LC_ALL=C exec "$SED_BIN" -E --unbuffered \
   -e 's/\b[0-9]{8,10}[:][A-Za-z0-9_-]{35}\b/[TELEGRAM_TOKEN_REDACTED]/g' \
   -e 's#(postgres(ql)?|mysql|mongodb)[:]/+[^[:space:]:@/]+[:][^[:space:]@/]+[@]#\1://[CRED_REDACTED]@#g' \
   -e 's/([Bb]earer|[Tt]oken)[[:space:]]+[A-Za-z0-9._/+=-]{30,}/\1 [REDACTED]/g' \
-  -e 's/(Authorization|x-api-key)[[:space:]]*:[[:space:]]*[A-Za-z0-9._/+=-]{20,}/\1: [REDACTED]/gi'
+  -e 's/(Authorization|x-api-key)[[:space:]]*:[[:space:]]*[A-Za-z0-9._/+=-]{20,}/\1: [REDACTED]/gi' \
+  | "${INDEX_PASS[@]}"

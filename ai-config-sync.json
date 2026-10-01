@@ -725,9 +725,9 @@
     {
       "name": "redact-tool-output.py",
       "claude": "claude/hooks/redact-tool-output.py",
-      "codex": null,
-      "status": "claude-only",
-      "note": "Claude PostToolUse hook masking credentials in Bash and MCP tool output via updatedToolOutput/updatedMCPToolOutput, reusing redact-secrets.sh patterns. No Codex counterpart yet: Codex hooks have no verified output-replacement field; tracked as a gap."
+      "codex": "codex/hooks/redact-tool-output.py",
+      "status": "paired",
+      "note": "Both mask tool output through redact-secrets.sh patterns and the known-value index (lib/python/secret_index.py), failing closed. Claude replaces the result via updatedToolOutput/updatedMCPToolOutput for every tool; Codex has no rewrite field, so it returns decision block with the masked output as the reason, for shell and MCP tools. Codex misses write_stdin chunks and error results."
     }
   ],
   "mcp_servers": [
@@ -791,7 +791,7 @@
       "path": "codex/hooks.json",
       "tracked": true,
       "live_path": "~/.codex/hooks.json",
-      "note": "Global registrations live through ~/.codex/hooks.json, outside repo-root .codex to avoid double loading. Lifecycle hooks use codex-hook-wrapper and an explicit Emacs socket. Shell matchers cover Bash, exec_command, functions.exec and functions.exec_command; edit matchers are collapsed for trust review. Guards allow or deny, never ask. The LaunchAgent guard covers shell and edits. Untrusted-execution routing (shell index 15) and the Epoch brief notice (PostToolUse shell index 1) were appended to keep trust keys; new definitions need native trust. Plan-review reminder removed 2026-09-30."
+      "note": "Global registrations live through ~/.codex/hooks.json, outside repo-root .codex to avoid double loading. Lifecycle hooks use codex-hook-wrapper and an explicit Emacs socket. Shell matchers cover Bash, exec_command, functions.exec and functions.exec_command; edit matchers are collapsed for trust review. Guards allow or deny, never ask. The LaunchAgent guard covers shell and edits. Untrusted-execution routing (shell index 15) and the Epoch brief notice (PostToolUse shell index 1) were appended to keep trust keys; new definitions need native trust. Output redactor added 2026-09-30."
     },
     {
       "tool": "Claude Code and Codex",

@@ -294,6 +294,10 @@ class FakeBroker:
             result = json.loads(kw["input"])
             result.update(id=self.write_id, title="Slack - Fixture", vault={"id": "v" * 26, "name": "Automations"})
             self.stored = copy.deepcopy(result)
+        elif len(argv) > 3 and str(argv[2]).endswith("bin/secret-index") and argv[3] == "add":
+            # The new secret is fingerprinted at once; its value travels on stdin only.
+            self.indexed = kw.get("input")
+            return subprocess.CompletedProcess(argv, 0, "added 1 fingerprints\n", "")
         else:
             raise AssertionError("unexpected fake broker operation")
         return subprocess.CompletedProcess(argv, 0, json.dumps(result), "")
@@ -316,7 +320,9 @@ class ClipboardTests(OfflineCase):
         writes = [(a, k) for a, k in broker.calls if "create" in a]
         self.assertEqual(len(writes), 1)
         self.assertIn(MARKER, writes[0][1]["input"])
-        self.assertEqual(broker.calls[-2][0][3], ITEM)
+        reads = [a for a, _ in broker.calls if a[:3] == ["op-desktop", "item", "get"]]
+        self.assertEqual(reads[-1][3], ITEM)
+        self.assertEqual(broker.indexed, MARKER)  # fingerprinted via stdin, not argv
 
     def test_force_preserves_metadata_and_uses_exact_id(self):
         broker = FakeBroker(True)

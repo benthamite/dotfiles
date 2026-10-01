@@ -35,6 +35,8 @@ FULL=(
   tests/test_codex_secret_patch_guard.py
   tests/test_claude_bash_pretooluse.py
   tests/test_hook_failure_safety.py
+  tests/test_secret_index.py
+  tests/test_credential_pages.py
 )
 
 if [ "${1:-}" = "--fast" ]; then

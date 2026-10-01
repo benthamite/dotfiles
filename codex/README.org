@@ -1130,10 +1130,14 @@ Codex has no counterpart to the Claude hook =chrome-bridge-recover.py=
 Chrome plugin and =control-chrome= skill, not the Claude in Chrome extension
 whose per-account profile that hook reopens.
 
-Codex also has no counterpart to the Claude hook =redact-tool-output.py=
-(=claude-only=), which masks credentials in Bash and MCP tool output
-before the model sees it: no Codex hook field for replacing tool output has
-been verified, so credential-bearing output remains a Codex gap.
+=redact-tool-output.py= (paired with Claude's) masks shell and MCP tool output
+through the same two layers (shape patterns and the known-value index). Codex
+has no field that rewrites a result, so when masking changes anything the hook
+returns =decision: "block"= with the masked output as the reason, which the
+model sees instead; images from credential pages are dropped the same way.
+Not covered (Codex 0.158.0): chunks of a still-running =exec_command= read
+through =write_stdin=, results Codex marks as errors, and Codex's own raw
+logs. New hook definitions need native trust approval before they run.
 The one output class Codex blocks before execution is a shell function body:
 =block-secret-leak.sh= denies =which=, =type= or =whence -c= on a shell
 function, =functions=, =typeset -f= and =$functions= through the paired

@@ -139,6 +139,11 @@
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/epoch-brief-freshness.sh",
             "timeout": 40
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/redact-tool-output.py",
+            "timeout": 30
           }
         ]
       },
@@ -173,6 +178,16 @@
           {
             "type": "command",
             "command": "/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PostToolUse --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/redact-tool-output.py",
             "timeout": 30
           }
         ]

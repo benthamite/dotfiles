@@ -56,11 +56,60 @@ class RedactToolOutputTest(unittest.TestCase):
         self.assertIsNone(M.replacement(bash("x.com/a/status/1790549176458123456 at 1790549176458\n")))
 
     def test_images_pass_through(self):
+        # An ordinary page: images stay (credential pages are tested in test_credential_pages).
+        context = '\n\nTab Context:\n- Executed on tabId: 1\n  • tabId 1: "t" ("https://example.org/")'
         ev = {"tool_name": "mcp__claude-in-chrome__computer",
-              "tool_response": [{"type": "image", "data": "AAAA"}, {"type": "text", "text": CLOUDFLARE}]}
+              "tool_response": [{"type": "image", "data": "AAAA"}, {"type": "text", "text": CLOUDFLARE + context}]}
         blocks = M.replacement(ev)["updatedMCPToolOutput"]
         self.assertEqual(blocks[0], {"type": "image", "data": "AAAA"})
         self.assertNotIn(CLOUDFLARE, blocks[1]["text"])
+
+    def test_known_values_are_masked_in_any_tool_result(self):
+        # An unprefixed hex secret (the 2026-07-21 Slack app secret shape) is
+        # invisible to the shape patterns; the fingerprint index catches it.
+        import os
+        import tempfile
+        sys.path.insert(0, str(HOOK.parents[2] / "lib/python"))
+        import secret_index
+        hex_secret = "".join("0123456789abcdef"[(i * 7) % 16] for i in range(32))
+        with tempfile.TemporaryDirectory() as d:
+            key = os.urandom(32)
+            path = Path(d, "index.json")
+            secret_index.write(secret_index.build_entries(key, [(hex_secret, "test:1")]), {}, path)
+            env = {"SECRET_INDEX_PATH": str(path), "SECRET_INDEX_KEY_HEX": key.hex()}
+            old = {k: os.environ.get(k) for k in env}
+            os.environ.update(env)
+            try:
+                read = {"tool_name": "Read", "tool_response": {"type": "text", "file": {
+                    "filePath": "/tmp/x.json", "content": f'{{"signing_secret": "{hex_secret}"}}', "numLines": 1}}}
+                masked = M.replacement(read)["updatedToolOutput"]
+                self.assertNotIn(hex_secret, json.dumps(masked))
+                self.assertEqual(masked["file"]["numLines"], 1)  # structure kept
+                self.assertEqual(masked["file"]["filePath"], "/tmp/x.json")
+                grep = {"tool_name": "Grep", "tool_response": {"filenames": [], "content": f"a.env:3:K={hex_secret}"}}
+                self.assertNotIn(hex_secret, json.dumps(M.replacement(grep)["updatedToolOutput"]))
+                self.assertIsNone(M.replacement({"tool_name": "Read", "tool_response": {"content": "clean"}}))
+            finally:
+                for k, v in old.items():
+                    if v is None:
+                        os.environ.pop(k, None)
+                    else:
+                        os.environ[k] = v
+
+    def test_redactor_failure_withholds_output(self):
+        original = M.mask_strings
+        M.mask_strings = lambda strings: (_ for _ in ()).throw(RuntimeError("boom"))
+        try:
+            out = M.replacement(bash(f"value {CLAUDE}\n"))["updatedToolOutput"]
+            self.assertEqual(out["stdout"], M.WITHHELD)
+            self.assertFalse(out["interrupted"])
+            blocks = M.replacement({"tool_name": "mcp__x__y", "tool_response": [
+                {"type": "image", "data": "AAAA"}, {"type": "text", "text": "anything"}]})["updatedMCPToolOutput"]
+            # No image survives a failed check, and block types stay valid.
+            self.assertEqual(blocks[0], {"type": "text", "text": M.WITHHELD})
+            self.assertEqual(blocks[1], {"type": "text", "text": M.WITHHELD})
+        finally:
+            M.mask_strings = original
 
     def test_hook_protocol(self):
         r = subprocess.run([sys.executable, str(HOOK)], input=json.dumps(bash(CLAUDE)), capture_output=True,

@@ -2,7 +2,10 @@
 
 Status: approved by Pablo on 2026-09-30. Item 0 done on 2026-09-30: suite green,
 `bin/test-guards` runs it in ~10 minutes in parallel (the <30 s target needs
-item 6), and a fail-open on grep errors was fixed. Next: items 1–2.
+item 6), and a fail-open on grep errors was fixed. Items 1–3 done on
+2026-09-30 (known-value index, output masking on every Claude tool and Codex
+shell/MCP, credential-page screenshots); see docs/secret-guard.md for what
+remains uncovered. Next: item 6, then item 5.
 
 ## Evidence
 

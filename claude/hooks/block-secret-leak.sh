@@ -544,6 +544,18 @@ SECRET_LABELS=(
 # returns after a single subprocess instead of one per pattern. Only when the
 # combined gate matches do we run the per-pattern loop to classify the hit and
 # emit a specific label.
+# Known secret values (keyed-fingerprint index, bin/secret-index): deny a
+# command or file write that carries one of this machine's actual secrets,
+# whatever its shape. Exit 0 = found, 1 = none or no index yet, other = the
+# check failed, which also denies.
+known_status=0
+known_labels=$(printf '%s' "$CONTENT" | python3 -B "$(dirname "$0")/../../bin/secret-index" contains 2>/dev/null) || known_status=$?
+case "$known_status" in
+  0) check_pattern '.' "contains a known secret value ($known_labels)" ;;
+  1) ;;
+  *) check_pattern '.' 'known-secret check failed' ;;
+esac
+
 gate_args=()
 for _pat in "${SECRET_PATTERNS[@]}"; do gate_args+=(-e "$_pat"); done
 if echo "$CONTENT" | grep -qE "${gate_args[@]}"; then

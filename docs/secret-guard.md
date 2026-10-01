@@ -58,13 +58,29 @@ screenshot.
 
 Tally: page/screenshot 9, command output 7, file read 3, **typed literal 0**.
 
+## Protection in place (2026-09-30)
+
+- **Known values:** `bin/secret-index refresh` (Pablo, Touch ID) fingerprints
+  every concealed 1Password field, `.zshenv-secrets` and known credential
+  files; `op-clipboard-store` adds new secrets as it stores them. Commands and
+  file writes carrying one are denied; tool output carrying one is masked.
+- **Output, Claude:** every tool's result (Read, Grep, Bash, MCP, subagent tool
+  calls...) is masked; fails closed.
+- **Output, Codex:** shell and MCP results are masked via `decision: block`.
+- **Screenshots:** dropped on pages in `agents/credential-pages.txt`, or when
+  the page cannot be determined.
+
 ## Known gaps (2026-09-30)
 
-- Screenshots are never masked.
-- Codex masks no tool output.
-- Claude does not mask Read or Grep output.
-- The redactor recognises formats, not your actual values: hex Slack secrets,
-  passwords in URLs and prefix-less tokens pass.
+- A background subagent's final report is not masked (no hook can rewrite
+  it); its own tool calls are, so this needs a subagent that deliberately
+  transforms a secret.
+- Codex: chunks of still-running `exec_command` sessions, error results, and
+  Codex's raw logs are not masked.
+- Secrets that are new and not yet indexed, shorter than 12 characters, or
+  stored somewhere the index does not read (the Keychain, browser storage)
+  are recognised only by shape.
+- A secret glued to the end of a word (`abcSECRET`) is not found.
 - Each Claude Bash call spends ~0.6 s in the guard (~120 subprocesses); the
   full guard suite takes ~10 minutes even in parallel, because each case
   starts real hook processes. Under 30 seconds needs the single-process

@@ -78,8 +78,16 @@ class ProtectedHookRegistrationTests(unittest.TestCase):
                 "Bash(pbpaste:*)",
             }.isdisjoint(permission_allows)
         )
+        # The only auto-mode rule that may mention the broker is the reviewed
+        # "Sanctioned secret brokering" entry tracked in claude/auto-mode.json
+        # (7db6e7751), which covers non-printing shapes only; the secret-leak
+        # guard enforces that limit. Any other or edited rule needs review.
+        tracked = json.loads((DOTFILES / "claude/auto-mode.json").read_text())["allow"]
+        reviewed = [rule for rule in tracked if "op-automations" in rule]
+        self.assertEqual(len(reviewed), 1)
+        self.assertTrue(reviewed[0].startswith("Sanctioned secret brokering:"))
         auto_allows = config.get("autoMode", {}).get("allow", [])
-        self.assertFalse(any("op-automations" in rule for rule in auto_allows))
+        self.assertEqual([rule for rule in auto_allows if "op-automations" in rule], reviewed)
 
 
 class SensitiveReadGuardTests(unittest.TestCase):
@@ -112,33 +120,30 @@ class SensitiveReadGuardTests(unittest.TestCase):
                     self.assertEqual(permission_decision(result), "allow")
 
     def test_op_run_env_file_loader_that_could_print_is_denied(self):
-        commands = (
-            "OP_RUN_NO_MASKING=1 op-automations run --env-file .env.op -- python3 sync.py",
-            "op-automations run --env-file .env.op -- python3 sync.py > /dev/stderr",
-            "cd /tmp && op-automations run --env-file .env.op -- python3 sync.py",
-            "op-automations run --env-file .env.op -- python3 sync.py | tee /tmp/log",
+        # Since e17124438 (2026-09-18) .env.op is a reference template, not a
+        # secrets file, so the sensitive-read guards no longer decide these.
+        # Whether a broker-run program can print a secret is the secret-leak
+        # guard's call. Pin the combined decision in both runtimes: unmasked
+        # or redirected output is denied; ordinary masked runs stay usable.
+        guards = (
+            DOTFILES / "claude/hooks/pretooluse-bash.sh",
+            DOTFILES / "codex/hooks/block-secret-leak.sh",
         )
-        for guard in SENSITIVE_READ_GUARDS:
-            for command in commands:
+        cases = (
+            ("OP_RUN_NO_MASKING=1 op-automations run --env-file .env.op -- python3 sync.py", "deny"),
+            ("op-automations run --env-file .env.op -- python3 sync.py > /dev/stderr", "deny"),
+            ("op-automations run --env-file .env.op -- env", "deny"),
+            ("op-automations run --env-file .env.op -- bash -c 'echo $TOKEN'", "deny"),
+            ("cd /tmp && op-automations run --env-file .env.op -- python3 sync.py", "allow"),
+            ("op-automations run --env-file .env.op -- python3 sync.py | tee /tmp/log", "allow"),
+        )
+        for guard in guards:
+            for command, expected in cases:
                 with self.subTest(guard=guard.name, command=command):
                     payload = {"tool_name": "Bash", "tool_input": {"command": command}}
                     result = run_hook(guard, payload)
                     self.assertEqual(result.returncode, 0, result.stderr)
-                    self.assertEqual(permission_decision(result), "deny")
-        # A program that prints its environment is the secret-leak guard's
-        # call, not a sensitive *read*; the standalone sensitive-read copies
-        # allow any leading broker command, and the Bash dispatcher combines
-        # both guards. Pin the combined decision.
-        dispatcher = DOTFILES / "claude/hooks/pretooluse-bash.sh"
-        for command in (
-            "op-automations run --env-file .env.op -- env",
-            "op-automations run --env-file .env.op -- bash -c 'echo $TOKEN'",
-        ):
-            with self.subTest(guard=dispatcher.name, command=command):
-                payload = {"tool_name": "Bash", "tool_input": {"command": command}}
-                result = run_hook(dispatcher, payload)
-                self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertEqual(permission_decision(result), "deny")
+                    self.assertEqual(permission_decision(result), expected)
 
     def test_safe_prefix_does_not_hide_later_content_read(self):
         command = "ls ~/.ssh/id_test_guard; cat ~/.ssh/id_test_guard"

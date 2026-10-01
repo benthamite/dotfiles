@@ -4,9 +4,14 @@ import json
 from pathlib import Path
 import subprocess
 import shutil
+import sys
 import tempfile
 import unittest
-from test_process_output_policy import PATH_READ_COMMAND, FUNCTION_LIST_COMMAND
+
+# Reuse the policy test's commands from any working directory (pytest from the
+# repo root does not put tests/ on sys.path).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from test_process_output_policy import PATH_READ_COMMAND, FUNCTION_LIST_COMMAND  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 

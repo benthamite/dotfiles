@@ -77,7 +77,9 @@ class DelegatedGuardFailuresTest(unittest.TestCase):
         self.guard = self.directory / "block-secret-leak.sh"
         # Every other guard the dispatcher delegates to allows, so each test
         # observes the disposable guard alone.
-        (self.directory / "block-untrusted-execution.sh").write_text("#!/bin/bash\ncat >/dev/null\n")
+        for name in ("block-untrusted-execution.sh", "block-github-write-command.sh",
+                     "block-elpaca-rebuild-uncommitted.sh", "block-long-pipeline-run-unchecked.sh"):
+            (self.directory / name).write_text("#!/bin/bash\ncat >/dev/null\n")
 
     def run_dispatcher(self, stdout="", stderr="", status=0):
         self.guard.write_text(

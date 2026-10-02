@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import locale
+import os
 import re
 import sys
 
@@ -79,10 +80,27 @@ def render(runtime: str, result: Result) -> dict | None:
     return {"hookSpecificOutput": out}
 
 
+def set_collation() -> None:
+    """Adopt the environment's LC_COLLATE, as the former shell guards' `sort -u` did.
+
+    Labeled fallback: the pyenv interpreters link Homebrew's libintl, whose
+    setlocale rejects "" when no LC_ALL, LC_COLLATE or LANG is set, as under
+    launchd. libc's setlocale, which `sort` used, resolves that environment
+    to "C", so C is the shell guards' collation there, not a weaker default.
+    Raising instead denied every tool call of every unattended agent.
+    """
+    try:
+        locale.setlocale(locale.LC_COLLATE, "")
+    except locale.Error:
+        if any(os.environ.get(name) for name in ("LC_ALL", "LC_COLLATE", "LANG")):
+            raise
+        locale.setlocale(locale.LC_COLLATE, "C")
+
+
 def main(runtime: str) -> int:
     """Hook entry point: stdin payload, stdout response, exit 2 on any failure."""
     try:
-        locale.setlocale(locale.LC_COLLATE, "")
+        set_collation()
         text = sys.stdin.read()
         # jq rejected lone-surrogate escapes (\ud800), so every shell guard
         # failed closed on them; json.loads accepts them. Keep failing closed.

@@ -92,6 +92,29 @@ class GuardFailureSafetyTests(unittest.TestCase):
                     self.assert_blocks_failure(guard_harness.run_e2e(runtime, payload, env=env))
 
 
+class LocaleFreeEnvironmentTests(unittest.TestCase):
+    """launchd starts agents with no locale variables. The engine's
+    setlocale(LC_COLLATE, "") raised there, so every unattended Claude and
+    Codex tool call was denied (2026-10-02 launchd audit)."""
+
+    LAUNCHD_ENV = {"HOME": str(Path.home()), "USER": os.environ.get("USER", ""),
+                   "PATH": "/usr/bin:/bin:/usr/sbin:/sbin"}
+
+    def test_ordinary_call_is_allowed_without_locale_variables(self):
+        for runtime, payload in (
+            ("claude", {"tool_name": "Bash", "tool_input": {"command": "true"}}),
+            ("codex", {"tool_name": "exec_command", "tool_input": {"cmd": "true"}}),
+        ):
+            with self.subTest(runtime=runtime):
+                result = guard_harness.run_e2e(runtime, payload, env=self.LAUNCHD_ENV)
+                self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_invalid_explicit_locale_still_blocks(self):
+        env = {**self.LAUNCHD_ENV, "LC_COLLATE": "xx_INVALID.UTF-8"}
+        result = guard_harness.run_e2e("claude", {"tool_name": "Bash", "tool_input": {"command": "true"}}, env=env)
+        self.assertEqual(result.returncode, 2, result.stdout)
+
+
 class ClassifierFailureTests(unittest.TestCase):
     """A Python classifier that fails must not read as "no finding".
 

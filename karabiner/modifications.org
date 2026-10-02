@@ -479,8 +479,7 @@ CLOCK: [2021-03-20 Sat 21:48]--[2021-03-20 Sat 21:56] =>  0:08
 
 #+begin_src clojure
 :templates {:alfred "osascript -e 'tell application \"Alfred 4\" to run trigger \"%s\" in workflow \"%s\" with argument \"%s\"'"
-            :open "open \"%s\""
-            :insert "~/My Drive/dotfiles/bin/char_input \"%s\""
+            :insert "\"$HOME/My Drive/dotfiles/bin/char_input\" \"%s\""
             }
 #+end_src
 
@@ -959,25 +958,24 @@ Hold =q= to open an application. 20+ applications are mapped. The letter choices
 #+begin_src clojure
 {:des "q-mode (apps)"
  :rules [:q-mode
-         [:c [:open "/Applications/Codex.app"]]
-         [:d [:open "/System/Library/CoreServices/Finder.app"]]
-         [:e [:open "/Applications/Emacs.app"]]
-         [:f [:open "/Applications/Firefox.app"]]
-         [:h [:open "/Applications/Google Chrome.app"]]
-         [:i [:open "/Applications/Anki.app"]]
-         [:j [:open "/System/Applications/System Settings.app"]]
-         [:l [:open "/Applications/DeepL.app"]]
-         [:m [:open "/Applications/Media Center 29.app"]]
-         [:p [:open "/Applications/Plex Media Server.app/"]]
-         [:r [:open "/Applications/Karabiner-Elements.app"]]
-         [:s [:open "/Applications/Slack.app"]]
-         [:t [:open "/System/Applications/Utilities/Terminal.app"]]
-         [:v [:open "/Applications/mpv.app"]]
-         [:w [:open "/Applications/HoudahSpot.app"]]
-         [:y [:open "/Applications/Spotify.app"]]
-         [:comma [:open "/Applications/Home Assistant.app"]]
-         [:period [:open "/Applications/Tor Browser.app"]]
-         [:slash [:open "/Applications/Safari.app"]]
+         [:c [:op "/Applications/Codex.app"]]
+         [:d [:op "/System/Library/CoreServices/Finder.app"]]
+         [:e [:op "/Applications/Emacs.app"]]
+         [:f [:op "/Applications/Firefox.app"]]
+         [:h [:op "/Applications/Google Chrome.app"]]
+         [:i [:op "/Applications/Anki.app"]]
+         [:j [:op "/System/Applications/System Settings.app"]]
+         [:l [:op "/Applications/Signal.app"]]
+         [:m [:op "/Applications/Media Center 29.app"]]
+         [:p [:op "/Applications/Plex Media Server.app"]]
+         [:r [:op "/Applications/Karabiner-Elements.app"]]
+         [:s [:op "/Applications/Slack.app"]]
+         [:t [:op "/System/Applications/Utilities/Terminal.app"]]
+         [:v [:op "/Applications/mpv.app"]]
+         [:w [:op "/Applications/HoudahSpot.app"]]
+         [:comma [:op "/Applications/Home Assistant.app"]]
+         [:period [:op "/Applications/Tor Browser.app"]]
+         [:slash [:op "/Applications/Safari.app"]]
          ]}
 #+end_src
 

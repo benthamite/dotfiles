@@ -138,6 +138,35 @@ class ShellCommandTests(NoKnownSecrets):
         self.assertEqual(bash(command, "codex").decision, "allow")
 
 
+class SecretOutputReasonTests(NoKnownSecrets):
+    """Follow-up 2 of the 2026-09-30 redesign: an executable glob gets its own
+    reason instead of the protected-name one, which named tools not present."""
+
+    def test_executable_glob_reports_the_glob(self):
+        for command in ("/usr/bin/s*ty find-generic-password", "env X=1 /bin/p?paste",
+                        "find . -name x -exec /usr/bin/s*ty {} +", "bash -c '/usr/bin/s*ty'",
+                        "eval '/bin/p?paste'"):
+            with self.subTest(command=command):
+                self.assertEqual(sl.secret_output_issue(command), "glob")
+                result = bash(command)
+                self.assertEqual(result.decision, "deny")
+                self.assertIn("runs a program named by a glob", result.reason)
+                self.assertNotIn("cannot be classified as safe", result.reason)
+
+    def test_protected_names_keep_their_reason(self):
+        for command in (f"{SEC} find-generic-password -w", f"env X=1 {PB}", f"bash -c '{PB}'"):
+            with self.subTest(command=command):
+                self.assertEqual(sl.secret_output_issue(command), "protected")
+                result = bash(command)
+                self.assertEqual(result.decision, "deny")
+                self.assertIn("cannot be classified as safe", result.reason)
+
+    def test_globs_in_arguments_are_not_executable_globs(self):
+        for command in ("ls *.py", "rg -n 'a*b' src", "cp docs/*.md /tmp/out/"):
+            with self.subTest(command=command):
+                self.assertIsNone(sl.secret_output_issue(command))
+
+
 class OpaqueTokenHeuristicTests(NoKnownSecrets):
     def test_allows_and_logs_label_without_value(self):
         self.assertEqual(bash(CURL_OPAQUE).decision, "allow")
@@ -229,7 +258,7 @@ class FunctionsExecTests(NoKnownSecrets):
 
     def test_browser_automation_program_allowed(self):
         # Read as shell text, `?.`, `[0]` and `*` looked like executable globs.
-        self.assertTrue(sl.contains_secret_output_command(self.BROWSER, document_edits=False))
+        self.assertEqual(sl.secret_output_issue(self.BROWSER, document_edits=False), "glob")
         self.assertEqual(self.run_program(self.BROWSER).decision, "allow")
 
     def test_program_that_can_run_commands_keeps_the_shell_scan(self):

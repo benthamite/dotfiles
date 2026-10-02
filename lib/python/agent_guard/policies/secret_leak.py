@@ -263,47 +263,51 @@ _NORMALIZE_RULES = (
 )
 
 
-def contains_secret_output_command(command: str, *, document_edits: bool = True) -> bool:
-    """Whether COMMAND may run a tool whose output is the secret itself."""
+def secret_output_issue(command: str, *, document_edits: bool = True) -> str | None:
+    """How COMMAND may run a tool whose output is the secret itself: "protected"
+    (a credential or clipboard tool name may execute) or "glob" (a program named
+    by a glob could expand to one); None if neither."""
     status, raw = _python_heredoc(command, document_edits=document_edits)
     if status != 0:
-        return True
+        return "protected"
     raw = mask_heredoc_bodies(raw)
     # A heredoc body still present feeds a shell or an interpreter: program source.
     if grep(_PROTECTED, raw):
         body_lines = _added_lines(mask_heredoc_bodies(raw, "all"), raw)
         if any(grep(_PROTECTED, line) for line in body_lines):
-            return True
+            return "protected"
     # A literal mention printed by a simple nested echo/printf program is data.
     for literal_echo in (_SQ_ECHO, _DQ_ECHO):
         if grep(literal_echo, raw) and not grep(r"`|[<>]\(", raw):
-            return False
+            return None
     scan = mask_op_quoted_literals(raw)
     if grep(_PLAIN_ECHO, scan) and not grep(r"[;&|`]|\$\(|[<>]\(", scan):
-        return False
+        return None
     if grep(_PROTECTED, scan):
         if grep(_PROTECTED, _inert_mentions(scan)):
-            return True
+            return "protected"
     if grep(_SHELL_C, raw) and grep(_PROTECTED, raw):
-        return True
+        return "protected"
     if (grep(r"""[A-Za-z_][A-Za-z0-9_]*=[[:space:]]*["']([^"']*/)?(pbpaste|security)["']""", raw)
             and grep(r"\$\{?[A-Za-z_][A-Za-z0-9_]*\}?", raw)):
-        return True
+        return "protected"
     if grep(r"\$\([[:space:]]*(command[[:space:]]+-v|which|type[[:space:]]+-P)[[:space:]]+(pbpaste|security)"
              r"[[:space:]]*\)", raw):
-        return True
+        return "protected"
     normalized = command_substitution(
         sed(normalize_shell_words(mask_heredoc_bodies(raw, "nonshell")) + "\n", *_NORMALIZE_RULES))
     if grep(f"{_SW_BOUNDARY}({_SW_WRAPPER})*{_SW_EXECUTABLE}{_SW_DELIMITER}", normalized):
-        return True
+        return "protected"
     if grep(f"(-exec|-execdir|-ok|-okdir)[[:space:]]+{_SW_EXECUTABLE}{_SW_DELIMITER}", normalized):
-        return True
+        return "protected"
     if grep(f"{_SW_BOUNDARY}({_SW_WRAPPER})*{_SW_GLOB}{_SW_DELIMITER}", normalized):
-        return True
+        return "glob"
     if grep(f"find[[:space:]].*-exec[[:space:]]+{_SW_GLOB}{_SW_DELIMITER}", normalized):
-        return True
-    return grep(r"""(^|[[:space:];&|(!`])(([^;&|[:space:]]*/)?(bash|sh|zsh|dash|ksh)[[:space:]]+-l?c|eval)"""
-                 r"""[[:space:]]+["'][^"']*([?*]|\[[^]]*)""", raw)
+        return "glob"
+    if grep(r"""(^|[[:space:];&|(!`])(([^;&|[:space:]]*/)?(bash|sh|zsh|dash|ksh)[[:space:]]+-l?c|eval)"""
+            r"""[[:space:]]+["'][^"']*([?*]|\[[^]]*)""", raw):
+        return "glob"
+    return None
 
 
 _OP_BIN = r"(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op"
@@ -409,7 +413,13 @@ def _deny_op_reveal_output(tool: str) -> Result:
         "`X=$(op-automations read REF)` for a non-printing command, or write it to a mode-0600 file.")
 
 
-def _deny_secret_output_command(tool: str) -> Result:
+def _deny_secret_output_command(tool: str, issue: str) -> Result:
+    if issue == "glob":
+        return Result.deny(
+            "BLOCKED: " + tool + " runs a program named by a glob (`*`, `?` or `[...]` in a command position), "
+            "which could expand to a credential or clipboard tool such as `security` or `pbpaste`.\n\nName the "
+            "program literally. Globs in arguments are fine; this applies only where a word is run as a command, "
+            "including after wrappers such as `env`, `xargs` or `find -exec`, and inside `bash -c` or `eval` strings.")
     return Result.deny(
         "BLOCKED: " + tool + " cannot be classified as safe from secret-printing credential or clipboard commands."
         "\n\nThis guard denies executable protected tool names and unclassified interpreter programs containing "
@@ -574,11 +584,13 @@ def _shell_allowlist(tool: str, content: str, nested: list[str] | None, literal:
 
     document_edits = nested is None or literal
     if nested is None or (not literal and _program_can_run_commands(content)):
-        if contains_secret_output_command(content, document_edits=document_edits):
-            return _deny_secret_output_command(tool)
+        issue = secret_output_issue(content, document_edits=document_edits)
+        if issue is not None:
+            return _deny_secret_output_command(tool, issue)
     for source in nested or ():
-        if contains_secret_output_command(source, document_edits=document_edits):
-            return _deny_secret_output_command(tool)
+        issue = secret_output_issue(source, document_edits=document_edits)
+        if issue is not None:
+            return _deny_secret_output_command(tool, issue)
 
     if nested is None:
         reason = op_command_denial(content)

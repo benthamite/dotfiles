@@ -39,6 +39,12 @@ function log(message) {
     $(message + '\n').dataUsingEncoding($.NSUTF8StringEncoding));
 }
 
+// System Events quits after `quit delay` idle seconds (300 by default), and
+// relaunching it added about 0.4 s to the next key press. Keep it resident.
+function keepSystemEventsRunning() {
+  if (systemEvents.quitDelay() !== 0) systemEvents.quitDelay = 0;
+}
+
 function focus(directory, name) {
   const suffix = '(' + name + ')';
   const chrome = systemEvents.processes.byName('Google Chrome');
@@ -68,6 +74,7 @@ function handle(line) {
   const start = Date.now();
   try {
     focus(directory, name);
+    keepSystemEventsRunning();
   } catch (e) {
     log('chrome-profile-focusd: ' + name + ': ' + e);
   }
@@ -88,6 +95,7 @@ function serve() {
   if (fifo.isNil()) throw new Error('cannot open ' + FIFO);
   $(String($.NSProcessInfo.processInfo.processIdentifier) + '\n')
     .writeToFileAtomicallyEncodingError(PIDFILE, true, $.NSUTF8StringEncoding, null);
+  keepSystemEventsRunning();
   let pending = '';
   for (;;) {
     const data = fifo.availableData;

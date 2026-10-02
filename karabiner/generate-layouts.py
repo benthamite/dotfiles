@@ -3,15 +3,25 @@
 
 Parses modifications.org to extract simlayer rules, converts each to
 keymap-drawer YAML, and runs `keymap draw` to produce SVGs.
+
+Keys whose action is a raw keystroke (e.g. {:modi :C-H- :key :u}) take
+their label from layout-labels.toml, so the published code blocks stay
+free of comments. Generation fails when a label names a key its layer no
+longer binds.
 """
 
+import argparse
+from concurrent.futures import ThreadPoolExecutor
 import os
 import re
 import subprocess
 import shutil
+import sys
+import tomllib
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 MODIFICATIONS_ORG = os.path.join(SCRIPT_DIR, "modifications.org")
+LABELS_TOML = os.path.join(SCRIPT_DIR, "layout-labels.toml")
 LAYOUTS_DIR = os.path.join(SCRIPT_DIR, "layouts")
 HUGO_IMG_DIR = os.path.join(
     os.path.expanduser("~"),
@@ -53,7 +63,7 @@ KEY_DISPLAY = {
 }
 
 SIMLAYER_TRIGGERS = {
-    "b-mode": "b", "f-mode": "f", "j-mode": "j", "k-mode": "k",
+    "b-mode": "b", "j-mode": "j", "k-mode": "k",
     "m-mode": "m", "p-mode": "p", "q-mode": "q", "v-mode": "v",
     "x-mode": "x", "y-mode": "y", "z-mode": "z",
     "comma-mode": "comma", "period-mode": "period",
@@ -61,10 +71,10 @@ SIMLAYER_TRIGGERS = {
 }
 
 # Simlayers that only activate in Emacs (have :condi :emacs)
-EMACS_ONLY = {"x-mode", "comma-mode"}
+EMACS_ONLY = {"x-mode", "comma-mode", "slash-mode"}
 
 # Simlayers with different behavior in Emacs vs outside Emacs
-DUAL_BEHAVIOR = {"j-mode", "z-mode", "slash-mode"}
+DUAL_BEHAVIOR = {"j-mode", "z-mode"}
 
 # :tos character aliases -> display character
 TOS_CHARS = {
@@ -378,12 +388,37 @@ def make_label(action, comment=None):
     return "?"
 
 
-def build_layer_keys(simlayer_name, rules, context=None):
+def load_labels(path):
+    """Read layout-labels.toml into {table name: {key: label}}.
+
+    Tables are named after the diagram: "b-mode", or "j-mode.emacs" and
+    "j-mode.macos" for the dual-behavior simlayers.
+    """
+    with open(path, "rb") as f:
+        data = tomllib.load(f)
+    labels = {}
+    for mode, table in data.items():
+        if all(isinstance(v, dict) for v in table.values()):
+            for ctx, sub in table.items():
+                labels[f"{mode}.{ctx}"] = sub
+        else:
+            labels[mode] = table
+    return labels
+
+
+def build_layer_keys(simlayer_name, rules, context=None, labels=None,
+                     errors=None):
     """Build a 36-element key list for keymap-drawer YAML.
 
     context: None (default, prefer Emacs rules), "emacs" (only Emacs +
     unconditional), or "macos" (only !emacs + unconditional).
+    labels: {key: label} from layout-labels.toml for this diagram; an
+    entry overrides the label derived from the action.
+    errors: list collecting labels for keys this diagram does not bind.
     """
+    labels = labels or {}
+    table = f"{simlayer_name}.{context}" if context else simlayer_name
+    bound = set()
     key_labels = {}
     hash_labels = {}  # ## prefixed rules (lower priority)
     for rule_str in rules:
@@ -405,21 +440,23 @@ def build_layer_keys(simlayer_name, rules, context=None):
         if condition in ("chrome", "firefox", "safari"):
             continue
 
+        bound.add(trigger_key)
+        label = labels.get(trigger_key) or make_label(action, comment)
         if is_hash:
             # Store ## rules as fallbacks (used if no plain rule exists)
-            if trigger_key not in hash_labels:
-                label = make_label(action, comment)
-                if label:
-                    hash_labels[trigger_key] = label
-        elif trigger_key not in key_labels:
-            label = make_label(action, comment)
-            if label:
-                key_labels[trigger_key] = label
+            if trigger_key not in hash_labels and label:
+                hash_labels[trigger_key] = label
+        elif trigger_key not in key_labels and label:
+            key_labels[trigger_key] = label
 
     # Merge: plain rules take priority, ## rules fill gaps
     for k, v in hash_labels.items():
         if k not in key_labels:
             key_labels[k] = v
+
+    if errors is not None:
+        for k in sorted(labels.keys() - bound):
+            errors.append(f"[{table}] {k}: labelled but not bound")
 
     # Build the 36-element list
     trigger = SIMLAYER_TRIGGERS.get(simlayer_name)
@@ -435,15 +472,19 @@ def build_layer_keys(simlayer_name, rules, context=None):
     return result
 
 
+# Base-layer annotation for each simlayer trigger key
+SIMLAYER_HOLDS = {
+    "q": "apps", "j": "del", "k": "chars",
+    "m": "math", "p": "diacrit", "v": "numbers", "b": "media",
+    "x": "avy", "y": "mouse", "z": "nav",
+    "comma": "transp", "period": "manip",
+    "semicolon": "sym", "slash": "org",
+}
+
+
 def build_base_layer_keys():
     """Build the base layer showing simlayer hold annotations."""
-    simlayer_holds = {
-        "q": "apps", "f": "chars", "j": "del", "k": "site",
-        "m": "math", "p": "diacrit", "v": "numbers", "b": "media",
-        "x": "avy", "y": "mouse", "z": "nav",
-        "comma": "transp", "period": "manip",
-        "semicolon": "sym", "slash": "org/app",
-    }
+    simlayer_holds = SIMLAYER_HOLDS
     thumb_info = {
         "left_control": {"t": "Esc", "h": "Meta"},
         "left_option": {"t": "Enter", "h": "Shift"},
@@ -527,65 +568,102 @@ def run_keymap_draw(yaml_path, svg_path):
     return True
 
 
-def main():
-    print("Parsing modifications.org...")
-    blocks = parse_simlayer_blocks(MODIFICATIONS_ORG)
-    print(f"Found {len(blocks)} simlayer blocks: {', '.join(sorted(blocks.keys()))}")
+def generate(org_path, labels_path, output_dir):
+    """Write every layer's YAML and SVG to OUTPUT_DIR.
 
-    os.makedirs(LAYOUTS_DIR, exist_ok=True)
-
-    # Generate base layer
-    print("\nGenerating base layer...")
-    base_keys = build_base_layer_keys()
-    base_yaml = build_yaml_content("base", base_keys)
-    yaml_path = write_yaml("base", base_yaml, LAYOUTS_DIR)
-    svg_path = os.path.join(LAYOUTS_DIR, "base.svg")
-    if run_keymap_draw(yaml_path, svg_path):
-        print(f"  -> {svg_path}")
-
-    # Generate simlayer SVGs
+    Return the list of label errors; nothing is written when it is
+    non-empty.
+    """
+    blocks = parse_simlayer_blocks(org_path)
+    labels = load_labels(labels_path)
+    errors = []
+    unknown = sorted(set(blocks) - SIMLAYER_TRIGGERS.keys())
+    if unknown:
+        errors.append(f"simlayers missing from SIMLAYER_TRIGGERS: {unknown}")
+    triggers = {SIMLAYER_TRIGGERS[m] for m in blocks if m in SIMLAYER_TRIGGERS}
+    if triggers != SIMLAYER_HOLDS.keys():
+        errors.append(
+            "SIMLAYER_HOLDS does not match the simlayers in modifications.org: "
+            f"unannotated {sorted(triggers - SIMLAYER_HOLDS.keys())}, "
+            f"no such simlayer {sorted(SIMLAYER_HOLDS.keys() - triggers)}"
+        )
+    layers = [("base", "base", build_base_layer_keys())]
     for simlayer_name in sorted(blocks.keys()):
         rules = blocks[simlayer_name]
-
         if simlayer_name in DUAL_BEHAVIOR:
-            # Generate two SVGs: Emacs and macOS
+            # Two diagrams: Emacs and macOS
             for ctx, suffix in (("emacs", "Emacs"), ("macos", "macOS")):
-                file_stem = f"{simlayer_name}-{ctx}"
-                print(f"\nGenerating {file_stem}...")
-                keys = build_layer_keys(simlayer_name, rules, context=ctx)
-                display_name = f"{simlayer_name} ({suffix})"
-                yaml_content = build_yaml_content(display_name, keys)
-                yaml_path = write_yaml(file_stem, yaml_content, LAYOUTS_DIR)
-                svg_path = os.path.join(LAYOUTS_DIR, f"{file_stem}.svg")
-                if run_keymap_draw(yaml_path, svg_path):
-                    print(f"  -> {svg_path}")
+                keys = build_layer_keys(
+                    simlayer_name, rules, context=ctx,
+                    labels=labels.get(f"{simlayer_name}.{ctx}"), errors=errors,
+                )
+                layers.append(
+                    (f"{simlayer_name}-{ctx}", f"{simlayer_name} ({suffix})", keys)
+                )
         else:
-            print(f"\nGenerating {simlayer_name}...")
-            keys = build_layer_keys(simlayer_name, rules)
+            keys = build_layer_keys(
+                simlayer_name, rules,
+                labels=labels.get(simlayer_name), errors=errors,
+            )
             display_name = (
                 f"{simlayer_name} (Emacs only)"
                 if simlayer_name in EMACS_ONLY
                 else simlayer_name
             )
-            yaml_content = build_yaml_content(display_name, keys)
-            yaml_path = write_yaml(simlayer_name, yaml_content, LAYOUTS_DIR)
-            svg_path = os.path.join(LAYOUTS_DIR, f"{simlayer_name}.svg")
-            if run_keymap_draw(yaml_path, svg_path):
-                print(f"  -> {svg_path}")
+            layers.append((simlayer_name, display_name, keys))
 
+    stems = {stem for stem, _, _ in layers}
+    for table in labels:
+        if table.replace(".", "-") not in stems:
+            errors.append(f"[{table}] no such diagram")
+    if errors:
+        return errors
+
+    os.makedirs(output_dir, exist_ok=True)
+    jobs = []
+    for stem, display_name, keys in layers:
+        yaml_path = write_yaml(stem, build_yaml_content(display_name, keys), output_dir)
+        jobs.append((yaml_path, os.path.join(output_dir, f"{stem}.svg")))
+    with ThreadPoolExecutor() as pool:
+        ok = list(pool.map(lambda job: run_keymap_draw(*job), jobs))
+    if not all(ok):
+        sys.exit(1)
+    for _, svg_path in jobs:
+        print(f"  -> {svg_path}")
+    return []
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--org", default=MODIFICATIONS_ORG)
+    parser.add_argument("--labels", default=LABELS_TOML)
+    parser.add_argument("--output-dir", default=LAYOUTS_DIR)
+    parser.add_argument(
+        "--no-copy", action="store_true",
+        help=f"do not copy the SVGs to {HUGO_IMG_DIR}",
+    )
+    args = parser.parse_args()
+
+    errors = generate(args.org, args.labels, args.output_dir)
+    if errors:
+        print("Cannot generate layouts:", file=sys.stderr)
+        for e in errors:
+            print(f"  {e}", file=sys.stderr)
+        sys.exit(1)
+
+    if args.no_copy:
+        return
     # Copy SVGs to Hugo static dir
     print(f"\nCopying SVGs to {HUGO_IMG_DIR}...")
     os.makedirs(HUGO_IMG_DIR, exist_ok=True)
     svg_count = 0
-    for fname in sorted(os.listdir(LAYOUTS_DIR)):
+    for fname in sorted(os.listdir(args.output_dir)):
         if fname.endswith(".svg"):
-            src = os.path.join(LAYOUTS_DIR, fname)
+            src = os.path.join(args.output_dir, fname)
             dst = os.path.join(HUGO_IMG_DIR, fname)
             shutil.copy2(src, dst)
             svg_count += 1
     print(f"Copied {svg_count} SVGs.")
-
-    print("\nDone!")
 
 
 if __name__ == "__main__":

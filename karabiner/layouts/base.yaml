@@ -4,8 +4,8 @@ layout:
 layers:
   base:
     - [{t: "Q", h: "apps"}, "W", "E", "R", "T", {t: "Y", h: "mouse"}, "U", "I", "O", {t: "P", h: "diacrit"}]
-    - ["A", "S", "D", {t: "F", h: "chars"}, "G", "H", {t: "J", h: "del"}, {t: "K", h: "site"}, "L", {t: ";", h: "sym"}]
-    - [{t: "Z", h: "nav"}, {t: "X", h: "avy"}, "C", {t: "V", h: "numbers"}, {t: "B", h: "media"}, "N", {t: "M", h: "math"}, {t: ",", h: "transp"}, {t: ".", h: "manip"}, {t: "/", h: "org/app"}]
+    - ["A", "S", "D", "F", "G", "H", {t: "J", h: "del"}, {t: "K", h: "chars"}, "L", {t: ";", h: "sym"}]
+    - [{t: "Z", h: "nav"}, {t: "X", h: "avy"}, "C", {t: "V", h: "numbers"}, {t: "B", h: "media"}, "N", {t: "M", h: "math"}, {t: ",", h: "transp"}, {t: ".", h: "manip"}, {t: "/", h: "org"}]
     - {t: "Esc", h: "Meta"}
     - {t: "Enter", h: "Shift"}
     - {t: "Win", h: "Hyper"}

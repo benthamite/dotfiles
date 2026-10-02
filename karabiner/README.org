@@ -26,9 +26,29 @@ represent:
 python3 karabiner/generate-layouts.py
 #+end_src
 
+Key labels for raw keystrokes (most Emacs-side bindings) live in
+[[file:layout-labels.toml][layout-labels.toml]], since the published code blocks carry no comments. A
+label should name what the keystroke does, which for Emacs bindings means the
+command it runs there. The generator refuses to run when a label names a key
+its layer no longer binds, or when its base-layer annotations disagree with
+the simlayers it finds.
+
 The generator also copies rendered images to its configured website checkout
-path. That copy is outside this repository and is not part of Karabiner
-activation.
+path; =--no-copy= skips that. That copy is outside this repository and is not
+part of Karabiner activation.
+
+* Drift check
+
+[[file:check-generated][check-generated]] fails when =karabiner.edn= differs from what
+=modifications.org= tangles to, or when =layouts/= differs from fresh
+generator output, including diagrams it no longer produces. The tracked
+=bin/dotfiles-pre-commit= hook, installed as the repository's =pre-commit=,
+runs it on the staged tree whenever a commit touches =karabiner/=. Run it by
+hand with:
+
+#+begin_src sh
+karabiner/check-generated
+#+end_src
 
 * Historical state and supporting files
 

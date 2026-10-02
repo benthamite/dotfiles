@@ -3,9 +3,9 @@ layout:
   layout_name: LAYOUT_split_3x5_3
 layers:
   x-mode (Emacs only):
-    - [null, null, null, null, null, null, "Word in line", null, null, "Word in line"]
+    - [null, null, null, null, null, null, "Line word ←", null, null, "Line word →"]
     - [null, null, null, null, null, "Contract", "Char ←", "Word ↑", "Word ↓", "Char →"]
-    - [null, {type: held}, null, null, null, "Expand", "Line ↑", "EOL ↑", "EOL ↓", null]
+    - [null, {type: held}, null, null, null, "Expand", "Line ↑", "EOL ↑", "Line ↓", "EOL ↓"]
     - null
     - null
     - null

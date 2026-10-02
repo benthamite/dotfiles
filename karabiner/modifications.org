@@ -1358,7 +1358,7 @@ CLOCK: [2021-06-03 Thu 20:44]--[2021-06-03 Thu 21:06] =>  0:22
 
 Hold =/= in Emacs to access org-mode commands via the =C-H-M-s-= modifier prefix.
 
-[[/images/keyboard/slash-mode-emacs.svg]]
+[[/images/keyboard/slash-mode.svg]]
 
 #+begin_src clojure
 {:des "slash simlayer → org-mode"

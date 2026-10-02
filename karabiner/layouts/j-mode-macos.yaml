@@ -3,9 +3,9 @@ layout:
   layout_name: LAYOUT_split_3x5_3
 layers:
   j-mode (macOS):
-    - ["Word ←", "To line", "To line end", "Word →", "Home", null, null, null, null, null]
+    - ["Word ←", "Line ←", "Line →", "Word →", "Home", null, null, null, null, null]
     - [null, "Bksp", "Del", null, "End", null, {type: held}, null, null, null]
-    - ["To line", "Select to", "Select to", "Line →", null, null, null, null, null, null]
+    - ["Line ←", "Select to ←", "Select to →", "Line →", null, null, null, null, null, null]
     - null
     - null
     - null

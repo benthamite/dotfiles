@@ -1,0 +1,16 @@
+#!/bin/sh
+# Tracked pre-commit hook for the dotfiles repository.
+#
+# When the commit touches karabiner/, check the staged tree (not the
+# working tree, which may hold unstaged edits) with
+# karabiner/check-generated, so karabiner.edn and the layout diagrams
+# cannot drift from modifications.org.
+
+set -eu
+
+git diff --cached --quiet -- karabiner/ && exit 0
+
+tmp=$(mktemp -d)
+trap 'rm -r "$tmp"' EXIT
+git ls-files -z -- karabiner/ | xargs -0 git checkout-index --prefix="$tmp/" --
+python3 "$tmp/karabiner/check-generated" --root "$tmp/karabiner"

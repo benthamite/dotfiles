@@ -4,7 +4,7 @@ layout:
 layers:
   z-mode (macOS):
     - [null, null, null, null, null, "PgUp", "Word ←", "Paragraph ←", "Paragraph →", "Word →"]
-    - [null, null, null, "Next section", null, "PgDn", "Left", "Up", "Down", "Right"]
+    - [null, null, null, null, null, "PgDn", "Left", "Up", "Down", "Right"]
     - [{type: held}, null, null, null, null, null, "Line start", "Doc start", "Doc end", "Line end"]
     - null
     - null

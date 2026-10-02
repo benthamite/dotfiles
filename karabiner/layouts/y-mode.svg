@@ -198,7 +198,7 @@ path.combo {
 <g transform="translate(28, 161)" class="key keypos-20">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
 <text x="0" y="0" class="key tap">
-<tspan x="0" dy="-0.6em">Save</tspan><tspan x="0" dy="1.2em">picture</tspan>
+<tspan x="0" dy="-0.6em">Save</tspan><tspan x="0" dy="1.2em">screen</tspan>
 </text>
 </g>
 <g transform="translate(84, 147)" class="key keypos-21">
@@ -207,13 +207,13 @@ path.combo {
 <g transform="translate(140, 140)" class="key keypos-22">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
 <text x="0" y="0" class="key tap">
-<tspan x="0" dy="-0.6em">Save</tspan><tspan x="0" dy="1.2em">picture</tspan>
+<tspan x="0" dy="-0.6em">Save</tspan><tspan x="0" dy="1.2em">area</tspan>
 </text>
 </g>
 <g transform="translate(196, 147)" class="key keypos-23">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
 <text x="0" y="0" class="key tap">
-<tspan x="0" dy="-0.6em">Copy</tspan><tspan x="0" dy="1.2em">picture</tspan>
+<tspan x="0" dy="-0.6em">Copy</tspan><tspan x="0" dy="1.2em">area</tspan>
 </text>
 </g>
 <g transform="translate(252, 154)" class="key keypos-24">

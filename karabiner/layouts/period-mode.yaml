@@ -3,9 +3,9 @@ layout:
   layout_name: LAYOUT_split_3x5_3
 layers:
   period-mode:
-    - ["QCOq", null, null, null, "Copy section", null, null, null, null, null]
-    - ["Copy sexp", null, null, "Delete sexp", null, null, "Mark sexp", "Mark around", null, null]
-    - [null, null, null, null, null, null, null, null, {type: held}, null]
+    - ["Copy word", "Copy sent", "Delete sent", "Delete word", "Copy section", null, "Kill word", "Kill sent", null, null]
+    - ["Copy sexp", null, null, "Delete sexp", "Quit", null, "Mark sexp", "Mark around", null, null]
+    - ["Copy line", "Copy para", "Delete para", "Delete line", null, null, "Kill line", "Kill para", {type: held}, null]
     - null
     - null
     - null

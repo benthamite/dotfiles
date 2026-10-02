@@ -2,9 +2,9 @@ layout:
   qmk_keyboard: corne_rotated
   layout_name: LAYOUT_split_3x5_3
 layers:
-  slash-mode (Emacs):
-    - ["Promote", "Shift meta ↑", "Shift meta ↓", "Demote", null, null, null, null, null, null]
-    - ["Promote", "Move subtree", "Move subtree", "Demote", null, null, null, null, null, null]
+  slash-mode (Emacs only):
+    - ["Promote tree", "Shift meta ↑", "Shift meta ↓", "Demote tree", null, null, null, null, null, null]
+    - ["Promote", "Subtree ↑", "Subtree ↓", "Demote", null, null, null, null, null, null]
     - ["Shift ←", "Shift ↑", "Shift ↓", "Shift →", null, null, null, null, null, {type: held}]
     - null
     - null

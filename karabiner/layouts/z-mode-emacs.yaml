@@ -3,12 +3,12 @@ layout:
   layout_name: LAYOUT_split_3x5_3
 layers:
   z-mode (Emacs):
-    - [null, "Defun start", "Sexp ←", "Prev section", "Scroll other", "Page ↑", "Word ←", "Sentence ←", "Sentence →", "Word →"]
-    - [null, "Defun end", "Sexp →", "Next section", "Scroll other", "Page ↓", "Left", "Up", "Down", "Right"]
-    - [{type: held}, null, null, null, "Other buffer", "First", "Line start", "Paragraph ←", "Paragraph →", "Line end"]
+    - [null, "Defun start", "Sexp ←", "Prev section", "Other ↑", "Page ↑", "Word ←", "Sentence ←", "Sentence →", "Word →"]
+    - [null, "Defun end", "Sexp →", "Next section", "Other ↓", "Page ↓", "Left", "Up", "Down", "Right"]
+    - [{type: held}, null, null, null, null, "1st heading", "Line start", "Paragraph ←", "Paragraph →", "Line end"]
     - null
     - null
     - null
-    - "Alt buffer"
+    - "Doc start"
     - "Doc end"
     - null

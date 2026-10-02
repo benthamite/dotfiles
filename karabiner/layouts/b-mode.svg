@@ -180,7 +180,7 @@ path.combo {
 <g transform="translate(252, 98)" class="key keypos-14">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
 <text x="0" y="0" class="key tap">
-<tspan x="0" dy="-0.6em">Toggle</tspan><tspan x="0" dy="1.2em">langs</tspan>
+<tspan x="0" dy="-0.6em">Dict</tspan><tspan x="0" dy="1.2em">lang</tspan>
 </text>
 </g>
 <g transform="translate(476, 98)" class="key keypos-15">
@@ -208,14 +208,12 @@ path.combo {
 <g transform="translate(84, 147)" class="key keypos-21">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
 <text x="0" y="0" class="key tap">
-<tspan x="0" dy="-0.6em">Copy</tspan><tspan x="0" dy="1.2em">picture</tspan>
+<tspan x="0" dy="-0.6em">Copy</tspan><tspan x="0" dy="1.2em">screen</tspan>
 </text>
 </g>
 <g transform="translate(140, 140)" class="key keypos-22">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">
-<tspan x="0" dy="-0.6em">Connect</tspan><tspan x="0" dy="1.2em">to</tspan>
-</text>
+<text x="0" y="0" class="key tap"><tspan style="font-size: 78%">Bluetooth</tspan></text>
 </g>
 <g transform="translate(196, 147)" class="key keypos-23">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>

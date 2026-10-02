@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+"""Check that Karabiner's generated files match their sources.
+
+karabiner.edn must be what modifications.org tangles to, and layouts/
+must be what generate-layouts.py produces from modifications.org and
+layout-labels.toml. Both have drifted before when one side was edited
+by hand, so the dotfiles pre-commit hook runs this on the staged tree.
+
+Usage: check-generated [--root DIR]
+
+DIR is a karabiner directory (default: the one holding this script).
+Exits 1 and names each stale file when anything differs.
+"""
+
+import argparse
+import filecmp
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+def elisp_string(s):
+    return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def tangle(org_path, edn_path):
+    """Tangle ORG_PATH, sending its blocks to EDN_PATH."""
+    emacs = shutil.which("emacs")
+    if not emacs:
+        sys.exit("check-generated: emacs not found; cannot tangle modifications.org")
+    # The blocks tangle to (print paths-file-karabiner-edn); bind it here
+    # so the check needs nothing from the user's init file.
+    expr = (
+        "(progn (require 'org)"
+        f" (setq paths-file-karabiner-edn {elisp_string(edn_path)})"
+        f" (org-babel-tangle-file {elisp_string(org_path)}))"
+    )
+    result = subprocess.run(
+        [emacs, "--batch", "--eval", expr], capture_output=True, text=True
+    )
+    if result.returncode != 0 or not os.path.exists(edn_path):
+        sys.exit(f"check-generated: tangling failed:\n{result.stderr}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--root", default=SCRIPT_DIR)
+    root = os.path.abspath(parser.parse_args().root)
+    problems = []
+
+    with tempfile.TemporaryDirectory() as tmp:
+        # Tangle a copy so the visiting state of the real file is untouched
+        org_copy = os.path.join(tmp, "modifications.org")
+        shutil.copy2(os.path.join(root, "modifications.org"), org_copy)
+        edn = os.path.join(tmp, "karabiner.edn")
+        tangle(org_copy, edn)
+        if not filecmp.cmp(edn, os.path.join(root, "karabiner.edn"), shallow=False):
+            problems.append(
+                "karabiner.edn differs from what modifications.org tangles to.\n"
+                "    Edit modifications.org, not karabiner.edn, then tangle it."
+            )
+
+        out = os.path.join(tmp, "layouts")
+        result = subprocess.run(
+            [
+                sys.executable, os.path.join(root, "generate-layouts.py"),
+                "--org", os.path.join(root, "modifications.org"),
+                "--labels", os.path.join(root, "layout-labels.toml"),
+                "--output-dir", out, "--no-copy",
+            ],
+            capture_output=True, text=True,
+        )
+        if result.returncode != 0:
+            problems.append(f"generate-layouts.py failed:\n{result.stderr.rstrip()}")
+        else:
+            layouts = os.path.join(root, "layouts")
+            expected = set(os.listdir(out))
+            actual = set(os.listdir(layouts))
+            stale = sorted(
+                f for f in expected & actual
+                if not filecmp.cmp(os.path.join(out, f), os.path.join(layouts, f),
+                                   shallow=False)
+            )
+            missing = sorted(expected - actual)
+            extra = sorted(actual - expected)
+            if stale or missing or extra:
+                lines = [f"    stale: {f}" for f in stale]
+                lines += [f"    missing: {f}" for f in missing]
+                lines += [f"    no longer generated: {f}" for f in extra]
+                problems.append(
+                    "layouts/ does not match generate-layouts.py output:\n"
+                    + "\n".join(lines)
+                    + "\n    Run: python3 karabiner/generate-layouts.py"
+                )
+
+    if problems:
+        for p in problems:
+            print(f"check-generated: {p}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

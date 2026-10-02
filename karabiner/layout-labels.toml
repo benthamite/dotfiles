@@ -1,0 +1,150 @@
+# Diagram labels for simlayer keys, read by generate-layouts.py.
+#
+# A label here overrides the one derived from the rule's action. Keys
+# whose action is a raw keystroke (e.g. {:modi :C-H- :key :u}) need one,
+# since the published code blocks carry no comments; without it the key
+# is drawn blank, which is right only when the keystroke runs nothing.
+# Emacs labels name the command the keystroke runs in Emacs. j-mode and
+# z-mode have an .emacs and a .macos table, one per diagram.
+#
+# generate-layouts.py fails when a label names a key its layer does not
+# bind, so a removed binding cannot leave a stale label behind.
+
+[b-mode]
+u = "Left half"
+i = "Maximize"
+o = "Center"
+p = "Right half"
+g = "Dict lang"
+h = "Dictation"
+x = "Copy screen"
+c = "Bluetooth"
+n = "Narration"
+
+[comma-mode]
+q = "Words ←"
+w = "Sentences ←"
+e = "Sentences"
+r = "Words"
+t = "Org element"
+a = "Sexps ←"
+s = "Chars ←"
+d = "Chars"
+f = "Sexps"
+z = "Lines ←"
+x = "Paragraphs ←"
+c = "Paragraphs"
+v = "Lines"
+
+[j-mode.emacs]
+q = "Word ←"
+w = "Sentence ←"
+e = "Sentence →"
+r = "Word →"
+a = "Zap ←"
+s = "Char ←"
+d = "Char →"
+f = "Zap →"
+g = "Append next"
+b = "Strip thing"
+z = "Line ←"
+x = "Paragraph ←"
+c = "Paragraph →"
+v = "Line →"
+
+[j-mode.macos]
+q = "Word ←"
+w = "Line ←"
+e = "Line →"
+r = "Word →"
+z = "Line ←"
+x = "Select to ←"
+c = "Select to →"
+v = "Line →"
+
+[period-mode]
+q = "Copy word"
+w = "Copy sent"
+e = "Delete sent"
+r = "Delete word"
+t = "Copy section"
+u = "Kill word"
+i = "Kill sent"
+a = "Copy sexp"
+f = "Delete sexp"
+g = "Quit"
+j = "Mark sexp"
+k = "Mark around"
+z = "Copy line"
+x = "Copy para"
+c = "Delete para"
+v = "Delete line"
+m = "Kill line"
+comma = "Kill para"
+
+[slash-mode]
+q = "Promote tree"
+w = "Shift meta ↑"
+e = "Shift meta ↓"
+r = "Demote tree"
+a = "Promote"
+s = "Subtree ↑"
+d = "Subtree ↓"
+f = "Demote"
+z = "Shift ←"
+x = "Shift ↑"
+c = "Shift ↓"
+v = "Shift →"
+
+[x-mode]
+u = "Line word ←"
+p = "Line word →"
+h = "Contract"
+j = "Char ←"
+k = "Word ↑"
+l = "Word ↓"
+semicolon = "Char →"
+n = "Expand"
+m = "Line ↑"
+comma = "EOL ↑"
+period = "Line ↓"
+slash = "EOL ↓"
+
+[y-mode]
+z = "Save screen"
+c = "Save area"
+v = "Copy area"
+b = "Screenshot"
+
+[z-mode.emacs]
+w = "Defun start"
+e = "Sexp ←"
+r = "Prev section"
+t = "Other ↑"
+y = "Page ↑"
+u = "Word ←"
+i = "Sentence ←"
+o = "Sentence →"
+p = "Word →"
+s = "Defun end"
+d = "Sexp →"
+f = "Next section"
+g = "Other ↓"
+h = "Page ↓"
+n = "1st heading"
+m = "Line start"
+comma = "Paragraph ←"
+period = "Paragraph →"
+slash = "Line end"
+spacebar = "Doc start"
+right_command = "Doc end"
+
+[z-mode.macos]
+u = "Word ←"
+i = "Paragraph ←"
+o = "Paragraph →"
+p = "Word →"
+m = "Line start"
+comma = "Doc start"
+period = "Doc end"
+slash = "Line end"

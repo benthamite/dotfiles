@@ -3,9 +3,9 @@ layout:
   layout_name: LAYOUT_split_3x5_3
 layers:
   k-mode:
-    - [null, "KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM"]
-    - ["KM", "KM", "KM", "KM", "KM", "KM", "KM", {type: held}, "KM", "KM"]
-    - ["KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM"]
+    - ["œ", null, "...", "€", "þ", null, "•", "!", "ø", "£"]
+    - [null, "ß", "ð", null, null, null, "⸘", {type: held}, "‽", null]
+    - [null, null, null, null, null, null, null, "«", "»", "?"]
     - null
     - null
     - null

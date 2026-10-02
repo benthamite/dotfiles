@@ -3,8 +3,8 @@ layout:
   layout_name: LAYOUT_split_3x5_3
 layers:
   j-mode (Emacs):
-    - ["Word ←", "Sentence ←", "Sentence →", "Word →", "Beginning of", null, null, null, null, null]
-    - ["Sexp ←", "Char ←", "Char →", "Sexp →", "Append next", null, {type: held}, null, null, null]
+    - ["Word ←", "Sentence ←", "Sentence →", "Word →", null, null, null, null, null, null]
+    - ["Zap ←", "Char ←", "Char →", "Zap →", "Append next", null, {type: held}, null, null, null]
     - ["Line ←", "Paragraph ←", "Paragraph →", "Line →", "Strip thing", null, null, null, null, null]
     - null
     - null

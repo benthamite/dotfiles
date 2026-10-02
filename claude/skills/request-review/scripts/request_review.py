@@ -518,11 +518,13 @@ def _codex_preamble(item, live):
         # Upstream codex-rs/core/src/tasks/regular.rs emits TurnStarted before
         # run_turn records user input. protocol/src/protocol.rs serializes it
         # as task_started; rollout/src/policy.rs persists this specific event.
-        fields = {"type", "turn_id", "trace_id", "started_at",
+        # codex-cli 0.160.0 also persists root_turn_id (observed 2026-10-02).
+        fields = {"type", "turn_id", "root_turn_id", "trace_id", "started_at",
                   "model_context_window", "collaboration_mode_kind"}
         return (set(payload) <= fields and payload.get("type") == "task_started"
                 and _text(payload.get("turn_id"))
-                and (payload.get("trace_id") is None or _text(payload["trace_id"]))
+                and all(payload.get(key) is None or _text(payload[key])
+                        for key in ("root_turn_id", "trace_id"))
                 and all(payload.get(key) is None or
                         (type(payload[key]) is int and -(2 ** 63) <= payload[key] < 2 ** 63)
                         for key in ("started_at", "model_context_window"))
@@ -737,7 +739,16 @@ def watch(args):
         if rendered != last:
             print(rendered, flush=True)
             last = rendered
-        if current.get("run", {}).get("status") in {"review-returned", "review-incomplete"}:
+        run_status = current.get("run", {}).get("status")
+        if run_status in {"review-returned", "review-incomplete"}:
+            return
+        reviewer_state = current.get("reviewer", {}).get("state")
+        pending = current.get("run", {}).get("pending_reconciliation")
+        # Only finish-review or reconcile-submission advance the run, so the
+        # watcher must hand control back once the reviewer stops working.
+        if reviewer_state == "awaiting-input" and (run_status == "review-active" or pending):
+            print("reviewer awaiting input; next: "
+                  + ("reconcile-submission --delivered" if pending else "finish-review"), flush=True)
             return
         time.sleep(args.interval)
 

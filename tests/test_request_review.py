@@ -509,6 +509,27 @@ class CrossReviewRunTests(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(SystemExit):
                 self.cli("watch", "--interval", value)
 
+    def test_watch_returns_when_active_reviewer_awaits_input(self):
+        self.create_run()
+        self.cli("submit-review")
+        with mock.patch.object(reviewer.time, "sleep", side_effect=AssertionError("watch kept polling")):
+            self.assertIn("next: finish-review", self.cli("watch"))
+
+    def test_watch_returns_when_pending_submission_reviewer_awaits_input(self):
+        self.pending()
+        with mock.patch.object(reviewer.time, "sleep", side_effect=AssertionError("watch kept polling")):
+            self.assertIn("next: reconcile-submission --delivered", self.cli("watch"))
+
+    def test_watch_keeps_polling_while_reviewer_is_busy(self):
+        self.create_run()
+        self.cli("submit-review")
+        self.actor["state"] = "busy"
+        def finish(_):
+            self.actor["state"] = "awaiting-input"
+        with mock.patch.object(reviewer.time, "sleep", side_effect=finish) as sleep:
+            self.assertIn("next: finish-review", self.cli("watch"))
+        self.assertEqual(sleep.call_count, 1)
+
     def test_context_frozen_by_exact_prompt_digest(self):
         self.create_run()
         context = self.directory / "context"
@@ -636,8 +657,12 @@ class CrossReviewRunTests(unittest.TestCase):
         valid = {"type": "task_started", "turn_id": "fixture-turn",
                  "model_context_window": None, "collaboration_mode_kind": "plan"}
         self.assertTrue(reviewer._codex_preamble({"type": "event_msg", "payload": valid}, self.actor))
+        # codex-cli 0.160.0 adds root_turn_id to the first-turn event.
+        self.assertTrue(reviewer._codex_preamble(
+            {"type": "event_msg", "payload": {**valid, "root_turn_id": "fixture-turn"}}, self.actor))
         for field, value in (("type", "task_complete"), ("type", "unknown"),
                              ("turn_id", ""), ("turn_id", 1), ("trace_id", []),
+                             ("root_turn_id", ""), ("root_turn_id", 1),
                              ("started_at", True), ("started_at", 1.5),
                              ("model_context_window", "128000"),
                              ("collaboration_mode_kind", "unknown"), ("extra", "unproved")):

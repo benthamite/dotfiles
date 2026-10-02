@@ -111,6 +111,12 @@ python3 "$SKILL_DIR/scripts/request_review.py" watch \
   --run-file "$review_run_file" --interval 20
 ```
 
+The watcher exits as soon as the reviewer awaits input, printing the next
+command (`finish-review`, or `reconcile-submission --delivered` while a
+submission is still pending). Do not pipe it through `tail` or another buffer:
+its exit is the completion signal. If `submit-review` reports a pending
+submission, the watcher still returns when the reviewer stops; reconcile then.
+
 Keep a long-running watcher in a yielded tool session and use the host's
 supported waiting mechanism. Poll with bounded waits and maintain the host's
 required user-update cadence. Stop only the run-owned watcher when it is no

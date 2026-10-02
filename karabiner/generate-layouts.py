@@ -197,10 +197,19 @@ def parse_action(action_str):
     if insert_match:
         return {"type": "insert", "char": insert_match.group(1)}
 
-    # Template: [:open "..."]
-    open_match = re.match(r'\[:open\s+"([^"]+)"\]', action_str)
+    # Template: [:open "..."], or Goku's built-in [:op "..."]
+    open_match = re.match(r'\[:op(?:en)?\s+"([^"]+)"\]', action_str)
     if open_match:
         return {"type": "open", "app": extract_app_name(open_match.group(1))}
+
+    # Template: [:chrome-profile "DIRECTORY" "NAME"], labelled by the
+    # profile name up to its first " — " or "." ("forethought.org" → "forethought")
+    chrome_match = re.match(
+        r'\[:chrome-profile\s+"[^"]+"\s+"([^"]+)"\]', action_str
+    )
+    if chrome_match:
+        name = chrome_match.group(1).split(" — ")[0].split(".")[0]
+        return {"type": "open", "app": name}
 
     # Template: [:km "..."]
     km_match = re.match(r'\[:km\s+"([^"]+)"\]', action_str)

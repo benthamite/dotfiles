@@ -1,0 +1,37 @@
+#!/bin/bash
+# Usage: chrome-profile-focus DIRECTORY NAME
+#
+# Bring a window of the Chrome profile NAME (as shown in Chrome's profile
+# menu) to the front. If that profile has no window, open one for profile
+# DIRECTORY (its folder under ~/Library/Application Support/Google/Chrome).
+#
+# Chrome's own `--profile-directory` launch always opens a new window, so the
+# existing window is found by its accessibility title, which ends in
+# "- Google Chrome - <user> (<profile name>)". This needs Accessibility
+# permission for osascript.
+
+if [ $# -ne 2 ]; then
+  echo "usage: chrome-profile-focus DIRECTORY NAME" >&2
+  exit 2
+fi
+
+osascript - "$1" "$2" <<'EOF'
+on run {profileDirectory, profileName}
+  set suffix to "(" & profileName & ")"
+  tell application "System Events"
+    if exists process "Google Chrome" then
+      tell process "Google Chrome"
+        repeat with w in windows
+          if title of w ends with suffix then
+            if value of attribute "AXMinimized" of w then set value of attribute "AXMinimized" of w to false
+            perform action "AXRaise" of w
+            set frontmost to true
+            return
+          end if
+        end repeat
+      end tell
+    end if
+  end tell
+  do shell script "open -na 'Google Chrome' --args --profile-directory=" & quoted form of profileDirectory
+end run
+EOF

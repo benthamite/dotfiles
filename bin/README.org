@@ -173,6 +173,7 @@ not be used to print or document secret values; the placement rules are in
 | Command | Contract |
 |---------+----------|
 | =chrome-profile-open= | Opens URLs using the inspected Chrome root and configured profile alias. Missing recorded account/name metadata refuses opening; root precedence is explicit flag, environment, saved config, then default. Launch success is not proof of document access. |
+| =chrome-profile-focus= | Raises an existing window of a Chrome profile, matched by the profile name in its accessibility title, or opens a window for the profile directory when none exists. Used by the Karabiner q-mode profile keys; needs Accessibility for =osascript=. |
 | =chrome-work-tab= | Opens URLs in the work Chrome profile, with a Codex-specific external-browser guard. |
 | =epoch-doc-link= | Creates exact, no-overwrite =epoch-doc:= shortcuts in a pinned parent directory, verifies the saved file, and opens document URIs through the configured Epoch Chrome profile. Saved-file/OS-handler acceptance is a separate live check. |
 | =gam= | Launches the local GAMADV-XTD3 installation. |

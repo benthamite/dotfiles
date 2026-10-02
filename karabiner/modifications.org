@@ -480,6 +480,7 @@ CLOCK: [2021-03-20 Sat 21:48]--[2021-03-20 Sat 21:56] =>  0:08
 #+begin_src clojure
 :templates {:alfred "osascript -e 'tell application \"Alfred 4\" to run trigger \"%s\" in workflow \"%s\" with argument \"%s\"'"
             :insert "\"$HOME/My Drive/dotfiles/bin/char_input\" \"%s\""
+            :chrome-profile "\"$HOME/My Drive/dotfiles/bin/chrome-profile-focus\" \"%s\" \"%s\""
             }
 #+end_src
 
@@ -953,6 +954,8 @@ CLOCK: [2023-04-30 Sun 11:59]--[2023-04-30 Sun 12:07] =>  0:08
 
 Hold =q= to open an application. 20+ applications are mapped. The letter choices are mnemonic where possible (e.g. =e= for Emacs, =f= for Firefox, =t= for Terminal).
 
+Four keys switch to a Chrome profile instead of opening an app: =h= Personal, =o= Epoch, =g= Forethought and =n= Tlön. [[file:../bin/chrome-profile-focus][chrome-profile-focus]] raises that profile's existing window, or opens one if the profile has none. Chrome's own =--profile-directory= flag opens a new window every time, which is why a plain =open= is not enough. Each rule gives the profile's folder under =~/Library/Application Support/Google/Chrome= and its name as shown in Chrome.
+
 [[/images/keyboard/q-mode.svg]]
 
 #+begin_src clojure
@@ -962,11 +965,14 @@ Hold =q= to open an application. 20+ applications are mapped. The letter choices
          [:d [:op "/System/Library/CoreServices/Finder.app"]]
          [:e [:op "/Applications/Emacs.app"]]
          [:f [:op "/Applications/Firefox.app"]]
-         [:h [:op "/Applications/Google Chrome.app"]]
+         [:g [:chrome-profile "Profile 10" "forethought.org"]]
+         [:h [:chrome-profile "Default" "Personal"]]
          [:i [:op "/Applications/Anki.app"]]
          [:j [:op "/System/Applications/System Settings.app"]]
          [:l [:op "/Applications/Signal.app"]]
          [:m [:op "/Applications/Media Center 29.app"]]
+         [:n [:chrome-profile "Profile 3" "Tlön"]]
+         [:o [:chrome-profile "Profile 2" "Epoch — Pablo"]]
          [:p [:op "/Applications/Plex Media Server.app"]]
          [:r [:op "/Applications/Karabiner-Elements.app"]]
          [:s [:op "/Applications/Slack.app"]]

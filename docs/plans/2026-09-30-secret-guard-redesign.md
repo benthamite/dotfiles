@@ -130,7 +130,8 @@ incident took this path.
 ## Follow-ups after item 6
 
 Deferred so item 6 is measured against unchanged guards (approved by Pablo,
-2026-10-01). Apply to the new engine, each with a regression test:
+2026-10-01). Apply to the new engine, each with a regression test.
+Both done 2026-10-01: c155a5b6f (1) and ab55f2695 (2).
 
 1. **Python heredoc with a pipe on its header is not recognized.**
    `lib-python-heredoc.py`'s `HEADER` allows nothing after the delimiter but a

@@ -181,6 +181,10 @@ def store(args):
     template, secret_field = prepare_template(template, args)
     # Intake happens only after argument, ownership and template preconditions.
     secret = run(["pbpaste"])
+    if args.token:
+        # Whitespace around a token is selection slack (a trailing newline or
+        # space from an editor line); only whitespace inside it is corruption.
+        secret = secret.strip()
     try:
         raw = secret.encode("utf-8")
     except UnicodeError:
@@ -190,7 +194,8 @@ def store(args):
     # A terminal that wraps a long token can put a space where the line broke;
     # storing that corrupts the token silently (it fails only when used).
     if args.token and any(c.isspace() for c in secret):
-        raise StoreError("clipboard token contains whitespace (a terminal-wrapped copy?)", 1)
+        raise StoreError("clipboard token has whitespace inside it (a terminal-wrapped copy?); "
+                         "join it into one unbroken line and copy again", 1)
     if not secret.startswith(args.prefix):
         raise StoreError("clipboard content does not start with the expected prefix", 1)
     secret_field["value"] = secret

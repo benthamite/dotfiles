@@ -1054,7 +1054,9 @@ executable globs, so =?= and =[= in a script are not misread as shell words,
 and the Python classifier recognizes =cd x && python3 - "$S" <<'EOF'= shapes.
 Wrappers consume only their options, assignments and durations, so
 =env FOO=2 grep pbpaste f= runs =grep=. The audited =bin/op-clipboard-store=
-consumer is the sanctioned route from a console Copy button into 1Password;
+consumer is the sanctioned route from a console Copy button into 1Password.
+With =--token= it trims whitespace around the copied value (selection slack)
+but still refuses whitespace inside it, which signals a terminal-wrapped copy;
 =tests/test_secret_guard_inert_mentions.py= pins the allowed and denied shapes
 for all three guard entry points.
 

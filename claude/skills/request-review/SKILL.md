@@ -162,11 +162,15 @@ user-only decision stops the affected review-dependent work. Exhaust safe
 evidence checks; ask for new authority only when genuinely missing, not for
 an action the user already explicitly authorized.
 
-## Cleanup and report
+## 5. Close the reviewer, then report
 
-After preserving the return and run evidence, close only a run-owned reviewer
-whose exact session identity still matches and which is confirmed inactive.
-Use the supported session cleanup API after inspecting its effects. Never
+Closing the reviewer is a required step, not optional tidying: do it before
+reporting the review result. After preserving the return and run evidence,
+close only a run-owned reviewer whose exact session identity still matches and
+which is confirmed inactive (`status` shows `reviewer=awaiting-input`). Use the
+supported session cleanup API, `agent-kill-session-buffer`, evaluated inside
+the reviewer's own buffer (`(with-current-buffer BUFFER
+(agent-kill-session-buffer))`), then confirm the buffer is gone. Never
 force-kill a busy, reused or unowned buffer, or signal the active Emacs process.
 An uncertain identity or active session remains protected and is reported.
 

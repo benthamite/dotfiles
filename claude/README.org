@@ -674,7 +674,9 @@ session identity and exact run-specific prompt before dispatch, and accepts
 only a terminal return from that submitted turn. Ambiguous delivery remains
 pending; missing evidence cannot authorize retransmission or an unsupported
 process-loss restart. Its helper reuses =agent_session_lib= and records private
-recovery evidence. Cleanup protects active, reused and unowned sessions.
+recovery evidence. Closing the run-owned reviewer is a required numbered step
+before the report, through =agent-kill-session-buffer= in the reviewer's own
+buffer; cleanup protects active, reused and unowned sessions.
 
 The =handoff= skill separates drafting, saving and user-triggered replacement.
 It saves private per-session artifacts without later overwrites, preserves shared slots,

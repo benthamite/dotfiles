@@ -1,0 +1,168 @@
+#!/usr/bin/env python3
+"""Run Claude Code on a member of an account pool, without needing Emacs.
+
+Pools are declared once, in the `agent-claude-accounts' form of
+emacs/config.org (accounts sharing a :pool). This command reads that form
+from the file itself, so scheduled jobs work whether or not Emacs is running.
+
+    claude-pool members POOL          JSON list of {name, home}
+    claude-pool run POOL -- ARGS...   run `claude ARGS...' on the pool
+
+`run' tries members in their declared order. Each attempt's stdout and stderr
+are buffered separately, and an attempt that hits a usage limit is discarded
+and the next member tried (likewise a member that is not logged in), so the caller sees the output of exactly one
+attempt. Work an attempt did before hitting its limit is not undone. Exit
+codes: the final attempt's, 75 when no member is usable, 69 when the
+pool cannot be read.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+import pwd
+import re
+import select
+import signal
+import subprocess
+import sys
+import tempfile
+
+BIN = Path(__file__).resolve().parent
+CLAUDE = BIN.parent / "shell/shims/claude"
+CONFIG = BIN.parent / "emacs/config.org"
+LIMIT = re.compile(rb"hit your [^\n]{0,40}limit|\"api_error_status\":\s*429|usage limit reached", re.I)
+LOGGED_OUT = re.compile(rb"Not logged in|Please run /login", re.I)
+EX_UNAVAILABLE, EX_TEMPFAIL = 69, 75
+STDIN_WAIT = 3
+TOKEN = re.compile(r'\s+|;[^\n]*|(?P<open>\()|(?P<close>\))|"(?P<string>(?:[^"\\]|\\.)*)"|(?P<atom>[^\s()"]+)')
+
+
+def unavailable(message: str):
+    print(f"claude-pool: {message}", file=sys.stderr)
+    sys.exit(EX_UNAVAILABLE)
+
+
+def read_form(text: str, position: int):
+    """Read one Lisp list of strings, symbols and dotted pairs starting at POSITION."""
+    stack, result = [], None
+    for match in TOKEN.finditer(text, position):
+        if match["open"]:
+            stack.append([])
+        elif match["close"]:
+            done = stack.pop()
+            if len(done) == 3 and done[1] == ".":
+                done = (done[0], done[2])
+            if not stack:
+                return done
+            stack[-1].append(done)
+        elif match["string"] is not None:
+            stack[-1].append(re.sub(r"\\(.)", r"\1", match["string"]))
+        elif match["atom"]:
+            if not stack:
+                raise ValueError("expected a list")
+            stack[-1].append(match["atom"])
+    raise ValueError("unterminated list")
+
+
+def accounts() -> list:
+    try:
+        text = CONFIG.read_text()
+    except OSError as error:
+        unavailable(f"cannot read {CONFIG}: {error}")
+    found = [m.end() for m in re.finditer(r"\(agent-claude-accounts\s+'", text)]
+    if len(found) != 1:
+        unavailable(f"expected one agent-claude-accounts form in {CONFIG}, found {len(found)}")
+    try:
+        return read_form(text, found[0])
+    except (ValueError, IndexError) as error:
+        unavailable(f"cannot parse agent-claude-accounts in {CONFIG}: {error}")
+
+
+def members(pool: str) -> list[dict]:
+    result = []
+    for entry in accounts():
+        if isinstance(entry, list) and entry and len(entry) % 2 == 1:
+            properties = dict(zip(entry[1::2], entry[2::2]))
+            if properties.get(":pool") == pool and isinstance(properties.get(":home"), str):
+                result.append({"name": entry[0], "home": os.path.expanduser(properties[":home"])})
+    if not result:
+        unavailable(f"pool {pool!r} has no members in {CONFIG}")
+    return result
+
+
+def piped_input() -> bytes | None:
+    """Return piped stdin, or None for a terminal or a stdin that stays silent.
+
+An inherited stdin that never closes must not hang a scheduled job, so input
+counts only when its first bytes arrive within STDIN_WAIT seconds."""
+    if sys.stdin is None or sys.stdin.isatty():
+        return None
+    ready, _, _ = select.select([sys.stdin], [], [], STDIN_WAIT)
+    return sys.stdin.buffer.read() if ready else None
+
+
+def run(pool: str, args: list[str]) -> int:
+    stdin = piped_input()
+    child = None
+
+    def forward(signum, frame):
+        if child is not None and child.poll() is None:
+            child.send_signal(signum)
+    for signum in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+        signal.signal(signum, forward)
+    limited = []
+    for account in members(pool):
+        env = {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")}
+        env["CLAUDE_CONFIG_DIR"] = account["home"]
+        # Claude Code finds its login-keychain credentials by user name, which
+        # a minimal job environment may not export.
+        user = pwd.getpwuid(os.getuid()).pw_name
+        env.setdefault("USER", user)
+        env.setdefault("LOGNAME", user)
+        # Headless callers choose their own permission mode; the shim's
+        # bypass option is refused by --restricted.
+        env["CLAUDE_NO_BYPASS_OPTION"] = "1"
+        with tempfile.TemporaryFile() as output, tempfile.TemporaryFile() as errors:
+            child = subprocess.Popen([str(CLAUDE), *args], stdin=subprocess.PIPE if stdin is not None else subprocess.DEVNULL,
+                                     stdout=output, stderr=errors, env=env)
+            if stdin is not None:
+                child.stdin.write(stdin)
+                child.stdin.close()
+            code = child.wait()
+            output.seek(0)
+            errors.seek(0)
+            data, diagnostics = output.read(), errors.read()
+        # A limit reply is short; a long transcript that merely mentions one is real output.
+        tail = data[-4000:] + diagnostics[-4000:]
+        if code and LIMIT.search(tail):
+            limited.append(account["name"])
+            print(f"claude-pool: {account['name']} is at its usage limit", file=sys.stderr)
+            continue
+        if code and LOGGED_OUT.search(tail):
+            limited.append(account["name"])
+            print(f"claude-pool: {account['name']} is not logged in", file=sys.stderr)
+            continue
+        print(f"claude-pool: ran on {account['name']}", file=sys.stderr)
+        sys.stderr.buffer.write(diagnostics)
+        sys.stderr.flush()
+        sys.stdout.buffer.write(data)
+        sys.stdout.flush()
+        return code
+    print(f"claude-pool: no member of {pool} is usable ({', '.join(limited)})", file=sys.stderr)
+    return EX_TEMPFAIL
+
+
+def main(argv: list[str]) -> int:
+    if len(argv) >= 2 and argv[0] == "members":
+        print(json.dumps(members(argv[1])))
+        return 0
+    if len(argv) >= 3 and argv[0] == "run" and argv[2] == "--":
+        return run(argv[1], argv[3:])
+    print(__doc__, file=sys.stderr)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

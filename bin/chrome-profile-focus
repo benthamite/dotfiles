@@ -2,36 +2,31 @@
 # Usage: chrome-profile-focus DIRECTORY NAME
 #
 # Bring a window of the Chrome profile NAME (as shown in Chrome's profile
-# menu) to the front. If that profile has no window, open one for profile
-# DIRECTORY (its folder under ~/Library/Application Support/Google/Chrome).
+# menu) to the front, or open one for profile DIRECTORY if it has none.
+# The work is done by chrome-profile-focusd, which see.
 #
-# Chrome's own `--profile-directory` launch always opens a new window, so the
-# existing window is found by its accessibility title, which ends in
-# "- Google Chrome - <user> (<profile name>)". This needs Accessibility
-# permission for osascript.
+# This client only hands the request to the running chrome-profile-focusd
+# server through its FIFO, so a Karabiner key press starts no osascript.
+# If the server is not running (its LaunchAgent is
+# com.stafforini.chrome-profile-focusd), it runs chrome-profile-focusd once
+# instead: correct but slow, and it says so on stderr, which Karabiner
+# records in ~/.local/share/karabiner/log/console_user_server.log.
 
 if [ $# -ne 2 ]; then
   echo "usage: chrome-profile-focus DIRECTORY NAME" >&2
   exit 2
 fi
 
-osascript - "$1" "$2" <<'EOF'
-on run {profileDirectory, profileName}
-  set suffix to "(" & profileName & ")"
-  tell application "System Events"
-    if exists process "Google Chrome" then
-      tell process "Google Chrome"
-        repeat with w in windows
-          if title of w ends with suffix then
-            if value of attribute "AXMinimized" of w then set value of attribute "AXMinimized" of w to false
-            perform action "AXRaise" of w
-            set frontmost to true
-            return
-          end if
-        end repeat
-      end tell
-    end if
-  end tell
-  do shell script "open -na 'Google Chrome' --args --profile-directory=" & quoted form of profileDirectory
-end run
-EOF
+state="$HOME/.local/state/chrome-profile-focus"
+fifo="$state/requests.fifo"
+
+if [ -p "$fifo" ] && read -r pid < "$state/daemon.pid" 2>/dev/null \
+    && kill -0 "$pid" 2>/dev/null; then
+  # Open read-write so the write cannot block, even if the server died
+  # since the check above.
+  printf '%s\t%s\n' "$1" "$2" 1<>"$fifo"
+  exit 0
+fi
+
+echo "chrome-profile-focus: server not running; handling the request directly (slow)" >&2
+exec "$(dirname "$0")/chrome-profile-focusd" "$1" "$2"

@@ -1,0 +1,112 @@
+#!/usr/bin/osascript -l JavaScript
+// Usage: chrome-profile-focusd             (serve requests; run by launchd)
+//        chrome-profile-focusd DIRECTORY NAME   (handle one request and exit)
+//
+// Bring a window of the Chrome profile NAME (as shown in Chrome's profile
+// menu) to the front, or open one for profile DIRECTORY (its folder under
+// ~/Library/Application Support/Google/Chrome) if that profile has none.
+//
+// Chrome's own `--profile-directory` launch always opens a new window, so
+// the existing window is found by its accessibility title, which ends in
+// "- Google Chrome - <user> (<profile name>)". This needs Accessibility
+// permission for osascript.
+//
+// The server exists because starting osascript per key press is what made
+// the Karabiner bindings slow: under Karabiner each start pays code-signing,
+// XProtect and TCC checks (TCC re-validates Karabiner's own signature as the
+// responsible process), which on 2026-10-02 took up to 8.6 s. The server
+// pays that once. It reads "DIRECTORY<TAB>NAME" lines from FIFO, which
+// bin/chrome-profile-focus writes, and records its pid in PIDFILE so the
+// client can tell whether it is running.
+
+ObjC.import('Foundation');
+
+const STATE_DIR = $.NSHomeDirectory().js + '/.local/state/chrome-profile-focus';
+const FIFO = STATE_DIR + '/requests.fifo';
+const PIDFILE = STATE_DIR + '/daemon.pid';
+
+const app = Application.currentApplication();
+app.includeStandardAdditions = true;
+const systemEvents = Application('System Events');
+
+function shellQuote(s) {
+  return "'" + s.replace(/'/g, "'\\''") + "'";
+}
+
+function log(message) {
+  // stderr goes to the LaunchAgent's StandardErrorPath
+  $.NSFileHandle.fileHandleWithStandardError.writeData(
+    $(message + '\n').dataUsingEncoding($.NSUTF8StringEncoding));
+}
+
+function focus(directory, name) {
+  const suffix = '(' + name + ')';
+  const chrome = systemEvents.processes.byName('Google Chrome');
+  if (chrome.exists()) {
+    const titles = chrome.windows.title();
+    for (let i = 0; i < titles.length; i++) {
+      if (titles[i] && titles[i].endsWith(suffix)) {
+        const w = chrome.windows[i];
+        const minimized = w.attributes.byName('AXMinimized');
+        if (minimized.value()) minimized.value = false;
+        w.actions.byName('AXRaise').perform();
+        chrome.frontmost = true;
+        return;
+      }
+    }
+  }
+  app.doShellScript("open -na 'Google Chrome' --args --profile-directory="
+                    + shellQuote(directory));
+}
+
+function handle(line) {
+  const [directory, name] = line.split('\t');
+  if (!directory || !name) {
+    log('chrome-profile-focusd: malformed request: ' + JSON.stringify(line));
+    return;
+  }
+  const start = Date.now();
+  try {
+    focus(directory, name);
+  } catch (e) {
+    log('chrome-profile-focusd: ' + name + ': ' + e);
+  }
+  // Slowness is what this server exists to prevent, so record any recurrence.
+  const elapsed = Date.now() - start;
+  if (elapsed > 1000) {
+    log(new Date().toISOString() + ' chrome-profile-focusd: ' + name + ' took ' + elapsed + ' ms');
+  }
+}
+
+function serve() {
+  app.doShellScript('mkdir -p ' + shellQuote(STATE_DIR)
+                    + ' && { [ -p ' + shellQuote(FIFO) + ' ] || mkfifo '
+                    + shellQuote(FIFO) + '; }');
+  // Opening read-write means the read never sees EOF when a client closes,
+  // so availableData simply blocks until the next request.
+  const fifo = $.NSFileHandle.fileHandleForUpdatingAtPath(FIFO);
+  if (fifo.isNil()) throw new Error('cannot open ' + FIFO);
+  $(String($.NSProcessInfo.processInfo.processIdentifier) + '\n')
+    .writeToFileAtomicallyEncodingError(PIDFILE, true, $.NSUTF8StringEncoding, null);
+  let pending = '';
+  for (;;) {
+    const data = fifo.availableData;
+    if (data.length === 0) continue;
+    pending += $.NSString.alloc.initWithDataEncoding(data, $.NSUTF8StringEncoding).js;
+    let newline;
+    while ((newline = pending.indexOf('\n')) >= 0) {
+      handle(pending.slice(0, newline));
+      pending = pending.slice(newline + 1);
+    }
+  }
+}
+
+function run(argv) {
+  if (argv.length === 2) {
+    focus(argv[0], argv[1]);
+  } else if (argv.length === 0) {
+    serve();
+  } else {
+    log('usage: chrome-profile-focusd [DIRECTORY NAME]');
+  }
+}

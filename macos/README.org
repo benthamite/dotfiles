@@ -37,6 +37,8 @@ worktree sync; this repository only supplies the
 [[file:../bin/README.org][=sync-reasoning-tasks-worktrees= command]].
 It also owns the daily =com.stafforini.elpaca-cooldown.observe= job (08:30),
 which runs [[file:../emacs/README.org][=bin/elpaca-cooldown observe=]] from this checkout.
+It also owns =com.stafforini.chrome-profile-focusd=, the always-running server
+behind the Karabiner Chrome profile keys (see =bin/chrome-profile-focusd=).
 
 * Personal updates
 

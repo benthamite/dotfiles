@@ -70,6 +70,7 @@ screenshot.
 | 09-27 | Mullvad account number | a | `op-desktop item list` titles |
 | 09-30 | Slack bot and user tokens | d | Slack settings page |
 | 09-30 | Google OAuth client secret, refresh token | a | `which` printed a function from `.zshenv-secrets`; rotated 09-30 (old secret deleted, old token revoked); path closed by the function-body policy, 02f475152 |
+| 10-02 | Lever Postings API key | d | `get_page_text` on Lever's API-credentials settings page, which displays it in plain text |
 
 Tally: page/screenshot 9, command output 7, file read 3, **typed literal 0**.
 

@@ -99,6 +99,11 @@ additive. Account selection changes which user-level native state is active; it
 does not introduce a third precedence layer. Effective behavior therefore
 depends on both tracked instructions and the selected live state.
 
+The global instructions direct agents looking for a past session to
+=claude/bin/agent-log-find=, which searches the rendered Markdown logs under
+=~/.claude/rendered/= (both backends, with summaries) instead of raw JSONL
+transcripts.
+
 Operating rules in =CLAUDE.md= stay short and state the behavior directly. The
 file is a lean always-loaded instruction source, not a manual: detail belongs in
 skills and context files that load on demand. User-facing replies lead with the

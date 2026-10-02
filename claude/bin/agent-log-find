@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+"""Find past Claude Code and Codex sessions fast, from the shell.
+
+Searches the Markdown logs that agent-log renders under ~/.claude/rendered
+(<project>/<YYYY-MM-DD_HH-MM>_<slug>.md, one per session, both backends).
+Each log starts with a header carrying the session id, backend, source
+transcript and an AI summary, so a date-bounded search over headers takes
+well under a second. Use this instead of grepping raw JSONL transcripts.
+
+Examples:
+  agent-log-find --since 2026-09-30 1password import
+  agent-log-find --days 2 --project dotfiles
+  agent-log-find --since 2026-09-27 --until 2026-09-28 --body "recovery codes"
+  agent-log-find --raw --days 1 reclassify   # sessions not rendered yet
+
+Terms are case-insensitive regular expressions; all must match. By default
+they are matched against the project, file slug and summary; --body also
+searches the full log text. --raw searches unrendered transcripts
+(~/.claude*/projects, ~/.codex*/sessions) by file modification time.
+"""
+import argparse
+import datetime as dt
+import os
+import re
+import sys
+from pathlib import Path
+
+RENDERED = Path(os.environ.get("AGENT_LOG_RENDERED", Path.home() / ".claude/rendered"))
+NAME = re.compile(r"^(\d{4}-\d{2}-\d{2})_(\d{2})-(\d{2})_(.*)\.md$")
+
+
+def header(path, limit=6000):
+    with open(path, encoding="utf-8", errors="replace") as f:
+        text = f.read(limit)
+    meta = dict(re.findall(r"<!-- (\w[\w-]*): (.*?) -->", text))
+    m = re.search(r"> \*\*Summary\*\*: (.*)", text)
+    meta["summary"] = m.group(1).strip() if m else ""
+    return meta
+
+
+def parse_day(s):
+    return dt.date.fromisoformat(s)
+
+
+def rendered_search(args, terms):
+    hits = []
+    for project_dir in RENDERED.iterdir():
+        if not project_dir.is_dir() or (args.project and not re.search(args.project, project_dir.name, re.I)):
+            continue
+        for p in project_dir.iterdir():
+            m = NAME.match(p.name)
+            if not m:
+                continue
+            day = parse_day(m.group(1))
+            if (args.since and day < args.since) or (args.until and day > args.until):
+                continue
+            meta = header(p)
+            hay = " ".join([project_dir.name, m.group(4), meta["summary"]])
+            if args.body and terms:
+                hay = p.read_text(encoding="utf-8", errors="replace")
+            if all(t.search(hay) for t in terms):
+                hits.append((f"{m.group(1)} {m.group(2)}:{m.group(3)}", project_dir.name, meta, p))
+    hits.sort(key=lambda h: h[0], reverse=True)
+    for when, project, meta, p in hits[: args.limit]:
+        summary = meta["summary"]
+        if len(summary) > args.width:
+            summary = summary[: args.width - 1] + "…"
+        print(f"{when}  {project}  [{meta.get('backend', '?')}]  {meta.get('session', '')}")
+        print(f"  {p}")
+        if summary:
+            print(f"  {summary}")
+    if len(hits) > args.limit:
+        print(f"({len(hits) - args.limit} more; raise --limit)", file=sys.stderr)
+    return len(hits)
+
+
+def raw_search(args, terms):
+    roots = [*Path.home().glob(".claude*/projects"), *Path.home().glob(".codex*/sessions")]
+    since = dt.datetime.combine(args.since or dt.date.min, dt.time.min).timestamp() if args.since else 0
+    until = dt.datetime.combine(args.until, dt.time.max).timestamp() if args.until else float("inf")
+    n = 0
+    seen = set()  # account homes share project directories through symlinks
+    for root in roots:
+        for p in root.rglob("*.jsonl"):
+            try:
+                mtime = p.stat().st_mtime
+            except OSError:
+                continue
+            if not since <= mtime <= until:
+                continue
+            real = p.resolve()
+            if real in seen:
+                continue
+            seen.add(real)
+            text = p.read_text(encoding="utf-8", errors="replace")
+            if all(t.search(text) for t in terms):
+                print(f"{dt.datetime.fromtimestamp(mtime):%Y-%m-%d %H:%M}  {p}")
+                n += 1
+    return n
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("terms", nargs="*", help="regular expressions; all must match")
+    ap.add_argument("--since", type=parse_day, help="first day, YYYY-MM-DD")
+    ap.add_argument("--until", type=parse_day, help="last day, YYYY-MM-DD")
+    ap.add_argument("--days", type=int, help="shorthand for --since <today - N days>")
+    ap.add_argument("--project", help="regex on the project directory name")
+    ap.add_argument("--body", action="store_true", help="match terms against the whole log, not just headers")
+    ap.add_argument("--raw", action="store_true", help="search raw transcripts by mtime (unrendered sessions)")
+    ap.add_argument("--limit", type=int, default=30)
+    ap.add_argument("--width", type=int, default=300, help="summary characters to show")
+    args = ap.parse_args()
+    if args.days is not None:
+        args.since = dt.date.today() - dt.timedelta(days=args.days)
+    terms = [re.compile(t, re.I) for t in args.terms]
+    found = raw_search(args, terms) if args.raw else rendered_search(args, terms)
+    if not found:
+        print("no matching sessions", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

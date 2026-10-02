@@ -70,11 +70,13 @@ profile at runtime; browser/tab IDs are session-specific.
 
 For background web research, use the web search/browsing tool and the mapped
 service clients or direct public downloads. Do not switch to Pablo's live Chrome
-because an HTTP request fails or a site presents a challenge. Live Chrome
-automation can steal focus even when it only opens or navigates a tab; the
-restriction is not limited to launchers or new windows. Use that browser only
-when Pablo explicitly authorizes interaction with it for the current task.
-Otherwise record the blocked route and continue through non-disruptive routes.
+because an HTTP request fails or a site presents a challenge. When a task
+needs Pablo's logged-in accounts or a site with no other agent path, use the
+browser through the Chrome plugin (Claude in Chrome / `control-chrome`) without
+asking; Pablo has authorized this standing use and does not want to repeat it
+(2026-10-02). Never steal focus while doing so: do not click links or buttons
+that open a new tab or window (Chrome activates them); read the link's `href`
+and navigate the agent's own tab to it instead.
 
 For Codex automation that depends on an existing Chrome session, use the
 installed Chrome plugin through its `control-chrome` skill and browser client.

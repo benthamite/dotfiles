@@ -93,6 +93,27 @@ def _signature(app):
         raise BrowserSyncError("Configured browser app failed OpenAI signature verification")
 
 
+def _cli_package(resources):
+    """Return the app's packaged CLI directory, or None for the legacy layout.
+
+    Since ChatGPT.app 26.928 the CLI ships as Resources/codex-cli, a
+    self-contained package whose bin/codex launcher execs a sibling
+    CodexCLI.app; earlier apps shipped a bare Resources/codex executable.
+    """
+    package = resources / "codex-cli"
+    manifest = package / "codex-package.json"
+    _unlinked(manifest)
+    if not manifest.is_file():
+        return None
+    try:
+        layout = json.loads(manifest.read_text())
+    except ValueError:
+        raise BrowserSyncError("Desktop CLI package manifest is invalid") from None
+    if layout.get("layoutVersion") != 1 or layout.get("entrypoint") != "bin/codex":
+        raise BrowserSyncError("Desktop CLI package layout is unsupported; needs reconciliation")
+    return package
+
+
 def _inspect(home, executable, config_args=()):
     _unlinked(home)
     plugins = _run(executable, home, ["plugin", "list", "--json"], config_args)
@@ -130,7 +151,8 @@ def _inspect(home, executable, config_args=()):
     env = transport.get("env", {})
     node_path = resources / "cua_node/bin/node"
     module_path = resources / "cua_node/lib/node_modules"
-    cli_path = resources / "codex"
+    cli_package = _cli_package(resources)
+    cli_path = cli_package / "bin/codex" if cli_package else resources / "codex"
     if (not command.is_file() or not node_path.is_file() or not module_path.is_dir()
             or env.get("NODE_REPL_NODE_PATH") != str(node_path)
             or env.get("NODE_REPL_NODE_MODULE_DIRS") != str(module_path)):
@@ -214,7 +236,7 @@ def _inspect(home, executable, config_args=()):
                 current=current, current_version=current_version, version=version,
                 services=services, target_service=target_service, app_version=app_version,
                 command=command, node_path=node_path, module_path=module_path, trust_roots=roots,
-                cli_path=cli_path,
+                cli_path=cli_path, cli_package=cli_package,
                 app_info=info_bytes,
                 app_seal=(app / "Contents/_CodeSignature/CodeResources").read_bytes())
 
@@ -292,8 +314,11 @@ def _launch_overrides(state, home, pin_client=False):
     try:
         retained_runtime = snapshot_runtime(state["app"] / "Contents/Resources/cua_node",
                                             Path.home() / ".local/share/codex-browser-runtimes")
-        retained_cli = snapshot_app_cli(state["cli_path"].parent,
-                                        Path.home() / ".local/share/codex-browser-clis")
+        cli_store = Path.home() / ".local/share/codex-browser-clis"
+        if state["cli_package"]:
+            retained_cli = snapshot_tree(state["cli_package"], cli_store) / "bin"
+        else:
+            retained_cli = snapshot_app_cli(state["cli_path"].parent, cli_store)
         retained_plugin = snapshot_tree(state["bundle"], service_store)
     except RuntimeSnapshotError as error:
         raise BrowserSyncError("Browser runtime retention: " + str(error)) from None

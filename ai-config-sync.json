@@ -676,7 +676,7 @@
       "path": "codex/config.toml",
       "tracked": true,
       "live_path": "~/.codex/config.toml",
-      "note": "Codex model/trust/plugin/MCP/hook config. Account copies are writable and seeded by agent; retain .git/.agent-workspace project_root_markers in each. Claude loads ancestors natively (no config counterpart). Desktop owns per-home browser hashes; the shim retains signed runtimes. Preserve hook source/key/hash trust; new hooks need hooks/list and config/batchWrite per home. skill-prune disables skills; codex-config-prune removes dead records. Moves require trust-key rewrites; Trajectory trust is retired. See codex/README.org."
+      "note": "Codex model/trust/plugin/MCP/hook config. Account copies are writable and seeded by agent; retain .git/.agent-workspace project_root_markers in each. Claude loads ancestors natively (no config counterpart). Desktop owns per-home browser hashes; the shim retains signed runtimes. CODEX_CLI_PATH: Resources/codex-cli/bin/codex. Preserve hook source/key/hash trust; new hooks need hooks/list and config/batchWrite per home. skill-prune disables skills; codex-config-prune removes dead records. Moves require trust-key rewrites; Trajectory trust is retired. See codex/README.org."
     },
     {
       "tool": "Codex",

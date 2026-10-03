@@ -186,6 +186,13 @@ The browser runtime, its modules, its matching app helper CLI, and the Chrome
 service bundle are retained as verified immutable copies. New servers use those
 paths, so a subsequent app replacement cannot remove those files.
 
+The helper CLI has two app layouts. Since ChatGPT.app 26.928 it is the
+=Resources/codex-cli= package (manifest =codex-package.json=, launcher
+=bin/codex= exec'ing a sibling =CodexCLI.app=); the whole package is retained
+and =CODEX_CLI_PATH= must name =Resources/codex-cli/bin/codex=. Older apps ship
+a bare =Resources/codex=, retained with its =codex-code-mode-host= sibling. An
+unknown package =layoutVersion= or entrypoint is refused rather than guessed.
+
 The private =codex-extras= adapter opts Emacs sessions into client retention with
 =CODEX_RETAIN_BROWSER_SKILL=1=. For that direct app-server launch only, the
 launcher disables the mutable Chrome plugin through a process config override.

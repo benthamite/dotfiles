@@ -526,5 +526,32 @@ class BrowserSyncTests(unittest.TestCase):
             self.assertNotIn("secret-value", str(caught.exception))
 
 
+class CliPackageTests(unittest.TestCase):
+    """ChatGPT.app 26.928 moved Resources/codex into a Resources/codex-cli package."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.resources = Path(self.temp.name).resolve()
+
+    def write_manifest(self, **layout):
+        package = self.resources / "codex-cli"
+        package.mkdir()
+        (package / "codex-package.json").write_text(json.dumps(layout))
+        return package
+
+    def test_legacy_layout_has_no_package(self):
+        self.assertIsNone(sync._cli_package(self.resources))
+
+    def test_package_layout_is_detected(self):
+        package = self.write_manifest(layoutVersion=1, entrypoint="bin/codex")
+        self.assertEqual(sync._cli_package(self.resources), package)
+
+    def test_unknown_package_layout_is_refused(self):
+        self.write_manifest(layoutVersion=2, entrypoint="bin/codex")
+        with self.assertRaises(sync.BrowserSyncError):
+            sync._cli_package(self.resources)
+
+
 if __name__ == "__main__":
     unittest.main()

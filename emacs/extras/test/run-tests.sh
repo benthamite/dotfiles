@@ -49,6 +49,8 @@ COMMON_ARGS=(
     --eval "(setq debug-on-error nil)"
     ${ELPACA:+--eval "(dolist (dir (file-expand-wildcards \"$ELPACA/builds/*/\")) (add-to-list 'load-path dir))"}
     --eval "(push \"$EXTRAS_DIR\" load-path)"
+    # Batch libraries shipped with extras (org-agenda-profiler) live here.
+    --eval "(push \"$EXTRAS_DIR/scripts\" load-path)"
     --eval "(push \"$SCRIPT_DIR\" load-path)"
     -l ert
 )

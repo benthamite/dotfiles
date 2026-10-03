@@ -200,6 +200,12 @@ roots, and maintenance. The generated
 public skills only; runtime plugins, private skills, ignored system content,
 and skills owned by other repositories are outside its scope.
 
+The =live-session-status= skill reports what a live peer Claude or Codex
+session is doing from its local transcript instead of calling the session
+opaque. Its read-only =session_tail.py= helper prints the last user and
+assistant text messages of a Claude JSONL transcript or Codex rollout, or of
+the newest one for a project directory.
+
 The =org-note-conventions= skill applies only to personal notes. It distinguishes
 root-backed and rootless heading layouts, preserves established structure, and
 joins soft prose wrapping without removing intentional Org hard line breaks.

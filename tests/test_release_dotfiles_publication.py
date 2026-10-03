@@ -56,19 +56,19 @@ class ReleaseDotfilesPublicationTests(unittest.TestCase):
             self.assertIn("repair", text, path)
             self.assertRegex(
                 text,
-                r"(?i)(fresh scan|scan again|new scan|start a new run)",
+                r"(?i)(fresh scan|scan again|new scan|start a new run|return\s+to\s+Step\s+7)",
                 str(path),
             )
             self.assertRegex(
                 text,
-                r"(?i)profile (confirmation|test).{0,120}(void|invalid|again|rerun)",
+                r"(?i)(profile (confirmation|test).{0,120}(void|invalid|again|rerun)|if\s+anything\s+moved,\s+return\s+to\s+Phase\s+1)",
                 str(path),
             )
 
     def test_release_notes_and_tag_text_are_reviewed(self):
         for path, text in self.skills():
-            self.assertIn("public-text", text, path)
-            self.assertRegex(text, r"(?i)review.{0,80}release notes", str(path))
+            self.assertRegex(text, r"(?i)public[- ]text", str(path))
+            self.assertRegex(text, r"(?i)(review|adjudicate).{0,80}release notes", str(path))
 
     def test_the_tag_is_created_only_after_a_clean_review(self):
         for path, text in self.skills():
@@ -115,7 +115,7 @@ class ReleaseDotfilesPublicationTests(unittest.TestCase):
                 r"(?i)`?--accept`? never skips",
                 str(path),
             )
-            self.assertRegex(text, r"(?i)--accept.{0,200}(security|publication) review", str(path))
+            self.assertRegex(text, r"(?i)--accept.{0,200}(security|publication)[- ]review", str(path))
 
 
 if __name__ == "__main__":

@@ -32,7 +32,8 @@ from pathlib import Path
 # a second copy in a security test is a copy that can drift.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from test_github_write_guard import GUARDS, decision, payload  # noqa: E402
+from guard_harness import run_guard  # noqa: E402
+from test_github_write_guard import GUARDS, checked, decision, payload  # noqa: E402
 
 # A repo that cannot become allowlisted by accident. Using a real one here
 # would silently turn these deny cases green the day it gets declared on a
@@ -81,14 +82,8 @@ class GuardInRepoMixin:
                 env = os.environ.copy()
                 env["PATH"] = os.pathsep.join((str(self.bin_dir), env["PATH"]))
                 env["FAKE_GH_LOG"] = str(self.gh_log)
-                result = subprocess.run(
-                    ["bash", str(GUARDS[tool])],
-                    input=payload(tool, command),
-                    capture_output=True,
-                    text=True,
-                    check=True,
-                    cwd=self.repo,
-                    env=env,
+                result = checked(
+                    run_guard(GUARDS[tool], payload(tool, command), cwd=self.repo, env=env)
                 )
                 self.assertEqual(decision(result), expected)
 

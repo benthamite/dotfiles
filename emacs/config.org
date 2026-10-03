@@ -765,6 +765,9 @@ Only Elpaca's treeless default is replaced; an explicit depth is kept."
 (add-hook 'elpaca-recipe-functions #'init-elpaca-own-repo-blobless)
 
 (toggle-debug-on-error) ; uncomment when debugging
+;; mu4e comes from Homebrew's mu, so its Elisp matches the installed mu server.
+;; Packages declaring it as a dependency (mu4e-extras) must not make Elpaca build it.
+(add-to-list 'elpaca-ignored-dependencies 'mu4e)
 (setq elpaca-lock-file
       (file-name-concat (file-name-directory (directory-file-name elpaca-directory)) "lockfile.el"))
 #+end_src
@@ -13048,16 +13051,11 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
 /[[https://github.com/djcb/mu][mu4e]] is an an Emacs-based e-mail client./
 
+mu4e is loaded from Homebrew's =mu= formula (=/opt/homebrew/share/emacs/site-lisp/mu/mu4e=, already on =load-path=), so the Elisp always matches the installed =mu= server. The former Elpaca recipe pinned 1.12.13 and never produced its generated =mu4e-config.el=, so Emacs silently paired that Elisp with Homebrew's 1.14.3 config and server.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package mu4e
-  :ensure (:host github
-                 :files ("mu4e/*.el" "build/mu4e/mu4e-meta.el" "build/mu4e/mu4e-config.el" "build/mu4e/mu4e.info")
-                 :repo "djcb/mu"
-                 :main "mu4e/mu4e.el"
-                 :pre-build (("./autogen.sh") ("ninja" "-C" "build"))
-                 :build (:not elpaca-build-docs)
-                 :ref "1a501281" ; v.1.12.13
-                 :depth nil)
+  :ensure nil ; Homebrew mu; see `elpaca-ignored-dependencies' above
   :defer 30
   :custom
   ;; uncomment thw two user options below when debugging

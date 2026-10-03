@@ -282,8 +282,13 @@ receivers, =global=/=nonlocal= and dynamic namespaces remain conservative.
 Indexed =read_text()= calls are also recognized for
 uniquely bound lists from literal =pathlib.Path= joins and =glob= patterns;
 shadowed builtins/imports, dynamic receivers and mutations remain conservative.
-Other calls/attribute bases, imports, literals, =psutil= and =/proc= markers
-remain checked; unquoted heredocs stay conservative.
+Other calls/attribute bases, imports, =psutil= and =/proc= markers remain
+checked; unquoted heredocs stay conservative. String literals are data only
+when the program imports nothing beyond a fixed set of inert modules and names
+no evaluator (=eval=, =exec=, =compile=, =getattr=, =__import__= ...); f-string
+parts always stay checked. A quote is a word boundary, so =f'ps'= counts as
+=ps=. A heredoc operator after =#= may be a comment, so its "body" is treated
+as shell.
 =tests/test_process_output_policy.py= and =tests/test_process_output_guard.py=
 cover the policy and registered guard entry points with synthetic commands.
 

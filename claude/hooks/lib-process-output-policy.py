@@ -21,6 +21,13 @@ SHELLS = TOKENS.SHELLS | {"fish"}
 FIELDS = set("pid ppid pgid pgrp sess sid uid euid ruid gid egid rgid user ruser group rgroup comm ucomm etime etimes time cputime cpu pcpu pmem %cpu %mem rss vsz vsize state stat tty tt tname nice ni pri flags f start started lstart wchan jobc nlwp thcount".split())
 RELEVANT = re.compile(r"(?<![\w-])(?:ps|pgrep)(?![\w-])|psutil|/proc/[^\s]+/(?:cmdline|environ)")
 INTERPRETERS = {"node", "nodejs", "perl", "ruby", "awk", "osascript"}
+# Python modules that can neither start a process nor evaluate text. A program
+# importing only these, with no dynamic builtins, cannot run a string literal.
+INERT_MODULES = {"__future__", "base64", "collections", "dataclasses", "datetime", "difflib", "enum",
+                 "fnmatch", "functools", "hashlib", "itertools", "json", "math", "pathlib", "re",
+                 "string", "textwrap", "typing", "unicodedata"}
+EVALUATORS = {"__import__", "compile", "getattr", "breakpoint", "exec", "eval", "globals", "locals",
+              "vars", "__builtins__"}
 WRAPPER_VALUES = {
     "env": {"-u", "--unset", "-C", "--chdir"},
     "nice": {"-n", "--adjustment"},
@@ -247,10 +254,23 @@ def project_python_names(source):
     for line in lines:
         offsets.append(total)
         total += len(line.encode("utf-8")) + 1
+    # String literals are data when the program cannot start a process or
+    # evaluate text: only inert imports, no relative imports, no evaluators.
+    # Literals naming psutil or /proc stay visible. f-string parts are skipped
+    # because their positions are not reliable before Python 3.12.
+    imported = ({alias.name.split(".")[0] for node in nodes if isinstance(node, ast.Import)
+                 for alias in node.names}
+                | {(node.module or "").split(".")[0] for node in nodes if isinstance(node, ast.ImportFrom)})
+    inert_strings = (not dynamic and imported <= INERT_MODULES
+                     and not any(isinstance(node, ast.ImportFrom) and node.level for node in nodes)
+                     and not any(isinstance(node, ast.Name) and node.id in EVALUATORS for node in nodes))
     data = bytearray(source.encode("utf-8"))
     for node in ast.walk(tree):
-        if (isinstance(node, ast.Name) and node.id in {"ps", "pgrep"}
-                and (node not in protected or node in path_reads)):
+        if ((isinstance(node, ast.Name) and node.id in {"ps", "pgrep"}
+                and (node not in protected or node in path_reads))
+                or (inert_strings and isinstance(node, ast.Constant) and isinstance(node.value, str)
+                    and not isinstance(parents.get(node), ast.JoinedStr)
+                    and not re.search(r"psutil|/proc/", node.value))):
             start = offsets[node.lineno - 1] + node.col_offset
             end = offsets[node.end_lineno - 1] + node.end_col_offset
             data[start:end] = b"_" * (end - start)
@@ -259,7 +279,10 @@ def project_python_names(source):
 
 def classify(source, depth=0):
     if depth > 8: raise Denied("nested process inspection exceeds the classifier limit")
-    relevant = RELEVANT.search(re.sub(r"[\\'\"]", "", source))
+    # Deleting quotes exposes split names (p''s); treating them as separators
+    # keeps prefixed literals (f'ps', rb"pgrep") from merging into one word.
+    relevant = (RELEVANT.search(re.sub(r"[\\'\"]", "", source))
+                or RELEVANT.search(re.sub(r"[\\'\"]", " ", source)))
     if not relevant: return
     # Quoted data heredocs are inert; executable interpreter bodies are checked.
     match = re.search(r"<<-?\s*(['\"]?)(\w+)\1[^\n]*\n", source)
@@ -270,6 +293,9 @@ def classify(source, depth=0):
         body = source[match.end():match.end() + end.start()]
         if "|" in source[:match.end()] and RELEVANT.search(body):
             raise Denied("piped process-inspection heredoc cannot be classified")
+        # After a `#` the operator may be a comment, so the "body" may be shell.
+        if "#" in prefix[prefix.rfind("\n") + 1:] and RELEVANT.search(body):
+            raise Denied("process inspection after a possible comment cannot be classified")
         head = unwrap(TOKENS._split_simple(TOKENS._tokenize(prefix))[-1][-1].words)
         base = Path(head[0].text).name if head else ""
         if base in SHELLS: classify(body, depth + 1)

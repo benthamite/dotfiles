@@ -48,6 +48,13 @@ ALLOW = [
     "python3 <<'PY'\nfrom pathlib import Path\nprint(Path('README.md').read_text())\nPY\n",
     "cat <<'EOF'\npgrep -fl mcp\nEOF\n",
     "printf '%s' \"$(pgrep -f emacs)\"", "# pgrep -fl mcp\ntrue",
+    # A program that can neither start a process nor evaluate text keeps
+    # `ps` in string literals as data, e.g. while editing documentation.
+    "python3 - <<'PY'\nps=[]; ps.append('ps aux')\nPY",
+    "python3 - <<'PY'\ndef f():\n ps=[];ps.append(\"ps aux\")\nPY",
+    "cd /tmp; python3 - <<'EOF'\nfrom pathlib import Path\n"
+    "s = 'retired (`newtask` and `ps/trajectory-*`)'\nPath('notes.txt').write_text(s)\nEOF\n",
+    "python3 - <<'PY'\nimport re, json\nprint(re.sub('x', 'ps aux', json.dumps('pgrep -fl')))\nPY",
 ]
 DENY = [
     *["python3 - <<'PY'\n" + body + "\nPY" for body in (
@@ -55,7 +62,15 @@ DENY = [
         "ps=[]; globals()['ps']=object(); ps.append(1)",
         "ps=[]; del ps; ps.append(1)", "ps=[]; ps()",
         "ps=[]; import subprocess as ps; ps.append(1)",
-        "ps=[]; ps.append('ps aux')", "ps=[]; exec('pass'); ps.append(1)",
+        "import subprocess\nps=[]; ps.append('ps aux')", "ps=[]; exec('pass'); ps.append(1)",
+        # String literals stay evidence once the program can run or evaluate text.
+        *[prelude + "\ncommand = 'ps aux'" for prelude in (
+            "import os", "import sys", "from os import system", "import pathlib, subprocess",
+            "from . import helper", "x = __import__", "x = getattr", "x = compile", "x = eval")],
+        "import pathlib\nx = f'ps {1}'", "import pathlib\nx = '/proc/1/cmdline'",
+        "import subprocess\nsubprocess.run(f'ps aux', shell=True)",
+        "import subprocess\nsubprocess.run(rb'pgrep -fl mcp', shell=True)",
+        "import pathlib\nx = 'psutil'",
         "ps=[]\ndef f(ps): ps.append(1)",
         "ps=[]\ntry: pass\nexcept Exception as ps: ps.append(1)",
         "ps=[]\nmatch object():\n case ps: ps.append(1)",
@@ -84,6 +99,8 @@ DENY = [
     "python3 <<'PY'\nimport os\nos.system('ps aux')\nPY\n",
     "sh <<'SH'\npgrep -fl mcp\nSH\n",
     "cat <<EOF\n$(pgrep -fl mcp)\nEOF\n",
+    # After `#` the operator is a comment and the "body" runs as shell.
+    "cat # <<'X'\npgrep -fl mcp\nX\n", "true; cat # <<'X'\nps aux\nX\n",
 ]
 
 class PolicyTests(unittest.TestCase):
@@ -113,7 +130,7 @@ class PolicyTests(unittest.TestCase):
             'def f():\n ps=[];[ps.append(x) for x in [1]]',
             'def f():\n ps=[];ps.cmdline()',
             'def f():\n ps=[];ps()',
-            'def f():\n ps=[];ps.append("ps aux")',
+            'def f():\n import subprocess\n ps=[];ps.append("ps aux")',
         ]
         for family in ('claude',):
             spec = importlib.util.spec_from_file_location('scope_policy_' + family,

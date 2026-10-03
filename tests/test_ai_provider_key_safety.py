@@ -205,7 +205,7 @@ class ProviderSafetyTest(unittest.TestCase):
     def test_invalid_inputs_refuse_before_any_secret_or_account_access(self):
         for more in [
             ["--verified-monthly-spend-cap-usd", "nan"], ["--verified-monthly-spend-cap-usd", "inf"],
-            ["--verified-monthly-spend-cap-usd", "-1"], ["--verified-monthly-spend-cap-usd", "1501"],
+            ["--verified-monthly-spend-cap-usd", "-1"], ["--verified-monthly-spend-cap-usd", "2001"],
             ["--project", "bad\nslug"], ["--env-name", "TOKEN\nINJECTED"],
             ["--provider-resource-id", "wrkspc_x/other"], ["--vault", "Other"],
             ["--admin-key-ref", "https://example.invalid"],
@@ -220,7 +220,7 @@ class ProviderSafetyTest(unittest.TestCase):
                 self.assertEqual(out, "")
 
     def test_dry_run_is_pure_even_with_nonexistent_repo_and_secret_file(self):
-        for provider, ceiling in (("openai", 500), ("anthropic", 1500)):
+        for provider, ceiling in (("openai", 500), ("anthropic", 2000)):
             flags = ["--repo", str(self.scratch / "absent"), "--dry-run"]
             if provider == "anthropic":
                 flags += ["--secret-file", str(self.scratch / "missing")]

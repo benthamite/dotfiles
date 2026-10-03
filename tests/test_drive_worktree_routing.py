@@ -5,6 +5,9 @@ Every worktree-creating helper must construct destinations under
 checkout and ~/My Drive), the Drive node_modules relocation helper must be
 gone from shell/.zshrc, and mkvenv must refuse to create a virtualenv under
 ~/My Drive.
+
+The Trajectory entry points (`newtask` in .zshrc and `ps/trajectory-*` in
+config.org) were retired in df6eb77cc; the helpers below were kept.
 """
 
 from __future__ import annotations
@@ -20,7 +23,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ZSHRC = ROOT / "shell" / ".zshrc"
-CONFIG_ORG = ROOT / "emacs" / "config.org"
 
 WORKTREE_HELPERS = [
     ROOT / "bin" / "cr-review-worktree",
@@ -85,14 +87,6 @@ class ZshrcRoutingTest(unittest.TestCase):
         )
         self.assertIn("ABSENT", result.stdout)
 
-    def test_newtask_constructs_external_worktree_path(self):
-        result = zsh_run("newtask my-task", self.tmp, self.stubs)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        calls = self.calls()
-        expected = f"{self.tmp}/repos/.worktrees/reasoning-tasks/pablo/my-task"
-        self.assertIn(f"worktree add {expected} -b pablo/my-task origin/main", calls)
-        self.assertIn(expected, result.stdout)
-
     def test_mkvenv_refuses_drive_root(self):
         project = self.tmp / "My Drive" / "someproj"
         project.mkdir(parents=True)
@@ -133,63 +127,6 @@ class WorktreeHelperRoutingTest(unittest.TestCase):
             text, r'WORKTREES="\$HOME/repos/\.worktrees/reasoning-tasks"'
         )
         self.assertRegex(text, r'wt="\$WORKTREES/qa-')
-
-    def test_zshrc_references_the_external_worktrees_root(self):
-        self.assertIn(EXTERNAL_ROOT_FRAGMENT, ZSHRC.read_text())
-
-
-class ConfigOrgRoutingTest(unittest.TestCase):
-    def trajectory_block(self) -> str:
-        text = CONFIG_ORG.read_text()
-        start = text.index("(defun ps/trajectory-new-task")
-        end = text.index("#+end_src", start)
-        return text[start:end]
-
-    def test_trajectory_functions_use_external_worktrees_root(self):
-        block = self.trajectory_block()
-        self.assertIn(EXTERNAL_ROOT_FRAGMENT, block)
-
-    def test_trajectory_functions_do_not_create_worktrees_inside_the_repo(self):
-        block = self.trajectory_block()
-        self.assertNotRegex(
-            block,
-            r'\(expand-file-name slug root\)\)\s*\)\s*\(unless',
-            "ps/trajectory-new-task still creates worktrees inside the repo checkout",
-        )
-
-    @unittest.skipUnless(shutil.which("emacs"), "batch emacs unavailable")
-    def test_trajectory_add_worktree_constructs_external_path_in_batch_emacs(self):
-        """Load the tangle block into batch Emacs with stubbed process calls
-        and assert the constructed `git worktree add' destination."""
-        block = self.trajectory_block()
-        with tempfile.TemporaryDirectory(prefix="ert-trajectory-") as tmp:
-            el = Path(tmp) / "trajectory.el"
-            log = Path(tmp) / "calls.el"
-            el.write_text(block)
-            expr = f"""
-(progn
-  (setq ps--calls nil)
-  (defun call-process (program &optional infile destination display &rest args)
-    (push (cons program args) ps--calls)
-    0)
-  (load "{el}" nil t)
-  (let ((default-directory "{tmp}/"))
-    (ps/trajectory--add-worktree "my-task"
-                                 (expand-file-name "~/repos/.worktrees/reasoning-tasks/pablo/my-task")
-                                 (expand-file-name "~/Trajectory/reasoning-tasks")))
-  (with-temp-file "{log}"
-    (prin1 ps--calls (current-buffer))))
-"""
-            result = subprocess.run(
-                ["emacs", "--batch", "--eval", expr],
-                capture_output=True,
-                text=True,
-                env={**os.environ, "HOME": tmp},
-            )
-            self.assertEqual(result.returncode, 0, result.stderr)
-            calls = log.read_text()
-            self.assertIn(f"{tmp}/repos/.worktrees/reasoning-tasks/pablo/my-task", calls)
-            self.assertIn('"worktree" "add"', calls)
 
 
 if __name__ == "__main__":

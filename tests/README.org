@@ -20,6 +20,11 @@ macOS commands, local wrappers, or repository topology, so a failure should be
 read in light of the test’s explicit preconditions rather than converted to a
 skip.
 
+Tools with their own Python environment (=gcalcli-epoch=, =gdoc=) are tested
+under that interpreter. Loaded by another Python, their modules run one
+delegated test that executes the module under the owning interpreter and fails
+if it is missing; see [[file:interpreter_delegation.py][interpreter_delegation.py]].
+
 Emacs extras use their own ERT and batch harness under
 [[file:../emacs/extras/test/][emacs/extras/test/]]. The single GitHub Actions workflow currently runs that
 extras suite; it is not evidence that every Python module in this directory ran

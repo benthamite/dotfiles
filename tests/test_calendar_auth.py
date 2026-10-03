@@ -1,20 +1,37 @@
-"""Canonical Calendar grant replacement and broker routing regressions."""
+"""Canonical Calendar grant replacement and broker routing regressions.
+
+bin/gcalcli-epoch runs under gcalcli's Homebrew Python; under any other
+interpreter this module delegates to that one (tests/interpreter_delegation.py).
+"""
 
 import importlib.machinery
 import importlib.util
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from interpreter_delegation import delegated_case  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[1]
-loader = importlib.machinery.SourceFileLoader("calendar_auth", str(ROOT / "bin/gcalcli-epoch"))
-spec = importlib.util.spec_from_loader(loader.name, loader)
-calendar = importlib.util.module_from_spec(spec)
-loader.exec_module(calendar)
+SCRIPT = ROOT / "bin/gcalcli-epoch"
+# The script's shebang names the interpreter that owns its dependencies.
+GCALCLI_PYTHON = Path(SCRIPT.read_text().splitlines()[0].removeprefix("#!").strip())
+OWN_INTERPRETER = importlib.util.find_spec("gcalcli") is not None
+if OWN_INTERPRETER:
+    loader = importlib.machinery.SourceFileLoader("calendar_auth", str(SCRIPT))
+    spec = importlib.util.spec_from_loader(loader.name, loader)
+    calendar = importlib.util.module_from_spec(spec)
+    loader.exec_module(calendar)
+
+DelegatedRun = unittest.skipIf(OWN_INTERPRETER, "already under the gcalcli interpreter")(
+    delegated_case("test_calendar_auth", GCALCLI_PYTHON))
 
 
+@unittest.skipUnless(OWN_INTERPRETER, "runs through DelegatedRun under the gcalcli interpreter")
 class CalendarAuthTests(unittest.TestCase):
     def test_broker_read_never_invokes_raw_op(self):
         with mock.patch.object(calendar.auth.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "grant\n")) as run:

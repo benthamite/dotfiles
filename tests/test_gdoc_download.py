@@ -1,17 +1,32 @@
-"""Run with the installed gdoc environment's Python; no credentials required."""
+"""Runs under the installed gdoc environment's Python; no credentials required.
+
+Under any other interpreter the module delegates to that one (see
+tests/interpreter_delegation.py).
+"""
 import hashlib
 import importlib.util
 from pathlib import Path
+import sys
 import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from interpreter_delegation import delegated_case  # noqa: E402
+
 SOURCE = Path(__file__).resolve().parents[1] / 'claude/bin/gdoc_download.py'
-spec = importlib.util.spec_from_file_location('gdoc_download', SOURCE)
-module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(module)
+GDOC_PYTHON = Path.home() / '.local/share/uv/tools/gdoc/bin/python'
+OWN_INTERPRETER = importlib.util.find_spec('gdoc') is not None
+if OWN_INTERPRETER:
+    spec = importlib.util.spec_from_file_location('gdoc_download', SOURCE)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+DelegatedRun = unittest.skipIf(OWN_INTERPRETER, 'already under the gdoc interpreter')(
+    delegated_case('test_gdoc_download', GDOC_PYTHON))
 
 
+@unittest.skipUnless(OWN_INTERPRETER, 'runs through DelegatedRun under the gdoc interpreter')
 class DownloadTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()

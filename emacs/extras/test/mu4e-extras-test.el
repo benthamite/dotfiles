@@ -90,10 +90,10 @@
                (lambda (_msg _field _addr) nil)))
       (should-not (mu4e-extras-msg-is-personal-p msg)))))
 
-;;;; msg-is-work-p
+;;;; msg-is-tlon-p
 
-(ert-deftest mu4e-extras-test-work-p-work-email ()
-  "Message addressed to WORK_EMAIL is classified as work."
+(ert-deftest mu4e-extras-test-tlon-p-work-email ()
+  "Message addressed to WORK_EMAIL is classified as Tlon."
   (skip-unless mu4e-extras-test--loadable)
   (let ((msg '(:to "user@work.com"))
         (work-email (getenv "WORK_EMAIL")))
@@ -101,25 +101,56 @@
                (lambda (_msg field addr)
                  (and (eq field :to)
                       (equal addr work-email)))))
-      (should (mu4e-extras-msg-is-work-p msg)))))
+      (should (mu4e-extras-msg-is-tlon-p msg)))))
 
-(ert-deftest mu4e-extras-test-work-p-reply-to-tlon ()
-  "Message with reply-to tlon-team is classified as work."
+(ert-deftest mu4e-extras-test-tlon-p-reply-to-tlon ()
+  "Message with reply-to tlon-team is classified as Tlon."
   (skip-unless mu4e-extras-test--loadable)
   (let ((msg '(:reply-to "tlon-team@googlegroups.com")))
     (cl-letf (((symbol-function 'mu4e-message-contact-field-matches)
                (lambda (_msg field addr)
                  (and (eq field :reply-to)
                       (equal addr "tlon-team@googlegroups.com")))))
-      (should (mu4e-extras-msg-is-work-p msg)))))
+      (should (mu4e-extras-msg-is-tlon-p msg)))))
 
-(ert-deftest mu4e-extras-test-work-p-personal-address ()
-  "Message addressed to a personal email is not classified as work."
+(ert-deftest mu4e-extras-test-tlon-p-personal-address ()
+  "Message addressed to a personal email is not classified as Tlon."
   (skip-unless mu4e-extras-test--loadable)
   (let ((msg '(:to "user@personal.com")))
     (cl-letf (((symbol-function 'mu4e-message-contact-field-matches)
                (lambda (_msg _field _addr) nil)))
-      (should-not (mu4e-extras-msg-is-work-p msg)))))
+      (should-not (mu4e-extras-msg-is-tlon-p msg)))))
+
+;;;; msg-is-epoch-p
+
+(ert-deftest mu4e-extras-test-epoch-p-epoch-email ()
+  "Message addressed to EPOCH_EMAIL is classified as Epoch."
+  (skip-unless mu4e-extras-test--loadable)
+  (let ((msg '(:to "user@epoch.example"))
+        (epoch-email (getenv "EPOCH_EMAIL")))
+    (cl-letf (((symbol-function 'mu4e-message-contact-field-matches)
+               (lambda (_msg field addr)
+                 (and (eq field :to)
+                      (equal addr epoch-email)))))
+      (should (mu4e-extras-msg-is-epoch-p msg)))))
+
+(ert-deftest mu4e-extras-test-epoch-p-other-address ()
+  "Message not addressed to EPOCH_EMAIL is not classified as Epoch."
+  (skip-unless mu4e-extras-test--loadable)
+  (let ((msg '(:to "user@work.com")))
+    (cl-letf (((symbol-function 'mu4e-message-contact-field-matches)
+               (lambda (_msg _field _addr) nil)))
+      (should-not (mu4e-extras-msg-is-epoch-p msg)))))
+
+(ert-deftest mu4e-extras-test-epoch-html-and-plain-text-split ()
+  "Epoch HTML and plain-text predicates split on the HTML check."
+  (skip-unless mu4e-extras-test--loadable)
+  (dolist (html '(t nil))
+    (cl-letf (((symbol-function 'mu4e-extras-msg-is-html-p) (lambda (_msg) html))
+              ((symbol-function 'mu4e-extras-msg-is-epoch-p) (lambda (_msg) t)))
+      (should (eq (and (mu4e-extras-msg-is-epoch-and-html-p '(:to "x")) t) html))
+      (should (eq (and (mu4e-extras-msg-is-epoch-and-plain-text-p '(:to "x")) t)
+                  (not html))))))
 
 ;;;; msg-is-personal-and-html-p
 
@@ -195,116 +226,129 @@
   (skip-unless mu4e-extras-test--loadable)
   (should-not (mu4e-extras-msg-is-personal-and-plain-text-p nil)))
 
-;;;; msg-is-work-and-html-p
+;;;; msg-is-tlon-and-html-p
 
-(ert-deftest mu4e-extras-test-work-and-html-p-both-true ()
-  "Message that is both work and HTML returns non-nil."
+(ert-deftest mu4e-extras-test-tlon-and-html-p-both-true ()
+  "Message that is both Tlon and HTML returns non-nil."
   (skip-unless mu4e-extras-test--loadable)
   (let ((msg '(:to "user@work.com")))
     (cl-letf (((symbol-function 'mu4e-extras-msg-is-html-p)
                (lambda (_msg) t))
-              ((symbol-function 'mu4e-extras-msg-is-work-p)
+              ((symbol-function 'mu4e-extras-msg-is-tlon-p)
                (lambda (_msg) t)))
-      (should (mu4e-extras-msg-is-work-and-html-p msg)))))
+      (should (mu4e-extras-msg-is-tlon-and-html-p msg)))))
 
-(ert-deftest mu4e-extras-test-work-and-html-p-not-html ()
-  "Message that is work but not HTML returns nil."
+(ert-deftest mu4e-extras-test-tlon-and-html-p-not-html ()
+  "Message that is Tlon but not HTML returns nil."
   (skip-unless mu4e-extras-test--loadable)
   (let ((msg '(:to "user@work.com")))
     (cl-letf (((symbol-function 'mu4e-extras-msg-is-html-p)
                (lambda (_msg) nil))
-              ((symbol-function 'mu4e-extras-msg-is-work-p)
+              ((symbol-function 'mu4e-extras-msg-is-tlon-p)
                (lambda (_msg) t)))
-      (should-not (mu4e-extras-msg-is-work-and-html-p msg)))))
+      (should-not (mu4e-extras-msg-is-tlon-and-html-p msg)))))
 
-(ert-deftest mu4e-extras-test-work-and-html-p-not-work ()
-  "Message that is HTML but not work returns nil."
+(ert-deftest mu4e-extras-test-tlon-and-html-p-not-work ()
+  "Message that is HTML but not Tlon returns nil."
   (skip-unless mu4e-extras-test--loadable)
   (let ((msg '(:to "user@personal.com")))
     (cl-letf (((symbol-function 'mu4e-extras-msg-is-html-p)
                (lambda (_msg) t))
-              ((symbol-function 'mu4e-extras-msg-is-work-p)
+              ((symbol-function 'mu4e-extras-msg-is-tlon-p)
                (lambda (_msg) nil)))
-      (should-not (mu4e-extras-msg-is-work-and-html-p msg)))))
+      (should-not (mu4e-extras-msg-is-tlon-and-html-p msg)))))
 
-(ert-deftest mu4e-extras-test-work-and-html-p-nil-msg ()
+(ert-deftest mu4e-extras-test-tlon-and-html-p-nil-msg ()
   "Nil message returns nil."
   (skip-unless mu4e-extras-test--loadable)
-  (should-not (mu4e-extras-msg-is-work-and-html-p nil)))
+  (should-not (mu4e-extras-msg-is-tlon-and-html-p nil)))
 
-;;;; msg-is-work-and-plain-text-p
+;;;; msg-is-tlon-and-plain-text-p
 
-(ert-deftest mu4e-extras-test-work-and-plain-text-p-both-true ()
-  "Message that is work and plain text returns non-nil."
+(ert-deftest mu4e-extras-test-tlon-and-plain-text-p-both-true ()
+  "Message that is Tlon and plain text returns non-nil."
   (skip-unless mu4e-extras-test--loadable)
   (let ((msg '(:to "user@work.com")))
     (cl-letf (((symbol-function 'mu4e-extras-msg-is-html-p)
                (lambda (_msg) nil))
-              ((symbol-function 'mu4e-extras-msg-is-work-p)
+              ((symbol-function 'mu4e-extras-msg-is-tlon-p)
                (lambda (_msg) t)))
-      (should (mu4e-extras-msg-is-work-and-plain-text-p msg)))))
+      (should (mu4e-extras-msg-is-tlon-and-plain-text-p msg)))))
 
-(ert-deftest mu4e-extras-test-work-and-plain-text-p-is-html ()
-  "Message that is work but HTML returns nil."
+(ert-deftest mu4e-extras-test-tlon-and-plain-text-p-is-html ()
+  "Message that is Tlon but HTML returns nil."
   (skip-unless mu4e-extras-test--loadable)
   (let ((msg '(:to "user@work.com")))
     (cl-letf (((symbol-function 'mu4e-extras-msg-is-html-p)
                (lambda (_msg) t))
-              ((symbol-function 'mu4e-extras-msg-is-work-p)
+              ((symbol-function 'mu4e-extras-msg-is-tlon-p)
                (lambda (_msg) t)))
-      (should-not (mu4e-extras-msg-is-work-and-plain-text-p msg)))))
+      (should-not (mu4e-extras-msg-is-tlon-and-plain-text-p msg)))))
 
-(ert-deftest mu4e-extras-test-work-and-plain-text-p-not-work ()
-  "Message that is plain text but not work returns nil."
+(ert-deftest mu4e-extras-test-tlon-and-plain-text-p-not-work ()
+  "Message that is plain text but not Tlon returns nil."
   (skip-unless mu4e-extras-test--loadable)
   (let ((msg '(:to "user@personal.com")))
     (cl-letf (((symbol-function 'mu4e-extras-msg-is-html-p)
                (lambda (_msg) nil))
-              ((symbol-function 'mu4e-extras-msg-is-work-p)
+              ((symbol-function 'mu4e-extras-msg-is-tlon-p)
                (lambda (_msg) nil)))
-      (should-not (mu4e-extras-msg-is-work-and-plain-text-p msg)))))
+      (should-not (mu4e-extras-msg-is-tlon-and-plain-text-p msg)))))
 
-(ert-deftest mu4e-extras-test-work-and-plain-text-p-nil-msg ()
+(ert-deftest mu4e-extras-test-tlon-and-plain-text-p-nil-msg ()
   "Nil message returns nil."
   (skip-unless mu4e-extras-test--loadable)
-  (should-not (mu4e-extras-msg-is-work-and-plain-text-p nil)))
+  (should-not (mu4e-extras-msg-is-tlon-and-plain-text-p nil)))
 
 ;;;; set-shortcuts
 
+(defmacro mu4e-extras-test--with-shortcut-folders (&rest body)
+  "Run BODY with distinct personal and Epoch folders and no shortcuts."
+  `(let ((mu4e-extras-inbox-folder "/INBOX")
+         (mu4e-extras-daily-folder "/Daily")
+         (mu4e-extras-epoch-inbox-folder "/epoch/INBOX")
+         (mu4e-extras-epoch-sent-folder "/epoch/Sent")
+         (mu4e-extras-epoch-drafts-folder "/epoch/Drafts")
+         (mu4e-extras-epoch-refiled-folder "/epoch/Refiled")
+         (mu4e-extras-epoch-trash-folder "/epoch/Trash")
+         (mu4e-maildir-shortcuts nil))
+     ,@body))
+
+(defun mu4e-extras-test--shortcut-alist ()
+  "Return `mu4e-maildir-shortcuts' as a key-sorted (KEY . MAILDIR) alist."
+  (sort (mapcar (lambda (s) (cons (plist-get s :key) (plist-get s :maildir)))
+                mu4e-maildir-shortcuts)
+        (lambda (a b) (< (car a) (car b)))))
+
 (ert-deftest mu4e-extras-test-set-shortcuts-populates-list ()
-  "Setting shortcuts populates `mu4e-maildir-shortcuts' with inbox and daily."
+  "Setting shortcuts maps each personal and Epoch folder to its key."
   (skip-unless mu4e-extras-test--loadable)
-  (let ((mu4e-extras-inbox-folder "/INBOX")
-        (mu4e-extras-daily-folder "/Daily")
-        (mu4e-maildir-shortcuts nil))
-    (mu4e-extras-set-shortcuts)
-    (should (= 2 (length mu4e-maildir-shortcuts)))
-    ;; add-to-list prepends, so daily (added second) is car
-    (should (equal "/Daily" (plist-get (car mu4e-maildir-shortcuts) :maildir)))
-    (should (equal ?y (plist-get (car mu4e-maildir-shortcuts) :key)))
-    (should (equal "/INBOX" (plist-get (cadr mu4e-maildir-shortcuts) :maildir)))
-    (should (equal ?i (plist-get (cadr mu4e-maildir-shortcuts) :key)))))
+  (mu4e-extras-test--with-shortcut-folders
+   (mu4e-extras-set-shortcuts)
+   (should (equal (mu4e-extras-test--shortcut-alist)
+                  (sort (list (cons ?i "/INBOX") (cons ?y "/Daily")
+                              (cons ?I "/epoch/INBOX") (cons ?T "/epoch/Sent")
+                              (cons ?D "/epoch/Drafts") (cons ?R "/epoch/Refiled")
+                              (cons ?X "/epoch/Trash"))
+                        (lambda (a b) (< (car a) (car b))))))))
 
 (ert-deftest mu4e-extras-test-set-shortcuts-idempotent ()
   "Calling `mu4e-extras-set-shortcuts' twice does not duplicate entries."
   (skip-unless mu4e-extras-test--loadable)
-  (let ((mu4e-extras-inbox-folder "/INBOX")
-        (mu4e-extras-daily-folder "/Daily")
-        (mu4e-maildir-shortcuts nil))
-    (mu4e-extras-set-shortcuts)
-    (mu4e-extras-set-shortcuts)
-    (should (= 2 (length mu4e-maildir-shortcuts)))))
+  (mu4e-extras-test--with-shortcut-folders
+   (mu4e-extras-set-shortcuts)
+   (mu4e-extras-set-shortcuts)
+   (should (= 7 (length mu4e-maildir-shortcuts)))))
 
 (ert-deftest mu4e-extras-test-set-shortcuts-uses-custom-folders ()
   "Shortcuts use the values of the custom folder variables."
   (skip-unless mu4e-extras-test--loadable)
-  (let ((mu4e-extras-inbox-folder "/CustomInbox")
-        (mu4e-extras-daily-folder "/CustomDaily")
-        (mu4e-maildir-shortcuts nil))
-    (mu4e-extras-set-shortcuts)
-    ;; add-to-list prepends, so daily (added second) is car
-    (should (equal "/CustomDaily" (plist-get (car mu4e-maildir-shortcuts) :maildir)))
-    (should (equal "/CustomInbox" (plist-get (cadr mu4e-maildir-shortcuts) :maildir)))))
+  (mu4e-extras-test--with-shortcut-folders
+   (let ((mu4e-extras-inbox-folder "/CustomInbox")
+         (mu4e-extras-daily-folder "/CustomDaily"))
+     (mu4e-extras-set-shortcuts)
+     (should (equal "/CustomInbox" (alist-get ?i (mu4e-extras-test--shortcut-alist))))
+     (should (equal "/CustomDaily" (alist-get ?y (mu4e-extras-test--shortcut-alist)))))))
 
 (provide 'mu4e-extras-test)
 ;;; mu4e-extras-test.el ends here

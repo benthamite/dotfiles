@@ -11,6 +11,8 @@ import stat
 import sys
 import tempfile
 
+sys.dont_write_bytecode = True  # keep __pycache__ out of the Drive-synced tree
+
 
 class RuntimeErrorDetected(Exception):
     pass

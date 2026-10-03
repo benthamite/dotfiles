@@ -42,6 +42,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+sys.dont_write_bytecode = True  # keep __pycache__ out of the Drive-synced tree
+
 from migration_safety import MigrationError, MigrationPlan
 
 

@@ -19,6 +19,8 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
+sys.dont_write_bytecode = True  # keep __pycache__ out of the Drive-synced tree
+
 HERE = Path(__file__).resolve().parent
 MAX_TEXT_GROUPS = 20
 MAX_TEXT_MEMBERS = 5

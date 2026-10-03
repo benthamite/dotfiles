@@ -16,6 +16,8 @@
 # docs/secret-guard.md.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# The code under test lives in the Drive-synced tree: never cache its bytecode.
+export PYTHONDONTWRITEBYTECODE=1
 
 FAST=(tests/agent_guard --ignore=tests/agent_guard/differential)
 FULL=(

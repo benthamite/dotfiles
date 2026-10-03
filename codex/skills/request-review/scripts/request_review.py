@@ -19,12 +19,15 @@ import re
 import shlex
 import stat
 import subprocess
+import sys
 import tempfile
 import time
 import uuid
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
+
+sys.dont_write_bytecode = True  # keep __pycache__ out of the Drive-synced tree
 
 _LIB_FILE = Path(__file__).resolve().parents[4] / "lib/python/agent_session_lib.py"
 _LIB_SPEC = importlib.util.spec_from_file_location("agent_session_lib", _LIB_FILE)

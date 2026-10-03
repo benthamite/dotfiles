@@ -45,6 +45,8 @@ import os
 import sys
 import urllib.parse
 
+sys.dont_write_bytecode = True  # keep __pycache__ out of the Drive-synced tree
+
 sys.path.insert(0, os.path.dirname(__file__))
 from _gworkspace_auth import api_request  # noqa: E402
 

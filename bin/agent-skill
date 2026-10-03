@@ -11,6 +11,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+sys.dont_write_bytecode = True  # keep __pycache__ out of the Drive-synced tree
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 HOME = Path.home()

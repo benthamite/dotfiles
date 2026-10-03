@@ -14,6 +14,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+sys.dont_write_bytecode = True  # keep __pycache__ out of the Drive-synced tree
+
 
 class UncertainResult(RuntimeError):
     """The client did not prove whether the operation changed Emacs."""

@@ -124,6 +124,10 @@ warning about the one affected project. The 2026-08-03 migration out of =~/My
 Drive/repos= hit this: the rewritten =tangodb= key collided with an appended
 one.
 
+Python entry scripts that import dotfiles modules set =sys.dont_write_bytecode=
+themselves: the Codex app and launchd jobs do not inherit
+=PYTHONDONTWRITEBYTECODE= from =.zshenv=, and Drive must hold no caches.
+
 * Skills
 
 [[file:skills/README.org][The Codex skill index]] documents discovery, programmatic and private roots,

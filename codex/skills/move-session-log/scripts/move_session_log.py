@@ -29,6 +29,8 @@ from contextlib import closing
 from pathlib import Path
 from typing import Any
 
+sys.dont_write_bytecode = True  # keep __pycache__ out of the Drive-synced tree
+
 from live_import import connect_database, database_identity, snapshot_database
 from migration_safety import MigrationError, MigrationPlan
 

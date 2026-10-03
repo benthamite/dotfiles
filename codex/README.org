@@ -40,7 +40,9 @@ Retained project files and session history do not grant automatic project trust.
 Unfamiliar code execution uses the shared =bin/untrusted-run= VM boundary;
 reviewed local workflows retain host execution. The paired routing guard is
 registered in =hooks.json= for recognizable untrusted launchers and the
-designated staging directory. Its exact definition needs native hook trust.
+designated staging directory. A variable executable assigned a literal earlier
+in the same command is classified as that literal. Its exact definition needs
+native hook trust.
 See [[file:hooks/README.org][the hook contracts]] for coverage and [[file:../bin/README.org][the runner contract]] for prerequisites.
 
 The native =agents.max_concurrent_threads_per_session= setting allows 32

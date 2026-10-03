@@ -184,6 +184,43 @@ def untrusted_input_capture(source, cwd):
     return False
 
 
+def literal_assignments(tokens):
+    """Variables assigned exactly once, unconditionally, to a literal path.
+
+    Agents often write `F=/path/tool; "$F" args`. Such a variable executable
+    is classified as its literal value. Grouping, background jobs, `||` and
+    shell control words can make the assignment conditional or scoped, so
+    those commands, and any word that could rebind a name (`read F`,
+    `export F=...`), leave every variable indirect.
+    """
+    if any(token in {"(", ")", "{", "}", "&", "||", ";;"} for token in tokens if isinstance(token, str)):
+        return {}
+    if any(not isinstance(token, str) and not token.quoted and token.text in TOKENS.CONTROL_WORDS
+           for token in tokens):
+        return {}
+    found, counts, mentioned = {}, {}, set()
+    previous = None
+    for index, token in enumerate(tokens):
+        if isinstance(token, str):
+            previous = token
+            continue
+        match = re.fullmatch(r"([A-Za-z_][A-Za-z0-9_]*)=(.*)", token.text, re.S)
+        if match and token.raw.startswith(match.group(1) + "="):
+            name = match.group(1)
+            counts[name] = counts.get(name, 0) + 1
+            following = tokens[index + 1] if index + 1 < len(tokens) else None
+            standalone = ((previous is None or previous in (";", "\n"))
+                          and (following is None or following in (";", "\n", "&&")))
+            value = expanded_home(match.group(2))
+            if standalone and not re.search(r"[$`\x00]", value):
+                found[name] = value
+        else:
+            mentioned.add(token.text.partition("=")[0])
+        previous = token
+    return {name: value for name, value in found.items()
+            if counts[name] == 1 and name not in mentioned}
+
+
 def literal_heredocs(source):
     """Remove quoted data/program bodies that are not shell command words.
 
@@ -232,6 +269,8 @@ def classify(source: str, cwd: Path, depth=0):
         raise Denied("a relevant process substitution cannot be safely routed")
     if (staged(str(cwd), cwd) or "agent-untrusted" in source) and any(token in {"(", ")", "{", "}", "&"} for token in tokens if isinstance(token, str)):
         raise Denied("grouped or background execution involving untrusted staging requires an explicit runner command")
+    literals = literal_assignments(tokens)
+    assigned = {}
     current = cwd
     for pipeline in pipelines:
         downloaded = False
@@ -262,8 +301,13 @@ def classify(source: str, cwd: Path, depth=0):
                 if any(capture.placeholder in value for value in expansion_inputs):
                     classify(capture.inner, current, depth + 1)
             if not words:
+                if len(pipeline) == 1:
+                    assigned.update((name, literals[name]) for name, _ in simple.assignments if name in literals)
                 continue
             head, arguments = words[0], words[1:]
+            reference = re.fullmatch(r"\$(?:([A-Za-z_][A-Za-z0-9_]*)|\{([A-Za-z_][A-Za-z0-9_]*)\})", head.text)
+            if reference and (reference.group(1) or reference.group(2)) in assigned:
+                head = TOKENS.Word(assigned[reference.group(1) or reference.group(2)], True, False, head.raw)
             base = Path(head.text).name
             if simple.here_string is not None and consumes_code(base, arguments):
                 if any(capture.placeholder in simple.here_string.text and untrusted_input_capture(capture.inner, current)

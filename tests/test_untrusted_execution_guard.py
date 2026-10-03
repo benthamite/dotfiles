@@ -141,6 +141,30 @@ class RoutingGuardTests(unittest.TestCase):
         self.both(f"'{RUNNER}' --workspace \"$(npx example-fixture)\" -- true", "deny")
         self.both("/tmp/untrusted-run --workspace /tmp/new-output -- true", "deny")
 
+    def test_variable_executable_assigned_a_literal_is_classified_as_that_literal(self):
+        tool = '"$HOME/bin/log-search"'
+        for command in (
+            f'F={tool}; "$F" --body untrusted-run | head',
+            f'F={tool}\n"${{F}}" --body npx',
+            f'F={tool} && "$F" curl',
+        ):
+            self.both(command, "allow")
+        for command in (
+            # The literal itself is classified: staged code and transient runners stay denied.
+            f"F='{self.stage}/tool'; \"$F\" --body untrusted-run",
+            'F=npx; "$F" example-fixture',
+            f"F='{RUNNER}'; \"$F\" --workspace \"$(npx example-fixture)\" -- true",
+            # Conditional, rebound, scoped or computed values remain indirect.
+            f'test -e x && F={tool}; "$F" curl',
+            f'F={tool}; F=npx; "$F" curl',
+            f'F={tool}; read F; "$F" curl',
+            f'(F={tool}); "$F" curl',
+            f'if true; then F={tool}; fi; "$F" curl',
+            'F="$(command -v log-search)"; "$F" curl',
+            f'"$F" curl; F={tool}',
+        ):
+            self.both(command, "deny")
+
     def test_nested_codex_commands_keep_separate_workdirs(self):
         for source, expected in (
             ('await tools.exec_command({cmd:"npm view example-fixture version"});', "allow"),

@@ -80,6 +80,8 @@ interpreter input, and host execution involving
 =~/.local/share/agent-untrusted/=. Plain source inspection and package metadata
 remain available. The canonical =bin/untrusted-run= command is allowed per
 invocation; its host substitutions and following commands remain checked.
+A variable executable assigned once, unconditionally, to a literal earlier in
+the same command (=F=/path; "$F" ...=) is classified as that literal.
 Quoted data heredocs are distinguished from shell commands. Unsupported
 relevant shell forms deny without an approval prompt. This is bounded routing,
 not arbitrary-program analysis or an independent same-user security boundary.

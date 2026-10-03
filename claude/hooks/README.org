@@ -71,7 +71,9 @@ remain available. The canonical =bin/untrusted-run= command is allowed per
 invocation; its host substitutions and following commands remain checked.
 A variable executable assigned once, unconditionally, to a literal earlier in
 the same command (=F=/path; "$F" ...=) is classified as that literal.
-Quoted data heredocs are distinguished from shell commands. Unsupported
+Quoted data heredocs are distinguished from shell commands, including one
+owned by the last command on its line (=cd dir; python3 - <<'PY'=); an
+operator after =#= may be a comment, so that body stays in the scan. Unsupported
 relevant shell forms deny without an approval prompt. This is bounded routing,
 not arbitrary-program analysis or an independent same-user security boundary.
 The VM runner supplies the execution boundary. Synthetic hook decisions are

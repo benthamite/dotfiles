@@ -42,7 +42,8 @@ reviewed local workflows retain host execution. =AGENTS.md= states only the
 routing rule; staging and trust details live in the runner contract. The paired routing guard is
 registered in =hooks.json= for recognizable untrusted launchers and the
 designated staging directory. A variable executable assigned a literal earlier
-in the same command is classified as that literal. Its exact definition needs
+in the same command is classified as that literal; a quoted heredoc after
+=cd dir;= is data, as on its own line. Its exact definition needs
 native hook trust.
 See [[file:hooks/README.org][the hook contracts]] for coverage and [[file:../bin/README.org][the runner contract]] for prerequisites.
 

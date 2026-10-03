@@ -224,23 +224,27 @@ def literal_assignments(tokens):
 def literal_heredocs(source):
     """Remove quoted data/program bodies that are not shell command words.
 
-    Only a plain, single quoted-delimiter heredoc is recognized. Complex and
-    unquoted forms remain in the scan. Shell programs remain executable input.
-    General non-shell program analysis is outside this routing guard's scope.
+    Only a plain, single quoted-delimiter heredoc ending its line is
+    recognized; it belongs to the line's last simple command, which may follow
+    other commands (`cd dir; python3 - <<'PY'`). The rest of the line stays in
+    the scan. Complex and unquoted forms remain in the scan. Shell programs
+    remain executable input. General non-shell program analysis is outside
+    this routing guard's scope.
     """
     lines = source.splitlines(keepends=True)
     index = 0
     while index < len(lines):
-        match = re.fullmatch(r"([^<>;|&`\n]+)<<(-)?\s*(['\"])([A-Za-z_][A-Za-z0-9_]*)\3\s*", lines[index])
+        # A `#` could make the operator a comment, leaving the "body" as shell.
+        match = re.fullmatch(r"([^<>`(){}#\n]+)<<(-)?\s*(['\"])([A-Za-z_][A-Za-z0-9_]*)\3\s*", lines[index])
         if not match:
             index += 1
             continue
         prefix = match[1]
         commands = TOKENS._split_simple(TOKENS._tokenize(prefix))
-        if len(commands) != 1 or len(commands[0]) != 1 or not commands[0][0].words:
+        if not commands or not commands[-1][-1].words or prefix.rstrip().endswith(("|", "&", ";")):
             index += 1
             continue
-        base = Path(commands[0][0].words[0].text).name
+        base = Path(commands[-1][-1].words[0].text).name
         if base not in READERS | {"tee", "node", "ruby", "perl", "jq"} and not re.fullmatch(r"python[0-9.]*", base):
             index += 1
             continue

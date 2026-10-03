@@ -104,8 +104,8 @@ engine versions are refused until the seccomp default is rebased and verified.
 Provision the reviewed ARM64 image once:
 
 #+begin_src sh
-docker pull --platform linux/arm64 node@sha256:8d342e46d3b2883df69f797cb60fc71d8a0b65de65ddfbf4bf63fdc02049615f
-docker pull --platform linux/arm64 python@sha256:bbc491ed39611eede47b1058ad4afb9ea957fb3bf4a7f1b442c6a5628ab93bdc
+docker pull --platform linux/arm64 docker.io/library/node@sha256:8d342e46d3b2883df69f797cb60fc71d8a0b65de65ddfbf4bf63fdc02049615f
+docker pull --platform linux/arm64 docker.io/library/python@sha256:bbc491ed39611eede47b1058ad4afb9ea957fb3bf4a7f1b442c6a5628ab93bdc
 #+end_src
 
 Select =--runtime python= for the pinned Python 3.11.16 slim-bookworm image.

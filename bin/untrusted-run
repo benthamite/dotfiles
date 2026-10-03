@@ -18,12 +18,15 @@ import uuid
 
 DOCKER = "/usr/local/bin/docker"
 SECCOMP = Path(__file__).resolve().with_name("untrusted-run-seccomp.json")
+# Fully qualified references: after Docker Desktop's VM wakes from Resource
+# Saver, a short "node@sha256:..." lookup reports "No such image" for a present
+# image until the qualified name has been resolved (observed 2026-10-03).
 # Docker Official Image node:22.23.2-bookworm-slim, linux/arm64, verified 2026-09-04.
-IMAGE = "node@sha256:8d342e46d3b2883df69f797cb60fc71d8a0b65de65ddfbf4bf63fdc02049615f"
+IMAGE = "docker.io/library/node@sha256:8d342e46d3b2883df69f797cb60fc71d8a0b65de65ddfbf4bf63fdc02049615f"
 # Docker Official Image Python 3.11.16 slim-bookworm, linux/arm64, verified 2026-09-28.
 IMAGES = {
     "node": IMAGE,
-    "python": "python@sha256:bbc491ed39611eede47b1058ad4afb9ea957fb3bf4a7f1b442c6a5628ab93bdc",
+    "python": "docker.io/library/python@sha256:bbc491ed39611eede47b1058ad4afb9ea957fb3bf4a7f1b442c6a5628ab93bdc",
 }
 
 

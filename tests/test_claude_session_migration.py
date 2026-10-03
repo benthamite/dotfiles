@@ -290,6 +290,21 @@ class ClaudeSessionMigrationTests(unittest.TestCase):
         (self.target / self.transcript.name).write_bytes(jsonl({"sessionId": SID, "cwd": NEW}))
         self.assert_refused_without_changes(SID, "--project", NEW, reason="disagree about session origin")
 
+    def test_half_applied_migration_with_history_already_at_target_completes(self):
+        # An earlier run rewrote the shared history; the transcript was later
+        # restored to its old bucket and still names the old project.
+        self.history.write_bytes(jsonl({"sessionId": SID, "project": NEW, "display": "fixture"}))
+        result = self.apply(SID, "--project", NEW)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        moved = self.target / self.transcript.name
+        self.assertFalse(self.transcript.exists())
+        self.assertEqual([json.loads(line)["cwd"] for line in moved.read_text().splitlines()], [NEW])
+        self.assertEqual([json.loads(line)["project"] for line in self.history.read_text().splitlines()], [NEW])
+
+    def test_history_naming_a_third_project_still_refuses(self):
+        self.history.write_bytes(jsonl({"sessionId": SID, "project": OTHER, "display": "fixture"}))
+        self.assert_refused_without_changes(SID, "--project", NEW, reason="disagree about session origin")
+
     def test_concurrent_history_append_is_preserved_verbatim_after_rewrite(self):
         # Unrelated sessions keep appending to the shared history while the
         # rename runs; their lines must follow the rewritten preflight prefix.

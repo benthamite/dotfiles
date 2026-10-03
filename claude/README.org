@@ -492,7 +492,10 @@ do not establish live resume behavior.
 Its =--rename-history= mode moves prompt-history entries of a project whose
 transcripts no longer exist, once no old bucket remains. =bin/migrate-profile=
 uses both modes to move every retired Emacs profile's sessions into the current
-profile.
+profile. A transcript still naming the old project whose history already names
+the migration target counts as a half-applied earlier migration and is completed;
+history naming any third project still refuses. Origin: on 2026-09-27 the 8.3.0-dev
+buckets reappeared after their history had been rewritten, blocking 35 sessions.
 The paired Codex adapter allows single closed-session imports while unrelated
 sessions remain open, using SQLite transactions and consistent recovery backups.
 Its bulk rename mode retains the full-store offline checks.

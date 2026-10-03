@@ -182,9 +182,15 @@ def session_origin(rows: Rows, session_id: str, *, require_identity: bool) -> st
     return origin
 
 
-def establish_origin(rows: Rows, history: Rows, session_id: str) -> str:
+def establish_origin(rows: Rows, history: Rows, session_id: str, *, target: str | None = None) -> str:
+    """TARGET is the project a migration is moving the session to.  History
+    that already names it while the transcript still names the old project is a
+    half-applied earlier migration (history rewritten, transcript restored to
+    its old bucket), so the transcript's origin stands."""
     transcript = session_origin(rows, session_id, require_identity=True)
     recorded = history_origin(history, session_id)
+    if recorded is not None and recorded == target and transcript not in (None, target):
+        return transcript
     if transcript is not None and recorded is not None and transcript != recorded:
         raise MigrationError("Transcript and first history entry disagree about session origin")
     origin = transcript or recorded
@@ -391,7 +397,7 @@ def build_rename_plan(old: str, new: str, *, migrate_project_settings: bool = Fa
         raise MigrationError("No session or root subagent transcripts identify this project bucket")
     if any(path.name not in transcripts for path in sidecars):
         raise MigrationError("Orphan session sidecar has no transcript ownership evidence")
-    owners = {sid: establish_origin(rows, history, sid) for sid, (_path, rows) in transcripts.items()}
+    owners = {sid: establish_origin(rows, history, sid, target=new) for sid, (_path, rows) in transcripts.items()}
     expected = {old} if bucket == source else {old, new}
     if transcripts and (len(set(owners.values())) != 1 or not set(owners.values()).issubset(expected)):
         raise MigrationError("Unknown or mixed project origins share this encoded bucket")
@@ -537,7 +543,7 @@ def build_single_plan(session_id: str, project: str) -> tuple[MigrationPlan, dic
     source = matches[0]
     rows = read_rows(plan, source)
     history, history_status = history_rows(plan)
-    origin = establish_origin(rows, history, session_id)
+    origin = establish_origin(rows, history, session_id, target=project)
     if exists(target_dir):
         if source.parent != target_dir:
             plan.expect_absent(target_dir / source.name)

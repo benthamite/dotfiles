@@ -38,7 +38,8 @@ Retained project files and session history do not grant automatic project trust.
 * Instructions
 
 Unfamiliar code execution uses the shared =bin/untrusted-run= VM boundary;
-reviewed local workflows retain host execution. The paired routing guard is
+reviewed local workflows retain host execution. =AGENTS.md= states only the
+routing rule; staging and trust details live in the runner contract. The paired routing guard is
 registered in =hooks.json= for recognizable untrusted launchers and the
 designated staging directory. A variable executable assigned a literal earlier
 in the same command is classified as that literal. Its exact definition needs

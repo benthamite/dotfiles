@@ -121,7 +121,9 @@ or the required Linux runtime is unavailable, stop; do not retry on the host.
 The paired =audit-mac-app= ASAR extractors also require this path. Their locked
 dependency bootstrap runs before parsing; archive extraction itself has no network.
 
-Reviewed local tools and code retain host execution. Paired guards deny
+Reviewed local tools and code retain host execution; a repository's location
+alone does not make its code trusted. Stage untrusted downloads and sources in
+=~/.local/share/agent-untrusted/=. Paired guards deny
 recognizable direct host launchers and execution involving
 =~/.local/share/agent-untrusted=. These are routing checks, not a complete
 analysis of arbitrary interpreter code. The host agent remains trusted and

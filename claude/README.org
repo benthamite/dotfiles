@@ -88,7 +88,8 @@ API-key-authenticated Claude session.
 * Instructions and settings
 
 Unfamiliar code execution uses the shared =bin/untrusted-run= VM boundary;
-reviewed local workflows retain host execution. The guard engine's
+reviewed local workflows retain host execution. =CLAUDE.md= states only the
+routing rule; staging and trust details live in the runner contract. The guard engine's
 untrusted-execution policy, run for every Bash call, denies recognizable
 untrusted launchers and execution from the designated staging directory. A
 variable executable assigned a literal earlier in the same command is

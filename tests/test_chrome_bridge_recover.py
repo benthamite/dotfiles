@@ -5,6 +5,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -44,6 +45,10 @@ class RecoverTest(unittest.TestCase):
             setattr(M, name, value)
             self.addCleanup(setattr, M, name, old)
         self.wrapper, self.claude, self.manifest = wrapper, claude, manifest
+        self.slept = []
+        old_sleep = M.sleep
+        M.sleep = self.slept.append
+        self.addCleanup(setattr, M, "sleep", old_sleep)
         self.env = {"CLAUDE_CONFIG_DIR": "/Users/x/.claude-tlon", "TMPDIR": str(self.root)}
 
     def opened(self):
@@ -66,6 +71,21 @@ class RecoverTest(unittest.TestCase):
         self.assertIn("opened Chrome profile 'tlon'", text)
         self.assertIn("Retry the browser call now", text)
         self.assertNotIn("Native host:", text)
+        self.assertEqual(self.slept, [M.STARTUP_GRACE])  # the extension needs time to come up
+
+    def test_retries_are_spaced_and_reporting_waits_for_the_extension(self):
+        M.advice(event(), self.env)
+        stamp = self.root / "claude-chrome-recover-.claude-tlon.stamp"
+        os.utime(stamp, (time.time() - 30,) * 2)
+        text = M.advice(event(), self.env)
+        self.assertEqual(self.slept[-1], M.RETRY_GAP)
+        self.assertIn("keep retrying", text)
+        self.assertNotIn("report the facts", text)
+        os.utime(stamp, (time.time() - M.GIVE_UP_AFTER - 1,) * 2)
+        text = M.advice(event(), self.env)
+        self.assertIn("Now report the facts above", text)
+        self.assertEqual(len(self.slept), 2)  # no further wait once giving up
+        self.assertEqual(self.opened(), ["tlon about:blank"])
 
     def test_other_disconnection_forms_are_detected(self):
         for ev in (event(response="The hidden tabs_context_mcp lookup did not respond within 8s.",

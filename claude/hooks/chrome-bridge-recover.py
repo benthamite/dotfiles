@@ -13,8 +13,13 @@ one window away. This hook turns that into a deterministic recovery:
    `claude` binary exists (a stale path breaks the bridge for every account);
 2. map this session's config dir to its Chrome profile (chrome-extension-profiles.json)
    and open that profile with chrome-profile-open, at most once per 90 s;
-3. tell the model what was found and done, and to retry before reporting any
-   browser problem to the user.
+3. wait for the extension: it needs some seconds after its profile opens
+   before it answers, and an immediate retry used to fail and be reported to
+   Pablo as "Chrome won't connect" (2026-10-04). The hook sleeps until the
+   profile has been open STARTUP_GRACE seconds, and at least RETRY_GAP
+   between retries, within its 45 s timeout;
+4. tell the model what was found and done, and to retry; only once the
+   profile has been open GIVE_UP_AFTER seconds may it report a problem.
 
 It never blocks a tool call and prints nothing when the bridge is connected.
 """
@@ -35,6 +40,10 @@ LAUNCHER = DOTFILES / "bin" / "chrome-profile-open"
 MANIFEST = (Path.home() / "Library/Application Support/Google/Chrome/NativeMessagingHosts"
             / "com.anthropic.claude_code_browser_extension.json")
 REOPEN_INTERVAL = 90
+STARTUP_GRACE = 25
+RETRY_GAP = 10
+GIVE_UP_AFTER = 60
+sleep = time.sleep  # replaced in tests
 DISCONNECTED = re.compile(
     r"extension is not connected|did not respond within|"
     r"not connected to (?:this|any) (?:account|browser)", re.I)
@@ -81,18 +90,28 @@ def profile_alias(config_dir: str, profile_map: Path | None = None) -> str | Non
     return mapping.get(Path(config_dir).name)
 
 
-def open_profile(alias: str, stamp: Path) -> str:
-    """Open the profile unless it was opened moments ago; say which happened."""
+def open_profile(alias: str, stamp: Path) -> tuple[str, float | None]:
+    """Open the profile unless it was opened moments ago. Returns what
+    happened and the seconds since the profile was opened (None on failure)."""
     try:
-        if time.time() - stamp.stat().st_mtime < REOPEN_INTERVAL:
-            return f"opened Chrome profile '{alias}' less than {REOPEN_INTERVAL} s ago; not reopening"
+        age = time.time() - stamp.stat().st_mtime
+        if age < REOPEN_INTERVAL:
+            return f"opened Chrome profile '{alias}' {age:.0f} s ago; not reopening", age
     except OSError:
         pass
     r = subprocess.run([str(LAUNCHER), alias, "about:blank"], capture_output=True, text=True, timeout=30)
     if r.returncode != 0:
-        return f"FAILED to open Chrome profile '{alias}': {(r.stderr or r.stdout).strip()}"
+        return f"FAILED to open Chrome profile '{alias}': {(r.stderr or r.stdout).strip()}", None
     stamp.touch()
-    return f"opened Chrome profile '{alias}'"
+    return f"opened Chrome profile '{alias}'", 0.0
+
+
+def wait_for_extension(age: float) -> float:
+    """Sleep until the profile has been open STARTUP_GRACE seconds, and at
+    least RETRY_GAP; return the profile's age afterwards."""
+    pause = max(RETRY_GAP, STARTUP_GRACE - age)
+    sleep(pause)
+    return age + pause
 
 
 def advice(event: dict, env: dict) -> str | None:
@@ -106,11 +125,20 @@ def advice(event: dict, env: dict) -> str | None:
     alias = profile_alias(config_dir)
     if alias:
         stamp = Path(env.get("TMPDIR", "/tmp")) / f"claude-chrome-recover-{Path(config_dir).name}.stamp"
+        done, age = open_profile(alias, stamp)
         lines.append(f"- This session's account ({Path(config_dir).name}) uses the Chrome profile '{alias}': "
-                     + open_profile(alias, stamp) + ".")
-        lines.append("- Retry the browser call now (call tabs_context_mcp; allow a few seconds for the extension "
-                     "to connect). Do not tell the user the browser is unavailable, or guess at sign-in problems, "
-                     "unless it still fails after the retry; then report the facts above.")
+                     + done + ".")
+        if age is None:
+            lines.append("- Report the failure above to the user.")
+        elif age < GIVE_UP_AFTER:
+            age = wait_for_extension(age)
+            lines.append(f"- Waited until the profile had been open {age:.0f} s. Retry the browser call now "
+                         f"(tabs_context_mcp). The extension can take up to a minute to connect: keep retrying "
+                         f"while this hook keeps saying to, and do not tell the user the browser is unavailable "
+                         f"or guess at sign-in problems.")
+        else:
+            lines.append(f"- The profile has been open {age:.0f} s and the extension still does not answer. "
+                         "Now report the facts above to the user.")
     else:
         lines.append(f"- No Chrome profile is mapped for this session's config dir ({Path(config_dir).name}) in "
                      f"{PROFILE_MAP}. Ask the user once which Chrome profile's Claude extension is signed in to "

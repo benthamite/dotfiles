@@ -19,13 +19,7 @@ class RuntimeErrorDetected(Exception):
 
 
 def browser_launch_options(arguments):
-    """Return config flags for local session launches, None for maintenance."""
-    launch = browser_launch(arguments)
-    return None if launch is None else launch[0]
-
-
-def browser_launch(arguments):
-    """Return configuration flags and the actual local session command.
+    """Return config flags for local session launches, None for maintenance.
 
     Parse option values before identifying a command so a model or path named
     'plugin' does not accidentally exempt a real session from reconciliation.
@@ -42,7 +36,6 @@ def browser_launch(arguments):
     flags = []
     index = 0
     command_seen = False
-    command = None
     while index < len(arguments):
         arg = arguments[index]
         key = arg.split('=', 1)[0]
@@ -72,20 +65,12 @@ def browser_launch(arguments):
                     for item in arguments[index + 1:]):
                 return None
             if not command_seen and arg in {'exec', 'e', 'review', 'resume', 'fork', 'app-server'}:
-                command = arg
                 command_seen = True
                 index += 1
                 continue
             command_seen = True  # Prompt/session id; flags can still follow it.
         index += 1
-    return flags, command
-
-
-def consume_browser_client_pin(launch, environment):
-    """Consume the aware-client marker so nested tool launches cannot inherit it."""
-    marker = environment.pop('CODEX_RETAIN_BROWSER_SKILL', None)
-    return (launch is not None and launch[1] == 'app-server'
-            and marker == '1')
+    return flags
 
 
 # Picks the Chrome profile and passes that profile's stored extension token.
@@ -200,9 +185,7 @@ def main():
     arguments = sys.argv[1:]
     try:
         executable = snapshot(installed_package(), Path.home() / '.local/share/codex-runtimes')
-        launch = browser_launch(sys.argv[1:])
-        consume_browser_client_pin(launch, os.environ)
-        if launch is not None:
+        if browser_launch_options(arguments) is not None:
             arguments = with_browser_overrides(arguments, browser_overrides())
     except (OSError, ValueError, RuntimeErrorDetected) as error:
         print('codex-runtime: ' + str(error), file=sys.stderr)

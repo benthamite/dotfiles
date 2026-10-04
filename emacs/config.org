@@ -9487,6 +9487,7 @@ contain =AGENTS.md= or =CLAUDE.md=, including directories without Git repositori
          "~/My Drive/tlon/projects/ea.news"))
      ("" . ("~/repos/*" "~/repos/.worktrees/*/*"))))
   (agent-project-registry-root "/Users/pablostafforini/My Drive/Epoch/projects/")
+  (agent-chief-directory "~/My Drive/Epoch/")
   (agent-claude-org-todo-in-progress-keyword "DOING")
   (agent-claude-accounts '(("personal"  . "~/.claude-personal")
 			   ("personal2"  . "~/.claude-personal2")

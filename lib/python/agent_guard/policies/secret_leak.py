@@ -434,7 +434,10 @@ def _deny_process_output(reason: str) -> Result:
     return Result.deny(
         "BLOCKED: " + reason + ". Process arguments and environments can contain credentials. Use PID-only pgrep or "
         "ps with explicit safe columns such as pid,ppid,comm. Filtering or redirecting unsafe output does not remove "
-        "this restriction.")
+        "this restriction.\n\nTo wait for a process, keep its PID (`$!`) and poll `kill -0 PID`, or bracket one "
+        "character of a `pgrep -f` pattern, as in `pgrep -f '[w]orker.py run'`. Your command runs as "
+        "`zsh -c '<command>'`, so an unbracketed `pgrep -f` pattern matches that shell itself and a wait loop on it "
+        "never ends.")
 
 
 def _deny_function_body(reason: str) -> Result:

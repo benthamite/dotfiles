@@ -105,6 +105,11 @@ class ShellCommandTests(NoKnownSecrets):
         self.assertIn("Process arguments", bash("ps aux").reason)
         self.assertEqual(bash("ps -o pid,comm").decision, "allow")
 
+    def test_process_denial_offers_self_safe_waits(self):
+        self.assertIn("pgrep -f '[w]orker.py run'", bash("ps aux").reason)
+        self.assertEqual(bash("until ! pgrep -f '[w]orker.py run' >/dev/null; do sleep 5; done").decision, "allow")
+        self.assertEqual(bash("while kill -0 123; do sleep 5; done").decision, "allow")
+
     def test_allowlist_no_longer_skips_secret_shapes(self):
         # The hook allowed these before checking shapes; the port checks first.
         self.assertIn("(GitHub token)", bash(f"grep -r {GITHUB} .").reason)

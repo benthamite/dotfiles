@@ -88,6 +88,29 @@ def consume_browser_client_pin(launch, environment):
             and marker == '1')
 
 
+PLAYWRIGHT_MCP = Path.home() / '.local/share/playwright-mcp/node_modules/@playwright/mcp/cli.js'
+NODE = Path('/opt/homebrew/bin/node')
+
+
+def browser_overrides():
+    """Return config flags giving a local session Playwright MCP's browser.
+
+    The desktop app's Chrome plugin and node_repl server run components
+    inside ChatGPT.app that OpenAI documents only for the app and that move
+    with each release, so local sessions do not load them.  Playwright MCP's
+    extension mode drives the user's own Chrome through the Playwright MCP
+    Bridge extension instead.
+    """
+    values = {
+        'plugins.chrome@openai-bundled.enabled': False,
+        'mcp_servers.node_repl.enabled': False,
+        'mcp_servers.playwright.command': str(NODE),
+        'mcp_servers.playwright.args': [str(PLAYWRIGHT_MCP), '--extension'],
+    }
+    return [part for name, value in values.items()
+            for part in ('-c', name + '=' + json.dumps(value))]
+
+
 def installed_package():
     """Never search PATH: its first Codex entry is this launcher's shim."""
     for candidate in (Path('/opt/homebrew/bin/codex'), Path('/usr/local/bin/codex')):
@@ -176,17 +199,9 @@ def main():
     try:
         executable = snapshot(installed_package(), Path.home() / '.local/share/codex-runtimes')
         launch = browser_launch(sys.argv[1:])
-        pin_client = consume_browser_client_pin(launch, os.environ)
+        consume_browser_client_pin(launch, os.environ)
         if launch is not None:
-            from codex_browser_sync import prepare_launch, BrowserSyncError
-            try:
-                overrides = prepare_launch(
-                    Path(os.environ.get('CODEX_HOME', str(Path.home() / '.codex'))),
-                    executable, config_args=launch[0],
-                    pin_client=pin_client)
-                arguments = with_browser_overrides(arguments, overrides)
-            except BrowserSyncError as error:
-                raise RuntimeErrorDetected(str(error)) from error
+            arguments = with_browser_overrides(arguments, browser_overrides())
     except (OSError, ValueError, RuntimeErrorDetected) as error:
         print('codex-runtime: ' + str(error), file=sys.stderr)
         return 1

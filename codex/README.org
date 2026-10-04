@@ -170,48 +170,17 @@ The command-line =shell/shims/codex= launcher retains signed Homebrew runtimes
 so updates do not delete an executable backing a running CLI session. This
 protects CLI executable lifetime; it does not establish browser functionality.
 
-Before local session launches, the launcher reconciles Chrome's source and
-installed plugin with the signed desktop app owning the configured runtime.
-It derives the browser service and app-version settings from that same app,
-including when saved settings still name a previous release. Launch overrides
-are temporary: account configuration and unrelated service registrations remain
-unchanged. Saved runtime, module and helper-CLI paths count as the app's own when they lie
-inside the owning app bundle, even if a later release moved or removed them, so
-an app update never requires editing account configurations. Paths outside the
-app, custom services and foreign/shared marketplace paths are refused.
-Reconciliation preserves an existing =latest= cache alias when its own installer
-refresh removes it, after restoring any retained version it names. It accepts
-only sibling version targets and leaves a valid installer-created alias intact.
-This does not repair already-missing aliases, cover installers bypassing this
-launcher, or prove native-host compatibility after a plugin upgrade.
-
-The browser runtime, its modules, its matching app helper CLI, and the Chrome
-service bundle are retained as verified immutable copies. New servers use those
-paths, so a subsequent app replacement cannot remove those files.
-
-The helper CLI has two app layouts. Since ChatGPT.app 26.928 it is the
-=Resources/codex-cli= package (manifest =codex-package.json=, launcher
-=bin/codex= exec'ing a sibling =CodexCLI.app=); the whole package is retained
-and launches use its =bin/codex= launcher. Older apps ship
-a bare =Resources/codex=, retained with its =codex-code-mode-host= sibling. An
-unknown package =layoutVersion= or entrypoint is refused rather than guessed.
-
-The private =codex-extras= adapter opts Emacs sessions into client retention with
-=CODEX_RETAIN_BROWSER_SKILL=1=. For that direct app-server launch only, the
-launcher disables the mutable Chrome plugin through a process config override.
-Before starting or resuming a thread, Emacs registers the retained bundle's
-skills through =skills/extraRoots/set= and waits for acknowledgement. The
-retained =chrome:control-chrome= skill then imports its matching retained client;
-later roots updates preserve that process's pinned directory. Invalid retained
-assets or a rejected roots request stop thread startup with an explicit error.
-This integration lives entirely in dotfiles; the public Emacs Codex package
-does not contain the retained-browser policy or depend on this configuration.
-
-Ordinary CLI/exec and other app-server clients do not opt in. Their client
-import still uses the installed plugin cache, which separate desktop cleanup
-can remove. Existing servers keep their original paths; this integration does
-not reload them. Retention covers local component lifetime, not extension
-disconnections, upstream protocol changes, or network outages.
+Local sessions get their browser from Playwright MCP, not from the desktop
+app. The launcher adds process config overrides to every local session launch:
+they disable the =chrome@openai-bundled= plugin and the app-generated
+=node_repl= MCP server, whose components live inside ChatGPT.app, move with
+each app release and are documented only for the app, and they register a
+=playwright= MCP server. That server runs a pinned =@playwright/mcp= installed
+in =~/.local/share/playwright-mcp= (outside Drive) with =--extension=, so it
+drives the user's own Chrome, logged-in profile and visible tabs, through
+Microsoft's Playwright MCP Bridge extension. On the first browser action it
+opens the extension's connect page in Chrome for approval. The desktop app
+keeps its own Chrome plugin; account configurations are not edited.
 
 Named-profile runtime settings and effective Chrome availability are inspected
 through the CLI's profile-aware diagnostics; installation metadata uses the

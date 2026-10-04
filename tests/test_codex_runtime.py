@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+import json
 import unittest
 from unittest.mock import patch
 
@@ -36,6 +37,16 @@ class RuntimeTests(unittest.TestCase):
             environment = {'CODEX_RETAIN_BROWSER_SKILL': '1', 'OTHER': 'preserved'}
             runtime.consume_browser_client_pin(launch, environment)
             self.assertEqual(environment, {'OTHER': 'preserved'})
+
+    def test_session_browser_is_playwright_not_desktop_internals(self):
+        overrides = runtime.browser_overrides()
+        flags = overrides[1::2]
+        self.assertEqual(overrides[::2], ['-c'] * len(flags))
+        self.assertIn('plugins.chrome@openai-bundled.enabled=false', flags)
+        self.assertIn('mcp_servers.node_repl.enabled=false', flags)
+        args = json.loads(next(f for f in flags if f.startswith('mcp_servers.playwright.args='))
+                          .split('=', 1)[1])
+        self.assertEqual(args, [str(runtime.PLAYWRIGHT_MCP), '--extension'])
 
     def test_browser_overrides_win_without_rewriting_literal_prompt(self):
         overrides = ['-c', 'mcp_servers.node_repl.env.browser_version="new"']

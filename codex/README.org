@@ -180,7 +180,8 @@ in =~/.local/share/playwright-mcp= (outside Drive) with =--extension=, so it
 drives the user's own Chrome, logged-in profile and visible tabs, through
 Microsoft's Playwright MCP Bridge extension. On the first browser action it
 opens the extension's connect page in Chrome for approval. The desktop app
-keeps its own Chrome plugin; account configurations are not edited.
+keeps its own Chrome plugin; account configurations are not edited. The global
+=AGENTS.md= names the server's =browser_*= tools as Codex's browser control.
 
 Named-profile runtime settings and effective Chrome availability are inspected
 through the CLI's profile-aware diagnostics; installation metadata uses the

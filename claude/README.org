@@ -729,10 +729,14 @@ Claude has events with no Codex equivalent here, including =Read=, =Grep=,
 =Glob=, =Skill=, Notification, and Chrome-specific events. Those are explicit
 manifest differences, not missing peers.
 
-=hooks/notify-emacs-session-end.sh= (Stop) drops a payload whose =session_id=
-differs from the id the agent package records for the session in its =.sid=
-file (since 2026-10-03). A =claude -p= run from a session's shell inherits
-=CLAUDE_BUFFER_NAME=, and its Stop used to mark the parent waiting mid-turn.
+Since 2026-10-03 the agent package passes its status line and its Emacs
+notification hooks (Stop, Notification, turn state, background tasks) to each
+Claude session it starts through =--settings=, so =~/.claude/settings.json=
+registers none of them. =hooks/notify-emacs-session-end.sh= and
+=hooks/notify-emacs-notification.sh= are no longer registered: with them, every
+event reached Emacs twice. A Stop from a =claude -p= run inside a session is
+dropped by the agent package itself, which compares the payload's
+=session_id= with the id it records for the session.
 
 Since 2026-10-01 every PreToolUse guard runs in one Python process:
 =~/.claude/settings.json= registers only =hooks/agent-guard.sh=, which runs the

@@ -44,9 +44,12 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(overrides[::2], ['-c'] * len(flags))
         self.assertIn('plugins.chrome@openai-bundled.enabled=false', flags)
         self.assertIn('mcp_servers.node_repl.enabled=false', flags)
+        command = json.loads(next(f for f in flags if f.startswith('mcp_servers.playwright.command='))
+                             .split('=', 1)[1])
+        self.assertTrue(command.endswith('/bin/playwright-mcp-launch'))
         args = json.loads(next(f for f in flags if f.startswith('mcp_servers.playwright.args='))
                           .split('=', 1)[1])
-        self.assertEqual(args, [str(runtime.PLAYWRIGHT_MCP), '--extension'])
+        self.assertEqual(args, ['--output-dir', str(runtime.PLAYWRIGHT_OUTPUT)])
 
     def test_browser_overrides_win_without_rewriting_literal_prompt(self):
         overrides = ['-c', 'mcp_servers.node_repl.env.browser_version="new"']

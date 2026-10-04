@@ -175,11 +175,22 @@ app. The launcher adds process config overrides to every local session launch:
 they disable the =chrome@openai-bundled= plugin and the app-generated
 =node_repl= MCP server, whose components live inside ChatGPT.app, move with
 each app release and are documented only for the app, and they register a
-=playwright= MCP server. That server runs a pinned =@playwright/mcp= installed
-in =~/.local/share/playwright-mcp= (outside Drive) with =--extension=, so it
-drives the user's own Chrome, logged-in profile and visible tabs, through
-Microsoft's Playwright MCP Bridge extension. On the first browser action it
-opens the extension's connect page in Chrome for approval. The desktop app
+=playwright= MCP server. =bin/playwright-mcp-launch= starts the pinned
+=@playwright/mcp= installed in =~/.local/share/playwright-mcp= (outside Drive)
+with =--extension=, so it drives the user's own Chrome, logged-in profile and
+visible tabs, through Microsoft's Playwright MCP Bridge extension, and writes
+page snapshots to =~/.cache/playwright-mcp= rather than the session directory.
+
+The extension asks for approval on every connection unless the server presents
+the token of the profile it connects to; each profile has its own token, and a
+token from another profile is rejected rather than prompted for. The launcher
+therefore fixes the profile at server start (the one Chrome last used if it has
+the extension, else the first that does, which is Playwright's own rule) and
+passes that profile's token from the personal 1Password =Automation= item
+=playwright-mcp-token-<profile directory>= (e.g. =playwright-mcp-token-profile-9=),
+read through the =op-automations= cache. A profile without a stored token gets
+the approval page. After regenerating a token, store the new one and forget
+its cached reference. The desktop app
 keeps its own Chrome plugin; account configurations are not edited. The global
 =AGENTS.md= names the server's =browser_*= tools as Codex's browser control.
 

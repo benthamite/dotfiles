@@ -1,0 +1,98 @@
+#!/usr/bin/python3
+"""Start Playwright MCP in extension mode on the profile Chrome last used.
+
+The Playwright MCP Bridge extension asks for approval on every connection
+unless the server presents that profile's token, and each profile has its own
+token: a token from another profile is rejected outright, not prompted for.
+So this launcher fixes the profile when the server starts (the one Chrome last
+used, if it has the extension, else the first that does, which is Playwright's
+own rule) and passes the token stored for exactly that profile.
+
+Tokens live in the personal 1Password Automation vault as items titled
+`playwright-mcp-token-<profile directory>` (e.g. `...-profile-9`), stored with
+the extension's copy button, so the value may carry its
+`PLAYWRIGHT_MCP_EXTENSION_TOKEN=` prefix.  A profile without a stored token
+gets the extension's approval dialog, and stderr says so.
+"""
+
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+
+sys.dont_write_bytecode = True  # keep __pycache__ out of the Drive-synced tree
+
+EXTENSION_ID = 'mmlmfjhmonkocbjadbfplnigmagldckm'
+CHROME = Path.home() / 'Library/Application Support/Google/Chrome'
+SERVER = Path.home() / '.local/share/playwright-mcp/node_modules/@playwright/mcp/cli.js'
+NODE = Path('/opt/homebrew/bin/node')
+OP_AUTOMATIONS = Path(__file__).resolve().parent / 'op-automations'
+TOKEN_PREFIX = 'PLAYWRIGHT_MCP_EXTENSION_TOKEN='
+
+
+def profiles(user_data):
+    """Return Chrome profile directories in Playwright's order."""
+    names = [p.name for p in user_data.iterdir()
+             if p.name == 'Default' or re.fullmatch(r'Profile \d+', p.name)]
+    return sorted(names, key=lambda n: -1 if n == 'Default' else int(n.split()[1]))
+
+
+def has_extension(profile_dir):
+    """Return whether the Playwright extension is installed in PROFILE_DIR."""
+    return (profile_dir / 'Extensions' / EXTENSION_ID).is_dir()
+
+
+def chosen_profile(user_data):
+    """Return the last-used profile with the extension, else the first one."""
+    try:
+        last = json.loads((user_data / 'Local State').read_text())['profile']['last_used']
+    except (OSError, ValueError, KeyError, TypeError):
+        last = None
+    if isinstance(last, str) and has_extension(user_data / last):
+        return last
+    return next((n for n in profiles(user_data) if has_extension(user_data / n)), None)
+
+
+def token_title(profile):
+    """Return the 1Password item title holding PROFILE's token."""
+    return 'playwright-mcp-token-' + profile.lower().replace(' ', '-')
+
+
+def read_token(profile, run=subprocess.run):
+    """Return PROFILE's stored token without its copy prefix, or None."""
+    ref = 'op://Automation/' + token_title(profile) + '/credential'
+    try:
+        result = run([str(OP_AUTOMATIONS), '@personal', 'cache', 'read', ref],
+                     stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    value = result.stdout.strip() if result.returncode == 0 else ''
+    if value.startswith(TOKEN_PREFIX):
+        value = value[len(TOKEN_PREFIX):]
+    return value or None
+
+
+def main(argv):
+    """Exec the Playwright MCP server with the chosen profile and its token."""
+    env = dict(os.environ)
+    args = [str(NODE), str(SERVER), '--extension', *argv]
+    profile = chosen_profile(CHROME)
+    if profile is None:
+        print('playwright-mcp-launch: no Chrome profile has the Playwright extension',
+              file=sys.stderr)
+    else:
+        args += ['--profile-dir-name', profile]
+        token = read_token(profile)
+        if token:
+            env['PLAYWRIGHT_MCP_EXTENSION_TOKEN'] = token
+        else:
+            print('playwright-mcp-launch: no token stored for ' + profile
+                  + ' (1Password Automation/' + token_title(profile)
+                  + '); Chrome will ask for approval', file=sys.stderr)
+    os.execve(args[0], args, env)
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])

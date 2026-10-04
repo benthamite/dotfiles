@@ -26,7 +26,7 @@ documented in [[file:../agents/README.org][the agent manual]]. Skill names and t
 | =claude-stage-hook= | Stages explicitly marked Claude final-message commands on the user’s paste surfaces. |
 | =codex-config-prune= | Removes stale project-trust and hook-state entries from Codex configuration. |
 | =codex-protocol-watch= | Checks whether Codex has added protocol methods unsupported by the Emacs client. |
-| =codex-runtime= | Retains the installed Homebrew Codex runtime and reconciles stale account-local Chrome plugins with their signed app before local sessions start. |
+| =codex-runtime= | Retains the installed Homebrew Codex runtime, and gives local sessions Playwright MCP (via =playwright-mcp-launch=) in place of the desktop app's Chrome plugin and =node_repl= server. |
 | =cr-pull-pinned= | Pulls and verifies the Taiga job pinned by a CR task. |
 | =cr-review-worktree= | Creates the canonical read-only review worktree for a CR task. |
 | =cr-taiga= | Maintains the private CR Taiga run ledger and exact-job comparisons. |
@@ -205,6 +205,7 @@ Mail activation and credential lookup are documented further in
 | =install-epoch-doc-handler= | Safely builds, signs, installs, and registers the local =epoch-doc:= URL handler. |
 | =mdfind-wrapper= | Runs Spotlight’s =mdfind= while suppressing its known query-parser noise. |
 | =paper-fetch= | Downloads papers through shared acquisition routes, with browser jobs for challenged hosts. Its =book-*= commands inventory, register, stage, inspect and compare explicitly reviewed PDFs without writing bibliography data. Uses a dedicated runtime; [[file:../docs/book-acquisition.md][the acquisition contract]] defines manifests and statuses. |
+| =playwright-mcp-launch= | Starts the pinned Playwright MCP server in extension mode on the Chrome profile last used (else the first with the Playwright extension), passing that profile's extension token from the personal 1Password =Automation= item =playwright-mcp-token-<profile directory>= so Codex's browser connects without an approval page; a profile without a stored token gets the page. =codex-runtime= registers it for local Codex sessions. |
 | =pinentry-labeled= | Wraps =pinentry-mac= for =gpg-agent=, prefixing each dialog with the secret it wants: YubiKey PIN, YubiKey Admin PIN, or GPG passphrase. |
 | =personal-updates= | Applies the scheduled and manual update policy documented in [[file:../macos/README.org][the macOS README]]. |
 | =sync-google-birthdays= | Mirrors reconciled BBDB birthdays into the reminder-free personal Google calendar =Birthdays (managed)=. |

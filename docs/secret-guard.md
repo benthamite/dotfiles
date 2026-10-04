@@ -72,7 +72,7 @@ screenshot.
 | 09-30 | Google OAuth client secret, refresh token | a | `which` printed a function from `.zshenv-secrets`; rotated 09-30 (old secret deleted, old token revoked); path closed by the function-body policy, 02f475152 |
 | 10-02 | Lever Postings API key | d | `get_page_text` on Lever's API-credentials settings page, which displays it in plain text |
 | 10-02 | Cloudflare Access service-token secret (first 5 characters) | d | `javascript_tool` listed button labels on the token's one-time details page, which embed the header and value |
-| 10-04 | Playwright MCP Bridge extension token (one Chrome profile) | d | Pablo's screenshot of the extension's connect page, which displays the token; regeneration recommended |
+| 10-04 | Playwright MCP Bridge extension token (one Chrome profile) | d | Pablo's screenshot of the extension's connect page, which displays the token; regenerated 10-04 before it was stored |
 
 Tally: page/screenshot 9, command output 7, file read 3, **typed literal 0**.
 

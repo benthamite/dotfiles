@@ -114,6 +114,20 @@ def _cli_package(resources):
     return package
 
 
+def _inside_app(app, value):
+    """Return whether saved setting VALUE names a path inside APP.
+
+    The path need not exist: settings the desktop app wrote for an earlier
+    release may name files a later release moved or removed.  Such settings
+    are still the app's own, and launch overrides replace them with paths
+    derived from the installed app; only paths outside it are custom.
+    """
+    if not isinstance(value, str) or not value:
+        return False
+    path = Path(value)
+    return path.is_absolute() and ".." not in path.parts and path.is_relative_to(app)
+
+
 def _inspect(home, executable, config_args=()):
     _unlinked(home)
     plugins = _run(executable, home, ["plugin", "list", "--json"], config_args)
@@ -154,13 +168,13 @@ def _inspect(home, executable, config_args=()):
     cli_package = _cli_package(resources)
     cli_path = cli_package / "bin/codex" if cli_package else resources / "codex"
     if (not command.is_file() or not node_path.is_file() or not module_path.is_dir()
-            or env.get("NODE_REPL_NODE_PATH") != str(node_path)
-            or env.get("NODE_REPL_NODE_MODULE_DIRS") != str(module_path)):
+            or not _inside_app(app, env.get("NODE_REPL_NODE_PATH"))
+            or not _inside_app(app, env.get("NODE_REPL_NODE_MODULE_DIRS"))):
         raise BrowserSyncError("Custom browser runtime paths require explicit reconciliation")
     _unlinked(node_path)
     _unlinked(module_path)
     _unlinked(cli_path)
-    if not cli_path.is_file() or env.get("CODEX_CLI_PATH") != str(cli_path):
+    if not cli_path.is_file() or not _inside_app(app, env.get("CODEX_CLI_PATH")):
         raise BrowserSyncError("Custom browser helper CLI requires explicit reconciliation")
     bundle = app / "Contents/Resources/plugins/openai-bundled/plugins/chrome"
     bundle_files = _inventory(bundle)

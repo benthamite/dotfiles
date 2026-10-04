@@ -434,6 +434,23 @@ class BrowserSyncTests(unittest.TestCase):
         with self.assertRaisesRegex(sync.BrowserSyncError, "Custom browser runtime"):
             self.launch_values()
 
+    def test_saved_app_paths_from_an_earlier_release_are_replaced(self):
+        # ChatGPT.app 26.928 moved Resources/codex into a codex-cli package;
+        # homes it has not reconciled still name the removed file.
+        env = self.runtime["transport"]["env"]
+        env["CODEX_CLI_PATH"] = str(self.app / "Contents/Resources/moved/codex")
+        env["NODE_REPL_NODE_PATH"] = str(self.app / "Contents/Resources/old_node/bin/node")
+        values = self.launch_values()
+        self.assertEqual(Path(values["mcp_servers.node_repl.env.CODEX_CLI_PATH"]).read_text(),
+                         "signed app CLI")
+        self.assertIn("retained-runtime", values["mcp_servers.node_repl.env.NODE_REPL_NODE_PATH"])
+
+    def test_paths_escaping_the_app_are_custom(self):
+        env = self.runtime["transport"]["env"]
+        env["CODEX_CLI_PATH"] = str(self.app / "Contents/Resources/../../../codex")
+        with self.assertRaisesRegex(sync.BrowserSyncError, "Custom browser helper CLI"):
+            self.launch_values()
+
     def test_custom_browser_helper_cli_is_not_replaced(self):
         self.runtime["transport"]["env"]["CODEX_CLI_PATH"] = "/custom/codex"
         with self.assertRaisesRegex(sync.BrowserSyncError, "Custom browser helper CLI"):

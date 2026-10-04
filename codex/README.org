@@ -175,7 +175,10 @@ installed plugin with the signed desktop app owning the configured runtime.
 It derives the browser service and app-version settings from that same app,
 including when saved settings still name a previous release. Launch overrides
 are temporary: account configuration and unrelated service registrations remain
-unchanged. Custom services and foreign/shared marketplace paths are refused.
+unchanged. Saved runtime, module and helper-CLI paths count as the app's own when they lie
+inside the owning app bundle, even if a later release moved or removed them, so
+an app update never requires editing account configurations. Paths outside the
+app, custom services and foreign/shared marketplace paths are refused.
 Reconciliation preserves an existing =latest= cache alias when its own installer
 refresh removes it, after restoring any retained version it names. It accepts
 only sibling version targets and leaves a valid installer-created alias intact.
@@ -189,7 +192,7 @@ paths, so a subsequent app replacement cannot remove those files.
 The helper CLI has two app layouts. Since ChatGPT.app 26.928 it is the
 =Resources/codex-cli= package (manifest =codex-package.json=, launcher
 =bin/codex= exec'ing a sibling =CodexCLI.app=); the whole package is retained
-and =CODEX_CLI_PATH= must name =Resources/codex-cli/bin/codex=. Older apps ship
+and launches use its =bin/codex= launcher. Older apps ship
 a bare =Resources/codex=, retained with its =codex-code-mode-host= sibling. An
 unknown package =layoutVersion= or entrypoint is refused rather than guessed.
 

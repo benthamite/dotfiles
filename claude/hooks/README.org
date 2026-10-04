@@ -322,7 +322,7 @@ Claude's wrapping of introspection output through =redact-secrets.sh=.
 | =commit-file-selection.py= | Resolves explicit commit selections with a disposable index, leaving shared staging untouched. |
 | =load-elisp-after-edit.sh= | Rebuilds and reloads an edited Elisp package through the live Emacs session, except for test-only files or while Git has an active operation or unmerged index entries. |
 | =notify-emacs-notification.sh= | Forwards a Claude Notification event to Emacs. |
-| =notify-emacs-session-end.sh= | Forwards a Claude Stop event to Emacs. |
+| =notify-emacs-session-end.sh= | Forwards a Claude Stop event to Emacs, dropping one from another session (a =claude -p= the session ran) per the agent package's =.sid= file. |
 | =redact-secrets.sh= | Masks recognized secret literals (including Google OAuth =GOCSPX-= client secrets, =1//= refresh tokens and =ya29.= access tokens) in a command's combined output; the guard engine's output wrapping (=agent_guard.policies.dispatcher=) routes credential-prone commands, including shell introspection (=which=, =type=, =whence=, =functions=), through it. |
 | =redact-tool-output.py= | After every tool call, masks known secret values (=bin/secret-index=), drops credential-page screenshots and fails closed; also masks the result's text through =redact-secrets.sh= and returns it as =updatedToolOutput= / =updatedMCPToolOutput=, so credentials in tool output (a Chrome =find= echo, a 1Password title) never reach the model or the transcript. |
 | =regenerate-coverage-map.sh= | Refreshes the CR rubric visualizer coverage map after relevant edits. |

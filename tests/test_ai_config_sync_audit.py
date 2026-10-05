@@ -87,7 +87,7 @@ class AiConfigSyncAuditTests(unittest.TestCase):
             self.module.normalized_global_instruction_text(codex),
         )
         self.assertNotIn("claude-in-chrome", codex.read_text())
-        self.assertIn("`mcp__node_repl__js`", codex.read_text())
+        self.assertIn("`playwright` MCP server's `browser_*` tools", codex.read_text())
 
     def test_documentation_audit_captures_stdout_and_stderr(self):
         root = self.make_repo(["bin/docs-audit"])

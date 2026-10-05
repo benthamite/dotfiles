@@ -451,7 +451,11 @@ permission to repair, rewrite history or publish.
 The project-local =config-audit= respects a requested subset and includes
 procedural bodies when full skill audits are requested. It distinguishes
 skill discovery from instruction loading and checks actual hook coverage
-before recommending removal of an overlapping instruction.
+before recommending removal of an overlapping instruction. Its context-delivery
+criterion checks that each rule reaches the agent when needed (resolving
+pointers, skill triggers, hook messages), flags unregistered or over-blocking
+hooks from rendered-log =BLOCKED= counts, and requires a caller search before
+any deletion.
 
 The project-local =find-skills= — disabled, see =skills-disabled.json= — checks
 the selected agent and project/global destination before installation. It

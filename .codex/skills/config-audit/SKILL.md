@@ -1,6 +1,6 @@
 ---
 name: config-audit
-description: Audit agent configuration for redundancy, conflicts, dead weight, staleness, and instruction drift across CLAUDE.md or AGENTS.md, skills, memory, hooks, settings, and docs.
+description: Audit agent configuration for redundancy, conflicts, dead weight, staleness, instruction drift, and context delivery across CLAUDE.md or AGENTS.md, skills, memory, hooks, settings, and docs. Use also to check whether rules reach the agent when needed (context pointers, skill triggers, hook messages) and to find unregistered or over-blocking hooks.
 ---
 
 # Audit agent configuration
@@ -84,7 +84,7 @@ Assign each rule a short ID and note which file it came from.
 
 ## Phase 3: Analysis
 
-Evaluate every extracted rule on five criteria. Present the results in a table grouped by source file.
+Evaluate every extracted rule on six criteria. Present the results in a table grouped by source file.
 
 ### Criterion 1: Default behavior
 
@@ -144,6 +144,32 @@ Telltale signs:
 
 Note: most well-written rules with examples or specific constraints will pass this criterion. It mainly catches hastily written preferences.
 
+### Criterion 6: Context delivery
+
+"Will this rule be in front of the agent when the situation arises, in every runtime it applies to?"
+
+For each rule in always-loaded files, context docs and skills, name what delivers it at the moment it is needed: always-loaded text, a pointer, a skill description trigger, or a hook message. Then check:
+
+- Pointer paths resolve from where the file is loaded (a relative path in a
+  file loaded from `~/.claude/` or `~/.codex/` may not), and the target section
+  exists.
+- A pointer's trigger covers the real situations, not just the obvious one
+  (for example, a service-access pointer that must also fire for browser
+  automation of that service).
+- A rule worded for one runtime ("Claude", one tool's names) that applies to
+  all runtimes.
+- Hooks that are unregistered (no `settings*.json` or `hooks.json` entry),
+  that duplicate another commit gate, or that block harmless commands. Sample
+  rendered session logs (`~/.claude/rendered/`) and count `BLOCKED` results per
+  policy to find false positives.
+- Vendor or plugin skills that fire in the same situation as a local skill
+  and give contradictory directions.
+
+Before recommending deletion of a file, hook or pointer, search callers,
+registrations, installers and tests (this repo, live settings, Elpaca package
+sources); docs and manifest descriptions are not callers. Recommend each fix
+per `agents/instruction-placement.org`.
+
 ## Phase 4: Output
 
 Keep the user-facing report proportional to the findings. For comprehensive
@@ -153,7 +179,7 @@ the requested scope.
 
 ### 1. Per-rule analysis table
 
-For each source file, a table with columns: Rule (short description), Default?, Conflicts?, Repeats?, Reactive?, Vague?. Use checkmarks or short notes in each cell.
+For each source file, a table with columns: Rule (short description), Default?, Conflicts?, Repeats?, Reactive?, Vague?, Delivered?. Use checkmarks or short notes in each cell.
 
 ### 2. Cut list
 

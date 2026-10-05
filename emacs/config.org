@@ -1455,6 +1455,7 @@ has connection termination."
 (use-feature server
   :demand t
   :config
+  (advice-add 'make-network-process :filter-args #'simple-extras-server-raise-backlog)
   ;; A test instance never starts a server: if the live server is busy,
   ;; `server-running-p' reports it gone, and the test instance would take
   ;; over the socket and delete it on exit, orphaning the live session.

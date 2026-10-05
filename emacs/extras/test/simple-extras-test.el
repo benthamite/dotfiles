@@ -927,5 +927,57 @@ way back to the contents of one killed by accident."
     (simple-extras-new-buffer-enable-auto-save)
     (should-not buffer-auto-save-file-name)))
 
+;;;; Server connection queue
+
+(ert-deftest simple-extras-test-server-raise-backlog-filters-only-server-socket ()
+  "Only the `server-start' socket gets the longer connection queue."
+  (require 'server)
+  (let ((server-name "server"))
+    (should (equal (simple-extras-server-raise-backlog
+                    '(:name "server" :server t :family local))
+                   `(:name "server" :server ,simple-extras-server-backlog
+                           :family local)))
+    (should (equal (simple-extras-server-raise-backlog
+                    '(:name "other" :server t))
+                   '(:name "other" :server t)))
+    (should (equal (simple-extras-server-raise-backlog
+                    '(:name "server" :host "localhost" :service 80))
+                   '(:name "server" :host "localhost" :service 80)))))
+
+(ert-deftest simple-extras-test-server-backlog-survives-busy-emacs ()
+  "Concurrent clients of a busy server wait instead of being refused."
+  (require 'server)
+  (let* ((server-socket-dir (make-temp-file "sx" t))
+         (server-name "t")
+         (server-process nil)
+         (server-clients nil)
+         (clients nil))
+    (advice-add 'make-network-process :filter-args
+                #'simple-extras-server-raise-backlog)
+    (unwind-protect
+        (progn
+          (server-start nil t)
+          (dotimes (i 12)
+            (push (make-process
+                   :name (format "sx-client-%d" i)
+                   :command (list (executable-find "emacsclient")
+                                  "-s" (expand-file-name "t" server-socket-dir)
+                                  "--eval" "1")
+                   :buffer nil :noquery t)
+                  clients))
+          ;; Stay busy, as a long synchronous command would, so no
+          ;; connection is accepted until every client has queued.
+          (let ((end (+ (float-time) 2)))
+            (while (< (float-time) end)))
+          (let ((deadline (+ (float-time) 20)))
+            (while (and (seq-some #'process-live-p clients)
+                        (< (float-time) deadline))
+              (accept-process-output nil 0.1)))
+          (should (equal (mapcar #'process-exit-status clients)
+                         (make-list 12 0))))
+      (advice-remove 'make-network-process #'simple-extras-server-raise-backlog)
+      (server-stop)
+      (delete-directory server-socket-dir t))))
+
 (provide 'simple-extras-test)
 ;;; simple-extras-test.el ends here

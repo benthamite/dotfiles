@@ -1188,5 +1188,26 @@ session is never touched."
        (not (process-get client 'frame))
        (not (process-get client 'tty))))
 
+(defconst simple-extras-server-backlog 128
+  "Length of the pending-connection queue of the Emacs server socket.
+`server-start' leaves it at the `make-network-process' default of 5.  While
+Emacs is busy it accepts no connections, so a few concurrent `emacsclient' calls
+fill that queue, and on macOS every further call fails at once with \"Connection
+refused\", as if the server were down.  With a longer queue those calls wait
+until Emacs is free.  The kernel caps the value at `kern.ipc.somaxconn'.")
+
+;;;###autoload
+(defun simple-extras-server-raise-backlog (args)
+  "Return ARGS with the Emacs server's connection queue lengthened.
+ARGS are the arguments of a `make-network-process' call.  When they create the
+server socket of `server-start', set its queue length to
+`simple-extras-server-backlog'; return any other ARGS unchanged.  Intended as
+`:filter-args' advice for `make-network-process'."
+  (if (and (eq (plist-get args :server) t)
+	   (boundp 'server-name)
+	   (equal (plist-get args :name) server-name))
+      (plist-put (copy-sequence args) :server simple-extras-server-backlog)
+    args))
+
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

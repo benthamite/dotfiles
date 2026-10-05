@@ -448,6 +448,19 @@ The command ~simple-extras-reap-closed-server-clients~ removes entries from ~ser
 #+findex: simple-extras-server-client-abandoned-p
 The predicate ~simple-extras-server-client-abandoned-p~ decides which entries qualify: the connection must be ~closed~ and the client must own no buffer, frame or tty, so a live editing session is never disturbed.
 
+** Server connection queue
+:PROPERTIES:
+:CUSTOM_ID: h:server-connection-queue
+:END:
+
+#+findex: simple-extras-server-raise-backlog
+#+vindex: simple-extras-server-backlog
+The function ~simple-extras-server-raise-backlog~ is =:filter-args= advice for ~make-network-process~. When the call creates the socket of ~server-start~, it sets the socket's pending-connection queue to ~simple-extras-server-backlog~ (128) instead of the default of 5; other calls pass through unchanged. The configuration installs the advice before starting the server.
+
+While Emacs is busy it accepts no new connections. With a queue of 5, a handful of concurrent =emacsclient= calls fill it, and on macOS every further call fails at once with "Connection refused", as though the server had died. With agents calling =emacsclient= routinely, this produced recurring false reports that the server needed restarting. With the longer queue those calls wait until Emacs is free, subject to their own timeouts. The kernel caps the value at =kern.ipc.somaxconn=.
+
+The advice only affects a server started after it is installed. To apply it to a running server without the client prompt, call ~(server-start nil t)~: this replaces only the listening socket, and connections already open keep running.
+
 ** Auto-save for new buffers
 :PROPERTIES:
 :CUSTOM_ID: h:auto-save-for-new-buffers

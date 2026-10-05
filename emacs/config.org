@@ -9472,8 +9472,14 @@ contain =AGENTS.md= or =CLAUDE.md=, including directories without Git repositori
                                    ("update-log" :args "--auto" :receipt t)))
   (agent-sync-theme t)
   (agent-project-sources
-   '(("epoch"
-      . ("/Users/pablostafforini/My Drive/Epoch/projects/shared/project-registry.json"))
+   `(("epoch"
+      . ,(delete-dups
+          (list (file-name-concat paths-dir-epoch-workspace
+                                  "projects/shared/project-registry.json")
+                ;; The personal projects kept out of the workspace.  Until
+                ;; their own registry is generated, this names the same file.
+                (file-name-concat paths-dir-epoch
+                                  "projects/shared/project-registry.json"))))
      ("tlon"
       . ("~/My Drive/tlon/projects/80k-ai-2027"
          "~/My Drive/tlon/projects/80k-podcast"
@@ -9485,8 +9491,8 @@ contain =AGENTS.md= or =CLAUDE.md=, including directories without Git repositori
          "~/My Drive/tlon/projects/ea.international"
          "~/My Drive/tlon/projects/ea.news"))
      ("" . ("~/repos/*" "~/repos/.worktrees/*/*"))))
-  (agent-project-registry-root "/Users/pablostafforini/My Drive/Epoch/projects/")
-  (agent-chief-directory "~/My Drive/Epoch/")
+  (agent-project-registry-root (file-name-concat paths-dir-epoch-workspace "projects/"))
+  (agent-chief-directory paths-dir-epoch)
   (agent-claude-org-todo-in-progress-keyword "DOING")
   (agent-claude-accounts '(("personal"  . "~/.claude-personal")
 			   ("personal2"  . "~/.claude-personal2")
@@ -10936,6 +10942,8 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
   :custom
   (org-link-search-must-match-exact-headline nil)
   (org-ellipsis " ")
+  ;; `epoch-ws:projects/foo/foo.org' resolves inside the Epoch workspace.
+  (org-link-abbrev-alist `(("epoch-ws" . ,paths-dir-epoch-workspace)))
 
   :bind
   ("H-L" . org-store-link))

@@ -154,6 +154,8 @@ The following variables define the top-level directories from which most other p
 @vindex paths-dir-websites
 @vindex paths-dir-personal-bibliography
 @vindex paths-dir-PW
+@vindex paths-dir-epoch
+@vindex paths-dir-epoch-workspace
 These directories are children of @code{paths-dir-google-drive} and contain personal data:
 
 @itemize
@@ -187,6 +189,10 @@ These directories are children of @code{paths-dir-google-drive} and contain pers
 @code{paths-dir-personal-bibliography}: Bib@TeX{} bibliography files and related resources.
 @item
 @code{paths-dir-PW}: the PW project directory.
+@item
+@code{paths-dir-epoch}: my personal Epoch notes, holding the inbox, root session logs and meeting notes (default: @samp{My Drive/Epoch/}).
+@item
+@code{paths-dir-epoch-workspace}: the shared Epoch workspace, holding the projects and their registry. Its default is the value of the @samp{EPOCH_WORKSPACE} environment variable, or @code{paths-dir-epoch} when that variable is unset, as it is while both share one directory.
 @end itemize
 
 @node Emacs configuration directories

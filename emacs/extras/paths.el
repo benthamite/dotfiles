@@ -246,7 +246,20 @@
 
 (defcustom paths-dir-epoch
   (file-name-concat paths-dir-google-drive "Epoch/")
-  "Path to the Epoch directory."
+  "Path to my personal Epoch notes directory.
+It holds the inbox, root session logs and meeting notes."
+  :type 'directory
+  :group 'paths)
+
+(defcustom paths-dir-epoch-workspace
+  (let ((workspace (getenv "EPOCH_WORKSPACE")))
+    (if (and workspace (not (equal workspace "")))
+        (file-name-as-directory (expand-file-name workspace))
+      paths-dir-epoch))
+  "Path to the shared Epoch workspace directory.
+It holds the projects and their registry.  The default is the value of
+the environment variable EPOCH_WORKSPACE, or `paths-dir-epoch' when that
+variable is unset, as it is while both share one directory."
   :type 'directory
   :group 'paths)
 

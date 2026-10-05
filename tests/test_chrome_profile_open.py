@@ -115,6 +115,25 @@ class ChromeProfileOpenTest(unittest.TestCase):
         self.assertIn("--user-data-dir=/tmp/Chrome", command)
         self.assertEqual(command[-1], "http://127.0.0.1:8770/")
 
+    def test_macos_background_opener_does_not_activate_chrome(self):
+        config = self.mod.OpenConfig(
+            alias="trajectory",
+            profile_directory="Profile 4",
+            profile_name="Trajectory Labs",
+            user_name="pablo.stafforini@trajectorylabs.net",
+            chrome_root=pathlib.Path("/tmp/Chrome"),
+        )
+
+        with mock.patch.object(self.mod.sys, "platform", "darwin"):
+            command = self.mod.build_chrome_command(
+                config, ["about:blank"], background=True
+            )
+
+        self.assertEqual(
+            command[:6],
+            ["/usr/bin/open", "-n", "-g", "-b", "com.google.Chrome", "--args"],
+        )
+
     def test_custom_chrome_path_keeps_direct_executable_launch(self):
         config = self.mod.OpenConfig(
             alias="trajectory",

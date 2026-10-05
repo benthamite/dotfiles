@@ -12,7 +12,8 @@ one window away. This hook turns that into a deterministic recovery:
 1. check that Chrome's native-messaging manifest points at a host wrapper whose
    `claude` binary exists (a stale path breaks the bridge for every account);
 2. map this session's config dir to its Chrome profile (chrome-extension-profiles.json)
-   and open that profile with chrome-profile-open, at most once per 90 s;
+   and open that profile with chrome-profile-open --background (so recovery
+   never steals the user's focus), at most once per 90 s;
 3. wait for the extension: it needs some seconds after its profile opens
    before it answers, and an immediate retry used to fail and be reported to
    Pablo as "Chrome won't connect" (2026-10-04). The hook sleeps until the
@@ -99,7 +100,7 @@ def open_profile(alias: str, stamp: Path) -> tuple[str, float | None]:
             return f"opened Chrome profile '{alias}' {age:.0f} s ago; not reopening", age
     except OSError:
         pass
-    r = subprocess.run([str(LAUNCHER), alias, "about:blank"], capture_output=True, text=True, timeout=30)
+    r = subprocess.run([str(LAUNCHER), "--background", alias, "about:blank"], capture_output=True, text=True, timeout=30)
     if r.returncode != 0:
         return f"FAILED to open Chrome profile '{alias}': {(r.stderr or r.stdout).strip()}", None
     stamp.touch()

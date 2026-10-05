@@ -206,6 +206,7 @@ def build_chrome_command(
     *,
     chrome_path: Path = DEFAULT_CHROME_PATH,
     new_window: bool = False,
+    background: bool = False,
 ) -> list[str]:
     chrome_args = [
         f"--user-data-dir={config.chrome_root}",
@@ -215,9 +216,12 @@ def build_chrome_command(
         chrome_args.append("--new-window")
     chrome_args.extend(urls)
     if sys.platform == "darwin" and chrome_path == DEFAULT_CHROME_PATH:
+        # -g keeps Chrome in the background so an automated caller does not
+        # steal the user's focus.
         return [
             str(DEFAULT_MACOS_OPEN_PATH),
             "-n",
+            *(["-g"] if background else []),
             "-b",
             DEFAULT_CHROME_BUNDLE_ID,
             "--args",
@@ -305,6 +309,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="request a new Chrome window instead of Chrome's default tab behavior",
     )
     parser.add_argument(
+        "--background",
+        action="store_true",
+        help="on macOS, open without bringing Chrome to the foreground (open -g)",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="print the Chrome command instead of executing it",
@@ -355,6 +364,7 @@ def main(argv: list[str] | None = None) -> int:
             list(args.urls),
             chrome_path=args.chrome,
             new_window=args.new_window,
+            background=args.background,
         )
         if args.dry_run:
             print(json.dumps(command))

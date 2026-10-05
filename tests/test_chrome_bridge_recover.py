@@ -67,7 +67,7 @@ class RecoverTest(unittest.TestCase):
 
     def test_not_connected_opens_the_mapped_profile_and_says_retry(self):
         text = M.advice(event(), self.env)
-        self.assertEqual(self.opened(), ["tlon about:blank"])
+        self.assertEqual(self.opened(), ["--background tlon about:blank"])
         self.assertIn("opened Chrome profile 'tlon'", text)
         self.assertIn("Retry the browser call now", text)
         self.assertNotIn("Native host:", text)
@@ -85,7 +85,7 @@ class RecoverTest(unittest.TestCase):
         text = M.advice(event(), self.env)
         self.assertIn("Now report the facts above", text)
         self.assertEqual(len(self.slept), 2)  # no further wait once giving up
-        self.assertEqual(self.opened(), ["tlon about:blank"])
+        self.assertEqual(self.opened(), ["--background tlon about:blank"])
 
     def test_other_disconnection_forms_are_detected(self):
         for ev in (event(response="The hidden tabs_context_mcp lookup did not respond within 8s.",
@@ -100,7 +100,7 @@ class RecoverTest(unittest.TestCase):
     def test_profile_is_not_reopened_within_the_interval(self):
         M.advice(event(), self.env)
         text = M.advice(event(), self.env)
-        self.assertEqual(self.opened(), ["tlon about:blank"])
+        self.assertEqual(self.opened(), ["--background tlon about:blank"])
         self.assertIn("not reopening", text)
 
     def test_unmapped_account_asks_once_instead_of_guessing(self):

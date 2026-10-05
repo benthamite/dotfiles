@@ -1,8 +1,9 @@
 # Selected agent skills
 
-Browse 62 selected skills maintained in this dotfiles repository. Each row links
-to the Claude Code and Codex source instructions. The complete skill directory
-contains its supporting scripts, references, templates and evaluation fixtures.
+Browse 62 selected skills maintained in this dotfiles repository, 54 of them
+enabled. Each row links to the Claude Code and Codex source instructions. The
+complete skill directory contains its supporting scripts, references, templates
+and evaluation fixtures.
 
 ## Using the skills
 
@@ -37,6 +38,10 @@ new skills are not included automatically. Edit the linked source directories,
 which keep companions and repository-relative paths intact. There are no copied
 skill bodies to synchronize here.
 
+Skills recorded as disabled in [`skills-disabled.json`](../../skills-disabled.json)
+are listed under [Disabled](#disabled) rather than in their scope's table.
+Re-enabling one moves its row back.
+
 The [tracked inventory](../skill-inventory.org) remains the generated inventory of
 all tracked skill sources. Catalog selection does not control Git tracking,
 remove existing public files or hide their history. The repository's guarded
@@ -62,7 +67,6 @@ publication process reviews the outgoing history and tree before a push.
 | `end-to-end` | Verify a software acceptance criterion through the decisive live surface. | [Source](../../claude/skills/end-to-end/SKILL.md) | [Source](../../codex/skills/end-to-end/SKILL.md) |
 | `fix-drive-errors` | Diagnose and repair Google Drive desktop sync errors. | [Source](../../claude/skills/fix-drive-errors/SKILL.md) | [Source](../../codex/skills/fix-drive-errors/SKILL.md) |
 | `generate-readme` | Generate a GitHub-facing Emacs package README from its Org manual. | [Source](../../claude/skills/generate-readme/SKILL.md) | [Source](../../codex/skills/generate-readme/SKILL.md) |
-| `google-sheets-comments` | Review and act on current Google Sheets comment threads through gdoc. | [Source](../../claude/skills/google-sheets-comments/SKILL.md) | [Source](../../codex/skills/google-sheets-comments/SKILL.md) |
 | `handoff` | Prepare a faithful next-session prompt for the Emacs agent-handoff consumer. | [Source](../../claude/skills/handoff/SKILL.md) | [Source](../../codex/skills/handoff/SKILL.md) |
 | `humanize` | Rewrite formulaic English prose while preserving meaning and voice. | [Source](../../claude/skills/humanize/SKILL.md) | [Source](../../codex/skills/humanize/SKILL.md) |
 | `interpretability-audit` | Review code for intent transparency and likely reader misunderstandings. | [Source](../../claude/skills/interpretability-audit/SKILL.md) | [Source](../../codex/skills/interpretability-audit/SKILL.md) |
@@ -70,10 +74,8 @@ publication process reviews the outgoing history and tree before a push.
 | `move-session-log` | Relocate selected Claude or Codex session metadata. | [Source](../../claude/skills/move-session-log/SKILL.md) | [Source](../../codex/skills/move-session-log/SKILL.md) |
 | `orchestrate-review` | Coordinate author/reviewer work in two live Emacs sessions. | [Source](../../claude/skills/orchestrate-review/SKILL.md) | [Source](../../codex/skills/orchestrate-review/SKILL.md) |
 | `org-note-conventions` | Preserve personal Org note structure and paragraph conventions. | [Source](../../claude/skills/org-note-conventions/SKILL.md) | [Source](../../codex/skills/org-note-conventions/SKILL.md) |
-| `overnight-todos` | Classify and process authorized personal Org TODOs unattended. | [Source](../../claude/skills/overnight-todos/SKILL.md) | [Source](../../codex/skills/overnight-todos/SKILL.md) |
 | `paste-via-kill-ring` | Stage actual manual-paste handoffs in Emacs or macOS. | [Source](../../claude/skills/paste-via-kill-ring/SKILL.md) | [Source](../../codex/skills/paste-via-kill-ring/SKILL.md) |
 | `personalize` | Draft prose using private writing samples. | [Source](../../claude/skills/personalize/SKILL.md) | [Source](../../codex/skills/personalize/SKILL.md) |
-| `pin-elisp-pr` | Pin an effective Elpaca package owner to a fork, branch or PR. | [Source](../../claude/skills/pin-elisp-pr/SKILL.md) | [Source](../../codex/skills/pin-elisp-pr/SKILL.md) |
 | `post-push-ci` | Observe exact pushed-commit CI and repair within authorization. | [Source](../../claude/skills/post-push-ci/SKILL.md) | [Source](../../codex/skills/post-push-ci/SKILL.md) |
 | `pr-audit` | Review frozen PR revisions, checks and integration evidence. | [Source](../../claude/skills/pr-audit/SKILL.md) | [Source](../../codex/skills/pr-audit/SKILL.md) |
 | `profile-ai-cli-performance` | Benchmark declared Claude/Codex client conditions. | [Source](../../claude/skills/profile-ai-cli-performance/SKILL.md) | [Source](../../codex/skills/profile-ai-cli-performance/SKILL.md) |
@@ -82,7 +84,6 @@ publication process reviews the outgoing history and tree before a push.
 | `release-package` | Audit, prepare and release public Emacs packages. | [Source](../../claude/skills/release-package/SKILL.md) | [Source](../../codex/skills/release-package/SKILL.md) |
 | `request-review` | Request one independent committed-plan review in the opposite CLI. | [Source](../../claude/skills/request-review/SKILL.md) | [Source](../../codex/skills/request-review/SKILL.md) |
 | `session-learning-capture` | Capture de-identified session lessons as proposals. | [Source](../../claude/skills/session-learning-capture/SKILL.md) | [Source](../../codex/skills/session-learning-capture/SKILL.md) |
-| `symptom-check` | Check proposed repairs against invariants and analogous paths. | [Source](../../claude/skills/symptom-check/SKILL.md) | [Source](../../codex/skills/symptom-check/SKILL.md) |
 | `test-suite` | Build meaningful behavioral and regression tests. | [Source](../../claude/skills/test-suite/SKILL.md) | [Source](../../codex/skills/test-suite/SKILL.md) |
 | `triage-personal-todos` | Prioritize personal Org tasks and select actionable work. | [Source](../../claude/skills/triage-personal-todos/SKILL.md) | [Source](../../codex/skills/triage-personal-todos/SKILL.md) |
 | `update-log` | Preserve project progress and complete local bookkeeping. | [Source](../../claude/skills/update-log/SKILL.md) | [Source](../../codex/skills/update-log/SKILL.md) |
@@ -102,13 +103,9 @@ publication process reviews the outgoing history and tree before a push.
 | Skill | Purpose | Claude Code | Codex |
 | --- | --- | --- | --- |
 | `config-audit` | Audit redundant, conflicting and stale agent configuration. | [Source](../../.claude/skills/config-audit/SKILL.md) | [Source](../../.codex/skills/config-audit/SKILL.md) |
-| `find-skills` | Discover, vet and optionally install third-party skills. | [Source](../../.claude/skills/find-skills/SKILL.md) | [Source](../../.codex/skills/find-skills/SKILL.md) |
 | `gitguardian-triage` | Investigate and remediate credential incidents with exact ownership and validity evidence. | [Source](../../.claude/skills/gitguardian-triage/SKILL.md) | [Source](../../.codex/skills/gitguardian-triage/SKILL.md) |
-| `install-mcp-server` | Install, authenticate and verify Claude MCP servers. | [Source](../../.claude/skills/install-mcp-server/SKILL.md) | [Source](../../.codex/skills/install-mcp-server/SKILL.md) |
-| `optimize-agent-instructions` | Simplify persistent agent instructions while preserving scope and discoverability. | [Source](../../.claude/skills/optimize-agent-instructions/SKILL.md) | [Source](../../.codex/skills/optimize-agent-instructions/SKILL.md) |
 | `release-dotfiles` | Prepare reproducible Elpaca lockfiles and verified dotfiles releases. | [Source](../../.claude/skills/release-dotfiles/SKILL.md) | [Source](../../.codex/skills/release-dotfiles/SKILL.md) |
 | `skill-audit` | Audit skills and reconstruct conservative Codex invocation evidence. | [Source](../../.claude/skills/skill-audit/SKILL.md) | [Source](../../.codex/skills/skill-audit/SKILL.md) |
-| `skill-resolver` | Resolve exact skill identities across Claude and Codex roots. | [Source](../../.claude/skills/skill-resolver/SKILL.md) | [Source](../../.codex/skills/skill-resolver/SKILL.md) |
 
 ## Dotfiles project · programmatic
 
@@ -133,3 +130,18 @@ publication process reviews the outgoing history and tree before a push.
 | `reconcile-contacts` | Compare contact populations and prepare merge candidates. | [Source](../../macos/.claude/skills/reconcile-contacts/SKILL.md) | [Source](../../macos/.codex/skills/reconcile-contacts/SKILL.md) |
 | `review-lulu-alert` | Investigate a firewall alert and recommend a scoped response. | [Source](../../macos/.claude/skills/review-lulu-alert/SKILL.md) | [Source](../../macos/.codex/skills/review-lulu-alert/SKILL.md) |
 | `security-audit` | Review secrets handling, supply chains, macOS controls and agent permissions. | [Source](../../macos/.claude/skills/security-audit/SKILL.md) | [Source](../../macos/.codex/skills/security-audit/SKILL.md) |
+
+## Disabled
+
+These are switched off for both runtimes; their sources remain for reference.
+
+| Skill | Purpose | Claude Code | Codex |
+| --- | --- | --- | --- |
+| `find-skills` | Discover, vet and optionally install third-party skills. | [Source](../../.claude/skills/find-skills/SKILL.md) | [Source](../../.codex/skills/find-skills/SKILL.md) |
+| `google-sheets-comments` | Review and act on current Google Sheets comment threads through gdoc. | [Source](../../claude/skills/google-sheets-comments/SKILL.md) | [Source](../../codex/skills/google-sheets-comments/SKILL.md) |
+| `install-mcp-server` | Install, authenticate and verify Claude MCP servers. | [Source](../../.claude/skills/install-mcp-server/SKILL.md) | [Source](../../.codex/skills/install-mcp-server/SKILL.md) |
+| `optimize-agent-instructions` | Simplify persistent agent instructions while preserving scope and discoverability. | [Source](../../.claude/skills/optimize-agent-instructions/SKILL.md) | [Source](../../.codex/skills/optimize-agent-instructions/SKILL.md) |
+| `overnight-todos` | Classify and process authorized personal Org TODOs unattended. | [Source](../../claude/skills/overnight-todos/SKILL.md) | [Source](../../codex/skills/overnight-todos/SKILL.md) |
+| `pin-elisp-pr` | Pin an effective Elpaca package owner to a fork, branch or PR. | [Source](../../claude/skills/pin-elisp-pr/SKILL.md) | [Source](../../codex/skills/pin-elisp-pr/SKILL.md) |
+| `skill-resolver` | Resolve exact skill identities across Claude and Codex roots. | [Source](../../.claude/skills/skill-resolver/SKILL.md) | [Source](../../.codex/skills/skill-resolver/SKILL.md) |
+| `symptom-check` | Check proposed repairs against invariants and analogous paths. | [Source](../../claude/skills/symptom-check/SKILL.md) | [Source](../../codex/skills/symptom-check/SKILL.md) |

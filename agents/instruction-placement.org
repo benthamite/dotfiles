@@ -86,8 +86,8 @@ does not itself authorize such an edit. Apply the placement policy below first.
 - =agents/configuration.org= defines the Claude/Codex synchronization topology.
 - =claude/README.org= and =codex/README.org= document tool-specific activation
   and local conventions.
-- =.claude/skills/optimize-agent-instructions/SKILL.md= and
-  =.codex/skills/optimize-agent-instructions/SKILL.md= apply this policy when
-  auditing or rewriting instruction files.
+- =.claude/skills/config-audit/SKILL.md= and
+  =.codex/skills/config-audit/SKILL.md= apply this policy when auditing
+  instruction files and recommending where a rule belongs.
 - Epoch project notes specialize this policy in
   =/Users/pablostafforini/My Drive/Epoch/projects/context/project-doc-conventions.md=.

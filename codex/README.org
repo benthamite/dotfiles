@@ -265,10 +265,11 @@ behavior contracts, isolates side effects, and checks discovery and failure
 sensitivity. Tests-only work preserves product code and reports valid failing
 regressions without claiming a green suite or a repaired bug.
 
-The paired =symptom-check= skill evaluates a proposed repair against a supported
-invariant and related code paths. It preserves read-only diagnosis, allows an
-explicitly pending disposition, and requires direct symptom evidence before
-claiming repair or closing an architectural issue.
+The paired =symptom-check= skill — disabled, see =skills-disabled.json= —
+evaluates a proposed repair against a supported invariant and related code
+paths. It preserves read-only diagnosis, allows an explicitly pending
+disposition, and requires direct symptom evidence before claiming repair or
+closing an architectural issue.
 
 The paired =session-learning-capture= skill records proposals only after checking
 session provenance and permission to use the Drive-synced personal inbox.
@@ -411,11 +412,12 @@ The =org-note-conventions= skill applies only to personal notes. It distinguishe
 root-backed and rootless heading layouts, preserves established structure, and
 joins soft prose wrapping without removing intentional Org hard line breaks.
 
-The =overnight-todos= skill requires an explicit personal-TODO run. Its default
-dry run classifies metadata without reading note bodies or starting workers.
-Act mode uses private outputs, token-based task accounting and an idempotent
-ledger; only verified outcomes justify completion, and budget limits produce
-deferrals. Existing ledger history requires explicit migration, not a reset.
+The =overnight-todos= skill — disabled, see =skills-disabled.json= — requires an
+explicit personal-TODO run. Its default dry run classifies metadata without
+reading note bodies or starting workers. Act mode uses private outputs,
+token-based task accounting and an idempotent ledger; only verified outcomes
+justify completion, and budget limits produce deferrals. Existing ledger history
+requires explicit migration, not a reset.
 
 The =paste-via-kill-ring= skill separates manual handoff from sending. It
 verifies exact non-secret ring placement without implicit clipboard forwarding,
@@ -429,10 +431,11 @@ and separates voice matching from factual or personal claims. Missing samples
 are explicit; concision preserves required answers, and prose preferences do
 not alter quotations, code or links. Drafting does not authorize sending.
 
-The =pin-elisp-pr= skill preserves one effective installation owner per active
-profile, including explicit-owner/config-only timing exceptions. It reuses the
-shared PR and profile lifecycle and distinguishes a configured recipe from an
-installed revision and verified loaded behavior.
+The =pin-elisp-pr= skill — disabled, see =skills-disabled.json= — preserves one
+effective installation owner per active profile, including
+explicit-owner/config-only timing exceptions. It reuses the shared PR and
+profile lifecycle and distinguishes a configured recipe from an installed
+revision and verified loaded behavior.
 
 The =post-push-ci= skill observes an exact pushed target without pushing again.
 Its helper reports a bounded run snapshot; expected-check coverage, run attempts
@@ -450,10 +453,10 @@ procedural bodies when full skill audits are requested. It distinguishes
 skill discovery from instruction loading and checks actual hook coverage
 before recommending removal of an overlapping instruction.
 
-The project-local =find-skills= checks the selected agent and project/global
-destination before installation. It preserves canonical paired roots and uses
-copies for Drive-backed destinations, then resolves the installed skill to
-verify discovery.
+The project-local =find-skills= — disabled, see =skills-disabled.json= — checks
+the selected agent and project/global destination before installation. It
+preserves canonical paired roots and uses copies for Drive-backed destinations,
+then resolves the installed skill to verify discovery.
 
 The project-local =gitguardian-triage= separates read-only classification from
 authorized rotation and closure, verifies exact credential ownership and
@@ -461,20 +464,21 @@ consumers, and treats ambiguous provider responses as inconclusive. Its
 =bin/gitguardian-incidents= reader rejects HTTP redirects so authenticated
 requests cannot forward credentials to another endpoint.
 
-The project-local =install-mcp-server= configures Claude Code when explicitly
-requested from Codex. It preserves documented endpoint paths, uses an explicit
-secret resolver, and distinguishes configured, authenticated, and tool-tested
-states before reporting readiness.
+The project-local =install-mcp-server= — disabled, see =skills-disabled.json= —
+configures Claude Code when explicitly requested from Codex. It preserves
+documented endpoint paths, uses an explicit secret resolver, and distinguishes
+configured, authenticated, and tool-tested states before reporting readiness.
 
-The project-local =optimize-agent-instructions= verifies instruction placement
-for each target runtime before externalizing guidance. It preserves routed
-references and useful rules, and does not assume Claude imports or path rules
-load in Codex.
+The project-local =optimize-agent-instructions= — disabled, see
+=skills-disabled.json= — verifies instruction placement for each target runtime
+before externalizing guidance. It preserves routed references and useful rules,
+and does not assume Claude imports or path rules load in Codex.
 
-The project-local =skill-resolver= honors exact session-catalog paths before
-name lookup and keeps project edits in their original scope. Its filesystem
-inventory is distinct from the runtime's enabled skill catalog; account and
-installed plugin-version evidence determine which sources it searches.
+The project-local =skill-resolver= — disabled, see =skills-disabled.json= —
+honors exact session-catalog paths before name lookup and keeps project edits in
+their original scope. Its filesystem inventory is distinct from the runtime's
+enabled skill catalog; account and installed plugin-version evidence determine
+which sources it searches.
 
 The project-local =skill-audit= remains explicit-invocation-only. Its historical
 collector distinguishes failed reads from successful output envelopes, preserves
@@ -668,10 +672,11 @@ It saves private per-session artifacts without later overwrites, preserves share
 and requires exact source/artifact checks and a one-invocation file binding
 before preparing a consumer command. Source inspection is not live readiness.
 
-The =google-sheets-comments= skill binds account/file/thread/reply identity,
-uses current API evidence rather than email notifications, and preserves exact
-action authority. Its gdoc contract records projection and receipt limitations;
-fresh pre/post checks reconcile ambiguous writes before any retry.
+The =google-sheets-comments= skill — disabled, see =skills-disabled.json= —
+binds account/file/thread/reply identity, uses current API evidence rather than
+email notifications, and preserves exact action authority. Its gdoc contract
+records projection and receipt limitations; fresh pre/post checks reconcile
+ambiguous writes before any retry.
 
 The =generate-readme= skill preserves established Org manuals, README-specific
 material and foreign edits. It distinguishes package/feature/repository names,

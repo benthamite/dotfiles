@@ -84,7 +84,7 @@ honor `--exit` only through the host's normal mechanism.
    use its supported resolver:
 
    ```bash
-   python3 "/Users/pablostafforini/My Drive/Epoch/projects/shared/scripts/project_harness.py" \
+   python3 "${EPOCH_WORKSPACE:-$HOME/My Drive/Epoch}/projects/shared/scripts/project_harness.py" \
      resolve --cwd "/absolute/session/directory"
    ```
 
@@ -120,6 +120,13 @@ honor `--exit` only through the host's normal mechanism.
 
 For resolved Epoch projects, use the tracked `logs/`, canonical Org brief and
 paired maps under the notes directory. Do not add them to ignore rules.
+
+Epoch notes have two roots. The workspace root (`$EPOCH_WORKSPACE`, default
+`~/My Drive/Epoch`) holds `projects/`, so project briefs, project `logs/`
+and maps belong there. The personal root (`$EPOCH_PRIVATE_ROOT`, default
+`~/My Drive/Epoch`) holds the root-level `logs/` and `meetings/`, so a root
+session log or meeting note belongs there, never in the workspace
+repository. Until the workspace split takes effect both are the same tree.
 
 For a generic project with no convention, use `logs/` as the local-only
 default and leave new decision tracking disabled in `--auto`. In an interactive
@@ -239,7 +246,7 @@ reconciled, not erased. Verify final sections and preserved baseline content.
 
 ## 4.5. Preview an Epoch closeout
 
-Skip for generic projects. From the Epoch root, identify exact session-owned
+Skip for generic projects. From the Epoch workspace root, identify exact session-owned
 inputs: brief, log, maps and other changed project files. Pass them with
 `--path`; use `--related-path` for eligible related notes outside the project.
 Omit unused options. A whole-file input must not contain another actor's hunk.

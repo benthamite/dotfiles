@@ -46,9 +46,12 @@ class EpochBriefFreshnessWrapperTest(unittest.TestCase):
         helper.write_text(STUB_HELPER, encoding="utf-8")
         return epoch
 
-    def run_wrapper(self, wrapper: Path, payload: str, epoch: Path) -> subprocess.CompletedProcess:
-        environment = dict(os.environ, EPOCH_ROOT=str(epoch), STUB_RECORD=str(self.record),
-                           PYTHONDONTWRITEBYTECODE="1")
+    def run_wrapper(self, wrapper: Path, payload: str, epoch: Path,
+                    variable: str = "EPOCH_ROOT", **extra: str) -> subprocess.CompletedProcess:
+        environment = {key: value for key, value in os.environ.items()
+                       if not key.startswith("EPOCH_")}
+        environment.update({variable: str(epoch), "STUB_RECORD": str(self.record),
+                            "PYTHONDONTWRITEBYTECODE": "1"}, **extra)
         return subprocess.run(["/bin/bash", str(wrapper)], input=payload, text=True,
                               capture_output=True, env=environment, timeout=30, check=False)
 
@@ -82,6 +85,29 @@ class EpochBriefFreshnessWrapperTest(unittest.TestCase):
                 self.assertEqual(output["hookSpecificOutput"]["additionalContext"], "stub notice")
                 self.record.unlink()
 
+
+    def test_epoch_workspace_locates_the_helper_ahead_of_epoch_root(self) -> None:
+        epoch = self.install_helper()
+        payload = json.dumps({"tool_name": "Read", "tool_input": {"file_path": "/e/p.org"}})
+        for wrapper in WRAPPERS:
+            with self.subTest(wrapper=wrapper.parent.parent.name):
+                result = self.run_wrapper(wrapper, payload, epoch, "EPOCH_WORKSPACE",
+                                          EPOCH_ROOT=str(self.root / "absent"))
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(self.record.read_text(encoding="utf-8"), payload)
+                self.record.unlink()
+
+    def test_epoch_shared_dir_overrides_the_workspace(self) -> None:
+        epoch = self.install_helper()
+        payload = json.dumps({"tool_name": "Read", "tool_input": {"file_path": "/e/p.org"}})
+        for wrapper in WRAPPERS:
+            with self.subTest(wrapper=wrapper.parent.parent.name):
+                result = self.run_wrapper(wrapper, payload, epoch / "projects/shared",
+                                          "EPOCH_SHARED_DIR",
+                                          EPOCH_WORKSPACE=str(self.root / "absent"))
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(self.record.read_text(encoding="utf-8"), payload)
+                self.record.unlink()
 
 if __name__ == "__main__":
     unittest.main()

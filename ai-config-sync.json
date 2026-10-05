@@ -563,8 +563,8 @@
     {
       "name": "epoch-asana",
       "scope": "epoch-project-local",
-      "claude_config": "~/My Drive/Epoch/.mcp.json",
-      "codex_config": "~/My Drive/Epoch/.codex/config.toml",
+      "claude_config": "{epoch_workspace}/.mcp.json",
+      "codex_config": "{epoch_workspace}/.codex/config.toml",
       "claude_server": "asana",
       "codex_server": "asana",
       "compare_public_config": true,
@@ -575,23 +575,23 @@
         {
           "label": "Claude Asana token resolves to pablo@epoch.ai",
           "command": [
-            "/Users/pablostafforini/My Drive/Epoch/scripts/check-asana-mcp-identity.sh",
+            "{epoch_workspace}/scripts/check-asana-mcp-identity.sh",
             "pablo@epoch.ai",
-            "/Users/pablostafforini/My Drive/Epoch/.mcp.json",
+            "{epoch_workspace}/.mcp.json",
             "claude"
           ]
         },
         {
           "label": "Codex Asana token resolves to pablo@epoch.ai",
           "command": [
-            "/Users/pablostafforini/My Drive/Epoch/scripts/check-asana-mcp-identity.sh",
+            "{epoch_workspace}/scripts/check-asana-mcp-identity.sh",
             "pablo@epoch.ai",
-            "/Users/pablostafforini/My Drive/Epoch/.codex/config.toml",
+            "{epoch_workspace}/.codex/config.toml",
             "codex"
           ]
         }
       ],
-      "note": "Epoch's Asana MCP is project-local and must expose the same server to Claude Code and Codex with the Epoch Asana identity. The audit checks account identity via Asana /users/me and never compares or prints token values."
+      "note": "Epoch's Asana MCP is local to the Epoch workspace checkout ({epoch_workspace} is EPOCH_WORKSPACE, default ~/My Drive/Epoch) and must expose the same server to Claude Code and Codex with the Epoch Asana identity. The audit checks account identity via Asana /users/me and never compares or prints token values."
     }
   ],
   "registrations": [

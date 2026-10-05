@@ -44,6 +44,55 @@ class AiConfigSyncAuditTests(unittest.TestCase):
             Path(self.module.__file__).resolve(),
         )
 
+    def test_interactive_skill_roots_list_epoch_workspace_and_private_roots(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp).resolve()
+            workspace, private, cwd = base / "ws", base / "private", base / "cwd"
+            for parent in (workspace, private):
+                (parent / ".claude" / "skills").mkdir(parents=True)
+            cwd.mkdir()
+            env = {"EPOCH_WORKSPACE": str(workspace), "EPOCH_PRIVATE_ROOT": str(private),
+                   "CLAUDE_HOME": str(base / "claude-home")}
+            with mock.patch.dict(os.environ, env):
+                roots = self.module.interactive_skill_roots(cwd, "claude")
+                env["EPOCH_PRIVATE_ROOT"] = str(workspace)
+                with mock.patch.dict(os.environ, env):
+                    same = self.module.interactive_skill_roots(cwd, "claude")
+        sources = {root.path: root.source for root in roots}
+        self.assertEqual("epoch-workspace", sources[workspace / ".claude" / "skills"])
+        self.assertEqual("epoch-private", sources[private / ".claude" / "skills"])
+        self.assertEqual(
+            ["epoch-workspace"],
+            [root.source for root in same if root.path == workspace / ".claude" / "skills"],
+        )
+        self.assertNotIn("epoch-private", [root.source for root in same])
+
+    def test_mcp_server_paths_resolve_against_epoch_workspace(self):
+        claude_name = ".mcp" + ".json"
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp)
+            server = {"command": "asana-mcp", "args": [], "env": {"ASANA_ACCESS_TOKEN": "x"}}
+            (workspace / claude_name).write_text(json.dumps({"mcpServers": {"asana": server}}))
+            (workspace / ".codex").mkdir()
+            (workspace / ".codex" / "config.toml").write_text(
+                '[mcp_servers.asana]\ncommand = "asana-mcp"\nargs = []\n'
+                '[mcp_servers.asana.env]\nASANA_ACCESS_TOKEN = "x"\n'
+            )
+            manifest = {"mcp_servers": [{
+                "name": "epoch-asana",
+                "claude_config": "{epoch_workspace}/" + claude_name,
+                "codex_config": "{epoch_workspace}/.codex/config.toml",
+                "claude_server": "asana",
+                "codex_server": "asana",
+                "required_env": ["ASANA_ACCESS_TOKEN"],
+                "identity_checks": [{"label": "fixture", "command": [
+                    "test", "-f", "{epoch_workspace}/" + claude_name]}],
+            }]}
+            problems: list[str] = []
+            with mock.patch.dict(os.environ, {"EPOCH_WORKSPACE": str(workspace)}):
+                self.module.audit_mcp_servers(problems, manifest)
+        self.assertEqual([], problems)
+
     def test_command_executable_skips_environment_assignments(self):
         self.assertEqual(
             self.module.command_executable("STATUS_DIR=/tmp/x /bin/hook.sh /bin/next.sh activity"),

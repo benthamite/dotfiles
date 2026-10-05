@@ -105,6 +105,25 @@ class AgentSkillTests(unittest.TestCase):
         self.assertEqual(300, priorities[self.admin])
         self.inventory.assert_called_once_with(self.codex_home)
 
+    def test_epoch_workspace_and_private_roots_are_both_listed(self):
+        workspace = self.root / "epoch-workspace"
+        private = self.root / "epoch-private"
+        for parent in (workspace, private):
+            self.skill(parent / ".claude/skills", "fixture-" + parent.name)
+        with mock.patch.dict(os.environ, {
+            "EPOCH_WORKSPACE": str(workspace),
+            "EPOCH_PRIVATE_ROOT": str(private),
+        }):
+            sources = {root.path: root.source for root in self.roots("claude")}
+        self.assertEqual("epoch-workspace", sources[workspace / ".claude/skills"])
+        self.assertEqual("epoch-private", sources[private / ".claude/skills"])
+
+    def test_epoch_roots_default_to_one_deduplicated_drive_tree(self):
+        epoch = self.home / "My Drive/Epoch"
+        self.skill(epoch / ".codex/skills", "fixture")
+        roots = [root for root in self.roots("codex") if root.path == epoch / ".codex/skills"]
+        self.assertEqual([("epoch-workspace", 40)], [(root.source, root.priority) for root in roots])
+
     def test_standard_roots_stop_at_worktree_file_or_cwd_outside_git(self):
         (self.project / ".git").rmdir()
         (self.project / ".git").write_text("gitdir: /fixture-only/not-read\n")

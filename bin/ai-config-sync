@@ -3063,11 +3063,22 @@ def run_identity_check(command: str | list[str], cwd: Path) -> subprocess.Comple
     )
 
 
+def epoch_placeholders(text: str) -> str:
+    """Replace `{epoch_workspace}` in TEXT with the Epoch workspace root.
+
+    The root is `EPOCH_WORKSPACE` when set and the notes tree's original Drive
+    location otherwise, so manifest entries stay valid on both sides of the
+    workspace split.
+    """
+    workspace = epoch_env_path("EPOCH_WORKSPACE", Path.home() / "My Drive" / "Epoch")
+    return text.replace("{epoch_workspace}", str(workspace))
+
+
 def audit_mcp_servers(problems: list[str], manifest: dict) -> None:
     for item in manifest.get("mcp_servers") or []:
         name = item.get("name", "mcp server")
-        claude_config = path_from_token(str(item.get("claude_config")), ROOT)
-        codex_config = path_from_token(str(item.get("codex_config")), ROOT)
+        claude_config = path_from_token(epoch_placeholders(str(item.get("claude_config"))), ROOT)
+        codex_config = path_from_token(epoch_placeholders(str(item.get("codex_config"))), ROOT)
         claude_name = item.get("claude_server", name)
         codex_name = item.get("codex_server", name)
 
@@ -3103,6 +3114,8 @@ def audit_mcp_servers(problems: list[str], manifest: dict) -> None:
         for check in item.get("identity_checks") or []:
             label = check.get("label", name) if isinstance(check, dict) else name
             command = check.get("command") if isinstance(check, dict) else check
+            if isinstance(command, list):
+                command = [epoch_placeholders(str(part)) for part in command]
             proc = run_identity_check(command, ROOT)
             if proc.returncode != 0:
                 detail = (proc.stderr or proc.stdout).strip()
@@ -3201,6 +3214,25 @@ def add_enabled_claude_plugin_roots(
             )
 
 
+def epoch_skill_parents() -> list[tuple[Path, str, int]]:
+    """Return the Epoch notes roots whose skills apply in every directory.
+
+    The shared workspace comes first, so it keeps its source label when the
+    personal notes root is the same directory, as it is before the workspace
+    split; `add_interactive_skill_root` drops the duplicate by resolved path.
+    """
+    default = Path.home() / "My Drive" / "Epoch"
+    return [
+        (epoch_env_path("EPOCH_WORKSPACE", default), "epoch-workspace", 40),
+        (epoch_env_path("EPOCH_PRIVATE_ROOT", default), "epoch-private", 41),
+    ]
+
+
+def epoch_env_path(name: str, default: Path) -> Path:
+    value = os.environ.get(name, "").strip()
+    return Path(value).expanduser() if value else default
+
+
 def interactive_skill_roots(cwd: Path, tool: str) -> list[InteractiveSkillRoot]:
     roots: list[InteractiveSkillRoot] = []
     seen: set[tuple[str, str]] = set()
@@ -3227,16 +3259,16 @@ def interactive_skill_roots(cwd: Path, tool: str) -> list[InteractiveSkillRoot]:
                 10 + depth,
             )
 
-    epoch_root = Path.home() / "My Drive" / "Epoch"
-    if tool == "codex":
+    for epoch_root, source, priority in epoch_skill_parents():
         add_interactive_skill_root(
             roots,
             seen,
-            epoch_root / ".codex" / "skills",
-            "codex",
-            "epoch-workspace",
-            40,
+            epoch_root / f".{tool}" / "skills",
+            tool,
+            source,
+            priority,
         )
+    if tool == "codex":
         codex_home = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex"))
         add_interactive_skill_root(roots, seen, codex_home / "skills", "codex", "CODEX_HOME", 100)
         add_interactive_skill_root(roots, seen, ROOT / "codex" / "skills", "codex", "dotfiles", 110)
@@ -3255,14 +3287,6 @@ def interactive_skill_roots(cwd: Path, tool: str) -> list[InteractiveSkillRoot]:
             )
 
     if tool == "claude":
-        add_interactive_skill_root(
-            roots,
-            seen,
-            epoch_root / ".claude" / "skills",
-            "claude",
-            "epoch-workspace",
-            40,
-        )
         claude_home = Path(os.environ.get("CLAUDE_HOME", Path.home() / ".claude"))
         add_interactive_skill_root(roots, seen, claude_home / "skills", "claude", "CLAUDE_HOME", 100)
         add_interactive_skill_root(roots, seen, ROOT / "claude" / "skills", "claude", "dotfiles", 110)

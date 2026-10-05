@@ -187,6 +187,25 @@ def add_claude_plugin_roots(
             )
 
 
+def epoch_skill_parents() -> list[tuple[Path, str, int]]:
+    """Return the Epoch notes roots whose skills apply in every directory.
+
+    The shared workspace comes first, so it keeps its source label when the
+    personal notes root is the same directory, as it is before the workspace
+    split; `add_root` drops the duplicate by resolved path.
+    """
+    default = HOME / "My Drive" / "Epoch"
+    return [
+        (env_path("EPOCH_WORKSPACE", default), "epoch-workspace", 40),
+        (env_path("EPOCH_PRIVATE_ROOT", default), "epoch-private", 41),
+    ]
+
+
+def env_path(name: str, default: Path) -> Path:
+    value = os.environ.get(name, "").strip()
+    return Path(value).expanduser() if value else default
+
+
 def discover_roots(cwd: Path, tool: str) -> list[SkillRoot]:
     roots: list[SkillRoot] = []
     seen: set[tuple[str, str]] = set()
@@ -222,25 +241,25 @@ def discover_roots(cwd: Path, tool: str) -> list[SkillRoot]:
                 10 + depth,
             )
 
-    epoch_root = HOME / "My Drive" / "Epoch"
-    if "codex" in wanted:
-        add_root(
-            roots,
-            seen,
-            epoch_root / ".codex" / "skills",
-            "codex",
-            "epoch-workspace",
-            40,
-        )
-    if "claude" in wanted:
-        add_root(
-            roots,
-            seen,
-            epoch_root / ".claude" / "skills",
-            "claude",
-            "epoch-workspace",
-            40,
-        )
+    for epoch_root, source, priority in epoch_skill_parents():
+        if "codex" in wanted:
+            add_root(
+                roots,
+                seen,
+                epoch_root / ".codex" / "skills",
+                "codex",
+                source,
+                priority,
+            )
+        if "claude" in wanted:
+            add_root(
+                roots,
+                seen,
+                epoch_root / ".claude" / "skills",
+                "claude",
+                source,
+                priority,
+            )
 
     if "codex" in wanted:
         codex_home = Path(os.environ.get("CODEX_HOME", HOME / ".codex"))

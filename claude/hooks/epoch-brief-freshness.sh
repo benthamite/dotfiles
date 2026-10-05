@@ -13,7 +13,13 @@ case "$INPUT" in
   *) exit 0 ;;
 esac
 
-HELPER="${EPOCH_ROOT:-$HOME/My Drive/Epoch}/projects/shared/scripts/brief_freshness_notice.py"
+# The shared directory resolves from the most specific variable set:
+# EPOCH_SHARED_DIR, then EPOCH_PROJECTS, then EPOCH_WORKSPACE (EPOCH_ROOT is
+# its older alias), then the notes tree's original Drive location.
+WORKSPACE="${EPOCH_WORKSPACE:-${EPOCH_ROOT:-$HOME/My Drive/Epoch}}"
+PROJECTS="${EPOCH_PROJECTS:-$WORKSPACE/projects}"
+SHARED="${EPOCH_SHARED_DIR:-$PROJECTS/shared}"
+HELPER="$SHARED/scripts/brief_freshness_notice.py"
 [ -f "$HELPER" ] || exit 0
 
 printf '%s' "$INPUT" | python3 -B "$HELPER"

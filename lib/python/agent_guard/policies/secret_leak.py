@@ -33,7 +33,7 @@ from ..codex_payload import (command_substitution, jq_alternative, jq_raw, jq_te
                              nested_exec_contexts)
 from ..core import CODEX, CODEX_SHELL_TOOLS, Call, HookFailure, Result
 from ..ere import grep, sed
-from ..shell_text import mask_heredoc_bodies
+from ..shell_text import _SINKS, mask_heredoc_bodies
 
 # --- grep -E, sed -E and awk as the hook ran them ------------------------------
 
@@ -263,6 +263,256 @@ _NORMALIZE_RULES = (
 )
 
 
+# --- what the shell can expand as a program name -------------------------------
+#
+# The executable-glob rules look for a glob word after a command boundary in
+# normalize_shell_words' text, which is not parsed as shell: `|` and `*` in
+# `${q%%|*}`, quoted Python or SQL whose quotes it dropped or misnested, case
+# patterns, `[!.]*` and heredoc bodies fed to Python or cat all read as a glob
+# in a command position. _glob_scan keeps only text the shell itself expands;
+# a glob rule denies only when it matches that text too.
+
+_GLOB_DATA_CONSUMERS = {name.decode() for name in _SINKS} | {
+    "node", "nodejs", "deno", "bun", "ruby", "perl", "php", "osascript", "emacs", "emacsclient", "sqlite3",
+    "psql", "mysql", "jq", "yq", "Rscript", "lua", "luajit", "swift", "julia", "awk", "gawk", "mawk", "sed",
+    "bc", "dc"}
+_GLOB_PREFIX_WORDS = {"do", "then", "else", "elif", "if", "while", "until", "{", "!", "time", "command",
+                      "builtin", "exec", "nohup", "nice", "env", "sudo", "timeout"}
+_CASE_RULES = (
+    (r"(case[[:space:]]+[^;&|()[:space:]]+[[:space:]]+in[[:space:]]+)\(?[^;&()]*\)", r"\1CASE_PATTERN)", "g"),
+    (r"(;;[[:space:]]*)\(?[^;&()]*\)", r"\1CASE_PATTERN)", "g"),
+)
+
+
+class _Unparsed(Exception):
+    """Shell text _glob_scan cannot follow."""
+
+
+def _skip_single(text: str, i: int) -> int:
+    """The index after the single-quoted span opening at I."""
+    end = text.find("'", i + 1)
+    if end < 0:
+        raise _Unparsed
+    return end + 1
+
+
+def _close_backtick(text: str, i: int) -> int:
+    """The index of the backquote ending the substitution whose body starts at I."""
+    while i < len(text):
+        if text[i] == "\\":
+            i += 2
+        elif text[i] == "`":
+            return i
+        else:
+            i += 1
+    raise _Unparsed
+
+
+def _close(text: str, i: int, opening: str, closing: str) -> int:
+    """The index of the CLOSING that ends the `$(` or `${` body starting at I."""
+    depth, n = 1, len(text)
+    while i < n:
+        c = text[i]
+        if c == "\\":
+            i += 2
+        elif c == "'":
+            i = _skip_single(text, i)
+        elif c == '"':
+            i = _double_quoted(text, i)[0]
+        elif c == "`":
+            i = _close_backtick(text, i + 1) + 1
+        elif closing == "}" and text.startswith("$(", i):
+            i = _close(text, i + 2, "(", ")") + 1
+        else:
+            if c == opening:
+                depth += 1
+            elif c == closing:
+                depth -= 1
+                if depth == 0:
+                    return i
+            i += 1
+    raise _Unparsed
+
+
+def _expansion(text: str, i: int) -> tuple[int, str] | None:
+    """The expansion starting at I (`$((`, `$(`, `${` or a backquote): the index
+    after it and its scanned form; None if none starts there."""
+    if text.startswith("$((", i):
+        end = _close(text, i + 2, "(", ")")
+        body = text[i + 3:end]
+        if "$(" in body or "`" in body:
+            raise _Unparsed
+        return end + 1, "A"
+    if text.startswith("$(", i):
+        end = _close(text, i + 2, "(", ")")
+        return end + 1, "$(" + _glob_scan(text[i + 2:end], True) + ")"
+    if text.startswith("${", i):
+        end = _close(text, i + 2, "{", "}")
+        body = text[i + 2:end]
+        # Its pattern operators are not command boundaries, but as (part of)
+        # a program name an expansion with a pattern still names an unknown
+        # program, so P keeps a `*` for one unless it is an assignment value.
+        # A substitution inside it runs.
+        if "$(" in body or "`" in body:
+            return end + 1, "${" + _glob_scan(body, True) + "}"
+        word = re.split(r"[ \t\n;&|()]", text[:i])[-1]
+        named = re.search(r"[*?[]", body) and not re.match(r"[A-Za-z_][A-Za-z0-9_]*=", word)
+        return end + 1, "P*" if named else "P"
+    if text.startswith("`", i):
+        end = _close_backtick(text, i + 1)
+        return end + 1, "`" + _glob_scan(text[i + 1:end], True) + "`"
+    return None
+
+
+def _double_quoted(text: str, i: int) -> tuple[int, str]:
+    """For the double-quoted span opening at I: the index after it, and Q
+    followed by the expansions in it, scanned."""
+    out, i, n = ["Q"], i + 1, len(text)
+    while i < n:
+        if text[i] == "\\":
+            i += 2
+        elif text[i] == '"':
+            return i + 1, "".join(out)
+        elif (found := _expansion(text, i)) is not None:
+            i, scanned = found
+            out.append(scanned)
+        else:
+            i += 1
+    raise _Unparsed
+
+
+def _feeds_data(segment: str) -> bool:
+    """Whether the simple command SEGMENT (its scanned text so far) is a program
+    that reads a heredoc as data or as non-shell source."""
+    words = segment.split()
+    k = 0
+    while k < len(words):
+        word = words[k]
+        if (word in _GLOB_PREFIX_WORDS or word.startswith("-") or re.fullmatch(r"[0-9]+[smhd]?", word)
+                or re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=\S*", word)):
+            k += 1
+        elif re.search(r"(^|/)pyenv$", word) and words[k + 1:k + 2] == ["exec"]:
+            k += 2
+        else:
+            program = word.rsplit("/", 1)[-1]
+            return program in _GLOB_DATA_CONSUMERS or re.fullmatch(r"python[0-9.]*", program) is not None
+    return False
+
+
+def _glob_scan(text: str, nested: bool = False) -> str:
+    """TEXT reduced to what the shell expands: a quoted span becomes Q followed
+    by its expansions, `${...}` P (P* when it holds a pattern), `$((...))` A,
+    an escaped character E, a `!` that is not a pipeline negation X; comments
+    are dropped, and so are the bodies of quoted heredocs read by a program
+    that is not a shell (unquoted ones keep their expansions); other bodies
+    are kept as normalize_shell_words reads them. Substitutions are scanned in place, as
+    NESTED text. Raises _Unparsed on text it cannot follow."""
+    out: list[str] = []
+    segment = 0                # where in OUT the current simple command starts
+    heredocs: list[tuple[str, bool, bool, bool]] = []    # delimiter, strip tabs, quoted, data
+    i, n = 0, len(text)
+    while i < n:
+        c = text[i]
+        at_word_start = i == 0 or text[i - 1] in " \t\n;&|()"
+        if c == "\n":
+            out.append("\n")
+            i += 1
+            for delimiter, strip, quoted, data in heredocs:
+                start = i
+                while True:
+                    if i >= n:
+                        raise _Unparsed
+                    end = text.find("\n", i)
+                    end = n if end < 0 else end
+                    line = text[i:end]
+                    i = end + 1
+                    if (line.lstrip("\t") if strip else line) == delimiter:
+                        break
+                body = text[start:i]
+                if not data:
+                    # Shell or unknown: read as the older normalization did.
+                    out.append(normalize_shell_words(body))
+                elif not quoted:
+                    out.append(_double_quoted('"' + body.replace("\\", "\\\\").replace('"', '\\"') + '"', 0)[1])
+                out.append("\n")
+            heredocs = []
+            segment = len(out)
+        elif c == "\\":
+            if not text.startswith("\\\n", i):
+                out.append("E")
+            i += 2
+        elif c == "'":
+            out.append("Q")
+            i = _skip_single(text, i)
+        elif c == '"':
+            i, scanned = _double_quoted(text, i)
+            out.append(scanned)
+        elif c == "#" and at_word_start:
+            end = text.find("\n", i)
+            i = n if end < 0 else end
+        elif (found := _expansion(text, i)) is not None:
+            i, scanned = found
+            out.append(scanned)
+        elif c == "!":
+            out.append("!" if at_word_start and text[i + 1:i + 2] in ("", " ", "\t", "\n") else "X")
+            i += 1
+        elif text.startswith("<<", i) and not text.startswith("<<<", i):
+            j = i + 2
+            strip = text.startswith("-", j)
+            j += strip
+            while j < n and text[j] in " \t":
+                j += 1
+            delimiter, quoted = [], False
+            while j < n and text[j] not in " \t\n;&|()<>":
+                if text[j] == "'":
+                    end = _skip_single(text, j)
+                    delimiter.append(text[j + 1:end - 1])
+                    quoted, j = True, end
+                elif text[j] == '"':
+                    end = text.find('"', j + 1)
+                    if end < 0:
+                        raise _Unparsed
+                    delimiter.append(text[j + 1:end])
+                    quoted, j = True, end + 1
+                elif text[j] == "\\":
+                    delimiter.append(text[j + 1:j + 2])
+                    quoted, j = True, j + 2
+                else:
+                    delimiter.append(text[j])
+                    j += 1
+            if not delimiter:
+                raise _Unparsed
+            # A body is data only when its reader and every program its output
+            # is piped to on the rest of the line read data, nothing there
+            # substitutes, and it is not inside a substitution, whose output
+            # may run (lib-heredoc's masker never allowed a pipe).
+            line_end = text.find("\n", j)
+            rest = text[j:] if line_end < 0 else text[j:line_end]
+            data = (not nested and not re.search(r"[(`]", rest) and _feeds_data("".join(out[segment:]))
+                    and all(_feeds_data(stage) for stage in rest.split("|")[1:]))
+            heredocs.append(("".join(delimiter), strip, quoted, data))
+            out.append("<<D")
+            i = j
+        else:
+            out.append(c)
+            i += 1
+            if c in ";&|()":
+                segment = len(out)
+    if heredocs:
+        raise _Unparsed
+    return "".join(out)
+
+
+def glob_scan_text(text: str) -> str | None:
+    """TEXT as the executable-glob rules read it (see _glob_scan), or None when
+    the scan cannot follow it."""
+    try:
+        scanned = _glob_scan(text)
+    except (_Unparsed, RecursionError):
+        return None
+    return command_substitution(sed(scanned + "\n", *_CASE_RULES, *_NORMALIZE_RULES))
+
+
 def secret_output_issue(command: str, *, document_edits: bool = True) -> str | None:
     """How COMMAND may run a tool whose output is the secret itself: "protected"
     (a credential or clipboard tool name may execute) or "glob" (a program named
@@ -300,10 +550,14 @@ def secret_output_issue(command: str, *, document_edits: bool = True) -> str | N
         return "protected"
     if grep(f"(-exec|-execdir|-ok|-okdir)[[:space:]]+{_SW_EXECUTABLE}{_SW_DELIMITER}", normalized):
         return "protected"
-    if grep(f"{_SW_BOUNDARY}({_SW_WRAPPER})*{_SW_GLOB}{_SW_DELIMITER}", normalized):
-        return "glob"
-    if grep(f"find[[:space:]].*-exec[[:space:]]+{_SW_GLOB}{_SW_DELIMITER}", normalized):
-        return "glob"
+    glob_text = None
+    for rule in (f"{_SW_BOUNDARY}({_SW_WRAPPER})*{_SW_GLOB}{_SW_DELIMITER}",
+                 f"find[[:space:]].*-exec[[:space:]]+{_SW_GLOB}{_SW_DELIMITER}"):
+        if grep(rule, normalized):
+            # Confirmed on the text the shell expands; kept if it cannot be parsed.
+            glob_text = glob_text or glob_scan_text(mask_heredoc_bodies(raw, "nonshell")) or normalized
+            if grep(rule, glob_text):
+                return "glob"
     if grep(r"""(^|[[:space:];&|(!`])(([^;&|[:space:]]*/)?(bash|sh|zsh|dash|ksh)[[:space:]]+-l?c|eval)"""
             r"""[[:space:]]+["'][^"']*([?*]|\[[^]]*)""", raw):
         return "glob"

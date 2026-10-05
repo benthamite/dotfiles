@@ -171,6 +171,48 @@ class SecretOutputReasonTests(NoKnownSecrets):
             with self.subTest(command=command):
                 self.assertIsNone(sl.secret_output_issue(command))
 
+    def test_text_the_shell_does_not_expand_is_not_a_command_glob(self):
+        # Shapes of real false denials (2026-10-02..05): pattern operators in
+        # ${...}, case patterns, quoted Python/SQL (also nested in $(...)),
+        # quoted assignments, `[!.]*`, and heredoc bodies read by Python or
+        # cat behind a prefix the heredoc masker does not follow.
+        for command in (
+                'for q in "a|b" "c|d"; do t=${q%%|*}; o=${q##*|}; echo "$t $o"; done',
+                'for f in *.json; do p=${f%.json}; id=${p#*/}; echo ${a[0]} $p $id; done',
+                'case "$f" in *.json|*.txt|*.md) echo "$f";; esac',
+                'case $d in a/|b/|arch*) continue;; x?) :;; esac',
+                'du -sh * .[!.]* | sort -h',
+                "grep -E '\"(sadaic_pid|ipi[a-z_]*)\"' f.json | wc -l",
+                "U='postgresql://u@h/db?options=-c%20x' psql -c 'select 1'",
+                'grep x out.txt | python -c "\nimport sys,random\nL=sys.stdin.read().splitlines()\n'
+                'print(random.sample(L,2)[0]*2)"',
+                'echo "$id: $(psql -Atc "select count(*) from works where id=$id")"',
+                'echo "$(python3 -c "print(\'\'\'a?\'\'\')")"',
+                "for f in $(ls d/*.json); do python3 - \"$f\" <<'EOF'\n"
+                "import glob\nprint(glob.glob('x/*.json'))\nEOF\ndone",
+                "F=x.org; [ -n \"$(tail -c1 \"$F\")\" ] && echo; cat >> \"$F\" <<'EOF'\n** TODO a\nEOF",
+                "python3 - <<EOF\nprint(32*len('ab'))\nEOF",
+                "true # see *.md\nls",
+                "psql -At <<'EOF' 2>&1 | head\nselect count(*) from t;\nEOF",
+                "for n in a:b:c; do k=${n%%:*}; rest=${n#*:}; id=${rest##*:}; echo $k $id; done"):
+            with self.subTest(command=command):
+                self.assertIsNone(sl.secret_output_issue(command))
+                self.assertEqual(bash(command).decision, "allow")
+
+    def test_globs_the_shell_runs_stay_denied(self):
+        # Expansions still run inside quotes, ${...} and heredocs, and a
+        # heredoc fed to a shell is shell.
+        for command in (
+                "/usr/bin/s*ty find-generic-password", "t=${q%%|*}; /bin/p?paste",
+                "case $x in *) :;; esac; /bin/p?paste", "! /bin/p?paste", "x=1 /bin/p?paste | cat",
+                'echo $(/bin/p?paste)', 'echo ${x:-$(/bin/p?paste)}', "echo `/bin/p?paste`",
+                "echo hi && /usr/bin/s*ty", "(/bin/p?paste)", "xargs /bin/p?paste", '"$HOME"/bin/p?paste',
+                "bash <<'EOF'\n/bin/p?paste\nEOF", "cat <<EOF | sh\n/bin/p?paste\nEOF",
+                "find . -exec /usr/bin/s*ty {} \\;", "echo 'unterminated; /bin/p?paste",
+                "${x##*/} show foo", "cat <<'EOF' | head | sh\n/bin/p?paste\nEOF"):
+            with self.subTest(command=command):
+                self.assertEqual(sl.secret_output_issue(command), "glob")
+
 
 class OpaqueTokenHeuristicTests(NoKnownSecrets):
     def test_allows_and_logs_label_without_value(self):

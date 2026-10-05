@@ -216,6 +216,9 @@ opaque. Its read-only =session_tail.py= helper prints the last user and
 assistant text messages of a Claude JSONL transcript or Codex rollout, or of
 the newest one for a project directory.
 
+The =order-salads= skill polls the supplier's WhatsApp chat about every 10
+minutes while waiting for a ticket, not every minute.
+
 The =org-note-conventions= skill applies only to personal notes. It distinguishes
 root-backed and rootless heading layouts, preserves established structure, and
 joins soft prose wrapping without removing intentional Org hard line breaks.
@@ -1165,19 +1168,32 @@ surrounding quotes; both used to miss, leaving the ambient repository to stand
 in, so an unowned target inherited whatever allowlist entry that repository
 had. =gh repo create= now refuses a command that names no =OWNER/REPO= at all,
 because a creation never acts on the current repository and so cannot borrow
-its authorization. Because the target is resolved from the whole command, a
-write inside a compound command (pipes, =;=, =&&=) is refused before any
-repository check, including a real push chained after a =--dry-run= one;
-read-only GitHub commands may be piped or chained freely. A single write
+its authorization. A compound command (pipes, =;=, =&&=) is judged one
+and-or element at a time (2026-10-05): each write element is checked alone in
+the directory it runs in, which is the command's own directory or the
+nearest preceding literal =cd DIR= of the same =&&= chain, so
+=cd ~/repos/x && git fetch -q && git push= is judged as a push from
+=~/repos/x=. Explicit =git -C=, =-R=/=--repo=, =GH_REPO= and URL targets
+still decide; writes to two repositories, or a write after a =cd= that cannot
+be resolved or whose chain ended (=;=, newline, =||=, =&=, or a command that
+may change directory), are refused. Elements made only of =printf=, =echo=,
+=kill-ring-put=, =pbcopy= and the output filters below, with no
+substitution or file redirection, run no write whatever they quote. Anything
+outside that grammar (substitutions, subshells, groups, heredocs, =eval=,
+=export=, =pushd= and similar) keeps the old rule: a write in a compound
+command is refused before any repository check. A scoped grant must match
+the whole command. Read-only GitHub commands may be piped or chained freely.
+=CompoundCommandTests= in =tests/agent_guard/test_policy_github_write.py=
+covers the binding. A single write
 piped only into =tail=, =head=, =grep=, =wc= or =cat=, optionally after
 =2>&1=, keeps its one target and is judged like the bare write. The one other
-compound write accepted is the sanctioned secret-provisioning pipeline
+piped write accepted is the sanctioned secret-provisioning pipeline
 =op-automations [@ACCOUNT] read REF | gh secret set NAME -R OWNER/REPO= (or
 =op-desktop read [--account X] REF= as the reader): exactly two stages, a
 literal =-R=/=--repo= in the =gh= stage checked against the allowlist, no
 other flags except =--no-newline=/=-n= on =read= (which keeps the trailing
-newline out of the stored secret), no operators or substitutions, and the
-1Password policy must approve the same command.
+newline out of the stored secret), no other operators or substitutions within
+that and-or element, and the 1Password policy must approve the same element.
 
 For Claude, the Bash dispatcher (=agent_guard.policies.dispatcher=) runs the
 GitHub write guard behind a prefilter, so the prefilter decides whether the

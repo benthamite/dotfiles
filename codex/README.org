@@ -144,6 +144,9 @@ skills in other repositories are outside its scope.
 Project skills use synthetic contact examples and route MCP credentials through
 the owning account's secrets context without listing account or vault topology.
 
+The =order-salads= skill polls the supplier's WhatsApp chat about every 10
+minutes while waiting for a ticket, not every minute.
+
 The =profile-ai-cli-performance= skill measures selected client conditions
 with exact terminal-success evidence and nullable, failure-aware paired metrics.
 Dry runs do not access credentials or launch clients; selected conditions alone
@@ -743,16 +746,22 @@ reads the allowlist and the automations registry from the committed =HEAD=
 revision, so a working-tree edit to either confers nothing. It classifies each literal shell command nested in
 =functions.exec= independently and refuses dynamic or ambiguous nested calls;
 read-only GitHub inspection remains available for undeclared repositories and
-may be piped or chained, while a write inside a compound command is refused
-before any repository check, including a real push chained after a
-=--dry-run= one. A single write piped only into =tail=, =head=, =grep=, =wc=
-or =cat=, optionally after =2>&1=, keeps its one target and is judged like
-the bare write. The one other compound write accepted is the sanctioned
-secret-provisioning pipeline =op-automations [@ACCOUNT] read REF | gh secret
+may be piped or chained. A compound command is judged one and-or element at
+a time, as for Claude (=claude/README.org=, 2026-10-05): each write is
+checked alone in the directory it runs in, the command's own or the nearest
+preceding literal =cd DIR= of the same =&&= chain; explicit =git -C=, =-R=,
+=GH_REPO= and URL targets still decide; writes to two repositories, or after
+an unresolvable or ended =cd= scope, are refused; text-only elements
+(=printf=, =echo=, =kill-ring-put=, =pbcopy=, output filters) without
+substitutions or file redirection run no write. Syntax outside that grammar
+keeps the old rule, refusing any write in a compound command. A single write
+piped only into =tail=, =head=, =grep=, =wc= or =cat=, optionally after
+=2>&1=, keeps its one target and is judged like the bare write. The one other
+piped write accepted is the sanctioned secret-provisioning pipeline =op-automations [@ACCOUNT] read REF | gh secret
 set NAME -R OWNER/REPO= (or =op-desktop read [--account X] REF= as the
 reader): exactly two stages, a literal =-R=/=--repo= in the =gh= stage checked
-against the allowlist, no other flags, operators or substitutions, and the
-1Password policy must approve the same command. A
+against the allowlist, no other flags, and no other operators or
+substitutions within that element, which the 1Password policy must approve. A
 registry match falls through silently rather than explicitly approving the
 write, including for pull-request merges, so the normal permission layer and
 the global user-authorization rule still apply.

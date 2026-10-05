@@ -44,8 +44,12 @@ def has_extension(profile_dir):
     return (profile_dir / 'Extensions' / EXTENSION_ID).is_dir()
 
 
-def chosen_profile(user_data):
-    """Return the last-used profile with the extension, else the first one."""
+def chosen_profile(user_data, requested=None):
+    """Honor an explicit profile without falling back to another account."""
+    if requested is not None:
+        if requested not in profiles(user_data) or not has_extension(user_data / requested):
+            raise ValueError("requested Chrome profile lacks the Playwright extension: " + requested)
+        return requested
     try:
         last = json.loads((user_data / 'Local State').read_text())['profile']['last_used']
     except (OSError, ValueError, KeyError, TypeError):
@@ -78,7 +82,11 @@ def main(argv):
     """Exec the Playwright MCP server with the chosen profile and its token."""
     env = dict(os.environ)
     args = [str(NODE), str(SERVER), '--extension', *argv]
-    profile = chosen_profile(CHROME)
+    try:
+        profile = chosen_profile(CHROME, env.get("PLAYWRIGHT_MCP_PROFILE"))
+    except ValueError as error:
+        print("playwright-mcp-launch: " + str(error), file=sys.stderr)
+        return 1
     if profile is None:
         print('playwright-mcp-launch: no Chrome profile has the Playwright extension',
               file=sys.stderr)
@@ -95,4 +103,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    sys.exit(main(sys.argv[1:]))

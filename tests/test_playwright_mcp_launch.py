@@ -40,6 +40,19 @@ class ProfileChoiceTests(unittest.TestCase):
         self.last_used('Default')
         self.assertEqual(launch.chosen_profile(self.root), 'Profile 2')
 
+    def test_explicit_profile_overrides_last_used(self):
+        self.install('Profile 2')
+        self.install('Profile 9')
+        self.last_used('Profile 9')
+        self.assertEqual(launch.chosen_profile(self.root, 'Profile 2'), 'Profile 2')
+
+    def test_unavailable_explicit_profile_never_falls_back(self):
+        self.install('Profile 9')
+        self.last_used('Profile 9')
+        for requested in ('Profile 2', '../Profile 9', '', 'Profile 100'):
+            with self.subTest(requested=requested), self.assertRaises(ValueError):
+                launch.chosen_profile(self.root, requested)
+
     def test_no_profile_with_the_extension(self):
         self.last_used('Default')
         self.assertIsNone(launch.chosen_profile(self.root))

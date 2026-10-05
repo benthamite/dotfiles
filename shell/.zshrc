@@ -110,6 +110,7 @@ emacsK() { while true; do emacsk; done }
 alias claude-personal='CLAUDE_CONFIG_DIR=~/.claude-personal claude'
 alias claude-tlon='CLAUDE_CONFIG_DIR=~/.claude-tlon claude'
 alias claude-epoch='CLAUDE_CONFIG_DIR=~/.claude-epoch claude'
+alias claude-forethought='CLAUDE_CONFIG_DIR=~/.claude-forethought claude'
 # make node use local certs
 export NODE_EXTRA_CA_CERTS="$HOME/Library/Application Support/mkcert/rootCA.pem"
 

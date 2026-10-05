@@ -64,16 +64,16 @@ shared tracked artifacts.
 
 ** Multi-account activation
 
-Four OAuth accounts use separate configuration homes:
-=~/.claude-personal/=, =~/.claude-personal2/=, =~/.claude-tlon/=, and
-=~/.claude-epoch/=. Each keeps its own OAuth identity, Keychain credentials,
+Five OAuth accounts use separate configuration homes:
+=~/.claude-personal/=, =~/.claude-personal2/=, =~/.claude-tlon/=,
+=~/.claude-epoch/=, and =~/.claude-forethought/=. Each keeps its own OAuth identity, Keychain credentials,
 and =.claude.json=. Settings, skills, projects, history, and plugins are shared
 through symlinks to =~/.claude/=. The account homes do not contain a second
 =CLAUDE.md=, because the user-level file is already loaded from =~/.claude/=.
 
 The selected account is stored in =~/.claude-current-account=. Emacs reads that
 selection through =agent-claude-start-or-switch= and changes it with
-=agent-claude-select-account=; terminal aliases select the same four account
+=agent-claude-select-account=; terminal aliases select the same account
 homes. Before launching a newly configured account, run
 =agent-claude-init-account= so its shared paths are symlinks from the start.
 Otherwise Claude may create divergent regular settings and history files on

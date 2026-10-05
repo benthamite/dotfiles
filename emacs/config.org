@@ -9491,7 +9491,8 @@ contain =AGENTS.md= or =CLAUDE.md=, including directories without Git repositori
   (agent-claude-accounts '(("personal"  . "~/.claude-personal")
 			   ("personal2"  . "~/.claude-personal2")
 			   ("tlon"     . "~/.claude-tlon")
-			   ("epoch"    . "~/.claude-epoch")))
+			   ("epoch"    . "~/.claude-epoch")
+			   ("forethought" . "~/.claude-forethought")))
   (agent-claude-settings-package-directory
    "~/.config/emacs-profiles/active/elpaca/sources/agent/")
 
@@ -9501,7 +9502,8 @@ contain =AGENTS.md= or =CLAUDE.md=, including directories without Git repositori
                           ("epoch3" :home "~/.codex-epoch3" :pool "epoch-pool")
                           ("epoch4" :home "~/.codex-epoch4" :pool "epoch-pool")
                           ("epoch5" :home "~/.codex-epoch5" :pool "epoch-pool")
-                          ("epoch-plan" :home "~/.codex-epoch-plan")))
+                          ("epoch-plan" :home "~/.codex-epoch-plan")
+                          ("forethought" . "~/.codex-forethought")))
 
   :bind
   ("H-e" . agent-menu)

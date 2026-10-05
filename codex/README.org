@@ -771,8 +771,11 @@ preceding literal =cd DIR= of the same =&&= chain; explicit =git -C=, =-R=,
 an unresolvable or ended =cd= scope, are refused; text-only elements
 (=printf=, =echo=, =kill-ring-put=, =pbcopy=, output filters) without
 substitutions or file redirection run no write. Syntax outside that grammar
-keeps the old rule, refusing any write in a compound command. A single write
-piped only into =tail=, =head=, =grep=, =wc= or =cat=, optionally after
+keeps the old rule, refusing any write in a compound command. Writes hidden
+in code the command runs (substitution and backtick bodies, =sh -c= strings,
+=eval=, =xargs=, text fed to a shell) are extracted and judged as whole
+commands under the same rules, as for Claude (=claude/README.org=,
+2026-10-05). A single write piped only into =tail=, =head=, =grep=, =wc= or =cat=, optionally after
 =2>&1=, keeps its one target and is judged like the bare write. The one other
 piped write accepted is the sanctioned secret-provisioning pipeline =op-automations [@ACCOUNT] read REF | gh secret
 set NAME -R OWNER/REPO= (or =op-desktop read [--account X] REF= as the

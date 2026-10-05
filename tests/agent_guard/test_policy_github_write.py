@@ -177,11 +177,9 @@ class DecideTests(unittest.TestCase):
         self.assertEqual(exec_call('await tools.exec_command({cmd: "git status"})').decision, "allow")
 
 
-class CompoundCommandTests(unittest.TestCase):
-    """A write in a compound command is bound to the nearest preceding literal
-    `cd DIR` of its `&&` chain (2026-10-05). Before, `cd REPO && git push` and
-    even `printf '… git push' | kill-ring-put` were denied as having no
-    segment-local target. benthamite/* is in the committed allowlist."""
+class RepositoryFixtures(unittest.TestCase):
+    """Repositories whose origin is allowlisted (benthamite/* is in the
+    committed allowlist), another allowlisted one, and a foreign one."""
 
     ALLOWED, OTHER = "benthamite/guard-test-scratch", "benthamite/guard-test-other"
 
@@ -228,6 +226,13 @@ class CompoundCommandTests(unittest.TestCase):
 
     UNRESOLVED = "GitHub write target directory cannot be resolved"
     WHOLE = "compound GitHub command has no segment-local repository target"
+
+
+class CompoundCommandTests(RepositoryFixtures):
+    """A write in a compound command is bound to the nearest preceding literal
+    `cd DIR` of its `&&` chain (2026-10-05). Before, `cd REPO && git push` and
+    even `printf '… git push' | kill-ring-put` were denied as having no
+    segment-local target."""
 
     def test_cd_and_push_binds_to_the_cd_target(self):
         self.assertAllowed(f"cd {self.allowed} && git fetch -q && git push")
@@ -303,9 +308,9 @@ class CompoundCommandTests(unittest.TestCase):
         self.assertAllowed('echo "gh pr create --repo no-such-owner-zz/repo" | pbcopy && echo done', cwd=self.foreign)
         self.assertAllowed(f"cd {self.allowed} && git push && printf 'pushed\\n'")
         # A substitution, an interpreter downstream, or a file written is not
-        # text-only. (The write patterns need a separator before `git`, so
-        # these say `$( git push)`; that detection gap predates this rule.)
+        # text-only (HiddenCommandTests covers writes with no space before them).
         self.assertDenied("printf '%s' \"$( git push)\" | kill-ring-put", self.WHOLE, cwd=self.foreign)
+        self.assertDenied("printf '%s' \"$(git push)\" | kill-ring-put", self.WHOLE, cwd=self.allowed)
         self.assertDenied("printf '%s' $( git push) | kill-ring-put", self.WHOLE, cwd=self.foreign)
         self.assertDenied("printf '%s' ` git push` | kill-ring-put", self.WHOLE, cwd=self.foreign)
         self.assertDenied("printf '%s' <( git push) | kill-ring-put", self.WHOLE, cwd=self.foreign)
@@ -325,6 +330,81 @@ class CompoundCommandTests(unittest.TestCase):
                         "| a", "a && && b", "$'a'", "'a", "a \\\nb", "case x in a) ;; esac"):
             with self.subTest(command=command):
                 self.assertIsNone(split(command))
+
+
+class HiddenCommandTests(RepositoryFixtures):
+    """A write hidden in a substitution, an `sh -c` string, eval, xargs or text
+    fed to a shell is judged like a plain write (2026-10-05). The write
+    patterns need a separator before `git` or `gh`, so before, `"$(git push)"`,
+    `eval "git push"` or `printf 'git push' | sh` passed unchecked."""
+
+    NOT_ALLOWED = f"git push targets non-allowlisted repo {FOREIGN}"
+    PR_NOT_ALLOWED = f"gh pr write operation targets non-allowlisted repo {FOREIGN}"
+
+    def assertJudgedLikeAPlainWrite(self, command, label=None):
+        """Denied where the directory's repository is not allowlisted, and
+        allowed where it is, as a plain `git push` is."""
+        self.assertDenied(command, label or self.NOT_ALLOWED, cwd=self.foreign)
+        self.assertAllowed(command, cwd=self.allowed)
+
+    def test_command_and_process_substitutions(self):
+        for command in ('"$(git push)"', 'echo "$(git push)"', "echo $(git push)", "`git push`", "echo `git push`",
+                        "echo $(echo $(git push))", "cat <(git push)", "tee >(git push) </dev/null",
+                        'echo "${X:-$(git push)}"'):
+            self.assertJudgedLikeAPlainWrite(command)
+        self.assertJudgedLikeAPlainWrite("x=$(gh pr create --title T --body B)", self.PR_NOT_ALLOWED)
+
+    def test_shell_strings_eval_and_xargs(self):
+        for command in ("bash -c 'git push'", 'sh -c "git push"', "bash -lc 'git push'", "nohup bash -c 'git push'",
+                        "env FOO=1 bash -c 'git push'", 'eval "git push"', "eval git push", 'command eval "git push"',
+                        "eval $'git\\x20push'", "xargs git push", 'bash -c "$(printf \'git push\')"',
+                        "bash <<< 'git push'", "source <(echo 'git push')"):
+            self.assertJudgedLikeAPlainWrite(command)
+        self.assertJudgedLikeAPlainWrite("zsh -c 'gh pr create --title T --body B'", self.PR_NOT_ALLOWED)
+
+    def test_shell_string_binds_its_own_cd(self):
+        # Before, a `cd` right after the quote was missed and the start directory decided.
+        self.assertDenied(f'sh -c "cd {self.foreign} && git push"', self.NOT_ALLOWED, cwd=self.allowed)
+        self.assertDenied(f"bash -c 'cd {self.foreign} && git push'", self.NOT_ALLOWED, cwd=self.allowed)
+        self.assertAllowed(f'sh -c "cd {self.allowed} && git push"', cwd=self.allowed)
+        self.assertDenied('sh -c "cd nonexistent-zz && git push"', self.UNRESOLVED, cwd=self.allowed)
+
+    def test_text_fed_to_an_interpreter(self):
+        # A pipeline into an interpreter has no segment-local target, wherever it runs.
+        for command in ("printf 'git push' | sh", 'echo "gh pr create --title T --body B" | bash',
+                        "printf 'git push' | sh -s", "echo 'git push' | zsh", "echo 'git push' | source /dev/stdin",
+                        "printf 'push' | xargs git", "echo x | xargs git push", "sh <<EOF\ngit push\nEOF",
+                        "cat <<EOF\n$(git push)\nEOF"):
+            self.assertDenied(command, self.WHOLE, cwd=self.allowed)
+
+    def test_writes_to_two_repositories(self):
+        self.assertDenied(f'echo "$(git -C {self.allowed} push) $(git -C {self.other} push)"',
+                          "GitHub command writes to more than one repository", cwd=self.allowed)
+
+    def test_wrappers_the_guard_cannot_follow_fail_closed(self):
+        for command in ("env -C /tmp bash -c 'git push'", "env -S 'git push'", "sudo -D /tmp sh -c 'git push'"):
+            self.assertDenied(command, "GitHub write in shell text the guard cannot parse", cwd=self.allowed)
+
+    def test_mentions_used_as_data_stay_allowed(self):
+        for command in ("printf '%s' \"git push\" | kill-ring-put", 'grep -rn "git push" .',
+                        "grep -n '$(git push)' file", 'rg "\\`git push\\`" docs', 'git commit -m "git push later"',
+                        'git commit -m "Explain why \\`git push\\` is gated"', 'echo "it\'s \\$(git push)"',
+                        "cat <<'EOF'\n$(git push)\nEOF", 'echo "a $(date) b" # $(git push) in a comment',
+                        "echo 'eval \"git push\"' | pbcopy", "echo $((1<<2)) && git status", "bash -c 'git status'",
+                        "echo 'gh pr list' | sh"):
+            self.assertAllowed(command, cwd=self.foreign)
+
+    def test_hidden_commands(self):
+        hidden = github_write.hidden_commands
+        self.assertEqual(hidden('a "$(b c)" `d` <(e) "${X:-$(f)}"'), ["b c", "d", "e", "f"])
+        self.assertEqual(hidden("sh -c 'a; b' x"), ["a; b", "x"])
+        self.assertEqual(hidden("printf 'a\\nb' | bash"), ["a\nb"])
+        self.assertEqual(hidden("echo y | xargs -I{} git {} -q"), ["git y -q"])
+        self.assertEqual(hidden("bash <<'EOF'\nx $(y)\nEOF"), ["x $(y)\n"])
+        self.assertEqual(hidden("grep '$(a)' \"\\$(b)\" # $(c)"), [])
+        for command in ("a 'b", 'a "$(b', "a `b", "env -C /x b", "cat <<EOF"):
+            with self.subTest(command=command), self.assertRaises(github_write._Unparsed):
+                hidden(command)
 
 
 if __name__ == "__main__":

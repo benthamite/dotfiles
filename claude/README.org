@@ -1223,6 +1223,26 @@ other flags except =--no-newline=/=-n= on =read= (which keeps the trailing
 newline out of the stored secret), no other operators or substitutions within
 that and-or element, and the 1Password policy must approve the same element.
 
+Writes hidden in code the command runs are judged too (2026-10-05). The
+write patterns need a separator before =git= or =gh=, so ="$(git push)"=,
+a backtick, =eval "git push"=, =xargs git push= or =printf 'git push' | sh=
+passed unchecked, and =sh -c "cd X && git push"= was judged in the starting
+directory because the =cd= after the quote was missed. The guard now
+extracts the bodies of command and process substitutions and backticks
+(outside single quotes, and in unquoted-delimiter heredocs), the string after
+=sh=/=bash=/=zsh= =-c=, the arguments of =eval=, the command =xargs= runs with
+its input, and text a shell or =source /dev/stdin= reads from a here-string,
+a heredoc or the literal arguments of earlier pipeline stages. Each is judged
+as a whole command in the command's starting directory, under the same
+allowlist and target rules, so it is denied or allowed exactly as the plain
+write would be; a hidden write in a compound command whose elements were not
+bound one by one (a pipeline into an interpreter, for instance) is refused.
+Text the parser cannot follow, and =env -C=, =env -S= or =sudo -D=, refuse
+when a write pattern appears anywhere in it. Quoted mentions used as data
+(grep patterns, =git commit -m=, =printf ... | kill-ring-put=) stay allowed.
+Scripts in files, other interpreters (=python3 -c=, =node -e=) and code built
+from variables are not inspected. =HiddenCommandTests= covers the forms.
+
 For Claude, the Bash dispatcher (=agent_guard.policies.dispatcher=) runs the
 GitHub write guard behind a prefilter, so the prefilter decides whether the
 guard runs at all. Until 2026-09-18 that
@@ -1230,6 +1250,9 @@ prefilter matched only a bare =git push= or =gh <verb>=, and =git -C DIR push=
 and =/usr/bin/git push= to an unowned repository reached no guard. It now
 delegates on any =git= or =gh= command word, in every spelling the guard's own
 =git_push_command_p= accepts, and the guard decides what is a write.
+Since 2026-10-05 it delegates on =git= or =gh= after any character that cannot
+be part of a word, and on any =$'…'=, whose escapes can spell one: a word after a
+backtick reached no guard before.
 =tests/test_github_write_guard.py= runs those forms through the dispatcher.
 
 Also since 2026-09-18, the GitHub write, Ahrefs and walk-list guards scan text

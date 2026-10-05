@@ -15,7 +15,10 @@ from ..ere import ere, grep
 from . import (ahrefs, destructive, elpaca_rebuild, github_write, hookspath, long_pipeline, secret_leak,
                sensitive_read, untrusted_execution, walk_list)
 
-GIT_OR_GH = ere(r"""(^|[[:space:];|&("'])("[^"]*/(git|gh)"|'[^']*/(git|gh)'|[^[:space:];|&]*/(git|gh)|git|gh)([[:space:]]|$)""")
+# Any `git` or `gh` word, however it is delimited (a backtick, `$(`, a quote
+# fed to `sh -c` or eval), and any `$'…'`, whose escapes can spell one; the
+# guard decides what is a write, including code hidden in the command.
+GIT_OR_GH = ere(r"""(^|[^A-Za-z0-9_.-])(git|gh)([^A-Za-z0-9_.-]|$)|[$]'""")
 EMACSCLIENT = ere(r"\bemacsclient\b")
 ELPACA = ere(r"elpaca-rebuild|elpaca-extras-reload")
 PIPELINE = (ere(r"(python3?|nohup)[^|]*setup_db\.py[^|]*(--full|--target)"),

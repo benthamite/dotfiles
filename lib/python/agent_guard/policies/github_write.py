@@ -563,14 +563,491 @@ def _stateful(segment: Segment) -> bool:
     return False
 
 
+# --- hidden commands (2026-10-05) ---------------------------------------------------
+#
+# The write patterns need a separator before `git` or `gh`, so a write inside a
+# substitution or a string run as code passed unchecked: `"$(git push)"`,
+# `` `git push` ``, `eval "git push"`, `printf 'git push' | sh`; and
+# `sh -c "cd x && git push"` missed its `cd`. _Hidden finds the code a command
+# runs besides its own words:
+#
+# - the bodies of command substitutions, backticks and process substitutions
+#   (outside single quotes, including those in unquoted-delimiter heredocs);
+# - the string after `sh|bash|zsh|… -c`, and the arguments after it;
+# - the arguments of eval, and the command xargs runs with its input appended;
+# - the text a shell, `source /dev/stdin` or xargs reads: a here-string, a
+#   heredoc, or the literal arguments of the earlier stages of its pipeline;
+# - the literal output of a substitution used as code (`bash -c "$(printf …)"`).
+#
+# Each piece is judged as a whole command by the whole hook, in the directory
+# the command starts in (_Guard.check_hidden). Mentions used as data (grep
+# patterns, commit messages, `printf … | kill-ring-put`) are not code here.
+# Text the parser cannot follow, `env -C`, `env -S` and `sudo -D` raise
+# _Unparsed: then a write pattern anywhere in the command, with quotes and
+# brackets ignored, denies. Not covered: scripts in files, other interpreters
+# (python, node, perl), and code built from variables.
+
+class _Unparsed(Exception):
+    """Shell text _Hidden cannot follow."""
+
+
+_SHELLS = {"sh", "bash", "zsh", "dash", "ksh", "mksh", "fish"}
+_STDIN_PATHS = {"/dev/stdin", "-", "/dev/fd/0"}
+_RESERVED = {"!", "if", "then", "else", "elif", "do", "while", "until", "time", "{", "}"}
+# Wrappers that run their operand, and their options that take an argument.
+_PREFIXES = {"command": "", "builtin": "", "exec": "a", "nohup": "", "nice": "n", "caffeinate": "", "stdbuf": "",
+             "timeout": "sk", "sudo": "ughpCTUrt", "env": "uP"}
+_REDIRECT = re.compile(r"([0-9]*)(<<<|<<-|<<|>>|>&|<&|&>>|&>|>\||<>|<|>)(.*)", re.DOTALL)
+_HEREDOC_WORD = re.compile(r"__guard_heredoc_([0-9]+)__")
+_SUBST_WORD = re.compile(r"__guard_subst_([0-9]+)__")
+_HIDDEN_DEPTH = 8
+
+
+def _ansi_c(text: str) -> str:
+    """The value of a `$'…'` body."""
+    try:
+        return text.encode("latin-1", "backslashreplace").decode("unicode_escape")
+    except UnicodeDecodeError as error:
+        raise _Unparsed from error
+
+
+class _Scanner:
+    """COMMAND's top-level substitution and heredoc bodies, and its text
+    (outer) with each substitution replaced by the word __guard_subst_N__, each
+    heredoc operand by __guard_heredoc_N__, `$'…'` by its single-quoted value
+    and `${…}` by a word.
+
+    The OUT argument collects the top-level text; it is None inside a
+    substitution body, whose own substitutions are found when that body is
+    judged as a command of its own."""
+
+    def __init__(self, command: str):
+        self.text = command
+        self.substitutions: list[str] = []
+        self.heredocs: dict[int, str] = {}
+        self.pending: list[tuple[str, bool, bool, int | None]] = []
+        self.arithmetic = 0
+        out: list[str] = []
+        self.code(0, None, out)
+        if self.pending:
+            raise _Unparsed
+        self.outer = "".join(out)
+
+    def code(self, i: int, closer: str | None, out: list[str] | None) -> int:
+        text, end, depth = self.text, len(self.text), 0
+        while i < end:
+            char, following = text[i], text[i + 1:i + 2]
+            if char == "\\":
+                self.emit(out, text[i:i + 2])
+                i += 2
+            elif char == "'":
+                close = text.find("'", i + 1)
+                if close < 0:
+                    raise _Unparsed
+                self.emit(out, text[i:close + 1])
+                i = close + 1
+            elif char == "$" and following == "'":
+                close = i + 2
+                while close < end and text[close] != "'":
+                    close += 2 if text[close] == "\\" else 1
+                if close >= end:
+                    raise _Unparsed
+                self.emit(out, shlex.quote(_ansi_c(text[i + 2:close])))
+                i = close + 1
+            elif char == '"':
+                self.emit(out, char)
+                i = self.expansions(i + 1, out, '"')
+            elif char == "`":
+                i = self.backtick(i, out)
+            elif char in "$<>" and following == "(":
+                i = self.substitution(i, out)
+            elif char == "$" and following == "{":
+                i = self.parameter(i + 2, out)
+            elif text.startswith("<<<", i):
+                self.emit(out, "<<<")
+                i += 3
+            elif char == "<" and following == "<" and not self.arithmetic:
+                i = self.heredoc_operator(i + 2, out)
+            elif char == "\n" and self.pending:
+                self.emit(out, char)
+                i = self.heredoc_bodies(i + 1, out is not None)
+            elif char == "#" and (i == 0 or text[i - 1] in BASH_SPACE + ";&|()"):
+                close = text.find("\n", i)
+                i = end if close < 0 else close
+            else:
+                if char == "(":
+                    depth += 1
+                elif char == ")":
+                    if depth == 0 and closer == ")":
+                        return i
+                    depth = max(depth - 1, 0)  # a stray `)` at top level: a case pattern
+                self.emit(out, char)
+                i += 1
+        if closer is not None:
+            raise _Unparsed
+        return i
+
+    @staticmethod
+    def emit(out: list[str] | None, text: str):
+        if out is not None:
+            out.append(text)
+
+    def record(self, out: list[str] | None, body: str):
+        if out is not None:
+            out.append(f" __guard_subst_{len(self.substitutions)}__ ")
+            self.substitutions.append(body)
+
+    def expansions(self, i: int, out: list[str] | None, terminator: str | None, end: int | None = None) -> int:
+        """Inside double quotes (TERMINATOR '"') or a heredoc body (up to END):
+        backslashes, backticks, `$(` and `${` stay active."""
+        text, end = self.text, len(self.text) if end is None else end
+        while i < end:
+            char, following = text[i], text[i + 1:i + 2]
+            if char == "\\":
+                self.emit(out, text[i:i + 2])
+                i += 2
+            elif char == terminator:
+                self.emit(out, char)
+                return i + 1
+            elif char == "`":
+                i = self.backtick(i, out)
+            elif char == "$" and following == "(":
+                i = self.substitution(i, out)
+            elif char == "$" and following == "{":
+                i = self.parameter(i + 2, out)
+            else:
+                self.emit(out, char)
+                i += 1
+        if terminator is not None:
+            raise _Unparsed
+        return i
+
+    def backtick(self, i: int, out: list[str] | None) -> int:
+        close = i + 1
+        while close < len(self.text) and self.text[close] != "`":
+            close += 2 if self.text[close] == "\\" else 1
+        if close >= len(self.text):
+            raise _Unparsed
+        self.record(out, re.sub(r"\\([\\`$])", r"\1", self.text[i + 1:close]))
+        return close + 1
+
+    def substitution(self, i: int, out: list[str] | None) -> int:
+        arithmetic = self.text[i:i + 3] == "$(("
+        self.arithmetic += arithmetic
+        close = self.code(i + 2, ")", None)
+        self.arithmetic -= arithmetic
+        self.record(out, self.text[i + 2:close])
+        return close + 1
+
+    def parameter(self, i: int, out: list[str] | None) -> int:
+        """`${…}` up to its `}`; substitutions inside it still run."""
+        scratch = [] if out is not None else None
+        text, depth = self.text, 0
+        while i < len(text):
+            char, following = text[i], text[i + 1:i + 2]
+            if char == "\\":
+                i += 2
+            elif char == '"':
+                i = self.expansions(i + 1, scratch, '"')
+            elif char == "`":
+                i = self.backtick(i, scratch)
+            elif char == "$" and following == "(":
+                i = self.substitution(i, scratch)
+            elif char == "$" and following == "{":
+                depth += 1
+                i += 2
+            elif char == "}":
+                if depth == 0:
+                    if out is not None:
+                        out.extend(word for word in scratch if word.startswith(" __guard_subst_"))
+                        out.append(" __guard_var__ ")
+                    return i + 1
+                depth -= 1
+                i += 1
+            else:
+                i += 1
+        raise _Unparsed
+
+    def heredoc_operator(self, i: int, out: list[str] | None) -> int:
+        text = self.text
+        strip = text[i:i + 1] == "-"
+        i += strip
+        while i < len(text) and text[i] in " \t":
+            i += 1
+        word, quoted = [], False
+        while i < len(text) and text[i] not in BASH_SPACE + ";&|<>()":
+            char = text[i]
+            if char in "'\"":
+                close = text.find(char, i + 1)
+                if close < 0:
+                    raise _Unparsed
+                word.append(text[i + 1:close])
+                quoted, i = True, close + 1
+            elif char == "\\":
+                word.append(text[i + 1:i + 2])
+                quoted, i = True, i + 2
+            else:
+                word.append(char)
+                i += 1
+        delimiter = "".join(word)
+        if not delimiter:
+            raise _Unparsed
+        index = None
+        if out is not None:
+            index = len(self.heredocs)
+            self.heredocs[index] = ""
+            out.append(f" <<__guard_heredoc_{index}__ ")
+        self.pending.append((delimiter, strip, not quoted, index))
+        return i
+
+    def heredoc_bodies(self, i: int, recording: bool) -> int:
+        text = self.text
+        for delimiter, strip, expands, index in self.pending:
+            start = i
+            while True:
+                newline = text.find("\n", i)
+                line = text[i:len(text) if newline < 0 else newline]
+                if (line.lstrip("\t") if strip else line) == delimiter:
+                    body_end, i = i, (len(text) if newline < 0 else newline + 1)
+                    break
+                if newline < 0:
+                    body_end = i = len(text)  # bash reads to the end, with a warning
+                    break
+                i = newline + 1
+            if index is not None:
+                self.heredocs[index] = text[start:body_end]
+            if expands and recording:
+                self.expansions(start, [], None, body_end)
+        self.pending.clear()
+        return i
+
+
+def _pipelines(outer: str) -> list[list[str]]:
+    """OUTER split into pipelines of stages at its unquoted control operators,
+    parentheses and standalone braces."""
+    pipelines, stages, current = [], [], []
+    quote, i = None, 0
+
+    def close_stage():
+        stage = "".join(current).strip(BASH_SPACE)
+        current.clear()
+        if stage:
+            stages.append(stage)
+
+    def close_pipeline():
+        close_stage()
+        if stages:
+            pipelines.append(list(stages))
+        stages.clear()
+
+    while i < len(outer):
+        char, following, previous = outer[i], outer[i + 1:i + 2], outer[i - 1:i]
+        if char == "\\" and quote != "'":
+            current.append(outer[i:i + 2])
+            i += 2
+            continue
+        if quote:
+            quote = None if char == quote else quote
+            current.append(char)
+        elif char in "'\"":
+            quote = char
+            current.append(char)
+        elif char == "|" and following != "|":
+            close_stage()
+            i += 2 if following == "&" else 1
+            continue
+        elif char in "|&" and following == char:
+            close_pipeline()
+            i += 2
+            continue
+        elif char == "&" and (previous in ("<", ">") or following == ">"):
+            current.append(char)
+        elif char in ";\n()&" or (char in "{}" and (not previous or previous in BASH_SPACE + ";&|")
+                                   and following in ("", *BASH_SPACE, ";")):
+            close_pipeline()
+        else:
+            current.append(char)
+        i += 1
+    close_pipeline()
+    return pipelines
+
+
+def _strip_prefixes(words: list[str]) -> list[str]:
+    """WORDS from the command a stage runs, past assignments, reserved words
+    and wrappers that run their operand; _Unparsed for a wrapper that changes
+    directory or splits a string into a command."""
+    i = 0
+    while i < len(words):
+        word = words[i]
+        name = os.path.basename(word)
+        if _ASSIGNMENT.match(word) or word in _RESERVED:
+            i += 1
+            continue
+        if name not in _PREFIXES:
+            break
+        if name == "command" and words[i + 1:i + 2] in (["-v"], ["-V"]):
+            return []
+        i += 1
+        while i < len(words):
+            option = words[i]
+            if name in ("env", "sudo") and option.startswith(("-C", "-D", "-S", "--chdir", "--split-string")):
+                raise _Unparsed
+            if name == "env" and _ASSIGNMENT.match(option):
+                i += 1
+            elif option == "--":
+                i += 1
+                break
+            elif option.startswith("--"):
+                i += 1
+            elif option.startswith("-") and len(option) > 1:
+                i += 2 if len(option) == 2 and option[1] in _PREFIXES[name] else 1
+            else:
+                break
+        if name == "timeout":
+            i += 1  # the duration
+    return words[i:]
+
+
+class _Hidden:
+    """The code hidden in COMMAND (see above): codes, a list of shell texts."""
+
+    def __init__(self, command: str):
+        self.scanner = _Scanner(command)
+        self.codes: list[str] = list(self.scanner.substitutions)
+        self.output_parts: list[str] = []
+        for pipeline in _pipelines(self.scanner.outer):
+            produced: list[str] = []
+            for index, stage in enumerate(pipeline):
+                words, fed = self.stage(stage)
+                stdin = fed if fed is not None else ("\n".join(produced) if index else None)
+                if words:
+                    self.analyze(words, stdin)
+                produced.append(self.literal(words, stage))
+                if fed:
+                    produced.append(fed)
+            self.output_parts.extend(produced)
+
+    @property
+    def output(self) -> str:
+        """The literal text COMMAND prints, as far as its arguments and fed
+        text tell (scanned as code wherever the command's output is run)."""
+        return "\n".join(self.output_parts)
+
+    def stage(self, stage: str) -> tuple[list[str], str | None]:
+        """STAGE's command words without redirections, and the text a
+        here-string or heredoc feeds it."""
+        try:
+            raw = shlex.split(stage)
+        except ValueError as error:
+            raise _Unparsed from error
+        words, fed, i = [], None, 0
+        while i < len(raw):
+            match = _REDIRECT.fullmatch(raw[i])
+            if not match:
+                words.append(raw[i])
+                i += 1
+                continue
+            target = match.group(3)
+            if not target and i + 1 < len(raw):
+                target, i = raw[i + 1], i + 1
+            i += 1
+            if match.group(2) == "<<<":
+                fed = self.expand(target)
+            elif match.group(2) in ("<<", "<<-") and (heredoc := _HEREDOC_WORD.fullmatch(target)):
+                fed = self.scanner.heredocs.get(int(heredoc.group(1)), "")
+        return _strip_prefixes(words), fed
+
+    def expand(self, word: str) -> str:
+        """WORD with each substitution replaced by its literal output."""
+        return _SUBST_WORD.sub(lambda match: _Hidden(self.scanner.substitutions[int(match.group(1))]).output, word)
+
+    def literal(self, words: list[str], stage: str) -> str:
+        arguments = [self.expand(word) for word in words[1:] if word not in ("-e", "-n", "-E")]
+        return " ".join(arguments).replace("\\n", "\n")
+
+    def analyze(self, words: list[str], stdin: str | None):
+        name = os.path.basename(words[0])
+        if name in _SHELLS:
+            i, command_string, reads_stdin = 1, False, False
+            while i < len(words):
+                word = words[i]
+                if word == "--":
+                    i += 1
+                    break
+                if word in ("-o", "+o", "-O", "+O", "--rcfile", "--init-file"):
+                    i += 2
+                elif word.startswith("--"):
+                    i += 1
+                elif word[:1] in "-+" and len(word) > 1:
+                    command_string |= word[0] == "-" and "c" in word[1:]
+                    reads_stdin |= "s" in word[1:]
+                    i += 1
+                else:
+                    break
+            operands = words[i:]
+            if command_string:
+                self.codes.extend(self.expand(word) for word in operands)
+            elif operands and not reads_stdin:
+                self.script(operands[0], stdin)
+            elif stdin:
+                self.codes.append(stdin)
+        elif name == "eval":
+            self.codes.append(self.expand(" ".join(words[1:])))
+        elif name in ("source", "."):
+            if len(words) > 1:
+                self.script(words[1], stdin)
+        elif name == "xargs":
+            self.xargs(words[1:], stdin or "")
+
+    def script(self, operand: str, stdin: str | None):
+        """A shell or `source` reading OPERAND as its script; a file's
+        contents are unknown."""
+        if operand in _STDIN_PATHS:
+            if stdin:
+                self.codes.append(stdin)
+        elif _SUBST_WORD.search(operand):
+            self.codes.append(self.expand(operand))
+
+    def xargs(self, words: list[str], stdin: str):
+        i, replace = 0, None
+        while i < len(words) and words[i].startswith("-") and words[i] != "-":
+            word = words[i]
+            i += 1
+            if word == "--":
+                break
+            if word.startswith("--replace"):
+                replace = word.partition("=")[2] or "{}"
+            elif word.startswith("-i"):
+                replace = word[2:] or "{}"
+            elif not word.startswith("--") and word[1] in "IJLnPsEdaRS":
+                argument = word[2:]
+                if not argument and i < len(words):
+                    argument, i = words[i], i + 1
+                if word[1] in "IJ":
+                    replace = argument
+        command, arguments = words[i:] or ["echo"], " ".join(stdin.split())
+        if replace:
+            self.codes.append(shlex.join(word.replace(replace, arguments) for word in command))
+        else:
+            self.codes.append(f"{shlex.join(command)} {arguments}".rstrip())
+
+
+def hidden_commands(command: str) -> list[str]:
+    """The shell texts COMMAND runs as code besides its own words; raises
+    _Unparsed when it cannot tell."""
+    return [code for code in _Hidden(command).codes if code.strip(BASH_SPACE)]
+
+
 class _Guard:
     """One run of the hook over one command."""
 
-    def __init__(self, call: Call, tool: str, command: str, segment: bool = False):
+    def __init__(self, call: Call, tool: str, command: str, segment: bool = False, depth: int = 0):
         self.call = call
         # A segment is one element of a compound command, judged by
         # compound(); the allowed targets of its writes collect in targets.
         self.segment = segment
+        # depth > 0: code hidden in an enclosing command (check_hidden).
+        self.depth = depth
         self.targets: set[str] = set()
         self.runtime = call.runtime
         self.tool = tool
@@ -709,7 +1186,28 @@ class _Guard:
     # --- compound commands -------------------------------------------------------
 
     def writes(self) -> bool:
-        """Whether the command runs any GitHub write that run() gates."""
+        """Whether the command runs any GitHub write that run() gates, in its
+        own words or in code hidden in them."""
+        if self.direct_writes():
+            return True
+        if self.depth >= _HIDDEN_DEPTH:
+            return True
+        try:
+            codes = hidden_commands(self.command)
+        except _Unparsed:
+            return self.unparsed_writes()
+        return any(self.child(code, segment=True).writes() for code in codes)
+
+    def unparsed_writes(self) -> bool:
+        """A write pattern anywhere in the command, quotes and brackets ignored."""
+        relaxed = re.sub(r"[\"'`(){}$<>\\]", " ", self.command)
+        return _Guard(self.call, self.tool, relaxed, segment=True, depth=_HIDDEN_DEPTH).direct_writes()
+
+    def child(self, code: str, segment: bool = False) -> "_Guard":
+        return _Guard(self.call, self.tool, code, segment=segment, depth=self.depth + 1)
+
+    def direct_writes(self) -> bool:
+        """Whether the command's own words run a GitHub write that run() gates."""
         scan = self.scan
         if ere.grep(_GIT_PUSH, scan):
             return True
@@ -745,14 +1243,17 @@ class _Guard:
         target = os.path.normpath(target)
         return target if os.path.isdir(target) else None
 
-    def judge_segment(self, text: str, directory: str) -> tuple[Result, set[str]]:
+    def judge_segment(self, text: str, directory: str, hidden: bool = False) -> tuple[Result, set[str]]:
         """The whole hook's decision for TEXT run in DIRECTORY, and the
-        repositories its writes target."""
+        repositories its writes target. HIDDEN: TEXT is code hidden in this
+        command, judged as a whole command (its own compound elements bound
+        to their `cd`) but never matched against a scoped grant."""
         payload = {"tool_name": self.call.tool_name, "tool_input": {"command": text}, "cwd": directory}
         env = {key: value for key, value in self.env.items() if key != "REPO_CONTEXT_DIR"}
         env.update(PWD=directory, OLDPWD=bash_pwd(self.env))
         with _working_directory(directory):
-            guard = _Guard(Call.from_payload(self.runtime, payload, env), self.tool, text, segment=True)
+            guard = _Guard(Call.from_payload(self.runtime, payload, env), self.tool, text, segment=not hidden,
+                           depth=self.depth + hidden)
             try:
                 result = guard.run()
             except _Exit as done:
@@ -847,7 +1348,7 @@ class _Guard:
             return self.nested_exec()
         # A grant authorizes one exact command, so it is matched against the
         # whole command, never against one element of a compound command.
-        status = 1 if self.segment else _authorization_status(self.command)
+        status = 1 if self.segment or self.depth else _authorization_status(self.command)
         if status == 0:
             return Result.allow()
         if status != 1:
@@ -920,7 +1421,41 @@ class _Guard:
                       "This operation has no single existing repository target that the repo allowlist can authorize.")
         if self.gh_api_write():
             self.require_allowed_repo("gh api write operation", self.target_repo_for_api())
+        self.check_hidden()
         return Result.allow()
+
+    def check_hidden(self):
+        """Judge the code hidden in the command (see _Hidden) as whole commands
+        run in the directory the command starts in. A compound command whose
+        elements were not judged one by one cannot bind them to a directory."""
+        try:
+            codes = hidden_commands(self.command)
+        except _Unparsed:
+            if self.unparsed_writes():
+                self.deny("GitHub write in shell text the guard cannot parse",
+                          "The command hides a git/gh write in quoting, substitution or a wrapper (env -C, env -S, "
+                          "sudo -D) that this guard cannot follow. Run the write as a plain command.")
+            return
+        hidden = [code for code in codes if self.child(code, segment=True).writes()]
+        if not hidden:
+            return
+        if self.depth >= _HIDDEN_DEPTH:
+            self.deny("GitHub write nested too deeply", "Run the write as a plain command.")
+        self.deny_if_compound()
+        directory = self.context_dir()
+        if directory is None:
+            self.deny("GitHub write target directory cannot be resolved",
+                      "The command's starting directory does not exist, so the target of the write it runs as "
+                      "hidden code cannot be checked.")
+        for code in hidden:
+            result, found = self.judge_segment(code, directory, hidden=True)
+            if result.decision == "deny":
+                raise _Exit(result)
+            self.targets |= found
+        if len(self.targets) > 1:
+            self.deny("GitHub command writes to more than one repository",
+                      "Targets: " + ", ".join(sorted(self.targets)) + ". Run each repository's writes in a separate "
+                      "tool call.")
 
     def gh_api_write(self) -> bool:
         command = self.command

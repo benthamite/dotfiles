@@ -539,6 +539,18 @@ class DispatcherPrefilterTests(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertEqual(self.run_dispatcher(command), "deny")
 
+    def test_hidden_writes_reach_the_guard(self) -> None:
+        # Until 2026-10-05 a backtick or `$'…'` before the word skipped the guard.
+        for command in (
+            f"echo `git push {self.UNOWNED} master`",
+            f"eval $'git\\x20push {self.UNOWNED} master'",
+            f'echo "$(git push {self.UNOWNED} master)"',
+            f"printf 'git push {self.UNOWNED} master' | sh",
+            f"bash -c 'git push {self.UNOWNED} master'",
+        ):
+            with self.subTest(command=command):
+                self.assertEqual(self.run_dispatcher(command), "deny")
+
     def test_read_only_git_and_gh_still_pass_the_dispatcher(self) -> None:
         for command in (
             "git -C /tmp/somerepo status --short",

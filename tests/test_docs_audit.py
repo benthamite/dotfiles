@@ -1646,6 +1646,26 @@ class DocsAuditInventoryTests(DocsAuditTestCase):
         self.assertNotIn("archive/", rendered)
         self.assertNotIn("\n* ", rendered)
 
+    def test_inventory_lists_disabled_skills_apart_from_active_ones(self):
+        rows = [
+            self.module.SkillInventoryRow(
+                name=name, description=f"{name} description.", scope="Global",
+                tools=("Codex",), paths=(f"codex/skills/{name}/SKILL.md",),
+            )
+            for name in ("active", "dormant")
+        ]
+        rendered = self.module.render_skill_inventory(
+            rows, disabled=frozenset({"dormant", "absent"})
+        )
+        self.assertIn("- =active=", rendered)
+        self.assertNotIn("- =dormant=", rendered)
+        self.assertNotIn("dormant description.", rendered)
+        self.assertTrue(rendered.endswith(
+            "Disabled, recorded in [[file:../skills-disabled.json]"
+            "[skills-disabled.json]]: =dormant=.\n"
+        ))
+        self.assertNotIn("\n* ", rendered)
+
     def test_catalog_consolidates_installations_without_changing_source_inventory(self):
         skill = self.skill_text("shared", "Same description.")
         root = self.make_repo(

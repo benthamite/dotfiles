@@ -116,6 +116,7 @@ class _SkillDefinition:
 class _SkillInventoryResult:
     rows: tuple[SkillInventoryRow, ...]
     problems: tuple[str, ...]
+    disabled: frozenset[str] = frozenset()
 
 
 def git_files(root: Path) -> list[str]:
@@ -375,9 +376,23 @@ def _skill_row_sort_key(row: SkillInventoryRow) -> tuple[object, ...]:
     )
 
 
+def _disabled_skill_names(root: Path) -> tuple[frozenset[str], list[str]]:
+    """Return the skills recorded as disabled in skills-disabled.json."""
+    path = root / "skills-disabled.json"
+    if not path.exists():
+        return frozenset(), []
+    try:
+        disabled = json.loads(path.read_text(encoding="utf-8")).get("disabled", {})
+    except (OSError, UnicodeError, ValueError, AttributeError):
+        return frozenset(), ["Disabled-skill record is unreadable: skills-disabled.json"]
+    if not isinstance(disabled, dict):
+        return frozenset(), ["Disabled-skill record is invalid: skills-disabled.json"]
+    return frozenset(disabled), []
+
+
 def _skill_inventory_result(root: Path) -> _SkillInventoryResult:
     definitions: list[_SkillDefinition] = []
-    problems: list[str] = []
+    disabled, problems = _disabled_skill_names(root)
     paths = [relative for relative in git_files(root)
              if relative.endswith("/SKILL.md") and not _excluded_skill_path(relative)]
     filters = _skill_encryption_filters(root, paths)
@@ -472,6 +487,7 @@ def _skill_inventory_result(root: Path) -> _SkillInventoryResult:
     return _SkillInventoryResult(
         tuple(sorted(rows, key=_skill_row_sort_key)),
         tuple(sorted(set(problems))),
+        disabled,
     )
 
 
@@ -602,15 +618,26 @@ def _org_code(value: str) -> str:
 
 
 def render_skill_inventory(
-    rows: list[SkillInventoryRow], relative: str = "agents/skill-inventory.org"
+    rows: list[SkillInventoryRow],
+    relative: str = "agents/skill-inventory.org",
+    disabled: frozenset[str] = frozenset(),
 ) -> str:
-    """Render active skills as one alphabetical list with relative links."""
+    """Render active skills as one alphabetical list with relative links.
+
+    Skills named in DISABLED (from skills-disabled.json) are left out of the
+    list and named in one closing line, so the inventory never presents a
+    disabled skill as available."""
     lines = SKILL_INVENTORY_HEADER.rstrip("\n").splitlines()
     lines.append("")
     grouped: dict[tuple[str, str], list[SkillInventoryRow]] = {}
+    disabled_present: set[str] = set()
     for row in rows:
-        if row.scope != "Archived":
-            grouped.setdefault((row.name, row.description), []).append(row)
+        if row.scope == "Archived":
+            continue
+        if row.name in disabled:
+            disabled_present.add(row.name)
+            continue
+        grouped.setdefault((row.name, row.description), []).append(row)
     for group in sorted(grouped.values(), key=lambda group: _skill_row_sort_key(
         min(group, key=_skill_row_sort_key)
     )):
@@ -639,6 +666,17 @@ def render_skill_inventory(
             description = description.replace("Pablo", "I").replace("himself", "myself")
             description = description.replace("his private voice samples", "my private voice samples")
         lines.append(f"- {_org_code(row.name)} [{' | '.join(links)}]: {description}")
+    if disabled_present:
+        target = posixpath.relpath(
+            "skills-disabled.json", posixpath.dirname(relative) or "."
+        )
+        names = ", ".join(
+            _org_code(name) for name in sorted(disabled_present, key=str.casefold)
+        )
+        lines.append("")
+        lines.append(
+            f"Disabled, recorded in [[file:{target}][skills-disabled.json]]: {names}."
+        )
     return "\n".join(lines) + "\n"
 
 
@@ -683,7 +721,7 @@ def skill_inventory_problems(root: Path, policy: dict) -> list[str]:
         actual = path.read_text(encoding="utf-8")
     except (OSError, UnicodeError):
         return [f"Generated skill inventory is invalid: {relative}"]
-    expected = render_skill_inventory(list(result.rows), relative)
+    expected = render_skill_inventory(list(result.rows), relative, result.disabled)
     if actual != expected:
         return [f"Generated skill inventory is stale: {relative}"]
     return []
@@ -714,7 +752,7 @@ def write_skill_inventory(root: Path, policy: dict) -> list[str]:
             delete=False,
         ) as handle:
             temporary = Path(handle.name)
-            handle.write(render_skill_inventory(list(result.rows), relative))
+            handle.write(render_skill_inventory(list(result.rows), relative, result.disabled))
             handle.flush()
             os.fsync(handle.fileno())
         temporary.chmod(0o644)

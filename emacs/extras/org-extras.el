@@ -161,6 +161,19 @@ When nil, use Org's built-in CSL fallback style."
                  string)
   :group 'org-extras)
 
+(defcustom org-extras-epoch-meetings-directory
+  (file-name-concat paths-dir-epoch "meetings/")
+  "Directory holding my private Epoch meeting notes.
+`org-extras-epoch-open-meeting-for-doc' searches the Org files under it."
+  :type 'directory
+  :group 'org-extras)
+
+(defcustom org-extras-epoch-doc-id-properties
+  '("GEMINI_DOC_ID" "GOOGLE_DOC_ID" "GDOCS_DOCUMENT_ID")
+  "Org properties that record the Google Doc a meeting note came from."
+  :type '(repeat string)
+  :group 'org-extras)
+
 ;;;; Variables
 
 (defvar-local org-extras-id-auto-add-exclude-file nil
@@ -1677,6 +1690,69 @@ SEPARATOR is nil, use ' • '."
 		   x)))
 	     strings)
      (or separator " • "))))
+
+;;;;; Epoch meetings
+
+(defun org-extras-epoch-open-meeting-for-doc (doc)
+  "Visit the private Epoch meeting note recording the Google Doc DOC.
+DOC is a Google Docs URL or a bare document ID.  Interactively, offer
+the link, URL or ID at point as the default.  The notes searched are
+the Org files under `org-extras-epoch-meetings-directory', matched on
+any of `org-extras-epoch-doc-id-properties'."
+  (interactive (list (org-extras-epoch--read-doc)))
+  (let* ((id (or (org-extras-epoch-doc-id doc)
+                 (user-error "Not a Google Doc ID or URL: %s" doc)))
+         (match (or (org-extras-epoch-find-meeting id)
+                    (user-error "No meeting note records Google Doc %s" id))))
+    (find-file (car match))
+    (goto-char (cdr match))
+    (org-reveal)))
+
+(defun org-extras-epoch--read-doc ()
+  "Read a Google Doc ID or URL, defaulting to the one at point."
+  (let ((default (org-extras-epoch--doc-at-point)))
+    (read-string (format-prompt "Google Doc ID or URL" default) nil nil default)))
+
+(defun org-extras-epoch--doc-at-point ()
+  "Return the region, Org link, URL or symbol at point that names a Google Doc."
+  (let ((candidate
+         (cond ((use-region-p)
+                (buffer-substring-no-properties (region-beginning) (region-end)))
+               ((and (derived-mode-p 'org-mode)
+                     (eq (org-element-type (org-element-context)) 'link))
+                (org-element-property :raw-link (org-element-context)))
+               (t (or (thing-at-point 'url t) (thing-at-point 'symbol t))))))
+    (when (and candidate (org-extras-epoch-doc-id candidate))
+      candidate)))
+
+(defun org-extras-epoch-doc-id (string)
+  "Return the Google Doc ID in STRING, or nil if it names none.
+STRING is a Google Docs URL or a bare document ID."
+  (cond ((string-match
+          "docs\\.google\\.com/document/\\(?:u/[0-9]+/\\)?d/\\([-_A-Za-z0-9]+\\)"
+          string)
+         (match-string 1 string))
+        ((string-match "\\`[[:space:]]*\\([-_A-Za-z0-9]\\{25,\\}\\)[[:space:]]*\\'" string)
+         (match-string 1 string))))
+
+(defun org-extras-epoch-find-meeting (id)
+  "Return (FILE . POSITION) of the meeting note recording Google Doc ID.
+Return nil when no Org file under `org-extras-epoch-meetings-directory'
+records ID, or when that directory does not exist."
+  (when (file-directory-p org-extras-epoch-meetings-directory)
+    (let ((regexp (concat "^[ \t]*:"
+                          (regexp-opt org-extras-epoch-doc-id-properties)
+                          ":[ \t]+" (regexp-quote id) "[ \t]*$")))
+      (seq-some (lambda (file) (org-extras-epoch--file-match file regexp))
+                (directory-files-recursively
+                 org-extras-epoch-meetings-directory "\\.org\\'")))))
+
+(defun org-extras-epoch--file-match (file regexp)
+  "Return (FILE . POSITION) of the first line in FILE matching REGEXP, or nil."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (when (re-search-forward regexp nil t)
+      (cons file (line-beginning-position)))))
 
 ;;;;; ol-eww
 

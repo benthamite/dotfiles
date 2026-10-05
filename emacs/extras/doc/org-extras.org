@@ -229,6 +229,22 @@ The default value is =("emacs-lisp" "python")=.  Add additional
 language names (such as ="shell"= or ="ruby"=) if you trust their
 evaluation in your workflow.
 
+** Epoch meeting notes
+:PROPERTIES:
+:CUSTOM_ID: h:epoch-meeting-notes-options
+:END:
+
+#+vindex: org-extras-epoch-meetings-directory
+#+vindex: org-extras-epoch-doc-id-properties
+The user option ~org-extras-epoch-meetings-directory~ is the directory
+of private Epoch meeting notes that
+~org-extras-epoch-open-meeting-for-doc~ searches
+([[#h:opening-epoch-meeting-notes][Opening the meeting note for a Google Doc]]).  It defaults to
+the =meetings/= subdirectory of ~paths-dir-epoch~.  The user option
+~org-extras-epoch-doc-id-properties~ lists the Org properties that
+record a meeting's source Google Doc: =GEMINI_DOC_ID=, =GOOGLE_DOC_ID=
+and =GDOCS_DOCUMENT_ID= by default.
+
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
@@ -1060,6 +1076,21 @@ bullet characters are replaced with Org list markers (=-=).
 
 This is an enhanced version of ~org-eww-copy-for-org-mode~ from the
 =ol-eww= library.
+
+*** Opening the meeting note for a Google Doc
+:PROPERTIES:
+:CUSTOM_ID: h:opening-epoch-meeting-notes
+:END:
+
+#+findex: org-extras-epoch-open-meeting-for-doc
+The command ~org-extras-epoch-open-meeting-for-doc~ visits the private
+Epoch meeting note made from a given Google Doc.  It prompts for a Docs
+URL or a bare document ID, offering the Org link, URL or ID at point as
+the default, and opens the first Org file under
+~org-extras-epoch-meetings-directory~ whose properties record that
+document, at the matching property.  It signals an error when no note
+records it.  Shared workspace notes can refer to a meeting by its Google
+Doc alone, and this command resolves the reference to my private notes.
 
 ** Babel and encryption
 :PROPERTIES:

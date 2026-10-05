@@ -47,6 +47,7 @@ User options
 * Clock report parameters::
 * Participant exclusion regexp::
 * Babel evaluation languages::
+* Epoch meeting notes::
 
 Commands
 
@@ -127,6 +128,7 @@ Links and sorting
 
 * Sorting links::
 * Copying EWW content as Org::
+* Opening the meeting note for a Google Doc::
 
 Babel and encryption
 
@@ -262,6 +264,7 @@ improve clock resolution, agenda file handling, and citation insertion
 * Clock report parameters::
 * Participant exclusion regexp::
 * Babel evaluation languages::
+* Epoch meeting notes::
 @end menu
 
 @node Agenda file exclusions
@@ -384,13 +387,27 @@ string.
 The user option @code{org-extras-confirm-babel-evaluate-languages} is a list
 of Org Babel language names (strings) for which code block evaluation
 proceeds without confirmation.  The function
-@code{org-extras-confirm-babel-evaluate} checks this list and returns
-non-nil for languages it contains, which tells Org that no confirmation
-prompt is needed (@ref{Babel and encryption}).
+@code{org-extras-confirm-babel-evaluate} checks this list and returns nil
+for languages it contains, which tells Org that no confirmation prompt
+is needed (@ref{Babel and encryption}).  Every other language is confirmed.
 
 The default value is @samp{("emacs-lisp" "python")}.  Add additional
 language names (such as @samp{"shell"} or @samp{"ruby"}) if you trust their
 evaluation in your workflow.
+
+@node Epoch meeting notes
+@section Epoch meeting notes
+
+@vindex org-extras-epoch-meetings-directory
+@vindex org-extras-epoch-doc-id-properties
+The user option @code{org-extras-epoch-meetings-directory} is the directory
+of private Epoch meeting notes that
+@code{org-extras-epoch-open-meeting-for-doc} searches
+(@ref{Opening the meeting note for a Google Doc}).  It defaults to
+the @samp{meetings/} subdirectory of @code{paths-dir-epoch}.  The user option
+@code{org-extras-epoch-doc-id-properties} lists the Org properties that
+record a meeting's source Google Doc: @samp{GEMINI_DOC_ID}, @samp{GOOGLE_DOC_ID}
+and @samp{GDOCS_DOCUMENT_ID} by default.
 
 @node Commands
 @chapter Commands
@@ -676,6 +693,12 @@ including @code{variable-pitch-mode}, @code{org-indent-mode}, @code{org-indent-p
 @code{org-startup-indented} and file-local variables only for the scan.  This
 keeps presentation setup such as variable-pitch indentation and file-local
 eval forms from doing unrelated work while the agenda is being built.
+
+Newly opened Org buffers are marked for deferred initialization.  On their
+first display outside the scan, normal mode setup, local variables and
+file-opening hooks run without rereading the file.  This restores fonts,
+wrapping and indentation while preserving unsaved text, point and narrowing.
+Already open buffers and subsequent displays are left alone.
 
 @node Going to an agenda item and clocking in
 @subsection Going to an agenda item and clocking in
@@ -1182,6 +1205,7 @@ skipped.
 @menu
 * Sorting links::
 * Copying EWW content as Org::
+* Opening the meeting note for a Google Doc::
 @end menu
 
 @node Sorting links
@@ -1211,6 +1235,19 @@ bullet characters are replaced with Org list markers (@samp{-}).
 
 This is an enhanced version of @code{org-eww-copy-for-org-mode} from the
 @samp{ol-eww} library.
+
+@node Opening the meeting note for a Google Doc
+@subsection Opening the meeting note for a Google Doc
+
+@findex org-extras-epoch-open-meeting-for-doc
+The command @code{org-extras-epoch-open-meeting-for-doc} visits the private
+Epoch meeting note made from a given Google Doc.  It prompts for a Docs
+URL or a bare document ID, offering the Org link, URL or ID at point as
+the default, and opens the first Org file under
+@code{org-extras-epoch-meetings-directory} whose properties record that
+document, at the matching property.  It signals an error when no note
+records it.  Shared workspace notes can refer to a meeting by its Google
+Doc alone, and this command resolves the reference to my private notes.
 
 @node Babel and encryption
 @section Babel and encryption
@@ -1424,10 +1461,11 @@ remain folded.  It is used internally by
 @findex org-extras-confirm-babel-evaluate
 The function @code{org-extras-confirm-babel-evaluate} is suitable as a value
 for @code{org-confirm-babel-evaluate}.  It receives the language name LANG
-and returns non-nil when the language is a member of
+and returns nil when the language is a member of
 @code{org-extras-confirm-babel-evaluate-languages} (@ref{Babel evaluation languages, , Babel evaluation
 languages}), indicating that no confirmation is needed for that
-language.
+language.  For any other language it returns non-nil, so Org prompts
+before evaluating the block.
 
 @node Refiling helpers
 @section Refiling helpers

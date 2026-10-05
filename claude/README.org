@@ -535,6 +535,10 @@ profile. A transcript still naming the old project whose history already names
 the migration target counts as a half-applied earlier migration and is completed;
 history naming any third project still refuses. Origin: on 2026-09-27 the 8.3.0-dev
 buckets reappeared after their history had been rewritten, blocking 35 sessions.
+A session resumed from another directory has one transcript per bucket under one
+UUID. A transcript's origin is accepted when any history entry for that session
+names it, not only the first, so such a split no longer blocks imports into
+either bucket.
 The paired Codex adapter allows single closed-session imports while unrelated
 sessions remain open, using SQLite transactions and consistent recovery backups.
 Its bulk rename mode retains the full-store offline checks.

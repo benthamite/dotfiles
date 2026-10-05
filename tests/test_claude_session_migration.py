@@ -162,6 +162,21 @@ class ClaudeSessionMigrationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue((self.target / self.transcript.name).is_file())
 
+    def test_destination_owner_resumed_from_another_project_is_verified(self):
+        # Resuming a session from another directory starts a second transcript
+        # with the same UUID there; its first history entry names the project
+        # where the session began.
+        self.target.mkdir()
+        owner = self.target / f"{OTHER_SID}.jsonl"
+        owner.write_bytes(jsonl({"sessionId": OTHER_SID, "cwd": NEW}))
+        with self.history.open("ab") as handle:
+            handle.write(jsonl({"sessionId": OTHER_SID, "project": OTHER, "display": "started"},
+                               {"sessionId": OTHER_SID, "project": NEW, "display": "resumed"}))
+        result = self.apply(SID, "--project", NEW)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue((self.target / self.transcript.name).is_file())
+        self.assertEqual(owner.read_bytes(), jsonl({"sessionId": OTHER_SID, "cwd": NEW}))
+
     def test_existing_verified_destination_preserves_auxiliary_bytes_without_reading_them(self):
         self.target.mkdir()
         owner = self.target / f"{OTHER_SID}.jsonl"

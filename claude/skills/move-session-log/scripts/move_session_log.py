@@ -152,14 +152,20 @@ def history_rows(plan: MigrationPlan) -> tuple[Rows, str]:
     return read_rows(plan, HISTORY_FILE, append_only=True), f"captured: {HISTORY_FILE}"
 
 
-def history_origin(rows: Rows, session_id: str) -> str | None:
-    origin = None
+def history_projects(rows: Rows, session_id: str) -> list[str]:
+    """Projects the history records for SESSION_ID, in first-seen order."""
+    projects: list[str] = []
     for _raw, obj in rows:
         if obj is not None and obj.get("sessionId") == session_id and "project" in obj:
             project = absolute_project(obj["project"])
-            if origin is None:
-                origin = project
-    return origin
+            if project not in projects:
+                projects.append(project)
+    return projects
+
+
+def history_origin(rows: Rows, session_id: str) -> str | None:
+    projects = history_projects(rows, session_id)
+    return projects[0] if projects else None
 
 
 def session_origin(rows: Rows, session_id: str, *, require_identity: bool) -> str | None:
@@ -188,9 +194,16 @@ def establish_origin(rows: Rows, history: Rows, session_id: str, *, target: str 
     """TARGET is the project a migration is moving the session to.  History
     that already names it while the transcript still names the old project is a
     half-applied earlier migration (history rewritten, transcript restored to
-    its old bucket), so the transcript's origin stands."""
+    its old bucket), so the transcript's origin stands.
+
+    A session resumed from another directory keeps its UUID but starts a
+    separate transcript in that directory's bucket, so its history names
+    several projects.  Each transcript's origin stands when any history entry
+    for the session names it."""
     transcript = session_origin(rows, session_id, require_identity=True)
     recorded = history_origin(history, session_id)
+    if transcript is not None and transcript in history_projects(history, session_id):
+        return transcript
     if recorded is not None and recorded == target and transcript not in (None, target):
         return transcript
     if transcript is not None and recorded is not None and transcript != recorded:

@@ -77,6 +77,8 @@ across turns (2026-10-01).
 
 Main agents running inside Emacs publish concise current-state descriptions
 through =bin/agent-status= at task boundaries and meaningful phase changes.
+The global instructions keep only that trigger; the script's =--help= carries
+the wording and failure rules.
 These descriptions appear beside the session summary in the agent menu;
 subagents must not overwrite their parent's status. A failed publish usually
 means Emacs was briefly busy, so agents keep publishing afterwards.

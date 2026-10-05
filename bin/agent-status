@@ -1,6 +1,31 @@
 #!/usr/bin/env bash
 # Publish agent-authored status through the active Emacs package checkout.
 set -euo pipefail
+if [ "${1-}" = -h ] || [ "${1-}" = --help ]; then
+  cat <<'EOF'
+Usage: agent-status [--backend codex|claude-code] "STATUS"
+
+Publish the calling Emacs agent session's current state to its agent menu.
+
+Who: only the main agent of an Emacs session (CODEX_BUFFER_NAME or
+CLAUDE_BUFFER_NAME is set). Subagents must not publish to the parent's
+session. Use --backend only when both variables are set.
+
+When: at task start, at meaningful phase changes, on blockers, and before the
+final response.
+
+What: a factual phrase of roughly 5-12 words, at most 160 characters, such as
+"Testing pagination fix" or "Waiting for your decision about bindings".
+Describe the current state, not the conversation, and do not claim success
+beyond verified evidence. This updates only the menu status, not its
+state-age clock.
+
+On failure: report the failure once and continue the task, but keep
+publishing at later points; a failure usually means Emacs was briefly busy,
+not that it is down. Do not guess another session or switch the Emacs server.
+EOF
+  exit 0
+fi
 script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
 errors=$(mktemp)
 trap 'rm -f "$errors"' EXIT

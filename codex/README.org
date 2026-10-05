@@ -61,7 +61,8 @@ The global =codex/AGENTS.md= and =claude/CLAUDE.md= files are semantic peers.
 The paired =find-past-session= skill directs agents looking for a past session
 to =claude/bin/agent-log-find=, which searches the rendered Markdown session
 logs rather than raw transcripts.
-The audit normalizes tool-specific titles, paths, and Claude =@context= syntax
+Both global files point to the context docs by the same absolute paths, and the
+audit rejects relative =context/= references in either. The audit normalizes tool-specific titles, paths, and Claude =@context= syntax
 before comparison. It also masks each file's browser-availability rule: Claude
 asks for =claude-in-chrome=, while Codex names the =playwright= MCP server's
 =browser_*= tools. The service-access trigger names services only; browser

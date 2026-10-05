@@ -89,6 +89,17 @@ class AiConfigSyncAuditTests(unittest.TestCase):
         self.assertNotIn("claude-in-chrome", codex.read_text())
         self.assertIn("`playwright` MCP server's `browser_*` tools", codex.read_text())
 
+    def test_global_instructions_reject_relative_context_references(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "CLAUDE.md"
+            path.write_text("Read `context/secrets.md` first.\n")
+            self.assertEqual(
+                ["Claude global instructions contain unresolved relative context reference: `context/"],
+                self.module.relative_context_reference_problems(path, "Claude"),
+            )
+            path.write_text(f"Read `{self.module.ROOT}/claude/context/secrets.md` first.\n")
+            self.assertEqual([], self.module.relative_context_reference_problems(path, "Claude"))
+
     def test_documentation_audit_captures_stdout_and_stderr(self):
         root = self.make_repo(["bin/docs-audit"])
         completed = subprocess.CompletedProcess(

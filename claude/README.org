@@ -198,6 +198,9 @@ The =ai-provider-key= helper owns the autonomous spend ceilings for automation
 runtime keys directly.
 
 [[file:context/README.org][The context index]] routes account, service, browser, secret, and MCP procedures.
+=CLAUDE.md= points to these files by absolute path: it loads as =~/.claude/CLAUDE.md=,
+where a relative =context/= path would not resolve. The sync audit rejects
+relative =context/= references in both global files.
 Sensitive procedures should be loaded only when the task needs them. In
 particular, read the secrets context before handling credentials rather than
 copying credential paths or token recipes into this public overview.

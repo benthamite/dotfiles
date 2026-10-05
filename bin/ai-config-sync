@@ -2233,12 +2233,9 @@ def normalized_global_instruction_text(path: Path) -> str:
     root_text = str(ROOT)
     text = text.replace("# Global Claude Code conventions", "# Global agent conventions")
     text = text.replace("# Global Codex conventions", "# Global agent conventions")
+    # Both files point to context docs by absolute path: neither runtime loads
+    # its global file from a directory where `context/...` would resolve.
     text = text.replace(f"{root_text}/", "")
-    text = text.replace("`claude/context/mcp-servers.md`", "`context/mcp-servers.md`")
-    text = text.replace("`claude/context/google-services.md`", "`context/google-services.md`")
-    text = text.replace("`claude/context/secrets.md`", "`context/secrets.md`")
-    text = text.replace("`claude/context/service-access.md`", "`context/service-access.md`")
-    text = text.replace("`claude/context/voice.md`", "`context/voice.md`")
     # Each tool gets its own browser-availability rule: Claude's comes from the
     # claude-in-chrome extension, Codex's from the Playwright MCP server.
     claude_browser_rule = (
@@ -2267,11 +2264,18 @@ def global_instruction_sync_problems() -> list[str]:
 
     if normalized_global_instruction_text(ROOT / GLOBAL_INSTRUCTION_CLAUDE) != normalized_global_instruction_text(codex_path):
         problems.append("Global instruction semantic drift after tool-specific normalization.")
-    actual_codex = codex_path.read_text()
-    for forbidden in ("@context/", "`context/"):
-        if forbidden in actual_codex:
-            problems.append(f"Codex global instructions contain unresolved relative context reference: {forbidden}")
+    problems.extend(relative_context_reference_problems(ROOT / GLOBAL_INSTRUCTION_CLAUDE, "Claude"))
+    problems.extend(relative_context_reference_problems(codex_path, "Codex"))
     return problems
+
+
+def relative_context_reference_problems(path: Path, label: str) -> list[str]:
+    text = path.read_text()
+    return [
+        f"{label} global instructions contain unresolved relative context reference: {forbidden}"
+        for forbidden in ("@context/", "`context/")
+        if forbidden in text
+    ]
 
 
 def add_nested_problems(problems: list[str], header: str, nested: list[str]) -> None:

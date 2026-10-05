@@ -20,7 +20,7 @@
 - **Deletion:** use `trash` instead of destructive recursive deletion.
 - **Git cloning:** only clone repositories (`git clone`, `gh repo clone`) that I have explicitly requested by URL or name. If a task seems to require cloning an unmentioned repo, ask first.
 - **Shared systems:** do not create PRs, open issues, post Slack/email/comments, create or update Asana tasks, or take other externally visible actions without my explicit confirmation.
-- **Secrets:** when reading, storing, sharing, or placing credentials (1Password, `.zshenv-secrets`, vault choice), read `context/secrets.md` first.
+- **Secrets:** when reading, storing, sharing, or placing credentials (1Password, `.zshenv-secrets`, vault choice), read `/Users/pablostafforini/My Drive/dotfiles/claude/context/secrets.md` first.
 
 ## User context and communication
 
@@ -37,11 +37,11 @@
 
 ## MCP servers
 
-For MCP server placement, inventory, and account-specific MCP notes, read `context/mcp-servers.md`.
+For MCP server placement, inventory, and account-specific MCP notes, read `/Users/pablostafforini/My Drive/dotfiles/claude/context/mcp-servers.md`.
 
 ## Service access tools
 
-For Gmail, Google Sheets/Calendar/Docs/Drive, Slack, GitHub, or Anna's Archive, use the local tool mapped in `context/service-access.md` rather than ad-hoc API calls or browser automation. For Google account/auth details, read `context/google-services.md`.
+For Gmail, Google Sheets/Calendar/Docs/Drive, Slack, GitHub, or Anna's Archive, use the local tool mapped in `/Users/pablostafforini/My Drive/dotfiles/claude/context/service-access.md` rather than ad-hoc API calls or browser automation. For Google account/auth details, read `/Users/pablostafforini/My Drive/dotfiles/claude/context/google-services.md`.
 
 ## Filesystem organization
 

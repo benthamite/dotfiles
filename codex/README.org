@@ -147,7 +147,10 @@ the owning account's secrets context without listing account or vault topology.
 
 The =order-salads= skill polls the supplier's WhatsApp chat about every 5
 minutes while waiting for a ticket, not every minute. It books Uber within the
-fare cap under a standing terms approval, without asking again.
+fare cap under a standing terms approval, without asking again. Its
+=browser-flow.md= records the tested routes: saving the Mercado Pago receipt PDF
+from the in-page viewer with a page script, attaching it to WhatsApp without the
+native file picker, and committing only the agent's own ledger hunk.
 
 The =profile-ai-cli-performance= skill measures selected client conditions
 with exact terminal-success evidence and nullable, failure-aware paired metrics.

@@ -21,7 +21,7 @@ The only other always-visible surface is skill descriptions. The design therefor
   - "so you don't have to ask again", "remember this", "store this";
   - adding or changing guidance in any instruction file, skill, hook, context/reference doc, project map, brief or note.
 - **Body**, a few lines with no restated policy:
-  1. Read `agents/instruction-placement.org` in full before choosing.
+  1. Read `/Users/pablostafforini/My Drive/dotfiles/agents/instruction-placement.org` (absolute path, so it resolves from any project) in full before choosing.
   2. Apply its decision test and permission boundary.
   3. For the chosen home, name what will put the content in front of the agent at the moment it is needed (a skill description, a hook, or a link from a map/skill that is already loaded at that time). If nothing does, the placement is incomplete.
 
@@ -35,31 +35,29 @@ The only other always-visible surface is skill descriptions. The design therefor
 - Leave `config-audit`'s reference as is. It audits; it doesn't place.
 - Update the `claude/README.org` and `codex/README.org` lines that say "Agent-facing guidance changes first consult the shared instruction-placement policy" so they name the skill as the delivery route.
 
-### 4. Apply the policy to today's leftover: `personal-details.md` (done in a9979771a; the context-index row was dropped because the docs audit admits only tracked files)
-- **Reference fact:** per the policy, it gets a link from the artifact loaded when forms are filled.
-- **Delivery:** the `chrome-use` skill is loaded before every browser step. Add one line there: "To fill a form for Pablo, take his details from `claude/context/personal-details.md`."
-- **Context index:** add a row to `claude/context/README.org` (it lists reference docs).
-- **README fix:** correct the false uncommitted line in `claude/README.org:201`.
-- **Unchanged:** keep the link already in `notes/flight-booking-profile.org`.
+### 4. `personal-details.md` (done: baseline)
+Completed in a9979771a: `chrome-use` (both) points form filling at the file; READMEs updated. No context-index row: the docs audit admits only tracked files. Nothing further in this plan.
 
 ### 5. Commit
 - Commit in single-purpose commits, following repo gates (README updates, pair sync):
-  1. `.gitignore` + context index + chrome-use line + README fix;
-  2. the new skill + dotfiles-context repoint + READMEs + policy step.
+  - One commit: the new skill pair + `dotfiles-context` repoint + both READMEs + policy step + the regenerated `agents/skill-inventory.org` (`bin/docs-audit generate`).
 
 ## Critical files
 - `agents/instruction-placement.org`: decision test, one added step.
 - `claude/skills/instruction-placement/SKILL.md` and `codex/skills/instruction-placement/SKILL.md`: new.
 - `claude/skills/dotfiles-context/SKILL.md` and `codex/skills/dotfiles-context/SKILL.md`.
-- `claude/skills/chrome-use/SKILL.md` and its codex peer.
-- `claude/context/README.org`, `claude/README.org`, `codex/README.org`, `.gitignore` (already staged).
+- `claude/README.org`, `codex/README.org`, `agents/skill-inventory.org` (generated).
 
 ## Verification
-- `bin/ai-config-sync audit` passes, and the commit gates pass.
-- **Trigger test (the real check):** run 3 fresh sessions started outside the dotfiles repo (cwd `~/My Drive/Forethought`), one each for Claude and Codex where possible. Use these prompts:
+- `bin/docs-audit generate`, `bin/docs-audit audit` and `bin/ai-config-sync audit` pass; commit gates pass.
+- Trigger matrix, every case on both Claude and Codex, fresh sessions with cwd `~/My Drive/Forethought`, each prompt ending "plan only, don't write anything":
   1. "Remember my seat preference is aisle so you don't ask again."
-  2. "Add a rule that you should always X" (a non-every-session rule).
+  2. "Add a rule that you should always run the linter before committing Elisp."
   3. "Store my passport expiry somewhere you can find it."
-- Pass criterion: in the rendered log, each run loads `instruction-placement` and reads the policy before writing anything. Each run uses no tools beyond reading, because the prompts end with "plan only, don't write". The cost is a few small model calls.
-- **Negative check:** an ordinary coding prompt does not trigger the skill.
-- If any trigger test fails, revise the description and rerun before calling it done.
+  4. Agent-initiated: a task in which Pablo corrects the agent mid-task (e.g. "you keep forgetting that I want X; make sure this doesn't happen again") without saying where to store it.
+  5. Negative: an ordinary coding question; the skill must not load.
+- Pass criterion for 1–4: the rendered log shows the skill loaded and the policy read, and the proposed plan (a) picks the home the policy's decision test gives, (b) proposes no CLAUDE.md/AGENTS.md edit without asking permission, (c) names the trigger that will deliver the content when needed. Loading alone is not a pass.
+- On any failure, revise the description and rerun the failing cases on both hosts.
+
+## Review
+Codex review of de72bb4e (run 64f92d58): five findings, all accepted and applied above (stronger pass criterion; absolute policy path; full host×case matrix incl. agent-initiated case; step 4 treated as completed baseline; inventory regeneration).

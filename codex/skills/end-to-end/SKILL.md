@@ -212,7 +212,7 @@ that interaction ineligible for this skill.
   Emacs session.
 - **Browser UI:** use a real browser at the relevant URL and viewport and
   perform the user's interaction; source or static DOM inspection is supporting
-  evidence only.
+  evidence only. Load `chrome-use` before driving Pablo's Chrome.
 - **Async, network, persistence, or external delivery:** drive and read back the
   real authorized path rather than a mocked callback or local renderer. Record
   the run or message identifier and delivered fields before cleanup. Capture

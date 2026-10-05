@@ -53,9 +53,10 @@ browser. Shared logic: `~/My Drive/dotfiles/lib/python/paper_fetch.py`.
    files are deleted by the tool, never staged.
 
 3. Browser job (`needs-browser`). The tool wrote `browser_job.path` (JSON) and one
-   JavaScript snippet per origin. Use the session's Chrome control (Claude:
-   `claude-in-chrome`; Codex: the Chrome plugin per `service-access.md`), in a tab
-   you create, and follow this order for each origin — it matters:
+   JavaScript snippet per origin. Load `chrome-use` first, then use the session's
+   Chrome control (Claude: Claude in Chrome; Codex CLI: the Playwright MCP
+   `browser_*` tools; Codex desktop app: `control-chrome`), in a tab you create,
+   and follow this order for each origin — it matters:
 
    1. Navigate the tab to the *first item URL* of that origin (the PDF itself).
       The challenge page ("Just a moment…", "DDoS-Guard") clears on its own within

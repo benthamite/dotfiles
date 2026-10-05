@@ -52,7 +52,8 @@ generic file-copy recipe to evade a guard.
 
 ## Finish
 
-Tell Pablo in one line what was staged and where to paste it, without repeating
-the payload. Open a relevant thread only when requested or useful within the
+Stage first, then show: after staging succeeds, show Pablo the staged text so
+he can check it, and say in one line where it was staged and where to paste it.
+Never show a credential. Open a relevant thread only when requested or useful within the
 authorized handoff, through the mandated service-access tool; navigation must
 not send a message or modify a draft.

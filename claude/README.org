@@ -477,11 +477,14 @@ user must paste himself (Emacs kill ring, clipboard for Chrome or native
 forms, opening the target thread). The global instructions only point at it,
 and the service-access routing table lives in
 [[file:context/service-access.md][context/service-access.md]] for the same reason: procedures load on demand,
-while the always-loaded file keeps one trigger line each. That routing table
-defines non-disruptive background research and the authorization boundary for
-live Chrome use, including tab navigation. Within authorized browser tasks it
-selects the Chrome plugin, reserves =chrome-profile-open= for manual launching,
-and separates page/REPL stalls from communication failures.
+while the always-loaded file keeps one trigger line each. The paired
+=chrome-use= skill, which loads before any browser step, owns the browser
+rules: background research stays off live Chrome, standing authorization for
+logged-in sites, each agent's browser control, never stealing focus (no new
+windows, no activating windows, =chrome-profile-open= only for manual
+launching), and one retry policy that separates connection failures (governed
+by =chrome-bridge-recover.py= for Claude) from page/REPL stalls. It takes
+precedence over the vendor Chrome skills where they differ.
 
 The service-access and [[file:context/google-services.md][Google account reference]] also record the dedicated Forethought Chrome profile (=forethought.org=, =pablo@forethought.org=). Forethought browser work uses that profile; its Google CLI authentication is not configured. Personal-profile guest access to the onboarding checklist is a separate, explicitly permitted route.
 

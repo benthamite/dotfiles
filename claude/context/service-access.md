@@ -68,48 +68,4 @@ profile at runtime; browser/tab IDs are session-specific.
 
 ### Browser access rules
 
-For background web research, use the web search/browsing tool and the mapped
-service clients or direct public downloads. Do not switch to Pablo's live Chrome
-because an HTTP request fails or a site presents a challenge. When a task
-needs Pablo's logged-in accounts or a site with no other agent path, use the
-browser through the Chrome plugin (Claude in Chrome / `control-chrome`) without
-asking; Pablo has authorized this standing use and does not want to repeat it
-(2026-10-02). Never steal focus while doing so: do not click links or buttons
-that open a new tab or window (Chrome activates them); read the link's `href`
-and navigate the agent's own tab to it instead.
-
-For Codex automation that depends on an existing Chrome session, use the
-installed Chrome plugin through its `control-chrome` skill and browser client.
-Verify the connection with a read-only tab listing before navigating. A failed
-generic Playwright or guessed CDP connection does not show that Chrome control
-is unavailable.
-
-Classify a failure before recovering from it. The plugin's
-`chrome-troubleshooting` checks and its `open-chrome-window.js` step cover only
-a communication failure: setup, browser selection or `browser.tabs.list()`
-fails. Once a browser is selected and a tab exists, a `goto` timeout ("Timed
-out waiting for tab … to navigate"), a hung page read, or `js execution timed
-out; kernel reset` is a page or REPL failure. The connection checks pass and
-prove nothing about it. Recover without asking: read the tab again; after a
-kernel reset, rerun the bootstrap and rebind the browser; then open a fresh
-tab from that browser and retry the navigation once. Challenge-protected hosts
-(DDoS-Guard, Cloudflare; for example Anna's Archive) can outlast `goto`'s load
-wait while their interstitial runs, so a timeout there is expected: read the
-tab until its title changes before calling the page unavailable. Treat it as a
-communication failure only if a fresh `browser.tabs.list()` also fails.
-
-Never open a new Chrome window, and never ask to: Pablo rejected an
-agent-opened window on 2026-09-25, and a window does not fix a page stall.
-When live Chrome use is authorized, work in tabs of the existing window.
-If communication still fails after the
-documented checks, report which check failed.
-
-`chrome-profile-open <alias> URL` is only a launcher for a page the user wants
-opened manually. It activates Chrome and can steal focus. Never use it,
-AppleScript, System Events, screenshots, or coordinate clicking as a fallback
-for Codex browser automation. If the Chrome plugin cannot connect after its
-documented checks, fail closed and report the connection problem.
-
-Configure launcher aliases with `chrome-profile-open --setup <alias>`.
-Project wrappers may call the launcher when manual opening is the requested
-action.
+Before any browser step, load the `chrome-use` skill; it holds the browser rules.

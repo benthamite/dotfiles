@@ -48,17 +48,35 @@ def policies_for(runtime: str, tool: str):
 
 
 def decide(call: Call) -> Result:
-    """The combined decision. A policy failure propagates (the caller denies)."""
+    """The combined decision. A HookFailure propagates at once (the caller denies).
+
+    Any other policy crash lets the rest of the chain run: if any policy
+    denies, before or after the crash, the call is denied with those reasons,
+    because main() would otherwise turn the crash into an allow-with-warning
+    on a read-only tool (crash_warning) and drop the denial. With no denial,
+    the first crash propagates.
+    """
     reasons: list[str] = []
     updated, context = None, ""
+    crash: Exception | None = None
     for policy in policies_for(call.runtime, call.tool_name):
-        result = policy.decide(call)
+        try:
+            result = policy.decide(call)
+        except HookFailure:
+            raise
+        except Exception as error:  # noqa: BLE001 - re-raised below unless a policy denies
+            crash = crash or error
+            continue
         if result.decision == "deny":
             reasons.append(result.reason)
         updated = updated or result.updated_input
         context = context or result.context
     if reasons:
+        if crash is not None:
+            reasons.append(f"(Another guard policy also crashed: {_crash_cause(crash)}.)")
         return Result.deny("\n\n".join(reasons))
+    if crash is not None:
+        raise crash
     return Result(decision="allow", updated_input=updated, context=context)
 
 

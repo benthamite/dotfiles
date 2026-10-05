@@ -757,9 +757,11 @@ except that a crash on =Read=, =Grep= or =Glob= allows the call unguarded with
 a warning to the user and the agent, so a broken guard can still be read and
 diagnosed (2026-10-05, after crashes on 2026-10-01/02 denied every tool).
 The engine handles the crashes it catches; =agent-guard.sh= handles the rest
-(no interpreter, an import error, a signal), trusting only a payload with a
-single =tool_name= key. A policy's deliberate =HookFailure= or an unparsable
-payload still denies every tool; =ReadOnlyToolCrashTests= in
+(no interpreter, an import error, a signal), reading the top-level
+=tool_name= with =JSON.parse= under =osascript -l JavaScript=, not the
+guard's Python. A denial by another policy in the chain still stands when one
+crashes. A policy's deliberate =HookFailure= or an unparsable payload still
+denies every tool; =ReadOnlyToolCrashTests= in
 =tests/test_hook_failure_safety.py= covers both paths. Each
 former guard hook is a policy module in =lib/python/agent_guard/policies/=
 (=secret_leak=, =sensitive_read=, =untrusted_execution=, =destructive=,

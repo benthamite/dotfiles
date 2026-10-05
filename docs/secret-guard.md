@@ -44,8 +44,13 @@ redesign behind it is
    read-only tools (Read, Grep, Glob) allows the call with a warning to the
    user and the agent (`engine.crash_warning`, and `agent-guard.sh` when the
    engine cannot start), so a broken guard can still be read and diagnosed;
-   their sensitive-read and walk-list checks do not run then. A policy's
-   `HookFailure`, an unparsable payload or an uncertain tool name still deny.
+   their sensitive-read and walk-list checks do not run then. A denial by any
+   other policy in the chain still stands (`engine.decide` runs the rest of
+   the chain after a crash). `agent-guard.sh` reads the top-level `tool_name`
+   with `JSON.parse` in `osascript -l JavaScript`, independent of the guard's
+   Python; `plutil` is unsuitable because it also accepts old-style and XML
+   property lists. A policy's `HookFailure`, an unparsable or non-JSON payload,
+   a nested-only or non-string tool name, or a failing parser still deny.
 
 ## Incident inventory (agent exposures)
 

@@ -17,8 +17,12 @@
 # (2026-10-01/02, when every tool was denied). The engine handles crashes it
 # catches (agent_guard.engine.crash_warning) and exits 2 for everything it
 # denies on purpose; this script handles the rest (no interpreter, an import
-# error, a signal), reading the tool name from a single top-level-looking
-# "tool_name" key. Anything less certain denies.
+# error, a signal). It reads the top-level "tool_name" with a strict JSON
+# parser that does not depend on the guard's Python: JSON.parse in macOS's
+# JavaScript for Automation (plutil also accepts old-style and XML property
+# lists, so it cannot tell malformed JSON apart). Duplicate keys resolve as
+# in the runtime's own JSON.parse. Malformed JSON, a non-object payload, a
+# missing or non-string top-level tool_name, or a failing osascript denies.
 # Codex has no read-only tools, so READ_ONLY_TOOLS is empty and every failure denies.
 READ_ONLY_TOOLS=''
 PY="$HOME/.pyenv/versions/3.11.9/bin/python3"
@@ -29,9 +33,17 @@ printf '%s' "$payload" | "$PY" -S -E -X pycache_prefix="$HOME/.cache/agent-guard
 status=$?
 [ "$status" -eq 0 ] && exit 0
 if [ "$status" -ne 2 ] && [ -n "$READ_ONLY_TOOLS" ]; then
-  keys=$(printf '%s' "$payload" | /usr/bin/grep -oE '"tool_name"[[:space:]]*:' | /usr/bin/wc -l | /usr/bin/tr -d ' ')
-  tool=$(printf '%s' "$payload" | /usr/bin/grep -oE '"tool_name"[[:space:]]*:[[:space:]]*"[A-Za-z]+"' | /usr/bin/sed -E 's/.*"([A-Za-z]+)"$/\1/')
-  if [ "$keys" = 1 ] && [[ "$tool" =~ ^($READ_ONLY_TOOLS)$ ]]; then
+  # JSON.stringify quotes the name, so a trailing newline cannot be stripped
+  # into a match; anything but a quoted letters-only name denies.
+  quoted=$(/usr/bin/osascript -l JavaScript -e 'function run(argv) {
+    const payload = JSON.parse(argv[0]);
+    if (payload === null || typeof payload !== "object" || Array.isArray(payload)) throw new Error("not an object");
+    if (typeof payload.tool_name !== "string") throw new Error("no top-level string tool_name");
+    return JSON.stringify(payload.tool_name);
+  }' "$payload" 2>/dev/null) || quoted=
+  tool=
+  [[ "$quoted" =~ ^\"([A-Za-z]+)\"$ ]] && tool=${BASH_REMATCH[1]}
+  if [ -n "$tool" ] && [[ "$tool" =~ ^($READ_ONLY_TOOLS)$ ]]; then
     message="WARNING: agent-guard crashed (engine exit status $status). $tool was allowed WITHOUT its guard checks (sensitive-read, walk-list); Bash, Edit, Write and other tools stay blocked until the guard is fixed."
     printf '%s\n' "$message" >&2
     printf '{"systemMessage": "%s", "hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": "%s"}}\n' "$message" "$message"

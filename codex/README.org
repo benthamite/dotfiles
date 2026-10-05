@@ -691,7 +691,9 @@ registers only =hooks/agent-guard.sh= for the shell tools and for
 =apply_patch|Edit|Write=. It runs the engine in =lib/python/agent_guard= and
 turns any failure into a denial. Claude's exception for a crash on its read-only
 tools does not apply: Codex has no =Read=, =Grep= or =Glob= tool, so its
-=agent-guard.sh= keeps =READ_ONLY_TOOLS= empty. Each former guard hook is a policy module in
+=agent-guard.sh= keeps =READ_ONLY_TOOLS= empty; it shares the Claude script's
+strict =JSON.parse= reading of the top-level =tool_name=, which never runs
+for Codex. Each former guard hook is a policy module in
 =lib/python/agent_guard/policies/= (=secret_leak=, =sensitive_read=,
 =untrusted_execution=, =destructive=, =github_write= and so on), run per tool
 in the order the old registrations did. For credential-prone shell commands

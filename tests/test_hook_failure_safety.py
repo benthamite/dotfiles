@@ -13,8 +13,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import guard_harness  # noqa: E402
 
 from agent_guard import classifiers, engine  # noqa: E402
-from agent_guard.core import HookFailure  # noqa: E402
-from agent_guard.policies import secret_leak  # noqa: E402
+from agent_guard.core import HookFailure, Result  # noqa: E402
+from agent_guard.policies import secret_leak, sensitive_read, walk_list  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 GUARD_NAMES = (
@@ -214,6 +214,28 @@ class ReadOnlyToolCrashTests(unittest.TestCase):
             with self.subTest(text=text):
                 GuardFailureSafetyTests.assert_blocks_failure(self, guard_harness.run_engine("claude", text))
 
+    def test_denial_before_or_after_a_crash_stands(self):
+        # 67abcafa7 regression: decide() collected sensitive_read's denial,
+        # then walk_list crashed and main() replaced the whole result with an
+        # allow-with-warning, so a denied Read went through.
+        denied = mock.Mock(return_value=Result.deny("sensitive file"))
+        crashed = mock.Mock(side_effect=RuntimeError("secret-looking detail"))
+        for first, second in ((denied, crashed), (crashed, denied)):
+            with self.subTest(first=first is denied), mock.patch.object(sensitive_read, "decide", first), \
+                    mock.patch.object(walk_list, "decide", second):
+                for tool in ("Read", "Grep"):
+                    result = guard_harness.run_engine("claude", {"tool_name": tool, "tool_input": {}})
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    decision = result.decision()
+                    self.assertEqual(decision["permissionDecision"], "deny")
+                    self.assertIn("sensitive file", decision["permissionDecisionReason"])
+                    self.assertIn("also crashed: RuntimeError", decision["permissionDecisionReason"])
+                    self.assertNotIn("secret-looking detail", result.stdout + result.stderr)
+        # With no denial, the crash still allows Read with a warning.
+        with mock.patch.object(sensitive_read, "decide", return_value=Result.allow()), \
+                mock.patch.object(walk_list, "decide", side_effect=RuntimeError("x")):
+            self.assert_warned_allow(guard_harness.run_engine("claude", self.READ), "Read")
+
     def test_entry_script_failure_allows_only_read_only_tools(self):
         with tempfile.TemporaryDirectory(prefix="guard-no-python-") as home:
             env = {**os.environ, "HOME": home}
@@ -227,6 +249,19 @@ class ReadOnlyToolCrashTests(unittest.TestCase):
                 ("claude", {"tool_name": "Bash", "tool_input": {"tool_name": "Read"}}),
                 ("claude", '{"tool_input": {}, "tool_name": "Read", "tool_name": "Bash"}'),
                 ("claude", "{broken"),
+                # Malformed JSON that names Read: trailing garbage, a
+                # trailing comma, an old-style property list (which plutil
+                # would accept), and an XML property list.
+                ("claude", '{"tool_name": "Read"} trailing'),
+                ("claude", '{"tool_name": "Read",}'),
+                ("claude", "{tool_name = Read;}"),
+                ("claude", '<?xml version="1.0"?><plist version="1.0"><dict><key>tool_name</key>'
+                           "<string>Read</string></dict></plist>"),
+                # Only a nested tool_name, or a non-string or non-object one.
+                ("claude", {"tool_input": {"tool_name": "Read"}}),
+                ("claude", {"tool_name": {"Read": 1}, "tool_input": {}}),
+                ("claude", {"tool_name": "Read\n", "tool_input": {}}),
+                ("claude", ["Read"]),
                 ("codex", self.READ),
             ):
                 with self.subTest(runtime=runtime, payload=payload):

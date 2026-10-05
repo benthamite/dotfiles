@@ -384,25 +384,11 @@
       "note": "1Password broker output-policy classifier for agent_guard.policies.secret_leak and github_write: allows an op-automations/op-desktop invocation only when its stdout cannot carry a credential; unmatched shapes are denied. Tested by tests/test_op_policy.py. The shared guard engine (lib/python/agent_guard, classifiers.py) loads this copy in-process for both runtimes; the Codex copy was removed at the 2026-10-01 cutover."
     },
     {
-      "name": "elpaca-run.sh",
-      "claude": "claude/hooks/elpaca-run.sh",
-      "codex": null,
-      "status": "unsupported-or-replaced",
-      "note": "Claude Emacs hook utility; Codex routes Emacs events through codex-hook-wrapper directly."
-    },
-    {
       "name": "epoch-brief-freshness.sh",
       "claude": "claude/hooks/epoch-brief-freshness.sh",
       "codex": "codex/hooks/epoch-brief-freshness.sh",
       "status": "paired",
       "note": "paired PostToolUse wrappers around the Epoch helper projects/shared/scripts/brief_freshness_notice.py, which lists a just-read project brief's possibly stale TODOs once per session and brief. Claude registers on Read|Bash, Codex on its shell matcher; both with timeout 40 (the helper's audit times out at 30). The wrappers differ only in their header comment."
-    },
-    {
-      "name": "fire-and-forget.sh",
-      "claude": "claude/hooks/fire-and-forget.sh",
-      "codex": null,
-      "status": "claude-only",
-      "note": "Claude utility wrapping notify-emacs-* hooks so the CLI doesn't block on emacsclient. The Codex copy was never registered and was removed when the redundant Codex notify-emacs-hook.sh registrations were dropped in favor of codex-hook-wrapper."
     },
     {
       "name": "lib-codex-hook-json.sh",
@@ -461,39 +447,11 @@
       "note": "Runtime-specific apply_patch/Edit/Write path adapters share the bounded manual export behavior. Both emit PostToolUse hookSpecificOutput with hookEventName and additionalContext, including sanitized partial-failure counts; a bare message field is invalid. Export failures use visible context with exit 0 because JSON accompanying a nonzero exit is ignored. No hook registration change is needed for the export-boundary repair."
     },
     {
-      "name": "notify-emacs-notification.sh",
-      "claude": "claude/hooks/notify-emacs-notification.sh",
-      "codex": null,
-      "status": "unsupported-or-replaced",
-      "note": "Claude Notification event; Codex routes Notification-equivalent events through codex-hook-wrapper directly."
-    },
-    {
-      "name": "notify-emacs-session-end.sh",
-      "claude": "claude/hooks/notify-emacs-session-end.sh",
-      "codex": null,
-      "status": "unsupported-or-replaced",
-      "note": "Claude Stop event wrapper; Codex routes Stop through codex-hook-wrapper directly."
-    },
-    {
       "name": "regenerate-manual-after-edit.sh",
       "claude": "claude/hooks/regenerate-manual-after-edit.sh",
       "codex": "codex/hooks/regenerate-manual-after-edit.sh",
       "status": "paired",
       "note": "paired for apply_patch/Edit/Write path lists; both copies emit PostToolUse JSON per the shared hook contract: hookSpecificOutput must carry hookEventName and additionalContext (a bare message field fails Claude's schema validation and is dropped), and failure branches must exit 0 with decision/reason because JSON printed alongside a non-zero exit is ignored"
-    },
-    {
-      "name": "regenerate-coverage-map.sh",
-      "claude": "claude/hooks/regenerate-coverage-map.sh",
-      "codex": null,
-      "status": "claude-only",
-      "note": "Claude PostToolUse Edit|Write hook that refreshes rubric-visualizer coverage maps after CR task grading/rubric.md or grading/coverage-map.json edits. Codex has no matching global PostToolUse hook for this Trajectory-specific Claude workflow."
-    },
-    {
-      "name": "register-coverage-hook.py",
-      "claude": "claude/hooks/register-coverage-hook.py",
-      "codex": null,
-      "status": "claude-only-unregistered-helper",
-      "note": "One-shot helper used to register regenerate-coverage-map.sh in ~/.claude/settings.json; kept beside the runtime hook for local maintenance. It is not a runtime hook and has no Codex counterpart."
     },
     {
       "name": "redact-secrets.sh",
@@ -552,32 +510,11 @@
       "note": "Claude-only SessionStart support for reasoning-tasks worktrees, budgeted for its 30 s registration timeout (banner 15 s, fetch 10 s, merge aborted on TERM, atomic settings write; tests/test_sync_reasoning_tasks_hook.py runs the real hook). Key-link repair precedes eligibility guards; eligible worktrees sync upstream without pushing, reapply the local overlay, inject private project skills, and install freshness protection. The bulk wrapper fetches once. Codex has no SessionStart counterpart and uses creation-time Emacs setup or explicit shared sync. Full behavior: claude/hooks/README.org."
     },
     {
-      "name": "sync-agent-c-worktree.sh",
-      "claude": "claude/hooks/sync-agent-c-worktree.sh",
-      "codex": null,
-      "status": "unsupported-or-replaced",
-      "note": "Compatibility wrapper for the old SessionStart hook path after the conceptual-reasoning repo moved from agent-c to reasoning-tasks. It immediately execs claude/hooks/sync-reasoning-tasks-worktree.sh. No Codex counterpart for the same reason as the canonical hook: Codex has no matching SessionStart hook in this setup."
-    },
-    {
       "name": "track-elisp-skill.sh",
       "claude": "claude/hooks/track-elisp-skill.sh",
       "codex": null,
       "status": "unsupported-or-replaced",
       "note": "Depends on Claude Skill PostToolUse events; Codex has no matching Skill hook event in this setup."
-    },
-    {
-      "name": "cr-skill-routing-reminder.sh",
-      "claude": "claude/hooks/cr-skill-routing-reminder.sh",
-      "codex": null,
-      "status": "claude-only",
-      "note": "Claude PreToolUse Edit/Write reminder: fires when editing a CR prompt/rubric/GOLDEN, telling the agent authoring is owned by /article-to-rubric (QA by /qa-reasoning) and to invoke the skill rather than hand-author. Non-blocking additionalContext. CR-scoped; no Codex peer."
-    },
-    {
-      "name": "cr-card-body-gate.sh",
-      "claude": "claude/hooks/cr-card-body-gate.sh",
-      "codex": null,
-      "status": "claude-only",
-      "note": "Claude PreToolUse Bash gate: denies a GitHub issue create/edit command when its --body-file is a CR card attempt that fails cr_card_body.py check (missing biblio/author/abstract), forcing CR cards through the template tool. Scoped to CR-card bodies; no Codex peer."
     },
     {
       "name": "cr-issue-comment-freshness.sh",

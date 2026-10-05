@@ -146,3 +146,23 @@ Both done 2026-10-01: c155a5b6f (1) and ab55f2695 (2).
    classified as safe from secret-printing credential or clipboard commands"
    although no protected name is present. Give the executable-glob path its
    own reason.
+
+## Follow-ups of 2026-10-05
+
+False denials found in session logs since 2026-10-02 (approved by Pablo).
+Each fixed narrowly, with a regression test, and replayed: every collected
+denied command run through the engine before and after the fix.
+
+3. **A Python variable named `ps` holding JSON read as process inspection**
+   (41b0fbe4e). `ps.values()`, `ps.get(k)` on tangodb's "persons" made the
+   receiver count as evidence. A receiver proven to hold parsed JSON or a
+   builtin container, in its own scope, calling a container method, is now
+   data. Replay: 7 of 12 denials allowed, all of that shape; the other 5 run
+   `ps` through `subprocess` (true) or use an object the proof cannot type.
+4. **Text the shell does not expand read as an executable glob**
+   (40f388f57). `${q%%|*}`, case patterns, quoted Python/SQL, `[!.]*` and
+   Python or `cat` heredoc bodies were scanned as command words. A glob rule
+   that fires is now confirmed on a scan of what the shell expands. Replay:
+   all 33 denials lose the glob reason; 31 are allowed, 2 are denied for
+   other reasons (a 1Password pipeline; a guard failing on a path that no
+   longer exists).

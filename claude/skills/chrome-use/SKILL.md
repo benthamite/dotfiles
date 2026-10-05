@@ -36,7 +36,10 @@ and does not want to repeat it. Each agent uses its own browser control:
 To fill in a form for Pablo, take his name, date of birth, contact details
 and address from `/Users/pablostafforini/My Drive/dotfiles/claude/context/personal-details.md`
 instead of asking him. Card numbers, passport numbers and passwords are not
-there and stay out of agent-typed fields.
+there and stay out of agent-typed fields; Pablo's permission does not change
+this, so do not ask for it. When a form needs one of them, say so at the start,
+fill in everything else, leave it unsubmitted, and tell Pablo which tab and
+Chrome profile window to finish it in.
 
 ## Never steal focus
 

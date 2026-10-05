@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+"""Trust the Epoch workspace checkout and its project directories in Codex.
+
+Run once at the workspace-split cutover, after the workspace repository has
+been cloned. Codex starts an untrusted directory in a restricted mode, so the
+new checkout needs the same `[projects."PATH"] trust_level = "trusted"`
+entries the Drive notes tree has. The script appends an entry for the
+workspace root and for each directory under its `projects/`, in the dotfiles
+Codex config and in every `~/.codex-epoch*/config.toml`, skipping entries
+that already exist. It refuses a workspace that does not exist, so it never
+trusts a path ahead of the clone. Rerunning it adds only what is missing.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+import tomllib
+from pathlib import Path
+
+DEFAULT_WORKSPACE = Path.home() / "repos" / "epoch" / "ai-enablement"
+DOTFILES_CONFIG = Path(__file__).resolve().parents[1] / "config.toml"
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE,
+                        help=f"workspace checkout (default: {DEFAULT_WORKSPACE})")
+    parser.add_argument("--config", type=Path, action="append", dest="configs",
+                        help="Codex config to update; repeatable (default: the dotfiles "
+                             "config and every ~/.codex-epoch*/config.toml)")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="report the entries that would be added without writing")
+    args = parser.parse_args(argv)
+    workspace = args.workspace.expanduser().resolve()
+    if not workspace.is_dir():
+        print(f"trust-epoch-workspace: workspace does not exist: {workspace}", file=sys.stderr)
+        return 1
+    paths = trusted_paths(workspace)
+    for config in unique_configs(args.configs or default_configs()):
+        missing = [path for path in paths if path not in existing_projects(config)]
+        verb = "would add" if args.dry_run else "added"
+        if missing and not args.dry_run:
+            append_entries(config, missing)
+        print(f"{config}: {verb} {len(missing)} of {len(paths)} entries")
+    return 0
+
+
+def trusted_paths(workspace: Path) -> list[str]:
+    """Return the workspace root and its project directories, as strings."""
+    projects = workspace / "projects"
+    children = sorted(child for child in projects.iterdir()
+                      if child.is_dir() and not child.name.startswith(".")) \
+        if projects.is_dir() else []
+    return [str(workspace), *(str(child) for child in children)]
+
+
+def default_configs() -> list[Path]:
+    return [DOTFILES_CONFIG, *sorted(Path.home().glob(".codex-epoch*/config.toml"))]
+
+
+def unique_configs(configs: list[Path]) -> list[Path]:
+    """Return CONFIGS that exist, dropping symlinked duplicates of one file."""
+    seen: set[str] = set()
+    result = []
+    for config in configs:
+        config = config.expanduser()
+        if not config.is_file():
+            print(f"{config}: missing, skipped", file=sys.stderr)
+            continue
+        real = os.path.realpath(config)
+        if real not in seen:
+            seen.add(real)
+            result.append(config)
+    return result
+
+
+def existing_projects(config: Path) -> set[str]:
+    with config.open("rb") as handle:
+        return set((tomllib.load(handle).get("projects") or {}).keys())
+
+
+def append_entries(config: Path, paths: list[str]) -> None:
+    text = config.read_text(encoding="utf-8")
+    separator = "" if text.endswith("\n\n") else ("\n" if text.endswith("\n") else "\n\n")
+    blocks = "".join(f'[projects.{json.dumps(path)}]\ntrust_level = "trusted"\n\n'
+                     for path in paths)
+    with config.open("a", encoding="utf-8") as handle:
+        handle.write(separator + blocks.rstrip("\n") + "\n")
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

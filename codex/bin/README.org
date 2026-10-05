@@ -3,16 +3,16 @@
 
 * Scope
 
-This directory contains the Codex-specific helper command tracked by the
-dotfiles repository. It is not added to =PATH= as a command bundle; invoke the
-script by its repository path when installing or repairing the Codex skill
-layout.
+This directory contains the Codex-specific helper commands tracked by the
+dotfiles repository. It is not added to =PATH= as a command bundle; invoke each
+script by its repository path.
 
 * Command index
 
 | Command | Purpose |
 |---------+---------|
 | =install-skills.sh= | Installs or repairs the live public and programmatic skill-directory links, preserves Codex-managed system skills, applies native skill pruning, and installs private-skill shims. |
+| =trust-epoch-workspace= | Adds Codex trust entries for the Epoch workspace checkout (default =~/repos/epoch/ai-enablement=) and each =projects/*= directory to =codex/config.toml= and every =~/.codex-epoch*/config.toml=. Idempotent, with =--dry-run=; refuses a workspace that does not exist. Run once at the workspace-split cutover, after cloning. |
 
 The documentation audit compares this table with every tracked direct child of
 the directory. Add or remove the matching row whenever the command set changes.

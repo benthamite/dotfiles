@@ -224,7 +224,8 @@ minutes while waiting for a ticket, not every minute. It books Uber within the
 fare cap under a standing terms approval, without asking again. Its
 =browser-flow.md= records the tested routes: saving the Mercado Pago receipt PDF
 from the in-page viewer with a page script, attaching it to WhatsApp without the
-native file picker, and committing only the agent's own ledger hunk.
+native file picker, deleting the PDF from Downloads once sent, and committing
+only the agent's own ledger hunk.
 
 The =org-note-conventions= skill applies only to personal notes. It distinguishes
 root-backed and rootless heading layouts, preserves established structure, and

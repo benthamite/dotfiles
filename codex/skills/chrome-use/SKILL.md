@@ -32,6 +32,11 @@ and does not want to repeat it. Each agent uses its own browser control:
   navigating. A failed generic Playwright or guessed CDP connection does not
   show that this plugin is unavailable.
 
+To fill in a form for Pablo, take his name, date of birth, contact details
+and address from `/Users/pablostafforini/My Drive/dotfiles/claude/context/personal-details.md`
+instead of asking him. Card numbers, passport numbers and passwords are not
+there and stay out of agent-typed fields.
+
 ## Never steal focus
 
 Pablo is working at the same machine. Never bring Chrome or one of its windows

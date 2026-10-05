@@ -22,6 +22,7 @@ ai-marketplace-monitor.log*
 !**/.env.example
 !**/.env.op
 claude/context/voice-samples.md
+claude/context/personal-details.md
 
 ## claude-code
 /.claude/*

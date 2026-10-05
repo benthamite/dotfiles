@@ -1,7 +1,6 @@
 ---
 name: proofread
 description: Proofread specified Markdown prose for spelling, grammar, punctuation and light clarity changes. Supports local aspell or explicitly scoped Gemini editing, preserving source files and reviewed suggestions; not factual review, broad rewriting or permission to upload restricted content.
-model: sonnet
 ---
 
 # Proofread

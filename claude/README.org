@@ -183,7 +183,8 @@ reasons and without incident history, migration-relative wording, shouted
 emphasis, or numeric output caps. The prompt audit recorded in
 [[file:../docs/plans/2026-09-02-prompt-audit.md][the 2026-09-02 prompt-audit plan]] lists the removed patterns and the items
 left in place on purpose, including the deliberate =model:= aliases on the
-GitGuardian, publication, and proofread skills.
+GitGuardian and publication skills. The proofread skill pins no model and runs
+on the session model.
 
 * Commands and context
 

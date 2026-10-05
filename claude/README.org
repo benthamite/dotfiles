@@ -136,8 +136,8 @@ repositories under =~/repos/epoch/=), nothing under the Drive sync root may
 hold dependencies, builds, caches, virtual environments, or worktrees, and
 every linked worktree lives under =~/repos/.worktrees/<repo>/<name>=. The
 108 repositories that used to sit under =~/My Drive/repos/= were moved on
-2026-08-03; =regenerate-coverage-map.sh= and the other hooks that name a
-repository path were updated in the same change. Python entry scripts that
+2026-08-03; the hooks that named a repository path were updated in the same
+change. Python entry scripts that
 import dotfiles modules set =sys.dont_write_bytecode= themselves, because
 launchd jobs and GUI-launched apps do not inherit =PYTHONDONTWRITEBYTECODE=
 from =.zshenv=.
@@ -220,7 +220,8 @@ assistant text messages of a Claude JSONL transcript or Codex rollout, or of
 the newest one for a project directory.
 
 The =order-salads= skill polls the supplier's WhatsApp chat about every 5
-minutes while waiting for a ticket, not every minute.
+minutes while waiting for a ticket, not every minute. It books Uber within the
+fare cap under a standing terms approval, without asking again.
 
 The =org-note-conventions= skill applies only to personal notes. It distinguishes
 root-backed and rootless heading layouts, preserves established structure, and
@@ -747,12 +748,20 @@ Claude has events with no Codex equivalent here, including =Read=, =Grep=,
 =Glob=, =Skill=, Notification, and Chrome-specific events. Those are explicit
 manifest differences, not missing peers.
 
+On 2026-10-05 the hook scripts that nothing registered, installed, or called
+were removed: the two CR guards =cr-card-body-gate.sh= and
+=cr-skill-routing-reminder.sh=, the coverage-map hook and its one-shot
+installer, the =sync-agent-c-worktree.sh= compatibility wrapper, and
+=elpaca-run.sh=. The reasoning-task sync hook and the freshness guard it
+installs stay, since =bin/cr-review-worktree= and
+=bin/sync-reasoning-tasks-worktrees= call it.
+
 Since 2026-10-03 the agent package passes its status line and its Emacs
 notification hooks (Stop, Notification, turn state, background tasks) to each
 Claude session it starts through =--settings=, so =~/.claude/settings.json=
-registers none of them. =hooks/notify-emacs-session-end.sh= and
-=hooks/notify-emacs-notification.sh= are no longer registered: with them, every
-event reached Emacs twice. A Stop from a =claude -p= run inside a session is
+registers none of them. The dotfiles copies of those Emacs notification hooks
+(and their =fire-and-forget.sh= wrapper) were registered here before that and
+were removed on 2026-10-05: with them, every event reached Emacs twice. A Stop from a =claude -p= run inside a session is
 dropped by the agent package itself, which compares the payload's
 =session_id= with the id it records for the session.
 

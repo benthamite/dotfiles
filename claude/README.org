@@ -216,7 +216,7 @@ opaque. Its read-only =session_tail.py= helper prints the last user and
 assistant text messages of a Claude JSONL transcript or Codex rollout, or of
 the newest one for a project directory.
 
-The =order-salads= skill polls the supplier's WhatsApp chat about every 10
+The =order-salads= skill polls the supplier's WhatsApp chat about every 5
 minutes while waiting for a ticket, not every minute.
 
 The =org-note-conventions= skill applies only to personal notes. It distinguishes

@@ -144,7 +144,7 @@ skills in other repositories are outside its scope.
 Project skills use synthetic contact examples and route MCP credentials through
 the owning account's secrets context without listing account or vault topology.
 
-The =order-salads= skill polls the supplier's WhatsApp chat about every 10
+The =order-salads= skill polls the supplier's WhatsApp chat about every 5
 minutes while waiting for a ticket, not every minute.
 
 The =profile-ai-cli-performance= skill measures selected client conditions

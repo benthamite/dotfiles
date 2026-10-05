@@ -479,7 +479,9 @@ user must paste himself (Emacs kill ring, clipboard for Chrome or native
 forms, opening the target thread). The global instructions only point at it,
 and the service-access routing table lives in
 [[file:context/service-access.md][context/service-access.md]] for the same reason: procedures load on demand,
-while the always-loaded file keeps one trigger line each. The paired
+while the always-loaded file keeps one trigger line each. The service-access
+trigger names services only; browser work reaches its rules through the
+=chrome-use= skill's own trigger. The paired
 =chrome-use= skill, which loads before any browser step, owns the browser
 rules: background research stays off live Chrome, standing authorization for
 logged-in sites, each agent's browser control, never stealing focus (no new
@@ -747,7 +749,10 @@ dropped by the agent package itself, which compares the payload's
 
 Since 2026-10-01 every PreToolUse guard runs in one Python process:
 =~/.claude/settings.json= registers only =hooks/agent-guard.sh=, which runs the
-engine in =lib/python/agent_guard= and turns any failure into a denial. Each
+engine in =lib/python/agent_guard= and turns any failure into a denial,
+except that a crash on =Read=, =Grep= or =Glob= allows the call unguarded with
+a warning to the user and the agent, so a broken guard can still be read and
+diagnosed (2026-10-05, after crashes on 2026-10-01/02 denied every tool). Each
 former guard hook is a policy module in =lib/python/agent_guard/policies/=
 (=secret_leak=, =sensitive_read=, =untrusted_execution=, =destructive=,
 =github_write= and so on), and =engine.py= runs them per tool in the order the

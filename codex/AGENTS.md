@@ -42,7 +42,7 @@ For MCP server placement, inventory, and account-specific MCP notes, read `/User
 
 ## Service access tools
 
-For Gmail, Google Sheets/Calendar/Docs/Drive, Slack, GitHub, Anna's Archive, or a manually opened Chrome profile, use the local tool mapped in `/Users/pablostafforini/My Drive/dotfiles/claude/context/service-access.md` rather than ad-hoc API calls or browser automation. For Google account/auth details, read `/Users/pablostafforini/My Drive/dotfiles/claude/context/google-services.md`.
+For Gmail, Google Sheets/Calendar/Docs/Drive, Slack, GitHub, or Anna's Archive, use the local tool mapped in `/Users/pablostafforini/My Drive/dotfiles/claude/context/service-access.md` rather than ad-hoc API calls or browser automation. For Google account/auth details, read `/Users/pablostafforini/My Drive/dotfiles/claude/context/google-services.md`.
 
 ## Filesystem organization
 

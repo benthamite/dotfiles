@@ -63,7 +63,8 @@ which searches the rendered Markdown session logs rather than raw transcripts.
 The audit normalizes tool-specific titles, paths, and Claude =@context= syntax
 before comparison. It also masks each file's browser-availability rule: Claude
 asks for =claude-in-chrome=, while Codex names the =playwright= MCP server's
-=browser_*= tools. User-facing replies use ASD-STE100 Simplified Technical
+=browser_*= tools. The service-access trigger names services only; browser
+work reaches its rules through the =chrome-use= skill. User-facing replies use ASD-STE100 Simplified Technical
 English.
 
 Agents ask for a task's decisions once: before acting, they list every

@@ -4,7 +4,7 @@ layout:
 layers:
   q-mode:
     - [{type: held}, "HoudahSpot", "Emacs", "Karabiner", "Terminal", null, null, "Anki", "Epoch", "Plex"]
-    - [null, "Slack", "Finder", "Firefox", "forethought", "Personal", "System", null, "Signal", null]
+    - [null, "Slack", "Finder", "Firefox", "forethought", "Personal", "System", "pablo@stafforini", "Signal", null]
     - [null, null, "Codex", "mpv", null, "Tlön", "Media Ctr", "Home", "Tor", "Safari"]
     - null
     - null

@@ -379,6 +379,7 @@
          [:h [:chrome-profile "Default" "Personal"]]
          [:i [:op "/Applications/Anki.app"]]
          [:j [:op "/System/Applications/System Settings.app"]]
+         [:k [:chrome-profile "Profile 9" "pablo@stafforini.com"]]
          [:l [:op "/Applications/Signal.app"]]
          [:m [:op "/Applications/Media Center 29.app"]]
          [:n [:chrome-profile "Profile 3" "Tlön"]]

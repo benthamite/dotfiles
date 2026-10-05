@@ -34,7 +34,6 @@
 - When running as the main agent in an Emacs session (`CODEX_BUFFER_NAME` or `CLAUDE_BUFFER_NAME` is set), publish your current state with `"$HOME/My Drive/dotfiles/bin/agent-status" "STATUS"` at task start, meaningful phase changes, blockers, and before the final response; `--help` gives the wording and failure rules.
 - When subagents or agent teams are available, use them whenever independent investigation, implementation, review, or verification work can run in parallel or benefits from a separate context window.
 - For subagents, use the most capable available model and match the main agent's current effort level unless the user explicitly asks for a cheaper or faster path; prefer performance over speed/cost.
-- To find a past session ("the session from yesterday", "what did we do about X"), run `"$HOME/My Drive/dotfiles/claude/bin/agent-log-find" --since YYYY-MM-DD TERMS…` first: it searches the rendered Claude and Codex logs (`~/.claude/rendered/<project>/<date>_<slug>.md`, with summaries) in under a second. Add `--body` to search full logs and `--raw` only for sessions too recent to be rendered. Never start by grepping raw JSONL transcripts. When I name an Emacs buffer such as `*agent-log-search*`, read it with `emacsclient -e` and follow the session links in it.
 
 ## MCP servers
 

@@ -319,6 +319,13 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
+      "name": "find-past-session",
+      "claude": "claude/skills/find-past-session/SKILL.md",
+      "codex": "codex/skills/find-past-session/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body matches."
+    },
+    {
       "name": "chrome-use",
       "claude": "claude/skills/chrome-use/SKILL.md",
       "codex": "codex/skills/chrome-use/SKILL.md",

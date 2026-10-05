@@ -58,8 +58,9 @@ peers. =project_doc_fallback_filenames= is deliberately absent: Codex does not
 load project =CLAUDE.md= as a fallback.
 
 The global =codex/AGENTS.md= and =claude/CLAUDE.md= files are semantic peers.
-Both direct agents looking for a past session to =claude/bin/agent-log-find=,
-which searches the rendered Markdown session logs rather than raw transcripts.
+The paired =find-past-session= skill directs agents looking for a past session
+to =claude/bin/agent-log-find=, which searches the rendered Markdown session
+logs rather than raw transcripts.
 The audit normalizes tool-specific titles, paths, and Claude =@context= syntax
 before comparison. It also masks each file's browser-availability rule: Claude
 asks for =claude-in-chrome=, while Codex names the =playwright= MCP server's
@@ -687,7 +688,8 @@ dispatching to the paired scripts documented in [[file:hooks/README.org][the hoo
 Since 2026-10-01 every PreToolUse guard runs in one Python process: =hooks.json=
 registers only =hooks/agent-guard.sh= for the shell tools and for
 =apply_patch|Edit|Write=. It runs the engine in =lib/python/agent_guard= and
-turns any failure into a denial. Each former guard hook is a policy module in
+turns any failure into a denial. Claude's exception for a crash on its read-only
+tools does not apply: Codex has no =Read=, =Grep= or =Glob= tool. Each former guard hook is a policy module in
 =lib/python/agent_guard/policies/= (=secret_leak=, =sensitive_read=,
 =untrusted_execution=, =destructive=, =github_write= and so on), run per tool
 in the order the old registrations did. For credential-prone shell commands

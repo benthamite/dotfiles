@@ -23,6 +23,7 @@ class ProtocolWatchTests(unittest.TestCase):
         self.commands = self.root / "commands"
         self.commands.mkdir()
         repo = self.root / "repo"
+        self.repo = repo
         (repo / "ground-truth").mkdir(parents=True)
         (repo / "ground-truth" / "protocol_coverage.py").write_text(
             "import os\n"
@@ -68,6 +69,35 @@ class ProtocolWatchTests(unittest.TestCase):
     def calls(self):
         path = self.root / "calls"
         return path.read_text().splitlines() if path.exists() else []
+
+    def install_default_resolver(self, body):
+        # Keep the real watcher bytes, with an isolated sibling resolver.
+        script = self.commands / "codex-protocol-watch"
+        script.write_bytes(SCRIPT.read_bytes())
+        self.command("elpaca-package-path", body)
+        self.env.pop("CODEX_EL_REPO")
+        return subprocess.run(
+            ["/bin/bash", str(script)], env=self.env,
+            capture_output=True, text=True, timeout=15,
+        )
+
+    def test_default_uses_live_package_resolution(self):
+        self.env["CHECK_STATUS"] = "0"
+        self.env["TEST_REPO"] = str(self.repo)
+        result = self.install_default_resolver(
+            '[[ "$1" == codex ]] || exit 2\n'
+            'printf "%s\\n" "$TEST_REPO"\n'
+        )
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("no protocol changes", result.stdout)
+        self.assertEqual(self.calls(), [])
+
+    def test_failed_resolution_is_not_acknowledged_as_a_protocol_finding(self):
+        result = self.install_default_resolver('echo "registry unavailable" >&2\nexit 1\n')
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("could not resolve codex", result.stdout)
+        self.assertEqual(self.calls(), [])
+        self.assertFalse(self.signature.exists())
 
     def test_total_failure_is_visible_and_retries_then_suppresses_after_success(self):
         failed = self.run_watch()

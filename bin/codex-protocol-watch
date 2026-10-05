@@ -16,8 +16,6 @@
 # to notify even when the finding is unchanged.
 set -uo pipefail
 
-repo="${CODEX_EL_REPO:-$HOME/.config/emacs-profiles/8.3.0-dev/elpaca/sources/codex}"
-checker="$repo/ground-truth/protocol_coverage.py"
 state_dir="${CODEX_PROTOCOL_WATCH_STATE:-$HOME/.local/state/codex-protocol-watch}"
 force=0
 [[ "${1:-}" == "--force" ]] && force=1
@@ -41,6 +39,18 @@ if ! command -v codex >/dev/null 2>&1; then
   echo "[codex-protocol-watch] codex not on PATH; nothing to check"
   exit 0
 fi
+# Resolve the package from the running profile; versioned profile directories
+# are disposable and must not be retained by scheduled jobs.
+if [[ -n "${CODEX_EL_REPO:-}" ]]; then
+  repo="$CODEX_EL_REPO"
+else
+  script_dir="$(cd -- "$(dirname -- "$0")" && pwd)"
+  if ! repo=$("$script_dir/elpaca-package-path" codex); then
+    echo "[codex-protocol-watch] could not resolve codex from the live Elpaca registry"
+    exit 1
+  fi
+fi
+checker="$repo/ground-truth/protocol_coverage.py"
 if [[ ! -f "$checker" ]]; then
   echo "[codex-protocol-watch] missing $checker; set CODEX_EL_REPO"
   exit 1

@@ -4,6 +4,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 sys.dont_write_bytecode = True
@@ -107,14 +108,15 @@ class DecideTests(unittest.TestCase):
 
     def test_dry_run_allowed_unless_compound(self):
         self.assertEqual(self.decide(CLAUDE, "git push --dry-run", self.foreign).decision, "allow")
+        # Each element of a compound command is judged alone (CompoundCommandTests).
         self.assertDenied(self.decide(CLAUDE, "git push --dry-run && git push", self.foreign),
-                          "compound GitHub command has no segment-local repository target")
+                          f"git push targets non-allowlisted repo {FOREIGN}")
 
     def test_unresolvable_directory_change(self):
         # A quoted `sh -c` body is not compound to the guard, so its `cd` is resolved.
         self.assertDenied(self.decide(CODEX, "sh -c ' cd a; cd b; git push'"), "git push target directory cannot be resolved")
         self.assertDenied(self.decide(CODEX, "sh -c ' cd $(pwd) && git push'"), "git push target directory cannot be resolved")
-        self.assertDenied(self.decide(CODEX, "cd a && git push"), "compound GitHub command has no segment-local repository target")
+        self.assertDenied(self.decide(CODEX, "cd a && git push"), "GitHub write target directory cannot be resolved")
 
     def test_ambiguous_target_wording_differs_by_runtime(self):
         claude = self.decide(CLAUDE, "gh pr comment 1", self.bare)
@@ -173,6 +175,156 @@ class DecideTests(unittest.TestCase):
         self.assertDenied(exec_call('await tools.exec_command({cmd: "ls", workdir: "/nonexistent/zz"})'),
                           "functions.exec nested workdir cannot be resolved")
         self.assertEqual(exec_call('await tools.exec_command({cmd: "git status"})').decision, "allow")
+
+
+class CompoundCommandTests(unittest.TestCase):
+    """A write in a compound command is bound to the nearest preceding literal
+    `cd DIR` of its `&&` chain (2026-10-05). Before, `cd REPO && git push` and
+    even `printf '… git push' | kill-ring-put` were denied as having no
+    segment-local target. benthamite/* is in the committed allowlist."""
+
+    ALLOWED, OTHER = "benthamite/guard-test-scratch", "benthamite/guard-test-other"
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        base = Path(cls.tmp.name).resolve()
+        cls.plain = str(base / "plain")
+        os.makedirs(cls.plain)
+        cls.allowed = str(base / "allowed")
+        cls.spaced = str(base / "dir with spaces")
+        cls.other = str(base / "other")
+        cls.foreign = str(base / "foreign")
+        for path, remote in ((cls.allowed, cls.ALLOWED), (cls.spaced, cls.ALLOWED), (cls.other, cls.OTHER),
+                             (cls.foreign, FOREIGN)):
+            subprocess.run(["git", "init", "-q", path], check=True, env=dict(os.environ, **GIT_ENV))
+            subprocess.run(["git", "-C", path, "remote", "add", "origin", f"https://github.com/{remote}.git"], check=True)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def decide(self, command, cwd=None, runtime=CLAUDE):
+        cwd = cwd or self.plain
+        previous = os.getcwd()
+        os.chdir(cwd)
+        try:
+            return github_write.decide(call(runtime, command, cwd))
+        finally:
+            os.chdir(previous)
+
+    def assertAllowed(self, command, cwd=None):
+        for runtime in (CLAUDE, CODEX):
+            with self.subTest(command=command, runtime=runtime):
+                result = self.decide(command, cwd, runtime)
+                self.assertEqual(result.decision, "allow", result.reason)
+
+    def assertDenied(self, command, label, cwd=None):
+        for runtime in (CLAUDE, CODEX):
+            with self.subTest(command=command, runtime=runtime):
+                result = self.decide(command, cwd, runtime)
+                self.assertEqual(result.decision, "deny", command)
+                self.assertTrue(result.reason.startswith(f"BLOCKED: {label}.\n\n"), result.reason)
+
+    UNRESOLVED = "GitHub write target directory cannot be resolved"
+    WHOLE = "compound GitHub command has no segment-local repository target"
+
+    def test_cd_and_push_binds_to_the_cd_target(self):
+        self.assertAllowed(f"cd {self.allowed} && git fetch -q && git push")
+        self.assertAllowed(f"cd {self.allowed} && git push 2>&1 | tail -3")
+        self.assertDenied(f"cd {self.foreign} && git fetch -q && git push",
+                          f"git push targets non-allowlisted repo {FOREIGN}")
+        # The cd target decides, not the directory the command starts in.
+        self.assertDenied(f"cd {self.foreign} && git push", f"git push targets non-allowlisted repo {FOREIGN}",
+                          cwd=self.allowed)
+        self.assertDenied(f"cd {self.foreign} && gh pr create --title T --body B",
+                          f"gh pr write operation targets non-allowlisted repo {FOREIGN}", cwd=self.allowed)
+        # Relative to the starting directory, and through an unquoted ~.
+        self.assertAllowed("cd ../allowed && git push", cwd=self.foreign)
+        base = str(Path(self.allowed).parent)
+        with mock.patch.dict(os.environ, HOME=base):
+            self.assertAllowed("cd ~/allowed && git push")
+            # A quoted ~ is a literal directory name, not HOME.
+            self.assertDenied("cd '~/allowed' && git push", self.UNRESOLVED)
+
+    def test_quoted_directory_with_spaces(self):
+        self.assertAllowed(f'cd "{self.spaced}" && git push')
+        self.assertAllowed(f"cd '{self.spaced}' && git push")
+        self.assertAllowed("cd " + self.spaced.replace(" ", "\\ ") + " && git push")
+
+    def test_successive_cds_bind_to_the_last(self):
+        self.assertDenied(f"cd {self.allowed} && cd {self.foreign} && git push",
+                          f"git push targets non-allowlisted repo {FOREIGN}")
+        self.assertAllowed(f"cd {self.foreign} && cd {self.allowed} && git push")
+        self.assertAllowed(f"cd {self.foreign} && cd ../allowed && git push")
+        # An unresolvable later cd leaves the directory unknown.
+        self.assertDenied(f"cd {self.allowed} && cd $X && git push", self.UNRESOLVED)
+        self.assertDenied(f"cd {self.allowed} && cd /nonexistent/zz && git push", self.UNRESOLVED)
+        self.assertDenied(f"cd {self.allowed} && cd - && git push", self.UNRESOLVED)
+        self.assertDenied(f"cd {self.allowed} && CDPATH=/x cd sub && git push", self.UNRESOLVED)
+
+    def test_scope_ends_outside_the_and_chain(self):
+        for connector in (";", "\n", " || ", " & "):
+            command = f"cd {self.allowed}{connector}git push"
+            self.assertDenied(command, self.UNRESOLVED)
+        self.assertDenied(f"cd {self.allowed} && git fetch; git push", self.UNRESOLVED)
+        # A command that may change directory (here a shell function) ends it too.
+        self.assertDenied(f"cd {self.allowed} && z foreign && git push", self.UNRESOLVED)
+        # Without any cd, the command's own directory stays known across `;`.
+        self.assertAllowed("git fetch; git push", cwd=self.allowed)
+
+    def test_subshells_and_stateful_commands_keep_the_whole_command_rule(self):
+        self.assertDenied(f"(cd {self.allowed} && git push)", self.WHOLE)
+        self.assertDenied(f"(cd {self.allowed}) && git push", self.WHOLE, cwd=self.foreign)
+        self.assertDenied(f"{{ cd {self.allowed} && git push; }}", self.WHOLE)
+        self.assertDenied(f"cd {self.allowed} && export GIT_DIR={self.foreign}/.git && git push", self.WHOLE)
+        self.assertDenied(f"pushd {self.allowed} && git push", self.WHOLE)
+        self.assertDenied(f"cd {self.allowed} | git push", self.WHOLE, cwd=self.foreign)
+
+    def test_writes_to_different_repositories_are_denied(self):
+        label = "compound GitHub command writes to more than one repository"
+        self.assertDenied(f"cd {self.allowed} && git push && cd {self.other} && git push", label)
+        self.assertDenied(f"cd {self.allowed} && git push && gh pr create -R {self.OTHER} --title T --body B", label)
+        self.assertAllowed(f"cd {self.allowed} && git push && gh pr create -R {self.ALLOWED} --title T --body B")
+
+    def test_explicit_targets_stay_authoritative(self):
+        self.assertDenied(f"cd {self.allowed} && git -C {self.foreign} push",
+                          f"git push targets non-allowlisted repo {FOREIGN}")
+        self.assertAllowed(f"cd {self.foreign} && git -C {self.allowed} push")
+        self.assertAllowed(f"cd {self.foreign} && git -C ../allowed push")
+        self.assertDenied(f"cd {self.allowed} && gh pr create -R {FOREIGN} --title T --body B",
+                          f"gh pr write operation targets non-allowlisted repo {FOREIGN}")
+        self.assertDenied(f"cd {self.allowed} && git push https://github.com/{FOREIGN}.git HEAD:x",
+                          f"git push targets non-allowlisted repo {FOREIGN}")
+
+    def test_text_only_stages(self):
+        # A quoted mention of a write, piped to the kill ring, runs nothing.
+        self.assertAllowed(f"printf '%s\\n' 'cd {self.foreign} && git push' | kill-ring-put", cwd=self.foreign)
+        self.assertAllowed('echo "gh pr create --repo no-such-owner-zz/repo" | pbcopy && echo done', cwd=self.foreign)
+        self.assertAllowed(f"cd {self.allowed} && git push && printf 'pushed\\n'")
+        # A substitution, an interpreter downstream, or a file written is not
+        # text-only. (The write patterns need a separator before `git`, so
+        # these say `$( git push)`; that detection gap predates this rule.)
+        self.assertDenied("printf '%s' \"$( git push)\" | kill-ring-put", self.WHOLE, cwd=self.foreign)
+        self.assertDenied("printf '%s' $( git push) | kill-ring-put", self.WHOLE, cwd=self.foreign)
+        self.assertDenied("printf '%s' ` git push` | kill-ring-put", self.WHOLE, cwd=self.foreign)
+        self.assertDenied("printf '%s' <( git push) | kill-ring-put", self.WHOLE, cwd=self.foreign)
+        for interpreter in ("sh", "bash", "zsh", "python3", "eval", "xargs sh -c"):
+            with self.subTest(interpreter=interpreter):
+                self.assertDenied(f"printf 'x && git push\\n' | {interpreter}", self.WHOLE, cwd=self.allowed)
+        self.assertFalse(github_write._text_only(github_write.Segment(["printf 'git push' > run.sh"], None)))
+        self.assertTrue(github_write._text_only(github_write.Segment(["printf 'git push' 2>&1", "kill-ring-put"], None)))
+        self.assertFalse(github_write._text_only(github_write.Segment(["printf -v X 'git push'"], None)))
+
+    def test_shell_segments(self):
+        split = github_write.shell_segments
+        self.assertEqual([(s.stages, s.connector) for s in split('cd "a b" && git push 2>&1 | tail -1; ls\nx &')],
+                         [(['cd "a b"'], "&&"), (["git push 2>&1", "tail -1"], ";"), (["ls"], ";"), (["x"], "&")])
+        self.assertEqual([s.stages for s in split("echo 'a && b | c'")], [["echo 'a && b | c'"]])
+        for command in ("a $(b)", 'a "$(b)"', "a `b`", "(a)", "{ a; }", "a <(b)", "cat <<EOF", "a # c", "a |",
+                        "| a", "a && && b", "$'a'", "'a", "a \\\nb", "case x in a) ;; esac"):
+            with self.subTest(command=command):
+                self.assertIsNone(split(command))
 
 
 if __name__ == "__main__":

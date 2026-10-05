@@ -225,6 +225,8 @@ exit 1
             "op-desktop read op://Employee/x/credential | gh secret set -R benthamite/scratch TOKEN",
             'op-automations @personal read --no-newline "op://Automation/x/credential" | gh secret set TOKEN -R benthamite/scratch',
             "op-desktop read -n --account my.1password.com op://Employee/x/credential | gh secret set TOKEN -R benthamite/scratch",
+            # Each and-or element is judged alone; `true` runs no write (2026-10-05).
+            "op-automations read op://A/x/credential | gh secret set TOKEN -R benthamite/scratch || true",
         ):
             with self.subTest(command=command):
                 self.assert_both(command, expected="allow")
@@ -241,7 +243,6 @@ exit 1
             "op-automations read op://A/x/credential | gh secret set TOKEN -R benthamite/scratch | cat",
             "op-automations read op://A/x/credential | gh secret set TOKEN -R benthamite/scratch && gh secret set T2 -R example/unowned",
             "op-automations read op://A/x/credential | gh secret set TOKEN -R benthamite/scratch; git push https://github.com/example/unowned.git HEAD:topic",
-            "op-automations read op://A/x/credential | gh secret set TOKEN -R benthamite/scratch || true",
             "(op-automations read op://A/x/credential | gh secret set TOKEN -R benthamite/scratch)",
             "op-automations read op://A/x/credential | gh secret set TOKEN -R benthamite/scratch > /tmp/out",
             "op-automations read op://A/x/credential | gh secret set TOKEN -R benthamite/scratch -R example/unowned",
@@ -273,6 +274,8 @@ exit 1
         for command in (
             "git push https://github.com/benthamite/scratch.git HEAD:topic 2>&1 | tail -3",
             "gh issue create --repo benthamite/scratch --title T --body B | head -1",
+            # Each and-or element is judged alone; `echo x` runs no write (2026-10-05).
+            "echo x && git push https://github.com/benthamite/scratch.git HEAD:topic | tail -1",
         ):
             with self.subTest(command=command):
                 self.assert_both(command, expected="allow")
@@ -281,7 +284,6 @@ exit 1
             "git push https://github.com/benthamite/scratch.git HEAD:topic | sh",
             "git push https://github.com/benthamite/scratch.git HEAD:topic | tail -1 > out",
             "git push https://github.com/benthamite/scratch.git HEAD:topic | tail $(x)",
-            "echo x && git push https://github.com/benthamite/scratch.git HEAD:topic | tail -1",
         ):
             with self.subTest(command=command):
                 self.assert_both(command, expected="deny")

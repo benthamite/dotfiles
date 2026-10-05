@@ -30,6 +30,7 @@ import os
 import re
 import shlex
 import subprocess
+from dataclasses import dataclass
 
 from .. import classifiers, codex_payload, ere, repo
 from ..codex_payload import bash_pwd, command_substitution, jq_raw, jq_text
@@ -361,11 +362,216 @@ def _working_directory(path: str):
         os.chdir(previous)
 
 
+# --- compound commands (2026-10-05) ----------------------------------------------
+#
+# A compound command with a write used to be denied outright, which blocked the
+# ordinary `cd ~/repos/x && git fetch -q && git push` and even text that only
+# quoted a write (`printf '%s' '… git push' | kill-ring-put`). A compound command
+# inside the small grammar of shell_segments is now judged one and-or list
+# element at a time (_Guard.compound):
+#
+# - Each element that runs a write is judged alone by the whole hook, in the
+#   directory it runs in, so `git -C`, `gh -R`, GH_REPO and URL targets stay
+#   authoritative; all writes must resolve to one repository.
+# - That directory starts as the command's own context and changes only at a
+#   literal `cd DIR` element. Its scope is the rest of the `&&` chain: after
+#   any other connector (`;`, newline, `||`, `&`), after a `cd` that cannot be
+#   resolved, and after an element whose command word may change the
+#   directory (anything outside _CWD_PRESERVING, such as zoxide's `z`), the
+#   directory is unknown until the next resolvable `cd`, and a write there is
+#   denied. A later `cd` replaces the binding.
+# - An element whose every pipeline stage is a text-only command
+#   (_TEXT_ONLY) with no file redirection runs no write, whatever it quotes.
+#
+# Anything the grammar does not model returns None and keeps the whole-command
+# denial: command or process substitution outside single quotes, backticks,
+# subshells and groups, heredocs, comments, `$'…'`, line continuations,
+# unbalanced quotes, empty pipeline stages, a `cd` inside a pipeline, and the
+# commands in _STATEFUL or an assignment-only element, which could redirect a
+# later write through the environment or the directory stack.
+
+@dataclass
+class Segment:
+    """One element of a top-level and-or list: its pipeline stages and the
+    connector after it ("&&", "||", ";" for `;` or a newline, "&", or None)."""
+    stages: list[str]
+    connector: str | None
+
+    @property
+    def text(self) -> str:
+        return " | ".join(self.stages)
+
+
+_STATEFUL = {"pushd", "popd", "export", "declare", "typeset", "local", "readonly", "unset", "source", ".", "eval",
+             "builtin", "command", "exec", "alias", "unalias", "shopt", "enable", "hash", "trap", "read", "mapfile",
+             "readarray", "let", "function", "getopts", "setopt", "unsetopt", "emulate", "autoload", "zmodload",
+             "chdir", "dirs", "set", "env"}
+_TEXT_ONLY = {"printf", "echo", "pbcopy", "kill-ring-put"} | _OUTPUT_FILTERS
+_CWD_PRESERVING = _TEXT_ONLY | {"git", "gh", "true", "false", "ls", "pwd", "test", "[", "sleep", "date", "make", "jq",
+                                "sed", "awk", "rg", "find", "sort", "uniq", "diff", "tr", "cut", "tee", "mkdir", "touch"}
+_ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*\+?=")
+# Redirections that write no file: fd duplication and /dev/null.
+_HARMLESS_REDIRECT = re.compile(r"[0-9]*>&[0-9]+-?|&>/dev/null|[0-9]*>>?/dev/null")
+_GLOB_OR_EXPANSION = set("$`*?[~")
+
+
+def shell_segments(command: str) -> list[Segment] | None:
+    """COMMAND split at its unquoted `&&`, `||`, `;`, `&` and newlines, each
+    element at its pipes (`|`, `|&`); None outside the grammar described above."""
+    segments: list[Segment] = []
+    stages: list[str] = []
+    current: list[str] = []
+    quote = None
+    index, end = 0, len(command)
+
+    def close_stage() -> bool:
+        stage = "".join(current).strip(BASH_SPACE)
+        current.clear()
+        if not stage:
+            return False
+        stages.append(stage)
+        return True
+
+    def close_segment(connector) -> bool:
+        if not "".join(current).strip(BASH_SPACE):
+            current.clear()
+            if stages:
+                return False  # `a |` followed by a connector
+            # An empty element is a blank line or a trailing `;` or `&`.
+            return not segments or segments[-1].connector in (";", "&")
+        close_stage()
+        segments.append(Segment(list(stages), connector))
+        stages.clear()
+        return True
+
+    while index < end:
+        char = command[index]
+        following = command[index + 1:index + 2]
+        if quote == "'":
+            current.append(char)
+            quote = None if char == "'" else quote
+            index += 1
+            continue
+        if quote == '"':
+            if char == "\\":
+                current.append(command[index:index + 2])
+                index += 2
+                continue
+            if char == "`" or (char == "$" and following == "("):
+                return None
+            current.append(char)
+            quote = None if char == '"' else quote
+            index += 1
+            continue
+        if char == "\\":
+            if following in ("", "\n"):
+                return None
+            current.append(command[index:index + 2])
+            index += 2
+            continue
+        if char in ("'", '"'):
+            if char == "'" and current and current[-1] == "$":
+                return None  # $'…'
+            quote = char
+            current.append(char)
+        elif char == "{" and current and current[-1] == "$":
+            close = command.find("}", index)
+            if close < 0 or any(c in command[index:close] for c in "`'\"(\\$"):
+                return None
+            current.append(command[index:close + 1])
+            index = close + 1
+            continue
+        elif char in "`(){}":
+            return None
+        elif char == "$" and following == "(":
+            return None
+        elif char in "<>" and (following == "(" or (char == "<" and following == "<")):
+            return None  # process substitution, heredoc, here-string
+        elif char == "#" and (not current or current[-1] in BASH_SPACE):
+            return None
+        elif char == "|":
+            if following == "|":
+                if not close_segment("||"):
+                    return None
+                index += 2
+                continue
+            if not close_stage():
+                return None
+            index += 2 if following == "&" else 1
+            continue
+        elif char == "&":
+            if following == "&":
+                if not close_segment("&&"):
+                    return None
+                index += 2
+                continue
+            if (current and current[-1] in "<>") or following == ">":
+                current.append(char)  # 2>&1, >&2, &>file
+            elif not close_segment("&"):
+                return None
+        elif char in ";\n":
+            if char == ";" and following in (";", "&"):
+                return None  # case-statement terminators
+            if not close_segment(";"):
+                return None
+        else:
+            current.append(char)
+        index += 1
+    if quote is not None or not close_segment(None):
+        return None
+    return segments
+
+
+def _command_words(stage: str) -> list[str] | None:
+    """STAGE's words from its command word on; None when it cannot be split or
+    only assigns variables."""
+    try:
+        words = shlex.split(stage)
+    except ValueError:
+        return None
+    while words and _ASSIGNMENT.match(words[0]):
+        words = words[1:]
+    return words or None
+
+
+def _unquoted(stage: str) -> str:
+    """STAGE with its quoted spans and escaped characters blanked."""
+    return re.sub(r"""'[^']*'|"(\\.|[^"\\])*"|\\.""", " ", stage)
+
+
+def _text_only(segment: Segment) -> bool:
+    """Every stage is a text-only command that writes no file, so the element
+    runs no write whatever its arguments quote. shell_segments already
+    rejected substitutions, and no stage is an interpreter, because every
+    stage is in _TEXT_ONLY."""
+    for stage in segment.stages:
+        words = _command_words(stage)
+        if words is None or words[0] not in _TEXT_ONLY:
+            return False
+        if words[0] == "printf" and any(word.startswith("-v") for word in words[1:]):
+            return False
+        if re.search("[<>]", _HARMLESS_REDIRECT.sub(" ", _unquoted(stage))):
+            return False
+    return True
+
+
+def _stateful(segment: Segment) -> bool:
+    for stage in segment.stages:
+        words = _command_words(stage)
+        if words is None or words[0] in _STATEFUL or (words[0] == "cd" and len(segment.stages) > 1):
+            return True
+    return False
+
+
 class _Guard:
     """One run of the hook over one command."""
 
-    def __init__(self, call: Call, tool: str, command: str):
+    def __init__(self, call: Call, tool: str, command: str, segment: bool = False):
         self.call = call
+        # A segment is one element of a compound command, judged by
+        # compound(); the allowed targets of its writes collect in targets.
+        self.segment = segment
+        self.targets: set[str] = set()
         self.runtime = call.runtime
         self.tool = tool
         self.command = command
@@ -498,6 +704,96 @@ class _Guard:
             self.deny(f"{action} has no unambiguous repository target", _AMBIGUOUS_ADVICE[self.runtime])
         if not self.repo_allowed(target):
             self.deny(f"{action} targets non-allowlisted repo {target}", _NOT_ALLOWLISTED_ADVICE)
+        self.targets.add(normalize_repo(target))
+
+    # --- compound commands -------------------------------------------------------
+
+    def writes(self) -> bool:
+        """Whether the command runs any GitHub write that run() gates."""
+        scan = self.scan
+        if ere.grep(_GIT_PUSH, scan):
+            return True
+        patterns = (_GH_PR, _GH_ISSUE, _GH_SECRET, _GH_WORKFLOW, _GH_RUN, _GH_RELEASE, _GH_REPO, _GH_LABEL, _GH_GIST,
+                    _GH_REPOSITORY, _GH_REPOSITORY_MORE, _GH_UNSCOPED)
+        return any(ere.grep(pattern, scan, echo=True) for pattern in patterns) or self.gh_api_write()
+
+    def context_dir(self) -> str | None:
+        """The absolute directory the command starts in, found as
+        repo.repo_root finds it, or None."""
+        directory = self.env.get("REPO_CONTEXT_DIR", "") or repo._payload_context_dir(self.call.raw)
+        if self.runtime == CODEX:
+            parent = codex_payload.parent_exec_workdir(self.call.raw, self.command)
+            directory = command_substitution(parent or "") or directory
+        directory = directory or bash_pwd(self.env)
+        return os.path.abspath(directory) if os.path.isdir(directory) else None
+
+    def cd_target(self, stage: str, words: list[str], here: str | None) -> str | None:
+        """The directory a literal `cd DIR` element lands in from HERE (None:
+        unknown), or None when it cannot be resolved without the shell."""
+        if len(words) != 2 or _ASSIGNMENT.match(stage):
+            return None  # `cd`, `cd -P DIR`, `cd A B`, `CDPATH=x cd DIR`
+        target, raw = words[1], stage[2:].lstrip(BASH_SPACE)
+        if target == raw and (raw == "~" or raw.startswith("~/")) and not _GLOB_OR_EXPANSION & set(raw[1:]):
+            target = self.env.get("HOME", "") + raw[1:]  # an unquoted ~ is HOME
+        elif not target or target.startswith("-") or _GLOB_OR_EXPANSION & set(target):
+            return None
+        if not target.startswith("/"):
+            # CDPATH could send a bare name elsewhere.
+            if here is None or (self.env.get("CDPATH") and not target.startswith(("./", "../"))):
+                return None
+            target = os.path.join(here, target)
+        target = os.path.normpath(target)
+        return target if os.path.isdir(target) else None
+
+    def judge_segment(self, text: str, directory: str) -> tuple[Result, set[str]]:
+        """The whole hook's decision for TEXT run in DIRECTORY, and the
+        repositories its writes target."""
+        payload = {"tool_name": self.call.tool_name, "tool_input": {"command": text}, "cwd": directory}
+        env = {key: value for key, value in self.env.items() if key != "REPO_CONTEXT_DIR"}
+        env.update(PWD=directory, OLDPWD=bash_pwd(self.env))
+        with _working_directory(directory):
+            guard = _Guard(Call.from_payload(self.runtime, payload, env), self.tool, text, segment=True)
+            try:
+                result = guard.run()
+            except _Exit as done:
+                result = done.result
+        return result, guard.targets
+
+    def compound(self) -> Result | None:
+        """The decision for a compound command judged element by element (see
+        shell_segments), or None to keep the whole-command rule."""
+        segments = shell_segments(self.command)
+        if segments is None or any(_stateful(segment) for segment in segments):
+            return None
+        start = self.context_dir()
+        here, targets = start, set()
+        for segment in segments:
+            words = _command_words(segment.stages[0])
+            if len(segment.stages) == 1 and words[0] == "cd":
+                here = self.cd_target(segment.stages[0], words, here)
+            elif not _text_only(segment):
+                text = segment.text
+                if _Guard(self.call, self.tool, text, segment=True).writes():
+                    if here is None:
+                        self.deny("GitHub write target directory cannot be resolved",
+                                  "An earlier `cd` in this command is not a literal existing directory, or its "
+                                  "`&&` chain ended (`;`, a newline, `||`, `&`) or ran a command that may change "
+                                  "directory. Bind the write with `cd DIR && …` in one `&&` chain, or run it in a "
+                                  "separate tool call.")
+                    result, found = self.judge_segment(text, here)
+                    if result.decision == "deny":
+                        return result
+                    targets |= found
+                if any((stage_words := _command_words(stage)) is None or stage_words[0] not in _CWD_PRESERVING
+                       for stage in segment.stages):
+                    here = None
+            if segment.connector not in ("&&", None) and here != start:
+                here = None
+        if len(targets) > 1:
+            self.deny("compound GitHub command writes to more than one repository",
+                      "Targets: " + ", ".join(sorted(targets)) + ". Run each repository's writes in a separate tool "
+                      "call.")
+        return Result.allow()
 
     # --- the hook --------------------------------------------------------------
 
@@ -549,7 +845,9 @@ class _Guard:
     def run(self) -> Result:
         if self.runtime == CODEX and self.tool == "functions.exec":
             return self.nested_exec()
-        status = _authorization_status(self.command)
+        # A grant authorizes one exact command, so it is matched against the
+        # whole command, never against one element of a compound command.
+        status = 1 if self.segment else _authorization_status(self.command)
         if status == 0:
             return Result.allow()
         if status != 1:
@@ -563,6 +861,10 @@ class _Guard:
             self.require_allowed_segment_repo("gh secret/variable write operation", pipeline_repo)
             return Result.allow()
 
+        if not self.segment and compound_shell_command(self.command):
+            result = self.compound()
+            if result is not None:
+                return result
         command, scan = self.command, self.scan
         if ere.grep(_GIT_PUSH, scan):
             # The dry-run shortcut reads the whole command, so a compound

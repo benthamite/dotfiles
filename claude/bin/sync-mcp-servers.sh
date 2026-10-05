@@ -23,6 +23,7 @@ CANONICAL = os.path.expanduser("~/.claude.json")
 TARGETS = [
     os.path.expanduser("~/.claude-epoch/.claude.json"),
     os.path.expanduser("~/.claude-personal/.claude.json"),
+    os.path.expanduser("~/.claude-personal2/.claude.json"),
     os.path.expanduser("~/.claude-tlon/.claude.json"),
 ]
 

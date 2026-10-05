@@ -53,6 +53,10 @@ credentials. Some older documents were shared with the personal account; use
 that account only where the task explicitly calls for that access. Profile and
 Notion-account distinctions are recorded in `service-access.md`.
 
+Claude Code does not load the claude.ai Gmail, Calendar or other hosted
+connectors (`disableClaudeAiConnectors`; see `mcp-servers.md`). Use the local
+tools above.
+
 ## Google Docs browser body edits
 
 Google Docs edits are externally visible. Do not use this protocol as approval
@@ -160,26 +164,6 @@ The Epoch refresh token also powers `gdoc --account epoch` (which has its own au
 
 If a token expires (`invalid_grant` errors), regenerate it with `claude/bin/update-gworkspace-refresh-token --account <epoch|personal>`. The helper opens the OAuth browser flow, updates the appropriate backing store (the Epoch `Automations` vault for the Epoch token, the personal 1Password `Automation` vault for the personal token), and prints only status metadata, never token values. The manual recipe under "Generating a new refresh token" remains available for unusual recovery cases.
 
-## Tooling by account
-
-### work account
-
-Use `gmail.py --account epoch` for `pablo@epoch.ai`.
-
-### email-triage bot account
-
-Use `gmail.py --account email-triage` for `email-triage@epoch.ai`.
-
-### personal account
-
-No dedicated MCP server. Personal-account Docs/Drive go through `gdoc --account personal` (see "Tooling by service" above). Calendar through `gcalcli-epoch`. Gmail through `gmail.py --account personal`.
-
-### Built-in (claude.ai integrations)
-
-- **claude.ai Gmail** — managed by Claude's own auth; not canonical for local Claude/Codex workflows
-- **claude.ai Google Calendar** — same
-- **claude.ai Airtable** — Epoch Airtable; use only when a task explicitly depends on the hosted connector surface
-
 ## Enabled APIs on `claude-code-gmail-490520`
 
 These APIs must be enabled for `gmail.py`, `sheets.py`, `gdoc`, and `gcalcli` to work:
@@ -193,7 +177,7 @@ Enable at: Google Cloud Console > APIs & Services > Library (project `claude-cod
 
 ## Generating a new refresh token
 
-The recipe below works for both accounts — the only differences are which Google account you sign in as, which env var to update afterwards, and which scopes to request. It prints the refresh token to stdout; copy that into the matching env var in `~/.zshenv-secrets`. If you'd rather not have the token transit your terminal, see the "without printing" variant below.
+Use the helper. It stores the token in the account's 1Password item (see "Auth" above) and never prints it. The manual recipe is for unusual recovery only: it prints the token, which you then store in that same 1Password item, never in a shell secrets file.
 
 ### Preferred helper
 
@@ -233,32 +217,9 @@ print('REFRESH_TOKEN=' + creds.refresh_token)
 "
 ```
 
-When the browser opens, sign in as the account you want the token for: `pablo@epoch.ai` for `GOOGLE_WORKSPACE_REFRESH_TOKEN`, `pablo.stafforini@gmail.com` for `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL`. The helper writes the Epoch token to 1Password at `op://Automations/Google Workspace OAuth - Pablo Epoch/credential` and the personal token to the `password` field of `google-workspace-refresh-token-personal` in the personal 1Password `Automation` vault.
+When the browser opens, sign in as the account you want the token for: `pablo@epoch.ai` for `GOOGLE_WORKSPACE_REFRESH_TOKEN`, `pablo.stafforini@gmail.com` for `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL`. For comparison, the helper writes the Epoch token to 1Password at `op://Automations/Google Workspace OAuth - Pablo Epoch/credential` and the personal token to the `password` field of `google-workspace-refresh-token-personal` in the personal 1Password `Automation` vault.
 
 After printing, update the corresponding backing store, then `rm /tmp/gworkspace-access-token-<account>.json` to flush the wrapper's token cache. For the personal account, update the `password` field of `google-workspace-refresh-token-personal` in the personal 1Password `Automation` vault (`op-desktop item edit`); for the Epoch account, update the `credential` field of `Google Workspace OAuth - Pablo Epoch` in the Automations 1Password vault.
-
-### Without printing the token to the terminal
-
-If you'd rather not have the token in scrollback, replace the final `print(...)` line with code that writes the token directly to `.zshenv-secrets`:
-
-```python
-from pathlib import Path
-import sys
-VAR = "GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL"  # or GOOGLE_WORKSPACE_REFRESH_TOKEN
-secrets = Path.home() / "My Drive" / "dotfiles" / "shell" / ".zshenv-secrets"
-text = secrets.read_text() if secrets.exists() else ""
-new_line = f'export {VAR}="{creds.refresh_token}"\n'
-lines = text.splitlines(keepends=True)
-for i, line in enumerate(lines):
-    if line.startswith(f"export {VAR}="):
-        lines[i] = new_line
-        break
-else:
-    if text and not text.endswith("\n"): lines.append("\n")
-    lines.append(new_line)
-secrets.write_text("".join(lines))
-print(f"Wrote {VAR} to {secrets}", file=sys.stderr)
-```
 
 Note: the OAuth flow's `port=8080` matches the redirect URI registered for `claude-code-gmail-490520`. `port=0` (random ephemeral) returns a Google 400 because the loopback redirect URI isn't auto-registered for this client.
 

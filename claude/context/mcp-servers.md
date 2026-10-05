@@ -8,7 +8,7 @@ Claude Code can load MCP servers through five mechanisms:
 
 | Mechanism | Source of truth | Loaded when | Edit how |
 |-----------|-----------------|-------------|----------|
-| User-level | `~/.claude.json` top-level `mcpServers` | Every session, every directory | Edit `~/.claude.json`, then run `claude/bin/sync-mcp-servers.sh` to propagate to `~/.claude-epoch/`, `~/.claude-personal/`, and `~/.claude-tlon/` |
+| User-level | `~/.claude.json` top-level `mcpServers` | Every session, every directory | Edit `~/.claude.json`, then run `claude/bin/sync-mcp-servers.sh` to propagate to `~/.claude-epoch/`, `~/.claude-personal/`, `~/.claude-personal2/`, and `~/.claude-tlon/` |
 | Project-local | `<project>/.mcp.json` | Only when CWD is that project | Edit the file directly; no sync needed |
 | claude.ai connectors | Server-side, no local file | Every session, regardless of CWD | Manage in claude.ai Settings > Connectors |
 | Plugin-managed | `~/.claude/plugins/...` | When the plugin is enabled | Use `/plugin enable/disable <name>` |
@@ -44,8 +44,10 @@ reference:
 2. Leave the canonical `~/.claude.json` with an empty `env` for that server.
 
 Browser automation from a Claude Code session targets the Chrome profile its
-account is paired to. Current account/profile details live in `README.org`
-under "Chrome integration and multi-account".
+account is paired to. The account homes are listed in `claude/README.org` under
+"Multi-account activation"; the account-to-profile map is
+`claude/chrome-extension-profiles.json`, read by the `chrome-bridge-recover.py`
+hook described under "Hooks".
 
 ## Current inventory
 
@@ -59,4 +61,4 @@ under "Chrome integration and multi-account".
 - Plugin-managed: none currently enabled.
 - `claude-in-chrome`: enabled and heavily used for browser automation.
 
-General service access tools are listed in `CLAUDE.md`.
+General service access tools are listed in `service-access.md`.

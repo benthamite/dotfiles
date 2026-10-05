@@ -12,7 +12,8 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import guard_harness  # noqa: E402
 
-from agent_guard import classifiers  # noqa: E402
+from agent_guard import classifiers, engine  # noqa: E402
+from agent_guard.core import HookFailure  # noqa: E402
 from agent_guard.policies import secret_leak  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -167,6 +168,78 @@ class MatcherFailureTests(unittest.TestCase):
             with self.subTest(guard=str(guard.relative_to(ROOT))), \
                     mock.patch.object(secret_leak, "grep", side_effect=RuntimeError("matcher failed")):
                 GuardFailureSafetyTests.assert_blocks_failure(self, run_guard(guard, payload))
+
+
+class ReadOnlyToolCrashTests(unittest.TestCase):
+    """A guard crash allows Read, Grep and Glob with a loud warning and keeps
+    denying everything else. 2026-10-01/02: every crash denied every tool, so
+    agents could not read the guard to diagnose it."""
+
+    READ = {"tool_name": "Read", "tool_input": {"file_path": "/tmp/guard-fixture.txt"}}
+    BASH = {"tool_name": "Bash", "tool_input": {"command": "true"}}
+
+    def assert_warned_allow(self, result, tool):
+        self.assertEqual(result.returncode, 0, result.stderr)
+        output = json.loads(result.stdout)
+        self.assertIn("agent-guard crashed", output["systemMessage"])
+        self.assertIn(f"{tool} was allowed WITHOUT its guard checks", output["systemMessage"])
+        self.assertEqual(output["hookSpecificOutput"]["additionalContext"], output["systemMessage"])
+        # No permissionDecision: the normal permission flow still applies.
+        self.assertNotIn("permissionDecision", output["hookSpecificOutput"])
+        self.assertIn("agent-guard crashed", result.stderr)
+
+    def test_engine_crash_allows_only_read_only_tools(self):
+        with mock.patch.object(engine, "decide", side_effect=RuntimeError("secret-looking detail")):
+            for tool in ("Read", "Grep", "Glob"):
+                with self.subTest(tool=tool):
+                    result = guard_harness.run_engine("claude", {"tool_name": tool, "tool_input": {}})
+                    self.assert_warned_allow(result, tool)
+                    # The cause names the exception type, never its message.
+                    self.assertIn("RuntimeError", result.stdout)
+                    self.assertNotIn("secret-looking detail", result.stdout + result.stderr)
+            for runtime, payload in (("claude", self.BASH),
+                                     ("claude", {"tool_name": "Edit", "tool_input": {}}),
+                                     ("claude", {"tool_name": "Write", "tool_input": {}}),
+                                     ("codex", {"tool_name": "exec_command", "tool_input": {"cmd": "true"}}),
+                                     ("codex", self.READ)):
+                with self.subTest(runtime=runtime, tool=payload["tool_name"]):
+                    GuardFailureSafetyTests.assert_blocks_failure(self, guard_harness.run_engine(runtime, payload))
+
+    def test_deliberate_failures_still_deny_read(self):
+        # A policy's HookFailure is a decision to deny, not a crash.
+        with mock.patch.object(engine, "decide", side_effect=HookFailure("cannot decide")):
+            GuardFailureSafetyTests.assert_blocks_failure(self, guard_harness.run_engine("claude", self.READ))
+        # A payload that is not an object names no tool.
+        for text in ("{broken", '["Read"]', '"Read"'):
+            with self.subTest(text=text):
+                GuardFailureSafetyTests.assert_blocks_failure(self, guard_harness.run_engine("claude", text))
+
+    def test_entry_script_failure_allows_only_read_only_tools(self):
+        with tempfile.TemporaryDirectory(prefix="guard-no-python-") as home:
+            env = {**os.environ, "HOME": home}
+            self.assert_warned_allow(guard_harness.run_e2e("claude", self.READ, env=env), "Read")
+            self.assert_warned_allow(guard_harness.run_e2e("claude", {"tool_name": "Glob", "tool_input": {}}, env=env),
+                                     "Glob")
+            for runtime, payload in (
+                ("claude", self.BASH),
+                ("claude", {"tool_name": "Write", "tool_input": {"file_path": "/tmp/x", "content": ""}}),
+                # A second "tool_name" key leaves the tool uncertain.
+                ("claude", {"tool_name": "Bash", "tool_input": {"tool_name": "Read"}}),
+                ("claude", '{"tool_input": {}, "tool_name": "Read", "tool_name": "Bash"}'),
+                ("claude", "{broken"),
+                ("codex", self.READ),
+            ):
+                with self.subTest(runtime=runtime, payload=payload):
+                    GuardFailureSafetyTests.assert_blocks_failure(self, guard_harness.run_e2e(runtime, payload, env=env))
+
+    def test_import_error_allows_read(self):
+        with tempfile.TemporaryDirectory(prefix="guard-no-engine-") as home:
+            interpreter = Path(home, ".pyenv/versions/3.11.9/bin/python3")
+            interpreter.parent.mkdir(parents=True)
+            interpreter.symlink_to(Path.home() / ".pyenv/versions/3.11.9/bin/python3")
+            env = {**os.environ, "HOME": home}
+            self.assert_warned_allow(guard_harness.run_e2e("claude", self.READ, env=env), "Read")
+            GuardFailureSafetyTests.assert_blocks_failure(self, guard_harness.run_e2e("claude", self.BASH, env=env))
 
 
 class HookSyntaxTests(unittest.TestCase):

@@ -689,7 +689,8 @@ Since 2026-10-01 every PreToolUse guard runs in one Python process: =hooks.json=
 registers only =hooks/agent-guard.sh= for the shell tools and for
 =apply_patch|Edit|Write=. It runs the engine in =lib/python/agent_guard= and
 turns any failure into a denial. Claude's exception for a crash on its read-only
-tools does not apply: Codex has no =Read=, =Grep= or =Glob= tool. Each former guard hook is a policy module in
+tools does not apply: Codex has no =Read=, =Grep= or =Glob= tool, so its
+=agent-guard.sh= keeps =READ_ONLY_TOOLS= empty. Each former guard hook is a policy module in
 =lib/python/agent_guard/policies/= (=secret_leak=, =sensitive_read=,
 =untrusted_execution=, =destructive=, =github_write= and so on), run per tool
 in the order the old registrations did. For credential-prone shell commands

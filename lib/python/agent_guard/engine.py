@@ -14,6 +14,7 @@ import locale
 import os
 import re
 import sys
+import traceback
 
 from .core import CLAUDE, CODEX, CODEX_SHELL_TOOLS, Call, HookFailure, Result
 from .policies import (ahrefs, codex_wrap, destructive, dirty_tree, dispatcher, elisp_skill, elpaca_dotfiles_edit, elpaca_rebuild,
@@ -97,10 +98,48 @@ def set_collation() -> None:
         locale.setlocale(locale.LC_COLLATE, "C")
 
 
+READ_ONLY_TOOLS = {CLAUDE: ("Read", "Grep", "Glob"), CODEX: ()}
+
+
+def crash_warning(runtime: str, tool: str, cause: str) -> dict | None:
+    """The allow-with-warning response for a read-only TOOL when the guard
+    crashed, or None when the call must stay denied.
+
+    A crash used to deny every tool, so an agent could not even read the guard
+    to diagnose it (2026-10-01/02). Read, Grep and Glob change nothing, so a
+    crash lets them through unguarded (sensitive_read and walk_list do not
+    run) with a warning to the user and the agent; Bash, Edit, Write and every
+    other tool stay denied. There is no permissionDecision, so the normal
+    permission flow still applies. Codex has no such tools.
+    claude/hooks/agent-guard.sh applies the same rule when the engine cannot
+    even start.
+    """
+    if tool not in READ_ONLY_TOOLS[runtime]:
+        return None
+    message = (f"WARNING: agent-guard crashed ({cause}). {tool} was allowed WITHOUT its guard checks "
+               "(sensitive-read, walk-list); Bash, Edit, Write and other tools stay blocked until the guard is fixed.")
+    return {"systemMessage": message,
+            "hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": message}}
+
+
+def _crash_cause(error: Exception) -> str:
+    """The exception type and innermost frame, never its message, which could
+    quote what the call was reading."""
+    frames = traceback.extract_tb(error.__traceback__)
+    where = f" at {os.path.basename(frames[-1].filename)}:{frames[-1].lineno}" if frames else ""
+    return type(error).__name__ + where
+
+
 def main(runtime: str) -> int:
-    """Hook entry point: stdin payload, stdout response, exit 2 on any failure."""
+    """Hook entry point: stdin payload, stdout response, exit 2 on any failure,
+    except a crash on a read-only tool (crash_warning).
+
+    A HookFailure is a policy's deliberate "cannot decide", not a crash, so it
+    denies every tool. So does a payload that is not a JSON object, whose tool
+    is unknown.
+    """
+    payload = None
     try:
-        set_collation()
         text = sys.stdin.read()
         # jq rejected lone-surrogate escapes (\ud800), so every shell guard
         # failed closed on them; json.loads accepts them. Keep failing closed.
@@ -109,10 +148,20 @@ def main(runtime: str) -> int:
         json.dumps(payload, ensure_ascii=False).encode("utf-8")
         if not isinstance(payload, dict):
             raise HookFailure("payload is not an object")
+        set_collation()
         response = render(runtime, decide(Call.from_payload(runtime, payload)))
-    except Exception:  # noqa: BLE001 - any failure denies, as the shell guards' EXIT traps did
+    except HookFailure:
         print(FAILED, file=sys.stderr)
         return 2
+    except Exception as error:  # noqa: BLE001 - any other failure denies, as the shell guards' EXIT traps did
+        tool = payload.get("tool_name") if isinstance(payload, dict) else None
+        warning = crash_warning(runtime, tool, _crash_cause(error)) if isinstance(tool, str) else None
+        if warning is None:
+            print(FAILED, file=sys.stderr)
+            return 2
+        print(warning["systemMessage"], file=sys.stderr)
+        print(json.dumps(warning))
+        return 0
     if response is not None:
         print(json.dumps(response))
     return 0

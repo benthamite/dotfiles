@@ -12,4 +12,6 @@ Contract shared with the old hooks:
   ``Result.rewrite(updated_input)``;
 - any exception in a policy denies the call ("Security hook failed"), as the
   shell guards' EXIT traps did.
+  Exception: a crash (not a HookFailure) on Claude's Read, Grep or Glob allows
+  the call with a warning (``engine.crash_warning``).
 """

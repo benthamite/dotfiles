@@ -40,7 +40,12 @@ redesign behind it is
    (`engine.main` exits 2), and `agent-guard.sh` turns every non-zero status
    of the interpreter, including a failed import, into exit 2. Before adding an
    `except`, check what the old behaviour was and fail closed unless it was a
-   deliberate fallback.
+   deliberate fallback. The one exception (2026-10-05): a crash on Claude's
+   read-only tools (Read, Grep, Glob) allows the call with a warning to the
+   user and the agent (`engine.crash_warning`, and `agent-guard.sh` when the
+   engine cannot start), so a broken guard can still be read and diagnosed;
+   their sensitive-read and walk-list checks do not run then. A policy's
+   `HookFailure`, an unparsable payload or an uncertain tool name still deny.
 
 ## Incident inventory (agent exposures)
 

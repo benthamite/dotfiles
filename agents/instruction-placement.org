@@ -64,6 +64,12 @@ does not itself authorize such an edit. Apply the placement policy below first.
    in the project brief or log, not the always-loaded instruction file.
 6. Is it reusable across Claude and Codex? If yes, update the counterpart
    artifact or record an explicit sync exemption, then run the sync audit.
+7. What delivers it when it is needed? Name the always-visible trigger (a
+   skill description, a hook, or a link from a map or skill already loaded at
+   that moment). A document that nothing loaded at that moment points to is
+   not delivered. Eight placement incidents between June and October 2026
+   were "fixed" by moving text and relying on agents to recall this policy;
+   the =instruction-placement= skill now delivers it at decision time.
 
 * Anti-Patterns
 :PROPERTIES:

@@ -333,6 +333,13 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; one body states each agent's browser control."
     },
     {
+      "name": "instruction-placement",
+      "claude": "claude/skills/instruction-placement/SKILL.md",
+      "codex": "codex/skills/instruction-placement/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter."
+    },
+    {
       "name": "chrome-permission-audit",
       "claude": "claude/skills/chrome-permission-audit/SKILL.md",
       "codex": "codex/skills/chrome-permission-audit/SKILL.md",

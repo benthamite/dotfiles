@@ -181,6 +181,55 @@ class PolicyTests(unittest.TestCase):
                     with self.assertRaises(policy.Denied):
                         policy.classify("python3 - <<'PY'\n" + source + "\nPY")
 
+    def test_json_data_named_ps(self):
+        # A `ps` holding parsed JSON or a builtin container (tangodb's
+        # "persons") is data; its builtin methods start nothing.
+        allowed = [
+            "import json\nd=json.load(open('p.json'))\nps=d if isinstance(d,list) else d.get('persons',d)\n"
+            "if isinstance(ps,dict): ps=list(ps.values())\nfor p in ps: print(p)",
+            "import json\nc=json.load(open('p.json'))\nps=c['canonical_persons']\n"
+            "x=ps[0] if isinstance(ps,list) else next(iter(ps.items()))",
+            "import json,re\nps={x['id']:x for x in json.load(open('p.json'))['persons']}\n"
+            "hub=ps.get('TI-1',{})",
+            "import json\np=json.load(open('p.json'))\nps=p if isinstance(p,list) else p.get('persons',p)\n"
+            "items = ps.values() if isinstance(ps,dict) else ps",
+            "ps=[]\nps.extend([1]); ps.sort()",
+            "pgrep={}\npgrep.update(a=1)",
+        ]
+        denied = [
+            # Not provably data: an arbitrary object, a hook, a shadowed
+            # constructor or json, a loop or argument binding, rebinding.
+            "ps=object()\nps.values()",
+            "import json\nps=json.load(open('p.json'), object_hook=make)\nps.values()",
+            "import json\njson=other\nps=json.load(open('p.json'))\nps.values()",
+            "import json as j\nps=j.load(open('p.json'))\nps.values()",
+            "list=make\nps=list()\nps.count(1)",
+            "ps=[]\nps=make()\nps.values()",
+            "for ps in [make()]:\n ps.values()",
+            "def f(ps):\n return ps.values()",
+            "ps=[]\nps+=make()\nps.values()",
+            "import json\nps=json.load(open('p.json'))[0]\nps.cmdline()",
+            "import json\nps=json.load(open('p.json'))\nps()",
+            "ps=[]\nexec('ps=make()')\nps.values()",
+            "import builtins\nps=list()\nps.values()",
+            "ps=PersonSnapshots([])\nps.values()",
+            # Real process inspection stays denied whatever `ps` holds.
+            "import json,subprocess\nps=json.load(open('p.json'))\nsubprocess.run(['ps','aux'])",
+            "import psutil\nps={}\nps.update(p=psutil.Process(1).environ())",
+        ]
+        for family in ("claude",):
+            spec = importlib.util.spec_from_file_location("json_policy_" + family,
+                ROOT / family / "hooks/lib-process-output-policy.py")
+            policy = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(policy)
+            for body in allowed:
+                with self.subTest(family=family, body=body):
+                    policy.classify("python3 - <<'PY'\n" + body + "\nPY")
+            for body in denied:
+                with self.subTest(family=family, body=body):
+                    with self.assertRaises(policy.Denied):
+                        policy.classify("python3 - <<'PY'\n" + body + "\nPY")
+
     def test_cases(self):
         for family in ("claude",):
             path = ROOT / family / "hooks/lib-process-output-policy.py"

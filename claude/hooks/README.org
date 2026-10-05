@@ -273,6 +273,10 @@ receivers, =global=/=nonlocal= and dynamic namespaces remain conservative.
 Indexed =read_text()= calls are also recognized for
 uniquely bound lists from literal =pathlib.Path= joins and =glob= patterns;
 shadowed builtins/imports, dynamic receivers and mutations remain conservative.
+A name whose every binding in its own module or function scope assigns
+parsed JSON (=json.load= without hooks, its subscripts, =.get= and
+conditionals) or a builtin container (a literal, comprehension, =list()=,
+=dict()= ...) may call container methods such as =ps.values()= or =ps.get(k)=.
 Other calls/attribute bases, imports, =psutil= and =/proc= markers remain
 checked; unquoted heredocs stay conservative. String literals are data only
 when the program imports nothing beyond a fixed set of inert modules and names

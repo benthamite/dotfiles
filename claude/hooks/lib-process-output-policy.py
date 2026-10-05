@@ -243,12 +243,93 @@ def project_python_names(source):
                     and literal_text(glob.args[0]) and isinstance(glob.func, ast.Attribute)
                     and glob.func.attr == "glob" and literal_path(glob.func.value)):
                 path_reads.add(node)
+
+    # A `ps` holding parsed JSON or a builtin container is data: `ps.values()`
+    # and `ps.get(k)` call builtin methods that start nothing. Proven like the
+    # list appends above, in the receiver's own module or function scope:
+    # every binding of each name involved is a plain assignment in that scope
+    # whose value is such data (a name stands for all of its bindings there).
+    # json is the stdlib module imported once at the top level; json.load
+    # without hooks returns only dicts, lists and scalars.
+    json_imports = bindings.get("json", [])
+    real_json = (len(json_imports) == 1 and isinstance(json_imports[0], ast.alias)
+                 and json_imports[0].name == "json" and json_imports[0].asname is None
+                 and isinstance(parents[json_imports[0]], ast.Import) and module_scope(json_imports[0]))
+    imported_roots = ({alias.name.split(".")[0] for node in nodes if isinstance(node, ast.Import)
+                       for alias in node.names}
+                      | {(node.module or "").split(".")[0] for node in nodes if isinstance(node, ast.ImportFrom)})
+    tampering = (dynamic or "builtins" in imported_roots or any(
+        isinstance(node, ast.Name) and node.id in {"__builtins__", "setattr", "delattr"}
+        or isinstance(node, ast.Attribute) and node.attr in {"__dict__", "modules"}
+        for node in nodes))
+    BUILTIN_CONSTRUCTORS = {"list", "dict", "set", "tuple", "sorted", "frozenset"}
+
+    def name_bound_to(name, predicate, scope, seen):
+        key = (predicate.__name__, name)
+        if key in seen: return True
+        bound = bindings.get(name, [])
+        if not bound: return False
+        for node in bound:
+            statement = parents.get(node)
+            if not (isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store)
+                    and lexical_scope(node) is scope
+                    and (isinstance(statement, ast.Assign) and statement.targets == [node]
+                         or isinstance(statement, ast.AnnAssign) and statement.target is node
+                         and statement.value is not None)
+                    and predicate(statement.value, scope, seen | {key})):
+                return False
+        return True
+
+    def json_value(node, scope, seen):
+        """NODE evaluates to a value json.load could return."""
+        if isinstance(node, ast.Constant): return True
+        if isinstance(node, ast.Name): return name_bound_to(node.id, json_value, scope, seen)
+        if isinstance(node, ast.Subscript): return json_value(node.value, scope, seen)
+        if isinstance(node, ast.IfExp):
+            return json_value(node.body, scope, seen) and json_value(node.orelse, scope, seen)
+        if isinstance(node, ast.BoolOp): return all(json_value(value, scope, seen) for value in node.values)
+        if isinstance(node, ast.Call) and not node.keywords and isinstance(node.func, ast.Attribute):
+            receiver = node.func.value
+            if (real_json and node.func.attr in {"load", "loads"} and len(node.args) == 1
+                    and isinstance(receiver, ast.Name) and receiver.id == "json"):
+                return True
+            return (node.func.attr == "get" and 1 <= len(node.args) <= 2 and json_value(receiver, scope, seen)
+                    and all(json_value(arg, scope, seen) for arg in node.args[1:]))
+        return False
+
+    def builtin_value(node, scope, seen):
+        """NODE evaluates to JSON data or a builtin container."""
+        if json_value(node, scope, seen): return True
+        if isinstance(node, (ast.List, ast.Tuple, ast.Set, ast.Dict,
+                             ast.ListComp, ast.SetComp, ast.DictComp)): return True
+        if isinstance(node, ast.Name): return name_bound_to(node.id, builtin_value, scope, seen)
+        if isinstance(node, ast.IfExp):
+            return builtin_value(node.body, scope, seen) and builtin_value(node.orelse, scope, seen)
+        return (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                and node.func.id in BUILTIN_CONSTRUCTORS and node.func.id not in bindings)
+
+    container_methods = {name for kind in (dict, list, set, tuple, str)
+                         for name in dir(kind) if not name.startswith("_")}
+    builtin_receivers = set()
+    if not tampering:
+        for node in nodes:
+            parent = parents.get(node)
+            scope = lexical_scope(node)
+            if (isinstance(node, ast.Name) and node.id in {"ps", "pgrep"}
+                    and isinstance(parent, ast.Attribute) and parent.value is node
+                    and parent.attr in container_methods
+                    and isinstance(scope, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef))
+                    and scope not in redirected
+                    and builtin_value(node, scope, frozenset())):
+                builtin_receivers.add(node)
+
     protected = set()
     for node in nodes:
         if isinstance(node, ast.Attribute) and not data_append(node):
             protected.update(ast.walk(node.value))
         elif isinstance(node, ast.Call) and not data_append(node.func):
             protected.update(ast.walk(node.func))
+    protected -= builtin_receivers
     lines = source.split("\n")
     offsets, total = [], 0
     for line in lines:

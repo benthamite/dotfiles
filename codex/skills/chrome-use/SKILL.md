@@ -16,7 +16,8 @@ skills (`claude-in-chrome`, `chrome-browser`, `control-chrome`,
 For background web research, use the web search/browsing tool and the mapped
 service clients or direct public downloads (`claude/context/service-access.md`).
 Do not switch to Pablo's live Chrome because an HTTP request fails or a site
-presents a challenge.
+presents a challenge, unless a skill's documented browser step calls for it
+(such as `download-paper`'s `needs-browser` job).
 
 When a task needs Pablo's logged-in accounts or a site with no other agent
 path, use the browser without asking: Pablo has authorized this standing use
@@ -36,8 +37,15 @@ and does not want to repeat it. Each agent uses its own browser control:
 Pablo is working at the same machine. Never bring Chrome or one of its windows
 to the front.
 
-- Work in tabs of the existing window. Never open a new Chrome window, and
+- Get your own tab through the browser tool's own calls (Claude in Chrome:
+  `tabs_context_mcp` with `createIfEmpty`, `tabs_create_mcp`). That is the
+  normal start, needs no permission, and is allowed even when the extension
+  puts its tab group in a new window. Never open windows any other way, and
   never ask to: a window does not fix a page stall.
+- Work only in your own tabs. Claude in Chrome cannot use tabs Pablo opened
+  himself, so never offer to. When a site needs a sign-in in your tab (1Password
+  web signs in per tab), navigate your tab there and ask Pablo to sign in in
+  that tab, naming it and its Chrome profile window.
 - Do not click links or buttons that open a new tab or window (Chrome
   activates them). Read the link's `href` and navigate your own tab to it.
 - Never raise, activate or reorder Chrome windows: no AppleScript or

@@ -218,6 +218,12 @@ roots, and maintenance. The generated
 public skills only; runtime plugins, private skills, ignored system content,
 and skills owned by other repositories are outside its scope.
 
+The =message-agent-session= skill sends a short message to another live
+agent.el session in Emacs through =bin/agent-send=. The tool prepends a fixed
+disclosure header, refuses self-sends and ambiguous targets, never resends, and
+reports delivery only when the recipient's transcript records the message.
+Sessions outside Emacs agent.el are unreachable.
+
 The =live-session-status= skill reports what a live peer Claude or Codex
 session is doing from its local transcript instead of calling the session
 opaque. Its read-only =session_tail.py= helper prints the last user and

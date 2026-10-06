@@ -559,7 +559,13 @@ def submit_to_agent(
     delivery_marker: str,
     one_pass: bool = False,
     expected_identity: dict[str, Any] | None = None,
+    preserve_windows: bool = False,
 ) -> str:
+    """Submit PROMPT to BUFFER and return its transcript once acknowledged.
+
+    PRESERVE_WINDOWS restores the user's window layout after dispatch, since
+    both backends' submit functions call `display-buffer' on the target.
+    """
     fn = _submit_function(backend)
     if transcript is None and (
         expected_identity is None or not expected_identity.get("session_id")
@@ -578,11 +584,7 @@ def submit_to_agent(
         _write_all(fd, prompt.encode("utf-8"))
         os.close(fd)
         fd = -1
-        expr = f'''
-(with-current-buffer {elisp_string(buffer)}
-  {_identity_guard(buffer, backend, expected_identity)}
-  (let ((agent-claude-submit-retries 0))
-  (with-temp-buffer
+        dispatch = f'''(with-temp-buffer
     (insert-file-contents {elisp_string(str(prompt_path))})
     (let ((target
            ({fn}
@@ -590,7 +592,14 @@ def submit_to_agent(
             (get-buffer {elisp_string(buffer)}))))
       (unless (buffer-live-p target)
         (error "agent submit dispatch did not resolve a live buffer"))
-      (princ "submitted")))))
+      (princ "submitted")))'''
+        if preserve_windows:
+            dispatch = f"(save-window-excursion\n  {dispatch})"
+        expr = f'''
+(with-current-buffer {elisp_string(buffer)}
+  {_identity_guard(buffer, backend, expected_identity)}
+  (let ((agent-claude-submit-retries 0))
+  {dispatch}))
 '''
         returned = run_emacs_eval(expr)
         if returned != "submitted":

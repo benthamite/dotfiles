@@ -105,6 +105,13 @@ and each =projects/*= directory) to this file and every
 =~/.codex-epoch*/config.toml=. It is idempotent and refuses a checkout that does
 not exist yet; run it once at the workspace-split cutover.
 
+The Epoch Asana MCP server is declared per machine, outside this file, in the
+untracked =.codex/config.toml= of the workspace checkout (Claude's twin is the
+checkout's =.mcp.json=). Its =env= pins =EPOCH_OP_BIN= (the dotfiles =op=
+routing shim), =NPX_BIN= and =EPOCH_ASANA_EXPECTED_EMAIL=, because the server's
+child process gets neither the shell's =op= function nor a shim-first =PATH=;
+=ai-config-sync audit= requires those keys and checks the token's identity.
+
 Hook trust belongs to an exact source path, handler key, and current definition.
 Review the command identity when approving changed hooks; event labels alone
 can name several handlers. Trust changes use Codex's configuration API and must

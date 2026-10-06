@@ -288,7 +288,10 @@ before any Elisp-level timeout can intervene.  To avoid this,
 elsewhere) and only pulls when the probe succeeds.  A successful probe
 also warms the system resolver cache, so the subsequent in-process
 lookup returns instantly.  The probe is abandoned after
-~forge-extras-dns-probe-timeout~ seconds (default 3).
+~forge-extras-dns-probe-timeout~ seconds (default 3).  The probe, like
+the =gh api /notifications= request, runs from
+~temporary-file-directory~, so a timer that fires in a buffer whose
+directory was deleted can still start it.
 
 *** Re-entrancy protection
 :PROPERTIES:

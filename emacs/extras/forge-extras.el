@@ -421,12 +421,15 @@ not resolve within `forge-extras-dns-probe-timeout', log a debug message
 instead of calling CALLBACK.  When no resolver command is available,
 call CALLBACK directly."
   (if-let* ((command (forge-extras--dns-probe-command host)))
-      (let ((proc (make-process
-                   :name "forge-extras-dns-probe"
-                   :buffer (generate-new-buffer " *forge-extras-dns-probe*")
-                   :command command
-                   :noquery t
-                   :sentinel (forge-extras--dns-probe-sentinel callback))))
+      ;; Timers run in whatever buffer is current, whose directory may
+      ;; no longer exist; `make-process' would then fail to start.
+      (let* ((default-directory temporary-file-directory)
+             (proc (make-process
+                    :name "forge-extras-dns-probe"
+                    :buffer (generate-new-buffer " *forge-extras-dns-probe*")
+                    :command command
+                    :noquery t
+                    :sentinel (forge-extras--dns-probe-sentinel callback))))
         (run-at-time forge-extras-dns-probe-timeout nil
                      #'forge-extras--kill-dns-probe proc))
     (funcall callback)))
@@ -531,7 +534,8 @@ unread, so that Emacs never blocks on the request.
 INITIAL-PULL is non-nil on the first pull and is skipped since all
 notifications are already fetched in that case."
   (when (and (not initial-pull) (executable-find "gh"))
-    (let* ((stderr (generate-new-buffer " *forge-extras-gh-notifications-stderr*"))
+    (let* ((default-directory temporary-file-directory)
+           (stderr (generate-new-buffer " *forge-extras-gh-notifications-stderr*"))
            (proc (make-process
                   :name "forge-extras-gh-notifications"
                   :buffer (generate-new-buffer " *forge-extras-gh-notifications*")

@@ -275,6 +275,20 @@
 
 ;;;; Parse issue fields (GraphQL)
 
+(ert-deftest forge-extras-test-dns-probe-missing-default-directory ()
+  "The DNS probe starts even when the current buffer's directory is gone."
+  (let ((default-directory "/nonexistent-forge-extras-test-directory/")
+        (forge-extras-dns-probe-timeout 5)
+        resolved)
+    (cl-letf (((symbol-function 'forge-extras--dns-probe-command)
+               (lambda (_host) '("sh" "-c" "echo 192.0.2.1"))))
+      (forge-extras--call-when-host-resolves
+       "api.github.com" (lambda () (setq resolved t)))
+      (with-timeout (5 nil)
+        (while (not resolved)
+          (accept-process-output nil 0.05))))
+    (should resolved)))
+
 (ert-deftest forge-extras-test-parse-issue-fields-basic ()
   "Parse a complete issue fields response with status and effort."
   (let* ((forge-extras-project-number 1)

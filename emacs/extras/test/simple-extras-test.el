@@ -1008,6 +1008,19 @@ way back to the contents of one killed by accident."
         (debug-on-error t))
     (should-not (simple-extras-server-write-state))))
 
+(ert-deftest simple-extras-test-server-state-survives-non-local-exit ()
+  "A write that exits non-locally still leaves the next write scheduled."
+  (let ((simple-extras--server-state-timer nil))
+    (unwind-protect
+        (cl-letf (((symbol-function 'simple-extras-server-write-state)
+                   (lambda () (throw 'simple-extras-test-abort nil))))
+          (catch 'simple-extras-test-abort
+            (simple-extras--server-state-tick))
+          (should (memq simple-extras--server-state-timer timer-list))
+          (should-not (timer--triggered simple-extras--server-state-timer)))
+      (when simple-extras--server-state-timer
+        (cancel-timer simple-extras--server-state-timer)))))
+
 (ert-deftest simple-extras-test-server-state-reports-debugger ()
   "Report the head of the backtrace while the debugger is active."
   (let ((buffer (get-buffer-create "*Backtrace*")))

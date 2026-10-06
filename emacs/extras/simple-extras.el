@@ -1239,9 +1239,18 @@ subprocess instead."
     (cancel-timer simple-extras--server-state-timer)
     (setq simple-extras--server-state-timer nil))
   (when simple-extras-server-state-mode
-    (setq simple-extras--server-state-timer
-          (run-with-timer 0 simple-extras-server-state-interval
-                          #'simple-extras-server-write-state))))
+    (simple-extras--server-state-tick)))
+
+(defun simple-extras--server-state-tick ()
+  "Write the server's state, scheduling the next write first.
+Scheduling first keeps the recorder alive when the write exits
+non-locally, as when the user quits a debugger entered during it.  A
+repeating timer interrupted that way stays marked as triggered and never
+fires again."
+  (setq simple-extras--server-state-timer
+        (run-with-timer simple-extras-server-state-interval nil
+                        #'simple-extras--server-state-tick))
+  (simple-extras-server-write-state))
 
 (defun simple-extras-server-write-state ()
   "Write the server's state to `simple-extras-server-state-file'.

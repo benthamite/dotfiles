@@ -7223,6 +7223,15 @@ Using my fork while awaiting merge of [[https://github.com/emacs-languagetool/fl
      ("disabledRules" . "ARROWS,DASH_RULE,DATE_NEW_YEAR,EN_QUOTES,GITHUB,WHITESPACE_RULE")))
 
   :config
+  ;; The package's default command with the JVM heap capped. JVM flags
+  ;; must precede the class name, and `flycheck-languagetool-server-args'
+  ;; are appended after it, so they go here. Set after loading, when the
+  ;; port option is defined.
+  (setopt flycheck-languagetool-server-command
+          (list "java" "-Xmx1g" "-cp" (expand-file-name flycheck-languagetool-server-jar)
+                "org.languagetool.server.HTTPServer"
+                "--port" (format "%s" flycheck-languagetool-server-port)))
+
   (defun flycheck-languagetool-enable ()
     "Enable `flycheck-languagetool' in selected buffers."
     (unless (or (derived-mode-p 'forge-post-mode

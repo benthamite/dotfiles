@@ -8,6 +8,9 @@
     paper-fetch book-stage CANDIDATES.json --md5 MD5 --out DIR [--file LOCAL.pdf]
     paper-fetch book-inspect LOCAL.pdf --out NEW-DIR [--pages 1,2,3,last]
     paper-fetch book-select CANDIDATES.json --reviews REVIEWS.json
+    paper-fetch zlib-refresh [--dry-run | --preflight]
+    paper-fetch zlib-build DUMP.jsonl.seekable.zst [--out INDEX.sqlite]
+    paper-fetch zlib-status
     paper-fetch hosts
 
 `get` tries every route that works from a shell (open access, LibGen JSON ->
@@ -19,6 +22,8 @@ the files land in ~/Downloads, and `collect` verifies and installs them.
 
 Book commands return JSON. Discovery/staging/inspection require review, never
 approve a book. See agents/bibliography-policy.md and docs/book-acquisition.md.
+`zlib-*` maintain the local Z-Library metadata index that book-candidates
+searches (~/.local/share/paper-fetch/zlib3/index.sqlite).
 Exit codes: 0 ok, 2 needs-browser, 3 not-member, 4 unavailable, 5 needs-review,
 6 unknown (search incomplete), 1 error.
 The Anna's Archive key comes from ANNAS_SECRET_KEY or the annas-archive item in
@@ -31,6 +36,7 @@ import argparse
 import importlib.util
 import json
 import os
+import sqlite3
 import subprocess
 import sys
 from pathlib import Path
@@ -44,6 +50,15 @@ if _SPEC is None or _SPEC.loader is None:
 pf = importlib.util.module_from_spec(_SPEC)
 sys.modules["paper_fetch"] = pf  # dataclasses resolve annotations through sys.modules
 _SPEC.loader.exec_module(pf)
+
+
+def zlib_module():
+    """The index builder/refresher, loaded only by the zlib-* commands."""
+    spec = importlib.util.spec_from_file_location("paper_fetch_zlib", _LIB_FILE.with_name("paper_fetch_zlib.py"))
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["paper_fetch_zlib"] = module
+    spec.loader.exec_module(module)
+    return module
 
 EXIT_CODES = {"ok": 0, "needs-browser": 2, "not-member": 3, "unavailable": 4, "mismatch": 4,
               "no-downloads": 4, "needs-review": 5, "unknown": 6, "error": 1}
@@ -180,6 +195,38 @@ def cmd_book_select(args: argparse.Namespace) -> int:
     return book_outcome(pf.select_book_candidate(manifest, read_json(args.reviews)))
 
 
+def cmd_zlib_build(args: argparse.Namespace) -> int:
+    zlib = zlib_module()
+    out = Path(args.out).expanduser() if args.out else pf.zlib_index_path()
+    with zlib.refresh_lock(out.parent):
+        result = zlib.build_index(Path(args.dump), out, listed=args.listed or "", btih=args.btih or "", log=log)
+    print(json.dumps({"status": "ok", **result}, indent=2))
+    return 0
+
+
+def cmd_zlib_refresh(args: argparse.Namespace) -> int:
+    zlib = zlib_module()
+    directory = Path(args.dir).expanduser()
+    if args.preflight:
+        problems = zlib.preflight(directory)
+        print(json.dumps({"status": "error" if problems else "ok", "problems": problems}, indent=2))
+        return 1 if problems else 0
+    result = zlib.refresh(pf.Http(), directory, dry_run=args.dry_run, log=log)
+    print(json.dumps(result, indent=2))
+    return 0
+
+
+def cmd_zlib_status(args: argparse.Namespace) -> int:
+    index = pf.zlib_index_path()
+    try:
+        meta = zlib_module().index_meta(index)
+    except (pf.PaperFetchError, sqlite3.Error) as exc:
+        print(json.dumps({"status": "unusable", "index": str(index), "error": str(exc)}, indent=2))
+        return 1
+    print(json.dumps({"status": "ok" if meta else "index-missing", "index": str(index), **meta}, indent=2))
+    return 0 if meta else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="paper-fetch", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -241,6 +288,24 @@ def main(argv: list[str] | None = None) -> int:
     select.add_argument("candidates")
     select.add_argument("--reviews", required=True)
     select.set_defaults(func=cmd_book_select)
+
+    zlib_build = sub.add_parser("zlib-build", help="build the Z-Library metadata index from a zlib3_records dump")
+    zlib_build.add_argument("dump", help="annas_archive_meta__aacid__zlib3_records__*.jsonl.seekable.zst")
+    zlib_build.add_argument("--out", help=f"index path (default {pf.zlib_index_path()})")
+    zlib_build.add_argument("--listed", help="date Anna's listed the dump (recorded in the index)")
+    zlib_build.add_argument("--btih", help="torrent info hash of the dump (recorded in the index)")
+    zlib_build.set_defaults(func=cmd_zlib_build)
+
+    zlib_refresh = sub.add_parser("zlib-refresh",
+                                  help="download the newest seeded zlib3_records dump and rebuild the index")
+    zlib_refresh.add_argument("--dir", default=str(pf.ZLIB_DIR), help="dump and index directory (never under Drive)")
+    zlib_refresh.add_argument("--dry-run", action="store_true", help="report the chosen snapshot; change nothing")
+    zlib_refresh.add_argument("--preflight", action="store_true",
+                              help="check tools and directory only (no network, no download)")
+    zlib_refresh.set_defaults(func=cmd_zlib_refresh)
+
+    zlib_status = sub.add_parser("zlib-status", help="print the Z-Library index's snapshot and counts")
+    zlib_status.set_defaults(func=cmd_zlib_status)
 
     args = parser.parse_args(argv)
     try:

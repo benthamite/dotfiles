@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.stafforini.paper-fetch-zlib-refresh</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/python3</string>
+    <string>/Users/pablostafforini/repos/launchd/bin/launchd-run-record</string>
+    <string>--label</string>
+    <string>com.stafforini.paper-fetch-zlib-refresh</string>
+    <string>--repo</string>
+    <string>dotfiles=/Users/pablostafforini/My Drive/dotfiles</string>
+    <string>--</string>
+    <string>/Users/pablostafforini/My Drive/dotfiles/bin/paper-fetch</string>
+    <string>zlib-refresh</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOME</key>
+    <string>/Users/pablostafforini</string>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+
+  <!-- Monthly: newest seeded zlib3_records dump, rebuilt Z-Library index. -->
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Day</key>
+    <integer>8</integer>
+    <key>Hour</key>
+    <integer>3</integer>
+    <key>Minute</key>
+    <integer>20</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>LowPriorityIO</key>
+  <true/>
+  <key>Nice</key>
+  <integer>10</integer>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/paper-fetch-zlib-refresh.out</string>
+  <key>StandardErrorPath</key>
+  <string>/tmp/paper-fetch-zlib-refresh.err</string>
+</dict>
+</plist>

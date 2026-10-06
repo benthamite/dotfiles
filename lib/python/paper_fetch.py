@@ -37,6 +37,7 @@ import json
 import os
 import re
 import shutil
+import sqlite3
 import subprocess
 import time
 import unicodedata
@@ -522,9 +523,13 @@ def libgen_isbn_files(http: Http, isbn: str, *, strict: bool = False) -> list[di
                 raise PaperFetchError("LibGen ISBN lookup returned a malformed edition")
             continue
         edition_files = edition.get("files")
+        if edition_files in (None, [], {}):
+            # LibGen lists editions that have no file (chapters, catalogue-only
+            # records) and omits their "files" key; such an edition adds nothing.
+            continue
         if not isinstance(edition_files, dict):
             if strict:
-                raise PaperFetchError("LibGen ISBN lookup omitted the edition's files")
+                raise PaperFetchError("LibGen ISBN lookup returned a malformed files object")
             continue
         for file_ in edition_files.values():
             if not isinstance(file_, dict):
@@ -627,6 +632,12 @@ def libgen_search_files(http: Http, query: str, *, strict: bool = False) -> tupl
     for row in rows:
         cells = re.findall(r"<td\b[^>]*>(.*?)</td>", row, re.S)
         fid = re.search(r"file\.php\?id=([0-9]+)", row)
+        if fid and re.match(r"\s*<td\s+colspan=[\"']?5\b", row):
+            # A file attached to no edition: one colspan=5 cell holds its
+            # file name and path in place of title/author/publisher/year/language.
+            # It has no edition metadata; the file record still names the file.
+            file_ids.setdefault(fid[1], {"title": "", "author": "", "year": "", "edition": "", "language": ""})
+            continue
         if len(cells) < 8 or not fid:
             raise PaperFetchError("LibGen search returned an unrecognized result row")
         titles = [_html_text(t) for t in re.findall(r'href="edition\.php\?id=[0-9]+"[^>]*>(.*?)</a>', cells[0], re.S)]
@@ -817,19 +828,181 @@ def libgen_book_results(http: Http, isbn: str, *, strict: bool = False) -> list[
     return [_libgen_candidate(record) for record in libgen_isbn_files(http, isbn, strict=strict)]
 
 
+# ---------------------------------------------------------------------------
+# Z-Library metadata index (local; built by paper_fetch_zlib.py)
+# ---------------------------------------------------------------------------
+
+ZLIB_DIR = Path.home() / ".local" / "share" / "paper-fetch" / "zlib3"
+ZLIB_INDEX_ENV = "PAPER_FETCH_ZLIB_INDEX"
+ZLIB_INDEX_SCHEMA = "2"
+ZLIB_SEARCH_LIMIT = 200
+# Title words that catalogues often replace with "&" or drop.
+_ZLIB_OPTIONAL_WORDS = {"and", "et", "und"}
+
+
+def zlib_index_path() -> Path:
+    return Path(os.environ.get(ZLIB_INDEX_ENV) or ZLIB_DIR / "index.sqlite")
+
+
+def isbn_digits(value: str) -> str:
+    """ISBN without separators ('' unless it has the length of an ISBN-10 or -13)."""
+    value = re.sub(r"[^0-9Xx]", "", str(value)).upper()
+    return value if re.fullmatch(r"[0-9]{9}[0-9X]|[0-9]{13}", value) else ""
+
+
+def isbn13(value: str) -> str:
+    """Canonical ISBN-13 of an ISBN-10 or -13 ('' for anything else).
+
+    Catalogues record either form for the same book, so lookups compare ISBN-13s.
+    """
+    value = isbn_digits(value)
+    if len(value) == 13:
+        return value
+    if len(value) == 10:
+        core = "978" + value[:9]
+        total = sum((1 if index % 2 == 0 else 3) * int(digit) for index, digit in enumerate(core))
+        return core + str((10 - total % 10) % 10)
+    return ""
+
+
+def _fts_tokens(text: str) -> list[str]:
+    """Words as FTS5's unicode61 tokenizer sees them: letters, digits and marks.
+
+    Marks matter: Indic vowel signs are combining characters, and splitting
+    at them would turn a Hindi title into meaningless fragments.
+    """
+    text = unicodedata.normalize("NFC", re.sub(r"[{}\\]", "", text))
+    tokens, current = [], []
+    for char in text:
+        if unicodedata.category(char)[0] in "LNM":
+            current.append(char)
+        elif current:
+            tokens.append("".join(current))
+            current = []
+    if current:
+        tokens.append("".join(current))
+    return tokens
+
+
+def _fts_group(tokens: list[str]) -> str:
+    return "(" + " ".join('"' + token.replace('"', '""') + '"' for token in tokens) + ")"
+
+
+def zlib_title_author_query(target: dict) -> str:
+    """FTS5 query: main-title words in the title, first author's surname in title or author.
+
+    The surname may sit in the title (a book about its subject) when the
+    catalogue credits an editor or compiler instead. '' when the title has no
+    searchable words.
+    """
+    main_title = re.split(r"[:;?!]|\s[-–—]\s", re.sub(r"[{}\\]", "", target["title"]), maxsplit=1)[0]
+    words = [token for token in _fts_tokens(main_title)
+             if len(token) > 1 and token.lower() not in _ZLIB_OPTIONAL_WORDS]
+    if not words:
+        return ""
+    query = "title : " + _fts_group(words)
+    first_author = re.split(r"\s+and\s+", target.get("author") or "", maxsplit=1)[0].strip()
+    surname = first_author.split(",")[0] if "," in first_author else (first_author.split() or [""])[-1]
+    surname_words = _fts_tokens(surname)
+    if surname_words:
+        query += " AND {title author} : " + _fts_group(surname_words)
+    return query
+
+
+def zlib_index_meta(connection: sqlite3.Connection) -> dict:
+    meta = dict(connection.execute("SELECT key, value FROM meta").fetchall())
+    if meta.get("schema") != ZLIB_INDEX_SCHEMA:
+        raise PaperFetchError(f"Z-Library index has schema {meta.get('schema')!r}, expected {ZLIB_INDEX_SCHEMA}; "
+                              "rebuild it with `paper-fetch zlib-build`")
+    return meta
+
+
+ZLIB_COLUMNS = ("zlibrary_id", "md5", "title", "author", "publisher", "year", "language", "extension",
+                "filesize", "isbns", "deleted")
+
+
+def _zlib_candidate(row: dict, match: str, snapshot: str) -> dict:
+    size = row["filesize"] if isinstance(row["filesize"], int) and row["filesize"] > 0 else None
+    record = {"md5": row["md5"], "title": row["title"] or "", "authors": row["author"] or "",
+              "author": row["author"] or "", "format": (row["extension"] or "").lower(),
+              "size_bytes": size, "size": f"{size / 1024**2:.1f}MB" if size else "",
+              "year": row["year"] or "", "language": row["language"] or "", "edition": "",
+              "publisher": row["publisher"] or "", "isbns": (row["isbns"] or "").split(), "filename": "",
+              "source": "zlib", "zlibrary_id": row["zlibrary_id"], "zlib_match": match, "zlib_snapshot": snapshot}
+    # Non-DMCA deletion notes ("spam", "bad file") stay visible as review hints.
+    if row["deleted"]:
+        record["zlib_deleted"] = row["deleted"]
+    return record
+
+
+def search_zlib_index(target: dict, index: Path | None = None) -> tuple[list[dict], dict]:
+    """Book candidates from the local Z-Library metadata index: ISBN, then title plus author.
+
+    Returns (candidates, attempt). A missing index is the attempt status
+    ``index-missing``: the route could not run, which is not evidence of
+    absence. The index holds only PDFs that Z-Library has not deleted for DMCA,
+    and metadata only; files are fetched by md5 through the member
+    fast-download like every other candidate.
+    """
+    index = index or zlib_index_path()
+    if not index.is_file():
+        return [], {"route": "zlib-index", "status": "index-missing", "index": str(index),
+                    "error": "no local Z-Library index; build it with `paper-fetch zlib-refresh`"}
+    rows: list[tuple[dict, str]] = []
+    isbn = isbn13(target.get("isbn", ""))
+    query = zlib_title_author_query(target)
+    truncated = False
+    try:
+        connection = sqlite3.connect(f"{index.resolve().as_uri()}?mode=ro", uri=True)
+        try:
+            connection.row_factory = sqlite3.Row
+            snapshot = zlib_index_meta(connection).get("snapshot", "")
+            columns = ", ".join(f"b.{column}" for column in ZLIB_COLUMNS)
+            if isbn:
+                rows.extend((dict(row), "isbn") for row in connection.execute(
+                    f"SELECT {columns} FROM isbn i JOIN books b ON b.zlibrary_id = i.zlibrary_id "
+                    "WHERE i.isbn = ? ORDER BY b.zlibrary_id", (isbn,)))
+            if query:
+                found = connection.execute(
+                    f"SELECT {columns} FROM books_fts f JOIN books b ON b.zlibrary_id = f.rowid "
+                    "WHERE books_fts MATCH ? ORDER BY b.zlibrary_id LIMIT ?",
+                    (query, ZLIB_SEARCH_LIMIT + 1)).fetchall()
+                truncated = len(found) > ZLIB_SEARCH_LIMIT
+                rows.extend((dict(row), "title-author") for row in found[:ZLIB_SEARCH_LIMIT])
+        finally:
+            connection.close()
+    except (sqlite3.Error, PaperFetchError) as exc:
+        return [], {"route": "zlib-index", "status": "unknown", "index": str(index),
+                    "error": f"Z-Library index query failed ({type(exc).__name__}: {exc})"}
+    candidates: list[dict] = []
+    seen: set[str] = set()
+    for row, match in rows:
+        if row["md5"] not in seen:
+            seen.add(row["md5"])
+            candidates.append(_zlib_candidate(row, match, snapshot))
+    attempt = {"route": "zlib-index", "status": "ok", "snapshot": snapshot, "count": len(candidates),
+               "isbn": isbn, "query": query}
+    if truncated:
+        attempt["truncated"] = True
+    return candidates, attempt
+
+
 def book_text_query(target: dict) -> str:
     """Title/author query for full-text search routes (never the ISBN)."""
     return target["query"] or " ".join(filter(None, (target["title"], target["author"])))
 
 
 def discover_book_candidates(http: Http, target: dict, *, annas_host: str = "",
-                             annas_search_html: str | None = None) -> dict:
+                             annas_search_html: str | None = None, zlib_index: Path | None = None) -> dict:
     """Inventory files for an explicitly identified edition, without selecting one.
 
-    Non-browser routes: LibGen ISBN JSON (when an ISBN is given) and LibGen
-    full-text search. Anna's Archive search has no API and is challenged for a
-    CLI; pass ANNAS_SEARCH_HTML (the page a browser saved for the same query) to
-    include it. Otherwise its attempt is ``needs-browser`` and the manifest's
+    Non-browser routes: LibGen ISBN JSON (when an ISBN is given), LibGen
+    full-text search, and the local Z-Library metadata index (ZLIB_INDEX,
+    default ``zlib_index_path()``). Anna's Archive search has no API and is
+    challenged for a CLI; pass ANNAS_SEARCH_HTML (the page a browser saved for
+    the same query) to include it. A PDF candidate from the Z-Library index
+    makes that browser step unnecessary, so the live Anna's search is then
+    ``skipped``. Otherwise its attempt is ``needs-browser`` and the manifest's
     ``annas_browser_search`` names the browser step.
     """
     target = book_target(target)
@@ -859,9 +1032,21 @@ def discover_book_candidates(http: Http, target: dict, *, annas_host: str = "",
     except Exception as exc:
         attempts.append({"route": "libgen-search", "status": "error", "query": text_query,
                          "error": type(exc).__name__})
+    zlib_records, zlib_attempt = search_zlib_index(target, zlib_index)
+    observations.extend(zlib_records)
+    attempts.append(zlib_attempt)
+    # Only a PDF without a deletion note stands in for Anna's search.
+    zlib_pdf = any(record["format"] == "pdf" and not record.get("zlib_deleted") for record in zlib_records)
     hosts = resolve_annas_hosts(http, annas_host)
     browser_search = None
-    if annas_search_html is not None:
+    if annas_search_html is None and zlib_pdf:
+        # The browser step stays on record (not requested) in case review
+        # rejects every candidate and the search has to run after all.
+        attempts.append({"route": "annas-book-search", "status": "skipped", "host": hosts[0],
+                         "reason": "the Z-Library index returned PDF candidates, so the browser-only "
+                                   "Anna's search was not needed",
+                         "fallback": annas_browser_search(hosts[0], query)})
+    elif annas_search_html is not None:
         page_query = annas_search_page_query(annas_search_html)
         if " ".join(page_query.split()) != " ".join(query.split()):
             raise PaperFetchError(f"Saved Anna's search page is for {page_query!r}, not the target query {query!r}")

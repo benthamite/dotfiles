@@ -64,16 +64,23 @@ BibLaTeX name string. A query can identify a pre-ISBN work.
 }
 ```
 
-Discovery runs three routes. It reads no membership credential and downloads no
-book.
+Discovery runs four routes, in this order. It reads no membership credential
+and downloads no book.
 
-- `libgen-isbn`: LibGen's JSON API, when the target has an ISBN.
+- `libgen-isbn`: LibGen's JSON API, when the target has an ISBN. Editions
+  listed without files (chapters, catalogue-only records) add nothing.
 - `libgen-search`: LibGen's full-text search for `query`, or title plus author.
   LibGen has no JSON search, but its HTML search page is not challenged; the
   tool reads file ids from it and md5/size/scan flags from the JSON API. It
   keeps the first 100 files; `truncated: true` marks a larger hit count.
+  Files attached to no edition have empty title/author/year observations.
+- `zlib-index`: the local [Z-Library metadata index](#z-library-metadata-index),
+  by ISBN and then by title plus first-author surname. Its attempt names the
+  index `snapshot`. Without an index the attempt is `index-missing`.
 - `annas-book-search`: Anna's Archive search. From the CLI this normally ends
-  in `needs-browser`; see [Anna's Archive search](#annas-archive-search).
+  in `needs-browser`; see [Anna's Archive search](#annas-archive-search). When
+  `zlib-index` returned a PDF candidate it is `skipped` instead, so the
+  browser step is not requested.
 
 Its output is a version-1 manifest with `target`, `query`, `candidates`,
 `attempts`, `status` and `search_complete`, plus `annas_browser_search` when
@@ -85,8 +92,43 @@ Provider failures and unfamiliar layouts remain explicit in `attempts`.
 The output file must be new. With no candidates, a pending Anna's browser
 search yields `needs-browser`; an empty recognized search yields `unavailable`;
 any other incomplete empty search yields `unknown`. None means global absence.
-`search_complete` is false while any route failed, is pending, was truncated or
-is marked `incomplete`.
+`search_complete` is false while any route failed, is pending, was skipped, was
+truncated, had no index or is marked `incomplete`.
+
+### Z-Library metadata index
+
+Anna's Archive publishes the whole Z-Library catalogue as `zlib3_records`
+metadata dumps (about 24 GB compressed). `paper-fetch zlib-build DUMP` streams
+one dump into `~/.local/share/paper-fetch/zlib3/index.sqlite` (never under
+Drive). Book review accepts only PDFs, so the index keeps only PDF records with
+an md5 that Z-Library has not deleted for DMCA, without the Sci-Hub articles
+Z-Library mirrors. Its columns are md5, Z-Library id, title, author,
+publisher, year, language, format, size, ISBNs and any non-DMCA deletion
+comment, plus an ISBN-13 lookup table and an external-content FTS5 table over
+title and author (no duplicated text). A Z-Library id recurs across crawls;
+each field keeps its latest non-empty value. The `meta` table records the
+source dump, its `snapshot` (newest record time) and the date Anna's listed
+it. `paper-fetch zlib-status` prints it.
+
+Candidates carry `source: zlib`, `zlibrary_id`, `zlib_match` (`isbn` or
+`title-author`) and `zlib_snapshot`. A `spam` or `bad file` deletion comment
+stays visible as `zlib_deleted`; such a PDF is offered for review but does not
+replace Anna's search. The index holds no files: `book-stage` downloads a
+candidate by md5 through the same member fast-download as every other
+candidate. Title search keeps the first 200 matches; `truncated: true` marks
+more. A skipped Anna's search keeps its browser step under `fallback` in
+that attempt, for when review rejects every candidate.
+
+`paper-fetch zlib-refresh` reads Anna's `/dyn/torrents.json` (no key), picks
+the newest `zlib3_records` dump that has seeders (newer dumps without seeders
+are listed in `skipped_unseeded`), downloads it through the running
+Transmission daemon with a seed-ratio limit of 0 and removes the torrent once
+complete, so nothing seeds. It then rebuilds the index into a temporary file
+that atomically replaces the old one, and deletes superseded dumps. With the
+index already on that dump it reports `up-to-date`. `--dry-run` reports the
+choice only; `--preflight` checks the tools and directory without network
+access. `macos/LaunchAgents/com.stafforini.paper-fetch-zlib-refresh.plist`
+runs it monthly.
 
 ### Anna's Archive search
 
@@ -95,9 +137,9 @@ search API"), and its FAQ names one stable JSON API: the member
 `/dyn/api/fast_download.json`, which needs an md5. The member key does not
 unlock search, `/md5/…` pages or `/db/…` record JSON (those want a logged-in
 browser session). `/search` sits behind DDoS-Guard and answers a CLI with a
-403 challenge page on every mirror. Bulk alternatives (the
-`aa_derived_mirror_metadata` torrents) are hundreds of gigabytes; they are not
-a lookup route.
+403 challenge page on every mirror. The full derived metadata
+(`aa_derived_mirror_metadata` torrents) is hundreds of gigabytes; only the
+Z-Library part is indexed locally (the `zlib-index` route).
 
 So Anna's search runs in Chrome, and the CLI consumes the saved page:
 

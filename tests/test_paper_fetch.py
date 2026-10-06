@@ -20,9 +20,61 @@ _SPEC = importlib.util.spec_from_file_location("paper_fetch", LIB)
 pf = importlib.util.module_from_spec(_SPEC)
 sys.modules["paper_fetch"] = pf
 _SPEC.loader.exec_module(pf)
+_ZSPEC = importlib.util.spec_from_file_location("paper_fetch_zlib", LIB.with_name("paper_fetch_zlib.py"))
+zlib = importlib.util.module_from_spec(_ZSPEC)
+sys.modules["paper_fetch_zlib"] = zlib
+_ZSPEC.loader.exec_module(zlib)
 
 MD5_A = "a" * 32
 MD5_B = "b" * 32
+MD5_C = "c" * 32
+MD5_D = "d" * 32
+MD5_E = "e" * 32
+DUMP_NAME = "annas_archive_meta__aacid__zlib3_records__20240809T171652Z--20260706T193143Z.jsonl.seekable.zst"
+
+
+def zlib_book(zid, md5, title, author, *, extension="pdf", isbns=(), year="1990", **extra):
+    """A crawled zlib3 record as the dump stores it."""
+    return {"zlibrary_id": zid, "date_added": "2022-08-24", "date_modified": "2023-04-05", "extension": extension,
+            "filesize_reported": 1234567, "md5_reported": md5, "title": title, "author": author,
+            "publisher": "Publisher", "language": "english", "series": "", "volume": "", "edition": "",
+            "year": year, "pages": "300", "description": "Long blurb that the index must not keep.",
+            "cover_path": "/covers/x.jpg", "isbns": list(isbns), "category_id": "", **extra}
+
+
+def annabookinfo(zid, md5, *, deleted="", storage="userbooks", identifier=None, **fields):
+    response = {"id": str(zid), "title": fields.get("title", ""), "author": fields.get("author", ""),
+                "volume": "", "year": fields.get("year", ""), "edition": "", "publisher": "", "identifier": identifier,
+                "language": "", "pages": "0", "cover": "", "storage": storage, "deleted_comment": deleted,
+                "filesize": "1234567", "extension": fields.get("extension", "pdf"), "ipfs_cid": None,
+                "ipfs_cid_blake2b": None, "md5": md5, "description": "", "downloadUrl": f"https://z-library.se/dl/{zid}/x"}
+    return {"zlibrary_id": zid, "annabookinfo": {"errors": [], "response": response}}
+
+
+def write_dump(directory, records, name=DUMP_NAME):
+    """A zstd-compressed zlib3_records dump of METADATA records, in AAC (time) order."""
+    lines = "".join(json.dumps({"aacid": f"aacid__zlib3_records__20240809T171652Z__{m['zlibrary_id']}__{i}",
+                                "metadata": m}, ensure_ascii=True) + "\n" for i, m in enumerate(records))
+    path = Path(directory) / name
+    subprocess.run(["zstd", "-q", "-f", "-o", str(path)], input=lines.encode(), check=True)
+    return path
+
+
+_FIXTURE_DIR = tempfile.TemporaryDirectory()
+
+
+def setUpModule():
+    # Discovery searches the Z-Library index by default; point it at a fixture
+    # holding one unrelated book so no test reads the real index.
+    dump = write_dump(_FIXTURE_DIR.name, [zlib_book(1, MD5_E, "Unrelated Fixture Volume", "Nobody, A.")])
+    index = Path(_FIXTURE_DIR.name) / "index.sqlite"
+    zlib.build_index(dump, index)
+    os.environ[pf.ZLIB_INDEX_ENV] = str(index)
+
+
+def tearDownModule():
+    os.environ.pop(pf.ZLIB_INDEX_ENV, None)
+    _FIXTURE_DIR.cleanup()
 
 
 class HttpTrustTests(unittest.TestCase):
@@ -301,7 +353,7 @@ class BookCandidateTests(unittest.TestCase):
         with mock.patch.object(pf, "annas_secret_key", side_effect=AssertionError("credentials not permitted")):
             result = pf.discover_book_candidates(http, BOOK_TARGET, annas_host="annas-archive.gl")
         self.assertEqual(result["status"], "needs-review")
-        self.assertEqual([a["status"] for a in result["attempts"]], ["ok", "ok", "needs-browser"])
+        self.assertEqual([a["status"] for a in result["attempts"]], ["ok", "ok", "ok", "needs-browser"])
         self.assertFalse(result["search_complete"])
         self.assertTrue(result["candidates"][0]["scanned"])
         self.assertTrue(result["candidates"][0]["ocr"])
@@ -314,7 +366,7 @@ class BookCandidateTests(unittest.TestCase):
             pf.parse_annas_book_results("<html>New site layout</html>")
         with self.assertRaises(pf.PaperFetchError):
             pf.libgen_isbn_files(FakeHttp([("libgen", html("{}", 500))]), "9780262033848", strict=True)
-        for payload in ({"error": "temporarily unavailable"}, {"1": {"title": "Book"}},
+        for payload in ({"error": "temporarily unavailable"}, {"1": {"title": "Book", "files": "9"}},
                         {"1": {"files": {"9": {}}}}):
             with self.subTest(payload=payload), self.assertRaises(pf.PaperFetchError):
                 pf.libgen_isbn_files(FakeHttp([("libgen", html(json.dumps(payload)))]), "9780262033848", strict=True)
@@ -322,6 +374,44 @@ class BookCandidateTests(unittest.TestCase):
             {} if params.get("object") == "f" else {"1": {"files": {"9": {"f_id": "9"}}}})))])
         with self.assertRaises(pf.PaperFetchError):
             pf.libgen_isbn_files(http, "9780262033848", strict=True)
+
+    def test_libgen_isbn_edition_without_files_contributes_nothing(self):
+        # LibGen lists chapter and catalogue-only editions under the ISBN without a
+        # "files" key (Carruthers 2005, ISBN 0195179676); strict lookup kept failing.
+        editions = {"1": {"title": "The Innate Mind", "year": "2005", "files": {"7": {"f_id": "9", "md5": MD5_A}}},
+                    "2": {"title": "The Innate Mind || Preface", "year": "2005"},
+                    "3": {"title": "The Innate Mind || Copyright Page", "year": "2005", "files": []}}
+        files = {"9": {"md5": MD5_A, "extension": "pdf", "filesize": "3266383", "locator": "innate.pdf"}}
+        http = FakeHttp([("libgen", lambda url, params: html(json.dumps(files if params.get("object") == "f" else editions)))])
+        records = pf.libgen_isbn_files(http, "0195179676", strict=True)
+        self.assertEqual([(r["md5"], r["title"]) for r in records], [(MD5_A, "The Innate Mind")])
+        only_empty = FakeHttp([("libgen", html(json.dumps({"2": {"title": "The Innate Mind || Preface"}})))])
+        self.assertEqual(pf.libgen_isbn_files(only_empty, "0195179676", strict=True), [])
+        self.assertEqual(len(only_empty.calls), 1, "no file lookup for editions without files")
+
+    def test_libgen_text_search_reads_files_attached_to_no_edition(self):
+        # The Jacobs 1996 "Marque jaune" search lists edition-less comic files as
+        # one colspan=5 cell (file name and path) plus pages, size, format, mirrors.
+        orphan = ('<tr>\n<td colspan=5>\n  <div class="row"><div class="col"><span data-toggle="tooltip" '
+                  'title="Time added/Time modified : 2021-03-14 06:13:55/2023-07-01 09:48:28<br>File ID: 91091253" >'
+                  'Jacobs, Edgar Pierre - 1987 - Blake et Mortimer T06 La marque jaune<br><font size=1 color="gray">'
+                  'ftp\\[BD.FR] French Comics</font></span></div></div>\n</td>\n<td>72</td>\n'
+                  '<td><nobr><a href="/file.php?id=91091253">20 MB</a></nobr></td>\n<td>cbz</td>\n'
+                  f'<td><a title="libgen" href="/get.php?md5={MD5_B}"><span>Libgen</span></a></td>\n</tr>')
+        page = libgen_search_page([("11", "La marque jaune", "Jacobs, Edgar Pierre", "1996")], total=2)
+        page = page.replace("</tbody>", orphan + "</tbody>")
+        files = {"11": {"md5": MD5_A, "extension": "pdf", "filesize": "5000000", "locator": "a/jaune.pdf"},
+                 "91091253": {"md5": MD5_B, "extension": "cbz", "filesize": "20971520",
+                              "locator": "[BD.FR] French Comics\\Blake et Mortimer T06 La marque jaune.cbz"}}
+        http = FakeHttp([("libgen.li/index.php", html(page)), ("json.php", lambda url, params: html(json.dumps(files)))])
+        records, total = pf.libgen_search_files(http, "La marque jaune Jacobs, Edgar Pierre", strict=True)
+        self.assertEqual(total, 2)
+        by_md5 = {record["md5"]: record for record in records}
+        self.assertEqual(by_md5[MD5_A]["title"], "La marque jaune")
+        orphan_record = by_md5[MD5_B]
+        self.assertEqual((orphan_record["title"], orphan_record["author"], orphan_record["year"]), ("", "", ""))
+        self.assertEqual(orphan_record["filename"], "Blake et Mortimer T06 La marque jaune.cbz")
+        self.assertEqual(http.calls[-1][1]["ids"], "11,91091253")
 
     def test_libgen_text_search_reads_ids_from_html_and_files_from_json(self):
         files = {"11": {"md5": MD5_A, "extension": "pdf", "filesize": "5000000", "scanned": "Y", "locator": "a/b.pdf"}}
@@ -685,6 +775,233 @@ class FetcherTests(unittest.TestCase):
             self.assertEqual(result["status"], "ok")
             self.assertTrue(Path(result["file"]).exists())
             self.assertFalse((dl / f"paperfetch-{job.token}-0.pdf").exists(), "installed file is moved out of Downloads")
+
+
+class ZlibIndexTests(unittest.TestCase):
+    def build(self, tmp, records, name=DUMP_NAME):
+        index = Path(tmp) / "index.sqlite"
+        meta = zlib.build_index(write_dump(tmp, records, name), index, listed="2026-07-07")
+        return index, meta
+
+    def target(self, **fields):
+        return pf.book_target({"title": "Games and Decisions", "author": "Luce, R. Duncan and Raiffa, Howard",
+                               "year": "1957", "edition": "first", "language": "english", **fields})
+
+    def test_build_merges_records_per_id_and_keeps_only_book_search_fields(self):
+        records = [
+            zlib_book(10, MD5_A, "Games and decisions", "Luce, R. Duncan", isbns=["0-486-65943-7"]),
+            {"zlibrary_id": 11, "missing": 1},
+            annabookinfo(10, MD5_A, storage="internet-archive", title="Games and decisions : introduction",
+                         identifier="9780486659435,0486659437"),
+            # A later crawl with an empty title must not erase the known one.
+            zlib_book(10, MD5_A, "", "Luce, R. Duncan", year="1957"),
+            # An annabookinfo-only record carries all the metadata there is.
+            annabookinfo(12, MD5_B, title="Hermits", author="France, Peter", year="1996", extension="epub"),
+            zlib_book(13, MD5_C, "A Paper on Proteins", "Lab, A.", isbns=[]),
+            annabookinfo(13, MD5_C, storage="scimag"),
+            zlib_book(14, "", "No file", "Nobody"),
+            # A PDF that a later record reveals as DMCA-deleted, and one whose
+            # DMCA deletion a later lookup lifted.
+            zlib_book(15, MD5_D, "Taken down", "X"),
+            annabookinfo(15, MD5_D, deleted="DMCA"),
+            annabookinfo(16, MD5_E, deleted="DMCA", title="Restored", extension="pdf"),
+            annabookinfo(16, MD5_E, deleted="", title="Restored", extension="pdf"),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            index, meta = self.build(tmp, records)
+            self.assertEqual((meta["snapshot"], meta["listed"], meta["books"]), ("2026-07-06T19:31:43Z", "2026-07-07", "2"))
+            self.assertEqual(meta["dump"], DUMP_NAME)
+            import sqlite3
+            connection = sqlite3.connect(index)
+            rows = {row[0]: row for row in connection.execute(
+                "SELECT zlibrary_id, md5, title, year, isbns, extension, filesize FROM books")}
+            self.assertEqual(set(rows), {10, 16}, "missing, non-PDF, scimag, DMCA and md5-less records are dropped")
+            # Each field keeps its latest non-empty value, whichever record supplied it.
+            self.assertEqual(rows[10][1:], (MD5_A, "Games and decisions : introduction", "1957",
+                                            "9780486659435 0486659437", "pdf", 1234567))
+            self.assertEqual(rows[16][2], "Restored")
+            self.assertEqual(connection.execute("SELECT isbn FROM isbn").fetchall(), [("9780486659435",)])
+            columns = {row[1] for row in connection.execute("PRAGMA table_info(books)")}
+            self.assertEqual(columns, {"zlibrary_id", "md5", "title", "author", "publisher", "year", "language",
+                                       "extension", "filesize", "isbns", "deleted"})
+            self.assertEqual(dict(connection.execute("SELECT key, value FROM meta"))["schema"], pf.ZLIB_INDEX_SCHEMA)
+            connection.close()
+
+    def test_search_matches_isbn_forms_then_title_and_surname_and_skips_dmca(self):
+        records = [
+            zlib_book(20, MD5_A, "Games and decisions : introduction and critical survey",
+                      "Luce, R. Duncan (Robert Duncan), Raiffa, Howard"),
+            zlib_book(21, MD5_B, "Games & Decisions", "R. Duncan Luce", isbns=["0486659437"]),
+            zlib_book(25, "f" * 32, "Games and decisions", "Luce", extension="djvu"),
+            zlib_book(22, MD5_C, "Games and decisions", "Luce, R. Duncan"),
+            annabookinfo(22, MD5_C, deleted="DMCA"),
+            zlib_book(23, MD5_D, "Games and decisions", "Luce", removed=1,
+                      removalReason="On your request nothing has been found"),
+            annabookinfo(23, MD5_D, deleted="spam"),
+            zlib_book(24, MD5_E, "Games People Play", "Berne, Eric"),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            index, _ = self.build(tmp, records)
+            candidates, attempt = pf.search_zlib_index(self.target(isbn="978-0-486-65943-5"), index)
+        self.assertEqual(attempt["status"], "ok")
+        self.assertEqual(attempt["snapshot"], "2026-07-06T19:31:43Z")
+        self.assertEqual([(c["md5"], c["zlib_match"]) for c in candidates],
+                         [(MD5_B, "isbn"), (MD5_A, "title-author"), (MD5_D, "title-author")])
+        first = candidates[1]
+        self.assertEqual((first["format"], first["size_bytes"], first["source"], first["zlibrary_id"]),
+                         ("pdf", 1234567, "zlib", 20))
+        self.assertEqual(candidates[2]["zlib_deleted"], "spam")
+        self.assertNotIn("zlib_deleted", first)
+
+    def test_search_folds_diacritics_and_finds_the_surname_in_the_title(self):
+        records = [
+            # Decomposed accent, as some Z-Library titles store it.
+            zlib_book(30, MD5_A, "El he\u0301roe de las mujeres", "Bioy Casares, Adolfo", year="1978"),
+            # A compiled volume credits its compiler; the subject's name is in the title.
+            zlib_book(31, MD5_B, "ABC de Adolfo Bioy Casares : reflexiones", "Martino, Daniel, 1961-"),
+            zlib_book(32, MD5_C, "Gentlemen : a novel", "Östergren, Klas, 1955-"),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            index, _ = self.build(tmp, records)
+            hero = pf.search_zlib_index(self.target(title="El héroe de las mujeres", author="Bioy Casares, Adolfo"), index)
+            abc = pf.search_zlib_index(self.target(title="{ABC} de Adolfo Bioy Casares: reflexiones y observaciones",
+                                                   author="Bioy Casares, Adolfo"), index)
+            gentlemen = pf.search_zlib_index(self.target(title="Gentlemen", author="Ostergren, Klas and Nunnally, Tiina"),
+                                             index)
+        self.assertEqual([c["md5"] for c in hero[0]], [MD5_A])
+        self.assertEqual([c["md5"] for c in abc[0]], [MD5_B])
+        self.assertEqual([c["md5"] for c in gentlemen[0]], [MD5_C])
+
+    def test_missing_index_is_a_recorded_attempt_not_a_crash(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            candidates, attempt = pf.search_zlib_index(self.target(), Path(tmp) / "absent.sqlite")
+        self.assertEqual(candidates, [])
+        self.assertEqual(attempt["status"], "index-missing")
+        target = {**BOOK_TARGET, "isbn": ""}
+        http = FakeHttp([("libgen.li/index.php", html(libgen_search_page([]))),
+                         ("/search", html("<title>DDoS-Guard</title>", 403))])
+        with mock.patch.dict(os.environ, {pf.ZLIB_INDEX_ENV: "/nonexistent/index.sqlite"}):
+            result = pf.discover_book_candidates(http, target, annas_host="annas-archive.gl")
+        self.assertEqual([a["status"] for a in result["attempts"]], ["ok", "index-missing", "needs-browser"])
+        self.assertEqual(result["status"], "needs-browser")
+        self.assertFalse(result["search_complete"])
+
+    def test_zlib_pdf_hit_feeds_review_and_avoids_the_browser_search(self):
+        target = {**BOOK_TARGET, "isbn": "", "title": "Games and Decisions", "author": "Luce, R. Duncan"}
+        http = FakeHttp([("libgen.li/index.php", html(libgen_search_page([]))),
+                         ("/search", html("<title>DDoS-Guard</title>", 403))])
+        with tempfile.TemporaryDirectory() as tmp:
+            index, _ = self.build(tmp, [zlib_book(40, MD5_A, "Games and decisions", "Luce, R. Duncan")])
+            with mock.patch.object(pf, "annas_secret_key", side_effect=AssertionError("credentials not permitted")):
+                result = pf.discover_book_candidates(http, target, annas_host="annas-archive.gl", zlib_index=index)
+            epub_index = Path(tmp) / "epub"
+            epub_index.mkdir()
+            epub_index, _ = self.build(epub_index, [
+                zlib_book(41, MD5_B, "Games and decisions", "Luce, R. Duncan", extension="epub"),
+                zlib_book(42, MD5_C, "Games and decisions", "Luce, R. Duncan"),
+                annabookinfo(42, MD5_C, deleted="spam")])
+            epub_only = pf.discover_book_candidates(http, target, annas_host="annas-archive.gl", zlib_index=epub_index)
+        self.assertEqual(result["status"], "needs-review")
+        self.assertNotIn("annas_browser_search", result)
+        self.assertFalse(any("/search" in url for url, _ in http.calls[:2]))
+        zlib_attempt, annas_attempt = result["attempts"][1:]
+        self.assertEqual((zlib_attempt["route"], zlib_attempt["snapshot"]), ("zlib-index", "2026-07-06T19:31:43Z"))
+        self.assertEqual(annas_attempt["status"], "skipped")
+        self.assertIn("snippet", annas_attempt["fallback"], "the skipped browser step stays on record")
+        self.assertFalse(result["search_complete"])
+        candidate = result["candidates"][0]
+        self.assertEqual((candidate["md5"], candidate["format"]), (MD5_A, "pdf"))
+        self.assertEqual(candidate["observations"][0]["source"], "zlib")
+        # The manifest is a normal inventory: the review path reads it and stages by md5.
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = Path(tmp) / "candidates.json"
+            manifest.write_text(json.dumps(result))
+            self.assertEqual(pf.read_book_candidates(manifest)["candidates"][0]["md5"], MD5_A)
+        # EPUBs are not indexed, and a PDF Z-Library flagged as spam does not
+        # replace Anna's search (it is still offered for review).
+        self.assertEqual([c["md5"] for c in epub_only["candidates"]], [MD5_C])
+        self.assertEqual(epub_only["status"], "needs-review")
+        self.assertEqual(epub_only["attempts"][-1]["status"], "needs-browser")
+        self.assertIn("annas_browser_search", epub_only)
+
+    def test_failed_build_keeps_the_previous_index(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            index, _ = self.build(tmp, [zlib_book(50, MD5_A, "Games and decisions", "Luce")])
+            before = index.read_bytes()
+            bad = Path(tmp) / "bad"
+            bad.mkdir()
+            dump = write_dump(bad, [zlib_book(51, MD5_B, "Other", "X")])
+            dump.write_bytes(dump.read_bytes()[:-8])  # truncated download
+            with self.assertRaises(zlib.ZlibError):
+                zlib.build_index(dump, index)
+            self.assertEqual(index.read_bytes(), before)
+            self.assertEqual(sorted(p.name for p in Path(tmp).iterdir()), sorted([DUMP_NAME, "bad", "index.sqlite"]))
+            with self.assertRaises(zlib.ZlibError):
+                zlib.build_index(Path(tmp) / DUMP_NAME, Path.home() / "My Drive" / "index.sqlite")
+
+    def test_refresh_picks_the_newest_seeded_snapshot(self):
+        def entry(name, seeders, listed):
+            return {"display_name": name + ".torrent", "btih": "0" * 40, "seeders": seeders,
+                    "url": f"https://annas-archive.gl/dyn/small_file/torrents/{name}.torrent",
+                    "added_to_torrents_list_at": listed, "data_size": 1}
+        old = "annas_archive_meta__aacid__zlib3_records__20240809T171652Z--20260626T054841Z.jsonl.seekable.zst"
+        seeded = DUMP_NAME
+        newer = "annas_archive_meta__aacid__zlib3_records__20240809T171652Z--20260821T041731Z.jsonl.seekable.zst"
+        newest = "annas_archive_meta__aacid__zlib3_records__20260913T213218Z--20260916T162622Z.jsonl.seekable.zst"
+        entries = [entry(old, 3, "2026-06-26"), entry(newest, 0, "2026-09-16"), entry(seeded, 43, "2026-07-07"),
+                   entry(newer, 0, "2026-08-22"), {"display_name": "annas_archive_data__aacid__other.torrent"}]
+        chosen, skipped = zlib.choose_snapshot(entries)
+        self.assertEqual(chosen["file_name"], seeded)
+        self.assertEqual([item["file_name"] for item in skipped], [newest, newer])
+        with self.assertRaises(zlib.ZlibError):
+            zlib.choose_snapshot([entry(newest, 0, "2026-09-16")])
+        # A dump listed twice must not break the ordering.
+        self.assertEqual(zlib.choose_snapshot([entry(seeded, 1, "x"), entry(seeded, 2, "x")])[0]["file_name"], seeded)
+
+    def test_refresh_never_steps_back_and_deletes_only_older_dumps(self):
+        older = "annas_archive_meta__aacid__zlib3_records__20240809T171652Z--20260626T054841Z.jsonl.seekable.zst"
+        newer = "annas_archive_meta__aacid__zlib3_records__20240809T171652Z--20260821T041731Z.jsonl.seekable.zst"
+        torrents = [{"display_name": older + ".torrent", "btih": "0" * 40, "seeders": 5, "data_size": 1,
+                     "url": "https://annas-archive.gl/x.torrent", "added_to_torrents_list_at": "2026-06-26"}]
+        http = FakeHttp([("torrents.json", html(json.dumps(torrents)))])
+        with tempfile.TemporaryDirectory() as tmp:
+            self.build(tmp, [zlib_book(70, MD5_A, "Games and decisions", "Luce")])  # index on DUMP_NAME (July)
+            with mock.patch.object(zlib, "transmission", side_effect=AssertionError("no download expected")):
+                self.assertEqual(zlib.refresh(http, Path(tmp))["status"], "up-to-date")
+            for name in (older, newer):
+                (Path(tmp) / name).write_bytes(b"x")
+            with mock.patch.object(zlib, "transmission", return_value={"torrents": []}):
+                removed = zlib._remove_superseded(Path(tmp), Path(tmp) / DUMP_NAME, lambda _m: None)
+            self.assertEqual(removed, [older])
+            self.assertTrue((Path(tmp) / newer).exists() and (Path(tmp) / DUMP_NAME).exists())
+
+    def test_refresh_rebuilds_an_index_with_an_old_schema(self):
+        import sqlite3
+        torrents = [{"display_name": DUMP_NAME + ".torrent", "btih": "0" * 40, "seeders": 5, "data_size": 1,
+                     "url": "https://annas-archive.gl/x.torrent", "added_to_torrents_list_at": "2026-07-07"}]
+        http = FakeHttp([("torrents.json", html(json.dumps(torrents)))])
+        with tempfile.TemporaryDirectory() as tmp:
+            index, _ = self.build(tmp, [zlib_book(80, MD5_A, "Games and decisions", "Luce")])
+            connection = sqlite3.connect(index)
+            connection.execute("UPDATE meta SET value = '0' WHERE key = 'schema'")
+            connection.commit()
+            connection.close()
+            self.assertEqual(zlib.refresh(http, Path(tmp), dry_run=True)["status"], "dry-run")
+
+    def test_query_keeps_indic_words_whole(self):
+        query = pf.zlib_title_author_query({"title": "हिन्दी साहित्य का इतिहास", "author": "शुक्ल, रामचन्द्र"})
+        self.assertEqual(query, 'title : ("हिन्दी" "साहित्य" "का" "इतिहास") AND {title author} : ("शुक्ल")')
+
+    def test_refresh_is_a_no_op_when_the_index_already_has_the_chosen_snapshot(self):
+        torrents = [{"display_name": DUMP_NAME + ".torrent", "btih": "0" * 40, "seeders": 5, "data_size": 1,
+                     "url": "https://annas-archive.gl/x.torrent", "added_to_torrents_list_at": "2026-07-07"}]
+        http = FakeHttp([("torrents.json", html(json.dumps(torrents)))])
+        with tempfile.TemporaryDirectory() as tmp:
+            self.build(tmp, [zlib_book(60, MD5_A, "Games and decisions", "Luce")])
+            with mock.patch.object(zlib, "transmission", side_effect=AssertionError("no download expected")):
+                result = zlib.refresh(http, Path(tmp))
+        self.assertEqual(result["status"], "up-to-date")
+        self.assertTrue(all("annas-archive" in url or "wikipedia" in url for url, _ in http.calls))
 
 
 class CliTests(unittest.TestCase):

@@ -5,12 +5,34 @@
 # working tree, which may hold unstaged edits) with
 # karabiner/check-generated, so karabiner.edn and the layout diagrams
 # cannot drift from modifications.org.
+#
+# When it touches code that LaunchAgents run (scripts, the auth helpers,
+# the agent hooks and their engine, the dotfiles-owned plists), check that
+# every registered job still starts in its launchd environment with
+# launchd-env-check from the launchd repository. It checks the staged tree
+# and blocks only on failures HEAD's tree does not already have.
 
 set -eu
 
-git diff --cached --quiet -- karabiner/ && exit 0
+LAUNCHD_ENV_CHECK=/Users/pablostafforini/repos/launchd/bin/launchd-env-check.py
+status=0
 
-tmp=$(mktemp -d)
-trap 'rm -r "$tmp"' EXIT
-git ls-files -z -- karabiner/ | xargs -0 git checkout-index --prefix="$tmp/" --
-python3 "$tmp/karabiner/check-generated" --root "$tmp/karabiner"
+if ! git diff --cached --quiet -- karabiner/; then
+  tmp=$(mktemp -d)
+  trap 'rm -r "$tmp"' EXIT
+  git ls-files -z -- karabiner/ | xargs -0 git checkout-index --prefix="$tmp/" --
+  python3 "$tmp/karabiner/check-generated" --root "$tmp/karabiner" || status=1
+fi
+
+if ! git diff --cached --quiet -- bin/ claude/bin/ claude/hooks/ codex/hooks/ lib/python/ macos/LaunchAgents/; then
+  if [ ! -f "$LAUNCHD_ENV_CHECK" ]; then
+    echo "pre-commit: $LAUNCHD_ENV_CHECK is missing; cannot check LaunchAgent environments." >&2
+    status=1
+  elif ! python3 "$LAUNCHD_ENV_CHECK" --dotfiles-repo "$(git rev-parse --show-toplevel)" \
+         --baseline HEAD --quiet; then
+    echo "pre-commit: this commit breaks a LaunchAgent in its launchd environment (above)." >&2
+    status=1
+  fi
+fi
+
+exit "$status"

@@ -74,7 +74,7 @@ before minting. Configuration symlinks and nonregular files are refused.
 | =store-secret-from-clipboard= | Consumes any console-created API credential from the clipboard, validates its shape, and creates or updates a 1Password item through =op-desktop= on stdin without putting the value in arguments. Updates preserve other fields and reject attachments, passkeys or ambiguous field matches. |
 | =agent-commit-gates= | Runs the documentation, README, and paired-config commit gates from the global Git =pre-commit= hook in agent sessions, giving each a canonical =git commit= (with =--amend= when git received it) so it reads the staged files from the index. |
 | =batch-test.sh= | Loads canonical package source (or runs ERT for =elisp-ert=) in batch Emacs, rejects stale-load warnings, and on success records evidence for the exact Elisp contents it covered. |
-| =check-elpaca-sync-hook= | Validates the embedded Elpaca sync hook and confirms that the installed hook is identical. |
+| =check-elpaca-sync-hook= | Validates the embedded Elpaca sync hooks and confirms that the installed hooks are identical; =--install= writes them from the primary checkout. |
 | =cloudflare-deploy-token= | Mints a per-project Cloudflare Worker-deploy API token using privately configured administrator references and stores it in the Automations vault. |
 | =copy-slack-draft= | Opens an exact Epoch Emacs target or stages a draft (stdin or private file) in its composer and kill ring, resolving the running server's socket by default, with per-stage receipts. |
 | =cr-worktree-gc.sh= | Removes only clean, fully pushed transient CR review worktrees and preserves unfinished work. |

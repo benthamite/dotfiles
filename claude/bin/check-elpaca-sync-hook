@@ -1,28 +1,65 @@
 #!/usr/bin/env bash
-# Validate the documented Elpaca sync hook against the installed hook.
+# Validate the documented Elpaca sync hooks against the installed hooks.
+#
+# Usage: check-elpaca-sync-hook [--install]
+#
+# The hooks are documented in emacs/config.org and installed in the shared
+# gitdir's hooks/ directory, which every linked worktree uses.  --install
+# writes them from the documentation; it runs only in the primary checkout,
+# so an unmerged worktree cannot install its own version for everyone.
 
 set -euo pipefail
 
 script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
 repo=$(cd -- "$script_dir/../.." && pwd)
-installed=${ELPACA_SYNC_HOOK:-/Users/pablostafforini/git-dirs/dotfiles/hooks/sync-elpaca-clone.sh}
-extracted=$(mktemp "${TMPDIR:-/tmp}/sync-elpaca-clone.XXXXXX")
-cleanup() {
-  rm -f "$extracted"
-}
-trap cleanup EXIT
+hooks=(sync-elpaca-clone.sh post-commit post-rewrite post-merge)
+common_dir=$(git -C "$repo" rev-parse --path-format=absolute --git-common-dir)
+hooks_dir=${ELPACA_SYNC_HOOKS_DIR:-$common_dir/hooks}
 
-awk '
-  /^=hooks\/sync-elpaca-clone\.sh=:$/ { section = 1; next }
-  section && /^#\+begin_src shell/ { body = 1; next }
-  body && /^#\+end_src/ { exit }
-  body { print }
-' "$repo/emacs/config.org" > "$extracted"
+install=0
+case "${1:-}" in
+  '') ;;
+  --install) install=1 ;;
+  *)
+    echo "usage: check-elpaca-sync-hook [--install]" >&2
+    exit 2
+    ;;
+esac
 
-if [ ! -s "$extracted" ]; then
-  echo "Cannot extract hooks/sync-elpaca-clone.sh from emacs/config.org" >&2
-  exit 1
+extracted_dir=$(mktemp -d "${TMPDIR:-/tmp}/elpaca-sync-hooks.XXXXXX")
+trap 'rm -f "$extracted_dir"/*; rmdir "$extracted_dir"' EXIT
+
+for hook in "${hooks[@]}"; do
+  awk -v header="=hooks/$hook=:" '
+    $0 == header { section = 1; next }
+    section && /^#\+begin_src shell/ { body = 1; next }
+    body && /^#\+end_src/ { exit }
+    body { print }
+  ' "$repo/emacs/config.org" > "$extracted_dir/$hook"
+  if [ ! -s "$extracted_dir/$hook" ]; then
+    echo "Cannot extract hooks/$hook from emacs/config.org" >&2
+    exit 1
+  fi
+  sh -n "$extracted_dir/$hook"
+done
+
+if ((install)); then
+  if [ "$(git -C "$repo" rev-parse --absolute-git-dir)" != "$common_dir" ]; then
+    echo "Install the hooks from the primary checkout, not a linked worktree" >&2
+    exit 1
+  fi
+  for hook in "${hooks[@]}"; do
+    install -m 755 "$extracted_dir/$hook" "$hooks_dir/$hook"
+  done
 fi
-sh -n "$extracted"
-sh -n "$installed"
-diff -u "$extracted" "$installed"
+
+status=0
+for hook in "${hooks[@]}"; do
+  if [ ! -x "$hooks_dir/$hook" ]; then
+    echo "Missing or not executable: $hooks_dir/$hook" >&2
+    status=1
+    continue
+  fi
+  diff -u "$extracted_dir/$hook" "$hooks_dir/$hook" || status=1
+done
+exit "$status"

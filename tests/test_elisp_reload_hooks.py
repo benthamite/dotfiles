@@ -5,6 +5,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -15,7 +16,6 @@ HOOKS = (
     DOTFILES / "codex/hooks/load-elisp-after-edit.sh",
 )
 EVIDENCE = DOTFILES / "claude/bin/elisp-evidence"
-SYNC_HOOK = Path("/Users/pablostafforini/git-dirs/dotfiles/hooks/sync-elpaca-clone.sh")
 CHECK_SYNC_HOOK = DOTFILES / "claude/bin/check-elpaca-sync-hook"
 
 
@@ -258,16 +258,49 @@ class ElispReloadHookTests(unittest.TestCase):
                 self.assertTrue(marker.exists())
 
 
+def documented_hook(name: str, directory: Path) -> Path:
+    """Write the hook NAME documented in emacs/config.org into DIRECTORY."""
+    lines = (DOTFILES / "emacs/config.org").read_text().splitlines()
+    start = lines.index(f"=hooks/{name}=:")
+    begin = next(i for i in range(start, len(lines)) if lines[i].startswith("#+begin_src shell"))
+    end = lines.index("#+end_src", begin)
+    path = directory / name
+    path.write_text("\n".join(lines[begin + 1:end]) + "\n")
+    path.chmod(0o755)
+    return path
+
+
 class ElpacaSyncHookTests(unittest.TestCase):
+    """Exercise the documented hooks, which are what --install writes."""
+
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp_dir.cleanup)
         self.root = Path(self.temp_dir.name)
+        self.home = self.root / "home"
+        self.state = self.root / "state"
+        self.hooks = self.root / "hooks"
+        self.hooks.mkdir()
+        self.no_hooks = self.root / "no-hooks"
+        self.no_hooks.mkdir()
+        for name in ("sync-elpaca-clone.sh", "post-commit", "post-rewrite", "post-merge"):
+            documented_hook(name, self.hooks)
+        self.sync_hook = self.hooks / "sync-elpaca-clone.sh"
+        self.env = os.environ.copy()
+        for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE",
+                     "CLAUDE_CODE_SESSION_ID", "CODEX_THREAD_ID"):
+            self.env.pop(name, None)
+        self.env.update(
+            HOME=str(self.home),
+            GIT_CONFIG_NOSYSTEM="1",
+            ELPACA_RELOAD_STATE_DIR=str(self.state),
+            AGENT_ELISP_EVIDENCE_DIR=str(self.root / "evidence"),
+        )
         self.primary = self.root / "primary"
         self.primary.mkdir()
-        subprocess.run(["git", "init", "-q", str(self.primary)], check=True)
-        subprocess.run(["git", "-C", str(self.primary), "config", "user.email", "test@example.com"], check=True)
-        subprocess.run(["git", "-C", str(self.primary), "config", "user.name", "Hook Test"], check=True)
+        self.git("init", "-q", "-b", "master", str(self.primary), cwd=self.root)
+        self.git("config", "user.email", "test@example.com")
+        self.git("config", "user.name", "Hook Test")
         for package in ("foo", "bar"):
             source = self.primary / f"emacs/extras/{package}.el"
             source.parent.mkdir(parents=True, exist_ok=True)
@@ -277,41 +310,51 @@ class ElpacaSyncHookTests(unittest.TestCase):
         helper.write_text("#!/bin/sh\nprintf '%s\\n' 'finished:test' > \"$ELPACA_RELOAD_STATUS_FILE\"\n")
         helper.chmod(0o755)
         shutil.copy2(EVIDENCE, self.primary / "claude/bin/elisp-evidence")
-        subprocess.run(["git", "-C", str(self.primary), "add", "."], check=True)
-        subprocess.run(["git", "-C", str(self.primary), "commit", "-qm", "baseline"], check=True)
-        self.old = subprocess.run(
-            ["git", "-C", str(self.primary), "rev-parse", "HEAD"],
-            text=True, capture_output=True, check=True,
-        ).stdout.strip()
-        self.home = self.root / "home"
+        self.git("add", ".")
+        self.git("commit", "-qm", "baseline", hooks=False)
+        self.old = self.rev("HEAD")
         profile_root = self.home / ".config/emacs-profiles/test/elpaca/sources"
         profile_root.mkdir(parents=True)
         self.mirror = profile_root / "dotfiles"
-        subprocess.run(["git", "clone", "-q", str(self.primary), str(self.mirror)], check=True)
+        self.git("clone", "-q", str(self.primary), str(self.mirror), cwd=self.root)
         profile_cache = self.home / ".config/emacs-profiles/.current-profile"
-        profile_cache.parent.mkdir(parents=True, exist_ok=True)
         profile_cache.write_text("test\n")
         for package in ("foo", "bar"):
-            (self.primary / f"emacs/extras/{package}.el").write_text(f"(defun {package}-new ())\n")
-            subprocess.run(["git", "-C", str(self.primary), "add", f"emacs/extras/{package}.el"], check=True)
-            subprocess.run(["git", "-C", str(self.primary), "commit", "-qm", f"change {package}"], check=True)
-        self.new = subprocess.run(
-            ["git", "-C", str(self.primary), "rev-parse", "HEAD"],
+            self.change(package, f"(defun {package}-new ())\n", hooks=False)
+        self.new = self.rev("HEAD")
+
+    def git(self, *args, cwd=None, hooks=True):
+        hooks_path = self.hooks if hooks else self.no_hooks
+        return subprocess.run(
+            ["git", "-c", f"core.hooksPath={hooks_path}", *args],
             text=True, capture_output=True, check=True,
-        ).stdout.strip()
-        self.state = self.root / "state"
+            cwd=cwd or self.primary, env=self.env,
+        )
+
+    def rev(self, ref, repo=None):
+        return self.git("rev-parse", ref, cwd=repo).stdout.strip()
+
+    def change(self, package, text, cwd=None, hooks=True):
+        cwd = cwd or self.primary
+        (cwd / f"emacs/extras/{package}.el").write_text(text)
+        self.git("add", f"emacs/extras/{package}.el", cwd=cwd)
+        self.git("commit", "-qm", f"change {package}", cwd=cwd, hooks=hooks)
+
+    def mirror_head(self):
+        return self.rev("HEAD", repo=self.mirror)
+
+    def wait_for_status(self, commit, package):
+        status = self.state / commit / f"{package}.status"
+        for _attempt in range(200):
+            if status.exists() and status.read_text().startswith("finished:"):
+                break
+            time.sleep(0.01)
+        return status.read_text() if status.exists() else ""
 
     def run_sync(self):
-        env = os.environ.copy()
-        env.update(
-            HOME=str(self.home),
-            GIT_DIR=str(self.primary / ".git"),
-            GIT_WORK_TREE=str(self.primary),
-            ELPACA_RELOAD_STATE_DIR=str(self.state),
-            AGENT_ELISP_EVIDENCE_DIR=str(self.root / "evidence"),
-        )
+        env = dict(self.env, GIT_DIR=str(self.primary / ".git"), GIT_WORK_TREE=str(self.primary))
         return subprocess.run(
-            ["sh", str(SYNC_HOOK), "rebase"], input=f"{self.old} {self.new}\n",
+            ["sh", str(self.sync_hook), "rebase"], input=f"{self.old} {self.new}\n",
             text=True, capture_output=True, check=False, cwd=self.primary, env=env,
         )
 
@@ -319,46 +362,19 @@ class ElpacaSyncHookTests(unittest.TestCase):
         result = self.run_sync()
         self.assertEqual(result.returncode, 0, result.stderr)
         for package in ("foo", "bar"):
-            status = self.state / self.new / f"{package}.status"
-            for _attempt in range(100):
-                if status.exists() and status.read_text().startswith("finished:"):
-                    break
-                import time
-                time.sleep(0.01)
-            self.assertEqual(status.read_text(), "finished:test\n")
-        mirror_head = subprocess.run(
-            ["git", "-C", str(self.mirror), "rev-parse", "HEAD"],
-            text=True, capture_output=True, check=True,
-        ).stdout.strip()
-        self.assertEqual(mirror_head, self.new)
+            self.assertEqual(self.wait_for_status(self.new, package), "finished:test\n")
+        self.assertEqual(self.mirror_head(), self.new)
 
     def test_deleted_package_is_removed_without_a_rebuild_request(self):
         (self.primary / "emacs/extras/foo.el").unlink()
-        subprocess.run(
-            ["git", "-C", str(self.primary), "add", "emacs/extras/foo.el"],
-            check=True,
-        )
-        subprocess.run(
-            ["git", "-C", str(self.primary), "commit", "-qm", "delete foo"],
-            check=True,
-        )
-        self.new = subprocess.run(
-            ["git", "-C", str(self.primary), "rev-parse", "HEAD"],
-            text=True,
-            capture_output=True,
-            check=True,
-        ).stdout.strip()
+        self.git("add", "emacs/extras/foo.el")
+        self.git("commit", "-qm", "delete foo", hooks=False)
+        self.new = self.rev("HEAD")
         result = self.run_sync()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse((self.mirror / "emacs/extras/foo.el").exists())
         self.assertFalse((self.state / self.new / "foo.status").exists())
-        bar_status = self.state / self.new / "bar.status"
-        for _attempt in range(100):
-            if bar_status.exists() and bar_status.read_text().startswith("finished:"):
-                break
-            import time
-            time.sleep(0.01)
-        self.assertEqual(bar_status.read_text(), "finished:test\n")
+        self.assertEqual(self.wait_for_status(self.new, "bar"), "finished:test\n")
 
     def test_status_retention_preserves_active_obligation(self):
         unreferenced = self.state / ("a" * 40)
@@ -375,6 +391,75 @@ class ElpacaSyncHookTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(unreferenced.exists())
         self.assertTrue(referenced.exists())
+
+    def test_commit_on_master_moves_mirror_and_rebuilds(self):
+        self.change("foo", "(defun foo-newer ())\n")
+        head = self.rev("HEAD")
+        self.assertEqual(self.mirror_head(), head)
+        self.assertEqual(self.wait_for_status(head, "foo"), "finished:test\n")
+
+    def test_commit_in_linked_worktree_leaves_mirror_alone(self):
+        self.run_sync()
+        before = self.mirror_head()
+        worktree = self.root / "worktree"
+        self.git("worktree", "add", "-q", "-b", "feature", str(worktree), hooks=False)
+        self.change("foo", "(defun foo-feature ())\n", cwd=worktree)
+        self.git("commit", "-q", "--amend", "-m", "amended", cwd=worktree)
+        self.assertNotEqual(self.rev("HEAD", repo=worktree), before)
+        self.assertEqual(self.mirror_head(), before)
+        self.assertFalse((self.state / self.rev("HEAD", repo=worktree)).exists())
+
+    def test_commit_on_other_branch_in_primary_leaves_mirror_at_master(self):
+        self.run_sync()
+        self.git("checkout", "-q", "-b", "feature", hooks=False)
+        self.change("foo", "(defun foo-feature ())\n")
+        self.assertEqual(self.mirror_head(), self.rev("master"))
+        self.assertNotEqual(self.rev("HEAD"), self.rev("master"))
+
+    def test_fast_forward_merge_of_worktree_branch_syncs_mirror(self):
+        self.run_sync()
+        worktree = self.root / "worktree"
+        self.git("worktree", "add", "-q", "-b", "feature", str(worktree), hooks=False)
+        self.change("foo", "(defun foo-feature ())\n", cwd=worktree)
+        self.change("bar", "(defun bar-feature ())\n", cwd=worktree)
+        self.assertEqual(self.mirror_head(), self.new)
+
+        self.git("merge", "-q", "--ff-only", "feature")
+
+        head = self.rev("master")
+        self.assertEqual(head, self.rev("feature"))
+        self.assertEqual(self.mirror_head(), head)
+        for package in ("foo", "bar"):
+            self.assertEqual(self.wait_for_status(head, package), "finished:test\n")
+
+    def test_manual_run_in_primary_realigns_a_stray_mirror(self):
+        stray_tree = self.root / "stray"
+        self.git("worktree", "add", "-q", "-b", "stray", str(stray_tree), hooks=False)
+        self.change("foo", "(defun foo-stray ())\n", cwd=stray_tree, hooks=False)
+        self.git("fetch", "-q", str(self.primary), "stray", cwd=self.mirror)
+        self.git("reset", "-q", "--hard", "FETCH_HEAD", cwd=self.mirror)
+        self.assertEqual(self.mirror_head(), self.rev("stray"))
+
+        result = subprocess.run(["sh", str(self.sync_hook)], text=True, capture_output=True,
+                                check=False, cwd=self.primary, env=self.env)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.mirror_head(), self.rev("master"))
+        self.assertEqual(self.wait_for_status(self.rev("master"), "foo"), "finished:test\n")
+
+    def test_install_is_refused_from_a_linked_worktree(self):
+        worktree = self.root / "worktree"
+        self.git("worktree", "add", "-q", "-b", "feature", str(worktree), hooks=False)
+        checker = worktree / "claude/bin/check-elpaca-sync-hook"
+        checker.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(CHECK_SYNC_HOOK, checker)
+        (worktree / "emacs").mkdir(exist_ok=True)
+        shutil.copy2(DOTFILES / "emacs/config.org", worktree / "emacs/config.org")
+        result = subprocess.run([str(checker), "--install"], text=True, capture_output=True,
+                                check=False, env=self.env)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("primary checkout", result.stderr)
+        self.assertFalse((self.primary / ".git/hooks/sync-elpaca-clone.sh").exists())
 
     def test_installed_rewrite_wrapper_forwards_hook_arguments(self):
         wrapper = Path("/Users/pablostafforini/git-dirs/dotfiles/hooks/post-rewrite")

@@ -925,23 +925,24 @@ NAME and ARGS as in `use-package'."
   :demand t)
 #+end_src
 
-Because =use-personal-package= declares each extras file with an =:ensure= recipe pointing at this GitHub repository, =elpaca= treats them like any other package: it clones the repo into its own =elpaca/sources/dotfiles/= directory and builds the relevant files from there. The matching =init-personal-package-menu= also exposes those recipes to Elpaca's dependency resolver, so extras packages referenced from another package's =Package-Requires= metadata remain installable even when a development profile intentionally has no lockfile. The recipes do not use =:wait t=: Elpaca's normal queue processing reads the whole init file before resolving dependency metadata, which lets later package declarations supply recipes for dependencies of earlier personal packages. This means the dotfiles end up in two separate local clones—the primary one in my main dotfiles location (where all edits are made) and the elpaca-managed one under =elpaca/sources/dotfiles/= (which Emacs loads from). To keep them in sync, three git hooks in the primary clone's gitdir automatically propagate changes to the elpaca clone. The =post-commit= hook handles normal commits, the =post-rewrite= hook handles rebases and amends, and both delegate to a shared =sync-elpaca-clone.sh= script. All three files live in the gitdir's =hooks/= directory and must be executable. The script reads the active profile name from a cache file (=~/.config/emacs-profiles/.current-profile=) that Emacs writes at startup, rather than calling =emacsclient=, to avoid deadlocking when the hook is triggered by a synchronous git process inside Emacs (e.g., =magit-commit-squash=). For every changed extras package, the script starts the bounded =claude/bin/elpaca-rebuild-wait= helper in the background. Only that helper writes status under its package lock; duplicate commit and rewrite hooks observe the same request instead of overwriting its state or forcing another rebuild. Each hook has its own diagnostic log. The helper records =pending=, =finished= or =failed= under =~/.cache/dotfiles/elpaca-reload/COMMIT/= so an agent can wait for the exact post-commit reload without relying on a hidden background token.
+Because =use-personal-package= declares each extras file with an =:ensure= recipe pointing at this GitHub repository, =elpaca= treats them like any other package: it clones the repo into its own =elpaca/sources/dotfiles/= directory and builds the relevant files from there. The matching =init-personal-package-menu= also exposes those recipes to Elpaca's dependency resolver, so extras packages referenced from another package's =Package-Requires= metadata remain installable even when a development profile intentionally has no lockfile. The recipes do not use =:wait t=: Elpaca's normal queue processing reads the whole init file before resolving dependency metadata, which lets later package declarations supply recipes for dependencies of earlier personal packages. This means the dotfiles end up in two separate local clones—the primary one in my main dotfiles location (where all edits are made) and the elpaca-managed one under =elpaca/sources/dotfiles/= (which Emacs loads from). To keep them in sync, git hooks in the primary clone's gitdir keep the elpaca clone at the primary checkout's =master=. The =post-commit= hook handles normal commits, the =post-rewrite= hook handles rebases and amends, the =post-merge= hook handles merges and fast-forwards, and all three delegate to a shared =sync-elpaca-clone.sh= script. Linked worktrees share these hooks, so the script does nothing there, and commits on other branches leave =master=, and so the mirror, unchanged; work reaches Emacs when it lands on =master=. The four files live in the gitdir's =hooks/= directory and must be executable; =claude/bin/check-elpaca-sync-hook --install= writes them from the blocks below, and running =sync-elpaca-clone.sh= by hand in the primary checkout realigns the mirror. The script reads the active profile name from a cache file (=~/.config/emacs-profiles/.current-profile=) that Emacs writes at startup, rather than calling =emacsclient=, to avoid deadlocking when the hook is triggered by a synchronous git process inside Emacs (e.g., =magit-commit-squash=). For every extras package that differs between the mirror's previous and new commit, the script starts the bounded =claude/bin/elpaca-rebuild-wait= helper in the background. Only that helper writes status under its package lock; duplicate commit and rewrite hooks observe the same request instead of overwriting its state or forcing another rebuild. Each hook has its own diagnostic log. The helper records =pending=, =finished= or =failed= under =~/.cache/dotfiles/elpaca-reload/COMMIT/= so an agent can wait for the exact post-commit reload without relying on a hidden background token.
 
 =hooks/sync-elpaca-clone.sh=:
 
 #+begin_src shell :tangle no
 #!/bin/sh
-# Propagate the current branch state to the elpaca repos clone.
+# Keep the elpaca clone of the dotfiles at the primary checkout's master.
 # Reads the active profile from a cache file written by Emacs at startup,
 # avoiding emacsclient calls that deadlock when git is spawned synchronously
 # by Emacs.
-# Called by post-commit and post-rewrite hooks.
-REWRITE_RANGES=""
-if [ "$#" -gt 0 ]; then
-    REWRITE_RANGES=$(cat)
-fi
+# Called by the post-commit, post-rewrite and post-merge hooks, which every
+# linked worktree shares; run it by hand in the primary checkout to realign.
+MIRROR_BRANCH=master
+GITDIR=$(git rev-parse --absolute-git-dir 2>/dev/null) || exit 0
+COMMON_DIR=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || exit 0
+# Commits in linked worktrees are not what Emacs should load.
+[ "$GITDIR" = "$COMMON_DIR" ] || exit 0
 PRIMARY_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
-BRANCH=$(git symbolic-ref --quiet --short HEAD 2>/dev/null || printf '%s' master)
 PROFILE=$(cat "$HOME/.config/emacs-profiles/.current-profile" 2>/dev/null)
 ELPACA_BASE="$HOME/.config/emacs-profiles/$PROFILE/elpaca"
 
@@ -953,37 +954,33 @@ elif [ -d "$ELPACA_BASE/repos/dotfiles/.git" ]; then
 fi
 
 if [ -n "$ELPACA_DOTFILES" ]; then
-    # Resolve the primary gitdir before unsetting the variables below; GIT_DIR
-    # is set only when a hook runs this, not when it is run by hand.
-    GITDIR=$(git rev-parse --absolute-git-dir)
+    # Resolve master before unsetting the variables below; GIT_DIR is set
+    # only when a hook runs this, not when it is run by hand.  Commits on
+    # other branches leave master, and so the mirror, where they were.
+    master_head=$(git rev-parse --verify --quiet "refs/heads/$MIRROR_BRANCH") || exit 0
     # The parent git process sets GIT_DIR, GIT_INDEX_FILE, and
     # GIT_WORK_TREE pointing at the Google Drive clone.  Unsetting them
     # is essential so that git commands target the elpaca clone.
     unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
-    if ! git -C "$ELPACA_DOTFILES" fetch "$GITDIR" "$BRANCH" 2>&1 ||
+    previous_head=$(git -C "$ELPACA_DOTFILES" rev-parse --verify --quiet HEAD)
+    if ! git -C "$ELPACA_DOTFILES" fetch "$GITDIR" "refs/heads/$MIRROR_BRANCH" 2>&1 ||
        ! git -C "$ELPACA_DOTFILES" reset --hard FETCH_HEAD 2>&1; then
         exit 1
     fi
-    primary_head=$(git -C "$PRIMARY_ROOT" rev-parse HEAD 2>/dev/null)
     mirror_head=$(git -C "$ELPACA_DOTFILES" rev-parse HEAD 2>/dev/null)
-    if [ -z "$primary_head" ] || [ "$mirror_head" != "$primary_head" ]; then
-        printf '%s\n' "Elpaca dotfiles mirror HEAD does not match primary HEAD" >&2
+    if [ "$mirror_head" != "$master_head" ]; then
+        printf '%s\n' "Elpaca dotfiles mirror HEAD does not match primary $MIRROR_BRANCH" >&2
         exit 1
     fi
 
-    # Rebuild+reload any extras packages whose .el files changed in this
-    # commit.  Run asynchronously to avoid deadlocking when git is spawned
-    # synchronously by Emacs (e.g. magit-commit).
+    # Rebuild+reload any extras packages whose .el files changed.  Run
+    # asynchronously to avoid deadlocking when git is spawned synchronously
+    # by Emacs (e.g. magit-commit).
     state_root=${ELPACA_RELOAD_STATE_DIR:-"$HOME/.cache/dotfiles/elpaca-reload"}
-    if [ -n "$REWRITE_RANGES" ]; then
-        CHANGED_EL=$(
-            printf '%s\n' "$REWRITE_RANGES" |
-            while read -r old new rest; do
-                [ -n "$old" ] && [ -n "$new" ] || continue
-                git -C "$ELPACA_DOTFILES" diff --name-only --diff-filter=ACMRT -M "$old" "$new" -- 'emacs/extras/*.el' 2>/dev/null || true
-            done |
-            sort -u
-        )
+    # Diff against what the mirror held, so a merge or rebase that moves
+    # master by several commits rebuilds every package it changed.
+    if [ -n "$previous_head" ]; then
+        CHANGED_EL=$(git -C "$ELPACA_DOTFILES" diff --name-only --diff-filter=ACMRT -M "$previous_head" HEAD -- 'emacs/extras/*.el' 2>/dev/null || true)
     else
         CHANGED_EL=$(git -C "$ELPACA_DOTFILES" diff-tree --root --no-commit-id --name-only --diff-filter=ACMRT -M -r HEAD -- 'emacs/extras/*.el' 2>/dev/null || true)
     fi
@@ -1042,6 +1039,13 @@ exec "$(dirname "$0")/sync-elpaca-clone.sh"
 #+begin_src shell :tangle no
 #!/bin/sh
 exec "$(dirname "$0")/sync-elpaca-clone.sh" "$@"
+#+end_src
+
+=hooks/post-merge=:
+
+#+begin_src shell :tangle no
+#!/bin/sh
+exec "$(dirname "$0")/sync-elpaca-clone.sh"
 #+end_src
 
 ** =use-package-extras=

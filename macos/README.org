@@ -24,7 +24,7 @@ The four tracked plists under [[file:LaunchAgents/][LaunchAgents/]] are currentl
 | Label | Schedule | Entry point |
 |-------+----------+-------------|
 | =com.stafforini.personal-updates.fast-brew= | 03:00 daily | =bin/personal-updates fast-brew= |
-| =com.stafforini.codex-protocol-watch= | 04:15 daily | =bin/codex-protocol-watch= |
+| =com.stafforini.codex-protocol-watch= | 04:15 daily | =bin/codex-protocol-watch=, run through =~/repos/launchd/bin/launchd-run-record= |
 | =com.stafforini.personal-updates.scan= | 08:15 daily | =bin/personal-updates scan= |
 | =com.stafforini.personal-updates.delayed= | 09:00 daily | =bin/personal-updates delayed --min-age-days 7= |
 

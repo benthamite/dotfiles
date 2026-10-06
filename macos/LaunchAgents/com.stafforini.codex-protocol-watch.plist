@@ -8,6 +8,13 @@
 
   <key>ProgramArguments</key>
   <array>
+    <string>/opt/homebrew/bin/python3</string>
+    <string>/Users/pablostafforini/repos/launchd/bin/launchd-run-record</string>
+    <string>--label</string>
+    <string>com.stafforini.codex-protocol-watch</string>
+    <string>--repo</string>
+    <string>dotfiles=/Users/pablostafforini/My Drive/dotfiles</string>
+    <string>--</string>
     <string>/Users/pablostafforini/My Drive/dotfiles/bin/codex-protocol-watch</string>
   </array>
 

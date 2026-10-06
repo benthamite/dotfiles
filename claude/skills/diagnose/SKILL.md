@@ -1,6 +1,6 @@
 ---
 name: diagnose
-description: Diagnose a specific agent, tooling, configuration, or workflow incident before any remedy. Use for /diagnose, why-did-this-happen questions, recurring process failures, broken hooks/skills/scripts, or diagnose-and-fix requests; not for ordinary code bugs, broad configuration audits, or repository-wide AI developer-experience reviews.
+description: Establish the cause of unintended behavior in the user's agents, tools, or configuration before proposing or applying any remedy. Use whenever such behavior is reported or observed and its cause is not yet established. Not for ordinary code bugs, broad configuration audits, or repository-wide AI developer-experience reviews.
 user-invocable: true
 ---
 

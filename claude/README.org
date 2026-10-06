@@ -400,7 +400,8 @@ The =document-elisp-extras= batch separates coverage-only reports from authorize
 manual updates, accounts for every source, and preserves per-package ownership.
 Exports use reviewed destinations and distinguish format generation from accuracy.
 
-The =diagnose= skill separates configured, loaded, triggered and acted-on evidence
+The =diagnose= skill applies whenever unintended behavior has no established
+cause. It separates configured, loaded, triggered and acted-on evidence
 for the incident's actual runtime. It preserves uncertain/mixed causes, requires
 practical enforcement coverage, and tests legitimate and unsafe guard cases.
 

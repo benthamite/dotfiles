@@ -1464,7 +1464,8 @@ has connection termination."
   ;; `server-running-p' reports it gone, and the test instance would take
   ;; over the socket and delete it on exit, orphaning the live session.
   (unless (or (getenv "INIT_TEST_INSTANCE") (server-running-p))
-    (server-start)))
+    (server-start)
+    (simple-extras-server-state-mode)))
 #+end_src
 
 ** =async=

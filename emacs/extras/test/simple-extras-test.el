@@ -979,5 +979,52 @@ way back to the contents of one killed by accident."
       (server-stop)
       (delete-directory server-socket-dir t))))
 
+;;;; Server state file
+
+(ert-deftest simple-extras-test-server-write-state-records-state ()
+  "Write the time, process ID and depths as JSON."
+  (let* ((dir (make-temp-file "sx-state" t))
+         (simple-extras-server-state-file (expand-file-name "state.json" dir)))
+    (unwind-protect
+        (progn
+          (simple-extras-server-write-state)
+          (let ((state (with-temp-buffer
+                         (insert-file-contents simple-extras-server-state-file)
+                         (json-parse-buffer :object-type 'plist
+                                            :null-object nil))))
+            (should (< (abs (- (plist-get state :time) (float-time))) 5))
+            (should (equal (plist-get state :pid) (emacs-pid)))
+            (should (equal (plist-get state :recursion_depth) 0))
+            (should (equal (plist-get state :minibuffer_depth) 0))
+            (should-not (plist-get state :prompt))
+            (should-not (plist-get state :debugger))))
+      (delete-directory dir t))))
+
+;; With `debug-on-error' set, an error in the timer would enter the
+;; debugger and park the server whose state the file is meant to explain.
+(ert-deftest simple-extras-test-server-write-state-swallows-errors ()
+  "A failed write signals nothing, even with `debug-on-error' set."
+  (let ((simple-extras-server-state-file "/nonexistent-root/x/state.json")
+        (debug-on-error t))
+    (should-not (simple-extras-server-write-state))))
+
+(ert-deftest simple-extras-test-server-state-reports-debugger ()
+  "Report the head of the backtrace while the debugger is active."
+  (let ((buffer (get-buffer-create "*Backtrace*")))
+    (unwind-protect
+        (progn
+          (with-current-buffer buffer
+            (insert "Debugger entered--entering a function:\n"
+                    "* clear-minibuffer-message()\n"
+                    "  shell-command(\"find\")\n"
+                    "  org-roam-db-sync()\n"))
+          (cl-letf (((symbol-function 'recursion-depth) (lambda () 3)))
+            (should (equal (plist-get (simple-extras--server-state) :debugger)
+                           (concat "Debugger entered--entering a function:\n"
+                                   "* clear-minibuffer-message()\n"
+                                   "  shell-command(\"find\")"))))
+          (should-not (simple-extras--server-state-backtrace)))
+      (kill-buffer buffer))))
+
 (provide 'simple-extras-test)
 ;;; simple-extras-test.el ends here

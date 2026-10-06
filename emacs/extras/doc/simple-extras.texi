@@ -79,6 +79,7 @@ Functions
 * Network detection::
 * Reaping closed server clients::
 * Server connection queue::
+* Server state file::
 * Auto-save for new buffers::
 * Keeping credentials out of auto-save files::
 * Miscellaneous utilities::
@@ -430,6 +431,7 @@ The command @code{simple-extras-set-python-virtual-environment} creates a Python
 * Network detection::
 * Reaping closed server clients::
 * Server connection queue::
+* Server state file::
 * Auto-save for new buffers::
 * Keeping credentials out of auto-save files::
 * Miscellaneous utilities::
@@ -524,6 +526,19 @@ The function @code{simple-extras-server-raise-backlog} is @samp{:filter-args} ad
 While Emacs is busy it accepts no new connections. With a queue of 5, a handful of concurrent @samp{emacsclient} calls fill it, and on macOS every further call fails at once with ``Connection refused'', as though the server had died. With agents calling @samp{emacsclient} routinely, this produced recurring false reports that the server needed restarting. With the longer queue those calls wait until Emacs is free, subject to their own timeouts. The kernel caps the value at @samp{kern.ipc.somaxconn}.
 
 The advice only affects a server started after it is installed. To apply it to a running server without the client prompt, call @code{(server-start nil t)}: this replaces only the listening socket, and connections already open keep running.
+
+@node Server state file
+@section Server state file
+
+@findex simple-extras-server-state-mode
+@findex simple-extras-server-write-state
+@vindex simple-extras-server-state-file
+@vindex simple-extras-server-state-interval
+The global minor mode @code{simple-extras-server-state-mode} writes the server's state to @code{simple-extras-server-state-file} (@samp{~/.cache/emacs-server-state.json}) every @code{simple-extras-server-state-interval} (5) seconds. The JSON object holds the time, the process ID, the recursion and minibuffer depths, any active minibuffer prompt, and the first three lines of an active debugger backtrace.
+
+A server request that enters the debugger or a minibuffer prompt stays parked until the user answers, while the rest of Emacs keeps working, so nothing outside Emacs can ask it what is wrong. Timers still run inside those recursive edits, so the file names what holds the server. A file that stops being updated means instead that Emacs is blocked in Lisp or a subprocess. The process ID tells the reader whether a server that answers is this Emacs or another instance that took over its socket. The @samp{emacs-server-watchdog} script in the dotfiles @samp{bin} directory reads the file when the server stops answering. @code{simple-extras-server-write-state} swallows its own errors: with @code{debug-on-error} set, an error in a timer would enter the debugger and park the server itself.
+
+The configuration enables the mode only in the instance that starts the server.
 
 @node Auto-save for new buffers
 @section Auto-save for new buffers

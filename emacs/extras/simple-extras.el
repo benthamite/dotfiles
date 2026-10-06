@@ -1209,5 +1209,72 @@ server socket of `server-start', set its queue length to
       (plist-put (copy-sequence args) :server simple-extras-server-backlog)
     args))
 
+;;;;; Server state file
+
+(defconst simple-extras-server-state-file
+  (expand-file-name "~/.cache/emacs-server-state.json")
+  "File where `simple-extras-server-state-mode' records the server's state.
+An external watchdog reads it when the server stops answering, so that
+it can report why without a working server to ask.")
+
+(defconst simple-extras-server-state-interval 5
+  "Seconds between writes of `simple-extras-server-state-file'.")
+
+(defvar simple-extras--server-state-timer nil
+  "Timer of `simple-extras-server-state-mode'.")
+
+;;;###autoload
+(define-minor-mode simple-extras-server-state-mode
+  "Record the Emacs server's state in `simple-extras-server-state-file'.
+Every `simple-extras-server-state-interval' seconds, write the time,
+this Emacs's process ID, the recursion and minibuffer depths, any
+active minibuffer prompt and the head of an active debugger backtrace.
+Timers run inside the debugger's and the minibuffer's recursive edits,
+which park server requests, so the file names what holds the server.  A
+file that stops being updated means Emacs is blocked in Lisp or a
+subprocess instead."
+  :global t
+  :group 'simple-extras
+  (when simple-extras--server-state-timer
+    (cancel-timer simple-extras--server-state-timer)
+    (setq simple-extras--server-state-timer nil))
+  (when simple-extras-server-state-mode
+    (setq simple-extras--server-state-timer
+          (run-with-timer 0 simple-extras-server-state-interval
+                          #'simple-extras-server-write-state))))
+
+(defun simple-extras-server-write-state ()
+  "Write the server's state to `simple-extras-server-state-file'.
+Errors are swallowed rather than signaled: with `debug-on-error' set, an
+error in a timer enters the debugger, which would park the server this
+state exists to explain."
+  (condition-case nil
+      (let ((temp (concat simple-extras-server-state-file ".tmp")))
+        (make-directory (file-name-directory simple-extras-server-state-file) t)
+        (write-region (json-serialize (simple-extras--server-state)) nil
+                      temp nil 'silent)
+        (rename-file temp simple-extras-server-state-file t))
+    (error nil)))
+
+(defun simple-extras--server-state ()
+  "Return the server's current state as a plist for JSON serialization."
+  (list :time (float-time)
+        :pid (emacs-pid)
+        :recursion_depth (recursion-depth)
+        :minibuffer_depth (minibuffer-depth)
+        :prompt (or (minibuffer-prompt) :null)
+        :debugger (or (simple-extras--server-state-backtrace) :null)))
+
+(defun simple-extras--server-state-backtrace ()
+  "Return the first lines of an active debugger backtrace, or nil."
+  (when-let* (((> (recursion-depth) 0))
+              (buffer (get-buffer "*Backtrace*"))
+              ((> (buffer-size buffer) 0)))
+    (with-current-buffer buffer
+      (save-excursion
+        (goto-char (point-min))
+        (forward-line 3)
+        (string-trim (buffer-substring-no-properties (point-min) (point)))))))
+
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

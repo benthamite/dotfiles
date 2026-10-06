@@ -45,24 +45,32 @@ class ClaudePoolTests(unittest.TestCase):
         shim.chmod(0o755)
         self.calls = self.root / "calls"
 
-    def pool(self, *members):
-        """Declare members (name, code, reply) in order as pool test-pool."""
-        lines = []
-        for name, code, reply in members:
-            home = self.root / "homes" / name
-            home.mkdir(parents=True)
-            (home / "code").write_text(str(code))
-            (home / "reply").write_text(reply)
-            lines.append(f'("{name}" :home "{home}" :pool "test-pool")')
+    def home(self, name, code, reply):
+        home = self.root / "homes" / name
+        home.mkdir(parents=True)
+        (home / "code").write_text(str(code))
+        (home / "reply").write_text(reply)
+        return home
+
+    def pool(self, *members, extra=()):
+        """Declare members (name, code, reply) in order as pool test-pool.
+
+EXTRA holds further entries (name, code, reply, form) outside the pool,
+in dotted-pair or plist form, available as fallbacks."""
+        lines = [f'("{name}" :home "{self.home(name, code, reply)}" :pool "test-pool")'
+                 for name, code, reply in members]
+        for name, code, reply, form in extra:
+            home = self.home(name, code, reply)
+            lines.append(f'("{name}" . "{home}")' if form == "pair" else f'("{name}" :home "{home}")')
         lines.append('("other" . "~/.claude-other")')
         config = self.root / "emacs" / "config.org"
         config.parent.mkdir()
         config.write_text("#+begin_src emacs-lisp\n(use-package agent\n  :custom\n"
                           f"  (agent-claude-accounts '({' '.join(lines)})))\n#+end_src\n")
 
-    def run_pool(self):
+    def run_pool(self, *options):
         env = {**os.environ, "POOL_TEST_CALLS": str(self.calls)}
-        result = subprocess.run([str(self.root / "bin" / "claude-pool"), "run", "test-pool", "--", "-p"],
+        result = subprocess.run([str(self.root / "bin" / "claude-pool"), "run", "test-pool", *options, "--", "-p"],
                                 input="prompt", capture_output=True, text=True, env=env, timeout=60)
         called = [Path(line).name for line in self.calls.read_text().split()] if self.calls.exists() else []
         return result, called
@@ -97,6 +105,47 @@ class ClaudePoolTests(unittest.TestCase):
         result, called = self.run_pool()
         self.assertEqual(called, ["first"])
         self.assertEqual((result.returncode, result.stdout), (0, reply))
+
+    def test_fallbacks_run_in_order_after_every_member(self):
+        self.pool(("a", 1, LIMITED), ("b", 1, EXPIRED),
+                  extra=[("tlon", 1, LIMITED, "pair"), ("spare", 0, OK, "plist")])
+        result, called = self.run_pool("--fallback", "tlon", "--fallback", "spare")
+        self.assertEqual(called, ["a", "b", "tlon", "spare"])
+        self.assertEqual((result.returncode, result.stdout), (0, OK))
+        self.assertIn("ran on spare", result.stderr)
+
+    def test_fallback_is_unused_while_a_member_answers(self):
+        self.pool(("a", 0, OK), extra=[("tlon", 0, OK, "pair")])
+        result, called = self.run_pool("--fallback", "tlon")
+        self.assertEqual((called, result.returncode), (["a"], 0))
+
+    def test_unusable_fallbacks_exit_75_naming_each_reason(self):
+        self.pool(("a", 1, LIMITED), extra=[("tlon", 1, NOT_LOGGED_IN, "pair")])
+        result, called = self.run_pool("--fallback", "tlon")
+        self.assertEqual((called, result.returncode, result.stdout), (["a", "tlon"], 75, ""))
+        self.assertEqual(result.stderr.strip().splitlines()[-1],
+                         "claude-pool: no member of test-pool or fallback tlon is usable "
+                         "(rate-limited: a; logged out: tlon)")
+
+    def test_unknown_or_duplicate_fallback_is_refused_before_any_run(self):
+        self.pool(("a", 0, OK), extra=[("tlon", 0, OK, "pair")])
+        for options in (["--fallback", "missing"], ["--fallback", "a"], ["--fallback", "tlon", "--fallback", "tlon"]):
+            with self.subTest(options=options):
+                result, called = self.run_pool(*options)
+                self.assertEqual((result.returncode, called), (69, []))
+
+    def test_malformed_fallback_option_prints_usage(self):
+        self.pool(("a", 0, OK))
+        result, called = self.run_pool("--fallback")
+        self.assertEqual((result.returncode, called), (2, []))
+
+    def test_members_lists_fallbacks_after_the_pool(self):
+        self.pool(("a", 0, OK), extra=[("tlon", 0, OK, "pair")])
+        result = subprocess.run([str(self.root / "bin" / "claude-pool"), "members", "test-pool", "--fallback", "tlon"],
+                                capture_output=True, text=True, timeout=60)
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual([m["name"] for m in json.loads(result.stdout)], ["a", "tlon"])
+        self.assertEqual(json.loads(result.stdout)[1]["home"], str(self.root / "homes" / "tlon"))
 
 
 if __name__ == "__main__":

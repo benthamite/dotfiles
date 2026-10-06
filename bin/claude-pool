@@ -5,16 +5,20 @@ Pools are declared once, in the `agent-claude-accounts' form of
 emacs/config.org (accounts sharing a :pool). This command reads that form
 from the file itself, so scheduled jobs work whether or not Emacs is running.
 
-    claude-pool members POOL          JSON list of {name, home}
-    claude-pool run POOL -- ARGS...   run `claude ARGS...' on the pool
+    claude-pool members POOL [--fallback NAME]...         JSON list of {name, home}
+    claude-pool run POOL [--fallback NAME]... -- ARGS...  run `claude ARGS...'
 
-`run' tries members in their declared order. Each attempt's stdout and stderr
+`run' tries members in their declared order, then each --fallback account in
+the order given. A fallback is any account of the same form, named as a
+dotted pair ("NAME" . HOME) or with :home; it is a caller's backup, not a
+pool member, so Emacs's interactive routing across the pool is unchanged. Each attempt's stdout and stderr
 are buffered separately, and an attempt that hits a usage limit is discarded
 and the next member tried (likewise a member that is not logged in or whose
 login has expired), so the caller sees the output of exactly one attempt.
 Work an attempt did before hitting its limit is not undone. Exit codes: the
-final attempt's, 75 when no member is usable (the last stderr line names the
-rate-limited and logged-out members), 69 when the pool cannot be read.
+final attempt's, 75 when no member or fallback is usable (the last stderr line
+names the rate-limited and logged-out accounts), 69 when the pool or a
+fallback cannot be read.
 """
 
 from __future__ import annotations
@@ -36,7 +40,8 @@ CONFIG = BIN.parent / "emacs/config.org"
 LIMIT = re.compile(rb"hit your [^\n]{0,40}limit|\"api_error_status\":\s*429|usage limit reached", re.I)
 # An expired OAuth session still reports loggedIn locally; only the request fails.
 LOGGED_OUT = re.compile(rb"Not logged in|Please run /login|OAuth session expired|could not be refreshed"
-                        rb"|Failed to authenticate|\"api_error_status\":\s*401", re.I)
+                        rb"|Failed to authenticate|Invalid API key|OAuth (?:access )?token (?:is invalid|has expired"
+                        rb"|has been revoked)|\"api_error_status\":\s*401", re.I)
 EX_UNAVAILABLE, EX_TEMPFAIL = 69, 75
 STDIN_WAIT = 3
 TOKEN = re.compile(r'\s+|;[^\n]*|(?P<open>\()|(?P<close>\))|"(?P<string>(?:[^"\\]|\\.)*)"|(?P<atom>[^\s()"]+)')
@@ -83,15 +88,30 @@ def accounts() -> list:
         unavailable(f"cannot parse agent-claude-accounts in {CONFIG}: {error}")
 
 
-def members(pool: str) -> list[dict]:
-    result = []
-    for entry in accounts():
-        if isinstance(entry, list) and entry and len(entry) % 2 == 1:
-            properties = dict(zip(entry[1::2], entry[2::2]))
-            if properties.get(":pool") == pool and isinstance(properties.get(":home"), str):
-                result.append({"name": entry[0], "home": os.path.expanduser(properties[":home"])})
+def parse_entry(entry) -> tuple[str, str, str | None] | None:
+    """(name, home, pool) of a dotted-pair or plist account entry."""
+    if isinstance(entry, tuple) and isinstance(entry[0], str) and isinstance(entry[1], str):
+        return entry[0], os.path.expanduser(entry[1]), None
+    if isinstance(entry, list) and entry and isinstance(entry[0], str) and len(entry) % 2 == 1:
+        properties = dict(zip(entry[1::2], entry[2::2]))
+        if isinstance(properties.get(":home"), str):
+            return entry[0], os.path.expanduser(properties[":home"]), properties.get(":pool")
+    return None
+
+
+def members(pool: str, fallbacks: list[str] = ()) -> list[dict]:
+    """POOL's members in declared order, then each fallback account."""
+    parsed = [found for found in map(parse_entry, accounts()) if found]
+    result = [{"name": name, "home": home} for name, home, member_of in parsed if member_of == pool]
     if not result:
         unavailable(f"pool {pool!r} has no members in {CONFIG}")
+    for wanted in fallbacks:
+        if any(account["name"] == wanted for account in result):
+            unavailable(f"fallback {wanted!r} is already in pool {pool!r} or named twice")
+        found = [{"name": name, "home": home} for name, home, _ in parsed if name == wanted]
+        if len(found) != 1:
+            unavailable(f"fallback {wanted!r} matches {len(found)} accounts in {CONFIG}")
+        result.extend(found)
     return result
 
 
@@ -106,7 +126,8 @@ counts only when its first bytes arrive within STDIN_WAIT seconds."""
     return sys.stdin.buffer.read() if ready else None
 
 
-def run(pool: str, args: list[str]) -> int:
+def run(pool: str, fallbacks: list[str], args: list[str]) -> int:
+    accounts_to_try = members(pool, fallbacks)
     stdin = piped_input()
     child = None
 
@@ -116,7 +137,7 @@ def run(pool: str, args: list[str]) -> int:
     for signum in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
         signal.signal(signum, forward)
     limited, logged_out = [], []
-    for account in members(pool):
+    for account in accounts_to_try:
         env = {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")}
         env["CLAUDE_CONFIG_DIR"] = account["home"]
         # Claude Code finds its login-keychain credentials by user name, which
@@ -155,16 +176,29 @@ def run(pool: str, args: list[str]) -> int:
         return code
     reasons = [f"{label}: {', '.join(names)}" for label, names in
                (("rate-limited", limited), ("logged out", logged_out)) if names]
-    print(f"claude-pool: no member of {pool} is usable ({'; '.join(reasons)})", file=sys.stderr)
+    scope = pool + "".join(f" or fallback {name}" for name in fallbacks)
+    print(f"claude-pool: no member of {scope} is usable ({'; '.join(reasons)})", file=sys.stderr)
     return EX_TEMPFAIL
 
 
+def options(argv: list[str]) -> tuple[list[str], list[str]] | None:
+    """Split leading --fallback NAME pairs from the rest; None when malformed."""
+    fallbacks = []
+    while argv[:1] == ["--fallback"]:
+        if len(argv) < 2 or not argv[1] or argv[1].startswith("-"):
+            return None
+        fallbacks.append(argv[1])
+        argv = argv[2:]
+    return fallbacks, argv
+
+
 def main(argv: list[str]) -> int:
-    if len(argv) >= 2 and argv[0] == "members":
-        print(json.dumps(members(argv[1])))
+    parsed = options(argv[2:]) if len(argv) >= 2 else None
+    if parsed and argv[0] == "members" and not parsed[1]:
+        print(json.dumps(members(argv[1], parsed[0])))
         return 0
-    if len(argv) >= 3 and argv[0] == "run" and argv[2] == "--":
-        return run(argv[1], argv[3:])
+    if parsed and argv[0] == "run" and parsed[1][:1] == ["--"]:
+        return run(argv[1], parsed[0], parsed[1][1:])
     print(__doc__, file=sys.stderr)
     return 2
 

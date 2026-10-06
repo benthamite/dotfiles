@@ -634,7 +634,7 @@
       "path": "codex/hooks.json",
       "tracked": true,
       "live_path": "~/.codex/hooks.json",
-      "note": "Global registrations live through ~/.codex/hooks.json, outside repo-root .codex to avoid double loading. Lifecycle hooks use codex-hook-wrapper and an explicit Emacs socket. Shell matchers cover Bash, exec_command and functions.exec(_command); edit matchers are collapsed for trust review. Guards allow or deny, never ask. Since 2026-10-01 the shell and apply_patch|Edit|Write PreToolUse groups each run only agent-guard.sh (chains in lib/python/agent_guard/engine.py); its trust was renewed per home via the app-server API. New definitions need native trust. Output redactor 2026-09-30."
+      "note": "Global registrations live through ~/.codex/hooks.json, outside repo-root .codex to avoid double loading. Lifecycle hooks use codex-hook-wrapper; only PermissionRequest waits on Emacs. Shell matchers cover Bash, exec_command and functions.exec(_command); edit matchers are collapsed for trust review. Guards allow or deny, never ask. Since 2026-10-01 the shell and apply_patch|Edit|Write PreToolUse groups each run only agent-guard.sh (chains in lib/python/agent_guard/engine.py); its trust was renewed per home via the app-server API. New definitions need native trust. Output redactor 2026-09-30."
     },
     {
       "tool": "Claude Code and Codex",

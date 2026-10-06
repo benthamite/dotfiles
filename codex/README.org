@@ -1150,7 +1150,12 @@ and Emacs socket are part of the integration. Shell matchers cover the supported
 shell and execution tool names; edit-style tools share compact matcher groups
 that must remain consistent with the trusted-tool list. =UserPromptSubmit= uses
 the event's required empty matcher. Stop and compact events forward lifecycle
-state; they do not create a Claude Notification event.
+state; they do not create a Claude Notification event. The wrapper calls Emacs
+through the =emacsclient= shim. Only =PermissionRequest= waits for an answer,
+for at most =codex-hook-answer-timeout= seconds; the other events are sent in
+the background, so a stalled Emacs server never holds up a Codex turn. After
+loading a different profile, =(codex--ensure-hooks-json)= rewrites the wrapper
+paths.
 
 =rules/default.rules= is the native command policy. Hook allow/deny decisions
 supplement it; allowing one layer does not bypass another guard or authorize an

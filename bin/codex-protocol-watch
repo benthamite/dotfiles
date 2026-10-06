@@ -39,14 +39,15 @@ if ! command -v codex >/dev/null 2>&1; then
   echo "[codex-protocol-watch] codex not on PATH; nothing to check"
   exit 0
 fi
-# Resolve the package from the running profile; versioned profile directories
-# are disposable and must not be retained by scheduled jobs.
+# Resolve the package from the active profile on disk: versioned profile
+# directories are disposable and must not be retained by scheduled jobs, and
+# this job runs at 04:15 whether or not Emacs is up.
 if [[ -n "${CODEX_EL_REPO:-}" ]]; then
   repo="$CODEX_EL_REPO"
 else
   script_dir="$(cd -- "$(dirname -- "$0")" && pwd)"
-  if ! repo=$("$script_dir/elpaca-package-path" codex); then
-    echo "[codex-protocol-watch] could not resolve codex from the live Elpaca registry"
+  if ! repo=$("$script_dir/elpaca-package-path" --on-disk codex); then
+    echo "[codex-protocol-watch] could not resolve codex in the active Emacs profile"
     exit 1
   fi
 fi

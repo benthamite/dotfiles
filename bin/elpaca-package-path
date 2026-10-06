@@ -2,9 +2,14 @@
 set -euo pipefail
 
 usage() {
-  echo "Usage: elpaca-package-path <package> [relative-path]" >&2
+  echo "Usage: elpaca-package-path [--on-disk] <package> [relative-path]" >&2
 }
 
+resolve_args=()
+if [ "${1:-}" = --on-disk ]; then
+  resolve_args=(--on-disk)
+  shift
+fi
 if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
   usage
   exit 2
@@ -13,7 +18,7 @@ fi
 identifier=$1
 relative=${2:-}
 script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
-resolution=$("$script_dir/elpaca-package-resolve" "$identifier")
+resolution=$("$script_dir/elpaca-package-resolve" ${resolve_args[@]+"${resolve_args[@]}"} "$identifier")
 base=$(printf '%s' "$resolution" | jq -er '.source | select(type == "string" and length > 0)')
 
 python3 - "$base" "$relative" <<'PY'

@@ -15,6 +15,9 @@ HELPER = ROOT / "bin/elpaca-package-path"
 FAKE_RESOLVER = """#!/usr/bin/env python3
 import os
 import sys
+if "PACKAGE_PATH_ARGS" in os.environ:
+    with open(os.environ["PACKAGE_PATH_ARGS"], "w") as handle:
+        handle.write(" ".join(sys.argv[1:]))
 print(os.environ["PACKAGE_PATH_RESOLUTION"])
 if os.environ.get("PACKAGE_PATH_RESOLVER_STATUS", "0") != "0":
     print("fixture resolver failed", file=sys.stderr)
@@ -114,6 +117,15 @@ class ElpacaPackagePathTests(unittest.TestCase):
     def test_symlink_loop_fails_without_a_path(self):
         (self.source / "loop").symlink_to("loop")
         self.assert_refused(self.run_helper("loop/new.el"))
+
+    def test_on_disk_flag_is_forwarded_to_the_resolver(self):
+        recorded = self.root / "resolver-args"
+        env = dict(self.env, PACKAGE_PATH_ARGS=str(recorded))
+        result = subprocess.run([str(self.helper), "--on-disk", "fixture-package", "new.el"],
+                                cwd=self.root, env=env, text=True, capture_output=True,
+                                timeout=10, check=False)
+        self.assert_path(result, self.source / "new.el")
+        self.assertEqual(recorded.read_text(), "--on-disk fixture-package")
 
     def test_resolver_nonzero_status_fails_even_with_valid_output(self):
         result = self.run_helper("new.el", resolver_status=7)

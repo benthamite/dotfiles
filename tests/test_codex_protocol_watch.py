@@ -81,11 +81,11 @@ class ProtocolWatchTests(unittest.TestCase):
             capture_output=True, text=True, timeout=15,
         )
 
-    def test_default_uses_live_package_resolution(self):
+    def test_default_resolves_package_on_disk_without_emacs(self):
         self.env["CHECK_STATUS"] = "0"
         self.env["TEST_REPO"] = str(self.repo)
         result = self.install_default_resolver(
-            '[[ "$1" == codex ]] || exit 2\n'
+            '[[ "$1 $2" == "--on-disk codex" ]] || exit 2\n'
             'printf "%s\\n" "$TEST_REPO"\n'
         )
         self.assertEqual(result.returncode, 0, result.stdout)

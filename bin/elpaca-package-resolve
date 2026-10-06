@@ -1,14 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+usage() {
+  echo "Usage: elpaca-package-resolve [--on-disk] IDENTIFIER" >&2
+}
+
+# --on-disk reads the active profile's checkouts instead of the live Elpaca
+# registry, so jobs that run without Emacs can resolve a package.  It matches
+# only checkout directory names, not recipe package names.
+on_disk=0
+if [ "${1:-}" = --on-disk ]; then
+  on_disk=1
+  shift
+fi
 if [ "$#" -ne 1 ]; then
-  echo "Usage: elpaca-package-resolve IDENTIFIER" >&2
+  usage
   exit 2
 fi
 
 identifier=$1
 case "$identifier" in
-  *[!A-Za-z0-9+_.-]* | "")
+  *[!A-Za-z0-9+_.-]* | "" | . | ..)
     echo "Invalid package identifier: $identifier" >&2
     exit 2
     ;;
@@ -38,43 +50,58 @@ if [ -f "$dotfiles_root/emacs/extras/$identifier.el" ]; then
   exit 0
 fi
 
-identifier_b64=$(printf '%s' "$identifier" | base64 | tr -d '\n')
-expression="
-(when-let* ((identifier
-             (decode-coding-string
-              (base64-decode-string \"$identifier_b64\") 'utf-8))
-            (resolution (elpaca-extras-resolve-package identifier))
-            (id (plist-get resolution :id))
-            (source (plist-get resolution :source-dir))
-            (label (plist-get resolution :label)))
-  (format \"%s:%s:%s\"
-          id
-          (base64-encode-string source t)
-          (base64-encode-string label t)))"
-
-if ! raw=$(timeout 10 emacsclient -e "$expression" 2>&1); then
-  echo "Could not query the live Elpaca package registry: $raw" >&2
-  exit 1
-fi
-result=$(printf '%s' "$raw" | sed 's/^"//; s/"$//')
-if [ -z "$result" ] || [ "$result" = nil ]; then
-  echo "No queued Elpaca package matches: $identifier" >&2
-  exit 1
-fi
-
-id=${result%%:*}
-encoded=${result#*:}
-source_b64=${encoded%%:*}
-label_b64=${encoded#*:}
-case "$id" in
-  *[!A-Za-z0-9+_.-]* | "")
-    echo "Invalid package ID returned by Emacs: $id" >&2
+if [ "$on_disk" = 1 ]; then
+  profiles=${EMACS_PROFILES_DIR:-$HOME/.config/emacs-profiles}
+  if ! profile=$(cd -- "$profiles/active" 2>/dev/null && pwd -P); then
+    echo "No active Emacs profile at $profiles/active" >&2
     exit 1
-    ;;
-esac
-source=$(jq -nr --arg value "$source_b64" '$value | @base64d')
-label=$(jq -nr --arg value "$label_b64" '$value | @base64d')
-source=${source%/}
+  fi
+  source="$profile/elpaca/sources/$identifier"
+  if [ ! -d "$source" ]; then
+    echo "No Elpaca checkout named $identifier in $profile" >&2
+    exit 1
+  fi
+  id=$identifier
+  label=$identifier
+else
+  identifier_b64=$(printf '%s' "$identifier" | base64 | tr -d '\n')
+  expression="
+  (when-let* ((identifier
+               (decode-coding-string
+                (base64-decode-string \"$identifier_b64\") 'utf-8))
+              (resolution (elpaca-extras-resolve-package identifier))
+              (id (plist-get resolution :id))
+              (source (plist-get resolution :source-dir))
+              (label (plist-get resolution :label)))
+    (format \"%s:%s:%s\"
+            id
+            (base64-encode-string source t)
+            (base64-encode-string label t)))"
+
+  if ! raw=$(timeout 10 emacsclient -e "$expression" 2>&1); then
+    echo "Could not query the live Elpaca package registry: $raw" >&2
+    exit 1
+  fi
+  result=$(printf '%s' "$raw" | sed 's/^"//; s/"$//')
+  if [ -z "$result" ] || [ "$result" = nil ]; then
+    echo "No queued Elpaca package matches: $identifier" >&2
+    exit 1
+  fi
+
+  id=${result%%:*}
+  encoded=${result#*:}
+  source_b64=${encoded%%:*}
+  label_b64=${encoded#*:}
+  case "$id" in
+    *[!A-Za-z0-9+_.-]* | "")
+      echo "Invalid package ID returned by Emacs: $id" >&2
+      exit 1
+      ;;
+  esac
+  source=$(jq -nr --arg value "$source_b64" '$value | @base64d')
+  label=$(jq -nr --arg value "$label_b64" '$value | @base64d')
+  source=${source%/}
+fi
 
 if [ -f "$dotfiles_root/emacs/extras/$id.el" ]; then
   label=$id

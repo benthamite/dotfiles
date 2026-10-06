@@ -1,0 +1,103 @@
+"""Exercise claude-pool's member fallback with stubbed Claude Code members.
+
+The real script runs from a temporary copy of the repository layout it
+expects (bin/, shell/shims/claude, emacs/config.org), so no real account,
+Emacs or network is involved. Each stub member replays a canned reply.
+"""
+
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import tempfile
+import unittest
+
+
+SCRIPT = Path(__file__).resolve().parents[1] / "bin" / "claude-pool"
+
+STUB = """#!/bin/sh
+echo "$CLAUDE_CONFIG_DIR" >> "$POOL_TEST_CALLS"
+cat "$CLAUDE_CONFIG_DIR/reply"
+exit "$(cat "$CLAUDE_CONFIG_DIR/code")"
+"""
+
+# Replies as Claude Code prints them with --output-format json.
+OK = json.dumps({"is_error": False, "result": "OK", "structured_output": {"links": []}})
+EXPIRED = json.dumps({"is_error": True, "subtype": "success", "api_error_status": None,
+                      "result": "Failed to authenticate: OAuth session expired and could not be refreshed"})
+LIMITED = json.dumps({"is_error": True, "api_error_status": 429,
+                      "result": "You've hit your weekly limit · resets Oct 9 at 1pm (America/Buenos_Aires)"})
+NOT_LOGGED_IN = "Not logged in · Please run /login"
+REFUSED = json.dumps({"is_error": True, "api_error_status": 400, "result": "API Error: 400 prompt is too long"})
+
+
+class ClaudePoolTests(unittest.TestCase):
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory(prefix="claude-pool-test-")
+        self.addCleanup(temp.cleanup)
+        self.root = Path(temp.name)
+        (self.root / "bin").mkdir()
+        shutil.copy(SCRIPT, self.root / "bin" / "claude-pool")
+        shim = self.root / "shell" / "shims" / "claude"
+        shim.parent.mkdir(parents=True)
+        shim.write_text(STUB)
+        shim.chmod(0o755)
+        self.calls = self.root / "calls"
+
+    def pool(self, *members):
+        """Declare members (name, code, reply) in order as pool test-pool."""
+        lines = []
+        for name, code, reply in members:
+            home = self.root / "homes" / name
+            home.mkdir(parents=True)
+            (home / "code").write_text(str(code))
+            (home / "reply").write_text(reply)
+            lines.append(f'("{name}" :home "{home}" :pool "test-pool")')
+        lines.append('("other" . "~/.claude-other")')
+        config = self.root / "emacs" / "config.org"
+        config.parent.mkdir()
+        config.write_text("#+begin_src emacs-lisp\n(use-package agent\n  :custom\n"
+                          f"  (agent-claude-accounts '({' '.join(lines)})))\n#+end_src\n")
+
+    def run_pool(self):
+        env = {**os.environ, "POOL_TEST_CALLS": str(self.calls)}
+        result = subprocess.run([str(self.root / "bin" / "claude-pool"), "run", "test-pool", "--", "-p"],
+                                input="prompt", capture_output=True, text=True, env=env, timeout=60)
+        called = [Path(line).name for line in self.calls.read_text().split()] if self.calls.exists() else []
+        return result, called
+
+    def test_expired_login_falls_through_to_next_member(self):
+        self.pool(("first", 1, EXPIRED), ("second", 0, OK))
+        result, called = self.run_pool()
+        self.assertEqual(called, ["first", "second"])
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, OK)
+        self.assertIn("first is not logged in", result.stderr)
+        self.assertIn("ran on second", result.stderr)
+
+    def test_no_usable_member_exits_75_naming_each_reason(self):
+        self.pool(("a", 1, LIMITED), ("b", 1, EXPIRED), ("c", 1, NOT_LOGGED_IN))
+        result, called = self.run_pool()
+        self.assertEqual(called, ["a", "b", "c"])
+        self.assertEqual(result.returncode, 75)
+        self.assertEqual(result.stdout, "")
+        self.assertEqual(result.stderr.strip().splitlines()[-1],
+                         "claude-pool: no member of test-pool is usable (rate-limited: a; logged out: b, c)")
+
+    def test_other_failures_are_returned_not_retried(self):
+        self.pool(("first", 1, REFUSED), ("second", 0, OK))
+        result, called = self.run_pool()
+        self.assertEqual(called, ["first"])
+        self.assertEqual((result.returncode, result.stdout), (1, REFUSED))
+
+    def test_successful_reply_mentioning_authentication_is_kept(self):
+        reply = json.dumps({"is_error": False, "result": "Failed to authenticate is a common error string"})
+        self.pool(("first", 0, reply), ("second", 0, OK))
+        result, called = self.run_pool()
+        self.assertEqual(called, ["first"])
+        self.assertEqual((result.returncode, result.stdout), (0, reply))
+
+
+if __name__ == "__main__":
+    unittest.main()

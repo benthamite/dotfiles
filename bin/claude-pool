@@ -10,10 +10,11 @@ from the file itself, so scheduled jobs work whether or not Emacs is running.
 
 `run' tries members in their declared order. Each attempt's stdout and stderr
 are buffered separately, and an attempt that hits a usage limit is discarded
-and the next member tried (likewise a member that is not logged in), so the caller sees the output of exactly one
-attempt. Work an attempt did before hitting its limit is not undone. Exit
-codes: the final attempt's, 75 when no member is usable, 69 when the
-pool cannot be read.
+and the next member tried (likewise a member that is not logged in or whose
+login has expired), so the caller sees the output of exactly one attempt.
+Work an attempt did before hitting its limit is not undone. Exit codes: the
+final attempt's, 75 when no member is usable (the last stderr line names the
+rate-limited and logged-out members), 69 when the pool cannot be read.
 """
 
 from __future__ import annotations
@@ -33,7 +34,9 @@ BIN = Path(__file__).resolve().parent
 CLAUDE = BIN.parent / "shell/shims/claude"
 CONFIG = BIN.parent / "emacs/config.org"
 LIMIT = re.compile(rb"hit your [^\n]{0,40}limit|\"api_error_status\":\s*429|usage limit reached", re.I)
-LOGGED_OUT = re.compile(rb"Not logged in|Please run /login", re.I)
+# An expired OAuth session still reports loggedIn locally; only the request fails.
+LOGGED_OUT = re.compile(rb"Not logged in|Please run /login|OAuth session expired|could not be refreshed"
+                        rb"|Failed to authenticate|\"api_error_status\":\s*401", re.I)
 EX_UNAVAILABLE, EX_TEMPFAIL = 69, 75
 STDIN_WAIT = 3
 TOKEN = re.compile(r'\s+|;[^\n]*|(?P<open>\()|(?P<close>\))|"(?P<string>(?:[^"\\]|\\.)*)"|(?P<atom>[^\s()"]+)')
@@ -112,7 +115,7 @@ def run(pool: str, args: list[str]) -> int:
             child.send_signal(signum)
     for signum in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
         signal.signal(signum, forward)
-    limited = []
+    limited, logged_out = [], []
     for account in members(pool):
         env = {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")}
         env["CLAUDE_CONFIG_DIR"] = account["home"]
@@ -141,7 +144,7 @@ def run(pool: str, args: list[str]) -> int:
             print(f"claude-pool: {account['name']} is at its usage limit", file=sys.stderr)
             continue
         if code and LOGGED_OUT.search(tail):
-            limited.append(account["name"])
+            logged_out.append(account["name"])
             print(f"claude-pool: {account['name']} is not logged in", file=sys.stderr)
             continue
         print(f"claude-pool: ran on {account['name']}", file=sys.stderr)
@@ -150,7 +153,9 @@ def run(pool: str, args: list[str]) -> int:
         sys.stdout.buffer.write(data)
         sys.stdout.flush()
         return code
-    print(f"claude-pool: no member of {pool} is usable ({', '.join(limited)})", file=sys.stderr)
+    reasons = [f"{label}: {', '.join(names)}" for label, names in
+               (("rate-limited", limited), ("logged out", logged_out)) if names]
+    print(f"claude-pool: no member of {pool} is usable ({'; '.join(reasons)})", file=sys.stderr)
     return EX_TEMPFAIL
 
 

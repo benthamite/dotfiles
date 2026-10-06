@@ -365,6 +365,13 @@ Ignore rules do not make tracked or Drive-synced content private. Post-update-lo
 hooks refresh the brief before its map is derived, within the caller's authority;
 derived fields cannot originate unverified claims.
 
+For Epoch, a routing table sends project logs, briefs, TODOs and decisions to
+the shared workspace (=$EPOCH_WORKSPACE=) and the root session log, the
+latest-session narrative and =personal/<path>.org= notes to the private root
+(=$EPOCH_PRIVATE_ROOT=); workspace text must pass the 14 approved privacy
+rules ("if in doubt, private"), and a two-root closeout commits the workspace
+first, then the private root with a =Workspace-Commit:= trailer.
+
 Work commits and bookkeeping transactions are separate. Epoch closeouts use
 the harness's explicit input set; publication needs its own authorization and
 verification at the intended destination. Final receipts publish without

@@ -119,12 +119,8 @@ honor `--exit` only through the host's normal mechanism.
 For resolved Epoch projects, use the tracked `logs/`, canonical Org brief and
 paired maps under the notes directory. Do not add them to ignore rules.
 
-Epoch notes have two roots. The workspace root (`$EPOCH_WORKSPACE`, default
-`~/My Drive/Epoch`) holds `projects/`, so project briefs, project `logs/`
-and maps belong there. The personal root (`$EPOCH_PRIVATE_ROOT`, default
-`~/My Drive/Epoch`) holds the root-level `logs/` and `meetings/`, so a root
-session log or meeting note belongs there, never in the workspace
-repository. Until the workspace split takes effect both are the same tree.
+Epoch notes have two roots; route every write with the table in
+[Epoch two-root routing](#epoch-two-root-routing) below.
 
 For a generic project with no convention, use `logs/` as the local-only
 default and leave new decision tracking disabled in `--auto`. In an interactive
@@ -149,6 +145,66 @@ Create or update only the requested map sections; preserve all other guidance.
 For an established map, do not add `Latest session`. If the user opted into
 decisions, create the project's summary/index and directory using its decision
 conventions; otherwise leave them absent.
+
+### Epoch two-root routing
+
+The workspace (`$EPOCH_WORKSPACE`, default `~/My Drive/Epoch`) is shared
+with colleagues. The private root (`$EPOCH_PRIVATE_ROOT`, same default) is
+Pablo's alone. Until cutover both are the same tree: when
+`EPOCH_PRIVATE_ROOT` is unset and the tree has `meetings/`, everything below
+is one repository and one atomic closeout, but each item still goes to the
+file the table names, so the split later moves nothing by hand.
+
+| What | Root | Where |
+|---|---|---|
+| Project session log entry | workspace | `projects/<slug>/logs/YYYY-MM-DD.md` |
+| Brief updates, TODOs, decisions, project maps | workspace | `projects/<slug>/…` |
+| Root session log | private | `logs/YYYY-MM-DD.md` |
+| Latest-session narrative | private | the private root's `CLAUDE.md`/`AGENTS.md`; workspace maps carry no `Latest session` narrative |
+| Private notes about a project | private | `personal/<workspace path>.org` (e.g. `personal/projects/<slug>/<slug>.org`) |
+| Meeting notes | private | `meetings/<label>/…` |
+
+Everything written to the workspace must pass this content test (the 14
+approved privacy rules). Never write there:
+
+1. private employment details (contract dates or terms, classification,
+   conversions, legal names), anyone's, the reader's included;
+2. individual AI usage (credits, spend, tier, allowances, rankings, activity);
+   seats and project budgets are fine;
+3. work-trial status or outcomes ("the work trialer" at most);
+4. personal email addresses of anyone;
+5. Epoch's financial figures (balances, payroll totals, insurance numbers);
+   payment approval limits are fine;
+6. pay policy of the salary-benchmarking tool;
+7. why or how someone left; the accounts-to-close list is fine;
+8. the name in an account-security incident ("a staff member");
+9. personality remarks about staff; tone and writing-style guidance is fine;
+10. Pablo's personal accounts and cards;
+11. judgments of how a named person performs or delivers; keep the system
+    state and outstanding work;
+12. anyone's personal finances or circumstances (expenses, visa, health,
+    family, home address); city or timezone only where a maintainer needs it;
+13. de-anonymising context: a replaced name plus a channel name, ID, unique
+    role, narrow date or quotation still identifies; drop the episode and keep
+    the technical lesson;
+14. hand edits to generated staff data (fix the generator).
+
+Neutral attribution ("María asked for X") stays. **If in doubt, private**:
+put the passage in `personal/<workspace path>.org` and leave the workspace
+file with the neutral system state. The workspace pre-commit hook and CI run
+`privacy_scan.py` on added lines and block the clearest cases; passing it does
+not prove the text is fine.
+
+Close out both roots in one harness call from the workspace root, using
+`closeout --portfolio` whenever a private path is included (`--project`
+refuses private paths once the roots are separate). Name private files as
+absolute paths under `${EPOCH_PRIVATE_ROOT:-$HOME/My Drive/Epoch}`: a relative
+`CLAUDE.md` means the workspace's own map. With separate roots the harness
+commits the workspace first, then the private root with a
+`Workspace-Commit: <sha>` trailer, and the receipt says `two_root: true`
+with the private half under `private`. Verify both commits. If the private
+commit fails after the workspace one landed, rerun apply with only the
+private paths and `--workspace-commit SHA`; never rerun the workspace half.
 
 ## 1. Record the session
 
@@ -222,7 +278,9 @@ unverified when copied into a map. Keep summaries within project word caps.
 ### Latest-session map
 
 For an established `Latest session` map, update only that section with a short
-summary of this session and `Full details: <log_dir>/YYYY-MM-DD.md`. Do not use
+summary of this session and `Full details: <log_dir>/YYYY-MM-DD.md`. For
+Epoch, that map is in the private root (see the routing table); do not add
+one to a workspace map. Do not use
 an `@` import for the full log. Migrate a legacy dated-log import without
 removing unrelated imports or instructions. Attribute event-dependent claims
 to the time of the actual check; do not turn an old observation into present
@@ -245,9 +303,11 @@ reconciled, not erased. Verify final sections and preserved baseline content.
 ## 4.5. Preview an Epoch closeout
 
 Skip for generic projects. From the Epoch workspace root, identify exact session-owned
-inputs: brief, log, maps and other changed project files. Pass them with
-`--path`; use `--related-path` for eligible related notes outside the project.
-Omit unused options. A whole-file input must not contain another actor's hunk.
+inputs: brief, log, maps and other changed project files, plus any private-root
+files routed above. Pass them with `--path`; use `--related-path` for eligible
+related notes outside the project. Omit unused options. Private-root inputs
+need `--portfolio` instead of `--project` and absolute paths (see
+[Epoch two-root routing](#epoch-two-root-routing)). A whole-file input must not contain another actor's hunk.
 Do not list generated views as inputs.
 
 Create an owned private evidence directory outside Drive and repositories with
@@ -309,6 +369,9 @@ python3 projects/shared/scripts/project_harness.py \
 Require exit zero, matching command/project/inputs, `ok: true`, and status
 `success` or `no-op`. For success, verify `applied: true`, the returned commit,
 its exact paths and postimages, and preserved unrelated index/worktree state.
+For a two-root receipt, also verify `private.commit`, its paths, its
+`Workspace-Commit:` trailer naming the workspace commit, and that no
+private-root path entered the workspace commit.
 For no-op, the current interface returns `applied: false`,
 `read_only: true`, and no commit even when `--apply` was used; verify the
 invocation and that no intended change remains. A preview no-op alone is not

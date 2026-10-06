@@ -11851,6 +11851,8 @@ Using my fork while awaiting merge of [[https://github.com/org-roam/org-roam/pul
   (org-roam-extras-auto-show-backlink-buffer t)
 
   :config
+  (advice-add 'org-roam-descendant-of-p :before-until
+              #'org-roam-extras-plainly-descendant-p)
   ;; exclude headings in specific files and directories
   ;; Set here rather than in :custom so that `org-roam-extras-excluded-dirs'
   ;; and `org-roam-extras-excluded-files' are guaranteed to be defined (they

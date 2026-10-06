@@ -457,5 +457,38 @@
       (should (equal seen '("[#1] First" "[#6] Sixth" "[#9] Last")))
       (should (equal jumped "six")))))
 
+;;;; File check
+
+(ert-deftest org-roam-extras-test-plainly-descendant-p ()
+  "Answer only for names that plainly extend the directory's."
+  (should (org-roam-extras-plainly-descendant-p "/a/b/c.org" "/a/b"))
+  (should (org-roam-extras-plainly-descendant-p "/a/b/c.org" "/a/b/"))
+  (should-not (org-roam-extras-plainly-descendant-p "/a/b" "/a/b"))
+  (should-not (org-roam-extras-plainly-descendant-p "/a/b/" "/a/b"))
+  (should-not (org-roam-extras-plainly-descendant-p "/a/bc/d.org" "/a/b"))
+  (should-not (org-roam-extras-plainly-descendant-p "/x/c.org" "/a/b"))
+  (should-not (org-roam-extras-plainly-descendant-p nil "/a/b")))
+
+(ert-deftest org-roam-extras-test-plainly-descendant-keeps-file-p ()
+  "With the advice, `org-roam-file-p' gives the same answers."
+  (let* ((dir (file-name-as-directory (make-temp-file "roam" t)))
+         (org-roam-directory dir)
+         (org-roam-file-exclude-regexp nil)
+         (files (list (expand-file-name "a.org" dir)
+                      (expand-file-name "sub/b.org" dir)
+                      (expand-file-name "c.txt" dir)
+                      (expand-file-name "../outside.org" dir)
+                      dir))
+         (plain (mapcar #'org-roam-file-p files)))
+    (unwind-protect
+        (progn
+          (advice-add 'org-roam-descendant-of-p :before-until
+                      #'org-roam-extras-plainly-descendant-p)
+          (should (equal (mapcar #'org-roam-file-p files) plain))
+          (should (equal plain '(t t nil nil nil))))
+      (advice-remove 'org-roam-descendant-of-p
+                     #'org-roam-extras-plainly-descendant-p)
+      (delete-directory dir t))))
+
 (provide 'org-roam-extras-test)
 ;;; org-roam-extras-test.el ends here

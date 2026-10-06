@@ -359,6 +359,25 @@ Optional FILTER-SPEC can be:
             :order-by [nodes:title]]
    (file-name-concat paths-dir-people "%")))
 
+;;;;; File check
+
+;;;###autoload
+(defun org-roam-extras-plainly-descendant-p (a b)
+  "Return t if file A's name plainly lies under directory B, else nil.
+Intended as `:before-until' advice for `org-roam-descendant-of-p',
+which calls `file-truename' on both arguments to rule out A being B.
+When A's expanded name extends B's as a directory, A is a descendant
+unless a symlink inside B points back at B, so the advice answers
+without resolving either name.  `org-roam-file-p' checks every file
+in `org-roam-list-files' this way; on Google Drive the truename
+calls took about three quarters of a 20-second listing.  Any other
+case is left to the advised function."
+  (and a b
+       (let ((dir (file-name-as-directory (expand-file-name b)))
+             (file (expand-file-name a)))
+         (and (string-prefix-p dir file)
+              (> (length file) (length dir))))))
+
 ;;;;; Misc
 
 (defun org-roam-extras-recent (days &optional limit)

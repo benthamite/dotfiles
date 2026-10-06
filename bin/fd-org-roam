@@ -5,6 +5,7 @@
 # options, and fd skips hidden and ignored files by default, which would drop
 # notes that find lists, such as the gitignored notes/chatgpt-sync files.
 # With --no-ignore --hidden it lists what find -L does over the same tree,
-# about ten times faster on Google Drive. Reached through ~/bin, because
-# org-roam splices the executable into an unquoted shell command.
+# about ten times faster on Google Drive. org-roam-extras defines the
+# matching `fd-org-roam' method, which Emacs finds through ~/bin on its
+# exec-path.
 exec fd --no-ignore --hidden "$@"

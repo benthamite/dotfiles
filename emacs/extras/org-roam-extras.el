@@ -362,6 +362,19 @@ Optional FILTER-SPEC can be:
 ;;;;; File check
 
 ;;;###autoload
+(defun org-roam--list-files-fd-org-roam (executable dir)
+  "Return all Org-roam files under DIR, using EXECUTABLE, an fd wrapper.
+`org-roam--list-files' calls this for the symbol `fd-org-roam' in
+`org-roam-list-files-commands'.  It runs the bin/fd-org-roam wrapper
+from the dotfiles, which adds the fd options org-roam has no way to
+pass, with the wrapper's path quoted for the shell.  A cons such as
+\(fd . PATH) in `org-roam-list-files-commands' does not work: in
+`org-roam--list-files' the pattern variable shadows the result
+variable, so the entry is skipped and the next method runs."
+  (org-roam--list-files-fd (shell-quote-argument executable) dir))
+
+
+;;;###autoload
 (defun org-roam-extras-plainly-descendant-p (a b)
   "Return t if file A's name plainly lies under directory B, else nil.
 Intended as `:before-until' advice for `org-roam-descendant-of-p',

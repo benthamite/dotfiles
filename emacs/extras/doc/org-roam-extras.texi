@@ -287,6 +287,9 @@ with @code{message} instead of opening the debugger.
 @node Fast file check
 @section Fast file check
 
+@findex org-roam--list-files-fd-org-roam
+The configuration lists files with the @samp{fd-org-roam} method, defined here as @code{org-roam--list-files-fd-org-roam}. It runs the dotfiles' @samp{bin/fd-org-roam} wrapper, which adds the @samp{fd} options @samp{--no-ignore --hidden} so that @samp{fd} lists the same files as @samp{find -L}, gitignored and hidden notes included, in about a tenth of the time. The method takes the place of a @samp{(fd . PATH)} entry in @code{org-roam-list-files-commands}, which @code{org-roam--list-files} silently skips: its pattern variable shadows the variable that holds the result.
+
 @findex org-roam-extras-plainly-descendant-p
 @code{org-roam-extras-plainly-descendant-p} is @samp{:before-until} advice for @code{org-roam-descendant-of-p}, installed by the configuration. That function resolves both of its arguments with @code{file-truename} to rule out a file being the directory itself, and @code{org-roam-file-p} calls it for every file @code{org-roam-list-files} finds. With @code{org-roam-directory} set to the whole Google Drive, those calls took about three quarters of a 20-second listing, during which Emacs and its server were blocked. The advice answers @samp{t} when the file's expanded name extends the directory's, the case for every listed file, and leaves any other case to the original function. It differs only for a symlink inside the directory that points back at the directory itself.
 

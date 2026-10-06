@@ -459,6 +459,32 @@
 
 ;;;; File check
 
+;; Plain fd skips ignored and hidden files, which would drop indexed notes.
+(ert-deftest org-roam-extras-test-fd-org-roam-lists-ignored-files ()
+  "The `fd-org-roam' method lists gitignored and hidden notes too."
+  (skip-unless (executable-find "fd"))
+  (let* ((dir (file-name-as-directory (make-temp-file "roam" t)))
+         (org-roam-directory dir)
+         (org-roam-file-exclude-regexp nil)
+         (org-roam-list-files-commands '(fd-org-roam))
+         (exec-path (cons (expand-file-name "../../../bin"
+                                            (file-name-directory
+                                             (locate-library "org-roam-extras")))
+                          exec-path)))
+    (unwind-protect
+        (progn
+          (make-directory (expand-file-name "ignored" dir))
+          (dolist (file '(".gitignore" "a.org" "ignored/b.org" ".c.org" "d.txt"))
+            (write-region (if (equal file ".gitignore") "ignored/\n" "")
+                          nil (expand-file-name file dir)))
+          (call-process "git" nil nil nil "-C" dir "init" "-q")
+          (should (executable-find "fd-org-roam"))
+          (should (equal (sort (mapcar (lambda (f) (file-relative-name f dir))
+                                       (org-roam-list-files))
+                               #'string<)
+                         '(".c.org" "a.org" "ignored/b.org"))))
+      (delete-directory dir t))))
+
 (ert-deftest org-roam-extras-test-plainly-descendant-p ()
   "Answer only for names that plainly extend the directory's."
   (should (org-roam-extras-plainly-descendant-p "/a/b/c.org" "/a/b"))

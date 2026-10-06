@@ -168,7 +168,7 @@ boundary.
 | =emacs= | Launches Emacs.app, optionally with a named profile, while filtering one known startup warning. |
 | =emacs-client= | Runs =emacsclient= with an empty alternate-editor fallback. |
 | =emacs-server-watchdog= | Run each minute by the =com.stafforini.emacs-server-watchdog= LaunchAgent. Probes the live Emacs server and, after two consecutive failures, sends one macOS notification naming the cause read from the state file =simple-extras-server-state-mode= writes: a debugger or minibuffer prompt parking requests, Emacs blocked in Lisp or a subprocess, or another Emacs answering the socket. Notifies again on recovery and logs each outage to =~/Library/Logs/emacs-server-watchdog.log=. |
-| =fd-org-roam= | Runs =fd= with =--no-ignore --hidden= for =org-roam-list-files-commands=, so =org-roam= lists the same files as =find -L= (including gitignored notes) about ten times faster; reached through =~/bin= because =org-roam= cannot quote a path with a space. |
+| =fd-org-roam= | Runs =fd= with =--no-ignore --hidden= for =org-roam-list-files-commands=, so =org-roam= lists the same files as =find -L= (including gitignored notes) about ten times faster. =org-roam-extras= defines the matching =fd-org-roam= method. |
 
 * External services
 

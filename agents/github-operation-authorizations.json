@@ -1,4 +1,21 @@
 {
   "version": 1,
-  "grants": []
+  "grants": [
+    {
+      "command": "gh repo fork epoch-research/bench-scraper --clone=false",
+      "account": "benthamite",
+      "authorization": "Pablo in Claude session 7e9cd95a on 2026-10-06: 'Create a pull request for Bench scraper'",
+      "created_at": "2026-10-06T21:20:16.553390+00:00",
+      "expires_at": "2026-10-07T01:20:16.553390+00:00",
+      "body_sha256": null
+    },
+    {
+      "command": "gh pr create --repo epoch-research/bench-scraper --base main --head benthamite:maintainers-mention --title \"Mention @automation-maintainers in health alerts\" --body-file /Users/pablostafforini/.local/state/gh-grant.nvn2Vv/body.md",
+      "account": "benthamite",
+      "authorization": "Pablo in Claude session 7e9cd95a on 2026-10-06: 'Create a pull request for Bench scraper'",
+      "created_at": "2026-10-06T21:20:16.747614+00:00",
+      "expires_at": "2026-10-07T01:20:16.747614+00:00",
+      "body_sha256": "bb766418e5995d6b2ab7edac54a379f18331818e905c17f5cba5cb0f5c390348"
+    }
+  ]
 }

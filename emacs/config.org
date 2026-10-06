@@ -9502,17 +9502,14 @@ contain =AGENTS.md= or =CLAUDE.md=, including directories without Git repositori
   (agent-sync-theme t)
   (agent-project-sources
    `(("epoch"
-      . ,(delete-dups
-          (cons (file-name-concat paths-dir-epoch-workspace
-                                  "projects/shared/project-registry.json")
-                ;; The personal projects kept out of the workspace.  Until
-                ;; their own registry is generated, this names the same file.
-                ;; It is listed only if it exists when this is set, because
-                ;; the picker signals an error for a missing registry.
-                (seq-filter #'file-exists-p
-                            (list (file-name-concat
-                                   paths-dir-epoch
-                                   "projects/shared/project-registry.json"))))))
+      . (,(file-name-concat paths-dir-epoch-workspace
+                            "projects/shared/project-registry.json")
+         ;; The personal projects kept in the private notes tree.  Their
+         ;; registry lives under personal/ (built with the workspace's
+         ;; build_project_registry.py --personal), and its relative paths
+         ;; resolve against that tree's projects/ directory.
+         (,(file-name-concat paths-dir-epoch "personal/project-registry.json")
+          . ,(file-name-concat paths-dir-epoch "projects/"))))
      ("tlon"
       . ("~/My Drive/tlon/projects/80k-ai-2027"
          "~/My Drive/tlon/projects/80k-podcast"

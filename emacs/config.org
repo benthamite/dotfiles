@@ -8103,6 +8103,20 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   :config
   (pdf-cache-prefetch-minor-mode -1) ; https://github.com/vedang/pdf-tools/issues/278#issuecomment-2096894629
 
+  (defun pdf-view-skip-redisplay-in-debugger (fn &rest args)
+    "Call FN with ARGS unless a debugger is active.
+Opening *Backtrace* resizes PDF windows, and redrawing them inside the
+debugger calls `epdfinfo' synchronously; with step mode on, each redraw
+opens another debugger, which resizes them again, without end."
+    (unless (and (> (recursion-depth) 0)
+                 (seq-some (lambda (buffer)
+                             (eq (buffer-local-value 'major-mode buffer)
+                                 'debugger-mode))
+                           (buffer-list)))
+      (apply fn args)))
+  (advice-add 'pdf-view-redisplay-some-windows
+              :around #'pdf-view-skip-redisplay-in-debugger)
+
   :hook
   (pdf-view-mode-hook . pdf-view-fit-page-to-window)
 

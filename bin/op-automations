@@ -115,13 +115,47 @@ if [[ "${1:-}" == cache ]]; then
       "$cache_failed_age" "$((cache_backoff_seconds - cache_failed_age))" >&2
     exit 1
   fi
-  cache_scratch=$(mktemp "$cache_dir/.read.XXXXXX")
-  trap 'rm -f "$cache_scratch"' EXIT
-  if "${BASH_SOURCE[0]}" "@$account" read "$cache_ref" >"$cache_scratch" && [[ -s "$cache_scratch" ]]; then
-    cat "$cache_scratch"
-    mv -f "$cache_scratch" "$cache_entry"
-    rm -f "$cache_entry.failed"
-    exit 0
+  # Callers bound this command with a timeout that usually ends in SIGKILL,
+  # which runs no trap. So the fresh read writes into a buffer file that is
+  # unlinked before the read starts, leaving nothing named to hold the value,
+  # and a watchdog kills the reader once this process is gone, so no `op` is
+  # orphaned. A named scratch file exists only between mktemp and mv; one older
+  # than a minute was abandoned by such a kill and is removed here.
+  find "$cache_dir" -maxdepth 1 -name '.read.*' -mmin +1 -delete 2>/dev/null || true
+  cache_buffer=$(mktemp "$cache_dir/.read.XXXXXX")
+  # shellcheck disable=SC2094 # one descriptor to write, one to read back
+  exec 3>"$cache_buffer" 4<"$cache_buffer"
+  rm -f "$cache_buffer"
+  "${BASH_SOURCE[0]}" "@$account" read "$cache_ref" >&3 3>&- 4<&- &
+  cache_reader=$!
+  exec 3>&-
+  (
+    # Orphaned by this shell's death, the watchdog is reparented away from $$.
+    # Read BASHPID here: inside $(...) it would name the substitution's shell.
+    watchdog=$BASHPID
+    while kill -0 "$cache_reader" 2>/dev/null && (($(ps -o ppid= -p "$watchdog") == $$)); do
+      sleep 0.5
+    done
+    kill "$cache_reader" 2>/dev/null || true
+  ) </dev/null >/dev/null 2>&1 4<&- &
+  cache_watchdog=$!
+  cache_scratch=
+  trap 'kill "$cache_reader" "$cache_watchdog" 2>/dev/null; exit 143' TERM
+  trap 'kill "$cache_reader" "$cache_watchdog" 2>/dev/null; exit 130' INT
+  trap 'kill "$cache_reader" "$cache_watchdog" 2>/dev/null; exit 129' HUP
+  trap 'rm -f ${cache_scratch:+"$cache_scratch"}' EXIT
+  cache_status=0
+  wait "$cache_reader" || cache_status=$?
+  kill "$cache_watchdog" 2>/dev/null || true
+  if ((cache_status == 0)); then
+    cache_scratch=$(mktemp "$cache_dir/.read.XXXXXX")
+    cat <&4 >"$cache_scratch"
+    if [[ -s "$cache_scratch" ]]; then
+      cat "$cache_scratch"
+      mv -f "$cache_scratch" "$cache_entry"
+      rm -f "$cache_entry.failed"
+      exit 0
+    fi
   fi
   touch "$cache_entry.failed"
   exit 1

@@ -1,10 +1,12 @@
 import json
 import os
+import signal
 import stat
 import subprocess
 import sys
 import tempfile
 import textwrap
+import time
 import unittest
 from pathlib import Path
 
@@ -121,6 +123,7 @@ class OpAutomationsCacheTest(unittest.TestCase):
         self.log_path = tmp_path / "calls.log"
         self.status_path = tmp_path / "op-status"
         self.status_path.write_text("0")
+        self.op_pid_path = tmp_path / "op-pid"
         self.state = tmp_path / "state"
         bin_dir = tmp_path / "bin"
         bin_dir.mkdir()
@@ -132,6 +135,11 @@ class OpAutomationsCacheTest(unittest.TestCase):
             #!/usr/bin/env bash
             printf 'op-args:%s\\n' "$*" >> {str(self.log_path)!r}
             status=$(cat {str(self.status_path)!r})
+            if [[ "$status" == hang ]]; then
+              printf 'partial-value'
+              printf '%s' "$$" > {str(self.op_pid_path)!r}
+              exec sleep 30
+            fi
             if [[ "$status" != 0 ]]; then
               printf '[ERROR] Too many requests\\n' >&2
               exit "$status"
@@ -238,6 +246,60 @@ class OpAutomationsCacheTest(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(list(self.cache_dir().glob("*.failed")), [])
+
+    def wait_for(self, predicate, timeout=10):
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if predicate():
+                return True
+            time.sleep(0.05)
+        return predicate()
+
+    @staticmethod
+    def alive(pid):
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            return False
+        return True
+
+    def test_killed_read_leaves_no_value_on_disk_and_no_orphaned_op(self):
+        # Callers' timeouts end in SIGKILL (subprocess.run) or SIGTERM. The
+        # stub op has already written part of the value when the caller quits.
+        for signum in (signal.SIGKILL, signal.SIGTERM):
+            with self.subTest(signal=signum.name):
+                self.status_path.write_text("hang")
+                self.op_pid_path.unlink(missing_ok=True)
+                broker = subprocess.Popen(
+                    [str(WRAPPER), "cache", "read", self.REF],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=self.env,
+                )
+                self.assertTrue(self.wait_for(
+                    lambda: self.op_pid_path.exists() and self.op_pid_path.read_text()
+                ))
+                op_pid = int(self.op_pid_path.read_text())
+
+                broker.send_signal(signum)
+                broker.wait(timeout=10)
+
+                self.assertTrue(self.wait_for(lambda: not self.alive(op_pid)),
+                                "op outlived the killed broker")
+                self.assertEqual(list(self.cache_dir().iterdir()), [])
+
+    def test_abandoned_scratch_files_are_removed_by_the_next_read(self):
+        self.cache_dir().mkdir(parents=True)
+        stale = self.cache_dir() / ".read.abc123"
+        stale.write_text("left-by-a-kill")
+        old = stale.stat().st_mtime - 120
+        os.utime(stale, (old, old))
+        fresh = self.cache_dir() / ".read.def456"
+        fresh.write_text("in-flight")
+
+        result = self.broker("cache", "read", self.REF)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(stale.exists())
+        self.assertTrue(fresh.exists())
 
     def test_accounts_have_separate_entries(self):
         self.broker("@personal", "cache", "read", self.REF)

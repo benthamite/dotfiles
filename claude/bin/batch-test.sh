@@ -110,8 +110,11 @@ DEPENDENCIES=$(printf '%s' "$CONTEXT" | jq -c '
   .package_build as $own | [.builds[] | select(rtrimstr("/") != ($own // "" | rtrimstr("/")))]')
 DEPENDENCIES_B64=$(printf '%s' "$DEPENDENCIES" | base64 | tr -d '\n')
 ARGS=(-Q --batch)
+# Loading dependencies from source macroexpands them eagerly, which for
+# large macros such as yaml.el's grammar exceeds the default nesting limit.
 ARGS+=(--eval "(progn (require 'json)
-  (setq load-prefer-newer nil load-suffixes '(\".el\" \".elc\"))
+  (setq load-prefer-newer nil load-suffixes '(\".el\" \".elc\")
+        max-lisp-eval-depth 10000)
   (setq load-path (append
     (json-parse-string
       (decode-coding-string (base64-decode-string \"$DEPENDENCIES_B64\") 'utf-8)

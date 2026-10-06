@@ -156,6 +156,17 @@
         ]
       }
     ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/session-search-cleanup.sh",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
     "PreCompact": [
       {
         "matcher": "*",

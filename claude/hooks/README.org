@@ -25,11 +25,12 @@ hook is a module in =lib/python/agent_guard/policies/=, and =engine.py= holds th
 per-tool chains in the order the old registrations ran: =Bash= runs
 =dispatcher= (secret leak, untrusted execution, sensitive read, destructive,
 Ahrefs, walk-list, =core.hooksPath=, GitHub write, Elpaca rebuild and
-long-pipeline checks, then output wrapping), =dirty_tree=, =launchagent= and
-=retired_secrets=; =Read= and =Grep= run =sensitive_read= and =walk_list=;
-=Edit=, =Write= and =NotebookEdit= run =secret_leak=, =retired_secrets=,
-=elpaca_dotfiles_edit=, =elisp_skill=, =texi_edit=, =walk_list= and
-=launchagent=; =Glob= runs =walk_list=. A denial from any policy denies, with
+long-pipeline checks, then output wrapping), =dirty_tree=, =launchagent=,
+=retired_secrets= and =search_root=; =Read= runs =sensitive_read= and
+=walk_list=, and =Grep= adds =search_root=; =Edit=, =Write= and =NotebookEdit=
+run =secret_leak=, =retired_secrets=, =elpaca_dotfiles_edit=, =elisp_skill=,
+=texi_edit=, =walk_list= and =launchagent=; =Glob= runs =walk_list= and
+=search_root=. A denial from any policy denies, with
 the reasons joined in chain order.
 
 The Python classifiers in this directory (=lib-op-policy.py=,
@@ -47,6 +48,16 @@ the engine deliberately decides differently from the shell guards it replaced,
 the difference is listed in =docs/plans/2026-10-01-guard-engine.md=.
 =bin/test-guards= runs the guard tests in-process through
 =tests/guard_harness.py=, plus a few end-to-end runs of =agent-guard.sh=.
+
+=search_root= denies a search whose root is =/=, =$HOME=, =~/My Drive=,
+=/Users=, =/Volumes= or another root in its =HUGE_ROOTS=, or an ancestor of
+one: the =Grep= and =Glob= tools (their =path=, else the session cwd; =Glob=
+only with =**=) and shell =grep -r=, =rg=, =ugrep=, =find=, =fd= and =bfs=
+(Claude's =find= and =grep= are its embedded bfs and ugrep). Roots are compared
+after expanding =~=, resolving relative paths (against the cwd or an earlier
+=cd=), symlinks and =..=; a narrower subdirectory or a depth limit of at most 2
+stays allowed. =session-search-cleanup.sh= terminates the search processes an
+ended session left running (=lib/python/session_search_cleanup.py=).
 
 * Activation and boundaries
 
@@ -328,6 +339,7 @@ Claude's wrapping of introspection output through =redact-secrets.sh=.
 | =remind-claude-readme-update.sh= | Reminds an agent when a write from any project changed the tracked Claude configuration. |
 | =require-doc-update.sh= | Requires a selected manual for production Elisp (a support file outside any package tree with its own =doc/= may instead select the =README.org= of its directory or a parent), or each global/project-local skill helper's own selected Markdown documentation; checks declared Texinfo and Info outputs without evaluating Org. Run for both agents from the global Git =pre-commit= hook by =claude/bin/agent-commit-gates=, which reads the staged files from the index. |
 | =require-readme-update.sh= | Requires Claude configuration documentation with staged Claude configuration changes. Run for both agents from the global Git =pre-commit= hook by =claude/bin/agent-commit-gates=, which reads the staged files from the index. |
+| =session-search-cleanup.sh= | At =SessionStart= and =SessionEnd=, terminates the search processes an ended session left running, matched by =CLAUDE_CODE_SESSION_ID=, process ancestry or a gone =CLAUDE_PID= owner, never by name alone (=lib/python/session_search_cleanup.py=); the =SessionStart= run catches sessions a signal ended, which skip =SessionEnd=. |
 | =session-learning-capture.sh= | Retained unregistered helper; validates Stop input and canonical cwd, emits escaped untrusted metadata, and reports malformed input without requesting capture. It writes no lesson records. |
 | =sync-reasoning-tasks-worktree.sh= | Repairs and updates an eligible reasoning-task worktree at SessionStart without pushing it. |
 | =track-elisp-skill.sh= | Records that the Elisp conventions skill was loaded in the current session. |

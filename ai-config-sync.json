@@ -556,7 +556,14 @@
       "claude": "claude/hooks/agent-guard.sh",
       "codex": "codex/hooks/agent-guard.sh",
       "status": "paired",
-      "note": "The only PreToolUse guard registration in both runtimes: runs lib/python/agent_guard (one policy module per former guard hook, chains in engine.py) and maps any status other than 0 to exit 2, so a missing interpreter, import error or crash denies. Intended differences from the shell guards: docs/plans/2026-10-01-guard-engine.md. Tests: bin/test-guards."
+      "note": "The only PreToolUse guard registration in both runtimes: runs lib/python/agent_guard (one policy module per former guard hook, chains in engine.py) and maps any status other than 0 to exit 2, so a missing interpreter, import error or crash denies. Intended differences from the shell guards: docs/plans/2026-10-01-guard-engine.md. Tests: bin/test-guards. Policy search_root (Claude Bash, Grep and Glob; Codex shell tools) denies searches rooted at a huge tree (HUGE_ROOTS in lib/python/agent_guard/policies/search_root.py)."
+    },
+    {
+      "name": "session-search-cleanup.sh",
+      "claude": "claude/hooks/session-search-cleanup.sh",
+      "codex": "codex/hooks/session-search-cleanup.sh",
+      "status": "paired",
+      "note": "Both run lib/python/session_search_cleanup.py, which terminates search processes an ended session left running, never by name alone. Intended differences: Claude runs it at SessionStart and SessionEnd (mutable ~/.claude/settings.json) and matches CLAUDE_CODE_SESSION_ID, ancestry or a gone CLAUDE_PID, because a signal skips SessionEnd; Codex runs it at SessionEnd only (timeout 3, the maximum), matching CODEX_THREAD_ID, since an app-server hosts several threads and sets no owner pid."
     }
   ],
   "mcp_servers": [

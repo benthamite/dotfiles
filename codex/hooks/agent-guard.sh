@@ -44,7 +44,7 @@ if [ "$status" -ne 2 ] && [ -n "$READ_ONLY_TOOLS" ]; then
   tool=
   [[ "$quoted" =~ ^\"([A-Za-z]+)\"$ ]] && tool=${BASH_REMATCH[1]}
   if [ -n "$tool" ] && [[ "$tool" =~ ^($READ_ONLY_TOOLS)$ ]]; then
-    message="WARNING: agent-guard crashed (engine exit status $status). $tool was allowed WITHOUT its guard checks (sensitive-read, walk-list); Bash, Edit, Write and other tools stay blocked until the guard is fixed."
+    message="WARNING: agent-guard crashed (engine exit status $status). $tool was allowed WITHOUT its guard checks (sensitive-read, walk-list, search-root); Bash, Edit, Write and other tools stay blocked until the guard is fixed."
     printf '%s\n' "$message" >&2
     printf '{"systemMessage": "%s", "hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": "%s"}}\n' "$message" "$message"
     exit 0

@@ -27,7 +27,7 @@ the order the old registrations ran. The shell tools (=Bash=, =exec_command=,
 =functions.exec=, =functions.exec_command=) run =sensitive_read=, =secret_leak=,
 =ahrefs=, =github_write=, =destructive=, =walk_list=, =elpaca_rebuild=,
 =dirty_tree=, =launchagent=, =untrusted_execution=, =hookspath=,
-=retired_secrets= and finally =codex_wrap=; =apply_patch=, =Edit= and =Write=
+=retired_secrets=, =search_root= and finally =codex_wrap=; =apply_patch=, =Edit= and =Write=
 run =secret_leak=, =elpaca_dotfiles_edit=, =texi_edit=, =walk_list=,
 =launchagent= and =retired_secrets=. A denial from any policy denies, with the
 reasons joined in chain order.
@@ -55,6 +55,16 @@ the engine deliberately decides differently from the shell guards it replaced,
 the difference is listed in =docs/plans/2026-10-01-guard-engine.md=.
 =bin/test-guards= runs the guard tests in-process through
 =tests/guard_harness.py=, plus a few end-to-end runs of =agent-guard.sh=.
+
+=search_root= denies a search (=grep -r=, =rg=, =ugrep=, =find=, =fd=, =bfs=)
+whose root is =/=, =$HOME=, =~/My Drive=, =/Users=, =/Volumes= or another root
+in its =HUGE_ROOTS=, or an ancestor of one, after expanding =~= and resolving
+relative paths (against the =workdir= or an earlier =cd=), symlinks and =..=.
+A narrower subdirectory or a depth limit of at most 2 stays allowed. At
+=SessionEnd=, =session-search-cleanup.sh= terminates search processes whose
+environment carries the ended thread's =CODEX_THREAD_ID=
+(=lib/python/session_search_cleanup.py=); Codex runs it only once the hook is
+trusted.
 
 * Activation and boundaries
 
@@ -331,6 +341,7 @@ tokens, =ya29.= access tokens) in the input guards and the redactor.
 | =remind-ai-config-sync.sh= | Delegates paired Claude/Codex update reminders to =bin/ai-config-sync=. |
 | =remind-claude-readme-update.sh= | Reminds work outside dotfiles when a symlinked edit changed the Claude configuration. |
 | =require-codex-readme-update.sh= | Requires the Codex README with staged Codex integration or sync changes. Run for both agents from the global Git =pre-commit= hook by =claude/bin/agent-commit-gates=, which reads the staged files from the index. |
+| =session-search-cleanup.sh= | At =SessionEnd=, terminates the search processes the ended thread left running, matched by =CODEX_THREAD_ID= in their environment, never by name alone (=lib/python/session_search_cleanup.py=). |
 | =session-learning-capture.sh= | Retained unregistered helper; validates Stop input and canonical cwd, emits escaped untrusted metadata, and reports malformed input without requesting capture. It writes no lesson records. |
 
 The documentation audit requires every tracked direct child to appear exactly

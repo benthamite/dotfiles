@@ -18,22 +18,22 @@ import traceback
 
 from .core import CLAUDE, CODEX, CODEX_SHELL_TOOLS, Call, HookFailure, Result
 from .policies import (ahrefs, codex_wrap, destructive, dirty_tree, dispatcher, elisp_skill, elpaca_dotfiles_edit, elpaca_rebuild,
-                       github_write, hookspath, launchagent, retired_secrets, secret_leak, sensitive_read,
-                       texi_edit, untrusted_execution, walk_list)
+                       github_write, hookspath, launchagent, retired_secrets, search_root, secret_leak,
+                       sensitive_read, texi_edit, untrusted_execution, walk_list)
 
 CHAINS = {
     CLAUDE: [
-        ("Bash", (dispatcher, dirty_tree, launchagent, retired_secrets)),
+        ("Bash", (dispatcher, dirty_tree, launchagent, retired_secrets, search_root)),
         ("Read", (sensitive_read, walk_list)),
         ("Edit|Write|NotebookEdit", (secret_leak, retired_secrets, elpaca_dotfiles_edit, elisp_skill, texi_edit, walk_list,
                                      launchagent)),
-        ("Grep", (sensitive_read, walk_list)),
-        ("Glob", (walk_list,)),
+        ("Grep", (sensitive_read, walk_list, search_root)),
+        ("Glob", (walk_list, search_root)),
     ],
     CODEX: [
         ("|".join(re.escape(t) for t in CODEX_SHELL_TOOLS),
          (sensitive_read, secret_leak, ahrefs, github_write, destructive, walk_list, elpaca_rebuild, dirty_tree,
-          launchagent, untrusted_execution, hookspath, retired_secrets, codex_wrap)),
+          launchagent, untrusted_execution, hookspath, retired_secrets, search_root, codex_wrap)),
         ("apply_patch|Edit|Write", (secret_leak, elpaca_dotfiles_edit, texi_edit, walk_list, launchagent, retired_secrets)),
     ],
 }
@@ -125,9 +125,9 @@ def crash_warning(runtime: str, tool: str, cause: str) -> dict | None:
 
     A crash used to deny every tool, so an agent could not even read the guard
     to diagnose it (2026-10-01/02). Read, Grep and Glob change nothing, so a
-    crash lets them through unguarded (sensitive_read and walk_list do not
-    run) with a warning to the user and the agent; Bash, Edit, Write and every
-    other tool stay denied. There is no permissionDecision, so the normal
+    crash lets them through unguarded (sensitive_read, walk_list and
+    search_root do not run) with a warning to the user and the agent; Bash,
+    Edit, Write and every other tool stay denied. There is no permissionDecision, so the normal
     permission flow still applies. Codex has no such tools.
     claude/hooks/agent-guard.sh applies the same rule when the engine cannot
     even start.
@@ -135,7 +135,8 @@ def crash_warning(runtime: str, tool: str, cause: str) -> dict | None:
     if tool not in READ_ONLY_TOOLS[runtime]:
         return None
     message = (f"WARNING: agent-guard crashed ({cause}). {tool} was allowed WITHOUT its guard checks "
-               "(sensitive-read, walk-list); Bash, Edit, Write and other tools stay blocked until the guard is fixed.")
+               "(sensitive-read, walk-list, search-root); Bash, Edit, Write and other tools stay blocked until the "
+               "guard is fixed.")
     return {"systemMessage": message,
             "hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": message}}
 

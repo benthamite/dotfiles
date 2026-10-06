@@ -954,7 +954,7 @@ CLOCK: [2023-04-30 Sun 11:59]--[2023-04-30 Sun 12:07] =>  0:08
 
 Hold =q= to open an application. 20+ applications are mapped. The letter choices are mnemonic where possible (e.g. =e= for Emacs, =f= for Firefox, =t= for Terminal).
 
-Five keys switch to a Chrome profile instead of opening an app: =h= Personal, =k= pablo@stafforini.com, =o= Epoch, =g= Forethought and =n= Tlön. [[file:../bin/chrome-profile-focus][chrome-profile-focus]] raises that profile's existing window, or opens one if the profile has none. Chrome's own =--profile-directory= flag opens a new window every time, which is why a plain =open= is not enough. The script only passes the request to an always-running server, because starting =osascript= on each key press sometimes took several seconds. Each rule gives the profile's folder under =~/Library/Application Support/Google/Chrome= and its name as shown in Chrome.
+Five keys switch to a Chrome profile instead of opening an app: =h= Personal, =k= pablo@stafforini.com, =o= Epoch, =g= Forethought and =n= Tlön. =chrome-profile-focus= raises that profile's existing window, or opens one if the profile has none. Chrome's own =--profile-directory= flag opens a new window every time, which is why a plain =open= is not enough. The script only passes the request to an always-running server, because starting =osascript= on each key press sometimes took several seconds. Each rule gives the profile's folder under =~/Library/Application Support/Google/Chrome= and its name as shown in Chrome.
 
 [[/images/keyboard/q-mode.svg]]
 

@@ -9,6 +9,9 @@ workspace root and for each directory under its `projects/`, in the dotfiles
 Codex config and in every `~/.codex-epoch*/config.toml`, skipping entries
 that already exist. It refuses a workspace that does not exist, so it never
 trusts a path ahead of the clone. Rerunning it adds only what is missing.
+
+The workspace is `--workspace`, else a non-empty `EPOCH_WORKSPACE`, else
+~/repos/epoch/ai-enablement.
 """
 
 from __future__ import annotations
@@ -26,8 +29,9 @@ DOTFILES_CONFIG = Path(__file__).resolve().parents[1] / "config.toml"
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--workspace", type=Path, default=DEFAULT_WORKSPACE,
-                        help=f"workspace checkout (default: {DEFAULT_WORKSPACE})")
+    parser.add_argument("--workspace", type=Path, default=default_workspace(os.environ),
+                        help="workspace checkout (default: $EPOCH_WORKSPACE, "
+                             f"else {DEFAULT_WORKSPACE})")
     parser.add_argument("--config", type=Path, action="append", dest="configs",
                         help="Codex config to update; repeatable (default: the dotfiles "
                              "config and every ~/.codex-epoch*/config.toml)")
@@ -46,6 +50,12 @@ def main(argv: list[str] | None = None) -> int:
             append_entries(config, missing)
         print(f"{config}: {verb} {len(missing)} of {len(paths)} entries")
     return 0
+
+
+def default_workspace(env) -> Path:
+    """Return the workspace named by ENV's EPOCH_WORKSPACE, else the default."""
+    value = env.get("EPOCH_WORKSPACE", "")
+    return Path(value).expanduser() if value else DEFAULT_WORKSPACE
 
 
 def trusted_paths(workspace: Path) -> list[str]:

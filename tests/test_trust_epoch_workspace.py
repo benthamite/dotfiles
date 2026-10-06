@@ -11,6 +11,7 @@ import sys
 import tempfile
 import tomllib
 import unittest
+from unittest import mock
 
 DOTFILES = Path(__file__).resolve().parents[1]
 
@@ -81,6 +82,28 @@ class TrustEpochWorkspaceTests(unittest.TestCase):
         self.assertIn("does not exist", err)
         self.assertEqual(before, self.config.read_text())
 
+
+    def test_workspace_defaults_to_epoch_workspace(self):
+        out = io.StringIO()
+        with mock.patch.dict("os.environ", {"EPOCH_WORKSPACE": str(self.workspace)}), \
+                redirect_stdout(out), redirect_stderr(io.StringIO()):
+            code = self.script.main(["--config", str(self.config)])
+        self.assertEqual(0, code)
+        self.assertIn("added 2 of 3", out.getvalue())
+
+    def test_workspace_flag_beats_epoch_workspace(self):
+        with mock.patch.dict("os.environ", {"EPOCH_WORKSPACE": str(self.root / "absent")}):
+            code, out, _ = self.run_script()
+        self.assertEqual(0, code)
+        self.assertIn("added 2 of 3", out)
+
+    def test_default_workspace_resolution(self):
+        default = Path.home() / "repos" / "epoch" / "ai-enablement"
+        self.assertEqual(default, self.script.default_workspace({}))
+        self.assertEqual(default, self.script.default_workspace({"EPOCH_WORKSPACE": ""}))
+        self.assertEqual(Path("/ws"), self.script.default_workspace({"EPOCH_WORKSPACE": "/ws"}))
+        self.assertEqual(Path.home() / "ws",
+                         self.script.default_workspace({"EPOCH_WORKSPACE": "~/ws"}))
 
 if __name__ == "__main__":
     unittest.main()

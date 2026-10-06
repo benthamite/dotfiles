@@ -12,7 +12,7 @@ script by its repository path.
 | Command | Purpose |
 |---------+---------|
 | =install-skills.sh= | Installs or repairs the live public and programmatic skill-directory links, preserves Codex-managed system skills, applies native skill pruning, and installs private-skill shims. |
-| =trust-epoch-workspace= | Adds Codex trust entries for the Epoch workspace checkout (default =~/repos/epoch/ai-enablement=) and each =projects/*= directory to =codex/config.toml= and every =~/.codex-epoch*/config.toml=. Idempotent, with =--dry-run=; refuses a workspace that does not exist. Run once at the workspace-split cutover, after cloning. |
+| =trust-epoch-workspace= | Adds Codex trust entries for the Epoch workspace checkout (=--workspace=, else =$EPOCH_WORKSPACE=, else =~/repos/epoch/ai-enablement=) and each =projects/*= directory to =codex/config.toml= and every =~/.codex-epoch*/config.toml=. Idempotent, with =--dry-run=; refuses a workspace that does not exist. Run once at the workspace-split cutover, after cloning. |
 
 The documentation audit compares this table with every tracked direct child of
 the directory. Add or remove the matching row whenever the command set changes.

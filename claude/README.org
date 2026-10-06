@@ -198,7 +198,7 @@ The =ai-provider-key= helper owns the autonomous spend ceilings for automation
 runtime keys directly.
 
 [[file:context/README.org][The context index]] routes account, service, browser, secret, and MCP procedures.
-The gitignored =context/personal-details.md= holds Pablo's form-filling details (name, date of birth, contact, address); like =voice-samples.md=, it is private, Drive-synced and never committed. The =chrome-use= skill points to it for form filling and has agents leave card numbers, passport numbers and passwords for Pablo, saying so up front instead of asking permission to type them; the context index lists only tracked documents, so it is not indexed.
+The gitignored =context/personal-details.md= holds Pablo's form-filling details (name, date of birth, contact, address, phone device); like =voice-samples.md=, it is private, Drive-synced and never committed. The =chrome-use= skill points to it for form filling and has agents leave card numbers, passport numbers and passwords for Pablo, saying so up front instead of asking permission to type them; the context index lists only tracked documents, so it is not indexed.
 =CLAUDE.md= points to these files by absolute path: it loads as =~/.claude/CLAUDE.md=,
 where a relative =context/= path would not resolve. The sync audit rejects
 relative =context/= references in both global files.

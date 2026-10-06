@@ -10,19 +10,22 @@
 # account belong in private configuration; see README.org.
 #
 # Usage: cloudflare-deploy-token --project <slug> [--account-id <id>]
-#          [--kv] [--d1] [--update] [--title <override>]
+#          [--kv] [--d1] [--pages] [--update] [--title <override>]
 #
 # Default scope is Workers Scripts Write; --kv / --d1 widen deliberately.
+# --pages mints a Pages-deploy token instead (Pages Write only, no Workers
+# scope), for `wrangler pages deploy` from CI.
 # --update replaces the credential field on an existing item.
 set -euo pipefail
 
-project="" account_id="" want_kv=0 want_d1=0 update=0 title=""
+project="" account_id="" want_kv=0 want_d1=0 want_pages=0 update=0 title=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --project) project="$2"; shift 2 ;;
     --account-id) account_id="$2"; shift 2 ;;
     --kv) want_kv=1; shift ;;
     --d1) want_d1=1; shift ;;
+    --pages) want_pages=1; shift ;;
     --update) update=1; shift ;;
     --title) title="$2"; shift 2 ;;
     *) echo "cloudflare-deploy-token: unknown argument $1" >&2; exit 2 ;;
@@ -106,7 +109,7 @@ trap 'unset ADMIN SECRET' EXIT
 
 SECRET="$(
   ADMIN="$ADMIN" ACCOUNT_ID="$account_id" PROJECT="$project" \
-  WANT_KV="$want_kv" WANT_D1="$want_d1" python3 - <<'PY'
+  WANT_KV="$want_kv" WANT_D1="$want_d1" WANT_PAGES="$want_pages" python3 - <<'PY'
 import json, os, sys, urllib.request
 
 API = "https://api.cloudflare.com/client/v4"
@@ -125,7 +128,7 @@ def call(method, path, body=None):
         raise SystemExit(f"Cloudflare API {path} failed: {payload.get('errors')}")
     return payload["result"]
 
-wanted = ["Workers Scripts Write"]
+wanted = ["Pages Write"] if os.environ["WANT_PAGES"] == "1" else ["Workers Scripts Write"]
 if os.environ["WANT_KV"] == "1":
     wanted.append("Workers KV Storage Write")
 if os.environ["WANT_D1"] == "1":
@@ -186,7 +189,8 @@ unset template existing_template
 
 op-desktop read "op://Automations/$title/credential" >/dev/null
 op-automations read "op://Automations/$title/credential" >/dev/null
-printf 'minted and stored op://Automations/%s/credential (account %s, scopes: Workers Scripts Write%s%s)\n' \
+printf 'minted and stored op://Automations/%s/credential (account %s, scopes: %s%s%s)\n' \
   "$title" "$account_id" \
+  "$([ "$want_pages" -eq 1 ] && printf 'Pages Write' || printf 'Workers Scripts Write')" \
   "$([ "$want_kv" -eq 1 ] && printf ', KV Write')" \
   "$([ "$want_d1" -eq 1 ] && printf ', D1 Write')"

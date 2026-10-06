@@ -55,7 +55,8 @@ use =op://VAULT/ITEM/FIELD= syntax; store references, never credential values.
 readable configuration stops before any broker or provider call. The helper
 tries the automation reference first, then explicitly reports a fallback to the
 desktop reference if that read fails. Scope remains Workers Scripts Write,
-with =--kv= and =--d1= adding their respective permissions. Both create and
+with =--kv= and =--d1= adding their respective permissions; =--pages= instead
+mints a Pages-only token (Pages Write) for =wrangler pages deploy= from CI. Both create and
 update send the minted value through broker stdin, never command arguments.
 Update preserves the existing API credential item's other fields and rejects
 unsupported categories, attachments, passkeys or ambiguous credential fields

@@ -208,7 +208,7 @@ Mail activation and credential lookup are documented further in
 | =playwright-mcp-launch= | Starts the pinned Playwright MCP server in extension mode on the Chrome profile last used (else the first with the Playwright extension), passing that profile's extension token from the personal 1Password =Automation= item =playwright-mcp-token-<profile directory>= so Codex's browser connects without an approval page; a profile without a stored token gets the page. =codex-runtime= registers it for local Codex sessions. |
 | =pinentry-labeled= | Wraps =pinentry-mac= for =gpg-agent=, prefixing each dialog with the secret it wants: YubiKey PIN, YubiKey Admin PIN, or GPG passphrase. |
 | =personal-updates= | Applies the scheduled and manual update policy documented in [[file:../macos/README.org][the macOS README]]. |
-| =sync-google-birthdays= | Mirrors reconciled BBDB birthdays into the reminder-free personal Google calendar =Birthdays (managed)=. |
+| =sync-google-birthdays= | Mirrors reconciled BBDB birthdays into the reminder-free personal Google calendar =Birthdays (managed)=. =--preflight= checks, changing nothing and reading no credential, that the attested sync can start (its LaunchAgent's launchd-environment check). |
 | =switch-gnupg= | Replaces the Homebrew GnuPG formula with a requested historical version. |
 
 * General utilities

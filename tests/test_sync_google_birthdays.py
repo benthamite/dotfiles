@@ -275,5 +275,45 @@ class BirthdayTests(unittest.TestCase):
                 self.assertEqual(json.loads(state.read_text())["calendar_id"], "calendar-id")
 
 
+
+class PreflightTests(unittest.TestCase):
+    """The side-effect-free probes launchd-env-check runs under the
+    LaunchAgent's environment (~/repos/launchd/README.md)."""
+
+    def setUp(self):
+        self.auth = MODULE.load_auth_helper()
+
+    def test_broker_resolves_without_reading_a_credential(self):
+        with mock.patch.object(self.auth.subprocess, "run") as run:
+            self.assertEqual(self.auth.preflight("personal"), [])
+        run.assert_not_called()
+
+    def test_bare_name_broker_off_path_is_reported(self):
+        # The Sep 25 to Oct 1 regression: LaunchAgent PATHs lack the dotfiles bin.
+        with mock.patch.object(self.auth, "BROKER", "op-" "automations"), \
+                mock.patch.dict(MODULE.os.environ, {"PATH": "/usr/bin:/bin"}):
+            problems = self.auth.preflight("personal")
+        self.assertEqual(len(problems), 1)
+        self.assertIn("is not an executable on this PATH", problems[0])
+
+    def test_sync_preflight_reports_missing_emacs_and_inputs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            missing = Path(directory) / "missing.el"
+            with mock.patch.object(MODULE, "EMACS", "no-such-emacs-for-test"), \
+                    mock.patch.object(MODULE, "DUMP_SCRIPT", missing), \
+                    mock.patch.object(MODULE, "BBDB_FILE", missing):
+                problems = MODULE.preflight()
+        self.assertEqual(problems, ["no-such-emacs-for-test is not on PATH", f"missing {missing}", f"missing {missing}"])
+
+    def test_sync_preflight_passes_when_everything_resolves(self):
+        with tempfile.TemporaryDirectory() as directory:
+            present = Path(directory) / "present.el"
+            present.write_text("")
+            with mock.patch.object(MODULE, "EMACS", MODULE.sys.executable), \
+                    mock.patch.object(MODULE, "DUMP_SCRIPT", present), \
+                    mock.patch.object(MODULE, "BBDB_FILE", present):
+                self.assertEqual(MODULE.preflight(), [])
+
+
 if __name__ == "__main__":
     unittest.main()

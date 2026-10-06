@@ -11,6 +11,7 @@ import importlib.util
 import json
 import os
 import random
+import shutil
 import subprocess
 import sys
 import time
@@ -41,6 +42,7 @@ LOCK_FILE = STATE_DIR / "lock"
 CALENDAR_NAME = "Birthdays (managed)"
 CALENDAR_DESCRIPTION = "Birthdays mirrored from reconciled BBDB and Google Contacts"
 MANAGED_BY = "sync-google-birthdays-v1"
+EMACS = "emacs"
 MIN_SAFE_BIRTHDAYS = 800
 WRITE_INTERVAL = 0.15
 API_ROOT = "https://www.googleapis.com/calendar/v3"
@@ -193,7 +195,7 @@ def load_birthdays(bbdb_file=BBDB_FILE, dump_script=DUMP_SCRIPT):
     """Load and validate birthday records through BBDB's own reader."""
     env = dict(os.environ, BBDB_FILE=str(bbdb_file))
     result = subprocess.run(
-        ["emacs", "-Q", "--batch", "-l", str(dump_script)],
+        [EMACS, "-Q", "--batch", "-l", str(dump_script)],
         capture_output=True,
         check=True,
         env=env,
@@ -310,6 +312,25 @@ def load_auth_helper(path=AUTH_HELPER):
         raise RuntimeError(f"Cannot load OAuth helper: {path}")
     spec.loader.exec_module(module)
     return module
+
+
+def preflight(auth_helper=AUTH_HELPER):
+    """Return what would stop an attested sync from starting in this environment.
+
+    Side-effect free: resolves the Emacs that reads BBDB on PATH, checks the
+    input files exist and asks the OAuth helper whether its credential broker
+    resolves, without reading a credential or calling Google
+    (launchd-env-check runs this under the LaunchAgent's environment).
+    """
+    problems = []
+    if shutil.which(EMACS) is None:
+        problems.append(f"{EMACS} is not on PATH")
+    for path in (DUMP_SCRIPT, BBDB_FILE, auth_helper):
+        if not path.is_file():
+            problems.append(f"missing {path}")
+    if auth_helper.is_file():
+        problems.extend(load_auth_helper(auth_helper).preflight("personal"))
+    return problems
 
 
 class CalendarApi:
@@ -538,7 +559,18 @@ def main():
         help="explicitly selected private Contacts SQLite store to reconcile "
              "against; required whenever Contacts are reconciled directly",
     )
+    parser.add_argument(
+        "--preflight",
+        action="store_true",
+        help="check, changing nothing and reading no credential, that the sync can start here, and exit",
+    )
     args = parser.parse_args()
+    if args.preflight:
+        problems = preflight()
+        if problems:
+            raise SystemExit("preflight: " + "; ".join(problems))
+        print("preflight: ok")
+        return
     reconciles_directly = (
         args.record_reconciliation_attestation
         or not args.use_reconciliation_attestation

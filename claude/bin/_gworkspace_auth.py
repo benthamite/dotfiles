@@ -17,6 +17,7 @@ invocation.
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -62,9 +63,13 @@ def _personal_ref(title):
     return f"op://Automation/{title}/password"
 
 
+def _broker_command(selector, verb, ref):
+    return [BROKER, *selector, "cache", verb, ref]
+
+
 def _broker_cache(selector, verb, ref):
     return subprocess.run(
-        [BROKER, *selector, "cache", verb, ref],
+        _broker_command(selector, verb, ref),
         capture_output=True,
         check=False,
         text=True,
@@ -85,6 +90,25 @@ def _op_read(ref):
     if result.returncode == 0:
         return result.stdout.strip()
     return ""
+
+
+def preflight(account):
+    """Return the problems that would stop ACCOUNT's credentials from loading here.
+
+    Reads no credential: it resolves the broker command `_read_env` would run
+    on this process's PATH, as a LaunchAgent would (launchd-env-check), or
+    checks that the account's token file exists.
+    """
+    if account in TOKEN_FILE:
+        if not os.path.isfile(TOKEN_FILE[account]):
+            return [f"missing credential file {TOKEN_FILE[account]!r} (account={account})"]
+        return []
+    if account not in REFRESH_TOKEN_ENV:
+        return [f"unknown account {account!r}"]
+    command = _broker_command(["@personal"], "read", _personal_ref(CLIENT_ID_ITEM))
+    if shutil.which(command[0], path=os.environ.get("PATH", os.defpath)) is None:
+        return [f"credential broker {command[0]!r} is not an executable on this PATH"]
+    return []
 
 
 def forget_cached_credentials(account):

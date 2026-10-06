@@ -48,7 +48,7 @@ import urllib.parse
 sys.dont_write_bytecode = True  # keep __pycache__ out of the Drive-synced tree
 
 sys.path.insert(0, os.path.dirname(__file__))
-from _gworkspace_auth import api_request  # noqa: E402
+from _gworkspace_auth import api_request, preflight  # noqa: E402
 
 API = "https://gmail.googleapis.com/gmail/v1/users/me"
 ACCOUNTS = ["epoch", "personal", "email-triage"]
@@ -223,6 +223,13 @@ def cmd_whoami(args):
     print(address)
 
 
+def cmd_preflight(args):
+    problems = preflight(args.account)
+    if problems:
+        sys.exit("ERROR: " + "; ".join(problems))
+    print("ok")
+
+
 def cmd_get(args):
     msg = api_request(
         "GET", f"{API}/messages/{args.id}?format={args.format}", account=args.account
@@ -362,6 +369,12 @@ def build_parser():
 
     who = sub.add_parser("whoami", parents=[sub_account])
     who.set_defaults(func=cmd_whoami)
+
+    pre = sub.add_parser(
+        "preflight", parents=[sub_account],
+        help="Check, reading no credential and calling no API, that this "
+             "environment can load the account's credentials.")
+    pre.set_defaults(func=cmd_preflight)
 
     g = sub.add_parser("get", parents=[sub_account])
     g.add_argument("id")

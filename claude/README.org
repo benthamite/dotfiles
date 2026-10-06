@@ -15,6 +15,10 @@ This prevents a separately expired Calendar grant from blocking automation.
 The =gmail.py --account personal whoami= command verifies the authenticated
 mailbox through Gmail's profile endpoint using the existing Gmail grant;
 it does not require a separate OAuth user-info scope.
+=gmail.py --account ACCOUNT preflight= reads no credential and calls no API:
+it checks that the broker command the helper would run resolves on the
+current =PATH=. LaunchAgents that send mail register it as their preflight for
+the launchd repo's environment check.
 
 This directory contains the tracked parts of my Claude Code setup. The shared
 Claude/Codex contract lives in [[file:../agents/configuration.org][the shared configuration guide]]; this file covers

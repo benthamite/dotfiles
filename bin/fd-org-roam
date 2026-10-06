@@ -1,0 +1,10 @@
+#!/bin/sh
+# fd for org-roam's file listing (`org-roam-list-files-commands').
+#
+# org-roam runs fd with -L --type file and extension flags but no way to add
+# options, and fd skips hidden and ignored files by default, which would drop
+# notes that find lists, such as the gitignored notes/chatgpt-sync files.
+# With --no-ignore --hidden it lists what find -L does over the same tree,
+# about ten times faster on Google Drive. Reached through ~/bin, because
+# org-roam splices the executable into an unquoted shell command.
+exec fd --no-ignore --hidden "$@"

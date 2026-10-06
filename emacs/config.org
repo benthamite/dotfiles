@@ -11793,6 +11793,10 @@ Using my fork while awaiting merge of [[https://github.com/org-roam/org-roam/pul
   :after org
   :custom
   (org-roam-directory paths-dir-org-roam)
+  ;; `find' takes over ten seconds over the whole Drive, during which
+  ;; `org-roam-db-sync' blocks Emacs; see bin/fd-org-roam.
+  (org-roam-list-files-commands
+   `((fd . ,(expand-file-name "~/bin/fd-org-roam")) find))
   (org-roam-node-display-template
    (concat "${title:*} "
            (propertize "${tags:10}" 'face 'org-tag)))

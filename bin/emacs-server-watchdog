@@ -12,12 +12,18 @@ The notification names the cause from the state file that
 backtrace or minibuffer prompt parking server requests, or, when the file has
 stopped updating, Emacs blocked in Lisp or a subprocess. Each outage and
 recovery is appended to LOG_FILE, so past incidents can be classified.
+
+Every run also appends one JSON line to SAMPLES_FILE: how long the server
+took to answer, the load averages, swap use and the processes using the
+most memory. A freeze can then be matched against what the machine was
+doing at the time. Lines older than SAMPLES_RETENTION are dropped.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -26,6 +32,12 @@ from pathlib import Path
 STATE_FILE = Path.home() / ".cache/emacs-server-state.json"
 WATCHDOG_FILE = Path.home() / ".cache/emacs-server-watchdog.json"
 LOG_FILE = Path.home() / "Library/Logs/emacs-server-watchdog.log"
+SAMPLES_FILE = Path.home() / "Library/Logs/emacs-server-watchdog.samples.jsonl"
+SAMPLES_RETENTION = 7 * 86400
+# Trim only once the oldest line is this far past retention, so the file
+# is rewritten about once a day rather than every minute.
+SAMPLES_TRIM_SLACK = 86400
+TOP_PROCESSES = 5
 EMACSCLIENT = "/opt/homebrew/bin/emacsclient"
 PROBE_TIMEOUT = 5
 FAILURES_TO_ALERT = 2
@@ -35,19 +47,29 @@ STALE_AFTER = 30
 
 
 def main() -> int:
+    server = check_server()
+    record_sample(server, time.time())
+    return 0
+
+
+def check_server() -> dict:
+    """Probe the server, alert on outages, and return the probe's result."""
     state = read_json(STATE_FILE)
     watchdog = read_json(WATCHDOG_FILE) or {"failures": 0, "alerted": False}
     pid = state.get("pid") if state else None
     if not (isinstance(pid, int) and emacs_running(pid)):
         write_json(WATCHDOG_FILE, {"failures": 0, "alerted": False})
-        return 0
+        return {"emacs_pid": None, "answered": None, "probe_seconds": None}
+    started = time.monotonic()
     answer = probe(socket_path())
+    result = {"emacs_pid": pid, "answered": answer == pid,
+              "probe_seconds": round(time.monotonic() - started, 2)}
     if answer == pid:
         if watchdog["alerted"]:
             log("recovered")
             notify("The outage is over.", "Emacs server answering again")
         write_json(WATCHDOG_FILE, {"failures": 0, "alerted": False})
-        return 0
+        return result
     watchdog["failures"] += 1
     if watchdog["failures"] >= FAILURES_TO_ALERT and not watchdog["alerted"]:
         cause = diagnose(state, answer, time.time())
@@ -55,7 +77,63 @@ def main() -> int:
         notify(cause, "Emacs server not answering")
         watchdog["alerted"] = True
     write_json(WATCHDOG_FILE, watchdog)
-    return 0
+    return result
+
+
+def record_sample(server: dict, now: float) -> None:
+    """Append SERVER's probe result and the machine's load to SAMPLES_FILE."""
+    processes = memory_by_process()
+    emacs_pid = server["emacs_pid"]
+    sample = {
+        "time": round(now),
+        **server,
+        "emacs_rss_mb": next((mb for pid, mb, _ in processes if pid == emacs_pid), None),
+        "load": [round(x, 2) for x in os.getloadavg()],
+        "swap_used_mb": swap_used_mb(),
+        "top_rss_mb": [[name, mb] for _, mb, name in processes[:TOP_PROCESSES]],
+    }
+    SAMPLES_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with SAMPLES_FILE.open("a") as f:
+        f.write(json.dumps(sample) + "\n")
+    trim_samples(now)
+
+
+def memory_by_process() -> list[tuple[int, int, str]]:
+    """Return (pid, resident MB, executable name) per process, largest first.
+
+    Only the executable name is read: command lines can carry credentials.
+    """
+    output = subprocess.run(["ps", "-A", "-o", "pid=,rss=,comm="],
+                            capture_output=True, text=True, check=True).stdout
+    processes = []
+    for line in output.splitlines():
+        pid, rss, comm = line.split(None, 2)
+        processes.append((int(pid), int(rss) // 1024, Path(comm).name))
+    return sorted(processes, key=lambda p: p[1], reverse=True)
+
+
+def swap_used_mb() -> int:
+    """Return the swap space in use, in MB."""
+    output = subprocess.run(["sysctl", "-n", "vm.swapusage"],
+                            capture_output=True, text=True, check=True).stdout
+    match = re.search(r"used = ([0-9.]+)M", output)
+    if not match:
+        raise ValueError(f"unexpected vm.swapusage output: {output!r}")
+    return round(float(match.group(1)))
+
+
+def trim_samples(now: float) -> None:
+    """Drop samples older than SAMPLES_RETENTION once enough have expired."""
+    with SAMPLES_FILE.open() as f:
+        first = f.readline()
+    if json.loads(first)["time"] > now - SAMPLES_RETENTION - SAMPLES_TRIM_SLACK:
+        return
+    cutoff = now - SAMPLES_RETENTION
+    kept = [line for line in SAMPLES_FILE.read_text().splitlines(keepends=True)
+            if json.loads(line)["time"] >= cutoff]
+    temp = SAMPLES_FILE.with_suffix(".tmp")
+    temp.write_text("".join(kept))
+    temp.replace(SAMPLES_FILE)
 
 
 def diagnose(state: dict, answer: int | None, now: float) -> str:

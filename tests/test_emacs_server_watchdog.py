@@ -75,6 +75,10 @@ class MainTest(unittest.TestCase):
             mock.patch.object(watchdog, "notify",
                               lambda message, title: self.notified.append(title)),
             mock.patch.object(watchdog, "log", self.logged.append),
+            mock.patch.object(watchdog, "SAMPLES_FILE", self.dir / "samples.jsonl"),
+            mock.patch.object(watchdog, "memory_by_process",
+                              lambda: [(42, 3500, "Emacs"), (7, 1600, "bztransmit")]),
+            mock.patch.object(watchdog, "swap_used_mb", lambda: 36000),
         ]
         for patch in patches:
             patch.start()
@@ -114,6 +118,52 @@ class MainTest(unittest.TestCase):
             self.run_with_answer(None)
             self.run_with_answer(None)
         self.assertEqual(self.notified, [])
+
+    def samples(self):
+        lines = (self.dir / "samples.jsonl").read_text().splitlines()
+        return [json.loads(line) for line in lines]
+
+    def test_each_run_records_a_sample(self):
+        self.run_with_answer(42)
+        self.run_with_answer(None)
+        first, second = self.samples()
+        self.assertEqual(first["emacs_pid"], 42)
+        self.assertTrue(first["answered"])
+        self.assertFalse(second["answered"])
+        self.assertIsInstance(first["probe_seconds"], float)
+        self.assertEqual(first["emacs_rss_mb"], 3500)
+        self.assertEqual(first["swap_used_mb"], 36000)
+        self.assertEqual(len(first["load"]), 3)
+        self.assertEqual(first["top_rss_mb"], [["Emacs", 3500], ["bztransmit", 1600]])
+
+    def test_a_closed_emacs_still_records_the_machine(self):
+        with mock.patch.object(watchdog, "emacs_running", lambda pid: False):
+            self.run_with_answer(None)
+        (sample,) = self.samples()
+        self.assertIsNone(sample["emacs_pid"])
+        self.assertIsNone(sample["answered"])
+        self.assertEqual(sample["swap_used_mb"], 36000)
+
+    def test_old_samples_are_trimmed_once_past_the_slack(self):
+        now = time.time()
+        day = 86400
+        path = self.dir / "samples.jsonl"
+        recent = json.dumps({"time": round(now - day)}) + "\n"
+        path.write_text(json.dumps({"time": round(now - 7.5 * day)}) + "\n" + recent)
+        watchdog.trim_samples(now)
+        self.assertEqual(len(path.read_text().splitlines()), 2)
+        path.write_text(json.dumps({"time": round(now - 8.5 * day)}) + "\n" + recent)
+        watchdog.trim_samples(now)
+        self.assertEqual(path.read_text(), recent)
+
+
+class SystemReadingTest(unittest.TestCase):
+    def test_reads_this_machine(self):
+        processes = watchdog.memory_by_process()
+        self.assertTrue(processes)
+        self.assertEqual(processes, sorted(processes, key=lambda p: p[1], reverse=True))
+        self.assertTrue(all("/" not in name for _, _, name in processes))
+        self.assertGreaterEqual(watchdog.swap_used_mb(), 0)
 
 
 if __name__ == "__main__":

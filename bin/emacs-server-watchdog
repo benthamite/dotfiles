@@ -1,0 +1,142 @@
+#!/usr/bin/env python3
+"""Alert when the live Emacs server stops answering, and say why.
+
+Run every minute by launchd. Each run probes the server socket with a short
+`emacsclient --eval (emacs-pid)`. A probe fails when it times out or errors,
+or when a different Emacs answers (a test instance that took over the socket).
+After FAILURES_TO_ALERT consecutive failures it sends one macOS notification,
+then one more when the server answers again.
+
+The notification names the cause from the state file that
+`simple-extras-server-state-mode' writes every few seconds: a debugger
+backtrace or minibuffer prompt parking server requests, or, when the file has
+stopped updating, Emacs blocked in Lisp or a subprocess. Each outage and
+recovery is appended to LOG_FILE, so past incidents can be classified.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+STATE_FILE = Path.home() / ".cache/emacs-server-state.json"
+WATCHDOG_FILE = Path.home() / ".cache/emacs-server-watchdog.json"
+LOG_FILE = Path.home() / "Library/Logs/emacs-server-watchdog.log"
+EMACSCLIENT = "/opt/homebrew/bin/emacsclient"
+PROBE_TIMEOUT = 5
+FAILURES_TO_ALERT = 2
+# The state file is written every five seconds; older than this means
+# Emacs is not running its timers.
+STALE_AFTER = 30
+
+
+def main() -> int:
+    state = read_json(STATE_FILE)
+    watchdog = read_json(WATCHDOG_FILE) or {"failures": 0, "alerted": False}
+    pid = state.get("pid") if state else None
+    if not (isinstance(pid, int) and emacs_running(pid)):
+        write_json(WATCHDOG_FILE, {"failures": 0, "alerted": False})
+        return 0
+    answer = probe(socket_path())
+    if answer == pid:
+        if watchdog["alerted"]:
+            log("recovered")
+            notify("The outage is over.", "Emacs server answering again")
+        write_json(WATCHDOG_FILE, {"failures": 0, "alerted": False})
+        return 0
+    watchdog["failures"] += 1
+    if watchdog["failures"] >= FAILURES_TO_ALERT and not watchdog["alerted"]:
+        cause = diagnose(state, answer, time.time())
+        log(f"outage: {cause}")
+        notify(cause, "Emacs server not answering")
+        watchdog["alerted"] = True
+    write_json(WATCHDOG_FILE, watchdog)
+    return 0
+
+
+def diagnose(state: dict, answer: int | None, now: float) -> str:
+    """Return a one-line cause for a failed probe from STATE and ANSWER."""
+    age = now - float(state.get("time", 0))
+    if answer is not None:
+        return (f"Another Emacs (pid {answer}) answers the server socket, "
+                f"not the live one (pid {state['pid']}).")
+    if age > STALE_AFTER:
+        return (f"Emacs has been blocked for {int(age)} s, in Lisp or a "
+                "subprocess; C-g may interrupt it.")
+    if state.get("debugger"):
+        first = state["debugger"].splitlines()[:2]
+        return ("Server parked in the debugger: " + " / ".join(first)
+                + ". Leave it with C-] or q in *Backtrace*.")
+    if state.get("prompt"):
+        return (f"Server parked at a minibuffer prompt: {state['prompt']} "
+                "Answer or quit it.")
+    if state.get("recursion_depth", 0) > 0:
+        return (f"Server parked in a recursive edit (depth "
+                f"{state['recursion_depth']}); leave it with C-].")
+    return ("Emacs is responsive but its server does not answer; the socket "
+            "may be missing or replaced.")
+
+
+def socket_path() -> str:
+    """Return the live server socket, which launchd's TMPDIR may not name."""
+    tmp = subprocess.run(["getconf", "DARWIN_USER_TEMP_DIR"],
+                         capture_output=True, text=True, check=True).stdout.strip()
+    return f"{tmp}emacs{os.getuid()}/server"
+
+
+def probe(socket: str) -> int | None:
+    """Return the process ID of the Emacs answering SOCKET, or None."""
+    try:
+        result = subprocess.run(
+            [EMACSCLIENT, f"--socket-name={socket}", f"--timeout={PROBE_TIMEOUT}",
+             "--eval", "(emacs-pid)"],
+            capture_output=True, text=True, timeout=PROBE_TIMEOUT + 10)
+    except subprocess.TimeoutExpired:
+        return None
+    try:
+        return int(result.stdout.strip()) if result.returncode == 0 else None
+    except ValueError:
+        return None
+
+
+def emacs_running(pid: int) -> bool:
+    """Return whether PID is a running Emacs process."""
+    result = subprocess.run(["ps", "-p", str(pid), "-o", "comm="],
+                            capture_output=True, text=True)
+    return result.returncode == 0 and "Emacs" in result.stdout
+
+
+def notify(message: str, title: str) -> None:
+    subprocess.run(["osascript", "-e", "on run argv", "-e",
+                    "display notification (item 1 of argv) with title (item 2 of argv)",
+                    "-e", "end run", "--", message, title],
+                   capture_output=True)
+
+
+def log(line: str) -> None:
+    LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with LOG_FILE.open("a") as f:
+        f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {line}\n")
+
+
+def read_json(path: Path) -> dict | None:
+    try:
+        data = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def write_json(path: Path, data: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp = path.with_suffix(".tmp")
+    temp.write_text(json.dumps(data))
+    temp.replace(path)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

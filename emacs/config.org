@@ -9475,12 +9475,16 @@ contain =AGENTS.md= or =CLAUDE.md=, including directories without Git repositori
   (agent-project-sources
    `(("epoch"
       . ,(delete-dups
-          (list (file-name-concat paths-dir-epoch-workspace
+          (cons (file-name-concat paths-dir-epoch-workspace
                                   "projects/shared/project-registry.json")
                 ;; The personal projects kept out of the workspace.  Until
                 ;; their own registry is generated, this names the same file.
-                (file-name-concat paths-dir-epoch
-                                  "projects/shared/project-registry.json"))))
+                ;; It is listed only if it exists when this is set, because
+                ;; the picker signals an error for a missing registry.
+                (seq-filter #'file-exists-p
+                            (list (file-name-concat
+                                   paths-dir-epoch
+                                   "projects/shared/project-registry.json"))))))
      ("tlon"
       . ("~/My Drive/tlon/projects/80k-ai-2027"
          "~/My Drive/tlon/projects/80k-podcast"

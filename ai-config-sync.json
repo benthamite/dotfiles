@@ -563,7 +563,7 @@
       "claude": "claude/hooks/agent-guard.sh",
       "codex": "codex/hooks/agent-guard.sh",
       "status": "paired",
-      "note": "The only PreToolUse guard registration in both runtimes: runs lib/python/agent_guard (one policy module per former guard hook, chains in engine.py) and maps any status other than 0 to exit 2, so a missing interpreter, import error or crash denies. Intended differences from the shell guards: docs/plans/2026-10-01-guard-engine.md. Tests: bin/test-guards. Policy search_root (Claude Bash, Grep and Glob; Codex shell tools) denies searches rooted at a huge tree (HUGE_ROOTS in lib/python/agent_guard/policies/search_root.py)."
+      "note": "The only PreToolUse guard registration in both runtimes: runs lib/python/agent_guard (one policy module per former guard hook, chains in engine.py) and maps any status other than 0 to exit 2, so a missing interpreter, import error or crash denies. Intended differences from the shell guards: docs/plans/2026-10-01-guard-engine.md. Tests: bin/test-guards. Policy search_root (Claude Bash, Grep and Glob; Codex shell tools) denies searches rooted at a huge tree (HUGE_ROOTS in lib/python/agent_guard/policies/search_root.py). Claude stale_team (SendMessage) blocks agents on a stale team."
     },
     {
       "name": "session-search-cleanup.sh",

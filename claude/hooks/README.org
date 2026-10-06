@@ -30,7 +30,7 @@ long-pipeline checks, then output wrapping), =dirty_tree=, =launchagent=,
 =walk_list=, and =Grep= adds =search_root=; =Edit=, =Write= and =NotebookEdit=
 run =secret_leak=, =retired_secrets=, =elpaca_dotfiles_edit=, =elisp_skill=,
 =texi_edit=, =walk_list= and =launchagent=; =Glob= runs =walk_list= and
-=search_root=. A denial from any policy denies, with
+=search_root=; =SendMessage= runs =stale_team=. A denial from any policy denies, with
 the reasons joined in chain order.
 
 The Python classifiers in this directory (=lib-op-policy.py=,

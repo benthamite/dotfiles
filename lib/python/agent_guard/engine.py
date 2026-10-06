@@ -19,7 +19,7 @@ import traceback
 from .core import CLAUDE, CODEX, CODEX_SHELL_TOOLS, Call, HookFailure, Result
 from .policies import (ahrefs, codex_wrap, destructive, dirty_tree, dispatcher, elisp_skill, elpaca_dotfiles_edit, elpaca_rebuild,
                        github_write, hookspath, launchagent, retired_secrets, search_root, secret_leak,
-                       sensitive_read, texi_edit, untrusted_execution, walk_list)
+                       sensitive_read, stale_team, texi_edit, untrusted_execution, walk_list)
 
 CHAINS = {
     CLAUDE: [
@@ -29,6 +29,7 @@ CHAINS = {
                                      launchagent)),
         ("Grep", (sensitive_read, walk_list, search_root)),
         ("Glob", (walk_list, search_root)),
+        ("SendMessage", (stale_team,)),
     ],
     CODEX: [
         ("|".join(re.escape(t) for t in CODEX_SHELL_TOOLS),

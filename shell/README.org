@@ -64,7 +64,7 @@ into =~/bin=:
 |------+----------|
 | =claude= | Selects the allowed Claude authentication route and strips unintended ambient Anthropic credentials. |
 | =codex= | Retains the current Homebrew runtime and reconciles Chrome's account-local plugin before local session launches. |
-| =emacsclient= | Finds the real Darwin temporary-directory socket when a caller overrides =$TMPDIR=. |
+| =emacsclient= | Finds the real Darwin temporary-directory socket when a caller overrides =$TMPDIR=. In Claude Code and Codex sessions, runs the first =--eval= expression with prompts and the debugger disabled and within =EMACSCLIENT_EVAL_LIMIT= seconds (default 120; 0 disables), so an agent's evaluation cannot park the Emacs server. |
 | =op= | Routes read-only Automations-vault work to =op-automations= and supported desktop-vault work to =op-desktop=. |
 
 The =dotfiles_prefer_shims= function moves this directory back to the front

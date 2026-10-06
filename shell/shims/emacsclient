@@ -17,22 +17,80 @@
 #
 # Diagnosed in the ai-access-management project on 2026-06-05. See that
 # project's logs for the full root-cause analysis.
+#
+# Agent evaluations cannot park the server. Emacs serves one request at a time,
+# so an agent's --eval that enters the debugger, waits at a minibuffer prompt,
+# or waits on the network or a long command stalls every other client until it
+# returns; since May such evaluations held the live server for minutes to hours.
+# In a Claude Code or Codex session, the first expression of an --eval call runs
+# with `inhibit-interaction', `inhibit-debugger' and `inhibit-debug-on-entry'
+# set, so a prompt or the debugger signals an error back to the agent instead,
+# and inside `with-timeout' of EMACSCLIENT_EVAL_LIMIT seconds (default 120);
+# the client gets a matching --timeout unless it passed one. 0 disables all of
+# this. `with-timeout' cannot interrupt Lisp that never waits. Later expressions
+# are left alone, since hooks pass data there for the first one to read.
 
-REAL=/opt/homebrew/bin/emacsclient
+REAL=${EMACSCLIENT_SHIM_REAL:-/opt/homebrew/bin/emacsclient}
 [ -x "$REAL" ] || REAL=/usr/local/bin/emacsclient
+
+# Options whose value may follow as a separate argument.
+takes_value() {
+	case "$1" in
+		-s | --socket-name | -f | --server-file | -w | --timeout | -a | \
+			--alternate-editor | -F | --frame-parameters | -d | --display | \
+			-T | --tramp | --parent-id) return 0 ;;
+	esac
+	return 1
+}
 
 inject=1
 [ -n "$EMACS_SOCKET_NAME" ] && inject=0
 [ -n "$EMACS_SERVER_FILE" ] && inject=0
+eval_mode=0
+has_timeout=0
+skip=0
 for arg in "$@"; do
+	if [ "$skip" = 1 ]; then
+		skip=0
+		continue
+	fi
 	case "$arg" in
+		--) break ;;
 		-s | -s?* | --socket-name | --socket-name=* | \
-			-f | -f?* | --server-file | --server-file=*)
-			inject=0
-			break
-			;;
+			-f | -f?* | --server-file | --server-file=*) inject=0 ;;
+		-w | -w?* | --timeout | --timeout=*) has_timeout=1 ;;
+		-e | --eval) eval_mode=1 ;;
+		-*[!nqucrtVHe]*) ;;
+		-*e*) eval_mode=1 ;;
 	esac
+	takes_value "$arg" && skip=1
 done
+
+limit=${EMACSCLIENT_EVAL_LIMIT:-120}
+if [ "$eval_mode" = 1 ] && [ "$limit" != 0 ] &&
+	{ [ -n "$CLAUDECODE" ] || [ -n "$CODEX_BUFFER_NAME" ] || [ -n "$CODEX_THREAD_ID" ]; }; then
+	wrapped=0
+	skip=0
+	options_done=0
+	count=$#
+	while [ "$count" -gt 0 ]; do
+		arg=$1
+		shift
+		count=$((count - 1))
+		if [ "$skip" = 1 ]; then
+			skip=0
+		elif [ "$wrapped" = 0 ] &&
+			{ [ "$options_done" = 1 ] || [ "${arg#-}" = "$arg" ]; }; then
+			arg="(let ((inhibit-interaction t) (inhibit-debugger t) (inhibit-debug-on-entry t)) (with-timeout ($limit (error \"Agent evaluation exceeded EMACSCLIENT_EVAL_LIMIT (%ss)\" $limit)) $arg))"
+			wrapped=1
+		elif [ "$options_done" = 0 ]; then
+			[ "$arg" = -- ] && options_done=1
+			takes_value "$arg" && skip=1
+		fi
+		set -- "$@" "$arg"
+	done
+	[ "$has_timeout" = 1 ] || set -- "--timeout=$((limit + 10))" "$@"
+fi
 
 if [ "$inject" = 1 ]; then
 	tmp=$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null)

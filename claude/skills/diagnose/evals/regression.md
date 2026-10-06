@@ -26,3 +26,5 @@ merely to exercise the scenarios.
 | Isolated hook tests pass but active runtime was not verified | Separate fixture proof from live user-visible verification; no unsupported resolved claim. |
 | Existing protection fails in one runtime mode | Check analogous relevant modes without expanding to unrelated inventory. |
 | Enforcement repair introduces an ask-style tool gate | Reject that design under local no-prompt policy; do not treat it as successful enforcement. |
+| Draft explanation rests on an untested inference, such as "the server is busy" | The challenge flags it; the discriminating check runs before anything is reported. |
+| A previous fix targeted the same symptom | Report why it did not hold before proposing another remedy. |

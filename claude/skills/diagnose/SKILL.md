@@ -27,6 +27,17 @@ While diagnosing, do not alter the failing mechanism or erase evidence just to m
 
 After a confirmed in-scope fix, test the exact reported behavior through the relevant runtime or a direct requirement-covering fixture, and check analogous affected paths. A source edit, successful hook unit test or changed metric does not alone prove live behavior. Distinguish causal evidence, fixture coverage and runtime verification; state material gaps rather than claiming resolution. Preserve unrelated work and commit logical owned fixes according to project policy. Diagnosis-only requests end with findings, not implementation.
 
+## Challenge before reporting
+
+Before presenting a diagnosis, a remedy plan or a claim that an incident is resolved, have a fresh subagent that did not write the draft attack it. Give it the user's report, the evidence collected so far (commands, outputs, paths, timestamps) and the draft, but not your reasoning. Ask it to:
+
+- mark each claim as observed, citing the evidence, or inferred;
+- name the cheapest safe check that would discriminate between the draft's explanation and the strongest alternative, and say whether it was run;
+- find any earlier fix for the same symptom and say why it did not hold;
+- say what in the user's report the draft leaves unexplained.
+
+Run the checks it names that are safe, revise, and challenge the revision. Stop when a round raises nothing new, or after three rounds. Present only claims that survived, and list what remains unverified. Where the runtime has no subagents, use `request-review` for the challenge instead.
+
 ## Diagnostic communication
 
 When a diagnosis uses overloaded local tooling labels, define the concrete artifact in plain language before relying on the label: e.g. a Markdown skill file, plugin bundle, agent-skill helper, Emacs package, command wrapper, or hook script. Do this only when ambiguity could affect the explanation; do not define ordinary unambiguous terms.

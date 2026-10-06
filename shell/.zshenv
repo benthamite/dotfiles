@@ -52,6 +52,13 @@ op() {
 	"$DOTFILES/shell/shims/op" "$@"
 }
 
+# Epoch workspace split (2026-10-06): shared project notes live in the
+# epoch-research/ai-enablement checkout; Pablo's private Epoch notes stay in
+# ~/My Drive/Epoch. Epoch tooling reads these instead of assuming one tree.
+export EPOCH_WORKSPACE="$HOME/repos/epoch/ai-enablement"
+export EPOCH_WORKSPACE_REPO="epoch-research/ai-enablement"
+export EPOCH_PRIVATE_ROOT="$HOME/My Drive/Epoch"
+
 # Essential environment variables
 export EDITOR="emacsclient -nw"
 export VISUAL="$EDITOR"

@@ -571,6 +571,50 @@ class CopySlackDraftTest(unittest.TestCase):
                 self.assertEqual(run.call_args.kwargs["timeout"], 65)
                 self.assertEqual(run.call_args.args[0][1:5], ["--socket-name", "/tmp/explicit-socket", "--alternate-editor", "false"])
 
+    def eval_failure(self, message):
+        # The shape emacsclient actually prints (it pretty-prints the list).
+        output = f"(draft-stage-failed\n {json.dumps(message)})\n"
+        with mock.patch.object(self.mod.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, output, "")):
+            self.mod.run_emacs_eval("(ignore)", "/tmp/socket")
+
+    def test_own_failure_reasons_are_reported_and_others_withheld(self):
+        with self.assertRaises(self.mod.Refused) as refused:
+            self.eval_failure("Slack reply input in *slack-thread: x* already contains unsent text")
+        self.assertIn("already contains unsent text", str(refused.exception))
+        with self.assertRaises(self.mod.UncertainResult) as own:
+            self.eval_failure('Slack failed to fetch reply target 1.2 in C1: "ratelimited"')
+        self.assertEqual(own.exception.reason, 'Slack failed to fetch reply target 1.2 in C1: "ratelimited"')
+        with self.assertRaises(self.mod.UncertainResult) as other:
+            self.eval_failure("Wrong type argument: PRIVATE DRAFT")
+        self.assertNotIn("PRIVATE", other.exception.reason)
+
+    def test_real_emacs_error_reaches_the_caller(self):
+        # Exercise the actual wrapper and printer, not a hand-written reply.
+        expression = None
+        with mock.patch.object(self.mod.subprocess, "run", side_effect=lambda argv, **_: subprocess.CompletedProcess(argv, 0, "", "")) as run:
+            with self.assertRaises(self.mod.UncertainResult):
+                self.mod.run_emacs_eval('(error "Target was not selected")', "/tmp/socket")
+            expression = run.call_args.args[0][-1]
+        printed = subprocess.run(["emacs", "-Q", "--batch", "--eval", f"(prin1 {expression})"],
+                                 capture_output=True, text=True, timeout=10).stdout
+        with mock.patch.object(self.mod.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, printed, "")):
+            with self.assertRaises(self.mod.UncertainResult) as caught:
+                self.mod.run_emacs_eval("(ignore)", "/tmp/socket")
+        self.assertEqual(caught.exception.reason, "Target was not selected")
+
+    def test_main_reports_refusal_with_reason(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "draft"
+            path.write_text("draft")
+            path.chmod(0o600)
+            refusal = self.mod.Refused("Slack message input in x already contains unsent text")
+            with mock.patch.object(sys, "argv", ["copy", "--socket", "/tmp/socket", "--file", str(path), "--channel", "C12345678"]), mock.patch.object(self.mod, "validate_socket", return_value="/tmp/socket"), mock.patch.object(self.mod, "prefill_channel_message", side_effect=refusal), mock.patch.object(self.mod, "copy_to_kill_ring") as ring, mock.patch("sys.stdout", new_callable=io.StringIO) as output:
+                self.assertEqual(self.mod.main(), 1)
+                ring.assert_not_called()
+        result = json.loads(output.getvalue())
+        self.assertEqual((result["status"], result["stage"]), ("refused", "composer"))
+        self.assertIn("already contains unsent text", result["reason"])
+
     def test_private_snapshot_preserves_bytes_and_freezes_source(self):
         original_mkdtemp = tempfile.mkdtemp
         with tempfile.TemporaryDirectory() as directory:

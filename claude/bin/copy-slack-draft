@@ -21,9 +21,30 @@ sys.dont_write_bytecode = True  # keep __pycache__ out of the Drive-synced tree
 class UncertainResult(RuntimeError):
     """The client did not prove whether the operation changed Emacs."""
 
+    def __init__(self, message: str = "", reason: str | None = None):
+        super().__init__(message)
+        self.reason = reason
+
+
+class Refused(RuntimeError):
+    """The composer holds text this helper did not stage; nothing was changed."""
+
+
+# Only the helper's own error messages are reported back: they name targets
+# and buffers, never draft text. Any other Emacs error is withheld, because
+# its message could quote composer contents.
+OWN_ERROR = re.compile(
+    r"(Staging rejected|slack-[\w-]+ is not available|Could not resolve Slack permalink"
+    r"|No registered Slack team|Epoch Slack |Slack |Linked message was not verified"
+    r"|Target was not selected|Composer |Timed out waiting for Slack reply target)"
+)
+# emacsclient pretty-prints, so the message may start on its own line.
+FAILURE = re.compile(r'\(draft-stage-failed\s+"((?:[^"\\]|\\.)*)"\)', re.S)
+
 
 def run_emacs_eval(expr: str, socket: str) -> str:
-    expr = f"(let ((debug-on-error nil)) (condition-case nil {expr} (error 'draft-stage-failed)))"
+    expr = ("(let ((debug-on-error nil)) (condition-case err " + expr
+            + " (error (list 'draft-stage-failed (error-message-string err)))))")
     try:
         result = subprocess.run(
             ["emacsclient", "--socket-name", socket,
@@ -37,6 +58,13 @@ def run_emacs_eval(expr: str, socket: str) -> str:
     except OSError:
         raise RuntimeError("Emacs client failed") from None
     out = (result.stdout or "").strip()
+    failure = FAILURE.fullmatch(out) if result.returncode == 0 else None
+    if failure:
+        message = re.sub(r"\\(.)", r"\1", failure.group(1))
+        if "already contains unsent text" in message:
+            raise Refused(message)
+        reason = message if OWN_ERROR.match(message) else "unrecognised Emacs error (message withheld)"
+        raise UncertainResult("Emacs staging failed", reason)
     if result.returncode != 0 or out not in {
         "draft-ring-staged", "draft-composer-staged", "draft-opened"
     }:
@@ -570,10 +598,16 @@ def main() -> int:
         result["status"] = "ok"
         result["stage"] = "complete"
         return 0
-    except (TimeoutError, KeyboardInterrupt, UncertainResult):
-        result["status"] = "uncertain"
+    except Refused as refusal:
+        result.update(status="refused", reason=str(refusal))
         return 1
-    except (OSError, UnicodeError, ValueError, RuntimeError):
+    except (TimeoutError, KeyboardInterrupt, UncertainResult) as error:
+        result["status"] = "uncertain"
+        if getattr(error, "reason", None):
+            result["reason"] = error.reason
+        return 1
+    except (OSError, UnicodeError, ValueError, RuntimeError) as error:
+        result["reason"] = str(error)
         return 1
     finally:
         print(json.dumps(result, sort_keys=True))

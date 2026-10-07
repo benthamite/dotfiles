@@ -9433,6 +9433,34 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (monet-mode 1)
   (claude-code-mode)
 
+  ;; The Epoch notes live in two repositories: the shared workspace
+  ;; (`paths-dir-epoch-workspace') and my private notes (`paths-dir-epoch').
+  ;; A session started in one gets the other through `--add-dir', which makes
+  ;; Claude Code load its `.claude/skills' (its CLAUDE.md is not loaded), so
+  ;; meeting and workspace skills stay available on both sides.
+  (defun pablo/claude-code-epoch-add-dir-switches (dir)
+    "Return `--add-dir' switches giving a session in DIR the other Epoch root."
+    (let ((workspace (expand-file-name paths-dir-epoch-workspace))
+          (private (expand-file-name paths-dir-epoch))
+          (dir (and dir (file-name-as-directory (expand-file-name dir)))))
+      (cond ((null dir) nil)
+            ((string-prefix-p workspace dir) (list "--add-dir" private))
+            ((string-prefix-p private dir) (list "--add-dir" workspace)))))
+
+  (defun pablo/claude-code-start-with-epoch-roots (start arg extra-switches &rest rest)
+    "Call START with ARG, EXTRA-SWITCHES and REST, adding the other Epoch root.
+A double prefix ARG prompts for the directory inside START, so it is left alone."
+    (apply start arg
+           (if (equal arg '(16))
+               extra-switches
+             ;; First, because `--add-dir' is variadic and would swallow a
+             ;; following positional argument.
+             (append (pablo/claude-code-epoch-add-dir-switches (claude-code--directory))
+                     extra-switches))
+           rest))
+
+  (advice-add 'claude-code--start :around #'pablo/claude-code-start-with-epoch-roots)
+
   :bind
   ("H-E" . claude-code-transient)
   (:repeat-map my-claude-code-map

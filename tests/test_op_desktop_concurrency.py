@@ -226,6 +226,34 @@ class DesktopConcurrencyTest(unittest.TestCase):
             self.assertIs(self.mod.connect_or_start(), sentinel)
         spawn.assert_called_once_with()
 
+    def test_hung_child_is_killed_reported_and_restarts_broker(self):
+        timeout = subprocess.TimeoutExpired(["op"], self.mod.CHILD_TIMEOUT_SECONDS)
+        with patch.object(self.mod.subprocess, "run", side_effect=timeout) as run, \
+             patch.object(self.mod.os, "kill") as kill:
+            client, server = self.pair()
+            worker = threading.Thread(target=self.mod.handle_connection, args=(server, 0))
+            worker.start()
+            self.threads.append(worker)
+            self.assertEqual(self.mod.recv_json(client), {"ready": True})
+            self.mod.send_json(client, {"argv": ["vault", "list"]})
+            reply = self.mod.recv_json(client)
+            worker.join(2)
+        self.assertEqual(run.call_args.kwargs["timeout"], self.mod.CHILD_TIMEOUT_SECONDS)
+        self.assertEqual(reply["rc"], 124)
+        self.assertIn("Touch ID", reply["err"])
+        self.assertNotIn("restart", reply)
+        kill.assert_called_once_with(os.getpid(), self.mod.signal.SIGTERM)
+
+    def test_op_run_children_are_not_time_limited(self):
+        done = subprocess.CompletedProcess([], 0, b"", b"")
+        with patch.object(self.mod.subprocess, "run", return_value=done) as run:
+            self.mod.execute_request({"argv": ["--account", "x", "run", "--", "prog", "read"]}, 0)
+            self.assertNotIn("timeout", run.call_args.kwargs)
+            self.mod.execute_request({"argv": ["--account", "x", "read", "op://v/i/f"]}, 0)
+            self.assertEqual(run.call_args.kwargs["timeout"], self.mod.CHILD_TIMEOUT_SECONDS)
+            self.mod.execute_request({"argv": ["read", "--", "run"]}, 0)
+            self.assertEqual(run.call_args.kwargs["timeout"], self.mod.CHILD_TIMEOUT_SECONDS)
+
 
 if __name__ == "__main__":
     unittest.main()

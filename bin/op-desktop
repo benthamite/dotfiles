@@ -76,6 +76,14 @@ MAX_STDIN_BYTES = 16 * 1024 * 1024
 MAX_ACTIVE_REQUESTS = 16
 REQUEST_IO_TIMEOUT_SECONDS = 10
 
+# A CLI child that gives no result in this long is waiting on a desktop
+# authorization that will never arrive: on 2026-10-07 a stale session left
+# every child hung, silently, for 11 hours, with no Touch ID prompt shown.
+# The child is killed and the broker restarts so the next command gets a
+# fresh authorization. `op run` hosts long-lived programs and is exempt.
+CHILD_TIMEOUT_SECONDS = 180
+UNBOUNDED_SUBCOMMANDS = {"run"}
+
 # Run the real binary by absolute path. `shell/shims/op` routes bare `op` here,
 # so resolving "op" through PATH would make the broker re-enter its own shim and
 # recurse. The first existing path wins; the list matches the shim's own.
@@ -220,11 +228,29 @@ def execute_request(request: dict, slave_fd: int) -> dict:
             run_options["stdin"] = slave_fd
         else:
             run_options["input"] = child_input
+        # Global flags take values (`--account X`), so look for the
+        # subcommand anywhere before the child program's `--`.
+        own_args = argv[:argv.index("--")] if "--" in argv else argv
+        if not UNBOUNDED_SUBCOMMANDS.intersection(own_args):
+            run_options["timeout"] = CHILD_TIMEOUT_SECONDS
         completed = subprocess.run([OP_BINARY, *argv], **run_options)
         payload = {
             "rc": completed.returncode,
             "out": completed.stdout.decode("utf-8", "replace"),
             "err": completed.stderr.decode("utf-8", "replace"),
+        }
+    except subprocess.TimeoutExpired:
+        log(f"  no result in {CHILD_TIMEOUT_SECONDS}s; child killed, broker restarting")
+        return {
+            "rc": 124,
+            "out": "",
+            "err": (
+                f"op-desktop: `op {' '.join(argv[:2])}` gave no result in "
+                f"{CHILD_TIMEOUT_SECONDS}s, so 1Password's authorization for this "
+                "session is stuck. The broker is restarting; rerun the command "
+                "and expect one Touch ID prompt.\n"
+            ),
+            "restart": True,
         }
     except FileNotFoundError:
         payload = {"rc": 127, "out": "", "err": "op-desktop: `op` not found\n"}
@@ -255,10 +281,15 @@ def handle_connection(conn: socket.socket, slave_fd: int) -> None:
         else:
             # Socket timeouts do not limit the CLI child's lifetime.
             payload = execute_request(request, slave_fd)
+        restart = payload.pop("restart", False)
         try:
             send_json(conn, payload)
         except OSError:
             pass
+        if restart:
+            # The lifetime lock is held until exit, so a replacement broker
+            # can only start once this one is gone.
+            os.kill(os.getpid(), signal.SIGTERM)
 
 
 class BrokerRequests:

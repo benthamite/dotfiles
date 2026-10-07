@@ -371,6 +371,7 @@
 
 {:des "q-mode (apps)"
  :rules [:q-mode
+         [:b [:chrome-profile "Profile 11" "baish.com.ar"]]
          [:c [:op "/Applications/Codex.app"]]
          [:d [:op "/System/Library/CoreServices/Finder.app"]]
          [:e [:op "/Applications/Emacs.app"]]

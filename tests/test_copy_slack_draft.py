@@ -1,3 +1,4 @@
+import hashlib
 import importlib.machinery
 import importlib.util
 import io
@@ -35,18 +36,27 @@ def load_module():
     return module
 
 
+def sha(text):
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
 class CopySlackDraftTest(unittest.TestCase):
     def setUp(self):
         self.mod = load_module()
+        state = tempfile.TemporaryDirectory()
+        self.addCleanup(state.cleanup)
+        env = mock.patch.dict(os.environ, {"XDG_STATE_HOME": state.name})
+        env.start()
+        self.addCleanup(env.stop)
 
-    def capture_prefill_expression(self, permalink, draft_path):
+    def capture_prefill_expression(self, permalink, draft_path, previous=None):
         captured = []
         with mock.patch.object(
             self.mod,
             "run_emacs_eval",
             side_effect=lambda expr, socket: captured.append(expr) or '"captured"',
         ):
-            self.mod.prefill_slack_reply(permalink, draft_path, '/tmp/synthetic-socket')
+            self.mod.prefill_slack_reply(permalink, draft_path, '/tmp/synthetic-socket', previous)
         self.assertEqual(len(captured), 1)
         return captured[0]
 
@@ -65,6 +75,7 @@ class CopySlackDraftTest(unittest.TestCase):
         disconnected=False,
         missing_linked_message=False,
         replace_during_display=False,
+        previous=None,
     ):
         draft = "First line\nSecond line\n"
         target_ts = thread_ts or MESSAGE_TS
@@ -72,7 +83,7 @@ class CopySlackDraftTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             draft_path = pathlib.Path(temp_dir) / "draft.txt"
             draft_path.write_text(draft)
-            expression = self.capture_prefill_expression(permalink, None if open_only else draft_path)
+            expression = self.capture_prefill_expression(permalink, None if open_only else draft_path, previous)
             thread_ts_form = "nil" if thread_ts is None else json.dumps(thread_ts)
             corrupt_hook = ""
             if corrupt_target_after_insert:
@@ -349,6 +360,28 @@ class CopySlackDraftTest(unittest.TestCase):
         self.assert_unchanged_on_failure(payload, target="TARGET UNSENT")
         self.assertIn("already contains unsent text", payload["failure"])
 
+    def test_replaces_text_this_helper_staged_earlier(self):
+        draft, payload = self.evaluate_prefill(
+            THREAD_PERMALINK,
+            thread_ts=THREAD_TS,
+            target_input="OLD DRAFT ñ",
+            previous=sha("OLD DRAFT ñ"),
+        )
+
+        self.assertIsNone(payload["failure"])
+        self.assertEqual(payload["target"], draft)
+
+    def test_edited_staged_text_is_not_replaced(self):
+        payload = self.evaluate_prefill(
+            THREAD_PERMALINK,
+            thread_ts=THREAD_TS,
+            target_input="OLD DRAFT, edited",
+            previous=sha("OLD DRAFT"),
+        )[1]
+
+        self.assert_unchanged_on_failure(payload, target="OLD DRAFT, edited")
+        self.assertIn("already contains unsent text", payload["failure"])
+
     def test_corrupt_insertion_is_rejected_and_rolled_back(self):
         payload = self.evaluate_prefill(
             THREAD_PERMALINK,
@@ -456,13 +489,13 @@ class CopySlackDraftTest(unittest.TestCase):
                     self.assertEqual(output[1:3], [None, None])
                     self.assertEqual(output[3], "OLD" if reject else "Draft 😀\r\n")
 
-    def channel(self, *, existing="", corrupt=False, open_only=False, display_change=False):
+    def channel(self, *, existing="", corrupt=False, open_only=False, display_change=False, previous=None):
         with tempfile.TemporaryDirectory() as directory:
             path = pathlib.Path(directory) / "draft"
             path.write_text("DRAFT")
             captured = []
             with mock.patch.object(self.mod, "run_emacs_eval", side_effect=lambda e, s: captured.append(e) or "draft-composer-staged"):
-                self.mod.prefill_channel_message("C12345678", None if open_only else path, "/tmp/socket")
+                self.mod.prefill_channel_message("C12345678", None if open_only else path, "/tmp/socket", previous)
             display_snippet = '(erase-buffer) (insert "NEW USER INPUT")' if display_change else ""
             corrupt_snippet = ""
             if corrupt:
@@ -495,6 +528,30 @@ class CopySlackDraftTest(unittest.TestCase):
         self.assertEqual(self.channel(), ["draft-composer-staged", None, "DRAFT"])
         self.assertEqual(self.channel(existing="DRAFT"), ["draft-composer-staged", None, "DRAFT"])
         self.assertEqual(self.channel(existing="UNSENT"), [None, True, "UNSENT"])
+
+    def test_channel_replaces_only_its_own_earlier_draft(self):
+        self.assertEqual(self.channel(existing="OLD", previous=sha("OLD")), ["draft-composer-staged", None, "DRAFT"])
+        self.assertEqual(self.channel(existing="OLD!", previous=sha("OLD")), [None, True, "OLD!"])
+        self.assertEqual(self.channel(existing="OLD", previous=sha("OLD"), corrupt=True), [None, True, "OLD"])
+
+    def test_main_passes_hash_of_previous_draft_for_same_thread(self):
+        seen = []
+
+        def fake_stage(target, snapshot, socket, previous):
+            seen.append(previous)
+            return "draft-composer-staged"
+
+        # The first link is the root message, the second a reply in its
+        # thread: both name the same composer.
+        root = "https://epochai.slack.com/archives/C12345678/p1710000000000000"
+        with tempfile.TemporaryDirectory() as directory:
+            for permalink, text in ((root, "first"), (THREAD_PERMALINK, "second"), (root, "third")):
+                path = pathlib.Path(directory) / "draft"
+                path.write_text(text)
+                path.chmod(0o600)
+                with mock.patch.object(sys, "argv", ["copy", "--socket", "/tmp/socket", "--file", str(path), "--permalink", permalink]), mock.patch.object(self.mod, "validate_socket", return_value="/tmp/socket"), mock.patch.object(self.mod, "prefill_slack_reply", side_effect=fake_stage), mock.patch.object(self.mod, "copy_to_kill_ring"), mock.patch("sys.stdout", new_callable=io.StringIO):
+                    self.assertEqual(self.mod.main(), 0)
+        self.assertEqual(seen, [None, sha("first"), sha("second")])
 
     def test_channel_corruption_rolls_back(self):
         self.assertEqual(self.channel(corrupt=True), [None, True, ""])
@@ -588,12 +645,14 @@ class CopySlackDraftTest(unittest.TestCase):
             self.assertEqual(self.mod.main(), 0)
             snapshot.assert_not_called()
             ring.assert_not_called()
-            stage.assert_called_once_with("C12345678", None, "/tmp/socket")
+            stage.assert_called_once_with("C12345678", None, "/tmp/socket", None)
             self.assertFalse(json.loads(output.getvalue())["composer"])
 
     def test_composer_success_ring_failure_is_partial(self):
         from contextlib import nullcontext
-        with mock.patch.object(sys, "argv", ["copy", "--socket", "/tmp/socket", "--channel", "C12345678", "--file", "/synthetic"]), mock.patch.object(self.mod, "validate_socket", return_value="/tmp/socket"), mock.patch.object(self.mod, "draft_snapshot", return_value=nullcontext(pathlib.Path("/snapshot"))), mock.patch.object(self.mod, "prefill_channel_message", return_value="draft-composer-staged"), mock.patch.object(self.mod, "copy_to_kill_ring", side_effect=self.mod.UncertainResult()), mock.patch("sys.stdout", new_callable=io.StringIO) as output:
+        snapshot = tempfile.NamedTemporaryFile()
+        self.addCleanup(snapshot.close)
+        with mock.patch.object(sys, "argv", ["copy", "--socket", "/tmp/socket", "--channel", "C12345678", "--file", "/synthetic"]), mock.patch.object(self.mod, "validate_socket", return_value="/tmp/socket"), mock.patch.object(self.mod, "draft_snapshot", return_value=nullcontext(pathlib.Path(snapshot.name))), mock.patch.object(self.mod, "prefill_channel_message", return_value="draft-composer-staged"), mock.patch.object(self.mod, "copy_to_kill_ring", side_effect=self.mod.UncertainResult()), mock.patch("sys.stdout", new_callable=io.StringIO) as output:
             self.assertEqual(self.mod.main(), 1)
             result = json.loads(output.getvalue())
             self.assertTrue(result["composer"])
@@ -620,7 +679,7 @@ class CopySlackDraftTest(unittest.TestCase):
         stdin.buffer = io.BytesIO(b"draft\n")
         seen = []
 
-        def fake_stage(channel, snapshot, socket):
+        def fake_stage(channel, snapshot, socket, previous):
             seen.append((channel, snapshot.read_bytes(), socket))
             return "draft-composer-staged"
 

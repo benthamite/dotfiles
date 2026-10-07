@@ -3,6 +3,7 @@
 
 import argparse
 import contextlib
+import hashlib
 import importlib.util
 import json
 import os
@@ -74,6 +75,46 @@ def copy_to_kill_ring(path: Path, socket: str) -> None:
         raise UncertainResult("Kill-ring staging was not acknowledged")
 
 
+def state_dir() -> Path:
+    base = os.environ.get("XDG_STATE_HOME") or str(Path.home() / ".local" / "state")
+    return Path(base) / "copy-slack-draft"
+
+
+def destination_key(permalink: str | None, channel: str | None) -> str:
+    """Name a composer: a thread (channel + root ts) or a channel's main input."""
+    if permalink:
+        info = permalink_info(permalink)
+        return f"{info['channel']}/{info['thread_ts'] or info['message_ts']}"
+    return f"{channel}/"
+
+
+def staged_hash_path(key: str) -> Path:
+    return state_dir() / hashlib.sha256(key.encode()).hexdigest()
+
+
+def read_staged_hash(key: str) -> str | None:
+    """Hash of the draft this helper last staged for KEY, if any."""
+    try:
+        value = staged_hash_path(key).read_text().strip()
+    except OSError:
+        return None
+    return value if re.fullmatch(r"[0-9a-f]{64}", value) else None
+
+
+def record_staged_hash(key: str, raw: bytes) -> None:
+    directory = state_dir()
+    directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+    target = staged_hash_path(key)
+    descriptor, temporary = tempfile.mkstemp(dir=directory)
+    with os.fdopen(descriptor, "w") as output:
+        output.write(hashlib.sha256(raw).hexdigest())
+    os.replace(temporary, target)
+
+
+def previous_form(previous: str | None) -> str:
+    return elisp_string(previous) if previous else "nil"
+
+
 def permalink_info(permalink: str) -> dict:
     spec = importlib.util.spec_from_file_location("draft_slack_parser", Path(__file__).with_name("slack.py"))
     module = importlib.util.module_from_spec(spec)
@@ -100,7 +141,8 @@ def composer_expression(expr: str) -> str:
     """ + expr.replace("(atomic-change-group", "(draft-atomic") + "))"
 
 
-def prefill_slack_reply(permalink: str, path: Path | None, socket: str) -> str:
+def prefill_slack_reply(permalink: str, path: Path | None, socket: str,
+                        previous: str | None = None) -> str:
     info = permalink_info(permalink)
     expr = f"""
 (progn
@@ -125,6 +167,9 @@ def prefill_slack_reply(permalink: str, path: Path | None, socket: str) -> str:
          (ts (plist-get info :ts))
          (thread-ts (plist-get info :thread-ts))
          (target-ts (or thread-ts ts))
+         ;; SHA-256 of the draft this helper last staged here: such text may
+         ;; be replaced, anything else in the composer is the user's.
+         (previous {previous_form(previous)})
          (team (slack-team-find-by-domain team-domain)))
     (unless (and team-domain room-id ts)
       (error "Could not resolve Slack permalink: %s"
@@ -245,12 +290,16 @@ def prefill_slack_reply(permalink: str, path: Path | None, socket: str) -> str:
                                 (unless
                                     (or
                                      (string-empty-p existing)
-                                     (equal existing draft))
+                                     (equal existing draft)
+                                     (and previous
+                                          (equal (secure-hash 'sha256 (encode-coding-string existing 'utf-8 t))
+                                                 previous)))
                                   (error
                                    "Slack reply input in %s already contains unsent text"
                                    (buffer-name buf)))
                                 (atomic-change-group
                                       (unless (equal existing draft)
+                                        (delete-region lui-input-marker (point-max))
                                         (goto-char lui-input-marker)
                                         (insert draft))
                                       (let ((staged
@@ -295,7 +344,8 @@ def prefill_slack_reply(permalink: str, path: Path | None, socket: str) -> str:
     return run_emacs_eval(composer_expression(expr), socket)
 
 
-def prefill_channel_message(channel: str, path: Path | None, socket: str) -> str:
+def prefill_channel_message(channel: str, path: Path | None, socket: str,
+                            previous: str | None = None) -> str:
     """Open the exact loaded Epoch room; stage PATH unless this is open-only."""
     expr = f"""
 (progn
@@ -307,6 +357,7 @@ def prefill_channel_message(channel: str, path: Path | None, socket: str) -> str
   (unless (fboundp 'slack-create-message-buffer)
     (error "slack-create-message-buffer is not available"))
   (let* ((channel-id {elisp_string(channel)})
+         (previous {previous_form(previous)})
          (team (or (slack-team-find-by-domain "epochai")
                    (error "Epoch Slack team is not registered")))
          (room (slack-room-find channel-id team)))
@@ -331,11 +382,15 @@ def prefill_channel_message(channel: str, path: Path | None, socket: str) -> str
           (error "Slack message input is not available in %s" (buffer-name buf)))
         (let ((existing (buffer-substring-no-properties
                          lui-input-marker (point-max))))
-          (unless (or (string-empty-p existing) (equal existing draft))
+          (unless (or (string-empty-p existing) (equal existing draft)
+                      (and previous
+                           (equal (secure-hash 'sha256 (encode-coding-string existing 'utf-8 t))
+                                  previous)))
             (error "Slack message input in %s already contains unsent text"
                    (buffer-name buf)))
           (atomic-change-group
             (unless (equal existing draft)
+              (delete-region lui-input-marker (point-max))
               (goto-char lui-input-marker)
               (insert draft))
             (unless (equal draft (buffer-substring-no-properties
@@ -499,11 +554,15 @@ def main() -> int:
             if not args.no_open:
                 result["stage"] = "open" if args.open_only else "composer"
                 stage = prefill_channel_message if args.channel else prefill_slack_reply
-                ack = stage(args.channel or args.permalink, snapshot, socket)
+                key = destination_key(args.permalink, args.channel)
+                previous = None if args.open_only else read_staged_hash(key)
+                ack = stage(args.channel or args.permalink, snapshot, socket, previous)
                 expected = "draft-opened" if args.open_only else "draft-composer-staged"
                 if ack != expected:
                     raise UncertainResult("Composer staging was not acknowledged")
                 result.update(opened=True, composer=not args.open_only)
+                if not args.open_only:
+                    record_staged_hash(key, snapshot.read_bytes())
             if not args.open_only:
                 result["stage"] = "ring"
                 copy_to_kill_ring(snapshot, socket)

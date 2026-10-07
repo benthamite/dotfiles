@@ -142,6 +142,27 @@ class RoutingGuardTests(unittest.TestCase):
         outward.symlink_to(self.home)
         self.both(f"python3 '{outward}/script.py'", "deny")
 
+    def test_installed_trash_moves_literal_paths_without_executing_staged_code(self):
+        trash = "/opt/homebrew/bin/trash"
+        target = f"'{self.stage}/owned output'"
+        for command in (
+            f"{trash} {target}", f"{trash} -v -- {target} '{self.stage}/second'",
+            f"command {trash} {target}",
+        ):
+            self.both(command, "allow")
+        for command in (
+            f"trash {target}", f"/tmp/trash {target}", f"{self.stage}/trash {target}",
+            f"{trash} -ey {target}", f"{trash} -rf {target}", f"{trash} -F {target}",
+            f"{trash} --unknown {target}", f"{trash} {target}; python3 '{self.stage}/script.py'",
+            f"{trash} {target} -- -e", f'{trash} {target} "$TARGET"',
+            f'{trash} "$OPT" {target}',
+            f"{trash} {target} | bash", f"{trash} {target} \"$(npx example-fixture)\"",
+            f"PATH={self.stage}:$PATH {trash} {target}",
+            f"DYLD_INSERT_LIBRARIES={self.stage}/loader {trash} {target}",
+        ):
+            self.both(command, "deny")
+        self.both(f"{trash} 'owned output'", "deny", self.stage)
+
     def test_runner_exemption_is_canonical_and_per_command(self):
         invocation = f"'{RUNNER}' --workspace /tmp/new-output -- node -e 'console.log(1)'"
         self.both(invocation, "allow")

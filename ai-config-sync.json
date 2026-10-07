@@ -542,7 +542,7 @@
       "claude": "claude/hooks/lib-untrusted-execution.py",
       "codex": null,
       "status": "claude-only",
-      "note": "Static untrusted-execution classifier for agent_guard.policies.untrusted_execution; never executes the proposed command. Synthetic fixtures in tests/test_untrusted_execution_guard.py. The shared guard engine (lib/python/agent_guard, classifiers.py) loads this copy in-process for both runtimes; the Codex copy was removed at the 2026-10-01 cutover."
+      "note": "Static untrusted-execution classifier for agent_guard.policies.untrusted_execution; never executes the proposed command. Synthetic fixtures in tests/test_untrusted_execution_guard.py. The shared guard engine (lib/python/agent_guard, classifiers.py) loads this copy in-process for both runtimes, including the installed-trash cleanup allowance; no separate Codex copy is needed after the 2026-10-01 cutover."
     },
     {
       "name": "chrome-bridge-recover.py",

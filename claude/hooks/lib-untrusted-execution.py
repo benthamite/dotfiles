@@ -46,6 +46,31 @@ INTERPRETERS = SHELLS | {"node", "nodejs", "ruby", "perl", "source", ".", "eval"
 CODE_ENV = {"PATH", "PYTHONPATH", "NODE_PATH", "NODE_OPTIONS", "BASH_ENV", "ENV", "LD_PRELOAD", "DYLD_INSERT_LIBRARIES"}
 
 
+def staging_cleanup(head, arguments):
+    """The installed trash utility moves literal operands without running them.
+
+    Do not accept a basename: PATH or a wrapper could select unrelated code.
+    Restrict options to the ordinary move operation, excluding empty-trash
+    modes and the utility's silently accepted rm options.
+    """
+    if head.text != "/opt/homebrew/bin/trash" or head.expands:
+        return False
+    operands = 0
+    options = True
+    for word in arguments:
+        if word.expands:
+            return False
+        if options and word.text == "--":
+            options = False
+        elif options and word.text == "-v":
+            continue
+        elif word.text.startswith("/"):
+            operands += 1
+        else:
+            return False
+    return operands > 0
+
+
 class Denied(Exception):
     """A fixed diagnostic, never the command or values supplied by the caller."""
 
@@ -366,9 +391,10 @@ def classify(source: str, cwd: Path, depth=0):
                                   for redirect in simple.redirects)
             at_staging = staged(str(invocation_dir), invocation_dir)
             safe_reader = base in READERS and not any(word.text == "--pre" or word.text.startswith("--pre=") for word in arguments)
+            safe_cleanup = staging_cleanup(head, arguments)
             explicit_executable = "/" in head.text or head.text.startswith(".")
             if ((explicit_executable and staged(head.text, invocation_dir))
-                    or ((at_staging or staged_args) and not safe_reader)):
+                    or ((at_staging or staged_args) and not (safe_reader or safe_cleanup))):
                 raise Denied("host execution involving the untrusted staging directory requires isolation")
             downloaded = downloaded or base in {"curl", "wget"}
             staged_input = staged_input or staged_args or staged_redirect or (at_staging and bool(arguments))

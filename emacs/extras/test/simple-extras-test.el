@@ -1000,6 +1000,22 @@ way back to the contents of one killed by accident."
             (should-not (plist-get state :debugger))))
       (delete-directory dir t))))
 
+(ert-deftest simple-extras-test-server-write-state-records-gc ()
+  "Write the garbage-collection count, time and threshold."
+  (let* ((dir (make-temp-file "sx-state" t))
+         (simple-extras-server-state-file (expand-file-name "state.json" dir))
+         (gc-cons-threshold 800000))
+    (unwind-protect
+        (progn
+          (simple-extras-server-write-state)
+          (let ((state (with-temp-buffer
+                         (insert-file-contents simple-extras-server-state-file)
+                         (json-parse-buffer :object-type 'plist))))
+            (should (equal (plist-get state :gcs_done) gcs-done))
+            (should (floatp (plist-get state :gc_elapsed)))
+            (should (equal (plist-get state :gc_cons_threshold) 800000))))
+      (delete-directory dir t))))
+
 ;; With `debug-on-error' set, an error in the timer would enter the
 ;; debugger and park the server whose state the file is meant to explain.
 (ert-deftest simple-extras-test-server-write-state-swallows-errors ()

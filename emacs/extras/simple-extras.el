@@ -1228,8 +1228,9 @@ it can report why without a working server to ask.")
   "Record the Emacs server's state in `simple-extras-server-state-file'.
 Every `simple-extras-server-state-interval' seconds, write the time,
 this Emacs's process ID, the recursion and minibuffer depths, any
-active minibuffer prompt and the head of an active debugger backtrace.
-Timers run inside the debugger's and the minibuffer's recursive edits,
+active minibuffer prompt, the head of an active debugger backtrace and
+the garbage-collection counters `gcs-done' and `gc-elapsed' with
+`gc-cons-threshold'.  Timers run inside the debugger's and the minibuffer's recursive edits,
 which park server requests, so the file names what holds the server.  A
 file that stops being updated means Emacs is blocked in Lisp or a
 subprocess instead."
@@ -1272,7 +1273,10 @@ state exists to explain."
         :recursion_depth (recursion-depth)
         :minibuffer_depth (minibuffer-depth)
         :prompt (or (minibuffer-prompt) :null)
-        :debugger (or (simple-extras--server-state-backtrace) :null)))
+        :debugger (or (simple-extras--server-state-backtrace) :null)
+        :gcs_done gcs-done
+        :gc_elapsed gc-elapsed
+        :gc_cons_threshold gc-cons-threshold))
 
 (defun simple-extras--server-state-backtrace ()
   "Return the first lines of an active debugger backtrace, or nil."

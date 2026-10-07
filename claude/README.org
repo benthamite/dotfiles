@@ -244,15 +244,6 @@ from the in-page viewer with a page script, attaching it to WhatsApp without the
 native file picker, deleting the PDF from Downloads once sent, and committing
 only the agent's own ledger hunk.
 
-The travel skills =find-flights=, =find-hotel= and =find-airbnb= hold only the
-search and booking procedure; Pablo's preferences live in his private notes
-(=flight-booking-profile.org= and =accommodation-booking-profile.org=), which
-each skill reads first, so this public repository carries no personal travel
-details. =find-flights= queries Google Flights through SerpApi with a script
-that reads its key from the personal 1Password =Automation= vault, and
-cross-checks Skyscanner in Chrome; the hotel and Airbnb skills work entirely in
-Chrome. All three stop before payment.
-
 The =org-note-conventions= skill applies only to personal notes. It distinguishes
 root-backed and rootless heading layouts, preserves established structure, and
 joins soft prose wrapping without removing intentional Org hard line breaks.

@@ -556,7 +556,7 @@
       "claude": "claude/hooks/redact-tool-output.py",
       "codex": "codex/hooks/redact-tool-output.py",
       "status": "paired",
-      "note": "Both mask tool output through redact-secrets.sh patterns and the known-value index (lib/python/secret_index.py), failing closed. Claude replaces the result via updatedToolOutput/updatedMCPToolOutput for every tool; Codex has no rewrite field, so it returns decision block with the masked output as the reason, for shell and MCP tools. Codex misses write_stdin chunks and error results."
+      "note": "Both share redact-secrets.sh and its lib/python/redact_numeric_credentials.py UUID-aware numeric filter; contextual patterns and actual-secret fingerprints still apply to UUIDs. Both mask tool output through the shared patterns and the known-value index (lib/python/secret_index.py), failing closed. Claude replaces the result via updatedToolOutput/updatedMCPToolOutput for every tool; Codex has no rewrite field, so it returns decision block with the masked output as the reason, for shell and MCP tools. Codex misses write_stdin chunks and error results."
     },
     {
       "name": "agent-guard.sh",

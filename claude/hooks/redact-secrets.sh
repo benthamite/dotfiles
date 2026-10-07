@@ -54,9 +54,9 @@ LC_ALL=C "$SED_BIN" -E --unbuffered \
   -e 's/AKIA[0-9A-Z]{16}/[AWS_ACCESS_KEY_REDACTED]/g' \
   -e 's/cf[a-z]t_[A-Za-z0-9_-]{30,}/[CLOUDFLARE_TOKEN_REDACTED]/g' \
   -e 's/(^|[^A-Za-z])s%3A[A-Za-z0-9._%-]{30,}/\1[SUBSTACK_SESSION_REDACTED]/g' \
-  -e 's/\b[0-9]{4}[ -]?[0-9]{4}[ -]?[0-9]{4}[ -]?[0-9]{4}\b/[16_DIGIT_NUMBER_REDACTED]/g' \
   -e 's/\b[0-9]{8,10}[:][A-Za-z0-9_-]{35}\b/[TELEGRAM_TOKEN_REDACTED]/g' \
   -e 's#(postgres(ql)?|mysql|mongodb)[:]/+[^[:space:]:@/]+[:][^[:space:]@/]+[@]#\1://[CRED_REDACTED]@#g' \
   -e 's/([Bb]earer|[Tt]oken)[[:space:]]+[A-Za-z0-9._/+=-]{30,}/\1 [REDACTED]/g' \
   -e 's/(Authorization|x-api-key)[[:space:]]*:[[:space:]]*[A-Za-z0-9._/+=-]{20,}/\1: [REDACTED]/gi' \
+  | python3 -B "$(dirname "$0")/../../lib/python/redact_numeric_credentials.py" \
   | "${INDEX_PASS[@]}"

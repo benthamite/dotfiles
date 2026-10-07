@@ -9,8 +9,10 @@ import importlib.util
 import json
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 HOOK = Path(__file__).resolve().parents[1] / "claude/hooks/redact-tool-output.py"
 spec = importlib.util.spec_from_file_location("redact_tool_output", HOOK)
@@ -21,6 +23,8 @@ CLOUDFLARE = "cf" + "ut_" + "Ab3" * 15
 MULLVAD = "5" + "1234567" * 2 + "8"  # 16 digits
 CLAUDE = "sk-" + "ant-" + "oat01-" + "Zx9_" * 20
 SUBSTACK = "s%" + "3A" + "Qw8." * 12
+# Public MusicBrainz recording: Carlos Gardel, El barbijo.
+MBID = '27311990-9142-4478-8766-f0fdea1caa40'
 
 
 def bash(stdout, stderr=""):
@@ -32,6 +36,13 @@ def mcp(text):
 
 
 class RedactToolOutputTest(unittest.TestCase):
+    def setUp(self):
+        import secret_index
+        # Synthetic indexes do not need account/repository/git discovery.
+        discovery = patch.object(secret_index, "public_strings", return_value=set())
+        discovery.start()
+        self.addCleanup(discovery.stop)
+
     def test_todays_leak_shapes_are_masked_in_bash_output(self):
         out = M.replacement(bash(f"mullvad.net/{MULLVAD} | Core | LOGIN\n{CLAUDE}\n", stderr=SUBSTACK))
         masked = out["updatedToolOutput"]
@@ -54,6 +65,42 @@ class RedactToolOutputTest(unittest.TestCase):
         self.assertIsNone(M.replacement(bash("redirect=https%3A%2F%2Fhingedaily.substack.com%2Fpublish%2Fsettings\n")))
         # Longer digit runs (tweet ids, timestamps) are not 16-digit numbers.
         self.assertIsNone(M.replacement(bash("x.com/a/status/1790549176458123456 at 1790549176458\n")))
+
+    def test_numeric_uuid_prefix_survives_both_output_hooks(self):
+        codex_spec = importlib.util.spec_from_file_location(
+            "codex_redact_tool_output", HOOK.parents[2] / "codex/hooks/redact-tool-output.py")
+        codex = importlib.util.module_from_spec(codex_spec)
+        codex_spec.loader.exec_module(codex)
+        for value in (MBID, MBID.upper()):
+            event = bash(json.dumps({"mbid": value}))
+            self.assertIsNone(M.replacement(event))
+            self.assertIsNone(codex.decision(event))
+        # UUIDs cannot hide an adjacent numeric credential or a contextual token.
+        for value in (MULLVAD, "-".join(["1234"] * 4), " ".join(["1234"] * 4), "é" + MULLVAD + "é"):
+            output = M.replacement(bash(f"{MBID} {value} {MBID}"))["updatedToolOutput"]["stdout"]
+            self.assertEqual(output.count(MBID), 2)
+            self.assertNotIn(value, output)
+            self.assertIn("[16_DIGIT_NUMBER_REDACTED]", output)
+        for value in ("Bearer " + MBID, "Authorization: " + MBID):
+            output = M.replacement(bash(value))["updatedToolOutput"]["stdout"]
+            self.assertNotIn(MBID, output)
+            self.assertIn("[REDACTED]", output)
+
+    def test_malformed_uuid_does_not_exempt_numeric_prefix(self):
+        for value in (MBID[:-1], MBID + "0", MBID[:-1] + "z", MBID + "-suffix"):
+            output = M.replacement(bash(value))["updatedToolOutput"]["stdout"]
+            self.assertIn("[16_DIGIT_NUMBER_REDACTED]", output)
+
+    def test_known_uuid_secret_is_still_masked(self):
+        import os
+        import secret_index
+        with tempfile.TemporaryDirectory() as directory:
+            key = os.urandom(32)
+            path = Path(directory, "index.json")
+            secret_index.write(secret_index.build_entries(key, [(MBID, "synthetic:uuid")]), {}, path)
+            with patch.dict(os.environ, {"SECRET_INDEX_PATH": str(path), "SECRET_INDEX_KEY_HEX": key.hex()}):
+                output = M.replacement(bash(MBID))["updatedToolOutput"]["stdout"]
+                self.assertEqual(output, secret_index.REDACTION)
 
     def test_images_pass_through(self):
         # An ordinary page: images stay (credential pages are tested in test_credential_pages).

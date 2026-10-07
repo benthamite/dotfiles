@@ -1226,7 +1226,10 @@ Chrome plugin and =control-chrome= skill, not the Claude in Chrome extension
 whose per-account profile that hook reopens.
 
 =redact-tool-output.py= (paired with Claude's) masks shell and MCP tool output
-through the same two layers (shape patterns and the known-value index). Codex
+through the same two layers (shape patterns and the known-value index).
+The shared numeric filter preserves complete UUID tokens while still masking
+standalone sixteen-digit numbers and malformed UUID lookalikes. Contextual
+credential patterns and known-secret fingerprints still apply to UUIDs. Codex
 has no field that rewrites a result, so when masking changes anything the hook
 returns =decision: "block"= with the masked output as the reason, which the
 model sees instead; images from credential pages are dropped the same way.

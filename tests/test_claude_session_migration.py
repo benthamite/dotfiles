@@ -418,12 +418,47 @@ class ClaudeSessionMigrationTests(unittest.TestCase):
             ([{"sessionId": OTHER_SID, "cwd": OLD}], [{"sessionId": SID, "project": OLD}]),
             ([{"cwd": OLD}], [{"sessionId": SID, "project": OLD}]),
             ([{"sessionId": SID}], []),
-            ([{"sessionId": SID, "cwd": OLD}], [{"sessionId": SID, "project": OTHER}]),
+            ([{"sessionId": SID, "cwd": OTHER}], [{"sessionId": SID, "project": OTHER}]),
         ):
             with self.subTest(rows=rows):
                 self.transcript.write_bytes(jsonl(*rows))
                 self.history.write_bytes(jsonl(*history))
                 self.assert_refused_without_changes("--rename", OLD, NEW)
+
+    def test_transcript_naming_the_exact_old_project_stands_against_other_history(self):
+        self.history.write_bytes(jsonl({"sessionId": SID, "project": OTHER, "display": "fixture"}))
+        result = self.apply("--rename", OLD, NEW)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(self.target.joinpath(f"{SID}.jsonl").read_text())["cwd"], NEW)
+        self.assertEqual(json.loads(self.history.read_text())["project"], OTHER)
+
+    def test_title_only_transcript_moves_with_its_bucket(self):
+        stub = self.source / f"{OTHER_SID}.jsonl"
+        raw = jsonl({"type": "custom-title", "sessionId": OTHER_SID, "customTitle": "fixture"},
+                    {"type": "agent-name", "sessionId": OTHER_SID, "agentName": "fixture"})
+        stub.write_bytes(raw)
+        result = self.apply("--rename", OLD, NEW)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((self.target / f"{OTHER_SID}.jsonl").read_bytes(), raw)
+
+    def test_workflow_agent_sidecars_are_rewritten_and_journals_stay_opaque(self):
+        run = self.source / SID / "subagents" / "workflows" / "wf_fixture-001"
+        run.mkdir(parents=True)
+        (run / "agent-afixture.jsonl").write_bytes(jsonl({"sessionId": SID, "agentId": "afixture", "cwd": OLD}))
+        (run / "agent-afixture.meta.json").write_bytes(b'{"agentType":"workflow"}')
+        journal = jsonl({"type": "started", "key": "v2:fixture", "agentId": "afixture"})
+        (run / "journal.jsonl").write_bytes(journal)
+        result = self.apply("--rename", OLD, NEW)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        moved = self.target / SID / "subagents" / "workflows" / "wf_fixture-001"
+        self.assertEqual(json.loads((moved / "agent-afixture.jsonl").read_text())["cwd"], NEW)
+        self.assertEqual((moved / "journal.jsonl").read_bytes(), journal)
+
+    def test_unexpected_workflow_jsonl_still_refuses(self):
+        run = self.source / SID / "subagents" / "workflows" / "wf_fixture-001"
+        run.mkdir(parents=True)
+        (run / "other.jsonl").write_bytes(jsonl({"sessionId": SID, "cwd": OLD}))
+        self.assert_refused_without_changes("--rename", OLD, NEW, reason="Unsupported sidecar JSONL path")
 
     def test_history_can_establish_origin_when_matching_transcript_has_no_cwd(self):
         self.transcript.write_bytes(jsonl({"sessionId": SID, "type": "summary"}))

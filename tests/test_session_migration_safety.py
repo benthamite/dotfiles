@@ -423,6 +423,11 @@ class MigrationSafetyTests(unittest.TestCase):
         process = b"p123\0\n"
         vanished = b"f3\0a \0nvnode: FD unavailable\0\n"
         self.mod._check_kernel_records(process + vanished, {(0x12, 34)})
+        # Descriptors above 999 print as "*" and their last three digits.
+        self.mod._check_kernel_records(process + vanished.replace(b"f3", b"f*123"), {(0x12, 34)})
+        for wide in (b"f*12", b"f*1234", b"f**123"):
+            with self.assertRaises(self.mod.MigrationError):
+                self.mod._check_kernel_records(process + vanished.replace(b"f3", wide), {(0x12, 34)})
         # Every Apple err2nm caller: a descriptor closed mid-scan is not a writer.
         for prefix in (b"socket", b"pipe", b"kqueue", b"semaphore", b"POSIX shared memory"):
             self.mod._check_kernel_records(process + vanished.replace(b"vnode", prefix), {(0x12, 34)})

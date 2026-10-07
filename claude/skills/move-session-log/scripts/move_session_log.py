@@ -190,7 +190,12 @@ def session_origin(rows: Rows, session_id: str, *, require_identity: bool) -> st
     return origin
 
 
-def establish_origin(rows: Rows, history: Rows, session_id: str, *, target: str | None = None) -> str:
+# Records Claude Code writes when a session is named before any conversation.
+TITLE_ONLY_TYPES = frozenset({"custom-title", "agent-name"})
+
+
+def establish_origin(rows: Rows, history: Rows, session_id: str, *, target: str | None = None,
+                     bucket_project: str | None = None) -> str:
     """TARGET is the project a migration is moving the session to.  History
     that already names it while the transcript still names the old project is a
     half-applied earlier migration (history rewritten, transcript restored to
@@ -199,11 +204,21 @@ def establish_origin(rows: Rows, history: Rows, session_id: str, *, target: str 
     A session resumed from another directory keeps its UUID but starts a
     separate transcript in that directory's bucket, so its history names
     several projects.  Each transcript's origin stands when any history entry
-    for the session names it."""
+    for the session names it.
+
+    BUCKET_PROJECT is the exact project whose bucket a rename is moving.  A
+    transcript whose own cwd is exactly that project belongs to it whatever
+    its prompt history names, and a transcript holding only title records
+    (no conversation, no cwd, no history) is owned by the bucket it sits in."""
     transcript = session_origin(rows, session_id, require_identity=True)
     recorded = history_origin(history, session_id)
     if transcript is not None and transcript in history_projects(history, session_id):
         return transcript
+    if bucket_project is not None and transcript == bucket_project:
+        return transcript
+    if (bucket_project is not None and transcript is None and recorded is None
+            and rows and all(obj is not None and obj.get("type") in TITLE_ONLY_TYPES for _raw, obj in rows)):
+        return bucket_project
     if recorded is not None and recorded == target and transcript not in (None, target):
         return transcript
     if transcript is not None and recorded is not None and transcript != recorded:
@@ -276,8 +291,15 @@ def sidecar_rows(plan: MigrationPlan, directory: Path, session_id: str) -> list[
                 relative = path.relative_to(directory)
                 if relative.parts[0] == "tool-results":
                     continue  # Tool output is opaque, even when it resembles metadata.
-                if (len(relative.parts) != 2 or relative.parts[0] != "subagents"
-                        or not relative.name.startswith("agent-")):
+                # Workflow runs keep their agents under
+                # subagents/workflows/<run>/, beside a journal.jsonl that records
+                # step results and carries no session routing metadata.
+                workflow = (len(relative.parts) == 4
+                            and relative.parts[:2] == ("subagents", "workflows"))
+                if workflow and relative.name == "journal.jsonl":
+                    continue
+                if not ((len(relative.parts) == 2 and relative.parts[0] == "subagents")
+                        or workflow) or not relative.name.startswith("agent-"):
                     raise MigrationError(f"Unsupported sidecar JSONL path: {path}")
                 rows = read_rows(plan, path)
                 session_origin(rows, session_id, require_identity=False)
@@ -412,7 +434,7 @@ def build_rename_plan(old: str, new: str, *, migrate_project_settings: bool = Fa
         raise MigrationError("No session or root subagent transcripts identify this project bucket")
     if any(path.name not in transcripts for path in sidecars):
         raise MigrationError("Orphan session sidecar has no transcript ownership evidence")
-    owners = {sid: establish_origin(rows, history, sid, target=new) for sid, (_path, rows) in transcripts.items()}
+    owners = {sid: establish_origin(rows, history, sid, target=new, bucket_project=old) for sid, (_path, rows) in transcripts.items()}
     expected = {old} if bucket == source else {old, new}
     if transcripts and (len(set(owners.values())) != 1 or not set(owners.values()).issubset(expected)):
         raise MigrationError("Unknown or mixed project origins share this encoded bucket")

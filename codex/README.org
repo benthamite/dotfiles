@@ -357,6 +357,8 @@ operations are not one transaction; a journal records partial failures. Metadata
 readback is distinct from observing the actual live resume consumer. Database
 updates cover thread =cwd=, not independent project associations; unsupported
 generations and schema side effects refuse before writes.
+The shared writer check reads =lsof='s =*NNN= form for descriptors above 999 as a
+plain descriptor, so a descriptor closed mid-scan no longer refuses the run.
 Bulk rename accepts several source paths sharing one destination, which
 =bin/migrate-profile= uses to consolidate retired Emacs profiles into the
 current one.

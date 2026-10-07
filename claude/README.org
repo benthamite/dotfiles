@@ -558,6 +558,13 @@ profile. A transcript still naming the old project whose history already names
 the migration target counts as a half-applied earlier migration and is completed;
 history naming any third project still refuses. Origin: on 2026-09-27 the 8.3.0-dev
 buckets reappeared after their history had been rewritten, blocking 35 sessions.
+A rename also accepts workflow-run agents under
+=subagents/workflows/<run>/agent-*.jsonl= (their =journal.jsonl= stays opaque), a
+transcript whose own =cwd= is exactly the old project even when its prompt history
+names another directory, and a title-only stub transcript, which belongs to its
+bucket. The writer check reads =lsof='s =*NNN= form for descriptors above 999. Origin:
+the 2026-10-06 workspace split refused seven project buckets on these shapes, so
+resuming those sessions still opened the pre-split directory.
 A session resumed from another directory has one transcript per bucket under one
 UUID. A transcript's origin is accepted when any history entry for that session
 names it, not only the first, so such a split no longer blocks imports into

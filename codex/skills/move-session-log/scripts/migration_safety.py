@@ -225,7 +225,10 @@ def _check_kernel_records(output, selected):
         # is not an open writer; no inode or access information was obtained.
         # proc.c initializes access to one ASCII space and prints that selected
         # field unconditionally.  Do not extend this wire shape to revoked/EPERM.
-        if (record[b"f"].isdigit() and set(record) == {b"f", b"a", b"n"}
+        # Descriptor numbers too wide for the column print as "*" plus their
+        # last three digits; they are still plain descriptors.
+        if ((record[b"f"].isdigit() or re.fullmatch(rb"\*[0-9]{3}", record[b"f"]))
+                and set(record) == {b"f", b"a", b"n"}
                 and record[b"a"] == b" " and record[b"n"] in _VANISHED_DESCRIPTORS):
             records += 1
             continue

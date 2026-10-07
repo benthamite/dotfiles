@@ -1089,6 +1089,11 @@ exec "$(dirname "$0")/sync-elpaca-clone.sh"
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package gcmh
+  :custom
+  ;; The default idle threshold (800 KB) makes timers and process filters
+  ;; trigger a full GC over a multi-GB heap every few seconds while idle,
+  ;; which starves the server: emacsclient times out (2026-10-07).
+  (gcmh-low-cons-threshold (* 128 1024 1024))
   :config
   (gcmh-mode))
 #+end_src

@@ -3070,7 +3070,7 @@ def epoch_placeholders(text: str) -> str:
     location otherwise, so manifest entries stay valid on both sides of the
     workspace split.
     """
-    workspace = epoch_env_path("EPOCH_WORKSPACE", Path.home() / "My Drive" / "Epoch")
+    workspace = epoch_env_path("EPOCH_WORKSPACE", Path.home() / "repos" / "epoch" / "ai-enablement")
     return text.replace("{epoch_workspace}", str(workspace))
 
 
@@ -3217,14 +3217,14 @@ def add_enabled_claude_plugin_roots(
 def epoch_skill_parents() -> list[tuple[Path, str, int]]:
     """Return the Epoch notes roots whose skills apply in every directory.
 
-    The shared workspace comes first, so it keeps its source label when the
-    personal notes root is the same directory, as it is before the workspace
-    split; `add_interactive_skill_root` drops the duplicate by resolved path.
+    The shared workspace comes first; `add_interactive_skill_root` drops a
+    duplicate by resolved path should both variables name one directory.
     """
-    default = Path.home() / "My Drive" / "Epoch"
     return [
-        (epoch_env_path("EPOCH_WORKSPACE", default), "epoch-workspace", 40),
-        (epoch_env_path("EPOCH_PRIVATE_ROOT", default), "epoch-private", 41),
+        (epoch_env_path("EPOCH_WORKSPACE", Path.home() / "repos" / "epoch" / "ai-enablement"),
+         "epoch-workspace", 40),
+        (epoch_env_path("EPOCH_PRIVATE_ROOT", Path.home() / "My Drive" / "Epoch"),
+         "epoch-private", 41),
     ]
 
 

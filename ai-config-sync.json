@@ -608,7 +608,7 @@
           ]
         }
       ],
-      "note": "Epoch's Asana MCP is local to the Epoch workspace checkout ({epoch_workspace} is EPOCH_WORKSPACE, ~/repos/epoch/ai-enablement on Pablo's machine since the 2026-10-06 split; the code default remains ~/My Drive/Epoch). Both configs are untracked per-machine files; env pins EPOCH_OP_BIN (the op routing shim), NPX_BIN and EPOCH_ASANA_EXPECTED_EMAIL, since the server's child process lacks a shim-first PATH and must expose the same server to Claude Code and Codex with the Epoch Asana identity. The audit checks account identity via Asana /users/me and never compares or prints token values."
+      "note": "Epoch's Asana MCP is local to the Epoch workspace checkout ({epoch_workspace} is EPOCH_WORKSPACE, ~/repos/epoch/ai-enablement on Pablo's machine since the 2026-10-06 split, which is also the code default). Both configs are untracked per-machine files; env pins EPOCH_OP_BIN (the op routing shim), NPX_BIN and EPOCH_ASANA_EXPECTED_EMAIL, since the server's child process lacks a shim-first PATH and must expose the same server to Claude Code and Codex with the Epoch Asana identity. The audit checks account identity via Asana /users/me and never compares or prints token values."
     }
   ],
   "registrations": [

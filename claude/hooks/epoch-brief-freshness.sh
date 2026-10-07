@@ -15,8 +15,8 @@ esac
 
 # The shared directory resolves from the most specific variable set:
 # EPOCH_SHARED_DIR, then EPOCH_PROJECTS, then EPOCH_WORKSPACE (EPOCH_ROOT is
-# its older alias), then the notes tree's original Drive location.
-WORKSPACE="${EPOCH_WORKSPACE:-${EPOCH_ROOT:-$HOME/My Drive/Epoch}}"
+# its older alias), then the workspace's standard checkout.
+WORKSPACE="${EPOCH_WORKSPACE:-${EPOCH_ROOT:-$HOME/repos/epoch/ai-enablement}}"
 PROJECTS="${EPOCH_PROJECTS:-$WORKSPACE/projects}"
 SHARED="${EPOCH_SHARED_DIR:-$PROJECTS/shared}"
 HELPER="$SHARED/scripts/brief_freshness_notice.py"

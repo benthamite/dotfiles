@@ -118,11 +118,16 @@ class AgentSkillTests(unittest.TestCase):
         self.assertEqual("epoch-workspace", sources[workspace / ".claude/skills"])
         self.assertEqual("epoch-private", sources[private / ".claude/skills"])
 
-    def test_epoch_roots_default_to_one_deduplicated_drive_tree(self):
-        epoch = self.home / "My Drive/Epoch"
-        self.skill(epoch / ".codex/skills", "fixture")
-        roots = [root for root in self.roots("codex") if root.path == epoch / ".codex/skills"]
-        self.assertEqual([("epoch-workspace", 40)], [(root.source, root.priority) for root in roots])
+    def test_epoch_roots_default_to_the_workspace_checkout_and_drive_notes(self):
+        workspace = self.home / "repos/epoch/ai-enablement"
+        private = self.home / "My Drive/Epoch"
+        for parent in (workspace, private):
+            self.skill(parent / ".codex/skills", "fixture-" + parent.name)
+        env = {k: v for k, v in os.environ.items() if k not in ("EPOCH_WORKSPACE", "EPOCH_PRIVATE_ROOT")}
+        with mock.patch.dict(os.environ, env, clear=True):
+            sources = {root.path: (root.source, root.priority) for root in self.roots("codex")}
+        self.assertEqual(("epoch-workspace", 40), sources[workspace / ".codex/skills"])
+        self.assertEqual(("epoch-private", 41), sources[private / ".codex/skills"])
 
     def test_standard_roots_stop_at_worktree_file_or_cwd_outside_git(self):
         (self.project / ".git").rmdir()

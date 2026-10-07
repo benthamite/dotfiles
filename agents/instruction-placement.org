@@ -96,4 +96,5 @@ does not itself authorize such an edit. Apply the placement policy below first.
   =.codex/skills/config-audit/SKILL.md= apply this policy when auditing
   instruction files and recommending where a rule belongs.
 - Epoch project notes specialize this policy in
-  =/Users/pablostafforini/My Drive/Epoch/projects/context/project-doc-conventions.md=.
+  =~/repos/epoch/ai-enablement/projects/context/project-doc-conventions.md=
+  (=$EPOCH_WORKSPACE=). Private Epoch notes go in =$EPOCH_PRIVATE_ROOT/personal/=.

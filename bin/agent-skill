@@ -190,14 +190,13 @@ def add_claude_plugin_roots(
 def epoch_skill_parents() -> list[tuple[Path, str, int]]:
     """Return the Epoch notes roots whose skills apply in every directory.
 
-    The shared workspace comes first, so it keeps its source label when the
-    personal notes root is the same directory, as it is before the workspace
-    split; `add_root` drops the duplicate by resolved path.
+    The shared workspace comes first; `add_root` drops a duplicate by
+    resolved path should both variables name one directory.
     """
-    default = HOME / "My Drive" / "Epoch"
     return [
-        (env_path("EPOCH_WORKSPACE", default), "epoch-workspace", 40),
-        (env_path("EPOCH_PRIVATE_ROOT", default), "epoch-private", 41),
+        (env_path("EPOCH_WORKSPACE", HOME / "repos" / "epoch" / "ai-enablement"),
+         "epoch-workspace", 40),
+        (env_path("EPOCH_PRIVATE_ROOT", HOME / "My Drive" / "Epoch"), "epoch-private", 41),
     ]
 
 

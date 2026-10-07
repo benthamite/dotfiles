@@ -84,7 +84,7 @@ honor `--exit` only through the host's normal mechanism.
    use its supported resolver:
 
    ```bash
-   python3 "${EPOCH_WORKSPACE:-$HOME/My Drive/Epoch}/projects/shared/scripts/project_harness.py" \
+   python3 "${EPOCH_WORKSPACE:-$HOME/repos/epoch/ai-enablement}/projects/shared/scripts/project_harness.py" \
      resolve --cwd "/absolute/session/directory"
    ```
 
@@ -150,16 +150,24 @@ conventions; otherwise leave them absent.
 
 ### Epoch two-root routing
 
-The workspace (`$EPOCH_WORKSPACE`, default `~/My Drive/Epoch`) is shared
-with colleagues. The private root (`$EPOCH_PRIVATE_ROOT`, same default) is
-Pablo's alone. Until cutover both are the same tree: when
-`EPOCH_PRIVATE_ROOT` is unset and the tree has `meetings/`, everything below
-is one repository and one atomic closeout, but each item still goes to the
-file the table names, so the split later moves nothing by hand.
+The workspace (`$EPOCH_WORKSPACE`, normally `~/repos/epoch/ai-enablement`,
+GitHub `epoch-research/ai-enablement`) is shared with colleagues. The private
+root (`$EPOCH_PRIVATE_ROOT`, normally `~/My Drive/Epoch`) is Pablo's alone.
+They are separate repositories: the harness commits workspace paths first, then
+private paths with a `Workspace-Commit:` trailer. If either variable is unset,
+stop and report an incomplete closeout; never fall back to one tree.
+
+The resolver returns `no-match` for the private root itself, `meetings/` and
+the personal projects that stay private (`ai-enablement-manager-hiring`,
+`security-engineer-hiring`, `conversations-with-champions` under
+`$EPOCH_PRIVATE_ROOT/projects/`). Their logs, briefs and TODOs stay in the
+private root and are committed there; nothing about them goes to the workspace.
+A root session (cwd `$EPOCH_PRIVATE_ROOT`) logs to `$EPOCH_PRIVATE_ROOT/logs/`.
 
 | What | Root | Where |
 |---|---|---|
-| Project session log entry | workspace | `projects/<slug>/logs/YYYY-MM-DD.md` |
+| Project session log entry (workspace project) | workspace | `projects/<slug>/logs/YYYY-MM-DD.md` |
+| Anything about a personal project | private | `projects/<slug>/…` in the private root |
 | Brief updates, TODOs, decisions, project maps | workspace | `projects/<slug>/…` |
 | Root session log | private | `logs/YYYY-MM-DD.md` |
 | Latest-session narrative | private | the private root's `CLAUDE.md`/`AGENTS.md`; workspace maps carry no `Latest session` narrative |
@@ -246,7 +254,7 @@ files to the intended project and inspect existing changes before editing.
 If a required hook exceeds authority or cannot be safely completed, record the
 gap and do not certify a full successful closeout.
 
-For Epoch, read `projects/context/project-doc-conventions.md` and the relevant
+For Epoch, read `$EPOCH_WORKSPACE/projects/context/project-doc-conventions.md` and the relevant
 post-update-log hook. Update semantic state and task evidence in the primary
 brief first. Preserve active work as Org task headings, not checkbox mirrors.
 A stale date or drafted action is not completion evidence. Do not fabricate

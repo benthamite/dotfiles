@@ -65,6 +65,46 @@ agenda.  List here the files that must survive that recomputation regardless."
 
 ;;;; Functions
 
+(defcustom vulpea-extras-agenda-directories nil
+  "Directories outside the Org-roam directory whose task files join the agenda.
+Org files below these directories that contain an open task heading are added
+to `org-agenda-files' by `vulpea-extras-agenda-files-update'.  They are found
+by reading the files, not through the Org-roam database, so they need not be
+notes.  Dot-directories, `logs' directories and `_archive.org' files are skipped."
+  :type '(repeat directory)
+  :group 'vulpea-extras)
+
+(defun vulpea-extras-agenda-directory-files ()
+  "Return the Org files below `vulpea-extras-agenda-directories' with open tasks."
+  (let ((open (vulpea-extras--open-todo-regexp)))
+    (seq-filter
+     (lambda (file)
+       (and (not (string-suffix-p "_archive.org" file))
+            (with-temp-buffer
+              (insert-file-contents file)
+              (let ((case-fold-search nil))
+                (re-search-forward open nil t)))))
+     (mapcan (lambda (dir)
+               (when (file-directory-p dir)
+                 (directory-files-recursively
+                  dir "\\.org\\'" nil
+                  (lambda (sub)
+                    (let ((name (file-name-nondirectory sub)))
+                      (not (or (string-prefix-p "." name)
+                               (equal name "logs"))))))))
+             vulpea-extras-agenda-directories))))
+
+(defun vulpea-extras--open-todo-regexp ()
+  "Return a regexp matching a heading whose keyword is a not-done state.
+The states come from the global `org-todo-keywords'."
+  (let (open)
+    (dolist (sequence org-todo-keywords)
+      (catch 'done
+        (dolist (keyword (cdr sequence))
+          (when (equal keyword "|") (throw 'done nil))
+          (push (replace-regexp-in-string "(.*" "" keyword) open))))
+    (concat "^\\*+[ \t]+" (regexp-opt open t) "\\(?:[ \t]\\|$\\)")))
+
 (defun vulpea-extras-project-p ()
   "Return non-nil if current buffer has a TODO, a schedule or a deadline.
 TODO entries marked as done are ignored, meaning the this
@@ -150,6 +190,7 @@ once stayed there for the rest of the session regardless."
          (delete-dups (append
 		       vulpea-extras-agenda-files-base
 		       (vulpea-extras-project-files)
+		       (vulpea-extras-agenda-directory-files)
 		       (org-roam-extras-recent 2 500)))
          org-extras-agenda-files-excluded)))
 

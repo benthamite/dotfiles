@@ -90,11 +90,12 @@ This function is designed to be added to a hook such as ~before-save-hook~ for O
 :END:
 
 #+findex: vulpea-extras-agenda-files-update
-The function ~vulpea-extras-agenda-files-update~ dynamically rebuilds ~org-agenda-files~ by combining three sources:
+The function ~vulpea-extras-agenda-files-update~ dynamically rebuilds ~org-agenda-files~ by combining four sources:
 
 1. The files listed in ~vulpea-extras-agenda-files-base~.
 2. All files tagged with ="project"= in the Org Roam database (queried via ~vulpea-extras-project-files~).
-3. Recently modified Org Roam files (retrieved via ~org-roam-extras-recent~ from =org-roam-extras.el=, limited to the last 2 days and 500 files).
+3. Org files with an open task below ~vulpea-extras-agenda-directories~ (found by ~vulpea-extras-agenda-directory-files~).
+4. Recently modified Org Roam files (retrieved via ~org-roam-extras-recent~ from =org-roam-extras.el=, limited to the last 2 days and 500 files).
 
 After merging these lists and removing duplicates, it subtracts any files listed in ~org-extras-agenda-files-excluded~. This function is installed as =:before= advice on ~org-agenda~, so the agenda file list is always fresh when you open the agenda.
 
@@ -102,6 +103,10 @@ The list is rebuilt from these sources rather than added to the value already in
 
 #+vindex: vulpea-extras-agenda-files-base
 The user option ~vulpea-extras-agenda-files-base~ lists the files that must appear in ~org-agenda-files~ whether or not they qualify as projects or count as recently modified. It exists because the rebuild is unconditional: without it, a statically configured agenda file would be discarded on the first refresh. The default value is the calendar file defined by the =paths= package.
+
+#+vindex: vulpea-extras-agenda-directories
+#+findex: vulpea-extras-agenda-directory-files
+The user option ~vulpea-extras-agenda-directories~ lists directories outside the Org Roam directory whose task files belong in the agenda, such as a Git checkout that cannot live under Google Drive. ~vulpea-extras-agenda-directory-files~ reads every Org file below them, without visiting it, and keeps those with a heading in a not-done state of the global ~org-todo-keywords~. It skips dot-directories, =logs= directories and =_archive.org= files. The default is nil.
 
 #+findex: vulpea-extras-project-files
 The function ~vulpea-extras-project-files~ queries the Org Roam database for all files that contain a node tagged with ="project"=. It returns a deduplicated list of file paths. This is the function that connects the automatic tagging system ([[#h:updating-the-project-tag][Updating the project tag]]) to the agenda file list.

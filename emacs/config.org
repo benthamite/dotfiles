@@ -7788,7 +7788,6 @@ the debugger's `recursive-edit' freezes Emacs inside the timer."
 
   :bind
   (("M-j" . tlon-node-find)
-   ("H-r" . tlon-dispatch)
    ("H-?" . tlon-mdx-insert-cite)
    ("A-C-p" . tlon-grep)))
 #+end_src
@@ -10817,9 +10816,17 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
   ;; I want these files to be searched for IDs, so that I can use
   ;; org-capture templates with them, but do not want them to be part
   ;; of org-agenda or org-roam.
-  (org-id-extra-files (list
-                       paths-file-tlon-tareas-leo
-                       paths-file-tlon-tareas-fede))
+  (org-id-extra-files (append
+                       (list paths-file-tlon-tareas-leo
+                             paths-file-tlon-tareas-fede)
+                       ;; The Epoch workspace sits outside the Org-roam
+                       ;; directory; personal notes link into it by ID.
+                       (when (file-directory-p paths-dir-epoch-workspace)
+                         (directory-files-recursively
+                          paths-dir-epoch-workspace "\\.org\\'" nil
+                          (lambda (dir)
+                            (not (string-prefix-p
+                                  "." (file-name-nondirectory dir))))))))
   :config
   (defun org-id-ensure-locations-hash-table (&rest _)
     "Ensure `org-id-locations' is a hash table.
@@ -11965,6 +11972,11 @@ I use this package to define a dynamic agenda, as explained and illustrated [[ht
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package vulpea-extras
+  :custom
+  ;; The Epoch workspace is a Git checkout outside the Org-roam directory, so
+  ;; its project briefs reach the agenda through a direct scan.
+  (vulpea-extras-agenda-directories
+   (list (file-name-concat paths-dir-epoch-workspace "projects/")))
   :hook
   ((find-file-hook before-save-hook) . vulpea-extras-project-update-tag))
 #+end_src

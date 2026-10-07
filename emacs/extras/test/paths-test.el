@@ -100,5 +100,18 @@
   "The tangle flags file ends with .el."
   (should (string-suffix-p ".el" paths-file-init-tangle-flags-sans-directory)))
 
+(ert-deftest paths-test-epoch-workspace-defaults-to-checkout ()
+  "Without EPOCH_WORKSPACE the workspace is the standard checkout, not the notes root."
+  (let ((process-environment (cons "EPOCH_WORKSPACE" process-environment)))
+    (should (equal (eval (car (get 'paths-dir-epoch-workspace 'standard-value)) t)
+                   (file-name-as-directory
+                    (expand-file-name "~/repos/epoch/ai-enablement"))))))
+
+(ert-deftest paths-test-epoch-workspace-follows-environment ()
+  "EPOCH_WORKSPACE, when set, names the workspace."
+  (let ((process-environment (cons "EPOCH_WORKSPACE=/tmp/ws" process-environment)))
+    (should (equal (eval (car (get 'paths-dir-epoch-workspace 'standard-value)) t)
+                   "/tmp/ws/"))))
+
 (provide 'paths-test)
 ;;; paths-test.el ends here

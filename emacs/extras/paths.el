@@ -255,11 +255,12 @@ It holds the inbox, root session logs and meeting notes."
   (let ((workspace (getenv "EPOCH_WORKSPACE")))
     (if (and workspace (not (equal workspace "")))
         (file-name-as-directory (expand-file-name workspace))
-      paths-dir-epoch))
+      (file-name-as-directory (expand-file-name "~/repos/epoch/ai-enablement"))))
   "Path to the shared Epoch workspace directory.
-It holds the projects and their registry.  The default is the value of
-the environment variable EPOCH_WORKSPACE, or `paths-dir-epoch' when that
-variable is unset, as it is while both share one directory."
+It is the checkout of epoch-research/ai-enablement and holds the projects
+and their registry; `paths-dir-epoch' keeps only the private notes.  The
+default is the value of the environment variable EPOCH_WORKSPACE, or the
+standard checkout location when Emacs starts without that variable."
   :type 'directory
   :group 'paths)
 

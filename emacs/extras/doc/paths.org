@@ -102,7 +102,7 @@ These directories are children of ~paths-dir-google-drive~ and contain personal 
 - ~paths-dir-personal-bibliography~: BibTeX bibliography files and related resources.
 - ~paths-dir-PW~: the PW project directory.
 - ~paths-dir-epoch~: my personal Epoch notes, holding the inbox, root session logs and meeting notes (default: =My Drive/Epoch/=).
-- ~paths-dir-epoch-workspace~: the shared Epoch workspace, holding the projects and their registry. Its default is the value of the =EPOCH_WORKSPACE= environment variable, or ~paths-dir-epoch~ when that variable is unset, as it is while both share one directory.
+- ~paths-dir-epoch-workspace~: the shared Epoch workspace, holding the projects and their registry. It is the checkout of =epoch-research/ai-enablement=. Its default is the value of the =EPOCH_WORKSPACE= environment variable, or =~/repos/epoch/ai-enablement/= when Emacs starts without that variable.
 
 *** Emacs configuration directories
 :PROPERTIES:

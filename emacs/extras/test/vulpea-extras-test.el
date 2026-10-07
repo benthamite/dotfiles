@@ -6,6 +6,7 @@
 ;;; Code:
 
 (require 'ert)
+(require 'cl-lib)
 (require 'vulpea-extras)
 
 ;; Ensure org-roam-directory is globally bound so `boundp' returns t
@@ -122,6 +123,28 @@
     (org-mode)
     (insert "* Regular heading\nSome text\n")
     (should-not (vulpea-extras-anniversary-p))))
+
+(ert-deftest vulpea-extras-test-agenda-directory-files ()
+  "Only files with an open task, outside logs, dot-dirs and archives, qualify."
+  (let* ((root (make-temp-file "vulpea-agenda-" t))
+         (org-todo-keywords '((sequence "TODO" "WAITING" "|" "DONE")))
+         (vulpea-extras-agenda-directories (list root)))
+    (unwind-protect
+        (cl-flet ((put (path text)
+                    (let ((file (expand-file-name path root)))
+                      (make-directory (file-name-directory file) t)
+                      (with-temp-file file (insert text))
+                      file)))
+          (let ((open (put "a/a.org" "* WAITING Thing\n"))
+                (todo (put "b/b.org" "* TODO Thing\n")))
+            (put "c/c.org" "* DONE Thing\n")
+            (put "d/notes.org" "TODO in prose is not a heading\n")
+            (put "a/logs/x.org" "* TODO Logged\n")
+            (put ".hidden/h.org" "* TODO Hidden\n")
+            (put "a/a_archive.org" "* TODO Archived\n")
+            (should (equal (sort (vulpea-extras-agenda-directory-files) #'string<)
+                           (sort (list open todo) #'string<)))))
+      (delete-directory root t))))
 
 (provide 'vulpea-extras-test)
 ;;; vulpea-extras-test.el ends here

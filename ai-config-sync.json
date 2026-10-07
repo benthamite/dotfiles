@@ -373,6 +373,27 @@
       "codex": "codex/skills/order-salads/SKILL.md",
       "status": "paired",
       "equivalence": "Paired encrypted personal workflow; bodies and auxiliary files match."
+    },
+    {
+      "name": "find-airbnb",
+      "claude": "claude/skills/find-airbnb/SKILL.md",
+      "codex": "codex/skills/find-airbnb/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
+      "name": "find-flights",
+      "claude": "claude/skills/find-flights/SKILL.md",
+      "codex": "codex/skills/find-flights/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
+      "name": "find-hotel",
+      "claude": "claude/skills/find-hotel/SKILL.md",
+      "codex": "codex/skills/find-hotel/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     }
   ],
   "hooks": [

@@ -172,6 +172,14 @@ from the in-page viewer with a page script, attaching it to WhatsApp without the
 native file picker, deleting the PDF from Downloads once sent, and committing
 only the agent's own ledger hunk.
 
+The travel skills =find-flights=, =find-hotel= and =find-airbnb= hold only the
+search and booking procedure; Pablo's preferences live in his private notes
+(=flight-booking-profile.org= and =accommodation-booking-profile.org=), which
+each skill reads first. =find-flights= queries Google Flights through SerpApi
+with a script that reads its key from the personal 1Password =Automation=
+vault; the browser steps use Codex's Chrome control as the =chrome-use= skill
+describes. All three stop before payment.
+
 The =profile-ai-cli-performance= skill measures selected client conditions
 with exact terminal-success evidence and nullable, failure-aware paired metrics.
 Dry runs do not access credentials or launch clients; selected conditions alone

@@ -21,9 +21,11 @@ classified.
 Every run also appends one JSON line to SAMPLES_FILE: how long the server
 took to answer and why the probe failed, the state file's age, the garbage
 collections Emacs ran since the previous run, the load averages, swap use
-and the processes using the most memory. A freeze can then be matched
-against what the machine was doing at the time. Lines older than
-SAMPLES_RETENTION are dropped.
+and the processes with the largest memory footprint. The footprint, unlike
+the resident size, counts compressed and swapped-out pages, so a process
+that has been swapped out still ranks by the memory it holds. A freeze can
+then be matched against what the machine was doing at the time. Lines older
+than SAMPLES_RETENTION are dropped.
 """
 
 from __future__ import annotations
@@ -46,6 +48,9 @@ SAMPLES_RETENTION = 7 * 86400
 SAMPLES_TRIM_SLACK = 86400
 TOP_PROCESSES = 5
 EMACSCLIENT = "/opt/homebrew/bin/emacsclient"
+# Setuid and entitled to read every process, so it sees root processes'
+# footprint too. One snapshot costs about 1.5 s of system time.
+TOP = "/usr/bin/top"
 PROBE_TIMEOUT = 5
 # Longest emacsclient error kept in samples and the log.
 DETAIL_LENGTH = 160
@@ -155,14 +160,16 @@ def gc_activity(state: dict, previous: dict | None) -> dict:
 def record_sample(server: dict, now: float) -> None:
     """Append SERVER's probe result and the machine's load to SAMPLES_FILE."""
     processes = memory_by_process()
-    emacs_pid = server["emacs_pid"]
+    emacs = next((p for p in processes if p[0] == server["emacs_pid"]), None)
     sample = {
         "time": round(now),
         **server,
-        "emacs_rss_mb": next((mb for pid, mb, _ in processes if pid == emacs_pid), None),
+        "emacs_memory_mb": emacs[1] if emacs else None,
+        "emacs_rss_mb": emacs[2] if emacs else None,
         "load": [round(x, 2) for x in os.getloadavg()],
         "swap_used_mb": swap_used_mb(),
-        "top_rss_mb": [[name, mb] for _, mb, name in processes[:TOP_PROCESSES]],
+        "top_memory_mb": [[name, footprint, rss]
+                          for _, footprint, rss, name in processes[:TOP_PROCESSES]],
     }
     SAMPLES_FILE.parent.mkdir(parents=True, exist_ok=True)
     with SAMPLES_FILE.open("a") as f:
@@ -170,18 +177,45 @@ def record_sample(server: dict, now: float) -> None:
     trim_samples(now)
 
 
-def memory_by_process() -> list[tuple[int, int, str]]:
-    """Return (pid, resident MB, executable name) per process, largest first.
+def memory_by_process() -> list[tuple[int, int, int, str]]:
+    """Return (pid, footprint MB, resident MB, name) per process, largest first.
 
-    Only the executable name is read: command lines can carry credentials.
+    The footprint comes from top and the resident size and executable name
+    from ps. Only the executable name is read: command lines can carry
+    credentials. Processes that exit between the two readings are left out.
     """
+    footprints = parse_top_memory(subprocess.run(
+        [TOP, "-l", "1", "-stats", "pid,mem"],
+        capture_output=True, text=True, check=True, timeout=60).stdout)
     output = subprocess.run(["ps", "-A", "-o", "pid=,rss=,comm="],
                             capture_output=True, text=True, check=True).stdout
     processes = []
     for line in output.splitlines():
         pid, rss, comm = line.split(None, 2)
-        processes.append((int(pid), int(rss) // 1024, Path(comm).name))
+        if int(pid) in footprints:
+            processes.append((int(pid), footprints[int(pid)], int(rss) // 1024,
+                              Path(comm).name))
     return sorted(processes, key=lambda p: p[1], reverse=True)
+
+
+TOP_UNITS = {"B": 1 / 2**20, "K": 1 / 1024, "M": 1, "G": 1024, "T": 2**20}
+
+
+def parse_top_memory(output: str) -> dict[int, int]:
+    """Return each process's footprint in MB from top's pid and mem OUTPUT.
+
+    top rounds large values, to whole gigabytes from 10 GB.
+    """
+    lines = output.splitlines()
+    header = next(i for i, line in enumerate(lines) if line.split()[:1] == ["PID"])
+    footprints = {}
+    for line in lines[header + 1:]:
+        match = re.fullmatch(r"\s*(\d+)\s+([0-9.]+)([BKMGT])[+-]?\s*", line)
+        if not match:
+            raise ValueError(f"unexpected top line: {line!r}")
+        pid, amount, unit = match.groups()
+        footprints[int(pid)] = round(float(amount) * TOP_UNITS[unit])
+    return footprints
 
 
 def swap_used_mb() -> int:

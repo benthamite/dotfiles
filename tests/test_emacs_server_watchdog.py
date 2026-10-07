@@ -188,7 +188,8 @@ class MainTest(unittest.TestCase):
             mock.patch.object(watchdog, "SAMPLES_FILE", self.dir / "samples.jsonl"),
             mock.patch.object(watchdog, "socket_identity", lambda socket: [1, 2]),
             mock.patch.object(watchdog, "memory_by_process",
-                              lambda: [(42, 3500, "Emacs"), (7, 1600, "bztransmit")]),
+                              lambda: [(9, 23000, 100, "Google Drive"),
+                                       (42, 5000, 3500, "Emacs")]),
             mock.patch.object(watchdog, "swap_used_mb", lambda: 36000),
         ]
         for patch in patches:
@@ -269,10 +270,12 @@ class MainTest(unittest.TestCase):
         self.assertTrue(first["answered"])
         self.assertFalse(second["answered"])
         self.assertIsInstance(first["probe_seconds"], float)
+        self.assertEqual(first["emacs_memory_mb"], 5000)
         self.assertEqual(first["emacs_rss_mb"], 3500)
         self.assertEqual(first["swap_used_mb"], 36000)
         self.assertEqual(len(first["load"]), 3)
-        self.assertEqual(first["top_rss_mb"], [["Emacs", 3500], ["bztransmit", 1600]])
+        self.assertEqual(first["top_memory_mb"],
+                         [["Google Drive", 23000, 100], ["Emacs", 5000, 3500]])
         self.assertIsNone(first["failure"])
         self.assertEqual(second["failure"], "timeout")
         self.assertEqual(second["failure_detail"], "exit 1: why")
@@ -311,12 +314,35 @@ class MainTest(unittest.TestCase):
         self.assertEqual(path.read_text(), recent)
 
 
+TOP_OUTPUT = """Processes: 891 total, 12 running, 875 sleeping, 7114 threads
+2026/10/07 10:05:09
+Load Avg: 17.01, 21.84, 24.10
+
+PID    MEM
+27547  23G
+50375  8719M+
+55316  5066M-
+1      6977K
+2      512B
+"""
+
+
 class SystemReadingTest(unittest.TestCase):
+    # Regression: Google Drive held 23 GB, nearly all swapped out, and never
+    # appeared in a ranking by resident size.
+    def test_parses_top_footprints(self):
+        self.assertEqual(watchdog.parse_top_memory(TOP_OUTPUT),
+                         {27547: 23552, 50375: 8719, 55316: 5066, 1: 7, 2: 0})
+
+    def test_rejects_unexpected_top_lines(self):
+        with self.assertRaises(ValueError):
+            watchdog.parse_top_memory(TOP_OUTPUT + "3  lots\n")
+
     def test_reads_this_machine(self):
         processes = watchdog.memory_by_process()
         self.assertTrue(processes)
         self.assertEqual(processes, sorted(processes, key=lambda p: p[1], reverse=True))
-        self.assertTrue(all("/" not in name for _, _, name in processes))
+        self.assertTrue(all("/" not in name for *_, name in processes))
         self.assertGreaterEqual(watchdog.swap_used_mb(), 0)
 
 

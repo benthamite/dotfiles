@@ -376,9 +376,9 @@ from the original rendered file, then reconciling that file's indexed location.
 The paired =update-log= skill runs only on an explicit bookkeeping request or
 the deliberate =--auto= chain. It preserves established map modes, intentionally
 different agent instructions, foreign changes and actual file-tracking policy.
-For Epoch it routes by root: workspace projects to =$EPOCH_WORKSPACE=, root
-sessions, meetings and the personal projects to =$EPOCH_PRIVATE_ROOT=, and it
-stops instead of falling back when either variable is unset.
+It holds no Epoch rules: for an Epoch session it follows the workspace's own
+=epoch-update-log= skill (=$EPOCH_WORKSPACE/.codex/skills/epoch-update-log/=), the single source of the Epoch closeout, which other
+maintainers use without these dotfiles.
 Ignore rules do not make tracked or Drive-synced content private. Post-update-log
 hooks refresh the brief before its map is derived, within the caller's authority;
 derived fields cannot originate unverified claims.

@@ -30,6 +30,19 @@ no-op. Honor an explicit request to record particular information even if the
 session was small. A retry must reconcile existing logs, commits and receipts,
 not append a duplicate entry just because it is a new agent turn.
 
+## Epoch sessions
+
+The Epoch workspace owns its closeout procedure; this skill holds none of its
+rules. When the session belongs to Epoch — its working directory is inside
+`$EPOCH_WORKSPACE` or `$EPOCH_PRIVATE_ROOT`, or the workspace resolver
+(`python3 "$EPOCH_WORKSPACE/projects/shared/scripts/project_harness.py" resolve
+--cwd DIR`) maps it to a project — read and follow
+the workspace's `epoch-update-log` skill (in `$EPOCH_WORKSPACE`'s
+skill directory for this tool) instead of the steps
+below, passing the same flags. Publish the receipt through that skill's writer.
+If `EPOCH_WORKSPACE` is unset or that file is missing, stop and report an
+incomplete closeout rather than applying the generic steps to Epoch notes.
+
 ## Receipt contract
 
 If `--receipt-file PATH` was supplied, bind that exact absolute target to this
@@ -48,7 +61,7 @@ python3 "/absolute/path/to/update-log/scripts/write_receipt.py" \
 
 Resolve the script relative to the loaded skill; do not assume the other CLI's
 installation exists. Add repeated `--evidence "/absolute/path.json"` for
-successful Epoch apply receipts. The writer validates receipt syntax and
+successful apply receipts. The writer validates receipt syntax and
 successful status, not provenance, project identity, actual commits, or
 permission. Check those independently below. Receipts may embed sensitive
 evidence; keep them in private storage, never a public commit. The host may
@@ -57,8 +70,7 @@ Keep durable recovery evidence outside that host-owned directory.
 
 - Use `success` only after required edits, checks, commits and final inspections.
 - Use `no-op` when no requested durable change remains, not when work was skipped
-  because access or verification failed. An Epoch apply no-op is evidence about
-  that transaction, not proof that the whole session had no durable changes.
+  because access or verification failed.
 - Use `failure` for incomplete required work. Explicit failure intentionally
   returns nonzero even when the failure receipt was successfully written.
 
@@ -80,49 +92,24 @@ honor `--exit` only through the host's normal mechanism.
    choosing a destination. Do not infer another project's ownership from a
    shared basename or a symlink.
 
-2. When an Epoch notes project or registered code checkout may own the work,
-   use its supported resolver:
-
-   ```bash
-   python3 "${EPOCH_WORKSPACE:-$HOME/repos/epoch/ai-enablement}/projects/shared/scripts/project_harness.py" \
-     resolve --cwd "/absolute/session/directory"
-   ```
-
-   Require a successful `command: resolve`, `ok: true` result for this cwd.
-   Use the returned notes `directory`, slug, primary brief and declared local
-   repositories. Only `error_code: no-match` permits generic discovery; ambiguity,
-   malformed results, pending recovery, invalid routing data, or an
-   unavailable resolver for known Epoch work is an incomplete closeout, not a
-   reason to create logs in the code checkout. Do not run unrelated recovery
-   implicitly. Resolution establishes routing, not full closeout validity;
-   inspect returned semantic findings without treating them as routing failure.
-   On a rejected pending-recovery or reserved-output request, read the failure
-   from stdout: no optional harness receipt file may have been published.
-
-3. Before editing, snapshot relevant worktree diffs, index entries and HEADs:
+2. Before editing, snapshot relevant worktree diffs, index entries and HEADs:
    the bookkeeping repo, repositories actually touched, and declared local
    repos whose state matters to this closeout. Include dirty maps, logs,
    decisions and hook-managed files. Track session-owned changes separately
    from pre-existing or concurrent changes. Recheck preimages before each write;
    never autosave a dirty live buffer or overwrite another writer's updates.
 
-4. Read the session map named by project convention; normally `CLAUDE.md`.
+3. Read the session map named by project convention; normally `CLAUDE.md`.
    Read sibling `AGENTS.md` too, preserving runtime-specific instructions.
    Discover log directories from explicit conventions, existing session
    pointers, or `Read first` links. A `Current focus` map without a dated
    `Latest session` pointer is an established mode, not first-run setup.
    Preserve map mode. Conflicting modes or destinations need reconciliation.
 
-5. Check whether decision tracking already exists. Do not create it merely
+4. Check whether decision tracking already exists. Do not create it merely
    because this session involved a design choice.
 
 ### First-run setup
-
-For resolved Epoch projects, use the tracked `logs/`, canonical Org brief and
-paired maps under the notes directory. Do not add them to ignore rules.
-
-Epoch notes have two roots; route every write with the table in
-[Epoch two-root routing](#epoch-two-root-routing) below.
 
 For a generic project with no convention, use `logs/` as the local-only
 default and leave new decision tracking disabled in `--auto`. In an interactive
@@ -147,74 +134,6 @@ Create or update only the requested map sections; preserve all other guidance.
 For an established map, do not add `Latest session`. If the user opted into
 decisions, create the project's summary/index and directory using its decision
 conventions; otherwise leave them absent.
-
-### Epoch two-root routing
-
-The workspace (`$EPOCH_WORKSPACE`, normally `~/repos/epoch/ai-enablement`,
-GitHub `epoch-research/ai-enablement`) is shared with colleagues. The private
-root (`$EPOCH_PRIVATE_ROOT`, normally `~/My Drive/Epoch`) is Pablo's alone.
-They are separate repositories: the harness commits workspace paths first, then
-private paths with a `Workspace-Commit:` trailer. If either variable is unset,
-stop and report an incomplete closeout; never fall back to one tree.
-
-The resolver returns `no-match` for the private root itself, `meetings/` and
-the personal projects that stay private (`ai-enablement-manager-hiring`,
-`security-engineer-hiring`, `conversations-with-champions` under
-`$EPOCH_PRIVATE_ROOT/projects/`). Their logs, briefs and TODOs stay in the
-private root and are committed there; nothing about them goes to the workspace.
-A root session (cwd `$EPOCH_PRIVATE_ROOT`) logs to `$EPOCH_PRIVATE_ROOT/logs/`.
-
-| What | Root | Where |
-|---|---|---|
-| Project session log entry (workspace project) | workspace | `projects/<slug>/logs/YYYY-MM-DD.md` |
-| Anything about a personal project | private | `projects/<slug>/…` in the private root |
-| Brief updates, TODOs, decisions, project maps | workspace | `projects/<slug>/…` |
-| Root session log | private | `logs/YYYY-MM-DD.md` |
-| Latest-session narrative | private | the private root's `CLAUDE.md`/`AGENTS.md`; workspace maps carry no `Latest session` narrative |
-| Private notes about a project | private | `personal/<workspace path>.org` (e.g. `personal/projects/<slug>/<slug>.org`) |
-| Meeting notes | private | `meetings/<label>/…` |
-
-Everything written to the workspace must pass this content test (the 14
-approved privacy rules). Never write there:
-
-1. private employment details (contract dates or terms, classification,
-   conversions, legal names), anyone's, the reader's included;
-2. individual AI usage (credits, spend, tier, allowances, rankings, activity);
-   seats and project budgets are fine;
-3. work-trial status or outcomes ("the work trialer" at most);
-4. personal email addresses of anyone;
-5. Epoch's financial figures (balances, payroll totals, insurance numbers);
-   payment approval limits are fine;
-6. pay policy of the salary-benchmarking tool;
-7. why or how someone left; the accounts-to-close list is fine;
-8. the name in an account-security incident ("a staff member");
-9. personality remarks about staff; tone and writing-style guidance is fine;
-10. Pablo's personal accounts and cards;
-11. judgments of how a named person performs or delivers; keep the system
-    state and outstanding work;
-12. anyone's personal finances or circumstances (expenses, visa, health,
-    family, home address); city or timezone only where a maintainer needs it;
-13. de-anonymising context: a replaced name plus a channel name, ID, unique
-    role, narrow date or quotation still identifies; drop the episode and keep
-    the technical lesson;
-14. hand edits to generated staff data (fix the generator).
-
-Neutral attribution ("María asked for X") stays. **If in doubt, private**:
-put the passage in `personal/<workspace path>.org` and leave the workspace
-file with the neutral system state. The workspace pre-commit hook and CI run
-`privacy_scan.py` on added lines and block the clearest cases; passing it does
-not prove the text is fine.
-
-Close out both roots in one harness call from the workspace root, using
-`closeout --portfolio` whenever a private path is included (`--project`
-refuses private paths once the roots are separate). Name private files as
-absolute paths under `${EPOCH_PRIVATE_ROOT:-$HOME/My Drive/Epoch}`: a relative
-`CLAUDE.md` means the workspace's own map. With separate roots the harness
-commits the workspace first, then the private root with a
-`Workspace-Commit: <sha>` trailer, and the receipt says `two_root: true`
-with the private half under `private`. Verify both commits. If the private
-commit fails after the workspace one landed, rerun apply with only the
-private paths and `--workspace-commit SHA`; never rerun the workspace half.
 
 ## 1. Record the session
 
@@ -254,25 +173,12 @@ files to the intended project and inspect existing changes before editing.
 If a required hook exceeds authority or cannot be safely completed, record the
 gap and do not certify a full successful closeout.
 
-For Epoch, read `$EPOCH_WORKSPACE/projects/context/project-doc-conventions.md` and the relevant
-post-update-log hook. Update semantic state and task evidence in the primary
-brief first. Preserve active work as Org task headings, not checkbox mirrors.
-A stale date or drafted action is not completion evidence. Do not fabricate
-`LAST_VERIFIED` or treat `VERIFY_WITH` as executable instructions.
-
-Let the closeout transaction archive closed headings and derive supported
-fields/views. Preserve source metadata and do not hand-edit generated views.
-Keep the brief concise; do not turn it into a chronological log or add routine
-meeting-reference sections. Record which hooks ran and material omissions.
-
 ## 4. Refresh the session map after the brief
 
 ### Current-focus map
 
 Preserve `Current focus` mode and accurate `Read first` pointers. Derive the
 digest from the updated brief's open work, never from the session narrative.
-For Epoch, leave generator-owned `Current focus` and `NEXT_STEP` to the
-closeout transaction after semantic edits.
 
 For generic maps, replace rather than append the digest. Use the brief's
 priority convention, stable source order for ties, and each task's own heading
@@ -288,10 +194,8 @@ unverified when copied into a map. Keep summaries within project word caps.
 ### Latest-session map
 
 For an established `Latest session` map, update only that section with a short
-summary of this session and `Full details: <log_dir>/YYYY-MM-DD.md`. For
-Epoch, that map is in the private root (see the routing table); do not add
-one to a workspace map. Do not use
-an `@` import for the full log. Migrate a legacy dated-log import without
+summary of this session and `Full details: <log_dir>/YYYY-MM-DD.md`. Do not
+use an `@` import for the full log. Migrate a legacy dated-log import without
 removing unrelated imports or instructions. Attribute event-dependent claims
 to the time of the actual check; do not turn an old observation into present
 certainty.
@@ -310,37 +214,6 @@ independently and preserve their other contents; do not run the copying helper
 or require byte equality. Unexpected drift in a required mirror must be
 reconciled, not erased. Verify final sections and preserved baseline content.
 
-## 4.5. Preview an Epoch closeout
-
-Skip for generic projects. From the Epoch workspace root, identify exact session-owned
-inputs: brief, log, maps and other changed project files, plus any private-root
-files routed above. Pass them with `--path`; use `--related-path` for eligible
-related notes outside the project. Omit unused options. Private-root inputs
-need `--portfolio` instead of `--project` and absolute paths (see
-[Epoch two-root routing](#epoch-two-root-routing)). A whole-file input must not contain another actor's hunk.
-Do not list generated views as inputs.
-
-Create an owned private evidence directory outside Drive and repositories with
-`mktemp -d /tmp/epoch-closeout.XXXXXX`. Record the literal path; do not assume
-shell variables survive tool calls. Use a fresh receipt filename per invocation:
-
-```bash
-python3 projects/shared/scripts/project_harness.py \
-  --receipt-file "/absolute/evidence/preview.json" \
-  closeout --project <slug> \
-  --path projects/<slug>/<owned-file>
-```
-
-Require exit zero, `command: closeout`, the intended project and exact inputs,
-`ok: true`, and status `needs-apply` or `no-op`. Inspect candidate outputs and
-validation findings. The harness validates selected projects and new/worsened
-findings relative to HEAD; it may retain unrelated baseline findings. Do not
-describe that as an unqualified clean-corpus check.
-
-Preview is not application. Keep its base commit and candidate binding; if
-inputs or HEAD change before apply, refresh the preview and review the new
-candidate. Never recover an unrelated transaction merely to clear a gate.
-
 ## 5. Commit owned changes; publish only with authority
 
 ### Work repositories first
@@ -348,8 +221,7 @@ candidate. Never recover an unrelated transaction merely to clear a gate.
 Identify repositories actually changed by the session and relevant declared
 local checkouts. Merely naming a repository does not authorize committing or
 publishing its unrelated changes. Separate code/work commits from the
-bookkeeping transaction: **do not commit the Epoch notes or generic bookkeeping
-paths here**, because the next step owns those commits.
+bookkeeping transaction: **do not commit the bookkeeping paths here**, because the next step owns those commits.
 
 For each owned logical change, run relevant checks, inspect exact staged
 contents and commit scope, and commit according to repository conventions.
@@ -365,30 +237,7 @@ not a closeout failure.
 
 ### Bookkeeping transaction
 
-For Epoch, do not stage or commit the notes by hand. After intended work commits
-and a current preview, use the same explicit input set with a fresh receipt:
-
-```bash
-python3 projects/shared/scripts/project_harness.py \
-  --receipt-file "/absolute/evidence/apply.json" \
-  closeout --project <slug> \
-  --path projects/<slug>/<owned-file> \
-  --message "Update <slug> project state" --apply
-```
-
-Require exit zero, matching command/project/inputs, `ok: true`, and status
-`success` or `no-op`. For success, verify `applied: true`, the returned commit,
-its exact paths and postimages, and preserved unrelated index/worktree state.
-For a two-root receipt, also verify `private.commit`, its paths, its
-`Workspace-Commit:` trailer naming the workspace commit, and that no
-private-root path entered the workspace commit.
-For no-op, the current interface returns `applied: false`,
-`read_only: true`, and no commit even when `--apply` was used; verify the
-invocation and that no intended change remains. A preview no-op alone is not
-proof that apply ran. Retain the apply receipt for final evidence. Recovery
-journals and rollback attempts are not permission to discard ambiguous state.
-
-For generic projects, stage only owned shareable log/map changes, opted-in
+Stage only owned shareable log/map changes, opted-in
 decisions, necessary ignore rules and in-scope hook changes. Keep local-only
 paths untracked and unstaged; never force-add them. Classify each intended path
 as changed/staged, already committed/unchanged, deliberately local-only, or
@@ -421,8 +270,7 @@ commits and preserved baseline changes. Record any required verification or
 publication gaps as incomplete. Do not equate known unrelated dirt with failure,
 or local-only ahead commits with a failed unrequested push.
 
-Write the requested final receipt with successful Epoch apply evidence only
-after these checks. Name the resulting notes commit, or accurately explain the
+Write the requested final receipt only after these checks. Name the resulting notes commit, or accurately explain the
 no-op/local-only outcome; state publication authority and actual result.
 
 Keep failed or uncertain recovery artifacts until reconciled. After a verified

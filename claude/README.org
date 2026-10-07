@@ -731,9 +731,9 @@ before committing. Failed or ambiguous publication retains recovery evidence.
 The paired =update-log= skill runs only on an explicit bookkeeping request or
 the deliberate =--auto= chain. It preserves established map modes, intentionally
 different agent instructions, foreign changes and actual file-tracking policy.
-For Epoch it routes by root: workspace projects to =$EPOCH_WORKSPACE=, root
-sessions, meetings and the personal projects to =$EPOCH_PRIVATE_ROOT=, and it
-stops instead of falling back when either variable is unset.
+It holds no Epoch rules: for an Epoch session it follows the workspace's own
+=epoch-update-log= skill (=$EPOCH_WORKSPACE/.claude/skills/epoch-update-log/=), the single source of the Epoch closeout, which other
+maintainers use without these dotfiles.
 Ignore rules do not make tracked or Drive-synced content private. Post-update-log
 hooks refresh the brief before its map is derived, within the caller's authority;
 derived fields cannot originate unverified claims.
@@ -1202,6 +1202,14 @@ With =--token= it trims whitespace around the copied value (selection slack)
 but still refuses whitespace inside it, which signals a terminal-wrapped copy;
 =tests/test_secret_guard_inert_mentions.py= pins the allowed and denied shapes
 for all three guard entry points.
+
+=bin/copy-slack-draft= places a Slack draft in an Emacs composer and the kill
+ring. Rerunning it with revised text replaces the draft it last staged in that
+composer, recognised by a SHA-256 under =$XDG_STATE_HOME/copy-slack-draft/=;
+other text there is never replaced. Its JSON status distinguishes =refused=
+(unsent text it did not stage; nothing changed) from =uncertain=, and carries a
+=reason= when the failure is one of its own messages. Other Emacs error text is
+withheld because it could quote the composer.
 
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged

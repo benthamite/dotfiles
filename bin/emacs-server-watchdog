@@ -10,13 +10,20 @@ then one more when the server answers again.
 The notification names the cause from the state file that
 `simple-extras-server-state-mode' writes every few seconds: a debugger
 backtrace or minibuffer prompt parking server requests, or, when the file has
-stopped updating, Emacs blocked in Lisp or a subprocess. Each outage and
-recovery is appended to LOG_FILE, so past incidents can be classified.
+stopped updating, Emacs blocked in Lisp or a subprocess. When the file is
+fresh, the cause comes from how the probe failed: a timeout means Emacs runs
+its timers but is too slow to answer (long garbage collections or busy Lisp);
+a missing socket file, one replaced since the server last answered, or a
+refused connection points at the socket itself. Each outage and recovery is
+appended to LOG_FILE, with the probe's failure, so past incidents can be
+classified.
 
 Every run also appends one JSON line to SAMPLES_FILE: how long the server
-took to answer, the load averages, swap use and the processes using the
-most memory. A freeze can then be matched against what the machine was
-doing at the time. Lines older than SAMPLES_RETENTION are dropped.
+took to answer and why the probe failed, the state file's age, the garbage
+collections Emacs ran since the previous run, the load averages, swap use
+and the processes using the most memory. A freeze can then be matched
+against what the machine was doing at the time. Lines older than
+SAMPLES_RETENTION are dropped.
 """
 
 from __future__ import annotations
@@ -40,6 +47,8 @@ SAMPLES_TRIM_SLACK = 86400
 TOP_PROCESSES = 5
 EMACSCLIENT = "/opt/homebrew/bin/emacsclient"
 PROBE_TIMEOUT = 5
+# Longest emacsclient error kept in samples and the log.
+DETAIL_LENGTH = 160
 FAILURES_TO_ALERT = 2
 # The state file is written every five seconds; older than this means
 # Emacs is not running its timers.
@@ -47,37 +56,100 @@ STALE_AFTER = 30
 
 
 def main() -> int:
-    server = check_server()
-    record_sample(server, time.time())
+    now = time.time()
+    server = check_server(now)
+    record_sample(server, now)
     return 0
 
 
-def check_server() -> dict:
+def check_server(now: float) -> dict:
     """Probe the server, alert on outages, and return the probe's result."""
     state = read_json(STATE_FILE)
-    watchdog = read_json(WATCHDOG_FILE) or {"failures": 0, "alerted": False}
+    watchdog = read_json(WATCHDOG_FILE) or {}
     pid = state.get("pid") if state else None
     if not (isinstance(pid, int) and emacs_running(pid)):
         write_json(WATCHDOG_FILE, {"failures": 0, "alerted": False})
         return {"emacs_pid": None, "answered": None, "probe_seconds": None}
+    socket = socket_path()
     started = time.monotonic()
-    answer = probe(socket_path())
-    result = {"emacs_pid": pid, "answered": answer == pid,
-              "probe_seconds": round(time.monotonic() - started, 2)}
-    if answer == pid:
-        if watchdog["alerted"]:
-            log("recovered")
-            notify("The outage is over.", "Emacs server answering again")
-        write_json(WATCHDOG_FILE, {"failures": 0, "alerted": False})
-        return result
-    watchdog["failures"] += 1
-    if watchdog["failures"] >= FAILURES_TO_ALERT and not watchdog["alerted"]:
-        cause = diagnose(state, answer, time.time())
-        log(f"outage: {cause}")
+    outcome = probe(socket)
+    probe_seconds = round(time.monotonic() - started, 2)
+    answered = outcome["answer"] == pid
+    if outcome["answer"] is not None and not answered:
+        outcome = {**outcome, "failure": "other_emacs",
+                   "detail": f"pid {outcome['answer']} answered"}
+    identity = socket_identity(socket)
+    socket_status = compare_socket(identity, watchdog.get("socket"))
+    result = {"emacs_pid": pid, "answered": answered,
+              "probe_seconds": probe_seconds,
+              "failure": outcome["failure"], "failure_detail": outcome["detail"],
+              "socket": socket_status,
+              "state_age_seconds": round(now - float(state.get("time", 0)), 1),
+              **gc_activity(state, watchdog.get("gc"))}
+    failures = 0 if answered else watchdog.get("failures", 0) + 1
+    alerted = watchdog.get("alerted", False)
+    if answered and alerted:
+        log("recovered")
+        notify("The outage is over.", "Emacs server answering again")
+        alerted = False
+    if failures >= FAILURES_TO_ALERT and not alerted:
+        cause = diagnose(state, outcome, socket_status, now)
+        log(f"outage: {cause} [probe: {outcome['failure']}: {outcome['detail']}]")
         notify(cause, "Emacs server not answering")
-        watchdog["alerted"] = True
-    write_json(WATCHDOG_FILE, watchdog)
+        alerted = True
+    write_json(WATCHDOG_FILE, {
+        "failures": failures, "alerted": alerted,
+        "socket": identity if answered else watchdog.get("socket"),
+        "gc": gc_counters(state)})
     return result
+
+
+def socket_identity(socket: str) -> list[int] | None:
+    """Return SOCKET's inode and modification time, or None if it is missing."""
+    try:
+        info = os.stat(socket)
+    except FileNotFoundError:
+        return None
+    return [info.st_ino, int(info.st_mtime)]
+
+
+def compare_socket(identity: list[int] | None, answered: list[int] | None) -> str:
+    """Compare the socket's IDENTITY with the one it had when it last ANSWERED.
+
+    Return "missing", "replaced", "unchanged", or "unknown" when the server
+    has not answered since the watchdog's state was reset.
+    """
+    if identity is None:
+        return "missing"
+    if answered is None:
+        return "unknown"
+    return "unchanged" if identity == answered else "replaced"
+
+
+def gc_counters(state: dict) -> dict | None:
+    """Return the cumulative garbage-collection counters in STATE, or None."""
+    if not isinstance(state.get("gcs_done"), int):
+        return None
+    return {"pid": state["pid"], "gcs_done": state["gcs_done"],
+            "gc_elapsed": float(state["gc_elapsed"])}
+
+
+def gc_activity(state: dict, previous: dict | None) -> dict:
+    """Return the garbage collections in STATE since the PREVIOUS counters.
+
+    The deltas are None when there is nothing to compare with: no counters
+    in either reading, or a different or restarted Emacs.
+    """
+    current = gc_counters(state)
+    comparable = (current and previous and previous.get("pid") == current["pid"]
+                  and previous["gcs_done"] <= current["gcs_done"])
+    return {
+        "gc_count_delta": (current["gcs_done"] - previous["gcs_done"]
+                           if comparable else None),
+        "gc_seconds_delta": (round(current["gc_elapsed"] - previous["gc_elapsed"], 2)
+                             if comparable else None),
+        "gc_cons_threshold": state.get("gc_cons_threshold"),
+    }
 
 
 def record_sample(server: dict, now: float) -> None:
@@ -136,12 +208,16 @@ def trim_samples(now: float) -> None:
     temp.replace(SAMPLES_FILE)
 
 
-def diagnose(state: dict, answer: int | None, now: float) -> str:
-    """Return a one-line cause for a failed probe from STATE and ANSWER."""
+def diagnose(state: dict, outcome: dict, socket_status: str, now: float) -> str:
+    """Return a one-line cause for a failed probe.
+
+    STATE is the Emacs state file, OUTCOME the probe's result and
+    SOCKET_STATUS how the socket compares with when the server last answered.
+    """
     age = now - float(state.get("time", 0))
-    if answer is not None:
-        return (f"Another Emacs (pid {answer}) answers the server socket, "
-                f"not the live one (pid {state['pid']}).")
+    if outcome["failure"] == "other_emacs":
+        return (f"Another Emacs (pid {outcome['answer']}) answers the server "
+                f"socket, not the live one (pid {state['pid']}).")
     if age > STALE_AFTER:
         return (f"Emacs has been blocked for {int(age)} s, in Lisp or a "
                 "subprocess; C-g may interrupt it.")
@@ -155,8 +231,19 @@ def diagnose(state: dict, answer: int | None, now: float) -> str:
     if state.get("recursion_depth", 0) > 0:
         return (f"Server parked in a recursive edit (depth "
                 f"{state['recursion_depth']}); leave it with C-].")
-    return ("Emacs is responsive but its server does not answer; the socket "
-            "may be missing or replaced.")
+    if socket_status == "missing" or outcome["failure"] == "no_socket":
+        return "The server socket file is missing, so nothing can connect to Emacs."
+    if socket_status == "replaced":
+        return ("The server socket was replaced since Emacs last answered; "
+                "another process may own it now.")
+    if outcome["failure"] == "refused":
+        return ("The server socket refuses connections: nothing listens on it, "
+                "or Emacs has left its connection queue full.")
+    if outcome["failure"] == "timeout":
+        return (f"Emacs runs timers (state {int(age)} s old) but did not answer "
+                f"within {PROBE_TIMEOUT} s: likely long garbage collections or "
+                "busy Lisp.")
+    return f"emacsclient failed: {outcome['detail']}"
 
 
 def socket_path() -> str:
@@ -166,19 +253,53 @@ def socket_path() -> str:
     return f"{tmp}emacs{os.getuid()}/server"
 
 
-def probe(socket: str) -> int | None:
-    """Return the process ID of the Emacs answering SOCKET, or None."""
+def probe(socket: str) -> dict:
+    """Ask the Emacs at SOCKET for its process ID.
+
+    Return a dict with "answer", the process ID or None, and, when there is
+    no answer, "failure" (see `classify_failure') and "detail", a shortened
+    error message; both are None after an answer.
+    """
     try:
         result = subprocess.run(
             [EMACSCLIENT, f"--socket-name={socket}", f"--timeout={PROBE_TIMEOUT}",
              "--eval", "(emacs-pid)"],
             capture_output=True, text=True, timeout=PROBE_TIMEOUT + 10)
     except subprocess.TimeoutExpired:
-        return None
-    try:
-        return int(result.stdout.strip()) if result.returncode == 0 else None
-    except ValueError:
-        return None
+        return {"answer": None, "failure": "timeout",
+                "detail": f"emacsclient hung past {PROBE_TIMEOUT + 10} s"}
+    if result.returncode == 0:
+        try:
+            return {"answer": int(result.stdout.strip()), "failure": None,
+                    "detail": None}
+        except ValueError:
+            return {"answer": None, "failure": "error",
+                    "detail": "unexpected answer: " + shorten(result.stdout)}
+    return {"answer": None, "failure": classify_failure(result.stderr),
+            "detail": f"exit {result.returncode}: " + shorten(result.stderr)}
+
+
+def classify_failure(stderr: str) -> str:
+    """Return why emacsclient failed, from its STDERR.
+
+    "timeout" when the server accepted the connection but did not reply,
+    "refused" when the connection was refused, "no_socket" when there is no
+    socket file, and "error" otherwise.
+    """
+    if "timed out after" in stderr:
+        return "timeout"
+    if "Connection refused" in stderr:
+        return "refused"
+    if "can't find socket" in stderr or "No such file or directory" in stderr:
+        return "no_socket"
+    return "error"
+
+
+def shorten(text: str) -> str:
+    """Return TEXT's lines joined, without emacsclient's path, cut to DETAIL_LENGTH."""
+    lines = [line.strip().removeprefix(EMACSCLIENT + ": ")
+             for line in text.splitlines() if line.strip()]
+    return " / ".join(lines)[:DETAIL_LENGTH]
 
 
 def emacs_running(pid: int) -> bool:

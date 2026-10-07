@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.machinery
 import importlib.util
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -188,8 +189,9 @@ class MainTest(unittest.TestCase):
             mock.patch.object(watchdog, "SAMPLES_FILE", self.dir / "samples.jsonl"),
             mock.patch.object(watchdog, "socket_identity", lambda socket: [1, 2]),
             mock.patch.object(watchdog, "memory_by_process",
-                              lambda: [(9, 23000, 100, "Google Drive"),
-                                       (42, 5000, 3500, "Emacs")]),
+                              lambda: [(42, 3500, 5000, "Emacs"),
+                                       (9, 100, 23000, "Google Drive"),
+                                       (7, 1600, None, "bztransmit")]),
             mock.patch.object(watchdog, "swap_used_mb", lambda: 36000),
         ]
         for patch in patches:
@@ -276,6 +278,8 @@ class MainTest(unittest.TestCase):
         self.assertEqual(len(first["load"]), 3)
         self.assertEqual(first["top_memory_mb"],
                          [["Google Drive", 23000, 100], ["Emacs", 5000, 3500]])
+        self.assertEqual(first["top_rss_mb"],
+                         [["Emacs", 3500], ["bztransmit", 1600], ["Google Drive", 100]])
         self.assertIsNone(first["failure"])
         self.assertEqual(second["failure"], "timeout")
         self.assertEqual(second["failure_detail"], "exit 1: why")
@@ -314,36 +318,20 @@ class MainTest(unittest.TestCase):
         self.assertEqual(path.read_text(), recent)
 
 
-TOP_OUTPUT = """Processes: 891 total, 12 running, 875 sleeping, 7114 threads
-2026/10/07 10:05:09
-Load Avg: 17.01, 21.84, 24.10
-
-PID    MEM
-27547  23G
-50375  8719M+
-55316  5066M-
-1      6977K
-2      512B
-"""
-
-
 class SystemReadingTest(unittest.TestCase):
-    # Regression: Google Drive held 23 GB, nearly all swapped out, and never
-    # appeared in a ranking by resident size.
-    def test_parses_top_footprints(self):
-        self.assertEqual(watchdog.parse_top_memory(TOP_OUTPUT),
-                         {27547: 23552, 50375: 8719, 55316: 5066, 1: 7, 2: 0})
-
-    def test_rejects_unexpected_top_lines(self):
-        with self.assertRaises(ValueError):
-            watchdog.parse_top_memory(TOP_OUTPUT + "3  lots\n")
-
     def test_reads_this_machine(self):
         processes = watchdog.memory_by_process()
         self.assertTrue(processes)
-        self.assertEqual(processes, sorted(processes, key=lambda p: p[1], reverse=True))
         self.assertTrue(all("/" not in name for *_, name in processes))
         self.assertGreaterEqual(watchdog.swap_used_mb(), 0)
+
+    # Regression: Google Drive held 23 GB, nearly all swapped out, and never
+    # appeared in a ranking by resident size.
+    def test_reads_the_footprint_of_own_processes(self):
+        own = watchdog.footprint_mb(os.getpid())
+        self.assertGreater(own, 0)
+        self.assertLess(own, 1024)
+        self.assertIsNone(watchdog.footprint_mb(1))
 
 
 if __name__ == "__main__":

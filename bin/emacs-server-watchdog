@@ -20,16 +20,19 @@ classified.
 
 Every run also appends one JSON line to SAMPLES_FILE: how long the server
 took to answer and why the probe failed, the state file's age, the garbage
-collections Emacs ran since the previous run, the load averages, swap use
-and the processes with the largest memory footprint. The footprint, unlike
-the resident size, counts compressed and swapped-out pages, so a process
-that has been swapped out still ranks by the memory it holds. A freeze can
-then be matched against what the machine was doing at the time. Lines older
-than SAMPLES_RETENTION are dropped.
+collections Emacs ran since the previous run, the load averages, swap use,
+the user's processes with the largest memory footprint and all processes
+with the largest resident size. The footprint, unlike the resident size,
+counts compressed and swapped-out pages, so a process that has been swapped
+out still ranks by the memory it holds; macOS reports it only for the
+user's own processes. A freeze can then be matched against what the
+machine was doing at the time. Lines older than SAMPLES_RETENTION are
+dropped.
 """
 
 from __future__ import annotations
 
+import ctypes
 import json
 import os
 import re
@@ -48,9 +51,6 @@ SAMPLES_RETENTION = 7 * 86400
 SAMPLES_TRIM_SLACK = 86400
 TOP_PROCESSES = 5
 EMACSCLIENT = "/opt/homebrew/bin/emacsclient"
-# Setuid and entitled to read every process, so it sees root processes'
-# footprint too. One snapshot costs about 1.5 s of system time.
-TOP = "/usr/bin/top"
 PROBE_TIMEOUT = 5
 # Longest emacsclient error kept in samples and the log.
 DETAIL_LENGTH = 160
@@ -161,15 +161,19 @@ def record_sample(server: dict, now: float) -> None:
     """Append SERVER's probe result and the machine's load to SAMPLES_FILE."""
     processes = memory_by_process()
     emacs = next((p for p in processes if p[0] == server["emacs_pid"]), None)
+    by_footprint = sorted((p for p in processes if p[2] is not None),
+                          key=lambda p: p[2], reverse=True)
+    by_rss = sorted(processes, key=lambda p: p[1], reverse=True)
     sample = {
         "time": round(now),
         **server,
-        "emacs_memory_mb": emacs[1] if emacs else None,
-        "emacs_rss_mb": emacs[2] if emacs else None,
+        "emacs_memory_mb": emacs[2] if emacs else None,
+        "emacs_rss_mb": emacs[1] if emacs else None,
         "load": [round(x, 2) for x in os.getloadavg()],
         "swap_used_mb": swap_used_mb(),
-        "top_memory_mb": [[name, footprint, rss]
-                          for _, footprint, rss, name in processes[:TOP_PROCESSES]],
+        "top_memory_mb": [[name, footprint, rss] for _, rss, footprint, name
+                          in by_footprint[:TOP_PROCESSES]],
+        "top_rss_mb": [[name, rss] for _, rss, _, name in by_rss[:TOP_PROCESSES]],
     }
     SAMPLES_FILE.parent.mkdir(parents=True, exist_ok=True)
     with SAMPLES_FILE.open("a") as f:
@@ -177,45 +181,47 @@ def record_sample(server: dict, now: float) -> None:
     trim_samples(now)
 
 
-def memory_by_process() -> list[tuple[int, int, int, str]]:
-    """Return (pid, footprint MB, resident MB, name) per process, largest first.
+def memory_by_process() -> list[tuple[int, int, int | None, str]]:
+    """Return (pid, resident MB, footprint MB, executable name) per process.
 
-    The footprint comes from top and the resident size and executable name
-    from ps. Only the executable name is read: command lines can carry
-    credentials. Processes that exit between the two readings are left out.
+    The footprint is None for processes of other users, root daemons
+    included: macOS reports it only to their owner or root. (top, which
+    is setuid, reads it for all, but takes over 30 s at launchd's
+    background priority.) Only the executable name is read: command lines
+    can carry credentials.
     """
-    footprints = parse_top_memory(subprocess.run(
-        [TOP, "-l", "1", "-stats", "pid,mem"],
-        capture_output=True, text=True, check=True, timeout=60).stdout)
     output = subprocess.run(["ps", "-A", "-o", "pid=,rss=,comm="],
                             capture_output=True, text=True, check=True).stdout
     processes = []
     for line in output.splitlines():
         pid, rss, comm = line.split(None, 2)
-        if int(pid) in footprints:
-            processes.append((int(pid), footprints[int(pid)], int(rss) // 1024,
-                              Path(comm).name))
-    return sorted(processes, key=lambda p: p[1], reverse=True)
+        processes.append((int(pid), int(rss) // 1024, footprint_mb(int(pid)),
+                          Path(comm).name))
+    return processes
 
 
-TOP_UNITS = {"B": 1 / 2**20, "K": 1 / 1024, "M": 1, "G": 1024, "T": 2**20}
+class RusageInfoV0(ctypes.Structure):
+    """The `rusage_info_v0' structure of <sys/resource.h>."""
+    _fields_ = [("uuid", ctypes.c_uint8 * 16)] + [
+        (name, ctypes.c_uint64) for name in (
+            "user_time", "system_time", "pkg_idle_wkups", "interrupt_wkups",
+            "pageins", "wired_size", "resident_size", "phys_footprint",
+            "proc_start_abstime", "proc_exit_abstime")]
 
 
-def parse_top_memory(output: str) -> dict[int, int]:
-    """Return each process's footprint in MB from top's pid and mem OUTPUT.
+LIBPROC = ctypes.CDLL("/usr/lib/libproc.dylib", use_errno=True)
 
-    top rounds large values, to whole gigabytes from 10 GB.
+
+def footprint_mb(pid: int) -> int | None:
+    """Return PID's physical footprint in MB, or None if it cannot be read.
+
+    This is the "Memory" column of Activity Monitor: the process's private
+    memory, including compressed and swapped-out pages.
     """
-    lines = output.splitlines()
-    header = next(i for i, line in enumerate(lines) if line.split()[:1] == ["PID"])
-    footprints = {}
-    for line in lines[header + 1:]:
-        match = re.fullmatch(r"\s*(\d+)\s+([0-9.]+)([BKMGT])[+-]?\s*", line)
-        if not match:
-            raise ValueError(f"unexpected top line: {line!r}")
-        pid, amount, unit = match.groups()
-        footprints[int(pid)] = round(float(amount) * TOP_UNITS[unit])
-    return footprints
+    info = RusageInfoV0()
+    if LIBPROC.proc_pid_rusage(pid, 0, ctypes.byref(info)) != 0:
+        return None
+    return info.phys_footprint // 2**20
 
 
 def swap_used_mb() -> int:

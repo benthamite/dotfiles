@@ -9,11 +9,11 @@ description: Download the PDF of an academic paper (by DOI, publisher/doi.org UR
 
 `paper-fetch` is the only implementation for obtaining a paper PDF. Do not write
 a new downloader, call Anna's Archive or LibGen directly, or reach for
-`annas-mcp`, `download-missing-pdfs.py --article-doi`, or Playwright. Every route
-that works from a shell is already inside the tool, in the right order, with
-identity verification; the skill's job is to run it, and to drive the one step it
-cannot do itself: a real browser session for hosts that only answer a real
-browser. Shared logic: `~/My Drive/dotfiles/lib/python/paper_fetch.py`.
+`annas-mcp` or Playwright. Every route that works from a shell is already
+inside the tool, in the right order, with identity verification; the skill's job
+is to run it, and to drive the one step it cannot do itself: a real browser
+session for hosts that only answer a real browser. Shared logic:
+`~/My Drive/dotfiles/lib/python/paper_fetch.py`.
 
 ## Procedure
 

@@ -21,9 +21,9 @@ Python modules loaded by resolved file path from more than one consumer.
   browser saved (=--annas-search-html=). Its book interfaces inventory, register,
   stage and inspect candidates,
   then compare measured bytes only after explicit reviews. The website's
-  =download-missing-pdfs.py= imports these interfaces as a read-only adapter;
-  tested by =tests/test_paper_fetch.py=. Reads the Anna's Archive key in-process
-  and never prints it.
+  nightly =download-missing-pdfs-batch.py= loads this module to revalidate
+  retained book reviews; tested by =tests/test_paper_fetch.py=. Reads the
+  Anna's Archive key in-process and never prints it.
 - =paper_fetch_cli.py= — command entry point for =bin/paper-fetch=, using the
   dedicated outside-Drive runtime pinned by =paper-fetch-requirements.txt=.
   [[file:../docs/book-acquisition.md][The acquisition contract]] documents book commands, manifests and statuses.

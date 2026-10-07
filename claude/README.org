@@ -459,8 +459,9 @@ processing stay in Emacs. The skill has no separate downloader or BibTeX writer.
 
 The =download-paper= workflow obtains one paper PDF by DOI, URL, arXiv id,
 md5 or title through =bin/paper-fetch=, the single paper-acquisition tool
-(shared logic in =lib/python/paper_fetch.py=). The tool exhausts every route
-that works from a shell and verifies the file's identity; the skill adds the
+(shared logic in =lib/python/paper_fetch.py=). The skill names no other
+downloader: the website's legacy =download-missing-pdfs.py= CLI is retired.
+The tool exhausts every route that works from a shell and verifies the file's identity; the skill adds the
 one step the tool cannot take, a real Chrome session for hosts behind a bot
 challenge, and the exact order that step needs. For Anna's Archive SciDB
 records it clicks the page's Download link and falls back to the page's

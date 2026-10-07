@@ -227,6 +227,8 @@ exit 1
             "op-desktop read -n --account my.1password.com op://Employee/x/credential | gh secret set TOKEN -R benthamite/scratch",
             # Each and-or element is judged alone; `true` runs no write (2026-10-05).
             "op-automations read op://A/x/credential | gh secret set TOKEN -R benthamite/scratch || true",
+            # A quoted reference is one token, so its item name may contain spaces.
+            'op-automations read "op://Automations/GitHub - X Reader/private_key" | gh secret set TOKEN -R benthamite/scratch',
         ):
             with self.subTest(command=command):
                 self.assert_both(command, expected="allow")

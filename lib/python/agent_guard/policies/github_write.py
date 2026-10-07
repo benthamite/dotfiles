@@ -120,7 +120,8 @@ _GET_METHOD = ere.ere(r"(^|[[:space:]])(--method|-X)(=|[[:space:]]+)GET\b")
 # compound_shell_command_p: a write piped only into these readers keeps one target.
 _OUTPUT_FILTERS = {"tail", "head", "grep", "wc", "cat"}
 # broker_secret_pipeline_repo
-_REF = re.compile(r"op://[^\s]+")
+# Matched against one shlex token, so a quoted item name may contain spaces.
+_REF = re.compile(r"op://.+")
 _ACCOUNTS = {"@epoch", "@personal", "@tlon"}
 _NO_NEWLINE = {"--no-newline", "-n"}
 _PIPELINE_REPO = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")

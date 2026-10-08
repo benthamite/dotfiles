@@ -61,6 +61,7 @@ peers. =project_doc_fallback_filenames= is deliberately absent: Codex does not
 load project =CLAUDE.md= as a fallback.
 
 The global =codex/AGENTS.md= and =claude/CLAUDE.md= files are semantic peers.
+Both carry the same operating rules, including "solve classes, not instances".
 The paired =find-past-session= skill directs agents looking for a past session
 to =claude/bin/agent-log-find=, which searches the rendered Markdown session
 logs rather than raw transcripts.

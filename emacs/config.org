@@ -1463,6 +1463,7 @@ has connection termination."
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature server
   :demand t
+  :after simple-extras
   :config
   (advice-add 'make-network-process :filter-args #'simple-extras-server-raise-backlog)
   ;; A test instance never starts a server: if the live server is busy,

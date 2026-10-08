@@ -162,6 +162,8 @@ bot account uses the existing local OAuth credential file at
 
 The Epoch refresh token also powers `gdoc --account epoch` (which has its own auth flow but uses the same OAuth client). The personal refresh token is used only by `gmail.py`/`sheets.py`; `gdoc --account personal` has its own token under `~/.config/gdoc/accounts/personal/`.
 
+**Other copies of this client's secret.** The Epoch item `op://Automations/Google Admin OAuth - Staff Data` (fields `client_id`, `client_secret`) holds its own copy for the CI staff-data refresh. When the client secret is rotated, update that item in the same step and prove it with a token refresh, then retire the old secret in GCP. The 2026-09-30 rotation missed it, and the staff-data refresh failed with `invalid_client` from 2026-10-08, once the old secret stopped working.
+
 If a token expires (`invalid_grant` errors), regenerate it with `claude/bin/update-gworkspace-refresh-token --account <epoch|personal>`. The helper opens the OAuth browser flow, updates the appropriate backing store (the Epoch `Automations` vault for the Epoch token, the personal 1Password `Automation` vault for the personal token), and prints only status metadata, never token values. The manual recipe under "Generating a new refresh token" remains available for unusual recovery cases.
 
 ## Enabled APIs on `claude-code-gmail-490520`

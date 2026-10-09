@@ -522,10 +522,22 @@ def _codex_preamble(item, live):
         # run_turn records user input. protocol/src/protocol.rs serializes it
         # as task_started; rollout/src/policy.rs persists this specific event.
         # codex-cli 0.160.0 also persists root_turn_id (observed 2026-10-02).
+        # codex-cli 0.162.0 adds turn_attribution, which restates the turn's
+        # own ids (observed 2026-10-09); it must name this same root turn.
         fields = {"type", "turn_id", "root_turn_id", "trace_id", "started_at",
-                  "model_context_window", "collaboration_mode_kind"}
+                  "model_context_window", "collaboration_mode_kind", "turn_attribution"}
+        attribution = payload.get("turn_attribution")
+        attribution_fields = {"turn_id", "turn_trigger", "parent_turn_id",
+                              "initiating_agent_path", "root_turn_id"}
         return (set(payload) <= fields and payload.get("type") == "task_started"
                 and _text(payload.get("turn_id"))
+                and (attribution is None or
+                     (isinstance(attribution, dict) and set(attribution) <= attribution_fields
+                      and attribution.get("turn_id") == payload["turn_id"]
+                      and attribution.get("root_turn_id") in (None, payload.get("root_turn_id"))
+                      and attribution.get("parent_turn_id") is None
+                      and attribution.get("turn_trigger") is None
+                      and attribution.get("initiating_agent_path") is None))
                 and all(payload.get(key) is None or _text(payload[key])
                         for key in ("root_turn_id", "trace_id"))
                 and all(payload.get(key) is None or

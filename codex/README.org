@@ -421,7 +421,9 @@ session identity and exact run-specific prompt before dispatch, and accepts
 only a terminal return from that submitted turn. Ambiguous delivery remains
 pending; missing evidence cannot authorize retransmission or an unsupported
 process-loss restart. Its helper reuses =agent_session_lib= and records private
-recovery evidence. The receipt check treats only documented first-turn runtime
+recovery evidence. Codex startup records are recognized field by field, so a new
+CLI field (such as 0.162.0's =turn_attribution=) leaves delivery pending until the
+recognizer is taught it. The receipt check treats only documented first-turn runtime
 context as non-conversation: the AGENTS.md and environment user fragments plus
 the developer fragments codex-cli 0.153 emits at startup (generic, host skills,
 permissions, collaboration mode, multi-agent role and mode instructions), and the

@@ -629,6 +629,9 @@ real blockers from assumptions, and keeps execution plans tied to the accepted s
 The =automate= skill distinguishes advice, construction and runtime activation.
 It chooses among deterministic, gptel, skill and scheduled implementations,
 preserves scope and authorization, and verifies loading separately from behavior.
+For scheduled jobs it points to the shared alerting principle
+(=claude/context/alerting.md=, =launchd-heartbeat=) and to unattended credential
+renewal (=claude/context/secrets.md=), added 2026-10-09.
 
 The =add-to-emacs-packages= workflow checks the list, existing manual and profile
 card independently. It resolves canonical sources, preserves note IDs and keeps

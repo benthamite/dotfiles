@@ -150,6 +150,14 @@ to enable recurring execution; building the former does not authorize activating
 it. Do not silently weaken authorization to make an unattended job succeed, or
 start recurring jobs during an advisory request.
 
+Two cross-project principles apply. Failure and liveness alerts go through the
+shared `launchd-heartbeat` service; read
+`/Users/pablostafforini/My Drive/dotfiles/claude/context/alerting.md` before
+designing them, and do not build a project-specific alert channel. An unattended
+job renews its own session credentials; a recurring manual refresh is a defect
+(see "Unattended programs renew their own sessions" in
+`/Users/pablostafforini/My Drive/dotfiles/claude/context/secrets.md`).
+
 ## 4. Verify the actual contract
 
 - Skill: validate metadata/resources, test representative success/failure prompts

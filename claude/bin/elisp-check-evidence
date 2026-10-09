@@ -22,6 +22,13 @@ case "$label" in
     echo "Evidence label must be one non-empty line" >&2
     exit 2
     ;;
+  file:?*) ;;
+  *)
+    # Package labels need the package runners, which resolve the canonical
+    # source and record their own evidence; they cannot run in a snapshot.
+    echo "Evidence label must be file:RELATIVE-PATH; test package $label with batch-test.sh or elisp-ert" >&2
+    exit 2
+    ;;
 esac
 
 script_dir=$(cd -- "$(dirname -- "$0")" && pwd)

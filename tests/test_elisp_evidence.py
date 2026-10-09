@@ -103,6 +103,34 @@ class ElispEvidenceTest(unittest.TestCase):
         self.assertIn("batch-test.sh", result.stderr)
         self.assertIn("pkg", result.stderr)
 
+    def test_package_hint_does_not_offer_staged_project_checks(self) -> None:
+        repo = self.make_repo("pkg", {"pkg.el": "(provide 'pkg)\n"})
+        self.write(repo, "pkg.el", "(provide 'pkg) ;; changed\n")
+        self.git(repo, "add", "pkg.el")
+        result = self.git(repo, "commit", "-q", "-m", "change", check=False)
+        self.assertIn("stash them first.", result.stderr)
+        self.assertNotIn("--staged", result.stderr)
+
+    def test_project_hint_offers_staged_project_checks(self) -> None:
+        repo = self.make_repo("proj", {"README": "x\n", "lisp/a.el": "(provide 'a)\n"})
+        self.write(repo, "lisp/a.el", "(provide 'a) ;; changed\n")
+        self.git(repo, "add", "lisp/a.el")
+        result = self.git(repo, "commit", "-q", "-m", "change", check=False)
+        self.assertIn("file:lisp/a.el", result.stderr)
+        self.assertIn("elisp-check-evidence --staged", result.stderr)
+
+    def test_check_evidence_rejects_package_labels(self) -> None:
+        repo = self.make_repo("pkg", {"pkg.el": "(provide 'pkg)\n", "check": "#!/bin/sh\n"})
+        (repo / "check").chmod(0o755)
+        self.git(repo, "add", "check")
+        self.git(repo, "commit", "-q", "-m", "x", env={"CLAUDE_CODE_SESSION_ID": ""})
+        script = ROOT / "claude" / "bin" / "elisp-check-evidence"
+        result = self.run_cmd([str(script), "pkg", "--", str(repo / "check")], repo)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("batch-test.sh", result.stderr)
+        result = self.run_cmd([str(script), "file:pkg.el", "--", str(repo / "check")], repo)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_tested_commit_passes_whatever_the_command_shape(self) -> None:
         repo = self.make_repo("pkg", {"pkg.el": "(provide 'pkg)\n"})
         shapes = [

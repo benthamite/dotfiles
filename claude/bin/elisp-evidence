@@ -372,9 +372,15 @@ def missing_test_message(root: Path, labels: list[str]) -> str:
     lines += [f"  {test_command(label)}" for label in labels]
     if any(label.startswith("file:") for label in labels):
         lines.append("Replace PROJECT-CHECK with a tracked executable check in the repository.")
+    # Only project checks can run against an index snapshot; package
+    # runners always test the working tree.
+    project = [label.startswith("file:") for label in labels]
+    staged = ("" if not any(project) else
+              " or test the staged version with elisp-check-evidence --staged" if all(project) else
+              " or, for file: labels, test the staged version with elisp-check-evidence --staged")
     lines.append(
-        "If other uncommitted edits to the same files are in the working tree, stash them first, "
-        "or test the staged version with elisp-check-evidence --staged."
+        "If other uncommitted edits to the same files are in the working tree, "
+        f"stash them first{staged}."
     )
     return "\n".join(lines)
 

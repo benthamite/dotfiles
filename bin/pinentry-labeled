@@ -15,7 +15,7 @@ function label(desc) {
     return ""
   if (desc ~ /unlock the card/ || desc ~ /PIN/)
     return "YUBIKEY PIN (the everyday one)%0A(not the Admin PIN, not the FIDO PIN)%0A%0A"
-  # A new secret is being created: a key's protection, or a password-only
+  # A new secret is being created: the protection of a key, or a password-only
   # (symmetric) encryption. Checked before the unlock texts so the strength
   # warning and repeat dialogs never look like a request for an existing secret.
   if (desc ~ /new passphrase|to protect|to%0Aprotect|insecure passphrase|not entered a passphrase|re-enter/)

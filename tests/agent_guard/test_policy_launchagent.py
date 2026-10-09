@@ -60,6 +60,24 @@ class CommandTests(unittest.TestCase):
                         "ALLOW_LAUNCHAGENT_CHANGE=1 launchctl load x", "cat <<EOF\nlaunchctl load x\nEOF"):
             self.assertEqual(self.label(command), "allow", command)
 
+    def test_removing_a_live_plist_is_denied_even_with_the_override(self):
+        removed = "BLOCKED: removing a plist from ~/Library/LaunchAgents by hand."
+        for command in ("trash ~/Library/LaunchAgents/a.plist", "rm -f /h/Library/LaunchAgents/a.plist",
+                        "ALLOW_LAUNCHAGENT_CHANGE=1 launchctl bootout gui/501/a && trash ~/Library/LaunchAgents/a.plist",
+                        "unlink $HOME/Library/LaunchAgents/a.plist"):
+            self.assertEqual(self.label(command), removed, command)
+            self.assertIn("launchd-retire.py", launchagent.decide(
+                call(CLAUDE, "Bash", {"command": command})).reason)
+
+    def test_bootout_names_the_retirer(self):
+        result = launchagent.decide(call(CLAUDE, "Bash", {"command": "launchctl bootout gui/501/x"}))
+        self.assertIn("launchd-retire.py", result.reason)
+
+    def test_the_retirer_and_unrelated_removals_are_allowed(self):
+        for command in ("python3 ~/repos/launchd/bin/launchd-retire.py a --reason x",
+                        "trash /tmp/a.plist", "rm ~/repos/launchd/agents/a.plist"):
+            self.assertEqual(self.label(command), "allow", command)
+
     def test_fragment_keeps_leading_operator(self):
         result = launchagent.decide(call(CODEX, "exec_command", {"cmd": "x;\n\ncp a ~/Library/LaunchAgents/"}))
         self.assertIn("\n\n  ;\n\ncp a ~/Library/LaunchAgents/\n\n", result.reason)

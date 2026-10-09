@@ -267,6 +267,10 @@ explicit =--load= flag. Read-only inspection is deliberately untouched: =ls=,
 print/list=. Heredoc bodies are masked so a commit message quoting a live path is
 not read as an invocation. =ALLOW_LAUNCHAGENT_CHANGE=1= is the narrow override
 for a change Pablo has authorized, such as a temporary bootout while debugging.
+Removing a live plist (=rm=, =trash=, =unlink=) is denied even with the
+override and names =bin/launchd-retire.py=, which boots the job out, trashes its
+plists and removes its registry entry in one step; a job removed by hand stays
+in the registry and the next audit reports it missing.
 
 The secret guard also checks process-listing commands before its permissive
 branches. On macOS, =pgrep -fl= can expose credentials in process arguments;

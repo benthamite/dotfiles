@@ -2,8 +2,10 @@
 
 ~/repos/launchd is the registry of record for launchd jobs, and its
 bin/launchd-install.py does the whole install; this denies writing, loading
-or unloading a job any other way. ALLOW_LAUNCHAGENT_CHANGE=1 is the override
-for a change Pablo authorized.
+or unloading a job any other way, and bin/launchd-retire.py is the only way to
+remove one. ALLOW_LAUNCHAGENT_CHANGE=1 is the override for a load or unload
+Pablo authorized; it never covers removing a live plist, because a job removed
+outside the registry is reported as missing by the next audit.
 
 The runtimes differ in the file-path branch: Claude reads one Edit/Write
 path and, if there is one, never looks at a command; Codex checks every path
@@ -32,6 +34,14 @@ That writes the canonical plist to ~/repos/launchd/agents/, symlinks the live
 file, adds the registry/jobs.json entry, and runs the audit. Add --adopt for a
 plist already sitting in ~/Library/LaunchAgents, --load to bootstrap it, and
 --dry-run to see the plan first. Commit the launchd repo afterwards."""
+
+RETIRE_GUIDANCE = """Retire it through the launchd registry instead:
+
+  python3 ~/repos/launchd/bin/launchd-retire.py LABEL --reason 'One sentence.'
+
+That boots the job out, trashes its live and canonical plists, removes the
+registry/jobs.json entry, and runs the audit. --dry-run shows the plan. Commit
+the launchd repo afterwards."""
 
 
 def _file_reason(path: str) -> str:
@@ -69,14 +79,23 @@ drift audit finds it.
 
 If the job is already registered and you are only reloading it, rerun with
 ALLOW_LAUNCHAGENT_CHANGE=1 once Pablo has confirmed the reload."""
+    if kind == "remove":
+        return f"""BLOCKED: removing a plist from ~/Library/LaunchAgents by hand.
+
+  {fragment}
+
+A job removed while the registry still lists it is reported as a missing
+managed job by the next audit. ALLOW_LAUNCHAGENT_CHANGE=1 does not cover this.
+
+{RETIRE_GUIDANCE}"""
     return f"""BLOCKED: unloading or removing a LaunchAgent outside the launchd registry.
 
   {fragment}
 
-If a job the registry still lists disappears, tomorrow's audit reports it as a
-missing managed job. Retire the job and its registry entry together: remove the
-managed_jobs entry in ~/repos/launchd/registry/jobs.json, delete the canonical
-plist under agents/, and commit that change alongside the bootout.
+If a job the registry still lists disappears, the next audit reports it as a
+missing managed job.
+
+{RETIRE_GUIDANCE}
 
 For a deliberate temporary bootout that Pablo has confirmed, rerun with
 ALLOW_LAUNCHAGENT_CHANGE=1."""
@@ -99,9 +118,9 @@ def classify(cmd: str, live_dir: str, home: str) -> tuple[str, str] | None:
             marker = opener.group(2)
     stripped = "\n".join(kept)
 
-    # The sanctioned path. Anything routed through the installer is fine, including
-    # the launchctl bootstrap it runs under --load.
-    if re.search(r"launchd-install(?:\.py)?\b", stripped):
+    # The sanctioned paths. Anything routed through the installer or the
+    # retirer is fine, including the launchctl calls they make.
+    if re.search(r"launchd-(?:install|retire)(?:\.py)?\b", stripped):
         return None
 
     live_patterns = [
@@ -116,7 +135,13 @@ def classify(cmd: str, live_dir: str, home: str) -> tuple[str, str] | None:
     # Command position: start of string, or after a newline or shell operator.
     pos = r"(?:^|[\n;&|(\x60])\s*(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*"
 
-    # 1. Writing into the live directory.
+    # 1. Removing a live plist.
+    remove_verbs = r"(?:rm|trash|unlink|srm)"
+    for match in re.finditer(pos + remove_verbs + r"\b[^\n;&|]*", stripped):
+        if re.search(live_re, match.group(0)):
+            return "remove", match.group(0).strip()
+
+    # 2. Writing into the live directory.
     write_verbs = r"(?:cp|mv|ln|install|touch|tee|rsync|plutil|defaults|sed|perl|python3?|ruby|awk)"
     for match in re.finditer(pos + write_verbs + r"\b[^\n;&|]*", stripped):
         fragment = match.group(0)
@@ -129,12 +154,12 @@ def classify(cmd: str, live_dir: str, home: str) -> tuple[str, str] | None:
             continue
         return "write", fragment.strip()
 
-    # 2. Redirection into the live directory: `... > ~/Library/LaunchAgents/x.plist`
+    # 3. Redirection into the live directory: `... > ~/Library/LaunchAgents/x.plist`
     match = re.search(r">>?\s*(" + live_re + ")", stripped)
     if match:
         return "write", match.group(0).strip()
 
-    # 3. Loading or unloading a service.
+    # 4. Loading or unloading a service.
     load_re = pos + r"launchctl\s+(bootstrap|bootout|load|unload|enable|disable|remove|submit)\b[^\n;&|]*"
     match = re.search(load_re, stripped)
     if match:
@@ -166,9 +191,9 @@ def decide(call: Call) -> Result:
     command = call.shell_command()
     if not command or ("LaunchAgents" not in command and "launchctl" not in command):
         return Result.allow()
-    if grep(_OVERRIDE, command):
-        return Result.allow()
     verdict = classify(command, live_dir, _python_home(call.env))
     if verdict is None:
+        return Result.allow()
+    if verdict[0] != "remove" and grep(_OVERRIDE, command):
         return Result.allow()
     return Result.deny(_command_reason(*verdict))

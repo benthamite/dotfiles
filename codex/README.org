@@ -48,6 +48,9 @@ native hook trust.
 The installed =/opt/homebrew/bin/trash= may move literal absolute staging paths
 with optional =-v= or =--=; execution checks still apply, and other trash
 executables or modes remain outside this narrow cleanup allowance.
+The LaunchAgent registry guard also denies removing a live plist by hand, even
+with its override; =~/repos/launchd/bin/launchd-retire.py= retires a job and its
+registry entry together.
 See [[file:hooks/README.org][the hook contracts]] for coverage and [[file:../bin/README.org][the runner contract]] for prerequisites.
 
 The native =agents.max_concurrent_threads_per_session= setting allows 32

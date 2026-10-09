@@ -873,17 +873,24 @@ The number is [1..n] for URLs \[0..(n-1)] in the message. If
 MULTI is nil, return the number for the URL; otherwise (MULTI is
 non-nil), accept ranges of URL numbers, as per
 `mu4e-split-ranges-to-numbers', and return the corresponding
-string."
-  (let* ((count (hash-table-count mu4e--view-link-map)) (def))
+string.
+
+While prompting show the URL indicators."
+  (let ((count (hash-table-count mu4e--view-link-map))
+        (hidden (and (listp buffer-invisibility-spec)
+                     (memq 'mu4e-url-indicator buffer-invisibility-spec))))
     (when (zerop count) (mu4e-error "No links for this message"))
-    (if (not multi)
-	(if (= count 1)
-	    (el-patch-swap (read-number (mu4e-format "%s: " prompt) 1) 1)
-	  (read-number (mu4e-format "%s (1-%d): " prompt count)))
-      (progn
-	(setq def (if (= count 1) "1" (format "1-%d" count)))
-	(read-string (mu4e-format "%s (default %s): " prompt def)
-		     nil nil def)))))
+    (unwind-protect
+        (progn
+          (mu4e--view-url-indicator-display t)
+          (if (not multi)
+              (if (= count 1)
+                  (el-patch-swap (read-number (mu4e-format "%s: " prompt) 1) 1)
+                (read-number (mu4e-format "%s (1-%d): " prompt count)))
+            (let ((def (if (= count 1) "1" (format "1-%d" count))))
+              (read-string (mu4e-format "%s (default %s): " prompt def)
+                           nil nil def))))
+      (mu4e--view-url-indicator-display (not hidden)))))
 
 (provide 'mu4e-extras)
 ;;; mu4e-extras.el ends here

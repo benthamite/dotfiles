@@ -586,7 +586,8 @@ The function ~mu4e--view-get-urls-num~ is patched using =el-patch= to
 automatically select the URL when a message contains exactly one link.
 The standard behavior would prompt the user to enter the number "1",
 which is unnecessary.  When there are multiple URLs, the original
-prompting behavior is preserved.
+prompting behavior is preserved, including the URL indicators that mu4e
+1.14 shows while prompting.
 
 * Indices
 :PROPERTIES:

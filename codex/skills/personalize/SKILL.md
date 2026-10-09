@@ -109,7 +109,10 @@ Apply the following preferences to new prose, not to protected literal content:
 Return the requested draft or authorized file edit without a routine style
 scorecard. Keep any material missing-source, sample or factual limitation
 outside the draft. When Pablo genuinely must paste it himself, use
-`paste-via-kill-ring`; staging still does not authorize sending.
+`paste-via-kill-ring`; staging still does not authorize sending. For a Slack
+destination, stage the draft in that conversation's composer in the same turn
+you write it, through the workspace's Slack drafting skill (Epoch: `slack-emacs`);
+staging needs no approval, because it sends nothing.
 
 For prose not authored by Pablo, use `humanize` only when the user requests its
 editing purpose. Neither skill promises that prose will evade an AI detector.

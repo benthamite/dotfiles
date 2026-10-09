@@ -7190,7 +7190,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package consult-flycheck
-  :after consult flyckeck)
+  :after consult flycheck)
 #+end_src
 
 ** =flycheck-ledger=
@@ -15356,7 +15356,7 @@ result to a user-specified file."
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature calc-ext
-  :after cal
+  :after calc
   :bind (:map calc-alg-map
               ("C-k" . nil)))
 #+end_src

@@ -9555,7 +9555,7 @@ contain =AGENTS.md= or =CLAUDE.md=, including directories without Git repositori
   (advice-add 'agent-project--sources-for-account :filter-return
               #'pablo/agent-add-forethought-projects)
   ;; Serve the phone control page over Tailscale.  Demote errors so a
-  ;; disconnected Tailscale does not abort the rest of this configuration.
+  ;; port that cannot be bound does not abort the rest of this configuration.
   (require 'agent-remote)
   (with-demoted-errors "agent-remote: %S"
     (agent-remote-mode 1))

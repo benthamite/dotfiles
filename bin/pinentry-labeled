@@ -15,15 +15,24 @@ function label(desc) {
     return ""
   if (desc ~ /unlock the card/ || desc ~ /PIN/)
     return "YUBIKEY PIN (the everyday one)%0A(not the Admin PIN, not the FIDO PIN)%0A%0A"
-  if (desc ~ /passphrase/)
-    return "GPG PASSPHRASE%0A(your long-standing GPG key password, not a YubiKey PIN)%0A%0A"
+  # A new secret is being created: a key's protection, or a password-only
+  # (symmetric) encryption. Checked before the unlock texts so the strength
+  # warning and repeat dialogs never look like a request for an existing secret.
+  if (desc ~ /new passphrase|to protect|to%0Aprotect|insecure passphrase|not entered a passphrase|re-enter/)
+    return "SETTING A NEW PASSWORD%0A(nothing you already know is being asked for: GnuPG wants to create a new password; cancel if you did not start this)%0A%0A"
+  if (desc ~ /unlock the OpenPGP secret key|secret key can be unlocked|(export|import) the OpenPGP/)
+    return "GPG KEY PASSPHRASE%0A(your long-standing GPG key password, not a YubiKey PIN)%0A%0A"
+  if (desc ~ /[Pp]assphrase/)
+    return "ONE-OFF FILE PASSWORD%0A(a password chosen for one password-encrypted file, not your GPG key password or a YubiKey PIN)%0A%0A"
   return ""
 }
 /^SETDESC / { kind = label($0); if (kind != "") sub(/^SETDESC /, "SETDESC " kind) }
 /^SETPROMPT / {
   if (kind ~ /^YUBIKEY ADMIN/) $0 = "SETPROMPT YubiKey ADMIN PIN:"
   else if (kind ~ /^YUBIKEY PIN/) $0 = "SETPROMPT YubiKey PIN:"
-  else if (kind ~ /^GPG/) $0 = "SETPROMPT GPG passphrase:"
+  else if (kind ~ /^GPG KEY/) $0 = "SETPROMPT GPG key passphrase:"
+  else if (kind ~ /^SETTING/) $0 = "SETPROMPT New password:"
+  else if (kind ~ /^ONE-OFF/) $0 = "SETPROMPT File password:"
 }
 { print; fflush() }
 ' | /opt/homebrew/bin/pinentry-mac "$@"

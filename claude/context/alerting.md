@@ -2,6 +2,8 @@
 
 Principle (2026-10-09): liveness and failure alerts for Pablo's automations go through one service, `launchd-heartbeat`, applied the same way in every project. Do not build a project's own watchdog Worker, push topic or alert channel; extend the shared service instead.
 
+Validity rule (2026-10-09): an alert states only what is true when it is sent. A source that fails to deliver keeps no findings for later; its next run checks afresh and reports only what still holds, and the failed delivery is reported by the withheld heartbeat. A check does not report a condition that the Mac being off or logged out explains (a job not yet due since load, a heartbeat that could not have been refreshed).
+
 ## The service
 
 `~/repos/launchd/heartbeat/` (README there): a Cloudflare Worker on the personal account, independent of the Mac and of GitHub, delivering on Telegram (@PablosNotificationBot) or Gmail SMTP.

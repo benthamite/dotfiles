@@ -1168,6 +1168,30 @@
   (should-not (org-extras-id--update-excluded-p
                "/Users/x/My Drive/Epoch/projects/onboarding/onboarding.org")))
 
+;; `org-id-extra-files' reaches `org-id-update-id-locations' directly, so the
+;; exclusions must be applied to it as well as to the files passed in.
+(ert-deftest org-extras-test-id-update-filters-extra-files ()
+  "Drop excluded paths from `org-id-extra-files' during the scan."
+  (let* ((kept "/Users/x/repos/foo/projects/onboarding/onboarding.org")
+         (fixture "/Users/x/repos/foo/tests/fixtures/onboarding/onboarding.org")
+         (org-id-extra-files (list kept fixture))
+         (org-directory (make-temp-file "org-extras-test-" t))
+         (seen 'unset))
+    (unwind-protect
+        (cl-letf (((symbol-function 'org-id-update-id-locations)
+                   (lambda (&rest _) (setq seen org-id-extra-files))))
+          (org-extras-id-update-id-locations))
+      (delete-directory org-directory t))
+    (should (equal seen (list kept)))
+    (should (equal org-id-extra-files (list kept fixture)))))
+
+(ert-deftest org-extras-test-id-update-excludes-sync-conflict-copies ()
+  "Skip sync-conflict copies, which duplicate every ID of the original."
+  (should (org-extras-id--update-excluded-p
+           "/Users/x/My Drive/android/inbox-mobile (conflict 2026-10-09-03-29-33).org"))
+  (should-not (org-extras-id--update-excluded-p
+               "/Users/x/My Drive/android/inbox-mobile.org")))
+
 ;;;; Epoch meetings
 
 (ert-deftest org-extras-test-epoch-doc-id-from-url-and-bare-id ()

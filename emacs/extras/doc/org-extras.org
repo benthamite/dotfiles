@@ -907,14 +907,17 @@ heading it belongs to rather than to an enclosing one.
 The command ~org-extras-id-update-id-locations~ scans all =.org= files
 under ~org-directory~ and updates the ID location database via
 ~org-id-update-id-locations~.  Paths matching any regexp in
-~org-extras-id-update-excluded-patterns~ are skipped, and pre-existing
+~org-extras-id-update-excluded-patterns~ are skipped, whether they
+come from ~org-directory~, ~org-id-extra-files~, the agenda files or
+open buffers, and pre-existing
 stale entries with matching paths are pruned from ~org-id-files~ and
 ~org-id-locations~ before the scan so they cannot reappear as
 duplicates on the next run.  The default patterns exclude macOS Trash
 files, git worktree checkouts inside ~org-directory~, test fixture
 trees such as =tests/fixtures/=, which reconstruct notes verbatim and
-therefore repeat the IDs of the notes they reproduce, Google Drive
-sync-conflict files, legacy Dropbox copies of files now canonical
+therefore repeat the IDs of the notes they reproduce, sync-conflict
+copies (=NAME conflicted copy= and =NAME (conflict
+YYYY-MM-DD-HH-MM-SS).org=), legacy Dropbox copies of files now canonical
 under ~org-directory~, and files with carriage returns in their
 names.  If the scan reports duplicate IDs, the command automatically
 calls ~org-extras-id-find-duplicate-ids~ ([[#h:finding-duplicate-ids][Finding duplicate IDs]]) so

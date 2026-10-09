@@ -60,7 +60,8 @@
    ".org2blog.org"
    "wiki-notes.org" ; removing temporarily
    ".*conflicted copy.*"
-   ".*conflicted-copy.*")
+   ".*conflicted-copy.*"
+   ".* (conflict [0-9-]+)\\.org")
   "List of files to exclude from `org-roam'."
   :type '(repeat string)
   :group 'org-roam-extras)

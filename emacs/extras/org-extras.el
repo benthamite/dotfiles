@@ -114,6 +114,7 @@ automatic addition of IDs globally."
     "/\\.worktrees/"
     "/tests?/fixtures/"
     "conflicted copy"
+    " (conflict [0-9-]+)\\.org\\'"
     "/Library/CloudStorage/Dropbox/"
     "\r")
   "Regexps matching file paths to skip in `org-extras-id-update-id-locations'.
@@ -123,8 +124,9 @@ duplicates on subsequent scans.
 
 Defaults exclude macOS Trash, git worktree checkouts (which duplicate every
 ID from the main branch), test fixture trees (which reconstruct notes verbatim,
-IDs included, so that a test cannot drift from the note it reproduces), Google
-Drive sync-conflict files, legacy Dropbox copies of files now canonical under
+IDs included, so that a test cannot drift from the note it reproduces),
+sync-conflict copies (\"NAME conflicted copy\" and \"NAME (conflict
+YYYY-MM-DD-HH-MM-SS).org\"), legacy Dropbox copies of files now canonical under
 `org-directory', and files with carriage returns in their names."
   :type '(repeat regexp)
   :group 'org-extras)
@@ -1407,7 +1409,7 @@ Store the relation between files and corresponding IDs.  This will
 scan all agenda files, all associated archives, all open Org
 files, recursively all files in `org-directory', and all files in
 `org-id-extra-files'.  Paths matching `org-extras-id-update-excluded-patterns'
-are skipped, and pre-existing stale entries with matching paths are pruned
+are skipped, from every one of those sources, and pre-existing stale entries with matching paths are pruned
 from `org-id-files' and `org-id-locations'.
 
 If `org-id-update-id-locations' reports duplicate IDs, this
@@ -1424,7 +1426,12 @@ to display them in a dedicated buffer."
     (advice-add 'org-buffer-list :around #'org-extras--id-update-filter-org-buffers)
     (unwind-protect
         (condition-case err
-            (org-id-update-id-locations filtered-files)
+            (let ((org-id-extra-files
+                   (if (symbolp org-id-extra-files)
+                       org-id-extra-files
+                     (cl-remove-if #'org-extras-id--update-excluded-p
+                                   org-id-extra-files))))
+              (org-id-update-id-locations filtered-files))
           (error (message "org-extras-id-update-id-locations: %s" (error-message-string err))))
       (advice-remove 'org-buffer-list #'org-extras--id-update-filter-org-buffers)
       (advice-remove 'org-agenda-files #'org-extras--id-update-filter-files)

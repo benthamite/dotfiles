@@ -74,7 +74,7 @@ Org Roam queries.
 The user option ~org-roam-extras-excluded-files~ specifies a list of
 file names or patterns to exclude from Org Roam.  Entries can be literal
 file names or regular expression patterns.  The default includes
-template files, old data files, and Dropbox conflict copies.  Both
+template files, old data files, and sync-conflict copies.  Both
 options feed into ~org-roam-file-exclude-regexp~.
 
 ** Backlink buffer display

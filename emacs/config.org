@@ -1720,7 +1720,7 @@ This feature is required by =org-gcal=. We create a new GPG key to use with =org
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature plstore
-  :after pass
+  :defer t
   :config
   (add-to-list 'plstore-encrypt-to "A7C6A908CD1254A8B4051D3DCDBBB523C9627A26"))
 #+end_src

@@ -9467,6 +9467,38 @@ A double prefix ARG prompts for the directory inside START, so it is left alone.
 
   (advice-add 'claude-code--start :around #'pablo/claude-code-start-with-epoch-roots)
 
+  ;; Upstream keys a session on the Git root, so every project folder of a
+  ;; multi-project repository (the Epoch workspace's projects/<slug>/) shares
+  ;; one session namespace and starts at the root, without the project's
+  ;; instructions.  Key it instead on the nearest folder inside the root that
+  ;; has its own AGENTS.md or CLAUDE.md, as the agent project picker does.
+  (defun pablo/agent-instruction-scope (root)
+    "Narrow session directory ROOT to the nearest instruction-bearing folder.
+Search from the current buffer's file directory, or `default-directory',
+up to ROOT.  Return ROOT when the search starts outside it or finds none."
+    (let* ((root-dir (file-name-as-directory (expand-file-name root)))
+           (start (expand-file-name (if buffer-file-name
+                                        (file-name-directory buffer-file-name)
+                                      default-directory)))
+           (found (and (string-prefix-p root-dir start)
+                       (locate-dominating-file
+                        start
+                        (lambda (dir)
+                          (and (string-prefix-p
+                                root-dir (file-name-as-directory
+                                          (expand-file-name dir)))
+                               (seq-some (lambda (name)
+                                           (file-regular-p
+                                            (expand-file-name name dir)))
+                                         '("AGENTS.md" "CLAUDE.md"))))))))
+      (if found
+          (abbreviate-file-name (file-name-as-directory (expand-file-name found)))
+        root)))
+
+  (advice-add 'claude-code--directory :filter-return #'pablo/agent-instruction-scope)
+  (with-eval-after-load 'codex
+    (advice-add 'codex--directory :filter-return #'pablo/agent-instruction-scope))
+
   :bind
   ("H-E" . claude-code-transient)
   (:repeat-map my-claude-code-map

@@ -2034,7 +2034,7 @@
 			    "65b7872864038a458990418947cd94b8907f7e38"))
  (org-contacts :source "elpaca-menu-lock-file" :recipe
 	       (:package "org-contacts" :fetcher git :url
-			 "https://repo.or.cz/org-contacts.git" :files
+			 "https://github.com/emacsmirror/org-contacts.git" :files
 			 ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo"
 			  "doc/dir" "doc/*.info" "doc/*.texi" "doc/*.texinfo"
 			  "lisp/*.el" "docs/dir" "docs/*.info" "docs/*.texi"

@@ -5,6 +5,7 @@
 
 | Document | Read when |
 |----------+-----------|
+| =alerting.md= | A task adds, changes or diagnoses liveness or failure alerts for an automation (heartbeats, watchdogs, CI failure notices); the principle is one shared service, =launchd-heartbeat=. |
 | =google-services.md= | A task needs Google account routing, authentication, scopes, refresh-token maintenance, or service-specific troubleshooting. |
 | =mcp-servers.md= | A task adds, removes, places, audits, or diagnoses a Claude MCP server. |
 | =secrets.md= | Before reading, storing, sharing, moving, or otherwise handling credentials and secret-bearing configuration. |
@@ -14,6 +15,7 @@ These documents are operational context, not general background to load
 into every task. [[file:service-access.md][service-access.md]] is a plain routing table and safe to read
 in full. [[file:google-services.md][google-services.md]] includes account and authentication procedures; do
 not reproduce or run credential-bearing recipes merely to document them.
+[[file:alerting.md][alerting.md]] holds no secrets and is safe to read in full.
 [[file:mcp-servers.md][mcp-servers.md]] is safe to read for server topology and placement, but resolved
 per-account environment values remain secrets. [[file:secrets.md][secrets.md]] is handling policy rather
 than a credential file, and its rule remains the same: never print or quote a

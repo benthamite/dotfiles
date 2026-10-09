@@ -1,0 +1,25 @@
+# Alerting for Pablo's automations
+
+Principle (2026-10-09): liveness and failure alerts for Pablo's automations go through one service, `launchd-heartbeat`, applied the same way in every project. Do not build a project's own watchdog Worker, push topic or alert channel; extend the shared service instead.
+
+## The service
+
+`~/repos/launchd/heartbeat/` (README there): a Cloudflare Worker on the personal account, independent of the Mac and of GitHub, delivering on Telegram (@PablosNotificationBot) or Gmail SMTP.
+
+- **Monitors** live in `src/monitors.ts`, one Durable Object each. Two rules:
+  - `staleAfterMs`: alert when no heartbeat has arrived for that long (Mac jobs);
+  - `dailyDeadlineUtc`: alert when no heartbeat dated today has arrived by that time. It is armed from deployment and alerts again on each missed day (daily jobs, CI).
+- **Routes**: `POST /heartbeat/NAME` after each success; `POST /alert/NAME` (text body) for an immediate failure alert; `GET /status`.
+- **Tokens**: `HEARTBEAT_TOKEN` (Mac client, every route). A source outside the Mac gets a monitor-scoped token (`tokenSecret` in the monitor config, listed in `deploy.py` `MONITOR_TOKEN_SECRETS`, kept in the personal `Automation` vault) that covers only its own heartbeat and alert routes.
+- **Verify live** with its verification mode (`deploy.py --var VERIFICATION_MODE:true`, `/verify/stale`, `/verify/reset`), then redeploy without it.
+
+## Adding a source
+
+1. Add the monitor (and a scoped token if the source is not the Mac), with a test, in `~/repos/launchd/heartbeat`; run `npm run verify`; deploy.
+2. The source sends a heartbeat after real success, judged by its outcome, not merely by the process exiting 0. On failure it calls `/alert/NAME`.
+3. Do not rely on GitHub's own failure email: it did not arrive on 2026-10-06 or 2026-10-08.
+
+## Instances
+
+- Compliant: the launchd audit and the personal responder (Mac); The Hinge's daily publish (`the-hinge-publish`, deadline 11:30 UTC, from its GitHub workflow).
+- Not yet compliant (TODO): The Hinge's Mac watchdog `watchdog/run.py` (emails by itself; kept as a second check that the published page loads, to be folded into the shared service or retired); other projects with their own alerting still to be swept.

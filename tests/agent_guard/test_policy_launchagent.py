@@ -69,6 +69,11 @@ class CommandTests(unittest.TestCase):
             self.assertIn("launchd-retire.py", launchagent.decide(
                 call(CLAUDE, "Bash", {"command": command})).reason)
 
+    def test_the_reloader_is_allowed_and_named_for_reloads(self):
+        self.assertEqual(self.label("python3 ~/repos/launchd/bin/launchd-reload.py a b"), "allow")
+        result = launchagent.decide(call(CLAUDE, "Bash", {"command": "launchctl bootstrap gui/501 x"}))
+        self.assertIn("launchd-reload.py", result.reason)
+
     def test_bootout_names_the_retirer(self):
         result = launchagent.decide(call(CLAUDE, "Bash", {"command": "launchctl bootout gui/501/x"}))
         self.assertIn("launchd-retire.py", result.reason)

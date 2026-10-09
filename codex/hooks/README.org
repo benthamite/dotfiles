@@ -279,7 +279,9 @@ for a change Pablo has authorized, such as a temporary bootout while debugging.
 Removing a live plist (=rm=, =trash=, =unlink=) is denied even with the
 override and names =bin/launchd-retire.py=, which boots the job out, trashes its
 plists and removes its registry entry in one step; a job removed by hand stays
-in the registry and the next audit reports it missing.
+in the registry and the next audit reports it missing. A reload of a registered
+job goes through =bin/launchd-reload.py=, which records the load time the audit
+judges the job's schedule from.
 
 The secret guard also checks process-listing commands before its permissive
 branches, including every extracted literal =functions.exec= shell command.

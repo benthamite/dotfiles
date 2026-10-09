@@ -77,8 +77,11 @@ drift audit finds it.
 
 {INSTALL_GUIDANCE}
 
-If the job is already registered and you are only reloading it, rerun with
-ALLOW_LAUNCHAGENT_CHANGE=1 once Pablo has confirmed the reload."""
+If the job is already registered and you are only reloading it, use the
+reloader once Pablo has confirmed the reload; it records the load time the
+audit judges the job's schedule from:
+
+  python3 ~/repos/launchd/bin/launchd-reload.py LABEL..."""
     if kind == "remove":
         return f"""BLOCKED: removing a plist from ~/Library/LaunchAgents by hand.
 
@@ -118,9 +121,9 @@ def classify(cmd: str, live_dir: str, home: str) -> tuple[str, str] | None:
             marker = opener.group(2)
     stripped = "\n".join(kept)
 
-    # The sanctioned paths. Anything routed through the installer or the
-    # retirer is fine, including the launchctl calls they make.
-    if re.search(r"launchd-(?:install|retire)(?:\.py)?\b", stripped):
+    # The sanctioned paths. Anything routed through the installer, the
+    # reloader or the retirer is fine, including the launchctl calls they make.
+    if re.search(r"launchd-(?:install|retire|reload)(?:\.py)?\b", stripped):
         return None
 
     live_patterns = [

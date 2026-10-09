@@ -76,7 +76,19 @@ QUERY="(progn (require 'json) (require 'seq)
             (mapcar #'file-truename
               (seq-filter #'file-directory-p
                 (directory-files root t directory-files-no-dot-files-regexp)))))
-            (cons 'package_build (file-truename build))))
+            (cons 'package_build (file-truename build))
+            ;; Libraries outside Elpaca, such as Homebrew's site-lisp
+            ;; (mu4e), which -Q drops from the batch load path.
+            (cons 'site (vconcat
+              (mapcar #'file-truename
+                (seq-filter
+                  (lambda (dir)
+                    (and (stringp dir) (not (file-remote-p dir))
+                         (file-directory-p dir)
+                         (not (file-in-directory-p dir root))
+                         (not (file-in-directory-p dir lisp-directory))
+                         (not (file-in-directory-p dir source))))
+                  load-path))))))
         'utf-8) t)))"
 if ! RAW_CONTEXT=$(timeout 10 emacsclient -e "$QUERY" 2>/dev/null); then
   echo "Cannot query active Elpaca dependency paths" >&2
@@ -89,7 +101,9 @@ if ! CONTEXT=$(printf '%s' "$RAW_CONTEXT" | jq -er --arg id "$PACKAGE" '
     (.builds | type == "array" and all(.[]; type == "string" and startswith("/") and
       (test("[[:cntrl:]]") | not))) and
     (.package_build | type == "string" and startswith("/") and
-      (test("[[:cntrl:]]") | not)))'); then
+      (test("[[:cntrl:]]") | not)) and
+    ((.site // []) | type == "array" and all(.[]; type == "string" and
+      startswith("/") and (test("[[:cntrl:]]") | not))))'); then
   echo "Invalid Elpaca dependency metadata" >&2
   exit 1
 fi
@@ -107,7 +121,8 @@ if { [ "$SOURCE_REPO" != "$CANONICAL_DOTFILES" ] ||
 fi
 # Exclude the package's own build entirely, not just its main library.
 DEPENDENCIES=$(printf '%s' "$CONTEXT" | jq -c '
-  .package_build as $own | [.builds[] | select(rtrimstr("/") != ($own // "" | rtrimstr("/")))]')
+  .package_build as $own | [.builds[] | select(rtrimstr("/") != ($own // "" | rtrimstr("/")))]
+    + (.site // [])')
 DEPENDENCIES_B64=$(printf '%s' "$DEPENDENCIES" | base64 | tr -d '\n')
 ARGS=(-Q --batch)
 # Loading dependencies from source macroexpands them eagerly, which for

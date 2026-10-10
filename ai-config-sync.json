@@ -585,6 +585,13 @@
       "codex": null,
       "status": "claude-only",
       "note": "Claude Stop hook registered in mutable ~/.claude/settings.json: refuses Status: done while the Stop payload's background_tasks lists running non-teammate tasks. Codex parity is unassessed (deferred 2026-10-10): whether Codex background terminals outlive a turn and whether its Stop payload exposes them is still to be checked; see docs/plans/2026-10-10-stale-background-jobs.md."
+    },
+    {
+      "name": "hold-idle-teammate-with-running-task.py",
+      "claude": "claude/hooks/hold-idle-teammate-with-running-task.py",
+      "codex": null,
+      "status": "claude-only",
+      "note": "Claude TeammateIdle hook registered in mutable ~/.claude/settings.json: keeps an agent-team teammate busy while a background shell it launched still has a writer on its output file, working around Claude Code leaving teammates' completion notices undelivered. Codex has no agent teams, so there is no counterpart. See docs/plans/2026-10-10-teammate-idle-with-running-task.md."
     }
   ],
   "mcp_servers": [

@@ -867,6 +867,15 @@ four-week audit of 3,962 background tasks found leftover tasks with many
 unrelated causes, all left behind by agents that had declared the work done; see
 =docs/plans/2026-10-10-stale-background-jobs.md=.
 
+Since 2026-10-10 the TeammateIdle hook =hooks/hold-idle-teammate-with-running-task.py=
+keeps an agent-team teammate from going idle while a background shell it started
+is still running (some process holds the task's output file open for writing). It
+tells the teammate to wait in the foreground instead, because Claude Code can queue
+a teammate's completion notice without delivering it, leaving the teammate idle
+for good. A task that ended without its notice reaching the teammate is reported
+to it once, with its output path. Origin: the 2026-10-10 Epoch/meetings stall; see
+=docs/plans/2026-10-10-teammate-idle-with-running-task.md=.
+
 Since 2026-10-01 every PreToolUse guard runs in one Python process:
 =~/.claude/settings.json= registers only =hooks/agent-guard.sh=, which runs the
 engine in =lib/python/agent_guard= and turns any failure into a denial,

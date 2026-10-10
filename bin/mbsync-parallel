@@ -40,18 +40,25 @@ trap 'rm -f "$MBSYNC_PASSFILE"' EXIT
 env -u MBSYNC_PASSFILE mbsync-passcmd > "$MBSYNC_PASSFILE"
 export MBSYNC_PASSFILE
 
-# Run gmail-maildir-sync in background (no GPG needed), mbsync in foreground
-# (mbsync needs GPG/pinentry which requires a TTY)
-gmail-maildir-sync sync &
-GMAIL_PID=$!
+# Run gmail-maildir-sync for each Gmail-API account in background (no GPG
+# needed), mbsync in foreground (mbsync needs GPG/pinentry which requires a TTY)
+gmail-maildir-sync --account epoch sync &
+EPOCH_PID=$!
+gmail-maildir-sync --account forethought sync &
+FORETHOUGHT_PID=$!
 
 echo "$channels" | parallel --will-cite sync_channel
 MBSYNC_STATUS=$?
 
-wait $GMAIL_PID
-GMAIL_STATUS=$?
+# Wait on each PID so every account's failure is seen, not just the last one.
+wait $EPOCH_PID
+EPOCH_STATUS=$?
+wait $FORETHOUGHT_PID
+FORETHOUGHT_STATUS=$?
 
-if [ "$GMAIL_STATUS" -ne 0 ]; then
-    exit "$GMAIL_STATUS"
-fi
+for status in "$EPOCH_STATUS" "$FORETHOUGHT_STATUS"; do
+    if [ "$status" -ne 0 ]; then
+        exit "$status"
+    fi
+done
 exit "$MBSYNC_STATUS"

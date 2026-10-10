@@ -13882,6 +13882,11 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
    :token (auth-source-extras-op-get "Slack MCP - Epoch Unofficial" "xoxc_token" 'epoch)
    :cookie (auth-source-extras-op-get "Slack MCP - Epoch Unofficial" "xoxd_token" 'epoch)
    :animate-image t)
+  (slack-register-team
+   :name "Forethought"
+   :token (auth-source-extras-op-get "slack-forethought" "token")
+   :cookie (auth-source-extras-op-get "slack-forethought" "cookie")
+   :animate-image t)
 
   :hook
   (slack-buffer-mode-hook . (lambda () (setopt line-spacing nil)))

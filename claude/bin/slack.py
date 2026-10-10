@@ -16,6 +16,8 @@ Multiple workspaces are supported via the WORKSPACES registry and the global
                  (.../xoxc_token -> Bearer token, .../xoxd_token -> 'd' cookie)
   altruismo-eficaz -> personal 1Password Automation vault: slack.com/altruismo-eficaz
                  (token: field -> Bearer token, cookie: field -> 'd' cookie)
+  forethought -> personal 1Password Automation vault: slack-forethought
+                 (same fields; see the Forethought exception in secrets.md)
 
 Usage:
   slack.py [-w WORKSPACE] <subcommand> ...
@@ -130,6 +132,12 @@ WORKSPACES = {
     "altruismo-eficaz": {
         "source": "automation",
         "item": "slack.com/altruismo-eficaz",
+        "token_field": "token",
+        "cookie_field": "cookie",
+    },
+    "forethought": {
+        "source": "automation",
+        "item": "slack-forethought",
         "token_field": "token",
         "cookie_field": "cookie",
     },

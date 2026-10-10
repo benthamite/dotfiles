@@ -20,14 +20,18 @@ the "Already tried" list in place.
   =simple-extras-server-state-mode=. Stale means timers are not running.
 - Display sleep/wake: =pmset -g log=. Several outages ended seconds after the
   display woke, i.e. Emacs froze while Pablo was away.
-- Not yet captured automatically: a C/Lisp stack during an outage. Only a
-  live =/usr/bin/sample= (see the =emacs-freeze= skill) gives one.
+- Stacks: since 2026-10-10 the watchdog runs =/usr/bin/sample= when a probe
+  fails or a minute has 30+ GCs (at most every 5 min) into
+  =~/Library/Logs/emacs-server-watchdog.stacks/=; the sample line's
+  =stack_file= names the report. It finishes 20-80 s after the run.
+  Native-compiled Lisp shows as =F<hex>_<name>_N= symbols.
 
 * Already tried (do not re-propose without new evidence)
 
 - Restarting Google Drive (2026-10-07): footprint fell from 23 GB to 0.4 GB,
   but was back at 15 GB within about an hour and at ~23 GB by 10-09. A restart
-  is not a fix; the cause of the growth is uninvestigated.
+  is not a fix: the memory refills within ~20 min of every start (see the
+  2026-10-10 Drive finding below).
 - Backblaze exclusion rules (2026-10-07): stop index growth, do not shrink
   the existing 5.5 GB =bzfileids.dat=.
 - =gcmh-low-cons-threshold= raised to 128 MB (2026-10-07, =351180ef6=):
@@ -37,15 +41,30 @@ the "Already tried" list in place.
 
 * Open
 
-- Google Drive's memory growth (~23 GB footprint, mostly swapped): cause not
-  investigated.
+- Google Drive's ~23 GB footprint: shrink the number of mirrored items, or
+  switch My Drive from Mirror to Stream. Pablo's decision (2026-10-10 finding
+  below).
 - Backblaze: start a new backup to drop the 5.5 GB index. Pablo's decision,
   pending since 2026-10-07.
-- Watchdog: capture =sample= output automatically on a failed probe or a GC
-  storm, so the next incident names the running code.
-- Cause of the 2026-10-10 GC storm (below).
+- Cause of the 2026-10-10 GC storm and the morning blocks: read the first
+  stack reports the watchdog captures.
 
 * Incidents
+
+** 2026-10-10: Google Drive memory (investigation, no change)
+
+- The main "Google Drive" child process holds it: 22 GB footprint, 22.3 GB
+  swapped, 100 MB resident. Malloc 13.5 GB in 16.9M live allocations, plus
+  11.2 GB of 160 KB "Foundation" regions; not fragmentation.
+- It fills in ~20 min after each start, during DriveFS's startup scan of
+  ~355k mirrored items ("ScanCloud Generated 354928 download events"), then
+  grows only ~0.5 GB/day. Inferred: ~63 KB retained per mirrored item.
+- Biggest mirrored trees under =~/My Drive=: Music 130k items, Apps 56k
+  (Zotero Library backup ~14k), Websites 34k, Dictionaries 34k, library-pdf
+  17k. =~/My Drive/repos= (3.6k, agent state) also violates the no-code-in-Drive
+  rule.
+- Drive for desktop 132.0.0.0; no acknowledged Google issue, only anecdotal
+  reports of Mirror mode using 20-30 GB.
 
 ** 2026-10-10: two freezes late morning (BST)
 

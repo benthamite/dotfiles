@@ -193,11 +193,17 @@ class MainTest(unittest.TestCase):
                                        (9, 100, 23000, "Google Drive"),
                                        (7, 1600, None, "bztransmit")]),
             mock.patch.object(watchdog, "swap_used_mb", lambda: 36000),
+            mock.patch.object(watchdog, "capture_stack", self.fake_capture),
         ]
+        self.captures = []
         for patch in patches:
             patch.start()
             self.addCleanup(patch.stop)
         self.write_state(recursion_depth=1, debugger="Debugger entered")
+
+    def fake_capture(self, pid, reason, now):
+        self.captures.append((pid, reason))
+        return f"/stacks/{reason}.txt"
 
     def write_state(self, **fields):
         (self.dir / "state.json").write_text(json.dumps(
@@ -305,6 +311,36 @@ class MainTest(unittest.TestCase):
         self.assertIsNone(sample["answered"])
         self.assertEqual(sample["swap_used_mb"], 36000)
 
+    def test_a_failed_probe_captures_a_stack_named_in_the_sample(self):
+        self.write_state()
+        self.run_with_answer(42)
+        self.run_with_answer(None)
+        self.assertEqual(self.captures, [(42, "timeout")])
+        first, second = self.samples()
+        self.assertNotIn("stack_file", first)
+        self.assertEqual(second["stack_file"], "/stacks/timeout.txt")
+
+    def test_captures_are_throttled_during_a_long_outage(self):
+        self.write_state()
+        self.run_with_answer(None)
+        self.run_with_answer(None)
+        self.assertEqual(len(self.captures), 1)
+        state = json.loads((self.dir / "watchdog.json").read_text())
+        state["last_capture"] -= watchdog.CAPTURE_INTERVAL
+        (self.dir / "watchdog.json").write_text(json.dumps(state))
+        self.run_with_answer(None)
+        self.assertEqual(len(self.captures), 2)
+
+    def test_a_gc_storm_captures_a_stack_even_when_the_server_answers(self):
+        self.write_state()
+        self.run_with_answer(42)
+        self.write_state(gcs_done=100 + watchdog.GC_STORM - 1)
+        self.run_with_answer(42)
+        self.assertEqual(self.captures, [])
+        self.write_state(gcs_done=100 + 2 * watchdog.GC_STORM)
+        self.run_with_answer(42)
+        self.assertEqual(self.captures, [(42, "gc-storm")])
+
     def test_old_samples_are_trimmed_once_past_the_slack(self):
         now = time.time()
         day = 86400
@@ -316,6 +352,45 @@ class MainTest(unittest.TestCase):
         path.write_text(json.dumps({"time": round(now - 8.5 * day)}) + "\n" + recent)
         watchdog.trim_samples(now)
         self.assertEqual(path.read_text(), recent)
+
+
+class CaptureStackTest(unittest.TestCase):
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        patch = mock.patch.object(watchdog, "STACKS_DIR", self.dir / "stacks")
+        patch.start()
+        self.addCleanup(patch.stop)
+
+    def test_samples_into_a_private_directory_and_trims_old_reports(self):
+        stacks = self.dir / "stacks"
+        stacks.mkdir()
+        old = stacks / "old.txt"
+        old.write_text("x")
+        os.utime(old, (0, 0))
+        with mock.patch.object(watchdog.subprocess, "Popen") as run:
+            path = watchdog.capture_stack(42, "timeout", time.time())
+        self.assertFalse(old.exists())
+        self.assertTrue(path.endswith("-timeout.txt"))
+        args = run.call_args.args[0]
+        self.assertEqual(args[:3], [watchdog.SAMPLE, "42", "3"])
+        self.assertEqual(args[-1], path)
+        self.assertTrue(run.call_args.kwargs["start_new_session"])
+        self.assertEqual(stacks.stat().st_mode & 0o777, 0o700)
+
+    def test_a_sample_that_cannot_start_is_logged_not_raised(self):
+        logged = []
+        with mock.patch.object(watchdog.subprocess, "Popen",
+                               side_effect=FileNotFoundError("sample")), \
+             mock.patch.object(watchdog, "log", logged.append):
+            self.assertIsNone(watchdog.capture_stack(42, "timeout", time.time()))
+        self.assertTrue(logged[0].startswith("stack capture failed"))
+
+    def test_samples_a_live_process(self):
+        path = Path(watchdog.capture_stack(os.getpid(), "test", time.time()))
+        deadline = time.monotonic() + 120
+        while not (path.exists() and "Call graph" in path.read_text()):
+            self.assertLess(time.monotonic(), deadline, "no report after 120 s")
+            time.sleep(1)
 
 
 class SystemReadingTest(unittest.TestCase):

@@ -30,6 +30,8 @@ For the **personal** account (`pablo.stafforini@gmail.com`):
 - Sheets: `sheets.py --account personal` (same CLI, same token as Gmail).
 - Calendar: `gcalcli-epoch` (both accounts via shared calendars; no per-account flag).
 
+The Forethought calendar (`pablo@forethought.org`) is shared with `pablo@epoch.ai` with write access (10 October 2026), so `gcalcli-epoch --calendar 'pablo@forethought.org'` reads and edits it.
+
 `gcalcli-epoch` validates the canonical Epoch OAuth grant from 1Password and
 atomically refreshes `/Users/pablostafforini/Library/Application Support/gcalcli/oauth`
 before invoking the installed `gcalcli`. It refuses mismatched account identity
@@ -52,7 +54,8 @@ forethought` (mail scope only, granted 10 October 2026; see "Auth" below).
 Docs/Drive: `gdoc --account forethought` (own token under
 `~/.config/gdoc/accounts/forethought/`, Drive and Docs scopes, granted 10 October
 2026; re-auth with `gdoc auth --account forethought --domain forethought.org`).
-The other mapped Google CLIs (`gmail.py`, `sheets.py`, calendar) have no
+Calendar: `gcalcli-epoch --calendar 'pablo@forethought.org'` (shared calendar; see above).
+The other mapped Google CLIs (`gmail.py`, `sheets.py`) have no
 Forethought credentials; do not assume `--account forethought` works there or
 route work through Epoch/personal credentials. Some older documents were shared with the personal account; use
 that account only where the task explicitly calls for that access. Profile and

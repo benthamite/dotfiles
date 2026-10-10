@@ -14,6 +14,7 @@ browser automation; each already carries the right account and auth.
 | Google Docs / Drive | `gdoc` (comments vs. suggestions: see `google-services.md`, "Reading comments and suggestions") |
 | GitHub | `gh` |
 | Signal (read-only) | `bin/sgn-read` |
+| Fireflies meeting transcripts (Forethought, read-only) | `bin/fireflies` |
 
 Relative paths are under the dotfiles root, `~/My Drive/dotfiles/`. For
 Google account and auth details, read `google-services.md` in this
@@ -45,6 +46,14 @@ a daemon and stores every message in `~/.local/share/sgn/sgn.db`. Do not call
 history with `sgn-read chats|show|search`, which opens the database read-only.
 There is no agent send path; sending goes through sgn in Emacs, and any message
 on Pablo's behalf needs his confirmation.
+
+## Fireflies
+
+`fireflies list|get` reads Pablo's Forethought Fireflies meetings
+(`pablo@forethought.org`) through the GraphQL API: `list` filters by date or
+keyword, `get ID` prints the summary and transcript as Markdown
+(`--summary-only` for the summary). The key is the `fireflies-forethought` item
+in the personal `Automation` vault (see `secrets.md`). There is no write path.
 
 ## Google Drive original files
 

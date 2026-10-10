@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+"""fireflies — read-only access to Pablo's Forethought Fireflies meetings.
+
+Uses the Fireflies GraphQL API as pablo@forethought.org. The API key is the
+`password` field of `fireflies-forethought` in the personal 1Password
+Automation vault (Forethought exception in claude/context/secrets.md), read
+in-process through op-automations and never printed. No write operations.
+
+Usage:
+  fireflies list [--since YYYY-MM-DD] [--until YYYY-MM-DD] [--keyword TEXT] [--limit N]
+  fireflies get ID [--summary-only]
+"""
+
+import argparse
+import datetime
+import json
+import subprocess
+import sys
+import urllib.error
+import urllib.request
+
+GRAPHQL_URL = "https://api.fireflies.ai/graphql"
+REQUEST_TIMEOUT = 60
+
+
+def fail(message, code=1):
+    sys.stderr.write(f"ERROR: {message}\n")
+    sys.exit(code)
+
+
+def api_key():
+    try:
+        out = subprocess.run(
+            ["op-automations", "@personal", "item", "get", "fireflies-forethought",
+             "--vault", "Automation", "--fields", "label=password", "--reveal"],
+            check=False, capture_output=True, text=True, timeout=REQUEST_TIMEOUT)
+    except (OSError, subprocess.TimeoutExpired):
+        fail("Fireflies credential lookup failed")
+    value = out.stdout.strip()
+    if out.returncode != 0 or not value or any(c.isspace() for c in value):
+        fail("Fireflies credential lookup failed (item fireflies-forethought)")
+    return value
+
+
+def query(gql, variables):
+    body = json.dumps({"query": gql, "variables": variables}).encode()
+    req = urllib.request.Request(GRAPHQL_URL, data=body, headers={
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key()}",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT) as resp:
+            data = json.load(resp)
+    except urllib.error.HTTPError as exc:
+        fail(f"Fireflies API returned HTTP {exc.code}: {exc.read()[:300].decode(errors='replace')}")
+    except urllib.error.URLError as exc:
+        fail(f"Fireflies API unreachable: {exc.reason}")
+    if data.get("errors"):
+        fail("Fireflies API error: " + "; ".join(e.get("message", "?") for e in data["errors"]))
+    return data["data"]
+
+
+def fmt_date(ms):
+    return datetime.datetime.fromtimestamp(ms / 1000).strftime("%Y-%m-%d %H:%M")
+
+
+def iso(day, end=False):
+    d = datetime.datetime.strptime(day, "%Y-%m-%d")
+    if end:
+        d += datetime.timedelta(days=1)
+    return d.astimezone(datetime.timezone.utc).isoformat()
+
+
+def cmd_list(args):
+    variables = {"limit": args.limit}
+    if args.since:
+        variables["fromDate"] = iso(args.since)
+    if args.until:
+        variables["toDate"] = iso(args.until, end=True)
+    if args.keyword:
+        variables["keyword"] = args.keyword
+    gql = """query($limit: Int, $fromDate: DateTime, $toDate: DateTime, $keyword: String) {
+      transcripts(limit: $limit, fromDate: $fromDate, toDate: $toDate, keyword: $keyword) {
+        id title date duration organizer_email participants
+      }
+    }"""
+    for t in query(gql, variables)["transcripts"]:
+        minutes = round(t.get("duration") or 0)
+        print(f"{fmt_date(t['date'])}\t{minutes} min\t{t['id']}\t{t['title']}")
+
+
+def cmd_get(args):
+    sentences = "" if args.summary_only else "sentences { speaker_name text start_time }"
+    gql = f"""query($id: String!) {{
+      transcript(id: $id) {{
+        id title date duration organizer_email participants transcript_url
+        summary {{ overview shorthand_bullet action_items }}
+        {sentences}
+      }}
+    }}"""
+    t = query(gql, {"id": args.id})["transcript"]
+    if not t:
+        fail(f"no transcript {args.id}")
+    print(f"# {t['title']}\n")
+    print(f"- Date: {fmt_date(t['date'])}")
+    print(f"- Duration: {round(t.get('duration') or 0)} min")
+    print(f"- Organizer: {t.get('organizer_email')}")
+    print(f"- Participants: {', '.join(t.get('participants') or [])}")
+    print(f"- Fireflies: {t.get('transcript_url')}\n")
+    summary = t.get("summary") or {}
+    for key, heading in (("overview", "Overview"), ("shorthand_bullet", "Notes"),
+                         ("action_items", "Action items")):
+        if summary.get(key):
+            print(f"## {heading}\n\n{summary[key].strip()}\n")
+    if not args.summary_only:
+        print("## Transcript\n")
+        for s in t.get("sentences") or []:
+            stamp = str(datetime.timedelta(seconds=int(s.get("start_time") or 0)))
+            print(f"[{stamp}] {s.get('speaker_name') or '?'}: {s.get('text')}")
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    sub = p.add_subparsers(dest="cmd", required=True)
+    ls = sub.add_parser("list", help="list meetings, newest first")
+    ls.add_argument("--since")
+    ls.add_argument("--until")
+    ls.add_argument("--keyword")
+    ls.add_argument("--limit", type=int, default=20)
+    g = sub.add_parser("get", help="print a meeting's summary and transcript as Markdown")
+    g.add_argument("id")
+    g.add_argument("--summary-only", action="store_true")
+    args = p.parse_args()
+    {"list": cmd_list, "get": cmd_get}[args.cmd](args)
+
+
+if __name__ == "__main__":
+    main()

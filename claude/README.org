@@ -548,8 +548,8 @@ forms, opening the target thread). The global instructions only point at it,
 and the service-access routing table lives in
 [[file:context/service-access.md][context/service-access.md]] for the same reason: procedures load on demand,
 while the always-loaded file keeps one trigger line each. The service-access
-trigger names services only (Signal joined it on 2026-10-10, routed to the
-read-only =bin/sgn-read=); browser work reaches its rules through the
+trigger names services only (Signal and Fireflies joined it on 2026-10-10,
+routed to the read-only =bin/sgn-read= and =bin/fireflies=); browser work reaches its rules through the
 =chrome-use= skill's own trigger. The paired
 =chrome-use= skill, which loads before any browser step, owns the browser
 rules: background research stays off live Chrome, standing authorization for

@@ -689,6 +689,111 @@ class CrossReviewRunTests(unittest.TestCase):
                 self.cli("reconcile-submission", "--delivered")
         self.assertIsNotNone(self.state()["pending_submission"])
 
+    # Shape of a real codex-cli 0.162.1 transcript (2026-10-10): the review
+    # turn hit the usage limit with no output, the session was restarted
+    # under another account, and "continue" started the turn that reviewed.
+    def echo(self, text):
+        self.append({"type": "event_msg", "payload": {"type": "item_completed", "item": {
+            "type": "UserMessage", "content": [{"type": "text", "text": text, "text_elements": []}]}}})
+
+    def usage_limited(self, code="usage_limit_exceeded"):
+        self.append({"type": "event_msg", "payload": {"type": "token_count", "info": None}})
+        self.append({"type": "event_msg", "payload": {
+            "type": "task_complete", "turn_id": "fixture-limited", "last_agent_message": None,
+            "error": {"message": "You've hit your usage limit.", "codex_error_info": code}}})
+
+    def resume(self, text="continue"):
+        for _ in range(2):
+            self.append({"type": "event_msg", "payload": {"type": "thread_settings_applied", "thread_settings": {}}})
+        self.append({"type": "event_msg", "payload": {"type": "task_started", "turn_id": "fixture-resumed"}})
+        self.append({"type": "response_item", "payload": {"type": "message", "role": "developer",
+                     "content": [{"type": "input_text", "text": "Synthetic skills."}]}})
+        self.append({"type": "world_state", "payload": {"full": False, "state": {}}})
+        self.append({"type": "turn_context", "payload": {"cwd": self.actor["directory"]}})
+        self.user(text)
+        self.echo(text)
+
+    def limited_review(self):
+        self.create_run()
+        self.cli("submit-review")
+        self.echo(self.prompt)
+        self.usage_limited()
+
+    def test_continuation_after_zero_output_usage_limit_completes(self):
+        self.limited_review()
+        self.resume()
+        self.output("Commentary.", phase="commentary")
+        self.append({"type": "response_item", "payload": {"type": "function_call"}})
+        self.output()
+        text = self.cli("finish-review")
+        self.assertIn("REVIEW OUTCOME: complete", text)
+        self.assertIn("usage limit", text)
+        self.assertEqual(self.state()["return_evidence"]["via"], "usage-limit-continuation")
+        self.assertEqual(self.state()["status"], "review-returned")
+        self.assertEqual(len(self.sent), 1)
+
+    def test_continuation_may_follow_repeated_usage_limits(self):
+        self.limited_review()
+        self.resume()
+        self.usage_limited()
+        self.resume()
+        self.output()
+        self.assertIn("REVIEW OUTCOME: complete", self.cli("finish-review"))
+
+    def test_markerless_continuation_is_terminal_incomplete(self):
+        self.limited_review()
+        self.resume()
+        self.output("Partial findings.")
+        self.assertIn("terminal-incomplete", self.cli("finish-review"))
+        evidence = self.state()["return_evidence"]
+        self.assertEqual((evidence["kind"], evidence["via"]), ("markerless", "usage-limit-continuation"))
+
+    def test_continuation_requires_limited_zero_output_turn_and_exact_continue(self):
+        def limited_with_output():
+            self.output("Started.", phase="commentary")
+            self.usage_limited()
+        def other_error():
+            self.append({"type": "event_msg", "payload": {
+                "type": "task_complete", "last_agent_message": None,
+                "error": {"message": "Server error.", "codex_error_info": "internal_server_error"}}})
+        def unknown_record():
+            self.usage_limited()
+            self.append({"type": "event_msg", "payload": {"type": "agent_reasoning", "text": "x"}})
+        variants = {
+            "output-before-limit": (limited_with_output, "continue", None),
+            "other-error": (other_error, "continue", None),
+            "unknown-between": (unknown_record, "continue", None),
+            "other-text": (self.usage_limited, "continue, and also edit the plan", None),
+            "later-user-turn": (self.usage_limited, "continue", ["unrelated next task"]),
+            "second-continue": (self.usage_limited, "continue", ["continue"]),
+            "task-then-continue": (self.usage_limited, "continue", ["now do task X", "continue"]),
+        }
+        for name, (first_turn, continuation, later) in variants.items():
+            with self.subTest(variant=name):
+                self.setUp()
+                self.create_run()
+                self.cli("submit-review")
+                self.echo(self.prompt)
+                first_turn()
+                self.resume(continuation)
+                self.output()
+                for text in later or ():
+                    self.user(text)
+                    self.output()
+                with self.assertRaisesRegex(SystemExit, "no terminal return"):
+                    self.cli("finish-review")
+                self.assertEqual(self.state()["status"], "review-active")
+
+    def test_claude_reviewer_has_no_continuation_path(self):
+        self.actor["backend"] = "claude-code"
+        self.create_run(**{"caller-backend": "codex"})
+        self.cli("submit-review")
+        self.usage_limited()
+        self.user("continue")
+        self.output()
+        with self.assertRaisesRegex(SystemExit, "no terminal return"):
+            self.cli("finish-review")
+
 
 if __name__ == "__main__":
     unittest.main()

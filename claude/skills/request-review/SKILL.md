@@ -137,6 +137,12 @@ Completion requires a terminal assistant return in this exact submitted turn
 ending with the exact run-specific completion marker. Earlier commentary,
 tool activity, a later different user turn, missing/truncated/malformed
 transcript evidence, or a reused buffer must not certify completion.
+One exception: when a Codex reviewer's submitted turn ended with a recorded
+usage-limit error and no output, and the next user message is exactly
+`continue` (typically sent after restarting the session under another account),
+the helper certifies the return of that continuation turn and records it as
+a usage-limit continuation. Any output before the limit, other text or a
+later user turn, including another `continue`, still refuses.
 
 A terminal return without the marker is a **terminal incomplete review**.
 Preserve and report it; no second contact or implementation based on a claimed

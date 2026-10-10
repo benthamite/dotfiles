@@ -201,7 +201,9 @@ def validate_review(state: Any, *, allow_legacy=False) -> dict[str, Any]:
                                    ("pending_submission", "submission", "return_evidence"))
     status = state.get("status")
     if evidence is not None and (not isinstance(evidence, dict)
-            or set(evidence) != {"kind", "sha256"} or evidence["kind"] not in {"marker", "markerless"}
+            or set(evidence) - {"via"} != {"kind", "sha256"}
+            or evidence.get("via", "usage-limit-continuation") != "usage-limit-continuation"
+            or evidence["kind"] not in {"marker", "markerless"}
             or not _hex(evidence["sha256"])):
         raise SystemExit("invalid return evidence")
     coherent = (
@@ -560,6 +562,110 @@ def _codex_preamble(item, live):
                     and kind in allowed[payload["role"]] for part, kind in zip(content, kinds)))
 
 
+# Codex ends a turn refused for the account's usage limit with a task_complete
+# carrying one of these codex_error_info codes (observed with codex-cli 0.162.1,
+# 2026-10-10). The work resumes in the same thread once this exact text is
+# sent, typically after restarting the session under another account; the
+# helper checks the transcript shape, not how the restart happened.
+USAGE_LIMIT_ERRORS = {"usage_limit_exceeded"}
+LIMIT_CONTINUATION = "continue"
+
+
+def _turn_bookkeeping(item, user_text):
+    """Recognize Codex records that carry neither output nor new user input.
+
+    USER_TEXT is the turn's own user message: Codex echoes it as an
+    item_completed UserMessage, and older versions as an event_msg user_message.
+    """
+    payload = item.get("payload")
+    if not isinstance(payload, dict):
+        return False
+    if item.get("type") in {"world_state", "turn_context"}:
+        return True
+    if item.get("type") == "response_item":
+        return payload.get("type") == "message" and payload.get("role") == "developer"
+    if item.get("type") != "event_msg":
+        return False
+    kind = payload.get("type")
+    if kind in {"task_started", "token_count", "thread_settings_applied"}:
+        return True
+    if kind == "user_message":
+        return payload.get("message") == user_text
+    entry = payload.get("item")
+    return (kind == "item_completed" and isinstance(entry, dict) and entry.get("type") == "UserMessage"
+            and _text_content(entry.get("content")) == user_text)
+
+
+def _text_content(content):
+    if not isinstance(content, list):
+        return None
+    return "\n".join(part["text"] for part in content
+                     if isinstance(part, dict) and isinstance(part.get("text"), str))
+
+
+def _usage_limited(item):
+    payload = item.get("payload")
+    if not isinstance(payload, dict):
+        return False
+    error = payload.get("error")
+    return (item.get("type") == "event_msg" and payload.get("type") == "task_complete"
+            and payload.get("last_agent_message") is None and isinstance(error, dict)
+            and error.get("codex_error_info") in USAGE_LIMIT_ERRORS)
+
+
+def _limit_continuation(path, offset, prompt_sha256):
+    """Return the offset of the turn that resumed a usage-limited review.
+
+    The exact submitted turn must end with a recorded usage-limit error and
+    no output; the next user message must be exactly LIMIT_CONTINUATION, with
+    only bookkeeping in between. A continuation turn that hits the limit the
+    same way may be continued again. Any output, other user text or unknown
+    record refuses (None), so only the submitted review's own work counts.
+    """
+    with Path(path).open("rb") as stream:
+        stream.seek(offset)
+        data = stream.read()
+    if data and not data.endswith(b"\n"):
+        return None
+    phase, user_text, resumed = "prompt", None, None
+    for line in data.split(b"\n")[:-1]:
+        position, offset = offset, offset + len(line) + 1
+        try:
+            item = json.loads(line.decode("utf-8"))
+        except (UnicodeError, json.JSONDecodeError):
+            return None
+        if not isinstance(item, dict):
+            return None
+        text = session._user_message_text(item)
+        if phase == "prompt":
+            if text is not None and _digest(text.encode("utf-8")) == prompt_sha256:
+                phase, user_text = "turn", text
+            continue
+        if phase == "done":
+            # "continue" is generic, so a later user turn must not be matched
+            # as the continuation's return; the continuation turn is the last.
+            payload = item.get("payload")
+            if text is not None or (item.get("type") == "event_msg" and isinstance(payload, dict)
+                                    and payload.get("type") == "user_message"):
+                return None
+            continue
+        if phase == "between":
+            if text == LIMIT_CONTINUATION:
+                phase, user_text, resumed = "turn", text, (position, text)
+            elif text is not None or not _turn_bookkeeping(item, None):
+                return None
+            continue
+        # Inside a turn that has produced no output yet.
+        if _usage_limited(item):
+            phase = "between"
+        elif text is not None or not _turn_bookkeeping(item, user_text):
+            # Output began: the resumed turn's return is judged as usual.
+            if resumed is None or text is not None:
+                return None
+            phase = "done"
+    return resumed if phase in {"turn", "done"} else None
+
+
 def _receipt(state, record, run_file):
     live = _current(state)
     if state["reviewer"]["transcript"] is None and live.get("transcript"):
@@ -690,9 +796,15 @@ def finish_review(args):
         if not _receipt(state, record, args.run_file):
             raise SystemExit("exact review delivery receipt is unavailable")
         inspected = _verify_boundary(state, record)
+        path = state["reviewer"]["transcript"]
         returned = session.latest_transcript_return(
-            state["reviewer"]["transcript"], record["transcript_offset"],
-            expected_prompt_sha256=record["prompt_sha256"])
+            path, record["transcript_offset"], expected_prompt_sha256=record["prompt_sha256"])
+        resumed = None
+        if returned is None and state["reviewer"]["backend"] == "codex":
+            resumed = _limit_continuation(path, record["transcript_offset"], record["prompt_sha256"])
+            if resumed is not None:
+                returned = session.latest_transcript_return(
+                    path, resumed[0], expected_prompt_sha256=_digest(resumed[1].encode("utf-8")))
         if _verify_boundary(state, record) != inspected:
             raise SystemExit("transcript changed during return inspection; no return accepted")
         _current(state, waiting=True)
@@ -704,8 +816,12 @@ def finish_review(args):
         state["status"] = "review-returned" if complete else "review-incomplete"
         state["return_evidence"] = {"kind": "marker" if complete else "markerless",
                                     "sha256": _digest(text.encode("utf-8"))}
+        if resumed is not None:
+            state["return_evidence"]["via"] = "usage-limit-continuation"
         save_review(args.run_file, state)
     print("REVIEW OUTCOME: " + ("complete" if complete else "terminal-incomplete"))
+    if resumed is not None:
+        print("(returned in a continuation after the submitted turn hit a usage limit with no output)")
     print(text)  # The exact validated bytes, not a different transcript reread.
 
 

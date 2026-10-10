@@ -184,3 +184,47 @@ these revisions take precedence.
    mode-line and phone displays, with controlled inputs: a real hook run
    against a synthetic transcript holding a stuck item.  This holds even if
    the upstream defect cannot be reproduced.
+
+## Step 1 result (2026-10-10): gate failed, nothing built
+
+I replayed 816 Claude transcripts with queue records (last 28 days):
+
+- 22,922 enqueues, 5,663 dequeues and 17,002 removes.
+- The queue can't be modelled reliably:
+  - 523 dequeues can't be tied to a specific item;
+  - 55 removes have no matching enqueue;
+  - 16 operations have unknown shapes.
+- A first-in-first-out (FIFO) reading is wrong.  A dequeue pairs with the
+  item that the next user record carries, which is usually the newest one.
+- 1,047 task notices were still outstanding at a lead turn end:
+  - 592 were delivered within 60 s;
+  - 225 were delivered after 1 minute or more;
+  - 230 were never delivered in the transcript, concentrated in six
+    agent-team-heavy tangodb sessions.
+- Most notices belong to teammates or subagents.  Whether they were delivered
+  is not visible from the main transcript's queue alone.
+- A sample of lead-owned "late" cases turned out to be pairing artifacts,
+  not stuck notices.
+
+The plan's rule therefore can't be made precise from queue records, and no
+automatic wake-up ships on it.
+
+A possible refined rule, not yet validated, would replace queue bookkeeping
+with two observable facts:
+
+1. The whole session is idle: the lead is waiting and no subagent or
+   teammate is working.  agent.el already knows this from the
+   SubagentStart, SubagentStop and TeammateIdle hooks.
+2. A completed task's notice text has not appeared in any user record of the
+   main or subagent transcripts.
+
+With nothing running, nobody can consume such a notice, so it is stuck by
+definition.  Today's meetings case meets both conditions:
+
+- the lead stopped at 15:50 and phase2c had been idle since 15:27;
+- the notice text appeared in no transcript until 16:42.
+
+Historical transcripts cannot show when teammates were idle, so this rule
+can only be validated live, in flag-only mode, before any wake-up.
+
+Replay scripts: this session's scratchpad, `replay/`.

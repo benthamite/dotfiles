@@ -9609,6 +9609,14 @@ BACKEND is `claude' or `codex'.  Each entry becomes (NAME :home HOME), with
    "~/.config/emacs-profiles/active/elpaca/sources/agent/")
 
   (agent-codex-accounts (pablo/agent-accounts 'codex))
+  ;; Each organization's directories always run under its own account,
+  ;; whatever account is currently selected.
+  (agent-account-directory-rules
+   `((,(file-name-concat paths-dir-personal-repos "epoch/")
+      . ((claude-code . "epoch") (codex . "epoch-pool")))
+     (,paths-dir-epoch . ((claude-code . "epoch") (codex . "epoch-pool")))
+     (,(file-name-concat paths-dir-personal-repos "forethought/") . "forethought")
+     ("~/My Drive/Forethought/" . "forethought")))
 
   :bind
   ("H-e" . agent-menu)

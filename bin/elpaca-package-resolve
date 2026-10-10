@@ -78,9 +78,17 @@ else
             (base64-encode-string source t)
             (base64-encode-string label t)))"
 
-  if ! raw=$(timeout 10 emacsclient -e "$expression" 2>&1); then
-    echo "Could not query the live Elpaca package registry: $raw" >&2
-    exit 1
+  if raw=$(timeout 10 emacsclient -e "$expression" 2>&1); then
+    :
+  else
+    query_status=$?
+    if [ "$query_status" -eq 124 ]; then
+      printf '%s\n' "Could not query the live Elpaca package registry (timeout status 124; 10-second client wait limit). Emacs execution state is unknown." >&2
+    else
+      printf 'Could not query the live Elpaca package registry (exit status %s).\n' "$query_status" >&2
+    fi
+    printf '%s\n' "${raw:-No diagnostic output from emacsclient.}" >&2
+    exit "$query_status"
   fi
   result=$(printf '%s' "$raw" | sed 's/^"//; s/"$//')
   if [ -z "$result" ] || [ "$result" = nil ]; then

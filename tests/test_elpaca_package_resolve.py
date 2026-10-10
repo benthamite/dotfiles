@@ -1,12 +1,11 @@
-"""Exercise on-disk package resolution through the real CLI.
-
-emacsclient is replaced by a recording stub so these checks prove the on-disk
-mode never consults Emacs; they do not exercise the live-registry mode.
-"""
+"""Exercise package resolution and its CLI failure path without live Emacs."""
 from __future__ import annotations
 
 import json
 import os
+import base64
+import shutil
+import shlex
 from pathlib import Path
 import subprocess
 import tempfile
@@ -90,6 +89,86 @@ class OnDiskResolveTests(unittest.TestCase):
         for identifier in [".", ".."]:
             with self.subTest(identifier=identifier):
                 self.assert_refused(self.resolve(identifier))
+
+
+class RegistryFailureTests(unittest.TestCase):
+    setUp = OnDiskResolveTests.setUp
+
+    def prepare_client(self, *, status=0, output="", delayed=False):
+        commands = self.root / "commands"
+        stub = commands / "emacsclient"
+        body = 'echo called >> "$EMACSCLIENT_CALLS"\n'
+        if delayed:
+            body += 'exec /bin/sleep 2\n'
+            timeout = shutil.which("timeout")
+            self.assertIsNotNone(timeout)
+            # Retain a real timeout child, shortening only its fixture wait.
+            timer = commands / "timeout"
+            timer.write_text('#!/bin/sh\n[ "$1" = 10 ] || exit 97\nshift\nexec ' +
+                             shlex.quote(timeout) + ' 0.05 "$@"\n')
+            timer.chmod(0o755)
+        else:
+            body += 'printf %s ' + shlex.quote(output) + '\nexit ' + str(status) + '\n'
+        stub.write_text('#!/bin/sh\n' + body)
+        stub.chmod(0o755)
+
+    def invoke(self, helper="elpaca-package-resolve"):
+        args = [str(HELPER.with_name(helper)), "fixture"]
+        if helper == "agent-status":
+            args[1] = "Controlled diagnostic fixture"
+        return subprocess.run(args, env=self.env, text=True, capture_output=True,
+                              timeout=3, check=False)
+
+    def test_real_timeout_is_reported_through_full_status_wrapper(self):
+        self.prepare_client(delayed=True)
+        result = self.invoke("agent-status")
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(result.stdout, "")
+        self.assertIn("timeout status 124", result.stderr)
+        self.assertIn("10-second client wait limit", result.stderr)
+        self.assertIn("Emacs execution state is unknown", result.stderr)
+        self.assertIn("No diagnostic output", result.stderr)
+        self.assertEqual(self.calls.read_text().splitlines(), ["called"])
+
+    def test_timeout_status_propagates_through_resolver_and_path(self):
+        self.prepare_client(status=124)
+        for helper in ["elpaca-package-resolve", "elpaca-package-path"]:
+            with self.subTest(helper=helper):
+                self.assertEqual(self.invoke(helper).returncode, 124)
+
+    def test_silent_non_timeout_failure_retains_status(self):
+        self.prepare_client(status=7)
+        result = self.invoke()
+        self.assertEqual(result.returncode, 7)
+        self.assertIn("exit status 7", result.stderr)
+        self.assertIn("No diagnostic output", result.stderr)
+        self.assertNotIn("timeout status", result.stderr)
+
+    def test_client_diagnostic_is_retained(self):
+        diagnostic = "emacsclient: can't connect to server\n"
+        self.prepare_client(status=1, output=diagnostic)
+        result = self.invoke()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(diagnostic, result.stderr)
+        self.assertIn("exit status 1", result.stderr)
+
+    def test_refusal_text_still_drives_existing_wrapper_retries(self):
+        self.prepare_client(status=1, output="emacsclient: can't connect to server\n")
+        sleep = self.root / "commands" / "sleep"
+        sleep.write_text('#!/bin/sh\nexit 0\n')
+        sleep.chmod(0o755)
+        result = self.invoke("agent-status")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("can't connect to server", result.stderr)
+        self.assertEqual(self.calls.read_text().splitlines(), ["called"] * 5)
+
+    def test_live_registry_success_still_resolves(self):
+        encoded = lambda value: base64.b64encode(value.encode()).decode()
+        self.prepare_client(output='"fixture:' + encoded(str(self.checkout)) + ':' + encoded('Fixture') + '"\n')
+        result = self.invoke()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)['source'], str(self.checkout))
+        self.assertEqual(result.stderr, "")
 
 
 if __name__ == "__main__":

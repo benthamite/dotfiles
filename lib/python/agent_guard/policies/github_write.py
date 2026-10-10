@@ -59,8 +59,8 @@ _NOT_ALLOWLISTED_ADVICE = (
 # Agents publish to epoch-research through the Writer app, never with Pablo's
 # login: GitHub notifies the pusher of every failed push-triggered run
 # (ai-enablement docs/superpowers/plans/2026-10-10-agent-push-attribution.md).
-# Off until the alert coverage check is proven to catch app-pushed failures.
-EPOCH_PUSH_ENFORCED = False
+# On since 2026-10-10, after the alert coverage canary caught an app-pushed failure.
+EPOCH_PUSH_ENFORCED = True
 _EPOCH_OWNER = "epoch-research/"
 # Declared repos the Writer app is not installed on, where an agent may push a
 # non-default branch itself. Refresh with `epoch_publish.py --writer-coverage`.

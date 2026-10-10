@@ -376,10 +376,9 @@ exit 1
         entries = self.allowlist_entries()
         candidates = [repo for repo in self.declared_repos() if repo not in entries]
         self.assertTrue(candidates, "expected a declared repo absent from the allowlist")
-        command = (
-            f"git push https://github.com/{candidates[0]}.git "
-            "main"
-        )
+        # A gh write: agent pushes to epoch-research go through the Writer app
+        # instead (EpochPushTests).
+        command = f"gh issue create --repo {candidates[0]} --title T --body B"
 
         self.assert_both(command, expected="allow")
 
@@ -621,6 +620,14 @@ class EpochPushTests(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertEqual(github_write.push_destinations(command, current), expected)
         self.assertIsNone(github_write.push_destinations("git push origin HEAD", lambda: None))
+
+    def test_the_registered_entry_scripts_enforce_it(self) -> None:
+        # Unpatched: the committed flag, through each runtime's real agent-guard.sh.
+        from guard_harness import run_e2e
+        for runtime in GUARDS:
+            with self.subTest(runtime=runtime):
+                result = run_e2e(runtime, payload(runtime, f"git push {self.EPOCH} master"), cwd=ROOT)
+                self.assertIn("epoch_publish.py", result.stdout + result.stderr)
 
     def test_the_flag_off_keeps_declared_pushes_allowed(self) -> None:
         with mock.patch.object(github_write, "EPOCH_PUSH_ENFORCED", False):

@@ -80,6 +80,11 @@ assuming Pablo's Slack identity followed his Google account; it is now
 deactivated and awaiting deletion by a workspace admin. It still appears in
 user searches. Never use it: do not message, mention, invite or act as it.
 
+Conversations with Forethought staff from before Pablo joined the Forethought
+workspace live in Slack Connect channels and group DMs on the Epoch workspace
+(`slack.py -w epoch`), e.g. `ai-uplift-core` and the group DMs with Will, Max,
+Lexi, Avi and Peter. Ignore Peter's type3ltd workspace.
+
 Forethought Gmail syncs into mu4e (`gmail-maildir-sync --account forethought`);
 Docs/Drive use `gdoc --account forethought`; the other mapped Google tools have no Forethought authentication. See `google-services.md` for account routing. Discover the connected
 profile at runtime; browser/tab IDs are session-specific.

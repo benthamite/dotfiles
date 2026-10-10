@@ -30,7 +30,6 @@ This manual describes the features and customization options for the Emacs Lisp 
 @menu
 * Overview::
 * User options::
-* Faces::
 * Modeline segments::
 * Modeline definitions::
 * Functions::
@@ -42,12 +41,10 @@ This manual describes the features and customization options for the Emacs Lisp 
 User options
 
 * Segment visibility::
-* Claude Code cost display::
-* Claude Code detail toggles::
 
 Modeline segments
 
-* Claude Code status::
+* AI session status::
 * Tlon segments::
 * Org Roam backlinks::
 * AI context::
@@ -77,9 +74,9 @@ information not provided by the standard @samp{doom-modeline} segments:
 
 @itemize
 @item
-A @strong{Claude Code status} segment that displays the session name, model,
-token count, cost, context usage percentage, lines changed, duration,
-and cache efficiency for active Claude Code sessions.
+An @strong{AI session status} segment that displays the session name, model,
+effort, account and the status the agent last published, for Claude
+Code and Codex sessions.
 @item
 An @strong{AI context} segment showing how many files are currently in the
 @samp{gptel} context.
@@ -102,8 +99,6 @@ GitHub notifications arrive.
 
 @menu
 * Segment visibility::
-* Claude Code cost display::
-* Claude Code detail toggles::
 @end menu
 
 @node Segment visibility
@@ -113,7 +108,6 @@ GitHub notifications arrive.
 @vindex doom-modeline-extras-tlon-split
 @vindex doom-modeline-extras-ai-context
 @vindex doom-modeline-extras-claude-code
-@vindex doom-modeline-extras-claude-code-usage
 The user option @code{doom-modeline-extras-org-roam} controls whether the Org
 Roam backlink count segment is displayed.  When non-@code{nil} (the default),
 the backlink count appears in the modeline while visiting an Org mode
@@ -130,64 +124,8 @@ non-@code{nil} and there are files in the @code{gptel-context--alist}, the count
 appears as a sparkle icon with a number.
 
 The user option @code{doom-modeline-extras-claude-code} controls whether the
-Claude Code status segment is displayed in Claude Code buffers.  The
+AI session status segment is displayed in agent session buffers.  The
 default value is @code{t}.
-
-The user option @code{doom-modeline-extras-claude-code-usage} controls
-whether rate limit burn-rate deviations are displayed in the Claude
-Code modeline segment.  The default value is @code{t}.  When non-@code{nil}, the
-segment shows how far ahead or behind the user is relative to a
-uniform consumption pace for both the 5-hour session and 7-day weekly
-windows.  Data is sourced from the usage polling in @samp{agent-claude}
-(@ref{Top,agent-claude,,agent-claude,}).
-
-@node Claude Code cost display
-@section Claude Code cost display
-
-@vindex doom-modeline-extras-claude-code-api-plan
-The user option @code{doom-modeline-extras-claude-code-api-plan} determines
-how session costs are rendered in the Claude Code modeline segment.
-When @code{nil} (the default), the package assumes a subscription plan (Free,
-Pro, or Max) and displays the cost with a strikethrough face to indicate
-that the amount is not actually charged.  When non-@code{nil}, it assumes an
-API plan and displays the cost normally, since the user is paying per
-token.
-
-The boolean type accepts @code{t} or @code{nil}.  You should set this to @code{t} if
-you are using the Claude API directly rather than a subscription plan.
-
-@node Claude Code detail toggles
-@section Claude Code detail toggles
-
-@vindex doom-modeline-extras-claude-code-tokens
-@vindex doom-modeline-extras-claude-code-lines-changed
-@vindex doom-modeline-extras-claude-code-cache-efficiency
-The Claude Code status segment can display several optional detail
-fields.  Each is controlled by a boolean user option that defaults to
-@code{nil} (hidden).  Set any of them to @code{t} to include the corresponding
-information in the modeline.
-
-The user option @code{doom-modeline-extras-claude-code-tokens} controls
-whether the input token count is shown.  When non-@code{nil}, the segment
-displays a compact token count (e.g., ``12.3k'', ``1.5M'').
-
-The user option @code{doom-modeline-extras-claude-code-lines-changed}
-controls whether lines added and removed are shown.  When non-@code{nil},
-the segment displays a @samp{+N/-M} indicator with color-coded faces.
-
-The user option @code{doom-modeline-extras-claude-code-cache-efficiency}
-controls whether the cache hit ratio is shown.  When non-@code{nil}, the
-segment displays the percentage of cache-read tokens relative to total
-tokens, color-coded by efficiency.
-
-@node Faces
-@chapter Faces
-
-@vindex doom-modeline-extras-cost-free
-The face @code{doom-modeline-extras-cost-free} is used to render the session
-cost on non-API (subscription) plans.  It inherits from
-@code{doom-modeline} and adds a strikethrough attribute, visually indicating
-that the displayed cost is not actually charged to the user.
 
 @node Modeline segments
 @chapter Modeline segments
@@ -197,88 +135,49 @@ The segments described below are defined using
 layouts.
 
 @menu
-* Claude Code status::
+* AI session status::
 * Tlon segments::
 * Org Roam backlinks::
 * AI context::
 @end menu
 
-@node Claude Code status
-@section Claude Code status
+@node AI session status
+@section AI session status
 
-@findex doom-modeline-extras--format-claude-status
-The @code{claude-code-status} segment is the most feature-rich segment in
-this package.  It activates only in buffers recognized as Claude Code
-sessions (via @code{claude-code--buffer-p}).  When session status data is
-available, it displays multiple pipe-separated fields:
+@findex doom-modeline-extras--format-state-summary
+The @code{ai-session-status} segment activates in buffers that @samp{agent}
+recognizes as agent sessions (via @code{agent--detect-backend}).  The
+@code{ai-session} modeline, which @samp{agent-claude} and @samp{agent-codex} set in
+their session buffers, consists of this segment followed by the usual
+right-hand segments.  It displays these pipe-separated fields:
 
 @itemize
 @item
 @strong{Backend icon}: the registered backend's icon, rendered via
 @code{agent-backend-icon-string} from the @samp{agent} package.
 @item
-@strong{Session name}: shown in bold, extracted from the buffer name.
-Hovering shows the backend's label (resolved via @code{agent-backend} and
-@code{agent-backend-label} from the @samp{agent} package), e.g. ``Claude Code
-session''.
+@strong{Session name}: shown in bold.  Hovering shows the backend's label
+(resolved via @code{agent-backend} and @code{agent-backend-label}), e.g.
+``Claude Code session''.
 @item
-@strong{Model}: the Claude model in use (e.g., ``opus'', ``sonnet'').
+@strong{Model}: the model in use.
 @item
-@strong{Effort}: the Claude Code reasoning effort level (e.g., ``high'').
+@strong{Effort}: the reasoning effort level (e.g., ``high'').  For Codex, the
+live buffer override comes first, falling back to the account's
+@samp{config.toml}.
 @item
-@strong{Account}: the account used for this session (e.g., ``personal'',
-``work''), when multi-account support is configured.  The value is read
-from the buffer's session via @code{agent-session} and
-@code{agent-session-account} from the @samp{agent} package.
+@strong{Account}: the account used for this session, read via
+@code{agent-session} and @code{agent-session-account}.
 @item
-@strong{Rate limit burn rate}: shown as @samp{5h:+N% 7d:-M%} when
-@code{doom-modeline-extras-claude-code-usage} is non-@code{nil}.  Each figure
-is a deviation from the expected usage at this point in the window,
-assuming uniform consumption across the entire period.  A positive
-value (red) means the user is burning through the budget faster than
-sustainable; a negative value (green) means the user is under budget.
-Hovering shows a tooltip with raw utilization and the relative reset
-time (e.g., ``27% used, -66% vs pace / Resets: in 2h 30m'').  The
-underlying data comes from the usage polling in @samp{agent-claude}
-(@ref{Top,agent-claude,,agent-claude,}).
-@item
-@strong{Token count}: formatted compactly (e.g., ``12.3k'', ``1.5M'').
-@item
-@strong{Cost}: shown as a dollar amount, optionally with strikethrough on
-subscription plans (@ref{Claude Code cost display}).
-@item
-@strong{Context usage}: shown as a percentage with color coding---green below
-60%, yellow at 60-79%, red at 80% and above.
-@item
-@strong{Lines changed}: a +N/-M display with green for additions and red for
-deletions.
-@item
-@strong{Duration}: elapsed session time in a compact format (e.g., ``5m23s'').
-@item
-@strong{Cache efficiency}: the ratio of cache-read tokens to total tokens,
-color-coded (green above 80%, yellow 50-79%, red below 50%).
-@item
-@strong{Alert indicator}: from @code{agent-alert-indicator}.
+@strong{Status}: the status the session's agent last published with
+@code{agent-session-set-status}, as returned by
+@code{agent-session-state-summary}.  This is the same text as the last
+column of the session switcher.  A status published before the latest
+prompt keeps the face @code{agent-session-stale-status}.
 @end itemize
 
-Codex sessions display the session name, configured model, reasoning
-effort, account, elapsed duration, and alert indicator when those values
-are available.  The reasoning effort comes from the live Codex buffer
-override first, falling back to the account's @samp{config.toml}.
-
-Before Claude status data arrives, the segment displays only the session
-name.
-
-The formatting is handled by several internal helper functions:
-@code{doom-modeline-extras--format-model},
-@code{doom-modeline-extras--format-account},
-@code{doom-modeline-extras--format-effort},
-@code{doom-modeline-extras--format-tokens},
-@code{doom-modeline-extras--format-cost},
-@code{doom-modeline-extras--format-context-percent},
-@code{doom-modeline-extras--format-lines-changed},
-@code{doom-modeline-extras--format-duration}, and
-@code{doom-modeline-extras--format-cache-efficiency}.
+Before Claude status data arrives, a Claude session shows no model,
+effort or account.
 
 @node Tlon segments
 @section Tlon segments
@@ -312,12 +211,11 @@ non-empty.
 @node Modeline definitions
 @chapter Modeline definitions
 
-The package defines a @code{claude-code} modeline layout using
-@code{doom-modeline-def-modeline}.  This layout places the @code{claude-code-status}
+The package defines an @code{ai-session} modeline layout using
+@code{doom-modeline-def-modeline}.  This layout places the @code{ai-session-status}
 segment on the left side (alongside the bar segment) and @code{misc-info},
-@code{major-mode}, @code{process}, and @code{time} on the right.  It is intended for
-use in Claude Code session buffers to give a comprehensive at-a-glance
-view of the session state.
+@code{major-mode}, @code{process}, and @code{time} on the right.  It is used in agent
+session buffers.
 
 @node Functions
 @chapter Functions

@@ -82,43 +82,6 @@
   :type 'boolean
   :group 'doom-modeline)
 
-(defcustom doom-modeline-extras-claude-code-api-plan nil
-  "Whether using an API plan for Claude Code.
-When nil (the default), assumes a subscription plan (Free, Pro,
-or Max) and displays the cost with strikethrough to indicate no
-charge.  When non-nil, displays the cost normally."
-  :type 'boolean
-  :group 'doom-modeline)
-
-(defcustom doom-modeline-extras-claude-code-tokens nil
-  "Whether to display token count in the Claude Code modeline."
-  :type 'boolean
-  :group 'doom-modeline)
-
-(defcustom doom-modeline-extras-claude-code-lines-changed nil
-  "Whether to display lines added/removed in the Claude Code modeline."
-  :type 'boolean
-  :group 'doom-modeline)
-
-(defcustom doom-modeline-extras-claude-code-cache-efficiency nil
-  "Whether to display cache efficiency in the Claude Code modeline."
-  :type 'boolean
-  :group 'doom-modeline)
-
-(defcustom doom-modeline-extras-claude-code-usage t
-  "Whether to display rate limit usage in the Claude Code modeline.
-Shows 5-hour session usage and 7-day weekly usage percentages."
-  :type 'boolean
-  :group 'doom-modeline)
-
-;;;; Faces
-
-(defface doom-modeline-extras-cost-free
-  '((t :inherit doom-modeline :strike-through t))
-  "Face for cost display on non-API (subscription) plans.
-Uses strikethrough to indicate the cost is not actually charged."
-  :group 'doom-modeline-extras)
-
 ;;;; Functions
 
 ;;;;; Modeline segments
@@ -167,54 +130,20 @@ Uses strikethrough to indicate the cost is not actually charged."
 (declare-function agent-backend-label "agent")
 (declare-function agent-backend-icon-string "agents")
 (declare-function agent-display-name "agents")
-(declare-function agent-alert-indicator "agents")
 (declare-function agent-session "agent")
 (declare-function agent-session-account "agent")
+(declare-function agent-session-state-summary "agent")
 (declare-function agent-claude-status-model "agent-claude")
 (declare-function agent-claude-status-effort "agent-claude")
-(declare-function agent-claude-status-cost "agent-claude")
-(declare-function agent-claude-status-context-percent "agent-claude")
-(declare-function agent-claude-status-token-count "agent-claude")
-(declare-function agent-claude-status-lines-added "agent-claude")
-(declare-function agent-claude-status-lines-removed "agent-claude")
-(declare-function agent-claude-status-duration-ms "agent-claude")
-(declare-function agent-claude-status-cache-read-tokens "agent-claude")
-(declare-function agent-claude-status-cache-total-tokens "agent-claude")
-(declare-function agent-claude-status-session-usage "agent-claude")
-(declare-function agent-claude-status-weekly-usage "agent-claude")
-(declare-function agent-claude-status-session-reset "agent-claude")
-(declare-function agent-claude-status-weekly-reset "agent-claude")
 (declare-function agent-codex-status-model "agent-codex")
 (declare-function agent-codex-status-effort "agent-codex")
-(declare-function agent-codex-status-duration-ms "agent-codex")
-(declare-function parse-iso8601-time-string "parse-time")
-(defvar agent-alert-on-ready)
 (defvar agent-claude--status-data)
-
-(defun doom-modeline-extras--toggle-alert-click (event)
-  "Toggle AI session alert from a mouse click EVENT in the modeline.
-Sets `agent-alert-on-ready' directly, which is the same state the
-`agent-menu' option infix binds."
-  (interactive "e")
-  (with-selected-window (posn-window (event-start event))
-    (setq agent-alert-on-ready (not agent-alert-on-ready))
-    (message "AI alert notifications %s"
-             (if agent-alert-on-ready "enabled" "disabled"))
-    (force-mode-line-update)))
-
-(defvar doom-modeline-extras--alert-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [mode-line mouse-1] #'doom-modeline-extras--toggle-alert-click)
-    (define-key map [tab-bar mouse-1] #'doom-modeline-extras--toggle-alert-click)
-    map)
-  "Keymap for clicking the alert indicator in the modeline.")
 
 (doom-modeline-def-segment ai-session-status
   "Display AI session status for any registered backend.
-Shows icon, bold session name, and alert indicator for all
-backends.  When the backend is Claude Code and status data is
-available, additional fields (model, cost, context%) are inserted
-between the name and the alert indicator."
+Shows icon, bold session name, model, effort and account, followed by
+the status the session's agent last published (the same text as the
+last column of the session switcher)."
   (when (and doom-modeline-extras-claude-code
              (fboundp 'agent--detect-backend))
     (let ((backend (agent--detect-backend (current-buffer))))
@@ -237,66 +166,35 @@ between the name and the alert indicator."
                 (doom-modeline-extras--format-claude-status-fields)))
              ('codex
               (doom-modeline-extras--format-codex-status-fields)))
-           " | " (doom-modeline-extras--format-alert-indicator)
+           (doom-modeline-extras--format-state-summary)
            (doom-modeline-spc)))))))
 
 (defun doom-modeline-extras--format-claude-status-fields ()
-  "Return Claude Code-specific status fields for the modeline.
-These are inserted between the session name and the alert indicator."
-  (let ((model (agent-claude-status-model))
-        (effort (agent-claude-status-effort))
-        (account (when-let* ((session (agent-session)))
-                   (agent-session-account session)))
-        (session-usage (agent-claude-status-session-usage))
-        (weekly-usage (agent-claude-status-weekly-usage))
-        (session-reset (agent-claude-status-session-reset))
-        (weekly-reset (agent-claude-status-weekly-reset))
-        (tokens (agent-claude-status-token-count))
-        (cost (agent-claude-status-cost))
-        (pct (agent-claude-status-context-percent))
-        (added (agent-claude-status-lines-added))
-        (removed (agent-claude-status-lines-removed))
-        (duration (agent-claude-status-duration-ms))
-        (cache-read (agent-claude-status-cache-read-tokens))
-        (cache-total (agent-claude-status-cache-total-tokens)))
-    (concat
-     (doom-modeline-extras--format-model model)
-     (doom-modeline-extras--format-effort effort)
-     (doom-modeline-extras--format-account account)
-     (when (bound-and-true-p doom-modeline-extras-claude-code-usage)
-       (doom-modeline-extras--format-usage session-usage weekly-usage
-                                           session-reset weekly-reset))
-     (when (bound-and-true-p doom-modeline-extras-claude-code-tokens)
-       (doom-modeline-extras--format-tokens tokens))
-     (doom-modeline-extras--format-cost cost)
-     (doom-modeline-extras--format-context-percent pct)
-     (when (bound-and-true-p doom-modeline-extras-claude-code-lines-changed)
-       (doom-modeline-extras--format-lines-changed added removed))
-     (doom-modeline-extras--format-duration duration)
-     (when (bound-and-true-p doom-modeline-extras-claude-code-cache-efficiency)
-       (doom-modeline-extras--format-cache-efficiency cache-read cache-total)))))
+  "Return Claude Code model, effort and account fields for the modeline."
+  (doom-modeline-extras--format-session-fields
+   (agent-claude-status-model) (agent-claude-status-effort)))
 
 (defun doom-modeline-extras--format-codex-status-fields ()
-  "Return Codex-specific status fields for the modeline."
-  (let ((model (agent-codex-status-model))
-        (effort (agent-codex-status-effort))
-        (account (when-let* ((session (agent-session)))
-                   (agent-session-account session)))
-        (duration (agent-codex-status-duration-ms)))
+  "Return Codex model, effort and account fields for the modeline."
+  (doom-modeline-extras--format-session-fields
+   (agent-codex-status-model) (agent-codex-status-effort)))
+
+(defun doom-modeline-extras--format-session-fields (model effort)
+  "Format MODEL, EFFORT and the current session's account for the modeline."
+  (let ((account (when-let* ((session (agent-session)))
+                   (agent-session-account session))))
     (concat
      (doom-modeline-extras--format-model model)
      (doom-modeline-extras--format-effort effort)
-     (doom-modeline-extras--format-account account)
-     (doom-modeline-extras--format-duration duration))))
+     (doom-modeline-extras--format-account account))))
 
-(defun doom-modeline-extras--format-alert-indicator ()
-  "Format the alert indicator with click action and tooltip."
-  (propertize (agent-alert-indicator)
-              'help-echo (format "Alert notifications: %s\nmouse-1: Toggle"
-                                 (if agent-alert-on-ready
-                                     "enabled" "disabled"))
-              'mouse-face 'doom-modeline-highlight
-              'local-map doom-modeline-extras--alert-map))
+(defun doom-modeline-extras--format-state-summary ()
+  "Format the status the current session's agent last published.
+Double each percent sign, which the mode line would otherwise treat as
+a construct."
+  (when-let* ((summary (agent-session-state-summary (current-buffer))))
+    (concat " | " (propertize (string-replace "%" "%%" summary)
+                              'help-echo "Latest published session status"))))
 
 (defun doom-modeline-extras--format-model (model)
   "Format MODEL name with separator."
@@ -314,179 +212,6 @@ These are inserted between the session name and the alert indicator."
     (concat " | " (propertize account
                                'face 'doom-modeline-buffer-path
                                'help-echo "Claude account"))))
-
-(defconst doom-modeline-extras--usage-window-5h (* 5 3600)
-  "Duration of the 5-hour rate limit window in seconds.")
-
-(defconst doom-modeline-extras--usage-window-7d (* 7 24 3600)
-  "Duration of the 7-day rate limit window in seconds.")
-
-(defun doom-modeline-extras--format-usage (session weekly session-reset weekly-reset)
-  "Format SESSION and WEEKLY usage as burn-rate deviations.
-SESSION-RESET and WEEKLY-RESET are ISO timestamps for window
-reset times.  Computes how far ahead or behind the user is
-relative to a uniform consumption pace."
-  (let ((s-dev (doom-modeline-extras--usage-deviation
-                session session-reset
-                doom-modeline-extras--usage-window-5h))
-        (w-dev (doom-modeline-extras--usage-deviation
-                weekly weekly-reset
-                doom-modeline-extras--usage-window-7d)))
-    (when (or s-dev w-dev)
-      (let ((parts nil))
-        (when w-dev
-          (push (propertize (format "7d:%+.0f%%%%" w-dev)
-                            'face (doom-modeline-extras--usage-deviation-face w-dev)
-                            'help-echo (doom-modeline-extras--usage-tooltip
-                                        "7-day weekly" weekly w-dev
-                                        weekly-reset))
-                parts))
-        (when s-dev
-          (push (propertize (format "5h:%+.0f%%%%" s-dev)
-                            'face (doom-modeline-extras--usage-deviation-face s-dev)
-                            'help-echo (doom-modeline-extras--usage-tooltip
-                                        "5-hour session" session s-dev
-                                        session-reset))
-                parts))
-        (when parts
-          (concat " | " (string-join parts " ")))))))
-
-(defun doom-modeline-extras--usage-deviation (utilization reset-iso window-secs)
-  "Compute usage deviation for UTILIZATION given RESET-ISO and WINDOW-SECS.
-Returns the percentage deviation from expected usage at this
-point in the window.  Positive means over budget, negative means
-under.  Returns nil when elapsed time is too small to be
-meaningful or data is unavailable."
-  (when (and (numberp utilization) (> utilization 0)
-             reset-iso (stringp reset-iso)
-             (require 'iso8601 nil t))
-    (condition-case nil
-        (let* ((target (parse-iso8601-time-string reset-iso))
-               (remaining (max (float-time (time-subtract target nil)) 0))
-               (elapsed (- window-secs remaining))
-               (expected (* (/ elapsed (float window-secs)) 100.0)))
-          (when (> expected 2.0)
-            (* (1- (/ utilization expected)) 100.0)))
-      (error nil))))
-
-(defun doom-modeline-extras--usage-tooltip (label raw-pct deviation reset-iso)
-  "Build a tooltip for LABEL with RAW-PCT usage, DEVIATION, and RESET-ISO."
-  (format "%s: %.0f%% used, %+.0f%% vs pace\nResets: %s"
-          label raw-pct deviation
-          (or (doom-modeline-extras--humanize-reset reset-iso) "unknown")))
-
-(defun doom-modeline-extras--humanize-reset (iso-string)
-  "Return a human-readable relative time until ISO-STRING."
-  (when (and iso-string (stringp iso-string) (require 'iso8601 nil t))
-    (condition-case nil
-        (let* ((target (parse-iso8601-time-string iso-string))
-               (diff (float-time (time-subtract target nil))))
-          (if (<= diff 0)
-              "now"
-            (let* ((hours (floor (/ diff 3600)))
-                   (mins (floor (/ (mod diff 3600) 60))))
-              (cond
-               ((> hours 24) (format "in %dd %dh" (/ hours 24) (mod hours 24)))
-               ((> hours 0) (format "in %dh %dm" hours mins))
-               (t (format "in %dm" mins))))))
-      (error nil))))
-
-(defun doom-modeline-extras--usage-deviation-face (deviation)
-  "Return the face for usage DEVIATION percentage.
-Red when over budget (positive), green when under (negative)."
-  (if (> deviation 0)
-      'doom-modeline-urgent
-    'doom-modeline-info))
-
-(defun doom-modeline-extras--format-tokens (tokens)
-  "Format TOKENS as a human-readable string with separator."
-  (when (and (numberp tokens) (> tokens 0))
-    (concat " | " (propertize (doom-modeline-extras--humanize-tokens tokens)
-                               'help-echo (format "Input tokens: %d" tokens)))))
-
-(defun doom-modeline-extras--humanize-tokens (n)
-  "Format token count N in a compact human-readable form."
-  (cond
-   ((>= n 1000000) (format "%.1fM" (/ n 1000000.0)))
-   ((>= n 1000) (format "%.1fk" (/ n 1000.0)))
-   (t (format "%d" n))))
-
-(defun doom-modeline-extras--format-cost (cost)
-  "Format COST as a dollar amount with separator.
-On subscription plans, applies strikethrough to indicate no charge."
-  (when (and (numberp cost) (> cost 0))
-    (let ((text (format "$%.2f" cost))
-          (tip (if doom-modeline-extras-claude-code-api-plan
-                   "Session cost (API plan)"
-                 "Session cost (subscription, not charged)")))
-      (concat " | "
-              (if doom-modeline-extras-claude-code-api-plan
-                  (propertize text 'help-echo tip)
-                (propertize text
-                            'help-echo tip
-                            'face 'doom-modeline-extras-cost-free))))))
-
-(defun doom-modeline-extras--format-context-percent (pct)
-  "Format context usage PCT with color coding and separator.
-Uses %%%% to produce a literal %% in the mode-line, since %%
-is a mode-line escape character."
-  (when (and (numberp pct) (> pct 0))
-    (concat " | "
-            (propertize (format "%d%%%%" pct)
-                        'face (doom-modeline-extras--context-face pct)
-                        'help-echo "Context window usage"))))
-
-(defun doom-modeline-extras--context-face (pct)
-  "Return the face for context usage percentage PCT."
-  (cond
-   ((>= pct 80) 'doom-modeline-urgent)
-   ((>= pct 60) 'doom-modeline-warning)
-   (t 'doom-modeline-info)))
-
-(defun doom-modeline-extras--format-lines-changed (added removed)
-  "Format ADDED and REMOVED line counts as a +N/-M string with separator."
-  (when (and (numberp added) (numberp removed)
-             (> (+ added removed) 0))
-    (let ((tip (format "Lines added: %d, lines removed: %d" added removed)))
-      (concat " | "
-              (propertize (format "+%d" added)
-                          'face 'doom-modeline-info
-                          'help-echo tip)
-              (propertize "/" 'help-echo tip)
-              (propertize (format "-%d" removed)
-                          'face 'doom-modeline-urgent
-                          'help-echo tip)))))
-
-(defun doom-modeline-extras--format-duration (ms)
-  "Format duration MS (in milliseconds) as a human-readable string."
-  (when (and (numberp ms) (> ms 0))
-    (concat " | " (propertize (doom-modeline-extras--humanize-duration ms)
-                               'help-echo "Session duration"))))
-
-(defun doom-modeline-extras--humanize-duration (ms)
-  "Format MS milliseconds in a compact human-readable form."
-  (let ((secs (/ ms 1000)))
-    (cond
-     ((>= secs 3600) (format "%dh%dm" (/ secs 3600) (/ (mod secs 3600) 60)))
-     ((>= secs 60) (format "%dm%ds" (/ secs 60) (mod secs 60)))
-     (t (format "%ds" secs)))))
-
-(defun doom-modeline-extras--format-cache-efficiency (cache-read cache-total)
-  "Format cache efficiency as a percentage from CACHE-READ and CACHE-TOTAL."
-  (when (and (numberp cache-read) (numberp cache-total) (> cache-total 0))
-    (let ((pct (/ (* 100 cache-read) cache-total)))
-      (when (> pct 0)
-        (concat " | "
-                (propertize (format "cache %d%%%%" pct)
-                            'face (doom-modeline-extras--cache-face pct)
-                            'help-echo "Cache efficiency"))))))
-
-(defun doom-modeline-extras--cache-face (pct)
-  "Return the face for cache efficiency percentage PCT."
-  (cond
-   ((>= pct 80) 'doom-modeline-info)
-   ((>= pct 50) 'doom-modeline-warning)
-   (t 'doom-modeline-urgent)))
 
 ;;;;; Modeline definitions
 

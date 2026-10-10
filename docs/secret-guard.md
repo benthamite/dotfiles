@@ -87,7 +87,9 @@ screenshot.
 | 10-09 | Edesur website login password | d | Pablo's screenshot of the login form with the password revealed |
 | 10-10 | Notion OAuth client ID and secret (Peter Hartree's Forethought integration) | a | Pablo pasted them into an unsaved Emacs buffer and pointed the agent at it; an `emacs-eval` read of the whole buffer printed them before they were stored (not yet in the secret index, so unmasked). The session is also exported to Peter. Stored afterwards with `op-clipboard-store`; rotation is Peter's call |
 
-Tally: page/screenshot 9, command output 8, file read 3, **typed literal 0**.
+| 10-10 | Google account password for `pablo@forethought.org` (as first issued) | a | a read-only Slack sweep returned an old message carrying it in plain text; changed since |
+
+Tally: page/screenshot 9, command output 9, file read 3, **typed literal 0**.
 
 ## Protection in place (2026-10-01)
 

@@ -1,0 +1,19 @@
+{
+  "claude": [
+    {"name": "personal", "home": "~/.claude-personal", "pool": "personal-pool"},
+    {"name": "personal2", "home": "~/.claude-personal2", "pool": "personal-pool"},
+    {"name": "tlon", "home": "~/.claude-tlon"},
+    {"name": "epoch", "home": "~/.claude-epoch"},
+    {"name": "forethought", "home": "~/.claude-forethought"}
+  ],
+  "codex": [
+    {"name": "tlon", "home": "~/.codex-tlon"},
+    {"name": "epoch", "home": "~/.codex-epoch", "pool": "epoch-pool"},
+    {"name": "epoch2", "home": "~/.codex-epoch2", "pool": "epoch-pool"},
+    {"name": "epoch3", "home": "~/.codex-epoch3", "pool": "epoch-pool"},
+    {"name": "epoch4", "home": "~/.codex-epoch4", "pool": "epoch-pool"},
+    {"name": "epoch5", "home": "~/.codex-epoch5", "pool": "epoch-pool"},
+    {"name": "epoch-plan", "home": "~/.codex-epoch-plan"},
+    {"name": "forethought", "home": "~/.codex-forethought"}
+  ]
+}

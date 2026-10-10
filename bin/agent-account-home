@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""Print the config home of one plain Claude or Codex account.
+
+Emacs (`agent-claude-accounts', `agent-codex-accounts') and scripts read the
+same account list, emacs/agent-accounts.json. A pool name is refused: choosing
+a pool member depends on the running Emacs's usage readings and hysteresis
+state, which this command does not reproduce.
+
+Exit status: 0 with the expanded home on stdout; 2 for a pool name; 1 for an
+unknown account or an invalid account file.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+import sys
+
+ACCOUNTS_FILE = Path(__file__).resolve().parents[1] / "emacs" / "agent-accounts.json"
+BACKENDS = ("claude", "codex")
+
+
+class AccountError(Exception):
+    """An account name that cannot be resolved to one home."""
+
+    def __init__(self, message: str, status: int = 1):
+        super().__init__(message)
+        self.status = status
+
+
+def load_accounts(path: Path = ACCOUNTS_FILE) -> dict[str, list[dict]]:
+    """Return the validated account lists from PATH."""
+    data = json.loads(path.read_text())
+    if not isinstance(data, dict) or set(data) != set(BACKENDS):
+        raise AccountError(f"{path}: expected exactly the keys {', '.join(BACKENDS)}")
+    for backend, entries in data.items():
+        if not isinstance(entries, list):
+            raise AccountError(f"{path}: {backend} must be a list")
+        names = set()
+        for entry in entries:
+            if (not isinstance(entry, dict) or not set(entry) <= {"name", "home", "pool"}
+                    or not all(isinstance(entry.get(field), str) and entry[field]
+                               for field in ("name", "home"))
+                    or ("pool" in entry and not (isinstance(entry["pool"], str) and entry["pool"]))):
+                raise AccountError(f"{path}: invalid {backend} entry {entry!r}")
+            if entry["name"] in names:
+                raise AccountError(f"{path}: duplicate {backend} account {entry['name']}")
+            names.add(entry["name"])
+        pools = {entry["pool"] for entry in entries if "pool" in entry}
+        if pools & names:
+            raise AccountError(f"{path}: {backend} pool names collide with account names")
+    return data
+
+
+def account_home(backend: str, name: str, accounts: dict[str, list[dict]]) -> str:
+    """Return the expanded home of BACKEND's plain account NAME."""
+    entries = accounts[backend]
+    for entry in entries:
+        if entry["name"] == name:
+            return os.path.expanduser(entry["home"])
+    if any(entry.get("pool") == name for entry in entries):
+        raise AccountError(
+            f"{name} is a {backend} pool; pool routing needs the running Emacs; "
+            "name a plain account", status=2)
+    raise AccountError(f"Unknown {backend} account: {name}")
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("backend", choices=BACKENDS)
+    parser.add_argument("name")
+    parser.add_argument("--accounts-file", type=Path, default=ACCOUNTS_FILE,
+                        help=argparse.SUPPRESS)
+    args = parser.parse_args(argv)
+    try:
+        print(account_home(args.backend, args.name, load_accounts(args.accounts_file)))
+    except AccountError as exc:
+        print(f"agent-account-home: {exc}", file=sys.stderr)
+        return exc.status
+    except (OSError, ValueError) as exc:
+        print(f"agent-account-home: cannot read {args.accounts_file}: {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

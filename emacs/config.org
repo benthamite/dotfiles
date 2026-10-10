@@ -9528,6 +9528,20 @@ contain =AGENTS.md= or =CLAUDE.md=, including directories without Git repositori
   :ensure (:host github
                  :repo "benthamite/agent")
   :defer t
+  :preface
+  (defun pablo/agent-accounts (backend)
+    "Return BACKEND's accounts from the account file shared with scripts.
+BACKEND is `claude' or `codex'.  Each entry becomes (NAME :home HOME), with
+`:pool POOL' when the file names a pool."
+    (let* ((file (file-name-concat paths-dir-dotfiles "emacs/agent-accounts.json"))
+           (data (with-temp-buffer
+                   (insert-file-contents file)
+                   (json-parse-buffer :object-type 'alist :array-type 'list))))
+      (mapcar (lambda (entry)
+                (append (list (alist-get 'name entry) :home (alist-get 'home entry))
+                        (when-let* ((pool (alist-get 'pool entry)))
+                          (list :pool pool))))
+              (alist-get backend data))))
   :config
   (require 'agent-claude)
   (require 'agent-codex)
@@ -9589,22 +9603,12 @@ contain =AGENTS.md= or =CLAUDE.md=, including directories without Git repositori
   (agent-project-registry-root (file-name-concat paths-dir-epoch-workspace "projects/"))
   (agent-chief-directory paths-dir-epoch)
   (agent-claude-org-todo-in-progress-keyword "DOING")
-  (agent-claude-accounts '(("personal" :home "~/.claude-personal" :pool "personal-pool")
-			   ("personal2" :home "~/.claude-personal2" :pool "personal-pool")
-			   ("tlon"     . "~/.claude-tlon")
-			   ("epoch"    . "~/.claude-epoch")
-			   ("forethought" . "~/.claude-forethought")))
+  ;; Scripts resolve the same accounts through bin/agent-account-home.
+  (agent-claude-accounts (pablo/agent-accounts 'claude))
   (agent-claude-settings-package-directory
    "~/.config/emacs-profiles/active/elpaca/sources/agent/")
 
-  (agent-codex-accounts '(("tlon"   . "~/.codex-tlon")
-                          ("epoch"  :home "~/.codex-epoch"  :pool "epoch-pool")
-                          ("epoch2" :home "~/.codex-epoch2" :pool "epoch-pool")
-                          ("epoch3" :home "~/.codex-epoch3" :pool "epoch-pool")
-                          ("epoch4" :home "~/.codex-epoch4" :pool "epoch-pool")
-                          ("epoch5" :home "~/.codex-epoch5" :pool "epoch-pool")
-                          ("epoch-plan" :home "~/.codex-epoch-plan")
-                          ("forethought" . "~/.codex-forethought")))
+  (agent-codex-accounts (pablo/agent-accounts 'codex))
 
   :bind
   ("H-e" . agent-menu)

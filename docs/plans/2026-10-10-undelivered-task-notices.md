@@ -135,3 +135,52 @@ Acceptance:
   message limits itself to delivering the notice.
 - Codex: not applicable, since Codex has no agent-team notice queue.  This
   is recorded as Claude-only.
+
+## Revisions after Codex review (commit 2fe8f05ad)
+
+All seven findings were accepted.  Where they conflict with the steps above,
+these revisions take precedence.
+
+1. **One rule for replay and production.** Production fires only when the
+   item is still outstanding at a final recheck immediately before acting.
+   The recheck re-reads the transcript after Stop.  The replay must evaluate
+   this exact rule, including the case of normal delivery shortly after a
+   Stop.
+2. **Hook transport.** `hooks/notify-emacs-state.sh` currently forwards only
+   the buffer, the send time and `agent_id`.  It must also forward
+   `transcript_path` and `session_id`.  agent.el checks that the
+   `session_id` matches the session's recorded id before reading.  The
+   change is verified through the real fire-and-forget wrapper.
+3. **Safe submission.** `agent-submit` types into the live prompt and presses
+   Return, so a draft the user is writing would be sent with it.  The
+   wake-up is submitted only when the session is waiting and its prompt is
+   verifiably empty, as read from the terminal screen.  Otherwise it is
+   deferred and the `stuck` flag is shown.  Tests: a populated prompt, and a
+   turn that starts between detection and submission.
+4. **Observing changes while idle.** Reading the transcript only at Stop
+   misses deliveries and enqueues that happen while the session is idle.
+   While a session is waiting with an outstanding item, agent.el watches its
+   transcript with `file-notify` and re-reads incrementally on change.  A
+   transcript change is an event, not a timer.  The watch is removed when
+   the session exits, its identity changes, or nothing is outstanding.
+5. **Invalid queue knowledge blocks action.** Each of the following marks
+   the queue model invalid, which blocks any wake-up until the model is
+   rebuilt from the start of the transcript:
+   - a failed read or parse;
+   - an unknown `queue-operation` shape;
+   - a transcript shorter than the stored offset (truncation or
+     replacement);
+   - an incomplete final line, which is left unconsumed until complete.
+
+   The offset and the queue update are committed together.
+6. **Inconclusive replay outcomes.** Each firing is classified as stuck,
+   false positive or inconclusive.  Where needed, the intended recipient's
+   transcript is correlated: for teammate notices, check the teammate's
+   transcript for receipt.  An inconclusive pattern blocks automatic
+   wake-up for that pattern, and only the flag ships for it.
+7. **Flag-only mode and integration checks.** With the wake-up disabled or
+   deferred, the `stuck` flag is set as soon as the production rule fires.
+   Verify the path from hook to reader to submission, and the switcher,
+   mode-line and phone displays, with controlled inputs: a real hook run
+   against a synthetic transcript holding a stuck item.  This holds even if
+   the upstream defect cannot be reproduced.

@@ -199,7 +199,8 @@ These guards run with the agent's OS user and filesystem access.
 Claude-specific browser, OAuth, hosted connector, and account state stay in
 Claude's native stores. Shared MCP wiring is audited only when it is declared in
 =ai-config-sync.json=; placement and account guidance lives in
-[[file:context/mcp-servers.md][the MCP reference]].
+[[file:context/mcp-servers.md][the MCP reference]], whose inventory lists each
+project-local server (including Notion for sessions under =~/repos/forethought=).
 
 Instruction files, skills, and hook reminders state current rules with their
 reasons and without incident history, migration-relative wording, shouted

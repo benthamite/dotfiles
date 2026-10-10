@@ -34,6 +34,10 @@ Usage:
       configured domain require an extra auth.test identity read.
   slack.py channels [--types=public_channel,private_channel,im,mpim] [--cursor=...]
       List channels (conversations.list).
+  slack.py join <channel>... [--dry-run]
+      Join public channels by name (#optional) or ID (conversations.join),
+      printing one JSON line per channel. All names are resolved before any
+      join; channels you are already in are reported, not rejoined.
   slack.py users-search <query> [--max=N]
       Find users by name/handle (users.list + client-side filter).
   slack.py user-info <user-id>
@@ -57,6 +61,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -649,6 +654,43 @@ def cmd_channels(args):
     print(json.dumps(out, indent=2))
 
 
+JOIN_INTERVAL = 1.2  # seconds; conversations.join is Tier 3 and calls are not retried
+
+
+def _public_channels():
+    """All non-archived public channels, keyed by name and by ID."""
+    channels, cursor = {}, None
+    while True:
+        out = call("conversations.list", types="public_channel",
+                   exclude_archived="true", limit="1000", cursor=cursor)
+        for ch in out.get("channels", []) or []:
+            channels[ch["name"]] = channels[ch["id"]] = ch
+        cursor = (out.get("response_metadata") or {}).get("next_cursor")
+        if not cursor:
+            return channels
+
+
+def cmd_join(args):
+    channels = _public_channels()
+    targets = [channels.get(c.lstrip("#")) for c in args.channels]
+    missing = [c for c, ch in zip(args.channels, targets) if ch is None]
+    if missing:
+        _fail("No such public channel: " + ", ".join(missing))
+    joined_any = False
+    for ch in targets:
+        if ch.get("is_member"):
+            status = "already"
+        elif args.dry_run:
+            status = "would-join"
+        else:
+            if joined_any:
+                time.sleep(JOIN_INTERVAL)
+            call("conversations.join", channel=ch["id"])
+            ch["is_member"] = joined_any = True
+            status = "joined"
+        print(json.dumps({"channel": ch["name"], "id": ch["id"], "status": status}), flush=True)
+
+
 def cmd_users_search(args):
     """users.list + client-side filter. Slack doesn't expose a server-side users.search."""
     cursor = None
@@ -788,6 +830,11 @@ def main():
     c.add_argument("--types", default="public_channel,private_channel,im,mpim")
     c.add_argument("--cursor")
     c.set_defaults(func=cmd_channels)
+
+    j = sub.add_parser("join", help="join public channels by name or ID")
+    j.add_argument("channels", nargs="+")
+    j.add_argument("--dry-run", action="store_true")
+    j.set_defaults(func=cmd_join)
 
     us = sub.add_parser("users-search")
     us.add_argument("query")

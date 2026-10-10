@@ -9610,13 +9610,17 @@ BACKEND is `claude' or `codex'.  Each entry becomes (NAME :home HOME), with
 
   (agent-codex-accounts (pablo/agent-accounts 'codex))
   ;; Each organization's directories always run under its own account,
-  ;; whatever account is currently selected.
+  ;; whatever account is currently selected.  The split Git directories
+  ;; cover the notes workspaces' linked worktrees.
   (agent-account-directory-rules
    `((,(file-name-concat paths-dir-personal-repos "epoch/")
       . ((claude-code . "epoch") (codex . "epoch-pool")))
      (,paths-dir-epoch . ((claude-code . "epoch") (codex . "epoch-pool")))
+     (,(file-name-concat paths-dir-split-git "Epoch/")
+      . ((claude-code . "epoch") (codex . "epoch-pool")))
      (,(file-name-concat paths-dir-personal-repos "forethought/") . "forethought")
-     ("~/My Drive/Forethought/" . "forethought")))
+     ("~/My Drive/Forethought/" . "forethought")
+     (,(file-name-concat paths-dir-split-git "Forethought/") . "forethought")))
 
   :bind
   ("H-e" . agent-menu)

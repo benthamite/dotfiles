@@ -131,3 +131,47 @@ Run a throwaway session with an agent team:
   teammate.  The block message says this.
 - The lead and plain subagents are not covered.  The defect has been seen
   only for a teammate.
+
+## Revisions after Codex review (commit 76adc5b9f)
+
+All five findings are accepted.  Where they conflict with the steps above,
+these revisions take precedence.
+
+1. **Running means a live writer, not a missing marker.** This resolves
+   findings 3 and 4.
+   - A task counts as running when a process holds its output file open,
+     checked with `lsof -t <output>`.  The output path comes from the
+     launch record.  This was observed: the hung `rg` held its `.output` on
+     fds 1 and 2.
+   - When no process holds the file, the task has ended, whether it
+     finished, was stopped or was killed.  This holds whoever stopped it.
+   - Text a command prints, `[exited with code N]` included, plays no part.
+   - A missing output file counts as ended and is reported.
+   - Step 0 becomes: verify on live tasks that a running shell task always
+     has a holder, and an ended one never does.  This is checked on
+     running, finished and TaskStop-ed tasks, and on a task whose command
+     prints the marker while still running.
+2. **Acknowledgement.** This resolves finding 1.
+   - The hook keeps state per session and teammate under
+     `~/.local/state/agent-teammate-idle/`.
+   - Once it has told the teammate that a task ended, giving the output
+     path, it records the task as acknowledged and never blocks on it
+     again.
+   - Fixture sequence: task ends, then the hook blocks with "ended, read
+     PATH", then on the next idle it allows.  No notice is ever delivered
+     in this sequence.
+3. **A wait that stays in the foreground.** This resolves finding 2.
+   - The block message tells the teammate to call Bash with
+     `timeout: 600000` (the documented maximum) and a loop that exits
+     when `lsof -t PATH` returns nothing, with a deadline under 600 s.
+   - The live test uses a task longer than 2 minutes and longer than one
+     full wait interval, about 11 minutes.  It checks that the wait never
+     becomes a background task and that a second wait round follows.
+4. **Both launch forms.** This resolves finding 5.
+   - The hook parses two kinds of launch result: explicit background
+     (`Command running in background with ID: X. Output is being written
+     to: P`) and timeout-moved (`Command did not complete within its Ns
+     timeout and was moved to the background (ID: X). Output is being
+     written to: P`; text observed in this session).
+   - Each form gets a fixture.  Unknown result shapes allow the idle and
+     are reported.

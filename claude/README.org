@@ -758,7 +758,9 @@ the deliberate =--auto= chain. It preserves established map modes, intentionally
 different agent instructions, foreign changes and actual file-tracking policy.
 It holds no Epoch rules: for an Epoch session it follows the workspace's own
 =epoch-update-log= skill (=$EPOCH_WORKSPACE/.claude/skills/epoch-update-log/=), the single source of the Epoch closeout, which other
-maintainers use without these dotfiles.
+maintainers use without these dotfiles. Likewise, a Forethought sprint session
+(=~/repos/forethought= or below) follows the sprint repo's own =closeout= skill
+(=~/repos/forethought/ph-ps/skills/closeout/=), which Peter Hartree also uses.
 Ignore rules do not make tracked or Drive-synced content private. Post-update-log
 hooks refresh the brief before its map is derived, within the caller's authority;
 derived fields cannot originate unverified claims.

@@ -41,6 +41,16 @@ below, passing the same flags. Publish the receipt through that skill's writer.
 If `EPOCH_WORKSPACE` is unset or that file is missing, stop and report an
 incomplete closeout rather than applying the generic steps to Epoch notes.
 
+## Forethought sessions
+
+The Forethought Research sprint owns its closeout procedure too. When the
+session's working directory is `~/repos/forethought` or below, read and
+follow the `closeout` skill in `~/repos/forethought/ph-ps/skills/closeout/`
+instead of the steps below, passing the same flags (`--auto`,
+`--receipt-file`, `--exit`) and summary. Publish the receipt through that
+skill's writer. If the skill is missing, stop and report an incomplete
+closeout rather than applying the generic steps to sprint notes.
+
 ## Receipt contract
 
 If `--receipt-file PATH` was supplied, bind that exact absolute target to this

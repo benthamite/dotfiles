@@ -14,44 +14,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import importlib.util
 import os
 from pathlib import Path
 import sys
 
-ACCOUNTS_FILE = Path(__file__).resolve().parents[1] / "emacs" / "agent-accounts.json"
-BACKENDS = ("claude", "codex")
+sys.dont_write_bytecode = True  # The checkout is under Drive, where caches do not belong.
 
-
-class AccountError(Exception):
-    """An account name that cannot be resolved to one home."""
-
-    def __init__(self, message: str, status: int = 1):
-        super().__init__(message)
-        self.status = status
-
-
-def load_accounts(path: Path = ACCOUNTS_FILE) -> dict[str, list[dict]]:
-    """Return the validated account lists from PATH."""
-    data = json.loads(path.read_text())
-    if not isinstance(data, dict) or set(data) != set(BACKENDS):
-        raise AccountError(f"{path}: expected exactly the keys {', '.join(BACKENDS)}")
-    for backend, entries in data.items():
-        if not isinstance(entries, list):
-            raise AccountError(f"{path}: {backend} must be a list")
-        names = set()
-        for entry in entries:
-            if (not isinstance(entry, dict) or not set(entry) <= {"name", "home", "pool"}
-                    or not all(isinstance(entry.get(field), str) and entry[field]
-                               for field in ("name", "home"))
-                    or ("pool" in entry and not (isinstance(entry["pool"], str) and entry["pool"]))):
-                raise AccountError(f"{path}: invalid {backend} entry {entry!r}")
-            if entry["name"] in names:
-                raise AccountError(f"{path}: duplicate {backend} account {entry['name']}")
-            names.add(entry["name"])
-        pools = {entry["pool"] for entry in entries if "pool" in entry}
-        if pools & names:
-            raise AccountError(f"{path}: {backend} pool names collide with account names")
-    return data
+_spec = importlib.util.spec_from_file_location(
+    "agent_accounts", Path(__file__).resolve().parents[1] / "lib" / "python" / "agent_accounts.py")
+_accounts = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_accounts)
+ACCOUNTS_FILE, BACKENDS = _accounts.ACCOUNTS_FILE, _accounts.BACKENDS
+AccountError, load_accounts = _accounts.AccountError, _accounts.load_accounts
 
 
 def account_home(backend: str, name: str, accounts: dict[str, list[dict]]) -> str:

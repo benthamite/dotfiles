@@ -1,7 +1,8 @@
 """Exercise claude-pool's member fallback with stubbed Claude Code members.
 
 The real script runs from a temporary copy of the repository layout it
-expects (bin/, shell/shims/claude, emacs/config.org), so no real account,
+expects (bin/, lib/python/agent_accounts.py, shell/shims/claude,
+emacs/agent-accounts.json), so no real account,
 Emacs or network is involved. Each stub member replays a canned reply.
 """
 
@@ -15,6 +16,7 @@ import unittest
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "bin" / "claude-pool"
+LIBRARY = Path(__file__).resolve().parents[1] / "lib" / "python" / "agent_accounts.py"
 
 STUB = """#!/bin/sh
 echo "$CLAUDE_CONFIG_DIR" >> "$POOL_TEST_CALLS"
@@ -39,6 +41,8 @@ class ClaudePoolTests(unittest.TestCase):
         self.root = Path(temp.name)
         (self.root / "bin").mkdir()
         shutil.copy(SCRIPT, self.root / "bin" / "claude-pool")
+        (self.root / "lib" / "python").mkdir(parents=True)
+        shutil.copy(LIBRARY, self.root / "lib" / "python" / "agent_accounts.py")
         shim = self.root / "shell" / "shims" / "claude"
         shim.parent.mkdir(parents=True)
         shim.write_text(STUB)
@@ -56,17 +60,15 @@ class ClaudePoolTests(unittest.TestCase):
         """Declare members (name, code, reply) in order as pool test-pool.
 
 EXTRA holds further entries (name, code, reply, form) outside the pool,
-in dotted-pair or plist form, available as fallbacks."""
-        lines = [f'("{name}" :home "{self.home(name, code, reply)}" :pool "test-pool")'
-                 for name, code, reply in members]
-        for name, code, reply, form in extra:
-            home = self.home(name, code, reply)
-            lines.append(f'("{name}" . "{home}")' if form == "pair" else f'("{name}" :home "{home}")')
-        lines.append('("other" . "~/.claude-other")')
-        config = self.root / "emacs" / "config.org"
-        config.parent.mkdir()
-        config.write_text("#+begin_src emacs-lisp\n(use-package agent\n  :custom\n"
-                          f"  (agent-claude-accounts '({' '.join(lines)})))\n#+end_src\n")
+available as fallbacks; FORM is kept for the callers' readability."""
+        claude = [{"name": name, "home": str(self.home(name, code, reply)), "pool": "test-pool"}
+                  for name, code, reply in members]
+        claude += [{"name": name, "home": str(self.home(name, code, reply))}
+                   for name, code, reply, _form in extra]
+        claude.append({"name": "other", "home": "~/.claude-other"})
+        accounts = self.root / "emacs" / "agent-accounts.json"
+        accounts.parent.mkdir()
+        accounts.write_text(json.dumps({"claude": claude, "codex": []}))
 
     def run_pool(self, *options):
         env = {**os.environ, "POOL_TEST_CALLS": str(self.calls)}

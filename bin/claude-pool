@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """Run Claude Code on a member of an account pool, without needing Emacs.
 
-Pools are declared once, in the `agent-claude-accounts' form of
-emacs/config.org (accounts sharing a :pool). This command reads that form
-from the file itself, so scheduled jobs work whether or not Emacs is running.
+Pools are declared once, in emacs/agent-accounts.json (Claude accounts
+sharing a "pool"), the account list Emacs reads into `agent-claude-accounts'.
+This command reads that file itself, so scheduled jobs work whether or not
+Emacs is running.
 
     claude-pool members POOL [--fallback NAME]...         JSON list of {name, home}
     claude-pool run POOL [--fallback NAME]... -- ARGS...  run `claude ARGS...'
 
 `run' tries members in their declared order, then each --fallback account in
-the order given. A fallback is any account of the same form, named as a
-dotted pair ("NAME" . HOME) or with :home; it is a caller's backup, not a
-pool member, so Emacs's interactive routing across the pool is unchanged. Each attempt's stdout and stderr
-are buffered separately, and an attempt that hits a usage limit is discarded
+the order given. A fallback is any other Claude account in that file; it is
+a caller's backup, not a pool member, so Emacs's interactive routing across
+the pool is unchanged. Each attempt's stdout and stderr are buffered separately, and an attempt that hits a usage limit is discarded
 and the next member tried (likewise a member that is not logged in or whose
 login has expired), so the caller sees the output of exactly one attempt.
 Work an attempt did before hitting its limit is not undone. Exit codes: the
@@ -23,6 +23,7 @@ fallback cannot be read.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -34,9 +35,12 @@ import subprocess
 import sys
 import tempfile
 
+sys.dont_write_bytecode = True  # The checkout is under Drive, where caches do not belong.
+
 BIN = Path(__file__).resolve().parent
 CLAUDE = BIN.parent / "shell/shims/claude"
-CONFIG = BIN.parent / "emacs/config.org"
+ACCOUNTS = BIN.parent / "emacs/agent-accounts.json"
+LIBRARY = BIN.parent / "lib/python/agent_accounts.py"
 LIMIT = re.compile(rb"hit your [^\n]{0,40}limit|\"api_error_status\":\s*429|usage limit reached", re.I)
 # An expired OAuth session still reports loggedIn locally; only the request fails.
 LOGGED_OUT = re.compile(rb"Not logged in|Please run /login|OAuth session expired|could not be refreshed"
@@ -44,7 +48,6 @@ LOGGED_OUT = re.compile(rb"Not logged in|Please run /login|OAuth session expired
                         rb"|has been revoked)|\"api_error_status\":\s*401", re.I)
 EX_UNAVAILABLE, EX_TEMPFAIL = 69, 75
 STDIN_WAIT = 3
-TOKEN = re.compile(r'\s+|;[^\n]*|(?P<open>\()|(?P<close>\))|"(?P<string>(?:[^"\\]|\\.)*)"|(?P<atom>[^\s()"]+)')
 
 
 def unavailable(message: str):
@@ -52,65 +55,30 @@ def unavailable(message: str):
     sys.exit(EX_UNAVAILABLE)
 
 
-def read_form(text: str, position: int):
-    """Read one Lisp list of strings, symbols and dotted pairs starting at POSITION."""
-    stack, result = [], None
-    for match in TOKEN.finditer(text, position):
-        if match["open"]:
-            stack.append([])
-        elif match["close"]:
-            done = stack.pop()
-            if len(done) == 3 and done[1] == ".":
-                done = (done[0], done[2])
-            if not stack:
-                return done
-            stack[-1].append(done)
-        elif match["string"] is not None:
-            stack[-1].append(re.sub(r"\\(.)", r"\1", match["string"]))
-        elif match["atom"]:
-            if not stack:
-                raise ValueError("expected a list")
-            stack[-1].append(match["atom"])
-    raise ValueError("unterminated list")
-
-
-def accounts() -> list:
+def accounts() -> list[tuple[str, str, str | None]]:
+    """(name, expanded home, pool or None) of every Claude account."""
     try:
-        text = CONFIG.read_text()
-    except OSError as error:
-        unavailable(f"cannot read {CONFIG}: {error}")
-    found = [m.end() for m in re.finditer(r"\(agent-claude-accounts\s+'", text)]
-    if len(found) != 1:
-        unavailable(f"expected one agent-claude-accounts form in {CONFIG}, found {len(found)}")
-    try:
-        return read_form(text, found[0])
-    except (ValueError, IndexError) as error:
-        unavailable(f"cannot parse agent-claude-accounts in {CONFIG}: {error}")
-
-
-def parse_entry(entry) -> tuple[str, str, str | None] | None:
-    """(name, home, pool) of a dotted-pair or plist account entry."""
-    if isinstance(entry, tuple) and isinstance(entry[0], str) and isinstance(entry[1], str):
-        return entry[0], os.path.expanduser(entry[1]), None
-    if isinstance(entry, list) and entry and isinstance(entry[0], str) and len(entry) % 2 == 1:
-        properties = dict(zip(entry[1::2], entry[2::2]))
-        if isinstance(properties.get(":home"), str):
-            return entry[0], os.path.expanduser(properties[":home"]), properties.get(":pool")
-    return None
+        spec = importlib.util.spec_from_file_location("agent_accounts", LIBRARY)
+        library = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(library)
+        entries = library.load_accounts(ACCOUNTS)["claude"]
+    except Exception as error:  # noqa: BLE001 - any failure means the pool cannot be read
+        unavailable(f"cannot read the Claude accounts in {ACCOUNTS}: {error}")
+    return [(entry["name"], os.path.expanduser(entry["home"]), entry.get("pool")) for entry in entries]
 
 
 def members(pool: str, fallbacks: list[str] = ()) -> list[dict]:
     """POOL's members in declared order, then each fallback account."""
-    parsed = [found for found in map(parse_entry, accounts()) if found]
+    parsed = accounts()
     result = [{"name": name, "home": home} for name, home, member_of in parsed if member_of == pool]
     if not result:
-        unavailable(f"pool {pool!r} has no members in {CONFIG}")
+        unavailable(f"pool {pool!r} has no members in {ACCOUNTS}")
     for wanted in fallbacks:
         if any(account["name"] == wanted for account in result):
             unavailable(f"fallback {wanted!r} is already in pool {pool!r} or named twice")
         found = [{"name": name, "home": home} for name, home, _ in parsed if name == wanted]
         if len(found) != 1:
-            unavailable(f"fallback {wanted!r} matches {len(found)} accounts in {CONFIG}")
+            unavailable(f"fallback {wanted!r} matches {len(found)} accounts in {ACCOUNTS}")
         result.extend(found)
     return result
 

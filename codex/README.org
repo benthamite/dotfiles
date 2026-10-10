@@ -75,9 +75,9 @@ Both global files point to the context docs by the same absolute paths, and the
 audit rejects relative =context/= references in either. The audit normalizes tool-specific titles, paths, and Claude =@context= syntax
 before comparison. It also masks each file's browser-availability rule: Claude
 asks for =claude-in-chrome=, while Codex names the =playwright= MCP server's
-=browser_*= tools. The service-access trigger names services only (Signal and Fireflies
-joined it on 2026-10-10, routed to the read-only =bin/sgn-read= and
-=bin/fireflies=); browser
+=browser_*= tools. The service-access trigger names services only (Signal, Fireflies
+and Granola joined it on 2026-10-10, routed to the read-only =bin/sgn-read=,
+=bin/fireflies= and =bin/granola=); browser
 work reaches its rules through the =chrome-use= skill, which also says agents
 work only in tabs their browser tool opened. User-facing replies use ASD-STE100 Simplified Technical
 English.

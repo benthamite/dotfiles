@@ -515,6 +515,70 @@ exit 1
         self.assert_both(command, expected="allow")
 
 
+class EpochPushTests(unittest.TestCase):
+    """Agents publish to epoch-research through epoch_publish.py, not git push.
+
+    GitHub notifies the pusher of a failed push-triggered run, so an agent
+    pushing with Pablo's login fills his inbox. With the flag on, every agent
+    `git push` to an epoch-research repository is refused, declared or not,
+    through each Claude and Codex entry point; other GitHub writes keep their
+    existing rules.
+    """
+
+    EPOCH = "https://github.com/epoch-research/ai-enablement.git"
+
+    def setUp(self) -> None:
+        patch = mock.patch.object(github_write, "EPOCH_PUSH_ENFORCED", True)
+        patch.start()
+        self.addCleanup(patch.stop)
+
+    def decide(self, tool: str, command: str) -> GuardResult:
+        return checked(run_guard(GUARDS[tool], payload(tool, command), cwd=ROOT))
+
+    def test_pushes_to_epoch_research_are_refused_with_the_helper_named(self) -> None:
+        epoch_checkout = Path.home() / "repos" / "epoch" / "ai-enablement"
+        commands = [
+            f"git push {self.EPOCH} master",
+            f"git push {self.EPOCH} HEAD:topic",
+            f"/usr/bin/git push {self.EPOCH} master",
+            f"cd /tmp && git push {self.EPOCH} master",
+            f"bash -c 'git push {self.EPOCH} master'",
+        ]
+        if epoch_checkout.is_dir():
+            commands += [f"git -C {epoch_checkout} push", f"cd {epoch_checkout} && git push origin master"]
+        for tool in GUARDS:
+            for command in commands:
+                with self.subTest(tool=tool, command=command):
+                    result = self.decide(tool, command)
+                    self.assertEqual(decision(result), "deny")
+                    self.assertIn("epoch_publish.py", result.stdout)
+
+    def test_codex_functions_exec_nested_push_is_refused(self) -> None:
+        source = f'await tools.exec_command({{cmd:"git push {self.EPOCH} master"}});'
+        result = checked(run_guard(GUARDS["codex"], {"tool_name": "functions.exec", "tool_input": {"input": source}},
+                                   cwd=ROOT))
+        self.assertEqual(decision(result), "deny")
+        self.assertIn("epoch_publish.py", result.stdout)
+
+    def test_other_writes_and_other_owners_are_unchanged(self) -> None:
+        for tool in GUARDS:
+            for command, expected in (
+                (f"git push --dry-run {self.EPOCH} master", "allow"),
+                ("git push https://github.com/benthamite/scratch.git HEAD:topic", "allow"),
+                ("gh pr create --repo epoch-research/ai-enablement --title T --body B", "allow"),
+                ("gh issue comment --repo epoch-research/ai-enablement 1 --body B", "allow"),
+                ("git push https://github.com/epoch-research/not-a-project-of-mine.git main", "deny"),
+            ):
+                with self.subTest(tool=tool, command=command):
+                    self.assertEqual(decision(self.decide(tool, command)), expected)
+
+    def test_the_flag_off_keeps_declared_pushes_allowed(self) -> None:
+        with mock.patch.object(github_write, "EPOCH_PUSH_ENFORCED", False):
+            for tool in GUARDS:
+                with self.subTest(tool=tool):
+                    self.assertEqual(decision(self.decide(tool, f"git push {self.EPOCH} master")), "allow")
+
+
 class DispatcherPrefilterTests(unittest.TestCase):
     """The Claude Bash dispatcher must reach the guard for every push spelling.
 

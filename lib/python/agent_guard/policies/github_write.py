@@ -56,6 +56,19 @@ _NOT_ALLOWLISTED_ADVICE = (
     "re-run 'make import' in automations-dashboard, and commit the registry -- declarations are read from the "
     "committed registry, so an uncommitted one has no effect.")
 
+# Agents publish to epoch-research through the Writer app, never with Pablo's
+# login: GitHub notifies the pusher of every failed push-triggered run
+# (ai-enablement docs/superpowers/plans/2026-10-10-agent-push-attribution.md).
+# Off until the alert coverage check is proven to catch app-pushed failures.
+EPOCH_PUSH_ENFORCED = False
+_EPOCH_OWNER = "epoch-research/"
+_EPOCH_PUSH_ADVICE = (
+    "Agents publish to epoch-research only as the Epoch Automations Writer app, so that failed push-triggered "
+    "runs do not notify Pablo. Commit, then run "
+    "`$EPOCH_SHARED_DIR/scripts/epoch_publish.py <checkout>` (default branch, declared repos). A non-default "
+    "branch, or a repo without the Writer installation, needs Pablo to push by hand: give him the `! git push ...` "
+    "command to type himself. Force pushes stay forbidden. Do not route the push through another path.")
+
 _ALLOWLIST_PATH = "agents/github-write-allowlist.txt"
 _DECLARED_REPOS_PATH = "data/automations.json"
 _REPO_CHARS = "A-Za-z0-9_.-"
@@ -1384,6 +1397,9 @@ class _Guard:
                               "explicitly, e.g. git push https://github.com/OWNER/REPO.git HEAD:BRANCH.")
                 target = self.repo_from_local_git() if run_status == 2 else self.repo_from_git_dir(run_dir)
             self.require_allowed_repo("git push", target)
+            if EPOCH_PUSH_ENFORCED and normalize_repo(target).startswith(_EPOCH_OWNER):
+                raise _Exit(Result.deny(f"BLOCKED: agent git push to {normalize_repo(target)}.\n\n"
+                                        + _EPOCH_PUSH_ADVICE))
 
         for pattern, action in ((_GH_PR, "gh pr write operation"), (_GH_ISSUE, "gh issue write operation")):
             if ere.grep(pattern, scan, echo=True):

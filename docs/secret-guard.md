@@ -89,7 +89,9 @@ screenshot.
 
 | 10-10 | Google account password for `pablo@forethought.org` (as first issued) | a | a read-only Slack sweep returned an old message carrying it in plain text; changed since |
 
-Tally: page/screenshot 9, command output 9, file read 3, **typed literal 0**.
+| 10-10 | Fireflies webhook signing secret (Pablo, meeting-debrief Worker) | d | a screenshot of the Fireflies Webhooks V2 edit panel, which shows the signing secret in plain text; rotated 10-10 in 1Password and on the Worker, Fireflies updated by Pablo. The `agents/credential-pages.txt` list does not cover `app.fireflies.ai/integrations/api/webhook` |
+
+Tally: page/screenshot 10, command output 9, file read 3, **typed literal 0**.
 
 ## Protection in place (2026-10-01)
 

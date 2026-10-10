@@ -64,8 +64,11 @@ Forethought account's full Notion workspace access.
 
 Pablo signs in to the Forethought Slack workspace as `pablo.stafforini@gmail.com`
 (user `pablo.stafforini`, `U0C72C0S1NW`), not as `pablo@forethought.org`.
-`slack.py -w forethought` acts as that user. The workspace also has a separate
-`pablo@forethought.org` user (`U0C8B8TME65`) that Pablo does not use.
+`slack.py -w forethought` acts as that user. The workspace also lists a
+`pablo@forethought.org` user (`U0C8B8TME65`). An agent created it in error by
+assuming Pablo's Slack identity followed his Google account; it is now
+deactivated and awaiting deletion by a workspace admin. It still appears in
+user searches. Never use it: do not message, mention, invite or act as it.
 
 Forethought Gmail syncs into mu4e (`gmail-maildir-sync --account forethought`);
 Docs/Drive use `gdoc --account forethought`; the other mapped Google tools have no Forethought authentication. See `google-services.md` for account routing. Discover the connected

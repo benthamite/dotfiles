@@ -262,7 +262,8 @@ operation's provenance and verify the installed document through that workflow.
 All book commands print JSON. `get`, `collect` and their article API remain
 unchanged. The website has no separate book-discovery command: its legacy
 `download-missing-pdfs.py` adapter is retired. Scheduled acquisition uses
-`download-missing-pdfs-batch.py` to run agent review and the explicit Ebib
-attachment workflow; its `missing_pdf_inventory.py` only lists `old.bib` books
-whose PDF is missing. These checks do not require human approval of every
+`download-missing-pdfs-batch.py` to run agent review up to a staged, reviewed
+copy, without Emacs; Emacs attaches staged copies through the explicit Ebib
+operation (`ebib-extras-pdf-queue-drain`, ledger lock `bin/pdf-queue-lock`). Its
+`missing_pdf_inventory.py` only lists `old.bib` books whose PDF is missing. These checks do not require human approval of every
 file or prohibit unattended acquisition.

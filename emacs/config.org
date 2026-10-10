@@ -12821,6 +12821,10 @@ The macro below generates the commands correctly. But attempting to define key b
   :hook
   (ebib-add-entry . ebib-extras-create-list-of-existing-authors)
 
+  :config
+  ;; Attach book PDFs that the scheduled acquisition job staged without Emacs.
+  (ebib-extras-pdf-queue-mode 1)
+
   :bind
   (("A-i" . ebib-extras-open-or-switch)
    :map ebib-index-mode-map

@@ -1354,5 +1354,260 @@
           (when (file-exists-p artifact) (delete-file artifact)))
         (delete-directory dir t)))))
 
+;;;; Staged PDF queue
+
+(defconst ebib-extras-test--pdf-queue-key "Author1960Book")
+
+(defconst ebib-extras-test--pdf-queue-open (symbol-function 'ebib-extras--pdf-queue-open)
+  "The real entry opener, which the queue fixture stubs.")
+
+(defun ebib-extras-test--pdf-queue-json (file)
+  "Return the JSON object in FILE."
+  (ebib-extras--pdf-queue-read-json file))
+
+(defun ebib-extras-test--pdf-queue-record (queue)
+  "Return the fixture book's ledger record in QUEUE."
+  (alist-get (intern ebib-extras-test--pdf-queue-key)
+             (alist-get 'books (ebib-extras-test--pdf-queue-json
+                                (expand-file-name "state.json" queue)))))
+
+(defun ebib-extras-test--with-pdf-queue (function)
+  "Call FUNCTION with a staged attempt, its ledger and a real Ebib database.
+FUNCTION receives a plist with :queue, :attempt, :db, :bib, :library,
+:staged and :attached (a list the attachment stub fills).  Attachment and
+processing are stubbed: they move the staged copy into the library and
+save the file field, as the real operation does, without OCR or network."
+  (let* ((root (make-temp-file "ebib-pdf-queue-" t))
+         (queue (expand-file-name "queue/" root))
+         (attempt (expand-file-name "attempt-1/" queue))
+         (library (expand-file-name "library/" root))
+         (bib (expand-file-name "fixture.bib" root))
+         (staged (expand-file-name "staged.pdf" attempt))
+         (key ebib-extras-test--pdf-queue-key)
+         (db (ebib-db-new-database))
+         (ebib--databases (list db))
+         (ebib-extras-pdf-queue-directory queue)
+         (ebib-extras-pdf-queue-lock-program
+          (expand-file-name "../../../bin/pdf-queue-lock" ebib-extras-test--directory))
+         (ebib-extras-pdf-queue-operation-timeout 60)
+         (ebib-extras--pdf-queue-current nil)
+         (ebib-extras--pdf-queue-tried nil)
+         (tlon-languages-properties '((:name "english" :standard "english")
+                                      (:name "german" :standard "german")))
+         (attached (list 'attached))
+         (warnings nil))
+    (unwind-protect
+        (progn
+          (make-directory attempt t)
+          (make-directory library t)
+          (with-temp-file staged (set-buffer-multibyte nil) (insert "%PDF-1.7 staged fixture"))
+          (ebib-db-set-filename bib db)
+          (ebib-db-set-backup nil db)
+          (ebib-db-set-entry key (copy-tree '(("=type=" . "book")
+                                             ("title" . "{Synthetic   Book}")
+                                             ("date" . "{1960}")))
+                             db)
+          (ebib-extras--save-database-headless db)
+          (let ((sha (ebib-extras--pdf-queue-sha256 staged)))
+            (ebib-extras--pdf-queue-write-json
+             (expand-file-name "input.json" attempt) `((bibliography . ,bib)))
+            (ebib-extras--pdf-queue-write-json
+             (expand-file-name "result.json" attempt)
+             `((status . "staged") (file . ,staged) (sha256 . ,sha)))
+            (ebib-extras--pdf-queue-write-json
+             (expand-file-name "selection.json" attempt)
+             `((identity . ((key . ,key) (type . "book") (title . "Synthetic Book")
+                            (edition . "") (date . "1960") (isbn . "") (language . "")))
+               (language . "english")))
+            (ebib-extras--pdf-queue-write-json
+             (expand-file-name "state.json" queue)
+             `((version . 1)
+               (books . ((,(intern key) . ((last_attempt . 1) (status . "staged")
+                                           (attempt . ,attempt))))))))
+          (cl-letf (((symbol-function 'ebib-extras--pdf-queue-open)
+                     (lambda (_bibfile _key) db))
+                    ((symbol-function 'gptel-extras--process-bib-entry-headless) #'ignore)
+                    ((symbol-function 'run-with-timer) #'ignore)
+                    ((symbol-function 'display-warning)
+                     (lambda (_type message &rest _) (push message warnings)))
+                    ((symbol-function 'ebib-extras-attach-file)
+                     (lambda (file key _postprocess db operation)
+                       (ebib-extras--operation-start operation)
+                       (let ((dest (expand-file-name (concat key ".pdf") library)))
+                         (rename-file file dest)
+                         (ebib-extras--update-file-field-contents key dest db)
+                         (nconc attached (list dest))
+                         (ebib-extras--operation-finish operation 'complete)
+                         dest))))
+            (funcall function (list :queue queue :attempt attempt :db db :bib bib
+                                    :library library :staged staged :attached attached
+                                    :warnings (lambda () warnings)))))
+      (delete-directory root t))))
+
+(ert-deftest ebib-extras-test-pdf-queue-attaches-a-staged-pdf ()
+  "A staged attempt is claimed, attached, read back and recorded."
+  (ebib-extras-test--with-pdf-queue
+   (lambda (fixture)
+     (ebib-extras-pdf-queue-drain)
+     (let* ((attempt (plist-get fixture :attempt))
+            (record (ebib-extras-test--pdf-queue-record (plist-get fixture :queue)))
+            (dest (cadr (plist-get fixture :attached)))
+            (result (ebib-extras-test--pdf-queue-json
+                     (expand-file-name "attach-result.json" attempt))))
+       (should (equal (alist-get 'status record) "attached"))
+       (should (equal (alist-get 'file record) dest))
+       (should (alist-get 'operation_id record))
+       (should (equal (alist-get 'status result) "attached"))
+       (should (equal (alist-get 'bytes_changed_by_processing result) "no"))
+       (should (file-exists-p (expand-file-name "claim.json" attempt)))
+       (should (equal (alist-get 'dest (ebib-extras-test--pdf-queue-json
+                                        (expand-file-name "operation.json" attempt)))
+                      dest))
+       (should (equal (ebib-extras--pdf-queue-disk-files (plist-get fixture :bib)
+                                                         ebib-extras-test--pdf-queue-key)
+                      (list dest)))
+       ;; The empty language was set from the review before the operation.
+       (should (equal (ebib-unbrace (ebib-db-get-field-value
+                                     "langid" ebib-extras-test--pdf-queue-key
+                                     (plist-get fixture :db)))
+                      "english"))
+       (should-not ebib-extras--pdf-queue-current)))))
+
+(ert-deftest ebib-extras-test-pdf-queue-changed-identity-is-not-attached ()
+  "An entry edited since review becomes attach-error without an operation."
+  (ebib-extras-test--with-pdf-queue
+   (lambda (fixture)
+     (ebib-set-field-value "edition" "2" ebib-extras-test--pdf-queue-key
+                           (plist-get fixture :db) 'overwrite)
+     (ebib-extras-pdf-queue-drain)
+     (let ((record (ebib-extras-test--pdf-queue-record (plist-get fixture :queue))))
+       (should (equal (alist-get 'status record) "attach-error"))
+       (should (string-match-p "edition" (alist-get 'reason record)))
+       (should (equal (plist-get fixture :attached) '(attached)))
+       (should (file-exists-p (plist-get fixture :staged)))
+       (should-not (file-exists-p (expand-file-name "operation.json" (plist-get fixture :attempt))))
+       (should (funcall (plist-get fixture :warnings)))))))
+
+(ert-deftest ebib-extras-test-pdf-queue-unsaved-bibliography-defers ()
+  "Unsaved bibliography edits return the attempt to the queue untouched."
+  (ebib-extras-test--with-pdf-queue
+   (lambda (fixture)
+     (progn
+       (cl-letf (((symbol-function 'ebib-extras--pdf-queue-open)
+                  ebib-extras-test--pdf-queue-open)
+                 ((symbol-function 'gptel-extras--bib-import-preflight)
+                  (lambda (bibfile)
+                    (user-error "Bibliography buffer has unsaved changes: %s" bibfile)))
+                 ((symbol-function 'gptel-extras--open-bib-entry-for-processing)
+                  (lambda (&rest _) (ert-fail "Entry opened despite failed preflight"))))
+         (ebib-extras-pdf-queue-drain)))
+     (should (equal (alist-get 'status (ebib-extras-test--pdf-queue-record
+                                        (plist-get fixture :queue)))
+                    "staged"))
+     (should-not (file-exists-p (expand-file-name "claim.json" (plist-get fixture :attempt))))
+     (should (equal (plist-get fixture :attached) '(attached))))))
+
+(ert-deftest ebib-extras-test-pdf-queue-respects-a-live-claim ()
+  "An attempt claimed by another running Emacs is left alone."
+  (ebib-extras-test--with-pdf-queue
+   (lambda (fixture)
+     (let* ((process (start-process "claim-owner" nil "sleep" "30"))
+            (pid (process-id process))
+            (claim (expand-file-name "claim.json" (plist-get fixture :attempt))))
+       (unwind-protect
+           (progn
+             (ebib-extras--pdf-queue-write-json
+              claim `((owner . "emacs-drain") (pid . ,pid)
+                      (emacs_start . ,(ebib-extras--pdf-queue-process-start pid))))
+             (ebib-extras-pdf-queue-drain)
+             (should (file-exists-p claim))
+             (should (equal (alist-get 'pid (ebib-extras-test--pdf-queue-json claim)) pid))
+             (should (equal (alist-get 'status (ebib-extras-test--pdf-queue-record
+                                                (plist-get fixture :queue)))
+                            "staged"))
+             (should (equal (plist-get fixture :attached) '(attached))))
+         (delete-process process))))))
+
+(defun ebib-extras-test--pdf-queue-interrupt (fixture claim operation)
+  "Mark FIXTURE's attempt as claimed by CLAIM, with OPERATION alist or nil."
+  (let ((attempt (plist-get fixture :attempt)))
+    (ebib-extras--pdf-queue-write-json (expand-file-name "claim.json" attempt) claim)
+    (when operation
+      (ebib-extras--pdf-queue-write-json (expand-file-name "operation.json" attempt) operation))
+    (should (ebib-extras--pdf-queue-ledger "merge" ebib-extras-test--pdf-queue-key
+                                           '((status . "attaching")) "staged"))))
+
+(ert-deftest ebib-extras-test-pdf-queue-interrupted-install-of-gone-owner-needs-review ()
+  "An operation whose Emacs exited after installation is never retried."
+  (ebib-extras-test--with-pdf-queue
+   (lambda (fixture)
+     (ebib-extras-test--pdf-queue-interrupt
+      fixture '((owner . "emacs-drain") (pid . 999999999) (emacs_start . 1))
+      '((operation_id . "bib-operation-from-exited-emacs") (dest . "/library/x.pdf")))
+     (ebib-extras-pdf-queue-drain)
+     (let ((record (ebib-extras-test--pdf-queue-record (plist-get fixture :queue))))
+       (should (equal (alist-get 'status record) "attach-error"))
+       (should (string-match-p "bib-operation-from-exited-emacs" (alist-get 'reason record))))
+     (should (equal (plist-get fixture :attached) '(attached)))
+     (should (file-exists-p (plist-get fixture :staged))))))
+
+(ert-deftest ebib-extras-test-pdf-queue-claim-without-operation-is-released ()
+  "A gone owner's claim that started no operation is released and retried."
+  (ebib-extras-test--with-pdf-queue
+   (lambda (fixture)
+     (ebib-extras-test--pdf-queue-interrupt
+      fixture '((owner . "emacs-drain") (pid . 999999999) (emacs_start . 1)) nil)
+     (ebib-extras-pdf-queue-drain)
+     (should (equal (alist-get 'status (ebib-extras-test--pdf-queue-record
+                                        (plist-get fixture :queue)))
+                    "attached"))
+     (should (= (length (plist-get fixture :attached)) 2)))))
+
+(ert-deftest ebib-extras-test-pdf-queue-interrupted-drain-resumes-known-operation ()
+  "This Emacs's own interrupted operation is verified instead of rerun."
+  (ebib-extras-test--with-pdf-queue
+   (lambda (fixture)
+     (let* ((db (plist-get fixture :db))
+            (key ebib-extras-test--pdf-queue-key)
+            (operation (ebib-extras-make-operation key db t))
+            (dest (ebib-extras-attach-file (plist-get fixture :staged) key t db operation)))
+       (ebib-extras-test--pdf-queue-interrupt
+        fixture (ebib-extras--pdf-queue-owner)
+        `((operation_id . ,(ebib-extras-operation-id operation)) (dest . ,dest)
+          (staged_sha256 . "unused")))
+       (ebib-extras-pdf-queue-drain)
+       (should (equal (alist-get 'status (ebib-extras-test--pdf-queue-record
+                                          (plist-get fixture :queue)))
+                      "attached"))
+       ;; Only the setup's installation ran; the drain did not attach again.
+       (should (= (length (plist-get fixture :attached)) 2))))))
+
+(ert-deftest ebib-extras-test-pdf-queue-pending-operation-times-out-for-review ()
+  "An operation still pending at the deadline becomes attach-error."
+  (ebib-extras-test--with-pdf-queue
+   (lambda (fixture)
+     (let ((ebib-extras-pdf-queue-operation-timeout -1)
+           (attach (symbol-function 'ebib-extras-attach-file)))
+       (cl-letf (((symbol-function 'ebib-extras-attach-file)
+                  (lambda (file key postprocess db operation)
+                    (prog1 (funcall attach file key postprocess db operation)
+                      ;; An OCR callback that never returns.
+                      (ebib-extras--operation-start operation)))))
+         (ebib-extras-pdf-queue-drain)))
+     (let ((record (ebib-extras-test--pdf-queue-record (plist-get fixture :queue))))
+       (should (equal (alist-get 'status record) "attach-error"))
+       (should (string-match-p "still pending" (alist-get 'reason record)))))))
+
+(ert-deftest ebib-extras-test-pdf-queue-clear-makes-a-book-eligible-again ()
+  "Clearing an attach-error record deletes it; other statuses are refused."
+  (ebib-extras-test--with-pdf-queue
+   (lambda (fixture)
+     (should-error (ebib-extras-pdf-queue-clear ebib-extras-test--pdf-queue-key)
+                   :type 'user-error)
+     (should (ebib-extras--pdf-queue-ledger "merge" ebib-extras-test--pdf-queue-key
+                                            '((status . "attach-error")) "staged"))
+     (ebib-extras-pdf-queue-clear ebib-extras-test--pdf-queue-key)
+     (should-not (ebib-extras-test--pdf-queue-record (plist-get fixture :queue))))))
+
 (provide 'ebib-extras-test)
 ;;; ebib-extras-test.el ends here

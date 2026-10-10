@@ -53,6 +53,40 @@ default) or any other non-nil value, prompt before overwriting."
                  (const :tag "Prompt before overwriting" prompt))
   :group 'ebib-extras)
 
+;;;;; Staged PDF queue
+
+(defcustom ebib-extras-pdf-queue-directory
+  (expand-file-name "~/.local/state/download-missing-pdfs/")
+  "Directory of the unattended book-PDF queue.
+The scheduled batch in stafforini.com stages reviewed PDFs here, one attempt
+directory per book, and records them in its `state.json' ledger.
+`ebib-extras-pdf-queue-drain' attaches them."
+  :type 'directory
+  :group 'ebib-extras)
+
+(defcustom ebib-extras-pdf-queue-lock-program
+  (file-name-concat paths-dir-dotfiles "bin/pdf-queue-lock")
+  "Program that changes one queue ledger record under the ledger's lock.
+The scheduled batch takes the same lock, so neither overwrites the other."
+  :type 'file
+  :group 'ebib-extras)
+
+(defcustom ebib-extras-pdf-queue-idle-seconds 600
+  "Idle seconds after which `ebib-extras-pdf-queue-mode' drains the queue."
+  :type 'natnum
+  :group 'ebib-extras)
+
+(defcustom ebib-extras-pdf-queue-poll-seconds 5
+  "Seconds between checks of a running attachment operation."
+  :type 'natnum
+  :group 'ebib-extras)
+
+(defcustom ebib-extras-pdf-queue-operation-timeout 7200
+  "Seconds an attachment operation, including OCR, may stay pending.
+After that the attempt is recorded as `attach-error' for review."
+  :type 'natnum
+  :group 'ebib-extras)
+
 ;;;; Variables
 
 (defconst ebib-extras-sort-states
@@ -1900,6 +1934,519 @@ DIRECTION can be `prev' or `next'."
   "Fetch keywords for the entry at point and put them in the associated org file."
   (interactive)
   (ebib-extras-fetch-field-value "keywords"))
+
+;;;;; Staged PDF queue
+
+;; The scheduled batch (stafforini.com scripts/download-missing-pdfs-batch.py)
+;; acquires and reviews book PDFs without Emacs and leaves each one `staged'.
+;; This drain pulls that work: it claims a staged attempt with an exclusive
+;; claim file, rechecks the entry, attaches the reviewed copy through the
+;; noninteractive Ebib operation, verifies the result and records `attached'
+;; or `attach-error'.  Ledger changes go through
+;; `ebib-extras-pdf-queue-lock-program', which shares the batch's lock.
+
+(defvar ebib-extras--pdf-queue-current nil
+  "Plist describing the attempt being attached, or nil.
+Keys: :key, :attempt, :db, :operation, :dest, :staged-sha256, :deadline.")
+
+(defvar ebib-extras--pdf-queue-tried nil
+  "Keys the current drain pass has already tried.")
+
+(defvar ebib-extras--pdf-queue-idle-timer nil
+  "Idle timer started by `ebib-extras-pdf-queue-mode'.")
+
+(defconst ebib-extras--pdf-queue-identity-fields
+  '(key type title edition date isbn language)
+  "Identity fields the batch saves and the drain compares before attaching.")
+
+(declare-function gptel-extras--bib-import-preflight "gptel-extras")
+(declare-function gptel-extras--open-bib-entry-for-processing "gptel-extras")
+(declare-function gptel-extras--process-bib-entry-headless "gptel-extras")
+(declare-function bibtex-search-entry "bibtex")
+(declare-function bibtex-text-in-field "bibtex")
+(defvar tlon-languages-properties)
+
+;;;###autoload
+(define-minor-mode ebib-extras-pdf-queue-mode
+  "Attach staged book PDFs whenever Emacs has been idle for a while.
+The idle period is `ebib-extras-pdf-queue-idle-seconds'."
+  :global t
+  :group 'ebib-extras
+  (when ebib-extras--pdf-queue-idle-timer
+    (cancel-timer ebib-extras--pdf-queue-idle-timer)
+    (setq ebib-extras--pdf-queue-idle-timer nil))
+  (when ebib-extras-pdf-queue-mode
+    (setq ebib-extras--pdf-queue-idle-timer
+          (run-with-idle-timer ebib-extras-pdf-queue-idle-seconds t
+                               #'ebib-extras--pdf-queue-idle-drain))))
+
+(defun ebib-extras--pdf-queue-idle-drain ()
+  "Drain the queue from the idle timer, reporting failures as warnings."
+  (unless ebib-extras--pdf-queue-current
+    (condition-case err
+        (when (ebib-extras--pdf-queue-records '("staged" "attaching"))
+          (ebib-extras-pdf-queue-drain))
+      (error (display-warning 'ebib-extras-pdf-queue
+                              (format "Drain failed: %s" (error-message-string err))
+                              :error)))))
+
+;;;###autoload
+(defun ebib-extras-pdf-queue-drain ()
+  "Attach every staged book PDF, one at a time, without prompting.
+First reconcile attempts whose claim outlived its drain.  Attachment runs
+asynchronously; each finished attempt starts the next."
+  (interactive)
+  (if ebib-extras--pdf-queue-current
+      (message "Already attaching %s" (plist-get ebib-extras--pdf-queue-current :key))
+    (setq ebib-extras--pdf-queue-tried nil)
+    (ebib-extras--pdf-queue-reconcile)
+    (unless (or ebib-extras--pdf-queue-current (ebib-extras--pdf-queue-next))
+      (when (called-interactively-p 'any)
+        (message "No staged PDF was started")))))
+
+(defun ebib-extras--pdf-queue-next ()
+  "Start attaching the oldest staged attempt not yet tried in this pass.
+Return non-nil if an attachment started.  Stop when the bibliography is not
+ready, since every attempt would fail the same way."
+  (catch 'done
+    (dolist (entry (ebib-extras--pdf-queue-records '("staged")))
+      (unless (member (car entry) ebib-extras--pdf-queue-tried)
+        (push (car entry) ebib-extras--pdf-queue-tried)
+        (pcase (ebib-extras--pdf-queue-start (car entry) (cdr entry))
+          ('started (throw 'done t))
+          ('released (throw 'done nil)))))
+    nil))
+
+(defun ebib-extras--pdf-queue-records (statuses)
+  "Return (KEY . RECORD) ledger entries whose status is in STATUSES.
+Sort them by their last attempt, oldest first."
+  (let* ((file (expand-file-name "state.json" ebib-extras-pdf-queue-directory))
+         (books (and (file-exists-p file)
+                     (alist-get 'books (ebib-extras--pdf-queue-read-json file)))))
+    (sort (seq-filter (lambda (entry)
+                        (member (alist-get 'status (cdr entry)) statuses))
+                      (mapcar (lambda (entry) (cons (symbol-name (car entry)) (cdr entry)))
+                              books))
+          (lambda (a b) (< (alist-get 'last_attempt (cdr a))
+                           (alist-get 'last_attempt (cdr b)))))))
+
+(defun ebib-extras--pdf-queue-read-json (file)
+  "Return the JSON object in FILE as an alist with symbol keys."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (json-parse-buffer :object-type 'alist :array-type 'list
+                       :null-object nil :false-object nil)))
+
+(defun ebib-extras--pdf-queue-write-json (file object &optional exclusive)
+  "Write OBJECT as JSON to FILE.
+With EXCLUSIVE, signal `file-already-exists' if FILE exists."
+  (let ((text (concat (json-serialize object) "\n")))
+    (with-temp-buffer
+      (insert text)
+      (write-region (point-min) (point-max) file nil 'silent nil
+                    (and exclusive 'excl)))))
+
+(defun ebib-extras--pdf-queue-ledger (command key &optional fields expect)
+  "Run ledger COMMAND (\"merge\" or \"delete\") for KEY under the shared lock.
+FIELDS is an alist merged into the record.  EXPECT, when non-nil, is the
+status the record must have.  Return non-nil on success and nil when the
+record's status differs from EXPECT; signal an error otherwise."
+  (with-temp-buffer
+    (let* ((args (append (list "--state-dir" (expand-file-name ebib-extras-pdf-queue-directory)
+                               command key)
+                         (when fields (list (json-serialize fields)))
+                         (when expect (list "--expect-status" expect))))
+           (status (apply #'call-process ebib-extras-pdf-queue-lock-program nil t nil args)))
+      (pcase status
+        (0 t)
+        (3 nil)
+        (_ (error "Queue ledger update failed for %s: %s" key (string-trim (buffer-string))))))))
+
+;;;;;; Claims
+
+(defun ebib-extras--pdf-queue-owner ()
+  "Return an alist identifying this Emacs as a claim owner."
+  `((owner . "emacs-drain")
+    (pid . ,(emacs-pid))
+    (emacs_start . ,(ebib-extras--pdf-queue-process-start (emacs-pid)))
+    (time . ,(format-time-string "%FT%T%z"))))
+
+(defun ebib-extras--pdf-queue-process-start (pid)
+  "Return the start time of process PID in whole seconds, or nil."
+  (when-let* ((start (alist-get 'start (process-attributes pid))))
+    (truncate (float-time start))))
+
+(defun ebib-extras--pdf-queue-claim-state (claim)
+  "Classify CLAIM, an alist read from `claim.json'.
+Return `mine' for this Emacs, `live' for another running Emacs and `gone'
+when its owner no longer runs."
+  (let ((pid (alist-get 'pid claim))
+        (start (alist-get 'emacs_start claim)))
+    (cond ((and (eql pid (emacs-pid))
+                (eql start (ebib-extras--pdf-queue-process-start (emacs-pid))))
+           'mine)
+          ((and (integerp pid) start
+                (eql start (ebib-extras--pdf-queue-process-start pid)))
+           'live)
+          (t 'gone))))
+
+(defun ebib-extras--pdf-queue-claim (attempt)
+  "Create ATTEMPT's claim file exclusively; return nil if it already exists."
+  (condition-case nil
+      (progn
+        (ebib-extras--pdf-queue-write-json
+         (expand-file-name "claim.json" attempt) (ebib-extras--pdf-queue-owner) t)
+        t)
+    (file-already-exists nil)))
+
+(defun ebib-extras--pdf-queue-release (key attempt)
+  "Return KEY's claimed ATTEMPT to the staged queue; no operation began."
+  (delete-file (expand-file-name "claim.json" attempt))
+  (ebib-extras--pdf-queue-ledger "merge" key '((status . "staged")) "attaching"))
+
+;;;;;; Reconciliation
+
+(defun ebib-extras--pdf-queue-reconcile ()
+  "Settle claims whose drain was interrupted, before any new attempt.
+A claim without `operation.json' started no Ebib operation and is released.
+A claim with one is settled from that operation's status; an operation this
+Emacs does not know (its owner exited) becomes `attach-error'."
+  (dolist (entry (ebib-extras--pdf-queue-records '("staged" "attaching")))
+    (let* ((key (car entry))
+           (record (cdr entry))
+           (attempt (alist-get 'attempt record))
+           (claim-file (expand-file-name "claim.json" attempt))
+           (claim (and (file-exists-p claim-file)
+                       (ebib-extras--pdf-queue-read-json claim-file)))
+           (state (and claim (ebib-extras--pdf-queue-claim-state claim))))
+      (cond ((or ebib-extras--pdf-queue-current (eq state 'live)))
+            ((equal (alist-get 'status record) "staged")
+             ;; A claim made just before a crash, before the ledger said so.
+             (when claim (delete-file claim-file)))
+            ((null claim)
+             (ebib-extras--pdf-queue-finish
+              key attempt "attach-error" "Attaching record has no claim file; review the attempt"))
+            (t (ebib-extras--pdf-queue-reconcile-claim key attempt))))))
+
+(defun ebib-extras--pdf-queue-reconcile-claim (key attempt)
+  "Settle KEY's interrupted claim on ATTEMPT."
+  (let* ((file (expand-file-name "operation.json" attempt))
+         (saved (and (file-exists-p file) (ebib-extras--pdf-queue-read-json file)))
+         (operation (and saved (gethash (alist-get 'operation_id saved)
+                                        ebib-extras--operations))))
+    (cond ((null saved) (ebib-extras--pdf-queue-release key attempt))
+          ((null operation)
+           (ebib-extras--pdf-queue-finish
+            key attempt "attach-error"
+            (format "Operation %s belonged to an Emacs session that ended; inspect the entry and %s"
+                    (alist-get 'operation_id saved) attempt)))
+          ((null (alist-get 'dest saved))
+           (ebib-extras--pdf-queue-finish
+            key attempt "attach-error"
+            (format "Operation %s was interrupted before its installed file was recorded"
+                    (alist-get 'operation_id saved))))
+          (t (setq ebib-extras--pdf-queue-current
+                   (list :key key :attempt attempt
+                         :db (ebib-extras-operation-db operation) :operation operation
+                         :dest (alist-get 'dest saved)
+                         :staged-sha256 (alist-get 'staged_sha256 saved)
+                         :deadline (+ (float-time) ebib-extras-pdf-queue-operation-timeout)))
+             (ebib-extras--pdf-queue-poll)))))
+
+;;;;;; Attachment
+
+(defun ebib-extras--pdf-queue-start (key record)
+  "Claim and start attaching KEY's staged attempt described by RECORD.
+Return `started', `released' (the bibliography is not ready), `failed' or
+`skipped' (another drain owns it)."
+  (let ((attempt (alist-get 'attempt record)))
+    (cond ((not (ebib-extras--pdf-queue-claim attempt)) 'skipped)
+          ((not (ebib-extras--pdf-queue-ledger
+                 "merge" key `((status . "attaching") (claim . ,(ebib-extras--pdf-queue-owner)))
+                 "staged"))
+           (delete-file (expand-file-name "claim.json" attempt))
+           'skipped)
+          (t (condition-case err
+                 (ebib-extras--pdf-queue-attach key attempt)
+               (error
+                (ebib-extras--pdf-queue-finish key attempt "attach-error"
+                                               (error-message-string err))
+                'failed))))))
+
+(defun ebib-extras--pdf-queue-attach (key attempt)
+  "Attach the staged copy in ATTEMPT to KEY and start polling its operation.
+Return `started', or `released' after returning the claim when the
+bibliography is not ready for a noninteractive write."
+  (let* ((input (ebib-extras--pdf-queue-read-json (expand-file-name "input.json" attempt)))
+         (result (ebib-extras--pdf-queue-read-json (expand-file-name "result.json" attempt)))
+         (selection (ebib-extras--pdf-queue-read-json (expand-file-name "selection.json" attempt)))
+         (bibfile (alist-get 'bibliography input))
+         (staged (alist-get 'file result))
+         (staged-sha256 (alist-get 'sha256 result))
+         (db (ebib-extras--pdf-queue-open bibfile key)))
+    (if (null db)
+        (progn (ebib-extras--pdf-queue-release key attempt) 'released)
+      (ebib-extras--pdf-queue-check-staged staged staged-sha256)
+      (ebib-extras--pdf-queue-check-identity key db (alist-get 'identity selection))
+      (ebib-extras--pdf-queue-check-no-pdf key db)
+      (ebib-extras--pdf-queue-ensure-language key db (alist-get 'language selection))
+      (ebib-extras--pdf-queue-run-operation key attempt db staged staged-sha256)
+      'started)))
+
+(defun ebib-extras--pdf-queue-open (bibfile key)
+  "Return the validated Ebib database holding KEY in BIBFILE.
+Return nil when BIBFILE has unsaved or conflicting changes."
+  (unless (fboundp 'gptel-extras--open-bib-entry-for-processing)
+    (require 'gptel-extras))
+  (condition-case err
+      (progn
+        (gptel-extras--bib-import-preflight bibfile)
+        (gptel-extras--open-bib-entry-for-processing bibfile key))
+    (user-error
+     (if (string-match-p "unsaved changes" (error-message-string err))
+         (progn (message "Deferring %s: %s" key (error-message-string err)) nil)
+       (signal (car err) (cdr err))))))
+
+(defun ebib-extras--pdf-queue-check-staged (file sha256)
+  "Signal an error unless FILE is a PDF whose SHA-256 digest is SHA256."
+  (unless (and (stringp file) (file-regular-p file))
+    (error "Staged PDF is missing: %s" file))
+  (unless (equal (ebib-extras--pdf-queue-sha256 file) sha256)
+    (error "Staged PDF changed since review: %s" file)))
+
+(defun ebib-extras--pdf-queue-sha256 (file)
+  "Return the SHA-256 digest of FILE's bytes."
+  (with-temp-buffer
+    (set-buffer-multibyte nil)
+    (insert-file-contents-literally file)
+    (secure-hash 'sha256 (current-buffer))))
+
+(defun ebib-extras--pdf-queue-check-identity (key db saved)
+  "Signal an error unless KEY in DB still matches SAVED, the reviewed identity."
+  (let ((current (ebib-extras--pdf-queue-identity key db)))
+    (dolist (field ebib-extras--pdf-queue-identity-fields)
+      (unless (equal (alist-get field current) (alist-get field saved))
+        (error "Entry %s changed since review: %s is %S, reviewed as %S"
+               key field (alist-get field current) (alist-get field saved))))))
+
+(defun ebib-extras--pdf-queue-identity (key db)
+  "Return KEY's identity fields in DB, normalized as the batch saves them."
+  (let ((value (lambda (field)
+                 (string-join (split-string (or (ebib-unbrace (ebib-db-get-field-value
+                                                               field key db 'noerror))
+                                                ""))
+                              " "))))
+    `((key . ,key)
+      (type . ,(downcase (funcall value "=type=")))
+      (title . ,(funcall value "title"))
+      (edition . ,(funcall value "edition"))
+      (date . ,(let ((date (funcall value "date")))
+                 (if (string-empty-p date) (funcall value "year") date)))
+      (isbn . ,(funcall value "isbn"))
+      (language . ,(funcall value "langid")))))
+
+(defun ebib-extras--pdf-queue-check-no-pdf (key db)
+  "Signal an error if KEY in DB already has an existing PDF attached."
+  (when-let* ((raw (ebib-db-get-field-value "file" key db 'noerror))
+              (pdf (seq-find (lambda (file)
+                               (and (string-suffix-p ".pdf" (downcase (string-trim file)))
+                                    (file-exists-p (expand-file-name (string-trim file)))))
+                             (ebib--split-files (ebib-unbrace raw)))))
+    (error "Entry %s already has a PDF: %s" key pdf)))
+
+(defun ebib-extras--pdf-queue-ensure-language (key db language)
+  "Make KEY's language in DB the reviewed LANGUAGE, saving DB if it changes.
+An entry without a valid language gets LANGUAGE; a different valid one is an
+error."
+  (require 'tlon-core)
+  (let ((current (ebib-unbrace (ebib-db-get-field-value "langid" key db 'noerror)))
+        (valid (lambda (name)
+                 (and name (tlon-lookup tlon-languages-properties :standard :name name)))))
+    (unless (funcall valid language)
+      (error "Reviewed language %S is not a valid langid" language))
+    (cond ((not (funcall valid current))
+           (ebib-set-field-value "langid" language key db 'overwrite)
+           (ebib-db-set-modified t db)
+           (ebib-extras--save-database db))
+          ((not (equal (downcase current) (downcase language)))
+           (error "Entry %s has language %s; the PDF was reviewed as %s"
+                  key current language)))))
+
+(defun ebib-extras--pdf-queue-run-operation (key attempt db staged staged-sha256)
+  "Attach STAGED to KEY in DB and start polling, recording progress in ATTEMPT.
+STAGED-SHA256 is the reviewed digest of STAGED."
+  (let* ((operation (ebib-extras-make-operation key db t))
+         (id (ebib-extras-operation-id operation))
+         (file (expand-file-name "operation.json" attempt))
+         (saved `((operation_id . ,id) (key . ,key)
+                  (bibfile . ,(ebib-db-get-filename db))
+                  (staged_sha256 . ,staged-sha256)
+                  (started . ,(format-time-string "%FT%T%z"))))
+         dest)
+    (ebib-extras--pdf-queue-write-json file saved)
+    (ebib-extras--pdf-queue-ledger "merge" key `((operation_id . ,id)) "attaching")
+    (setq ebib-extras--pdf-queue-current
+          (list :key key :attempt attempt :db db :operation operation
+                :staged-sha256 staged-sha256
+                :deadline (+ (float-time) ebib-extras-pdf-queue-operation-timeout)))
+    ;; The skill's sequence: errors are recorded in the operation itself.
+    (condition-case nil
+        (progn
+          (setq dest (ebib-extras-attach-file staged key t db operation))
+          (ebib-extras--pdf-queue-write-json file (append saved `((dest . ,dest))))
+          (setq ebib-extras--pdf-queue-current
+                (plist-put ebib-extras--pdf-queue-current :dest dest))
+          (gptel-extras--process-bib-entry-headless 0 key db operation))
+      ((error quit) nil))
+    (ebib-extras--pdf-queue-poll)))
+
+(defun ebib-extras--pdf-queue-poll ()
+  "Finish the current attempt once its operation has no pending tasks.
+Then start the next staged attempt.  A failure to record the outcome stops
+the drain with a warning; the claim is reconciled on the next drain."
+  (condition-case err
+      (let* ((current ebib-extras--pdf-queue-current)
+             (operation (plist-get current :operation)))
+        (cond ((and (> (ebib-extras-operation-pending operation) 0)
+                    (<= (float-time) (plist-get current :deadline)))
+               (run-with-timer ebib-extras-pdf-queue-poll-seconds nil
+                               #'ebib-extras--pdf-queue-poll))
+              (t (ebib-extras--pdf-queue-conclude current)
+                 (ebib-extras--pdf-queue-next))))
+    (error
+     (setq ebib-extras--pdf-queue-current nil)
+     (display-warning 'ebib-extras-pdf-queue
+                      (format "Drain stopped: %s" (error-message-string err)) :error))))
+
+(defun ebib-extras--pdf-queue-conclude (current)
+  "Verify the finished attempt described by CURRENT and record its outcome."
+  (let ((key (plist-get current :key))
+        (attempt (plist-get current :attempt)))
+    (condition-case err
+        (let ((verified (ebib-extras--pdf-queue-verify current)))
+          (ebib-extras--pdf-queue-finish
+           key attempt "attached"
+           (format "Attached %s through %s; read back from Ebib and disk"
+                   (alist-get 'file verified) (alist-get 'operation_id verified))
+           verified))
+      (error (ebib-extras--pdf-queue-finish
+              key attempt "attach-error" (error-message-string err))))))
+
+(defun ebib-extras--pdf-queue-verify (current)
+  "Return the verified installation of CURRENT's attempt as an alist.
+Require a complete operation for the exact entry and bibliography, a saved
+database, and a nonempty PDF that both Ebib and the file on disk attach."
+  (let* ((key (plist-get current :key))
+         (db (plist-get current :db))
+         (operation (plist-get current :operation))
+         (id (ebib-extras-operation-id operation))
+         (status (ebib-extras-operation-status-for-id id))
+         (dest (plist-get current :dest))
+         (bibfile (ebib-db-get-filename db)))
+    (when (> (plist-get status :pending) 0)
+      (error "Operation %s still pending after %d seconds"
+             id ebib-extras-pdf-queue-operation-timeout))
+    (unless (and (equal (plist-get status :key) key)
+                 (equal (file-truename (plist-get status :bibfile)) (file-truename bibfile))
+                 (eq (plist-get status :status) 'complete)
+                 (zerop (plist-get status :pending))
+                 (null (plist-get status :errors)))
+      (error "Operation %s did not complete cleanly: %S" id status))
+    (unless dest
+      (error "Operation %s installed no file" id))
+    (when (ebib-db-modified-p db)
+      (error "Bibliography database has unsaved changes after %s" id))
+    (unless (member (expand-file-name dest)
+                    (ebib-extras--pdf-queue-files
+                     (ebib-db-get-field-value "file" key db 'noerror)))
+      (error "Ebib entry %s does not attach %s" key dest))
+    (unless (member (expand-file-name dest) (ebib-extras--pdf-queue-disk-files bibfile key))
+      (error "Saved bibliography entry %s does not attach %s" key dest))
+    (unless (ebib-extras--pdf-queue-pdf-p dest)
+      (error "Installed file is not a nonempty PDF: %s" dest))
+    (let ((sha256 (ebib-extras--pdf-queue-sha256 dest)))
+      `((status . "attached") (key . ,key) (operation_id . ,id)
+        (file . ,(expand-file-name dest)) (sha256 . ,sha256)
+        (staged_sha256 . ,(plist-get current :staged-sha256))
+        (bytes_changed_by_processing
+         . ,(if (equal sha256 (plist-get current :staged-sha256)) "no" "yes"))
+        (bibliography . ,bibfile)))))
+
+(defun ebib-extras--pdf-queue-files (raw)
+  "Return the expanded file names in RAW, a file field value."
+  (and raw (mapcar (lambda (file) (expand-file-name (string-trim file)))
+                   (ebib--split-files (ebib-unbrace raw)))))
+
+(defun ebib-extras--pdf-queue-disk-files (bibfile key)
+  "Return the expanded files that KEY's entry in BIBFILE attaches on disk."
+  (require 'bibtex)
+  (with-temp-buffer
+    (insert-file-contents bibfile)
+    (delay-mode-hooks (bibtex-mode))
+    (when (bibtex-search-entry key)
+      (ebib-extras--pdf-queue-files (bibtex-text-in-field "file")))))
+
+(defun ebib-extras--pdf-queue-pdf-p (file)
+  "Return non-nil if FILE is a nonempty file starting with a PDF header."
+  (and (file-regular-p file)
+       (> (file-attribute-size (file-attributes file)) 0)
+       (with-temp-buffer
+         (set-buffer-multibyte nil)
+         (insert-file-contents-literally file nil 0 5)
+         (equal (buffer-string) "%PDF-"))))
+
+(defun ebib-extras--pdf-queue-finish (key attempt status reason &optional details)
+  "Record STATUS and REASON for KEY's ATTEMPT and end the current attempt.
+DETAILS is an alist of verified facts saved with the outcome.  An
+`attach-error' is shown as a warning: the book waits for review."
+  (let ((operation-id (alist-get 'operation_id details
+                                 (when-let* ((operation (plist-get ebib-extras--pdf-queue-current
+                                                                   :operation)))
+                                   (ebib-extras-operation-id operation)))))
+    (setq ebib-extras--pdf-queue-current nil)
+    (ebib-extras--pdf-queue-write-json
+     (expand-file-name "attach-result.json" attempt)
+     (append `((status . ,status) (key . ,key) (reason . ,reason)
+               (time . ,(format-time-string "%FT%T%z")))
+             (assq-delete-all 'status (assq-delete-all 'key (copy-alist details)))))
+    (ebib-extras--pdf-queue-ledger
+     "merge" key (append `((status . ,status) (reason . ,reason))
+                         (when operation-id `((operation_id . ,operation-id)))
+                         (when-let* ((file (alist-get 'file details))) `((file . ,file))))
+     "attaching")
+    (if (equal status "attach-error")
+        (display-warning 'ebib-extras-pdf-queue
+                         (format "%s: %s (clear with `ebib-extras-pdf-queue-clear')" key reason))
+      (message "Attached staged PDF for %s" key))))
+
+;;;;;; Review
+
+;;;###autoload
+(defun ebib-extras-pdf-queue-status ()
+  "Report how many queued books are staged, attaching or need review."
+  (interactive)
+  (let ((counts (mapcar (lambda (status)
+                          (cons status (ebib-extras--pdf-queue-records (list status))))
+                        '("staged" "attaching" "attach-error"))))
+    (message "PDF queue: %d staged, %d attaching, %d attach-error%s"
+             (length (alist-get "staged" counts nil nil #'equal))
+             (length (alist-get "attaching" counts nil nil #'equal))
+             (length (alist-get "attach-error" counts nil nil #'equal))
+             (if-let* ((errors (alist-get "attach-error" counts nil nil #'equal)))
+                 (concat " (" (mapconcat #'car errors ", ") ")")
+               ""))))
+
+;;;###autoload
+(defun ebib-extras-pdf-queue-clear (key)
+  "Clear KEY's `attach-error' record so the batch may acquire it again.
+Review the attempt directory and the entry first."
+  (interactive
+   (list (completing-read "Clear attach-error for: "
+                          (mapcar #'car (ebib-extras--pdf-queue-records '("attach-error")))
+                          nil t)))
+  (if (ebib-extras--pdf-queue-ledger "delete" key nil "attach-error")
+      (message "Cleared %s; the next batch may acquire it again" key)
+    (user-error "%s is not in attach-error" key)))
 
 ;;;;; pdf metadata
 

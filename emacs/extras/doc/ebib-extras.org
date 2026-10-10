@@ -51,6 +51,24 @@ The option accepts one of three values:
 
 The type is a choice between these three constants. In most workflows, the default value of ~prompt~ provides a good balance between safety and convenience. You may want to change it to ~overwrite~ if you frequently re-download files and trust that the newer version is always preferable, or to ~nil~ if you want strict protection against accidental overwrites.
 
+** Staged PDF queue options
+:PROPERTIES:
+:CUSTOM_ID: h:pdf-queue-options
+:END:
+
+#+vindex: ebib-extras-pdf-queue-directory
+#+vindex: ebib-extras-pdf-queue-lock-program
+#+vindex: ebib-extras-pdf-queue-idle-seconds
+#+vindex: ebib-extras-pdf-queue-poll-seconds
+#+vindex: ebib-extras-pdf-queue-operation-timeout
+These options configure the drain that attaches staged book PDFs ([[#h:pdf-queue][Staged PDF queue]]):
+
+- ~ebib-extras-pdf-queue-directory~: the queue written by the scheduled batch, =~/.local/state/download-missing-pdfs/= by default.
+- ~ebib-extras-pdf-queue-lock-program~: the program that changes one ledger record under the lock the batch also takes, dotfiles =bin/pdf-queue-lock= by default.
+- ~ebib-extras-pdf-queue-idle-seconds~: idle time after which ~ebib-extras-pdf-queue-mode~ drains the queue (600).
+- ~ebib-extras-pdf-queue-poll-seconds~: interval between checks of a running attachment operation (5).
+- ~ebib-extras-pdf-queue-operation-timeout~: how long an operation, including OCR, may stay pending before the attempt is recorded as =attach-error= (7200).
+
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
@@ -487,6 +505,33 @@ The command ~ebib-extras-ocr-pdf~ performs OCR on the PDF file associated with t
 Attachment postprocessing captures the entry's PDF and validated language before metadata processing can yield. OCR uses that captured file even if another buffer becomes current. Noninteractive operations never open or display the PDF; manual attachment keeps the existing display behavior. Invalid keys in noninteractive processing produce a blocked diagnostic instead of invoking the interactive key generator.
 
 Programmatic ~ebib-extras-set-pdf-metadata~ callers may supply KEY and DB explicitly to select the entry independently of the current buffer. Metadata updates use a direct process invocation with private diagnostics, so command output cannot open a window. A failed metadata process signals an error for operation reporting, and its temporary files and diagnostics buffer are cleaned on both success and failure.
+
+** Staged PDF queue
+:PROPERTIES:
+:CUSTOM_ID: h:pdf-queue
+:END:
+
+#+findex: ebib-extras-pdf-queue-drain
+#+findex: ebib-extras-pdf-queue-mode
+#+findex: ebib-extras-pdf-queue-status
+#+findex: ebib-extras-pdf-queue-clear
+The scheduled book-PDF batch (stafforini.com =scripts/download-missing-pdfs-batch.py=) runs without Emacs. Its workers acquire and review a PDF for an existing =old.bib= entry and stop at =staged=: the attempt directory holds the review, =selection.json= (with the entry identity the PDF was reviewed against and its verified language) and a byte-identical copy of the selected PDF. Attachment happens here, so the job never depends on a running Emacs: Emacs pulls the work.
+
+The command ~ebib-extras-pdf-queue-drain~ attaches every staged attempt, one at a time. For each it:
+
+1. Creates =claim.json= in the attempt exclusively and marks the ledger record =attaching=, only if it is still =staged=.
+2. Runs the bibliography preflight. Unsaved bibliography edits return the attempt to =staged= and end the pass; the next drain retries.
+3. Checks the staged copy's SHA-256, compares the entry's key, type, title, edition, date, ISBN and language with the reviewed identity, and refuses an entry that already has a PDF. An empty language is set to the reviewed one.
+4. Creates a noninteractive Ebib operation, records it in =operation.json=, attaches the copy and processes the entry through that same operation, then polls until no callback is pending.
+5. Requires the operation to be complete for that entry and bibliography, the database saved, and the installed file a nonempty PDF that both the Ebib entry and the file on disk attach. It writes =attach-result.json= and records =attached= or =attach-error=.
+
+Ledger changes go through ~ebib-extras-pdf-queue-lock-program~, which re-reads =state.json= under the lock the batch also takes, so the drain and the batch never overwrite each other's records. The batch does not select =staged=, =attaching= or =attach-error= books.
+
+Before a pass, the drain reconciles interrupted claims. A claim held by another running Emacs is left alone. A claim whose drain ended without =operation.json= started no Ebib operation, so the attempt returns to =staged=. A claim with an operation this Emacs still knows is verified once the operation finishes; an operation from an Emacs session that has ended cannot be inspected and becomes =attach-error=.
+
+An =attach-error= is shown as a warning and the book waits for review: inspect the attempt directory and the entry, then run ~ebib-extras-pdf-queue-clear~ to delete the record so the batch may acquire the book again. ~ebib-extras-pdf-queue-status~ reports the staged, attaching and =attach-error= counts.
+
+The global minor mode ~ebib-extras-pdf-queue-mode~ runs the drain after ~ebib-extras-pdf-queue-idle-seconds~ of idle time whenever something is staged or claimed.
 
 ** Identifier retrieval
 :PROPERTIES:

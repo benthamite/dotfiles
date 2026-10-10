@@ -47,9 +47,11 @@ human-account email work.
 For the **Forethought** account (`pablo@forethought.org`), use the dedicated
 Forethought Chrome profile (browser discovery label `forethought.org`) for
 authorized browser work. Gmail and Calendar access were verified on 29 September
-2026. The mapped Google CLIs do not yet have configured Forethought credentials;
-do not assume `--account forethought` works or route work through Epoch/personal
-credentials. Some older documents were shared with the personal account; use
+2026. Forethought Gmail is synced into mu4e by `bin/gmail-maildir-sync --account
+forethought` (mail scope only, granted 10 October 2026; see "Auth" below). The
+other mapped Google CLIs (`gmail.py`, `sheets.py`, `gdoc`, calendar) have no
+Forethought credentials; do not assume `--account forethought` works there or
+route work through Epoch/personal credentials. Some older documents were shared with the personal account; use
 that account only where the task explicitly calls for that access. Profile and
 Notion-account distinctions are recorded in `service-access.md`.
 
@@ -150,13 +152,16 @@ through the Google APIs via `gdoc`, never by assuming one command covers both.
 | `GOOGLE_WORKSPACE_CLIENT_SECRET` | both | OAuth client secret (shared); `password` field of `google-workspace-client-secret` in the personal 1Password `Automation` vault |
 | `GOOGLE_WORKSPACE_REFRESH_TOKEN` | epoch | refresh token authenticated as `pablo@epoch.ai`; stored in 1Password at `op://Automations/Google Workspace OAuth - Pablo Epoch/credential` |
 | `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL` | personal | refresh token authenticated as `pablo.stafforini@gmail.com`; `password` field of `google-workspace-refresh-token-personal` in the personal 1Password `Automation` vault, injected by the local wrappers |
+| `GOOGLE_WORKSPACE_REFRESH_TOKEN_FORETHOUGHT` | forethought | refresh token authenticated as `pablo@forethought.org`, scope `https://mail.google.com/` only; `password` field of `google-workspace-refresh-token-forethought` in the personal 1Password `Automation` vault (exception in `secrets.md`), read only by `bin/gmail-maildir-sync --account forethought` |
 
 Pick the account with `--account epoch` (default), `--account personal`, or
 `--account email-triage` on `gmail.py`; `sheets.py` supports the two human
 accounts. The wrapper exchanges the refresh token for an access token and
 caches per-account at `/tmp/gworkspace-access-token-<account>.json`.
-`bin/gmail-maildir-sync` is Epoch-only and injects the Epoch Google Workspace
-credentials before running the Python package used by mu4e. The email-triage
+`bin/gmail-maildir-sync --account <epoch|forethought>` (default `epoch`) injects
+that account's address (`GMAIL_SYNC_EMAIL`) and refresh token before running the
+Python package used by mu4e; the package refuses (exit 4) when the credentials
+authenticate as a different address. Mail lands in `~/Mail/<account>/`. The email-triage
 bot account uses the existing local OAuth credential file at
 `~/.gmail-mcp-epoch/credentials/email-triage@epoch.ai.json`.
 
@@ -164,7 +169,7 @@ The Epoch refresh token also powers `gdoc --account epoch` (which has its own au
 
 **Other copies of this client's secret.** The Epoch item `op://Automations/Google Admin OAuth - Staff Data` (fields `client_id`, `client_secret`) holds its own copy for the CI staff-data refresh. When the client secret is rotated, update that item in the same step and prove it with a token refresh, then retire the old secret in GCP. The 2026-09-30 rotation missed it, and the staff-data refresh failed with `invalid_client` from 2026-10-08, once the old secret stopped working.
 
-If a token expires (`invalid_grant` errors), regenerate it with `claude/bin/update-gworkspace-refresh-token --account <epoch|personal>`. The helper opens the OAuth browser flow, updates the appropriate backing store (the Epoch `Automations` vault for the Epoch token, the personal 1Password `Automation` vault for the personal token), and prints only status metadata, never token values. The manual recipe under "Generating a new refresh token" remains available for unusual recovery cases.
+If a token expires (`invalid_grant` errors), regenerate it with `claude/bin/update-gworkspace-refresh-token --account <epoch|personal|forethought>`. The helper opens the OAuth browser flow (`--no-browser` prints the URL so it can be opened in the matching Chrome profile), refuses to store a token granted for a different address, updates the appropriate backing store (the Epoch `Automations` vault for the Epoch token, the personal 1Password `Automation` vault for the personal and Forethought tokens, creating the item on first grant), and prints only status metadata, never token values. The Forethought grant on 10 October 2026 succeeded without adding a test user, which shows the shared OAuth app is in production (the "test user" note above predates that). The manual recipe under "Generating a new refresh token" remains available for unusual recovery cases.
 
 ## Enabled APIs on `claude-code-gmail-490520`
 

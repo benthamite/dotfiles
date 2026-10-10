@@ -69,6 +69,7 @@ class UpdateTokenTests(unittest.TestCase):
             mock.patch.object(module, "read_personal_automation", side_effect=["id", "secret"]),
             mock.patch.object(module, "op_inject") as update,
             mock.patch.object(module, "forget_cached_token") as forget,
+            mock.patch.object(module, "authorized_email", return_value="pablo.stafforini@gmail.com"),
             contextlib.redirect_stderr(stderr),
         ):
             module.main()
@@ -101,6 +102,7 @@ class UpdateTokenTests(unittest.TestCase):
             mock.patch.object(module, "read_personal_automation", side_effect=["id", "secret"]),
             mock.patch.object(module, "op_inject") as update,
             mock.patch.object(module, "forget_cached_token"),
+            mock.patch.object(module, "authorized_email", return_value="pablo.stafforini@gmail.com"),
             mock.patch.dict(module.os.environ, {}, clear=True),
         ):
             module.main()
@@ -108,6 +110,41 @@ class UpdateTokenTests(unittest.TestCase):
         update.assert_called_once_with(
             module.TOKEN_OP_ENTRIES["personal"], "new-secret-token"
         )
+
+    def test_forethought_scope_is_mail_only(self):
+        module = load_module()
+        self.assertEqual(module.SCOPES["forethought"], ["https://mail.google.com/"])
+        self.assertEqual(module.TOKEN_OP_ENTRIES["forethought"]["vault"], "Automation")
+
+    def test_consent_for_another_account_is_not_stored(self):
+        module = load_module()
+        flow = mock.Mock()
+        flow.run_local_server.return_value = mock.Mock(
+            refresh_token="new-secret-token",
+            granted_scopes=module.SCOPES["forethought"],
+            scopes=module.SCOPES["forethought"],
+        )
+        module.InstalledAppFlow.from_client_config.return_value = flow
+        with (
+            mock.patch.object(sys, "argv", [str(SCRIPT), "--account", "forethought"]),
+            mock.patch.object(module, "read_personal_automation", side_effect=["id", "secret"]),
+            mock.patch.object(module, "op_inject") as update,
+            mock.patch.object(module, "authorized_email", return_value="pablo@epoch.ai"),
+        ):
+            with self.assertRaises(SystemExit) as raised:
+                module.main()
+        update.assert_not_called()
+        self.assertIn("pablo@epoch.ai", str(raised.exception.code))
+        self.assertNotIn("new-secret-token", str(raised.exception.code))
+
+    def test_store_creates_the_item_on_first_grant(self):
+        module = load_module()
+        missing = mock.Mock(returncode=1, stderr='"x" isn\'t an item in the "Automation" vault')
+        created = mock.Mock(returncode=0, stderr="")
+        with mock.patch.object(module.subprocess, "run", side_effect=[missing, created]) as run:
+            module.op_inject(module.TOKEN_OP_ENTRIES["forethought"], "tok")
+        self.assertEqual(run.call_args_list[0].args[0][1:3], ["item", "edit"])
+        self.assertEqual(run.call_args_list[1].args[0][1:3], ["item", "create"])
 
     def test_forget_targets_the_cached_reference_of_each_store(self):
         module = load_module()

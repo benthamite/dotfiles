@@ -62,8 +62,8 @@ profile also has guest access to Pablo's Forethought Notion onboarding checklist
 Pablo explicitly permits using it for that checklist. This is distinct from the
 Forethought account's full Notion workspace access.
 
-Forethought CLI authentication has not been configured in the mapped Google
-tools. See `google-services.md` for account routing. Discover the connected
+Forethought Gmail syncs into mu4e (`gmail-maildir-sync --account forethought`);
+the other mapped Google tools have no Forethought authentication. See `google-services.md` for account routing. Discover the connected
 profile at runtime; browser/tab IDs are session-specific.
 
 ### Browser access rules

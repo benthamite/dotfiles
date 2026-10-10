@@ -6,9 +6,12 @@ This helper intentionally prints only status metadata, never token values.
 
 from pathlib import Path
 import argparse
+import json
 import os
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 
 from google_auth_oauthlib.flow import InstalledAppFlow
 
@@ -16,6 +19,13 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 TOKEN_VARS = {
     "epoch": "GOOGLE_WORKSPACE_REFRESH_TOKEN",
     "personal": "GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL",
+    "forethought": "GOOGLE_WORKSPACE_REFRESH_TOKEN_FORETHOUGHT",
+}
+
+ACCOUNT_EMAILS = {
+    "epoch": "pablo@epoch.ai",
+    "personal": "pablo.stafforini@gmail.com",
+    "forethought": "pablo@forethought.org",
 }
 
 TOKEN_OP_ENTRIES = {
@@ -29,6 +39,14 @@ TOKEN_OP_ENTRIES = {
         "account": "my.1password.com",
         "vault": "Automation",
         "item": "google-workspace-refresh-token-personal",
+        "field": "password",
+    },
+    # Forethought has no Automation vault; see the exception in
+    # claude/context/secrets.md.
+    "forethought": {
+        "account": "my.1password.com",
+        "vault": "Automation",
+        "item": "google-workspace-refresh-token-forethought",
         "field": "password",
     },
 }
@@ -52,6 +70,9 @@ SCOPES = {
         "https://www.googleapis.com/auth/calendar.app.created",
         "https://www.googleapis.com/auth/calendar.calendarlist.readonly",
         "https://www.googleapis.com/auth/spreadsheets",
+    ],
+    "forethought": [
+        "https://mail.google.com/",
     ],
 }
 
@@ -92,22 +113,23 @@ def op_inject(spec, value):
     op_desktop = Path(__file__).resolve().parents[2] / "bin" / "op-desktop"
     env = os.environ.copy()
     env.pop("OP_SERVICE_ACCOUNT_TOKEN", None)
+    location = ["--vault", spec["vault"], "--account", spec["account"]]
+    assignment = f"{spec['field']}={value}"
     result = subprocess.run(
-        [
-            str(op_desktop),
-            "item",
-            "edit",
-            spec["item"],
-            "--vault",
-            spec["vault"],
-            "--account",
-            spec["account"],
-            f"{spec['field']}={value}",
-        ],
+        [str(op_desktop), "item", "edit", spec["item"], *location, assignment],
         capture_output=True,
         text=True,
         env=env,
     )
+    if result.returncode != 0 and "isn't an item" in (result.stderr or ""):
+        # First grant for this account: create the item instead.
+        result = subprocess.run(
+            [str(op_desktop), "item", "create", "--category", "password",
+             "--title", spec["item"], *location, assignment],
+            capture_output=True,
+            text=True,
+            env=env,
+        )
     if result.returncode != 0:
         # Never raise CalledProcessError here: its message embeds argv,
         # which carries the credential.
@@ -117,6 +139,19 @@ def op_inject(spec, value):
             f"{stderr or 'no stderr'}\n"
             "The new refresh token was NOT stored; re-run this helper."
         )
+
+
+def authorized_email(access_token):
+    """Return the Gmail address ACCESS_TOKEN authenticates as, or None."""
+    request = urllib.request.Request(
+        "https://gmail.googleapis.com/gmail/v1/users/me/profile",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return json.load(response).get("emailAddress")
+    except (urllib.error.URLError, ValueError):
+        return None
 
 
 def forget_cached_token(spec):
@@ -135,6 +170,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--account", choices=sorted(TOKEN_VARS), required=True)
     parser.add_argument("--port", type=int, default=8080)
+    parser.add_argument(
+        "--no-browser",
+        action="store_true",
+        help="Print the consent URL instead of opening the default browser, "
+        "so it can be opened in the right Chrome profile",
+    )
     args = parser.parse_args()
 
     var = TOKEN_VARS[args.account]
@@ -160,13 +201,10 @@ def main():
     os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
     creds = flow.run_local_server(
         port=args.port,
-        open_browser=True,
+        open_browser=not args.no_browser,
         include_granted_scopes="true",
         prompt="consent",
-        login_hint={
-            "epoch": "pablo@epoch.ai",
-            "personal": "pablo.stafforini@gmail.com",
-        }[args.account],
+        login_hint=ACCOUNT_EMAILS[args.account],
     )
     granted_scopes = set(creds.granted_scopes or creds.scopes or [])
     missing_scopes = set(SCOPES[args.account]) - granted_scopes
@@ -176,6 +214,16 @@ def main():
         sys.exit(
             "Google did not grant every requested scope; the old token was not changed: "
             + ", ".join(sorted(missing_scopes))
+        )
+    # Store a token only for the account it was requested for: a consent
+    # completed in the wrong browser profile must not overwrite another
+    # account's slot.
+    email = authorized_email(creds.token)
+    expected = ACCOUNT_EMAILS[args.account]
+    if (email or "").lower() != expected:
+        sys.exit(
+            f"Consent was granted as {email or 'an unknown account'}, not {expected}; "
+            "the old token was not changed"
         )
     if args.account in TOKEN_OP_ENTRIES:
         spec = TOKEN_OP_ENTRIES[args.account]

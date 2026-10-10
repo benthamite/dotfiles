@@ -95,10 +95,14 @@ Add a Claude Stop hook in `claude/hooks/` and register it in
    a malformed payload.  A missing field is reported on stderr instead of
    being read as "no tasks", following the agent.el principle that an
    undocumented field must not fail silently.
-5. Loop guard: limit blocks per turn the way `elisp-evidence stop-check`
-   does (`MAX_STOP_BLOCKS`, `stop_hook_active`).  Both remedies are always
-   available to the agent, so a second block indicates a hook bug.  The hook
-   then allows the stop and logs it.
+5. Loop guard.  Do not use `stop_hook_active`: it is set by a continuation
+   from any Stop hook, including the Elisp gate.  Keep a hook-specific block
+   count keyed by session id and `prompt_id`.  It resets with each new user
+   prompt.  After two blocks in one turn, allow the stop but return a
+   `systemMessage` naming the still-running tasks, so the user sees the
+   contradiction instead of it passing silently.  This is a bounded
+   intervention, not a guarantee.  Task cleanup can fail, and a new task
+   can start after a block.
 
 Why this boundary:
 
@@ -131,8 +135,18 @@ or wait on a PID stays.
 
 ### 3. One-off cleanup
 
-TaskStop is not available across sessions, so with the user's approval, kill
-the 12 hung processes in the dotfiles and meetings sessions.
+Preferred: with the user's approval, message each affected session (via
+`message-agent-session`) and ask it to TaskStop the listed task ids.  That
+clears Claude Code's own task registry, so the next Stop payload and
+agent.el agree.
+
+Fallback, only if a session cannot act: kill directly.  Re-identify the
+processes fresh at kill time: shells whose parent is that session's
+`claude` process, matched to the task's command by its output file
+(`tasks/<id>.output` held open on fd 1).  Never reuse PIDs recorded at
+incident time.  Signal the whole process group.  Then verify that no
+descendant survives, that the session's next Stop payload no longer lists
+the task, and that agent.el shows the session idle.
 
 ## Rejected alternatives
 
@@ -164,3 +178,19 @@ the 12 hung processes in the dotfiles and meetings sessions.
   background and end the turn with `Status: done`.  The stop must be refused.
   After TaskStop, the stop must succeed and agent.el must show the session as
   idle.
+- Live subagent case, since most abandoned tasks came from subagents: in a
+  throwaway session, have a subagent start `sleep 600` in the background and
+  return.  The parent then ends with `Status: done`.  The parent's Stop must
+  list the task and be refused.  Cleanup must succeed and agent.el must show
+  idle.
+- With the Elisp Stop gate also blocking in the same turn, the block count
+  must still reach the exhaustion `systemMessage` correctly.
+
+## Review
+
+Codex reviewed commit 1230ae6f2.  All three findings were accepted and
+folded in above:
+
+- the loop guard (hook-specific counter, visible exhaustion);
+- the subagent live test;
+- safe cleanup with fresh process identification.

@@ -48,7 +48,7 @@ For Gmail, Google Sheets/Calendar/Docs/Drive, Slack, GitHub, or Anna's Archive, 
 
 - Dotfiles source of truth: `~/My Drive/dotfiles/`; many home-directory paths are symlinks into it.
 - Active personal repositories: `~/repos/`; active Epoch repositories: `~/repos/epoch/`.
-- The canonical dotfiles working tree is the only repository under `~/My Drive/`. Never create another repository there, and never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
+- Code repositories never live under `~/My Drive/`. The exceptions are the canonical dotfiles working tree and notes workspaces (e.g. `Epoch/`, `Forethought/`, `notes/`): their working tree lives in Drive and their git directory in `~/git-dirs/<name>` (`git init --separate-git-dir`). Never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
 - All linked worktrees: `~/repos/.worktrees/<repo>/<name>`.
 
 ## Version control

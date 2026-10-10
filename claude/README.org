@@ -149,8 +149,11 @@ subagents must not overwrite their parent's status. A failed publish usually
 means Emacs was briefly busy, so agents keep publishing afterwards.
 
 The global instructions state the repository-root contract shared with the
-Codex side: every repository lives outside Drive under =~/repos/= (Epoch
-repositories under =~/repos/epoch/=), nothing under the Drive sync root may
+Codex side: every code repository lives outside Drive under =~/repos/= (Epoch
+repositories under =~/repos/epoch/=). The dotfiles and notes workspaces such as
+=Epoch/= and =Forethought/= are the exception: their working trees stay in
+Drive and their git directories live in =~/git-dirs/<name>=. Nothing under the
+Drive sync root may
 hold dependencies, builds, caches, virtual environments, or worktrees, and
 every linked worktree lives under =~/repos/.worktrees/<repo>/<name>=. The
 108 repositories that used to sit under =~/My Drive/repos/= were moved on

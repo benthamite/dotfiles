@@ -41,9 +41,12 @@ the "Already tried" list in place.
 
 * Open
 
-- Google Drive's ~23 GB footprint: shrink the number of mirrored items, or
-  switch My Drive from Mirror to Stream. Pablo's decision (2026-10-10 finding
-  below).
+- Google Drive's ~23 GB footprint (2026-10-10 finding below). Pablo rejected
+  moving large trees (Music, Websites, Dictionaries, Zotero backup) out of
+  Drive on 2026-10-10: all that content stays in Drive. Switching My Drive
+  from Mirror to Stream was not pursued (path churn, unverified effect).
+  Moving the ~3.6k items left in =~/My Drive/repos= is hygiene, not a memory
+  lever (1% of mirrored items).
 - Backblaze: start a new backup to drop the 5.5 GB index. Pablo's decision,
   pending since 2026-10-07.
 - Cause of the 2026-10-10 GC storm and the morning blocks: read the first

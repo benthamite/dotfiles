@@ -137,6 +137,34 @@ the app-server JSON-RPC turn flag, and are much more stable.
 - **An attention inbox and busy-input queue** (plan ready 07-31, never
   implemented).
 
+## Measurement: agent.el versus `claude agents --json` (2026-10-10 23:49 to 2026-10-11 00:05)
+
+- **Method:** 40 samples about 22 s apart over all live Claude sessions,
+  four accounts queried.  The script is `compare-status.py` in session
+  70afc41c's scratchpad.  agent.el amber counted as busy.
+- **Overall:** 100 of 140 comparisons agreed.  All 40 disagreements were
+  one session, `ai-enablement/projects` (a1754f77): Claude Code said
+  `busy`, agent.el showed green.
+- **Claude Code was right.**  A teammate (`push-impl`) was actively writing
+  its transcript the whole time.  The session started on 10-09, before the
+  `.agents/` teammate hooks existed (`b36a2fc`).  Its per-session hook
+  settings never received them, so agent.el never sees its teammates
+  working.  This is the known "pre-existing sessions" gap, now confirmed
+  live.
+- **Controlled test:** a throwaway session left `sleep 180` in the
+  background and ended its turn.
+  - Claude Code reported `busy` while the job ran, and agent.el showed
+    amber.
+  - Both switched to idle within the same 2 s sample when the job ended.
+  - So `busy` includes background shells.  The SDK docs' statement that
+    shells don't hold `running` applies to `session_state_changed`, not to
+    `claude agents`.
+- **Not covered by the run:** `waiting` (a permission prompt), Codex
+  sessions, and long durations.  The sample is small: 15 minutes and
+  4 sessions.
+- **Conclusion:** in every observed disagreement, Claude Code's own status
+  was correct and agent.el's inference was wrong.
+
 ## How other tools do it (researched 10-10 from primary sources)
 
 **SDK/stream-json tools** have reliable state:

@@ -13299,6 +13299,11 @@ mu4e is loaded from Homebrew's =mu= formula (=/opt/homebrew/share/emacs/site-lis
   (mu4e-extras-epoch-drafts-folder "/epoch/Drafts")
   (mu4e-extras-epoch-refiled-folder "/epoch/Refiled")
   (mu4e-extras-epoch-trash-folder "/epoch/Trash")
+  (mu4e-extras-forethought-inbox-folder "/forethought/Inbox")
+  (mu4e-extras-forethought-sent-folder "/forethought/Sent")
+  (mu4e-extras-forethought-drafts-folder "/forethought/Drafts")
+  (mu4e-extras-forethought-refiled-folder "/forethought/Refiled")
+  (mu4e-extras-forethought-trash-folder "/forethought/Trash")
   (mu4e-extras-wide-reply t)
 
   :config

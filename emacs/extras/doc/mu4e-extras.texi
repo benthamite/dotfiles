@@ -41,6 +41,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 User options
 
 * Folder configuration::
+* Gmail API accounts::
 * Reply behavior::
 * Reaction emojis::
 * Chrome profile selection::
@@ -90,10 +91,13 @@ Gmail-based workflow.  It depends on @samp{el-patch} for patching internal
 
 The package solves several practical problems that arise when using
 @samp{mu4e} with Gmail.  The personal account syncs via @samp{mbsync} (IMAP),
-while the Epoch AI account syncs via @samp{gmail-maildir-sync}, a custom
-tool that uses the Gmail API directly (necessary because the Epoch
-Google Workspace admin has disabled IMAP).  Both sync backends run in
-parallel during mail updates.  Gmail's IMAP behavior can reset the read
+while the Epoch AI and Forethought Google Workspace accounts sync via
+@samp{gmail-maildir-sync}, a custom tool that uses the Gmail API directly
+(necessary because their Workspace admins have disabled IMAP).  The
+Gmail API accounts are described by a single table,
+@code{mu4e-extras-gmail-api-accounts} (@ref{Gmail API accounts}), so each one gets
+the same folder routing, contexts, sending and Gmail integration.  All
+sync backends run in parallel during mail updates.  Gmail's IMAP behavior can reset the read
 status of refiled and sent messages after synchronization.  This package
 tracks such messages in a queue and re-applies the read flag after each
 sync cycle, preventing the annoying appearance of already-read messages
@@ -116,6 +120,7 @@ contains only a single URL@.
 
 @menu
 * Folder configuration::
+* Gmail API accounts::
 * Reply behavior::
 * Reaction emojis::
 * Chrome profile selection::
@@ -132,6 +137,11 @@ contains only a single URL@.
 @vindex mu4e-extras-epoch-drafts-folder
 @vindex mu4e-extras-epoch-refiled-folder
 @vindex mu4e-extras-epoch-trash-folder
+@vindex mu4e-extras-forethought-inbox-folder
+@vindex mu4e-extras-forethought-sent-folder
+@vindex mu4e-extras-forethought-drafts-folder
+@vindex mu4e-extras-forethought-refiled-folder
+@vindex mu4e-extras-forethought-trash-folder
 The user option @code{mu4e-extras-inbox-folder} specifies the maildir path
 for the main inbox folder.  It is used by @code{mu4e-extras-set-shortcuts}
 and @code{mu4e-extras-set-bookmarks} to configure maildir shortcuts and
@@ -158,6 +168,58 @@ and @code{mu4e-extras-epoch-trash-folder} specify the maildir paths for the
 corresponding Epoch AI folders.  They are used by
 @code{mu4e-extras-set-shortcuts} to add uppercase-key maildir shortcuts for
 Epoch folders.  The default value for each is an empty string.
+
+The user options @code{mu4e-extras-forethought-inbox-folder},
+@code{mu4e-extras-forethought-sent-folder},
+@code{mu4e-extras-forethought-drafts-folder},
+@code{mu4e-extras-forethought-refiled-folder}, and
+@code{mu4e-extras-forethought-trash-folder} specify the maildir paths for the
+corresponding Forethought folders, used by @code{mu4e-extras-set-shortcuts};
+the inbox is also used by @code{mu4e-extras-set-bookmarks}.  The default
+value for each is an empty string.
+
+@node Gmail API accounts
+@section Gmail API accounts
+
+@vindex mu4e-extras-gmail-api-accounts
+The user option @code{mu4e-extras-gmail-api-accounts} lists the accounts
+synced and sent through @samp{gmail-maildir-sync}.  Each element is a plist
+with these keys:
+
+@table @asis
+@item @samp{:name}
+the account name passed as @samp{gmail-maildir-sync --account NAME}.
+@item @samp{:label}
+the human-readable name used in context names.
+@item @samp{:address} or @samp{:address-env}
+the account's email address, given
+literally or as the name of an environment variable.
+@item @samp{:maildir}
+the maildir prefix owned by the account, such as
+@samp{"/epoch/"}.
+@item @samp{:chrome-profile}
+the Chrome profile directory used to open the
+account's Gmail (@ref{Chrome profile selection}).
+@item @samp{:state-db}
+the account's @samp{gmail-maildir-sync} SQLite state
+database.
+@item @samp{:html-signature} and @samp{:plain-text-signature}
+the variables
+holding the account's signatures, from @samp{org-msg-extras.el}.
+@end table
+
+The default value describes two accounts.  Epoch (@samp{:name "epoch"})
+takes its address from @samp{EPOCH_EMAIL}, owns @samp{/epoch/}, uses Chrome
+profile @samp{"Profile 2"} and the state database
+@samp{~/.local/share/gmail-maildir-sync/state.db}.  Forethought
+(@samp{:name "forethought"}) uses @samp{pablo@@forethought.org}, owns
+@samp{/forethought/}, uses Chrome profile @samp{"Profile 10"} and the state
+database @samp{~/.local/share/gmail-maildir-sync/forethought/state.db}.
+
+A message belongs to an account when its maildir starts with the
+account's @samp{:maildir}.  That ownership decides the refile and trash
+folders, the Chrome profile, the Gmail thread lookup, the reaction
+transport and the compose context.
 
 @node Reply behavior
 @section Reply behavior
@@ -194,7 +256,6 @@ includes common emojis such as thumbs up, heart, and check mark.
 @section Chrome profile selection
 
 @vindex mu4e-extras-chrome-profile-personal
-@vindex mu4e-extras-chrome-profile-work
 @vindex mu4e-extras-chrome-program
 Commands that open Gmail in a browser route the URL to a specific
 Chrome profile based on the email account.  This is useful when you
@@ -209,9 +270,9 @@ sequentially: the first profile is @samp{"Default"}, subsequent profiles
 are @samp{"Profile 1"}, @samp{"Profile 2"}, and so on.  The default value is
 @samp{"Default"}.
 
-The user option @code{mu4e-extras-chrome-profile-work} specifies the Chrome
-profile directory for work (Epoch) email, using the same naming
-convention.  The default value is @samp{"Profile 2"}.
+Each Gmail API account names its own Chrome profile directory, using the
+same naming convention, in the @samp{:chrome-profile} key of
+@code{mu4e-extras-gmail-api-accounts} (@ref{Gmail API accounts}).
 
 The user option @code{mu4e-extras-chrome-program} specifies the Chrome
 executable used to open Gmail URLs.  The default value is the standard
@@ -280,6 +341,7 @@ the message, the package ensures the flag is restored automatically.
 @findex mu4e-extras-init
 @findex mu4e-extras-update-all-mail-and-index
 @findex mu4e-extras-check-all-mail
+@findex mu4e-extras-all-mail-command
 @findex mu4e-extras-reindex-db
 The command @code{mu4e-extras-init} reinitializes the @samp{mu} database.  It
 stops any running mail update, quits @samp{mu4e}, and then runs the @samp{muinit}
@@ -289,11 +351,12 @@ major configuration changes.
 The command @code{mu4e-extras-update-all-mail-and-index} fetches all mail
 including archives from all accounts, then indexes with @samp{mu}.  It runs
 @samp{mbsync gmail-all} for the personal account and
-@samp{gmail-maildir-sync pull --include-all} for the Epoch account in
-parallel (the Epoch account uses the Gmail API instead of IMAP, since
-the Epoch Google Workspace admin has disabled IMAP).  With a prefix
-argument, it runs in the background; otherwise, it shows a progress
-window.
+@samp{gmail-maildir-sync --account NAME pull --include-all} for each Gmail
+API account in parallel.  The shell command, built by
+@code{mu4e-extras-all-mail-command}, waits for each process separately and
+exits with a non-zero status if any of them failed, so one failed sync
+is not hidden by the others.  With a prefix argument, it runs in the
+background; otherwise, it shows a progress window.
 
 Mail updates run from the current buffer's @code{default-directory} when that
 directory still exists, and from the user's home directory otherwise.
@@ -334,11 +397,12 @@ MIME message per Google's email reaction format specification (using a
 @samp{text/vnd.google.email-reaction+json} part) and sends it to the
 original sender.
 
-The command automatically determines the sending account by checking
-which of the user's email addresses appears in the message's To or Cc
-fields.  Epoch messages are sent via the Gmail API (through
-@samp{gmail-maildir-sync send}); personal and Tlon messages are sent via
-SMTP@.
+The sending account is the Gmail API account whose maildir holds the
+message; for other messages, it is the account whose address appears in
+the message's To or Cc fields.  Reactions to messages of a Gmail API
+account are sent via the Gmail API (through
+@samp{gmail-maildir-sync --account NAME send}); personal and Tlon messages
+are sent via SMTP@.
 
 @node Viewing messages in Gmail
 @section Viewing messages in Gmail
@@ -348,7 +412,6 @@ SMTP@.
 @findex mu4e-extras-gmail-base
 @findex mu4e-extras-gmail-message-id
 @findex mu4e-extras-gmail-thread-id
-@vindex mu4e-extras-gmail-sync-state-db
 The function @code{mu4e-extras-gmail-base} returns the base Gmail URL
 (@samp{https://mail.google.com/mail/u/0/}).  It uses account index 0
 because Chrome profile selection (@ref{Chrome profile selection}) already
@@ -362,10 +425,11 @@ selection}).  When no message is at point, it defaults to the personal
 profile.
 
 The command @code{mu4e-extras-view-in-gmail} opens the message at point in
-Gmail.  For messages synced via @code{gmail-maildir-sync} (Epoch account), it
-reads the @samp{X-Gmail-Message-Id} header from the message file, looks up
-the corresponding thread ID from the @code{gmail-maildir-sync} SQLite state
-database (@code{mu4e-extras-gmail-sync-state-db}), and opens the thread
+Gmail.  For messages of a Gmail API account, it reads the
+@samp{X-Gmail-Message-Id} header from the message file, looks up the
+corresponding thread ID in that account's @samp{gmail-maildir-sync} SQLite
+state database (the @samp{:state-db} key of
+@code{mu4e-extras-gmail-api-accounts}), and opens the thread
 directly using a @code{#all/<thread-id>} URL@.  For other messages (personal
 account), it falls back to searching by RFC 822 message ID@.  The URL is
 opened in the Chrome profile matching the message's account
@@ -467,8 +531,8 @@ The function @code{mu4e-extras-gmail-fix-flags} translates standard @samp{mu4e}
 marks into Gmail-specific label changes.  For each mark and message
 pair, it applies the appropriate tag operations: removing @samp{\Inbox} and
 adding @samp{\Trash} for trash, removing @samp{\Inbox} and adding @samp{\Refiled} for
-refile, and toggling @samp{\Starred} for flag/unflag.  Epoch messages are
-skipped, since they are synced via the Gmail API directly (through
+refile, and toggling @samp{\Starred} for flag/unflag.  Messages of Gmail
+API accounts are skipped, since they are synced via the Gmail API directly (through
 @samp{gmail-maildir-sync}) rather than via @samp{mbsync}, so IMAP flag
 manipulation does not apply to them.
 
@@ -477,6 +541,7 @@ manipulation does not apply to them.
 
 @findex mu4e-extras-set-shortcuts
 @findex mu4e-extras-set-bookmarks
+@findex mu4e-extras-all-inboxes-query
 @findex mu4e-extras-set-face-locally
 @findex mu4e-extras-send-via-gmail-api
 @findex mu4e-extras-set-contexts
@@ -485,10 +550,16 @@ The function @code{mu4e-extras-set-shortcuts} adds predefined entries to
 @code{mu4e-maildir-shortcuts}.  Personal folders use lowercase keys (@code{i} for
 inbox, @code{y} for daily) and Epoch folders use uppercase keys (@code{I} for
 inbox, @code{T} for sent, @code{D} for drafts, @code{R} for refiled, @code{X} for trash).
+Forethought folders use @code{f} for inbox, @code{s} for sent, @code{w} for drafts,
+@code{F} for refiled, and @code{z} for trash.
 
 The function @code{mu4e-extras-set-bookmarks} adds an ``All inboxes'' bookmark
-(key @code{a}) to @code{mu4e-bookmarks} that queries both the personal and Epoch
-inbox folders, providing a combined view of all incoming mail.
+(key @code{a}) to @code{mu4e-bookmarks} that queries the personal, Epoch and
+Forethought inbox folders, providing a combined view of all incoming
+mail.  It replaces any existing ``All inboxes'' bookmark, so calling it
+again after changing the inbox folders does not add a duplicate.  The
+query is built by @code{mu4e-extras-all-inboxes-query}, which omits inbox
+folders whose name is empty.
 
 The function @code{mu4e-extras-set-face-locally} remaps the @code{shr-text} face
 to a smaller height (0.9) in @code{mu4e-view-mode} buffers.  This is
@@ -496,23 +567,30 @@ intended for @code{mu4e-view-mode-hook} to improve the readability of HTML
 emails rendered with @samp{shr}.
 
 The function @code{mu4e-extras-send-via-gmail-api} sends the current message
-by piping it to @samp{gmail-maildir-sync send}, which uses the Gmail API
-directly.  Unlike @code{message-send-mail-with-sendmail}, it does not inject
+by piping it to @samp{gmail-maildir-sync --account NAME send}, which uses
+the Gmail API directly.  NAME is the account in
+@code{mu4e-extras-gmail-api-accounts} whose address is @code{user-mail-address},
+which the active context sets; if no account has that address, it
+signals an error without sending.  Unlike @code{message-send-mail-with-sendmail}, it does not inject
 sendmail-specific flags (@samp{-oi}, @samp{-f}, @samp{-t}) that @samp{gmail-maildir-sync}
 does not accept.
 
 The function @code{mu4e-extras-set-contexts} defines and sets
-@code{mu4e-contexts} for six combinations: personal HTML, personal plain
-text, Epoch HTML, Epoch plain text, Tlon HTML, and Tlon plain text.
-Each context uses environment variables (@samp{PERSONAL_GMAIL},
-@samp{EPOCH_EMAIL}, @samp{WORK_EMAIL}) for email addresses and references
-account-specific signature variables from @samp{org-msg-extras.el}
+@code{mu4e-contexts}, in this order: personal HTML and plain text, an HTML
+and a plain-text context for each Gmail API account (Epoch, then
+Forethought), and Tlon HTML and plain text.  Context names are numbered
+in that order (@samp{"1 Personal HTML"} to @samp{"8 Tlon plain text"}).  The
+personal and Tlon contexts use environment variables (@samp{PERSONAL_GMAIL},
+@samp{WORK_EMAIL}) for email addresses; the Gmail API account contexts use
+the account's address.  Each context references account-specific
+signature variables from @samp{org-msg-extras.el}
 (@code{org-msg-extras-epoch-html-signature},
-@code{org-msg-extras-tlon-html-signature}, etc.).  The Epoch contexts also
-set account-specific folder paths (sent, drafts) and use the custom
-function @code{mu4e-extras-send-via-gmail-api} to send messages via
-@samp{gmail-maildir-sync send} instead of SMTP, since the Epoch Google
-Workspace admin has disabled IMAP/SMTP@.  The Tlon contexts
+@code{org-msg-extras-forethought-html-signature},
+@code{org-msg-extras-tlon-html-signature}, etc.).  The Gmail API account
+contexts also set the account's sent and drafts folders and use
+@code{mu4e-extras-send-via-gmail-api} to send messages via
+@samp{gmail-maildir-sync} instead of SMTP, since those Workspace admins have
+disabled IMAP/SMTP@.  The Tlon contexts
 authenticate SMTP as @samp{PERSONAL_GMAIL} (not @samp{WORK_EMAIL}), since
 the Tlon account is configured as a send-as alias in Gmail.  The
 plain text contexts disable @code{org-msg-mode} on entry and re-enable
@@ -542,33 +620,51 @@ to keep the archive up to date.
 @node Context matching
 @section Context matching
 
+@findex mu4e-extras-msg-account
+@findex mu4e-extras-account-address
+@findex mu4e-extras-account-for-address
 @findex mu4e-extras-msg-is-personal-p
-@findex mu4e-extras-msg-is-epoch-p
+@findex mu4e-extras-msg-is-account-p
+@findex mu4e-extras-msg-matches-account-p
 @findex mu4e-extras-msg-is-tlon-p
-@findex mu4e-extras-msg-belongs-to-epoch-p
 @findex mu4e-extras-msg-is-html-p
 @findex mu4e-extras-refile-folder
 @findex mu4e-extras-trash-folder
-The function @code{mu4e-extras-msg-is-personal-p} returns non-@code{nil} if the
-message's @samp{:to} field matches either the personal Gmail address or the
-personal email address (from environment variables).
+The function @code{mu4e-extras-msg-account} returns the element of
+@code{mu4e-extras-gmail-api-accounts} whose @samp{:maildir} prefixes the
+message's maildir, or @code{nil} for mail synced by @samp{mbsync}.  The function
+@code{mu4e-extras-account-address} returns an account's email address, and
+@code{mu4e-extras-account-for-address} finds the account with a given
+address (compared case-insensitively).
 
-The function @code{mu4e-extras-msg-is-epoch-p} returns non-@code{nil} if the
-message's @samp{:to} field matches the Epoch AI email address.
+For Gmail API accounts, maildir ownership is authoritative and is
+checked before any recipient header.  A message stored in an account's
+maildir picks that account's context even when it is also addressed to
+another of the user's addresses, arrived by Bcc or through a group, or
+is one of the user's own sent messages.  Recipient headers decide only
+for the remaining (@samp{mbsync}) mail.
+
+The function @code{mu4e-extras-msg-is-personal-p} returns non-@code{nil} if the
+message is not owned by a Gmail API account and its @samp{:to} field matches
+either the personal Gmail address or the personal email address (from
+environment variables).
+
+The function @code{mu4e-extras-msg-is-account-p} returns non-@code{nil} if a
+message belongs to a given Gmail API account: when some account owns
+the message's maildir, only that account matches; otherwise, the
+account matches if the message's @samp{:to} field contains its address.
+The function @code{mu4e-extras-msg-matches-account-p} adds the HTML or plain
+text check used by the account's contexts.
 
 The function @code{mu4e-extras-msg-is-tlon-p} returns non-@code{nil} if the
-message's @samp{:to} field matches the Tlon work email address or if the
-@samp{:reply-to} field matches the team's Google Group.
+message is not owned by a Gmail API account and its @samp{:to} field matches
+the Tlon work email address or its @samp{:reply-to} field matches the team's
+Google Group.
 
-The function @code{mu4e-extras-msg-belongs-to-epoch-p} returns non-@code{nil} if
-the message's maildir path starts with @samp{/epoch/}.  This is used by the
-folder routing functions below.
-
-The function @code{mu4e-extras-refile-folder} returns @samp{/epoch/Refiled} for
-Epoch messages and @samp{/Refiled} for all others.
-
-The function @code{mu4e-extras-trash-folder} returns @samp{/epoch/Trash} for
-Epoch messages and @samp{/Trash} for all others.
+The functions @code{mu4e-extras-refile-folder} and
+@code{mu4e-extras-trash-folder} return the @samp{Refiled} or @samp{Trash} folder inside
+the owning account's maildir (for example @samp{/forethought/Refiled}), and
+@samp{/Refiled} or @samp{/Trash} for all other messages.
 
 The function @code{mu4e-extras-msg-is-html-p} returns non-@code{nil} if the
 message contains a @samp{text/html} MIME part, as determined by parsing the
@@ -578,13 +674,17 @@ raw message file.
 @section Reaction helpers
 
 @findex mu4e-extras-reaction-from-address
+@findex mu4e-extras-reaction-addressed-account
 @findex mu4e-extras-reaction-to-email
 @findex mu4e-extras-reaction-build-mime
 @findex mu4e-extras-reaction-send
+@findex mu4e-extras-gmail-api-send-buffer
 The function @code{mu4e-extras-reaction-from-address} determines the
-sending account for a reaction by checking which of the user's email
-addresses (Epoch, Tlon, or personal) appears in the message's To or
-Cc fields.
+sending address for a reaction.  For a message of a Gmail API account,
+it is that account's address.  Otherwise, it checks which of the user's
+email addresses appears in the message's To or Cc fields: first the
+Gmail API accounts (via @code{mu4e-extras-reaction-addressed-account}), then
+Tlon, falling back to the personal address.
 
 The function @code{mu4e-extras-reaction-to-email} extracts the bare email
 address of the original sender.
@@ -595,9 +695,9 @@ text fallback, a @samp{text/vnd.google.email-reaction+json} part with the
 emoji and format version, and an HTML fallback.
 
 The function @code{mu4e-extras-reaction-send} dispatches the reaction
-message to the appropriate transport: the Gmail API (via
-@samp{gmail-maildir-sync send}) for Epoch messages, and SMTP for all
-others.
+message to the appropriate transport: the Gmail API account owning the
+message (via @code{mu4e-extras-gmail-api-send-buffer}, which runs
+@samp{gmail-maildir-sync --account NAME send}), and SMTP for all others.
 
 @node Chrome profile helpers
 @section Chrome profile helpers
@@ -611,8 +711,8 @@ with the @samp{--profile-directory} and @samp{--new-tab} flags.  PROFILE is a
 directory name like @samp{"Default"} or @samp{"Profile 2"}.
 
 The function @code{mu4e-extras-chrome-profile-for-msg} returns the Chrome
-profile directory for a given message.  It returns
-@code{mu4e-extras-chrome-profile-work} for Epoch messages and
+profile directory for a given message.  It returns the @samp{:chrome-profile}
+of the Gmail API account owning the message, and
 @code{mu4e-extras-chrome-profile-personal} otherwise (@ref{Chrome profile selection, , Chrome profile
 selection}).  When MSG is @code{nil}, it returns the personal profile.
 
@@ -639,7 +739,8 @@ The function @code{mu4e--view-get-urls-num} is patched using @samp{el-patch} to
 automatically select the URL when a message contains exactly one link.
 The standard behavior would prompt the user to enter the number ``1'',
 which is unnecessary.  When there are multiple URLs, the original
-prompting behavior is preserved.
+prompting behavior is preserved, including the URL indicators that mu4e
+1.14 shows while prompting.
 
 @node Indices
 @chapter Indices

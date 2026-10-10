@@ -28,8 +28,10 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'el-patch)
 (require 'mu4e)
+(require 'seq)
 
 ;;;; User options
 
@@ -77,6 +79,72 @@
   :type 'string
   :group 'mu4e-extras)
 
+(defcustom mu4e-extras-forethought-inbox-folder ""
+  "Name of the Forethought `inbox' folder."
+  :type 'string
+  :group 'mu4e-extras)
+
+(defcustom mu4e-extras-forethought-sent-folder ""
+  "Name of the Forethought `sent' folder."
+  :type 'string
+  :group 'mu4e-extras)
+
+(defcustom mu4e-extras-forethought-drafts-folder ""
+  "Name of the Forethought `drafts' folder."
+  :type 'string
+  :group 'mu4e-extras)
+
+(defcustom mu4e-extras-forethought-refiled-folder ""
+  "Name of the Forethought `refiled' folder."
+  :type 'string
+  :group 'mu4e-extras)
+
+(defcustom mu4e-extras-forethought-trash-folder ""
+  "Name of the Forethought `trash' folder."
+  :type 'string
+  :group 'mu4e-extras)
+
+(defcustom mu4e-extras-gmail-api-accounts
+  '((:name "epoch"
+     :label "Epoch"
+     :address-env "EPOCH_EMAIL"
+     :maildir "/epoch/"
+     :chrome-profile "Profile 2"
+     :state-db "~/.local/share/gmail-maildir-sync/state.db"
+     :html-signature org-msg-extras-epoch-html-signature
+     :plain-text-signature org-msg-extras-epoch-plain-text-signature)
+    (:name "forethought"
+     :label "Forethought"
+     :address "pablo@forethought.org"
+     :maildir "/forethought/"
+     :chrome-profile "Profile 10"
+     :state-db "~/.local/share/gmail-maildir-sync/forethought/state.db"
+     :html-signature org-msg-extras-forethought-html-signature
+     :plain-text-signature org-msg-extras-forethought-plain-text-signature))
+  "Accounts synced and sent through `gmail-maildir-sync' via the Gmail API.
+Each element is a plist with these keys:
+
+`:name'                 account name passed to `gmail-maildir-sync --account'.
+`:label'                human-readable name used in context names.
+`:address'              the account's email address, or nil to use
+                        `:address-env'.
+`:address-env'          environment variable holding the email address.
+`:maildir'              maildir prefix owned by the account, with leading and
+                        trailing slashes, e.g. \"/epoch/\".
+`:chrome-profile'       Chrome profile directory used to open the account's
+                        Gmail; see `mu4e-extras-chrome-profile-personal'.
+`:state-db'             path to the account's `gmail-maildir-sync' SQLite state
+                        database.
+`:html-signature'       variable holding the HTML `org-msg' signature.
+`:plain-text-signature' variable holding the plain-text signature.
+
+A message belongs to an account when its maildir starts with the account's
+`:maildir'.  That ownership decides the refile and trash folders, the Chrome
+profile, the Gmail thread lookup, the reaction send path and the compose
+context."
+  :type '(repeat (plist :value-type sexp))
+  :group 'mu4e-extras)
+
 (defcustom mu4e-extras-wide-reply 'prompt
   "Whether the reply to messages should be \"wide\" (a.k.a. \"reply-to-all\").
 If `prompt', ask the user. If t, always reply to all. If nil, always reply to
@@ -93,16 +161,6 @@ the sender only."
 
 (defcustom mu4e-extras-chrome-profile-personal "Default"
   "Chrome profile directory for personal email.
-This is the on-disk directory name inside
-\"~/Library/Application Support/Google/Chrome/\",
-not the display name shown in Chrome's UI.  Use
-\"Default\" for the first profile, \"Profile 1\" for
-the second, etc."
-  :type 'string
-  :group 'mu4e-extras)
-
-(defcustom mu4e-extras-chrome-profile-work "Profile 2"
-  "Chrome profile directory for work email.
 This is the on-disk directory name inside
 \"~/Library/Application Support/Google/Chrome/\",
 not the display name shown in Chrome's UI.  Use
@@ -137,8 +195,9 @@ the second, etc."
 
 (defun mu4e-extras-gmail-fix-flags (mark msg)
   "Fix Gmail flags for each MARK and MSG pair.
-Skip Epoch messages, which are synced via the Gmail API directly."
-  (unless (mu4e-extras-msg-belongs-to-epoch-p msg)
+Skip messages of `mu4e-extras-gmail-api-accounts', which are synced via the
+Gmail API directly."
+  (unless (mu4e-extras-msg-account msg)
     (cond ((eq mark 'trash)  (mu4e-action-retag-message msg "-\\Inbox,+\\Trash,-\\Draft"))
           ((eq mark 'refile) (mu4e-action-retag-message msg "-\\Inbox,+\\Refiled"))
           ((eq mark 'flag)   (mu4e-action-retag-message msg "+\\Starred"))
@@ -215,24 +274,42 @@ function marks the saved copy as read."
 ;;;;; Setup
 
 (defun mu4e-extras-set-shortcuts ()
-  "Set `mu4e-maildir-shortcuts'."
+  "Set the variable `mu4e-maildir-shortcuts'."
   (dolist (shortcut `((:maildir ,mu4e-extras-inbox-folder :key ?i)
 		      (:maildir ,mu4e-extras-daily-folder :key ?y)
 		      (:maildir ,mu4e-extras-epoch-inbox-folder :key ?I)
 		      (:maildir ,mu4e-extras-epoch-sent-folder :key ?T)
 		      (:maildir ,mu4e-extras-epoch-drafts-folder :key ?D)
 		      (:maildir ,mu4e-extras-epoch-refiled-folder :key ?R)
-		      (:maildir ,mu4e-extras-epoch-trash-folder :key ?X)))
+		      (:maildir ,mu4e-extras-epoch-trash-folder :key ?X)
+		      (:maildir ,mu4e-extras-forethought-inbox-folder :key ?f)
+		      (:maildir ,mu4e-extras-forethought-sent-folder :key ?s)
+		      (:maildir ,mu4e-extras-forethought-drafts-folder :key ?w)
+		      (:maildir ,mu4e-extras-forethought-refiled-folder :key ?F)
+		      (:maildir ,mu4e-extras-forethought-trash-folder :key ?z)))
     (add-to-list 'mu4e-maildir-shortcuts shortcut)))
 
 (defun mu4e-extras-set-bookmarks ()
-  "Set `mu4e-bookmarks'."
+  "Set the variable `mu4e-bookmarks'.
+Replace any existing \"All inboxes\" bookmark, so that calling this function
+again after changing the inbox folders does not add a second one."
+  (setq mu4e-bookmarks (cl-remove "All inboxes" mu4e-bookmarks
+				  :key (lambda (bookmark) (plist-get bookmark :name))
+				  :test #'equal))
   (add-to-list 'mu4e-bookmarks
 	       `(:name "All inboxes"
-		       :query ,(format "maildir:%s OR maildir:%s"
-				       mu4e-extras-inbox-folder
-				       mu4e-extras-epoch-inbox-folder)
+		       :query ,(mu4e-extras-all-inboxes-query)
 		       :key ?a)))
+
+(defun mu4e-extras-all-inboxes-query ()
+  "Return a `mu' query matching the personal, Epoch and Forethought inboxes.
+Inbox folders whose name is empty are omitted."
+  (mapconcat (lambda (folder) (concat "maildir:" folder))
+	     (seq-remove #'string-empty-p
+			 (list mu4e-extras-inbox-folder
+			       mu4e-extras-epoch-inbox-folder
+			       mu4e-extras-forethought-inbox-folder))
+	     " OR "))
 
 (defun mu4e-extras-set-face-locally ()
   "Set `shr-text' face locally in `mu4ew-view-mode' buffers."
@@ -261,8 +338,23 @@ function marks the saved copy as read."
 If RUN-IN-BACKGROUND is non-nil (or called with prefix-argument), run in the
 background; otherwise, pop up a window."
   (interactive "P")
-  (let ((mu4e-get-mail-command "sh -c 'mbsync gmail-all & gmail-maildir-sync pull --include-all & wait'"))
+  (let ((mu4e-get-mail-command (mu4e-extras-all-mail-command)))
     (mu4e-update-mail-and-index run-in-background)))
+
+(defun mu4e-extras-all-mail-command ()
+  "Return the shell command that syncs all mail, archives included.
+The command runs `mbsync gmail-all' and a full `gmail-maildir-sync' pull for
+each account in `mu4e-extras-gmail-api-accounts' in parallel.  It waits for each
+process separately and exits with the status of a failed one, so that a failure
+in one sync is not masked by the others."
+  (let ((commands (cons "mbsync gmail-all"
+			(mapcar (lambda (account)
+				  (format "gmail-maildir-sync --account %s pull --include-all"
+					  (plist-get account :name)))
+				mu4e-extras-gmail-api-accounts))))
+    (format "sh -c 'pids=; %sstatus=0; for pid in $pids; do wait $pid || status=$?; done; exit $status'"
+	    (mapconcat (lambda (command) (concat command " & pids=\"$pids $!\"; "))
+		       commands ""))))
 
 ;;;;;; Refile
 
@@ -392,10 +484,10 @@ PROFILE is a directory name like \"Default\" or \"Profile 2\"."
 
 (defun mu4e-extras-chrome-profile-for-msg (&optional msg)
   "Return the Chrome profile directory for MSG.
-Returns the work profile for Epoch messages, and the personal
-profile otherwise."
-  (if (and msg (mu4e-extras-msg-belongs-to-epoch-p msg))
-      mu4e-extras-chrome-profile-work
+Return the `:chrome-profile' of the Gmail API account owning MSG, and
+`mu4e-extras-chrome-profile-personal' otherwise."
+  (if-let* ((account (mu4e-extras-msg-account msg)))
+      (plist-get account :chrome-profile)
     mu4e-extras-chrome-profile-personal))
 
 (defun mu4e-extras-gmail-base (&optional _msg)
@@ -414,10 +506,6 @@ profile for that message's account."
      (concat (mu4e-extras-gmail-base msg) "#inbox")
      (mu4e-extras-chrome-profile-for-msg msg))))
 
-(defconst mu4e-extras-gmail-sync-state-db
-  (expand-file-name "~/.local/share/gmail-maildir-sync/state.db")
-  "Path to the `gmail-maildir-sync' SQLite state database.")
-
 (defun mu4e-extras-gmail-message-id (msg)
   "Return the Gmail hex message ID for MSG, or nil.
 Reads the `X-Gmail-Message-Id' header from the message file on disk."
@@ -429,13 +517,16 @@ Reads the `X-Gmail-Message-Id' header from the message file on disk."
       (when (re-search-forward "^X-Gmail-Message-Id: \\([0-9a-f]+\\)" nil t)
 	(match-string 1)))))
 
-(defun mu4e-extras-gmail-thread-id (gmail-id)
-  "Return the Gmail thread ID for GMAIL-ID, or nil.
-Queries the `gmail-maildir-sync' state database."
-  (when (and gmail-id (file-exists-p mu4e-extras-gmail-sync-state-db))
+(defun mu4e-extras-gmail-thread-id (gmail-id account)
+  "Return the Gmail thread ID for GMAIL-ID in ACCOUNT, or nil.
+ACCOUNT is an element of `mu4e-extras-gmail-api-accounts', or nil.  Query the
+`gmail-maildir-sync' state database of ACCOUNT."
+  (when-let* ((gmail-id)
+	      (db (and account (expand-file-name (plist-get account :state-db))))
+	      ((file-exists-p db)))
     (with-temp-buffer
       (when (zerop (call-process "sqlite3" nil t nil
-				 mu4e-extras-gmail-sync-state-db
+				 db
 				 (format "SELECT gmail_thread_id FROM messages WHERE gmail_id = '%s' LIMIT 1"
 					 gmail-id)))
 	(let ((result (string-trim (buffer-string))))
@@ -444,13 +535,14 @@ Queries the `gmail-maildir-sync' state database."
 
 (defun mu4e-extras-view-in-gmail ()
   "Open Gmail in a browser and view message at point in it.
-For Epoch messages, open the thread directly using the Gmail
-thread ID from the `gmail-maildir-sync' state database.
-Otherwise, search by RFC 822 message ID."
+For messages of a Gmail API account, open the thread directly using
+the Gmail thread ID from that account's `gmail-maildir-sync' state
+database.  Otherwise, search by RFC 822 message ID."
   (interactive)
   (let* ((msg (mu4e-message-at-point))
 	 (gmail-id (mu4e-extras-gmail-message-id msg))
-	 (thread-id (mu4e-extras-gmail-thread-id gmail-id))
+	 (thread-id (mu4e-extras-gmail-thread-id
+		     gmail-id (mu4e-extras-msg-account msg)))
 	 (url (if thread-id
 		  (concat (mu4e-extras-gmail-base msg) "#all/" thread-id)
 		(let ((id (url-hexify-string (plist-get msg :message-id))))
@@ -482,19 +574,28 @@ reaction format specification."
 
 (defun mu4e-extras-reaction-from-address (msg)
   "Return the user's email address for the account MSG belongs to.
-Checks which of the user's addresses appears in the To or Cc
+For a message of a Gmail API account, return that account's address.
+Otherwise, check which of the user's addresses appears in the To or Cc
 fields of MSG."
-  (cond
-   ((mu4e-extras-reaction-msg-matches-address-p msg (getenv "EPOCH_EMAIL"))
-    (getenv "EPOCH_EMAIL"))
-   ((mu4e-extras-reaction-msg-matches-address-p msg (getenv "WORK_EMAIL"))
-    (getenv "WORK_EMAIL"))
-   (t (getenv "PERSONAL_GMAIL"))))
+  (if-let* ((account (or (mu4e-extras-msg-account msg)
+			 (mu4e-extras-reaction-addressed-account msg))))
+      (mu4e-extras-account-address account)
+    (if (mu4e-extras-reaction-msg-matches-address-p msg (getenv "WORK_EMAIL"))
+	(getenv "WORK_EMAIL")
+      (getenv "PERSONAL_GMAIL"))))
+
+(defun mu4e-extras-reaction-addressed-account (msg)
+  "Return the Gmail API account whose address is in the To or Cc fields of MSG."
+  (cl-find-if (lambda (account)
+		(mu4e-extras-reaction-msg-matches-address-p
+		 msg (mu4e-extras-account-address account)))
+	      mu4e-extras-gmail-api-accounts))
 
 (defun mu4e-extras-reaction-msg-matches-address-p (msg address)
   "Return non-nil if ADDRESS appears in the To or Cc fields of MSG."
-  (or (mu4e-message-contact-field-matches msg :to address)
-      (mu4e-message-contact-field-matches msg :cc address)))
+  (and address
+       (or (mu4e-message-contact-field-matches msg :to address)
+	   (mu4e-message-contact-field-matches msg :cc address))))
 
 (defun mu4e-extras-reaction-to-email (msg)
   "Return the bare email address of the sender of MSG."
@@ -559,29 +660,15 @@ type.  CONTENT is the part body."
 
 (defun mu4e-extras-reaction-send (msg to mime)
   "Send MIME as a reaction to MSG.
-TO is the recipient's bare email address.  Uses the Gmail API for
-Epoch messages and SMTP for all others."
+TO is the recipient's bare email address.  Use the Gmail API for
+messages of a Gmail API account and SMTP for all others."
   (with-temp-buffer
     (insert mime)
-    (if (mu4e-extras-msg-belongs-to-epoch-p msg)
-	(mu4e-extras-reaction-send-via-gmail-api)
+    (if-let* ((account (mu4e-extras-msg-account msg)))
+	(mu4e-extras-gmail-api-send-buffer account "Gmail reaction send")
       (mu4e-extras-reaction-send-via-smtp to))))
 
 (declare-function smtpmail-via-smtp "smtpmail")
-
-(defun mu4e-extras-reaction-send-via-gmail-api ()
-  "Send the current buffer as a reaction via the Gmail API."
-  (let ((errbuf (generate-new-buffer " *gmail-api-reaction-errors*")))
-    (unwind-protect
-	(let ((exit-code (call-process-region
-			  (point-min) (point-max)
-			  "gmail-maildir-sync" nil errbuf nil "send")))
-	  (unless (zerop exit-code)
-	    (error "Gmail reaction send failed (exit %d): %s"
-		   exit-code
-		   (with-current-buffer errbuf
-		     (string-trim (buffer-string))))))
-      (kill-buffer errbuf))))
 
 (defun mu4e-extras-reaction-send-via-smtp (to)
   "Send the current buffer as a reaction via SMTP to TO."
@@ -650,7 +737,7 @@ It takes `mbsync' a while to check all channels, so I run this function less
 frequently than `mu4e-update-mail-and-index', which excludes the archive and
 takes just a couple of seconds."
   (interactive)
-  (let ((mu4e-get-mail-command "sh -c 'mbsync gmail-all & gmail-maildir-sync pull --include-all & wait'"))
+  (let ((mu4e-get-mail-command (mu4e-extras-all-mail-command)))
     (mu4e-update-mail-and-index t)))
 
 ;;;;; Sending via Gmail API
@@ -662,21 +749,33 @@ sendmail-specific flags (`-oi', `-f', `-t') that
 `gmail-maildir-sync' does not accept.  It also strips the
 `mail-header-separator' line that Emacs keeps in the compose
 buffer, replacing it with the blank line RFC 2822 requires
-between headers and body."
-  (save-excursion
-    (goto-char (point-min))
-    (re-search-forward
-     (concat "^" (regexp-quote mail-header-separator) "\n"))
-    (replace-match "\n"))
+between headers and body.
+
+The message is sent from the Gmail API account whose address is
+`user-mail-address', which the active `mu4e' context sets."
+  (let ((account (or (mu4e-extras-account-for-address user-mail-address)
+		     (error "No Gmail API account for sender %s" user-mail-address))))
+    (save-excursion
+      (goto-char (point-min))
+      (re-search-forward
+       (concat "^" (regexp-quote mail-header-separator) "\n"))
+      (replace-match "\n"))
+    (mu4e-extras-gmail-api-send-buffer account "Gmail-maildir-sync send")))
+
+(defun mu4e-extras-gmail-api-send-buffer (account description)
+  "Send the current buffer as an RFC 2822 message from Gmail API ACCOUNT.
+ACCOUNT is an element of `mu4e-extras-gmail-api-accounts'.  DESCRIPTION names
+the operation in the error signaled when `gmail-maildir-sync' fails."
   (let ((errbuf (generate-new-buffer " *gmail-api-send-errors*")))
     (unwind-protect
         (let ((exit-code (call-process-region (point-min) (point-max)
                                               "gmail-maildir-sync"
                                               nil errbuf nil
+                                              "--account" (plist-get account :name)
                                               "send")))
           (unless (zerop exit-code)
-            (error "Gmail-maildir-sync send failed (exit %d): %s"
-                   exit-code
+            (error "%s failed (exit %d): %s"
+                   description exit-code
                    (with-current-buffer errbuf
                      (string-trim (buffer-string))))))
       (kill-buffer errbuf))))
@@ -686,86 +785,128 @@ between headers and body."
 (declare-function org-msg-mode "org-msg")
 (defvar org-msg-extras-personal-html-signature)
 (defvar org-msg-extras-personal-plain-text-signature)
-(defvar org-msg-extras-epoch-html-signature)
-(defvar org-msg-extras-epoch-plain-text-signature)
 (defvar org-msg-extras-tlon-html-signature)
 (defvar org-msg-extras-tlon-plain-text-signature)
 (defun mu4e-extras-set-contexts ()
-  "Set `mu4e-contexts'."
+  "Set `mu4e-contexts'.
+The personal contexts come first, then an HTML and a plain-text context for
+each account in `mu4e-extras-gmail-api-accounts', then the Tlon contexts.
+Context names are numbered in that order."
   (setq mu4e-contexts
-	`(,(make-mu4e-context
-            :name "1 Personal HTML"
-            :match-func #'mu4e-extras-msg-is-personal-and-html-p
-            :vars `((user-mail-address . ,(getenv "PERSONAL_GMAIL"))
-		    (smtpmail-smtp-user . ,(getenv "PERSONAL_GMAIL"))
-		    (message-send-mail-function . smtpmail-send-it)
-		    (org-msg-signature . ,org-msg-extras-personal-html-signature)))
-	  ,(make-mu4e-context
-            :name "2 Personal plain text"
-            :match-func #'mu4e-extras-msg-is-personal-and-plain-text-p
-	    :enter-func (lambda () (org-msg-mode -1))
-	    :leave-func #'org-msg-mode
-            :vars `((user-mail-address . ,(getenv "PERSONAL_GMAIL"))
-		    (smtpmail-smtp-user . ,(getenv "PERSONAL_GMAIL"))
-		    (message-send-mail-function . smtpmail-send-it)
-		    (org-msg-signature . ,org-msg-extras-personal-plain-text-signature)))
-	  ,(make-mu4e-context
-            :name "3 Epoch HTML"
-            :match-func #'mu4e-extras-msg-is-epoch-and-html-p
-            :vars `((user-mail-address . ,(getenv "EPOCH_EMAIL"))
-		    (smtpmail-smtp-user . ,(getenv "EPOCH_EMAIL"))
-		    (mu4e-sent-folder . "/epoch/Sent")
-		    (mu4e-drafts-folder . "/epoch/Drafts")
-		    (message-send-mail-function . mu4e-extras-send-via-gmail-api)
-		    (org-msg-signature . ,org-msg-extras-epoch-html-signature)))
-	  ,(make-mu4e-context
-            :name "4 Epoch plain text"
-            :match-func #'mu4e-extras-msg-is-epoch-and-plain-text-p
-	    :enter-func (lambda () (org-msg-mode -1))
-	    :leave-func #'org-msg-mode
-            :vars `((user-mail-address . ,(getenv "EPOCH_EMAIL"))
-		    (smtpmail-smtp-user . ,(getenv "EPOCH_EMAIL"))
-		    (mu4e-sent-folder . "/epoch/Sent")
-		    (mu4e-drafts-folder . "/epoch/Drafts")
-		    (message-send-mail-function . mu4e-extras-send-via-gmail-api)
-		    (org-msg-signature . ,org-msg-extras-epoch-plain-text-signature)))
-	  ,(make-mu4e-context
-            :name "5 Tlon HTML"
-            :match-func #'mu4e-extras-msg-is-tlon-and-html-p
-            :vars `((user-mail-address . ,(getenv "WORK_EMAIL"))
-		    (smtpmail-smtp-user . ,(getenv "PERSONAL_GMAIL"))
-		    (message-send-mail-function . smtpmail-send-it)
-		    (org-msg-signature . ,org-msg-extras-tlon-html-signature)))
-	  ,(make-mu4e-context
-            :name "6 Tlon plain text"
-            :match-func #'mu4e-extras-msg-is-tlon-and-plain-text-p
-	    :enter-func (lambda () (org-msg-mode -1))
-	    :leave-func #'org-msg-mode
-            :vars `((user-mail-address . ,(getenv "WORK_EMAIL"))
-		    (smtpmail-smtp-user . ,(getenv "PERSONAL_GMAIL"))
-		    (message-send-mail-function . smtpmail-send-it)
-		    (org-msg-signature . ,org-msg-extras-tlon-plain-text-signature))))))
+	(mu4e-extras--number-contexts
+	 (append
+	  (list (mu4e-extras--make-context
+		 "Personal" t #'mu4e-extras-msg-is-personal-and-html-p
+		 `((user-mail-address . ,(getenv "PERSONAL_GMAIL"))
+		   (smtpmail-smtp-user . ,(getenv "PERSONAL_GMAIL"))
+		   (message-send-mail-function . smtpmail-send-it)
+		   (org-msg-signature . ,org-msg-extras-personal-html-signature)))
+		(mu4e-extras--make-context
+		 "Personal" nil #'mu4e-extras-msg-is-personal-and-plain-text-p
+		 `((user-mail-address . ,(getenv "PERSONAL_GMAIL"))
+		   (smtpmail-smtp-user . ,(getenv "PERSONAL_GMAIL"))
+		   (message-send-mail-function . smtpmail-send-it)
+		   (org-msg-signature . ,org-msg-extras-personal-plain-text-signature))))
+	  (mapcan #'mu4e-extras--gmail-api-contexts mu4e-extras-gmail-api-accounts)
+	  (list (mu4e-extras--make-context
+		 "Tlon" t #'mu4e-extras-msg-is-tlon-and-html-p
+		 `((user-mail-address . ,(getenv "WORK_EMAIL"))
+		   (smtpmail-smtp-user . ,(getenv "PERSONAL_GMAIL"))
+		   (message-send-mail-function . smtpmail-send-it)
+		   (org-msg-signature . ,org-msg-extras-tlon-html-signature)))
+		(mu4e-extras--make-context
+		 "Tlon" nil #'mu4e-extras-msg-is-tlon-and-plain-text-p
+		 `((user-mail-address . ,(getenv "WORK_EMAIL"))
+		   (smtpmail-smtp-user . ,(getenv "PERSONAL_GMAIL"))
+		   (message-send-mail-function . smtpmail-send-it)
+		   (org-msg-signature . ,org-msg-extras-tlon-plain-text-signature))))))))
+
+(defun mu4e-extras--gmail-api-contexts (account)
+  "Return the HTML and plain-text `mu4e' contexts for Gmail API ACCOUNT.
+ACCOUNT is an element of `mu4e-extras-gmail-api-accounts'."
+  (let ((address (mu4e-extras-account-address account))
+	(maildir (plist-get account :maildir)))
+    (mapcar (lambda (html)
+	      (mu4e-extras--make-context
+	       (plist-get account :label) html
+	       (lambda (msg) (mu4e-extras-msg-matches-account-p msg account html))
+	       `((user-mail-address . ,address)
+		 (smtpmail-smtp-user . ,address)
+		 (mu4e-sent-folder . ,(concat maildir "Sent"))
+		 (mu4e-drafts-folder . ,(concat maildir "Drafts"))
+		 (message-send-mail-function . mu4e-extras-send-via-gmail-api)
+		 (org-msg-signature
+		  . ,(symbol-value (plist-get account (if html
+							   :html-signature
+							 :plain-text-signature)))))))
+	    '(t nil))))
+
+(defun mu4e-extras--make-context (label html match-func vars)
+  "Return a `mu4e' context for LABEL in HTML or plain-text format.
+If HTML is non-nil, name the context \"LABEL HTML\"; otherwise, name it
+\"LABEL plain text\" and disable `org-msg-mode' while it is active.  MATCH-FUNC
+and VARS are the context's match function and variables."
+  (if html
+      (make-mu4e-context :name (concat label " HTML")
+			 :match-func match-func
+			 :vars vars)
+    (make-mu4e-context :name (concat label " plain text")
+		       :match-func match-func
+		       :enter-func (lambda () (org-msg-mode -1))
+		       :leave-func #'org-msg-mode
+		       :vars vars)))
+
+(defun mu4e-extras--number-contexts (contexts)
+  "Prefix the name of each of CONTEXTS with its position, starting at 1.
+Return CONTEXTS."
+  (seq-do-indexed (lambda (context index)
+		    (setf (mu4e-context-name context)
+			  (format "%d %s" (1+ index) (mu4e-context-name context))))
+		  contexts)
+  contexts)
 
 ;;;;; Account detection
 
-(defun mu4e-extras-msg-belongs-to-epoch-p (msg)
-  "Return t iff MSG belongs to the Epoch AI account."
-  (when-let* ((maildir (mu4e-message-field msg :maildir)))
-    (string-prefix-p "/epoch/" maildir)))
+(defun mu4e-extras-msg-account (msg)
+  "Return the element of `mu4e-extras-gmail-api-accounts' owning MSG, or nil.
+An account owns MSG when MSG's maildir starts with the account's `:maildir'."
+  (when-let* ((maildir (and msg (mu4e-message-field msg :maildir))))
+    (cl-find-if (lambda (account)
+		  (string-prefix-p (plist-get account :maildir) maildir))
+		mu4e-extras-gmail-api-accounts)))
+
+(defun mu4e-extras-account-address (account)
+  "Return the email address of Gmail API ACCOUNT, or nil if unknown."
+  (or (plist-get account :address)
+      (when-let* ((variable (plist-get account :address-env)))
+	(getenv variable))))
+
+(defun mu4e-extras-account-for-address (address)
+  "Return the Gmail API account whose email address is ADDRESS, or nil."
+  (when address
+    (cl-find-if (lambda (account)
+		  (when-let* ((account-address (mu4e-extras-account-address account)))
+		    (string-equal-ignore-case account-address address)))
+		mu4e-extras-gmail-api-accounts)))
 
 ;;;;; Account folders
 
 (defun mu4e-extras-refile-folder (msg)
   "Return the refile folder for MSG."
-  (if (mu4e-extras-msg-belongs-to-epoch-p msg)
-      "/epoch/Refiled"
-    "/Refiled"))
+  (mu4e-extras--account-folder msg "Refiled"))
 
 (defun mu4e-extras-trash-folder (msg)
   "Return the trash folder for MSG."
-  (if (mu4e-extras-msg-belongs-to-epoch-p msg)
-      "/epoch/Trash"
-    "/Trash"))
+  (mu4e-extras--account-folder msg "Trash"))
+
+(defun mu4e-extras--account-folder (msg folder)
+  "Return FOLDER inside the maildir of the account owning MSG.
+For a message of a Gmail API account, FOLDER is inside the account's
+`:maildir'; otherwise, it is at the top level of the maildir."
+  (concat (if-let* ((account (mu4e-extras-msg-account msg)))
+	      (plist-get account :maildir)
+	    "/")
+	  folder))
 
 (defun mu4e-extras-set-account-folders ()
   "Set folder variables for multi-account support."
@@ -773,6 +914,11 @@ between headers and body."
 	mu4e-trash-folder #'mu4e-extras-trash-folder))
 
 ;;;;; Context matching
+
+;; A message stored in a Gmail API account's maildir belongs to that account,
+;; whoever it is addressed to: this covers messages addressed to several of the
+;; user's accounts, Bcc and group deliveries, and the user's own sent messages.
+;; Recipient headers decide only for the remaining (`mbsync') mail.
 
 (defun mu4e-extras-msg-is-personal-and-html-p (msg)
   "Return t iff MSG is a personal HTML message."
@@ -786,17 +932,13 @@ between headers and body."
     (and (not (mu4e-extras-msg-is-html-p msg))
 	 (mu4e-extras-msg-is-personal-p msg))))
 
-(defun mu4e-extras-msg-is-epoch-and-html-p (msg)
-  "Return t iff MSG is an Epoch AI HTML message."
+(defun mu4e-extras-msg-matches-account-p (msg account html)
+  "Return non-nil iff MSG matches the context of Gmail API ACCOUNT.
+If HTML is non-nil, MSG must be an HTML message; otherwise, it must be a plain
+text message."
   (when msg
-    (and (mu4e-extras-msg-is-html-p msg)
-	 (mu4e-extras-msg-is-epoch-p msg))))
-
-(defun mu4e-extras-msg-is-epoch-and-plain-text-p (msg)
-  "Return t iff MSG is an Epoch AI plain text message."
-  (when msg
-    (and (not (mu4e-extras-msg-is-html-p msg))
-	 (mu4e-extras-msg-is-epoch-p msg))))
+    (and (mu4e-extras-msg-is-account-p msg account)
+	 (eq (and (mu4e-extras-msg-is-html-p msg) t) (and html t)))))
 
 (defun mu4e-extras-msg-is-tlon-and-html-p (msg)
   "Return t iff MSG is a Tlon HTML message."
@@ -811,18 +953,27 @@ between headers and body."
 	 (mu4e-extras-msg-is-tlon-p msg))))
 
 (defun mu4e-extras-msg-is-personal-p (msg)
-  "Return t iff MSG is a personal message."
-  (or (mu4e-message-contact-field-matches msg :to (getenv "PERSONAL_GMAIL"))
-      (mu4e-message-contact-field-matches msg :to (getenv "PERSONAL_EMAIL"))))
+  "Return t iff MSG is a personal message.
+Messages of a Gmail API account are never personal."
+  (and (not (mu4e-extras-msg-account msg))
+       (or (mu4e-message-contact-field-matches msg :to (getenv "PERSONAL_GMAIL"))
+	   (mu4e-message-contact-field-matches msg :to (getenv "PERSONAL_EMAIL")))))
 
-(defun mu4e-extras-msg-is-epoch-p (msg)
-  "Return t iff MSG is an Epoch AI message."
-  (mu4e-message-contact-field-matches msg :to (getenv "EPOCH_EMAIL")))
+(defun mu4e-extras-msg-is-account-p (msg account)
+  "Return non-nil iff MSG belongs to Gmail API ACCOUNT.
+If a Gmail API account owns MSG's maildir, MSG belongs to that account only.
+Otherwise, MSG belongs to ACCOUNT if it is addressed to ACCOUNT's address."
+  (if-let* ((owner (mu4e-extras-msg-account msg)))
+      (equal (plist-get owner :name) (plist-get account :name))
+    (when-let* ((address (mu4e-extras-account-address account)))
+      (mu4e-message-contact-field-matches msg :to address))))
 
 (defun mu4e-extras-msg-is-tlon-p (msg)
-  "Return t iff MSG is a Tlon message."
-  (or (mu4e-message-contact-field-matches msg :to (getenv "WORK_EMAIL"))
-      (mu4e-message-contact-field-matches msg :reply-to "tlon-team@googlegroups.com")))
+  "Return t iff MSG is a Tlon message.
+Messages of a Gmail API account are never Tlon messages."
+  (and (not (mu4e-extras-msg-account msg))
+       (or (mu4e-message-contact-field-matches msg :to (getenv "WORK_EMAIL"))
+	   (mu4e-message-contact-field-matches msg :reply-to "tlon-team@googlegroups.com"))))
 
 ;; based on `org-msg-article-htmlp-mu4e'
 (defun mu4e-extras-msg-is-html-p (msg)

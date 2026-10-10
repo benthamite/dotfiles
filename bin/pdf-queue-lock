@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+"""Change one record of the book-PDF queue ledger under its shared lock.
+
+The Emacs drain (`ebib-extras-pdf-queue-drain') cannot take a flock itself;
+it calls this command for every ledger change, so it and the scheduled batch
+never overwrite each other's records. See lib/python/pdf_queue_state.py.
+
+  pdf-queue-lock [--state-dir DIR] show
+  pdf-queue-lock [--state-dir DIR] merge KEY JSON-OBJECT [--expect-status S]
+  pdf-queue-lock [--state-dir DIR] delete KEY [--expect-status S]
+
+Prints the resulting record (or null) as JSON. Exit 3 when --expect-status
+does not match the current record, 1 for any other failure.
+"""
+
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import json
+from pathlib import Path
+import sys
+
+sys.dont_write_bytecode = True  # The checkout is under Drive, where caches do not belong.
+
+LIBRARY = Path(__file__).resolve().parents[1] / "lib" / "python" / "pdf_queue_state.py"
+DEFAULT_STATE_DIR = Path.home() / ".local/state/download-missing-pdfs"
+
+
+def load_library():
+    spec = importlib.util.spec_from_file_location("pdf_queue_state", LIBRARY)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--state-dir", type=Path, default=DEFAULT_STATE_DIR)
+    commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("show")
+    for name in ("merge", "delete"):
+        command = commands.add_parser(name)
+        command.add_argument("key")
+        if name == "merge":
+            command.add_argument("fields")
+        command.add_argument("--expect-status")
+    args = parser.parse_args(argv)
+    queue = load_library()
+    state_dir = args.state_dir.expanduser()
+    try:
+        if args.command == "show":
+            print(json.dumps(queue.read_state(state_dir), indent=2))
+            return 0
+        expect = queue.ANY if args.expect_status is None else args.expect_status
+        if args.command == "merge":
+            fields = json.loads(args.fields)
+            if not isinstance(fields, dict):
+                raise ValueError("merge fields must be a JSON object")
+            state = queue.update_record(state_dir, args.key, merge=fields, expect_status=expect)
+        else:
+            state = queue.update_record(state_dir, args.key, delete=True, expect_status=expect)
+    except queue.StatusMismatch as exc:
+        print(f"pdf-queue-lock: {exc}", file=sys.stderr)
+        return 3
+    except (OSError, ValueError) as exc:
+        print(f"pdf-queue-lock: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(state["books"].get(args.key)))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -63,7 +63,7 @@ Pablo explicitly permits using it for that checklist. This is distinct from the
 Forethought account's full Notion workspace access.
 
 Forethought Gmail syncs into mu4e (`gmail-maildir-sync --account forethought`);
-the other mapped Google tools have no Forethought authentication. See `google-services.md` for account routing. Discover the connected
+Docs/Drive use `gdoc --account forethought`; the other mapped Google tools have no Forethought authentication. See `google-services.md` for account routing. Discover the connected
 profile at runtime; browser/tab IDs are session-specific.
 
 ### Browser access rules

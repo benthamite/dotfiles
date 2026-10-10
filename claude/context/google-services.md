@@ -48,8 +48,11 @@ For the **Forethought** account (`pablo@forethought.org`), use the dedicated
 Forethought Chrome profile (browser discovery label `forethought.org`) for
 authorized browser work. Gmail and Calendar access were verified on 29 September
 2026. Forethought Gmail is synced into mu4e by `bin/gmail-maildir-sync --account
-forethought` (mail scope only, granted 10 October 2026; see "Auth" below). The
-other mapped Google CLIs (`gmail.py`, `sheets.py`, `gdoc`, calendar) have no
+forethought` (mail scope only, granted 10 October 2026; see "Auth" below).
+Docs/Drive: `gdoc --account forethought` (own token under
+`~/.config/gdoc/accounts/forethought/`, Drive and Docs scopes, granted 10 October
+2026; re-auth with `gdoc auth --account forethought --domain forethought.org`).
+The other mapped Google CLIs (`gmail.py`, `sheets.py`, calendar) have no
 Forethought credentials; do not assume `--account forethought` works there or
 route work through Epoch/personal credentials. Some older documents were shared with the personal account; use
 that account only where the task explicitly calls for that access. Profile and

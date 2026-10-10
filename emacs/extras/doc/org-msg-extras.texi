@@ -85,9 +85,11 @@ The package depends on @samp{org-msg} and @samp{org-extras}.
 @vindex org-msg-extras-personal-html-signature
 @vindex org-msg-extras-epoch-plain-text-signature
 @vindex org-msg-extras-epoch-html-signature
+@vindex org-msg-extras-forethought-plain-text-signature
+@vindex org-msg-extras-forethought-html-signature
 @vindex org-msg-extras-tlon-plain-text-signature
 @vindex org-msg-extras-tlon-html-signature
-@samp{org-msg-extras.el} provides six user options for defining email signatures, covering three contexts (personal, Epoch AI, and Tlön) and two formats (plain text and HTML/Org).
+@samp{org-msg-extras.el} provides eight user options for defining email signatures, covering four contexts (personal, Epoch AI, Forethought, and Tlön) and two formats (plain text and HTML/Org).
 
 The user option @code{org-msg-extras-personal-plain-text-signature} holds the signature for personal emails sent in plain text format. Its default value is @samp{"\n--\nPablo\n"}, a minimal signature preceded by the conventional @samp{--} separator. The type is a string.
 
@@ -96,6 +98,10 @@ The user option @code{org-msg-extras-personal-html-signature} holds the signatur
 The user option @code{org-msg-extras-epoch-plain-text-signature} holds the signature for Epoch AI emails in plain text, including name, title, and website URL@. The type is a string.
 
 The user option @code{org-msg-extras-epoch-html-signature} holds the signature for Epoch AI emails in Org/HTML format, including the current job title, Epoch logo, and links to the website, Twitter, and newsletter. The type is a string.
+
+The user option @code{org-msg-extras-forethought-plain-text-signature} holds the signature for Forethought emails in plain text, with name, organization, and website URL@. The type is a string.
+
+The user option @code{org-msg-extras-forethought-html-signature} holds the signature for Forethought emails in Org/HTML format, with styled name and a link to the Forethought website. The type is a string.
 
 The user option @code{org-msg-extras-tlon-plain-text-signature} holds the signature for Tlön emails in plain text, including name, title, and company name. The type is a string.
 

@@ -78,6 +78,26 @@
   :type 'string
   :group 'org-msg-extras)
 
+(defcustom org-msg-extras-forethought-plain-text-signature
+  "\n--\nPablo Stafforini\nForethought | https://www.forethought.org/\n"
+  "Forethought signature for plain text emails."
+  :type 'string
+  :group 'org-msg-extras)
+
+(defcustom org-msg-extras-forethought-html-signature
+  (concat
+   "\n#+begin_signature\n--\n"
+   "#+begin_export html\n"
+   "<span style=\"display:block; font-family:Arial,Helvetica,sans-serif;"
+   " font-size:13px; line-height:1.4\">"
+   "<b>Pablo Stafforini</b><br>"
+   "<a href=\"https://www.forethought.org/\">Forethought</a></span>\n"
+   "#+end_export\n"
+   "#+end_signature")
+  "Forethought signature for HTML emails."
+  :type 'string
+  :group 'org-msg-extras)
+
 (defcustom org-msg-extras-tlon-plain-text-signature
   "\n--\nPablo Stafforini\nFounder & President\nTlön\n"
   "Tlön signature for plain text emails."

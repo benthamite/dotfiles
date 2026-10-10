@@ -168,6 +168,10 @@ managed =.system= content, pairing, and maintenance. The generated
 skills. Dynamic plugins, private skills, ignored runtime system skills, and
 skills in other repositories are outside its scope.
 
+The =emacs-freeze= skill moved from =emacs/.codex/skills/= to the global root on
+2026-10-10 for the same reason as its Claude counterpart; it reads
+=emacs/freeze-incidents.org= first.
+
 Project skills use synthetic contact examples and route MCP credentials through
 the owning account's secrets context without listing account or vault topology.
 

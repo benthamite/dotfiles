@@ -64,6 +64,7 @@ publication process reviews the outgoing history and tree before a push.
 | `dotfiles-context` | Route dotfiles and Elpaca edits to canonical sources and verification commands. | [Source](../../claude/skills/dotfiles-context/SKILL.md) | [Source](../../codex/skills/dotfiles-context/SKILL.md) |
 | `dx-audit` | Audit a repository for AI developer onboarding and verification friction. | [Source](../../claude/skills/dx-audit/SKILL.md) | [Source](../../codex/skills/dx-audit/SKILL.md) |
 | `elisp-conventions` | Apply local Elisp coding, documentation and verification rules. | [Source](../../claude/skills/elisp-conventions/SKILL.md) | [Source](../../codex/skills/elisp-conventions/SKILL.md) |
+| `emacs-freeze` | Diagnose unresponsive Emacs with bounded sampling and server probes. | [Source](../../claude/skills/emacs-freeze/SKILL.md) | [Source](../../codex/skills/emacs-freeze/SKILL.md) |
 | `end-to-end` | Verify a software acceptance criterion through the decisive live surface. | [Source](../../claude/skills/end-to-end/SKILL.md) | [Source](../../codex/skills/end-to-end/SKILL.md) |
 | `fix-drive-errors` | Diagnose and repair Google Drive desktop sync errors. | [Source](../../claude/skills/fix-drive-errors/SKILL.md) | [Source](../../codex/skills/fix-drive-errors/SKILL.md) |
 | `generate-readme` | Generate a GitHub-facing Emacs package README from its Org manual. | [Source](../../claude/skills/generate-readme/SKILL.md) | [Source](../../codex/skills/generate-readme/SKILL.md) |
@@ -118,7 +119,6 @@ publication process reviews the outgoing history and tree before a push.
 | Skill | Purpose | Claude Code | Codex |
 | --- | --- | --- | --- |
 | `document-elisp-extras` | Route project-local documentation requests to the maintained global workflow. | [Source](../../emacs/.claude/skills/document-elisp-extras/SKILL.md) | [Source](../../emacs/.codex/skills/document-elisp-extras/SKILL.md) |
-| `emacs-freeze` | Diagnose unresponsive Emacs with bounded sampling and server probes. | [Source](../../emacs/.claude/skills/emacs-freeze/SKILL.md) | [Source](../../emacs/.codex/skills/emacs-freeze/SKILL.md) |
 | `migrate-profile` | Coordinate session/history housekeeping after an Emacs profile migration. | [Source](../../emacs/.claude/skills/migrate-profile/SKILL.md) | [Source](../../emacs/.codex/skills/migrate-profile/SKILL.md) |
 | `rename-package` | Rename Emacs package source, API and selected repository/runtime identities. | [Source](../../emacs/.claude/skills/rename-package/SKILL.md) | [Source](../../emacs/.codex/skills/rename-package/SKILL.md) |
 

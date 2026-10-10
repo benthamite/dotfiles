@@ -20,6 +20,15 @@ Preserve the user's intentionally enabled global `debug-on-error` workflow.
 Temporary suppression during authorized recovery needs a recorded restoration
 plan and post-unwind verification, not a permanent debugger-off recommendation.
 
+## 0. Read the incident history
+
+Before collecting evidence, read `emacs/freeze-incidents.org` in the dotfiles
+repository (`~/My Drive/dotfiles`). It lists where the watchdog evidence lives,
+remedies already tried and their outcome, and open decisions. Do not
+re-propose a tried remedy or re-ask an open decision without new evidence;
+cite the entry instead. When the investigation ends, add an incident entry
+and update its "Already tried" and "Open" sections.
+
 ## 1. Identify the session
 
 - Record the reported symptom, onset, preceding action, UI behavior, runtime/

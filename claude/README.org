@@ -235,6 +235,12 @@ roots, and maintenance. The generated
 public skills only; runtime plugins, private skills, ignored system content,
 and skills owned by other repositories are outside its scope.
 
+The =emacs-freeze= skill moved from =emacs/.claude/skills/= to the global
+root on 2026-10-10: freezes are reported from sessions in any project, and a
+project-scoped skill is invisible to a session started at the repository root.
+It reads =emacs/freeze-incidents.org= first, so that remedies already tried are
+not proposed again.
+
 The =message-agent-session= skill sends a short message to another live
 agent.el session in Emacs through =bin/agent-send=. The tool prepends a fixed
 disclosure header, refuses self-sends and ambiguous targets, never resends, and

@@ -15,8 +15,8 @@ from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
-HELPERS = [ROOT / "emacs" / runtime / "skills/emacs-freeze/scripts/run-client.py"
-           for runtime in (".codex", ".claude")]
+HELPERS = [ROOT / runtime / "skills/emacs-freeze/scripts/run-client.py"
+           for runtime in ("codex", "claude")]
 
 
 def load_runner():

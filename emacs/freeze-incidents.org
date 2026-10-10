@@ -1,0 +1,80 @@
+#+title: Emacs freeze incidents
+
+Running record of Emacs freezes and slowdowns: what each investigation found,
+what was changed, and what is still open. The =emacs-freeze= skill reads this
+before diagnosing, so that a session does not re-propose a remedy already
+tried. Append one entry per investigation; update the open items and
+the "Already tried" list in place.
+
+* Evidence sources
+
+- Watchdog: =bin/emacs-server-watchdog=, run each minute by launchd.
+  - Outage/recovery log: =~/Library/Logs/emacs-server-watchdog.log= (local
+    time).
+  - Per-minute samples: =~/Library/Logs/emacs-server-watchdog.samples.jsonl=.
+    Fields include probe result and failure kind, state-file age, GC count and
+    seconds since the previous sample, Emacs footprint, swap, top processes.
+    =time= is epoch seconds; convert with jq =strflocaltime=, not =strftime=
+    (UTC).
+- State file =~/.cache/emacs-server-state.json=, written every 5 s by
+  =simple-extras-server-state-mode=. Stale means timers are not running.
+- Display sleep/wake: =pmset -g log=. Several outages ended seconds after the
+  display woke, i.e. Emacs froze while Pablo was away.
+- Not yet captured automatically: a C/Lisp stack during an outage. Only a
+  live =/usr/bin/sample= (see the =emacs-freeze= skill) gives one.
+
+* Already tried (do not re-propose without new evidence)
+
+- Restarting Google Drive (2026-10-07): footprint fell from 23 GB to 0.4 GB,
+  but was back at 15 GB within about an hour and at ~23 GB by 10-09. A restart
+  is not a fix; the cause of the growth is uninvestigated.
+- Backblaze exclusion rules (2026-10-07): stop index growth, do not shrink
+  the existing 5.5 GB =bzfileids.dat=.
+- =gcmh-low-cons-threshold= raised to 128 MB (2026-10-07, =351180ef6=):
+  outages continued (30 on 10-10).
+- =emacsk= repeatedly: stacks nested debuggers and leaves =debug-on-quit= on
+  (2026-10-06). Press it once.
+
+* Open
+
+- Google Drive's memory growth (~23 GB footprint, mostly swapped): cause not
+  investigated.
+- Backblaze: start a new backup to drop the 5.5 GB index. Pablo's decision,
+  pending since 2026-10-07.
+- Watchdog: capture =sample= output automatically on a failed probe or a GC
+  storm, so the next incident names the running code.
+- Cause of the 2026-10-10 GC storm (below).
+
+* Incidents
+
+** 2026-10-10: two freezes late morning (BST)
+
+- 11:24–11:28: server timed out, then refused connections; single GCs of
+  3.6 s and 10 s, load 52–55, swap 19 GB. Display was asleep 11:23:35–11:27:52;
+  recovery came 3 s after wake. Inferred: GC over a partly swapped heap under
+  host memory pressure.
+- 11:43–11:47: 133 GCs (41 s) in one minute, 53 (17 s) in the next, each
+  ~0.3 s. Only one failed probe, so this was constant pausing rather than a
+  blocked server. No other minute in the 7-day samples had 30+ GCs. Trigger
+  unknown.
+- Earlier the same day: 07:13–07:55-ish a 45 min block with stale state, and
+  08:35–09:07 outages every ~5 min. =mu4e-update-interval= is 300, but the
+  mu4e update path is asynchronous, so that link is weak.
+- "Quit emacsclient request" in *Messages* only means Pablo's C-g landed in
+  an agent hook's emacsclient request queued behind the stall; the hooks are
+  not implicated. The =minibuffer-quit= backtrace in mu4e's search prompt
+  came from =debug-on-quit= being on, and shows Lisp idle at the prompt.
+
+** 2026-10-07: overnight server outages (launchd session f2a5d424)
+
+- Server unanswered 03:51–08:24 and 09:21–09:27 with timers running; both
+  ended when Pablo returned. Inferred: back-to-back idle GCs under gcmh's
+  800 KB idle threshold, over a 5.6 GB, partly swapped heap. Swap 36.5/37.9 GB;
+  Google Drive 23 GB footprint. Details: =~/repos/launchd/logs/2026-10-07.md=.
+
+** 2026-10-06 19:58: freeze (session 68771613)
+
+- Most likely memory starvation: idle timer frame at the first signal, swap
+  36/38 GB, load ~70. Strongest suspect then: Backblaze loading its 5.5 GB
+  index. Nested debuggers came from repeated =emacsk=. Details:
+  =logs/2026-10-07.md=.

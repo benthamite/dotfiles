@@ -117,7 +117,9 @@ The project-local =document-elisp-extras= entries load the matching runtime's
 global workflow from this repository. They keep local discovery without a
 second procedure that can drift from the maintained documentation rules.
 
-The =emacs-freeze= workflow binds evidence to a specific process and distinguishes
+The =emacs-freeze= skill is global (=claude/skills/= and =codex/skills/=),
+because freezes are reported from sessions in any project. It reads
+[[file:freeze-incidents.org][the freeze incident record]] first. The workflow binds evidence to a specific process and distinguishes
 UI responsiveness from server replies. Its client helper bounds only its owned
 child process; timeouts do not establish recovery or cancel queued Emacs work.
 Recovery requires explicit authority and checks for session data and debugger

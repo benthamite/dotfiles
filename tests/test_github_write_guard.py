@@ -572,6 +572,56 @@ class EpochPushTests(unittest.TestCase):
                 with self.subTest(tool=tool, command=command):
                     self.assertEqual(decision(self.decide(tool, command)), expected)
 
+    def test_topic_branches_go_through_the_writer_app_where_it_is_installed(self) -> None:
+        for tool in GUARDS:
+            for command in (f"git push {self.EPOCH} topic", f"git push -u {self.EPOCH} HEAD:refs/heads/topic"):
+                with self.subTest(tool=tool, command=command):
+                    self.assertEqual(decision(self.decide(tool, command)), "deny")
+
+    def test_without_the_writer_app_only_named_non_default_branches_may_be_pushed(self) -> None:
+        url = "https://github.com/epoch-research/alert-responder-sandbox.git"
+        missing = {"epoch-research/alert-responder-sandbox"}
+        with mock.patch.object(github_write, "_writer_missing", lambda env: missing):
+            for tool in GUARDS:
+                for command, expected in (
+                    (f"git push {url} topic", "allow"),
+                    (f"git push -u {url} local:refs/heads/fix/x", "allow"),
+                    (f"git push {url} main", "deny"),
+                    (f"git push {url} topic:master", "deny"),
+                    (f"git push {url} +topic", "deny"),
+                    (f"git push --force {url} topic", "deny"),
+                    (f"git push --force-with-lease {url} topic", "deny"),
+                    (f"git push -fu {url} topic", "deny"),
+                    (f"git push --delete {url} topic", "deny"),
+                    (f"git push {url} :topic", "deny"),
+                    (f"git push --all {url}", "deny"),
+                    (f"git push {url} refs/tags/v1", "deny"),
+                ):
+                    with self.subTest(tool=tool, command=command):
+                        self.assertEqual(decision(self.decide(tool, command)), expected)
+
+    def test_the_committed_writer_missing_list_is_read(self) -> None:
+        # Fails until agents/epoch-writer-missing.txt is committed: the guard
+        # reads HEAD, never the working tree.
+        self.assertIn("epoch-research/alert-responder-sandbox", github_write._writer_missing(os.environ.copy()))
+
+    def test_push_destinations(self) -> None:
+        current = lambda: "feature"  # noqa: E731
+        cases = {
+            "git push": ["feature"],
+            "git push origin": ["feature"],
+            "git push origin HEAD": ["feature"],
+            "git push -o ci.skip origin a b:c": ["a", "c"],
+            "git -C /x push origin refs/heads/a": ["a"],
+            "git push origin +a": None,
+            "git push origin refs/tags/v1": None,
+            "git push --mirror origin": None,
+        }
+        for command, expected in cases.items():
+            with self.subTest(command=command):
+                self.assertEqual(github_write.push_destinations(command, current), expected)
+        self.assertIsNone(github_write.push_destinations("git push origin HEAD", lambda: None))
+
     def test_the_flag_off_keeps_declared_pushes_allowed(self) -> None:
         with mock.patch.object(github_write, "EPOCH_PUSH_ENFORCED", False):
             for tool in GUARDS:

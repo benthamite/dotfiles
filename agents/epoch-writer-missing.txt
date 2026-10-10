@@ -1,0 +1,13 @@
+# epoch-research repositories declared in a project's :REPOS: that the Epoch
+# Automations Writer app is not installed on. Agents cannot publish to them
+# through epoch_publish.py, so the GitHub write guard lets an agent push a
+# named non-default branch of these repos itself (never the default branch).
+#
+# Regenerate with the Epoch workspace's
+#   projects/shared/scripts/epoch_publish.py --writer-coverage
+# and remove a line once an org owner installs the app on that repository.
+epoch-research/alert-responder-sandbox
+epoch-research/justworks-claude-proxy
+epoch-research/sandbox
+epoch-research/slack-auto-responder
+epoch-research/vibes-seeder

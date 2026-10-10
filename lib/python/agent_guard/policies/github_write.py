@@ -62,12 +62,20 @@ _NOT_ALLOWLISTED_ADVICE = (
 # Off until the alert coverage check is proven to catch app-pushed failures.
 EPOCH_PUSH_ENFORCED = False
 _EPOCH_OWNER = "epoch-research/"
+# Declared repos the Writer app is not installed on, where an agent may push a
+# non-default branch itself. Refresh with `epoch_publish.py --writer-coverage`.
+_WRITER_MISSING_PATH = "agents/epoch-writer-missing.txt"
 _EPOCH_PUSH_ADVICE = (
     "Agents publish to epoch-research only as the Epoch Automations Writer app, so that failed push-triggered "
-    "runs do not notify Pablo. Commit, then run "
-    "`$EPOCH_SHARED_DIR/scripts/epoch_publish.py <checkout>` (default branch, declared repos). A non-default "
-    "branch, or a repo without the Writer installation, needs Pablo to push by hand: give him the `! git push ...` "
-    "command to type himself. Force pushes stay forbidden. Do not route the push through another path.")
+    "runs do not notify Pablo. Commit on the branch to publish (the default branch, or a topic branch for a pull "
+    "request), then run `$EPOCH_SHARED_DIR/scripts/epoch_publish.py <checkout>` and, for a topic branch, "
+    "`gh pr create --head BRANCH`. Only in a repo without the Writer installation (agents/epoch-writer-missing.txt) "
+    "may an agent `git push` a named non-default branch itself; default branches, force pushes, --all, --mirror, "
+    "deletions and tags are never agent pushes. Do not route the push through another path.")
+# git push options that take a separate value, and ones that are never agent pushes.
+_PUSH_VALUE_OPTIONS = {"-o", "--push-option", "--repo", "--receive-pack", "--exec"}
+_PUSH_REFUSED_OPTIONS = {"-f", "--force", "--all", "--branches", "--mirror", "-d", "--delete", "--tags", "--prune",
+                         "--force-if-includes"}
 
 _ALLOWLIST_PATH = "agents/github-write-allowlist.txt"
 _DECLARED_REPOS_PATH = "data/automations.json"
@@ -306,6 +314,56 @@ def _allowlist_patterns(env: dict) -> list[str]:
         entry = re.sub(f"[{re.escape(BASH_SPACE)}]", "", entry)
         patterns.append(_lower(re.sub(r"\.git\Z", "", entry)))
     return patterns
+
+
+def _writer_missing(env: dict) -> set[str]:
+    text = _git_show(str(DOTFILES), "HEAD:" + _WRITER_MISSING_PATH, env).decode("utf-8", "surrogateescape")
+    return {_lower(line.split("#", 1)[0].strip()) for line in text.split("\n") if line.split("#", 1)[0].strip()}
+
+
+def push_destinations(command: str, current_branch) -> list[str] | None:
+    """The branch names a plain `git ... push ...` command updates, or None when
+    it is not one (unparsable, a force, --all, a tag or other non-branch ref).
+    CURRENT_BRANCH() names the checked-out branch, or None."""
+    try:
+        words = shlex.split(command)
+    except ValueError:
+        return None
+    if "push" not in words:
+        return None
+    words = words[words.index("push") + 1:]
+    positionals, skip = [], False
+    for word in words:
+        if skip:
+            skip = False
+        elif word in _PUSH_VALUE_OPTIONS:
+            skip = True
+        elif word.split("=", 1)[0] in _PUSH_REFUSED_OPTIONS or word.startswith("--force-with-lease"):
+            return None
+        elif word.startswith("-"):
+            if not word.startswith("--") and len(word) > 2 and set(word[1:]) & {"f", "d"}:
+                return None
+        else:
+            positionals.append(word)
+    refspecs = positionals[1:]
+    if not refspecs:
+        branch = current_branch()
+        return [branch] if branch else None
+    out = []
+    for spec in refspecs:
+        if spec.startswith("+") or spec.startswith(":"):
+            return None
+        dest = spec.split(":", 1)[-1]
+        if dest == "HEAD":
+            dest = current_branch()
+            if not dest:
+                return None
+        if dest.startswith("refs/"):
+            if not dest.startswith("refs/heads/"):
+                return None
+            dest = dest.removeprefix("refs/heads/")
+        out.append(dest)
+    return out
 
 
 def _jq_documents(text: str) -> list:
@@ -1398,8 +1456,7 @@ class _Guard:
                 target = self.repo_from_local_git() if run_status == 2 else self.repo_from_git_dir(run_dir)
             self.require_allowed_repo("git push", target)
             if EPOCH_PUSH_ENFORCED and normalize_repo(target).startswith(_EPOCH_OWNER):
-                raise _Exit(Result.deny(f"BLOCKED: agent git push to {normalize_repo(target)}.\n\n"
-                                        + _EPOCH_PUSH_ADVICE))
+                self.check_epoch_push(normalize_repo(target))
 
         for pattern, action in ((_GH_PR, "gh pr write operation"), (_GH_ISSUE, "gh issue write operation")):
             if ere.grep(pattern, scan, echo=True):
@@ -1440,6 +1497,35 @@ class _Guard:
             self.require_allowed_repo("gh api write operation", self.target_repo_for_api())
         self.check_hidden()
         return Result.allow()
+
+    def push_directory(self) -> str | None:
+        status, directory = self.resolved_run_dir()
+        if status == 0:
+            return directory
+        if status == 2:
+            try:
+                return repo.repo_root(self.command, self.call.raw, self.runtime, self.env).cwd
+            except HookFailure:
+                return None
+        return None
+
+    def check_epoch_push(self, target: str):
+        """Allow an agent push to epoch-research only for named non-default
+        branches of a repo the Writer app is not installed on."""
+        directory = self.push_directory()
+
+        def git_out(*args: str) -> str:
+            if directory is None:
+                return ""
+            return self._git_text(list(args), directory).strip()
+
+        branches = push_destinations(self.command, lambda: git_out("symbolic-ref", "--quiet", "--short", "HEAD"))
+        defaults = {"main", "master"}
+        if remote_head := git_out("symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"):
+            defaults.add(remote_head.removeprefix("origin/"))
+        if branches and not set(branches) & defaults and target in _writer_missing(self.env):
+            return
+        raise _Exit(Result.deny(f"BLOCKED: agent git push to {target}.\n\n" + _EPOCH_PUSH_ADVICE))
 
     def check_hidden(self):
         """Judge the code hidden in the command (see _Hidden) as whole commands

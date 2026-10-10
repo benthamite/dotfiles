@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+"""sgn-read — read-only access to Pablo's Signal history in sgn's database.
+
+sgn (the Emacs Signal client) runs signal-cli as a daemon, which holds
+signal-cli's lock, and stores every message in SQLite. This tool opens that
+database read-only so agents can read chats without touching signal-cli or
+Emacs. It has no send or write path: sending goes through sgn in Emacs.
+
+Usage:
+  sgn-read chats [--match TEXT] [--limit N]
+  sgn-read show CHAT [--since YYYY-MM-DD] [--limit N]
+  sgn-read search QUERY [--chat CHAT] [--limit N]
+
+CHAT is a chat id or a case-insensitive substring of the chat name; it must
+match exactly one chat. Times are local.
+"""
+
+import argparse
+import datetime
+import os
+import sqlite3
+import sys
+
+DB_PATH = os.path.join(
+    os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share"),
+    "sgn", "sgn.db")
+
+
+def connect():
+    if not os.path.exists(DB_PATH):
+        sys.exit(f"ERROR: sgn database not found at {DB_PATH}")
+    conn = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def fmt_ts(ms):
+    return datetime.datetime.fromtimestamp(ms / 1000).strftime("%Y-%m-%d %H:%M")
+
+
+def resolve_chat(conn, chat):
+    row = conn.execute("SELECT id, name FROM chats WHERE id = ?", (chat,)).fetchone()
+    if row:
+        return row
+    rows = conn.execute(
+        "SELECT id, name FROM chats WHERE name LIKE ? ORDER BY last_msg_ts DESC",
+        (f"%{chat}%",)).fetchall()
+    if len(rows) == 1:
+        return rows[0]
+    if not rows:
+        sys.exit(f"ERROR: no chat matches '{chat}'")
+    names = "\n".join(f"  {r['id']}\t{r['name']}" for r in rows)
+    sys.exit(f"ERROR: '{chat}' matches {len(rows)} chats; pass an id:\n{names}")
+
+
+def sender_names(conn):
+    names = {}
+    for r in conn.execute("SELECT uuid, number, name FROM recipients"):
+        label = r["name"] or r["number"] or r["uuid"]
+        names[r["uuid"]] = label
+        if r["number"]:
+            names[r["number"]] = label
+    return names
+
+
+def print_messages(rows, names):
+    for r in rows:
+        who = "me" if r["outgoing"] else names.get(r["sender"], r["sender"])
+        body = "[deleted]" if r["deleted"] else (r["body"] or "[media]")
+        quote = f" (replying to: {r['quote_body'][:60]!r})" if r["quote_body"] else ""
+        print(f"{fmt_ts(r['timestamp'])}  {who}{quote}: {body}")
+
+
+def cmd_chats(conn, args):
+    sql = "SELECT id, type, name, last_msg_ts FROM chats"
+    params = []
+    if args.match:
+        sql += " WHERE name LIKE ?"
+        params.append(f"%{args.match}%")
+    sql += " ORDER BY last_msg_ts DESC LIMIT ?"
+    params.append(args.limit)
+    for r in conn.execute(sql, params):
+        last = fmt_ts(r["last_msg_ts"]) if r["last_msg_ts"] else "-"
+        print(f"{last}\t{r['type']}\t{r['name']}\t{r['id']}")
+
+
+def cmd_show(conn, args):
+    chat = resolve_chat(conn, args.chat)
+    sql = "SELECT * FROM messages WHERE chat_id = ?"
+    params = [chat["id"]]
+    if args.since:
+        since = datetime.datetime.strptime(args.since, "%Y-%m-%d")
+        sql += " AND timestamp >= ?"
+        params.append(int(since.timestamp() * 1000))
+    sql += " ORDER BY timestamp DESC LIMIT ?"
+    params.append(args.limit)
+    rows = list(reversed(conn.execute(sql, params).fetchall()))
+    print(f"# {chat['name']} ({chat['id']})")
+    print_messages(rows, sender_names(conn))
+
+
+def cmd_search(conn, args):
+    sql = ("SELECT m.*, c.name AS chat_name FROM messages_fts f "
+           "JOIN messages m ON m.rowid = f.rowid JOIN chats c ON c.id = m.chat_id "
+           "WHERE messages_fts MATCH ?")
+    params = [args.query]
+    if args.chat:
+        sql += " AND m.chat_id = ?"
+        params.append(resolve_chat(conn, args.chat)["id"])
+    sql += " ORDER BY m.timestamp DESC LIMIT ?"
+    params.append(args.limit)
+    names = sender_names(conn)
+    for r in conn.execute(sql, params):
+        print(f"[{r['chat_name']}] ", end="")
+        print_messages([r], names)
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    sub = p.add_subparsers(dest="cmd", required=True)
+    c = sub.add_parser("chats", help="list chats, most recent first")
+    c.add_argument("--match")
+    c.add_argument("--limit", type=int, default=50)
+    s = sub.add_parser("show", help="print a chat's messages, oldest first")
+    s.add_argument("chat")
+    s.add_argument("--since")
+    s.add_argument("--limit", type=int, default=100)
+    q = sub.add_parser("search", help="full-text search of message bodies")
+    q.add_argument("query")
+    q.add_argument("--chat")
+    q.add_argument("--limit", type=int, default=50)
+    args = p.parse_args()
+    conn = connect()
+    {"chats": cmd_chats, "show": cmd_show, "search": cmd_search}[args.cmd](conn, args)
+
+
+if __name__ == "__main__":
+    main()

@@ -13,6 +13,7 @@ browser automation; each already carries the right account and auth.
 | Google Calendar | `gcalcli-epoch` (canonical Epoch OAuth grant; shared personal calendars) |
 | Google Docs / Drive | `gdoc` (comments vs. suggestions: see `google-services.md`, "Reading comments and suggestions") |
 | GitHub | `gh` |
+| Signal (read-only) | `bin/sgn-read` |
 
 Relative paths are under the dotfiles root, `~/My Drive/dotfiles/`. For
 Google account and auth details, read `google-services.md` in this
@@ -35,6 +36,15 @@ Book acquisition uses the same implementation. Its command and review-manifest
 contract is in [book-acquisition.md](../../docs/book-acquisition.md); edition,
 metadata and attachment decisions follow the shared
 [bibliography policy](../../agents/bibliography-policy.md).
+
+## Signal
+
+Pablo uses Signal through `sgn`, his Emacs client, which runs `signal-cli` as
+a daemon and stores every message in `~/.local/share/sgn/sgn.db`. Do not call
+`signal-cli` directly: the daemon holds its lock, so commands hang. Read
+history with `sgn-read chats|show|search`, which opens the database read-only.
+There is no agent send path; sending goes through sgn in Emacs, and any message
+on Pablo's behalf needs his confirmation.
 
 ## Google Drive original files
 

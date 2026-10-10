@@ -855,6 +855,16 @@ Stop from a =claude -p= run inside a session is dropped by the agent package
 itself, which compares the payload's
 =session_id= with the id it records for the session.
 
+Since 2026-10-10 the Stop hook =hooks/block-done-over-running-tasks.py= refuses a
+turn whose last status line is =Status: done= while Claude Code's Stop payload
+still lists a running background shell, Monitor or background agent (teammates
+are excluded: an idle one is reported running). The agent must stop each task or
+report the work as still open. After two refusals in one prompt, counted by the
+hook itself, the stop is allowed with a message naming the tasks. Origin: a
+four-week audit of 3,962 background tasks found leftover tasks with many
+unrelated causes, all left behind by agents that had declared the work done; see
+=docs/plans/2026-10-10-stale-background-jobs.md=.
+
 Since 2026-10-01 every PreToolUse guard runs in one Python process:
 =~/.claude/settings.json= registers only =hooks/agent-guard.sh=, which runs the
 engine in =lib/python/agent_guard= and turns any failure into a denial,

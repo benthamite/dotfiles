@@ -712,6 +712,11 @@ not paired and names no file on the deleted side (for example
 Claude-only hook scripts deleted their manifest entries with them and needed
 no Codex change.
 
+The Claude Stop hook =block-done-over-running-tasks.py= (2026-10-10) has no
+Codex counterpart yet. Whether Codex background terminals outlive a turn, and
+whether its Stop payload lists them, is unassessed; the manifest records it as
+=claude-only= until then.
+
 Both interactive and programmatic =walk-list= copies use exact input identity
 and locked lifecycle transitions. Native atomic exchange detects displaced-file
 races and retains uncertain recovery data; new stored copies and evidence use

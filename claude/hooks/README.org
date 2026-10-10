@@ -324,6 +324,7 @@ Claude's wrapping of introspection output through =redact-secrets.sh=.
 
 | File | Purpose |
 |------+---------|
+| =block-done-over-running-tasks.py= | Stop hook: refuses =Status: done= while the payload lists running non-teammate background tasks; own per-prompt block count, then allows with a =systemMessage=. Tests: =tests/test_block_done_over_running_tasks.py=. |
 | =agent-guard.sh= | The only PreToolUse guard registration: runs the guard engine (=lib/python/agent_guard=) and turns every exit status other than 0 into exit 2, so a missing interpreter, import error or crash denies. |
 | =lib-op-policy.py= | Classifies 1Password broker commands for =agent_guard.policies.secret_leak=: a closed allowlist of shapes whose stdout carries no credential, everything else denied. |
 | =lib-process-output-policy.py= | Prevents process argument/environment listings through =agent_guard.policies.secret_leak=; permits PID-only =pgrep= and explicit safe =ps= columns such as =pid,ppid,comm=. |

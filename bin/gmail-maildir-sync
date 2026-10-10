@@ -25,15 +25,44 @@ op_read() {
   op-automations cache read "$1" 2>/dev/null || true
 }
 
+# The account is the value of `--account` (default epoch); it selects the
+# address and refresh token.  Each account has its own override variable, so an
+# ambient Epoch token can never be used under another account's selection.
+account=epoch
+prev=
+for arg in "$@"; do
+  case "$arg" in
+    --account=*) account="${arg#--account=}" ;;
+  esac
+  if [ "$prev" = "--account" ]; then
+    account="$arg"
+  fi
+  prev="$arg"
+done
+
 GOOGLE_WORKSPACE_CLIENT_ID="${GOOGLE_WORKSPACE_CLIENT_ID:-$(personal_automation google-workspace-client-id)}"
 GOOGLE_WORKSPACE_CLIENT_SECRET="${GOOGLE_WORKSPACE_CLIENT_SECRET:-$(personal_automation google-workspace-client-secret)}"
-GOOGLE_WORKSPACE_REFRESH_TOKEN="${GOOGLE_WORKSPACE_REFRESH_TOKEN:-$(op_read 'op://Automations/Google Workspace OAuth - Pablo Epoch/credential')}"
-EPOCH_EMAIL="${EPOCH_EMAIL:-pablo@epoch.ai}"
+case "$account" in
+  epoch)
+    GMAIL_SYNC_EMAIL="${EPOCH_EMAIL:-pablo@epoch.ai}"
+    GOOGLE_WORKSPACE_REFRESH_TOKEN="${GOOGLE_WORKSPACE_REFRESH_TOKEN:-$(op_read 'op://Automations/Google Workspace OAuth - Pablo Epoch/credential')}"
+    ;;
+  forethought)
+    # Personal Automation vault: see the Forethought exception in
+    # claude/context/secrets.md.
+    GMAIL_SYNC_EMAIL=pablo@forethought.org
+    GOOGLE_WORKSPACE_REFRESH_TOKEN="${GOOGLE_WORKSPACE_REFRESH_TOKEN_FORETHOUGHT:-$(personal_automation google-workspace-refresh-token-forethought)}"
+    ;;
+  *)
+    printf 'gmail-maildir-sync: unknown account %s\n' "$account" >&2
+    exit 2
+    ;;
+esac
 
 export GOOGLE_WORKSPACE_CLIENT_ID
 export GOOGLE_WORKSPACE_CLIENT_SECRET
 export GOOGLE_WORKSPACE_REFRESH_TOKEN
-export EPOCH_EMAIL
+export GMAIL_SYNC_EMAIL
 export PYTHONPATH="$repo${PYTHONPATH:+:$PYTHONPATH}"
 
 exec "$uv_bin" run \

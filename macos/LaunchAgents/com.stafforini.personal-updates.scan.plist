@@ -8,6 +8,13 @@
 
   <key>ProgramArguments</key>
   <array>
+    <string>/opt/homebrew/bin/python3</string>
+    <string>/Users/pablostafforini/repos/launchd/bin/launchd-network-retry</string>
+    <string>--label</string>
+    <string>com.stafforini.personal-updates.scan</string>
+    <string>--host</string>
+    <string>github.com</string>
+    <string>--</string>
     <string>/Users/pablostafforini/My Drive/dotfiles/bin/personal-updates</string>
     <string>scan</string>
   </array>

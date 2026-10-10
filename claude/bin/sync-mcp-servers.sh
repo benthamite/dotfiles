@@ -11,21 +11,29 @@
 # account-specific secrets, and each account's values win on key conflicts.
 set -euo pipefail
 
+# The account list lives in emacs/agent-accounts.json, read through
+# lib/python/agent_accounts.py; this script sits two levels below the root.
+DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+export SYNC_MCP_DOTFILES="$DOTFILES"
+
 exec python3 - "$@" <<'PYTHON'
+import importlib.util
 import json
 import os
 import sys
 import tempfile
 
+sys.dont_write_bytecode = True  # The checkout is under Drive, where caches do not belong.
+
 CANONICAL = os.path.expanduser("~/.claude.json")
-# Active account dirs only. ~/.claude-work is obsolete and intentionally
-# excluded; do not re-add unless that account is reactivated.
+# Every Claude account declared in the shared account list.
+_library = os.path.join(os.environ["SYNC_MCP_DOTFILES"], "lib/python/agent_accounts.py")
+_spec = importlib.util.spec_from_file_location("agent_accounts", _library)
+_accounts = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_accounts)
 TARGETS = [
-    os.path.expanduser("~/.claude-epoch/.claude.json"),
-    os.path.expanduser("~/.claude-forethought/.claude.json"),
-    os.path.expanduser("~/.claude-personal/.claude.json"),
-    os.path.expanduser("~/.claude-personal2/.claude.json"),
-    os.path.expanduser("~/.claude-tlon/.claude.json"),
+    os.path.join(os.path.expanduser(entry["home"]), ".claude.json")
+    for entry in _accounts.load_accounts()["claude"]
 ]
 
 if not os.path.isfile(CANONICAL):

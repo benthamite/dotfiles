@@ -94,18 +94,34 @@ fi
 # in to -- a different account from the selected one, with its own quota and
 # billing. That split is invisible until one of the two hits a usage limit.
 #
-# Each ~/.codex-<account> home is a thin overlay: auth.json is the only real file
-# and everything else symlinks back to ~/.codex, so pointing CODEX_HOME at one
-# changes the identity and nothing else.
+# Each account's home is a thin overlay: auth.json is the only real file and
+# everything else symlinks back to ~/.codex, so pointing CODEX_HOME at one
+# changes the identity and nothing else. The account's home comes from the
+# shared account list, emacs/agent-accounts.json (the one Emacs reads into
+# `agent-codex-accounts'), not from a naming convention.
 #
 # An explicit CODEX_HOME always wins, so a pinned account (an isolated benchmark,
 # a one-off `CODEX_HOME=... codex`) is never overridden. Unknown or stale account
-# names fall through to the ordinary ~/.codex default. `$(<file)` is a zsh builtin
-# read, so this costs no subprocess.
+# names, and pool names (only Emacs can route a pool), fall through to the
+# ordinary ~/.codex default. Every shell reads this file, so the lookup uses only
+# zsh builtins: `$(<file)' reads without a subprocess and the parse is pattern
+# matching. tests/test_zshenv_codex_home.py checks it against bin/agent-account-home.
 if [ -z "${CODEX_HOME:-}" ] && [ -r "$HOME/.codex-current-account" ]; then
-	_codex_account="${$(<"$HOME/.codex-current-account")//[[:space:]]/}"
-	if [ -n "$_codex_account" ] && [ -d "$HOME/.codex-$_codex_account" ]; then
-		export CODEX_HOME="$HOME/.codex-$_codex_account"
-	fi
-	unset _codex_account
+	() {
+		local account="${$(<"$HOME/.codex-current-account")//[[:space:]]/}"
+		local file="$DOTFILES/emacs/agent-accounts.json"
+		[[ -n "$account" && -r "$file" ]] || return
+		local text="$(<"$file")" entry home
+		text="${text#*\"codex\"*\[}"
+		text="${text%%\]*}"
+		while [[ "$text" =~ '[{]([^}]*)[}]' ]]; do
+			entry="$match[1]"
+			text="${text[MEND+1,-1]}"
+			[[ "$entry" =~ '"name"[[:space:]]*:[[:space:]]*"([^"]*)"' && "$match[1]" == "$account" ]] || continue
+			[[ "$entry" =~ '"home"[[:space:]]*:[[:space:]]*"([^"]*)"' ]] || return
+			home="${match[1]/#\~/$HOME}"
+			[[ -d "$home" ]] && export CODEX_HOME="$home"
+			return
+		done
+	}
 fi

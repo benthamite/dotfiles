@@ -37,6 +37,8 @@ Retained project files and session history do not grant automatic project trust.
 
 * Instructions
 
+The "Do the work yourself" rule in =AGENTS.md= gained a hand-off clause on 2026-10-10: when a step needs Pablo, the agent first prepares everything around it (page opened, permitted fields filled, secrets on the clipboard, cursor placed) and then gives numbered click-by-click instructions naming window, tab, field and button.
+
 Unfamiliar code execution uses the shared =bin/untrusted-run= VM boundary;
 reviewed local workflows retain host execution. =AGENTS.md= states only the
 routing rule; staging and trust details live in the runner contract. The paired routing guard is

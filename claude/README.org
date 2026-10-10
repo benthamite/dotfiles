@@ -91,6 +91,8 @@ API-key-authenticated Claude session.
 
 * Instructions and settings
 
+The "Do the work yourself" rule in =CLAUDE.md= (mirrored in =codex/AGENTS.md=) gained a hand-off clause on 2026-10-10: when a step needs Pablo, the agent first does everything around it (opens the page in its own tab, fills permitted fields, puts secrets on the clipboard, places the cursor) and then gives numbered click-by-click instructions naming window, tab, field and button. Origin: during the Forethought meeting-debrief build Pablo repeatedly received instructions that began "open …" for steps the agent could have prepared itself.
+
 Unfamiliar code execution uses the shared =bin/untrusted-run= VM boundary;
 reviewed local workflows retain host execution. =CLAUDE.md= states only the
 routing rule; staging and trust details live in the runner contract. The guard engine's

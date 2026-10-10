@@ -154,7 +154,7 @@ def main() -> int:
             lines.append(f"- {task}: output {path}")
         lines.append(
             "Wait for each in the foreground: call Bash with timeout 600000 and a command such as "
-            "`for i in $(seq 1 115); do lsof -F a PATH | grep -q '^a.*[wu]' || break; sleep 5; done; "
+            "`for i in $(seq 1 100); do lsof -F a PATH | grep -q '^a.*[wu]' || break; sleep 5; done; "
             "tail -40 PATH`. Repeat until no process writes the file, then read the output and carry "
             "on. If you no longer need a task, stop it with TaskStop instead.")
     if ended:

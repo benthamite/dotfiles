@@ -566,6 +566,8 @@ precedence over the vendor Chrome skills where they differ.
 
 The service-access and [[file:context/google-services.md][Google account reference]] also record the dedicated Forethought Chrome profile (=forethought.org=, =pablo@forethought.org=). Forethought browser work uses that profile. Of the Google CLIs, =gdoc --account forethought= (since 2026-10-10) and =gmail-maildir-sync --account forethought= have Forethought authentication; the others do not. Personal-profile guest access to the onboarding checklist is a separate, explicitly permitted route.
 
+The local =gdoc= extension (=claude/bin/gdoc_download.py=, run by =bin/gdoc=) adds =download= and makes =write= and =push= refuse an empty source file unless given =--allow-empty=, after a parsing slip blanked a live doc on 2026-10-11. The Google account reference's "Editing Google Docs" section says which =gdoc= command fits which kind of change; the service-access table points there.
+
 Browser control is runtime-owned rather than mirrored through a tracked
 Codex-App handoff skill. Claude therefore carries no pointer skill or helper
 command for moving a Codex thread into the desktop app.

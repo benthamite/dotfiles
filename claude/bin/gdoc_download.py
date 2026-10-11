@@ -1,7 +1,10 @@
-"""Add original-file downloads to the installed gdoc CLI and account routing.
+"""Extend the installed gdoc CLI: original-file downloads, and an empty-write guard.
 
 Drive blobs use files.get_media; native Workspace documents still use export.
 https://developers.google.com/workspace/drive/api/guides/manage-downloads
+
+Upstream `write` and `push` replace a document with whatever the file holds,
+including nothing; on 11 Oct 2026 a parsing slip blanked a live doc that way.
 """
 import argparse
 import hashlib
@@ -13,6 +16,7 @@ import tempfile
 from gdoc import cli
 from gdoc.api import get_drive_service
 from gdoc.api.drive import _translate_http_error
+from gdoc.frontmatter import parse_frontmatter
 from gdoc.util import GdocError
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
@@ -80,6 +84,25 @@ def cmd_download(args):
     return 0
 
 
+def refuse_empty_body(command):
+    """Wrap a whole-document upload so an empty source cannot blank the doc.
+
+    Unreadable files pass through so upstream reports them in its usual way.
+    """
+    def guarded(args):
+        if not getattr(args, "allow_empty", False):
+            try:
+                text = Path(args.file).read_text(encoding="utf-8")
+            except OSError:
+                return command(args)
+            if not parse_frontmatter(text)[1].strip():
+                raise GdocError(
+                    f"{args.file} has no content; writing it would blank the document "
+                    "(pass --allow-empty to clear it deliberately)", exit_code=3)
+        return command(args)
+    return guarded
+
+
 _original_build_parser = cli.build_parser
 
 
@@ -97,6 +120,11 @@ def build_parser():
     for flag in ("json", "plain", "verbose"):
         modes.add_argument(f"--{flag}", action="store_true", default=argparse.SUPPRESS)
     command.set_defaults(func=cmd_download)
+    for name in ("write", "push"):
+        upload = subparsers.choices[name]
+        upload.add_argument("--allow-empty", action="store_true",
+                            help="Allow an empty file to clear the document")
+        upload.set_defaults(func=refuse_empty_body(upload.get_default("func")))
     return parser
 
 

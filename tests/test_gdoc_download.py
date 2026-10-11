@@ -106,5 +106,46 @@ class DownloadTests(unittest.TestCase):
         self.service.files.assert_not_called()
 
 
+@unittest.skipUnless(OWN_INTERPRETER, 'runs through DelegatedRun under the gdoc interpreter')
+class EmptyWriteGuardTests(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.upstream = {name: MagicMock(return_value=0) for name in ('cmd_write', 'cmd_push')}
+        for name, mock in self.upstream.items():
+            patcher = patch.object(module.cli, name, mock)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        self.parser = module.build_parser()
+
+    def run_upload(self, content, *extra):
+        source = Path(self.directory.name) / 'doc.md'
+        source.write_text(content, encoding='utf-8')
+        results = {}
+        for command, argv in [('cmd_write', ['write', 'doc-id', str(source)]),
+                              ('cmd_push', ['push', str(source)])]:
+            args = self.parser.parse_args(argv + list(extra))
+            try:
+                results[command] = args.func(args)
+            except module.GdocError as error:
+                results[command] = error
+        return results
+
+    def test_empty_or_frontmatter_only_file_is_refused(self):
+        for content in ['', '  \n\n', '---\ngdoc: doc-id\ntitle: T\n---\n\n']:
+            with self.subTest(content=content):
+                for command, result in self.run_upload(content).items():
+                    self.assertIsInstance(result, module.GdocError)
+                    self.upstream[command].assert_not_called()
+
+    def test_content_and_explicit_clear_reach_upstream(self):
+        for content, extra in [('# Title\n\nText.\n', ()), ('', ('--allow-empty',))]:
+            with self.subTest(content=content):
+                for command, result in self.run_upload(content, *extra).items():
+                    self.assertEqual(result, 0)
+                    self.upstream[command].assert_called_once()
+                    self.upstream[command].reset_mock()
+
+
 if __name__ == '__main__':
     unittest.main()

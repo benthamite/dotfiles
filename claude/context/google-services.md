@@ -114,6 +114,31 @@ for a content-change claim (they were confirmed on an old release); the
 export-and-byte-compare method above is version-independent and is the
 reliable path regardless.
 
+## Editing Google Docs
+
+Pick the command by the kind of change (confirmed on gdoc 0.21.0, 11 Oct 2026):
+
+- **Text within one paragraph:** `gdoc edit DOC OLD NEW`. It replaces plain
+  text only: replacing a heading's text drops the heading style, it cannot
+  match across paragraphs, and deleting a list item's text leaves an empty
+  bullet.
+- **Anything structural** (headings, deleting or moving bullets or sections):
+  `gdoc pull DOC FILE.md`, edit the file, then `gdoc push FILE.md`. The pulled
+  file carries `gdoc:` frontmatter that binds it to its doc, and headings,
+  lists and italics survive the round trip. On a multi-tab doc, `push` and
+  `write` without `--tab` would collapse the tabs into one and need
+  `--force-collapse-tabs`; use `write --tab` or `insert` there instead.
+- **Never rebuild a doc from `gdoc cat` output.** `cat` prints a status banner
+  on stdout whose shape varies ("--- no changes ---" or a multi-line
+  change summary), so stripping it by pattern can silently drop the body.
+- `write` and `push` replace the whole doc (or tab). The local launcher
+  refuses an empty source file, frontmatter aside; pass `--allow-empty` only to
+  clear a doc deliberately. After any whole-doc upload, `pull` the doc again
+  and diff it against the file you sent.
+- "doc changed since last read" means gdoc has no record of a read since the
+  last change; re-read with `pull` or `cat`, check nobody else edited, and
+  retry. Do not reach for `--force` to get past it.
+
 ## Reading comments and suggestions
 
 "Process the comments on a doc" means every feedback thread in the doc's

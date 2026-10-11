@@ -11,7 +11,7 @@ browser automation; each already carries the right account and auth.
 | Google Sheets | `claude/bin/sheets.py` |
 | Slack | `claude/bin/slack.py` |
 | Google Calendar | `gcalcli-epoch` (canonical Epoch OAuth grant; shared personal calendars) |
-| Google Docs / Drive | `gdoc` (comments vs. suggestions: see `google-services.md`, "Reading comments and suggestions") |
+| Google Docs / Drive | `gdoc` (before changing a doc, read `google-services.md`, "Editing Google Docs"; comments vs. suggestions: same file, "Reading comments and suggestions") |
 | GitHub | `gh` |
 | Signal (read-only) | `bin/sgn-read` |
 | Fireflies meeting transcripts (Forethought, read-only) | `bin/fireflies` |
@@ -77,7 +77,9 @@ files; `gdoc export` remains the command for converting native documents.
 
 The canonical `bin/gdoc` launcher extends the installed uv-managed CLI with
 `claude/bin/gdoc_download.py`, reusing its parser, account selection, authentication,
-and command allowlist. Existing commands are delegated unchanged. Downloads check
+and command allowlist. Existing commands are delegated unchanged, except that
+`write` and `push` refuse an empty source file unless given `--allow-empty`
+(see `google-services.md`, "Editing Google Docs"). Downloads check
 Drive permission, size, and available MD5 metadata before installing the file. The
 installed package is not patched. If upstream adds `download`, the extension stops
 with an explicit retirement message rather than shadowing that implementation.

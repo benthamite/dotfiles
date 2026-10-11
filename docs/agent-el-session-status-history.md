@@ -95,6 +95,19 @@ the app-server JSON-RPC turn flag, and are much more stable.
 | Stop hook refusing `Status: done` over running tasks | 10-10 | Active.  Catches agents leaving hung jobs |
 | Detecting undelivered task notices from transcript `queue-operation` records | 10-10 | Abandoned: a replay of 816 transcripts showed the records cannot be paired (523 unattributable dequeues; not FIFO) |
 | TeammateIdle hold while the teammate's own shell has an output-file writer | 10-10 | Active.  Prevents the lost-notice stall |
+| Claude display from `claude agents --json`, Claude Code's own report | 10-11 (`2af0543`) | Active.  Idle or waiting shows waiting; busy after the turn has ended shows amber.  Queried in the background per config dir on each hook event and when a result is over 30 s old.  No current report shows unknown.  Hook-only inference is kept and logged to `*Messages*` on every difference.  Live check 10-11: both open sessions matched Claude Code, including one on an exit dialog that the hooks alone would have shown busy.  Pending: one day of normal use with the difference log clean |
+
+## Current approach (since 2026-10-11)
+
+- Claude sessions' display comes from Claude Code's own report:
+  `claude agents --json`, run once per `CLAUDE_CONFIG_DIR`.
+- The hook inference is kept as a check only.  After each query, every
+  session where it differs from Claude Code's report is logged to
+  `*Messages*` ("Claude Code reports X, hooks alone say Y").
+- When a status complaint comes in:
+  1. Read that log first.
+  2. Compare with `claude agents --json` for the session's account.
+  3. Only then look at hooks.
 
 ## Ideas raised but never pursued
 

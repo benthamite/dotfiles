@@ -25,8 +25,8 @@ The four tracked plists under [[file:LaunchAgents/][LaunchAgents/]] are currentl
 |-------+----------+-------------|
 | =com.stafforini.personal-updates.fast-brew= | 03:00 daily | =bin/personal-updates fast-brew= |
 | =com.stafforini.codex-protocol-watch= | 04:15 daily | =bin/codex-protocol-watch=, run through =~/repos/launchd/bin/launchd-run-record= |
-| =com.stafforini.personal-updates.scan= | 08:15 daily | =bin/personal-updates scan= |
-| =com.stafforini.personal-updates.delayed= | 09:00 daily | =bin/personal-updates delayed --min-age-days 7= |
+| =com.stafforini.personal-updates.scan= | 02:15 daily | =bin/personal-updates scan= |
+| =com.stafforini.personal-updates.delayed= | 05:00 daily | =bin/personal-updates delayed --min-age-days 7= |
 
 The plists write logs under =~/.local/state/= and use absolute paths into this
 checkout. After changing a plist, reload its matching LaunchAgent before

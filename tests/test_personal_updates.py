@@ -1,6 +1,8 @@
 import importlib.util
 import importlib.machinery
 import pathlib
+import io
+import contextlib
 import json
 import tempfile
 import subprocess
@@ -550,6 +552,14 @@ class PersonalUpdatesStateTest(unittest.TestCase):
         with patch.object(self.mod, "run", side_effect=fake_run):
             self.mod.brew_helper("upgrade", {"brew_formula": {}}, ["--formula", "tool"])
         self.assertFalse(recorded[0].exists())
+
+    def test_helper_failure_reports_homebrew_output(self):
+        failed = subprocess.CompletedProcess([], 1, "", "Error: bottle fetch failed")
+        stderr = io.StringIO()
+        with patch.object(self.mod, "run", return_value=failed), contextlib.redirect_stderr(stderr):
+            with self.assertRaisesRegex(RuntimeError, "Homebrew upgrade failed"):
+                self.mod.brew_helper("upgrade", {"brew_formula": {}})
+        self.assertIn("Error: bottle fetch failed", stderr.getvalue())
 
 
 class PersonalUpdatesBrewBoundaryTest(unittest.TestCase):

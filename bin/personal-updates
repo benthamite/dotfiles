@@ -281,6 +281,10 @@ def brew_helper(mode, request, upgrade_args=()):
                                   "HOMEBREW_NO_ANALYTICS": "1", "HOMEBREW_DEV_CMD_RUN": "1"})
         if result.returncode:
             reasons = [line for line in result.stderr.splitlines() if "Delayed update refused:" in line]
+            if not reasons:
+                # Keep Homebrew's own account of the failure: without it the cause cannot be diagnosed.
+                print(f"Homebrew {mode} output before the failure:\n{(result.stderr.strip() or result.stdout.strip())}",
+                      file=sys.stderr)
             raise RuntimeError("; ".join(reasons) or f"Homebrew {mode} failed (exit {result.returncode}); no unguarded retry was attempted")
         return result
 

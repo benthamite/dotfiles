@@ -95,7 +95,8 @@ the app-server JSON-RPC turn flag, and are much more stable.
 | Stop hook refusing `Status: done` over running tasks | 10-10 | Active.  Catches agents leaving hung jobs |
 | Detecting undelivered task notices from transcript `queue-operation` records | 10-10 | Abandoned: a replay of 816 transcripts showed the records cannot be paired (523 unattributable dequeues; not FIFO) |
 | TeammateIdle hold while the teammate's own shell has an output-file writer | 10-10 | Active.  Prevents the lost-notice stall |
-| Claude display from `claude agents --json`, Claude Code's own report | 10-11 (`2af0543`) | Active.  Idle or waiting shows waiting; busy after the turn has ended shows amber.  Queried in the background per config dir on each hook event and when a result is over 30 s old.  No current report shows unknown.  Hook-only inference is kept and logged to `*Messages*` on every difference.  Live check 10-11: both open sessions matched Claude Code, including one on an exit dialog that the hooks alone would have shown busy.  Pending: one day of normal use with the difference log clean |
+| Claude display from `claude agents --json`, Claude Code's own report | 10-11 (`2af0543`) | Active.  Idle or waiting shows waiting; busy after the turn has ended shows amber.  Queried in the background per config dir on each hook event and when a result is over 30 s old.  No current report shows unknown.  Hook-only inference is kept and logged to `*Messages*` on every difference.  Live check 10-11: both open sessions matched Claude Code, including one on an exit dialog that the hooks alone would have shown busy.  **Failed within a day** (see next row) |
+| Stale-reading rules for the `claude agents` source | 10-11 (`67a7d92`) | Active.  `2af0543` showed sessions green for seconds after a prompt, sometimes for the whole turn.  Two causes.  (1) A prompt sent from Emacs sets busy and writes the state file, and `notify-emacs-state.sh` then drops every activity hook of the turn (`bab30f8`), so no hook reached Emacs and the previous turn's idle reading stayed current.  (2) A query started at the instant of the submit still reads idle, because Claude Code registers the turn about 0.5 s later.  Fix: every session event (new `agent-session-event-functions`) makes earlier readings stale and schedules a query after `agent-claude-status-settle-time` (2 s); a reading is current only if taken at least that long after the latest session event.  Other hook traffic refreshes at a limited rate without staling.  Live reproduction (5 Bash calls via `agent-submit`; 3 via typed text plus RET): busy from 0.2 s to the stop, then waiting.  The first attempt at this fix, which staled without a settle time, still showed 6.6 s of green in the same reproduction |
 
 ## Current approach (since 2026-10-11)
 
@@ -212,6 +213,23 @@ Neither Orca nor any other terminal wrapper would have handled the two 10-10
 failures (artifact watch, lost teammate notice) correctly.  Orca was first
 evaluated on 09-20, but only its display code; its detection was read on
 10-10.
+
+## Verification lesson from 10-11
+
+`2af0543` was called done after unit tests that set the event time by hand
+and a live check of sessions at rest.  Nobody sampled the display through a
+real turn.
+
+Any change to state detection must be checked with the turn-sampling
+reproduction before it is called done:
+
+1. Start a throwaway session and let it settle.
+2. Send a prompt that runs several tool calls, once through `agent-submit`
+   and once as typed text plus RET.
+3. Read `agent-session-display-state` several times a second from the
+   submit until after the stop.
+
+The display must read busy for the whole turn, and waiting afterwards.
 
 ## The recurring failure pattern
 

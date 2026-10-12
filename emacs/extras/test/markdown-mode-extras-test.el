@@ -8,6 +8,20 @@
 (require 'ert)
 (require 'markdown-mode-extras)
 
+;;;; base-element
+
+(ert-deftest markdown-mode-extras-test-base-element-encodes-directory ()
+  "The base element points at the visited file's directory, URL-encoded."
+  (with-temp-buffer
+    (setq buffer-file-name "/tmp/My Drive/notes/plan.md")
+    (should (equal (markdown-mode-extras--base-element)
+                   "<base href=\"file:///tmp/My%20Drive/notes/\"/>"))))
+
+(ert-deftest markdown-mode-extras-test-base-element-without-file ()
+  "A buffer not visiting a file gets no base element."
+  (with-temp-buffer
+    (should (equal (markdown-mode-extras--base-element) ""))))
+
 ;;;; delete-link
 
 (ert-deftest markdown-mode-extras-test-delete-link-returns-name ()

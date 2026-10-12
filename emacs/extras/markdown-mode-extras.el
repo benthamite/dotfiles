@@ -29,6 +29,7 @@
 ;;; Code:
 
 (require 'markdown-mode)
+(require 'url-util)
 
 ;;;; Functions
 
@@ -122,6 +123,26 @@ See also `org-extras-paste-with-conversion'.  For the reverse process, use
             (set-marker end nil)
             (forward-line 1))
         (forward-line 1)))))
+
+;;;###autoload
+(defun markdown-mode-extras-preview ()
+  "Preview the current buffer in a browser with working relative paths.
+Like `markdown-preview', but add a base element pointing at the directory of
+the visited file, so that relative links and images resolve even though the
+preview is written to a temporary file."
+  (interactive)
+  (let ((markdown-xhtml-header-content
+         (concat markdown-xhtml-header-content
+                 (markdown-mode-extras--base-element))))
+    (markdown-preview)))
+
+(defun markdown-mode-extras--base-element ()
+  "Return a base element for the visited file's directory, or an empty string."
+  (if buffer-file-name
+      (format "<base href=\"%s\"/>"
+              (url-encode-url
+               (concat "file://" (file-name-directory buffer-file-name))))
+    ""))
 
 (provide 'markdown-mode-extras)
 ;;; markdown-mode-extras.el ends here

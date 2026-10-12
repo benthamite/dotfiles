@@ -101,6 +101,18 @@ replacement URL.  This is handy for updating broken or outdated links.
 The command uses ~markdown-mode-extras-delete-link~
 ([[#h:delete-link][Deleting a link]]) to remove the original link structure.
 
+** Preview with relative paths
+:PROPERTIES:
+:CUSTOM_ID: h:preview
+:END:
+
+#+findex: markdown-mode-extras-preview
+The command ~markdown-mode-extras-preview~ works like ~markdown-preview~,
+but adds a =<base>= element pointing at the directory of the visited
+file.  ~markdown-preview~ writes its HTML to a temporary file, so
+without the base element relative links and images in the document do
+not resolve.
+
 ** Table alignment
 :PROPERTIES:
 :CUSTOM_ID: h:table-alignment

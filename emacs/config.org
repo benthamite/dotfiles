@@ -7384,7 +7384,6 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
         ("s-f" . markdown-insert-footnote)
         ("s-i" . markdown-insert-italic)
         ("s-k" . markdown-insert-link)
-        ("s-p" . markdown-preview)
         :map markdown-mode-map
         ("s-a" . markdown-insert-gfm-code-block)
         ("s-z" . markdown-edit-code-block)
@@ -7398,8 +7397,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
         ("s-e" . markdown-insert-code)
         ("s-f" . markdown-insert-footnote)
         ("s-i" . markdown-insert-italic)
-        ("s-k" . markdown-insert-link)
-        ("s-p" . markdown-preview)))
+        ("s-k" . markdown-insert-link)))
 #+end_src
 
 ** =markdown-mode-extras=
@@ -7421,12 +7419,14 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
         ("s-r" . markdown-mode-extras-remove-url-in-link)
         ("s-v" . markdown-mode-extras-paste-with-conversion)
         ("H-s-v" . markdown-mode-extras-org-paste-dwim)
+        ("s-p" . markdown-mode-extras-preview)
         :map markdown-mode-map
         ("A-C-H-t" . markdown-mode-extras-copy-section)
         ("s-l" . markdown-mode-extras-insert-locator)
         ("s-r" . markdown-mode-extras-remove-url-in-link)
         ("s-v" . markdown-mode-extras-paste-with-conversion)
         ("H-s-v" . markdown-mode-extras-org-paste-dwim)
+        ("s-p" . markdown-mode-extras-preview)
         :map org-mode-map
         ("H-s-v" . markdown-mode-extras-org-paste-dwim)))
 #+end_src

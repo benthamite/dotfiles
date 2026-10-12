@@ -128,6 +128,12 @@ def _open_authenticated(request):
 #   "op"         -> 1Password: read <op_path>/xoxc_token and <op_path>/xoxd_token.
 #   "automation" -> item <item> of the personal 1Password Automation vault, with
 #                   fields <token_field> (xoxc) and <cookie_field> (xoxd).
+# Credentials are read through the broker's 24h cache (`cache read`): a bulk
+# job runs this script hundreds of times, and uncached reads exhausted the
+# personal account's ~1,000-requests-per-day quota on 2026-10-12 (secrets.md,
+# "Cached reads"). Exception: an item whose title contains "/" has no valid
+# op:// reference, so it is read uncached until it is referenced by ID
+# ("cached": False).
 WORKSPACES = {
     "epoch": {
         "domain": "epochai.slack.com",
@@ -139,6 +145,7 @@ WORKSPACES = {
         "item": "slack.com/altruismo-eficaz",
         "token_field": "token",
         "cookie_field": "cookie",
+        "cached": False,
     },
     "forethought": {
         "source": "automation",
@@ -168,12 +175,13 @@ def _broker_hint(stderr):
     return "no diagnostic output"
 
 
-def _op_read(path):
+def _op_read(path, cached=False):
     if not path.startswith("op://Automations/"):
         _fail("Slack browser-session credentials must use the Automations broker", 2)
+    verb = ["cache", "read"] if cached else ["read"]
     try:
         out = subprocess.run(
-            ["op-automations", "read", path], check=False, capture_output=True,
+            ["op-automations", *verb, path], check=False, capture_output=True,
             text=True, timeout=REQUEST_TIMEOUT,
         )
     except subprocess.TimeoutExpired:
@@ -191,13 +199,25 @@ def _op_read(path):
     return value
 
 
-def _automation_field(item, field):
-    """Return FIELD of ITEM in the personal 1Password Automation vault."""
+def _automation_ref(item, field):
+    return f"op://Automation/{item}/{field}"
+
+
+def _automation_field(item, field, cached=True):
+    """Return FIELD of ITEM in the personal 1Password Automation vault.
+
+    With CACHED, read through the broker's 24h cache; otherwise use an uncached
+    `item get`, for items that have no valid op:// reference.
+    """
+    if cached:
+        command = ["op-automations", "@personal", "cache", "read",
+                   _automation_ref(item, field)]
+    else:
+        command = ["op-automations", "@personal", "item", "get", item, "--vault",
+                   "Automation", "--fields", f"label={field}", "--reveal"]
     try:
         out = subprocess.run(
-            ["op-automations", "@personal", "item", "get", item, "--vault", "Automation",
-             "--fields", f"label={field}", "--reveal"],
-            check=False, capture_output=True, text=True, timeout=REQUEST_TIMEOUT,
+            command, check=False, capture_output=True, text=True, timeout=REQUEST_TIMEOUT,
         )
     except (OSError, UnicodeError, subprocess.TimeoutExpired):
         _fail("personal Slack credential lookup failed")
@@ -226,11 +246,12 @@ def _tokens():
             )
             sys.exit(2)
         if ws["source"] == "op":
-            xoxc = _op_read(f"{ws['op_path']}/xoxc_token")
-            xoxd = _op_read(f"{ws['op_path']}/xoxd_token")
+            xoxc = _op_read(f"{ws['op_path']}/xoxc_token", cached=True)
+            xoxd = _op_read(f"{ws['op_path']}/xoxd_token", cached=True)
         elif ws["source"] == "automation":
-            xoxc = _automation_field(ws["item"], ws["token_field"])
-            xoxd = _automation_field(ws["item"], ws["cookie_field"])
+            cached = ws.get("cached", True)
+            xoxc = _automation_field(ws["item"], ws["token_field"], cached)
+            xoxd = _automation_field(ws["item"], ws["cookie_field"], cached)
         else:
             sys.stderr.write(
                 f"ERROR: workspace '{_workspace}' has invalid source '{ws['source']}'\n"
@@ -244,6 +265,35 @@ def _tokens():
     return _xoxc, _xoxd
 
 
+def _forget_tokens():
+    """Drop this workspace's cached credentials; return whether any were cached."""
+    global _xoxc, _xoxd, _token_workspace
+    cached = _cached_refs(WORKSPACES[_workspace])
+    _xoxc = _xoxd = _token_workspace = None
+    if cached is None:
+        return False
+    selector, refs = cached
+    for ref in refs:
+        try:
+            subprocess.run(
+                ["op-automations", *selector, "cache", "forget", ref], check=False,
+                capture_output=True, text=True, timeout=REQUEST_TIMEOUT,
+            )
+        except (OSError, UnicodeError, subprocess.TimeoutExpired):
+            _fail("Slack credential cache could not be cleared")
+    return True
+
+
+def _cached_refs(ws):
+    """Return the account selector and references of WS's cached credentials."""
+    if ws["source"] == "op":
+        return [], [f"{ws['op_path']}/xoxc_token", f"{ws['op_path']}/xoxd_token"]
+    if ws["source"] == "automation" and ws.get("cached", True):
+        return ["@personal"], [_automation_ref(ws["item"], ws["token_field"]),
+                               _automation_ref(ws["item"], ws["cookie_field"])]
+    return None
+
+
 def _api_url(method):
     """Validate the exact API destination before acquiring credentials."""
     if not isinstance(method, str) or not _METHOD_RE.fullmatch(method):
@@ -255,8 +305,19 @@ def _api_url(method):
     return url
 
 
-def _post_form(url, params, headers):
-    """Make one authenticated request and return only a successful JSON object."""
+class _AuthRejected(Exception):
+    """Slack rejected the session credentials themselves."""
+
+
+_AUTH_ERRORS = frozenset({"not_authed", "invalid_auth", "token_revoked"})
+
+
+def _post_form(url, params, headers, raise_on_auth=False):
+    """Make one authenticated request and return only a successful JSON object.
+
+    With RAISE_ON_AUTH, a credential rejection raises `_AuthRejected` instead of
+    exiting, so the caller can refresh cached credentials once.
+    """
     body = urllib.parse.urlencode({k: v for k, v in params.items() if v is not None}).encode()
     req = urllib.request.Request(
         url,
@@ -276,6 +337,8 @@ def _post_form(url, params, headers):
         _fail("Slack returned an invalid response object")
     if data.get("ok") is not True:
         error = data.get("error")
+        if raise_on_auth and error in _AUTH_ERRORS:
+            raise _AuthRejected(error)
         suffix = f": {error}" if isinstance(error, str) and error in _SAFE_API_ERRORS else ""
         _fail(f"Slack API rejected the request{suffix}")
     return data
@@ -284,10 +347,18 @@ def _post_form(url, params, headers):
 def call(method, **params):
     """POST to slack.com/api/<method> using the selected browser-session user."""
     url = _api_url(method)
+    try:
+        return _post_form(url, params, _session_headers(), raise_on_auth=True)
+    except _AuthRejected as rejected:
+        # A rotated session leaves the cached copy stale: refresh it once.
+        if not _forget_tokens():
+            _fail(f"Slack API rejected the request: {rejected}")
+        return _post_form(url, params, _session_headers())
+
+
+def _session_headers():
     xoxc, xoxd = _tokens()
-    return _post_form(url, params, {
-        "Authorization": f"Bearer {xoxc}", "Cookie": f"d={xoxd}",
-    })
+    return {"Authorization": f"Bearer {xoxc}", "Cookie": f"d={xoxd}"}
 
 
 def call_notifier(method, **params):

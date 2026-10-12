@@ -74,7 +74,7 @@ class SlackTests(OfflineCase):
 
     def test_epoch_uses_only_broker(self):
         def broker(argv, **kw):
-            self.assertEqual(argv[:2], ["op-automations", "read"])
+            self.assertEqual(argv[:3], ["op-automations", "cache", "read"])
             self.assertEqual(kw["timeout"], 30)
             return subprocess.CompletedProcess(argv, 0, MARKER, "")
         with mock.patch.object(SLACK.subprocess, "run", side_effect=broker) as run:
@@ -93,9 +93,39 @@ class SlackTests(OfflineCase):
         with mock.patch.object(SLACK, "_op_read", return_value="epoch-token"):
             SLACK._tokens()
         SLACK._workspace = "altruismo-eficaz"
-        with mock.patch.object(SLACK, "_automation_field", side_effect=lambda item, field: "personal-" + field) as read:
+        with mock.patch.object(SLACK, "_automation_field", side_effect=lambda item, field, cached: "personal-" + field) as read:
             self.assertEqual(SLACK._tokens(), ("personal-token", "personal-cookie"))
-            self.assertEqual(read.call_args_list, [mock.call("slack.com/altruismo-eficaz", "token"), mock.call("slack.com/altruismo-eficaz", "cookie")])
+            self.assertEqual(read.call_args_list, [mock.call("slack.com/altruismo-eficaz", "token", False), mock.call("slack.com/altruismo-eficaz", "cookie", False)])
+
+    def test_forethought_reads_through_the_broker_cache(self):
+        SLACK._workspace = "forethought"
+        def broker(argv, **kw):
+            self.assertEqual(argv[:4], ["op-automations", "@personal", "cache", "read"])
+            self.assertIn(argv[4], ["op://Automation/slack-forethought/token", "op://Automation/slack-forethought/cookie"])
+            return subprocess.CompletedProcess(argv, 0, MARKER, "")
+        with mock.patch.object(SLACK.subprocess, "run", side_effect=broker) as run:
+            self.assertEqual(SLACK._tokens(), (MARKER, MARKER))
+            self.assertEqual(run.call_count, 2)
+
+    def test_auth_rejection_forgets_cache_and_retries_once(self):
+        SLACK._workspace = "forethought"
+        commands = []
+        def broker(argv, **kw):
+            commands.append(argv[2:4])
+            return subprocess.CompletedProcess(argv, 0, MARKER, "")
+        bodies = [b'{"ok":false,"error":"invalid_auth"}', b'{"ok":true,"user":"U1"}']
+        with mock.patch.object(SLACK.subprocess, "run", side_effect=broker), \
+                mock.patch.object(SLACK, "_open_authenticated", side_effect=lambda req: Response(bodies.pop(0))):
+            self.assertEqual(SLACK.call("auth.test")["user"], "U1")
+        self.assertEqual(commands, [["cache", "read"]] * 2 + [["cache", "forget"]] * 2 + [["cache", "read"]] * 2)
+
+    def test_second_auth_rejection_fails_without_another_retry(self):
+        SLACK._workspace = "forethought"
+        with mock.patch.object(SLACK.subprocess, "run", side_effect=lambda argv, **kw: subprocess.CompletedProcess(argv, 0, MARKER, "")) as run, \
+                mock.patch.object(SLACK, "_open_authenticated", side_effect=lambda req: Response(b'{"ok":false,"error":"invalid_auth"}')):
+            message = self.failure(lambda: SLACK.call("auth.test"))
+        self.assertIn("invalid_auth", message)
+        self.assertEqual(run.call_count, 6)
 
     def test_invalid_methods_fail_before_credentials(self):
         with mock.patch.object(SLACK, "_tokens", side_effect=tripwire):

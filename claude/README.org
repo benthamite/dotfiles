@@ -1266,6 +1266,14 @@ other text there is never replaced. Its JSON status distinguishes =refused=
 =reason= when the failure is one of its own messages. Other Emacs error text is
 withheld because it could quote the composer.
 
+=bin/slack.py= reads each workspace's session credentials through
+=op-automations cache read=, so an agent that runs it hundreds of times spends
+two 1Password requests a day rather than two per call. If Slack rejects a
+cached credential (=invalid_auth=, =not_authed=, =token_revoked=), it runs
+=cache forget= and retries once. The =altruismo-eficaz= item's title contains
+"/", which no =op://= reference can express, so that workspace still reads
+uncached until the item is referenced by ID.
+
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged
 index entries, so a live Emacs never loads tests or a partially resolved tree.

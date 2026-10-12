@@ -7359,7 +7359,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
   :ensure nil ; Queued as a dependency before this configuration block.
   :custom
   (markdown-fontify-code-blocks-natively t)
-  (markdown-command "pandoc --from markdown --to html")
+  (markdown-command "pandoc --from gfm+yaml_metadata_block --to html")
   (markdown-disable-tooltip-prompt t)
   (markdown-italic-underscore t)
 

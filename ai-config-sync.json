@@ -151,13 +151,6 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
-      "name": "handoff",
-      "claude": "claude/skills/handoff/SKILL.md",
-      "codex": "codex/skills/handoff/SKILL.md",
-      "status": "tool-specific-divergence",
-      "note": "Claude and Codex handoff skills intentionally differ because their Emacs handoff commands read different temp files and have different command names."
-    },
-    {
       "name": "humanize",
       "claude": "claude/skills/humanize/SKILL.md",
       "codex": "codex/skills/humanize/SKILL.md",
@@ -175,20 +168,6 @@
       "name": "lint-elisp",
       "claude": "claude/skills/lint-elisp/SKILL.md",
       "codex": "codex/skills/lint-elisp/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "live-session-status",
-      "claude": "claude/skills/live-session-status/SKILL.md",
-      "codex": "codex/skills/live-session-status/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "message-agent-session",
-      "claude": "claude/skills/message-agent-session/SKILL.md",
-      "codex": "codex/skills/message-agent-session/SKILL.md",
       "status": "paired",
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },

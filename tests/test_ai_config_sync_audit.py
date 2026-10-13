@@ -1334,6 +1334,17 @@ for name in subprocess.check_output(["git", "ls-files", "-z"], cwd=root).decode(
 
         self.assertEqual([], problems)
 
+    def test_linked_skill_directories_are_not_owned(self):
+        root = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: shutil.rmtree(root, ignore_errors=True))
+        skills = root / "repo" / "claude" / "skills"
+        for directory in (skills / "own", root / "package" / "linked"):
+            directory.mkdir(parents=True)
+            (directory / "SKILL.md").write_text("---\nname: x\n---\n")
+        (skills / "linked").symlink_to(root / "package" / "linked")
+
+        self.assertEqual(self.module.owned_skill_names(skills), {"own"})
+
     def test_stale_skill_override_without_record_is_reported(self):
         home = Path(tempfile.mkdtemp())
         self.addCleanup(lambda: __import__("shutil").rmtree(home, ignore_errors=True))

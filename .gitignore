@@ -43,6 +43,13 @@ codex/skills/*/node_modules
 claude/bin/__pycache__
 lib/python/__pycache__
 claude/skills/*/scripts/__pycache__
+# Linked from the agent package by M-x agent-setup.
+claude/skills/handoff
+claude/skills/live-session-status
+claude/skills/message-agent-session
+codex/skills/handoff
+codex/skills/live-session-status
+codex/skills/message-agent-session
 codex/skills/*/scripts/__pycache__
 bin/__pycache__
 claude/hooks/__pycache__

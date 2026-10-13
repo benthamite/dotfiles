@@ -9608,6 +9608,10 @@ BACKEND is `claude' or `codex'.  Each entry becomes (NAME :home HOME), with
   (agent-claude-accounts (pablo/agent-accounts 'claude))
   (agent-claude-settings-package-directory
    "~/.config/emacs-profiles/active/elpaca/sources/agent/")
+  ;; The same alias for the skills agent-setup links, so the links
+  ;; outlive a change of profile.
+  (agent-setup-package-directory
+   "~/.config/emacs-profiles/active/elpaca/sources/agent/")
 
   (agent-codex-accounts (pablo/agent-accounts 'codex))
   ;; Each organization's directories always run under its own account,

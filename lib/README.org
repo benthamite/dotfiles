@@ -27,11 +27,13 @@ Python modules loaded by resolved file path from more than one consumer.
 - =paper_fetch_cli.py= — command entry point for =bin/paper-fetch=, using the
   dedicated outside-Drive runtime pinned by =paper-fetch-requirements.txt=.
   [[file:../docs/book-acquisition.md][The acquisition contract]] documents book commands, manifests and statuses.
-- =agent_session_lib.py= — single-actor Emacs =agent.el= session primitives
-  (guarded prompt delivery, marker-in-transcript delivery acknowledgment, marker-gated
-  transcript reads, buffer lifecycle inspection). Consumed by the paired
+- =agent_session_lib.py= — loader for the single-actor Emacs =agent.el= session
+  primitives (guarded prompt delivery, marker-in-transcript delivery acknowledgment,
+  marker-gated transcript reads, buffer lifecycle inspection). The library itself
+  ships with the =agent= package, in =lib/python/= of its checkout, and is tested
+  there; this file runs that copy in its own namespace. Consumed by the paired
   =orchestrate-review= and =request-review= skill helpers on both
-  the Claude and Codex sides; tested by =tests/test_agent_session_lib.py=.
+  the Claude and Codex sides.
   Emacs IPC has a 15-second client timeout. A timeout leaves delivery ambiguous,
   not failed; pending submissions remain available for receipt reconciliation.
   Manual delivered reconciliation requires the marker-bearing user message,

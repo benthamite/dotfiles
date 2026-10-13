@@ -463,17 +463,12 @@ Native =[[skills.config]]= entries can disable a tracked skill without deleting
 it. Programmatic skills remain outside ordinary interactive discovery and are
 invoked explicitly by the runner.
 
-The =message-agent-session= skill sends a short message to another live
-agent.el session in Emacs through =bin/agent-send=. The tool prepends a fixed
-disclosure header, refuses self-sends and ambiguous targets, never resends, and
-reports delivery only when the recipient's transcript records the message.
-Sessions outside Emacs agent.el are unreachable.
+The =handoff=, =live-session-status= and =message-agent-session= skills ship
+with the =agent= Emacs package, in =etc/skills/= of its checkout, and are not
+tracked here. =M-x agent-setup= links them into this directory's =skills/=;
+the links are ignored by Git. =bin/agent-send= runs the package's tool of the
+same name.
 
-The =live-session-status= skill reports what a live peer Claude or Codex
-session is doing from its local transcript instead of calling the session
-opaque. Its read-only =session_tail.py= helper prints the last user and
-assistant text messages of a Claude JSONL transcript or Codex rollout, or of
-the newest one for a project directory.
 
 The =org-note-conventions= skill applies only to personal notes. It distinguishes
 root-backed and rootless heading layouts, preserves established structure, and
@@ -758,11 +753,6 @@ functional markup. It uses style heuristics rather than authorship tests or
 word quotas, keeps functional URL parameters, and does not delete unverified
 citations. Inline edits and read-only reviews do not imply file or public writes.
 Calling workflows invoke it explicitly; it is no longer a =wikipedia-article= phase.
-
-The =handoff= skill separates drafting, saving and user-triggered replacement.
-It saves private per-session artifacts without later overwrites, preserves shared slots,
-and requires exact source/artifact checks and a one-invocation file binding
-before preparing a consumer command. Source inspection is not live readiness.
 
 The =google-sheets-comments= skill — disabled, see =skills-disabled.json= —
 binds account/file/thread/reply identity, uses current API evidence rather than

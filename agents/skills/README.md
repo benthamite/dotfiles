@@ -68,7 +68,6 @@ publication process reviews the outgoing history and tree before a push.
 | `end-to-end` | Verify a software acceptance criterion through the decisive live surface. | [Source](../../claude/skills/end-to-end/SKILL.md) | [Source](../../codex/skills/end-to-end/SKILL.md) |
 | `fix-drive-errors` | Diagnose and repair Google Drive desktop sync errors. | [Source](../../claude/skills/fix-drive-errors/SKILL.md) | [Source](../../codex/skills/fix-drive-errors/SKILL.md) |
 | `generate-readme` | Generate a GitHub-facing Emacs package README from its Org manual. | [Source](../../claude/skills/generate-readme/SKILL.md) | [Source](../../codex/skills/generate-readme/SKILL.md) |
-| `handoff` | Prepare a faithful next-session prompt for the Emacs agent-handoff consumer. | [Source](../../claude/skills/handoff/SKILL.md) | [Source](../../codex/skills/handoff/SKILL.md) |
 | `humanize` | Rewrite formulaic English prose while preserving meaning and voice. | [Source](../../claude/skills/humanize/SKILL.md) | [Source](../../codex/skills/humanize/SKILL.md) |
 | `interpretability-audit` | Review code for intent transparency and likely reader misunderstandings. | [Source](../../claude/skills/interpretability-audit/SKILL.md) | [Source](../../codex/skills/interpretability-audit/SKILL.md) |
 | `lint-elisp` | Diagnose and fix Elisp byte-compilation and checkdoc findings. | [Source](../../claude/skills/lint-elisp/SKILL.md) | [Source](../../codex/skills/lint-elisp/SKILL.md) |

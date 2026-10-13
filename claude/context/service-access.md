@@ -10,7 +10,7 @@ browser automation; each already carries the right account and auth.
 | Gmail | `claude/bin/gmail.py` |
 | Google Sheets | `claude/bin/sheets.py` |
 | Slack | `claude/bin/slack.py` |
-| Google Calendar | `gcalcli-epoch` (canonical Epoch OAuth grant; shared personal calendars) |
+| Google Calendar | `gcalcli-epoch` (canonical Epoch OAuth grant). Reads the Epoch, personal and Forethought calendars together; scope to one with `--calendar`, e.g. `--calendar 'pablo@forethought.org'` |
 | Google Docs / Drive | `gdoc` (before changing a doc, read `google-services.md`, "Editing Google Docs"; comments vs. suggestions: same file, "Reading comments and suggestions") |
 | GitHub | `gh` |
 | Signal (read-only) | `bin/sgn-read` |

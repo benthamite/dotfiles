@@ -54,6 +54,28 @@ the "Already tried" list in place.
 
 * Incidents
 
+** 2026-10-12 23:19 → 10-13: agent.el status-query loop (diagnosed)
+
+- Server unanswered from 23:19, refused from 00:47 (listen backlog full);
+  Emacs 24375 at 100% CPU throughout. Not memory: swap 17 GB, load ~11.
+- 08:49 stacks: ~500+ nested =kill-buffer= → =delete-process= →
+  =status_notify= → sentinel → =kill-buffer= frames (sampler truncates the
+  root), with =claude-code--find-all-claude-buffers= and
+  =generate-new-buffer-name= as leaf work. Emacs spawns a =claude= child
+  about once a second; open pipes swing between ~340 and ~1300.
+- Source: =agent-claude--query-agents-status= / =--finish-agents-query=
+  (agent.el =2af0543=, 2026-10-11). The sentinel kills the query's buffers,
+  and that runs other exited queries' sentinels inside it; it also starts the
+  rerun query from inside the sentinel. Inferred: a self-feeding nesting loop.
+- 00:53 stacks: a timer's =make-process= (the scheduled query) signalled a
+  file error, =debug-on-error= opened a debugger, and timers inside it
+  repeated the failure. =get-process= scanned a huge process list and
+  =generate-new-buffer-name= a huge buffer list, so query buffers and
+  processes were leaking. The exact errno was not captured; fd exhaustion
+  is a guess.
+- The 10-11/10-12 outages started the day this code landed; the earlier
+  ones (10-06 to 10-10) predate it and have other causes.
+
 ** 2026-10-10: Google Drive memory (investigation, no change)
 
 - The main "Google Drive" child process holds it: 22 GB footprint, 22.3 GB

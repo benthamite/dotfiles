@@ -396,6 +396,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#agent-shell][agent-shell]]
   - [[#claude-code][claude-code]]
   - [[#agent][agent]]
+  - [[#agent-extras][agent-extras]]
   - [[#agent-log][agent-log]]
   - [[#monet][monet]]
   - [[#codex][codex]]
@@ -9629,6 +9630,19 @@ BACKEND is `claude' or `codex'.  Each entry becomes (NAME :home HOME), with
   (with-eval-after-load 'debug
     (bind-keys :map debugger-mode-map
                ("D" . agent-debug-backtrace))))
+#+end_src
+
+** =agent-extras=
+:PROPERTIES:
+:ID:       0FF0C3D4-E562-47CD-B973-7264EF0F5CFF
+:END:
+
+/[[file:extras/agent-extras.el][agent-extras]] collects my extensions for =agent=: the commands that depend on my own skills./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-personal-package agent-extras
+  :after agent
+  :demand t)
 #+end_src
 
 

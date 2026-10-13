@@ -1,0 +1,114 @@
+#+title: agent-extras: Extensions for agent
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: agent-extras.info
+#+texinfo_filename: agent-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Agent Extras: (agent-extras)
+#+texinfo_dir_desc: Extensions for agent
+
+This manual describes the features and customization options for the Emacs Lisp file =agent-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=agent-extras.el= extends the =agent= package with commands that depend on
+my own skills, and so do not belong in a package other people install:
+
+- A project audit that runs several audit skills in sequence
+  ([[#h:project-audit][Project audit]]).
+- The post-push CI closeout ([[#h:post-push-ci][Post-push CI]]).
+- A read-only view of =orchestrate-review= runs
+  ([[#h:orchestration-run-view][Orchestration run view]]).
+
+#+findex: agent-extras-add-menu-entries
+Loading the file calls ~agent-extras-add-menu-entries~, which adds the three
+commands to the Tools column of ~agent-menu~ after "run skill": audit project
+(=t a=), post-push CI (=t c=) and orchestration run (=t o=). Calling it again
+adds nothing.
+
+* Project audit
+:PROPERTIES:
+:CUSTOM_ID: h:project-audit
+:END:
+
+#+findex: agent-extras-audit-project
+#+vindex: agent-extras-audit-skills
+#+vindex: agent-extras-audit-project-directories
+The command ~agent-extras-audit-project~ prompts for a backend and a project
+directory, then runs each skill in ~agent-extras-audit-skills~ with =--accept=
+through the backend's non-interactive prompt runner. It commits the changes
+after each skill that succeeds, and shows the results in the
+=*Agent audit results*= buffer when the last one finishes. It refuses to start
+when the directory has uncommitted changes, since the automatic commits would
+include them.
+
+~agent-extras-audit-project-directories~ holds the directories offered at the
+prompt. A directory typed at the prompt is saved to it.
+
+* Post-push CI
+:PROPERTIES:
+:CUSTOM_ID: h:post-push-ci
+:END:
+
+#+findex: agent-extras-post-push-ci
+The command ~agent-extras-post-push-ci~ runs the =post-push-ci= skill through
+the selected backend with =--no-push --commit HEAD=. Use it after a push has
+already happened and you want an agent to inspect GitHub Actions failures, fix
+the root cause, and continue the authorized CI closeout loop.
+
+* Orchestration run view
+:PROPERTIES:
+:CUSTOM_ID: h:orchestration-run-view
+:END:
+
+#+findex: agent-extras-run-open
+#+findex: agent-extras-run-mode
+The command ~agent-extras-run-open~ opens an =orchestrate-review= run JSON file
+in a read-only ~agent-extras-run-mode~ buffer. Select the private run file
+created by the skill; the command remembers opened filenames for the current
+Emacs session and does not scan temporary directories. Each run has its own
+view.
+
+The view shows the recorded stage, phase, status, author and reviewer, and
+the latest stage-level progress with the progress file's age. Pending delivery
+reconciliation and a recorded incomplete return appear as attention items.
+Old progress does not establish that an actor stopped. A returned implementation
+is distinct from a completed run; the helper still owns verification evidence
+and completion. This view does not validate the full workflow contract.
+
+Session links recheck the recorded native identity before opening a buffer.
+An unavailable or replaced session is labeled unavailable. Legacy version-2
+runs remain readable, but actors without recorded identities cannot be linked.
+File links open the run record, progress file, run directory, or repository.
+The run format does not record ordinary spec/plan paths or blocker descriptions;
+the view says so rather than looking through conversations to infer them.
+
+Visible views refresh every five seconds; =g= refreshes immediately and =q=
+quits the window. Killing a view cancels its refresh timer. A read failure
+replaces the display with an explicit error, so stale data cannot appear current.
+Only local files are supported. Run reads are limited to 4 MiB, and progress
+reads to the final 16 KiB. The view never submits prompts, advances phases,
+reads transcripts, inspects internal tasks, or starts workers.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

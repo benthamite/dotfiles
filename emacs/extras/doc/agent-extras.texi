@@ -1,0 +1,147 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename agent-extras.info
+@settitle agent-extras: Extensions for agent
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Agent Extras: (agent-extras). Extensions for agent.
+@end direntry
+
+@finalout
+@titlepage
+@title agent-extras: Extensions for agent
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top agent-extras: Extensions for agent
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{agent-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Project audit::
+* Post-push CI::
+* Orchestration run view::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{agent-extras.el} extends the @samp{agent} package with commands that depend on
+my own skills, and so do not belong in a package other people install:
+
+@itemize
+@item
+A project audit that runs several audit skills in sequence
+(@ref{Project audit}).
+@item
+The post-push CI closeout (@ref{Post-push CI}).
+@item
+A read-only view of @samp{orchestrate-review} runs
+(@ref{Orchestration run view}).
+@end itemize
+
+@findex agent-extras-add-menu-entries
+Loading the file calls @code{agent-extras-add-menu-entries}, which adds the three
+commands to the Tools column of @code{agent-menu} after ``run skill'': audit project
+(@samp{t a}), post-push CI (@samp{t c}) and orchestration run (@samp{t o}). Calling it again
+adds nothing.
+
+@node Project audit
+@chapter Project audit
+
+@findex agent-extras-audit-project
+@vindex agent-extras-audit-skills
+@vindex agent-extras-audit-project-directories
+The command @code{agent-extras-audit-project} prompts for a backend and a project
+directory, then runs each skill in @code{agent-extras-audit-skills} with @samp{--accept}
+through the backend's non-interactive prompt runner. It commits the changes
+after each skill that succeeds, and shows the results in the
+@samp{*Agent audit results*} buffer when the last one finishes. It refuses to start
+when the directory has uncommitted changes, since the automatic commits would
+include them.
+
+@code{agent-extras-audit-project-directories} holds the directories offered at the
+prompt. A directory typed at the prompt is saved to it.
+
+@node Post-push CI
+@chapter Post-push CI
+
+@findex agent-extras-post-push-ci
+The command @code{agent-extras-post-push-ci} runs the @samp{post-push-ci} skill through
+the selected backend with @samp{--no-push --commit HEAD}. Use it after a push has
+already happened and you want an agent to inspect GitHub Actions failures, fix
+the root cause, and continue the authorized CI closeout loop.
+
+@node Orchestration run view
+@chapter Orchestration run view
+
+@findex agent-extras-run-open
+@findex agent-extras-run-mode
+The command @code{agent-extras-run-open} opens an @samp{orchestrate-review} run JSON file
+in a read-only @code{agent-extras-run-mode} buffer. Select the private run file
+created by the skill; the command remembers opened filenames for the current
+Emacs session and does not scan temporary directories. Each run has its own
+view.
+
+The view shows the recorded stage, phase, status, author and reviewer, and
+the latest stage-level progress with the progress file's age. Pending delivery
+reconciliation and a recorded incomplete return appear as attention items.
+Old progress does not establish that an actor stopped. A returned implementation
+is distinct from a completed run; the helper still owns verification evidence
+and completion. This view does not validate the full workflow contract.
+
+Session links recheck the recorded native identity before opening a buffer.
+An unavailable or replaced session is labeled unavailable. Legacy version-2
+runs remain readable, but actors without recorded identities cannot be linked.
+File links open the run record, progress file, run directory, or repository.
+The run format does not record ordinary spec/plan paths or blocker descriptions;
+the view says so rather than looking through conversations to infer them.
+
+Visible views refresh every five seconds; @samp{g} refreshes immediately and @samp{q}
+quits the window. Killing a view cancels its refresh timer. A read failure
+replaces the display with an explicit error, so stale data cannot appear current.
+Only local files are supported. Run reads are limited to 4 MiB, and progress
+reads to the final 16 KiB@. The view never submits prompts, advances phases,
+reads transcripts, inspects internal tasks, or starts workers.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

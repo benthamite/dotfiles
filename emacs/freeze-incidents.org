@@ -36,6 +36,8 @@ the "Already tried" list in place.
   the existing 5.5 GB =bzfileids.dat=.
 - =gcmh-low-cons-threshold= raised to 128 MB (2026-10-07, =351180ef6=):
   outages continued (30 on 10-10).
+- SIGUSR2 against a sentinel loop (2026-10-13): breaks the chain only
+  briefly while the code that feeds it stays loaded.
 - =emacsk= repeatedly: stacks nested debuggers and leaves =debug-on-quit= on
   (2026-10-06). Press it once.
 
@@ -73,6 +75,13 @@ the "Already tried" list in place.
   =generate-new-buffer-name= a huge buffer list, so query buffers and
   processes were leaking. The exact errno was not captured; fd exhaustion
   is a guess.
+- Recovery: SIGUSR2 at 09:54 unwound the chain into nested debuggers
+  (timer =make-process= failing to create a pipe), but the server stayed
+  unanswered and the loop resumed within 4 min. SIGTERM was approved;
+  the agent's permission classifier blocked it, so it was handed to Pablo.
+- Fix: agent.el finishes queries from a timer, never inside the sentinel;
+  an exited but unstored query blocks duplicates; a query that cannot start
+  becomes an error result (3 regression tests fail before, pass after).
 - The 10-11/10-12 outages started the day this code landed; the earlier
   ones (10-06 to 10-10) predate it and have other causes.
 

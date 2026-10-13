@@ -56,7 +56,7 @@ the "Already tried" list in place.
 
 * Incidents
 
-** 2026-10-12 23:19 → 10-13: agent.el status-query loop (diagnosed)
+** 2026-10-12 23:19 → 10-13: agent.el status-query loop (fixed in agent =5bb959a=)
 
 - Server unanswered from 23:19, refused from 00:47 (listen backlog full);
   Emacs 24375 at 100% CPU throughout. Not memory: swap 17 GB, load ~11.
@@ -82,6 +82,10 @@ the "Already tried" list in place.
 - Fix: agent.el finishes queries from a timer, never inside the sentinel;
   an exited but unstored query blocks duplicates; a query that cannot start
   becomes an error result (3 regression tests fail before, pass after).
+  Committed and pushed as agent =5bb959a= on 2026-10-13 by a later
+  session, the diagnosing one having ended with the frozen Emacs. Checked
+  live: a query that cannot start stores an error and leaks no buffer.
+  The nesting loop itself was not reproduced live.
 - The 10-11/10-12 outages started the day this code landed; the earlier
   ones (10-06 to 10-10) predate it and have other causes.
 

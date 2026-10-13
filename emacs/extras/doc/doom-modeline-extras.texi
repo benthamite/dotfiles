@@ -31,7 +31,6 @@ This manual describes the features and customization options for the Emacs Lisp 
 * Overview::
 * User options::
 * Modeline segments::
-* Modeline definitions::
 * Functions::
 * Indices::
 
@@ -44,7 +43,6 @@ User options
 
 Modeline segments
 
-* AI session status::
 * Tlon segments::
 * Org Roam backlinks::
 * AI context::
@@ -66,17 +64,14 @@ Indices
 @chapter Overview
 
 @samp{doom-modeline-extras.el} extends the @samp{doom-modeline} package with
-custom modeline segments, a dedicated modeline layout for Claude Code
-sessions, and enhanced handling of GitHub notifications.
+custom modeline segments and enhanced handling of GitHub notifications.
+The modeline of agent session buffers is defined by the @samp{agent} package
+itself, in @samp{agent-doom-modeline.el}.
 
 The package defines several modeline segments that surface contextual
 information not provided by the standard @samp{doom-modeline} segments:
 
 @itemize
-@item
-An @strong{AI session status} segment that displays the session name, model,
-effort, account and the status the agent last published, for Claude
-Code and Codex sessions.
 @item
 An @strong{AI context} segment showing how many files are currently in the
 @samp{gptel} context.
@@ -107,7 +102,6 @@ GitHub notifications arrive.
 @vindex doom-modeline-extras-org-roam
 @vindex doom-modeline-extras-tlon-split
 @vindex doom-modeline-extras-ai-context
-@vindex doom-modeline-extras-claude-code
 The user option @code{doom-modeline-extras-org-roam} controls whether the Org
 Roam backlink count segment is displayed.  When non-@code{nil} (the default),
 the backlink count appears in the modeline while visiting an Org mode
@@ -123,10 +117,6 @@ AI context file count is displayed.  The default value is @code{t}.  When
 non-@code{nil} and there are files in the @code{gptel-context--alist}, the count
 appears as a sparkle icon with a number.
 
-The user option @code{doom-modeline-extras-claude-code} controls whether the
-AI session status segment is displayed in agent session buffers.  The
-default value is @code{t}.
-
 @node Modeline segments
 @chapter Modeline segments
 
@@ -135,49 +125,10 @@ The segments described below are defined using
 layouts.
 
 @menu
-* AI session status::
 * Tlon segments::
 * Org Roam backlinks::
 * AI context::
 @end menu
-
-@node AI session status
-@section AI session status
-
-@findex doom-modeline-extras--format-state-summary
-The @code{ai-session-status} segment activates in buffers that @samp{agent}
-recognizes as agent sessions (via @code{agent--detect-backend}).  The
-@code{ai-session} modeline, which @samp{agent-claude} and @samp{agent-codex} set in
-their session buffers, consists of this segment followed by the usual
-right-hand segments.  It displays these pipe-separated fields:
-
-@itemize
-@item
-@strong{Backend icon}: the registered backend's icon, rendered via
-@code{agent-backend-icon-string} from the @samp{agent} package.
-@item
-@strong{Session name}: shown in bold.  Hovering shows the backend's label
-(resolved via @code{agent-backend} and @code{agent-backend-label}), e.g.
-``Claude Code session''.
-@item
-@strong{Model}: the model in use.
-@item
-@strong{Effort}: the reasoning effort level (e.g., ``high'').  For Codex, the
-live buffer override comes first, falling back to the account's
-@samp{config.toml}.
-@item
-@strong{Account}: the account used for this session, read via
-@code{agent-session} and @code{agent-session-account}.
-@item
-@strong{Status}: the status the session's agent last published with
-@code{agent-session-set-status}, as returned by
-@code{agent-session-state-summary}.  This is the same text as the last
-column of the session switcher.  A status published before the latest
-prompt keeps the face @code{agent-session-stale-status}.
-@end itemize
-
-Before Claude status data arrives, a Claude session shows no model,
-effort or account.
 
 @node Tlon segments
 @section Tlon segments
@@ -207,15 +158,6 @@ The @code{ai-context} segment displays the number of files currently in the
 @samp{gptel} AI context list (@code{gptel-context--alist}).  It appears only when
 @code{doom-modeline-extras-ai-context} is non-@code{nil} and the context is
 non-empty.
-
-@node Modeline definitions
-@chapter Modeline definitions
-
-The package defines an @code{ai-session} modeline layout using
-@code{doom-modeline-def-modeline}.  This layout places the @code{ai-session-status}
-segment on the left side (alongside the bar segment) and @code{misc-info},
-@code{major-mode}, @code{process}, and @code{time} on the right.  It is used in agent
-session buffers.
 
 @node Functions
 @chapter Functions

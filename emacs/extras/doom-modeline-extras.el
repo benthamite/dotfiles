@@ -77,11 +77,6 @@
   :type 'boolean
   :group 'doom-modeline)
 
-(defcustom doom-modeline-extras-claude-code t
-  "Whether to display Claude Code status in the modeline."
-  :type 'boolean
-  :group 'doom-modeline)
-
 ;;;; Functions
 
 ;;;;; Modeline segments
@@ -123,102 +118,6 @@
       (concat (doom-modeline-spc)
               (format "✨(%s)" count)))))
   
-;;;;;; AI session status
-
-(declare-function agent--detect-backend "agents")
-(declare-function agent-backend "agent")
-(declare-function agent-backend-label "agent")
-(declare-function agent-backend-icon-string "agents")
-(declare-function agent-display-name "agents")
-(declare-function agent-session "agent")
-(declare-function agent-session-account "agent")
-(declare-function agent-session-state-summary "agent")
-(declare-function agent-claude-status-model "agent-claude")
-(declare-function agent-claude-status-effort "agent-claude")
-(declare-function agent-codex-status-model "agent-codex")
-(declare-function agent-codex-status-effort "agent-codex")
-(defvar agent-claude--status-data)
-
-(doom-modeline-def-segment ai-session-status
-  "Display AI session status for any registered backend.
-Shows icon, bold session name, model, effort and account, followed by
-the status the session's agent last published (the same text as the
-last column of the session switcher)."
-  (when (and doom-modeline-extras-claude-code
-             (fboundp 'agent--detect-backend))
-    (let ((backend (agent--detect-backend (current-buffer))))
-      (when backend
-        (let ((icon (agent-backend-icon-string backend 'mode-line-active))
-              (name (agent-display-name (current-buffer))))
-          (concat
-           (doom-modeline-spc)
-           (when (and icon (not (string-empty-p icon)))
-             (concat icon " "))
-           (propertize name
-                       'face '(bold doom-modeline-buffer-major-mode)
-                       'help-echo (format "%s session"
-                                          (or (when-let* ((struct (agent-backend backend)))
-                                                (agent-backend-label struct))
-                                              "AI")))
-           (pcase backend
-             ('claude-code
-              (when (bound-and-true-p agent-claude--status-data)
-                (doom-modeline-extras--format-claude-status-fields)))
-             ('codex
-              (doom-modeline-extras--format-codex-status-fields)))
-           (doom-modeline-extras--format-state-summary)
-           (doom-modeline-spc)))))))
-
-(defun doom-modeline-extras--format-claude-status-fields ()
-  "Return Claude Code model, effort and account fields for the modeline."
-  (doom-modeline-extras--format-session-fields
-   (agent-claude-status-model) (agent-claude-status-effort)))
-
-(defun doom-modeline-extras--format-codex-status-fields ()
-  "Return Codex model, effort and account fields for the modeline."
-  (doom-modeline-extras--format-session-fields
-   (agent-codex-status-model) (agent-codex-status-effort)))
-
-(defun doom-modeline-extras--format-session-fields (model effort)
-  "Format MODEL, EFFORT and the current session's account for the modeline."
-  (let ((account (when-let* ((session (agent-session)))
-                   (agent-session-account session))))
-    (concat
-     (doom-modeline-extras--format-model model)
-     (doom-modeline-extras--format-effort effort)
-     (doom-modeline-extras--format-account account))))
-
-(defun doom-modeline-extras--format-state-summary ()
-  "Format the status the current session's agent last published.
-Double each percent sign, which the mode line would otherwise treat as
-a construct."
-  (when-let* ((summary (agent-session-state-summary (current-buffer))))
-    (concat " | " (propertize (string-replace "%" "%%" summary)
-                              'help-echo "Latest published session status"))))
-
-(defun doom-modeline-extras--format-model (model)
-  "Format MODEL name with separator."
-  (when model
-    (concat " | " (propertize model 'help-echo "Model"))))
-
-(defun doom-modeline-extras--format-effort (effort)
-  "Format reasoning EFFORT with separator."
-  (when effort
-    (concat " | " (propertize effort 'help-echo "Reasoning effort"))))
-
-(defun doom-modeline-extras--format-account (account)
-  "Format ACCOUNT name with separator."
-  (when account
-    (concat " | " (propertize account
-                               'face 'doom-modeline-buffer-path
-                               'help-echo "Claude account"))))
-
-;;;;; Modeline definitions
-
-(doom-modeline-def-modeline 'ai-session
-  '(bar ai-session-status)
-  '(misc-info major-mode process time))
-
 ;;;;; GitHub notifications
 
 (autoload 'forge-extras-pull-notifications "forge-extras")

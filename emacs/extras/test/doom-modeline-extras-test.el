@@ -5,7 +5,6 @@
 ;;; Code:
 
 (require 'ert)
-(require 'agent)
 (require 'doom-modeline-extras)
 
 (defvar ghub-default-host-alist)
@@ -121,47 +120,4 @@
       (should (= start-count 1))
       (should (eq doom-modeline-extras--github-fetch-process 'new-process)))))
 
-;;;; AI session status
-
-(ert-deftest doom-modeline-extras-test-format-codex-status-fields-shows-effort ()
-  "Format Codex modeline fields with model and reasoning effort."
-  (cl-letf (((symbol-function 'agent-codex-status-model)
-             (lambda () "gpt-5.5"))
-            ((symbol-function 'agent-codex-status-effort)
-             (lambda () "high")))
-    (with-temp-buffer
-      (agent--set-session (current-buffer)
-                          (agent-session-create :backend 'codex
-                                                :account "epoch"
-                                                :directory "~/project/"))
-      (should (equal (doom-modeline-extras--format-codex-status-fields)
-                     " | gpt-5.5 | high | epoch")))))
-
-(ert-deftest doom-modeline-extras-test-format-claude-status-fields-shows-effort ()
-  "Format Claude modeline fields with model and effort."
-  (cl-letf (((symbol-function 'agent-claude-status-model)
-             (lambda () "Opus 4.8"))
-            ((symbol-function 'agent-claude-status-effort)
-             (lambda () "high")))
-    (with-temp-buffer
-      (agent--set-session (current-buffer)
-                          (agent-session-create :backend 'claude-code
-                                                :account nil
-                                                :directory "~/project/"))
-      (should (equal (doom-modeline-extras--format-claude-status-fields)
-                     " | Opus 4.8 | high")))))
-
-(ert-deftest doom-modeline-extras-test-format-state-summary-escapes-percent ()
-  "Show the latest published status with percent signs escaped."
-  (with-temp-buffer
-    (setq-local agent--session-published-status "Coverage at 80% now")
-    (should (equal (doom-modeline-extras--format-state-summary)
-                   " | Coverage at 80%% now"))))
-
-(ert-deftest doom-modeline-extras-test-format-state-summary-absent ()
-  "Show nothing when the agent has published no status."
-  (with-temp-buffer
-    (should-not (doom-modeline-extras--format-state-summary))))
-
-(provide 'doom-modeline-extras-test)
 ;;; doom-modeline-extras-test.el ends here

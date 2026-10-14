@@ -86,6 +86,7 @@ ALLOW = [
     "op-desktop --status",
     "op-desktop --stop",
     "op-automations whoami",
+    "op-automations @personal service-account ratelimit",
     "op-desktop vault list",
     "op-desktop user list",
     # membership/permission listings carry no secret values

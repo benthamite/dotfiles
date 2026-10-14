@@ -58,7 +58,7 @@ everything else including shapes it cannot place:
 - `document get … --out-file F`, `inject … --out-file F`; `item create|edit`
   without `--format`; `item delete`, `document create|edit|delete`, `vault
   create`; `whoami`, `vault|user|group list|get`, `vault user|group list`, `vault user grant|revoke`,
-  `group user list`, `account list`, `document list`, `item template
+  `group user list`, `account list`, `service-account ratelimit`, `document list`, `item template
   list|get`, `--status`, `--stop`.
 - `op-desktop item share … --emails ADDRESSES`: a link restricted to named
   recipients opens only after they confirm a code sent to their address, so

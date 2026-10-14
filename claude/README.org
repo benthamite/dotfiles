@@ -1005,7 +1005,7 @@ carries no credential (masked =run=, captured or filed =read=, metadata-only
 =jq= over item output, =--out-file= documents, writes without =--format=,
 share links restricted with =--emails=, metadata commands, including the
 =vault user list= / =vault group list= / =group user list= membership
-listings) and denies every other shape, including unrestricted share links
+listings and =service-account ratelimit= usage counters) and denies every other shape, including unrestricted share links
 and shapes it cannot place. Interpreter programs are not parsed as shell: one
 that names a broker is denied unless it is a recognized Python document edit.
 Broker paths passed to =ls=, =stat=, or =readlink= are inert file

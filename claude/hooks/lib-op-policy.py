@@ -646,6 +646,9 @@ def classify_invocation(
         return
     if sub == "account" and args[:1] == ["list"]:
         return
+    # Rate-limit usage prints request counters and reset times, never a token.
+    if sub == "service-account" and args[:1] == ["ratelimit"]:
+        return
     raise Deny(f"unclassified 1Password command `{' '.join([sub] + args[:1])}`")
 
 

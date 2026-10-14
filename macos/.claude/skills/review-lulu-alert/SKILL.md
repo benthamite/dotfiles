@@ -64,6 +64,12 @@ alert windows do not establish queue order or which one the user sees. Do not
 choose an arbitrary first match; bind the selected window or report ambiguity.
 A bounded Accessibility traversal is not an atomic snapshot.
 
+When several alerts are open, the report's `alert_queue` groups every window by
+program, path and destination in one bounded read. Characterize a flood from
+those groups; do not write ad-hoc traversals of every window, which are slow
+and unbounded. A group is a summary, not a selected alert: an authorized
+decision still binds and re-reads each window it answers.
+
 Record the alert timestamp, process PID/path/arguments, destination and
 port/protocol in private evidence. An unreadable identity cannot support an
 automated later decision. Preserve raw values internally while redacting

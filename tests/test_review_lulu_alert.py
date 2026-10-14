@@ -307,6 +307,40 @@ class FixtureParsingTests(unittest.TestCase):
         self.assertEqual("incomplete", report["read_status"])
         self.assertNotIn("process", report)
 
+    def test_alert_flood_is_summarized_by_program_and_destination(self):
+        capture = json.loads((FIXTURES / "alert-real-capture.json").read_text())
+        other = json.loads(json.dumps(capture["elements"]).replace("1.1.1.1", "9.9.9.9"))
+        flood = dict(capture)
+        flood["window"] = {"found": False, "title": None, "app_window_count": 3,
+                           "alert_window_count": 3, "matched_by": None}
+        flood["elements"] = []
+        flood["read_issues"] = ["Multiple alert windows; no alert selected"]
+        flood["queue_elements"] = [capture["elements"], capture["elements"], other]
+        path = Path(TEST_ROOT.name) / "alert-flood.json"
+        path.write_text(json.dumps(flood))
+
+        result = run_helper("--fixture", str(path))
+        self.assertEqual(70, result.returncode)
+        report = json.loads(result.stdout)
+        self.assertIsNone(report["alert_present"])
+        self.assertNotIn("process", report)
+        queue = report["alert_queue"]
+        self.assertEqual(3, queue["alerts_summarized"])
+        self.assertEqual(
+            [("1.1.1.1", 2), ("9.9.9.9", 1)],
+            [(g["ip_address"], g["count"]) for g in queue["groups"]],
+        )
+        self.assertEqual("/tmp/lulu-alert-probe", queue["groups"][0]["path"])
+        # Arguments can carry secrets and are not needed to group a flood.
+        self.assertNotIn("args", json.dumps(queue))
+
+    def test_queue_elements_must_match_the_alert_count(self):
+        capture = json.loads((FIXTURES / "alert-real-capture.json").read_text())
+        capture["queue_elements"] = [capture["elements"], capture["elements"]]
+        path = Path(TEST_ROOT.name) / "alert-queue-contradiction.json"
+        path.write_text(json.dumps(capture))
+        self.assertEqual(64, run_helper("--fixture", str(path)).returncode)
+
     def test_no_alert_state_is_a_clean_success(self):
         result = run_helper("--fixture", str(FIXTURES / "no-alert.json"))
 

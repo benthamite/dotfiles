@@ -32,8 +32,11 @@ Usage:
       Fetch an exact target plus one context page, with explicit coverage.
       Workspace URLs are bound to the selected account; workspaces without a
       configured domain require an extra auth.test identity read.
-  slack.py channels [--types=public_channel,private_channel,im,mpim] [--cursor=...]
-      List channels (conversations.list).
+  slack.py channels [<query>] [--types=public_channel,private_channel,im,mpim]
+      List every non-archived conversation you can see (conversations.list,
+      all pages; default types: public and private channels), one compact
+      JSON line each. <query> keeps those whose name or purpose contains it,
+      case-insensitively. stderr reports how many matched out of the total.
   slack.py join <channel>... [--dry-run]
       Join public channels by name (#optional) or ID (conversations.join),
       printing one JSON line per channel. All names are resolved before any
@@ -51,7 +54,8 @@ Usage:
   slack.py unsave <channel-id> <ts>
       Remove that exact message from Later using internal saved.delete.
 
-Output: raw JSON from Slack on stdout. Non-zero exit on API error.
+Output: raw JSON from Slack on stdout (channels and join print JSON lines).
+Non-zero exit on API error.
 """
 
 import argparse
@@ -714,15 +718,53 @@ def cmd_permalink(args):
     print(json.dumps(out, indent=2))
 
 
+MAX_LIST_PAGES = 100
+
+
+def _conversations(types):
+    """Every non-archived conversation of TYPES, across all pages.
+
+    Pages are sparse (one can hold a handful of channels and a cursor), so a
+    single page is never the whole list. Fails rather than return a partial one.
+    """
+    conversations, cursor = [], None
+    for _ in range(MAX_LIST_PAGES):
+        out = call("conversations.list", types=types,
+                   exclude_archived="true", limit="1000", cursor=cursor)
+        conversations.extend(out.get("channels", []) or [])
+        cursor = (out.get("response_metadata") or {}).get("next_cursor")
+        if not cursor:
+            return conversations
+    _fail(f"conversations.list still had more pages after {MAX_LIST_PAGES}")
+
+
+def _conversation_row(ch):
+    if ch.get("is_im"):
+        kind = "im"
+    elif ch.get("is_mpim"):
+        kind = "mpim"
+    else:
+        kind = "private" if ch.get("is_private") else "public"
+    row = {"id": ch.get("id"), "name": ch.get("name"), "type": kind,
+           "is_member": ch.get("is_member"), "num_members": ch.get("num_members"),
+           "purpose": (ch.get("purpose") or {}).get("value") or None}
+    if kind == "im":
+        row["user"] = ch.get("user")
+    return {k: v for k, v in row.items() if v is not None}
+
+
 def cmd_channels(args):
-    out = call(
-        "conversations.list",
-        types=args.types,
-        cursor=args.cursor,
-        limit="200",
-        exclude_archived="true",
-    )
-    print(json.dumps(out, indent=2))
+    conversations = _conversations(args.types)
+    needle = (args.query or "").lower().lstrip("#")
+    rows = [_conversation_row(ch) for ch in conversations]
+    if needle:
+        rows = [r for r in rows
+                if needle in (r.get("name") or "").lower() or needle in (r.get("purpose") or "").lower()]
+    rows.sort(key=lambda r: (r.get("name") or "", r["id"]))
+    for row in rows:
+        print(json.dumps(row, ensure_ascii=False))
+    scope = f"match {args.query!r}" if needle else "listed"
+    sys.stderr.write(f"{len(rows)} of {len(conversations)} conversations {scope} ({args.types})\n")
 
 
 JOIN_INTERVAL = 1.2  # seconds; conversations.join is Tier 3 and calls are not retried
@@ -730,15 +772,10 @@ JOIN_INTERVAL = 1.2  # seconds; conversations.join is Tier 3 and calls are not r
 
 def _public_channels():
     """All non-archived public channels, keyed by name and by ID."""
-    channels, cursor = {}, None
-    while True:
-        out = call("conversations.list", types="public_channel",
-                   exclude_archived="true", limit="1000", cursor=cursor)
-        for ch in out.get("channels", []) or []:
-            channels[ch["name"]] = channels[ch["id"]] = ch
-        cursor = (out.get("response_metadata") or {}).get("next_cursor")
-        if not cursor:
-            return channels
+    channels = {}
+    for ch in _conversations("public_channel"):
+        channels[ch["name"]] = channels[ch["id"]] = ch
+    return channels
 
 
 def cmd_join(args):
@@ -897,9 +934,9 @@ def main():
     pl.set_defaults(resolve_users=True)
     pl.set_defaults(func=cmd_permalink)
 
-    c = sub.add_parser("channels")
-    c.add_argument("--types", default="public_channel,private_channel,im,mpim")
-    c.add_argument("--cursor")
+    c = sub.add_parser("channels", help="list every visible conversation, optionally filtered")
+    c.add_argument("query", nargs="?")
+    c.add_argument("--types", default="public_channel,private_channel")
     c.set_defaults(func=cmd_channels)
 
     j = sub.add_parser("join", help="join public channels by name or ID")

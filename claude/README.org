@@ -1264,6 +1264,12 @@ cached credential (=invalid_auth=, =not_authed=, =token_revoked=), it runs
 "/", which no =op://= reference can express, so that workspace still reads
 uncached until the item is referenced by ID.
 
+=slack.py channels [QUERY]= follows =conversations.list= through every page and
+prints one compact JSON line per conversation, with a "N of M" count on stderr.
+Slack's pages are sparse (a page can hold two channels and a cursor), so a
+single page once passed for the whole list and hid 56 of 58 channels; the
+command now fails rather than return a partial list.
+
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged
 index entries, so a live Emacs never loads tests or a partially resolved tree.

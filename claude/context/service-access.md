@@ -11,7 +11,7 @@ browser automation; each already carries the right account and auth.
 | Google Sheets | `claude/bin/sheets.py` |
 | Slack | `claude/bin/slack.py` |
 | Google Calendar | `gcalcli-epoch` (canonical Epoch OAuth grant). Reads the Epoch, personal and Forethought calendars together; scope to one with `--calendar`, e.g. `--calendar 'pablo@forethought.org'` |
-| Google Docs / Drive | `gdoc` (before changing a doc, read `google-services.md`, "Editing Google Docs"; comments vs. suggestions: same file, "Reading comments and suggestions") |
+| Google Docs / Drive | `gdoc` (read docs with `gdoc cat`, which appends comment threads; `export` and `pull` don't. Before changing a doc, read `google-services.md`, "Editing Google Docs"; comments vs. suggestions: same file, "Reading comments and suggestions") |
 | GitHub | `gh` |
 | Signal (read-only) | `bin/sgn-read` |
 | Fireflies meeting transcripts (Forethought, read-only) | `bin/fireflies` |

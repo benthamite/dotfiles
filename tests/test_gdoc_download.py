@@ -3,8 +3,11 @@
 Under any other interpreter the module delegates to that one (see
 tests/interpreter_delegation.py).
 """
+from contextlib import redirect_stderr, redirect_stdout
 import hashlib
 import importlib.util
+import io
+import json
 from pathlib import Path
 import sys
 import tempfile
@@ -145,6 +148,87 @@ class EmptyWriteGuardTests(unittest.TestCase):
                     self.assertEqual(result, 0)
                     self.upstream[command].assert_called_once()
                     self.upstream[command].reset_mock()
+
+
+def thread(cid, quote, content='note'):
+    return {'id': cid, 'content': content, 'author': {'displayName': 'Ann'},
+            'createdTime': '2026-10-14T09:00:00Z', 'resolved': False,
+            'quotedFileContent': {'value': quote} if quote is not None else {},
+            'replies': [{'author': {'displayName': 'Bo'}, 'content': 'reply'}]}
+
+
+@unittest.skipUnless(OWN_INTERPRETER, 'runs through DelegatedRun under the gdoc interpreter')
+class CatCommentsTests(unittest.TestCase):
+    TABS = ['Talks\nTom on acausal catastrophe risk.\nIt is here.',
+            'Logistics\nRooms: Manor Hall & Byre. It is here too.']
+    COMMENTS = [thread('a', 'acausal catastrophe risk'), thread('b', 'Manor Hall &amp; Byre'),
+                thread('c', 'here'), thread('d', 'deleted text'), thread('e', None),
+                thread('f', 'is h')]
+
+    def setUp(self):
+        self.upstream = MagicMock(side_effect=lambda args: print('BODY') or 0)
+        patcher = patch.object(module.cli, 'cmd_cat', self.upstream)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        for name, value in [('_resolve_doc_id', lambda doc: doc)]:
+            p = patch.object(module.cli, name, value)
+            p.start()
+            self.addCleanup(p.stop)
+        p = patch('gdoc.api.comments.list_comments', return_value=self.COMMENTS)
+        self.list_comments = p.start()
+        self.addCleanup(p.stop)
+        p = patch.object(module, '_tab_texts', return_value=(self.TABS, 0))
+        self.tab_texts = p.start()
+        self.addCleanup(p.stop)
+        self.parser = module.build_parser()
+
+    def run_cat(self, *argv):
+        args = self.parser.parse_args(['cat', 'doc-id', *argv])
+        out, err = io.StringIO(), io.StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            status = args.func(args)
+        return status, out.getvalue(), err.getvalue()
+
+    def test_whole_doc_appends_every_thread(self):
+        status, out, _ = self.run_cat()
+        self.assertEqual(status, 0)
+        self.assertTrue(out.startswith('BODY\n'))
+        self.assertIn('## Comments (6 threads, open and resolved)', out)
+        self.assertIn('-> Bo: "reply"', out)
+        self.assertIn('on "Manor Hall & Byre"', out)
+        self.tab_texts.assert_not_called()
+
+    def test_tab_shows_its_threads_and_counts_the_rest(self):
+        _, out, _ = self.run_cat('--tab', 'Talks')
+        self.assertIn('## Comments (2 threads, open and resolved; not shown: 1 on other tabs '
+                      'and 3 whose quoted text is no longer in the doc', out)
+        self.assertIn('#a ', out)
+        self.assertIn('on "here" (this text is also on other tabs)', out)
+        self.assertNotIn('#b ', out)
+
+    def test_short_quotes_match_whole_words_only(self):
+        self.assertFalse(module._contains('this', module._folded('this'), 'is h'))
+        self.assertTrue(module._contains('It is here', module._folded('It is here'), 'is  here'))
+
+    def test_json_carries_the_threads(self):
+        self.upstream.side_effect = lambda args: print(json.dumps({'ok': True, 'content': 'BODY'})) or 0
+        _, out, _ = self.run_cat('--json')
+        data = json.loads(out)
+        self.assertEqual(len(data['comments']), 6)
+        self.assertIn('Suggestion threads', data['comments_note'])
+
+    def test_opt_outs_and_plain_leave_upstream_output_alone(self):
+        for argv in (['--no-comments'], ['--comments'], ['--plain']):
+            with self.subTest(argv=argv):
+                _, out, err = self.run_cat(*argv)
+                self.assertEqual(out, 'BODY\n')
+        self.assertIn('comments not shown with --plain', err)
+
+    def test_failed_comment_read_is_reported_and_body_kept(self):
+        self.list_comments.side_effect = RuntimeError('quota')
+        status, out, err = self.run_cat()
+        self.assertEqual((status, out), (0, 'BODY\n'))
+        self.assertIn('comments could not be read (quota)', err)
 
 
 if __name__ == '__main__':

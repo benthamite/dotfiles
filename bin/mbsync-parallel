@@ -56,6 +56,19 @@ EPOCH_STATUS=$?
 wait $FORETHOUGHT_PID
 FORETHOUGHT_STATUS=$?
 
+# Report each mailbox that synced to the shared heartbeat monitor, which
+# alerts when one has not synced for two hours (claude/context/alerting.md).
+# A failed report is printed but does not change the sync's exit status.
+report_synced() {
+    if [ "$2" -eq 0 ]; then
+        "$HOME/repos/launchd/bin/launchd-heartbeat.py" send "mail-sync-$1" ||
+            echo "Failed to report mail-sync-$1 heartbeat" >&2
+    fi
+}
+report_synced personal "$MBSYNC_STATUS"
+report_synced epoch "$EPOCH_STATUS"
+report_synced forethought "$FORETHOUGHT_STATUS"
+
 for status in "$EPOCH_STATUS" "$FORETHOUGHT_STATUS"; do
     if [ "$status" -ne 0 ]; then
         exit "$status"

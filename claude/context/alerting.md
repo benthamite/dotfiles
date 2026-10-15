@@ -23,5 +23,5 @@ Validity rule (2026-10-09): an alert states only what is true when it is sent. A
 
 ## Instances
 
-- Compliant: the launchd audit and the personal responder (Mac); The Hinge's daily publish (`the-hinge-publish`, deadline 11:30 UTC, from its GitHub workflow).
+- Compliant: the launchd audit and the personal responder (Mac); The Hinge's daily publish (`the-hinge-publish`, deadline 11:30 UTC, from its GitHub workflow). Mail sync into mu4e (`mail-sync-personal`, `mail-sync-epoch`, `mail-sync-forethought`, stale after 2 h, from `bin/mbsync-parallel`), added 2026-10-15 after the Forethought Gmail token was revoked and mail silently stopped for two days.
 - Not yet compliant (TODO): The Hinge's Mac watchdog `watchdog/run.py` (emails by itself; kept as a second check that the published page loads, to be folded into the shared service or retired); other projects with their own alerting still to be swept.

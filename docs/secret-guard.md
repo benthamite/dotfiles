@@ -88,6 +88,7 @@ screenshot.
 | 10-10 | Notion OAuth client ID and secret (Peter Hartree's Forethought integration) | a | Pablo pasted them into an unsaved Emacs buffer and pointed the agent at it; an `emacs-eval` read of the whole buffer printed them before they were stored (not yet in the secret index, so unmasked). The session is also exported to Peter. Stored afterwards with `op-clipboard-store`; rotation is Peter's call |
 
 | 10-10 | Google account password for `pablo@forethought.org` (as first issued) | a | a read-only Slack sweep returned an old message carrying it in plain text; changed since |
+| 10-16 | Slack bot token (Forethought "Sprint Watchdog" app) | d | screenshot of the app's OAuth & permissions page, which shows the token in plain text; the session is also exported to Peter; rotated 10-16 before it was stored |
 
 | 10-10 | Fireflies webhook signing secret (Pablo, meeting-debrief Worker) | d | a screenshot of the Fireflies Webhooks V2 edit panel, which shows the signing secret in plain text; rotated 10-10 in 1Password and on the Worker, Fireflies updated by Pablo. The `agents/credential-pages.txt` list does not cover `app.fireflies.ai/integrations/api/webhook` |
 

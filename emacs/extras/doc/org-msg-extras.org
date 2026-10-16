@@ -55,9 +55,9 @@ The user option ~org-msg-extras-epoch-plain-text-signature~ holds the signature 
 
 The user option ~org-msg-extras-epoch-html-signature~ holds the signature for Epoch AI emails in Org/HTML format, including the current job title, Epoch logo, and links to the website, Twitter, and newsletter. The type is a string.
 
-The user option ~org-msg-extras-forethought-plain-text-signature~ holds the signature for Forethought emails in plain text: just the first name, identical to the personal signature. The type is a string.
+The user option ~org-msg-extras-forethought-plain-text-signature~ holds the signature for Forethought emails in plain text, including name, title, and website URL. The type is a string.
 
-The user option ~org-msg-extras-forethought-html-signature~ holds the signature for Forethought emails in Org/HTML format: just the first name in bold, identical to the personal signature. The type is a string.
+The user option ~org-msg-extras-forethought-html-signature~ holds the signature for Forethought emails in Org/HTML format, with styled name, title, and a link to the website. The type is a string.
 
 The user option ~org-msg-extras-tlon-plain-text-signature~ holds the signature for Tlön emails in plain text, including name, title, and company name. The type is a string.
 

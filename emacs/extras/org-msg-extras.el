@@ -79,13 +79,22 @@
   :group 'org-msg-extras)
 
 (defcustom org-msg-extras-forethought-plain-text-signature
-  "\n--\nPablo\n"
+  "\n--\nPablo Stafforini\nHead of AI Adoption, Forethought\nhttps://forethought.org/\n"
   "Forethought signature for plain text emails."
   :type 'string
   :group 'org-msg-extras)
 
 (defcustom org-msg-extras-forethought-html-signature
-  "\n#+begin_signature\n--\n*Pablo*\n#+end_signature"
+  (concat
+   "\n#+begin_signature\n--\n"
+   "#+begin_export html\n"
+   "<span style=\"display:block; font-family:Arial,Helvetica,sans-serif;"
+   " font-size:13px; line-height:1.4\">"
+   "<b>Pablo Stafforini</b><br>"
+   "Head of AI Adoption, Forethought<br>"
+   "<a href=\"https://forethought.org/\">forethought.org</a></span>\n"
+   "#+end_export\n"
+   "#+end_signature")
   "Forethought signature for HTML emails."
   :type 'string
   :group 'org-msg-extras)

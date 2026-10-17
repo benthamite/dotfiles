@@ -242,7 +242,8 @@ its cached reference. The desktop app
 keeps its own Chrome plugin; account configurations are not edited. The global
 =AGENTS.md= names the server's =browser_*= tools as Codex's browser control.
 The paired =chrome-use= skill holds the browser rules for both agents (focus,
-windows, retries) and loads before any browser step. It also points form
+windows, including visible windows opened by browser-launching scripts,
+retries) and loads before any browser step or such script. It also points form
 filling at the private, gitignored =claude/context/personal-details.md=,
 and has agents leave card numbers, passport numbers and passwords for Pablo,
 saying so up front instead of asking permission to type them.

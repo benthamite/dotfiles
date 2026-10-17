@@ -554,7 +554,8 @@ trigger names services only (Signal, Fireflies and Granola joined it on
 rules: background research stays off live Chrome, standing authorization for
 logged-in sites, each agent's browser control, never stealing focus (the agent's own
 tab or tab group comes only from the browser tool's own calls, work only in
-those tabs, no other new windows, no activating windows, =chrome-profile-open=
+those tabs, no other new windows, including visible windows opened by
+Playwright or similar scripts, no activating windows, =chrome-profile-open=
 only for manual launching), and one retry policy that separates connection failures (governed
 by =chrome-bridge-recover.py= for Claude) from page/REPL stalls. It takes
 precedence over the vendor Chrome skills where they differ.

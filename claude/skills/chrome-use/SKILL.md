@@ -1,6 +1,6 @@
 ---
 name: chrome-use
-description: "Rules for driving Pablo's Chrome. Use before the first browser step of any task: Claude in Chrome (mcp__claude-in-chrome__* tools), the Codex Playwright MCP browser_* tools or desktop control-chrome, or any work on a logged-in site; also before activating, raising or opening a Chrome window or profile. Not for web search or plain HTTP fetches."
+description: "Rules for driving Pablo's Chrome. Use before the first browser step of any task: Claude in Chrome (mcp__claude-in-chrome__* tools), the Codex Playwright MCP browser_* tools or desktop control-chrome, or any work on a logged-in site; also before activating, raising or opening a Chrome window or profile, and before running a script that launches a browser (Playwright, Puppeteer, Selenium). Not for web search or plain HTTP fetches."
 user-invocable: false
 ---
 
@@ -51,6 +51,10 @@ to the front.
   normal start, needs no permission, and is allowed even when the extension
   puts its tab group in a new window. Never open windows any other way, and
   never ask to: a window does not fix a page stall.
+- That includes scripts. A script that launches a visible browser (Playwright,
+  Puppeteer or Selenium with `headless=False`, even on a separate profile)
+  opens a window that takes focus. Run such scripts headless; when a login
+  needs Pablo, do it in your own Claude in Chrome tab instead.
 - Work only in your own tabs. Claude in Chrome cannot use tabs Pablo opened
   himself, so never offer to. When a site needs a sign-in in your tab (1Password
   web signs in per tab), navigate your tab there and ask Pablo to sign in in

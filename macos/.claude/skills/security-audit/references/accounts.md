@@ -55,8 +55,10 @@ code, or Secret Key, and never submit a password to a breach checker.
   Watchtower uses Have I Been Pwned data. Do not open an item's details or
   reveal a field to confirm a finding. If Watchtower is disabled in settings,
   report it as not checked instead of enabling it. The 1Password web app ends
-  its session when its tab navigates by URL, so once Pablo signs in, reach
-  Watchtower through the app's own navigation, never by loading a URL.
+  its session when its tab navigates by URL. Its vault and Watchtower views are
+  also masked from agent page reads and screenshots by the credential-page
+  policy, so Watchtower is Pablo's step: ask him for the counts and the
+  root-account titles in each category instead of asking him to sign in.
 - Prioritize reused and compromised passwords on root accounts. A reused password
   on a low-value site is low severity unless that password also protects a root
   account.

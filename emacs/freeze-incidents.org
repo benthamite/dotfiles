@@ -56,6 +56,26 @@ the "Already tried" list in place.
 
 * Incidents
 
+** 2026-10-17: all-day outages under host starvation (investigation, no change)
+
+- 16 outages 05:02–16:37, the longest 13:31–14:45 (refused). At 16:35 swap
+  was 25.6/26.6 GB, free RAM ~70 MB and load 150–200; the watchdog itself
+  wrote no sample from 16:17 to 16:27. Google Drive still ~23 GB.
+- Emacs 4855 was not stuck in Lisp. Two 5 s samples at 16:35 showed the main
+  thread idle in =read_char=; its CPU time was flat for a minute, then the
+  pending clients completed and =(emacs-pid)= answered in 0.4 s at 16:38.
+  Recursion depth 0. The day's watchdog stacks got only 34–81 of ~4,400
+  samples each (barely scheduled), showed no hot Lisp, and took up to 12 min
+  to write.
+- GC: 3438 GCs, 3725 s total in 4 days (~1.1 s each), consistent with GC over
+  a swapped heap.
+- Extra load at the time: the Claude session 80969 (tangodb
+  =listening-20261016= worktree) ran a 9-worker Python job spawning =fpcalc=
+  from 16:08, which matches the 16:10–16:37 load rise; an =agent-log= summary
+  worker (Emacs --quick, 1 GB, ~90% CPU for 8+ min); Backblaze =bztransmit=
+  3.2 GB RSS. These add to the pressure; the morning outages predate the
+  =fpcalc= job, so the chronic cause is still memory (see Open).
+
 ** 2026-10-12 23:19 → 10-13: agent.el status-query loop (fixed in agent =5bb959a=)
 
 - Server unanswered from 23:19, refused from 00:47 (listen backlog full);

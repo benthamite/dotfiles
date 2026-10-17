@@ -483,6 +483,13 @@ token-based task accounting and an idempotent ledger; only verified outcomes
 justify completion, and budget limits produce deferrals. Existing ledger history
 requires explicit migration, not a reset.
 
+The =overnight-watch= skill runs in its own session while Pablo sleeps. Its
+=watch_snapshot.py= reads every live agent.el session's transcript, subagent
+activity and terminal screen; faint composer text is a prompt suggestion, not
+input. It nudges stuck sessions through =agent-send= once per cause and never
+answers decisions, permission dialogs or menus that are Pablo's. It depends on
+the =agent= package's =agent-send=.
+
 The =paste-via-kill-ring= skill separates manual handoff from sending. It
 verifies exact non-secret ring placement without implicit clipboard forwarding,
 while honoring text-transform acceptance and checking an independent payload copy.

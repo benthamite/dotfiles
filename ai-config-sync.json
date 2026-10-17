@@ -186,6 +186,13 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
+      "name": "overnight-watch",
+      "claude": "claude/skills/overnight-watch/SKILL.md",
+      "codex": "codex/skills/overnight-watch/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
       "name": "overnight-todos",
       "claude": "claude/skills/overnight-todos/SKILL.md",
       "codex": "codex/skills/overnight-todos/SKILL.md",

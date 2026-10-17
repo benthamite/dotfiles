@@ -800,8 +800,9 @@ only a terminal return from that submitted turn. Ambiguous delivery remains
 pending; missing evidence cannot authorize retransmission or an unsupported
 process-loss restart. Its helper reuses =agent_session_lib= and records private
 recovery evidence. Codex startup records are recognized field by field, so a new
-CLI field (such as 0.162.0's =turn_attribution=) leaves delivery pending until the
-recognizer is taught it. As the one exception to the submitted-turn rule, a Codex reviewer whose submitted turn ended with a recorded
+CLI field or record (such as 0.162.0's =turn_attribution= or 0.163.0's
+=thread_settings_applied= event) leaves delivery pending until the recognizer
+is taught it. As the one exception to the submitted-turn rule, a Codex reviewer whose submitted turn ended with a recorded
 =usage_limit_exceeded= error and no output, followed by exactly =continue=, is
 certified from that continuation turn and recorded as such; any later user turn
 still refuses.

@@ -519,6 +519,15 @@ def _codex_preamble(item, live):
         # protocol.rs WorldStateItem::full is {full:true,state:object}; it
         # has no session/cwd fields. Actor and transcript remain separately pinned.
         return set(payload) == {"full", "state"} and payload["full"] is True and isinstance(payload["state"], dict)
+    if item.get("type") == "event_msg" and payload.get("type") == "thread_settings_applied":
+        # codex-cli 0.163.0 persists the thread's settings after turn_context
+        # and before the first user input (observed 2026-10-17). It must name
+        # this same thread and directory.
+        settings = payload.get("thread_settings")
+        return (set(payload) == {"type", "thread_id", "thread_settings"}
+                and payload.get("thread_id") == live["session_id"]
+                and isinstance(settings, dict) and _absolute(settings.get("cwd"))
+                and str(Path(settings["cwd"]).resolve()) == live["directory"])
     if item.get("type") == "event_msg":
         # Upstream codex-rs/core/src/tasks/regular.rs emits TurnStarted before
         # run_turn records user input. protocol/src/protocol.rs serializes it

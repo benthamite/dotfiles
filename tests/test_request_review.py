@@ -674,6 +674,20 @@ class CrossReviewRunTests(unittest.TestCase):
         self.assertFalse(reviewer._codex_preamble(
             {"type": "event_msg", "payload": valid}, {**self.actor, "backend": "claude-code"}))
 
+    def test_codex_0_163_thread_settings_event_must_name_this_thread(self):
+        # Observed 2026-10-17 from codex-cli 0.163.0, between turn_context and
+        # the first user message.
+        valid = {"type": "thread_settings_applied", "thread_id": self.actor["session_id"],
+                 "thread_settings": {"model": "fixture", "cwd": self.actor["directory"]}}
+        self.assertTrue(reviewer._codex_preamble({"type": "event_msg", "payload": valid}, self.actor))
+        for payload in ({**valid, "thread_id": "other-thread"},
+                        {**valid, "thread_settings": {"cwd": "/elsewhere"}},
+                        {**valid, "thread_settings": {}},
+                        {**valid, "thread_settings": []},
+                        {**valid, "extra": "unproved"}):
+            with self.subTest(payload=payload):
+                self.assertFalse(reviewer._codex_preamble({"type": "event_msg", "payload": payload}, self.actor))
+
     def test_same_bytes_replacement_during_receipt_read_refuses(self):
         self.pending()
         self.user(self.prompt)

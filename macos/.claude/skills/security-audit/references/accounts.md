@@ -26,7 +26,10 @@ code, or Secret Key, and never submit a password to a breach checker.
   recover the other, or a recovery address on a lapsed or shared domain.
 - A domain whose registrar account is taken over means the attacker controls
   mail for that domain and can reset every account that uses it. Check registrar
-  2FA and transfer lock where Pablo's own account pages show them.
+  2FA and transfer lock where Pablo's own account pages show them. Find the
+  registrar account that actually holds a domain from its renewal notices
+  before asking Pablo to sign in; one person can have several registrar
+  accounts, and an empty domain list means the wrong one.
 
 ## Breach exposure
 
@@ -51,7 +54,9 @@ code, or Secret Key, and never submit a password to a breach checker.
   passwords, weak passwords, and available-but-unused two-factor authentication.
   Watchtower uses Have I Been Pwned data. Do not open an item's details or
   reveal a field to confirm a finding. If Watchtower is disabled in settings,
-  report it as not checked instead of enabling it.
+  report it as not checked instead of enabling it. The 1Password web app ends
+  its session when its tab navigates by URL, so once Pablo signs in, reach
+  Watchtower through the app's own navigation, never by loading a URL.
 - Prioritize reused and compromised passwords on root accounts. A reused password
   on a low-value site is low severity unless that password also protects a root
   account.

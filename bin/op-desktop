@@ -239,16 +239,24 @@ def execute_request(request: dict, slave_fd: int) -> dict:
             "out": completed.stdout.decode("utf-8", "replace"),
             "err": completed.stderr.decode("utf-8", "replace"),
         }
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired as expired:
+        # What the CLI printed before hanging is the only evidence of *why* it
+        # hung (a prompt it was waiting on, an error it kept retrying). stderr
+        # carries prompts and errors, never item values, which go to stdout.
+        partial = (expired.stderr or b"").decode("utf-8", "replace").strip()
         log(f"  no result in {CHILD_TIMEOUT_SECONDS}s; child killed, broker restarting")
+        log(f"  child stderr before kill: {partial[-500:]!r}")
+        # A broker restart does not touch `op daemon`, which outlives the
+        # broker; on 2026-10-17 hangs persisted across restarts and recovery
+        # coincided with replacing a daemon. Daemons only cache sessions.
+        reap_op_daemons(everything=True)
         return {
             "rc": 124,
             "out": "",
             "err": (
                 f"op-desktop: `op {' '.join(argv[:2])}` gave no result in "
-                f"{CHILD_TIMEOUT_SECONDS}s, so 1Password's authorization for this "
-                "session is stuck. The broker is restarting; rerun the command "
-                "and expect one Touch ID prompt.\n"
+                f"{CHILD_TIMEOUT_SECONDS}s and was killed; the broker is restarting.\n"
+                f"op-desktop: the CLI's stderr before the kill: {partial[-500:] or '(empty)'}\n"
             ),
             "restart": True,
         }
@@ -258,6 +266,108 @@ def execute_request(request: dict, slave_fd: int) -> dict:
         payload = {"rc": 1, "out": "", "err": "op-desktop: child execution failed\n"}
     log(f"  rc={payload['rc']}")
     return payload
+
+
+DAEMON_SOCKET = os.path.join(os.path.expanduser("~"), ".config", "op", "op-daemon.sock")
+
+
+def find_op_daemons() -> list[tuple[int, str]]:
+    """Return (pid, executable) for every `op daemon` serving DAEMON_SOCKET.
+
+    A daemon is an orphaned `op` process (parent launchd) holding the daemon
+    socket. Identified by process metadata only; command lines are not read.
+    """
+    listing = subprocess.run(
+        ["ps", "-axo", "pid=,ppid=,comm="], capture_output=True, text=True
+    ).stdout
+    daemons = []
+    for line in listing.splitlines():
+        fields = line.split(None, 2)
+        if len(fields) != 3 or fields[1] != "1" or os.path.basename(fields[2]) != "op":
+            continue
+        files = subprocess.run(
+            ["lsof", "-a", "-p", fields[0], "-Ffn"], capture_output=True, text=True
+        ).stdout.splitlines()
+        executable, holds_socket, descriptor = "", False, ""
+        for entry in files:
+            if entry.startswith("f"):
+                descriptor = entry[1:]
+            elif entry.startswith("n"):
+                if entry[1:] == DAEMON_SOCKET:
+                    holds_socket = True
+                elif descriptor == "txt" and entry.endswith("/op") and not executable:
+                    executable = entry[1:]
+        if holds_socket:
+            daemons.append((int(fields[0]), executable))
+    return daemons
+
+
+def daemon_socket_owner() -> int | None:
+    """PID of the process listening on DAEMON_SOCKET, i.e. the daemon the CLI
+    actually talks to, or None if nothing accepts connections there."""
+    probe = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    probe.settimeout(2)
+    try:
+        probe.connect(DAEMON_SOCKET)
+        # SOL_LOCAL = 0, LOCAL_PEERPID = 2 on macOS.
+        return probe.getsockopt(0, 2)
+    except OSError:
+        return None
+    finally:
+        probe.close()
+
+
+def reap_op_daemons(everything: bool) -> None:
+    """Stop `op daemon` processes that cannot help or that are wedged.
+
+    Every daemon not listening on the socket is unreachable by new CLI
+    commands (a later daemon took over the path; 2026-10-17 found two, one
+    still running a pre-upgrade 2.39.0 binary), so it only holds stale state.
+    With `everything` (after a hung command), also stop the listening daemon.
+    On 2026-10-17 `item get`/`vault list` requests hung repeatedly across eight
+    broker restarts; recovery coincided with a daemon being replaced (on
+    2026-10-07 a broker restart alone had sufficed). Which daemon was serving
+    during those hangs, and what triggered them, is unknown: the listener pid is
+    now logged so the next occurrence can settle it. The CLI starts a fresh
+    daemon on its next command.
+    """
+    try:
+        daemons = find_op_daemons()
+    except OSError:
+        log("  could not list op daemons")
+        return
+    owner = daemon_socket_owner()
+    log(f"  op daemons {[pid for pid, _ in daemons]}; socket served by pid {owner}")
+    if owner is None and not everything:
+        # Unknown listener: a failed probe must not count as "nobody listens",
+        # or the startup sweep would stop the live daemon.
+        log("  listener unknown; leaving daemons alone")
+        return
+    targets = [(pid, exe) for pid, exe in daemons if everything or pid != owner]
+    for pid, exe in targets:
+        try:
+            os.kill(pid, signal.SIGTERM)
+            log(f"  sent SIGTERM to op daemon pid={pid} exe={exe or 'unknown'}")
+        except OSError:
+            pass
+    deadline = time.monotonic() + 3
+    while targets and time.monotonic() < deadline:
+        time.sleep(0.2)
+        targets = [(pid, exe) for pid, exe in targets if process_alive(pid)]
+    for pid, _exe in targets:
+        try:
+            os.kill(pid, signal.SIGKILL)
+            log(f"  killed op daemon pid={pid} (ignored SIGTERM)")
+        except OSError:
+            pass
+
+
+def process_alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
 
 
 def handle_connection(conn: socket.socket, slave_fd: int) -> None:
@@ -384,6 +494,7 @@ def serve_broker() -> None:
     os.chmod(PID_PATH, 0o600)
 
     log(f"broker started pid={os.getpid()} tty={os.ttyname(slave_fd)}")
+    reap_op_daemons(everything=False)
 
     def shutdown(_signum=None, _frame=None):
         log("broker stopping")

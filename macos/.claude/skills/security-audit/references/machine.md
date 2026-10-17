@@ -82,10 +82,8 @@ Inspect profile metadata only, never cookies or session databases.
   passphrase status unverified unless established from permitted existing
   evidence. Unrecognized authorized keys need provenance, not an automatic
   malicious label.
-- Google Advanced Protection is an optional account-hardening recommendation.
-  Check existing evidence without assuming enrollment, setup time, or access.
-  Mention app-password and third-party compatibility implications when relevant;
-  never change enrollment or test recovery during an audit.
+- Online-account second factors, recovery paths, and Google Advanced Protection
+  belong to [accounts](accounts.md).
 - Check backup freshness, encryption, destination access, and available
   independent recovery copies using metadata. Distinguish a completed backup
   from a demonstrated restore. A restore test belongs to explicitly authorized

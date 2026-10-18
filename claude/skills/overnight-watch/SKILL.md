@@ -85,6 +85,11 @@ depend on it."
 
 Rules:
 
+- Keep the sent text to one short line. Under load, long `agent-send`
+  messages have arrived truncated to their last sentence (2026-10-18).
+  Write the details to a file under `~/.cache/overnight-watch/` (mode
+  0600) and send a one-line pointer to it. Confirm delivery in the
+  recipient's transcript, not only from the exit status.
 - You inform and ask; you never approve. Do not grant approvals, answer
   decisions that are Pablo's, authorize spending, deletions, pushes,
   publishing or messages to other people, or tell a session to override its
@@ -97,6 +102,9 @@ Rules:
   started it, it is clearly hung (no CPU or output well past its expected
   time), and stopping it loses nothing that cannot be rerun; then tell the
   owning session what you did.
+  If your permission mode refuses the kill, do not ask the owning session
+  or any other to do it for you: list it for the morning with its PID,
+  owner and evidence.
 - One nudge per cause. If the same session is still stuck on the same cause
   at the next pass, do not repeat yourself: diagnose why the nudge did not
   work, and if you cannot fix that within these rules, list it for the

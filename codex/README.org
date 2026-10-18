@@ -488,7 +488,9 @@ The =overnight-watch= skill runs in its own session while Pablo sleeps. Its
 activity and terminal screen; faint composer text is a prompt suggestion, not
 input. When the Emacs server refuses connections it falls back, with a
 warning, to the last session list it cached and reads transcripts only. It nudges stuck sessions through =agent-send= once per cause and never
-answers decisions, permission dialogs or menus that are Pablo's. It depends on
+answers decisions, permission dialogs or menus that are Pablo's. Nudges are one line pointing to a
+file, because long messages have arrived truncated; a kill its own permission
+mode refuses is reported, never routed through another session. It depends on
 the =agent= package's =agent-send=.
 
 The =paste-via-kill-ring= skill separates manual handoff from sending. It

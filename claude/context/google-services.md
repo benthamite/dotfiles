@@ -10,6 +10,7 @@ Pablo uses multiple human Google accounts plus a bot account, and accesses each 
 | `pablo.stafforini@gmail.com`             | Personal account              |
 | `pablo@forethought.org`                  | Forethought work account      |
 | `email-triage@epoch.ai`                  | Email-triage bot account      |
+| `pablostafforini@baish.com.ar`           | BAISH/FIAS account            |
 
 ## Tooling by service
 
@@ -64,6 +65,15 @@ Notion-account distinctions are recorded in `service-access.md`.
 Claude Code does not load the claude.ai Gmail, Calendar or other hosted
 connectors (`disableClaudeAiConnectors`; see `mcp-servers.md`). Use the local
 tools above.
+
+For the **BAISH/FIAS** account (`pablostafforini@baish.com.ar`), use
+`gdoc --account baish` for Docs/Drive (own token under
+`~/.config/gdoc/accounts/baish/`, Drive and Docs scopes, granted 18 October
+2026; re-auth with `gdoc auth --account baish --domain baish.com.ar`). It reads
+the BAISH Workspace and the FIAS folders Eitan shares inside `@baish.com.ar`,
+including the FIAS legal folder and the legacy BAISH tree. Browser work uses the
+`baish` Chrome profile (`baish.com.ar`), which also holds the `fias` Claude
+account's extension. Gmail, Sheets and Calendar have no BAISH credentials yet.
 
 ## Google Docs browser body edits
 

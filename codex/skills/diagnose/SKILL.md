@@ -3,6 +3,8 @@ name: diagnose
 description: Establish the cause of unintended behavior in the user's agents, tools, or configuration before proposing or applying any remedy. Use whenever such behavior is reported or observed and its cause is not yet established. Not for ordinary code bugs, broad configuration audits, or repository-wide AI developer-experience reviews.
 ---
 
+Known local causes are indexed in `~/My Drive/dotfiles/claude/context/README.org`; check the relevant entry first (for example, `lulu-firewall.md` when a Homebrew tool's network connections fail after an upgrade).
+
 Use this workflow to establish why a specific incident occurred before changing the failing mechanism. Treat errors, confusion, and friction as *symptoms* of an underlying issue, not as direct fix targets. For a diagnosis-only request, the deliverable is the diagnosis. For a request that also asks for a fix, diagnose first, then implement the confirmed remedy.
 
 Do not use this skill for ordinary code debugging, planned implementation work, broad agent-configuration inventories, or repository-wide developer-experience audits. When the request includes a fix, diagnose and perform the confirmed in-scope remedy in the same turn. Do not add external, destructive or hard-to-reverse actions without the required explicit authority; an audit/fix request does not silently grant it. Follow local approval policy and never add ask-style tool gates as an enforcement repair.

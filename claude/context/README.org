@@ -7,6 +7,7 @@
 |----------+-----------|
 | =alerting.md= | A task adds, changes or diagnoses liveness or failure alerts for an automation (heartbeats, watchdogs, CI failure notices); the principle is one shared service, =launchd-heartbeat=. |
 | =google-services.md= | A task needs Google account routing, authentication, scopes, refresh-token maintenance, or service-specific troubleshooting. |
+| =lulu-firewall.md= | A Homebrew-installed tool's network connections hang or fail while other programs reach the same host, especially after a =brew upgrade=. |
 | =mcp-servers.md= | A task adds, removes, places, audits, or diagnoses a Claude MCP server. |
 | =secrets.md= | Before reading, storing, sharing, moving, or otherwise handling credentials and secret-bearing configuration. |
 | =service-access.md= | A task needs an external service (Gmail, Google Sheets/Calendar/Docs/Drive, Slack, GitHub, Anna's Archive) or the Forethought Chrome profile; it maps each service to its local tool. Browser rules live in the =chrome-use= skill. |

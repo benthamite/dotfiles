@@ -56,6 +56,23 @@ the "Already tried" list in place.
 
 * Incidents
 
+** 2026-10-18 night: repeated outages under host starvation (investigation, no change)
+
+- Seen by the overnight watcher session: server refused 00:56–~01:15;
+  watchdog outages 05:42–06:29 (timeout) and from 07:33 (blocked; state
+  file stale from 07:18, still out at 08:15). The watchdog wrote no sample
+  from 23:14 to at least 01:00.
+- Emacs 4855 was not stuck in Lisp: 3 s samples at 00:58 and 07:56 showed the
+  main thread idle in =read_char=. By 07:56 its RSS had fallen from ~1.4 GB
+  to 66 MB (swapped out). Swap 25.4/26.6 GB, load 75–300 all night.
+- Load sources: will-corpus OCR (32 Python workers + tesseract), the
+  macro-corpus collection workflow, the tangodb r7 round, and a broken
+  tangodb inline multiprocessing script (PID 69941, 23:24–~05:30) that
+  respawned ~270k failing workers. Same chronic memory cause as 10-17.
+- Side effect: under load, =agent-send= delivered only the last sentence
+  of a long message; one-line messages arrived intact.
+- Samples: =/tmp/emacs-freeze.7zBio1/=.
+
 ** 2026-10-17: all-day outages under host starvation (investigation, no change)
 
 - 16 outages 05:02–16:37, the longest 13:31–14:45 (refused). At 16:35 swap

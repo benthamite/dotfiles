@@ -61,6 +61,21 @@ because its vendor ships updates.
   did not establish credential separation. Verify a separate-UID or VM boundary
   for the actual untrusted workflow; do not generalize this version-specific
   observation into a claim about every sandbox or future OS version.
+- Check whether an agent can weaken the controls meant to contain it: disable
+  or reconfigure LuLu, answer a firewall or permission prompt, edit privacy
+  grants in System Settings, turn off FileVault, Gatekeeper or the firewall,
+  or edit its own guards. UI automation (System Events, `osascript`, computer
+  use) reaches all of these through the agent host's Accessibility grant.
+  Test the guards and classifier with synthetic commands that would perform
+  such a change, never by attempting it, and record allow or deny for each.
+  An allowed path is High when the agent holds the needed OS grant.
+- Map each agent's credential reach without reading values: whether its
+  processes can reach the 1Password SSH agent socket (`SSH_AUTH_SOCK`), git
+  credential helpers (`git config --get-all credential.helper`), the login
+  Keychain through the `security` CLI, and an unlocked `op` session or its
+  idle window. A signing or authentication agent the sandbox can reach lets
+  injected instructions push code or log in as Pablo; rate by what the
+  credential reaches.
 - Treat CLAUDE.md/AGENTS.md and skill instructions as behavioral guidance. Broad
   wording is a review lead; a skill cannot create OS privilege by prose alone.
   Establish the tool/sandbox capability and untrusted-input path that make a

@@ -21,6 +21,20 @@ Login, Screen Sharing, and Remote Management. Distinguish intentional, scoped
 access from unexpected exposure; do not enable/disable a service to test it.
 Report active outbound-firewall status and relevant policy, not just installation.
 
+Audit LuLu's rules with `scripts/lulu-rules.py`, which reads its rules and
+preferences read-only. An allow rule for an interpreter, shell, `osascript` or
+`curl` to any endpoint lets every script that program runs reach any host, so
+the firewall does not stop exfiltration by such code; rate it High when such
+code handles untrusted input (dependencies, agents), and name the workflow
+that needs the rule. `allowApple` and `allowInstalled` admit programs without
+a rule (Apple-signed `curl` and `osascript` among them); report them as
+Medium. Report stale rules as cleanup. An `unreadable` file is an unverified
+high-risk item.
+
+List listening sockets with `lsof -nP -iTCP -sTCP:LISTEN` (process name, user,
+address, port only). A service bound to a non-loopback address is reachable
+from the network; establish its owner and authentication.
+
 For Lockdown Mode, use actual System Settings evidence through an existing
 permitted read path, or mark status not checked. An MDM profile identifier is
 not Lockdown status. Recommend it for a relevant targeted-attack threat after
@@ -78,6 +92,34 @@ Inspect profile metadata only, never cookies or session databases.
   Do not run `sfltool dumpbtm`: it requires administrator authorization and
   raises a password prompt (observed 2026-10-18). For the full registration
   list, ask Pablo for System Settings > General > Login Items & Extensions.
+- A launch item whose program or script, or any directory above it, is
+  writable by the user or lies under Google Drive runs whatever that path holds
+  next: rate a root-run (LaunchDaemon) target High, a user target as a
+  persistence path. Check the user crontab (`crontab -l`, entries only),
+  `/etc/periodic` and `/etc/*.local`, and login hooks
+  (`defaults read com.apple.loginwindow`, LoginHook/LogoutHook keys only).
+  The root crontab needs sudo: ask Pablo to run `sudo crontab -l`, or report it
+  as an unverified high-risk item when `cron` holds Full Disk Access.
+- Startup files are code: shell startup files, the Emacs init and early-init,
+  `~/.ssh/config`, git config and hooks, and any file they load. When they
+  live in Google Drive, anything that can write the Drive account can run code
+  at the next shell or Emacs start. Compare tracked startup files with git
+  using `git status --porcelain` and `git diff --stat` (names and counts, never
+  content) and report modified or untracked loaded files, and symlinks from
+  home into Drive, as unreviewed code. Note whether Drive version history
+  could restore a clean copy.
+- Check sudo configuration through readable metadata: `/etc/sudoers.d` file
+  names and modes, and, when readable, `NOPASSWD`, `timestamp_timeout` and
+  `!tty_tickets` entries. A `NOPASSWD` rule for a program that runs arbitrary
+  code is High. Unreadable sudoers is not checked, not clean.
+- PATH order: a user-writable directory ahead of `/usr/bin` lets any process
+  running as the user shadow `sudo`, `ssh` or `git` for later shells. Report
+  each writable entry before the system directories.
+- Look for quarantine stripping in scripts, aliases and functions
+  (`xattr -d`/`-c`/`-r` on `com.apple.quarantine`, `--no-quarantine`,
+  `HOMEBREW_CASK_OPTS`): it removes the Gatekeeper check for what follows.
+- Inventory clipboard-history apps and their retention. Copied passwords and
+  tokens persist there and are readable by any process with the app's data.
 - Inventory browser extensions across applicable profiles. Prioritize granted
   host access, cookies/debugger/native-messaging privileges, install/update
   origin, and continued need. Publisher size is supporting context only.

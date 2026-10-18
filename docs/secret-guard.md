@@ -91,6 +91,7 @@ screenshot.
 | 10-16 | Slack bot token (Forethought "Sprint Watchdog" app) | d | screenshot of the app's OAuth & permissions page, which shows the token in plain text; the session is also exported to Peter; rotated 10-16 before it was stored |
 
 | 10-10 | Fireflies webhook signing secret (Pablo, meeting-debrief Worker) | d | a screenshot of the Fireflies Webhooks V2 edit panel, which shows the signing secret in plain text; rotated 10-10 in 1Password and on the Worker, Fireflies updated by Pablo. The `agents/credential-pages.txt` list does not cover `app.fireflies.ai/integrations/api/webhook` |
+| 10-18 | YubiKey OTP (one-time, 44-char modhex) | — | not an agent action: a YubiKey touch while the Claude Code prompt had focus sent the OTP as a chat message; it stays valid only until a newer OTP from that key is used |
 
 Tally: page/screenshot 10, command output 9, file read 3, **typed literal 0**.
 

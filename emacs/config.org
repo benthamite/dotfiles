@@ -9519,10 +9519,12 @@ up to ROOT.  Return ROOT when the search starts outside it or finds none."
 
 /[[https://github.com/benthamite/agent][agent]] provides Emacs integration for AI coding agents./
 
-Forethought's workspace, preparation notes and project notes are available under
-every account.
-The project picker discovers directories under =Forethought/projects/= that
-contain =AGENTS.md= or =CLAUDE.md=, including directories without Git repositories.
+The notes workspaces in =pablo/agent-notes-workspaces= (Forethought, FIAS) are
+available under every account.
+For each one, the project picker lists the workspace root and the top-level and
+=projects/= directories that contain =AGENTS.md= or =CLAUDE.md=, including
+directories without Git repositories.
+The FIAS org checkouts under =~/repos/fias/= are listed too.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package agent
@@ -9550,17 +9552,30 @@ BACKEND is `claude' or `codex'.  Each entry becomes (NAME :home HOME), with
   (agent-claude-mode 1)
   (agent-codex-mode 1)
   (agent-tab-bar-mode 1)
-  (defun pablo/agent-add-forethought-projects (sources)
-    "Append Forethought's workspace and instruction-bearing projects to SOURCES."
-    (let* ((root (expand-file-name "~/My Drive/Forethought/"))
-           (projects (expand-file-name "projects/" root)))
-      (append sources
-              (when (file-directory-p root) (list root))
-              (let ((prep (expand-file-name "prep/" root)))
-                (when (pablo/agent-instruction-directory-p prep) (list prep)))
-              (when (file-directory-p projects)
-                (seq-filter #'pablo/agent-instruction-directory-p
-                            (directory-files projects t "\\`[^.]"))))))
+  (defvar pablo/agent-notes-workspaces
+    '("~/My Drive/Forethought/" "~/My Drive/FIAS/")
+    "Notes workspaces the agent project picker lists under every account.")
+  (defun pablo/agent-add-notes-workspaces (sources)
+    "Append the directories of `pablo/agent-notes-workspaces' to SOURCES."
+    (append sources
+            (mapcan #'pablo/agent-notes-workspace-directories
+                    pablo/agent-notes-workspaces)))
+  (defun pablo/agent-notes-workspace-directories (root)
+    "Return ROOT and its instruction-bearing directories.
+The directories are ROOT's top-level subdirectories and the subdirectories of
+its projects/ directory that contain project instructions.  Return nil if ROOT
+does not exist."
+    (let ((root (file-name-as-directory (expand-file-name root))))
+      (when (file-directory-p root)
+        (cons root
+              (seq-filter #'pablo/agent-instruction-directory-p
+                          (append (directory-files root t "\\`[^.]")
+                                  (pablo/agent-subdirectories
+                                   (expand-file-name "projects/" root))))))))
+  (defun pablo/agent-subdirectories (directory)
+    "Return the non-hidden entries of DIRECTORY, or nil if it does not exist."
+    (when (file-directory-p directory)
+      (directory-files directory t "\\`[^.]")))
   (defun pablo/agent-instruction-directory-p (directory)
     "Return non-nil if DIRECTORY contains project instructions."
     (and (file-directory-p directory)
@@ -9568,7 +9583,7 @@ BACKEND is `claude' or `codex'.  Each entry becomes (NAME :home HOME), with
                      (file-regular-p (expand-file-name name directory)))
                    '("AGENTS.md" "CLAUDE.md"))))
   (advice-add 'agent-project--sources-for-account :filter-return
-              #'pablo/agent-add-forethought-projects)
+              #'pablo/agent-add-notes-workspaces)
   ;; Serve the phone control page over Tailscale.  Demote errors so a
   ;; port that cannot be bound does not abort the rest of this configuration.
   (require 'agent-remote)
@@ -9600,7 +9615,7 @@ BACKEND is `claude' or `codex'.  Each entry becomes (NAME :home HOME), with
          "~/My Drive/tlon/projects/cognitive-revolution"
          "~/My Drive/tlon/projects/ea.international"
          "~/My Drive/tlon/projects/ea.news"))
-     ("" . ("~/repos/*" "~/repos/.worktrees/*/*"))))
+     ("" . ("~/repos/*" "~/repos/fias/*" "~/repos/.worktrees/*/*"))))
   (agent-project-registry-root (file-name-concat paths-dir-epoch-workspace "projects/"))
   (agent-chief-directory paths-dir-epoch)
   (agent-claude-org-todo-in-progress-keyword "DOING")
@@ -9625,7 +9640,13 @@ BACKEND is `claude' or `codex'.  Each entry becomes (NAME :home HOME), with
       . ((claude-code . "epoch") (codex . "epoch-pool")))
      (,(file-name-concat paths-dir-personal-repos "forethought/") . "forethought")
      ("~/My Drive/Forethought/" . "forethought")
-     (,(file-name-concat paths-dir-split-git "Forethought/") . "forethought")))
+     (,(file-name-concat paths-dir-split-git "Forethought/") . "forethought")
+     ;; FIAS has no account of its own; Codex has no personal account.
+     (,(file-name-concat paths-dir-personal-repos "fias/")
+      . ((claude-code . "personal-pool")))
+     ("~/My Drive/FIAS/" . ((claude-code . "personal-pool")))
+     (,(file-name-concat paths-dir-split-git "FIAS/")
+      . ((claude-code . "personal-pool")))))
 
   :bind
   ("H-e" . agent-menu)

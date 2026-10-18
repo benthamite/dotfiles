@@ -12,9 +12,9 @@
 
 set -eu
 
-# Item "mbsync/password" by ID: the slash in its title cannot appear in an
-# op:// reference.
-ref=op://Automation/v37scsqu7tccknafmswlgmkow4/password
+# Item "smtp.gmail.com", the Gmail app password "mac-mail" that Emacs smtpmail
+# also reads.
+ref=op://Automation/smtp.gmail.com/password
 
 if [ -n "${MBSYNC_PASSFILE:-}" ] && [ -r "$MBSYNC_PASSFILE" ]; then
     cat "$MBSYNC_PASSFILE"

@@ -22,6 +22,7 @@ import time
 from pathlib import Path
 
 AGENT_SEND = Path.home() / "My Drive/dotfiles/bin/agent-send"
+SESSIONS_CACHE = Path.home() / ".cache/overnight-watch/sessions.json"
 SCREEN_LINES = 18
 TEXT_CHARS = 1200
 
@@ -133,9 +134,24 @@ def screen(buffer):
 
 def main():
     own = os.environ.get("CLAUDE_BUFFER_NAME") or os.environ.get("CODEX_BUFFER_NAME")
-    sessions = json.loads(subprocess.run([str(AGENT_SEND), "--list", "--json"],
-                                         capture_output=True, text=True, check=True).stdout)
     print(f"# snapshot {time.strftime('%Y-%m-%d %H:%M:%S')}; load {os.getloadavg()[0]:.0f}")
+    listing = subprocess.run([str(AGENT_SEND), "--list", "--json"], capture_output=True, text=True)
+    emacs_up = listing.returncode == 0
+    if emacs_up:
+        sessions = json.loads(listing.stdout)
+        SESSIONS_CACHE.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        SESSIONS_CACHE.write_text(listing.stdout)
+    else:
+        # Labeled fallback: during an Emacs server outage the sessions' own
+        # processes keep running, so their transcripts still show progress.
+        # Use the last successful listing and say so; screens are unavailable.
+        print(f"# EMACS SERVER UNREACHABLE: {listing.stderr.strip()[-300:]}")
+        if not SESSIONS_CACHE.exists():
+            print("# no cached session list; cannot continue")
+            return 1
+        print(f"# using session list cached {fmt_age(age(SESSIONS_CACHE))}; "
+              "states are stale and screens are skipped")
+        sessions = json.loads(SESSIONS_CACHE.read_text())
     for s in sessions:
         if s["buffer"] == own:
             continue
@@ -152,8 +168,9 @@ def main():
             print(f"last assistant message at {local(ts)}:")
             print(text[-TEXT_CHARS:])
             print(f"STATUS LINE: {status[-1] if status else '(none)'}")
-        print("--- screen bottom")
-        print(screen(s["buffer"]))
+        if emacs_up:
+            print("--- screen bottom")
+            print(screen(s["buffer"]))
 
 
 if __name__ == "__main__":

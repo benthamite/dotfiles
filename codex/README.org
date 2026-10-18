@@ -486,7 +486,8 @@ requires explicit migration, not a reset.
 The =overnight-watch= skill runs in its own session while Pablo sleeps. Its
 =watch_snapshot.py= reads every live agent.el session's transcript, subagent
 activity and terminal screen; faint composer text is a prompt suggestion, not
-input. It nudges stuck sessions through =agent-send= once per cause and never
+input. When the Emacs server refuses connections it falls back, with a
+warning, to the last session list it cached and reads transcripts only. It nudges stuck sessions through =agent-send= once per cause and never
 answers decisions, permission dialogs or menus that are Pablo's. It depends on
 the =agent= package's =agent-send=.
 

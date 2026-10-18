@@ -29,6 +29,12 @@ Defaults: check every 20 minutes (`--every`) until 08:00 local (`--until`).
    suggestion, not input anyone typed. Read more of a transcript with
    `live-session-status` when the tail does not explain the state.
 
+   If the snapshot reports the Emacs server unreachable, the sessions are
+   usually still running: judge them from transcript write ages, diagnose
+   Emacs with the `emacs-freeze` skill (read-only; no signals), and record
+   the outage for the morning report. Under host memory starvation it has
+   recovered on its own before.
+
 2. Classify each session:
 
    | Class | Evidence | Action |

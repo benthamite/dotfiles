@@ -69,12 +69,14 @@ Inspect profile metadata only, never cookies or session databases.
   exposure; assess its intended use. Explain which workflow relies on each
   flagged grant before recommending its removal, and report `stale` grants on
   deleted paths as cleanup. Route a specific questionable app to `audit-mac-app`.
-- Inspect modern background-task registrations (Apple's `sfltool dumpbtm`,
-  locally filtered) and metadata for `~/Library/LaunchAgents`,
+- Inspect background-task registrations through metadata for `~/Library/LaunchAgents`,
   `/Library/LaunchAgents`, and `/Library/LaunchDaemons`. Include legacy login
   items where relevant. Review executable path, ownership, signature/provenance,
   and the command's access; an unfamiliar name alone is not malware evidence.
   Do not print raw plist environment values or arbitrary program arguments.
+  Do not run `sfltool dumpbtm`: it requires administrator authorization and
+  raises a password prompt (observed 2026-10-18). For the full registration
+  list, ask Pablo for System Settings > General > Login Items & Extensions.
 - Inventory browser extensions across applicable profiles. Prioritize granted
   host access, cookies/debugger/native-messaging privileges, install/update
   origin, and continued need. Publisher size is supporting context only.

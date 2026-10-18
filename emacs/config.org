@@ -9641,12 +9641,12 @@ does not exist."
      (,(file-name-concat paths-dir-personal-repos "forethought/") . "forethought")
      ("~/My Drive/Forethought/" . "forethought")
      (,(file-name-concat paths-dir-split-git "Forethought/") . "forethought")
-     ;; FIAS has no account of its own; Codex has no personal account.
+     ;; Codex has no FIAS account, so only Claude is routed.
      (,(file-name-concat paths-dir-personal-repos "fias/")
-      . ((claude-code . "personal-pool")))
-     ("~/My Drive/FIAS/" . ((claude-code . "personal-pool")))
+      . ((claude-code . "fias")))
+     ("~/My Drive/FIAS/" . ((claude-code . "fias")))
      (,(file-name-concat paths-dir-split-git "FIAS/")
-      . ((claude-code . "personal-pool")))))
+      . ((claude-code . "fias")))))
 
   :bind
   ("H-e" . agent-menu)

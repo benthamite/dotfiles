@@ -4,7 +4,8 @@
     {"name": "personal2", "home": "~/.claude-personal2", "pool": "personal-pool"},
     {"name": "tlon", "home": "~/.claude-tlon"},
     {"name": "epoch", "home": "~/.claude-epoch"},
-    {"name": "forethought", "home": "~/.claude-forethought"}
+    {"name": "forethought", "home": "~/.claude-forethought"},
+    {"name": "fias", "home": "~/.claude-fias"}
   ],
   "codex": [
     {"name": "tlon", "home": "~/.codex-tlon"},

@@ -68,9 +68,9 @@ shared tracked artifacts.
 
 ** Multi-account activation
 
-Five OAuth accounts use separate configuration homes:
+Six OAuth accounts use separate configuration homes:
 =~/.claude-personal/=, =~/.claude-personal2/=, =~/.claude-tlon/=,
-=~/.claude-epoch/=, and =~/.claude-forethought/=. Each keeps its own OAuth identity, Keychain credentials,
+=~/.claude-epoch/=, =~/.claude-forethought/=, and =~/.claude-fias/=. Each keeps its own OAuth identity, Keychain credentials,
 and =.claude.json=. Settings, skills, projects, history, and plugins are shared
 through symlinks to =~/.claude/=. The account homes do not contain a second
 =CLAUDE.md=, because the user-level file is already loaded from =~/.claude/=.

@@ -59,7 +59,8 @@ Inspect profile metadata only, never cookies or session databases.
   read; an `unreadable` database means unknown grants, handled as an
   unverified high-risk item (SKILL.md, Report).
 - A grant to a generic executor (an interpreter, shell, `osascript`, `cron`,
-  a terminal, an editor or a macro engine; the helper's `generic_executor`)
+  a terminal, an editor, a macro engine or an AI agent app; the helper's
+  `generic_executor`, whose list may lag new apps)
   extends to every script that program runs, so any code running as the user
   holds it. Rate Accessibility, synthetic input, Automation of System Events
   or System Settings, Full Disk Access and Developer Tools held that way as

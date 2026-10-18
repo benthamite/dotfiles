@@ -74,6 +74,12 @@ class TccGrantsTest(unittest.TestCase):
         self.assertTrue(grant["generic_executor"])
         self.assertEqual(grant["target"], "com.apple.systemevents")
 
+    def test_agent_app_accessibility_is_flagged(self):
+        db = self.base / "TCC.db"
+        make_db(db, [("kTCCServiceAccessibility", "com.openai.codex", 0, 2, None, 0)])
+        [grant] = self.report(db)[0]["grants"]
+        self.assertTrue(grant["generic_executor"])
+
     def test_specific_app_denied_grant_and_other_service_are_not_flagged(self):
         db = self.base / "TCC.db"
         make_db(db, [("kTCCServiceAccessibility", "com.knollsoft.Rectangle", 0, 2, None, 0),

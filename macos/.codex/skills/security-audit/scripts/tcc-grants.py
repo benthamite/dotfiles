@@ -54,6 +54,9 @@ GENERIC_BUNDLES = {
     "dev.warp.Warp-Stable", "org.gnu.Emacs", "com.microsoft.VSCode",
     "com.todesktop.230313mzl4w4u92", "com.stairways.keyboardmaestro.engine",
     "com.apple.dt.Xcode",
+    # Agent apps run commands a model chooses, so their grants reach any
+    # instruction that reaches the model.
+    "com.openai.codex", "com.openai.sky.CUAService", "com.anthropic.claudefordesktop",
 }
 
 

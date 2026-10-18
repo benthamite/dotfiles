@@ -82,3 +82,10 @@ resources when Homebrew removes its predecessor; new sessions select the new
 release. The Chrome helper's `CODEX_CLI_PATH` uses the same launcher. Direct
 launches through `/opt/homebrew/bin/codex` bypass this protection. See
 `shell/README.org` for runtime storage and retention details.
+
+Both Homebrew lanes hold back a package whose LuLu allow rule is tied to its
+versioned path and has no directory rule (`bin/lulu-homebrew-rules check`),
+because upgrading it would raise a LuLu alert on every connection
+(`claude/context/lulu-firewall.md`). The delayed lane alerts about held
+packages through `launchd-heartbeat`, and both lanes send the `personal-updates`
+heartbeat after a successful run (`claude/context/alerting.md`).

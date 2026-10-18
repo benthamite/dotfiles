@@ -1,0 +1,154 @@
+#!/usr/bin/env python3
+"""Keep LuLu's allow rules for Homebrew tools valid across upgrades.
+
+Homebrew binaries are ad-hoc signed, so LuLu keys their rules on the exact
+path, which contains the version (/opt/homebrew/Cellar/git/2.56.0/...). An
+upgrade leaves the rule behind and every connection raises a new alert. A
+LuLu directory rule, a path ending in "*", matches by prefix instead, so
+"/opt/homebrew/Cellar/git/*" covers every version.
+
+`check` lists each Homebrew package that has a version-specific allow rule
+but no directory rule; it exits 1 when there is one. `add` creates the
+missing directory rules through LuLu's Add Rule dialog. Background:
+claude/context/lulu-firewall.md.
+"""
+
+from __future__ import annotations
+
+import argparse
+import plistlib
+import re
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+
+RULES_FILE = Path("/Library/Objective-See/LuLu/rules.plist")
+RULE_ALLOW = 1
+PACKAGE_DIR = re.compile(r"^(/opt/homebrew/(?:Cellar|Caskroom)/[^/]+)/[^/]+/")
+
+# Drives LuLu's Add Rule window. Each step waits for the window it needs, so
+# a slow LuLu fails with an error instead of typing into the wrong window.
+ADD_RULE_SCRIPT = """
+on waitForWindow(prefix)
+  tell application "System Events" to tell process "LuLu"
+    repeat 40 times
+      repeat with w in windows
+        if (name of w) starts with prefix then return w
+      end repeat
+      delay 0.25
+    end repeat
+  end tell
+  error "LuLu window did not appear: " & prefix
+end waitForWindow
+
+on run argv
+  set rulePath to item 1 of argv
+  tell application "LuLu" to activate
+  tell application "System Events" to tell process "LuLu"
+    set rulesWindow to missing value
+    repeat with w in windows
+      if (name of w) starts with "LuLu Rules" then set rulesWindow to w
+    end repeat
+    if rulesWindow is missing value then
+      click button "View Rules" of my waitForWindow("Settings")
+      set rulesWindow to my waitForWindow("LuLu Rules")
+    end if
+    click (first button of rulesWindow whose description is "add")
+    set w to my waitForWindow("Add Rule")
+    click radio button " Allow" of w
+    set value of text field 1 of w to rulePath
+    set value of text field 2 of w to "*"
+    set value of text field 3 of w to "*"
+    click button "Add" of w
+    repeat 40 times
+      set stillOpen to false
+      repeat with x in windows
+        if (name of x) starts with "Add Rule" then set stillOpen to true
+      end repeat
+      if not stillOpen then return
+      delay 0.25
+    end repeat
+    error "LuLu kept the Add Rule window open for " & rulePath
+  end tell
+end run
+"""
+
+
+def load_rules(path: Path = RULES_FILE) -> list[dict]:
+    """Return LuLu's rules as dicts of plain values."""
+    with path.open("rb") as handle:
+        objects = plistlib.load(handle)["$objects"]
+
+    def resolve(value):
+        return objects[value.data] if isinstance(value, plistlib.UID) else value
+
+    return [
+        {key: resolve(value) for key, value in item.items()}
+        for item in objects
+        if isinstance(item, dict) and "path" in item and "action" in item
+    ]
+
+
+def uncovered_packages(rules: list[dict], installed=Path.is_dir) -> list[str]:
+    """Return installed package directories with versioned allow rules but no directory rule."""
+    allowed = [rule for rule in rules
+               if rule.get("action") == RULE_ALLOW and rule.get("isDisabled") in (None, "$null", False, 0)]
+    prefixes = [rule["path"][:-1] for rule in allowed
+                if isinstance(rule.get("path"), str) and rule["path"].endswith("*")]
+    packages = set()
+    for rule in allowed:
+        match = PACKAGE_DIR.match(rule.get("path") or "")
+        if match:
+            packages.add(match.group(1))
+    return sorted(package for package in packages
+                  if installed(Path(package))
+                  and not any((package + "/").startswith(prefix) for prefix in prefixes))
+
+
+def add_directory_rule(package: str) -> None:
+    subprocess.run(["osascript", "-", package + "/*"], input=ADD_RULE_SCRIPT,
+                   text=True, check=True, capture_output=True)
+
+
+def command_check(rules_file: Path) -> int:
+    missing = uncovered_packages(load_rules(rules_file))
+    for package in missing:
+        print(package)
+    return 1 if missing else 0
+
+
+def command_add(rules_file: Path) -> int:
+    missing = uncovered_packages(load_rules(rules_file))
+    for package in missing:
+        try:
+            add_directory_rule(package)
+        except subprocess.CalledProcessError as error:
+            print(f"lulu-homebrew-rules: adding {package}/* failed: {error.stderr.strip()}",
+                  file=sys.stderr)
+            return 1
+        print(f"added {package}/*")
+    # LuLu writes rules.plist asynchronously; confirm from the file itself.
+    for _ in range(20):
+        remaining = uncovered_packages(load_rules(rules_file))
+        if not remaining:
+            return 0
+        time.sleep(0.5)
+    for package in remaining:
+        print(f"lulu-homebrew-rules: still uncovered: {package}", file=sys.stderr)
+    return 1
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--rules-file", type=Path, default=RULES_FILE)
+    parser.add_argument("command", choices=("check", "add"))
+    args = parser.parse_args(argv)
+    if args.command == "check":
+        return command_check(args.rules_file)
+    return command_add(args.rules_file)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

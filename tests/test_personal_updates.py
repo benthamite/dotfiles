@@ -835,5 +835,87 @@ end
         self.assertIsNone(installed)
 
 
+class PersonalUpdatesLuluTest(unittest.TestCase):
+    """Upgrades that would strand a LuLu rule are held back and reported."""
+
+    def setUp(self):
+        self.mod = load_module()
+        self.now = datetime(2026, 6, 15, tzinfo=timezone.utc)
+
+    def test_delayed_holds_package_lulu_would_not_cover(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = pathlib.Path(directory)
+            args = Namespace(state_file=base / "state.json", log_dir=base / "logs",
+                             hold_file=base / "holds", excluded_casks_file=base / "excluded",
+                             min_age_days=7, dry_run=True)
+            observation = {"name": "git", "available": "1.1", "artifact": "checksum-id",
+                           "first_seen": "2026-05-01T00:00:00+00:00"}
+            args.state_file.write_text(json.dumps({"brew_formula": {"git": {
+                "installed": "1.0", "available": "1.1", "first_seen": observation["first_seen"]}},
+                "observations": {"brew_formula": {"git": observation}}}))
+            current = {"brew_formula": [{"name": "git", "installed": "1.0", "available": "1.1"}]}
+            output = io.StringIO()
+            with patch.object(self.mod, "brew_outdated", return_value=current), \
+                 patch.object(self.mod, "observe_artifacts", return_value={"brew_formula": {"git": observation}}), \
+                 contextlib.redirect_stdout(output):
+                self.mod.command_delayed(args, now=self.now, lulu_held={"git"})
+            result = json.loads(output.getvalue())
+        self.assertEqual(result["eligible"], {})
+        self.assertIn("brew_formula/git: its LuLu allow rule would not cover the new version",
+                      result["deferred"])
+
+    def test_fast_brew_skips_held_package(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = pathlib.Path(directory)
+            args = Namespace(log_dir=base / "logs", fast_brew_file=base / "fast-brew.txt",
+                             dry_run=False)
+            with patch.object(self.mod, "upgrade_fast_brew") as upgrade:
+                self.mod.command_fast_brew(args, lulu_held={"codex"})
+        upgrade.assert_called_once_with([])
+
+    def test_uncovered_packages_are_read_from_the_check(self):
+        check = subprocess.CompletedProcess([], 1, stdout="/opt/homebrew/Cellar/git\n"
+                                            "/opt/homebrew/Caskroom/codex\n", stderr="")
+        with patch.object(self.mod.subprocess, "run", return_value=check):
+            self.assertEqual(self.mod.lulu_uncovered_packages(), {"git", "codex"})
+
+    def test_failed_check_is_an_error_not_an_empty_hold(self):
+        check = subprocess.CompletedProcess([], 2, stdout="", stderr="no rules file")
+        with patch.object(self.mod.subprocess, "run", return_value=check):
+            with self.assertRaisesRegex(RuntimeError, "no rules file"):
+                self.mod.lulu_uncovered_packages()
+
+    def run_main(self, command, held):
+        with tempfile.TemporaryDirectory() as directory:
+            argv = ["--log-dir", directory, command]
+            with patch.object(self.mod, "lulu_uncovered_packages", return_value=held), \
+                 patch.object(self.mod, "command_delayed") as delayed, \
+                 patch.object(self.mod, "command_fast_brew") as fast_brew, \
+                 patch.object(self.mod, "send_alert") as alert, \
+                 patch.object(self.mod, "send_heartbeat") as heartbeat:
+                status = self.mod.main(argv)
+        return status, delayed, fast_brew, alert, heartbeat
+
+    def test_delayed_alerts_on_held_packages_then_reports_liveness(self):
+        status, delayed, _fast, alert, heartbeat = self.run_main("delayed", {"git"})
+        self.assertEqual(status, 0)
+        self.assertEqual(delayed.call_args.kwargs["lulu_held"], {"git"})
+        self.assertIn("git", alert.call_args.args[0])
+        self.assertIn("lulu-homebrew-rules add", alert.call_args.args[0])
+        heartbeat.assert_called_once_with()
+
+    def test_fast_brew_holds_without_a_second_daily_alert(self):
+        status, _delayed, fast_brew, alert, heartbeat = self.run_main("fast-brew", {"codex"})
+        self.assertEqual(status, 0)
+        self.assertEqual(fast_brew.call_args.kwargs["lulu_held"], {"codex"})
+        alert.assert_not_called()
+        heartbeat.assert_called_once_with()
+
+    def test_covered_run_sends_no_alert(self):
+        _status, _delayed, _fast, alert, heartbeat = self.run_main("delayed", set())
+        alert.assert_not_called()
+        heartbeat.assert_called_once_with()
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -24,6 +24,11 @@ DEFAULT_FAST_BREW_PACKAGES = ("codex",)
 DEFAULT_MIN_AGE_DAYS = 7
 KINDS = ("brew_formula", "brew_cask")
 BREW_HELPER = Path(__file__).with_name("personal-updates-brew.rb")
+LULU_RULES = Path(__file__).with_name("lulu-homebrew-rules")
+# Liveness and failure alerts go through the shared service
+# (claude/context/alerting.md).
+HEARTBEAT = Path.home() / "repos/launchd/bin/launchd-heartbeat.py"
+HEARTBEAT_NAME = "personal-updates"
 # Homebrew reports bundle versions only for `app` artifacts. These
 # self-updating casks install through a pkg or an installer script, so their
 # installed version is read from the location they actually install to.
@@ -374,6 +379,39 @@ def append_log(log_dir, message):
         handle.write(message.rstrip() + "\n")
 
 
+def send_alert(text):
+    result = subprocess.run([str(HEARTBEAT), "alert", HEARTBEAT_NAME], input=text,
+                            text=True, capture_output=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"alert not delivered: {result.stderr.strip()}")
+
+
+def send_heartbeat():
+    run([str(HEARTBEAT), "send", HEARTBEAT_NAME])
+
+
+def lulu_uncovered_packages():
+    """Return the Homebrew packages whose next upgrade would strand a LuLu rule.
+
+    LuLu keys rules for ad-hoc signed Homebrew binaries on their versioned
+    path, so upgrading such a package raises a LuLu alert on every connection
+    until a directory rule covers it (claude/context/lulu-firewall.md).
+    """
+    result = subprocess.run([str(LULU_RULES), "check"], text=True, capture_output=True)
+    if result.returncode == 0:
+        return set()
+    if result.returncode == 1 and result.stdout.strip():
+        return {Path(line).name for line in result.stdout.split()}
+    raise RuntimeError(f"lulu-homebrew-rules check failed: {result.stderr.strip()}")
+
+
+def lulu_alert_text(packages):
+    return ("LuLu has version-specific allow rules but no directory rule for "
+            + ", ".join(sorted(packages))
+            + ", so upgrading them would raise a LuLu alert on every connection. "
+            "Their upgrades are held back until you run: lulu-homebrew-rules add")
+
+
 def command_scan(args):
     state = load_json(args.state_file, {})
     updates = brew_outdated()
@@ -385,7 +423,7 @@ def command_scan(args):
     print(json.dumps(new_state, indent=2, sort_keys=True))
 
 
-def command_delayed(args, now=None):
+def command_delayed(args, now=None, lulu_held=frozenset()):
     state = load_json(args.state_file, {})
     now = now or now_utc()
     # Reconcile saved eligibility with today's candidates. The in-process Ruby
@@ -412,6 +450,9 @@ def command_delayed(args, now=None):
         for name in names:
             version_error = current.get(kind, {}).get(name, {}).get("version_check_error")
             if version_error:
+                continue
+            if name in lulu_held:
+                deferred.append(f"{kind}/{name}: its LuLu allow rule would not cover the new version")
                 continue
             observed = observations.get(kind, {}).get(name, {})
             if observed.get("name") not in allowed[kind]:
@@ -445,8 +486,9 @@ def command_fast(args):
     append_log(args.log_dir, "fast lane installed recommended macOS updates")
 
 
-def command_fast_brew(args):
-    packages = load_fast_brew_packages(args.fast_brew_file)
+def command_fast_brew(args, lulu_held=frozenset()):
+    packages = [name for name in load_fast_brew_packages(args.fast_brew_file)
+                if name not in lulu_held]
     if args.dry_run:
         print(json.dumps(packages, indent=2, sort_keys=True))
         return
@@ -481,12 +523,20 @@ def main(argv=None):
     try:
         if args.command == "scan":
             command_scan(args)
-        elif args.command == "delayed":
-            command_delayed(args)
+        elif args.command in ("delayed", "fast-brew"):
+            held = lulu_uncovered_packages()
+            if args.command == "delayed":
+                command_delayed(args, lulu_held=held)
+            else:
+                command_fast_brew(args, lulu_held=held)
+            if not args.dry_run:
+                # Only the daily delayed lane alerts, so a held package is
+                # reported once a day rather than once per lane.
+                if held and args.command == "delayed":
+                    send_alert(lulu_alert_text(held))
+                send_heartbeat()
         elif args.command == "fast":
             command_fast(args)
-        elif args.command == "fast-brew":
-            command_fast_brew(args)
     except Exception as error:
         append_log(args.log_dir, f"error: {error}")
         print(error, file=sys.stderr)

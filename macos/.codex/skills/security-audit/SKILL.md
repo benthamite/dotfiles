@@ -69,6 +69,13 @@ metadata-only output is not permission to bypass a denied input read.
 Do not source a target shell file, load an editor config, run `direnv allow`,
 start an MCP server, or execute a project-supplied scanner to inspect it.
 
+The prohibition covers secret values, not security state. Read non-secret
+security-state metadata the session can already read, such as macOS privacy
+grants (`scripts/tcc-grants.py`), firewall rules and launch-item registrations;
+skipping such a read leaves a consequential control unexamined and protects
+nothing. Never acquire access to complete a read. When the OS denies one, ask
+Pablo for the equivalent System Settings view before marking it not checked.
+
 Inspect a check's execution, output, and network effects before running it.
 Capture and filter potentially sensitive stdout **and stderr** locally before
 tool output reaches the transcript. Do not send secrets, config files, or
@@ -106,7 +113,14 @@ with security. Keep an unverified claim explicitly unverified.
 Give a compact coverage table per selected domain: checked (with or without a
 finding), not checked (reason), or not applicable (reason). Identify roots,
 tool versions, and reference dates only where they affect the conclusion.
-Track skipped subchecks so a partial scan cannot look complete.
+Track skipped subchecks so a partial scan cannot look complete. Rank each
+skipped subcheck by the severity its failure would have. A skipped subcheck
+that could hide a High or Critical exposure goes in the summary beside the
+findings as an unverified high-risk item, naming the next step and who takes
+it; it is never only a coverage-table row or a generic deferral. On
+2026-09-17 privacy grants were "not checked" in a table row while
+`/usr/bin/osascript` held Accessibility, letting any code running as Pablo
+click any button, including LuLu's firewall prompts.
 
 For each deduplicated finding include location, observed evidence, confidence,
 the concrete exposure and affected workflow, severity rationale, and a scoped

@@ -52,11 +52,23 @@ Inspect profile metadata only, never cookies or session databases.
 
 ## Privileged applications and persistence
 
-- Review existing Full Disk Access, Accessibility, Automation, Input Monitoring,
-  and screen-recording grants for terminals, editors, agents, and their helpers.
-  Use already permitted settings/metadata access; do not grant access or open
-  protected databases to complete the audit. Explain which workflow inherits
-  the access. Route a specific questionable app to `audit-mac-app`.
+- Review standing privacy grants with `scripts/tcc-grants.py`, which reads the
+  system and per-user TCC databases read-only and lists Full Disk Access,
+  Accessibility, Automation, synthetic input, Input Monitoring, Screen
+  Recording and Developer Tools grants. Do not grant access to complete the
+  read; an `unreadable` database means unknown grants, handled as an
+  unverified high-risk item (SKILL.md, Report).
+- A grant to a generic executor (an interpreter, shell, `osascript`, `cron`,
+  a terminal, an editor or a macro engine; the helper's `generic_executor`)
+  extends to every script that program runs, so any code running as the user
+  holds it. Rate Accessibility, synthetic input, Automation of System Events
+  or System Settings, Full Disk Access and Developer Tools held that way as
+  High: such code can click through confirmations such as firewall alerts,
+  read every protected file, or start programs without Gatekeeper checks.
+  An app that runs only its own code holding the same grant is a narrower
+  exposure; assess its intended use. Explain which workflow relies on each
+  flagged grant before recommending its removal, and report `stale` grants on
+  deleted paths as cleanup. Route a specific questionable app to `audit-mac-app`.
 - Inspect modern background-task registrations (Apple's `sfltool dumpbtm`,
   locally filtered) and metadata for `~/Library/LaunchAgents`,
   `/Library/LaunchAgents`, and `/Library/LaunchDaemons`. Include legacy login

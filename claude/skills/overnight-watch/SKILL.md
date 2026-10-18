@@ -90,6 +90,14 @@ Rules:
   Write the details to a file under `~/.cache/overnight-watch/` (mode
   0600) and send a one-line pointer to it. Confirm delivery in the
   recipient's transcript, not only from the exit status.
+- Judge what a nudge did from everything the recipient did after it
+  arrived, not only from whether the stall you targeted cleared. Search its
+  transcript for every identifier you mentioned (PID, task id, file) and
+  read its turns after the message's timestamp. A message truncated at the
+  front can still deliver its later paragraphs, and the recipient may act
+  on them: on 2026-10-18 a nudge judged failed had led tangodb to stop a
+  looping task and trash its log within a minute, and the morning report
+  wrongly said nobody knew who stopped it.
 - You inform and ask; you never approve. Do not grant approvals, answer
   decisions that are Pablo's, authorize spending, deletions, pushes,
   publishing or messages to other people, or tell a session to override its
@@ -136,6 +144,10 @@ At `--until`, stop the schedule and end with a short report:
 3. What waits on Pablo, as one numbered list across all sessions, each item
    naming its buffer.
 4. Anything you could not unstick and why.
+
+Before writing that an outcome is unknown (who stopped a process, whether a
+nudge worked), search the transcripts of the sessions involved for it. The
+answer is usually there.
 
 Publish your own state with `agent-status` at start, at each intervention and
 before the final report when running in Emacs.

@@ -11,3 +11,4 @@ HartreeWorks/ph-ps--autumn-sprint-private
 ForethoughtFoundation/ph-ps--autumn-sprint-shared
 HartreeWorks/ph-ps--forethought-retreat-transcripts
 ForethoughtFoundation/ClaudeThought
+baisharg/tesoreria

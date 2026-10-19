@@ -123,7 +123,7 @@ class CommandTests(unittest.TestCase):
     def setUp(self):
         self.mod = load_module()
 
-    def run_main(self, argv, stdin=b"", env_socket=True):
+    def run_main(self, argv, stdin=b"", env_socket=True, in_emacs=True):
         calls = []
 
         def fake_run(command, **kwargs):
@@ -147,6 +147,7 @@ class CommandTests(unittest.TestCase):
             mock.patch.object(self.mod.sys, "stdout", out),
             mock.patch.object(self.mod.sys, "stderr", err),
             mock.patch.object(self.mod.shutil, "which", return_value="/usr/bin/pbcopy"),
+            mock.patch.object(self.mod, "inside_emacs", return_value=in_emacs),
         ]
         if env_socket:
             patches.append(mock.patch.object(self.mod, "default_socket", return_value=Path("/tmp/fixture-socket")))
@@ -171,6 +172,18 @@ class CommandTests(unittest.TestCase):
         self.assertEqual((code, out), (0, "staged: kill-ring, clipboard\n"))
         self.assertEqual(self.seen_payload, b"line\n")
         self.assertEqual([c[0][0] for c in calls], ["emacsclient", "pbcopy"])
+
+    def test_outside_emacs_also_copies_to_clipboard(self):
+        code, out, _, calls = self.run_main([], stdin=b"text", in_emacs=False)
+        self.assertEqual((code, out), (0, "staged: kill-ring, clipboard\n"))
+        self.assertEqual([c[0][0] for c in calls], ["emacsclient", "pbcopy"])
+
+    def test_inside_emacs_reads_session_variables(self):
+        for name in ("INSIDE_EMACS", "CLAUDE_BUFFER_NAME", "CODEX_BUFFER_NAME"):
+            with mock.patch.dict(os.environ, {name: "x"}):
+                self.assertTrue(self.mod.inside_emacs())
+        with mock.patch.dict(os.environ, {}, clear=True):
+            self.assertFalse(self.mod.inside_emacs())
 
     def test_missing_server_and_empty_payload_fail_cleanly(self):
         code, out, err, calls = self.run_main([], stdin=b"text", env_socket=False)

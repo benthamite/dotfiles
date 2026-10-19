@@ -26,7 +26,10 @@ ring through a verified form that never imports or exports the system
 clipboard, deletes the file, and prints `staged: kill-ring`. It strips the
 single trailing newline a heredoc adds; use `--keep-newline` to keep it, or
 `--file PATH` to stage a file's exact bytes. For a Chrome or native macOS paste
-target add `--clipboard`, which also feeds the same bytes to `pbcopy`.
+target add `--clipboard`, which also feeds the same bytes to `pbcopy`. A
+session outside Emacs (a plain terminal, where ⌘V reads only the system
+clipboard) gets the clipboard copy by default, and the receipt then reads
+`staged: kill-ring, clipboard`.
 
 Do not hand-roll `emacsclient --eval` with the text spliced into Lisp, and do
 not create temporary directories, permission checks or verification forms

@@ -499,7 +499,8 @@ The =paste-via-kill-ring= skill separates manual handoff from sending. It
 verifies exact non-secret ring placement without implicit clipboard forwarding,
 while honoring text-transform acceptance and checking an independent payload copy.
 Credentials follow the secrets workflow, not the persisted Emacs kill ring;
-clipboard placement and verification are reported separately. The agent shows
+clipboard placement and verification are reported separately. A session
+outside Emacs also gets a clipboard copy by default. The agent shows
 the text only after staging it, as the global rule requires.
 
 The =personalize= skill keeps private voice examples out of public artifacts

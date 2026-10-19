@@ -288,7 +288,9 @@ The =paste-via-kill-ring= skill separates manual handoff from sending and is
 one command: =claude/bin/kill-ring-put= reads the text from stdin or a file,
 finds the running Emacs server socket, and verifies exact non-secret ring
 placement without implicit clipboard forwarding, honoring text-transform
-acceptance and never echoing the payload. The Lisp form and private temp-file
+acceptance and never echoing the payload. Outside Emacs (no =INSIDE_EMACS=,
+=CLAUDE_BUFFER_NAME= or =CODEX_BUFFER_NAME=) it also copies to the clipboard,
+since a plain terminal pastes only from there. The Lisp form and private temp-file
 handling live in the helper, not the skill text. Credentials follow the secrets
 workflow, not the persisted Emacs kill ring; clipboard placement (=--clipboard=)
 is reported separately. The agent shows the text only after staging it, as the

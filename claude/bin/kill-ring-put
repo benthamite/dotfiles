@@ -5,7 +5,9 @@ Reads the text from stdin (or ``--file``), finds the user's Emacs server socket,
 and pushes the exact text onto the kill ring through a verified form that never
 touches the system clipboard. Prints a one-line receipt and never echoes the
 payload. Add ``--clipboard`` to also copy the same bytes with ``pbcopy`` for a
-Chrome or native macOS paste target.
+Chrome or native macOS paste target. Outside Emacs (a session in a plain
+terminal) the clipboard copy is the default, since there ⌘V reads only the
+system clipboard.
 
 Credentials do not belong here: the kill ring is persisted by savehist, and the
 secret guards deny piping a 1Password read into this command.
@@ -76,6 +78,12 @@ def default_socket() -> Path | None:
     return None
 
 
+def inside_emacs() -> bool:
+    """Whether the calling session runs in an Emacs buffer, where yank reads the kill ring."""
+    return any(os.environ.get(name) for name in
+               ("INSIDE_EMACS", "CLAUDE_BUFFER_NAME", "CODEX_BUFFER_NAME"))
+
+
 def validate_socket(value: str) -> str:
     path = Path(value)
     if not path.is_absolute():
@@ -136,7 +144,8 @@ def main() -> int:
     parser.add_argument("--file", help="Read the exact bytes of this UTF-8 file instead of stdin")
     parser.add_argument("--socket", help="Emacs server socket (default: the running server's)")
     parser.add_argument("--clipboard", action="store_true",
-                        help="Also copy the same text to the macOS clipboard with pbcopy")
+                        help="Also copy the same text to the macOS clipboard with pbcopy "
+                             "(the default outside Emacs)")
     parser.add_argument("--keep-newline", action="store_true",
                         help="Keep a single trailing newline read from stdin (stripped by default)")
     args = parser.parse_args()
@@ -155,7 +164,7 @@ def main() -> int:
                 output.write(payload)
             stage_kill_ring(payload_path, str(socket))
             staged.append("kill-ring")
-            if args.clipboard:
+            if args.clipboard or not inside_emacs():
                 stage_clipboard(payload_path)
                 staged.append("clipboard")
         finally:

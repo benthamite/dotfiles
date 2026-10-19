@@ -372,7 +372,8 @@ class CaptureStackTest(unittest.TestCase):
         self.assertFalse(old.exists())
         self.assertTrue(path.endswith("-timeout.txt"))
         args = run.call_args.args[0]
-        self.assertEqual(args[:3], [watchdog.SAMPLE, "42", "3"])
+        self.assertEqual(args[4:8], [str(watchdog.SAMPLE_DEADLINE),
+                                     watchdog.SAMPLE, "42", "3"])
         self.assertEqual(args[-1], path)
         self.assertTrue(run.call_args.kwargs["start_new_session"])
         self.assertEqual(stacks.stat().st_mode & 0o777, 0o700)
@@ -391,6 +392,29 @@ class CaptureStackTest(unittest.TestCase):
         while not (path.exists() and "Call graph" in path.read_text()):
             self.assertLess(time.monotonic(), deadline, "no report after 120 s")
             time.sleep(1)
+
+    # Regression: samplers hung for up to 2 h under load, and while
+    # attached they made every dlopen in Emacs wait.
+    def test_a_hung_sample_is_stopped_at_the_deadline(self):
+        hung = self.dir / "hung-sample"
+        hung.write_text("#!/bin/sh\necho $$ > \"$4.pid\"\nexec sleep 300\n")
+        hung.chmod(0o700)
+        with mock.patch.object(watchdog, "SAMPLE", str(hung)), \
+             mock.patch.object(watchdog, "SAMPLE_DEADLINE", 1):
+            path = watchdog.capture_stack(42, "timeout", time.time())
+        pid_file = Path(path + ".pid")
+        deadline = time.monotonic() + 10
+        while not pid_file.exists():
+            self.assertLess(time.monotonic(), deadline, "sampler never started")
+            time.sleep(0.1)
+        pid = int(pid_file.read_text())
+        while True:
+            try:
+                os.kill(pid, 0)
+            except ProcessLookupError:
+                break
+            self.assertLess(time.monotonic(), deadline, "sampler not stopped")
+            time.sleep(0.1)
 
 
 class SystemReadingTest(unittest.TestCase):

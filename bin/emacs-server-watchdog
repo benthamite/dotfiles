@@ -70,6 +70,16 @@ STACKS_DIR = Path.home() / "Library/Logs/emacs-server-watchdog.stacks"
 STACKS_RETENTION = 7 * 86400
 SAMPLE = "/usr/bin/sample"
 SAMPLE_SECONDS = 3
+# A `sample' still running after this long is stopped. While attached it
+# makes every dlopen in Emacs, such as loading native-compiled Lisp, wait
+# for it; on 2026-10-19 five samplers hung for up to 2 h under load and
+# froze Emacs on each load.
+SAMPLE_DEADLINE = 120
+# Runs `sample' (the arguments after the deadline) and stops it at the
+# deadline.
+SAMPLE_SUPERVISOR = ('deadline=$1; shift; "$@" & s=$!; '
+                     '(sleep "$deadline"; kill "$s" 2>/dev/null) & k=$!; '
+                     'wait "$s"; kill "$k" 2>/dev/null')
 # A garbage-collection storm: this many collections since the previous run.
 # The busiest minute in a week of samples before 2026-10-10 had under 30.
 GC_STORM = 30
@@ -154,8 +164,9 @@ def capture_stack(pid: int, reason: str, now: float) -> str | None:
     frames. `sample' records for SAMPLE_SECONDS at once but then spends
     17-40 s symbolicating (longer at launchd's background priority), so it
     runs detached in its own session, which launchd does not kill when
-    this run exits; the report appears once it finishes. Return None when
-    it cannot be started.
+    this run exits; the report appears once it finishes. A supervising
+    shell stops it after SAMPLE_DEADLINE. Return None when it cannot be
+    started.
     """
     STACKS_DIR.mkdir(parents=True, exist_ok=True)
     # Stacks name local paths and buffers; keep them owner-only.
@@ -164,7 +175,9 @@ def capture_stack(pid: int, reason: str, now: float) -> str | None:
     stamp = time.strftime("%Y%m%d-%H%M%S", time.localtime(now))
     path = STACKS_DIR / f"{stamp}-{reason}.txt"
     try:
-        subprocess.Popen([SAMPLE, str(pid), str(SAMPLE_SECONDS), "-file", str(path)],
+        subprocess.Popen(["/bin/sh", "-c", SAMPLE_SUPERVISOR, "sh",
+                          str(SAMPLE_DEADLINE), SAMPLE, str(pid),
+                          str(SAMPLE_SECONDS), "-file", str(path)],
                          stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL, start_new_session=True)
     except OSError as err:

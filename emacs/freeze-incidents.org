@@ -83,6 +83,19 @@ the "Already tried" list in place.
   MEM omits swapped pages, so one of the three, most likely the 4-day
   =johnson-worker=, held ~20 GB of swap. Unverified which; worker's growth
   not yet investigated.
+- 17:34 freeze caught in a live sample: a timer ran
+  =agent-log--auto-session-end-actions=, which parsed the whole session
+  JSONL (98 MB for tangodb 11e3c9fd) on the main thread just for its
+  metadata, setting off back-to-back GCs. Fixed in agent-log =8a10b35=
+  (parse only the first MB); live lookup now <1 s with 1 GC.
+- 18:15 freeze caught live: Emacs blocked inside =dlopen= of a native-comp
+  file, in dyld's =blockOnSynchronousEvent=, i.e. waiting on an attached
+  observer. Five orphaned =/usr/bin/sample= processes started by the
+  watchdog had been running 45 min to 2 h 17 min. SIGTERMing them unblocked
+  Emacs at once (probe 0.89 s). So since 10-10, when the watchdog began
+  sampling, a sampler hung under load froze Emacs on every native-comp
+  load until it ended, and each outage could start another. Fixed: the
+  watchdog stops each sampler after 120 s (dotfiles commit below).
 - Also closed the =(quit)= debugger (=top-level= via timer) and set
   =debug-on-quit= nil; verified depth 0, =debug-on-error= t.
 - Samples: =/tmp/emacs-freeze.yImmBP/=.

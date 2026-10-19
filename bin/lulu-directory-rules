@@ -38,26 +38,36 @@ VERSIONED_PATHS = (
 # Drives LuLu's Add Rule window. Each step waits for the window it needs, so
 # a slow LuLu fails with an error instead of typing into the wrong window.
 ADD_RULE_SCRIPT = """
-on waitForWindow(prefix)
+on findWindow(prefix)
+  -- One Apple Event for all names: LuLu can have hundreds of alert windows.
   tell application "System Events" to tell process "LuLu"
-    repeat 40 times
-      repeat with w in windows
-        if (name of w) starts with prefix then return w
-      end repeat
-      delay 0.25
+    set windowNames to name of windows
+    repeat with i from 1 to count of windowNames
+      if (item i of windowNames) starts with prefix then return window i
     end repeat
   end tell
+  return missing value
+end findWindow
+
+on waitForWindow(prefix)
+  repeat 40 times
+    set w to my findWindow(prefix)
+    if w is not missing value then return w
+    delay 0.25
+  end repeat
   error "LuLu window did not appear: " & prefix
 end waitForWindow
 
 on run argv
   set rulePath to item 1 of argv
+  set rulesWindow to my findWindow("LuLu Rules")
+  if rulesWindow is missing value and my findWindow("Settings") is missing value then
+    -- LuLu opens Settings on reopen only when none of its windows is visible.
+    if my findWindow("LuLu Alert") is not missing value then error "answer LuLu's open alerts first; LuLu opens its Settings window only when no other LuLu window is visible"
+    do shell script "open -a LuLu"
+  end if
   tell application "LuLu" to activate
   tell application "System Events" to tell process "LuLu"
-    set rulesWindow to missing value
-    repeat with w in windows
-      if (name of w) starts with "LuLu Rules" then set rulesWindow to w
-    end repeat
     if rulesWindow is missing value then
       click button "View Rules" of my waitForWindow("Settings")
       set rulesWindow to my waitForWindow("LuLu Rules")
@@ -69,16 +79,12 @@ on run argv
     set value of text field 2 of w to "*"
     set value of text field 3 of w to "*"
     click button "Add" of w
-    repeat 40 times
-      set stillOpen to false
-      repeat with x in windows
-        if (name of x) starts with "Add Rule" then set stillOpen to true
-      end repeat
-      if not stillOpen then return
-      delay 0.25
-    end repeat
-    error "LuLu kept the Add Rule window open for " & rulePath
   end tell
+  repeat 40 times
+    if my findWindow("Add Rule") is missing value then return
+    delay 0.25
+  end repeat
+  error "LuLu kept the Add Rule window open for " & rulePath
 end run
 """
 

@@ -152,6 +152,7 @@ WORKSPACES = {
         "cached": False,
     },
     "forethought": {
+        "domain": "forethought-ea.slack.com",
         "source": "automation",
         "item": "slack-forethought",
         "token_field": "token",
@@ -465,6 +466,22 @@ def _has_replies(message):
         return False
 
 
+def _add_permalinks(out, channel):
+    """Give each message its permalink, so callers copy links instead of guessing the domain."""
+    domain = WORKSPACES[_workspace].get("domain")
+    if not domain:
+        return
+    for message in out.get("messages") or []:
+        ts = message.get("ts")
+        if not isinstance(ts, str) or not re.fullmatch(r"[0-9]+\.[0-9]{6}", ts):
+            continue
+        link = f"https://{domain}/archives/{channel}/p{ts.replace('.', '')}"
+        thread_ts = message.get("thread_ts")
+        if isinstance(thread_ts, str) and thread_ts != ts:
+            link += f"?thread_ts={thread_ts}&cid={channel}"
+        message["permalink"] = link
+
+
 def _message_rows(out):
     messages = out.get("messages")
     if not isinstance(messages, list) or any(not isinstance(item, dict) for item in messages):
@@ -624,6 +641,7 @@ def cmd_history(args):
         latest=args.latest,
         cursor=args.cursor,
     )
+    _add_permalinks(out, args.channel)
     print(json.dumps(out, indent=2))
 
 
@@ -644,6 +662,7 @@ def cmd_replies(args):
     if not args.cursor:
         _exact_message(out, args.thread_ts)
     out["coverage"] = _page_coverage(out, args.cursor)
+    _add_permalinks(out, args.channel)
     if args.resolve_users:
         resolve_users_in_response(out)
     print(json.dumps(out, indent=2))

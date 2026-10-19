@@ -104,6 +104,10 @@ assuming Pablo's Slack identity followed his Google account; it is now
 deactivated and awaiting deletion by a workspace admin. It still appears in
 user searches. Never use it: do not message, mention, invite or act as it.
 
+The Forethought workspace's links are `https://forethought-ea.slack.com/...`, not
+`forethought.slack.com`. `slack.py history` and `replies` give each message its
+`permalink`; copy that rather than building a Slack URL by hand.
+
 Conversations with Forethought staff from before Pablo joined the Forethought
 workspace live in Slack Connect channels and group DMs on the Epoch workspace
 (`slack.py -w epoch`), e.g. `ai-uplift-core` and the group DMs with Will, Max,

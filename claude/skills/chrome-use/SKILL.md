@@ -76,6 +76,26 @@ have opened manually; it activates Chrome. Configure its aliases with
 opening is the requested action. The only automated caller is the Claude hook
 `chrome-bridge-recover.py`, which uses `--background`.
 
+## Close every tab you open
+
+Pablo is working in the same Chrome, so leftover tabs pile up in his windows.
+Browser work may run while he is at the machine, but it cleans up after itself:
+
+- Work through a list of pages (downloads, a batch of sites) in one tab,
+  navigating it from page to page; do not open a new tab per item.
+- Close each tab as soon as you are done with it, and every tab you opened
+  before you finish, stop or hand back, including after an error.
+- A click can open a tab outside your tab group (a PDF or a download link).
+  After such a click, find that tab and close it; better, read the link's
+  `href` and navigate your own tab instead.
+- Before your final report, list your tab group and close what remains. Tabs
+  opened outside the group, which the browser tools cannot list, may be found
+  and closed with read-only AppleScript queries and `close` commands that
+  never activate a window, matching only URLs you visited.
+
+Origin: on 19 Oct 2026 a corpus-download agent opened about 20 tabs in a row
+and left three open (one in its group, two opened by download links).
+
 ## Classify a failure before recovering
 
 A communication failure means setup, browser selection or the tab listing

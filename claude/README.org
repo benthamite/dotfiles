@@ -567,7 +567,8 @@ trigger names services only (Signal, Fireflies and Granola joined it on
 =chrome-use= skill's own trigger. The paired
 =chrome-use= skill, which loads before any browser step, owns the browser
 rules: background research stays off live Chrome, standing authorization for
-logged-in sites, each agent's browser control, never stealing focus (the agent's own
+logged-in sites, each agent's browser control, closing every tab an agent
+opens (since 2026-10-19, after a download run left tabs in Pablo's windows), never stealing focus (the agent's own
 tab or tab group comes only from the browser tool's own calls, work only in
 those tabs, no other new windows, including visible windows opened by
 Playwright or similar scripts, no activating windows, =chrome-profile-open=

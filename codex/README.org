@@ -246,7 +246,10 @@ windows, including visible windows opened by browser-launching scripts,
 retries) and loads before any browser step or such script. It also points form
 filling at the private, gitignored =claude/context/personal-details.md=,
 and has agents leave card numbers, passport numbers and passwords for Pablo,
-saying so up front instead of asking permission to type them.
+saying so up front instead of asking permission to type them. Since
+2026-10-19 it also requires agents to close every tab they open, including
+tabs a download link opens outside their tab group, and to work through lists
+of pages in one tab.
 
 Named-profile runtime settings and effective Chrome availability are inspected
 through the CLI's profile-aware diagnostics; installation metadata uses the

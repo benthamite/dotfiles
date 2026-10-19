@@ -1484,6 +1484,10 @@ tracked public skill name or catalog description changes, first run
 =bin/docs-audit generate=. For a registered hook change, verify both its
 standalone decision logic and the real Claude event path; mutable
 =~/.claude/settings.json= registration is part of that behavior.
+The audit counts a Claude plugin's cached version only if
+=~/.claude/plugins/installed_plugins.json= names it: Claude Code keeps an
+uninstalled or replaced version in the cache, unmarked, while sessions still use
+it, and counting it reported a false duplicate skill on 2026-10-19.
 
 Claude's settings format, event surface, permission model, browser integration,
 and account overlays are genuine tool-specific state. The sync contract records

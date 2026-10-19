@@ -3455,5 +3455,26 @@ for name in subprocess.check_output(["git", "ls-files", "-z"], cwd=root).decode(
                 self.assertTrue(problems.get(root), problems)
 
 
+    def test_plugin_roots_skip_uninstalled_versions_still_in_cache(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            plugin_cache = home / "plugins" / "cache" / "market" / "tool"
+            for version in ("old111", "new222", "gone333"):
+                (plugin_cache / version / "skills" / "tool").mkdir(parents=True)
+            (plugin_cache / "gone333" / ".orphaned_at").write_text("1")
+            (home / "settings.json").write_text(json.dumps({"enabledPlugins": {"tool@market": True}}))
+            (home / "plugins" / "installed_plugins.json").write_text(json.dumps(
+                {"version": 2, "plugins": {"tool@market": [
+                    {"scope": "user", "installPath": "/elsewhere/cache/market/tool/new222"}]}}))
+            roots, seen = [], set()
+            self.module.add_enabled_claude_plugin_roots(roots, seen, home)
+            self.assertEqual([root.path.parent.name for root in roots], ["new222"])
+
+            (home / "plugins" / "installed_plugins.json").unlink()
+            roots, seen = [], set()
+            self.module.add_enabled_claude_plugin_roots(roots, seen, home)
+            self.assertEqual(sorted(root.path.parent.name for root in roots), ["new222", "old111"])
+
+
 if __name__ == "__main__":
     unittest.main()

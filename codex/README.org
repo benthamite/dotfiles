@@ -1314,7 +1314,8 @@ assignments and interpreter prefixes. After a
 tracked public skill name or catalog description changes, run
 =bin/docs-audit generate= first. For hook changes, verify the registration in
 =hooks.json= and exercise the real Codex event payload as well as the standalone
-script.
+script. How the audit treats each tool's plugin cache is documented in
+that tool's README.
 
 Codex's instruction discovery, tracked native configuration, lifecycle hooks,
 rules, plugin state, and managed system skills are genuine differences. They

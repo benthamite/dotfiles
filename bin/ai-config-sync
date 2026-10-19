@@ -3188,12 +3188,37 @@ def enabled_claude_plugins(claude_home: Path) -> list[str]:
     return sorted(plugin_id for plugin_id, active in enabled.items() if active)
 
 
+def installed_claude_plugin_versions(claude_home: Path) -> dict[str, set[str]]:
+    """Map each plugin ID to the cache version directories Claude Code has installed.
+
+    An uninstalled or replaced version stays in the cache, unmarked as orphaned,
+    while running sessions still use it; only versions named in
+    installed_plugins.json are live.
+    """
+    try:
+        data = json.loads((claude_home / "plugins" / "installed_plugins.json").read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}
+    plugins = data.get("plugins") if isinstance(data, dict) else None
+    if not isinstance(plugins, dict):
+        return {}
+    versions: dict[str, set[str]] = {}
+    for plugin_id, entries in plugins.items():
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if isinstance(entry, dict) and isinstance(entry.get("installPath"), str):
+                versions.setdefault(plugin_id, set()).add(Path(entry["installPath"]).name)
+    return versions
+
+
 def add_enabled_claude_plugin_roots(
     roots: list[InteractiveSkillRoot],
     seen: set[tuple[str, str]],
     claude_home: Path,
 ) -> None:
     cache = claude_home / "plugins" / "cache"
+    installed = installed_claude_plugin_versions(claude_home)
     for plugin_id in enabled_claude_plugins(claude_home):
         if "@" not in plugin_id:
             continue
@@ -3203,6 +3228,9 @@ def add_enabled_claude_plugin_roots(
             continue
         for version_dir in sorted(path for path in plugin_cache.iterdir() if path.is_dir()):
             if (version_dir / ".orphaned_at").exists():
+                continue
+            # A plugin absent from installed_plugins.json keeps every unorphaned version.
+            if plugin_id in installed and version_dir.name not in installed[plugin_id]:
                 continue
             add_interactive_skill_root(
                 roots,

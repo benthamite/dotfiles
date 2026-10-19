@@ -84,7 +84,7 @@ launches through `/opt/homebrew/bin/codex` bypass this protection. See
 `shell/README.org` for runtime storage and retention details.
 
 Both Homebrew lanes hold back a package whose LuLu allow rule is tied to its
-versioned path and has no directory rule (`bin/lulu-homebrew-rules check`),
+versioned path and has no directory rule (`bin/lulu-directory-rules check`),
 because upgrading it would raise a LuLu alert on every connection
 (`claude/context/lulu-firewall.md`). The delayed lane alerts about held
 packages through `launchd-heartbeat`, and both lanes send the `personal-updates`

@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""Keep LuLu's allow rules for Homebrew tools valid across upgrades.
+"""Keep LuLu's allow rules valid across upgrades of versioned installs.
 
-Homebrew binaries are ad-hoc signed, so LuLu keys their rules on the exact
-path, which contains the version (/opt/homebrew/Cellar/git/2.56.0/...). An
-upgrade leaves the rule behind and every connection raises a new alert. A
-LuLu directory rule, a path ending in "*", matches by prefix instead, so
-"/opt/homebrew/Cellar/git/*" covers every version.
+When LuLu does not resolve a binary's code signature, it keys the rule on
+the exact path. Homebrew (ad-hoc signed, /opt/homebrew/Cellar/git/2.56.0/...)
+and Claude Code's native installer (~/.local/share/claude/versions/2.1.303)
+put the version in that path, so an upgrade leaves the rule behind and every
+connection raises a new alert. A LuLu directory rule, a path ending in "*",
+matches by prefix instead, so "/opt/homebrew/Cellar/git/*" covers every
+version.
 
-`check` lists each Homebrew package that has a version-specific allow rule
+`check` lists each package directory that has a version-specific allow rule
 but no directory rule; it exits 1 when there is one. `add` creates the
 missing directory rules through LuLu's Add Rule dialog. Background:
 claude/context/lulu-firewall.md.
@@ -26,7 +28,12 @@ from pathlib import Path
 
 RULES_FILE = Path("/Library/Objective-See/LuLu/rules.plist")
 RULE_ALLOW = 1
-PACKAGE_DIR = re.compile(r"^(/opt/homebrew/(?:Cellar|Caskroom)/[^/]+)/[^/]+/")
+# Install layouts that put the version in the executable's path. Group 1 is
+# the directory whose "*" rule covers every version.
+VERSIONED_PATHS = (
+    re.compile(r"^(/opt/homebrew/(?:Cellar|Caskroom)/[^/]+)/[^/]+/"),
+    re.compile("^(" + re.escape(str(Path.home() / ".local/share/claude/versions")) + r")/[^/]+$"),
+)
 
 # Drives LuLu's Add Rule window. Each step waits for the window it needs, so
 # a slow LuLu fails with an error instead of typing into the wrong window.
@@ -99,9 +106,10 @@ def uncovered_packages(rules: list[dict], installed=Path.is_dir) -> list[str]:
                 if isinstance(rule.get("path"), str) and rule["path"].endswith("*")]
     packages = set()
     for rule in allowed:
-        match = PACKAGE_DIR.match(rule.get("path") or "")
-        if match:
-            packages.add(match.group(1))
+        for pattern in VERSIONED_PATHS:
+            match = pattern.match(rule.get("path") or "")
+            if match:
+                packages.add(match.group(1))
     return sorted(package for package in packages
                   if installed(Path(package))
                   and not any((package + "/").startswith(prefix) for prefix in prefixes))
@@ -125,7 +133,7 @@ def command_add(rules_file: Path) -> int:
         try:
             add_directory_rule(package)
         except subprocess.CalledProcessError as error:
-            print(f"lulu-homebrew-rules: adding {package}/* failed: {error.stderr.strip()}",
+            print(f"lulu-directory-rules: adding {package}/* failed: {error.stderr.strip()}",
                   file=sys.stderr)
             return 1
         print(f"added {package}/*")
@@ -136,7 +144,7 @@ def command_add(rules_file: Path) -> int:
             return 0
         time.sleep(0.5)
     for package in remaining:
-        print(f"lulu-homebrew-rules: still uncovered: {package}", file=sys.stderr)
+        print(f"lulu-directory-rules: still uncovered: {package}", file=sys.stderr)
     return 1
 
 

@@ -24,7 +24,7 @@ DEFAULT_FAST_BREW_PACKAGES = ("codex",)
 DEFAULT_MIN_AGE_DAYS = 7
 KINDS = ("brew_formula", "brew_cask")
 BREW_HELPER = Path(__file__).with_name("personal-updates-brew.rb")
-LULU_RULES = Path(__file__).with_name("lulu-homebrew-rules")
+LULU_RULES = Path(__file__).with_name("lulu-directory-rules")
 # Liveness and failure alerts go through the shared service
 # (claude/context/alerting.md).
 HEARTBEAT = Path.home() / "repos/launchd/bin/launchd-heartbeat.py"
@@ -401,15 +401,18 @@ def lulu_uncovered_packages():
     if result.returncode == 0:
         return set()
     if result.returncode == 1 and result.stdout.strip():
-        return {Path(line).name for line in result.stdout.split()}
-    raise RuntimeError(f"lulu-homebrew-rules check failed: {result.stderr.strip()}")
+        # The check also covers non-Homebrew installs (Claude Code), which
+        # Homebrew upgrades cannot strand.
+        return {Path(line).name for line in result.stdout.splitlines()
+                if line.startswith("/opt/homebrew/")}
+    raise RuntimeError(f"lulu-directory-rules check failed: {result.stderr.strip()}")
 
 
 def lulu_alert_text(packages):
     return ("LuLu has version-specific allow rules but no directory rule for "
             + ", ".join(sorted(packages))
             + ", so upgrading them would raise a LuLu alert on every connection. "
-            "Their upgrades are held back until you run: lulu-homebrew-rules add")
+            "Their upgrades are held back until you run: lulu-directory-rules add")
 
 
 def command_scan(args):

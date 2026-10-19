@@ -7,12 +7,12 @@ import unittest
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "bin" / "lulu-homebrew-rules"
+SCRIPT = ROOT / "bin" / "lulu-directory-rules"
 
 
 def load_module():
-    loader = importlib.machinery.SourceFileLoader("lulu_homebrew_rules", str(SCRIPT))
-    spec = importlib.util.spec_from_loader("lulu_homebrew_rules", loader)
+    loader = importlib.machinery.SourceFileLoader("lulu_directory_rules", str(SCRIPT))
+    spec = importlib.util.spec_from_loader("lulu_directory_rules", loader)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -36,7 +36,7 @@ def write_archive(path, rules):
                       fmt=plistlib.FMT_BINARY)
 
 
-class LuluHomebrewRulesTest(unittest.TestCase):
+class LuluDirectoryRulesTest(unittest.TestCase):
     def setUp(self):
         self.mod = load_module()
 
@@ -66,6 +66,12 @@ class LuluHomebrewRulesTest(unittest.TestCase):
         rules = [rule("/opt/homebrew/Cellar/node/26.3.0/bin/node"),
                  rule("/opt/homebrew/Cellar/node/*", action=0)]
         self.assertEqual(self.uncovered(rules), ["/opt/homebrew/Cellar/node"])
+
+    def test_claude_code_native_versions_are_checked(self):
+        versions = str(pathlib.Path.home() / ".local/share/claude/versions")
+        rules = [rule(versions + "/2.1.302")]
+        self.assertEqual(self.uncovered(rules), [versions])
+        self.assertEqual(self.uncovered(rules + [rule(versions + "/*")]), [])
 
     def test_uninstalled_packages_are_ignored(self):
         rules = [rule("/opt/homebrew/Caskroom/claude-code/2.1.85/claude")]

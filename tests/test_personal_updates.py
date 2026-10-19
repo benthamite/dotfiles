@@ -875,7 +875,8 @@ class PersonalUpdatesLuluTest(unittest.TestCase):
 
     def test_uncovered_packages_are_read_from_the_check(self):
         check = subprocess.CompletedProcess([], 1, stdout="/opt/homebrew/Cellar/git\n"
-                                            "/opt/homebrew/Caskroom/codex\n", stderr="")
+                                            "/opt/homebrew/Caskroom/codex\n"
+                                            "/Users/x/.local/share/claude/versions\n", stderr="")
         with patch.object(self.mod.subprocess, "run", return_value=check):
             self.assertEqual(self.mod.lulu_uncovered_packages(), {"git", "codex"})
 
@@ -901,7 +902,7 @@ class PersonalUpdatesLuluTest(unittest.TestCase):
         self.assertEqual(status, 0)
         self.assertEqual(delayed.call_args.kwargs["lulu_held"], {"git"})
         self.assertIn("git", alert.call_args.args[0])
-        self.assertIn("lulu-homebrew-rules add", alert.call_args.args[0])
+        self.assertIn("lulu-directory-rules add", alert.call_args.args[0])
         heartbeat.assert_called_once_with()
 
     def test_fast_brew_holds_without_a_second_daily_alert(self):

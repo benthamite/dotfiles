@@ -74,6 +74,17 @@ the "Already tried" list in place.
   session 80969 (scratchpad job with =fpcalc=/=ffmpeg=) and forethought
   session 36598. Same chronic memory cause as 10-17 and 10-18, now the
   third day running.
+- 17:14: still thrashing (~750k swapins in 4 s, ~400 MB free). Pablo
+  SIGTERMed three idle processes: =johnson-worker= Emacs 8093 (child of
+  4855, up since ~10-15 17:00, 2.5 GB per =top=), LanguageTool server
+  43523 (1 GB), Claude Code 2.1.300 =bg-spare= 1536 (3 GB). =top= showed
+  ~6.5 GB between them, yet swap fell from 32.3 GB to 7.5 GB, swapins
+  dropped to 16 per 5 s, and =(emacs-pid)= answered in 0.45 s. =top='s
+  MEM omits swapped pages, so one of the three, most likely the 4-day
+  =johnson-worker=, held ~20 GB of swap. Unverified which; worker's growth
+  not yet investigated.
+- Also closed the =(quit)= debugger (=top-level= via timer) and set
+  =debug-on-quit= nil; verified depth 0, =debug-on-error= t.
 - Samples: =/tmp/emacs-freeze.yImmBP/=.
 
 ** 2026-10-18 night: repeated outages under host starvation (investigation, no change)

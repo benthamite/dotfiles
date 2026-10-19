@@ -35,7 +35,7 @@ jobs:
                                   ledger-mode gptel llm no-littering
                                   doom-modeline orderless markdown-mode
                                   vulpea anki-editor aidermacs zotra
-                                  f s inheritenv))
+                                  f s inheritenv async))
                       (condition-case err
                           (unless (package-installed-p pkg)
                             (package-install pkg))

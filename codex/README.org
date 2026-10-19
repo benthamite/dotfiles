@@ -736,6 +736,9 @@ whether its Stop payload lists them, is unassessed; the manifest records it as
 The Claude TeammateIdle hook =hold-idle-teammate-with-running-task.py= (2026-10-10)
 has no Codex counterpart because Codex has no agent teams.
 
+The Claude-only guard policy =named_agent= (2026-10-19) has no Codex counterpart
+for the same reason: the =agent-guard.sh= engine runs it for Claude's =Agent= tool only.
+
 Both interactive and programmatic =walk-list= copies use exact input identity
 and locked lifecycle transitions. Native atomic exchange detects displaced-file
 races and retains uncertain recovery data; new stored copies and evidence use

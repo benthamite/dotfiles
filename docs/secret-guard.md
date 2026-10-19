@@ -92,6 +92,7 @@ screenshot.
 
 | 10-10 | Fireflies webhook signing secret (Pablo, meeting-debrief Worker) | d | a screenshot of the Fireflies Webhooks V2 edit panel, which shows the signing secret in plain text; rotated 10-10 in 1Password and on the Worker, Fireflies updated by Pablo. The `agents/credential-pages.txt` list does not cover `app.fireflies.ai/integrations/api/webhook` |
 | 10-18 | YubiKey OTP (one-time, 44-char modhex) | — | not an agent action: a YubiKey touch while the Claude Code prompt had focus sent the OTP as a chat message; it stays valid only until a newer OTP from that key is used |
+| 10-19 | Cloudflare R2 S3 access key and secret (bucket-scoped token) | d | Claude in Chrome `find` returned the copy buttons with the key values in their descriptions; token to be deleted and recreated |
 
 Tally: page/screenshot 10, command output 9, file read 3, **typed literal 0**.
 

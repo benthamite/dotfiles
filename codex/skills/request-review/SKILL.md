@@ -163,6 +163,12 @@ against the repository. Record accepted findings and their appropriate change,
 or a concise reason for rejection. A valid but out-of-scope finding may be
 recorded as deferred; it does not expand implementation or publication authority.
 
+A finding never overrides the user. If accepting one would reverse, defer or
+weaken something the user explicitly asked for, do not fold it into the revised
+plan or decision list. Put it to the user as its own question: what they asked
+for, what the finding says, and the options, e.g. meeting the concern while
+keeping their requirement. Until they answer, the plan keeps their requirement.
+
 For review-only work, return the adjudication/report without product changes.
 For already-authorized implementation, update the owned plan as needed,
 implement accepted in-scope findings, and verify the stated user-visible

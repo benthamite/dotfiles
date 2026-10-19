@@ -454,6 +454,9 @@ Its watcher returns as soon as the reviewer awaits input and names the next comm
 required numbered step before the report, through =agent-kill-session-buffer=
 in the reviewer's own buffer; cleanup protects active, reused and unowned
 sessions.
+A finding that would reverse, defer or weaken an explicit user requirement is
+put to the user as its own question rather than folded into the revised plan
+(added 2026-10-19, after a review finding silently deferred a requirement).
 
 Delivery and manual reconciliation require the exact frozen prompt, including
 its marker, in a new user message after the saved transcript boundary. Busy state

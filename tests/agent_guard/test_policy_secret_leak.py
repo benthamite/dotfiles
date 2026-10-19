@@ -128,6 +128,12 @@ class ShellCommandTests(NoKnownSecrets):
         self.assertIn("would expose a secret (GitHub token)", result.reason)
         self.assertIn("(private key)", bash(f"echo '{PRIVATE_KEY}'").reason)
 
+    def test_url_slug_is_not_an_sk_key(self):
+        slug = "https://cnbc.com/2026/10/15/" + "sk-" + "hynix-samsung-softbank-stocks.html"
+        self.assertEqual(decide("claude", "Write", {"file_path": "/tmp/x.json", "content": slug}).decision, "allow")
+        key = "sk-" + "proj-" + "aZ9" * 10
+        self.assertIn("(API secret key (sk-...))", decide("claude", "Write", {"file_path": "/tmp/x", "content": f"K={key}"}).reason)
+
     def test_only_option_text_escapes_echo_checks(self):
         self.assertEqual(sl._secret_pattern_denial("Bash", "-n", ".", "x"), None)
 

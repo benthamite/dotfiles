@@ -618,7 +618,8 @@ SECRET_PATTERNS = (
     (r"github_pat_[A-Za-z0-9_]{22,}", "GitHub personal access token"),
     (r"xox[bporca]-[A-Za-z0-9-]{10,}", "Slack token"),
     (r"sk-ant-[A-Za-z0-9_-]{40,}", "Anthropic API key"),
-    (r"(^|[^A-Za-z0-9])sk-[a-zA-Z0-9_-]{20,}", "API secret key (sk-...)"),
+    # Not after "/": URL slugs such as /sk-hynix-samsung-... (a news headline) are not keys.
+    (r"(^|[^A-Za-z0-9/])sk-[a-zA-Z0-9_-]{20,}", "API secret key (sk-...)"),
     (r"(sk|pk|rk)_(live|test)_[A-Za-z0-9]{20,}", "Stripe API key"),
     (r"lin_api_[A-Za-z0-9]{40,}", "Linear API key"),
     (r"pat[A-Za-z0-9]{14}\.[a-f0-9]{64}", "Airtable personal access token"),

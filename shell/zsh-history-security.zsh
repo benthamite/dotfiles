@@ -12,7 +12,7 @@ _dotfiles_history_contains_credential() {
         'github_pat_[A-Za-z0-9_]{22,}'
         'xox[bporca]-[A-Za-z0-9-]{10,}'
         'sk-ant-[A-Za-z0-9_-]{40,}'
-        '(^|[^A-Za-z0-9])sk-[A-Za-z0-9_-]{20,}'
+        '(^|[^A-Za-z0-9/])sk-[A-Za-z0-9_-]{20,}'
         '(sk|pk|rk)_(live|test)_[A-Za-z0-9]{20,}'
         'lin_api_[A-Za-z0-9]{40,}'
         'glpat-[A-Za-z0-9_-]{20,}'

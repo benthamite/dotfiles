@@ -15,7 +15,6 @@ browser automation; each already carries the right account and auth.
 | GitHub | `gh` |
 | Signal (read-only) | `bin/sgn-read` |
 | Fireflies meeting transcripts (Forethought, read-only) | `bin/fireflies` |
-| Granola meeting notes (Forethought, read-only) | `bin/granola` |
 
 Relative paths are under the dotfiles root, `~/My Drive/dotfiles/`. For
 Google account and auth details, read `google-services.md` in this
@@ -58,15 +57,14 @@ in the personal `Automation` vault (see `secrets.md`). There is no write path.
 
 ## Granola
 
-`granola list|get` reads Granola notes through Granola's public API with
-Pablo's personal key (`pablo@forethought.org`, a member of Peter's Business
-workspace; scopes: personal and public notes). Pablo records few or no meetings
-himself, so what it returns is mostly the notes Peter shares to the workspace
-(his "Forethought" folder). `get NOTE_ID` prints summary, notes and transcript
-as Markdown. The key is the `granola-forethought` item in the personal
-`Automation` vault (see `secrets.md`). No write path. Meetings with Peter are
-often recorded in Granola, Fireflies or both; check both before concluding a
-conversation was not recorded.
+No agent access, and none is planned (2026-10-20). Granola's API needs the
+Business plan. Peter removed `pablo@forethought.org` from his Business workspace
+on 2026-10-11 (Granola's email of that date), which invalidated Pablo's API key,
+and the account now sits in Forethought's workspace (admin: Fin Moorhouse),
+which isn't on Business. Pablo records no meetings in Granola himself, and on
+2026-10-10 he and Peter agreed to record their calls in Fireflies instead, so
+use `bin/fireflies`. For an older call that only Peter recorded in Granola, ask
+Peter for an export. The `bin/granola` tool was removed; it is in git history.
 
 ## Google Drive original files
 

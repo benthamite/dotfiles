@@ -4,7 +4,7 @@
 Replaces the sheets_* tools from the (former) google-workspace-epoch MCP
 server. Auth is shared with gmail.py via _gworkspace_auth.py.
 
-Pass --account {epoch,personal} on any subcommand. Default is `epoch`.
+Pass --account {epoch,personal,baish} on any subcommand. Default is `epoch`.
 
 A "spreadsheet ID" is the long string in a Sheets URL:
   https://docs.google.com/spreadsheets/d/<ID>/edit
@@ -12,7 +12,7 @@ A "range" is A1 notation, optionally prefixed with the sheet name:
   Sheet1!A1:C10  |  A:A  |  Quarterly!B2
 
 Usage:
-  sheets.py [--account epoch|personal] read <spreadsheet-id> <range> [--format=tsv|json]
+  sheets.py [--account epoch|personal|baish] read <spreadsheet-id> <range> [--format=tsv|json]
       Print the cell values. Default format=tsv (one row per line, tab separated).
   sheets.py [--account ...] write <spreadsheet-id> <range>
       Read TSV from stdin and write into the range. One line = one row.
@@ -140,7 +140,7 @@ def _account_parser(default):
         kwargs["default"] = default
     parser.add_argument(
         "--account",
-        choices=["epoch", "personal"],
+        choices=["epoch", "personal", "baish"],
         help="Which Google Workspace account to authenticate as (default: epoch).",
         **kwargs,
     )

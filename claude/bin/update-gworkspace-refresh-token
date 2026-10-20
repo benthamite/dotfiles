@@ -20,12 +20,14 @@ TOKEN_VARS = {
     "epoch": "GOOGLE_WORKSPACE_REFRESH_TOKEN",
     "personal": "GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL",
     "forethought": "GOOGLE_WORKSPACE_REFRESH_TOKEN_FORETHOUGHT",
+    "baish": "GOOGLE_WORKSPACE_REFRESH_TOKEN_BAISH",
 }
 
 ACCOUNT_EMAILS = {
     "epoch": "pablo@epoch.ai",
     "personal": "pablo.stafforini@gmail.com",
     "forethought": "pablo@forethought.org",
+    "baish": "pablostafforini@baish.com.ar",
 }
 
 TOKEN_OP_ENTRIES = {
@@ -47,6 +49,13 @@ TOKEN_OP_ENTRIES = {
         "account": "my.1password.com",
         "vault": "Automation",
         "item": "google-workspace-refresh-token-forethought",
+        "field": "password",
+    },
+    # BAISH has no 1Password of its own; same exception as Forethought.
+    "baish": {
+        "account": "my.1password.com",
+        "vault": "Automation",
+        "item": "google-workspace-refresh-token-baish",
         "field": "password",
     },
 }
@@ -73,6 +82,10 @@ SCOPES = {
     ],
     "forethought": [
         "https://mail.google.com/",
+    ],
+    "baish": [
+        "https://www.googleapis.com/auth/gmail.modify",
+        "https://www.googleapis.com/auth/spreadsheets",
     ],
 }
 

@@ -42,10 +42,12 @@ CLIENT_SECRET_ITEM = "google-workspace-client-secret"
 REFRESH_TOKEN_ENV = {
     "epoch": "GOOGLE_WORKSPACE_REFRESH_TOKEN",
     "personal": "GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL",
+    "baish": "GOOGLE_WORKSPACE_REFRESH_TOKEN_BAISH",
 }
 
 REFRESH_TOKEN_ITEM = {
     "personal": "google-workspace-refresh-token-personal",
+    "baish": "google-workspace-refresh-token-baish",
 }
 
 REFRESH_TOKEN_OP = {

@@ -6,10 +6,10 @@ server. Auth is shared with sheets.py via _gworkspace_auth.py and uses the
 GOOGLE_WORKSPACE_* env vars; see that module for the per-account env-var
 mapping.
 
-Pass --account {epoch,personal,email-triage} on any subcommand. Default is `epoch`.
+Pass --account {epoch,personal,baish,email-triage} on any subcommand. Default is `epoch`.
 
 Usage:
-  gmail.py [--account epoch|personal|email-triage] query <gmail-search-query> [--max=N]
+  gmail.py [--account epoch|personal|baish|email-triage] query <gmail-search-query> [--max=N]
       Search Gmail. Returns one line per match: <id>\\t<from>\\t<date>\\t<subject>.
   gmail.py [--account ...] whoami
       Print the authenticated Gmail mailbox email.
@@ -51,7 +51,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from _gworkspace_auth import api_request, preflight  # noqa: E402
 
 API = "https://gmail.googleapis.com/gmail/v1/users/me"
-ACCOUNTS = ["epoch", "personal", "email-triage"]
+ACCOUNTS = ["epoch", "personal", "baish", "email-triage"]
 
 
 def _decode_body(payload):

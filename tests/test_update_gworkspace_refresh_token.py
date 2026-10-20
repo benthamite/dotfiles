@@ -111,6 +111,18 @@ class UpdateTokenTests(unittest.TestCase):
             module.TOKEN_OP_ENTRIES["personal"], "new-secret-token"
         )
 
+    def test_baish_scope_is_mail_and_sheets_in_personal_automation(self):
+        module = load_module()
+        self.assertEqual(
+            module.SCOPES["baish"],
+            [
+                "https://www.googleapis.com/auth/gmail.modify",
+                "https://www.googleapis.com/auth/spreadsheets",
+            ],
+        )
+        self.assertEqual(module.TOKEN_OP_ENTRIES["baish"]["account"], "my.1password.com")
+        self.assertEqual(module.TOKEN_OP_ENTRIES["baish"]["vault"], "Automation")
+
     def test_forethought_scope_is_mail_only(self):
         module = load_module()
         self.assertEqual(module.SCOPES["forethought"], ["https://mail.google.com/"])

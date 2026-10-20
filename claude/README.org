@@ -563,7 +563,7 @@ and the service-access routing table lives in
 while the always-loaded file keeps one trigger line each. The service-access
 trigger names services only (Signal, Fireflies and Granola joined it on
 2026-10-10, routed to the read-only =bin/sgn-read=, =bin/fireflies= and
-=bin/granola=; Granola left it on 2026-10-20, when its API access ended); browser work reaches its rules through the
+=bin/granola=; Granola left it on 2026-10-20, when its API access ended, and rejoined the same day with a key for the BAISH workspace); browser work reaches its rules through the
 =chrome-use= skill's own trigger. The paired
 =chrome-use= skill, which loads before any browser step, owns the browser
 rules: background research stays off live Chrome, standing authorization for

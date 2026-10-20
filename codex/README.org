@@ -80,7 +80,7 @@ asks for =claude-in-chrome=, while Codex names the =playwright= MCP server's
 =browser_*= tools. The service-access trigger names services only (Signal, Fireflies
 and Granola joined it on 2026-10-10, routed to the read-only =bin/sgn-read=,
 =bin/fireflies= and =bin/granola=; Granola left it on 2026-10-20, when its API
-access ended); browser
+access ended, and rejoined the same day with a key for the BAISH workspace); browser
 work reaches its rules through the =chrome-use= skill, which also says agents
 work only in tabs their browser tool opened. User-facing replies use ASD-STE100 Simplified Technical
 English.

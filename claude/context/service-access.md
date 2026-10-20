@@ -15,6 +15,7 @@ browser automation; each already carries the right account and auth.
 | GitHub | `gh` |
 | Signal (read-only) | `bin/sgn-read` |
 | WhatsApp (read-only, allowlisted chats) | `bin/wa-read` |
+| Granola meeting notes (BAISH workspace, read-only) | `bin/granola` |
 | Fireflies meeting transcripts (Forethought, read-only) | `bin/fireflies` |
 
 Relative paths are under the dotfiles root, `~/My Drive/dotfiles/`. For
@@ -79,14 +80,19 @@ in the personal `Automation` vault (see `secrets.md`). There is no write path.
 
 ## Granola
 
-No agent access, and none is planned (2026-10-20). Granola's API needs the
-Business plan. Peter removed `pablo@forethought.org` from his Business workspace
-on 2026-10-11 (Granola's email of that date), which invalidated Pablo's API key,
-and the account now sits in Forethought's workspace (admin: Fin Moorhouse),
-which isn't on Business. Pablo records no meetings in Granola himself, and on
-2026-10-10 he and Peter agreed to record their calls in Fireflies instead, so
-use `bin/fireflies`. For an older call that only Peter recorded in Granola, ask
-Peter for an export. The `bin/granola` tool was removed; it is in git history.
+`granola list|get` reads Granola notes visible to `pablostafforini@baish.com.ar`
+in the BAISH Business workspace (key created 2026-10-20). Its scopes are
+personal notes, which include private folders shared with Pablo such as Eitan's
+"[Private, solo presidente y tesorero] Fundación", and public workspace notes.
+`get NOTE_ID` prints summary, notes and transcript as Markdown, with the note's
+folders; `list` cannot filter by folder, because the API does not return
+folders there. The key is the `granola-baish` item in the personal
+`Automation` vault (see `secrets.md`). No write path.
+
+Pablo's Forethought Granola access ended on 2026-10-11, when Peter removed
+`pablo@forethought.org` from his Business workspace; Forethought's own
+workspace is not on Business. For Forethought calls use `bin/fireflies`; for
+an older call only Peter recorded in Granola, ask Peter for an export.
 
 ## Google Drive original files
 

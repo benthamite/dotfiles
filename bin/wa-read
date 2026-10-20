@@ -1,0 +1,240 @@
+#!/usr/bin/env python3
+"""wa-read — read-only access to Pablo's WhatsApp archive.
+
+The wa-archive daemon (~/repos/wa-archive, LaunchAgent com.stafforini.wa-archive)
+links to WhatsApp as a passive companion device and stores messages in SQLite.
+This tool opens that database read-only. It has no send or write path:
+sending goes through WhatsApp Web, with Pablo's confirmation per message.
+
+Only chats on the allowlist can be read. The allowlist,
+~/.config/wa-archive/allowlist, holds one chat JID per line; text after `#`
+is a comment (conventionally the chat's name). Find a chat's JID with
+`wa-read resolve NAME`, then have Pablo add it. A missing, empty or malformed
+allowlist makes every command except `resolve` refuse.
+
+Usage:
+  wa-read chats
+  wa-read show CHAT [--since YYYY-MM-DD] [--limit N]
+  wa-read search QUERY [--chat CHAT] [--limit N]
+  wa-read resolve NAME
+
+CHAT is an allowlisted JID or a case-insensitive substring of the name of
+exactly one allowlisted chat. Times are local. Results come with the archive's
+coverage, because a missing message may predate it.
+"""
+
+import argparse
+import datetime
+import json
+import os
+import re
+import sqlite3
+import sys
+import time
+
+HOME = os.path.expanduser("~")
+DATA = os.environ.get("XDG_DATA_HOME") or os.path.join(HOME, ".local", "share")
+STATE = os.environ.get("XDG_STATE_HOME") or os.path.join(HOME, ".local", "state")
+CONFIG = os.environ.get("XDG_CONFIG_HOME") or os.path.join(HOME, ".config")
+DB_PATH = os.path.join(DATA, "wa-archive", "messages.db")
+HEARTBEAT = os.path.join(STATE, "wa-archive", "heartbeat.json")
+UNLINKED = os.path.join(STATE, "wa-archive", "unlinked")
+ALLOWLIST = os.path.join(CONFIG, "wa-archive", "allowlist")
+HEARTBEAT_MAX_AGE = 3600
+JID_RE = re.compile(r"^[0-9A-Za-z._:-]+@(s\.whatsapp\.net|g\.us|lid)$")
+
+
+def die(msg):
+    sys.exit(f"ERROR: {msg}")
+
+
+def connect():
+    if not os.path.exists(DB_PATH):
+        die(f"WhatsApp archive not found at {DB_PATH}")
+    conn = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def warn_health():
+    """Warn on stderr when the archive may be missing recent messages."""
+    if os.path.exists(UNLINKED):
+        print("WARNING: wa-archive is unlinked from WhatsApp; no new messages are "
+              "being archived (relink with `wa-archive link PHONE`).", file=sys.stderr)
+        return
+    try:
+        with open(HEARTBEAT) as f:
+            beat = json.load(f)
+        at = datetime.datetime.fromisoformat(beat["at"].replace("Z", "+00:00")).timestamp()
+    except (OSError, ValueError, KeyError):
+        print("WARNING: no wa-archive heartbeat; the daemon may not be running.", file=sys.stderr)
+        return
+    age = time.time() - at
+    if age > HEARTBEAT_MAX_AGE:
+        print(f"WARNING: wa-archive heartbeat is {int(age // 60)} minutes old; "
+              "recent messages may be missing.", file=sys.stderr)
+
+
+def load_allowlist(conn):
+    """Return the allowlisted canonical chat keys, or exit if unusable."""
+    try:
+        with open(ALLOWLIST) as f:
+            lines = f.read().splitlines()
+    except OSError:
+        die(f"no allowlist at {ALLOWLIST}; refusing to read any chat")
+    keys = []
+    for n, line in enumerate(lines, 1):
+        jid = line.split("#", 1)[0].strip()
+        if not jid:
+            continue
+        if not JID_RE.match(jid):
+            die(f"malformed allowlist line {n}: {line!r}; refusing to read any chat")
+        row = conn.execute("SELECT key FROM aliases WHERE alias = ?", (jid,)).fetchone()
+        keys.append(row["key"] if row else jid)
+    if not keys:
+        die(f"allowlist {ALLOWLIST} is empty; refusing to read any chat")
+    return list(dict.fromkeys(keys))
+
+
+def fmt_ts(ts):
+    return datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M")
+
+
+def chat_rows(conn, keys):
+    marks = ",".join("?" * len(keys))
+    return conn.execute(
+        f"SELECT key, name, is_group, updated_at FROM chats WHERE key IN ({marks}) "
+        "ORDER BY updated_at DESC", keys).fetchall()
+
+
+def resolve_chat(conn, allowed, chat):
+    if chat in allowed:
+        rows = chat_rows(conn, [chat])
+        return rows[0] if rows else {"key": chat, "name": ""}
+    canon = conn.execute("SELECT key FROM aliases WHERE alias = ?", (chat,)).fetchone()
+    if canon and canon["key"] in allowed:
+        return resolve_chat(conn, allowed, canon["key"])
+    rows = [r for r in chat_rows(conn, allowed) if chat.lower() in (r["name"] or "").lower()]
+    if len(rows) == 1:
+        return rows[0]
+    if not rows:
+        die(f"'{chat}' is not an allowlisted chat")
+    names = "\n".join(f"  {r['key']}\t{r['name']}" for r in rows)
+    die(f"'{chat}' matches {len(rows)} allowlisted chats; pass a JID:\n{names}")
+
+
+def chat_names(conn):
+    return {r["key"]: r["name"] for r in conn.execute("SELECT key, name FROM chats") if r["name"]}
+
+
+def print_coverage(conn, keys):
+    chunks = conn.execute(
+        "SELECT COUNT(*) AS n, MAX(progress) AS progress FROM sync_chunks").fetchone()
+    print(f"# coverage: {chunks['n']} history chunks received, "
+          f"sync progress {chunks['progress'] or 0}%")
+    marks = ",".join("?" * len(keys))
+    for r in conn.execute(
+            f"SELECT chat_key, COUNT(*) AS n, MIN(ts) AS first, MAX(ts) AS last FROM messages "
+            f"WHERE chat_key IN ({marks}) GROUP BY chat_key", keys):
+        print(f"#   {r['chat_key']}: {r['n']} messages, {fmt_ts(r['first'])} to {fmt_ts(r['last'])}")
+
+
+MESSAGE_SQL = """
+SELECT m.*,
+  (SELECT text FROM mutations u WHERE u.chat_key = m.chat_key AND u.target_id = m.id
+     AND u.kind = 'edit' ORDER BY u.ts DESC LIMIT 1) AS edited_text,
+  EXISTS (SELECT 1 FROM mutations u WHERE u.chat_key = m.chat_key AND u.target_id = m.id
+     AND u.kind = 'revoke') AS revoked
+FROM messages m
+"""
+
+
+def print_messages(rows, names, with_chat=False):
+    for r in rows:
+        who = "me" if r["from_me"] else (names.get(r["sender_key"]) or r["sender_name"] or r["sender_key"])
+        if r["revoked"]:
+            body = "[deleted]"
+        else:
+            body = r["edited_text"] if r["edited_text"] is not None else r["text"]
+            if r["edited_text"] is not None:
+                body += " [edited]"
+            if r["media_type"]:
+                media = f"[{r['media_type']}{': ' + r['file_name'] if r['file_name'] else ''}]"
+                body = f"{media} {body}".strip()
+        prefix = f"[{names.get(r['chat_key'], r['chat_key'])}] " if with_chat else ""
+        print(f"{prefix}{fmt_ts(r['ts'])}  {who}: {body}")
+
+
+def cmd_chats(conn, args):
+    allowed = load_allowlist(conn)
+    for r in chat_rows(conn, allowed):
+        last = fmt_ts(r["updated_at"]) if r["updated_at"] else "-"
+        kind = "group" if r["is_group"] else "direct"
+        print(f"{last}\t{kind}\t{r['name']}\t{r['key']}")
+
+
+def cmd_show(conn, args):
+    allowed = load_allowlist(conn)
+    chat = resolve_chat(conn, allowed, args.chat)
+    sql = MESSAGE_SQL + " WHERE m.chat_key = ?"
+    params = [chat["key"]]
+    if args.since:
+        since = datetime.datetime.strptime(args.since, "%Y-%m-%d")
+        sql += " AND m.ts >= ?"
+        params.append(int(since.timestamp()))
+    sql += " ORDER BY m.ts DESC LIMIT ?"
+    params.append(args.limit)
+    rows = list(reversed(conn.execute(sql, params).fetchall()))
+    print(f"# {chat['name']} ({chat['key']})")
+    print_coverage(conn, [chat["key"]])
+    print_messages(rows, chat_names(conn))
+
+
+def cmd_search(conn, args):
+    allowed = load_allowlist(conn)
+    keys = [resolve_chat(conn, allowed, args.chat)["key"]] if args.chat else allowed
+    marks = ",".join("?" * len(keys))
+    sql = (MESSAGE_SQL + f" WHERE m.chat_key IN ({marks}) AND "
+           "(m.text LIKE ? OR m.file_name LIKE ? OR EXISTS (SELECT 1 FROM mutations u "
+           "WHERE u.chat_key = m.chat_key AND u.target_id = m.id AND u.text LIKE ?)) "
+           "ORDER BY m.ts DESC LIMIT ?")
+    pattern = f"%{args.query}%"
+    rows = conn.execute(sql, [*keys, pattern, pattern, pattern, args.limit]).fetchall()
+    print_coverage(conn, keys)
+    print_messages(rows, chat_names(conn), with_chat=True)
+
+
+def cmd_resolve(conn, args):
+    """List chats whose name matches, with JIDs, so Pablo can allowlist one."""
+    rows = conn.execute(
+        "SELECT key, name, is_group FROM chats WHERE name LIKE ? ORDER BY updated_at DESC",
+        (f"%{args.name}%",)).fetchall()
+    if not rows:
+        die(f"no chat name matches '{args.name}'")
+    for r in rows:
+        print(f"{r['key']}\t{'group' if r['is_group'] else 'direct'}\t{r['name']}")
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    sub = p.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("chats", help="list allowlisted chats, most recent first")
+    s = sub.add_parser("show", help="print an allowlisted chat's messages, oldest first")
+    s.add_argument("chat")
+    s.add_argument("--since")
+    s.add_argument("--limit", type=int, default=100)
+    q = sub.add_parser("search", help="search message text in allowlisted chats")
+    q.add_argument("query")
+    q.add_argument("--chat")
+    q.add_argument("--limit", type=int, default=50)
+    r = sub.add_parser("resolve", help="find chat JIDs by name, for the allowlist")
+    r.add_argument("name")
+    args = p.parse_args()
+    conn = connect()
+    warn_health()
+    {"chats": cmd_chats, "show": cmd_show, "search": cmd_search,
+     "resolve": cmd_resolve}[args.cmd](conn, args)
+
+
+if __name__ == "__main__":
+    main()

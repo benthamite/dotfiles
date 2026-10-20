@@ -197,6 +197,7 @@ not be used to print or document secret values; the placement rules are in
 | =op-desktop= | Reuses one terminal-backed desktop authorization for 1Password CLI calls and securely forwards piped item templates. A child other than =op run= that gives no result in 180 s is killed with exit 124 and the broker restarts, so a stuck authorization fails loudly instead of hanging every later call. |
 | =sgn-read= | Reads Signal history read-only from the =sgn= Emacs client's SQLite database (=chats=, =show=, =search=). It never calls =signal-cli=, whose lock the sgn daemon holds, and has no send path. |
 | =trajectory-open= | Opens a URL through the =trajectory= Chrome profile alias. |
+| =wa-read= | Reads WhatsApp history read-only from the =wa-archive= daemon's SQLite database (=chats=, =show=, =search=, =resolve=), limited to the chats on =~/.config/wa-archive/allowlist=. It prints the archive's coverage with results, warns when the daemon is unlinked or its heartbeat is stale, and has no send path. |
 | =transfer-github-issues= | Transfers the issue numbers in the configured input file between two fixed repositories. |
 | =translation-server= | Starts the local translation server with Node 22 LTS, bound only to =127.0.0.1:1969=. |
 

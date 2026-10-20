@@ -1,6 +1,6 @@
 # Read-only WhatsApp archive for agents
 
-Status: proposed; revised after one Codex review (2026-10-20, see "Review changes"). Not implemented.
+Status: implemented 2026-10-20 (`~/repos/wa-archive`, `bin/wa-read`); revised after one Codex review (see "Review changes") and during implementation (see "Implementation notes").
 
 ## Problem
 
@@ -137,3 +137,20 @@ precedence over it where they conflict.
    WhatsApp Web after the daemon ingests it and after `wa-read` shows it, and
    that no presence or typing indicator appears. This replaces verification
    item 5's grep as the evidence; the grep stays as a regression check only.
+
+## Implementation notes
+
+- History chunks use whatsmeow's manual download mode: the handler downloads
+  a chunk, commits it with its `sync_chunks` row, and only then sends the
+  history receipt and deletes the blob from the server. In automatic mode
+  whatsmeow deletes the blob even when the handler fails, which would lose the
+  chunk.
+- With synchronous acks, whatsmeow asks Pablo's own phone to resend a message
+  that failed to decrypt on its first retry, regardless of
+  `AutomaticMessageRerequestFromPhone`. It is a peer message to his own device,
+  invisible to others, as WhatsApp Web does; it is listed as permitted traffic.
+- `show` and `search` also accept a name substring, matched only among
+  allowlisted chats, so a name can never admit a chat that is not on the list.
+- Direct-chat names come from whatsmeow's contact store, then the contact's
+  latest display name; masked phone numbers ("+54∙∙∙90") are discarded.
+- Pairing uses a phone-number code (`PairPhone`) instead of a QR image.

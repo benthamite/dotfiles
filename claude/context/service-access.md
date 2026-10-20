@@ -14,7 +14,7 @@ browser automation; each already carries the right account and auth.
 | Google Docs / Drive | `gdoc` (read docs with `gdoc cat`, which appends comment threads; `export` and `pull` don't. Before changing a doc, read `google-services.md`, "Editing Google Docs"; comments vs. suggestions: same file, "Reading comments and suggestions") |
 | GitHub | `gh` |
 | Signal (read-only) | `bin/sgn-read` |
-| WhatsApp | WhatsApp Web in Chrome (see "WhatsApp" below); no local tool yet |
+| WhatsApp (read-only, allowlisted chats) | `bin/wa-read` |
 | Fireflies meeting transcripts (Forethought, read-only) | `bin/fireflies` |
 
 Relative paths are under the dotfiles root, `~/My Drive/dotfiles/`. For
@@ -50,14 +50,24 @@ on Pablo's behalf needs his confirmation.
 
 ## WhatsApp
 
-There is no local WhatsApp tool yet; a read-only reader on the Signal pattern
-(local message store plus a reader with no send path) is planned. Until then,
-use WhatsApp Web through Claude in Chrome. It is linked in two Chrome profiles:
-Personal (used by the `order-salads` skill) and `baish` (`baish.com.ar`, linked
-20 October 2026), which the `fias` Claude account drives and which serves BAISH
-and FIAS work. WhatsApp Web runs in one tab per profile: if it reports being
-open in another window, that is Pablo's tab, and "Use here" disconnects it, so
-ask before taking it over. Sending any message needs Pablo's confirmation.
+Read WhatsApp with `wa-read chats|show|search|resolve`. The `wa-archive`
+daemon (`~/repos/wa-archive`, LaunchAgent `com.stafforini.wa-archive`, design
+in `docs/plans/2026-10-20-whatsapp-archive.md`) is linked to Pablo's account as
+a passive companion device ("wa-archive (read-only)") and stores every chat in
+`~/.local/share/wa-archive/messages.db`; `wa-read` opens it read-only. Only
+chats on `~/.config/wa-archive/allowlist` (one JID per line) can be read; to
+add one, find its JID with `wa-read resolve NAME` and ask Pablo before adding
+it. Results print the archive's coverage: a missing message may predate it.
+`wa-read` warns when the device is unlinked or the heartbeat is stale; relink
+with `~/repos/wa-archive/bin/wa-archive link PHONE` (a phone-number pairing
+code Pablo enters on his phone, valid about 2.5 minutes).
+
+There is no agent send path in `wa-read`. To send, use WhatsApp Web through
+Claude in Chrome, with Pablo's confirmation per message. It is linked in two
+Chrome profiles: Personal (used by the `order-salads` skill) and `baish`
+(`baish.com.ar`), which the `fias` Claude account drives. WhatsApp Web runs in
+one tab per profile: if it reports being open in another window, that is
+Pablo's tab, and "Use here" disconnects it, so ask before taking it over.
 
 ## Fireflies
 

@@ -154,3 +154,23 @@ precedence over it where they conflict.
 - Direct-chat names come from whatsmeow's contact store, then the contact's
   latest display name; masked phone numbers ("+54∙∙∙90") are discarded.
 - Pairing uses a phone-number code (`PairPhone`) instead of a QR image.
+
+## Verification (2026-10-20)
+
+- Compared against WhatsApp Web for the five allowlisted chats (per-day counts
+  of text messages, documents and voice notes, then message by message where
+  counts differed). Every message Web showed was in the archive, except two
+  classes, both fixed: content types the daemon did not recognise were dropped
+  (a group invite), and messages deleted before linking were absent. Unknown
+  content is now stored under its protobuf field name, and pre-link deletions
+  as "[deleted]".
+- Removing the device from the phone made the daemon exit 0 with the
+  `unlinked` marker; launchd did not restart it and `wa-read` warned.
+- A stale heartbeat produced a launchd-audit error; restarting reconnected
+  without pairing; a restart during history sync lost nothing.
+- Full history: `RequireFullSync` was set and the device relinked, but in the
+  first five minutes the phone sent only the recent batch (no FULL chunks).
+  Older history may still arrive; otherwise backfilling needs on-demand
+  history requests (`BuildHistorySyncRequest`), not implemented.
+- Not yet observed: that an incoming message stays unread on the phone after
+  the daemon stores it (passive check).

@@ -15419,9 +15419,6 @@ result to a user-specified file."
   :ensure (:host github
                  :repo "benthamite/epoch.el")
   :demand t
-  :bind
-  (("H-l" . epoch-menu))
-
   :config
   (defvar pablo/epoch-pull-forge-repos-timer nil
     "Idle timer that periodically pulls Forge topics in all Epoch repos.")
@@ -15429,6 +15426,20 @@ result to a user-specified file."
     (cancel-timer pablo/epoch-pull-forge-repos-timer))
   (setq pablo/epoch-pull-forge-repos-timer
         (run-with-idle-timer (* 60 60) t #'epoch-pull-forge-repos)))
+#+end_src
+
+** =forethought=
+:PROPERTIES:
+:ID:       7C3E1A52-9B4D-4F0E-8A61-2D5F3B9C8E14
+:END:
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package forethought
+  :ensure (:host github
+                 :repo "benthamite/forethought.el")
+  :defer t
+  :bind
+  (("H-l" . forethought-menu)))
 #+end_src
 
 ** =calc=

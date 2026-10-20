@@ -94,6 +94,8 @@ screenshot.
 | 10-18 | YubiKey OTP (one-time, 44-char modhex) | — | not an agent action: a YubiKey touch while the Claude Code prompt had focus sent the OTP as a chat message; it stays valid only until a newer OTP from that key is used |
 | 10-19 | Cloudflare R2 S3 access key and secret (bucket-scoped token) | d | Claude in Chrome `find` returned the copy buttons with the key values in their descriptions; token to be deleted and recreated |
 | 10-19 | Slack bot token | d | Claude in Chrome screenshot of a Slack app's OAuth & Permissions page, which shows the token in full |
+| 10-20 | Website password | d | Claude in Chrome screenshot of a messaging chat opened by a misclick |
+| 10-20 | Two Google Workspace passwords | d | Claude in Chrome page text of a messaging chat |
 
 Tally: page/screenshot 10, command output 9, file read 3, **typed literal 0**.
 

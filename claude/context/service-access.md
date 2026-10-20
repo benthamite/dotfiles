@@ -14,6 +14,7 @@ browser automation; each already carries the right account and auth.
 | Google Docs / Drive | `gdoc` (read docs with `gdoc cat`, which appends comment threads; `export` and `pull` don't. Before changing a doc, read `google-services.md`, "Editing Google Docs"; comments vs. suggestions: same file, "Reading comments and suggestions") |
 | GitHub | `gh` |
 | Signal (read-only) | `bin/sgn-read` |
+| WhatsApp | WhatsApp Web in Chrome (see "WhatsApp" below); no local tool yet |
 | Fireflies meeting transcripts (Forethought, read-only) | `bin/fireflies` |
 
 Relative paths are under the dotfiles root, `~/My Drive/dotfiles/`. For
@@ -46,6 +47,17 @@ a daemon and stores every message in `~/.local/share/sgn/sgn.db`. Do not call
 history with `sgn-read chats|show|search`, which opens the database read-only.
 There is no agent send path; sending goes through sgn in Emacs, and any message
 on Pablo's behalf needs his confirmation.
+
+## WhatsApp
+
+There is no local WhatsApp tool yet; a read-only reader on the Signal pattern
+(local message store plus a reader with no send path) is planned. Until then,
+use WhatsApp Web through Claude in Chrome. It is linked in two Chrome profiles:
+Personal (used by the `order-salads` skill) and `baish` (`baish.com.ar`, linked
+20 October 2026), which the `fias` Claude account drives and which serves BAISH
+and FIAS work. WhatsApp Web runs in one tab per profile: if it reports being
+open in another window, that is Pablo's tab, and "Use here" disconnects it, so
+ask before taking it over. Sending any message needs Pablo's confirmation.
 
 ## Fireflies
 

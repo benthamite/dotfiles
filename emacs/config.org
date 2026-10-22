@@ -7213,13 +7213,13 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 /[[https://github.com/emacs-languagetool/flycheck-languagetool][flycheck-languagetool]] provides ~flycheck~ support for [[https://languagetool.org/][LanguageTool]]./
 
-Using my fork while awaiting merge of [[https://github.com/emacs-languagetool/flycheck-languagetool/pull/40][emacs-languagetool/flycheck-languagetool#40]].
+Using my fork while awaiting merge of [[https://github.com/emacs-languagetool/flycheck-languagetool/pull/40][emacs-languagetool/flycheck-languagetool#40]]. The pinned branch adds, on top of that PR, a fix that restarts the server when it dies; it has not been submitted upstream yet.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package flycheck-languagetool
   :ensure (:host github
                  :repo "benthamite/flycheck-languagetool"
-                 :branch "fix/guard-stale-buffer-positions") ; https://github.com/emacs-languagetool/flycheck-languagetool/pull/40
+                 :branch "fix/restart-dead-server") ; awaiting PR merge: https://github.com/emacs-languagetool/flycheck-languagetool/pull/40 (plus unsubmitted server-restart fix)
   :after flycheck
   :init
   (setopt flycheck-languagetool-server-jar

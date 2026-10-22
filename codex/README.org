@@ -437,7 +437,8 @@ and keep the host's required update cadence. Cleanup closes only run-owned,
 confirmed-inactive sessions; adopted or busy sessions remain protected.
 
 The paired =request-review= skill requests one opposite-CLI review of an
-immutable committed plan. It preserves review-only scope, binds a stable
+immutable committed plan. It preserves review-only scope, snoozes the reviewer
+session it creates so it stays out of the user's sight, binds a stable
 session identity and exact run-specific prompt before dispatch, and accepts
 only a terminal return from that submitted turn. Ambiguous delivery remains
 pending; missing evidence cannot authorize retransmission or an unsupported

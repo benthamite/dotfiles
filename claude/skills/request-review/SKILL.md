@@ -31,7 +31,12 @@ Start a fresh run-owned session with a unique explicit instance name, an
 explicit noninteractive account selection, and the intended repository as its
 directory. Do not reuse a pre-existing buffer or assume a sample buffer name.
 The reviewer must have a stable live session identity; unknown identity is a
-blocker, not a match. Initialization-only transcript metadata may be fresh;
+blocker, not a match. As soon as the session exists, snooze it indefinitely so
+it stays out of the user's sight: evaluate `(agent-toggle-snooze BUFFER)` with
+no duration, since it toggles, only when `(agent-session-snoozed-p BUFFER)` is
+nil, then confirm that predicate returns non-nil. Snoozing moves the reviewer
+to the end of the switcher, skips it in `agent-jump-to-waiting` and suppresses
+its ready alert; it does not change the lifecycle state the helper reads. Initialization-only transcript metadata may be fresh;
 prior prompts, reasoning, tools or other conversation history are not.
 
 Resolve this skill's actual directory rather than assuming the current working

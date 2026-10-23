@@ -3,12 +3,21 @@ from __future__ import annotations
 import os
 import re
 import subprocess
+import tomllib
 import unittest
 from pathlib import Path
 
 
 DOTFILES = Path("/Users/pablostafforini/My Drive/dotfiles")
 NPM_MINIMUM = (11, 10, 0)
+BUN_MINIMUM = (1, 3, 0)
+PIP_MINIMUM = (26, 1, 0)
+# pips that cannot take the gate, with the reason.
+PIP_EXEMPT = {
+    Path("/usr/bin/pip3"): "Apple's system pip; not upgradable in place",
+    Path.home() / ".pyenv/versions/3.9.18/bin/pip": "pip 26.1+ needs Python 3.10+",
+    Path.home() / ".pyenv/versions/3.10.10/bin/pip": "Python built without ssl; cannot reach PyPI",
+}
 
 
 def command_output(binary: Path, *args: str) -> str:
@@ -28,13 +37,18 @@ def command_output(binary: Path, *args: str) -> str:
 
 
 def version_tuple(version: str) -> tuple[int, int, int]:
-    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", version.strip())
+    match = re.match(r"(\d+)\.(\d+)(?:\.(\d+))?", version.strip())
     if not match:
-        raise AssertionError(f"unexpected npm version: {version!r}")
-    return tuple(map(int, match.groups()))
+        raise AssertionError(f"unexpected version: {version!r}")
+    return tuple(int(part or 0) for part in match.groups())
 
 
-class NodeSupplyChainPolicyTests(unittest.TestCase):
+def read_toml(path: Path) -> dict:
+    with path.open("rb") as handle:
+        return tomllib.load(handle)
+
+
+class ReleaseAgePolicyTests(unittest.TestCase):
     def npm_binaries(self) -> list[Path]:
         binaries = sorted((Path.home() / ".nvm/versions/node").glob("v*/bin/npm"))
         homebrew = Path("/opt/homebrew/bin/npm")
@@ -57,6 +71,37 @@ class NodeSupplyChainPolicyTests(unittest.TestCase):
                 config = command_output(npm, "config", "ls", "-l")
                 self.assertRegex(config, r"(?m)^min-release-age = 3$")
                 self.assertNotRegex(config, r"(?m)^minimum-release-age =")
+
+    def test_bun_enforces_three_day_release_age(self):
+        bun = Path("/opt/homebrew/bin/bun")
+        if not bun.exists():
+            self.skipTest("bun not installed")
+        self.assertGreaterEqual(version_tuple(command_output(bun, "--version")), BUN_MINIMUM)
+        config = read_toml(Path.home() / ".bunfig.toml")
+        self.assertEqual(config["install"]["minimumReleaseAge"], 3 * 24 * 60 * 60)
+
+    def test_uv_enforces_three_day_release_age(self):
+        config = read_toml(Path.home() / ".config/uv/uv.toml")
+        self.assertEqual(config["exclude-newer"], "3 days")
+
+    def pip_binaries(self) -> list[Path]:
+        binaries = sorted((Path.home() / ".pyenv/versions").glob("*/bin/pip"))
+        binaries += [Path("/opt/homebrew/bin/pip3"), Path("/usr/bin/pip3")]
+        return [pip for pip in binaries if pip.exists()]
+
+    def test_every_installed_pip_enforces_three_day_release_age(self):
+        for pip in self.pip_binaries():
+            if pip in PIP_EXEMPT:
+                continue
+            with self.subTest(pip=pip):
+                version = command_output(pip, "--version").split()[1]
+                self.assertGreaterEqual(
+                    version_tuple(version),
+                    PIP_MINIMUM,
+                    f"{pip} predates duration support in uploaded-prior-to",
+                )
+                config = command_output(pip, "config", "list")
+                self.assertRegex(config, r"(?m)^install\.uploaded-prior-to='P3D'$")
 
     def test_security_audit_skills_prescribe_the_npm_setting(self):
         skill_paths = (

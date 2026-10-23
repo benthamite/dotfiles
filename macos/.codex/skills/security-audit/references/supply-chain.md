@@ -29,14 +29,27 @@ to audit them. A missing scanner is a coverage gap.
   installation (`--only-binary :all:`) and pinned artifact hashes reduce
   install-time risk; wheels still execute code when used. Assess build origin,
   index configuration/dependency confusion, and the real isolation boundary.
-- Preserve Pablo's npm release-age policy: `min-release-age=3` (days), requiring
-  npm 11.10.0 or newer. Verify the actual binary version and recognized effective
-  configuration; capture `npm config ls -l` and emit only the checked key.
-  `npm config get` alone can echo an unknown key. For pnpm,
-  `minimumReleaseAge` uses minutes; for Bun it uses seconds. Check current
-  syntax/config location and exemptions. For uv, inspect `--exclude-newer`
-  policy and installed-version semantics. Release age reduces some exposure;
-  it is not vulnerability detection or a reason to defer an urgent security fix.
+- Preserve Pablo's release-age policy: refuse versions published less than 3
+  days ago, in every installed package manager, as user-level config:
+  - npm: `~/.npmrc` `min-release-age=3` (days), npm 11.10.0 or newer.
+  - Bun: `~/.bunfig.toml` `[install]` `minimumReleaseAge = 259200` (seconds).
+  - uv: `~/.config/uv/uv.toml` `exclude-newer = "3 days"`.
+  - pip: `~/.config/pip/pip.conf` `[install]` `uploaded-prior-to = P3D`,
+    pip 26.1 or newer (26.0 rejects durations; older pips ignore the key).
+  - Deno 2.8+ reads `min-release-age` from `.npmrc`; its built-in default is
+    24 hours.
+  - pnpm (`minimum-release-age`, minutes) and Yarn 4 (`npmMinimalAgeGate`,
+    minutes) when installed.
+  Older versions silently ignore these keys, so verify each binary's version
+  and effective configuration (for npm, capture `npm config ls -l` and emit
+  only the checked key; `npm config get` alone echoes unknown keys).
+  `tests/test_release_age_policy.py` checks this. The 3-day figure comes
+  from a cost estimate (most malicious versions are pulled within 1-2 days;
+  survivors usually last weeks), not from a tool default. Release age reduces
+  some exposure; it is not vulnerability detection or a reason to defer an
+  urgent security fix: bypass once with `--min-release-age=0`,
+  `--minimum-release-age=0`, `--exclude-newer-package NAME=false`, or
+  `--uploaded-prior-to` with an explicit date.
 
 ## Advisory collection
 

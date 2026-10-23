@@ -88,7 +88,7 @@ The command ~tab-bar-extras-toggle-slack-notifications~ toggles Slack notificati
 The variable ~slack-extras-teams~ lists the teams to register. Each element is a plist with =:domain= (the workspace host, such as ="epochai.slack.com"=), =:fallback= (a function of no arguments returning =(TOKEN . COOKIE)=, typically read from 1Password), and any other ~slack-register-team~ options, such as =:name= and =:animate-image=.
 
 #+findex: slack-extras-register-teams
-The command ~slack-extras-register-teams~ registers every team in ~slack-extras-teams~. For each team it asks ~slack-extras-chrome-credentials~ for the current pair and uses =:fallback= only when that returns nil. A team already registered under the same name with a different token is disconnected and removed from ~slack-teams-by-token~ first, so calling the command again after a sign-out refreshes the team without leaving a duplicate.
+The command ~slack-extras-register-teams~ registers every team in ~slack-extras-teams~. For each team it asks ~slack-extras-chrome-credentials~ for the current pair and uses =:fallback= only when that returns nil. A team already registered under the same name with a different token is disconnected and removed from ~slack-teams-by-token~ first, so calling the command again after a sign-out refreshes the team without leaving a duplicate. A team that was connected is connected again under the new token.
 
 #+findex: slack-extras-chrome-credentials
 #+vindex: slack-extras-chrome-program

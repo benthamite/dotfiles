@@ -229,16 +229,21 @@ not leave a duplicate behind."
     (slack-extras--register-team team)))
 
 (defun slack-extras--register-team (team)
-  "Register TEAM, a `slack-extras-teams' plist, with current credentials."
-  (let* ((credentials (or (slack-extras-chrome-credentials (plist-get team :domain))
+  "Register TEAM, a `slack-extras-teams' plist, with current credentials.
+If TEAM was connected under a stale token, connect it again under the new one."
+  (let* ((name (plist-get team :name))
+         (credentials (or (slack-extras-chrome-credentials (plist-get team :domain))
                           (funcall (plist-get team :fallback))))
          (options (slack-extras--plist-without team '(:domain :fallback)))
-         (stale (slack-extras--registered-team (plist-get team :name))))
+         (stale (slack-extras--registered-team name))
+         (reconnect (and stale (slack-team-connectedp stale))))
     (unless (and stale (equal (oref stale token) (car credentials)))
       (when stale
         (slack-extras--unregister-team stale))
       (apply #'slack-register-team
-             :token (car credentials) :cookie (cdr credentials) options))))
+             :token (car credentials) :cookie (cdr credentials) options)
+      (when reconnect
+        (slack-start (slack-extras--registered-team name))))))
 
 (defun slack-extras-chrome-credentials (domain)
   "Return a cons (TOKEN . COOKIE) for Slack DOMAIN read from Chrome, or nil.

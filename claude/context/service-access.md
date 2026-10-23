@@ -14,7 +14,7 @@ browser automation; each already carries the right account and auth.
 | Google Docs / Drive | `gdoc` (read docs with `gdoc cat`, which appends comment threads; `export` and `pull` don't. Before changing a doc, read `google-services.md`, "Editing Google Docs"; comments vs. suggestions: same file, "Reading comments and suggestions") |
 | GitHub | `gh` |
 | Signal (read-only) | `bin/sgn-read` |
-| WhatsApp (read-only, allowlisted chats) | `bin/wa-read` |
+| WhatsApp (read-only) | `bin/wa-read` |
 | Inbox monitor: new messages routed to a project, and waits (read-only) | `bin/inbox-read`, `bin/inbox-wait` |
 | Granola meeting notes (BAISH workspace, read-only) | `bin/granola` |
 | Fireflies meeting transcripts (Forethought, read-only) | `bin/fireflies` |
@@ -56,10 +56,12 @@ Read WhatsApp with `wa-read chats|show|search|resolve`. The `wa-archive`
 daemon (`~/repos/wa-archive`, LaunchAgent `com.stafforini.wa-archive`, design
 in `docs/plans/2026-10-20-whatsapp-archive.md`) is linked to Pablo's account as
 a passive companion device ("wa-archive (read-only)") and stores every chat in
-`~/.local/share/wa-archive/messages.db`; `wa-read` opens it read-only. Only
-chats on `~/.config/wa-archive/allowlist` (one JID per line) can be read; to
-add one, find its JID with `wa-read resolve NAME` and ask Pablo before adding
-it. Results print the archive's coverage: a missing message may predate it.
+`~/.local/share/wa-archive/messages.db` (90 days kept; excluded from Time
+Machine); `wa-read` opens it read-only. Every chat is readable except those on
+the optional `~/.config/wa-archive/denylist` (one JID per line; Pablo decides
+what goes there). Scope searches to the task with `--chat`, since other
+people's private conversations should not enter context needlessly. Results
+print the archive's coverage: a missing message may predate it.
 `wa-read` warns when the device is unlinked or the heartbeat is stale; relink
 with `~/repos/wa-archive/bin/wa-archive link PHONE` (a phone-number pairing
 code Pablo enters on his phone, valid about 2.5 minutes).
@@ -153,7 +155,7 @@ Before any browser step, load the `chrome-use` skill; it holds the browser rules
 ## Inbox monitor
 
 `~/repos/inbox-monitor` (launchd job `com.stafforini.inbox-monitor`) collects
-WhatsApp (allowlisted chats) and email (`~/Mail/Inbox`) into one database,
+WhatsApp (every chat not on the deny-list) and email (`~/Mail/Inbox`) into one database,
 routes each message to the projects whose `<repo>/.inbox-routes.toml` claims
 it (registry: `~/.config/inbox-monitor/projects.toml`), and wakes that
 project's open agent.el session with a prompt starting `[inbox-monitor]`, or

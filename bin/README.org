@@ -200,7 +200,7 @@ not be used to print or document secret values; the placement rules are in
 | =trajectory-open= | Opens a URL through the =trajectory= Chrome profile alias. |
 | =inbox-read= | Front end of the inbox monitor (=~/repos/inbox-monitor=): shows a project's undelivered WhatsApp and email messages and wait notices from =~/.local/share/inbox-monitor/inbox.db=, and acknowledges them with =--ack-upto= / =--ack-waits=. Read-only towards the channels: it never sends or marks anything read. |
 | =inbox-wait= | Registers, lists and cancels inbox-monitor waits (=add=, =list=, =cancel=): a session blocked on someone records who and where, optionally a DNS-TXT probe and a deadline, and is resumed or Pablo alerted when it is satisfied. |
-| =wa-read= | Reads WhatsApp history read-only from the =wa-archive= daemon's SQLite database (=chats=, =show=, =search=, =resolve=), limited to the chats on =~/.config/wa-archive/allowlist=. It prints the archive's coverage with results, warns when the daemon is unlinked or its heartbeat is stale, and has no send path. |
+| =wa-read= | Reads WhatsApp history read-only from the =wa-archive= daemon's SQLite database (=chats=, =show=, =search=, =resolve=), skipping chats on the optional deny-list =~/.config/wa-archive/denylist=. It prints the archive's coverage with results, warns when the daemon is unlinked or its heartbeat is stale, and has no send path. |
 | =transfer-github-issues= | Transfers the issue numbers in the configured input file between two fixed repositories. |
 | =translation-server= | Starts the local translation server with Node 22 LTS, bound only to =127.0.0.1:1969=. |
 

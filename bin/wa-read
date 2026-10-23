@@ -6,11 +6,14 @@ links to WhatsApp as a passive companion device and stores messages in SQLite.
 This tool opens that database read-only. It has no send or write path:
 sending goes through WhatsApp Web, with Pablo's confirmation per message.
 
-Only chats on the allowlist can be read. The allowlist,
-~/.config/wa-archive/allowlist, holds one chat JID per line; text after `#`
-is a comment (conventionally the chat's name). Find a chat's JID with
-`wa-read resolve NAME`, then have Pablo add it. A missing, empty or malformed
-allowlist makes every command except `resolve` refuse.
+Every chat can be read except those on the deny-list (Pablo's decision of
+2026-10-23: the former allowlist did not bound what an agent with shell
+access can read, and the other channels have no such list). The deny-list,
+~/.config/wa-archive/denylist, is optional and holds one chat JID per line;
+text after `#` is a comment (conventionally the chat's name). Find a chat's
+JID with `wa-read resolve NAME`. A malformed deny-list makes every command
+refuse, so a typo cannot silently expose a chat meant to stay hidden.
+Narrow searches to the relevant chat with `--chat`.
 
 Usage:
   wa-read chats
@@ -18,9 +21,9 @@ Usage:
   wa-read search QUERY [--chat CHAT] [--limit N]
   wa-read resolve NAME
 
-CHAT is an allowlisted JID or a case-insensitive substring of the name of
-exactly one allowlisted chat. Times are local. Results come with the archive's
-coverage, because a missing message may predate it.
+CHAT is a JID or a case-insensitive substring of the name of exactly one
+readable chat. Times are local. Results come with the archive's coverage,
+because a missing message may predate it (the archive keeps 90 days).
 """
 
 import argparse
@@ -39,7 +42,7 @@ CONFIG = os.environ.get("XDG_CONFIG_HOME") or os.path.join(HOME, ".config")
 DB_PATH = os.path.join(DATA, "wa-archive", "messages.db")
 HEARTBEAT = os.path.join(STATE, "wa-archive", "heartbeat.json")
 UNLINKED = os.path.join(STATE, "wa-archive", "unlinked")
-ALLOWLIST = os.path.join(CONFIG, "wa-archive", "allowlist")
+DENYLIST = os.path.join(CONFIG, "wa-archive", "denylist")
 HEARTBEAT_MAX_AGE = 3600
 JID_RE = re.compile(r"^[0-9A-Za-z._:-]+@(s\.whatsapp\.net|g\.us|lid)$")
 
@@ -75,25 +78,32 @@ def warn_health():
               "recent messages may be missing.", file=sys.stderr)
 
 
-def load_allowlist(conn):
-    """Return the allowlisted canonical chat keys, or exit if unusable."""
+def load_denylist(conn):
+    """Return the denied canonical chat keys (empty when there is no deny-list)."""
     try:
-        with open(ALLOWLIST) as f:
+        with open(DENYLIST) as f:
             lines = f.read().splitlines()
-    except OSError:
-        die(f"no allowlist at {ALLOWLIST}; refusing to read any chat")
-    keys = []
+    except FileNotFoundError:
+        return set()
+    except OSError as e:
+        die(f"cannot read deny-list {DENYLIST}: {e}; refusing to read any chat")
+    keys = set()
     for n, line in enumerate(lines, 1):
         jid = line.split("#", 1)[0].strip()
         if not jid:
             continue
         if not JID_RE.match(jid):
-            die(f"malformed allowlist line {n}: {line!r}; refusing to read any chat")
+            die(f"malformed deny-list line {n}: {line!r}; refusing to read any chat")
         row = conn.execute("SELECT key FROM aliases WHERE alias = ?", (jid,)).fetchone()
-        keys.append(row["key"] if row else jid)
-    if not keys:
-        die(f"allowlist {ALLOWLIST} is empty; refusing to read any chat")
-    return list(dict.fromkeys(keys))
+        keys.add(row["key"] if row else jid)
+    return keys
+
+
+def readable_keys(conn):
+    """Canonical keys of every chat not on the deny-list, most recent first."""
+    denied = load_denylist(conn)
+    return [r["key"] for r in conn.execute("SELECT key FROM chats ORDER BY updated_at DESC")
+            if r["key"] not in denied]
 
 
 def fmt_ts(ts):
@@ -107,20 +117,20 @@ def chat_rows(conn, keys):
         "ORDER BY updated_at DESC", keys).fetchall()
 
 
-def resolve_chat(conn, allowed, chat):
-    if chat in allowed:
+def resolve_chat(conn, readable, chat):
+    if chat in readable:
         rows = chat_rows(conn, [chat])
         return rows[0] if rows else {"key": chat, "name": ""}
     canon = conn.execute("SELECT key FROM aliases WHERE alias = ?", (chat,)).fetchone()
-    if canon and canon["key"] in allowed:
-        return resolve_chat(conn, allowed, canon["key"])
-    rows = [r for r in chat_rows(conn, allowed) if chat.lower() in (r["name"] or "").lower()]
+    if canon and canon["key"] in readable:
+        return resolve_chat(conn, readable, canon["key"])
+    rows = [r for r in chat_rows(conn, readable) if chat.lower() in (r["name"] or "").lower()]
     if len(rows) == 1:
         return rows[0]
     if not rows:
-        die(f"'{chat}' is not an allowlisted chat")
+        die(f"'{chat}' is not a readable chat (unknown, or on the deny-list)")
     names = "\n".join(f"  {r['key']}\t{r['name']}" for r in rows)
-    die(f"'{chat}' matches {len(rows)} allowlisted chats; pass a JID:\n{names}")
+    die(f"'{chat}' matches {len(rows)} chats; pass a JID:\n{names}")
 
 
 def chat_names(conn):
@@ -166,16 +176,16 @@ def print_messages(rows, names, with_chat=False):
 
 
 def cmd_chats(conn, args):
-    allowed = load_allowlist(conn)
-    for r in chat_rows(conn, allowed):
+    readable = readable_keys(conn)
+    for r in chat_rows(conn, readable):
         last = fmt_ts(r["updated_at"]) if r["updated_at"] else "-"
         kind = "group" if r["is_group"] else "direct"
         print(f"{last}\t{kind}\t{r['name']}\t{r['key']}")
 
 
 def cmd_show(conn, args):
-    allowed = load_allowlist(conn)
-    chat = resolve_chat(conn, allowed, args.chat)
+    readable = readable_keys(conn)
+    chat = resolve_chat(conn, readable, args.chat)
     sql = MESSAGE_SQL + " WHERE m.chat_key = ?"
     params = [chat["key"]]
     if args.since:
@@ -191,8 +201,8 @@ def cmd_show(conn, args):
 
 
 def cmd_search(conn, args):
-    allowed = load_allowlist(conn)
-    keys = [resolve_chat(conn, allowed, args.chat)["key"]] if args.chat else allowed
+    readable = readable_keys(conn)
+    keys = [resolve_chat(conn, readable, args.chat)["key"]] if args.chat else readable
     marks = ",".join("?" * len(keys))
     sql = (MESSAGE_SQL + f" WHERE m.chat_key IN ({marks}) AND "
            "(m.text LIKE ? OR m.file_name LIKE ? OR EXISTS (SELECT 1 FROM mutations u "
@@ -200,12 +210,13 @@ def cmd_search(conn, args):
            "ORDER BY m.ts DESC LIMIT ?")
     pattern = f"%{args.query}%"
     rows = conn.execute(sql, [*keys, pattern, pattern, pattern, args.limit]).fetchall()
-    print_coverage(conn, keys)
+    if args.chat:  # across all chats the per-chat coverage would be very long
+        print_coverage(conn, keys)
     print_messages(rows, chat_names(conn), with_chat=True)
 
 
 def cmd_resolve(conn, args):
-    """List chats whose name matches, with JIDs, so Pablo can allowlist one."""
+    """List chats whose name matches, with JIDs (for --chat or the deny-list)."""
     rows = conn.execute(
         "SELECT key, name, is_group FROM chats WHERE name LIKE ? ORDER BY updated_at DESC",
         (f"%{args.name}%",)).fetchall()
@@ -218,16 +229,16 @@ def cmd_resolve(conn, args):
 def main():
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = p.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("chats", help="list allowlisted chats, most recent first")
-    s = sub.add_parser("show", help="print an allowlisted chat's messages, oldest first")
+    sub.add_parser("chats", help="list readable chats, most recent first")
+    s = sub.add_parser("show", help="print a chat's messages, oldest first")
     s.add_argument("chat")
     s.add_argument("--since")
     s.add_argument("--limit", type=int, default=100)
-    q = sub.add_parser("search", help="search message text in allowlisted chats")
+    q = sub.add_parser("search", help="search message text in readable chats")
     q.add_argument("query")
     q.add_argument("--chat")
     q.add_argument("--limit", type=int, default=50)
-    r = sub.add_parser("resolve", help="find chat JIDs by name, for the allowlist")
+    r = sub.add_parser("resolve", help="find chat JIDs by name")
     r.add_argument("name")
     args = p.parse_args()
     conn = connect()

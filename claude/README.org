@@ -1286,7 +1286,13 @@ two 1Password requests a day rather than two per call. If Slack rejects a
 cached credential (=invalid_auth=, =not_authed=, =token_revoked=), it runs
 =cache forget= and retries once. The =altruismo-eficaz= item's title contains
 "/", which no =op://= reference can express, so that workspace still reads
-uncached until the item is referenced by ID.
+uncached until the item is referenced by ID. The =becas-aisar= and =baish=
+workspaces use the personal =Automation= items =slack-becas-aisar= and
+=slack-baish= (fields =token= and =cookie=). When credentials are rejected even
+after the retry, the error names the =slack-credentials= skill, which refreshes
+them: the agent copies the token from the Slack page to the clipboard through
+Chrome and stores it with =op-clipboard-store=; only the HttpOnly =d= cookie
+needs Pablo, and only after he signs out of Slack in that profile.
 
 =slack.py channels [QUERY]= follows =conversations.list= through every page and
 prints one compact JSON line per conversation, with a "N of M" count on stderr.

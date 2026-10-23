@@ -18,6 +18,8 @@ Multiple workspaces are supported via the WORKSPACES registry and the global
                  (token: field -> Bearer token, cookie: field -> 'd' cookie)
   forethought -> personal 1Password Automation vault: slack-forethought
                  (same fields; see the Forethought exception in secrets.md)
+  becas-aisar, baish -> personal 1Password Automation vault: slack-becas-aisar,
+                 slack-baish (same fields; see the BAISH exception in secrets.md)
 
 Usage:
   slack.py [-w WORKSPACE] <subcommand> ...
@@ -155,6 +157,20 @@ WORKSPACES = {
         "domain": "forethought-ea.slack.com",
         "source": "automation",
         "item": "slack-forethought",
+        "token_field": "token",
+        "cookie_field": "cookie",
+    },
+    "becas-aisar": {
+        "domain": "becasaisar.slack.com",
+        "source": "automation",
+        "item": "slack-becas-aisar",
+        "token_field": "token",
+        "cookie_field": "cookie",
+    },
+    "baish": {
+        "domain": "baish.slack.com",
+        "source": "automation",
+        "item": "slack-baish",
         "token_field": "token",
         "cookie_field": "cookie",
     },
@@ -315,6 +331,10 @@ class _AuthRejected(Exception):
 
 
 _AUTH_ERRORS = frozenset({"not_authed", "invalid_auth", "token_revoked"})
+# Expired or revoked session credentials are refreshed with a procedure, not
+# by hand-editing 1Password: point the agent at it when they fail.
+_REFRESH_HINT = ("The stored session credentials are stale: refresh them with the "
+                 "slack-credentials skill (claude/skills/slack-credentials/SKILL.md)")
 
 
 def _post_form(url, params, headers, raise_on_auth=False):
@@ -345,6 +365,8 @@ def _post_form(url, params, headers, raise_on_auth=False):
         if raise_on_auth and error in _AUTH_ERRORS:
             raise _AuthRejected(error)
         suffix = f": {error}" if isinstance(error, str) and error in _SAFE_API_ERRORS else ""
+        if error in _AUTH_ERRORS:
+            _fail(f"Slack API rejected the request{suffix}. {_REFRESH_HINT}")
         _fail(f"Slack API rejected the request{suffix}")
     return data
 
@@ -357,7 +379,7 @@ def call(method, **params):
     except _AuthRejected as rejected:
         # A rotated session leaves the cached copy stale: refresh it once.
         if not _forget_tokens():
-            _fail(f"Slack API rejected the request: {rejected}")
+            _fail(f"Slack API rejected the request: {rejected}. {_REFRESH_HINT}")
         return _post_form(url, params, _session_headers())
 
 

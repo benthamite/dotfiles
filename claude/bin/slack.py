@@ -256,6 +256,16 @@ _xoxd = None
 _token_workspace = None
 
 
+def _chrome():
+    """The sibling module that reads current credentials from Chrome."""
+    sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+    try:
+        import slack_chrome
+    finally:
+        sys.path.pop(0)
+    return slack_chrome
+
+
 def _tokens():
     global _xoxc, _xoxd, _token_workspace
     if _xoxc is None or _token_workspace != _workspace:
@@ -266,6 +276,14 @@ def _tokens():
                 f"ERROR: unknown workspace '{_workspace}'. Valid: {valid}\n"
             )
             sys.exit(2)
+        # Credentials read from Chrome after the stored ones were rejected
+        # (slack_chrome.py) take precedence; 1Password is the fallback.
+        fresh = _chrome().cached(ws["domain"]) if ws.get("domain") else None
+        if fresh:
+            _xoxc, _xoxd = fresh
+            _token_workspace = _workspace
+            _user_cache.clear()
+            return _xoxc, _xoxd
         if ws["source"] == "op":
             xoxc = _op_read(f"{ws['op_path']}/xoxc_token", cached=True)
             xoxd = _op_read(f"{ws['op_path']}/xoxd_token", cached=True)
@@ -331,9 +349,9 @@ class _AuthRejected(Exception):
 
 
 _AUTH_ERRORS = frozenset({"not_authed", "invalid_auth", "token_revoked"})
-# Expired or revoked session credentials are refreshed with a procedure, not
-# by hand-editing 1Password: point the agent at it when they fail.
-_REFRESH_HINT = ("The stored session credentials are stale: refresh them with the "
+# Reached only when the automatic refresh from Chrome also failed; the skill
+# lists the causes (usually: Pablo is signed out of Slack in Chrome).
+_REFRESH_HINT = ("Reading fresh credentials from Chrome failed too; see the "
                  "slack-credentials skill (claude/skills/slack-credentials/SKILL.md)")
 
 
@@ -377,10 +395,31 @@ def call(method, **params):
     try:
         return _post_form(url, params, _session_headers(), raise_on_auth=True)
     except _AuthRejected as rejected:
-        # A rotated session leaves the cached copy stale: refresh it once.
+        # The browser session ended (sign-out, email change, forced re-login):
+        # read the current credentials from Chrome and retry once.
+        if _refresh_from_chrome():
+            return _post_form(url, params, _session_headers())
+        # Otherwise a rotated session may have left the broker cache stale.
         if not _forget_tokens():
             _fail(f"Slack API rejected the request: {rejected}. {_REFRESH_HINT}")
         return _post_form(url, params, _session_headers())
+
+
+def _refresh_from_chrome():
+    """Replace this workspace's credentials with Chrome's; return success."""
+    global _xoxc, _xoxd, _token_workspace
+    domain = WORKSPACES[_workspace].get("domain")
+    if not domain:
+        return False
+    chrome = _chrome()
+    try:
+        _xoxc, _xoxd = chrome.refresh(domain)
+    except chrome.Unavailable as exc:
+        sys.stderr.write(f"slack.py: could not read credentials from Chrome: {exc}\n")
+        return False
+    _token_workspace = _workspace
+    _user_cache.clear()
+    return True
 
 
 def _session_headers():

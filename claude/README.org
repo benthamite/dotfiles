@@ -1288,14 +1288,14 @@ cached credential (=invalid_auth=, =not_authed=, =token_revoked=), it runs
 "/", which no =op://= reference can express, so that workspace still reads
 uncached until the item is referenced by ID. The =becas-aisar= and =baish=
 workspaces use the personal =Automation= items =slack-becas-aisar= and
-=slack-baish= (fields =token= and =cookie=). When credentials are rejected even
-after the retry, the error names the =slack-credentials= skill, which refreshes
-them: the agent copies the token from the Slack page to the clipboard through
-Chrome and stores it with =op-clipboard-store=; only the HttpOnly =d= cookie
-needs Pablo, and only after he signs out of Slack in that profile or changes
-the account's email. If the auto-mode classifier blocks the page script, Pablo
-pastes a one-line =copy(...)= into that tab's console and the agent still runs
-the store (2026-10-23). The inbox
+=slack-baish= (fields =token= and =cookie=). Since 2026-10-24 the 1Password
+items are only a fallback: when Slack rejects a pair, =slack_chrome.py= reads
+the current =d= cookie from Chrome's cookie database (any profile signed in to
+the workspace), derives the token from the workspace's =/ssb/redirect= page,
+verifies it with =auth.test=, caches the pair in =~/.cache/slack-chrome/=
+(0600) and slack.py retries, so nobody copies credentials by hand. The
+=slack-credentials= skill covers the remaining failures (signed out of Slack in
+Chrome, Keychain access refused, a Chrome format change). The inbox
 monitor (=~/repos/inbox-monitor=, described in =context/service-access.md=)
 imports =slack.py= to poll the becas-aisar, baish, forethought and epoch
 workspaces every two minutes; its project routing, notify-only fallback and

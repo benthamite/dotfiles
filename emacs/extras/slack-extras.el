@@ -198,5 +198,84 @@ happens after the initial mode-string sync."
               :around #'slack-extras--also-toggle-slack)
   (slack-extras--register-tab-bar-element))
 
+;;;;; Credentials from Chrome
+
+(defvar slack-extras-chrome-program
+  (expand-file-name "~/My Drive/dotfiles/claude/bin/slack_chrome.py")
+  "Program that refreshes Slack session credentials from Chrome.
+Run as `slack_chrome.py ensure DOMAIN', it leaves a verified token and
+cookie for DOMAIN in `slack-extras-chrome-cache-directory', reading them
+from Chrome when the cached pair is stale.")
+
+(defvar slack-extras-chrome-cache-directory
+  (expand-file-name "~/.cache/slack-chrome/")
+  "Directory where `slack-extras-chrome-program' caches credentials.")
+
+(defvar slack-extras-teams nil
+  "Slack teams that `slack-extras-register-teams' registers.
+Each element is a plist with `:domain' (the workspace host, such as
+\"epochai.slack.com\"), `:fallback', a function of no arguments returning
+a cons (TOKEN . COOKIE) read from 1Password, and the remaining
+`slack-register-team' options, such as `:name'.")
+
+(defun slack-extras-register-teams ()
+  "Register every team in `slack-extras-teams' with current credentials.
+A team's credentials come from Chrome through `slack-extras-chrome-program'
+and, when that fails, from its `:fallback' function.  A team registered
+under a stale token is disconnected and removed first, so a refresh does
+not leave a duplicate behind."
+  (interactive)
+  (dolist (team slack-extras-teams)
+    (slack-extras--register-team team)))
+
+(defun slack-extras--register-team (team)
+  "Register TEAM, a `slack-extras-teams' plist, with current credentials."
+  (let* ((credentials (or (slack-extras-chrome-credentials (plist-get team :domain))
+                          (funcall (plist-get team :fallback))))
+         (options (slack-extras--plist-without team '(:domain :fallback)))
+         (stale (slack-extras--registered-team (plist-get team :name))))
+    (unless (and stale (equal (oref stale token) (car credentials)))
+      (when stale
+        (slack-extras--unregister-team stale))
+      (apply #'slack-register-team
+             :token (car credentials) :cookie (cdr credentials) options))))
+
+(defun slack-extras-chrome-credentials (domain)
+  "Return a cons (TOKEN . COOKIE) for Slack DOMAIN read from Chrome, or nil.
+Run `slack-extras-chrome-program' to verify or refresh the cached pair,
+then read it from `slack-extras-chrome-cache-directory'."
+  (when (and domain
+             (zerop (call-process "python3" nil nil nil
+                                  slack-extras-chrome-program "ensure" domain)))
+    (let ((file (expand-file-name (concat domain ".json")
+                                  slack-extras-chrome-cache-directory)))
+      (when (file-readable-p file)
+        (let ((data (json-parse-string
+                     (with-temp-buffer
+                       (insert-file-contents file)
+                       (buffer-string))
+                     :object-type 'alist)))
+          (cons (alist-get 'token data) (alist-get 'cookie data)))))))
+
+(defun slack-extras--registered-team (name)
+  "Return the registered Slack team called NAME, or nil."
+  (seq-find (lambda (team) (equal (oref team name) name))
+            (hash-table-values slack-teams-by-token)))
+
+(defun slack-extras--unregister-team (team)
+  "Disconnect TEAM and remove it from `slack-teams-by-token'."
+  (when (slack-team-connectedp team)
+    (slack-team-disconnect team))
+  (remhash (oref team token) slack-teams-by-token))
+
+(defun slack-extras--plist-without (plist keys)
+  "Return PLIST without the properties in KEYS."
+  (let (result)
+    (while plist
+      (unless (memq (car plist) keys)
+        (setq result (append result (list (car plist) (cadr plist)))))
+      (setq plist (cddr plist)))
+    result))
+
 (provide 'slack-extras)
 ;;; slack-extras.el ends here

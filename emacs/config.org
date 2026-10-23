@@ -13943,17 +13943,8 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
                                         "ai-productivity-digest"))
   (slack-activity-feed-watch-channel-limit 15)
 
-  :config
-  (slack-register-team
-   :name "Epoch AI"
-   :token (auth-source-extras-op-get "Slack MCP - Epoch Unofficial" "xoxc_token" 'epoch)
-   :cookie (auth-source-extras-op-get "Slack MCP - Epoch Unofficial" "xoxd_token" 'epoch)
-   :animate-image t)
-  (slack-register-team
-   :name "Forethought"
-   :token (auth-source-extras-op-get "slack-forethought" "token")
-   :cookie (auth-source-extras-op-get "slack-forethought" "cookie")
-   :animate-image t)
+  ;; Teams are registered by `slack-extras-register-teams' (see the
+  ;; `slack-extras' section), which reads current credentials from Chrome.
 
   :hook
   (slack-buffer-mode-hook . (lambda () (setopt line-spacing nil)))
@@ -14052,7 +14043,28 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
         ("o" . slack-extras-personal-capture)
         :map slack-message-buffer-message-keymap
         ("E" . slack-extras-work-capture)
-        ("o" . slack-extras-personal-capture)))
+        ("o" . slack-extras-personal-capture))
+
+  :config
+  ;; Credentials come from Chrome (claude/bin/slack_chrome.py), so a browser
+  ;; sign-out no longer needs a manual copy into 1Password; the 1Password
+  ;; items are the fallback. `M-x slack-extras-register-teams' refreshes them
+  ;; in a running session.
+  (setq slack-extras-teams
+        (list (list :name "Epoch AI" :domain "epochai.slack.com" :animate-image t
+                    :fallback
+                    (lambda ()
+                      (cons (auth-source-extras-op-get
+                             "Slack MCP - Epoch Unofficial" "xoxc_token" 'epoch)
+                            (auth-source-extras-op-get
+                             "Slack MCP - Epoch Unofficial" "xoxd_token" 'epoch))))
+              (list :name "Forethought" :domain "forethought-ea.slack.com"
+                    :animate-image t
+                    :fallback
+                    (lambda ()
+                      (cons (auth-source-extras-op-get "slack-forethought" "token")
+                            (auth-source-extras-op-get "slack-forethought" "cookie"))))))
+  (slack-extras-register-teams))
 #+end_src
 
 ** =ol-emacs-slack=

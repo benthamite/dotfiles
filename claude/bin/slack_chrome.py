@@ -154,3 +154,33 @@ def refresh(domain: str) -> tuple[str, str]:
             return token, cookie
     raise Unavailable(f"no Chrome profile is signed in to {domain}; sign in to "
                       "Slack in Chrome and run the command again")
+
+
+def ensure(domain: str) -> None:
+    """Leave a verified pair for DOMAIN in the cache, refreshing from Chrome if needed."""
+    pair = cached(domain)
+    if pair and _verify(domain, *pair):
+        return
+    refresh(domain)
+
+
+def main(argv=None) -> int:
+    """`slack_chrome.py ensure DOMAIN`: for Emacs Slack, which then reads the cache.
+
+    Prints nothing on success and only a reason on failure; never a value.
+    """
+    import sys
+    args = sys.argv[1:] if argv is None else argv
+    if len(args) != 2 or args[0] != "ensure":
+        sys.stderr.write("usage: slack_chrome.py ensure DOMAIN\n")
+        return 2
+    try:
+        ensure(args[1])
+    except Unavailable as exc:
+        sys.stderr.write(f"slack_chrome: {exc}\n")
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

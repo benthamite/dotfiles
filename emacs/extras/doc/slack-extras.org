@@ -23,6 +23,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 - Commands to capture the message at point to personal or work inboxes ([[#h:capture][Capture]]).
 - Local ActivityWatch channel context for selected channel and thread buffers ([[#h:activity-watch][ActivityWatch context]]).
 - A tab-bar notification element showing Slack unreads and mentions ([[#h:tab-bar-notifications][Tab-bar notifications]]).
+- Team registration with session credentials read from Chrome ([[#h:chrome-credentials][Credentials from Chrome]]).
 
 The package depends on =slack= and =ol=.
 
@@ -75,6 +76,24 @@ The tab-bar element ~tab-bar-extras-slack-element~ displays a Slack icon (from =
 
 #+findex: tab-bar-extras-toggle-slack-notifications
 The command ~tab-bar-extras-toggle-slack-notifications~ toggles Slack notifications in the tab bar. It also participates in the master toggle: when ~tab-bar-extras-toggle-notifications~ is called, Slack notifications are toggled along with the other notification sources.
+
+* Credentials from Chrome
+:PROPERTIES:
+:CUSTOM_ID: h:chrome-credentials
+:END:
+
+=emacs-slack= authenticates with a browser session: an =xoxc-= token and the =d= cookie. Slack invalidates both whenever that browser session ends, so credentials copied once into 1Password go stale. This section registers teams with the credentials Chrome currently holds instead.
+
+#+vindex: slack-extras-teams
+The variable ~slack-extras-teams~ lists the teams to register. Each element is a plist with =:domain= (the workspace host, such as ="epochai.slack.com"=), =:fallback= (a function of no arguments returning =(TOKEN . COOKIE)=, typically read from 1Password), and any other ~slack-register-team~ options, such as =:name= and =:animate-image=.
+
+#+findex: slack-extras-register-teams
+The command ~slack-extras-register-teams~ registers every team in ~slack-extras-teams~. For each team it asks ~slack-extras-chrome-credentials~ for the current pair and uses =:fallback= only when that returns nil. A team already registered under the same name with a different token is disconnected and removed from ~slack-teams-by-token~ first, so calling the command again after a sign-out refreshes the team without leaving a duplicate.
+
+#+findex: slack-extras-chrome-credentials
+#+vindex: slack-extras-chrome-program
+#+vindex: slack-extras-chrome-cache-directory
+The function ~slack-extras-chrome-credentials~ runs ~slack-extras-chrome-program~ (=claude/bin/slack_chrome.py ensure DOMAIN=), which verifies the cached pair with =auth.test= and, if Slack rejects it, reads the =d= cookie from Chrome's cookie database and derives the token from the workspace's =/ssb/redirect= page. It then reads the pair from =DOMAIN.json= in ~slack-extras-chrome-cache-directory~. It returns nil when the program fails, for example when no Chrome profile is signed in to that workspace.
 
 * Indices
 :PROPERTIES:

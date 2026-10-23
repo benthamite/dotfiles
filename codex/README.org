@@ -179,7 +179,8 @@ The =emacs-freeze= skill moved from =emacs/.codex/skills/= to the global root on
 
 The =slack-credentials= skill (2026-10-23) refreshes the xoxc/xoxd session
 credentials of =claude/bin/slack.py=; in Codex the page-script step runs through
-the browser tool that the =chrome-use= skill selects.
+the browser tool that the =chrome-use= skill selects. If that step is blocked,
+Pablo pastes one console line and the agent still runs the store.
 
 Project skills use synthetic contact examples and route MCP credentials through
 the owning account's secrets context without listing account or vault topology.

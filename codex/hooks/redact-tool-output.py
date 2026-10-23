@@ -100,6 +100,8 @@ def decision(event: dict) -> dict | None:
         strings: list[str] = []
         _strings(_without_images(response), strings)
         masked = mask_strings(strings)
+        if credential_pages.text_unsafe(event.get("tool_name", ""), event.get("tool_input"), response):
+            masked = [credential_pages.mask_opaque(x) for x in masked]
     except Exception:  # noqa: BLE001 - fail closed
         return {"decision": "block", "reason": WITHHELD}
     if masked == strings and not unsafe_images:

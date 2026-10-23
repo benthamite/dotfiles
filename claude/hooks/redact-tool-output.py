@@ -160,6 +160,8 @@ def replacement(event: dict) -> dict | None:
         if credential_pages.images_unsafe(event.get("tool_input"), response):
             response = credential_pages.strip_images(response)
         masked = _transform(response, mask_strings)
+        if credential_pages.text_unsafe(tool, event.get("tool_input"), response):
+            masked = _transform(masked, lambda ss: [credential_pages.mask_opaque(x) for x in ss])
     except Exception:  # noqa: BLE001 - fail closed; see module docstring
         masked = _withhold(_strip_all_images(original))
     response = original

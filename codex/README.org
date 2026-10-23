@@ -1298,7 +1298,7 @@ standalone sixteen-digit numbers and malformed UUID lookalikes. Contextual
 credential patterns and known-secret fingerprints still apply to UUIDs. Codex
 has no field that rewrites a result, so when masking changes anything the hook
 returns =decision: "block"= with the masked output as the reason, which the
-model sees instead; images from credential pages are dropped the same way.
+model sees instead; images from credential pages are dropped the same way, and on those pages browser text has credential-like strings masked (=credential_pages.mask_opaque=).
 Not covered (Codex 0.158.0): Codex's own raw logs, and, for commands the
 guard engine does not wrap, chunks of a still-running =exec_command= read
 through =write_stdin= and results Codex marks as errors. New hook definitions need native trust approval before they run.

@@ -152,8 +152,13 @@ Pick the command by the kind of change (confirmed on gdoc 0.21.0, 11 Oct 2026):
   item, every uploaded paragraph, headings included, comes out as a bullet.
   Before such a write, check whether the target ends with a list item; if it
   does, use `edit`/`insert` instead, or first remove that item's bullet in the
-  browser. `gdoc edit` on a list item whose label is bold (`**Label**: text`)
-  can also drop the bold, so re-read the paragraph after editing it.
+  browser.
+- **`gdoc edit` resets inline formatting across the whole paragraph** it
+  touches (bold labels, italics), even far from the replaced text. The
+  replacement accepts Markdown, so make the old text span every formatted run
+  in the paragraph and restate them (`**Label.** … *term* …`) in one edit; a
+  second edit to restore one run resets the others. Re-read the paragraph
+  with `cat` afterwards.
 - "doc changed since last read" means gdoc has no record of a read since the
   last change; re-read with `pull` or `cat`, check nobody else edited, and
   retry. Do not reach for `--force` to get past it.

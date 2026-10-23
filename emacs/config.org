@@ -9615,7 +9615,15 @@ does not exist."
          "~/My Drive/tlon/projects/cognitive-revolution"
          "~/My Drive/tlon/projects/ea.international"
          "~/My Drive/tlon/projects/ea.news"))
+     ("forethought" . (forethought-project-dirs))
      ("" . ("~/repos/*" "~/repos/fias/*" "~/repos/.worktrees/*/*"))))
+  ;; A message from an organization's Slack or mailbox has its project
+  ;; chosen among that organization's, whatever account is selected.
+  (agent-account-origin-rules
+   '(("\\`slack:Epoch AI\\'" . ((claude-code . "epoch") (codex . "epoch-pool")))
+     ("\\`mu4e:/epoch/" . ((claude-code . "epoch") (codex . "epoch-pool")))
+     ("\\`slack:Forethought\\'" . "forethought")
+     ("\\`mu4e:/forethought/" . "forethought")))
   (agent-project-registry-root (file-name-concat paths-dir-epoch-workspace "projects/"))
   (agent-chief-directory paths-dir-epoch)
   (agent-claude-org-todo-in-progress-keyword "DOING")

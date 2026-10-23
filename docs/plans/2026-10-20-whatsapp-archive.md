@@ -174,3 +174,7 @@ precedence over it where they conflict.
   history requests (`BuildHistorySyncRequest`), not implemented.
 - Not yet observed: that an incoming message stays unread on the phone after
   the daemon stores it (passive check).
+
+## Retention and backups (2026-10-23)
+
+Pablo's decision: the archive keeps 90 days of messages (`Retention` in `archive.go`; pruned at startup and hourly; a history-sync replay of older messages is pruned again on the next pass), and both `~/.local/share/wa-archive` and `~/.local/share/inbox-monitor` are excluded from Time Machine (`tmutil addexclusion`), since they hold decrypted messages and the linked device's session keys. FileVault protects them at rest.

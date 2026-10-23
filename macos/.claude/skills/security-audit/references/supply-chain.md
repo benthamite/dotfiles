@@ -49,7 +49,10 @@ to audit them. A missing scanner is a coverage gap.
   some exposure; it is not vulnerability detection or a reason to defer an
   urgent security fix: bypass once with `--min-release-age=0`,
   `--minimum-release-age=0`, `--exclude-newer-package NAME=false`, or
-  `--uploaded-prior-to` with an explicit date.
+  `--uploaded-prior-to` with an explicit date. An unpinned upgrade does not
+  fail under the gate: it silently resolves the newest version older than 3
+  days. For an urgent fix, pin the exact version, bypass for that install, and
+  confirm the installed version afterwards.
 
 ## Advisory collection
 

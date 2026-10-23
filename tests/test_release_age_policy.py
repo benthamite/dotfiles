@@ -15,7 +15,6 @@ PIP_MINIMUM = (26, 1, 0)
 # pips that cannot take the gate, with the reason.
 PIP_EXEMPT = {
     Path("/usr/bin/pip3"): "Apple's system pip; not upgradable in place",
-    Path.home() / ".pyenv/versions/3.9.18/bin/pip": "pip 26.1+ needs Python 3.10+",
     Path.home() / ".pyenv/versions/3.10.10/bin/pip": "Python built without ssl; cannot reach PyPI",
 }
 

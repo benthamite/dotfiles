@@ -1292,7 +1292,9 @@ workspaces use the personal =Automation= items =slack-becas-aisar= and
 after the retry, the error names the =slack-credentials= skill, which refreshes
 them: the agent copies the token from the Slack page to the clipboard through
 Chrome and stores it with =op-clipboard-store=; only the HttpOnly =d= cookie
-needs Pablo, and only after he signs out of Slack in that profile.
+needs Pablo, and only after he signs out of Slack in that profile. The inbox
+monitor (=~/repos/inbox-monitor=, described in =context/service-access.md=)
+imports =slack.py= to poll those two workspaces every two minutes.
 
 =slack.py channels [QUERY]= follows =conversations.list= through every page and
 prints one compact JSON line per conversation, with a "N of M" count on stderr.

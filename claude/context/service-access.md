@@ -178,6 +178,8 @@ notifies Pablo when none is open. Design and decisions:
 - A satisfied wait means the person wrote, not that the matter is settled: if
   the message does not resolve it, register the wait again.
 - Signal is collected from sgn's database, which is updated only while sgn
-  runs in Emacs. Slack is not collected yet (phase 2 needs tokens), so waits on
-  Slack are not matched.
+  runs in Emacs. Slack (becas-aisar, baish) is polled every 2 minutes through
+  `claude/bin/slack.py`; a Slack wait's `--sender` is the user ID (from
+  `slack.py users-search`). If Slack health fails, refresh the credentials
+  with the `slack-credentials` skill.
 

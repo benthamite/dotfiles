@@ -147,6 +147,13 @@ Pick the command by the kind of change (confirmed on gdoc 0.21.0, 11 Oct 2026):
   refuses an empty source file, frontmatter aside; pass `--allow-empty` only to
   clear a doc deliberately. After any whole-doc upload, `pull` the doc again
   and diff it against the file you sent.
+- **A whole-doc or tab upload inherits the style of the last paragraph** it
+  replaces (gdoc 0.21.0, 23 Oct 2026): if the doc or tab ends with a list
+  item, every uploaded paragraph, headings included, comes out as a bullet.
+  Before such a write, check whether the target ends with a list item; if it
+  does, use `edit`/`insert` instead, or first remove that item's bullet in the
+  browser. `gdoc edit` on a list item whose label is bold (`**Label**: text`)
+  can also drop the bold, so re-read the paragraph after editing it.
 - "doc changed since last read" means gdoc has no record of a read since the
   last change; re-read with `pull` or `cat`, check nobody else edited, and
   retry. Do not reach for `--force` to get past it.

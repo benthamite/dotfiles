@@ -175,5 +175,9 @@ notifies Pablo when none is open. Design and decisions:
   current session, matches only messages arriving after registration, and
   resumes the session (reopening it if closed) when satisfied. `inbox-wait
   list`, `inbox-wait cancel ID`.
-- Phase 1 has no Slack or Signal; waits on those channels are not matched yet.
+- A satisfied wait means the person wrote, not that the matter is settled: if
+  the message does not resolve it, register the wait again.
+- Signal is collected from sgn's database, which is updated only while sgn
+  runs in Emacs. Slack is not collected yet (phase 2 needs tokens), so waits on
+  Slack are not matched.
 

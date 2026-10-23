@@ -125,13 +125,13 @@ profile also has guest access to Pablo's Forethought Notion onboarding checklist
 Pablo explicitly permits using it for that checklist. This is distinct from the
 Forethought account's full Notion workspace access.
 
-Pablo signs in to the Forethought Slack workspace as `pablo.stafforini@gmail.com`
-(user `pablo.stafforini`, `U0C72C0S1NW`), not as `pablo@forethought.org`.
-`slack.py -w forethought` acts as that user. The workspace also has a
+Pablo's Forethought Slack account is user `pablo.stafforini` (`U0C72C0S1NW`).
+Its email was `pablo.stafforini@gmail.com` until 2026-10-23, when it became
+`pablo@forethought.org`. `slack.py -w forethought` acts as that user. The workspace also has a
 deactivated duplicate (`U0C8B8TME65`), which an agent created in error by
 assuming Pablo's Slack identity followed his Google account. On 2026-10-23 it
 was renamed "Deactivated duplicate" (username `deactivated-duplicate`, email
-`pablo+old-slack@forethought.org`) to free pablo@forethought.org and stop it
+`pablo+old-slack@forethought.org`) to free that address and stop it
 matching "pablo". Only the Primary Owner (Amrit) could delete its profile.
 Never use it: do not message, mention, invite or act as it.
 

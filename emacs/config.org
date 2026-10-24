@@ -13935,6 +13935,11 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   ;; Teams are registered by `slack-extras-register-teams' (see the
   ;; `slack-extras' section), which reads current credentials from Chrome.
 
+  :init
+  ;; Connect every team once Emacs is idle after startup; calling the
+  ;; autoloaded `slack-start' loads slack, which registers the teams first.
+  (run-with-idle-timer 10 nil #'slack-start)
+
   :hook
   (slack-buffer-mode-hook . (lambda () (setopt line-spacing nil)))
 

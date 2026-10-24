@@ -60,6 +60,19 @@ the "Already tried" list in place.
 
 * Incidents
 
+** 2026-10-24 04:55: short outage under host starvation (investigation, no change)
+
+- Watchdog: answered until 04:54:13, timed out 04:55:16 and 04:56:30
+  (state file 4-10 s old, so timers ran), answered again by 04:57. Load
+  jumped from ~11 to 39.9; swap 16.6 GB.
+- Top CPU at 04:56: Backblaze =bztransmit= (100%, 8.8 GB RSS, started
+  04:46) and two pyenv Python 3.11 jobs (100% each, 3.1 and 3.6 GB, running
+  58 min and 82 min). Emacs itself was at 14% CPU.
+- Not caused by the Slack team re-registration and =slack-start= run from a
+  FIAS session shortly before: Emacs answered every probe after it until the
+  load spike.
+- The watchdog's stack file for 04:55:16 was not written.
+
 ** 2026-10-19 afternoon: outages under host starvation (investigation, no change)
 
 - Watchdog probe timed out at 15:57; at 16:06 the default socket refused

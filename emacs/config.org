@@ -13931,16 +13931,6 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   (slack-buffer-emojify t)
   (slack-message-custom-notifier 'ignore)
   (slack-thread-also-send-to-room nil)
-  (slack-activity-feed-watch-channels '("automation-alerts"
-                                        "cybersecurity-ops"
-                                        "pablo-isabel"
-                                        "pablo-maria"
-                                        "pablo-ricardo"
-                                        "pablo-elliot"
-					"matt-pablo"
-                                        "media-mentions-digest"
-                                        "analytics-digest"
-                                        "ai-productivity-digest"))
   (slack-activity-feed-watch-channel-limit 15)
 
   ;; Teams are registered by `slack-extras-register-teams' (see the

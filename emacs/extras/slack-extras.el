@@ -116,6 +116,7 @@ channel metadata.  No messages or network requests are involved."
 (defvar slack-teams-by-token)
 (defvar slack-tokens-by-id)
 (defvar slack-current-buffer)
+(defvar slack-current-team)
 (defvar tab-bar-extras-global-mode-string)
 (defvar slack-activity-last-refresh-time)
 (defvar slack-activity-refresh-debounce)
@@ -233,7 +234,8 @@ not leave a duplicate behind."
 (defun slack-extras--register-team (team)
   "Register TEAM, a `slack-extras-teams' plist, with current credentials.
 Every team of the same name registered under another token is stale and is
-unregistered first.  If a stale team was connected, connect the current one."
+unregistered first.  If a stale team was connected, connect the current one,
+and if a stale team was `slack-current-team', make the current one current."
   (let* ((name (plist-get team :name))
          (credentials (or (slack-extras-chrome-credentials (plist-get team :domain))
                           (funcall (plist-get team :fallback))))
@@ -242,15 +244,17 @@ unregistered first.  If a stale team was connected, connect the current one."
          (stale (seq-remove (lambda (registered)
                               (equal (oref registered token) token))
                             (slack-extras--registered-teams name)))
-         (reconnect (seq-some #'slack-team-connectedp stale)))
+         (reconnect (seq-some #'slack-team-connectedp stale))
+         (was-current (memq slack-current-team stale)))
     (mapc #'slack-extras--unregister-team stale)
     (unless (slack-team-find-by-token token)
       (apply #'slack-register-team
              :token token :cookie (cdr credentials) options))
-    (when reconnect
-      (let ((current (slack-team-find-by-token token)))
-        (unless (slack-team-connectedp current)
-          (slack-start current))))))
+    (let ((current (slack-team-find-by-token token)))
+      (when was-current
+        (setq slack-current-team current))
+      (when (and reconnect (not (slack-team-connectedp current)))
+        (slack-start current)))))
 
 (defun slack-extras-chrome-credentials (domain)
   "Return a cons (TOKEN . COOKIE) for Slack DOMAIN read from Chrome, or nil.
@@ -276,12 +280,14 @@ then read it from `slack-extras-chrome-cache-directory'."
 
 (defun slack-extras--unregister-team (team)
   "Disconnect TEAM, kill its buffers and remove it from the team registries.
-The buffers hold TEAM itself, and the Activity feed registers the team of a
-buffer it touches again, so a live buffer would bring TEAM back as a
-duplicate."
+The buffers and `slack-current-team' hold TEAM itself, and the Activity feed
+registers again the team it is handed, so a remaining reference would bring
+TEAM back as a duplicate."
   (when (slack-team-connectedp team)
     (slack-team-disconnect team))
   (mapc #'kill-buffer (slack-extras--team-buffers team))
+  (when (eq slack-current-team team)
+    (setq slack-current-team nil))
   (let ((id (and (slot-boundp team 'id) (oref team id))))
     (when (and id (equal (gethash id slack-tokens-by-id) (oref team token)))
       (remhash id slack-tokens-by-id)))

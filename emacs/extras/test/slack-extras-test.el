@@ -55,7 +55,8 @@
 Credentials resolve to token \"xoxc-new\", and registering a team adds it to
 `slack-teams-by-token' without connecting."
   (declare (indent 0))
-  `(let ((slack-teams-by-token (make-hash-table :test 'equal))
+  `(let ((slack-current-team nil)
+         (slack-teams-by-token (make-hash-table :test 'equal))
          (slack-tokens-by-id (make-hash-table :test 'equal))
          (slack-buffer--team-cache (make-hash-table :test 'eq)))
      (cl-letf (((symbol-function 'slack-extras-chrome-credentials)
@@ -100,6 +101,12 @@ Credentials resolve to token \"xoxc-new\", and registering a team adds it to
             (should-not (memq stale (hash-table-values slack-teams-by-token))))
         (when (buffer-live-p buffer)
           (kill-buffer buffer))))))
+
+(ert-deftest slack-extras-register-team-replaces-stale-current-team ()
+  (slack-extras-test--with-registry
+    (setq slack-current-team (slack-extras-test--register "xoxc-old"))
+    (slack-extras--register-team '(:name "Forethought" :domain "ft.slack.com"))
+    (should (equal (oref slack-current-team token) "xoxc-new"))))
 
 (provide 'slack-extras-test)
 ;;; slack-extras-test.el ends here

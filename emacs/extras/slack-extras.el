@@ -114,6 +114,8 @@ channel metadata.  No messages or network requests are involved."
 (defvar slack-has-unreads)
 (defvar slack-unread-count)
 (defvar slack-teams-by-token)
+(defvar slack-tokens-by-id)
+(defvar slack-current-buffer)
 (defvar tab-bar-extras-global-mode-string)
 (defvar slack-activity-last-refresh-time)
 (defvar slack-activity-refresh-debounce)
@@ -230,20 +232,25 @@ not leave a duplicate behind."
 
 (defun slack-extras--register-team (team)
   "Register TEAM, a `slack-extras-teams' plist, with current credentials.
-If TEAM was connected under a stale token, connect it again under the new one."
+Every team of the same name registered under another token is stale and is
+unregistered first.  If a stale team was connected, connect the current one."
   (let* ((name (plist-get team :name))
          (credentials (or (slack-extras-chrome-credentials (plist-get team :domain))
                           (funcall (plist-get team :fallback))))
+         (token (car credentials))
          (options (slack-extras--plist-without team '(:domain :fallback)))
-         (stale (slack-extras--registered-team name))
-         (reconnect (and stale (slack-team-connectedp stale))))
-    (unless (and stale (equal (oref stale token) (car credentials)))
-      (when stale
-        (slack-extras--unregister-team stale))
+         (stale (seq-remove (lambda (registered)
+                              (equal (oref registered token) token))
+                            (slack-extras--registered-teams name)))
+         (reconnect (seq-some #'slack-team-connectedp stale)))
+    (mapc #'slack-extras--unregister-team stale)
+    (unless (slack-team-find-by-token token)
       (apply #'slack-register-team
-             :token (car credentials) :cookie (cdr credentials) options)
-      (when reconnect
-        (slack-start (slack-extras--registered-team name))))))
+             :token token :cookie (cdr credentials) options))
+    (when reconnect
+      (let ((current (slack-team-find-by-token token)))
+        (unless (slack-team-connectedp current)
+          (slack-start current))))))
 
 (defun slack-extras-chrome-credentials (domain)
   "Return a cons (TOKEN . COOKIE) for Slack DOMAIN read from Chrome, or nil.
@@ -262,16 +269,32 @@ then read it from `slack-extras-chrome-cache-directory'."
                      :object-type 'alist)))
           (cons (alist-get 'token data) (alist-get 'cookie data)))))))
 
-(defun slack-extras--registered-team (name)
-  "Return the registered Slack team called NAME, or nil."
-  (seq-find (lambda (team) (equal (oref team name) name))
-            (hash-table-values slack-teams-by-token)))
+(defun slack-extras--registered-teams (name)
+  "Return every registered Slack team called NAME."
+  (seq-filter (lambda (team) (equal (oref team name) name))
+              (hash-table-values slack-teams-by-token)))
 
 (defun slack-extras--unregister-team (team)
-  "Disconnect TEAM and remove it from `slack-teams-by-token'."
+  "Disconnect TEAM, kill its buffers and remove it from the team registries.
+The buffers hold TEAM itself, and the Activity feed registers the team of a
+buffer it touches again, so a live buffer would bring TEAM back as a
+duplicate."
   (when (slack-team-connectedp team)
     (slack-team-disconnect team))
+  (mapc #'kill-buffer (slack-extras--team-buffers team))
+  (let ((id (and (slot-boundp team 'id) (oref team id))))
+    (when (and id (equal (gethash id slack-tokens-by-id) (oref team token)))
+      (remhash id slack-tokens-by-id)))
   (remhash (oref team token) slack-teams-by-token))
+
+(defun slack-extras--team-buffers (team)
+  "Return the live Slack buffers whose team is TEAM."
+  (seq-filter (lambda (buffer)
+                (let ((slack-buffer (buffer-local-value 'slack-current-buffer
+                                                        buffer)))
+                  (and slack-buffer
+                       (eq (slack-buffer-team slack-buffer) team))))
+              (buffer-list)))
 
 (defun slack-extras--plist-without (plist keys)
   "Return PLIST without the properties in KEYS."

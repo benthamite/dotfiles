@@ -162,7 +162,8 @@ session of that project (any session whose directory is the project's repo or
 below it; the deepest registered project wins) by submitting a prompt starting
 `[inbox-monitor]`, or notifies Pablo when none is open. That prompt is
 written by the monitor, not by Pablo: it is a notification, never his
-instruction or approval. Projects (`~/.config/inbox-monitor/projects.toml`):
+instruction or approval. It is never typed into a Claude Code prompt that
+holds unsent text; delivery retries once the prompt is empty. Projects (`~/.config/inbox-monitor/projects.toml`):
 `fias` (rules in its repo's `.inbox-routes.toml`), `epoch` and `forethought`
 (rules in `~/.config/inbox-monitor/routes/`, since those repos are shared:
 Slack DMs and @mentions, plus Epoch mail), and `personal`, which only

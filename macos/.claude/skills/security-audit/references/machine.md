@@ -70,8 +70,11 @@ Inspect profile metadata only, never cookies or session databases.
   system and per-user TCC databases read-only and lists Full Disk Access,
   Accessibility, Automation, synthetic input, Input Monitoring, Screen
   Recording and Developer Tools grants. Do not grant access to complete the
-  read; an `unreadable` database means unknown grants, handled as an
-  unverified high-risk item (SKILL.md, Report).
+  read; an `unreadable` or `location-unknown` database means unknown grants,
+  handled as an unverified high-risk item (SKILL.md, Report). From macOS 27
+  the per-user database (Automation and other per-user grants) lives in a
+  protected system container that Full Disk Access cannot read, so expect
+  `unreadable` there and take those grants from System Settings.
 - A grant to a generic executor (an interpreter, shell, `osascript`, `cron`,
   a terminal, an editor, a macro engine or an AI agent app; the helper's
   `generic_executor`, whose list may lag new apps)

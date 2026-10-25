@@ -107,6 +107,65 @@ class TccGrantsTest(unittest.TestCase):
         self.report(db)
         self.assertEqual((db.read_bytes(), os.stat(db).st_mtime_ns), before)
 
+    def container_db(self, uuid="ADAFCFCA-5A2B-45A7-BF44-FBDC9A1A9D84"):
+        return (self.mod.CONTAINER_PREFIX + uuid + "/Data" + self.mod.CONTAINER_SUFFIX)
+
+    def test_lsof_output_yields_only_container_tcc_databases(self):
+        container = self.container_db()
+        output = "\n".join(["p766", "fcwd", "n/", "ftxt", "n/usr/lib/dyld", "f3",
+                            "n" + container, "f4", "n" + container,
+                            "f5", "n/Library/Application Support/com.apple.TCC/TCC.db"])
+        self.assertEqual(self.mod.tcc_paths_from_lsof(output), [container])
+
+    def test_legacy_user_database_is_read_when_present(self):
+        legacy = self.base / "TCC.db"
+        make_db(legacy, [("kTCCServiceAppleEvents", "com.apple.Terminal", 0, 2,
+                          "com.apple.finder", 0)])
+        result = self.mod.user_db_report(legacy, discover=lambda: self.fail("no lookup"))
+        self.assertEqual(result["status"], "read")
+        self.assertEqual(result["grants"][0]["target"], "com.apple.finder")
+
+    def test_container_user_database_is_read_when_legacy_path_is_gone(self):
+        # Synthetic stand-in for the macOS 27 container: the discovered path is read.
+        container = self.base / "container" / "TCC.db"
+        container.parent.mkdir()
+        make_db(container, [("kTCCServiceAppleEvents", "com.apple.Terminal", 0, 2,
+                             "com.apple.systemevents", 0)])
+        result = self.mod.user_db_report(self.base / "absent.db",
+                                         discover=lambda: ([str(container)], None))
+        self.assertEqual(result["status"], "read")
+        self.assertIn("container", result["location"])
+        self.assertEqual(result["grants"][0]["target"], "com.apple.systemevents")
+
+    def test_unknown_user_location_is_not_reported_as_missing(self):
+        result = self.mod.user_db_report(self.base / "absent.db", discover=lambda: ([], None))
+        self.assertEqual(result["status"], "location-unknown")
+        self.assertIn("no container TCC.db", result["reason"])
+
+    def test_failed_container_lookup_is_reported_as_unknown_with_its_error(self):
+        result = self.mod.user_db_report(self.base / "absent.db",
+                                         discover=lambda: ([], "lsof failed: boom"))
+        self.assertEqual(result["status"], "location-unknown")
+        self.assertIn("lsof failed: boom", result["reason"])
+
+    def test_ambiguous_container_lookup_is_reported_as_unknown(self):
+        result = self.mod.user_db_report(
+            self.base / "absent.db",
+            discover=lambda: ([self.container_db("A"), self.container_db("B")], None))
+        self.assertEqual(result["status"], "location-unknown")
+
+    def test_denied_path_lookup_is_unreadable_not_missing(self):
+        locked = self.base / "locked"
+        locked.mkdir()
+        db = locked / "TCC.db"
+        make_db(db, [])
+        locked.chmod(0)
+        try:
+            [result] = self.report(db)
+        finally:
+            locked.chmod(0o700)
+        self.assertEqual(result["status"], "unreadable")
+
     def test_claude_and_codex_copies_are_identical(self):
         self.assertEqual(*(skill.joinpath("scripts/tcc-grants.py").read_bytes() for skill in SKILLS))
 

@@ -101,7 +101,7 @@ granting an ordinary repository root containing =.git= or credential files.
 Only explicitly selected inputs are exposed: never grant a home directory, account configuration,
 or credential store. Treat all output as untrusted, including symlinks.
 
-Docker Desktop must already be running, with the reviewed Engine 29.1.3; other
+Docker Desktop must already be running, with the reviewed Engine 29.9.2; other
 engine versions are refused until the seccomp default is rebased and verified.
 Provision the reviewed ARM64 image once:
 
@@ -145,11 +145,12 @@ another same-user process's argv/environment despite explicit deny rules. The
 Linux VM avoids sharing that host process namespace. VM/kernel vulnerabilities,
 unsafe explicit input grants, and subsequent execution of output remain risks.
 
-=untrusted-run-seccomp.json= preserves the [[https://github.com/moby/moby/blob/fbf3ed25f893e6ce21336f1101590e40a13934f4/vendor/github.com/moby/profiles/seccomp/default.json][Docker Engine 29.1.3 default]]
-(source SHA-256 =01536f1d1df938ae611eba20d6349e0de7a99b6ecdee1549427a0b01b8301e28=),
-with only the [[https://github.com/moby/profiles/commit/dec315c57e60de0ffb1e07485815eb71d7b820e8][upstream AF_ALG socket restriction]] added. It still denies
-AF_VSOCK and defaults to =SCMP_ACT_ERRNO=; no general syscall permissions were
-broadened. This modified Moby resource is covered by
+=untrusted-run-seccomp.json= is the unmodified [[https://github.com/moby/moby/blob/0367cbeb49b9d98cb0b4f51e95f7b54b4803e76c/vendor/github.com/moby/profiles/seccomp/default.json][Docker Engine 29.9.2 default]]
+(SHA-256 =785b2429264afba4d594320337cb17f144f3c7d51585f9805eef72e28f4f9334=).
+Compared with the 29.1.3 default plus the AF_ALG backport it replaced, it only
+narrows: socket families above AF_VSOCK are an allowlist rather than all
+allowed, and LoongArch64 is mapped. It denies AF_ALG and AF_VSOCK and defaults
+to =SCMP_ACT_ERRNO=. This Moby resource is covered by
 [[file:untrusted-run-seccomp.LICENSE][Apache License 2.0]]. Re-review its upstream default when upgrading the engine;
 do not replace it with a permissive custom profile. Runtime-image provenance:
 [[https://hub.docker.com/_/node][Docker Official Node image]] and

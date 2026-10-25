@@ -76,7 +76,7 @@ print(json.dumps(checks))
                 process = mock.Mock()
                 process.wait.return_value = 0
                 process.poll.return_value = None
-                results = [subprocess.CompletedProcess([], 0, stdout="29.1.3\n"),
+                results = [subprocess.CompletedProcess([], 0, stdout="29.9.2\n"),
                            subprocess.CompletedProcess([], 0), cleanup]
                 with mock.patch.object(module.subprocess, "run", side_effect=results), \
                      mock.patch.object(module.subprocess, "Popen", return_value=process):

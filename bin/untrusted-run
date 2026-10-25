@@ -120,8 +120,8 @@ def run(args):
                                   close_fds=True, timeout=30, **kwargs)
         version = control_run(["version", "--format", "{{.Server.Version}}"],
                               capture_output=True, text=True)
-        if version.returncode or version.stdout.strip() != "29.1.3":
-            raise ValueError("Requires reviewed Docker Engine 29.1.3; rebase and verify the seccomp profile for other versions")
+        if version.returncode or version.stdout.strip() != "29.9.2":
+            raise ValueError("Requires reviewed Docker Engine 29.9.2; rebase and verify the seccomp profile for other versions")
         present = control_run(["image", "inspect", image], stdout=subprocess.DEVNULL,
                               stderr=subprocess.PIPE, text=True)
         if present.returncode:

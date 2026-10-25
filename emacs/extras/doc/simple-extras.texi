@@ -40,6 +40,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 User options
 
 * Auto-save directory for new buffers::
+* Reachability probe timeout::
 
 Commands
 
@@ -77,6 +78,7 @@ Functions
 * Asciifying strings::
 * Slug helpers::
 * Network detection::
+* Network reachability::
 * Reaping closed server clients::
 * Server connection queue::
 * Server state file::
@@ -108,6 +110,7 @@ The package depends on @samp{no-littering} (for determining the auto-save direct
 
 @menu
 * Auto-save directory for new buffers::
+* Reachability probe timeout::
 @end menu
 
 @node Auto-save directory for new buffers
@@ -119,6 +122,12 @@ The user option @code{simple-extras-new-buffer-auto-save-dir} specifies the dire
 The default value is derived from @code{no-littering-var-directory}, placing auto-save files at @samp{var/auto-save/new-buffers/} beneath the @samp{no-littering} data directory. The type is @code{directory}. If the specified directory does not exist when the option is set, it is created automatically via the @code{:set} function.
 
 You would change this if you want auto-save files for untitled buffers stored in a different location, for example on a RAM disk for faster writes or in a directory that is excluded from backups.
+
+@node Reachability probe timeout
+@section Reachability probe timeout
+
+@vindex simple-extras-reachability-timeout
+The user option @code{simple-extras-reachability-timeout} is how many seconds a reachability probe may take before the host counts as down (@ref{Network reachability}). The default is 5.
 
 @node Commands
 @chapter Commands
@@ -429,6 +438,7 @@ The command @code{simple-extras-set-python-virtual-environment} creates a Python
 * Asciifying strings::
 * Slug helpers::
 * Network detection::
+* Network reachability::
 * Reaping closed server clients::
 * Server connection queue::
 * Server state file::
@@ -504,6 +514,22 @@ The function @code{simple-extras-slug-hyphenate} replaces spaces, underscores, a
 @findex simple-extras-connected-to-network-p
 The function @code{simple-extras-connected-to-network-p} checks whether the system is connected to a specific WiFi network by name. On macOS, it queries the network SSID via @samp{ipconfig getsummary}; on GNU/Linux, it uses @samp{iwgetid -r}. It returns @code{t} if the current SSID matches the given NETWORK argument. This can be used in configuration to conditionally enable features that depend on being connected to a particular network (e.g., a home or office network).
 
+@node Network reachability
+@section Network reachability
+
+On macOS, Emacs resolves host names on its main thread, even for connections opened with @samp{:nowait}. When the resolver is slow or the network is down, any Lisp connection freezes Emacs until the lookup ends. These functions let a timer find out from a subprocess whether a host answers before it connects. A successful probe also leaves the answer in the system resolver's cache, so the connection that follows resolves quickly. This narrows the window for a freeze but does not close it: the network can still fail between the probe and the connection. Code that can make its request in a subprocess should do that instead.
+
+@findex simple-extras-probe-url
+The function @code{simple-extras-probe-url} runs @samp{curl --head} on a URL, limited to @code{simple-extras-reachability-timeout} seconds, and calls a callback with @code{t} if any HTTP response came back and @code{nil} otherwise. A 401 counts as an answer. The URL is visible to other processes, so it must not carry credentials. Each probe has a key, and while a probe with the same key is still running, the function starts no new one and returns @code{nil}.
+
+@findex simple-extras-call-when-reachable
+The function @code{simple-extras-call-when-reachable} takes a URL, a function and its arguments. It calls the function only if the URL answers; otherwise it skips the call and logs that in @samp{*Messages*}, without showing it in the echo area. Use it as a timer's function:
+
+@lisp
+(run-with-idle-timer 30 t #'simple-extras-call-when-reachable
+                     "https://api.github.com/" #'forge-extras-pull-notifications)
+@end lisp
+
 @node Reaping closed server clients
 @section Reaping closed server clients
 
@@ -536,7 +562,7 @@ The advice only affects a server started after it is installed. To apply it to a
 @vindex simple-extras-server-state-interval
 The global minor mode @code{simple-extras-server-state-mode} writes the server's state to @code{simple-extras-server-state-file} (@samp{~/.cache/emacs-server-state.json}) every @code{simple-extras-server-state-interval} (5) seconds. The JSON object holds the time, the process ID, the recursion and minibuffer depths, any active minibuffer prompt, the first three lines of an active debugger backtrace, and the garbage-collection counters @code{gcs-done} and @code{gc-elapsed} with the current @code{gc-cons-threshold}.
 
-A server request that enters the debugger or a minibuffer prompt stays parked until the user answers, while the rest of Emacs keeps working, so nothing outside Emacs can ask it what is wrong. Timers still run inside those recursive edits, so the file names what holds the server. A file that stops being updated means instead that Emacs is blocked in Lisp or a subprocess. The process ID tells the reader whether a server that answers is this Emacs or another instance that took over its socket. The @samp{emacs-server-watchdog} script in the dotfiles @samp{bin} directory reads the file when the server stops answering. Between its runs it compares the garbage-collection counters, so a server slowed by long collections, which also stop timers and server requests, shows up in its samples. @code{simple-extras-server-write-state} swallows its own errors: with @code{debug-on-error} set, an error in a timer would enter the debugger and park the server itself.
+A server request that enters the debugger or a minibuffer prompt stays parked until the user answers, while the rest of Emacs keeps working, so nothing outside Emacs can ask it what is wrong. Timers still run inside those recursive edits, so the file names what holds the server. A file that stops being updated means instead that Emacs is blocked in Lisp or a subprocess. The process ID tells the reader whether a server that answers is this Emacs or another instance that took over its socket. The @samp{emacs-server-watchdog} script in the dotfiles @samp{bin} directory reads the file when the server stops answering. Between its runs it compares the garbage-collection counters, so a server slowed by long collections, which also stop timers and server requests, shows up in its samples. @code{simple-extras-server-write-state} swallows its own errors: with @code{debug-on-error} set, an error in a timer would enter the debugger and park the server itself. Each write schedules the next one before it starts, so quitting a debugger that opened during a write does not stop the recording: a repeating timer interrupted that way would stay marked as triggered and never fire again.
 
 The configuration enables the mode only in the instance that starts the server.
 

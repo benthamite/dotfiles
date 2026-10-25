@@ -42,6 +42,14 @@ The default value is derived from ~no-littering-var-directory~, placing auto-sav
 
 You would change this if you want auto-save files for untitled buffers stored in a different location, for example on a RAM disk for faster writes or in a directory that is excluded from backups.
 
+** Reachability probe timeout
+:PROPERTIES:
+:CUSTOM_ID: h:reachability-timeout
+:END:
+
+#+vindex: simple-extras-reachability-timeout
+The user option ~simple-extras-reachability-timeout~ is how many seconds a reachability probe may take before the host counts as down ([[#h:network-reachability][Network reachability]]). The default is 5.
+
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
@@ -433,6 +441,24 @@ The function ~simple-extras-slug-hyphenate~ replaces spaces, underscores, and do
 
 #+findex: simple-extras-connected-to-network-p
 The function ~simple-extras-connected-to-network-p~ checks whether the system is connected to a specific WiFi network by name. On macOS, it queries the network SSID via =ipconfig getsummary=; on GNU/Linux, it uses =iwgetid -r=. It returns ~t~ if the current SSID matches the given NETWORK argument. This can be used in configuration to conditionally enable features that depend on being connected to a particular network (e.g., a home or office network).
+
+** Network reachability
+:PROPERTIES:
+:CUSTOM_ID: h:network-reachability
+:END:
+
+On macOS, Emacs resolves host names on its main thread, even for connections opened with =:nowait=. When the resolver is slow or the network is down, any Lisp connection freezes Emacs until the lookup ends. These functions let a timer find out from a subprocess whether a host answers before it connects. A successful probe also leaves the answer in the system resolver's cache, so the connection that follows resolves quickly. This narrows the window for a freeze but does not close it: the network can still fail between the probe and the connection. Code that can make its request in a subprocess should do that instead.
+
+#+findex: simple-extras-probe-url
+The function ~simple-extras-probe-url~ runs =curl --head= on a URL, limited to ~simple-extras-reachability-timeout~ seconds, and calls a callback with ~t~ if any HTTP response came back and ~nil~ otherwise. A 401 counts as an answer. The URL is visible to other processes, so it must not carry credentials. Each probe has a key, and while a probe with the same key is still running, the function starts no new one and returns ~nil~.
+
+#+findex: simple-extras-call-when-reachable
+The function ~simple-extras-call-when-reachable~ takes a URL, a function and its arguments. It calls the function only if the URL answers; otherwise it skips the call and logs that in =*Messages*=, without showing it in the echo area. Use it as a timer's function:
+
+#+begin_src emacs-lisp
+(run-with-idle-timer 30 t #'simple-extras-call-when-reachable
+                     "https://api.github.com/" #'forge-extras-pull-notifications)
+#+end_src
 
 ** Reaping closed server clients
 :PROPERTIES:

@@ -66,6 +66,12 @@ Buffers whose text matches this are excluded from auto-saving by
   :type 'regexp
   :group 'simple-extras)
 
+(defcustom simple-extras-reachability-timeout 5
+  "Seconds a reachability probe may take before the host counts as down.
+See `simple-extras-probe-url'."
+  :type 'natnum
+  :group 'simple-extras)
+
 ;;;; Functions
 
 ;;;;; Personal
@@ -1288,6 +1294,62 @@ state exists to explain."
         (goto-char (point-min))
         (forward-line 3)
         (string-trim (buffer-substring-no-properties (point-min) (point)))))))
+
+;;;;; Network reachability
+
+;; Emacs on macOS resolves host names synchronously on the main thread, so a
+;; Lisp connection on a slow or dead network freezes Emacs until the lookup
+;; ends (emacs/freeze-incidents.org, 2026-10-25).  Probing the host from a
+;; subprocess first keeps Emacs responsive and warms the system resolver's
+;; cache for the connection that follows.  It narrows the window but cannot
+;; close it: the network can still fail between the probe and the connection.
+
+(defvar simple-extras--reachability-probes (make-hash-table :test #'equal)
+  "Running reachability probes, keyed by KEY of `simple-extras-probe-url'.")
+
+(defun simple-extras-probe-url (url key callback)
+  "Check without blocking Emacs whether URL answers, then call CALLBACK.
+Run curl in a subprocess limited to `simple-extras-reachability-timeout'
+seconds, and call CALLBACK with t when it got any response from URL, nil
+otherwise.  URL must carry no credentials, since it is visible to other
+processes.  While a probe with the same KEY, compared with `equal', is still
+running, start none and return nil; otherwise return the probe process."
+  (unless (process-live-p (gethash key simple-extras--reachability-probes))
+    (puthash key
+             (make-process
+              :name "reachability-probe"
+              :command (list "curl" "--disable" "--silent" "--head"
+                             "--output" "/dev/null" "--max-time"
+                             (number-to-string simple-extras-reachability-timeout)
+                             url)
+              :connection-type 'pipe
+              :noquery t
+              :sentinel (lambda (process _event)
+                          (simple-extras--probe-sentinel process key callback)))
+             simple-extras--reachability-probes)))
+
+(defun simple-extras--probe-sentinel (process key callback)
+  "Call CALLBACK with whether PROCESS, the probe for KEY, succeeded."
+  (unless (process-live-p process)
+    (when (eq (gethash key simple-extras--reachability-probes) process)
+      (remhash key simple-extras--reachability-probes))
+    (funcall callback (and (eq (process-status process) 'exit)
+                           (zerop (process-exit-status process))))))
+
+;;;###autoload
+(defun simple-extras-call-when-reachable (url function &rest args)
+  "Call FUNCTION with ARGS if URL answers, without blocking Emacs until then.
+Use this for timers whose FUNCTION connects to URL's host from Lisp: see
+`simple-extras-probe-url', which does the check.  When URL does not answer,
+skip the call and log that in *Messages* only.  A call made while the
+previous probe for the same URL and FUNCTION still runs is dropped."
+  (simple-extras-probe-url
+   url (list url function)
+   (lambda (reachable)
+     (if reachable
+         (apply function args)
+       (let ((inhibit-message t))
+         (message "Skipped `%s': %s did not answer" function url))))))
 
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

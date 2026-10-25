@@ -1055,5 +1055,98 @@ way back to the contents of one killed by accident."
           (should-not (simple-extras--server-state-backtrace)))
       (kill-buffer buffer))))
 
+;;;; Network reachability
+
+(defun simple-extras-test--server (reply)
+  "Start a local server that sends REPLY to each client, or nothing if nil.
+Return the server process."
+  (make-network-process
+   :name "simple-extras-test-server" :server t :host 'local :service t
+   :noquery t
+   :filter (lambda (process _string)
+             (when reply
+               (process-send-string process reply)
+               (delete-process process)))))
+
+(defun simple-extras-test--server-url (server)
+  "Return the URL of local SERVER."
+  (format "http://127.0.0.1:%d/" (process-contact server :service)))
+
+(defun simple-extras-test--probe (url &optional key)
+  "Probe URL under KEY and return what the callback got, or `timeout'."
+  (let ((result 'pending))
+    (simple-extras-probe-url url (or key url) (lambda (ok) (setq result ok)))
+    (with-timeout (10 'timeout)
+      (while (eq result 'pending)
+        (accept-process-output nil 0.05))
+      result)))
+
+(ert-deftest simple-extras-test-probe-url-reachable ()
+  "Report t when the host answers."
+  (let ((server (simple-extras-test--server
+                 "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")))
+    (unwind-protect
+        (should (eq (simple-extras-test--probe
+                     (simple-extras-test--server-url server))
+                    t))
+      (delete-process server))))
+
+(ert-deftest simple-extras-test-probe-url-refused ()
+  "Report nil when nothing listens."
+  (let* ((server (simple-extras-test--server nil))
+         (url (simple-extras-test--server-url server)))
+    (delete-process server)
+    (should (null (simple-extras-test--probe url)))))
+
+(ert-deftest simple-extras-test-probe-url-silent-host-keeps-emacs-running ()
+  "Report nil after the timeout while Emacs keeps running timers."
+  (let ((server (simple-extras-test--server nil))
+        (simple-extras-reachability-timeout 1)
+        (ticks 0)
+        timer)
+    (unwind-protect
+        (progn
+          (setq timer (run-at-time 0.1 0.1 (lambda () (cl-incf ticks))))
+          (should (null (simple-extras-test--probe
+                         (simple-extras-test--server-url server))))
+          (should (>= ticks 5)))
+      (cancel-timer timer)
+      (delete-process server))))
+
+(ert-deftest simple-extras-test-probe-url-one-probe-per-key ()
+  "Start no second probe while one with the same key runs."
+  (let ((server (simple-extras-test--server nil))
+        (simple-extras-reachability-timeout 1)
+        (calls 0))
+    (unwind-protect
+        (let ((url (simple-extras-test--server-url server)))
+          (should (simple-extras-probe-url url 'key (lambda (_) (cl-incf calls))))
+          (should-not (simple-extras-probe-url url 'key (lambda (_) (cl-incf calls))))
+          (should (null (simple-extras-test--probe url 'key-2)))
+          (with-timeout (5) (while (zerop calls) (accept-process-output nil 0.05)))
+          (should (= calls 1))
+          (should (simple-extras-probe-url url 'key #'ignore)))
+      (delete-process server))))
+
+(ert-deftest simple-extras-test-call-when-reachable ()
+  "Call the function with its arguments only when the host answers."
+  (let* ((server (simple-extras-test--server
+                  "HTTP/1.1 401 Unauthorized\r\nContent-Length: 0\r\n\r\n"))
+         (url (simple-extras-test--server-url server))
+         (got 'none))
+    (unwind-protect
+        (progn
+          (simple-extras-call-when-reachable url (lambda (&rest args) (setq got args)) 1 2)
+          (with-timeout (10) (while (eq got 'none) (accept-process-output nil 0.05)))
+          (should (equal got '(1 2)))
+          (delete-process server)
+          (setq got 'none)
+          (let ((probe (simple-extras-call-when-reachable
+                        url (lambda (&rest _) (setq got 'called)))))
+            (with-timeout (10) (while (process-live-p probe) (accept-process-output nil 0.05)))
+            (accept-process-output nil 0.1))
+          (should (eq got 'none)))
+      (delete-process server))))
+
 (provide 'simple-extras-test)
 ;;; simple-extras-test.el ends here

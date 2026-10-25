@@ -117,10 +117,10 @@ Track skipped subchecks so a partial scan cannot look complete. Rank each
 skipped subcheck by the severity its failure would have. A skipped subcheck
 that could hide a High or Critical exposure goes in the summary beside the
 findings as an unverified high-risk item, naming the next step and who takes
-it; it is never only a coverage-table row or a generic deferral. On
-2026-09-17 privacy grants were "not checked" in a table row while
-`/usr/bin/osascript` held Accessibility, letting any code running as Pablo
-click any button, including LuLu's firewall prompts.
+it; it is never only a coverage-table row or a generic deferral. A
+"not checked" table row for privacy grants, for example, can hide a script
+host holding Accessibility, which lets any code click through firewall prompts.
+Keep machine-specific findings in the private report, never in this skill.
 
 For each deduplicated finding include location, observed evidence, confidence,
 the concrete exposure and affected workflow, severity rationale, and a scoped

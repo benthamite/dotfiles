@@ -59,9 +59,6 @@ the "Already tried" list in place.
   wikipedia-auto, mu4e, slack's =request= callbacks and the rest, to check
   against the =elisp-conventions= network rule. Deferred by Pablo until the
   usage poller fix landed (it has).
-- Hand-set 1.1.1.1 Wi-Fi DNS fails on networks that block it (2026-10-25):
-  clearing it was approved, but the agent's permission classifier blocked
-  =networksetup=; handed to Pablo.
 - Cause of the 2026-10-10 GC storm and the morning blocks: read the first
   stack reports the watchdog captures.
 

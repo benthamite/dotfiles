@@ -64,6 +64,22 @@ the "Already tried" list in place.
 
 * Incidents
 
+** 2026-10-25 22:44: debugger entered from the new Slack reachability advice (diagnosis only)
+
+- Watchdog: socket refused from 22:44:43, a minute after =158dc3689=
+  (Slack =slack-ws-open= reachability advice) was committed at 22:43.
+- 22:46 sample (=/tmp/emacs-freeze.nfKaa2/s1.txt=, 0% CPU): timer →
+  =kill-buffer= → =delete-process= → sentinel =request--curl-callback= →
+  =slack-ws-reconnect-with-reconnect-url= → an interpreted lambda (=let=
+  body) → =signal= → =debug= → =recursive-edit= waiting in =read_char=.
+  Idle GC (=gcmh-idle-garbage-collect=) ran inside that wait. The server
+  did not accept connections while the debugger waited inside the sentinel.
+- Inference, not confirmed: the interpreted lambda is the new
+  =slack-extras--open-when-reachable= advice. The error message was not read
+  because the server was unreachable.
+- Recovery: none taken; quitting the =*Backtrace*= window (=q=) is the least
+  invasive option and does not end Emacs.
+
 ** 2026-10-25 21:33–22:19: main-thread DNS from forge timers and NSM (remedies proposed)
 
 - Pablo: unresponsive again. Watchdog: timeout 21:33:50 (recovered 21:34:54),

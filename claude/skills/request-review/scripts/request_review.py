@@ -731,6 +731,7 @@ def submit_review(args):
             transcript_offset=state["pending_submission"]["transcript_offset"],
             delivery_marker=_review_marker(state), one_pass=True,
             expected_identity={**state["reviewer"], "state": "awaiting-input"},
+            preserve_windows=True,  # the reviewer stays out of Pablo's windows
         )
         if state["reviewer"]["transcript"] is not None and actual_path != state["reviewer"]["transcript"]:
             raise SystemExit("delivery returned a different transcript; pending retained")

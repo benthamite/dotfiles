@@ -29,7 +29,12 @@ failure. A generic subagent is not automatically the opposite CLI session.
 Read the installed `agent.el` API and account configuration when needed.
 Start a fresh run-owned session with a unique explicit instance name, an
 explicit noninteractive account selection, and the intended repository as its
-directory. Do not reuse a pre-existing buffer or assume a sample buffer name.
+directory. Start it without displaying it: both backends pop to a new session
+buffer, which briefly takes over Pablo's frame. Wrap the start in
+`(save-window-excursion (let ((display-buffer-overriding-action
+'(display-buffer-no-window (allow-no-window . t)))) ...))`; the helper's
+submission likewise preserves his windows.
+Do not reuse a pre-existing buffer or assume a sample buffer name.
 The reviewer must have a stable live session identity; unknown identity is a
 blocker, not a match. As soon as the session exists, snooze it indefinitely so
 it stays out of the user's sight: evaluate `(agent-toggle-snooze BUFFER)` with

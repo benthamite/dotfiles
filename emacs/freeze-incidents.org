@@ -55,10 +55,35 @@ the "Already tried" list in place.
   10-19 outages all coincided with agent sessions running 9+ worker pools
   over full swap. Proposed: one global rule capping worker concurrency and
   checking swap before starting a pool; pending Pablo's decision.
+- Network calls on the main thread (2026-10-25): =url-retrieve= from timers
+  (agent usage poller) blocks Emacs for every slow DNS lookup. Proposed: move
+  the usage fetch to an async =curl= subprocess, as =gptel-extras= already
+  does, and make that the rule for periodic network calls; pending Pablo's
+  decision. Hand-set 1.1.1.1 Wi-Fi DNS fails on networks that block it.
 - Cause of the 2026-10-10 GC storm and the morning blocks: read the first
   stack reports the watchdog captures.
 
 * Incidents
+
+** 2026-10-25 10:33–11:09 and 12:08–12:11: synchronous DNS in the usage poller (investigation, no change)
+
+- Not host load: load ~8, Emacs 1999 at 4% CPU, recursion depth 0.
+- All five watchdog stacks from 10:37 to 12:09 have the main thread
+  (100% of its samples) in =getaddrinfo= → =mdns_addrinfo= → =kevent=,
+  reached from =url-retrieve= → =open-gnutls-stream= →
+  =make-network-process=, called from a timer through bytecode (10:37, 11:05),
+  and from =url-http-end-of-document-sentinel= at 12:04.
+- Most likely caller: =agent-usage--poll= (bytecode, every 300 s), which calls
+  =url-retrieve= for 9 accounts (4 Claude at =api.anthropic.com=, 5 Codex at
+  =chatgpt.com=). Not proven: the bytecode frames hide the function.
+  On macOS Emacs resolves names synchronously on the main thread even with
+  =:nowait=, so each lookup blocks Emacs.
+- Why lookups are slow: Wi-Fi DNS is set by hand to 1.1.1.1/1.0.0.1, and
+  the current network (gateway 10.254.221.206) blocks DNS to 1.1.1.1 (UDP
+  and TCP time out; ping works). Tailscale MagicDNS (100.100.100.100) took
+  0.3–1.2 s per query, =getaddrinfo= 0.5–3.9 s. The network's own resolver
+  (DHCP, 10.254.221.206) answered in 8–12 ms.
+- Samples: =/tmp/emacs-freeze.RD0CI2/=.
 
 ** 2026-10-24 04:55: short outage under host starvation (investigation, no change)
 

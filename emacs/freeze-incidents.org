@@ -83,8 +83,10 @@ the "Already tried" list in place.
   In Emacs 30.2 =nsm-should-check= resolves the host unconditionally, but the
   result is only used when =nsm-trust-local-network= is non-nil; live value
   is nil, so the lookup is pure cost.
-- 20:52 and 21:32 stacks contain Slack websocket and =request= frames; where
-  they blocked was not established.
+- 20:52 stack: all 77 main-thread samples in =websocket-ensure-handshake= →
+  =wait_while_connecting=, i.e. the silent-server live test before the
+  websocket fix (committed 20:57). 21:32 stack: main thread mostly in
+  =ns_select=; no network wait shown, cause of that outage unknown.
 - Live network timers (22:20): =tlon-pull-issues-in-all-repos=,
   =epoch-pull-forge-repos=, =forge-extras-pull-notifications=,
   =doom-modeline--github-fetch-notifications=, =elfeed-extras-update=, plus
@@ -102,6 +104,17 @@ the "Already tried" list in place.
   3. The same probe before Slack's websocket reconnect.
   4. Deferred: report the =nsm-should-check= lookup upstream (email to the
      Emacs bug tracker under Pablo's name).
+- Codex review of =f536a121d= (run 85f18212): all five findings accepted.
+  Probe gating is a mitigation, so it must be a labeled exception to the
+  network rule, with moving the forge pulls out of the main Emacs tracked;
+  probe the host each request actually uses (=api.github.com= for forge,
+  the reconnect URL's host for Slack); one pending probe per timer or team,
+  stale callbacks dropped, and a skipped Slack reconnect retried; tests for
+  NSM (no lookup with trust nil, checks still run, trust t and function
+  values unchanged) and for a probe that succeeds before a stalled connect.
+  Dropped from remedy 2: =doom-modeline--github-fetch-notifications= already
+  runs in an =async-start= subprocess and elfeed uses curl
+  (=elfeed-use-curl= t).
 
 ** 2026-10-25 13:04–20:44: Slack websocket TLS handshake with no timeout (fixed in dotfiles =a9624ab02=)
 

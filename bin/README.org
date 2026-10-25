@@ -223,6 +223,7 @@ Mail activation and credential lookup are documented further in
 | =lulu-directory-rules= | =check= lists installed Homebrew packages and the Claude Code versions directory whose LuLu allow rule is tied to a versioned path with no directory rule (exit 1 if any); =add= creates the missing =DIR/*= allow rules through LuLu's Add Rule window. See [[file:../claude/context/lulu-firewall.md][=lulu-firewall.md=]]. |
 | =personal-updates= | Applies the scheduled and manual update policy documented in [[file:../macos/README.org][the macOS README]]. |
 | =sync-google-birthdays= | Mirrors reconciled BBDB birthdays into the reminder-free personal Google calendar =Birthdays (managed)=. =--preflight= checks, changing nothing and reading no credential, that the attested sync can start (its LaunchAgent's launchd-environment check). |
+| =tcc-terminal-log= | Records, for a fixed period (default 7 days), the macOS privacy (TCC) decisions tccd logs with Terminal as the responsible or accessing process: service, preflight or real request, accessing/requesting binary, Apple Events target, decision. Metadata only, in a private 0700 directory with a size cap; at the end writes a Markdown summary, optionally commits it, and alerts through =launchd-heartbeat=, which also hears of an early stop. tccd is not asked again after a granted decision is cached, so silence is not evidence of non-use. Run as a launchd job from the launchd registry. |
 | =switch-gnupg= | Replaces the Homebrew GnuPG formula with a requested historical version. |
 
 * General utilities

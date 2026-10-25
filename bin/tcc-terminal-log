@@ -1,0 +1,506 @@
+#!/usr/bin/env python3
+"""Record, for a bounded period, macOS privacy (TCC) decisions charged to Terminal.
+
+    tcc-terminal-log run        # launchd entry point: stream, record, finish
+    tcc-terminal-log summary    # print the summary of what is recorded so far
+    tcc-terminal-log status     # print the state file
+
+macOS attributes a process's access to protected resources to its responsible
+process; everything started from Terminal (shells, editors, agents and what
+they run) is charged to Terminal's grants. This tool reads tccd's decisions
+from the unified log (`log stream`, subsystem com.apple.TCC) and keeps those
+whose responsible or accessing process is Terminal, for the services below.
+
+It stores metadata only: time, service, whether the call was a preflight
+(a check) or a real access request, the accessing, responsible and requesting
+binaries as tccd logs them, an Apple Events target when tccd logs one, and the
+decision. Nothing else from the log, no file paths beyond those binaries, and
+no process arguments. Data lives in a private 0700 directory with a size cap.
+
+What tccd does not log cannot be recorded. In particular, the kernel and
+appleeventsd cache a granted decision, so most repeated uses of Full Disk
+Access or Automation never reach tccd: silence is not evidence of non-use.
+
+Lifecycle: the first run fixes the end time (default: 7 days later). At the
+end it writes a Markdown summary, commits it to a notes repository if given,
+sends `launchd-heartbeat alert NAME` saying the log is ready, marks itself
+finished and exits 0; later runs exit at once. While running it sends an
+hourly heartbeat. An unexpected end of `log stream` or an internal error sends
+an alert and exits nonzero, so launchd restarts it.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import selectors
+import signal
+import subprocess
+import sys
+import time
+from collections import Counter
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+
+TERMINAL_PATH = "/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal"
+TERMINAL_ID = "com.apple.Terminal"
+HEARTBEAT = Path.home() / "repos/launchd/bin/launchd-heartbeat.py"
+DEFAULT_NAME = "tcc-terminal-log"
+DEFAULT_STATE_DIR = Path.home() / ".local/state/tcc-terminal-log"
+DEFAULT_DAYS = 7.0
+DEFAULT_MAX_BYTES = 20 * 1024 * 1024
+HEARTBEAT_EVERY = 3600
+FLUSH_EVERY = 60
+PENDING_TTL = 120
+ALERT_COOLDOWN = 6 * 3600
+
+# Services recorded, with the System Settings name they appear under.
+SERVICES = {
+    "kTCCServiceSystemPolicyAllFiles": "Full Disk Access",
+    "kTCCServiceSystemPolicySysAdminFiles": "Full Disk Access (administrator files)",
+    "kTCCServiceSystemPolicyAppData": "App data (other apps' containers)",
+    "kTCCServiceSystemPolicyAppDataDetailed": "App data (other apps' containers)",
+    "kTCCServiceSystemPolicyAppBundles": "App Management",
+    "kTCCServiceSystemPolicyDesktopFolder": "Files: Desktop",
+    "kTCCServiceSystemPolicyDocumentsFolder": "Files: Documents",
+    "kTCCServiceSystemPolicyDownloadsFolder": "Files: Downloads",
+    "kTCCServiceSystemPolicyNetworkVolumes": "Files: network volumes",
+    "kTCCServiceSystemPolicyRemovableVolumes": "Files: removable volumes",
+    "kTCCServiceAddressBook": "Contacts",
+    "kTCCServiceCalendar": "Calendars",
+    "kTCCServiceReminders": "Reminders",
+    "kTCCServicePhotos": "Photos",
+    "kTCCServiceAccessibility": "Accessibility",
+    "kTCCServicePostEvent": "Accessibility (synthetic input)",
+    "kTCCServiceListenEvent": "Input Monitoring",
+    "kTCCServiceScreenCapture": "Screen Recording",
+    "kTCCServiceDeveloperTool": "Developer Tools",
+    "kTCCServiceAppleEvents": "Automation",
+}
+
+AUTH_VALUES = {"0": "denied", "1": "unknown", "2": "allowed", "3": "limited"}
+# tccd's auth_reason codes, as documented by TCC research write-ups.
+AUTH_REASONS = {
+    "1": "error", "2": "user consent", "3": "user set", "4": "system set",
+    "5": "service policy", "6": "MDM policy", "7": "override policy",
+    "8": "missing usage string", "9": "prompt timeout", "10": "preflight unknown",
+    "11": "entitled", "12": "app type policy",
+}
+
+PREDICATE = ('subsystem == "com.apple.TCC" AND process == "tccd" AND '
+             '(eventMessage BEGINSWITH "AUTHREQ_" OR eventMessage BEGINSWITH "REQUEST_MSG")')
+
+MSG_ID = re.compile(r"msgID=([0-9.]+)")
+ROLE = re.compile(r"(responsible|accessing|requesting)=\{TCCDProcess: ([^{}]*)\}")
+FIELD = re.compile(r"(\w+)=(.*?)(?=, \w+=|,? *$)")
+KEY_VALUE = re.compile(r"(\w+)=([^,]*)")
+INDIRECT = re.compile(r'(?i)(?:indirect_object[\w]*|target_bundle_id)"?\s*=\s*"?([^"\n}]+)"?')
+
+
+# ---------------------------------------------------------------- parsing
+
+def parse_role(text: str) -> dict:
+    return {key: value.strip() for key, value in FIELD.findall(text.strip().rstrip(","))}
+
+
+def parse_attribution(message: str) -> dict:
+    roles = {}
+    for role, body in ROLE.findall(message):
+        fields = parse_role(body)
+        roles[role] = {
+            "identifier": fields.get("identifier"),
+            "binary": fields.get("binary_path"),
+            "responsible_path": fields.get("responsible_path"),
+        }
+    return roles
+
+
+def parse_message(message: str) -> tuple[str, str, dict] | None:
+    """Return (kind, msg_id, fields) for one tccd log message, or None."""
+    match = MSG_ID.search(message)
+    if not match:
+        return None
+    msg_id = match.group(1)
+    if message.startswith("AUTHREQ_CTX:"):
+        fields = dict(KEY_VALUE.findall(message))
+        return "ctx", msg_id, {"service": fields.get("service"),
+                               "preflight": fields.get("preflight") == "yes"}
+    if message.startswith("AUTHREQ_ATTRIBUTION:"):
+        return "attribution", msg_id, parse_attribution(message)
+    if message.startswith("AUTHREQ_RESULT:"):
+        fields = dict(KEY_VALUE.findall(message))
+        return "result", msg_id, {"auth_value": fields.get("authValue"),
+                                  "auth_reason": fields.get("authReason")}
+    if message.startswith("REQUEST_MSG:"):
+        target = INDIRECT.search(message)
+        return "request", msg_id, {"target": target.group(1).strip() if target else None}
+    return None
+
+
+def is_terminal(process: dict | None) -> bool:
+    if not process:
+        return False
+    return (process.get("identifier") == TERMINAL_ID
+            or process.get("binary") == TERMINAL_PATH
+            or process.get("responsible_path") == TERMINAL_PATH)
+
+
+def build_record(parts: dict) -> dict | None:
+    """Turn the joined parts of one tccd request into a stored record, or None."""
+    ctx = parts.get("ctx") or {}
+    service = ctx.get("service")
+    if service not in SERVICES:
+        return None
+    roles = parts.get("attribution") or {}
+    responsible = roles.get("responsible")
+    accessing = roles.get("accessing")
+    # The process charged is the responsible one; without a responsible role
+    # tccd charges the accessing process itself. Terminal merely *requesting*
+    # (asking about another app) is not a use of Terminal's grants.
+    charged = responsible or accessing
+    if not is_terminal(charged):
+        return None
+    result = parts.get("result") or {}
+    # Without an accessing role (e.g. a Screen Recording preflight) the caller
+    # is the requesting process.
+    subject = accessing or roles.get("requesting") or responsible or {}
+    return {
+        "service": service,
+        "preflight": bool(ctx.get("preflight")),
+        "accessing": subject.get("binary"),
+        "responsible": (responsible or {}).get("responsible_path") or (charged or {}).get("binary"),
+        "requesting": (roles.get("requesting") or {}).get("binary"),
+        "target": (parts.get("request") or {}).get("target"),
+        "decision": AUTH_VALUES.get(str(result.get("auth_value")), str(result.get("auth_value"))),
+        "reason": AUTH_REASONS.get(str(result.get("auth_reason")), str(result.get("auth_reason"))),
+    }
+
+
+class Joiner:
+    """Join tccd's per-request log lines (keyed by tccd pid and msgID)."""
+
+    def __init__(self, ttl: float = PENDING_TTL):
+        self.pending: dict[tuple, dict] = {}
+        self.ttl = ttl
+
+    def feed(self, event: dict, now: float | None = None) -> dict | None:
+        now = time.monotonic() if now is None else now
+        parsed = parse_message(event.get("eventMessage", ""))
+        if parsed is None:
+            return None
+        kind, msg_id, fields = parsed
+        key = (event.get("processID"), msg_id)
+        parts = self.pending.setdefault(key, {"seen": now})
+        parts[kind] = fields
+        self.expire(now)
+        if kind != "result":
+            return None
+        del self.pending[key]
+        record = build_record(parts)
+        if record is not None:
+            record = {"time": event.get("timestamp")} | record
+        return record
+
+    def expire(self, now: float) -> None:
+        for key in [k for k, v in self.pending.items() if now - v["seen"] > self.ttl]:
+            del self.pending[key]
+
+
+# ---------------------------------------------------------------- storage
+
+AGGREGATE_FIELDS = ("service", "accessing", "responsible", "requesting", "target",
+                    "preflight", "decision", "reason")
+
+
+class Store:
+    def __init__(self, directory: Path, max_bytes: int = DEFAULT_MAX_BYTES):
+        self.directory = directory
+        self.max_bytes = max_bytes
+        self.records = directory / "records.jsonl"
+        self.counts_file = directory / "counts.json"
+        self.state_file = directory / "state.json"
+        directory.mkdir(parents=True, exist_ok=True)
+        os.chmod(directory, 0o700)
+        self.counts = self.load_counts()
+
+    def load_counts(self) -> dict:
+        try:
+            return json.loads(self.counts_file.read_text())
+        except FileNotFoundError:
+            return {}
+
+    def add(self, record: dict) -> None:
+        key = json.dumps([record.get(f) for f in AGGREGATE_FIELDS])
+        entry = self.counts.setdefault(key, {"count": 0, "first": record["time"]})
+        entry["count"] += 1
+        entry["last"] = record["time"]
+        size = self.records.stat().st_size if self.records.exists() else 0
+        if size < self.max_bytes:
+            with open(self.records, "a", opener=private_opener) as handle:
+                handle.write(json.dumps(record) + "\n")
+        else:
+            state = self.state()
+            if not state.get("records_truncated_at"):
+                self.update_state(records_truncated_at=now_iso())
+
+    def flush(self) -> None:
+        write_private(self.counts_file, json.dumps(self.counts))
+
+    def state(self) -> dict:
+        try:
+            return json.loads(self.state_file.read_text())
+        except FileNotFoundError:
+            return {}
+
+    def update_state(self, **changes) -> dict:
+        state = self.state() | changes
+        write_private(self.state_file, json.dumps(state, indent=2))
+        return state
+
+    def note(self, text: str) -> None:
+        state = self.state()
+        events = (state.get("events") or [])[-199:] + [f"{now_iso()} {text}"]
+        self.update_state(events=events)
+
+
+def private_opener(path, flags):
+    return os.open(path, flags, 0o600)
+
+
+def write_private(path: Path, text: str) -> None:
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    with open(temporary, "w", opener=private_opener) as handle:
+        handle.write(text)
+    os.replace(temporary, path)
+
+
+def now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+# ---------------------------------------------------------------- summary
+
+def summarize(counts: dict, state: dict) -> str:
+    rows = []
+    for key, entry in counts.items():
+        values = dict(zip(AGGREGATE_FIELDS, json.loads(key)))
+        rows.append(values | entry)
+    lines = [
+        "# TCC decisions charged to Terminal",
+        "",
+        f"Period: {state.get('started', '?')} to {state.get('finished') or state.get('ends', '?')}"
+        f" (planned end {state.get('ends', '?')}).",
+        "Source: tccd's AUTHREQ log lines (unified log, com.apple.TCC), kept when the",
+        "responsible process (or, without one, the accessing process) is Terminal.",
+        "",
+        "Limits: tccd logs a decision only when it is asked. The kernel and appleeventsd",
+        "cache granted decisions, so repeated Full Disk Access and Automation use mostly",
+        "never appears; a service with no rows is not shown to be unused.",
+    ]
+    if state.get("records_truncated_at"):
+        lines.append(f"Raw records hit the size cap at {state['records_truncated_at']};"
+                     " the counts below are complete.")
+    gaps = [e for e in state.get("events", []) if "stopped" in e or "exited" in e
+            or "error" in e or "started" in e]
+    if gaps:
+        lines += ["", "Logger runs and interruptions (time not covered between a stop and the",
+                  "next start):", ""] + [f"- {e}" for e in gaps]
+    lines += ["", "Services with no recorded decision: " + (", ".join(sorted(
+        {SERVICES[s] for s in SERVICES} - {SERVICES.get(r["service"], r["service"]) for r in rows}))
+        or "none") + "."]
+    for service in sorted({r["service"] for r in rows}, key=lambda s: SERVICES.get(s, s)):
+        service_rows = sorted((r for r in rows if r["service"] == service),
+                              key=lambda r: -r["count"])
+        total = sum(r["count"] for r in service_rows)
+        real = sum(r["count"] for r in service_rows if not r["preflight"])
+        decisions = Counter()
+        for r in service_rows:
+            decisions[r["decision"]] += r["count"]
+        lines += ["", f"## {SERVICES.get(service, service)} (`{service}`)", "",
+                  f"{total} decisions: {total - real} preflight, {real} real requests; "
+                  + ", ".join(f"{n} {d}" for d, n in decisions.most_common()) + ".", "",
+                  "| Count | Kind | Accessing binary | Requested by | Target | Decision | First | Last |",
+                  "|---:|---|---|---|---|---|---|---|"]
+        for r in service_rows:
+            lines.append("| {count} | {kind} | `{accessing}` | `{requesting}` | {target} | "
+                         "{decision} ({reason}) | {first} | {last} |".format(
+                             kind="preflight" if r["preflight"] else "request",
+                             target=f"`{r['target']}`" if r["target"] else "",
+                             **{k: r.get(k) for k in ("count", "accessing", "requesting",
+                                                      "decision", "reason", "first", "last")}))
+    return "\n".join(lines) + "\n"
+
+
+# ---------------------------------------------------------------- side effects
+
+def send_alert(name: str, text: str) -> str | None:
+    """Send an immediate alert; return an error description or None."""
+    try:
+        result = subprocess.run([sys.executable, str(HEARTBEAT), "alert", name], input=text,
+                                text=True, capture_output=True, timeout=60)
+    except (OSError, subprocess.SubprocessError) as error:
+        return str(error)
+    return None if result.returncode == 0 else (result.stderr.strip() or "alert failed")
+
+
+def send_heartbeat(name: str) -> str | None:
+    try:
+        result = subprocess.run([sys.executable, str(HEARTBEAT), "send", name],
+                                text=True, capture_output=True, timeout=60)
+    except (OSError, subprocess.SubprocessError) as error:
+        return str(error)
+    return None if result.returncode == 0 else (result.stderr.strip() or "heartbeat failed")
+
+
+def commit_summary(notes_root: Path, notes_git_dir: Path, summary: Path) -> str | None:
+    git = ["git", "--git-dir", str(notes_git_dir), "--work-tree", str(notes_root)]
+    relative = str(summary.relative_to(notes_root))
+    for command in (git + ["add", "--", relative],
+                    git + ["commit", "-m", f"Add {summary.name}", "--", relative]):
+        result = subprocess.run(command, cwd=notes_root, text=True, capture_output=True,
+                                timeout=120)
+        if result.returncode != 0:
+            return (result.stderr or result.stdout).strip()[-500:] or "git failed"
+    return None
+
+
+def finish(args, store: Store) -> None:
+    store.flush()
+    state = store.update_state(finished=now_iso())
+    date = datetime.now().strftime("%Y-%m-%d")
+    summary_path = args.summary_dir / f"tcc-terminal-log-{date}.md"
+    summary_path.write_text(summarize(store.counts, state))
+    commit_error = None
+    if args.notes_git_dir:
+        commit_error = commit_summary(args.notes_root, args.notes_git_dir, summary_path)
+    text = [f"The one-week Terminal TCC log is ready. Summary: {summary_path}"]
+    if args.plan:
+        text.append(f"Plan: {args.plan}")
+    text.append("Committed to notes." if args.notes_git_dir and not commit_error
+                else f"Summary not committed: {commit_error}" if commit_error
+                else "Summary not committed (no notes repository configured).")
+    store.note("finished; summary written")
+    error = send_alert(args.name, "\n".join(text))
+    store.update_state(done=True, completion_alert_error=error)
+    if error:
+        raise RuntimeError(f"completion alert not delivered: {error}")
+
+
+class Stopped(BaseException):
+    """SIGTERM or SIGINT arrived; raised from the handler so select() returns."""
+
+
+def run(args) -> int:
+    store = Store(args.state_dir, args.max_bytes)
+    state = store.state()
+    if state.get("done"):
+        return 0
+    if not state.get("started"):
+        started = datetime.now(timezone.utc)
+        state = store.update_state(started=started.isoformat(timespec="seconds"),
+                                   ends=(started + timedelta(days=args.days)).isoformat(
+                                       timespec="seconds"))
+    ends = datetime.fromisoformat(state["ends"])
+    store.note("started")
+
+    def alert_once(text: str) -> None:
+        last = store.state().get("last_failure_alert", 0)
+        if time.time() - last >= ALERT_COOLDOWN:
+            error = send_alert(args.name, text)
+            store.update_state(last_failure_alert=time.time(), last_alert_error=error)
+
+    def on_signal(signum, _frame):
+        raise Stopped(signum)
+
+    signal.signal(signal.SIGTERM, on_signal)
+    signal.signal(signal.SIGINT, on_signal)
+
+    if datetime.now(timezone.utc) >= ends:
+        finish(args, store)
+        return 0
+
+    stream = subprocess.Popen(
+        ["/usr/bin/log", "stream", "--style", "ndjson", "--level", "info",
+         "--predicate", PREDICATE],
+        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1)
+    joiner = Joiner()
+    selector = selectors.DefaultSelector()
+    selector.register(stream.stdout, selectors.EVENT_READ)
+    last_flush = last_beat = float("-inf")
+    try:
+        while True:
+            now = time.monotonic()
+            if now - last_beat >= HEARTBEAT_EVERY:
+                error = send_heartbeat(args.name)
+                store.update_state(last_heartbeat=now_iso(), last_heartbeat_error=error)
+                last_beat = now
+            if now - last_flush >= FLUSH_EVERY:
+                store.flush()
+                last_flush = now
+            if datetime.now(timezone.utc) >= ends:
+                stream.terminate()
+                finish(args, store)
+                return 0
+            if not selector.select(timeout=30):
+                continue
+            line = stream.stdout.readline()
+            if not line:
+                code = stream.wait()
+                store.note(f"log stream exited with {code}")
+                alert_once(f"tcc-terminal-log: `log stream` exited with {code} before the "
+                           f"planned end ({state['ends']}). launchd will restart it; "
+                           f"state: {args.state_dir}/state.json")
+                return 1
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            record = joiner.feed(event)
+            if record is not None:
+                store.add(record)
+    except Stopped as stop:
+        # launchd stops jobs at logout, shutdown and bootout; not a failure.
+        store.note(f"stopped by signal {stop.args[0]}")
+        return 0
+    except Exception as error:
+        store.note(f"error: {type(error).__name__}: {error}")
+        alert_once(f"tcc-terminal-log stopped early on an error: {type(error).__name__}: "
+                   f"{error}. launchd will restart it; state: {args.state_dir}/state.json")
+        raise
+    finally:
+        store.flush()
+        if stream.poll() is None:
+            stream.terminate()
+            try:
+                stream.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                stream.kill()
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("command", choices=("run", "summary", "status"))
+    parser.add_argument("--state-dir", type=Path, default=DEFAULT_STATE_DIR)
+    parser.add_argument("--days", type=float, default=DEFAULT_DAYS)
+    parser.add_argument("--max-bytes", type=int, default=DEFAULT_MAX_BYTES)
+    parser.add_argument("--name", default=DEFAULT_NAME, help="heartbeat monitor name")
+    parser.add_argument("--summary-dir", type=Path, default=Path.cwd())
+    parser.add_argument("--notes-root", type=Path, help="work tree to commit the summary in")
+    parser.add_argument("--notes-git-dir", type=Path, help="git dir for --notes-root")
+    parser.add_argument("--plan", help="plan file named in the completion alert")
+    args = parser.parse_args(argv)
+    if args.command == "run":
+        return run(args)
+    store = Store(args.state_dir, args.max_bytes)
+    if args.command == "summary":
+        sys.stdout.write(summarize(store.counts, store.state()))
+    else:
+        sys.stdout.write(json.dumps(store.state(), indent=2) + "\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

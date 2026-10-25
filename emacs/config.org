@@ -292,6 +292,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#find-func][find-func]]
   - [[#elisp-refs][elisp-refs]]
   - [[#elisp-demos][elisp-demos]]
+  - [[#package-lint][package-lint]]
 - [[#keyboard-macros][keyboard macros]]
   - [[#kmacro][kmacro]]
   - [[#kmacro-extras][kmacro-extras]]
@@ -6838,6 +6839,18 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 #+end_src
 
 * keyboard macros
+** =package-lint=
+:PROPERTIES:
+:ID:       9B3A1EA0-5FD6-4723-B70D-F8830B224AEF
+:END:
+
+/[[https://github.com/purcell/package-lint][package-lint]] checks Elisp packages for problems that would block their inclusion in package archives./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package package-lint
+  :defer t)
+#+end_src
+
 :PROPERTIES:
 :ID:       ADB25EC1-6E97-4057-AEBD-FB7B7E4503CF
 :END:

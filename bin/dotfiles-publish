@@ -81,7 +81,7 @@ RULESET_POLICY_FILES = (
 
 MODES = ("publish", "release", "full-audit", "readiness")
 FULL_AUDIT_REVIEW_POLICY = "full-history-findings-and-risk-sources-v1"
-OUTGOING_REVIEW_POLICY = "exhaustive-outgoing-v1"
+OUTGOING_REVIEW_POLICY = "exhaustive-outgoing-v2"  # v2: open weaknesses block
 INCIDENT_RESOLUTIONS = ("rotated", "revoked", "invalid", "accepted-risk")
 
 

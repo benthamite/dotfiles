@@ -320,6 +320,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#atomic-chrome][atomic-chrome]]
   - [[#markdown-mode][markdown-mode]]
   - [[#markdown-mode-extras][markdown-mode-extras]]
+  - [[#redline][redline]]
   - [[#grip-mode][grip-mode]]
   - [[#xwidget][xwidget]]
   - [[#edit-indirect][edit-indirect]]
@@ -6838,7 +6839,6 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
   (advice-add 'helpful-update :after 'elisp-demos-advice-helpful-update))
 #+end_src
 
-* keyboard macros
 ** =package-lint=
 :PROPERTIES:
 :ID:       9B3A1EA0-5FD6-4723-B70D-F8830B224AEF
@@ -6851,6 +6851,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
   :defer t)
 #+end_src
 
+* keyboard macros
 :PROPERTIES:
 :ID:       ADB25EC1-6E97-4057-AEBD-FB7B7E4503CF
 :END:
@@ -7443,6 +7444,44 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
         ("s-p" . markdown-mode-extras-preview)
         :map org-mode-map
         ("H-s-v" . markdown-mode-extras-org-paste-dwim)))
+#+end_src
+
+** =redline=
+:PROPERTIES:
+:ID:       5CC720DF-0B67-4D56-AD78-203C0BC32DFE
+:END:
+
+/[[https://github.com/benthamite/redline][redline]] adds review threads and suggested changes to Markdown and Org files, in the format of Roughdraft, and hands the review to an agent./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package redline
+  :ensure (:repo "~/repos/redline")
+  :defer t
+  :custom
+  (redline-send-function #'init-redline-submit-to-agent)
+
+  :config
+  (defun init-redline-submit-to-agent (file prompt)
+    "Submit PROMPT about FILE to an agent session working on FILE.
+Prefer sessions whose directory contains FILE, asking when several do."
+    (let* ((sessions (seq-filter
+                      (lambda (buffer)
+                        (when-let* ((session (agent-session buffer))
+                                    (directory (agent-session-directory session)))
+                          (file-in-directory-p file directory)))
+                      (agent-session-buffers)))
+           (candidates (or sessions (agent-session-buffers)))
+           (buffer (if (cdr candidates)
+                       (get-buffer (completing-read "Session: " (mapcar #'buffer-name candidates)
+                                                    nil t))
+                     (car candidates))))
+      (unless buffer (user-error "No agent session"))
+      (agent-submit prompt buffer)
+      (message "Review sent to %s" (buffer-name buffer))))
+
+  :bind
+  (:map redline-mode-map
+        ("C-c r" . redline-command-map)))
 #+end_src
 
 ** =grip-mode=

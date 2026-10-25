@@ -71,6 +71,14 @@ The scheduled batch takes the same lock, so neither overwrites the other."
   :type 'file
   :group 'ebib-extras)
 
+(defcustom ebib-extras-pdf-metadata-program
+  (file-name-concat paths-dir-dotfiles "bin/pdf-metadata-sync")
+  "Program that writes an entry's title, author and date into its PDF.
+The nightly job com.stafforini.pdf-metadata-sync runs the same program over
+the whole library."
+  :type 'file
+  :group 'ebib-extras)
+
 (defcustom ebib-extras-pdf-queue-idle-seconds 600
   "Idle seconds after which `ebib-extras-pdf-queue-mode' drains the queue."
   :type 'natnum
@@ -2451,66 +2459,54 @@ Review the attempt directory and the entry first."
 ;;;;; pdf metadata
 
 (defun ebib-extras-set-pdf-metadata (&optional key db)
-  "Set the metadata of the PDF associated with KEY.
+  "Set the title, author and date metadata of the PDF associated with KEY.
 If KEY is nil, use the entry at point.  Explicit DB selects the Ebib
 database independently of the current buffer, with KEY identifying its entry.
 
-This implementation uses `pdftk-java' (or `pdftk' if available)
-to update the Author and Title fields in-place."
+The raw field values go to `ebib-extras-pdf-metadata-program', which also
+brings the whole library in line nightly, so both paths format alike."
   (interactive)
-  (let ((pdftk-cmd (or (executable-find "pdftk")
-                       (executable-find "pdftk-java"))))
-    (unless pdftk-cmd
-      (user-error "Please install `pdftk-java` (e.g. 'brew install pdftk-java')"))
-    (unless (or db (derived-mode-p 'ebib-entry-mode 'bibtex-mode))
-      (user-error "Not in `ebib-entry-mode' or 'bibtex-mode'"))
-    (when-let* ((get-field (if db
-                              (lambda (field)
-                                (let ((ebib--cur-db db))
-                                  (ebib-extras-get-field field key)))
-                            (pcase major-mode
+  (unless (or db (derived-mode-p 'ebib-entry-mode 'bibtex-mode))
+    (user-error "Not in `ebib-entry-mode' or `bibtex-mode'"))
+  (when-let* ((get-field (if db
+                             (lambda (field)
+                               (let ((ebib--cur-db db))
+                                 (ebib-extras-get-field field key)))
+                           (pcase major-mode
                              ('ebib-entry-mode #'ebib-extras-get-field)
                              ('bibtex-mode   #'bibtex-extras-get-field))))
-                (file (if db
-                          (ebib-extras-get-file-in-string (funcall get-field "file") "pdf")
-                        (if key
+              (file (if db
+                        (ebib-extras-get-file-in-string (funcall get-field "file") "pdf")
+                      (if key
                           (when-let* ((files (pcase major-mode
                                                ('ebib-entry-mode (ebib-extras-get-field "file" key))
                                                ('bibtex-mode (bibtex-extras-get-entry-as-string key "file")))))
                             (ebib-extras-get-file-in-string files "pdf"))
-                          (ebib-extras-get-file "pdf"))))
-                (author (or (funcall get-field "author")
-                            (funcall get-field "editor"))))
-      (let* ((file-absolute (expand-file-name file))
-             (author-list   (ebib-extras-get-authors-list author))
-             (author-string (ebib-extras-unbrace
-                             (ebib-extras-format-authors author-list ", " most-positive-fixnum)))
-             (title         (ebib-extras-unbrace (funcall get-field "title")))
-             (info-file     (make-temp-file "ebib-extras-pdftk-info"))
-             (output-file (make-temp-file "ebib-extras-pdftk-output" nil ".pdf"))
-             (diagnostics (generate-new-buffer " *ebib-pdf-metadata*")))
-        (unwind-protect
-            (progn
-              (with-temp-file info-file
-                (when title
-                  (insert "InfoBegin\nInfoKey: Title\nInfoValue: " title "\n"))
-                (when author-string
-                  (insert "InfoBegin\nInfoKey: Author\nInfoValue: " author-string "\n"))
-                (insert "\n"))
-              (let ((exit-code (process-file
-                                pdftk-cmd nil (list diagnostics t) nil
-                                file-absolute "update_info_utf8" info-file
-                                "output" output-file)))
-                (unless (and (integerp exit-code) (zerop exit-code))
-                  (error "PDF metadata update failed (%s): %s" exit-code
-                         (with-current-buffer diagnostics
-                           (string-trim (buffer-substring-no-properties
-                                         (point-min) (min (point-max) (+ (point-min) 500)))))))
-                (rename-file output-file file-absolute t)
-                (message "Updated PDF metadata using pdftk-java")))
-          (dolist (file (list info-file output-file))
-            (when (file-exists-p file) (delete-file file)))
-          (when (buffer-live-p diagnostics) (kill-buffer diagnostics)))))))
+                        (ebib-extras-get-file "pdf")))))
+    (ebib-extras--write-pdf-metadata (expand-file-name file) get-field)))
+
+(defun ebib-extras--write-pdf-metadata (file get-field)
+  "Write the metadata of an entry to the PDF FILE.
+GET-FIELD takes a field name and returns the entry's raw value for it."
+  (let ((diagnostics (generate-new-buffer " *ebib-pdf-metadata*")))
+    (unwind-protect
+        (let ((exit-code (apply #'process-file ebib-extras-pdf-metadata-program
+                                nil (list diagnostics t) nil "write" file
+                                (ebib-extras--pdf-metadata-arguments get-field))))
+          (unless (eql exit-code 0)
+            (error "PDF metadata update failed (%s): %s" exit-code
+                   (with-current-buffer diagnostics
+                     (string-trim (buffer-substring-no-properties
+                                   (point-min) (min (point-max) (+ (point-min) 500)))))))
+          (message "Updated PDF metadata"))
+      (kill-buffer diagnostics))))
+
+(defun ebib-extras--pdf-metadata-arguments (get-field)
+  "Return the metadata program's field options from GET-FIELD's values."
+  (mapcan (lambda (field)
+            (when-let* ((value (funcall get-field field)))
+              (list (concat "--" field) value)))
+          '("title" "author" "editor" "date" "year")))
 
 (defun ebib-extras-get-authors-list (authors)
   "Split AUTHORS into a list of authors, reversing the first and last names.

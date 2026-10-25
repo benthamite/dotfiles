@@ -1,0 +1,542 @@
+#!/usr/bin/env python3
+"""Make library PDFs' title, author and date metadata match their bib entries.
+
+    pdf-metadata-sync sync [--limit N] [--min-age SECONDS] [--dry-run]
+    pdf-metadata-sync write PDF [--title T] [--author A] [--editor E]
+                                [--date D] [--year Y]
+    pdf-metadata-sync --preflight
+
+`sync` reads every bibliography Ebib loads, finds each entry's attached PDF,
+and rewrites the PDFs whose metadata differs from the entry. It runs nightly
+as the LaunchAgent com.stafforini.pdf-metadata-sync.
+
+`write` takes one entry's raw (still LaTeX-encoded, crossref-resolved) field
+values and writes them to PDF. `ebib-extras-set-pdf-metadata' calls it when a
+PDF is attached, so both paths format metadata the same way.
+
+See docs/pdf-metadata.md for the field mapping and the state file.
+"""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import fcntl
+import hashlib
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import unicodedata
+from pathlib import Path
+
+sys.dont_write_bytecode = True  # keep __pycache__ out of the Drive-synced tree
+
+HOME = Path.home()
+# The bibliographies Ebib loads (`paths-files-bibliography-all').
+BIB_FILES = [
+    HOME / "My Drive/bibliography/new.bib",
+    HOME / "My Drive/bibliography/old.bib",
+    HOME / "My Drive/bibliography/migration.bib",
+    HOME / "My Drive/bibliography/tango.bib",
+    HOME / "repos/babel-refs/bib/fluid.bib",
+    HOME / "repos/babel-refs/bib/stable.bib",
+    HOME / "repos/babel-refs/bib/db.bib",
+]
+STATE_DIR = HOME / ".local/state/pdf-metadata-sync"
+STATE_FILE = STATE_DIR / "state.json"
+HEARTBEAT_FILE = STATE_DIR / "success"
+LOCK_FILE = STATE_DIR / "lock"
+EXIFTOOL = shutil.which("exiftool") or "/opt/homebrew/bin/exiftool"
+# Bump when the mapping from bib fields to tags changes, so every PDF is
+# compared again instead of trusting state recorded under the old mapping.
+MAPPING_VERSION = "1"
+READ_TAGS = ["PDF:Title", "XMP-dc:Title", "PDF:Author", "XMP-dc:Creator",
+             "XMP-dc:Date", "PDF:CreateDate", "XMP-xmp:CreateDate",
+             "PDF:Encryption"]
+READ_CHUNK = 400
+
+
+# ---------------------------------------------------------------- bib parsing
+
+def _skip_ws(text: str, i: int) -> int:
+    while i < len(text) and text[i].isspace():
+        i += 1
+    return i
+
+
+def _read_braced(text: str, i: int) -> tuple[str, int]:
+    """Return the contents of the brace group starting at text[i] == '{'."""
+    depth, start = 0, i + 1
+    while i < len(text):
+        c = text[i]
+        if c == "\\":
+            i += 2
+            continue
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                return text[start:i], i + 1
+        i += 1
+    raise ValueError("unbalanced braces")
+
+
+def _read_quoted(text: str, i: int) -> tuple[str, int]:
+    depth, start = 0, i + 1
+    i += 1
+    while i < len(text):
+        c = text[i]
+        if c == "\\":
+            i += 2
+            continue
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+        elif c == '"' and depth == 0:
+            return text[start:i], i + 1
+        i += 1
+    raise ValueError("unterminated quoted value")
+
+
+def parse_bib(text: str) -> list[dict]:
+    """Parse BibTeX TEXT into entry dicts with `_type', `_key' and fields."""
+    entries = []
+    for m in re.finditer(r"@(\w+)\s*\{", text):
+        etype = m.group(1).lower()
+        if etype in ("comment", "preamble", "string"):
+            continue
+        i = m.end()
+        km = re.compile(r"\s*([^,\s{}]+)\s*,").match(text, i)
+        if not km:
+            continue
+        entry = {"_type": etype, "_key": km.group(1)}
+        i = km.end()
+        try:
+            while True:
+                i = _skip_ws(text, i)
+                if i >= len(text) or text[i] == "}":
+                    break
+                fm = re.compile(r"([\w:.+-]+)\s*=\s*").match(text, i)
+                if not fm:
+                    break
+                i = fm.end()
+                if text[i] == "{":
+                    value, i = _read_braced(text, i)
+                elif text[i] == '"':
+                    value, i = _read_quoted(text, i)
+                else:
+                    vm = re.compile(r"[^,}\s]+").match(text, i)
+                    value, i = vm.group(0), vm.end()
+                entry[fm.group(1).lower()] = value
+                i = _skip_ws(text, i)
+                if i < len(text) and text[i] == ",":
+                    i += 1
+        except (ValueError, AttributeError, IndexError):
+            print(f"warning: could not parse entry {entry['_key']}",
+                  file=sys.stderr)
+            continue
+        entries.append(entry)
+    return entries
+
+
+def resolve(entry: dict, by_key: dict, field: str, depth: int = 0):
+    """Return FIELD of ENTRY, inheriting it through `crossref' like biblatex.
+
+    A parent's title becomes the child's booktitle or maintitle, never its
+    title, when the child is an in*/supp* entry or the parent an mv* entry.
+    """
+    if entry.get(field, "").strip():
+        return entry[field]
+    parent = by_key.get(entry.get("crossref", "").strip())
+    if parent is None or depth > 4:
+        return None
+    if field == "title" and (entry["_type"].startswith(("in", "supp"))
+                             or parent["_type"].startswith("mv")):
+        return None
+    return resolve(parent, by_key, field, depth + 1)
+
+
+def pdf_paths(file_field: str) -> list[Path]:
+    """Return the PDFs listed in an Ebib `file' field (unescaped `;' splits)."""
+    paths = []
+    for part in re.split(r"(?<!\\);", file_field):
+        part = part.replace("\\;", ";").strip()
+        if not part.lower().endswith(".pdf"):
+            continue
+        path = Path(os.path.expanduser(part))
+        # Ebib resolves relative names against `ebib-file-search-dirs' ("~").
+        paths.append(path if path.is_absolute() else HOME / path)
+    return paths
+
+
+# ----------------------------------------------------------------- formatting
+
+ACCENTS = {"'": "\u0301", "`": "\u0300", "^": "\u0302", '"': "\u0308",
+           "~": "\u0303", "=": "\u0304", ".": "\u0307", "u": "\u0306",
+           "v": "\u030c", "H": "\u030b", "c": "\u0327", "k": "\u0328",
+           "r": "\u030a"}
+SYMBOLS = {"ae": "æ", "AE": "Æ", "oe": "œ", "OE": "Œ", "aa": "å", "AA": "Å",
+           "o": "ø", "O": "Ø", "ss": "ß", "l": "ł", "L": "Ł", "i": "ı",
+           "textbar": "|", "textbackslash": "\\", "textgreater": ">",
+           "textless": "<", "textendash": "–", "textemdash": "—",
+           "textquoteleft": "‘", "textquoteright": "’", "S": "§",
+           "textasciitilde": "~", "dots": "…", "ldots": "…"}
+
+
+def latex_to_text(value: str) -> str:
+    """Convert the LaTeX found in bib fields to plain Unicode text."""
+    s = re.sub(r"\s+", " ", value).strip()
+
+    def accent(m: re.Match) -> str:
+        return unicodedata.normalize(
+            "NFC", m.group(2) + ACCENTS[m.group(1)])
+
+    # \'e  \'{e}  {\'e}  \c{c}  \v s
+    s = re.sub(r"\\([" + re.escape("'`^\"~=.") + r"])\s*\{?([A-Za-z])\}?",
+               accent, s)
+    s = re.sub(r"\\([uvHckr])(?:\s+|\{)([A-Za-z])\}?", accent, s)
+    s = re.sub(r"\\([A-Za-z]+)\b\s*(?:\{\})?",
+               lambda m: SYMBOLS.get(m.group(1), "\\" + m.group(1)), s)
+    # \textit{x}, \emph{x} and other formatting commands keep their argument.
+    s = re.sub(r"\\[A-Za-z]+\s*(?=\{)", "", s)
+    s = re.sub(r"\\[A-Za-z]+\s*", "", s)
+    s = re.sub(r"(?<!\\)[{}$]", "", s)
+    s = re.sub(r"(?<!\\)~", " ", s)
+    s = re.sub(r"\\([&%$#_{}>])", r"\1", s)
+    s = s.replace("---", "—").replace("--", "–")
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def _split_top(text: str, sep: re.Pattern) -> list[str]:
+    """Split TEXT on SEP occurrences outside braces."""
+    parts, depth, start, i = [], 0, 0, 0
+    while i < len(text):
+        c = text[i]
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+        elif depth == 0:
+            m = sep.match(text, i)
+            if m:
+                parts.append(text[start:i])
+                start = i = m.end()
+                continue
+        i += 1
+    parts.append(text[start:])
+    return [p.strip() for p in parts if p.strip()]
+
+
+AND = re.compile(r"\s+and\s+", re.I)
+COMMA = re.compile(r",\s*")
+
+
+def format_names(value: str) -> list[str]:
+    """Return NAMES as "First Last" strings; "others" becomes "et al."."""
+    names = []
+    for name in _split_top(re.sub(r"\s+", " ", value), AND):
+        if name == "others":
+            names.append("et al.")
+            continue
+        parts = _split_top(name, COMMA)
+        if len(parts) == 2:        # Last, First
+            name = f"{parts[1]} {parts[0]}"
+        elif len(parts) == 3:      # Last, Jr, First
+            name = f"{parts[2]} {parts[0]} {parts[1]}"
+        names.append(latex_to_text(name))
+    return names
+
+
+def format_date(date: str | None, year: str | None):
+    """Return (YYYY[:MM[:DD]], 'YYYY:MM:DD 12:00:00') or None.
+
+    The PDF Info CreationDate needs a full date, so a missing month or day is
+    written as 01 there; XMP keeps the bib's own precision.  Noon, with no
+    zone, keeps the calendar date when a viewer converts it to local time.
+    """
+    m = re.match(r"\s*(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?", date or "")
+    if not m:
+        m = re.fullmatch(r"\s*(\d{4})\s*", year or "")
+    if not m:
+        return None
+    y, mo, d = (m.groups() + (None, None))[:3]
+    xmp = ":".join(p for p in (y, mo, d) if p)
+    return xmp, f"{y}:{mo or '01'}:{d or '01'} 12:00:00"
+
+
+def desired_tags(title, author, editor, date, year) -> dict:
+    """Map raw bib values to the exiftool tags to write (absent ones omitted)."""
+    tags = {}
+    if title and title.strip():
+        text = latex_to_text(title)
+        tags["PDF:Title"] = tags["XMP-dc:Title"] = text
+    names = format_names(author or "") or format_names(editor or "")
+    people = [n for n in names if n != "et al."]
+    if people:
+        tags["PDF:Author"] = ", ".join(people)
+        if len(people) < len(names):
+            tags["PDF:Author"] += " et al."
+        tags["XMP-dc:Creator"] = people
+    dates = format_date(date, year)
+    if dates:
+        tags["XMP-dc:Date"] = tags["XMP-xmp:CreateDate"] = dates[0]
+        tags["PDF:CreateDate"] = dates[1]
+    return tags
+
+
+# -------------------------------------------------------------------- exiftool
+
+def _norm(tag: str, value):
+    if isinstance(value, list):
+        return [str(v) for v in value]
+    value = "" if value is None else str(value)
+    if tag == "PDF:CreateDate":
+        return value[:10]
+    return value
+
+
+def matches(tags: dict, current: dict) -> bool:
+    for tag, want in tags.items():
+        have = current.get(tag)
+        if tag == "XMP-dc:Creator" and not isinstance(have, list):
+            have = [] if have is None else [have]
+        if _norm(tag, have) != _norm(tag, want):
+            return False
+    return True
+
+
+def read_metadata(paths: list[Path]) -> dict[str, dict]:
+    """Return {path: {tag: raw value}} for PATHS, read in batches."""
+    out = {}
+    for i in range(0, len(paths), READ_CHUNK):
+        chunk = paths[i:i + READ_CHUNK]
+        with tempfile.NamedTemporaryFile("w", suffix=".args",
+                                         delete=False) as f:
+            f.write("\n".join(str(p) for p in chunk) + "\n")
+        try:
+            proc = subprocess.run(
+                [EXIFTOOL, "-json", "-G1", "-q", "-q", "-charset",
+                 "filename=utf8", *[f"-{t}" for t in READ_TAGS],
+                 "-@", f.name],
+                capture_output=True, text=True, timeout=1800)
+        finally:
+            os.unlink(f.name)
+        for row in json.loads(proc.stdout or "[]"):
+            out[row.pop("SourceFile")] = row
+    return out
+
+
+def write_metadata(pdf: Path, tags: dict) -> str | None:
+    """Write TAGS to PDF in place; return an error message or None."""
+    args = ["-overwrite_original_in_place", "-q", "-m"]
+    for tag, value in tags.items():
+        if isinstance(value, list):
+            # Repeated assignments in one command replace the whole list.
+            args += [f"-{tag}={v}" for v in value]
+        else:
+            args.append(f"-{tag}={value}")
+    with tempfile.NamedTemporaryFile("w", suffix=".args", delete=False,
+                                     encoding="utf-8") as f:
+        f.write("\n".join(args + [str(pdf)]) + "\n")
+    try:
+        proc = subprocess.run([EXIFTOOL, "-charset", "filename=utf8",
+                               "-@", f.name],
+                              capture_output=True, text=True, timeout=300)
+    finally:
+        os.unlink(f.name)
+    if proc.returncode != 0:
+        return (proc.stderr or proc.stdout).strip()[:500] or "exiftool failed"
+    current = read_metadata([pdf]).get(str(pdf), {})
+    if not matches(tags, current):
+        return "metadata read back after writing does not match"
+    return None
+
+
+# ------------------------------------------------------------------- commands
+
+def _stat_key(pdf: Path) -> list:
+    st = pdf.stat()
+    return [st.st_mtime_ns, st.st_size]
+
+
+def _want_hash(tags: dict) -> str:
+    blob = json.dumps([MAPPING_VERSION, tags], sort_keys=True)
+    return hashlib.sha256(blob.encode()).hexdigest()[:16]
+
+
+def collect_targets() -> tuple[dict[Path, dict], list[str]]:
+    """Return ({pdf: entry}, notes) for every PDF attached to an entry."""
+    entries, by_key = [], {}
+    for bib in BIB_FILES:
+        for e in parse_bib(bib.read_text(encoding="utf-8")):
+            entries.append(e)
+            by_key.setdefault(e["_key"], e)
+    claims: dict[Path, list[dict]] = {}
+    for e in entries:
+        for pdf in pdf_paths(e.get("file", "")):
+            claims.setdefault(pdf, []).append(e)
+    targets, notes = {}, []
+    for pdf, owners in claims.items():
+        if len({o["_key"] for o in owners}) > 1:
+            named = [o for o in owners if o["_key"] == pdf.stem]
+            if not named:
+                notes.append(f"ambiguous {pdf.name}: "
+                             + ", ".join(o["_key"] for o in owners))
+                continue
+            owners = named
+        e = owners[0]
+        targets[pdf] = desired_tags(
+            *(resolve(e, by_key, f)
+              for f in ("title", "author", "editor", "date", "year")))
+        targets[pdf]["_key"] = e["_key"]
+    return targets, notes
+
+
+def cmd_sync(args) -> int:
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    lock = open(LOCK_FILE, "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        print("another pdf-metadata-sync run holds the lock", file=sys.stderr)
+        return 1
+    try:
+        state = json.loads(STATE_FILE.read_text())
+    except FileNotFoundError:
+        state = {}
+    targets, notes = collect_targets()
+    now = dt.datetime.now().timestamp()
+    counts = dict.fromkeys(("missing", "empty", "recent", "unchanged",
+                            "known-failure", "matching", "updated",
+                            "failed", "encrypted", "deferred"), 0)
+    to_read = []
+    for pdf, tags in targets.items():
+        tags = {k: v for k, v in tags.items() if k != "_key"}
+        if not tags:
+            counts["empty"] += 1
+            continue
+        try:
+            key = _stat_key(pdf)
+        except FileNotFoundError:
+            counts["missing"] += 1
+            continue
+        if now - key[0] / 1e9 < args.min_age:
+            counts["recent"] += 1
+            continue
+        rec = state.get(str(pdf))
+        if rec and rec["stat"] == key and rec["want"] == _want_hash(tags):
+            counts["unchanged" if rec["status"] == "ok"
+                   else "known-failure"] += 1
+            continue
+        to_read.append(pdf)
+    current = read_metadata(to_read)
+    writes = 0
+    for pdf in to_read:
+        entry = targets[pdf]
+        tags = {k: v for k, v in entry.items() if k != "_key"}
+        meta = current.get(str(pdf), {})
+        record = {"want": _want_hash(tags), "key": entry["_key"]}
+        if meta.get("PDF:Encryption"):
+            counts["encrypted"] += 1
+            record["status"] = "encrypted"
+        elif matches(tags, meta):
+            counts["matching"] += 1
+            record["status"] = "ok"
+        elif args.dry_run:
+            counts["updated"] += 1
+            print(f"would update {entry['_key']}: {pdf}")
+            continue
+        elif writes >= args.limit:
+            counts["deferred"] += 1
+            continue
+        else:
+            writes += 1
+            error = write_metadata(pdf, tags)
+            if error:
+                counts["failed"] += 1
+                record.update(status="write-error", error=error)
+                print(f"failed {entry['_key']}: {pdf}: {error}")
+            else:
+                counts["updated"] += 1
+                record["status"] = "ok"
+                print(f"updated {entry['_key']}: {pdf}")
+        record["stat"] = _stat_key(pdf)
+        if not args.dry_run:
+            state[str(pdf)] = record
+    for note in notes:
+        print(note)
+    if not args.dry_run:
+        tmp = STATE_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(state, indent=0, sort_keys=True))
+        tmp.replace(STATE_FILE)
+    print(dt.datetime.now().isoformat(timespec="seconds"),
+          ("dry run: " if args.dry_run else "")
+          + " ".join(f"{k}={v}" for k, v in counts.items()),
+          f"ambiguous={len(notes)}")
+    if counts["failed"]:
+        return 1
+    if not args.dry_run:
+        HEARTBEAT_FILE.write_text(dt.datetime.now().isoformat() + "\n")
+    return 0
+
+
+def cmd_write(args) -> int:
+    tags = desired_tags(args.title, args.author, args.editor, args.date,
+                        args.year)
+    if not tags:
+        print("no title, author or date to write", file=sys.stderr)
+        return 0
+    error = write_metadata(Path(args.pdf), tags)
+    if error:
+        print(error, file=sys.stderr)
+        return 1
+    return 0
+
+
+def cmd_preflight() -> int:
+    problems = []
+    if not os.access(EXIFTOOL, os.X_OK):
+        problems.append(f"exiftool not executable: {EXIFTOOL}")
+    for bib in BIB_FILES:
+        if not os.access(bib, os.R_OK):
+            problems.append(f"bibliography not readable: {bib}")
+    for p in problems:
+        print(p, file=sys.stderr)
+    return 1 if problems else 0
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--preflight", action="store_true",
+                        help="check the runtime without side effects")
+    sub = parser.add_subparsers(dest="command")
+    s = sub.add_parser("sync", help="update every library PDF that differs")
+    s.add_argument("--limit", type=int, default=1000,
+                   help="maximum PDFs to rewrite this run (default 1000)")
+    s.add_argument("--min-age", type=int, default=3600,
+                   help="skip PDFs modified fewer than this many seconds ago")
+    s.add_argument("--dry-run", action="store_true",
+                   help="report what would change; write nothing")
+    w = sub.add_parser("write", help="write one entry's raw fields to a PDF")
+    w.add_argument("pdf")
+    for field in ("title", "author", "editor", "date", "year"):
+        w.add_argument(f"--{field}")
+    args = parser.parse_args(argv)
+    if args.preflight:
+        return cmd_preflight()
+    if args.command == "sync":
+        return cmd_sync(args)
+    if args.command == "write":
+        return cmd_write(args)
+    parser.print_help()
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

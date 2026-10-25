@@ -498,13 +498,14 @@ The command ~ebib-extras-citar-open-notes~ opens the Org note associated with th
 
 #+findex: ebib-extras-set-pdf-metadata
 #+findex: ebib-extras-ocr-pdf
-The command ~ebib-extras-set-pdf-metadata~ writes Author and Title metadata into the PDF file associated with the current entry (or a specified key). It uses =pdftk-java= (or =pdftk= if available) to update the metadata in place. The author names are extracted and formatted from the BibTeX =author= (or =editor=) field using ~ebib-extras-get-authors-list~ and ~ebib-extras-format-authors~ ([[#h:author-formatting][Author formatting]]). The command signals a user error if =pdftk-java= is not installed.
+#+vindex: ebib-extras-pdf-metadata-program
+The command ~ebib-extras-set-pdf-metadata~ writes the title, author and date of the current entry (or a specified key) into its PDF. It passes the raw, crossref-resolved =title=, =author=, =editor=, =date= and =year= fields to ~ebib-extras-pdf-metadata-program~ (=bin/pdf-metadata-sync= in the dotfiles), which formats them and writes both the PDF Info dictionary and XMP with exiftool. The nightly LaunchAgent =com.stafforini.pdf-metadata-sync= runs the same program over the whole library, so attach-time and nightly metadata agree; =docs/pdf-metadata.md= in the dotfiles documents the field mapping.
 
 The command ~ebib-extras-ocr-pdf~ performs OCR on the PDF file associated with the current entry using ~files-extras-ocr-pdf~. When called with a prefix argument (=C-u=), OCR is forced even if text is already present in the PDF.
 
 Attachment postprocessing captures the entry's PDF and validated language before metadata processing can yield. OCR uses that captured file even if another buffer becomes current. Noninteractive operations never open or display the PDF; manual attachment keeps the existing display behavior. Invalid keys in noninteractive processing produce a blocked diagnostic instead of invoking the interactive key generator.
 
-Programmatic ~ebib-extras-set-pdf-metadata~ callers may supply KEY and DB explicitly to select the entry independently of the current buffer. Metadata updates use a direct process invocation with private diagnostics, so command output cannot open a window. A failed metadata process signals an error for operation reporting, and its temporary files and diagnostics buffer are cleaned on both success and failure.
+Programmatic ~ebib-extras-set-pdf-metadata~ callers may supply KEY and DB explicitly to select the entry independently of the current buffer. Metadata updates use a direct process invocation with private diagnostics, so command output cannot open a window. A failed metadata process signals an error for operation reporting, and its diagnostics buffer is killed on both success and failure.
 
 ** Staged PDF queue
 :PROPERTIES:

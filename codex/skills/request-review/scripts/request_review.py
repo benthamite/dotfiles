@@ -555,10 +555,20 @@ def _codex_preamble(item, live):
                         (type(payload[key]) is int and -(2 ** 63) <= payload[key] < 2 ** 63)
                         for key in ("started_at", "model_context_window"))
                 and payload.get("collaboration_mode_kind", "default") in ("default", "plan"))
+    if item.get("type") == "response_item" and payload.get("type") == "additional_tools":
+        # codex-cli 0.164.0 persists the session's tool declarations first
+        # (protocol/src/models.rs ResponseItem::AdditionalTools; observed
+        # 2026-10-25). Declarations only: no user text, no output.
+        tools = payload.get("tools")
+        return (set(payload) <= {"type", "id", "role", "tools"} and payload.get("role") == "developer"
+                and isinstance(tools, list)
+                and all(isinstance(tool, dict) and _text(tool.get("type")) for tool in tools))
     if item.get("type") != "response_item" or payload.get("type") != "message":
         return False
+    # codex-cli 0.164.0 also persists the base instructions as a developer
+    # message (core/src/context/base_instructions.rs; observed 2026-10-25).
     allowed = {"user": {"agents_md.instructions", "environments.environment_context"},
-               "developer": {"generic.developer_instructions", "host_skills.instructions",
+               "developer": {"model.base_instructions", "generic.developer_instructions", "host_skills.instructions",
                              "permissions.instructions", "collaboration_mode.instructions",
                              "multi_agent.role_instructions", "multi_agent.mode_instructions"}}
     content = payload.get("content")

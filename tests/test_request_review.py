@@ -641,6 +641,26 @@ class CrossReviewRunTests(unittest.TestCase):
             message("developer", ["host_skills.instructions", "user.text"]), live))
         self.assertFalse(reviewer._codex_preamble(message("developer", ["skills.instructions"]), live))
 
+    def test_codex_0_164_tools_and_base_instructions_are_preamble(self):
+        # Observed 2026-10-25 from codex-cli 0.164.0: an additional_tools item
+        # and a model.base_instructions developer message open the transcript.
+        live = self.actor
+        tools = {"type": "additional_tools", "id": "at_fixture", "role": "developer",
+                 "tools": [{"type": "namespace", "name": "functions", "description": "", "tools": []}]}
+        self.assertTrue(reviewer._codex_preamble({"type": "response_item", "payload": tools}, live))
+        for payload in ({**tools, "role": "user"}, {**tools, "tools": {}}, {**tools, "tools": ["x"]},
+                        {**tools, "content": [{"type": "input_text", "text": "hi"}]}):
+            with self.subTest(payload=payload):
+                self.assertFalse(reviewer._codex_preamble({"type": "response_item", "payload": payload}, live))
+        def message(role):
+            return {"type": "response_item", "payload": {"type": "message", "role": role,
+                "content": [{"type": "input_text", "text": "You are Codex."}],
+                "internal_chat_message_metadata_passthrough": {
+                    "content_item_kinds": ["model.base_instructions"],
+                    "content_item_metadata": [{"provenance": {"type": "harness", "hook": False}}]}}}
+        self.assertTrue(reviewer._codex_preamble(message("developer"), live))
+        self.assertFalse(reviewer._codex_preamble(message("user"), live))
+
     def test_context_annotations_do_not_allow_arbitrary_user_or_tool_preambles(self):
         live = self.actor
         message = {"type": "response_item", "payload": {"type": "message", "role": "user",

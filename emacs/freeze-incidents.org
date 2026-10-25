@@ -64,6 +64,45 @@ the "Already tried" list in place.
 
 * Incidents
 
+** 2026-10-25 21:33–22:19: main-thread DNS from forge timers and NSM (remedies proposed)
+
+- Pablo: unresponsive again. Watchdog: timeout 21:33:50 (recovered 21:34:54),
+  refused 21:39:39 (recovered 21:41:06), stacks at 20:52, 21:32 and 22:18.
+  Server answered again by ~22:20.
+- Network: Mullvad is now the default route (=utun5=), DNS via its local
+  resolver 127.88.19.60; Tailscale also connected. =slack.com= resolved in
+  0.7 s at 22:19. Whether Mullvad was turned on deliberately: unknown.
+- 22:18 stack: timer =tlon-pull-issues-in-all-repos= → =forge--query= →
+  =ghub--retrieve= → =url-retrieve= → =open-gnutls-stream= → =getaddrinfo= →
+  =kevent= (68 of 82 main-thread samples).
+- 22:19 sample (=/tmp/emacs-freeze.jmC5jC/s1.txt=): a nowait TLS connection
+  finished inside =wait_reading_process_output= (caller unknown) →
+  =finish_after_tls_connection= → =nsm-verify-connection= →
+  =nsm-check-tls-connection= → =nsm-should-check= →
+  =network-lookup-address-info= → =getaddrinfo= (2538 of 2584 samples).
+  In Emacs 30.2 =nsm-should-check= resolves the host unconditionally, but the
+  result is only used when =nsm-trust-local-network= is non-nil; live value
+  is nil, so the lookup is pure cost.
+- 20:52 and 21:32 stacks contain Slack websocket and =request= frames; where
+  they blocked was not established.
+- Live network timers (22:20): =tlon-pull-issues-in-all-repos=,
+  =epoch-pull-forge-repos=, =forge-extras-pull-notifications=,
+  =doom-modeline--github-fetch-notifications=, =elfeed-extras-update=, plus
+  local or subprocess ones (activity-watch, copilot, =tlon-repos-pull-babel-refs=).
+- Proposed remedies (pending Pablo's approval):
+  1. =el-patch= =nsm-should-check= in config.org so it calls
+     =network-lookup-address-info= only when =nsm-trust-local-network= is
+     non-nil.
+  2. One shared helper that, before each run of the network timers above,
+     resolves/reaches the target host in an async =curl= subprocess
+     (=--max-time 5=) and skips the run on failure; name it in the
+     =elisp-conventions= network rule. Narrows, does not close, the window:
+     DNS can degrade between the probe and Emacs's own lookup, and a network
+     change may flush the system resolver cache.
+  3. The same probe before Slack's websocket reconnect.
+  4. Deferred: report the =nsm-should-check= lookup upstream (email to the
+     Emacs bug tracker under Pablo's name).
+
 ** 2026-10-25 13:04–20:44: Slack websocket TLS handshake with no timeout (fixed in dotfiles =a9624ab02=)
 
 - Pablo: froze while the internet was down. Watchdog: timeouts from 13:04,

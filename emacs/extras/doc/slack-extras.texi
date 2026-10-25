@@ -33,6 +33,8 @@ This manual describes the features and customization options for the Emacs Lisp 
 * Commands::
 * ActivityWatch context::
 * Tab-bar notifications::
+* Credentials from Chrome::
+* Reachability before connecting::
 * Indices::
 
 @detailmenu
@@ -64,6 +66,8 @@ Commands to capture the message at point to personal or work inboxes (@ref{Captu
 Local ActivityWatch channel context for selected channel and thread buffers (@ref{ActivityWatch context}).
 @item
 A tab-bar notification element showing Slack unreads and mentions (@ref{Tab-bar notifications}).
+@item
+Team registration with session credentials read from Chrome (@ref{Credentials from Chrome}).
 @end itemize
 
 The package depends on @samp{slack} and @samp{ol}.
@@ -111,6 +115,30 @@ The tab-bar element @code{tab-bar-extras-slack-element} displays a Slack icon (f
 
 @findex tab-bar-extras-toggle-slack-notifications
 The command @code{tab-bar-extras-toggle-slack-notifications} toggles Slack notifications in the tab bar. It also participates in the master toggle: when @code{tab-bar-extras-toggle-notifications} is called, Slack notifications are toggled along with the other notification sources.
+
+@node Credentials from Chrome
+@chapter Credentials from Chrome
+
+@samp{emacs-slack} authenticates with a browser session: an @samp{xoxc-} token and the @samp{d} cookie. Slack invalidates both whenever that browser session ends, so credentials copied once into 1Password go stale. This section registers teams with the credentials Chrome currently holds instead.
+
+@vindex slack-extras-teams
+The variable @code{slack-extras-teams} lists the teams to register. Each element is a plist with @samp{:domain} (the workspace host, such as @samp{"epochai.slack.com"}), @samp{:fallback} (a function of no arguments returning @samp{(TOKEN . COOKIE)}, typically read from 1Password), and any other @code{slack-register-team} options, such as @samp{:name} and @samp{:animate-image}.
+
+@findex slack-extras-register-teams
+The command @code{slack-extras-register-teams} registers every team in @code{slack-extras-teams}. For each team it asks @code{slack-extras-chrome-credentials} for the current pair and uses @samp{:fallback} only when that returns nil. Every team already registered under the same name with a different token is disconnected, its buffers are killed and it is removed from the team registries first, so calling the command again after a sign-out refreshes the team without leaving a duplicate. The buffers must go, and @code{slack-current-team} moves to the new team, because both hold the old team object and the Activity feed would otherwise register it again. A team that was connected is connected again under the new token.
+
+@findex slack-extras-chrome-credentials
+@vindex slack-extras-chrome-program
+@vindex slack-extras-chrome-cache-directory
+The function @code{slack-extras-chrome-credentials} runs @code{slack-extras-chrome-program} (@samp{claude/bin/slack_chrome.py ensure DOMAIN}), which verifies the cached pair with @samp{auth.test} and, if Slack rejects it, reads the @samp{d} cookie from Chrome's cookie database and derives the token from the workspace's @samp{/ssb/redirect} page. It then reads the pair from @samp{DOMAIN.json} in @code{slack-extras-chrome-cache-directory}. It returns nil when the program fails, for example when no Chrome profile is signed in to that workspace.
+
+@node Reachability before connecting
+@chapter Reachability before connecting
+
+@findex slack-extras--open-when-reachable
+On macOS, opening a websocket resolves its host on Emacs's main thread, so a reconnect while the resolver is slow freezes Emacs. @samp{slack-extras} therefore advises @code{slack-ws-open} to check first, from a subprocess with @code{simple-extras-probe-url} (see the @samp{simple-extras} manual), whether the websocket host answers. Only the host is probed, never the URL's token. If the host answers, the websocket opens as before. If not, the open is skipped and @code{slack-ws-reconnect} schedules another attempt, with its usual backoff and attempt limit.
+
+Only one probe per team runs at a time; an open requested meanwhile is dropped. When the probe ends, the open is also dropped, with no reconnect, if the team was unregistered or replaced, reconnection was turned off, the websocket got connected, or another connection attempt was made in the meantime.
 
 @node Indices
 @chapter Indices

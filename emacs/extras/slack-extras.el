@@ -5,7 +5,7 @@
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/slack-extras.el
 ;; Version: 0.1
-;; Package-Requires: ((slack "0.0.2"))
+;; Package-Requires: ((slack "0.0.2") (simple-extras "0.2"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -30,6 +30,8 @@
 
 (require 'ol)
 (require 'slack)
+(require 'simple-extras)
+(require 'url-parse)
 
 ;;;; Functions
 
@@ -310,6 +312,46 @@ TEAM back as a duplicate."
         (setq result (append result (list (car plist) (cadr plist)))))
       (setq plist (cddr plist)))
     result))
+
+;;;;; Reachability before connecting
+
+(defconst slack-extras-default-ws-url "wss://wss-primary.slack.com/"
+  "Websocket URL `slack-ws-open' uses when it is given none.")
+
+(defun slack-extras--open-when-reachable (open ws team &rest args)
+  "Call OPEN with WS, TEAM and ARGS once the websocket host answers.
+OPEN is `slack-ws-open', which this advises.  Opening a websocket resolves
+its host on the main thread, which freezes Emacs while the resolver is slow;
+`simple-extras-probe-url' checks the host from a subprocess first.  When the
+host does not answer, schedule a reconnect with `slack-ws-reconnect', which
+backs off.  Drop the call if, by the time the probe ends, TEAM was replaced,
+reconnection was turned off, or another connection was opened.  A call made
+while a probe for TEAM still runs is dropped too."
+  (let ((host (url-host (url-generic-parse-url
+                         (or (plist-get args :ws-url)
+                             slack-extras-default-ws-url))))
+        (team-id (slack-team-id team))
+        (conn (oref ws conn)))
+    (simple-extras-probe-url
+     (format "https://%s/" host) (list 'slack-ws-open team-id)
+     (lambda (reachable)
+       (when (slack-extras--open-still-wanted-p ws team team-id conn)
+         (if reachable
+             (apply open ws team args)
+           (slack-log (format "Websocket host %s did not answer" host)
+                      team :level 'warn)
+           (slack-ws-reconnect ws team)))))))
+
+(defun slack-extras--open-still-wanted-p (ws team team-id conn)
+  "Return non-nil if WS of TEAM should still be opened.
+TEAM-ID is TEAM's id and CONN its connection when the open was requested."
+  (and (eq (slack-team-find team-id) team)
+       (eq (oref team ws) ws)
+       (eq (oref ws conn) conn)
+       (not (oref ws inhibit-reconnection))
+       (not (oref ws connected))))
+
+(advice-add 'slack-ws-open :around #'slack-extras--open-when-reachable)
 
 (provide 'slack-extras)
 ;;; slack-extras.el ends here

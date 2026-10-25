@@ -95,6 +95,16 @@ The command ~slack-extras-register-teams~ registers every team in ~slack-extras-
 #+vindex: slack-extras-chrome-cache-directory
 The function ~slack-extras-chrome-credentials~ runs ~slack-extras-chrome-program~ (=claude/bin/slack_chrome.py ensure DOMAIN=), which verifies the cached pair with =auth.test= and, if Slack rejects it, reads the =d= cookie from Chrome's cookie database and derives the token from the workspace's =/ssb/redirect= page. It then reads the pair from =DOMAIN.json= in ~slack-extras-chrome-cache-directory~. It returns nil when the program fails, for example when no Chrome profile is signed in to that workspace.
 
+* Reachability before connecting
+:PROPERTIES:
+:CUSTOM_ID: h:reachability
+:END:
+
+#+findex: slack-extras--open-when-reachable
+On macOS, opening a websocket resolves its host on Emacs's main thread, so a reconnect while the resolver is slow freezes Emacs. =slack-extras= therefore advises ~slack-ws-open~ to check first, from a subprocess with ~simple-extras-probe-url~ (see the =simple-extras= manual), whether the websocket host answers. Only the host is probed, never the URL's token. If the host answers, the websocket opens as before. If not, the open is skipped and ~slack-ws-reconnect~ schedules another attempt, with its usual backoff and attempt limit.
+
+Only one probe per team runs at a time; an open requested meanwhile is dropped. When the probe ends, the open is also dropped, with no reconnect, if the team was unregistered or replaced, reconnection was turned off, the websocket got connected, or another connection attempt was made in the meantime.
+
 * Indices
 :PROPERTIES:
 :CUSTOM_ID: h:indices

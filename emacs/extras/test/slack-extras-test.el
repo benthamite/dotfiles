@@ -108,5 +108,74 @@ Credentials resolve to token \"xoxc-new\", and registering a team adds it to
     (slack-extras--register-team '(:name "Forethought" :domain "ft.slack.com"))
     (should (equal (oref slack-current-team token) "xoxc-new"))))
 
+;;;; Reachability before connecting
+
+(defmacro slack-extras-test--with-team (team ws &rest body)
+  "Run BODY with TEAM registered and WS its websocket, probes stubbed.
+In BODY, `probed' holds the probed URLs, `pending' the probe's callback,
+`opened' the arguments `slack-ws-open' got, and `reconnects' the number of
+reconnects scheduled."
+  (declare (indent 2))
+  `(let* ((slack-teams-by-token (make-hash-table :test 'equal))
+          (slack-tokens-by-id (make-hash-table :test 'equal))
+          (,ws (slack-team-ws))
+          (,team (slack-team :id "T-RE-TEST" :token "xoxc-test"))
+          probed opened (reconnects 0) pending)
+     (oset ,team ws ,ws)
+     (puthash "xoxc-test" ,team slack-teams-by-token)
+     (puthash "T-RE-TEST" "xoxc-test" slack-tokens-by-id)
+     (cl-letf (((symbol-function 'simple-extras-probe-url)
+                (lambda (url _key callback)
+                  (push url probed)
+                  (setq pending callback)))
+               ((symbol-function 'slack-ws-reconnect)
+                (lambda (&rest _) (cl-incf reconnects)))
+               ((symbol-function 'slack-log) #'ignore))
+       ,@body)))
+
+(ert-deftest slack-extras-open-when-reachable-opens-after-probe ()
+  "Probe the host of the given URL without its token, then open."
+  (slack-extras-test--with-team team ws
+    (slack-extras--open-when-reachable
+     (lambda (&rest a) (setq opened a)) ws team
+     :ws-url "wss://wss-backup.slack.com/link/?token=secret")
+    (should (equal probed '("https://wss-backup.slack.com/")))
+    (should-not opened)
+    (funcall pending t)
+    (should (equal opened (list ws team :ws-url
+                                "wss://wss-backup.slack.com/link/?token=secret")))
+    (should (= reconnects 0))))
+
+(ert-deftest slack-extras-open-when-reachable-default-host ()
+  "Probe the default websocket host when no URL is given."
+  (slack-extras-test--with-team team ws
+    (slack-extras--open-when-reachable #'ignore ws team)
+    (should (equal probed '("https://wss-primary.slack.com/")))))
+
+(ert-deftest slack-extras-open-when-reachable-retries-when-down ()
+  "Schedule a reconnect instead of opening when the host does not answer."
+  (slack-extras-test--with-team team ws
+    (slack-extras--open-when-reachable
+     (lambda (&rest a) (setq opened a)) ws team)
+    (funcall pending nil)
+    (should-not opened)
+    (should (= reconnects 1))))
+
+(ert-deftest slack-extras-open-when-reachable-drops-stale-calls ()
+  "Neither open nor reconnect once the open is no longer wanted."
+  (dolist (change (list (lambda (_team _ws) (remhash "xoxc-test" slack-teams-by-token))
+                        (lambda (team _ws) (oset team ws (slack-team-ws)))
+                        (lambda (_team ws) (oset ws inhibit-reconnection t))
+                        (lambda (_team ws) (oset ws connected t))
+                        (lambda (_team ws) (oset ws conn 'newer))))
+    (dolist (result '(t nil))
+      (slack-extras-test--with-team team ws
+        (slack-extras--open-when-reachable
+         (lambda (&rest a) (setq opened a)) ws team)
+        (funcall change team ws)
+        (funcall pending result)
+        (should-not opened)
+        (should (= reconnects 0))))))
+
 (provide 'slack-extras-test)
 ;;; slack-extras-test.el ends here

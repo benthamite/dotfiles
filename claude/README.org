@@ -413,6 +413,8 @@ clean source-first Emacs without deleting bytecode or falling back to the
 package's build. Staged project checks validate a private indexed snapshot,
 not unrelated working-tree bytes. A file rename does not authorize whole-package
 unloading, and a metadata predicate does not prove a live menu works.
+Its coding style forbids network waits on the main thread from timers,
+sentinels, filters and hooks, after the 2026-10-25 freezes.
 
 The documentation guard reads generated-output declarations from the proposed
 commit's manual bytes, including explicit selections and inherited amendments.

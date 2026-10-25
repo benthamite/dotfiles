@@ -30,6 +30,12 @@ refreshed.
   without an empty line. Separate later paragraphs with one empty line.
 - Do not end error messages with a period.
 - Add comments only when the code cannot make the reason clear.
+- Never wait on the network on the main thread from code that runs without a
+  command: timers, sentinels, filters and hooks. `url-retrieve`, a blocking
+  `open-network-stream` and `websocket-open` resolve the host and negotiate TLS
+  synchronously, with no timeout. Use an async `curl` subprocess with
+  `--max-time`, as `agent-usage-http-get` does, and pass secrets on its stdin.
+  Background: `emacs/freeze-incidents.org`, 2026-10-25.
 
 ## Choose the layout
 

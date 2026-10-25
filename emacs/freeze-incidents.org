@@ -55,19 +55,19 @@ the "Already tried" list in place.
   10-19 outages all coincided with agent sessions running 9+ worker pools
   over full swap. Proposed: one global rule capping worker concurrency and
   checking swap before starting a pool; pending Pablo's decision.
-- Network calls on the main thread (2026-10-25): =url-retrieve= from timers
-  (agent usage poller) blocks Emacs for every slow DNS lookup. Proposed: move
-  the usage fetch to an async =curl= subprocess, as =gptel-extras= already
-  does, and make that the rule for periodic network calls; pending Pablo's
-  decision. Hand-set 1.1.1.1 Wi-Fi DNS fails on networks that block it.
-  Same afternoon: blocking Slack websocket TLS handshake froze Emacs 7.5 h;
-  proposed =:websocket-nowait t= in =slack-extras-teams=.
+- Other timers that may wait on the network on the main thread (2026-10-25):
+  wikipedia-auto, mu4e, slack's =request= callbacks and the rest, to check
+  against the =elisp-conventions= network rule. Deferred by Pablo until the
+  usage poller fix landed (it has).
+- Hand-set 1.1.1.1 Wi-Fi DNS fails on networks that block it (2026-10-25):
+  clearing it was approved, but the agent's permission classifier blocked
+  =networksetup=; handed to Pablo.
 - Cause of the 2026-10-10 GC storm and the morning blocks: read the first
   stack reports the watchdog captures.
 
 * Incidents
 
-** 2026-10-25 13:04–20:44: Slack websocket TLS handshake with no timeout (investigation, no change)
+** 2026-10-25 13:04–20:44: Slack websocket TLS handshake with no timeout (fixed in dotfiles =a9624ab02=)
 
 - Pablo: froze while the internet was down. Watchdog: timeouts from 13:04,
   refused from 14:22, state file stale throughout, recovered 20:44:37.
@@ -86,8 +86,19 @@ the "Already tried" list in place.
   the server answered a minute later. What ended the handshake is unknown.
 - Same class as the morning's DNS stalls: a network wait on the main thread
   with no deadline.
+- Fix: =:websocket-nowait t= alone did not help. websocket.el's
+  =websocket-ensure-handshake= sends the handshake while a nowait connection
+  is still connecting, which blocks in =wait_while_connecting= the same way
+  (reproduced live at 20:48 against a silent local server; that test froze
+  Emacs for ~20 s). Upstream =main= has the same code. Now patched with
+  =el-patch= in config.org to send only once the connection is open, and both
+  teams set =:websocket-nowait t=, so slack's 20 s connect timeout can fire.
+  Batch test against a silent server: Emacs ran 16 event-loop turns in 8 s
+  (unpatched: blocked 14 s); a real echo server still connected. Live: a
+  Forethought reconnect returned in 4 ms and connected within 4 s. Not tested
+  with the network actually down. Upstream PR not prepared yet.
 
-** 2026-10-25 10:33–11:09 and 12:08–12:11: synchronous DNS in the usage poller (investigation, no change)
+** 2026-10-25 10:33–11:09 and 12:08–12:11: synchronous DNS in the usage poller (fixed in agent =74e859b=)
 
 - Not host load: load ~8, Emacs 1999 at 4% CPU, recursion depth 0.
 - All five watchdog stacks from 10:37 to 12:09 have the main thread
@@ -105,6 +116,11 @@ the "Already tried" list in place.
   and TCP time out; ping works). Tailscale MagicDNS (100.100.100.100) took
   0.3–1.2 s per query, =getaddrinfo= 0.5–3.9 s. The network's own resolver
   (DHCP, 10.254.221.206) answered in 8–12 ms.
+- Fix: agent =74e859b= fetches usage through =agent-usage-http-get=, a =curl=
+  subprocess with a 30 s cap and token headers on stdin. ERT covers a silent
+  server (Emacs keeps running); live fetches for both backends succeeded.
+  Rule added to the =elisp-conventions= skill: no network waits on the main
+  thread from timers, sentinels, filters or hooks.
 - Samples: =/tmp/emacs-freeze.RD0CI2/=.
 
 ** 2026-10-24 04:55: short outage under host starvation (investigation, no change)

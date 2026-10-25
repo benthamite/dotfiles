@@ -35,7 +35,13 @@ refreshed.
   `open-network-stream` and `websocket-open` resolve the host and negotiate TLS
   synchronously, with no timeout. Use an async `curl` subprocess with
   `--max-time`, as `agent-usage-http-get` does, and pass secrets on its stdin.
-  Background: `emacs/freeze-incidents.org`, 2026-10-25.
+  On macOS even `:nowait` connections resolve the host on the main thread.
+  Exception, only where the connection cannot leave Lisp (forge/ghub,
+  emacs-slack's websocket): probe the host first with
+  `simple-extras-call-when-reachable` or `simple-extras-probe-url`. This
+  narrows the freeze window but does not close it, so record each use in the
+  incident file's Open section. Background: `emacs/freeze-incidents.org`,
+  2026-10-25.
 
 ## Choose the layout
 

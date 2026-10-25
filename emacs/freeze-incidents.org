@@ -60,10 +60,32 @@ the "Already tried" list in place.
   the usage fetch to an async =curl= subprocess, as =gptel-extras= already
   does, and make that the rule for periodic network calls; pending Pablo's
   decision. Hand-set 1.1.1.1 Wi-Fi DNS fails on networks that block it.
+  Same afternoon: blocking Slack websocket TLS handshake froze Emacs 7.5 h;
+  proposed =:websocket-nowait t= in =slack-extras-teams=.
 - Cause of the 2026-10-10 GC storm and the morning blocks: read the first
   stack reports the watchdog captures.
 
 * Incidents
+
+** 2026-10-25 13:04–20:44: Slack websocket TLS handshake with no timeout (investigation, no change)
+
+- Pablo: froze while the internet was down. Watchdog: timeouts from 13:04,
+  refused from 14:22, state file stale throughout, recovered 20:44:37.
+- All 19 watchdog stacks, 13:04 to 16:31, show the same main-thread path:
+  =request= callback → =slack-ws-reconnect-with-reconnect-url= →
+  =websocket-open= → =open-network-stream= (TLS) → =gnutls-boot= →
+  =gnutls_try_handshake= → =nanosleep=. In Emacs 30.2 that function retries
+  a blocking client's handshake every 10 ms until it succeeds or hits a fatal
+  error. Only C-g (=maybe_quit=) can stop it, since timers do not run.
+  A connection whose peer goes silent blocks Emacs until the socket fails.
+- Why blocking: emacs-slack's =websocket-nowait= slot defaults to nil, and
+  =slack-extras-teams= does not set it. With nil, slack's 20 s connect-timeout
+  timer is armed but cannot fire while the handshake blocks.
+- 20:43 sample, after the handshake ended: a timer running =org-roam-db-sync=
+  (via =simple-extras-call-verbosely-in-background=) after the 7.5 h stall;
+  the server answered a minute later. What ended the handshake is unknown.
+- Same class as the morning's DNS stalls: a network wait on the main thread
+  with no deadline.
 
 ** 2026-10-25 10:33–11:09 and 12:08–12:11: synchronous DNS in the usage poller (investigation, no change)
 

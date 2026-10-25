@@ -14176,11 +14176,47 @@ At the default =medium= level, Emacs only asks a yes/no question when a
 certificate is bad.  The =high= level also records certificate fingerprints, so
 Emacs warns me when the certificate of a known host changes.
 
+Emacs 30.2 resolves the host of every new TLS connection again before checking
+it, on the main thread, even though it uses the addresses only when
+=nsm-trust-local-network= is on. On macOS a slow resolver then freezes Emacs
+(2026-10-25 in =emacs/freeze-incidents.org=), so the patch looks the host up
+only when that option is on.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature nsm
+  :after el-patch
   :defer t
   :custom
-  (network-security-level 'high))
+  (network-security-level 'high)
+  :config
+  (el-patch-defun nsm-should-check (host)
+    "Determine whether NSM should check for TLS problems for HOST.
+
+If `nsm-trust-local-network' is or returns non-nil, and if the
+host address is a localhost address, or in the same subnet as one
+of the local interfaces, this function returns nil.  Non-nil
+otherwise."
+    (let ((el-patch-remove (addresses (network-lookup-address-info host)))
+          (network-interface-list (network-interface-list t))
+          (off-net t))
+      (when
+          (or (and (functionp nsm-trust-local-network)
+                   (funcall nsm-trust-local-network))
+              nsm-trust-local-network)
+        (mapc
+         (lambda (ip)
+           (mapc
+            (lambda (info)
+              (let ((local-ip (nth 1 info))
+                    (mask (nth 3 info)))
+                (when
+                    (nsm-network-same-subnet (substring local-ip 0 -1)
+                                             (substring mask 0 -1)
+                                             (substring ip 0 -1))
+                  (setq off-net nil))))
+            network-interface-list))
+         (el-patch-swap addresses (network-lookup-address-info host))))
+      off-net)))
 #+end_src
 
 ** =url=

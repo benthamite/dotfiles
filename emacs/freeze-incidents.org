@@ -64,6 +64,9 @@ the "Already tried" list in place.
   =simple-extras-probe-url=. Moving the forge pulls out of the main Emacs is
   deferred (forge database writes from a second Emacs). Report of the
   =nsm-should-check= lookup upstream: deferred.
+- Upstream reports for the two websocket.el bugs (accept-header case,
+  =on-open= after a failed handshake) and the emacs-slack fork commit
+  =b4b3f23= (unpushed): pending Pablo's decision.
 - A commit reloaded =slack-extras= live but not the =simple-extras= it newly
   depended on (2026-10-25 22:43); why the earlier =simple-extras= reload did
   not take effect is unknown.
@@ -87,6 +90,31 @@ the "Already tried" list in place.
   because the server was unreachable.
 - Recovery: none taken; quitting the =*Backtrace*= window (=q=) is the least
   invasive option and does not end Emacs.
+
+** 2026-10-26 09:52–11:01: Slack reconnect storm and rate limiting (fixed in dotfiles =c4df3c54f=, =35abd64a8=; emacs-slack =b4b3f23=)
+
+- Not a freeze, but the same loop that fed the overnight outages: both teams
+  disconnected and Slack answered =rtm.connect= with 429.
+- Root cause (websocket debug log, 10:49): Slack's edge (envoy) returns
+  lowercase headers, e.g. =sec-websocket-accept=. websocket.el matches
+  =Sec-Web[Ss]ocket-Accept= under the global =case-fold-search=, which is
+  nil in this config, so every valid 101 handshake was rejected as
+  "Incorrect handshake".
+- Amplifiers: websocket.el still marks the socket open and runs =on-open=
+  after a failed handshake; emacs-slack reset its attempt count and backoff
+  in =on-open= and fired 4–5 API calls per fake open, so it retried every
+  few seconds. =rtm.connect= (Tier 1, ~1/min) ran =:no-retry=, ignoring
+  Retry-After, and a failed first authorization was never retried
+  (Forethought, 09:52).
+- Fixes: el-patches of =websocket-verify-headers= (name ignoring case, value
+  exact) and =websocket-outer-filter= (open only after the checks pass);
+  emacs-slack resets reconnect state only on Slack's hello, honors
+  Retry-After on reconnect and =api.test=, and retries a failed first
+  authorization with the same backoff. Batch-tested before and after; the
+  slack suite passes (391 tests). Live: Forethought connected 10:59:36,
+  Epoch 11:01:39, both with the count reset by hello.
+- The 429s observed carried no Retry-After as far as the logs show (delays
+  stayed 16 and 32 s); not established.
 
 ** 2026-10-25 22:44 → 10-26 09:48: debugger left open by a half-loaded change (self-inflicted)
 

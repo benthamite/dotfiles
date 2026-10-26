@@ -171,6 +171,58 @@ class AllowanceContractTest(unittest.TestCase):
         self.assert_allowed("ALLOW_LAUNCHAGENT_CHANGE=1 launchctl bootout gui/501/com.stafforini.x")
 
 
+PROBE = "com.stafforini.deco-connectivity-probe.plist"
+
+# Read-only inspection that the guard once denied (launchd plan 2026-10-26, item 10).
+PLUTIL_READS = [
+    f"p=~/Library/LaunchAgents/{PROBE}; plutil -extract StandardOutPath raw $p",
+    f"o=$(plutil -extract StandardOutPath raw {LIVE_DIR}/{PROBE})",
+    f"plutil -extract StandardOutPath raw -n ~/Library/LaunchAgents/{PROBE}",
+    f"plutil -extract Label xml1 -o - ~/Library/LaunchAgents/{PROBE}",
+    f"plutil -convert json -o - ~/Library/LaunchAgents/{PROBE} | jq .",
+    f"plutil -convert xml1 -o /tmp/x.plist ~/Library/LaunchAgents/{PROBE}",
+    f"plutil -lint ~/Library/LaunchAgents/{PROBE}",
+    f"plutil ~/Library/LaunchAgents/{PROBE}",
+    f"plutil -type Label ~/Library/LaunchAgents/{PROBE}",
+    f"p=\"$HOME/Library/LaunchAgents/{PROBE}\"; less \"$p\"",
+]
+
+# Writes into the live directory that must still be denied.
+PLUTIL_WRITES = [
+    f"plutil -convert xml1 ~/Library/LaunchAgents/{PROBE}",
+    f"plutil -replace Label -string x ~/Library/LaunchAgents/{PROBE}",
+    f"plutil -insert Foo -bool YES ~/Library/LaunchAgents/{PROBE}",
+    f"plutil -remove StandardOutPath {LIVE_DIR}/{PROBE}",
+    # Without -o, a non-raw -extract overwrites the input file in place.
+    f"plutil -extract StartInterval xml1 ~/Library/LaunchAgents/{PROBE}",
+    f"plutil -extract Label raw -o ~/Library/LaunchAgents/y.plist /tmp/x.plist",
+    f"plutil -convert xml1 -o ~/Library/LaunchAgents/y.plist /tmp/x.plist",
+    f"p=~/Library/LaunchAgents/{PROBE}; plutil -convert binary1 \"$p\"",
+    f"p=~/Library/LaunchAgents/{PROBE}; cp /tmp/x.plist $p",
+    f"p=~/Library/LaunchAgents/{PROBE}; echo x > ${{p}}",
+    f"plutil -p /tmp/x.plist > ~/Library/LaunchAgents/{PROBE}",
+    f"tee ~/Library/LaunchAgents/{PROBE} < /tmp/x.plist",
+]
+
+
+class PlutilContractTest(unittest.TestCase):
+    """Both shell hooks pass plist inspection and still deny plist writes."""
+
+    def test_inspection_is_allowed_by_both_hooks(self):
+        for hook in (CLAUDE_HOOK, CODEX_HOOK):
+            for command in PLUTIL_READS:
+                with self.subTest(hook=hook, command=command):
+                    result = bash(hook, command)
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(result.stdout, "")
+
+    def test_writes_are_denied_by_both_hooks(self):
+        for hook in (CLAUDE_HOOK, CODEX_HOOK):
+            for command in PLUTIL_WRITES:
+                with self.subTest(hook=hook, command=command):
+                    self.assertIn("launchd-install.py", reason(bash(hook, command)))
+
+
 class CodexParityTest(unittest.TestCase):
     """The Codex guard must reach the same verdicts through its own payloads."""
 

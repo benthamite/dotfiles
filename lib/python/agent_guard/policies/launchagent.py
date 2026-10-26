@@ -10,7 +10,8 @@ outside the registry is reported as missing by the next audit.
 The runtimes differ in the file-path branch: Claude reads one Edit/Write
 path and, if there is one, never looks at a command; Codex checks every path
 a call changes and then still checks the shell command. The command
-classifier is the hook's embedded Python, unchanged.
+classifier began as the hook's embedded Python; since then it tracks shell
+variables holding a live path and judges plutil by where it writes.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ from __future__ import annotations
 import os
 import pwd
 import re
+import shlex
 
 from ..codex_payload import command_substitution, jq_text
 from ..codex_paths import codex_changed_paths
@@ -104,6 +106,68 @@ For a deliberate temporary bootout that Pablo has confirmed, rerun with
 ALLOW_LAUNCHAGENT_CHANGE=1."""
 
 
+# plutil options that take an argument, and how many (see `man plutil`).
+_PLUTIL_ARGS = {
+    "-convert": 1, "-create": 1, "-extract": 2, "-insert": 1, "-replace": 1,
+    "-remove": 1, "-type": 1, "-expect": 1, "-o": 1, "-e": 1,
+    "-bool": 1, "-integer": 1, "-float": 1, "-string": 1, "-date": 1,
+    "-data": 1, "-xml": 1, "-json": 1,
+}
+_PLUTIL_READ_OPS = {None, "-p", "-lint", "-type", "-help"}
+_PLUTIL_OPS = {"-p", "-lint", "-help", "-type", "-convert", "-create", "-extract",
+               "-insert", "-replace", "-remove"}
+
+
+def _plutil_targets(fragment: str) -> list[str]:
+    """Paths a `plutil ...` fragment writes, per `man plutil` and observed behavior.
+
+    -p, -lint (the default), -type and -help only read. Every other operation
+    writes its result to `-o PATH` when given (`-o -` is stdout), else to
+    FILE.EXT for `-e EXT`, else back over each input file. `-extract KEY raw`
+    without -o prints to stdout; any other -extract format without -o
+    overwrites the input file in place (checked against plutil on macOS 27).
+    """
+    text = fragment.strip().rstrip(")\x60").strip()
+    try:
+        tokens = shlex.split(text, posix=True)
+    except ValueError:
+        tokens = text.split()
+    while tokens and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", tokens[0]):
+        tokens.pop(0)
+    tokens = tokens[1:]  # plutil itself
+    op = fmt = out = None
+    files: list[str] = []
+    i = 0
+    while i < len(tokens):
+        tok = tokens[i]
+        if re.match(r"\d*[<>]", tok):
+            # Redirections are judged by the redirection check; skip the operand.
+            i += 2 if re.fullmatch(r"\d*[<>]{1,2}&?", tok) else 1
+            continue
+        if tok == "--":
+            files.extend(tokens[i + 1:])
+            break
+        if tok in _PLUTIL_OPS and op is None:
+            op = tok
+            if tok == "-extract" and i + 2 < len(tokens):
+                fmt = tokens[i + 2]
+        if tok == "-o" and i + 1 < len(tokens):
+            out = tokens[i + 1]
+        if tok in _PLUTIL_ARGS:
+            i += 1 + _PLUTIL_ARGS[tok]
+            continue
+        if not tok.startswith("-"):
+            files.append(tok)
+        i += 1
+    if op in _PLUTIL_READ_OPS:
+        return []
+    if out is not None:
+        return [] if out == "-" else [out]
+    if op == "-extract" and fmt == "raw":
+        return []
+    return files
+
+
 def classify(cmd: str, live_dir: str, home: str) -> tuple[str, str] | None:
     """The hook's embedded classifier: (kind, fragment) or None to allow."""
     # Drop heredoc bodies unless the body itself is being written into the live
@@ -135,30 +199,45 @@ def classify(cmd: str, live_dir: str, home: str) -> tuple[str, str] | None:
     ]
     live_re = "(?:" + "|".join(live_patterns) + r")\S*"
 
-    # Command position: start of string, or after a newline or shell operator.
-    pos = r"(?:^|[\n;&|(\x60])\s*(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*"
+    # A shell variable assigned a live path (`p=~/Library/LaunchAgents/x.plist`)
+    # stands for that path wherever it is expanded later in the command.
+    live_vars = {
+        m.group(1)
+        for m in re.finditer(r"(?:^|[\s;&|(\x60])([A-Za-z_][A-Za-z0-9_]*)=([^\s;&|]*)", stripped)
+        if re.search(live_re, m.group(2))
+    }
+    live_ref = live_re
+    if live_vars:
+        names = "|".join(sorted(map(re.escape, live_vars)))
+        live_ref = "(?:" + live_re + r"|\$\{?(?:" + names + r")\b\}?\S*)"
+
+    # Command position: start of string, or after a newline or shell operator,
+    # past any leading `NAME=value` assignments. A value stops at an operator,
+    # so `p=x; plutil ...` puts plutil, not the assignment, in command position.
+    pos = r"(?:^|[\n;&|(\x60])\s*(?:[A-Za-z_][A-Za-z0-9_]*=[^\s;&|]*\s+)*"
 
     # 1. Removing a live plist.
     remove_verbs = r"(?:rm|trash|unlink|srm)"
     for match in re.finditer(pos + remove_verbs + r"\b[^\n;&|]*", stripped):
-        if re.search(live_re, match.group(0)):
+        if re.search(live_ref, match.group(0)):
             return "remove", match.group(0).strip()
 
     # 2. Writing into the live directory.
     write_verbs = r"(?:cp|mv|ln|install|touch|tee|rsync|plutil|defaults|sed|perl|python3?|ruby|awk)"
-    for match in re.finditer(pos + write_verbs + r"\b[^\n;&|]*", stripped):
+    for match in re.finditer(pos + r"(" + write_verbs + r")\b[^\n;&|]*", stripped):
         fragment = match.group(0)
-        if not re.search(live_re, fragment):
+        if not re.search(live_ref, fragment):
             continue
-        # plutil -p and defaults read only inspect.
-        if re.search(r"\bplutil\b[^\n]*\s-p\b", fragment):
-            continue
+        # plutil writes only where _plutil_targets says; defaults read only inspects.
+        if match.group(1) == "plutil":
+            if not any(re.search(live_ref, target) for target in _plutil_targets(fragment)):
+                continue
         if re.search(r"\bdefaults\s+read\b", fragment):
             continue
         return "write", fragment.strip()
 
     # 3. Redirection into the live directory: `... > ~/Library/LaunchAgents/x.plist`
-    match = re.search(r">>?\s*(" + live_re + ")", stripped)
+    match = re.search(r">>?\s*(" + live_ref + ")", stripped)
     if match:
         return "write", match.group(0).strip()
 

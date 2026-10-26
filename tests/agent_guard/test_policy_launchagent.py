@@ -92,6 +92,26 @@ class CommandTests(unittest.TestCase):
         self.assertEqual(self.label("launchctl bootstrap gui/501 x\n" + "x\n" * 200_001),
                          "BLOCKED: loading a LaunchAgent outside the launchd registry.")
 
+    def test_plutil_reads_are_allowed_in_both_runtimes(self):
+        for command in ("p=~/Library/LaunchAgents/a.plist; plutil -extract StandardOutPath raw $p",
+                        "o=$(plutil -extract StandardOutPath raw /h/Library/LaunchAgents/a.plist)",
+                        "plutil -extract Label json -o - ~/Library/LaunchAgents/a.plist",
+                        "plutil -lint ~/Library/LaunchAgents/a.plist",
+                        "plutil -extract Label raw ~/Library/LaunchAgents/a.plist 2>/dev/null"):
+            for runtime in (CLAUDE, CODEX):
+                self.assertEqual(self.label(command, runtime), "allow", (runtime, command))
+
+    def test_plutil_writes_are_denied_in_both_runtimes(self):
+        written = "BLOCKED: installing a plist into ~/Library/LaunchAgents by hand."
+        for command in ("plutil -convert xml1 ~/Library/LaunchAgents/a.plist",
+                        "plutil -replace Label -string x $HOME/Library/LaunchAgents/a.plist",
+                        "plutil -extract K xml1 ~/Library/LaunchAgents/a.plist",
+                        "plutil -extract K raw -o ~/Library/LaunchAgents/b /tmp/a.plist",
+                        "p=~/Library/LaunchAgents/a.plist; plutil -remove K \"$p\"",
+                        "p=/h/Library/LaunchAgents/a.plist && mv /tmp/a.plist $p"):
+            for runtime in (CLAUDE, CODEX):
+                self.assertEqual(self.label(command, runtime), written, (runtime, command))
+
     def test_override_needs_whitespace_boundaries(self):
         self.assertEqual(self.label("echo ALLOW_LAUNCHAGENT_CHANGE=1x; launchctl load y"),
                          "BLOCKED: loading a LaunchAgent outside the launchd registry.")

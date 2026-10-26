@@ -59,6 +59,14 @@ the "Already tried" list in place.
   wikipedia-auto, mu4e, slack's =request= callbacks and the rest, to check
   against the =elisp-conventions= network rule. Deferred by Pablo until the
   usage poller fix landed (it has).
+- Probe exceptions to the network rule (2026-10-26): the three forge timers
+  and Slack's websocket open still connect from Lisp after a successful
+  =simple-extras-probe-url=. Moving the forge pulls out of the main Emacs is
+  deferred (forge database writes from a second Emacs). Report of the
+  =nsm-should-check= lookup upstream: deferred.
+- A commit reloaded =slack-extras= live but not the =simple-extras= it newly
+  depended on (2026-10-25 22:43); why the earlier =simple-extras= reload did
+  not take effect is unknown.
 - Cause of the 2026-10-10 GC storm and the morning blocks: read the first
   stack reports the watchdog captures.
 
@@ -80,7 +88,28 @@ the "Already tried" list in place.
 - Recovery: none taken; quitting the =*Backtrace*= window (=q=) is the least
   invasive option and does not end Emacs.
 
-** 2026-10-25 21:33–22:19: main-thread DNS from forge timers and NSM (remedies proposed)
+** 2026-10-25 22:44 → 10-26 09:48: debugger left open by a half-loaded change (self-inflicted)
+
+- 22:43: editing =config.org= from outside made Emacs revert the 600 KB
+  buffer; =flycheck-languagetool= then URL-encoded the whole text
+  (=url-hexify-string=, heavy GC). Server refused from 22:44.
+- Same minute: the commit hook reloaded the new =slack-extras= (advice on
+  =slack-ws-open=) while the running =simple-extras= lacked
+  =simple-extras-probe-url=. Slack's next reconnect, from a =request= curl
+  sentinel, signalled =void-function= and entered the debugger inside the
+  sentinel. Emacs then mostly refused the server; it answered once at 22:50,
+  when the advice was removed, but the debugger stayed open. Watchdog outages
+  at 23:05, 23:20, 00:30 and 02:47 all show this debugger frame.
+- Pablo found Emacs frozen in the morning and rebooted (09:48). The new
+  session loaded both extras; live checks: probe of =api.github.com= returns
+  t, the forge timers call =simple-extras-call-when-reachable=, Slack's advice
+  is active. At 10:07 the probe skipped Epoch's open while the network was
+  failing (curl exit 6 just before), then Slack rate-limited =rtm.connect=
+  (429) after the overnight reconnects; Forethought's startup =rtm.connect=
+  timed out at 09:52 with no retry scheduled (upstream emacs-slack) and was
+  restarted by hand.
+
+** 2026-10-25 21:33–22:19: main-thread DNS from forge timers and NSM (fixed in dotfiles =7398342b8=, =5408d1f37=, =158dc3689=, =163cf0afa=)
 
 - Pablo: unresponsive again. Watchdog: timeout 21:33:50 (recovered 21:34:54),
   refused 21:39:39 (recovered 21:41:06), stacks at 20:52, 21:32 and 22:18.

@@ -7628,7 +7628,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package redline
-  :ensure (:repo "~/repos/redline")
+  :ensure (:host github :repo "benthamite/redline")
   :defer t
   :custom
   (redline-send-function #'init-redline-submit-to-agent)

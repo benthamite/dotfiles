@@ -1395,7 +1395,58 @@ has connection termination."
                                         ((string-prefix-p "/" path) path)
                                         (t (concat "/" path))))
                                      (websocket-create-headers
-                                      url key protocols extensions custom-header-alist)))))))
+                                      url key protocols extensions custom-header-alist))))))
+
+  ;; Upstream reports an open, and runs the on-open callback, even after the
+  ;; handshake check failed and the connection was closed.  emacs-slack then
+  ;; took a refused, rate-limited connection for a working one, reset its
+  ;; backoff and retried within seconds (emacs/freeze-incidents.org,
+  ;; 2026-10-26).  Open only when the handshake checks pass.
+  (el-patch-defun websocket-outer-filter (websocket output)
+    "Filter the WEBSOCKET server's OUTPUT.
+This will parse headers and process frames repeatedly until there
+is no more output or the connection closes.  If the websocket
+connection is invalid, the connection will be closed."
+    (websocket-debug websocket "Received: %s" output)
+    (let ((start-point)
+          (text (concat (websocket-inflight-input websocket) output))
+          (header-end-pos))
+      (setf (websocket-inflight-input websocket) nil)
+      ;; If we've received the complete header, check to see if we've
+      ;; received the desired handshake.
+      (when (and (eq 'connecting (websocket-ready-state websocket)))
+        (if (and (setq header-end-pos (string-match "\r\n\r\n" text))
+                 (setq start-point (+ 4 header-end-pos)))
+            (el-patch-swap
+              (progn
+                (condition-case err
+                    (progn
+                      (websocket-verify-response-code text)
+                      (websocket-verify-headers websocket text)
+                      (websocket-process-headers (websocket-url websocket) text))
+                  (error
+                   (websocket-close websocket)
+                   (funcall (websocket-on-error websocket)
+                            websocket 'on-open err)))
+                (setf (websocket-ready-state websocket) 'open)
+                (websocket-try-callback 'websocket-on-open 'on-open websocket))
+              (when (condition-case err
+                        (progn
+                          (websocket-verify-response-code text)
+                          (websocket-verify-headers websocket text)
+                          (websocket-process-headers (websocket-url websocket) text)
+                          t)
+                      (error
+                       (websocket-close websocket)
+                       (funcall (websocket-on-error websocket)
+                                websocket 'on-open err)
+                       nil))
+                (setf (websocket-ready-state websocket) 'open)
+                (websocket-try-callback 'websocket-on-open 'on-open websocket)))
+          (setf (websocket-inflight-input websocket) text)))
+      (when (eq 'open (websocket-ready-state websocket))
+        (websocket-process-input-on-open-ws
+         websocket (substring text (or start-point 0)))))))
 #+end_src
 
 ** =casual=

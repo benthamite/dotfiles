@@ -16,14 +16,6 @@
       "created_at": "2026-10-06T21:20:16.747614+00:00",
       "expires_at": "2026-10-07T01:20:16.747614+00:00",
       "body_sha256": "bb766418e5995d6b2ab7edac54a379f18331818e905c17f5cba5cb0f5c390348"
-    },
-    {
-      "command": "gh repo fork ahyatt/emacs-websocket --clone=false",
-      "account": "benthamite",
-      "authorization": "Pablo, 2026-10-26: 'create a fork and use it in my dotfiles, but do not submit a PR for now' (emacs-websocket fixes)",
-      "created_at": "2026-10-26T10:30:59.190852+00:00",
-      "expires_at": "2026-10-26T14:30:59.190852+00:00",
-      "body_sha256": null
     }
   ]
 }

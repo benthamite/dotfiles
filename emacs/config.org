@@ -2370,7 +2370,10 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :config
   (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link)
   (advice-add 'forge-visit-this-topic :before #'forge-extras-sync-read-status)
-  (run-with-idle-timer 30 t #'forge-extras-pull-notifications)
+  ;; Forge connects from Lisp, which freezes Emacs while DNS is slow; probe
+  ;; GitHub from a subprocess first (emacs/freeze-incidents.org, 2026-10-25).
+  (run-with-idle-timer 30 t #'simple-extras-call-when-reachable
+                       "https://api.github.com/" #'forge-extras-pull-notifications)
 
   :bind
   (:map forge-issue-mode-map
@@ -7847,7 +7850,8 @@ To populate the database of historical prices:
   (when (timerp pablo/tlon-pull-issues-timer)
     (cancel-timer pablo/tlon-pull-issues-timer))
   (setq pablo/tlon-pull-issues-timer
-        (run-with-idle-timer (* 60 60) t #'tlon-pull-issues-in-all-repos))
+        (run-with-idle-timer (* 60 60) t #'simple-extras-call-when-reachable
+                             "https://api.github.com/" #'tlon-pull-issues-in-all-repos))
 
   (with-eval-after-load 'tlon-db
     (defun tlon-db-extras--suppress-debugger (orig-fun &rest args)
@@ -15552,7 +15556,8 @@ result to a user-specified file."
   (when (timerp pablo/epoch-pull-forge-repos-timer)
     (cancel-timer pablo/epoch-pull-forge-repos-timer))
   (setq pablo/epoch-pull-forge-repos-timer
-        (run-with-idle-timer (* 60 60) t #'epoch-pull-forge-repos)))
+        (run-with-idle-timer (* 60 60) t #'simple-extras-call-when-reachable
+                             "https://api.github.com/" #'epoch-pull-forge-repos)))
 #+end_src
 
 ** =forethought=

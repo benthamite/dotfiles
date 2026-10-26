@@ -1397,6 +1397,101 @@ has connection termination."
                                      (websocket-create-headers
                                       url key protocols extensions custom-header-alist))))))
 
+  ;; Header names are case-insensitive, but upstream matches
+  ;; "Sec-WebSocket-Accept" under the global `case-fold-search', which I set
+  ;; to nil.  Slack's edge sends "sec-websocket-accept", so valid handshakes
+  ;; were rejected and Slack reconnected until rate limited
+  ;; (emacs/freeze-incidents.org, 2026-10-26).  Match the name ignoring case
+  ;; and the accept value exactly.
+  (el-patch-defun websocket-verify-headers (websocket output)
+    "Based on WEBSOCKET's data, ensure the headers in OUTPUT are valid.
+The output is assumed to have complete headers.  This function
+will either return t or call `error'.  This has the side-effect
+of populating the list of server extensions to WEBSOCKET."
+    (el-patch-swap
+      (let ((accept-regexp
+             (concat "Sec-Web[Ss]ocket-Accept: " (regexp-quote (websocket-accept-string websocket)))))
+        (websocket-debug websocket "Checking for accept header regexp: %s" accept-regexp)
+        (unless (string-match accept-regexp output)
+          (signal 'websocket-invalid-header
+                  (list "Incorrect handshake from websocket: is this really a websocket connection?"))))
+      (let ((accept (websocket-accept-string websocket)))
+        (websocket-debug websocket "Checking for accept header: %s" accept)
+        (unless (and (let ((case-fold-search t))
+                       (string-match "\r\nSec-WebSocket-Accept: *\\([^\r\n]*\\)\r\n"
+                                     output))
+                     (string= (match-string 1 output) accept))
+          (signal 'websocket-invalid-header
+                  (list "Incorrect handshake from websocket: is this really a websocket connection?")))))
+    (let ((case-fold-search t))
+      (websocket-debug websocket "Checking for upgrade header")
+      (unless (string-match "\r\nUpgrade: websocket\r\n" output)
+        (signal 'websocket-invalid-header
+                (list "No 'Upgrade: websocket' header found")))
+      (websocket-debug websocket "Checking for connection header")
+      (unless (string-match "\r\nConnection: upgrade\r\n" output)
+        (signal 'websocket-invalid-header
+                (list "No 'Connection: upgrade' header found")))
+      (when (websocket-protocols websocket)
+        (dolist (protocol (websocket-protocols websocket))
+          (websocket-debug websocket "Checking for protocol match: %s"
+                           protocol)
+          (let ((protocols
+                 (if (string-match (format "\r\nSec-Websocket-Protocol: %s\r\n"
+                                           protocol)
+                                   output)
+                     (list protocol)
+                   (signal 'websocket-invalid-header
+                           (list "Incorrect or missing protocol returned by the server.")))))
+            (setf (websocket-negotiated-protocols websocket) protocols))))
+      (let* ((extensions (websocket-parse-repeated-field
+                          output
+                          "Sec-WebSocket-Extensions"))
+             (extra-extensions))
+        (dolist (ext extensions)
+          (let ((x (cl-first (split-string ext "; ?"))))
+            (unless (or (member x (websocket-extensions websocket))
+                        (member x extra-extensions))
+              (push x extra-extensions))))
+        (when extra-extensions
+          (signal 'websocket-invalid-header
+                  (list (format "Non-requested extensions returned by server: %S"
+                                extra-extensions))))
+        (setf (websocket-negotiated-extensions websocket) extensions)))
+    t)
+
+  ;;;;;;;;;;;;;;;;;;;;;;
+  ;; Websocket server ;;
+  ;;;;;;;;;;;;;;;;;;;;;;
+
+  (defvar websocket-server-websockets nil
+    "A list of current websockets live on any server.")
+
+  (cl-defun websocket-server (port &rest plist)
+    "Open a websocket server on PORT.
+  If the plist contains a `:host' HOST pair, this value will be
+  used to configure the addresses the socket listens on. The symbol
+  `local' specifies the local host. If unspecified or nil, the
+  socket will listen on all addresses.
+
+  This also takes a plist of callbacks: `:on-open', `:on-message',
+  `:on-close' and `:on-error', which operate exactly as documented
+  in the websocket client function `websocket-open'.  Returns the
+  connection, which should be kept in order to pass to
+  `websocket-server-close'."
+    (let* ((conn (make-network-process
+                  :name (format "websocket server on port %s" port)
+                  :server t
+                  :family 'ipv4
+                  :noquery t
+                  :filter #'websocket-server-filter
+                  :log #'websocket-server-accept
+                  :filter-multibyte nil
+                  :plist plist
+                  :host (plist-get plist :host)
+                  :service port)))
+      conn))
+
   ;; Upstream reports an open, and runs the on-open callback, even after the
   ;; handshake check failed and the connection was closed.  emacs-slack then
   ;; took a refused, rate-limited connection for a working one, reset its

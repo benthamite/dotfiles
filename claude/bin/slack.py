@@ -946,9 +946,7 @@ def cmd_file(args):
         headers={"Authorization": f"Bearer {xoxc}", "Cookie": f"d={xoxd}"},
     )
     try:
-        with _open_authenticated(req) as response:
-            data = response.read()
-            ctype = response.headers.get("Content-Type", "")
+        data, ctype = _read_file_response(req)
     except (OSError, ValueError, http.client.HTTPException):
         _fail("Slack file response could not be read")
     if ctype.startswith("text/html"):
@@ -957,6 +955,37 @@ def cmd_file(args):
     with open(args.output, "wb") as fh:
         fh.write(data)
     print(json.dumps({"ok": True, "path": args.output, "bytes": len(data), "content_type": ctype}))
+
+
+def _read_file_response(request):
+    """Return (bytes, content type) for an authenticated files.slack.com request.
+
+    Some workspaces (baish, 2026-10-26) answer with a 302 to a pre-signed
+    slack-files.com URL. That URL is fetched without credentials, so they
+    still never leave files.slack.com."""
+    opener = urllib.request.build_opener(_NoCredentialRedirects())
+    try:
+        response = opener.open(request, timeout=REQUEST_TIMEOUT)
+    except urllib.error.HTTPError as error:
+        location = error.headers.get("Location", "") if error.code in (301, 302, 303, 307, 308) else ""
+        status = error.code
+        error.close()
+        if not _is_presigned_file_url(location):
+            _fail(f"Slack request failed with HTTP {status}")
+        response = opener.open(location, timeout=REQUEST_TIMEOUT)
+    with response:
+        return response.read(), response.headers.get("Content-Type", "")
+
+
+def _is_presigned_file_url(url):
+    """Return whether URL is an https slack-files.com download link."""
+    try:
+        parsed = urllib.parse.urlsplit(url)
+        return (parsed.scheme == "https" and parsed.hostname == "slack-files.com"
+                and parsed.port in (None, 443) and parsed.username is None
+                and parsed.path.startswith("/files-pri"))
+    except ValueError:
+        return False
 
 
 def main():

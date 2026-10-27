@@ -131,8 +131,9 @@ Agents solve classes, not instances: a recurring concern such as credentials or
 alerting follows one written principle across every project, and a fix in one
 project starts by checking how its siblings handle the same thing.
 
-Any message an agent writes that goes to Peter Hartree under Pablo's name starts
-with =[agent] =, whether the agent sends it or Pablo pastes it. Peter proposed
+Any message an agent itself sends to Peter Hartree under Pablo's name starts
+with =[agent] =; drafts Pablo sends himself, such as text staged in the kill
+ring, carry no prefix. Peter proposed
 this on Slack on 2026-10-27 after an agent-written question reached him
 unmarked. The rule sits in the always-loaded file because such messages can be
 drafted from any project and go out on any channel.

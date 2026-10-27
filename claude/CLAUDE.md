@@ -21,7 +21,7 @@
 - **Deletion:** use `trash` instead of destructive recursive deletion.
 - **Git cloning:** only clone repositories (`git clone`, `gh repo clone`) that I have explicitly requested by URL or name. If a task seems to require cloning an unmentioned repo, ask first.
 - **Shared systems:** do not create PRs, open issues, post Slack/email/comments, create or update Asana tasks, or take other externally visible actions without my explicit confirmation.
-- **Messages to Peter:** start any message you write that goes to Peter Hartree under my name with `[agent] `, on any channel, whether you send it or I paste it (agreed with him on Slack, 2026-10-27).
+- **Messages to Peter:** when you yourself send a message to Peter Hartree under my name, on any channel, start it with `[agent] ` (agreed with him on Slack, 2026-10-27). Leave the prefix out of drafts I send myself, such as text you stage in the kill ring.
 - **Secrets:** when reading, storing, sharing, or placing credentials (1Password, `.zshenv-secrets`, vault choice), read `/Users/pablostafforini/My Drive/dotfiles/claude/context/secrets.md` first.
 
 ## User context and communication

@@ -15,3 +15,5 @@ Pablo's Mac runs LuLu (Objective-See), an outbound firewall. Homebrew binaries a
 **Other versioned layouts.** On 19 Oct the rules also held versioned paths under `~/.pyenv/versions`, `~/.nvm/versions/node` and the Playwright cache, each with one or a few rules. They change rarely and are not covered; add a pattern to `VERSIONED_PATHS` if their alerts recur.
 
 **Remaining gap.** A package upgraded only as another package's dependency, or upgraded by hand with `brew upgrade`, is not held. If its alerts appear, answer one with Allow, then run `lulu-directory-rules add`.
+
+**Rule review.** LuLu's Rules window shows only a program's name and signer, not its path, so rules for different binaries with the same name cannot be told apart there. Read `rules.plist` instead (`security-audit`'s `scripts/lulu-rules.py`).

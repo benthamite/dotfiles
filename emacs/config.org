@@ -14287,7 +14287,19 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
                     :fallback
                     (lambda ()
                       (cons (auth-source-extras-op-get "slack-forethought" "token")
-                            (auth-source-extras-op-get "slack-forethought" "cookie"))))))
+                            (auth-source-extras-op-get "slack-forethought" "cookie"))))
+              (list :name "BAISH" :domain "baish.slack.com"
+                    :animate-image t :websocket-nowait t
+                    :fallback
+                    (lambda ()
+                      (cons (auth-source-extras-op-get "slack-baish" "token")
+                            (auth-source-extras-op-get "slack-baish" "cookie"))))
+              (list :name "Becas AISAR" :domain "becasaisar.slack.com"
+                    :animate-image t :websocket-nowait t
+                    :fallback
+                    (lambda ()
+                      (cons (auth-source-extras-op-get "slack-becas-aisar" "token")
+                            (auth-source-extras-op-get "slack-becas-aisar" "cookie"))))))
   (slack-extras-register-teams))
 #+end_src
 

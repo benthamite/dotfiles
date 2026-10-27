@@ -3324,8 +3324,9 @@ def rewritten_commit(repo, index, commit, parents, edits):
 
     EDITS maps a path to None (remove it) or to a blob id that replaces it
     wherever the commit has the path.  Author, committer, dates and message
-    are kept; the tree is edited in a temporary index, so no file is checked
-    out and no smudge filter (such as git-crypt's) runs."""
+    are kept, and a signed commit is signed again; the tree is edited in a
+    temporary index, so no file is checked out and no smudge filter (such as
+    git-crypt's) runs."""
     git_with_index(repo, index, "read-tree", commit + "^{tree}")
     for path, blob in edits.items():
         entry = run_git(repo.root, "ls-tree", commit, "--", path).text.strip()
@@ -3340,11 +3341,15 @@ def rewritten_commit(repo, index, commit, parents, edits):
     fields = run_git(repo.root, "log", "-1", "--format=%an%x00%ae%x00%ad%x00%cn%x00%ce%x00%cd",
                      "--date=raw", commit).text.rstrip("\n").split("\x00")
     raw = run_git(repo.root, "cat-file", "commit", commit).out
-    message = raw.split(b"\n\n", 1)[1] if b"\n\n" in raw else b""
+    header, _, message = raw.partition(b"\n\n")
     environment = dict(os.environ, GIT_AUTHOR_NAME=fields[0], GIT_AUTHOR_EMAIL=fields[1],
                        GIT_AUTHOR_DATE=fields[2], GIT_COMMITTER_NAME=fields[3],
                        GIT_COMMITTER_EMAIL=fields[4], GIT_COMMITTER_DATE=fields[5])
     arguments = ["git", "-C", str(repo.root), "commit-tree", tree]
+    # commit-tree ignores commit.gpgSign, so re-sign whatever was signed
+    # with the repository's configured key; a signing failure refuses.
+    if any(line.startswith((b"gpgsig ", b"gpgsig-sha256 ")) for line in header.split(b"\n")):
+        arguments.append("-S")
     for parent in parents:
         arguments += ["-p", parent]
     completed = subprocess.run(arguments, input=message, stdout=subprocess.PIPE,

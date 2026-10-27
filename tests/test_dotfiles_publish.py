@@ -2330,6 +2330,32 @@ class DotfilesPublishRepairTests(PublicationFixture):
         self.assertEqual("", self.git("ls-tree", "-r", "--name-only", "HEAD", "--", "config").stdout)
         self.assertTrue((self.repo / "config/service.conf").exists())
 
+    def test_repair_apply_re_signs_only_the_commits_that_were_signed(self):
+        key = self.base / "signing-key"
+        subprocess.run(["/usr/bin/ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-C", "fixture",
+                        "-f", str(key)], check=True)
+        signers = self.base / "allowed-signers"
+        signers.write_text("test@example.invalid %s" % (self.base / "signing-key.pub").read_text())
+        for name, value in (("gpg.format", "ssh"), ("user.signingkey", str(key)),
+                            ("gpg.ssh.allowedSignersFile", str(signers))):
+            self.git("config", name, value)
+        self.publish_base()
+        self.git("config", "commit.gpgsign", "true")
+        self.commit("add configuration", {"config/service.conf": "token = %s\n" % TEST_SECRET})
+        self.git("config", "commit.gpgsign", "false")
+        self.commit("later work", {"docs/later.md": "later\n"})
+        proc, run_id = self.scan()
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        self.assertEqual(0, self.cli("repair-start", "--run", run_id).returncode)
+        clean = self.base / "clean.conf"
+        clean.write_text("token = from-op\n")
+        applied = self.cli("repair-apply", "--run", run_id, "--replace", "config/service.conf=%s" % clean)
+        self.assertEqual(0, applied.returncode, applied.stdout + applied.stderr)
+        rewritten = self.git("rev-list", "--reverse", "%s..HEAD" % self.remote_tip()).stdout.split()
+        self.assertEqual([True, False], ["\ngpgsig " in self.git("cat-file", "commit", commit).stdout
+                                         for commit in rewritten])
+        self.assertEqual(0, self.git("verify-commit", rewritten[0], check=False).returncode)
+
     def test_repair_apply_drops_commits_the_edits_leave_empty(self):
         self.publish_base()
         self.commit("record the risk", {"docs/risk.md": "token = %s\n" % TEST_SECRET})

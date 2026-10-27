@@ -65,22 +65,22 @@ help and suggestion application must not access credentials or initialise Gemini
 is a failed proofreading run, not an empty list of corrections or permission to
 choose another model silently.
 
-The setup command requires Node and Yarn Classic; a missing package manager is
+The setup command requires Node and npm 7 or later; a missing package manager is
 a setup dependency, not proof that proofreading succeeded. Install missing
 dependencies only through the external runtime setup:
 
 ```sh
-yarn -s setup-runtime
+sh scripts/install-runtime.sh
 ```
 
 Run this from the resolved skill directory. Setup and execution use
 PROOFREAD_RUNTIME_DIR, then XDG_DATA_HOME, then ~/.local/share/proofread.
 Both the runtime root and node_modules destination are canonicalized before use
 and rejected if they resolve into `~/My Drive`. The installer stages only public
-manifests, its cache and temporary state outside Drive. Its Yarn invocation skips
-implicit rc files; if required registry, proxy or policy settings depend on them,
-stop and arrange an explicitly approved setup, not a policy bypass. This is not
-a sandbox for dependency lifecycle scripts. Keep dependencies, builds,
+manifests, its cache and temporary state outside Drive, and runs `npm ci` from
+the frozen `package-lock.json` without lifecycle scripts. It honors the user's
+npm configuration, including the release-age gate; if that refuses a locked
+version, stop rather than bypass the policy. Keep dependencies, builds,
 caches and test fixtures outside the synced tree. Do not create or symlink a
 local `node_modules`. Check aspell and the selected English dictionary for
 spellcheck; do not install or invoke the Gemini engine to compensate for failure.
@@ -88,7 +88,7 @@ spellcheck; do not install or invoke the Gemini engine to compensate for failure
 ## Generate and review the corrected copy
 
 From the skill directory, pass the absolute target as one quoted argument.
-The runtime wrapper does not require Yarn once dependencies are installed:
+The runtime wrapper does not require npm once dependencies are installed:
 
 ```sh
 sh scripts/run-with-runtime.sh scripts/proofread.ts "/absolute/path/document.md" --engine spellcheck --language british

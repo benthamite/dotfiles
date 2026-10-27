@@ -5,17 +5,17 @@ Google Gemini. See [SKILL.md](./SKILL.md) for scope, privacy, review and accepta
 
 ## Setup
 
-From this skill directory, run `yarn -s setup-runtime` when dependencies are missing.
+From this skill directory, run `sh scripts/install-runtime.sh` when dependencies are missing.
 Setup and execution use PROOFREAD_RUNTIME_DIR, then XDG_DATA_HOME, then ~/.local/share/proofread.
 Both the runtime root and node_modules destination are canonicalized and must
 remain outside Google Drive. Do not create or symlink local `node_modules`,
 builds, caches or test fixtures into the synced tree.
-The installer uses Yarn Classic 1.x and `trash`, stages public manifests outside
-Drive, and skips implicit Yarn/npm rc files. Required policy or network settings
-must be supplied through an approved setup; do not bypass them to install.
-These path controls do not sandbox dependency lifecycle scripts.
+The installer uses npm 7 or later and `trash`, stages public manifests outside
+Drive, and runs `npm ci --ignore-scripts` from the frozen `package-lock.json`.
+It honors the user's npm configuration, including the release-age gate; do not
+bypass policy or network settings to install.
 Once installed, use the shell runtime wrapper shown in the skill; normal
-proofreading and suggestion application do not require Yarn on PATH.
+proofreading and suggestion application do not require npm on PATH.
 
 LLM mode alone consumes `GOOGLE_AI_API_KEY` injected through the approved secret
 workflow. Skill-local `.env` files and the legacy `.env.example` are no longer

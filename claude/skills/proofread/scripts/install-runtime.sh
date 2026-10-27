@@ -8,21 +8,21 @@ runtime_dir=$(node "$script_dir/resolve-runtime-dir.mjs" --runtime-root)
 export PROOFREAD_RUNTIME_DIR="$runtime_dir"
 node_modules_dir=$(node "$script_dir/resolve-runtime-dir.mjs")
 
-if ! command -v yarn >/dev/null 2>&1; then
-  printf '%s\n' "Error: Yarn Classic 1.x is required; no package-manager fallback is used." >&2
+if ! command -v npm >/dev/null 2>&1; then
+  printf '%s\n' "Error: npm 7 or later is required; no package-manager fallback is used." >&2
   exit 1
 fi
-case "$(yarn --no-default-rc --version)" in
-  1.*) ;;
-  *) printf '%s\n' "Error: Yarn Classic 1.x is required for this frozen lockfile." >&2; exit 1 ;;
+case "$(npm --version)" in
+  [0-6].*) printf '%s\n' "Error: npm 7 or later is required for this lockfile." >&2; exit 1 ;;
 esac
 if ! command -v trash >/dev/null 2>&1; then
   printf '%s\n' "Error: trash is required to clean the owned install staging directory." >&2
   exit 1
 fi
 
-# --modules-folder alone does not relocate the project cwd or install state.
-# Stage only these public manifests; never copy the skill or its ignored files.
+# npm ci installs into the project's own node_modules, so the project must be
+# outside Drive. Stage only these public manifests; never copy the skill or its
+# ignored files.
 mkdir -p "$runtime_dir"
 install_dir=$(mktemp -d "$runtime_dir/.install-XXXXXX")
 cleanup() {
@@ -39,9 +39,16 @@ trap 'exit 129' HUP
 trap 'exit 130' INT
 trap 'exit 143' TERM
 cp "$skill_dir/package.json" "$install_dir/package.json"
-cp "$skill_dir/yarn.lock" "$install_dir/yarn.lock"
+cp "$skill_dir/package-lock.json" "$install_dir/package-lock.json"
 mkdir "$install_dir/tmp"
 export TMPDIR="$install_dir/tmp"
 cd "$install_dir"
-yarn --no-default-rc install --frozen-lockfile --non-interactive --production=false \
-  --modules-folder "$node_modules_dir" --cache-folder "$install_dir/cache"
+npm ci --ignore-scripts --include=dev --no-audit --no-fund --cache "$install_dir/cache"
+
+# Swap the finished tree into the resolved destination. A previous tree moves
+# into staging, so the cleanup trap trashes it with the rest of the install.
+if [ -e "$node_modules_dir" ]; then
+  mv "$node_modules_dir" "$install_dir/previous-node_modules"
+fi
+mkdir -p "$(dirname "$node_modules_dir")"
+mv "$install_dir/node_modules" "$node_modules_dir"

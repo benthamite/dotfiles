@@ -11,7 +11,7 @@ tsx_cli="$node_modules_dir/tsx/dist/cli.mjs"
 if [ ! -f "$tsx_cli" ]; then
   printf '%s\n' \
     "Proofread dependencies are not installed outside the sync root." \
-    "Run: yarn -s setup-runtime" \
+    "Run: sh scripts/install-runtime.sh" \
     >&2
   exit 1
 fi

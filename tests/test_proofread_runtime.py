@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Offline runtime boundaries; fixture Yarn/tsx do not certify real installs."""
+"""Offline runtime boundaries; fixture npm/tsx do not certify real installs."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CLAUDE_SKILL = ROOT / "claude" / "skills" / "proofread"
 CODEX_SKILL = ROOT / "codex" / "skills" / "proofread"
 PUBLIC_FILES = (
-    "package.json", "package-lock.json", "yarn.lock", "tsconfig.json",
+    "package.json", "package-lock.json", "tsconfig.json",
     "scripts/install-runtime.sh", "scripts/run-with-runtime.sh",
     "scripts/resolve-runtime-dir.mjs",
 )
@@ -50,38 +50,37 @@ class ProofreadRuntimeLocationTests(unittest.TestCase):
         self.bin = self.root / "bin"
         self.bin.mkdir()
         self.runtime = self.root / "runtime"
-        self.record = self.root / "yarn-record.json"
+        self.record = self.root / "npm-record.json"
         self.install_fake_tools()
 
     def install_fake_tools(self) -> None:
-        yarn = self.bin / "yarn"
-        yarn.write_text(
+        npm = self.bin / "npm"
+        npm.write_text(
             f"#!{sys.executable}\n"
             "import json, os, pathlib, sys\n"
-            "if '--version' in sys.argv[1:]:\n"
+            "if sys.argv[1:] == ['--version']:\n"
             "    pathlib.Path(os.environ['FIXTURE_RECORD']).with_suffix('.version.json').write_text(json.dumps(sys.argv[1:]))\n"
-            "    print(os.environ.get('FIXTURE_YARN_VERSION', '1.22.22'))\n"
+            "    print(os.environ.get('FIXTURE_NPM_VERSION', '11.6.2'))\n"
             "    sys.exit(0)\n"
             "args = sys.argv[1:]\n"
             "cwd = pathlib.Path.cwd()\n"
             "record = {'cwd': str(cwd), 'args': args, 'tmpdir': os.environ.get('TMPDIR'), 'files': sorted(p.name for p in cwd.iterdir()),\n"
             "          'package': (cwd / 'package.json').read_text(),\n"
-            "          'lock': (cwd / 'yarn.lock').read_text()}\n"
+            "          'lock': (cwd / 'package-lock.json').read_text()}\n"
             "pathlib.Path(os.environ['FIXTURE_RECORD']).write_text(json.dumps(record))\n"
-            "(cwd / 'yarn-error.log').write_text('owned simulated install state')\n"
-            "if os.environ.get('FIXTURE_YARN_FAIL'):\n"
+            "(cwd / 'npm-debug.log').write_text('owned simulated install state')\n"
+            "if os.environ.get('FIXTURE_NPM_FAIL'):\n"
             "    sys.exit(23)\n"
-            "modules = pathlib.Path(args[args.index('--modules-folder') + 1])\n"
-            "cli = modules / 'tsx' / 'dist' / 'cli.mjs'\n"
+            "cli = cwd / 'node_modules' / 'tsx' / 'dist' / 'cli.mjs'\n"
             "cli.parent.mkdir(parents=True, exist_ok=True)\n"
             f"cli.write_text({NATIVE_TS_LOADER!r})\n"
-            "if '--cache-folder' in args:\n"
-            "    cache = pathlib.Path(args[args.index('--cache-folder') + 1])\n"
+            "if '--cache' in args:\n"
+            "    cache = pathlib.Path(args[args.index('--cache') + 1])\n"
             "    cache.mkdir(parents=True, exist_ok=True)\n"
             "    (cache / 'fixture-cache').write_text('owned')\n",
             encoding="utf-8",
         )
-        yarn.chmod(0o700)
+        npm.chmod(0o700)
         trash = self.bin / "trash"
         trash.write_text(
             f"#!{sys.executable}\n"
@@ -144,32 +143,55 @@ class ProofreadRuntimeLocationTests(unittest.TestCase):
         stage = Path(record["cwd"])
         self.assertTrue(stage.is_relative_to(self.runtime))
         self.assertFalse(stage.is_relative_to(self.drive))
-        self.assertEqual(record["files"], ["package.json", "tmp", "yarn.lock"])
+        self.assertEqual(record["files"], ["package-lock.json", "package.json", "tmp"])
         self.assertEqual(record["tmpdir"], str(stage / "tmp"))
         self.assertFalse((self.drive / "unused-temp").exists())
-        self.assertEqual(json.loads(self.record.with_suffix('.version.json').read_text()), ["--no-default-rc", "--version"])
+        self.assertEqual(json.loads(self.record.with_suffix('.version.json').read_text()), ["--version"])
         self.assertEqual(record["package"], (self.skill_dir / "package.json").read_text())
-        self.assertEqual(record["lock"], (self.skill_dir / "yarn.lock").read_text())
-        for flag in ("--no-default-rc", "--frozen-lockfile", "--non-interactive", "--production=false"):
+        self.assertEqual(record["lock"], (self.skill_dir / "package-lock.json").read_text())
+        self.assertEqual(record["args"][0], "ci")
+        for flag in ("--ignore-scripts", "--include=dev", "--no-audit", "--no-fund"):
             self.assertIn(flag, record["args"])
-        cache = Path(record["args"][record["args"].index("--cache-folder") + 1])
+        cache = Path(record["args"][record["args"].index("--cache") + 1])
         self.assertTrue(cache.is_relative_to(stage))
         self.assertFalse(stage.exists())
         self.assertEqual(before, {p: (self.skill_dir / p).read_bytes() for p in PUBLIC_FILES})
         self.assertEqual(sorted(p.name for p in caller.iterdir()), ["package.json"])
         self.assertFalse((self.skill_dir / "node_modules").exists())
+        self.assertTrue((self.runtime / "node_modules" / "tsx" / "dist" / "cli.mjs").is_file())
+
+    def test_installer_replaces_previous_tree(self) -> None:
+        stale = self.runtime / "node_modules" / "stale-package"
+        stale.mkdir(parents=True)
+        result = self.run_script("install-runtime.sh")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(stale.exists())
+        self.assertTrue((self.runtime / "node_modules" / "tsx" / "dist" / "cli.mjs").is_file())
+        self.assertEqual([p.name for p in self.runtime.iterdir()], ["node_modules"])
+
+    def test_installer_preserves_external_node_modules_alias(self) -> None:
+        self.runtime.mkdir()
+        modules = self.root / "shared-dependencies"
+        (modules / "stale-package").mkdir(parents=True)
+        (self.runtime / "node_modules").symlink_to(modules, target_is_directory=True)
+        result = self.run_script("install-runtime.sh")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue((self.runtime / "node_modules").is_symlink())
+        self.assertFalse((modules / "stale-package").exists())
+        self.assertTrue((modules / "tsx" / "dist" / "cli.mjs").is_file())
 
     def test_installer_failure_is_preserved_and_staging_is_cleaned(self) -> None:
-        result = self.run_script("install-runtime.sh", env=self.env(FIXTURE_YARN_FAIL="1"))
+        result = self.run_script("install-runtime.sh", env=self.env(FIXTURE_NPM_FAIL="1"))
         self.assertEqual(result.returncode, 23, result.stderr)
         stage = Path(json.loads(self.record.read_text())["cwd"])
         self.assertFalse(stage.exists())
-        self.assertFalse((self.skill_dir / "yarn-error.log").exists())
+        self.assertFalse((self.skill_dir / "npm-debug.log").exists())
+        self.assertFalse((self.runtime / "node_modules").exists())
 
-    def test_installer_rejects_non_classic_yarn_without_install(self) -> None:
-        result = self.run_script("install-runtime.sh", env=self.env(FIXTURE_YARN_VERSION="4.9.0"))
+    def test_installer_rejects_npm_without_lockfile_v3_support(self) -> None:
+        result = self.run_script("install-runtime.sh", env=self.env(FIXTURE_NPM_VERSION="6.14.18"))
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("Yarn Classic 1.x", result.stderr)
+        self.assertIn("npm 7 or later", result.stderr)
         self.assertFalse(self.record.exists())
 
     def test_setup_and_execution_share_override_precedence(self) -> None:
@@ -257,7 +279,7 @@ class ProofreadRuntimeMetadataTests(unittest.TestCase):
             self.assertEqual(package[kind], lock["packages"][""][kind])
         self.assertNotIn("dotenv", package["dependencies"])
         self.assertNotIn("node_modules/dotenv", lock["packages"])
-        self.assertNotIn("dotenv@", (CLAUDE_SKILL / "yarn.lock").read_text())
+        self.assertFalse((CLAUDE_SKILL / "yarn.lock").exists())
 
     def test_typescript_checks_do_not_emit_into_drive(self) -> None:
         config = json.loads((CLAUDE_SKILL / "tsconfig.json").read_text())
@@ -269,7 +291,7 @@ class ProofreadRuntimeMetadataTests(unittest.TestCase):
             for name in ("SKILL.md", "README.md"):
                 with self.subTest(skill_dir=skill_dir, name=name):
                     contents = (skill_dir / name).read_text()
-                    self.assertIn("yarn -s setup-runtime", contents)
+                    self.assertIn("sh scripts/install-runtime.sh", contents)
                     self.assertIn("PROOFREAD_RUNTIME_DIR, then XDG_DATA_HOME, then ~/.local/share/proofread", contents)
                     self.assertIn("Both the runtime root and node_modules destination are canonicalized", contents)
 

@@ -187,8 +187,12 @@ collected or routed (Pablo, 2026-10-24).
   **Contexto** (what the other person said, with a link, and the relevant
   facts or deadlines), **Decisión** (what Pablo has to decide, and the
   recommendation), **Borrador** (the text, as a quote block, in the language it
-  will be sent in) and, if any, **Adjuntos** (absolute paths). Each section
-  must be decidable on its own, without the chat. Update a section when new
+  will be sent in) and, if any, **Adjuntos** (absolute paths). Under each
+  heading put `<!-- inbox: CONVERSATION_ID after EVENT_ID -->` (the
+  conversation and the latest event the draft answers). Before adding to the
+  file or pointing Pablo to it, run `inbox-drafts check --project PROJECT`: a
+  draft marked ANSWERED is one Pablo already replied to, so retire it. Each
+  section must be decidable on its own, without the chat. Update a section when new
   messages change it; once the archive shows it sent, or Pablo drops it, move
   it under a final `# Enviados / descartados` heading with the date.
 - Pre-authorized actions live in the project's `.inbox-policy.toml` and count

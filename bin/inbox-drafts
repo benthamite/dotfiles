@@ -1,0 +1,4 @@
+#!/bin/sh
+# inbox-drafts: front end of the inbox monitor (~/repos/inbox-monitor; design in its
+# docs/plan.md). Read-only: never sends anything.
+exec /Users/pablostafforini/repos/inbox-monitor/bin/inbox-drafts "$@"

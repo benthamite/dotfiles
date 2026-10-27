@@ -69,7 +69,7 @@ def decide(call: Call) -> Result:
                 raise HookFailure("context fields")
             lib.classify(command, Path(cwd).resolve(strict=False))
     except lib.Denied as error:
-        return Result.deny("BLOCKED: " + str(error) + ADVICE)
+        return Result.deny("BLOCKED: " + str(error) + (error.advice or ADVICE))
     except (ValueError, TypeError, KeyError, OSError) as error:
         raise HookFailure(f"untrusted-execution classifier: {error}") from error
     return Result.allow()

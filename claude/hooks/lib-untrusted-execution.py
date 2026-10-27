@@ -42,6 +42,8 @@ WRAPPER_VALUES = {
 }
 MANAGER_VALUES = {"--prefix", "--cache", "--userconfig", "--registry", "--dir", "-C", "--cwd", "--directory", "--project", "--package", "-p"}
 READERS = {"cat", "head", "tail", "wc", "ls", "stat", "file", "readlink", "pwd", "grep", "rg", "ripgrep", "echo", "printf", "true", "false"}
+# Commands whose quoted heredoc is data or a non-shell program (commit messages, PR bodies, scripts).
+HEREDOC_CONSUMERS = READERS | {"tee", "node", "ruby", "perl", "jq", "git", "gh"}
 INTERPRETERS = SHELLS | {"node", "nodejs", "ruby", "perl", "source", ".", "eval"}
 CODE_ENV = {"PATH", "PYTHONPATH", "NODE_PATH", "NODE_OPTIONS", "BASH_ENV", "ENV", "LD_PRELOAD", "DYLD_INSERT_LIBRARIES"}
 
@@ -72,13 +74,61 @@ def staging_cleanup(head, arguments):
 
 
 class Denied(Exception):
-    """A fixed diagnostic, never the command or values supplied by the caller."""
+    """A fixed diagnostic, never the command or values supplied by the caller.
+
+    ADVICE, when given, replaces the default advice to use the VM runner: it
+    names the classifiable forms of a command that host execution allows.
+    """
+
+    def __init__(self, reason, advice=None):
+        super().__init__(reason)
+        self.advice = advice
+
+
+UNTRUSTED_ADVICE = ("Run untrusted code only through the canonical dotfiles bin/untrusted-run with explicit minimal "
+                    "inputs and a fresh output directory; if the required VM or runtime is unavailable, stop rather "
+                    "than retry it on the host.")
+DIRECTORY_REASON = ("a relevant directory change cannot be classified: cd needs exactly one argument that is "
+                    "a literal, ~ or $HOME path, or \"$NAME\" or \"$NAME/sub/dir\" for a variable assigned such a "
+                    "path by an unconditional standalone assignment earlier in the command")
+DIRECTORY_ADVICE = (". If this is trusted host execution, rewrite it in one of those forms or use the tool's own "
+                    "directory option (such as npm --prefix DIR). " + UNTRUSTED_ADVICE)
+PARSE_ADVICE = (". If this is trusted host execution, make it parseable: balance its quotes, or pass text in a file "
+                "or in a quoted-delimiter heredoc (<<'EOF' ending its line) read by a data command such as cat, "
+                "tee, git or gh. " + UNTRUSTED_ADVICE)
 
 
 def expanded_home(value: str) -> str:
     for prefix in ("${HOME}", "$HOME", "~"):
         if value == prefix or value.startswith(prefix + "/"):
             return str(Path.home()) + value[len(prefix):]
+    return value
+
+
+def literal_text(word):
+    """WORD's text with a leading ~ or $HOME expanded, or None if anything else expands.
+
+    A `\\x00` marks a command substitution lifted out of the word.
+    """
+    value = expanded_home(word.text) if word.expands else word.text
+    return None if "\x00" in value or (word.expands and re.search(r"[$`]", value)) else value
+
+
+def assigned_reference(word, assigned):
+    """The literal in ASSIGNED for a word that is exactly $NAME or ${NAME}, optionally double-quoted.
+
+    A literal path suffix (`"$D/bin/tool"`) is appended. Matching the source
+    keeps `"$F"x` from reading as `$Fx`. Unquoted, the shell may split or glob
+    the value, so one with blanks or glob characters stays unresolved.
+    """
+    match = re.fullmatch(r'(")?\$(?:([A-Za-z_][A-Za-z0-9_]*)|\{([A-Za-z_][A-Za-z0-9_]*)\})'
+                         r'(/[^"\'$`\\]*)?(?(1)")', word.raw)
+    value = assigned.get(match[2] or match[3]) if match else None
+    if value is None:
+        return None
+    value += match[4] or ""
+    if not match[1] and re.search(r"[\s*?[\]]", value):
+        return None
     return value
 
 
@@ -212,8 +262,9 @@ def untrusted_input_capture(source, cwd):
 def literal_assignments(tokens):
     """Variables assigned exactly once, unconditionally, to a literal path.
 
-    Agents often write `F=/path/tool; "$F" args`. Such a variable executable
-    is classified as its literal value. Grouping, background jobs, `||` and
+    Agents often write `F=/path/tool; "$F" args` or `D=/dir; cd "$D"`. Such
+    a variable executable or cd target is classified as its literal value
+    (`assigned_reference`). Grouping, background jobs, `||` and
     shell control words can make the assignment conditional or scoped, so
     those commands, and any word that could rebind a name (`read F`,
     `export F=...`), leave every variable indirect.
@@ -251,16 +302,16 @@ def literal_heredocs(source):
 
     Only a plain, single quoted-delimiter heredoc ending its line is
     recognized; it belongs to the line's last simple command, which may follow
-    other commands (`cd dir; python3 - <<'PY'`). The rest of the line stays in
-    the scan. Complex and unquoted forms remain in the scan. Shell programs
-    remain executable input. General non-shell program analysis is outside
-    this routing guard's scope.
+    other commands (`cd dir; python3 - <<'PY'`) and redirect its output
+    (`cat > file <<'EOF'`). The rest of the line stays in the scan. Complex and
+    unquoted forms remain in the scan. Shell programs remain executable input.
+    General non-shell program analysis is outside this routing guard's scope.
     """
     lines = source.splitlines(keepends=True)
     index = 0
     while index < len(lines):
         # A `#` could make the operator a comment, leaving the "body" as shell.
-        match = re.fullmatch(r"([^<>`(){}#\n]+)<<(-)?\s*(['\"])([A-Za-z_][A-Za-z0-9_]*)\3\s*", lines[index])
+        match = re.fullmatch(r"([^<`(){}#\n]+)<<(-)?\s*(['\"])([A-Za-z_][A-Za-z0-9_]*)\3\s*", lines[index])
         if not match:
             index += 1
             continue
@@ -270,7 +321,7 @@ def literal_heredocs(source):
             index += 1
             continue
         base = Path(commands[-1][-1].words[0].text).name
-        if base not in READERS | {"tee", "node", "ruby", "perl", "jq"} and not re.fullmatch(r"python[0-9.]*", base):
+        if base not in HEREDOC_CONSUMERS and not re.fullmatch(r"python[0-9.]*", base):
             index += 1
             continue
         end = next((position for position in range(index + 1, len(lines))
@@ -290,9 +341,10 @@ def classify(source: str, cwd: Path, depth=0):
         lifted, captures, process_substitution = TOKENS._lift_substitutions(source)
         tokens = list(without_comments(TOKENS._tokenize(lifted)))
         pipelines = TOKENS._split_simple(tokens)
-    except TOKENS.Deny:
+    except TOKENS.Deny as error:
         if relevant(source, cwd):
-            raise Denied("a relevant shell command could not be parsed") from None
+            # The tokenizer's parse diagnostics are fixed strings, such as "unterminated single quote".
+            raise Denied(f"a relevant shell command could not be parsed ({error})", PARSE_ADVICE) from None
         return
     if process_substitution and relevant(source, cwd):
         raise Denied("a relevant process substitution cannot be safely routed")
@@ -334,15 +386,15 @@ def classify(source: str, cwd: Path, depth=0):
                     assigned.update((name, literals[name]) for name, _ in simple.assignments if name in literals)
                 continue
             head, arguments = words[0], words[1:]
-            reference = re.fullmatch(r"\$(?:([A-Za-z_][A-Za-z0-9_]*)|\{([A-Za-z_][A-Za-z0-9_]*)\})", head.text)
-            if reference and (reference.group(1) or reference.group(2)) in assigned:
-                head = TOKENS.Word(assigned[reference.group(1) or reference.group(2)], True, False, head.raw)
+            literal = assigned_reference(head, assigned)
+            if literal is not None:
+                head = TOKENS.Word(literal, True, False, head.raw)
             base = Path(head.text).name
             if simple.here_string is not None and consumes_code(base, arguments):
                 if any(capture.placeholder in simple.here_string.text and untrusted_input_capture(capture.inner, current)
                        for capture in captures):
                     raise Denied("downloaded or staged input is being executed through a host here-string")
-            if head.expands and expanded_home(head.text) == head.text and relevant(source, invocation_dir):
+            if literal_text(head) is None and relevant(source, invocation_dir):
                 raise Denied("an indirect executable in a relevant command cannot be classified")
             if base == "untrusted-run":
                 if normalized(head.text, invocation_dir) != RUNNER:
@@ -360,14 +412,18 @@ def classify(source: str, cwd: Path, depth=0):
                     or (base == "uv" and values[:2] == ["tool", "run"])):
                 raise Denied("a transient package executable requires isolation")
             if base == "cd":
-                if len(pipeline) > 1 and (staged(str(invocation_dir), invocation_dir) or any(staged(word.text, invocation_dir) for word in arguments)):
+                target = None
+                if len(arguments) == 1:
+                    target = assigned_reference(arguments[0], assigned)
+                    target = literal_text(arguments[0]) if target is None else target
+                if len(pipeline) > 1 and (staged(str(invocation_dir), invocation_dir)
+                                          or any(staged(word.text, invocation_dir) for word in arguments)
+                                          or (target is not None and staged(target, invocation_dir))):
                     raise Denied("a piped directory change involving untrusted staging cannot be classified")
-                if len(arguments) == 1 and not arguments[0].expands:
-                    current = normalized(arguments[0].text, invocation_dir)
-                elif len(arguments) == 1 and expanded_home(arguments[0].text) != arguments[0].text:
-                    current = normalized(arguments[0].text, invocation_dir)
+                if target is not None:
+                    current = normalized(target, invocation_dir)
                 elif relevant(source, invocation_dir):
-                    raise Denied("a relevant directory change cannot be classified")
+                    raise Denied(DIRECTORY_REASON, DIRECTORY_ADVICE)
                 continue
             if interpreter(base):
                 for index, word in enumerate(arguments):
@@ -416,7 +472,7 @@ def main():
             classify(command, Path(cwd).resolve(strict=False))
     except Denied as error:
         print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny",
-              "permissionDecisionReason": "BLOCKED: " + str(error) + ". Use the canonical dotfiles bin/untrusted-run with explicit minimal inputs and a fresh output directory. If the required VM or runtime is unavailable, stop this execution; do not retry it on the host."}}))
+              "permissionDecisionReason": "BLOCKED: " + str(error) + (error.advice or ". Use the canonical dotfiles bin/untrusted-run with explicit minimal inputs and a fresh output directory. If the required VM or runtime is unavailable, stop this execution; do not retry it on the host.")}}))
         return 0
     except (ValueError, TypeError, KeyError, OSError):
         print("Security hook failed; tool execution denied.", file=sys.stderr)

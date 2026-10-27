@@ -43,9 +43,9 @@ Unfamiliar code execution uses the shared =bin/untrusted-run= VM boundary;
 reviewed local workflows retain host execution. =AGENTS.md= states only the
 routing rule; staging and trust details live in the runner contract. The paired routing guard is
 registered in =hooks.json= for recognizable untrusted launchers and the
-designated staging directory. A variable executable assigned a literal earlier
-in the same command is classified as that literal; a quoted heredoc after
-=cd dir;= is data, as on its own line. Its exact definition needs
+designated staging directory. A variable executable or =cd= target assigned a
+literal earlier in the same command is classified as that literal; a quoted
+heredoc after =cd dir;= or read by =git= or =gh= is data, as on its own line. Its exact definition needs
 native hook trust.
 The installed =/opt/homebrew/bin/trash= may move literal absolute staging paths
 with optional =-v= or =--=; execution checks still apply, and other trash

@@ -1339,6 +1339,13 @@ blocked meanwhile. Every hook in =claude/git-hooks= then runs the
 repository's own hook of the same name, so repository hooks keep working. The
 only related command guard denies overriding =core.hooksPath=; a plain read
 (=--get= or the bare key) is allowed.
+*Repository remotes.* Every repository under =~/repos= has a private GitHub
+remote, so forge, backups and other machines can reach it. A repository that
+deliberately stays local records why with =git config repo.noRemote "REASON"=.
+In agent sessions =post-commit= runs =claude/bin/repo-remote-check=, which warns
+on a commit in a repository under =~/repos= that has neither a remote nor that
+setting, and prints the =gh repo create= command to stage for Pablo. It only
+warns; commits made outside agent sessions are not checked.
 The documentation, README, and paired-config commit gates also run from that
 =pre-commit= hook, through =claude/bin/agent-commit-gates=, so they read the
 staged files from the index instead of inferring them from command text.

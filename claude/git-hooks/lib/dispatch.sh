@@ -1,7 +1,7 @@
 # Body of every hook in this global core.hooksPath directory.
 # Agent sessions get the Elisp evidence check on pre-commit and
-# post-commit, and the documentation and paired-config gates on
-# pre-commit.  Every hook then runs the repository's own hook, which a
+# post-commit, the documentation and paired-config gates on pre-commit,
+# and the missing-remote warning on post-commit.  Every hook then runs the repository's own hook, which a
 # global core.hooksPath would otherwise disable.
 hook=$(basename "$0")
 hooks_dir=$(cd "$(dirname "$0")" && pwd -P)
@@ -16,7 +16,10 @@ if [ -n "${CLAUDE_CODE_SESSION_ID:-}${CODEX_THREAD_ID:-}" ]; then
       "$hooks_dir/../bin/agent-commit-gates" || status=1
       [ "$status" -eq 0 ] || exit 1
       ;;
-    post-commit) "$hooks_dir/../bin/elisp-evidence" post-commit ;;
+    post-commit)
+      "$hooks_dir/../bin/elisp-evidence" post-commit
+      "$hooks_dir/../bin/repo-remote-check"
+      ;;
   esac
 fi
 common_dir=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || exit 0

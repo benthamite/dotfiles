@@ -1,0 +1,24 @@
+#!/bin/sh
+# Warn when a repository under ~/repos has no remote.
+#
+# Rule (claude/README.org, "Repository remotes"): every repository under
+# ~/repos has a private GitHub remote, so forge, backups and other machines
+# can reach it.  A repository that deliberately stays local records why with
+#   git config repo.noRemote "REASON"
+# Run from the global post-commit hook in agent sessions; it only warns.
+top=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+case "$top/" in
+  "$HOME/repos/"*) ;;
+  *) exit 0 ;;
+esac
+[ -n "$(git remote)" ] && exit 0
+[ -n "$(git config --get repo.noRemote)" ] && exit 0
+name=$(basename "$top")
+cat >&2 <<EOF
+repo-remote-check: $top has no remote.
+Every repository under ~/repos gets a private GitHub remote. Ask Pablo, then
+stage for him (auto mode blocks agents from running it):
+  gh repo create benthamite/$name --private --source "$top" --remote origin --push
+To keep it local instead, record why: git config repo.noRemote "REASON"
+EOF
+exit 0

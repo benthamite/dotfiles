@@ -1,4 +1,4 @@
 #!/bin/sh
-# inbox-policy: front end of the inbox monitor (~/repos/inbox-monitor; design in
-# docs/plans/2026-10-23-inbox-monitor.md). Never sends anything.
+# inbox-policy: front end of the inbox monitor (~/repos/inbox-monitor; design in its
+# docs/plan.md). Never sends anything.
 exec /Users/pablostafforini/repos/inbox-monitor/bin/inbox-policy "$@"

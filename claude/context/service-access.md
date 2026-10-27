@@ -170,7 +170,7 @@ holds unsent text; delivery retries once the prompt is empty. Projects (`~/.conf
 (rules in `~/.config/inbox-monitor/routes/`, since that repo is shared:
 Slack DMs and @mentions), and `personal`, which only
 notifies, and only for direct conversations no other project claimed. Design
-and decisions: `docs/plans/2026-10-23-inbox-monitor.md`. Epoch Slack and Epoch mail are not
+and decisions: `docs/plan.md` in the private `~/repos/inbox-monitor`. Epoch Slack and Epoch mail are not
 collected or routed (Pablo, 2026-10-24).
 
 - On an `[inbox-monitor]` prompt: run `inbox-read --project NAME`, handle the

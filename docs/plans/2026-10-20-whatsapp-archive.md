@@ -179,4 +179,4 @@ precedence over it where they conflict.
 
 Pablo's decision: the archive keeps 90 days of messages (`Retention` in `archive.go`; pruned at startup and hourly; a history-sync replay of older messages is pruned again on the next pass), and both `~/.local/share/wa-archive` and `~/.local/share/inbox-monitor` are excluded from Time Machine (`tmutil addexclusion`), since they hold decrypted messages and the linked device's session keys. FileVault protects them at rest.
 
-**Allowlist replaced by a deny-list (2026-10-23)**: Pablo's decision. `wa-read` reads every chat except those on the optional `~/.config/wa-archive/denylist`; a malformed deny-list still makes it refuse. See the inbox monitor plan (`2026-10-23-inbox-monitor.md`, decision 6).
+**Allowlist replaced by a deny-list (2026-10-23)**: Pablo's decision. `wa-read` reads every chat except those on the optional `~/.config/wa-archive/denylist`; a malformed deny-list still makes it refuse. See the inbox monitor plan (`docs/plan.md` in the private `~/repos/inbox-monitor`, decision 6).

@@ -51,6 +51,7 @@ STATE_FILE = STATE_DIR / "state.json"
 HEARTBEAT_FILE = STATE_DIR / "success"
 LOCK_FILE = STATE_DIR / "lock"
 EXIFTOOL = shutil.which("exiftool") or "/opt/homebrew/bin/exiftool"
+QPDF = shutil.which("qpdf") or "/opt/homebrew/bin/qpdf"
 # Bump when the mapping from bib fields to tags changes, so every PDF is
 # compared again instead of trusting state recorded under the old mapping.
 MAPPING_VERSION = "1"
@@ -358,6 +359,51 @@ def write_metadata(pdf: Path, tags: dict) -> str | None:
     return None
 
 
+def _pages(pdf: Path) -> str:
+    proc = subprocess.run([QPDF, "--show-npages", str(pdf)],
+                          capture_output=True, text=True, timeout=300)
+    return proc.stdout.strip() if proc.returncode in (0, 3) else ""
+
+
+def rewrite_and_write(pdf: Path, tags: dict) -> str | None:
+    """Rewrite PDF with qpdf, write TAGS to the rewrite, copy it over PDF.
+
+    The fallback for PDFs exiftool refuses (a broken xref or Root object)
+    that qpdf reads. The rewrite replaces PDF only if its page count matches
+    and the write reads back; it drops the file's incremental-update history.
+    Returns an error message or None."""
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp) / pdf.name
+        proc = subprocess.run([QPDF, str(pdf), str(out)],
+                              capture_output=True, text=True, timeout=600)
+        if proc.returncode not in (0, 3):
+            return (proc.stderr.strip()[-300:] or "qpdf rewrite failed")
+        before, after = _pages(pdf), _pages(out)
+        if not after or after != before:
+            return f"qpdf rewrite changed the page count ({before} -> {after})"
+        error = write_metadata(out, tags)
+        if error:
+            return error
+        # Copy into the existing file, as exiftool's in-place mode does, so
+        # its Finder metadata and Drive identity survive.
+        shutil.copyfile(out, pdf)
+    return None
+
+
+def write_with_repair(pdf: Path, tags: dict) -> tuple[str | None, str | None]:
+    """Write TAGS to PDF, falling back to `rewrite_and_write'.
+
+    Returns (error, repaired): error is None on success; repaired is the
+    exiftool error a qpdf rewrite worked around, if it did."""
+    error = write_metadata(pdf, tags)
+    if not error:
+        return None, None
+    repair_error = rewrite_and_write(pdf, tags)
+    if repair_error:
+        return f"{error}; qpdf rewrite: {repair_error}", None
+    return None, error
+
+
 # ------------------------------------------------------------------- commands
 
 def _stat_key(pdf: Path) -> list:
@@ -414,7 +460,8 @@ def cmd_sync(args) -> int:
     now = dt.datetime.now().timestamp()
     counts = dict.fromkeys(("missing", "empty", "recent", "unchanged",
                             "known-failure", "matching", "updated",
-                            "failed", "encrypted", "deferred"), 0)
+                            "repaired", "failed", "encrypted", "deferred"),
+                           0)
     to_read = []
     for pdf, tags in targets.items():
         tags = {k: v for k, v in tags.items() if k != "_key"}
@@ -457,11 +504,16 @@ def cmd_sync(args) -> int:
             continue
         else:
             writes += 1
-            error = write_metadata(pdf, tags)
+            error, repaired = write_with_repair(pdf, tags)
             if error:
                 counts["failed"] += 1
                 record.update(status="write-error", error=error)
                 print(f"failed {entry['_key']}: {pdf}: {error}")
+            elif repaired:
+                counts["repaired"] += 1
+                record["status"] = "ok"
+                print(f"repaired {entry['_key']}: {pdf}: qpdf rewrite after:"
+                      f" {repaired}")
             else:
                 counts["updated"] += 1
                 record["status"] = "ok"
@@ -492,10 +544,12 @@ def cmd_write(args) -> int:
     if not tags:
         print("no title, author or date to write", file=sys.stderr)
         return 0
-    error = write_metadata(Path(args.pdf), tags)
+    error, repaired = write_with_repair(Path(args.pdf), tags)
     if error:
         print(error, file=sys.stderr)
         return 1
+    if repaired:
+        print(f"repaired by qpdf rewrite after: {repaired}", file=sys.stderr)
     return 0
 
 
@@ -503,6 +557,8 @@ def cmd_preflight() -> int:
     problems = []
     if not os.access(EXIFTOOL, os.X_OK):
         problems.append(f"exiftool not executable: {EXIFTOOL}")
+    if not os.access(QPDF, os.X_OK):
+        problems.append(f"qpdf not executable: {QPDF}")
     for bib in BIB_FILES:
         if not os.access(bib, os.R_OK):
             problems.append(f"bibliography not readable: {bib}")

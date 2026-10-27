@@ -143,14 +143,32 @@ def previous_form(previous: str | None) -> str:
     return elisp_string(previous) if previous else "nil"
 
 
-def permalink_info(permalink: str) -> dict:
+def slack_module():
     spec = importlib.util.spec_from_file_location("draft_slack_parser", Path(__file__).with_name("slack.py"))
     module = importlib.util.module_from_spec(spec)
     # Compile source directly: importing this sibling must not write a cache
     # beside the maintained scripts inside Drive.
     exec(compile(Path(spec.origin).read_bytes(), spec.origin, "exec"), module.__dict__)
-    module._workspace = "epoch"
+    return module
+
+
+def permalink_info(permalink: str) -> dict:
+    """Parse PERMALINK against the slack.py workspace that owns its domain."""
+    module = slack_module()
+    host = permalink.split("/")[2] if permalink.count("/") >= 3 else ""
+    keys = [k for k, ws in module.WORKSPACES.items() if ws.get("domain") == host]
+    if not keys:
+        raise ValueError("Slack permalink is not in a configured workspace")
+    module._workspace = keys[0]
     return module.parse_permalink(permalink)
+
+
+def workspace_subdomain(workspace: str) -> str:
+    """Return the Slack subdomain (as Emacs Slack keys teams) of WORKSPACE."""
+    domain = slack_module().WORKSPACES.get(workspace, {}).get("domain")
+    if not domain:
+        raise ValueError("Unknown Slack workspace or workspace without a domain")
+    return domain.split(".")[0]
 
 
 def composer_expression(expr: str) -> str:
@@ -205,7 +223,7 @@ def prefill_slack_reply(permalink: str, path: Path | None, socket: str,
     (unless team
       (error "No registered Slack team for %s" team-domain))
     (unless (slack-team-connectedp team)
-      (error "Epoch Slack is disconnected"))
+      (error "Slack team is disconnected"))
     (let ((room (slack-room-find room-id team)))
       (unless room
         (error "Slack room %s is not loaded for team %s"
@@ -373,8 +391,8 @@ def prefill_slack_reply(permalink: str, path: Path | None, socket: str,
 
 
 def prefill_channel_message(channel: str, path: Path | None, socket: str,
-                            previous: str | None = None) -> str:
-    """Open the exact loaded Epoch room; stage PATH unless this is open-only."""
+                            previous: str | None = None, workspace: str = "epoch") -> str:
+    """Open the exact loaded room of WORKSPACE; stage PATH unless this is open-only."""
     expr = f"""
 (progn
   (require 'cl-lib)
@@ -386,12 +404,12 @@ def prefill_channel_message(channel: str, path: Path | None, socket: str,
     (error "slack-create-message-buffer is not available"))
   (let* ((channel-id {elisp_string(channel)})
          (previous {previous_form(previous)})
-         (team (or (slack-team-find-by-domain "epochai")
-                   (error "Epoch Slack team is not registered")))
+         (team (or (slack-team-find-by-domain {elisp_string(workspace_subdomain(workspace))})
+                   (error "Slack team is not registered: %s" {elisp_string(workspace)})))
          (room (slack-room-find channel-id team)))
-    (unless room (error "Epoch Slack room is not loaded"))
+    (unless room (error "Slack room is not loaded"))
     (unless (slack-team-connectedp team)
-      (error "Epoch Slack is disconnected"))
+      (error "Slack team is disconnected"))
     ;; The cursor slot is typed as a string. Passing nil happens to work when a
     ;; buffer for this room is already cached and blows up with "Invalid slot
     ;; type" when one has to be constructed, which is exactly the first time
@@ -547,6 +565,15 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--workspace", default="epoch",
+        help="slack.py workspace key for --channel (default: epoch); "
+             "a --permalink's domain selects its workspace",
+    )
+    parser.add_argument(
+        "--no-ring", action="store_true",
+        help="Stage only in the composer; leave the kill ring alone",
+    )
+    parser.add_argument(
         "--no-open",
         action="store_true",
         help=(
@@ -563,6 +590,8 @@ def main() -> int:
             raise ValueError("Use either --file or --stdin")
         if not args.open_only and not (args.file or args.stdin):
             raise ValueError("A draft file or --stdin is required")
+        if args.no_open and args.no_ring:
+            raise ValueError("Nothing to do with both --no-open and --no-ring")
         if args.no_open and (args.permalink or args.channel):
             raise ValueError("Ring-only cannot specify a target")
         if not args.no_open and bool(args.permalink) == bool(args.channel):
@@ -584,14 +613,18 @@ def main() -> int:
                 stage = prefill_channel_message if args.channel else prefill_slack_reply
                 key = destination_key(args.permalink, args.channel)
                 previous = None if args.open_only else read_staged_hash(key)
-                ack = stage(args.channel or args.permalink, snapshot, socket, previous)
+                if args.channel:
+                    ack = prefill_channel_message(args.channel, snapshot, socket, previous,
+                                                  args.workspace)
+                else:
+                    ack = stage(args.permalink, snapshot, socket, previous)
                 expected = "draft-opened" if args.open_only else "draft-composer-staged"
                 if ack != expected:
                     raise UncertainResult("Composer staging was not acknowledged")
                 result.update(opened=True, composer=not args.open_only)
                 if not args.open_only:
                     record_staged_hash(key, snapshot.read_bytes())
-            if not args.open_only:
+            if not args.open_only and not args.no_ring:
                 result["stage"] = "ring"
                 copy_to_kill_ring(snapshot, socket)
                 result["ring"] = True

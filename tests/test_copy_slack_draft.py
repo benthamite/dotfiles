@@ -689,7 +689,7 @@ class CopySlackDraftTest(unittest.TestCase):
             self.assertEqual(self.mod.main(), 0)
             snapshot.assert_not_called()
             ring.assert_not_called()
-            stage.assert_called_once_with("C12345678", None, "/tmp/socket", None)
+            stage.assert_called_once_with("C12345678", None, "/tmp/socket", None, "epoch")
             self.assertFalse(json.loads(output.getvalue())["composer"])
 
     def test_composer_success_ring_failure_is_partial(self):
@@ -723,7 +723,7 @@ class CopySlackDraftTest(unittest.TestCase):
         stdin.buffer = io.BytesIO(b"draft\n")
         seen = []
 
-        def fake_stage(channel, snapshot, socket, previous):
+        def fake_stage(channel, snapshot, socket, previous, workspace="epoch"):
             seen.append((channel, snapshot.read_bytes(), socket))
             return "draft-composer-staged"
 
@@ -742,6 +742,28 @@ class CopySlackDraftTest(unittest.TestCase):
                 self.assertEqual(self.mod.main(), 1)
                 client.assert_not_called()
                 self.assertEqual(json.loads(output.getvalue())["stage"], "validation")
+
+    def test_permalink_selects_its_workspace_by_domain(self):
+        info = self.mod.permalink_info(
+            "https://becasaisar.slack.com/archives/C0C39AQCEMD/p1793111186883979"
+            "?thread_ts=1793023924.707039&cid=C0C39AQCEMD")
+        self.assertEqual(info["channel"], "C0C39AQCEMD")
+        with self.assertRaises(ValueError):
+            self.mod.permalink_info("https://unknown-ws.slack.com/archives/C12345678/p1710000000000000")
+
+    def test_workspace_subdomain_names_the_emacs_team(self):
+        self.assertEqual(self.mod.workspace_subdomain("baish"), "baish")
+        self.assertEqual(self.mod.workspace_subdomain("epoch"), "epochai")
+        with self.assertRaises(ValueError):
+            self.mod.workspace_subdomain("nope")
+
+    def test_no_ring_stages_only_the_composer(self):
+        stdin = mock.Mock()
+        stdin.buffer = io.BytesIO(b"draft\n")
+        with mock.patch.object(sys, "argv", ["copy", "--stdin", "--no-ring", "--workspace", "baish", "--channel", "C12345678"]), mock.patch.object(sys, "stdin", stdin), mock.patch.object(self.mod, "default_socket", return_value="/tmp/s"), mock.patch.object(self.mod, "prefill_channel_message", return_value="draft-composer-staged") as stage, mock.patch.object(self.mod, "copy_to_kill_ring") as ring, mock.patch.object(self.mod, "record_staged_hash"), mock.patch.object(self.mod, "read_staged_hash", return_value=None), mock.patch("sys.stdout", new_callable=io.StringIO):
+            self.assertEqual(self.mod.main(), 0)
+            self.assertEqual(stage.call_args.args[-1], "baish")
+            ring.assert_not_called()
 
 
 if __name__ == "__main__":

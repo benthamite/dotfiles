@@ -37,7 +37,10 @@ resolving it.
 
 =copy-slack-draft= takes the draft from =--stdin= or a private UTF-8 =--file=
 outside Drive, and finds the running Emacs server's socket unless =--socket=
-names another. It opens the exact Epoch destination, preserves
+names another. It works in every workspace registered both in =slack.py= and
+in Emacs Slack (=slack-extras-teams=): a permalink's domain picks the
+workspace, and =--workspace= (default =epoch=) does for =--channel=. It opens
+the exact destination, preserves
 conflicting unsent input, verifies composer insertion, then stages the same text
 in the kill ring without importing or exporting the system clipboard.
 =--open-only= opens without copying or inserting. Structured receipts distinguish
@@ -77,7 +80,7 @@ before minting. Configuration symlinks and nonregular files are refused.
 | =batch-test.sh= | Loads canonical package source (or runs ERT for =elisp-ert=) in batch Emacs, rejects stale-load warnings, and on success records evidence for the exact Elisp contents it covered. |
 | =check-elpaca-sync-hook= | Validates the embedded Elpaca sync hooks and confirms that the installed hooks are identical; =--install= writes them from the primary checkout. |
 | =cloudflare-deploy-token= | Mints a per-project Cloudflare Worker-deploy API token using privately configured administrator references and stores it in the Automations vault. |
-| =copy-slack-draft= | Opens an exact Epoch Emacs target or stages a draft (stdin or private file) in its composer and kill ring, resolving the running server's socket by default, with per-stage receipts. |
+| =copy-slack-draft= | Opens an exact Emacs Slack target in any workspace registered in both =slack.py= and Emacs (a permalink's domain selects it; =--workspace= for =--channel=) or stages a draft (stdin or private file) in its composer and, unless =--no-ring=, the kill ring, resolving the running server's socket by default, with per-stage receipts. |
 | =cr-worktree-gc.sh= | Removes only clean, fully pushed transient CR review worktrees and preserves unfinished work. |
 | =elisp-ert= | Runs profile-aware ERT for a package, test file, and optional test selector. |
 | =elisp-evidence= | Records content-bound Elisp test evidence and commit-bound live evidence, and implements the checks behind the global Git hooks in =claude/git-hooks= (=pre-commit=, =post-commit=) and the agent Stop hook (=stop-check=). |

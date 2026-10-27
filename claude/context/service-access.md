@@ -193,7 +193,10 @@ collected or routed (Pablo, 2026-10-24).
   file or pointing Pablo to it, run `inbox-drafts check --project PROJECT`: a
   draft marked ANSWERED is one Pablo already replied to, so retire it. Each
   section must be decidable on its own, without the chat. Update a section when new
-  messages change it; once the archive shows it sent, or Pablo drops it, move
+  messages change it. Once Pablo approves a Slack draft, stage it in the Emacs
+  composer of its exact conversation with `claude/bin/copy-slack-draft
+  --no-ring --stdin --permalink URL` (or `--workspace KEY --channel ID`); Pablo
+  sends it from Emacs. Never type it through Chrome. Once the archive shows it sent, or Pablo drops it, move
   it under a final `# Enviados / descartados` heading with the date.
 - Pre-authorized actions live in the project's `.inbox-policy.toml` and count
   only while Pablo's approval matches the file (`inbox-policy status --project

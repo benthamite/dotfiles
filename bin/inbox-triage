@@ -1,4 +1,0 @@
-#!/bin/sh
-# inbox-triage: daily triage of unclaimed conversations (~/repos/inbox-monitor;
-# design in its docs/plan.md). Proposes; routes only what Pablo approves.
-exec /Users/pablostafforini/repos/inbox-monitor/bin/inbox-triage "$@"

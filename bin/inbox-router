@@ -1,0 +1,4 @@
+#!/bin/sh
+# inbox-router: the inbox monitor's agent router (~/repos/inbox-monitor; design in
+# its docs/plan.md): status, compare (shadow mode), correct TEXT.
+exec /Users/pablostafforini/repos/inbox-monitor/bin/inbox-router "$@"

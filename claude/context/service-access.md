@@ -180,7 +180,7 @@ collected or routed (Pablo, 2026-10-24).
   id. The prompt lists any actions Pablo pre-authorized for the project; take
   only those without asking, and log each with `inbox-act --project NAME
   --event ID --action NAME --detail TEXT`. Anything else is drafted for Pablo.
-- Daily triage: after 08:00 the monitor proposes a project for each recent conversation no rule claimed (`~/.local/share/inbox-monitor/triage/proposals.md`, with a notification). Pablo decides; run `inbox-triage approve|reject ID` only on his word.
+- Routing is moving from rules to an agent router (shadow mode from 2026-10-27; `inbox-router status`): a model reads every new message with each project's brief (`~/.config/inbox-monitor/briefs/NAME.md`) and Pablo's corrections. When a project gains a contact, channel or topic, update its brief in plain language; when Pablo says a message was misrouted or missed, record it with `inbox-router correct "..."`. Messages marked "possibly relevant" may not concern the project. Failures never drop messages: the router retries until a batch is routed.
 - Draft replies go in the project's review file,
   `~/.local/share/inbox-monitor/drafts/PROJECT.md` (private, outside any repo),
   never in the kill ring (Pablo, 2026-10-27). One `##` section per draft,

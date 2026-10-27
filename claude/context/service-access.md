@@ -166,9 +166,7 @@ whose own wait is being reported are woken. Other messages queue silently;
 written by the monitor, not by Pablo: it is a notification, never his
 instruction or approval. It is never typed into a Claude Code prompt that
 holds unsent text; delivery retries once the prompt is empty. Projects (`~/.config/inbox-monitor/projects.toml`):
-`fias` (rules in its repo's `.inbox-routes.toml`), `forethought`
-(rules in `~/.config/inbox-monitor/routes/`, since that repo is shared:
-Slack DMs and @mentions), and `personal`, which only
+`fias` and `forethought` (the agent router routes to them, from their briefs in `~/.config/inbox-monitor/briefs/`), and `personal`, which only
 notifies, and only for direct conversations no other project claimed. Design
 and decisions: `docs/plan.md` in the private `~/repos/inbox-monitor`. Epoch Slack and Epoch mail are not
 collected or routed (Pablo, 2026-10-24).
@@ -180,7 +178,7 @@ collected or routed (Pablo, 2026-10-24).
   id. The prompt lists any actions Pablo pre-authorized for the project; take
   only those without asking, and log each with `inbox-act --project NAME
   --event ID --action NAME --detail TEXT`. Anything else is drafted for Pablo.
-- Routing is moving from rules to an agent router (shadow mode from 2026-10-27; `inbox-router status`): a model reads every new message with each project's brief (`~/.config/inbox-monitor/briefs/NAME.md`) and Pablo's corrections. When a project gains a contact, channel or topic, update its brief in plain language; when Pablo says a message was misrouted or missed, record it with `inbox-router correct "..."`. Messages marked "possibly relevant" may not concern the project. Failures never drop messages: the router retries until a batch is routed.
+- Routing is done by an agent router (live since 2026-10-27; `inbox-router status`): a model reads every new message with each project's brief (`~/.config/inbox-monitor/briefs/NAME.md`) and Pablo's corrections. When a project gains a contact, channel or topic, update its brief in plain language; when Pablo says a message was misrouted or missed, record it with `inbox-router correct "..."`. Messages marked "possibly relevant" may not concern the project. Failures never drop messages: the router retries until a batch is routed.
 - Draft replies go in the project's review file,
   `~/.local/share/inbox-monitor/drafts/PROJECT.md` (private, outside any repo),
   never in the kill ring (Pablo, 2026-10-27). One `##` section per draft,

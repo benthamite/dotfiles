@@ -180,6 +180,17 @@ collected or routed (Pablo, 2026-10-24).
   id. The prompt lists any actions Pablo pre-authorized for the project; take
   only those without asking, and log each with `inbox-act --project NAME
   --event ID --action NAME --detail TEXT`. Anything else is drafted for Pablo.
+- Draft replies go in the project's review file,
+  `~/.local/share/inbox-monitor/drafts/PROJECT.md` (private, outside any repo),
+  never in the kill ring (Pablo, 2026-10-27). One `##` section per draft,
+  newest first, headed with the recipient, channel and a one-line topic, with:
+  **Contexto** (what the other person said, with a link, and the relevant
+  facts or deadlines), **Decisión** (what Pablo has to decide, and the
+  recommendation), **Borrador** (the text, as a quote block, in the language it
+  will be sent in) and, if any, **Adjuntos** (absolute paths). Each section
+  must be decidable on its own, without the chat. Update a section when new
+  messages change it; once the archive shows it sent, or Pablo drops it, move
+  it under a final `# Enviados / descartados` heading with the date.
 - Pre-authorized actions live in the project's `.inbox-policy.toml` and count
   only while Pablo's approval matches the file (`inbox-policy status --project
   NAME`). Pablo approves with `inbox-policy approve --project NAME` in his own

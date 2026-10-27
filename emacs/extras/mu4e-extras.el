@@ -1019,7 +1019,7 @@ mbsync removes files between index runs."
 
 ;; do not prompt for an URL number when there is only one URL
 (el-patch-defun mu4e--view-get-urls-num (prompt &optional multi)
-  "Ask the user with PROMPT for an URL number for MSG.
+  "Ask the user with PROMPT for an URL number for current message.
 The number is [1..n] for URLs \[0..(n-1)] in the message. If
 MULTI is nil, return the number for the URL; otherwise (MULTI is
 non-nil), accept ranges of URL numbers, as per

@@ -1282,8 +1282,11 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
 /[[https://github.com/raxod502/el-patch][el-patch]] customizes the behavior of Emacs Lisp functions and notifies the user when a function so customized changes./
 
+=el-patch= must be active before the rest of this file is read. Loading a file expands every macro in each top-level form, and the =use-feature= blocks below run at once rather than through the Elpaca queue. Without =:wait t=, =el-patch-defun= is not yet defined when they are read, so their patch bodies are expanded as ordinary code (=when= becomes =if= and =progn=) and the stored patch no longer matches the source it is validated against.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package el-patch
+  :ensure (:wait t)
   :config
   (defvar init-el-patch-validation-failure-log
     (expand-file-name "el-patch-validation-failures.eld" user-emacs-directory)

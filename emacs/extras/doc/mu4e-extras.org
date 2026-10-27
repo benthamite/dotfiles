@@ -679,6 +679,9 @@ The standard behavior would prompt the user to enter the number "1",
 which is unnecessary.  When there are multiple URLs, the original
 prompting behavior is preserved, including the URL indicators that mu4e
 1.14 shows while prompting.
+The patch matches the definition in =mu4e-view-html.el=, where newer
+mu4e releases define this function; when mu4e changes it, =el-patch=
+warns at its next validation.
 
 * Indices
 :PROPERTIES:

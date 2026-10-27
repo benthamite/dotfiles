@@ -3377,14 +3377,26 @@ def command_repair_apply(args):
             raise PublishError("--replace takes PATH=FILE", EXIT_REFUSED)
         # --path applies the attributes of PATH, so a git-crypt path is stored encrypted.
         edits[path] = run_git(repo.root, "hash-object", "-w", "--path", path, source).text.strip()
-    if not edits:
-        raise PublishError("name at least one --remove PATH or --replace PATH=FILE", EXIT_REFUSED)
-    dirty = run_git(repo.root, "status", "--porcelain", "--", *edits).text.strip()
-    if dirty:
-        raise PublishError("uncommitted changes in a repaired path; commit or move them first:\n" + dirty,
+    drops = set()
+    for name in args.drop:
+        resolved = run_git(repo.root, "rev-parse", "--verify", "--quiet", name + "^{commit}", check=False)
+        if resolved.code != 0:
+            raise PublishError("--drop %s does not name a commit" % name, EXIT_REFUSED)
+        drops.add(resolved.text.strip())
+    if not edits and not drops:
+        raise PublishError("name at least one --remove PATH, --replace PATH=FILE or --drop COMMIT",
                            EXIT_REFUSED)
+    if edits:
+        dirty = run_git(repo.root, "status", "--porcelain", "--", *edits).text.strip()
+        if dirty:
+            raise PublishError("uncommitted changes in a repaired path; commit or move them first:\n" + dirty,
+                               EXIT_REFUSED)
     commits = run_git(repo.root, "rev-list", "--reverse", "--topo-order",
                       "%s..%s" % (entry["remote_oid"], original)).text.split()
+    outside = sorted(drops - set(commits))
+    if outside:
+        raise PublishError("--drop names a commit outside the outgoing range: %s"
+                           % ", ".join(commit[:12] for commit in outside), EXIT_REFUSED)
     mapping = {}
     with tempfile.TemporaryDirectory(prefix="dotfiles-publish-repair-") as work:
         index = Path(work) / "index"
@@ -3393,25 +3405,41 @@ def command_repair_apply(args):
             if len(parents) > 1:
                 raise PublishError("the outgoing range has a merge commit (%s); repair it by hand" % commit[:12],
                                    EXIT_REFUSED)
-            mapping[commit] = rewritten_commit(
-                repo, index, commit, [mapping.get(parent, parent) for parent in parents], edits)
+            new_parents = [mapping.get(parent, parent) for parent in parents]
+            rewritten = rewritten_commit(repo, index, commit, new_parents, edits)
+            if commit in drops:
+                # Trees are snapshots: dropping a commit that still changes
+                # something would silently fold that change into its child.
+                remaining = run_git(repo.root, "diff", "--name-only", new_parents[0], rewritten).text.split()
+                if remaining:
+                    raise PublishError("cannot drop %s: after the edits it still changes %s; remove or "
+                                       "replace those paths too" % (commit[:12], ", ".join(remaining)),
+                                       EXIT_REFUSED)
+                rewritten = new_parents[0]
+            mapping[commit] = rewritten
     new_candidate = mapping[commits[-1]] if commits else original
     if new_candidate == original:
         raise PublishError("the named paths do not occur in the outgoing commits", EXIT_REFUSED)
     run_git(repo.root, "update-ref", "-m", "dotfiles-publish repair-apply", branch, new_candidate, original)
     # Only the repaired paths move in the index and worktree; a removed path
     # stays on disk untracked so it can be ignored or moved.
-    run_git(repo.root, "reset", "--quiet", new_candidate, "--", *edits)
+    if edits:
+        run_git(repo.root, "reset", "--quiet", new_candidate, "--", *edits)
     replaced = [path for path, blob in edits.items() if blob is not None]
     if replaced:
         run_git(repo.root, "checkout", new_candidate, "--", *replaced)
     hook = Path(run_git(repo.root, "rev-parse", "--path-format=absolute", "--git-common-dir").text.strip()) \
         / "hooks" / "post-rewrite"
     if os.access(str(hook), os.X_OK):
-        rewrites = "".join("%s %s\n" % pair for pair in mapping.items() if pair[0] != pair[1])
+        # Like git rebase, report only rewritten commits, not dropped ones.
+        rewrites = "".join("%s %s\n" % pair for pair in mapping.items()
+                           if pair[0] != pair[1] and pair[0] not in drops)
         subprocess.run([str(hook), "rebase"], input=rewrites.encode(), cwd=str(repo.root))
     for old, new in mapping.items():
-        print("rewritten: %s -> %s" % (old[:12], new[:12]))
+        if old in drops:
+            print("dropped: %s" % old[:12])
+        else:
+            print("rewritten: %s -> %s" % (old[:12], new[:12]))
     print("new-candidate: %s" % new_candidate)
     print("next: repair-verify %s" % " ".join("--allowed-path %s" % path for path in edits))
     return EXIT_OK
@@ -4014,10 +4042,13 @@ def build_parser():
     repair_start.set_defaults(handler=command_repair_start)
 
     repair_apply = subparsers.add_parser(
-        "repair-apply", help="remove or replace paths in the outgoing commits without a checkout")
+        "repair-apply", help="remove or replace paths in the outgoing commits, or drop emptied commits, "
+                             "without a checkout")
     repair_apply.add_argument("--run", required=True)
     repair_apply.add_argument("--remove", action="append", default=[], metavar="PATH")
     repair_apply.add_argument("--replace", action="append", default=[], metavar="PATH=FILE")
+    repair_apply.add_argument("--drop", action="append", default=[], metavar="COMMIT",
+                              help="drop an outgoing commit that the edits leave empty")
     repair_apply.set_defaults(handler=command_repair_apply)
 
     repair_verify = subparsers.add_parser("repair-verify", help="verify a repaired history")

@@ -2330,6 +2330,51 @@ class DotfilesPublishRepairTests(PublicationFixture):
         self.assertEqual("", self.git("ls-tree", "-r", "--name-only", "HEAD", "--", "config").stdout)
         self.assertTrue((self.repo / "config/service.conf").exists())
 
+    def test_repair_apply_drops_commits_the_edits_leave_empty(self):
+        self.publish_base()
+        self.commit("record the risk", {"docs/risk.md": "token = %s\n" % TEST_SECRET})
+        self.commit("later work", {"docs/later.md": "later\n"})
+        self.commit("revise the risk", {"docs/risk.md": "revised\n"})
+        self.commit("move the risk elsewhere", remove=("docs/risk.md",))
+        proc, run_id = self.scan()
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        self.assertEqual(0, self.cli("repair-start", "--run", run_id).returncode)
+        outgoing = self.git("rev-list", "--reverse", "%s..HEAD" % self.remote_tip()).stdout.split()
+        applied = self.cli("repair-apply", "--run", run_id, "--remove", "docs/risk.md",
+                           "--drop", outgoing[0], "--drop", outgoing[2], "--drop", outgoing[3])
+        self.assertEqual(0, applied.returncode, applied.stdout + applied.stderr)
+        self.assertEqual(3, applied.stdout.count("dropped: "))
+        self.assertEqual(["later work"],
+                         self.git("log", "--format=%s", "%s..HEAD" % self.remote_tip()).stdout.split("\n")[:-1])
+        history = self.git("log", "-p", "%s..HEAD" % self.remote_tip()).stdout
+        self.assertNotIn("risk.md", history)
+        self.assertEqual("later\n", self.git("show", "HEAD:docs/later.md").stdout)
+        self.assertEqual("", self.git("status", "--porcelain").stdout)
+        verified = self.cli("repair-verify", "--run", run_id, "--allowed-path", "docs/risk.md")
+        self.assertEqual(0, verified.returncode, verified.stdout + verified.stderr)
+
+    def test_repair_apply_refuses_to_drop_a_commit_that_still_changes_files(self):
+        self.publish_base()
+        original = self.commit("add configuration",
+                               {"config/service.conf": "token = %s\n" % TEST_SECRET, "docs/other.md": "other\n"})
+        proc, run_id = self.scan()
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        self.assertEqual(0, self.cli("repair-start", "--run", run_id).returncode)
+        refused = self.cli("repair-apply", "--run", run_id, "--remove", "config/service.conf",
+                           "--drop", original)
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("still changes docs/other.md", refused.stderr)
+        self.assertEqual(original, self.head())
+
+    def test_repair_apply_refuses_to_drop_a_published_commit(self):
+        run_id, _ = self.start_repairable_run()
+        original = self.head()
+        refused = self.cli("repair-apply", "--run", run_id, "--remove", "config/service.conf",
+                           "--drop", self.remote_tip())
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("outside the outgoing range", refused.stderr)
+        self.assertEqual(original, self.head())
+
     def test_repair_apply_refuses_a_dirty_repaired_path(self):
         run_id, _ = self.start_repairable_run()
         (self.repo / "config/service.conf").write_text("edited\n")

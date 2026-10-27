@@ -369,7 +369,10 @@ are no longer loaded. Review-only work does not write copies or imply provider
 transfer. Editing preserves source files, requires validated literal changes,
 and distinguishes engine failures and protected-syntax gaps from clean results. Its
 =package-lock.json= and =yarn.lock= must change together; the runtime installs
-from the frozen =yarn.lock=.
+from the frozen =yarn.lock=. =npm update --package-lock-only= also rewrites
+=yarn.lock= but drops other platforms' optional packages and sha1 fragments, so
+discard that rewrite and edit the bumped =yarn.lock= entries from the registry's
+=dist.shasum= and =dist.integrity= instead.
 
 The paired =move-session-log= skill rewrites session metadata and Codex's
 project-filtered thread index using exact session identities and known metadata

@@ -30,6 +30,9 @@ redesign behind it is
    brings back the denial, the route registry and their tests, then add the exposure to the table.
 3. **Every new exposure is recorded here** (a row in the table, no values),
    with the path it took. Changes to the guard must say which rows they close.
+   A row names the credential's kind, not its account, and never says where
+   other copies live or that it is still valid or unrotated: this file is
+   public, and those details make a target. Keep them in private notes.
 4. **Tests must stay fast.** Guard tests call the engine in-process through
    `tests/guard_harness.py`; add end-to-end runs of `agent-guard.sh` only to
    prove wiring. Run `bin/test-guards` (every guard test, ~35 s) before

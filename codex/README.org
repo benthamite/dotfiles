@@ -69,7 +69,8 @@ load project =CLAUDE.md= as a fallback.
 The global =codex/AGENTS.md= and =claude/CLAUDE.md= files are semantic peers.
 Both carry the same operating rules, including "solve classes, not instances",
 and the same repository-root contract (notes workspaces under Drive keep their
-git directories in =~/git-dirs/=).
+git directories in =~/git-dirs/=). Both also require agent-written messages to
+Peter Hartree to start with =[agent] =.
 The paired =find-past-session= skill directs agents looking for a past session
 to =claude/bin/agent-log-find=, which searches the rendered Markdown session
 logs rather than raw transcripts.

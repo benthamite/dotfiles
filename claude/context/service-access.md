@@ -160,7 +160,7 @@ each message to the projects whose rules claim it, and wakes an idle agent.el
 session of that project (one whose directory is the project's repo or below
 it; the deepest registered project wins) by submitting a prompt starting
 `[inbox-monitor]`. Waking is off by default: only sessions Pablo turned on
-with agent.el's `agent-toggle-wake-ups` (`m w` in `agent-menu`) and sessions
+with agent.el's `agent-toggle-wake-ups` (`m m`, "toggle monitor", in `agent-menu`) and sessions
 whose own wait is being reported are woken. Other messages queue silently;
 `inbox-read` still shows them. That prompt is
 written by the monitor, not by Pablo: it is a notification, never his

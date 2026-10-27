@@ -7,7 +7,7 @@ the meantime. Before such a session stops, this hook checks the project's queue
 and, if anything is waiting, keeps the turn going with an instruction to read
 and handle it.
 
-It applies only to agent.el sessions that accept wake-ups (`m w` in agent-menu)
+It applies only to agent.el sessions that accept wake-ups (`m m`, "toggle monitor", in agent-menu)
 and whose directory is inside a monitored project. It fails open: any error, a
 missing Emacs or a missing database lets the session stop. `stop_hook_active`
 (a stop already continued by a hook) also lets it stop, so it cannot loop.

@@ -76,7 +76,8 @@ session's project wait for review, with the context needed to decide each one.
 The function asks the monitor's =inbox-drafts path --cwd DIR= which project
 holds the session's directory, and returns nil (so =m f= reports that the
 session has no review file) when the command is missing or no monitored
-project holds the directory.
+project holds the directory. After commenting on the drafts, =m p= (process
+review file) asks the session to carry out the comments.
 
 * Orchestration run view
 :PROPERTIES:

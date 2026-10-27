@@ -264,7 +264,8 @@ command-text fallback excludes project-local =.codex/= paths, its staged-file
 check excludes the project-local =.codex/skills/= mirrors that
 =ai-config-sync guard-commit= checks, and it excludes
 the repo-root =AGENTS.md= project mirror; the project-local dotfiles skill is
-handled by its configured documentation owner instead.
+handled by its configured documentation owner instead. It does not count
+dependency lockfiles, named once in =claude/hooks/lib-dependency-lockfiles.sh=.
 
 The LaunchAgent registry guard (=agent_guard.policies.launchagent=) routes every launchd change through
 =~/repos/launchd=. It denies writing a plist into
@@ -348,7 +349,7 @@ tokens, =ya29.= access tokens) in the input guards and the redactor.
 | =regenerate-manual-after-edit.sh= | Regenerates validated declared sibling Texinfo and existing Info names independently; disables local/Babel evaluation, refuses unsafe destinations or unsupported export directives, and reports partial failures without raw private errors. |
 | =remind-ai-config-sync.sh= | Delegates paired Claude/Codex update reminders to =bin/ai-config-sync=. |
 | =remind-claude-readme-update.sh= | Reminds work outside dotfiles when a symlinked edit changed the Claude configuration. |
-| =require-codex-readme-update.sh= | Requires the Codex README with staged Codex integration or sync changes. Run for both agents from the global Git =pre-commit= hook by =claude/bin/agent-commit-gates=, which reads the staged files from the index. |
+| =require-codex-readme-update.sh= | Requires the Codex README with staged Codex integration or sync changes; dependency lockfiles do not count. Run for both agents from the global Git =pre-commit= hook by =claude/bin/agent-commit-gates=, which reads the staged files from the index. |
 | =session-search-cleanup.sh= | At =SessionEnd=, terminates the search processes the ended thread left running, matched by =CODEX_THREAD_ID= in their environment, never by name alone (=lib/python/session_search_cleanup.py=). |
 | =session-learning-capture.sh= | Retained unregistered helper; validates Stop input and canonical cwd, emits escaped untrusted metadata, and reports malformed input without requesting capture. It writes no lesson records. |
 

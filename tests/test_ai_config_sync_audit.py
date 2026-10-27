@@ -1463,6 +1463,87 @@ for name in subprocess.check_output(["git", "ls-files", "-z"], cwd=root).decode(
         self.assertIn("README.org", problems[0])
         self.assertNotIn("Skills section", problems[0])
 
+    def test_lockfile_only_project_local_skill_change_needs_no_documentation(self):
+        """A dependency bump has no behavior for the documentation owner to describe."""
+        repo = self.make_repo(["README.org"])
+        lockfiles = {
+            ".claude/skills/example/package-lock.json",
+            ".claude/skills/example/yarn.lock",
+            ".codex/skills/example/package-lock.json",
+        }
+
+        self.assertEqual(
+            [],
+            self.module.local_skill_readme_problems(lockfiles, "example", "skills", repo),
+        )
+        self.assertEqual(
+            [],
+            self.module.local_skill_readme_problems(
+                {".claude/programmatic-skills/example/uv.lock"},
+                "example",
+                "programmatic-skills",
+                repo,
+            ),
+        )
+        for other in (
+            ".claude/skills/example/SKILL.md",
+            # The guard checks a skill once, from whichever side it meets
+            # first, so a file on the other side must still count.
+            ".codex/skills/example/SKILL.md",
+            # A manifest declares dependencies and scripts; it is not a lockfile.
+            ".claude/skills/example/package.json",
+            # A directory argument may stage more than the lockfile.
+            ".claude/skills/example",
+        ):
+            with self.subTest(other=other):
+                problems = self.module.local_skill_readme_problems(
+                    lockfiles | {other}, "example", "skills", repo
+                )
+                self.assertEqual(1, len(problems))
+                self.assertIn("README.org", problems[0])
+
+    def test_guard_accepts_a_lockfile_only_project_local_skill_commit(self):
+        skill_files = [
+            f"{side}/skills/example/{name}"
+            for side in (".claude", ".codex")
+            for name in ("SKILL.md", "package-lock.json")
+        ]
+        repo = self.make_repo(["README.org", *skill_files])
+        lockfiles = {path for path in skill_files if path.endswith(".json")}
+
+        def guard(changed_paths: set[str]) -> list[str]:
+            problems: list[str] = []
+            self.module.guard_changed_paths(
+                repo, changed_paths, changed_paths, changed_paths, problems,
+                False, {}, {}, {}, {},
+            )
+            return problems
+
+        self.assertEqual([], guard(lockfiles))
+        self.assertIn(
+            "README.org",
+            "\n".join(guard(lockfiles | {".codex/skills/example/SKILL.md"})),
+        )
+
+    def test_dependency_lockfile_names_match_the_readme_gates(self):
+        """The README commit gates and this guard exempt the same lockfiles."""
+        library = DOTFILES / "claude/hooks/lib-dependency-lockfiles.sh"
+        result = subprocess.run(
+            [
+                "bash", "-c",
+                'set -euo pipefail; source "$1"; '
+                'printf "%s\\n" "${DEPENDENCY_LOCKFILE_NAMES[@]}"',
+                "lockfile-names", str(library),
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        shell_names = result.stdout.split()
+
+        self.assertEqual(len(shell_names), len(set(shell_names)), shell_names)
+        self.assertEqual(set(shell_names), set(self.module.DEPENDENCY_LOCKFILE_NAMES))
+
     def test_configured_manual_documentation_owner_must_change(self):
         repo = self.make_repo(["README.md"])
         self.write_file(repo, "docs/project-skills.org")

@@ -28,6 +28,8 @@ fi
 # Check staged files (amend-aware: see lib-staged-files.sh)
 # shellcheck source=lib-staged-files.sh
 source "$SCRIPT_DIR/lib-staged-files.sh"
+# shellcheck source=lib-dependency-lockfiles.sh
+source "$SCRIPT_DIR/lib-dependency-lockfiles.sh"
 
 HAS_CLAUDE_CHANGES=false
 HAS_README=false
@@ -38,7 +40,8 @@ if [ -n "$STAGED" ]; then
       claude/skills/*/digests/*|claude/skills/*/last-run/*|claude/skills/twitter-vet/vetted/*)
         ;;
       claude/skills/*|claude/hooks/*|claude/settings*.json|claude/CLAUDE.md)
-        HAS_CLAUDE_CHANGES=true
+        # A dependency lockfile records versions, not behavior to document.
+        is_dependency_lockfile "$file" || HAS_CLAUDE_CHANGES=true
         ;;
       claude/README.org)
         HAS_README=true
@@ -52,8 +55,14 @@ fi
 if [ "$HAS_CLAUDE_CHANGES" = false ] && [ "$STAGED_SELECTION" = 0 ]; then
   if echo "$COMMAND" | grep -qE '\bgit\s+add\b'; then
     # Direct path in git add args (e.g., git add claude/skills/foo/SKILL.md)
-    # Exclude runtime data paths (digests, last-run, vetted)
-    if echo "$COMMAND" | grep -qE '(^|[[:space:]])claude/(skills|hooks|settings|CLAUDE)' && ! echo "$COMMAND" | grep -qE '\.claude/' && ! echo "$COMMAND" | grep -qE 'claude/skills/[^/]+/(digests|last-run)/|claude/skills/twitter-vet/vetted/'; then
+    # Exclude runtime data paths (digests, last-run, vetted) and dependency
+    # lockfiles. Lockfiles are dropped word by word, so another path named
+    # beside one still counts.
+    NON_LOCKFILE_WORDS=$(printf '%s\n' "$COMMAND" | tr -s '[:space:]' '\n' |
+      while IFS= read -r word; do
+        is_dependency_lockfile "$word" || printf '%s\n' "$word"
+      done)
+    if printf '%s\n' "$NON_LOCKFILE_WORDS" | grep -qE '^claude/(skills|hooks|settings|CLAUDE)' && ! echo "$COMMAND" | grep -qE '\.claude/' && ! echo "$COMMAND" | grep -qE 'claude/skills/[^/]+/(digests|last-run)/|claude/skills/twitter-vet/vetted/'; then
       HAS_CLAUDE_CHANGES=true
     fi
     # cd into a claude/ subdirectory before git add (e.g., cd ~/.claude/skills/foo && git add SKILL.md).

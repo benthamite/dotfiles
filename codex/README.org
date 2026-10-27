@@ -1226,7 +1226,10 @@ staged files from the index instead of inferring them from command text.
 An Elisp support file outside any package tree with its own =doc/=, such as a
 helper under =bin/=, is documented by the =README.org= of its directory or a
 parent; the Codex README gate ignores the project-local =.codex/skills/=
-mirrors, whose pairing =ai-config-sync guard-commit= checks. For a
+mirrors, whose pairing =ai-config-sync guard-commit= checks. Neither README gate,
+nor that guard's documentation-owner check for project-local skills, counts a
+dependency lockfile such as =package-lock.json=, so a lockfile-only version bump
+needs no documentation edit. For a
 =git commit -- PATH=, the documentation audit writes its candidate tree from
 the temporary index Git is committing, because the real index is locked.
 

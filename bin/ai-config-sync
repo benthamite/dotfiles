@@ -68,6 +68,20 @@ TOOL_SPECIFIC_SKILL_FRONTMATTER = {
 PEER_STATUS_PREFIXES = ("paired",)
 REGISTERED_PAIR_STATUSES = {"paired"}
 HOOK_DOCUMENTATION_NAMES = {"README.md", "README.org"}
+# A dependency lockfile records resolved versions (a Dependabot security bump,
+# for one) and no behavior a documentation owner could describe, so changing
+# only lockfiles needs no documentation update. Manifests such as package.json
+# still do. The README commit gates use the same names from
+# claude/hooks/lib-dependency-lockfiles.sh; a test checks the two lists match.
+DEPENDENCY_LOCKFILE_NAMES = frozenset({
+    # JavaScript
+    "package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml",
+    "bun.lock", "bun.lockb",
+    # Python
+    "uv.lock", "poetry.lock", "Pipfile.lock",
+    # Rust and Ruby
+    "Cargo.lock", "Gemfile.lock",
+})
 
 RUNTIME_PATTERNS = (
     "claude/skills/*/digests/*",
@@ -2051,6 +2065,19 @@ def local_skill_readme_problems(
     manifest: dict | None = None,
     candidate_tree: CommitCandidateTree | None = None,
 ) -> list[str]:
+    # Both sides count: the guard checks a skill once, whichever side it
+    # meets first, so a lockfile on one side must not excuse a file on the other.
+    skill_paths = [
+        path
+        for path in changed_paths
+        for side in (".claude", ".codex")
+        if path == f"{side}/{skill_root}/{skill}"
+        or path.startswith(f"{side}/{skill_root}/{skill}/")
+    ]
+    if skill_paths and all(
+        Path(path).name in DEPENDENCY_LOCKFILE_NAMES for path in skill_paths
+    ):
+        return []
     owner, mode = local_skill_documentation_policy(repo_root, manifest)
     generated_dotfiles_inventory = (
         mode == "generated"

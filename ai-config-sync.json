@@ -447,6 +447,13 @@
       "note": "Shared staged-file helper copied for commit gates; Codex usage comment references lib-codex-hook-json.sh."
     },
     {
+      "name": "lib-dependency-lockfiles.sh",
+      "claude": "claude/hooks/lib-dependency-lockfiles.sh",
+      "codex": null,
+      "status": "claude-only",
+      "note": "Names the dependency lockfiles that the README commit gates do not count as documented changes. One copy for both gates: codex/hooks/require-codex-readme-update.sh sources it from claude/hooks/. bin/ai-config-sync keeps the same names as DEPENDENCY_LOCKFILE_NAMES for project-local skill documentation owners; tests/test_ai_config_sync_audit.py checks that the lists match."
+    },
+    {
       "name": "commit-file-selection.py",
       "claude": "claude/hooks/commit-file-selection.py",
       "codex": "codex/hooks/commit-file-selection.py",

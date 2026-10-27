@@ -29,6 +29,9 @@ fi
 
 # shellcheck source=lib-staged-files.sh
 source "$SCRIPT_DIR/lib-staged-files.sh"
+# The one lockfile list, shared with the Claude README gate.
+# shellcheck source=../../claude/hooks/lib-dependency-lockfiles.sh
+source "$DOTFILES_ROOT/claude/hooks/lib-dependency-lockfiles.sh"
 
 HAS_CODEX_CHANGES=false
 HAS_README=false
@@ -45,7 +48,8 @@ if [ -n "$STAGED" ]; then
         # document project-local skills.
         ;;
       .codex/*|codex/*|ai-config-sync.json|bin/ai-config-sync)
-        HAS_CODEX_CHANGES=true
+        # A dependency lockfile records versions, not behavior to document.
+        is_dependency_lockfile "$file" || HAS_CODEX_CHANGES=true
         ;;
     esac
   done <<< "$STAGED"
@@ -56,8 +60,13 @@ if [ "$HAS_CODEX_CHANGES" = false ] && echo "$COMMAND" | grep -qE '\bgit\s+add\b
   # infer from command text here: project-local commits commonly stage
   # `.codex/skills/...`, and Codex hook payloads do not always include enough
   # cwd/workdir context for lib-repo-root.sh to distinguish those commands
-  # before `git add` has run.
-  if echo "$COMMAND" | grep -qE '(^|[[:space:]])(codex/|ai-config-sync\.json|bin/ai-config-sync)'; then
+  # before `git add` has run. Dependency lockfiles are dropped word by word,
+  # so another path named beside one still counts.
+  NON_LOCKFILE_WORDS=$(printf '%s\n' "$COMMAND" | tr -s '[:space:]' '\n' |
+    while IFS= read -r word; do
+      is_dependency_lockfile "$word" || printf '%s\n' "$word"
+    done)
+  if printf '%s\n' "$NON_LOCKFILE_WORDS" | grep -qE '^(codex/|ai-config-sync\.json|bin/ai-config-sync)'; then
     HAS_CODEX_CHANGES=true
   fi
 fi

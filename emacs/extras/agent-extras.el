@@ -382,6 +382,22 @@ Use \`g' to refresh and \`q' to quit.  Visible views refresh every five seconds.
   (when (timerp agent-extras-run--timer) (cancel-timer agent-extras-run--timer))
   (setq agent-extras-run--timer nil))
 
+;;;; Inbox monitor drafts
+
+(defun agent-extras-inbox-drafts-file (buffer)
+  "Return the inbox monitor's drafts file for session BUFFER, or nil.
+The file belongs to the monitored project whose repository holds BUFFER's
+directory, as the monitor's `inbox-drafts path' command reports it.  Return
+nil when the command is missing or no monitored project holds the directory."
+  (when-let* ((program (executable-find "inbox-drafts"))
+              (dir (expand-file-name
+                    (buffer-local-value 'default-directory buffer))))
+    (with-temp-buffer
+      (when (zerop (call-process program nil t nil "path" "--cwd" dir))
+        (string-trim (buffer-string))))))
+
+(setq agent-review-file-function #'agent-extras-inbox-drafts-file)
+
 ;;;; Menu
 
 (defun agent-extras-add-menu-entries ()

@@ -39,6 +39,8 @@ Retained project files and session history do not grant automatic project trust.
 
 The "Do the work yourself" rule in =AGENTS.md= gained a hand-off clause on 2026-10-10: when a step needs Pablo, the agent first prepares everything around it (page opened, permitted fields filled, secrets on the clipboard, cursor placed) and then gives numbered click-by-click instructions naming window, tab, field and button.
 
+Two operating rules added on 2026-10-27 (mirrored from =claude/CLAUDE.md=): an agent must name and get approval for any edit that reverses an agreed rule or decision in a governing document, and a rule that leaves a whole category unable to qualify is raised, not used to prune. Origin: this setup's Codex session replaced the per-platform noise thresholds with one 2% value without telling Pablo.
+
 Unfamiliar code execution uses the shared =bin/untrusted-run= VM boundary;
 reviewed local workflows retain host execution. =AGENTS.md= states only the
 routing rule; staging and trust details live in the runner contract. The paired routing guard is

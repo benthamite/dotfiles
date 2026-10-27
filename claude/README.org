@@ -93,6 +93,8 @@ API-key-authenticated Claude session.
 
 The "Do the work yourself" rule in =CLAUDE.md= (mirrored in =codex/AGENTS.md=) gained a hand-off clause on 2026-10-10: when a step needs Pablo, the agent first does everything around it (opens the page in its own tab, fills permitted fields, puts secrets on the clipboard, places the cursor) and then gives numbered click-by-click instructions naming window, tab, field and button. Origin: during the Forethought meeting-debrief build Pablo repeatedly received instructions that began "open …" for steps the agent could have prepared itself.
 
+Two operating rules in =CLAUDE.md= (mirrored in =codex/AGENTS.md=) were added on 2026-10-27: an agent must name and get approval for any edit that reverses an agreed rule or decision in a governing document, and a rule that leaves a whole category unable to qualify is raised, not used to prune. Origin: a Codex session narrowing the noise-model work replaced the per-platform hotel and Airbnb noise thresholds with one 2% value in the accommodation profile and booking workflow without telling Pablo, and the next booking search pruned every hotel on that basis.
+
 Unfamiliar code execution uses the shared =bin/untrusted-run= VM boundary;
 reviewed local workflows retain host execution. =CLAUDE.md= states only the
 routing rule; staging and trust details live in the runner contract. The guard engine's

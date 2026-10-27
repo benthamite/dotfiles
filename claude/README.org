@@ -858,7 +858,8 @@ ambiguous writes before any retry.
 The =generate-readme= skill preserves established Org manuals, README-specific
 material and foreign edits. It distinguishes package/feature/repository names,
 checks recipe prerequisites and installed revisions, verifies publishable links,
-and reserves manual renames or roadmap migrations for explicit requests.
+links Pablo's packages to their manual on stafforini.com rather than the Org
+file, and reserves manual renames or roadmap migrations for explicit requests.
 
 The =fix-drive-errors= skill separates read-only diagnosis from authorized
 repairs and binds live evidence to the displayed account and sync root. Its

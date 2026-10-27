@@ -124,10 +124,10 @@ Give the smallest complete configuration and actual first command or library cal
 ```markdown
 ## Documentation
 
-For detailed usage and reference documentation, see the [manual](README.org).
+For detailed usage and reference documentation, see the [manual](https://stafforini.com/notes/PACKAGE/).
 ```
 
-Replace the example link with the actual manual path and describe its verified coverage; preserve stable section targets.
+For Pablo's own packages, link to the published manual on his website, `https://stafforini.com/notes/<package>/`, never to the Org file in the repository. That page includes the repository's Org manual, so the manual file stays in the repository. Check that the page responds before linking it. If it does not exist yet, create it with `add-to-emacs-packages` first. For other authors' packages, link to the manual's actual path. Describe the manual's verified coverage; preserve stable section targets.
 
 #### 7. Roadmap (if applicable)
 

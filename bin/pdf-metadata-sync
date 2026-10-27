@@ -52,6 +52,9 @@ HEARTBEAT_FILE = STATE_DIR / "success"
 LOCK_FILE = STATE_DIR / "lock"
 EXIFTOOL = shutil.which("exiftool") or "/opt/homebrew/bin/exiftool"
 QPDF = shutil.which("qpdf") or "/opt/homebrew/bin/qpdf"
+# Info entries the job does not manage, kept when a repair drops the Info
+# dictionary.
+INFO_KEPT = ["Subject", "Keywords", "Creator", "Producer"]
 # Bump when the mapping from bib fields to tags changes, so every PDF is
 # compared again instead of trusting state recorded under the old mapping.
 MAPPING_VERSION = "1"
@@ -369,25 +372,35 @@ def rewrite_and_write(pdf: Path, tags: dict) -> str | None:
     """Rewrite PDF with qpdf, write TAGS to the rewrite, copy it over PDF.
 
     The fallback for PDFs exiftool refuses (a broken xref or Root object)
-    that qpdf reads. The rewrite replaces PDF only if its page count matches
-    and the write reads back; it drops the file's incremental-update history.
-    Returns an error message or None."""
+    that qpdf reads. If the tags still do not read back, as when an Info
+    entry is not a string, the second attempt drops the Info dictionary and
+    copies back its untouched readable entries. A rewrite replaces PDF only
+    if its page count matches and the write reads back; it drops the file's
+    incremental-update history. Returns an error message or None."""
+    error = None
     with tempfile.TemporaryDirectory() as tmp:
         out = Path(tmp) / pdf.name
-        proc = subprocess.run([QPDF, str(pdf), str(out)],
-                              capture_output=True, text=True, timeout=600)
-        if proc.returncode not in (0, 3):
-            return (proc.stderr.strip()[-300:] or "qpdf rewrite failed")
-        before, after = _pages(pdf), _pages(out)
-        if not after or after != before:
-            return f"qpdf rewrite changed the page count ({before} -> {after})"
-        error = write_metadata(out, tags)
-        if error:
-            return error
-        # Copy into the existing file, as exiftool's in-place mode does, so
-        # its Finder metadata and Drive identity survive.
-        shutil.copyfile(out, pdf)
-    return None
+        for extra in ([], ["--remove-info"]):
+            proc = subprocess.run([QPDF, *extra, str(pdf), str(out)],
+                                  capture_output=True, text=True, timeout=600)
+            if proc.returncode not in (0, 3):
+                return (proc.stderr.strip()[-300:] or "qpdf rewrite failed")
+            before, after = _pages(pdf), _pages(out)
+            if not after or after != before:
+                return f"qpdf rewrite changed the page count ({before} -> {after})"
+            if extra:
+                subprocess.run([EXIFTOOL, "-q", "-q", "-overwrite_original",
+                                "-charset", "filename=utf8", "-tagsFromFile",
+                                str(pdf), *[f"-PDF:{t}" for t in INFO_KEPT],
+                                str(out)],
+                               capture_output=True, text=True, timeout=300)
+            error = write_metadata(out, tags)
+            if not error:
+                # Copy into the existing file, as exiftool's in-place mode
+                # does, so its Finder metadata and Drive identity survive.
+                shutil.copyfile(out, pdf)
+                return None
+    return error
 
 
 def write_with_repair(pdf: Path, tags: dict) -> tuple[str | None, str | None]:

@@ -42,7 +42,10 @@ before `%PDF-`) or its write does not read back, both `write` and `sync` fall
 back to rewriting the file with qpdf in a temporary directory, writing the tags
 to the rewrite and copying it over the original in place. The rewrite is used
 only if its page count matches and the write reads back; it drops the file's
-incremental-update history. `sync` logs such files as `repaired` with the
+incremental-update history. If the tags still do not read back (an Info entry
+that is not a string, as in `Butler1908Erewhon.pdf`), a second rewrite drops
+the Info dictionary and copies back its Subject, Keywords, Creator and
+Producer before writing. `sync` logs such files as `repaired` with the
 exiftool error. A PDF neither tool can write stays untouched and counts as
 `failed`.
 

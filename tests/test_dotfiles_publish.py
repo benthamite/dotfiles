@@ -2356,6 +2356,38 @@ class DotfilesPublishRepairTests(PublicationFixture):
                                          for commit in rewritten])
         self.assertEqual(0, self.git("verify-commit", rewritten[0], check=False).returncode)
 
+    def test_repair_apply_substitutes_text_in_each_outgoing_version(self):
+        self.publish_base()
+        self.commit("add configuration", {"config/service.conf": "token = %s\nmode = a\n" % TEST_SECRET})
+        self.commit("later work", {"config/service.conf": "token = %s\nmode = b\n" % TEST_SECRET,
+                                   "docs/later.md": "later\n"})
+        proc, run_id = self.scan()
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        self.assertEqual(0, self.cli("repair-start", "--run", run_id).returncode)
+        spec = self.base / "substitute.json"
+        spec.write_text(json.dumps([{"old": "token = %s" % TEST_SECRET, "new": "token = from-op"}]))
+        applied = self.cli("repair-apply", "--run", run_id, "--substitute", "config/service.conf=%s" % spec)
+        self.assertEqual(0, applied.returncode, applied.stdout + applied.stderr)
+        rewritten = self.git("rev-list", "--reverse", "%s..HEAD" % self.remote_tip()).stdout.split()
+        # Each version keeps its own other lines; only the named text changes.
+        self.assertEqual(["token = from-op\nmode = a\n", "token = from-op\nmode = b\n"],
+                         [self.git("show", "%s:config/service.conf" % commit).stdout for commit in rewritten])
+        self.assertNotIn(TEST_SECRET, self.git("log", "-p", "%s..HEAD" % self.remote_tip()).stdout)
+        self.assertEqual("token = from-op\nmode = b\n", (self.repo / "config/service.conf").read_text())
+        self.assertEqual("", self.git("status", "--porcelain").stdout)
+
+    def test_repair_apply_refuses_a_substitution_that_matches_nothing(self):
+        run_id, _ = self.start_repairable_run()
+        original = self.head()
+        spec = self.base / "substitute.json"
+        spec.write_text(json.dumps([{"old": "token = %s" % TEST_SECRET, "new": "token = from-op"},
+                                    {"old": "absent text", "new": "x"}]))
+        refused = self.cli("repair-apply", "--run", run_id, "--substitute", "config/service.conf=%s" % spec)
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("config/service.conf pair 2", refused.stderr)
+        self.assertNotIn("absent text", refused.stderr)
+        self.assertEqual(original, self.head())
+
     def test_repair_apply_drops_commits_the_edits_leave_empty(self):
         self.publish_base()
         self.commit("record the risk", {"docs/risk.md": "token = %s\n" % TEST_SECRET})

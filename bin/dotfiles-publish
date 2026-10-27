@@ -20,6 +20,7 @@ Two environment variables change behaviour and both are deliberate:
 from __future__ import annotations
 
 import argparse
+import collections
 import fcntl
 import hashlib
 import hmac
@@ -3319,24 +3320,35 @@ def git_with_index(repo, index, *args, input_bytes=None):
     return completed.stdout.decode("utf-8", "replace")
 
 
-def rewritten_commit(repo, index, commit, parents, edits):
+def rewritten_commit(repo, index, commit, parents, edits, hits=None):
     """Return a copy of COMMIT on PARENTS with EDITS applied to its tree.
 
-    EDITS maps a path to None (remove it) or to a blob id that replaces it
-    wherever the commit has the path.  Author, committer, dates and message
-    are kept, and a signed commit is signed again; the tree is edited in a
-    temporary index, so no file is checked out and no smudge filter (such as
-    git-crypt's) runs."""
+    EDITS maps a path to None (remove it), to a blob id that replaces it, or
+    to a list of (old, new) byte pairs substituted in that commit's own copy,
+    wherever the commit has the path; HITS counts each pair's matches.
+    Substitution edits the stored bytes, so it never matches inside an
+    encrypted file.  Author, committer, dates and message are kept, and a
+    signed commit is signed again; the tree is edited in a temporary index,
+    so no file is checked out and no smudge filter (such as git-crypt's)
+    runs."""
     git_with_index(repo, index, "read-tree", commit + "^{tree}")
-    for path, blob in edits.items():
+    for path, edit in edits.items():
         entry = run_git(repo.root, "ls-tree", commit, "--", path).text.strip()
         if not entry:
             continue
-        if blob is None:
+        if edit is None:
             git_with_index(repo, index, "update-index", "--force-remove", "--", path)
-        else:
-            mode = entry.split()[0]
-            git_with_index(repo, index, "update-index", "--cacheinfo", "%s,%s,%s" % (mode, blob, path))
+            continue
+        mode, _, stored = entry.split("\t", 1)[0].split()
+        blob = edit
+        if isinstance(edit, list):
+            data = run_git(repo.root, "cat-file", "blob", stored).out
+            for number, (old, new) in enumerate(edit):
+                if hits is not None:
+                    hits[(path, number)] += data.count(old)
+                data = data.replace(old, new)
+            blob = run_git(repo.root, "hash-object", "-w", "--no-filters", "--stdin", input_bytes=data).text.strip()
+        git_with_index(repo, index, "update-index", "--cacheinfo", "%s,%s,%s" % (mode, blob, path))
     tree = git_with_index(repo, index, "write-tree").strip()
     fields = run_git(repo.root, "log", "-1", "--format=%an%x00%ae%x00%ad%x00%cn%x00%ce%x00%cd",
                      "--date=raw", commit).text.rstrip("\n").split("\x00")
@@ -3382,6 +3394,22 @@ def command_repair_apply(args):
             raise PublishError("--replace takes PATH=FILE", EXIT_REFUSED)
         # --path applies the attributes of PATH, so a git-crypt path is stored encrypted.
         edits[path] = run_git(repo.root, "hash-object", "-w", "--path", path, source).text.strip()
+    for spec in args.substitute:
+        path, separator, source = spec.partition("=")
+        if not separator or not path or not source:
+            raise PublishError("--substitute takes PATH=FILE", EXIT_REFUSED)
+        if path in edits:
+            raise PublishError("%s is named by more than one edit" % path, EXIT_REFUSED)
+        try:
+            pairs = json.loads(Path(source).read_text(encoding="utf-8"))
+        except (OSError, ValueError) as error:
+            raise PublishError("--substitute %s: cannot read %s: %s" % (path, source, error), EXIT_REFUSED)
+        if not isinstance(pairs, list) or not pairs or not all(
+                isinstance(pair, dict) and set(pair) == {"old", "new"} and isinstance(pair["old"], str)
+                and isinstance(pair["new"], str) and pair["old"] for pair in pairs):
+            raise PublishError('--substitute FILE holds a nonempty JSON list of {"old": TEXT, "new": TEXT}',
+                               EXIT_REFUSED)
+        edits[path] = [(pair["old"].encode("utf-8"), pair["new"].encode("utf-8")) for pair in pairs]
     drops = set()
     for name in args.drop:
         resolved = run_git(repo.root, "rev-parse", "--verify", "--quiet", name + "^{commit}", check=False)
@@ -3389,8 +3417,8 @@ def command_repair_apply(args):
             raise PublishError("--drop %s does not name a commit" % name, EXIT_REFUSED)
         drops.add(resolved.text.strip())
     if not edits and not drops:
-        raise PublishError("name at least one --remove PATH, --replace PATH=FILE or --drop COMMIT",
-                           EXIT_REFUSED)
+        raise PublishError("name at least one --remove PATH, --replace PATH=FILE, --substitute PATH=FILE "
+                           "or --drop COMMIT", EXIT_REFUSED)
     if edits:
         dirty = run_git(repo.root, "status", "--porcelain", "--", *edits).text.strip()
         if dirty:
@@ -3403,6 +3431,7 @@ def command_repair_apply(args):
         raise PublishError("--drop names a commit outside the outgoing range: %s"
                            % ", ".join(commit[:12] for commit in outside), EXIT_REFUSED)
     mapping = {}
+    hits = collections.Counter()
     with tempfile.TemporaryDirectory(prefix="dotfiles-publish-repair-") as work:
         index = Path(work) / "index"
         for commit in commits:
@@ -3411,7 +3440,7 @@ def command_repair_apply(args):
                 raise PublishError("the outgoing range has a merge commit (%s); repair it by hand" % commit[:12],
                                    EXIT_REFUSED)
             new_parents = [mapping.get(parent, parent) for parent in parents]
-            rewritten = rewritten_commit(repo, index, commit, new_parents, edits)
+            rewritten = rewritten_commit(repo, index, commit, new_parents, edits, hits)
             if commit in drops:
                 # Trees are snapshots: dropping a commit that still changes
                 # something would silently fold that change into its child.
@@ -3422,6 +3451,13 @@ def command_repair_apply(args):
                                        EXIT_REFUSED)
                 rewritten = new_parents[0]
             mapping[commit] = rewritten
+    # A substitution that matches nothing is a mistyped repair, not a no-op.
+    # Name it by position: its text may be the very thing being removed.
+    unmatched = ["%s pair %d" % (path, number + 1) for path, edit in edits.items() if isinstance(edit, list)
+                 for number in range(len(edit)) if not hits[(path, number)]]
+    if unmatched:
+        raise PublishError("--substitute text occurs in no outgoing version: %s" % ", ".join(unmatched),
+                           EXIT_REFUSED)
     new_candidate = mapping[commits[-1]] if commits else original
     if new_candidate == original:
         raise PublishError("the named paths do not occur in the outgoing commits", EXIT_REFUSED)
@@ -4052,6 +4088,9 @@ def build_parser():
     repair_apply.add_argument("--run", required=True)
     repair_apply.add_argument("--remove", action="append", default=[], metavar="PATH")
     repair_apply.add_argument("--replace", action="append", default=[], metavar="PATH=FILE")
+    repair_apply.add_argument("--substitute", action="append", default=[], metavar="PATH=FILE",
+                              help='replace exact text in every outgoing version of PATH; FILE is a JSON '
+                                   'list of {"old": TEXT, "new": TEXT}')
     repair_apply.add_argument("--drop", action="append", default=[], metavar="COMMIT",
                               help="drop an outgoing commit that the edits leave empty")
     repair_apply.set_defaults(handler=command_repair_apply)

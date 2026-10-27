@@ -893,6 +893,8 @@ Stop from a =claude -p= run inside a session is dropped by the agent package
 itself, which compares the payload's
 =session_id= with the id it records for the session.
 
+Since 2026-10-27 the Stop hook =hooks/inbox-pending-stop.py= makes a session that accepts inbox-monitor wake-ups handle the messages routed to its project while it was busy, before it stops: the monitor wakes only idle sessions, and a FIAS session that worked for 90 minutes left Ro's final contract and Eitan's payment approval unseen.
+
 Since 2026-10-10 the Stop hook =hooks/block-done-over-running-tasks.py= refuses a
 turn whose last status line is =Status: done= while Claude Code's Stop payload
 still lists a running background shell, Monitor or background agent (teammates

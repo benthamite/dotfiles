@@ -39,6 +39,8 @@ Retained project files and session history do not grant automatic project trust.
 
 The kill-ring rule in =AGENTS.md= gained an exception on 2026-10-27: draft replies to other people that come out of inbox-monitor work go in the project's drafts file (=~/.local/share/inbox-monitor/drafts/PROJECT.md=), with the context needed to decide each one, never in the kill ring.
 
+Codex has no counterpart yet to the Claude Stop hook =inbox-pending-stop.py= (2026-10-27), which makes a session that accepts inbox-monitor wake-ups handle messages routed to its project while it was busy; =ai-config-sync.json= records the parity as deferred.
+
 The "Do the work yourself" rule in =AGENTS.md= gained a hand-off clause on 2026-10-10: when a step needs Pablo, the agent first prepares everything around it (page opened, permitted fields filled, secrets on the clipboard, cursor placed) and then gives numbered click-by-click instructions naming window, tab, field and button.
 
 Two operating rules added on 2026-10-27 (mirrored from =claude/CLAUDE.md=): an agent must name and get approval for any edit that reverses an agreed rule or decision in a governing document, and a rule that leaves a whole category unable to qualify is raised, not used to prune. Origin: this setup's Codex session replaced the per-platform noise thresholds with one 2% value without telling Pablo.

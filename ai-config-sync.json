@@ -587,6 +587,13 @@
       "note": "Claude Stop hook registered in mutable ~/.claude/settings.json: refuses Status: done while the Stop payload's background_tasks lists running non-teammate tasks. Codex parity is unassessed (deferred 2026-10-10): whether Codex background terminals outlive a turn and whether its Stop payload exposes them is still to be checked; see docs/plans/2026-10-10-stale-background-jobs.md."
     },
     {
+      "name": "inbox-pending-stop.py",
+      "claude": "claude/hooks/inbox-pending-stop.py",
+      "codex": null,
+      "status": "claude-only",
+      "note": "Claude Stop hook registered in mutable ~/.claude/settings.json: when an agent.el session that accepts inbox-monitor wake-ups is about to stop and its project has undelivered messages or wait notices (which the monitor could not submit while the session was busy), it continues the turn with an instruction to handle them; stop_hook_active lets it stop, so it cannot loop. Codex parity is deferred (2026-10-27): Codex sessions in a monitored project would need the same check in its Stop hook."
+    },
+    {
       "name": "hold-idle-teammate-with-running-task.py",
       "claude": "claude/hooks/hold-idle-teammate-with-running-task.py",
       "codex": null,

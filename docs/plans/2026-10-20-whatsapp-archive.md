@@ -1,5 +1,11 @@
 # Read-only WhatsApp archive for agents
 
+> **Superseded in part (2026-10-27):** Pablo approved a send path. The daemon
+> now sends messages queued in its outbox by `bin/wa-send` (text, documents,
+> images), only for messages he approved; presence, read receipts and
+> reactions stay forbidden. WhatsApp Web is no longer the agents' send path.
+> See `~/repos/wa-archive/outbox.go` and `claude/context/service-access.md`.
+
 Status: implemented 2026-10-20 (`~/repos/wa-archive`, `bin/wa-read`); revised after one Codex review (see "Review changes") and during implementation (see "Implementation notes").
 
 ## Problem

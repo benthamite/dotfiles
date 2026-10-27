@@ -66,12 +66,17 @@ print the archive's coverage: a missing message may predate it.
 with `~/repos/wa-archive/bin/wa-archive link PHONE` (a phone-number pairing
 code Pablo enters on his phone, valid about 2.5 minutes).
 
-There is no agent send path in `wa-read`. To send, use WhatsApp Web through
-Claude in Chrome, with Pablo's confirmation per message. It is linked in two
-Chrome profiles: Personal (used by the `order-salads` skill) and `baish`
-(`baish.com.ar`), which the `fias` Claude account drives. WhatsApp Web runs in
-one tab per profile: if it reports being open in another window, that is
-Pablo's tab, and "Use here" disconnects it, so ask before taking it over.
+Send with `wa-send --chat "EXACT NAME" | --to JID --text "..." [--file
+/abs/path]` (since 2026-10-27; `wa-send --help`): it queues the message in
+wa-archive's outbox, the daemon sends it as Pablo (a file goes as a document,
+or as a photo if it is an image, with the text as caption), archives it, and
+`wa-send` prints the receipt. Send only what Pablo approved: a "send" comment
+processed from a drafts file, or his explicit OK in chat. Exit 3 means no
+receipt arrived: check `wa-read show` before retrying, never resend blindly.
+Receipts stay in `~/.local/share/wa-archive/outbox/sent/`. Do not send through
+WhatsApp Web in Chrome: it cannot attach files reliably and types into Pablo's
+browser. (Exception still to migrate: the `order-salads` skill sends through
+WhatsApp Web in the Personal profile.)
 
 ## Fireflies
 
@@ -195,7 +200,8 @@ collected or routed (Pablo, 2026-10-24).
   messages change it. Once Pablo approves a Slack draft, stage it in the Emacs
   composer of its exact conversation with `claude/bin/copy-slack-draft
   --no-ring --stdin --permalink URL` (or `--workspace KEY --channel ID`); Pablo
-  sends it from Emacs. Never type it through Chrome. Once the archive shows it sent, or Pablo drops it, move
+  sends it from Emacs. Never type it through Chrome. Once he approves a
+  WhatsApp draft, send it with `wa-send` (see "WhatsApp"), attachments included. Once the archive shows it sent, or Pablo drops it, move
   it under a final `# Enviados / descartados` heading with the date.
 - Pre-authorized actions live in the project's `.inbox-policy.toml` and count
   only while Pablo's approval matches the file (`inbox-policy status --project

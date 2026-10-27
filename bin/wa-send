@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+"""wa-send: send a WhatsApp message Pablo approved, optionally with a file.
+
+Queues a job in wa-archive's outbox (~/.local/share/wa-archive/outbox/); the
+running wa-archive daemon sends it as Pablo, archives it, and writes a receipt
+to outbox/sent/ or outbox/failed/. This command waits for that receipt.
+
+Only for messages Pablo approved: a "send" comment processed from a drafts
+file, or his explicit OK in chat. Every receipt stays in outbox/sent/.
+
+  wa-send --chat "FIAS - Legal Contable" --text "..." [--file /abs/path.pdf]
+  wa-send --to 5491100000000@s.whatsapp.net --stdin < message.txt
+
+--chat must match exactly one chat name (as `wa-read resolve` lists it).
+Exit status: 0 sent, 1 failed (nothing sent), 3 no receipt in time: the
+message may or may not have gone out, so check `wa-read show` before retrying.
+"""
+
+import argparse
+import json
+import os
+import secrets
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+OUTBOX = Path.home() / ".local/share/wa-archive/outbox"
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(prog="wa-send", description=__doc__,
+                                formatter_class=argparse.RawDescriptionHelpFormatter)
+    target = p.add_mutually_exclusive_group(required=True)
+    target.add_argument("--to", help="chat JID")
+    target.add_argument("--chat", help="exact chat name")
+    body = p.add_mutually_exclusive_group()
+    body.add_argument("--text", help="message text (the caption with --file)")
+    body.add_argument("--stdin", action="store_true", help="read the text from stdin")
+    p.add_argument("--file", help="absolute path of a file to attach")
+    p.add_argument("--timeout", type=int, default=120, help="seconds to wait for the receipt")
+    a = p.parse_args()
+    text = sys.stdin.read().rstrip("\n") if a.stdin else (a.text or "")
+    if not text.strip() and not a.file:
+        p.error("nothing to send")
+    if a.file:
+        path = Path(a.file).expanduser()
+        if not path.is_absolute() or not path.is_file():
+            p.error(f"--file must be an existing absolute path: {a.file}")
+        a.file = str(path)
+    to = a.to or resolve(a.chat)
+    if not OUTBOX.is_dir():
+        sys.exit("wa-send: no outbox; is the wa-archive daemon running?")
+    name = f"{time.strftime('%Y%m%dT%H%M%S')}-{secrets.token_hex(4)}.json"
+    job = {"to": to, "text": text}
+    if a.file:
+        job["file"] = a.file
+    tmp = OUTBOX / (name + ".tmp")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w") as fh:
+        json.dump(job, fh)
+    os.replace(tmp, OUTBOX / name)
+    deadline = time.time() + a.timeout
+    while time.time() < deadline:
+        for status in ("sent", "failed"):
+            receipt = OUTBOX / status / name
+            if receipt.exists():
+                print(receipt.read_text().strip())
+                return 0 if status == "sent" else 1
+        time.sleep(1)
+    print(json.dumps({"status": "unknown", "job": name,
+                      "note": "no receipt yet; check wa-read show before retrying"}))
+    return 3
+
+
+def resolve(chat: str) -> str:
+    """Return the JID of the one chat named exactly CHAT."""
+    out = subprocess.run(["wa-read", "resolve", chat], capture_output=True, text=True)
+    matches = [line.split("\t")[0] for line in out.stdout.splitlines()
+               if line.count("\t") >= 2 and line.split("\t", 2)[2].strip().casefold()
+               == chat.strip().casefold()]
+    if len(matches) != 1:
+        sys.exit(f"wa-send: {len(matches)} chats are named exactly {chat!r}; use --to JID")
+    return matches[0]
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -78,6 +78,14 @@ WhatsApp Web in Chrome: it cannot attach files reliably and types into Pablo's
 browser. (Exception still to migrate: the `order-salads` skill sends through
 WhatsApp Web in the Personal profile.)
 
+Attachments: `wa-read` shows `[document: NAME]` but no file. Download one with
+`wa-fetch --chat "EXACT NAME" --name NAME | --latest | --id MSGID` (since
+2026-10-28): the daemon downloads that one file into
+`~/.local/share/wa-archive/media/` and `wa-fetch` prints its path. Nothing is
+downloaded unless asked. Attachments that arrived before 2026-10-28 have no
+stored reference and cannot be fetched; ask Pablo to forward them to his own
+chat, which makes them fetchable.
+
 ## Slack
 
 Send with `slack.py -w WORKSPACE send --permalink URL | --channel ID

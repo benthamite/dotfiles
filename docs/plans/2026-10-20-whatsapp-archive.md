@@ -5,6 +5,8 @@
 > images), only for messages he approved; presence, read receipts and
 > reactions stay forbidden. WhatsApp Web is no longer the agents' send path.
 > See `~/repos/wa-archive/outbox.go` and `claude/context/service-access.md`.
+> Since 2026-10-28 it also keeps each attachment's download reference and
+> downloads one file when `bin/wa-fetch` asks (`fetch.go`).
 
 Status: implemented 2026-10-20 (`~/repos/wa-archive`, `bin/wa-read`); revised after one Codex review (see "Review changes") and during implementation (see "Implementation notes").
 

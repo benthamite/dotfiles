@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+"""wa-fetch: download a WhatsApp attachment from the archive, on request.
+
+The wa-archive daemon keeps each attachment's download reference but no file.
+This asks it to download one (documents, images, video, audio) into
+~/.local/share/wa-archive/media/ and prints the receipt with the file's path.
+
+  wa-fetch --chat "Gaston Teplitzki" --name "factura.pdf"   newest file with that name
+  wa-fetch --chat "Tesorería FIAS" --latest                 newest attachment in the chat
+  wa-fetch --to 5491100000000@s.whatsapp.net --id 3A5107...  one exact message
+
+--chat must match exactly one chat name (as `wa-read resolve` lists it).
+Attachments received before 2026-10-28, when references started being kept,
+cannot be fetched. Exit status: 0 done, 1 failed, 3 no receipt in time.
+"""
+
+import argparse
+import json
+import os
+import secrets
+import sqlite3
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+DATA = Path.home() / ".local/share/wa-archive"
+FETCH = DATA / "fetch"
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(prog="wa-fetch", description=__doc__,
+                                formatter_class=argparse.RawDescriptionHelpFormatter)
+    target = p.add_mutually_exclusive_group(required=True)
+    target.add_argument("--to", help="chat JID")
+    target.add_argument("--chat", help="exact chat name")
+    which = p.add_mutually_exclusive_group(required=True)
+    which.add_argument("--id", help="message id")
+    which.add_argument("--name", help="attachment file name (newest match)")
+    which.add_argument("--latest", action="store_true", help="newest attachment in the chat")
+    p.add_argument("--timeout", type=int, default=120)
+    a = p.parse_args()
+    chat = a.to or resolve(a.chat)
+    msg_id = a.id or find(chat, a.name)
+    if not FETCH.is_dir():
+        sys.exit("wa-fetch: no fetch queue; is the wa-archive daemon running?")
+    name = f"{time.strftime('%Y%m%dT%H%M%S')}-{secrets.token_hex(4)}.json"
+    tmp = FETCH / (name + ".tmp")
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w") as fh:
+        json.dump({"chat": chat, "id": msg_id}, fh)
+    os.replace(tmp, FETCH / name)
+    deadline = time.time() + a.timeout
+    while time.time() < deadline:
+        for status in ("done", "failed"):
+            receipt = FETCH / status / name
+            if receipt.exists():
+                print(receipt.read_text().strip())
+                return 0 if status == "done" else 1
+        time.sleep(1)
+    print(json.dumps({"status": "unknown", "request": name}))
+    return 3
+
+
+def find(chat: str, file_name: str | None) -> str:
+    """Return the id of the newest attachment in CHAT, named FILE_NAME if given."""
+    db = sqlite3.connect(f"file:{DATA / 'messages.db'}?mode=ro", uri=True)
+    key = (db.execute("SELECT key FROM aliases WHERE alias=?", (chat,)).fetchone() or [chat])[0]
+    query = ("SELECT m.id FROM messages m JOIN media_refs r ON r.chat_key=m.chat_key AND r.id=m.id "
+             "WHERE m.chat_key=?")
+    args = [key]
+    if file_name:
+        query += " AND m.file_name=?"
+        args.append(file_name)
+    row = db.execute(query + " ORDER BY m.ts DESC LIMIT 1", args).fetchone()
+    if not row:
+        sys.exit(f"wa-fetch: no fetchable attachment{' named ' + repr(file_name) if file_name else ''}"
+                 f" in {chat} (attachments before 2026-10-28 cannot be fetched)")
+    return row[0]
+
+
+def resolve(chat: str) -> str:
+    """Return the JID of the one chat named exactly CHAT."""
+    out = subprocess.run(["wa-read", "resolve", chat], capture_output=True, text=True)
+    matches = [line.split("\t")[0] for line in out.stdout.splitlines()
+               if line.count("\t") >= 2 and line.split("\t", 2)[2].strip().casefold()
+               == chat.strip().casefold()]
+    if len(matches) != 1:
+        sys.exit(f"wa-fetch: {len(matches)} chats are named exactly {chat!r}; use --to JID")
+    return matches[0]
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -27,6 +27,8 @@ class SendTests(unittest.TestCase):
         spec.loader.exec_module(self.mod)
         self.mod._workspace = "forethought"
         self.call = self.enterContext(mock.patch.object(self.mod, "call", side_effect=self.fake_call))
+        self.clear = self.enterContext(mock.patch.object(self.mod, "_clear_staged_draft",
+                                                         return_value="nothing-staged"))
         self.enterContext(mock.patch.object(self.mod, "_tokens", side_effect=AssertionError("No credentials")))
         self.output = self.enterContext(mock.patch("sys.stdout", new_callable=io.StringIO))
         self.errors = self.enterContext(mock.patch("sys.stderr", new_callable=io.StringIO))
@@ -102,6 +104,35 @@ class SendTests(unittest.TestCase):
             with self.assertRaises(self.mod._NoResponse) as raised:
                 self.mod._open_authenticated(object())
         self.assertEqual(raised.exception.code, 1)
+
+    def test_receipt_reports_the_staged_copy_and_clears_its_thread(self):
+        self.clear.return_value = "cleared"
+        self.mod.cmd_send(send_args(permalink=REPLY_LINK))
+        self.clear.assert_called_once_with("D0C8CR24NQZ", "1793185400.000100")
+        self.assertEqual(self.receipt()["composer"], "cleared")
+
+    def test_nothing_is_cleared_when_the_send_fails(self):
+        self.call.side_effect = SystemExit(1)
+        with self.assertRaises(SystemExit):
+            self.mod.cmd_send(send_args(channel="C0C9VPUQ9SN"))
+        self.clear.assert_not_called()
+
+    def test_clear_targets_the_thread_root_or_the_channel(self):
+        spec = importlib.util.spec_from_file_location("slack_clear_test", SOURCE)
+        real = importlib.util.module_from_spec(spec)  # setUp's module has _clear_staged_draft mocked
+        spec.loader.exec_module(real)
+        real._workspace = "forethought"
+        done = SimpleNamespace(stdout='{"clear": "absent", "status": "ok"}\n')
+        with mock.patch.object(real.subprocess, "run", return_value=done) as run:
+            self.assertEqual(real._clear_staged_draft("D0C8CR24NQZ", "1793185462.048979"), "absent")
+            self.assertEqual(real._clear_staged_draft("C0C9VPUQ9SN", None), "absent")
+        thread_argv, channel_argv = (c.args[0] for c in run.call_args_list)
+        self.assertEqual(thread_argv[3:], ["--clear", "--permalink", PERMALINK])
+        self.assertEqual(channel_argv[3:], ["--clear", "--channel", "C0C9VPUQ9SN", "--workspace", "forethought"])
+        with mock.patch.object(real.subprocess, "run", side_effect=OSError("no emacs")):
+            self.assertEqual(real._clear_staged_draft("C0C9VPUQ9SN", None), "uncertain")
+        with mock.patch.object(real.subprocess, "run", return_value=SimpleNamespace(stdout="")):
+            self.assertEqual(real._clear_staged_draft("C0C9VPUQ9SN", None), "uncertain")
 
     def test_cli_wiring(self):
         with mock.patch("sys.argv", ["slack.py", "-w", "forethought", "send", "--permalink", PERMALINK,

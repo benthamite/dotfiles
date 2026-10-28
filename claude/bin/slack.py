@@ -59,6 +59,8 @@ Usage:
       Post a message Pablo approved, as him (chat.postMessage). --permalink
       replies in that message's thread; --channel posts at top level unless
       --thread-ts is given. Prints a receipt with the new message's permalink.
+      Empties that conversation's Emacs composer if it still holds a draft
+      copy-slack-draft staged there (receipt field "composer").
       Exit 3: no response from Slack, so the message may or may not have
       gone out; check `history` or `replies` before retrying.
 
@@ -981,7 +983,31 @@ def cmd_send(args):
     _add_permalinks({"messages": [message]}, channel)
     print(json.dumps({"status": "sent", "workspace": _workspace, "channel": out.get("channel", channel),
                       "ts": out.get("ts"), "thread_ts": thread_ts,
-                      "permalink": message.get("permalink"), "text": text}))
+                      "permalink": message.get("permalink"), "text": text,
+                      "composer": _clear_staged_draft(channel, thread_ts)}))
+
+
+def _clear_staged_draft(channel, thread_ts):
+    """Empty a copy of the draft that copy-slack-draft staged in this conversation's composer.
+
+    Otherwise Pablo could send it a second time from Emacs. Returns that helper's
+    outcome ("nothing-staged", "cleared", "absent" or "kept", when the composer
+    holds his own text), or "uncertain"; the message is sent either way.
+    """
+    if thread_ts:
+        domain = WORKSPACES[_workspace].get("domain")
+        if not domain:
+            return "uncertain"
+        target = ["--permalink", f"https://{domain}/archives/{channel}/p{thread_ts.replace('.', '')}"]
+    else:
+        target = ["--channel", channel, "--workspace", _workspace]
+    helper = os.path.join(os.path.dirname(os.path.realpath(__file__)), "copy-slack-draft")
+    try:
+        done = subprocess.run([sys.executable, "-B", helper, "--clear", *target],
+                              capture_output=True, text=True, timeout=90)
+        return json.loads(done.stdout.strip().splitlines()[-1]).get("clear") or "uncertain"
+    except (OSError, ValueError, IndexError, AttributeError, subprocess.SubprocessError):
+        return "uncertain"
 
 
 def cmd_file(args):

@@ -1339,7 +1339,11 @@ usable response raises =_NoResponse= (still exit 1 for the other commands),
 which =send= turns into exit 3, because Slack may have posted it: the caller
 checks the conversation before retrying, and nothing retries on its own. A
 credential rejection is still refreshed and retried once, since Slack posts
-nothing when it rejects the session.
+nothing when it rejects the session. Because =personalize= stages each Slack
+draft in its composer as it is written, =send= then runs =copy-slack-draft
+--clear= for the same conversation, which empties the composer if it still
+holds the unedited staged draft; otherwise Pablo could send the stale copy a
+second time. The receipt's =composer= field reports the outcome.
 
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged

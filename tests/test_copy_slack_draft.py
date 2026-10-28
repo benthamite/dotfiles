@@ -765,6 +765,75 @@ class CopySlackDraftTest(unittest.TestCase):
             self.assertEqual(stage.call_args.args[-1], "baish")
             ring.assert_not_called()
 
+    def clear(self, *, existing, previous, thread_ts=THREAD_TS, buffer_live=True):
+        """Run clear_composer's Lisp against a stub Slack; return [result, failure, composer, lookup]."""
+        captured = []
+        with mock.patch.object(self.mod, "run_emacs_eval", side_effect=lambda e, s: captured.append(e) or "draft-composer-cleared"):
+            self.mod.clear_composer("epochai", "C12345678", thread_ts, "/tmp/socket", previous)
+        return self.batch(f'''(progn (require 'cl-lib) (require 'json) (require 'eieio)
+          (defclass test-slack-buffer () ((buf :initarg :buf)))
+          (defvar test-lookup nil)
+          (defun slack-team-find-by-domain (domain)
+            (unless (equal domain "epochai") (error "Wrong workspace")) 'team)
+          (defun slack-room-find (id _team) (unless (equal id "C12345678") (error "Wrong room")) 'room)
+          (defun slack-buffer-find (class _team _room &rest args)
+            (setq test-lookup (cons (symbol-name class) args))
+            (test-slack-buffer :buf (get-buffer "target")))
+          (with-current-buffer (get-buffer-create "target")
+            (insert "earlier messages\\n")
+            (setq-local lui-input-marker (copy-marker (point-max)))
+            (insert {json.dumps(existing)}))
+          {"" if buffer_live else '(kill-buffer "target")'}
+          (let (result failure)
+            (condition-case err (setq result {captured[0]}) (error (setq failure (error-message-string err))))
+            (princ (json-encode
+              (list result failure
+                    (when (get-buffer "target")
+                      (with-current-buffer "target" (buffer-substring lui-input-marker (point-max))))
+                    test-lookup)))))''')
+
+    def test_clear_empties_only_the_draft_this_helper_staged(self):
+        self.assertEqual(self.clear(existing="DRAFT ñ", previous=sha("DRAFT ñ")),
+                         ["draft-composer-cleared", None, "", ["slack-thread-message-buffer", THREAD_TS]])
+        self.assertEqual(self.clear(existing="DRAFT ñ, edited", previous=sha("DRAFT ñ"))[:3],
+                         ["draft-composer-kept", None, "DRAFT ñ, edited"])
+        self.assertEqual(self.clear(existing="", previous=sha("DRAFT"))[:3], ["draft-composer-absent", None, ""])
+
+    def test_clear_of_a_channel_composer_and_a_closed_buffer(self):
+        self.assertEqual(self.clear(existing="DRAFT", previous=sha("DRAFT"), thread_ts=None),
+                         ["draft-composer-cleared", None, "", ["slack-message-buffer"]])
+        self.assertEqual(self.clear(existing="DRAFT", previous=sha("DRAFT"), buffer_live=False)[:2],
+                         ["draft-composer-absent", None])
+
+    def run_clear_main(self, argv, outcome="draft-composer-cleared"):
+        with mock.patch.object(sys, "argv", ["copy", "--clear", *argv]), \
+                mock.patch.object(self.mod, "default_socket", return_value="/tmp/s"), \
+                mock.patch.object(self.mod, "run_emacs_eval", return_value=outcome) as client, \
+                mock.patch("sys.stdout", new_callable=io.StringIO) as output:
+            code = self.mod.main()
+        return code, json.loads(output.getvalue()), client
+
+    def test_clear_without_a_staged_draft_never_contacts_emacs(self):
+        code, result, client = self.run_clear_main(["--permalink", MESSAGE_PERMALINK])
+        self.assertEqual((code, result["status"], result["clear"]), (0, "ok", "nothing-staged"))
+        client.assert_not_called()
+
+    def test_clear_forgets_the_draft_once_it_is_gone_but_not_when_kept(self):
+        key = self.mod.destination_key(THREAD_PERMALINK, None)
+        self.mod.record_staged_hash(key, b"DRAFT")
+        code, result, client = self.run_clear_main(["--permalink", THREAD_PERMALINK], "draft-composer-kept")
+        self.assertEqual((code, result["clear"]), (0, "kept"))
+        self.assertEqual(self.mod.read_staged_hash(key), sha("DRAFT"))
+        self.assertIn(sha("DRAFT"), client.call_args.args[0])
+        code, result, _ = self.run_clear_main(["--permalink", THREAD_PERMALINK])
+        self.assertEqual((code, result["clear"]), (0, "cleared"))
+        self.assertIsNone(self.mod.read_staged_hash(key))
+
+    def test_clear_refuses_draft_arguments(self):
+        code, result, client = self.run_clear_main(["--stdin", "--channel", "C12345678"])
+        self.assertEqual((code, result["status"]), (1, "failed"))
+        client.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

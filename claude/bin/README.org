@@ -46,6 +46,10 @@ in the kill ring without importing or exporting the system clipboard.
 =--open-only= opens without copying or inserting. Structured receipts distinguish
 acknowledged stages from uncertain outcomes; private recovery snapshots survive
 uncertainty. Raw request errors and draft contents are omitted from diagnostics.
+=--clear= (run by =slack.py send= after each send) empties the target's
+composer only if it still holds, unedited, the draft this helper last staged
+there; it examines an existing buffer without fetching or displaying anything,
+and does not contact Emacs at all when nothing was staged.
 
 =cloudflare-deploy-token= reads an owner-only JSON file (mode 600) at
 =~/.config/agent-tools/cloudflare-deploy-token.json=. Keep its directory mode
@@ -80,7 +84,7 @@ before minting. Configuration symlinks and nonregular files are refused.
 | =batch-test.sh= | Loads canonical package source (or runs ERT for =elisp-ert=) in batch Emacs, rejects stale-load warnings, and on success records evidence for the exact Elisp contents it covered. |
 | =check-elpaca-sync-hook= | Validates the embedded Elpaca sync hooks and confirms that the installed hooks are identical; =--install= writes them from the primary checkout. |
 | =cloudflare-deploy-token= | Mints a per-project Cloudflare Worker-deploy API token using privately configured administrator references and stores it in the Automations vault. |
-| =copy-slack-draft= | Opens an exact Emacs Slack target in any workspace registered in both =slack.py= and Emacs (a permalink's domain selects it; =--workspace= for =--channel=) or stages a draft (stdin or private file) in its composer and, unless =--no-ring=, the kill ring, resolving the running server's socket by default, with per-stage receipts. |
+| =copy-slack-draft= | Opens an exact Emacs Slack target in any workspace registered in both =slack.py= and Emacs (a permalink's domain selects it; =--workspace= for =--channel=) or stages a draft (stdin or private file) in its composer and, unless =--no-ring=, the kill ring, resolving the running server's socket by default, with per-stage receipts; =--clear= empties a draft it staged once the message has been sent. |
 | =cr-worktree-gc.sh= | Removes only clean, fully pushed transient CR review worktrees and preserves unfinished work. |
 | =elisp-ert= | Runs profile-aware ERT for a package, test file, and optional test selector. |
 | =elisp-evidence= | Records content-bound Elisp test evidence and commit-bound live evidence, and implements the checks behind the global Git hooks in =claude/git-hooks= (=pre-commit=, =post-commit=) and the agent Stop hook (=stop-check=). |

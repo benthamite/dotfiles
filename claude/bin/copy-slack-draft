@@ -66,7 +66,8 @@ def run_emacs_eval(expr: str, socket: str) -> str:
         reason = message if OWN_ERROR.match(message) else "unrecognised Emacs error (message withheld)"
         raise UncertainResult("Emacs staging failed", reason)
     if result.returncode != 0 or out not in {
-        "draft-ring-staged", "draft-composer-staged", "draft-opened"
+        "draft-ring-staged", "draft-composer-staged", "draft-opened",
+        "draft-composer-cleared", "draft-composer-absent", "draft-composer-kept",
     }:
         raise UncertainResult("Emacs staging was not acknowledged")
     return out
@@ -454,6 +455,73 @@ def prefill_channel_message(channel: str, path: Path | None, socket: str,
     return run_emacs_eval(composer_expression(expr), socket)
 
 
+def clear_composer(team_domain: str, channel: str, thread_ts: str | None, socket: str,
+                   previous: str) -> str:
+    """Empty the composer if it still holds the draft whose hash is PREVIOUS.
+
+    Run after the message was sent by other means, so the staged copy cannot be
+    sent twice. Only an existing buffer is examined, nothing is fetched or
+    displayed, and any other text in the composer is the user's and is kept.
+    """
+    if thread_ts:
+        find = f"(slack-buffer-find 'slack-thread-message-buffer team room {elisp_string(thread_ts)})"
+    else:
+        find = "(slack-buffer-find 'slack-message-buffer team room)"
+    expr = f"""
+(progn
+  (require 'subr-x)
+  (require 'eieio)
+  (require 'slack-team nil t)
+  (require 'slack-message-buffer nil t)
+  (require 'slack-thread-message-buffer nil t)
+  (let* ((team (and (fboundp 'slack-team-find-by-domain)
+                    (slack-team-find-by-domain {elisp_string(team_domain)})))
+         (room (and team (slack-room-find {elisp_string(channel)} team)))
+         (object (and room {find}))
+         (buf (and object (slot-boundp object 'buf) (slot-value object 'buf))))
+    (if (not (buffer-live-p buf))
+        'draft-composer-absent
+      (with-current-buffer buf
+        (unless (and (markerp lui-input-marker)
+                     (eq (marker-buffer lui-input-marker) buf))
+          (error "Composer input is not available in %s" (buffer-name buf)))
+        (let ((existing (buffer-substring-no-properties lui-input-marker (point-max))))
+          (cond
+           ((string-empty-p existing) 'draft-composer-absent)
+           ((equal (secure-hash 'sha256 (encode-coding-string existing 'utf-8 t))
+                   {elisp_string(previous)})
+            (delete-region lui-input-marker (point-max))
+            'draft-composer-cleared)
+           (t 'draft-composer-kept)))))))
+""".strip()
+    return run_emacs_eval(expr, socket)
+
+
+def clear_staged(args) -> str:
+    """Clear the draft this helper staged for the target; return what happened.
+
+    "nothing-staged" (no record, so Emacs is not contacted), "cleared",
+    "absent" (no composer holds text) or "kept" (the composer holds other text).
+    """
+    key = destination_key(args.permalink, args.channel)
+    previous = read_staged_hash(key)
+    if previous is None:
+        return "nothing-staged"
+    if args.permalink:
+        info = permalink_info(args.permalink)
+        team_domain, channel = info["team_domain"], info["channel"]
+        thread_ts = info["thread_ts"] or info["message_ts"]
+    else:
+        team_domain, channel, thread_ts = workspace_subdomain(args.workspace), args.channel, None
+    socket = validate_socket(args.socket) if args.socket else default_socket()
+    if socket is None:
+        raise ValueError("No running Emacs server socket found; supply --socket")
+    outcome = clear_composer(team_domain, channel, thread_ts, socket, previous).removeprefix("draft-composer-")
+    if outcome != "kept":
+        staged_hash_path(key).unlink(missing_ok=True)
+    return outcome
+
+
 def default_socket() -> str | None:
     """Return the running Emacs server's default owned socket, or None."""
     uid = os.getuid()
@@ -580,10 +648,26 @@ def main() -> int:
             "Mutate only the kill ring; do not open or prefill Slack."
         ),
     )
+    parser.add_argument(
+        "--clear", action="store_true",
+        help="After the message was sent another way, empty the target's composer "
+             "if it still holds the draft this helper staged there",
+    )
     args = parser.parse_args()
 
     result = {"status": "failed", "stage": "validation", "opened": False, "composer": False, "ring": False}
     try:
+        if args.clear:
+            if args.file or args.stdin or args.open_only or args.no_open or args.no_ring:
+                raise ValueError("--clear takes only a target")
+            if bool(args.permalink) == bool(args.channel):
+                raise ValueError("Specify exactly one target")
+            if args.channel and not re.fullmatch(r"[CGD][A-Z0-9]{8,}", args.channel):
+                raise ValueError("Invalid channel ID")
+            result["stage"] = "clear"
+            result["clear"] = clear_staged(args)
+            result.update(status="ok", stage="complete")
+            return 0
         if args.open_only and (args.file or args.stdin or args.no_open):
             raise ValueError("Open-only cannot stage text")
         if args.file and args.stdin:

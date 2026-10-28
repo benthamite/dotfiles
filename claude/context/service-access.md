@@ -88,7 +88,10 @@ approved: a "send" comment processed from a drafts file, or his explicit OK in
 chat. Exit 3 means Slack gave no response, so the message may have gone out:
 check `slack.py replies` or `history` before retrying, never resend blindly. A
 draft Pablo wants to edit or send himself goes in its conversation's Emacs
-composer with `copy-slack-draft`. Do not type messages into Slack in Chrome.
+composer with `copy-slack-draft`. After sending, `send` empties that composer
+if it still holds the unedited staged draft, so it can't go out twice; a
+receipt `"composer": "uncertain"` or `"kept"` means a copy or Pablo's own
+text may still be there, so tell him. Do not type messages into Slack in Chrome.
 
 ## Fireflies
 

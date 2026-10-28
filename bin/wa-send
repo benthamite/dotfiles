@@ -18,6 +18,7 @@ message may or may not have gone out, so check `wa-read show` before retrying.
 
 import argparse
 import json
+import re
 import os
 import secrets
 import subprocess
@@ -39,8 +40,17 @@ def main() -> int:
     body.add_argument("--stdin", action="store_true", help="read the text from stdin")
     p.add_argument("--file", help="absolute path of a file to attach")
     p.add_argument("--timeout", type=int, default=120, help="seconds to wait for the receipt")
+    p.add_argument("--formatting", action="store_true",
+                   help="allow WhatsApp formatting (*bold*, _italic_, ~strike~, ```mono```)")
     a = p.parse_args()
     text = sys.stdin.read().rstrip("\n") if a.stdin else (a.text or "")
+    if not a.formatting:
+        spans = formatted_spans(text)
+        if spans:
+            sys.exit("wa-send: WhatsApp would format part of this text: "
+                     + "; ".join(repr(x) for x in spans)
+                     + ". Reword it (e.g. 'unos' instead of '~' for approximate) "
+                     "or pass --formatting if that is intended.")
     if not text.strip() and not a.file:
         p.error("nothing to send")
     if a.file:
@@ -71,6 +81,18 @@ def main() -> int:
     print(json.dumps({"status": "unknown", "job": name,
                       "note": "no receipt yet; check wa-read show before retrying"}))
     return 3
+
+
+# WhatsApp formats a span between two identical markers when the opening one
+# is not preceded by a word character and the closing one is not followed by
+# one, and the span neither starts nor ends with a space (2026-10-28: two "~"
+# meaning "about" struck through half a message to Eitan).
+FORMATTING = re.compile(r"(?<![\w])([*_~])(?=\S)(.+?)(?<=\S)\1(?![\w])|```.+?```", re.S)
+
+
+def formatted_spans(text: str) -> list[str]:
+    """Return the parts of TEXT that WhatsApp would render as formatting."""
+    return [m.group(0) for m in FORMATTING.finditer(text)]
 
 
 def resolve(chat: str) -> str:

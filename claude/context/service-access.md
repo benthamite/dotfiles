@@ -73,6 +73,10 @@ or as a photo if it is an image, with the text as caption), archives it, and
 `wa-send` prints the receipt. Send only what Pablo approved: a "send" comment
 processed from a drafts file, or his explicit OK in chat. Exit 3 means no
 receipt arrived: check `wa-read show` before retrying, never resend blindly.
+WhatsApp renders `*bold*`, `_italic_`, `~strike~` and ```` ```mono``` ````, so
+drafts must not use those characters by accident (write "unos", not `~`, for
+an approximate figure); `wa-send` refuses text it would format unless given
+`--formatting` (2026-10-28: two `~` struck through half a message).
 Receipts stay in `~/.local/share/wa-archive/outbox/sent/`. Do not send through
 WhatsApp Web in Chrome: it cannot attach files reliably and types into Pablo's
 browser. (Exception still to migrate: the `order-salads` skill sends through

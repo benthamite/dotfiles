@@ -82,9 +82,10 @@ Attachments: `wa-read` shows `[document: NAME]` but no file. Download one with
 `wa-fetch --chat "EXACT NAME" --name NAME | --latest | --id MSGID` (since
 2026-10-28): the daemon downloads that one file into
 `~/.local/share/wa-archive/media/` and `wa-fetch` prints its path. Nothing is
-downloaded unless asked. Attachments that arrived before 2026-10-28 have no
-stored reference and cannot be fetched; ask Pablo to forward them to his own
-chat, which makes them fetchable.
+downloaded unless asked. Every attachment received since 2026-10-28 15:35 can
+be fetched; the few that arrived before cannot (the phone does not resend
+them). Never ask Pablo to forward or resend files to make them fetchable: if
+an old one is truly needed, draft a request to its sender in the review file.
 
 ## Slack
 

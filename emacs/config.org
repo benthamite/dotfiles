@@ -1333,6 +1333,12 @@ failure time to make the next occurrence diagnosable."
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package websocket
+  ;; My fork fixes the client handshake: lowercase header names, on-open after
+  ;; a failed handshake, and blocking sends with :nowait
+  ;; (emacs/freeze-incidents.org, 2026-10-25/26).  No upstream PR yet.
+  :ensure (:host github
+                 :repo "benthamite/emacs-websocket"
+                 :branch "fix/handshake-robustness")
   :after el-patch
   :defer t
   :config
@@ -1374,177 +1380,7 @@ has connection termination."
                                 websocket frame)))
             ((eq opcode 'close)
              (lambda () (delete-process (websocket-conn websocket))))
-            (t (lambda ())))))
-
-  ;; With NOWAIT, upstream sends the handshake while the connection is still
-  ;; being made, so `process-send-string' blocks Emacs until the connect and
-  ;; TLS negotiation end, with no timeout: a reconnect on a dead network froze
-  ;; Emacs for 7.5 hours on 2026-10-25 (emacs/freeze-incidents.org). Send it
-  ;; only once the connection is open; with NOWAIT that is from the sentinel.
-  (el-patch-defun websocket-ensure-handshake (url conn key protocols extensions custom-header-alist nowait)
-    (let ((url-struct (url-generic-parse-url url))
-          (websocket (process-get conn :websocket)))
-      (when (and (eq 'connecting (websocket-ready-state websocket))
-                 (memq (process-status conn)
-                       (el-patch-swap (list 'run (if nowait 'connect 'open))
-                                      '(run open))))
-        (websocket-debug websocket "Sending handshake, key: %s, acceptance: %s"
-                         key (websocket-accept-string websocket))
-        (process-send-string conn
-                             (format "GET %s HTTP/1.1\r\n%s"
-                                     (let ((path (url-filename url-struct)))
-                                       (cond
-                                        ((= (length path) 0) "/")
-                                        ((string-prefix-p "/" path) path)
-                                        (t (concat "/" path))))
-                                     (websocket-create-headers
-                                      url key protocols extensions custom-header-alist))))))
-
-  ;; Header names are case-insensitive, but upstream matches
-  ;; "Sec-WebSocket-Accept" under the global `case-fold-search', which I set
-  ;; to nil.  Slack's edge sends "sec-websocket-accept", so valid handshakes
-  ;; were rejected and Slack reconnected until rate limited
-  ;; (emacs/freeze-incidents.org, 2026-10-26).  Match the name ignoring case
-  ;; and the accept value exactly.
-  (el-patch-defun websocket-verify-headers (websocket output)
-    "Based on WEBSOCKET's data, ensure the headers in OUTPUT are valid.
-The output is assumed to have complete headers.  This function
-will either return t or call `error'.  This has the side-effect
-of populating the list of server extensions to WEBSOCKET."
-    (el-patch-swap
-      (let ((accept-regexp
-             (concat "Sec-Web[Ss]ocket-Accept: " (regexp-quote (websocket-accept-string websocket)))))
-        (websocket-debug websocket "Checking for accept header regexp: %s" accept-regexp)
-        (unless (string-match accept-regexp output)
-          (signal 'websocket-invalid-header
-                  (list "Incorrect handshake from websocket: is this really a websocket connection?"))))
-      (let ((accept (websocket-accept-string websocket)))
-        (websocket-debug websocket "Checking for accept header: %s" accept)
-        (unless (and (let ((case-fold-search t))
-                       (string-match "\r\nSec-WebSocket-Accept: *\\([^\r\n]*\\)\r\n"
-                                     output))
-                     (string= (match-string 1 output) accept))
-          (signal 'websocket-invalid-header
-                  (list "Incorrect handshake from websocket: is this really a websocket connection?")))))
-    (let ((case-fold-search t))
-      (websocket-debug websocket "Checking for upgrade header")
-      (unless (string-match "\r\nUpgrade: websocket\r\n" output)
-        (signal 'websocket-invalid-header
-                (list "No 'Upgrade: websocket' header found")))
-      (websocket-debug websocket "Checking for connection header")
-      (unless (string-match "\r\nConnection: upgrade\r\n" output)
-        (signal 'websocket-invalid-header
-                (list "No 'Connection: upgrade' header found")))
-      (when (websocket-protocols websocket)
-        (dolist (protocol (websocket-protocols websocket))
-          (websocket-debug websocket "Checking for protocol match: %s"
-                           protocol)
-          (let ((protocols
-                 (if (string-match (format "\r\nSec-Websocket-Protocol: %s\r\n"
-                                           protocol)
-                                   output)
-                     (list protocol)
-                   (signal 'websocket-invalid-header
-                           (list "Incorrect or missing protocol returned by the server.")))))
-            (setf (websocket-negotiated-protocols websocket) protocols))))
-      (let* ((extensions (websocket-parse-repeated-field
-                          output
-                          "Sec-WebSocket-Extensions"))
-             (extra-extensions))
-        (dolist (ext extensions)
-          (let ((x (cl-first (split-string ext "; ?"))))
-            (unless (or (member x (websocket-extensions websocket))
-                        (member x extra-extensions))
-              (push x extra-extensions))))
-        (when extra-extensions
-          (signal 'websocket-invalid-header
-                  (list (format "Non-requested extensions returned by server: %S"
-                                extra-extensions))))
-        (setf (websocket-negotiated-extensions websocket) extensions)))
-    t)
-
-  ;;;;;;;;;;;;;;;;;;;;;;
-  ;; Websocket server ;;
-  ;;;;;;;;;;;;;;;;;;;;;;
-
-  (defvar websocket-server-websockets nil
-    "A list of current websockets live on any server.")
-
-  (cl-defun websocket-server (port &rest plist)
-    "Open a websocket server on PORT.
-  If the plist contains a `:host' HOST pair, this value will be
-  used to configure the addresses the socket listens on. The symbol
-  `local' specifies the local host. If unspecified or nil, the
-  socket will listen on all addresses.
-
-  This also takes a plist of callbacks: `:on-open', `:on-message',
-  `:on-close' and `:on-error', which operate exactly as documented
-  in the websocket client function `websocket-open'.  Returns the
-  connection, which should be kept in order to pass to
-  `websocket-server-close'."
-    (let* ((conn (make-network-process
-                  :name (format "websocket server on port %s" port)
-                  :server t
-                  :family 'ipv4
-                  :noquery t
-                  :filter #'websocket-server-filter
-                  :log #'websocket-server-accept
-                  :filter-multibyte nil
-                  :plist plist
-                  :host (plist-get plist :host)
-                  :service port)))
-      conn))
-
-  ;; Upstream reports an open, and runs the on-open callback, even after the
-  ;; handshake check failed and the connection was closed.  emacs-slack then
-  ;; took a refused, rate-limited connection for a working one, reset its
-  ;; backoff and retried within seconds (emacs/freeze-incidents.org,
-  ;; 2026-10-26).  Open only when the handshake checks pass.
-  (el-patch-defun websocket-outer-filter (websocket output)
-    "Filter the WEBSOCKET server's OUTPUT.
-This will parse headers and process frames repeatedly until there
-is no more output or the connection closes.  If the websocket
-connection is invalid, the connection will be closed."
-    (websocket-debug websocket "Received: %s" output)
-    (let ((start-point)
-          (text (concat (websocket-inflight-input websocket) output))
-          (header-end-pos))
-      (setf (websocket-inflight-input websocket) nil)
-      ;; If we've received the complete header, check to see if we've
-      ;; received the desired handshake.
-      (when (and (eq 'connecting (websocket-ready-state websocket)))
-        (if (and (setq header-end-pos (string-match "\r\n\r\n" text))
-                 (setq start-point (+ 4 header-end-pos)))
-            (el-patch-swap
-              (progn
-                (condition-case err
-                    (progn
-                      (websocket-verify-response-code text)
-                      (websocket-verify-headers websocket text)
-                      (websocket-process-headers (websocket-url websocket) text))
-                  (error
-                   (websocket-close websocket)
-                   (funcall (websocket-on-error websocket)
-                            websocket 'on-open err)))
-                (setf (websocket-ready-state websocket) 'open)
-                (websocket-try-callback 'websocket-on-open 'on-open websocket))
-              (when (condition-case err
-                        (progn
-                          (websocket-verify-response-code text)
-                          (websocket-verify-headers websocket text)
-                          (websocket-process-headers (websocket-url websocket) text)
-                          t)
-                      (error
-                       (websocket-close websocket)
-                       (funcall (websocket-on-error websocket)
-                                websocket 'on-open err)
-                       nil))
-                (setf (websocket-ready-state websocket) 'open)
-                (websocket-try-callback 'websocket-on-open 'on-open websocket)))
-          (setf (websocket-inflight-input websocket) text)))
-      (when (eq 'open (websocket-ready-state websocket))
-        (websocket-process-input-on-open-ws
-         websocket (substring text (or start-point 0)))))))
+            (t (lambda ()))))))
 #+end_src
 
 ** =casual=

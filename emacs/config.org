@@ -9265,7 +9265,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (gptel-max-tokens 10000)
   (gptel-stream t)
   (gptel-confirm-tool-calls nil)
-  (gptel-api-key (auth-source-extras-op-get "openai.com" "gptel" 'tlon))
+  (gptel-api-key (lambda () (auth-source-extras-op-get "openai.com" "gptel" 'tlon)))
 
   :config
   (require 'tlon-core)
@@ -9275,19 +9275,22 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   ;; set reasoning effort in o3-mini
   (put 'o3-mini :request-params '(:reasoning_effort "high" :stream :json-false))
 
+  ;; Each key is a lambda, read on use: a key read at load time stays nil
+  ;; for the session if 1Password is unreachable then (2026-10-28).
+
   ;; default model
   (setopt gptel-model nil ; Set asynchronously by model discovery.
           gptel-backend (gptel-make-anthropic "Claude"
                           :stream t
-                          :key (auth-source-extras-op-get "anthropic.com" "key" 'tlon)))
+                          :key (lambda () (auth-source-extras-op-get "anthropic.com" "key" 'tlon))))
 
   ;; other models
   (gptel-make-gemini "Gemini"
     :stream t
-    :key (auth-source-extras-op-get "aistudio.google.com" "password" 'tlon))
+    :key (lambda () (auth-source-extras-op-get "aistudio.google.com" "password" 'tlon)))
 
   (gptel-make-anthropic "Claude-thinking"
-    :key (auth-source-extras-op-get "anthropic.com" "key" 'tlon)
+    :key (lambda () (auth-source-extras-op-get "anthropic.com" "key" 'tlon))
     :stream t
     :models '(gptel-extras-model-unavailable)
     :request-params '(:thinking (:type "adaptive")
@@ -9298,7 +9301,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     :host "api.deepseek.com"
     :endpoint "/chat/completions"
     :stream t
-    :key (auth-source-extras-op-get "deepseek.com" "emacs" 'tlon)
+    :key (lambda () (auth-source-extras-op-get "deepseek.com" "emacs" 'tlon))
     :models '(;; <https://api-docs.deepseek.com/quick_start/pricing/
               (deepseek-chat
                :context-window 64.0
@@ -9315,7 +9318,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   (gptel-make-openai "Perplexity"
     :host "api.perplexity.ai"
-    :key (auth-source-extras-op-get "perplexity.ai" "key" 'tlon)
+    :key (lambda () (auth-source-extras-op-get "perplexity.ai" "key" 'tlon))
     :endpoint "/chat/completions"
     :stream t
     :models '(;; <https://docs.perplexity.ai/docs/model-cards>
@@ -9334,7 +9337,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   (gptel-make-openai "xAI"
     :host "api.x.ai"
-    :key (auth-source-extras-op-get "x.ai" "emacs" 'tlon)
+    :key (lambda () (auth-source-extras-op-get "x.ai" "emacs" 'tlon))
     :endpoint "/v1/chat/completions"
     :stream t
     :models '((grok-4-latest

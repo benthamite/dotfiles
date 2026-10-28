@@ -1,12 +1,13 @@
 ---
 name: add-to-emacs-packages
-description: Add or register one of the user's Emacs packages in my-emacs-packages.org, create its documentation note, and add its GitHub profile README card. Use when the user wants to update the public Emacs packages list for a specific package.
+description: Add or register one of the user's Emacs packages in my-emacs-packages.org, create its documentation note, add its GitHub profile README card, and fill its repository's About description, website and topics. Use when the user wants to update the public Emacs packages list for a specific package.
 ---
 
 # Add to Emacs packages
 
 Register the requested package in the public packages list and its documentation
-note. Handle the GitHub profile card as a separate, explicitly authorized action.
+note, and fill the repository's GitHub About fields. Handle the GitHub profile
+card as a separate, explicitly authorized action.
 This is not general documentation, README generation or release work; use
 `document-elisp-package`, `generate-readme` or `release-package` for those tasks.
 
@@ -46,6 +47,7 @@ Check these independently, recording present, missing, incomplete or unknown:
 1. The exact package heading in the packages list.
 2. Its documentation note, existing ID and the list's documentation link.
 3. Its exact card in the profile README's "Packages I've developed" section.
+4. Its repository's About description, website and topics (step 6).
 
 Read the remote README with the mapped `gh` tool, separately from other commands:
 
@@ -189,3 +191,31 @@ Clean up a disposable clone with `trash` only after confirming all intended
 commits are safely retained or published. If a failed push leaves an unpublished
 commit, preserve it in a durable checkout or recoverable artifact outside Drive
 before cleanup, and report its location. Never delete a pre-existing checkout.
+
+## 6. Fill the repository's About fields
+
+Every published package repository shows three fields in its GitHub About box.
+Registering a package authorizes setting them on `benthamite/<package>`:
+
+- **Description:** one short factual line saying what the package does, in the
+  style of `Display quotations in a review buffer or the echo area` (sentence
+  case, no trailing period, no "An Emacs package that"). Keep an existing
+  accurate description.
+- **Website:** `https://stafforini.com/notes/<package>/`, the manual page from
+  step 3. Set it only after the page responds with 200; a missing page is a
+  publication gap to report, not a reason to link elsewhere.
+- **Topics:** always `emacs` and `emacs-lisp`, plus two to four topics naming
+  what the package works with or does (for example `org-mode`, `signal`,
+  `spotify`). Add to existing topics; do not remove them.
+
+Run one repository per `gh` call (the GitHub write guard rejects compound
+targets):
+
+```bash
+gh repo edit benthamite/<package> --description "<line>" \
+  --homepage "https://stafforini.com/notes/<package>/" \
+  --add-topic emacs --add-topic emacs-lisp --add-topic <topic>
+```
+
+Verify with
+`gh repo view benthamite/<package> --json description,homepageUrl,repositoryTopics`.

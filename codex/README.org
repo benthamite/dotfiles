@@ -700,7 +700,8 @@ renewal (=claude/context/secrets.md=), added 2026-10-09.
 
 The =add-to-emacs-packages= workflow checks the list, existing manual and profile
 card independently. It resolves canonical sources, preserves note IDs and keeps
-local registration separate from clone and publication authorization.
+local registration separate from clone and publication authorization. It
+also sets the repository's About description, manual link and topics.
 
 The =clean-citations= workflow resolves source references in selected personal
 Org notes, adds missing works through =add-bib-entry=, and preserves verified

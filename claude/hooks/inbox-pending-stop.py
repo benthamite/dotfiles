@@ -9,10 +9,14 @@ and handle it.
 
 It applies only to agent.el sessions that accept wake-ups (`m m`, "toggle monitor", in agent-menu)
 and whose directory is inside a monitored project. It fails open: any error, a
-missing Emacs or a missing database lets the session stop. `stop_hook_active`
-(a stop already continued by a hook) also lets it stop, so it cannot loop.
+missing Emacs or a missing database lets the session stop. After a stop that a
+hook already continued (`stop_hook_active`), it blocks again only for messages
+newer than the ones it last reported, so it cannot loop on items the session
+failed to acknowledge, yet still catches what arrived during the continuation
+(2026-10-27: a message that came in then was left until the next morning).
 """
 
+import hashlib
 import json
 import os
 import sqlite3
@@ -22,6 +26,7 @@ from pathlib import Path
 
 MONITOR = Path.home() / "repos/inbox-monitor"
 DB = Path.home() / ".local/share/inbox-monitor/inbox.db"
+STATE = Path.home() / ".local/state/inbox-monitor/stop-hook"
 
 
 def main() -> int:
@@ -29,16 +34,19 @@ def main() -> int:
         payload = json.load(sys.stdin)
     except ValueError:
         return 0
-    if payload.get("stop_hook_active"):
-        return 0
     buffer = os.environ.get("CLAUDE_BUFFER_NAME")
     if not buffer or not DB.exists():
         return 0
     project = owning_project(payload.get("cwd") or os.getcwd())
     if not project or not accepts_wake_ups(buffer):
         return 0
-    waiting = pending(project)
+    waiting, newest = pending(project)
+    marker = STATE / (hashlib.sha256(buffer.encode()).hexdigest()[:16] + ".json")
+    if payload.get("stop_hook_active") and newest <= reported(marker):
+        return 0
     if waiting:
+        STATE.mkdir(parents=True, exist_ok=True)
+        marker.write_text(json.dumps({"newest": newest}))
         print(json.dumps({
             "decision": "block",
             "reason": (f"[inbox-monitor] {waiting} item(s) for project {project} arrived "
@@ -75,16 +83,28 @@ def accepts_wake_ups(buffer: str) -> bool:
     return out.stdout.strip() == "t"
 
 
-def pending(project: str) -> int:
+def reported(marker: Path) -> int:
+    """Return the newest item id this session was last told about, or 0."""
+    try:
+        return int(json.loads(marker.read_text())["newest"])
+    except (OSError, ValueError, KeyError):
+        return 0
+
+
+def pending(project: str) -> tuple[int, int]:
+    """Return how many items wait for PROJECT and a stamp of the newest one."""
     conn = sqlite3.connect(f"file:{DB}?mode=ro", uri=True, timeout=5)
     try:
-        messages = conn.execute("SELECT count(*) FROM deliveries WHERE project=? "
-                                "AND state != 'acked'", (project,)).fetchone()[0]
-        notices = conn.execute("SELECT count(*) FROM waits WHERE project=? AND notice_state "
-                               "IN ('pending', 'notified')", (project,)).fetchone()[0]
+        messages, newest_message = conn.execute(
+            "SELECT count(*), coalesce(max(created_at), 0) FROM deliveries "
+            "WHERE project=? AND state != 'acked'", (project,)).fetchone()
+        notices, newest_notice = conn.execute(
+            "SELECT count(*), coalesce(max(coalesce(closed_at, created_at)), 0) FROM waits "
+            "WHERE project=? AND notice_state IN ('pending', 'notified')",
+            (project,)).fetchone()
     finally:
         conn.close()
-    return messages + notices
+    return messages + notices, max(newest_message, newest_notice)
 
 
 if __name__ == "__main__":

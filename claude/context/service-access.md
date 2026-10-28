@@ -236,7 +236,10 @@ collected or routed (Pablo, 2026-10-24).
   the next step instead of only moving it to the sent list; and every open
   task in the project's plan whose next step is Pablo's has an item, whether
   or not a message arrived about it (2026-10-28: Agus's payment and several
-  plan tasks never reached the file). One `##` section per item,
+  plan tasks never reached the file). Each item is a matter, not a message:
+  it states **Se cierra cuando** (the condition that ends it, e.g. "Agus cobró
+  octubre") and leaves the file only when that holds; each incoming message
+  updates the matter it belongs to. One `##` section per item,
   most urgent first, headed with the person or channel and a one-line topic, with:
   **Contexto** (what the other person said, with a link, and the relevant
   facts or deadlines), **Decisión** (what Pablo has to decide, and the

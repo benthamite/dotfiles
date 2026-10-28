@@ -254,8 +254,11 @@ collected or routed (Pablo, 2026-10-24).
   with `m p`, or his explicit OK in chat) is sent by the agent, not staged
   for him (Pablo, 2026-10-28): Slack with `claude/bin/copy-slack-draft --send
   --stdin --workspace KEY --channel ID` for a DM or channel post, or
-  `--permalink URL` to reply in a thread; WhatsApp with `wa-send`
-  (attachments included). Never type it through Chrome. Confirm it arrived;
+  `--permalink URL` to reply in a thread; WhatsApp with `wa-send --to
+  CONVERSATION_ID` (attachments included). Send to the conversation in the
+  item's marker, never to a chat chosen by name: some groups have no name in
+  the archive, and two FIAS groups share members (2026-10-28: a reply to
+  Javier went to the wrong group). Never type it through Chrome. Confirm it arrived;
   an uncertain result is checked, not resent. Once the archive shows it sent, or Pablo drops it, move
   it under a final `# Enviados / descartados` heading with the date.
 - Pre-authorized actions live in the project's `.inbox-policy.toml` and count

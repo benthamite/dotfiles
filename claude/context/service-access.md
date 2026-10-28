@@ -215,10 +215,15 @@ collected or routed (Pablo, 2026-10-24).
   arrives, record it in the project's files so later sessions find it
   (2026-10-28: a draft asked Agustín Brusco for bank details he had forwarded
   five days earlier).
-- Draft replies go in the project's review file,
-  `~/.local/share/inbox-monitor/drafts/PROJECT.md` (private, outside any repo),
-  never in the kill ring (Pablo, 2026-10-27). One `##` section per draft,
-  newest first, headed with the recipient, channel and a one-line topic, with:
+- The project's review file, `~/.local/share/inbox-monitor/drafts/PROJECT.md`
+  (private, outside any repo; `m f` in agent-menu opens it), is the one place
+  for everything Pablo has to act on (Pablo, 2026-10-27/28): draft replies,
+  decisions, and tasks only he can do (a transfer, forwarding a file). Never
+  the kill ring, and never only in a chat reply or a status line. After
+  updating it, run `inbox-drafts sync --project PROJECT`, which rewrites its
+  "Esperando a otros" section from the open waits, and in the status line
+  point to the file instead of listing its items. One `##` section per item,
+  most urgent first, headed with the person or channel and a one-line topic, with:
   **Contexto** (what the other person said, with a link, and the relevant
   facts or deadlines), **Decisión** (what Pablo has to decide, and the
   recommendation), **Borrador** (the text, as a quote block, in the language it

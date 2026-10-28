@@ -10,8 +10,9 @@ This asks it to download one (documents, images, video, audio) into
   wa-fetch --to 5491100000000@s.whatsapp.net --id 3A5107...  one exact message
 
 --chat must match exactly one chat name (as `wa-read resolve` lists it).
-Attachments received before 2026-10-28, when references started being kept,
-cannot be fetched. Exit status: 0 done, 1 failed, 3 no receipt in time.
+Attachments that arrived before 2026-10-28 15:35, when references started
+being kept, cannot be fetched (asking the phone for that history returns
+nothing). Exit status: 0 done, 1 failed, 3 no receipt in time.
 """
 
 import argparse
@@ -66,16 +67,15 @@ def find(chat: str, file_name: str | None) -> str:
     """Return the id of the newest attachment in CHAT, named FILE_NAME if given."""
     db = sqlite3.connect(f"file:{DATA / 'messages.db'}?mode=ro", uri=True)
     key = (db.execute("SELECT key FROM aliases WHERE alias=?", (chat,)).fetchone() or [chat])[0]
-    query = ("SELECT m.id FROM messages m JOIN media_refs r ON r.chat_key=m.chat_key AND r.id=m.id "
-             "WHERE m.chat_key=?")
+    query = ("SELECT m.id FROM messages m WHERE m.chat_key=? "
+             "AND m.media_type IN ('document', 'image', 'video', 'audio', 'voice')")
     args = [key]
     if file_name:
         query += " AND m.file_name=?"
         args.append(file_name)
     row = db.execute(query + " ORDER BY m.ts DESC LIMIT 1", args).fetchone()
     if not row:
-        sys.exit(f"wa-fetch: no fetchable attachment{' named ' + repr(file_name) if file_name else ''}"
-                 f" in {chat} (attachments before 2026-10-28 cannot be fetched)")
+        sys.exit(f"wa-fetch: no attachment{' named ' + repr(file_name) if file_name else ''} in {chat}")
     return row[0]
 
 

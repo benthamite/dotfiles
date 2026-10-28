@@ -230,7 +230,13 @@ collected or routed (Pablo, 2026-10-24).
   save), and after updating it run `inbox-drafts sync --project PROJECT`,
   which reloads his buffer and rewrites its
   "Esperando a otros" section from the open waits, and in the status line
-  point to the file instead of listing its items. One `##` section per item,
+  point to the file instead of listing its items. The file follows the
+  matters, not only the messages: when a draft is sent but the matter stays
+  open (a contract to sign, a payment to make), replace its item with one for
+  the next step instead of only moving it to the sent list; and every open
+  task in the project's plan whose next step is Pablo's has an item, whether
+  or not a message arrived about it (2026-10-28: Agus's payment and several
+  plan tasks never reached the file). One `##` section per item,
   most urgent first, headed with the person or channel and a one-line topic, with:
   **Contexto** (what the other person said, with a link, and the relevant
   facts or deadlines), **Decisión** (what Pablo has to decide, and the

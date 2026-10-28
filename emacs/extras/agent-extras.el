@@ -398,6 +398,25 @@ nil when the command is missing or no monitored project holds the directory."
 
 (setq agent-review-file-function #'agent-extras-inbox-drafts-file)
 
+(defcustom agent-extras-review-files-directory
+  "~/.local/share/inbox-monitor/drafts/"
+  "Directory of the inbox monitor's review files.
+Files visited under it turn on `redline-mode', so the CriticMarkup comments
+on each draft can be read and written in place."
+  :type 'directory
+  :group 'agent-extras)
+
+(defun agent-extras-review-file-setup ()
+  "Turn on `redline-mode' when the visited file is an inbox monitor review file.
+Review files live under `agent-extras-review-files-directory'."
+  (when (and buffer-file-name
+             (fboundp 'redline-mode)
+             (file-in-directory-p buffer-file-name
+                                  agent-extras-review-files-directory))
+    (redline-mode 1)))
+
+(add-hook 'find-file-hook #'agent-extras-review-file-setup)
+
 ;;;; Menu
 
 (defun agent-extras-add-menu-entries ()

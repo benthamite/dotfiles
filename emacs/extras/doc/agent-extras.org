@@ -79,6 +79,12 @@ session has no review file) when the command is missing or no monitored
 project holds the directory. After commenting on the drafts, =m p= (process
 review file) asks the session to carry out the comments.
 
+#+vindex: agent-extras-review-files-directory
+#+findex: agent-extras-review-file-setup
+Any file visited under ~agent-extras-review-files-directory~ (the drafts
+directory) turns on ~redline-mode~, so the CriticMarkup comments on each draft
+can be read and written in place, however the file was opened.
+
 * Orchestration run view
 :PROPERTIES:
 :CUSTOM_ID: h:orchestration-run-view

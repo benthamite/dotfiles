@@ -210,5 +210,24 @@
       (delete-file script)
       (delete-directory dir))))
 
+(ert-deftest agent-extras-test-review-file-turns-on-redline ()
+  "Visiting a file under the review directory turns on `redline-mode'."
+  (let* ((dir (file-name-as-directory (make-temp-file "agent-review" t)))
+         (agent-extras-review-files-directory dir)
+         (file (expand-file-name "fias.md" dir))
+         (outside (make-temp-file "agent-other" nil ".md"))
+         called)
+    (unwind-protect
+        (cl-letf (((symbol-function 'redline-mode) (lambda (&rest _) (push buffer-file-name called))))
+          (with-temp-buffer
+            (setq buffer-file-name file)
+            (agent-extras-review-file-setup))
+          (with-temp-buffer
+            (setq buffer-file-name outside)
+            (agent-extras-review-file-setup))
+          (should (equal called (list file))))
+      (delete-file outside)
+      (delete-directory dir t))))
+
 (provide 'agent-extras-test)
 ;;; agent-extras-test.el ends here

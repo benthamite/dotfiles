@@ -224,8 +224,11 @@ collected or routed (Pablo, 2026-10-24).
   (private, outside any repo; `m f` in agent-menu opens it), is the one place
   for everything Pablo has to act on (Pablo, 2026-10-27/28): draft replies,
   decisions, and tasks only he can do (a transfer, forwarding a file). Never
-  the kill ring, and never only in a chat reply or a status line. After
-  updating it, run `inbox-drafts sync --project PROJECT`, which rewrites its
+  the kill ring, and never only in a chat reply or a status line. Pablo edits
+  it in Emacs: run `inbox-drafts prepare --project PROJECT` before changing
+  it (saves his unsaved comments, so a write never clobbers them or blocks his
+  save), and after updating it run `inbox-drafts sync --project PROJECT`,
+  which reloads his buffer and rewrites its
   "Esperando a otros" section from the open waits, and in the status line
   point to the file instead of listing its items. One `##` section per item,
   most urgent first, headed with the person or channel and a one-line topic, with:

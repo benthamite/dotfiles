@@ -112,7 +112,9 @@ outside the draft. When Pablo genuinely must paste it himself, use
 `paste-via-kill-ring`; staging still does not authorize sending. For a Slack
 destination, stage the draft in that conversation's composer in the same turn
 you write it, through the workspace's Slack drafting skill (Epoch: `slack-emacs`);
-staging needs no approval, because it sends nothing.
+staging needs no approval, because it sends nothing. Once Pablo approves
+sending it, send it yourself with `slack.py send`
+(`claude/context/service-access.md`, "Slack").
 
 For prose not authored by Pablo, use `humanize` only when the user requests its
 editing purpose. Neither skill promises that prose will evade an AI detector.

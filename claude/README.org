@@ -312,7 +312,8 @@ and separates voice matching from factual or personal claims. Missing samples
 are explicit; concision preserves required answers, and prose preferences do
 not alter quotations, code or links. Drafting does not authorize sending; a
 Slack draft is staged in its composer in the same turn, through the workspace's
-Slack drafting skill.
+Slack drafting skill, and once Pablo approves it the agent sends it with
+=slack.py send=.
 
 The =pin-elisp-pr= skill — disabled, see =skills-disabled.json= — preserves one
 effective installation owner per active profile, including
@@ -1328,6 +1329,17 @@ prints one compact JSON line per conversation, with a "N of M" count on stderr.
 Slack's pages are sparse (a page can hold two channels and a cursor), so a
 single page once passed for the whole list and hid 56 of 58 channels; the
 command now fails rather than return a partial list.
+
+=slack.py send= (2026-10-28) posts a message Pablo approved, as him, with
+=chat.postMessage=: =--permalink= replies in that message's thread, =--channel=
+posts at top level. Until then agents had no Slack send path and left every
+approved reply in the Emacs composer for Pablo to send himself, a step he
+rejected; WhatsApp had gained =wa-send= the day before. A request that gets no
+usable response raises =_NoResponse= (still exit 1 for the other commands),
+which =send= turns into exit 3, because Slack may have posted it: the caller
+checks the conversation before retrying, and nothing retries on its own. A
+credential rejection is still refreshed and retried once, since Slack posts
+nothing when it rejects the session.
 
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged

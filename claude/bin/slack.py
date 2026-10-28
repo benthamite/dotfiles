@@ -55,9 +55,15 @@ Usage:
       Fetch one response from the internal saved.list endpoint.
   slack.py unsave <channel-id> <ts>
       Remove that exact message from Later using internal saved.delete.
+  slack.py send (--permalink <url> | --channel <id> [--thread-ts <ts>]) (--text <text> | --stdin)
+      Post a message Pablo approved, as him (chat.postMessage). --permalink
+      replies in that message's thread; --channel posts at top level unless
+      --thread-ts is given. Prints a receipt with the new message's permalink.
+      Exit 3: no response from Slack, so the message may or may not have
+      gone out; check `history` or `replies` before retrying.
 
-Output: raw JSON from Slack on stdout (channels and join print JSON lines).
-Non-zero exit on API error.
+Output: raw JSON from Slack on stdout (channels and join print JSON lines;
+send prints one receipt line). Non-zero exit on API error.
 """
 
 import argparse
@@ -80,13 +86,18 @@ _SAFE_API_ERRORS = frozenset({
     "missing_scope", "channel_not_found", "not_in_channel", "ratelimited",
     "rate_limited", "restricted_action", "invalid_arguments", "invalid_arg_name",
     "method_not_supported_for_channel_type", "user_not_found", "access_denied",
+    "is_archived", "msg_too_long", "no_text",
 })
 
 
-def _fail(message, code=1):
+class _NoResponse(SystemExit):
+    """No usable response arrived, so Slack may still have acted on the request."""
+
+
+def _fail(message, code=1, kind=SystemExit):
     """Report caller-owned diagnostics; broker stderr only as one masked line."""
     sys.stderr.write(f"ERROR: {message}\n")
-    raise SystemExit(code)
+    raise kind(code)
 
 
 class _NoCredentialRedirects(urllib.request.HTTPRedirectHandler):
@@ -125,9 +136,9 @@ def _open_authenticated(request):
     except urllib.error.HTTPError as error:
         status = error.code
         error.close()
-        _fail(f"Slack request failed with HTTP {status}")
+        _fail(f"Slack request failed with HTTP {status}", kind=_NoResponse)
     except (OSError, ValueError, http.client.HTTPException):
-        _fail("Slack request failed before a response was received")
+        _fail("Slack request failed before a response was received", kind=_NoResponse)
 
 # Workspace registry. Each entry describes where this workspace's xoxc/xoxd
 # session tokens come from. Two source kinds:
@@ -375,9 +386,9 @@ def _post_form(url, params, headers, raise_on_auth=False):
         with _open_authenticated(req) as response:
             data = json.loads(response.read())
     except (OSError, ValueError, http.client.HTTPException):
-        _fail("Slack returned an unreadable JSON response")
+        _fail("Slack returned an unreadable JSON response", kind=_NoResponse)
     if not isinstance(data, dict):
-        _fail("Slack returned an invalid response object")
+        _fail("Slack returned an invalid response object", kind=_NoResponse)
     if data.get("ok") is not True:
         error = data.get("error")
         if raise_on_auth and error in _AUTH_ERRORS:
@@ -937,6 +948,42 @@ def cmd_unsave(args):
     print(json.dumps(out, indent=2))
 
 
+def cmd_send(args):
+    """Post a message Pablo approved, as him, and print its receipt.
+
+    Never retried: a request that got no response may have posted, so the
+    caller reconciles with `history` or `replies` (exit 3) before sending again.
+    """
+    text = sys.stdin.read().removesuffix("\n") if args.stdin else args.text
+    if not isinstance(text, str) or not text.strip():
+        _fail("Nothing to send", 2)
+    if args.permalink:
+        if args.thread_ts:
+            _fail("--thread-ts goes with --channel; a permalink already names its thread", 2)
+        try:
+            info = parse_permalink(args.permalink)
+        except ValueError as error:
+            _fail(str(error), 2)
+        _verify_permalink_workspace(info)
+        channel, thread_ts = info["channel"], info["thread_ts"] or info["message_ts"]
+    else:
+        channel, thread_ts = args.channel, args.thread_ts
+        if not re.fullmatch(r"[CGD][A-Z0-9]{8,}", channel):
+            _fail("Send requires an exact channel ID", 2)
+        if thread_ts is not None and not re.fullmatch(r"[0-9]+\.[0-9]{6}", thread_ts):
+            _fail("Invalid Slack thread timestamp", 2)
+    try:
+        out = call("chat.postMessage", channel=channel, text=text, thread_ts=thread_ts)
+    except _NoResponse:
+        _fail("No response from Slack: the message may or may not have been sent. "
+              "Check `history` or `replies` before retrying.", 3)
+    message = dict(out.get("message") or {}, ts=out.get("ts"))
+    _add_permalinks({"messages": [message]}, channel)
+    print(json.dumps({"status": "sent", "workspace": _workspace, "channel": out.get("channel", channel),
+                      "ts": out.get("ts"), "thread_ts": thread_ts,
+                      "permalink": message.get("permalink"), "text": text}))
+
+
 def cmd_file(args):
     """Download a Slack-hosted file (files.slack.com url_private*) to a local path."""
     _validate_credential_url(args.url, "files.slack.com")
@@ -1075,6 +1122,16 @@ def main():
     un.add_argument("channel")
     un.add_argument("ts")
     un.set_defaults(func=cmd_unsave)
+
+    se = sub.add_parser("send", help="post a message Pablo approved, as him")
+    target = se.add_mutually_exclusive_group(required=True)
+    target.add_argument("--permalink", help="reply in the thread of the message at this URL")
+    target.add_argument("--channel", help="channel ID for a top-level post")
+    se.add_argument("--thread-ts", help="with --channel: reply in this thread")
+    body = se.add_mutually_exclusive_group(required=True)
+    body.add_argument("--text")
+    body.add_argument("--stdin", action="store_true", help="read the text from stdin")
+    se.set_defaults(func=cmd_send)
 
     u = sub.add_parser("unreads")
     u.set_defaults(func=cmd_unreads)

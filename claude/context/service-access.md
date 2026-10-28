@@ -78,6 +78,18 @@ WhatsApp Web in Chrome: it cannot attach files reliably and types into Pablo's
 browser. (Exception still to migrate: the `order-salads` skill sends through
 WhatsApp Web in the Personal profile.)
 
+## Slack
+
+Send with `slack.py -w WORKSPACE send --permalink URL | --channel ID
+[--thread-ts TS] --text "..." | --stdin` (since 2026-10-28; `slack.py send
+--help`): it posts as Pablo, `--permalink` replying in that message's thread,
+and prints a receipt with the new message's permalink. Send only what Pablo
+approved: a "send" comment processed from a drafts file, or his explicit OK in
+chat. Exit 3 means Slack gave no response, so the message may have gone out:
+check `slack.py replies` or `history` before retrying, never resend blindly. A
+draft Pablo wants to edit or send himself goes in its conversation's Emacs
+composer with `copy-slack-draft`. Do not type messages into Slack in Chrome.
+
 ## Fireflies
 
 `fireflies list|get` reads Pablo's Forethought Fireflies meetings
@@ -197,10 +209,8 @@ collected or routed (Pablo, 2026-10-24).
   file or pointing Pablo to it, run `inbox-drafts check --project PROJECT`: a
   draft marked ANSWERED is one Pablo already replied to, so retire it. Each
   section must be decidable on its own, without the chat. Update a section when new
-  messages change it. Once Pablo approves a Slack draft, stage it in the Emacs
-  composer of its exact conversation with `claude/bin/copy-slack-draft
-  --no-ring --stdin --permalink URL` (or `--workspace KEY --channel ID`); Pablo
-  sends it from Emacs. Never type it through Chrome. Once he approves a
+  messages change it. Once Pablo approves a Slack draft, send it with
+  `slack.py send` (see "Slack"). Once he approves a
   WhatsApp draft, send it with `wa-send` (see "WhatsApp"), attachments included. Once the archive shows it sent, or Pablo drops it, move
   it under a final `# Enviados / descartados` heading with the date.
 - Pre-authorized actions live in the project's `.inbox-policy.toml` and count

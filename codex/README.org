@@ -532,7 +532,8 @@ and separates voice matching from factual or personal claims. Missing samples
 are explicit; concision preserves required answers, and prose preferences do
 not alter quotations, code or links. Drafting does not authorize sending; a
 Slack draft is staged in its composer in the same turn, through the workspace's
-Slack drafting skill.
+Slack drafting skill, and once Pablo approves it the agent sends it with
+=slack.py send=.
 
 The =pin-elisp-pr= skill — disabled, see =skills-disabled.json= — preserves one
 effective installation owner per active profile, including

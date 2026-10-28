@@ -37,6 +37,7 @@ import json
 import os
 import re
 import shutil
+import socket
 import sqlite3
 import subprocess
 import time
@@ -48,9 +49,11 @@ from typing import Any, Callable, Iterable
 
 try:  # pragma: no cover - import guard exercised by callers without curl_cffi
     import certifi as _certifi
+    from curl_cffi import CurlOpt as _CurlOpt
     from curl_cffi import requests as _requests
 except ImportError:  # pragma: no cover
     _certifi = None
+    _CurlOpt = None
     _requests = None
 
 VERSION = 1
@@ -63,6 +66,13 @@ WIKIPEDIA_ANNAS_API_URL = (
 )
 FAST_DOWNLOAD_PATH = "dyn/api/fast_download.json"
 LIBGEN_JSON_URL = "https://libgen.li/json.php"
+LIBGEN_ADS_URL = "https://libgen.li/ads.php"
+# Hosts that some ISPs block at the resolver (Orange France answers ::1 for every
+# LibGen mirror, under a court order). When the system resolver gives only
+# loopback addresses for one of them, Http asks Cloudflare's DNS-over-HTTPS
+# resolver instead and pins the answer for that host. Approved by Pablo, 28 Oct 2026.
+DOH_FALLBACK_HOSTS = {"libgen.li"}
+DOH_URL = "https://cloudflare-dns.com/dns-query"
 CROSSREF_WORKS_URL = "https://api.crossref.org/works"
 OPENALEX_WORKS_URL = "https://api.openalex.org/works"
 UNPAYWALL_URL = "https://api.unpaywall.org/v2/"
@@ -141,22 +151,49 @@ class Http:
                 "from dotfiles/lib/python/paper-fetch-requirements.txt "
                 "(see dotfiles/docs/book-acquisition.md)")
         self.timeout = timeout
+        self.impersonate = impersonate
         # Preserve explicit CA overrides; otherwise use our pinned trust bundle
         # instead of curl_cffi's possibly stale platform-default certificate file.
-        ca_bundle = (os.environ.get("REQUESTS_CA_BUNDLE") or os.environ.get("CURL_CA_BUNDLE")
-                     or os.environ.get("SSL_CERT_FILE") or _certifi.where())
-        self.session = _requests.Session(impersonate=impersonate, verify=ca_bundle)
+        self.ca_bundle = (os.environ.get("REQUESTS_CA_BUNDLE") or os.environ.get("CURL_CA_BUNDLE")
+                          or os.environ.get("SSL_CERT_FILE") or _certifi.where())
+        self.session = _requests.Session(impersonate=impersonate, verify=self.ca_bundle)
+        self._pinned: dict[str, Any] = {}
+
+    def _session_for(self, url: str):
+        """The shared session, or one pinned to a DoH answer for a resolver-blocked host."""
+        parts = urllib.parse.urlsplit(url)
+        host = (parts.hostname or "").lower()
+        if host not in DOH_FALLBACK_HOSTS:
+            return self.session
+        if host not in self._pinned:
+            self._pinned[host] = self._doh_session(host, parts.port or (80 if parts.scheme == "http" else 443))
+        return self._pinned[host]
+
+    def _doh_session(self, host: str, port: int):
+        try:
+            addresses = {info[4][0] for info in socket.getaddrinfo(host, port)}
+        except OSError:
+            addresses = set()
+        if addresses and not all(ipaddress.ip_address(a.split("%")[0]).is_loopback for a in addresses):
+            return self.session
+        response = self.session.get(DOH_URL, params={"name": host, "type": "A"},
+                                    headers={"accept": "application/dns-json"}, timeout=20)
+        answers = [a.get("data") for a in (response.json().get("Answer") or []) if a.get("type") == 1]
+        if not answers:
+            return self.session
+        return _requests.Session(impersonate=self.impersonate, verify=self.ca_bundle,
+                                 curl_options={_CurlOpt.RESOLVE: [f"{host}:{port}:{answers[0]}"]})
 
     def get(self, url: str, *, params: dict | None = None, headers: dict | None = None,
             timeout: int | None = None) -> Response:
-        response = self.session.get(url, params=params, headers=headers or {},
-                                    timeout=timeout or self.timeout, allow_redirects=True)
+        response = self._session_for(url).get(url, params=params, headers=headers or {},
+                                              timeout=timeout or self.timeout, allow_redirects=True)
         return Response(response.status_code, response.content, str(response.url),
                         response.headers.get("content-type", ""))
 
     def post(self, url: str, *, data: dict | None = None, timeout: int | None = None) -> Response:
-        response = self.session.post(url, data=data, timeout=timeout or self.timeout,
-                                     allow_redirects=True)
+        response = self._session_for(url).post(url, data=data, timeout=timeout or self.timeout,
+                                               allow_redirects=True)
         return Response(response.status_code, response.content, str(response.url),
                         response.headers.get("content-type", ""))
 
@@ -483,6 +520,21 @@ def libgen_md5s(http: Http, doi: str) -> list[str]:
                 if MD5_RE.match(md5) and md5 not in md5s:
                     md5s.append(md5)
     return md5s
+
+
+def libgen_download(http: Http, md5: str) -> Response | None:
+    """md5 -> the PDF from LibGen's own mirror: its ads page links a one-time get.php URL.
+
+    Tried before Anna's fast download, which spends the daily member quota and whose
+    partner servers lack some files LibGen still serves."""
+    page = http.get(LIBGEN_ADS_URL, params={"md5": md5}, timeout=60)
+    if page.status != 200:
+        return None
+    link = re.search(r'href="([^"]*get\.php\?[^"]*)"', page.text)
+    if not link:
+        return None
+    response = http.get(urllib.parse.urljoin(LIBGEN_ADS_URL, html.unescape(link.group(1))), timeout=180)
+    return response if response.is_pdf else None
 
 
 def libgen_isbn_files(http: Http, isbn: str, *, strict: bool = False) -> list[dict]:
@@ -1860,6 +1912,18 @@ class Fetcher:
                     break
         if not md5s:
             return None
+        for candidate in md5s[:3]:
+            response = self._safe(lambda: libgen_download(self.http, candidate))
+            if response is None:
+                outcome.attempts.append(Attempt("libgen-download", f"md5 {candidate[:8]}…", "no PDF"))
+                continue
+            staged = self._stage(response.content, work, name)
+            if verify_pdf(staged, work).verdict == "mismatch":
+                staged.unlink(missing_ok=True)
+                outcome.attempts.append(Attempt("libgen-download", f"md5 {candidate[:8]}…", "a different work"))
+                continue
+            outcome.attempts.append(Attempt("libgen-download", f"md5 {candidate[:8]}…", "ok"))
+            return self._finish(outcome, str(staged), "libgen-download", work)
         if not key:
             outcome.attempts.append(Attempt("annas-fast-download", "-", "no secret key available"))
             return None

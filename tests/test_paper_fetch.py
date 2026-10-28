@@ -105,6 +105,32 @@ class HttpTrustTests(unittest.TestCase):
                 certifi.where.assert_not_called()
 
 
+    def test_resolver_blocked_libgen_is_pinned_to_the_doh_answer(self):
+        with mock.patch.object(pf, "_requests") as requests, \
+             mock.patch.object(pf, "_CurlOpt") as curl_opt, \
+             mock.patch.object(pf, "_certifi") as certifi, \
+             mock.patch.object(pf.socket, "getaddrinfo", return_value=[(0, 0, 0, "", ("::1", 443, 0, 0))]), \
+             mock.patch.dict(os.environ, {}, clear=True):
+            certifi.where.return_value = "/ca.pem"
+            requests.Session.return_value.get.return_value.json.return_value = {
+                "Answer": [{"type": 5, "data": "alias."}, {"type": 1, "data": "179.43.167.164"}]}
+            http = pf.Http()
+            pinned = http._session_for("https://libgen.li/json.php")
+            self.assertIs(http._session_for("https://libgen.li/ads.php"), pinned)
+            self.assertIs(http._session_for("https://api.crossref.org/works"), http.session)
+        self.assertEqual(requests.Session.call_args_list[1], mock.call(
+            impersonate="chrome", verify="/ca.pem",
+            curl_options={curl_opt.RESOLVE: ["libgen.li:443:179.43.167.164"]}))
+
+    def test_resolvable_libgen_uses_the_shared_session(self):
+        with mock.patch.object(pf, "_requests") as requests, \
+             mock.patch.object(pf, "_certifi"), \
+             mock.patch.object(pf.socket, "getaddrinfo", return_value=[(0, 0, 0, "", ("179.43.167.164", 443))]):
+            http = pf.Http()
+            self.assertIs(http._session_for("https://libgen.li/json.php"), http.session)
+        requests.Session.return_value.get.assert_not_called()
+
+
 class FakeHttp:
     """Routes requests by URL substring to canned responses; records calls."""
 
@@ -733,6 +759,23 @@ class FetcherTests(unittest.TestCase):
             key_params = [p for u, p in http.calls if "fast_download" in u]
             self.assertEqual(key_params[0]["key"], "k")
             self.assertTrue(all("annas-archive" in u for u, p in http.calls if p.get("key")))
+
+    def test_libgen_mirror_serves_the_file_before_fast_download(self):
+        http = FakeHttp([
+            ("api.crossref.org", self.crossref()),
+            ("doi.org/10.1111", html("<title>Just a moment...</title>", 403)),
+            ("ads.php", html('<a href="get.php?md5=x&amp;key=ONE"><h2>GET</h2></a>')),
+            ("get.php", pf.Response(200, pdf_bytes(), "https://cdn.example/f.pdf", "application/octet-stream")),
+            ("libgen", html(json.dumps({"1": {"doi": "10.1111/phpr.12684", "files": {"9": {"md5": MD5_A}}}}))),
+        ])
+        with tempfile.TemporaryDirectory() as tmp, \
+             mock.patch.object(pf, "pdf_text", side_effect=lambda p, pages=3: p.read_bytes().decode("latin1")), \
+             mock.patch.object(pf, "pdf_pages", return_value=20):
+            outcome = self._fetcher(http, tmp).fetch("10.1111/phpr.12684")
+            self.assertEqual(outcome.status, "ok")
+            self.assertEqual(outcome.route, "libgen-download")
+        self.assertIn(("https://libgen.li/get.php?md5=x&key=ONE", {}), http.calls)
+        self.assertFalse(any("fast_download" in u for u, _ in http.calls), "no Anna's quota spent")
 
     def test_not_member_is_reported_with_md5_and_stops(self):
         http = FakeHttp([

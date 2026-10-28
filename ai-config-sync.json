@@ -700,7 +700,7 @@
       "path": "codex/rules/default.rules",
       "tracked": true,
       "live_path": "~/.codex/rules/default.rules",
-      "note": "Codex-only command allowlist rules, pruned 2026-07-29 to generic recurring commands only (git add/commit/push/restore, curl -L, ps, emacs batch, emacsclient --eval). One-off approvals, dead-PID kills, the AGENTS.md symlink rule, and the arbitrary-command CODEX_HOME env prefix were removed; do not re-add task-specific or PID-specific rules. There is no Claude counterpart; material policy changes should be recorded here."
+      "note": "Codex-only command allowlist rules, pruned 2026-07-29 to generic recurring commands only (git add/commit/push/restore, curl -L, ps, emacs batch, emacsclient --eval; paper-fetch, added 2026-10-28 so agents fetch papers without a prompt). One-off approvals, dead-PID kills, the AGENTS.md symlink rule, and the arbitrary-command CODEX_HOME env prefix were removed; do not re-add task-specific or PID-specific rules. There is no Claude counterpart; material policy changes should be recorded here."
     },
     {
       "tool": "Claude Code and Codex",

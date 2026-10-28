@@ -526,6 +526,9 @@ tool's status taxonomy verbatim and hands a staged file to =add-bib-entry= for
 attachment. Its browser step loads =chrome-use= and uses Claude in Chrome, the
 Codex CLI's Playwright MCP =browser_*= tools, or the Codex desktop app's
 =control-chrome=.
+The tool's LibGen route works where the ISP's resolver blocks LibGen (it falls
+back to DNS-over-HTTPS) and downloads LibGen's md5s from LibGen's own mirror
+before spending Anna's fast-download quota.
 Anna's Archive's only API is the member fast-download endpoint, which takes an
 md5; it has no search API, so its book search runs in Chrome and
 =paper-fetch book-candidates --annas-search-html= consumes the saved page, while

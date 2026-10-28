@@ -27,8 +27,9 @@ session for hosts that only answer a real browser. Shared logic:
    `IDENT` may be a DOI, a doi.org or publisher URL, an arXiv id, a 32-hex Anna's
    Archive md5, or a title (add `--author` to disambiguate a title). The tool
    resolves metadata through Crossref/OpenAlex, then tries open access (Unpaywall,
-   OpenAlex, arXiv, publisher page), then LibGen -> Anna's Archive member fast
-   download, then Anna's SciDB. It reads the Anna's Archive key itself; never pass
+   OpenAlex, arXiv, publisher page), then LibGen (DOI -> md5, then LibGen's own
+   mirror) -> Anna's Archive member fast download, then Anna's SciDB. Where the
+   ISP's resolver blocks LibGen, the tool resolves it over DNS-over-HTTPS. It reads the Anna's Archive key itself; never pass
    or print a key or a signed download URL.
 
    Anna's Archive's only API is that member fast-download endpoint, which takes

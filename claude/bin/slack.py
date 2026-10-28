@@ -540,8 +540,32 @@ def _has_replies(message):
         return False
 
 
+def full_text(message):
+    """Return everything a reader of MESSAGE sees, as plain text.
+
+    A forwarded ("shared") message, a link unfurl or a file leaves the
+    message's own `text` empty or partial; their content sits in
+    `attachments` and `files`. On 2026-10-28 an agent took a forwarded
+    message with someone's bank details for an empty one and asked for them
+    again.
+    """
+    parts = [message.get("text") or ""]
+    for att in message.get("attachments") or []:
+        body = att.get("text") or att.get("fallback") or ""
+        if not body:
+            continue
+        who = att.get("author_name") or att.get("author_subname") or ""
+        label = "Forwarded message" if att.get("is_share") or att.get("is_msg_unfurl") else "Attachment"
+        parts.append(f"[{label}{' from ' + who if who else ''}]\n{body}")
+    for f in message.get("files") or []:
+        parts.append(f"[File: {f.get('name') or f.get('title') or f.get('id')}]")
+    return "\n".join(p for p in parts if p).strip()
+
+
 def _add_permalinks(out, channel):
     """Give each message its permalink, so callers copy links instead of guessing the domain."""
+    for message in out.get("messages") or []:
+        message["full_text"] = full_text(message)
     domain = WORKSPACES[_workspace].get("domain")
     if not domain:
         return

@@ -212,9 +212,13 @@ collected or routed (Pablo, 2026-10-24).
   file or pointing Pablo to it, run `inbox-drafts check --project PROJECT`: a
   draft marked ANSWERED is one Pablo already replied to, so retire it. Each
   section must be decidable on its own, without the chat. Update a section when new
-  messages change it. Once Pablo approves a Slack draft, send it with
-  `slack.py send` (see "Slack"). Once he approves a
-  WhatsApp draft, send it with `wa-send` (see "WhatsApp"), attachments included. Once the archive shows it sent, or Pablo drops it, move
+  messages change it. A draft Pablo approved (a "send" comment processed
+  with `m p`, or his explicit OK in chat) is sent by the agent, not staged
+  for him (Pablo, 2026-10-28): Slack with `claude/bin/copy-slack-draft --send
+  --stdin --workspace KEY --channel ID` for a DM or channel post, or
+  `--permalink URL` to reply in a thread; WhatsApp with `wa-send`
+  (attachments included). Never type it through Chrome. Confirm it arrived;
+  an uncertain result is checked, not resent. Once the archive shows it sent, or Pablo drops it, move
   it under a final `# Enviados / descartados` heading with the date.
 - Pre-authorized actions live in the project's `.inbox-policy.toml` and count
   only while Pablo's approval matches the file (`inbox-policy status --project

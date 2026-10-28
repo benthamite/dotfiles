@@ -68,6 +68,7 @@ def run_emacs_eval(expr: str, socket: str) -> str:
     if result.returncode != 0 or out not in {
         "draft-ring-staged", "draft-composer-staged", "draft-opened",
         "draft-composer-cleared", "draft-composer-absent", "draft-composer-kept",
+        "draft-sent",
     }:
         raise UncertainResult("Emacs staging was not acknowledged")
     return out
@@ -391,6 +392,31 @@ def prefill_slack_reply(permalink: str, path: Path | None, socket: str,
     return run_emacs_eval(composer_expression(expr), socket)
 
 
+def send_staged(path: Path, socket: str) -> str:
+    """Send the draft just staged in the selected Slack composer.
+
+    Staging leaves the target buffer selected with exactly the draft in its
+    input; this re-checks that, submits it with `lui-send-input', and requires
+    the input to be empty afterwards.
+    """
+    draft = elisp_string(path.read_text(encoding="utf-8"))
+    expr = f"""
+(let* ((buf (window-buffer (selected-window)))
+       (draft {draft}))
+  (with-current-buffer buf
+    (unless (and (boundp 'lui-input-marker) (markerp lui-input-marker)
+                 (equal draft (buffer-substring-no-properties lui-input-marker (point-max))))
+      (error "Composer does not hold the staged draft"))
+    (goto-char (point-max))
+    (lui-send-input)
+    (if (string-empty-p (string-trim (buffer-substring-no-properties
+                                      lui-input-marker (point-max))))
+        'draft-sent
+      (error "Composer still holds text after sending"))))
+""".strip()
+    return run_emacs_eval(expr, socket)
+
+
 def prefill_channel_message(channel: str, path: Path | None, socket: str,
                             previous: str | None = None, workspace: str = "epoch") -> str:
     """Open the exact loaded room of WORKSPACE; stage PATH unless this is open-only."""
@@ -649,6 +675,11 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--send", action="store_true",
+        help="After staging, send the draft from the composer (implies --no-ring); "
+             "only for a message Pablo approved",
+    )
+    parser.add_argument(
         "--clear", action="store_true",
         help="After the message was sent another way, empty the target's composer "
              "if it still holds the draft this helper staged there",
@@ -668,6 +699,10 @@ def main() -> int:
             result["clear"] = clear_staged(args)
             result.update(status="ok", stage="complete")
             return 0
+        if args.send:
+            if args.open_only or args.no_open:
+                raise ValueError("--send needs a draft and a target")
+            args.no_ring = True
         if args.open_only and (args.file or args.stdin or args.no_open):
             raise ValueError("Open-only cannot stage text")
         if args.file and args.stdin:
@@ -708,6 +743,11 @@ def main() -> int:
                 result.update(opened=True, composer=not args.open_only)
                 if not args.open_only:
                     record_staged_hash(key, snapshot.read_bytes())
+                if args.send:
+                    result["stage"] = "send"
+                    if send_staged(snapshot, socket) != "draft-sent":
+                        raise UncertainResult("Sending was not acknowledged; check Slack before retrying")
+                    result["sent"] = True
             if not args.open_only and not args.no_ring:
                 result["stage"] = "ring"
                 copy_to_kill_ring(snapshot, socket)

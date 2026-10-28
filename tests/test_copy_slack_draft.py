@@ -834,6 +834,22 @@ class CopySlackDraftTest(unittest.TestCase):
         self.assertEqual((code, result["status"]), (1, "failed"))
         client.assert_not_called()
 
+    def test_send_stages_then_sends_without_the_ring(self):
+        stdin = mock.Mock()
+        stdin.buffer = io.BytesIO(b"draft\n")
+        with mock.patch.object(sys, "argv", ["copy", "--stdin", "--send", "--workspace", "baish", "--channel", "C12345678"]), mock.patch.object(sys, "stdin", stdin), mock.patch.object(self.mod, "default_socket", return_value="/tmp/s"), mock.patch.object(self.mod, "prefill_channel_message", return_value="draft-composer-staged"), mock.patch.object(self.mod, "send_staged", return_value="draft-sent") as send, mock.patch.object(self.mod, "copy_to_kill_ring") as ring, mock.patch.object(self.mod, "record_staged_hash"), mock.patch.object(self.mod, "read_staged_hash", return_value=None), mock.patch("sys.stdout", new_callable=io.StringIO) as output:
+            self.assertEqual(self.mod.main(), 0)
+            send.assert_called_once()
+            ring.assert_not_called()
+            self.assertTrue(json.loads(output.getvalue())["sent"])
+
+    def test_send_without_acknowledgement_is_uncertain(self):
+        stdin = mock.Mock()
+        stdin.buffer = io.BytesIO(b"draft\n")
+        with mock.patch.object(sys, "argv", ["copy", "--stdin", "--send", "--channel", "C12345678"]), mock.patch.object(sys, "stdin", stdin), mock.patch.object(self.mod, "default_socket", return_value="/tmp/s"), mock.patch.object(self.mod, "prefill_channel_message", return_value="draft-composer-staged"), mock.patch.object(self.mod, "send_staged", side_effect=self.mod.UncertainResult("x")), mock.patch.object(self.mod, "record_staged_hash"), mock.patch.object(self.mod, "read_staged_hash", return_value=None), mock.patch("sys.stdout", new_callable=io.StringIO) as output:
+            self.assertEqual(self.mod.main(), 1)
+            self.assertEqual(json.loads(output.getvalue())["status"], "uncertain")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -54,7 +54,8 @@ the "Already tried" list in place.
 - No limit on agent-launched parallel jobs (2026-10-19): 10-17, 10-18 and
   10-19 outages all coincided with agent sessions running 9+ worker pools
   over full swap. Proposed: one global rule capping worker concurrency and
-  checking swap before starting a pool; pending Pablo's decision.
+  checking swap before starting a pool; pending Pablo's decision. Recurred
+  2026-10-28 with 72 =claude= processes over full swap.
 - Other timers that may wait on the network on the main thread (2026-10-25):
   wikipedia-auto, mu4e, slack's =request= callbacks and the rest, to check
   against the =elisp-conventions= network rule. Deferred by Pablo until the
@@ -74,6 +75,30 @@ the "Already tried" list in place.
   stack reports the watchdog captures.
 
 * Incidents
+
+** 2026-10-28 13:59–14:04+: server refuses clients under host starvation (investigation, no change)
+
+- From about 13:59, =emacsclient= calls from an agent session timed out
+  (30 s), then got =Connection refused= on the default server socket. The
+  watchdog wrote no sample after 13:56:13 (answered in 0.96 s) through at
+  least 14:04.
+- Emacs was alive: the state file kept updating (14:00:54, 14:04:05) with
+  recursion depth 0, no debugger and no prompt. A 5 s sample at 14:03 had
+  the main thread in =read_char= → =timer_check=, mostly
+  =auto-revert-buffers= file-access checks, plus =json-encode= and EIEIO slot
+  access. Emacs was at 4.7% CPU.
+- Host: load 148–183, swap 32.8 of 33.8 GB used. Top CPU: WindowManager
+  (80%), a pyenv Python 3.11 job (62%, 1 GB, 12 min), App Store with its
+  payment sheets, mediaanalysisd. 72 =claude= processes, 121 Chrome
+  renderers.
+- The session had just run two from-scratch Agent Emacs installs
+  (=test/smoke-test.sh=, native compilation in a second Emacs) at about 13:25
+  and 13:58; both had finished before the refusals, and the load stayed high
+  after them.
+- A refusal rather than a timeout suggests a full connection queue,
+  presumably agent hooks' =emacsclient= calls piling up while Emacs crawled.
+  Not confirmed.
+- Sample: =/tmp/emacs-freeze.LWQmKY/sample.txt= (temporary).
 
 ** 2026-10-25 22:44: debugger entered from the new Slack reachability advice (diagnosis only)
 

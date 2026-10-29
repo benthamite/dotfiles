@@ -83,17 +83,25 @@ import urllib.request
 API = "https://slack.com/api"
 REQUEST_TIMEOUT = 30
 _METHOD_RE = re.compile(r"[a-z][A-Za-z0-9_]*(?:\.[a-z][A-Za-z0-9_]*)+")
-_SAFE_API_ERRORS = frozenset({
-    "not_authed", "invalid_auth", "account_inactive", "token_revoked",
-    "missing_scope", "channel_not_found", "not_in_channel", "ratelimited",
-    "rate_limited", "restricted_action", "invalid_arguments", "invalid_arg_name",
-    "method_not_supported_for_channel_type", "user_not_found", "access_denied",
-    "is_archived", "msg_too_long", "no_text",
-})
+# Slack error codes are bare identifiers; anything else is not echoed.
+_API_ERROR_RE = re.compile(r"[a-z][a-z_]{0,63}")
 
 
 class _NoResponse(SystemExit):
     """No usable response arrived, so Slack may still have acted on the request."""
+
+
+class ApiError(SystemExit):
+    """Slack answered ok=false for a reason other than the session credentials.
+
+    `error` is Slack's error code, or "" when it was not a bare identifier.
+    Callers that keep running (inbox-monitor) use it to tell a bad request
+    from a credential failure, which exits as a plain SystemExit.
+    """
+
+    def __init__(self, code=1, error=""):
+        super().__init__(code)
+        self.error = error
 
 
 def _fail(message, code=1, kind=SystemExit):
@@ -395,10 +403,12 @@ def _post_form(url, params, headers, raise_on_auth=False):
         error = data.get("error")
         if raise_on_auth and error in _AUTH_ERRORS:
             raise _AuthRejected(error)
-        suffix = f": {error}" if isinstance(error, str) and error in _SAFE_API_ERRORS else ""
+        safe = error if isinstance(error, str) and _API_ERROR_RE.fullmatch(error) else ""
+        suffix = f": {safe}" if safe else ""
         if error in _AUTH_ERRORS:
             _fail(f"Slack API rejected the request{suffix}. {_REFRESH_HINT}")
-        _fail(f"Slack API rejected the request{suffix}")
+        sys.stderr.write(f"ERROR: Slack API rejected the request{suffix}\n")
+        raise ApiError(1, safe)
     return data
 
 

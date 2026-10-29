@@ -135,11 +135,12 @@ Agents solve classes, not instances: a recurring concern such as credentials or
 alerting follows one written principle across every project, and a fix in one
 project starts by checking how its siblings handle the same thing.
 
-Any message an agent itself sends to Peter Hartree under Pablo's name starts
-with =[agent] =; drafts Pablo sends himself, such as text staged in the kill
-ring, carry no prefix. Peter proposed
-this on Slack on 2026-10-27 after an agent-written question reached him
-unmarked. The rule sits in the always-loaded file because such messages can be
+Any message an agent itself sends under Pablo's name, to anyone, starts with
+=[agent] =; drafts Pablo sends himself, such as text staged in the kill ring,
+carry no prefix. Peter proposed the prefix for messages to him on Slack on
+2026-10-27 after an agent-written question reached him unmarked; Pablo extended
+it to every recipient on 2026-10-29, before an agent was to message Will
+MacAskill. The rule sits in the always-loaded file because such messages can be
 drafted from any project and go out on any channel.
 
 Agents ask for a task's decisions once: before acting, they list every

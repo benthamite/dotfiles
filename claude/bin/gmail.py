@@ -176,6 +176,11 @@ def _build_message(args):
         if parent_headers is None:
             sys.exit("ERROR: --subject is required unless --reply-to is given")
         subject = _reply_subject(parent_headers)
+    elif parent_headers is not None and subject != _reply_subject(parent_headers):
+        # A changed subject starts a new thread for every recipient
+        # (2026-10-29: a reply to BlueDot left its thread this way).
+        sys.exit(f"ERROR: a reply keeps its thread's subject; omit --subject "
+                 f"(it would be {_reply_subject(parent_headers)!r})")
     msg = email.message.EmailMessage()
     msg["To"] = args.to
     if args.cc:

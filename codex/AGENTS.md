@@ -23,7 +23,7 @@
 - **Deletion:** use `trash` instead of destructive recursive deletion.
 - **Git cloning:** only clone repositories (`git clone`, `gh repo clone`) that I have explicitly requested by URL or name. If a task seems to require cloning an unmentioned repo, ask first.
 - **Shared systems:** do not create PRs, open issues, post Slack/email/comments, create or update Asana tasks, or take other externally visible actions without my explicit confirmation.
-- **Messages you send:** when you yourself send a message under my name, to anyone and on any channel, start it with `[agent] ` (first agreed with Peter Hartree on Slack, 2026-10-27; extended to everyone by me, 2026-10-29). Leave the prefix out of drafts I send myself, such as text you stage in the kill ring, and out of messages I approved in a review file (e.g. a `send` comment in an inbox-monitor drafts file): I reviewed those, so they go out under my own name (2026-10-30).
+- **Messages you send:** when you yourself send a message under my name, to anyone and on any channel, start it with `[agent] ` (first agreed with Peter Hartree on Slack, 2026-10-27; extended to everyone by me, 2026-10-29). Leave the prefix out of drafts I send myself, such as text you stage in the kill ring, and out of messages I approved in a review file (e.g. a `send` comment in an inbox-monitor drafts file): I reviewed those, so they go out under my own name (2026-10-30). The send tools add the prefix themselves; pass `--reviewed FILE` only for review-file approvals.
 - **Secrets:** when reading, storing, sharing, or placing credentials (1Password, `.zshenv-secrets`, vault choice), read `/Users/pablostafforini/My Drive/dotfiles/claude/context/secrets.md` first.
 
 ## User context and communication

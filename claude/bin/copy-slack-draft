@@ -578,6 +578,10 @@ def validate_socket(value: str) -> str:
     return str(path)
 
 
+# None unless --send; then "" (prefix) or the --reviewed file.
+SEND_PREFIX = None
+
+
 @contextlib.contextmanager
 def draft_snapshot(value: str):
     path = Path(value).expanduser().absolute()
@@ -599,6 +603,12 @@ def draft_snapshot(value: str):
     text = raw.decode("utf-8")
     if text.startswith("\ufeff") or not text.strip() or "\x00" in text:
         raise ValueError("Draft must be nonempty UTF-8 without BOM or NUL")
+    if SEND_PREFIX is not None:
+        # --send posts as Pablo: apply the [agent] prefix rule (agent_prefix.py).
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import agent_prefix
+        text = agent_prefix.apply(text, SEND_PREFIX or None, "copy-slack-draft --send")
+        raw = text.encode("utf-8")
     directory = Path(tempfile.mkdtemp(prefix="slack-draft-", dir="/tmp"))
     snapshot = directory / "draft.txt"
     retain = False
@@ -680,6 +690,10 @@ def main() -> int:
              "only for a message Pablo approved",
     )
     parser.add_argument(
+        "--reviewed", metavar="FILE",
+        help="With --send: Pablo approved this exact text in review FILE, so it goes without the [agent] prefix",
+    )
+    parser.add_argument(
         "--clear", action="store_true",
         help="After the message was sent another way, empty the target's composer "
              "if it still holds the draft this helper staged there",
@@ -703,6 +717,8 @@ def main() -> int:
             if args.open_only or args.no_open:
                 raise ValueError("--send needs a draft and a target")
             args.no_ring = True
+            global SEND_PREFIX
+            SEND_PREFIX = args.reviewed or ""
         if args.open_only and (args.file or args.stdin or args.no_open):
             raise ValueError("Open-only cannot stage text")
         if args.file and args.stdin:

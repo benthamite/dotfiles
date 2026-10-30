@@ -301,7 +301,15 @@ def cmd_draft(args):
     print(out["id"])
 
 
+def _prefixed_body(args, tool):
+    """Apply the [agent] prefix rule to the body (agent_prefix.py)."""
+    import agent_prefix
+    args.body = agent_prefix.apply(_read_body(args), args.reviewed, tool)
+    args.body_file = None
+
+
 def cmd_send(args):
+    _prefixed_body(args, "gmail.py send")
     raw, thread_id = _build_message(args)
     out = api_request(
         "POST",
@@ -313,6 +321,7 @@ def cmd_send(args):
 
 
 def cmd_reply(args):
+    _prefixed_body(args, "gmail.py reply")
     thread_id, h = _reply_context(args.id, args.account)
     msg = email.message.EmailMessage()
     msg["To"] = args.to or h.get("from", "")
@@ -415,6 +424,9 @@ def build_parser():
         s.add_argument("--cc")
         s.add_argument("--bcc")
         s.add_argument("--attach", action="append", default=[])
+        if name == "send":
+            s.add_argument("--reviewed", metavar="FILE",
+                           help="Pablo approved this exact body in review FILE: send it without the [agent] prefix")
         s.set_defaults(func=fn)
 
     rep = sub.add_parser("reply", parents=[sub_account])
@@ -423,6 +435,8 @@ def build_parser():
     rep.add_argument("--body")
     rep.add_argument("--body-file", dest="body_file")
     rep.add_argument("--attach", action="append", default=[])
+    rep.add_argument("--reviewed", metavar="FILE",
+                     help="Pablo approved this exact body in review FILE: send it without the [agent] prefix")
     rep.set_defaults(func=cmd_reply)
 
     sd = sub.add_parser("send-draft", parents=[sub_account])

@@ -26,6 +26,9 @@ import sys
 import time
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "claude" / "bin"))
+import agent_prefix  # noqa: E402
+
 OUTBOX = Path.home() / ".local/share/wa-archive/outbox"
 
 
@@ -40,10 +43,14 @@ def main() -> int:
     body.add_argument("--stdin", action="store_true", help="read the text from stdin")
     p.add_argument("--file", help="absolute path of a file to attach")
     p.add_argument("--timeout", type=int, default=120, help="seconds to wait for the receipt")
+    p.add_argument("--reviewed", metavar="FILE",
+                   help="Pablo approved this exact text in review FILE: send it without the [agent] prefix")
     p.add_argument("--formatting", action="store_true",
                    help="allow WhatsApp formatting (*bold*, _italic_, ~strike~, ```mono```)")
     a = p.parse_args()
     text = sys.stdin.read().rstrip("\n") if a.stdin else (a.text or "")
+    if text.strip():
+        text = agent_prefix.apply(text, a.reviewed, "wa-send")
     if not a.formatting:
         spans = formatted_spans(text)
         if spans:

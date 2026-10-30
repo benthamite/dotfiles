@@ -71,7 +71,11 @@ Send with `wa-send --chat "EXACT NAME" | --to JID --text "..." [--file
 wa-archive's outbox, the daemon sends it as Pablo (a file goes as a document,
 or as a photo if it is an image, with the text as caption), archives it, and
 `wa-send` prints the receipt. Send only what Pablo approved: a "send" comment
-processed from a drafts file, or his explicit OK in chat. Exit 3 means no
+processed from a drafts file, or his explicit OK in chat. The `[agent] `
+prefix is added by `wa-send`, `slack.py send` and `gmail.py send|reply`
+themselves (`claude/bin/agent_prefix.py`, 2026-10-30); pass `--reviewed
+DRAFTS_FILE` only for text Pablo approved in that review file, which the tool
+checks is there. A chat OK is not `--reviewed`. Exit 3 means no
 receipt arrived: check `wa-read show` before retrying, never resend blindly.
 WhatsApp renders `*bold*`, `_italic_`, `~strike~` and ```` ```mono``` ````, so
 drafts must not use those characters by accident (write "unos", not `~`, for

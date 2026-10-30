@@ -144,6 +144,10 @@ inbox-monitor drafts file), which he has already reviewed, carry no prefix
 it to every recipient on 2026-10-29, before an agent was to message Will
 MacAskill. The rule sits in the always-loaded file because such messages can be
 drafted from any project and go out on any channel.
+The send tools enforce it (=claude/bin/agent_prefix.py=, 2026-10-30):
+=wa-send=, =slack.py send= and =gmail.py send|reply= add the prefix unless
+given =--reviewed FILE=, and then refuse text that is not in that review file.
+This followed a chat-approved message that went out unmarked the same day.
 
 Agents ask for a task's decisions once: before acting, they list every
 decision and approval the task needs through to completion, with a

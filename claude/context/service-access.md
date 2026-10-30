@@ -74,8 +74,9 @@ or as a photo if it is an image, with the text as caption), archives it, and
 processed from a drafts file, or his explicit OK in chat. The `[agent] `
 prefix is added by `wa-send`, `slack.py send` and `gmail.py send|reply`
 themselves (`claude/bin/agent_prefix.py`, 2026-10-30); pass `--reviewed
-DRAFTS_FILE` only for text Pablo approved in that review file, which the tool
-checks is there. A chat OK is not `--reviewed`. Exit 3 means no
+DRAFTS_FILE` only for text Pablo approved in that review file: the tool checks
+that the text is in an item carrying his comment (`{>>send<<}`), so send before
+removing the comment. A chat OK is not `--reviewed`. Exit 3 means no
 receipt arrived: check `wa-read show` before retrying, never resend blindly.
 WhatsApp renders `*bold*`, `_italic_`, `~strike~` and ```` ```mono``` ````, so
 drafts must not use those characters by accident (write "unos", not `~`, for

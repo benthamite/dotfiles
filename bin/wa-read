@@ -159,6 +159,21 @@ FROM messages m
 """
 
 
+def transcript(chat_key, msg_id):
+    """The transcript wa-archive saved for a voice note or audio, or None.
+    The daemon downloads such audio on arrival and wa-transcribe writes
+    media/<chat>/<id>-<name>.txt next to it."""
+    folder = os.path.join(DATA, "wa-archive", "media", re.sub(r"[^\w.\- ]+", "_", chat_key))
+    try:
+        names = sorted(n for n in os.listdir(folder) if n.startswith(msg_id + "-") and n.endswith(".txt"))
+    except FileNotFoundError:
+        return None
+    for n in names:
+        with open(os.path.join(folder, n), errors="replace") as fh:
+            return fh.read().strip()
+    return None
+
+
 def print_messages(rows, names, with_chat=False):
     for r in rows:
         who = "me" if r["from_me"] else (names.get(r["sender_key"]) or r["sender_name"] or r["sender_key"])
@@ -171,6 +186,9 @@ def print_messages(rows, names, with_chat=False):
             if r["media_type"]:
                 media = f"[{r['media_type']}{': ' + r['file_name'] if r['file_name'] else ''}]"
                 body = f"{media} {body}".strip()
+                if r["media_type"] in ("voice", "audio"):
+                    t = transcript(r["chat_key"], r["id"])
+                    body += f" (transcripción automática: «{t}»)" if t else " (todavía sin transcripción)"
         prefix = f"[{names.get(r['chat_key'], r['chat_key'])}] " if with_chat else ""
         print(f"{prefix}{fmt_ts(r['ts'])}  {who}: {body}")
 

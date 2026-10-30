@@ -1,0 +1,17 @@
+#!/bin/sh
+# wa-transcribe AUDIO: write a Whisper transcript of a WhatsApp voice note or
+# audio file to AUDIO.txt. The wa-archive daemon runs it after downloading one;
+# wa-read and inbox-read show the transcript in place of "[voice]".
+set -eu
+audio=$1
+whisper=${WA_WHISPER:-$HOME/.pyenv/versions/3.11.9/bin/whisper}
+PATH=/opt/homebrew/bin:/usr/bin:/bin
+export PATH
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/wa-transcribe.XXXXXX")
+base=$(basename "$audio")
+out="$tmp/${base%.*}.txt"
+cleanup() { [ -f "$out" ] && unlink "$out"; rmdir "$tmp"; }
+trap cleanup EXIT
+"$whisper" "$audio" --model small --output_format txt --output_dir "$tmp" >/dev/null 2>&1
+[ -s "$out" ]
+mv "$out" "$audio.txt.tmp" && mv "$audio.txt.tmp" "$audio.txt"

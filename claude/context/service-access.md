@@ -86,7 +86,11 @@ Attachments: `wa-read` shows `[document: NAME]` but no file. Download one with
 `wa-fetch --chat "EXACT NAME" --name NAME | --latest | --id MSGID` (since
 2026-10-28): the daemon downloads that one file into
 `~/.local/share/wa-archive/media/` and `wa-fetch` prints its path. Nothing is
-downloaded unless asked. Every attachment received since 2026-10-28 15:35 can
+downloaded unless asked, except voice notes and audio: since 2026-10-30 the
+daemon downloads them on arrival and `wa-transcribe` (Whisper) writes a
+transcript next to each, which `wa-read` and `inbox-read` show in place of a
+bare `[voice]`. If one shows «todavía sin transcripción», fetch it with
+`wa-fetch --id` (that also transcribes it) and wait a minute. Every attachment received since 2026-10-28 15:35 can
 be fetched; the few that arrived before cannot (the phone does not resend
 them). Never ask Pablo to forward or resend files to make them fetchable: if
 an old one is truly needed, draft a request to its sender in the review file.

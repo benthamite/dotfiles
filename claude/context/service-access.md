@@ -247,8 +247,13 @@ collected or routed (Pablo, 2026-10-24).
   or not a message arrived about it (2026-10-28: Agus's payment and several
   plan tasks never reached the file). Each item is a matter, not a message:
   it states **Se cierra cuando** (the condition that ends it, e.g. "Agus cobró
-  octubre") and leaves the file only when that holds; each incoming message
-  updates the matter it belongs to. One `##` section per item,
+  octubre") and leaves the file when that holds, or while its next step is
+  someone else's: then it becomes a wait (listed under "Esperando a otros")
+  and comes back as an item when the step is Pablo's again (Pablo,
+  2026-10-30: an item with no action for him sat under "urgent"). Each
+  incoming message updates the matter it belongs to. A message the sender
+  deleted counts as never sent: no item, no acknowledgment, no record (Pablo,
+  2026-10-30). One `##` section per item,
   most urgent first, headed with the person or channel and a one-line topic, with:
   **Contexto** (what the other person said, with a link, and the relevant
   facts or deadlines), **Decisión** (what Pablo has to decide, and the

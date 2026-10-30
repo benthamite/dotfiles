@@ -76,6 +76,21 @@ the "Already tried" list in place.
 
 * Incidents
 
+** 2026-10-30 10:24–10:29: server filter parked in =server-return-error='s =sit-for= under host starvation (investigation, no change)
+
+- Watchdog: timer state stale from about 10:24:00; outage logged 10:27:40
+  ("blocked for 210 s"); Emacs answered again at 10:29. Load average was
+  about 60 (two agent-log ERT runs, Google Drive, =bztransmit=).
+- 10:27 sample (=/tmp/emacs-freeze.GMQGsG/sample.txt=, about 0% CPU):
+  =read_process_output= → =server-process-filter= →
+  =server--process-filter-1= → =server-return-error= →
+  =server--message-sit-for= → =sit-for= → =read_char=. Stock Emacs 30.2
+  code: an =emacsclient= request errored and the server sat for 2 s to
+  show the message, but the wait lasted minutes.
+- Unknown: which request errored, and why a 2-second =sit-for= did not
+  return. Candidates are the agent's own =emacsclient= probes or the
+  watchdog's. No recovery action was taken.
+
 ** 2026-10-28 13:59–14:04+: server refuses clients under host starvation (investigation, no change)
 
 - From about 13:59, =emacsclient= calls from an agent session timed out

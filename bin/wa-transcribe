@@ -12,6 +12,6 @@ base=$(basename "$audio")
 out="$tmp/${base%.*}.txt"
 cleanup() { [ -f "$out" ] && unlink "$out"; rmdir "$tmp"; }
 trap cleanup EXIT
-"$whisper" "$audio" --model small --output_format txt --output_dir "$tmp" >/dev/null 2>&1
+"$whisper" "$audio" --model turbo --output_format txt --output_dir "$tmp" >/dev/null 2>&1
 [ -s "$out" ]
 mv "$out" "$audio.txt.tmp" && mv "$audio.txt.tmp" "$audio.txt"

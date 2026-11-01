@@ -97,6 +97,9 @@ unrelated definitions and resolve collisions rather than overwriting/shadowing t
    dependencies and generated caches outside Drive and declare their setup.
 6. Update required documentation and discovery/catalog metadata. Keep auxiliary
    files paired as well as the main instructions, except documented differences.
+7. An exit-time skill (one that runs unattended at session end, such as a
+   before-exit chain step) must also become an `exit-skill-audit` target; read
+   `/Users/pablostafforini/My Drive/dotfiles/claude/context/skill-audits.md`.
 
 ### gptel directive or preset
 

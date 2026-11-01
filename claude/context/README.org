@@ -11,12 +11,13 @@
 | =mcp-servers.md= | A task adds, removes, places, audits, or diagnoses a Claude MCP server. |
 | =secrets.md= | Before reading, storing, sharing, moving, or otherwise handling credentials and secret-bearing configuration. |
 | =service-access.md= | A task needs an external service (Gmail, Google Sheets/Calendar/Docs/Drive, Slack, GitHub, Anna's Archive) or the Forethought Chrome profile; it maps each service to its local tool. Browser rules live in the =chrome-use= skill. |
+| =skill-audits.md= | A task adds or changes an exit-time skill (a before-exit chain step) or its audit; the principle is a monthly =exit-skill-audit= target per skill, proposing changes for Pablo's approval. |
 
 These documents are operational context, not general background to load
 into every task. [[file:service-access.md][service-access.md]] is a plain routing table and safe to read
 in full. [[file:google-services.md][google-services.md]] includes account and authentication procedures; do
 not reproduce or run credential-bearing recipes merely to document them.
-[[file:alerting.md][alerting.md]] holds no secrets and is safe to read in full.
+[[file:alerting.md][alerting.md]] and [[file:skill-audits.md][skill-audits.md]] hold no secrets and are safe to read in full.
 [[file:mcp-servers.md][mcp-servers.md]] is safe to read for server topology and placement, but resolved
 per-account environment values remain secrets. [[file:secrets.md][secrets.md]] is handling policy rather
 than a credential file, and its rule remains the same: never print or quote a

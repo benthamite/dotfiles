@@ -423,6 +423,15 @@ Ignore rules do not make tracked or Drive-synced content private. Post-update-lo
 hooks refresh the brief before its map is derived, within the caller's authority;
 derived fields cannot originate unverified claims.
 
+The paired =exit-skill-audit= skill runs after =update-log= in the Emacs before-exit
+chain and audits an exit-time skill once a month. Each target (so far only the
+Forethought =closeout=) is a directory under =exit-skill-audit/targets/= holding the
+skill's path, its checks and its test sessions. The audit runs in fresh-context
+subagents, writes proposals and holds the session for Pablo's decision; it never
+edits the target skill itself. Its script keeps due dates, a per-target lock and
+pending proposals under =~/.local/state/exit-skill-audit/=. The principle and the
+targets still to add are in [[file:../claude/context/skill-audits.md][claude/context/skill-audits.md]].
+
 For Epoch, a routing table sends project logs, briefs, TODOs and decisions to
 the shared workspace (=$EPOCH_WORKSPACE=) and the root session log, the
 latest-session narrative and =personal/<path>.org= notes to the private root

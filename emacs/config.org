@@ -5721,7 +5721,7 @@ I use it for the Autumn Sprint's board. Its background syncs read the Linear key
   :demand t
   :custom
   (org-linear-teams '("AS"))
-  (org-linear-file (file-name-concat paths-dir-android "sprint.org"))
+  (org-linear-file (file-name-concat paths-dir-google-drive "Forethought/sprint.org"))
   (org-linear-file-header "#+TITLE: Autumn Sprint
 ,#+STARTUP: overview
 ,#+PRIORITIES: 1 9 7

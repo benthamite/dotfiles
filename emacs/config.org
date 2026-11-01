@@ -9660,8 +9660,14 @@ does not exist."
 
   :custom
   (agent-alert-on-ready t)
+  ;; exit-skill-audit audits exit-time skills monthly and writes `held' when its
+  ;; proposals await Pablo (claude/context/skill-audits.md).  Its directories
+  ;; are the union of its targets' (exit-skill-audit/targets/*/target.json).
   (agent-before-exit-skill-names '("session-learning-capture"
-                                   ("update-log" :args "--auto" :receipt t)))
+                                   ("update-log" :args "--auto" :receipt t)
+                                   ("exit-skill-audit" :receipt t
+                                    :directories ("~/repos/forethought/"
+                                                  "~/My Drive/Forethought/"))))
   (agent-sync-theme t)
   (agent-project-sources
    `(("epoch"

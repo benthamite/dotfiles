@@ -26,9 +26,9 @@ asks.
    free: no MELPA recipe (`https://raw.githubusercontent.com/melpa/melpa/master/recipes/NAME`
    returns 404) and no Emacs package of that name on GitHub.
 2. **Source location.** Ask the running Emacs for `elpaca-sources-directory`
-   (never guess the profile) and create the package at `SOURCES/NAME/`, with
-   `git init` and the remote `https://github.com/benthamite/NAME.git`. That
-   directory becomes the canonical checkout once the recipe in step 7 exists
+   (never guess the profile) and create the package at `SOURCES/NAME/` with
+   `git init`. That directory becomes the canonical checkout once the recipe in
+   step 4 exists
    (`dotfiles-context`). Keep scratch work out of the Drive tree.
 3. **Layout.** Match Pablo's published packages (for example `annas-archive`,
    `elfeed-ai`, `mullvad`):
@@ -39,22 +39,36 @@ asks.
    - `test/NAME-test.el` and an executable `test/run-tests.sh`, so the commit
      guard has a tracked check (copy `forethought.el`'s or `elfeed-ai`'s and adapt);
    - `README.org` (step 5), `README.md` (step 5) and the exported `NAME.texi`.
-4. **Code and tests.** Follow `elisp-conventions` throughout: never block the
+4. **Publish and install the skeleton first.** The commit guard accepts Elisp
+   only with test evidence from `batch-test.sh` or `elisp-ert`, and those
+   resolve the package through Elpaca, which knows it only once it has a
+   recipe, which needs the repository to exist. So, before committing any
+   Elisp:
+   1. commit `COPYING.txt` and `test/run-tests.sh` alone, on the branch `main`;
+   2. with Pablo's approval, create the public repository and push that
+      commit (`gh repo create benthamite/NAME --public --source . --remote origin --push`);
+   3. add a `config.org` section in the matching part of the file: a heading
+      with an `:ID:`, a one-line description linking the repository, and
+      `(use-package NAME :ensure (:host github :repo "benthamite/NAME") :defer t)`
+      (see the `org-linear` and `elfeed-ai` sections), plus its table-of-contents
+      line. Follow `dotfiles-context` for editing and tangling, and commit it
+      with `elisp-check-evidence file:emacs/config.org -- bin/check-config-org`
+      (use `--staged` and `--snapshot` when the file holds others' edits);
+   4. register it in the running Emacs without a restart:
+      `(progn (elpaca (NAME :host github :repo "benthamite/NAME")) (elpaca-process-queues))`.
+      Elpaca reuses the existing source directory; check that
+      `bin/elpaca-package-resolve NAME` now answers.
+5. **Code and tests.** Follow `elisp-conventions` throughout: never block the
    main thread on the network, test with the batch runners, commit with
    evidence. For code that writes to an outside service, give the tests a fake of
    that service; run live writes only against a sandbox account Pablo approved.
    Before calling the code done, have an independent reviewer audit it
    (`code-audit`, or a subagent given the code rather than your conclusions).
-5. **Documentation.** `document-elisp-package` writes the `README.org` manual
+6. **Documentation.** `document-elisp-package` writes the `README.org` manual
    and its Texinfo export; then `generate-readme` derives `README.md`.
-6. **Publish.** With Pablo's approval, create the public repository
-   (`gh repo create benthamite/NAME --public --source . --push`).
-7. **Install.** Add a `config.org` section in the matching part of the file:
-   a heading with an `:ID:`, a one-line description linking the repository, and
-   `(use-package NAME :ensure (:host github :repo "benthamite/NAME") ...)`
-   (see the `elfeed-ai` section). Follow `dotfiles-context` for editing and
-   tangling `config.org`, and verify the package in the live session with
-   `elisp-live-verify`.
+7. **Push and verify.** Push the code, and verify the package in the live
+   session with `elisp-live-verify`. Turn on any behaviour that runs by itself
+   (timers, modes) in `config.org` only after a live test passes.
 8. **Register.** Run `add-to-emacs-packages`: the entry in
    `my-emacs-packages.org` (the website list), its documentation note, the
    repository's About fields and, if authorized, the card on the GitHub profile.

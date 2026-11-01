@@ -716,7 +716,10 @@ The =new-emacs-package= workflow (2026-11-01) takes a new standalone package fro
 name to a public, documented and registered repository. It only sequences the
 skills that own each step (=elisp-conventions=, =document-elisp-package=,
 =generate-readme=, =dotfiles-context=, =add-to-emacs-packages=,
-=release-package=), after collecting every decision up front.
+=release-package=), after collecting every decision up front. It publishes and
+registers a skeleton before the first Elisp commit, because the commit guard's
+test runners resolve packages through Elpaca, which needs the recipe and the
+repository first.
 
 The =add-to-emacs-packages= workflow checks the list, existing manual and profile
 card independently. It resolves canonical sources, preserves note IDs and keeps

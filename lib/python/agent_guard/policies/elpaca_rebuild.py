@@ -2,6 +2,8 @@
 
 The Elpaca source clone syncs from the dotfiles repository through commits,
 so a rebuild with uncommitted `emacs/extras/*.el` edits loads stale code.
+`elpaca-rebuild-wait` is out of scope: it checks its own package's source and
+tolerates unrelated edits, so naming it is not a direct rebuild.
 Both runtimes' hooks differ only in how they read the command. Claude ran
 this one only through the Bash dispatcher, behind the same two greps.
 """
@@ -20,7 +22,7 @@ _REBUILD = ere(r"elpaca-rebuild|elpaca-extras-reload")
 
 
 def decide(call: Call) -> Result:
-    command = call.shell_command()
+    command = call.shell_command().replace("elpaca-rebuild-wait", "")
     if not grep(_EMACSCLIENT, command, echo=True) or not grep(_REBUILD, command, echo=True):
         return Result.allow()
     dotfiles = bash_home(call.env) + "/My Drive/dotfiles"
@@ -34,4 +36,5 @@ def decide(call: Call) -> Result:
     return Result.deny(
         "BLOCKED: You have uncommitted .el changes in the dotfiles repo. The elpaca source clone only has committed "
         "code, so elpaca-rebuild would load stale definitions.\n\nUncommitted files:\n" + dirty
-        + "\n\nCommit first, then rebuild.")
+        + "\n\nCommit first, then rebuild. If these are unrelated to the package you are rebuilding, use "
+        "claude/bin/elpaca-rebuild-wait PACKAGE, which checks only that package.")

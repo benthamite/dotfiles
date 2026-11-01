@@ -55,6 +55,11 @@ class ElpacaRebuildTests(unittest.TestCase):
             self.assertEqual(self.decide(command).decision, "allow", command)
         self.assertEqual(self.decide("²emacsclient elpaca-extras-reload").decision, "deny")
 
+    def test_scoped_helper_is_not_a_direct_rebuild(self):
+        (self.repo / "emacs/extras/a.el").write_text("changed\n")
+        self.assertEqual(self.decide("elpaca-rebuild-wait b; emacsclient -e t").decision, "allow")
+        self.assertEqual(self.decide(f"elpaca-rebuild-wait b; {REBUILD}").decision, "deny")
+
 
 class GitFailureTests(unittest.TestCase):
     """`DIRTY=$(git ... 2>/dev/null || true)`: a failing git leaves DIRTY empty."""

@@ -237,6 +237,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#institution-calendar][institution-calendar]]
   - [[#org-gcal][org-gcal]]
   - [[#org-gcal-extras][org-gcal-extras]]
+  - [[#org-linear][org-linear]]
   - [[#calfw][calfw]]
   - [[#calfw-org][calfw-org]]
   - [[#calfw-blocks][calfw-blocks]]
@@ -5702,6 +5703,19 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 (use-personal-package org-gcal-extras
   :after org-gcal
   :demand t)
+#+end_src
+
+** =org-linear=
+:PROPERTIES:
+:ID:       117687A1-732A-4346-855F-5DCB95B8E21F
+:END:
+/[[https://github.com/benthamite/org-linear][org-linear]] syncs the issues of Linear teams with an Org file in both directions./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package org-linear
+  :ensure (:host github
+                 :repo "benthamite/org-linear")
+  :defer t)
 #+end_src
 
 ** =calfw=

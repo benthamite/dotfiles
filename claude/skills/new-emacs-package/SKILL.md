@@ -64,19 +64,29 @@ asks.
    that service; run live writes only against a sandbox account Pablo approved.
    Before calling the code done, have an independent reviewer audit it
    (`code-audit`, or a subagent given the code rather than your conclusions).
-6. **Documentation.** `document-elisp-package` writes the `README.org` manual
-   and its Texinfo export; then `generate-readme` derives `README.md`.
-7. **Push and verify.** Push the code, and verify the package in the live
-   session with `elisp-live-verify`. Turn on any behaviour that runs by itself
-   (timers, modes) in `config.org` only after a live test passes.
-8. **Register.** Run `add-to-emacs-packages`: the entry in
-   `my-emacs-packages.org` (the website list), its documentation note, the
-   repository's About fields and, if authorized, the card on the GitHub profile.
-9. **Release.** Tag a first version only when Pablo asks, with `release-package`.
+6. **Manual.** `document-elisp-package` writes the `README.org` manual and its
+   Texinfo export.
+7. **Publish the manual before anything links to it.** `README.md` and the
+   repository's About box link to `https://stafforini.com/notes/NAME/`, so that
+   page must be live first:
+   1. run the local part of `add-to-emacs-packages`: the documentation note and
+      the entry in `my-emacs-packages.org`;
+   2. in `~/repos/stafforini.com`, follow `PUBLISHING.md`: run
+      `bash scripts/export-notes.sh`, check `content/notes/NAME.md`, then
+      `bash scripts/deploy.sh --quick` (`--fast-note` does not cover new notes);
+   3. check that the page answers 200.
+8. **README and push.** Only now run `generate-readme`, whose manual link the
+   page answers, and push. Verify the package in the live session with
+   `elisp-live-verify`. Turn on any behaviour that runs by itself (timers,
+   modes) in `config.org` only after a live test passes.
+9. **Finish registering.** Complete `add-to-emacs-packages`: the repository's
+   About fields and, if authorized, the card on the GitHub profile.
+10. **Release.** Tag a first version only when Pablo asks, with `release-package`.
 
 ## Done when
 
 The repository is public and pushed, the package loads in the live Emacs from
 its Elpaca recipe, its tests pass, `README.org`, `README.md` and the Texinfo
-manual agree with the code, and it appears on the website list (and, if
+manual agree with the code, `https://stafforini.com/notes/NAME/` answers 200 and
+every link to it works, and the package appears on the website list (and, if
 authorized, the profile). Report anything left undone as open, not done.

@@ -719,7 +719,8 @@ skills that own each step (=elisp-conventions=, =document-elisp-package=,
 =release-package=), after collecting every decision up front. It publishes and
 registers a skeleton before the first Elisp commit, because the commit guard's
 test runners resolve packages through Elpaca, which needs the recipe and the
-repository first.
+repository first. It deploys the manual to the website before pushing the
+=README.md= that links to it.
 
 The =add-to-emacs-packages= workflow checks the list, existing manual and profile
 card independently. It resolves canonical sources, preserves note IDs and keeps

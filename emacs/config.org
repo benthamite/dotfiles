@@ -5711,11 +5711,37 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 :END:
 /[[https://github.com/benthamite/org-linear][org-linear]] syncs the issues of Linear teams with an Org file in both directions./
 
+I use it for the Autumn Sprint's board. Its background syncs read the Linear key through the =op-automations= cache from the personal =Automation= vault, so they never ask for Touch ID (=claude/context/secrets.md=, "Forethought secrets").
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-linear
   :ensure (:host github
                  :repo "benthamite/org-linear")
-  :defer t)
+  :after org
+  :demand t
+  :custom
+  (org-linear-teams '("AS"))
+  (org-linear-file (file-name-concat paths-dir-android "sprint.org"))
+  (org-linear-file-header "#+TITLE: Autumn Sprint
+,#+STARTUP: overview
+,#+PRIORITIES: 1 9 7
+,#+TODO: TRIAGE(r) TODO(t) DOING(g) WAITING(w@) SOMEDAY(s) | DONE(d) CANCELLED(c@)
+")
+  (org-linear-state-keywords '(("Waiting" . "WAITING") ("Backlog" . "SOMEDAY")))
+  (org-linear-keyword-states '(("CANCELLED" . "Rejected")))
+  (org-linear-priorities '((1 . "1") (2 . "2") (3 . "4") (4 . "6")))
+  (org-linear-agenda-keep-tags '("joint"))
+  (org-linear-api-key-command
+   '("op-automations" "@personal" "cache" "read"
+     "op://Automation/linear-api-key-forethought/password"))
+  (org-linear-api-key-forget-command
+   '("op-automations" "@personal" "cache" "forget"
+     "op://Automation/linear-api-key-forethought/password"))
+  :config
+  (setq org-agenda-skip-function-global #'org-linear-agenda-skip)
+  (with-eval-after-load 'vulpea-extras
+    (add-to-list 'vulpea-extras-agenda-files-base org-linear-file))
+  (org-linear-auto-sync-mode))
 #+end_src
 
 ** =calfw=

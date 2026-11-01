@@ -712,6 +712,12 @@ For scheduled jobs it points to the shared alerting principle
 (=claude/context/alerting.md=, =launchd-heartbeat=) and to unattended credential
 renewal (=claude/context/secrets.md=), added 2026-10-09.
 
+The =new-emacs-package= workflow (2026-11-01) takes a new standalone package from
+name to a public, documented and registered repository. It only sequences the
+skills that own each step (=elisp-conventions=, =document-elisp-package=,
+=generate-readme=, =dotfiles-context=, =add-to-emacs-packages=,
+=release-package=), after collecting every decision up front.
+
 The =add-to-emacs-packages= workflow checks the list, existing manual and profile
 card independently. It resolves canonical sources, preserves note IDs and keeps
 local registration separate from clone and publication authorization. It

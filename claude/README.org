@@ -497,6 +497,12 @@ The =automate= skill distinguishes advice, construction and runtime activation.
 It chooses among deterministic, gptel, skill and scheduled implementations,
 preserves scope and authorization, and verifies loading separately from behavior.
 
+The =new-emacs-package= workflow (2026-11-01) takes a new standalone package from
+name to a public, documented and registered repository. It only sequences the
+skills that own each step (=elisp-conventions=, =document-elisp-package=,
+=generate-readme=, =dotfiles-context=, =add-to-emacs-packages=,
+=release-package=), after collecting every decision up front.
+
 The =add-to-emacs-packages= workflow checks the list, existing manual and profile
 card independently. It resolves canonical sources, preserves note IDs and keeps
 local registration separate from clone and publication authorization. It

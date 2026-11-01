@@ -165,6 +165,13 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
+      "name": "new-emacs-package",
+      "claude": "claude/skills/new-emacs-package/SKILL.md",
+      "codex": "codex/skills/new-emacs-package/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
       "name": "lint-elisp",
       "claude": "claude/skills/lint-elisp/SKILL.md",
       "codex": "codex/skills/lint-elisp/SKILL.md",

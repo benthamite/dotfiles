@@ -184,6 +184,19 @@ class ElispEvidenceTest(unittest.TestCase):
         self.git(repo, "add", "emacs/extras/alpha.el")
         self.git(repo, "commit", "-q", "-m", "alpha")
 
+    def test_extras_test_file_is_pointed_at_its_ert_suite(self) -> None:
+        repo = self.make_repo("dotfiles", {
+            "emacs/extras/test/alpha-test.el": "(a)\n",
+            "claude/bin/.keep": "",
+        })
+        self.write(repo, "emacs/extras/test/alpha-test.el", "(b)\n")
+        self.git(repo, "add", "emacs/extras/test/alpha-test.el")
+        result = self.git(repo, "commit", "-q", "-m", "t", check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("elisp-ert", result.stderr)
+        self.assertIn("alpha", result.stderr)
+        self.assertNotIn("PROJECT-CHECK", result.stderr)
+
     def test_deleted_file_needs_evidence_of_absence(self) -> None:
         repo = self.make_repo("proj", {"scripts/a.el": "(a)\n", "scripts/b.el": "(b)\n"})
         self.git(repo, "rm", "-q", "scripts/a.el")

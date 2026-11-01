@@ -182,3 +182,13 @@ if grep -qE 'newer than byte-compiled file|using older file' "$OUTPUT_FILE"; the
 fi
 # Evidence is recorded only for source that did not change during the run.
 "$EVIDENCE" record-test "$SOURCE_REPO" "$IDENTIFIER" "$REVISION_BEFORE"
+# A whole-file ERT run is also evidence for the test file itself, which
+# the commit hook tracks under its own label.  A single selected test is not.
+if [ "$ERT_MODE" = true ] && [ -z "$TEST_NAME" ]; then
+  TEST_PATH=$(cd -- "$(dirname -- "$TEST_FILE")" && pwd -P)/$(basename -- "$TEST_FILE")
+  case "$TEST_PATH" in
+    "$SOURCE_REPO/"*)
+      "$EVIDENCE" record-test "$SOURCE_REPO" "file:${TEST_PATH#"$SOURCE_REPO/"}" "$REVISION_BEFORE"
+      ;;
+  esac
+fi

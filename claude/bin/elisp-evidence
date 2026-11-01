@@ -24,6 +24,7 @@ import fcntl
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shlex
 import subprocess
@@ -358,7 +359,16 @@ def debt_path(session: str) -> Path:
 # --- Messages -----------------------------------------------------------------
 
 
-def test_command(label: str) -> str:
+def extras_test_package(label: str) -> str | None:
+    """Return the package whose ERT suite is the dotfiles test file LABEL, if any."""
+    match = re.fullmatch(r"file:emacs/extras/test/([^/]+?)-tests?\.el", label)
+    return match.group(1) if match else None
+
+
+def test_command(root: Path, label: str) -> str:
+    if package := extras_test_package(label):
+        test_file = root / label.removeprefix("file:")
+        return f"{shlex.quote(str(TOOL_DIR / 'elisp-ert'))} {shlex.quote(package)} {shlex.quote(str(test_file))}"
     if label.startswith("file:"):
         return f"{shlex.quote(str(TOOL_DIR / 'elisp-check-evidence'))} {shlex.quote(label)} -- PROJECT-CHECK"
     return f"{shlex.quote(str(TOOL_DIR / 'batch-test.sh'))} {shlex.quote(label)}"
@@ -369,8 +379,8 @@ def missing_test_message(root: Path, labels: list[str]) -> str:
         f"Elisp evidence: the Elisp being committed in {root} has no passing test of these exact contents.",
         "Run, after the final edit (pipes and chained commands are fine):",
     ]
-    lines += [f"  {test_command(label)}" for label in labels]
-    if any(label.startswith("file:") for label in labels):
+    lines += [f"  {test_command(root, label)}" for label in labels]
+    if any(label.startswith("file:") and not extras_test_package(label) for label in labels):
         lines.append("Replace PROJECT-CHECK with a tracked executable check in the repository.")
     # Only project checks can run against an index snapshot; package
     # runners always test the working tree.
@@ -495,7 +505,7 @@ def is_ancestor(root: Path, ancestor: str, descendant: str) -> bool:
 def debt_instruction(debt: dict) -> str:
     where = f"commit {debt['commit'][:12]} in {debt['repo']}"
     if debt["kind"] == "test":
-        return f"- {where} changed {debt['label']} without a passing test of its contents. Run: {test_command(debt['label'])}"
+        return f"- {where} changed {debt['label']} without a passing test of its contents. Run: {test_command(Path(debt['repo']), debt['label'])}"
     verify = shlex.quote(str(TOOL_DIR / "elisp-live-verify"))
     return (f"- {where} changed {debt['label']} and it has not been checked in the live Emacs. "
             f"Run: {verify} {shlex.quote(debt['label'])} -- 'EXPRESSION' with an expression that exercises the change.")

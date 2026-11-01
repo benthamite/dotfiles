@@ -148,6 +148,15 @@ else:
         self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
         self.assertNotIn("init-current-profile", (self.root / "client-calls").read_text())
 
+    def test_whole_file_ert_covers_a_test_file_in_the_repo(self):
+        inside = self.write("test/example-test.el", self.test_file.read_text())
+        whole = self.run_helper(self.ert, "example", str(inside))
+        self.assertEqual(whole.returncode, 0, whole.stderr + whole.stdout)
+        self.assertIn("recorded test evidence for file:test/example-test.el in", whole.stdout)
+        selected = self.run_helper(self.ert, "example", str(inside), "example-current")
+        self.assertEqual(selected.returncode, 0, selected.stderr + selected.stdout)
+        self.assertNotIn("file:test/example-test.el", selected.stdout)
+
     def test_ert_supports_legacy_registry_source_and_selected_test(self):
         legacy = self.profile / "repos/example"
         legacy.parent.mkdir(parents=True)

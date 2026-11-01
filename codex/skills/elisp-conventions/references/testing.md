@@ -29,6 +29,11 @@ accepted, not an arbitrary sibling library basename. For example, use
 `elisp-ert agent test/agent-claude-test.el`, not
 `elisp-ert agent-claude test/agent-claude-test.el`.
 
+For a dotfiles extra the test file is `emacs/extras/test/PACKAGE-test.el`. Give
+its path relative to the current directory, or an absolute one; it does not
+resolve against the package. A run of the whole file also records the evidence
+the commit hook needs for that test file. A run of one selected test does not.
+
 Both runners start `emacs -Q --batch`, put canonical source and its `lisp/`
 directory before dependencies, prefer `.el` even after source timestamps were
 rewound, and exclude the package's own build. They do not delete `.elc` files.

@@ -1238,7 +1238,9 @@ Elisp test and live-verification evidence is enforced on content, never on
 the spelling of a shell command, so direct and =functions.exec= commands behave
 alike. =batch-test.sh=, =elisp-ert= and =elisp-check-evidence= record, after a
 successful run, which Elisp files at which contents they covered;
-=elisp-live-verify= records the commit it exercised. =claude/bin/elisp-evidence=
+=elisp-live-verify= records the commit it exercised. A whole-file =elisp-ert=
+run also covers the test file itself; a run of one selected test does not.
+=claude/bin/elisp-evidence=
 keeps these records under =~/.local/state/agent-elisp-evidence/=. The global
 Git hook directory =claude/git-hooks= (=core.hooksPath= in =~/.gitconfig=)
 runs its checks only in agent sessions, identified by =CODEX_THREAD_ID= or

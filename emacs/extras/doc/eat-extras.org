@@ -34,7 +34,7 @@ The package also provides interactive commands that send specific editing operat
 :END:
 
 #+vindex: eat-extras-non-bound-keys
-The variable ~eat-extras-non-bound-keys~ is a list of key vectors to exclude from terminal capture in semi-char mode. These keys will not be forwarded to the terminal process, leaving them available for their normal Emacs bindings. The list includes standard Emacs prefix keys (=C-g=, =C-h=, =C-x=, =M-x=, etc.) and the custom modifier combinations used for terminal editing commands ([[#h:terminal-editing-commands][Terminal editing commands]]).
+The variable ~eat-extras-non-bound-keys~ is a list of key vectors to exclude from terminal capture in semi-char mode. These keys will not be forwarded to the terminal process, leaving them available for their normal Emacs bindings. The list includes standard Emacs prefix keys (=C-g=, =C-h=, =C-x=, =M-x=, etc.), the window-move keys =M-,= and =M-.=, and the custom modifier combinations used for terminal editing commands ([[#h:terminal-editing-commands][Terminal editing commands]]).
 
 #+vindex: eat-extras-emacs-passthrough-keys
 The variable ~eat-extras-emacs-passthrough-keys~ is a list of key description strings (in =kbd= format) for standard Emacs prefix keys that should be explicitly released from terminal capture. While ~eat-extras-non-bound-keys~ prevents Eat from claiming these keys, this variable ensures that their bindings are set to ~nil~ in the semi-char mode map, so they fall through to the global map.

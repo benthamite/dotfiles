@@ -29,6 +29,14 @@
   (dolist (key eat-extras-emacs-passthrough-keys)
     (should (stringp key))))
 
+(ert-deftest eat-extras-test-setup-releases-window-move-keys ()
+  "Setup leaves the window-move keys free of `eat-self-input'."
+  (let ((eat-semi-char-non-bound-keys eat-semi-char-non-bound-keys)
+        (eat-semi-char-mode-map eat-semi-char-mode-map))
+    (eat-extras-setup-semi-char-mode-map)
+    (dolist (key '("M-," "M-."))
+      (should-not (lookup-key eat-semi-char-mode-map (kbd key))))))
+
 ;;;; Send functions - escape sequence verification
 
 (ert-deftest eat-extras-test-send-forward-word-escape ()

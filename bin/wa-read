@@ -17,13 +17,14 @@ Narrow searches to the relevant chat with `--chat`.
 
 Usage:
   wa-read chats
-  wa-read show CHAT [--since YYYY-MM-DD] [--limit N]
-  wa-read search QUERY [--chat CHAT] [--limit N]
+  wa-read show CHAT [--since YYYY-MM-DD] [--limit N] [--ids]
+  wa-read search QUERY [--chat CHAT] [--limit N] [--ids]
   wa-read resolve NAME
 
 CHAT is a JID or a case-insensitive substring of the name of exactly one
 readable chat. Times are local. Results come with the archive's coverage,
 because a missing message may predate it (the archive keeps 90 days).
+--ids prints each message's ID, which `wa-send --reply-to` takes to quote it.
 """
 
 import argparse
@@ -174,7 +175,7 @@ def transcript(chat_key, msg_id):
     return None
 
 
-def print_messages(rows, names, with_chat=False):
+def print_messages(rows, names, with_chat=False, ids=False):
     for r in rows:
         who = "me" if r["from_me"] else (names.get(r["sender_key"]) or r["sender_name"] or r["sender_key"])
         if r["revoked"]:
@@ -190,7 +191,8 @@ def print_messages(rows, names, with_chat=False):
                     t = transcript(r["chat_key"], r["id"])
                     body += f" (transcripción automática: «{t}»)" if t else " (todavía sin transcripción)"
         prefix = f"[{names.get(r['chat_key'], r['chat_key'])}] " if with_chat else ""
-        print(f"{prefix}{fmt_ts(r['ts'])}  {who}: {body}")
+        msg_id = f"  [{r['id']}]" if ids else ""
+        print(f"{prefix}{fmt_ts(r['ts'])}{msg_id}  {who}: {body}")
 
 
 def cmd_chats(conn, args):
@@ -215,7 +217,7 @@ def cmd_show(conn, args):
     rows = list(reversed(conn.execute(sql, params).fetchall()))
     print(f"# {chat['name']} ({chat['key']})")
     print_coverage(conn, [chat["key"]])
-    print_messages(rows, chat_names(conn))
+    print_messages(rows, chat_names(conn), ids=args.ids)
 
 
 def cmd_search(conn, args):
@@ -230,7 +232,7 @@ def cmd_search(conn, args):
     rows = conn.execute(sql, [*keys, pattern, pattern, pattern, args.limit]).fetchall()
     if args.chat:  # across all chats the per-chat coverage would be very long
         print_coverage(conn, keys)
-    print_messages(rows, chat_names(conn), with_chat=True)
+    print_messages(rows, chat_names(conn), with_chat=True, ids=args.ids)
 
 
 def cmd_resolve(conn, args):
@@ -252,10 +254,12 @@ def main():
     s.add_argument("chat")
     s.add_argument("--since")
     s.add_argument("--limit", type=int, default=100)
+    s.add_argument("--ids", action="store_true", help="print each message's ID (for wa-send --reply-to)")
     q = sub.add_parser("search", help="search message text in readable chats")
     q.add_argument("query")
     q.add_argument("--chat")
     q.add_argument("--limit", type=int, default=50)
+    q.add_argument("--ids", action="store_true", help="print each message's ID (for wa-send --reply-to)")
     r = sub.add_parser("resolve", help="find chat JIDs by name")
     r.add_argument("name")
     args = p.parse_args()

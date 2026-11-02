@@ -29,5 +29,19 @@ class FormattingTests(unittest.TestCase):
             self.assertEqual(self.mod.formatted_spans(text), [], text)
 
 
+class ReplyToTests(unittest.TestCase):
+    def test_reply_to_goes_into_the_job(self):
+        import json, os, subprocess, sys, tempfile
+        with tempfile.TemporaryDirectory() as home:
+            outbox = Path(home) / ".local/share/wa-archive/outbox"
+            outbox.mkdir(parents=True)
+            env = dict(os.environ, HOME=home)
+            subprocess.run([sys.executable, str(SOURCE), "--to", "1@s.whatsapp.net", "--text", "hola",
+                            "--programmatic", "--reply-to", "3EB0ABC", "--timeout", "0"],
+                           env=env, capture_output=True, text=True)
+            jobs = list(outbox.glob("*.json"))
+            self.assertEqual(len(jobs), 1)
+            self.assertEqual(json.loads(jobs[0].read_text())["reply_to"], "3EB0ABC")
+
 if __name__ == "__main__":
     unittest.main()

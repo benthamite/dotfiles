@@ -11,8 +11,13 @@ message. Every receipt stays in outbox/sent/.
 
   wa-send --chat "FIAS - Legal Contable" --text "..." [--file /abs/path.pdf]
   wa-send --to 5491100000000@s.whatsapp.net --stdin < message.txt
+  wa-send --chat "Tesorería FIAS" --reply-to 3EB0... --text "..."
 
 --chat must match exactly one chat name (as `wa-read resolve` lists it).
+--reply-to quotes an earlier message of the same chat, as WhatsApp's Reply
+does. Its ID is the part after the slash in an inbox-read ref, or the one
+`wa-read show --ids` prints. A message missing from the archive fails the job;
+it never goes out without the quote.
 Exit status: 0 sent, 1 failed (nothing sent), 3 no receipt in time: the
 message may or may not have gone out, so check `wa-read show` before retrying.
 """
@@ -43,6 +48,7 @@ def main() -> int:
     body.add_argument("--text", help="message text (the caption with --file)")
     body.add_argument("--stdin", action="store_true", help="read the text from stdin")
     p.add_argument("--file", help="absolute path of a file to attach")
+    p.add_argument("--reply-to", metavar="ID", help="ID of a message in the same chat to quote, as WhatsApp's Reply does")
     p.add_argument("--timeout", type=int, default=120, help="seconds to wait for the receipt")
     p.add_argument("--reviewed", metavar="FILE",
                    help="Pablo approved this exact text in review FILE: send it without the [agent] prefix")
@@ -75,6 +81,8 @@ def main() -> int:
     job = {"to": to, "text": text}
     if a.file:
         job["file"] = a.file
+    if a.reply_to:
+        job["reply_to"] = a.reply_to
     tmp = OUTBOX / (name + ".tmp")
     fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(fd, "w") as fh:

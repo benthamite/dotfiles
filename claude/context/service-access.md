@@ -273,7 +273,15 @@ collected or routed (Pablo, 2026-10-24).
   for him (Pablo, 2026-10-28): Slack with `claude/bin/copy-slack-draft --send
   --stdin --workspace KEY --channel ID` for a DM or channel post, or
   `--permalink URL` to reply in a thread; WhatsApp with `wa-send --to
-  CONVERSATION_ID` (attachments included). Send to the conversation in the
+  CONVERSATION_ID` (attachments included). Answer a message where it was
+  written: a Slack message inside a thread gets its reply in that thread
+  (`slack.py replies CHANNEL TS` shows its `thread_ts`; send with `--channel
+  ID --thread-ts TS`), never as a new post (2026-11-02: an acknowledgment
+  posted at the top of a DM read as a non sequitur). On WhatsApp, when the
+  reply would be unclear on its own (an older message, or several topics in
+  the chat), quote the message with `wa-send --reply-to ID`, as WhatsApp's
+  Reply does; the ID is the part after the slash in its inbox ref, or from
+  `wa-read show --ids` (Pablo, 2026-11-02). Send to the conversation in the
   item's marker, never to a chat chosen by name: some groups have no name in
   the archive, and two FIAS groups share members (2026-10-28: a reply to
   Javier went to the wrong group). Never type it through Chrome. Confirm it arrived;

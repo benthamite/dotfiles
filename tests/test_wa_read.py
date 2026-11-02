@@ -119,6 +119,12 @@ class WaReadTest(unittest.TestCase):
         self.assertNotIn("will be deleted", out)
         self.assertIn("# coverage:", out)
 
+    def test_ids_are_printed_only_on_request(self):
+        plain = self.run_cli("show", OPEN).stdout
+        with_ids = self.run_cli("show", OPEN, "--ids").stdout
+        self.assertNotIn("[1]  Eitan", plain)
+        self.assertIn("[1]  Eitan: needle open", with_ids)
+
     def test_unlinked_marker_warns(self):
         (Path(self.env["XDG_STATE_HOME"]) / "wa-archive" / "unlinked").write_text("x")
         self.assertIn("unlinked", self.run_cli("chats").stderr)

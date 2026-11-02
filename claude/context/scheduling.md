@@ -12,6 +12,6 @@ Reasons and design: The Hinge's `docs/plans/2026-11-02-reliability.md` (`~/repos
 
 ## Instances
 
-- Compliant once deployed: The Hinge's daily issue (supervisor checkpoints 10:45, 12:30, 14:45 UTC; every run reconciles with Substack before planning). Status: being built 2026-11-02.
+- Compliant once deployed: The Hinge's daily issue (supervisor checkpoints 10:45, 12:30, 14:45 UTC; every run reconciles with Substack before planning). Status: deployed 2026-11-02 (App "The Hinge supervisor"); production verification is the first day it dispatches a real run.
 - Compliant by its own rules (Forethought joint work, governed by ph-ps's `AGENTS.md`): ph-ps automations, dispatched by the meeting-debrief Worker's cron as the ph-ps App rather than GitHub's `schedule`.
 - To assess (TODO): whether each of these must run on time, and if so, bring it under the principle: `benthamite/stafforini.com` and `benthamite/benthamite` (GitHub `schedule`); The Hinge's weekly audit (`com.stafforini.hinge-audit`, launchd on the Mac); other launchd jobs in `~/repos/launchd`.

@@ -15,9 +15,10 @@ skills (`claude-in-chrome`, `chrome-browser`, `control-chrome`,
 
 For background web research, use the web search/browsing tool and the mapped
 service clients or direct public downloads (`claude/context/service-access.md`).
-Do not switch to Pablo's live Chrome because an HTTP request fails or a site
-presents a challenge, unless a skill's documented browser step calls for it
-(such as `download-paper`'s `needs-browser` job).
+When those fail (an HTTP refusal, a challenge page, content that needs a
+browser), use Pablo's Chrome through your browser control without asking
+(Pablo, 2026-11-02). A site-specific rule that restricts or pauses access to
+a site still governs it.
 
 When a task needs Pablo's logged-in accounts or a site with no other agent
 path, use the browser without asking: Pablo has authorized this standing use

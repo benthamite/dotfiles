@@ -257,7 +257,8 @@ the approval page. After regenerating a token, store the new one and forget
 its cached reference. The desktop app
 keeps its own Chrome plugin; account configurations are not edited. The global
 =AGENTS.md= names the server's =browser_*= tools as Codex's browser control.
-The paired =chrome-use= skill holds the browser rules for both agents (focus,
+The paired =chrome-use= skill holds the browser rules for both agents
+(research falls back to live Chrome when the web tools fail, since 2026-11-02; focus,
 windows, including visible windows opened by browser-launching scripts,
 retries) and loads before any browser step or such script. It also points form
 filling at the private, gitignored =claude/context/personal-details.md=,

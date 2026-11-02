@@ -9732,13 +9732,15 @@ does not exist."
          "~/My Drive/tlon/projects/ea.news"))
      ("forethought" . (forethought-project-dirs))
      ("" . ("~/repos/*" "~/repos/fias/*" "~/repos/.worktrees/*/*"))))
-  ;; A message from an organization's Slack or mailbox has its project
-  ;; chosen among that organization's, whatever account is selected.
+  ;; A thing from an organization's Slack, mailbox or Linear workspace
+  ;; has its project chosen among that organization's, whatever account
+  ;; is selected.
   (agent-account-origin-rules
    '(("\\`slack:Epoch AI\\'" . ((claude-code . "epoch") (codex . "epoch-pool")))
      ("\\`mu4e:/epoch/" . ((claude-code . "epoch") (codex . "epoch-pool")))
      ("\\`slack:Forethought\\'" . "forethought")
-     ("\\`mu4e:/forethought/" . "forethought")))
+     ("\\`mu4e:/forethought/" . "forethought")
+     ("\\`linear:forethought\\'" . "forethought")))
   (agent-project-registry-root (file-name-concat paths-dir-epoch-workspace "projects/"))
   (agent-chief-directory paths-dir-epoch)
   (agent-claude-org-todo-in-progress-keyword "DOING")
@@ -13922,11 +13924,14 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
 
 /[[https://github.com/benthamite/sgn][sgn]] is an Emacs interface for Signal./
 
+sgn is started at the end of startup so that Signal messages keep reaching its database, which =sgn-read= and the inbox monitor read; otherwise nothing arrives until sgn is opened by hand (it stayed off from 13 Oct to 2 Nov 2026).
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package sgn
   :ensure (:host github
            :repo "benthamite/sgn")
   :defer t
+  :hook (elpaca-after-init . sgn-start)
   :custom
   (sgn-account (auth-source-extras-op-get "signal" "password")))
 #+end_src

@@ -30,6 +30,8 @@ class SendTests(unittest.TestCase):
         self.mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(self.mod)
         self.mod._workspace = "forethought"
+        import agent_prefix
+        self.enterContext(mock.patch.object(agent_prefix, "FORETHOUGHT", Path.cwd()))
         self.call = self.enterContext(mock.patch.object(self.mod, "call", side_effect=self.fake_call))
         self.clear = self.enterContext(mock.patch.object(self.mod, "_clear_staged_draft",
                                                          return_value="nothing-staged"))

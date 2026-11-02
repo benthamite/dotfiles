@@ -428,7 +428,7 @@ def build_parser():
             s.add_argument("--reviewed", metavar="FILE",
                            help="Pablo approved this exact body in review FILE: send it without the [agent] prefix")
             s.add_argument("--programmatic", action="store_true",
-                           help='a step of a skill or other programmatic path is sending this: no [agent] prefix (CLAUDE.md, "Messages you send")')
+                           help='a step of a skill or other programmatic path is sending this: no [agent] prefix (agent_prefix.py)')
         s.set_defaults(func=fn)
 
     rep = sub.add_parser("reply", parents=[sub_account])
@@ -440,7 +440,7 @@ def build_parser():
     rep.add_argument("--reviewed", metavar="FILE",
                      help="Pablo approved this exact body in review FILE: send it without the [agent] prefix")
     rep.add_argument("--programmatic", action="store_true",
-                     help='a step of a skill or other programmatic path is sending this: no [agent] prefix (CLAUDE.md, "Messages you send")')
+                     help='a step of a skill or other programmatic path is sending this: no [agent] prefix (agent_prefix.py)')
     rep.set_defaults(func=cmd_reply)
 
     sd = sub.add_parser("send-draft", parents=[sub_account])

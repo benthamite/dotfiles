@@ -1,14 +1,16 @@
 """The [agent] prefix on messages an agent sends under Pablo's name.
 
-Rule (global CLAUDE.md, "Messages you send"): a message starts with "[agent] "
-only when Pablo asked an agent, in an interactive session, to send it.  A
-message sent as a step of a skill or another programmatic path, and text Pablo
-approved in a review file, go out under his own name.  The send paths of
-wa-send, slack.py and gmail.py call `apply`.  The prefix is the default because
-interactive sends are free-form, while each programmatic send has its command
-written down: --programmatic omits the prefix; with --reviewed FILE the text
-must appear in an item of that file that carries Pablo's comment, or the send
-is refused.
+Rule (~/repos/forethought/AGENTS.md, "Messages you send"): within Forethought,
+meaning when the tool runs in that folder or below, a message starts with
+"[agent] " only when Pablo asked an agent, in an interactive session, to send
+it.  A message sent as a step of a skill or another programmatic path, and text
+Pablo approved in a review file, go out under his own name.  Outside that folder
+no message carries the prefix.  The send paths of wa-send, slack.py, gmail.py
+and copy-slack-draft call `apply`.  Within Forethought the prefix is the default
+because interactive sends are free-form, while each programmatic send has its
+command written down: --programmatic omits the prefix.  Everywhere, with
+--reviewed FILE the text must appear in an item of that file that carries
+Pablo's comment, or the send is refused.
 """
 
 import re
@@ -16,6 +18,11 @@ import sys
 from pathlib import Path
 
 PREFIX = "[agent] "
+FORETHOUGHT = Path.home() / "repos" / "forethought"
+
+
+def _in_forethought() -> bool:
+    return Path.cwd().resolve().is_relative_to(FORETHOUGHT.resolve())
 
 
 def _norm(text: str) -> str:
@@ -45,11 +52,11 @@ def apply(text: str, reviewed: str | None, tool: str,
         hits = [sec for sec in sections if _norm(body) in _norm(sec)]
         if not hits:
             sys.exit(f"{tool}: the text is not in {reviewed}, so Pablo did not "
-                     "approve it there; send it without --reviewed (it gets the "
-                     "[agent] prefix) or put the exact text in the review file")
+                     "approve it there; send it without --reviewed or put the "
+                     "exact text in the review file")
         if not any("{>>" in sec for sec in hits):
             sys.exit(f"{tool}: the text is in {reviewed} but its item has no "
                      "comment from Pablo ({>>...<<}); send it before removing his "
                      "comment, or without --reviewed")
         return body
-    return text if text.startswith(PREFIX) else PREFIX + text
+    return PREFIX + body if _in_forethought() else body

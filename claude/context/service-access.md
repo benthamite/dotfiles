@@ -72,9 +72,10 @@ wa-archive's outbox, the daemon sends it as Pablo (a file goes as a document,
 or as a photo if it is an image, with the text as caption), archives it, and
 `wa-send` prints the receipt. Send only what Pablo approved: a "send" comment
 processed from a drafts file, his explicit OK in chat, or a step of a skill he
-invoked that names the message. The `[agent] `
-prefix is added by `wa-send`, `slack.py send` and `gmail.py send|reply`
-themselves (`claude/bin/agent_prefix.py`, 2026-10-30); pass `--programmatic`
+invoked that names the message. Run in `~/repos/forethought` or below,
+`wa-send`, `slack.py send` and `gmail.py send|reply` add the `[agent] ` prefix
+themselves (`claude/bin/agent_prefix.py`; rule in that folder's `AGENTS.md`);
+elsewhere they send no prefix. Pass `--programmatic`
 when a skill step or other programmatic path sends the message (2026-11-02),
 and `--reviewed
 DRAFTS_FILE` only for text Pablo approved in that review file: the tool checks

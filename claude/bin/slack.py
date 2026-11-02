@@ -1196,7 +1196,7 @@ def main():
     se.add_argument("--reviewed", metavar="FILE",
                     help="Pablo approved this exact text in review FILE: send it without the [agent] prefix")
     se.add_argument("--programmatic", action="store_true",
-                    help='a step of a skill or other programmatic path is sending this: no [agent] prefix (CLAUDE.md, "Messages you send")')
+                    help='a step of a skill or other programmatic path is sending this: no [agent] prefix (agent_prefix.py)')
     se.set_defaults(func=cmd_send)
 
     u = sub.add_parser("unreads")

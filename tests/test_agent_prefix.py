@@ -7,12 +7,28 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "claude" / "bin"
 import agent_prefix  # noqa: E402
 
 
-def test_prefix_added_without_review_file():
+@pytest.fixture
+def in_forethought(tmp_path, monkeypatch):
+    root = tmp_path / "forethought"
+    (root / "ph-ps").mkdir(parents=True)
+    monkeypatch.setattr(agent_prefix, "FORETHOUGHT", root)
+    monkeypatch.chdir(root / "ph-ps")
+
+
+def test_prefix_added_in_forethought(in_forethought):
     assert agent_prefix.apply("Hola", None, "t") == "[agent] Hola"
     assert agent_prefix.apply("[agent] Hola", None, "t") == "[agent] Hola"
 
 
-def test_programmatic_send_goes_unprefixed():
+def test_no_prefix_outside_forethought(tmp_path, monkeypatch):
+    monkeypatch.setattr(agent_prefix, "FORETHOUGHT", tmp_path / "forethought")
+    (tmp_path / "forethought-other").mkdir()
+    monkeypatch.chdir(tmp_path / "forethought-other")
+    assert agent_prefix.apply("Hola", None, "t") == "Hola"
+    assert agent_prefix.apply("[agent] Hola", None, "t") == "Hola"
+
+
+def test_programmatic_send_goes_unprefixed(in_forethought):
     assert agent_prefix.apply("Hola", None, "t", True) == "Hola"
     assert agent_prefix.apply("[agent] Hola", None, "t", True) == "Hola"
 
@@ -24,7 +40,7 @@ def test_programmatic_and_reviewed_are_alternatives(tmp_path):
         agent_prefix.apply("Hola", str(review), "t", True)
 
 
-def test_review_file_text_goes_unprefixed(tmp_path):
+def test_review_file_text_goes_unprefixed(in_forethought, tmp_path):
     review = tmp_path / "fias.md"
     review.write_text("## Gastón\n\n{==**Borrador**==}{>>send<<}\n\n> Gastón, ya salió\n> la transferencia.\n")
     assert agent_prefix.apply("Gastón, ya salió la transferencia.", str(review), "t") == \

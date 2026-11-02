@@ -696,7 +696,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--programmatic", action="store_true",
-        help='With --send: a step of a skill or other programmatic path is sending this: no [agent] prefix (CLAUDE.md, "Messages you send")',
+        help='With --send: a step of a skill or other programmatic path is sending this: no [agent] prefix (agent_prefix.py)',
     )
     parser.add_argument(
         "--clear", action="store_true",

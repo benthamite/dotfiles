@@ -53,7 +53,7 @@ def main() -> int:
     p.add_argument("--reviewed", metavar="FILE",
                    help="Pablo approved this exact text in review FILE: send it without the [agent] prefix")
     p.add_argument("--programmatic", action="store_true",
-                   help='a step of a skill or other programmatic path is sending this: no [agent] prefix (CLAUDE.md, "Messages you send")')
+                   help='a step of a skill or other programmatic path is sending this: no [agent] prefix (agent_prefix.py)')
     p.add_argument("--formatting", action="store_true",
                    help="allow WhatsApp formatting (*bold*, _italic_, ~strike~, ```mono```)")
     a = p.parse_args()

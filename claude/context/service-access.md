@@ -256,7 +256,9 @@ collected or routed (Pablo, 2026-10-24).
   incoming message updates the matter it belongs to. A message the sender
   deleted counts as never sent: no item, no acknowledgment, no record (Pablo,
   2026-10-30). One `##` section per item,
-  most urgent first, headed with the person or channel and a one-line topic, with:
+  most urgent first (mark an item urgent only if it needs Pablo today: a
+  deadline today or tomorrow, or someone blocked on him right now; a deadline
+  days away is not urgent, Pablo 2026-10-30), headed with the person or channel and a one-line topic, with:
   **Contexto** (what the other person said, with a link, and the relevant
   facts or deadlines), **Decisión** (what Pablo has to decide, and the
   recommendation), **Borrador** (the text, as a quote block, in the language it

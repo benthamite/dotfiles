@@ -92,6 +92,24 @@ class WriteReceiptTest(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertEqual(payload["status"], "failure")
 
+    def test_held_returns_zero_and_embeds_no_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            evidence = root / "evidence.json"
+            evidence.write_text('{"status": "success"}', encoding="utf-8")
+            receipt = root / "closeout.json"
+            result = self.run_writer(
+                "--receipt-file", str(receipt),
+                "--status", "held",
+                "--message", "Committed locally; rebase conflict needs you.",
+                "--evidence", str(evidence),
+            )
+            payload = json.loads(receipt.read_text(encoding="utf-8"))
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(payload["status"], "held")
+        self.assertNotIn("evidence", payload)
+
     def test_existing_file_and_symlink_targets_are_preserved(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -823,6 +823,9 @@ maintainers use without these dotfiles. Likewise, a Forethought sprint session
 Ignore rules do not make tracked or Drive-synced content private. Post-update-log
 hooks refresh the brief before its map is derived, within the caller's authority;
 derived fields cannot originate unverified claims.
+Its receipt writer accepts =success=, =no-op=, =held= and =failure=; =held=
+means the work stopped for the user, so the Emacs before-exit chain keeps the
+session open with a notice instead of a warning.
 
 The paired =exit-skill-audit= skill runs after =update-log= in the Emacs before-exit
 chain and audits an exit-time skill once a month. Each target (so far only the

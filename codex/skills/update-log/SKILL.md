@@ -79,6 +79,10 @@ Keep durable recovery evidence outside that host-owned directory.
 - Use `success` only after required edits, checks, commits and final inspections.
 - Use `no-op` when no requested durable change remains, not when work was skipped
   because access or verification failed.
+- Use `held` when the work is done as far as it safely can be and a step needs
+  the user (for example a commit left local because of a conflict only they can
+  settle). The host keeps the session open with a notice instead of a warning.
+  It exits 0 and carries no evidence.
 - Use `failure` for incomplete required work. Explicit failure intentionally
   returns nonzero even when the failure receipt was successfully written.
 

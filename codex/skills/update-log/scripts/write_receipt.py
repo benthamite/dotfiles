@@ -13,8 +13,12 @@ import tempfile
 from pathlib import Path
 
 
-ACCEPTED_STATUSES = frozenset({"success", "no-op", "failure"})
+ACCEPTED_STATUSES = frozenset({"success", "no-op", "held", "failure"})
 SUCCESS_STATUSES = frozenset({"success", "no-op"})
+# "held": the skill did what it could and stopped for the user; the host keeps the
+# session open without a warning. It is a deliberate outcome, so it exits 0, but it
+# is not a success, so it carries no evidence.
+ZERO_EXIT_STATUSES = SUCCESS_STATUSES | {"held"}
 MAX_EVIDENCE_BYTES = 4 * 1024 * 1024
 MAX_EVIDENCE_FILES = 16
 MAX_RECEIPT_BYTES = 16 * 1024 * 1024
@@ -166,7 +170,7 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, ValueError, TypeError, RecursionError):
         print("error: receipt publication failed; inspect target before retrying", file=sys.stderr)
         return 2
-    return 0 if status in SUCCESS_STATUSES else 1
+    return 0 if status in ZERO_EXIT_STATUSES else 1
 
 
 if __name__ == "__main__":

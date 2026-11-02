@@ -145,7 +145,8 @@ question reached him unmarked; Pablo extended it to every recipient on
 2026-10-29, before an agent was to message Will MacAskill, and narrowed it on
 2026-11-02 after a routine =order-salads= request reached the supplier marked.
 The rule sits in the always-loaded file because such messages can be
-drafted from any project and go out on any channel.
+drafted from any project and go out on any channel. It states only the
+behavior; this paragraph keeps its history.
 The send tools enforce it (=claude/bin/agent_prefix.py=, 2026-10-30):
 =wa-send=, =slack.py send= and =gmail.py send|reply= add the prefix unless
 given =--programmatic= or =--reviewed FILE=, and the latter refuses text that is

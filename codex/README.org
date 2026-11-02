@@ -76,9 +76,9 @@ The global =codex/AGENTS.md= and =claude/CLAUDE.md= files are semantic peers.
 Both carry the same operating rules, including "solve classes, not instances",
 and the same repository-root contract (notes workspaces under Drive keep their
 git directories in =~/git-dirs/=). Both also reserve the =[agent] = prefix for
-messages Pablo asked an agent to send in an interactive session (2026-11-02);
-messages a skill step or other programmatic path sends, and messages he approved
-in a review file, go out without it.
+messages Pablo asked an agent to send in an interactive session; messages a skill
+step or other programmatic path sends, and messages he approved in a review file,
+go out without it. The rule's history is in =claude/README.org=.
 The send tools add the prefix by default (=claude/bin/agent_prefix.py=);
 =--programmatic= and =--reviewed FILE= omit it.
 The paired =find-past-session= skill directs agents looking for a past session

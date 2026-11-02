@@ -71,12 +71,15 @@ Send with `wa-send --chat "EXACT NAME" | --to JID --text "..." [--file
 wa-archive's outbox, the daemon sends it as Pablo (a file goes as a document,
 or as a photo if it is an image, with the text as caption), archives it, and
 `wa-send` prints the receipt. Send only what Pablo approved: a "send" comment
-processed from a drafts file, or his explicit OK in chat. The `[agent] `
+processed from a drafts file, his explicit OK in chat, or a step of a skill he
+invoked that names the message. The `[agent] `
 prefix is added by `wa-send`, `slack.py send` and `gmail.py send|reply`
-themselves (`claude/bin/agent_prefix.py`, 2026-10-30); pass `--reviewed
+themselves (`claude/bin/agent_prefix.py`, 2026-10-30); pass `--programmatic`
+when a skill step or other programmatic path sends the message (2026-11-02),
+and `--reviewed
 DRAFTS_FILE` only for text Pablo approved in that review file: the tool checks
 that the text is in an item carrying his comment (`{>>send<<}`), so send before
-removing the comment. A chat OK is not `--reviewed`. Exit 3 means no
+removing the comment. A chat OK is neither. Exit 3 means no
 receipt arrived: check `wa-read show` before retrying, never resend blindly.
 WhatsApp renders `*bold*`, `_italic_`, `~strike~` and ```` ```mono``` ````, so
 drafts must not use those characters by accident (write "unos", not `~`, for
@@ -84,8 +87,7 @@ an approximate figure); `wa-send` refuses text it would format unless given
 `--formatting` (2026-10-28: two `~` struck through half a message).
 Receipts stay in `~/.local/share/wa-archive/outbox/sent/`. Do not send through
 WhatsApp Web in Chrome: it cannot attach files reliably and types into Pablo's
-browser. (Exception still to migrate: the `order-salads` skill sends through
-WhatsApp Web in the Personal profile.)
+browser.
 
 Attachments: `wa-read` shows `[document: NAME]` but no file. Download one with
 `wa-fetch --chat "EXACT NAME" --name NAME | --latest | --id MSGID` (since

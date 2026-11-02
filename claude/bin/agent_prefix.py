@@ -1,10 +1,12 @@
 """The [agent] prefix on messages an agent sends under Pablo's name.
 
-Rule (global CLAUDE.md, "Messages you send"): every message an agent sends as
-Pablo starts with "[agent] ", except text Pablo approved in a review file,
-which goes out under his own name.  The send paths of wa-send, slack.py and
-gmail.py call `apply`, so the rule does not depend on the agent remembering
-it: without --reviewed the prefix is added; with --reviewed FILE the text
+Rule (global CLAUDE.md, "Messages you send"): a message starts with "[agent] "
+only when Pablo asked an agent, in an interactive session, to send it.  A
+message sent as a step of a skill or another programmatic path, and text Pablo
+approved in a review file, go out under his own name.  The send paths of
+wa-send, slack.py and gmail.py call `apply`.  The prefix is the default because
+interactive sends are free-form, while each programmatic send has its command
+written down: --programmatic omits the prefix; with --reviewed FILE the text
 must appear in an item of that file that carries Pablo's comment, or the send
 is refused.
 """
@@ -23,10 +25,16 @@ def _norm(text: str) -> str:
     return re.sub(r"\s+", " ", " ".join(lines)).strip()
 
 
-def apply(text: str, reviewed: str | None, tool: str) -> str:
+def apply(text: str, reviewed: str | None, tool: str,
+          programmatic: bool = False) -> str:
     """Return TEXT as it must be sent, or exit if --reviewed does not hold."""
+    body = text[len(PREFIX):] if text.startswith(PREFIX) else text
+    if programmatic:
+        if reviewed:
+            sys.exit(f"{tool}: --programmatic and --reviewed are alternatives; "
+                     "pass the one that describes this send")
+        return body
     if reviewed:
-        body = text[len(PREFIX):] if text.startswith(PREFIX) else text
         path = Path(reviewed).expanduser()
         if not path.is_file():
             sys.exit(f"{tool}: --reviewed {reviewed}: no such file")

@@ -12,6 +12,18 @@ def test_prefix_added_without_review_file():
     assert agent_prefix.apply("[agent] Hola", None, "t") == "[agent] Hola"
 
 
+def test_programmatic_send_goes_unprefixed():
+    assert agent_prefix.apply("Hola", None, "t", True) == "Hola"
+    assert agent_prefix.apply("[agent] Hola", None, "t", True) == "Hola"
+
+
+def test_programmatic_and_reviewed_are_alternatives(tmp_path):
+    review = tmp_path / "fias.md"
+    review.write_text("## Gastón\n\n{>>send<<}\n\n> Hola\n")
+    with pytest.raises(SystemExit):
+        agent_prefix.apply("Hola", str(review), "t", True)
+
+
 def test_review_file_text_goes_unprefixed(tmp_path):
     review = tmp_path / "fias.md"
     review.write_text("## Gastón\n\n{==**Borrador**==}{>>send<<}\n\n> Gastón, ya salió\n> la transferencia.\n")

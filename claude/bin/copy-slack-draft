@@ -580,6 +580,7 @@ def validate_socket(value: str) -> str:
 
 # None unless --send; then "" (prefix) or the --reviewed file.
 SEND_PREFIX = None
+SEND_PROGRAMMATIC = False
 
 
 @contextlib.contextmanager
@@ -607,7 +608,7 @@ def draft_snapshot(value: str):
         # --send posts as Pablo: apply the [agent] prefix rule (agent_prefix.py).
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         import agent_prefix
-        text = agent_prefix.apply(text, SEND_PREFIX or None, "copy-slack-draft --send")
+        text = agent_prefix.apply(text, SEND_PREFIX or None, "copy-slack-draft --send", SEND_PROGRAMMATIC)
         raw = text.encode("utf-8")
     directory = Path(tempfile.mkdtemp(prefix="slack-draft-", dir="/tmp"))
     snapshot = directory / "draft.txt"
@@ -694,6 +695,10 @@ def main() -> int:
         help="With --send: Pablo approved this exact text in review FILE, so it goes without the [agent] prefix",
     )
     parser.add_argument(
+        "--programmatic", action="store_true",
+        help='With --send: a step of a skill or other programmatic path is sending this: no [agent] prefix (CLAUDE.md, "Messages you send")',
+    )
+    parser.add_argument(
         "--clear", action="store_true",
         help="After the message was sent another way, empty the target's composer "
              "if it still holds the draft this helper staged there",
@@ -717,8 +722,9 @@ def main() -> int:
             if args.open_only or args.no_open:
                 raise ValueError("--send needs a draft and a target")
             args.no_ring = True
-            global SEND_PREFIX
+            global SEND_PREFIX, SEND_PROGRAMMATIC
             SEND_PREFIX = args.reviewed or ""
+            SEND_PROGRAMMATIC = args.programmatic
         if args.open_only and (args.file or args.stdin or args.no_open):
             raise ValueError("Open-only cannot stage text")
         if args.file and args.stdin:

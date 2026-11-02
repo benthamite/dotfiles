@@ -6,7 +6,8 @@ running wa-archive daemon sends it as Pablo, archives it, and writes a receipt
 to outbox/sent/ or outbox/failed/. This command waits for that receipt.
 
 Only for messages Pablo approved: a "send" comment processed from a drafts
-file, or his explicit OK in chat. Every receipt stays in outbox/sent/.
+file, his explicit OK in chat, or a step of a skill he invoked that names this
+message. Every receipt stays in outbox/sent/.
 
   wa-send --chat "FIAS - Legal Contable" --text "..." [--file /abs/path.pdf]
   wa-send --to 5491100000000@s.whatsapp.net --stdin < message.txt
@@ -45,12 +46,14 @@ def main() -> int:
     p.add_argument("--timeout", type=int, default=120, help="seconds to wait for the receipt")
     p.add_argument("--reviewed", metavar="FILE",
                    help="Pablo approved this exact text in review FILE: send it without the [agent] prefix")
+    p.add_argument("--programmatic", action="store_true",
+                   help='a step of a skill or other programmatic path is sending this: no [agent] prefix (CLAUDE.md, "Messages you send")')
     p.add_argument("--formatting", action="store_true",
                    help="allow WhatsApp formatting (*bold*, _italic_, ~strike~, ```mono```)")
     a = p.parse_args()
     text = sys.stdin.read().rstrip("\n") if a.stdin else (a.text or "")
     if text.strip():
-        text = agent_prefix.apply(text, a.reviewed, "wa-send")
+        text = agent_prefix.apply(text, a.reviewed, "wa-send", a.programmatic)
     if not a.formatting:
         spans = formatted_spans(text)
         if spans:

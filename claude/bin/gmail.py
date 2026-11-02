@@ -304,7 +304,7 @@ def cmd_draft(args):
 def _prefixed_body(args, tool):
     """Apply the [agent] prefix rule to the body (agent_prefix.py)."""
     import agent_prefix
-    args.body = agent_prefix.apply(_read_body(args), args.reviewed, tool)
+    args.body = agent_prefix.apply(_read_body(args), args.reviewed, tool, args.programmatic)
     args.body_file = None
 
 
@@ -427,6 +427,8 @@ def build_parser():
         if name == "send":
             s.add_argument("--reviewed", metavar="FILE",
                            help="Pablo approved this exact body in review FILE: send it without the [agent] prefix")
+            s.add_argument("--programmatic", action="store_true",
+                           help='a step of a skill or other programmatic path is sending this: no [agent] prefix (CLAUDE.md, "Messages you send")')
         s.set_defaults(func=fn)
 
     rep = sub.add_parser("reply", parents=[sub_account])
@@ -437,6 +439,8 @@ def build_parser():
     rep.add_argument("--attach", action="append", default=[])
     rep.add_argument("--reviewed", metavar="FILE",
                      help="Pablo approved this exact body in review FILE: send it without the [agent] prefix")
+    rep.add_argument("--programmatic", action="store_true",
+                     help='a step of a skill or other programmatic path is sending this: no [agent] prefix (CLAUDE.md, "Messages you send")')
     rep.set_defaults(func=cmd_reply)
 
     sd = sub.add_parser("send-draft", parents=[sub_account])

@@ -148,6 +148,9 @@ The send tools enforce it (=claude/bin/agent_prefix.py=, 2026-10-30):
 =wa-send=, =slack.py send= and =gmail.py send|reply= add the prefix unless
 given =--reviewed FILE=, and then refuse text that is not in that review file.
 This followed a chat-approved message that went out unmarked the same day.
+=--programmatic= omits the prefix when a skill step sends the message;
+=order-salads= uses it, because its routine requests to the supplier go out
+under Pablo's name (2026-11-02).
 
 Agents ask for a task's decisions once: before acting, they list every
 decision and approval the task needs through to completion, with a

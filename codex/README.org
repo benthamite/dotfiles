@@ -80,7 +80,8 @@ sends under Pablo's name, to anyone, to start with =[agent] = (extended from
 messages to Peter Hartree on 2026-10-29); messages Pablo approved in a
 review file go out without it (2026-10-30).
 The send tools add the prefix themselves (=claude/bin/agent_prefix.py=);
-=--reviewed FILE= marks text Pablo approved in a review file.
+=--reviewed FILE= marks text Pablo approved in a review file, and
+=--programmatic= a message a skill step sends (=order-salads=, 2026-11-02).
 The paired =find-past-session= skill directs agents looking for a past session
 to =claude/bin/agent-log-find=, which searches the rendered Markdown session
 logs rather than raw transcripts.

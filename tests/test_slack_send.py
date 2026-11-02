@@ -4,18 +4,22 @@ import importlib.util
 import io
 import json
 from pathlib import Path
+import sys
 from types import SimpleNamespace
 import unittest
 from unittest import mock
 
 
 SOURCE = Path(__file__).resolve().parents[1] / "claude/bin/slack.py"
+# slack.py imports agent_prefix from its own directory.
+sys.path.insert(0, str(SOURCE.parent))
 PERMALINK = "https://forethought-ea.slack.com/archives/D0C8CR24NQZ/p1793185462048979"
 REPLY_LINK = PERMALINK + "?thread_ts=1793185400.000100&cid=D0C8CR24NQZ"
 
 
 def send_args(**overrides):
-    args = dict(permalink=None, channel=None, thread_ts=None, text="Done.", stdin=False)
+    args = dict(permalink=None, channel=None, thread_ts=None, text="Done.", stdin=False,
+                reviewed=None, programmatic=False)
     args.update(overrides)
     return SimpleNamespace(**args)
 
@@ -47,7 +51,7 @@ class SendTests(unittest.TestCase):
 
     def test_permalink_replies_in_that_messages_thread(self):
         self.mod.cmd_send(send_args(permalink=PERMALINK))
-        self.assertEqual(self.posted(), [{"channel": "D0C8CR24NQZ", "text": "Done.",
+        self.assertEqual(self.posted(), [{"channel": "D0C8CR24NQZ", "text": "[agent] Done.",
                                           "thread_ts": "1793185462.048979"}])
         self.assertEqual(self.receipt()["permalink"], "https://forethought-ea.slack.com/archives/D0C8CR24NQZ/"
                          "p1793190000000200?thread_ts=1793185462.048979&cid=D0C8CR24NQZ")
@@ -58,13 +62,17 @@ class SendTests(unittest.TestCase):
 
     def test_channel_posts_at_top_level(self):
         self.mod.cmd_send(send_args(channel="C0C9VPUQ9SN"))
-        self.assertEqual(self.posted(), [{"channel": "C0C9VPUQ9SN", "text": "Done.", "thread_ts": None}])
+        self.assertEqual(self.posted(), [{"channel": "C0C9VPUQ9SN", "text": "[agent] Done.", "thread_ts": None}])
         self.assertEqual(self.receipt()["status"], "sent")
+
+    def test_programmatic_send_has_no_prefix(self):
+        self.mod.cmd_send(send_args(channel="C0C9VPUQ9SN", programmatic=True))
+        self.assertEqual(self.posted()[0]["text"], "Done.")
 
     def test_stdin_drops_one_trailing_newline(self):
         with mock.patch("sys.stdin", io.StringIO("Line one.\nLine two.\n\n")):
             self.mod.cmd_send(send_args(channel="C0C9VPUQ9SN", text=None, stdin=True))
-        self.assertEqual(self.posted()[0]["text"], "Line one.\nLine two.\n")
+        self.assertEqual(self.posted()[0]["text"], "[agent] Line one.\nLine two.\n")
 
     def test_blank_text_sends_nothing(self):
         with self.assertRaises(SystemExit) as raised:

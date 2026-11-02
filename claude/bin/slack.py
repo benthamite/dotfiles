@@ -994,7 +994,7 @@ def cmd_send(args):
     if not isinstance(text, str) or not text.strip():
         _fail("Nothing to send", 2)
     import agent_prefix
-    text = agent_prefix.apply(text, args.reviewed, "slack.py send")
+    text = agent_prefix.apply(text, args.reviewed, "slack.py send", args.programmatic)
     if args.permalink:
         if args.thread_ts:
             _fail("--thread-ts goes with --channel; a permalink already names its thread", 2)
@@ -1195,6 +1195,8 @@ def main():
     body.add_argument("--stdin", action="store_true", help="read the text from stdin")
     se.add_argument("--reviewed", metavar="FILE",
                     help="Pablo approved this exact text in review FILE: send it without the [agent] prefix")
+    se.add_argument("--programmatic", action="store_true",
+                    help='a step of a skill or other programmatic path is sending this: no [agent] prefix (CLAUDE.md, "Messages you send")')
     se.set_defaults(func=cmd_send)
 
     u = sub.add_parser("unreads")

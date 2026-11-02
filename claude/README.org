@@ -135,22 +135,22 @@ Agents solve classes, not instances: a recurring concern such as credentials or
 alerting follows one written principle across every project, and a fix in one
 project starts by checking how its siblings handle the same thing.
 
-Any message an agent itself sends under Pablo's name, to anyone, starts with
-=[agent] =; drafts Pablo sends himself, such as text staged in the kill ring,
-and messages he approved in a review file (a =send= comment in an
-inbox-monitor drafts file), which he has already reviewed, carry no prefix
-(2026-10-30). Peter proposed the prefix for messages to him on Slack on
-2026-10-27 after an agent-written question reached him unmarked; Pablo extended
-it to every recipient on 2026-10-29, before an agent was to message Will
-MacAskill. The rule sits in the always-loaded file because such messages can be
+An agent's message under Pablo's name starts with =[agent] = only when Pablo
+asked for that message in an interactive session. A message sent as a step of a
+skill or other programmatic path, drafts Pablo sends himself, such as text
+staged in the kill ring, and messages he approved in a review file (a =send=
+comment in an inbox-monitor drafts file) carry no prefix. Peter proposed the
+prefix for messages to him on Slack on 2026-10-27 after an agent-written
+question reached him unmarked; Pablo extended it to every recipient on
+2026-10-29, before an agent was to message Will MacAskill, and narrowed it on
+2026-11-02 after a routine =order-salads= request reached the supplier marked.
+The rule sits in the always-loaded file because such messages can be
 drafted from any project and go out on any channel.
 The send tools enforce it (=claude/bin/agent_prefix.py=, 2026-10-30):
 =wa-send=, =slack.py send= and =gmail.py send|reply= add the prefix unless
-given =--reviewed FILE=, and then refuse text that is not in that review file.
+given =--programmatic= or =--reviewed FILE=, and the latter refuses text that is
+not in that review file.
 This followed a chat-approved message that went out unmarked the same day.
-=--programmatic= omits the prefix when a skill step sends the message;
-=order-salads= uses it, because its routine requests to the supplier go out
-under Pablo's name (2026-11-02).
 
 Agents ask for a task's decisions once: before acting, they list every
 decision and approval the task needs through to completion, with a

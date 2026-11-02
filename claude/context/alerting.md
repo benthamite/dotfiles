@@ -1,5 +1,7 @@
 # Alerting for Pablo's automations
 
+When an automation must run on time, the same service also triggers it: see `scheduling.md` (2026-11-02).
+
 Principle (2026-10-09): liveness and failure alerts for Pablo's automations go through one service, `launchd-heartbeat`, applied the same way in every project. Do not build a project's own watchdog Worker, push topic or alert channel; extend the shared service instead.
 
 GitHub notifications (Pablo, 2026-10-23; applies in every project: personal, Epoch, Forethought): a GitHub Actions run whose failures an alerting service covers (this service, Epoch's or ph-ps's watchdog) must not generate a GitHub notification at all. GitHub notifies whoever a run is attributed to (the pusher, the dispatcher, the last editor of a `cron:` line), so such runs are started by an App or bot identity, never by Pablo: dispatched through the App, push checks started by an App dispatcher, cron lines last changed by the App. Never suppress or filter GitHub's notifications in account settings: a notification that does arrive is a real signal, of a run nothing else covers or of an attribution leak to fix at its source. Reference instance: ph-ps (`AGENTS.md`, "Automations"; `scripts/check-automations` fails any workflow an event attributed to a person would start). Not yet compliant (TODO): The Hinge's "Daily issue" runs, attributed to Pablo (notified 2026-10-23).

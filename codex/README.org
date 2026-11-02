@@ -710,7 +710,8 @@ It chooses among deterministic, gptel, skill and scheduled implementations,
 preserves scope and authorization, and verifies loading separately from behavior.
 For scheduled jobs it points to the shared alerting principle
 (=claude/context/alerting.md=, =launchd-heartbeat=) and to unattended credential
-renewal (=claude/context/secrets.md=), added 2026-10-09.
+renewal (=claude/context/secrets.md=), added 2026-10-09, and to the scheduling
+principle (=claude/context/scheduling.md=), added 2026-11-02.
 
 The =new-emacs-package= workflow (2026-11-01) takes a new standalone package from
 name to a public, documented and registered repository. It only sequences the

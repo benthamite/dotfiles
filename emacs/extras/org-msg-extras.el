@@ -30,6 +30,7 @@
 
 (require 'org-extras)
 (require 'org-msg)
+(require 'mm-decode)
 
 ;;;; User options
 
@@ -164,6 +165,56 @@ This is a slightly tweaked version of `org-msg-goto-body'."
   (while (re-search-forward org-property-re nil t)
     (forward-line)))
 
+(defun org-msg-extras-prepare-forward ()
+  "Prepare a mu4e forward so that `org-msg' shows the original in place.
+For an HTML reply, `org-msg-post-setup' embeds the parent message's HTML
+under a From/Date/Subject header, but it skips this for forwards because
+the body that `message-forward' inserts contains MML tags. When the
+forwarded message has an HTML part and no attachments, delete that body,
+so that `org-msg' embeds the original as it does for a reply. Otherwise
+keep the body and close its open parts with
+`org-msg-extras-close-forwarded-parts', so that attachments are kept.
+
+Must run before `org-msg-post-setup' in `mu4e-compose-mode-hook'."
+  (when (eq (bound-and-true-p mu4e-compose-type) 'forward)
+    (if (org-msg-extras--embeddable-p mu4e-compose-parent-message)
+	(org-msg-extras--clear-forward-body)
+      (org-msg-extras-close-forwarded-parts))))
+
+(declare-function mu4e-message-readable-path "mu4e-message")
+(defun org-msg-extras--embeddable-p (msg)
+  "Return non-nil if `org-msg' can embed MSG in place of a forward body.
+That is, MSG has a text/html part, and every part is text or an inline
+image, so that embedding drops no attachment."
+  (with-temp-buffer
+    (insert-file-contents-literally (mu4e-message-readable-path msg))
+    (let* ((handles (mm-dissect-buffer t t))
+	   (leaves (org-msg-extras--leaf-handles handles)))
+      (prog1 (and (cl-some (lambda (h) (equal (mm-handle-media-type h) "text/html"))
+			   leaves)
+		  (cl-every #'org-msg-extras--embeddable-handle-p leaves))
+	(mm-destroy-parts handles)))))
+
+(defun org-msg-extras--leaf-handles (handle)
+  "Return the non-multipart MIME handles in HANDLE."
+  (if (stringp (car-safe handle))
+      (mapcan #'org-msg-extras--leaf-handles (cdr handle))
+    (list handle)))
+
+(defun org-msg-extras--embeddable-handle-p (handle)
+  "Return non-nil if HANDLE is text or an inline image."
+  (and (not (equal (car (mm-handle-disposition handle)) "attachment"))
+       (member (mm-handle-media-supertype handle) '("text" "image"))))
+
+(defun org-msg-extras--clear-forward-body ()
+  "Replace the body that `message-forward' inserted with an empty line.
+`org-msg-post-setup' uses its reply layout only when the body is not
+empty, so leave a newline."
+  (save-excursion
+    (message-goto-body)
+    (delete-region (point) (point-max))
+    (insert "\n")))
+
 (defconst org-msg-extras-forward-end-line
   "-------------------- End of forwarded message --------------------"
   "Line that `message-forward' inserts after an inline forwarded message.
@@ -182,7 +233,8 @@ tag can follow the part's last line without a newline: `mml-insert-mime'
 does not end a text part with one, and it quotes any literal tag in the
 part as `<#!', so every `<#' followed by a letter or slash is a tag.
 
-Must run before `org-msg-post-setup' in `mu4e-compose-mode-hook'."
+`org-msg-extras-prepare-forward' calls this for forwards that `org-msg'
+cannot embed."
   (when (eq (bound-and-true-p mu4e-compose-type) 'forward)
     (save-excursion
       (message-goto-body)

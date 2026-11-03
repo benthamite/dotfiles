@@ -7,6 +7,7 @@
 ;;; Code:
 
 (require 'ert)
+(require 'cl-lib)
 (require 'org)
 
 ;;;; Inlined pure logic
@@ -152,6 +153,48 @@ multipart message can contain `</html><#/multipart>'."
   (let ((body "<#part type=text/html>\n<p>Hi</p>\n"))
     (should (equal (org-msg-extras-test--close-forwarded-parts body 'reply)
                    body))))
+
+;;;; prepare-forward
+
+(defun org-msg-extras-test--embeddable-p (raw)
+  "Return `org-msg-extras--embeddable-p' for a parent message RAW."
+  (unless (condition-case nil
+              (progn (require 'org-msg-extras) t)
+            (error nil))
+    (ert-skip "org-msg-extras dependencies unavailable"))
+  (let ((file (make-temp-file "org-msg-extras-test" nil ".eml" raw)))
+    (unwind-protect
+        (cl-letf (((symbol-function 'mu4e-message-readable-path)
+                   (lambda (_msg) file)))
+          (org-msg-extras--embeddable-p 'msg))
+      (delete-file file))))
+
+(ert-deftest org-msg-extras-test-embeddable-html-only ()
+  "An HTML-only message can be embedded."
+  (should (org-msg-extras-test--embeddable-p
+           "Subject: x\nMIME-Version: 1.0\nContent-Type: text/html\n\n<p>Hi</p>\n")))
+
+(ert-deftest org-msg-extras-test-embeddable-alternative ()
+  "A text and HTML alternative can be embedded."
+  (should (org-msg-extras-test--embeddable-p
+           (concat "Subject: x\nMIME-Version: 1.0\n"
+                   "Content-Type: multipart/alternative; boundary=\"b\"\n\n"
+                   "--b\nContent-Type: text/plain\n\nHi\n"
+                   "--b\nContent-Type: text/html\n\n<p>Hi</p>\n--b--\n"))))
+
+(ert-deftest org-msg-extras-test-not-embeddable-plain-text ()
+  "A plain-text message is not embedded."
+  (should-not (org-msg-extras-test--embeddable-p
+               "Subject: x\nMIME-Version: 1.0\nContent-Type: text/plain\n\nHi\n")))
+
+(ert-deftest org-msg-extras-test-not-embeddable-with-attachment ()
+  "A message with an attachment is not embedded, so the attachment is kept."
+  (should-not (org-msg-extras-test--embeddable-p
+               (concat "Subject: x\nMIME-Version: 1.0\n"
+                       "Content-Type: multipart/mixed; boundary=\"b\"\n\n"
+                       "--b\nContent-Type: text/html\n\n<p>Hi</p>\n"
+                       "--b\nContent-Type: application/pdf\n"
+                       "Content-Disposition: attachment; filename=a.pdf\n\nxx\n--b--\n"))))
 
 (provide 'org-msg-extras-test)
 ;;; org-msg-extras-test.el ends here

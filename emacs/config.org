@@ -13547,6 +13547,9 @@ I use this package to compose messages and to reply to messages composed in HTML
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-msg
+  :ensure (:host github
+                 :repo "benthamite/org-msg"
+                 :branch "fix/mu4e-reply-header-from-head") ; awaiting PR merge: https://github.com/jeremy-compostella/org-msg/pull/227
   :after mu4e-extras
   :demand t
   :custom

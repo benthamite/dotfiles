@@ -19,6 +19,10 @@ it does not require a separate OAuth user-info scope.
 it checks that the broker command the helper would run resolves on the
 current =PATH=. LaunchAgents that send mail register it as their preflight for
 the launchd repo's environment check.
+=gmail.py draft|send|reply= send the body as text plus an HTML alternative, as
+Gmail itself does. A text-only message showed a hard break every 70 or so
+characters in Gmail's mobile app and in Outlook, which looked machine-made
+(2026-11-03).
 
 This directory contains the tracked parts of my Claude Code setup. The shared
 Claude/Codex contract lives in [[file:../agents/configuration.org][the shared configuration guide]]; this file covers

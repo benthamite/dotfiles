@@ -39,6 +39,7 @@ Usage:
 import argparse
 import base64
 import email.message
+import html
 import json
 import mimetypes
 import os
@@ -120,6 +121,20 @@ def _read_body(args):
     return args.body or ""
 
 
+def _set_body(msg, text):
+    """Set TEXT as the body, with the HTML alternative Gmail itself sends.
+
+    Without it, clients show a text/plain-only message with a hard break
+    every 70 or so characters (Gmail's mobile app, Outlook), which looks
+    machine-made (2026-11-03: Eitan noticed it on a FIAS email to Galicia).
+    With an HTML part they reflow the text like any other email.
+    """
+    msg.set_content(text)
+    lines = [html.escape(line) for line in text.rstrip("\n").split("\n")]
+    msg.add_alternative('<div dir="ltr">' + "<br>\n".join(lines) + "</div>\n",
+                        subtype="html")
+
+
 def _add_attachments(msg, paths):
     for path in paths or []:
         mime_type, _ = mimetypes.guess_type(path)
@@ -190,7 +205,7 @@ def _build_message(args):
     msg["Subject"] = subject
     if parent_headers is not None:
         _set_reply_headers(msg, parent_headers)
-    msg.set_content(_read_body(args))
+    _set_body(msg, _read_body(args))
     _add_attachments(msg, getattr(args, "attach", []))
     return base64.urlsafe_b64encode(msg.as_bytes()).decode().rstrip("="), thread_id
 
@@ -327,7 +342,7 @@ def cmd_reply(args):
     msg["To"] = args.to or h.get("from", "")
     msg["Subject"] = _reply_subject(h)
     _set_reply_headers(msg, h)
-    msg.set_content(_read_body(args))
+    _set_body(msg, _read_body(args))
     _add_attachments(msg, args.attach)
     raw = base64.urlsafe_b64encode(msg.as_bytes()).decode().rstrip("=")
     out = api_request(

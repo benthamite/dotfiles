@@ -16,6 +16,22 @@
       "created_at": "2026-10-06T21:20:16.747614+00:00",
       "expires_at": "2026-10-07T01:20:16.747614+00:00",
       "body_sha256": "bb766418e5995d6b2ab7edac54a379f18331818e905c17f5cba5cb0f5c390348"
+    },
+    {
+      "command": "gh repo fork stevemolitor/claude-code.el --clone=false",
+      "account": "benthamite",
+      "authorization": "Pablo in Claude session a88e4146 on 2026-11-03: 'approve' (fork + PR for claude-code.el C-x C-s send-now)",
+      "created_at": "2026-11-03T11:55:01.049940+00:00",
+      "expires_at": "2026-11-03T15:55:01.049940+00:00",
+      "body_sha256": null
+    },
+    {
+      "command": "gh pr create --repo stevemolitor/claude-code.el --base main --head benthamite:send-now-key --title \"Forward C-x C-s to Claude Code as its send-now key\" --body-file /private/tmp/claude-501/-Users-pablostafforini--config-emacs-profiles-9-0-2-dev-elpaca-sources-claude-code/a88e4146-8315-49f0-acc2-f78555198969/scratchpad/pr-body.md",
+      "account": "benthamite",
+      "authorization": "Pablo in Claude session a88e4146 on 2026-11-03: 'approve' (fork + PR for claude-code.el C-x C-s send-now)",
+      "created_at": "2026-11-03T11:55:21.656872+00:00",
+      "expires_at": "2026-11-03T15:55:21.656872+00:00",
+      "body_sha256": "44755e89a6997fc19399022bcbf846b3166e9d00ecfa3fd470e986f03be4026c"
     }
   ]
 }

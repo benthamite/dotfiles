@@ -9529,7 +9529,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package claude-code
   :ensure (:host github
-                 :repo "stevemolitor/claude-code.el" :branch "main"
+                 :repo "benthamite/claude-code.el"
+                 :branch "send-now-key" ; awaiting PR merge: https://github.com/stevemolitor/claude-code.el/pull/150
                  :files ("*.el" (:exclude "images/*")))
   :defer t
   :custom

@@ -164,6 +164,37 @@ This is a slightly tweaked version of `org-msg-goto-body'."
   (while (re-search-forward org-property-re nil t)
     (forward-line)))
 
+(defconst org-msg-extras-forward-end-line
+  "-------------------- End of forwarded message --------------------"
+  "Line that `message-forward' inserts after an inline forwarded message.
+`message-forward-make-body-plain' hardcodes it; no variable holds it.")
+
+(defun org-msg-extras-close-forwarded-parts ()
+  "Close the MML text parts that a forwarded message leaves open.
+`message-forward' inserts each text part of the forwarded message as a
+`<#part>' tag with no closing tag, which MML allows. `org-msg-post-setup'
+lifts only closed tags out of the Org body, so an open part, such as the
+whole of an HTML-only message, stays in the body and is sent as escaped
+HTML source. Close each open text part before the next MML tag or the
+end of the forwarded message, so that `org-msg' sends it as a part of
+its own, as it already does for forwarded multipart messages.
+
+Must run before `org-msg-post-setup' in `mu4e-compose-mode-hook'."
+  (when (eq (bound-and-true-p mu4e-compose-type) 'forward)
+    (save-excursion
+      (message-goto-body)
+      (let ((part-end (concat "^\\(?:<#\\|"
+			      (regexp-quote org-msg-extras-forward-end-line)
+			      "$\\)")))
+	(while (re-search-forward "^<#part type=\"?text/" nil t)
+	  (forward-line)
+	  (goto-char (if (re-search-forward part-end nil t)
+			 (match-beginning 0)
+		       (point-max)))
+	  (unless (looking-at-p "<#/part>")
+	    (unless (bolp) (insert "\n"))
+	    (insert "<#/part>\n")))))))
+
 (defun org-msg-extras-fold-signature-blocks ()
   "Fold export blocks inside the email signature."
   (save-excursion

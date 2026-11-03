@@ -99,9 +99,9 @@ The user option @code{org-msg-extras-epoch-plain-text-signature} holds the signa
 
 The user option @code{org-msg-extras-epoch-html-signature} holds the signature for Epoch AI emails in Org/HTML format, including the current job title, Epoch logo, and links to the website, Twitter, and newsletter. The type is a string.
 
-The user option @code{org-msg-extras-forethought-plain-text-signature} holds the signature for Forethought emails in plain text, with name, organization, and website URL@. The type is a string.
+The user option @code{org-msg-extras-forethought-plain-text-signature} holds the signature for Forethought emails in plain text, including name, title, and website URL@. The type is a string.
 
-The user option @code{org-msg-extras-forethought-html-signature} holds the signature for Forethought emails in Org/HTML format, with styled name and a link to the Forethought website. The type is a string.
+The user option @code{org-msg-extras-forethought-html-signature} holds the signature for Forethought emails in Org/HTML format, with styled name, title, and a link to the website. The type is a string.
 
 The user option @code{org-msg-extras-tlon-plain-text-signature} holds the signature for Tlön emails in plain text, including name, title, and company name. The type is a string.
 
@@ -134,6 +134,10 @@ The command @code{org-msg-extras-open-in-grammarly} builds on @code{org-msg-extr
 When you begin composing an email in @samp{org-msg}, the cursor may be positioned in the header area or after the signature, requiring manual navigation to the body. The command @code{org-msg-extras-begin-compose} moves point to the optimal position for starting to type the message body. If @code{org-msg-signature} is set, the command places point just before the signature. Otherwise, it calls @code{org-msg-extras-end-of-meta-data} to skip past the properties drawer and inserts a newline. It also calls @code{simple-extras-visible-mode-enhanced} to adjust buffer visibility for composing.
 
 The command @code{org-msg-extras-end-of-meta-data} is a helper that advances point past consecutive Org property lines (lines matching @code{org-property-re}). It is used internally by @code{org-msg-extras-begin-compose} to skip the meta-data section at the top of the @samp{org-msg} buffer (@ref{Composition helpers}).
+
+@findex org-msg-extras-close-forwarded-parts
+@vindex org-msg-extras-forward-end-line
+The function @code{org-msg-extras-close-forwarded-parts} makes forwarded HTML-only messages arrive intact. @code{message-forward} inserts each text part of the forwarded message as an MML @samp{<#part>} tag without a closing tag. @samp{org-msg} lifts only closed MML blocks out of the Org body, so an open part stays in the body and is sent as escaped HTML source. The function closes each open text part before the next MML tag or the end-of-forward line (@code{org-msg-extras-forward-end-line}), so @samp{org-msg} sends the original as a separate part, as it already does for forwarded multipart messages. It acts only on mu4e forwards and must run before @code{org-msg-post-setup} in @code{mu4e-compose-mode-hook}.
 
 @node Indices
 @chapter Indices

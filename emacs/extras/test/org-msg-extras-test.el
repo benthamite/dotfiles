@@ -79,5 +79,60 @@
         (should-not (string-match-p "Operations Associate" signature)))
     (ert-skip "org-msg-extras dependencies unavailable")))
 
+;;;; close-forwarded-parts
+
+(defconst org-msg-extras-test--end-line
+  "-------------------- End of forwarded message --------------------"
+  "End-of-forward line that `message-forward' inserts.")
+
+(defun org-msg-extras-test--close-forwarded-parts (body &optional type)
+  "Return BODY after closing forwarded parts in a draft of TYPE.
+TYPE defaults to `forward'."
+  (unless (condition-case nil
+              (progn (require 'org-msg-extras) t)
+            (error nil))
+    (ert-skip "org-msg-extras dependencies unavailable"))
+  (with-temp-buffer
+    (let ((mail-header-separator "--text follows this line--"))
+      (insert "Subject: Fwd: x\n" mail-header-separator "\n" body)
+      (setq-local mu4e-compose-type (or type 'forward))
+      (org-msg-extras-close-forwarded-parts)
+      (goto-char (point-min))
+      (message-goto-body)
+      (buffer-substring-no-properties (point) (point-max)))))
+
+(ert-deftest org-msg-extras-test-close-forwarded-html-only-part ()
+  "An open HTML part is closed before the end-of-forward line."
+  (should (equal (org-msg-extras-test--close-forwarded-parts
+                  (concat "<#part type=text/html charset=\"utf-8\" nofile=yes>\n"
+                          "<p>Hi</p>\n"
+                          org-msg-extras-test--end-line "\n"))
+                 (concat "<#part type=text/html charset=\"utf-8\" nofile=yes>\n"
+                         "<p>Hi</p>\n<#/part>\n"
+                         org-msg-extras-test--end-line "\n"))))
+
+(ert-deftest org-msg-extras-test-close-forwarded-parts-in-multipart ()
+  "Open parts inside a multipart are closed before the next tag."
+  (should (equal (org-msg-extras-test--close-forwarded-parts
+                  (concat "<#multipart type=alternative>\n"
+                          "<#part type=\"text/plain\">\nHi\n"
+                          "<#part type=\"text/html\">\n<p>Hi</p>\n"
+                          "<#/multipart>\n"))
+                 (concat "<#multipart type=alternative>\n"
+                         "<#part type=\"text/plain\">\nHi\n<#/part>\n"
+                         "<#part type=\"text/html\">\n<p>Hi</p>\n<#/part>\n"
+                         "<#/multipart>\n"))))
+
+(ert-deftest org-msg-extras-test-close-forwarded-parts-keeps-closed-part ()
+  "A part that is already closed is left alone."
+  (let ((body "<#part type=text/html>\n<p>Hi</p>\n<#/part>\n"))
+    (should (equal (org-msg-extras-test--close-forwarded-parts body) body))))
+
+(ert-deftest org-msg-extras-test-close-forwarded-parts-only-forwards ()
+  "Drafts that are not forwards are left alone."
+  (let ((body "<#part type=text/html>\n<p>Hi</p>\n"))
+    (should (equal (org-msg-extras-test--close-forwarded-parts body 'reply)
+                   body))))
+
 (provide 'org-msg-extras-test)
 ;;; org-msg-extras-test.el ends here

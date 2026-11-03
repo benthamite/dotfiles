@@ -177,15 +177,18 @@ lifts only closed tags out of the Org body, so an open part, such as the
 whole of an HTML-only message, stays in the body and is sent as escaped
 HTML source. Close each open text part before the next MML tag or the
 end of the forwarded message, so that `org-msg' sends it as a part of
-its own, as it already does for forwarded multipart messages.
+its own, as it already does for forwarded multipart messages. The next
+tag can follow the part's last line without a newline: `mml-insert-mime'
+does not end a text part with one, and it quotes any literal tag in the
+part as `<#!', so every `<#' followed by a letter or slash is a tag.
 
 Must run before `org-msg-post-setup' in `mu4e-compose-mode-hook'."
   (when (eq (bound-and-true-p mu4e-compose-type) 'forward)
     (save-excursion
       (message-goto-body)
-      (let ((part-end (concat "^\\(?:<#\\|"
+      (let ((part-end (concat "<#/?[a-z]\\|^"
 			      (regexp-quote org-msg-extras-forward-end-line)
-			      "$\\)")))
+			      "$")))
 	(while (re-search-forward "^<#part type=\"?text/" nil t)
 	  (forward-line)
 	  (goto-char (if (re-search-forward part-end nil t)

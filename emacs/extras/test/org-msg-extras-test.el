@@ -123,6 +123,25 @@ TYPE defaults to `forward'."
                          "<#part type=\"text/html\">\n<p>Hi</p>\n<#/part>\n"
                          "<#/multipart>\n"))))
 
+(ert-deftest org-msg-extras-test-close-forwarded-parts-mid-line-tag ()
+  "A part is closed before a tag that follows its last line directly.
+`mml-insert-mime' leaves no newline after a text part, so a forwarded
+multipart message can contain `</html><#/multipart>'."
+  (should (equal (org-msg-extras-test--close-forwarded-parts
+                  (concat "<#multipart type=alternative>\n"
+                          "<#part type=text/html>\n<p>Hi</p></html><#/multipart>\n"))
+                 (concat "<#multipart type=alternative>\n"
+                         "<#part type=text/html>\n<p>Hi</p></html>\n<#/part>\n"
+                         "<#/multipart>\n"))))
+
+(ert-deftest org-msg-extras-test-close-forwarded-parts-ignores-quoted-tag ()
+  "A quoted tag inside a part does not end the part."
+  (should (equal (org-msg-extras-test--close-forwarded-parts
+                  (concat "<#part type=text/plain>\nSee <#!part> here\n"
+                          org-msg-extras-test--end-line "\n"))
+                 (concat "<#part type=text/plain>\nSee <#!part> here\n<#/part>\n"
+                         org-msg-extras-test--end-line "\n"))))
+
 (ert-deftest org-msg-extras-test-close-forwarded-parts-keeps-closed-part ()
   "A part that is already closed is left alone."
   (let ((body "<#part type=text/html>\n<p>Hi</p>\n<#/part>\n"))

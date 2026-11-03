@@ -16,46 +16,6 @@
       "created_at": "2026-10-06T21:20:16.747614+00:00",
       "expires_at": "2026-10-07T01:20:16.747614+00:00",
       "body_sha256": "bb766418e5995d6b2ab7edac54a379f18331818e905c17f5cba5cb0f5c390348"
-    },
-    {
-      "command": "gh repo fork HartreeWorks/skill--day-tracker --clone=false",
-      "account": "benthamite",
-      "authorization": "Pablo in Claude session 84952927 on 2026-11-03: 'can you create a pr or prs for the relevant issues?' then 'also /request-review before'",
-      "created_at": "2026-11-03T22:12:18.202121+00:00",
-      "expires_at": "2026-11-04T02:12:18.202121+00:00",
-      "body_sha256": null
-    },
-    {
-      "command": "gh pr create --repo HartreeWorks/skill--day-tracker --base main --head benthamite:fix-previous-capture --title \"fix(capture): compare with the previous capture, not the current one\" --body-file /private/tmp/claude-501/-Users-pablostafforini-repos-forethought/84952927-156d-411f-ac32-62800796804e/scratchpad/pr/1-previous-capture.md",
-      "account": "benthamite",
-      "authorization": "Pablo in Claude session 84952927 on 2026-11-03: 'can you create a pr or prs for the relevant issues?' then 'also /request-review before'",
-      "created_at": "2026-11-03T22:12:18.400369+00:00",
-      "expires_at": "2026-11-04T02:12:18.400369+00:00",
-      "body_sha256": "f79908811e39dcb79f67694245d2fc84fe28860d1d1ebd3161bd5b7f57c06641"
-    },
-    {
-      "command": "gh pr create --repo HartreeWorks/skill--day-tracker --base main --head benthamite:fix-session-messages --title \"fix(capture): read typed messages from Claude Code and Codex transcripts\" --body-file /private/tmp/claude-501/-Users-pablostafforini-repos-forethought/84952927-156d-411f-ac32-62800796804e/scratchpad/pr/2-session-messages.md",
-      "account": "benthamite",
-      "authorization": "Pablo in Claude session 84952927 on 2026-11-03: 'can you create a pr or prs for the relevant issues?' then 'also /request-review before'",
-      "created_at": "2026-11-03T22:12:18.607579+00:00",
-      "expires_at": "2026-11-04T02:12:18.607579+00:00",
-      "body_sha256": "dc1cfcb2ee05b8cc96c32ee5e6635ad80e8c68cd5e7fb06e421ff0d1b592ded9"
-    },
-    {
-      "command": "gh pr create --repo HartreeWorks/skill--day-tracker --base main --head benthamite:fix-window-fallback --title \"fix(capture): keep the sensitive-window filter when the window helper fails\" --body-file /private/tmp/claude-501/-Users-pablostafforini-repos-forethought/84952927-156d-411f-ac32-62800796804e/scratchpad/pr/3-window-fallback.md",
-      "account": "benthamite",
-      "authorization": "Pablo in Claude session 84952927 on 2026-11-03: 'can you create a pr or prs for the relevant issues?' then 'also /request-review before'",
-      "created_at": "2026-11-03T22:12:18.809836+00:00",
-      "expires_at": "2026-11-04T02:12:18.809836+00:00",
-      "body_sha256": "8e981b7a746b19ac34673e5bf7bc8bbff057df871d0de8aae6925b53e82a291d"
-    },
-    {
-      "command": "gh pr create --repo HartreeWorks/skill--day-tracker --base main --head benthamite:fix-server-security --title \"fix(server): refuse cross-site requests and path traversal, escape untrusted text\" --body-file /private/tmp/claude-501/-Users-pablostafforini-repos-forethought/84952927-156d-411f-ac32-62800796804e/scratchpad/pr/4-server-security.md",
-      "account": "benthamite",
-      "authorization": "Pablo in Claude session 84952927 on 2026-11-03: 'can you create a pr or prs for the relevant issues?' then 'also /request-review before'",
-      "created_at": "2026-11-03T22:12:31.968754+00:00",
-      "expires_at": "2026-11-04T02:12:31.968754+00:00",
-      "body_sha256": "ad3e8662a23e9502c02675706087fab4a95949c0a4301ae5b5db8b6c471a6eea"
     }
   ]
 }

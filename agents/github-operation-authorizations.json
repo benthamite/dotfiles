@@ -16,22 +16,6 @@
       "created_at": "2026-10-06T21:20:16.747614+00:00",
       "expires_at": "2026-10-07T01:20:16.747614+00:00",
       "body_sha256": "bb766418e5995d6b2ab7edac54a379f18331818e905c17f5cba5cb0f5c390348"
-    },
-    {
-      "command": "gh repo fork jeremy-compostella/org-msg --clone=false",
-      "account": "benthamite",
-      "authorization": "Pablo approved in chat on 2026-11-03: fork org-msg, push fix branch, open upstream PR for the mu4e reply-header fix",
-      "created_at": "2026-11-03T12:50:47.437892+00:00",
-      "expires_at": "2026-11-03T16:50:47.437892+00:00",
-      "body_sha256": null
-    },
-    {
-      "command": "gh pr create --repo jeremy-compostella/org-msg --base main --head benthamite:fix/mu4e-reply-header-from-head --title \"Read the mu4e reply header from the message head only\" --body-file /private/tmp/claude-501/-Users-pablostafforini-My-Drive-dotfiles-emacs/a5aaae65-d9b8-4fd4-902c-93459fb4ecf7/scratchpad/pr/body.md",
-      "account": "benthamite",
-      "authorization": "Pablo approved in chat on 2026-11-03: fork org-msg, push fix branch, open upstream PR for the mu4e reply-header fix",
-      "created_at": "2026-11-03T12:50:47.648625+00:00",
-      "expires_at": "2026-11-03T16:50:47.648625+00:00",
-      "body_sha256": "3c521de2bd85d055d74df3f854c6e8887249f7e50f8980b2ba77e1547511ba33"
     }
   ]
 }

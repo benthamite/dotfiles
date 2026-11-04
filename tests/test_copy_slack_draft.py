@@ -443,11 +443,14 @@ class CopySlackDraftTest(unittest.TestCase):
         self.assertEqual(payload["target"], "UNSENT")
         self.assertEqual(payload["result"], "draft-opened")
 
-    def test_disconnected_team_is_not_started(self):
-        _, payload = self.evaluate_prefill(THREAD_PERMALINK, thread_ts=THREAD_TS,
-                                          disconnected=True)
-        self.assert_unchanged_on_failure(payload, target="")
-        self.assertEqual(payload["room-mutations"], 0)
+    def test_disconnected_team_stages_without_starting_it(self):
+        # Staging uses Slack's REST API, not the real-time websocket, which can
+        # stay down for days while Slack in Emacs keeps working (2026-11-04).
+        # The fake `slack-start' errors, so a reconnection attempt would fail.
+        draft, payload = self.evaluate_prefill(THREAD_PERMALINK, thread_ts=THREAD_TS,
+                                               disconnected=True)
+        self.assertIsNone(payload["failure"])
+        self.assertEqual(payload["target"], draft)
 
     def test_linked_message_must_be_in_fetched_thread(self):
         _, payload = self.evaluate_prefill(THREAD_PERMALINK, thread_ts=THREAD_TS,

@@ -224,8 +224,6 @@ def prefill_slack_reply(permalink: str, path: Path | None, socket: str,
              {elisp_string(permalink)}))
     (unless team
       (error "No registered Slack team for %s" team-domain))
-    (unless (slack-team-connectedp team)
-      (error "Slack team is disconnected"))
     (let ((room (slack-room-find room-id team)))
       (unless room
         (error "Slack room %s is not loaded for team %s"
@@ -435,8 +433,6 @@ def prefill_channel_message(channel: str, path: Path | None, socket: str,
                    (error "Slack team is not registered: %s" {elisp_string(workspace)})))
          (room (slack-room-find channel-id team)))
     (unless room (error "Slack room is not loaded"))
-    (unless (slack-team-connectedp team)
-      (error "Slack team is disconnected"))
     ;; The cursor slot is typed as a string. Passing nil happens to work when a
     ;; buffer for this room is already cached and blows up with "Invalid slot
     ;; type" when one has to be constructed, which is exactly the first time

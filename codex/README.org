@@ -418,6 +418,10 @@ It holds no Epoch rules: for an Epoch session it follows the workspace's own
 maintainers use without these dotfiles. Likewise, a Forethought sprint session
 (=~/repos/forethought= or below) follows the sprint repo's own =closeout= skill
 (=~/repos/forethought/ph-ps/skills/closeout/=), which Peter Hartree also uses.
+Entries carry the session ID and the closeout steps done, so a retry resumes only
+the rest; agents read the transcript after compaction and re-read each touched
+map or brief as a newcomer before the receipt.
+
 Ignore rules do not make tracked or Drive-synced content private. Post-update-log
 hooks refresh the brief before its map is derived, within the caller's authority;
 derived fields cannot originate unverified claims.

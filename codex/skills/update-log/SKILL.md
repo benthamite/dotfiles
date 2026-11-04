@@ -28,6 +28,20 @@ no-op. Honor an explicit request to record particular information even if the
 session was small. A retry must reconcile existing logs, commits and receipts,
 not append a duplicate entry just because it is a new agent turn.
 
+Before writing, make sure what you are recording is grounded:
+
+- If the session's context was compacted, your memory of the earlier part is
+  only a summary. Read that part of the session's own transcript, matched by
+  session ID, before writing.
+- A suggestion an agent made that the person didn't take up is not an item:
+  neither a follow-up nor a decision. One the person approved is.
+- Every link, permalink and quotation comes from a tool's output in this
+  session, copied exactly. Never write one from memory. If you can't find the
+  source, say so.
+- If a project file already reflects something newer than this session's
+  evidence (check `git log -p` and the dates of linked material), leave it and
+  put your finding in the log entry.
+
 ## Epoch sessions
 
 The Epoch workspace owns its closeout procedure; this skill holds none of its
@@ -158,6 +172,14 @@ existing file, append a distinct session entry with a horizontal-rule separator
 after checking the current contents and ownership. Reconcile an earlier entry
 from this same closeout before appending. Do not rewrite other sessions.
 
+Put the session ID in each log entry's heading, and end the entry with a line
+listing the closeout steps done. If an entry for this session ID exists, this
+is a retry: read that line and resume only the steps not done.
+
+Lead each entry with the outcome. Don't repeat what the map or brief already
+says, and leave out process noise such as retries and tool errors unless they
+change what a reader should do.
+
 Include what was done, material findings and results, decisions or reasoning
 needed later, and unfinished work. Distinguish observed results from hypotheses,
 drafted messages from sent ones, and local changes from published changes.
@@ -281,6 +303,10 @@ Verify the log entry, map mode/pointer, decisions, applicable hooks, actual
 commits and preserved baseline changes. Record any required verification or
 publication gaps as incomplete. Do not equate known unrelated dirt with failure,
 or local-only ahead commits with a failed unrequested push.
+
+Before the receipt, re-read each touched project's map or brief as a newcomer
+would. Ask what would mislead them, what is stale and what is missing. Fix it,
+then add a follow-up commit.
 
 Write the requested final receipt only after these checks. Name the resulting notes commit, or accurately explain the
 no-op/local-only outcome; state publication authority and actual result.

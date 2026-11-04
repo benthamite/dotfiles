@@ -119,7 +119,7 @@ The constant ~tab-bar-extras-notification-status-element~ displays a muted bell 
 Over time, the tab bar display can become stale---the clock might freeze, weather data might be outdated, or the global mode string might have been modified by another package. The command ~tab-bar-extras-reset~ performs a full refresh:
 
 1. It restarts the clock with ~display-time~.
-2. It reapplies ~tab-bar-extras-global-mode-string~ to ~global-mode-string~.
+2. It reapplies ~tab-bar-extras-global-mode-string~ to ~global-mode-string~. It then shows the clocked task again if ~org-clocking-p~ says a clock is running, so a task whose buffer was killed stops being displayed.
 3. Unless the QUICK argument is non-nil, it updates geolocation via ~calendar-extras-set-geolocation~ (if =calendar-extras= is loaded and ~calendar-extras-use-geolocation~ is set) and sets the weather location accordingly.
 4. If ~tab-bar-extras-reset-wttr~ is non-nil and ~display-wttr-mode~ is active, it refreshes the weather display.
 

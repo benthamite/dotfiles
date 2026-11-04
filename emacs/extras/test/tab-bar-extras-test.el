@@ -86,5 +86,27 @@
     (tab-bar-extras-toggle-telega-notifications 'disable)
     (should-not tab-bar-extras-telega-notifications-enabled)))
 
+(ert-deftest tab-bar-extras-test-restore-skips-dead-clock ()
+  "A task whose clock is not running is not shown again."
+  (let ((org-clock-current-task "Dead task")
+        (global-mode-string nil))
+    (cl-letf (((symbol-function 'org-clocking-p) (lambda () nil))
+              ((symbol-function 'org-clock-update-mode-line)
+               (lambda (&rest _) (error "Should not update the mode line"))))
+      (tab-bar-extras-restore-org-clock)
+      (should-not global-mode-string))))
+
+(ert-deftest tab-bar-extras-test-restore-shows-running-clock ()
+  "A task whose clock is running is shown again."
+  (let ((org-clock-current-task "Live task")
+        (global-mode-string nil)
+        updated)
+    (cl-letf (((symbol-function 'org-clocking-p) (lambda () t))
+              ((symbol-function 'org-clock-update-mode-line)
+               (lambda (&rest _) (setq updated t))))
+      (tab-bar-extras-restore-org-clock)
+      (should (memq 'org-mode-line-string global-mode-string))
+      (should updated))))
+
 (provide 'tab-bar-extras-test)
 ;;; tab-bar-extras-test.el ends here

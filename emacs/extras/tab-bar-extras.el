@@ -173,18 +173,24 @@ non-nil, run only the essential reset functions."
   (let ((inhibit-message t))
     (setq global-mode-string tab-bar-extras-global-mode-string)))
 
-(defvar org-clock-current-task)
+(declare-function org-clocking-p "org-clock")
 (defun tab-bar-extras-reset-unless-clock ()
   "Reset the Tab Bar when `org-clock' isn't running.
 The condition is included to prevent the currently clocked task from
 disappearing when the Tab Bar is reset."
-  (unless (bound-and-true-p org-clock-current-task)
+  (unless (tab-bar-extras--clock-running-p)
     (tab-bar-extras-reset)))
+
+(defun tab-bar-extras--clock-running-p ()
+  "Return non-nil when an `org-clock' clock is running.
+Ask `org-clocking-p', since `org-clock-current-task' stays set when the
+clocked task's buffer is killed, which would keep a dead task on display."
+  (and (fboundp 'org-clocking-p) (org-clocking-p)))
 
 (declare-function org-clock-update-mode-line "org-clock")
 (defun tab-bar-extras-restore-org-clock ()
   "Restore `org-clock' display in `global-mode-string' if a clock is running."
-  (when (bound-and-true-p org-clock-current-task)
+  (when (tab-bar-extras--clock-running-p)
     (unless (memq 'org-mode-line-string global-mode-string)
       (setq global-mode-string
 	    (append global-mode-string '(org-mode-line-string))))

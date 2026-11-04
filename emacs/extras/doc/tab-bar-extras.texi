@@ -177,7 +177,7 @@ Over time, the tab bar display can become stale---the clock might freeze, weathe
 @item
 It restarts the clock with @code{display-time}.
 @item
-It reapplies @code{tab-bar-extras-global-mode-string} to @code{global-mode-string}.
+It reapplies @code{tab-bar-extras-global-mode-string} to @code{global-mode-string}. It then shows the clocked task again if @code{org-clocking-p} says a clock is running, so a task whose buffer was killed stops being displayed.
 @item
 Unless the QUICK argument is non-nil, it updates geolocation via @code{calendar-extras-set-geolocation} (if @samp{calendar-extras} is loaded and @code{calendar-extras-use-geolocation} is set) and sets the weather location accordingly.
 @item

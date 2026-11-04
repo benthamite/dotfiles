@@ -6,6 +6,7 @@
 | Document | Read when |
 |----------+-----------|
 | =alerting.md= | A task adds, changes or diagnoses liveness or failure alerts for an automation (heartbeats, watchdogs, CI failure notices); the principle is one shared service, =launchd-heartbeat=. |
+| =hosting.md= | A task decides where an always-on automation runs (Mac, server, Worker); the principle is that a service belonging to an organization runs on that organization's server, and one needing Pablo's personal credentials stays on the Mac. |
 | =google-services.md= | A task needs Google account routing, authentication, scopes, refresh-token maintenance, or service-specific troubleshooting. |
 | =lulu-firewall.md= | A Homebrew-installed tool's network connections hang or fail while other programs reach the same host, especially after a =brew upgrade=. |
 | =mcp-servers.md= | A task adds, removes, places, audits, or diagnoses a Claude MCP server. |
@@ -18,7 +19,7 @@ These documents are operational context, not general background to load
 into every task. [[file:service-access.md][service-access.md]] is a plain routing table and safe to read
 in full. [[file:google-services.md][google-services.md]] includes account and authentication procedures; do
 not reproduce or run credential-bearing recipes merely to document them.
-[[file:alerting.md][alerting.md]], [[file:scheduling.md][scheduling.md]] and [[file:skill-audits.md][skill-audits.md]] hold no secrets and are safe to read in full.
+[[file:alerting.md][alerting.md]], [[file:hosting.md][hosting.md]], [[file:scheduling.md][scheduling.md]] and [[file:skill-audits.md][skill-audits.md]] hold no secrets and are safe to read in full.
 [[file:mcp-servers.md][mcp-servers.md]] is safe to read for server topology and placement, but resolved
 per-account environment values remain secrets. [[file:secrets.md][secrets.md]] is handling policy rather
 than a credential file, and its rule remains the same: never print or quote a

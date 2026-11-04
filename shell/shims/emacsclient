@@ -29,6 +29,15 @@
 # the client gets a matching --timeout unless it passed one. 0 disables all of
 # this. `with-timeout' cannot interrupt Lisp that never waits. Later expressions
 # are left alone, since hooks pass data there for the first one to read.
+#
+# The server pretty-prints the result after all of the above has ended, with
+# no timeout, and `pp-fill' on a large structure (on 2026-11-04, a Slack
+# websocket object) hung Emacs until a C-g opened the debugger. So a result
+# other than a string, number or symbol whose printed form exceeds
+# EMACSCLIENT_EVAL_MAX_PRINT characters (default 4000) comes back as an error
+# instead. Keep `%' out of that error text: Emacs 30.2's `server-return-error'
+# passes the text to `server--message-sit-for' as a format string, and a stray
+# `%' makes it fail silently, so the client never gets a reply.
 
 REAL=${EMACSCLIENT_SHIM_REAL:-/opt/homebrew/bin/emacsclient}
 [ -x "$REAL" ] || REAL=/usr/local/bin/emacsclient
@@ -67,6 +76,7 @@ for arg in "$@"; do
 done
 
 limit=${EMACSCLIENT_EVAL_LIMIT:-120}
+maxprint=${EMACSCLIENT_EVAL_MAX_PRINT:-4000}
 if [ "$eval_mode" = 1 ] && [ "$limit" != 0 ] &&
 	{ [ -n "$CLAUDECODE" ] || [ -n "$CODEX_BUFFER_NAME" ] || [ -n "$CODEX_THREAD_ID" ]; }; then
 	wrapped=0
@@ -81,7 +91,7 @@ if [ "$eval_mode" = 1 ] && [ "$limit" != 0 ] &&
 			skip=0
 		elif [ "$wrapped" = 0 ] &&
 			{ [ "$options_done" = 1 ] || [ "${arg#-}" = "$arg" ]; }; then
-			arg="(let ((inhibit-interaction t) (inhibit-debugger t) (inhibit-debug-on-entry t)) (with-timeout ($limit (error \"Agent evaluation exceeded EMACSCLIENT_EVAL_LIMIT (%ss)\" $limit)) $arg))"
+			arg="(let ((inhibit-interaction t) (inhibit-debugger t) (inhibit-debug-on-entry t)) (let ((agent-eval--value (with-timeout ($limit (error \"Agent evaluation exceeded EMACSCLIENT_EVAL_LIMIT (%ss)\" $limit)) $arg))) (if (or (stringp agent-eval--value) (numberp agent-eval--value) (symbolp agent-eval--value)) agent-eval--value (let ((agent-eval--size (length (prin1-to-string agent-eval--value)))) (if (> agent-eval--size $maxprint) (error \"Agent evaluation result too large to print safely (%d chars, limit EMACSCLIENT_EVAL_MAX_PRINT); return a string or a narrower value\" agent-eval--size) agent-eval--value)))))"
 			wrapped=1
 		elif [ "$options_done" = 0 ]; then
 			[ "$arg" = -- ] && options_done=1

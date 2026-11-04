@@ -9,6 +9,6 @@ Principle (Pablo, 2026-11-04): an always-on service that belongs to an organizat
 
 ## Instances
 
-- In progress (approved 2026-11-04): FIAS treasury recorder (companion device on the FIAS WhatsApp Business number) and updater (scheduled Claude Code run that records the FIAS number, the FIAS treasury mailbox and `#tesoreria-ops` in the `tesoreria` repo), on a FIAS-billed VPS. Design: `~/repos/fias/tesoreria/docs/ops-handover.md`.
+- In progress (approved 2026-11-04): FIAS treasury recorder (companion device on the FIAS WhatsApp Business number) and updater (scheduled Claude Code run that records the FIAS number, the FIAS treasury mailbox and `#ops-fias` in the `tesoreria` repo), on a FIAS-billed VPS. Design: `~/repos/fias/tesoreria/docs/ops-handover.md`.
 - Compliant by the personal-credentials exception: the inbox monitor and `wa-archive` on Pablo's own accounts.
 - To assess (TODO): other `~/repos/launchd` jobs that serve an organization rather than Pablo.

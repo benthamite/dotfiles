@@ -25,7 +25,8 @@ Usage:
   gmail.py [--account ...] draft --to=<addr> [--subject=<s>] [--reply-to=<message-id>] [--body=<text> | --body-file=<path>] [--cc=<addr>] [--bcc=<addr>] [--attach=<path> ...]
       Create a draft. Prints the new draft ID on stdout. With --reply-to the
       draft lands in that message's thread (In-Reply-To and References set,
-      subject defaults to "Re: <parent subject>").
+      subject defaults to "Re: <parent subject>"). --reply-account=<acct> reads the
+      parent from another of the mailboxes (threading headers only).
   gmail.py [--account ...] send --to=<addr> [--subject=<s>] [--reply-to=<message-id>] [--body=<text> | --body-file=<path>] [--cc=<addr>] [--bcc=<addr>] [--attach=<path> ...]
       Send an email. Prints the sent message ID. --reply-to works as for draft.
   gmail.py [--account ...] reply <message-id> [--to=<addr>] [--body=<text> | --body-file=<path>] [--attach=<path> ...]
@@ -184,9 +185,25 @@ def _build_message(args):
     """
     thread_id = None
     parent_headers = None
+    reply_account = getattr(args, "reply_account", None)
+    if reply_account and not getattr(args, "reply_to", None):
+        sys.exit("ERROR: --reply-account needs --reply-to")
     if getattr(args, "reply_to", None):
-        thread_id, parent_headers = _reply_context(args.reply_to, args.account)
+        thread_id, parent_headers = _reply_context(
+            args.reply_to, reply_account or args.account)
+        if reply_account and reply_account != args.account:
+            # The thread ID belongs to the other mailbox; the threading
+            # headers alone put the reply in the recipients' thread.
+            thread_id = None
     subject = args.subject
+    if (parent_headers is None and subject is not None
+            and subject.strip().lower().startswith(("re:", "fwd:", "fw:"))):
+        # 2026-11-04: a "Re:" message sent as a new email, because the thread
+        # was in another account, reached everyone as a separate thread.
+        sys.exit("ERROR: a 'Re:'/'Fwd:' subject without --reply-to is a fake "
+                 "reply that recipients see as a new thread. Reply with "
+                 "--reply-to MESSAGE_ID (plus --reply-account ACCOUNT when the "
+                 "thread is in another of Pablo's mailboxes).")
     if subject is None:
         if parent_headers is None:
             sys.exit("ERROR: --subject is required unless --reply-to is given")
@@ -433,6 +450,14 @@ def build_parser():
             dest="reply_to",
             metavar="MESSAGE_ID",
             help="thread the message as a reply to this Gmail message ID",
+        )
+        s.add_argument(
+            "--reply-account",
+            dest="reply_account",
+            choices=ACCOUNTS,
+            help="the account whose mailbox holds --reply-to, when it is not "
+                 "the sending account (e.g. a thread in the personal Gmail "
+                 "answered from baish)",
         )
         s.add_argument("--body")
         s.add_argument("--body-file", dest="body_file")

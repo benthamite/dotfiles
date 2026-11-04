@@ -23,6 +23,11 @@ the launchd repo's environment check.
 Gmail itself does. A text-only message showed a hard break every 70 or so
 characters in Gmail's mobile app and in Outlook, which looked machine-made
 (2026-11-03).
+A reply always goes in its thread: =--reply-to ID=, plus =--reply-account
+ACCT= when the thread is in another of Pablo's mailboxes (e.g. a thread in the
+personal Gmail answered from baish). =draft|send= refuse a "Re:" or "Fwd:"
+subject without =--reply-to=: sent as a new email it reached every recipient
+as a separate thread (2026-11-04, FUNDACEN; Eitan flagged it).
 
 This directory contains the tracked parts of my Claude Code setup. The shared
 Claude/Codex contract lives in [[file:../agents/configuration.org][the shared configuration guide]]; this file covers

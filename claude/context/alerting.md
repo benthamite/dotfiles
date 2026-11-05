@@ -8,6 +8,8 @@ GitHub notifications (Pablo, 2026-10-23; applies in every project: personal, Epo
 
 Validity rule (2026-10-09): an alert states only what is true when it is sent. A source that fails to deliver keeps no findings for later; its next run checks afresh and reports only what still holds, and the failed delivery is reported by the withheld heartbeat. A check does not report a condition that the Mac being off or logged out explains (a job not yet due since load, a heartbeat that could not have been refreshed).
 
+Nothing to do, no alert (Pablo, 2026-11-05): a failure that a fallback fully covers, and that leaves Pablo nothing to do, is logged, not alerted, and the log must persist so its frequency can still be checked. Alert on the same source's other failures, which may mean it has changed for good, and on the fallback failing. First instance: the supervisor's Substack read, whose HTTP 429 (Substack throttles Cloudflare's shared egress) alerted on two days of three while `issue.json` and the run's own read covered it. Sibling: The Hinge's feed relay, which serves its last good copy on the same 429 (`relay/worker.js`). Other alerts still to be swept (TODO).
+
 ## The service
 
 `~/repos/launchd/heartbeat/` (README there): a Cloudflare Worker on the personal account, independent of the Mac and of GitHub, delivering on Telegram (@PablosNotificationBot) or Gmail SMTP.

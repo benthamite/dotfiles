@@ -42,6 +42,12 @@ LOCK_FILE = STATE_DIR / "lock"
 CALENDAR_NAME = "Birthdays (managed)"
 CALENDAR_DESCRIPTION = "Birthdays mirrored from reconciled BBDB and Google Contacts"
 MANAGED_BY = "sync-google-birthdays-v1"
+CALENDAR_TIME_ZONE = "America/Argentina/Buenos_Aires"
+SUMMARY_PREFIX = "morning-summary-"
+SUMMARY_HOUR = 9
+SUMMARY_MINUTES = 15
+# Buenos Aires's offset throughout 2000, the year events are anchored to.
+SUMMARY_UTC_OFFSET = dt.timezone(dt.timedelta(hours=-3))
 EMACS = "emacs"
 MIN_SAFE_BIRTHDAYS = 800
 WRITE_INTERVAL = 0.15
@@ -279,6 +285,58 @@ def desired_event(record):
     }
 
 
+def summary_stable_id(month, day):
+    """Return the stable ID of the morning summary event for MONTH and DAY."""
+    return f"{SUMMARY_PREFIX}{month:02d}-{day:02d}"
+
+
+def is_summary_event(event):
+    """Return non-nil if EVENT is a morning summary, not one person's birthday."""
+    stable_id = event["extendedProperties"]["private"]["stableId"]
+    return stable_id.startswith(SUMMARY_PREFIX)
+
+
+def summary_events(records):
+    """Return one morning notification event per date with birthdays in RECORDS.
+
+    Google's API cannot give an all-day event a same-day reminder (it turns a
+    negative override into midnight) and does not apply the calendar's all-day
+    default to events it creates, so the notification is a timed event.
+    """
+    names_by_date = {}
+    for record in records:
+        date = (record["month"], record["day"])
+        names_by_date.setdefault(date, []).append(record["display_name"])
+    events = []
+    for (month, day), names in sorted(names_by_date.items()):
+        start = dt.datetime(2000, month, day, SUMMARY_HOUR, tzinfo=SUMMARY_UTC_OFFSET)
+        end = start + dt.timedelta(minutes=SUMMARY_MINUTES)
+        stable_id = summary_stable_id(month, day)
+        label = "Birthday" if len(names) == 1 else "Birthdays"
+        events.append({
+            "id": event_id(stable_id),
+            "summary": f"{label}: {', '.join(sorted(names))}",
+            "description": "Morning birthday summary",
+            "start": {"dateTime": start.isoformat(), "timeZone": CALENDAR_TIME_ZONE},
+            "end": {"dateTime": end.isoformat(), "timeZone": CALENDAR_TIME_ZONE},
+            "recurrence": ["RRULE:FREQ=YEARLY"],
+            "transparency": "transparent",
+            "visibility": "private",
+            "reminders": {
+                "useDefault": False,
+                "overrides": [{"method": "popup", "minutes": 0}],
+            },
+            "extendedProperties": {
+                "private": {
+                    "managedBy": MANAGED_BY,
+                    "stableId": stable_id,
+                    "birthday": f"{month:02d}-{day:02d}",
+                }
+            },
+        })
+    return events
+
+
 def comparable_event(event):
     """Return only managed fields from Google EVENT."""
     return {
@@ -428,7 +486,7 @@ def calendar_id(api, name, create=True):
     created = api.request("POST", "/calendars", body={
         "summary": name,
         "description": CALENDAR_DESCRIPTION,
-        "timeZone": "America/Argentina/Buenos_Aires",
+        "timeZone": CALENDAR_TIME_ZONE,
     })
     atomic_write(STATE_FILE, json.dumps({
         "calendar": name,
@@ -529,6 +587,9 @@ def prune_digest(deletes):
 
 def validate_pruning(deletes, allow_prune_digest):
     """Require exact explicit authorization before pruning managed events."""
+    # Summary events hold no data of their own: they are rebuilt from the
+    # people's birthdays, and go when a date no longer has any.
+    deletes = [event for event in deletes if not is_summary_event(event)]
     required_digest = prune_digest(deletes) if deletes else None
     if deletes and required_digest != allow_prune_digest:
         raise RuntimeError(
@@ -600,7 +661,7 @@ def main():
         else:
             assert_reconciled(args.contacts_db)
         records = load_birthdays()
-        desired = [desired_event(record) for record in records]
+        desired = [desired_event(record) for record in records] + summary_events(records)
         auth = load_auth_helper()
         api = CalendarApi(auth.get_access_token("personal"))
         selected_calendar_id, created = calendar_id(
@@ -619,8 +680,9 @@ def main():
             "update": len(updates),
             "delete": len(deletes),
         }
-        if deletes:
-            result["delete_digest"] = prune_digest(deletes)
+        person_deletes = [event for event in deletes if not is_summary_event(event)]
+        if person_deletes:
+            result["delete_digest"] = prune_digest(person_deletes)
         if args.verify_only:
             verify_exact(desired, existing)
         elif not args.dry_run:

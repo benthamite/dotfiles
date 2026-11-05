@@ -162,6 +162,44 @@ class BirthdayTests(unittest.TestCase):
         self.assertEqual(event["transparency"], "transparent")
         self.assertEqual(event["visibility"], "private")
 
+    def test_summary_event_names_everyone_with_a_birthday_that_date(self):
+        records = [
+            {"stable_id": "b", "display_name": "Zoe", "year": None, "month": 7, "day": 12},
+            {"stable_id": "a", "display_name": "Ana", "year": 1986, "month": 7, "day": 12},
+            {"stable_id": "c", "display_name": "Max", "year": 1990, "month": 1, "day": 3},
+        ]
+        january, july = MODULE.summary_events(records)
+        self.assertEqual(july["summary"], "Birthdays: Ana, Zoe")
+        self.assertEqual(january["summary"], "Birthday: Max")
+        self.assertEqual(july["start"]["dateTime"], "2000-07-12T09:00:00-03:00")
+        self.assertEqual(july["end"]["dateTime"], "2000-07-12T09:15:00-03:00")
+        self.assertEqual(july["recurrence"], ["RRULE:FREQ=YEARLY"])
+        self.assertEqual(july["reminders"], {
+            "useDefault": False,
+            "overrides": [{"method": "popup", "minutes": 0}],
+        })
+        self.assertEqual(july["transparency"], "transparent")
+        self.assertEqual(july["visibility"], "private")
+
+    def test_summary_event_id_depends_only_on_the_date(self):
+        ana = {"stable_id": "a", "display_name": "Ana", "year": None, "month": 7, "day": 12}
+        zoe = {"stable_id": "z", "display_name": "Zoe", "year": None, "month": 7, "day": 12}
+        first = MODULE.summary_events([ana])[0]
+        second = MODULE.summary_events([ana, zoe])[0]
+        self.assertEqual(first["id"], second["id"])
+        self.assertNotEqual(first["summary"], second["summary"])
+
+    def test_summary_events_are_pruned_without_authorization(self):
+        summary = MODULE.summary_events([
+            {"stable_id": "a", "display_name": "Ana", "year": None, "month": 7, "day": 12},
+        ])
+        MODULE.validate_pruning(summary, None)
+        person = MODULE.desired_event(
+            {"stable_id": "a", "display_name": "Ana", "year": None, "month": 7, "day": 12}
+        )
+        with self.assertRaisesRegex(RuntimeError, "--allow-prune-digest"):
+            MODULE.validate_pruning(summary + [person], None)
+
     def test_yearless_event_uses_neutral_anchor(self):
         event = MODULE.desired_event({
             "stable_id": "uuid-2", "display_name": "Someone",
@@ -207,13 +245,21 @@ class BirthdayTests(unittest.TestCase):
         )
 
     def test_pruning_requires_digest_of_exact_event_ids(self):
-        deletes = [{"id": "a"}, {"id": "b"}]
+        properties = {"private": {"stableId": "person"}}
+        deletes = [
+            {"id": "a", "extendedProperties": properties},
+            {"id": "b", "extendedProperties": properties},
+        ]
         digest = MODULE.prune_digest(deletes)
         with self.assertRaisesRegex(RuntimeError, "--allow-prune-digest"):
             MODULE.validate_pruning(deletes, None)
         MODULE.validate_pruning(deletes, digest)
         with self.assertRaisesRegex(RuntimeError, "--allow-prune-digest"):
-            MODULE.validate_pruning([{"id": "c"}, {"id": "d"}], digest)
+            MODULE.validate_pruning(
+                [{"id": "c", "extendedProperties": properties},
+                 {"id": "d", "extendedProperties": properties}],
+                digest,
+            )
 
     def test_writes_are_verified_before_deletes(self):
         calls = []

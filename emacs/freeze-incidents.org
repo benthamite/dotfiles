@@ -76,6 +76,23 @@ the "Already tried" list in place.
 
 * Incidents
 
+** 2026-11-05 05:52-06:26: stall with the display off, ended by display wake (investigation, no change)
+
+- Server last answered 05:52:07; the watchdog probe timed out from 05:53:25,
+  and by 06:12 the socket refused connections. =recovered= at 06:26:59, 18 s
+  after the display turned on at 06:26:41. The display had been off since
+  05:30, with the server answering normally until 05:52.
+- Trigger candidate: within seconds of a headless page test posting
+  =/api/new= in agent-remote (commit e65f7a1). That start spawned no session.
+  The same start at 06:30 with the display on worked, and Emacs stayed
+  responsive. One run each way, so the start is neither cleared nor convicted.
+- Not stuck in Lisp: 5 s and 3 s samples at 05:55 and 06:13 showed the main
+  thread idle in =read_char= under =ns_select_1=, recursion depth 1 in the C
+  stack, and CPU time flat at 814:09.97 for 20 minutes. Unlike 2026-10-17,
+  this did not clear by itself under load; swap was 33.5/34.8 GB, load 16-39.
+- Unknown: why an idle =ns_select= stopped servicing timers and sockets until
+  the display woke. Samples: =/tmp/emacs-freeze.LL7EuD/=.
+
 ** 2026-10-30 10:24–10:29: server filter parked in =server-return-error='s =sit-for= under host starvation (investigation, no change)
 
 - Watchdog: timer state stale from about 10:24:00; outage logged 10:27:40

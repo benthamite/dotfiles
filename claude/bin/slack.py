@@ -63,6 +63,11 @@ Usage:
       copy-slack-draft staged there (receipt field "composer").
       Exit 3: no response from Slack, so the message may or may not have
       gone out; check `history` or `replies` before retrying.
+  slack.py edit --permalink <url> (--text <text> | --stdin)
+      Replace the text of one of Pablo's own messages with text he approved
+      (chat.update). Prints a receipt with the permalink and new text.
+      Exit 3: no response from Slack, so the edit may or may not have been
+      applied; check `history` or `replies` before retrying.
 
 Output: raw JSON from Slack on stdout (channels and join print JSON lines;
 send prints one receipt line). Non-zero exit on API error.
@@ -1023,6 +1028,32 @@ def cmd_send(args):
                       "composer": _clear_staged_draft(channel, thread_ts)}))
 
 
+def cmd_edit(args):
+    """Replace the text of one of Pablo's own messages with approved text.
+
+    Never retried: on no response (exit 3) the caller checks the message
+    with `history` or `replies` before editing again.
+    """
+    text = sys.stdin.read().removesuffix("\n") if args.stdin else args.text
+    if not isinstance(text, str) or not text.strip():
+        _fail("Nothing to write", 2)
+    import agent_prefix
+    text = agent_prefix.apply(text, args.reviewed, "slack.py edit", args.programmatic)
+    try:
+        info = parse_permalink(args.permalink)
+    except ValueError as error:
+        _fail(str(error), 2)
+    _verify_permalink_workspace(info)
+    channel, ts = info["channel"], info["message_ts"]
+    try:
+        out = call("chat.update", channel=channel, ts=ts, text=text)
+    except _NoResponse:
+        _fail("No response from Slack: the edit may or may not have been applied. "
+              "Check `history` or `replies` before retrying.", 3)
+    print(json.dumps({"status": "edited", "workspace": _workspace, "channel": out.get("channel", channel),
+                      "ts": out.get("ts", ts), "permalink": args.permalink, "text": text}))
+
+
 def _clear_staged_draft(channel, thread_ts):
     """Empty a copy of the draft that copy-slack-draft staged in this conversation's composer.
 
@@ -1198,6 +1229,17 @@ def main():
     se.add_argument("--programmatic", action="store_true",
                     help='a step of a skill or other programmatic path is sending this: no [agent] prefix (agent_prefix.py)')
     se.set_defaults(func=cmd_send)
+
+    ed = sub.add_parser("edit", help="replace the text of one of Pablo's own messages with approved text")
+    ed.add_argument("--permalink", required=True, help="the message to edit")
+    ebody = ed.add_mutually_exclusive_group(required=True)
+    ebody.add_argument("--text")
+    ebody.add_argument("--stdin", action="store_true", help="read the text from stdin")
+    ed.add_argument("--reviewed", metavar="FILE",
+                    help="Pablo approved this exact text in review FILE: no [agent] prefix")
+    ed.add_argument("--programmatic", action="store_true",
+                    help="a step of a skill or other programmatic path is editing: no [agent] prefix")
+    ed.set_defaults(func=cmd_edit)
 
     u = sub.add_parser("unreads")
     u.set_defaults(func=cmd_unreads)

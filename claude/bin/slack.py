@@ -55,7 +55,7 @@ Usage:
       Fetch one response from the internal saved.list endpoint.
   slack.py unsave <channel-id> <ts>
       Remove that exact message from Later using internal saved.delete.
-  slack.py send (--permalink <url> | --channel <id> [--thread-ts <ts>]) (--text <text> | --stdin)
+  slack.py send (--permalink <url> | --channel <id> [--thread-ts <ts>]) (--text <text> | --stdin) [--rich]
       Post a message Pablo approved, as him (chat.postMessage). --permalink
       replies in that message's thread; --channel posts at top level unless
       --thread-ts is given. Prints a receipt with the new message's permalink.
@@ -63,7 +63,10 @@ Usage:
       copy-slack-draft staged there (receipt field "composer").
       Exit 3: no response from Slack, so the message may or may not have
       gone out; check `history` or `replies` before retrying.
-  slack.py edit --permalink <url> (--text <text> | --stdin)
+      --rich sends the text as a rich_text block as well, so lines starting
+      with "• " or "◦ " (or indented bullets) become real Slack lists whose
+      wrapped lines stay indented (slack_rich_text.py).
+  slack.py edit --permalink <url> (--text <text> | --stdin) [--rich]
       Replace the text of one of Pablo's own messages with text he approved
       (chat.update). Prints a receipt with the permalink and new text.
       Exit 3: no response from Slack, so the edit may or may not have been
@@ -1016,7 +1019,8 @@ def cmd_send(args):
         if thread_ts is not None and not re.fullmatch(r"[0-9]+\.[0-9]{6}", thread_ts):
             _fail("Invalid Slack thread timestamp", 2)
     try:
-        out = call("chat.postMessage", channel=channel, text=text, thread_ts=thread_ts)
+        out = call("chat.postMessage", channel=channel, text=text, thread_ts=thread_ts,
+                   **_rich_params(text, args.rich))
     except _NoResponse:
         _fail("No response from Slack: the message may or may not have been sent. "
               "Check `history` or `replies` before retrying.", 3)
@@ -1046,12 +1050,25 @@ def cmd_edit(args):
     _verify_permalink_workspace(info)
     channel, ts = info["channel"], info["message_ts"]
     try:
-        out = call("chat.update", channel=channel, ts=ts, text=text)
+        out = call("chat.update", channel=channel, ts=ts, text=text,
+                   **_rich_params(text, args.rich))
     except _NoResponse:
         _fail("No response from Slack: the edit may or may not have been applied. "
               "Check `history` or `replies` before retrying.", 3)
     print(json.dumps({"status": "edited", "workspace": _workspace, "channel": out.get("channel", channel),
                       "ts": out.get("ts", ts), "permalink": args.permalink, "text": text}))
+
+
+def _rich_params(text, rich):
+    """Return the `blocks` parameter that renders TEXT as the composer would.
+
+    With RICH, bullet lines become real Slack lists (slack_rich_text.py);
+    TEXT stays as the notification and fallback text.
+    """
+    if not rich:
+        return {}
+    import slack_rich_text
+    return {"blocks": json.dumps(slack_rich_text.to_blocks(text), ensure_ascii=False)}
 
 
 def _clear_staged_draft(channel, thread_ts):
@@ -1228,6 +1245,8 @@ def main():
                     help="Pablo approved this exact text in review FILE: send it without the [agent] prefix")
     se.add_argument("--programmatic", action="store_true",
                     help='a step of a skill or other programmatic path is sending this: no [agent] prefix (agent_prefix.py)')
+    se.add_argument("--rich", action="store_true",
+                    help="send as rich text, so bullet lines (•, ◦ or indented) become real Slack lists")
     se.set_defaults(func=cmd_send)
 
     ed = sub.add_parser("edit", help="replace the text of one of Pablo's own messages with approved text")
@@ -1239,6 +1258,8 @@ def main():
                     help="Pablo approved this exact text in review FILE: no [agent] prefix")
     ed.add_argument("--programmatic", action="store_true",
                     help="a step of a skill or other programmatic path is editing: no [agent] prefix")
+    ed.add_argument("--rich", action="store_true",
+                    help="send as rich text, so bullet lines (•, ◦ or indented) become real Slack lists")
     ed.set_defaults(func=cmd_edit)
 
     u = sub.add_parser("unreads")

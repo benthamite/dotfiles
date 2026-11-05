@@ -1397,6 +1397,16 @@ draft in its composer as it is written, =send= then runs =copy-slack-draft
 holds the unedited staged draft; otherwise Pablo could send the stale copy a
 second time. The receipt's =composer= field reports the outcome.
 
+=slack.py edit --permalink URL= (2026-11-05) replaces the text of one of
+Pablo's own messages with =chat.update=, under the same approval and exit-3
+rules as =send=; the =daily-check-in= skill uses it to add the retrospective to
+the previous day's post. =send= and =edit= take =--rich= (2026-11-05), which
+also sends the text as a =rich_text= block built by =claude/bin/slack_rich_text.py=:
+lines starting with =•= or =◦= (or indented bullets) become real Slack lists,
+as the message composer makes them, so wrapped lines stay indented under
+their bullet; a literal =•= in plain mrkdwn renders as text, with wrapped lines
+back at the margin. The plain text stays as the notification fallback.
+
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged
 index entries, so a live Emacs never loads tests or a partially resolved tree.

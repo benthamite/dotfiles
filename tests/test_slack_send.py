@@ -19,7 +19,7 @@ REPLY_LINK = PERMALINK + "?thread_ts=1793185400.000100&cid=D0C8CR24NQZ"
 
 def send_args(**overrides):
     args = dict(permalink=None, channel=None, thread_ts=None, text="Done.", stdin=False,
-                reviewed=None, programmatic=False)
+                reviewed=None, programmatic=False, rich=False)
     args.update(overrides)
     return SimpleNamespace(**args)
 

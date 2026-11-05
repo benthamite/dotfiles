@@ -582,8 +582,14 @@ def full_text(message):
 
 def _add_permalinks(out, channel):
     """Give each message its permalink, so callers copy links instead of guessing the domain."""
+    import slack_rich_text
     for message in out.get("messages") or []:
         message["full_text"] = full_text(message)
+        # Slack flattens `text` (newlines become spaces) when a message has
+        # rich text; its lines and bullets survive only in the blocks.
+        mrkdwn = slack_rich_text.from_blocks(message.get("blocks"))
+        if mrkdwn is not None:
+            message["mrkdwn"] = mrkdwn
     domain = WORKSPACES[_workspace].get("domain")
     if not domain:
         return

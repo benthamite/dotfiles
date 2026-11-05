@@ -54,6 +54,32 @@ class RichTextTests(unittest.TestCase):
         blocks = RICH.to_blocks("• A &amp; B")
         self.assertEqual(text(blocks[0]["elements"][0]["elements"][0]["elements"]), "A & B")
 
+    def test_round_trip(self):
+        self.assertEqual(RICH.from_blocks(RICH.to_blocks(PLAN)), PLAN)
+
+    def test_from_blocks_composer_post(self):
+        composer = [{"type": "rich_text", "elements": [
+            {"type": "rich_text_section", "elements": [
+                {"type": "text", "text": "Day", "style": {"bold": True}},
+                {"type": "text", "text": "\n\n"},
+                {"type": "text", "text": "Schedule", "style": {"italic": True}},
+                {"type": "text", "text": ":\n"}]},
+            {"type": "rich_text_list", "style": "bullet", "indent": 0, "elements": [
+                {"type": "rich_text_section", "elements": [
+                    {"type": "text", "text": "S1", "style": {"bold": True, "strike": True}},
+                    {"type": "text", "text": ": done", "style": {"strike": True}}]}]},
+            {"type": "rich_text_section", "elements": [
+                {"type": "text", "text": "\n"},
+                {"type": "text", "text": "Retrospective:", "style": {"italic": True}},
+                {"type": "text", "text": " good "},
+                {"type": "user", "user_id": "U1"}]}]}]
+        self.assertEqual(RICH.from_blocks(composer),
+                         "*Day*\n\n_Schedule_:\n• ~*S1*: done~\n\n_Retrospective:_ good <@U1>")
+
+    def test_from_blocks_without_rich_text(self):
+        self.assertIsNone(RICH.from_blocks([{"type": "section"}]))
+        self.assertIsNone(RICH.from_blocks(None))
+
     def test_serialises(self):
         json.dumps(RICH.to_blocks(PLAN), ensure_ascii=False)
 

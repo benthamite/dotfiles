@@ -12,6 +12,9 @@ Input conventions:
   nested; its level is the number of leading four-space groups, or 1 for
   "◦" and 2 for "▪" when unindented.
 - Any other line is ordinary text; blank lines are kept.
+- A blank line right after a list stands for the line break Slack's composer
+  puts at the start of the text that follows a list (Slack shows a gap there);
+  `from_blocks` writes that break back as a blank line, so the two round-trip.
 - Inline *bold*, _italic_, ~strike~ (nestable), `code` and <url|label> links.
 - &amp;, &lt; and &gt; are unescaped, since rich text holds raw characters.
 """
@@ -93,3 +96,92 @@ def _element(kind, text, style):
     if style:
         element["style"] = {name: True for name in sorted(style)}
     return element
+
+
+GLYPH = {0: "•", 1: "◦"}
+MARK = {"bold": "*", "italic": "_", "strike": "~", "code": "`"}
+
+
+def from_blocks(blocks):
+    """Return mrkdwn for the rich_text BLOCKS, in the form `to_blocks` reads.
+
+    Slack replaces a message's plain `text` with a flattened copy (newlines
+    become spaces) whenever it carries rich text, so this is how a reader
+    recovers the lines and bullets. Return None when BLOCKS hold no
+    rich_text block.
+    """
+    rich = [b for b in blocks or [] if b.get("type") == "rich_text"]
+    if not rich:
+        return None
+    out = []
+    for block in rich:
+        for element in block.get("elements") or []:
+            if element.get("type") == "rich_text_list":
+                level = int(element.get("indent") or 0)
+                glyph = GLYPH.get(level, "▪")
+                for item in element.get("elements") or []:
+                    out.append(f"{'    ' * level}{glyph} {render(item.get('elements'))}\n")
+            else:
+                out.append(render(element.get("elements")))
+    return "".join(out).rstrip("\n")
+
+
+def render(elements):
+    """Return mrkdwn for inline rich_text ELEMENTS, merging runs of one style."""
+    runs = []
+    for element in elements or []:
+        style = frozenset(k for k, v in (element.get("style") or {}).items() if v and k in MARK)
+        for piece, piece_style in _split_space(_plain(element), style):
+            runs.append((piece, piece_style))
+    out, open_styles = [], []
+    for index, (piece, style) in enumerate(runs):
+        while open_styles and not set(open_styles) <= style:
+            out.append(MARK[open_styles.pop()])
+        for name in sorted(style - set(open_styles),
+                           key=lambda name: (-_reach(runs, index, name), name)):
+            out.append(MARK[name])
+            open_styles.append(name)
+        out.append(piece)
+    out.extend(MARK[name] for name in reversed(open_styles))
+    return "".join(out)
+
+
+def _reach(runs, index, name):
+    """Return how many runs from INDEX on keep style NAME without a break.
+
+    Opening the longest-lasting style first makes it the outer marker, so
+    `~*S1*: text~` round-trips instead of becoming `*~S1~*~: text~`.
+    """
+    count = 0
+    for _, style in runs[index:]:
+        if name not in style:
+            break
+        count += 1
+    return count
+
+
+def _split_space(text, style):
+    """Keep surrounding whitespace and newlines outside style markers."""
+    if not style:
+        return [(text, style)]
+    match = re.fullmatch(r"(\s*)(.*?)(\s*)", text, re.S)
+    lead, body, trail = match.groups()
+    return [(p, s) for p, s in ((lead, frozenset()), (body, style), (trail, frozenset())) if p]
+
+
+def _plain(element):
+    kind = element.get("type")
+    if kind == "text":
+        return element.get("text", "")
+    if kind == "link":
+        label = element.get("text")
+        return f"<{element['url']}|{label}>" if label else f"<{element['url']}>"
+    if kind == "user":
+        return f"<@{element.get('user_id')}>"
+    if kind == "channel":
+        return f"<#{element.get('channel_id')}>"
+    if kind == "emoji":
+        return f":{element.get('name')}:"
+    if kind == "broadcast":
+        return f"<!{element.get('range')}>"
+    return element.get("text", "")

@@ -1405,7 +1405,11 @@ also sends the text as a =rich_text= block built by =claude/bin/slack_rich_text.
 lines starting with =•= or =◦= (or indented bullets) become real Slack lists,
 as the message composer makes them, so wrapped lines stay indented under
 their bullet; a literal =•= in plain mrkdwn renders as text, with wrapped lines
-back at the margin. The plain text stays as the notification fallback.
+back at the margin. The plain text stays as the notification fallback. Slack then
+flattens the message's stored =text= (newlines become spaces), as it does for
+every rich-text message, so =history= and =replies= add a =mrkdwn= field
+rebuilt from the blocks, in the same form =--rich= reads; read that field to
+edit such a message.
 
 The Elisp post-edit hook rebuilds and reloads complete package worktrees, but
 skips test-only files and edits while Git has an active operation or unmerged

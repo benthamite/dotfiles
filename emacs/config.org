@@ -5732,6 +5732,7 @@ I use it for the Autumn Sprint's board. Its background syncs read the Linear key
   (org-linear-priorities '((1 . "1") (2 . "2") (3 . "4") (4 . "6")))
   (org-linear-agenda-keep-tags '("joint"))
   (org-linear-start-date-label "deferred")
+  (org-linear-closed-retention-days 0)
   (org-linear-api-key-command
    '("op-automations" "@personal" "cache" "read"
      "op://Automation/linear-api-key-forethought/password"))

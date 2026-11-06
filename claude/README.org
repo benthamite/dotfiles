@@ -286,7 +286,11 @@ same name.
 
 
 The =order-salads= skill polls the supplier's WhatsApp chat about every 5
-minutes while waiting for a ticket, not every minute. It books Uber within the
+minutes while waiting for a ticket, not every minute, and keeps polling with no
+time limit until the ticket arrives (since 2026-11-06; previously 60 minutes). It snoozes its
+session (=agent-toggle-snooze=) once Pablo has paid the supplier. Once an
+order is fully done it closes its own Emacs session buffer with
+=agent-kill-session-buffer=. It books Uber within the
 fare cap under a standing terms approval, without asking again: invoking the
 skill is the purchase approval. Its
 =browser-flow.md= records the tested routes: reading the chat with =wa-read --ids= and

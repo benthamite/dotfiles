@@ -190,8 +190,15 @@ def session_origin(rows: Rows, session_id: str, *, require_identity: bool) -> st
     return origin
 
 
-# Records Claude Code writes when a session is named before any conversation.
-TITLE_ONLY_TYPES = frozenset({"custom-title", "agent-name"})
+# Records Claude Code writes into a transcript that holds no conversation:
+# naming a session before it starts, or suppressing history for a fork that
+# inherits a session.  Such a stub carries no cwd, so it can only belong to the
+# bucket it sits in; it never counts as evidence of that bucket's project.
+METADATA_ONLY_TYPES = frozenset({"custom-title", "agent-name", "history-suppression"})
+
+
+def metadata_only(rows: Rows) -> bool:
+    return bool(rows) and all(obj is not None and obj.get("type") in METADATA_ONLY_TYPES for _raw, obj in rows)
 
 
 def establish_origin(rows: Rows, history: Rows, session_id: str, *, target: str | None = None,
@@ -208,7 +215,7 @@ def establish_origin(rows: Rows, history: Rows, session_id: str, *, target: str 
 
     BUCKET_PROJECT is the exact project whose bucket a rename is moving.  A
     transcript whose own cwd is exactly that project belongs to it whatever
-    its prompt history names, and a transcript holding only title records
+    its prompt history names, and a transcript holding only metadata records
     (no conversation, no cwd, no history) is owned by the bucket it sits in."""
     transcript = session_origin(rows, session_id, require_identity=True)
     recorded = history_origin(history, session_id)
@@ -217,7 +224,7 @@ def establish_origin(rows: Rows, history: Rows, session_id: str, *, target: str 
     if bucket_project is not None and transcript == bucket_project:
         return transcript
     if (bucket_project is not None and transcript is None and recorded is None
-            and rows and all(obj is not None and obj.get("type") in TITLE_ONLY_TYPES for _raw, obj in rows)):
+            and metadata_only(rows)):
         return bucket_project
     if recorded is not None and recorded == target and transcript not in (None, target):
         return transcript
@@ -548,7 +555,12 @@ def validate_destination(plan: MigrationPlan, directory: Path, history: Rows, pr
             # Ownership is settled by the first records, so a session still
             # running in the destination project may keep appending to this
             # transcript; only truncation or replacement invalidates the plan.
-            origin = establish_origin(read_rows(plan, path, append_only=True), history, path.stem)
+            rows = read_rows(plan, path, append_only=True)
+            if (metadata_only(rows) and session_origin(rows, path.stem, require_identity=True) is None
+                    and not history_projects(history, path.stem)):
+                # A conversation-less stub is neither a collision nor an owner.
+                continue
+            origin = establish_origin(rows, history, path.stem)
             if origin != project:
                 raise MigrationError("Existing destination bucket belongs to a different project origin")
             owners.add(path.stem)

@@ -664,6 +664,12 @@ names another directory, and a title-only stub transcript, which belongs to its
 bucket. The writer check reads =lsof='s =*NNN= form for descriptors above 999. Origin:
 the 2026-10-06 workspace split refused seven project buckets on these shapes, so
 resuming those sessions still opened the pre-split directory.
+A stub transcript holding only metadata records (=custom-title=, =agent-name=, or the
+=history-suppression= record Claude Code writes when a fork inherits a session) has no
+=cwd= and belongs to its bucket. A rename moves it; an import's destination check
+neither counts it as an owner nor refuses it, so the bucket still needs one real
+transcript from the target project. Origin: on 2026-11-07 two such stubs in the
+tangodb bucket refused every import into tangodb.
 A session resumed from another directory has one transcript per bucket under one
 UUID. A transcript's origin is accepted when any history entry for that session
 names it, not only the first, so such a split no longer blocks imports into

@@ -222,6 +222,25 @@ class ClaudeSessionMigrationTests(unittest.TestCase):
         self.assertEqual(tree_snapshot(self.config), before)
         self.assertFalse(self.backup.exists())
 
+    def test_metadata_only_destination_stub_is_neither_owner_nor_collision(self):
+        self.target.mkdir()
+        owner = self.target / f"{OTHER_SID}.jsonl"
+        owner.write_bytes(jsonl({"sessionId": OTHER_SID, "cwd": NEW}))
+        stub_sid = "bbbbbbbb-cccc-dddd-eeee-ffffffffffff"
+        stub = self.target / f"{stub_sid}.jsonl"
+        raw = jsonl({"type": "history-suppression", "sessionId": stub_sid, "cause": "fork_inherit"})
+        stub.write_bytes(raw)
+        result = self.apply(SID, "--project", NEW)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue((self.target / self.transcript.name).is_file())
+        self.assertEqual(stub.read_bytes(), raw)
+
+    def test_destination_holding_only_metadata_stubs_has_no_owner(self):
+        self.target.mkdir()
+        (self.target / f"{OTHER_SID}.jsonl").write_bytes(
+            jsonl({"type": "history-suppression", "sessionId": OTHER_SID, "cause": "fork_inherit"}))
+        self.assert_refused_without_changes(SID, "--project", NEW, reason="no independently verified project owner")
+
     def test_unknown_destination_auxiliary_files_are_not_ownership_evidence(self):
         self.target.mkdir()
         (self.target / "sessions-index.json").write_text("{}")
@@ -435,7 +454,8 @@ class ClaudeSessionMigrationTests(unittest.TestCase):
     def test_title_only_transcript_moves_with_its_bucket(self):
         stub = self.source / f"{OTHER_SID}.jsonl"
         raw = jsonl({"type": "custom-title", "sessionId": OTHER_SID, "customTitle": "fixture"},
-                    {"type": "agent-name", "sessionId": OTHER_SID, "agentName": "fixture"})
+                    {"type": "agent-name", "sessionId": OTHER_SID, "agentName": "fixture"},
+                    {"type": "history-suppression", "sessionId": OTHER_SID, "cause": "fork_inherit"})
         stub.write_bytes(raw)
         result = self.apply("--rename", OLD, NEW)
         self.assertEqual(result.returncode, 0, result.stderr)

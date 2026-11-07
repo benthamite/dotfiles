@@ -16,6 +16,22 @@
       "created_at": "2026-10-06T21:20:16.747614+00:00",
       "expires_at": "2026-10-07T01:20:16.747614+00:00",
       "body_sha256": "bb766418e5995d6b2ab7edac54a379f18331818e905c17f5cba5cb0f5c390348"
+    },
+    {
+      "command": "gh pr create --repo TobiasZawada/elgrep --base master --head benthamite:fix/lexical-binding-cookie --title \"Write a lexical-binding cookie in the elgrep data file\" --body-file /Users/pablostafforini/.local/state/gh-grant.JJn3Fz/elgrep-body.md",
+      "account": "benthamite",
+      "authorization": "Pablo in Claude session eaa3369c on 2026-11-07: 'check that no similar pr has already been submitted for those packages first. if not, submit them, without asking me.'",
+      "created_at": "2026-11-07T13:40:51.618519+00:00",
+      "expires_at": "2026-11-07T17:40:51.618519+00:00",
+      "body_sha256": "f30d705aa8e6e6a3a4daf59b9ede527f78d2bd541b24ae49831e676da310cf78"
+    },
+    {
+      "command": "gh pr create --repo jorgenschaefer/elpy --base master --head benthamite:fix/lexical-binding-cookie --title \"Add a lexical-binding cookie to the python-mode .yas-setup.el\" --body-file /Users/pablostafforini/.local/state/gh-grant.JJn3Fz/elpy-body.md",
+      "account": "benthamite",
+      "authorization": "Pablo in Claude session eaa3369c on 2026-11-07: 'check that no similar pr has already been submitted for those packages first. if not, submit them, without asking me.'",
+      "created_at": "2026-11-07T13:40:51.828543+00:00",
+      "expires_at": "2026-11-07T17:40:51.828543+00:00",
+      "body_sha256": "9e0d8f6d1ebea567a4d7ffec0e40b18ec5a7c03c4b5195eb212e71334b044466"
     }
   ]
 }

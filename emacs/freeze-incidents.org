@@ -73,8 +73,37 @@ the "Already tried" list in place.
   not take effect is unknown.
 - Cause of the 2026-10-10 GC storm and the morning blocks: read the first
   stack reports the watchdog captures.
+- Live reloads after a =cl-defstruct= slot is inserted mid-struct
+  (2026-11-07): instances built before the reload keep the old layout, so
+  accessors read the neighbouring slot. Second half-loaded-reload incident
+  after 2026-10-25. Proposed: =elpaca-extras-rebuild-and-reload= detects a
+  changed struct layout and reports "restart required" instead of success;
+  =agent-tab-bar-mode= cancels its old timer before starting a new one.
+  Pending Pablo's decision.
 
 * Incidents
+
+** 2026-11-07 ~08:53: debugger re-entered every second by a live-reloaded =agent-backend= struct (diagnosis)
+
+- Pablo: stuck in a backtrace that fires again as soon as it is closed.
+  Emacs PID 4095 answered the server; recursion depth 1.
+- Backtrace: timer =agent--tab-bar-refresh= → =agent-session-display-state=
+  → ... → =agent-account-entry= → =(assoc "tlon"
+  "~/.claude-current-account")= → =wrong-type-argument listp=.
+- Cause: agent commit =82a8fec= (08:53) inserted =icon-svg= after =icon=
+  in =cl-defstruct agent-backend=. The commit's live reload redefined the
+  accessors (46 slots) but the =claude-code= and =codex= instances
+  registered at startup still had 45, so =agent-backend-accounts= returned
+  the =account-file= slot. The =wrong-number-of-arguments= errors in
+  =*Messages*= fit the same shift (function slots read off by one). Earlier
+  struct changes (11-04) appended slots at the end, so they did not break.
+- Amplifier: 21 copies of the 1 s =agent--tab-bar-refresh= timer.
+  =agent-tab-bar-mode= starts a new timer on each enable without cancelling
+  the old one, so every re-enable (config re-evaluation, reloads) leaks one.
+  With the debugger open, the timers' errors are only logged; once it is
+  closed, the next tick enters it again.
+- =debug-on-quit= was =t= globally (cause not checked).
+- Evidence: =/tmp/emacs-freeze.YaqQWT/= (temporary).
 
 ** 2026-11-05 05:52-06:26: stall with the display off, ended by display wake (investigation, no change)
 

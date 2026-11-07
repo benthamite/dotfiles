@@ -41,7 +41,7 @@ from .sensitive_read import tool_name
 _GRANT_ADVICE = (
     "\n\nAfter explicit user authorization, supported fork/PR commands may use committed scoped grants "
     "(agents/github-operation-authorizations.md). Otherwise GitHub writes require a target that matches an exact "
-    "OWNER/REPO entry or OWNER/* account wildcard in the committed `~/My Drive/dotfiles/agents/github-write-allowlist.txt` "
+    "OWNER/REPO entry or OWNER/* account wildcard in the committed `~/repos/dotfiles/agents/github-write-allowlist.txt` "
     "(working-tree edits do not count), or is declared by an Epoch project via :REPOS: and committed to the "
     "automations registry.")
 _AMBIGUOUS_ADVICE = {

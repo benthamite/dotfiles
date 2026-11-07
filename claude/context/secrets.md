@@ -77,7 +77,7 @@ since the guard cannot tell a string from a `subprocess` call; variable or
 `command -v` indirection, process substitution, and raw `op` in any spelling
 (Touch ID routing, next section). Reading a broker's *source* is fine: a
 broker path handed to a read-only text tool (`cat bin/op-automations`,
-`sed -n 1,50p ~/My\ Drive/dotfiles/bin/op-automations`) passes unless that
+`sed -n 1,50p ~/repos/dotfiles/bin/op-automations`) passes unless that
 stage is piped into a shell or interpreter. The policy and its residual risks are in
 `docs/plans/2026-09-02-secret-guard-op-output-policy.md`; the case
 table is `tests/test_op_policy.py`.

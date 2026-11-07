@@ -24,9 +24,9 @@ case "$TOOL" in
   *) exit 0 ;;
 esac
 
-DOTFILES_CLAUDE="$HOME/My Drive/dotfiles/claude"
+DOTFILES_CLAUDE="$HOME/repos/dotfiles/claude"
 DOTFILES_CLAUDE_REAL=$(python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$DOTFILES_CLAUDE" 2>/dev/null || true)
-DOTFILES_ROOT="$HOME/My Drive/dotfiles"
+DOTFILES_ROOT="$HOME/repos/dotfiles"
 DOTFILES_ROOT_REAL=$(python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$DOTFILES_ROOT" 2>/dev/null || true)
 
 # Skip if we're already in the dotfiles repo (the commit hook will handle it).

@@ -191,7 +191,7 @@ def repository_names() -> frozenset[str]:
     import re  # noqa: PLC0415
 
     names: set[str] = set()
-    roots = [Path.home() / "repos", Path.home() / "repos/epoch", Path.home() / "My Drive/dotfiles"]
+    roots = [Path.home() / "repos", Path.home() / "repos/epoch", Path.home() / "repos/dotfiles"]
     for root in roots:
         candidates = [root] if (root / ".git").exists() else list(root.glob("*")) if root.is_dir() else []
         for repo in candidates:

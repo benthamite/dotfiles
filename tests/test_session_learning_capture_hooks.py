@@ -22,7 +22,7 @@ class SessionLearningCaptureHookTests(unittest.TestCase):
         self.hooks = {}
         for tool, source in HOOKS.items():
             text = source.read_text()
-            original = 'ROOT="/Users/pablostafforini/My Drive/dotfiles"'
+            original = 'ROOT="/Users/pablostafforini/repos/dotfiles"'
             self.assertEqual(text.count(original), 1)
             hook = self.directory / (tool + ".sh")
             hook.write_text(text.replace(original, 'ROOT="' + str(self.repo) + '"'))

@@ -166,7 +166,7 @@ change trigger.
 The canonical dotfiles audit now delegates to:
 
 #+begin_src sh
-python3 bin/docs-audit audit --root "$HOME/My Drive/dotfiles"
+python3 bin/docs-audit audit --root "$HOME/repos/dotfiles"
 #+end_src
 
 That documentation audit enforces README ownership, links, subtree indexes,
@@ -192,7 +192,7 @@ hidden behind fallbacks.
 
 * Non-Git notes workspaces
 
-=~/My Drive/Forethought/= keeps matching regular =CLAUDE.md= and =AGENTS.md=
+=~/repos/forethought-notes/= keeps matching regular =CLAUDE.md= and =AGENTS.md=
 files at the workspace root and in each project. Claude loads ancestor
 instructions natively. Codex uses =project_root_markers = [".git",
 ".agent-workspace"]= in the shared config and each existing account's writable

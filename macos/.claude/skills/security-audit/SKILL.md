@@ -54,7 +54,7 @@ same change suffices. In Pablo's configuration, guards must allow or deny,
 never introduce interactive approval prompts.
 
 Before credential-related work, read
-`~/My Drive/dotfiles/claude/context/secrets.md`. Use its personal/Epoch
+`~/repos/dotfiles/claude/context/secrets.md`. Use its personal/Epoch
 placement and broker rules; this skill does not redefine them. For service
 access use `claude/context/service-access.md`; for MCP placement use
 `claude/context/mcp-servers.md`, resolved under that dotfiles root.

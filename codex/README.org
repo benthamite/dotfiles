@@ -74,8 +74,8 @@ load project =CLAUDE.md= as a fallback.
 
 The global =codex/AGENTS.md= and =claude/CLAUDE.md= files are semantic peers.
 Both carry the same operating rules, including "solve classes, not instances",
-and the same repository-root contract (notes workspaces under Drive keep their
-git directories in =~/git-dirs/=). The =[agent] = prefix rule covers Forethought
+and the same repository-root contract (every repository, notes workspaces
+included, lives under =~/repos/= with its own =.git= directory). The =[agent] = prefix rule covers Forethought
 only and lives in =~/repos/forethought/AGENTS.md=; its history is in
 =claude/README.org=.
 The paired =find-past-session= skill directs agents looking for a past session
@@ -1401,7 +1401,7 @@ remain explicit rather than being hidden by fallback behavior.
 
 * Forethought notes workspace
 
-Forethought sessions launch from =~/My Drive/Forethought/= or the selected
+Forethought sessions launch from =~/repos/forethought-notes/= or the selected
 notes project. The Emacs project picker includes the workspace, =prep/=, and
 immediate =projects/*/= directories with instruction files, across existing
 accounts. Each project has an =AGENTS.md= file; the workspace =AGENTS.md= supplies

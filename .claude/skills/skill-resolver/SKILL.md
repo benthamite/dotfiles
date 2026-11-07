@@ -25,19 +25,19 @@ install, edit, or synchronize skills.
 Command:
 
 ```bash
-/Users/pablostafforini/My\ Drive/dotfiles/bin/agent-skill
+/Users/pablostafforini/repos/dotfiles/bin/agent-skill
 ```
 
 Common operations:
 
 ```bash
-/Users/pablostafforini/My\ Drive/dotfiles/bin/agent-skill path diagnose --tool codex
-/Users/pablostafforini/My\ Drive/dotfiles/bin/agent-skill cat diagnose --tool codex
-/Users/pablostafforini/My\ Drive/dotfiles/bin/agent-skill path diagnose --tool claude
-/Users/pablostafforini/My\ Drive/dotfiles/bin/agent-skill list --tool codex
-/Users/pablostafforini/My\ Drive/dotfiles/bin/agent-skill roots --tool codex
-/Users/pablostafforini/My\ Drive/dotfiles/bin/agent-skill duplicates --tool codex
-/Users/pablostafforini/My\ Drive/dotfiles/bin/agent-skill path skill-resolver --tool codex --cwd "/Users/pablostafforini/My Drive/dotfiles"
+/Users/pablostafforini/repos/dotfiles/bin/agent-skill path diagnose --tool codex
+/Users/pablostafforini/repos/dotfiles/bin/agent-skill cat diagnose --tool codex
+/Users/pablostafforini/repos/dotfiles/bin/agent-skill path diagnose --tool claude
+/Users/pablostafforini/repos/dotfiles/bin/agent-skill list --tool codex
+/Users/pablostafforini/repos/dotfiles/bin/agent-skill roots --tool codex
+/Users/pablostafforini/repos/dotfiles/bin/agent-skill duplicates --tool codex
+/Users/pablostafforini/repos/dotfiles/bin/agent-skill path skill-resolver --tool codex --cwd "/Users/pablostafforini/repos/dotfiles"
 ```
 
 Rules:

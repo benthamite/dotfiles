@@ -21,7 +21,7 @@ Cover one named personal Git repository/worktree and, optionally, a narrower
 directory. Use the current repository only when it is clearly the intended
 personal notes corpus. Otherwise resolve the user's established personal notes
 checkout from context, or ask when multiple plausible owners remain. Do not
-silently select an old `~/My Drive/notes` path, assume a basename proves
+silently select an old `~/repos/notes` path, assume a basename proves
 ownership, or scan every personal repository to answer a single-repository
 request. State the selected root and scope first.
 
@@ -33,7 +33,7 @@ not permission to use a personal rubric on employer material.
 Use the canonical wrapper for all commands:
 
 ```text
-~/My Drive/dotfiles/claude/bin/triage-notes
+~/repos/dotfiles/claude/bin/triage-notes
 ```
 
 The engine is a separately installed, owner-supplied dependency; it is not

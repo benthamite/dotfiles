@@ -120,7 +120,7 @@ class AgentSkillTests(unittest.TestCase):
 
     def test_epoch_roots_default_to_the_workspace_checkout_and_drive_notes(self):
         workspace = self.home / "repos/epoch/ai-enablement"
-        private = self.home / "My Drive/Epoch"
+        private = self.home / "repos/epoch-notes"
         for parent in (workspace, private):
             self.skill(parent / ".codex/skills", "fixture-" + parent.name)
         env = {k: v for k, v in os.environ.items() if k not in ("EPOCH_WORKSPACE", "EPOCH_PRIVATE_ROOT")}

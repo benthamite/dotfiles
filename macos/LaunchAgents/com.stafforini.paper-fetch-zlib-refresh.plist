@@ -13,9 +13,9 @@
     <string>--label</string>
     <string>com.stafforini.paper-fetch-zlib-refresh</string>
     <string>--repo</string>
-    <string>dotfiles=/Users/pablostafforini/My Drive/dotfiles</string>
+    <string>dotfiles=/Users/pablostafforini/repos/dotfiles</string>
     <string>--</string>
-    <string>/Users/pablostafforini/My Drive/dotfiles/bin/paper-fetch</string>
+    <string>/Users/pablostafforini/repos/dotfiles/bin/paper-fetch</string>
     <string>zlib-refresh</string>
   </array>
 

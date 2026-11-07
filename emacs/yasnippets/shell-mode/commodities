@@ -3,4 +3,4 @@
 # key: comp
 # contributor: Pablo Stafforini
 # --
-python3 ~/My\ Drive/ledger/commodities.py
+python3 ~/repos/ledger/commodities.py

@@ -13,9 +13,9 @@
     <string>--label</string>
     <string>com.stafforini.codex-protocol-watch</string>
     <string>--repo</string>
-    <string>dotfiles=/Users/pablostafforini/My Drive/dotfiles</string>
+    <string>dotfiles=/Users/pablostafforini/repos/dotfiles</string>
     <string>--</string>
-    <string>/Users/pablostafforini/My Drive/dotfiles/bin/codex-protocol-watch</string>
+    <string>/Users/pablostafforini/repos/dotfiles/bin/codex-protocol-watch</string>
   </array>
 
   <key>EnvironmentVariables</key>

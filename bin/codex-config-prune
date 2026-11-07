@@ -25,7 +25,7 @@ import sys
 import tomllib
 from pathlib import Path
 
-DEFAULT_CONFIG = Path.home() / "My Drive" / "dotfiles" / "codex" / "config.toml"
+DEFAULT_CONFIG = Path.home() / "repos" / "dotfiles" / "codex" / "config.toml"
 
 PROJECT_RE = re.compile(r'^\[projects\."(.+)"\]\s*$')
 HOOK_STATE_RE = re.compile(r'^\[hooks\.state\."(.+)"\]\s*$')

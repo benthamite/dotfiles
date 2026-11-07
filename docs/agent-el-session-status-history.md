@@ -558,7 +558,7 @@ Colour scheme drift: on 05-12 the user names "black, green, brown" (black = work
 - **Later broken** [confirmed by commit message, not in session]: the 2026-07-26 commit `29576aa` says this predicate "reported waiting whenever an app-server turn was active and an input marker existed, which is nearly always during a turn… this forced actively working Codex sessions to render as waiting or background-waiting." The 06-09 fix therefore undid the green-while-working fix made 12 minutes earlier. Two sessions on the same day each tuned the heuristic to a single example, in opposite directions.
 
 #### 2026-06-10/11 · Claude d8b4d5e7 (not in this batch; authored the state-machine commits)
-- **Where it lives:** `~/.claude/rendered/codex/2026-06-10_19-15_i-m-really-tired-…md`, a Claude session started in `~/My Drive/dotfiles/codex`.
+- **Where it lives:** `~/.claude/rendered/codex/2026-06-10_19-15_i-m-really-tired-…md`, a Claude session started in `~/repos/dotfiles/codex`.
 - **User:** "I'm really tired of encountering bugs in this package. It seems there's something ill-conceived about the architecture".
 - **Design audit, root cause #2:** "Waiting-for-input is push-based state cleared by advising upstream internals… seven advised private functions… Every time either upstream adds an input path, the flag goes stale." Root cause #4: state "inferred by regex-matching rendered TUI text… it will happen again with every TUI cosmetic change."
 - **Proposed:** "Derive waiting state instead of storing it". The plan `docs/plans/2026-06-10-architecture-refactor.md` (commit `76549e5`) says readiness becomes "an event-driven state machine (`agent-session-event`) fed by backend event translators". The same plan also proposed a real upstream codex.el API.
@@ -568,7 +568,7 @@ Colour scheme drift: on 05-12 the user names "black, green, brown" (black = work
   - The plan initialised `agent--session-state` to `'busy`. `504151f` (2026-07-26) fixed this after "One live session had displayed busy for nearly three hours on that initializer alone." [confirmed by commit message]
 
 #### 2026-06-11 · codex 019eb6ac (did not author the state-machine commits)
-- **Reported:** "the green/amber/black color-coding… doesn't not seem to be working reliably for claude code… *claude:~/My Drive/dotfiles/codex:default* is working but it is listed in green".
+- **Reported:** "the green/amber/black color-coding… doesn't not seem to be working reliably for claude code… *claude:~/repos/dotfiles/codex:default* is working but it is listed in green".
 - **Diagnosed:** "The switcher currently treats 'not busy' as waiting/green". Claude had no `:waiting-p`/`:busy-p`. Its amber detector only matched the old "N shells/monitors" footer. Live, the state machine said `awaiting-input` while the tail showed "Remote Control active" with an active `general-purpose` task.
 - **Built:** `e2465f8` (now `59f58cc`) "detect remote control background work". It is a new regex on the literal "Remote Control active" marker. The live check showed `:display background-waiting`.
 - **Caveats:**
@@ -1178,7 +1178,7 @@ Session times are the local times shown in the rendered logs. The commit timesta
 # Appendix C: dotfiles side
 
 
-Repo: `~/My Drive/dotfiles` (git dir `~/git-dirs/dotfiles`, branch `master`). Hashes are those on HEAD; the git dir also holds a parallel rewritten lineage with different hashes for the same commits (e.g. `82abbbcb4` = `3e989dc94`, `6ce850701` = `fad577deb`), which some inbox records cite. Inventory compiled 2026-10-10.
+Repo: `~/repos/dotfiles` (git dir `~/repos/dotfiles/.git`, branch `master`). Hashes are those on HEAD; the git dir also holds a parallel rewritten lineage with different hashes for the same commits (e.g. `82abbbcb4` = `3e989dc94`, `6ce850701` = `fad577deb`), which some inbox records cite. Inventory compiled 2026-10-10.
 
 ### 1. Status publishing (`bin/agent-status` and the global rule)
 

@@ -25,7 +25,7 @@ CODEX_BLOCK_BEGIN = "# BEGIN skill-prune disabled skills"
 CODEX_BLOCK_END = "# END skill-prune disabled skills"
 OLD_MANAGED_MARKER = ".managed-by-dotfiles-skill-prune"
 LOCAL_ROOTS_ENV = "SKILL_PRUNE_LOCAL_ROOTS"
-DEFAULT_LOCAL_ROOT = Path.home() / "My Drive"
+DEFAULT_LOCAL_ROOT = Path.home() / "repos"
 LOCAL_SCAN_SKIP_DIRS = {
     ".cache",
     ".claude",
@@ -41,6 +41,7 @@ LOCAL_SCAN_SKIP_DIRS = {
     "node_modules",
     "target",
     "venv",
+    ".worktrees",
 }
 
 

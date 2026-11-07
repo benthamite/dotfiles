@@ -46,7 +46,7 @@ bounded() {
     "$@"
   fi
 }
-overlay_dir="${SYNC_REASONING_TASKS_OVERLAY_DIR:-${SYNC_AGENT_C_OVERLAY_DIR:-$HOME/My Drive/dotfiles/claude/templates/reasoning-tasks}}"
+overlay_dir="${SYNC_REASONING_TASKS_OVERLAY_DIR:-${SYNC_AGENT_C_OVERLAY_DIR:-$HOME/repos/dotfiles/claude/templates/reasoning-tasks}}"
 parent_agents="${SYNC_REASONING_TASKS_PARENT_AGENTS:-${SYNC_AGENT_C_PARENT_AGENTS:-$HOME/Trajectory/AGENTS.md}}"
 # Private (project-scoped, NOT user-level) skills to inject into reasoning-tasks worktrees.
 # Whatever skill dirs live here are picked up automatically — not hardcoded.
@@ -180,7 +180,7 @@ repair_all_worktree_keys
 # Best-effort and strictly non-fatal: runs AFTER the critical key-repair above so it
 # can never affect it, and only removes worktrees that are clean AND fully pushed
 # (the script keeps anything with uncommitted/unpushed work). See cr-worktree-gc.sh.
-gc_script="${SYNC_REASONING_TASKS_GC_SCRIPT:-${SYNC_AGENT_C_GC_SCRIPT:-$HOME/My Drive/dotfiles/claude/bin/cr-worktree-gc.sh}}"
+gc_script="${SYNC_REASONING_TASKS_GC_SCRIPT:-${SYNC_AGENT_C_GC_SCRIPT:-$HOME/repos/dotfiles/claude/bin/cr-worktree-gc.sh}}"
 [ -x "$gc_script" ] && "$gc_script" || true
 
 cd "${CLAUDE_PROJECT_DIR:-$PWD}" 2>/dev/null || exit 0
@@ -217,7 +217,7 @@ fi
 # to an reasoning-tasks issue whose newest comment the agent hasn't acknowledged (the
 # 2026-07-03 stale-QA-comment incident). Runs in the hook, not the agent's bash
 # tool, so no agent command ever has to name the settings file.
-freshness_hook="$HOME/My Drive/dotfiles/claude/hooks/cr-issue-comment-freshness.sh"
+freshness_hook="$HOME/repos/dotfiles/claude/hooks/cr-issue-comment-freshness.sh"
 if [ -x "$freshness_hook" ]; then
   FRESHNESS_HOOK="$freshness_hook" python3 - <<'PYEOF' 2>/dev/null \
     && vsay "freshness guard present in local settings." \

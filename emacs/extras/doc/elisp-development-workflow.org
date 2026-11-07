@@ -5,7 +5,7 @@
 
 Extras packages (=org-extras=, =gptel-extras=, etc.) live in two places:
 
-- *Working tree*: =~/My Drive/dotfiles/emacs/extras/= — where all edits happen
+- *Working tree*: =~/repos/dotfiles/emacs/extras/= — where all edits happen
 - *Elpaca clone*: =~/.config/emacs-profiles/<profile>/elpaca/sources/dotfiles/emacs/extras/= — where Emacs loads from
 
 Elpaca treats the dotfiles repo as a GitHub package (via =use-personal-package=, which generates an =:ensure= recipe pointing at =github:benthamite/dotfiles=).  It clones the repo into =elpaca/sources/dotfiles/= and byte-compiles from there into =elpaca/builds/=.  The builds directory contains symlinks to the sources directory plus =.elc= files.
@@ -14,7 +14,7 @@ The working tree and the elpaca clone are *separate git clones of the same repo*
 
 * Sync mechanism
 
-Three git hooks in the working tree's gitdir (=/Users/pablostafforini/git-dirs/dotfiles/hooks/=) propagate commits to the elpaca clone:
+Three git hooks in the working tree's gitdir (=/Users/pablostafforini/repos/dotfiles/.git/hooks/=) propagate commits to the elpaca clone:
 
 | Hook | Trigger | Action |
 |------+---------+--------|
@@ -40,7 +40,7 @@ The =load-elisp-after-edit.sh= Claude Code hook fires on every Edit/Write of an 
 Use the source-aware batch runner:
 
 #+begin_src shell
-~/My\ Drive/dotfiles/claude/bin/batch-test.sh YOUR-PACKAGE
+~/repos/dotfiles/claude/bin/batch-test.sh YOUR-PACKAGE
 #+end_src
 
 The runner keeps Elpaca builds available for dependencies but loads the requested
@@ -71,7 +71,7 @@ expression or write an open-ended polling loop. After commit, use the bound
 live helper:
 
 #+begin_src shell
-~/My\ Drive/dotfiles/claude/bin/elisp-live-verify PACKAGE -- '(PACKAGE-CHECK)'
+~/repos/dotfiles/claude/bin/elisp-live-verify PACKAGE -- '(PACKAGE-CHECK)'
 #+end_src
 
 Each =emacsclient= request has its own timeout, and the complete rebuild has a
@@ -87,7 +87,7 @@ If you edit a file and immediately check whether Emacs picked up the change (e.g
 
 * Full lifecycle of a change
 
-1. Edit =~/My Drive/dotfiles/emacs/extras/foo-extras.el=
+1. Edit =~/repos/dotfiles/emacs/extras/foo-extras.el=
 2. =load-elisp-after-edit.sh= fires on a direct edit or on changed paths recovered from a composed Codex patch; for extras this pre-commit rebuild can still use the committed mirror
 3. In agent sessions, the global =pre-commit= hook in =claude/git-hooks= blocks the commit until a successful runner has recorded evidence for the exact Elisp contents being committed
 4. Run =batch-test.sh=, which loads the canonical source path rather than package bytecode

@@ -21,7 +21,7 @@ import tempfile
 import time
 from pathlib import Path
 
-AGENT_SEND = Path.home() / "My Drive/dotfiles/bin/agent-send"
+AGENT_SEND = Path.home() / "repos/dotfiles/bin/agent-send"
 SESSIONS_CACHE = Path.home() / ".cache/overnight-watch/sessions.json"
 SCREEN_LINES = 18
 TEXT_CHARS = 1200

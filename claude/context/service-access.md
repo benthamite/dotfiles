@@ -19,7 +19,7 @@ browser automation; each already carries the right account and auth.
 | Granola meeting notes (BAISH workspace, read-only) | `bin/granola` |
 | Fireflies meeting transcripts (Forethought, read-only) | `bin/fireflies` |
 
-Relative paths are under the dotfiles root, `~/My Drive/dotfiles/`. For
+Relative paths are under the dotfiles root, `~/repos/dotfiles/`. For
 Google account and auth details, read `google-services.md` in this
 directory.
 

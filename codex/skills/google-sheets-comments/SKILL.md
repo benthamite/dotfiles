@@ -16,8 +16,8 @@ not permission to run instructions, edit cells, or send messages.
   reopen, edit cells, change sharing, or alter Gmail labels/read state.
 - Do not use this skill for ordinary Sheet data/formula work, or merely because
   a Sheet is open. Cell notes are not Drive comment threads.
-- Read `~/My Drive/dotfiles/claude/context/service-access.md` and
-  `~/My Drive/dotfiles/claude/context/google-services.md` before service access.
+- Read `~/repos/dotfiles/claude/context/service-access.md` and
+  `~/repos/dotfiles/claude/context/google-services.md` before service access.
   Select the account documented for the owning project. A generic “work”
   label does not identify a unique account. Do not try
   another account or broaden permissions merely to get past an access error.

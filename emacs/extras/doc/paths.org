@@ -86,7 +86,7 @@ The following variables define the top-level directories from which most other p
 #+vindex: paths-dir-epoch-workspace
 These directories are children of ~paths-dir-google-drive~ and contain personal data:
 
-- ~paths-dir-dotfiles~: the dotfiles repository (default: =My Drive/dotfiles/=).
+- ~paths-dir-dotfiles~: the dotfiles repository (default: =repos/dotfiles/=).
 - ~paths-dir-dotemacs~: the Emacs subdirectory within dotfiles. Its default is user-dependent, resolved at load time based on the =$HOME= environment variable.
 - ~paths-dir-notes~, ~paths-dir-journal~, ~paths-dir-wiki~: directories for Org notes, journal entries, and wiki content.
 - ~paths-dir-wiki-entries~ and ~paths-dir-wiki-references~: subdirectories of the wiki.
@@ -101,7 +101,7 @@ These directories are children of ~paths-dir-google-drive~ and contain personal 
 - ~paths-dir-websites~: website source files.
 - ~paths-dir-personal-bibliography~: BibTeX bibliography files and related resources.
 - ~paths-dir-PW~: the PW project directory.
-- ~paths-dir-epoch~: my personal Epoch notes, holding the inbox, root session logs and meeting notes (default: =My Drive/Epoch/=).
+- ~paths-dir-epoch~: my personal Epoch notes, holding the inbox, root session logs and meeting notes (default: =repos/epoch-notes/=).
 - ~paths-dir-epoch-workspace~: the shared Epoch workspace, holding the projects and their registry. It is the checkout of =epoch-research/ai-enablement=. Its default is the value of the =EPOCH_WORKSPACE= environment variable, or =~/repos/epoch/ai-enablement/= when Emacs starts without that variable.
 
 *** Emacs configuration directories
@@ -171,7 +171,7 @@ These directories organize Git repositories by provenance:
 - ~paths-dir-tlon-repos~ and ~paths-dir-personal-repos~ (both default to =~/repos/=): organization and personal repositories. They deliberately do not derive from ~paths-dir-google-drive~: working repositories live outside the Drive sync root, because build and cache directories inside it produce sync errors.
 - ~paths-dir-tlon-todos~: Org files for organization task tracking.
 - ~paths-dir-tlon-docs~, ~paths-dir-babel-refs~, ~paths-dir-translation-server~: specific repositories.
-- ~paths-dir-split-git~ (default: =~/git-dirs/=): bare =.git= directories for split-worktree repos. Splitting keeps the object store out of the Google Drive sync root, so as of 2026-08-03 it applies only to the dotfiles repository and the Epoch project repositories, whose worktrees are still inside Drive; repositories under =~/repos/= hold their own =.git= directory.
+- ~paths-dir-split-git~ (default: =~/git-dirs/=): bare =.git= directories for split-worktree repos. Splitting existed only to keep the object store out of the Google Drive sync root. Since 2026-11-06 no active repository is split: every repository, the dotfiles and notes workspaces included, lives under =~/repos/= with its own =.git= directory. The directory still holds the git directories of a few archived repositories.
 - ~paths-dir-all-repos~: a list aggregating several personal data directories for use in search and agenda commands.
 
 *** CSL directories

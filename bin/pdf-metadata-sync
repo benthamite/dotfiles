@@ -38,10 +38,10 @@ sys.dont_write_bytecode = True  # keep __pycache__ out of the Drive-synced tree
 HOME = Path.home()
 # The bibliographies Ebib loads (`paths-files-bibliography-all').
 BIB_FILES = [
-    HOME / "My Drive/bibliography/new.bib",
-    HOME / "My Drive/bibliography/old.bib",
-    HOME / "My Drive/bibliography/migration.bib",
-    HOME / "My Drive/bibliography/tango.bib",
+    HOME / "repos/bibliography/new.bib",
+    HOME / "repos/bibliography/old.bib",
+    HOME / "repos/bibliography/migration.bib",
+    HOME / "repos/bibliography/tango.bib",
     HOME / "repos/babel-refs/bib/fluid.bib",
     HOME / "repos/babel-refs/bib/stable.bib",
     HOME / "repos/babel-refs/bib/db.bib",

@@ -479,8 +479,8 @@ CLOCK: [2021-03-20 Sat 21:48]--[2021-03-20 Sat 21:56] =>  0:08
 
 #+begin_src clojure
 :templates {:alfred "osascript -e 'tell application \"Alfred 4\" to run trigger \"%s\" in workflow \"%s\" with argument \"%s\"'"
-            :insert "\"$HOME/My Drive/dotfiles/bin/char_input\" \"%s\""
-            :chrome-profile "\"$HOME/My Drive/dotfiles/bin/chrome-profile-focus\" \"%s\" \"%s\""
+            :insert "\"$HOME/repos/dotfiles/bin/char_input\" \"%s\""
+            :chrome-profile "\"$HOME/repos/dotfiles/bin/chrome-profile-focus\" \"%s\" \"%s\""
             }
 #+end_src
 

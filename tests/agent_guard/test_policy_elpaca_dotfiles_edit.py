@@ -18,7 +18,7 @@ class ElpacaDotfilesEditTests(unittest.TestCase):
     def test_canonical_path_strips_through_the_last_clone_segment(self):
         result = decide(CLAUDE, "Edit", {"file_path": "/e/elpaca/sources/dotfiles/a/elpaca/sources/dotfiles/b.el"})
         self.assertEqual(result.decision, "deny")
-        self.assertIn("\n  ~/My Drive/dotfiles/b.el\n\n", result.reason)
+        self.assertIn("\n  ~/repos/dotfiles/b.el\n\n", result.reason)
 
     def test_other_paths(self):
         self.assertEqual(decide(CLAUDE, "Edit", {"file_path": "/e/elpaca/sources/dotfiles"}).decision, "allow")
@@ -28,7 +28,7 @@ class ElpacaDotfilesEditTests(unittest.TestCase):
         patch = "*** Begin Patch\n*** Update File: x\n*** Move to: /e/elpaca/sources/dotfiles/y\n*** End Patch"
         result = decide(CODEX, "apply_patch", patch)
         self.assertEqual(result.decision, "deny")
-        self.assertIn("~/My Drive/dotfiles/y\n", result.reason)
+        self.assertIn("~/repos/dotfiles/y\n", result.reason)
         self.assertEqual(decide(CODEX, "Edit", {"path": "/e/elpaca/sources/dotfiles/z"}).decision, "deny")
 
 

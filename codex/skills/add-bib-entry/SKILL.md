@@ -14,7 +14,7 @@ before selecting a work/edition, reviewing fields or accepting an attachment.
 That document owns these decisions; this skill owns how to apply them through
 Emacs. For whole-note source cleanup, use `clean-citations`.
 
-Use `/Users/pablostafforini/My Drive/dotfiles/bin/emacs-eval` for ad-hoc live
+Use `/Users/pablostafforini/repos/dotfiles/bin/emacs-eval` for ad-hoc live
 expressions. It bounds results before Emacs prints them and reports truncation;
 it does not make expensive computation safe or cancel server work after a
 client timeout. Export complete selected-entry data to a private file. When
@@ -28,22 +28,22 @@ bytes first; use UTF-8 for the file. Do not change global coding settings.
    - Otherwise search active bibliography files with `rg -n -F -- "IDENTIFIER" BIBFILE...`, then check title/author and alternate identifier forms. Reuse a matching work's existing key; distinguish editions/versions before creating a duplicate.
    - Get active paths from Emacs rather than guessing:
      ```bash
-     "/Users/pablostafforini/My Drive/dotfiles/bin/emacs-eval" '(progn (require '\''paths nil t) (mapcar (lambda (symbol) (cons symbol (and (boundp symbol) (symbol-value symbol)))) '\''(paths-file-personal-bibliography-new paths-file-personal-bibliography-old paths-files-bibliography-all citar-bibliography)))'
+     "/Users/pablostafforini/repos/dotfiles/bin/emacs-eval" '(progn (require '\''paths nil t) (mapcar (lambda (symbol) (cons symbol (and (boundp symbol) (symbol-value symbol)))) '\''(paths-file-personal-bibliography-new paths-file-personal-bibliography-old paths-files-bibliography-all citar-bibliography)))'
      ```
 
 2. Choose the target BibTeX file.
-   - For Pablo's personal notes, default to `paths-file-personal-bibliography-new`, normally `/Users/pablostafforini/My Drive/bibliography/new.bib`.
+   - For Pablo's personal notes, default to `paths-file-personal-bibliography-new`, normally `/Users/pablostafforini/repos/bibliography/new.bib`.
    - Do not add new personal references to `old.bib` or Babel/Tlön bibliography files unless the user or project context explicitly calls for that.
    - Resolve the actual target and active databases before writes. If Emacs is unavailable or paths are unset, diagnose that gap; the usual path is not evidence of the current configuration. Do not restart/signal Emacs or silently switch workflows.
    - Check for unsaved changes in the target's visiting buffers and loaded Ebib database before importing or reloading. Reconcile them without discarding or saving unrelated user edits; stop this addition if that cannot be done safely.
 
 3. Add and process the entry through Zotra/Ebib.
-   - If you need to inspect or reload an Elpaca package involved in this workflow, resolve it with `"/Users/pablostafforini/My Drive/dotfiles/bin/elpaca-package-path" PACKAGE`. For Anna's Archive source append `annas-archive annas-archive.el` to that quoted executable. Do not use `locate-library`, `symbol-file`, or `~/.emacs.d/elpaca/...` as the source authority.
+   - If you need to inspect or reload an Elpaca package involved in this workflow, resolve it with `"/Users/pablostafforini/repos/dotfiles/bin/elpaca-package-path" PACKAGE`. For Anna's Archive source append `annas-archive annas-archive.el` to that quoted executable. Do not use `locate-library`, `symbol-file`, or `~/.emacs.d/elpaca/...` as the source authority.
    - Manual/full workflow: run `zotra-extras-add-entry` in Emacs. It imports metadata via Zotra/Zotero translators, prompts for the target bibfile, opens the entry in Ebib, and then runs the Ebib processing path.
    - Headless/agent workflow: import metadata with `gptel-extras-add-bib-entry` (the `add_bib_entry` tool), after `gptel-extras--bib-import-preflight` on the explicit target. Load that key with `gptel-extras--open-bib-entry-for-processing` and review all imported fields under the shared policy before attachment. For DOI articles and books use the staged-download sequence below; for webpage/video routes process the SAME existing key with `gptel-extras--process-bib-entry-headless`. Never reimport merely to invoke `add_bib_entry_and_process`. The combined helper remains available for already-reviewed straightforward identifiers; it does not replace final field review. Retain the explicit DB and operation across callbacks and do not start competing downloads.
    - Metadata-import template (transport identifiers/paths as escaped Lisp strings through an argument vector, not shell interpolation):
      ```bash
-     "/Users/pablostafforini/My Drive/dotfiles/bin/emacs-eval" --timeout 60 '(progn (require '\''gptel-extras) (require '\''zotra-extras) (require '\''ebib-extras) (gptel-extras--bib-import-preflight "RESOLVED-BIBFILE") (gptel-extras-add-bib-entry "IDENTIFIER" "RESOLVED-BIBFILE"))'
+     "/Users/pablostafforini/repos/dotfiles/bin/emacs-eval" --timeout 60 '(progn (require '\''gptel-extras) (require '\''zotra-extras) (require '\''ebib-extras) (gptel-extras--bib-import-preflight "RESOLVED-BIBFILE") (gptel-extras-add-bib-entry "IDENTIFIER" "RESOLVED-BIBFILE"))'
      ```
    - Programmatic Emacs calls must not select an Ebib entry, launch a viewer/browser or prompt. Use explicit entry/database and noninteractive operation policy. Inspect extracted text and rendered page images with agent tools; this does not require opening the user's PDF viewer. Browser acquisition, when needed, uses the mapped browser workflow. Manual commands retain their interactive behavior.
    - The headless helper calls the actual `ebib-extras-process-entry` without rebinding global input functions. It preserves an existing abstract and reports missing language, ambiguous choices, destination collisions or conflicting edits as blocked results instead of prompting. Inspect the document and candidate metadata to resolve ordinary choices yourself; ask Pablo only when his preference is needed. Preserve unrelated user edits.
@@ -59,7 +59,7 @@ bytes first; use UTF-8 for the file. Do not change global coding settings.
      - Video URLs: obtains subtitle files, not a paper PDF.
      - Online/article URLs: generates PDF and HTML files with `eww-extras-url-to-file`.
    - Manual Anna's Archive downloads may use the external browser. The noninteractive route reports a blocked result when it cannot complete unattended. If the returned file list is empty or incomplete, inspect the `file` field and this operation's status. Match a candidate in Downloads/library by work identity and job evidence, never merely by recency. An existing but stale `file` field can prevent normal attachment; diagnose it rather than repeatedly importing the work.
-   - Read `/Users/pablostafforini/My Drive/dotfiles/claude/context/service-access.md` before direct service access; its mapped paper route is `paper-fetch`. Read `/Users/pablostafforini/My Drive/dotfiles/claude/context/secrets.md` before any credential-backed action. Do not print credentials or signed download URLs.
+   - Read `/Users/pablostafforini/repos/dotfiles/claude/context/service-access.md` before direct service access; its mapped paper route is `paper-fetch`. Read `/Users/pablostafforini/repos/dotfiles/claude/context/secrets.md` before any credential-backed action. Do not print credentials or signed download URLs.
    - For article PDF downloads, use `paper-fetch` (dotfiles `bin/`; shared logic in `lib/python/paper_fetch.py`) with a fresh staging directory outside Drive. The `download-paper` skill documents its routes, statuses and browser fallback. Keep Zotra/Ebib responsible for metadata and attachment; diagnose an unavailable Emacs session before changing bibliography state:
      ```bash
      paper-fetch get "DOI-OR-URL" --out "STAGING-DIRECTORY" --name "CITEKEY"
@@ -92,10 +92,10 @@ bytes first; use UTF-8 for the file. Do not change global coding settings.
 ## Fallbacks
 
 - If Zotra cannot import the work, inspect the relevant implementation before hand-writing BibTeX:
-  - `/Users/pablostafforini/My Drive/dotfiles/emacs/extras/zotra-extras.el`
-  - `/Users/pablostafforini/My Drive/dotfiles/emacs/extras/ebib-extras.el`
-  - Anna's Archive download behavior: run `"/Users/pablostafforini/My Drive/dotfiles/bin/elpaca-package-path" annas-archive annas-archive.el` and inspect the returned file.
-  - package docs in `/Users/pablostafforini/My Drive/dotfiles/emacs/extras/doc/zotra-extras.org` and `ebib-extras.org`
+  - `/Users/pablostafforini/repos/dotfiles/emacs/extras/zotra-extras.el`
+  - `/Users/pablostafforini/repos/dotfiles/emacs/extras/ebib-extras.el`
+  - Anna's Archive download behavior: run `"/Users/pablostafforini/repos/dotfiles/bin/elpaca-package-path" annas-archive annas-archive.el` and inspect the returned file.
+  - package docs in `/Users/pablostafforini/repos/dotfiles/emacs/extras/doc/zotra-extras.org` and `ebib-extras.org`
 - Manual BibTeX is acceptable only for genuinely unsupported cases, after the Zotra/Ebib path and relevant implementation have been inspected and the labeled fallback is justified and approved. Preserve the shared policy, structural validation, valid key style and citation resolution.
 - Exhaust available in-scope agent paths before declaring an attachment blocked. If a credential, unavailable live session or genuinely ambiguous candidate still prevents completion, preserve the entry and report the exact missing piece. Do not substitute a different work or claim the attachment is complete.
 

@@ -38,7 +38,7 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.1.0-dev/elpaca/sources/dotfiles"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/dotfiles"]
+[projects."/Users/pablostafforini/repos/dotfiles"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/emacs-slack"]
@@ -47,16 +47,16 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/repos/stafforini.com"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/dotfiles/claude"]
+[projects."/Users/pablostafforini/repos/dotfiles/claude"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/notes"]
+[projects."/Users/pablostafforini/repos/notes"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/sgn"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch"]
+[projects."/Users/pablostafforini/repos/epoch-notes"]
 trust_level = "trusted"
 
 [projects."/private/tmp"]
@@ -80,22 +80,22 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/repos/tangodb"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/dotfiles/codex"]
+[projects."/Users/pablostafforini/repos/dotfiles/codex"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/dotfiles/emacs/extras"]
+[projects."/Users/pablostafforini/repos/dotfiles/emacs/extras"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/dotfiles/agents"]
+[projects."/Users/pablostafforini/repos/dotfiles/agents"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/email-triage"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/email-triage"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/impact-dashboard"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/impact-dashboard"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/analytics-aggregation"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/analytics-aggregation"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/agent-log"]
@@ -107,10 +107,10 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/ai-agent"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/ai-productivity-digest"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/ai-productivity-digest"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/automation-watchdog"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/automation-watchdog"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/spofy"]
@@ -119,49 +119,49 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/gdocs"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/ai-team-accounts"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/ai-team-accounts"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/chatgpt-analyzer"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/chatgpt-analyzer"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/dotfiles/claude/skills"]
+[projects."/Users/pablostafforini/repos/dotfiles/claude/skills"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/url-health"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/url-health"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/telega"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/meetings/benjamin-ou"]
+[projects."/Users/pablostafforini/repos/epoch-notes/meetings/benjamin-ou"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/meetings/isabel"]
+[projects."/Users/pablostafforini/repos/epoch-notes/meetings/isabel"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Finance"]
+[projects."/Users/pablostafforini/repos/finance"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/meetings/luke"]
+[projects."/Users/pablostafforini/repos/epoch-notes/meetings/luke"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/candidate-screening"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/candidate-screening"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/bench-scraper"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/bench-scraper"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/meetings/maria"]
+[projects."/Users/pablostafforini/repos/epoch-notes/meetings/maria"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/automations-dashboard"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/automations-dashboard"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/time-tracker"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/time-tracker"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/media-mentions"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/media-mentions"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/ghub"]
@@ -176,7 +176,7 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/repos/agent-skills"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/dotfiles/emacs"]
+[projects."/Users/pablostafforini/repos/dotfiles/emacs"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/init"]
@@ -206,25 +206,25 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/repos/80000hours.global"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/notes/public"]
+[projects."/Users/pablostafforini/repos/notes/public"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/benchmark-updates"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/benchmark-updates"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/slack-auto-responder"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/slack-auto-responder"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/ebib"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/meetings/ricardo"]
+[projects."/Users/pablostafforini/repos/epoch-notes/meetings/ricardo"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/wip-summary-poster"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/wip-summary-poster"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/home"]
+[projects."/Users/pablostafforini/repos/home"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/repos/epoch/ai-productivity-digest"]
@@ -236,34 +236,34 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/repos/epoch/email-triage"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/cybersecurity-policy"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/cybersecurity-policy"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/modeling-impact"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/modeling-impact"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/builds/agent"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/dotfiles/macos"]
+[projects."/Users/pablostafforini/repos/dotfiles/macos"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/markdown-mode"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/meetings"]
+[projects."/Users/pablostafforini/repos/epoch-notes/meetings"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/link-archiver"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/link-archiver"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/ai-tools-rollout"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/ai-tools-rollout"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/spam-filtering"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/spam-filtering"]
 trust_level = "trusted"
 
 [projects."/opt/homebrew"]
@@ -272,10 +272,10 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/ai-wiki"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/ai-wiki"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/android"]
+[projects."/Users/pablostafforini/repos/android"]
 trust_level = "trusted"
 
 [projects."/private/tmp/codex-gt"]
@@ -287,19 +287,19 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/repos/macrostrategy"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/agent-readiness"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/agent-readiness"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/dotfiles"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/conversations-with-champions"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/conversations-with-champions"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/gdocs-addon"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/gdocs-addon"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/repos/orbit"]
@@ -311,10 +311,10 @@ trust_level = "trusted"
 [projects."/"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/shared"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/shared"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/slack-maintenance"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/slack-maintenance"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/Videos/Harvard CS50s Intro to Cybersecurity"]
@@ -326,37 +326,37 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/org-gcal"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/epoch-find"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/epoch-find"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/Movies"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/epoch-asana"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/epoch-asana"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/epoch-ai-info"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/epoch-ai-info"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/trx"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/epoch-staff-availability"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/epoch-staff-availability"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/benchmark-candidate-digest"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/benchmark-candidate-digest"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/lever-assistant"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/lever-assistant"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/repos/reasoning-excellence"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/local-cybersecurity-checkup"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/local-cybersecurity-checkup"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/citation-tracker"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/citation-tracker"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/repos/rubric-visualizer"]
@@ -365,19 +365,19 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/spofy"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/meetings/yafah"]
+[projects."/Users/pablostafforini/repos/epoch-notes/meetings/yafah"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/onboarding"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/onboarding"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/projects/claude-tag"]
+[projects."/Users/pablostafforini/repos/epoch-notes/projects/claude-tag"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/My Drive/EA/EA Summit Buenos Aires"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/meetings/dmitriy"]
+[projects."/Users/pablostafforini/repos/epoch-notes/meetings/dmitriy"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/johnson"]
@@ -389,13 +389,13 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/yasnippet"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/meetings/giles"]
+[projects."/Users/pablostafforini/repos/epoch-notes/meetings/giles"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/meetings/tom"]
+[projects."/Users/pablostafforini/repos/epoch-notes/meetings/tom"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/My Drive/Epoch/meetings/matt"]
+[projects."/Users/pablostafforini/repos/epoch-notes/meetings/matt"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/repos/ae-newsletter-generator"]
@@ -823,39 +823,39 @@ enabled = false
 # BEGIN skill-prune disabled skills
 
 [[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/find-skills/SKILL.md"
+path = "/Users/pablostafforini/repos/dotfiles/.codex/skills/find-skills/SKILL.md"
 enabled = false
 
 [[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/google-sheets-comments/SKILL.md"
+path = "/Users/pablostafforini/repos/dotfiles/codex/skills/google-sheets-comments/SKILL.md"
 enabled = false
 
 [[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/install-mcp-server/SKILL.md"
+path = "/Users/pablostafforini/repos/dotfiles/.codex/skills/install-mcp-server/SKILL.md"
 enabled = false
 
 [[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/optimize-agent-instructions/SKILL.md"
+path = "/Users/pablostafforini/repos/dotfiles/.codex/skills/optimize-agent-instructions/SKILL.md"
 enabled = false
 
 [[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/overnight-todos/SKILL.md"
+path = "/Users/pablostafforini/repos/dotfiles/codex/skills/overnight-todos/SKILL.md"
 enabled = false
 
 [[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/pin-elisp-pr/SKILL.md"
+path = "/Users/pablostafforini/repos/dotfiles/codex/skills/pin-elisp-pr/SKILL.md"
 enabled = false
 
 [[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/refresh-cr-tracker/SKILL.md"
+path = "/Users/pablostafforini/repos/dotfiles/codex/skills/refresh-cr-tracker/SKILL.md"
 enabled = false
 
 [[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/skill-resolver/SKILL.md"
+path = "/Users/pablostafforini/repos/dotfiles/.codex/skills/skill-resolver/SKILL.md"
 enabled = false
 
 [[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/symptom-check/SKILL.md"
+path = "/Users/pablostafforini/repos/dotfiles/codex/skills/symptom-check/SKILL.md"
 enabled = false
 # END skill-prune disabled skills
 

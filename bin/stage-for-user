@@ -35,7 +35,7 @@ fi
 # real macOS per-user temp dir, so staging still works when the caller runs
 # with TMPDIR overridden (Claude Code pins TMPDIR=/tmp/claude-$UID for hooks and
 # tool commands, which hides the socket from a bare emacsclient).
-shim="$HOME/My Drive/dotfiles/shell/shims/emacsclient"
+shim="$HOME/repos/dotfiles/shell/shims/emacsclient"
 if [ -x "$shim" ]; then
   emacsclient=$shim
 else

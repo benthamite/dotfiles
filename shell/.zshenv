@@ -16,7 +16,7 @@ export PATH="$GOPATH/bin:$PATH"
 export GEM_HOME="$HOME/.gem"
 
 # Root of this repository, derived from this file's own real location so the
-# tracked shell files work wherever the checkout lives (~/My Drive/dotfiles on
+# tracked shell files work wherever the checkout lives (~/repos/dotfiles on
 # this machine, elsewhere on others that symlink ~/.zshenv into their clone).
 # %N is the file zsh is currently reading ($0 stays "zsh" in startup files) and
 # :A resolves the ~/.zshenv symlink to the file inside the repository.
@@ -54,10 +54,10 @@ op() {
 
 # Epoch workspace split (2026-10-06): shared project notes live in the
 # epoch-research/ai-enablement checkout; Pablo's private Epoch notes stay in
-# ~/My Drive/Epoch. Epoch tooling reads these instead of assuming one tree.
+# ~/repos/epoch-notes. Epoch tooling reads these instead of assuming one tree.
 export EPOCH_WORKSPACE="$HOME/repos/epoch/ai-enablement"
 export EPOCH_WORKSPACE_REPO="epoch-research/ai-enablement"
-export EPOCH_PRIVATE_ROOT="$HOME/My Drive/Epoch"
+export EPOCH_PRIVATE_ROOT="$HOME/repos/epoch-notes"
 
 # Essential environment variables
 export EDITOR="emacsclient -nw"

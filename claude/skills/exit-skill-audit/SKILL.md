@@ -9,7 +9,7 @@ argument-hint: "[--receipt-file PATH] [--target ID] [--force]"
 
 Principle: every exit-time skill audits itself monthly through this skill;
 audits only propose, Pablo approves. The principle, its instances and its TODO
-targets are in `~/My Drive/dotfiles/claude/context/skill-audits.md`.
+targets are in `~/repos/dotfiles/claude/context/skill-audits.md`.
 
 A **target** is an exit-time skill plus the checks that audit it, in
 `targets/<id>/` beside this file: `target.json` (the skill's path, the

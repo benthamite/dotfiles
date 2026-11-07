@@ -13,7 +13,7 @@ a new downloader, call Anna's Archive or LibGen directly, or reach for
 inside the tool, in the right order, with identity verification; the skill's job
 is to run it, and to drive the one step it cannot do itself: a real browser
 session for hosts that only answer a real browser. Shared logic:
-`~/My Drive/dotfiles/lib/python/paper_fetch.py`.
+`~/repos/dotfiles/lib/python/paper_fetch.py`.
 
 ## Procedure
 

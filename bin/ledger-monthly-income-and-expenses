@@ -8,8 +8,8 @@ TMP1=$(mktemp)
 TMP2=$(mktemp)
 trap 'rm -f "$TMP1" "$TMP2"' EXIT
 
-ledger --file ~/My\ Drive/ledger/journal.ledger -j reg ^Income -M --collapse --plot-amount-format="%(format_date(date, \"%Y-%m-%d\")) %(abs(quantity(scrub(display_amount))))\n" > "$TMP1"
-ledger --file ~/My\ Drive/ledger/journal.ledger -j reg ^Expenses -M --collapse > "$TMP2"
+ledger --file ~/repos/ledger/journal.ledger -j reg ^Income -M --collapse --plot-amount-format="%(format_date(date, \"%Y-%m-%d\")) %(abs(quantity(scrub(display_amount))))\n" > "$TMP1"
+ledger --file ~/repos/ledger/journal.ledger -j reg ^Expenses -M --collapse > "$TMP2"
 
 (cat <<EOF) | gnuplot
   set terminal $LEDGER_TERM

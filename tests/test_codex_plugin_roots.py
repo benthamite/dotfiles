@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 
-DOTFILES = Path("/Users/pablostafforini/My Drive/dotfiles")
+DOTFILES = Path("/Users/pablostafforini/repos/dotfiles")
 
 
 def load_script(name: str, path: Path):

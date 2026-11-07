@@ -714,7 +714,7 @@ def _secret_pattern_denial(tool: str, content: str, pattern: str, label: str) ->
         "BLOCKED: " + tool + " command would expose a secret (" + label + ").\n\nUse environment variables or "
         "`op://` references instead of literal secret values.\n\nIf this is a false positive, do not add an "
         "exemption to the guard: fetch a public URL with WebFetch instead, and read "
-        "~/My Drive/dotfiles/docs/secret-guard.md before changing the guard. Do not bypass it.")
+        "~/repos/dotfiles/docs/secret-guard.md before changing the guard. Do not bypass it.")
 
 
 # --- payload ------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 # Retained, unregistered Stop hook. This only emits a prompt; it captures nothing.
 set -euo pipefail
 
-ROOT="/Users/pablostafforini/My Drive/dotfiles"
+ROOT="/Users/pablostafforini/repos/dotfiles"
 TOOL="claude"
 
 exec python3 -c '

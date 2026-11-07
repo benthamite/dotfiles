@@ -22,7 +22,7 @@ GUARDS = [
 
 ALLOW = [
     "op-automations run --env-file .env.op -- python3 script.py --check",
-    'EPOCH_SHARED_DIR="/Users/x/My Drive/Epoch/projects/shared" KEY=/tmp/k.json '
+    'EPOCH_SHARED_DIR="/Users/x/repos/epoch-notes/projects/shared" KEY=/tmp/k.json '
     "op-automations run --env-file /Users/x/repo/.env.op -- python3 /Users/x/repo/refresh.py --check --diff",
     "DIR='/Users/x/My Drive' op-automations run --env-file .env.op -- make test",
     'ROOT="$HOME/repos/x" op-automations run --env-file "$ROOT/.env.op" -- python3 "$ROOT/bridge.py"',

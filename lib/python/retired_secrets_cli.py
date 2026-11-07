@@ -101,7 +101,7 @@ DENY_REASON = (
     "BLOCKED: this refers to the retired password-store CLI ({what}: {sample!r}). "
     "All secrets are in 1Password; read them with op-automations "
     "(Automation vaults, unattended) or op-desktop (anything else), in the "
-    "shapes described in ~/My Drive/dotfiles/claude/context/secrets.md. Do not "
+    "shapes described in ~/repos/dotfiles/claude/context/secrets.md. Do not "
     "name the retired CLI in code, docs, logs or commit messages: describe a "
     "removed reference as a 1Password lookup, or delete it."
 )

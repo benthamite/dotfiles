@@ -6,7 +6,7 @@ description: Decide where to persist anything meant for future agent sessions, i
 # Instruction placement
 
 1. Before choosing where anything goes, read the canonical policy in full:
-   `/Users/pablostafforini/My Drive/dotfiles/agents/instruction-placement.org`.
+   `/Users/pablostafforini/repos/dotfiles/agents/instruction-placement.org`.
 2. Apply its decision test and its permission boundary for `CLAUDE.md` and
    `AGENTS.md`.
 3. Name what will put the content in front of an agent at the moment it is

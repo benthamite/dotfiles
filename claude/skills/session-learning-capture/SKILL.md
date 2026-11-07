@@ -37,7 +37,7 @@ could collide with unrelated sessions.
 The central destination is:
 
 ```text
-~/My Drive/dotfiles/.agent-learnings/inbox/
+~/repos/dotfiles/.agent-learnings/inbox/
 ```
 
 It is **Drive-synced personal storage**, not merely local or private because

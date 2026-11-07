@@ -42,7 +42,7 @@ profile’s checkout, normally:
 #+end_example
 
 That checkout is a read-only runtime mirror. All edits belong in
-=~/My Drive/dotfiles/=. =bin/elpaca-package-path dotfiles= resolves this special
+=~/repos/dotfiles/=. =bin/elpaca-package-path dotfiles= resolves this special
 case to the canonical repository; other packages resolve to the active Elpaca
 profile.
 
@@ -90,7 +90,7 @@ actual reload result.
 
 This means an uncommitted extras edit is not yet the code loaded by Emacs. The
 safe order is: edit the canonical file, run the source-aware batch test, commit,
-then run =~/My\ Drive/dotfiles/claude/bin/elisp-live-verify PACKAGE -- EXPR=.
+then run =~/repos/dotfiles/claude/bin/elisp-live-verify PACKAGE -- EXPR=.
 That helper observes the post-commit rebuild, runs the package-named expression
 in live Emacs, and emits repository/package/commit-bound evidence. Batch
 evidence is separately bound to the repository, package, and source revision.

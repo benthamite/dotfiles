@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 
-DOTFILES = Path("/Users/pablostafforini/My Drive/dotfiles")
+DOTFILES = Path("/Users/pablostafforini/repos/dotfiles")
 NPM_MINIMUM = (11, 10, 0)
 BUN_MINIMUM = (1, 3, 0)
 PIP_MINIMUM = (26, 1, 0)

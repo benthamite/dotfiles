@@ -26,7 +26,7 @@ install the declared wheels without build scripts or unpinned dependencies:
 ```sh
 uv pip install --no-config --no-python-downloads --only-binary :all: --no-deps \
   --python "$HOME/.local/share/paper-fetch/venv/bin/python" \
-  --requirements "$HOME/My Drive/dotfiles/lib/python/paper-fetch-requirements.txt"
+  --requirements "$HOME/repos/dotfiles/lib/python/paper-fetch-requirements.txt"
 uv pip check --no-config --python "$HOME/.local/share/paper-fetch/venv/bin/python"
 ```
 

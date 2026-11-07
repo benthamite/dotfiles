@@ -10,7 +10,7 @@ Create or update an Org manual with the usage context and reference detail of
 The organization and metadata below are local conventions inspired by that
 manual, not a claim that Denote requires this exact template.
 
-**Dotfiles monorepo override:** In `~/My Drive/dotfiles/`, documentation for `emacs/extras/<package>.el` goes in `emacs/extras/doc/<package>.org` (one file per package), NOT `README.org`. When invoked for a package under `emacs/extras/`, use that path instead of the standalone-repo convention below.
+**Dotfiles monorepo override:** In `~/repos/dotfiles/`, documentation for `emacs/extras/<package>.el` goes in `emacs/extras/doc/<package>.org` (one file per package), NOT `README.org`. When invoked for a package under `emacs/extras/`, use that path instead of the standalone-repo convention below.
 
 For standalone packages, prefer an established manual path and the user's explicit target; use root `README.org` for a new manual when no convention exists. Do not force a rename, case-only move or consolidation of an existing multi-manual layout as an incidental documentation change. If a rename is actually requested, inspect collisions and inbound/build references, preserve history and use a safe two-step case-only move when the filesystem requires it. Cover the package's supported source files thematically, not vendored dependencies, unrelated libraries or tests.
 

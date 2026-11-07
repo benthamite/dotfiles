@@ -17,7 +17,7 @@ _CLONE = "elpaca/sources/dotfiles/"
 def _reason(path: str) -> str:
     canonical = path[path.rindex(_CLONE) + len(_CLONE):]  # ${FILE_PATH##*elpaca/sources/dotfiles/}
     return ("BLOCKED: Do not edit the elpaca clone of dotfiles — it syncs via git and your changes will be "
-            "overwritten.\n\nEdit the canonical file instead:\n  ~/My Drive/dotfiles/" + canonical
+            "overwritten.\n\nEdit the canonical file instead:\n  ~/repos/dotfiles/" + canonical
             + "\n\nThen commit and push in the dotfiles repo. The elpaca clone will pick up the change on next sync.")
 
 

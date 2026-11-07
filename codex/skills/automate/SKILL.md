@@ -99,7 +99,7 @@ unrelated definitions and resolve collisions rather than overwriting/shadowing t
    files paired as well as the main instructions, except documented differences.
 7. An exit-time skill (one that runs unattended at session end, such as a
    before-exit chain step) must also become an `exit-skill-audit` target; read
-   `/Users/pablostafforini/My Drive/dotfiles/claude/context/skill-audits.md`.
+   `/Users/pablostafforini/repos/dotfiles/claude/context/skill-audits.md`.
 
 ### gptel directive or preset
 
@@ -155,15 +155,15 @@ start recurring jobs during an advisory request.
 
 Three cross-project principles apply. Failure and liveness alerts go through the
 shared `launchd-heartbeat` service; read
-`/Users/pablostafforini/My Drive/dotfiles/claude/context/alerting.md` before
+`/Users/pablostafforini/repos/dotfiles/claude/context/alerting.md` before
 designing them, and do not build a project-specific alert channel. A job that
 must run on time gets a second trigger from that service's supervisor, and every
 run plans from fresh state; read
-`/Users/pablostafforini/My Drive/dotfiles/claude/context/scheduling.md` before
+`/Users/pablostafforini/repos/dotfiles/claude/context/scheduling.md` before
 choosing a scheduler or adding retries. An unattended
 job renews its own session credentials; a recurring manual refresh is a defect
 (see "Unattended programs renew their own sessions" in
-`/Users/pablostafforini/My Drive/dotfiles/claude/context/secrets.md`).
+`/Users/pablostafforini/repos/dotfiles/claude/context/secrets.md`).
 
 ## 4. Verify the actual contract
 

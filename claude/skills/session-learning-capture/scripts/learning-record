@@ -11,14 +11,14 @@
 #       its current sha256 is HASH (preimage check for merges).
 #
 # KEY is TOOL-SESSIONID (e.g. claude-90001c89-...).  The inbox defaults to
-# ~/My Drive/dotfiles/.agent-learnings/inbox; SESSION_LEARNING_INBOX
+# ~/repos/dotfiles/.agent-learnings/inbox; SESSION_LEARNING_INBOX
 # overrides it for tests.  Exit codes: 0 ok, 1 usage/safety error,
 # 2 no record, 3 locked by another run, 4 record exists and differs,
 # 5 preimage mismatch.
 
 set -euo pipefail
 
-inbox=${SESSION_LEARNING_INBOX:-"$HOME/My Drive/dotfiles/.agent-learnings/inbox"}
+inbox=${SESSION_LEARNING_INBOX:-"$HOME/repos/dotfiles/.agent-learnings/inbox"}
 
 die() { printf 'learning-record: %s\n' "$2" >&2; exit "$1"; }
 

@@ -15,9 +15,7 @@ Before adding or changing agent-facing guidance, use the
 
 ## Canonical sources
 
-- `~/My Drive/dotfiles/` is the canonical dotfiles source. It is the intentional
-  exception to the rule that development repositories do not live under the
-  Drive sync root.
+- `~/repos/dotfiles/` is the canonical dotfiles source.
 - The active profile's `elpaca/sources/dotfiles/` checkout (or its registry's
   legacy equivalent) is a read-only mirror. Do not edit it, even if an edit guard
   does not fire. Commit-time synchronization supplies its canonical changes.
@@ -32,7 +30,7 @@ Resolve package paths with the deterministic helper instead of guessing a
 profile or using `locate-library` or `symbol-file`:
 
 ```bash
-~/My\ Drive/dotfiles/bin/elpaca-package-path PACKAGE [relative-path]
+~/repos/dotfiles/bin/elpaca-package-path PACKAGE [relative-path]
 ```
 
 The helper returns the canonical dotfiles root for `dotfiles`, the canonical
@@ -91,7 +89,7 @@ not the aggregate `dotfiles` source. Observe any already-started commit-hook
 rebuild first rather than launching a competing one:
 
 ```bash
-~/My\ Drive/dotfiles/claude/bin/elpaca-rebuild-wait PACKAGE
+~/repos/dotfiles/claude/bin/elpaca-rebuild-wait PACKAGE
 ```
 
 ## Verification
@@ -99,11 +97,11 @@ rebuild first rather than launching a competing one:
 - Confirm the intended source/profile and generated output after a tangle;
   distinguish that from separately authorized live activation and behavior.
 - Follow `elisp-conventions` for every Emacs Lisp change.
-- Run `~/My\ Drive/dotfiles/bin/ai-config-sync audit` after paired
+- Run `~/repos/dotfiles/bin/ai-config-sync audit` after paired
   Claude/Codex changes.
 - If a tracked public skill name or catalog description changed, run
-  `~/My\ Drive/dotfiles/bin/docs-audit generate` and then
-  `~/My\ Drive/dotfiles/bin/docs-audit audit`. Inspect the generated diff and
+  `~/repos/dotfiles/bin/docs-audit generate` and then
+  `~/repos/dotfiles/bin/docs-audit audit`. Inspect the generated diff and
   preserve concurrent catalog edits; a generator can update more than your row.
 - Inspect `git status --short` before completion so unrelated concurrent edits
   remain separate.

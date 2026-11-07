@@ -160,7 +160,7 @@ These directories are children of @code{paths-dir-google-drive} and contain pers
 
 @itemize
 @item
-@code{paths-dir-dotfiles}: the dotfiles repository (default: @samp{My Drive/dotfiles/}).
+@code{paths-dir-dotfiles}: the dotfiles repository (default: @samp{repos/dotfiles/}).
 @item
 @code{paths-dir-dotemacs}: the Emacs subdirectory within dotfiles. Its default is user-dependent, resolved at load time based on the @samp{$HOME} environment variable.
 @item
@@ -190,7 +190,7 @@ These directories are children of @code{paths-dir-google-drive} and contain pers
 @item
 @code{paths-dir-PW}: the PW project directory.
 @item
-@code{paths-dir-epoch}: my personal Epoch notes, holding the inbox, root session logs and meeting notes (default: @samp{My Drive/Epoch/}).
+@code{paths-dir-epoch}: my personal Epoch notes, holding the inbox, root session logs and meeting notes (default: @samp{repos/epoch-notes/}).
 @item
 @code{paths-dir-epoch-workspace}: the shared Epoch workspace, holding the projects and their registry. Its default is the value of the @samp{EPOCH_WORKSPACE} environment variable, or @code{paths-dir-epoch} when that variable is unset, as it is while both share one directory.
 @end itemize
@@ -277,7 +277,7 @@ These directories organize Git repositories by provenance:
 @item
 @code{paths-dir-tlon-docs}, @code{paths-dir-babel-refs}, @code{paths-dir-translation-server}: specific repositories.
 @item
-@code{paths-dir-split-git} (default: @samp{~/git-dirs/}): bare @samp{.git} directories for split-worktree repos. Splitting keeps the object store out of the Google Drive sync root, so as of 2026-08-03 it applies only to the dotfiles repository and the Epoch project repositories, whose worktrees are still inside Drive; repositories under @samp{~/repos/} hold their own @samp{.git} directory.
+@code{paths-dir-split-git} (default: @samp{~/git-dirs/}): bare @samp{.git} directories for split-worktree repos. Splitting existed only to keep the object store out of the Google Drive sync root. Since 2026-11-06 no active repository is split: every repository, the dotfiles and notes workspaces included, lives under @samp{~/repos/} with its own @samp{.git} directory. The directory still holds the git directories of a few archived repositories.
 @item
 @code{paths-dir-all-repos}: a list aggregating several personal data directories for use in search and agenda commands.
 @end itemize

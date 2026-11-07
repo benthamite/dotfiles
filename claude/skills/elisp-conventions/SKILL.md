@@ -51,7 +51,7 @@ refreshed.
 Every edited `.el` file uses one of these paths:
 
 1. **Dotfiles extra:** production source under
-   `~/My Drive/dotfiles/emacs/extras/`. This is canonical source; the active
+   `~/repos/dotfiles/emacs/extras/`. This is canonical source; the active
    Elpaca dotfiles checkout is a committed mirror. Use `dotfiles-context` for
    source routing.
 2. **Standalone package:** identify the owning package from its metadata and
@@ -108,11 +108,11 @@ unless they also change production code or user documentation.
      session unless that workflow makes the operation safe.
 
 ```bash
-~/My\ Drive/dotfiles/claude/bin/elpaca-rebuild-wait PACKAGE
-~/My\ Drive/dotfiles/claude/bin/elisp-live-verify PACKAGE -- '(PACKAGE-CHECK)'
-~/My\ Drive/dotfiles/claude/bin/batch-test.sh PACKAGE
-~/My\ Drive/dotfiles/claude/bin/elisp-check-evidence file:RELATIVE-PATH -- PROJECT-CHECK
-~/My\ Drive/dotfiles/claude/bin/elisp-ert PACKAGE TEST-FILE [TEST-NAME]
+~/repos/dotfiles/claude/bin/elpaca-rebuild-wait PACKAGE
+~/repos/dotfiles/claude/bin/elisp-live-verify PACKAGE -- '(PACKAGE-CHECK)'
+~/repos/dotfiles/claude/bin/batch-test.sh PACKAGE
+~/repos/dotfiles/claude/bin/elisp-check-evidence file:RELATIVE-PATH -- PROJECT-CHECK
+~/repos/dotfiles/claude/bin/elisp-ert PACKAGE TEST-FILE [TEST-NAME]
 ```
 
 Test evidence counts only when it identifies the repository, package, and

@@ -5,7 +5,7 @@ description: 'Find or recall a past Claude or Codex session. Use when the user r
 
 # Find a past session
 
-1. Run `"$HOME/My Drive/dotfiles/claude/bin/agent-log-find" --since YYYY-MM-DD TERMS…`
+1. Run `"$HOME/repos/dotfiles/claude/bin/agent-log-find" --since YYYY-MM-DD TERMS…`
    first. It searches the rendered Claude and Codex logs
    (`~/.claude/rendered/<project>/<date>_<slug>.md`, with summaries) in under a
    second.

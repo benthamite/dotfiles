@@ -21,7 +21,7 @@ class ElpacaRebuildTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.env = {**os.environ, **GIT_ENV, "HOME": self.tmp.name}
-        self.repo = Path(self.tmp.name, "My Drive/dotfiles")
+        self.repo = Path(self.tmp.name, "repos/dotfiles")
         (self.repo / "emacs/extras").mkdir(parents=True)
         (self.repo / "emacs/extras/a.el").write_text("a\n")
         (self.repo / "emacs/b.el").write_text("b\n")
@@ -65,7 +65,7 @@ class GitFailureTests(unittest.TestCase):
     """`DIRTY=$(git ... 2>/dev/null || true)`: a failing git leaves DIRTY empty."""
 
     def test_git_error_allows_like_the_hook(self):
-        with tempfile.TemporaryDirectory() as home:  # no repository at HOME/My Drive/dotfiles
+        with tempfile.TemporaryDirectory() as home:  # no repository at HOME/repos/dotfiles
             call = Call.from_payload(CLAUDE, {"tool_name": "Bash", "tool_input": {"command": REBUILD}},
                                      env={**os.environ, "HOME": home})
             self.assertEqual(elpaca_rebuild.decide(call).decision, "allow")

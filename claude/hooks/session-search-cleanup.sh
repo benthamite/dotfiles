@@ -9,4 +9,4 @@
 # stderr and exits 0, and a missing interpreter only loses the cleanup.
 PY="$HOME/.pyenv/versions/3.11.9/bin/python3"
 exec "$PY" -S -E -X pycache_prefix="$HOME/.cache/agent-guard/pycache" \
-  "$HOME/My Drive/dotfiles/lib/python/session_search_cleanup.py" claude
+  "$HOME/repos/dotfiles/lib/python/session_search_cleanup.py" claude

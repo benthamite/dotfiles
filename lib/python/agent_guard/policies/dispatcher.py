@@ -40,7 +40,7 @@ NEEDS_REDACTION = tuple(ere(p) for p in (
 ))
 HEREDOC = ere(r"""<<-?[[:space:]]*[A-Za-z_'"]""")
 BACKGROUND = ere(r"&[[:space:]]*$")
-REDACTOR = str(HOME / "My Drive/dotfiles/claude/hooks/redact-secrets.sh")
+REDACTOR = str(HOME / "repos/dotfiles/claude/hooks/redact-secrets.sh")
 
 
 def _delegate(name: str, policy, call: Call, reasons: list[str]) -> None:

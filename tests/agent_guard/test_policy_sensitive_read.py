@@ -88,8 +88,8 @@ class BashTests(unittest.TestCase):
         self.assertEqual(bash("claude", "cat <<'EOF' > notes.md\n.env\nEOF").decision, "allow")
 
     def test_shell_export_classifier_exact_invocation(self):
-        helper = f"{HOME}/My Drive/dotfiles/macos/.claude/skills/security-audit/scripts/classify-shell-exports.py"
-        target = f"{HOME}/My Drive/dotfiles/shell/.zshenv-secrets"
+        helper = f"{HOME}/repos/dotfiles/macos/.claude/skills/security-audit/scripts/classify-shell-exports.py"
+        target = f"{HOME}/repos/dotfiles/shell/.zshenv-secrets"
         self.assertEqual(bash("claude", f'python3 "{helper}" "{target}"').decision, "allow")
         self.assertEqual(bash("claude", f'python3 "{helper}" "{target}" -v').decision, "deny")
 

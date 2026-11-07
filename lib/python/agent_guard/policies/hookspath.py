@@ -13,7 +13,7 @@ from .. import ere
 from ..core import Call, Result
 
 REASON = ("BLOCKED: Git commands may not override core.hooksPath. The global hooks in "
-          "~/My Drive/dotfiles/claude/git-hooks enforce Elisp test evidence and run each repository's own hooks.")
+          "~/repos/dotfiles/claude/git-hooks enforce Elisp test evidence and run each repository's own hooks.")
 
 _OPTION = r"-c[[:space:]]*core\.hookspath"
 _GIT_CONFIG = r"(^|[^[:alnum:]_-])git[[:space:]][^|;&]*config[[:space:]][^|;&]*core\.hookspath"

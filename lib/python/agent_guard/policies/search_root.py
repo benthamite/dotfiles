@@ -6,7 +6,7 @@ On 2026-10-06 agent sessions' searches read the disk at about 2 GB/s and
 pushed the load average to ~150; several were rooted at / or ~/My Drive (16,500
 PDFs in library-pdf alone). Claude Code's `find` and `grep` are its embedded
 bfs and ugrep, so a shell search is the usual form. A search inside a specific
-subdirectory (~/My Drive/dotfiles, ~/repos/x) is allowed, and so is a shallow
+subdirectory (~/repos/dotfiles, ~/repos/x) is allowed, and so is a shallow
 one (a depth limit of at most MAX_SHALLOW_DEPTH).
 
 Roots are compared after expanding ~ and $HOME, resolving a relative path
@@ -75,7 +75,7 @@ _LONG_VALUES = {
            "format", "and"},
 }
 _ADVICE = ("Name a narrower directory as the search root: the project or subdirectory that holds what you are "
-           "looking for (e.g. ~/My Drive/dotfiles, ~/repos/<name>), or cd there first. A shallow search is allowed "
+           "looking for (e.g. ~/repos/dotfiles, ~/repos/<name>), or cd there first. A shallow search is allowed "
            f"at these roots (find -maxdepth {MAX_SHALLOW_DEPTH}, fd/rg --max-depth {MAX_SHALLOW_DEPTH}). "
            f"The huge roots are configured in HUGE_ROOTS ({__name__}).")
 

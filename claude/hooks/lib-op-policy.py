@@ -46,7 +46,7 @@ RUN_DENIED_PROGRAMS = {"env", "printenv", "set", "export", "declare", "typeset",
 DATA_COMMANDS = {"echo", "printf", "grep", "rg", "ripgrep", "git", "ls", "stat", "readlink"}
 # Read-only text tools. A broker *path* handed to one of these is the script's
 # source being read, not the broker being run: `cat bin/op-automations`,
-# `sed -n 1,50p ~/My\ Drive/dotfiles/bin/op-automations`, `wc -l …`. Denied
+# `sed -n 1,50p ~/repos/dotfiles/bin/op-automations`, `wc -l …`. Denied
 # again when the stage feeds an interpreter, which would run what it reads.
 TEXT_READERS = {"cat", "head", "tail", "wc", "sed", "diff", "file", "less", "more", "shellcheck"}
 INTERPRETERS = SHELLS | {"eval", "source", ".", "xargs", "perl", "ruby", "node", "awk"}

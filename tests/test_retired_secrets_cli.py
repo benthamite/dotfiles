@@ -49,7 +49,7 @@ INNOCENT = (
     "from passlib import hash",
     "op-automations @personal read op://Automation/home-assistant-token/credential",
     "except ValueError:\n    pass  # ignore",
-    "~/My Drive/dotfiles/claude/hooks/block-retired-secrets-cli.py",
+    "~/repos/dotfiles/claude/hooks/block-retired-secrets-cli.py",
 )
 
 

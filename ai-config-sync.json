@@ -679,7 +679,7 @@
       "path": "codex/hooks.json",
       "tracked": true,
       "live_path": "~/.codex/hooks.json",
-      "note": "Global registrations live through ~/.codex/hooks.json, outside repo-root .codex to avoid double loading. Lifecycle hooks use codex-hook-wrapper; only PermissionRequest waits on Emacs. Shell matchers cover Bash, exec_command and functions.exec(_command); edit matchers are collapsed for trust review. Guards allow or deny, never ask. Since 2026-10-01 the shell and apply_patch|Edit|Write PreToolUse groups each run only agent-guard.sh (chains in lib/python/agent_guard/engine.py); its trust was renewed per home via the app-server API. New definitions need native trust. Output redactor 2026-09-30."
+      "note": "Global registrations live through ~/.codex/hooks.json, outside repo-root .codex to avoid double loading. Lifecycle hooks use codex-hook-wrapper; only PermissionRequest waits on Emacs. Shell matchers cover Bash, exec_command and functions.exec(_command); edit matchers are collapsed for trust review. Guards allow or deny, never ask. Since 2026-10-01 the shell and apply_patch|Edit|Write PreToolUse groups each run only agent-guard.sh (chains in lib/python/agent_guard/engine.py); trust renewed per home via app-server API (2026-11-06). New definitions need native trust. Output redactor 2026-09-30."
     },
     {
       "tool": "Claude Code and Codex",
@@ -693,7 +693,7 @@
       "path": "codex/config.toml",
       "tracked": true,
       "live_path": "~/.codex/config.toml",
-      "note": "Codex model/trust/plugin/MCP/hook config. Account copies are writable and seeded by agent; retain .git/.agent-workspace project_root_markers in each. Claude loads ancestors natively (no config counterpart). Desktop owns per-home browser hashes; the shim retains signed runtimes. CODEX_CLI_PATH: Resources/codex-cli/bin/codex. Preserve hook source/key/hash trust; new hooks need hooks/list and config/batchWrite per home. skill-prune disables skills; codex-config-prune removes dead records. Moves require trust-key rewrites; Trajectory trust is retired. See codex/README.org."
+      "note": "Codex model/trust/plugin/MCP/hook config. Account copies are writable and seeded by agent; retain .git/.agent-workspace project_root_markers in each. Claude loads ancestors natively (no config counterpart). Desktop owns per-home browser hashes; the shim retains signed runtimes. CODEX_CLI_PATH: Resources/codex-cli/bin/codex. Preserve hook source/key/hash trust; new hooks need hooks/list and config/batchWrite per home. skill-prune disables skills; codex-config-prune removes dead records. Moves require trust-key rewrites (last 2026-11-06); Trajectory trust is retired. See codex/README.org."
     },
     {
       "tool": "Codex",

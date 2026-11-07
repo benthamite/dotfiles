@@ -206,7 +206,7 @@ happens after the initial mode-string sync."
 ;;;;; Credentials from Chrome
 
 (defvar slack-extras-chrome-program
-  (expand-file-name "~/My Drive/dotfiles/claude/bin/slack_chrome.py")
+  (expand-file-name "~/repos/dotfiles/claude/bin/slack_chrome.py")
   "Program that refreshes Slack session credentials from Chrome.
 Run as `slack_chrome.py ensure DOMAIN', it leaves a verified token and
 cookie for DOMAIN in `slack-extras-chrome-cache-directory', reading them

@@ -25,9 +25,9 @@ Use the committed redacting wrapper; it obtains the GitGuardian token internally
 and prints a fixed metadata schema:
 
 ```bash
-"$HOME/My Drive/dotfiles/bin/gitguardian-incidents" list-open
-"$HOME/My Drive/dotfiles/bin/gitguardian-incidents" list-closed
-"$HOME/My Drive/dotfiles/bin/gitguardian-incidents" get "$id"
+"$HOME/repos/dotfiles/bin/gitguardian-incidents" list-open
+"$HOME/repos/dotfiles/bin/gitguardian-incidents" list-closed
+"$HOME/repos/dotfiles/bin/gitguardian-incidents" get "$id"
 ```
 
 The wrapper owns the credential locator; use its configured account rather

@@ -46,7 +46,7 @@ dependencies, state, plans or generated artifacts in the skill tree or a synced
 location. Resolve symlinks rather than assuming every home path is outside Drive.
 Missing/broken dependencies are setup gaps, not permission-free profiles.
 
-Read `/Users/pablostafforini/My Drive/dotfiles/claude/context/secrets.md` before
+Read `/Users/pablostafforini/repos/dotfiles/claude/context/secrets.md` before
 handling permission-store data or backups. Access only the permission key through
 the helper; never dump the whole database, tokens, raw errors or account sessions.
 

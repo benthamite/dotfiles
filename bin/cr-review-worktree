@@ -24,7 +24,7 @@ set -uo pipefail
 REPO="trajectory-labs-pbc/reasoning-tasks"
 MAIN="$HOME/Trajectory/reasoning-tasks/main"
 WORKTREES="$HOME/repos/.worktrees/reasoning-tasks"
-HOOK="$HOME/My Drive/dotfiles/claude/hooks/sync-reasoning-tasks-worktree.sh"
+HOOK="$HOME/repos/dotfiles/claude/hooks/sync-reasoning-tasks-worktree.sh"
 
 die() { echo "cr-review-worktree: $*" >&2; exit 1; }
 

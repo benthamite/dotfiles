@@ -3,4 +3,4 @@
 # key: coinp
 # contributor: Pablo Stafforini
 # --
-python3 ~/My\ Drive/ledger/coinprices/coinprices.py >> ~/My\ Drive/ledger/.pricedb
+python3 ~/repos/ledger/coinprices/coinprices.py >> ~/repos/ledger/.pricedb

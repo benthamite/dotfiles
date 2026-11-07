@@ -108,7 +108,7 @@
   :group 'paths)
 
 (defcustom paths-dir-finance
-  (file-name-concat paths-dir-google-drive "finance/")
+  (file-name-concat (expand-file-name "~") "repos/finance/")
   "Path to the finance directory."
   :type 'directory
   :group 'paths)
@@ -168,7 +168,7 @@
   :group 'paths)
 
 (defcustom paths-dir-journal
-  (file-name-concat paths-dir-google-drive "journal/")
+  (file-name-concat (expand-file-name "~") "repos/journal/")
   "Path to the journal directory."
   :type 'directory
   :group 'paths)
@@ -192,7 +192,7 @@
   :group 'paths)
 
 (defcustom paths-dir-dotfiles
-  (file-name-concat paths-dir-google-drive "dotfiles/")
+  (file-name-concat (expand-file-name "~") "repos/dotfiles/")
   "Path to the dotfiles directory."
   :type 'directory
   :group 'paths)
@@ -204,14 +204,14 @@
   :group 'paths)
 
 (defcustom paths-dir-bibliographic-notes
-  (file-name-concat paths-dir-google-drive "bibliographic-notes/")
+  (file-name-concat (expand-file-name "~") "repos/bibliographic-notes/")
   "Path to the bibliographic notes directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-dotemacs
   (let ((dir (pcase (getenv "HOME")
-	       ("/Users/pablostafforini" "My Drive/dotfiles/emacs/")
+	       ("/Users/pablostafforini" "repos/dotfiles/emacs/")
 	       ("/Users/fede" "source/dotfiles/emacs/")
 	       ("/Users/cartago" "source/dotfiles/emacs/")
 	       (_ "dotfiles/emacs/"))))
@@ -245,7 +245,7 @@
   :group 'paths)
 
 (defcustom paths-dir-epoch
-  (file-name-concat paths-dir-google-drive "Epoch/")
+  (file-name-concat (expand-file-name "~") "repos/epoch-notes/")
   "Path to my personal Epoch notes directory.
 It holds the inbox, root session logs and meeting notes."
   :type 'directory
@@ -265,25 +265,25 @@ standard checkout location when Emacs starts without that variable."
   :group 'paths)
 
 (defcustom paths-dir-ledger
-  (file-name-concat paths-dir-google-drive "ledger/")
+  (file-name-concat (expand-file-name "~") "repos/ledger/")
   "Path to the ledger directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-notes
-  (file-name-concat paths-dir-google-drive "notes/")
+  (file-name-concat (expand-file-name "~") "repos/notes/")
   "Path to the notes directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-people
-  (file-name-concat paths-dir-google-drive "people/")
+  (file-name-concat (expand-file-name "~") "repos/people/")
   "Path to the people directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-android
-  (file-name-concat paths-dir-google-drive "android/")
+  (file-name-concat (expand-file-name "~") "repos/android/")
   "Path to the Android directory."
   :type 'directory
   :group 'paths)
@@ -324,7 +324,7 @@ value."
   :group 'paths)
 
 (defcustom paths-dir-tlon-todos
-  (file-name-concat paths-dir-google-drive "tlon-notes/")
+  (file-name-concat (expand-file-name "~") "repos/tlon-notes/")
   "Path to the Tlön todos directory."
   :type 'directory
   :group 'paths)
@@ -339,11 +339,11 @@ value."
   (file-name-concat (expand-file-name "~") "git-dirs/")
   "Path to the \".git\" directory in split repos.
 
-Splitting exists only to keep the object store out of the Google Drive sync
-root, so it now applies only to repositories whose worktree is still inside
-Drive: the dotfiles repository and the Epoch project repositories.  Every
-repository under `paths-dir-personal-repos' keeps its \".git\" directory in
-place."
+Splitting existed only to keep the object store out of the Google Drive sync
+root.  Since 2026-11-06 no active repository is split: every repository,
+the dotfiles and notes workspaces included, lives under
+`paths-dir-personal-repos' with its \".git\" directory in place.  The
+directory still holds the git directories of a few archived repositories."
   :type 'directory
   :group 'paths)
 
@@ -500,7 +500,7 @@ This should be the path you set `org-roam-directory' to."
   :group 'paths)
 
 (defcustom paths-dir-personal-bibliography
-  (file-name-concat paths-dir-google-drive "bibliography/")
+  (file-name-concat (expand-file-name "~") "repos/bibliography/")
   "Path to the `bibliography' directory."
   :type 'directory
   :group 'paths)

@@ -17,7 +17,7 @@ set -euo pipefail
 root="${REASONING_TASKS_WORKTREES_ROOT:-${AGENT_C_WORKTREES_ROOT:-$HOME/Trajectory/reasoning-tasks}}"
 external_root="${REASONING_TASKS_EXTERNAL_WORKTREES_ROOT:-$HOME/repos/.worktrees/reasoning-tasks}"
 main="${REASONING_TASKS_MAIN_WORKTREE:-${AGENT_C_MAIN_WORKTREE:-$root/main}}"
-sync_script="${REASONING_TASKS_SYNC_SCRIPT:-${AGENT_C_SYNC_SCRIPT:-$HOME/My Drive/dotfiles/claude/hooks/sync-reasoning-tasks-worktree.sh}}"
+sync_script="${REASONING_TASKS_SYNC_SCRIPT:-${AGENT_C_SYNC_SCRIPT:-$HOME/repos/dotfiles/claude/hooks/sync-reasoning-tasks-worktree.sh}}"
 log_dir="${REASONING_TASKS_SYNC_LOG_DIR:-${AGENT_C_SYNC_LOG_DIR:-$HOME/.local/state/reasoning-tasks-worktree-sync}}"
 
 mkdir -p "$log_dir"

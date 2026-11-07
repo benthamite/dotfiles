@@ -196,7 +196,7 @@ def epoch_skill_parents() -> list[tuple[Path, str, int]]:
     return [
         (env_path("EPOCH_WORKSPACE", HOME / "repos" / "epoch" / "ai-enablement"),
          "epoch-workspace", 40),
-        (env_path("EPOCH_PRIVATE_ROOT", HOME / "My Drive" / "Epoch"), "epoch-private", 41),
+        (env_path("EPOCH_PRIVATE_ROOT", HOME / "repos" / "epoch-notes"), "epoch-private", 41),
     ]
 
 

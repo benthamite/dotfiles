@@ -12,14 +12,14 @@ read-only. Do not ask again for that same authority.
 
 ## Load the owners
 
-Read `/Users/pablostafforini/My Drive/dotfiles/agents/bibliography-policy.md`
+Read `/Users/pablostafforini/repos/dotfiles/agents/bibliography-policy.md`
 before deciding which works/editions to add. It alone owns editorial and PDF
 selection policy. Use `add-bib-entry` for every new entry, targeted metadata
 repair and attachment. Use `org-note-conventions` for personal Org edits.
 
 For lookup, exact source-span replacement, Org syntax and preservation, read
 the existing conversion procedure:
-`/Users/pablostafforini/My Drive/notes/.codex/programmatic-skills/convert-citations/SKILL.md`
+`/Users/pablostafforini/repos/notes/.codex/programmatic-skills/convert-citations/SKILL.md`
 in Codex, or the corresponding `.claude/` path in Claude.
 Its existing-only boundary applies to the conversion phase after this workflow
 has resolved additions; do not ask that phase to create missing entries.
@@ -78,7 +78,7 @@ items when the policy changes.
    Add parents first. Process additions and callbacks sequentially; research
    independent works in parallel only when it does not share mutation state.
 4. Export selected entry fields as JSON and run
-   `/Users/pablostafforini/My Drive/dotfiles/bin/bib-entry-check`;
+   `/Users/pablostafforini/repos/dotfiles/bin/bib-entry-check`;
    supply explicitly resolved parents for crossrefs. Correct missing/incorrect
    metadata through Ebib, then recheck. Record semantic source/edition/abstract
    review separately: the CLI's success means structure only.

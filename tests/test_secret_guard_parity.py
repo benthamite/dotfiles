@@ -341,7 +341,7 @@ class SecretGuardParityTests(unittest.TestCase):
     def test_broker_metadata_inspection(self):
         for command in (
             "bash -n bin/op-automations",
-            "ls -l /Users/pablostafforini/bin/op-automations '/Users/pablostafforini/My Drive/dotfiles/bin/op-automations'",
+            "ls -l /Users/pablostafforini/bin/op-automations '/Users/pablostafforini/repos/dotfiles/bin/op-automations'",
             "/usr/bin/stat /Users/pablostafforini/bin/op-desktop",
             "readlink /Users/pablostafforini/bin/op-automations",
         ):
@@ -633,7 +633,7 @@ class SecretGuardParityTests(unittest.TestCase):
     def test_case_default_pattern_is_not_mistaken_for_executable_glob(self):
         self.assert_both("case x in *) true ;; esac", "allow")
         for shred in ("shred", "/opt/homebrew/bin/shred"):
-            command = f"""runs_root=/Users/pablostafforini/git-dirs/dotfiles/dotfiles-publish/runs
+            command = f"""runs_root=/Users/pablostafforini/repos/dotfiles/.git/dotfiles-publish/runs
 purged=0
 for run_file in "$runs_root"/*/run.json; do
   test -f "$run_file" || continue
@@ -721,7 +721,7 @@ done"""
         # path must not hide the command word from the sink check.
         for helper in (
             "copy-slack-draft",
-            "~/My\\ Drive/dotfiles/claude/bin/copy-slack-draft",
+            "~/repos/dotfiles/claude/bin/copy-slack-draft",
             "kill-ring-put",
         ):
             with self.subTest(helper=helper):

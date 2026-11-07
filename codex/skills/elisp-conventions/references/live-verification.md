@@ -8,7 +8,7 @@ Emacs session.
 After the verified commit, use the bound live-verification helper:
 
 ```bash
-~/My\ Drive/dotfiles/claude/bin/elisp-live-verify PACKAGE -- '(PACKAGE-CHECK)'
+~/repos/dotfiles/claude/bin/elisp-live-verify PACKAGE -- '(PACKAGE-CHECK)'
 ```
 
 Confirm live interaction and its effects are within the requested task. Resolve
@@ -39,7 +39,7 @@ For a deleted package, run from its owning Git checkout and use the actual
 registry/feature ID, which may differ from the checkout evidence label:
 
 ```bash
-~/My\ Drive/dotfiles/claude/bin/elisp-live-verify deleted:PACKAGE -- '(not (featurep '\''PACKAGE))'
+~/repos/dotfiles/claude/bin/elisp-live-verify deleted:PACKAGE -- '(not (featurep '\''PACKAGE))'
 ```
 
 This mode requires the package source to be absent at `HEAD`. It removes only

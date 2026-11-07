@@ -23,7 +23,7 @@ from typing import BinaryIO, Iterable
 sys.dont_write_bytecode = True  # keep __pycache__ out of the Drive-synced tree
 
 
-ROOT = Path.home() / "My Drive" / "dotfiles"
+ROOT = Path.home() / "repos" / "dotfiles"
 BIN_DIR = Path(__file__).resolve().parent
 if str(BIN_DIR) not in sys.path:
     sys.path.insert(0, str(BIN_DIR))
@@ -3278,7 +3278,7 @@ def epoch_skill_parents() -> list[tuple[Path, str, int]]:
     return [
         (epoch_env_path("EPOCH_WORKSPACE", Path.home() / "repos" / "epoch" / "ai-enablement"),
          "epoch-workspace", 40),
-        (epoch_env_path("EPOCH_PRIVATE_ROOT", Path.home() / "My Drive" / "Epoch"),
+        (epoch_env_path("EPOCH_PRIVATE_ROOT", Path.home() / "repos" / "epoch-notes"),
          "epoch-private", 41),
     ]
 

@@ -17,7 +17,7 @@ import unittest
 from pathlib import Path
 
 
-SCRIPT = Path("/Users/pablostafforini/My Drive/dotfiles/claude/bin/sync-mcp-servers.sh")
+SCRIPT = Path("/Users/pablostafforini/repos/dotfiles/claude/bin/sync-mcp-servers.sh")
 
 
 class SyncMcpServersTests(unittest.TestCase):

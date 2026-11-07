@@ -1,2 +1,2 @@
 #!/bin/sh
-exec "$HOME/My Drive/dotfiles/claude/bin/ahrefs-api-guard" "$@"
+exec "$HOME/repos/dotfiles/claude/bin/ahrefs-api-guard" "$@"

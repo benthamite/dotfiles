@@ -14,12 +14,12 @@ This is not general documentation, README generation or release work; use
 
 ## Paths and authority
 
-- Packages list: `/Users/pablostafforini/My Drive/notes/public/my-emacs-packages.org`.
+- Packages list: `/Users/pablostafforini/repos/notes/public/my-emacs-packages.org`.
 - Existing manuals are normally under
-  `/Users/pablostafforini/My Drive/notes/public/unlisted/`. Search the public notes
+  `/Users/pablostafforini/repos/notes/public/unlisted/`. Search the public notes
   tree and follow existing ID links before choosing a new path.
 - Resolve Elpaca source with
-  `"/Users/pablostafforini/My Drive/dotfiles/bin/elpaca-package-path" PACKAGE`.
+  `"/Users/pablostafforini/repos/dotfiles/bin/elpaca-package-path" PACKAGE`.
   Do not construct a checkout from a profile name, guess a legacy layout, or use
   `locate-library`/`symbol-file` as source authority.
 - Read each target repository's applicable instructions and status before edits.

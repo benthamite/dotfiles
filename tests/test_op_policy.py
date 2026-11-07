@@ -14,7 +14,7 @@ import sys
 import unittest
 from pathlib import Path
 
-DOTFILES = Path("/Users/pablostafforini/My Drive/dotfiles")
+DOTFILES = Path("/Users/pablostafforini/repos/dotfiles")
 MODULES = {
     "claude": DOTFILES / "claude" / "hooks" / "lib-op-policy.py",
 }
@@ -101,15 +101,15 @@ ALLOW = [
     "op-desktop document list --vault Automations",
     # inert documentation
     "bash -n bin/op-automations",
-    "/bin/bash -n '/Users/pablostafforini/My Drive/dotfiles/bin/op-automations'",
-    "ls -l /Users/pablostafforini/bin/op-automations '/Users/pablostafforini/My Drive/dotfiles/bin/op-automations'",
+    "/bin/bash -n '/Users/pablostafforini/repos/dotfiles/bin/op-automations'",
+    "ls -l /Users/pablostafforini/bin/op-automations '/Users/pablostafforini/repos/dotfiles/bin/op-automations'",
     "/bin/ls -l op-desktop",
     "stat op-automations",
     "readlink /Users/pablostafforini/bin/op-desktop",
     # a broker *path* read by a text tool is its source being read
     "cat bin/op-automations",
-    "cat ~/My\\ Drive/dotfiles/bin/op-automations",
-    "sed -n 1,200p ~/My\\ Drive/dotfiles/bin/op-automations",
+    "cat ~/repos/dotfiles/bin/op-automations",
+    "sed -n 1,200p ~/repos/dotfiles/bin/op-automations",
     "head -50 bin/op-automations | grep exec",
     "wc -l bin/op-automations bin/op-desktop",
     "diff bin/op-automations bin/op-desktop",

@@ -8,7 +8,7 @@
 
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/pablostafforini/My Drive/dotfiles/bin/personal-updates</string>
+    <string>/Users/pablostafforini/repos/dotfiles/bin/personal-updates</string>
     <string>delayed</string>
     <string>--min-age-days</string>
     <string>7</string>

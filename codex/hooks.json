@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/9.0.2-dev/elpaca/sources/codex/bin/codex-hook-wrapper PermissionRequest --emacsclient /Users/pablostafforini/My\\ Drive/dotfiles/shell/shims/emacsclient --socket-name server",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/9.0.2-dev/elpaca/sources/codex/bin/codex-hook-wrapper PermissionRequest --emacsclient /Users/pablostafforini/repos/dotfiles/shell/shims/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/9.0.2-dev/elpaca/sources/codex/bin/codex-hook-wrapper UserPromptSubmit --emacsclient /Users/pablostafforini/My\\ Drive/dotfiles/shell/shims/emacsclient --socket-name server",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/9.0.2-dev/elpaca/sources/codex/bin/codex-hook-wrapper UserPromptSubmit --emacsclient /Users/pablostafforini/repos/dotfiles/shell/shims/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -30,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/agent-guard.sh",
+            "command": "~/repos/dotfiles/codex/hooks/agent-guard.sh",
             "timeout": 30
           }
         ]
@@ -40,7 +40,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/agent-guard.sh",
+            "command": "~/repos/dotfiles/codex/hooks/agent-guard.sh",
             "timeout": 30
           }
         ]
@@ -50,7 +50,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/9.0.2-dev/elpaca/sources/codex/bin/codex-hook-wrapper PreToolUse --emacsclient /Users/pablostafforini/My\\ Drive/dotfiles/shell/shims/emacsclient --socket-name server",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/9.0.2-dev/elpaca/sources/codex/bin/codex-hook-wrapper PreToolUse --emacsclient /Users/pablostafforini/repos/dotfiles/shell/shims/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -62,17 +62,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/load-elisp-after-edit.sh",
+            "command": "~/repos/dotfiles/codex/hooks/load-elisp-after-edit.sh",
             "timeout": 150
           },
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/epoch-brief-freshness.sh",
+            "command": "~/repos/dotfiles/codex/hooks/epoch-brief-freshness.sh",
             "timeout": 40
           },
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/redact-tool-output.py",
+            "command": "~/repos/dotfiles/codex/hooks/redact-tool-output.py",
             "timeout": 30
           }
         ]
@@ -82,22 +82,22 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/load-elisp-after-edit.sh",
+            "command": "~/repos/dotfiles/codex/hooks/load-elisp-after-edit.sh",
             "timeout": 150
           },
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/remind-claude-readme-update.sh",
+            "command": "~/repos/dotfiles/codex/hooks/remind-claude-readme-update.sh",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/regenerate-manual-after-edit.sh",
+            "command": "~/repos/dotfiles/codex/hooks/regenerate-manual-after-edit.sh",
             "timeout": 60
           },
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/remind-ai-config-sync.sh",
+            "command": "~/repos/dotfiles/codex/hooks/remind-ai-config-sync.sh",
             "timeout": 5
           }
         ]
@@ -107,7 +107,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/redact-tool-output.py",
+            "command": "~/repos/dotfiles/codex/hooks/redact-tool-output.py",
             "timeout": 30
           }
         ]
@@ -117,7 +117,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/9.0.2-dev/elpaca/sources/codex/bin/codex-hook-wrapper PostToolUse --emacsclient /Users/pablostafforini/My\\ Drive/dotfiles/shell/shims/emacsclient --socket-name server",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/9.0.2-dev/elpaca/sources/codex/bin/codex-hook-wrapper PostToolUse --emacsclient /Users/pablostafforini/repos/dotfiles/shell/shims/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -129,7 +129,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/9.0.2-dev/elpaca/sources/codex/bin/codex-hook-wrapper SessionStart --emacsclient /Users/pablostafforini/My\\ Drive/dotfiles/shell/shims/emacsclient --socket-name server",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/9.0.2-dev/elpaca/sources/codex/bin/codex-hook-wrapper SessionStart --emacsclient /Users/pablostafforini/repos/dotfiles/shell/shims/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -140,7 +140,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/claude/bin/elisp-evidence stop-check --agent codex",
+            "command": "~/repos/dotfiles/claude/bin/elisp-evidence stop-check --agent codex",
             "timeout": 30
           }
         ]
@@ -150,7 +150,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/9.0.2-dev/elpaca/sources/codex/bin/codex-hook-wrapper Stop --emacsclient /Users/pablostafforini/My\\ Drive/dotfiles/shell/shims/emacsclient --socket-name server",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/9.0.2-dev/elpaca/sources/codex/bin/codex-hook-wrapper Stop --emacsclient /Users/pablostafforini/repos/dotfiles/shell/shims/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -161,7 +161,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/session-search-cleanup.sh",
+            "command": "~/repos/dotfiles/codex/hooks/session-search-cleanup.sh",
             "timeout": 3
           }
         ]
@@ -173,7 +173,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/9.0.2-dev/elpaca/sources/codex/bin/codex-hook-wrapper PreCompact --emacsclient /Users/pablostafforini/My\\ Drive/dotfiles/shell/shims/emacsclient --socket-name server",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/9.0.2-dev/elpaca/sources/codex/bin/codex-hook-wrapper PreCompact --emacsclient /Users/pablostafforini/repos/dotfiles/shell/shims/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -185,7 +185,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/9.0.2-dev/elpaca/sources/codex/bin/codex-hook-wrapper PostCompact --emacsclient /Users/pablostafforini/My\\ Drive/dotfiles/shell/shims/emacsclient --socket-name server",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/9.0.2-dev/elpaca/sources/codex/bin/codex-hook-wrapper PostCompact --emacsclient /Users/pablostafforini/repos/dotfiles/shell/shims/emacsclient --socket-name server",
             "timeout": 30
           }
         ]

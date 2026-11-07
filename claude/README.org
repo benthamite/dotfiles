@@ -183,12 +183,12 @@ subagents must not overwrite their parent's status. A failed publish usually
 means Emacs was briefly busy, so agents keep publishing afterwards.
 
 The global instructions state the repository-root contract shared with the
-Codex side: every code repository lives outside Drive under =~/repos/= (Epoch
-repositories under =~/repos/epoch/=). The dotfiles and notes workspaces such as
-=Epoch/= and =Forethought/= are the exception: their working trees stay in
-Drive and their git directories live in =~/git-dirs/<name>=. Nothing under the
-Drive sync root may
-hold dependencies, builds, caches, virtual environments, or worktrees, and
+Codex side: every git repository lives outside Drive under =~/repos/= with
+its =.git= directory inside it (Epoch repositories under =~/repos/epoch/=, an
+organization's notes workspace at =~/repos/<org>-notes=). The dotfiles and the
+notes workspaces were the last exception, with working trees in Drive and git
+directories in =~/git-dirs/<name>=, until they moved on 2026-11-06. Nothing
+under the Drive sync root may hold dependencies, builds, caches, virtual environments, or worktrees, and
 every linked worktree lives under =~/repos/.worktrees/<repo>/<name>=. The
 108 repositories that used to sit under =~/My Drive/repos/= were moved on
 2026-08-03; the hooks that named a repository path were updated in the same
@@ -1647,7 +1647,7 @@ those differences rather than forcing them into Codex-shaped files.
 
 * Forethought notes workspace
 
-Forethought sessions launch from =~/My Drive/Forethought/= or the selected
+Forethought sessions launch from =~/repos/forethought-notes/= or the selected
 notes project. The Emacs project picker includes the workspace, =prep/=, and
 immediate =projects/*/= directories with instruction files, across existing
 accounts. Claude loads the workspace =CLAUDE.md= and then the project's

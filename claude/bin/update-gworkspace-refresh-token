@@ -247,7 +247,7 @@ def main():
             file=sys.stderr,
         )
     else:
-        secrets = Path.home() / "My Drive" / "dotfiles" / "shell" / ".zshenv-secrets"
+        secrets = Path.home() / "repos" / "dotfiles" / "shell" / ".zshenv-secrets"
         update_env_file(var, creds.refresh_token, secrets)
         print(f"Updated {var} in {secrets}", file=sys.stderr)
 

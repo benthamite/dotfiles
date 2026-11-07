@@ -18,12 +18,12 @@
 
 ## Safety
 
-- **Untrusted execution:** run code you haven't reviewed (downloaded scripts, unfamiliar repositories' build/test/install steps, `npx`/`uvx`-style runners) through `~/My Drive/dotfiles/bin/untrusted-run` with minimal inputs. If it can't run there, stop; never fall back to the host.
+- **Untrusted execution:** run code you haven't reviewed (downloaded scripts, unfamiliar repositories' build/test/install steps, `npx`/`uvx`-style runners) through `~/repos/dotfiles/bin/untrusted-run` with minimal inputs. If it can't run there, stop; never fall back to the host.
 - **Emacs:** never send signals to an active Emacs session without explicit confirmation.
 - **Deletion:** use `trash` instead of destructive recursive deletion.
 - **Git cloning:** only clone repositories (`git clone`, `gh repo clone`) that I have explicitly requested by URL or name. If a task seems to require cloning an unmentioned repo, ask first.
 - **Shared systems:** do not create PRs, open issues, post Slack/email/comments, create or update Asana tasks, or take other externally visible actions without my explicit confirmation.
-- **Secrets:** when reading, storing, sharing, or placing credentials (1Password, `.zshenv-secrets`, vault choice), read `/Users/pablostafforini/My Drive/dotfiles/claude/context/secrets.md` first.
+- **Secrets:** when reading, storing, sharing, or placing credentials (1Password, `.zshenv-secrets`, vault choice), read `/Users/pablostafforini/repos/dotfiles/claude/context/secrets.md` first.
 
 ## User context and communication
 
@@ -34,23 +34,23 @@
 
 ## Agents
 
-- When running as the main agent in an Emacs session (`CODEX_BUFFER_NAME` or `CLAUDE_BUFFER_NAME` is set), publish your current state with `"$HOME/My Drive/dotfiles/bin/agent-status" "STATUS"` at task start, meaningful phase changes, blockers, and before the final response; `--help` gives the wording and failure rules.
+- When running as the main agent in an Emacs session (`CODEX_BUFFER_NAME` or `CLAUDE_BUFFER_NAME` is set), publish your current state with `"$HOME/repos/dotfiles/bin/agent-status" "STATUS"` at task start, meaningful phase changes, blockers, and before the final response; `--help` gives the wording and failure rules.
 - When subagents or agent teams are available, use them whenever independent investigation, implementation, review, or verification work can run in parallel or benefits from a separate context window.
 - For subagents, use the most capable available model and match the main agent's current effort level unless the user explicitly asks for a cheaper or faster path; prefer performance over speed/cost.
 
 ## MCP servers
 
-For MCP server placement, inventory, and account-specific MCP notes, read `/Users/pablostafforini/My Drive/dotfiles/claude/context/mcp-servers.md`.
+For MCP server placement, inventory, and account-specific MCP notes, read `/Users/pablostafforini/repos/dotfiles/claude/context/mcp-servers.md`.
 
 ## Service access tools
 
-For Gmail, Google Sheets/Calendar/Docs/Drive, Slack, Signal, Fireflies, Granola, GitHub, or Anna's Archive, use the local tool mapped in `/Users/pablostafforini/My Drive/dotfiles/claude/context/service-access.md` rather than ad-hoc API calls or browser automation. For Google account/auth details, read `/Users/pablostafforini/My Drive/dotfiles/claude/context/google-services.md`.
+For Gmail, Google Sheets/Calendar/Docs/Drive, Slack, Signal, Fireflies, Granola, GitHub, or Anna's Archive, use the local tool mapped in `/Users/pablostafforini/repos/dotfiles/claude/context/service-access.md` rather than ad-hoc API calls or browser automation. For Google account/auth details, read `/Users/pablostafforini/repos/dotfiles/claude/context/google-services.md`.
 
 ## Filesystem organization
 
-- Dotfiles source of truth: `~/My Drive/dotfiles/`; many home-directory paths are symlinks into it.
+- Dotfiles source of truth: `~/repos/dotfiles/`; many home-directory paths are symlinks into it.
 - Active personal repositories: `~/repos/`; active Epoch repositories: `~/repos/epoch/`.
-- Code repositories never live under `~/My Drive/`. The exceptions are the canonical dotfiles working tree and notes workspaces (e.g. `Epoch/`, `Forethought/`, `notes/`): their working tree lives in Drive and their git directory in `~/git-dirs/<name>` (`git init --separate-git-dir`). Never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
+- Every git repository lives under `~/repos/`, with its `.git` directory inside it. An organization's notes workspace is `~/repos/<org>-notes` (e.g. `epoch-notes`, `forethought-notes`, `fias-notes`). `~/My Drive/` holds only documents and data, never a repository, and Google-native files (`.gdoc`, `.gsheet`) stay there because moving one out trashes the document. Never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
 - All linked worktrees: `~/repos/.worktrees/<repo>/<name>`.
 
 ## Version control

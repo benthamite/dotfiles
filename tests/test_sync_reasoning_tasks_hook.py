@@ -31,7 +31,7 @@ class SyncReasoningTasksHookTests(unittest.TestCase):
         self.home = self.root / "home"
         self.home.mkdir()
         # The freshness guard is registered only when this exact path exists.
-        self.freshness = self.home / "My Drive/dotfiles/claude/hooks/cr-issue-comment-freshness.sh"
+        self.freshness = self.home / "repos/dotfiles/claude/hooks/cr-issue-comment-freshness.sh"
         self.freshness.parent.mkdir(parents=True)
         self.freshness.write_text("#!/bin/sh\nexit 0\n")
         self.freshness.chmod(0o755)

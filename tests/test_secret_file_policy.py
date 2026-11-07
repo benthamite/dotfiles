@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 
-DOTFILES = Path("/Users/pablostafforini/My Drive/dotfiles")
+DOTFILES = Path("/Users/pablostafforini/repos/dotfiles")
 
 
 def ignored(path: str) -> bool:

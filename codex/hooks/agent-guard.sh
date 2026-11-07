@@ -29,7 +29,7 @@ PY="$HOME/.pyenv/versions/3.11.9/bin/python3"
 payload=$(cat)
 printf '%s' "$payload" | "$PY" -S -E -X pycache_prefix="$HOME/.cache/agent-guard/pycache" \
   -c 'import sys; sys.path.insert(0, sys.argv[1]); from agent_guard.engine import main; sys.exit(main(sys.argv[2]))' \
-  "$HOME/My Drive/dotfiles/lib/python" codex
+  "$HOME/repos/dotfiles/lib/python" codex
 status=$?
 [ "$status" -eq 0 ] && exit 0
 if [ "$status" -ne 2 ] && [ -n "$READ_ONLY_TOOLS" ]; then

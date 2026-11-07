@@ -23,7 +23,7 @@ plan and post-unwind verification, not a permanent debugger-off recommendation.
 ## 0. Read the incident history
 
 Before collecting evidence, read `emacs/freeze-incidents.org` in the dotfiles
-repository (`~/My Drive/dotfiles`). It lists where the watchdog evidence lives,
+repository (`~/repos/dotfiles`). It lists where the watchdog evidence lives,
 remedies already tried and their outcome, and open decisions. Do not
 re-propose a tried remedy or re-ask an open decision without new evidence;
 cite the entry instead. When the investigation ends, add an incident entry

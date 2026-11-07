@@ -13,9 +13,9 @@ Install a new MCP server into Claude Code, avoiding common pitfalls.
 
 ## Local placement authority
 
-Before choosing scope, use `/Users/pablostafforini/My Drive/dotfiles/claude/context/mcp-servers.md` as the source of truth for this setup:
+Before choosing scope, use `/Users/pablostafforini/repos/dotfiles/claude/context/mcp-servers.md` as the source of truth for this setup:
 
-- User-level MCPs belong in `~/.claude.json` top-level `mcpServers`; after any user-level add/remove, run `/Users/pablostafforini/My Drive/dotfiles/claude/bin/sync-mcp-servers.sh`.
+- User-level MCPs belong in `~/.claude.json` top-level `mcpServers`; after any user-level add/remove, run `/Users/pablostafforini/repos/dotfiles/claude/bin/sync-mcp-servers.sh`.
 - Shared project MCPs belong in the project's `.mcp.json`.
 - Do not use `~/.claude.json`'s `projects.<path>.mcpServers` block for project-scoped MCPs.
 
@@ -94,7 +94,7 @@ Use these rules:
 ## Step 5: Register with Claude Code
 
 ### Scope
-- **`-s user`** (global): Available in all projects. Use this by default for generally useful servers. The canonical source is `~/.claude.json`; after adding or removing a user-level server there, run `/Users/pablostafforini/My Drive/dotfiles/claude/bin/sync-mcp-servers.sh` so the configured account files receive the change.
+- **`-s user`** (global): Available in all projects. Use this by default for generally useful servers. The canonical source is `~/.claude.json`; after adding or removing a user-level server there, run `/Users/pablostafforini/repos/dotfiles/claude/bin/sync-mcp-servers.sh` so the configured account files receive the change.
 - **`-s project`** (shared project): Writes the current project's `.mcp.json`. Use this for project-specific servers that should be available to agents working in that repo. No account sync is needed.
 - **`-s local`** (private local): Claude CLI's default, but it stores project-local config in a hidden per-path block. Do not use it for normal project-scoped servers in this dotfiles setup. Use it only if the user explicitly asks for a private, unshared local exception, and document that exception.
 
@@ -155,7 +155,7 @@ documentation and the protocol response before changing the endpoint.
 After adding, run:
 
 ```bash
-/Users/pablostafforini/My\ Drive/dotfiles/claude/bin/sync-mcp-servers.sh  # only for -s user changes to canonical ~/.claude.json
+/Users/pablostafforini/repos/dotfiles/claude/bin/sync-mcp-servers.sh  # only for -s user changes to canonical ~/.claude.json
 claude mcp list
 ```
 
@@ -210,7 +210,7 @@ Before reporting success, confirm credential handling is complete:
 Tell the user:
 1. Server name and scope (`user`, `project`, or explicitly requested `local`)
 2. Which tools were actually exposed and successfully tested, distinguishing any unverified ones
-3. Config file touched (`~/.claude.json` or `.mcp.json`) and whether `/Users/pablostafforini/My Drive/dotfiles/claude/bin/sync-mcp-servers.sh` was run
+3. Config file touched (`~/.claude.json` or `.mcp.json`) and whether `/Users/pablostafforini/repos/dotfiles/claude/bin/sync-mcp-servers.sh` was run
 4. Any remaining reload/restart or documented OAuth authentication requirement
 5. How to remove it: `claude mcp remove <name> -s <scope>`
 
@@ -225,7 +225,7 @@ Tell the user:
 | Native module ABI mismatch | Server crashes on startup | Rebuild with the same node version you're running |
 | Wrong scope | Server unavailable where requested | Correct scope to the user's intended target; sync only for canonical user-level changes |
 | Used default `-s local` for a project server | Server is hidden in per-path config instead of `.mcp.json` | Re-add with `-s project` |
-| User-level change not synced | Works in one Claude account but not others | Run `/Users/pablostafforini/My Drive/dotfiles/claude/bin/sync-mcp-servers.sh` and restart affected sessions |
+| User-level change not synced | Works in one Claude account but not others | Run `/Users/pablostafforini/repos/dotfiles/claude/bin/sync-mcp-servers.sh` and restart affected sessions |
 | Raw secret in `claude mcp add -e` | Secret may leak through history/logs/config | Use a reference with an explicit resolver or approved environment injection |
 | Literal `op://` passed to server | Authentication fails | Add the account-appropriate resolver; Claude does not resolve 1Password references |
 | Space in path | Server fails to start | Preserve the executable and each argument as separate correctly quoted values |

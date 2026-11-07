@@ -15,7 +15,7 @@ For text Pablo will send as himself, compose it with `personalize` first.
 ## Stage non-secret text: one command
 
 ```bash
-~/My\ Drive/dotfiles/claude/bin/kill-ring-put <<'EOF'
+~/repos/dotfiles/claude/bin/kill-ring-put <<'EOF'
 The exact text to stage.
 EOF
 ```

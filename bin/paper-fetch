@@ -6,4 +6,4 @@ if [ ! -x "$PAPER_FETCH_PYTHON" ]; then
     echo 'paper-fetch: dedicated runtime missing; see dotfiles/docs/book-acquisition.md' >&2
     exit 1
 fi
-exec "$PAPER_FETCH_PYTHON" -B "$HOME/My Drive/dotfiles/lib/python/paper_fetch_cli.py" "$@"
+exec "$PAPER_FETCH_PYTHON" -B "$HOME/repos/dotfiles/lib/python/paper_fetch_cli.py" "$@"

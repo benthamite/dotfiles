@@ -23,7 +23,7 @@ identities itself. Preserve duplicate rows and their order.
 
 Start with the error panel and basename candidates:
 
-    ~/My\ Drive/dotfiles/bin/drive-errors list
+    ~/repos/dotfiles/bin/drive-errors list
 
 `list` opens the error summary's View button and reads every page. The currently
 supported exact reason strings are `Can’t upload some Google files` and

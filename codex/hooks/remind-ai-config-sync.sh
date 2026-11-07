@@ -4,4 +4,4 @@
 
 set -euo pipefail
 
-"$HOME/My Drive/dotfiles/bin/ai-config-sync" remind-codex
+"$HOME/repos/dotfiles/bin/ai-config-sync" remind-codex

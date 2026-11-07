@@ -11,7 +11,7 @@ profile. Invoking this skill is the authority to move them: do not ask which
 profile, which packages or whether to proceed.
 
 ```bash
-"$HOME/My Drive/dotfiles/bin/migrate-profile"
+"$HOME/repos/dotfiles/bin/migrate-profile"
 ```
 
 The script finds every Claude bucket, Claude prompt-history entry and Codex

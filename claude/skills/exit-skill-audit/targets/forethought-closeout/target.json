@@ -3,7 +3,7 @@
   "description": "The Forethought sprint's closeout skill, which the update-log exit step runs for sessions under ~/repos/forethought.",
   "skill": "~/repos/forethought/ph-ps/skills/closeout/SKILL.md",
   "repo": "~/repos/forethought/ph-ps",
-  "directories": ["~/repos/forethought", "~/My Drive/Forethought"],
+  "directories": ["~/repos/forethought", "~/repos/forethought-notes"],
   "interval_days": 30,
   "checks": "checks.md",
   "tests": "tests"

@@ -10,12 +10,12 @@ load paths. Use the owning project's official targets as well when required;
 unmanaged packages follow their own clean batch workflow:
 
 ```bash
-~/My\ Drive/dotfiles/claude/bin/batch-test.sh PACKAGE
-~/My\ Drive/dotfiles/claude/bin/batch-test.sh PACKAGE '(message "%S" (PACKAGE-some-fn))'
-~/My\ Drive/dotfiles/claude/bin/elisp-check-evidence file:RELATIVE-PATH -- PROJECT-CHECK
-~/My\ Drive/dotfiles/claude/bin/elisp-check-evidence --staged file:RELATIVE-PATH -- PROJECT-CHECK
-~/My\ Drive/dotfiles/claude/bin/elisp-ert PACKAGE test/PACKAGE-test.el
-~/My\ Drive/dotfiles/claude/bin/elisp-ert PACKAGE test/PACKAGE-test.el TEST-NAME
+~/repos/dotfiles/claude/bin/batch-test.sh PACKAGE
+~/repos/dotfiles/claude/bin/batch-test.sh PACKAGE '(message "%S" (PACKAGE-some-fn))'
+~/repos/dotfiles/claude/bin/elisp-check-evidence file:RELATIVE-PATH -- PROJECT-CHECK
+~/repos/dotfiles/claude/bin/elisp-check-evidence --staged file:RELATIVE-PATH -- PROJECT-CHECK
+~/repos/dotfiles/claude/bin/elisp-ert PACKAGE test/PACKAGE-test.el
+~/repos/dotfiles/claude/bin/elisp-ert PACKAGE test/PACKAGE-test.el TEST-NAME
 ```
 
 Wrap multiple top-level expressions for `batch-test.sh PACKAGE EXPR` in

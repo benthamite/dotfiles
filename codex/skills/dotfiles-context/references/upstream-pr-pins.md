@@ -75,7 +75,7 @@ is loaded and how it will survive package updates; do not label it fork-pinned.
 2. Inspect the working tree/index, unsaved config buffer and existing recipe,
    including any different temporary pin. If the PR is open, edit the existing
    Elpaca recipe in
-   `~/My Drive/dotfiles/emacs/config.org` so it points to the PR head repository
+   `~/repos/dotfiles/emacs/config.org` so it points to the PR head repository
    and branch. Preserve the invariant that one package has one install recipe:
    modify or move the existing `use-package` or `elpaca` owner instead of adding
    a duplicate dependency recipe. Preserve package ID, file/build directives and

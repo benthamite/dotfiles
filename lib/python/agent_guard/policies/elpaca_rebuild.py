@@ -25,7 +25,7 @@ def decide(call: Call) -> Result:
     command = call.shell_command().replace("elpaca-rebuild-wait", "")
     if not grep(_EMACSCLIENT, command, echo=True) or not grep(_REBUILD, command, echo=True):
         return Result.allow()
-    dotfiles = bash_home(call.env) + "/My Drive/dotfiles"
+    dotfiles = bash_home(call.env) + "/repos/dotfiles"
     result = subprocess.run(["git", "-C", dotfiles, "diff", "HEAD", "--name-only", "--", "emacs/extras/*.el"],
                             env=call.env, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     dirty = command_substitution(result.stdout.decode("utf-8", "surrogateescape"))

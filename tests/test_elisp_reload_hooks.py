@@ -462,7 +462,7 @@ class ElpacaSyncHookTests(unittest.TestCase):
         self.assertFalse((self.primary / ".git/hooks/sync-elpaca-clone.sh").exists())
 
     def test_installed_rewrite_wrapper_forwards_hook_arguments(self):
-        wrapper = Path("/Users/pablostafforini/git-dirs/dotfiles/hooks/post-rewrite")
+        wrapper = Path("/Users/pablostafforini/repos/dotfiles/.git/hooks/post-rewrite")
         self.assertIn('sync-elpaca-clone.sh" "$@"', wrapper.read_text())
 
     def test_embedded_and_installed_sync_hooks_are_identical(self):

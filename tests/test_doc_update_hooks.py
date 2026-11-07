@@ -952,7 +952,7 @@ class SkillHelperDocUpdateHookTests(unittest.TestCase):
 
 
 class DocUpdateHookRepoPathTests(unittest.TestCase):
-    """Cover a repository whose path contains a space, as ~/My Drive/dotfiles does.
+    """Cover a repository whose path contains a space, as ~/My Drive/dotfiles did.
 
     The other fixtures build their repository directly under `tempfile`, whose
     paths never contain a space, so none of this was exercised before.

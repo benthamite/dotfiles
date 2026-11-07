@@ -234,9 +234,9 @@ was tested. This is not authentication against another process running as the
 same user, which can write the user-owned state files under
 =~/.local/state/agent-elisp-evidence/=. It prevents accidental skipping, not a
 determined forger.  The Stop hook is registered in
-=~/.claude/settings.json= as =~/My\ Drive/dotfiles/claude/bin/elisp-evidence
+=~/.claude/settings.json= as =~/repos/dotfiles/claude/bin/elisp-evidence
 stop-check --agent claude=, and =core.hooksPath= in =~/.gitconfig= names
-=~/My Drive/dotfiles/claude/git-hooks=.
+=~/repos/dotfiles/claude/git-hooks=.
 
 The reasoning-worktree SessionStart hook repairs required key links before its
 working-directory and origin checks. That repair loop therefore runs in every

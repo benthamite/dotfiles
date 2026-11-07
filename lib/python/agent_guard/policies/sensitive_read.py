@@ -162,10 +162,10 @@ def is_safe_env_loader(command: str) -> bool:
 
 def is_safe_shell_export_classifier(command: str, home_dir: str) -> bool:
     """The security-audit skill's exact classify-shell-exports.py invocation."""
-    target = f"{home_dir}/My Drive/dotfiles/shell/.zshenv-secrets"
+    target = f"{home_dir}/repos/dotfiles/shell/.zshenv-secrets"
     for python in ("python3", "/usr/bin/python3", "/opt/homebrew/bin/python3"):
         for tool in (".claude", ".codex"):
-            helper = f"{home_dir}/My Drive/dotfiles/macos/{tool}/skills/security-audit/scripts/classify-shell-exports.py"
+            helper = f"{home_dir}/repos/dotfiles/macos/{tool}/skills/security-audit/scripts/classify-shell-exports.py"
             if command in (f'{python} "{helper}" "{target}"', f"{python} '{helper}' '{target}'"):
                 return True
     return False

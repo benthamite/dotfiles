@@ -20,7 +20,7 @@ Recognize `--audit`; reject unknown flags or ambiguous package arguments. The re
 For the default audit set, read listed level-2 package headings from:
 
 ```text
-~/My Drive/notes/public/my-emacs-packages.org
+~/repos/notes/public/my-emacs-packages.org
 ```
 
 Exclude the `Unlisted packages` subtree; do not hard-code a stale package list. The current catalog's `** =name=` headings can be read with:
@@ -35,7 +35,7 @@ awk '
     sub(/=$/, "", name)
     print name
   }
-' "$HOME/My Drive/notes/public/my-emacs-packages.org"
+' "$HOME/repos/notes/public/my-emacs-packages.org"
 ```
 
 Inspect the heading structure before using that parser; changed nesting or heading decorations must not silently yield an empty or partial inventory. Validate and deduplicate names before using them in paths/API endpoints. Missing catalog access is an explicit gap, not zero packages.

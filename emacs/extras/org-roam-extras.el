@@ -392,6 +392,43 @@ case is left to the advised function."
          (and (string-prefix-p dir file)
               (> (length file) (length dir))))))
 
+;;;;; Additional roots
+
+;;;###autoload
+(defun org-roam-extras-list-files-in-all-roots (orig-fun)
+  "Return ORIG-FUN's files plus the Org-roam files in the additional roots.
+Intended as `:around' advice for `org-roam-list-files', which lists
+`org-roam-directory' only.  Each existing directory in
+`paths-dirs-org-additional' is listed the same way, with
+`org-roam-directory' bound to it so that `org-roam-file-p' judges its
+files relative to that root."
+  (delete-dups
+   (apply #'append
+          (funcall orig-fun)
+          (mapcar (lambda (dir)
+                    (when (file-directory-p dir)
+                      (let ((org-roam-directory dir))
+                        (org-roam--list-files (expand-file-name dir)))))
+                  paths-dirs-org-additional))))
+
+;;;###autoload
+(defun org-roam-extras-file-in-any-root-p (orig-fun &optional file)
+  "Return non-nil if ORIG-FUN accepts FILE under any Org-roam root.
+Intended as `:around' advice for `org-roam-file-p', which accepts only
+files under `org-roam-directory'.  When it rejects FILE, the check is
+repeated with `org-roam-directory' bound to each directory in
+`paths-dirs-org-additional' that FILE plainly lies under, so the
+extension and exclusion tests still apply.  Roots FILE is not under are
+skipped without resolving names, as in
+`org-roam-extras-plainly-descendant-p'."
+  (or (funcall orig-fun file)
+      (when-let* ((path (or file (buffer-file-name (buffer-base-buffer)))))
+        (seq-some (lambda (dir)
+                    (and (org-roam-extras-plainly-descendant-p path dir)
+                         (let ((org-roam-directory dir))
+                           (funcall orig-fun path))))
+                  paths-dirs-org-additional))))
+
 ;;;;; Misc
 
 (defun org-roam-extras-recent (days &optional limit)

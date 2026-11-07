@@ -480,6 +480,21 @@ This should be the path you set `org-directory' to."
   :type 'directory
   :group 'paths)
 
+(defcustom paths-dirs-org-additional
+  (mapcar (lambda (name)
+            (file-name-as-directory
+             (file-name-concat paths-dir-personal-repos name)))
+          '("notes" "bibliographic-notes" "people" "epoch-notes" "dotfiles"
+            "tlon-notes" "home" "forethought-notes" "journal" "android"
+            "fias-notes" "finance" "bibliography" "ledger" "shopping"))
+  "Directories outside `paths-dir-org' that hold Org notes.
+These repositories lived under `paths-dir-org' until they moved to
+`paths-dir-personal-repos'.  Code that reads Org notes from
+`paths-dir-org', such as Org-roam and the Org ID scan, reads these
+directories as well."
+  :type '(repeat directory)
+  :group 'paths)
+
 (defcustom paths-dir-org-roam
   paths-dir-org
   "Path to the directory containing your org roam files.

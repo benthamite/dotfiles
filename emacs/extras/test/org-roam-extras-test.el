@@ -516,5 +516,56 @@
                      #'org-roam-extras-plainly-descendant-p)
       (delete-directory dir t))))
 
+;;;; additional roots
+
+(defmacro org-roam-extras-test--with-roots (bindings &rest body)
+  "Run BODY with a main and an extra Org-roam root bound per BINDINGS.
+BINDINGS is (MAIN EXTRA); both name fresh directories, and the advice
+on `org-roam-list-files' and `org-roam-file-p' is installed meanwhile."
+  (declare (indent 1))
+  `(let* ((,(car bindings) (file-name-as-directory
+                            (file-truename (make-temp-file "roam-main-" t))))
+          (,(cadr bindings) (file-name-as-directory
+                             (file-truename (make-temp-file "roam-extra-" t))))
+          (org-roam-directory ,(car bindings))
+          (paths-dirs-org-additional (list ,(cadr bindings)))
+          (org-roam-list-files-commands nil)
+          (org-roam-file-exclude-regexp "excluded")
+          (org-roam-file-extensions '("org")))
+     (advice-add 'org-roam-list-files :around
+                 #'org-roam-extras-list-files-in-all-roots)
+     (advice-add 'org-roam-file-p :around #'org-roam-extras-file-in-any-root-p)
+     (unwind-protect
+         (progn ,@body)
+       (advice-remove 'org-roam-list-files
+                      #'org-roam-extras-list-files-in-all-roots)
+       (advice-remove 'org-roam-file-p #'org-roam-extras-file-in-any-root-p)
+       (delete-directory ,(car bindings) t)
+       (delete-directory ,(cadr bindings) t))))
+
+(ert-deftest org-roam-extras-test-list-files-includes-additional-roots ()
+  "List Org-roam files from `org-roam-directory' and the additional roots."
+  (skip-unless (featurep 'org-roam))
+  (org-roam-extras-test--with-roots (main extra)
+    (let ((a (expand-file-name "a.org" main))
+          (b (expand-file-name "sub/b.org" extra))
+          (skipped (expand-file-name "excluded.org" extra)))
+      (make-directory (file-name-directory b) t)
+      (dolist (f (list a b skipped)) (write-region "" nil f))
+      (let ((files (org-roam-list-files)))
+        (should (member a files))
+        (should (member b files))
+        (should-not (member skipped files))))))
+
+(ert-deftest org-roam-extras-test-file-p-accepts-additional-roots ()
+  "Accept a file under an additional root and reject one under neither."
+  (skip-unless (featurep 'org-roam))
+  (org-roam-extras-test--with-roots (main extra)
+    (should (org-roam-file-p (expand-file-name "note.org" extra)))
+    (should (org-roam-file-p (expand-file-name "note.org" main)))
+    (should-not (org-roam-file-p (expand-file-name "excluded.org" extra)))
+    (should-not (org-roam-file-p (expand-file-name "note.txt" extra)))
+    (should-not (org-roam-file-p "/nonexistent-root/note.org"))))
+
 (provide 'org-roam-extras-test)
 ;;; org-roam-extras-test.el ends here

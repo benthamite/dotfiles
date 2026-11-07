@@ -339,6 +339,9 @@ The variable @code{paths-dir-org} specifies the root directory for Org files, in
 
 The variable @code{paths-dir-org-roam} specifies the Org-roam directory, intended for @code{org-roam-directory}. The default is the same as @code{paths-dir-org}.
 
+@vindex paths-dirs-org-additional
+The variable @code{paths-dirs-org-additional} lists the directories outside @code{paths-dir-org} that also hold Org notes: the notes repositories under @code{paths-dir-personal-repos}, such as @samp{notes}, @samp{people} and @samp{bibliographic-notes}. Org-roam (through @samp{org-roam-extras}), the Org ID scan and automatic heading IDs (through @samp{org-extras}), and @samp{vulpea-extras} read them alongside @code{paths-dir-org}.
+
 @node File paths
 @section File paths
 

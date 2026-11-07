@@ -1191,7 +1191,7 @@ only level-1 headings in files in specified directories by customizing
   "Return non-nil if the current buffer may receive automatic heading IDs."
   (when-let* ((file (buffer-file-name)))
     (and (derived-mode-p 'org-mode)
-	 (string-match paths-dir-org file)
+	 (org-extras-id-file-under-any-p file (org-extras-org-directories))
 	 (not buffer-read-only)
 	 (not org-extras-id-auto-add-exclude-file)
 	 (not (org-extras-buffer-edit-unsafe-p))
@@ -1210,6 +1210,18 @@ That left 710 files under \"anki/elisp\" eligible for IDs while \"anki\" itself
 was listed as excluded, and it is why the list had grown entries such as
 \"tlon/fede/archive\" that a recursive test makes redundant."
   (seq-some (lambda (directory) (file-in-directory-p file directory)) directories))
+
+(defun org-extras-org-directories ()
+  "Return `org-directory' followed by `paths-dirs-org-additional'."
+  (cons org-directory paths-dirs-org-additional))
+
+(defun org-extras-org-files ()
+  "Return the Org files under every directory in `org-extras-org-directories'.
+Directories that do not exist are skipped."
+  (mapcan (lambda (directory)
+            (when (file-directory-p directory)
+              (directory-files-recursively directory "\\.org\\'")))
+          (org-extras-org-directories)))
 
 ;; Mark these `ox' options special at compile time.  `ox' is not required until
 ;; the export actually runs, so without these declarations the byte-compiler does
@@ -1263,7 +1275,7 @@ it names were given IDs anyway."
 ;;;###autoload
 (defun org-extras-id-add-missing-ids (&optional files)
   "Add missing heading IDs to FILES and save the ones that changed.
-FILES defaults to every Org file under `org-directory' that
+FILES defaults to every Org file in `org-extras-org-directories' that
 `org-extras-id-update-excluded-patterns' does not exclude.  Each file is visited
 and passed through `org-extras-id-auto-add-ids-to-headings-in-file', so the same
 exclusions apply as when saving that file by hand.
@@ -1293,7 +1305,7 @@ skipped."
           :errors (nreverse errors))))
 
 (defun org-extras-id-missing-id-candidates ()
-  "Return the Org files under `org-directory' that may lack heading IDs.
+  "Return the Org files in `org-extras-org-directories' that may lack IDs.
 Files that `org-extras-id-update-excluded-patterns' or
 `org-extras-id-auto-add-excluded-directories' rule out are dropped before the
 per-file scan, so a directory excluded from automatic IDs is not opened only to
@@ -1301,7 +1313,7 @@ be refused."
   (cl-remove-if-not
    #'org-extras-id-file-may-lack-ids-p
    (cl-remove-if #'org-extras-id-auto-add-excluded-file-p
-                 (directory-files-recursively org-directory "\\.org\\'"))))
+                 (org-extras-org-files))))
 
 (defun org-extras-id-auto-add-excluded-file-p (file)
   "Return non-nil if FILE is ruled out of automatic ID addition by its path."
@@ -1407,8 +1419,8 @@ eliminates redundant filesystem and regex overhead."
   "Scan relevant files for IDs and process duplicates.
 Store the relation between files and corresponding IDs.  This will
 scan all agenda files, all associated archives, all open Org
-files, recursively all files in `org-directory', and all files in
-`org-id-extra-files'.  Paths matching `org-extras-id-update-excluded-patterns'
+files, recursively all files in `org-extras-org-directories', and all
+files in `org-id-extra-files'.  Paths matching `org-extras-id-update-excluded-patterns'
 are skipped, from every one of those sources, and pre-existing stale entries with matching paths are pruned
 from `org-id-files' and `org-id-locations'.
 
@@ -1418,7 +1430,7 @@ to display them in a dedicated buffer."
   (interactive)
   (org-extras-id--clear-duplicate-buffer)
   (org-extras-id--prune-locations)
-  (let* ((all-files (directory-files-recursively org-directory "\\.org$"))
+  (let* ((all-files (org-extras-org-files))
          (filtered-files
           (cl-remove-if #'org-extras-id--update-excluded-p all-files)))
     (advice-add 'display-warning :after #'org-extras--id-update-warning-handler)

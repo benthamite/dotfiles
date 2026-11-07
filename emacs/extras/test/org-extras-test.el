@@ -1231,5 +1231,43 @@
   (let ((org-extras-epoch-meetings-directory "/nonexistent/org-extras-meetings/"))
     (should-not (org-extras-epoch-find-meeting "abcdefghijklmnopqrstuvwxyz"))))
 
+;;;; Org roots
+
+(ert-deftest org-extras-test-org-files-covers-additional-roots ()
+  "List Org files from `org-directory' and `paths-dirs-org-additional'."
+  (let* ((main (make-temp-file "org-extras-main-" t))
+         (extra (make-temp-file "org-extras-extra-" t))
+         (org-directory main)
+         (paths-dirs-org-additional (list extra "/nonexistent-org-root/")))
+    (unwind-protect
+        (progn
+          (write-region "" nil (expand-file-name "a.org" main))
+          (make-directory (expand-file-name "sub" extra))
+          (write-region "" nil (expand-file-name "sub/b.org" extra))
+          (write-region "" nil (expand-file-name "c.txt" extra))
+          (should (equal (sort (mapcar #'file-name-nondirectory
+                                       (org-extras-org-files))
+                               #'string<)
+                         '("a.org" "b.org"))))
+      (delete-directory main t)
+      (delete-directory extra t))))
+
+(ert-deftest org-extras-test-auto-add-eligible-in-additional-root ()
+  "Treat a note under an additional root as eligible for automatic IDs."
+  (let* ((extra (file-truename (make-temp-file "org-extras-extra-" t)))
+         (file (expand-file-name "note.org" extra))
+         (org-directory "/nonexistent-org-directory/")
+         (paths-dirs-org-additional (list extra)))
+    (unwind-protect
+        (progn
+          (write-region "* Heading\n" nil file)
+          (with-current-buffer (find-file-noselect file)
+            (unwind-protect
+                (progn
+                  (org-mode)
+                  (should (org-extras-id-auto-add-eligible-buffer-p)))
+              (kill-buffer))))
+      (delete-directory extra t))))
+
 (provide 'org-extras-test)
 ;;; org-extras-test.el ends here

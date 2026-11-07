@@ -235,6 +235,10 @@ The configuration lists files with the =fd-org-roam= method, defined here as ~or
 #+findex: org-roam-extras-plainly-descendant-p
 ~org-roam-extras-plainly-descendant-p~ is =:before-until= advice for ~org-roam-descendant-of-p~, installed by the configuration. That function resolves both of its arguments with ~file-truename~ to rule out a file being the directory itself, and ~org-roam-file-p~ calls it for every file ~org-roam-list-files~ finds. With ~org-roam-directory~ set to the whole Google Drive, those calls took about three quarters of a 20-second listing, during which Emacs and its server were blocked. The advice answers =t= when the file's expanded name extends the directory's, the case for every listed file, and leaves any other case to the original function. It differs only for a symlink inside the directory that points back at the directory itself.
 
+#+findex: org-roam-extras-list-files-in-all-roots
+#+findex: org-roam-extras-file-in-any-root-p
+Org-roam reads one directory, but some notes repositories live outside it, in ~paths-dirs-org-additional~. Two pieces of =:around= advice, installed by the configuration, make those directories Org-roam roots as well, while ~org-roam-directory~ stays the single root that keys the database. ~org-roam-extras-list-files-in-all-roots~ advises ~org-roam-list-files~: it appends the files of each additional directory, listed with ~org-roam-directory~ bound to that directory. ~org-roam-extras-file-in-any-root-p~ advises ~org-roam-file-p~: when the original rejects a file, it retries with ~org-roam-directory~ bound to each additional directory the file plainly lies under, so the extension and exclusion tests still apply. ~org-roam-db-sync~, saving a note and the other callers of these two functions therefore treat the additional directories like ~org-roam-directory~.
+
 ** Batch processing dump
 :PROPERTIES:
 :CUSTOM_ID: h:batch-processing-dump

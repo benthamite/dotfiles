@@ -197,12 +197,17 @@ once stayed there for the rest of the session regardless."
 (advice-add 'org-agenda :before #'vulpea-extras-agenda-files-update)
 
 (defun vulpea-extras-buffer-p ()
-  "Return non-nil if the currently visited buffer is a note."
+  "Return non-nil if the currently visited buffer is a note.
+A note is a file under `org-roam-directory' or under one of
+`paths-dirs-org-additional'."
   (and buffer-file-name
        (boundp 'org-roam-directory)
-       (string-prefix-p
-        (expand-file-name (file-name-as-directory org-roam-directory))
-        (file-name-directory buffer-file-name))))
+       (let ((dir (file-name-directory buffer-file-name)))
+         (seq-some (lambda (root)
+                     (string-prefix-p
+                      (expand-file-name (file-name-as-directory root))
+                      dir))
+                   (cons org-roam-directory paths-dirs-org-additional)))))
 
 (provide 'vulpea-extras)
 ;;; vulpea-extras.el ends here

@@ -72,7 +72,7 @@ The function respects tag inheritance when checking for the =ARCHIVE= tag. Compl
 The function ~vulpea-extras-anniversary-p~ returns non-~nil~ if the current Org buffer contains an anniversary expression (=%%(org-anniversary ...)=). Files with anniversaries are treated as projects for tagging purposes, ensuring that recurring personal dates appear in the agenda.
 
 #+findex: vulpea-extras-buffer-p
-The function ~vulpea-extras-buffer-p~ returns non-~nil~ if the current buffer's file is located within ~org-roam-directory~. This is used as a guard to ensure that project-detection logic runs only on Org Roam files.
+The function ~vulpea-extras-buffer-p~ returns non-~nil~ if the current buffer's file is located within ~org-roam-directory~ or one of ~paths-dirs-org-additional~. This is used as a guard to ensure that project-detection logic runs only on Org Roam files.
 
 ** Updating the project tag
 :PROPERTIES:

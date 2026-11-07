@@ -981,7 +981,7 @@ several exclusion conditions:
 
 @itemize
 @item
-The file must be in @code{org-mode} and within @code{paths-dir-org}.
+The file must be in @code{org-mode} and within one of @code{org-extras-org-directories}.
 @item
 The buffer must not be read-only.
 @item
@@ -1037,8 +1037,8 @@ these options.
 The command @code{org-extras-id-add-missing-ids} visits Org files, adds any
 missing heading IDs through
 @code{org-extras-id-auto-add-ids-to-headings-in-file}, and saves the files it
-changed.  Called with no argument it works on every candidate under
-@code{org-directory}; called from Lisp it accepts an explicit list of files.
+changed.  Called with no argument it works on every candidate in
+@code{org-extras-org-directories}; called from Lisp it accepts an explicit list of files.
 It returns a plist reporting how many files were scanned, changed and
 left alone, plus any that raised an error.
 
@@ -1052,7 +1052,7 @@ to its contents.
 @findex org-extras-id-missing-id-candidates
 @findex org-extras-id-file-may-lack-ids-p
 The function @code{org-extras-id-missing-id-candidates} returns the files the
-command works on by default: every Org file under @code{org-directory} that
+command works on by default: every Org file in @code{org-extras-org-directories} that
 @code{org-extras-id-auto-add-excluded-file-p} does not rule out by path, and
 that @code{org-extras-id-file-may-lack-ids-p} reports as incomplete.  The
 first of those combines @code{org-extras-id-update-excluded-patterns} with
@@ -1068,11 +1068,19 @@ heading it belongs to rather than to an enclosing one.
 @node Updating ID locations
 @subsection Updating ID locations
 
+@findex org-extras-org-directories
+@findex org-extras-org-files
+The function @code{org-extras-org-directories} returns @code{org-directory} followed
+by @code{paths-dirs-org-additional}, the notes repositories that sit outside it,
+and @code{org-extras-org-files} returns every @samp{.org} file under them.  The ID
+scan, the bulk ID command and automatic heading IDs all use these roots,
+so notes outside @code{org-directory} are treated like those inside it.
+
 @findex org-extras-id-update-id-locations
 @findex org-extras-id-update-id-locations-background
 @vindex org-extras-id-update-excluded-patterns
 The command @code{org-extras-id-update-id-locations} scans all @samp{.org} files
-under @code{org-directory} and updates the ID location database via
+in @code{org-extras-org-directories} and updates the ID location database via
 @code{org-id-update-id-locations}.  Paths matching any regexp in
 @code{org-extras-id-update-excluded-patterns} are skipped, and pre-existing
 stale entries with matching paths are pruned from @code{org-id-files} and

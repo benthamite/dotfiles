@@ -12124,6 +12124,10 @@ Using my fork while awaiting merge of [[https://github.com/org-roam/org-roam/pul
   :config
   (advice-add 'org-roam-descendant-of-p :before-until
               #'org-roam-extras-plainly-descendant-p)
+  ;; Notes repositories outside `org-roam-directory' are Org-roam roots too.
+  (advice-add 'org-roam-list-files :around
+              #'org-roam-extras-list-files-in-all-roots)
+  (advice-add 'org-roam-file-p :around #'org-roam-extras-file-in-any-root-p)
   ;; exclude headings in specific files and directories
   ;; Set here rather than in :custom so that `org-roam-extras-excluded-dirs'
   ;; and `org-roam-extras-excluded-files' are guaranteed to be defined (they

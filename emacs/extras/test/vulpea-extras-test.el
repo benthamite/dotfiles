@@ -146,5 +146,24 @@
                            (sort (list open todo) #'string<)))))
       (delete-directory root t))))
 
+;;;; additional roots
+
+(ert-deftest vulpea-extras-test-buffer-p-in-additional-root ()
+  "Return non-nil when the buffer file is under `paths-dirs-org-additional'."
+  (let* ((roam-dir (file-truename (make-temp-file "vulpea-roam-" t)))
+         (extra-dir (file-truename (make-temp-file "vulpea-extra-" t)))
+         (tmpfile (expand-file-name "test.org" extra-dir)))
+    (unwind-protect
+        (progn
+          (write-region "" nil tmpfile)
+          (with-current-buffer (find-file-noselect tmpfile)
+            (unwind-protect
+                (let ((org-roam-directory roam-dir)
+                      (paths-dirs-org-additional (list extra-dir)))
+                  (should (vulpea-extras-buffer-p)))
+              (kill-buffer))))
+      (delete-directory roam-dir t)
+      (delete-directory extra-dir t))))
+
 (provide 'vulpea-extras-test)
 ;;; vulpea-extras-test.el ends here

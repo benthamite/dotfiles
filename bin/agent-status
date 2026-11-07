@@ -31,8 +31,12 @@ errors=$(mktemp)
 trap 'rm -f "$errors"' EXIT
 # Locating the checkout queries Emacs, and a briefly stalled Emacs refuses
 # connections outright; retry those refusals as the helper itself does.
+# Only the main Emacs has the Elpaca registry, so the lookup ignores the
+# server a session names (Agent Emacs sets EMACS_SOCKET_NAME to itself);
+# the helper keeps it and publishes to the Emacs that runs the session.
 for delay in 0.5 1 2 4 ""; do
-  if helper=$("$script_dir/elpaca-package-path" agent bin/agent-status 2>"$errors"); then
+  if helper=$(env -u EMACS_SOCKET_NAME -u EMACS_SERVER_FILE \
+                "$script_dir/elpaca-package-path" agent bin/agent-status 2>"$errors"); then
     rm -f "$errors"
     exec "$helper" "$@"
   fi

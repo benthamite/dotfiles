@@ -1215,6 +1215,23 @@ server socket of `server-start', set its queue length to
       (plist-put (copy-sequence args) :server simple-extras-server-backlog)
     args))
 
+;;;###autoload
+(defun simple-extras-server-send-unless-disconnected (send proc string)
+  "Call SEND with PROC and STRING, dropping the reply if PROC has disconnected.
+SEND is `server-send-string'.  Since Emacs 31 the server answers queued requests
+one at a time, so an `emacsclient' that gives up while an earlier request is
+being evaluated is gone when its turn comes, and replying to it signals \"not
+running\".  With `debug-on-error' set, that opens the debugger although nothing
+is wrong.  Log and drop such a reply; errors for a live PROC propagate.
+Intended as `:around' advice for `server-send-string'."
+  (condition-case err
+      (funcall send proc string)
+    (error
+     (when (process-live-p proc)
+       (signal (car err) (cdr err)))
+     (server-log (format "Dropped reply to disconnected client: %S" string) proc)
+     nil)))
+
 ;;;;; Server state file
 
 (defconst simple-extras-server-state-file

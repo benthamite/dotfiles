@@ -1480,6 +1480,7 @@ has connection termination."
   :after simple-extras
   :config
   (advice-add 'make-network-process :filter-args #'simple-extras-server-raise-backlog)
+  (advice-add 'server-send-string :around #'simple-extras-server-send-unless-disconnected)
   ;; A test instance never starts a server: if the live server is busy,
   ;; `server-running-p' reports it gone, and the test instance would take
   ;; over the socket and delete it on exit, orphaning the live session.

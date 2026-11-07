@@ -487,6 +487,16 @@ While Emacs is busy it accepts no new connections. With a queue of 5, a handful 
 
 The advice only affects a server started after it is installed. To apply it to a running server without the client prompt, call ~(server-start nil t)~: this replaces only the listening socket, and connections already open keep running.
 
+** Replies to disconnected clients
+:PROPERTIES:
+:CUSTOM_ID: h:server-disconnected-replies
+:END:
+
+#+findex: simple-extras-server-send-unless-disconnected
+The function ~simple-extras-server-send-unless-disconnected~ is =:around= advice for ~server-send-string~. When a reply cannot be sent because its client has already disconnected, it records the dropped reply with ~server-log~ and returns instead of signaling an error. Errors for a client that is still connected propagate as before. The configuration installs the advice when it starts the server.
+
+Since Emacs 31 the server answers queued requests one at a time. An =emacsclient= that gives up while an earlier request is still being evaluated, such as the server watchdog's periodic probe during a long agent request, is gone by the time its turn comes. Replying to it signals "not running", and with ~debug-on-error~ set that opened the debugger although nothing was wrong.
+
 ** Server state file
 :PROPERTIES:
 :CUSTOM_ID: h:server-state-file

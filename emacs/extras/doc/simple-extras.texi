@@ -81,6 +81,7 @@ Functions
 * Network reachability::
 * Reaping closed server clients::
 * Server connection queue::
+* Replies to disconnected clients::
 * Server state file::
 * Auto-save for new buffers::
 * Keeping credentials out of auto-save files::
@@ -97,11 +98,11 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{simple-extras.el} extends Emacs's built-in @samp{simple.el} library with a systematic set of editing primitives, mode enhancements, and utility functions. While @samp{simple.el} provides the foundational commands for killing, yanking, transposing, and indenting text, it does not offer corresponding @emph{delete} (remove without touching the kill ring) or @emph{copy} (add to the kill ring without removing) variants. This package fills that gap.
+@samp{simple-extras.el} extends Emacs's built-in @samp{simple.el} library with a systematic set of editing primitives@comma{} mode enhancements@comma{} and utility functions. While @samp{simple.el} provides the foundational commands for killing@comma{} yanking@comma{} transposing@comma{} and indenting text@comma{} it does not offer corresponding @emph{delete} (remove without touching the kill ring) or @emph{copy} (add to the kill ring without removing) variants. This package fills that gap.
 
-The core design principle is straightforward: for every standard @samp{kill-*} command that operates on a text object (word, line, sentence, paragraph, or sexp), @samp{simple-extras.el} provides a matching @samp{delete-*} variant that discards the text and a @samp{copy-*} variant that saves it to the kill ring without removing it from the buffer. It also provides @samp{kill-whole-*}, @samp{delete-whole-*}, and @samp{copy-whole-*} commands that operate on the entire text object at point, and backward @samp{transpose-*} commands that move text objects in the reverse direction.
+The core design principle is straightforward: for every standard @samp{kill-*} command that operates on a text object (word@comma{} line@comma{} sentence@comma{} paragraph@comma{} or sexp)@comma{} @samp{simple-extras.el} provides a matching @samp{delete-*} variant that discards the text and a @samp{copy-*} variant that saves it to the kill ring without removing it from the buffer. It also provides @samp{kill-whole-*}@comma{} @samp{delete-whole-*}@comma{} and @samp{copy-whole-*} commands that operate on the entire text object at point@comma{} and backward @samp{transpose-*} commands that move text objects in the reverse direction.
 
-Beyond editing primitives, @samp{simple-extras.el} offers several DWIM (Do What I Mean) commands: a smart @code{keyboard-quit} that adapts its behavior to the current context, an @code{indent-dwim} that indents the region, Org source block, or entire buffer, and a @code{narrow-or-widen-dwim} that toggles narrowing based on what is at point. Other utilities include text conversion via Pandoc, accent removal and slugification, enhanced mode toggling for @code{visible-mode} and @code{visual-line-mode}, and auto-save support for untitled buffers.
+Beyond editing primitives@comma{} @samp{simple-extras.el} offers several DWIM (Do What I Mean) commands: a smart @code{keyboard-quit} that adapts its behavior to the current context@comma{} an @code{indent-dwim} that indents the region@comma{} Org source block@comma{} or entire buffer@comma{} and a @code{narrow-or-widen-dwim} that toggles narrowing based on what is at point. Other utilities include text conversion via Pandoc@comma{} accent removal and slugification@comma{} enhanced mode toggling for @code{visible-mode} and @code{visual-line-mode}@comma{} and auto-save support for untitled buffers.
 
 The package depends on @samp{no-littering} (for determining the auto-save directory) and @samp{paths} (for path constants).
 
@@ -117,17 +118,17 @@ The package depends on @samp{no-littering} (for determining the auto-save direct
 @section Auto-save directory for new buffers
 
 @vindex simple-extras-new-buffer-auto-save-dir
-The user option @code{simple-extras-new-buffer-auto-save-dir} specifies the directory in which auto-save files for new, non-file-visiting buffers are stored. These are buffers with names matching @samp{untitled} that have no associated file on disk (@ref{Auto-save for new buffers}).
+The user option @code{simple-extras-new-buffer-auto-save-dir} specifies the directory in which auto-save files for new@comma{} non-file-visiting buffers are stored. These are buffers with names matching @samp{untitled} that have no associated file on disk (@ref{Auto-save for new buffers, , Auto-save for new buffers}).
 
-The default value is derived from @code{no-littering-var-directory}, placing auto-save files at @samp{var/auto-save/new-buffers/} beneath the @samp{no-littering} data directory. The type is @code{directory}. If the specified directory does not exist when the option is set, it is created automatically via the @code{:set} function.
+The default value is derived from @code{no-littering-var-directory}@comma{} placing auto-save files at @samp{var/auto-save/new-buffers/} beneath the @samp{no-littering} data directory. The type is @code{directory}. If the specified directory does not exist when the option is set@comma{} it is created automatically via the @code{:set} function.
 
-You would change this if you want auto-save files for untitled buffers stored in a different location, for example on a RAM disk for faster writes or in a directory that is excluded from backups.
+You would change this if you want auto-save files for untitled buffers stored in a different location@comma{} for example on a RAM disk for faster writes or in a directory that is excluded from backups.
 
 @node Reachability probe timeout
 @section Reachability probe timeout
 
 @vindex simple-extras-reachability-timeout
-The user option @code{simple-extras-reachability-timeout} is how many seconds a reachability probe may take before the host counts as down (@ref{Network reachability}). The default is 5.
+The user option @code{simple-extras-reachability-timeout} is how many seconds a reachability probe may take before the host counts as down (@ref{Network reachability, , Network reachability}). The default is 5.
 
 @node Commands
 @chapter Commands
@@ -171,11 +172,11 @@ The user option @code{simple-extras-reachability-timeout} is how many seconds a 
 @findex simple-extras-transpose-words-backward
 Emacs's built-in @code{kill-word} and @code{backward-kill-word} always place the deleted text on the kill ring. This is often undesirable when you simply want to discard a word or copy it without disturbing the kill ring's contents. The word operation commands address this gap.
 
-The command @code{simple-extras-delete-word} works like @code{kill-word} but discards the text without touching the kill ring. It accepts an optional numeric prefix argument to delete that many words forward. Its backward counterpart, @code{simple-extras-backward-delete-word}, deletes words behind point. Similarly, @code{simple-extras-copy-word} copies forward words to the kill ring without removing them from the buffer, and @code{simple-extras-backward-copy-word} does the same in the backward direction.
+The command @code{simple-extras-delete-word} works like @code{kill-word} but discards the text without touching the kill ring. It accepts an optional numeric prefix argument to delete that many words forward. Its backward counterpart@comma{} @code{simple-extras-backward-delete-word}@comma{} deletes words behind point. Similarly@comma{} @code{simple-extras-copy-word} copies forward words to the kill ring without removing them from the buffer@comma{} and @code{simple-extras-backward-copy-word} does the same in the backward direction.
 
-When you need to act on the entire word at point regardless of where point is within it, use @code{simple-extras-kill-whole-word} (kills and adds to kill ring), @code{simple-extras-delete-whole-word} (discards), or @code{simple-extras-copy-whole-word} (copies to kill ring without removing). These commands use @code{bounds-of-thing-at-point} internally to determine the word boundaries (@ref{Operating on the whole text object}).
+When you need to act on the entire word at point regardless of where point is within it@comma{} use @code{simple-extras-kill-whole-word} (kills and adds to kill ring)@comma{} @code{simple-extras-delete-whole-word} (discards)@comma{} or @code{simple-extras-copy-whole-word} (copies to kill ring without removing). These commands use @code{bounds-of-thing-at-point} internally to determine the word boundaries (@ref{Operating on the whole text object, , Operating on the whole text object}).
 
-The command @code{simple-extras-transpose-words-backward} interchanges the word before point with the one before it, effectively the reverse of the standard @code{transpose-words}. This is useful when you realize two words are in the wrong order and want to fix it by moving the current word backward rather than forward.
+The command @code{simple-extras-transpose-words-backward} interchanges the word before point with the one before it@comma{} effectively the reverse of the standard @code{transpose-words}. This is useful when you realize two words are in the wrong order and want to fix it by moving the current word backward rather than forward.
 
 @node Line operations
 @section Line operations
@@ -188,13 +189,13 @@ The command @code{simple-extras-transpose-words-backward} interchanges the word 
 @findex simple-extras-delete-whole-line
 @findex simple-extras-copy-whole-line
 @findex simple-extras-transpose-lines-backward
-The line commands mirror the word commands in structure (@ref{Word operations}). The command @code{simple-extras-delete-line} deletes from point to the end of the line (or ARG lines forward with a prefix argument) without touching the kill ring. The command @code{simple-extras-backward-delete-line} deletes from point to the beginning of the line.
+The line commands mirror the word commands in structure (@ref{Word operations, , Word operations}). The command @code{simple-extras-delete-line} deletes from point to the end of the line (or ARG lines forward with a prefix argument) without touching the kill ring. The command @code{simple-extras-backward-delete-line} deletes from point to the beginning of the line.
 
 The command @code{simple-extras-copy-line} copies from point to the end of the line (or ARG lines forward) to the kill ring without removing the text. The command @code{simple-extras-backward-copy-line} copies backward to the beginning of the line.
 
-For whole-line operations, @code{simple-extras-kill-whole-line} kills the entire line at point, @code{simple-extras-delete-whole-line} deletes it without the kill ring, and @code{simple-extras-copy-whole-line} copies it. These are particularly useful when bound to key sequences for quick line manipulation.
+For whole-line operations@comma{} @code{simple-extras-kill-whole-line} kills the entire line at point@comma{} @code{simple-extras-delete-whole-line} deletes it without the kill ring@comma{} and @code{simple-extras-copy-whole-line} copies it. These are particularly useful when bound to key sequences for quick line manipulation.
 
-The command @code{simple-extras-transpose-lines-backward} exchanges the current line with the previous one, the reverse of @code{transpose-lines}. This provides a natural way to move a line upward in a buffer.
+The command @code{simple-extras-transpose-lines-backward} exchanges the current line with the previous one@comma{} the reverse of @code{transpose-lines}. This provides a natural way to move a line upward in a buffer.
 
 @node Sentence operations
 @section Sentence operations
@@ -207,11 +208,11 @@ The command @code{simple-extras-transpose-lines-backward} exchanges the current 
 @findex simple-extras-delete-whole-sentence
 @findex simple-extras-copy-whole-sentence
 @findex simple-extras-transpose-sentences-backward
-The sentence commands follow the same pattern as word and line operations (@ref{Word operations}). The command @code{simple-extras-delete-sentence} deletes forward to the end of the current sentence without touching the kill ring; with a negative prefix argument, it deletes backward. The command @code{simple-extras-backward-delete-sentence} deletes backward to the start of the sentence.
+The sentence commands follow the same pattern as word and line operations (@ref{Word operations, , Word operations}). The command @code{simple-extras-delete-sentence} deletes forward to the end of the current sentence without touching the kill ring; with a negative prefix argument@comma{} it deletes backward. The command @code{simple-extras-backward-delete-sentence} deletes backward to the start of the sentence.
 
-The copy variants, @code{simple-extras-copy-sentence} and @code{simple-extras-backward-copy-sentence}, add the sentence text to the kill ring without removing it from the buffer.
+The copy variants@comma{} @code{simple-extras-copy-sentence} and @code{simple-extras-backward-copy-sentence}@comma{} add the sentence text to the kill ring without removing it from the buffer.
 
-The whole-sentence commands (@code{simple-extras-kill-whole-sentence}, @code{simple-extras-delete-whole-sentence}, @code{simple-extras-copy-whole-sentence}) act on the entire sentence at point. The command @code{simple-extras-transpose-sentences-backward} swaps the current sentence with the previous one.
+The whole-sentence commands (@code{simple-extras-kill-whole-sentence}@comma{} @code{simple-extras-delete-whole-sentence}@comma{} @code{simple-extras-copy-whole-sentence}) act on the entire sentence at point. The command @code{simple-extras-transpose-sentences-backward} swaps the current sentence with the previous one.
 
 @node Paragraph operations
 @section Paragraph operations
@@ -224,9 +225,9 @@ The whole-sentence commands (@code{simple-extras-kill-whole-sentence}, @code{sim
 @findex simple-extras-delete-whole-paragraph
 @findex simple-extras-copy-whole-paragraph
 @findex simple-extras-transpose-paragraphs-backward
-The paragraph commands complete the set of text-object operations (@ref{Word operations}). The command @code{simple-extras-delete-paragraph} deletes forward to the end of the paragraph; with prefix argument N, it deletes to the Nth paragraph end. A negative argument deletes backward. The command @code{simple-extras-backward-delete-paragraph} deletes backward to the start of the paragraph.
+The paragraph commands complete the set of text-object operations (@ref{Word operations, , Word operations}). The command @code{simple-extras-delete-paragraph} deletes forward to the end of the paragraph; with prefix argument N@comma{} it deletes to the Nth paragraph end. A negative argument deletes backward. The command @code{simple-extras-backward-delete-paragraph} deletes backward to the start of the paragraph.
 
-The copy variants (@code{simple-extras-copy-paragraph} and @code{simple-extras-backward-copy-paragraph}) add paragraph text to the kill ring without removing it. The whole-paragraph commands (@code{simple-extras-kill-whole-paragraph}, @code{simple-extras-delete-whole-paragraph}, @code{simple-extras-copy-whole-paragraph}) operate on the entire paragraph at point.
+The copy variants (@code{simple-extras-copy-paragraph} and @code{simple-extras-backward-copy-paragraph}) add paragraph text to the kill ring without removing it. The whole-paragraph commands (@code{simple-extras-kill-whole-paragraph}@comma{} @code{simple-extras-delete-whole-paragraph}@comma{} @code{simple-extras-copy-whole-paragraph}) operate on the entire paragraph at point.
 
 The command @code{simple-extras-transpose-paragraphs-backward} swaps the current paragraph with the previous one.
 
@@ -241,11 +242,11 @@ The command @code{simple-extras-transpose-paragraphs-backward} swaps the current
 @findex simple-extras-delete-whole-sexp
 @findex simple-extras-copy-whole-sexp
 @findex simple-extras-transpose-sexps-backward
-The sexp (S-expression) commands are especially useful in Emacs Lisp and other Lisp dialects, where sexps are the fundamental unit of code structure. They follow the same delete/copy/kill-whole/transpose pattern as the other text-object commands (@ref{Word operations}).
+The sexp (S-expression) commands are especially useful in Emacs Lisp and other Lisp dialects@comma{} where sexps are the fundamental unit of code structure. They follow the same delete/copy/kill-whole/transpose pattern as the other text-object commands (@ref{Word operations, , Word operations}).
 
 The command @code{simple-extras-delete-sexp} deletes the next sexp (or ARG sexps) without affecting the kill ring. The command @code{simple-extras-backward-delete-sexp} does the same in the backward direction. The copy variants (@code{simple-extras-copy-sexp} and @code{simple-extras-backward-copy-sexp}) add sexp text to the kill ring without deleting it.
 
-The whole-sexp commands (@code{simple-extras-kill-whole-sexp}, @code{simple-extras-delete-whole-sexp}, @code{simple-extras-copy-whole-sexp}) operate on the complete sexp at point. The command @code{simple-extras-transpose-sexps-backward} reverses the order of the two sexps around point.
+The whole-sexp commands (@code{simple-extras-kill-whole-sexp}@comma{} @code{simple-extras-delete-whole-sexp}@comma{} @code{simple-extras-copy-whole-sexp}) operate on the complete sexp at point. The command @code{simple-extras-transpose-sexps-backward} reverses the order of the two sexps around point.
 
 @node Zap-to-char variants
 @section Zap-to-char variants
@@ -255,11 +256,11 @@ The whole-sexp commands (@code{simple-extras-kill-whole-sexp}, @code{simple-extr
 @findex simple-extras-backward-zap-copy-to-char
 @findex simple-extras-zap-delete-to-char
 @findex simple-extras-backward-zap-delete-to-char
-Emacs's built-in @code{zap-to-char} kills text from point up to and including a specified character. The commands in this group provide backward, copy, and delete variants of this operation.
+Emacs's built-in @code{zap-to-char} kills text from point up to and including a specified character. The commands in this group provide backward@comma{} copy@comma{} and delete variants of this operation.
 
 The command @code{simple-extras-backward-zap-to-char} kills backward from point to the ARGth occurrence of a character. It prompts for the target character interactively and respects @code{case-fold-search}. Upper-case characters trigger a case-sensitive search when called interactively.
 
-The command @code{simple-extras-zap-copy-to-char} copies text from point forward to the ARGth occurrence of a character, adding it to the kill ring without removing it from the buffer. The command @code{simple-extras-backward-zap-copy-to-char} does the same in the backward direction.
+The command @code{simple-extras-zap-copy-to-char} copies text from point forward to the ARGth occurrence of a character@comma{} adding it to the kill ring without removing it from the buffer. The command @code{simple-extras-backward-zap-copy-to-char} does the same in the backward direction.
 
 The command @code{simple-extras-zap-delete-to-char} deletes text from point forward to the ARGth occurrence of a character without touching the kill ring. The command @code{simple-extras-backward-zap-delete-to-char} does the same backward.
 
@@ -267,7 +268,7 @@ The command @code{simple-extras-zap-delete-to-char} deletes text from point forw
 @section Character transposition
 
 @findex simple-extras-transpose-chars-backward
-The command @code{simple-extras-transpose-chars-backward} transposes the two characters around point, moving point backward by one character. This is the reverse of the standard @code{transpose-chars}, providing a quick way to fix transposition errors without repositioning point.
+The command @code{simple-extras-transpose-chars-backward} transposes the two characters around point@comma{} moving point backward by one character. This is the reverse of the standard @code{transpose-chars}@comma{} providing a quick way to fix transposition errors without repositioning point.
 
 @node Smart region commands
 @section Smart region commands
@@ -275,26 +276,26 @@ The command @code{simple-extras-transpose-chars-backward} transposes the two cha
 @findex simple-extras-smart-kill-region
 @findex simple-extras-smart-delete-region
 @findex simple-extras-smart-copy-region
-These three commands provide DWIM behavior for acting on text. Kill and delete operate on the region only when the mark is active, while copy delegates to @code{copy-region-as-kill} and also accepts an inactive mark that Emacs still considers usable. Otherwise, they operate on the whole current line. This makes them convenient as general-purpose bindings since they adapt to context.
+These three commands provide DWIM behavior for acting on text. Kill and delete operate on the region only when the mark is active@comma{} while copy delegates to @code{copy-region-as-kill} and also accepts an inactive mark that Emacs still considers usable. Otherwise@comma{} they operate on the whole current line. This makes them convenient as general-purpose bindings since they adapt to context.
 
-The command @code{simple-extras-smart-kill-region} calls @code{kill-region} when the mark is active, and @code{kill-whole-line} otherwise. The command @code{simple-extras-smart-delete-region} calls @code{delete-region} when the mark is active, and @code{simple-extras-delete-whole-line} (@ref{Line operations}) otherwise. The command @code{simple-extras-smart-copy-region} calls @code{copy-region-as-kill} when the mark is usable, and @code{simple-extras-copy-whole-line} otherwise.
+The command @code{simple-extras-smart-kill-region} calls @code{kill-region} when the mark is active@comma{} and @code{kill-whole-line} otherwise. The command @code{simple-extras-smart-delete-region} calls @code{delete-region} when the mark is active@comma{} and @code{simple-extras-delete-whole-line} (@ref{Line operations, , Line operations}) otherwise. The command @code{simple-extras-smart-copy-region} calls @code{copy-region-as-kill} when the mark is usable@comma{} and @code{simple-extras-copy-whole-line} otherwise.
 
 @node Yank commands
 @section Yank commands
 
 @findex simple-extras-yank-and-pop
 @findex simple-extras-paste-no-properties
-The command @code{simple-extras-yank-and-pop} yanks the top entry from the kill ring and then removes that entry from the ring. This is useful when you want to paste something once and ensure it does not remain in the kill ring for accidental future yanks. After yanking, it displays a confirmation message.
+The command @code{simple-extras-yank-and-pop} yanks the top entry from the kill ring and then removes that entry from the ring. This is useful when you want to paste something once and ensure it does not remain in the kill ring for accidental future yanks. After yanking@comma{} it displays a confirmation message.
 
-The command @code{simple-extras-paste-no-properties} yanks the top of the kill ring with all text properties stripped. This is helpful when pasting text from formatted sources (such as web browsers or rich-text editors) into a plain-text buffer where font faces, colors, and other properties would be distracting.
+The command @code{simple-extras-paste-no-properties} yanks the top of the kill ring with all text properties stripped. This is helpful when pasting text from formatted sources (such as web browsers or rich-text editors) into a plain-text buffer where font faces@comma{} colors@comma{} and other properties would be distracting.
 
 @node Exchanging point and mark
 @section Exchanging point and mark
 
 @findex simple-extras-exchange-point-and-mark
-The built-in @code{exchange-point-and-mark} swaps point and mark, but its interaction with @code{transient-mark-mode} can be surprising: without a prefix argument, it reactivates the mark even when the region was inactive, which is often not what you want. The command @code{simple-extras-exchange-point-and-mark} inverts the meaning of the prefix argument when transient mark mode is on but the region is inactive. This means calling it without a prefix argument in that situation will @emph{not} reactivate the mark, and calling it @emph{with} a prefix argument will.
+The built-in @code{exchange-point-and-mark} swaps point and mark@comma{} but its interaction with @code{transient-mark-mode} can be surprising: without a prefix argument@comma{} it reactivates the mark even when the region was inactive@comma{} which is often not what you want. The command @code{simple-extras-exchange-point-and-mark} inverts the meaning of the prefix argument when transient mark mode is on but the region is inactive. This means calling it without a prefix argument in that situation will @emph{not} reactivate the mark@comma{} and calling it @emph{with} a prefix argument will.
 
-This refinement, inspired by @uref{https://spwhitton.name/blog/entry/transient-mark-mode/, Sean Whitton's blog post}, makes @code{exchange-point-and-mark} more intuitive for users who rely on transient mark mode but frequently want to jump to the mark without activating a selection.
+This refinement@comma{} inspired by @uref{https://spwhitton.name/blog/entry/transient-mark-mode/, Sean Whitton's blog post}@comma{} makes @code{exchange-point-and-mark} more intuitive for users who rely on transient mark mode but frequently want to jump to the mark without activating a selection.
 
 @node Enhanced visible mode
 @section Enhanced visible mode
@@ -302,33 +303,33 @@ This refinement, inspired by @uref{https://spwhitton.name/blog/entry/transient-m
 @findex simple-extras-visible-mode-enhanced
 @findex simple-extras-visible-mode-enhanced-dired
 @findex simple-extras-visible-mode-enhanced-org
-The command @code{simple-extras-visible-mode-enhanced} toggles @code{visible-mode} together with several related display modes, providing a single command to reveal or hide all visual embellishments at once. It accepts an optional prefix argument: positive to enable, negative to disable, or toggle if called interactively without an argument.
+The command @code{simple-extras-visible-mode-enhanced} toggles @code{visible-mode} together with several related display modes@comma{} providing a single command to reveal or hide all visual embellishments at once. It accepts an optional prefix argument: positive to enable@comma{} negative to disable@comma{} or toggle if called interactively without an argument.
 
-When in a Dired buffer, it delegates to @code{simple-extras-visible-mode-enhanced-dired}, which toggles @code{dired-hide-details-mode} and @code{dired-omit-mode}. When in an Org-mode buffer (including @code{org-agenda-mode} and @code{org-msg-mode}), it delegates to @code{simple-extras-visible-mode-enhanced-org}, which toggles @code{org-tidy-mode} (if present in @code{org-mode-hook}), inline images (via @code{org-extras-inline-images} from @samp{org-extras.el}), and @code{org-modern-mode} (when available and not in the agenda). This is useful for quickly switching between a ``clean'' reading view and a ``raw'' editing view.
+When in a Dired buffer@comma{} it delegates to @code{simple-extras-visible-mode-enhanced-dired}@comma{} which toggles @code{dired-hide-details-mode} and @code{dired-omit-mode}. When in an Org-mode buffer (including @code{org-agenda-mode} and @code{org-msg-mode})@comma{} it delegates to @code{simple-extras-visible-mode-enhanced-org}@comma{} which toggles @code{org-tidy-mode} (if present in @code{org-mode-hook})@comma{} inline images (via @code{org-extras-inline-images} from @samp{org-extras.el})@comma{} and @code{org-modern-mode} (when available and not in the agenda). This is useful for quickly switching between a ``clean'' reading view and a ``raw'' editing view.
 
 @node Enhanced visual line mode
 @section Enhanced visual line mode
 
 @findex simple-extras-visual-line-mode-enhanced
-The command @code{simple-extras-visual-line-mode-enhanced} toggles @code{visual-line-mode} while also managing the @code{truncate-lines} variable. When turning @code{visual-line-mode} off, it sets @code{truncate-lines} to @code{t} so long lines are truncated rather than wrapped. When turning it on, it sets @code{truncate-lines} to @code{nil}. This ensures consistent line-wrapping behavior that matches the user's intent when toggling visual line mode.
+The command @code{simple-extras-visual-line-mode-enhanced} toggles @code{visual-line-mode} while also managing the @code{truncate-lines} variable. When turning @code{visual-line-mode} off@comma{} it sets @code{truncate-lines} to @code{t} so long lines are truncated rather than wrapped. When turning it on@comma{} it sets @code{truncate-lines} to @code{nil}. This ensures consistent line-wrapping behavior that matches the user's intent when toggling visual line mode.
 
 @node DWIM keyboard quit
 @section DWIM keyboard quit
 
 @findex simple-extras-keyboard-quit-dwim
-The command @code{simple-extras-keyboard-quit-dwim} provides a context-aware replacement for the standard @code{keyboard-quit}. Instead of always calling @code{keyboard-quit}, it checks the current context and performs the most appropriate quit action:
+The command @code{simple-extras-keyboard-quit-dwim} provides a context-aware replacement for the standard @code{keyboard-quit}. Instead of always calling @code{keyboard-quit}@comma{} it checks the current context and performs the most appropriate quit action:
 
 @enumerate
 @item
-If the region is active, it deactivates the mark without adding the region to the window selection.
+If the region is active@comma{} it deactivates the mark without adding the region to the window selection.
 @item
-If the Completions buffer is selected, it closes the completion window.
+If the Completions buffer is selected@comma{} it closes the completion window.
 @item
-If a prefix argument is pending, or a keyboard macro is being defined, it does nothing (or cancels the macro events).
+If a prefix argument is pending@comma{} or a keyboard macro is being defined@comma{} it does nothing (or cancels the macro events).
 @item
-If the minibuffer is active, it hides any completions and then aborts the recursive edit.
+If the minibuffer is active@comma{} it hides any completions and then aborts the recursive edit.
 @item
-Otherwise, it falls through to the standard @code{keyboard-quit}.
+Otherwise@comma{} it falls through to the standard @code{keyboard-quit}.
 @end enumerate
 
 This behavior is inspired by @uref{https://protesilaos.com/emacs/dotemacs, Protesilaos Stavrou's configuration} and avoids the common annoyance of @code{keyboard-quit} disrupting ongoing macro definitions or unexpectedly clearing prefix arguments.
@@ -337,29 +338,29 @@ This behavior is inspired by @uref{https://protesilaos.com/emacs/dotemacs, Prote
 @section DWIM indentation
 
 @findex simple-extras-indent-dwim
-The command @code{simple-extras-indent-dwim} indents code intelligently based on context. If a region is active, it indents the region. If point is inside an Org source block (as determined by @code{org-in-src-block-p}), it narrows to the block and indents its contents. Otherwise, it indents the entire buffer.
+The command @code{simple-extras-indent-dwim} indents code intelligently based on context. If a region is active@comma{} it indents the region. If point is inside an Org source block (as determined by @code{org-in-src-block-p})@comma{} it narrows to the block and indents its contents. Otherwise@comma{} it indents the entire buffer.
 
-In all cases, the command runs @code{whitespace-cleanup} afterward to remove trailing whitespace and fix other whitespace issues. This makes it a convenient one-stop command for keeping code properly formatted.
+In all cases@comma{} the command runs @code{whitespace-cleanup} afterward to remove trailing whitespace and fix other whitespace issues. This makes it a convenient one-stop command for keeping code properly formatted.
 
 @node DWIM narrowing
 @section DWIM narrowing
 
 @findex simple-extras-narrow-or-widen-dwim
-The command @code{simple-extras-narrow-or-widen-dwim} toggles narrowing based on the current context. If the buffer is already narrowed, it widens. Otherwise, it narrows to the first applicable target:
+The command @code{simple-extras-narrow-or-widen-dwim} toggles narrowing based on the current context. If the buffer is already narrowed@comma{} it widens. Otherwise@comma{} it narrows to the first applicable target:
 
 @enumerate
 @item
-The active region, if one is selected.
+The active region@comma{} if one is selected.
 @item
-An Org source block, if point is inside one (via @code{org-narrow-to-block}).
+An Org source block@comma{} if point is inside one (via @code{org-narrow-to-block}).
 @item
 An Org subtree and its children (via @code{org-extras-narrow-to-entry-and-children} from @samp{org-extras.el}).
 @item
-A Markdown subtree (via @code{markdown-narrow-to-subtree}), when in @code{markdown-mode}.
+A Markdown subtree (via @code{markdown-narrow-to-subtree})@comma{} when in @code{markdown-mode}.
 @item
-A Ledger transaction (via @code{ledger-mode-extras-narrow-to-xact} from @samp{ledger-mode-extras.el}), when in @code{ledger-mode}.
+A Ledger transaction (via @code{ledger-mode-extras-narrow-to-xact} from @samp{ledger-mode-extras.el})@comma{} when in @code{ledger-mode}.
 @item
-The current defun, as a fallback.
+The current defun@comma{} as a fallback.
 @end enumerate
 
 This eliminates the need to remember separate narrowing commands for different contexts.
@@ -368,63 +369,63 @@ This eliminates the need to remember separate narrowing commands for different c
 @section Word counting
 
 @findex simple-extras-count-words-dwim
-The command @code{simple-extras-count-words-dwim} counts words in the active region if one exists, or in the current clipboard (kill ring) contents otherwise. Either way, the count is saved to the kill ring and displayed in the minibuffer. This is convenient when you need a quick word count for a selection or for text you have just copied.
+The command @code{simple-extras-count-words-dwim} counts words in the active region if one exists@comma{} or in the current clipboard (kill ring) contents otherwise. Either way@comma{} the count is saved to the kill ring and displayed in the minibuffer. This is convenient when you need a quick word count for a selection or for text you have just copied.
 
 @node Filling and unfilling
 @section Filling and unfilling
 
 @findex simple-extras-fill-or-unfill-paragraph
-The command @code{simple-extras-fill-or-unfill-paragraph} acts like @code{fill-paragraph} on the first invocation, reformatting the current paragraph to respect @code{fill-column}. When called a second time in immediate succession, it @emph{unfills} the paragraph by setting @code{fill-column} to @code{point-max}, effectively joining all lines into one. This toggle behavior makes it easy to switch between filled and unfilled text with a single keybinding.
+The command @code{simple-extras-fill-or-unfill-paragraph} acts like @code{fill-paragraph} on the first invocation@comma{} reformatting the current paragraph to respect @code{fill-column}. When called a second time in immediate succession@comma{} it @emph{unfills} the paragraph by setting @code{fill-column} to @code{point-max}@comma{} effectively joining all lines into one. This toggle behavior makes it easy to switch between filled and unfilled text with a single keybinding.
 
 @node URL stripping
 @section URL stripping
 
 @findex simple-extras-strip-url
 @findex simple-extras-strip-thing-at-point
-The command @code{simple-extras-strip-url} simplifies the URL at point by removing the @samp{http(s)://} scheme, the @samp{www.} prefix, and any trailing slash. It replaces the URL in the buffer with the simplified version. If no URL is found at point, it signals an error.
+The command @code{simple-extras-strip-url} simplifies the URL at point by removing the @samp{http(s)://} scheme@comma{} the @samp{www.} prefix@comma{} and any trailing slash. It replaces the URL in the buffer with the simplified version. If no URL is found at point@comma{} it signals an error.
 
-The command @code{simple-extras-strip-thing-at-point} is a DWIM wrapper that dispatches to the appropriate stripping function based on the thing at point. It supports URLs (delegating to @code{simple-extras-strip-url}), filenames (replacing them with their nondirectory component), and symbols (lowercasing them). It collapses surrounding whitespace afterward when point is not at the beginning or end of a line.
+The command @code{simple-extras-strip-thing-at-point} is a DWIM wrapper that dispatches to the appropriate stripping function based on the thing at point. It supports URLs (delegating to @code{simple-extras-strip-url})@comma{} filenames (replacing them with their nondirectory component)@comma{} and symbols (lowercasing them). It collapses surrounding whitespace afterward when point is not at the beginning or end of a line.
 
-Both commands rely on @code{simple-extras-get-url-at-point} to detect URLs and @code{simple-extras-simplify-url} to perform the simplification (@ref{URL utilities}).
+Both commands rely on @code{simple-extras-get-url-at-point} to detect URLs and @code{simple-extras-simplify-url} to perform the simplification (@ref{URL utilities, , URL utilities}).
 
 @node Asciifying text
 @section Asciifying text
 
 @findex simple-extras-asciify-text
-The command @code{simple-extras-asciify-text} removes accents and converts European language characters to their ASCII equivalents within a region. For example, ``cafe'' becomes ``cafe'', ``ss'' replaces ``ß'', and em dashes become double hyphens. When called interactively without a region, it operates on the current line.
+The command @code{simple-extras-asciify-text} removes accents and converts European language characters to their ASCII equivalents within a region. For example@comma{} ``cafe'' becomes ``cafe''@comma{} ``ss'' replaces ``ß''@comma{} and em dashes become double hyphens. When called interactively without a region@comma{} it operates on the current line.
 
-The conversion table handles a wide range of characters including accented Latin characters (French, German, Spanish, Czech, Vietnamese, and others), special punctuation (soft hyphens, thin spaces, inverted question marks), and various dash types. The search is case-insensitive.
+The conversion table handles a wide range of characters including accented Latin characters (French@comma{} German@comma{} Spanish@comma{} Czech@comma{} Vietnamese@comma{} and others)@comma{} special punctuation (soft hyphens@comma{} thin spaces@comma{} inverted question marks)@comma{} and various dash types. The search is case-insensitive.
 
-This command is used internally by @code{simple-extras-slugify} to prepare strings for URL slugification (@ref{Slugifying strings}).
+This command is used internally by @code{simple-extras-slugify} to prepare strings for URL slugification (@ref{Slugifying strings, , Slugifying strings}).
 
 @node Slugifying strings
 @section Slugifying strings
 
 @findex simple-extras-slugify
 @findex simple-extras-slugify-clipboard
-The command @code{simple-extras-slugify} converts a string into a URL-friendly slug: it strips Unicode punctuation, removes accents via @code{simple-extras-asciify-string} (@ref{Asciifying text}), converts to lowercase, and replaces spaces and underscores with hyphens. When called interactively, it prompts for a string, copies the resulting slug to the kill ring, and echoes it in the minibuffer.
+The command @code{simple-extras-slugify} converts a string into a URL-friendly slug: it strips Unicode punctuation@comma{} removes accents via @code{simple-extras-asciify-string} (@ref{Asciifying text, , Asciifying text})@comma{} converts to lowercase@comma{} and replaces spaces and underscores with hyphens. When called interactively@comma{} it prompts for a string@comma{} copies the resulting slug to the kill ring@comma{} and echoes it in the minibuffer.
 
-The command @code{simple-extras-slugify-clipboard} is a convenience wrapper that takes the current clipboard (kill ring) content, slugifies it, and replaces the kill ring entry with the slug. This is useful for quickly converting a copied title or heading into a file-name-friendly format.
+The command @code{simple-extras-slugify-clipboard} is a convenience wrapper that takes the current clipboard (kill ring) content@comma{} slugifies it@comma{} and replaces the kill ring entry with the slug. This is useful for quickly converting a copied title or heading into a file-name-friendly format.
 
 @node Sorting S-expressions
 @section Sorting S-expressions
 
 @findex simple-extras-sort-sexps
-The command @code{simple-extras-sort-sexps} alphabetically sorts all S-expressions within the active region. It reads each sexp, sorts them by their string representation (ignoring leading whitespace and comments), and rewrites the region with the sorted order.
+The command @code{simple-extras-sort-sexps} alphabetically sorts all S-expressions within the active region. It reads each sexp@comma{} sorts them by their string representation (ignoring leading whitespace and comments)@comma{} and rewrites the region with the sorted order.
 
-This is especially useful for keeping @code{use-package} declarations, @code{require} lists, or alist entries in a consistent alphabetical order. The command skips over comments attached to sexps, so inline documentation is preserved with its associated expression.
+This is especially useful for keeping @code{use-package} declarations@comma{} @code{require} lists@comma{} or alist entries in a consistent alphabetical order. The command skips over comments attached to sexps@comma{} so inline documentation is preserved with its associated expression.
 
 @node Removing advice
 @section Removing advice
 
 @findex simple-extras-advice-remove-all
-The command @code{simple-extras-advice-remove-all} removes all advice functions from a given symbol. When called interactively, it prompts for a function name with completion. This is useful during development and debugging when you want to restore a function to its unadvised state without knowing exactly which advice functions were added.
+The command @code{simple-extras-advice-remove-all} removes all advice functions from a given symbol. When called interactively@comma{} it prompts for a function name with completion. This is useful during development and debugging when you want to restore a function to its unadvised state without knowing exactly which advice functions were added.
 
 @node Setting up a Python virtual environment
 @section Setting up a Python virtual environment
 
 @findex simple-extras-set-python-virtual-environment
-The command @code{simple-extras-set-python-virtual-environment} creates a Python virtual environment in the root of the current Git repository. It locates the repository root via @code{locate-dominating-file}, names the virtual environment after the repository directory, and runs @samp{python -m venv} to create it. If the virtual environment already exists, it displays a message and takes no action. If the current buffer is not inside a Git repository, it signals an error.
+The command @code{simple-extras-set-python-virtual-environment} creates a Python virtual environment in the root of the current Git repository. It locates the repository root via @code{locate-dominating-file}@comma{} names the virtual environment after the repository directory@comma{} and runs @samp{python -m venv} to create it. If the virtual environment already exists@comma{} it displays a message and takes no action. If the current buffer is not inside a Git repository@comma{} it signals an error.
 
 @node Functions
 @chapter Functions
@@ -441,6 +442,7 @@ The command @code{simple-extras-set-python-virtual-environment} creates a Python
 * Network reachability::
 * Reaping closed server clients::
 * Server connection queue::
+* Replies to disconnected clients::
 * Server state file::
 * Auto-save for new buffers::
 * Keeping credentials out of auto-save files::
@@ -452,23 +454,23 @@ The command @code{simple-extras-set-python-virtual-environment} creates a Python
 
 @findex simple-extras-delete-instead-of-kill
 @findex simple-extras-copy-instead-of-kill
-The macro @code{simple-extras-delete-instead-of-kill} evaluates its body forms with @code{kill-region} temporarily rebound to @code{delete-region}. This means any kill commands executed within the body will delete text without adding it to the kill ring. Nearly all of the @samp{delete-*} commands in this package are built on top of this macro (@ref{Word operations}, @ref{Line operations}, etc.).
+The macro @code{simple-extras-delete-instead-of-kill} evaluates its body forms with @code{kill-region} temporarily rebound to @code{delete-region}. This means any kill commands executed within the body will delete text without adding it to the kill ring. Nearly all of the @samp{delete-*} commands in this package are built on top of this macro (@ref{Word operations, , Word operations}@comma{} @ref{Line operations, , Line operations}@comma{} etc.).
 
-The macro @code{simple-extras-copy-instead-of-kill} similarly rebinds @code{kill-region} to @code{kill-ring-save}, so that kill commands copy text to the kill ring without removing it from the buffer. It also sets @code{this-command} to @code{kill-region} to ensure proper interaction with the kill ring's append behavior. All @samp{copy-*} commands use this macro.
+The macro @code{simple-extras-copy-instead-of-kill} similarly rebinds @code{kill-region} to @code{kill-ring-save}@comma{} so that kill commands copy text to the kill ring without removing it from the buffer. It also sets @code{this-command} to @code{kill-region} to ensure proper interaction with the kill ring's append behavior. All @samp{copy-*} commands use this macro.
 
-Both macros use @code{cl-letf} for the temporary rebinding, which ensures the original function is restored even if an error occurs.
+Both macros use @code{cl-letf} for the temporary rebinding@comma{} which ensures the original function is restored even if an error occurs.
 
 @node Operating on the whole text object
 @section Operating on the whole text object
 
 @findex simple-extras-kill-whole-thing
-The function @code{simple-extras-kill-whole-thing} kills the entire text object at point for a given THING type (such as @code{'word}, @code{'line}, @code{'sentence}, @code{'paragraph}, or @code{'sexp}). It uses @code{bounds-of-thing-at-point} to determine the boundaries of the text object and then calls @code{kill-region} on them. All @samp{kill-whole-*}, @samp{delete-whole-*}, and @samp{copy-whole-*} commands delegate to this function.
+The function @code{simple-extras-kill-whole-thing} kills the entire text object at point for a given THING type (such as @code{'word}@comma{} @code{'line}@comma{} @code{'sentence}@comma{} @code{'paragraph}@comma{} or @code{'sexp}). It uses @code{bounds-of-thing-at-point} to determine the boundaries of the text object and then calls @code{kill-region} on them. All @samp{kill-whole-*}@comma{} @samp{delete-whole-*}@comma{} and @samp{copy-whole-*} commands delegate to this function.
 
 @node Save excursion with buffer restoration
 @section Save excursion with buffer restoration
 
 @findex simple-extras-save-excursion
-The macro @code{simple-extras-save-excursion} works like the built-in @code{save-excursion} but additionally restores the original buffer if the body forms switch to a different buffer. The built-in @code{save-excursion} only saves and restores point and mark within the same buffer; if a @code{switch-to-buffer} call occurs in the body, point is not restored. This macro wraps its body in a @code{prog1} form that explicitly switches back to the original buffer and restores point.
+The macro @code{simple-extras-save-excursion} works like the built-in @code{save-excursion} but additionally restores the original buffer if the body forms switch to a different buffer. The built-in @code{save-excursion} only saves and restores point and mark within the same buffer; if a @code{switch-to-buffer} call occurs in the body@comma{} point is not restored. This macro wraps its body in a @code{prog1} form that explicitly switches back to the original buffer and restores point.
 
 @node URL utilities
 @section URL utilities
@@ -478,11 +480,11 @@ The macro @code{simple-extras-save-excursion} works like the built-in @code{save
 @findex simple-extras-simplify-url
 @findex simple-extras-get-url
 @findex simple-extras-string-is-url-p
-The function @code{simple-extras-get-url-at-point} attempts to extract a URL near point without moving point. It looks for URL-like character sequences, handles parentheses and whitespace boundaries, strips @samp{URL:} prefixes, removes trailing periods, and prepends @samp{http://} to bare @samp{www.} URLs. If no valid URL is found, it returns @code{nil}. An optional argument PT allows specifying a position other than point.
+The function @code{simple-extras-get-url-at-point} attempts to extract a URL near point without moving point. It looks for URL-like character sequences@comma{} handles parentheses and whitespace boundaries@comma{} strips @samp{URL:} prefixes@comma{} removes trailing periods@comma{} and prepends @samp{http://} to bare @samp{www.} URLs. If no valid URL is found@comma{} it returns @code{nil}. An optional argument PT allows specifying a position other than point.
 
-The function @code{simple-extras-remove-trailing-slash} strips a trailing slash from a string, and @code{simple-extras-simplify-url} removes the @samp{http(s)://} scheme, @samp{www.} prefix, and trailing slash from a URL string. These are used by @code{simple-extras-strip-url} (@ref{URL stripping}).
+The function @code{simple-extras-remove-trailing-slash} strips a trailing slash from a string@comma{} and @code{simple-extras-simplify-url} removes the @samp{http(s)://} scheme@comma{} @samp{www.} prefix@comma{} and trailing slash from a URL string. These are used by @code{simple-extras-strip-url} (@ref{URL stripping, , URL stripping}).
 
-The function @code{simple-extras-get-url} retrieves a URL from multiple sources: an explicit argument, the current buffer's mode (EWW, Ebib, or Bib@TeX{}), or a user prompt pre-filled with the current kill ring entry. This provides a convenient way for other commands to obtain a URL regardless of context.
+The function @code{simple-extras-get-url} retrieves a URL from multiple sources: an explicit argument@comma{} the current buffer's mode (EWW@comma{} Ebib@comma{} or Bib@TeX{})@comma{} or a user prompt pre-filled with the current kill ring entry. This provides a convenient way for other commands to obtain a URL regardless of context.
 
 The function @code{simple-extras-string-is-url-p} checks whether a string is a valid URL by parsing it with @code{url-generic-parse-url} and verifying that both the scheme (@code{url-type}) and host (@code{url-host}) are present.
 
@@ -490,9 +492,9 @@ The function @code{simple-extras-string-is-url-p} checks whether a string is a v
 @section Text conversion via Pandoc
 
 @findex simple-extras-pandoc-convert
-The function @code{simple-extras-pandoc-convert} converts text between formats using the external @uref{https://pandoc.org/, Pandoc} tool. It accepts a TARGET format (using Pandoc's format names), an optional SOURCE format (defaulting to HTML), and optional CONTENT (defaulting to the system clipboard).
+The function @code{simple-extras-pandoc-convert} converts text between formats using the external @uref{https://pandoc.org/, Pandoc} tool. It accepts a TARGET format (using Pandoc's format names)@comma{} an optional SOURCE format (defaulting to HTML)@comma{} and optional CONTENT (defaulting to the system clipboard).
 
-When CONTENT is provided as a string, the conversion happens in a temporary buffer via @code{call-process-region}. When CONTENT is @code{nil}, the function reads from the system clipboard using @samp{pbv} (for HTML content) or @samp{pbpaste} (as a fallback), pipes it through Pandoc, and returns the result as a string. The @samp{--wrap=none} flag is always passed to prevent Pandoc from inserting line breaks.
+When CONTENT is provided as a string@comma{} the conversion happens in a temporary buffer via @code{call-process-region}. When CONTENT is @code{nil}@comma{} the function reads from the system clipboard using @samp{pbv} (for HTML content) or @samp{pbpaste} (as a fallback)@comma{} pipes it through Pandoc@comma{} and returns the result as a string. The @samp{--wrap=none} flag is always passed to prevent Pandoc from inserting line breaks.
 
 This function is primarily used programmatically by other packages to convert clipboard HTML to Org or Markdown format.
 
@@ -500,30 +502,30 @@ This function is primarily used programmatically by other packages to convert cl
 @section Asciifying strings
 
 @findex simple-extras-asciify-string
-The function @code{simple-extras-asciify-string} takes a string and returns a new string with all accented characters replaced by their ASCII equivalents. It works by inserting the string into a temporary buffer, calling @code{simple-extras-asciify-text} on it (@ref{Asciifying text}), and returning the result. This is used by @code{simple-extras-slugify} for programmatic accent removal (@ref{Slugifying strings}).
+The function @code{simple-extras-asciify-string} takes a string and returns a new string with all accented characters replaced by their ASCII equivalents. It works by inserting the string into a temporary buffer@comma{} calling @code{simple-extras-asciify-text} on it (@ref{Asciifying text, , Asciifying text})@comma{} and returning the result. This is used by @code{simple-extras-slugify} for programmatic accent removal (@ref{Slugifying strings, , Slugifying strings}).
 
 @node Slug helpers
 @section Slug helpers
 
 @findex simple-extras-slug-hyphenate
-The function @code{simple-extras-slug-hyphenate} replaces spaces, underscores, and dots with hyphens in a string, collapses multiple consecutive hyphens into one, and strips leading and trailing hyphens. It is used internally by @code{simple-extras-slugify} (@ref{Slugifying strings}).
+The function @code{simple-extras-slug-hyphenate} replaces spaces@comma{} underscores@comma{} and dots with hyphens in a string@comma{} collapses multiple consecutive hyphens into one@comma{} and strips leading and trailing hyphens. It is used internally by @code{simple-extras-slugify} (@ref{Slugifying strings, , Slugifying strings}).
 
 @node Network detection
 @section Network detection
 
 @findex simple-extras-connected-to-network-p
-The function @code{simple-extras-connected-to-network-p} checks whether the system is connected to a specific WiFi network by name. On macOS, it queries the network SSID via @samp{ipconfig getsummary}; on GNU/Linux, it uses @samp{iwgetid -r}. It returns @code{t} if the current SSID matches the given NETWORK argument. This can be used in configuration to conditionally enable features that depend on being connected to a particular network (e.g., a home or office network).
+The function @code{simple-extras-connected-to-network-p} checks whether the system is connected to a specific WiFi network by name. On macOS@comma{} it queries the network SSID via @samp{ipconfig getsummary}; on GNU/Linux@comma{} it uses @samp{iwgetid -r}. It returns @code{t} if the current SSID matches the given NETWORK argument. This can be used in configuration to conditionally enable features that depend on being connected to a particular network (e.g.@comma{} a home or office network).
 
 @node Network reachability
 @section Network reachability
 
-On macOS, Emacs resolves host names on its main thread, even for connections opened with @samp{:nowait}. When the resolver is slow or the network is down, any Lisp connection freezes Emacs until the lookup ends. These functions let a timer find out from a subprocess whether a host answers before it connects. A successful probe also leaves the answer in the system resolver's cache, so the connection that follows resolves quickly. This narrows the window for a freeze but does not close it: the network can still fail between the probe and the connection. Code that can make its request in a subprocess should do that instead.
+On macOS@comma{} Emacs resolves host names on its main thread@comma{} even for connections opened with @samp{:nowait}. When the resolver is slow or the network is down@comma{} any Lisp connection freezes Emacs until the lookup ends. These functions let a timer find out from a subprocess whether a host answers before it connects. A successful probe also leaves the answer in the system resolver's cache@comma{} so the connection that follows resolves quickly. This narrows the window for a freeze but does not close it: the network can still fail between the probe and the connection. Code that can make its request in a subprocess should do that instead.
 
 @findex simple-extras-probe-url
-The function @code{simple-extras-probe-url} runs @samp{curl --head} on a URL, limited to @code{simple-extras-reachability-timeout} seconds, and calls a callback with @code{t} if any HTTP response came back and @code{nil} otherwise. A 401 counts as an answer. The URL is visible to other processes, so it must not carry credentials. Each probe has a key, and while a probe with the same key is still running, the function starts no new one and returns @code{nil}.
+The function @code{simple-extras-probe-url} runs @samp{curl --head} on a URL@comma{} limited to @code{simple-extras-reachability-timeout} seconds@comma{} and calls a callback with @code{t} if any HTTP response came back and @code{nil} otherwise. A 401 counts as an answer. The URL is visible to other processes@comma{} so it must not carry credentials. Each probe has a key@comma{} and while a probe with the same key is still running@comma{} the function starts no new one and returns @code{nil}.
 
 @findex simple-extras-call-when-reachable
-The function @code{simple-extras-call-when-reachable} takes a URL, a function and its arguments. It calls the function only if the URL answers; otherwise it skips the call and logs that in @samp{*Messages*}, without showing it in the echo area. Use it as a timer's function:
+The function @code{simple-extras-call-when-reachable} takes a URL@comma{} a function and its arguments. It calls the function only if the URL answers; otherwise it skips the call and logs that in @samp{*Messages*}@comma{} without showing it in the echo area. Use it as a timer's function:
 
 @lisp
 (run-with-idle-timer 30 t #'simple-extras-call-when-reachable
@@ -535,23 +537,31 @@ The function @code{simple-extras-call-when-reachable} takes a URL, a function an
 
 @findex simple-extras-reap-closed-server-clients
 @findex simple-extras-server-client-abandoned-p
-The command @code{simple-extras-reap-closed-server-clients} removes entries from @code{server-clients} whose connection has already closed, returning the number deleted. It runs from @code{midnight-hook}.
+The command @code{simple-extras-reap-closed-server-clients} removes entries from @code{server-clients} whose connection has already closed@comma{} returning the number deleted. It runs from @code{midnight-hook}.
 
-@code{server-sentinel} normally removes a client when its connection ends, but the cleanup can be missed. An @code{emacsclient} killed while the server is still evaluating its request leaves Emacs replying down a socket nobody holds, and this happens routinely whenever such a call is wrapped in @samp{timeout}. The entry then sits in @code{server-clients} with a status of @code{closed} for the rest of the session; one such orphan had persisted for over 25 hours, alongside three leaked entries whose client processes were long gone.
+@code{server-sentinel} normally removes a client when its connection ends@comma{} but the cleanup can be missed. An @code{emacsclient} killed while the server is still evaluating its request leaves Emacs replying down a socket nobody holds@comma{} and this happens routinely whenever such a call is wrapped in @samp{timeout}. The entry then sits in @code{server-clients} with a status of @code{closed} for the rest of the session; one such orphan had persisted for over 25 hours@comma{} alongside three leaked entries whose client processes were long gone.
 
 @findex simple-extras-server-client-abandoned-p
-The predicate @code{simple-extras-server-client-abandoned-p} decides which entries qualify: the connection must be @code{closed} and the client must own no buffer, frame or tty, so a live editing session is never disturbed.
+The predicate @code{simple-extras-server-client-abandoned-p} decides which entries qualify: the connection must be @code{closed} and the client must own no buffer@comma{} frame or tty@comma{} so a live editing session is never disturbed.
 
 @node Server connection queue
 @section Server connection queue
 
 @findex simple-extras-server-raise-backlog
 @vindex simple-extras-server-backlog
-The function @code{simple-extras-server-raise-backlog} is @samp{:filter-args} advice for @code{make-network-process}. When the call creates the socket of @code{server-start}, it sets the socket's pending-connection queue to @code{simple-extras-server-backlog} (128) instead of the default of 5; other calls pass through unchanged. The configuration installs the advice before starting the server.
+The function @code{simple-extras-server-raise-backlog} is @samp{:filter-args} advice for @code{make-network-process}. When the call creates the socket of @code{server-start}@comma{} it sets the socket's pending-connection queue to @code{simple-extras-server-backlog} (128) instead of the default of 5; other calls pass through unchanged. The configuration installs the advice before starting the server.
 
-While Emacs is busy it accepts no new connections. With a queue of 5, a handful of concurrent @samp{emacsclient} calls fill it, and on macOS every further call fails at once with ``Connection refused'', as though the server had died. With agents calling @samp{emacsclient} routinely, this produced recurring false reports that the server needed restarting. With the longer queue those calls wait until Emacs is free, subject to their own timeouts. The kernel caps the value at @samp{kern.ipc.somaxconn}.
+While Emacs is busy it accepts no new connections. With a queue of 5@comma{} a handful of concurrent @samp{emacsclient} calls fill it@comma{} and on macOS every further call fails at once with ``Connection refused''@comma{} as though the server had died. With agents calling @samp{emacsclient} routinely@comma{} this produced recurring false reports that the server needed restarting. With the longer queue those calls wait until Emacs is free@comma{} subject to their own timeouts. The kernel caps the value at @samp{kern.ipc.somaxconn}.
 
-The advice only affects a server started after it is installed. To apply it to a running server without the client prompt, call @code{(server-start nil t)}: this replaces only the listening socket, and connections already open keep running.
+The advice only affects a server started after it is installed. To apply it to a running server without the client prompt@comma{} call @code{(server-start nil t)}: this replaces only the listening socket@comma{} and connections already open keep running.
+
+@node Replies to disconnected clients
+@section Replies to disconnected clients
+
+@findex simple-extras-server-send-unless-disconnected
+The function @code{simple-extras-server-send-unless-disconnected} is @samp{:around} advice for @code{server-send-string}. When a reply cannot be sent because its client has already disconnected@comma{} it records the dropped reply with @code{server-log} and returns instead of signaling an error. Errors for a client that is still connected propagate as before. The configuration installs the advice when it starts the server.
+
+Since Emacs 31 the server answers queued requests one at a time. An @samp{emacsclient} that gives up while an earlier request is still being evaluated@comma{} such as the server watchdog's periodic probe during a long agent request@comma{} is gone by the time its turn comes. Replying to it signals ``not running''@comma{} and with @code{debug-on-error} set that opened the debugger although nothing was wrong.
 
 @node Server state file
 @section Server state file
@@ -560,9 +570,9 @@ The advice only affects a server started after it is installed. To apply it to a
 @findex simple-extras-server-write-state
 @vindex simple-extras-server-state-file
 @vindex simple-extras-server-state-interval
-The global minor mode @code{simple-extras-server-state-mode} writes the server's state to @code{simple-extras-server-state-file} (@samp{~/.cache/emacs-server-state.json}) every @code{simple-extras-server-state-interval} (5) seconds. The JSON object holds the time, the process ID, the recursion and minibuffer depths, any active minibuffer prompt, the first three lines of an active debugger backtrace, and the garbage-collection counters @code{gcs-done} and @code{gc-elapsed} with the current @code{gc-cons-threshold}.
+The global minor mode @code{simple-extras-server-state-mode} writes the server's state to @code{simple-extras-server-state-file} (@samp{~/.cache/emacs-server-state.json}) every @code{simple-extras-server-state-interval} (5) seconds. The JSON object holds the time@comma{} the process ID@comma{} the recursion and minibuffer depths@comma{} any active minibuffer prompt@comma{} the first three lines of an active debugger backtrace@comma{} and the garbage-collection counters @code{gcs-done} and @code{gc-elapsed} with the current @code{gc-cons-threshold}.
 
-A server request that enters the debugger or a minibuffer prompt stays parked until the user answers, while the rest of Emacs keeps working, so nothing outside Emacs can ask it what is wrong. Timers still run inside those recursive edits, so the file names what holds the server. A file that stops being updated means instead that Emacs is blocked in Lisp or a subprocess. The process ID tells the reader whether a server that answers is this Emacs or another instance that took over its socket. The @samp{emacs-server-watchdog} script in the dotfiles @samp{bin} directory reads the file when the server stops answering. Between its runs it compares the garbage-collection counters, so a server slowed by long collections, which also stop timers and server requests, shows up in its samples. @code{simple-extras-server-write-state} swallows its own errors: with @code{debug-on-error} set, an error in a timer would enter the debugger and park the server itself. Each write schedules the next one before it starts, so quitting a debugger that opened during a write does not stop the recording: a repeating timer interrupted that way would stay marked as triggered and never fire again.
+A server request that enters the debugger or a minibuffer prompt stays parked until the user answers@comma{} while the rest of Emacs keeps working@comma{} so nothing outside Emacs can ask it what is wrong. Timers still run inside those recursive edits@comma{} so the file names what holds the server. A file that stops being updated means instead that Emacs is blocked in Lisp or a subprocess. The process ID tells the reader whether a server that answers is this Emacs or another instance that took over its socket. The @samp{emacs-server-watchdog} script in the dotfiles @samp{bin} directory reads the file when the server stops answering. Between its runs it compares the garbage-collection counters@comma{} so a server slowed by long collections@comma{} which also stop timers and server requests@comma{} shows up in its samples. @code{simple-extras-server-write-state} swallows its own errors: with @code{debug-on-error} set@comma{} an error in a timer would enter the debugger and park the server itself. Each write schedules the next one before it starts@comma{} so quitting a debugger that opened during a write does not stop the recording: a repeating timer interrupted that way would stay marked as triggered and never fire again.
 
 The configuration enables the mode only in the instance that starts the server.
 
@@ -572,15 +582,15 @@ The configuration enables the mode only in the instance that starts the server.
 @findex simple-extras-is-new-buffer-p
 @findex simple-extras-new-buffer-enable-auto-save
 @findex simple-extras-new-buffer-auto-save-dir
-The function @code{simple-extras-is-new-buffer-p} returns @code{t} if the current buffer is a new, non-file-visiting buffer whose name starts with @samp{untitled}. This predicate is used by the auto-save infrastructure to identify buffers that need special handling.
+The function @code{simple-extras-is-new-buffer-p} returns @code{t} if the current buffer is a new@comma{} non-file-visiting buffer whose name starts with @samp{untitled}. This predicate is used by the auto-save infrastructure to identify buffers that need special handling.
 
 The function @code{simple-extras-new-buffer-enable-auto-save} enables @code{auto-save-mode} for new buffers (as determined by @code{simple-extras-is-new-buffer-p}). It is added to @code{buffer-list-update-hook} so that auto-save is activated as soon as a new untitled buffer appears.
 
-It returns immediately when the buffer already has an auto-save file name, and that guard is essential rather than a mere optimisation. @code{auto-save-mode} recomputes @code{buffer-auto-save-file-name} on @strong{every} invocation, and @code{make-auto-save-file-name} gives a buffer that visits no file a name containing a random component, so successive calls yield @samp{#untitled#bhdeoF#}, @samp{#untitled#jBhzLB#}, @samp{#untitled#kDY6F6#} and so on. Since @code{buffer-list-update-hook} runs on nearly every command, an unguarded version renamed the auto-save target continuously: each auto-save wrote to a freshly-named file and abandoned the previous one. A single buffer named @samp{untitled} had left 17,214 files behind this way, and 41,377 had accumulated in total, peaking at 1,127 in one day.
+It returns immediately when the buffer already has an auto-save file name@comma{} and that guard is essential rather than a mere optimisation. @code{auto-save-mode} recomputes @code{buffer-auto-save-file-name} on @strong{every} invocation@comma{} and @code{make-auto-save-file-name} gives a buffer that visits no file a name containing a random component@comma{} so successive calls yield @samp{#untitled#bhdeoF#}@comma{} @samp{#untitled#jBhzLB#}@comma{} @samp{#untitled#kDY6F6#} and so on. Since @code{buffer-list-update-hook} runs on nearly every command@comma{} an unguarded version renamed the auto-save target continuously: each auto-save wrote to a freshly-named file and abandoned the previous one. A single buffer named @samp{untitled} had left 17@comma{}214 files behind this way@comma{} and 41@comma{}377 had accumulated in total@comma{} peaking at 1@comma{}127 in one day.
 
-The function @code{simple-extras-new-buffer-auto-save-dir} is an @code{:around} advice on @code{auto-save-mode} that redirects auto-save files for untitled buffers to the directory specified by @code{simple-extras-new-buffer-auto-save-dir} (@ref{Auto-save directory for new buffers}). For file-visiting buffers, it passes through to the original function unchanged.
+The function @code{simple-extras-new-buffer-auto-save-dir} is an @code{:around} advice on @code{auto-save-mode} that redirects auto-save files for untitled buffers to the directory specified by @code{simple-extras-new-buffer-auto-save-dir} (@ref{Auto-save directory for new buffers, , Auto-save directory for new buffers}). For file-visiting buffers@comma{} it passes through to the original function unchanged.
 
-The auto-save file of an untitled buffer deliberately @strong{survives} the buffer being killed. Killing a buffer that visits no file does not prompt for confirmation, so that file is the only route back to the contents of a buffer killed by accident — which is the reason for auto-saving untitled buffers at all. Retaining it costs one file per untitled buffer, which is bounded; the runaway growth described above came from the repeated renaming, not from retention.
+The auto-save file of an untitled buffer deliberately @strong{survives} the buffer being killed. Killing a buffer that visits no file does not prompt for confirmation@comma{} so that file is the only route back to the contents of a buffer killed by accident — which is the reason for auto-saving untitled buffers at all. Retaining it costs one file per untitled buffer@comma{} which is bounded; the runaway growth described above came from the repeated renaming@comma{} not from retention.
 
 @node Keeping credentials out of auto-save files
 @section Keeping credentials out of auto-save files
@@ -589,27 +599,27 @@ The auto-save file of an untitled buffer deliberately @strong{survives} the buff
 @findex simple-extras-disable-auto-save
 @findex simple-extras-buffer-contains-secret-p
 @vindex simple-extras-secret-regexp
-Redirecting auto-save files for untitled buffers to a fixed directory (@ref{Auto-save for new buffers}) has a consequence that is easy to miss: those files are never cleaned up. @code{delete-auto-save-files} removes an auto-save file when its buffer is @strong{saved}, but an untitled scratch buffer is by definition never saved, so killing it leaves the auto-save file behind permanently. Paste an API key into a scratch buffer to look at it, kill the buffer, and the key remains on disk indefinitely — and is then swept up by whatever backs the machine up.
+Redirecting auto-save files for untitled buffers to a fixed directory (@ref{Auto-save for new buffers, , Auto-save for new buffers}) has a consequence that is easy to miss: those files are never cleaned up. @code{delete-auto-save-files} removes an auto-save file when its buffer is @strong{saved}@comma{} but an untitled scratch buffer is by definition never saved@comma{} so killing it leaves the auto-save file behind permanently. Paste an API key into a scratch buffer to look at it@comma{} kill the buffer@comma{} and the key remains on disk indefinitely — and is then swept up by whatever backs the machine up.
 
-The function @code{simple-extras-inhibit-auto-save-of-secrets} prevents this. It runs as @code{:before} advice on @code{do-auto-save}, and for every buffer that is due to be auto-saved and that holds a secret, it calls @code{simple-extras-disable-auto-save} — which clears @code{buffer-auto-save-file-name} and deletes any auto-save file already written, since that file may already contain the credential. Auto-saving stays off for that buffer for the rest of the session.
+The function @code{simple-extras-inhibit-auto-save-of-secrets} prevents this. It runs as @code{:before} advice on @code{do-auto-save}@comma{} and for every buffer that is due to be auto-saved and that holds a secret@comma{} it calls @code{simple-extras-disable-auto-save} — which clears @code{buffer-auto-save-file-name} and deletes any auto-save file already written@comma{} since that file may already contain the credential. Auto-saving stays off for that buffer for the rest of the session.
 
-A buffer counts as holding a secret on either of two independent tests, because neither covers the other's case.
+A buffer counts as holding a secret on either of two independent tests@comma{} because neither covers the other's case.
 
 @findex simple-extras-visiting-decrypted-file-p
-The first is @strong{location}: @code{simple-extras-visiting-decrypted-file-p} returns non-nil for any buffer visiting a file under @code{temporary-file-directory}. This is the password-manager edit case: tools such as @samp{gpg} and @samp{op} decrypt an entry to a temporary file and open an editor on it — on a system without @samp{/dev/shm}, which includes macOS, that file is on ordinary disk — so every file there is a decrypted secret regardless of its contents. Location is the surer test, because a pattern has to recognise the credential format in advance and never will for all of them: a passphrase, a recovery code or a bank account detail looks like ordinary text. Extending the pattern list one format at a time is the wrong shape of fix for this case.
+The first is @strong{location}: @code{simple-extras-visiting-decrypted-file-p} returns non-nil for any buffer visiting a file under @code{temporary-file-directory}. This is the password-manager edit case: tools such as @samp{gpg} and @samp{op} decrypt an entry to a temporary file and open an editor on it — on a system without @samp{/dev/shm}@comma{} which includes macOS@comma{} that file is on ordinary disk — so every file there is a decrypted secret regardless of its contents. Location is the surer test@comma{} because a pattern has to recognise the credential format in advance and never will for all of them: a passphrase@comma{} a recovery code or a bank account detail looks like ordinary text. Extending the pattern list one format at a time is the wrong shape of fix for this case.
 
 @vindex simple-extras-secret-regexp
-The second is @strong{content}: @code{simple-extras-buffer-contains-secret-p} matches the buffer text against @code{simple-extras-secret-regexp}. This catches what location cannot — a key pasted into an untitled buffer, or printed in a backtrace because a function took it as an argument. Emacs prints every argument when it enters the debugger, so a key reaches @samp{*Backtrace*} without anyone typing it there.
+The second is @strong{content}: @code{simple-extras-buffer-contains-secret-p} matches the buffer text against @code{simple-extras-secret-regexp}. This catches what location cannot — a key pasted into an untitled buffer@comma{} or printed in a backtrace because a function took it as an argument. Emacs prints every argument when it enters the debugger@comma{} so a key reaches @samp{*Backtrace*} without anyone typing it there.
 
 @findex simple-extras-backup-enable-predicate
-@code{simple-extras-backup-enable-predicate} applies the same location rule to backups and is installed as @code{backup-enable-predicate}. Backups are disabled globally through @code{make-backup-files}, so this is redundant today; it exists so that re-enabling backups cannot silently restore the original leak. That leak was exactly this: Emacs wrote a permanent backup of a @code{pass} temporary file, and the shredding @code{pass} performs on exit removed only its own copy. 38 entries leaked that way between February and July 2023.
+@code{simple-extras-backup-enable-predicate} applies the same location rule to backups and is installed as @code{backup-enable-predicate}. Backups are disabled globally through @code{make-backup-files}@comma{} so this is redundant today; it exists so that re-enabling backups cannot silently restore the original leak. That leak was exactly this: Emacs wrote a permanent backup of a @code{pass} temporary file@comma{} and the shredding @code{pass} performs on exit removed only its own copy. 38 entries leaked that way between February and July 2023.
 
-@code{simple-extras-new-buffer-enable-auto-save} makes the same check, so that its @code{buffer-list-update-hook} entry does not immediately switch auto-saving back on.
+@code{simple-extras-new-buffer-enable-auto-save} makes the same check@comma{} so that its @code{buffer-list-update-hook} entry does not immediately switch auto-saving back on.
 
 @vindex simple-extras-secret-regexp
-The user option @code{simple-extras-secret-regexp} holds the pattern. It covers Anthropic, OpenAI (including project, admin and service-account keys), GitHub, Slack and AWS credential formats, plus PEM private key headers. Add to it if you handle credentials in a format it does not yet recognise.
+The user option @code{simple-extras-secret-regexp} holds the pattern. It covers Anthropic@comma{} OpenAI (including project@comma{} admin and service-account keys)@comma{} GitHub@comma{} Slack and AWS credential formats@comma{} plus PEM private key headers. Add to it if you handle credentials in a format it does not yet recognise.
 
-The scan is cached against @code{buffer-chars-modified-tick} and recomputed only when the buffer's text changes, which matters because @code{auto-save-interval} may be set low enough that auto-saving happens every few keystrokes.
+The scan is cached against @code{buffer-chars-modified-tick} and recomputed only when the buffer's text changes@comma{} which matters because @code{auto-save-interval} may be set low enough that auto-saving happens every few keystrokes.
 
 @node Miscellaneous utilities
 @section Miscellaneous utilities
@@ -623,21 +633,21 @@ The scan is cached against @code{buffer-chars-modified-tick} and recomputed only
 @findex simple-extras-local-set-key
 The function @code{simple-extras-init-disable-funs} disables a list of functions after a specified number of seconds by adding @code{ignore} as an @code{:override} advice. This can be used during Emacs startup to suppress unwanted function calls that occur during initialization.
 
-The function @code{simple-extras-get-next-element} returns the next element in a list after a given element, cycling back to the first element when the end is reached. This is useful for implementing cycling behaviors in commands.
+The function @code{simple-extras-get-next-element} returns the next element in a list after a given element@comma{} cycling back to the first element when the end is reached. This is useful for implementing cycling behaviors in commands.
 
-The function @code{simple-extras-call-verbosely} calls a function and displays a message with its name, optionally using a custom format string. This is useful for debugging or logging which functions are being called during complex operations.
+The function @code{simple-extras-call-verbosely} calls a function and displays a message with its name@comma{} optionally using a custom format string. This is useful for debugging or logging which functions are being called during complex operations.
 
 The function @code{simple-extras-call-verbosely-in-background} is the
-background-maintenance variant. It logs the function call, runs it with
-@code{debug-on-error} locally disabled, catches errors, reports them with
-@code{message}, and returns @code{nil} on failure so hooks such as @code{midnight-hook}
+background-maintenance variant. It logs the function call@comma{} runs it with
+@code{debug-on-error} locally disabled@comma{} catches errors@comma{} reports them with
+@code{message}@comma{} and returns @code{nil} on failure so hooks such as @code{midnight-hook}
 do not enter the debugger or abort the rest of the hook.
 
 The function @code{simple-extras-get-emacs-distro} detects whether the current Emacs build is the Mac port (@samp{emacs-mac}) or Emacs Plus (@samp{emacs-plus}) by checking for distribution-specific bound variables.
 
 The function @code{simple-extras-string-at-point} returns the quote-delimited string at point by scanning forward and backward for string-syntax delimiters on the current line.
 
-The function @code{simple-extras-local-set-key} binds a KEY to a COMMAND in the current buffer only, by creating a new sparse keymap with the current local map as its parent. This is useful for setting up buffer-specific keybindings from hooks or advice functions.
+The function @code{simple-extras-local-set-key} binds a KEY to a COMMAND in the current buffer only@comma{} by creating a new sparse keymap with the current local map as its parent. This is useful for setting up buffer-specific keybindings from hooks or advice functions.
 
 @node Indices
 @chapter Indices

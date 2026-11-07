@@ -985,6 +985,24 @@ way back to the contents of one killed by accident."
       (server-stop)
       (delete-directory server-socket-dir t))))
 
+(ert-deftest simple-extras-test-server-send-drops-reply-to-disconnected-client ()
+  "A reply to a client that has disconnected is dropped without an error."
+  (require 'server)
+  (let ((proc (make-pipe-process :name "sx-gone" :noquery t)))
+    (delete-process proc)
+    (should-error (server-send-string proc "-emacs-pid 1\n"))
+    (should-not (simple-extras-server-send-unless-disconnected
+                 #'server-send-string proc "-emacs-pid 1\n"))))
+
+(ert-deftest simple-extras-test-server-send-keeps-errors-for-live-client ()
+  "An error sending to a connected client still propagates."
+  (let ((proc (make-pipe-process :name "sx-live" :noquery t)))
+    (unwind-protect
+        (should-error (simple-extras-server-send-unless-disconnected
+                       (lambda (_proc _string) (error "Send failed"))
+                       proc "x"))
+      (delete-process proc))))
+
 ;;;; Server state file
 
 (ert-deftest simple-extras-test-server-write-state-records-state ()

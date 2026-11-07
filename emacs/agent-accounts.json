@@ -9,8 +9,8 @@
   ],
   "codex": [
     {"name": "tlon", "home": "~/.codex-tlon"},
-    {"name": "epoch", "home": "~/.codex-epoch", "pool": "epoch-pool"},
-    {"name": "epoch-plan", "home": "~/.codex-epoch-plan"},
+    {"name": "epoch", "home": "~/.codex-epoch"},
+    {"name": "personal", "home": "~/.codex-epoch-plan"},
     {"name": "forethought", "home": "~/.codex-forethought"}
   ]
 }

@@ -9755,8 +9755,8 @@ does not exist."
   ;; has its project chosen among that organization's, whatever account
   ;; is selected.
   (agent-account-origin-rules
-   '(("\\`slack:Epoch AI\\'" . ((claude-code . "epoch") (codex . "epoch-pool")))
-     ("\\`mu4e:/epoch/" . ((claude-code . "epoch") (codex . "epoch-pool")))
+   '(("\\`slack:Epoch AI\\'" . ((claude-code . "epoch") (codex . "epoch")))
+     ("\\`mu4e:/epoch/" . ((claude-code . "epoch") (codex . "epoch")))
      ("\\`slack:Forethought\\'" . "forethought")
      ("\\`mu4e:/forethought/" . "forethought")
      ("\\`linear:forethought\\'" . "forethought")))
@@ -9777,8 +9777,8 @@ does not exist."
   ;; whatever account is currently selected.
   (agent-account-directory-rules
    `((,(file-name-concat paths-dir-personal-repos "epoch/")
-      . ((claude-code . "epoch") (codex . "epoch-pool")))
-     (,paths-dir-epoch . ((claude-code . "epoch") (codex . "epoch-pool")))
+      . ((claude-code . "epoch") (codex . "epoch")))
+     (,paths-dir-epoch . ((claude-code . "epoch") (codex . "epoch")))
      (,(file-name-concat paths-dir-personal-repos "forethought/") . "forethought")
      ("~/repos/forethought-notes/" . "forethought")
      ;; Codex has no FIAS account, so only Claude is routed.

@@ -76,6 +76,12 @@ the "Already tried" list in place.
 - Reload guards cover literal and load-time =defclass= and =cl-defstruct=
   only (2026-11-07). Other state that a reload leaves stale, such as values
   captured in closures or timers, is still unguarded.
+- Config blocks run mid-reload (2026-11-07 09:32): reloading =agent.el=
+  first re-runs the =use-package agent= =:config= block (an
+  =eval-after-load= form) before =agent-claude= and the other files reload,
+  so it calls old or half-updated functions. Proposed:
+  =elpaca-extras-reload= holds the package's after-load forms until every
+  file has loaded. Pending Pablo's decision.
 
 * Incidents
 
@@ -117,8 +123,17 @@ the "Already tried" list in place.
   statically and at load; an aborted reload records =failed=), live-verified;
   =c0f553ac1= (=elpaca-rebuild-wait= archives a pending record whose source
   moved on once its token is terminal and the package idle).
+- Third debugger (09:32): the live check's rebuild of agent at the peer's
+  =ca4aa74= hit =void-variable agent-claude--event-hook-functions=. A peer
+  reload during editing had installed the new =agent-claude--mode-enable=
+  without its =defconst=; reloading =agent.el= re-ran the config block, which
+  called it before =agent-claude= reloaded. Pablo quit the debugger; the new
+  code recorded the token =failed= and =c0f553ac1= archived the stranded
+  08:53 record as designed. Loading =agent-claude= first, then rerunning the
+  check, passed (live evidence at =ca4aa74=).
 - =debug-on-quit= was =t= globally (cause not checked).
-- Evidence: =/tmp/emacs-freeze.YaqQWT/= (temporary).
+- Evidence: samples and replies deleted after the fix; the 09:32 backtrace
+  Pablo saved is =~/Downloads/backtrace.el=.
 
 ** 2026-11-05 05:52-06:26: stall with the display off, ended by display wake (investigation, no change)
 

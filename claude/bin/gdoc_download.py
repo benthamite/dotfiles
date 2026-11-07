@@ -1,5 +1,5 @@
 """Extend the installed gdoc CLI: original-file downloads, an empty-write guard,
-and comment threads on every `cat`.
+comment threads on every `cat`, and token writes that parallel runs can share.
 
 Drive blobs use files.get_media; native Workspace documents still use export.
 https://developers.google.com/workspace/drive/api/guides/manage-downloads
@@ -11,6 +11,10 @@ Upstream `cat` shows comments only on request, and its `--comments` view
 refuses `--tab`. A doc's comments often hold what its body leaves out (on
 14 Oct 2026 a read of the retreat doc missed 232 threads), so `cat` appends
 them unless `--no-comments` is given.
+
+Upstream saves every refreshed token through one fixed `token.json.tmp`, so
+parallel runs that refresh the same expired token collide and the losers
+report "Not authenticated"; `write_private` gives each write its own file.
 """
 import argparse
 import contextlib
@@ -24,7 +28,7 @@ import re
 import sys
 import tempfile
 
-from gdoc import cli
+from gdoc import auth, cli
 from gdoc.api import get_drive_service
 from gdoc.api.drive import _translate_http_error
 from gdoc.frontmatter import parse_frontmatter
@@ -243,6 +247,30 @@ def with_comments(command):
     return cat
 
 
+def write_private(path, content):
+    """Replace the secret file PATH with CONTENT through a temp file of its own.
+
+    Upstream's `_write_private` opens one fixed `<name>.tmp` with O_EXCL, so of
+    several processes refreshing the same expired token at once all but one
+    fail; upstream swallows that error and reports "Not authenticated" for a
+    token that is fine.  On 6 and 7 Nov 2026 this failed two of the Forethought
+    closeout's Drive-comment targets, which it runs six at a time.  `mkstemp`
+    creates the file with mode 0600 and `os.replace` swaps it in atomically,
+    so the last writer wins with a valid token.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp",
+                                     dir=path.parent)
+    try:
+        with os.fdopen(fd, "w") as stream:
+            stream.write(content)
+        os.replace(temporary, path)
+    except BaseException:
+        Path(temporary).unlink(missing_ok=True)
+        raise
+
+
 _original_build_parser = cli.build_parser
 
 
@@ -273,5 +301,6 @@ def build_parser():
 
 
 if __name__ == "__main__":
+    auth._write_private = write_private
     cli.build_parser = build_parser
     raise SystemExit(cli.main())

@@ -231,5 +231,53 @@ class CatCommentsTests(unittest.TestCase):
         self.assertIn('comments could not be read (quota)', err)
 
 
+@unittest.skipUnless(OWN_INTERPRETER, 'runs through DelegatedRun under the gdoc interpreter')
+class TokenWriteTests(unittest.TestCase):
+    """Parallel runs refreshing one token must all save it."""
+
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.path = Path(self.directory.name) / 'accounts/forethought/token.json'
+
+    def test_parallel_writes_all_succeed(self):
+        import multiprocessing
+        context = multiprocessing.get_context('spawn')
+        with context.Manager() as manager:
+            start = manager.Event()
+            with context.Pool(6) as pool:
+                results = [pool.apply_async(_race_write, (str(SOURCE), str(self.path), i, start))
+                           for i in range(6)]
+                start.set()
+                outcomes = [r.get(timeout=60) for r in results]
+        self.assertEqual(outcomes, ['ok'] * 6)
+        self.assertIn(json.loads(self.path.read_text())['writer'], range(6))
+        self.assertEqual([p.name for p in self.path.parent.iterdir()], ['token.json'])
+
+    def test_mode_is_private(self):
+        self.path.parent.mkdir(parents=True)
+        self.path.write_text('{}')
+        self.path.chmod(0o644)
+        module.write_private(self.path, '{"writer": 0}')
+        self.assertEqual(self.path.stat().st_mode & 0o777, 0o600)
+
+    def test_cli_saves_tokens_through_it(self):
+        self.assertIn('auth._write_private = write_private', SOURCE.read_text())
+
+
+def _race_write(source, path, writer, start):
+    """Load the wrapper in a fresh process and write repeatedly once START is set."""
+    spec = importlib.util.spec_from_file_location('gdoc_download', source)
+    loaded = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(loaded)
+    start.wait()
+    try:
+        for _ in range(20):
+            loaded.write_private(path, json.dumps({'writer': writer}))
+        return 'ok'
+    except Exception as error:  # report it, so a failure shows what collided
+        return f'{type(error).__name__}: {error}'
+
+
 if __name__ == '__main__':
     unittest.main()

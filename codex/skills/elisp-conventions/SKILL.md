@@ -28,6 +28,9 @@ refreshed.
 - In a multiline docstring, continue the first paragraph on the next line
   without an empty line. Separate later paragraphs with one empty line.
 - Do not end error messages with a period.
+- Start every `.el` file with a `lexical-binding: t` cookie on its first line,
+  including throwaway scripts loaded into a live Emacs. Emacs 31 warns each
+  time it loads a file without one.
 - Add comments only when the code cannot make the reason clear.
 - Never wait on the network on the main thread from code that runs without a
   command: timers, sentinels, filters and hooks. `url-retrieve`, a blocking

@@ -663,6 +663,8 @@ Its coding style forbids network waits on the main thread from timers,
 sentinels, filters and hooks, after the 2026-10-25 freezes. Connections that
 cannot leave Lisp, such as forge's and Slack's, may instead probe the host from
 a subprocess with =simple-extras-probe-url=, as a recorded exception.
+Every =.el= file, including a throwaway script loaded into a live Emacs, starts
+with a =lexical-binding= cookie, since Emacs 31 warns on each load without one.
 
 The documentation guard reads generated-output declarations from the proposed
 commit's manual bytes, including explicit selections and inherited amendments.

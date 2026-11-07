@@ -95,12 +95,19 @@ is_doc_exempt_el() {
   esac
 }
 
-# A staged .el change that only rewrites the `;; Version:' header is
-# also exempt: it records a release, and changes no behavior the manual
-# could describe.  Release tooling makes that bump as a commit of its
-# own, which otherwise could not be committed without inventing a
+# A staged .el change made only of lines that change no behavior a manual
+# could describe is also exempt.  Such a line is one of:
+#
+# - a `;; Version:' header: release tooling bumps it in a commit of its own;
+# - a `lexical-binding' cookie, or the header line it was appended to:
+#   Emacs 31 warns on loading a file without one;
+# - a bare `(defvar SYMBOL)' declaration, which keeps a dynamic binding
+#   dynamic once the cookie is added;
+# - a blank line.
+#
+# Otherwise these commits could not be made without inventing a
 # documentation edit to satisfy this gate.
-is_version_bump_only() {
+is_doc_neutral_only() {
   local file="$1" diff body
   if [ "${STAGED_SELECTION:-0}" = 1 ]; then
     diff=$(printf '%s' "$STAGED_ELISP_DIFFS" | jq -r --arg file "$file" '.[$file] // empty')
@@ -118,9 +125,34 @@ is_version_bump_only() {
   # Keep the added and removed content lines, dropping file headers.
   body=$(printf '%s\n' "$diff" | grep -E '^[+-]' | grep -Ev '^(\+\+\+|---)' || true)
   [ -n "$body" ] || return 1
-  # Exempt only when every changed line is a version header.
-  ! printf '%s\n' "$body" |
-    grep -qEv '^[+-];;[[:space:]]*Version:[[:space:]]*[0-9][0-9A-Za-z.+-]*[[:space:]]*$'
+  printf '%s\n' "$body" | python3 -I -c '
+import re
+import sys
+
+COOKIE = re.compile(r"\s*-\*-.*\blexical-binding:\s*(t|nil)\b.*-\*-\s*$")
+VERSION = re.compile(r";;\s*Version:\s*[0-9][0-9A-Za-z.+-]*\s*$")
+DEFVAR = re.compile(r"\s*\(defvar\s+[^\s()]+\)\s*$")
+lines = sys.stdin.read().splitlines()
+added = [line[1:] for line in lines if line.startswith("+")]
+removed = [line[1:] for line in lines if line.startswith("-")]
+# A removed comment line is neutral only when an added line is that same
+# line with a cookie appended.
+cookie_bases = {COOKIE.sub("", line).rstrip() for line in added if COOKIE.search(line)}
+
+
+def neutral(line, was_added):
+    if not line.strip() or VERSION.match(line) or DEFVAR.match(line):
+        return True
+    if was_added:
+        return line.lstrip().startswith(";") and bool(COOKIE.search(line))
+    return line.lstrip().startswith(";") and line.rstrip() in cookie_bases
+
+
+ok = all(neutral(line, True) for line in added) and all(
+    neutral(line, False) for line in removed
+)
+sys.exit(0 if ok else 1)
+'
 }
 
 git_add_elisp_paths() {
@@ -263,7 +295,7 @@ skill_script_owner() {
 record_elisp_requirement() {
   local file="$1" owner recorded
   is_doc_exempt_el "$file" && return 0
-  is_version_bump_only "$file" && return 0
+  is_doc_neutral_only "$file" && return 0
   if owner=$(skill_script_owner "$file"); then
     if [ "${#SKILL_HELPER_OWNERS[@]}" -gt 0 ]; then
       for recorded in "${SKILL_HELPER_OWNERS[@]}"; do

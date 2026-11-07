@@ -103,6 +103,57 @@ class DocUpdateHookTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(permission_decision(result), "deny")
 
+    def assert_doc_decision(self, before: str, after: str, expected: str):
+        source = self.repo / "example.el"
+        source.write_text(before)
+        self.git("add", "example.el")
+        self.git("-c", "user.name=Test", "-c", "user.email=test@example.com",
+                 "commit", "-qm", "fixture")
+        source.write_text(after)
+        self.git("add", "example.el")
+        for hook, command_field in HOOKS:
+            with self.subTest(hook=hook):
+                result = self.run_hook(hook, command_field)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(permission_decision(result), expected, result.stdout)
+
+    def test_allows_cookie_appended_to_header(self):
+        self.assert_doc_decision(
+            ";;; example.el --- Example\n(provide 'example)\n",
+            ";;; example.el --- Example  -*- lexical-binding: t -*-\n(provide 'example)\n",
+            "allow",
+        )
+
+    def test_allows_new_cookie_line_with_bare_defvar(self):
+        self.assert_doc_decision(
+            "(require 'subr-x)\n(provide 'example)\n",
+            ";;; -*- lexical-binding: t -*-\n(require 'subr-x)\n\n"
+            "(defvar example-dynamic-variable)\n(provide 'example)\n",
+            "allow",
+        )
+
+    def test_cookie_does_not_exempt_behavior_change(self):
+        self.assert_doc_decision(
+            ";;; example.el --- Example\n(provide 'example)\n",
+            ";;; example.el --- Example  -*- lexical-binding: t -*-\n"
+            "(message \"changed\")\n(provide 'example)\n",
+            "deny",
+        )
+
+    def test_cookie_does_not_exempt_rewritten_header(self):
+        self.assert_doc_decision(
+            ";;; example.el --- Example\n(provide 'example)\n",
+            ";;; example.el --- Renamed  -*- lexical-binding: t -*-\n(provide 'example)\n",
+            "deny",
+        )
+
+    def test_defvar_with_value_is_not_exempt(self):
+        self.assert_doc_decision(
+            "(provide 'example)\n",
+            "(defvar example-variable 1)\n(provide 'example)\n",
+            "deny",
+        )
+
     def stage(self, relative: str, text: str):
         path = self.repo / relative
         path.parent.mkdir(parents=True, exist_ok=True)

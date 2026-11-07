@@ -153,9 +153,9 @@ Signal a `user-error' when ENTRIES contains different package IDs."
                       entries ", "))))))
 
 (defun elpaca-extras--source-feature-info (file &optional artifact)
-  "Return FILE's features, requirements, and EIEIO class layouts.
+  "Return FILE's features, requirements, class layouts and struct forms.
 ARTIFACT is the exact file that a subsequent `load' will evaluate."
-  (let (classes features requirements)
+  (let (classes structs features requirements)
     (dolist (source-form (elpaca-extras--source-forms file))
       (dolist (form (elpaca-extras--source-feature-forms source-form))
         (pcase (car form)
@@ -170,12 +170,15 @@ ARTIFACT is the exact file that a subsequent `load' will evaluate."
                 source-form
                 (or (null artifact)
                     (string-match-p (rx ".el" eos) artifact))))
-        (push (elpaca-extras--source-class-layout form) classes)))
+        (push (elpaca-extras--source-class-layout form) classes))
+      (setq structs
+            (nconc structs (elpaca-extras--source-struct-forms source-form))))
     (list :source file
           :artifact (or artifact file)
           :features (nreverse features)
           :requires (nreverse requirements)
-          :classes (nreverse classes))))
+          :classes (nreverse classes)
+          :structs structs)))
 
 (defun elpaca-extras--source-forms (file)
   "Read and return all top-level Lisp forms in FILE."
@@ -290,7 +293,10 @@ is not loaded yet is still found and compared."
            "Cannot reload %s: class %s is not statically inspectable; restart Emacs"
            package class-name)))))
     (dolist (layout (mapcar #'cdr layouts))
-      (elpaca-extras--assert-class-layout package layout layouts))))
+      (elpaca-extras--assert-class-layout package layout layouts))
+    (dolist (info (or declaration-info file-info))
+      (dolist (form (plist-get info :structs))
+        (elpaca-extras--assert-struct-form-layout package form)))))
 
 (defun elpaca-extras--assert-class-layout (package layout layouts)
   "Reject LAYOUT when it would invalidate a live class from PACKAGE.
@@ -332,6 +338,97 @@ LAYOUTS indexes other prospective class definitions that will load with it."
                           (plist-get layout :name)))))
             (push (cons (plist-get layout :name) layout) layouts)))))
     (nreverse layouts)))
+
+(defun elpaca-extras--source-struct-forms (form)
+  "Return the literal `cl-defstruct' forms that FORM evaluates at load time."
+  (cond
+   ((not (consp form)) nil)
+   ((eq (car form) 'cl-defstruct) (list form))
+   ((memq (car form) '(eval-and-compile progn))
+    (mapcan #'elpaca-extras--source-struct-forms (cdr form)))
+   (t nil)))
+
+(defun elpaca-extras--assert-struct-form-layout (package form)
+  "Reject `cl-defstruct' FORM when it would change a live struct of PACKAGE.
+Accessors are redefined with the new slot offsets, but instances made
+before the reload keep the old ones, so every accessor of a moved slot
+would read a neighbouring slot."
+  (let ((name (elpaca-extras--struct-form-name form)))
+    (when (elpaca-extras--live-struct-layout name)
+      (let ((definition
+             (condition-case nil
+                 (elpaca-extras--struct-form-definition form)
+               (error
+                (signal
+                 'elpaca-extras-restart-required
+                 (list
+                  (format
+                   "Cannot reload %s: struct %s is not statically inspectable; restart Emacs"
+                   package name)))))))
+        (elpaca-extras--assert-struct-layout
+         package name (elpaca-extras--struct-define-layout
+                       (mapcar #'elpaca-extras--literal-value
+                               (cdr definition))))))))
+
+(defun elpaca-extras--struct-form-name (form)
+  "Return the struct name declared by `cl-defstruct' FORM."
+  (let ((spec (cadr form)))
+    (if (consp spec) (car spec) spec)))
+
+(defun elpaca-extras--struct-form-definition (form)
+  "Return the `cl-struct-define' call that `cl-defstruct' FORM expands to.
+The expansion only computes the layout; it defines nothing."
+  (let ((expansion (macroexpand-1 form))
+        definition)
+    (cl-labels ((walk (node)
+                  (when (and (consp node) (not definition))
+                    (if (eq (car node) 'cl-struct-define)
+                        (setq definition node)
+                      (when (proper-list-p node)
+                        (mapc #'walk node))))))
+      (walk expansion))
+    (or definition
+        (error "No cl-struct-define call in the expansion of %S" (cadr form)))))
+
+(defun elpaca-extras--literal-value (form)
+  "Return the value of literal FORM, a quoted value or a self-evaluating one."
+  (cond
+   ((eq (car-safe form) 'quote) (cadr form))
+   ((or (null form) (eq form t) (keywordp form) (stringp form)
+        (numberp form))
+    form)
+   (t (error "Not a literal: %S" form))))
+
+(defun elpaca-extras--struct-define-layout (arguments)
+  "Return the live layout that `cl-struct-define' ARGUMENTS would produce.
+ARGUMENTS are evaluated: NAME DOCSTRING PARENT TYPE NAMED SLOTS and the
+rest.  A record keeps its tag outside the slot list, so drop the tag
+slot that the arguments include for it."
+  (let ((type (nth 3 arguments))
+        (slots (mapcar #'car (nth 5 arguments))))
+    (list :type (unless (eq type 'record) type)
+          :named (nth 4 arguments)
+          :slots (if (eq type 'record) (cdr slots) slots))))
+
+(defun elpaca-extras--live-struct-layout (name)
+  "Return the layout of the live struct NAME, or nil when there is none."
+  (let ((class (and (symbolp name) (cl--find-class name))))
+    (when (cl-typep class 'cl-structure-class)
+      (list :type (cl--struct-class-type class)
+            :named (cl--struct-class-named class)
+            :slots (mapcar #'cl--slot-descriptor-name
+                           (cl--struct-class-slots class))))))
+
+(defun elpaca-extras--assert-struct-layout (package name layout)
+  "Signal a restart requirement when LAYOUT differs from live struct NAME.
+PACKAGE names the package being reloaded."
+  (let ((live (elpaca-extras--live-struct-layout name)))
+    (when (and live (not (equal live layout)))
+      (signal
+       'elpaca-extras-restart-required
+       (list
+        (format "Cannot reload %s: struct %s changed layout; restart Emacs"
+                package name))))))
 
 (defun elpaca-extras--loaded-class-names-for-files (file-info)
   "Return live EIEIO classes previously defined by FILE-INFO's files."
@@ -416,13 +513,27 @@ ARGUMENTS are those passed to `eieio-defclass-internal'."
          package layout (list (cons class-name layout)))))
     (apply original arguments)))
 
+(defun elpaca-extras--guarded-cl-struct-define
+    (package original &rest arguments)
+  "Call ORIGINAL struct definition with a live-layout guard for PACKAGE.
+ARGUMENTS are those passed to `cl-struct-define'."
+  (elpaca-extras--assert-struct-layout
+   package (car arguments) (elpaca-extras--struct-define-layout arguments))
+  (apply original arguments))
+
 (defun elpaca-extras--call-with-class-layout-guard (package function)
-  "Call FUNCTION while guarding every runtime class definition in PACKAGE."
-  (let ((original (symbol-function 'eieio-defclass-internal)))
+  "Call FUNCTION while guarding every runtime class or struct definition.
+PACKAGE names the package whose files FUNCTION loads."
+  (let ((original-class (symbol-function 'eieio-defclass-internal))
+        (original-struct (symbol-function 'cl-struct-define)))
     (cl-letf (((symbol-function 'eieio-defclass-internal)
                (lambda (&rest arguments)
                  (apply #'elpaca-extras--guarded-eieio-defclass
-                        package original arguments))))
+                        package original-class arguments)))
+              ((symbol-function 'cl-struct-define)
+               (lambda (&rest arguments)
+                 (apply #'elpaca-extras--guarded-cl-struct-define
+                        package original-struct arguments))))
       (funcall function))))
 
 (defun elpaca-extras--class-parent-names (class)
@@ -678,22 +789,34 @@ TOKEN, when non-nil, identifies the status entry to update."
       (remove-hook 'elpaca-post-queue-hook callback)
       (pcase status
         ('finished
-         (condition-case reload-error
-             (let ((current-load-list nil))
-               (elpaca-extras-reload pkg)
+         (let ((settled nil))
+           ;; Quitting a debugger entered during the reload throws to top
+           ;; level past the handler below.  Record that too, or the token
+           ;; stays queued and blocks every later rebuild of PKG.
+           (unwind-protect
+               (prog1
+                   (condition-case reload-error
+                       (let ((current-load-list nil))
+                         (elpaca-extras-reload pkg)
+                         (elpaca-extras--record-build-reload-status
+                          token :package pkg :state 'finished
+                          :message (format "%s and reloaded: %s" verb pkg))
+                         (message "%s and reloaded: %s" verb pkg)
+                         'finished)
+                     (error
+                      (let ((message
+                             (format "Reload failed for %s: %s"
+                                     pkg (error-message-string reload-error))))
+                        (elpaca-extras--record-build-reload-status
+                         token :package pkg :state 'failed :message message)
+                        (message "%s" message)
+                        'failed)))
+                 (setq settled t))
+             (unless settled
                (elpaca-extras--record-build-reload-status
-                token :package pkg :state 'finished
-                :message (format "%s and reloaded: %s" verb pkg))
-               (message "%s and reloaded: %s" verb pkg)
-               'finished)
-           (error
-            (let ((message
-                   (format "Reload failed for %s: %s"
-                           pkg (error-message-string reload-error))))
-              (elpaca-extras--record-build-reload-status
-               token :package pkg :state 'failed :message message)
-              (message "%s" message)
-              'failed))))
+                token :package pkg :state 'failed
+                :message (format "Reload of %s aborted before it finished; restart Emacs"
+                                 pkg))))))
         ('failed
          (let ((message (format "Build failed for %s: %s" pkg
                                 (or (and e (nth 2 (car (elpaca<-log e))))

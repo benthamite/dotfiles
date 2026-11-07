@@ -149,9 +149,9 @@
          (message-result nil)
          token-status
          (fake-callback (lambda () nil))
-         ;; Build a fake elpaca struct: a list with log at index 20.
-         (fake-elpaca (make-list 21 nil)))
-    (setf (nth 20 fake-elpaca) '((nil nil "dependency conflict")))
+         (fake-elpaca (elpaca<--create
+                       :id 'broken-pkg
+                       :log '((nil nil "dependency conflict")))))
     (cl-letf (((symbol-function 'elpaca-get)
                (lambda (_pkg) fake-elpaca))
               ((symbol-function 'elpaca--status)
@@ -206,6 +206,25 @@
            (plist-get
             (elpaca-extras-build-reload-status "restart-token") :state)))
       (should (string-match-p "restart Emacs" message-result)))))
+
+(ert-deftest elpaca-extras-test-handle-build-complete-aborted-reload ()
+  "A reload thrown out to top level leaves a failed status, not a queued one."
+  (cl-letf (((symbol-function 'elpaca-get)
+             (lambda (_pkg) 'fake-elpaca))
+            ((symbol-function 'elpaca--status)
+             (lambda (_e) 'finished))
+            ((symbol-function 'remove-hook) #'ignore)
+            ((symbol-function 'elpaca-extras-reload)
+             (lambda (_pkg) (throw 'elpaca-extras-test-top-level nil)))
+            ((symbol-function 'message) #'ignore))
+    (elpaca-extras--record-build-reload-status
+     "aborted-token" :package 'pkg :state 'queued :message "Build queued")
+    (catch 'elpaca-extras-test-top-level
+      (elpaca-extras--handle-build-complete
+       'pkg (lambda () nil) "Rebuilt" "aborted-token"))
+    (let ((status (elpaca-extras-build-reload-status "aborted-token")))
+      (should (eq (plist-get status :state) 'failed))
+      (should (string-match-p "aborted" (plist-get status :message))))))
 
 (ert-deftest elpaca-extras-test-handle-build-complete-reload-error ()
   "Any reload error becomes a terminal failure instead of escaping."
@@ -340,8 +359,7 @@
   "On failure with empty log, the message reports an unknown error."
   (let* ((message-result nil)
          (fake-callback (lambda () nil))
-         ;; Build a fake elpaca struct with nil log at index 20.
-         (fake-elpaca (make-list 21 nil)))
+         (fake-elpaca (elpaca<--create :id 'broken-pkg :log nil)))
     (cl-letf (((symbol-function 'elpaca-get)
                (lambda (_pkg) fake-elpaca))
               ((symbol-function 'elpaca--status)
@@ -863,6 +881,78 @@
           (elpaca-extras-reload 'pkg)
           (should (equal loaded '(pkg))))
       (setq features saved-features))))
+
+(defmacro elpaca-extras-test--with-struct-source (source &rest body)
+  "Run BODY with package `pkg' reading SOURCE as its only file.
+Bind `loaded' to non-nil in BODY once the reload loads a file."
+  (declare (indent 1))
+  `(let ((loaded nil)
+         (saved-features features))
+     (unwind-protect
+         (cl-letf (((symbol-function 'locate-file)
+                    (lambda (name _path _suffixes)
+                      (format "/fake/pkg/%s.el" name)))
+                   ((symbol-function 'directory-files)
+                    (lambda (&rest _) '("/fake/pkg/pkg.el")))
+                   ((symbol-function 'insert-file-contents)
+                    (lambda (_file &rest _)
+                      (erase-buffer)
+                      (insert ,source)
+                      (goto-char (point-min))))
+                   ((symbol-function 'load)
+                    (lambda (&rest _) (setq loaded t)))
+                   ((symbol-function 'message) #'ignore))
+           (setq features '(pkg))
+           ,@body)
+       (setq features saved-features))))
+
+(ert-deftest elpaca-extras-test-reload-refuses-inserted-struct-slot ()
+  "Require a restart when a live struct gains a slot before existing ones."
+  (cl-defstruct (elpaca-extras-test-struct-a (:copier nil)) name program)
+  (elpaca-extras-test--with-struct-source
+      "(cl-defstruct (elpaca-extras-test-struct-a (:copier nil)) name icon program)\n(provide 'pkg)"
+    (should-error (elpaca-extras-reload 'pkg)
+                  :type 'elpaca-extras-restart-required)
+    (should-not loaded)))
+
+(ert-deftest elpaca-extras-test-reload-refuses-appended-struct-slot ()
+  "Require a restart when a live struct gains a trailing slot.
+Instances made before the reload lack the slot, so reading it fails."
+  (cl-defstruct (elpaca-extras-test-struct-b (:copier nil)) name)
+  (elpaca-extras-test--with-struct-source
+      "(cl-defstruct (elpaca-extras-test-struct-b (:copier nil)) name icon)\n(provide 'pkg)"
+    (should-error (elpaca-extras-reload 'pkg)
+                  :type 'elpaca-extras-restart-required)
+    (should-not loaded)))
+
+(ert-deftest elpaca-extras-test-reload-allows-unchanged-struct ()
+  "Reload a package whose live struct keeps its layout."
+  (cl-defstruct (elpaca-extras-test-struct-c (:copier nil)) name program)
+  (elpaca-extras-test--with-struct-source
+      "(cl-defstruct (elpaca-extras-test-struct-c (:copier nil))\n  \"Doc.\" name (program nil :read-only t))\n(provide 'pkg)"
+    (elpaca-extras-reload 'pkg)
+    (should loaded)))
+
+(ert-deftest elpaca-extras-test-reload-allows-new-struct ()
+  "Reload a package that declares a struct not yet defined."
+  (elpaca-extras-test--with-struct-source
+      "(cl-defstruct elpaca-extras-test-struct-never-defined name)\n(provide 'pkg)"
+    (elpaca-extras-reload 'pkg)
+    (should loaded)))
+
+(ert-deftest elpaca-extras-test-struct-runtime-guard ()
+  "A struct defined by a macro during the load is checked when defined."
+  (cl-defstruct (elpaca-extras-test-struct-d (:copier nil)) name)
+  (should-error
+   (elpaca-extras--call-with-class-layout-guard
+    'pkg
+    (lambda ()
+      (eval '(cl-defstruct (elpaca-extras-test-struct-d (:copier nil))
+               icon name)
+            t)))
+   :type 'elpaca-extras-restart-required)
+  (should (equal (mapcar #'car (cl-struct-slot-info 'elpaca-extras-test-struct-d))
+                 '(cl-tag-slot name))))
 
 (provide 'elpaca-extras-test)
 ;;; elpaca-extras-test.el ends here

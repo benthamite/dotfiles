@@ -73,17 +73,13 @@ the "Already tried" list in place.
   not take effect is unknown.
 - Cause of the 2026-10-10 GC storm and the morning blocks: read the first
   stack reports the watchdog captures.
-- Live reloads after a =cl-defstruct= slot is inserted mid-struct
-  (2026-11-07): instances built before the reload keep the old layout, so
-  accessors read the neighbouring slot. Second half-loaded-reload incident
-  after 2026-10-25. Proposed: =elpaca-extras-rebuild-and-reload= detects a
-  changed struct layout and reports "restart required" instead of success;
-  =agent-tab-bar-mode= cancels its old timer before starting a new one.
-  Pending Pablo's decision.
+- Reload guards cover literal and load-time =defclass= and =cl-defstruct=
+  only (2026-11-07). Other state that a reload leaves stale, such as values
+  captured in closures or timers, is still unguarded.
 
 * Incidents
 
-** 2026-11-07 ~08:53: debugger re-entered every second by a live-reloaded =agent-backend= struct (diagnosis)
+** 2026-11-07 08:53–09:06: debugger re-entered every second by a live-reloaded =agent-backend= struct (fixed: agent =065549d=, dotfiles =068921481=, =c0f553ac1=)
 
 - Pablo: stuck in a backtrace that fires again as soon as it is closed.
   Emacs PID 4095 answered the server; recursion depth 1.
@@ -95,13 +91,32 @@ the "Already tried" list in place.
   accessors (46 slots) but the =claude-code= and =codex= instances
   registered at startup still had 45, so =agent-backend-accounts= returned
   the =account-file= slot. The =wrong-number-of-arguments= errors in
-  =*Messages*= fit the same shift (function slots read off by one). Earlier
-  struct changes (11-04) appended slots at the end, so they did not break.
+  =*Messages*= fit the same shift (function slots read off by one). The
+  11-04 struct changes appended slots, which leaves old instances short
+  rather than shifted; they showed no failure.
 - Amplifier: 21 copies of the 1 s =agent--tab-bar-refresh= timer.
   =agent-tab-bar-mode= starts a new timer on each enable without cancelling
   the old one, so every re-enable (config re-evaluation, reloads) leaks one.
   With the debugger open, the timers' errors are only logged; once it is
   closed, the next tick enters it again.
+- Recovery (09:02, approved): reloaded =agent-claude= and =agent-codex= so
+  =agent-register-backend= rebuilt both instances, cancelled the 21 timers,
+  re-enabled the mode once, then =top-level=. =debug-on-error= stayed =t=.
+- Second round (09:04–09:05), self-inflicted: at 08:59 another session
+  amended the commit (=a47f55f=) to move =icon-svg= last, a layout change
+  for the running Emacs. This agent's edit to =agent.el= at 09:04 ran the
+  after-edit rebuild hook, which loaded it; =accounts= then read
+  ="CLAUDE_CONFIG_DIR"=. Same recovery at 09:05. Lesson: check a package
+  repo for other sessions' commits before editing it while Emacs runs it.
+- Blocked rebuilds: each reload that entered the debugger was thrown out by
+  =top-level=, so its token stayed =queued= and the 08:53 owner record,
+  bound to the amended-away =82a8fec=, refused every later agent rebuild.
+  Tokens marked failed by hand after confirming no callback was pending.
+- Fixes: agent =065549d= (one tab-bar timer per enable); dotfiles
+  =068921481= (reload refuses any change to a live =cl-defstruct= layout,
+  statically and at load; an aborted reload records =failed=), live-verified;
+  =c0f553ac1= (=elpaca-rebuild-wait= archives a pending record whose source
+  moved on once its token is terminal and the package idle).
 - =debug-on-quit= was =t= globally (cause not checked).
 - Evidence: =/tmp/emacs-freeze.YaqQWT/= (temporary).
 

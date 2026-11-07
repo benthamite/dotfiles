@@ -642,10 +642,12 @@
   "Get-emacs-distro returns nil when neither variable is bound."
   ;; Emacs 31 refuses to unbind a built-in variable, and Emacs+ defines
   ;; `ns-system-appearance-change-functions' in C.
-  (skip-when (seq-some (lambda (var)
-                         (eq (find-lisp-object-file-name var 'defvar) 'C-source))
-                       '(mac-effective-appearance-change-hook
-                         ns-system-appearance-change-functions)))
+  ;; `skip-when' is Emacs 30+; CI runs Emacs 29.
+  (skip-unless (not (seq-some (lambda (var)
+                                (eq (find-lisp-object-file-name var 'defvar)
+                                    'C-source))
+                              '(mac-effective-appearance-change-hook
+                                ns-system-appearance-change-functions))))
   (let ((had-mac (boundp 'mac-effective-appearance-change-hook))
         (had-ns (boundp 'ns-system-appearance-change-functions)))
     (unwind-protect

@@ -58,8 +58,19 @@ user's scope and safety instructions. Return findings to the current author.
 
 Independently review this implementation plan. Identify concrete correctness
 gaps, missing verification, sequencing problems, and scope contradictions the
-author should account for during implementation. Return prioritized findings
-with reasons. This is the only review pass; the author will adjudicate every
+author should account for during implementation.
+
+Treat the plan's Decisions (fixed) section, and any fixed decisions supplied
+as context, as constraints: do not propose changes that would alter them. If
+you think a fixed decision is wrong, raise that as its own finding. Label every
+finding as one of:
+- defect: the plan would miss its success criteria, break a stated
+  constraint, or leave a requirement unverified;
+- conflicts with decision <name>: the concern can only be met by changing a
+  fixed decision, the scope or the design;
+- preference: an optional improvement that shows no defect.
+
+Return prioritized findings with reasons. This is the only review pass; the author will adjudicate every
 finding within the authorized scope, so do not request a revised plan or another
 review round.
 {context}

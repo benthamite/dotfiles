@@ -64,6 +64,14 @@ Preserve staged, untracked and unsaved user work. If creating or changing the
 plan is within scope, commit only the owned plan changes under project rules;
 do not sweep other work into that commit.
 
+The plan must carry a `Decisions (fixed)` section. It lists every choice the
+user made or approved and every deliberate design choice the author made, each
+with a one-line reason. If creating or changing the plan is within scope, add
+the section before committing. Otherwise, if the committed plan lacks one,
+pass the list with `--context-file`, labeled as the fixed decisions. The
+reviewer treats these decisions as constraints, and adjudication protects them
+(section 4).
+
 The helper resolves the supplied commit/ref to an immutable commit and blob,
 and rejects a tree or symlink as the plan. The reviewer reads a shell-quoted
 `git show` command pinned to that anchor, not the working-tree plan.
@@ -169,15 +177,29 @@ evidence are inspection-only; do not fabricate a migration to resume them.
 ## 4. Adjudicate within the authorized scope
 
 Work through every returned finding in this session. Verify its factual claims
-against the repository. Record accepted findings and their appropriate change,
-or a concise reason for rejection. A valid but out-of-scope finding may be
-recorded as deferred; it does not expand implementation or publication authority.
+against the repository, then put it in exactly one class. A true claim is not
+by itself a reason to accept.
 
-A finding never overrides the user. If accepting one would reverse, defer or
-weaken something the user explicitly asked for, do not fold it into the revised
-plan or decision list. Put it to the user as its own question: what they asked
-for, what the finding says, and the options, e.g. meeting the concern while
-keeping their requirement. Until they answer, the plan keeps their requirement.
+- **Defect:** as written, the plan would miss its own success criteria, break
+  a stated constraint, or leave a requirement unverified, and the fix changes
+  no fixed decision, scope or design. Accept it and record the change.
+- **Decision conflict:** acting on it would change a fixed decision, the
+  scope or the design, however slightly, or would reverse, defer or weaken
+  something the user asked for. Do not fold it into the plan. Put all such
+  findings to the user together in one numbered list: the decision, what the
+  finding says, and the options (e.g. meeting the concern while keeping the
+  decision), with a recommendation. Until the user answers, the plan keeps the
+  decision.
+- **Preference:** a true but optional improvement (more robust, cleaner, more
+  general) that shows no defect. Reject it and record it as optional.
+- **Unfounded:** the claim is false or cannot be verified. Reject it with the
+  reason.
+
+When a finding fits more than one class, pick the one that protects the plan:
+decision conflict over defect, preference over defect. The reviewer's own
+label is a claim to check, not the class. A valid but out-of-scope finding may
+be recorded as deferred; it does not expand implementation or publication
+authority.
 
 For review-only work, return the adjudication/report without product changes.
 For already-authorized implementation, update the owned plan as needed,

@@ -121,9 +121,28 @@ python3 "$SKILL_DIR/scripts/orchestrate_review.py" --help
 - While orchestration is active, do not send a final response unless the workflow reached a terminal state or a real blocker requires user input. Use commentary updates instead.
 - Treat review findings as input to Agent 1's next stage, not as a request to
   revise and resubmit the current artifact.
-- Require Agent 1 to address valid findings in the next artifact or in the
-  implementation. If Agent 1 rejects a finding, it records a concise reason
-  while continuing; it does not ask Agent 2 to adjudicate the rejection.
+- Require Agent 1 to adjudicate every finding by checking its factual claims
+  and putting it in exactly one class. A true claim is not by itself a reason
+  to act on it. This mirrors `request-review` section 4; keep the two in sync.
+  - Defect: the artifact would miss its own success criteria, break a stated
+    constraint, or leave a requirement unverified, and the fix changes no
+    fixed decision, scope or design. Address it in the next artifact or the
+    implementation.
+  - Decision conflict: acting on it would change a fixed decision, the scope
+    or the design, however slightly, or would reverse, defer or weaken
+    something the user asked for. Keep the decision, record the finding, and
+    continue; the orchestrator puts every such finding to the user in the
+    final report.
+  - Preference: a true but optional improvement that shows no defect. Reject
+    it and record it as optional.
+  - Unfounded: false or unverifiable. Reject it with the reason.
+  When a finding fits more than one class, pick decision conflict over defect
+  and preference over defect. Agent 1 does not ask Agent 2 to adjudicate a
+  rejection.
+- The spec carries a `Decisions (fixed)` section: every choice the user made
+  or approved, each with a one-line reason. The plan carries it forward and
+  adds Agent 1's deliberate design choices. Both reviews treat it as
+  constraints.
 - Perform exactly two inter-model review handoffs: one after the spec and one
   after the plan. Do not add implementation review unless the user explicitly
   requests a separate review phase.
@@ -398,7 +417,10 @@ Spec-review prompt shape:
 ```text
 Independently review the spec at <path/commit>. Identify concrete omissions,
 contradictions, feasibility risks, and unclear acceptance criteria that should
-affect the implementation plan. Return prioritized findings with reasons. This
+affect the implementation plan. Treat the Decisions (fixed) section as
+constraints; if you think a fixed decision is wrong, raise that as its own
+finding. Label each finding defect, conflicts with decision <name>, or
+preference. Return prioritized findings with reasons. This
 is the only spec-review pass; Agent 1 will use the findings when creating the
 plan, so do not request a revised spec or another review round.
 ```
@@ -406,8 +428,9 @@ plan, so do not request a revised spec or another review round.
 ## Step 6: Create and review the plan
 
 Submit the spec and Agent 2's complete review to Agent 1. Have Agent 1 create
-the implementation plan while adjudicating every finding. Valid feedback must
-change the plan; rejected feedback must receive a concise recorded reason.
+the implementation plan while adjudicating every finding by the operating
+rule: only defects change the plan; every other finding gets a concise
+recorded class and reason.
 Proceed directly to the plan rather than revising and resubmitting the spec.
 
 Use the repository's required planning workflow. If it names a skill, verify
@@ -425,6 +448,9 @@ Plan-review prompt shape:
 Independently review the implementation plan at <path/commit> against the spec.
 Identify concrete correctness gaps, missing verification, sequencing problems,
 and scope contradictions that Agent 1 should account for during implementation.
+Treat the Decisions (fixed) section as constraints; if you think a fixed
+decision is wrong, raise that as its own finding. Label each finding defect,
+conflicts with decision <name>, or preference.
 Return prioritized findings with reasons. This is the only plan-review pass;
 Agent 1 will use the findings while implementing, so do not request a revised
 plan or another review round.
@@ -433,9 +459,9 @@ plan or another review round.
 ## Step 7: Implement with the plan review
 
 Submit the plan and Agent 2's complete plan review to Agent 1. Agent 1
-implements the plan while adjudicating every finding. Valid feedback must
-change the implementation or its verification; rejected feedback must receive
-a concise recorded reason. Do not revise and resubmit the plan first.
+implements the plan while adjudicating every finding by the operating rule:
+only defects change the implementation or its verification; every other
+finding gets a concise recorded class and reason. Do not revise and resubmit the plan first.
 
 Use the implementation workflow required by the plan and available in the
 current session. Agent 1 implements the whole stage using the
@@ -502,4 +528,7 @@ preserved because ownership, activity, or cleanup authority is unresolved.
 Report the stage outcome, actor assignments, spec/plan review handoffs, and
 implementation commits. Include branch/worktree state, consequential
 verification limitations, and cleanup performed or deliberately deferred.
+List every decision-conflict finding from either review as one numbered set of
+decisions for the user: the decision, what the finding says, the options and a
+recommendation. The delivered work keeps each decision until the user answers.
 Keep it brief; expand only when the user needs the details.

@@ -472,6 +472,10 @@ transcripts or processes. The watcher does not automatically enforce a timed
 stop-loss or detect login screens. Agents use supported host waiting mechanisms
 and keep the host's required update cadence. Cleanup closes only run-owned,
 confirmed-inactive sessions; adopted or busy sessions remain protected.
+Agent 1 adjudicates review findings with =request-review='s classes: the spec
+and plan carry a =Decisions (fixed)= section, only defects change the next
+artifact, and decision conflicts keep the decision and are listed for the user
+in the final report.
 
 The paired =request-review= skill requests one opposite-CLI review of an
 immutable committed plan. It preserves review-only scope, starts and submits to
@@ -498,9 +502,13 @@ Its watcher returns as soon as the reviewer awaits input and names the next comm
 required numbered step before the report, through =agent-kill-session-buffer=
 in the reviewer's own buffer; cleanup protects active, reused and unowned
 sessions.
-A finding that would reverse, defer or weaken an explicit user requirement is
-put to the user as its own question rather than folded into the revised plan
-(added 2026-10-19, after a review finding silently deferred a requirement).
+The plan carries a =Decisions (fixed)= section, which the reviewer treats as
+constraints. Each finding is classed as a defect, decision conflict, preference
+or unfounded; a true claim alone does not get a finding accepted. Only defects
+change the plan; decision conflicts, including any that would reverse, defer or
+weaken a user requirement, go to the user in one list while the plan keeps the
+decision (2026-10-19, after a finding silently deferred a requirement;
+tightened 2026-11-07, after accepted findings drifted from agreed plans).
 
 Delivery and manual reconciliation require the exact frozen prompt, including
 its marker, in a new user message after the saved transcript boundary. Busy state

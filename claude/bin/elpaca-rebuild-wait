@@ -165,6 +165,45 @@ def reconcile_tokenless_request(package, source_repo, extras, initial,
         f"{package}.abandoned.{time.time_ns()}.json"), archive)
 
 
+def superseded_operation_p(operation, initial):
+    """Return whether OPERATION is a tokened request for an earlier source state."""
+    return (operation is not None
+            and operation.get("state") in ("requesting", "pending")
+            and bool(operation.get("token"))
+            and operation.get("context") != initial)
+
+
+def reconcile_superseded_operation(package, source_repo, extras, initial,
+                                   operation, operation_file):
+    """Archive a request whose source changed after its token ended.
+
+    Call only under the exclusive package owner lock, then request a new
+    build.  This covers an owner that died before recording completion,
+    after which the source moved on (for example an amended commit), so its
+    context can never match again.  Only the same Emacs runtime qualifies,
+    its token must be terminal and the package idle; the archive is never a
+    completion receipt.
+    """
+    previous = operation.get("context") or {}
+    if previous.get("runtime") != initial["runtime"]:
+        raise RebuildError("unresolved rebuild from another Emacs runtime; reconcile its owner")
+    terminal = token_status(package, operation.get("token"), initial["runtime"])
+    if terminal not in ("finished", "failed"):
+        raise RebuildError("an unresolved rebuild exists; reconcile its owner before requesting another")
+    idle = confirmed_idle(package, initial["runtime"])
+    if context(package, source_repo, extras) != initial:
+        raise RebuildError("owner context changed during superseded-request reconciliation")
+    old_status = Path(operation["status_file"])
+    if read_status(old_status) == "pending":
+        atomic_write(old_status, "failed:superseded by a later source state; no completion certified\n")
+    archive = dict(operation, state="abandoned", reconciliation={
+        "reason": "source changed after the request's token ended",
+        "terminal_state": terminal, "idle": idle,
+    })
+    write_json(operation_file.with_name(
+        f"{package}.abandoned.{time.time_ns()}.json"), archive)
+
+
 def reconcile_replaced_pending(package, source_repo, extras, initial,
                                operation, operation_file, status_file):
     """Archive a terminal token whose status the legacy commit hook replaced.
@@ -268,6 +307,10 @@ def observe_abandoned_operation(root, package, source_repo, extras, initial,
         elif operation["state"] == "requesting" and not operation.get("token"):
             reconcile_tokenless_request(package, source_repo, extras, initial,
                                         operation, operation_file, status_file)
+            operation = start_operation(package, initial, operation_file, status_file)
+        elif superseded_operation_p(operation, initial):
+            reconcile_superseded_operation(package, source_repo, extras, initial,
+                                           operation, operation_file)
             operation = start_operation(package, initial, operation_file, status_file)
         else:
             resume_token(operation, initial, status_file)
@@ -472,6 +515,10 @@ def main():
         if operation and operation.get("state") == "requesting" and not operation.get("token"):
             reconcile_tokenless_request(package, source_repo, extras, initial,
                                         operation, operation_file, status_file)
+            operation = None
+        if superseded_operation_p(operation, initial):
+            reconcile_superseded_operation(package, source_repo, extras, initial,
+                                           operation, operation_file)
             operation = None
         if operation and operation.get("state") in ("requesting", "pending"):
             resume_token(operation, initial, status_file)

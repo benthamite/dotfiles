@@ -235,6 +235,65 @@ class ElpacaRebuildProtocolTests(unittest.TestCase):
             self.reconcile_replaced(initial, owner, status, operation)
         self.assertFalse(list((self.root / "owners").glob("*.rejected.*.json")))
 
+    def superseded_request(self):
+        """Return a tokened request whose source has since moved on."""
+        initial = {"runtime": self.identity(), "source": "fixture", "active": "fixture"}
+        owner = self.root / "owners/fixture-package.json"
+        old_status = self.root / "old-revision/fixture-package.status"
+        old_status.parent.mkdir()
+        operation = self.helper.start_operation(
+            "fixture-package", dict(initial, source="amended away"), owner, old_status)
+        self.assertEqual(operation["state"], "pending")
+        return initial, owner, old_status, operation
+
+    def reconcile_superseded(self, initial, owner, operation):
+        with self.helper.owner_lock(self.root, "fixture-package"), \
+                patch.object(self.helper, "context", return_value=initial):
+            self.helper.reconcile_superseded_operation(
+                "fixture-package", self.source, False, initial, operation, owner)
+
+    def test_superseded_terminal_request_is_archived_and_old_status_failed(self):
+        initial, owner, old_status, operation = self.superseded_request()
+        self.assertTrue(self.helper.superseded_operation_p(operation, initial))
+        for state in ("finished", "failed"):
+            with self.subTest(state=state):
+                self.status_state = state
+                self.helper.atomic_write(old_status, "pending:requesting rebuild\n")
+                self.reconcile_superseded(initial, owner, operation)
+                archives = list((self.root / "owners").glob("fixture-package.abandoned.*.json"))
+                archived = self.helper.read_json(max(archives, key=lambda path: path.stat().st_mtime_ns))
+                self.assertEqual(archived["token"], operation["token"])
+                self.assertEqual(archived["reconciliation"]["terminal_state"], state)
+                self.assertEqual(self.helper.read_status(old_status), "failed")
+        self.assertFalse(list(self.root.glob("**/*.receipt.json")))
+
+    def test_superseded_queued_request_is_not_reconciled(self):
+        initial, owner, _old_status, operation = self.superseded_request()
+        self.status_state = "queued"
+        with self.assertRaisesRegex(self.helper.RebuildError, "unresolved rebuild"):
+            self.reconcile_superseded(initial, owner, operation)
+        self.assertFalse(list((self.root / "owners").glob("*.abandoned.*.json")))
+
+    def test_superseded_request_with_another_queued_request_is_not_reconciled(self):
+        initial, owner, _old_status, operation = self.superseded_request()
+        self.queued = True
+        with self.assertRaisesRegex(self.helper.RebuildError, "not confirmed idle"):
+            self.reconcile_superseded(initial, owner, operation)
+        self.assertFalse(list((self.root / "owners").glob("*.abandoned.*.json")))
+
+    def test_superseded_request_from_another_runtime_is_not_reconciled(self):
+        initial, owner, _old_status, operation = self.superseded_request()
+        operation["context"]["runtime"] = dict(initial["runtime"], pid=1)
+        calls = self.calls
+        with self.assertRaisesRegex(self.helper.RebuildError, "another Emacs runtime"):
+            self.reconcile_superseded(initial, owner, operation)
+        self.assertEqual(self.calls, calls)
+
+    def test_current_request_is_not_superseded(self):
+        initial, _owner, _old_status, operation = self.superseded_request()
+        operation["context"] = initial
+        self.assertFalse(self.helper.superseded_operation_p(operation, initial))
+
 
 if __name__ == "__main__":
     unittest.main()

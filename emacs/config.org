@@ -598,6 +598,7 @@ The contents of this code block are tangled to the ~early-init.el~ file.
 First, I check the system appearance and blacken the screen if it's set to `dark`. This is done to prevent a flash of white during startup on macOS when using a dark theme. I use frame parameters to set the background and foreground colors instead of =set-face-attribute= to avoid interfering with =face-spec-recalc= during theme switches.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally nil t)
+;;; early-init.el --- Early init file -*- lexical-binding: t -*-
 (defun macos-get-system-appearance ()
   "Return the current macOS system appearance."
   (intern (downcase (string-trim (shell-command-to-string
@@ -5961,8 +5962,13 @@ the triggered flag while rescheduling so the callback cannot reenter itself.
 
 /[[https://github.com/emacsorphanage/session][session]] lets you use variables, registers and buffer places across sessions./
 
+Using my fork, whose branch writes a =lexical-binding= cookie in the session file so that Emacs 31 does not warn each time it loads it. The upstream repository is an archive that takes no pull requests.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package session
+  :ensure (:host github
+                 :repo "benthamite/session"
+                 :branch "fix/lexical-binding-cookie") ; permanent fork: emacsattic/session is archived
   :custom
   (session-globals-include '((kill-ring 100)
                              (session-file-alist 100 t)
@@ -6011,8 +6017,13 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 
 /[[https://github.com/TobiasZawada/elgrep][elgrep]] is an Emacs implementation of grep that requires no external dependencies./
 
+Using my fork, whose branch writes a =lexical-binding= cookie in the elgrep data file so that Emacs 31 does not warn each time it loads it.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package elgrep
+  :ensure (:host github
+                 :repo "benthamite/elgrep"
+                 :branch "fix/lexical-binding-cookie") ; upstream PR: github.com/TobiasZawada/elgrep/pull/9
   :bind
   (:map elgrep-mode-map
         ("r" . elgrep-edit-mode)
@@ -8998,8 +9009,13 @@ CLOCK: [2021-11-01 Mon 12:09]--[2021-11-01 Mon 12:10] =>  0:01
 
 /[[https://github.com/jorgenschaefer/elpy][elpy]] is an Emacs Python development environment./
 
+Using my fork, whose branch adds a =lexical-binding= cookie to the snippet helper file that yasnippet loads, so that Emacs 31 does not warn about it.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package elpy
+  :ensure (:host github
+                 :repo "benthamite/elpy"
+                 :branch "fix/lexical-binding-cookie") ; upstream PR: github.com/jorgenschaefer/elpy/pull/2070
   :defer t
   :custom
   (elpy-rpc-python-command "python3")
@@ -13353,11 +13369,12 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
 
 /[[https://github.com/djcb/mu][mu4e]] is an an Emacs-based e-mail client./
 
-mu4e is loaded from Homebrew's =mu= formula (=/opt/homebrew/share/emacs/site-lisp/mu/mu4e=, already on =load-path=), so the Elisp always matches the installed =mu= server. The former Elpaca recipe pinned 1.12.13 and never produced its generated =mu4e-config.el=, so Emacs silently paired that Elisp with Homebrew's 1.14.3 config and server.
+mu4e is loaded from Homebrew's =mu= formula (=/opt/homebrew/share/emacs/site-lisp/mu/mu4e=), so the Elisp always matches the installed =mu= server. That directory is added to =load-path= explicitly: the prebuilt Emacs+ app puts Homebrew's =site-lisp= on =load-path= but not its subdirectories, which the old source-built formula added. The former Elpaca recipe pinned 1.12.13 and never produced its generated =mu4e-config.el=, so Emacs silently paired that Elisp with Homebrew's 1.14.3 config and server.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package mu4e
   :ensure nil ; Homebrew mu; see `elpaca-ignored-dependencies' above
+  :load-path "/opt/homebrew/share/emacs/site-lisp/mu/mu4e"
   :defer 30
   :custom
   ;; uncomment thw two user options below when debugging

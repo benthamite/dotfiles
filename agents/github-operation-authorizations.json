@@ -16,6 +16,22 @@
       "created_at": "2026-10-06T21:20:16.747614+00:00",
       "expires_at": "2026-10-07T01:20:16.747614+00:00",
       "body_sha256": "bb766418e5995d6b2ab7edac54a379f18331818e905c17f5cba5cb0f5c390348"
+    },
+    {
+      "command": "gh repo fork LucaDeLeo/gdoc --clone=false",
+      "account": "benthamite",
+      "authorization": "Pablo in Claude session a7f9ce1f on 2026-11-07: approved opening a PR to LucaDeLeo/gdoc with the token temp-file fix",
+      "created_at": "2026-11-07T15:15:04.275850+00:00",
+      "expires_at": "2026-11-07T19:15:04.275850+00:00",
+      "body_sha256": null
+    },
+    {
+      "command": "gh pr create --repo LucaDeLeo/gdoc --base main --head benthamite:fix/parallel-token-writes --title \"fix: parallel token saves no longer fail as not authenticated\" --body-file /Users/pablostafforini/.local/state/gh-grant.emBRa4/body.md",
+      "account": "benthamite",
+      "authorization": "Pablo in Claude session a7f9ce1f on 2026-11-07: approved opening a PR to LucaDeLeo/gdoc with the token temp-file fix",
+      "created_at": "2026-11-07T15:15:04.536441+00:00",
+      "expires_at": "2026-11-07T19:15:04.536441+00:00",
+      "body_sha256": "4300c0233c4b98bd349d3d95ba2465adbb0b4e4c80dc6b4b7b4652559e514a6a"
     }
   ]
 }

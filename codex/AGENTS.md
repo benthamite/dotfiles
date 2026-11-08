@@ -51,6 +51,7 @@ For Gmail, Google Sheets/Calendar/Docs/Drive, Slack, Signal, Fireflies, Granola,
 - Dotfiles source of truth: `~/repos/dotfiles/`; many home-directory paths are symlinks into it.
 - Active personal repositories: `~/repos/`; active Epoch repositories: `~/repos/epoch/`.
 - Every git repository lives under `~/repos/`, with its `.git` directory inside it. An organization's notes workspace is `~/repos/<org>-notes` (e.g. `epoch-notes`, `forethought-notes`, `fias-notes`). `~/My Drive/` holds only documents and data, never a repository, and Google-native files (`.gdoc`, `.gsheet`) stay there because moving one out trashes the document. Never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
+- Drive folder names: lowercase for folders that tools read by path (`library-pdf`, `anki`, `tlon`, …; never rename these without updating every reference, including the shared `babel-refs` bibliography); sentence case (`Self-improvement`) for folders I browse. Retired material goes in `Archived` (`archive` holds org archive files).
 - All linked worktrees: `~/repos/.worktrees/<repo>/<name>`.
 
 ## Version control

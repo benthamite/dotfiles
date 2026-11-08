@@ -7938,7 +7938,7 @@ the debugger's `recursive-edit' freezes Emacs inside the timer."
   :ensure (:host github
                  :repo "benthamite/johnson")
   :custom
-  (johnson-dictionary-directories '("/Users/pablostafforini/My Drive/Dictionaries/"))
+  (johnson-dictionary-directories '("/Users/pablostafforini/My Drive/dictionaries/"))
   (johnson-dictionary-priorities
    '(;; --- English monolingual (en/en) ---
      ("Shorter Oxford English Dictionary 6"                                            .  -95)

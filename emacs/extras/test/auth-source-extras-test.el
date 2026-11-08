@@ -111,6 +111,26 @@ Each recorded batch is (ACCOUNT . TITLES).  The account `broken' has no token."
       (should (= (length warnings) 1))
       (should (string-match-p "a, b, c" (car warnings))))))
 
+;; Incident 2026-11-08: the discovery timer fired during a startup batch and
+;; started a second batch inside it.
+(ert-deftest auth-source-extras-op-items-runs-no-timer-while-waiting ()
+  "A batch reads every item without letting a pending timer run."
+  (let* ((script (make-temp-file "fake-op" nil ".sh"
+                                 (concat "#!/bin/sh\nsleep 0.3\n"
+                                         "printf '{\"title\":\"%s\",\"fields\":"
+                                         "[{\"id\":\"password\",\"value\":\"V\"}]}' \"$4\"\n")))
+         (auth-source-extras-op-program script)
+         (fired nil)
+         (timer (run-at-time 0 nil (lambda () (setq fired t)))))
+    (unwind-protect
+        (progn
+          (set-file-modes script #o700)
+          (should (equal (auth-source-extras--op-items 'tlon '("a" "b"))
+                         '(("a" ("password" . "V")) ("b" ("password" . "V")))))
+          (should-not fired))
+      (cancel-timer timer)
+      (delete-file script))))
+
 (ert-deftest auth-source-extras-op-item-fields-keys-by-label-and-id ()
   (should (equal (auth-source-extras--op-item-fields
                   '((title . "t") (fields ((id . "f1") (label . "api") (value . "V")))))

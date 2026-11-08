@@ -165,8 +165,13 @@ because the CLI fetches the items of a single invocation one after another."
   (let* ((procs (mapcar (lambda (title) (auth-source-extras--op-start account title))
                         titles))
          (deadline (+ (float-time) auth-source-extras-op-timeout)))
+    ;; An integer JUST-THIS-ONE keeps timers and other filters from running
+    ;; during the wait.  Otherwise a timer that reads a secret starts a second
+    ;; batch inside this one (Claude model discovery at startup, 2026-11-08),
+    ;; doubling the `op' processes, and this batch then reports as failed the
+    ;; titles that the inner one already cached.
     (while (and (seq-some #'process-live-p procs) (< (float-time) deadline))
-      (accept-process-output nil 0.05))
+      (accept-process-output (seq-find #'process-live-p procs) 0.05 nil 1))
     (mapcar #'auth-source-extras--op-collect procs)))
 
 (defun auth-source-extras--op-start (account title)
@@ -206,7 +211,7 @@ never contains item values."
         (cons title
               (cond ((process-live-p proc) '(:error . "timed out"))
                     ((zerop (process-exit-status proc))
-                     (accept-process-output proc 0 nil t)
+                     (accept-process-output proc 0 nil 1)
                      (auth-source-extras--op-exact-fields
                       title (with-current-buffer out
                               (json-parse-string (buffer-string)
@@ -230,7 +235,7 @@ website matches it; accepting that would hand out the wrong secret."
 (defun auth-source-extras--op-error-reason (proc err)
   "Return the last line of PROC's error output in buffer ERR, or its status."
   (when-let* ((stderr-proc (get-buffer-process err)))
-    (accept-process-output stderr-proc 0 nil t))
+    (accept-process-output stderr-proc 0 nil 1))
   (let ((lines (split-string (with-current-buffer err (buffer-string)) "\n" t "[ \t]+")))
     (if lines
         (replace-regexp-in-string "\\`\\[ERROR\\] [0-9/]+ [0-9:]+ " "" (car (last lines)))

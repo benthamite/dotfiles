@@ -679,6 +679,14 @@ A session resumed from another directory has one transcript per bucket under one
 UUID. A transcript's origin is accepted when any history entry for that session
 names it, not only the first, so such a split no longer blocks imports into
 either bucket.
+A session resumed from the target directory may instead keep appending to its old
+transcript while writing new sidecars under =<target>/<uuid>/=, so an import finds
+that sidecar present and refuses. The opt-in =--merge-sidecar= import flag fills it:
+its agent transcripts must name no other session, each source entry moves in
+without replacement, any name collision refuses the whole run, and emptied source
+directories are removed last. Without the flag an existing sidecar still refuses.
+Origin: on 2026-11-07 the =~/My Drive/dotfiles= to =~/repos/dotfiles= move left
+session 3717988b split this way.
 The paired Codex adapter allows single closed-session imports while unrelated
 sessions remain open, using SQLite transactions and consistent recovery backups.
 Its bulk rename mode retains the full-store offline checks.

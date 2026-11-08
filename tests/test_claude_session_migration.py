@@ -149,6 +149,52 @@ class ClaudeSessionMigrationTests(unittest.TestCase):
         (target_sidecar / "keep.txt").write_text("concurrent sidecar")
         self.assert_refused_without_changes(SID, "--project", NEW, reason="absent destination")
 
+    def add_destination_sidecar(self):
+        """A session resumed from NEW writes later sidecars under NEW's bucket."""
+        later = self.target / SID / "tool-results" / "later.txt"
+        later.parent.mkdir(parents=True)
+        later.write_text("written after the resume")
+        return later
+
+    def test_merge_sidecar_fills_existing_destination_sidecar(self):
+        self.add_sidecar()
+        later = self.add_destination_sidecar()
+        dry = self.run_cli("--dry-run", SID, "--project", NEW, "--merge-sidecar")
+        self.assertEqual(dry.returncode, 0, dry.stderr)
+        self.assertIn("sidecar entries merged: 2", dry.stdout)
+        self.assertTrue(self.transcript.exists())
+        result = self.apply(SID, "--project", NEW, "--merge-sidecar")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(self.transcript.exists())
+        self.assertFalse((self.source / SID).exists())
+        moved = self.target / self.transcript.name
+        self.assertEqual(json.loads(moved.read_text())["cwd"], NEW)
+        self.assertEqual(json.loads(self.history.read_text())["project"], NEW)
+        self.assertEqual(later.read_text(), "written after the resume")
+        self.assertEqual((self.target / SID / "tool-results/result.txt").read_text(), OLD + " opaque fixture")
+        agent = self.target / SID / "subagents/agent-fixture.jsonl"
+        self.assertEqual(json.loads(agent.read_text())["cwd"], NEW)
+
+    def test_merge_sidecar_refuses_any_name_collision(self):
+        self.add_sidecar()
+        self.add_destination_sidecar()
+        (self.target / SID / "tool-results" / "result.txt").write_text("different bytes")
+        self.assert_refused_without_changes(SID, "--project", NEW, "--merge-sidecar", reason="collision")
+
+    def test_merge_sidecar_refuses_destination_agents_of_another_session(self):
+        self.add_sidecar()
+        self.add_destination_sidecar()
+        foreign = self.target / SID / "subagents" / "agent-other.jsonl"
+        foreign.parent.mkdir()
+        foreign.write_bytes(jsonl({"sessionId": OTHER_SID, "cwd": NEW, "type": "user"}))
+        self.assert_refused_without_changes(SID, "--project", NEW, "--merge-sidecar",
+                                            reason="conflicts with its exact session UUID")
+
+    def test_merge_sidecar_is_rejected_outside_single_import(self):
+        result = self.run_cli("--dry-run", "--rename", OLD, NEW, "--merge-sidecar")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("single-session import only", result.stderr)
+
     def test_existing_destination_with_colliding_other_origin_is_refused(self):
         project, other = "/fixture/a.b", "/fixture/a-b"
         target = self.source.parent / encoded(project)

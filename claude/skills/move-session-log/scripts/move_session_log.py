@@ -523,8 +523,11 @@ def session_candidates(session_id: str | None = None) -> list[Path]:
 
 
 def validate_destination(plan: MigrationPlan, directory: Path, history: Rows, project: str,
-                         incoming: set[str]) -> None:
-    """An encoded name is insufficient evidence that an existing bucket is ours."""
+                         incoming: set[str], merging: str | None = None) -> None:
+    """An encoded name is insufficient evidence that an existing bucket is ours.
+
+    MERGING names the incoming session whose existing destination sidecar an
+    explicit --merge-sidecar import fills; the incoming transcript owns it."""
     plain_directory(directory)
     def identity(path: Path) -> tuple[int, ...]:
         info = path.lstat()
@@ -566,6 +569,8 @@ def validate_destination(plan: MigrationPlan, directory: Path, history: Rows, pr
             owners.add(path.stem)
         elif path.is_dir() and UUID_RE.fullmatch(path.name):
             sidecars.add(path.name)
+    if merging is not None:
+        owners.add(merging)
     if sidecars - owners:
         raise MigrationError("Destination has an orphan session sidecar without ownership evidence")
     if entries and not owners:
@@ -575,13 +580,50 @@ def validate_destination(plan: MigrationPlan, directory: Path, history: Rows, pr
         current = inventory()
         # The safety helper separately guards absence, no-overwrite publication,
         # and readback for incoming owned files. All preexisting entries stay put.
-        if {name: value for name, value in current.items() if name not in incoming} != original:
+        # A merged sidecar is incoming yet preexisting; plan.watch_tree pins it.
+        def settled(entries: dict[str, tuple[int, ...]]) -> dict[str, tuple[int, ...]]:
+            return {name: value for name, value in entries.items() if name not in incoming}
+        if settled(current) != settled(original):
             raise MigrationError("Destination bucket membership or ownership evidence changed")
 
     plan.add_check("verify existing Claude destination ownership", verify_destination)
 
 
-def build_single_plan(session_id: str, project: str) -> tuple[MigrationPlan, dict[str, Any]]:
+def merge_sidecar_tree(plan: MigrationPlan, source: Path, destination: Path,
+                       emptied: list[Path]) -> int:
+    """Plan no-replace moves of SOURCE's entries into the existing DESTINATION.
+
+    A directory present on both sides is merged recursively; any other name
+    present on both sides refuses the whole run.  Directories whose entries all
+    move out are appended to EMPTIED, deepest first."""
+    plain_directory(source)
+    plain_directory(destination)
+    moved = 0
+    for path in sorted(source.iterdir()):
+        counterpart = destination / path.name
+        if not exists(counterpart):
+            plan.move(path, counterpart)
+            moved += 1
+        elif (path.is_dir() and not path.is_symlink()
+              and counterpart.is_dir() and not counterpart.is_symlink()):
+            moved += merge_sidecar_tree(plan, path, counterpart, emptied)
+        else:
+            raise MigrationError(f"Sidecar merge collision; refusing to overwrite: {counterpart}")
+    emptied.append(source)
+    return moved
+
+
+def remove_emptied_directories(directories: list[tuple[Path, tuple[int, ...]]]) -> None:
+    """Remove source sidecar directories a merge emptied; never remove contents."""
+    for path, identity in directories:
+        info = path.lstat()
+        if (info.st_dev, info.st_ino) != identity or not stat.S_ISDIR(info.st_mode):
+            raise MigrationError(f"Emptied source directory changed before removal: {path}")
+        os.rmdir(path)  # Refuses a directory that gained entries since the moves.
+
+
+def build_single_plan(session_id: str, project: str, *, merge_sidecar: bool = False
+                      ) -> tuple[MigrationPlan, dict[str, Any]]:
     session_uuid(session_id)
     absolute_project(project)
     plan = MigrationPlan()
@@ -593,12 +635,16 @@ def build_single_plan(session_id: str, project: str) -> tuple[MigrationPlan, dic
     rows = read_rows(plan, source)
     history, history_status = history_rows(plan)
     origin = establish_origin(rows, history, session_id, target=project)
+    merge = (merge_sidecar and source.parent != target_dir
+             and exists(target_dir / session_id) and exists(source.parent / session_id))
     if exists(target_dir):
         if source.parent != target_dir:
             plan.expect_absent(target_dir / source.name)
-            plan.expect_absent(target_dir / session_id)
+            if not merge:
+                plan.expect_absent(target_dir / session_id)
         incoming = set() if source.parent == target_dir else {source.name, session_id}
-        validate_destination(plan, target_dir, history, project, incoming)
+        validate_destination(plan, target_dir, history, project, incoming,
+                             merging=session_id if merge else None)
     if source.parent == target_dir:
         if origin != project:
             raise MigrationError("Session is at the target but its origin metadata is inconsistent")
@@ -617,7 +663,14 @@ def build_single_plan(session_id: str, project: str) -> tuple[MigrationPlan, dic
     source_sidecar = source.parent / session_id
     target_sidecar = target_dir / session_id
     plan.expect_absent(target)
-    plan.expect_absent(target_sidecar)
+    if merge:
+        # The existing destination sidecar must already belong to this session:
+        # its agent transcripts may name no other session.  Tool results stay
+        # opaque.  Its whole tree is pinned so that a concurrent writer refuses.
+        sidecar_rows(plan, target_sidecar, session_id)
+        plan.watch_tree(target_sidecar)
+    else:
+        plan.expect_absent(target_sidecar)
     if encode_project_path(origin) != source.parent.name:
         raise MigrationError("Session origin does not match its source bucket encoding")
     if origin != project and encode_project_path(origin) == encode_project_path(project):
@@ -626,14 +679,23 @@ def build_single_plan(session_id: str, project: str) -> tuple[MigrationPlan, dic
     rewrites = sum(rewrite_session(plan, path, parsed, session_id, origin, project) for path, parsed in files)
     history_rewrites = rewrite_history(plan, history, {session_id: origin}, project)
     plan.move(source, target)
-    if exists(source_sidecar):
+    summary: dict[str, Any] = {"operation": "move one session and its sidecar", "session": session_id}
+    if merge:
+        emptied: list[Path] = []
+        moved = merge_sidecar_tree(plan, source_sidecar, target_sidecar, emptied)
+        identities = [(path, (path.lstat().st_dev, path.lstat().st_ino)) for path in emptied]
+        plan.add_action("remove emptied source sidecar directories",
+                        lambda: remove_emptied_directories(identities))
+        summary["operation"] = "move one session and merge its sidecar into the existing one"
+        summary["sidecar entries merged"] = moved
+    elif exists(source_sidecar):
         plan.move(source_sidecar, target_sidecar)
     plan.validate()
-    return plan, {"operation": "move one session and its sidecar", "session": session_id,
-                  "session files scanned": len(files), "session cwd fields rewritten": rewrites,
-                  "history project fields rewritten": history_rewrites,
-                  "history store": history_status,
-                  "project settings": "unchanged (not requested)"}
+    summary.update({"session files scanned": len(files), "session cwd fields rewritten": rewrites,
+                    "history project fields rewritten": history_rewrites,
+                    "history store": history_status,
+                    "project settings": "unchanged (not requested)"})
+    return plan, summary
 
 
 def parse_args() -> argparse.Namespace:
@@ -647,6 +709,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--offline", action="store_true",
                         help="assert that no Claude session is running in the affected project directories")
     parser.add_argument("--backup-dir", type=Path, help="new absolute recovery directory outside Google Drive")
+    parser.add_argument("--merge-sidecar", action="store_true",
+                        help="single import only: fill this session's existing destination sidecar "
+                             "instead of refusing; any name collision still refuses")
     parser.add_argument("--migrate-project-settings", action="store_true",
                         help="separately authorized trust/settings migration; --rename only")
     args = parser.parse_args()
@@ -654,6 +719,8 @@ def parse_args() -> argparse.Namespace:
         parser.error("--rename and --rename-history are separate operations")
     if (args.rename or args.rename_history) and (args.session_id or args.project is not None):
         parser.error("--rename cannot be combined with a session ID or --project")
+    if args.merge_sidecar and not args.session_id:
+        parser.error("--merge-sidecar applies to a single-session import only")
     if args.migrate_project_settings and not args.rename:
         parser.error("--migrate-project-settings requires --rename and separate authorization")
     return args
@@ -667,7 +734,8 @@ def main() -> int:
         elif args.rename:
             plan, summary = build_rename_plan(*args.rename, migrate_project_settings=args.migrate_project_settings)
         elif args.session_id:
-            plan, summary = build_single_plan(args.session_id, str(Path(args.project or os.getcwd()).resolve()))
+            plan, summary = build_single_plan(args.session_id, str(Path(args.project or os.getcwd()).resolve()),
+                                              merge_sidecar=args.merge_sidecar)
         else:
             target = PROJECTS_DIR / encode_project_path(str(Path(args.project or os.getcwd()).resolve()))
             files = sorted((path for path in session_candidates() if path.parent != target),

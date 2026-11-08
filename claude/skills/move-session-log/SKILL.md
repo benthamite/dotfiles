@@ -48,6 +48,14 @@ truncating JSON rewrites, or another account's store if the helpers fail.
   history rewrites. The preview reports their count and how many lack a
   transcript; a bucket holding only `tool-results/` is refused for lack of any
   session identity. Single-session import does not move root sidecars.
+- A session resumed from the target directory keeps appending to its old
+  transcript but writes new sidecars under the target bucket, so the import
+  finds `<target>/<uuid>/` already present and refuses. Only when the user has
+  approved merging, add `--merge-sidecar` to the import (preview and apply). It
+  requires that sidecar's agent transcripts to name no other session, moves
+  each source entry in without replacement, refuses the whole run on any name
+  collision, and removes the emptied source directories last. Without the flag
+  an existing sidecar still refuses.
 
 - `--rename-history OLD NEW` rewrites prompt-history entries whose project is
   exactly OLD, with or without a `sessionId`, once no OLD bucket remains.

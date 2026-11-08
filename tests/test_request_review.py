@@ -661,6 +661,22 @@ class CrossReviewRunTests(unittest.TestCase):
         self.assertTrue(reviewer._codex_preamble(message("developer"), live))
         self.assertFalse(reviewer._codex_preamble(message("user"), live))
 
+    def test_codex_0_167_deferred_tool_namespaces_are_preamble(self):
+        # Observed 2026-11-07 from codex-cli 0.167.0: the startup developer
+        # message carries a tools.deferred_namespaces part after the host
+        # skills, permissions and collaboration mode parts.
+        live = self.actor
+        kinds = ["host_skills.instructions", "permissions.instructions",
+                 "collaboration_mode.instructions", "tools.deferred_namespaces"]
+        def message(role, kinds):
+            return {"type": "response_item", "payload": {"type": "message", "role": role,
+                "content": [{"type": "input_text", "text": f"<{kind}>"} for kind in kinds],
+                "internal_chat_message_metadata_passthrough": {"content_item_kinds": kinds}}}
+        self.assertTrue(reviewer._codex_preamble(message("developer", kinds), live))
+        self.assertFalse(reviewer._codex_preamble(message("user", kinds), live))
+        self.assertFalse(reviewer._codex_preamble(
+            message("developer", ["tools.deferred_namespaces", "user.text"]), live))
+
     def test_context_annotations_do_not_allow_arbitrary_user_or_tool_preambles(self):
         live = self.actor
         message = {"type": "response_item", "payload": {"type": "message", "role": "user",

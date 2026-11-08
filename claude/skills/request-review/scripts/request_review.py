@@ -578,9 +578,13 @@ def _codex_preamble(item, live):
         return False
     # codex-cli 0.164.0 also persists the base instructions as a developer
     # message (core/src/context/base_instructions.rs; observed 2026-10-25).
+    # codex-cli 0.167.0 adds the deferred tool namespace summary to the
+    # startup developer message (core/src/context/world_state/tools.rs;
+    # observed 2026-11-07). Harness-rendered names only: no user text.
     allowed = {"user": {"agents_md.instructions", "environments.environment_context"},
                "developer": {"model.base_instructions", "generic.developer_instructions", "host_skills.instructions",
                              "permissions.instructions", "collaboration_mode.instructions",
+                             "tools.deferred_namespaces",
                              "multi_agent.role_instructions", "multi_agent.mode_instructions"}}
     content = payload.get("content")
     metadata = payload.get("internal_chat_message_metadata_passthrough")

@@ -49,7 +49,7 @@ Dired's built-in ~dired-copy-filename-as-kill~ copies the filename at point, but
 
 - ~dired-extras-copy-filename-as-kill-sans-extension~ copies the filename at point without its file extension. This is handy when you need the base name for renaming, referencing, or constructing a related filename.
 
-- ~dired-extras-copy-filename-as-kill-absolute~ copies the full absolute path of the marked files (or the file at point). Internally, it passes the prefix argument =(0)= to ~dired-copy-filename-as-kill~.
+- ~dired-extras-copy-filename-as-kill-absolute~ copies the full absolute path of the marked files (or the file at point). Internally, it passes the numeric argument =0= to ~dired-copy-filename-as-kill~ (Emacs 31 no longer treats the list =(0)= as absolute).
 
 - ~dired-extras-copy-filename-as-kill-dwim~ adapts its behavior to the current display state. When ~dired-hide-details-mode~ is active, it copies base filenames (without directory components); otherwise, it copies full paths. The filenames are joined with newlines, making them easy to paste into a shell or document.
 

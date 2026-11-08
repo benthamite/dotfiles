@@ -5688,6 +5688,11 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   (org-gcal-up-days 1)
   (org-gcal-down-days 7)
   (org-gcal-auto-archive nil)
+  ;; Listing every agenda file's archive costs ~30 s per entry-id scan with
+  ;; 400+ agenda files (Org dedups them pairwise with `file-equal-p'), and a
+  ;; sync scans twice plus once per file holding entry IDs, freezing Emacs.
+  ;; The calendar archive is itself an agenda file, so nothing is lost.
+  (org-generic-id-search-archives nil)
 
   :config
   ;; see the relevant section in this config file for more details on how to set

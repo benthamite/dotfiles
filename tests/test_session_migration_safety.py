@@ -459,6 +459,21 @@ class MigrationSafetyTests(unittest.TestCase):
                     self.mod._check_kernel_records(process + variant, {(0x12, 34)})
                 self.assertNotIn("private", str(caught.exception))
 
+    def test_only_exact_non_vnode_fileport_can_omit_object_type(self):
+        process = b"p123\0\n"
+        fileport = b"ffp.\0a \0nunknown file type: 508455\0\n"
+        self.mod._check_kernel_records(process + fileport, {(0x12, 34)})
+        self.mod._check_kernel_records(process + fileport.replace(b"ffp.", b"f fp."), {(0x12, 34)})
+        for record in (fileport.replace(b"ffp.", b"f3"),
+                       fileport.replace(b"a \0", b"aw\0"),
+                       fileport.replace(b"a \0", b""),
+                       fileport.replace(b"ffp.\0", b"ffp.\0D0x12\0i34\0"),
+                       fileport.replace(b"508455", b"508455 extra"),
+                       fileport.replace(b"unknown file type: 508455", b"vnode: Permission denied"),
+                       b"ffp.\0a \0\n"):
+            with self.subTest(record=record), self.assertRaises(self.mod.MigrationError):
+                self.mod._check_kernel_records(process + record, {(0x12, 34)})
+
     def test_incomplete_diagnostics_expose_only_fixed_categories(self):
         for message, category in ((b"vnode: Permission denied", "vnode-EACCES"),
                                   (b"no more information", "vnode-EPERM"),

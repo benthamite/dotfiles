@@ -403,6 +403,9 @@ updates cover thread =cwd=, not independent project associations; unsupported
 generations and schema side effects refuse before writes.
 The shared writer check reads =lsof='s =*NNN= form for descriptors above 999 as a
 plain descriptor, so a descriptor closed mid-scan no longer refuses the run.
+It also skips the =fp.= record =lsof= prints as "unknown file type: N" for a
+fileport that is not a vnode, pipe, socket or shared memory, which cannot hold a
+session file.
 Bulk rename accepts several source paths sharing one destination, which
 =bin/migrate-profile= uses to consolidate retired Emacs profiles into the
 current one.

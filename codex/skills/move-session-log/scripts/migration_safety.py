@@ -232,6 +232,16 @@ def _check_kernel_records(output, selected):
                 and record[b"a"] == b" " and record[b"n"] in _VANISHED_DESCRIPTORS):
             records += 1
             continue
+        # Apple dproc.c process_fileports(): a fileport whose type is not
+        # VNODE, PIPE, SOCKET or PSHM falls to the default branch, which prints
+        # "unknown file type: %d" with the fileport handle and no object type.
+        # A vnode fileport always takes its own case, so this shape cannot hold
+        # an input file.  System daemons (UserEventAgent, networkserviceproxy)
+        # hold such fileports intermittently.
+        if (record[b"f"].strip() == b"fp." and set(record) == {b"f", b"a", b"n"}
+                and record[b"a"] == b" " and re.fullmatch(rb"unknown file type: -?[0-9]+", record[b"n"])):
+            records += 1
+            continue
         if record[b"f"] == b"err":
             raise MigrationError("Writer inspection reports an incomplete process descriptor scan"
                                  + _record_diagnostic(record))

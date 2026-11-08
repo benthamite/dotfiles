@@ -85,7 +85,7 @@ the "Already tried" list in place.
 
 * Incidents
 
-** 2026-11-07 ~23:50 → 11-08 07:54: main thread parked in a kernel Mach call during a system-wide stall (investigation, no change)
+** 2026-11-07 ~23:50 → 11-08 07:54: main thread parked in a kernel Mach call under host starvation from agent-log-redact scrubbers (investigation, no change here)
 
 - Emacs PID 63326 stopped answering the server at about 23:50, 10 minutes
   after the display turned off (23:39; no system sleep). Pablo restarted
@@ -107,8 +107,16 @@ the "Already tried" list in place.
   ran again at 03:38. Kernel log: TCC "watchdog expired for approval"
   messages from 02:40, later than the Emacs stall. Mac up since
   10-30 (no reboot).
-- Not established: what held the kernel IPC path. No prior watchdog stack
-  shows this signature (117 stack files checked).
+- No prior watchdog stack shows this signature (117 stack files checked).
+- Likely cause, found afterwards: host starvation from piled-up
+  =agent-log-redact= scrubbers. Watchdog load went from ~8 to 198 at
+  23:09 and was 337–358 at 02:20 and 03:23, with swap up from 31 to
+  50 GB. On 11-08 morning the agent-log session (ea89d9ee) found 47
+  scrubbers running (load 415), 25 of them orphaned from the old Emacs:
+  each session end started a full rescan of ~94 GB of transcripts, and
+  runs overlapped. It stopped them and is limiting runs to one at a time
+  over changed files only. Not established: that the 23:09 spike itself
+  was scrubbers (the watchdog does not log process counts).
 - Open: the watchdog dies when =top= times out, so it records nothing
   during exactly this kind of stall.
 

@@ -10475,6 +10475,7 @@ fixed stale element-cache state after edits inside lists
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package org-extras
   :custom
+  (org-extras-bbdb-anniversaries-heading nil) ; birthdays come from Google Calendar
   (org-extras-id-auto-add-excluded-directories (list paths-dir-anki
                                                      paths-dir-google-drive-tlon-leo
                                                      paths-dir-google-drive-tlon-fede

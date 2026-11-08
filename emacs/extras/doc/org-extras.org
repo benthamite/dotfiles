@@ -507,10 +507,11 @@ depend on the major mode of the buffer from which the command is called.
 #+findex: org-extras-agenda-maintain-current-day
 The function ~org-extras-agenda-maintain-current-day~ is the non-interactive
 counterpart used by overnight maintenance.  It enables anniversary display
-and refreshes an existing daily agenda buffer, but never creates or displays
-an agenda, changes windows, or visits ~config.org~.  If the anniversary
-heading is missing from the Org ID database, it reports an error instead of
-falling back to an interactive Org-roam jump.
+(unless ~org-extras-bbdb-anniversaries-heading~ is ~nil~) and refreshes an
+existing daily agenda buffer, but never creates or displays an agenda,
+changes windows, or visits ~config.org~.  If the anniversary heading is
+missing from the Org ID database, it reports an error instead of falling
+back to an interactive Org-roam jump.
 
 #+findex: org-extras-with-suppressed-agenda-file-opening-hooks
 During agenda file preparation, agenda files are opened for scanning

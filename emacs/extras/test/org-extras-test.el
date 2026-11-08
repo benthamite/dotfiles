@@ -658,6 +658,16 @@
                                       (buffer-string)))))
         (delete-file file)))))
 
+(ert-deftest org-extras-test-maintain-current-day-respects-nil-heading ()
+  "Do not touch anniversaries when `org-extras-bbdb-anniversaries-heading' is nil."
+  (let ((org-extras-bbdb-anniversaries-heading nil)
+        (called nil))
+    (cl-letf (((symbol-function 'org-extras--agenda-update-anniversaries)
+               (lambda (&rest _) (setq called t)))
+              ((symbol-function 'get-buffer) (lambda (_) nil)))
+      (org-extras-agenda-maintain-current-day))
+    (should-not called)))
+
 ;;;; copy-heading-name
 
 (ert-deftest org-extras-test-copy-heading-name-copies-to-kill-ring ()

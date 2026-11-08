@@ -667,7 +667,8 @@ Enable anniversary display without an interactive ID lookup.  Refresh the
 daily agenda only when its buffer already exists and is in `org-agenda-mode'."
   (org-extras-with-suppressed-agenda-file-opening-hooks
    (lambda ()
-     (org-extras--agenda-update-anniversaries t t)
+     (when org-extras-bbdb-anniversaries-heading
+       (org-extras--agenda-update-anniversaries t t))
      (when-let ((agenda (get-buffer "*Org Agenda(a)*")))
        (with-current-buffer agenda
          (when (derived-mode-p 'org-agenda-mode)

@@ -101,10 +101,11 @@ the "Already tried" list in place.
   =mach_port_deallocate= kernel trap. Emacs was inside macOS, not
   running Lisp; any event read would have parked the same way, so the
   ebib-extras warning is where the stall surfaced, not its cause.
-- Other processes stalled in the same window: the watchdog's
-  =top -l 1= timed out (60 s) at 23:15 and killed the watchdog; its
-  launchd restart sat as =xpcproxy= for 30+ minutes; the watchdog only
-  ran again at 03:38. Kernel log: TCC "watchdog expired for approval"
+- Other processes stalled in the same window: the watchdog's run spawned
+  at 23:15 sat as =xpcproxy= (not yet started) for 20+ minutes; after
+  23:14 it recorded only two samples (02:20, 03:23) and logged the
+  outage at 03:38. (A =top= timeout traceback in its error log is from
+  10-07, an older version; it is unrelated.) Kernel log: TCC "watchdog expired for approval"
   messages from 02:40, later than the Emacs stall. Mac up since
   10-30 (no reboot).
 - No prior watchdog stack shows this signature (117 stack files checked).
@@ -116,9 +117,12 @@ the "Already tried" list in place.
   each session end started a full rescan of ~94 GB of transcripts, and
   runs overlapped. It stopped them and is limiting runs to one at a time
   over changed files only. Not established: that the 23:09 spike itself
-  was scrubbers (the watchdog does not log process counts).
-- Open: the watchdog dies when =top= times out, so it records nothing
-  during exactly this kind of stall.
+  was scrubbers (the watchdog did not log process counts then).
+- Changed afterwards: the watchdog runs at =ProcessType= =Standard=
+  instead of =Background= (launchd =3d32aae=, reloaded and confirmed
+  =spawn type = daemon=), and each sample now logs the most frequent
+  process names as =top_process_counts= (dotfiles =470894177=).
+  Whether it now runs through a load-400 stall is untested.
 
 ** 2026-11-07 08:53–09:06: debugger re-entered every second by a live-reloaded =agent-backend= struct (fixed: agent =065549d=, dotfiles =068921481=, =c0f553ac1=)
 

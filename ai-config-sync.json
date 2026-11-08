@@ -387,6 +387,13 @@
       "codex": "codex/skills/order-salads/SKILL.md",
       "status": "paired",
       "equivalence": "Paired encrypted personal workflow; bodies and auxiliary files match."
+    },
+    {
+      "name": "reorder-supplies",
+      "claude": "claude/skills/reorder-supplies/SKILL.md",
+      "codex": "codex/skills/reorder-supplies/SKILL.md",
+      "status": "paired",
+      "equivalence": "Paired encrypted personal workflow; bodies match."
     }
   ],
   "hooks": [

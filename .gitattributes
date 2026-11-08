@@ -13,3 +13,5 @@ codex/skills/refresh-cr-tracker/SKILL.md filter=git-crypt diff=git-crypt
 claude/auto-mode.json filter=git-crypt diff=git-crypt
 claude/skills/order-salads/** filter=git-crypt diff=git-crypt
 codex/skills/order-salads/** filter=git-crypt diff=git-crypt
+claude/skills/reorder-supplies/** filter=git-crypt diff=git-crypt
+codex/skills/reorder-supplies/** filter=git-crypt diff=git-crypt

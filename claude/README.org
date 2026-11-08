@@ -292,6 +292,11 @@ the links are ignored by Git. =bin/agent-send= runs the package's tool of the
 same name.
 
 
+The =reorder-supplies= skill (2026-11-08, encrypted like =order-salads=)
+keeps a registry of Pablo's recurring consumables, with shop, exact listing and
+last quantities. It takes each reorder to the final payment step and hands
+that step to Pablo. It updates the registry after every order.
+
 The =order-salads= skill polls the supplier's WhatsApp chat about every 5
 minutes while waiting for a ticket, not every minute, and keeps polling with no
 time limit until the ticket arrives (since 2026-11-06; previously 60 minutes). It snoozes its

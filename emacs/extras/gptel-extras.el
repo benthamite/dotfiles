@@ -84,6 +84,22 @@ replaced with the alias's current value on each refresh."
 
 (defvar gptel-extras--model-timer nil)
 (defvar gptel-extras--model-process nil)
+
+(defconst gptel-extras--model-retry-delays '(300 900 3600)
+  "Seconds to wait before each retry after a failed model discovery.
+The last delay repeats until a refresh succeeds.  Without retries, a
+transient failure at startup, such as an API key that 1Password could
+not deliver in time, would block managed Claude models until the next
+daily refresh.")
+
+(defvar gptel-extras--model-retry-timer nil
+  "Timer for the next retry after a failed model discovery, or nil.")
+
+(defvar gptel-extras--model-retry-count 0
+  "Number of retries scheduled since the last successful discovery.")
+
+(defvar gptel-extras--model-last-failure nil
+  "Message of the last failed discovery since the last success, or nil.")
 (defvar gptel-extras-model-discovery-mode nil)
 
 (defconst gptel-extras--model-aliases
@@ -102,6 +118,7 @@ than silently using an old or unrelated model."
   (when (timerp gptel-extras--model-timer)
     (cancel-timer gptel-extras--model-timer))
   (setq gptel-extras--model-timer nil)
+  (gptel-extras--cancel-model-retry)
   (if gptel-extras-model-discovery-mode
       (progn
         (gptel-extras--apply-model-bindings)
@@ -142,7 +159,11 @@ Preview and unrecognized ID formats are excluded."
     (setq gptel-extras-model-discovery-status 'refreshing)
     (condition-case err
         (let* ((backend (gptel-get-backend "Claude"))
-               (key (gptel--get-api-key (gptel-backend-key backend))))
+               (source (gptel-backend-key backend))
+               ;; Call a key function here, so that a nil result is reported
+               ;; as a missing key rather than as gptel's `stringp' error.
+               (value (if (functionp source) (funcall source) source))
+               (key (and value (gptel--get-api-key value))))
           (unless (and (stringp key) (not (string-empty-p key))
                        (not (string-match-p "[\r\n]" key)))
             (error "Claude API key is unavailable or invalid"))
@@ -229,6 +250,7 @@ The API key travels on standard input, never in process arguments."
         (gptel-extras--register-model backend model info)
         (set (car entry) model)))
     (gptel-extras--apply-model-bindings)
+    (gptel-extras--cancel-model-retry)
     (setq gptel-extras-model-discovery-status 'ready
           gptel-extras-model-discovery-time (current-time))
     (message "Claude models: Opus %s; Sonnet %s; Haiku %s"
@@ -299,13 +321,51 @@ managed settings without resolving aliases or requiring missing backends."
                         'gptel-extras-model-unavailable)))))))
 
 (defun gptel-extras--model-discovery-failed (message)
-  "Invalidate managed defaults and report discovery failure MESSAGE."
-  (setq gptel-extras-model-discovery-status message)
-  (dolist (entry gptel-extras--model-aliases)
-    (set (cdr entry) nil))
-  (gptel-extras--apply-model-bindings t)
-  (display-warning 'gptel-extras
-                   (concat "Claude model discovery failed: " message)))
+  "Invalidate managed defaults, report failure MESSAGE and schedule a retry.
+A retry that fails with the same MESSAGE is not reported again."
+  (let ((repeated (equal message gptel-extras--model-last-failure)))
+    (setq gptel-extras-model-discovery-status message
+          gptel-extras--model-last-failure message)
+    (dolist (entry gptel-extras--model-aliases)
+      (set (cdr entry) nil))
+    (gptel-extras--apply-model-bindings t)
+    (when gptel-extras-model-discovery-mode
+      (gptel-extras--schedule-model-retry))
+    (unless repeated
+      (display-warning
+       'gptel-extras
+       (concat "Claude model discovery failed: " message
+               (when gptel-extras--model-retry-timer
+                 (format "; retrying in %d minutes"
+                         (/ (gptel-extras--model-retry-delay) 60))))))))
+
+(defun gptel-extras--model-retry-delay ()
+  "Return the delay in seconds before the scheduled retry."
+  (nth (min (1- gptel-extras--model-retry-count)
+            (1- (length gptel-extras--model-retry-delays)))
+       gptel-extras--model-retry-delays))
+
+(defun gptel-extras--schedule-model-retry ()
+  "Schedule the next model discovery after a failure."
+  (when (timerp gptel-extras--model-retry-timer)
+    (cancel-timer gptel-extras--model-retry-timer))
+  (setq gptel-extras--model-retry-count (1+ gptel-extras--model-retry-count)
+        gptel-extras--model-retry-timer
+        (run-at-time (gptel-extras--model-retry-delay) nil
+                     #'gptel-extras--retry-models)))
+
+(defun gptel-extras--retry-models ()
+  "Run a scheduled retry of model discovery."
+  (setq gptel-extras--model-retry-timer nil)
+  (gptel-extras-refresh-models))
+
+(defun gptel-extras--cancel-model-retry ()
+  "Cancel any scheduled discovery retry and reset the backoff."
+  (when (timerp gptel-extras--model-retry-timer)
+    (cancel-timer gptel-extras--model-retry-timer))
+  (setq gptel-extras--model-retry-timer nil
+        gptel-extras--model-retry-count 0
+        gptel-extras--model-last-failure nil))
 
 (declare-function make-llm-claude "llm-claude" (&rest args))
 

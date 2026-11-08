@@ -192,6 +192,57 @@
     (should (string-match-p "Missing backend" warning))
     (should-not claude-sonnet-latest)))
 
+;; Incident 2026-11-08: under host load the tlon 1Password reads timed out
+;; at startup, the key function returned nil, and discovery stayed failed
+;; until the next daily refresh.
+(ert-deftest gptel-extras-test-model-failure-retries-with-backoff ()
+  "A failure schedules retries with backoff, warns once, and success resets."
+  (let ((gptel-extras-model-discovery-mode t)
+        (gptel-extras--model-retry-timer nil)
+        (gptel-extras--model-retry-count 0)
+        (gptel-extras--model-last-failure nil)
+        (gptel-extras-model-discovery-status nil)
+        (gptel-extras-model-bindings nil)
+        (gptel-extras-model-backend-bindings nil)
+        (claude-opus-latest nil) (claude-sonnet-latest nil) (claude-haiku-latest nil)
+        delays warnings cancelled)
+    (cl-letf (((symbol-function 'run-at-time)
+               (lambda (time repeat function)
+                 (should-not repeat)
+                 (should (eq function #'gptel-extras--retry-models))
+                 (push time delays)
+                 (timer-create)))
+              ((symbol-function 'cancel-timer)
+               (lambda (timer) (push timer cancelled)))
+              ((symbol-function 'display-warning)
+               (lambda (_type text &rest _args) (push text warnings))))
+      (dolist (_ '(1 2 3 4))
+        (setq gptel-extras-model-discovery-status 'refreshing)
+        (gptel-extras--model-discovery-failed "offline"))
+      (should (equal (reverse delays) '(300 900 3600 3600)))
+      (should (= (length warnings) 1))
+      (should (string-match-p "retrying in 5 minutes" (car warnings)))
+      (gptel-extras--model-discovery-failed "other")
+      (should (= (length warnings) 2))
+      (gptel-extras--cancel-model-retry)
+      (should-not gptel-extras--model-retry-timer)
+      (should (= gptel-extras--model-retry-count 0))
+      (gptel-extras--model-discovery-failed "offline")
+      (should (= (length warnings) 3))
+      (should (= (car delays) 300)))))
+
+(ert-deftest gptel-extras-test-model-nil-key-reported-as-missing ()
+  "A key function that returns nil yields a missing-key failure."
+  (let* ((backend (gptel--make-anthropic :name "Claude" :key (lambda () nil)))
+         (gptel--known-backends `(("Claude" . ,backend)))
+         (gptel-extras--model-process nil)
+         (gptel-extras-model-discovery-mode nil)
+         failure)
+    (cl-letf (((symbol-function 'gptel-extras--model-discovery-failed)
+               (lambda (message) (setq failure message))))
+      (gptel-extras-refresh-models))
+    (should (equal failure "Claude API key is unavailable or invalid"))))
+
 ;;;; Generate next heading
 
 (ert-deftest gptel-extras-test-generate-next-heading-no-number ()

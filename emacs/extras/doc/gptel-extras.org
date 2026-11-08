@@ -496,7 +496,10 @@ maps an existing backend name to a discovered alias variable; its model list
 then contains only that alias's concrete model. The backend's request options
 must be compatible with that family. The =Claude-thinking= configuration uses
 this to follow Sonnet with adaptive thinking. A discovery failure makes managed
-backends unavailable, including when a buffer still holds an earlier model.
+backends unavailable, including when a buffer still holds an earlier model. After
+a failure, for example when 1Password could not deliver the API key in time at
+startup, discovery retries after 5 minutes, 15 minutes and then every hour until
+it succeeds. Repeated failures with the same message are warned about once.
 
 #+findex: gptel-extras-make-claude-provider
 Consumers of the =llm= package can call ~gptel-extras-make-claude-provider~ with

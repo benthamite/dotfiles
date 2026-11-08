@@ -85,6 +85,33 @@ the "Already tried" list in place.
 
 * Incidents
 
+** 2026-11-07 ~23:50 → 11-08 07:54: main thread parked in a kernel Mach call during a system-wide stall (investigation, no change)
+
+- Emacs PID 63326 stopped answering the server at about 23:50, 10 minutes
+  after the display turned off (23:39; no system sleep). Pablo restarted
+  Emacs at 07:54. 22 Org files' agenda edits from 23:11–23:36 were never
+  saved; they were restored from their auto-saves on 11-08 (session
+  027c7aea).
+- Two =sample= runs (23:52 and 00:13) show the identical main-thread
+  stack: timer =ebib-extras--pdf-queue-idle-drain= →
+  =ebib-extras--pdf-queue-finish= → =display-warning= →
+  =warning--display-buffer= → =sit-for= → =input-pending-p= →
+  =gobble_input= → =ns_read_socket= → =-[NSApplication run]= → main
+  dispatch queue drain → =_voucher_dealloc_mach_voucher= →
+  =mach_port_deallocate= kernel trap. Emacs was inside macOS, not
+  running Lisp; any event read would have parked the same way, so the
+  ebib-extras warning is where the stall surfaced, not its cause.
+- Other processes stalled in the same window: the watchdog's
+  =top -l 1= timed out (60 s) at 23:15 and killed the watchdog; its
+  launchd restart sat as =xpcproxy= for 30+ minutes; the watchdog only
+  ran again at 03:38. Kernel log: TCC "watchdog expired for approval"
+  messages from 02:40, later than the Emacs stall. Mac up since
+  10-30 (no reboot).
+- Not established: what held the kernel IPC path. No prior watchdog stack
+  shows this signature (117 stack files checked).
+- Open: the watchdog dies when =top= times out, so it records nothing
+  during exactly this kind of stall.
+
 ** 2026-11-07 08:53–09:06: debugger re-entered every second by a live-reloaded =agent-backend= struct (fixed: agent =065549d=, dotfiles =068921481=, =c0f553ac1=)
 
 - Pablo: stuck in a backtrace that fires again as soon as it is closed.

@@ -75,7 +75,8 @@ processed from a drafts file, his explicit OK in chat, or a step of a skill he
 invoked that names the message. Run in `~/repos/forethought` or below,
 `wa-send`, `slack.py send` and `gmail.py send|reply` add the `[agent] ` prefix
 themselves (`claude/bin/agent_prefix.py`; rule in that folder's `AGENTS.md`);
-elsewhere they send no prefix. Pass `--programmatic`
+elsewhere they send no prefix, except that `slack.py` and `copy-slack-draft`
+add it to anything posted to the forethought workspace. Pass `--programmatic`
 when a skill step or other programmatic path sends the message (2026-11-02),
 and `--reviewed
 DRAFTS_FILE` only for text Pablo approved in that review file: the tool checks

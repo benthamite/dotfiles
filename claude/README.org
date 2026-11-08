@@ -159,7 +159,10 @@ the behavior; this paragraph keeps its history.
 The send tools enforce it (=claude/bin/agent_prefix.py=, 2026-10-30):
 run in that folder or below, =wa-send=, =slack.py send=, =gmail.py send|reply=
 and =copy-slack-draft --send= add the prefix unless given =--programmatic= or
-=--reviewed FILE=; run elsewhere, they send no prefix. =--reviewed= refuses text
+=--reviewed FILE=; run elsewhere, they send no prefix, except that =slack.py=
+and =copy-slack-draft= add it to anything posted to the Forethought workspace.
+That exception dates from 2026-11-08, when a Forethought DM sent from the
+dotfiles folder went out unmarked. =--reviewed= refuses text
 that is not in that review file everywhere.
 This followed a chat-approved message that went out unmarked the same day.
 

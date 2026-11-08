@@ -154,14 +154,20 @@ def slack_module():
     return module
 
 
-def permalink_info(permalink: str) -> dict:
-    """Parse PERMALINK against the slack.py workspace that owns its domain."""
+def permalink_workspace(permalink: str) -> str:
+    """Return the key of the slack.py workspace that owns PERMALINK's domain."""
     module = slack_module()
     host = permalink.split("/")[2] if permalink.count("/") >= 3 else ""
     keys = [k for k, ws in module.WORKSPACES.items() if ws.get("domain") == host]
     if not keys:
         raise ValueError("Slack permalink is not in a configured workspace")
-    module._workspace = keys[0]
+    return keys[0]
+
+
+def permalink_info(permalink: str) -> dict:
+    """Parse PERMALINK against the slack.py workspace that owns its domain."""
+    module = slack_module()
+    module._workspace = permalink_workspace(permalink)
     return module.parse_permalink(permalink)
 
 
@@ -577,6 +583,9 @@ def validate_socket(value: str) -> str:
 # None unless --send; then "" (prefix) or the --reviewed file.
 SEND_PREFIX = None
 SEND_PROGRAMMATIC = False
+# Whether --send posts to the Forethought workspace, which the prefix rule
+# covers wherever this runs.
+SEND_FORETHOUGHT = False
 
 
 @contextlib.contextmanager
@@ -604,7 +613,8 @@ def draft_snapshot(value: str):
         # --send posts as Pablo: apply the [agent] prefix rule (agent_prefix.py).
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         import agent_prefix
-        text = agent_prefix.apply(text, SEND_PREFIX or None, "copy-slack-draft --send", SEND_PROGRAMMATIC)
+        text = agent_prefix.apply(text, SEND_PREFIX or None, "copy-slack-draft --send",
+                                  SEND_PROGRAMMATIC, forethought=SEND_FORETHOUGHT)
         raw = text.encode("utf-8")
     directory = Path(tempfile.mkdtemp(prefix="slack-draft-", dir="/tmp"))
     snapshot = directory / "draft.txt"
@@ -718,9 +728,11 @@ def main() -> int:
             if args.open_only or args.no_open:
                 raise ValueError("--send needs a draft and a target")
             args.no_ring = True
-            global SEND_PREFIX, SEND_PROGRAMMATIC
+            global SEND_PREFIX, SEND_PROGRAMMATIC, SEND_FORETHOUGHT
             SEND_PREFIX = args.reviewed or ""
             SEND_PROGRAMMATIC = args.programmatic
+            SEND_FORETHOUGHT = (permalink_workspace(args.permalink) if args.permalink
+                                else args.workspace) == "forethought"
         if args.open_only and (args.file or args.stdin or args.no_open):
             raise ValueError("Open-only cannot stage text")
         if args.file and args.stdin:

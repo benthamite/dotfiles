@@ -1,7 +1,8 @@
 """The [agent] prefix on messages an agent sends under Pablo's name.
 
 Rule (~/repos/forethought/AGENTS.md, "Messages you send"): within Forethought,
-meaning when the tool runs in that folder or below, a message starts with
+meaning when the tool runs in that folder or below or the message goes to a
+Forethought destination (the forethought Slack workspace), a message starts with
 "[agent] " only when Pablo asked an agent, in an interactive session, to send
 it.  A message sent as a step of a skill or another programmatic path, and text
 Pablo approved in a review file, go out under his own name.  Outside that folder
@@ -11,6 +12,9 @@ because interactive sends are free-form, while each programmatic send has its
 command written down: --programmatic omits the prefix.  Everywhere, with
 --reviewed FILE the text must appear in an item of that file that carries
 Pablo's comment, or the send is refused.
+
+The destination counts as well as the folder because a Forethought message
+sent from another folder went out unmarked on 2026-11-08.
 """
 
 import re
@@ -33,8 +37,12 @@ def _norm(text: str) -> str:
 
 
 def apply(text: str, reviewed: str | None, tool: str,
-          programmatic: bool = False) -> str:
-    """Return TEXT as it must be sent, or exit if --reviewed does not hold."""
+          programmatic: bool = False, forethought: bool = False) -> str:
+    """Return TEXT as it must be sent, or exit if --reviewed does not hold.
+
+    FORETHOUGHT true says the message goes to a Forethought destination, which
+    brings it under the rule wherever the tool runs.
+    """
     body = text[len(PREFIX):] if text.startswith(PREFIX) else text
     if programmatic:
         if reviewed:
@@ -59,4 +67,4 @@ def apply(text: str, reviewed: str | None, tool: str,
                      "comment from Pablo ({>>...<<}); send it before removing his "
                      "comment, or without --reviewed")
         return body
-    return PREFIX + body if _in_forethought() else body
+    return PREFIX + body if forethought or _in_forethought() else body

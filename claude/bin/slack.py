@@ -1008,7 +1008,8 @@ def cmd_send(args):
     if not isinstance(text, str) or not text.strip():
         _fail("Nothing to send", 2)
     import agent_prefix
-    text = agent_prefix.apply(text, args.reviewed, "slack.py send", args.programmatic)
+    text = agent_prefix.apply(text, args.reviewed, "slack.py send", args.programmatic,
+                              forethought=_workspace == "forethought")
     if args.permalink:
         if args.thread_ts:
             _fail("--thread-ts goes with --channel; a permalink already names its thread", 2)
@@ -1048,7 +1049,8 @@ def cmd_edit(args):
     if not isinstance(text, str) or not text.strip():
         _fail("Nothing to write", 2)
     import agent_prefix
-    text = agent_prefix.apply(text, args.reviewed, "slack.py edit", args.programmatic)
+    text = agent_prefix.apply(text, args.reviewed, "slack.py edit", args.programmatic,
+                              forethought=_workspace == "forethought")
     try:
         info = parse_permalink(args.permalink)
     except ValueError as error:

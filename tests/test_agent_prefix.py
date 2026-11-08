@@ -20,6 +20,13 @@ def test_prefix_added_in_forethought(in_forethought):
     assert agent_prefix.apply("[agent] Hola", None, "t") == "[agent] Hola"
 
 
+def test_prefix_added_for_a_forethought_destination_anywhere(tmp_path, monkeypatch):
+    monkeypatch.setattr(agent_prefix, "FORETHOUGHT", tmp_path / "forethought")
+    monkeypatch.chdir(tmp_path)
+    assert agent_prefix.apply("Hola", None, "t", forethought=True) == "[agent] Hola"
+    assert agent_prefix.apply("Hola", None, "t", True, forethought=True) == "Hola"
+
+
 def test_no_prefix_outside_forethought(tmp_path, monkeypatch):
     monkeypatch.setattr(agent_prefix, "FORETHOUGHT", tmp_path / "forethought")
     (tmp_path / "forethought-other").mkdir()

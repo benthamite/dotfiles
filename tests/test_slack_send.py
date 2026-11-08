@@ -71,6 +71,14 @@ class SendTests(unittest.TestCase):
         self.mod.cmd_send(send_args(channel="C0C9VPUQ9SN", programmatic=True))
         self.assertEqual(self.posted()[0]["text"], "Done.")
 
+    def test_forethought_workspace_gets_the_prefix_from_any_folder(self):
+        import agent_prefix
+        with mock.patch.object(agent_prefix, "FORETHOUGHT", Path("/nonexistent/forethought")):
+            self.mod.cmd_send(send_args(channel="C0C9VPUQ9SN"))
+            self.mod._workspace = "epoch"
+            self.mod.cmd_send(send_args(channel="C0C9VPUQ9SN"))
+        self.assertEqual([p["text"] for p in self.posted()], ["[agent] Done.", "Done."])
+
     def test_stdin_drops_one_trailing_newline(self):
         with mock.patch("sys.stdin", io.StringIO("Line one.\nLine two.\n\n")):
             self.mod.cmd_send(send_args(channel="C0C9VPUQ9SN", text=None, stdin=True))

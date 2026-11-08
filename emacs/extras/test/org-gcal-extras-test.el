@@ -158,5 +158,12 @@
        'file 'silent))
     (should (= 0 reset-count))))
 
+(ert-deftest org-gcal-extras-test-not-birthday-p ()
+  "Rejects Google birthday events and keeps every other event type."
+  (skip-unless org-gcal-extras-test--loadable)
+  (should-not (org-gcal-extras-not-birthday-p '(:eventType "birthday")))
+  (should (org-gcal-extras-not-birthday-p '(:eventType "default")))
+  (should (org-gcal-extras-not-birthday-p '(:summary "No type"))))
+
 (provide 'org-gcal-extras-test)
 ;;; org-gcal-extras-test.el ends here

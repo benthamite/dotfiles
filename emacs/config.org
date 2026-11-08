@@ -5704,7 +5704,10 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package org-gcal-extras
   :after org-gcal
-  :demand t)
+  :demand t
+  :custom
+  ;; Google's contact birthdays would show up as overdue agenda deadlines
+  (org-gcal-fetch-event-filters '(org-gcal-extras-not-birthday-p)))
 #+end_src
 
 ** =org-linear=

@@ -60,6 +60,14 @@ Because the advice sits on ~oauth2-auto-authenticate~ rather than on an =org-gca
 
 The inner guard is the same pattern used by ~forge-extras--prevent-reentrant-query~ to protect =forge= from the identical class of freeze.
 
+* Event filters
+:PROPERTIES:
+:CUSTOM_ID: h:event-filters
+:END:
+
+#+findex: org-gcal-extras-not-birthday-p
+The predicate ~org-gcal-extras-not-birthday-p~ returns ~nil~ for events whose Google =eventType= is ="birthday"=, the type Google uses for the birthdays and anniversaries it copies from Google Contacts into the primary calendar. Add it to ~org-gcal-fetch-event-filters~ to keep these events out of the Org calendar file, where each would otherwise appear in the agenda as an overdue deadline.
+
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands

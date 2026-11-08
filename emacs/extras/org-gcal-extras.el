@@ -179,6 +179,16 @@ call `org-gcal-extras-reauthenticate'")
 (advice-add 'oauth2-auto-authenticate :around
 	    #'org-gcal-extras--avoid-login-during-sync-chain)
 
+;;;; Event filters
+
+(defun org-gcal-extras-not-birthday-p (event)
+  "Return non-nil unless EVENT is a Google Contacts birthday event.
+Google adds contact birthdays and anniversaries to the primary calendar
+as events whose `eventType' is \"birthday\".  Use this predicate in
+`org-gcal-fetch-event-filters' to keep them out of the Org calendar
+file, where they would show up in the agenda as overdue deadlines."
+  (not (equal (plist-get event :eventType) "birthday")))
+
 ;;;; Functions
 
 (defun org-gcal-extras--reset-element-cache ()

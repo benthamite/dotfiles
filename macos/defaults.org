@@ -33,6 +33,7 @@ The code blocks in this file are [[https://orgmode.org/manual/Extracting-Source-
 - [[#mac-app-store][Mac App Store]]
 - [[#photos][Photos]]
 - [[#google-chrome][Google Chrome]]
+- [[#emacs][Emacs]]
 - [[#kill-affected-applications][Kill affected applications]]
 - [[#local-variables][Local variables]]
 :END:
@@ -585,6 +586,18 @@ echo 'Prevent Photos from opening automatically when devices are plugged in'
 defaults write com.google.Chrome PMPrintingExpandedStateForPrint2 -bool true
 defaults write com.google.Chrome.canary PMPrintingExpandedStateForPrint2 -bool true
 echo 'Expand the print dialog by default'
+#+end_src
+
+* Emacs
+:PROPERTIES:
+:ID:       004C2571-BE0D-4E2A-900A-2E94D30A4A17
+:END:
+
+Without this, App Nap throttles Emacs a minute after the screen locks, and the phone page that ~agent-remote-mode~ serves times out until the screen is unlocked. Emacs reads the setting at launch.
+
+#+begin_src shell :results none
+defaults write org.gnu.Emacs NSAppSleepDisabled -bool true
+echo 'Keep App Nap from throttling Emacs while the screen is locked'
 #+end_src
 
 * Kill affected applications

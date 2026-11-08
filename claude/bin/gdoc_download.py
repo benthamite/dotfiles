@@ -126,26 +126,51 @@ def refuse_empty_body(command):
     return guarded
 
 
-_FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
+_FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
 _THEMATIC_BREAK = re.compile(r"^\s{0,3}([-*_])(?:\s*\1){2,}\s*$")
-_DASH_OR_PLUS_ITEM = re.compile(r"^((?:\s*>)*\s*)[-+](\s+\S)")
+_DASH_OR_PLUS_ITEM = re.compile(r"^((?:\s*>)*)(\s*)[-+](\s+\S)")
+_LIST_ITEM = re.compile(r"^(?:\s*>)*\s*(?:[-+*]|\d+[.)])\s")
 
 
 def star_bullets(markdown):
-    """Rewrite `-` and `+` list markers as `*`, outside code fences.
+    """Rewrite `-` and `+` list markers as `*`, outside code and maths.
 
     Drive's Markdown import keeps `-` and `+` as the glyph itself; `*` becomes
-    a round bullet. Thematic breaks such as `---` and `- - -` are left alone.
+    a round bullet. Left alone: fenced and indented code, `$$` maths, `<pre>`
+    blocks, leading YAML front matter, and thematic breaks such as `---`.
     """
-    lines, fence = [], None
-    for line in markdown.split("\n"):
+    lines, fence, verbatim, in_list = [], None, None, False
+    source = markdown.split("\n")
+    if source and source[0].strip() == "---":
+        for i in range(1, len(source)):
+            if source[i].strip() in ("---", "..."):
+                lines, source = source[:i + 1], source[i + 1:]
+                break
+    for line in source:
         opener = _FENCE.match(line)
-        if fence is None and opener:
-            fence = opener.group(1)[0]
-        elif fence is not None and opener and opener.group(1)[0] == fence:
-            fence = None
-        elif fence is None and not _THEMATIC_BREAK.match(line):
-            line = _DASH_OR_PLUS_ITEM.sub(r"\1*\2", line, count=1)
+        if fence is not None:
+            if (opener and opener.group(1)[0] == fence[0]
+                    and len(opener.group(1)) >= len(fence) and not opener.group(2).strip()):
+                fence = None
+        elif verbatim is not None:
+            if verbatim in line:
+                verbatim = None
+        elif opener:
+            fence = opener.group(1)
+        elif line.strip().startswith("$$"):
+            if line.strip() == "$$" or not line.strip().endswith("$$") or line.strip() == "$$$$":
+                verbatim = "$$"
+        elif line.lstrip().lower().startswith("<pre") and "</pre>" not in line.lower():
+            verbatim = "</pre>"
+        elif line.strip() and not _THEMATIC_BREAK.match(line):
+            item = _DASH_OR_PLUS_ITEM.match(line)
+            indent = len(item.group(2).expandtabs(4)) if item else 0
+            if item and (indent < 4 or in_list):
+                line = _DASH_OR_PLUS_ITEM.sub(r"\1\2*\3", line, count=1)
+            if _LIST_ITEM.match(line):
+                in_list = True
+            elif not line[:1].isspace():
+                in_list = False
         lines.append(line)
     return "\n".join(lines)
 

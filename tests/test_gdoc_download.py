@@ -251,6 +251,18 @@ class StarBulletsTests(unittest.TestCase):
         text = '-1 degrees\n--flag\nnot - a list\n-'
         self.assertEqual(module.star_bullets(text), text)
 
+    def test_indented_code_maths_pre_and_front_matter_are_left_alone(self):
+        for text in ('para\n\n    - code', '$$\na\n- b\n+ c\n$$', '<pre>\n- x\n</pre>',
+                     '---\ntags:\n  - a\n---\nbody'):
+            self.assertEqual(module.star_bullets(text), text)
+
+    def test_nested_items_indented_four_spaces_are_still_list_items(self):
+        self.assertEqual(module.star_bullets('- a\n    - b'), '* a\n    * b')
+
+    def test_a_longer_fence_is_not_closed_by_a_shorter_one(self):
+        text = '````\n```\n- in code\n```\n````'
+        self.assertEqual(module.star_bullets(text), text)
+
     def test_uploads_receive_the_rewritten_markdown(self):
         upload = MagicMock(return_value='result', __name__='update_doc_content', __doc__='doc')
         wrapped = module.with_star_bullets(upload)

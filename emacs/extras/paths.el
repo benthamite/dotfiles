@@ -96,7 +96,7 @@
   :group 'paths)
 
 (defcustom paths-dir-music
-  (file-name-concat paths-dir-google-drive "music/")
+  (file-name-concat paths-dir-google-drive "Music/")
   "Path to the music directory."
   :type 'directory
   :group 'paths)
@@ -509,7 +509,7 @@ This should be the path you set `org-roam-directory' to."
   :group 'paths)
 
 (defcustom paths-dir-websites
-  (file-name-concat paths-dir-google-drive "websites/")
+  (file-name-concat paths-dir-google-drive "Websites/")
   "Path to the `websites' directory."
   :type 'directory
   :group 'paths)

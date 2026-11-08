@@ -146,6 +146,8 @@ These directories are children of ~paths-dir-google-drive~ and contain media and
 - ~paths-dir-audiobooks~: audiobook files.
 - ~paths-dir-org-images~: images embedded in Org files.
 
+Defaults spell each Drive folder in its on-disk case. Folders that tools read by path are lowercase (=library-pdf/=, =anki/=); folders browsed by hand use sentence case (=Music/=, =Websites/=). macOS resolves either spelling, but string comparisons of paths do not.
+
 #+vindex: paths-dir-music-tango
 #+vindex: paths-dir-music-popular
 #+vindex: paths-dir-music-classical

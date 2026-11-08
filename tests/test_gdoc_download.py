@@ -232,6 +232,38 @@ class CatCommentsTests(unittest.TestCase):
 
 
 @unittest.skipUnless(OWN_INTERPRETER, 'runs through DelegatedRun under the gdoc interpreter')
+class StarBulletsTests(unittest.TestCase):
+    """Drive's Markdown import keeps `-` and `+` as the bullet glyph; `*` gives round bullets."""
+
+    def test_dash_and_plus_markers_become_stars_at_every_level(self):
+        self.assertEqual(module.star_bullets('- a\n  - b\n    + c\n* d'),
+                         '* a\n  * b\n    * c\n* d')
+
+    def test_inline_formatting_and_blockquotes_keep_their_text(self):
+        self.assertEqual(module.star_bullets('- **Fork:** x - y\n> - quoted'),
+                         '* **Fork:** x - y\n> * quoted')
+
+    def test_code_fences_thematic_breaks_and_tables_are_left_alone(self):
+        text = '```\n- in code\n```\n---\n- - -\n| - | x |\n~~~\n+ also code\n~~~'
+        self.assertEqual(module.star_bullets(text), text)
+
+    def test_hyphens_that_are_not_list_markers_are_left_alone(self):
+        text = '-1 degrees\n--flag\nnot - a list\n-'
+        self.assertEqual(module.star_bullets(text), text)
+
+    def test_uploads_receive_the_rewritten_markdown(self):
+        upload = MagicMock(return_value='result', __name__='update_doc_content', __doc__='doc')
+        wrapped = module.with_star_bullets(upload)
+        self.assertEqual(wrapped('doc-id', '- a', folder_id='f'), 'result')
+        upload.assert_called_once_with('doc-id', '* a', folder_id='f')
+
+    def test_cli_wraps_both_drive_markdown_uploads(self):
+        source = SOURCE.read_text()
+        for name in ('create_doc_from_markdown', 'update_doc_content'):
+            self.assertIn(f'drive.{name} = with_star_bullets(drive.{name})', source)
+
+
+@unittest.skipUnless(OWN_INTERPRETER, 'runs through DelegatedRun under the gdoc interpreter')
 class TokenWriteTests(unittest.TestCase):
     """Parallel runs refreshing one token must all save it."""
 

@@ -1,5 +1,6 @@
 """Extend the installed gdoc CLI: original-file downloads, an empty-write guard,
-comment threads on every `cat`, and token writes that parallel runs can share.
+comment threads on every `cat`, token writes that parallel runs can share, and
+round bullets in documents made from Markdown.
 
 Drive blobs use files.get_media; native Workspace documents still use export.
 https://developers.google.com/workspace/drive/api/guides/manage-downloads
@@ -15,6 +16,13 @@ them unless `--no-comments` is given.
 Upstream saves every refreshed token through one fixed `token.json.tmp`, so
 parallel runs that refresh the same expired token collide and the losers
 report "Not authenticated"; `write_private` gives each write its own file.
+
+Drive's own Markdown import, which `new --file` and `write` and `push` without
+`--tab` use, keeps a `-` or `+` list marker as the bullet glyph, so lists show
+hyphens; a `*` marker imports as ● ○ ■ (checked 8 Nov 2026, when Pablo asked
+for bullets instead of hyphens). `star_bullets` rewrites the markers before
+those uploads. gdoc's own parser (`insert`, `write --tab`) already makes round
+bullets.
 """
 import argparse
 import contextlib
@@ -29,7 +37,7 @@ import sys
 import tempfile
 
 from gdoc import auth, cli
-from gdoc.api import get_drive_service
+from gdoc.api import drive, get_drive_service
 from gdoc.api.drive import _translate_http_error
 from gdoc.frontmatter import parse_frontmatter
 from gdoc.util import GdocError
@@ -116,6 +124,40 @@ def refuse_empty_body(command):
                     "(pass --allow-empty to clear it deliberately)", exit_code=3)
         return command(args)
     return guarded
+
+
+_FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
+_THEMATIC_BREAK = re.compile(r"^\s{0,3}([-*_])(?:\s*\1){2,}\s*$")
+_DASH_OR_PLUS_ITEM = re.compile(r"^((?:\s*>)*\s*)[-+](\s+\S)")
+
+
+def star_bullets(markdown):
+    """Rewrite `-` and `+` list markers as `*`, outside code fences.
+
+    Drive's Markdown import keeps `-` and `+` as the glyph itself; `*` becomes
+    a round bullet. Thematic breaks such as `---` and `- - -` are left alone.
+    """
+    lines, fence = [], None
+    for line in markdown.split("\n"):
+        opener = _FENCE.match(line)
+        if fence is None and opener:
+            fence = opener.group(1)[0]
+        elif fence is not None and opener and opener.group(1)[0] == fence:
+            fence = None
+        elif fence is None and not _THEMATIC_BREAK.match(line):
+            line = _DASH_OR_PLUS_ITEM.sub(r"\1*\2", line, count=1)
+        lines.append(line)
+    return "\n".join(lines)
+
+
+def with_star_bullets(upload):
+    """Wrap a Drive Markdown upload (`create_doc_from_markdown`,
+    `update_doc_content`), whose second argument is the Markdown, so its lists
+    import with round bullets."""
+    def wrapped(target, content, *args, **kwargs):
+        return upload(target, star_bullets(content), *args, **kwargs)
+    wrapped.__name__, wrapped.__doc__ = upload.__name__, upload.__doc__
+    return wrapped
 
 
 SUGGESTIONS_NOTE = ("Suggestion threads are not included: the Drive API omits them "
@@ -302,5 +344,7 @@ def build_parser():
 
 if __name__ == "__main__":
     auth._write_private = write_private
+    drive.create_doc_from_markdown = with_star_bullets(drive.create_doc_from_markdown)
+    drive.update_doc_content = with_star_bullets(drive.update_doc_content)
     cli.build_parser = build_parser
     raise SystemExit(cli.main())

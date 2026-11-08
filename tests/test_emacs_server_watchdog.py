@@ -191,7 +191,8 @@ class MainTest(unittest.TestCase):
             mock.patch.object(watchdog, "memory_by_process",
                               lambda: [(42, 3500, 5000, "Emacs"),
                                        (9, 100, 23000, "Google Drive"),
-                                       (7, 1600, None, "bztransmit")]),
+                                       (7, 1600, None, "bztransmit"),
+                                       (43, 300, 400, "Emacs")]),
             mock.patch.object(watchdog, "swap_used_mb", lambda: 36000),
             mock.patch.object(watchdog, "capture_stack", self.fake_capture),
         ]
@@ -283,9 +284,13 @@ class MainTest(unittest.TestCase):
         self.assertEqual(first["swap_used_mb"], 36000)
         self.assertEqual(len(first["load"]), 3)
         self.assertEqual(first["top_memory_mb"],
-                         [["Google Drive", 23000, 100], ["Emacs", 5000, 3500]])
+                         [["Google Drive", 23000, 100], ["Emacs", 5000, 3500],
+                          ["Emacs", 400, 300]])
         self.assertEqual(first["top_rss_mb"],
-                         [["Emacs", 3500], ["bztransmit", 1600], ["Google Drive", 100]])
+                         [["Emacs", 3500], ["bztransmit", 1600], ["Emacs", 300],
+                          ["Google Drive", 100]])
+        self.assertEqual(first["top_process_counts"],
+                         [["Emacs", 2], ["Google Drive", 1], ["bztransmit", 1]])
         self.assertIsNone(first["failure"])
         self.assertEqual(second["failure"], "timeout")
         self.assertEqual(second["failure_detail"], "exit 1: why")

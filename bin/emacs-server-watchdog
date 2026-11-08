@@ -258,11 +258,26 @@ def record_sample(server: dict, now: float) -> None:
         "top_memory_mb": [[name, footprint, rss] for _, rss, footprint, name
                           in by_footprint[:TOP_PROCESSES]],
         "top_rss_mb": [[name, rss] for _, rss, _, name in by_rss[:TOP_PROCESSES]],
+        "top_process_counts": process_counts(processes),
     }
     SAMPLES_FILE.parent.mkdir(parents=True, exist_ok=True)
     with SAMPLES_FILE.open("a") as f:
         f.write(json.dumps(sample) + "\n")
     trim_samples(now)
+
+
+def process_counts(processes: list[tuple[int, int, int | None, str]]) -> list:
+    """Return the TOP_PROCESSES most frequent executable names with counts.
+
+    Many copies of one program show up here before they show up in memory:
+    on 2026-11-07 dozens of batch Emacs scrubbers drove the load to 400.
+    Ties keep the order in which names first appear.
+    """
+    counts: dict[str, int] = {}
+    for _, _, _, name in processes:
+        counts[name] = counts.get(name, 0) + 1
+    ranked = sorted(counts.items(), key=lambda item: item[1], reverse=True)
+    return [[name, count] for name, count in ranked[:TOP_PROCESSES]]
 
 
 def memory_by_process() -> list[tuple[int, int, int | None, str]]:

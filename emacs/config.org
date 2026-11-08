@@ -9728,6 +9728,8 @@ does not exist."
 
   :custom
   (agent-alert-on-ready t)
+  ;; Start the phone's new-session folder browser among my repositories.
+  (agent-remote-new-session-directory "~/repos/")
   ;; exit-skill-audit audits exit-time skills monthly and writes `held' when its
   ;; proposals await Pablo (claude/context/skill-audits.md).  Its directories
   ;; are the union of its targets' (exit-skill-audit/targets/*/target.json).

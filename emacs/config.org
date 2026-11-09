@@ -4953,13 +4953,15 @@ I use this package in combination with =prot-scratch= (see above) to persist scr
 
 ~persistent-scratch-backup-directory~ is deliberately ~nil~. Setting it makes the package write a *new, dated file on every save*, so a scratch buffer edited over months leaves hundreds of historical copies that nothing ever reclaims — 2,646 of them had accumulated, holding old drafts and pasted API keys in plain text. With it unset, the scratch state is still persisted across sessions, but to a single file that is overwritten in place, which is all the persistence I want.
 
+The scratch buffers are restored from ~elpaca-after-init-hook~, not ~emacs-startup-hook~. When Elpaca has to build a package at startup, it evaluates this block only after ~emacs-startup-hook~ has run, so a function added there would never fire.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package persistent-scratch
   :custom
   (persistent-scratch-autosave-interval 10)
   (persistent-scratch-backup-directory nil)
   :hook
-  (emacs-startup . persistent-scratch-setup-default))
+  (elpaca-after-init-hook . persistent-scratch-setup-default))
 #+end_src
 
 ** =executable=
@@ -7499,7 +7501,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package markdown-mode-extras
   :hook
-  (markdown-mode . markdown-mode-extras-align-all-tables)
+  (markdown-mode-hook . markdown-mode-extras-align-all-tables)
   
   :bind
   (:map gfm-mode-map
@@ -13027,9 +13029,6 @@ The macro below generates the commands correctly. But attempting to define key b
   :custom
   (ebib-extras-attach-existing-file-action 'overwrite)
 
-  :hook
-  (ebib-add-entry . ebib-extras-create-list-of-existing-authors)
-
   :config
   ;; Attach book PDFs that the scheduled acquisition job staged without Emacs.
   (ebib-extras-pdf-queue-mode 1)
@@ -13971,7 +13970,7 @@ sgn is started at the end of startup so that Signal messages keep reaching its d
   :ensure (:host github
            :repo "benthamite/sgn")
   :defer t
-  :hook (elpaca-after-init . sgn-start)
+  :hook (elpaca-after-init-hook . sgn-start)
   :custom
   (sgn-account (auth-source-extras-op-get "signal" "password")))
 #+end_src
@@ -15495,7 +15494,7 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
          :map esi-dictate-mode-map
          ("C-g" . esi-dictate-stop))
   :hook
-  (esi-dictate-speech-final . esi-dictate-fix-context))
+  (esi-dictate-speech-final-hook . esi-dictate-fix-context))
 #+end_src
 
 ** =read-aloud=

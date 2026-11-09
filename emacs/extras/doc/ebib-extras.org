@@ -474,15 +474,6 @@ The command ~ebib-extras-open-key~ opens the entry for a given KEY in Ebib. It f
 
 The function ~ebib-extras-get-file-of-key~ searches all loaded Ebib databases (as listed in ~paths-files-bibliography-all~) for the given KEY and returns the filename of the database that contains it. It signals a user error if Ebib has not been launched yet.
 
-*** Author checking
-:PROPERTIES:
-:CUSTOM_ID: h:author-checking
-:END:
-
-#+findex: ebib-extras-check-author-exists
-#+findex: ebib-extras-create-list-of-existing-authors
-The command ~ebib-extras-check-author-exists~ checks whether the =author= field of the current entry matches any author already present in the database. This is useful for spotting variant spellings or new authors. It relies on ~ebib-extras-existing-authors~, which must first be populated by calling ~ebib-extras-create-list-of-existing-authors~. That function uses ~ebib--create-author/editor-collection~ to build the list from the current database.
-
 ** Notes integration
 :PROPERTIES:
 :CUSTOM_ID: h:notes-integration
@@ -774,14 +765,6 @@ The variable ~ebib-extras-invalid-files~ holds the list of invalidly named files
 The variable ~ebib-extras-file-notify-descriptors~ holds the list of active file-notify descriptors for auto-reloading databases. These are used by ~ebib-extras-remove-file-notify-watchers~ to clean up watchers.
 
 The variable ~ebib-extras-last-reload-times~ is a hash table mapping database file paths to their last reload time, used for the cooldown mechanism in the auto-reload callback ([[#h:saving-reloading][Saving and reloading databases]]).
-
-** Author tracking
-:PROPERTIES:
-:CUSTOM_ID: h:author-tracking
-:END:
-
-#+vindex: ebib-extras-existing-authors
-The variable ~ebib-extras-existing-authors~ holds the list of all authors in the current database, populated by ~ebib-extras-create-list-of-existing-authors~. It is used by ~ebib-extras-check-author-exists~ to verify that an author already appears in the database ([[#h:author-checking][Author checking]]).
 
 * Patched functions
 :PROPERTIES:

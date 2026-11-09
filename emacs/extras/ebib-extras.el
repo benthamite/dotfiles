@@ -1756,13 +1756,6 @@ is the file notification event; _NTH is the database index."
   "Get database number for FILE."
   (cdr (assoc file ebib-extras-db-numbers)))
 
-(defvar ebib-extras-existing-authors nil
-  "List of all authors in the current database.")
-
-(defun ebib-extras-create-list-of-existing-authors ()
-  "Create a list of all authors in the current database."
-  (setq ebib-extras-existing-authors (ebib--create-author/editor-collection)))
-
 (declare-function ebib-extras-search-goodreads "ebib-extras")
 (declare-function ebib-extras-search-imdb "ebib-extras")
 (declare-function ebib-extras-search-letterboxd "ebib-extras")

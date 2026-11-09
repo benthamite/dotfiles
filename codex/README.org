@@ -23,6 +23,12 @@ codex/
 └── README.org
 #+end_example
 
+=rules/default.rules= allows generic recurring commands without a prompt, plus
+project commands Pablo approved, written with full paths so they match no other
+project. The only project rule allows the Idea Swipe app deploy (=web/deploy=);
+the server deploy still prompts, because a prefix rule would also allow its
+card-loading, deletion and visibility subcommands.
+
 The live =~/.codex/AGENTS.md=, =~/.codex/config.toml=, and
 =~/.codex/hooks.json= paths are symlinks to the tracked files. The installer
 links =~/.codex/skills= to the tracked skill tree and exposes the programmatic

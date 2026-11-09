@@ -8,3 +8,7 @@ prefix_rule(pattern=["git", "push"], decision="allow")
 prefix_rule(pattern=["git", "restore", "--source=HEAD", "--worktree"], decision="allow")
 prefix_rule(pattern=["emacsclient", "--eval"], decision="allow")
 prefix_rule(pattern=["paper-fetch"], decision="allow")
+# Idea Swipe app deploy (Pablo, 6 Nov 2026); pairs the Claude allow rule in claude/settings.json.
+# The server deploy rule has no counterpart: a prefix rule would also allow server/deploy's
+# card-loading, deletion and visibility subcommands, which still need Pablo's approval.
+prefix_rule(pattern=["op-automations", "@personal", "run", "--env-file", "/Users/pablostafforini/repos/forethought/idea-swipe/deploy.env.op", "--", "python3", "/Users/pablostafforini/repos/forethought/idea-swipe/web/deploy"], decision="allow")

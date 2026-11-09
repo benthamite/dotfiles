@@ -721,7 +721,7 @@
       "path": "codex/rules/default.rules",
       "tracked": true,
       "live_path": "~/.codex/rules/default.rules",
-      "note": "Codex-only command allowlist rules, pruned 2026-07-29 to generic recurring commands only (git add/commit/push/restore, curl -L, ps, emacs batch, emacsclient --eval; paper-fetch, added 2026-10-28 so agents fetch papers without a prompt). One-off approvals, dead-PID kills, the AGENTS.md symlink rule, and the arbitrary-command CODEX_HOME env prefix were removed; do not re-add task-specific or PID-specific rules. There is no Claude counterpart; material policy changes should be recorded here."
+      "note": "Codex-only command allowlist: generic recurring commands (git add/commit/push/restore, curl -L, ps, emacs batch, emacsclient --eval, paper-fetch). No one-off, task-specific or PID-specific rules. Exception (Pablo, 9 Nov 2026): a project command Pablo approved, written with full paths so it matches no other project, paired with its Claude allow rule; so far only the Idea Swipe app deploy. The server deploy has no rule, since a prefix would also allow its card and deletion subcommands. Record material policy changes here."
     },
     {
       "tool": "Claude Code and Codex",

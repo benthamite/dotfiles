@@ -23,6 +23,25 @@ Relative paths are under the dotfiles root, `~/repos/dotfiles/`. For
 Google account and auth details, read `google-services.md` in this
 directory.
 
+## Gmail
+
+Automated email to Pablo (Pablo, 2026-11-09): every email a job, script or
+skill sends Pablo is written in Markdown and sent with `gmail.py send
+--markdown`, which renders it as GitHub-flavoured Markdown in the HTML part,
+keeping each line break (`claude/bin/_mail_body.py`, pandoc). A script that
+builds its own message calls `_mail_body.set_body(..., markdown=True)`, as
+launchd's `bin/responder-mail.py` does. The plain part keeps the source, so
+checks that read it back are unaffected. Email to other people stays plain
+(no `--markdown`): Markdown would join a signature's lines and render stray
+`*` or `_`.
+
+Instances (2026-11-09): The Hinge's audit and watchdog, launchd's monitor
+and responder, finance-automation's digest, airbnb-pricing's monitoring, the
+Home Assistant health check. Inactive email channels to bring under the rule
+if enabled (TODO): the heartbeat Worker's SMTP channel (`ALERT_CHANNEL` is
+`telegram`) and stafforini.com's `sa-lp-13f-check.py` SMTP (no SMTP secrets
+set).
+
 ## Paper PDFs
 
 `paper-fetch get IDENT` is the single implementation for obtaining a paper PDF:

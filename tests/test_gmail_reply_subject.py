@@ -21,7 +21,7 @@ def load():
 def args(subject):
     return types.SimpleNamespace(reply_to="m1", account="baish", subject=subject,
                                  to="a@b.c", cc=None, bcc=None, body="hi",
-                                 body_file=None, attach=[])
+                                 body_file=None, attach=[], markdown=False)
 
 
 def test_changed_subject_is_refused(monkeypatch):

@@ -23,6 +23,9 @@ the launchd repo's environment check.
 Gmail itself does. A text-only message showed a hard break every 70 or so
 characters in Gmail's mobile app and in Outlook, which looked machine-made
 (2026-11-03).
+With =--markdown= the HTML part renders the body as GitHub-flavoured
+Markdown, line breaks kept (=bin/_mail_body.py=, via pandoc); every automated
+email to Pablo uses it (=context/service-access.md=, "Gmail", 2026-11-09).
 A reply always goes in its thread: =--reply-to ID=, plus =--reply-account
 ACCT= when the thread is in another of Pablo's mailboxes (e.g. a thread in the
 personal Gmail answered from baish). =draft|send= refuse a "Re:" or "Fwd:"

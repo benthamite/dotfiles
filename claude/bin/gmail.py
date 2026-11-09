@@ -22,15 +22,18 @@ Usage:
       Download an attachment to <output-path>.
   gmail.py [--account ...] archive <message-id>
       Remove the INBOX label from a message.
-  gmail.py [--account ...] draft --to=<addr> [--subject=<s>] [--reply-to=<message-id>] [--body=<text> | --body-file=<path>] [--cc=<addr>] [--bcc=<addr>] [--attach=<path> ...]
+  gmail.py [--account ...] draft --to=<addr> [--subject=<s>] [--reply-to=<message-id>] [--body=<text> | --body-file=<path>] [--cc=<addr>] [--bcc=<addr>] [--attach=<path> ...] [--markdown]
       Create a draft. Prints the new draft ID on stdout. With --reply-to the
       draft lands in that message's thread (In-Reply-To and References set,
       subject defaults to "Re: <parent subject>"). --reply-account=<acct> reads the
       parent from another of the mailboxes (threading headers only).
-  gmail.py [--account ...] send --to=<addr> [--subject=<s>] [--reply-to=<message-id>] [--body=<text> | --body-file=<path>] [--cc=<addr>] [--bcc=<addr>] [--attach=<path> ...]
+  gmail.py [--account ...] send --to=<addr> [--subject=<s>] [--reply-to=<message-id>] [--body=<text> | --body-file=<path>] [--cc=<addr>] [--bcc=<addr>] [--attach=<path> ...] [--markdown]
       Send an email. Prints the sent message ID. --reply-to works as for draft.
-  gmail.py [--account ...] reply <message-id> [--to=<addr>] [--body=<text> | --body-file=<path>] [--attach=<path> ...]
+  gmail.py [--account ...] reply <message-id> [--to=<addr>] [--body=<text> | --body-file=<path>] [--attach=<path> ...] [--markdown]
       Reply to a thread (preserves In-Reply-To and References).
+  --markdown (draft, send, reply) renders the body as GitHub-flavoured
+      Markdown in the HTML part, line breaks kept; the plain part keeps the
+      source. Every automated email to Pablo uses it (service-access.md).
   gmail.py [--account ...] send-draft <draft-id>
       Send a previously created draft.
   gmail.py [--account ...] delete-draft <draft-id>
@@ -40,7 +43,6 @@ Usage:
 import argparse
 import base64
 import email.message
-import html
 import json
 import mimetypes
 import os
@@ -51,6 +53,7 @@ sys.dont_write_bytecode = True  # keep __pycache__ out of the Drive-synced tree
 
 sys.path.insert(0, os.path.dirname(__file__))
 from _gworkspace_auth import api_request, preflight  # noqa: E402
+from _mail_body import set_body  # noqa: E402
 
 API = "https://gmail.googleapis.com/gmail/v1/users/me"
 ACCOUNTS = ["epoch", "personal", "baish", "email-triage"]
@@ -120,20 +123,6 @@ def _read_body(args):
         with open(args.body_file) as f:
             return f.read()
     return args.body or ""
-
-
-def _set_body(msg, text):
-    """Set TEXT as the body, with the HTML alternative Gmail itself sends.
-
-    Without it, clients show a text/plain-only message with a hard break
-    every 70 or so characters (Gmail's mobile app, Outlook), which looks
-    machine-made (2026-11-03: Eitan noticed it on a FIAS email to Galicia).
-    With an HTML part they reflow the text like any other email.
-    """
-    msg.set_content(text)
-    lines = [html.escape(line) for line in text.rstrip("\n").split("\n")]
-    msg.add_alternative('<div dir="ltr">' + "<br>\n".join(lines) + "</div>\n",
-                        subtype="html")
 
 
 def _add_attachments(msg, paths):
@@ -222,7 +211,7 @@ def _build_message(args):
     msg["Subject"] = subject
     if parent_headers is not None:
         _set_reply_headers(msg, parent_headers)
-    _set_body(msg, _read_body(args))
+    set_body(msg, _read_body(args), markdown=args.markdown)
     _add_attachments(msg, getattr(args, "attach", []))
     return base64.urlsafe_b64encode(msg.as_bytes()).decode().rstrip("="), thread_id
 
@@ -359,7 +348,7 @@ def cmd_reply(args):
     msg["To"] = args.to or h.get("from", "")
     msg["Subject"] = _reply_subject(h)
     _set_reply_headers(msg, h)
-    _set_body(msg, _read_body(args))
+    set_body(msg, _read_body(args), markdown=args.markdown)
     _add_attachments(msg, args.attach)
     raw = base64.urlsafe_b64encode(msg.as_bytes()).decode().rstrip("=")
     out = api_request(
@@ -464,6 +453,9 @@ def build_parser():
         s.add_argument("--cc")
         s.add_argument("--bcc")
         s.add_argument("--attach", action="append", default=[])
+        s.add_argument("--markdown", action="store_true",
+                       help="render the body as Markdown in the HTML part (every automated "
+                            "email to Pablo: service-access.md, Gmail)")
         if name == "send":
             s.add_argument("--reviewed", metavar="FILE",
                            help="Pablo approved this exact body in review FILE: send it without the [agent] prefix")
@@ -477,6 +469,9 @@ def build_parser():
     rep.add_argument("--body")
     rep.add_argument("--body-file", dest="body_file")
     rep.add_argument("--attach", action="append", default=[])
+    rep.add_argument("--markdown", action="store_true",
+                     help="render the body as Markdown in the HTML part (every automated "
+                          "email to Pablo: service-access.md, Gmail)")
     rep.add_argument("--reviewed", metavar="FILE",
                      help="Pablo approved this exact body in review FILE: send it without the [agent] prefix")
     rep.add_argument("--programmatic", action="store_true",

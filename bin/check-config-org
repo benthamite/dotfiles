@@ -1,45 +1,129 @@
 #!/bin/bash
 # Validate emacs/config.org: every tangled Elisp block must read as
-# balanced Lisp, and the profile-aware tangle must succeed in the
-# active Emacs session.  Used as the evidence check for config.org
-# commits (see claude/bin/elisp-check-evidence).
+# balanced Lisp, every :hook in a use-package, use-feature or
+# use-personal-package form must name a hook variable, and the
+# profile-aware tangle must succeed in the active Emacs session.  Used
+# as the evidence check for config.org commits (see
+# claude/bin/elisp-check-evidence).
 # Pass --snapshot when that runner uses --staged: inputs then come from
 # its indexed checkout and generated files stay outside the active profile.
+# Pass --static FILE to run only the block checks, on FILE, without
+# tangling: a way to test the checks against a copy.
 
 set -euo pipefail
 
 root=$(cd -- "$(dirname -- "$0")/.." && pwd)
 config="$root/emacs/config.org"
 snapshot=false
+static=false
 case "${1:-}" in
   --snapshot) snapshot=true; shift ;;
+  --static)
+    if [ "$#" -ge 2 ] && [ -f "$2" ]; then
+      static=true
+      config=$2
+      shift 2
+    fi
+    ;;
 esac
 if [ "$#" -ne 0 ]; then
-  echo "Usage: check-config-org [--snapshot]" >&2
+  echo "Usage: check-config-org [--snapshot | --static FILE]" >&2
   exit 2
 fi
 config_lisp=$(python3 -c 'import json, sys; print(json.dumps(sys.argv[1]))' "$config")
 
-emacs --batch -Q --eval "
+# config.org sets `use-package-hook-name-suffix' to nil, so use-package
+# adds a :hook function to the symbol exactly as written.  A name without
+# its -hook suffix is a variable nothing runs, and the function never
+# fires.  The names are read with use-package's own :hook normalizer, so
+# every spec shape it accepts is covered.  The read is not a command
+# substitution because macOS's bash 3.2 misparses quotes in a heredoc
+# inside one.
+IFS= read -r -d '' block_checks <<'EOF' || true
 (progn
   (require 'org)
-  (find-file $config_lisp)
-  (let ((count 0) line)
+  (require 'use-package)
+  (defun check-config-org-hook-problems (form file line)
+    "Return a message for each bad :hook in use-package-style FORM.
+FORM is read from the block at LINE of FILE.  A :hook name is bad
+when it lacks a hook variable's suffix or use-package rejects it."
+    (let (problems)
+      (dolist (spec (check-config-org-use-package-forms form))
+        (dolist (args (check-config-org-hook-sections spec))
+          (condition-case err
+              (dolist (hook (check-config-org-hook-names (cadr spec) args))
+                (unless (string-match-p "-\\(?:hooks?\\|functions\\)\\'"
+                                        (symbol-name hook))
+                  (push (format "%s block at line %d: (%s %s ...) :hook names `%s', which is not a hook variable"
+                                file line (car spec) (cadr spec) hook)
+                        problems)))
+            (error
+             (push (format "%s block at line %d: (%s %s ...) has an invalid :hook: %s"
+                           file line (car spec) (cadr spec)
+                           (error-message-string err))
+                   problems)))))
+      (nreverse problems)))
+  (defun check-config-org-use-package-forms (form)
+    "Return FORM and the forms nested in it that call a use-package macro."
+    (when (consp form)
+      (let ((found (and (memq (car form)
+                              '(use-package use-feature use-personal-package))
+                        (proper-list-p form)
+                        (list form))))
+        (while (consp form)
+          (setq found (append found (check-config-org-use-package-forms (car form))))
+          (setq form (cdr form)))
+        found)))
+  (defun check-config-org-hook-sections (spec)
+    "Return the arguments of each :hook keyword in use-package-style SPEC."
+    (let (sections args in-hook)
+      (dolist (element (cddr spec))
+        (cond ((keywordp element)
+               (when in-hook (push (nreverse args) sections))
+               (setq in-hook (eq element :hook)
+                     args nil))
+              (in-hook (push element args))))
+      (when in-hook (push (nreverse args) sections))
+      (nreverse sections)))
+  (defun check-config-org-hook-names (name args)
+    "Return the hook symbols that :hook ARGS name in the form for NAME."
+    (mapcan (lambda (pair)
+              (copy-sequence
+               (use-package-hook-handler-normalize-mode-symbols (car pair))))
+            (use-package-normalize/:hook name :hook args)))
+  (find-file check-config-org-file)
+  (let ((file (file-name-nondirectory check-config-org-file))
+        (count 0) line problems)
     (org-babel-map-src-blocks nil
-      (when (and (string= lang \"emacs-lisp\")
-                 (not (string-match-p \":tangle +no\" (or header-args \"\"))))
+      (when (and (string= lang "emacs-lisp")
+                 (not (string-match-p ":tangle +no" (or header-args ""))))
         (setq count (1+ count))
         (setq line (line-number-at-pos beg-block))
-        (with-temp-buffer
-          (emacs-lisp-mode)
-          (insert body)
-          (goto-char (point-min))
-          (condition-case err
-              (while (progn (forward-comment (buffer-size)) (not (eobp)))
-                (read (current-buffer)))
-            (error (error \"config.org block at line %d: %s\"
-                          line (error-message-string err)))))))
-    (message \"config.org: %d Elisp blocks parsed\" count)))"
+        (let (forms)
+          (with-temp-buffer
+            (emacs-lisp-mode)
+            (insert body)
+            (goto-char (point-min))
+            (condition-case err
+                (while (progn (forward-comment (buffer-size)) (not (eobp)))
+                  (push (read (current-buffer)) forms))
+              (error (error "%s block at line %d: %s"
+                            file line (error-message-string err)))))
+          (dolist (form (nreverse forms))
+            (setq problems (nconc problems (check-config-org-hook-problems
+                                            form file line)))))))
+    (when problems
+      (dolist (problem problems)
+        (message "%s" problem))
+      (message "%s: name the full hook variable in each :hook spec above; use-package-hook-name-suffix is nil"
+               file)
+      (kill-emacs 1))
+    (message "%s: %d Elisp blocks parsed, :hook names checked" file count)))
+EOF
+emacs --batch -Q --eval "(defvar check-config-org-file $config_lisp)" --eval "$block_checks"
+if [ "$static" = true ]; then
+  exit 0
+fi
 
 if [ "$snapshot" = true ]; then
   # The evidence runner materializes indexed bytes beside this script. Keep

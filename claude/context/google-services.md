@@ -159,6 +159,11 @@ Pick the command by the kind of change (confirmed on gdoc 0.21.0, 11 Oct 2026):
   in the paragraph and restate them (`**Label.** … *term* …`) in one edit; a
   second edit to restore one run resets the others. Re-read the paragraph
   with `cat` afterwards.
+- **Tables from Markdown** (`new --file`, `write`, `push`) get fixed column
+  widths that minimise each table's height; the local extension does this
+  after the upload (9 Nov 2026). For an older doc, or after editing a table's
+  text, run `gdoc fit-tables DOC` (`--dry-run` to see the widths first; it
+  leaves tables with hand-set widths alone unless given `--refit`).
 - "doc changed since last read" means gdoc has no record of a read since the
   last change; re-read with `pull` or `cat`, check nobody else edited, and
   retry. Do not reach for `--force` to get past it.

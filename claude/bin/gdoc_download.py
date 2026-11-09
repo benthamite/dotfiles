@@ -23,16 +23,26 @@ hyphens; a `*` marker imports as ● ○ ■ (checked 8 Nov 2026, when Pablo ask
 for bullets instead of hyphens). `star_bullets` rewrites the markers before
 those uploads. gdoc's own parser (`insert`, `write --tab`) already makes round
 bullets.
+
+The same import gives every table evenly distributed columns, so a column of
+one-word cells is as wide as a column of paragraphs. After those uploads,
+`fit_tables` gives each table fixed column widths that minimise its height in
+lines (asked by Pablo on 9 Nov 2026), and `fit-tables` does it for an existing
+doc.
 """
 import argparse
 import contextlib
+import functools
 import hashlib
 import html
 import io
 import json
+import math
 import os
 from pathlib import Path
+import random
 import re
+import struct
 import sys
 import tempfile
 
@@ -183,6 +193,393 @@ def with_star_bullets(upload):
         return upload(target, star_bullets(content), *args, **kwargs)
     wrapped.__name__, wrapped.__doc__ = upload.__name__, upload.__doc__
     return wrapped
+
+
+FONT_DIRECTORIES = (Path("/System/Library/Fonts/Supplemental"), Path("/System/Library/Fonts"),
+                    Path("/Library/Fonts"), Path.home() / "Library/Fonts")
+BREAK_AFTER = "-–—/"      # Docs can also wrap after a hyphen, dash or slash
+TEXT_SAFETY_PT = 2                  # Docs lays text out a little wider than raw advances
+MIN_COLUMN_PT = 20
+SPLIT_PENALTY_LINES = 1             # a word broken mid-word costs as much as a line
+DEFAULT_PADDING_PT = 5              # Docs' default cell padding on each side
+RANDOM_STARTS = 12
+
+
+class FontMetrics:
+    """Advance widths read from a TrueType file's `cmap` (format 4) and `hmtx`
+    tables, so text can be measured without a font library in gdoc's Python."""
+
+    def __init__(self, path):
+        data = Path(path).read_bytes()
+        (count,) = struct.unpack_from(">H", data, 4)
+        tables = {}
+        for i in range(count):
+            tag, _, offset, _ = struct.unpack_from(">4sIII", data, 12 + 16 * i)
+            tables[tag.decode("latin-1")] = offset
+        missing = {"head", "hhea", "hmtx", "cmap"} - tables.keys()
+        if missing:
+            raise GdocError(f"{path}: no {', '.join(sorted(missing))} table")
+        (self.units_per_em,) = struct.unpack_from(">H", data, tables["head"] + 18)
+        (metrics,) = struct.unpack_from(">H", data, tables["hhea"] + 34)
+        self.advances = [struct.unpack_from(">H", data, tables["hmtx"] + 4 * i)[0]
+                         for i in range(metrics)]
+        self.glyphs = self._character_map(data, tables["cmap"], path)
+
+    @staticmethod
+    def _character_map(data, base, path):
+        (count,) = struct.unpack_from(">H", data, base + 2)
+        for i in range(count):
+            platform, encoding, offset = struct.unpack_from(">HHI", data, base + 4 + 8 * i)
+            table = base + offset
+            if ((platform, encoding) in ((3, 1), (0, 3))
+                    and struct.unpack_from(">H", data, table)[0] == 4):
+                break
+        else:
+            raise GdocError(f"{path}: no format-4 Unicode character map")
+        (segments_x2,) = struct.unpack_from(">H", data, table + 6)
+        ends = table + 14
+        starts = ends + segments_x2 + 2
+        deltas = starts + segments_x2
+        range_offsets = deltas + segments_x2
+        glyphs = {}
+        for s in range(segments_x2 // 2):
+            (end,) = struct.unpack_from(">H", data, ends + 2 * s)
+            (start,) = struct.unpack_from(">H", data, starts + 2 * s)
+            (delta,) = struct.unpack_from(">H", data, deltas + 2 * s)
+            (range_offset,) = struct.unpack_from(">H", data, range_offsets + 2 * s)
+            for code in range(start, min(end, 0xFFFE) + 1):
+                if range_offset:
+                    at = range_offsets + 2 * s + range_offset + 2 * (code - start)
+                    (glyph,) = struct.unpack_from(">H", data, at)
+                    glyph = (glyph + delta) % 65536 if glyph else 0
+                else:
+                    glyph = (code + delta) % 65536
+                glyphs[code] = glyph
+        return glyphs
+
+    def width(self, text, size):
+        """Width of TEXT in points at SIZE points; unmapped characters count
+        as the font's missing-glyph box."""
+        last = len(self.advances) - 1
+        units = sum(self.advances[min(self.glyphs.get(ord(c), 0), last)] for c in text)
+        return units * size / self.units_per_em
+
+
+class MonospaceMetrics:
+    """Every character 0.6 em wide: the advance of the usual code fonts
+    (Roboto Mono, which Docs uses for inline code, and Source Code Pro)."""
+
+    def width(self, text, size):
+        return 0.6 * size * len(text)
+
+
+@functools.lru_cache(maxsize=None)
+def font_metrics(family, bold):
+    """Metrics for FAMILY from a local TrueType file.  Docs' web fonts are often
+    not installed: a monospace family is measured at 0.6 em per character, and
+    any other missing family with Arial's metrics, with a warning."""
+    names = [f"{family} Bold.ttf"] if bold else [f"{family}.ttf", f"{family} Regular.ttf"]
+    for directory in FONT_DIRECTORIES:
+        for name in names:
+            if (directory / name).is_file():
+                return FontMetrics(directory / name)
+    if "mono" in family.lower():
+        return MonospaceMetrics()
+    if family == "Arial":
+        raise GdocError("no local Arial TrueType file, so table text cannot be measured")
+    print(f"WARN: no local font file for {family}; measuring it with Arial's metrics",
+          file=sys.stderr)
+    return font_metrics("Arial", bold)
+
+
+def _run_font(text_style, base):
+    size = (text_style.get("fontSize") or base.get("fontSize") or {}).get("magnitude", 11)
+    face = text_style.get("weightedFontFamily") or base.get("weightedFontFamily") or {}
+    bold = text_style.get("bold", base.get("bold", False)) or face.get("weight", 400) >= 700
+    return face.get("fontFamily", "Arial"), bool(bold), size
+
+
+def _pieces(characters):
+    """Unbreakable pieces of a paragraph as (width, gap) pairs in points, GAP
+    being the width of the spaces before the piece."""
+    pieces, word, gap = [], 0.0, 0.0
+    for character, (family, bold, size) in characters:
+        advance = font_metrics(family, bold).width(character, size)
+        if character.isspace():
+            if word:
+                pieces.append((word, gap))
+                word, gap = 0.0, 0.0
+            gap += advance
+        else:
+            word += advance
+            if character in BREAK_AFTER:
+                pieces.append((word, gap))
+                word, gap = 0.0, 0.0
+    if word:
+        pieces.append((word, gap))
+    return pieces
+
+
+def cell_paragraphs(cell, base):
+    """A Docs API table cell as a list of paragraphs, each a list of pieces."""
+    paragraphs = []
+    for block in cell.get("content", []):
+        paragraph = block.get("paragraph")
+        if paragraph is None:
+            continue
+        characters = []
+        for element in paragraph.get("elements", []):
+            run = element.get("textRun")
+            if run:
+                font = _run_font(run.get("textStyle", {}), base)
+                characters.extend((c, font) for c in run["content"] if c != "\n")
+        paragraphs.append(_pieces(characters))
+    return paragraphs or [[]]
+
+
+def line_count(paragraphs, available):
+    """Lines that PARAGRAPHS wrap to in AVAILABLE points of text width, wrapping
+    greedily at piece boundaries and splitting a piece wider than the line."""
+    if available <= 0:
+        return 10 ** 6
+    lines = 0
+    for pieces in paragraphs:
+        lines += 1
+        x = None
+        for width, gap in pieces:
+            if x is not None and x + gap + width <= available:
+                x += gap + width
+                continue
+            if x is not None:
+                lines += 1
+            overflow = max(0, math.ceil(width / available) - 1)
+            lines += overflow
+            x = width - overflow * available
+    return lines
+
+
+def split_count(paragraphs, available):
+    """Words of PARAGRAPHS too wide for AVAILABLE points, which Docs breaks
+    mid-word."""
+    return sum(width > available for pieces in paragraphs for width, _ in pieces)
+
+
+def _scaled(weights, total, minimum):
+    """Integer widths at least MINIMUM, summing to TOTAL, roughly in proportion
+    to WEIGHTS."""
+    spare = total - minimum * len(weights)
+    weights = [max(w, 1e-9) for w in weights]
+    shares = [spare * w / sum(weights) for w in weights]
+    widths = [minimum + math.floor(s) for s in shares]
+    order = sorted(range(len(weights)), key=lambda i: shares[i] - math.floor(shares[i]), reverse=True)
+    for i in order[:total - sum(widths)]:
+        widths[i] += 1
+    return widths
+
+
+def fit_widths(cells, total, padding, minimum=MIN_COLUMN_PT):
+    """Integer column widths, at least MINIMUM points and summing to TOTAL,
+    that minimise a table's height.
+
+    CELLS[r][c] holds the paragraphs of cell (r, c), PADDING[c] the horizontal
+    padding of column c.  Height is the sum over rows of the tallest cell's
+    line count, plus SPLIT_PENALTY_LINES for each word broken mid-word, so a
+    column is narrowed past a word only when that saves more lines; ties go
+    to fewer broken words, then to fewer lines over all cells, then to the
+    smaller unwrapped-width estimate.  The search is a local search from
+    several starting splits, so the result is a good split, not a proven
+    optimum.
+    """
+    columns = len(cells[0])
+    if minimum * columns > total:
+        raise GdocError(f"{columns} columns cannot fit in {total} pt")
+    cache = {}
+    natural = [[max((sum(w + g for w, g in pieces) for pieces in cell), default=0.0)
+                for cell in row] for row in cells]
+
+    def layout(r, c, width):
+        key = (r, c, width)
+        if key not in cache:
+            available = width - padding[c] - TEXT_SAFETY_PT
+            cache[key] = (line_count(cells[r][c], available), split_count(cells[r][c], available))
+        return cache[key]
+
+    def cost(widths):
+        height = all_lines = splits = 0
+        estimate = 0.0
+        for r in range(len(cells)):
+            counts = [layout(r, c, widths[c]) for c in range(columns)]
+            height += max(lines for lines, _ in counts)
+            all_lines += sum(lines for lines, _ in counts)
+            splits += sum(split for _, split in counts)
+            estimate += max(natural[r][c] / max(widths[c] - padding[c], 1) for c in range(columns))
+        return height + SPLIT_PENALTY_LINES * splits, splits, all_lines, estimate
+
+    def improve(widths):
+        best = cost(widths)
+        for step in (32, 16, 8, 4, 2, 1):
+            improved = True
+            while improved:
+                improved = False
+                for i in range(columns):
+                    for j in range(columns):
+                        if i == j or widths[j] - step < minimum:
+                            continue
+                        widths[i] += step
+                        widths[j] -= step
+                        trial = cost(widths)
+                        if trial < best:
+                            best, improved = trial, True
+                        else:
+                            widths[i] -= step
+                            widths[j] += step
+        return best, widths
+
+    widest = [max(row[c] for row in natural) for c in range(columns)]
+    summed = [sum(row[c] for row in natural) for c in range(columns)]
+    starts = [[1] * columns, widest, summed, [math.sqrt(w) for w in widest]]
+    generator = random.Random(0)
+    starts += [[generator.random() for _ in range(columns)] for _ in range(RANDOM_STARTS)]
+    return min(improve(_scaled(weights, total, minimum)) for weights in starts)[1]
+
+
+def _points(dimension, default=0.0):
+    return (dimension or {}).get("magnitude", default)
+
+
+def _horizontal_padding(cell):
+    style = cell.get("tableCellStyle", {})
+    return (_points(style.get("paddingLeft"), DEFAULT_PADDING_PT)
+            + _points(style.get("paddingRight"), DEFAULT_PADDING_PT))
+
+
+def _tabs(tabs):
+    for tab in tabs:
+        yield tab
+        yield from _tabs(tab.get("childTabs", []))
+
+
+def plan_table_widths(document, refit=False):
+    """Width changes for the top-level tables of DOCUMENT (a Docs API document
+    fetched with its tabs), as (report, requests) pairs.
+
+    A table that already has a fixed column width is left alone unless REFIT,
+    so widths someone set by hand survive.  The text width is the page width
+    less the margins; in a pageless doc that is the width of the page setup.
+    """
+    plans = []
+    for tab in _tabs(document.get("tabs", [])):
+        tab_id = tab["tabProperties"]["tabId"]
+        body = tab.get("documentTab", {})
+        style = body.get("documentStyle", {})
+        total = math.floor(_points(style.get("pageSize", {}).get("width"))
+                           - _points(style.get("marginLeft")) - _points(style.get("marginRight")))
+        base = next((s.get("textStyle", {}) for s in body.get("namedStyles", {}).get("styles", [])
+                     if s.get("namedStyleType") == "NORMAL_TEXT"), {})
+        for element in body.get("body", {}).get("content", []):
+            table = element.get("table")
+            if not table:
+                continue
+            columns = table["columns"]
+            rows = table.get("tableRows", [])
+            report = dict(tab=tab_id, index=element["startIndex"], rows=len(rows),
+                          columns=columns, total=total)
+            properties = table.get("tableStyle", {}).get("tableColumnProperties", [])
+            if not refit and any(p.get("widthType") == "FIXED_WIDTH" for p in properties):
+                plans.append((dict(report, skipped="has fixed widths"), []))
+                continue
+            if any(len(row["tableCells"]) != columns
+                   or any(cell.get("tableCellStyle", {}).get("columnSpan", 1) != 1
+                          for cell in row["tableCells"]) for row in rows):
+                plans.append((dict(report, skipped="has merged cells"), []))
+                continue
+            cells = [[cell_paragraphs(cell, base) for cell in row["tableCells"]] for row in rows]
+            padding = [max(_horizontal_padding(row["tableCells"][c]) for row in rows)
+                       for c in range(columns)]
+            fixed = {c: _points(p.get("width")) for c, p in enumerate(properties)
+                     if p.get("widthType") == "FIXED_WIDTH"}
+            before = [fixed.get(c) or total / columns for c in range(columns)]
+
+            def height(widths):
+                return sum(max(line_count(cells[r][c], widths[c] - padding[c] - TEXT_SAFETY_PT)
+                               for c in range(columns)) for r in range(len(rows)))
+
+            def broken(widths):
+                return sum(split_count(cells[r][c], widths[c] - padding[c] - TEXT_SAFETY_PT)
+                           for r in range(len(rows)) for c in range(columns))
+
+            widths = fit_widths(cells, total, padding)
+            report.update(widths=widths, lines_before=height(before), lines_after=height(widths),
+                          broken_before=broken(before), broken_after=broken(widths))
+            requests = [{"updateTableColumnProperties": {
+                "tableStartLocation": {"index": element["startIndex"], "tabId": tab_id},
+                "columnIndices": [c],
+                "tableColumnProperties": {"widthType": "FIXED_WIDTH",
+                                          "width": {"magnitude": widths[c], "unit": "PT"}},
+                "fields": "widthType,width"}} for c in range(columns)]
+            plans.append((report, requests))
+    return plans
+
+
+def fit_tables(doc_id, refit=False, dry_run=False):
+    """Fit the column widths of DOC_ID's tables; return one report per table."""
+    from gdoc.api.docs import get_docs_service
+    documents = get_docs_service().documents()
+    document = documents.get(documentId=doc_id, includeTabsContent=True).execute()
+    plans = plan_table_widths(document, refit=refit)
+    requests = [request for _, table_requests in plans for request in table_requests]
+    if requests and not dry_run:
+        documents.batchUpdate(documentId=doc_id, body={"requests": requests}).execute()
+    return [report for report, _ in plans]
+
+
+def _current_version(doc_id):
+    return int(get_drive_service().files().get(
+        fileId=doc_id, fields="version", supportsAllDrives=True).execute()["version"])
+
+
+def with_fitted_tables(upload, doc_id_of):
+    """Wrap a Drive Markdown upload so the doc's tables get fitted column widths.
+
+    The upload's reported version becomes the version after fitting, so gdoc
+    records our own width change as part of the write, not as an outside edit.
+    A failed fit leaves the upload in place and says so on stderr.
+    """
+    def wrapped(*args, **kwargs):
+        result = upload(*args, **kwargs)
+        doc_id = doc_id_of(args, kwargs, result)
+        try:
+            if any("widths" in report for report in fit_tables(doc_id)):
+                version = _current_version(doc_id)
+                if isinstance(result, dict):
+                    result = dict(result, version=version)
+                else:
+                    result = version
+        except (GdocError, HttpError, OSError, KeyError) as error:
+            print(f"WARN: table column widths not fitted: {error}", file=sys.stderr)
+        return result
+    wrapped.__name__, wrapped.__doc__ = upload.__name__, upload.__doc__
+    return wrapped
+
+
+def cmd_fit_tables(args):
+    reports = fit_tables(cli._resolve_doc_id(args.doc), refit=args.refit, dry_run=args.dry_run)
+    if getattr(args, "json", False):
+        print(json.dumps(reports))
+        return 0
+    if not reports:
+        print("No tables.")
+    for report in reports:
+        where = f"table at {report['index']} ({report['rows']}×{report['columns']})"
+        if "skipped" in report:
+            print(f"{where}: skipped, {report['skipped']}")
+        else:
+            verb = "would set" if args.dry_run else "set"
+            print(f"{where}: {report['lines_before']} → {report['lines_after']} lines, "
+                  f"{report['broken_before']} → {report['broken_after']} words broken; "
+                  f"{verb} widths {' '.join(map(str, report['widths']))} pt "
+                  f"(of {report['total']})")
+    return 0
 
 
 SUGGESTIONS_NOTE = ("Suggestion threads are not included: the Drive API omits them "
@@ -355,6 +752,20 @@ def build_parser():
     for flag in ("json", "plain", "verbose"):
         modes.add_argument(f"--{flag}", action="store_true", default=argparse.SUPPRESS)
     command.set_defaults(func=cmd_download)
+    if "fit-tables" in subparsers.choices:
+        raise GdocError("installed gdoc now has fit-tables; retire the local extension")
+    command = subparsers.add_parser(
+        "fit-tables", help="Set table column widths that minimise each table's height")
+    command.add_argument("doc", help="Document ID or URL")
+    command.add_argument("--refit", action="store_true",
+                         help="Also refit tables whose column widths are already fixed")
+    command.add_argument("--dry-run", action="store_true",
+                         help="Report the widths without changing the doc")
+    command.add_argument("--account", default=os.environ.get("GDOC_ACCOUNT"))
+    modes = command.add_mutually_exclusive_group()
+    for flag in ("json", "plain", "verbose"):
+        modes.add_argument(f"--{flag}", action="store_true", default=argparse.SUPPRESS)
+    command.set_defaults(func=cmd_fit_tables)
     for name in ("write", "push"):
         upload = subparsers.choices[name]
         upload.add_argument("--allow-empty", action="store_true",
@@ -369,7 +780,11 @@ def build_parser():
 
 if __name__ == "__main__":
     auth._write_private = write_private
-    drive.create_doc_from_markdown = with_star_bullets(drive.create_doc_from_markdown)
-    drive.update_doc_content = with_star_bullets(drive.update_doc_content)
+    drive.create_doc_from_markdown = with_fitted_tables(
+        with_star_bullets(drive.create_doc_from_markdown),
+        lambda args, kwargs, result: result["id"])
+    drive.update_doc_content = with_fitted_tables(
+        with_star_bullets(drive.update_doc_content),
+        lambda args, kwargs, result: args[0] if args else kwargs["doc_id"])
     cli.build_parser = build_parser
     raise SystemExit(cli.main())

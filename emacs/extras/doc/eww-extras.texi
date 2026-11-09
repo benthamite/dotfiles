@@ -59,7 +59,6 @@ Functions
 
 Patches
 
-* Readability scoring::
 * Readability node selection::
 
 Indices
@@ -73,35 +72,33 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{eww-extras.el} extends EWW (Emacs Web Wowser), the built-in Emacs web
-browser, with capabilities for generating files from web pages, managing
-readability mode, navigating URL hierarchies, and integrating with other
+@samp{eww-extras.el} extends EWW (Emacs Web Wowser)@comma{} the built-in Emacs web
+browser@comma{} with capabilities for generating files from web pages@comma{} managing
+readability mode@comma{} navigating URL hierarchies@comma{} and integrating with other
 packages.  It depends on the @samp{paths} and @samp{el-patch} packages.
 
 The most substantial feature is the ability to generate PDF and HTML
 files from any URL using headless Chrome.  This requires Chrome to be
 installed and uses copies of the user's Chrome profile data for
-authentication, enabling downloads from sites that require login.  The
+authentication@comma{} enabling downloads from sites that require login.  The
 generated files are placed in the downloads directory and can optionally
-trigger a callback function (e.g., to attach the file to a Bib@TeX{}
+trigger a callback function (e.g.@comma{} to attach the file to a Bib@TeX{}
 entry).
 
-The package also enhances EWW's readability mode.  By default, every
+The package also enhances EWW's readability mode.  By default@comma{} every
 page rendered in EWW is automatically converted to its ``readable'' form
-(stripping navigation, ads, and other clutter).  A file-backed exception
+(stripping navigation@comma{} ads@comma{} and other clutter).  A file-backed exception
 list allows excluding specific domains where readability mode produces
-poor results.  Adding exceptions is a single command away.  The package
-also patches an upstream bug in @code{eww-score-readability} that causes
-CSS-heavy pages to render as empty buffers (@ref{Patches}).
+poor results.  Adding exceptions is a single command away.
 
-For navigation, the package provides Vimium-style commands: editing the
-current URL, opening kill ring content, and moving up or to the root of
+For navigation@comma{} the package provides Vimium-style commands: editing the
+current URL@comma{} opening kill ring content@comma{} and moving up or to the root of
 the URL hierarchy.  It also provides commands for switching between EWW
 and xwidget-webkit for different rendering needs.
 
 Integration with other packages includes handling YouTube URLs via
 @samp{elfeed-tube} (for transcript extraction) and @samp{mpv} (for video
-playback), and adding the current page to a bibliography via
+playback)@comma{} and adding the current page to a bibliography via
 @samp{zotra-extras}.
 
 @node User options
@@ -123,10 +120,10 @@ is an empty list.  This variable is populated at load time from the file
 specified by @code{eww-extras-readable-exceptions-file} and updated whenever
 you add a new exception via
 @code{eww-extras-add-domain-to-readable-exceptions}
-(@ref{Adding readability exceptions}).
+(@ref{Adding readability exceptions, , Adding readability exceptions}).
 
 The user option @code{eww-extras-readable-exceptions-file} specifies the
-path to the file containing readability exception patterns, one per
+path to the file containing readability exception patterns@comma{} one per
 line.  The default value is @samp{etc/eww-readable-exceptions.txt} within
 the Emacs configuration directory (via @code{paths-dir-dotemacs}).  You would
 change this if you want to store the exceptions file elsewhere.
@@ -148,8 +145,8 @@ change this if you want to store the exceptions file elsewhere.
 
 @findex eww-extras-browse-file
 The command @code{eww-extras-browse-file} opens a local file in EWW@.  It
-tries several sources for the file path: an explicit FILE argument, the
-filename at point, the current buffer's file, or a prompt.  This is
+tries several sources for the file path: an explicit FILE argument@comma{} the
+filename at point@comma{} the current buffer's file@comma{} or a prompt.  This is
 useful for previewing local HTML files or documents in the EWW renderer.
 
 @node Generating files from URLs
@@ -159,15 +156,15 @@ useful for previewing local HTML files or documents in the EWW renderer.
 @findex eww-extras-url-to-html
 The command @code{eww-extras-url-to-pdf} generates a PDF file from a URL
 using headless Chrome's print-to-PDF feature.  The URL is determined
-from context (the current EWW page, kill ring, or a prompt).  The output
+from context (the current EWW page@comma{} kill ring@comma{} or a prompt).  The output
 file is saved to the downloads directory (@code{paths-dir-downloads}) with a
 name derived from the Bib@TeX{} key (if called from Ebib or Bib@TeX{} mode)
 or the buffer name.
 
 The command @code{eww-extras-url-to-html} generates an HTML file from a URL
 using headless Chrome's DOM dump feature.  When called from a
-bibliographic context, the file name is based on the Bib@TeX{} key;
-otherwise, it uses a slugified version of the page title.
+bibliographic context@comma{} the file name is based on the Bib@TeX{} key;
+otherwise@comma{} it uses a slugified version of the page title.
 
 Both commands accept an optional CALLBACK function that is called with
 the output file path and Bib@TeX{} key upon completion.  This enables
@@ -175,19 +172,19 @@ workflows like automatically attaching the generated file to a Bib@TeX{}
 entry.
 
 The commands run asynchronously in a fresh headless Chrome profile.  They do
-not read a personal Chrome profile, retain cookies between runs, load browser
-extensions, or require an exported cookie file.  The first run installs the
+not read a personal Chrome profile@comma{} retain cookies between runs@comma{} load browser
+extensions@comma{} or require an exported cookie file.  The first run installs the
 exact locked renderer dependencies in @samp{~/Library/Caches/eww-extras-renderer};
 later runs reuse that cache.  The dependency tree and browser profile are
 never created in the dotfiles repository or Google Drive.
 
-Before saving the file, the renderer uses DuckDuckGo Autoconsent to opt out of
+Before saving the file@comma{} the renderer uses DuckDuckGo Autoconsent to opt out of
 supported consent managers.  It then checks every frame for a remaining
-blocking consent prompt and removes non-consent residual overlays, such as
+blocking consent prompt and removes non-consent residual overlays@comma{} such as
 subscribe or newsletter dialogs.  A dialog that merely cites a privacy policy
-or notice is a residual overlay, not a consent prompt, and an in-flow element
+or notice is a residual overlay@comma{} not a consent prompt@comma{} and an in-flow element
 is never removed on the strength of its class name alone.  If a consent prompt
-remains, the process fails and does not create or modify the requested output.
+remains@comma{} the process fails and does not create or modify the requested output.
 The renderer is intended for public pages; it does not carry authentication
 from a personal browser session.  Rendering has a 27-second internal deadline
 and a 30-second hard process limit.
@@ -199,7 +196,7 @@ and a 30-second hard process limit.
 The command @code{eww-extras-add-domain-to-readable-exceptions} prompts for a
 domain pattern and adds it to the readability exceptions file.  The
 domain of the current EWW page (or a URL in the kill ring) is offered as
-the default input.  After adding the exception, it reloads the
+the default input.  After adding the exception@comma{} it reloads the
 exceptions list and refreshes the current page.
 
 This command provides a quick way to permanently opt out of readability
@@ -214,18 +211,18 @@ mode for sites where it strips important content.
 @findex eww-extras-go-to-root-url-hierarchy
 The command @code{eww-extras-edit-current-url} pre-fills the minibuffer with
 the current EWW URL and lets you edit it or enter a new search query.
-With a prefix argument, the result opens in a new EWW buffer.
+With a prefix argument@comma{} the result opens in a new EWW buffer.
 
 The command @code{eww-extras-open-with-recent-kill-ring} opens the most
-recent kill ring entry as a URL in EWW@.  With a prefix argument, it
+recent kill ring entry as a URL in EWW@.  With a prefix argument@comma{} it
 opens in a new EWW buffer.
 
 The command @code{eww-extras-go-up-url-hierarchy} navigates one level up in
-the URL path.  For example, from @samp{example.com/a/b/c} it navigates to
+the URL path.  For example@comma{} from @samp{example.com/a/b/c} it navigates to
 @samp{example.com/a/b}.
 
 The command @code{eww-extras-go-to-root-url-hierarchy} navigates to the root
-domain of the current URL, stripping all path components.
+domain of the current URL@comma{} stripping all path components.
 
 @node Switching renderers
 @section Switching renderers
@@ -233,7 +230,7 @@ domain of the current URL, stripping all path components.
 @findex eww-extras-open-with-xwidget
 @findex eww-extras-open-with-eww
 The command @code{eww-extras-open-with-xwidget} opens the current EWW page
-in xwidget-webkit, providing a full WebKit rendering.  This is useful
+in xwidget-webkit@comma{} providing a full WebKit rendering.  This is useful
 when EWW's text-mode rendering is insufficient for a page's layout.
 The command must be called from an EWW buffer.
 
@@ -269,10 +266,9 @@ The function @code{eww-extras-readable-autoview} is added to
 the current URL matches a pattern in @code{eww-extras-readable-exceptions} or
 the page has no source content to process.  If the readability heuristic
 selects a non-visible node (producing an empty buffer) or a node
-covering only a tiny fraction of the article content, the function falls
-back to displaying the full page.  This guards against the upstream
-scoring bug described in @ref{Patches}) and against cases where
-navigation-heavy elements drag down the full content node's score,
+covering only a tiny fraction of the article content@comma{} the function falls
+back to displaying the full page.  This guards against cases where
+navigation-heavy elements drag down the full content node's score@comma{}
 causing a narrow subsection to be selected instead.
 
 The function @code{eww-extras-set-readable-exceptions-from-file} reads the
@@ -285,9 +281,9 @@ automatically at load time and after adding a new exception.
 
 @findex eww-extras-browse-youtube
 The function @code{eww-extras-browse-youtube} is designed as a handler for
-YouTube URLs (e.g., in @code{browse-url-handlers}).  When called with a
-YouTube URL, it kills the current EWW buffer, ensures the external
-video player is running (defaulting to @samp{mpv}), and fetches the video
+YouTube URLs (e.g.@comma{} in @code{browse-url-handlers}).  When called with a
+YouTube URL@comma{} it kills the current EWW buffer@comma{} ensures the external
+video player is running (defaulting to @samp{mpv})@comma{} and fetches the video
 transcript using @code{elfeed-tube-fetch}.  This provides a workflow where
 you read the transcript in Emacs while watching the video in an external
 player.
@@ -296,35 +292,35 @@ player.
 @section File generation internals
 
 @findex eww-extras-url-to-file
-An explicit KEY determines the output stem independently of the selected buffer. Optional OUTPUT-PATH permits a unique staging file for each operation, including simultaneous requests for the same key in different databases. Optional ERROR-CALLBACK receives terminal failures; without it, the sentinel retains its existing error behavior. Stop and continuation events do not complete the conversion, and each terminal callback runs once.
+An explicit KEY determines the output stem independently of the selected buffer. Optional OUTPUT-PATH permits a unique staging file for each operation@comma{} including simultaneous requests for the same key in different databases. Optional ERROR-CALLBACK receives terminal failures; without it@comma{} the sentinel retains its existing error behavior. Stop and continuation events do not complete the conversion@comma{} and each terminal callback runs once.
 
 @findex eww-extras-url-to-file-make-command
 @findex eww-extras-url-to-file-sentinel
 @findex eww-extras-run-callback
 The function @code{eww-extras-url-to-file} is the core logic shared by
 @code{eww-extras-url-to-pdf} and @code{eww-extras-url-to-html}.  It determines
-the URL and output file name from context, constructs and starts the
-headless Chrome process, and sets up the process sentinel.  An optional
-@code{key} argument lets callers supply the Bib@TeX{} key directly, bypassing
+the URL and output file name from context@comma{} constructs and starts the
+headless Chrome process@comma{} and sets up the process sentinel.  An optional
+@code{key} argument lets callers supply the Bib@TeX{} key directly@comma{} bypassing
 the buffer-derived lookup.
 
 The function @code{eww-extras-url-to-file-make-command} builds a direct argument
 list for the renderer wrapper.  The wrapper verifies the lock-hash dependency
-cache, installs it with @samp{npm ci --ignore-scripts} when necessary, and launches
+cache@comma{} installs it with @samp{npm ci --ignore-scripts} when necessary@comma{} and launches
 the configured system Chrome through @samp{playwright-core}.  It does not use a
-shell command, @samp{npx}, or a Playwright-managed browser download.
+shell command@comma{} @samp{npx}@comma{} or a Playwright-managed browser download.
 
 The function @code{eww-extras-url-to-file-sentinel} creates a process
 sentinel that requires both a zero exit status and a nonempty output before it
-runs the callback.  Each render has a private diagnostics buffer, so concurrent
+runs the callback.  Each render has a private diagnostics buffer@comma{} so concurrent
 PDF and HTML jobs cannot mix their errors. Standard error joins the main
-process output, preserving the renderer's diagnostic without an extra pipe
+process output@comma{} preserving the renderer's diagnostic without an extra pipe
 sentinel's completion message. Failed output is never attached.
 
-The renderer rejects unsuccessful HTTP responses for the main document,
+The renderer rejects unsuccessful HTTP responses for the main document@comma{}
 including redirect targets and later document navigations. Failed images or
 embedded frames do not turn a successful article response into an error. Known
-browser challenge pages, including Cloudflare's block-page structure, are also
+browser challenge pages@comma{} including Cloudflare's block-page structure@comma{} are also
 rejected even when the server reports HTTP success. These failures preserve an
 existing destination and never install a newly rendered error page. Previously
 verified local HTML can be supplied explicitly with a @samp{file:} URL@.
@@ -334,7 +330,7 @@ overlay identity; a large fixed or sticky reading pane is not itself an overlay.
 An unnamed dialog backdrop is removed only when it contains no other content.
 Cleanup refuses to remove a main/article element or a first-level heading
 outside a dialog. Such ambiguous matches fail the render and preserve an
-existing destination, rather than attaching a partial document.
+existing destination@comma{} rather than attaching a partial document.
 
 The function @code{eww-extras-run-callback} safely executes the optional
 callback function with the output file and Bib@TeX{} key as arguments.
@@ -343,30 +339,8 @@ callback function with the output file and Bib@TeX{} key as arguments.
 @chapter Patches
 
 @menu
-* Readability scoring::
 * Readability node selection::
 @end menu
-
-@node Readability scoring
-@section Readability scoring
-
-@findex eww-score-readability
-The built-in function @code{eww-score-readability} determines which part of a
-web page contains the main textual content for @code{eww-readable}.  It
-excludes @code{script}, @code{head}, and @code{comment} tags from scoring, but does not
-exclude @code{style} tags.  CSS text inside @samp{<style>} elements is therefore
-counted as readable content, which can cause CSS-heavy nodes (such as
-Wikipedia's @samp{div.navbox-styles}) to win the readability contest over the
-actual article.  The result is an empty buffer because the selected node
-contains only invisible CSS@.
-
-This package uses @code{el-patch} to add @code{style} to the exclusion list in
-@code{eww-score-readability}, giving @samp{<style>} elements a score of -2 (the
-same penalty applied to @code{script} and @code{head}).  As an additional safety
-net, @code{eww-extras-readable-autoview} detects when the readable render
-produces an empty buffer or a result smaller than 2% of the HTML source
-size, and falls back to displaying the full page
-(@ref{Readability management}).
 
 @node Readability node selection
 @section Readability node selection
@@ -376,14 +350,14 @@ The built-in function @code{eww-highest-readability} selects the DOM node
 with the highest readability score for @code{eww-readable}.  It replaces the
 current best node with a deeper child whenever the child scores higher
 and contains more than 100 words.  On pages where navigation-heavy
-elements (navboxes, table of contents, categories) drag down the full
-content node's aggregate score, a small subsection—such as the lead
+elements (navboxes@comma{} table of contents@comma{} categories) drag down the full
+content node's aggregate score@comma{} a small subsection—such as the lead
 paragraph—can win the readability contest over the full article.
 
 This package uses @code{el-patch} to raise the minimum word threshold from a
-fixed 100 to @code{max(100, 1/3 of the current best node's word count)}.
+fixed 100 to @code{max(100@comma{} 1/3 of the current best node's word count)}.
 This ensures a child must contain a substantial fraction of the
-parent's text to replace it, preventing narrow subsections from winning
+parent's text to replace it@comma{} preventing narrow subsections from winning
 over broader content areas.
 
 @node Indices

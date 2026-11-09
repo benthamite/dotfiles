@@ -63,8 +63,10 @@ the "Already tried" list in place.
 - Probe exceptions to the network rule (2026-10-26): the three forge timers
   and Slack's websocket open still connect from Lisp after a successful
   =simple-extras-probe-url=. Moving the forge pulls out of the main Emacs is
-  deferred (forge database writes from a second Emacs). Report of the
-  =nsm-should-check= lookup upstream: deferred.
+  deferred (forge database writes from a second Emacs). The
+  =nsm-should-check= lookup needs no upstream report: Emacs 31.1 resolves
+  the host only when =nsm-trust-local-network= is on, and the local patch
+  was removed (2026-11-09).
 - Upstream reports for the two websocket.el bugs (accept-header case,
   =on-open= after a failed handshake) and the emacs-slack fork commit
   =b4b3f23= (unpushed): pending Pablo's decision.

@@ -462,8 +462,7 @@ Formats current entry according to variable `bibtex-entry-format'."
 					       (nth 3 entry-list)))
 		      opt-field-list (append (if crossref-key
 						 (nth 3 entry-list))
-					     (nth 4 entry-list)
-					     bibtex-user-optional-fields)
+					     (nth 4 entry-list))
 		      ;; default list of fields that may appear in this entry
 		      default-field-list (append req-field-list opt-field-list)
 		      ;; number of ALT fields we may find

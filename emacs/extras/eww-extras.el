@@ -34,35 +34,6 @@
 
 ;;;; Patches
 
-;; Upstream bug: `eww-score-readability' does not exclude `style' tags, so CSS
-;; text inside <style> elements gets counted as readable content.  This causes
-;; CSS-heavy nodes (e.g. Wikipedia's `div.navbox-styles') to win the readability
-;; contest, producing an empty render.
-(el-patch-defun eww-score-readability (node)
-  (let ((score -1))
-    (cond
-     ((memq (dom-tag node) (el-patch-swap '(script head comment)
-					  '(script head comment style)))
-      (setq score -2))
-     ((eq (dom-tag node) 'meta)
-      (setq score -1))
-     ((eq (dom-tag node) 'img)
-      (setq score 2))
-     ((eq (dom-tag node) 'a)
-      (setq score (- (length (split-string (dom-text node))))))
-     (t
-      (dolist (elem (dom-children node))
-	(cond
-         ((stringp elem)
-          (setq score (+ score (length (split-string elem)))))
-         ((consp elem)
-	  (setq score (+ score
-			 (or (cdr (assoc :eww-readability-score (cdr elem)))
-			     (eww-score-readability elem)))))))))
-    ;; Cache the score of the node to avoid recomputing all the time.
-    (dom-set-attribute node :eww-readability-score score)
-    score))
-
 ;; Upstream `eww-highest-readability' replaces the current best node with a
 ;; deeper child whenever the child scores higher and has more than 100 words.
 ;; On pages where navigation-heavy elements (navboxes, TOC, categories) drag

@@ -200,7 +200,8 @@ FONT_DIRECTORIES = (Path("/System/Library/Fonts/Supplemental"), Path("/System/Li
 BREAK_AFTER = "-–—/"      # Docs can also wrap after a hyphen, dash or slash
 TEXT_SAFETY_PT = 2                  # Docs lays text out a little wider than raw advances
 MIN_COLUMN_PT = 20
-SPLIT_PENALTY_LINES = 1             # a word broken mid-word costs as much as a line
+SPLIT_PENALTY_LINES = 2             # a word broken mid-word costs as much as two lines
+                                    # (Pablo, 9 Nov 2026: at 1, ratings such as "Me-dia" split)
 DEFAULT_PADDING_PT = 5              # Docs' default cell padding on each side
 RANDOM_STARTS = 12
 

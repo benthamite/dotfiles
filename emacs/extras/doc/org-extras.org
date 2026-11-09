@@ -928,7 +928,12 @@ therefore repeat the IDs of the notes they reproduce, sync-conflict
 copies (=NAME conflicted copy= and =NAME (conflict
 YYYY-MM-DD-HH-MM-SS).org=), legacy Dropbox copies of files now canonical
 under ~org-directory~, and files with carriage returns in their
-names.  If the scan reports duplicate IDs, the command automatically
+names.  Before the scan it also drops saved ~org-id-files~ entries that
+reach one of the scanned files under another spelling (same device and
+inode).  After a folder is renamed only in letter case, as from
+=tango= to =Tango=, the old path still opens the file on macOS's
+case-insensitive volumes, and Org would otherwise scan the file twice
+and report every ID in it as a duplicate on every later run.  If the scan reports duplicate IDs, the command automatically
 calls ~org-extras-id-find-duplicate-ids~ ([[#h:finding-duplicate-ids][Finding duplicate IDs]]) so
 that you can review and resolve them.  Starting a new scan removes any
 results buffer left by an earlier scan.

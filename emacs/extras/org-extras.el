@@ -1423,7 +1423,9 @@ scan all agenda files, all associated archives, all open Org
 files, recursively all files in `org-extras-org-directories', and all
 files in `org-id-extra-files'.  Paths matching `org-extras-id-update-excluded-patterns'
 are skipped, from every one of those sources, and pre-existing stale entries with matching paths are pruned
-from `org-id-files' and `org-id-locations'.
+from `org-id-files' and `org-id-locations'.  Saved entries that reach one of
+the scanned files under another spelling are dropped as well, so a file is
+never scanned twice.
 
 If `org-id-update-id-locations' reports duplicate IDs, this
 command will automatically call `org-extras-id-find-duplicate-ids'
@@ -1434,6 +1436,7 @@ to display them in a dedicated buffer."
   (let* ((all-files (org-extras-org-files))
          (filtered-files
           (cl-remove-if #'org-extras-id--update-excluded-p all-files)))
+    (org-extras-id--drop-saved-aliases filtered-files)
     (advice-add 'display-warning :after #'org-extras--id-update-warning-handler)
     (advice-add 'org-agenda-files :around #'org-extras--id-update-filter-files)
     (advice-add 'org-buffer-list :around #'org-extras--id-update-filter-org-buffers)
@@ -1494,6 +1497,36 @@ preventing them from reappearing as duplicates of canonical files."
                org-id-locations)
       (dolist (id stale-ids)
         (remhash id org-id-locations)))))
+
+(defun org-extras-id--drop-saved-aliases (scanned-files)
+  "Drop `org-id-files' entries that name one of SCANNED-FILES differently.
+On a case-insensitive volume a path saved before a folder was renamed only in
+letter case still reaches the moved file.  `org-id-update-id-locations' then
+scans the file under both spellings, because it deduplicates by
+`file-truename', which keeps the case, and it reports every ID in the file as
+a duplicate.  It also saves both spellings again, so the alias would survive
+every later scan.  A saved entry counts as an alias when its spelling is not
+among SCANNED-FILES but its device and inode are those of one of them."
+  (when (consp org-id-files)
+    (let ((scanned-names (make-hash-table :test #'equal))
+          (scanned-identities (make-hash-table :test #'equal)))
+      (dolist (file scanned-files)
+        (puthash (expand-file-name file) t scanned-names)
+        (when-let* ((identity (org-extras-id--file-identity file)))
+          (puthash identity t scanned-identities)))
+      (setq org-id-files
+            (cl-remove-if
+             (lambda (file)
+               (and (not (gethash (expand-file-name file) scanned-names))
+                    (gethash (org-extras-id--file-identity file)
+                             scanned-identities)))
+             org-id-files)))))
+
+(defun org-extras-id--file-identity (file)
+  "Return the device and inode of FILE, or nil when FILE does not exist."
+  (when-let* ((attributes (file-attributes file 'integer)))
+    (cons (file-attribute-device-number attributes)
+          (file-attribute-inode-number attributes))))
 
 ;;;;;; process duplicate ids
 

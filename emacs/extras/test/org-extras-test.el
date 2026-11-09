@@ -1202,6 +1202,66 @@
   (should-not (org-extras-id--update-excluded-p
                "/Users/x/My Drive/android/inbox-mobile.org")))
 
+(ert-deftest org-extras-test-id-drop-saved-aliases-keeps-other-files ()
+  "Drop only saved paths that reach a scanned file under another name."
+  (let* ((dir (file-name-as-directory (make-temp-file "org-extras-alias-" t)))
+         (real (expand-file-name "real/a.org" dir))
+         (other (expand-file-name "other/b.org" dir))
+         (alias (expand-file-name "link/a.org" dir))
+         (missing (expand-file-name "missing.org" dir)))
+    (unwind-protect
+        (progn
+          (make-directory (file-name-directory real))
+          (make-directory (file-name-directory other))
+          (write-region "" nil real)
+          (write-region "" nil other)
+          (make-symbolic-link (expand-file-name "real" dir)
+                              (expand-file-name "link" dir))
+          (let ((org-id-files (list alias other missing real)))
+            (org-extras-id--drop-saved-aliases (list real))
+            (should (equal org-id-files (list other missing real)))))
+      (delete-directory dir t))))
+
+(ert-deftest org-extras-test-id-update-no-duplicates-after-case-rename ()
+  "Do not report duplicate IDs after a folder is renamed only in case.
+On a case-insensitive volume the saved lowercase path still reaches the
+renamed file, which Org would otherwise scan under both spellings."
+  (let* ((dir (file-name-as-directory
+               (file-truename (make-temp-file "org-extras-case-" t))))
+         (old (expand-file-name "tango/notes.org" dir))
+         (new (expand-file-name "Tango/notes.org" dir))
+         (org-directory dir)
+         (paths-dirs-org-additional nil)
+         (org-agenda-files nil)
+         (org-id-extra-files nil)
+         (org-id-track-globally t)
+         (org-id-locations-file (expand-file-name "id-locations.el" dir))
+         (org-id-files nil)
+         (org-id-locations nil)
+         (org-id--locations-checksum nil)
+         (duplicates nil))
+    (unwind-protect
+        (progn
+          (skip-unless (file-name-case-insensitive-p dir))
+          (make-directory (file-name-directory old))
+          (with-temp-file old
+            (insert "* One\n:PROPERTIES:\n:ID: case-rename-one\n:END:\n"
+                    "* Two\n:PROPERTIES:\n:ID: case-rename-two\n:END:\n"))
+          (cl-letf (((symbol-function 'org-extras-id-find-duplicate-ids) #'ignore)
+                    ((symbol-function 'message)
+                     (lambda (format-string &rest args)
+                       (when (string-prefix-p "Duplicate ID" format-string)
+                         (push (apply #'format format-string args) duplicates)))))
+            (org-extras-id-update-id-locations)
+            (rename-file (expand-file-name "tango" dir) (expand-file-name "Tango" dir))
+            (should (member "Tango" (directory-files dir)))
+            (org-extras-id-update-id-locations))
+          (should-not duplicates)
+          (should (equal (mapcar #'expand-file-name org-id-files) (list new)))
+          (should (equal (expand-file-name (org-id-find-id-file "case-rename-one"))
+                         new)))
+      (delete-directory dir t))))
+
 ;;;; Epoch meetings
 
 (ert-deftest org-extras-test-epoch-doc-id-from-url-and-bare-id ()

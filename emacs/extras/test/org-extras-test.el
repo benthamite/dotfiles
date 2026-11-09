@@ -1222,6 +1222,39 @@
             (should (equal org-id-files (list other missing real)))))
       (delete-directory dir t))))
 
+(ert-deftest org-extras-test-id-update-scans-each-file-once ()
+  "Scan a file once when a caller passes it under two names.
+Covers every source of `org-id-update-id-locations', such as agenda files or
+open buffers that still carry an old spelling, and callers that bypass the
+`org-extras' wrapper.  A hard link gives the file its second name, so the
+test also runs on case-sensitive file systems."
+  (let* ((dir (file-name-as-directory
+               (file-truename (make-temp-file "org-extras-once-" t))))
+         (new (expand-file-name "notes.org" dir))
+         (old (expand-file-name "old-notes.org" dir))
+         (org-agenda-files nil)
+         (org-id-extra-files nil)
+         (org-id-track-globally t)
+         (org-id-locations-file (expand-file-name "id-locations.el" dir))
+         (org-id-files nil)
+         (org-id-locations nil)
+         (org-id--locations-checksum nil)
+         (duplicates nil))
+    (unwind-protect
+        (progn
+          (with-temp-file new
+            (insert "* One\n:PROPERTIES:\n:ID: scan-once-one\n:END:\n"))
+          (add-name-to-file new old)
+          (cl-letf (((symbol-function 'message)
+                     (lambda (format-string &rest args)
+                       (when (string-prefix-p "Duplicate ID" format-string)
+                         (push (apply #'format format-string args) duplicates))))
+                    ((symbol-function 'warn) #'ignore))
+            (org-id-update-id-locations (list old new)))
+          (should-not duplicates)
+          (should (= (length org-id-files) 1)))
+      (delete-directory dir t))))
+
 (ert-deftest org-extras-test-id-update-no-duplicates-after-case-rename ()
   "Do not report duplicate IDs after a folder is renamed only in case.
 On a case-insensitive volume the saved lowercase path still reaches the

@@ -1128,6 +1128,15 @@ files share deeply symlinked path prefixes@comma{} this eliminates redundant
 filesystem calls and @code{tramp-completion-file-name-handler} regex
 overhead that would otherwise dominate the scan time.
 
+A third @code{:around} advice (@code{org-extras--id-update-one-name-per-file})
+makes sure no file is scanned twice.  Org deduplicates the files it
+gathers by @code{file-truename}@comma{} which keeps letter case@comma{} so two spellings of
+one path on a case-insensitive volume would both be scanned and every ID
+in the file reported as a duplicate.  During the scan the advice makes
+@code{file-truename} return one name per file@comma{} identified by device and
+inode.  This covers every source of files and also direct calls to
+@code{org-id-update-id-locations}@comma{} not just this command.
+
 @node Finding duplicate IDs
 @subsection Finding duplicate IDs
 

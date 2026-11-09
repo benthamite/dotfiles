@@ -1416,6 +1416,37 @@ eliminates redundant filesystem and regex overhead."
 
 (advice-add 'org-id-update-id-locations :around #'org-extras--memoize-file-truename)
 
+(defun org-extras--id-update-one-name-per-file (orig-fun &rest args)
+  "Call ORIG-FUN with ARGS while giving each existing file a single name.
+`org-id-update-id-locations' gathers files from several sources and
+deduplicates them by `file-truename', which keeps letter case.  On a
+case-insensitive volume two spellings of one path, such as an old one
+left behind by a folder rename, both survive, so the file is scanned
+twice and every ID in it is reported as a duplicate.  While ORIG-FUN
+runs, `file-truename' gives each existing file that Org gathers the
+first name it returned for that file's device and inode, so the first
+source to name a file decides the name recorded."
+  (let ((names (make-hash-table :test #'equal))
+        (real-file-truename (symbol-function 'file-truename)))
+    (cl-letf (((symbol-function 'file-truename)
+               (lambda (filename &optional counter prev-dirs)
+                 (let ((truename (funcall real-file-truename
+                                          filename counter prev-dirs)))
+                   (if counter
+                       truename
+                     (org-extras-id--first-name truename names))))))
+      (apply orig-fun args))))
+
+(advice-add 'org-id-update-id-locations :around #'org-extras--id-update-one-name-per-file)
+
+(defun org-extras-id--first-name (file names)
+  "Return the name NAMES first recorded for FILE's device and inode.
+Record FILE as that name when NAMES has none yet.  Return FILE unchanged
+when it does not exist."
+  (if-let* ((identity (org-extras-id--file-identity file)))
+      (or (gethash identity names) (puthash identity file names))
+    file))
+
 (defun org-extras-id-update-id-locations ()
   "Scan relevant files for IDs and process duplicates.
 Store the relation between files and corresponding IDs.  This will
@@ -1424,8 +1455,8 @@ files, recursively all files in `org-extras-org-directories', and all
 files in `org-id-extra-files'.  Paths matching `org-extras-id-update-excluded-patterns'
 are skipped, from every one of those sources, and pre-existing stale entries with matching paths are pruned
 from `org-id-files' and `org-id-locations'.  Saved entries that reach one of
-the scanned files under another spelling are dropped as well, so a file is
-never scanned twice.
+the scanned files under another spelling are dropped as well, so a stale saved
+spelling does not win over the one the directory walk finds.
 
 If `org-id-update-id-locations' reports duplicate IDs, this
 command will automatically call `org-extras-id-find-duplicate-ids'
@@ -1501,12 +1532,11 @@ preventing them from reappearing as duplicates of canonical files."
 (defun org-extras-id--drop-saved-aliases (scanned-files)
   "Drop `org-id-files' entries that name one of SCANNED-FILES differently.
 On a case-insensitive volume a path saved before a folder was renamed only in
-letter case still reaches the moved file.  `org-id-update-id-locations' then
-scans the file under both spellings, because it deduplicates by
-`file-truename', which keeps the case, and it reports every ID in the file as
-a duplicate.  It also saves both spellings again, so the alias would survive
-every later scan.  A saved entry counts as an alias when its spelling is not
-among SCANNED-FILES but its device and inode are those of one of them."
+letter case still reaches the moved file.  `org-id-update-id-locations' reads
+saved entries before SCANNED-FILES, so without this the old name would be the
+one `org-extras--id-update-one-name-per-file' keeps and the index would go on
+recording it.  A saved entry counts as an alias when its spelling is not among
+SCANNED-FILES but its device and inode are those of one of them."
   (when (consp org-id-files)
     (let ((scanned-names (make-hash-table :test #'equal))
           (scanned-identities (make-hash-table :test #'equal)))

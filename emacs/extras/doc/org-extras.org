@@ -961,6 +961,15 @@ files share deeply symlinked path prefixes, this eliminates redundant
 filesystem calls and ~tramp-completion-file-name-handler~ regex
 overhead that would otherwise dominate the scan time.
 
+A third ~:around~ advice (~org-extras--id-update-one-name-per-file~)
+makes sure no file is scanned twice.  Org deduplicates the files it
+gathers by ~file-truename~, which keeps letter case, so two spellings of
+one path on a case-insensitive volume would both be scanned and every ID
+in the file reported as a duplicate.  During the scan the advice makes
+~file-truename~ return one name per file, identified by device and
+inode.  This covers every source of files and also direct calls to
+~org-id-update-id-locations~, not just this command.
+
 *** Finding duplicate IDs
 :PROPERTIES:
 :CUSTOM_ID: h:finding-duplicate-ids

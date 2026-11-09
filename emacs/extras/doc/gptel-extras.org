@@ -19,7 +19,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 =gptel-extras.el= extends =gptel=, the Emacs package that integrates various Large Language Models---ChatGPT, Gemini, Claude, Perplexity, local models, and others---into Emacs buffers. While =gptel= provides the core infrastructure for sending prompts and receiving responses, =gptel-extras.el= adds workflows and conveniences that make day-to-day use more productive.
 
-The package depends on =gptel= (version 0.7.1 or later) and =paths= (for directory path resolution).
+The package depends on =gptel= (version 0.7.1 or later), =paths= (for directory path resolution) and =simple-extras=.
 
 The extensions fall into several thematic areas:
 

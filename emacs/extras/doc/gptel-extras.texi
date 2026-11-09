@@ -32,6 +32,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 * User options::
 * Commands::
 * Functions::
+* Automatic Claude model discovery::
 * Tools::
 * Indices::
 
@@ -111,39 +112,42 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{gptel-extras.el} extends @samp{gptel}, the Emacs package that integrates various Large Language Models---ChatGPT, Gemini, Claude, Perplexity, local models, and others---into Emacs buffers. While @samp{gptel} provides the core infrastructure for sending prompts and receiving responses, @samp{gptel-extras.el} adds workflows and conveniences that make day-to-day use more productive.
+@samp{gptel-extras.el} extends @samp{gptel}@comma{} the Emacs package that integrates various Large Language Models---ChatGPT@comma{} Gemini@comma{} Claude@comma{} Perplexity@comma{} local models@comma{} and others---into Emacs buffers. While @samp{gptel} provides the core infrastructure for sending prompts and receiving responses@comma{} @samp{gptel-extras.el} adds workflows and conveniences that make day-to-day use more productive.
 
-The package depends on @samp{gptel} (version 0.7.1 or later) and @samp{paths} (for directory path resolution).
+The package depends on @samp{gptel} (version 0.7.1 or later)@comma{} @samp{paths} (for directory path resolution) and @samp{simple-extras}.
 
 The extensions fall into several thematic areas:
 
 @itemize
 @item
-@strong{Aider-style context management.} Commands for generating a repository map (via the external @samp{aider} tool), caching it with configurable time-to-live and git-aware invalidation, and automatically injecting both the map and a project conventions file into the @samp{gptel} context before each request (@ref{Aider context management}).
+@strong{Aider-style context management.} Commands for generating a repository map (via the external @samp{aider} tool)@comma{} caching it with configurable time-to-live and git-aware invalidation@comma{} and automatically injecting both the map and a project conventions file into the @samp{gptel} context before each request (@ref{Aider context management, , Aider context management}).
 
 @item
-@strong{Conversation management.} Automatic saving of new @samp{gptel} buffers to a dedicated directory, continuation of conversations across linked buffers, and a workaround for unresponsive @samp{gptel} sessions (@ref{Conversation management}).
+@strong{Conversation management.} Automatic saving of new @samp{gptel} buffers to a dedicated directory@comma{} continuation of conversations across linked buffers@comma{} and a workaround for unresponsive @samp{gptel} sessions (@ref{Conversation management, , Conversation management}).
 
 @item
-@strong{ChatGPT import.} Bulk import of conversations exported from ChatGPT into Org files (@ref{ChatGPT import}).
+@strong{ChatGPT import.} Bulk import of conversations exported from ChatGPT into Org files (@ref{ChatGPT import, , ChatGPT import}).
 
 @item
-@strong{Commit summarization.} Sending selected commit diffs from a Magit log buffer to an LLM for changelog-style summaries (@ref{Commit summarization}).
+@strong{Commit summarization.} Sending selected commit diffs from a Magit log buffer to an LLM for changelog-style summaries (@ref{Commit summarization, , Commit summarization}).
 
 @item
-@strong{Search integration.} A command that simultaneously opens a web search and queries a configured AI model (e.g., Perplexity Sonar) with the same query (@ref{Search integration}).
+@strong{Search integration.} A command that simultaneously opens a web search and queries a configured AI model (e.g.@comma{} Perplexity Sonar) with the same query (@ref{Search integration, , Search integration}).
 
 @item
-@strong{Email drafting.} Integration with @samp{mu4e} and @samp{org-msg} for LLM-assisted email reply drafting (@ref{Email drafting with mu4e}).
+@strong{Email drafting.} Integration with @samp{mu4e} and @samp{org-msg} for LLM-assisted email reply drafting (@ref{Email drafting with mu4e, , Email drafting with mu4e}).
 
 @item
-@strong{Gptel tools.} A collection of tools---filesystem editing, bibliography search, and entry addition---that @samp{gptel} can invoke via its tool-use feature, plus a macro for defining tool presets (@ref{Tools}).
+@strong{Gptel tools.} A collection of tools---filesystem editing@comma{} bibliography search@comma{} and entry addition---that @samp{gptel} can invoke via its tool-use feature@comma{} plus a macro for defining tool presets (@ref{Tools, , Tools}).
 
 @item
-@strong{Model-specific workarounds.} Automatic Mullvad VPN activation for Gemini requests and a command for fixing garbled characters in LLM output (@ref{Model-specific workarounds}).
+@strong{Automatic model discovery.} Track the newest Claude Opus@comma{} Sonnet@comma{} and Haiku releases and update configured model settings (@ref{Automatic Claude model discovery, , Automatic Claude model discovery}).
 
 @item
-@strong{General convenience commands.} Toggling default major mode, navigating to the end of a buffer before sending, rewriting function definitions via Embark, and more (@ref{General convenience commands}).
+@strong{Model-specific workarounds.} Automatic Mullvad VPN activation for Gemini requests and a command for fixing garbled characters in LLM output (@ref{Model-specific workarounds, , Model-specific workarounds}).
+
+@item
+@strong{General convenience commands.} Toggling default major mode@comma{} navigating to the end of a buffer before sending@comma{} rewriting function definitions via Embark@comma{} and more (@ref{General convenience commands, , General convenience commands}).
 @end itemize
 
 @node User options
@@ -162,30 +166,30 @@ The extensions fall into several thematic areas:
 @section Aider context options
 
 @vindex gptel-extras-add-repo-map-to-context
-The user option @code{gptel-extras-add-repo-map-to-context} controls whether the repository map is automatically added to the @samp{gptel} context before every request sent via @code{gptel-send}. When non-nil, the function @code{gptel-extras-add-context-files} generates (or retrieves from cache) the repository map and injects it into the context (@ref{Automatic context injection}).
+The user option @code{gptel-extras-add-repo-map-to-context} controls whether the repository map is automatically added to the @samp{gptel} context before every request sent via @code{gptel-send}. When non-nil@comma{} the function @code{gptel-extras-add-context-files} generates (or retrieves from cache) the repository map and injects it into the context (@ref{Automatic context injection, , Automatic context injection}).
 
-The default value is @code{nil}. Enable this option when you are using @samp{gptel} for coding tasks within a project and want the LLM to have an overview of the codebase structure, similar to Aider's built-in repo map feature.
+The default value is @code{nil}. Enable this option when you are using @samp{gptel} for coding tasks within a project and want the LLM to have an overview of the codebase structure@comma{} similar to Aider's built-in repo map feature.
 
 This is a boolean option.
 
 @vindex gptel-extras-add-conventions-to-context
-The user option @code{gptel-extras-add-conventions-to-context} controls whether a @samp{conventions.md} file from the project root is automatically added to the @samp{gptel} context before every request. When non-nil, @code{gptel-extras-add-context-files} calls @code{gptel-extras-add-conventions-to-context} to include this file (@ref{Automatic context injection}).
+The user option @code{gptel-extras-add-conventions-to-context} controls whether a @samp{conventions.md} file from the project root is automatically added to the @samp{gptel} context before every request. When non-nil@comma{} @code{gptel-extras-add-context-files} calls @code{gptel-extras-add-conventions-to-context} to include this file (@ref{Automatic context injection, , Automatic context injection}).
 
 The default value is @code{nil}. Enable this option if your project has a @samp{conventions.md} file documenting coding standards and you want the LLM to respect them.
 
 This is a boolean option.
 
 @vindex gptel-extras-repo-map-cache-ttl
-The user option @code{gptel-extras-repo-map-cache-ttl} specifies the time-to-live for cached repository maps, in seconds. After this duration, the cached map is considered stale and will be regenerated on the next request.
+The user option @code{gptel-extras-repo-map-cache-ttl} specifies the time-to-live for cached repository maps@comma{} in seconds. After this duration@comma{} the cached map is considered stale and will be regenerated on the next request.
 
-The default value is @code{3600} (one hour). Increase this value for large, stable repositories where the structure rarely changes; decrease it for rapidly evolving codebases.
+The default value is @code{3600} (one hour). Increase this value for large@comma{} stable repositories where the structure rarely changes; decrease it for rapidly evolving codebases.
 
 This is an integer option.
 
 @vindex gptel-extras-repo-map-invalidate-on-git-changes
-The user option @code{gptel-extras-repo-map-invalidate-on-git-changes} controls whether the repository map cache is invalidated when the git HEAD reference changes, regardless of the TTL@. When non-nil, any new commit, branch switch, or rebase that alters HEAD triggers regeneration of the map.
+The user option @code{gptel-extras-repo-map-invalidate-on-git-changes} controls whether the repository map cache is invalidated when the git HEAD reference changes@comma{} regardless of the TTL@. When non-nil@comma{} any new commit@comma{} branch switch@comma{} or rebase that alters HEAD triggers regeneration of the map.
 
-The default value is @code{t}. Disable this option only if you want the map to persist strictly based on the TTL, ignoring git activity.
+The default value is @code{t}. Disable this option only if you want the map to persist strictly based on the TTL@comma{} ignoring git activity.
 
 This is a boolean option.
 
@@ -193,9 +197,9 @@ This is a boolean option.
 @section Email drafting options
 
 @vindex gptel-extras-mu4e-draft-reply-prompt
-The user option @code{gptel-extras-mu4e-draft-reply-prompt} specifies the prompt sent to the LLM when drafting an email reply with @code{gptel-extras-mu4e-draft-reply} (@ref{Email drafting with mu4e}). The prompt instructs the model to draft a message based on the attached email thread, complete any partial draft already present, and produce only the body text (no headers or signature).
+The user option @code{gptel-extras-mu4e-draft-reply-prompt} specifies the prompt sent to the LLM when drafting an email reply with @code{gptel-extras-mu4e-draft-reply} (@ref{Email drafting with mu4e, , Email drafting with mu4e}). The prompt instructs the model to draft a message based on the attached email thread@comma{} complete any partial draft already present@comma{} and produce only the body text (no headers or signature).
 
-The default value includes the user's full name (from @code{user-full-name}) to help the LLM identify the sender. Customize this option to adjust the drafting instructions, tone, or language.
+The default value includes the user's full name (from @code{user-full-name}) to help the LLM identify the sender. Customize this option to adjust the drafting instructions@comma{} tone@comma{} or language.
 
 This is a string option.
 
@@ -203,14 +207,14 @@ This is a string option.
 @section Search options
 
 @vindex gptel-extras-search-model
-The user option @code{gptel-extras-search-model} specifies the backend and model to use for the AI component of @code{gptel-extras-search-and-ask-model} (@ref{Search integration}). The value is a cons cell of the form @samp{(BACKEND . MODEL)}, where @samp{BACKEND} is a string naming a @samp{gptel} backend and @samp{MODEL} is a symbol identifying the model.
+The user option @code{gptel-extras-search-model} specifies the backend and model to use for the AI component of @code{gptel-extras-search-and-ask-model} (@ref{Search integration, , Search integration}). The value is a cons cell of the form @samp{(BACKEND . MODEL)}@comma{} where @samp{BACKEND} is a string naming a @samp{gptel} backend and @samp{MODEL} is a symbol identifying the model.
 
 The default value is @samp{("Perplexity" . sonar)}. Change this option if you prefer a different search-oriented model or if the Perplexity backend is not configured.
 
 @vindex gptel-extras-search-prefix
 The user option @code{gptel-extras-search-prefix} specifies the URL prefix for the web search opened by @code{gptel-extras-search-and-ask-model}. The query string is appended (URL-encoded) to this prefix.
 
-The default value is @samp{"https://www.google.com/search?q}"=. Change this to use a different search engine (e.g., DuckDuckGo, Bing).
+The default value is @samp{"https://www.google.com/search?q}"=. Change this to use a different search engine (e.g.@comma{} DuckDuckGo@comma{} Bing).
 
 This is a string option.
 
@@ -218,7 +222,7 @@ This is a string option.
 @section Gemini and VPN options
 
 @vindex gptel-extras-gemini-mullvad-disconnect-after
-The user option @code{gptel-extras-gemini-mullvad-disconnect-after} specifies the number of minutes after which the Mullvad VPN connection, activated for a Gemini request, is automatically disconnected (@ref{Model-specific workarounds}).
+The user option @code{gptel-extras-gemini-mullvad-disconnect-after} specifies the number of minutes after which the Mullvad VPN connection@comma{} activated for a Gemini request@comma{} is automatically disconnected (@ref{Model-specific workarounds, , Model-specific workarounds}).
 
 The default value is @code{1}. Increase this if your Gemini requests take longer than one minute to complete.
 
@@ -228,14 +232,14 @@ This is an integer option.
 @section Directory options
 
 @vindex gptel-extras-dir
-The user option @code{gptel-extras-dir} specifies the directory where @samp{gptel} conversation buffers are automatically saved by @code{gptel-extras-save-buffer} (@ref{Saving buffers}). The directory is sorted chronologically via a @samp{.dir-locals.el} file, since the typical use case is to locate a recently modified conversation.
+The user option @code{gptel-extras-dir} specifies the directory where @samp{gptel} conversation buffers are automatically saved by @code{gptel-extras-save-buffer} (@ref{Saving buffers, , Saving buffers}). The directory is sorted chronologically via a @samp{.dir-locals.el} file@comma{} since the typical use case is to locate a recently modified conversation.
 
 The default value is derived from @code{paths-dir-notes} with @samp{gptel/} appended. Change this if you store your notes elsewhere.
 
 This is a directory option.
 
 @vindex gptel-extras-chatgpt-import-dir
-The user option @code{gptel-extras-chatgpt-import-dir} specifies the directory where imported ChatGPT conversations are saved by @code{gptel-extras-import-chatgpt-conversations} (@ref{ChatGPT import}).
+The user option @code{gptel-extras-chatgpt-import-dir} specifies the directory where imported ChatGPT conversations are saved by @code{gptel-extras-import-chatgpt-conversations} (@ref{ChatGPT import, , ChatGPT import}).
 
 The default value is derived from @code{paths-dir-notes} with @samp{chatgpt/} appended.
 
@@ -253,7 +257,7 @@ The user option @code{gptel-extras-alert-when-finished} controls whether an aler
 @item
 @code{nil}: never display an alert.
 @item
-A list of model symbols (e.g., @code{(gemini-pro claude-opus-4-6)}): display an alert only when the response comes from one of the listed models.
+A list of model symbols (e.g.@comma{} @code{(gemini-pro claude-opus-4-6)}): display an alert only when the response comes from one of the listed models.
 @end itemize
 
 The default value is @code{nil}. This is useful when using slow models where you might switch to another task while waiting for the response. The alert relies on the @samp{alert} package.
@@ -276,20 +280,20 @@ The default value is @code{nil}. This is useful when using slow models where you
 
 @findex gptel-extras-summarize-commit-diffs
 @vindex gptel-extras-changelog-file
-When reviewing a series of commits in a @samp{magit-log-mode} buffer, you may want a quick, high-level summary of what changed. The command @code{gptel-extras-summarize-commit-diffs} takes the active region in the log buffer, extracts the diffs for all commits within that region, and sends them to the LLM with a prompt requesting an Org-mode-formatted changelog summary.
+When reviewing a series of commits in a @samp{magit-log-mode} buffer@comma{} you may want a quick@comma{} high-level summary of what changed. The command @code{gptel-extras-summarize-commit-diffs} takes the active region in the log buffer@comma{} extracts the diffs for all commits within that region@comma{} and sends them to the LLM with a prompt requesting an Org-mode-formatted changelog summary.
 
-The summary is displayed in a dedicated @samp{*Commit Summary*} buffer. The prompt is structured using the template in the constant @code{gptel-extras-changelog-file} (which points to the changelog template file in the extras directory), helping the LLM produce output organized by package or feature.
+The summary is displayed in a dedicated @samp{*Commit Summary*} buffer. The prompt is structured using the template in the constant @code{gptel-extras-changelog-file} (which points to the changelog template file in the extras directory)@comma{} helping the LLM produce output organized by package or feature.
 
-With a prefix argument (@samp{C-u}), the command includes full diff content with unified context rather than the default three-line unified diff. This can help the LLM understand broader context around each change.
+With a prefix argument (@samp{C-u})@comma{} the command includes full diff content with unified context rather than the default three-line unified diff. This can help the LLM understand broader context around each change.
 
-Tool use (@code{gptel-use-tools}) is disabled for this request, since it is a programmatic call that should produce a plain-text summary without invoking any tools.
+Tool use (@code{gptel-use-tools}) is disabled for this request@comma{} since it is a programmatic call that should produce a plain-text summary without invoking any tools.
 
 This command must be invoked from a @samp{magit-log-mode} buffer with an active region spanning the commits of interest.
 
 @node Aider context management
 @section Aider context management
 
-These commands manage the repository map and conventions file that provide project-level context to the LLM@. The repository map is generated by the external @samp{aider} tool (@samp{aider --show-repo-map}) and cached in memory with configurable TTL and git-aware invalidation (@ref{Aider context options}).
+These commands manage the repository map and conventions file that provide project-level context to the LLM@. The repository map is generated by the external @samp{aider} tool (@samp{aider --show-repo-map}) and cached in memory with configurable TTL and git-aware invalidation (@ref{Aider context options, , Aider context options}).
 
 @menu
 * Showing and managing the repository map::
@@ -301,25 +305,25 @@ These commands manage the repository map and conventions file that provide proje
 
 @findex gptel-extras-show-repo-map
 @vindex gptel-extras-repo-map-buffer-name-formatter
-The command @code{gptel-extras-show-repo-map} generates (or retrieves from cache) the repository map for the current project and displays it in a dedicated buffer. The buffer name follows the format string @code{gptel-extras-repo-map-buffer-name-formatter} (default @samp{*Repo Map: %s*}, where @samp{%s} is the project name). Use this to inspect the map before deciding whether to include it in the context.
+The command @code{gptel-extras-show-repo-map} generates (or retrieves from cache) the repository map for the current project and displays it in a dedicated buffer. The buffer name follows the format string @code{gptel-extras-repo-map-buffer-name-formatter} (default @samp{*Repo Map: %s*}@comma{} where @samp{%s} is the project name). Use this to inspect the map before deciding whether to include it in the context.
 
 @findex gptel-extras-add-repo-map-to-context
-The command @code{gptel-extras-add-repo-map-to-context} generates the repository map, removes any previously added map from the @samp{gptel} context, and then adds the current map with explanatory preamble text. The preamble instructs the LLM to use the map for understanding project structure and to request relevant files.
+The command @code{gptel-extras-add-repo-map-to-context} generates the repository map@comma{} removes any previously added map from the @samp{gptel} context@comma{} and then adds the current map with explanatory preamble text. The preamble instructs the LLM to use the map for understanding project structure and to request relevant files.
 
 @findex gptel-extras-add-conventions-to-context
-The command @code{gptel-extras-add-conventions-to-context} adds the @samp{conventions.md} file from the current project root to the @samp{gptel} context. The project root is determined by @code{gptel-extras-get-repo} (@ref{Functions}).
+The command @code{gptel-extras-add-conventions-to-context} adds the @samp{conventions.md} file from the current project root to the @samp{gptel} context. The project root is determined by @code{gptel-extras-get-repo} (@ref{Functions, , Functions}).
 
 @findex gptel-extras-remove-repo-map-from-context
 The command @code{gptel-extras-remove-repo-map-from-context} removes the repository map buffer from the @samp{gptel} context without deleting the buffer itself.
 
 @findex gptel-extras-invalidate-repo-map-cache
-The command @code{gptel-extras-invalidate-repo-map-cache} removes the cached repository map for the current project, forcing regeneration on the next request. This is useful after large structural changes that the git-aware invalidation might not capture (e.g., adding many new files without committing).
+The command @code{gptel-extras-invalidate-repo-map-cache} removes the cached repository map for the current project@comma{} forcing regeneration on the next request. This is useful after large structural changes that the git-aware invalidation might not capture (e.g.@comma{} adding many new files without committing).
 
 @node Toggling automatic context injection
 @subsection Toggling automatic context injection
 
 @findex gptel-extras-toggle-aider-files
-The command @code{gptel-extras-toggle-aider-files} toggles both @code{gptel-extras-add-repo-map-to-context} and @code{gptel-extras-add-conventions-to-context} simultaneously. If both are currently disabled, they are enabled, and vice versa. This provides a quick way to switch between coding mode (with full project context) and general conversation mode (without it).
+The command @code{gptel-extras-toggle-aider-files} toggles both @code{gptel-extras-add-repo-map-to-context} and @code{gptel-extras-add-conventions-to-context} simultaneously. If both are currently disabled@comma{} they are enabled@comma{} and vice versa. This provides a quick way to switch between coding mode (with full project context) and general conversation mode (without it).
 
 @node Conversation management
 @section Conversation management
@@ -334,64 +338,64 @@ The command @code{gptel-extras-toggle-aider-files} toggles both @code{gptel-extr
 @subsection Continuing in a new buffer
 
 @findex gptel-extras-continue-in-new-buffer
-Long conversations can become unwieldy and expensive to process. The command @code{gptel-extras-continue-in-new-buffer} creates a new @samp{gptel} buffer whose heading is derived from the current buffer's top-level heading, with a number appended or incremented (e.g., ``My topic'' becomes ``My topic 2'', ``My topic 2'' becomes ``My topic 3'').
+Long conversations can become unwieldy and expensive to process. The command @code{gptel-extras-continue-in-new-buffer} creates a new @samp{gptel} buffer whose heading is derived from the current buffer's top-level heading@comma{} with a number appended or incremented (e.g.@comma{} ``My topic'' becomes ``My topic 2''@comma{} ``My topic 2'' becomes ``My topic 3'').
 
-The command also inserts a ``Continued here'' link (using Org IDs) at the end of the original buffer, so you can easily navigate between parts of the conversation. The current buffer must have @code{gptel-mode} active.
+The command also inserts a ``Continued here'' link (using Org IDs) at the end of the original buffer@comma{} so you can easily navigate between parts of the conversation. The current buffer must have @code{gptel-mode} active.
 
 @node Saving buffers
 @subsection Saving buffers
 
 @findex gptel-extras-save-buffer
-The function @code{gptel-extras-save-buffer} is designed as @samp{:after} advice on the main @code{gptel} function. When @samp{gptel} is called interactively to create a new buffer (rather than reusing an existing file), this function automatically saves the buffer to @code{gptel-extras-dir} (@ref{Directory options}). The filename is a slugified version of the buffer name with the appropriate extension (@samp{.org} or @samp{.md} depending on the major mode).
+The function @code{gptel-extras-save-buffer} is designed as @samp{:after} advice on the main @code{gptel} function. When @samp{gptel} is called interactively to create a new buffer (rather than reusing an existing file)@comma{} this function automatically saves the buffer to @code{gptel-extras-dir} (@ref{Directory options, , Directory options}). The filename is a slugified version of the buffer name with the appropriate extension (@samp{.org} or @samp{.md} depending on the major mode).
 
-In Org mode, the function also inserts the buffer name as a level-1 heading at the top. During the initial save, @code{gptel--save-state} is temporarily removed from @code{before-save-hook} to avoid errors from the incomplete gptel state at that early stage.
+In Org mode@comma{} the function also inserts the buffer name as a level-1 heading at the top. During the initial save@comma{} @code{gptel--save-state} is temporarily removed from @code{before-save-hook} to avoid errors from the incomplete gptel state at that early stage.
 
 @node Recovering from unresponsive sessions
 @subsection Recovering from unresponsive sessions
 
 @findex gptel-extras-kill-buffer-then-reopen-file
-Occasionally, @samp{gptel} may stop processing requests in a buffer for unclear reasons. The command @code{gptel-extras-kill-buffer-then-reopen-file} works around this by saving the buffer, killing it, and reopening the file. In Org mode buffers, it also unfolds all headings after reopening.
+Occasionally@comma{} @samp{gptel} may stop processing requests in a buffer for unclear reasons. The command @code{gptel-extras-kill-buffer-then-reopen-file} works around this by saving the buffer@comma{} killing it@comma{} and reopening the file. In Org mode buffers@comma{} it also unfolds all headings after reopening.
 
-This command can be added to @code{gptel-post-response-functions} for automatic recovery, or invoked manually with @samp{M-x gptel-extras-kill-buffer-then-reopen-file}.
+This command can be added to @code{gptel-post-response-functions} for automatic recovery@comma{} or invoked manually with @samp{M-x gptel-extras-kill-buffer-then-reopen-file}.
 
 @node ChatGPT import
 @section ChatGPT import
 
 @findex gptel-extras-import-chatgpt-conversations
-The command @code{gptel-extras-import-chatgpt-conversations} processes the @samp{conversations.json} file included in a ChatGPT data export. It creates one Org file per conversation in @code{gptel-extras-chatgpt-import-dir} (@ref{Directory options}), using a slugified version of the conversation title as the filename.
+The command @code{gptel-extras-import-chatgpt-conversations} processes the @samp{conversations.json} file included in a ChatGPT data export. It creates one Org file per conversation in @code{gptel-extras-chatgpt-import-dir} (@ref{Directory options, , Directory options})@comma{} using a slugified version of the conversation title as the filename.
 
-Each file contains the conversation title as a level-1 heading, with user and assistant messages as level-2 headings beneath it. Markdown content from ChatGPT is converted to Org syntax via Pandoc (using @code{org-extras-convert-markdown-to-org}). A link to the original conversation on the ChatGPT website is included when the conversation ID is available.
+Each file contains the conversation title as a level-1 heading@comma{} with user and assistant messages as level-2 headings beneath it. Markdown content from ChatGPT is converted to Org syntax via Pandoc (using @code{org-extras-convert-markdown-to-org}). A link to the original conversation on the ChatGPT website is included when the conversation ID is available.
 
-With a prefix argument (@samp{C-u}), archived conversations are included in the import. By default, archived conversations are skipped.
+With a prefix argument (@samp{C-u})@comma{} archived conversations are included in the import. By default@comma{} archived conversations are skipped.
 
 @node Email drafting with mu4e
 @section Email drafting with mu4e
 
 @findex gptel-extras-mu4e-draft-reply
-The command @code{gptel-extras-mu4e-draft-reply} uses the LLM to draft a reply to the email currently being composed in @samp{mu4e} (via @samp{org-msg}). The command adds the entire current buffer as context, positions the cursor after the email headers, and sends the prompt defined in @code{gptel-extras-mu4e-draft-reply-prompt} (@ref{Email drafting options}).
+The command @code{gptel-extras-mu4e-draft-reply} uses the LLM to draft a reply to the email currently being composed in @samp{mu4e} (via @samp{org-msg}). The command adds the entire current buffer as context@comma{} positions the cursor after the email headers@comma{} and sends the prompt defined in @code{gptel-extras-mu4e-draft-reply-prompt} (@ref{Email drafting options, , Email drafting options}).
 
-If you have already started writing a partial draft, the LLM will attempt to complete it. The prompt instructs the model to produce only the body text, without headers or signature.
+If you have already started writing a partial draft@comma{} the LLM will attempt to complete it. The prompt instructs the model to produce only the body text@comma{} without headers or signature.
 
-With a prefix argument (@samp{C-u}), the command lets you edit the prompt before sending it, which is useful for providing additional instructions (e.g., requesting a particular tone).
+With a prefix argument (@samp{C-u})@comma{} the command lets you edit the prompt before sending it@comma{} which is useful for providing additional instructions (e.g.@comma{} requesting a particular tone).
 
-Before sending, the command calls @code{gptel-extras-warn-when-context} (@ref{Context warning}) to alert you if there is existing context that might interfere. After the request is sent, all context is removed.
+Before sending@comma{} the command calls @code{gptel-extras-warn-when-context} (@ref{Context warning, , Context warning}) to alert you if there is existing context that might interfere. After the request is sent@comma{} all context is removed.
 
-Tool use (@code{gptel-use-tools}) is disabled for this request, since the reply drafting is a programmatic call that should produce plain text without invoking any tools.
+Tool use (@code{gptel-use-tools}) is disabled for this request@comma{} since the reply drafting is a programmatic call that should produce plain text without invoking any tools.
 
 @node Search integration
 @section Search integration
 
 @findex gptel-extras-search-and-ask-model
-The command @code{gptel-extras-search-and-ask-model} prompts for a search query, then performs two actions in parallel:
+The command @code{gptel-extras-search-and-ask-model} prompts for a search query@comma{} then performs two actions in parallel:
 
 @enumerate
 @item
-Opens the query in a web browser using @code{gptel-extras-search-prefix} (@ref{Search options}).
+Opens the query in a web browser using @code{gptel-extras-search-prefix} (@ref{Search options, , Search options}).
 @item
-Creates a new @samp{gptel} buffer, sets the backend and model to @code{gptel-extras-search-model} buffer-locally, and sends the query as a prompt.
+Creates a new @samp{gptel} buffer@comma{} sets the backend and model to @code{gptel-extras-search-model} buffer-locally@comma{} and sends the query as a prompt.
 @end enumerate
 
-This is useful for quick research where you want both traditional web results and an AI-generated answer. The command calls @code{gptel-extras-warn-when-context} before proceeding (@ref{Context warning}).
+This is useful for quick research where you want both traditional web results and an AI-generated answer. The command calls @code{gptel-extras-warn-when-context} before proceeding (@ref{Context warning, , Context warning}).
 
 @node General convenience commands
 @section General convenience commands
@@ -424,7 +428,7 @@ The command @code{gptel-extras-goto-end-and-send} moves point to the end of the 
 @findex gptel-extras-rewrite-defun
 The command @code{gptel-extras-rewrite-defun} marks the function definition at point (using @code{mark-defun}) and then invokes @code{gptel-rewrite} on the selected region. This is intended for use with @samp{embark}: binding @code{gptel-rewrite} directly to an Embark action would not work because it requires an active region.
 
-If point is not on a function definition, the command signals an error.
+If point is not on a function definition@comma{} the command signals an error.
 
 @node Fixing garbled characters
 @subsection Fixing garbled characters
@@ -436,23 +440,23 @@ The command @code{gptel-extras-fix-garbled-chars} replaces @samp{let/} with @sam
 @subsection Adding a buffer as context
 
 @findex gptel-extras-add-buffer
-The command @code{gptel-extras-add-buffer} adds the entire contents of a buffer to the @samp{gptel} context. When called interactively, it adds the current buffer. When called from Lisp, pass a buffer object as the argument.
+The command @code{gptel-extras-add-buffer} adds the entire contents of a buffer to the @samp{gptel} context. When called interactively@comma{} it adds the current buffer. When called from Lisp@comma{} pass a buffer object as the argument.
 
-This is useful when you want the LLM to consider the full content of a file or buffer without manually selecting a region. It is used internally by @code{gptel-extras-mu4e-draft-reply} (@ref{Email drafting with mu4e}).
+This is useful when you want the LLM to consider the full content of a file or buffer without manually selecting a region. It is used internally by @code{gptel-extras-mu4e-draft-reply} (@ref{Email drafting with mu4e, , Email drafting with mu4e}).
 
 @node Context warning
 @subsection Context warning
 
 @findex gptel-extras-warn-when-context
-The command @code{gptel-extras-warn-when-context} checks whether the @samp{gptel} context is non-empty and, if so, prompts for confirmation before proceeding. If the user declines, the command offers to clear the context entirely. This prevents accidentally sending a request with stale or irrelevant context.
+The command @code{gptel-extras-warn-when-context} checks whether the @samp{gptel} context is non-empty and@comma{} if so@comma{} prompts for confirmation before proceeding. If the user declines@comma{} the command offers to clear the context entirely. This prevents accidentally sending a request with stale or irrelevant context.
 
-This function is called by @code{gptel-extras-mu4e-draft-reply} (@ref{Email drafting with mu4e}) and @code{gptel-extras-search-and-ask-model} (@ref{Search integration}).
+This function is called by @code{gptel-extras-mu4e-draft-reply} (@ref{Email drafting with mu4e, , Email drafting with mu4e}) and @code{gptel-extras-search-and-ask-model} (@ref{Search integration, , Search integration}).
 
 @node Connecting to MCP servers
 @subsection Connecting to MCP servers
 
 @findex gptel-extras-connect-to-all-servers
-The command @code{gptel-extras-connect-to-all-servers} connects to all configured MCP (Model Context Protocol) servers via @code{gptel-mcp-connect}, then immediately applies the @samp{tools-clear} preset to deactivate all tools. This is useful during initialization: it establishes the server connections so that tools are available on demand, without activating any tools by default.
+The command @code{gptel-extras-connect-to-all-servers} connects to all configured MCP (Model Context Protocol) servers via @code{gptel-mcp-connect}@comma{} then immediately applies the @samp{tools-clear} preset to deactivate all tools. This is useful during initialization: it establishes the server connections so that tools are available on demand@comma{} without activating any tools by default.
 
 @node Functions
 @chapter Functions
@@ -472,22 +476,22 @@ The command @code{gptel-extras-connect-to-all-servers} connects to all configure
 @section Automatic context injection
 
 @findex gptel-extras-add-context-files
-The function @code{gptel-extras-add-context-files} is added as @samp{:before} advice on @code{gptel-send}. Before every request, it checks the user options @code{gptel-extras-add-repo-map-to-context} and @code{gptel-extras-add-conventions-to-context} (@ref{Aider context options}) and, when enabled, calls the corresponding commands to inject context.
+The function @code{gptel-extras-add-context-files} is added as @samp{:before} advice on @code{gptel-send}. Before every request@comma{} it checks the user options @code{gptel-extras-add-repo-map-to-context} and @code{gptel-extras-add-conventions-to-context} (@ref{Aider context options, , Aider context options}) and@comma{} when enabled@comma{} calls the corresponding commands to inject context.
 
 @node Post-response hooks
 @section Post-response hooks
 
 @findex gptel-extras-alert-when-finished
-The function @code{gptel-extras-alert-when-finished} is added to @code{gptel-post-response-functions}. After @samp{gptel} inserts a response, it checks @code{gptel-extras-alert-when-finished} (@ref{Alert options}) and, if the condition is met, displays an alert via the @samp{alert} package.
+The function @code{gptel-extras-alert-when-finished} is added to @code{gptel-post-response-functions}. After @samp{gptel} inserts a response@comma{} it checks @code{gptel-extras-alert-when-finished} (@ref{Alert options, , Alert options}) and@comma{} if the condition is met@comma{} displays an alert via the @samp{alert} package.
 
 @findex gptel-extras-generate-latex-previews
-The function @code{gptel-extras-generate-latex-previews} is intended for @code{gptel-post-response-functions}. When the current buffer is in Org mode and its @code{default-directory} matches @code{gptel-extras-dir}, the function generates @LaTeX{} previews by calling @code{org-latex-preview}. This provides automatic rendering of mathematical notation in @samp{gptel} conversation files.
+The function @code{gptel-extras-generate-latex-previews} is intended for @code{gptel-post-response-functions}. When the current buffer is in Org mode and its @code{default-directory} matches @code{gptel-extras-dir}@comma{} the function generates @LaTeX{} previews by calling @code{org-latex-preview}. This provides automatic rendering of mathematical notation in @samp{gptel} conversation files.
 
 @node Model-specific workarounds
 @section Model-specific workarounds
 
 @findex gptel-extras-set-mullvad
-The function @code{gptel-extras-set-mullvad} is added as @samp{:around} advice on @code{gptel-curl-get-response}. When @code{gptel-model} is @code{gemini-pro}, it activates a Mullvad VPN connection (via @code{mullvad-connect-to-website}) before the request is sent, with an automatic disconnect timer set to @code{gptel-extras-gemini-mullvad-disconnect-after} minutes (@ref{Gemini and VPN options}). This bypasses location restrictions that Gemini imposes in certain regions.
+The function @code{gptel-extras-set-mullvad} is added as @samp{:around} advice on @code{gptel-curl-get-response}. When @code{gptel-model} is @code{gemini-pro}@comma{} it activates a Mullvad VPN connection (via @code{mullvad-connect-to-website}) before the request is sent@comma{} with an automatic disconnect timer set to @code{gptel-extras-gemini-mullvad-disconnect-after} minutes (@ref{Gemini and VPN options, , Gemini and VPN options}). This bypasses location restrictions that Gemini imposes in certain regions.
 
 The VPN connection is made silently (no user prompt). The @samp{mullvad} package must be installed and configured separately.
 
@@ -499,48 +503,48 @@ The VPN connection is made silently (no user prompt). The @samp{mullvad} package
 @subsection Fast JSON logging
 
 @findex gptel-extras--fast-log
-The function @code{gptel-extras--fast-log} is added as @samp{:around} advice on @code{gptel--log}. The upstream @code{gptel--log} function calls @code{json-pretty-print}, which uses @code{replace-region-contents} internally.  That function runs the O(n²) @samp{compareseq} diff algorithm, which freezes Emacs on large JSON payloads (such as full LLM request/response bodies).
+The function @code{gptel-extras--fast-log} is added as @samp{:around} advice on @code{gptel--log}. The upstream @code{gptel--log} function calls @code{json-pretty-print}@comma{} which uses @code{replace-region-contents} internally.  That function runs the O(n²) @samp{compareseq} diff algorithm@comma{} which freezes Emacs on large JSON payloads (such as full LLM request/response bodies).
 
-This advice replaces the pretty-printing step with a direct parse-then-insert approach: the JSON data is parsed with @code{json-parse-string} and re-inserted with @code{json-encode} (with @code{json-encoding-pretty-print} bound to @samp{t}), avoiding the diff entirely.
+This advice replaces the pretty-printing step with a direct parse-then-insert approach: the JSON data is parsed with @code{json-parse-string} and re-inserted with @code{json-encode} (with @code{json-encoding-pretty-print} bound to @samp{t})@comma{} avoiding the diff entirely.
 
 @node Running queries programmatically
 @section Running queries programmatically
 
 @findex gptel-extras-run-query
-The function @code{gptel-extras-run-query} creates a new @samp{gptel} buffer from a query string, optionally setting a specific backend and model. It is used internally by @code{gptel-extras-search-and-ask-model} (@ref{Search integration}) and can be called from Lisp for any programmatic query dispatch.
+The function @code{gptel-extras-run-query} creates a new @samp{gptel} buffer from a query string@comma{} optionally setting a specific backend and model. It is used internally by @code{gptel-extras-search-and-ask-model} (@ref{Search integration, , Search integration}) and can be called from Lisp for any programmatic query dispatch.
 
-The buffer name is a slugified version of the query with the appropriate file extension. If @samp{BACKEND} or @samp{MODEL} are nil, the global defaults are used.
+The buffer name is a slugified version of the query with the appropriate file extension. If @samp{BACKEND} or @samp{MODEL} are nil@comma{} the global defaults are used.
 
-Tool use (@code{gptel-use-tools}) is disabled for this request, since it is a programmatic call that should produce a plain-text response without invoking any tools.
+Tool use (@code{gptel-use-tools}) is disabled for this request@comma{} since it is a programmatic call that should produce a plain-text response without invoking any tools.
 
 @node Setting backend and model
 @section Setting backend and model
 
 @findex gptel-extras-set-backend-and-model
-The function @code{gptel-extras-set-backend-and-model} sets @code{gptel-backend} and @code{gptel-model} buffer-locally in the current Org buffer. Pass the backend name as a string and the model as a symbol. If either argument is nil, the current global value is used.
+The function @code{gptel-extras-set-backend-and-model} sets @code{gptel-backend} and @code{gptel-model} buffer-locally in the current Org buffer. Pass the backend name as a string and the model as a symbol. If either argument is nil@comma{} the current global value is used.
 
-This is a helper function (not a command) used by @code{gptel-extras-run-query} (@ref{Running queries programmatically}) and @code{gptel-extras-search-and-ask-model} (@ref{Search integration}).
+This is a helper function (not a command) used by @code{gptel-extras-run-query} (@ref{Running queries programmatically, , Running queries programmatically}) and @code{gptel-extras-search-and-ask-model} (@ref{Search integration, , Search integration}).
 
 @node Buffer validation
 @section Buffer validation
 
 @findex gptel-extras-ensure-gptel-mode
-The function @code{gptel-extras-ensure-gptel-mode} signals an error if @code{gptel-mode} is not active in the current buffer. It is used as a guard by commands such as @code{gptel-extras-continue-in-new-buffer} (@ref{Continuing in a new buffer}) that require an active @samp{gptel} session.
+The function @code{gptel-extras-ensure-gptel-mode} signals an error if @code{gptel-mode} is not active in the current buffer. It is used as a guard by commands such as @code{gptel-extras-continue-in-new-buffer} (@ref{Continuing in a new buffer, , Continuing in a new buffer}) that require an active @samp{gptel} session.
 
 @node Repository identification
 @section Repository identification
 
 @findex gptel-extras-get-repo
-The function @code{gptel-extras-get-repo} determines the repository path for the current request. In Org mode, it checks the @samp{GPTEL_REPO} property at the document level; if not set, it prompts the user and stores the selection. In Markdown mode, it reads or writes a @samp{GPTEL_REPO} key in YAML front matter. In other modes, it uses @code{project-root} if a project is detected, falling back to a directory prompt.
+The function @code{gptel-extras-get-repo} determines the repository path for the current request. In Org mode@comma{} it checks the @samp{GPTEL_REPO} property at the document level; if not set@comma{} it prompts the user and stores the selection. In Markdown mode@comma{} it reads or writes a @samp{GPTEL_REPO} key in YAML front matter. In other modes@comma{} it uses @code{project-root} if a project is detected@comma{} falling back to a directory prompt.
 
 @findex gptel-extras-get-repo-map
-The function @code{gptel-extras-get-repo-map} returns the repository map for the current project, using the cached version if it is still valid (checked via @code{gptel-extras-repo-map-cache-valid-p}). When the cache is stale or empty, it calls @samp{aider --show-repo-map} to generate a fresh map and stores it along with the current timestamp and git HEAD reference.
+The function @code{gptel-extras-get-repo-map} returns the repository map for the current project@comma{} using the cached version if it is still valid (checked via @code{gptel-extras-repo-map-cache-valid-p}). When the cache is stale or empty@comma{} it calls @samp{aider --show-repo-map} to generate a fresh map and stores it along with the current timestamp and git HEAD reference.
 
 @node Preset macro
 @section Preset macro
 
 @findex gptel-extras-make-tool-presets
-The macro @code{gptel-extras-make-tool-presets} creates two @samp{gptel} presets for a given set of tools: a base preset that sets the active tools to exactly the specified list, and an additive preset (with @samp{+} appended to the name) that appends the tools to whatever tools are already active. This is useful for defining reusable tool configurations.
+The macro @code{gptel-extras-make-tool-presets} creates two @samp{gptel} presets for a given set of tools: a base preset that sets the active tools to exactly the specified list@comma{} and an additive preset (with @samp{+} appended to the name) that appends the tools to whatever tools are already active. This is useful for defining reusable tool configurations.
 
 For example:
 
@@ -551,6 +555,73 @@ For example:
 @end lisp
 
 This creates presets named @samp{tools-web-search} (sets tools to the two specified) and @samp{tools-web-search+} (adds them to existing tools).
+
+@node Automatic Claude model discovery
+@chapter Automatic Claude model discovery
+
+@findex gptel-extras-model-discovery-mode
+Enable @code{gptel-extras-model-discovery-mode} after creating a gptel backend named
+@samp{Claude}. The mode queries Anthropic's Models API asynchronously when enabled
+and every 24 hours while Emacs is running. It uses that backend's existing API
+key and makes no inference requests. No credentials are stored in a cache or
+passed on the command line.
+
+@vindex claude-opus-latest
+@vindex claude-sonnet-latest
+@vindex claude-haiku-latest
+The variables @code{claude-opus-latest}@comma{} @code{claude-sonnet-latest}@comma{} and
+@code{claude-haiku-latest} hold concrete model symbols. Discovery reads every page
+before updating them. Within each family it chooses the highest numeric release
+version@comma{} breaking ties by snapshot date@comma{} creation time@comma{} and ID@. Preview IDs and
+unrecognized naming formats are excluded. The variables start as @code{nil}; there is
+no persistent cache or manually maintained default model ID@.
+
+@vindex gptel-extras-model-bindings
+Set @code{gptel-extras-model-bindings} to an alist of settings and the alias variables
+they should follow. Its default is @code{nil} (no managed settings). For example@comma{} an entry whose car is @code{gptel-model} and whose
+cdr is @code{claude-sonnet-latest} updates the global gptel default after discovery.
+The setting is updated on every successful refresh; ordinary @code{setq} assignments
+elsewhere copy the alias's value only once. Buffer-local model choices are
+preserved. Consumers with a separate backend setting must select @samp{Claude}.
+
+@vindex gptel-extras-model-backend-bindings
+For a backend with its own model list@comma{} use
+@code{gptel-extras-model-backend-bindings}. This alist defaults to @code{nil}. Each entry
+maps an existing backend name to a discovered alias variable; its model list
+then contains only that alias's concrete model. The backend's request options
+must be compatible with that family. The @samp{Claude-thinking} configuration uses
+this to follow Sonnet with adaptive thinking. A discovery failure makes managed
+backends unavailable@comma{} including when a buffer still holds an earlier model. After
+a failure@comma{} for example when 1Password could not deliver the API key in time at
+startup@comma{} discovery retries after 5 minutes@comma{} 15 minutes and then every hour until
+it succeeds. Repeated failures with the same message are warned about once.
+
+@findex gptel-extras-make-claude-provider
+Consumers of the @samp{llm} package can call @code{gptel-extras-make-claude-provider} with
+an alias variable's symbol. It returns an @samp{llm-claude} provider using the alias's
+current concrete model and the @samp{Claude} backend's API key. It rejects unknown
+or unresolved aliases. Call it for each request: retaining a provider object
+would retain its old model. Magit's commit-message generator accepts such a
+provider factory@comma{} so new commit-message requests follow the discovered Haiku.
+
+Discovered models are registered with the backend before defaults change@comma{} so
+gptel does not substitute a different model. Existing pricing and request
+parameters are preserved for known model IDs. New models use capabilities and
+context limits supplied by the API; missing prices remain unknown rather than
+being copied from an older release. Automatic discovery cannot guarantee that
+future model generations will remain compatible with all request options.
+
+@findex gptel-extras-refresh-models
+@vindex gptel-extras-model-discovery-status
+@vindex gptel-extras-model-discovery-time
+Use @code{gptel-extras-refresh-models} to refresh immediately. Concurrent refreshes
+are coalesced. Inspect @code{gptel-extras-model-discovery-status} for @code{refreshing}@comma{}
+@code{ready}@comma{} or an error message@comma{} and @code{gptel-extras-model-discovery-time} for the
+last successful refresh. A failed refresh displays a warning@comma{} clears the alias
+variables@comma{} and marks managed settings unavailable. Requests using those
+settings fail explicitly until discovery succeeds; they do not silently use a
+stale model or gptel's first registered model. Disabling the mode cancels its
+timer and any discovery request; it does not restore previous setting values.
 
 @node Tools
 @chapter Tools
@@ -567,18 +638,18 @@ This creates presets named @samp{tools-web-search} (sets tools to the two specif
 @node Filesystem tools
 @section Filesystem tools
 
-Three filesystem tools are provided, forming a fallback chain for file modification:
+Three filesystem tools are provided@comma{} forming a fallback chain for file modification:
 
 @findex gptel-extras-edit-file
 @enumerate
 @item
-@strong{edit@math{_file}} (@code{gptel-extras-edit-file}): The primary file editing tool. It applies a list of edits to a file, where each edit specifies an @code{:old_string} to find and a @code{:new_string} to replace it with. The tool first attempts an exact match; if that fails, it uses fuzzy matching with normalized whitespace, case-insensitive search, and flexible regex strategies.
+@strong{edit@math{_file}} (@code{gptel-extras-edit-file}): The primary file editing tool. It applies a list of edits to a file@comma{} where each edit specifies an @code{:old_string} to find and a @code{:new_string} to replace it with. The tool first attempts an exact match; if that fails@comma{} it uses fuzzy matching with normalized whitespace@comma{} case-insensitive search@comma{} and flexible regex strategies.
 
 @item
-@strong{apply@math{_diff}}: Applies a unified diff (patch) to a file using the external @samp{patch} command. Useful when the LLM generates changes in diff format. Supports configurable patch options (@samp{-p0}, @samp{-p1}, etc.).
+@strong{apply@math{_diff}}: Applies a unified diff (patch) to a file using the external @samp{patch} command. Useful when the LLM generates changes in diff format. Supports configurable patch options (@samp{-p0}@comma{} @samp{-p1}@comma{} etc.).
 
 @item
-@strong{replace@math{_file}@math{_contents}}: Replaces the entire content of a file. This is the last resort, as it requires sending the full file content and is therefore token-inefficient.
+@strong{replace@math{_file}@math{_contents}}: Replaces the entire content of a file. This is the last resort@comma{} as it requires sending the full file content and is therefore token-inefficient.
 @end enumerate
 
 All three tools modify files directly on disk without user confirmation.
@@ -592,26 +663,26 @@ The tool @strong{search@math{_bibliography}} (@code{gptel-extras-citar-search}) 
 Each result is a pair of @samp{(FORMATTED-CITATION . CITE-KEY)}. The default limit is 10 results; use -1 for no limit.
 
 @findex gptel-extras-add-bib-entry
-The tool @strong{add@math{_bib}@math{_entry}} (@code{gptel-extras-add-bib-entry}) adds a bibliographic entry for a URL, ISBN, or DOI to a specified Bib@TeX{} file. It delegates to @code{zotra-extras-add-entry} from @samp{zotra-extras.el} and returns the citation key of the newly added entry. Import runs in a neutral buffer, so an active EWW or Elfeed buffer cannot copy its URL or alter the kill ring.
+The tool @strong{add@math{_bib}@math{_entry}} (@code{gptel-extras-add-bib-entry}) adds a bibliographic entry for a URL@comma{} ISBN@comma{} or DOI to a specified Bib@TeX{} file. It delegates to @code{zotra-extras-add-entry} from @samp{zotra-extras.el} and returns the citation key of the newly added entry. Import runs in a neutral buffer@comma{} so an active EWW or Elfeed buffer cannot copy its URL or alter the kill ring.
 
-Both bibliography tools use the importer's direct return value, so a failed cleanup cannot leave them reporting a previous entry's cached key. Zotra Extras resolves generated-key collisions through Ebib's uniqueness routine before saving and preserves existing records.
+Both bibliography tools use the importer's direct return value@comma{} so a failed cleanup cannot leave them reporting a previous entry's cached key. Zotra Extras resolves generated-key collisions through Ebib's uniqueness routine before saving and preserves existing records.
 
 @findex gptel-extras-add-bib-entry-and-process
-The tool @strong{add@math{_bib}@math{_entry}@math{_and}@math{_process}} (@code{gptel-extras-add-bib-entry-and-process}) imports the entry through Zotra, loads or refreshes its explicit database in the background, and calls @code{ebib-extras-process-entry} for key validation, language handling, crossref checks, and attachment lookup. It does not select an Ebib entry, sort the UI, or change the caller's buffer or windows. Pass the target bibliography explicitly. The helper refuses an import or refresh when that file has an unsaved visiting buffer or Ebib database. Because Ebib reads a bibliography through the buffer visiting it, a refresh first reverts an unmodified visiting buffer whose file changed on disk, so the reload sees the current file rather than the buffer's stale text.
+The tool @strong{add@math{_bib}@math{_entry}@math{_and}@math{_process}} (@code{gptel-extras-add-bib-entry-and-process}) imports the entry through Zotra@comma{} loads or refreshes its explicit database in the background@comma{} and calls @code{ebib-extras-process-entry} for key validation@comma{} language handling@comma{} crossref checks@comma{} and attachment lookup. It does not select an Ebib entry@comma{} sort the UI@comma{} or change the caller's buffer or windows. Pass the target bibliography explicitly. The helper refuses an import or refresh when that file has an unsaved visiting buffer or Ebib database. Because Ebib reads a bibliography through the buffer visiting it@comma{} a refresh first reverts an unmodified visiting buffer whose file changed on disk@comma{} so the reload sees the current file rather than the buffer's stale text.
 
-The helper keeps an already valid key and uses the entry's identifier and verified language. Missing language, ambiguous archive results, file collisions and unresolved crossrefs produce a blocked result for review. No global input function is replaced; unrelated user commands retain normal input behavior.
+The helper keeps an already valid key and uses the entry's identifier and verified language. Missing language@comma{} ambiguous archive results@comma{} file collisions and unresolved crossrefs produce a blocked result for review. No global input function is replaced; unrelated user commands retain normal input behavior.
 
-The operation retains its original key, database and entry identity across callbacks. Navigation cannot redirect it. Closing the database, replacing the entry, unsaved user edits or an external file change blocks further writes. Existing abstracts are preserved, including ones added while a request is pending.
+The operation retains its original key@comma{} database and entry identity across callbacks. Navigation cannot redirect it. Closing the database@comma{} replacing the entry@comma{} unsaved user edits or an external file change blocks further writes. Existing abstracts are preserved@comma{} including ones added while a request is pending.
 
-To include a staged PDF, create an operation with @code{(ebib-extras-make-operation KEY DB t)}, supply it as the fifth argument of @code{ebib-extras-attach-file}, and then as the fourth argument of @code{gptel-extras--process-bib-entry-headless}. Store and save the verified language before starting. Do not reload the database between these calls.
+To include a staged PDF@comma{} create an operation with @code{(ebib-extras-make-operation KEY DB t)}@comma{} supply it as the fifth argument of @code{ebib-extras-attach-file}@comma{} and then as the fourth argument of @code{gptel-extras--process-bib-entry-headless}. Store and save the verified language before starting. Do not reload the database between these calls.
 
-The result contains @samp{:operation-id}, the final key, bibliography filename, attachment paths, @samp{:status} (@code{complete}, @code{pending} or @code{blocked}), @samp{:pending} task count and @samp{:errors}. Query a timed-out operation with @code{ebib-extras-operation-status-for-id}. Waiting is bounded by @samp{timeout} (45 seconds by default); timeout does not cancel its tasks. An existing PDF does not mark pending abstract, rendering or OCR work complete. After a blocked operation drains, resolve its cause and create a new operation for the same existing entry; do not import it again. Verify document identity separately from processing status.
+The result contains @samp{:operation-id}@comma{} the final key@comma{} bibliography filename@comma{} attachment paths@comma{} @samp{:status} (@code{complete}@comma{} @code{pending} or @code{blocked})@comma{} @samp{:pending} task count and @samp{:errors}. Query a timed-out operation with @code{ebib-extras-operation-status-for-id}. Waiting is bounded by @samp{timeout} (45 seconds by default); timeout does not cancel its tasks. An existing PDF does not mark pending abstract@comma{} rendering or OCR work complete. After a blocked operation drains@comma{} resolve its cause and create a new operation for the same existing entry; do not import it again. Verify document identity separately from processing status.
 
 @node Robustifying tool presets
 @section Robustifying tool presets
 
 @findex gptel-extras--modify-value-append-fix
-The function @code{gptel-extras--modify-value-append-fix} is added as @samp{:around} advice on @code{gptel--modify-value}. It normalizes @samp{:append} specifications in preset plists so that tool names (strings or symbols) are properly wrapped in a list when appending to an existing list value. Without this fix, appending tool names could be misinterpreted as string appends, causing errors.
+The function @code{gptel-extras--modify-value-append-fix} is added as @samp{:around} advice on @code{gptel--modify-value}. It normalizes @samp{:append} specifications in preset plists so that tool names (strings or symbols) are properly wrapped in a list when appending to an existing list value. Without this fix@comma{} appending tool names could be misinterpreted as string appends@comma{} causing errors.
 
 @node Redacting credentials from queries
 @section Redacting credentials from queries
@@ -620,9 +691,9 @@ The function @code{gptel-extras--modify-value-append-fix} is added as @samp{:aro
 @vindex gptel-extras-redact-secrets
 The function @code{gptel-extras-redact-secrets-in-query} runs from @code{gptel-prompt-transform-functions} and replaces anything matching @code{simple-extras-secret-regexp} with @samp{[REDACTED-CREDENTIAL]} before the query leaves the machine. It reports how many credentials it removed.
 
-That hook is called in a temporary buffer holding the exact text bound for the provider, which makes it the one place worth guarding: whatever reaches that buffer is transmitted verbatim to a third party. Guarding individual commands would not be enough, because a credential can enter a query by many routes — context added from a buffer or a file, an agent transcript, a shell history, or a backtrace whose frames include an API key as an argument. Emacs prints every argument when it enters the debugger, so a function that takes a key as a parameter puts that key in @samp{*Backtrace*} without anyone typing it.
+That hook is called in a temporary buffer holding the exact text bound for the provider@comma{} which makes it the one place worth guarding: whatever reaches that buffer is transmitted verbatim to a third party. Guarding individual commands would not be enough@comma{} because a credential can enter a query by many routes — context added from a buffer or a file@comma{} an agent transcript@comma{} a shell history@comma{} or a backtrace whose frames include an API key as an argument. Emacs prints every argument when it enters the debugger@comma{} so a function that takes a key as a parameter puts that key in @samp{*Backtrace*} without anyone typing it.
 
-The function is appended to the hook rather than prepended, so that it runs @strong{after} @code{gptel--transform-add-context}. Order matters here: context pulled in from other buffers and files is inserted by that earlier function, and redacting before it ran would leave exactly the material most likely to contain a credential untouched.
+The function is appended to the hook rather than prepended@comma{} so that it runs @strong{after} @code{gptel--transform-add-context}. Order matters here: context pulled in from other buffers and files is inserted by that earlier function@comma{} and redacting before it ran would leave exactly the material most likely to contain a credential untouched.
 
 The user option @code{gptel-extras-redact-secrets} defaults to @samp{t}; set it to @samp{nil} only to debug the redaction itself.
 

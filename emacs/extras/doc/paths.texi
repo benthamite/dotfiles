@@ -71,11 +71,11 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{paths.el} provides a centralized registry of filesystem paths used across the Emacs configuration. Rather than scattering hard-coded paths through dozens of packages, this file defines every important directory and file location as a @code{defcustom} variable. Other packages reference these variables (e.g. @code{paths-dir-notes}, @code{paths-file-config}) instead of constructing paths themselves.
+@samp{paths.el} provides a centralized registry of filesystem paths used across the Emacs configuration. Rather than scattering hard-coded paths through dozens of packages@comma{} this file defines every important directory and file location as a @code{defcustom} variable. Other packages reference these variables (e.g. @code{paths-dir-notes}@comma{} @code{paths-file-config}) instead of constructing paths themselves.
 
-This approach has two advantages. First, it makes the configuration portable: when the filesystem layout changes (a new machine, a different Dropbox location, or a different user account), only the variables in @samp{paths.el} need updating. Second, it provides discoverability: all known directories and files are visible in one place, with their relationships made explicit through nesting (e.g. @code{paths-dir-music-tango} is defined relative to @code{paths-dir-music}, which is relative to @code{paths-dir-google-drive}).
+This approach has two advantages. First@comma{} it makes the configuration portable: when the filesystem layout changes (a new machine@comma{} a different Dropbox location@comma{} or a different user account)@comma{} only the variables in @samp{paths.el} need updating. Second@comma{} it provides discoverability: all known directories and files are visible in one place@comma{} with their relationships made explicit through nesting (e.g. @code{paths-dir-music-tango} is defined relative to @code{paths-dir-music}@comma{} which is relative to @code{paths-dir-google-drive}).
 
-The variables are organized into three groups: directories (@ref{Directory paths}), files (@ref{File paths}), and other identifiers (@ref{Other identifiers}).
+The variables are organized into three groups: directories (@ref{Directory paths, , Directory paths})@comma{} files (@ref{File paths, , File paths})@comma{} and other identifiers (@ref{Other identifiers, , Other identifiers}).
 
 @node User options
 @chapter User options
@@ -89,7 +89,7 @@ The variables are organized into three groups: directories (@ref{Directory paths
 @node Directory paths
 @section Directory paths
 
-The directory variables define the filesystem tree used by the Emacs configuration. They form a hierarchy where child directories are constructed from parent variables using @code{file-name-concat}, so changing a parent automatically adjusts all children.
+The directory variables define the filesystem tree used by the Emacs configuration. They form a hierarchy where child directories are constructed from parent variables using @code{file-name-concat}@comma{} so changing a parent automatically adjusts all children.
 
 @menu
 * Core directories::
@@ -124,7 +124,7 @@ The following variables define the top-level directories from which most other p
 @item
 @code{paths-dir-dropbox} (default: @samp{~/Library/CloudStorage/Dropbox/}): the Dropbox sync directory. Organization shared directories are children of this path.
 @item
-@code{paths-dir-google-drive} (default: @samp{~/My Drive/}): the Google Drive sync directory. Most personal data, library, and media directories are children of this path.
+@code{paths-dir-google-drive} (default: @samp{~/My Drive/}): the Google Drive sync directory. Most personal data@comma{} library@comma{} and media directories are children of this path.
 @item
 @code{paths-dir-emacs} (default: @code{user-emacs-directory}): the Emacs configuration directory.
 @item
@@ -162,9 +162,9 @@ These directories are children of @code{paths-dir-google-drive} and contain pers
 @item
 @code{paths-dir-dotfiles}: the dotfiles repository (default: @samp{repos/dotfiles/}).
 @item
-@code{paths-dir-dotemacs}: the Emacs subdirectory within dotfiles. Its default is user-dependent, resolved at load time based on the @samp{$HOME} environment variable.
+@code{paths-dir-dotemacs}: the Emacs subdirectory within dotfiles. Its default is user-dependent@comma{} resolved at load time based on the @samp{$HOME} environment variable.
 @item
-@code{paths-dir-notes}, @code{paths-dir-journal}, @code{paths-dir-wiki}: directories for Org notes, journal entries, and wiki content.
+@code{paths-dir-notes}@comma{} @code{paths-dir-journal}@comma{} @code{paths-dir-wiki}: directories for Org notes@comma{} journal entries@comma{} and wiki content.
 @item
 @code{paths-dir-wiki-entries} and @code{paths-dir-wiki-references}: subdirectories of the wiki.
 @item
@@ -176,7 +176,7 @@ These directories are children of @code{paths-dir-google-drive} and contain pers
 @item
 @code{paths-dir-android}: files synced with an Android device.
 @item
-@code{paths-dir-bbdb}, @code{paths-dir-people}: contact databases.
+@code{paths-dir-bbdb}@comma{} @code{paths-dir-people}: contact databases.
 @item
 @code{paths-dir-ledger}: plain-text accounting files.
 @item
@@ -190,9 +190,9 @@ These directories are children of @code{paths-dir-google-drive} and contain pers
 @item
 @code{paths-dir-PW}: the PW project directory.
 @item
-@code{paths-dir-epoch}: my personal Epoch notes, holding the inbox, root session logs and meeting notes (default: @samp{repos/epoch-notes/}).
+@code{paths-dir-epoch}: my personal Epoch notes@comma{} holding the inbox@comma{} root session logs and meeting notes (default: @samp{repos/epoch-notes/}).
 @item
-@code{paths-dir-epoch-workspace}: the shared Epoch workspace, holding the projects and their registry. Its default is the value of the @samp{EPOCH_WORKSPACE} environment variable, or @code{paths-dir-epoch} when that variable is unset, as it is while both share one directory.
+@code{paths-dir-epoch-workspace}: the shared Epoch workspace@comma{} holding the projects and their registry. It is the checkout of @samp{epoch-research/ai-enablement}. Its default is the value of the @samp{EPOCH_WORKSPACE} environment variable@comma{} or @samp{~/repos/epoch/ai-enablement/} when Emacs starts without that variable.
 @end itemize
 
 @node Emacs configuration directories
@@ -235,11 +235,11 @@ These directories are children of @code{paths-dir-google-drive} and contain medi
 
 @itemize
 @item
-@code{paths-dir-pdf-library}, @code{paths-dir-html-library}, @code{paths-dir-media-library}: document and media libraries.
+@code{paths-dir-pdf-library}@comma{} @code{paths-dir-html-library}@comma{} @code{paths-dir-media-library}: document and media libraries.
 @item
-@code{paths-dir-music}: the root music directory, with children @code{paths-dir-music-tango}, @code{paths-dir-music-popular}, @code{paths-dir-music-classical}, and @code{paths-dir-music-to-sort} for genre subdirectories.
+@code{paths-dir-music}: the root music directory@comma{} with children @code{paths-dir-music-tango}@comma{} @code{paths-dir-music-popular}@comma{} @code{paths-dir-music-classical}@comma{} and @code{paths-dir-music-to-sort} for genre subdirectories.
 @item
-@code{paths-dir-movies}: the movies directory (default: @samp{~/movies/}).
+@code{paths-dir-movies}: the movies directory (default: @samp{~/Movies/}).
 @item
 @code{paths-dir-finance}: financial documents.
 @item
@@ -247,6 +247,8 @@ These directories are children of @code{paths-dir-google-drive} and contain medi
 @item
 @code{paths-dir-org-images}: images embedded in Org files.
 @end itemize
+
+Defaults spell each folder in its on-disk case. Folders that tools read by path are lowercase (@samp{library-pdf/}@comma{} @samp{anki/}); folders browsed by hand use sentence case (@samp{Music/}@comma{} @samp{Music/Tango/}@comma{} @samp{Websites/})@comma{} as does macOS's @samp{~/Movies/}. macOS resolves either spelling@comma{} but string comparisons of paths do not.
 
 @vindex paths-dir-music-tango
 @vindex paths-dir-music-popular
@@ -271,13 +273,13 @@ These directories organize Git repositories by provenance:
 @item
 @code{paths-dir-external-repos} (default: @samp{~/source/}): third-party repositories.
 @item
-@code{paths-dir-tlon-repos} and @code{paths-dir-personal-repos} (both default to @samp{~/repos/}): organization and personal repositories. They deliberately do not derive from @code{paths-dir-google-drive}: working repositories live outside the Drive sync root, because build and cache directories inside it produce sync errors.
+@code{paths-dir-tlon-repos} and @code{paths-dir-personal-repos} (both default to @samp{~/repos/}): organization and personal repositories. They deliberately do not derive from @code{paths-dir-google-drive}: working repositories live outside the Drive sync root@comma{} because build and cache directories inside it produce sync errors.
 @item
 @code{paths-dir-tlon-todos}: Org files for organization task tracking.
 @item
-@code{paths-dir-tlon-docs}, @code{paths-dir-babel-refs}, @code{paths-dir-translation-server}: specific repositories.
+@code{paths-dir-tlon-docs}@comma{} @code{paths-dir-babel-refs}@comma{} @code{paths-dir-translation-server}: specific repositories.
 @item
-@code{paths-dir-split-git} (default: @samp{~/git-dirs/}): bare @samp{.git} directories for split-worktree repos. Splitting existed only to keep the object store out of the Google Drive sync root. Since 2026-11-06 no active repository is split: every repository, the dotfiles and notes workspaces included, lives under @samp{~/repos/} with its own @samp{.git} directory. The directory still holds the git directories of a few archived repositories.
+@code{paths-dir-split-git} (default: @samp{~/git-dirs/}): bare @samp{.git} directories for split-worktree repos. Splitting existed only to keep the object store out of the Google Drive sync root. Since 2026-11-06 no active repository is split: every repository@comma{} the dotfiles and notes workspaces included@comma{} lives under @samp{~/repos/} with its own @samp{.git} directory. The directory still holds the git directories of a few archived repositories.
 @item
 @code{paths-dir-all-repos}: a list aggregating several personal data directories for use in search and agenda commands.
 @end itemize
@@ -289,7 +291,7 @@ These directories organize Git repositories by provenance:
 @vindex paths-dir-personal-csl-locales
 @vindex paths-dir-tlon-csl-styles
 @vindex paths-dir-tlon-csl-locales
-These directories hold Citation Style Language resources, used by @samp{citeproc-el} and related bibliography tools:
+These directories hold Citation Style Language resources@comma{} used by @samp{citeproc-el} and related bibliography tools:
 
 @itemize
 @item
@@ -307,7 +309,7 @@ These directories hold Citation Style Language resources, used by @samp{citeproc
 @vindex paths-dir-google-drive-tlon-fede
 @vindex paths-dir-google-drive-tlon-pablo
 @vindex paths-dir-google-drive-tlon-ledger
-These directories organize shared team resources under @code{paths-dir-google-drive-tlon}. Each team member has a personal subdirectory, and shared resources such as the ledger live under the @samp{core} subdirectory.
+These directories organize shared team resources under @code{paths-dir-google-drive-tlon}. Each team member has a personal subdirectory@comma{} and shared resources such as the ledger live under the @samp{core} subdirectory.
 
 Active organization-wide directories sit at the root:
 
@@ -335,12 +337,12 @@ Obsolete projects live under @code{paths-dir-google-drive-tlon-archive}:
 
 @vindex paths-dir-org
 @vindex paths-dir-org-roam
-The variable @code{paths-dir-org} specifies the root directory for Org files, intended to be used as the value of @code{org-directory}. The default is @code{paths-dir-google-drive}.
+The variable @code{paths-dir-org} specifies the root directory for Org files@comma{} intended to be used as the value of @code{org-directory}. The default is @code{paths-dir-google-drive}.
 
-The variable @code{paths-dir-org-roam} specifies the Org-roam directory, intended for @code{org-roam-directory}. The default is the same as @code{paths-dir-org}.
+The variable @code{paths-dir-org-roam} specifies the Org-roam directory@comma{} intended for @code{org-roam-directory}. The default is the same as @code{paths-dir-org}.
 
 @vindex paths-dirs-org-additional
-The variable @code{paths-dirs-org-additional} lists the directories outside @code{paths-dir-org} that also hold Org notes: the notes repositories under @code{paths-dir-personal-repos}, such as @samp{notes}, @samp{people} and @samp{bibliographic-notes}. Org-roam (through @samp{org-roam-extras}), the Org ID scan and automatic heading IDs (through @samp{org-extras}), and @samp{vulpea-extras} read them alongside @code{paths-dir-org}.
+The variable @code{paths-dirs-org-additional} lists the directories outside @code{paths-dir-org} that also hold Org notes: the notes repositories under @code{paths-dir-personal-repos}@comma{} such as @samp{notes}@comma{} @samp{people} and @samp{bibliographic-notes}. Org-roam (through @samp{org-roam-extras})@comma{} the Org ID scan and automatic heading IDs (through @samp{org-extras})@comma{} and @samp{vulpea-extras} read them alongside @code{paths-dir-org}.
 
 @node File paths
 @section File paths
@@ -375,7 +377,7 @@ The variable @code{paths-dirs-org-additional} lists the directories outside @cod
 @vindex paths-file-ean
 @vindex paths-file-work
 @vindex paths-file-tlon
-These variables point to individual Org files used for task management, knowledge capture, and project tracking. Notable entries include:
+These variables point to individual Org files used for task management@comma{} knowledge capture@comma{} and project tracking. Notable entries include:
 
 @itemize
 @item
@@ -415,9 +417,9 @@ The bibliography variables define Bib@TeX{} database files:
 @item
 @code{paths-file-personal-bibliography-tango} (@samp{tango.bib}): the tango literature bibliography. Existing references in the other bibliography files can be reused without duplication.
 @item
-@code{paths-files-bibliography-personal}: a list containing the four personal bibliography files, suitable for passing to @samp{ebib} or @samp{citar}.
+@code{paths-files-bibliography-personal}: a list containing the four personal bibliography files@comma{} suitable for passing to @samp{ebib} or @samp{citar}.
 @item
-@code{paths-files-bibliography-all}: a list of all bibliography files, including both personal and organization files. Defaults to an empty list; organization packages append their files at load time.
+@code{paths-files-bibliography-all}: a list of all bibliography files@comma{} including both personal and organization files. Defaults to an empty list; organization packages append their files at load time.
 @end itemize
 
 @node Ledger files

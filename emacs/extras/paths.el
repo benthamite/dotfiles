@@ -102,7 +102,7 @@
   :group 'paths)
 
 (defcustom paths-dir-movies
-  (file-name-concat (expand-file-name "~") "movies/")
+  (file-name-concat (expand-file-name "~") "Movies/")
   "Path to the movies directory."
   :type 'directory
   :group 'paths)
@@ -120,25 +120,25 @@
   :group 'paths)
 
 (defcustom paths-dir-music-tango
-  (file-name-concat paths-dir-music "tango/")
+  (file-name-concat paths-dir-music "Tango/")
   "Path to the tango music directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-music-popular
-  (file-name-concat paths-dir-music "popular/")
+  (file-name-concat paths-dir-music "Popular/")
   "Path to the popular music directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-music-classical
-  (file-name-concat paths-dir-music "classical/")
+  (file-name-concat paths-dir-music "Classical/")
   "Path to the classical music directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-music-to-sort
-  (file-name-concat paths-dir-music "to sort/")
+  (file-name-concat paths-dir-music "To sort/")
   "Path to the music to sort directory."
   :type 'directory
   :group 'paths)

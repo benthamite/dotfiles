@@ -141,12 +141,12 @@ These directories are children of ~paths-dir-google-drive~ and contain media and
 
 - ~paths-dir-pdf-library~, ~paths-dir-html-library~, ~paths-dir-media-library~: document and media libraries.
 - ~paths-dir-music~: the root music directory, with children ~paths-dir-music-tango~, ~paths-dir-music-popular~, ~paths-dir-music-classical~, and ~paths-dir-music-to-sort~ for genre subdirectories.
-- ~paths-dir-movies~: the movies directory (default: =~/movies/=).
+- ~paths-dir-movies~: the movies directory (default: =~/Movies/=).
 - ~paths-dir-finance~: financial documents.
 - ~paths-dir-audiobooks~: audiobook files.
 - ~paths-dir-org-images~: images embedded in Org files.
 
-Defaults spell each Drive folder in its on-disk case. Folders that tools read by path are lowercase (=library-pdf/=, =anki/=); folders browsed by hand use sentence case (=Music/=, =Websites/=). macOS resolves either spelling, but string comparisons of paths do not.
+Defaults spell each folder in its on-disk case. Folders that tools read by path are lowercase (=library-pdf/=, =anki/=); folders browsed by hand use sentence case (=Music/=, =Music/Tango/=, =Websites/=), as does macOS's =~/Movies/=. macOS resolves either spelling, but string comparisons of paths do not.
 
 #+vindex: paths-dir-music-tango
 #+vindex: paths-dir-music-popular

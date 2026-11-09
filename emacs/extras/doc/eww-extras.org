@@ -299,7 +299,9 @@ callback function with the output file and BibTeX key as arguments.
 
 #+findex: eww-highest-readability
 The built-in function ~eww-highest-readability~ selects the DOM node
-with the highest readability score for ~eww-readable~.  It replaces the
+with the highest readability score.  Since Emacs 31.1 ~eww-readable~ no
+longer calls it (it uses ~eww-readable-dom~), but =org-web-tools= still
+does when it converts a web page to Org.  It replaces the
 current best node with a deeper child whenever the child scores higher
 and contains more than 100 words.  On pages where navigation-heavy
 elements (navboxes, table of contents, categories) drag down the full

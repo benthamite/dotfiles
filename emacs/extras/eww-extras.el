@@ -40,10 +40,13 @@
 ;; down the full content node's score, a small subsection—such as the lead
 ;; paragraph—can win the readability contest.  We raise the threshold to
 ;; max(100, 1/3 of the current best node's word count), so a child must
-;; contain a substantial fraction of the parent's text to replace it.
+;; contain a substantial fraction of the parent's text to replace it.  Emacs
+;; 31.1's `eww-readable' uses `eww-readable-dom' instead, so this patch now
+;; affects only callers of the obsolete function, such as org-web-tools.
 (el-patch-defun eww-highest-readability (node)
+  (declare (obsolete 'eww-readable-dom "31.1"))
   (let ((result node)
-	(el-patch-add (result-words (length (split-string (dom-texts node)))))
+	(el-patch-add (result-words (length (split-string (dom-inner-text node)))))
 	highest)
     (dolist (elem (dom-non-text-children node))
       (when (> (or (dom-attr
@@ -54,11 +57,11 @@
 		   most-negative-fixnum))
         ;; We set a lower bound to how long we accept that the
         ;; readable portion of the page is going to be.
-        (when (> (length (split-string (dom-texts highest)))
+        (when (> (length (split-string (dom-inner-text highest)))
 		 (el-patch-swap 100
 				(max 100 (/ result-words 3))))
 	  (el-patch-add
-	   (setq result-words (length (split-string (dom-texts highest)))))
+	   (setq result-words (length (split-string (dom-inner-text highest)))))
           (setq result highest))))
     result))
 

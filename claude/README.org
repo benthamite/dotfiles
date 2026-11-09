@@ -190,7 +190,10 @@ Codex side: every git repository lives outside Drive under =~/repos/= with
 its =.git= directory inside it (Epoch repositories under =~/repos/epoch/=, an
 organization's notes workspace at =~/repos/<org>-notes=). The dotfiles and the
 notes workspaces were the last exception, with working trees in Drive and git
-directories in =~/git-dirs/<name>=, until they moved on 2026-11-06. Nothing
+directories in =~/git-dirs/<name>=, until they moved on 2026-11-06. A repository the phone needs reaches it through git, never Drive (added
+2026-11-09): the move took =~/repos/android= out of Drive, which silently broke
+the phone's DriveSync path to Orgzly, so the phone now keeps a Termux clone of
+it (=bin/phone-org-sync=) and both sides sync with GitHub. Nothing
 under the Drive sync root may hold dependencies, builds, caches, virtual environments, or worktrees, and
 every linked worktree lives under =~/repos/.worktrees/<repo>/<name>=. Drive
 folder names follow a two-tier rule added on 2026-11-08: lowercase for

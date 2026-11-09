@@ -1,0 +1,83 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# phone-org-sync: sync the phone's Orgzly folder with the android repository.
+#
+# Runs in Termux on Pablo's phone (installed as ~/bin/org-sync, run by cron
+# every 15 minutes under termux-services). Orgzly reads and writes
+# /sdcard/org; that folder is the work tree of a git repository whose git
+# directory is ~/android.git in Termux's private storage. The Mac runs the
+# same cycle in ~/repos/android (launchd repo, bin/android-org-sync).
+#
+# Each run: commit local changes, fetch, rebase onto origin/master, push.
+# A rebase that stops on a conflict is aborted, so nothing is overwritten:
+# the phone keeps its commit, the run fails, and the heartbeat is withheld.
+# After a success it reports a heartbeat to the shared monitor when a token
+# is present (~/.config/org-sync/heartbeat-token); see
+# ~/repos/dotfiles/claude/context/alerting.md.
+
+set -u
+
+readonly git_dir="$HOME/android.git"
+readonly state_dir="$HOME/.local/state/org-sync"
+readonly log_file="$state_dir/log"
+readonly lock_dir="$state_dir/lock"
+readonly token_file="$HOME/.config/org-sync/heartbeat-token"
+readonly heartbeat_url="https://launchd-heartbeat.hingedaily.workers.dev"
+readonly monitor="android-sync-phone"
+
+mkdir -p "$state_dir"
+exec >>"$log_file" 2>&1
+
+log() { printf '%s %s\n' "$(date '+%F %T')" "$*"; }
+g() { git --git-dir="$git_dir" "$@"; }
+
+# A lock older than 30 minutes belongs to a run that was killed.
+if ! mkdir "$lock_dir" 2>/dev/null; then
+  if [ -n "$(find "$lock_dir" -maxdepth 0 -mmin +30 2>/dev/null)" ]; then
+    rmdir "$lock_dir" && mkdir "$lock_dir" || exit 0
+    log "removed a stale lock"
+  else
+    exit 0
+  fi
+fi
+trap 'rmdir "$lock_dir"' EXIT
+
+fail() {
+  log "FAILED: $*"
+  exit 1
+}
+
+if [ -d "$git_dir/rebase-merge" ] || [ -d "$git_dir/rebase-apply" ]; then
+  g rebase --abort || fail "a rebase left over from an earlier run could not be aborted"
+  log "aborted a rebase left over from an earlier run"
+fi
+
+g add --all || fail "git add"
+if ! g diff --cached --quiet; then
+  g commit --quiet -m "Phone sync" || fail "git commit"
+  log "committed local changes"
+fi
+
+g fetch --quiet origin || fail "fetch from GitHub"
+
+if ! g merge-base --is-ancestor origin/master master; then
+  if ! g rebase --quiet origin/master; then
+    g rebase --abort
+    fail "conflict rebasing onto origin/master; the phone's changes are kept in a local commit and were not pushed"
+  fi
+  log "rebased onto $(g rev-parse --short origin/master)"
+fi
+
+if [ "$(g rev-list --count origin/master..master)" -gt 0 ]; then
+  g push --quiet origin master || fail "push to GitHub"
+  log "pushed $(g rev-parse --short master)"
+fi
+
+touch "$state_dir/success"
+
+if [ -r "$token_file" ]; then
+  curl --silent --show-error --fail --max-time 15 \
+    -X POST -H "Authorization: Bearer $(cat "$token_file")" \
+    -A "launchd-heartbeat-client/1" \
+    "$heartbeat_url/heartbeat/$monitor" >/dev/null ||
+    log "heartbeat could not be sent"
+fi

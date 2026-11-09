@@ -83,7 +83,8 @@ Both carry the same operating rules, including "solve classes, not instances",
 and the same repository-root contract (every repository, notes workspaces
 included, lives under =~/repos/= with its own =.git= directory). Both also carry the
 Drive folder-naming rule (lowercase for tool-read folders, sentence case for
-browsed ones). The =[agent] = prefix rule covers Forethought
+browsed ones). Both say that a repository the phone needs reaches it
+through git (a Termux clone synced with GitHub), never through Drive. The =[agent] = prefix rule covers Forethought
 only and lives in =~/repos/forethought/AGENTS.md=; its history is in
 =claude/README.org=.
 The paired =find-past-session= skill directs agents looking for a past session

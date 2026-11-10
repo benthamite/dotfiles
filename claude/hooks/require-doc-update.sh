@@ -105,6 +105,10 @@ is_doc_exempt_el() {
 #   dynamic once the cookie is added;
 # - a blank line.
 #
+# A change that only replaces the contents of string literals, such as a
+# job title in a signature, is exempt too when no manual quotes the
+# replaced text (lib-elisp-string-change.py).
+#
 # Otherwise these commits could not be made without inventing a
 # documentation edit to satisfy this gate.
 is_doc_neutral_only() {
@@ -152,7 +156,8 @@ ok = all(neutral(line, True) for line in added) and all(
     neutral(line, False) for line in removed
 )
 sys.exit(0 if ok else 1)
-'
+' && return 0
+  printf '%s' "$diff" | python3 -I "$SCRIPT_DIR/lib-elisp-string-change.py" "$REPO_ROOT"
 }
 
 git_add_elisp_paths() {

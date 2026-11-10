@@ -524,6 +524,13 @@
       "note": "Codex README commit gate scoped to this dotfiles repository; the repo-root AGENTS.md project mirror is not treated as Codex integration. Runs for both agents from the global Git pre-commit hook through claude/bin/agent-commit-gates, which passes a canonical git commit so the staged files are read from the index."
     },
     {
+      "name": "lib-elisp-string-change.py",
+      "claude": "claude/hooks/lib-elisp-string-change.py",
+      "codex": null,
+      "status": "claude-only",
+      "note": "Helper of the documentation commit gate require-doc-update.sh, which runs for both agents from the global Git pre-commit hook; exempts Elisp changes that only replace string-literal contents no manual quotes."
+    },
+    {
       "name": "require-doc-update.sh",
       "claude": "claude/hooks/require-doc-update.sh",
       "codex": null,

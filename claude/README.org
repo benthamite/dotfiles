@@ -483,7 +483,9 @@ unstaged headers cannot hide outputs; ambiguous pending staging is refused with
 a reason to stage the intended manual separately.
 A change made only of a version header, a =lexical-binding= cookie, a bare
 =(defvar SYMBOL)= declaration or blank lines needs no manual, since it changes
-nothing a manual describes.
+nothing a manual describes. Neither does a change that only replaces the
+contents of string literals, such as a job title in a signature, when no manual
+the gate recognizes quotes the replaced text.
 
 Automatic manual exports compare source identity and content, allowing
 metadata-only changes during export. Replaced sources, changed contents and

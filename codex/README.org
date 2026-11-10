@@ -689,6 +689,9 @@ commit's manual bytes, including explicit selections and inherited amendments.
 It handles independent Texinfo/Info names without evaluating Org. Unrelated
 unstaged headers cannot hide outputs; ambiguous pending staging is refused with
 a reason to stage the intended manual separately.
+A change that only replaces the contents of string literals, such as a job
+title in a signature, needs no manual when no manual the gate recognizes quotes
+the replaced text.
 
 A separate pre-commit gate, =claude/hooks/require-fresh-texinfo.py=, blocks a
 commit whose staged =.texi= differs from a fresh export of its staged Org manual;

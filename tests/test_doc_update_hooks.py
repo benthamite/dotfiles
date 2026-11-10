@@ -154,6 +154,110 @@ class DocUpdateHookTests(unittest.TestCase):
             "deny",
         )
 
+    SIGNATURE = (
+        '(defcustom example-signature\n'
+        '  "\\n--\\nPablo\\nHead of AI Adoption, Org\\n"\n'
+        '  "Signature for {kind} emails."\n'
+        "  :type 'string)\n"
+    )
+
+    def test_allows_string_value_no_manual_quotes(self):
+        self.assert_doc_decision(
+            self.SIGNATURE.format(kind="Org"),
+            self.SIGNATURE.format(kind="Org").replace("Adoption", "Uplift"),
+            "allow",
+        )
+
+    def test_string_value_quoted_by_manual_needs_docs(self):
+        (self.repo / "README.md").write_text("# Example\n\nTitle: Head of AI Adoption.\n")
+        self.git("add", "README.md")
+        self.assert_doc_decision(
+            self.SIGNATURE.format(kind="Org"),
+            self.SIGNATURE.format(kind="Org").replace("Adoption", "Uplift"),
+            "deny",
+        )
+
+    def test_whole_old_string_quoted_by_manual_needs_docs(self):
+        (self.repo / "README.md").write_text('Default: ="\\n--\\nPablo\\n"=\n')
+        self.git("add", "README.md")
+        self.assert_doc_decision(
+            '(defcustom example-sig "\\n--\\nPablo\\n" "Doc." :type \'string)\n',
+            '(defcustom example-sig "\\n--\\nPablo S.\\n" "Doc." :type \'string)\n',
+            "deny",
+        )
+
+    def test_string_change_with_code_change_needs_docs(self):
+        self.assert_doc_decision(
+            self.SIGNATURE.format(kind="Org"),
+            self.SIGNATURE.format(kind="Org")
+            .replace("Adoption", "Uplift").replace("'string", "'sexp"),
+            "deny",
+        )
+
+    def test_string_turned_into_symbol_needs_docs(self):
+        self.assert_doc_decision(
+            '(setq example-mode "fast")\n',
+            "(setq example-mode 'fast)\n",
+            "deny",
+        )
+
+    def test_comment_change_needs_docs(self):
+        self.assert_doc_decision(
+            ';; Uses the fast path.\n(setq example-mode "fast")\n',
+            ';; Uses the slow path.\n(setq example-mode "fast")\n',
+            "deny",
+        )
+
+    def test_allows_change_inside_multiline_string(self):
+        self.assert_doc_decision(
+            '(defun example ()\n  "Do the thing.\nIt prints a greeting."\n  (message "Hi"))\n',
+            '(defun example ()\n  "Do the thing.\nIt prints a salutation."\n  (message "Hi"))\n',
+            "allow",
+        )
+
+    def test_code_between_strings_on_one_line_needs_docs(self):
+        # The changed line closes one string and opens the next; a line-local
+        # reading would mistake the code between them for string contents.
+        self.assert_doc_decision(
+            '(list "first\nline" (foo) "second\nline")\n',
+            '(list "first\nline" (bar) "second\nline")\n',
+            "deny",
+        )
+
+    def test_character_literal_quote_does_not_open_a_string(self):
+        self.assert_doc_decision(
+            '(list ?" ?\\" "alpha" beta)\n',
+            '(list ?" ?\\" "gamma" beta)\n',
+            "allow",
+        )
+        self.assert_doc_decision(
+            '(list ?" "alpha" beta)\n',
+            '(list ?" "alpha" delta)\n',
+            "deny",
+        )
+
+    def test_allows_string_change_after_form_feed(self):
+        self.assert_doc_decision(
+            ';;; Code:\n\x0c\n(setq example-name "alpha")\n',
+            ';;; Code:\n\x0c\n(setq example-name "gamma")\n',
+            "allow",
+        )
+
+    def test_string_change_in_selection_and_one_shot_commits(self):
+        before = self.SIGNATURE.format(kind="Org")
+        (self.repo / "example.el").write_text(before)
+        self.git("add", "example.el")
+        self.git("-c", "user.name=Test", "-c", "user.email=test@example.com",
+                 "commit", "-qm", "fixture")
+        (self.repo / "example.el").write_text(before.replace("Adoption", "Uplift"))
+        hook, field = HOOKS[0]
+        for command in ("git commit --only -m test -- example.el",
+                        "git add example.el && git commit -m test"):
+            with self.subTest(command=command):
+                result = self.run_hook(hook, field, command)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(permission_decision(result), "allow", result.stdout)
+
     def stage(self, relative: str, text: str):
         path = self.repo / relative
         path.parent.mkdir(parents=True, exist_ok=True)

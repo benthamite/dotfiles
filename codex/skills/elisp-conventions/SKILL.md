@@ -164,5 +164,8 @@ staged changes.
 
 Manual updates are not required only because a commit changes a test file or a
 generated/machine-owned file such as `lockfile.el`, `*-autoloads.el`, or
-`*-pkg.el`. Read [references/testing.md](references/testing.md) before using the
-branch-local documentation deferral for a deliberate multi-commit refactor.
+`*-pkg.el`, nor for a change that only replaces the contents of string literals
+(a job title in a signature, say) when no manual quotes the replaced text; the
+guard checks both. Read [references/testing.md](references/testing.md) before
+using the branch-local documentation deferral for a deliberate multi-commit
+refactor.

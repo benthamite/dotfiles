@@ -40,6 +40,14 @@ apply to these dependencies too. Metadata changes after candidate selection are
 checked against the actual installer object, before a formula install or the
 removal of a predecessor cask. Automatic Homebrew refresh and unrelated dependent
 upgrades are disabled for the guarded operation.
+
+Because Homebrew does not upgrade dependents here, a candidate is also deferred
+while any pending item whose upgrade would include it, or anything upgraded with
+it, is itself waiting: upgrading a library alone can remove the version an
+installed dependent links to (2026-11-09: simdjson went ahead while node's
+rebuild waited on other dependencies, and node no longer started). The two
+then go ahead together. Each `delayed` run also runs `brew linkage --test` and
+alerts on any installed formula with missing libraries, however it broke.
 If an approved cask upgrade fails, Homebrew may restore that exact recorded
 predecessor. This exception exists only during its rollback; it cannot authorize
 an unrelated older cask or a fresh installation of the predecessor.

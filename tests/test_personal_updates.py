@@ -539,6 +539,52 @@ class PersonalUpdatesStateTest(unittest.TestCase):
                                   "are unchecked or have not completed the waiting period", log)
                     self.assertNotIn("error", log)
 
+    def test_dependency_waits_while_a_pending_dependent_waits(self):
+        # Regression (2026-11-09): simdjson was upgraded alone while node's
+        # rebuild waited on other dependencies, so node lost its library.
+        observations = {"brew_formula": {
+            "node": self.observation("node", "x", ["brew_formula/lz4", "brew_formula/simdjson"]),
+            "simdjson": self.observation("simdjson", "x"),
+            "lz4": self.observation("lz4", "x"),
+            "unrelated": self.observation("unrelated", "x", ["brew_formula/other"]),
+        }, "brew_cask": {}}
+        pending = {"brew_formula": {name: {} for name in observations["brew_formula"]}}
+        eligible, deferred = self.mod.dependent_holds(
+            {"brew_formula": ["simdjson", "zstd"]}, pending, observations)
+        self.assertEqual(eligible, {"brew_formula": ["zstd"]})
+        self.assertEqual(deferred, ["brew_formula/simdjson: installed dependents brew_formula/node "
+                                    "are waiting and would be left linked to the old version"])
+        eligible, deferred = self.mod.dependent_holds(
+            {"brew_formula": ["lz4", "node", "simdjson"]}, pending, observations)
+        self.assertEqual(eligible, {"brew_formula": ["lz4", "node", "simdjson"]})
+        self.assertEqual(deferred, [])
+
+    def test_dependent_hold_cascades_through_the_upgrade_closure(self):
+        # top waits; mid would upgrade leaf, which top also needs; so mid waits.
+        observations = {"brew_formula": {
+            "top": self.observation("top", "x", ["brew_formula/leaf"]),
+            "mid": self.observation("mid", "x", ["brew_formula/leaf"]),
+            "leaf": self.observation("leaf", "x"),
+        }, "brew_cask": {}}
+        pending = {"brew_formula": {name: {} for name in observations["brew_formula"]}}
+        eligible, _deferred = self.mod.dependent_holds(
+            {"brew_formula": ["leaf", "mid"]}, pending, observations)
+        self.assertEqual(eligible, {"brew_formula": []})
+
+    def test_broken_linkage_names_formulae_with_missing_libraries(self):
+        output = ("==> Checking node linkage\nSystem libraries:\n  /usr/lib/libc++.1.dylib\n"
+                  "==> Checking r linkage\nBroken dependencies:\n"
+                  "  /opt/homebrew/opt/tcl-tk/lib/libtcl9.0.dylib (tcl-tk)\n==> Checking zstd linkage\n")
+        def fake_run(command, **kwargs):
+            self.assertEqual(command, ["brew", "linkage", "--test"])
+            return subprocess.CompletedProcess(command, 1, output, "")
+        self.assertEqual(self.mod.broken_linkage(fake_run), ["r"])
+        clean = lambda command, **kwargs: subprocess.CompletedProcess(command, 0, "==> Checking zstd linkage\n", "")
+        self.assertEqual(self.mod.broken_linkage(clean), [])
+        failed = lambda command, **kwargs: subprocess.CompletedProcess(command, 1, "", "Error: boom")
+        with self.assertRaisesRegex(RuntimeError, "brew linkage --test failed"):
+            self.mod.broken_linkage(failed)
+
     def test_helper_disables_auto_update_and_cleans_private_request(self):
         recorded = []
         def fake_run(command, **kwargs):
@@ -886,10 +932,11 @@ class PersonalUpdatesLuluTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "no rules file"):
                 self.mod.lulu_uncovered_packages()
 
-    def run_main(self, command, held):
+    def run_main(self, command, held, broken=()):
         with tempfile.TemporaryDirectory() as directory:
             argv = ["--log-dir", directory, command]
             with patch.object(self.mod, "lulu_uncovered_packages", return_value=held), \
+                 patch.object(self.mod, "broken_linkage", return_value=list(broken)), \
                  patch.object(self.mod, "command_delayed") as delayed, \
                  patch.object(self.mod, "command_fast_brew") as fast_brew, \
                  patch.object(self.mod, "send_alert") as alert, \
@@ -910,6 +957,13 @@ class PersonalUpdatesLuluTest(unittest.TestCase):
         self.assertEqual(status, 0)
         self.assertEqual(fast_brew.call_args.kwargs["lulu_held"], {"codex"})
         alert.assert_not_called()
+        heartbeat.assert_called_once_with()
+
+    def test_delayed_alerts_on_broken_linkage_then_reports_liveness(self):
+        status, _delayed, _fast, alert, heartbeat = self.run_main("delayed", set(), ["node"])
+        self.assertEqual(status, 0)
+        self.assertIn("node", alert.call_args.args[0])
+        self.assertIn("brew linkage --test", alert.call_args.args[0])
         heartbeat.assert_called_once_with()
 
     def test_covered_run_sends_no_alert(self):

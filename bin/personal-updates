@@ -348,6 +348,73 @@ def dependency_blockers(kind, name, observations, allowed):
     return sorted(blockers)
 
 
+def dependent_holds(eligible, pending, observations):
+    """Drop eligible items whose upgrade would strand a pending dependent.
+
+    The upgrade runs with HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK, so Homebrew
+    does not upgrade the dependents of what it upgrades. When a dependent's
+    own new version is still waiting, upgrading the dependency alone can
+    remove a library the installed dependent links to (2026-11-09: simdjson
+    went ahead while node waited, and node failed to start). So an item goes
+    ahead only if every pending item that would upgrade anything it upgrades
+    goes ahead too. Returns (eligible, deferral reasons)."""
+    accepted = {(kind, name) for kind, names in eligible.items() for name in names}
+    waiting_items = {(kind, name) for kind in KINDS for name in pending.get(kind, {})}
+    deferred = []
+    changed = True
+    while changed:
+        changed = False
+        for kind, name in sorted(accepted):
+            entry = observations.get(kind, {}).get(name, {})
+            upgraded = {f"{kind}/{entry.get('name', name)}", *upgrade_closure(kind, name, observations)}
+            stranded = sorted(
+                f"{dep_kind}/{dep_name}" for dep_kind, dep_name in waiting_items - accepted
+                if upgraded & set(observations.get(dep_kind, {}).get(dep_name, {}).get("pending_deps", [])))
+            if stranded:
+                accepted.discard((kind, name))
+                changed = True
+                deferred.append(f"{kind}/{name}: installed dependents {', '.join(stranded)} "
+                                "are waiting and would be left linked to the old version")
+    return ({kind: [name for name in names if (kind, name) in accepted]
+             for kind, names in eligible.items()}, deferred)
+
+
+def upgrade_closure(kind, name, observations):
+    """References of the pending dependencies upgraded along with an item."""
+    closure = set()
+    stack = [(kind, name)]
+    while stack:
+        current_kind, current_name = stack.pop()
+        for reference in observations.get(current_kind, {}).get(current_name, {}).get("pending_deps", []):
+            if reference not in closure:
+                closure.add(reference)
+                stack.append(tuple(reference.split("/", 1)))
+    return closure
+
+
+def broken_linkage(run_command=None):
+    """Installed formulae whose linked libraries are missing, per `brew linkage --test'."""
+    result = (run_command or run)(["brew", "linkage", "--test"], check=False,
+                                  env_overrides={"HOMEBREW_NO_AUTO_UPDATE": "1"})
+    broken, current = [], None
+    for line in (result.stdout + "\n" + result.stderr).splitlines():
+        match = re.match(r"==> Checking (\S+) linkage", line)
+        if match:
+            current = match.group(1)
+        elif line.strip() == "Broken dependencies:" and current and current not in broken:
+            broken.append(current)
+    if result.returncode and not broken:
+        raise RuntimeError(f"brew linkage --test failed (exit {result.returncode}): "
+                           f"{(result.stderr or result.stdout).strip()[-300:]}")
+    return broken
+
+
+def linkage_alert_text(formulae):
+    return ("Homebrew formulae with broken library links (a dependency's upgrade removed a library "
+            "they use): " + ", ".join(formulae) + ". Upgrade or reinstall each, then check with: "
+            "brew linkage --test")
+
+
 def upgrade_brew(eligible, allowed):
     for command in brew_upgrade_commands_for_eligible(eligible):
         brew_helper("upgrade", allowed, command[2:])
@@ -468,6 +535,8 @@ def command_delayed(args, now=None, lulu_held=frozenset()):
                 continue
             accepted.append(name)
         eligible[kind] = accepted
+    eligible, stranding = dependent_holds(eligible, current, observations)
+    deferred.extend(stranding)
     eligible = {kind: names for kind, names in eligible.items() if names}
     if args.dry_run:
         print(json.dumps({"eligible": eligible, "deferred": deferred}, indent=2, sort_keys=True))
@@ -537,6 +606,11 @@ def main(argv=None):
                 # reported once a day rather than once per lane.
                 if held and args.command == "delayed":
                     send_alert(lulu_alert_text(held))
+                # Checked every night, not only after an upgrade, so a break
+                # from a manual upgrade is caught too.
+                broken = broken_linkage() if args.command == "delayed" else []
+                if broken:
+                    send_alert(linkage_alert_text(broken))
                 send_heartbeat()
         elif args.command == "fast":
             command_fast(args)

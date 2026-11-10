@@ -14,3 +14,5 @@ ForethoughtFoundation/ClaudeThought
 baisharg/tesoreria
 baisharg/tesoreria-ops
 ForethoughtFoundation/idea-swipe
+ForethoughtFoundation/ph-ps--will-corpus
+ForethoughtFoundation/ph-ps--research-corpus
